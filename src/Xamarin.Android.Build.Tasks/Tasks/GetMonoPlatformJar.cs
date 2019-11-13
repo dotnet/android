@@ -7,8 +7,10 @@ using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks
 {
-	public class GetMonoPlatformJar : Task
+	public class GetMonoPlatformJar : AndroidTask
 	{
+		public override string TaskPrefix => "GMJ";
+
 		[Required]
 		public string TargetFrameworkDirectory { get; set; }
 
@@ -18,11 +20,8 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public string MonoPlatformDexPath { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
-			Log.LogDebugMessage ("GetMonoPlatformJar Task");
-			Log.LogDebugMessage ("  TargetFrameworkDirectory: {0}", TargetFrameworkDirectory);
-			
 			var directories = TargetFrameworkDirectory.Split (new char[] { ';', ','} ,StringSplitOptions.RemoveEmptyEntries);
 
 			foreach (var dir in directories)

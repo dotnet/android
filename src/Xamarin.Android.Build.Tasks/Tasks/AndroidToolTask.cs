@@ -6,7 +6,7 @@ using Microsoft.Build.Framework;
 
 namespace Xamarin.Android.Tasks
 {
-	public abstract class AndroidToolTask : ToolTask
+	public abstract class AndroidRunToolTask : AndroidToolTask
 	{
 		protected static bool IsWindows = Path.DirectorySeparatorChar == '\\';
 
@@ -80,6 +80,8 @@ namespace Xamarin.Android.Tasks
 		//   Resources/values/theme.xml(2): error APT0000: Error retrieving parent for item: No resource found that matches the given name '@android:style/Theme.AppCompat'.
 		//   Resources/values/theme.xml:2: error APT0000: Error retrieving parent for item: No resource found that matches the given name '@android:style/Theme.AppCompat'.
 		//   res/drawable/foo-bar.jpg: Invalid file name: must contain only [a-z0-9_.]
+		// Warnings can be like this
+		//   aapt2 W 09-17 18:15:27 98796 12879433 ApkAssets.cpp:138] resources.arsc in APK 'android.jar' is compressed.
 		// Look for them and convert them to MSBuild compatible errors.
 		static Regex androidErrorRegex;
 		public static Regex AndroidErrorRegex {
@@ -99,9 +101,9 @@ namespace Xamarin.Android.Tasks
  \s*
  :
 )?
-( # optional warning|error:
+( # optional warning|error|aapt2\sW|aapt2.exe\sW:
  \s*
- (?<level>(warning|error)[^:]*)\s*
+ (?<level>(warning|error|aapt2\sW|aapt2.exe\sW)[^:]*)\s*
  :
 )?
 \s*

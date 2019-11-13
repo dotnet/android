@@ -25,6 +25,7 @@
 // THE SOFTWARE.
 
 using System;
+using System.Text;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 using System.IO;
@@ -33,8 +34,10 @@ using System.Linq;
 
 namespace Xamarin.Android.Tasks
 {
-	public class AndroidComputeResPaths : Task
+	public class AndroidComputeResPaths : AndroidTask
 	{
+		public override string TaskPrefix => "CRP";
+
 		[Required]
 		public ITaskItem[] ResourceFiles { get; set; }
 		
@@ -56,14 +59,8 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public string ResourceNameCaseMap { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
-			Log.LogDebugMessage ("  IntermediateDir: {0}", IntermediateDir);
-			Log.LogDebugMessage ("  Prefixes: {0}", Prefixes);
-			Log.LogDebugMessage ("  ProjectDir: {0}", ProjectDir);
-			Log.LogDebugMessage ("  LowercaseFilenames: {0}", LowercaseFilenames);
-			Log.LogDebugTaskItems ("  ResourceFiles:", ResourceFiles);
-
 			var intermediateFiles = new List<ITaskItem> ();
 			var resolvedFiles = new List<ITaskItem> ();
 			
@@ -96,18 +93,24 @@ namespace Xamarin.Android.Tasks
 					if (string.IsNullOrEmpty (rel)) {
 						rel = item.GetMetadata ("Identity");
 						if (!string.IsNullOrEmpty (ProjectDir)) {
-							var fullRelPath = Path.GetFullPath (rel);
-							var fullProjectPath = Path.GetFullPath (ProjectDir);
+							var fullRelPath = Path.GetFullPath (rel).Normalize (NormalizationForm.FormC);
+							var fullProjectPath = Path.GetFullPath (ProjectDir).Normalize (NormalizationForm.FormC);
 							if (fullRelPath.StartsWith (fullProjectPath)) {
 								rel = fullRelPath.Replace (fullProjectPath, string.Empty);
 							}
 						}
 					}
-					if (prefixes != null) {
-						foreach (var p in prefixes) {
-							if (rel.StartsWith (p))
-								rel = rel.Substring (p.Length);
-						}
+				}
+
+				if (Path.IsPathRooted (rel)) {
+					var root = Path.GetPathRoot (rel);
+					rel = rel.Substring (root.Length);
+				}
+
+				if (prefixes != null) {
+					foreach (var p in prefixes) {
+						if (rel.StartsWith (p))
+							rel = rel.Substring (p.Length);
 					}
 				}
 
@@ -117,6 +120,15 @@ namespace Xamarin.Android.Tasks
 				if (baseFileName != rel)
 					nameCaseMap.WriteLine ("{0}|{1}", rel, baseFileName);
 				string dest = Path.GetFullPath (Path.Combine (IntermediateDir, baseFileName));
+				string intermediateDirFullPath = Path.GetFullPath (IntermediateDir);
+				// if the path ends up "outside" of our target intermediate directory, just use the filename
+				if (String.Compare (intermediateDirFullPath, 0, dest, 0, intermediateDirFullPath.Length, StringComparison.OrdinalIgnoreCase) != 0) {
+					dest = Path.GetFullPath (Path.Combine (IntermediateDir, Path.GetFileName (baseFileName)));
+				}
+				if (!File.Exists (item.ItemSpec)) {
+					Log.LogCodedError ("XA2001", file: item.ItemSpec, lineNumber: 0, message: $"Source file '{item.ItemSpec}' could not be found.");
+					continue;
+				}
 				var newItem = new TaskItem (dest);
 				newItem.SetMetadata ("LogicalName", rel);
 				item.CopyMetadataTo (newItem);
@@ -130,12 +142,14 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugTaskItems ("  IntermediateFiles:", IntermediateFiles);
 			Log.LogDebugTaskItems ("  ResolvedResourceFiles:", ResolvedResourceFiles);
 			Log.LogDebugTaskItems ("  ResourceNameCaseMap:", ResourceNameCaseMap);
-			return true;
+			return !Log.HasLoggedErrors;
 		}
 	}
 	
-	public class RemoveUnknownFiles : Task
+	public class RemoveUnknownFiles : AndroidTask
 	{
+		public override string TaskPrefix => "RUF";
+
 		static bool IsWindows = Path.DirectorySeparatorChar == '\\';
 
 		[Required]
@@ -152,13 +166,8 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public ITaskItem [] RemovedDirectories { get; set; }
 		
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
-			Log.LogDebugMessage ("RemoveUnknownFiles Task");
-			Log.LogDebugTaskItems ("Files", Files);
-			Log.LogDebugMessage ($"Directory {Directory}");
-			Log.LogDebugMessage ($"RemoveDirectories {RemoveDirectories}");
-
 			var absDir = Path.GetFullPath (Directory);
 			
 			HashSet<string> knownFiles;

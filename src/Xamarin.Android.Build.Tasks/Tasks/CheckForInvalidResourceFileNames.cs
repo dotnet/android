@@ -12,27 +12,32 @@ using System.Collections.Generic;
 using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Tasks {
-	public class CheckForInvalidResourceFileNames : Task {
+	public class CheckForInvalidResourceFileNames : AndroidTask {
+		public override string TaskPrefix => "CFI";
+
 		[Required]
 		public ITaskItem[] Resources { get; set; }
 
 		Regex fileNameCheck = new Regex ("[^a-zA-Z0-9_.]+", RegexOptions.Compiled);
 		Regex fileNameWithHyphenCheck = new Regex ("[^a-zA-Z0-9_.-]+", RegexOptions.Compiled);
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			foreach (var resource in Resources) {
-				var fileName = Path.GetFileName (resource.ItemSpec);
-				var directory = Path.GetFileName (Path.GetDirectoryName (resource.ItemSpec));
+				var resourceFile = resource.GetMetadata ("LogicalName").Replace ('\\', Path.DirectorySeparatorChar);
+				if (string.IsNullOrEmpty (resourceFile))
+					resourceFile = resource.ItemSpec;
+				var fileName = Path.GetFileName (resourceFile);
+				var directory = Path.GetFileName (Path.GetDirectoryName (resourceFile));
 				if (directory.StartsWith ("values", StringComparison.OrdinalIgnoreCase)) {
 					var match = fileNameWithHyphenCheck.Match (fileName);
 					if (match.Success) {
-						Log.LogCodedError ("APT0000", resource.ItemSpec, 0, $"Invalid file name: It must contain only {fileNameWithHyphenCheck}.");
+						Log.LogCodedError ("APT0002", resource.ItemSpec, 0, $"Invalid file name: It must contain only {fileNameWithHyphenCheck}.");
 					}
 				} else {
 					var match = fileNameCheck.Match (fileName);
 					if (match.Success) {
-						Log.LogCodedError ("APT0000", resource.ItemSpec, 0, $"Invalid file name: It must contain only {fileNameCheck}.");
+						Log.LogCodedError ("APT0003", resource.ItemSpec, 0, $"Invalid file name: It must contain only {fileNameCheck}.");
 					}
 				}
 			}

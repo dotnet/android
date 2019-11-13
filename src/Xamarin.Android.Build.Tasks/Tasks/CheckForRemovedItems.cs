@@ -7,8 +7,10 @@ using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks
 {
-	public class CheckForRemovedItems : Task 
+	public class CheckForRemovedItems : AndroidTask 
 	{
+		public override string TaskPrefix => "CFR";
+
 		[Required]
 		public ITaskItem[] Files { get; set; }
 
@@ -18,12 +20,8 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public ITaskItem RemovedFilesFlag { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
-			Log.LogDebugMessage ("RemoveUnknownFiles Task");
-			Log.LogDebugTaskItems ("Files", Files);
-			Log.LogDebugMessage ("  Directory:", Directory);
-
 			var absDir = Path.GetFullPath (Directory);
 
 			HashSet<string> knownFiles;

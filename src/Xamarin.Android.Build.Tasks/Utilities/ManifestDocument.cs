@@ -76,7 +76,6 @@ namespace Xamarin.Android.Tasks {
 		};
 		
 		public string PackageName { get; set; }
-		public List<string> Addons { get; private set; }
 		public string ApplicationName { get; set; }
 		public string [] Placeholders { get; set; }
 		public List<string> Assemblies { get; set; }
@@ -113,12 +112,20 @@ namespace Xamarin.Android.Tasks {
 			return minAttr.Value;
 		}
 
+		public string GetTargetSdk ()
+		{
+			var targetAttr = doc.Root.Element ("uses-sdk")?.Attribute (androidNs + "targetSdkVersion");
+			if (targetAttr == null) {
+				return SdkVersionName;
+			}
+			return targetAttr.Value;
+		}
+
 		TaskLoggingHelper log;
 
 		public ManifestDocument (string templateFilename, TaskLoggingHelper log) : base ()
 		{
 			this.log = log;
-			Addons = new List<string> ();
 			Assemblies = new List<string> ();
 
 			attName = androidNs + "name";
@@ -217,7 +224,7 @@ namespace Xamarin.Android.Tasks {
 			}
 		}
 		
-		public IList<string> Merge (List<TypeDefinition> subclasses, List<string> selectedWhitelistAssemblies, string applicationClass, bool embed, string bundledWearApplicationName, IEnumerable<string> mergedManifestDocuments)
+		public IList<string> Merge (List<TypeDefinition> subclasses, string applicationClass, bool embed, string bundledWearApplicationName, IEnumerable<string> mergedManifestDocuments)
 		{
 			string applicationName  = ApplicationName;
 
@@ -237,7 +244,7 @@ namespace Xamarin.Android.Tasks {
 			if (manifest.Attribute (androidNs + "versionName") == null)
 				manifest.SetAttributeValue (androidNs + "versionName", "1.0");
 			
-			app = CreateApplicationElement (manifest, applicationClass, subclasses, selectedWhitelistAssemblies);
+			app = CreateApplicationElement (manifest, applicationClass, subclasses);
 			
 			if (app.Attribute (androidNs + "label") == null && applicationName != null)
 				app.SetAttributeValue (androidNs + "label", applicationName);
@@ -265,8 +272,8 @@ namespace Xamarin.Android.Tasks {
 			if (uses.Attribute (androidNs + "minSdkVersion") == null) {
 				int minSdkVersion;
 				if (!int.TryParse (SdkVersionName, out minSdkVersion))
-					minSdkVersion = 11;
-				minSdkVersion = Math.Min (minSdkVersion, 11);
+					minSdkVersion = XABuildConfig.NDKMinimumApiAvailable;
+				minSdkVersion = Math.Min (minSdkVersion, XABuildConfig.NDKMinimumApiAvailable);
 				uses.SetAttributeValue (androidNs + "minSdkVersion", minSdkVersion.ToString ());
 			}
 
@@ -382,8 +389,6 @@ namespace Xamarin.Android.Tasks {
 			if (!embed)
 				AddFastDeployPermissions ();
 
-			AddAddOns (app, SdkDir, SdkVersionName, Addons);
-
 			// If the manifest has android:installLocation, but we are targeting
 			// API 7 or lower, remove it for the user and show a warning
 			if (manifest.Attribute (androidNs + "installLocation") != null) {
@@ -394,12 +399,12 @@ namespace Xamarin.Android.Tasks {
 			}
 
 			AddInstrumentations (manifest, subclasses, targetSdkVersionValue);
-			AddPermissions (app, selectedWhitelistAssemblies);
-			AddPermissionGroups (app, selectedWhitelistAssemblies);
-			AddPermissionTrees (app, selectedWhitelistAssemblies);
-			AddUsesPermissions (app, selectedWhitelistAssemblies);
-			AddUsesFeatures (app, selectedWhitelistAssemblies);
-			AddSupportsGLTextures (app, selectedWhitelistAssemblies);
+			AddPermissions (app);
+			AddPermissionGroups (app);
+			AddPermissionTrees (app);
+			AddUsesPermissions (app);
+			AddUsesFeatures (app);
+			AddSupportsGLTextures (app);
 
 			ReorderActivityAliases (app);
 			ReorderElements (app);
@@ -503,7 +508,7 @@ namespace Xamarin.Android.Tasks {
 			return null;
 		}
 
-		XElement CreateApplicationElement (XElement manifest, string applicationClass, List<TypeDefinition> subclasses, List<string> selectedWhitelistAssemblies)
+		XElement CreateApplicationElement (XElement manifest, string applicationClass, List<TypeDefinition> subclasses)
 		{
 			var application = manifest.Descendants ("application").FirstOrDefault ();
 
@@ -516,10 +521,10 @@ namespace Xamarin.Android.Tasks {
 					.Where (attr => attr != null)
 					.ToList ();
 			var usesLibraryAttr = 
-				Assemblies.Concat (selectedWhitelistAssemblies).SelectMany (path => UsesLibraryAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)))
+				Assemblies.SelectMany (path => UsesLibraryAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)))
 				.Where (attr => attr != null);
 			var usesConfigurationAttr =
-				Assemblies.Concat (selectedWhitelistAssemblies).SelectMany (path => UsesConfigurationAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)))
+				Assemblies.SelectMany (path => UsesConfigurationAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)))
 				.Where (attr => attr != null);
 			if (assemblyAttr.Count > 1)
 				throw new InvalidOperationException ("There can be only one [assembly:Application] attribute defined.");
@@ -630,10 +635,12 @@ namespace Xamarin.Android.Tasks {
 
 		XElement CreateMonoRuntimeProvider (string name, string processName, int initOrder)
 		{
+			var directBootAware = DirectBootAware ();
 			return new XElement ("provider",
 						new XAttribute (androidNs + "name", name),
 						new XAttribute (androidNs + "exported", "false"),
 						new XAttribute (androidNs + "initOrder", initOrder),
+						directBootAware ? new XAttribute (androidNs + "directBootAware", "true") : null,
 						processName == null ? null : new XAttribute (androidNs + "process", processName),
 						new XAttribute (androidNs + "authorities", PackageName + "." + name + ".__mono_init__"));
 		}
@@ -642,6 +649,26 @@ namespace Xamarin.Android.Tasks {
 		{
 			return LauncherIntentElements.All (entry => 
 					intentFilter.Elements (entry.Key).Any (e => ((string) e.Attribute (attName) == entry.Value)));
+		}
+
+		/// <summary>
+		/// Returns true if an element has the @android:directBootAware attribute and its 'true'
+		/// </summary>
+		public bool DirectBootAware ()
+		{
+			var processAttrName = androidNs.GetName ("directBootAware");
+			var appAttr = app.Attribute (processAttrName);
+			bool value;
+			if (appAttr != null && bool.TryParse (appAttr.Value, out value) && value)
+				return true;
+			foreach (XElement el in app.Elements ()) {
+				var elAttr = el.Attribute (processAttrName);
+				if (elAttr != null && bool.TryParse (elAttr.Value, out value) && value)
+					return true;
+			}
+
+			// If android:directBootAware is omitted, returns false.
+			return false;
 		}
 
 		XElement ActivityFromTypeDefinition (TypeDefinition type, string name, int targetSdkVersion)
@@ -730,57 +757,6 @@ namespace Xamarin.Android.Tasks {
 					filter.Add (new XElement (e.Key, new XAttribute (attName, e.Value)));
 			}
 		}
-		
-		internal static void AddAddOns (XElement app, string sdkDir, string sdkVersionName, IList<string> addonList)
-		{
-			List<AndroidAddOnManifest> manifests = AndroidAddOnManifest.GetAddOnManifests (sdkDir).ToList ();
-			foreach (string library in app.Elements ("uses-library")
-					.Select (ul => {
-						var n = (string) ul.Attribute (androidNs + "name");
-						return n != null ? n.Trim () : n; 
-					})
-					.Where (ul => !string.IsNullOrEmpty (ul))) {
-				AndroidAddOn addOn = GetAddOn (manifests, sdkVersionName, library);
-				// uses-library could be used to specify such library that does not exist in
-				// application or even on the host (even if "required" is true). The target
-				// may contain that library. "android.test.runner" is such an example.
-				if (addOn != null)
-					addonList.Add (addOn.JarPath);
-			}
-		}
-		
-		static AndroidAddOn GetAddOn (List<AndroidAddOnManifest> manifests, string sdkVersionName, string libraryName)
-		{
-			// try exact match
-			AndroidAddOn addon = manifests.SelectMany (manifest => manifest.Libraries)
-				.Where (ao => ao.Name == libraryName && ao.ApiLevel == sdkVersionName)
-				.FirstOrDefault ();
-			if (addon != null)
-				return addon;
-			
-			// Try to grab an addon with level <= sdkVersion
-			// Requires that sdkVersion & AndroidAddOn.ApiLevel be convertible to System.Int32.
-			//
-			// So far preview L does not come up with google add-on, so it's OK to leave it unsupported.
-			int targetLevel;
-			if (!int.TryParse (sdkVersionName, out targetLevel)) {
-				return null;
-			}
-			int curLevel = int.MinValue;
-			foreach (AndroidAddOn attempt in manifests.SelectMany (manifest => manifest.Libraries)
-					.Where (ao => ao.Name == libraryName)) {
-				int level;
-				if (!int.TryParse (attempt.ApiLevel, out level))
-					continue;
-				if (curLevel > level)
-					continue;
-				if (level > targetLevel)
-					continue;
-				curLevel = level;
-				addon = attempt;
-			}
-			return addon;
-		}
 
 		public void AddInternetPermissionForDebugger ()
 		{
@@ -796,26 +772,20 @@ namespace Xamarin.Android.Tasks {
 				app.AddBeforeSelf (new XElement ("uses-permission", new XAttribute (attName, permReadExternalStorage)));
 		}
 
-		void AddPermissions (XElement application, List<string> selectedWhitelistAssemblies)
+		void AddPermissions (XElement application)
 		{
-			// Look in user assemblies + whitelist (like Maps)
-			var check_assemblies = Assemblies.Union (selectedWhitelistAssemblies);
-
 			var assemblyAttrs = 
-				check_assemblies.SelectMany (path => PermissionAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)));
+				Assemblies.SelectMany (path => PermissionAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)));
 			// Add unique permissions to the manifest
 			foreach (var pa in assemblyAttrs.Distinct (new PermissionAttribute.PermissionAttributeComparer ()))
 				if (!application.Parent.Descendants ("permission").Any (x => (string)x.Attribute (attName) == pa.Name))
 					application.AddBeforeSelf (pa.ToElement (PackageName));
 		}
 
-		void AddPermissionGroups (XElement application, List<string> selectedWhitelistAssemblies)
+		void AddPermissionGroups (XElement application)
 		{
-			// Look in user assemblies + whitelist (like Maps)
-			var check_assemblies = Assemblies.Union (selectedWhitelistAssemblies);
-
 			var assemblyAttrs = 
-				check_assemblies.SelectMany (path => PermissionGroupAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)));
+				Assemblies.SelectMany (path => PermissionGroupAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)));
 
 			// Add unique permissionGroups to the manifest
 			foreach (var pga in assemblyAttrs.Distinct (new PermissionGroupAttribute.PermissionGroupAttributeComparer ()))
@@ -823,13 +793,10 @@ namespace Xamarin.Android.Tasks {
 					application.AddBeforeSelf (pga.ToElement (PackageName));
 		}
 
-		void AddPermissionTrees (XElement application, List<string> selectedWhitelistAssemblies)
+		void AddPermissionTrees (XElement application)
 		{
-			// Look in user assemblies + whitelist (like Maps)
-			var check_assemblies = Assemblies.Union (selectedWhitelistAssemblies);
-
-			var assemblyAttrs = 
-				check_assemblies.SelectMany (path => PermissionTreeAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)));
+			var assemblyAttrs =
+				Assemblies.SelectMany (path => PermissionTreeAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)));
 
 			// Add unique permissionGroups to the manifest
 			foreach (var pta in assemblyAttrs.Distinct (new PermissionTreeAttribute.PermissionTreeAttributeComparer ()))
@@ -837,13 +804,10 @@ namespace Xamarin.Android.Tasks {
 					application.AddBeforeSelf (pta.ToElement (PackageName));
 		}
 
-		void AddUsesPermissions (XElement application, List<string> selectedWhitelistAssemblies)
+		void AddUsesPermissions (XElement application)
 		{
-			// Look in user assemblies + whitelist (like Maps)
-			var check_assemblies = Assemblies.Union (selectedWhitelistAssemblies);
-
-			var assemblyAttrs = 
-				check_assemblies.SelectMany (path => UsesPermissionAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)));
+			var assemblyAttrs =
+				Assemblies.SelectMany (path => UsesPermissionAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)));
 
 			// Add unique permissions to the manifest
 			foreach (var upa in assemblyAttrs.Distinct (new UsesPermissionAttribute.UsesPermissionComparer ()))
@@ -865,13 +829,10 @@ namespace Xamarin.Android.Tasks {
 					application.Add (ula.ToElement (PackageName));
 		}
 
-		void AddUsesFeatures (XElement application, List<string> selectedWhitelistAssemblies)
+		void AddUsesFeatures (XElement application)
 		{
-			// Look in user assemblies + whitelist (like Maps)
-			var check_assemblies = Assemblies.Union (selectedWhitelistAssemblies);
-
-			var assemblyAttrs = 
-				check_assemblies.SelectMany (path => UsesFeatureAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)));
+			var assemblyAttrs =
+				Assemblies.SelectMany (path => UsesFeatureAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)));
 
 			// Add unique features by Name or glESVersion to the manifest
 			foreach (var feature in assemblyAttrs) {
@@ -889,13 +850,10 @@ namespace Xamarin.Android.Tasks {
 			}
 		}
 
-		void AddSupportsGLTextures (XElement application, List<string> selectedWhitelistAssemblies)
+		void AddSupportsGLTextures (XElement application)
 		{
-			// Look in user assemblies + whitelist (like Maps)
-			var check_assemblies = Assemblies.Union (selectedWhitelistAssemblies);
-
-			var assemblyAttrs = 
-				check_assemblies.SelectMany (path => SupportsGLTextureAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)));
+			var assemblyAttrs =
+				Assemblies.SelectMany (path => SupportsGLTextureAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)));
 
 			// Add unique items by Name to the manifest
 			foreach (var feature in assemblyAttrs) {
@@ -1001,6 +959,23 @@ namespace Xamarin.Android.Tasks {
 			VersionCode = code.ToString ();
 		}
 
+		public bool ValidateVersionCode (out string error, out string errorCode)
+		{
+			int code;
+			error = errorCode = string.Empty;
+			if (!int.TryParse (VersionCode, out code)) {
+				error = $"VersionCode {VersionCode} is invalid. It must be an integer value.";
+				errorCode = "XA0003";
+				return false;
+			}
+			if (code > maxVersionCode || code < 0) {
+				error = $"VersionCode {code} is outside 0, {maxVersionCode} interval";
+				errorCode = "XA0004";
+				return false;
+			}
+			return true;
+		}
+
 		public void CalculateVersionCode (string currentAbi, string versionCodePattern, string versionCodeProperties)
 		{
 			var regex = new Regex ("\\{(?<key>([A-Za-z]+)):?[D0-9]*[\\}]");
@@ -1014,8 +989,13 @@ namespace Xamarin.Android.Tasks {
 			}
 			if (!kvp.ContainsKey ("abi") && !string.IsNullOrEmpty (currentAbi))
 				kvp.Add ("abi", GetAbiCode (currentAbi));
-			if (!kvp.ContainsKey ("versionCode"))
-				kvp.Add ("versionCode", int.Parse (VersionCode));
+			if (!kvp.ContainsKey ("versionCode")) {
+				if (int.TryParse (VersionCode, out int parsedCode)) {
+					kvp.Add ("versionCode", parsedCode);
+				} else {
+					throw new ArgumentOutOfRangeException ("VersionCode", $"VersionCode {VersionCode} is invalid. It must be an integer value.");
+				}
+			}
 			if (!kvp.ContainsKey ("minSDK")) {
 				kvp.Add ("minSDK", int.Parse (GetMinimumSdk ()));
 			}
@@ -1027,11 +1007,6 @@ namespace Xamarin.Android.Tasks {
 					continue;
 				versionCode += string.Format (format, kvp [key]);
 			}
-			int code;
-			if (!int.TryParse (versionCode, out code))
-				throw new ArgumentOutOfRangeException ("VersionCode", $"VersionCode {versionCode} is invalid. It must be an integer value.");
-			if (code > maxVersionCode || code < 0)
-				throw new ArgumentOutOfRangeException ("VersionCode", $"VersionCode {code} is outside 0, {maxVersionCode} interval");
 			VersionCode = versionCode.TrimStart ('0');
 		}
 	}

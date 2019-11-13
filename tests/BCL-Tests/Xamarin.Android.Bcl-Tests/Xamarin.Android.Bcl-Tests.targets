@@ -1,24 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <UsingTask AssemblyFile="..\..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
-  <UsingTask AssemblyFile="..\..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.SystemUnzip" />
+  <PropertyGroup>
+    <_ProfAssemProjItemsPath>..\..\..\bin\Build$(Configuration)\ProfileAssemblies.projitems</_ProfAssemProjItemsPath>
+    <_ProfAssemProjItemsPath Condition="!Exists('$(_ProfAssemProjItemsPath)')">..\..\..\bin\$(Configuration)\bcl-tests\ProfileAssemblies.projitems</_ProfAssemProjItemsPath>
+  </PropertyGroup>
   <Import Project="Xamarin.Android.Bcl-Tests.projitems" />
   <Import Project="..\..\..\build-tools\scripts\TestApks.targets" />
-  <Import Project="..\..\..\src\mono-runtimes\ProfileAssemblies.projitems" />
+  <Import Project="$(_ProfAssemProjItemsPath)" />
   <Target Name="_AddTestAssemblies"
       DependsOnTargets="_RemapAssemblies"
       BeforeTargets="ResolveAssemblyReferences">
     <ItemGroup>
-      <Reference Include="@(MonoTestAssembly->'$(IntermediateOutputPath)%(Identity)')" />
+      <Reference Include="@(MonoTestAssembly->'$(IntermediateOutputPath)%(Identity)')">
+        <Private>False</Private>
+      </Reference>
       <Reference Remove="$(IntermediateOutputPath)nunitlite.dll" />
+      <_BclTestSatelliteAssemblySource  Include="@(MonoTestSatelliteAssembly->'..\..\..\bin\$(Configuration)\bcl-tests\%(Identity)')" />
+      <_BclTestSatelliteAssemblyDest    Include="@(MonoTestSatelliteAssembly->'$(IntermediateOutputPath)%(Identity)')" />
     </ItemGroup>
+    <Copy
+        SourceFiles="@(_BclTestSatelliteAssemblySource)"
+        DestinationFiles="@(_BclTestSatelliteAssemblyDest)"
+    />
   </Target>
   <Target Name="_RemapAssemblies"
       Inputs="@(MonoTestAssembly->'..\..\..\bin\$(Configuration)\bcl-tests\%(Identity)')"
       Outputs="@(MonoTestAssembly->'$(IntermediateOutputPath)%(Identity)')">
     <MakeDir Directories="$(IntermediateOutputPath)" />
     <ItemGroup>
-      <_Source  Include="@(MonoTestAssembly->'..\..\..\bin\$(Configuration)\bcl-tests\%(Identity)')" />
+      <_Source  Include="@(MonoTestAssembly->'..\..\..\bin\$(Configuration)\bcl-tests\%(Identity)')" Condition="%(MonoTestAssembly.TestType) != 'xunit'" />
     </ItemGroup>
     <ResolveAssemblyReference
         Assemblies="Xamarin.Android.NUnitLite"
@@ -28,6 +38,11 @@
     <Exec
         Command="$(RemapAssemblyRefTool) &quot;%(_Source.Identity)&quot; &quot;$(IntermediateOutputPath)%(_Source.Filename)%(_Source.Extension)&quot; nunitlite &quot;$(_NUnit)&quot;"
     />
+    <!-- Nothing to remap for the xunit tests, but we still need them in the intermediate output path in order to resolve their references. -->
+    <ItemGroup>
+      <_XunitTestAssembly Include="@(MonoTestAssembly->'..\..\..\bin\$(Configuration)\bcl-tests\%(Identity)')"  Condition="%(MonoTestAssembly.TestType) == 'xunit'" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_XunitTestAssembly)" DestinationFolder="$(IntermediateOutputPath)" />
     <ItemGroup>
       <_DebugSymbol
           Include="..\..\..\bin\$(Configuration)\bcl-tests\%(MonoTestAssembly.Filename).pdb"
@@ -38,38 +53,5 @@
         SourceFiles="@(_DebugSymbol)"
         DestinationFolder="$(IntermediateOutputPath)"
     />
-  </Target>
-  <ItemGroup>
-    <_TestResource Include="..\..\..\bin\$(Configuration)\bcl-tests\Test\resources\Resources.es-ES.resources">
-      <Culture>es-ES</Culture>
-      <Name>monodroid_corlib_test.resources.dll</Name>
-    </_TestResource>
-    <_TestResource Include="..\..\..\bin\$(Configuration)\bcl-tests\Test\resources\Resources.nn-NO.resources">
-      <Culture>nn-NO</Culture>
-      <Name>monodroid_corlib_test.resources.dll</Name>
-    </_TestResource>
-  </ItemGroup>
-  <Target Name="_CreateTestResources"
-      BeforeTargets="ResolveAssemblyReferences"
-      DependsOnTargets="_ExtractTestResources"
-      Inputs="@(_TestResource)"
-      Outputs="$(IntermediateOutputPath)%(_TestResource.Culture)\%(_TestResource.Name)">
-    <MakeDir Directories="$(IntermediateOutputPath)%(_TestResource.Culture)" />
-    <AL
-        OutputAssembly="$(IntermediateOutputPath)%(Culture)\%(Name)"
-        Version="1.0.0.0"
-        Culture="%(Culture)"
-        EmbedResources="@(_TestResource)"
-    />
-  </Target>
-  <Target Name="_ExtractTestResources"
-      Inputs="..\..\..\bin\$(Configuration)\bcl-tests\bcl-tests.zip"
-      Outputs="@(_TestResource)">
-    <SystemUnzip
-        SourceFiles="..\..\..\bin\$(Configuration)\bcl-tests\bcl-tests.zip"
-        HostOS="$(HostOS)"
-        DestinationFolder="..\..\..\bin\$(Configuration)\bcl-tests"
-    />
-    <Touch Files="@(_TestResource)" />
   </Target>
 </Project>

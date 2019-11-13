@@ -87,7 +87,6 @@ index a2a9c1d1..ec78ddb4 100644
 +++ b/Configuration.props
 @@ -70,8 +70,8 @@
      <JavaInteropSourceDirectory Condition=" '$(JavaInteropSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\Java.Interop</JavaInteropSourceDirectory>
-     <LlvmSourceDirectory Condition=" '$(LlvmSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\llvm</LlvmSourceDirectory>
      <MonoSourceDirectory>$(MSBuildThisFileDirectory)external\mono</MonoSourceDirectory>
 -    <MonoRequiredMinimumVersion Condition=" '$(MonoRequiredMinimumVersion)' == '' ">5.14.0</MonoRequiredMinimumVersion>
 -    <MonoRequiredMaximumVersion Condition=" '$(MonoRequiredMaximumVersion)' == '' ">5.15.0</MonoRequiredMaximumVersion>
@@ -137,13 +136,9 @@ must be shipped in the SDK.  Facade assemblies are installed into the
 `bin/$(Configuration)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/v1.0/Facades`
 directory.
 
-The `@(MonoFacadeAssembly)` list can be updated with this shell code on macOS:
-
-	$ cd external/mono/mcs/class/Facades
-	$ for d in `find . -depth 1 -type d | grep -v 'netstandard\|System.Drawing.Primitives\|System.Net.Http.Rtc' | sort -f` ; do
-	  n=`basename "$d"`;
-	  echo "    <MonoFacadeAssembly Include=\"$n.dll\" />";
-	done | pbcopy
+This script uses the contents of `external/mono/sdks/out/android-bcl`, and thus
+requires either a local monodroid sdks build, or the extraction of a
+[Mono Archive](#mono-archive).
 
 The `@(MonoProfileAssembly)` item group is for non-Facade assemblies, which are
 installed into the
@@ -152,12 +147,15 @@ directory.  This item group must be updated whenever a new BCL assembly is added
 
 The `@(MonoTestAssembly)` item group contains unit test assemblies, executed by
 [`tests/BCL-Tests`](../../tests/BCL-Tests).
-The `%(MonoTestAssembly.SourcePath)` item metadata is the directory name within
-`external/mono/mcs/class` which contains files needed for execution by the unit
-tests.
 The `%(MonoTestAssembly.TestType)` item metadata is the *type* of unit test
 assembly; valid values are `xunit` (for xUnit unit test assemblies),
 `reference` (for ???), and the empty string/not set (for NUnit assemblies).
+
+
+It should be possible to update `ProfileAssemblies.projitems` by running the
+script `build-tools/scripts/gen-ProfileAssemblies.sh`:
+
+	build-tools/scripts/gen-ProfileAssemblies.sh > src/mono-runtimes/ProfileAssemblies.projitems
 
 
 <a name="build" />
@@ -172,7 +170,7 @@ Ensure that `make all` builds *first*.  Once that builds, move on to using
 `make jenkins`, which adds support for *all* ABIs, *plus* AOT and LLVM
 compilers, plus Windows binaries.
 
-See [`Documentation/building/unix-instructions.md`](../building/unix-instructions.md).
+See [`Documentation/building/unix/instructions.md`](../building/unix/instructions.md).
 
 
 <a name="unit-tests" />
@@ -183,7 +181,7 @@ Run the unit tests by using `make all-tests run-all-tests`.
 
 All unit tests should pass.
 
-See [`Documentation/building/unix-instructions.md`](../building/unix-instructions.md).
+See [`Documentation/building/unix/instructions.md`](../building/unix/instructions.md).
 
 
 <a name="create-pr" />

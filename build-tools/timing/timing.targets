@@ -7,15 +7,30 @@
   <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitHash" />
   <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.ProcessMSBuildTiming" />
   <Target Name="LogcatTiming">
-    <Exec Command="&quot;$(AdbToolPath)\$(AdbToolExe)&quot; $(_AdbTarget) $(AdbOptions) logcat -v threadtime -d > tmp-logcat-timing.log" />
+    <PropertyGroup>
+      <_TmpLogcatInputFilename>logcat-$([System.IO.Path]::GetRandomFileName()).txt</_TmpLogcatInputFilename>
+    </PropertyGroup>
+    <Error Condition=" '$(LogcatInputFilename)' == '' And Exists($(_TmpLogcatInputFilename))" Text="Unable to create temporary file $(_TmpLogcatInputFilenam) as it already exists." />
+    <Exec
+        Condition=" '$(LogcatInputFilename)' == '' "
+        Command="&quot;$(AdbToolPath)\$(AdbToolExe)&quot; $(_AdbTarget) $(AdbOptions) logcat -v threadtime -d > $(_TmpLogcatInputFilename)"
+    />
+    <PropertyGroup Condition=" '$(LogcatInputFilename)' == '' ">
+      <LogcatInputFilename>$(_TmpLogcatInputFilename)</LogcatInputFilename>
+      <_TmpLogcatFileCreated>True</_TmpLogcatFileCreated>
+    </PropertyGroup>
     <ProcessLogcatTiming
-        InputFilename="tmp-logcat-timing.log"
+        InputFilename="$(LogcatInputFilename)"
         ApplicationPackageName="$(Package)"
         PID="$(PID)"
-        ResultsFilename="tmp-timing-results.csv"
+        ResultsFilename="$(LogcatInputFilename)-results.csv"
         DefinitionsFilename="..\scripts\TimingDefinitions.txt"
         AddResults="true"
         Activity="$(Activity)" />
+    <Delete
+        Condition=" '$(_TmpLogcatFileCreated)' == 'True' "
+        Files="$(_TmpLogcatInputFilename)"
+    />
   </Target>
   <PropertyGroup>
     <_MSBuildTimingDependsOn>
@@ -76,7 +91,7 @@
     />
     <Git
         Condition=" '%(XACaptureBuildTimingProject.Repo)' != '' "
-        Arguments="clone &quot;%(XACaptureBuildTimingProject.Repo)&quot; --depth=1 &quot;%(XACaptureBuildTimingProject.DirectoryFullPath)&quot;"
+        Arguments="clone &quot;%(XACaptureBuildTimingProject.Repo)&quot; &quot;%(XACaptureBuildTimingProject.DirectoryFullPath)&quot;"
         WorkingDirectory="$(_TopDir)"
         ToolPath="$(GitToolPath)"
         ToolExe="$(GitToolExe)"

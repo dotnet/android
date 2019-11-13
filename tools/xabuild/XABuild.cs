@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Xml;
 
@@ -15,13 +16,27 @@ namespace Xamarin.Android.Build
 		{
 			var paths = new XABuildPaths ();
 			try {
+				//HACK: running on Mono, MSBuild cannot resolve System.Reflection.Metadata
+				if (!paths.IsWindows) {
+					AppDomain.CurrentDomain.AssemblyResolve += (sender, args) => {
+						var name = new AssemblyName (args.Name);
+						if (name.Name == "System.Reflection.Metadata") {
+							var path = Path.Combine (paths.MSBuildBin, $"{name.Name}.dll");
+							return Assembly.LoadFile (path);
+						}
+						//Return null, to revert to default .NET behavior
+						return null;
+					};
+				}
 				if (!Directory.Exists (paths.XamarinAndroidBuildOutput)) {
 					Console.WriteLine ($"Unable to find Xamarin.Android build output at {paths.XamarinAndroidBuildOutput}");
 					return 1;
 				}
 
-				//Create a custom xabuild.exe.config
-				var xml = CreateConfig (paths);
+				// Create a custom xabuild.exe.config
+				CreateConfig (paths);
+				// Create a Microsoft.Build.NuGetSdkResolver.xml
+				CreateSdkResolverConfig (paths);
 
 				//Symbolic links to be created: key=system, value=in-tree
 				var symbolicLinks = new Dictionary<string, string> ();
@@ -50,12 +65,8 @@ namespace Xamarin.Android.Build
 
 				return MSBuildApp.Main ();
 			} finally {
-				//NOTE: these are temporary files
-				foreach (var file in new [] { paths.MSBuildExeTempPath, paths.XABuildConfig }) {
-					if (File.Exists (file)) {
-						File.Delete (file);
-					}
-				}
+				//NOTE: this is a temporary directory
+				Directory.Delete (paths.MSBuildTempPath, recursive: true);
 			}
 		}
 
@@ -75,7 +86,7 @@ namespace Xamarin.Android.Build
 			}
 		}
 
-		static XmlDocument CreateConfig (XABuildPaths paths)
+		static void CreateConfig (XABuildPaths paths)
 		{
 			var xml = new XmlDocument ();
 			xml.Load (paths.MSBuildConfig);
@@ -87,7 +98,8 @@ namespace Xamarin.Android.Build
 			SetProperty (toolsets, "MSBuildToolsPath64", paths.MSBuildBin);
 			SetProperty (toolsets, "MSBuildExtensionsPath", paths.MSBuildExtensionsPath);
 			SetProperty (toolsets, "MSBuildExtensionsPath32", paths.MSBuildExtensionsPath);
-			SetProperty (toolsets, "RoslynTargetsPath", Path.Combine (paths.MSBuildBin, "Roslyn"));
+			if (!string.IsNullOrEmpty (paths.RoslynTargetsPath))
+				SetProperty (toolsets, "RoslynTargetsPath", paths.RoslynTargetsPath);
 			SetProperty (toolsets, "NuGetProps", paths.NuGetProps);
 			SetProperty (toolsets, "NuGetTargets", paths.NuGetTargets);
 			SetProperty (toolsets, "NuGetRestoreTargets", paths.NuGetRestoreTargets);
@@ -106,13 +118,14 @@ namespace Xamarin.Android.Build
 				}
 			}
 
+			Directory.CreateDirectory (paths.MSBuildTempPath);
+			File.WriteAllText (paths.MSBuildExeTempPath, ""); // File just has to *exist*
 			xml.Save (paths.XABuildConfig);
 
 			if (Directory.Exists (paths.MSBuildSdksPath)) {
 				Environment.SetEnvironmentVariable ("MSBuildSDKsPath", paths.MSBuildSdksPath, EnvironmentVariableTarget.Process);
 			}
 			Environment.SetEnvironmentVariable ("MSBUILD_EXE_PATH", paths.MSBuildExeTempPath, EnvironmentVariableTarget.Process);
-			return xml;
 		}
 
 		/// <summary>
@@ -131,6 +144,21 @@ namespace Xamarin.Android.Build
 				property.SetAttribute ("name", name);
 				property.SetAttribute ("value", value);
 				toolsets.PrependChild (property);
+			}
+		}
+
+		static void CreateSdkResolverConfig (XABuildPaths paths)
+		{
+			if (string.IsNullOrEmpty (paths.SdkResolverConfigPath) || string.IsNullOrEmpty (paths.NuGetSdkResolverPath))
+				return;
+			var dir = Path.GetDirectoryName (paths.SdkResolverConfigPath);
+			Directory.CreateDirectory (dir);
+			using (var writer = File.CreateText (paths.SdkResolverConfigPath)) {
+				writer.WriteLine ("<SdkResolver>");
+				writer.Write ("\t<Path>");
+				writer.Write (paths.NuGetSdkResolverPath);
+				writer.WriteLine ("</Path>");
+				writer.WriteLine ("</SdkResolver>");
 			}
 		}
 	}

@@ -66,23 +66,15 @@ namespace Xamarin.Android.Tasks
 				var srcClassRef = new CodeTypeReferenceExpression (
 					new CodeTypeReference (primary_name + (isNestedSrc ? '.' : '_') + type.Name, CodeTypeReferenceOptions.GlobalReference));
 				// destination language may not support nested types, but they should take care of such types by themselves.
+				var typeFullName = type.FullName.Replace ('/', '.');
 				var dstClassRef = new CodeTypeReferenceExpression (
-					new CodeTypeReference (type.FullName.Replace ('/', '.'), CodeTypeReferenceOptions.GlobalReference));
+					new CodeTypeReference (typeFullName, CodeTypeReferenceOptions.GlobalReference));
 				foreach (var field in type.Fields) {
 					var dstField = new CodeFieldReferenceExpression (dstClassRef, field.Name);
 					var srcField = new CodeFieldReferenceExpression (srcClassRef, field.Name);
 					var fieldName = CreateIdentifier (type.Name, field.Name);
 					if (!resourceFields.Contains (fieldName)) {
-						Log.LogWarning (subcategory: null,
-							warningCode: "XA0106",
-							helpKeyword: null,
-							file: null,
-							lineNumber: 0,
-							columnNumber: 0,
-							endLineNumber: 0,
-							endColumnNumber: 0,
-							message: $"Skipping {fieldName}. Please check that your Nuget Package versions are compatible."
-						);
+						Log.LogDebugMessage ($"Value not found for {typeFullName}.{field.Name}, skipping...");
 						continue;
 					}
 					// This simply assigns field regardless of whether it is int or int[].

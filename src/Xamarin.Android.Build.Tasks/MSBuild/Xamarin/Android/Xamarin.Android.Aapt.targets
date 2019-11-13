@@ -1,0 +1,96 @@
+<!--
+***********************************************************************************************
+Xamarin.Android.Aapt.targets
+
+WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and have
+  created a backup copy.  Incorrect changes to this file will make it
+  impossible to load or build your projects from the command-line or the IDE.
+
+This file imports the version- and platform-specific targets for the project importing
+this file. This file also defines targets to produce an error if the specified targets
+file does not exist, but the project is built anyway (command-line or IDE build).
+
+Copyright (C) 2019  Microsoft Corporation. All rights reserved.
+***********************************************************************************************
+-->
+
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+<Target Name="_UpdateAndroidResgenAapt"
+    Condition="'$(_AndroidUseAapt2)' != 'True'">
+
+  <!-- Change cases so we support mixed case resource names -->
+  <ConvertResourcesCases
+      Condition="'$(_AndroidUseAapt2)' != 'True'"
+      ResourceDirectories="$(MonoAndroidResDirIntermediate);@(LibraryResourceDirectories)"
+      ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
+      AcwMapFile="$(_AcwMapFile)"
+      CustomViewMapFile="$(_CustomViewMapFile)"
+      AndroidConversionFlagFile="$(_AndroidResgenFlagFile)"
+  />
+
+  <!-- Run aapt to generate R.java -->
+  <Aapt
+      Condition="'$(_AndroidResourceDesignerFile)' != '' And '$(_AndroidUseAapt2)' != 'True'"
+      ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
+      OutputImportDirectory="$(_AndroidLibrayProjectIntermediatePath)"
+      UseShortFileNames="$(UseShortFileNames)"
+      JavaPlatformJarPath="$(JavaPlatformJarPath)"
+      ManifestFiles="$(ResgenTemporaryDirectory)\AndroidManifest.xml"
+      PackageName="$(_AndroidPackage)"
+      ApplicationName="$(_AndroidPackage)"
+      ResourceDirectory="$(MonoAndroidResDirIntermediate)"
+      JavaDesignerOutputDirectory="$(ResgenTemporaryDirectory)"
+      ResourceOutputFile="$(ResgenTemporaryDirectory)\resources.apk"
+      ExtraPackages="$(AaptExtraPackages)"
+      AdditionalResourceDirectories="@(LibraryResourceDirectories)"
+      LibraryProjectJars="@(ExtractedJarImports)"
+      ExtraArgs="$(AndroidResgenExtraArgs)"
+      ToolPath="$(AaptToolPath)"
+      ToolExe="$(AaptToolExe)"
+      ApiLevel="$(_AndroidTargetSdkVersion)"
+      AndroidUseLatestPlatformSdk="$(AndroidUseLatestPlatformSdk)"
+      ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
+      AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
+      YieldDuringToolExecution="$(YieldDuringToolExecution)"
+      ExplicitCrunch="$(AndroidExplicitCrunch)"
+      SupportedAbis="@(_BuildTargetAbis)"
+      ResourceSymbolsTextFileDirectory="$(IntermediateOutputPath)"
+      ContinueOnError="$(DesignTimeBuild)"
+  />
+</Target>
+<Target Name="_CreateBaseApkWithAapt"
+    Condition="'$(_AndroidUseAapt2)' != 'True'">
+  <Aapt
+     Condition="'$(_AndroidUseAapt2)' != 'True'"
+     ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
+     OutputImportDirectory="$(_AndroidLibrayProjectIntermediatePath)"
+     UseShortFileNames="$(UseShortFileNames)"
+     JavaPlatformJarPath="$(JavaPlatformJarPath)"
+     ManifestFiles="$(IntermediateOutputPath)android\AndroidManifest.xml"
+     ResourceDirectory="$(MonoAndroidResDirIntermediate)"
+     JavaDesignerOutputDirectory="$(AaptTemporaryDirectory)"
+     ResourceOutputFile="$(_PackagedResources)"
+     ExtraPackages="$(AaptExtraPackages)"
+     AdditionalResourceDirectories="@(LibraryResourceDirectories)"
+     ExtraArgs="$(AndroidResgenExtraArgs)"
+     PackageName="$(_AndroidPackage)"
+     ApplicationName="$(_AndroidPackage)"
+     UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
+     AssetDirectory="$(MonoAndroidAssetsDirIntermediate)"
+     ToolPath="$(AaptToolPath)"
+     ToolExe="$(AaptToolExe)"
+     ApiLevel="$(_AndroidTargetSdkVersion)"
+     AndroidUseLatestPlatformSdk="$(AndroidUseLatestPlatformSdk)"
+     ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
+     AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
+     SupportedAbis="@(_BuildTargetAbis)"
+     CreatePackagePerAbi="$(AndroidCreatePackagePerAbi)"
+     YieldDuringToolExecution="$(YieldDuringToolExecution)"
+     ExplicitCrunch="$(AndroidExplicitCrunch)"
+     VersionCodePattern="$(AndroidVersionCodePattern)"
+     VersionCodeProperties="$(AndroidVersionCodeProperties)"
+     AndroidSdkPlatform="$(_AndroidApiLevel)"
+  />
+</Target>
+</Project>

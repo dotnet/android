@@ -15,8 +15,10 @@ namespace Xamarin.Android.Tasks
 	/// - Calculate ApiLevel and ApiLevelName
 	/// - Find the paths of various Android tooling that other tasks need to call
 	/// </summary>
-	public class ResolveAndroidTooling : Task
+	public class ResolveAndroidTooling : AndroidTask
 	{
+		public override string TaskPrefix => "RAT";
+
 		public string AndroidSdkPath { get; set; }
 
 		public string AndroidSdkBuildToolsVersion { get; set; }
@@ -28,6 +30,8 @@ namespace Xamarin.Android.Tasks
 		public bool UseLatestAndroidPlatformSdk { get; set; }
 
 		public bool AotAssemblies { get; set; }
+
+		public bool AndroidApplication { get; set; } = true;
 
 		[Output]
 		public string TargetFrameworkVersion { get; set; }
@@ -65,6 +69,9 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public string Aapt2Version { get; set; }
 
+		[Output]
+		public string Aapt2ToolPath { get; set; }
+
 		static readonly bool IsWindows = Path.DirectorySeparatorChar == '\\';
 		static readonly string ZipAlign = IsWindows ? "zipalign.exe" : "zipalign";
 		static readonly string Aapt = IsWindows ? "aapt.exe" : "aapt";
@@ -73,7 +80,7 @@ namespace Xamarin.Android.Tasks
 		static readonly string Lint = IsWindows ? "lint.bat" : "lint";
 		static readonly string ApkSigner = "apksigner.jar";
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			string toolsZipAlignPath = Path.Combine (AndroidSdkPath, "tools", ZipAlign);
 			bool findZipAlign = (string.IsNullOrEmpty (ZipAlignPath) || !Directory.Exists (ZipAlignPath)) && !File.Exists (toolsZipAlignPath);
@@ -131,7 +138,14 @@ namespace Xamarin.Android.Tasks
 			ApkSignerJar = Path.Combine (AndroidSdkBuildToolsBinPath, "lib", ApkSigner);
 			AndroidUseApkSigner = File.Exists (ApkSignerJar);
 
-			bool aapt2Installed = File.Exists (Path.Combine (AndroidSdkBuildToolsBinPath, Aapt2));
+			if (string.IsNullOrEmpty (Aapt2ToolPath)) {
+				var osBinPath = MonoAndroidHelper.GetOSBinPath ();
+				var aapt2 = Path.Combine (osBinPath, Aapt2);
+				if (File.Exists (aapt2))
+					Aapt2ToolPath = osBinPath;
+			}
+
+			bool aapt2Installed = !string.IsNullOrEmpty (Aapt2ToolPath) && File.Exists (Path.Combine (Aapt2ToolPath, Aapt2));
 			if (aapt2Installed && AndroidUseAapt2) {
 				if (!GetAapt2Version ()) {
 					AndroidUseAapt2 = false;
@@ -185,11 +199,9 @@ namespace Xamarin.Android.Tasks
 			}
 
 			int apiLevel;
-			if (int.TryParse (AndroidApiLevel, out apiLevel)) {
+			if (AndroidApplication && int.TryParse (AndroidApiLevel, out apiLevel)) {
 				if (apiLevel < 26)
-					Log.LogCodedWarning ("XA0113", $"Google Play requires that new applications must use a TargetFrameworkVersion of v8.0 (API level 26) or above. You are currently targeting {TargetFrameworkVersion} (API level {AndroidApiLevel}).");
-				if (apiLevel < 26)
-					Log.LogCodedWarning ("XA0114", $"Google Play requires that application updates must use a TargetFrameworkVersion of v8.0 (API level 26) or above. You are currently targeting {TargetFrameworkVersion} (API level {AndroidApiLevel}).");
+					Log.LogCodedWarning ("XA0113", $"Google Play requires that new applications and updates must use a TargetFrameworkVersion of v8.0 (API level 26) or above. You are currently targeting {TargetFrameworkVersion} (API level {AndroidApiLevel}).");
 				if (apiLevel < 19)
 					Log.LogCodedWarning ("XA0117", $"The TargetFrameworkVersion {TargetFrameworkVersion} is deprecated. Please update it to be v4.4 or higher.");
 			}
@@ -224,7 +236,17 @@ namespace Xamarin.Android.Tasks
 		bool GetAapt2Version ()
 		{
 			var sb = new StringBuilder ();
-			var aapt2Tool = Path.Combine (AndroidSdkBuildToolsBinPath, Aapt2);
+			var aapt2Tool = Path.Combine (Aapt2ToolPath, Aapt2);
+
+			// Try to use a cached value for Aapt2Version
+			var key = ($"{nameof (ResolveAndroidTooling)}.{nameof (Aapt2Version)}", aapt2Tool);
+			var cached = BuildEngine4.GetRegisteredTaskObject (key, RegisteredTaskObjectLifetime.AppDomain) as string;
+			if (!string.IsNullOrEmpty (cached)) {
+				Log.LogDebugMessage ($"Using cached value for {nameof (Aapt2Version)}: {cached}");
+				Aapt2Version = cached;
+				return true;
+			}
+
 			try {
 				MonoAndroidHelper.RunProcess (aapt2Tool, "version", (s, e) => {
 					if (!string.IsNullOrEmpty (e.Data))
@@ -243,6 +265,7 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ($"`{aapt2Tool} version` returned: ```{versionInfo}```");
 			if (versionNumberMatch.Success && Version.TryParse (versionNumberMatch.Groups ["version"]?.Value.Replace (":", "."), out Version versionNumber)) {
 				Aapt2Version = versionNumber.ToString ();
+				BuildEngine4.RegisterTaskObject (key, Aapt2Version, RegisteredTaskObjectLifetime.AppDomain, allowEarlyCollection: false);
 				return true;
 			}
 			return false;

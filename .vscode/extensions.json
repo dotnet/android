@@ -1,0 +1,9 @@
+{
+    "recommendations": [
+      "ms-vscode.csharp",
+      "ms-vscode.cpptools",
+      "ms-vscode.mono-debug",
+      "wghats.vscode-nxunit-test-adapter",
+      "visualstudioexptteam.vscodeintellicode",
+    ]
+}

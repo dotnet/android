@@ -2,7 +2,7 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
   <Import Project="..\..\build-tools\scripts\XAVersionInfo.targets" />
-  <Import Project="Mono.Android.projitems" />
+  <Import Project="..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems" />
   <ItemGroup>
     <Compile Include="$(IntermediateOutputPath)AssemblyInfo.cs" />
   </ItemGroup>
@@ -48,7 +48,7 @@
       Inputs="..\..\bin\Build$(Configuration)\jnienv-gen.exe"
       Outputs="Android.Runtime\JNIEnv.g.cs">
     <Exec
-        Command="$(ManagedRuntime) ..\..\bin\Build$(Configuration)\jnienv-gen.exe -o Android.Runtime\JNIEnv.g.cs --use-java-interop"
+        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) ..\..\bin\Build$(Configuration)\jnienv-gen.exe -o Android.Runtime\JNIEnv.g.cs --use-java-interop"
     />
     <Touch Files="Android.Runtime\JNIEnv.g.cs" />
   </Target>
@@ -69,7 +69,7 @@
       <_Out>-o "$(IntermediateOutputPath)mcw\api.xml"</_Out>
     </PropertyGroup>
     <Exec
-        Command="$(ManagedRuntime) $(ApiMerge) $(_Out) $(_Glob) $(_Profiles) $(_LastProfile)"
+        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(ApiMerge) $(_Out) $(_Glob) $(_Profiles) $(_LastProfile)"
     />
   </Target>
   <Target Name="_GenerateBinding"
@@ -92,12 +92,13 @@
       <_TypeMap>--type-map-report=$(IntermediateOutputPath)mcw\type-mapping.txt</_TypeMap>
       <_Api>$(IntermediateOutputPath)mcw\api.xml</_Api>
       <_Dirs>--enumdir=$(IntermediateOutputPath)mcw</_Dirs>
+      <_FullIntermediateOutputPath>$([System.IO.Path]::GetFullPath('$(IntermediateOutputPath)'))</_FullIntermediateOutputPath>
     </PropertyGroup>
     <Exec
-        Command="$(ManagedRuntime) $(Generator) $(_GenFlags) $(_ApiLevel) $(_Out) $(_Codegen) $(_Fixup) $(_Enums1) $(_Enums2) $(_Versions) $(_Annotations) $(_Assembly) $(_TypeMap) $(_Dirs) $(_Api)"
+        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(Generator) $(_GenFlags) $(_ApiLevel) $(_Out) $(_Codegen) $(_Fixup) $(_Enums1) $(_Enums2) $(_Versions) $(_Annotations) $(_Assembly) $(_TypeMap) $(_Dirs) $(_Api)"
     />
     <ItemGroup>
-      <Compile Include="$(IntermediateOutputPath)mcw\**\*.cs" />
+      <Compile Include="$(_FullIntermediateOutputPath)\mcw\**\*.cs" KeepDuplicates="False" />
     </ItemGroup>
     <XmlPeek
         Namespaces="&lt;Namespace Prefix='msbuild' Uri='http://schemas.microsoft.com/developer/msbuild/2003' /&gt;"
@@ -133,7 +134,7 @@
   </Target>
   <Target Name="_GenerateAndroidApiInfo"
       BeforeTargets="_GenerateFrameworkList"
-      Inputs="$(MSBuildProjectFullPath);$(MSBuildThisFileDirectory)Mono.Android.projitems"
+      Inputs="$(MSBuildProjectFullPath);..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems"
       Outputs="$(OutputPath)AndroidApiInfo.xml">
    <MakeDir Directories="$(OutputPath)" />
    <ItemGroup>

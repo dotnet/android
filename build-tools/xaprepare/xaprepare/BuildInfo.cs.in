@@ -1,0 +1,13 @@
+namespace Xamarin.Android.Prepare
+{
+	static class BuildPaths
+	{
+		public const string XamarinAndroidSourceRoot = @"@XA_SOURCE_ROOT@";
+		public const string XAPrepareSourceDir = @"@XA_PREPARE_SOURCE@";
+	}
+
+	partial class BuildInfo
+	{
+		public const string XAVersion = "@XA_PRODUCT_VERSION@";
+	}
+}

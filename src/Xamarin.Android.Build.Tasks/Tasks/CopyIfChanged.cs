@@ -14,8 +14,10 @@ namespace Xamarin.Android.Tasks
 	// when it hasn't actually changed, the user will get a "Reload?"
 	// prompt in IDEs, so we only want to copy the file if there is
 	// an actual change.
-	public class CopyIfChanged : Task
+	public class CopyIfChanged : AndroidTask
 	{
+		public override string TaskPrefix => "CIC";
+
 		[Required]
 		public ITaskItem[] SourceFiles { get; set; }
 
@@ -27,32 +29,28 @@ namespace Xamarin.Android.Tasks
 
 		private List<ITaskItem> modifiedFiles = new List<ITaskItem>();
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
-			Log.LogDebugMessage ("CopyIfChanged Task");
-			Log.LogDebugTaskItems ("  SourceFiles: {0}", SourceFiles);
-			Log.LogDebugTaskItems ("  DestinationFiles: {0}", DestinationFiles);
-
 			if (SourceFiles.Length != DestinationFiles.Length)
 				throw new ArgumentException ("source and destination count mismatch");
 
 			for (int i = 0; i < SourceFiles.Length; i++) {
-				var src = SourceFiles [i].ItemSpec;
-				if (!File.Exists (src))
-					continue;
-				var dest = DestinationFiles [i].ItemSpec;
-				var srcmodifiedDate = File.GetLastWriteTimeUtc (src);
-				var dstmodifiedDate = File.Exists (dest) ? File.GetLastWriteTimeUtc (dest) : srcmodifiedDate;
-				if (dstmodifiedDate > srcmodifiedDate) {
-					Log.LogDebugMessage ($"  Skipping {src} its up to date");
+				var src = new FileInfo (SourceFiles [i].ItemSpec);
+				if (!src.Exists) {
+					Log.LogDebugMessage ($"  Skipping {src} it does not exist");
 					continue;
 				}
-				if (!MonoAndroidHelper.CopyIfChanged (src, dest)) {
+				var dest = new FileInfo (DestinationFiles [i].ItemSpec);
+				if (dest.Exists && dest.LastWriteTimeUtc > src.LastWriteTimeUtc && dest.Length == src.Length) {
+					Log.LogDebugMessage ($"  Skipping {src} it is up to date");
+					continue;
+				}
+				if (!MonoAndroidHelper.CopyIfChanged (src.FullName, dest.FullName)) {
 					Log.LogDebugMessage ($"  Skipping {src} it was not changed.");
-					MonoAndroidHelper.SetWriteable (dest);
+					MonoAndroidHelper.SetWriteable (dest.FullName);
 					continue;
 				}
-				modifiedFiles.Add (new TaskItem (dest));
+				modifiedFiles.Add (new TaskItem (dest.FullName));
 			}
 
 			ModifiedFiles = modifiedFiles.ToArray ();

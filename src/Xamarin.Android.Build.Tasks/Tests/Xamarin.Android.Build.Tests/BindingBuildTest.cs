@@ -19,9 +19,19 @@ namespace Xamarin.Android.Build.Tests
 		};
 
 		[Test]
-		[TestCaseSource ("ClassParseOptions")]
+		[TestCaseSource (nameof (ClassParseOptions))]
 		public void BuildBasicBindingLibrary (string classParser)
 		{
+			var targets = new List<string> {
+				"_ExtractJavaDocJars",
+				"ExportJarToXml",
+				"GenerateBindings",
+				"ResolveLibraryProjects",
+				"BuildDocumentation",
+				"_ResolveLibraryProjectImports",
+				"CoreCompile",
+			};
+
 			var proj = new XamarinAndroidBindingProject () {
 				IsRelease = true,
 			};
@@ -42,11 +52,16 @@ namespace Xamarin.Android.Build.Tests
 				foreach (var property in properties) {
 					Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, property + " = "), $"$({property}) should be set!");
 				}
+
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second build should succeed");
+				foreach (var target in targets) {
+					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped on second build!");
+				}
 			}
 		}
 
 		[Test]
-		[TestCaseSource ("ClassParseOptions")]
+		[TestCaseSource (nameof (ClassParseOptions))]
 		public void CleanBasicBindingLibrary (string classParser)
 		{
 			var proj = new XamarinAndroidBindingProject () {
@@ -59,17 +74,21 @@ namespace Xamarin.Android.Build.Tests
 			using (var b = CreateDllBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded");
-				var fileCount = Directory.GetFiles (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath), "*", SearchOption.AllDirectories)
-					.Where (x => !Path.GetFileName (x).StartsWith ("TemporaryGeneratedFile")).Count ();
+				var ignoreFiles = new string [] {
+					"TemporaryGeneratedFile",
+					"FileListAbsolute.txt",
+				};
+				var files = Directory.GetFiles (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath), "*", SearchOption.AllDirectories)
+					.Where (x => !ignoreFiles.Any (i => !Path.GetFileName (x).Contains (i)));
 				Assert.AreEqual (0, Directory.GetDirectories (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath), "*", SearchOption.AllDirectories).Length,
 					"All directories in {0} should have been removed", proj.IntermediateOutputPath);
-				Assert.AreEqual (0, fileCount,
-					"All files in {0} should have been removed", proj.IntermediateOutputPath);
+				Assert.AreEqual (0, files.Count (), "{0} should be empty. Found {1}",
+					proj.IntermediateOutputPath, string.Join (Environment.NewLine, files));
 			}
 		}
 
 		[Test]
-		[TestCaseSource ("ClassParseOptions")]
+		[TestCaseSource (nameof (ClassParseOptions))]
 		public void BuildAarBindigLibraryStandalone (string classParser)
 		{
 			var proj = new XamarinAndroidBindingProject () {
@@ -87,14 +106,14 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[TestCaseSource ("ClassParseOptions")]
+		[TestCaseSource (nameof (ClassParseOptions))]
 		public void BuildAarBindigLibraryWithNuGetPackageOfJar (string classParser)
 		{
 			var proj = new XamarinAndroidBindingProject () {
 				UseLatestPlatformSdk = true,
 				IsRelease = true,
 			};
-			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_22_1_1_1);
+			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
 			proj.Jars.Add (new AndroidItem.LibraryProjectZip ("Jars\\android-crop-1.0.1.aar") {
 				WebContent = "https://jcenter.bintray.com/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar"
 			});
@@ -106,13 +125,14 @@ namespace Xamarin.Android.Build.Tests
 					<attr path=""/api/package[@name='com.soundcloud.android.crop']/class[@name='RotateBitmap']"" name='visibility'>public</attr>
 				</metadata>";
 			proj.AndroidClassParser = classParser;
-			var b = CreateDllBuilder (Path.Combine ("temp", TestName));
-			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-			b.Dispose ();
+			using (var b = CreateDllBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			}
 		}
 
 		[Test]
-		[TestCaseSource ("ClassParseOptions")]
+		[TestCaseSource (nameof (ClassParseOptions))]
+		[NonParallelizable]
 		public void BuildLibraryZipBindigLibraryWithAarOfJar (string classParser)
 		{
 			var proj = new XamarinAndroidBindingProject () {
@@ -120,7 +140,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = true,
 			};
 			proj.AndroidClassParser = classParser;
-			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_22_1_1_1);
+			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
 			proj.Jars.Add (new AndroidItem.LibraryProjectZip ("Jars\\aFileChooserBinaries.zip") {
 				WebContentFileNameFromAzure = "aFileChooserBinaries.zip"
 			});
@@ -164,9 +184,9 @@ namespace Com.Ipaulpro.Afilechooser {
 	}                                                   
 }"
 			});
-			var b = CreateDllBuilder (Path.Combine ("temp", TestName), false, false);
-			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-			b.Dispose ();
+			using (var b = CreateDllBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			}
 		}
 
 		[Test]
@@ -395,7 +415,7 @@ namespace Foo {
 	<attr path=""/api/package[@name='com.actionbarsherlock.view']"" name=""managedName"">Xamarin.ActionbarSherlockBinding.Views</attr>
 </metadata>",
 			};
-			binding.PackageReferences.Add (KnownPackages.AndroidSupportV4_22_1_1_1);
+			binding.PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
 			using (var bindingBuilder = CreateDllBuilder (Path.Combine ("temp", "RemoveEventHandlerResolution", "Binding"))) {
 				Assert.IsTrue (bindingBuilder.Build (binding), "binding build should have succeeded");
 			}
@@ -462,7 +482,7 @@ AAAA==";
 		}
 
 		[Test]
-		[TestCaseSource ("ClassParseOptions")]
+		[TestCaseSource (nameof (ClassParseOptions))]
 		public void DesignTimeBuild (string classParser)
 		{
 			var proj = new XamarinAndroidBindingProject {
@@ -488,6 +508,64 @@ AAAA==";
 					var typeName = "Com.Balysv.Material.Drawable.Menu.MaterialMenuView";
 					Assert.IsTrue (assembly.MainModule.Types.Any (t => t.FullName == typeName), $"Type `{typeName}` should exist!");
 				}
+			}
+		}
+
+		[Test]
+		[TestCaseSource (nameof (ClassParseOptions))]
+		public void BindDefaultInterfaceMethods (string classParser)
+		{
+			var proj = new XamarinAndroidBindingProject {
+				IsRelease = true,
+			};
+
+			// The sources for the .jar is in the jar itself.
+			string classesJarBase64 = @"
+UEsDBBQACAgIANWk6UwAAAAAAAAAAAAAAAAJAAQATUVUQS1JTkYv/soAAAMAUEsHCAAAAAACAAAAAAA
+AAFBLAwQUAAgICADVpOlMAAAAAAAAAAAAAAAAFAAAAE1FVEEtSU5GL01BTklGRVNULk1G803My0xLLS
+7RDUstKs7Mz7NSMNQz4OVyLkpNLElN0XWqBAlY6BnEG5obKmj4FyUm56QqOOcXFeQXJZYA1WvycvFyA
+QBQSwcIFGFrLUQAAABFAAAAUEsDBAoAAAgAAK2k6UwAAAAAAAAAAAAAAAAEAAAAY29tL1BLAwQKAAAI
+AACtpOlMAAAAAAAAAAAAAAAADAAAAGNvbS94YW1hcmluL1BLAwQKAAAIAACwpOlMAAAAAAAAAAAAAAA
+AEQAAAGNvbS94YW1hcmluL3Rlc3QvUEsDBBQACAgIAJmk6UwAAAAAAAAAAAAAAAAuAAAAY29tL3hhbW
+FyaW4vdGVzdC9EZWZhdWx0SW50ZXJmYWNlTWV0aG9kcy5jbGFzc3WOvU7DMBSFjxsnKeWnXUE8QLrgh
+ScAhBSJnwHE7qQ3JVUSC8dGFc/EwsrAA/BQiOuqLKnw8Pn4+LuWv38+vwCcY5biKMVUIKqMYWbzXEBe
+mgUJTG/qju58W5B91EXDTbIkd6HtX3jj0G+DzPL5E28v3q8FJg/G25Ku6zB1ekWV9o3LO0e20iXdkns
+2i/5spV+1QFaaVq11q23dKUe9U//4ArMwoRrdLdV9saLSJQICI4QVc4ogmTGfThBugFH0zuR/MpNNE7
+x015NDL3C868VDL2XuYbL1joMTjI+BNpYC+/xcaA820uEvUEsHCIw1aijpAAAAhQEAAFBLAwQUAAgIC
+ACYpOlMAAAAAAAAAAAAAAAAHAAAAERlZmF1bHRJbnRlcmZhY2VNZXRob2RzLmphdmF1zLEOwiAQBuCd
+p7hRl0Zd2YyLgw9xwlGJFCocTWPTdxdSHarxxv///utR3bElUKFrRuwwWt8wJZZC9PnqrALrmaJBRXA
+ig9nx+RNciG9BJzEJKKeXtnowIcBmCxNE4hw97CTMP6glPmJcuf1f91y5w7cbgtWQ3rCOBnSZymJhNX
+nkPJYnUsziBVBLBwgzfz2miQAAAPUAAABQSwECFAAUAAgICADVpOlMAAAAAAIAAAAAAAAACQAEAAAAA
+AAAAAAAAAAAAAAATUVUQS1JTkYv/soAAFBLAQIUABQACAgIANWk6UwUYWstRAAAAEUAAAAUAAAAAAAA
+AAAAAAAAAD0AAABNRVRBLUlORi9NQU5JRkVTVC5NRlBLAQIKAAoAAAgAAK2k6UwAAAAAAAAAAAAAAAA
+EAAAAAAAAAAAAAAAAAMMAAABjb20vUEsBAgoACgAACAAAraTpTAAAAAAAAAAAAAAAAAwAAAAAAAAAAA
+AAAAAA5QAAAGNvbS94YW1hcmluL1BLAQIKAAoAAAgAALCk6UwAAAAAAAAAAAAAAAARAAAAAAAAAAAAA
+AAAAA8BAABjb20veGFtYXJpbi90ZXN0L1BLAQIUABQACAgIAJmk6UyMNWoo6QAAAIUBAAAuAAAAAAAA
+AAAAAAAAAD4BAABjb20veGFtYXJpbi90ZXN0L0RlZmF1bHRJbnRlcmZhY2VNZXRob2RzLmNsYXNzUEs
+BAhQAFAAICAgAmKTpTDN/PaaJAAAA9QAAABwAAAAAAAAAAAAAAAAAgwIAAERlZmF1bHRJbnRlcmZhY2
+VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
+";
+			proj.Jars.Add (new AndroidItem.EmbeddedJar ("dim.jar") {
+				BinaryContent = () => Convert.FromBase64String (classesJarBase64)
+			});
+
+			proj.AndroidClassParser = classParser;
+
+			proj.SetProperty ("_EnableInterfaceMembers", "True");
+			proj.SetProperty ("LangVersion", "preview");
+
+			using (var b = CreateDllBuilder (Path.Combine ("temp", TestName), false, false)) {
+				proj.NuGetRestore (b.ProjectDirectory);
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+				string asmpath = Path.GetFullPath (Path.Combine (Path.GetDirectoryName (new Uri (GetType ().Assembly.CodeBase).LocalPath), b.ProjectDirectory, b.Output.OutputPath, (proj.AssemblyName ?? proj.ProjectName) + ".dll"));
+				Assert.IsTrue (File.Exists (asmpath), "assembly does not exist");
+
+				var cs = b.Output.GetIntermediaryAsText (Path.Combine ("generated", "src", "Com.Xamarin.Test.IDefaultInterfaceMethods.cs"));
+				Assert.IsTrue (cs.Contains ("int Quux ();"), "Quux not generated.");
+				Assert.IsTrue (cs.Contains ("virtual unsafe int Foo ()"), "Foo not generated.");
+				Assert.IsTrue (cs.Contains ("virtual unsafe int Bar {"), "Bar not generated.");
+				Assert.IsTrue (cs.Contains ("set {"), "(Baz) setter not generated.");
 			}
 		}
 	}

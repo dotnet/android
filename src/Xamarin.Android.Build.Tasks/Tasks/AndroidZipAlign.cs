@@ -1,19 +1,12 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks
 {
-	public class AndroidZipAlign : AndroidToolTask
+	public class AndroidZipAlign : AndroidRunToolTask
 	{
-		public AndroidZipAlign ()
-		{
-		}
+		public override string TaskPrefix => "AZA";
 
 		[Required]
 		public ITaskItem Source { get; set; }
@@ -34,20 +27,10 @@ namespace Xamarin.Android.Tasks
 		protected override string GenerateCommandLineCommands ()
 		{
 			string sourceFilename = Path.GetFileNameWithoutExtension (Source.ItemSpec);
-			if (sourceFilename.EndsWith (strSignedUnaligned))
+			if (sourceFilename.EndsWith (strSignedUnaligned, StringComparison.OrdinalIgnoreCase))
 				sourceFilename = sourceFilename.Remove (sourceFilename.Length - strSignedUnaligned.Length);
 			return string.Format ("-p {0} \"{1}\" \"{2}{3}{4}-Signed.apk\"",
 				Alignment, Source.ItemSpec, DestinationDirectory.ItemSpec, Path.DirectorySeparatorChar, sourceFilename);
-		}
-
-		public override bool Execute ()
-		{
-			Log.LogDebugMessage ("AndroidZipAlign Task");
-			Log.LogDebugMessage ("  Alignment: {0}", Alignment);
-			Log.LogDebugMessage ("  Source: {0}", Source.ItemSpec);
-			Log.LogDebugMessage ("  DestinationDirectory: {0}", DestinationDirectory.ItemSpec);
-
-			return base.Execute ();
 		}
 
 		protected override string GenerateFullPathToTool ()
@@ -58,6 +41,13 @@ namespace Xamarin.Android.Tasks
 		protected override string ToolName
 		{
 			get { return IsWindows ? "zipalign.exe" : "zipalign"; }
+		}
+
+		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
+		{
+			if (ExitCode != 0)
+				Log.LogCodedError (DefaultErrorCode, singleLine);
+			base.LogEventsFromTextOutput (singleLine, messageImportance);
 		}
 	}
 }

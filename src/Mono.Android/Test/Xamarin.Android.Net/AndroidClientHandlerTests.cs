@@ -79,7 +79,6 @@ namespace Xamarin.Android.NetTests {
 			Assert.AreEqual (4096, h.CookieContainer.MaxCookieSize, "#3b");
 			Assert.AreEqual (null, h.Credentials, "#4");
 			Assert.AreEqual (50, h.MaxAutomaticRedirections, "#5");
-			Assert.AreEqual (int.MaxValue, h.MaxRequestContentBufferSize, "#6");
 			Assert.IsFalse (h.PreAuthenticate, "#7");
 			Assert.IsNull (h.Proxy, "#8");
 			Assert.IsTrue (h.SupportsAutomaticDecompression, "#9");
@@ -105,13 +104,6 @@ namespace Xamarin.Android.NetTests {
 				h.MaxRequestContentBufferSize = -1;
 				Assert.Fail ("#2");
 			} catch (ArgumentOutOfRangeException) {
-			}
-
-			h.UseProxy = false;
-			try {
-				h.Proxy = new Proxy ();
-				Assert.Fail ("#3");
-			} catch (InvalidOperationException) {
 			}
 		}
 
@@ -151,7 +143,7 @@ namespace Xamarin.Android.NetTests {
 			try {
 				return connector ();
 			} catch (AggregateException ex) {
-				if (IgnoreIfConnectionFailed (ex.InnerException as WebException, out connectionFailed))
+				if (IgnoreIfConnectionFailed (ex, out connectionFailed))
 					return null;
 				throw;
 			}
@@ -163,10 +155,23 @@ namespace Xamarin.Android.NetTests {
 			try {
 				runner ();
 			} catch (AggregateException ex) {
-				if (IgnoreIfConnectionFailed (ex.InnerException as WebException, out connectionFailed))
+				if (IgnoreIfConnectionFailed (ex, out connectionFailed))
 					return;
 				throw;
 			}
+		}
+
+		bool IgnoreIfConnectionFailed (AggregateException aex, out bool connectionFailed)
+		{
+			if (IgnoreIfConnectionFailed (aex.InnerException as HttpRequestException, out connectionFailed))
+				return true;
+
+			return IgnoreIfConnectionFailed (aex.InnerException as WebException, out connectionFailed);
+		}
+
+		bool IgnoreIfConnectionFailed (HttpRequestException hrex, out bool connectionFailed)
+		{
+			return IgnoreIfConnectionFailed (hrex?.InnerException as WebException, out connectionFailed);
 		}
 
 		bool IgnoreIfConnectionFailed (WebException wex, out bool connectionFailed)
@@ -175,12 +180,16 @@ namespace Xamarin.Android.NetTests {
 			if (wex == null)
 				return false;
 
-			if (wex.Status != WebExceptionStatus.ConnectFailure)
-				return false;
+			switch (wex.Status) {
+				case WebExceptionStatus.ConnectFailure:
+				case WebExceptionStatus.NameResolutionFailure:
+				case WebExceptionStatus.Timeout:
+					connectionFailed = true;
+					Assert.Ignore ($"Ignoring network failure: {wex}");
+					return true;
+			}
 
-			connectionFailed = true;
-			Assert.Ignore ($"Failed to connect to server. {wex}");
-			return true;
+			return false;
 		}
 	}
 

@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
+using Xamarin.Android.Tools.VSWhere;
 
 namespace Xamarin.Android.Build
 {
@@ -48,9 +49,24 @@ namespace Xamarin.Android.Build
 		public string MSBuildBin { get; private set; }
 
 		/// <summary>
+		/// Temporary directory used for MSBUILD_EXE_PATH
+		/// </summary>
+		public string MSBuildTempPath { get; private set; }
+
+		/// <summary>
 		/// Temporary file used for MSBUILD_EXE_PATH
 		/// </summary>
 		public string MSBuildExeTempPath { get; private set; }
+
+		/// <summary>
+		/// Config file needed for Microsoft.Build.NuGetSdkResolver.dll to work
+		/// </summary>
+		public string SdkResolverConfigPath { get; private set; }
+
+		/// <summary>
+		/// Full path to the system Microsoft.Build.NuGetSdkResolver.dll
+		/// </summary>
+		public string NuGetSdkResolverPath { get; private set; }
 
 		/// <summary>
 		/// Path to MSBuild's App.config file
@@ -102,6 +118,13 @@ namespace Xamarin.Android.Build
 
 		public string NuGetRestoreTargets { get; private set; }
 
+		/// <summary>
+		/// The directory containing Microsoft.CSharp.Core.Targets
+		/// 
+		/// In VS 2017 and 2019, this would be: %VsInstallDir%\MSBuild\15.0\Bin\Roslyn
+		/// </summary>
+		public string RoslynTargetsPath { get; private set; }
+
 		public XABuildPaths ()
 		{
 			IsWindows                 = Environment.OSVersion.Platform == PlatformID.Win32NT;
@@ -110,43 +133,62 @@ namespace Xamarin.Android.Build
 			XABuildDirectory          = Path.GetDirectoryName (GetType ().Assembly.Location);
 			XamarinAndroidBuildOutput = Path.GetFullPath (Path.Combine (XABuildDirectory, ".."));
 
-			const string vsVersion    = "15.0";
 			string programFiles       = Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86);
 			string prefix             = Path.Combine (XamarinAndroidBuildOutput, "lib", "xamarin.android");
 
 			if (IsWindows) {
-				foreach (var edition in new [] { "Enterprise", "Professional", "Community", "BuildTools" }) {
-					var vsInstall = Path.Combine (programFiles, "Microsoft Visual Studio", "2017", edition);
-					if (Directory.Exists (vsInstall)) {
-						VsInstallRoot = vsInstall;
-						break;
-					}
-				}
-				if (VsInstallRoot == null)
-					VsInstallRoot = programFiles;
+				var instance = MSBuildLocator.QueryLatest ();
+				VsInstallRoot = instance.VisualStudioRootPath;
 
 				MSBuildPath              = Path.Combine (VsInstallRoot, "MSBuild");
-				MSBuildBin               = Path.Combine (MSBuildPath, vsVersion, "Bin");
+				MSBuildBin               = Path.GetDirectoryName (instance.MSBuildPath);
 				MSBuildConfig            = Path.Combine (MSBuildBin, "MSBuild.exe.config");
 				DotNetSdkPath            = FindLatestDotNetSdk (Path.Combine (Environment.GetEnvironmentVariable ("ProgramW6432"), "dotnet", "sdk"));
 				MSBuildSdksPath          = DotNetSdkPath ?? Path.Combine (MSBuildPath, "Sdks");
 				SystemFrameworks         = Path.Combine (programFiles, "Reference Assemblies", "Microsoft", "Framework");
-				SystemTargetsDirectories = new [] { Path.Combine (MSBuildPath, vsVersion), Path.Combine (MSBuildPath, "Microsoft") };
+				string msbuildDir        = Path.GetDirectoryName (MSBuildBin);
+				SystemTargetsDirectories = new [] { msbuildDir, Path.Combine (MSBuildPath, "Microsoft") };
 				SearchPathsOS            = "windows";
-				string nuget             = Path.Combine (MSBuildPath, "Microsoft", "NuGet", vsVersion);
+				string nuget             = Path.Combine (MSBuildPath, "Microsoft", "NuGet", "16.0");
+				if (!Directory.Exists (nuget)) {
+					nuget = Path.Combine (MSBuildPath, "Microsoft", "NuGet", "15.0");
+				}
 				NuGetProps               = Path.Combine (nuget, "Microsoft.NuGet.props");
 				NuGetTargets             = Path.Combine (nuget, "Microsoft.NuGet.targets");
-				NuGetRestoreTargets      = Path.Combine (VsInstallRoot, "Common7", "IDE", "CommonExtensions", "Microsoft", "NuGet", "NuGet.targets");
+				var nugetDirectory       = Path.Combine (VsInstallRoot, "Common7", "IDE", "CommonExtensions", "Microsoft", "NuGet");
+				NuGetRestoreTargets      = Path.Combine (nugetDirectory, "NuGet.targets");
+				NuGetSdkResolverPath     = Path.Combine (nugetDirectory, "Microsoft.Build.NuGetSdkResolver.dll");
 			} else {
+				string[] vsVersions       = new [] {"Current", "15.0"};
 				string mono              = IsMacOS ? "/Library/Frameworks/Mono.framework/Versions/Current/lib/mono" : "/usr/lib/mono";
 				string monoExternal      = IsMacOS ? "/Library/Frameworks/Mono.framework/External/" : "/usr/lib/mono";
 				MSBuildPath              = Path.Combine (mono, "msbuild");
-				MSBuildBin               = Path.Combine (MSBuildPath, vsVersion, "bin");
+
+				MSBuildBin = null;
+				foreach (string vsVersion in vsVersions) {
+					MSBuildBin = Path.Combine (MSBuildPath, vsVersion, "bin");
+					if (Directory.Exists (MSBuildBin))
+						break;
+				}
+				if (string.IsNullOrEmpty (MSBuildBin))
+					throw new InvalidOperationException ("Unable to locate MSBuild binaries directory");
+
 				MSBuildConfig            = Path.Combine (MSBuildBin, "MSBuild.dll.config");
 				DotNetSdkPath            = FindLatestDotNetSdk ("/usr/local/share/dotnet/sdk");
 				MSBuildSdksPath          = DotNetSdkPath ?? Path.Combine (MSBuildBin, "Sdks");
 				SystemFrameworks         = Path.Combine (mono, "xbuild-frameworks");
-				SystemTargetsDirectories = new [] { Path.Combine (mono, "xbuild", vsVersion), Path.Combine (mono, "xbuild", "Microsoft") };
+
+				var systemTargetDirs = new List <string> ();
+				foreach (string vsVersion in vsVersions) {
+					string xbuildDir = Path.Combine (mono, "xbuild", vsVersion);
+					if (!Directory.Exists (xbuildDir))
+						continue;
+					systemTargetDirs.Add (xbuildDir);
+				}
+				if (systemTargetDirs.Count == 0)
+					throw new InvalidOperationException ("Unable to locate xbuild directory");
+				systemTargetDirs.Add (Path.Combine (mono, "xbuild", "Microsoft"));
+				SystemTargetsDirectories = systemTargetDirs.ToArray ();
 				SearchPathsOS            = IsMacOS ? "osx" : "unix";
 
 				string nuget = Path.Combine (mono, "xbuild", "Microsoft", "NuGet");
@@ -155,16 +197,30 @@ namespace Xamarin.Android.Build
 					NuGetProps   = Path.Combine (nuget, "Microsoft.NuGet.props");
 				}
 				NuGetRestoreTargets = Path.Combine (MSBuildBin, "NuGet.targets");
+				NuGetSdkResolverPath = Path.Combine (MSBuildBin, "Microsoft.Build.NuGetSdkResolver.dll");
 				if (!File.Exists (NuGetRestoreTargets) && !string.IsNullOrEmpty (DotNetSdkPath)) {
 					NuGetRestoreTargets = Path.Combine (DotNetSdkPath, "..", "NuGet.targets");
+					NuGetSdkResolverPath = Path.Combine (DotNetSdkPath, "..", "Microsoft.Build.NuGetSdkResolver.dll");
 				}
 			}
 
 			FrameworksDirectory       = Path.Combine (prefix, "xbuild-frameworks");
 			MSBuildExtensionsPath     = Path.Combine (prefix, "xbuild");
 			MonoAndroidToolsDirectory = Path.Combine (prefix, "xbuild", "Xamarin", "Android");
-			MSBuildExeTempPath        = Path.GetTempFileName ();
+			MSBuildTempPath           = Path.Combine (Path.GetTempPath (), Path.GetRandomFileName ());
+			MSBuildExeTempPath        = Path.Combine (MSBuildTempPath, Path.GetRandomFileName ());
+			SdkResolverConfigPath     = Path.Combine (MSBuildTempPath, "SdkResolvers", "Microsoft.Build.NuGetSdkResolver", "Microsoft.Build.NuGetSdkResolver.xml");
 			XABuildConfig             = MSBuildExeTempPath + ".config";
+
+			var roslyn = Path.Combine (MSBuildBin, "Roslyn");
+			if (Directory.Exists (roslyn)) {
+				RoslynTargetsPath = roslyn;
+			} else {
+				//NOTE: this codepath happens with VS 2019, Roslyn is located in a 15.0 directory...
+				roslyn = Path.Combine (MSBuildPath, "15.0", "Bin", "Roslyn");
+				if (Directory.Exists (roslyn))
+					RoslynTargetsPath = roslyn;
+			}
 
 			//Android SDK and NDK
 			var pathsTargets = Path.Combine (XABuildDirectory, "..", "..", "..", "build-tools", "scripts", "Paths.targets");
@@ -224,15 +280,24 @@ namespace Xamarin.Android.Build
 			}
 		}
 
-		string FindLatestDotNetSdk(string dotNetPath)
+		string FindLatestDotNetSdk (string dotNetPath)
 		{
-			if (Directory.Exists(dotNetPath)) {
-				var directories = from dir in Directory.EnumerateDirectories (dotNetPath)
-				                  let version = GetVersionFromDirectory (dir)
-				                  where version != null
-				                  orderby version descending
-				                  select Path.Combine (dir, "Sdks");
-				return directories.FirstOrDefault ();
+			if (Directory.Exists (dotNetPath)) {
+				Version latest = new Version (0,0);
+				string Sdk = null;
+				foreach (var dir in Directory.EnumerateDirectories (dotNetPath)) {
+					var version = GetVersionFromDirectory (dir);
+					var sdksDir = Path.Combine (dir, "Sdks");
+					if (!Directory.Exists (sdksDir))
+						sdksDir = Path.Combine (dir, "bin", "Sdks");
+					if (version != null && version > latest) {
+						if (Directory.Exists (sdksDir) && File.Exists (Path.Combine (sdksDir, "Microsoft.NET.Sdk", "Sdk", "Sdk.props"))) {
+							latest = version;
+							Sdk = sdksDir;
+						}
+					}
+				}
+				return Sdk;
 			}
 			return null;
 		}

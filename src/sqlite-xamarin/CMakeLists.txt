@@ -4,6 +4,7 @@ project(libsqlite-xamarin C)
 
 include(CheckIncludeFiles)
 include(CheckCCompilerFlag)
+include("../../build-tools/cmake/xa_macros.cmake")
 
 if(NOT DEFINED SQLITE_LIBRARY_NAME)
   message(FATAL_ERROR "Please set the SQLITE_LIBRARY_NAME variable on command line (-DSQLITE_LIBRARY_NAME=base_library_name)")
@@ -20,6 +21,16 @@ endif()
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${SQLITE_OUTPUT_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${SQLITE_OUTPUT_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${SQLITE_OUTPUT_DIR})
+
+if (ANDROID_NDK_MAJOR GREATER 17)
+  # For some reason NDK 18 doesn't set this *required* macro...
+  add_definitions("-D__ANDROID_API__=${ANDROID_NATIVE_API_LEVEL}")
+endif()
+
+if (ANDROID_NDK_MAJOR LESS 20)
+  # This is missing from the older NDKs api-leve.h file
+  add_definitions("-D__ANDROID_API_Q__=29")
+endif()
 
 add_definitions("-DNO_ANDROID_FUNCS=1")
 add_definitions("-DNDEBUG=1")
@@ -55,40 +66,14 @@ endif()
 
 add_definitions("-Dfdatasync=fdatasync")
 
-if (NOT ANDROID_NDK_MAJOR OR ANDROID_NDK_MAJOR LESS 17)
+if (NOT ANDROID_NDK_MAJOR OR ANDROID_NDK_MAJOR LESS 20)
   add_definitions("-D__ANDROID_API_Q__=29")
 endif()
 
-macro(c_compiler_has_flag _flag)
-  check_c_compiler_flag(-${_flag} HAS_${_flag}_C)
-  if (HAS_${_flag}_C)
-    set(LOCAL_CMAKE_C_FLAGS "${LOCAL_CMAKE_C_FLAGS} -${_flag}")
-  endif()
-endmacro(c_compiler_has_flag)
-
-macro(linker_has_flag _flag)
-  set(CMAKE_REQUIRED_FLAGS "-${_flag}")
-  check_c_compiler_flag("" HAS_${_flag}_LINKER)
-  if(HAS_${_flag}_LINKER)
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -${_flag}")
-  endif()
-endmacro()
-
+set(DSO_SYMBOL_VISIBILITY "default")
+xa_common_prepare()
 # Don't put the leading '-' in options
-set(TEST_COMPILER_ARGS
-  fno-strict-aliasing
-  ffunction-sections
-  funswitch-loops
-  finline-limit=300
-  fstack-protector
-  Wa,--noexecstack
-  Wformat
-  Werror=format-security
-  Wall
-  Wno-unused-parameter
-  mindirect-branch=thunk-inline
-  mfunction-return=thunk-inline
-  )
+set(TEST_COMPILER_ARGS ${XA_COMPILER_FLAGS})
 
 if(CMAKE_BUILD_TYPE STREQUAL Debug)
   set(TEST_COMPILER_ARGS ${TEST_COMPILER_ARGS} ggdb3 fno-omit-frame-pointer)
@@ -102,24 +87,7 @@ foreach(arg ${TEST_COMPILER_ARGS})
   c_compiler_has_flag(${arg})
 endforeach(arg)
 
-set(TEST_LINKER_ARGS
-  Wl,-z,now
-  Wl,-z,relro
-  Wl,-z,noexecstack
-  Wl,--no-undefined
-  )
-
-if(MINGW)
-  set(TEST_LINKER_ARGS
-    ${TEST_LINKER_ARGS}
-    Wl,--export-all-symbols
-    )
-else()
-  set(TEST_LINKER_ARGS
-    ${TEST_LINKER_ARGS}
-    Wl,--export-dynamic
-    )
-endif()
+set(TEST_LINKER_ARGS ${XA_LINKER_ARGS})
 
 foreach(arg ${TEST_LINKER_ARGS})
   linker_has_flag(${arg})

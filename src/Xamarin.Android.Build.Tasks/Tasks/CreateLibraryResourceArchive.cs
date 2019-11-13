@@ -14,8 +14,10 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
-	public class CreateLibraryResourceArchive : Task
+	public class CreateLibraryResourceArchive : AndroidTask
 	{
+		public override string TaskPrefix => "CLR";
+
 		[Required]
 		public string OutputDirectory { get; set; }
 
@@ -35,22 +37,10 @@ namespace Xamarin.Android.Tasks
 		{
 		}
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			if (LibraryProjectPropertiesFiles.Length == 0 && LibraryProjectZipFiles.Length == 0)
 				return true;
-			
-			Log.LogDebugMessage ("CreateLibraryResourceArchive Task");
-			Log.LogDebugMessage ("  OutputDirectory: {0}", OutputDirectory);
-			Log.LogDebugMessage ("  OutputJarsDirectory: {0}", OutputJarsDirectory);
-			Log.LogDebugMessage ("  OutputAnnotationsDirectory: {0}", OutputAnnotationsDirectory);
-			Log.LogDebugMessage ("  LibraryProjectProperties:");
-			
-			foreach (var p in LibraryProjectPropertiesFiles)
-				Log.LogDebugMessage ("    " + p.ItemSpec);
-			Log.LogDebugMessage ("  LibraryProjectZip:");
-			foreach (var z in LibraryProjectZipFiles)
-				Log.LogDebugMessage ("    " + z.ItemSpec);
 			
 			var outDirInfo = new DirectoryInfo (OutputDirectory);
 			

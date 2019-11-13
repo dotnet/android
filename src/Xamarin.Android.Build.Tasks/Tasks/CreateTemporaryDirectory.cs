@@ -7,17 +7,17 @@ using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks
 {
-	public class CreateTemporaryDirectory : Task
+	public class CreateTemporaryDirectory : AndroidTask
 	{
+		public override string TaskPrefix => "CTD";
+
 		[Output]
 		public string TemporaryDirectory { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			TemporaryDirectory = Path.Combine (Path.GetTempPath (), Path.GetRandomFileName ());
 			Directory.CreateDirectory (TemporaryDirectory);
-
-			Log.LogDebugMessage ("CreateTemporaryDirectory Task");
 			Log.LogDebugMessage ("  OUTPUT: TemporaryDirectory: {0}", TemporaryDirectory);
 
 			return true;

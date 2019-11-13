@@ -3,7 +3,6 @@
 bin
 Configuration.Override.props
 Configuration.OperatingSystem.props
-msfinal.pub
 obj
 packages
 .DS_Store
@@ -20,3 +19,6 @@ apk-sizes-*.txt
 *.rawproto
 *.binlog
 src/Xamarin.Android.Build.Tasks/Xamarin.Android.Common.props
+*~
+external/monodroid/
+external/mono/

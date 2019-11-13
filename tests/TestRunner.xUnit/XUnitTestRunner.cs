@@ -810,8 +810,12 @@ namespace Xamarin.Android.UnitTests.XUnit
 					if (filters != null && filters.Count > 0) {
 						testCases = discoverySink.TestCases.Where (tc => IsIncluded (tc)).ToList ();
 						FilteredTests += discoverySink.TestCases.Count - testCases.Count;
-					} else
+					} else if (!string.IsNullOrEmpty (TestSuiteToRun)) {
+						testCases = discoverySink.TestCases.Where (tc => IsIncludedInSelectedTestSuite (tc)).ToList ();
+						FilteredTests += discoverySink.TestCases.Count - testCases.Count;
+					} else {
 						testCases = discoverySink.TestCases;
+					}
 
 					var assemblyElement = new XElement ("assembly");
 					IExecutionSink resultsSink = new DelegatingExecutionSummarySink (messageSink, null, null);
@@ -834,15 +838,18 @@ namespace Xamarin.Android.UnitTests.XUnit
 
 		bool IsIncluded (ITestCase testCase)
 		{
-			if (testCase.Traits == null || testCase.Traits.Count == 0)
-				return true;
-			
+			if (!IsIncludedInSelectedTestSuite (testCase))
+				return false;
+
 			foreach (XUnitFilter filter in filters) {
 				List<string> values;
 				if (filter == null)
 					continue;
 
 				if (filter.FilterType == XUnitFilterType.Trait) {
+					if (testCase.Traits == null || testCase.Traits.Count == 0)
+						continue;
+
 					if (!testCase.Traits.TryGetValue (filter.TraitName, out values))
 						continue;
 
@@ -860,9 +867,17 @@ namespace Xamarin.Android.UnitTests.XUnit
 				}
 
 				if (filter.FilterType == XUnitFilterType.TypeName) {
-					Log.Info (LogTag, $"IsIncluded: filter: '{filter.TestCaseName}', test case name: {testCase.DisplayName}"); 
-					if (String.Compare (testCase.DisplayName, filter.TestCaseName, StringComparison.OrdinalIgnoreCase) == 0)
+					if (string.Compare (testCase.DisplayName, filter.TestCaseName, StringComparison.OrdinalIgnoreCase) == 0 ||
+							(testCase.DisplayName.Length > filter.TestCaseName.Length &&
+							 testCase.DisplayName.StartsWith (filter.TestCaseName) &&
+							 (testCase.DisplayName [filter.TestCaseName.Length] == '(' ||
+							  testCase.DisplayName [filter.TestCaseName.Length] == '.'))) {
+
+						if (filter.Exclude)
+							Log.Info (LogTag, $"Excluding Test: {testCase.DisplayName}");
+
 						return !filter.Exclude;
+					}
 					continue;
 				}
 
@@ -870,6 +885,12 @@ namespace Xamarin.Android.UnitTests.XUnit
 			}
 
 			return true;
+		}
+
+		bool IsIncludedInSelectedTestSuite (ITestCase testCase)
+		{
+			return string.IsNullOrEmpty (TestSuiteToRun) ? true
+				: testCase.DisplayName.StartsWith (TestSuiteToRun, StringComparison.OrdinalIgnoreCase);
 		}
 	}
 }

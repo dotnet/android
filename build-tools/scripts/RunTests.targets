@@ -8,19 +8,17 @@
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.RunParallelTargets" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.SetEnvironmentVariable" />
   <PropertyGroup>
-    <_Runtime Condition=" '$(HostOS)' != 'Windows' ">$(ManagedRuntime)</_Runtime>
-    <_NUnit>$(_Runtime) packages\NUnit.ConsoleRunner.3.7.0\tools\nunit3-console.exe</_NUnit>
     <_Test Condition=" '$(TEST)' != '' ">--test=&quot;$(TEST)&quot;</_Test>
     <_XABuild>$(_TopDir)\bin\$(Configuration)\bin\xabuild</_XABuild>
-    <_XABinLogPrefix>/v:normal /binaryLogger:"$(MSBuildThisFileDirectory)\..\..\bin\Build$(Configuration)\msbuild</_XABinLogPrefix>
+    <_XABinLogPrefix>/v:normal /binaryLogger:"$(MSBuildThisFileDirectory)\..\..\bin\Test$(Configuration)\msbuild</_XABinLogPrefix>
     <_XABuildDiag Condition=" '$(USE_MSBUILD)' == '0' And '$(V)' != '' ">/v:diag </_XABuildDiag>
-    <_XABuildProperties>$(_XABuildDiag)/p:Configuration=$(Configuration) /p:XAIntegratedTests=$(XAIntegratedTests)</_XABuildProperties>
+    <_XABuildProperties>$(_XABuildDiag)/p:Configuration=$(Configuration)</_XABuildProperties>
   </PropertyGroup>
   <ItemGroup>
     <_TestAssembly Include="$(_TopDir)\bin\Test$(Configuration)\Xamarin.Android.Build.Tests.dll" />
     <_TestAssembly Include="$(_TopDir)\bin\Test$(Configuration)\CodeBehind\CodeBehindUnitTests.dll" />
-    <_TestAssembly Include="$(_TopDir)\bin\Test$(Configuration)\EmbeddedDSO\EmbeddedDSOUnitTests.dll" />
-    <_TestAssembly Include="$(_TopDir)\bin\Test$(Configuration)\Xamarin.Android.MakeBundle-UnitTests\Xamarin.Android.MakeBundle-UnitTests.dll" />
+    <_TestAssembly Include="$(_TopDir)\bin\Test$(Configuration)\EmbeddedDSOUnitTests.dll" />
+    <_TestAssembly Include="$(_TopDir)\bin\Test$(Configuration)\Xamarin.Android.MakeBundle-UnitTests.dll" />
     <_ApkTestProject Include="$(_TopDir)\src\Mono.Android\Test\Mono.Android-Tests.csproj" />
     <_ApkTestProject Include="$(_TopDir)\tests\CodeGen-Binding\Xamarin.Android.JcwGen-Tests\Xamarin.Android.JcwGen-Tests.csproj" />
     <_ApkTestProject Include="$(_TopDir)\tests\CodeGen-MkBundle\Xamarin.Android.MakeBundle-Tests\Xamarin.Android.MakeBundle-Tests.csproj" />
@@ -28,9 +26,13 @@
     <_ApkTestProject Include="$(_TopDir)\tests\BCL-Tests\Xamarin.Android.Bcl-Tests\Xamarin.Android.Bcl-Tests.csproj" />
     <_ApkTestProject Include="$(_TopDir)\tests\Xamarin.Forms-Performance-Integration\Droid\Xamarin.Forms.Performance.Integration.Droid.csproj" />
     <_ApkTestProject Include="$(_TopDir)\tests\EmbeddedDSOs\EmbeddedDSO\EmbeddedDSO.csproj" />
+    <_ApkTestProject Include="$(_TopDir)\tests\Runtime-AppBundle\Mono.Android-TestsAppBundle.csproj" />
     <_ApkTestProject Include="$(_TopDir)\tests\Runtime-MultiDex\Mono.Android-TestsMultiDex.csproj" />
     <_ApkTestProjectAot Include="$(_TopDir)\src\Mono.Android\Test\Mono.Android-Tests.csproj" />
+    <_ApkTestProjectAot Include="$(_TopDir)\tests\locales\Xamarin.Android.Locale-Tests\Xamarin.Android.Locale-Tests.csproj" />
+    <_ApkTestProjectAot Include="$(_TopDir)\tests\Xamarin.Forms-Performance-Integration\Droid\Xamarin.Forms.Performance.Integration.Droid.csproj" />
     <_ApkTestProjectBundle Include="$(_TopDir)\src\Mono.Android\Test\Mono.Android-Tests.csproj" />
+    <_ApkTestProjectBundle Include="$(_TopDir)\tests\Xamarin.Forms-Performance-Integration\Droid\Xamarin.Forms.Performance.Integration.Droid.csproj" />
   </ItemGroup>
   <Target Name="ListNUnitTests">
     <Exec
@@ -111,7 +113,16 @@
     <MSBuild
         ContinueOnError="ErrorAndContinue"
         Projects="$(_TopDir)\tests\RunApkTests.targets"
+        Targets="$(RunApkTestsTarget)"
     />
+    <PropertyGroup>
+      <_HostOS>$(HostOS)</_HostOS>
+      <_ExeExtension></_ExeExtension>
+      <_HostOS Condition=" '$(_HostOS)' == 'Windows' "></_HostOS>
+      <_ExeExtension Condition=" '$(_HostOS)' == 'Windows' ">.exe</_ExeExtension>
+      <_CrossCompilerAvailable Condition="Exists('$(_TopDir)\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\$(_HostOS)\cross-arm$(_ExeExtension)')">True</_CrossCompilerAvailable>
+      <_CrossCompilerAvailable Condition=" '$(_CrossCompilerAvailable)' == '' ">False</_CrossCompilerAvailable>
+    </PropertyGroup>
     <ItemGroup Condition=" '$(USE_MSBUILD)' == '1' ">
       <_ApkTestProjectAot>
         <_BinLog>$(_XABinLogPrefix)-$([System.DateTime]::Now.ToString ("yyyyMMddTHHmmss"))-%(Filename)-AOT.binlog"</_BinLog>
@@ -119,13 +130,30 @@
     </ItemGroup>
     <Exec 
         Command="$(_XABuild) %(_ApkTestProjectAot.Identity) %(_ApkTestProjectAot._BinLog) /t:SignAndroidPackage $(_XABuildProperties) /p:AotAssemblies=True"
-        Condition=" '$(Configuration)' == 'Release' "
+        Condition=" '$(_CrossCompilerAvailable)' == 'True' "
     />
     <MSBuild 
         ContinueOnError="ErrorAndContinue"
         Projects="$(_TopDir)\tests\RunApkTests.targets"
-        Condition=" '$(Configuration)' == 'Release' "
+        Targets="$(RunApkTestsTarget)"
+        Condition=" '$(_CrossCompilerAvailable)' == 'True' "
         Properties="AotAssemblies=True"
+    />
+    <ItemGroup Condition=" '$(USE_MSBUILD)' == '1' ">
+      <_ApkTestProjectProfiledAot>
+        <_BinLog>$(_XABinLogPrefix)-$([System.DateTime]::Now.ToString ("yyyyMMddTHHmmss"))-%(Filename)-profiled-AOT.binlog"</_BinLog>
+      </_ApkTestProjectProfiledAot>
+    </ItemGroup>
+    <Exec
+        Command="$(_XABuild) %(_ApkTestProjectAot.Identity) %(_ApkTestProjectAot._BinLog) /t:SignAndroidPackage $(_XABuildProperties) /p:AndroidEnableProfiledAot=True"
+        Condition=" '$(_CrossCompilerAvailable)' == 'True' "
+    />
+    <MSBuild
+        ContinueOnError="ErrorAndContinue"
+        Projects="$(_TopDir)\tests\RunApkTests.targets"
+        Targets="$(RunApkTestsTarget)"
+        Condition=" '$(_CrossCompilerAvailable)' == 'True' "
+        Properties="AndroidEnableProfiledAot=True;AotAssemblies=True"
     />
     <ItemGroup Condition=" '$(USE_MSBUILD)' == '1' ">
       <_ApkTestProjectBundle>
@@ -134,27 +162,52 @@
     </ItemGroup>
     <Exec
         Command="$(_XABuild) %(_ApkTestProjectBundle.Identity) %(_ApkTestProjectBundle._BinLog) /t:SignAndroidPackage $(_XABuildProperties) /p:BundleAssemblies=True /p:EmbedAssembliesIntoApk=True"
-        Condition=" '$(Configuration)' == 'Release' "
+        Condition=" '$(_CrossCompilerAvailable)' == 'True' "
     />
     <MSBuild
         ContinueOnError="ErrorAndContinue"
         Projects="$(_TopDir)\tests\RunApkTests.targets"
-        Condition=" '$(Configuration)' == 'Release' "
+        Targets="$(RunApkTestsTarget)"
+        Condition=" '$(_CrossCompilerAvailable)' == 'True' "
         Properties="BundleAssemblies=True"
     />
   </Target>
   <Target Name="RunPerformanceTests">
     <MSBuild Projects="$(MSBuildThisFileDirectory)..\timing\timing.csproj" Targets="MSBuildTiming" />
   </Target>
+  <Target Name="RunNUnitDeviceTests">
+    <MSBuild
+        ContinueOnError="ErrorAndContinue"
+        Projects="$(_TopDir)\tests\RunApkTests.targets"
+        Targets="RunNUnitDeviceTests"
+    />
+  </Target>
   <ItemGroup>
     <_RunParallelTestTarget Include="RunNUnitTests" />
     <_RunParallelTestTarget Include="RunApkTests" />
   </ItemGroup>
   <ItemGroup>
-    <_RunTestTarget Include="RunJavaInteropTests" />
-    <_RunTestTarget Include="RunPerformanceTests" />
+    <_RunTestTarget Include="RunJavaInteropTests">
+      <Properties></Properties>
+    </_RunTestTarget>
+    <_RunTestTarget Include="RunPerformanceTests">
+      <Properties></Properties>
+    </_RunTestTarget>
+    <_RunTestTarget Include="RunApkTests">
+      <Properties>RunApkTestsTarget=RunPerformanceApkTests</Properties>
+    </_RunTestTarget>
+    <_RunTestTarget Include="RunNUnitDeviceTests">
+      <Properties></Properties>
+    </_RunTestTarget>
   </ItemGroup>
   <Target Name="RunAllTests">
+    <MSBuild
+         ContinueOnError="ErrorAndContinue"
+         Projects="$(MSBuildThisFileDirectory)RunTests.targets"
+         RunEachTargetSeparately="True"
+         Targets="@(_RunTestTarget)"
+         Properties="%(_RunTestTarget.Properties)"
+     />
     <RunParallelTargets
         ContinueOnError="ErrorAndContinue"
         Configuration="$(Configuration)"
@@ -163,11 +216,5 @@
         ProjectFile="$(MSBuildThisFileDirectory)RunTests.targets"
         Targets="@(_RunParallelTestTarget)"
     />
-    <MSBuild
-         ContinueOnError="ErrorAndContinue"
-         Projects="$(MSBuildThisFileDirectory)RunTests.targets"
-         RunEachTargetSeparately="True"
-         Targets="@(_RunTestTarget)"
-     />
    </Target>
 </Project>

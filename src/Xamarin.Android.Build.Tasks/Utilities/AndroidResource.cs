@@ -37,7 +37,7 @@ namespace Monodroid {
 
 		static readonly XNamespace android = "http://schemas.android.com/apk/res/android";
 		static readonly XNamespace res_auto = "http://schemas.android.com/apk/res-auto";
-		static readonly Regex r = new Regex (@"^@\+?(?<package>[^:]+:)?(anim|color|drawable|layout|menu)/(?<file>.*)$", RegexOptions.Compiled);
+		static readonly Regex r = new Regex (@"^@\+?(?<package>[^:]+:)?(anim|color|drawable|layout|menu|mipmap)/(?<file>.*)$", RegexOptions.Compiled);
 		static readonly string[] fixResourcesAliasPaths = {
 			"/resources/item",
 			"/resources/integer-array/item",
@@ -55,13 +55,6 @@ namespace Monodroid {
 			UpdateXmlResource (null, e, acwMap);
 		}
 
-		internal static IEnumerable<T> Prepend<T> (this IEnumerable<T> l, T another) where T : XNode
-		{
-			yield return another;
-			foreach (var e in l)
-				yield return e;
-		}
-		
 		static void UpdateXmlResource (string resourcesBasePath, XElement e, Dictionary<string, string> acwMap, IEnumerable<string> additionalDirectories = null, Action<TraceLevel, string> logMessage = null, Action<string> registerCustomView = null)
 		{
 			foreach (var elem in GetElements (e).Prepend (e)) {
@@ -208,10 +201,7 @@ namespace Monodroid {
 		{
 			if (attr.Name.Namespace != res_auto)
 				return false;
-			switch (attr.Name.LocalName) {
-			case "rectLayout":
-			case "roundLayout":
-			case "actionLayout":
+			if (attr.Name.LocalName.EndsWith ("Layout", StringComparison.Ordinal)) {
 				attr.Value = attr.Value.ToLowerInvariant ();
 				return true;
 			}

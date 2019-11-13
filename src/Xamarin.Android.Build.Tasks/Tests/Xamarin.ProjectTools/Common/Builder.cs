@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.IO;
 using System.Diagnostics;
@@ -7,11 +7,9 @@ using System.Text;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Xml;
 using System.Xml.XPath;
 using System.Xml.Linq;
-
-using XABuildPaths = Xamarin.Android.Build.Paths;
+using Xamarin.Android.Tools.VSWhere;
 
 namespace Xamarin.ProjectTools
 {
@@ -24,6 +22,10 @@ namespace Xamarin.ProjectTools
 		string buildLogFullPath;
 		public bool IsUnix { get; set; }
 		public bool RunningMSBuild { get; set; }
+		/// <summary>
+		/// This passes /p:BuildingInsideVisualStudio=True, command-line to MSBuild
+		/// </summary>
+		public bool BuildingInsideVisualStudio { get; set; } = true;
 		public LoggerVerbosity Verbosity { get; set; }
 		public IEnumerable<string> LastBuildOutput {
 			get {
@@ -39,25 +41,10 @@ namespace Xamarin.ProjectTools
 		public string BuildLogFile { get; set; }
 		public bool ThrowOnBuildFailure { get; set; }
 		public bool RequiresMSBuild { get; set; }
-
-		string GetVisualStudio2017Directory ()
-		{
-			var editions = new [] {
-				"Enterprise",
-				"Professional",
-				"Community",
-				"BuildTools"
-			};
-
-			var x86 = Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86);
-			foreach (var edition in editions) {
-				var dir = Path.Combine (x86, "Microsoft Visual Studio", "2017", edition);
-				if (Directory.Exists (dir))
-					return dir;
-			}
-
-			return null;
-		}
+		/// <summary>
+		/// True if NuGet restore occurs automatically (default)
+		/// </summary>
+		public bool AutomaticNuGetRestore { get; set; } = true;
 
 		public string XABuildExe {
 			get {
@@ -81,21 +68,14 @@ namespace Xamarin.ProjectTools
 				xabuild = XABuildPaths.XABuildExe;
 				if (File.Exists (xabuild))
 					return xabuild;
-				return "msbuild";
+				return IsUnix ? "msbuild" : TestEnvironment.GetVisualStudioInstance ().MSBuildPath;
 			}
 		}
 
-		public string AndroidMSBuildDirectory {
-			get {
-				var frameworkLibDir = FrameworkLibDirectory;
-				var path = Path.Combine (frameworkLibDir, "xbuild", "Xamarin", "Android");
-				if (Directory.Exists (path))
-					return path;
-				return frameworkLibDir;
-			}
-		}
-
-		public string FrameworkLibDirectory {
+		/// <summary>
+		/// The top directory of a local build tree if it can be found, e.g. xamarin-android/bin/Debug.
+		/// </summary>
+		string BuildOutputDirectory {
 			get {
 				var outdir = Environment.GetEnvironmentVariable ("XA_BUILD_OUTPUT_PATH");
 				string configuration = Environment.GetEnvironmentVariable ("CONFIGURATION") ?? XABuildPaths.Configuration;
@@ -110,43 +90,41 @@ namespace Xamarin.ProjectTools
 					outdir = Path.Combine (XABuildPaths.TopDirectory, "bin", "Debug");
 				if (!Directory.Exists (Path.Combine (outdir, "lib")) || !File.Exists (Path.Combine (outdir, libmonodroidPath)))
 					outdir = Path.Combine (XABuildPaths.TopDirectory, "bin", "Release");
-				if (IsUnix) {
-					if (!Directory.Exists (Path.Combine (outdir, "lib")) || !File.Exists (Path.Combine (outdir, libmonodroidPath)))
-						outdir = "/Library/Frameworks/Xamarin.Android.framework/Versions/Current";
-					return Path.Combine (outdir, "lib", "xamarin.android");
-				}
-				else {
-					if (Directory.Exists (Path.Combine (outdir, "lib")) && File.Exists (Path.Combine (outdir, libmonodroidPath)))
-						return Path.Combine (outdir, "lib", "xamarin.android");
 
-					var visualStudioDirectory = GetVisualStudio2017Directory ();
-					if (!string.IsNullOrEmpty (visualStudioDirectory))
-						return Path.Combine (visualStudioDirectory, "MSBuild", "Xamarin", "Android");
-
-					var x86 = Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86);
-					return Path.Combine (x86, "MSBuild", "Xamarin", "Android");
-				}
+				return outdir;
 			}
 		}
 
-		public string MicrosoftNetSdkDirectory {
+		/// <summary>
+		/// The MonoAndroidTools directory within a local build tree, e.g. xamarin-android/bin/Debug/lib/xamarin.android/xbuild/Xamarin/Android.<br/>
+		/// If a local build tree can not be found, or if it is empty, this will return the system installation location instead:<br/>
+		///	Windows:  C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Xamarin\Android <br/>
+		///	macOS:    /Library/Frameworks/Xamarin.Android.framework/Versions/Current/lib/xamarin.android/xbuild/Xamarin/Android
+		/// </summary>
+		public string AndroidMSBuildDirectory {
 			get {
-				string path;
-				if (IsUnix) {
-					path = System.IO.Path.Combine ("/usr", "local", "share", "dotnet", "sdk");
-					return FindLatestDotNetSdk (path);
-				}
-				var visualStudioDirectory = GetVisualStudio2017Directory ();
-				if (!string.IsNullOrEmpty (visualStudioDirectory)) {
-					path = Path.Combine (visualStudioDirectory, "MSBuild", "Sdks", "Microsoft.NET.Sdk");
-					if (File.Exists (Path.Combine (path, "Sdk", "Sdk.props")))
-						return path;
-				}
-				var x86 = Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86);
-				path = Path.Combine (x86, "MSBuild", "Sdks", "Microsoft.NET.Sdk");
-				if (File.Exists (Path.Combine (path, "Sdk", "Sdk.props")))
-					return path;
-				return string.Empty;
+				var msbuildDir = Path.Combine (BuildOutputDirectory, "lib", "xamarin.android", "xbuild", "Xamarin", "Android");
+				if (Directory.Exists (msbuildDir) && File.Exists (Path.Combine (msbuildDir, "lib", "armeabi-v7a", "libmono-android.release.so")))
+					return msbuildDir;
+
+				return TestEnvironment.MonoAndroidToolsDirectory;
+			}
+		}
+
+		/// <summary>
+		/// The MonoAndroid framework (and other reference assemblies) directory within a local build tree. Contains v1.0, v9.0, etc,
+		/// e.g. xamarin-android/bin/Debug/lib/xamarin.android/xbuild-frameworks/MonoAndroid.<br/>
+		/// If a local build tree can not be found, or if it is empty, this will return the system installation location instead:<br/>
+		///	Windows:  C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\ReferenceAssemblies\Microsoft\Framework\MonoAndroid <br/>
+		///	macOS:    Library/Frameworks/Xamarin.Android.framework/Versions/Current/lib/xamarin.android/xbuild-frameworks/MonoAndroid
+		/// </summary>
+		public string FrameworkLibDirectory {
+			get {
+				var frameworkLibDir = Path.Combine (BuildOutputDirectory, "lib", "xamarin.android", "xbuild-frameworks", "MonoAndroid");
+				if (Directory.Exists (frameworkLibDir) && Directory.EnumerateDirectories (frameworkLibDir, "v*", SearchOption.TopDirectoryOnly).Any ())
+					return frameworkLibDir;
+
+				return TestEnvironment.MonoAndroidFrameworkDirectory;
 			}
 		}
 
@@ -201,12 +179,7 @@ namespace Xamarin.ProjectTools
 			Version firstVersion    = null;
 			Version lastVersion     = null;
 
-			var outdir = FrameworkLibDirectory;
-			var path = Path.Combine (outdir, "xbuild-frameworks", "MonoAndroid");
-			if (!Directory.Exists(path)) {
-				path = outdir;
-			}
-			foreach (var dir in Directory.EnumerateDirectories (path, "v*", SearchOption.TopDirectoryOnly)) {
+			foreach (var dir in Directory.EnumerateDirectories (FrameworkLibDirectory, "v*", SearchOption.TopDirectoryOnly)) {
 				// No binding assemblies in `v1.0`; don't process.
 				if (Path.GetFileName (dir) == "v1.0")
 					continue;
@@ -230,6 +203,22 @@ namespace Xamarin.ProjectTools
 			}
 		}
 
+		public int GetMaxInstalledPlatform ()
+		{
+			string sdkPath = AndroidSdkResolver.GetAndroidSdkPath ();
+			int result = 0;
+			foreach (var dir in Directory.EnumerateDirectories (Path.Combine (sdkPath, "platforms"))) {
+				int version;
+				string v = Path.GetFileName (dir).Replace ("android-", "");
+				if (!int.TryParse (v, out version))
+					continue;
+				if (version < result)
+					continue;
+				result = version;
+			}
+			return result;
+		}
+
 		static string GetApiLevelFromInfoPath (string androidApiInfo)
 		{
 			if (!File.Exists (androidApiInfo))
@@ -241,7 +230,7 @@ namespace Xamarin.ProjectTools
 
 		public bool TargetFrameworkExists (string targetFramework)
 		{
-			var path = Path.Combine (FrameworkLibDirectory, "xbuild-frameworks", "MonoAndroid", targetFramework);
+			var path = Path.Combine (FrameworkLibDirectory, targetFramework);
 			if (!Directory.Exists (path)) {
 				return false;
 			}
@@ -270,49 +259,8 @@ namespace Xamarin.ProjectTools
 			GC.SuppressFinalize (this);
 		}
 
-		public string AndroidSdkDirectory { get; private set; }
-
-		public string AndroidNdkDirectory { get; private set; }
-
-		/// <summary>
-		/// Locates and sets AndroidSdkDirectory and AndroidNdkDirectory
-		/// </summary>
-		public void ResolveSdks ()
-		{
-			var homeDirectory = Environment.GetFolderPath (Environment.SpecialFolder.UserProfile);
-			var androidSdkToolPath = Path.Combine (homeDirectory, "android-toolchain");
-			if (string.IsNullOrEmpty (AndroidSdkDirectory)) {
-				var sdkPath = Environment.GetEnvironmentVariable ("ANDROID_SDK_PATH");
-				if (String.IsNullOrEmpty (sdkPath))
-					sdkPath = GetPathFromRegistry ("AndroidSdkDirectory");
-				if (String.IsNullOrEmpty (sdkPath))
-					sdkPath = Path.GetFullPath (Path.Combine (androidSdkToolPath, "sdk"));
-				if (Directory.Exists (sdkPath)) {
-					AndroidSdkDirectory = sdkPath;
-				}
-			}
-			if (string.IsNullOrEmpty (AndroidNdkDirectory)) {
-				var ndkPath = Environment.GetEnvironmentVariable ("ANDROID_NDK_PATH");
-				if (String.IsNullOrEmpty (ndkPath))
-					ndkPath = GetPathFromRegistry ("AndroidNdkDirectory");
-				if (String.IsNullOrEmpty (ndkPath))
-					ndkPath = Path.GetFullPath (Path.Combine (androidSdkToolPath, "ndk"));
-				if (Directory.Exists (ndkPath)) {
-					AndroidNdkDirectory = ndkPath;
-				}
-			}
-		}
-
 		protected virtual void Dispose (bool disposing)
 		{
-		}
-
-		string GetPathFromRegistry (string valueName)
-		{
-			if (Environment.OSVersion.Platform == PlatformID.Win32NT) {
-				return (string)Microsoft.Win32.Registry.GetValue ("HKEY_CURRENT_USER\\SOFTWARE\\Novell\\Mono for Android", valueName, null);
-			}
-			return null;
 		}
 
 		Regex timeElapsedRegEx = new Regex (
@@ -320,7 +268,7 @@ namespace Xamarin.ProjectTools
 			RegexOptions.Multiline | RegexOptions.Compiled
 		);
 
-		protected bool BuildInternal (string projectOrSolution, string target, string [] parameters = null, Dictionary<string, string> environmentVariables = null)
+		protected bool BuildInternal (string projectOrSolution, string target, string [] parameters = null, Dictionary<string, string> environmentVariables = null, bool restore = true)
 		{
 			buildLogFullPath = (!string.IsNullOrEmpty (BuildLogFile))
 				? Path.GetFullPath (Path.Combine (XABuildPaths.TestOutputDirectory, Path.GetDirectoryName (projectOrSolution), BuildLogFile))
@@ -334,39 +282,46 @@ namespace Xamarin.ProjectTools
 				: string.Format ("/noconsolelogger \"/flp1:LogFile={0};Encoding=UTF-8;Verbosity={1}\"",
 					buildLogFullPath, Verbosity.ToString ().ToLower ());
 
-			ResolveSdks ();
-
 			var start = DateTime.UtcNow;
 			var args  = new StringBuilder ();
 			var psi   = new ProcessStartInfo (XABuildExe);
-			args.AppendFormat ("{0} /t:{1} /restore {2}",
-				QuoteFileName(Path.Combine (XABuildPaths.TestOutputDirectory, projectOrSolution)), target, logger);
-			if (RunningMSBuild)
-				args.Append (" /p:BuildingOutOfProcess=true");
-			else
-				args.Append (" /p:UseHostCompilerIfAvailable=false /p:BuildingInsideVisualStudio=true");
-			if (!string.IsNullOrEmpty (AndroidSdkDirectory)) {
-				args.AppendFormat (" /p:AndroidSdkDirectory=\"{0}\" ", AndroidSdkDirectory);
+			var responseFile = Path.Combine (XABuildPaths.TestOutputDirectory, Path.GetDirectoryName (projectOrSolution), "project.rsp");
+			args.AppendFormat ("{0} /t:{1} {2}",
+					QuoteFileName (Path.Combine (XABuildPaths.TestOutputDirectory, projectOrSolution)), target, logger);
+			if (AutomaticNuGetRestore && restore) {
+				args.Append (" /restore");
 			}
-			if (!string.IsNullOrEmpty (AndroidNdkDirectory)) {
-				args.AppendFormat (" /p:AndroidNdkDirectory=\"{0}\" ", AndroidNdkDirectory);
-			}
-			if (parameters != null) {
-				foreach (var param in parameters) {
-					args.AppendFormat (" /p:{0}", param);
+			args.Append ($" @\"{responseFile}\"");
+			using (var sw = new StreamWriter (responseFile, append: false, encoding: Encoding.UTF8)) {
+				sw.WriteLine ($" /p:BuildingInsideVisualStudio={BuildingInsideVisualStudio}");
+				if (BuildingInsideVisualStudio && RunningMSBuild) {
+					sw.WriteLine (" /p:BuildingOutOfProcess=true");
 				}
-			}
-			var msbuildArgs = Environment.GetEnvironmentVariable ("NUNIT_MSBUILD_ARGS");
-			if (!string.IsNullOrEmpty (msbuildArgs)) {
-				args.Append (msbuildArgs);
-			}
-			if (RunningMSBuild) {
-				psi.EnvironmentVariables ["MSBUILD"] = "msbuild";
-				args.Append ($" /bl:\"{Path.GetFullPath (Path.Combine (XABuildPaths.TestOutputDirectory, Path.GetDirectoryName (projectOrSolution), "msbuild.binlog"))}\"");
-			}
-			if (environmentVariables != null) {
-				foreach (var kvp in environmentVariables) {
-					psi.EnvironmentVariables [kvp.Key] = kvp.Value;
+				string sdkPath = AndroidSdkResolver.GetAndroidSdkPath ();
+				if (Directory.Exists (sdkPath)) {
+					sw.WriteLine (" /p:AndroidSdkDirectory=\"{0}\" ", sdkPath);
+				}
+				string ndkPath = AndroidSdkResolver.GetAndroidNdkPath ();
+				if (Directory.Exists (ndkPath)) {
+					sw.WriteLine (" /p:AndroidNdkDirectory=\"{0}\" ", ndkPath);
+				}
+				if (parameters != null) {
+					foreach (var param in parameters) {
+						sw.WriteLine (" /p:{0}", param);
+					}
+				}
+				var msbuildArgs = Environment.GetEnvironmentVariable ("NUNIT_MSBUILD_ARGS");
+				if (!string.IsNullOrEmpty (msbuildArgs)) {
+					sw.WriteLine (msbuildArgs);
+				}
+				if (RunningMSBuild) {
+					psi.EnvironmentVariables ["MSBUILD"] = "msbuild";
+					sw.WriteLine ($" /bl:\"{Path.GetFullPath (Path.Combine (XABuildPaths.TestOutputDirectory, Path.GetDirectoryName (projectOrSolution), "msbuild.binlog"))}\"");
+				}
+				if (environmentVariables != null) {
+					foreach (var kvp in environmentVariables) {
+						psi.EnvironmentVariables [kvp.Key] = kvp.Value;
+					}
 				}
 			}
 
@@ -427,7 +382,7 @@ namespace Xamarin.ProjectTools
 					p.Start ();
 					p.BeginOutputReadLine ();
 					p.BeginErrorReadLine ();
-					ranToCompletion = p.WaitForExit ((int)new TimeSpan (0, 10, 0).TotalMilliseconds);
+					ranToCompletion = p.WaitForExit ((int)new TimeSpan (0, 15, 0).TotalMilliseconds);
 					if (psi.RedirectStandardOutput)
 						stdout.WaitOne ();
 					if (psi.RedirectStandardError)
@@ -470,12 +425,8 @@ namespace Xamarin.ProjectTools
 			}
 			if (!result && ThrowOnBuildFailure) {
 				string message = "Build failure: " + Path.GetFileName (projectOrSolution) + (BuildLogFile != null && File.Exists (buildLogFullPath) ? "Build log recorded at " + buildLogFullPath : null);
-				//NOTE: enormous logs will lock up IDE's UI
-				if (IsRunningInIDE) {
-					throw new FailedBuildException (message);
-				} else {
-					throw new FailedBuildException (message, null, File.ReadAllText (buildLogFullPath));
-				}
+				//NOTE: enormous logs will lock up IDE's UI. Build result files should be appended to the TestResult on failure.
+				throw new FailedBuildException (message);
 			}
 
 			return result;
@@ -505,25 +456,6 @@ namespace Xamarin.ProjectTools
 			return fileName.Contains (" ") ? $"\"{fileName}\"" : fileName;
 		}
 
-		string FindLatestDotNetSdk (string dotNetPath)
-		{
-			if (Directory.Exists (dotNetPath)) {
-				var directories = from dir in Directory.EnumerateDirectories (dotNetPath)
-					let version = GetVersionFromDirectory (dir)
-					where version != null && File.Exists (Path.Combine (dir, "Sdks", "Microsoft.NET.Sdk", "Sdk", "Sdk.props"))
-					orderby version descending
-					select Path.Combine (dir, "Sdks", "Microsoft.NET.Sdk");
-				return directories.FirstOrDefault ();
-			}
-			return string.Empty;
-		}
-
-		static Version GetVersionFromDirectory (string dir)
-		{
-			Version v;
-			Version.TryParse (Path.GetFileName (dir), out v);
-			return v;
-		}
 	}
 }
 

@@ -11,7 +11,8 @@ using Microsoft.Build.Utilities;
 using Monodroid;
 
 namespace Xamarin.Android.Tasks {
-	public class ConvertCustomView : Task {
+	public class ConvertCustomView : AndroidTask {
+		public override string TaskPrefix => "CCV";
 
 		[Required]
 		public string CustomViewMapFile { get; set; }
@@ -23,7 +24,10 @@ namespace Xamarin.Android.Tasks {
 
 		public ITaskItem [] ResourceDirectories { get; set; }
 
-		public override bool Execute ()
+		[Output]
+		public ITaskItem [] Processed { get; set; }
+
+		public override bool RunTask ()
 		{
 			var resource_name_case_map = MonoAndroidHelper.LoadResourceCaseMap (ResourceNameCaseMap);
 			var acw_map = MonoAndroidHelper.LoadAcwMapFile (AcwMapFile);
@@ -46,13 +50,13 @@ namespace Xamarin.Android.Tasks {
 						bool update = false;
 						foreach (var elem in AndroidResource.GetElements (e).Prepend (e)) {
 							update |= TryFixCustomView (elem, acw_map, (level, message) => {
-								ITaskItem resdir = ResourceDirectories?.FirstOrDefault (x => file.StartsWith (x.ItemSpec)) ?? null;
+								ITaskItem resdir = ResourceDirectories?.FirstOrDefault (x => file.StartsWith (x.ItemSpec, StringComparison.OrdinalIgnoreCase)) ?? null;
 								switch (level) {
 								case TraceLevel.Error:
-									Log.FixupResourceFilenameAndLogCodedError ("XA1002", message, file, resdir.ItemSpec, resource_name_case_map);
+									Log.FixupResourceFilenameAndLogCodedError ("XA1002", message, file, resdir?.ItemSpec, resource_name_case_map);
 									break;
 								case TraceLevel.Warning:
-									Log.FixupResourceFilenameAndLogCodedError ("XA1001", message, file, resdir.ItemSpec, resource_name_case_map);
+									Log.FixupResourceFilenameAndLogCodedError ("XA1001", message, file, resdir?.ItemSpec, resource_name_case_map);
 									break;
 								default:
 									Log.LogDebugMessage (message);
@@ -68,14 +72,31 @@ namespace Xamarin.Android.Tasks {
 							var lastModified = File.GetLastWriteTimeUtc (file);
 							if (document.SaveIfChanged (file)) {
 								Log.LogDebugMessage ($"Fixed up Custom Views in {file}");
-								MonoAndroidHelper.SetLastAccessAndWriteTimeUtc (file, lastModified, Log);
+								File.SetLastWriteTimeUtc (file, lastModified);
 							}
 						}
 						processed.Add (file);
 					}
 				}
 			}
-
+			var output = new List<ITaskItem> ();
+			foreach (var file in processed) {
+				ITaskItem resdir = ResourceDirectories?.FirstOrDefault (x => file.StartsWith (x.ItemSpec)) ?? null;
+				if (resdir == null) {
+					continue;
+				}
+				var hash = resdir.GetMetadata ("Hash");
+				var stamp = resdir.GetMetadata ("StampFile");
+				var filename = !string.IsNullOrEmpty (hash) ? hash : "compiled";
+				var stampFile = !string.IsNullOrEmpty (stamp) ? stamp : $"{filename}.stamp";
+				Log.LogDebugMessage ($"{filename} {stampFile}");
+				output.Add (new TaskItem (file, new Dictionary<string, string> {
+					{ "StampFile" , stampFile },
+					{ "Hash" , filename },
+					{ "ResourceDirectory", resdir.ItemSpec }
+				}));
+			}
+			Processed = output.ToArray ();
 			return !Log.HasLoggedErrors;
 		}
 

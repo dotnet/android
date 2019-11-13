@@ -23,17 +23,17 @@ namespace Android.Runtime {
 		public IntPtr          grefClass;
 		public IntPtr          Class_forName;
 		public uint            logCategories;
-		public IntPtr          Class_getName;
 		public int             version;
 		public int             androidSdkVersion;
 		public int             localRefsAreIndirect;
 		public int             grefGcThreshold;
 		public IntPtr          grefIGCUserPeer;
 		public int             isRunningOnDesktop;
+		public byte            brokenExceptionTransitions;
+		public int             packageNamingPolicy;
 	}
 
 	public static partial class JNIEnv {
-
 		static IntPtr java_class_loader;
 		static IntPtr java_vm;
 		static IntPtr load_class_id;
@@ -46,10 +46,10 @@ namespace Android.Runtime {
 
 		static IntPtr cid_System;
 		static IntPtr mid_System_identityHashCode;
+		static IntPtr grefIGCUserPeer_class;
 
 		internal static int    gref_gc_threshold;
-		internal static IntPtr mid_Class_getName;
-		
+
 		internal  static  bool  PropagateExceptions;
 		static UncaughtExceptionHandler defaultUncaughtExceptionHandler;
 
@@ -57,56 +57,35 @@ namespace Android.Runtime {
 
 		static AndroidRuntime androidRuntime;
 
-#if !JAVA_INTEROP
-		static JNIInvokeInterface invoke_iface;
+		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
+		extern static void monodroid_log (LogLevel level, LogCategories category, string message);
 
-		[ThreadStatic] static IntPtr handle;
-		[ThreadStatic] static JniNativeInterfaceInvoker env;
+		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
+		internal extern static IntPtr monodroid_timing_start (string message);
 
-		static JniNativeInterfaceInvoker Env {
-			get { 
-				if (Handle == IntPtr.Zero) // Forces thread attach if necessary.
-					throw new Exception ("JNIEnv handle is NULL");
-				return env;
-			}
-		}
+		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
+		internal extern static void monodroid_timing_stop (IntPtr sequence, string message);
 
-		static void SetEnv ()
-		{
-			int r;
-			if ((r = invoke_iface.GetEnv (java_vm, out handle, version)) != 0)
-				AndroidEnvironment.FailFast ("Unable to get JNI Environment pointer! " +
-						"GetEnv(vm=0x" + java_vm.ToString ("x") + ", version=0x" + version.ToString ("x") + ")=" + r +
-						"; gettid()=" + gettid () +
-						"; Thread.ManagedThreadId=" + Thread.CurrentThread.ManagedThreadId +
-						"; Thread.Name=\"" + Thread.CurrentThread.Name + "\"" +
-						"; at: " + new StackTrace (true).ToString ());
-			env = CreateNativeInterface ();
-		}
-#endif  // !JAVA_INTEROP
+		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
+		internal extern static void monodroid_free (IntPtr ptr);
 
 		public static IntPtr Handle {
 			get {
-#if JAVA_INTEROP
 				return JniEnvironment.EnvironmentPointer;
-#else   // !JAVA_INTEROP
-				if (handle == IntPtr.Zero) {
-					SetEnv ();
-				}
-				return handle;
-#endif  // !JAVA_INTEROP
 			}
 		}
 
 		public static void CheckHandle (IntPtr jnienv)
 		{
-#if JAVA_INTEROP
 			new JniTransition (jnienv).Dispose ();
-#else   // !JAVA_INTEROP
-			if (Handle != jnienv) {
-				SetEnv ();
-			}
-#endif  // !JAVA_INTEROP
+		}
+
+		internal static bool IsGCUserPeer (IntPtr value)
+		{
+			if (value == IntPtr.Zero)
+				return false;
+
+			return IsInstanceOf (value, grefIGCUserPeer_class);
 		}
 
 		[DllImport ("libc")]
@@ -115,66 +94,36 @@ namespace Android.Runtime {
 		static unsafe void RegisterJniNatives (IntPtr typeName_ptr, int typeName_len, IntPtr jniClass, IntPtr methods_ptr, int methods_len)
 		{
 			string typeName = new string ((char*) typeName_ptr, 0, typeName_len);
-
-			var __start = new DateTime ();
-			if (Logger.LogTiming) {
-				__start = DateTime.UtcNow;
-				Logger.Log (LogLevel.Info,
-						"monodroid-timing",
-						"JNIEnv.RegisterJniNatives (\"" + typeName + "\", 0x" + jniClass.ToString ("x") + ") start: " + (__start - new DateTime (1970, 1, 1)).TotalMilliseconds);
-			}
-
 			Type type = Type.GetType (typeName);
 			if (type == null) {
-				Logger.Log (LogLevel.Error, "MonoDroid",
-						"Could not load type '" + typeName + "'. Skipping JNI registration of type '" + 
-						Java.Interop.TypeManager.GetClassName (jniClass) + "'.");
+				monodroid_log (LogLevel.Error,
+				               LogCategories.Default,
+				               $"Could not load type '{typeName}'. Skipping JNI registration of type '{Java.Interop.TypeManager.GetClassName (jniClass)}'.");
 				return;
 			}
 
 			var className = Java.Interop.TypeManager.GetClassName (jniClass);
-			TypeManager.RegisterType (className, type);
+			Java.Interop.TypeManager.RegisterType (className, type);
 
 			JniType jniType = null;
 			JniType.GetCachedJniType (ref jniType, className);
 
 			androidRuntime.TypeManager.RegisterNativeMembers (jniType, type, methods_ptr == IntPtr.Zero ? null : new string ((char*) methods_ptr, 0, methods_len));
-
-			if (Logger.LogTiming) {
-				var __end = DateTime.UtcNow;
-				Logger.Log (LogLevel.Info,
-						"monodroid-timing",
-						"JNIEnv.RegisterJniNatives total time: " + (__end - new DateTime (1970, 1, 1)).TotalMilliseconds + " [elapsed: " + (__end - __start).TotalMilliseconds + " ms]");
-			}
 		}
 
 		internal static unsafe void Initialize (JnienvInitializeArgs* args)
 		{
-			Logger.Categories = (LogCategories) args->logCategories;
-
-			var __start = new DateTime ();
-			if (Logger.LogTiming) {
-				__start = DateTime.UtcNow;
-				Logger.Log (LogLevel.Info,
-						"monodroid-timing",
-						"JNIEnv.Initialize start: " + (__start - new DateTime (1970, 1, 1)).TotalMilliseconds);
-				Logger.Log (LogLevel.Info,
-						"monodroid-timing",
-						"JNIEnv.Initialize: Logger JIT/etc. time: " + (DateTime.UtcNow - new DateTime (1970, 1, 1)).TotalMilliseconds + " [elapsed: " + (DateTime.UtcNow - __start).TotalMilliseconds + " ms]");
+			bool logTiming = (args->logCategories & (uint)LogCategories.Timing) != 0;
+			IntPtr total_timing_sequence = IntPtr.Zero;
+			IntPtr partial_timing_sequence = IntPtr.Zero;
+			if (logTiming) {
+				total_timing_sequence = monodroid_timing_start ("JNIEnv.Initialize start");
+				partial_timing_sequence = monodroid_timing_start (null);
 			}
 
 			gref_gc_threshold = args->grefGcThreshold;
 
-			mid_Class_getName = args->Class_getName;
-
 			java_vm = args->javaVm;
-
-#if !JAVA_INTEROP
-			handle = args->env;
-			env = CreateNativeInterface ();
-
-			invoke_iface = (JNIInvokeInterface) Marshal.PtrToStructure (Marshal.ReadIntPtr (java_vm), typeof (JNIInvokeInterface));
-#endif  // !JAVA_INTEROP
 
 			version = args->version;
 
@@ -190,58 +139,34 @@ namespace Android.Runtime {
 			else
 				IdentityHash = v => v;
 
-#if JAVA_INTEROP
-			androidRuntime = new AndroidRuntime (args->env, args->javaVm, androidSdkVersion > 10, args->grefLoader, args->Loader_loadClass);
-#endif // JAVA_INTEROP
+			Mono.SystemDependencyProvider.Initialize ();
 
-			if (Logger.LogTiming) {
-				var __end = DateTime.UtcNow;
-				Logger.Log (LogLevel.Info,
-						"monodroid-timing",
-						"JNIEnv.Initialize: time: " + (__end - new DateTime (1970, 1, 1)).TotalMilliseconds + " [elapsed: " + (__end - __start).TotalMilliseconds + " ms]");
-				__start = DateTime.UtcNow;
-				var _ = Java.Interop.TypeManager.jniToManaged;
-				__end = DateTime.UtcNow;
-				Logger.Log (LogLevel.Info,
-						"monodroid-timing",
-						"JNIEnv.Initialize: TypeManager init time: " + (__end - new DateTime (1970, 1, 1)).TotalMilliseconds + " [elapsed: " + (__end - __start).TotalMilliseconds + " ms]");
-			}
+			androidRuntime = new AndroidRuntime (args->env, args->javaVm, androidSdkVersion > 10, args->grefLoader, args->Loader_loadClass);
 
 			AllocObjectSupported = androidSdkVersion > 10;
-			IsRunningOnDesktop = Convert.ToBoolean (args->isRunningOnDesktop);
+			IsRunningOnDesktop = args->isRunningOnDesktop == 1;
 
-			Java.Interop.Runtime.grefIGCUserPeer_class = args->grefIGCUserPeer;
+			grefIGCUserPeer_class = args->grefIGCUserPeer;
 
-#if BROKEN_EXCEPTION_TRANSITIONS	// XA < 5.0
-			var propagate =
-				Environment.GetEnvironmentVariable ("__XA_PROPAGATE_EXCEPTIONS__") ??
-				Environment.GetEnvironmentVariable ("__XA_PROPOGATE_EXCEPTIONS__");
-			if (!string.IsNullOrEmpty (propagate)) {
-				bool.TryParse (propagate, out PropagateExceptions);
-			}
-			if (PropagateExceptions) {
-				Logger.Log (LogLevel.Info,
-						"monodroid",
-						"Enabling managed-to-java exception propagation.");
-			}
-#else
-			PropagateExceptions               = true;
-			var   brokenExceptionTransitions  = Environment.GetEnvironmentVariable ("XA_BROKEN_EXCEPTION_TRANSITIONS");
-			bool  brokenTransitions;
-			if (!string.IsNullOrEmpty (brokenExceptionTransitions) && bool.TryParse (brokenExceptionTransitions, out brokenTransitions)) {
-				PropagateExceptions = !brokenTransitions;
-			}
-#endif
+			PropagateExceptions = args->brokenExceptionTransitions == 0;
+
 			if (PropagateExceptions) {
 				defaultUncaughtExceptionHandler = new UncaughtExceptionHandler (Java.Lang.Thread.DefaultUncaughtExceptionHandler);
 				if (!IsRunningOnDesktop)
 					Java.Lang.Thread.DefaultUncaughtExceptionHandler = defaultUncaughtExceptionHandler;
 			}
 
-			if (Logger.LogTiming)
-				Logger.Log (LogLevel.Info,
-						"monodroid-timing",
-						"JNIEnv.Initialize end: " + (DateTime.UtcNow - new DateTime (1970, 1, 1)).TotalMilliseconds);
+			JavaNativeTypeManager.PackageNamingPolicy = (PackageNamingPolicy)args->packageNamingPolicy;
+			if (IsRunningOnDesktop) {
+				string packageNamingPolicy = Environment.GetEnvironmentVariable ("__XA_PACKAGE_NAMING_POLICY__");
+				if (Enum.TryParse (packageNamingPolicy, out PackageNamingPolicy pnp)) {
+					JavaNativeTypeManager.PackageNamingPolicy = pnp;
+				}
+			}
+
+			if (logTiming) {
+				monodroid_timing_stop (total_timing_sequence, "JNIEnv.Initialize end");
+			}
 		}
 
 		internal static void Exit ()
@@ -253,7 +178,6 @@ namespace Android.Runtime {
 			if (uncaughtExceptionHandler != null && uncaughtExceptionHandler == defaultUncaughtExceptionHandler)
 				Java.Lang.Thread.DefaultUncaughtExceptionHandler = uncaughtExceptionHandler.DefaultHandler;
 
-#if JAVA_INTEROP
 			/* Manually dispose surfaced objects and close the current JniEnvironment to
 			 * avoid ObjectDisposedException thrown on finalizer threads after shutdown
 			 */
@@ -264,9 +188,7 @@ namespace Android.Runtime {
 						obj.Dispose ();
 					continue;
 				} catch (Exception e) {
-					Logger.Log (LogLevel.Warn,
-								"monodroid",
-								string.Format ("Couldn't dispose object: {0}", e));
+					monodroid_log (LogLevel.Warn, LogCategories.Default, $"Couldn't dispose object: {e}");
 				}
 				/* If calling Dispose failed, the assumption is that user-code in
 				 * the Dispose(bool) overload is to blame for it. In that case we
@@ -277,7 +199,6 @@ namespace Android.Runtime {
 					ManualJavaObjectDispose (jobj);
 			}
 			JniEnvironment.Runtime.Dispose ();
-#endif // JAVA_INTEROP
 		}
 
 		/* FIXME: This reproduces the minimal steps in Java.Lang.Object.Dispose
@@ -306,7 +227,7 @@ namespace Android.Runtime {
 			defaultUncaughtExceptionHandler.UncaughtException (javaThread, javaException);
 		}
 
-		[DllImport ("__Internal")]
+		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
 		extern static void _monodroid_gc_wait_for_bridge_processing ();
 
 		static volatile bool BridgeProcessing; // = false
@@ -318,7 +239,7 @@ namespace Android.Runtime {
 			_monodroid_gc_wait_for_bridge_processing ();
 		}
 
-		[DllImport ("__Internal")]
+		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
 		extern static IntPtr _monodroid_get_identity_hash_code (IntPtr env, IntPtr value);
 
 		internal static Func<IntPtr, IntPtr> IdentityHash;
@@ -481,14 +402,6 @@ namespace Android.Runtime {
 				return CreateInstance (type, signature, cp);
 		}
 
-#if !JAVA_INTEROP
-		static unsafe JniNativeInterfaceInvoker CreateNativeInterface ()
-		{
-			JniNativeInterfaceStruct* p = (JniNativeInterfaceStruct*) Marshal.ReadIntPtr (Handle);
-			return new JniNativeInterfaceInvoker (p);
-		}
-#endif  // !JAVA_INTEROP
-
 		public static IntPtr FindClass (System.Type type)
 		{
 			int rank = JavaNativeTypeManager.GetArrayInfo (type, out type);
@@ -497,7 +410,7 @@ namespace Android.Runtime {
 			} catch (Java.Lang.Throwable e) {
 				if (!((e is Java.Lang.NoClassDefFoundError) || (e is Java.Lang.ClassNotFoundException)))
 					throw;
-				Logger.Log (LogLevel.Warn, "monodroid", "JNIEnv.FindClass(Type) caught unexpected exception: " + e);
+				monodroid_log (LogLevel.Warn, LogCategories.Default, $"JNIEnv.FindClass(Type) caught unexpected exception: {e}");
 				string jni = Java.Interop.TypeManager.GetJniTypeName (type);
 				if (jni != null) {
 					e.Dispose ();
@@ -577,58 +490,26 @@ namespace Android.Runtime {
 		{
 			if (obj == IntPtr.Zero)
 				throw new ArgumentException ("'obj' must not be IntPtr.Zero.", "obj");
-#if JAVA_INTEROP
+
 			JniEnvironment.Exceptions.Throw (new JniObjectReference (obj));
-#else   // !JAVA_INTEROP
-			if (Env.Throw (Handle, obj) != 0) {
-				ExceptionDescribe ();
-				AndroidEnvironment.FailFast ("Unable to raise a Java exception!");
-			}
-#endif  // !JAVA_INTEROP
 		}
 
 		public static void ThrowNew (IntPtr clazz, string message)
 		{
 			if (message == null)
 				throw new ArgumentNullException ("message");
-#if JAVA_INTEROP
+
 			JniEnvironment.Exceptions.ThrowNew (new JniObjectReference (clazz), message);
-#else   // !JAVA_INTEROP
-			if (Env.ThrowNew (Handle, clazz, message) != 0) {
-				ExceptionDescribe ();
-				AndroidEnvironment.FailFast ("Unable to raise a Java exception!");
-			}
-#endif  // !JAVA_INTEROP
 		}
 
 		public static void PushLocalFrame (int capacity)
 		{
-#if JAVA_INTEROP
 			JniEnvironment.References.PushLocalFrame (capacity);
-#else   // !JAVA_INTEROP
-			int rvalue = Env._PushLocalFrame (Handle, capacity);
-
-			if (rvalue != 0) {
-				Exception e = AndroidEnvironment.GetExceptionForLastThrowable ();
-				if (e != null)
-					ExceptionDispatchInfo.Capture (e).Throw ();
-			}
-#endif  // !JAVA_INTEROP
 		}
 
 		public static void EnsureLocalCapacity (int capacity)
 		{
-#if JAVA_INTEROP
 			JniEnvironment.References.EnsureLocalCapacity (capacity);
-#else   // !JAVA_INTEROP
-			int rvalue = Env._EnsureLocalCapacity (Handle, capacity);
-
-			if (rvalue != 0) {
-				Exception e = AndroidEnvironment.GetExceptionForLastThrowable ();
-				if (e != null)
-					ExceptionDispatchInfo.Capture (e).Throw ();
-			}
-#endif  // !JAVA_INTEROP
 		}
 
 		internal static void DeleteRef (IntPtr handle, JniHandleOwnership transfer)
@@ -645,166 +526,66 @@ namespace Android.Runtime {
 			}
 		}
 
-		[DllImport ("__Internal")]
+		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int _monodroid_gref_log (string message);
 
-		[DllImport ("__Internal")]
+		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int _monodroid_gref_log_new (IntPtr curHandle, byte curType, IntPtr newHandle, byte newType, string threadName, int threadId, [In] StringBuilder from, int from_writable);
 
-		[DllImport ("__Internal")]
+		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void _monodroid_gref_log_delete (IntPtr handle, byte type, string threadName, int threadId, [In] StringBuilder from, int from_writable);
 
-		[DllImport ("__Internal")]
+		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void _monodroid_weak_gref_new (IntPtr curHandle, byte curType, IntPtr newHandle, byte newType, string threadName, int threadId, [In] StringBuilder from, int from_writable);
 
-		[DllImport ("__Internal")]
+		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void _monodroid_weak_gref_delete (IntPtr handle, byte type, string threadName, int threadId, [In] StringBuilder from, int from_writable);
 
-		[DllImport ("__Internal")]
+		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int _monodroid_lref_log_new (int lrefc, IntPtr handle, byte type, string threadName, int threadId, [In] StringBuilder from, int from_writable);
 
-		[DllImport ("__Internal")]
+		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void _monodroid_lref_log_delete (int lrefc, IntPtr handle, byte type, string threadName, int threadId, [In] StringBuilder from, int from_writable);
 
 		public static IntPtr NewGlobalRef (IntPtr jobject)
 		{
-#if JAVA_INTEROP
 			var r = new JniObjectReference (jobject);
 			return r.NewGlobalRef ().Handle;
-#else   // !JAVA_INTEROP
-			IntPtr res = Env.NewGlobalRef (Handle, jobject);
-			var log		= Logger.LogGlobalRef;
-			var ctype	= log ? _GetObjectRefType (jobject) : (byte) '*';
-			var ntype	= log ? _GetObjectRefType (res) : (byte) '*';
-			var tname = log ? Thread.CurrentThread.Name : null;
-			var tid   = log ? Thread.CurrentThread.ManagedThreadId : 0;
-			var from  = log ? new StringBuilder (new StackTrace (true).ToString ()) : null;
-			int gc 		= _monodroid_gref_log_new (jobject, ctype, res, ntype, tname, tid, from, 1);
-			if (gc >= gref_gc_threshold) {
-				Logger.Log (LogLevel.Info, "monodroid-gc", gc + " outstanding GREFs. Performing a full GC!");
-				System.GC.Collect ();
-			}
-			return res;
-#endif  // !JAVA_INTEROP
 		}
 
 		public static void DeleteGlobalRef (IntPtr jobject)
 		{
-#if JAVA_INTEROP
 			var r = new JniObjectReference (jobject, JniObjectReferenceType.Global);
 			JniObjectReference.Dispose (ref r);
-#else   // !JAVA_INTEROP
-			var log		= Logger.LogGlobalRef;
-			var ctype	= log ? _GetObjectRefType (jobject) : (byte) '*';
-			var tname = log ? Thread.CurrentThread.Name : null;
-			var tid   = log ? Thread.CurrentThread.ManagedThreadId : 0;
-			var from  = log ? new StringBuilder (new StackTrace (true).ToString ()) : null;
-			_monodroid_gref_log_delete (jobject, ctype, tname, tid, from, 1);
-			Env.DeleteGlobalRef (Handle, jobject);
-#endif  // !JAVA_INTEROP
 		}
-
-#if !JAVA_INTEROP
-		internal static int lref_count;
-
-		static IntPtr LogCreateLocalRef (IntPtr jobject)
-		{
-			if (jobject == IntPtr.Zero)
-				return jobject;
-
-			if (Logger.LogLocalRef) {
-				var v = Interlocked.Increment (ref lref_count);
-
-				var tname = Thread.CurrentThread.Name;
-				var tid   = Thread.CurrentThread.ManagedThreadId;;
-				var from  = new StringBuilder (new StackTrace (true).ToString ());
-				_monodroid_lref_log_new (v, jobject, (byte) 'L', tname, tid, from, 1);
-			}
-			return jobject;
-		}
-#endif  // !JAVA_INTEROP
 
 		public static IntPtr NewLocalRef (IntPtr jobject)
 		{
-#if JAVA_INTEROP
 			return new JniObjectReference (jobject).NewLocalRef ().Handle;
-#else   // !JAVA_INTEROP
-			return LogCreateLocalRef (Env.NewLocalRef (Handle, jobject));
-#endif  // !JAVA_INTEROP
 		}
 
 		public static void DeleteLocalRef (IntPtr jobject)
 		{
-#if JAVA_INTEROP
 			var r = new JniObjectReference (jobject, JniObjectReferenceType.Local);
 			JniObjectReference.Dispose (ref r);
-#else   // !JAVA_INTEROP
-			Env.DeleteLocalRef (Handle, jobject);
-
-			if (jobject == IntPtr.Zero)
-				return;
-
-			if (Logger.LogLocalRef) {
-				var v = Interlocked.Decrement (ref lref_count);
-
-				var tname = Thread.CurrentThread.Name;
-				var tid   = Thread.CurrentThread.ManagedThreadId;;
-				var from  = new StringBuilder (new StackTrace (true).ToString ());
-				_monodroid_lref_log_delete (v, jobject, (byte) 'L', tname, tid, from, 1);
-			}
-#endif  // !JAVA_INTEROP
 		}
 
 		public static void DeleteWeakGlobalRef (IntPtr jobject)
 		{
-#if JAVA_INTEROP
 			var r = new JniObjectReference (jobject, JniObjectReferenceType.WeakGlobal);
 			JniObjectReference.Dispose (ref r);
-#else   // !JAVA_INTEROP
-			var log		= Logger.LogGlobalRef;
-			var ctype	= log ? _GetObjectRefType (jobject) : (byte) '*';
-			var tname = log ? Thread.CurrentThread.Name : null;
-			var tid   = log ? Thread.CurrentThread.ManagedThreadId : 0;
-			var from  = log ? new StringBuilder (new StackTrace (true).ToString ()) : null;
-			_monodroid_weak_gref_delete (jobject, ctype, tname, tid, from, 1);
-			Env.DeleteWeakGlobalRef (Handle, jobject);
-#endif  // !JAVA_INTEROP
 		}
 
 		public static IntPtr NewObject (IntPtr jclass, IntPtr jmethod)
 		{
-#if JAVA_INTEROP
 			var r = JniEnvironment.Object.NewObject (new JniObjectReference (jclass), new JniMethodInfo (jmethod, isStatic: false));
 			return r.Handle;
-#else   // !JAVA_INTEROP
-			Java.Interop.TypeManager.ActivationEnabled = false;
-			IntPtr rvalue = Env.NewObject (Handle, jclass, jmethod);
-			Java.Interop.TypeManager.ActivationEnabled = true;
-
-			Exception e = AndroidEnvironment.GetExceptionForLastThrowable ();
-			if (e != null)
-				ExceptionDispatchInfo.Capture (e).Throw ();
-
-			return LogCreateLocalRef (rvalue);
-#endif  // !JAVA_INTEROP
 		}
 
 		public static unsafe IntPtr NewObject (IntPtr jclass, IntPtr jmethod, JValue* parms)
 		{
-#if JAVA_INTEROP
 			var r = JniEnvironment.Object.NewObject (new JniObjectReference (jclass), new JniMethodInfo (jmethod, isStatic: false), (JniArgumentValue*) parms);
 			return r.Handle;
-#else   // !JAVA_INTEROP
-			Java.Interop.TypeManager.ActivationEnabled = false;
-			IntPtr rvalue = Env.NewObjectA (Handle, jclass, jmethod, parms);
-			Java.Interop.TypeManager.ActivationEnabled = true;
-
-			Exception e = AndroidEnvironment.GetExceptionForLastThrowable ();
-			if (e != null)
-				ExceptionDispatchInfo.Capture (e).Throw ();
-
-			return LogCreateLocalRef (rvalue);
-#endif  // !JAVA_INTEROP
 		}
 
 		public static unsafe IntPtr NewObject (IntPtr jclass, IntPtr jmethod, params JValue[] parms)
@@ -823,7 +604,7 @@ namespace Android.Runtime {
 			}
 		}
 
-		[DllImport ("__Internal")]
+		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern IntPtr monodroid_typemap_managed_to_java (string managed);
 
 		public static string GetJniName (Type type)
@@ -853,62 +634,25 @@ namespace Android.Runtime {
 			return NewLocalRef (value.Handle);
 		}
 
-#if !JAVA_INTEROP
-		static JObjectRefType GetObjectRefType (IntPtr jobject)
-		{
-			return (JObjectRefType) Env.GetObjectRefType (Handle, jobject);
-		}
-
-		static byte _GetObjectRefType (IntPtr jobject)
-		{
-			var value = GetObjectRefType (jobject);
-			switch (value) {
-				case JObjectRefType.Invalid:	    return (byte) 'I';
-				case JObjectRefType.Local:        return (byte) 'L';
-				case JObjectRefType.Global:       return (byte) 'G';
-				case JObjectRefType.WeakGlobal:   return (byte) 'W';
-				default:                          return (byte) '*';
-			}
-		}
-#endif  // !JAVA_INTEROP
-
 		static IntPtr char_sequence_to_string_id;
 
 		public static string GetCharSequence (IntPtr jobject, JniHandleOwnership transfer)
 		{
 			if (jobject == IntPtr.Zero)
 				return null;
-#if JAVA_INTEROP
+
 			var r = JniEnvironment.Object.ToString (new JniObjectReference (jobject));
 			return JniEnvironment.Strings.ToString (ref r, JniObjectReferenceOptions.CopyAndDispose);
-#else   // !JAVA_INTEROP
-			IntPtr str = LogCreateLocalRef (Env.CallObjectMethod (Handle, jobject, Java.Lang.Class.CharSequence_toString)); 
-			try {
-				return GetString (str, JniHandleOwnership.TransferLocalRef);
-			} finally {
-				DeleteRef (jobject, transfer);
-			}
-#endif  // !JAVA_INTEROP
 		}
 
 		public static unsafe string GetString (IntPtr value, JniHandleOwnership transfer)
 		{
 			if (value == IntPtr.Zero)
 				return null;
-#if JAVA_INTEROP
+
 			var s = JniEnvironment.Strings.ToString (new JniObjectReference (value));
 			DeleteRef (value, transfer);
 			return s;
-#else   // !JAVA_INTEROP
-			int len = Env.GetStringLength (Handle, value);
-			IntPtr chars = Env.GetStringChars (Handle, value, IntPtr.Zero);
-			try {
-				return new string ((char*) chars, 0, len);
-			} finally {
-				Env.ReleaseStringChars (Handle, value, chars);
-				DeleteRef (value, transfer);
-			}
-#endif  // !JAVA_INTEROP
 		}
 
 		public static unsafe IntPtr NewString (string text)
@@ -916,19 +660,7 @@ namespace Android.Runtime {
 			if (text == null)
 				return IntPtr.Zero;
 
-#if JAVA_INTEROP
 			return JniEnvironment.Strings.NewString (text).Handle;
-#else   // !JAVA_INTEROP
-			IntPtr rvalue;
-			fixed (char *s = text)
-				rvalue = LogCreateLocalRef (Env.NewString (Handle, (IntPtr) s, text.Length));
-
-			Exception e = AndroidEnvironment.GetExceptionForLastThrowable ();
-			if (e != null)
-				ExceptionDispatchInfo.Capture (e).Throw ();
-
-			return rvalue;
-#endif  // !JAVA_INTEROP
 		}
 
 		public static unsafe IntPtr NewString (char[] text, int length)
@@ -936,20 +668,8 @@ namespace Android.Runtime {
 			if (text == null)
 				return IntPtr.Zero;
 
-#if JAVA_INTEROP
 			fixed (char *s = text)
 				return JniEnvironment.Strings.NewString (s, length).Handle;
-#else   // !JAVA_INTEROP
-			IntPtr rvalue;
-			fixed (char *s = text)
-				rvalue = LogCreateLocalRef (Env.NewString (Handle, (IntPtr) s, length));
-
-			Exception e = AndroidEnvironment.GetExceptionForLastThrowable ();
-			if (e != null)
-				ExceptionDispatchInfo.Capture (e).Throw ();
-
-			return rvalue;
-#endif  // !JAVA_INTEROP
 		}
 
 		static void AssertCompatibleArrayTypes (Type sourceType, IntPtr destArray)
@@ -1121,118 +841,50 @@ namespace Android.Runtime {
 
 		static unsafe void _GetBooleanArrayRegion (IntPtr array, int start, int length, bool[] buffer)
 		{
-#if JAVA_INTEROP
 			fixed (bool* p = buffer)
 				JniEnvironment.Arrays.GetBooleanArrayRegion (new JniObjectReference (array), start, length, p);
-#else   // !JAVA_INTEROP
-			byte[] b = new byte [buffer.Length];
-			Env.GetBooleanArrayRegion (Handle, array, start, length, b);
-
-			Exception e = AndroidEnvironment.GetExceptionForLastThrowable ();
-			if (e != null)
-				ExceptionDispatchInfo.Capture (e).Throw ();
-
-			for (int i = 0; i < buffer.Length; ++i)
-				buffer [i] = b [i] != 0;
-#endif  // !JAVA_INTEROP
 		}
 
 		static unsafe void _GetByteArrayRegion (IntPtr array, int start, int length, byte[] buffer)
 		{
-#if JAVA_INTEROP
 			fixed (byte* p = buffer)
 				JniEnvironment.Arrays.GetByteArrayRegion (new JniObjectReference (array), start, length, (sbyte*) p);
-#else   // !JAVA_INTEROP
-			Env.GetByteArrayRegion (Handle, array, start, length, buffer);
-
-			Exception e = AndroidEnvironment.GetExceptionForLastThrowable ();
-			if (e != null)
-				ExceptionDispatchInfo.Capture (e).Throw ();
-#endif  // !JAVA_INTEROP
 		}
 
 		static unsafe void _GetCharArrayRegion (IntPtr array, int start, int length, char[] buffer)
 		{
-#if JAVA_INTEROP
 			fixed (char* p = buffer)
 				JniEnvironment.Arrays.GetCharArrayRegion (new JniObjectReference (array), start, length, p);
-#else   // !JAVA_INTEROP
-			Env.GetCharArrayRegion (Handle, array, start, length, buffer);
-
-			Exception e = AndroidEnvironment.GetExceptionForLastThrowable ();
-			if (e != null)
-				ExceptionDispatchInfo.Capture (e).Throw ();
-#endif  // !JAVA_INTEROP
 		}
 
 		static unsafe void _GetShortArrayRegion (IntPtr array, int start, int length, short[] buffer)
 		{
-#if JAVA_INTEROP
 			fixed (short* p = buffer)
 				JniEnvironment.Arrays.GetShortArrayRegion (new JniObjectReference (array), start, length, p);
-#else   // !JAVA_INTEROP
-			Env.GetShortArrayRegion (Handle, array, start, length, buffer);
-
-			Exception e = AndroidEnvironment.GetExceptionForLastThrowable ();
-			if (e != null)
-				ExceptionDispatchInfo.Capture (e).Throw ();
-#endif  // !JAVA_INTEROP
 		}
 
 		static unsafe void _GetIntArrayRegion (IntPtr array, int start, int length, int[] buffer)
 		{
-#if JAVA_INTEROP
 			fixed (int* p = buffer)
 				JniEnvironment.Arrays.GetIntArrayRegion (new JniObjectReference (array), start, length, p);
-#else   // !JAVA_INTEROP
-			Env.GetIntArrayRegion (Handle, array, start, length, buffer);
-
-			Exception e = AndroidEnvironment.GetExceptionForLastThrowable ();
-			if (e != null)
-				ExceptionDispatchInfo.Capture (e).Throw ();
-#endif  // !JAVA_INTEROP
 		}
 
 		static unsafe void _GetLongArrayRegion (IntPtr array, int start, int length, long[] buffer)
 		{
-#if JAVA_INTEROP
 			fixed (long* p = buffer)
 				JniEnvironment.Arrays.GetLongArrayRegion (new JniObjectReference (array), start, length, p);
-#else   // !JAVA_INTEROP
-			Env.GetLongArrayRegion (Handle, array, start, length, buffer);
-
-			Exception e = AndroidEnvironment.GetExceptionForLastThrowable ();
-			if (e != null)
-				ExceptionDispatchInfo.Capture (e).Throw ();
-#endif  // !JAVA_INTEROP
 		}
 
 		static unsafe void _GetFloatArrayRegion (IntPtr array, int start, int length, float[] buffer)
 		{
-#if JAVA_INTEROP
 			fixed (float* p = buffer)
 				JniEnvironment.Arrays.GetFloatArrayRegion (new JniObjectReference (array), start, length, p);
-#else   // !JAVA_INTEROP
-			Env.GetFloatArrayRegion (Handle, array, start, length, buffer);
-
-			Exception e = AndroidEnvironment.GetExceptionForLastThrowable ();
-			if (e != null)
-				ExceptionDispatchInfo.Capture (e).Throw ();
-#endif  // !JAVA_INTEROP
 		}
 
 		static unsafe void _GetDoubleArrayRegion (IntPtr array, int start, int length, double[] buffer)
 		{
-#if JAVA_INTEROP
 			fixed (double* p = buffer)
 				JniEnvironment.Arrays.GetDoubleArrayRegion (new JniObjectReference (array), start, length, p);
-#else   // !JAVA_INTEROP
-			Env.GetDoubleArrayRegion (Handle, array, start, length, buffer);
-
-			Exception e = AndroidEnvironment.GetExceptionForLastThrowable ();
-			if (e != null)
-				ExceptionDispatchInfo.Capture (e).Throw ();
-#endif  // !JAVA_INTEROP
 		}
 
 		public static void CopyArray (IntPtr src, Array dest, Type elementType = null)
@@ -1297,15 +949,8 @@ namespace Android.Runtime {
 
 			AssertCompatibleArrayTypes (typeof (bool[]), dest);
 
-#if JAVA_INTEROP
 			fixed (bool* p = src)
 				JniEnvironment.Arrays.SetBooleanArrayRegion (new JniObjectReference (dest), 0, src.Length, p);
-#else   // !JAVA_INTEROP
-			byte[] bytes = new byte [src.Length];
-			for (int i = 0; i < src.Length; i++)
-				bytes [i] = (byte) (src [i] ? 1 : 0);
-			SetBooleanArrayRegion (dest, 0, src.Length, bytes);
-#endif  // !JAVA_INTEROP
 		}
 
 		public static void CopyArray (string[] src, IntPtr dest)
@@ -1315,11 +960,7 @@ namespace Android.Runtime {
 
 			for (int i = 0; i < src.Length; i++) {
 				IntPtr native = NewString (src [i]);
-#if JAVA_INTEROP
 				JniEnvironment.Arrays.SetObjectArrayElement (new JniObjectReference (dest), i, new JniObjectReference (native));
-#else   // !JAVA_INTEROP
-				SetObjectArrayElement (dest, i, native);
-#endif  // !JAVA_INTEROP
 				DeleteLocalRef (native);
 			}
 		}
@@ -1331,11 +972,7 @@ namespace Android.Runtime {
 
 			for (int i = 0; i < src.Length; i++) {
 				IJavaObject o = src [i];
-#if JAVA_INTEROP
 				JniEnvironment.Arrays.SetObjectArrayElement (new JniObjectReference (dest), i, new JniObjectReference (o == null ? IntPtr.Zero : o.Handle));
-#else   // !JAVA_INTEROP
-				SetObjectArrayElement (dest, i, o == null ? IntPtr.Zero : o.Handle);
-#endif  // !JAVA_INTEROP
 			}
 		}
 
@@ -1520,11 +1157,7 @@ namespace Android.Runtime {
 
 		static int _GetArrayLength (IntPtr array_ptr)
 		{
-#if JAVA_INTEROP
 			return JniEnvironment.Arrays.GetArrayLength (new JniObjectReference (array_ptr));
-#else   // !JAVA_INTEROP
-			return Env.GetArrayLength (Handle, array_ptr);
-#endif  // !JAVA_INTEROP
 		}
 
 		public static object[] GetObjectArray (IntPtr array_ptr, Type[] element_types)
@@ -1600,18 +1233,11 @@ namespace Android.Runtime {
 			if (array == null)
 				return IntPtr.Zero;
 			IntPtr result;
-#if JAVA_INTEROP
+
 			var r   = JniEnvironment.Arrays.NewBooleanArray (array.Length);
 			fixed (bool* p = array)
 				JniEnvironment.Arrays.SetBooleanArrayRegion (r, 0, array.Length, p);
 			result  = r.Handle;
-#else   // !JAVA_INTEROP
-			result  = LogCreateLocalRef (Env.NewBooleanArray (Handle, array.Length));
-			byte[] bytes = new byte [array.Length];
-			for (int i = 0; i < array.Length; i++)
-				bytes [i] = (byte) (array [i] ? 1 : 0);
-			SetBooleanArrayRegion (result, 0, array.Length, bytes);
-#endif  // !JAVA_INTEROP
 
 			return result;
 		}
@@ -1634,17 +1260,7 @@ namespace Android.Runtime {
 
 		public static IntPtr NewObjectArray (int length, IntPtr elementClass, IntPtr initialElement)
 		{
-#if JAVA_INTEROP
 			return JniEnvironment.Arrays.NewObjectArray (length, new JniObjectReference (elementClass), new JniObjectReference (initialElement)).Handle;
-#else   // !JAVA_INTEROP
-			IntPtr result = LogCreateLocalRef (Env.NewObjectArray (Handle, length, elementClass, initialElement));
-
-			Exception e = AndroidEnvironment.GetExceptionForLastThrowable ();
-			if (e != null)
-				ExceptionDispatchInfo.Capture (e).Throw ();
-
-			return result;
-#endif  // !JAVA_INTEROP
 		}
 
 		public static IntPtr NewObjectArray<T>(params T[] values)
@@ -1881,117 +1497,50 @@ namespace Android.Runtime {
 
 		static unsafe void _SetBooleanArrayRegion (IntPtr array, int start, int length, bool[] buffer)
 		{
-#if JAVA_INTEROP
 			fixed (bool* p = buffer)
 				JniEnvironment.Arrays.SetBooleanArrayRegion (new JniObjectReference (array), start, length, p);
-#else   // !JAVA_INTEROP
-			var _buffer = new byte [buffer.Length];
-			for (int i = 0; i < _buffer.Length; ++i)
-				_buffer [i] = buffer [i] ? (byte) 1 : (byte) 0;
-			Env.SetBooleanArrayRegion (Handle, array, start, length, _buffer);
-
-			Exception e = AndroidEnvironment.GetExceptionForLastThrowable ();
-			if (e != null)
-				ExceptionDispatchInfo.Capture (e).Throw ();
-#endif  // !JAVA_INTEROP
 		}
 
 		static unsafe void _SetByteArrayRegion (IntPtr array, int start, int length, byte[] buffer)
 		{
-#if JAVA_INTEROP
 			fixed (byte* p = buffer)
 				JniEnvironment.Arrays.SetByteArrayRegion (new JniObjectReference (array), start, length, (sbyte*) p);
-#else   // !JAVA_INTEROP
-			Env.SetByteArrayRegion (Handle, array, start, length, buffer);
-
-			Exception e = AndroidEnvironment.GetExceptionForLastThrowable ();
-			if (e != null)
-				ExceptionDispatchInfo.Capture (e).Throw ();
-#endif  // !JAVA_INTEROP
 		}
 
 		static unsafe void _SetCharArrayRegion (IntPtr array, int start, int length, char[] buffer)
 		{
-#if JAVA_INTEROP
 			fixed (char* p = buffer)
 				JniEnvironment.Arrays.SetCharArrayRegion (new JniObjectReference (array), start, length, p);
-#else   // !JAVA_INTEROP
-			Env.SetCharArrayRegion (Handle, array, start, length, buffer);
-
-			Exception e = AndroidEnvironment.GetExceptionForLastThrowable ();
-			if (e != null)
-				ExceptionDispatchInfo.Capture (e).Throw ();
-#endif  // !JAVA_INTEROP
 		}
 
 		static unsafe void _SetShortArrayRegion (IntPtr array, int start, int length, short[] buffer)
 		{
-#if JAVA_INTEROP
 			fixed (short* p = buffer)
 				JniEnvironment.Arrays.SetShortArrayRegion (new JniObjectReference (array), start, length, p);
-#else   // !JAVA_INTEROP
-			Env.SetShortArrayRegion (Handle, array, start, length, buffer);
-
-			Exception e = AndroidEnvironment.GetExceptionForLastThrowable ();
-			if (e != null)
-				ExceptionDispatchInfo.Capture (e).Throw ();
-#endif  // !JAVA_INTEROP
 		}
 
 		static unsafe void _SetIntArrayRegion (IntPtr array, int start, int length, int[] buffer)
 		{
-#if JAVA_INTEROP
 			fixed (int* p = buffer)
 				JniEnvironment.Arrays.SetIntArrayRegion (new JniObjectReference (array), start, length, p);
-#else   // !JAVA_INTEROP
-			Env.SetIntArrayRegion (Handle, array, start, length, buffer);
-
-			Exception e = AndroidEnvironment.GetExceptionForLastThrowable ();
-			if (e != null)
-				ExceptionDispatchInfo.Capture (e).Throw ();
-#endif  // !JAVA_INTEROP
 		}
 
 		static unsafe void _SetLongArrayRegion (IntPtr array, int start, int length, long[] buffer)
 		{
-#if JAVA_INTEROP
 			fixed (long* p = buffer)
 				JniEnvironment.Arrays.SetLongArrayRegion (new JniObjectReference (array), start, length, p);
-#else   // !JAVA_INTEROP
-			Env.SetLongArrayRegion (Handle, array, start, length, buffer);
-
-			Exception e = AndroidEnvironment.GetExceptionForLastThrowable ();
-			if (e != null)
-				ExceptionDispatchInfo.Capture (e).Throw ();
-#endif  // !JAVA_INTEROP
 		}
 
 		static unsafe void _SetFloatArrayRegion (IntPtr array, int start, int length, float[] buffer)
 		{
-#if JAVA_INTEROP
 			fixed (float* p = buffer)
 				JniEnvironment.Arrays.SetFloatArrayRegion (new JniObjectReference (array), start, length, p);
-#else   // !JAVA_INTEROP
-			Env.SetFloatArrayRegion (Handle, array, start, length, buffer);
-
-			Exception e = AndroidEnvironment.GetExceptionForLastThrowable ();
-			if (e != null)
-				ExceptionDispatchInfo.Capture (e).Throw ();
-#endif  // !JAVA_INTEROP
 		}
 
 		static unsafe void _SetDoubleArrayRegion (IntPtr array, int start, int length, double[] buffer)
 		{
-#if JAVA_INTEROP
 			fixed (double* p = buffer)
 				JniEnvironment.Arrays.SetDoubleArrayRegion (new JniObjectReference (array), start, length, p);
-#else   // !JAVA_INTEROP
-			Env.SetDoubleArrayRegion (Handle, array, start, length, buffer);
-
-			Exception e = AndroidEnvironment.GetExceptionForLastThrowable ();
-			if (e != null)
-				ExceptionDispatchInfo.Capture (e).Throw ();
-#endif  // !JAVA_INTEROP
 		}
 
 		public static void SetArrayItem<T> (IntPtr array_ptr, int index, T value)
@@ -2015,38 +1564,6 @@ namespace Android.Runtime {
 				ret [i] = JavaObjectExtensions.JavaCast<Java.Lang.Object>(JavaConvert.ToJavaObject (array [i]));
 			return ret;
 		}
-
-#if !JAVA_INTEROP
-		delegate int GetEnvDelegate (IntPtr javavm, out IntPtr envptr, int version);
-		delegate int AttachCurrentThreadDelegate (IntPtr javavm, out IntPtr env, IntPtr args);
-		delegate int DetachCurrentThreadDelegate (IntPtr javavm);
-
-		struct JNIInvokeInterface {
-			public IntPtr reserved0;
-			public IntPtr reserved1;
-			public IntPtr reserved2;
- 
-			public IntPtr DestroyJavaVM; // jint       (*DestroyJavaVM)(JavaVM*);
-			public AttachCurrentThreadDelegate AttachCurrentThread;
-			public DetachCurrentThreadDelegate DetachCurrentThread;
-			public GetEnvDelegate GetEnv;
-			public IntPtr AttachCurrentThreadAsDaemon; //jint        (*AttachCurrentThreadAsDaemon)(JavaVM*, JNIEnv**, void*);
-		}
-
-		internal struct JNINativeMethod {
-
-			public string Name;
-			public string Sig;
-			public Delegate Func;
-
-			public JNINativeMethod (string name, string sig, Delegate func)
-			{
-				Name = name;
-				Sig = sig;
-				Func = func;
-			}
-		} 
-#endif  // !JAVA_INTEROP
 
 #if ANDROID_8
 		[DllImport ("libjnigraphics.so")]
@@ -2075,5 +1592,3 @@ namespace Android.Runtime {
 #endif  // ANDROID_8
 	}
 }
-
-

@@ -11,12 +11,14 @@ using System.Xml.XPath;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 
-using TPL = System.Threading.Tasks;
+using Xamarin.Build;
 
 namespace Xamarin.Android.Tasks
 {
-	public class CalculateLayoutCodeBehind : AsyncTask
+	public class CalculateLayoutCodeBehind : AndroidAsyncTask
 	{
+		public override string TaskPrefix => "CLC";
+
 		sealed class LayoutInclude
 		{
 			public string Id;
@@ -111,15 +113,8 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public ITaskItem [] LayoutPartialClassFiles { get; set; }
 
-		public override bool Execute ()
+		public async override System.Threading.Tasks.Task RunTaskAsync ()
 		{
-			Log.LogDebugMessage ("CalculateLayoutCodeBehind Task");
-			Log.LogDebugMessage ($"  OutputLanguage: {OutputLanguage}");
-			Log.LogDebugMessage ($"  OutputFileExtension: {OutputFileExtension}");
-			Log.LogDebugMessage ($"  BaseNamespace: {BaseNamespace}");
-			Log.LogDebugMessage ($"  BindingDependenciesCacheFile: {BindingDependenciesCacheFile}");
-			Log.LogDebugTaskItems ("  BoundLayouts:", BoundLayouts);
-
 			widgetWithId = XPathExpression.Compile ("//*[@android:id and string-length(@android:id) != 0] | //include[not(@android:id)]");
 
 			GenerateLayoutBindings.BindingGeneratorLanguage gen;
@@ -129,7 +124,6 @@ namespace Xamarin.Android.Tasks
 			} else
 				sourceFileExtension = OutputFileExtension;
 
-			string partialClassNames = null;
 			var layoutsByName = new Dictionary <string, LayoutGroup> (StringComparer.OrdinalIgnoreCase);
 
 			foreach (ITaskItem item in BoundLayouts) {
@@ -146,19 +140,8 @@ namespace Xamarin.Android.Tasks
 				// is changed!
 				Log.LogDebugMessage ($"Parsing layouts in parallel (threshold of {ParallelGenerationThreshold} layouts met)");
 
-				var cts = new CancellationTokenSource ();
-                                TPL.ParallelOptions options = new TPL.ParallelOptions {
-                                        CancellationToken = cts.Token,
-                                        TaskScheduler = TPL.TaskScheduler.Default,
-                                };
-				TPL.Task.Factory.StartNew (
-					() => TPL.Parallel.ForEach (layoutsByName, options, kvp => ParseAndLoadGroup (layoutsByName, kvp.Key, kvp.Value.InputItems, ref kvp.Value.LayoutBindingItems, ref kvp.Value.LayoutPartialClassItems)),
-					cts.Token,
-					TPL.TaskCreationOptions.None,
-					TPL.TaskScheduler.Default
-				).ContinueWith (t => Complete ());
-
-				base.Execute ();
+				await this.WhenAll (layoutsByName, kvp =>
+					ParseAndLoadGroup (layoutsByName, kvp.Key, kvp.Value.InputItems, ref kvp.Value.LayoutBindingItems, ref kvp.Value.LayoutPartialClassItems));
 
 				foreach (var kvp in layoutsByName) {
 					LayoutGroup group = kvp.Value;
@@ -173,7 +156,6 @@ namespace Xamarin.Android.Tasks
 				foreach (var kvp in layoutsByName) {
 					ParseAndLoadGroup (layoutsByName, kvp.Key, kvp.Value.InputItems, ref layoutBindingFiles, ref layoutPartialClassFiles);
 				}
-				Complete ();
 			}
 
 			LayoutBindingFiles = layoutBindingFiles.ToArray ();
@@ -183,8 +165,6 @@ namespace Xamarin.Android.Tasks
 
 			Log.LogDebugTaskItems ("  LayoutBindingFiles:", LayoutBindingFiles, true);
 			Log.LogDebugTaskItems ("  LayoutPartialClassFiles:", LayoutPartialClassFiles, true);
-
-			return !Log.HasLoggedErrors;
 		}
 
 		void ParseAndLoadGroup (Dictionary <string, LayoutGroup> groupIndex, string groupName, List<ITaskItem> items, ref List<ITaskItem> layoutBindingFiles, ref List<ITaskItem> layoutPartialClassFiles)

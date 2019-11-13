@@ -7,8 +7,6 @@ using Microsoft.Build.Construction;
 using System.Diagnostics;
 using System.Text;
 
-using XABuildPaths = Xamarin.Android.Build.Paths;
-
 namespace Xamarin.ProjectTools
 {
 	public abstract class XamarinProject 
@@ -31,6 +29,11 @@ namespace Xamarin.ProjectTools
 		public IList<Package> Packages { get; private set; }
 		public IList<BuildItem> References { get; private set; }
 		public IList<Package> PackageReferences { get; private set; }
+		public virtual bool ShouldRestorePackageReferences => PackageReferences?.Count > 0;
+		/// <summary>
+		/// If true, the ProjectDirectory will be deleted and populated on the first build
+		/// </summary>
+		public virtual bool ShouldPopulate => true;
 		public IList<Import> Imports { get; private set; }
 		PropertyGroup common, debug, release;
 
@@ -120,6 +123,33 @@ namespace Xamarin.ProjectTools
 			}
 		}
 
+		public BuildItem GetItem (string include)
+		{
+			return ItemGroupList.SelectMany (g => g).FirstOrDefault (i => i.Include ().Equals (include, StringComparison.OrdinalIgnoreCase));
+		}
+
+		public Import GetImport (string include)
+		{
+			return Imports.FirstOrDefault (i => i.Project ().Equals (include, StringComparison.OrdinalIgnoreCase));
+		}
+
+		public void Touch (params string [] itemPaths)
+		{
+			foreach (var item in itemPaths) {
+				var buildItem = GetItem (item);
+				if (buildItem != null) {
+					buildItem.Timestamp = DateTime.UtcNow;
+					continue;
+				}
+				var import = GetImport (item);
+				if (import != null) {
+					import.Timestamp = DateTime.UtcNow;
+					continue;
+				}
+				throw new InvalidOperationException ($"Path `{item}` not found in project!");
+			}
+		}
+
 		string project_file_path;
 		public string ProjectFilePath {
 			get { return project_file_path ?? ProjectName + Language.DefaultProjectExtension; }
@@ -139,22 +169,26 @@ namespace Xamarin.ProjectTools
 			return new BuildOutput (this) { Builder = builder };
 		}
 
-		string project_file_contents;
+		ProjectResource project;
 		string packages_config_contents;
 
 		public virtual List<ProjectResource> Save (bool saveProject = true)
 		{
 			var list = new List<ProjectResource> ();
 			if (saveProject) {
+				if (project == null) {
+					project = new ProjectResource {
+						Path = ProjectFilePath,
+						Encoding = System.Text.Encoding.UTF8,
+					};
+				}
+				// Clear the Timestamp if the project changed
 				var contents = SaveProject ();
-				var timestamp = contents != project_file_contents ? default (DateTimeOffset?) : 
-					ItemGroupList.SelectMany (ig => ig).Where (i => i.Timestamp != null).Select (i => (DateTimeOffset)i.Timestamp).Max ();
-				list.Add (new ProjectResource () {
-					Timestamp = timestamp,
-					Path = ProjectFilePath,
-					Content = project_file_contents = contents,
-					Encoding = System.Text.Encoding.UTF8,
-				});
+				if (contents != project.Content) {
+					project.Timestamp = null;
+					project.Content = contents;
+				}
+				list.Add (project);
 			}
 
 			if (Packages.Any ()) {
@@ -173,7 +207,7 @@ namespace Xamarin.ProjectTools
 			foreach (var ig in ItemGroupList)
 				list.AddRange (ig.Select (s => new ProjectResource () {
 					Timestamp = s.Timestamp,
-					Path = s.Include (),
+					Path = s.Include?.Invoke (),
 					Content = s.TextContent == null ? null : s.TextContent (),
 					BinaryContent = s.BinaryContent == null ? null : s.BinaryContent (),
 					Encoding = s.Encoding,
@@ -183,6 +217,7 @@ namespace Xamarin.ProjectTools
 
 			foreach (var import in Imports)
 				list.Add (new ProjectResource () {
+					Timestamp = import.Timestamp,
 					Path = import.Project (),
 					Content = import.TextContent == null ? null : import.TextContent (),
 					Encoding = System.Text.Encoding.UTF8,
@@ -214,7 +249,7 @@ namespace Xamarin.ProjectTools
 			UpdateProjectFiles (directory, projectFiles);
 		}
 
-		public void UpdateProjectFiles (string directory, IEnumerable<ProjectResource> projectFiles, bool doNotCleanup = false)
+		public virtual void UpdateProjectFiles (string directory, IEnumerable<ProjectResource> projectFiles, bool doNotCleanup = false)
 		{
 			directory = Path.Combine (Root, directory.Replace ('\\', '/').Replace ('/', Path.DirectorySeparatorChar));
 
@@ -222,6 +257,9 @@ namespace Xamarin.ProjectTools
 				throw new InvalidOperationException ("Path '" + directory + "' does not exist.");
 
 			foreach (var p in projectFiles) {
+				// Skip empty paths or wildcards
+				if (string.IsNullOrEmpty (p.Path) || p.Path.Contains ("*"))
+					continue;
 				var path = Path.Combine (directory, p.Path.Replace ('\\', '/').Replace ('/', Path.DirectorySeparatorChar));
 
 				if (p.Deleted) {
@@ -290,13 +328,16 @@ namespace Xamarin.ProjectTools
 			var isWindows = Environment.OSVersion.Platform == PlatformID.Win32NT;
 			var nuget = Path.Combine (Root, "NuGet.exe");
 			var psi = new ProcessStartInfo (isWindows ? nuget : "mono") {
-				Arguments = $"{(isWindows ? "" : "\"" + nuget + "\"")} restore -PackagesDirectory \"{Path.Combine (Root, directory, "..", "packages")}\" \"{Path.Combine (Root, directory, "packages.config")}\"",
+				Arguments = $"{(isWindows ? "" : "\"" + nuget + "\"")} restore -Verbosity Detailed -PackagesDirectory \"{Path.Combine (Root, directory, "..", "packages")}\" \"{Path.Combine (Root, directory, "packages.config")}\"",
 				CreateNoWindow = true,
 				UseShellExecute = false,
 				WindowStyle = ProcessWindowStyle.Hidden,
 				RedirectStandardError = true,
 				RedirectStandardOutput = true,
 			};
+			//TODO: possibly remove this later?
+			psi.EnvironmentVariables.Add ("MONO_LOG_LEVEL", "debug");
+			Console.WriteLine ($"{psi.FileName} {psi.Arguments}");
 			using (var process = new Process {
 				StartInfo = psi,
 			}) {
@@ -309,7 +350,7 @@ namespace Xamarin.ProjectTools
 			}
 		}
 
-		public string ProcessSourceTemplate (string source)
+		public virtual string ProcessSourceTemplate (string source)
 		{
 			return source.Replace ("${ROOT_NAMESPACE}", RootNamespace ?? ProjectName).Replace ("${PROJECT_NAME}", ProjectName);
 		}

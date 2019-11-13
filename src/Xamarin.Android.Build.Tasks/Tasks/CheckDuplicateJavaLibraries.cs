@@ -6,18 +6,16 @@ using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks
 {
-	public class CheckDuplicateJavaLibraries : Task
+	public class CheckDuplicateJavaLibraries : AndroidTask
 	{
-		public ITaskItem[] JavaSourceFiles { get; set; }
+		public override string TaskPrefix => "CDJ";
+
+		public ITaskItem [] JavaSourceFiles { get; set; }
 		public ITaskItem[] JavaLibraries { get; set; }		
 		public ITaskItem[] LibraryProjectJars { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
-			Log.LogDebugTaskItems ("  JavaSourceFiles:", JavaSourceFiles);
-			Log.LogDebugTaskItems ("  JavaLibraries:", JavaLibraries);
-			Log.LogDebugTaskItems ("  LibraryProjectJars:", LibraryProjectJars);
-
 			var jarFiles = (JavaSourceFiles != null) ? JavaSourceFiles.Where (f => f.ItemSpec.EndsWith (".jar")) : null;
 			if (jarFiles != null && JavaLibraries != null)
 				jarFiles = jarFiles.Concat (JavaLibraries);

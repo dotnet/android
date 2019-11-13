@@ -1,6 +1,3 @@
-export OS_NAME       := $(shell uname)
-export OS_ARCH       := $(shell uname -m)
-export NO_SUDO       ?= false
 V             ?= 0
 prefix         = /usr/local
 CONFIGURATION  = Debug
@@ -8,18 +5,87 @@ RUNTIME       := $(shell which mono64 2> /dev/null && echo mono64 || echo mono) 
 SOLUTION       = Xamarin.Android.sln
 TEST_TARGETS   = build-tools/scripts/RunTests.targets
 API_LEVEL     ?=
+PREPARE_ARGS =
+PREPARE_BUILD_LOG = bin/Build$(CONFIGURATION)/bootstrap-build.binlog
+PREPARE_RESTORE_LOG = bin/Build$(CONFIGURATION)/bootstrap-restore.binlog
+PREPARE_SOURCE_DIR = build-tools/xaprepare
+PREPARE_SOLUTION = $(PREPARE_SOURCE_DIR)/xaprepare.sln
+PREPARE_EXE = $(PREPARE_SOURCE_DIR)/xaprepare/bin/$(CONFIGURATION)/xaprepare.exe
+PREPARE_COMMON_MSBUILD_FLAGS = /p:Configuration=$(CONFIGURATION) $(PREPARE_MSBUILD_ARGS) $(MSBUILD_ARGS)
+PREPARE_MSBUILD_FLAGS = /binaryLogger:"$(PREPARE_BUILD_LOG)" $(PREPARE_COMMON_MSBUILD_FLAGS)
+PREPARE_RESTORE_FLAGS = /binaryLogger:"$(PREPARE_RESTORE_LOG)" $(PREPARE_COMMON_MSBUILD_FLAGS)
+PREPARE_SCENARIO =
+PREPARE_CI_PR ?= 0
+PREPARE_CI ?= 0
+PREPARE_AUTOPROVISION ?= 0
+PREPARE_IGNORE_MONO_VERSION ?= 1
 
-ifeq ($(OS_NAME),Darwin)
-export MACOSX_DEPLOYMENT_TARGET := 10.11
+_PREPARE_CI_MODE_PR_ARGS = --no-emoji --run-mode=CI
+_PREPARE_CI_MODE_ARGS = $(_PREPARE_CI_MODE_PR_ARGS) -a
+_PREPARE_ARGS =
+
+BOOTSTRAP_SOLUTION = Xamarin.Android.BootstrapTasks.sln
+BOOTSTRAP_BUILD_LOG = bin/Build$(CONFIGURATION)/bootstrap-build.binlog
+BOOTSTRAP_MSBUILD_FLAGS = /binaryLogger:"$(BOOTSTRAP_BUILD_LOG)" $(PREPARE_COMMON_MSBUILD_FLAGS)
+
+all:
+	$(call MSBUILD_BINLOG,all,$(_SLN_BUILD)) $(MSBUILD_FLAGS) $(SOLUTION)
+
+-include bin/Build$(CONFIGURATION)/rules.mk
+
+ifeq ($(OS_NAME),)
+export OS_NAME       := $(shell uname)
+endif
+
+ifeq ($(OS_ARCH),)
+export OS_ARCH       := $(shell uname -m)
+endif
+
+export NO_SUDO       ?= false
+
+ifneq ($(NO_SUDO),false)
+_PREPARE_ARGS += --auto-provisioning-uses-sudo=false
 endif
 
 ifneq ($(V),0)
-MONO_OPTIONS += --debug
+MONO_OPTIONS   += --debug
+NUGET_VERBOSITY = -Verbosity Detailed
+_PREPARE_ARGS += -v:d
 endif
 
-ifneq ($(MONO_OPTIONS),)
-export MONO_OPTIONS
+ifneq ($(PREPARE_CI_PR),0)
+_PREPARE_ARGS += $(_PREPARE_CI_MODE_PR_ARGS)
 endif
+
+ifneq ($(PREPARE_CI),0)
+_PREPARE_ARGS += $(_PREPARE_CI_MODE_ARGS)
+endif
+
+ifneq ($(PREPARE_AUTOPROVISION),0)
+_PREPARE_ARGS += --auto-provision=yes --auto-provision-uses-sudo=yes
+endif
+
+ifeq ($(OS_NAME),Darwin)
+ifeq ($(HOMEBREW_PREFIX),)
+HOMEBREW_PREFIX ?= $(shell brew --prefix)
+endif
+else
+HOMEBREW_PREFIX := $prefix
+endif
+
+ifeq ($(wildcard Configuration.OperatingSystem.props),)
+PREPARE_MSBUILD_FLAGS += "/p:HostHomebrewPrefix=$(HOMEBREW_PREFIX)"
+endif
+
+ifneq ($(PREPARE_SCENARIO),)
+_PREPARE_ARGS += -s:"$(PREPARE_SCENARIO)"
+endif
+
+ifeq ($(XA_FORCE_COMPONENT_REFRESH),true)
+_PREPARE_ARGS += -refresh
+endif
+
+_PREPARE_ARGS += $(PREPARE_ARGS)
 
 include build-tools/scripts/msbuild.mk
 
@@ -30,11 +96,8 @@ _SLN_BUILD  = MSBUILD="$(MSBUILD)" tools/scripts/xabuild
 endif   # $(USE_MSBUILD) == 1
 
 ifneq ($(API_LEVEL),)
-MSBUILD_FLAGS += /p:AndroidApiLevel=$(API_LEVEL) /p:AndroidFrameworkVersion=$(word $(API_LEVEL), $(ALL_FRAMEWORKS))
+MSBUILD_FLAGS += /p:AndroidApiLevel=$(API_LEVEL) /p:AndroidFrameworkVersion=$(word $(API_LEVEL), $(ALL_FRAMEWORKS)) /p:AndroidPlatformId=$(word $(a), $(ALL_PLATFORM_IDS))
 endif
-
-all::
-	$(call MSBUILD_BINLOG,all,$(_SLN_BUILD)) $(MSBUILD_FLAGS) $(SOLUTION)
 
 all-tests::
 	MSBUILD="$(MSBUILD)" $(call MSBUILD_BINLOG,all-tests,tools/scripts/xabuild) $(MSBUILD_FLAGS) Xamarin.Android-Tests.sln
@@ -66,70 +129,13 @@ uninstall::
 	rm -rf "$(prefix)/lib/mono/xbuild/Xamarin/Android"
 	rm -rf "$(prefix)/lib/mono/xbuild-frameworks/MonoAndroid"
 
-ifeq ($(OS_NAME),Linux)
-export LINUX_DISTRO         := $(shell lsb_release -i -s || true)
-export LINUX_DISTRO_RELEASE := $(shell lsb_release -r -s || true)
-prepare:: linux-prepare
-endif # $(OS_NAME)=Linux
+topdir  := $(shell pwd)
 
-prepare:: prepare-paths prepare-msbuild
+# Used by External XA Build
+EXTERNAL_XA_PATH=$(topdir)
+EXTERNAL_GIT_PATH=$(topdir)/external
 
-linux-prepare::
-	BINFMT_MISC_TROUBLE="cli win" \
-	BINFMT_WARN=no ; \
-	for m in ${BINFMT_MISC_TROUBLE}; do \
-		if [ -f "/proc/sys/fs/binfmt_misc/$$m" ]; then \
-			BINFMT_WARN=yes ; \
-		fi ; \
-	done ; \
-	if [ "x${BINFMT_WARN}" = "xyes" ]; then \
-		cat Documentation/binfmt_misc-warning-Linux.txt ; \
-	fi; \
-	if [ -f build-tools/scripts/dependencies/linux-prepare-$(LINUX_DISTRO)-$(LINUX_DISTRO_RELEASE).sh ]; then \
-		sh build-tools/scripts/dependencies/linux-prepare-$(LINUX_DISTRO)-$(LINUX_DISTRO_RELEASE).sh $(LINUX_DISTRO_RELEASE); \
-	elif [ -f build-tools/scripts/dependencies/linux-prepare-$(LINUX_DISTRO).sh ]; then \
-		sh build-tools/scripts/dependencies/linux-prepare-$(LINUX_DISTRO).sh $(LINUX_DISTRO_RELEASE); \
-	fi
-
-# $(call GetPath,path)
-GetPath   = $(shell $(MSBUILD) $(MSBUILD_FLAGS) /p:DoNotLoadOSProperties=True /nologo /v:minimal /t:Get$(1)FullPath build-tools/scripts/Paths.targets | tr -d '[[:space:]]' )
-
-MSBUILD_PREPARE_PROJS = \
-	src/mono-runtimes/mono-runtimes.csproj \
-	src/Xamarin.Android.Build.Tasks/Xamarin.Android.Build.Tasks.csproj
-
-prepare-external:
-	git submodule update --init --recursive
-	nuget restore $(SOLUTION)
-	nuget restore Xamarin.Android-Tests.sln
-	(cd external/xamarin-android-tools && make prepare CONFIGURATION=$(CONFIGURATION))
-	(cd $(call GetPath,JavaInterop) && make prepare CONFIGURATION=$(CONFIGURATION) JI_MAX_JDK=8)
-	(cd $(call GetPath,JavaInterop) && make bin/Build$(CONFIGURATION)/JdkInfo.props CONFIGURATION=$(CONFIGURATION) JI_MAX_JDK=8)
-
-prepare-deps: prepare-external
-	./build-tools/scripts/generate-os-info Configuration.OperatingSystem.props
-	mkdir -p bin/Build$(CONFIGURATION)
-	$(call MSBUILD_BINLOG,prepare-deps) build-tools/dependencies/dependencies.csproj
-	$(call MSBUILD_BINLOG,prepare-bundle) build-tools/download-bundle/download-bundle.csproj
-	$(call MSBUILD_BINLOG,prepare-restore) $(MSBUILD_FLAGS) tests/Xamarin.Forms-Performance-Integration/Xamarin.Forms.Performance.Integration.csproj /t:Restore
-
-prepare-props: prepare-deps
-	cp $(call GetPath,JavaInterop)/external/Mono.Cecil* "$(call GetPath,MonoSource)/external"
-	cp "$(call GetPath,JavaInterop)/product.snk" "$(call GetPath,MonoSource)"
-	cp build-tools/scripts/Configuration.Java.Interop.Override.props external/Java.Interop/Configuration.Override.props
-	cp $(call GetPath,MonoSource)/mcs/class/msfinal.pub .
-
-prepare-msbuild: prepare-props
-ifeq ($(USE_MSBUILD),1)
-	for proj in $(MSBUILD_PREPARE_PROJS); do \
-		$(call MSBUILD_BINLOG,prepare-msbuild) "$$proj" || exit 1; \
-	done
-endif	# msbuild
-
-prepare-image-dependencies:
-	$(call MSBUILD_BINLOG,prepare-image-deps) build-tools/scripts/PrepareImageDependencies.targets /t:PrepareImageDependencies \
-		/p:AndroidSupportedHostJitAbis=mxe-Win32:mxe-Win64
-	cat bin/Build$(CONFIGURATION)/prepare-image-dependencies.sh | tr -d '\r' > prepare-image-dependencies.sh
+-include $(EXTERNAL_GIT_PATH)/monodroid/xa-integration.mk
 
 include build-tools/scripts/BuildEverything.mk
 
@@ -137,57 +143,13 @@ include build-tools/scripts/BuildEverything.mk
 include build-tools/scripts/Packaging.mk
 include tests/api-compatibility/api-compatibility.mk
 
-topdir  := $(shell pwd)
-
-
-XA_BUILD_PATHS_OUT = bin/Test$(CONFIGURATION)/XABuildPaths.cs
-
-prepare-paths: $(XA_BUILD_PATHS_OUT)
-
-$(XA_BUILD_PATHS_OUT): bin/Test%/XABuildPaths.cs: build-tools/scripts/XABuildPaths.cs.in
-	mkdir -p $(shell dirname $@)
-	sed -e 's;@CONFIGURATION@;$*;g' \
-	    -e 's;@TOP_DIRECTORY@;$(topdir);g' < $< > $@
-	cat $@
-
-
-# Usage: $(call CALL_CREATE_THIRD_PARTY_NOTICES,path,licenseType,includeExternalDeps,includeBuildDeps)
-define CREATE_THIRD_PARTY_NOTICES
-	$(call MSBUILD_BINLOG,create-tpn,$(MSBUILD)) $(_MSBUILD_ARGS) \
-		$(topdir)/build-tools/ThirdPartyNotices/ThirdPartyNotices.csproj \
-		/p:Configuration=$(CONFIGURATION) \
-		/p:ThirdPartyNoticeFile=$(topdir)/$(1) \
-		/p:ThirdPartyNoticeLicenseType=$(2) \
-		/p:TpnIncludeExternalDependencies=$(3) \
-		/p:TpnIncludeBuildDependencies=$(4)
-endef # CREATE_THIRD_PARTY_NOTICES
-
-prepare:: prepare-tpn
-
-TPN_LICENSE_FILES = $(shell grep -h '<LicenseFile>' external/*.tpnitems src/*.tpnitems \
-	| sed -E 's,<LicenseFile>(.*)</LicenseFile>,\1,g;s,.\(MSBuildThisFileDirectory\),$(topdir)/external/,g' \
-	| tr \\ / )
-
-# Usage: $(call CREATE_THIRD_PARTY_NOTICES_RULE,path,licenseType,includeExternalDeps,includeBuildDeps)
-define CREATE_THIRD_PARTY_NOTICES_RULE
-prepare-tpn:: $(1)
-
-$(1) $(topdir)/$(1): build-tools/ThirdPartyNotices/ThirdPartyNotices.csproj \
-		$(wildcard external/*.tpnitems src/*.tpnitems) \
-		$(TPN_LICENSE_FILES)
-	$(call CREATE_THIRD_PARTY_NOTICES,$(1),$(2),$(3),$(4))
-endef # CREATE_THIRD_PARTY_NOTICES_RULE
-
-THIRD_PARTY_NOTICE_LICENSE_TYPE = microsoft-oss
-
-$(eval $(call CREATE_THIRD_PARTY_NOTICES_RULE,ThirdPartyNotices.txt,foundation,False,False))
-$(eval $(call CREATE_THIRD_PARTY_NOTICES_RULE,bin/$(CONFIGURATION)/lib/xamarin.android/ThirdPartyNotices.txt,$(THIRD_PARTY_NOTICE_LICENSE_TYPE),True,False))
-
 run-all-tests:
 	@echo "PRINTING MONO VERSION"
 	mono --version
-	$(call MSBUILD_BINLOG,run-all-tests) $(TEST_TARGETS) /t:RunAllTests
-	$(MAKE) run-api-compatibility-tests
+	_r=0 ; \
+	$(call MSBUILD_BINLOG,run-all-tests,,Test) $(TEST_TARGETS) /t:RunAllTests || _r=$$? ; \
+	$(MAKE) run-api-compatibility-tests || _r=$$?; \
+	exit $$_r
 
 clean:
 	$(call MSBUILD_BINLOG,clean) /t:Clean Xamarin.Android.sln
@@ -201,19 +163,60 @@ distclean:
 
 run-nunit-tests:
 ifeq ($(SKIP_NUNIT_TESTS),)
-	$(call MSBUILD_BINLOG,run-nunit-tests) $(TEST_TARGETS) /t:RunNUnitTests
+	$(call MSBUILD_BINLOG,run-nunit-tests,,Test) $(TEST_TARGETS) /t:RunNUnitTests
 endif # $(SKIP_NUNIT_TESTS) == ''
 
 run-ji-tests:
-	$(call MSBUILD_BINLOG,run-ji-tests) $(TEST_TARGETS) /t:RunJavaInteropTests
+	$(call MSBUILD_BINLOG,run-ji-tests,,Test) $(TEST_TARGETS) /t:RunJavaInteropTests
+
+ifneq ($(PACKAGES),)
+APK_TESTS_PROP = /p:ApkTests='"$(PACKAGES)"'
+endif
 
 run-apk-tests:
-	$(call MSBUILD_BINLOG,run-apk-tests) $(TEST_TARGETS) /t:RunApkTests
+	_r=0 ; \
+	$(call MSBUILD_BINLOG,run-apk-tests,,Test) $(TEST_TARGETS) /t:RunApkTests /p:RunApkTestsTarget=RunPerformanceApkTests $(APK_TESTS_PROP) || _r=1 ; \
+	$(call MSBUILD_BINLOG,run-apk-tests,,Test) $(TEST_TARGETS) /t:RunApkTests $(APK_TESTS_PROP) || _r=1 ; \
+	exit $$_r
 
 run-performance-tests:
-	$(call MSBUILD_BINLOG,run-performance-tests) $(TEST_TARGETS) /t:RunPerformanceTests
+	_r=0 ; \
+	$(call MSBUILD_BINLOG,run-apk-tests,,Test) $(TEST_TARGETS) /t:RunApkTests /p:RunApkTestsTarget=RunPerformanceApkTests $(APK_TESTS_PROP) || _r=1 ; \
+	$(call MSBUILD_BINLOG,run-performance-tests,,Test) $(TEST_TARGETS) /t:RunPerformanceTests || _r=1 ; \
+	exit $$_r
 
 list-nunit-tests:
 	$(MSBUILD) $(MSBUILD_FLAGS) $(TEST_TARGETS) /t:ListNUnitTests
 
 include build-tools/scripts/runtime-helpers.mk
+
+.PHONY: prepare-build-init
+prepare-build-init:
+	mkdir -p $(dir $(PREPARE_BUILD_LOG))
+	msbuild $(PREPARE_RESTORE_FLAGS) $(PREPARE_SOLUTION) /t:Restore
+
+.PHONY: prepare-build
+prepare-build: prepare-build-init
+	msbuild $(PREPARE_MSBUILD_FLAGS) $(PREPARE_SOLUTION)
+
+.PHONY: prepare
+prepare: prepare-build
+	mono --debug $(PREPARE_EXE) $(_PREPARE_ARGS)
+	msbuild $(BOOTSTRAP_MSBUILD_FLAGS) $(BOOTSTRAP_SOLUTION)
+
+.PHONY: prepare-help
+prepare-help: prepare-build
+	mono --debug $(PREPARE_EXE) -h
+
+.PHONY: prepare-update-mono
+prepare-update-mono: prepare-build
+	mono --debug $(PREPARE_EXE) $(_PREPARE_ARGS) -s:UpdateMono
+
+prepare-external-git-dependencies: prepare-build
+	mono --debug $(PREPARE_EXE) $(_PREPARE_ARGS) -s:PrepareExternalGitDependencies
+
+APK_SIZES_REFERENCE_DIR=tests/apk-sizes-reference
+
+update-apk-sizes-reference:
+	-mkdir -p $(APK_SIZES_REFERENCE_DIR)
+	cp -v *values-$(CONFIGURATION).csv $(APK_SIZES_REFERENCE_DIR)/

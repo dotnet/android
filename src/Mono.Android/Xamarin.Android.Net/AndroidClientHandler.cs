@@ -172,11 +172,12 @@ namespace Xamarin.Android.Net
 		/// cref="t:System.TimeSpan.Zero"/>
 		/// </para>
 		/// <para>
-		/// The default value is <c>100</c> seconds, the same as the documented value of <see
-		/// cref="t:System.Net.Http.HttpClient.Timeout"/>
+		/// The default value is <c>24</c> hours, much higher than the documented value of <see
+		/// cref="t:System.Net.Http.HttpClient.Timeout"/> and the same as the value of iOS-specific
+		/// NSUrlSessionHandler.
 		/// </para>
 		/// </summary>
-		public TimeSpan ReadTimeout { get; set; } = TimeSpan.FromSeconds (100);
+		public TimeSpan ReadTimeout { get; set; } = TimeSpan.FromHours (24);
 
 		/// <summary>
 		/// <para>
@@ -192,7 +193,7 @@ namespace Xamarin.Android.Net
 		/// The default value is <c>120</c> seconds.
 		/// </para>
 		/// </summary>
-		public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromSeconds (120);
+		public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromHours (24);
 
 		protected override void Dispose (bool disposing)
 		{
@@ -259,10 +260,14 @@ namespace Xamarin.Android.Net
 			while (true) {
 				URL java_url = new URL (EncodeUrl (redirectState.NewUrl));
 				URLConnection java_connection;
-				if (UseProxy)
-					java_connection = java_url.OpenConnection (await GetJavaProxy (redirectState.NewUrl, cancellationToken));
-				else
+				if (UseProxy) {
+					var javaProxy = await GetJavaProxy (redirectState.NewUrl, cancellationToken).ConfigureAwait (continueOnCapturedContext: false);
+					// When you use the parameter Java.Net.Proxy.NoProxy the system proxy is overriden. Leave the parameter out to respect the default settings.
+					java_connection = javaProxy == Java.Net.Proxy.NoProxy ? java_url.OpenConnection () : java_url.OpenConnection (javaProxy);
+				} else {
+					// In this case the consumer of this class has explicitly chosen to not use a proxy, so bypass the default proxy. The default value of UseProxy is true.
 					java_connection = java_url.OpenConnection (Java.Net.Proxy.NoProxy);
+				}
 
 				var httpsConnection = java_connection as HttpsURLConnection;
 				if (httpsConnection != null) {

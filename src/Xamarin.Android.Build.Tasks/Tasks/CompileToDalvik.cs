@@ -14,10 +14,14 @@ namespace Xamarin.Android.Tasks
 {
 	public class CompileToDalvik : JavaToolTask
 	{
-		public ITaskItem[] AdditionalJavaLibraryReferences { get; set; }
+		public override string TaskPrefix => "CTX";
+
+		public ITaskItem [] AdditionalJavaLibraryReferences { get; set; }
 
 		[Required]
 		public string ClassesOutputDirectory { get; set; }
+
+		public string ClassesZip { get; set; }
 
 		public string DxJarPath { get; set; }
 
@@ -46,7 +50,7 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			if (!Directory.Exists (ClassesOutputDirectory))
 				Directory.CreateDirectory (ClassesOutputDirectory);
@@ -54,7 +58,7 @@ namespace Xamarin.Android.Tasks
 			bool ret = false;
 			inputListFile = Path.GetTempFileName ();
 			try {
-				ret = base.Execute ();
+				ret = base.RunTask ();
 			} catch (FileNotFoundException ex) {
 				Log.LogCodedError ("XA1003", ex.ToString ());
 			} finally {
@@ -82,11 +86,18 @@ namespace Xamarin.Android.Tasks
 					cmd.AppendSwitch (JavaOptions);		
 				}
 
+				cmd.AppendSwitchIfNotNull ("-Dfile.encoding=", "UTF8");
 				// Add the specific -XmxN to override the default heap size for the JVM
 				// N can be in the form of Nm or NGB (e.g 100m or 1GB ) 
 				cmd.AppendSwitchIfNotNull("-Xmx", JavaMaximumHeapSize);
 
 				cmd.AppendSwitchIfNotNull ("-jar ", Path.Combine (DxJarPath));
+			} else {
+				// To pass additional java parameters to `dx` you must 
+				// provide the parameter without the leading `-` 
+				// the dx tool will add that in after stripping off
+				// the `-J`
+				cmd.AppendSwitchIfNotNull ("-JDfile.encoding=", "UTF8");
 			}
 
 			cmd.AppendSwitch (DxExtraArguments);
@@ -117,10 +128,9 @@ namespace Xamarin.Android.Tasks
 					}
 				} else {
 					Log.LogDebugMessage ("  processing ClassesOutputDirectory...");
-					var zip = Path.GetFullPath (Path.Combine (ClassesOutputDirectory, "..", "classes.zip"));
-					if (File.Exists (zip)) {
-						Log.LogDebugMessage ($"    {zip}");
-						sw.WriteLine (Path.GetFullPath (zip));
+					if (!string.IsNullOrEmpty (ClassesZip) && File.Exists (ClassesZip)) {
+						Log.LogDebugMessage ($"    {ClassesZip}");
+						sw.WriteLine (Path.GetFullPath (ClassesZip));
 					}
 					foreach (var jar in JavaLibrariesToCompile) {
 						var fullPath = Path.GetFullPath (jar.ItemSpec);

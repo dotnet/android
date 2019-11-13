@@ -8,8 +8,10 @@ using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks
 {
-	public class GetExtraPackages : Task
+	public class GetExtraPackages : AndroidTask
 	{
+		public override string TaskPrefix => "GEP";
+
 		[Required]
 		public string IntermediateOutputPath { get; set; }
 
@@ -19,7 +21,7 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string LibraryProjectImportsDirectoryName { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			var extraPackages = new List<string> ();
 			var libProjects = Path.Combine (IntermediateOutputPath, "__library_projects__");
@@ -35,8 +37,6 @@ namespace Xamarin.Android.Tasks
 			}
 
 			ExtraPackages = String.Join (":", extraPackages.Distinct ().ToArray ());
-
-			Log.LogDebugMessage ("CreateTemporaryDirectory Task");
 			Log.LogDebugMessage ("  OUTPUT: ExtraPackages: {0}", ExtraPackages);
 
 			return true;

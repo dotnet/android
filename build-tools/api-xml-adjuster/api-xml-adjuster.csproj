@@ -7,7 +7,6 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>Xamarin.Android.Tools</RootNamespace>
     <AssemblyName>api-xml-adjuster</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -43,13 +42,6 @@
     </ProjectReference>
     <ProjectReference Include="..\..\external\Java.Interop\tools\class-parse\class-parse.csproj">
       <Name>class-parse</Name>
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\android-toolchain\android-toolchain.csproj">
-      <Project>{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA}</Project>
-      <Name>android-toolchain</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>

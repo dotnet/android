@@ -17,9 +17,10 @@
     <AssemblyName>Xamarin.Android.JcwGen-Tests</AssemblyName>
     <AndroidManifest>Properties\AndroidManifest.xml</AndroidManifest>
     <AndroidSupportedAbis>armeabi-v7a;x86</AndroidSupportedAbis>
-    <TargetFrameworkVersion>v8.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v9.0</TargetFrameworkVersion>
     <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
     <AndroidUseLatestPlatformSdk>true</AndroidUseLatestPlatformSdk>
+    <LangVersion>preview</LangVersion>
   </PropertyGroup>
   <Import Project="..\..\..\Configuration.props" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -51,6 +52,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BindingTests.cs" />
+    <Compile Include="DimBindingTests.cs" />
     <Compile Include="ExceptionTests.cs" />
     <Compile Include="MainActivity.cs" />
     <Compile Include="TestInstrumentation.cs" />

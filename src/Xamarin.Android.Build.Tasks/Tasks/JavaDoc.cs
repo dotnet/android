@@ -13,6 +13,8 @@ namespace Xamarin.Android.Tasks
 
 	public class JavaDoc : JavaToolTask
 	{
+		public override string TaskPrefix => "JDC";
+
 		public string [] SourceDirectories { get; set; }
 
 		public string [] DestinationDirectories { get; set; }
@@ -27,15 +29,8 @@ namespace Xamarin.Android.Tasks
 			get { return OS.IsWindows ? "javadoc.exe" : "javadoc"; }
 		}
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
-			Log.LogDebugMessage ("JavaDoc Task");
-			Log.LogDebugTaskItems ("  SourceDirectories: ", SourceDirectories);
-			Log.LogDebugTaskItems ("  DestinationDirectories: ", DestinationDirectories);
-			Log.LogDebugMessage ("  JavaPlatformJar: {0}", JavaPlatformJar);
-			Log.LogDebugTaskItems ("  ReferenceJars: ", ReferenceJars);
-			Log.LogDebugTaskItems ("  ExtraArgs: ", ExtraArgs);
-
 			foreach (var dir in DestinationDirectories)
 				if (!Directory.Exists (dir))
 					Directory.CreateDirectory (dir);
@@ -44,7 +39,7 @@ namespace Xamarin.Android.Tasks
 			foreach (var pair in SourceDirectories.Zip (DestinationDirectories, (src, dst) => new { Source = src, Destination = dst })) {
 				context_src = pair.Source;
 				context_dst = pair.Destination;
-				base.Execute ();
+				base.RunTask ();
 			}
 			return true;
 		}

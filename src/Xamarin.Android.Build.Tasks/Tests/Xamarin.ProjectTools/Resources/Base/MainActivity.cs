@@ -9,7 +9,7 @@ using Android.OS;
 
 namespace ${ROOT_NAMESPACE}
 {
-	[Activity (Label = "${PROJECT_NAME}", MainLauncher = true, Icon = "@drawable/icon")]
+	[Register ("${JAVA_PACKAGENAME}.MainActivity"), Activity (Label = "${PROJECT_NAME}", MainLauncher = true, Icon = "@drawable/icon")]
 	public class MainActivity : Activity
 	{
 		int count = 1;
@@ -28,6 +28,8 @@ namespace ${ROOT_NAMESPACE}
 			button.Click += delegate {
 				button.Text = string.Format ("{0} clicks!", count++);
 			};
+
+			//${AFTER_ONCREATE}
 		}
 	}
 }

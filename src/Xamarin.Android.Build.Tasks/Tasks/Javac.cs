@@ -8,36 +8,39 @@ using Microsoft.Build.Utilities;
 using System.Text;
 using System.Collections.Generic;
 using Xamarin.Tools.Zip;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
 	public class Javac : JavaCompileToolTask
 	{
+		public override string TaskPrefix => "JVC";
+
 		[Required]
 		public string ClassesOutputDirectory { get; set; }
+
+		public string ClassesZip { get; set; }
 
 		public string JavaPlatformJarPath { get; set; }
 
 		public string JavacTargetVersion { get; set; }
 		public string JavacSourceVersion { get; set; }
 
-		public override void OnLogStarted ()
-		{
-			Log.LogDebugMessage ("  ClassesOutputDirectory: {0}", ClassesOutputDirectory);
-			Log.LogDebugMessage ("  JavacTargetVersion: {0}", JavacTargetVersion);
-			Log.LogDebugMessage ("  JavacSourceVersion: {0}", JavacSourceVersion);
-		}
+		public override string DefaultErrorCode => "JAVAC0000";
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			if (!Directory.Exists (ClassesOutputDirectory))
 				Directory.CreateDirectory (ClassesOutputDirectory);
-			var result = base.Execute ();
+			var result = base.RunTask ();
 			if (!result)
 				return result;
 			// compress all the class files
-			using (var zip = new ZipArchiveEx (Path.Combine (ClassesOutputDirectory, "..", "classes.zip"), FileMode.OpenOrCreate))
-				zip.AddDirectory (ClassesOutputDirectory, "", CompressionMethod.Store);
+			if (!string.IsNullOrEmpty (ClassesZip)) {
+				using (var zip = new ZipArchiveEx (ClassesZip, FileMode.OpenOrCreate)) {
+					zip.AddDirectory (ClassesOutputDirectory, "", CompressionMethod.Store);
+				}
+			}
 			return result;
 		}
 
@@ -57,16 +60,19 @@ namespace Xamarin.Android.Tasks
 
 			cmd.AppendSwitchIfNotNull ("-J-Dfile.encoding=", "UTF8");
 
-			cmd.AppendSwitchIfNotNull ("-d ", ClassesOutputDirectory);
-
-			cmd.AppendSwitchIfNotNull ("-classpath ", Jars == null || !Jars.Any () ? null : string.Join (Path.PathSeparator.ToString (), Jars.Select (i => i.ItemSpec)));
-			cmd.AppendSwitchIfNotNull ("-bootclasspath ", JavaPlatformJarPath);
-			cmd.AppendSwitchIfNotNull ("-encoding ", "UTF-8");
 			cmd.AppendFileNameIfNotNull (string.Format ("@{0}", TemporarySourceListFile));
 			cmd.AppendSwitchIfNotNull ("-target ", JavacTargetVersion);
 			cmd.AppendSwitchIfNotNull ("-source ", JavacSourceVersion);
 
 			return cmd.ToString ();
+		}
+
+		protected override void WriteOptionsToResponseFile (StreamWriter sw)
+		{
+			sw.WriteLine ($"-d \"{ClassesOutputDirectory.Replace (@"\", @"\\")}\"");
+			sw.WriteLine ("-classpath \"{0}\"", Jars == null || !Jars.Any () ? null : string.Join (Path.PathSeparator.ToString (), Jars.Select (i => i.ItemSpec.Replace (@"\", @"\\"))));
+			sw.WriteLine ("-bootclasspath \"{0}\"", JavaPlatformJarPath.Replace (@"\", @"\\"));
+			sw.WriteLine ($"-encoding UTF8");
 		}
 	}
 }

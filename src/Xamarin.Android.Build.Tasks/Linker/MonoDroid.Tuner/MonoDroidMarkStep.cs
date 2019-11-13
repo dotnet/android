@@ -436,6 +436,14 @@ namespace MonoDroid.Tuner
 			PreserveRegisteredMethod (method.DeclaringType, member);
 		}
 
+		protected override bool ShouldMarkInterfaceImplementation (TypeDefinition type, InterfaceImplementation iface, TypeDefinition resolvedInterfaceType)
+		{
+			if (base.ShouldMarkInterfaceImplementation (type, iface, resolvedInterfaceType))
+				return true;
+
+			return resolvedInterfaceType.ImplementsIJavaObject () || resolvedInterfaceType.ImplementsIJavaPeerable ();
+		}
+
 		protected override void DoAdditionalTypeProcessing (TypeDefinition type)
 		{
 			// If we are preserving a Mono.Android interface,

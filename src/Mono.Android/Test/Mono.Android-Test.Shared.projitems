@@ -9,37 +9,68 @@
     <Import_RootNamespace>Mono.Android-Test.Shared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)\Resources\Resource.designer.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\Properties\AssemblyInfo.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\Android.App\ApplicationTest.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\Android.Content\IntentTest.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\Android.Runtime\CharSequenceTest.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\Android.Runtime\JavaCollectionTest.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\Android.Runtime\JnienvArrayMarshaling.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\Android.Runtime\XmlReaderPullParserTest.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\Android.Runtime\XmlReaderResourceParserTest.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\Android.Widget\AdapterTests.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\Java.Interop\JavaConvertTest.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\Java.Lang\ObjectArrayMarshaling.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\Java.Lang\ObjectTest.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\Java.Interop\JnienvTest.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\System\AppDomainTest.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\System\AssemblyInformationalVersionAttributeTest.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\System\ExceptionTest.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\System\TimeZoneTest.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\System.IO\DriveInfoTest.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\System.IO.Compression\GZipStreamTest.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\System.Net\ProxyTest.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\System.Net\SslTest.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\System.Net\NetworkInterfaces.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\System.Threading\InterlockedTest.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\Java.Interop\JavaObjectExtensionsTests.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\Xamarin.Android.Net\AndroidClientHandlerTests.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\Xamarin.Android.Net\HttpClientIntegrationTests.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\Xamarin.Android.RuntimeTests\MainActivity.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\Xamarin.Android.RuntimeTests\MyIntent.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\Xamarin.Android.RuntimeTests\NonJavaObject.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\Xamarin.Android.RuntimeTests\TestInstrumentation.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)\Android.OS\BundleTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)System.Linq\LinqExpressionTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Resources\Resource.designer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Properties\AssemblyInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Android.App\ApplicationTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Android.Content.Res\AssetManagerTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Android.Content\IntentTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Android.Graphics\NinePatchTests.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Android.Runtime\CharSequenceTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Android.Runtime\JavaCollectionTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Android.Runtime\JnienvArrayMarshaling.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Android.Runtime\XmlReaderPullParserTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Android.Runtime\XmlReaderResourceParserTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Android.Widget\AdapterTests.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JavaConvertTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Lang\ObjectArrayMarshaling.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Lang\ObjectTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JnienvTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)System.Net\WebSocketTests.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)System\AppDomainTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)System\AssemblyInformationalVersionAttributeTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)System\ExceptionTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)System\TimeZoneTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)System.IO\DriveInfoTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)System.IO.Compression\GZipStreamTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)System.Net\ProxyTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)System.Net\SslTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)System.Net\NetworkInterfaces.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)System.Runtime.InteropServices\DllImportTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)System.Threading\InterlockedTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JavaObjectExtensionsTests.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Xamarin.Android.Net\AndroidClientHandlerTests.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Xamarin.Android.Net\HttpClientIntegrationTests.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Xamarin.Android.RuntimeTests\MainActivity.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Xamarin.Android.RuntimeTests\MyIntent.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Xamarin.Android.RuntimeTests\NonJavaObject.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Xamarin.Android.RuntimeTests\NUnitInstrumentation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Xamarin.Android.RuntimeTests\TestInstrumentation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Android.OS\BundleTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Mono.Data.Sqlite\SqliteTests.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Android.Widget\CustomWidgetTests.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="$(MSBuildThisFileDirectory)..\..\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Resources\Base\Image.9.png">
+      <Link>Resources\Drawable\Image.9.png</Link>
+    </AndroidResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)LinkedAssets\folder.png" />
+    <None Include="$(MSBuildThisFileDirectory)LinkedAssets\hamburger.png" />
+    <None Include="$(MSBuildThisFileDirectory)LinkedAssets\linked_text.txt" />
+    <None Include="$(MSBuildThisFileDirectory)LinkedAssets\linked_text2.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidAsset Include="$(MSBuildThisFileDirectory)LinkedAssets\hamburger.png">
+      <Link>Assets\hamburger.png</Link>
+    </AndroidAsset>
+    <AndroidAsset Include="$(MSBuildThisFileDirectory)LinkedAssets\linked_text.txt">
+      <Link>Assets\linked_text.txt</Link>
+    </AndroidAsset>
+    <AndroidAsset Include="$(MSBuildThisFileDirectory)Assets\subfolder\accept_request.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="$(MSBuildThisFileDirectory)LinkedAssets\" />
   </ItemGroup>
 </Project>

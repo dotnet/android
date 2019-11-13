@@ -9,8 +9,10 @@ using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks
 {
-	public class GetAndroidDefineConstants : Task
+	public class GetAndroidDefineConstants : AndroidTask
 	{
+		public override string TaskPrefix => "GAD";
+
 		[Required]
 		public int AndroidApiLevel { get; set; }
 
@@ -19,7 +21,7 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public  ITaskItem[]     AndroidDefineConstants      { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			var constants = new List<ITaskItem> ();
 

@@ -10,8 +10,10 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
-	public class CopyAndConvertResources : Task
+	public class CopyAndConvertResources : AndroidTask
 	{
+		public override string TaskPrefix => "CCR";
+
 		[Required]
 		public ITaskItem[] SourceFiles { get; set; }
 
@@ -37,13 +39,8 @@ namespace Xamarin.Android.Tasks
 		private List<ITaskItem> modifiedFiles = new List<ITaskItem>();
 		Dictionary<string, HashSet<string>> customViewMap;
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
-			Log.LogDebugMessage ("CopyAndConvertResources Task");
-			Log.LogDebugTaskItems ("  SourceFiles:", SourceFiles);
-			Log.LogDebugTaskItems ("  DestinationFiles:", DestinationFiles);
-			Log.LogDebugMessage ("  AcwMapFile: {0}", AcwMapFile);
-
 			if (SourceFiles.Length != DestinationFiles.Length)
 				throw new ArgumentException ("source and destination count mismatch");
 

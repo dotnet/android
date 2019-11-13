@@ -1,19 +1,17 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Xml;
 using System.Xml.Linq;
-using Mono.Cecil;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
-using System.Text.RegularExpressions;
 
 namespace Xamarin.Android.Tasks
 {
-	public class GetImportedLibraries : Task
+	public class GetImportedLibraries : AndroidTask
 	{
+		public override string TaskPrefix => "GIL";
+
 		static readonly string [] IgnoredManifestDirectories = new [] {
 			"bin",
 			"manifest",
@@ -34,30 +32,36 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public ITaskItem [] ManifestDocuments { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
-			Log.LogDebugMessage ("GetImportedLibraries Task");
-			Log.LogDebugMessage ("  TargetDirectory: {0}", TargetDirectory);
 			if (!Directory.Exists (TargetDirectory)) {
 				Log.LogDebugMessage ("Target directory was not found");
 				return true;
 			}
-			// there could be ./AndroidManifest.xml and bin/AndroidManifest.xml, which will be the same. So, ignore "bin" ones.
+
 			var manifestDocuments = new List<ITaskItem> ();
-			foreach (var f in Directory.EnumerateFiles (TargetDirectory, "AndroidManifest.xml", SearchOption.AllDirectories)) {
-				var directory = Path.GetFileName (Path.GetDirectoryName (f));
-				if (IgnoredManifestDirectories.Contains (directory))
-					continue;
-				manifestDocuments.Add (new TaskItem (f));
+			var nativeLibraries   = new List<ITaskItem> ();
+			var jarFiles          = new List<ITaskItem> ();
+			foreach (var file in Directory.EnumerateFiles (TargetDirectory, "*", SearchOption.AllDirectories)) {
+				if (file.EndsWith (".so", StringComparison.OrdinalIgnoreCase)) {
+					if (MonoAndroidHelper.GetNativeLibraryAbi (file) != null)
+						nativeLibraries.Add (new TaskItem (file));
+				} else if (file.EndsWith (".jar", StringComparison.OrdinalIgnoreCase)) {
+					jarFiles.Add (new TaskItem (file));
+				} else if (file.EndsWith (".xml", StringComparison.OrdinalIgnoreCase)) {
+					if (Path.GetFileName (file) == "AndroidManifest.xml") {
+						// there could be ./AndroidManifest.xml and bin/AndroidManifest.xml, which will be the same. So, ignore "bin" ones.
+						var directory = Path.GetFileName (Path.GetDirectoryName (file));
+						if (IgnoredManifestDirectories.Contains (directory))
+							continue;
+						manifestDocuments.Add (new TaskItem (file));
+					}
+				}
 			}
+
 			ManifestDocuments = manifestDocuments.ToArray ();
-			NativeLibraries = Directory.GetFiles (TargetDirectory, "*.so", SearchOption.AllDirectories)
-				.Where (p => MonoAndroidHelper.GetNativeLibraryAbi (p) != null)
-				.Select (p => new TaskItem (p)).ToArray ();
-			Jars = Directory.GetFiles (TargetDirectory, "*.jar", SearchOption.AllDirectories).Select (p => new TaskItem (p)).ToArray ();
-			Log.LogDebugTaskItems ("  NativeLibraries: ", NativeLibraries);
-			Log.LogDebugTaskItems ("  Jars: ", Jars);
-			Log.LogDebugTaskItems ("  ManifestDocuments: ", ManifestDocuments);
+			NativeLibraries = nativeLibraries.ToArray ();
+			Jars = jarFiles.ToArray ();
 
 			if (!string.IsNullOrEmpty (CacheFile)) {
 				var document = new XDocument (
@@ -69,6 +73,10 @@ namespace Xamarin.Android.Tasks
 						));
 				document.SaveIfChanged (CacheFile);
 			}
+
+			Log.LogDebugTaskItems ("  NativeLibraries: ", NativeLibraries);
+			Log.LogDebugTaskItems ("  Jars: ", Jars);
+			Log.LogDebugTaskItems ("  ManifestDocuments: ", ManifestDocuments);
 
 			return true;
 		}

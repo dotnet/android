@@ -1,6 +1,6 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <Import Project="..\..\src\Mono.Android\Mono.Android.projitems" />
+  <Import Project="..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems" />
 
   <PropertyGroup>
     <_TopDir>$(MSBuildThisFileDirectory)..\..</_TopDir>
@@ -31,7 +31,7 @@
     <MakeDir Directories="$(_OutputPath)api" />
     <Exec
         Condition="Exists('$(_TopDir)\src\Mono.Android\Profiles\api-%(ApiFileDefinition.Level).params.txt')"
-        Command="$(ManagedRuntime) $(ClassParse) $(AndroidSdkDirectory)\platforms\android-%(ApiFileDefinition.Id)\android.jar -platform=%(ApiFileDefinition.Level) -parameter-names=&quot;%(ApiFileDefinition.ParameterDescription)&quot; -o=&quot;%(ApiFileDefinition.ClassParseXml)&quot;"
+        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(ClassParse) $(AndroidSdkDirectory)\platforms\android-%(ApiFileDefinition.Id)\android.jar -platform=%(ApiFileDefinition.Level) -parameter-names=&quot;%(ApiFileDefinition.ParameterDescription)&quot; -o=&quot;%(ApiFileDefinition.ClassParseXml)&quot;"
     />
   </Target>
   <Target Name="_AdjustApiXml"
@@ -44,7 +44,7 @@
     </PropertyGroup>
     <Exec
         Condition="Exists('$(_TopDir)\src\Mono.Android\Profiles\api-%(ApiFileDefinition.Level).params.txt')"
-        Command="$(ManagedRuntime) $(ApiXmlAdjuster) %(ApiFileDefinition.ClassParseXml) %(ApiFileDefinition.ApiAdjustedXml)"
+        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(ApiXmlAdjuster) %(ApiFileDefinition.ClassParseXml) %(ApiFileDefinition.ApiAdjustedXml)"
     />
   </Target>
 

@@ -48,7 +48,7 @@ namespace Xamarin.Android.Build.Tests
 				}
 			}
 
-			Assert.AreEqual (expected.Trim (), builder.ToString ().Trim ());
+			Assert.AreEqual (expected.Trim ().Replace("\r\n", "\n"), builder.ToString ().Trim ().Replace("\r\n", "\n"));
 		}
 
 		[Test]

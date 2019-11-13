@@ -16,6 +16,12 @@
     <AndroidApplication>false</AndroidApplication>
     <AndroidUseLatestPlatformSdk>false</AndroidUseLatestPlatformSdk>
     <NoStdLib>true</NoStdLib>
+    <!-- Disable XML doc warnings:
+         CS1570: XML comment has badly formed XML - 'Whitespace is not allowed at this location.'
+         CS1572: XML comment has a param tag for 'Bar', but there is no parameter by that name
+         CS1591: Missing XML comment for publicly visible type or member 'Foo'
+    -->
+    <NoWarn>1570;1572;1591</NoWarn>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <Import Project="..\..\build-tools\scripts\MonoAndroidFramework.props" />
@@ -351,12 +357,6 @@
     <ProjectReference Include="..\Mono.Android\Mono.Android.csproj">
       <Project>{66CF299A-CE95-4131-BCD8-DB66E30C4BF7}</Project>
       <Name>Mono.Android</Name>
-      <Private>False</Private>
-    </ProjectReference>
-    <ProjectReference Condition=" '$(AndroidApiLevel)' >= 24 " Include="..\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj">
-      <Project>{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}</Project>
-      <Name>Xamarin.Android.Build.Tasks</Name>
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
       <Private>False</Private>
     </ProjectReference>
   </ItemGroup>

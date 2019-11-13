@@ -10,8 +10,10 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
-	public class JarToXml : ToolTask
+	public class JarToXml : AndroidToolTask
 	{
+		public override string TaskPrefix => "JTX";
+
 		[Required]
 		public string AndroidSdkDirectory { get; set; }
 		
@@ -43,25 +45,8 @@ namespace Xamarin.Android.Tasks
 
 		public string JavaMaximumHeapSize { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
-			Log.LogDebugMessage ("JarToXml Task");
-			Log.LogDebugMessage ("  JavaOptions: {0}", JavaOptions);
-			Log.LogDebugMessage ("  JavaMaximumHeapSize: {0}", JavaMaximumHeapSize);
-			Log.LogDebugMessage ("  AndroidSdkDirectory: {0}", AndroidSdkDirectory);
-			Log.LogDebugMessage ("  AndroidApiLevel: {0}", AndroidApiLevel);
-			Log.LogDebugMessage ("  MonoAndroidToolsDirectory: {0}", MonoAndroidToolsDirectory);
-			Log.LogDebugMessage ("  JavaSdkDirectory: {0}", JavaSdkDirectory);
-			Log.LogDebugMessage ("  OutputFile: {0}", OutputFile);
-			Log.LogDebugMessage ("  DroidDocPaths: {0}", DroidDocPaths);
-			Log.LogDebugMessage ("  JavaDocPaths: {0}", JavaDocPaths);
-			Log.LogDebugMessage ("  Java7DocPaths: {0}", Java7DocPaths);
-			Log.LogDebugMessage ("  Java8DocPaths: {0}", Java8DocPaths);
-			Log.LogDebugTaskItems ("  JavaDocs: {0}", JavaDocs);
-			Log.LogDebugTaskItems ("  LibraryProjectJars:", LibraryProjectJars);
-			Log.LogDebugTaskItems ("  SourceJars:", SourceJars);
-			Log.LogDebugTaskItems ("  ReferenceJars:", ReferenceJars);
-
 			if (SourceJars == null || SourceJars.Count () == 0) {
 				Log.LogError ("At least one Java library is required for binding, this must be either 'EmbeddedJar', 'InputJar' (for jar), 'LibraryProjectZip' (for aar or zip) or 'LibraryProjectProperties' (project.properties) build action.");
 				return false;
@@ -88,7 +73,7 @@ namespace Xamarin.Android.Tasks
 			// Ensure our output directory exists
 			Directory.CreateDirectory (Path.GetDirectoryName (OutputFile));
 
-			return base.Execute ();
+			return base.RunTask ();
 		}
 
 		protected override string GenerateCommandLineCommands ()

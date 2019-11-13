@@ -4,6 +4,11 @@ Once the build has finished, `bin/$(Configuration)/bin/xabuild` may be
 used to build projects. This is a shell script on Linux and macOS,
 and will execute `xabuild.exe` on Windows.
 
+**Note:** In order to successfully run `xabuild.exe` on Windows, you'll
+need to first enable '[Developer Mode][win-dev-settings]' on your Windows
+machine so that various symbolic links can be created.
+
+[win-dev-settings]: https://docs.microsoft.com/en-us/windows/uwp/get-started/enable-your-device-for-development#accessing-settings-for-developers
 
 ## Linux and macOS System-Wide Installation
 
@@ -58,7 +63,7 @@ of the Xamarin.Android SDK. Only one install can be active at a time.)
 The [HelloWorld](samples/HelloWorld) sample may be built with the
 [xabuild](tools/scripts/xabuild) script:
 
-    bin/Debug/xabuild /t:SignAndroidPackage samples/HelloWorld/HelloWorld.csproj
+    bin/Debug/bin/xabuild /t:SignAndroidPackage samples/HelloWorld/HelloWorld.csproj
 
 `xabuild /t:SignAndroidPackage` will generate an `.apk` file, which may be
 installed onto an Android device with the [`adb install`][adb-commands]

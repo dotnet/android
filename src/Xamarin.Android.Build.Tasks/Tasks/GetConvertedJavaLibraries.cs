@@ -1,16 +1,14 @@
-using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
-	public class GetConvertedJavaLibraries : Task
+	public class GetConvertedJavaLibraries : AndroidTask
 	{
+		public override string TaskPrefix => "GCJ";
+
 		[Required]
 		public string Extension { get; set; }
 		public string OutputJackDirectory { get; set; }
@@ -18,18 +16,12 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public string [] ConvertedFilesToBeGenerated { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
-			Log.LogDebugMessage ("GetConvertedJavaLibraries Task");
-			Log.LogDebugMessage ("  Extension: {0}", Extension);
-			Log.LogDebugMessage ("  OutputJackDirectory: {0}", OutputJackDirectory);
-			Log.LogDebugTaskItems ("  JarsToConvert:", JarsToConvert);
-
-			var md5 = MD5.Create ();
 			ConvertedFilesToBeGenerated =
 				(JarsToConvert ?? new string [0]).Select (
 					j => Path.Combine (OutputJackDirectory,
-					                   BitConverter.ToString (md5.ComputeHash (Encoding.UTF8.GetBytes (j))) + Path.ChangeExtension (Path.GetFileName (j), Extension)))
+					                   Files.HashString (j) + Path.ChangeExtension (Path.GetFileName (j), Extension)))
 				             .ToArray ();
 			Log.LogDebugTaskItems ("  ConvertedFilesToBeGenerated:", ConvertedFilesToBeGenerated);
 			return true;

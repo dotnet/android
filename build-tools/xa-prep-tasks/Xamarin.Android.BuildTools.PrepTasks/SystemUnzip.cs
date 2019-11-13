@@ -162,6 +162,11 @@ namespace Xamarin.Android.BuildTools.PrepTasks {
 							File.Delete (dest);
 						File.Move (file, dest);
 					}
+					// Don't attempt to set write/access time on linked files.
+					var destFileInfo = new FileInfo (dest);
+					if (!destFileInfo.Attributes.HasFlag (FileAttributes.ReparsePoint)) {
+						File.SetLastWriteTimeUtc (dest, DateTime.UtcNow);
+					}
 				}
 			}
 		}

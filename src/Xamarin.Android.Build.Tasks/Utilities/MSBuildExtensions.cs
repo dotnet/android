@@ -2,12 +2,12 @@
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
+using System.Xml;
 using System.Text.RegularExpressions;
 
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
+using Xamarin.Build;
 
 namespace Xamarin.Android.Tasks
 {
@@ -138,6 +138,33 @@ namespace Xamarin.Android.Tasks
 		public static void LogCodedWarning (this TaskLoggingHelper log, string code, string file, int lineNumber, string message, params object [] messageArgs)
 		{
 			log.LogWarning (string.Empty, code, string.Empty, file, lineNumber, 0, 0, 0, message, messageArgs);
+		}
+
+		/// <summary>
+		/// Logs a coded warning from a node in an XML document
+		/// </summary>
+		/// <param name="node">An element that implements IXmlLineInfo</param>
+		public static void LogWarningForXmlNode (this TaskLoggingHelper log, string code, string file, object node, string message, params object [] messageArgs)
+		{
+			int lineNumber = 0;
+			int columnNumber = 0;
+			var lineInfo = node as IXmlLineInfo;
+			if (lineInfo != null && lineInfo.HasLineInfo ()) {
+				lineNumber = lineInfo.LineNumber;
+				columnNumber = lineInfo.LinePosition;
+			}
+			log.LogWarning (
+					subcategory: string.Empty,
+					warningCode: code,
+					helpKeyword: string.Empty,
+					file: file,
+					lineNumber: lineNumber,
+					columnNumber: columnNumber,
+					endLineNumber: 0,
+					endColumnNumber: 0,
+					message: message,
+					messageArgs: messageArgs
+			);
 		}
 
 		public static Action<TraceLevel, string> CreateTaskLogger (this Task task)

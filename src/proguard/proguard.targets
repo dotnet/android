@@ -1,45 +1,48 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll"  TaskName="Xamarin.Android.Tools.BootstrapTasks.Ant" />
-  <Target Name="_BuildProGuard">
-    <Ant
-        Arguments="$(AntProguardBuildAdditionalArguments) -f buildscripts\build.xml proguard"
-        ToolPath="$(AntToolPath)"
-        JavaSdkDirectory="$(JavaSdkDirectory)"
-        WorkingDirectory="$(ProGuardSourceFullPath)"
+  <PropertyGroup>
+    <_OutputJar>$(OutputPath)lib\proguard.jar</_OutputJar>
+    <_OutputBat>$(OutputPath)bin\proguard.bat</_OutputBat>
+    <_OutputSh>$(OutputPath)bin\proguard.sh</_OutputSh>
+    <_OutputLicense>$(OutputPath)license.html</_OutputLicense>
+  </PropertyGroup>
+  <ItemGroup>
+    <_Outputs Include="$(_OutputJar);$(_OutputBat);$(_OutputSh);$(_OutputLicense)" />
+  </ItemGroup>
+  <Target Name="_BuildProGuard"
+      Inputs="$(MSBuildThisFile);$(ProGuardSourceFullPath)\buildscripts\build.xml"
+      Outputs="@(_Outputs)">
+    <Exec
+        Command="&quot;$(GradleWPath)&quot; proguardJar $(GradleArgs)"
+        EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)"
+        WorkingDirectory="$(ProGuardSourceFullPath)\buildscripts"
     />
     <MakeDir Directories="$(OutputPath)" />
     <Copy
         SourceFiles="..\..\external\proguard\lib\proguard.jar"
-        DestinationFiles="$(OutputPath)\lib\proguard.jar"
+        DestinationFiles="$(_OutputJar)"
     />
     <Copy
         SourceFiles="..\..\external\proguard\bin\proguard.bat"
-        DestinationFiles="$(OutputPath)\bin\proguard.bat"
+        DestinationFiles="$(_OutputBat)"
     />
     <Copy
         SourceFiles="..\..\external\proguard\bin\proguard.sh"
-        DestinationFiles="$(OutputPath)\bin\proguard.sh"
+        DestinationFiles="$(_OutputSh)"
     />
     <Copy
         SourceFiles="..\..\external\proguard\docs\license.html"
-        DestinationFiles="$(OutputPath)\license.html"
+        DestinationFiles="$(_OutputLicense)"
+    />
+    <Touch Files="@(_Outputs)" />
+  </Target>
+  <Target Name="Clean">
+    <Delete Files="@(_Outputs)" />
+    <Exec
+        Command="&quot;$(GradleWPath)&quot; clean $(GradleArgs)"
+        EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)"
+        WorkingDirectory="$(ProGuardSourceFullPath)\buildscripts"
     />
   </Target>
-  <Target Name="_CleanProGuard"
-      AfterTargets="Clean">
-    <Delete Files="$(OutputPath)\license.html" />
-    <Delete Files="$(OutputPath)\lib\proguard.jar" />
-    <Delete Files="$(OutputPath)\bin\proguard.sh" />
-    <Delete Files="$(OutputPath)\bin\proguard.bat" />
-    <Ant
-        Arguments="-f buildscripts\build.xml clean"
-        ToolPath="$(AntToolPath)"
-        JavaSdkDirectory="$(JavaSdkDirectory)"
-        WorkingDirectory="$(ProGuardSourceFullPath)"
-    />
-  </Target>
-  <Target Name="CoreCompile"
-      DependsOnTargets="_BuildProGuard">
-  </Target>
+  <Target Name="CoreCompile" />
 </Project>
 

@@ -10,8 +10,9 @@ using Microsoft.Build.Framework;
 
 namespace Xamarin.Android.Tasks
 {
-	public class CreateAdditionalLibraryResourceCache : Task
+	public class CreateAdditionalLibraryResourceCache : AndroidTask
 	{
+		public override string TaskPrefix => "CAL";
 
 		[Required]
 		public ITaskItem[] AdditionalAndroidResourcePaths { get; set; }
@@ -23,11 +24,8 @@ namespace Xamarin.Android.Tasks
 		public ITaskItem[] CopiedResources { get; set; }
 
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
-			Log.LogDebugMessage ("CreateAdditionalLibraryResourceCache Task");
-			Log.LogDebugTaskItems ("  AdditionalAndroidResourcePaths:", AdditionalAndroidResourcePaths);
-			Log.LogDebugTaskItems ("  AdditionalAndroidResourceCachePaths: ", AdditionalAndroidResourceCachePaths);
 			var copiedResources = new List<ITaskItem> ();
 
 			for (int i = 0; i < AdditionalAndroidResourcePaths.Length; i++) {

@@ -5,8 +5,10 @@ using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks
 {
-	public class KeyTool : AndroidToolTask
+	public class KeyTool : AndroidRunToolTask
 	{
+		public override string TaskPrefix => "KEY";
+
 		string previousLine;
 
 		[Required]
@@ -28,7 +30,7 @@ namespace Xamarin.Android.Tasks
 
 		protected override string DefaultErrorCode => "ANDKT0000";
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			Log.LogDebugMessage ("KeyTool : {0}", Command);
 			Log.LogDebugMessage ("          {0}",KeyStore);
@@ -38,7 +40,7 @@ namespace Xamarin.Android.Tasks
 			if (!Directory.Exists (store_dir))
 				Directory.CreateDirectory (store_dir);
 
-			return base.Execute ();
+			return base.RunTask ();
 		}
 
 

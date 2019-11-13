@@ -30,9 +30,11 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 		{
 			var pathExt     = Environment.GetEnvironmentVariable ("PATHEXT");
 			var pathExts    = pathExt?.Split (new char [] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries);
-			FileExtensions  = new string [(pathExts?.Length ?? 0) + 1];
-			if (pathExts != null) {
-				Array.Copy (pathExts, 0, FileExtensions, 0, pathExts.Length);
+			int length      = pathExts?.Length ?? 0;
+			FileExtensions  = new string [length * 2 + 1];
+			for (int i = 0, j = 0; i < length; i++, j += 2) {
+				FileExtensions [j] = pathExts [i].ToLowerInvariant ();
+				FileExtensions [j + 1] = pathExts [i];
 			}
 			FileExtensions [FileExtensions.Length - 1] = null;
 		}

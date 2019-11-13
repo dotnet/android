@@ -7,7 +7,6 @@
     <OutputType>Library</OutputType>
     <RootNamespace>EmbeddedDSOUnitTests</RootNamespace>
     <AssemblyName>EmbeddedDSOUnitTests</AssemblyName>
-    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
   </PropertyGroup>
 
   <Import Project="..\..\..\Configuration.props" />
@@ -17,14 +16,14 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\..\bin\TestDebug\EmbeddedDSO</OutputPath>
+    <OutputPath>..\..\..\bin\TestDebug</OutputPath>
     <DefineConstants>DEBUG;</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
-    <OutputPath>..\..\..\bin\TestRelease\EmbeddedDSO</OutputPath>
+    <OutputPath>..\..\..\bin\TestRelease</OutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -33,15 +32,27 @@
     <Reference Include="System" />
     <Reference Include="System.Xml" />
     <Reference Include="nunit.framework">
-      <HintPath>..\..\..\packages\NUnit.3.7.1\lib\net45\nunit.framework.dll</HintPath>
+      <HintPath>..\..\..\packages\NUnit.3.11.0\lib\net45\nunit.framework.dll</HintPath>
+    </Reference>
+    <Reference Include="Xamarin.Android.Build.Tasks">
+      <HintPath>..\..\..\bin\$(Configuration)\lib/xamarin.android\xbuild\Xamarin\Android\Xamarin.Android.Build.Tasks.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Xamarin.Android.Tools.AndroidSdk">
+      <HintPath>..\..\..\bin\$(Configuration)\lib/xamarin.android\xbuild\Xamarin\Android\Xamarin.Android.Tools.AndroidSdk.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="libZipSharp">
+      <HintPath>..\..\..\packages\Xamarin.LibZipSharp.1.0.6\lib\net45\libZipSharp.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BuildTests.cs" />
     <Compile Include="$(IntermediateOutputPath)Config.cs" />
-    <Compile Include="..\..\..\bin\Test$(CONFIGURATION)/XABuildPaths.cs">
-       <Link>XABuildPaths.cs</Link>
+    <Compile Include="..\..\..\bin\Build$(CONFIGURATION)/XABuildConfig.cs">
+       <Link>XABuildConfig.cs</Link>
     </Compile>
+    <Compile Include="..\..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Utilities\EnvironmentHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -51,10 +62,6 @@
     <ProjectReference Include="..\..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Xamarin.ProjectTools.csproj">
       <Project>{2DD1EE75-6D8D-4653-A800-0A24367F7F38}</Project>
       <Name>Xamarin.ProjectTools</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\external\LibZipSharp\libZipSharp.csproj">
-      <Project>{E248B2CA-303B-4645-ADDC-9D4459D550FD}</Project>
-      <Name>libZipSharp</Name>
     </ProjectReference>
   </ItemGroup>
 
@@ -72,4 +79,5 @@
         Replacements="@ANDROID_SDK_DIRECTORY@=$(AndroidSdkDirectory);@BUILD_TOOLS_FOLDER@=$(XABuildToolsFolder);@EXECUTABLE_EXTENSION@=$(ExecutableExtension)"
     />
   </Target>
+  <Import Project="..\..\..\packages\Xamarin.LibZipSharp.1.0.6\build\Xamarin.LibZipSharp.targets" Condition="Exists('..\..\..\packages\Xamarin.LibZipSharp.1.0.6\build\Xamarin.LibZipSharp.targets')" />
 </Project>

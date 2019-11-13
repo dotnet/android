@@ -1,5 +1,6 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\..\packages\Xamarin.Build.AsyncTask.0.3.4\build\Xamarin.Build.AsyncTask.props" Condition="Exists('..\..\packages\Xamarin.Build.AsyncTask.0.3.4\build\Xamarin.Build.AsyncTask.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -9,14 +10,15 @@
     <RootNamespace>Xamarin.Android.Tasks</RootNamespace>
     <AssemblyName>Xamarin.Android.Build.Tasks</AssemblyName>
     <FileAlignment>512</FileAlignment>
-    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <SchemaVersion>2.0</SchemaVersion>
+    <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugSymbols>True</DebugSymbols>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <Import Project="..\..\build-tools\scripts\MSBuildReferences.projitems" />
   <Import Project="..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>True</DebugSymbols>
     <Optimize>False</Optimize>
     <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android\</OutputPath>
     <DefineConstants Condition="'$(MonoDroidTiming)' == ''">TRACE;DEBUG;HAVE_CECIL;MSBUILD;ANDROID_24</DefineConstants>
@@ -24,7 +26,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType></DebugType>
     <Optimize>True</Optimize>
     <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android\</OutputPath>
     <DefineConstants>TRACE;HAVE_CECIL;MSBUILD;ANDROID_24</DefineConstants>
@@ -37,7 +38,13 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Collections.Immutable">
+      <HintPath>..\..\packages\System.Collections.Immutable.1.5.0\lib\netstandard2.0\System.Collections.Immutable.dll</HintPath>
+    </Reference>
     <Reference Include="System.Core" />
+    <Reference Include="System.Reflection.Metadata">
+      <HintPath>..\..\packages\System.Reflection.Metadata.1.6.0\lib\netstandard2.0\System.Reflection.Metadata.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Xml" />
     <Reference Include="Irony">
@@ -96,6 +103,27 @@
     <Reference Include="NuGet.ProjectModel">
       <HintPath>..\..\packages\NuGet.ProjectModel.4.6.0\lib\net46\NuGet.ProjectModel.dll</HintPath>
     </Reference>
+    <Reference Include="Xamarin.Build.AsyncTask">
+      <HintPath>..\..\packages\Xamarin.Build.AsyncTask.0.3.4\lib\netstandard2.0\Xamarin.Build.AsyncTask.dll</HintPath>
+    </Reference>
+    <Reference Include="pdb2mdb.exe">
+      <HintPath>..\..\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\pdb2mdb.exe</HintPath>
+    </Reference>
+    <Reference Include="Mono.CompilerServices.SymbolWriter.dll">
+      <HintPath>..\..\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\Mono.CompilerServices.SymbolWriter.dll</HintPath>
+    </Reference>
+    <Reference Include="Xamarin.Android.Cecil">
+      <HintPath>..\..\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\Xamarin.Android.Cecil.dll</HintPath>
+    </Reference>
+    <Reference Include="Xamarin.Android.Cecil.Mdb">
+      <HintPath>..\..\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\Xamarin.Android.Cecil.Mdb.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Posix.NETStandard">
+      <HintPath>..\..\packages\Mono.Posix.NETStandard.1.0.0\lib\net40\Mono.Posix.NETStandard.dll</HintPath>
+    </Reference>
+    <Reference Include="libZipSharp">
+      <HintPath>..\..\packages\Xamarin.LibZipSharp.1.0.6\lib\net45\libZipSharp.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="$(IntermediateOutputPath)Profile.g.cs" />
@@ -105,23 +133,34 @@
     <Compile Include="Linker\MonoDroid.Tuner\Linker.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\LinkerOptions.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\MonoDroidMarkStep.cs" />
+    <Compile Include="Linker\MonoDroid.Tuner\OutputStepWithTimestamps.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\PreserveHttpAndroidClientHandler.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\StripEmbeddedLibraries.cs" />
     <Compile Include="Tasks\Aapt.cs" />
     <Compile Include="Tasks\Aapt2.cs" />
     <Compile Include="Tasks\Aapt2Compile.cs" />
     <Compile Include="Tasks\Aapt2Link.cs" />
+    <Compile Include="Tasks\AndroidTask.cs" />
     <Compile Include="Tasks\AndroidZipAlign.cs" />
     <Compile Include="Tasks\BuildApk.cs" />
+    <Compile Include="Tasks\BuildBaseAppBundle.cs" />
+    <Compile Include="Tasks\BuildAppBundle.cs" />
+    <Compile Include="Tasks\BundleTool.cs" />
+    <Compile Include="Tasks\BuildApkSet.cs" />
+    <Compile Include="Tasks\InstallApkSet.cs" />
     <Compile Include="Tasks\CilStrip.cs" />
     <Compile Include="Tasks\ConvertDebuggingFiles.cs" />
     <Compile Include="Tasks\CheckForInvalidResourceFileNames.cs" />
     <Compile Include="Tasks\CollectNonEmptyDirectories.cs" />
     <Compile Include="Tasks\CollectPdbFiles.cs" />
+    <Compile Include="Tasks\FilterAssemblies.cs" />
+    <Compile Include="Tasks\GenerateLibraryResources.cs" />
     <Compile Include="Tasks\Generator.cs" />
     <Compile Include="Tasks\JarToXml.cs" />
     <Compile Include="Tasks\GetJavaPlatformJar.cs" />
     <Compile Include="Tasks\GetFilesThatExist.cs" />
+    <Compile Include="Tasks\LinkAssembliesNoShrink.cs" />
+    <Compile Include="Tasks\ReadAndroidManifest.cs" />
     <Compile Include="Tasks\RemoveRegisterAttribute.cs" />
     <Compile Include="Tasks\GetMonoPlatformJar.cs" />
     <Compile Include="Tasks\GeneratePackageManagerJava.cs" />
@@ -145,6 +184,7 @@
     <Compile Include="Tasks\ResolveSdksTask.cs" />
     <Compile Include="Tasks\CompileToDalvik.cs" />
     <Compile Include="Tasks\AndroidToolTask.cs" />
+    <Compile Include="Tasks\PrepareAbiItems.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Mono.Android\ApplicationAttribute.Partial.cs" />
     <Compile Include="Mono.Android\BroadcastReceiverAttribute.Partial.cs" />
@@ -152,12 +192,17 @@
     <Compile Include="Mono.Android\ContentProviderAttribute.Partial.cs" />
     <Compile Include="Mono.Android\LayoutAttribute.Partial.cs" />
     <Compile Include="Tasks\SetVsMonoAndroidRegistryKey.cs" />
+    <Compile Include="Tasks\SplitProperty.cs" />
     <Compile Include="Tasks\ValidateJavaVersion.cs" />
-    <Compile Include="Utilities\AndroidAddOnManifest.cs" />
     <Compile Include="Mono.Android\IntentFilterAttribute.Partial.cs" />
     <Compile Include="Mono.Android\GrantUriPermissionAttribute.Partial.cs" />
+    <Compile Include="Tasks\WriteLockFile.cs" />
+    <Compile Include="Utilities\DummyCustomAttributeProvider.cs" />
     <Compile Include="Utilities\InvalidActivityNameException.cs" />
     <Compile Include="Utilities\JavaResourceParser.cs" />
+    <Compile Include="Utilities\MetadataResolver.cs" />
+    <Compile Include="Utilities\MetadataExtensions.cs" />
+    <Compile Include="Utilities\PackagingUtils.cs" />
     <Compile Include="Utilities\ResourceParser.cs" />
     <Compile Include="Utilities\ManagedResourceParser.cs" />
     <Compile Include="Utilities\ManifestDocumentElement.cs" />
@@ -175,7 +220,9 @@
     <Compile Include="Linker\MonoDroid.Tuner\PreserveJavaExceptions.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\PreserveJavaTypeRegistrations.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\RemoveAttributes.cs" />
+    <Compile Include="Utilities\AsyncTaskExtensions.cs" />
     <Compile Include="Utilities\MSBuildExtensions.cs" />
+    <Compile Include="Utilities\UnhandledExceptionLogger.cs" />
     <Compile Include="Utilities\ZipArchiveEx.cs" />
     <Compile Include="Mono.Android\ServiceAttribute.Partial.cs" />
     <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\AdjustVisibility.cs">
@@ -197,6 +244,7 @@
     <Compile Include="Linker\MonoDroid.Tuner\PreserveDynamicTypes.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\PreserveLinqExpressions.cs" />
     <Compile Include="Tasks\NdkUtils.cs" />
+    <Compile Include="Tasks\NdkUtilsOld.cs" />
     <Compile Include="Tasks\MakeBundleNativeCodeExternal.cs" />
     <Compile Include="Tasks\GetExtraPackages.cs" />
     <Compile Include="Tasks\CopyGeneratedJavaResourceClasses.cs" />
@@ -214,12 +262,9 @@
     <Compile Include="Mono.Android\SupportsGLTextureAttribute.Partial.cs" />
     <Compile Include="Tasks\CreateNativeLibraryArchive.cs" />
     <Compile Include="Tasks\GetImportedLibraries.cs" />
-    <Compile Include="Tasks\GetAdditionalResourcesFromAssemblies.cs" />
-    <Compile Include="Tasks\CreateAndroidResourceStamp.cs" />
     <Compile Include="Tasks\CollectLibraryAssets.cs" />
     <Compile Include="Tasks\ImportJavaDoc.cs" />
     <Compile Include="Tasks\MDoc.cs" />
-    <Compile Include="Tasks\GetAddOnPlatformLibraries.cs" />
     <Compile Include="Tasks\ParseAndroidWearProjectAndManifest.cs" />
     <Compile Include="Tasks\PrepareWearApplicationFiles.cs" />
     <Compile Include="Tasks\CopyAndConvertResources.cs" />
@@ -238,7 +283,6 @@
     <Compile Include="Tasks\LogWarningsForFiles.cs" />
     <Compile Include="Tasks\DetermineJavaLibrariesToCompile.cs" />
     <Compile Include="Tasks\CreateMultiDexMainDexClassList.cs" />
-    <Compile Include="Tasks\ReadAdditionalResourcesFromAssemblyCache.cs" />
     <Compile Include="Tasks\JavaToolTask.cs" />
     <Compile Include="Tasks\GenerateLayoutCodeBehind.cs" />
     <Compile Include="Tasks\GenerateLayoutBindings.cs" />
@@ -249,84 +293,6 @@
     <Compile Include="Tasks\CalculateProjectDependencies.cs" />
     <Compile Include="Tasks\ConvertCustomView.cs" />
     <Compile Include="Tasks\ComputeHash.cs" />
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\BitAccess.cs">
-      <Link>pdb2mdb\BitAccess.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\BitSet.cs">
-      <Link>pdb2mdb\BitSet.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\CvInfo.cs">
-      <Link>pdb2mdb\CvInfo.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\DataStream.cs">
-      <Link>pdb2mdb\DataStream.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\DbiDbgHdr.cs">
-      <Link>pdb2mdb\DbiDbgHdr.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\DbiHeader.cs">
-      <Link>pdb2mdb\DbiHeader.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\DbiModuleInfo.cs">
-      <Link>pdb2mdb\DbiModuleInfo.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\DbiSecCon.cs">
-      <Link>pdb2mdb\DbiSecCon.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\Driver.cs">
-      <Link>pdb2mdb\Driver.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\IntHashTable.cs">
-      <Link>pdb2mdb\IntHashTable.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\Interfaces.cs">
-      <Link>pdb2mdb\Interfaces.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\MsfDirectory.cs">
-      <Link>pdb2mdb\MsfDirectory.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\PdbConstant.cs">
-      <Link>pdb2mdb\PdbConstant.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\PdbDebugException.cs">
-      <Link>pdb2mdb\PdbDebugException.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\PdbException.cs">
-      <Link>pdb2mdb\PdbException.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\PdbFile.cs">
-      <Link>pdb2mdb\PdbFile.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\PdbFileHeader.cs">
-      <Link>pdb2mdb\PdbFileHeader.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\PdbFunction.cs">
-      <Link>pdb2mdb\PdbFunction.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\PdbLine.cs">
-      <Link>pdb2mdb\PdbLine.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\PdbLines.cs">
-      <Link>pdb2mdb\PdbLines.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\PdbReader.cs">
-      <Link>pdb2mdb\PdbReader.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\PdbScope.cs">
-      <Link>pdb2mdb\PdbScope.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\PdbSlot.cs">
-      <Link>pdb2mdb\PdbSlot.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\PdbSource.cs">
-      <Link>pdb2mdb\PdbSource.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\PdbWriter.cs">
-      <Link>pdb2mdb\PdbWriter.cs</Link>
-    </Compile>
-    <Compile Include="$(MonoSourceFullPath)\mcs\tools\pdb2mdb\SourceLocationProvider.cs">
-      <Link>pdb2mdb\SourceLocationProvider.cs</Link>
-    </Compile>
     <Compile Include="Tasks\Lint.cs" />
     <Compile Include="Tasks\ReadLibraryProjectImportsCache.cs" />
     <Compile Include="Tasks\ReadImportedLibrariesCache.cs" />
@@ -347,6 +313,9 @@
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\I18nAssemblies.cs">
       <Link>Linker\Linker\I18nAssemblies.cs</Link>
     </Compile>
+    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\Inflater.cs">
+      <Link>Linker\Linker\Inflater.cs</Link>
+    </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\IXApiVisitor.cs">
       <Link>Linker\Linker\IXApiVisitor.cs</Link>
     </Compile>
@@ -358,6 +327,9 @@
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\MethodReferenceExtensions.cs">
       <Link>Linker\Linker\MethodReferenceExtensions.cs</Link>
+    </Compile>
+    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\OverrideInformation.cs">
+      <Link>Linker\Linker\OverrideInformation.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\Pipeline.cs">
       <Link>Linker\Linker\Pipeline.cs</Link>
@@ -419,6 +391,9 @@
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\MarkStep.cs">
       <Link>Linker\Linker.Stepsq\MarkStep.cs</Link>
     </Compile>
+    <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\PreserveDependencyLookupStep.cs">
+      <Link>Linker\Linker.Stepsq\PreserveDependencyLookupStep.cs</Link>
+    </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\LoadException.cs">
       <Link>Linker\Linker\LoadException.cs</Link>
     </Compile>
@@ -437,12 +412,25 @@
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\MarkingHelpers.cs">
       <Link>Linker\Linker\MarkingHelpers.cs</Link>
     </Compile>
+    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\KnownMembers.cs">
+      <Link>Linker\Linker\KnownMembers.cs</Link>
+    </Compile>
+    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\MethodDefinitionExtensions.cs">
+      <Link>Linker\Linker\MethodDefinitionExtensions.cs</Link>
+    </Compile>
+    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\MethodBodyScanner.cs">
+      <Link>Linker\Linker\MethodBodyScanner.cs</Link>
+    </Compile>
+    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\TypeDefinitionExtensions.cs">
+      <Link>Linker\Linker\TypeDefinitionExtensions.cs</Link>
+    </Compile>
+    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\BCL.cs">
+      <Link>Linker\Linker\BCL.cs</Link>
+    </Compile>
     <Compile Include="Tasks\MergeResources.cs" />
     <Compile Include="Tasks\GetConvertedJavaLibraries.cs" />
     <Compile Include="Tasks\JavaCompileToolTask.cs" />
-    <Compile Include="Tasks\AsyncTask.cs" />
     <Compile Include="Utilities\ResourceMerger.cs" />
-    <Compile Include="Tasks\Dx.cs" />
     <Compile Include="Tasks\CreateMsymManifest.cs" />
     <Compile Include="Utilities\AndroidResource.cs">
       <Link>Utilities\AndroidResource.cs</Link>
@@ -470,9 +458,6 @@
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\FixModuleFlags.cs">
       <Link>Linker\Mono.Tuner\FixModuleFlags.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\PrintTypeMap.cs">
-      <Link>Linker\Mono.Tuner\PrintTypeMap.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\PreserveCrypto.cs">
       <Link>Linker\Mono.Tuner\PreserveCrypto.cs</Link>
@@ -575,7 +560,17 @@
     <Compile Include="Tasks\LayoutLocationInfo.cs" />
     <Compile Include="Tasks\LayoutTypeFixup.cs" />
     <Compile Include="Tasks\LayoutWidget.cs" />
-    <Compile Include="Tasks\CancelableTask.cs" />
+    <Compile Include="..\..\bin\Build$(Configuration)\XABuildConfig.cs" />
+    <Compile Include="Tasks\CheckGoogleSdkRequirements.cs" />
+    <Compile Include="Utilities\NativeAssemblyDataStream.cs" />
+    <Compile Include="Utilities\NativeAssemblyGenerator.cs" />
+    <Compile Include="Utilities\NativeAssemblerTargetProvider.cs" />
+    <Compile Include="Utilities\ARMNativeAssemblerTargetProvider.cs" />
+    <Compile Include="Utilities\X86NativeAssemblerTargetProvider.cs" />
+    <Compile Include="Utilities\TypeMappingNativeAssemblyGenerator.cs" />
+    <Compile Include="Utilities\ApplicationConfigNativeAssemblyGenerator.cs" />
+    <Compile Include="Tasks\CompileNativeAssembly.cs" />
+    <Compile Include="Tasks\LinkApplicationSharedLibraries.cs" />
     <None Include="Resources\desugar_deploy.jar">
       <Link>desugar_deploy.jar</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -590,11 +585,16 @@
     </None>
     <Compile Include="Tasks\JavaDoc.cs" />
     <Compile Include="Linker\MonoDroid.Tuner\AndroidLinkContext.cs" />
+    <Compile Include="Tasks\AppendCustomMetadataToItemGroup.cs" />
+    <Compile Include="Utilities\OutputLine.cs" />
+    <Compile Include="Utilities\ResourceIdentifier.cs" />
+    <Compile Include="Tasks\GetAndroidActivityName.cs" />
   </ItemGroup>
   <ItemGroup>
     <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.LaunchMode.cs" />
     <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.ScreenOrientation.cs" />
     <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.ConfigChanges.cs" />
+    <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.ForegroundService.cs" />
     <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.UiOptions.cs" />
     <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Views.SoftInput.cs" />
     <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.Protection.cs" />
@@ -615,13 +615,19 @@
     <None Include="updateinfo.dat">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="startup.aotprofile">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="startup-xf.aotprofile">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <!-- MD doesn't handle MSBuildToolsPath yet
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   -->
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="Xamarin.Android.Build.Tasks.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>
@@ -635,11 +641,17 @@
     <EmbeddedResource Include="Resources\machine.config">
       <LogicalName>machine.config</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\MonoPackageManager.java">
-      <LogicalName>MonoPackageManager.java</LogicalName>
+    <EmbeddedResource Include="Resources\MonoRuntimeProvider.Bundled.java">
+      <LogicalName>MonoRuntimeProvider.Bundled.java</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Seppuku.java">
-      <LogicalName>Seppuku.java</LogicalName>
+    <EmbeddedResource Include="Resources\MonoRuntimeProvider.Bundled.20.java">
+      <LogicalName>MonoRuntimeProvider.Bundled.20.java</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\MonoRuntimeProvider.Shared.java">
+      <LogicalName>MonoRuntimeProvider.Shared.java</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\MonoRuntimeProvider.Shared.20.java">
+      <LogicalName>MonoRuntimeProvider.Shared.20.java</LogicalName>
     </EmbeddedResource>
     <EmbeddedResource Include="Linker\PreserveLists\mscorlib.xml">
       <LogicalName>mscorlib.xml</LogicalName>
@@ -659,32 +671,8 @@
     <EmbeddedResource Include="Resources\proguard_xamarin.cfg">
       <LogicalName>proguard_xamarin.cfg</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\MonoPackageManager.api4.java">
-      <LogicalName>MonoPackageManager.api4.java</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\NotifyTimeZoneChanges.java">
-      <LogicalName>NotifyTimeZoneChanges.java</LogicalName>
-    </EmbeddedResource>
     <EmbeddedResource Include="Resources\ApplicationRegistration.java">
       <LogicalName>ApplicationRegistration.java</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\IncrementalClassLoader.java">
-      <LogicalName>IncrementalClassLoader.java</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Placeholder.java">
-      <LogicalName>Placeholder.java</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\MultiDexLoader.java">
-      <LogicalName>MultiDexLoader.java</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\MultiDexLoader.Debug.java">
-      <LogicalName>MultiDexLoader.Debug.java</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\MonkeyPatcher.java">
-      <LogicalName>MonkeyPatcher.java</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\ResourcePatcher.java">
-      <LogicalName>ResourcePatcher.java</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
@@ -722,11 +710,6 @@
       Xamarin.Android.Build.Tasks.targets uses several tasks located in
       Xamarin.Android.Tools.BootstrapTasks, such as <GenerateProfile/>
       -->
-    <ProjectReference Include="..\..\build-tools\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj">
-      <Project>{E8492EFB-D14A-4F32-AA28-88848322ECEA}</Project>
-      <Name>Xamarin.Android.Tools.BootstrapTasks</Name>
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-    </ProjectReference>
     <!--
       *Logically* needs to be built first because executing the <Proguard/>
       task will require the outputs of `proguard.csproj`.
@@ -741,17 +724,15 @@
       <Name>r8</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\..\external\LibZipSharp\libZipSharp.csproj">
-      <Project>{E248B2CA-303B-4645-ADDC-9D4459D550FD}</Project>
-      <Name>libZipSharp</Name>
+    <ProjectReference Include="..\aapt2\aapt2.csproj">
+      <Project>{0c31de30-f9df-4312-bffe-dcad558ccf08}</Project>
+      <Name>aapt2</Name>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\..\external\Java.Interop\src\Xamarin.Android.Cecil\Xamarin.Android.Cecil.csproj">
-      <Project>{15945D4B-FF56-4BCC-B598-2718D199DD08}</Project>
-      <Name>Xamarin.Android.Cecil</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\external\Java.Interop\src\Xamarin.Android.Cecil\Xamarin.Android.Cecil.Mdb.csproj">
-      <Project>{C0487169-8F81-497F-919E-EB42B1D0243F}</Project>
-      <Name>Xamarin.Android.Cecil.Mdb</Name>
+    <ProjectReference Include="..\bundletool\bundletool.csproj">
+      <Project>{a0aef446-3368-4591-9de6-bc3b2b33337d}</Project>
+      <Name>bundletool</Name>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\..\external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj">
       <Project>{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}</Project>
@@ -765,11 +746,12 @@
       <Project>{94BD81F7-B06F-4295-9636-F8A3B6BDC762}</Project>
       <Name>Java.Interop</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="pdb2mdb\" />
-    <Folder Include="Linker\Linker\" />
-    <Folder Include="utils\" />
+    <ProjectReference Include="..\..\build-tools\fetch-windows-assemblers\fetch-windows-assemblers.csproj">
+      <Project>{09518DF2-C7B1-4CDB-849A-9F91F4BEA925}</Project>
+      <Name>fetch-windows-assemblers</Name>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="ILRepack.targets" />
+  <Import Project="..\..\packages\Xamarin.LibZipSharp.1.0.6\build\Xamarin.LibZipSharp.targets" Condition="Exists('..\..\packages\Xamarin.LibZipSharp.1.0.6\build\Xamarin.LibZipSharp.targets')" />
 </Project>

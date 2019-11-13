@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 using Android.App;
 using Android.Content;
@@ -19,8 +19,11 @@ namespace Xamarin.Forms.Performance.Integration.Droid
 
 		protected override void OnCreate (Bundle bundle)
 		{
-			if (firstOnCreate)
-				Console.WriteLine ("startup-timing: OnCreate reached");
+			TimingLogger timing = null;
+
+			if (firstOnCreate) {
+				timing = new TimingLogger ("startup-timing: OnCreate reached");
+			}
 
 			TabLayoutResource = Resource.Layout.Tabbar;
 			ToolbarResource = Resource.Layout.Toolbar;
@@ -32,7 +35,7 @@ namespace Xamarin.Forms.Performance.Integration.Droid
 			LoadApplication (new App ());
 
 			if (firstOnCreate) {
-				Console.WriteLine ("startup-timing: OnCreate end reached");
+				timing.Stop ("startup-timing: OnCreate end reached");
 				firstOnCreate = false;
 			}
 		}
@@ -44,26 +47,32 @@ namespace Xamarin.Forms.Performance.Integration.Droid
 
 		protected override void OnStart ()
 		{
-			if (firstOnStart)
-				Console.WriteLine ("startup-timing: OnStart reached");
+			TimingLogger timing = null;
+
+			if (firstOnStart) {
+				timing = new TimingLogger ("startup-timing: OnStart reached");
+			}
 
 			base.OnStart ();
 
 			if (firstOnStart) {
-				Console.WriteLine ("startup-timing: OnStart end reached");
+				timing.Stop ("startup-timing: OnStart end reached");
 				firstOnStart = false;
 			}
 		}
 
 		protected override void OnResume ()
 		{
-			if (firstOnResume)
-				Console.WriteLine ("startup-timing: OnResume reached");
+			TimingLogger timing = null;
+
+			if (firstOnResume) {
+				timing = new TimingLogger ("startup-timing: OnResume reached");
+			}
 
 			base.OnResume ();
 
 			if (firstOnResume) {
-				Console.WriteLine ("startup-timing: OnResume end reached");
+				timing.Stop ("startup-timing: OnResume end reached");
 				firstOnResume = false;
 			}
 		}

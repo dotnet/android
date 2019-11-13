@@ -116,8 +116,9 @@ namespace Bug12935
 				proj.TargetFrameworkVersion = "v4.0.3";
 				proj.AndroidManifest = string.Format (TargetSdkManifest, "15");
 				Assert.IsFalse (builder.Build (proj), "Build for TargetFrameworkVersion 15 should have failed");
-				StringAssertEx.Contains ("APT0000: ", builder.LastBuildOutput);
-				StringAssertEx.Contains ("1 Error(s)", builder.LastBuildOutput);
+				StringAssertEx.Contains (useAapt2 ? "APT2259: " : "APT1134: ", builder.LastBuildOutput);
+				StringAssertEx.Contains (useAapt2 ? "APT2067" : "", builder.LastBuildOutput);
+				StringAssertEx.Contains ($"{(useAapt2 ? "2" : "1")} Error(s)", builder.LastBuildOutput);
 			}
 		}
 
@@ -247,8 +248,8 @@ namespace Bug12935
 				TargetFrameworkVersion = "v7.0",
 				IsRelease = true,
 			};
-			string attrHead = "[Activity (";
-			string attr = @"[Activity (DirectBootAware=true, ";
+			string attrHead = ", Activity (";
+			string attr = @", Activity (DirectBootAware=true, ";
 			proj.MainActivity = proj.DefaultMainActivity.Replace (attrHead, attr);
 			proj.OtherBuildItems.Add (new BuildItem (BuildActions.Compile, "MyService.cs") {
 				TextContent = () => "using Android.App; [Service (DirectBootAware = true)] public class MyService : Service { public override Android.OS.IBinder OnBind (Android.Content.Intent intent) { return null; } }"
@@ -266,6 +267,8 @@ namespace Bug12935
 				Assert.IsNotNull (le, "no activity element found");
 				Assert.IsTrue (doc.XPathSelectElements ("//activity[@android:directBootAware='true']", nsResolver).Any (),
 						   "'activity' element is not generated as expected.");
+				Assert.IsTrue (doc.XPathSelectElements ("//provider[@android:name='mono.MonoRuntimeProvider' and @android:directBootAware='true']", nsResolver).Any (),
+						   "'provider' element is not generated as expected.");
 			}
 		}
 
@@ -358,7 +361,7 @@ namespace Bug12935
 				/* pattern */ "{abi}{minSDK:00}{versionCode:000}",
 				/* props */ null,
 				/* shouldBuild */ true,
-				/* expected */ "211012;311012",
+				/* expected */ "216012;316012",
 			},
 			new object[] {
 				/* seperateApk */ true,
@@ -368,7 +371,7 @@ namespace Bug12935
 				/* pattern */ "{abi}{minSDK:00}{screen}{versionCode:000}",
 				/* props */ "screen=24",
 				/* shouldBuild */ true,
-				/* expected */ "21124012;31124012",
+				/* expected */ "21624012;31624012",
 			},
 			new object[] {
 				/* seperateApk */ true,
@@ -378,7 +381,7 @@ namespace Bug12935
 				/* pattern */ "{abi}{minSDK:00}{screen}{foo:0}{versionCode:000}",
 				/* props */ "screen=24;foo=$(Foo)",
 				/* shouldBuild */ true,
-				/* expected */ "211241012;311241012",
+				/* expected */ "216241012;316241012",
 			},
 			new object[] {
 				/* seperateApk */ true,
@@ -388,12 +391,12 @@ namespace Bug12935
 				/* pattern */ "{abi}{minSDK:00}{screen}{foo:00}{versionCode:000}",
 				/* props */ "screen=24;foo=$(Foo)",
 				/* shouldBuild */ false,
-				/* expected */ "2112401012;3112401012",
+				/* expected */ "2162401012;3162401012",
 			},
 		};
 
 		[Test]
-		[TestCaseSource("VersionCodeTestSource")]
+		[TestCaseSource(nameof (VersionCodeTestSource))]
 		public void VersionCodeTests (bool seperateApk, string abis, string versionCode, bool useLegacy, string versionCodePattern, string versionCodeProperties, bool shouldBuild, string expectedVersionCode)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -473,7 +476,7 @@ namespace Bug12935
 		}
 
 		[Test]
-		[TestCaseSource ("DebuggerAttributeCases")]
+		[TestCaseSource (nameof (DebuggerAttributeCases))]
 		public void DebuggerAttribute (string debugType, bool isRelease, bool expected)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -484,6 +487,47 @@ namespace Bug12935
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
 				var manifest = builder.Output.GetIntermediaryAsText (Root, Path.Combine ("android", "AndroidManifest.xml"));
 				Assert.AreEqual (expected, manifest.Contains ("android:debuggable=\"true\""), $"Manifest  {(expected ? "should" : "should not")} contain the andorid:debuggable attribute");
+			}
+		}
+
+		[Test]
+		public void ModifyManifest ([Values (true, false)] bool isRelease)
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
+				Imports = {
+					new Import ("foo.targets") {
+				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-16""?>
+<Project ToolsVersion=""4.0"" xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">
+<PropertyGroup>
+	<AfterGenerateAndroidManifest>
+		$(AfterGenerateAndroidManifest);
+		_Foo;
+	</AfterGenerateAndroidManifest>
+	<Namespace>
+	    <Namespace Prefix=""android"" Uri=""http://schemas.android.com/apk/res/android"" />
+	</Namespace>
+</PropertyGroup>
+<ItemGroup>
+	<_Permissions Include=""&lt;uses-permission android:name=&quot;android.permission.READ_CONTACTS&quot; /&gt;"" />
+</ItemGroup>
+<Target Name=""_Foo"">
+	<XmlPoke
+		XmlInputPath=""$(IntermediateOutputPath)android\AndroidManifest.xml""
+		Value=""@(_Permissions)""
+		Query=""/manifest""
+		Namespaces=""$(Namespace)""
+	/>
+</Target>
+</Project>
+"
+					},
+				},
+			};
+			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
+				var manifest = builder.Output.GetIntermediaryAsText (Root, Path.Combine ("android", "AndroidManifest.xml"));
+				Assert.IsTrue (manifest.Contains ("READ_CONTACTS"), $"Manifest should contain the READ_CONTACTS");
 			}
 		}
 
@@ -500,7 +544,7 @@ namespace Bug12935
 				using (var zip = ZipArchive.Create (ms)) {
 					zip.AddEntry ("AndroidManifest.xml", @"<?xml version='1.0'?>
 <manifest xmlns:android='http://schemas.android.com/apk/res/android' package='com.xamarin.test'>
-    <uses-sdk android:minSdkVersion='14'/>
+    <uses-sdk android:minSdkVersion='16'/>
     <permission android:name='${applicationId}.permission.C2D_MESSAGE' android:protectionLevel='signature' />
     <application>
         <activity android:name='.signin.internal.SignInHubActivity' />
@@ -535,13 +579,13 @@ namespace Bug12935
 					new BuildItem.ProjectReference ("..\\Binding1\\Binding1.csproj", lib.ProjectGuid)
 				},
 				PackageReferences = {
-					KnownPackages.SupportMediaCompat_25_4_0_1,
-					KnownPackages.SupportFragment_25_4_0_1,
-					KnownPackages.SupportCoreUtils_25_4_0_1,
-					KnownPackages.SupportCoreUI_25_4_0_1,
-					KnownPackages.SupportCompat_25_4_0_1,
-					KnownPackages.AndroidSupportV4_25_4_0_1,
-					KnownPackages.SupportV7AppCompat_25_4_0_1,
+					KnownPackages.SupportMediaCompat_27_0_2_1,
+					KnownPackages.SupportFragment_27_0_2_1,
+					KnownPackages.SupportCoreUtils_27_0_2_1,
+					KnownPackages.SupportCoreUI_27_0_2_1,
+					KnownPackages.SupportCompat_27_0_2_1,
+					KnownPackages.AndroidSupportV4_27_0_2_1,
+					KnownPackages.SupportV7AppCompat_27_0_2_1,
 				},
 			};
 			proj.Sources.Add (new BuildItem.Source ("TestActivity1.cs") {
@@ -615,7 +659,7 @@ public class TestActivity2 : FragmentActivity {
 		[Test]
 		public void AllActivityAttributeProperties ()
 		{
-			const string expectedOutput = "android:allowEmbedded=\"true\" android:allowTaskReparenting=\"true\" android:alwaysRetainTaskState=\"true\" android:autoRemoveFromRecents=\"true\" android:banner=\"@drawable/icon\" android:clearTaskOnLaunch=\"true\" android:colorMode=\"hdr\" android:configChanges=\"mcc\" android:description=\"@string/app_name\" android:directBootAware=\"true\" android:documentLaunchMode=\"never\" android:enabled=\"true\" android:enableVrMode=\"foo\" android:excludeFromRecents=\"true\" android:exported=\"true\" android:finishOnCloseSystemDialogs=\"true\" android:finishOnTaskLaunch=\"true\" android:hardwareAccelerated=\"true\" android:icon=\"@drawable/icon\" android:immersive=\"true\" android:label=\"TestActivity\" android:launchMode=\"singleTop\" android:lockTaskMode=\"normal\" android:logo=\"@drawable/icon\" android:maxAspectRatio=\"1.2\" android:maxRecents=\"1\" android:multiprocess=\"true\" android:name=\"com.contoso.TestActivity\" android:noHistory=\"true\" android:parentActivityName=\"md52d9cf6333b8e95e8683a477bc589eda5.MainActivity\" android:permission=\"com.contoso.permission.TEST_ACTIVITY\" android:persistableMode=\"persistNever\" android:process=\"com.contoso.process.testactivity_process\" android:recreateOnConfigChanges=\"mcc\" android:relinquishTaskIdentity=\"true\" android:resizeableActivity=\"true\" android:resumeWhilePausing=\"true\" android:rotationAnimation=\"crossfade\" android:roundIcon=\"@drawable/icon\" android:screenOrientation=\"portrait\" android:showForAllUsers=\"true\" android:showOnLockScreen=\"true\" android:showWhenLocked=\"true\" android:singleUser=\"true\" android:stateNotNeeded=\"true\" android:supportsPictureInPicture=\"true\" android:taskAffinity=\"com.contoso\" android:theme=\"@android:style/Theme.Light\" android:turnScreenOn=\"true\" android:uiOptions=\"splitActionBarWhenNarrow\" android:visibleToInstantApps=\"true\" android:windowSoftInputMode=\"stateUnchanged|adjustUnspecified\"";
+			const string expectedOutput = "android:allowEmbedded=\"true\" android:allowTaskReparenting=\"true\" android:alwaysRetainTaskState=\"true\" android:autoRemoveFromRecents=\"true\" android:banner=\"@drawable/icon\" android:clearTaskOnLaunch=\"true\" android:colorMode=\"hdr\" android:configChanges=\"mcc\" android:description=\"@string/app_name\" android:directBootAware=\"true\" android:documentLaunchMode=\"never\" android:enabled=\"true\" android:enableVrMode=\"foo\" android:excludeFromRecents=\"true\" android:exported=\"true\" android:finishOnCloseSystemDialogs=\"true\" android:finishOnTaskLaunch=\"true\" android:hardwareAccelerated=\"true\" android:icon=\"@drawable/icon\" android:immersive=\"true\" android:label=\"TestActivity\" android:launchMode=\"singleTop\" android:lockTaskMode=\"normal\" android:logo=\"@drawable/icon\" android:maxAspectRatio=\"1.2\" android:maxRecents=\"1\" android:multiprocess=\"true\" android:name=\"com.contoso.TestActivity\" android:noHistory=\"true\" android:parentActivityName=\"unnamedproject.unnamedproject.MainActivity\" android:permission=\"com.contoso.permission.TEST_ACTIVITY\" android:persistableMode=\"persistNever\" android:process=\"com.contoso.process.testactivity_process\" android:recreateOnConfigChanges=\"mcc\" android:relinquishTaskIdentity=\"true\" android:resizeableActivity=\"true\" android:resumeWhilePausing=\"true\" android:rotationAnimation=\"crossfade\" android:roundIcon=\"@drawable/icon\" android:screenOrientation=\"portrait\" android:showForAllUsers=\"true\" android:showOnLockScreen=\"true\" android:showWhenLocked=\"true\" android:singleUser=\"true\" android:stateNotNeeded=\"true\" android:supportsPictureInPicture=\"true\" android:taskAffinity=\"com.contoso\" android:theme=\"@android:style/Theme.Light\" android:turnScreenOn=\"true\" android:uiOptions=\"splitActionBarWhenNarrow\" android:visibleToInstantApps=\"true\" android:windowSoftInputMode=\"stateUnchanged|adjustUnspecified\"";
 
 			var proj = new XamarinAndroidApplicationProject ();
 
@@ -691,5 +735,44 @@ class TestActivity : Activity { }"
 				Assert.AreEqual (expectedOutput, string.Join (" ", e.Attributes ()));
 			}
 		}
+
+		[Test]
+ 		public void AllServiceAttributeProperties ()
+ 		{
+ 			const string expectedOutput = "android:directBootAware=\"true\" android:enabled=\"true\" android:exported=\"true\" android:foregroundServiceType=\"connectedDevice\" android:icon=\"@drawable/icon\" android:isolatedProcess=\"true\" android:label=\"TestActivity\" android:name=\"com.contoso.TestActivity\" android:permission=\"com.contoso.permission.TEST_ACTIVITY\" android:process=\"com.contoso.process.testactivity_process\" android:roundIcon=\"@drawable/icon\"";
+
+ 			var proj = new XamarinAndroidApplicationProject ();
+
+ 			proj.Sources.Add (new BuildItem.Source ("TestActivity.cs") {
+ 				TextContent = () => @"using Android.App;
+ using Android.Content.PM;
+ using Android.Views;
+ [Service (
+ 	DirectBootAware            = true,
+ 	Enabled                    = true,
+ 	Exported                   = true,
+	ForegroundServiceType      = ForegroundService.TypeConnectedDevice,
+ 	Icon                       = ""@drawable/icon"",
+ 	IsolatedProcess            = true,
+ 	Label                      = ""TestActivity"",
+ 	Name                       = ""com.contoso.TestActivity"",
+ 	Permission                 = ""com.contoso.permission.TEST_ACTIVITY"",
+ 	Process                    = ""com.contoso.process.testactivity_process"",
+ 	RoundIcon                  = ""@drawable/icon"")]
+ class TestService : Service { public override Android.OS.IBinder OnBind (Android.Content.Intent intent) { return null; } }"
+ 			});
+
+ 			using (ProjectBuilder builder = CreateDllBuilder (Path.Combine ("temp", TestName))) {
+ 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
+
+ 				string manifest = builder.Output.GetIntermediaryAsText (Path.Combine ("android", "AndroidManifest.xml"));
+ 				var doc = XDocument.Parse (manifest);
+ 				var ns = XNamespace.Get ("http://schemas.android.com/apk/res/android");
+ 				IEnumerable<XElement> activities = doc.Element ("manifest")?.Element ("application")?.Elements ("service");
+ 				XElement e = activities.FirstOrDefault (x => x.Attribute (ns.GetName ("label"))?.Value == "TestActivity");
+ 				Assert.IsNotNull (e, "Manifest should contain an activity labeled TestActivity");
+ 				Assert.AreEqual (expectedOutput, string.Join (" ", e.Attributes ()));
+ 			}
+ 		}
 	}
 }

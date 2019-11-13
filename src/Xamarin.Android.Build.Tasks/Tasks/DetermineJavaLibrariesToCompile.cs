@@ -4,13 +4,16 @@ using System.Collections.Generic;
 using Microsoft.Build.Framework;
 using System.Linq;
 using System.IO;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
-	public class DetermineJavaLibrariesToCompile : Task
+	public class DetermineJavaLibrariesToCompile : AndroidTask
 	{
+		public override string TaskPrefix => "DJL";
+
 		[Required]
-		public string MonoPlatformJarPath { get; set; }
+		public ITaskItem[] MonoPlatformJarPaths { get; set; }
 
 		public bool EnableInstantRun { get; set; }
 
@@ -24,29 +27,17 @@ namespace Xamarin.Android.Tasks
 
 		public ITaskItem[] LibraryProjectJars { get; set; }
 
-		public ITaskItem[] AdditionalJavaLibraryReferences { get; set; }
-
 		[Output]
 		public ITaskItem[] JavaLibrariesToCompile { get; set; }
 
 		[Output]
 		public ITaskItem[] ReferenceJavaLibraries { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
-			Log.LogDebugMessage ("DetermineJavaLibrariesToCompile");
-			Log.LogDebugMessage ("  EnableInstantRun: {0}", EnableInstantRun);
-			Log.LogDebugMessage ("  MonoPlatformJarPath: {0}", MonoPlatformJarPath);
-			Log.LogDebugTaskItems ("  JavaSourceFiles:", JavaSourceFiles);
-			Log.LogDebugTaskItems ("  JavaLibraries:", JavaLibraries);
-			Log.LogDebugTaskItems ("  ExternalJavaLibraries:", ExternalJavaLibraries);
-			Log.LogDebugTaskItems ("  LibraryProjectJars:", LibraryProjectJars);
-			Log.LogDebugTaskItems ("  AdditionalJavaLibraryReferences:", AdditionalJavaLibraryReferences);
-			Log.LogDebugTaskItems ("  DoNotPackageJavaLibraries:", DoNotPackageJavaLibraries);
-
 			var jars = new List<ITaskItem> ();
 			if (!EnableInstantRun)
-				jars.Add (new TaskItem (MonoPlatformJarPath));
+				jars.AddRange (MonoPlatformJarPaths);
 			if (JavaSourceFiles != null)
 				foreach (var jar in JavaSourceFiles.Where (p => Path.GetExtension (p.ItemSpec) == ".jar"))
 					jars.Add (jar);
@@ -57,21 +48,35 @@ namespace Xamarin.Android.Tasks
 				foreach (var jar in LibraryProjectJars)
 					if (!MonoAndroidHelper.IsEmbeddedReferenceJar (jar.ItemSpec))
 						jars.Add (jar);
-			if (AdditionalJavaLibraryReferences != null)
-				foreach (var jar in AdditionalJavaLibraryReferences.Distinct (TaskItemComparer.DefaultComparer))
-					jars.Add (jar);
 
 			var distinct  = MonoAndroidHelper.DistinctFilesByContent (jars);
-			jars          = jars.Where (j => distinct.Contains (j)).ToList ();
 
-			JavaLibrariesToCompile = jars.Where (j => !IsExcluded (j.ItemSpec)).ToArray ();
-			ReferenceJavaLibraries = (ExternalJavaLibraries ?? Enumerable.Empty<ITaskItem> ())
-				.Concat (jars.Except (JavaLibrariesToCompile)).ToArray ();
+			var javaLibrariesToCompile = new List<ITaskItem> ();
+			var referenceJavaLibraries = new List<ITaskItem> ();
+			if (ExternalJavaLibraries != null)
+				referenceJavaLibraries.AddRange (ExternalJavaLibraries);
+
+			foreach (var item in distinct) {
+				if (!HasClassFiles (item.ItemSpec))
+					continue;
+				if (IsExcluded (item.ItemSpec)) {
+					referenceJavaLibraries.Add (item);
+				} else {
+					javaLibrariesToCompile.Add (item);
+				}
+			}
+			JavaLibrariesToCompile = javaLibrariesToCompile.ToArray ();
+			ReferenceJavaLibraries = referenceJavaLibraries.ToArray ();
 
 			Log.LogDebugTaskItems ("  JavaLibrariesToCompile:", JavaLibrariesToCompile);
 			Log.LogDebugTaskItems ("  ReferenceJavaLibraries:", ReferenceJavaLibraries);
 
 			return true;
+		}
+
+		bool HasClassFiles (string jar)
+		{
+			return Files.ZipAny (jar, entry => entry.FullName.EndsWith (".class", StringComparison.OrdinalIgnoreCase));
 		}
 
 		bool IsExcluded (string jar)

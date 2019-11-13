@@ -16,8 +16,10 @@ using Xamarin.Android.Tools;
 namespace Xamarin.Android.Tasks
 {
 	// can't be a single ToolTask, because it has to run mkbundle many times for each arch.
-	public class MakeBundleNativeCodeExternal : Task
+	public class MakeBundleNativeCodeExternal : AndroidTask
 	{
+		public override string TaskPrefix => "MBN";
+
 		const string BundleSharedLibraryName = "libmonodroid_bundle_app.so";
 
 		[Required]
@@ -27,7 +29,8 @@ namespace Xamarin.Android.Tasks
 		public ITaskItem[] Assemblies { get; set; }
 		
 		// Which ABIs to include native libs for
-		public string SupportedAbis { get; set; }
+		[Required]
+		public string [] SupportedAbis { get; set; }
 		
 		[Required]
 		public string TempOutputPath { get; set; }
@@ -51,16 +54,12 @@ namespace Xamarin.Android.Tasks
 		{
 		}
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
-			Log.LogDebugMessage ("Assemblies: {0}", Assemblies.Length);
-			Log.LogDebugMessage ("SupportedAbis: {0}", SupportedAbis);
-			Log.LogDebugMessage ("AutoDeps: {0}", AutoDeps);
+			if (!NdkUtil.Init (Log, AndroidNdkDirectory))
+				return false;
+
 			try {
-				if (String.IsNullOrEmpty (AndroidNdkDirectory)) {
-					Log.LogCodedError ("XA5101", "Could not locate Android NDK. Please make sure to configure path to NDK in SDK Locations or set via /p:AndroidNdkDirectory in the MSBuild/xbuild argument.");
-					return false;
-				}
 				return DoExecute ();
 			} catch (XamarinAndroidException e) {
 				Log.LogCodedError (string.Format ("XA{0:0000}", e.Code), e.MessageWithoutCode);
@@ -74,14 +73,13 @@ namespace Xamarin.Android.Tasks
 
 		bool DoExecute ()
 		{
-			var abis = SupportedAbis.Split (new char[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
 			var results = new List<ITaskItem> ();
 			string bundlepath = Path.Combine (TempOutputPath, "bundles");
 			if (!Directory.Exists (bundlepath))
 				Directory.CreateDirectory (bundlepath);
 			else
 				Directory.Delete (bundlepath, true);
-			foreach (var abi in abis) {
+			foreach (var abi in SupportedAbis) {
 				AndroidTargetArch arch = AndroidTargetArch.Other;
 				switch (abi) {
 				case "arm64":
@@ -141,12 +139,13 @@ namespace Xamarin.Android.Tasks
 					CreateNoWindow = true,
 					WindowStyle = ProcessWindowStyle.Hidden,
 				};
-				var gccNoQuotes = NdkUtil.GetNdkTool (AndroidNdkDirectory, arch, "gcc");
-				var gcc = '"' + gccNoQuotes + '"';
-				var gas = '"' + NdkUtil.GetNdkTool (AndroidNdkDirectory, arch, "as") + '"';
-				psi.EnvironmentVariables ["CC"] = gcc;
+				string windowsCompilerSwitches = NdkUtil.GetCompilerTargetParameters (AndroidNdkDirectory, arch, level);
+				var compilerNoQuotes = NdkUtil.GetNdkTool (AndroidNdkDirectory, arch, "gcc", level);
+				var compiler = $"\"{compilerNoQuotes}\" {windowsCompilerSwitches}".Trim ();
+				var gas = '"' + NdkUtil.GetNdkTool (AndroidNdkDirectory, arch, "as", level) + '"';
+				psi.EnvironmentVariables ["CC"] = compiler;
 				psi.EnvironmentVariables ["AS"] = gas;
-				Log.LogDebugMessage ("CC=" + gcc);
+				Log.LogDebugMessage ("CC=" + compiler);
 				Log.LogDebugMessage ("AS=" + gas);
 				//psi.EnvironmentVariables ["PKG_CONFIG_PATH"] = Path.Combine (Path.GetDirectoryName (MonoDroidSdk.MandroidTool), "lib", abi);
 				Log.LogDebugMessage ("[mkbundle] " + psi.FileName + " " + clb);
@@ -166,6 +165,11 @@ namespace Xamarin.Android.Tasks
 				// then compile temp.c into temp.o and ...
 
 				clb = new CommandLineBuilder ();
+
+				// See NdkUtils.GetNdkTool for reasons why
+				if (!String.IsNullOrEmpty (windowsCompilerSwitches))
+					clb.AppendTextUnquoted (windowsCompilerSwitches);
+
 				clb.AppendSwitch ("-c");
 
 				// This is necessary only when unified headers are in use but it won't hurt to have it
@@ -192,8 +196,8 @@ namespace Xamarin.Android.Tasks
 				clb.AppendSwitch ("-I");
 				clb.AppendFileNameIfNotNull (NdkUtil.GetNdkPlatformIncludePath (AndroidNdkDirectory, arch, level));
 				clb.AppendFileNameIfNotNull (Path.Combine (outpath, "temp.c"));
-				Log.LogDebugMessage ("[CC] " + gcc + " " + clb);
-				if (MonoAndroidHelper.RunProcess (gccNoQuotes, clb.ToString (), OnCcOutputData,  OnCcErrorData) != 0) {
+				Log.LogDebugMessage ("[CC] " + compiler + " " + clb);
+				if (MonoAndroidHelper.RunProcess (compilerNoQuotes, clb.ToString (), OnCcOutputData,  OnCcErrorData) != 0) {
 					Log.LogCodedError ("XA5103", "NDK C compiler resulted in an error. Exit code {0}", proc.ExitCode);
 					return false;
 				}
@@ -217,7 +221,7 @@ namespace Xamarin.Android.Tasks
 				clb.AppendSwitch ("-ldl");
 				clb.AppendSwitch ("-llog");
 				clb.AppendSwitch ("-lz"); // Compress
-				string ld = NdkUtil.GetNdkTool (AndroidNdkDirectory, arch, "ld");
+				string ld = NdkUtil.GetNdkTool (AndroidNdkDirectory, arch, "ld", level);
 				Log.LogMessage (MessageImportance.Normal, "[LD] " + ld + " " + clb);
 				if (MonoAndroidHelper.RunProcess (ld, clb.ToString (), OnLdOutputData,  OnLdErrorData) != 0) {
 					Log.LogCodedError ("XA5201", "NDK Linker resulted in an error. Exit code {0}", proc.ExitCode);

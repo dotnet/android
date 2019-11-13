@@ -30,8 +30,10 @@
 #include <string.h>
 
 #include "monodroid.h"
-#include "monodroid-glue.h"
-#include "util.h"
+#include "monodroid-glue.hh"
+
+#include "util.hh"
+#include "globals.hh"
 
 using namespace xamarin::android;
 
@@ -117,7 +119,7 @@ _monodroid_get_network_interface_state (const char *ifname, mono_bool *is_up, mo
 	if (!ret)
 		log_warn (LOG_NET, "Unable to determine interface '%s' state using Java API", ifname);
 
-	if (networkInterface != NULL && env != NULL) {
+	if (networkInterface != nullptr && env != nullptr) {
 		env->DeleteLocalRef (networkInterface);
 	}
 
@@ -128,14 +130,14 @@ _monodroid_get_network_interface_state (const char *ifname, mono_bool *is_up, mo
 MONO_API mono_bool
 _monodroid_get_network_interface_up_state (const char *ifname, mono_bool *is_up)
 {
-	return _monodroid_get_network_interface_state (ifname, is_up, NULL);
+	return _monodroid_get_network_interface_state (ifname, is_up, nullptr);
 }
 
 /* !DO NOT REMOVE! Used by Mono BCL (System.Net.NetworkInformation.NetworkInterface) */
 MONO_API mono_bool
 _monodroid_get_network_interface_supports_multicast (const char *ifname, mono_bool *supports_multicast)
 {
-	return _monodroid_get_network_interface_state (ifname, NULL, supports_multicast);
+	return _monodroid_get_network_interface_state (ifname, nullptr, supports_multicast);
 }
 
 /* !DO NOT REMOVE! Used by Mono BCL (System.Net.NetworkInformation.UnixIPInterfaceProperties) */
@@ -146,7 +148,7 @@ _monodroid_get_dns_servers (void **dns_servers_array)
 		log_warn (LOG_NET, "Unable to get DNS servers, no location to store data in");
 		return -1;
 	}
-	*dns_servers_array = NULL;
+	*dns_servers_array = nullptr;
 
 	size_t  len;
 	char   *dns;
@@ -155,9 +157,9 @@ _monodroid_get_dns_servers (void **dns_servers_array)
 	char    prop_name[] = "net.dnsX";
 	for (int i = 0; i < 8; i++) {
 		prop_name [7] = (char)(i + 0x31);
-		len = monodroid_get_system_property (prop_name, &dns);
+		len = static_cast<size_t>(monodroid_get_system_property (prop_name, &dns));
 		if (len == 0) {
-			dns_servers [i] = NULL;
+			dns_servers [i] = nullptr;
 			continue;
 		}
 		dns_servers [i] = strndup (dns, len);
@@ -167,7 +169,8 @@ _monodroid_get_dns_servers (void **dns_servers_array)
 	if (count <= 0)
 		return 0;
 
-	char **ret = (char**)malloc (sizeof (char*) * count);
+	size_t alloc_size = MULTIPLY_WITH_OVERFLOW_CHECK (size_t, sizeof (char*), static_cast<size_t>(count));
+	char **ret = (char**)malloc (alloc_size);
 	char **p = ret;
 	for (int i = 0; i < 8; i++) {
 		if (!dns_servers [i])
@@ -178,4 +181,3 @@ _monodroid_get_dns_servers (void **dns_servers_array)
 	*dns_servers_array = (void*)ret;
 	return count;
 }
-

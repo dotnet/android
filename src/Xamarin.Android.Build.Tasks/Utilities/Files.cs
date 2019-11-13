@@ -1,18 +1,45 @@
 using System;
-using System.IO;
-using System.Security.Cryptography;
-
-using Xamarin.Tools.Zip;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
+using Java.Interop.Tools.JavaCallableWrappers;
+using Xamarin.Tools.Zip;
+
 #if MSBUILD
 using Microsoft.Build.Utilities;
 using Xamarin.Android.Tasks;
 #endif
 
-namespace Xamarin.Android.Tools {
+namespace Xamarin.Android.Tools
+{
 
 	static class Files {
+
+		/// <summary>
+		/// Windows has a MAX_PATH limit of 260 characters
+		/// See: https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file#maximum-path-length-limitation
+		/// </summary>
+		public const int MaxPath = 260;
+
+		/// <summary>
+		/// On Windows, we can opt into a long path with this prefix
+		/// </summary>
+		public const string LongPathPrefix = @"\\?\";
+
+		/// <summary>
+		/// Converts a full path to a \\?\ prefixed path that works on all Windows machines when over 260 characters
+		/// NOTE: requires a *full path*, use sparingly
+		/// </summary>
+		public static string ToLongPath (string fullPath)
+		{
+			// On non-Windows platforms, return the path unchanged
+			if (Path.DirectorySeparatorChar != '\\') {
+				return fullPath;
+			}
+			return LongPathPrefix + fullPath;
+		}
 
 		public static bool Archive (string target, Action<string> archiver)
 		{
@@ -61,14 +88,14 @@ namespace Xamarin.Android.Tools {
 					Directory.CreateDirectory (directory);
 
 				if (!Directory.Exists (source)) {
-					File.Copy (source, destination, true);
+					MonoAndroidHelper.SetWriteable (destination);
+					File.Delete (destination);
+					File.Copy (source, destination);
 					MonoAndroidHelper.SetWriteable (destination);
 					File.SetLastWriteTimeUtc (destination, DateTime.UtcNow);
-					File.SetLastAccessTimeUtc (destination, DateTime.UtcNow);
 					return true;
 				}
-			}/* else
-				Console.WriteLine ("Skipping copying {0}, unchanged", Path.GetFileName (destination));*/
+			}
 
 			return false;
 		}
@@ -88,6 +115,7 @@ namespace Xamarin.Android.Tools {
 					Directory.CreateDirectory (directory);
 
 				MonoAndroidHelper.SetWriteable (destination);
+				File.Delete (destination);
 				File.WriteAllBytes (destination, bytes);
 				return true;
 			}
@@ -102,6 +130,7 @@ namespace Xamarin.Android.Tools {
 					Directory.CreateDirectory (directory);
 
 				MonoAndroidHelper.SetWriteable (destination);
+				File.Delete (destination);
 				using (var fileStream = File.Create (destination)) {
 					stream.Position = 0; //HasStreamChanged read to the end
 					stream.CopyTo (fileStream);
@@ -121,7 +150,6 @@ namespace Xamarin.Android.Tools {
 					source.CopyTo (f);
 				}
 				File.SetLastWriteTimeUtc (destination, DateTime.UtcNow);
-				File.SetLastAccessTimeUtc (destination, DateTime.UtcNow);
 #if TESTCACHE
 				if (hash != null)
 					File.WriteAllText (destination + ".hash", hash);
@@ -141,14 +169,12 @@ namespace Xamarin.Android.Tools {
 
 				File.Copy (source, destination, true);
 				File.SetLastWriteTimeUtc (destination, DateTime.UtcNow);
-				File.SetLastAccessTimeUtc (destination, DateTime.UtcNow);
 #if TESTCACHE
 				if (hash != null)
 					File.WriteAllText (destination + ".hash", hash);
 #endif
 				return true;
-			}/* else
-				Console.WriteLine ("Skipping copying {0}, unchanged", Path.GetFileName (destination));*/
+			}
 
 			return false;
 		}
@@ -281,61 +307,53 @@ namespace Xamarin.Android.Tools {
 			return ZipArchive.Open (filename, FileMode.Open, strictConsistencyChecks: strictConsistencyChecks);
 		}
 
-		public static bool ExtractAll(ZipArchive zip, string destination, Action<int, int> progressCallback = null, Func<string, string> modifyCallback = null,
-			Func<string, bool> deleteCallback = null, bool forceUpdate = true)
+		public static bool ZipAny (string filename, Func<ZipEntry, bool> filter)
+		{
+			using (var zip = ReadZipFile (filename)) {
+				return zip.Any (filter);
+			}
+		}
+
+		public static bool ExtractAll (ZipArchive zip, string destination, Action<int, int> progressCallback = null, Func<string, string> modifyCallback = null,
+			Func<string, bool> deleteCallback = null)
 		{
 			int i = 0;
 			int total = (int)zip.EntryCount;
 			bool updated = false;
 			HashSet<string> files = new HashSet<string> ();
-			foreach (var entry in zip) {
-				progressCallback?.Invoke (i++, total);
-				if (entry.FullName.Contains ("/__MACOSX/") ||
-						entry.FullName.EndsWith ("/__MACOSX", StringComparison.OrdinalIgnoreCase) ||
-						entry.FullName.EndsWith ("/.DS_Store", StringComparison.OrdinalIgnoreCase))
-					continue;
-				var fullName = modifyCallback?.Invoke (entry.FullName) ?? entry.FullName;
-				if (entry.IsDirectory) {
+			using (var memoryStream = new MemoryStream ()) {
+				foreach (var entry in zip) {
+					progressCallback?.Invoke (i++, total);
+					if (entry.IsDirectory)
+						continue;
+					if (entry.FullName.Contains ("/__MACOSX/") ||
+							entry.FullName.EndsWith ("/__MACOSX", StringComparison.OrdinalIgnoreCase) ||
+							entry.FullName.EndsWith ("/.DS_Store", StringComparison.OrdinalIgnoreCase))
+						continue;
+					var fullName = modifyCallback?.Invoke (entry.FullName) ?? entry.FullName;
+					var outfile = Path.GetFullPath (Path.Combine (destination, fullName));
+					files.Add (outfile);
+					memoryStream.SetLength (0); //Reuse the stream
+					entry.Extract (memoryStream);
 					try {
-						Directory.CreateDirectory (Path.Combine (destination, fullName));
-					} catch (NotSupportedException ex) {
-						//NOTE: invalid paths, such as `:` on Windows can cause this
-						throw new NotSupportedException ($"Invalid zip entry `{fullName}` found in archive.", ex);
-					}
-					continue;
-				}
-				try {
-					Directory.CreateDirectory (Path.Combine (destination, Path.GetDirectoryName (fullName)));
-				} catch (NotSupportedException ex) {
-					//NOTE: invalid paths, such as `:` on Windows can cause this
-					throw new NotSupportedException ($"Invalid zip entry `{fullName}` found in archive.", ex);
-				}
-				var outfile = Path.GetFullPath (Path.Combine (destination, fullName));
-				files.Add (outfile);
-				var dt = File.Exists (outfile) ? File.GetLastWriteTimeUtc (outfile) : DateTime.MinValue;
-				if (forceUpdate || entry.ModificationTime > dt) {
-					try {
-						entry.Extract (destination, fullName, FileMode.Create);
-						MonoAndroidHelper.SetWriteable (outfile);
-						var utcNow = DateTime.UtcNow;
-						File.SetLastWriteTimeUtc (outfile, utcNow);
-						File.SetLastAccessTimeUtc (outfile, utcNow);
+						updated |= MonoAndroidHelper.CopyIfStreamChanged (memoryStream, outfile);
 					} catch (PathTooLongException) {
 						throw new PathTooLongException ($"Could not extract \"{fullName}\" to \"{outfile}\". Path is too long.");
 					}
-					updated = true;
 				}
 			}
-			foreach (var file in Directory.GetFiles (destination, "*.*", SearchOption.AllDirectories)) {
-				var outfile = Path.GetFullPath (file);
-				if (outfile.Contains ("/__MACOSX/") ||
-				    		outfile.EndsWith ("__AndroidLibraryProjects__.zip", StringComparison.OrdinalIgnoreCase) ||
-						outfile.EndsWith ("/__MACOSX", StringComparison.OrdinalIgnoreCase) ||
-						outfile.EndsWith ("/.DS_Store", StringComparison.OrdinalIgnoreCase))
-					continue;
-				if (!files.Contains (outfile) && !(deleteCallback?.Invoke (outfile) ?? true)) {
-					File.Delete (outfile);
-					updated = true;
+			if (Directory.Exists (destination)) {
+				foreach (var file in Directory.GetFiles (destination, "*", SearchOption.AllDirectories)) {
+					var outfile = Path.GetFullPath (file);
+					if (outfile.Contains ("/__MACOSX/") ||
+							outfile.EndsWith ("__AndroidLibraryProjects__.zip", StringComparison.OrdinalIgnoreCase) ||
+							outfile.EndsWith ("/__MACOSX", StringComparison.OrdinalIgnoreCase) ||
+							outfile.EndsWith ("/.DS_Store", StringComparison.OrdinalIgnoreCase))
+						continue;
+					if (!files.Contains (outfile) && (deleteCallback?.Invoke (outfile) ?? true)) {
+						File.Delete (outfile);
+						updated = true;
+					}
 				}
 			}
 			return updated;
@@ -349,15 +367,15 @@ namespace Xamarin.Android.Tools {
 
 		public static string HashBytes (byte [] bytes)
 		{
-			using (HashAlgorithm hashAlg = new SHA1Managed ()) {
+			using (HashAlgorithm hashAlg = new Crc64 ()) {
 				byte [] hash = hashAlg.ComputeHash (bytes);
-				return BitConverter.ToString (hash);
+				return ToHexString (hash);
 			}
 		}
 
 		public static string HashFile (string filename)
 		{
-			using (HashAlgorithm hashAlg = new SHA1Managed ()) {
+			using (HashAlgorithm hashAlg = new Crc64 ()) {
 				return HashFile (filename, hashAlg);
 			}
 		}
@@ -366,7 +384,7 @@ namespace Xamarin.Android.Tools {
 		{
 			using (Stream file = new FileStream (filename, FileMode.Open, FileAccess.Read)) {
 				byte[] hash = hashAlg.ComputeHash (file);
-				return BitConverter.ToString (hash);
+				return ToHexString (hash);
 			}
 		}
 
@@ -374,11 +392,24 @@ namespace Xamarin.Android.Tools {
 		{
 			stream.Position = 0;
 
-			using (HashAlgorithm hashAlg = new SHA1Managed ()) {
+			using (HashAlgorithm hashAlg = new Crc64 ()) {
 				byte[] hash = hashAlg.ComputeHash (stream);
-				return BitConverter.ToString (hash);
+				return ToHexString (hash);
 			}
 		}
+
+		public static string ToHexString (byte[] hash)
+		{
+			char [] array = new char [hash.Length * 2];
+			for (int i = 0, j = 0; i < hash.Length; i += 1, j += 2) {
+				byte b = hash [i];
+				array [j] = GetHexValue (b / 16);
+				array [j + 1] = GetHexValue (b % 16);
+			}
+			return new string (array);
+		}
+
+		static char GetHexValue (int i) => (char) (i < 10 ? i + 48 : i - 10 + 65);
 
 		public static void DeleteFile (string filename, object log)
 		{

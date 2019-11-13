@@ -4,8 +4,10 @@ using System;
 
 namespace Xamarin.Android.Tasks
 {
-	public class SetVsMonoAndroidRegistryKey : Task
+	public class SetVsMonoAndroidRegistryKey : AndroidTask
 	{
+		public override string TaskPrefix => "SVM";
+
 		[Required]
 		public string InstallationID { get; set; }
 
@@ -14,7 +16,7 @@ namespace Xamarin.Android.Tasks
 
 		const string EnvironmentVariable = "XAMARIN_ANDROID_REGKEY";
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			string value = $@"SOFTWARE\Xamarin\VisualStudio\{VisualStudioVersion}_{InstallationID}\Android";
 			Log.LogDebugMessage ($"Setting %{EnvironmentVariable}%=\"{value}\"");

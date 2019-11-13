@@ -1,0 +1,19 @@
+parameters:
+  configuration: $(XA.Build.Configuration)
+  artifactName: results
+
+steps:
+- task: MSBuild@1
+  displayName: package build and test results
+  inputs:
+    solution: build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
+    configuration: ${{ parameters.configuration }}
+    msbuildArguments: /restore /t:Build,ZipBuildStatus,ZipTestResults /p:BuildStatusZipOutputPath=$(Build.ArtifactStagingDirectory) /p:TestResultZipOutputPath=$(Build.ArtifactStagingDirectory)
+  condition: always()
+
+- task: PublishPipelineArtifact@0
+  displayName: upload build and test results
+  inputs:
+    artifactName: ${{ parameters.artifactName }}
+    targetPath: $(Build.ArtifactStagingDirectory)
+  condition: always()

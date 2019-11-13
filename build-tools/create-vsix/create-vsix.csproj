@@ -8,10 +8,9 @@
     <OutputType>Library</OutputType>
     <RootNamespace>Xamarin.Android.Sdk</RootNamespace>
     <AssemblyName>Xamarin.Android.Sdk</AssemblyName>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <CreateVsixContainer Condition=" '$(CreateVsixContainer)' == '' ">False</CreateVsixContainer>
     <CopyBuildOutputToOutputDirectory>true</CopyBuildOutputToOutputDirectory>
-    <CopyOutputSymbolsToOutputDirectory>False</CopyOutputSymbolsToOutputDirectory>
+    <CopyOutputSymbolsToOutputDirectory>True</CopyOutputSymbolsToOutputDirectory>
     <GeneratePkgDefFile>False</GeneratePkgDefFile>
     <IncludeAssemblyInVSIXContainer>true</IncludeAssemblyInVSIXContainer>
     <IncludeCopyLocalReferencesInVSIXContainer>False</IncludeCopyLocalReferencesInVSIXContainer>
@@ -25,9 +24,9 @@
     <ExtensionInstallationFolder>Xamarin\Xamarin.Android.Sdk</ExtensionInstallationFolder>
     <OutputPath>bin\$(Configuration)</OutputPath>
   </PropertyGroup>
+  <Import Project="..\..\Configuration.props" />
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' " />
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' " />
-  <Import Project="..\..\Configuration.props" />
   <ItemGroup>
     <Compile Include="AndroidSdkPackage.cs" />
     <Content Include="Resources\AndroidSdkPackage.ico">
@@ -123,12 +122,4 @@
     <DetokenizeVsixManifestFileDependsOn />
   </PropertyGroup>
   <Import Project="create-vsix.targets" />
-  <ItemGroup>
-    <ProjectReference Include="..\xa-prep-tasks\xa-prep-tasks.csproj">
-      <Project>{7CE69551-BD73-4726-ACAA-AAF89C84BAF8}</Project>
-      <Name>xa-prep-tasks</Name>
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-      <Private>False</Private>
-    </ProjectReference>
-  </ItemGroup>
 </Project>

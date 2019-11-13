@@ -8,6 +8,8 @@ namespace Xamarin.Android.Tasks
 {
 	public class AndroidApkSigner : JavaToolTask
 	{
+		public override string TaskPrefix => "AAS";
+
 		[Required]
 		public string ApkSignerJar { get; set; }
 
@@ -23,28 +25,52 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string KeyAlias { get; set; }
 
+		/// <summary>
+		/// The Password for the Key.
+		/// You can use the raw password here, however if you want to hide your password in logs
+		/// you can use a preview of env: or file: to point it to an Environment variable or 
+		/// a file.
+		///
+		///   env:<PasswordEnvironentVariable>
+		///   file:<PasswordFile> 
+		/// </summary>
 		[Required]
 		public string KeyPass { get; set; }
 
+		/// <summary>
+		/// The Password for the Keystore.
+		/// You can use the raw password here, however if you want to hide your password in logs
+		/// you can use a preview of env: or file: to point it to an Environment variable or 
+		/// a file.
+		///
+		///   env:<PasswordEnvironentVariable>
+		///   file:<PasswordFile> 
+		/// </summary>
 		[Required]
 		public string StorePass { get; set; }
 
 		public string AdditionalArguments { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
-			Log.LogDebugMessage ("AndroidApkSigner:");
-			Log.LogDebugMessage ("  ApkSignerJar: {0}", ApkSignerJar);
-			Log.LogDebugMessage ("  ApkToSign: {0}", ApkToSign);
-			Log.LogDebugMessage ("  ManifestFile: {0}", ManifestFile);
-			Log.LogDebugMessage ("  AdditionalArguments: {0}", AdditionalArguments);
-
 			if (!File.Exists (GenerateFullPathToTool ())) {
 				Log.LogError ($"'{GenerateFullPathToTool ()}' does not exist. You need to install android-sdk build-tools 26.0.1 or above.");
 				return false;
 			}
 
-			return base.Execute ();
+			return base.RunTask ();
+		}
+
+		void AddStorePass (CommandLineBuilder cmd, string cmdLineSwitch, string value)
+		{
+			if (value.StartsWith ("env:", StringComparison.Ordinal)) {
+				cmd.AppendSwitchIfNotNull ($"{cmdLineSwitch} ", value);
+			}
+			else if (value.StartsWith ("file:", StringComparison.Ordinal)) {
+				cmd.AppendSwitchIfNotNull ($"{cmdLineSwitch} file:", value.Replace ("file:", string.Empty));
+			} else {
+				cmd.AppendSwitchIfNotNull ($"{cmdLineSwitch} pass:", value);
+			}
 		}
 
 		protected override string GenerateCommandLineCommands ()
@@ -65,9 +91,9 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendSwitchIfNotNull ("-jar ", ApkSignerJar);
 			cmd.AppendSwitch ("sign");
 			cmd.AppendSwitchIfNotNull ("--ks ", KeyStore);
-			cmd.AppendSwitchIfNotNull ("--ks-pass pass:", StorePass);
+			AddStorePass (cmd, "--ks-pass", StorePass);
 			cmd.AppendSwitchIfNotNull ("--ks-key-alias ", KeyAlias);
-			cmd.AppendSwitchIfNotNull ("--key-pass pass:", KeyPass);
+			AddStorePass (cmd, "--key-pass", KeyPass);
 			cmd.AppendSwitchIfNotNull ("--min-sdk-version ", minSdk.ToString ());
 			cmd.AppendSwitchIfNotNull ("--max-sdk-version ", maxSdk.ToString ());
 		

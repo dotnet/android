@@ -1,26 +1,49 @@
 ﻿using NUnit.Framework;
 using System;
-using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
+using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
-using XABuildPaths = Xamarin.Android.Build.Paths;
 
 namespace Xamarin.Android.Build.Tests
 {
 	public class BaseTest
 	{
+		public static ConcurrentDictionary<string, string> TestOutputDirectories = new ConcurrentDictionary<string, string> ();
+
 		[SetUpFixture]
-		public class SetUp
-		{
+		public class SetUp {
 			public static bool HasDevices {
 				get;
 				private set;
+			}
+
+			public static string DeviceAbi {
+				get;
+				private set;
+			}
+
+			public static bool CommercialBuildAvailable {
+				get;
+				private set;
+			}
+
+			public static string AndroidMSBuildDirectory {
+				get;
+				private set;
+			}
+
+			static SetUp ()
+			{
+				using (var builder = new Builder ()) {
+					CommercialBuildAvailable = File.Exists (Path.Combine (builder.AndroidMSBuildDirectory, "Xamarin.Android.Common.Debugging.targets"));
+					AndroidMSBuildDirectory = builder.AndroidMSBuildDirectory;
+				}
 			}
 
 			[OneTimeSetUp]
@@ -38,6 +61,13 @@ namespace Xamarin.Android.Build.Tests
 						result = result.Split ('*').First ().Trim ();
 					}
 					HasDevices = int.TryParse (result, out sdkVersion) && sdkVersion != -1;
+					if (HasDevices) {
+						if (sdkVersion >= 21)
+							DeviceAbi = RunAdbCommand ("shell getprop ro.product.cpu.abilist64").Trim ();
+
+						if (string.IsNullOrEmpty (DeviceAbi))
+							DeviceAbi = RunAdbCommand ("shell getprop ro.product.cpu.abi") ?? RunAdbCommand ("shell getprop ro.product.cpu.abi2");
+					}
 				} catch (Exception ex) {
 					Console.Error.WriteLine ("Failed to determine whether there is Android target emulator or not: " + ex);
 				}
@@ -63,27 +93,18 @@ namespace Xamarin.Android.Build.Tests
 				foreach (var p in Process.GetProcessesByName ("adb.exe"))
 					p.Kill ();
 			}
+
 		}
 
 		protected bool HasDevices => SetUp.HasDevices;
 
-		protected bool IsWindows {
-			get { return Environment.OSVersion.Platform == PlatformID.Win32NT; }
-		}
+		protected string DeviceAbi => SetUp.DeviceAbi;
 
-		public string CacheRootPath {
-			get {
-				return IsWindows ? Environment.GetFolderPath (Environment.SpecialFolder.LocalApplicationData)
-					: Environment.GetFolderPath (Environment.SpecialFolder.Personal);
-			}
-		}
+		protected bool IsWindows => TestEnvironment.IsWindows;
 
-		public string CachePath {
-			get {
-				return IsWindows ? Path.Combine (CacheRootPath, "Xamarin")
-					: Path.Combine (CacheRootPath, ".local", "share", "Xamarin");
-			}
-		}
+		protected bool IsMacOS => TestEnvironment.IsMacOS;
+
+		protected bool IsLinux => TestEnvironment.IsLinux;
 
 		public string StagingPath {
 			get { return Environment.GetFolderPath (Environment.SpecialFolder.MyDocuments); }
@@ -94,6 +115,10 @@ namespace Xamarin.Android.Build.Tests
 				return Path.GetFullPath (XABuildPaths.TestOutputDirectory);
 			}
 		}
+
+		public static bool CommercialBuildAvailable => SetUp.CommercialBuildAvailable;
+
+		public static string AndroidMSBuildDirectory => SetUp.AndroidMSBuildDirectory;
 
 		char [] invalidChars = { '{', '}', '(', ')', '$', ':', ';', '\"', '\'', ',', '=' };
 
@@ -109,51 +134,75 @@ namespace Xamarin.Android.Build.Tests
 
 		public static string AndroidSdkPath {
 			get {
-				var home = Environment.GetFolderPath (Environment.SpecialFolder.UserProfile);
-				var sdkPath = Environment.GetEnvironmentVariable ("ANDROID_SDK_PATH");
-				if (string.IsNullOrEmpty (sdkPath))
-					sdkPath = Path.Combine (home, "android-toolchain", "sdk");
-				return sdkPath;
+				return AndroidSdkResolver.GetAndroidSdkPath ();
 			}
 		}
 
 		public static string AndroidNdkPath {
 			get {
-				var home = Environment.GetFolderPath (Environment.SpecialFolder.UserProfile);
-				var sdkPath = Environment.GetEnvironmentVariable ("ANDROID_NDK_PATH");
-				if (string.IsNullOrEmpty (sdkPath))
-					sdkPath = Path.Combine (home, "android-toolchain", "ndk");
-				return sdkPath;
+				return AndroidSdkResolver.GetAndroidNdkPath ();
 			}
 		}
 
-		protected void WaitFor(int milliseconds)
+		/// <summary>
+		/// Windows can only create a file of 255 characters: This type of path is composed of components separated by backslashes, each up to the value returned in the lpMaximumComponentLength parameter of the GetVolumeInformation function (this value is commonly 255 characters).
+		/// See: https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file#maximum-path-length-limitation
+		/// </summary>
+		public const int MaxFileName = 255;
+
+		static Lazy<bool> longPaths = new Lazy<bool> (() => {
+			if (!TestEnvironment.IsWindows) {
+				return true;
+			}
+			var path = Path.Combine (Path.GetTempPath (), "foo".PadRight (MaxFileName, 'N'));
+			try {
+				File.WriteAllText (path, "");
+				return true;
+			} catch {
+				return false;
+			} finally {
+				// If the file exists, we should be able to delete it
+				if (File.Exists (path)) {
+					File.Delete (path);
+				}
+			}
+		});
+
+		public static bool LongPathsSupported => longPaths.Value;
+
+		protected static void WaitFor(int milliseconds)
 		{
 			var pause = new ManualResetEvent(false);
 			pause.WaitOne(milliseconds);
 		}
 
-		protected static string RunAdbCommand (string command, bool ignoreErrors = true)
+		protected static string RunAdbCommand (string command, bool ignoreErrors = true, int timeout = 30)
 		{
 			string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".exe" : "";
 			string adb = Path.Combine (AndroidSdkPath, "platform-tools", "adb" + ext);
-			var proc = System.Diagnostics.Process.Start (new System.Diagnostics.ProcessStartInfo (adb, command) { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false });
-			if (!proc.WaitForExit ((int)TimeSpan.FromSeconds (30).TotalMilliseconds)) {
-				proc.Kill ();
-				proc.WaitForExit ();
-			}
-			var result = proc.StandardOutput.ReadToEnd ().Trim () + proc.StandardError.ReadToEnd ().Trim ();
-			return result;
+			string adbTarget = Environment.GetEnvironmentVariable ("ADB_TARGET");
+			return RunProcess (adb, $"{adbTarget} {command}");
 		}
 
-		protected string RunProcess (string exe, string args) {
-			var proc = System.Diagnostics.Process.Start (new System.Diagnostics.ProcessStartInfo (exe, args) { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false });
-			if (!proc.WaitForExit ((int)TimeSpan.FromSeconds(30).TotalMilliseconds)) {
-				proc.Kill ();
-				proc.WaitForExit ();
+		protected static string RunProcess (string exe, string args)
+		{
+			TestContext.Out.WriteLine ($"{nameof(RunProcess)}: {exe} {args}");
+			var info = new ProcessStartInfo (exe, args) {
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				UseShellExecute = false,
+				CreateNoWindow = true,
+				WindowStyle = ProcessWindowStyle.Hidden,
+			};
+			using (var proc = Process.Start (info)) {
+				if (!proc.WaitForExit ((int)TimeSpan.FromSeconds (30).TotalMilliseconds)) {
+					proc.Kill ();
+					TestContext.Out.WriteLine ($"{nameof (RunProcess)} timed out: {exe} {args}");
+					return null; //Don't try to read stdout/stderr
+				}
+				var result = proc.StandardOutput.ReadToEnd ().Trim () + proc.StandardError.ReadToEnd ().Trim ();
+				return result;
 			}
-			var result = proc.StandardOutput.ReadToEnd ().Trim () + proc.StandardError.ReadToEnd ().Trim ();
-			return result;
 		}
 
 		protected string CreateFauxAndroidNdkDirectory (string path)
@@ -187,7 +236,7 @@ namespace Xamarin.Android.Build.Tests
 			var androidSdkBinPath = Path.Combine (androidSdkToolsPath, "bin");
 			var androidSdkPlatformToolsPath = Path.Combine (androidSdkDirectory, "platform-tools");
 			var androidSdkPlatformsPath = Path.Combine (androidSdkDirectory, "platforms");
-			var androidSdkBuildToolsPath = Path.Combine (androidSdkDirectory, "build-tools", buildToolsVersion);
+			var androidSdkBuildToolsPath = Path.Combine (androidSdkDirectory, "build-tools", buildToolsVersion ?? string.Empty);
 			Directory.CreateDirectory (androidSdkDirectory);
 			Directory.CreateDirectory (androidSdkToolsPath);
 			Directory.CreateDirectory (androidSdkBinPath);
@@ -196,8 +245,10 @@ namespace Xamarin.Android.Build.Tests
 			Directory.CreateDirectory (androidSdkBuildToolsPath);
 
 			File.WriteAllText (Path.Combine (androidSdkPlatformToolsPath, IsWindows ? "adb.exe" : "adb"), "");
-			File.WriteAllText (Path.Combine (androidSdkBuildToolsPath, IsWindows ? "zipalign.exe" : "zipalign"), "");
-			File.WriteAllText (Path.Combine (androidSdkBuildToolsPath, IsWindows ? "aapt.exe" : "aapt"), "");
+			if (!string.IsNullOrEmpty (buildToolsVersion)) {
+				File.WriteAllText (Path.Combine (androidSdkBuildToolsPath, IsWindows ? "zipalign.exe" : "zipalign"), "");
+				File.WriteAllText (Path.Combine (androidSdkBuildToolsPath, IsWindows ? "aapt.exe" : "aapt"), "");
+			}
 			File.WriteAllText (Path.Combine (androidSdkToolsPath, IsWindows ? "lint.bat" : "lint"), "");
 
 			List<ApiInfo> defaults = new List<ApiInfo> ();
@@ -295,26 +346,38 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		protected ProjectBuilder CreateApkBuilder (string directory, bool cleanupAfterSuccessfulBuild = false, bool cleanupOnDispose = true)
+		protected ProjectBuilder CreateApkBuilder (string directory = null, bool cleanupAfterSuccessfulBuild = false, bool cleanupOnDispose = false)
 		{
-			TestContext.CurrentContext.Test.Properties ["Output"] = new string [] { Path.Combine (Root, directory) };
+			if (string.IsNullOrEmpty (directory))
+				directory = Path.Combine ("temp", TestName);
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = Path.Combine (Root, directory);
 			return BuildHelper.CreateApkBuilder (directory, cleanupAfterSuccessfulBuild, cleanupOnDispose);
 		}
 
-		protected ProjectBuilder CreateDllBuilder (string directory, bool cleanupAfterSuccessfulBuild = false, bool cleanupOnDispose = true)
+		protected ProjectBuilder CreateDllBuilder (string directory = null, bool cleanupAfterSuccessfulBuild = false, bool cleanupOnDispose = false)
 		{
-			TestContext.CurrentContext.Test.Properties ["Output"] = new string [] { Path.Combine (Root, directory) };
+			if (string.IsNullOrEmpty (directory))
+				directory = Path.Combine ("temp", TestName);
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = Path.Combine (Root, directory);
 			return BuildHelper.CreateDllBuilder (directory, cleanupAfterSuccessfulBuild, cleanupOnDispose);
+		}
+
+		protected void AssertFileContentsMatch (string file1, string file2)
+		{
+			if (!FileCompare (file1, file2)) {
+				TestContext.AddTestAttachment (file1, Path.GetFileName (file1));
+				TestContext.AddTestAttachment (file2, Path.GetFileName (file2));
+				Assert.Fail ($"{file1} and {file2} do not match.");
+			}
 		}
 
 		protected bool FileCompare (string file1, string file2)
 		{
-			if (!File.Exists (file1) || !File.Exists (file2))
-				return false;
-			using (var stream1 = File.OpenRead (file1)) {
-				using (var stream2 = File.OpenRead (file2)) {
-					return StreamCompare (stream1, stream2);
-				}
+			FileAssert.Exists (file1);
+			FileAssert.Exists (file2);
+			using (var stream1 = File.OpenRead (file1))
+			using (var stream2 = File.OpenRead (file2)) {
+				return StreamCompare (stream1, stream2);
 			}
 		}
 
@@ -322,16 +385,12 @@ namespace Xamarin.Android.Build.Tests
 		{
 			Assert.IsNotNull (stream1, "stream1 of StreamCompare should not be null");
 			Assert.IsNotNull (stream2, "stream2 of StreamCompare should not be null");
-			byte[] f1 = ReadAllBytesIgnoringLineEndings (stream1);
-			byte[] f2 = ReadAllBytesIgnoringLineEndings (stream2);
-
-			var hash = MD5.Create ();
-			var f1hash = Convert.ToBase64String (hash.ComputeHash (f1));
-			var f2hash = Convert.ToBase64String (hash.ComputeHash (f2));
-			return f1hash.Equals (f2hash);
+			string hash1 = MonoAndroidHelper.HashBytes (ReadAllBytesIgnoringLineEndings (stream1));
+			string hash2 = MonoAndroidHelper.HashBytes (ReadAllBytesIgnoringLineEndings (stream2));
+			return hash1 == hash2;
 		}
 
-		protected byte[] ReadAllBytesIgnoringLineEndings (Stream stream)
+		protected byte [] ReadAllBytesIgnoringLineEndings (Stream stream)
 		{
 			using (var memoryStream = new MemoryStream ()) {
 				int readByte;
@@ -345,24 +404,30 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[OneTimeSetUp]
-		public void FixtureSetup ()
+		protected string GetPathToLatestBuildTools (string exe)
 		{
-			// Clean the Resource Cache.
-			if (string.IsNullOrEmpty (Environment.GetEnvironmentVariable ("BUILD_HOST")))
-				return;
-			if (Directory.Exists (CachePath)) {
-				foreach (var subDir in Directory.GetDirectories (CachePath, "*", SearchOption.TopDirectoryOnly)) {
-					// ignore known useful directories.
-					if (subDir.EndsWith ("Mono for Android", StringComparison.OrdinalIgnoreCase) ||
-						subDir.EndsWith ("Cache", StringComparison.OrdinalIgnoreCase) ||
-						subDir.EndsWith ("Log", StringComparison.OrdinalIgnoreCase)
-						|| subDir.EndsWith ("Logs", StringComparison.OrdinalIgnoreCase))
-						continue;
-					Console.WriteLine ("[FixtureSetup] Removing Resource Cache Directory {0}", subDir);
-					Directory.Delete (subDir, recursive: true);
-				}
+			var path = Path.Combine (AndroidSdkPath, "build-tools");
+			foreach (var dir in Directory.GetDirectories (path, "*", SearchOption.TopDirectoryOnly).OrderByDescending (x => new Version (Path.GetFileName (x)))) {
+				var aapt2 = Path.Combine (dir, exe);
+				if (File.Exists (aapt2))
+					return dir;
 			}
+			return Path.Combine (path, "25.0.2");
+		}
+
+		protected string GetPathToAapt2 ()
+		{
+			var exe = IsWindows ? "aapt2.exe" : "aapt2";
+			var path = Path.Combine (AndroidMSBuildDirectory, IsWindows ? "" : (IsMacOS ? "Darwin" : "Linux"));
+			if (File.Exists (Path.Combine (path, exe)))
+				return path;
+			return GetPathToLatestBuildTools (exe);
+		}
+
+		protected string GetPathToAapt ()
+		{
+			var exe = IsWindows ? "aapt.exe" : "aapt";
+			return GetPathToLatestBuildTools (exe);
 		}
 
 		[SetUp]
@@ -376,15 +441,16 @@ namespace Xamarin.Android.Build.Tests
 		protected virtual void CleanupTest ()
 		{
 			TestContext.Out.WriteLine ($"[TESTLOG] Test {TestName} Complete");
+			TestContext.Out.WriteLine ($"[TESTLOG] Test {TestName} Outcome={TestContext.CurrentContext.Result.Outcome.Status}");
 			TestContext.Out.Flush ();
-			if (System.Diagnostics.Debugger.IsAttached || TestContext.CurrentContext.Test.Properties ["Output"] == null)
+			string outputDir = null;
+			if (!TestOutputDirectories.TryGetValue (TestContext.CurrentContext.Test.ID, out outputDir))
+				return;
+			if (System.Diagnostics.Debugger.IsAttached || string.IsNullOrEmpty (outputDir))
 					return;
 			// find the "root" directory just below "temp" and clean from there because
 			// some tests create multiple subdirectories
-			var items = (IList)TestContext.CurrentContext.Test.Properties ["Output"];
-			if (items.Count == 0)
-				return;
-			var output = Path.GetFullPath (items[0].ToString ());
+			var output = Path.GetFullPath (outputDir);
 			while (!Directory.GetParent (output).Name.EndsWith ("temp", StringComparison.OrdinalIgnoreCase)) {
 					output = Directory.GetParent (output).FullName;
 			}
@@ -395,19 +461,8 @@ namespace Xamarin.Android.Build.Tests
 				FileSystemUtils.SetDirectoryWriteable (output);
 				Directory.Delete (output, recursive: true);
 			} else {
-				foreach (var file in Directory.GetFiles (Path.Combine (output), "build.log", SearchOption.AllDirectories)) {
-					TestContext.Out.WriteLine ("*************************************************************************");
-					TestContext.Out.WriteLine (file);
-					TestContext.Out.WriteLine ();
-					using (StreamReader reader = new StreamReader (file)) {
-						string line;
-						while ((line = reader.ReadLine ()) != null) {
-							TestContext.Out.WriteLine (line);
-							TestContext.Out.Flush ();
-						}
-					}
-					TestContext.Out.WriteLine ("*************************************************************************");
-					TestContext.Out.Flush ();
+				foreach (var file in Directory.GetFiles (Path.Combine (output), "*.log", SearchOption.AllDirectories)) {
+					TestContext.AddTestAttachment (file, Path.GetFileName (output));
 				}
 			}
 		}

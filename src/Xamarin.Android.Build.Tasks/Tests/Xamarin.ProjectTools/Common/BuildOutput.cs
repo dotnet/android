@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Xamarin.Tools.Zip;
 
 namespace Xamarin.ProjectTools
@@ -59,6 +60,38 @@ namespace Xamarin.ProjectTools
 						return true;
 			}
 			return false;
+		}
+
+		/// <summary>
+		/// Looks for: Building target "Foo" partially, because some output files are out of date with respect to their input files.
+		/// </summary>
+		public bool IsTargetPartiallyBuilt (string target)
+		{
+			foreach (var line in Builder.LastBuildOutput) {
+				if (line.Contains ($"Building target \"{target}\" partially")) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// Extracts the timing (in milliseconds) from the Performance Summary.
+		/// </summary>
+		/// <param name="targetOrTask">The Target or Task to get the timing for.</param>
+		/// <returns>The time it took as a TimeSpan. Or Zero if the data could not be found.</returns>
+		public TimeSpan GetTargetOrTaskTime (string targetOrTask)
+		{
+			Regex regex = new Regex (@"\s+(?<time>\d+)\s+(ms)\s+(" + targetOrTask + @")\s+(?<calls>\d+)\scalls",
+				RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+			foreach (var line in Builder.LastBuildOutput) {
+				var match = regex.Match (line);
+				if (match.Success) {
+					if (TimeSpan.TryParse ($"0:0:0.{match.Groups ["time"].Value}", out TimeSpan result))
+						return result;
+				}
+			}
+			return TimeSpan.Zero;
 		}
 
 		public bool IsApkInstalled {

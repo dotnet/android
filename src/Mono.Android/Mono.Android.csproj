@@ -77,10 +77,17 @@
       <HintPath>$(OutputPath)..\v1.0\Facades\System.Runtime.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="System.Drawing.Common.dll">
+      <HintPath>$(OutputPath)..\v1.0\Facades\System.Drawing.Common.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings\JavaNativeTypeManager.cs">
       <Link>JavaNativeTypeManager.cs</Link>
+    </Compile>
+    <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64.cs">
+      <Link>Crc64.cs</Link>
     </Compile>
     <Compile Include="Android.Runtime\DynamicMethodNameCounter.cs" />
     <Compile Include="Android.Runtime\IJavaObjectValueMarshaler.cs" />
@@ -170,6 +177,7 @@
     <Compile Include="Android.InputMethodServices\KeyboardView.cs" />
     <Compile Include="Android.Locations\LocationManager.cs" />
     <Compile Include="Android.Media\AudioManager.cs" />
+    <Compile Include="Android.Media\AudioRecord.cs" />
     <Compile Include="Android.Media\AudioTrack.cs" />
     <Compile Include="Android.Media\MediaMetadataRetriever.cs" />
     <Compile Include="Android.Media\MediaPlayer.cs" />
@@ -222,6 +230,7 @@
     <Compile Include="Android.Runtime\ResourceDesignerAttribute.cs" />
     <Compile Include="Android.Runtime\ResourceIdManager.cs" />
     <Compile Include="Android.Runtime\StringDefAttribute.cs" />
+    <Compile Include="Android.Runtime\TimingLogger.cs" />
     <Compile Include="Android.Runtime\TypeManager.cs" />
     <Compile Include="Android.Runtime\UncaughtExceptionHandler.cs" />
     <Compile Include="Android.Runtime\XAPeerMembers.cs" />
@@ -229,6 +238,7 @@
     <Compile Include="Android.Runtime\XmlReaderPullParser.cs" />
     <Compile Include="Android.Telephony\PhoneNumberUtils.cs" />
     <Compile Include="Android.Telephony\TelephonyManager.cs" />
+    <Compile Include="Android.Telephony.Mbms\IGroupCallCallback.cs" />
     <Compile Include="Android.Test\MoreAsserts.cs" />
     <Compile Include="Android.Text\ClipboardManager.cs" />
     <Compile Include="Android.Text\ITextWatcher.cs" />
@@ -308,21 +318,10 @@
     <Compile Include="Javax.Microedition.Khronos.Egl\EGLContext.cs" />
     <Compile Include="Org.Apache.Http.Impl.Conn\DefaultClientConnection.cs" />
     <Compile Include="Org.Apache.Http.Impl.Cookie\BasicClientCookie.cs" />
-    <Compile Include="System.Drawing/Color.cs" />
-    <Compile Include="System.Drawing/ColorConverter.cs" />
-    <Compile Include="System.Drawing/KnownColor.cs" />
-    <Compile Include="System.Drawing/KnownColors.cs" />
-    <Compile Include="System.Drawing/Point.cs" />
     <Compile Include="System.Drawing/PointConverter.cs" />
-    <Compile Include="System.Drawing/PointF.cs" />
-    <Compile Include="System.Drawing/Rectangle.cs" />
     <Compile Include="System.Drawing/RectangleConverter.cs" />
-    <Compile Include="System.Drawing/RectangleF.cs" />
-    <Compile Include="System.Drawing/Size.cs" />
     <Compile Include="System.Drawing/SizeConverter.cs" />
-    <Compile Include="System.Drawing/SizeF.cs" />
     <Compile Include="System.Drawing/SizeFConverter.cs" />
-    <Compile Include="System.Drawing/SystemColors.cs" />
     <Compile Include="System.IO\AndroidExtensions.cs" />
     <Compile Include="System.Linq\Extensions.cs" />
     <Compile Include="Xamarin.Android.Net\AndroidClientHandler.cs" />
@@ -367,9 +366,9 @@
       <Name>jcw-gen</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\..\src\mono-runtimes\mono-runtimes.csproj">
-      <Project>{C03E6CF1-7460-4CDC-A4AB-292BBC0F61F2}</Project>
-      <Name>mono-runtimes</Name>
+    <ProjectReference Include="..\..\src\java-runtime\java-runtime.csproj">
+      <Project>{1D4FC8F1-0DA4-4F38-BE68-11AEBA9A0EA4}</Project>
+      <Name>java-runtime</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>

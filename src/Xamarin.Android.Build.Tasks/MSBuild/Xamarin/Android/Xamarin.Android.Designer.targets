@@ -1,0 +1,143 @@
+<!--
+***********************************************************************************************
+Xamarin.Android.Common.Designer.targets
+
+WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and have
+  created a backup copy.  Incorrect changes to this file will make it
+  impossible to load or build your projects from the command-line or the IDE.
+
+This file imports the version- and platform-specific targets for the project importing
+this file. This file also defines targets to produce an error if the specified targets
+file does not exist, but the project is built anyway (command-line or IDE build).
+
+Copyright (C) 2016 Xamarin. All rights reserved.
+***********************************************************************************************
+-->
+
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+<Target Name="GetExtraLibraryLocationsForDesigner"
+    DependsOnTargets="_SetupDesignTimeBuildForCompile"
+    Returns="ExtraJarLocation;ExtraResourceLocation">
+  <ReadLibraryProjectImportsCache
+      Condition="Exists('$(_AndroidLibraryProjectImportsCache)')"
+      CacheFile="$(_AndroidLibraryProjectImportsCache)">
+    <Output TaskParameter="ResolvedResourceDirectories" ItemName="_LibraryResourceDirectories" />
+    <Output TaskParameter="Jars" ItemName="_LibraryJars" />
+  </ReadLibraryProjectImportsCache>
+  <ItemGroup>
+    <ExtraJarLocation Include="@(_LibraryJars)">
+      <Source>LibraryImport</Source>
+    </ExtraJarLocation>
+    <ExtraJarLocation Include="@(AndroidJavaLibrary->'%(FullPath)')">
+      <Source>AndroidJavaLibrary</Source>
+    </ExtraJarLocation>
+    <ExtraResourceLocation Include="@(_LibraryResourceDirectories)">
+      <Source>LibraryImport</Source>
+    </ExtraResourceLocation>
+  </ItemGroup>
+</Target>
+
+<Target Name="_CopyAssembliesForDesigner"
+    Inputs="@(ResolvedAssemblies)"
+    Outputs="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')">
+  <Copy
+      SourceFiles="@(ResolvedAssemblies)"
+      DestinationFiles="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')"
+  />
+</Target>
+
+<Target Name="_PrepareAssembliesForDesigner">
+  <ItemGroup>
+    <_ResolvedAssemblies
+        Include="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')"
+    />
+    <_ResolvedUserAssemblies
+        Include="@(ResolvedUserAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')"
+    />
+    <_ResolvedUserMonoAndroidAssembliesForDesigner
+        Include="@(ResolvedUserAssemblies)"
+        Condition="'%(ResolvedUserAssemblies.TargetFrameworkIdentifier)' == 'MonoAndroid' Or '%(ResolvedUserAssemblies.HasMonoAndroidReference)' == 'True'"
+    />
+  </ItemGroup>
+</Target>
+
+<Target Name="_GeneratePackageManagerJavaForDesigner"
+    DependsOnTargets="_AddStaticResources;_ResolveAssemblies;_CopyAssembliesForDesigner;_PrepareAssembliesForDesigner;$(BeforeGenerateAndroidManifest)"
+    Inputs="$(_ResolvedUserAssembliesHashFile);@(ResolvedAssemblies);@(ResolvedUserAssemblies);$(_AndroidManifestAbs);"
+    Outputs="$(_AndroidIntermediateJavaSourceDirectory)mono\MonoPackageManager_Resources.java;$(_AcwMapFile)">
+  <GenerateJavaStubs
+      ResolvedAssemblies="@(_ResolvedAssemblies)"
+      ResolvedUserAssemblies="@(_ResolvedUserMonoAndroidAssembliesForDesigner)"
+      ManifestTemplate="$(_AndroidManifestAbs)"
+      MergedManifestDocuments="@(ExtractedManifestDocuments)"
+      Debug="$(AndroidIncludeDebugSymbols)"
+      NeedsInternet="$(AndroidNeedsInternetPermission)"
+      AndroidSdkPlatform="$(_AndroidApiLevel)"
+      AndroidSdkDir="$(_AndroidSdkDirectory)"
+      PackageName="$(_AndroidPackage)"
+      OutputDirectory="$(IntermediateOutputPath)android"
+      MergedAndroidManifestOutput="$(IntermediateOutputPath)android\AndroidManifest.xml"
+      UseSharedRuntime="$(AndroidUseSharedRuntime)"
+      EmbedAssemblies="$(EmbedAssembliesIntoApk)"
+      ResourceDirectory="$(MonoAndroidResDirIntermediate)"
+      BundledWearApplicationName="$(BundledWearApplicationPackageName)"
+      PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
+      ApplicationJavaClass="$(AndroidApplicationJavaClass)"
+      FrameworkDirectories="$(_XATargetFrameworkDirectories);$(_XATargetFrameworkDirectories)Facades"
+      AcwMapFile="$(_AcwMapFile)"
+      SupportedAbis="$(_BuildTargetAbis)">
+  </GenerateJavaStubs>
+  <ConvertCustomView
+      Condition="Exists('$(_CustomViewMapFile)')"
+      CustomViewMapFile="$(_CustomViewMapFile)"
+      AcwMapFile="$(_AcwMapFile)"
+      ResourceDirectories="$(MonoAndroidResDirIntermediate);@(LibraryResourceDirectories)"
+      ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
+  />
+  <!-- Create java needed for Mono runtime -->
+  <GeneratePackageManagerJava
+      ResolvedAssemblies="@(_ResolvedAssemblies)"
+      ResolvedUserAssemblies="@(_ResolvedUserAssemblies)"
+      MainAssembly="$(MonoAndroidLinkerInputDir)$(TargetFileName)"
+      OutputDirectory="$(_AndroidIntermediateJavaSourceDirectory)mono"
+      EnvironmentOutputDirectory="$(_AndroidIntermediateJavaSourceDirectory)mono\android\app"
+      UseSharedRuntime="$(AndroidUseSharedRuntime)"
+      TargetFrameworkVersion="$(TargetFrameworkVersion)"
+      Manifest="$(IntermediateOutputPath)android\AndroidManifest.xml"
+      Environments="@(AndroidEnvironment);@(LibraryEnvironments)"
+      AndroidAotMode="$(AndroidAotMode)"
+      EnableLLVM="$(EnableLLVM)"
+      HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
+      TlsProvider="$(AndroidTlsProvider)"
+      Debug="$(AndroidIncludeDebugSymbols)"
+      AndroidSequencePointsMode="$(_SequencePointsMode)"
+      EnableSGenConcurrent="$(AndroidEnableSGenConcurrent)"
+      IsBundledApplication="$(BundleAssemblies)"
+      SupportedAbis="$(_BuildTargetAbis)"
+      AndroidPackageName="$(_AndroidPackage)"
+      EnablePreloadAssembliesDefault="$(_AndroidEnablePreloadAssembliesDefault)">
+    <Output TaskParameter="BuildId" PropertyName="_XamarinBuildId" />
+  </GeneratePackageManagerJava>
+</Target>
+
+<Target Name="SetupDependenciesForDesigner"
+    DependsOnTargets="UpdateAndroidResources;_AdjustJavacVersionArguments;_GeneratePackageManagerJavaForDesigner;_GetMonoPlatformJarPath;_DetermineJavaLibrariesToCompile"
+    Inputs="$(MSBuildAllProjects);$(MonoPlatformJarPath);@(_JavaStubFiles);@(AndroidJavaSource)"
+    Outputs="$(_AndroidStampDirectory)SetupDependenciesForDesigner.stamp">
+  <Javac
+      JavaPlatformJarPath="$(JavaPlatformJarPath)"
+      ClassesOutputDirectory="$(_AndroidIntermediateJavaClassDirectory)"
+      TargetFrameworkDirectory="$(TargetFrameworkDirectory)"
+      StubSourceDirectory="$(_AndroidIntermediateJavaSourceDirectory)"
+      JavaSourceFiles=""
+      ToolPath="$(JavacToolPath)"
+      ToolExe="$(JavacToolExe)"
+      Jars="@(_JavaLibrariesToCompile);@(_ReferenceJavaLibs)"
+      JavacTargetVersion="$(JavacTargetVersion)"
+      JavacSourceVersion="$(JavacSourceVersion)"
+  />
+  <Touch Files="$(_AndroidStampDirectory)SetupDependenciesForDesigner.stamp" AlwaysCreate="true" />
+</Target>
+
+</Project>

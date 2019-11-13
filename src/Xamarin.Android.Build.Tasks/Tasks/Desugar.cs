@@ -1,11 +1,8 @@
 ﻿// Copyright (C) 2011 Xamarin, Inc. All rights reserved.
 
-using System;
-using System.Linq;
 using System.IO;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using System.Text;
 using System.Collections.Generic;
 using Xamarin.Android.Tools;
 
@@ -14,6 +11,8 @@ namespace Xamarin.Android.Tasks
 
 	public class Desugar : JavaToolTask
 	{
+		public override string TaskPrefix => "DES";
+
 		[Required]
 		public string DesugarJarPath { get; set; }
 
@@ -34,12 +33,12 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public string [] OutputJars { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			if (!Directory.Exists (OutputDirectory))
 				Directory.CreateDirectory (OutputDirectory);
 
-			return base.Execute ();
+			return base.RunTask ();
 		}
 
 		protected override string GenerateCommandLineCommands ()
@@ -85,9 +84,8 @@ namespace Xamarin.Android.Tasks
 				cmd.AppendSwitch (DesugarExtraArguments); // it should contain "--dex".
 
 			var outputs = new List<string> ();
-			var md5 = System.Security.Cryptography.MD5.Create ();
 			foreach (var jar in InputJars) {
-				var output = Path.Combine (OutputDirectory, BitConverter.ToString (md5.ComputeHash (Encoding.UTF8.GetBytes (jar))) + Path.GetFileName (jar));
+				var output = Path.Combine (OutputDirectory, Files.HashString (jar) + Path.GetFileName (jar));
 				outputs.Add (output);
 				cmd.AppendSwitch ("--classpath_entry ");
 				cmd.AppendFileNameIfNotNull (jar);

@@ -7,20 +7,18 @@ using System.IO;
 
 namespace Xamarin.Android.Tasks
 {
-	public class CheckProjectItems : Task
+	public class CheckProjectItems : AndroidTask
 	{
+		public override string TaskPrefix => "CPI";
+
 		public bool IsApplication { get; set; }
 		public ITaskItem [] EmbeddedNativeLibraries { get; set; }
 		public ITaskItem [] NativeLibraries { get; set; }
 		public ITaskItem [] JavaLibraries { get; set; }
 		public ITaskItem [] JavaSourceFiles { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
-			Log.LogDebugMessage ("CheckProjectItems Task");
-			Log.LogDebugTaskItems ("  NativeLibraries:", NativeLibraries);
-			Log.LogDebugTaskItems ("  JavaLibraries:", JavaLibraries);
-			Log.LogDebugTaskItems ("  JavaSourceFiles:", JavaSourceFiles);
 			if (IsApplication && EmbeddedNativeLibraries != null && EmbeddedNativeLibraries.Length > 0) {
 				foreach (ITaskItem lib in EmbeddedNativeLibraries) {
 					Log.LogError (

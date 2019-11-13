@@ -44,9 +44,8 @@ namespace Xamarin.Android.UnitTests.NUnit
 
 		IEnumerable<string> GetFilterValuesFromExtras (string key)
 		{
-			Dictionary<string, string> extras = GetStringExtrasFromBundle ();
-			if (extras.ContainsKey (key)) {
-				string filterValue = extras [key];
+			if (StringExtrasInBundle.ContainsKey (key)) {
+				string filterValue = StringExtrasInBundle [key];
 				if (!string.IsNullOrEmpty (filterValue))
 					return filterValue.Split (':');
 			}
@@ -66,13 +65,13 @@ namespace Xamarin.Android.UnitTests.NUnit
 			ChainCategoryFilter (IncludedCategories, false, ref filter);
 
 			Log.Info (LogTag, "Configuring test categories to include from extras:");
-			ChainCategoryFilter (GetFilterValuesFromExtras ("include"), false, ref filter);
+			ChainCategoryFilter (GetFilterValuesFromExtras (KnownArguments.Include), false, ref filter);
 
 			Log.Info (LogTag, "Configuring test categories to exclude:");
 			ChainCategoryFilter (ExcludedCategories, true, ref filter);
 
 			Log.Info(LogTag, "Configuring test categories to exclude from extras:");
-			ChainCategoryFilter (GetFilterValuesFromExtras ("exclude"), true, ref filter);
+			ChainCategoryFilter (GetFilterValuesFromExtras (KnownArguments.Exclude), true, ref filter);
 
 			Log.Info (LogTag, "Configuring tests to exclude (by name):");
 			ChainTestNameFilter (ExcludedTestNames?.ToArray (), ref filter);

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
+using System.Text.RegularExpressions;
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -21,18 +21,23 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 			get { return false; }
 		}
 
-		public GitBranch ()
-		{
-			// `git rev-parse --abbrev-ref HEAD` currently writes `HEAD` to stderr; no idea why.
-			LogStandardErrorAsError = false;
-		}
+		static readonly Regex GitHeadRegex = new Regex ("(?<=refs/heads/).+$", RegexOptions.Compiled);
 
 		public override bool Execute ()
 		{
 			Log.LogMessage (MessageImportance.Low, $"Task {nameof (GitBranch)}");
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (WorkingDirectory)}: {WorkingDirectory.ItemSpec}");
 
-			base.Execute ();
+			string gitHeadFile = Path.Combine (WorkingDirectory.ItemSpec, ".git", "HEAD");
+			if (File.Exists (gitHeadFile)) {
+				string gitHeadFileContent = File.ReadAllText (gitHeadFile);
+				Match match = GitHeadRegex.Match (gitHeadFileContent);
+				Branch = match.Value;
+			}
+
+			if (string.IsNullOrEmpty (Branch)) {
+				base.Execute ();
+			}
 
 			Log.LogMessage (MessageImportance.Low, $"  [Output] {nameof (Branch)}: {Branch}");
 
@@ -41,13 +46,20 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 
 		protected override string GenerateCommandLineCommands ()
 		{
-			return "rev-parse --abbrev-ref HEAD";
+			return "name-rev --name-only --exclude=tags/* HEAD";
 		}
 
 		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
 		{
 			if (string.IsNullOrEmpty (singleLine))
 				return;
+
+			// Strip common unecessary characters.
+			singleLine = singleLine.Replace ("remotes/origin/", string.Empty);
+			int index = singleLine.IndexOf ('~');
+			if (index > 0)
+				singleLine = singleLine.Remove (index);
+
 			Branch  = singleLine;
 		}
 	}

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+  <Xamarin.Android.RuntimeTests.CustomButton
+      android:id="@+id/upperButton"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:text="hello" />
+  <Mono.Android_Test.Library.CustomTextView
+      android:id="@+id/upperTextFromLib"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:text="hello" />
+</LinearLayout>

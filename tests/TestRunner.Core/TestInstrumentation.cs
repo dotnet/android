@@ -16,6 +16,9 @@ namespace Xamarin.Android.UnitTests
 		protected sealed class KnownArguments
 		{
 			public const string LogLevel = "loglevel";
+			public const string Suite = "suite";
+			public const string Include = "include";
+			public const string Exclude = "exclude";
 		}
 
 		const string ResultExecutedTests = "run";
@@ -35,6 +38,8 @@ namespace Xamarin.Android.UnitTests
 		protected IList<string> TestAssemblyDirectories { get; set; }
 		protected bool GCAfterEachFixture { get; set; }
 		protected LogWriter Logger { get; } = new LogWriter ();
+		protected Dictionary<string, string> StringExtrasInBundle { get; set; } = new Dictionary<string, string> ();
+		protected string TestSuiteToRun { get; set; }
 
 		protected TestInstrumentation ()
 		{}
@@ -75,22 +80,29 @@ namespace Xamarin.Android.UnitTests
 		public override void OnCreate (Bundle arguments)
 		{
 			base.OnCreate (arguments);
-			ProcessArguments (arguments);
 			this.arguments = arguments;
+			ProcessArguments ();
 			Start ();
 		}
 
-		protected virtual void ProcessArguments (Bundle arguments)
+		protected virtual void ProcessArguments ()
 		{
-			// Because of the way GetStringExtrasFromBundle below is implemented, we need to remove from the
-			// bundle the arguments we know. GetStringExtrasFromBundle treats all entries as category
-			// filters.
 			if (arguments == null)
 				return;
 
-			if (arguments.ContainsKey (KnownArguments.LogLevel)) {
-				Logger.SetMinimuLogLevelFromString (arguments.GetString (KnownArguments.LogLevel)?.Trim ());
-				arguments.Remove (KnownArguments.LogLevel);
+			foreach (var key in arguments.KeySet ()) {
+				string value = arguments.GetString (key);
+				if (!string.IsNullOrEmpty (value)) {
+					StringExtrasInBundle.Add (key, value);
+				}
+			}
+
+			if (StringExtrasInBundle.ContainsKey (KnownArguments.LogLevel)) {
+				Logger.SetMinimuLogLevelFromString (StringExtrasInBundle [KnownArguments.LogLevel]?.Trim ());
+			}
+
+			if (StringExtrasInBundle.ContainsKey (KnownArguments.Suite)) {
+				TestSuiteToRun = StringExtrasInBundle [KnownArguments.Suite]?.Trim ();
 			}
 		}
 
@@ -333,17 +345,6 @@ namespace Xamarin.Android.UnitTests
 		protected virtual Assembly LoadTestAssembly (string filePath)
 		{
 			return Assembly.LoadFrom (filePath);
-		}
-
-		protected Dictionary<string, string> GetStringExtrasFromBundle ()
-		{
-			var filtersFromBundle = new Dictionary<string, string> ();
-			foreach (var key in arguments.KeySet ()) {
-				string value = arguments.GetString (key);
-				if (!string.IsNullOrEmpty (value))
-					filtersFromBundle.Add (key, value);
-			}
-			return filtersFromBundle;
 		}
 
 		protected virtual void ConfigureFilters (TRunner runner)

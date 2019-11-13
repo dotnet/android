@@ -185,6 +185,7 @@ namespace Xamarin.Android.Manifest {
 			{ typeof (ActivityPersistableMode),     (value, p, r, v) => ToString ((ActivityPersistableMode) value) },
 			{ typeof (ConfigChanges),       (value, p, r, v) => ToString ((ConfigChanges) value) },
 			{ typeof (DocumentLaunchMode),  (value, p, r, v) => ToString ((DocumentLaunchMode) value) },
+			{ typeof (ForegroundService),   (value, p, r, v) => ToString ((ForegroundService) value) },
 			{ typeof (LaunchMode),          (value, p, r, v) => ToString ((LaunchMode) value) },
 			{ typeof (Protection),          (value, p, r, v) => ToString ((Protection) value) },
 			{ typeof (ScreenOrientation),   (value, p, r, v) => ToString ((ScreenOrientation) value, v) },
@@ -365,6 +366,19 @@ namespace Xamarin.Android.Manifest {
 			return ToString (typeDef);
 		}
 
+		static string ToString (ForegroundService value)
+		{
+			switch (value) {
+				case ForegroundService.TypeConnectedDevice:	return "connectedDevice";
+				case ForegroundService.TypeDataSync:		return "dataSync";
+				case ForegroundService.TypeLocation:		return "location";
+				case ForegroundService.TypeMediaPlayback:	return "mediaPlayback";
+				case ForegroundService.TypeMediaProjection:	return "mediaProjection";
+				case ForegroundService.TypePhoneCall:		return "phoneCall";
+				default:
+					throw new ArgumentException ($"Unsupported ForegroundServiceType value '{value}'.", nameof (value));
+			}
+		}
 		IEnumerator<string> IEnumerable<string>.GetEnumerator ()
 		{
 			return Mappings.Keys.GetEnumerator ();

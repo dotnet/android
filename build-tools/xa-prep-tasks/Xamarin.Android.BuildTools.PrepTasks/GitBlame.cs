@@ -45,7 +45,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 
 		protected override string GenerateCommandLineCommands ()
 		{
-			return $"blame \"{Path.GetFullPath (FileName.ItemSpec)}\"";
+			return $"blame \"{FileName.ItemSpec}\"";
 		}
 
 		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)

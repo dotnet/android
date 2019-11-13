@@ -23,6 +23,7 @@ namespace Xamarin.Android.UnitTests
 		public string TestsRootDirectory { get; set; }
 		public Context Context { get; }
 		public List<TestFailureInfo> FailureInfos { get; } = new List<TestFailureInfo> ();
+		public string TestSuiteToRun { get; set; }
 
 		protected LogWriter Logger { get; }
 		protected abstract string ResultsFileName { get; set; }

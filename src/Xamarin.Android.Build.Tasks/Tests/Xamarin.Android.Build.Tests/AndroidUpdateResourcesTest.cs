@@ -1,15 +1,14 @@
-﻿﻿﻿using System;
-using Xamarin.ProjectTools;
-using NUnit.Framework;
-using System.Linq;
-using System.IO;
-using System.Threading;
-using System.Text;
+using System;
 using System.Collections.Generic;
-using Microsoft.Build.Framework;
-using System.Xml.Linq;
-using System.Security.Cryptography;
+using System.IO;
+using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
+using Microsoft.Build.Framework;
+using NUnit.Framework;
+using Xamarin.Android.Tools;
+using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -23,13 +22,15 @@ namespace Xamarin.Android.Build.Tests
 			if (Directory.Exists ("temp/RepetitiveBuild"))
 				Directory.Delete ("temp/RepetitiveBuild", true);
 			var proj = new XamarinAndroidApplicationProject ();
-			using (var b = CreateApkBuilder ("temp/RepetitiveBuild")) {
+			using (var b = CreateApkBuilder ("temp/RepetitiveBuild", cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
 				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj), "first build failed");
 				Assert.IsTrue (b.Build (proj), "second build failed");
 				Assert.IsTrue (b.Output.IsTargetSkipped ("_Sign"), "failed to skip some build");
-				proj.AndroidResources.Last ().Timestamp = null; // means "always build"
+				var item = proj.AndroidResources.First (x => x.Include () == "Resources\\values\\Strings.xml");
+				item.TextContent = () => proj.StringsXml.Replace ("${PROJECT_NAME}", "Foo");
+				item.Timestamp = null;
 				Assert.IsTrue (b.Build (proj), "third build failed");
 				Assert.IsFalse (b.Output.IsTargetSkipped ("_Sign"), "incorrectly skipped some build");
 			}
@@ -41,31 +42,9 @@ namespace Xamarin.Android.Build.Tests
 			var regEx = new Regex (@"(?<type>([a-zA-Z_0-9])+)\slibrary_name=(?<value>([0-9A-Za-z])+);", RegexOptions.Compiled | RegexOptions.Multiline ); 
 
 			var path = Path.Combine (Root, "temp", $"DesignTimeBuild_{isRelease}_{useManagedParser}_{useAapt2}");
-			var cachePath = Path.Combine (path, "Cache");
-			var envVar = new Dictionary<string, string> () {
-				{ "XAMARIN_CACHEPATH", cachePath },
-			};
-			var url = "http://dl-ssl.google.com/android/repository/build-tools_r24-macosx.zip";
-			var md5 = MD5.Create ();
-			var hash = string.Concat (md5.ComputeHash (Encoding.UTF8.GetBytes (url)).Select (b => b.ToString ("X02")));
-			var zipPath = Path.Combine (cachePath, "zips", $"{hash}.zip");
-			if (File.Exists (zipPath))
-				File.Delete (zipPath);
-
-			var extractedDir = Path.Combine (cachePath, "Lib1");
-			if (Directory.Exists (extractedDir))
-				Directory.Delete (extractedDir, recursive: true);
-
 			var lib = new XamarinAndroidLibraryProject () {
 				ProjectName = "Lib1",
 				IsRelease = isRelease,
-				AssemblyInfo = @"using System.Reflection;
-using System.Runtime.CompilerServices;
-
-[assembly: Android.NativeLibraryReferenceAttribute (""android-N/renderscript/lib/packaged/x86/librsjni.so"",
-	SourceUrl="""+ url +@""",
-	Version=""1"", PackageName=""Lib1"")]
-",
 			};
 			lib.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", useManagedParser.ToString ());
 			lib.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
@@ -78,8 +57,6 @@ using System.Runtime.CompilerServices;
 			var intermediateOutputPath = Path.Combine (path, proj.ProjectName, proj.IntermediateOutputPath);
 			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", useManagedParser.ToString ());
 			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
-			if (useManagedParser)
-				proj.SetProperty ("BuildingInsideVisualStudio", "True");
 			using (var l = CreateDllBuilder (Path.Combine (path, lib.ProjectName), false, false)) {
 				using (var b = CreateApkBuilder (Path.Combine (path, proj.ProjectName), false, false)) {
 					l.Verbosity = LoggerVerbosity.Diagnostic;
@@ -89,41 +66,27 @@ using System.Runtime.CompilerServices;
 					b.Verbosity = LoggerVerbosity.Diagnostic;
 					b.ThrowOnBuildFailure = false;
 					b.Target = "Compile";
-					Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, parameters: new string [] { "DesignTimeBuild=true" }, environmentVariables: envVar),
+					Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, parameters: new string [] { "DesignTimeBuild=true" }),
 						"first build failed");
-					Assert.IsTrue (b.Output.IsTargetSkipped ("_BuildAdditionalResourcesCache"), "Target `_BuildAdditionalResourcesCache` should be skipped!");
-					var items = new List<string> ();
-					string first = null;
-					if (!useManagedParser) {
-						foreach (var file in Directory.EnumerateFiles (Path.Combine (intermediateOutputPath, "android"), "R.java", SearchOption.AllDirectories)) {
-							var matches = regEx.Matches (File.ReadAllText (file));
-							items.AddRange (matches.Cast<System.Text.RegularExpressions.Match> ().Select (x => x.Groups ["value"].Value));
-						}
-						first = items.First ();
-						Assert.IsTrue (items.All (x => x == first), "All Items should have matching values");
-					}
 					var designTimeDesigner = Path.Combine (intermediateOutputPath, "designtime", "Resource.designer.cs");
 					if (useManagedParser) {
 						FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should have been created.");
 					}
 					WaitFor (1000);
 					b.Target = "Build";
-					Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, parameters: new string [] { "DesignTimeBuild=false" }, environmentVariables: envVar), "second build failed");
-					Assert.IsFalse(b.Output.IsTargetSkipped ("_BuildAdditionalResourcesCache"), "_BuildAdditionalResourcesCache should have run.");
-					Assert.IsTrue (b.LastBuildOutput.ContainsText ($"Downloading {url}") || b.LastBuildOutput.ContainsText ($"reusing existing archive: {zipPath}"), $"{url} should have been downloaded.");
-					FileAssert.Exists (Path.Combine (extractedDir, "1", "content", "android-N", "aapt"), $"Files should have been extracted to {extractedDir}");
+					Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, parameters: new string [] { "DesignTimeBuild=false" }), "second build failed");
 					FileAssert.Exists (Path.Combine (intermediateOutputPath, "R.txt"), "R.txt should exist after IncrementalClean!");
 					FileAssert.Exists (Path.Combine (intermediateOutputPath, "res.flag"), "res.flag should exist after IncrementalClean!");
 					if (useManagedParser) {
 						FileAssert.Exists (designTimeDesigner, $"{designTimeDesigner} should not have been deleted.");
 					}
-					items.Clear ();
+					var items = new List<string> ();
 					if (!useManagedParser) {
-						foreach (var file in Directory.EnumerateFiles (Path.Combine (intermediateOutputPath, "android"), "R.java", SearchOption.AllDirectories)) {
+						foreach (var file in Directory.EnumerateFiles (Path.Combine (intermediateOutputPath, "android", "src"), "R.java", SearchOption.AllDirectories)) {
 							var matches = regEx.Matches (File.ReadAllText (file));
 							items.AddRange (matches.Cast<System.Text.RegularExpressions.Match> ().Select (x => x.Groups ["value"].Value));
 						}
-						first = items.First ();
+						var first = items.First ();
 						Assert.IsTrue (items.All (x => x == first), "All Items should have matching values");
 					}
 				}
@@ -136,13 +99,13 @@ using System.Runtime.CompilerServices;
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 				PackageReferences = {
-					KnownPackages.SupportMediaCompat_25_4_0_1,
-					KnownPackages.SupportFragment_25_4_0_1,
-					KnownPackages.SupportCoreUtils_25_4_0_1,
-					KnownPackages.SupportCoreUI_25_4_0_1,
-					KnownPackages.SupportCompat_25_4_0_1,
-					KnownPackages.AndroidSupportV4_25_4_0_1,
-					KnownPackages.SupportV7AppCompat_25_4_0_1,
+					KnownPackages.SupportMediaCompat_27_0_2_1,
+					KnownPackages.SupportFragment_27_0_2_1,
+					KnownPackages.SupportCoreUtils_27_0_2_1,
+					KnownPackages.SupportCoreUI_27_0_2_1,
+					KnownPackages.SupportCompat_27_0_2_1,
+					KnownPackages.AndroidSupportV4_27_0_2_1,
+					KnownPackages.SupportV7AppCompat_27_0_2_1,
 				},
 				TargetFrameworkVersion = "v7.1",
 			};
@@ -203,7 +166,7 @@ using System.Runtime.CompilerServices;
 			using (var b = CreateApkBuilder ($"temp/{TestName}")) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed.");
-				StringAssertEx.Contains ("APT0000", b.LastBuildOutput, "An error message with a blank \"level\", should be reported as an error!");
+				StringAssertEx.Contains (useAapt2 ? "APT0003" : "APT1144", b.LastBuildOutput, "An error message with a blank \"level\", should be reported as an error!");
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 			}
 		}
@@ -285,12 +248,12 @@ using System.Runtime.CompilerServices;
 					proj.AndroidResources.Add (image1); 
 				}
 				proj.References.Add (new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj"));
-				proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_21_0_3_0);
-				proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_21_0_3_0);
-				proj.PackageReferences.Add (KnownPackages.SupportV7MediaRouter_21_0_3_0);
-				proj.PackageReferences.Add (KnownPackages.GooglePlayServices_22_0_0_2);
+				proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
+				proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
+				proj.PackageReferences.Add (KnownPackages.SupportV7MediaRouter_27_0_2_1);
+				proj.PackageReferences.Add (KnownPackages.GooglePlayServicesMaps_42_1021_1);
+				proj.PackageReferences.Add (KnownPackages.Xamarin_Build_Download_0_4_11);
 				proj.AndroidExplicitCrunch = explicitCrunch;
-				proj.SetProperty ("TargetFrameworkVersion", "v5.0");
 				using (var b = CreateApkBuilder (Path.Combine (projectPath, "Application1"), false, false)) {
 					b.Verbosity = LoggerVerbosity.Diagnostic;
 					Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
@@ -305,31 +268,25 @@ using System.Runtime.CompilerServices;
 						proj.IntermediateOutputPath);
 					png = PNGChecker.LoadFromBytes (data);
 					Assert.IsTrue (png.Is9Patch, "image2.9.png should have been processed into a 9 patch image.");
-					data = ZipHelper.ReadFileFromZip (path, "res/drawable-hdpi-v4/common_signin_btn_icon_normal_dark.9.png");
-					Assert.IsNotNull (data, "common_signin_btn_icon_normal_dark.9.png should be in {0}android/bin/packaged_resources",
+					data = ZipHelper.ReadFileFromZip (path, "res/drawable-hdpi-v4/common_google_signin_btn_icon_dark_normal_background.9.png");
+					Assert.IsNotNull (data, "common_google_signin_btn_icon_dark_normal_background.9.png.png should be in {0}android/bin/packaged_resources",
 						proj.IntermediateOutputPath);
 					png = PNGChecker.LoadFromBytes (data);
-					Assert.IsTrue (png.Is9Patch, "common_signin_btn_icon_normal_dark.9.png should have been processed into a 9 patch image.");
+					Assert.IsTrue (png.Is9Patch, "common_google_signin_btn_icon_dark_normal_background.9.png should have been processed into a 9 patch image.");
 					Directory.Delete (Path.Combine (Root,projectPath), recursive: true);
 				}
 			}
 		}
 
 		[Test]
-		[NonParallelizable]
 		/// <summary>
 		/// Based on https://bugzilla.xamarin.com/show_bug.cgi?id=29263
 		/// </summary>
-		public void CheckXmlResourcesFilesAreProcessed ([Values(false, true)] bool isRelease)
+		public void CheckXmlResourcesFilesAreProcessed ([Values(false, true)] bool useAapt2)
 		{
-			var projectPath = String.Format ("temp/CheckXmlResourcesFilesAreProcessed_{0}", isRelease);
+			var projectPath = String.Format ("temp/CheckXmlResourcesFilesAreProcessed_{0}", useAapt2);
 
-			var lib = new XamarinAndroidLibraryProject () {
-				IsRelease = isRelease,
-				ProjectName = "Classlibrary1",
-			};
-			lib.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\layout\\custom_text.xml") {
-				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8"" ?>
+			var layout =  @"<?xml version=""1.0"" encoding=""utf-8"" ?>
 <LinearLayout xmlns:android=""http://schemas.android.com/apk/res/android""
 	android:orientation = ""vertical""
 	android:layout_width = ""fill_parent""
@@ -344,7 +301,12 @@ using System.Runtime.CompilerServices;
 		android:layout_width = ""fill_parent""
 		android:layout_height = ""wrap_content""
 		android:text = ""namespace_proper"" />
-</LinearLayout>"
+</LinearLayout>";
+			var lib = new XamarinAndroidLibraryProject () {
+				ProjectName = "Classlibrary1",
+			};
+			lib.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\layout\\custom_text_lib.xml") {
+				TextContent = () => layout,
 			});
 			lib.Sources.Add (new BuildItem.Source ("CustomTextView.cs") {
 				TextContent = () => @"using Android.Widget;
@@ -362,12 +324,17 @@ namespace ClassLibrary1
 			});
 
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
 				OtherBuildItems = {
 					new BuildItem.ProjectReference (@"..\Classlibrary1\Classlibrary1.csproj", "Classlibrary1", lib.ProjectGuid) {
 					},
 				}
 			};
+
+			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\layout\\custom_text_app.xml") {
+				TextContent = () => layout,
+			});
 
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable\\UPPER_image.png") {
 				BinaryContent = () => XamarinAndroidCommonProject.icon_binary_mdpi
@@ -427,32 +394,26 @@ namespace UnnamedProject
 	}
 }"
 			});
-			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_22_1_1_1);
-			proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_22_1_1_1);
-			proj.PackageReferences.Add (KnownPackages.SupportV7Palette_22_1_1_1);
-			proj.SetProperty ("TargetFrameworkVersion", "v5.0");
-			proj.SetProperty (proj.DebugProperties, "JavaMaximumHeapSize", "1G");
-			proj.SetProperty (proj.ReleaseProperties, "JavaMaximumHeapSize", "1G");
-			using (var libb = CreateDllBuilder (Path.Combine (projectPath, lib.ProjectName)))
-			using (var b = CreateApkBuilder (Path.Combine (projectPath, proj.ProjectName))) {
-				b.Verbosity = LoggerVerbosity.Diagnostic;
+			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
+			using (var libb = CreateDllBuilder (Path.Combine (projectPath, lib.ProjectName), cleanupOnDispose: false))
+			using (var b = CreateApkBuilder (Path.Combine (projectPath, proj.ProjectName), cleanupOnDispose: false)) {
 				Assert.IsTrue (libb.Build (lib), "Library Build should have succeeded.");
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				var customViewPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "lp", "0", "jl", "res", "layout", "custom_text.xml");
-				Assert.IsTrue (File.Exists (customViewPath), $"custom_text.xml should exist at {customViewPath}");
-				var doc = XDocument.Load (customViewPath);
-				Assert.IsNotNull (doc.Element ("LinearLayout"), "PreferenceScreen should be present in preferences.xml");
-				Assert.IsNull (doc.Element ("LinearLayout").Element ("Classlibrary1.CustomTextView"),
-					"Classlibrary1.CustomTextView should have been replaced with an $(MD5Hash).CustomTextView");
-				Assert.IsNull (doc.Element ("LinearLayout").Element ("classlibrary1.CustomTextView"),
-					"classlibrary1.CustomTextView should have been replaced with an $(MD5Hash).CustomTextView");
+				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
+				var packaged_resources = Path.Combine (intermediate, "android", "bin", "packaged_resources");
+				FileAssert.Exists (packaged_resources);
+				using (var zip = ZipHelper.OpenZip (packaged_resources)) {
+					CheckCustomView (zip, intermediate, "lp", "0", "jl", "res", "layout", "custom_text_lib.xml");
+					CheckCustomView (zip, intermediate, "res", "layout", "custom_text_app.xml");
+				}
 				
 				var preferencesPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "res","xml","preferences.xml");
 				Assert.IsTrue (File.Exists (preferencesPath), "Preferences.xml should have been renamed to preferences.xml");
-				doc = XDocument.Load (preferencesPath);
+				var doc = XDocument.Load (preferencesPath);
 				Assert.IsNotNull (doc.Element ("PreferenceScreen"), "PreferenceScreen should be present in preferences.xml");
 				Assert.IsNull (doc.Element ("PreferenceScreen").Element ("UnnamedProject.CustomPreference"),
-					"UnamedProject.CustomPreference should have been replaced with an $(MD5Hash).CustomPreference");
+					"UnamedProject.CustomPreference should have been replaced with an $(Hash).CustomPreference");
 				var style = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "res", "values", "styles.xml"); 
 				Assert.IsTrue (File.Exists (style));
 				doc = XDocument.Load (style);
@@ -468,9 +429,54 @@ namespace UnnamedProject
 					.FirstOrDefault (x => x.Attribute("name").Value == "colorAccent");
 				Assert.IsNotNull (item, "The Style should contain an Item");
 				Assert.AreEqual ("@color/deep_purple_A200", item.Value, "item value should be @color/deep_purple_A200");
-				StringAssertEx.DoesNotContain ("AndroidResgen: Warning while updating Resource XML", b.LastBuildOutput,
+				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, "AndroidResgen: Warning while updating Resource XML"),
 					"Warning while processing resources should not have been raised.");
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "Build should have succeeded.");
+				Assert.IsTrue (b.Output.IsTargetSkipped ("_GenerateJavaStubs"), "Target _GenerateJavaStubs should have been skipped");
+
+				lib.Touch ("CustomTextView.cs");
+
+				Assert.IsTrue (libb.Build (lib, doNotCleanupOnUpdate: true, saveProject: false), "second library build should have succeeded.");
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second app build should have succeeded.");
+
+				using (var zip = ZipHelper.OpenZip (packaged_resources)) {
+					CheckCustomView (zip, intermediate, "lp", "0", "jl", "res", "layout", "custom_text_lib.xml");
+					CheckCustomView (zip, intermediate, "res", "layout", "custom_text_app.xml");
+				}
+
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
+			}
+		}
+
+		void CheckCustomView (Xamarin.Tools.Zip.ZipArchive zip, params string [] paths)
+		{
+			var customViewPath = Path.Combine (paths);
+			FileAssert.Exists (customViewPath, $"custom_text.xml should exist at {customViewPath}");
+			var doc = XDocument.Load (customViewPath);
+			Assert.IsNotNull (doc.Element ("LinearLayout"), "PreferenceScreen should be present in preferences.xml");
+			Assert.IsNull (doc.Element ("LinearLayout").Element ("Classlibrary1.CustomTextView"),
+				"Classlibrary1.CustomTextView should have been replaced with an $(Hash).CustomTextView");
+			Assert.IsNull (doc.Element ("LinearLayout").Element ("classlibrary1.CustomTextView"),
+				"classlibrary1.CustomTextView should have been replaced with an $(Hash).CustomTextView");
+
+			//Now check the zip
+			var customViewInZip = "res/layout/" + Path.GetFileName (customViewPath);
+			var entry = zip.ReadEntry (customViewInZip);
+			Assert.IsNotNull (entry, $"`{customViewInZip}` should exist in packaged_resources!");
+
+			using (var stream = new MemoryStream ()) {
+				entry.Extract (stream);
+				stream.Position = 0;
+
+				using (var reader = new StreamReader (stream)) {
+					//NOTE: This is a binary format, but we can still look for text within.
+					//      Don't use `StringAssert` because `contents` make the failure message unreadable.
+					var contents = reader.ReadToEnd ();
+					Assert.IsFalse (contents.Contains ("Classlibrary1.CustomTextView"),
+							"Classlibrary1.CustomTextView should have been replaced with an $(Hash).CustomTextView");
+					Assert.IsFalse (contents.Contains ("classlibrary1.CustomTextView"),
+							"classlibrary1.CustomTextView should have been replaced with an $(Hash).CustomTextView");
+				}
 			}
 		}
 
@@ -482,7 +488,8 @@ namespace UnnamedProject
 		};
 
 		[Test]
-		[TestCaseSource("ReleaseLanguage")]
+		[Parallelizable (ParallelScope.Self)]
+		[TestCaseSource (nameof (ReleaseLanguage))]
 		public void CheckResourceDesignerIsCreated (bool isRelease, ProjectLanguage language)
 		{
 			//Due to the MSBuild project automatically sorting <ItemGroup />, we can't possibly get the F# projects to build here on Windows
@@ -509,7 +516,7 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		[TestCaseSource("ReleaseLanguage")]
+		[TestCaseSource(nameof (ReleaseLanguage))]
 		public void CheckResourceDesignerIsUpdatedWhenReadOnly (bool isRelease, ProjectLanguage language)
 		{
 			//Due to the MSBuild project automatically sorting <ItemGroup />, we can't possibly get the F# projects to build here on Windows
@@ -543,6 +550,9 @@ namespace UnnamedProject
 	android:layout_height=""wrap_content"" 
 	android:text=""Hello""
 	/>
+<TextView
+	android:id=""@+id/myText""
+	/>
 </LinearLayout>";
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue ((File.GetAttributes (designerPath) & FileAttributes.ReadOnly) != FileAttributes.ReadOnly,
@@ -551,7 +561,7 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		[TestCaseSource("ReleaseLanguage")]
+		[TestCaseSource(nameof (ReleaseLanguage))]
 		public void CheckOldResourceDesignerIsNotUsed (bool isRelease, ProjectLanguage language)
 		{
 			if (language == XamarinAndroidProjectLanguage.FSharp)
@@ -582,7 +592,7 @@ namespace UnnamedProject
 
 		// ref https://bugzilla.xamarin.com/show_bug.cgi?id=30089
 		[Test]
-		[TestCaseSource("ReleaseLanguage")]
+		[TestCaseSource(nameof (ReleaseLanguage))]
 		public void CheckOldResourceDesignerWithWrongCasingIsRemoved (bool isRelease, ProjectLanguage language)
 		{
 			if (language == XamarinAndroidProjectLanguage.FSharp)
@@ -613,36 +623,6 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void TargetGenerateJavaDesignerForComponentIsSkipped ([Values(false, true)] bool isRelease)
-		{ 
-			// build with packages... then tweak a package..
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
-			};
-			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_21_0_3_0);
-			proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_21_0_3_0);
-			proj.SetProperty ("TargetFrameworkVersion", "v5.0");
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
-				b.Verbosity = LoggerVerbosity.Diagnostic;
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				StringAssertEx.DoesNotContain ("Skipping target \"_GenerateJavaDesignerForComponent\" because",
-					b.LastBuildOutput, "Target _GenerateJavaDesignerForComponent should not have been skipped");
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				StringAssertEx.Contains ("Skipping target \"_GenerateJavaDesignerForComponent\" because",
-					b.LastBuildOutput, "Target _GenerateJavaDesignerForComponent should have been skipped");
-				var files = Directory.EnumerateFiles (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "resourcecache")
-					, "abc_fade_in.xml", SearchOption.AllDirectories);
-				Assert.AreEqual (1, files.Count (), "There should only be one abc_fade_in.xml in the resourcecache");
-				var resFile = files.First ();
-				Assert.IsTrue (File.Exists (resFile), "{0} should exist", resFile);
-				File.SetLastWriteTime (resFile, DateTime.UtcNow);
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				StringAssertEx.DoesNotContain ("Skipping target \"_GenerateJavaDesignerForComponent\" because",
-					b.LastBuildOutput, "Target _GenerateJavaDesignerForComponent should not have been skipped");
-			}
-		}
-
-		[Test]
 		public void CheckAaptErrorRaisedForMissingResource ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -665,8 +645,8 @@ namespace UnnamedProject
 				b.Verbosity = LoggerVerbosity.Diagnostic;
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed");
-				StringAssertEx.Contains ("APT0000: ", b.LastBuildOutput);
-				StringAssertEx.Contains ("2 Error(s)", b.LastBuildOutput);
+				StringAssertEx.Contains ("APT2260: ", b.LastBuildOutput);
+				StringAssertEx.Contains ("3 Error(s)", b.LastBuildOutput);
 			}
 		}
 
@@ -684,7 +664,7 @@ namespace UnnamedProject
 				b.Verbosity = LoggerVerbosity.Diagnostic;
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed");
-				StringAssertEx.Contains ("APT0000: ", b.LastBuildOutput);
+				StringAssertEx.Contains ("APT2144: ", b.LastBuildOutput);
 				StringAssertEx.Contains ("1 Error(s)", b.LastBuildOutput);
 			}
 		}
@@ -709,7 +689,33 @@ namespace UnnamedProject
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed");
 				StringAssertEx.Contains ("Invalid file name:", b.LastBuildOutput);
-				StringAssertEx.Contains ("1 Error(s)", b.LastBuildOutput);
+				StringAssertEx.Contains ($"{(useAapt2 ? "1" : "3")} Error(s)", b.LastBuildOutput);
+			}
+		}
+
+		[Test]
+		public void CheckAaptErrorNotRaisedForInvalidFileNameWithValidLogicalName ([Values (false, true)] bool useAapt2)
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable\\icon-2.png") {
+				Metadata = { { "LogicalName", "Resources\\drawable\\icon2.png" } },
+				BinaryContent = () => XamarinAndroidCommonProject.icon_binary_hdpi,
+			});
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\strings-2.xml") {
+				Metadata = { { "LogicalName", "Resources\\values\\strings2.xml" } },
+				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
+<resources>
+	<string name=""hellome"">Hello World, Click Me!</string>
+</resources>",
+			});
+			var projectPath = string.Format ($"temp/{TestName}");
+			using (var b = CreateApkBuilder (Path.Combine (projectPath, "UnamedApp"), false, false)) {
+				b.Verbosity = LoggerVerbosity.Diagnostic;
+				b.ThrowOnBuildFailure = false;
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				StringAssertEx.DoesNotContain ("Invalid file name:", b.LastBuildOutput);
+				StringAssertEx.DoesNotContain ("1 Error(s)", b.LastBuildOutput);
 			}
 		}
 
@@ -730,8 +736,10 @@ namespace UnnamedProject
 				b.Verbosity = LoggerVerbosity.Diagnostic;
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed");
-				StringAssertEx.Contains ("APT0000: ", b.LastBuildOutput);
-				StringAssertEx.Contains ("2 Error(s)", b.LastBuildOutput);
+				StringAssertEx.Contains ("APT2057: ", b.LastBuildOutput);
+				StringAssertEx.Contains ("APT2222: ", b.LastBuildOutput);
+				StringAssertEx.Contains ("APT2261: ", b.LastBuildOutput);
+				StringAssertEx.Contains ("3 Error(s)", b.LastBuildOutput);
 			}
 		}
 
@@ -986,9 +994,8 @@ namespace UnnamedProject
 					}
 				},
 				PackageReferences = {
-					new Package (KnownPackages.AndroidSupportV13_21_0_3_0, audoAddReferences:true),
-					new Package (KnownPackages.AndroidSupportV4_21_0_3_0, audoAddReferences:true),
-					new Package (KnownPackages.SupportV7AppCompat_21_0_3_0, audoAddReferences:true),
+					KnownPackages.SupportV7AppCompat_27_0_2_1,
+					KnownPackages.AndroidSupportV4_27_0_2_1,
 				},
 			};
 			proj.SetProperty (KnownProperties.TargetFrameworkVersion, "v5.1");
@@ -1088,10 +1095,7 @@ namespace Lib1 {
 			};
 			appProj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, appProj.ProjectName))) {
-				appBuilder.Verbosity = LoggerVerbosity.Diagnostic;
-				appBuilder.Target = "Compile";
-				Assert.IsTrue (appBuilder.Build (appProj, parameters: new string[] { "DesignTimeBuild=true", "BuildingInsideVisualStudio=true" } ),
-					"DesignTime Application Build should have succeeded.");
+				Assert.IsTrue (appBuilder.DesignTimeBuild (appProj), "DesignTime Application Build should have succeeded.");
 				Assert.IsFalse (appProj.CreateBuildOutput (appBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
 					"Target '_ManagedUpdateAndroidResgen' should have run.");
 				var designerFile = Path.Combine (Root, path, appProj.ProjectName, appProj.IntermediateOutputPath, "designtime", "Resource.designer.cs");
@@ -1103,7 +1107,6 @@ namespace Lib1 {
 				StringAssert.Contains ("myButton", designerContents, $"{designerFile} should contain Resources.Id.myButton");
 				StringAssert.Contains ("Icon", designerContents, $"{designerFile} should contain Resources.Drawable.Icon");
 				StringAssert.Contains ("Main", designerContents, $"{designerFile} should contain Resources.Layout.Main");
-				appBuilder.Target = "SignAndroidPackage";
 				Assert.IsTrue (appBuilder.Build (appProj),
 					"Normal Application Build should have succeeded.");
 				Assert.IsTrue (appProj.CreateBuildOutput (appBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
@@ -1150,29 +1153,29 @@ namespace Lib1 {
 					new BuildItem.ProjectReference (@"..\Lib1\Lib1.csproj", libProj.ProjectName, libProj.ProjectGuid),
 				},
 				PackageReferences = {
-					KnownPackages.SupportMediaCompat_25_4_0_1,
-					KnownPackages.SupportFragment_25_4_0_1,
-					KnownPackages.SupportCoreUtils_25_4_0_1,
-					KnownPackages.SupportCoreUI_25_4_0_1,
-					KnownPackages.SupportCompat_25_4_0_1,
-					KnownPackages.AndroidSupportV4_25_4_0_1,
-					KnownPackages.SupportV7AppCompat_25_4_0_1,
+					KnownPackages.SupportMediaCompat_27_0_2_1,
+					KnownPackages.SupportFragment_27_0_2_1,
+					KnownPackages.SupportCoreUtils_27_0_2_1,
+					KnownPackages.SupportCoreUI_27_0_2_1,
+					KnownPackages.SupportCompat_27_0_2_1,
+					KnownPackages.AndroidSupportV4_27_0_2_1,
+					KnownPackages.SupportV7AppCompat_27_0_2_1,
 				},
 			};
 			appProj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, libProj.ProjectName), false, false)) {
-				libBuilder.Verbosity = LoggerVerbosity.Diagnostic;
+				libBuilder.AutomaticNuGetRestore = false;
+				Assert.IsTrue (libBuilder.RunTarget (libProj, "Restore"), "Library project should have restored.");
 				libBuilder.ThrowOnBuildFailure = false;
 				using (var appBuilder = CreateApkBuilder (Path.Combine (path, appProj.ProjectName), false, false)) {
-					appBuilder.Verbosity = LoggerVerbosity.Diagnostic;
+					appBuilder.AutomaticNuGetRestore = false;
+					Assert.IsTrue (appBuilder.RunTarget (appProj, "Restore"), "App project should have restored.");
 					appBuilder.ThrowOnBuildFailure = false;
-					libBuilder.Target = "Compile";
-					Assert.IsTrue (libBuilder.Build (libProj, parameters: new string [] { "DesignTimeBuild=true", "BuildingInsideVisualStudio=true" }), "Library project should have built");
+					Assert.IsTrue (libBuilder.DesignTimeBuild (libProj), "Library project should have built");
 					Assert.LessOrEqual (libBuilder.LastBuildTime.TotalMilliseconds, maxBuildTimeMs, $"DesignTime build should be less than {maxBuildTimeMs} milliseconds.");
 					Assert.IsFalse (libProj.CreateBuildOutput (libBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
 						"Target '_ManagedUpdateAndroidResgen' should have run.");
-					appBuilder.Target = "Compile";
-					Assert.AreEqual (!appBuilder.RunningMSBuild, appBuilder.Build (appProj, parameters: new string [] { "DesignTimeBuild=true", "BuildingInsideVisualStudio=true" }), "Application project should have built");
+					Assert.AreEqual (!appBuilder.RunningMSBuild, appBuilder.DesignTimeBuild (appProj), "Application project should have built");
 					Assert.LessOrEqual (appBuilder.LastBuildTime.TotalMilliseconds, maxBuildTimeMs, $"DesignTime build should be less than {maxBuildTimeMs} milliseconds.");
 					Assert.IsFalse (appProj.CreateBuildOutput (appBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
 						"Target '_ManagedUpdateAndroidResgen' should have run.");
@@ -1188,12 +1191,10 @@ namespace Lib1 {
 					StringAssert.Contains ("material_grey_50", designerContents, $"{designerFile} should contain Resources.Color.material_grey_50");
 					StringAssert.DoesNotContain ("main_text_item_size", designerContents, $"{designerFile} should not contain Resources.Dimension.main_text_item_size");
 					StringAssert.DoesNotContain ("theme_devicedefault_background", designerContents, $"{designerFile} should not contain Resources.Color.theme_devicedefault_background");
-					libBuilder.Target = "Build";
 					Assert.IsTrue (libBuilder.Build (libProj), "Library project should have built");
 					Assert.IsTrue (libProj.CreateBuildOutput (libBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
 						"Target '_ManagedUpdateAndroidResgen' should not have run.");
-					appBuilder.Target = "Compile";
-					Assert.IsTrue (appBuilder.Build (appProj, parameters: new string [] { "DesignTimeBuild=true", "BuildingInsideVisualStudio=true" }), "App project should have built");
+					Assert.IsTrue (appBuilder.DesignTimeBuild (appProj), "App project should have built");
 					Assert.LessOrEqual (appBuilder.LastBuildTime.TotalMilliseconds, maxBuildTimeMs, $"DesignTime build should be less than {maxBuildTimeMs} milliseconds.");
 					Assert.IsFalse (appProj.CreateBuildOutput (appBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
 					"Target '_ManagedUpdateAndroidResgen' should have run.");
@@ -1210,18 +1211,13 @@ namespace Lib1 {
 					StringAssert.Contains ("theme_devicedefault_background", designerContents, $"{designerFile} should contain Resources.Color.theme_devicedefault_background");
 					StringAssert.Contains ("main_text_item_size", designerContents, $"{designerFile} should contain Resources.Dimension.main_text_item_size");
 					StringAssert.Contains ("SomeColor", designerContents, $"{designerFile} should contain Resources.Color.SomeColor");
-
-					appBuilder.Target = "SignAndroidPackage";
 					Assert.IsTrue (appBuilder.Build (appProj), "App project should have built");
-
 
 					Assert.IsTrue (appBuilder.Clean (appProj), "Clean should have succeeded");
 					Assert.IsTrue (File.Exists (designerFile), $"'{designerFile}' should not have been cleaned.");
 					designerFile = Path.Combine (Root, path, libProj.ProjectName, libProj.IntermediateOutputPath, "designtime", "Resource.designer.cs");
 					Assert.IsTrue (libBuilder.Clean (libProj), "Clean should have succeeded");
 					Assert.IsTrue (File.Exists (designerFile), $"'{designerFile}' should not have been cleaned.");
-
-
 				}
 			}
 		}
@@ -1254,8 +1250,8 @@ namespace Lib1 {
 				if (useAapt2) {
 					StringAssertEx.DoesNotContain ("APT0000", builder.LastBuildOutput, "Build output should not contain an APT0000 warning");
 				} else {
-					var expected = builder.RunningMSBuild ? "warning APT0000: max res 26, skipping values-v27" : "warning APT0000: warning : max res 26, skipping values-v27";
-					StringAssertEx.Contains (expected, builder.LastBuildOutput, "Build output should contain an APT0000 warning about 'max res 26, skipping values-v27'");
+					var expected = builder.RunningMSBuild ? "warning APT1146: max res 26, skipping values-v27" : "warning APT1146: warning : max res 26, skipping values-v27";
+					StringAssertEx.Contains (expected, builder.LastBuildOutput, "Build output should contain an APT1146 warning about 'max res 26, skipping values-v27'");
 				}
 			}
 		}
@@ -1282,7 +1278,7 @@ namespace Lib1 {
 			});
 			using (var builder = CreateApkBuilder (path, false, false)) {
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-				StringAssertEx.Contains ($"warning APT0000: warning: string '{name}' has no default translation.", builder.LastBuildOutput, "Build output should contain an APT0000 warning about 'no default translation'");
+				StringAssertEx.Contains ($"warning APT1145: warning: string '{name}' has no default translation.", builder.LastBuildOutput, "Build output should contain an APT1145 warning about 'no default translation'");
 			}
 		}
 
@@ -1409,7 +1405,7 @@ namespace UnnamedProject
 
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build should have succeeded");
 
-				var r_java = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "src", "android", "support", "compat", "R.java");
+				var r_java = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "src", "unnamedproject", "unnamedproject", "R.java");
 				FileAssert.Exists (r_java);
 				var r_java_contents = File.ReadAllLines (r_java);
 				Assert.IsTrue (StringAssertEx.ContainsText (r_java_contents, textView1), $"android/support/compat/R.java should contain `{textView1}`!");
@@ -1487,6 +1483,27 @@ namespace UnnamedProject
 			});
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded");
+			}
+		}
+
+		[Test]
+		[Parallelizable (ParallelScope.Self)]
+		public void CheckNoVersionVectors ([Values (true, false)] bool useAapt2)
+		{
+			var proj = new XamarinFormsAndroidApplicationProject ();
+			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+				string aaptCommand = useAapt2 ? "Executing link" : "Executing package";
+				foreach (var line in b.LastBuildOutput) {
+					if (line.Contains (aaptCommand)) {
+						StringAssert.Contains ("--no-version-vectors", line, "The Xamarin.Android.Support.Vector.Drawable NuGet should set `--no-version-vectors`!");
+						return;
+					}
+				}
+
+				Assert.Fail ($"aapt log message was not found: {aaptCommand}");
 			}
 		}
 	}

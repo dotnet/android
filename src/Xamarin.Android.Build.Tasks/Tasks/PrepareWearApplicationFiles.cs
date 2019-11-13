@@ -1,15 +1,16 @@
-﻿using System;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 using System.IO;
 using System.Xml.Linq;
 using Xamarin.Android.Tools;
-using Xamarin.Android.Tools.Aidl;
+using System.Collections.Generic;
 
 namespace Xamarin.Android.Tasks
 {
-	public class PrepareWearApplicationFiles : Task
+	public class PrepareWearApplicationFiles : AndroidTask
 	{
+		public override string TaskPrefix => "PWA";
+
 		static readonly XNamespace androidNs = XNamespace.Get ("http://schemas.android.com/apk/res/android");
 
 		[Required]
@@ -21,20 +22,18 @@ namespace Xamarin.Android.Tasks
 		public ITaskItem WearableApplicationDescriptionFile { get; set; }
 		[Output]
 		public ITaskItem BundledWearApplicationApkResourceFile { get; set; }
+		[Output]
+		public string [] ModifiedFiles { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
-			Log.LogDebugMessage ("PrepareWearApplicationFiles task");
-			Log.LogDebugTaskItems ("  WearAndroidManifestFile:", WearAndroidManifestFile);
-			Log.LogDebugTaskItems ("  IntermediateOutputPath:", IntermediateOutputPath);
-			Log.LogDebugTaskItems ("  WearApplicationApkPath:", WearApplicationApkPath);
-
 			string rawapk = "wearable_app.apk";
 			string intermediateApkPath = Path.Combine (IntermediateOutputPath, "res", "raw", rawapk);
 			string intermediateXmlFile = Path.Combine (IntermediateOutputPath, "res", "xml", "wearable_app_desc.xml");
 
 			var doc = XDocument.Load (WearAndroidManifestFile);
 			var wearPackageName = AndroidAppManifest.CanonicalizePackageName (doc.Root.Attribute ("package").Value);
+			var modified = new List<string> ();
 
 			if (PackageName != wearPackageName)
 				Log.LogCodedError ("XA5211", "Embedded wear app package name differs from handheld app package name ({0} != {1}).", wearPackageName, PackageName);
@@ -51,17 +50,22 @@ namespace Xamarin.Android.Tasks
 </wearableApp>
 ", wearPackageName, doc.Root.Attribute (androidNs + "versionCode").Value, doc.Root.Attribute (androidNs + "versionName").Value, Path.GetFileNameWithoutExtension (rawapk));
 
-			MonoAndroidHelper.CopyIfChanged (WearApplicationApkPath, intermediateApkPath);
+			if (MonoAndroidHelper.CopyIfChanged (WearApplicationApkPath, intermediateApkPath)) {
+				Log.LogDebugMessage ("    Copied APK to {0}", intermediateApkPath);
+				modified.Add (intermediateApkPath);
+			}
 
 			Directory.CreateDirectory (Path.GetDirectoryName (intermediateXmlFile));
 			if (!File.Exists (intermediateXmlFile) || !XDocument.DeepEquals (XDocument.Load (intermediateXmlFile), XDocument.Parse (xml))) {
 				File.WriteAllText (intermediateXmlFile, xml);
 				Log.LogDebugMessage ("    Created additional resource as {0}", intermediateXmlFile);
+				modified.Add (intermediateXmlFile);
 			}
 			WearableApplicationDescriptionFile = new TaskItem (intermediateXmlFile);
 			WearableApplicationDescriptionFile.SetMetadata ("IsWearApplicationResource", "True");
 			BundledWearApplicationApkResourceFile = new TaskItem (intermediateApkPath);
 			BundledWearApplicationApkResourceFile.SetMetadata ("IsWearApplicationResource", "True");
+			ModifiedFiles = modified.ToArray ();
 
 			return true;
 		}

@@ -10,6 +10,8 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 #endif  // !APP
 
+using Xamarin.Android.BuildTools.PrepTasks;
+
 namespace Xamarin.Android.Tools.BootstrapTasks
 {
 #if !APP
@@ -17,6 +19,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 	{
 		public                  bool                DeleteSourceFiles           { get; set; }
 		public                  string              Configuration               { get; set; }
+		public                  string              TestsFlavor                 { get; set; }
 		[Required]
 		public                  string              SourceFile                  { get; set; }
 		[Required]
@@ -41,7 +44,9 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			catch (Exception e) {
 				Log.LogWarning ($"Unable to process `{SourceFile}`.  Is it empty?  (Did a unit test runner SIGSEGV?)");
 				Log.LogWarningFromException (e);
-				CreateErrorResultsFile (SourceFile, dest, Configuration, e);
+				CreateErrorResultsFile (SourceFile, dest, Configuration, TestsFlavor, e, m => {
+						Log.LogMessage (MessageImportance.Low, m);
+				});
 			}
 
 			if (DeleteSourceFiles && Path.GetFullPath (SourceFile) != Path.GetFullPath (dest)) {
@@ -69,6 +74,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		{
 			var destFilename = Path.GetFileNameWithoutExtension (source) +
 				(string.IsNullOrWhiteSpace (Configuration) ? "" : "-" + Configuration) +
+				(string.IsNullOrWhiteSpace (TestsFlavor) ? "" : TestsFlavor) +
 				Path.GetExtension (source);
 			var dest = Path.Combine (DestinationFolder, destFilename);
 			return dest;
@@ -101,13 +107,15 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 	partial class RenameTestCases {
 
-		static void CreateErrorResultsFile (string sourceFile, string destFile, string config, Exception e)
+		static void CreateErrorResultsFile (string sourceFile, string destFile, string config, string flavor, Exception e, Action<string> logDebugMessage)
 		{
-			GetTestCaseInfo (sourceFile, Path.GetDirectoryName (destFile), config, out var testSuiteName, out var testCaseName, out var logcatPath);
+			GetTestCaseInfo (sourceFile, Path.GetDirectoryName (destFile), config, flavor, logDebugMessage, out var testSuiteName, out var testCaseName, out var logcatPath);
 			var contents  = new StringBuilder ();
 			if (File.Exists (sourceFile)) {
 				contents.Append (File.ReadAllText (sourceFile));
 			}
+
+			bool adbCrashed = false;
 			if (logcatPath != null) {
 				if (contents.Length > 0) {
 					contents.AppendLine ();
@@ -135,57 +143,16 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				if (inBinRun) {
 					contents.Append ("]");
 				}
+
+				adbCrashed |= logcat.IndexOf (RunInstrumentationTests.AdbRestartText, StringComparison.Ordinal) >= 0;
 			}
 
-			var doc       = new XDocument (
-				new XElement ("test-results",
-					new XAttribute ("date", DateTime.Now.ToString ("yyyy-MM-dd")),
-					new XAttribute ("errors", "1"),
-					new XAttribute ("failures", "0"),
-					new XAttribute ("ignored", "0"),
-					new XAttribute ("inconclusive", "0"),
-					new XAttribute ("invalid", "0"),
-					new XAttribute ("name", destFile),
-					new XAttribute ("not-run", "0"),
-					new XAttribute ("skipped", "0"),
-					new XAttribute ("time", DateTime.Now.ToString ("HH:mm:ss")),
-					new XAttribute ("total", "1"),
-					new XElement ("environment",
-						new XAttribute ("nunit-version", "3.6.0.0"),
-						new XAttribute ("clr-version", "4.0.30319.42000"),
-						new XAttribute ("os-version", "Unix 15.6.0.0"),
-						new XAttribute ("platform", "Unix"),
-						new XAttribute ("cwd", Environment.CurrentDirectory),
-						new XAttribute ("machine-name", Environment.MachineName),
-						new XAttribute ("user", Environment.UserName),
-						new XAttribute ("user-domain", Environment.MachineName)),
-					new XElement ("culture-info",
-						new XAttribute ("current-culture", "en-US"),
-						new XAttribute ("current-uiculture", "en-US")),
-					new XElement ("test-suite",
-						new XAttribute ("type", "APK-File"),
-						new XAttribute ("name", testSuiteName),
-						new XAttribute ("executed", "True"),
-						new XAttribute ("result", "Failure"),
-						new XAttribute ("success", "False"),
-						new XAttribute ("time", "0"),
-						new XAttribute ("asserts", "0"),
-						new XElement ("results",
-							new XElement ("test-case",
-								new XAttribute ("name", testCaseName),
-								new XAttribute ("executed", "True"),
-								new XAttribute ("result", "Error"),
-								new XAttribute ("success", "False"),
-								new XAttribute ("time", "0.0"),
-								new XAttribute ("asserts", "1"),
-								new XElement ("failure",
-									new XElement ("message",
-										$"Error processing `{sourceFile}`.  " +
-										$"Check the build log for execution errors.{Environment.NewLine}" +
-										$"File contents:{Environment.NewLine}",
-										new XCData (contents.ToString ())),
-									new XElement ("stack-trace", e.ToString ())))))));
-			doc.Save (destFile);
+			var adbText = adbCrashed ? RunInstrumentationTests.AdbCrashErrorText : "";
+			var message = $"{adbText}Error processing `{sourceFile}`.  " +
+				$"Check the build log for execution errors.{Environment.NewLine}" +
+				$"File contents:{Environment.NewLine}";
+
+			ErrorResultsHelper.CreateErrorResultsFile (destFile, testSuiteName, testCaseName, e, message, contents.ToString ());
 		}
 
 		// Example `SourceFile`:
@@ -193,18 +160,20 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		// Example `DestinationFolder`:
 		//   /Users/builder/jenkins/workspace/xamarin-android-pr-builder-release/xamarin-android/
 		// Example `adb logcat`:
-		//   /Users/builder/jenkins/workspace/xamarin-android-pr-builder-release/xamarin-android/tests/logcat-Release-Mono.Android_Tests.txt
+		//   /Users/builder/jenkins/workspace/xamarin-android-pr-builder-release/xamarin-android/bin/TestRelease/logcat-Release-Mono.Android_Tests.txt
 		//
 		// We need to extract the "base" test name from `SourceFile`, and use that to construct `logcatPath`
-		static void GetTestCaseInfo (string sourceFile, string destinationFolder, string config, out string testSuiteName, out string testCaseName, out string logcatPath)
+		static void GetTestCaseInfo (string sourceFile, string destinationFolder, string config, string flavor, Action<string> logDebugMessage, out string testSuiteName, out string testCaseName, out string logcatPath)
 		{
 			var name        = Path.GetFileNameWithoutExtension (sourceFile);
 			if (name.StartsWith ("TestResult-"))
 				name    = name.Substring ("TestResult-".Length);
 			testSuiteName   = name;
 			testCaseName    = $"Possible Crash / {config}";
-			logcatPath      = Path.Combine (destinationFolder, "tests", $"logcat-{config}-{name}.txt");
+			logcatPath      = Path.Combine (destinationFolder, "bin", $"Test{config}", $"logcat-{config}{flavor}-{name}.txt");
+			logDebugMessage ($"Looking for `adb logcat` output in the file: {logcatPath}");
 			if (!File.Exists (logcatPath)) {
+				logDebugMessage ($"Could not find file `{logcatPath}`.  Will not be including `adb logcat` output.");
 				logcatPath      = null;
 			}
 		}
@@ -212,9 +181,9 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 #if APP
 	// Compile:
-	//   csc build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks/RenameTestCases.cs /out:test.exe /d:APP /r:System.Xml.Linq.dll
+	//   csc build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks/RenameTestCases.cs /out:test.exe /d:APP /r:System.Xml.Linq.dll /r:bin/BuildDebug/xa-prep-tasks.dll
 	// Run:
-	//   mono test.exe test.xml
+	//   MONO_PATH=bin/BuildDebug mono test.exe test.xml
 	// Validate:
 	//   curl -o Results.xsd https://nunit.org/docs/files/Results.xsd
 	//   MONO_XMLTOOL_ERROR_DETAILS=yes mono-xmltool  --validate Results.xsd test.xml
@@ -229,7 +198,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			string destFile       = args [0];
 			string sourceFile     = args.Length > 1 ? args [1] : "source.xml";
 			string config         = args.Length > 2 ? args [2] : "Debug";
-			CreateErrorResultsFile (sourceFile, destFile, config, new Exception ("Wee!!!"));
+			CreateErrorResultsFile (sourceFile, destFile, config, "", new Exception ("Wee!!!"), Console.WriteLine);
 		}
 	}
 #endif  // APP

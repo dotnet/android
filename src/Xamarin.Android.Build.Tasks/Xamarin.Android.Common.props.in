@@ -2,6 +2,7 @@
 	<PropertyGroup>
 		<XamarinAndroidVersion>@PACKAGE_VERSION@-@PACKAGE_VERSION_BUILD@</XamarinAndroidVersion>
 		<_JavaInteropReferences>Java.Interop;System.Runtime</_JavaInteropReferences>
+		<Debugger Condition=" '$(Debugger)' == '' ">Xamarin</Debugger>
 		<DependsOnSystemRuntime Condition=" '$(DependsOnSystemRuntime)' == '' ">true</DependsOnSystemRuntime>
 		<ImplicitlyExpandNETStandardFacades>false</ImplicitlyExpandNETStandardFacades>
 		<CopyNuGetImplementations Condition=" '$(CopyNuGetImplementations)' == ''">true</CopyNuGetImplementations>
@@ -11,11 +12,13 @@
 		<AndroidVersionCodePattern Condition=" '$(AndroidUseLegacyVersionCode)' != 'True' And '$(AndroidVersionCodePattern)' == '' ">{abi}{versionCode:D5}</AndroidVersionCodePattern>
 		<AndroidResourceGeneratorTargetName>UpdateGeneratedFiles</AndroidResourceGeneratorTargetName>
 		<AndroidUseAapt2 Condition=" '$(AndroidUseAapt2)' == '' ">True</AndroidUseAapt2>
+		<AndroidPackageNamingPolicy Condition=" '$(AndroidPackageNamingPolicy)' == '' ">LowercaseCrc64</AndroidPackageNamingPolicy>
 		<AndroidUseManagedDesignTimeResourceGenerator Condition=" '$(AndroidUseManagedDesignTimeResourceGenerator)' == '' And '$(OS)' != 'Windows_NT' ">False</AndroidUseManagedDesignTimeResourceGenerator>
-		<AndroidSdkBuildToolsVersion Condition="'$(AndroidSdkBuildToolsVersion)' == ''">27.0.3</AndroidSdkBuildToolsVersion>
-		<AndroidSdkPlatformToolsVersion Condition="'$(AndroidSdkPlatformToolsVersion)' == ''">27.0.1</AndroidSdkPlatformToolsVersion>
+		<AndroidSdkBuildToolsVersion Condition="'$(AndroidSdkBuildToolsVersion)' == ''">28.0.3</AndroidSdkBuildToolsVersion>
+		<AndroidSdkPlatformToolsVersion Condition="'$(AndroidSdkPlatformToolsVersion)' == ''">28.0.0</AndroidSdkPlatformToolsVersion>
 		<AndroidSdkToolsVersion Condition="'$(AndroidSdkToolsVersion)' == ''">26.1.1</AndroidSdkToolsVersion>
 		<AndroidNdkVersion Condition="'$(AndroidNdkVersion)' == ''">16.1</AndroidNdkVersion>
+		<BundleToolVersion Condition="'$(BundleToolVersion)' == ''">@BUNDLETOOL_VERSION@</BundleToolVersion>
 
 		<!-- Enable nuget package conflict resolution -->
 		<ResolveAssemblyConflicts>true</ResolveAssemblyConflicts>
@@ -26,4 +29,18 @@
 			<Generator>MSBuild:UpdateGeneratedFiles</Generator>
 		</AndroidResource>
 	</ItemDefinitionGroup>
+        <ItemGroup>
+          <AndroidMinimumSupportedApiLevel Include="armeabi-v7a">
+            <ApiLevel>@NDK_ARMEABI_V7_API@</ApiLevel>
+          </AndroidMinimumSupportedApiLevel>
+          <AndroidMinimumSupportedApiLevel Include="arm64-v8a">
+            <ApiLevel>@NDK_ARM64_V8A_API@</ApiLevel>
+          </AndroidMinimumSupportedApiLevel>
+          <AndroidMinimumSupportedApiLevel Include="x86">
+            <ApiLevel>@NDK_X86_API@</ApiLevel>
+          </AndroidMinimumSupportedApiLevel>
+          <AndroidMinimumSupportedApiLevel Include="x86_64">
+            <ApiLevel>@NDK_X86_64_API@</ApiLevel>
+          </AndroidMinimumSupportedApiLevel>
+        </ItemGroup>
 </Project>

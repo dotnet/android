@@ -14,12 +14,15 @@ using NUnit.Framework;
 using Xamarin.ProjectTools;
 using Xamarin.Tools.Zip;
 
-using XABuildPaths = global::Xamarin.Android.Build.Paths;
-
 namespace Xamarin.Android.MakeBundle.UnitTests
 {
 	sealed class LocalBuilder : Builder
 	{
+		public LocalBuilder ()
+		{
+			BuildingInsideVisualStudio = false;
+		}
+
 		public bool Build (string projectOrSolution, string target, string[] parameters = null, Dictionary<string, string> environmentVariables = null)
 		{
 			return BuildInternal (projectOrSolution, target, parameters, environmentVariables);
@@ -61,10 +64,10 @@ namespace Xamarin.Android.MakeBundle.UnitTests
 		static BuildTests_EmbeddedDSOBuildTests ()
 		{
 			TestProjectRootDirectory = Path.GetFullPath (Path.Combine (XABuildPaths.TopDirectory, "tests", "CodeGen-MkBundle", "Xamarin.Android.MakeBundle-Tests"));
-			TestOutputDir = Path.Combine (XABuildPaths.TestOutputDirectory, "CodeGen-MkBundle");
+			TestOutputDir = Path.Combine (XABuildPaths.TestOutputDirectory, "temp", "CodeGen-MkBundle");
 		}
 
-		[TestFixtureSetUp]
+		[OneTimeSetUp]
 		public void BuildProject ()
 		{
 			if (File.Exists (Config.LlvmReadobj)) {
@@ -82,9 +85,18 @@ namespace Xamarin.Android.MakeBundle.UnitTests
 			apk = Path.Combine (testProjectPath, "bin", XABuildPaths.Configuration, $"{ProjectPackageName}-Signed.apk");
 			string projectPath = Path.Combine (testProjectPath, $"{ProjectName}.csproj");
 			LocalBuilder builder = GetBuilder ("Xamarin.Android.MakeBundle-Tests");
-			bool success = builder.Build (projectPath, "SignAndroidPackage", new [] { "UnitTestsMode=true" });
+			bool success = builder.Build (projectPath, "SignAndroidPackage", new [] { "UnitTestsMode=true", $"Configuration={XABuildPaths.Configuration}" });
 
 			Assert.That (success, Is.True, "Should have been built");
+		}
+
+		[OneTimeTearDown]
+		public void CleanUp ()
+		{
+			if (TestContext.CurrentContext.Result.FailCount == 0) {
+				FileSystemUtils.SetDirectoryWriteable (TestOutputDir);
+				Directory.Delete (TestOutputDir, recursive: true);
+			}
 		}
 
 		[Test]

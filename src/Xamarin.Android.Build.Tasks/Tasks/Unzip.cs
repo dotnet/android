@@ -7,17 +7,15 @@ using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Tasks
 {
-	public class Unzip : Task
+	public class Unzip : AndroidTask
 	{
+		public override string TaskPrefix => "UNZ";
+
 		public ITaskItem [] Sources { get; set; }
 		public ITaskItem [] DestinationDirectories { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
-			Log.LogDebugMessage ("Unzip Task");
-			Log.LogDebugTaskItems ("  Sources: ", Sources);
-			Log.LogDebugTaskItems ("  DestinationDirectories: ", DestinationDirectories);
-
 			foreach (var pair in Sources.Zip (DestinationDirectories, (s, d) => new { Source = s, Destination = d })) {
 				if (!Directory.Exists (pair.Destination.ItemSpec))
 					Directory.CreateDirectory (pair.Destination.ItemSpec);

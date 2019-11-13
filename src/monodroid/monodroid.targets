@@ -24,45 +24,54 @@
     <GenerateMonoDroidIncludes SourceFiles="@(_EmbeddedBlobSource)" DestinationFiles="@(_EmbeddedBlobDestination)" />
   </Target>
 
+  <Target Name="RunStaticAnalysis"
+      Condition=" '$(HostOS)' != 'Windows' "
+      Inputs="jni\*.cc;jni\**\*.c"
+      Outputs="@(AndroidSupportedTargetJitAbi->'$(MSBuildThisFileDirectory)static-analysis.%(Identity).txt')">
+    <Exec
+        Command="clang-check -analyze -p=$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-Debug jni\*.cc jni\**\*.c > @(AndroidSupportedTargetJitAbi->'$(MSBuildThisFileDirectory)static-analysis.%(Identity).txt 2>&amp;1')"
+        WorkingDirectory="$(MSBuildThisFileDirectory)"
+    />
+  </Target>
+
   <Target Name="_ConfigureHostRuntimes"
-      DependsOnTargets="_CreateMacMxeCmakeToolchainFiles"
-      Inputs="CMakeLists.txt"
+      Inputs="CMakeLists.txt;..\..\build-tools\scripts\cmake-common.props;..\..\build-tools\scripts\Ndk.targets"
       Outputs="@(_HostRuntime->'$(IntermediatePath)%(OutputDirectory)-Debug\CMakeCache.txt');@(_HostRuntime->'$(IntermediatePath)%(OutputDirectory)-Release\CMakeCache.txt')">
     <MakeDir Directories="$(IntermediateOutputPath)%(_HostRuntime.OutputDirectory)-Debug" />
-    <!-- CMAKE_RUNTIME_OUTPUT_DIRECTORY is provided for the mxe/mingw cross builds. DLL outputs are treated as _runtime_ objects (as opposed to _library_ ones for .so, .dylib etc) by cmake
+    <!-- CMAKE_RUNTIME_OUTPUT_DIRECTORY is provided for the mingw cross builds. DLL outputs are treated as _runtime_ objects (as opposed to _library_ ones for .so, .dylib etc) by cmake
          and so in order to put libmono-android.*.dll in the output dir we need to set this property. Since we build no executables here, it won't affect the non-DLL outputs.  -->
     <Exec
-        Command="$(CmakePath) %(_HostRuntime.CmakeFlags) -DCONFIGURATION=Release -DCMAKE_BUILD_TYPE=Debug -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$(OutputPath)/%(_HostRuntime.OutputDirectory) -DCMAKE_RUNTIME_OUTPUT_DIRECTORY=$(OutputPath)/%(_HostRuntime.OutputDirectory) $(MSBuildThisFileDirectory)"
+        Command="$(CmakePath) %(_HostRuntime.CmakeFlags) -DCONFIGURATION=Release -DCMAKE_BUILD_TYPE=Debug -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=$(OutputPath)/%(_HostRuntime.OutputDirectory) -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$(OutputPath)/%(_HostRuntime.OutputDirectory) -DCMAKE_RUNTIME_OUTPUT_DIRECTORY=$(OutputPath)/%(_HostRuntime.OutputDirectory) $(MSBuildThisFileDirectory)"
         WorkingDirectory="$(IntermediateOutputPath)%(_HostRuntime.OutputDirectory)-Debug"
     />
 
     <MakeDir Directories="$(IntermediateOutputPath)%(_HostRuntime.OutputDirectory)-Release" />
     <Exec
-        Command="$(CmakePath) %(_HostRuntime.CmakeFlags) -DSTRIP_DEBUG=ON -DCONFIGURATION=Debug -DCMAKE_BUILD_TYPE=Release -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$(OutputPath)/%(_HostRuntime.OutputDirectory) -DCMAKE_RUNTIME_OUTPUT_DIRECTORY=$(OutputPath)/%(_HostRuntime.OutputDirectory) $(MSBuildThisFileDirectory)"
+        Command="$(CmakePath) %(_HostRuntime.CmakeFlags) -DSTRIP_DEBUG=ON -DCONFIGURATION=Debug -DCMAKE_BUILD_TYPE=Release -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=$(OutputPath)/%(_HostRuntime.OutputDirectory) -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$(OutputPath)/%(_HostRuntime.OutputDirectory) -DCMAKE_RUNTIME_OUTPUT_DIRECTORY=$(OutputPath)/%(_HostRuntime.OutputDirectory) $(MSBuildThisFileDirectory)"
         WorkingDirectory="$(IntermediateOutputPath)%(_HostRuntime.OutputDirectory)-Release"
     />
   </Target>
 
   <Target Name="_ConfigureAndroidRuntimes"
-      Inputs="CMakeLists.txt"
+      Inputs="CMakeLists.txt;..\..\build-tools\scripts\cmake-common.props"
       Outputs="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Debug\CMakeCache.txt');@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Release\CMakeCache.txt')">
     <MakeDir Directories="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-Debug" />
     <Exec
-        Command="$(CmakePath) $(_CmakeAndroidFlags) -DCONFIGURATION=Release -DCMAKE_BUILD_TYPE=Debug -DANDROID_ABI=%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) $(MSBuildThisFileDirectory)"
+        Command="$(CmakePath) $(_CmakeAndroidFlags) -DCONFIGURATION=Release -DCMAKE_BUILD_TYPE=Debug -DANDROID_NATIVE_API_LEVEL=%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_PLATFORM=android-%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_ABI=%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) $(MSBuildThisFileDirectory)"
         WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-Debug"
     />
 
     <MakeDir Directories="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-Release" />
     <Exec
-        Command="$(CmakePath) $(_CmakeAndroidFlags) -DSTRIP_DEBUG=ON -DCONFIGURATION=Debug -DCMAKE_BUILD_TYPE=Release -DANDROID_ABI=%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) $(MSBuildThisFileDirectory)"
+        Command="$(CmakePath) $(_CmakeAndroidFlags) -DSTRIP_DEBUG=ON -DCONFIGURATION=Debug -DCMAKE_BUILD_TYPE=Release -DANDROID_NATIVE_API_LEVEL=%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_PLATFORM=android-%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_ABI=%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) $(MSBuildThisFileDirectory)"
         WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-Release"
     />
   </Target>
 
   <Target Name="_BuildAndroidRuntimes"
       DependsOnTargets="_ConfigureAndroidRuntimes"
-      Inputs="@(_MonodroidSource);@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Debug\CMakeCache.txt');@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Release\CMakeCache.txt')"
-      Outputs="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.debug.so');@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.release.so')">
+      Inputs="@(_MonodroidSource);@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Debug\CMakeCache.txt');@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Release\CMakeCache.txt');jni\*.cc;jni\*.h;jni\**\*.c;;..\..\build-tools\scripts\Ndk.targets"
+      Outputs="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.debug.so');@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.release.so');@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Debug\libxamarin-app.so');@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Release\libxamarin-app.so')">
     <Exec
         Command="$(NinjaPath) -v"
         WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-Debug"
@@ -76,8 +85,8 @@
 
   <Target Name="_BuildHostRuntimes"
       DependsOnTargets="_GetBuildHostRuntimes;_CreateJavaInteropDllConfigs;_ConfigureHostRuntimes"
-      Inputs="@(_MonodroidSource);@(_HostRuntime->'$(IntermediatePath)%(OutputDirectory)-Debug\CMakeCache.txt');@(_HostRuntime->'$(IntermediatePath)%(OutputDirectory)-Release\CMakeCache.txt')"
-      Outputs="@(_HostRuntime->'$(OutputPath)%(OutputDirectory)\libmono-android.debug.%(NativeLibraryExtension)');@(_HostRuntime->'$(OutputPath)%(OutputDirectory)\libmono-android.release.%(NativeLibraryExtension)')">
+      Inputs="@(_MonodroidSource);@(_HostRuntime->'$(IntermediatePath)%(OutputDirectory)-Debug\CMakeCache.txt');@(_HostRuntime->'$(IntermediatePath)%(OutputDirectory)-Release\CMakeCache.txt');jni\*.cc;jni\*.h;jni\**\*.c;"
+      Outputs="@(_HostRuntime->'$(OutputPath)%(OutputDirectory)\libmono-android.debug.%(NativeLibraryExtension)');@(_HostRuntime->'$(OutputPath)%(OutputDirectory)\libmono-android.release.%(NativeLibraryExtension)');@(_HostRuntime->'$(OutputPath)%(OutputDirectory)\libxamarin-app.%(NativeLibraryExtension)')">
     <Message Text="Building host runtime %(_HostRuntime.Identity) in $(OutputPath)%(_HostRuntime.OutputDirectory)"/>
     <MakeDir Directories="$(OutputPath)%(_HostRuntime.OutputDirectory)" />
 
@@ -98,6 +107,7 @@
         SourceFiles="@(_HostRuntime->'$(OutputPath)%(OutputDirectory)\libmono-android.release.%(NativeLibraryExtension)')"
         DestinationFiles="@(_HostRuntime->'$(OutputPath)%(OutputDirectory)\libmono-android.release.d.%(NativeLibraryExtension)')"
     />
+
   </Target>
   <Target Name="_CleanRuntimes"
       DependsOnTargets="_GetBuildHostRuntimes"
@@ -130,21 +140,6 @@
       <_OutputReleasePath       Include="$(OutputPath)%(_HostRuntime.OutputDirectory)\libmono-android.release.d.%(_HostRuntime.NativeLibraryExtension)" />
       <_OutputReleaseStripPath  Include="$(OutputPath)%(_HostRuntime.OutputDirectory)\libmono-android.release.%(_HostRuntime.NativeLibraryExtension)" />
     </ItemGroup>
-  </Target>
-
-  <Target Name="_CreateMacMxeCmakeToolchainFiles"
-      Inputs="mxe-32.cmake.in;mxe-64.cmake.in"
-      Outputs="$(IntermediateOutputPath)\mxe-32.cmake;$(IntermediateOutputPath)\mxe-64.cmake">
-    <ReplaceFileContents
-        SourceFile="mxe-32.cmake.in"
-        DestinationFile="$(IntermediateOutputPath)\mxe-32.cmake"
-        Replacements="@MXE_PATH@=$(AndroidMxeInstallPrefix)"
-    />
-    <ReplaceFileContents
-        SourceFile="mxe-64.cmake.in"
-        DestinationFile="$(IntermediateOutputPath)\mxe-64.cmake"
-        Replacements="@MXE_PATH@=$(AndroidMxeInstallPrefix)"
-    />
   </Target>
 
   <Target Name="CoreCompile"

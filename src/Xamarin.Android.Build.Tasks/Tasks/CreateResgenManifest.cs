@@ -11,20 +11,18 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
-	public class CreateResgenManifest : Task
+	public class CreateResgenManifest : AndroidTask
 	{
+		public override string TaskPrefix => "CRM";
+
 		[Required]
 		public string ManifestOutputFile { get; set; }
 
 		[Required]
 		public string PackageName { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
-			Log.LogDebugMessage ("CreateResgenManifest Task");
-			Log.LogDebugMessage ("  ManifestOutputFile: {0}", ManifestOutputFile);
-			Log.LogDebugMessage ("  PackageName: {0}", PackageName);
-
 			// <manifest xmlns:android="http://schemas.android.com/apk/res/android"
 			//		   package="MonoAndroidApplication4.MonoAndroidApplication4" />
 

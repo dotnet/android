@@ -10,7 +10,7 @@
 #include <windows.h>
 #endif
 
-#include "cpu-arch.h"
+#include "cpu-arch.hh"
 
 #if __ANDROID__
 #define BUF_SIZE 512
@@ -162,7 +162,7 @@ get_running_on_cpu_apple (unsigned short *running_on_cpu)
 	size_t length;
 
 	length = sizeof (cputype);
-	sysctlbyname ("hw.cputype", &cputype, &length, NULL, 0);
+	sysctlbyname ("hw.cputype", &cputype, &length, nullptr, 0);
 	switch (cputype) {
 		case CPU_TYPE_X86:
 			*running_on_cpu = CPU_KIND_X86;

@@ -10,12 +10,15 @@ using NUnit.Framework;
 
 using Xamarin.ProjectTools;
 
-using XABuildPaths = global::Xamarin.Android.Build.Paths;
-
 namespace CodeBehindUnitTests
 {
 	sealed class LocalBuilder : Builder
 	{
+		public LocalBuilder ()
+		{
+			BuildingInsideVisualStudio = false;
+		}
+		
 		public bool Build (string projectOrSolution, string target, string[] parameters = null, Dictionary<string, string> environmentVariables = null)
 		{
 			return BuildInternal (projectOrSolution, target, parameters, environmentVariables);
@@ -148,7 +151,7 @@ namespace CodeBehindUnitTests
 		{
 			TestProjectRootDirectory = Path.GetFullPath (Path.Combine (XABuildPaths.TopDirectory, "tests", "CodeBehind", "BuildTests"));
 			CommonSampleLibraryRootDirectory = Path.GetFullPath (Path.Combine (XABuildPaths.TopDirectory, "tests", "CodeBehind", CommonSampleLibraryName));
-			TestOutputDir = Path.Combine (XABuildPaths.TestOutputDirectory, "CodeBehind");
+			TestOutputDir = Path.Combine (XABuildPaths.TestOutputDirectory, "temp", "CodeBehind");
 
 			generated_sources = new List <SourceFile> {
 				new SourceFile ("Binding.Main.g.cs") {
@@ -485,6 +488,8 @@ namespace CodeBehindUnitTests
 				ret.Add ($"ExtraConstants={extras}");
 			}
 
+			ret.Add ($"Configuration={XABuildPaths.Configuration}");
+
 			return ret.ToArray ();
 		}
 
@@ -533,6 +538,7 @@ namespace CodeBehindUnitTests
 		{
 			string temporaryProjectDir = PrepareProject (testName);
 			LocalBuilder builder = GetBuilder ($"{ProjectName}.{testName}");
+			builder.BuildingInsideVisualStudio = dtb;
 			var testInfo = new TestProjectInfo (ProjectName, testName, temporaryProjectDir, TestOutputDir);
 
 			try {
@@ -547,8 +553,15 @@ namespace CodeBehindUnitTests
 				}
 			} catch {
 				CopyLogs (testInfo, false);
+				foreach (var file in Directory.GetFiles (testInfo.OutputDirectory, "*.log", SearchOption.AllDirectories)) {
+					TestContext.AddTestAttachment (file);
+				}
 				throw;
 			}
+
+			// Clean up successful tests
+			FileSystemUtils.SetDirectoryWriteable (testInfo.OutputDirectory);
+			Directory.Delete (testInfo.OutputDirectory, recursive: true);
 		}
 
 		bool WasParsedInParallel (TestProjectInfo testInfo)
@@ -621,7 +634,7 @@ namespace CodeBehindUnitTests
 
 		string PrepareProject (string testName)
 		{
-			string tempRoot = Path.Combine (TestOutputDir, $"{testName}.build", XABuildPaths.Configuration);
+			string tempRoot = Path.Combine (TestOutputDir, testName, XABuildPaths.Configuration);
 			string temporaryProjectPath = Path.Combine (tempRoot, "project");
 
 			var ignore = new HashSet <string> {

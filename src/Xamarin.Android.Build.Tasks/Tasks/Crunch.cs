@@ -9,12 +9,14 @@ using Microsoft.Build.Framework;
 using System.Text.RegularExpressions;
 using Xamarin.Android.Tools;
 using Xamarin.Android.Tools.Aidl;
-using ThreadingTasks = System.Threading.Tasks;
+using Xamarin.Build;
 
 namespace Xamarin.Android.Tasks
 {
-	public class Crunch : AsyncTask
+	public class Crunch : AndroidAsyncTask
 	{
+		public override string TaskPrefix => "CRN";
+
 		// Aapt errors looks like this:
 		//   C:\Users\Jonathan\Documents\Visual Studio 2010\Projects\AndroidMSBuildTest\AndroidMSBuildTest\obj\Debug\res\layout\main.axml:7: error: No resource identifier found for attribute 'id2' in package 'android' (TaskId:22)
 		// Look for them and convert them to MSBuild compatible errors.
@@ -58,7 +60,7 @@ namespace Xamarin.Android.Tasks
 						continue;
 					MonoAndroidHelper.CopyIfChanged (dest, item.ItemSpec);
 					// reset the Dates so MSBuild/xbuild doesn't think they changed.
-					MonoAndroidHelper.SetLastAccessAndWriteTimeUtc (item.ItemSpec, srcmodifiedDate, Log);
+					File.SetLastWriteTimeUtc (item.ItemSpec, srcmodifiedDate);
 				}
 			}
 			finally {
@@ -68,46 +70,17 @@ namespace Xamarin.Android.Tasks
 			return;
 		}
 
-		public override bool Execute ()
+		public async override System.Threading.Tasks.Task RunTaskAsync ()
 		{
-			Yield ();
-			try {
-				var task = ThreadingTasks.Task.Run ( () => {
-					DoExecute ();
-				}, Token);
-
-				task.ContinueWith (Complete);
-
-				base.Execute ();
-			} finally {
-				Reacquire ();
-			}
-
-			return !Log.HasLoggedErrors;
-		}
-
-		void DoExecute ()
-		{
-			LogDebugMessage ("Crunch Task");
-			LogDebugTaskItems ("  SourceFiles:", SourceFiles);
 			// copy the changed files over to a temp location for processing
 			var imageFiles = SourceFiles.Where (x => string.Equals (Path.GetExtension (x.ItemSpec),".png", StringComparison.OrdinalIgnoreCase));
-
 			if (!imageFiles.Any ())
 				return;
 
-			ThreadingTasks.ParallelOptions options = new ThreadingTasks.ParallelOptions {
-				CancellationToken = Token,
-				TaskScheduler = ThreadingTasks.TaskScheduler.Default,
-			};
-
 			var imageGroups = imageFiles.GroupBy (x => Path.GetDirectoryName (Path.GetFullPath (x.ItemSpec)));
 
-			ThreadingTasks.Parallel.ForEach (imageGroups, options, DoExecute);
-
-			return;
+			await this.WhenAll (imageGroups, DoExecute);
 		}
-
 
 		protected string GenerateFullPathToTool ()
 		{
@@ -176,7 +149,7 @@ namespace Xamarin.Android.Tasks
 			proc.Start ();
 			proc.BeginOutputReadLine ();
 			proc.BeginErrorReadLine ();
-			Token.Register (() => {
+			CancellationToken.Register (() => {
 				try {
 					proc.Kill ();
 				}

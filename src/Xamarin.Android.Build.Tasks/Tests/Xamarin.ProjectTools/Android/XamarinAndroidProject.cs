@@ -13,7 +13,7 @@ namespace Xamarin.ProjectTools
 			: base (debugConfigurationName, releaseConfigurationName)
 		{
 			Language = XamarinAndroidProjectLanguage.CSharp;
-			TargetFrameworkVersion = Versions.Marshmallow;
+			TargetFrameworkVersion = Versions.Android10;
 			UseLatestPlatformSdk = true;
 			AddReferences ("System.Core", "System.Xml", "Mono.Android");
 			ProjectGuid = Guid.NewGuid ().ToString ();

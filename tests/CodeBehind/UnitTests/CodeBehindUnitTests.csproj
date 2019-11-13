@@ -7,7 +7,6 @@
     <OutputType>Library</OutputType>
     <RootNamespace>CodeBehindUnitTests</RootNamespace>
     <AssemblyName>CodeBehindUnitTests</AssemblyName>
-    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
   </PropertyGroup>
   <Import Project="..\..\..\Configuration.props" />
   <Import Project="..\..\..\build-tools\scripts\MSBuildReferences.projitems" />
@@ -28,14 +27,11 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="nunit.framework">
-      <HintPath>..\..\..\packages\NUnit.3.7.1\lib\net45\nunit.framework.dll</HintPath>
+      <HintPath>..\..\..\packages\NUnit.3.11.0\lib\net45\nunit.framework.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BuildTests.cs" />
-    <Compile Include="..\..\..\bin\Test$(CONFIGURATION)/XABuildPaths.cs">
-       <Link>XABuildPaths.cs</Link>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

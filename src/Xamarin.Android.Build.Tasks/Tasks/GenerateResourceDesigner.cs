@@ -7,14 +7,16 @@ using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Monodroid;
+using Mono.Cecil;
 
 using Java.Interop.Tools.Cecil;
 
 namespace Xamarin.Android.Tasks
 {
-	public class GenerateResourceDesigner : Task
+	public class GenerateResourceDesigner : AndroidTask
 	{
+		public override string TaskPrefix => "GRD";
+
 		[Required]
 		public string NetResgenOutputFile { get; set; }
 
@@ -44,9 +46,14 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public bool DesignTimeBuild { get; set; }
 
+		[Required]
+		public string JavaPlatformJarPath { get; set; }
+
+		public string ResourceFlagFile { get; set; }
+
 		private Dictionary<string, string> resource_fixup = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase);
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			// In Xamarin Studio, if the project name isn't a valid C# identifier
 			// then $(RootNamespace) is not set, and the generated Activity is
@@ -55,23 +62,14 @@ namespace Xamarin.Android.Tasks
 			// Use "Application" as the default namespace name to work with XS.
 			Namespace = Namespace ?? "Application";
 
-			Log.LogDebugMessage ("GenerateResourceDesigner Task");
-			Log.LogDebugMessage ("  NetResgenOutputFile: {0}", NetResgenOutputFile);
-			Log.LogDebugMessage ("  JavaResgenInputFile: {0}", JavaResgenInputFile);
-			Log.LogDebugMessage ("  Namespace: {0}", Namespace);
-			Log.LogDebugMessage ("  ResourceDirectory: {0}", ResourceDirectory);
-			Log.LogDebugTaskItemsAndLogical ("  AdditionalResourceDirectories:", AdditionalResourceDirectories);
-			Log.LogDebugMessage ("  IsApplication: {0}", IsApplication);
-			Log.LogDebugMessage ("  UseManagedResourceGenerator: {0}", UseManagedResourceGenerator);
-			Log.LogDebugTaskItemsAndLogical ("  Resources:", Resources);
-			Log.LogDebugTaskItemsAndLogical ("  References:", References);
-
 			if (!File.Exists (JavaResgenInputFile) && !UseManagedResourceGenerator)
 				return true;
 
 			// ResourceDirectory may be a relative path, and
 			// we need to compare it to absolute paths
 			ResourceDirectory = Path.GetFullPath (ResourceDirectory);
+
+			var javaPlatformDirectory = Path.GetDirectoryName (JavaPlatformJarPath);
 
 			// Create our capitalization maps so we can support mixed case resources
 			foreach (var item in Resources) {
@@ -98,7 +96,7 @@ namespace Xamarin.Android.Tasks
 			// Parse out the resources from the R.java file
 			CodeTypeDeclaration resources;
 			if (UseManagedResourceGenerator) {
-				var parser = new ManagedResourceParser () { Log = Log };
+				var parser = new ManagedResourceParser () { Log = Log, JavaPlatformDirectory = javaPlatformDirectory, ResourceFlagFile = ResourceFlagFile };
 				resources = parser.Parse (ResourceDirectory, AdditionalResourceDirectories?.Select (x => x.ItemSpec), IsApplication, resource_fixup);
 			} else {
 				var parser = new JavaResourceParser () { Log = Log };
@@ -116,30 +114,25 @@ namespace Xamarin.Android.Tasks
 				Namespace = string.Empty;
 
 			// Create static resource overwrite methods for each Resource class in libraries.
-			var assemblyNames = new List<string> ();
-			if (IsApplication && References != null && References.Any ()) {
+			if (IsApplication && References != null && References.Length > 0) {
 				// FIXME: should this be unified to some better code with ResolveLibraryProjectImports?
+				var assemblies = new List<AssemblyDefinition> (References.Length);
 				using (var resolver = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: false)) {
-					foreach (var assemblyName in References) {
-						var suffix = assemblyName.ItemSpec.EndsWith (".dll") ? String.Empty : ".dll";
-						string hintPath = assemblyName.GetMetadata ("HintPath").Replace (Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
-						string fileName = assemblyName.ItemSpec + suffix;
-						string fullPath = Path.GetFullPath (assemblyName.ItemSpec);
-						// Skip non existing files in DesignTimeBuild
-						if (!File.Exists (fullPath) && DesignTimeBuild) {
-							Log.LogDebugMessage ("Skipping non existant dependancy '{0}' due to design time build.", fullPath);
+					foreach (var assembly in References) {
+						var assemblyPath = assembly.ItemSpec;
+						var fileName = Path.GetFileName (assemblyPath);
+						if (MonoAndroidHelper.IsFrameworkAssembly (fileName) &&
+								!MonoAndroidHelper.FrameworkEmbeddedJarLookupTargets.Contains (fileName)) {
+							Log.LogDebugMessage ($"Skipping framework assembly '{fileName}'.");
 							continue;
 						}
-						resolver.Load (fullPath);
-						if (!String.IsNullOrEmpty (hintPath) && !File.Exists (hintPath)) // ignore invalid HintPath
-							hintPath = null;
-						string assemblyPath = String.IsNullOrEmpty (hintPath) ? fileName : hintPath;
-						if (MonoAndroidHelper.IsFrameworkAssembly (fileName) && !MonoAndroidHelper.FrameworkEmbeddedJarLookupTargets.Contains (Path.GetFileName (fileName)))
+						if (!File.Exists (assemblyPath)) {
+							Log.LogDebugMessage ($"Skipping non-existent dependency '{assemblyPath}'.");
 							continue;
+						}
+						assemblies.Add (resolver.Load (assemblyPath));
 						Log.LogDebugMessage ("Scan assembly {0} for resource generator", fileName);
-						assemblyNames.Add (assemblyPath);
 					}
-					var assemblies = assemblyNames.Select (assembly => resolver.GetAssembly (assembly));
 					new ResourceDesignerImportGenerator (Namespace, resources, Log)
 						.CreateImportMethods (assemblies);
 				}
@@ -240,7 +233,9 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			MonoAndroidHelper.CopyIfStringChanged (code, file);
+			if (MonoAndroidHelper.CopyIfStringChanged (code, file)) {
+				Log.LogDebugMessage ($"Writing to: {file}");
+			}
 		}
 
 		private void AddRename (string android, string user)

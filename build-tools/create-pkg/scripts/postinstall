@@ -1,0 +1,10 @@
+#!/bin/sh
+
+NDK_TOOL_ROOT=/Library/Frameworks/Xamarin.Android.framework/Versions/Current/lib/xamarin.android/xbuild/Xamarin/Android/Darwin/ndk
+files=$(find $NDK_TOOL_ROOT -name "*.swab")
+for file in $files; do
+	unswabbed=$(basename $file .swab)
+	dd if=$file of=$NDK_TOOL_ROOT/$unswabbed conv=swab
+	chmod +x $NDK_TOOL_ROOT/$unswabbed
+	rm $file
+done

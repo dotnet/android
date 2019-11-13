@@ -13,8 +13,10 @@ using Xamarin.Android.Tools.Aidl;
 
 namespace Xamarin.Android.Tasks
 {
-	public class GenerateManagedAidlProxies : Task
+	public class GenerateManagedAidlProxies : AndroidTask
 	{
+		public override string TaskPrefix => "GMA";
+
 		[Required]
 		public ITaskItem[] References { get; set; }
 
@@ -32,15 +34,8 @@ namespace Xamarin.Android.Tasks
 		{
 		}
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
-			Log.LogDebugMessage ("Task GenerateManagedAidlProxies");
-			Log.LogDebugTaskItems ("  References:", References);
-			Log.LogDebugTaskItems ("  SourceAidlFiles:", SourceAidlFiles);
-			Log.LogDebugMessage ("  IntermediateOutputDirectory: {0}", IntermediateOutputDirectory);
-			Log.LogDebugMessage ("  OutputNamespace: {0}", OutputNamespace);
-			Log.LogDebugMessage ("  ParcelableHandlingOption: {0}", ParcelableHandlingOption);
-
 			if (SourceAidlFiles.Length == 0) // nothing to do
 				return true;
 
@@ -55,8 +50,9 @@ namespace Xamarin.Android.Tasks
 			if (!string.IsNullOrEmpty (OutputNamespace))
 				opts.OutputNS = OutputNamespace;
 
-			foreach (var file in References)
+			foreach (var file in References) {
 				opts.AddReference (file.ItemSpec);
+			}
 			foreach (var file in SourceAidlFiles)
 				opts.AddFile (file.ItemSpec);
 

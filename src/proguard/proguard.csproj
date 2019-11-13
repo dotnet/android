@@ -3,7 +3,6 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{4B9D96BB-95AB-44E8-9F87-13B12C8BCED1}</ProjectGuid>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -20,11 +19,4 @@
     </BuildDependsOn>
   </PropertyGroup>
   <Import Project="proguard.targets" />
-  <ItemGroup>
-    <ProjectReference Include="..\..\build-tools\android-toolchain\android-toolchain.csproj">
-      <Project>{8FF78EB6-6FC8-46A7-8A15-EBBA9045C5FA}</Project>
-      <Name>android-toolchain</Name>
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-    </ProjectReference>
-  </ItemGroup>
 </Project>

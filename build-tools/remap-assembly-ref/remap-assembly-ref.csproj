@@ -7,7 +7,6 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>remapassemblyref</RootNamespace>
     <AssemblyName>remap-assembly-ref</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -28,10 +27,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <ProjectReference Include="..\..\external\Java.Interop\src\Xamarin.Android.Cecil\Xamarin.Android.Cecil.csproj">
-      <Project>{15945D4B-FF56-4BCC-B598-2718D199DD08}</Project>
-      <Name>Xamarin.Android.Cecil</Name>
-    </ProjectReference>  </ItemGroup>
+    <Reference Include="Mono.Cecil">
+      <HintPath>$(XamarinAndroidSourcePath)external\mono\sdks\out\android-bcl\monodroid_tools\Mono.Cecil.dll</HintPath>
+    </Reference>
+  </ItemGroup>
   <ItemGroup>
     <Compile Include="remap-assembly-ref.cs" />
   </ItemGroup>

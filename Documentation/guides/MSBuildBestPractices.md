@@ -196,6 +196,72 @@ Other times it is good to use "stamp" files:
   improvement to use a stamp file. Profile build times before and
   after to be sure.
 
+## Building Partially
+
+In addition to MSBuild targets skipping completely, there is a way for
+them to run *partially*. The concept is that your target has a 1-to-1
+mapping from a set of `Inputs` to `Outputs` and the actual work done
+in between can be performed on each file individually.
+
+Let's imagine we had a target that generates a documentation file for
+a list of `*.java` files:
+
+```xml
+<Target Name="_GenerateDocumentation"
+    Inputs="@(_JavaFiles)"
+    Outputs="@(_JavaFiles->'$(DocsDirectory)%(Filename).md')">
+  <GenerateDocumentation
+      SourceFiles="@(_JavaFiles)"
+      DestinationFiles="@(_JavaFiles->'$(DocsDirectory)%(Filename).md')"
+  />
+</Target>
+```
+
+This target uses a given `$(DocsDirectory)` to generate a tree of
+documentation files for each `.java` file. We use an [item group
+transform][msbuild-transforms] to get a list of files in another
+directory.
+
+So let's imagine you edited one `Foo.java` file, on the next build:
+
+- The `_GenerateDocumentation` target will run *partially*, saying
+  `Foo.java` is newer than `Foo.md`.
+- The `<GenerateDocumentation/>` MSBuild task will only receive inputs
+  of the files that changed. `SourceFiles` will have one file, and
+  `DestinationFiles` one file.
+
+We could have also used a stamp file here, but in this case it is more
+performant for incremental builds to build *partially*. When one
+`.java` file changes, we only have to generate one documentation file.
+
+Building partially also works, if you need to invalidate on additional
+files, such as:
+
+```xml
+<Target Name="_GenerateDocumentation"
+    Inputs="@(_JavaFiles);$(MSBuildAllProjects)"
+    Outputs="@(_JavaFiles->'$(DocsDirectory)%(Filename).md')">
+<!-- ... -->
+</Target>
+```
+
+This is helpful if there is an MSBuild property that alters the output
+of `<GenerateDocumentation/>`. A change to an MSBuild project file
+will re-run the target completely. `$(MSBuildAllProjects)` is a list
+of every MSBuild file imported during a build, MSBuild automatically
+evaluates `$(MSBuildAllProjects)` since [MSBuild 16.0][allprojects].
+
+One pitfall, is this `_GenerateDocumentation` example *must* touch the
+timestamps on all files in `Outputs` -- regardless if they were
+actually changed. Otherwise, your target can get into a state where it
+will never be skipped again.
+
+Read more about building *partially* on the [official MSBuild
+docs][msbuild-partial].
+
+[allprojects]: http://www.panopticoncentral.net/2019/07/12/msbuildallprojects-considered-harmful/
+[msbuild-partial]: https://docs.microsoft.com/en-us/visualstudio/msbuild/how-to-build-incrementally
+
 ## FileWrites and IncrementalClean
 
 Generally, the place to put intermediate files during a build is
@@ -273,6 +339,102 @@ In general, if a target *writes* files, it should be incremental. If
 it needs to run every time in order to support other targets, do not
 use `Inputs` or `Outputs`.
 
+## Should I use BeforeTargets or AfterTargets?
+
+It depends, but probably not.
+
+Let's look at a simple example of why you might not want to 
+do so. Let's assume we have a target that runs the linker after `Build`:
+
+```xml
+<Target Name="_LinkAssemblies" AfterTargets="Build">
+  <LinkAssemblies ... />
+</Target>
+```
+
+Let's imagine the case where the project has a C# compiler error.
+`_LinkAssemblies` will run, regardless if `Build` succeeded or not!
+
+This causes a confusing set of errors:
+
+1. A `<LinkAssemblies/>` failure due to a missing assembly.
+2. The real problem: a syntax error in C# code.
+
+Instead you should use:
+```xml
+<PropertyGroup>
+  <BuildDependsOn>
+    $(BuildDependsOn);
+    _LinkAssemblies;
+  </BuildDependsOn>
+</PropertyGroup>
+```
+
+Unfortunately, not all targets will have a `$(XDependsOn)` property.
+In some cases, `BeforeTargets` or `AfterTargets` is the only option.
+Consider what happens if the target fails in that case, and consider 
+using `$(MSBuildLastTaskResult)` if available to check for the last 
+task execution state (see [docs](https://docs.microsoft.com/en-us/visualstudio/msbuild/msbuild-reserved-and-well-known-properties?view=vs-2019) 
+on possible states for that property).
+
+## Caching in MSBuild Tasks
+
+There are two scenarios where you may want to do some kind of
+in-memory caching:
+
+1. You have some data you need to share between two MSBuild tasks--or
+   perhaps an instance of the same MSBuild task in another project
+   within the current build.
+2. You have some data you want to persist in-memory between *builds*,
+   while the same instance of the IDE is open.
+
+Scenario 1 can be achieved with `static` variables, although as
+mentioned on [Don't use Static in C#][static_csharp], shared `static`
+state can have its own pitfalls. Avoiding `static` for caching is
+probably a good idea.
+
+Instead we can use an API provided by MSBuild:
+
+```csharp
+// To cache a value
+string key = "foo";
+BuildEngine4.RegisterTaskObject (key, "bar", RegisteredTaskObjectLifetime.Build, allowEarlyCollection: false);
+// To retrieve a value
+string value = (string)BuildEngine4.GetRegisteredTaskObject (key, RegisteredTaskObjectLifetime.Build);
+```
+
+Or if you want to cache across multiple-builds, use
+`RegisteredTaskObjectLifetime.AppDomain` instead.
+
+To *test* and validate your MSBuild task's use of
+`RegisteredTaskObjectLifetime.AppDomain` you have two choices:
+
+1. Test builds in the IDE. You can verify with diagnostic logging
+   turned on or using the [Project System Tools][project_system] to
+   view `.binlog` files from builds in the IDE.
+2. Set the `%MSBUILDNOINPROCNODE%` environment variable to `1` and
+   build command-line. This undocumented env var forces MSBuild to
+   create an out-of-process reusable node unless `/nr:false` or
+   `%MSBUILDDISABLENODEREUSE%=1`. You should see a leftover
+   `MSBuild.exe` worker node when running builds command-line.
+  
+_NOTE: Option 2 only works on Windows. Mono / macOS does not have
+an implementation of MSBuild out-of-process nodes yet._
+
+### Other Notes on `RegisterTaskObject`
+
+* Make sure your cache invalidates properly. Use a key that will be
+  different if the proper environment change occurs: the attached
+  `$(AdbTarget)`, a file path, version number, etc.
+* Cache primitive values that will not use up a lot of memory.
+  `string` or `Tuple<string,string>` are fine data types to use as
+  keys and/or values.
+* Consider if the cached data should just be cached on-disk instead.
+  Is the data ephemeral? Will it be valid when restarting the IDE?
+
+[static_csharp]: https://softwareengineering.stackexchange.com/questions/161222/dont-use-static-in-c
+[project_system]: https://marketplace.visualstudio.com/items?itemName=VisualStudioProductTeam.ProjectSystemTools
+
 # Best Practices for Xamarin.Android MSBuild targets
 
 ## Naming in Xamarin.Android targets
@@ -288,6 +450,71 @@ This is a good convention so it is easy to know which properties are
 specific to Xamarin.Android, and this will prevent them from
 conflicting with MSBuild properties from other products. All MSBuild
 properties are effectively "global variables"...
+
+## Xamarin.Android MSBuild Task base classes
+
+We have a few base classes to simplify error handling, `async` /
+`await` usage, etc.
+
+`AndroidTask` is a plain `Task`, override `RunTask` and use it as you
+would `Task.Execute()`:
+
+```csharp
+public class MyTask : AndroidTask
+{
+    // Prefix for XAMYT0000 error codes: choose unique chars
+    public override string TaskPrefix => "MYT";
+
+    public override bool RunTask ()
+    {
+        // Implementation
+        return !Log.HasLoggedErrors;
+    }
+}
+```
+
+The benefit here is that if an unhandled exception is thrown, `MyTask`
+will automatically generate proper error codes.
+
+`AndroidAsyncTask` has an additional override for doing work on a
+background thread:
+
+```csharp
+public async override System.Threading.Tasks.Task RunTaskAsync ()
+{
+    await DoSomethingExpensive ();
+}
+```
+
+`RunTaskAsync` is already on a background thread, and is setup to do
+the proper `Yield()`, `try`, `finally`, and `Reacquire()` calls needed
+for MSBuild.
+
+You might also leverage the `WhenAll` extension method:
+
+```csharp
+public async override System.Threading.Tasks.Task RunTaskAsync ()
+{
+    await this.WhenAll (Files, DoWork);
+}
+
+[Required]
+ITaskItem [] Files { get; set;}
+
+void DoWork (ITaskItem file)
+{
+    // The actual work done in parallel
+}
+```
+
+There are still some things to look out for with `AsyncTask`:
+
+* Use full paths on the background thread, or make use of the
+  `AsyncTask.WorkingDirectory` property. If the task is shifted to
+  another MSBuild node, `Environment.CurrentDirectory` will not be
+  what is expected.
+* Use the `AsyncTask.Log*` helper methods for logging. Calling
+  `Log.LogMessage` directly can cause hangs in the IDE.
 
 ## Stamp Files
 
@@ -366,33 +593,41 @@ For MSBuild, we should instead do:
 
 Then we just let MSBuild and `IncrementalClean` do their thing.
 
-## IncrementalClean and `_CleanGetCurrentAndPriorFileWrites`
+## Run a Target Before IncrementalClean
 
 If you have a target that needs to run before `IncrementalClean`, such
 as:
 
 ```xml
-<Target Name="_AddFilesToFileWrites" BeforeTargets="IncrementalClean">
+<Target Name="_AddFilesToFileWrites">
   <ItemGroup>
     <FileWrites Include="$(_AndroidStampDirectory)*.stamp" />
   </ItemGroup>
 </Target>
 ```
 
-Unfortunately, due to the ordering of MSBuild's core targets. These
-files won't get added to the `FileWrites` list appropriately!
-`IncrementalClean` depends on a `_CleanGetCurrentAndPriorFileWrites`
-target which does the actual work of persisting the contents of
-`FileWrites`. The above target runs after
-`_CleanGetCurrentAndPriorFileWrites`.
+There is no `$(IncrementalCleanDependsOn)` property, what do you do?
 
-The only working fix I've found so far is to add:
+Since using `BeforeTargets` and `AfterTargets` is a no-no, we have
+modified `$(CoreBuildDependsOn)` so you can run a target *before*
+`IncrementalClean`:
 
+```xml
+<PropertyGroup>
+  <!--Add to this property as needed here-->
+  <_BeforeIncrementalClean>
+    _AddFilesToFileWrites;
+  </_BeforeIncrementalClean>
+  <CoreBuildDependsOn>
+    $([MSBuild]::Unescape($(CoreBuildDependsOn.Replace('IncrementalClean;', '$(_BeforeIncrementalClean);IncrementalClean;'))))
+  </CoreBuildDependsOn>
+</PropertyGroup>
 ```
-BeforeTargets="_CleanGetCurrentAndPriorFileWrites"
-```
 
-In the meantime, see the following links about this problem:
+This is the current recommendation from the MSBuild team to run a
+target before `IncrementalClean`.
+
+See the following links about this problem:
 
   * [MSBuild Github Issue #3916][msbuild_issue]
   * [MSBuild Repro][msbuild_repro]

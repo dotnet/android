@@ -10,26 +10,30 @@ using Mono.Cecil;
 
 namespace Xamarin.Android.Tasks
 {
-	public class RemoveRegisterAttribute : Task
+	public class RemoveRegisterAttribute : AndroidTask
 	{
+		public override string TaskPrefix => "RRA";
+
 		const string RegisterAttribute = "Android.Runtime.RegisterAttribute";
 
 		[Required]
 		public ITaskItem[] ShrunkFrameworkAssemblies { get; set; }
 
-		public override bool Execute ()
-		{
-			Log.LogDebugMessage ("RemoveRegisterAttribute Task");
-			Log.LogDebugTaskItems ("  ShrunkFrameworkAssemblies:", ShrunkFrameworkAssemblies);
+		public bool Deterministic { get; set; }
 
+		public override bool RunTask ()
+		{
 			// Find Mono.Android.dll
 			var mono_android = ShrunkFrameworkAssemblies.First (f => Path.GetFileNameWithoutExtension (f.ItemSpec) == "Mono.Android").ItemSpec;
+			var writerParameters = new WriterParameters {
+				DeterministicMvid = Deterministic,
+			};
 			using (var assembly = AssemblyDefinition.ReadAssembly (mono_android, new ReaderParameters { ReadWrite = true })) {
 				// Strip out [Register] attributes
 				foreach (TypeDefinition type in assembly.MainModule.Types)
 					ProcessType (type);
 
-				assembly.Write ();
+				assembly.Write (writerParameters);
 			}
 			
 			return true;

@@ -17,16 +17,10 @@
     <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
     <AndroidUseLatestPlatformSdk>true</AndroidUseLatestPlatformSdk>
     <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
-    <AndroidSupportedAbis>armeabi-v7a;x86</AndroidSupportedAbis>
-
-    <!-- This should be removed once XA build tasks are updated to support embedded DSOs.
-	 The same applies to the `__XA_DSO_IN_APK=1` line in Environment.txt
-    -->
-    <AndroidStoreUncompressedFileExtensions>.so</AndroidStoreUncompressedFileExtensions>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(UnitTestsMode)' == 'true' ">
-    <RelativeRootPath>..\..\..\..\..\..</RelativeRootPath>
+    <RelativeRootPath>..\..\..\..\..\..\..</RelativeRootPath>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(UnitTestsMode)' != 'true' ">
@@ -34,6 +28,13 @@
   </PropertyGroup>
 
   <Import Project="$(RelativeRootPath)\Configuration.props" />
+
+  <PropertyGroup>
+    <!-- We have to limit the supported abis to the currently enabled set, since the PR builders don't build all architectures but,
+         eventually, we have to build for all the ABIs unconditionally here -->
+    <AndroidSupportedAbis>$(AndroidSupportedTargetJitAbisSplit)</AndroidSupportedAbis>
+  </PropertyGroup>
+
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <Optimize>false</Optimize>

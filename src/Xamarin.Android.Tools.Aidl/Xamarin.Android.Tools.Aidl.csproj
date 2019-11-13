@@ -7,11 +7,10 @@
     <OutputType>Library</OutputType>
     <RootNamespace>Xamarin.AndroidTools.Aidl</RootNamespace>
     <AssemblyName>Xamarin.Android.Tools.Aidl</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <DebugSymbols>True</DebugSymbols>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>True</DebugSymbols>
     <Optimize>False</Optimize>
     <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android</OutputPath>
     <DefineConstants>DEBUG;</DefineConstants>
@@ -20,7 +19,6 @@
     <ConsolePause>False</ConsolePause>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>none</DebugType>
     <Optimize>True</Optimize>
     <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android</OutputPath>
     <ErrorReport>prompt</ErrorReport>
@@ -34,6 +32,9 @@
       <HintPath>..\..\packages\Irony.0.9.1\lib\net40\Irony.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Xamarin.Android.Cecil">
+      <HintPath>..\..\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\Xamarin.Android.Cecil.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -46,11 +47,5 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\external\Java.Interop\src\Xamarin.Android.Cecil\Xamarin.Android.Cecil.csproj">
-      <Project>{15945D4B-FF56-4BCC-B598-2718D199DD08}</Project>
-      <Name>Xamarin.Android.Cecil</Name>
-    </ProjectReference>
   </ItemGroup>
 </Project>

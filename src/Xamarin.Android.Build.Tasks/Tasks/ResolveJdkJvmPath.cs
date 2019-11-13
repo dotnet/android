@@ -10,14 +10,16 @@ namespace Xamarin.Android.Tasks
 	/// <summary>
 	/// This MSBuild task's job is to find $(JdkJvmPath) used by $(AndroidGenerateJniMarshalMethods)
 	/// </summary>
-	public class ResolveJdkJvmPath : Task
+	public class ResolveJdkJvmPath : AndroidTask
 	{
+		public override string TaskPrefix => "RJJ";
+
 		public string JavaSdkPath { get; set; }
 
 		[Output]
 		public string JdkJvmPath { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			try {
 				JdkJvmPath = GetJvmPath ();

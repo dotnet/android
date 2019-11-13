@@ -12,12 +12,13 @@ using Microsoft.Build.Framework;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using Xamarin.Android.Tools;
-using ThreadingTasks = System.Threading.Tasks;
 
 namespace Xamarin.Android.Tasks {
 	
 	//aapt2 link -o resources.apk.bk --manifest Foo.xml --java . --custom-package com.infinitespace_studios.blankforms -R foo2 -v --auto-add-overlay
 	public class Aapt2Link : Aapt2 {
+		public override string TaskPrefix => "A2L";
+
 		[Required]
 		public ITaskItem [] ManifestFiles { get; set; }
 
@@ -47,7 +48,7 @@ namespace Xamarin.Android.Tasks {
 
 		public bool CreatePackagePerAbi { get; set; }
 
-		public string SupportedAbis { get; set; }
+		public string [] SupportedAbis { get; set; }
 
 		public string OutputFile { get; set; }
 
@@ -71,41 +72,29 @@ namespace Xamarin.Android.Tasks {
 
 		public bool NonConstantId { get; set; }
 
+		public bool ProtobufFormat { get; set; }
+
+		public string ProguardRuleOutput { get; set; }
+
 		AssemblyIdentityMap assemblyMap = new AssemblyIdentityMap ();
+		List<string> tempFiles = new List<string> ();
 
-		public override bool Execute ()
+		public async override System.Threading.Tasks.Task RunTaskAsync ()
 		{
-			if (CreatePackagePerAbi)
-				Log.LogDebugMessage ("  SupportedAbis: {0}", SupportedAbis);
-			
-			Yield ();
 			try {
-				var task = ThreadingTasks.Task.Run (() => {
-					DoExecute ();
-				}, Token);
+				LoadResourceCaseMap ();
 
-				task.ContinueWith (Complete);
+				assemblyMap.Load (Path.Combine (WorkingDirectory, AssemblyIdentityMapFile));
 
-				base.Execute ();
+				await this.WhenAll (ManifestFiles, ProcessManifest);
 			} finally {
-				Reacquire ();
+				lock (tempFiles) {
+					foreach (var temp in tempFiles) {
+						File.Delete (temp);
+					}
+					tempFiles.Clear ();
+				}
 			}
-
-			return !Log.HasLoggedErrors;
-		}
-
-		void DoExecute ()
-		{
-			LoadResourceCaseMap ();
-
-			assemblyMap.Load (Path.Combine (WorkingDirectory, AssemblyIdentityMapFile));
-
-			ThreadingTasks.ParallelOptions options = new ThreadingTasks.ParallelOptions {
-				CancellationToken = Token,
-				TaskScheduler = ThreadingTasks.TaskScheduler.Default,
-			};
-
-			ThreadingTasks.Parallel.ForEach (ManifestFiles, options, ProcessManifest);
 		}
 
 		string GenerateCommandLineCommands (string ManifestFile, string currentAbi, string currentResourceOutputFile)
@@ -120,13 +109,20 @@ namespace Xamarin.Android.Tasks {
 			string manifestFile = Path.Combine (manifestDir, Path.GetFileName (ManifestFile));
 			ManifestDocument manifest = new ManifestDocument (ManifestFile, this.Log);
 			manifest.SdkVersion = AndroidSdkPlatform;
-			if (currentAbi != null) {
-				if (!string.IsNullOrEmpty (VersionCodePattern))
+			if (!string.IsNullOrEmpty (VersionCodePattern)) {
+				try {
 					manifest.CalculateVersionCode (currentAbi, VersionCodePattern, VersionCodeProperties);
-				else
-					manifest.SetAbi (currentAbi);
-			} else if (!string.IsNullOrEmpty (VersionCodePattern)) {
-				manifest.CalculateVersionCode (null, VersionCodePattern, VersionCodeProperties);
+				} catch (ArgumentOutOfRangeException ex) {
+					Log.LogCodedError ("XA0003", ManifestFile, 0, ex.Message);
+					return string.Empty;
+				}
+			}
+			if (currentAbi != null && string.IsNullOrEmpty (VersionCodePattern)) {
+				manifest.SetAbi (currentAbi);
+			}
+			if (!manifest.ValidateVersionCode (out string error, out string errorCode)) {
+				Log.LogCodedError (errorCode, ManifestFile, 0, error);
+				return string.Empty;
 			}
 			manifest.ApplicationName = ApplicationName;
 			manifest.Save (manifestFile);
@@ -141,16 +137,24 @@ namespace Xamarin.Android.Tasks {
 				cmd.AppendSwitchIfNotNull ("--custom-package ", PackageName.ToLowerInvariant ());
 			
 			if (AdditionalResourceArchives != null) {
-				foreach (var dir in AdditionalResourceArchives) {
-					var flatArchive = dir.ItemSpec;
-					if (!File.Exists (flatArchive))
-						continue;
-					cmd.AppendSwitchIfNotNull ("-R ", flatArchive);
+				foreach (var item in AdditionalResourceArchives) {
+					var flata = Path.Combine (WorkingDirectory, item.ItemSpec);
+					if (File.Exists (flata)) {
+						cmd.AppendSwitchIfNotNull ("-R ", flata);
+					} else {
+						Log.LogDebugMessage ("Archive does not exist: " + flata);
+					}
 				}
 			}
 
-			if (CompiledResourceFlatArchive != null && File.Exists (CompiledResourceFlatArchive.ItemSpec))
-				cmd.AppendSwitchIfNotNull ("-R ", CompiledResourceFlatArchive.ItemSpec);
+			if (CompiledResourceFlatArchive != null) {
+				var flata = Path.Combine (WorkingDirectory, CompiledResourceFlatArchive.ItemSpec);
+				if (File.Exists (flata)) {
+					cmd.AppendSwitchIfNotNull ("-R ", flata);
+				} else {
+					Log.LogDebugMessage ("Archive does not exist: " + flata);
+				}
+			}
 			
 			cmd.AppendSwitch ("--auto-add-overlay");
 
@@ -166,6 +170,9 @@ namespace Xamarin.Android.Tasks {
 			if (!string.IsNullOrEmpty (ResourceSymbolsTextFile))
 				cmd.AppendSwitchIfNotNull ("--output-text-symbols ", ResourceSymbolsTextFile);
 
+			if (ProtobufFormat)
+				cmd.AppendSwitch ("--proto-format");
+
 			var extraArgsExpanded = ExpandString (ExtraArgs);
 			if (extraArgsExpanded != ExtraArgs)
 				Log.LogDebugMessage ("  ExtraArgs expanded: {0}", extraArgsExpanded);
@@ -179,6 +186,9 @@ namespace Xamarin.Android.Tasks {
 					assetDir = Path.Combine (WorkingDirectory, assetDir);
 				if (!string.IsNullOrWhiteSpace (assetDir) && Directory.Exists (assetDir))
 					cmd.AppendSwitchIfNotNull ("-A ", assetDir);
+			}
+			if (!string.IsNullOrEmpty (ProguardRuleOutput)) {
+				cmd.AppendSwitchIfNotNull ("--proguard ", ProguardRuleOutput);
 			}
 			cmd.AppendSwitchIfNotNull ("-o ", currentResourceOutputFile);
 			return cmd.ToString ();
@@ -205,28 +215,30 @@ namespace Xamarin.Android.Tasks {
 		bool ExecuteForAbi (string cmd, string currentResourceOutputFile)
 		{
 			var output = new List<OutputLine> ();
-			var ret = RunAapt (cmd, output);
+			var aaptResult = RunAapt (cmd, output);
 			var success = !string.IsNullOrEmpty (currentResourceOutputFile)
 				? File.Exists (Path.Combine (currentResourceOutputFile + ".bk"))
-				: ret;
+				: aaptResult;
 			foreach (var line in output) {
-				if (line.StdError) {
-					if (!LogAapt2EventsFromOutput (line.Line, MessageImportance.Normal, success))
-						break;
-				} else {
-					LogMessage (line.Line, MessageImportance.Normal);
-				}
+				if (!LogAapt2EventsFromOutput (line.Line, MessageImportance.Normal, success))
+					break;
 			}
-			if (ret && !string.IsNullOrEmpty (currentResourceOutputFile)) {
+			if (!string.IsNullOrEmpty (currentResourceOutputFile)) {
 				var tmpfile = currentResourceOutputFile + ".bk";
 				// aapt2 might not produce an archive and we must provide
 				// and -o foo even if we don't want one.
 				if (File.Exists (tmpfile)) {
-					MonoAndroidHelper.CopyIfZipChanged (tmpfile, currentResourceOutputFile);
+					if (aaptResult) {
+						MonoAndroidHelper.CopyIfZipChanged (tmpfile, currentResourceOutputFile);
+					}
 					File.Delete (tmpfile);
 				}
+				// Delete the archive on failure
+				if (!aaptResult && File.Exists (currentResourceOutputFile)) {
+					File.Delete (currentResourceOutputFile);
+				}
 			}
-			return ret;
+			return aaptResult;
 		}
 
 		bool ManifestIsUpToDate (string manifestFile)
@@ -257,18 +269,25 @@ namespace Xamarin.Android.Tasks {
 			}
 
 			var defaultAbi = new string [] { null };
-			var abis = SupportedAbis?.Split (new char [] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
-			var outputFile = string.IsNullOrEmpty (OutputFile) ? Path.GetTempFileName () : OutputFile;
-			foreach (var abi in (CreatePackagePerAbi && abis?.Length > 1) ? defaultAbi.Concat (abis) : defaultAbi) {
+			var abis = CreatePackagePerAbi && SupportedAbis?.Length > 1 ? defaultAbi.Concat (SupportedAbis) : defaultAbi;
+			var outputFile = string.IsNullOrEmpty (OutputFile) ? GetTempFile () : OutputFile;
+			foreach (var abi in abis) {
 				var currentResourceOutputFile = abi != null ? string.Format ("{0}-{1}", outputFile, abi) : outputFile;
 				if (!string.IsNullOrEmpty (currentResourceOutputFile) && !Path.IsPathRooted (currentResourceOutputFile))
 					currentResourceOutputFile = Path.Combine (WorkingDirectory, currentResourceOutputFile);
-				if (!ExecuteForAbi (GenerateCommandLineCommands (manifest, abi, currentResourceOutputFile), currentResourceOutputFile)) {
+				string cmd = GenerateCommandLineCommands (manifest, abi, currentResourceOutputFile);
+				if (string.IsNullOrWhiteSpace (cmd) || !ExecuteForAbi (cmd, currentResourceOutputFile)) {
 					Cancel ();
 				}
 			}
+		}
 
-			return;
+		string GetTempFile ()
+		{
+			var temp = Path.GetTempFileName ();
+			lock (tempFiles)
+				tempFiles.Add (temp);
+			return temp;
 		}
 	}
 

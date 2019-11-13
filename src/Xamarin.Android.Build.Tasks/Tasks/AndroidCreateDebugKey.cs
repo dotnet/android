@@ -7,6 +7,8 @@ namespace Xamarin.Android.Tasks
 {
 	public class AndroidCreateDebugKey : KeyTool
 	{
+		public override string TaskPrefix => "ACD";
+
 		public int Validity { get; set; }
 
 		public string KeyAlgorithm { get; set; }
@@ -17,14 +19,6 @@ namespace Xamarin.Android.Tasks
 		{
 			KeyAlgorithm = "RSA";
 			Validity = 30 * 365; // 30 years
-		}
-
-		public override bool Execute ()
-		{
-			Log.LogDebugMessage ("AndroidCreateDebugKey : {0}", Command);
-			Log.LogDebugMessage ("          {0}",Validity);
-			Log.LogDebugMessage ("          {0}",KeyAlgorithm);
-			return base.Execute ();
 		}
 
 		protected override CommandLineBuilder CreateCommandLine ()

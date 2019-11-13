@@ -37,22 +37,11 @@ namespace Xamarin.Android.Tasks
 
 		internal string TemporarySourceListFile;
 
-		public virtual void OnLogStarted ()
-		{ 
-		}
-
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
-			Log.LogDebugMessage ("{0} Task", GetType ().Name);
-			Log.LogDebugMessage ("  StubSourceDirectory: {0}", StubSourceDirectory);
-			Log.LogDebugMessage ("  TargetFrameworkDirectory: {0}", TargetFrameworkDirectory);
-			Log.LogDebugTaskItems ("  JavaSourceFiles:", JavaSourceFiles);
-			Log.LogDebugTaskItems ("  Jars:", Jars);
-			OnLogStarted ();
-
 			GenerateResponseFile ();
 
-			var retval = base.Execute ();
+			var retval = base.RunTask ();
 
 			try {
 				File.Delete (TemporarySourceListFile);
@@ -63,12 +52,18 @@ namespace Xamarin.Android.Tasks
 			return retval;
 		}
 
+		protected virtual void WriteOptionsToResponseFile (StreamWriter sw)
+		{
+		}
+
 		private void GenerateResponseFile ()
 		{
 			TemporarySourceListFile = Path.GetTempFileName ();
 
 			using (var sw = new StreamWriter (path:TemporarySourceListFile, append:false,
 						encoding:new UTF8Encoding (encoderShouldEmitUTF8Identifier:false))) {
+
+				WriteOptionsToResponseFile (sw);
 				// Include any user .java files
 				if (JavaSourceFiles != null)
 					foreach (var file in JavaSourceFiles.Where (p => Path.GetExtension (p.ItemSpec) == ".java"))

@@ -9,7 +9,7 @@ using Android.OS;
 
 namespace ${ROOT_NAMESPACE}
 {
-	[Activity (Label = "${PROJECT_NAME}", Icon = "@drawable/icon", Theme = "@style/MainTheme", MainLauncher = true, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation)]
+	[Register("${JAVA_PACKAGENAME}.MainActivity"), Activity(Label = "${PROJECT_NAME}", Icon = "@drawable/icon", Theme = "@style/MainTheme", MainLauncher = true, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation)]
 	public class MainActivity : global::Xamarin.Forms.Platform.Android.FormsAppCompatActivity
 	{
 		protected override void OnCreate (Bundle savedInstanceState)
@@ -19,6 +19,7 @@ namespace ${ROOT_NAMESPACE}
 
 			base.OnCreate (savedInstanceState);
 			global::Xamarin.Forms.Forms.Init (this, savedInstanceState);
+			//${AFTER_FORMS_INIT}
 			LoadApplication (new App ());
 		}
 	}

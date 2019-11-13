@@ -14,6 +14,8 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 
 		public int PID { get; set; } = -1;
 
+		static readonly string activityManagerPrefix = @"^(?<timestamp>\d+-\d+\s+[\d:\.]+)\s+.*Activity(Task)??Manager: ";
+
 		public override bool Execute ()
 		{
 			LoadDefinitions ();
@@ -23,11 +25,12 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 
 			using (var reader = new StreamReader (InputFilename)) {
 				string line;
-				var procIdentification = string.IsNullOrEmpty (Activity) ? $"added application {ApplicationPackageName}" : $"activity {Activity}";
+				var procIdentification = string.IsNullOrEmpty (Activity) ? $"added application {ApplicationPackageName}" : $"activity {{?{Activity}}}?";
 				var startIdentification = PID > 0 ? $".*: pid={PID}" : $@"{procIdentification}: pid=(?<pid>\d+)";
-				var procStartRegex = new Regex ($@"^(?<timestamp>\d+-\d+\s+[\d:\.]+)\s+.*ActivityManager: Start proc.*for {startIdentification}");
+				var procStartRegex = new Regex ($"{activityManagerPrefix}Start proc.*for {startIdentification}");
 				var startIdentification2 = PID > 0 ? $"{PID}:" : $@"(?<pid>\d+):.*{procIdentification}";
-				var procStartRegex2 = new Regex ($@"^(?<timestamp>\d+-\d+\s+[\d:\.]+)\s+.*ActivityManager: Start proc {startIdentification2}");
+				var procStartRegex2 = new Regex ($"{activityManagerPrefix}Start proc {startIdentification2}");
+				var activityDisplayed = new Regex ($"{activityManagerPrefix}Displayed {Activity}:");
 				Regex timingRegex = null;
 				DateTime start = DateTime.Now;
 				DateTime last = start;
@@ -48,9 +51,24 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 						timingRegex = new Regex ($@"^(?<timestamp>\d+-\d+\s+[\d:\.]+)\s+{PID}\s+(?<message>.*)$");
 						started = true;
 					} else {
+						if (line.Contains ($"Process {ApplicationPackageName} (pid {PID}) has died")) {
+							Log.LogError ("Application crash detected. Could not collect performance data.");
+							return false;
+						}
+
 						var match = timingRegex.Match (line);
-						if (!match.Success)
+						if (!match.Success) {
+							if (!string.IsNullOrEmpty (Activity)) {
+								var matchActivity = activityDisplayed.Match (line);
+								if (matchActivity.Success) {
+									var timeString = (ParseTime (matchActivity.Groups ["timestamp"].Value) - start).TotalMilliseconds.ToString ();
+									results ["ActivityDisplayed"] = timeString;
+									Log.LogMessage (MessageImportance.Low, $"Time: {timeString.PadLeft (6)}ms Activity displayed");
+								}
+							}
+
 							continue;
+						}
 
 						var time = ParseTime (match.Groups ["timestamp"].Value);
 						var span = time - start;
@@ -78,10 +96,10 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 					Log.LogMessage (MessageImportance.Normal, $"Last timing message: {(last - start).TotalMilliseconds}ms");
 
 					WriteResults ();
-				} else
-					Log.LogWarning ("Wasn't able to collect the performance data");
-
-				reader.Close ();
+				} else {
+					Log.LogError ("Application start wasn't detected. Could not collect performance data.");
+					return false;
+				}
 			}
 
 			return true;

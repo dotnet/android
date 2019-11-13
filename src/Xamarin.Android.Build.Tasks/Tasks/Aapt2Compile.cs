@@ -12,11 +12,11 @@ using Microsoft.Build.Framework;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using Xamarin.Android.Tools;
-using ThreadingTasks = System.Threading.Tasks;
 
 namespace Xamarin.Android.Tasks {
 	
 	public class Aapt2Compile : Aapt2 {
+		public override string TaskPrefix => "A2C";
 
 		List<ITaskItem> archives = new List<ITaskItem> ();
 
@@ -29,42 +29,14 @@ namespace Xamarin.Android.Tasks {
 		[Output]
 		public ITaskItem [] CompiledResourceFlatArchives => archives.ToArray ();
 
-		public override bool Execute ()
-		{
-			Log.LogDebugMessage ("Aapt2Compile Task");
-			Log.LogDebugMessage ("  ResourceNameCaseMap: {0}", ResourceNameCaseMap);
-			Log.LogDebugMessage ("  ResourceSymbolsTextFile: {0}", ResourceSymbolsTextFile);
-			Log.LogDebugTaskItems ("  ResourceDirectories: ", ResourceDirectories);
-
-			Yield ();
-			try {
-				var task = ThreadingTasks.Task.Run (() => {
-					DoExecute ();
-				}, Token);
-
-				task.ContinueWith (Complete);
-
-				base.Execute ();
-			} finally {
-				Reacquire ();
-			}
-
-			return !Log.HasLoggedErrors;
-		}
-
-		void DoExecute ()
+		public override System.Threading.Tasks.Task RunTaskAsync ()
 		{
 			LoadResourceCaseMap ();
 
-			ThreadingTasks.ParallelOptions options = new ThreadingTasks.ParallelOptions {
-				CancellationToken = Token,
-				TaskScheduler = ThreadingTasks.TaskScheduler.Default,
-			};
-
-			ThreadingTasks.Parallel.ForEach (ResourceDirectories, options, ProcessDirectory);
+			return this.WhenAllWithLock (ResourceDirectories, ProcessDirectory);
 		}
 
-		void ProcessDirectory (ITaskItem resourceDirectory)
+		void ProcessDirectory (ITaskItem resourceDirectory, object lockObject)
 		{
 			if (!Directory.EnumerateDirectories (resourceDirectory.ItemSpec).Any ())
 				return;
@@ -75,15 +47,12 @@ namespace Xamarin.Android.Tasks {
 			var outputArchive = Path.Combine (FlatArchivesDirectory, $"{filename}.flata");
 			var success = RunAapt (GenerateCommandLineCommands (resourceDirectory, outputArchive), output);
 			if (success && File.Exists (Path.Combine (WorkingDirectory, outputArchive))) {
-				archives.Add (new TaskItem (outputArchive));
+				lock (lockObject)
+					archives.Add (new TaskItem (outputArchive));
 			}
 			foreach (var line in output) {
-				if (line.StdError) {
-					if (!LogAapt2EventsFromOutput (line.Line, MessageImportance.Normal, success))
-						break;
-				} else {
-					LogMessage (line.Line, MessageImportance.Normal);
-				}
+				if (!LogAapt2EventsFromOutput (line.Line, MessageImportance.Normal, success))
+					break;
 			}
 		}
 
@@ -94,7 +63,7 @@ namespace Xamarin.Android.Tasks {
 			cmd.AppendSwitchIfNotNull ("-o ", outputArchive);
 			if (!string.IsNullOrEmpty (ResourceSymbolsTextFile))
 				cmd.AppendSwitchIfNotNull ("--output-text-symbols ", ResourceSymbolsTextFile);
-			cmd.AppendSwitchIfNotNull ("--dir ", ResourceDirectoryFullPath (dir.ItemSpec));
+			cmd.AppendSwitchIfNotNull ("--dir ", dir.ItemSpec.TrimEnd ('\\'));
 			if (ExplicitCrunch)
 				cmd.AppendSwitch ("--no-crunch");
 			if (!string.IsNullOrEmpty (ExtraArgs))

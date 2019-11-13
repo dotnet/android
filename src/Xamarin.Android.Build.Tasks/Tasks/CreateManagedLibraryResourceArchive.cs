@@ -11,8 +11,10 @@ namespace Xamarin.Android.Tasks
 	/// <summary>
 	/// Creates __AndroidLibraryProjects__.zip, $(AndroidApplication) should be False!
 	/// </summary>
-	public class CreateManagedLibraryResourceArchive : Task
+	public class CreateManagedLibraryResourceArchive : AndroidTask
 	{
+		public override string TaskPrefix => "CML";
+
 		[Required]
 		public string OutputDirectory { get; set; }
 
@@ -37,7 +39,7 @@ namespace Xamarin.Android.Tasks
 		{
 		}
 		
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			var outDirInfo = new DirectoryInfo (OutputDirectory);
 			

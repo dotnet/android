@@ -1,0 +1,294 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProjectGuid>{965D4281-1668-498C-86C4-264D7A44DAE7}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Xamarin.Android.Prepare</RootNamespace>
+    <AssemblyName>xaprepare</AssemblyName>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <Import Project="..\..\..\Configuration.props" />
+  <Import Project="xaprepare.targets" Condition=" $(MSBuildToolsPath.IndexOf('omnisharp')) &lt; 0 " />
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ExternalConsole>true</ExternalConsole>
+    <PlatformTarget>x86</PlatformTarget>
+    <LangVersion>7.1</LangVersion>
+    <DocumentationFile>bin\Debug\xaprepare.xml</DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ExternalConsole>true</ExternalConsole>
+    <PlatformTarget>x86</PlatformTarget>
+    <LangVersion>7.1</LangVersion>
+    <DocumentationFile>bin\Release\xaprepare.xml</DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="mscorlib" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(OS)' == 'Unix' ">
+    <Reference Include="Mono.Posix" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="$(IntermediateOutputPath)\BuildInfo.Generated.cs" />
+    <Compile Include="$(IntermediateOutputPath)\Properties.Defaults.cs" />
+    <Compile Include="Main.cs" />
+    <Compile Include="Application\Abi.cs" />
+    <Compile Include="Application\Abi.Bitness.cs" />
+    <Compile Include="Application\Abi.OS.cs" />
+    <Compile Include="Application\AbiType.cs" />
+    <Compile Include="Application\AndroidPlatform.cs" />
+    <Compile Include="Application\AndroidToolchainComponent.cs" />
+    <Compile Include="Application\AppObject.cs" />
+    <Compile Include="Application\BclFile.cs" />
+    <Compile Include="Application\BclFileTarget.cs" />
+    <Compile Include="Application\BclFileType.cs" />
+    <Compile Include="Application\BuildInfo.cs" />
+    <Compile Include="Application\Characters.cs" />
+    <Compile Include="Application\CompressionFormat.cs" />
+    <Compile Include="Application\Context.cs" />
+    <Compile Include="Application\DownloadStatus.cs" />
+    <Compile Include="Application\EssentialTools.cs" />
+    <Compile Include="Application\ExecutionMode.cs" />
+    <Compile Include="Application\Extensions.DictionaryOfProgramVersionParser.cs" />
+    <Compile Include="Application\Extensions.Runtime.cs" />
+    <Compile Include="Application\ExternalGitDependency.cs" />
+    <Compile Include="Application\GeneratedFile.cs" />
+    <Compile Include="Application\GeneratedMakeRulesFile.cs" />
+    <Compile Include="Application\GeneratedMonoAndroidProjitemsFile.cs" />
+    <Compile Include="Application\GeneratedProfileAssembliesProjitemsFile.cs" />
+    <Compile Include="Application\GeneratedPlaceholdersFile.cs" />
+    <Compile Include="Application\KnownConditions.cs" />
+    <Compile Include="Application\KnownProperties.cs" />
+    <Compile Include="Application\LlvmRuntime.cs" />
+    <Compile Include="Application\Log.cs" />
+    <Compile Include="Application\LoggingVerbosity.cs" />
+    <Compile Include="Application\MonoCrossRuntime.cs" />
+    <Compile Include="Application\MonoHostRuntime.cs" />
+    <Compile Include="Application\MonoJitRuntime.cs" />
+    <Compile Include="Application\MonoRuntime.cs" />
+    <Compile Include="Application\MonoRuntimesHelpers.cs" />
+    <Compile Include="Application\MonoUtilityFile.cs" />
+    <Compile Include="Application\ProcessRunner.cs" />
+    <Compile Include="Application\ProcessStandardStreamWrapper.cs" />
+    <Compile Include="Application\Program.cs" />
+    <Compile Include="Application\ProgramVersionParser.cs" />
+    <Compile Include="Application\Properties.cs" />
+    <Compile Include="Application\PropertiesChangedEventArgs.cs" />
+    <Compile Include="Application\RegexProgramVersionParser.cs" />
+    <Compile Include="Application\RuleGeneratorDelegate.cs" />
+    <Compile Include="Application\Runtime.cs" />
+    <Compile Include="Application\RuntimeFile.cs" />
+    <Compile Include="Application\RuntimeFileType.cs" />
+    <Compile Include="Application\Scenario.cs" />
+    <Compile Include="Application\ScenarioNoStandardEndSteps.cs" />
+    <Compile Include="Application\ScenarioAttribute.cs" />
+    <Compile Include="Application\SimpleActionStep.cs" />
+    <Compile Include="Application\SizeFormatter.cs" />
+    <Compile Include="Application\Step.cs" />
+    <Compile Include="Application\StepWithDownloadProgress.cs" />
+    <Compile Include="Application\TestAssembly.cs" />
+    <Compile Include="Application\TestAssemblyType.cs" />
+    <Compile Include="Application\ThirdPartyLicenseType.cs" />
+    <Compile Include="Application\ThirdPartyNotice.cs" />
+    <Compile Include="Application\ThirdPartyNoticeGroup.cs" />
+    <Compile Include="Application\ThumbTwiddler.cs" />
+    <Compile Include="Application\TPNAttribute.cs" />
+    <Compile Include="Application\Utilities.cs" />
+    <Compile Include="Application\VersionFetchers.cs" />
+    <Compile Include="ConfigAndData\AbiNames.cs" />
+    <Compile Include="ConfigAndData\BuildAndroidPlatforms.cs" />
+    <Compile Include="ConfigAndData\CommonLicenses.cs" />
+    <Compile Include="ConfigAndData\Configurables.cs" />
+    <Compile Include="ConfigAndData\Dependencies\AndroidToolchain.cs" />
+    <Compile Include="ConfigAndData\Runtimes.cs" />
+    <Compile Include="ConfigAndData\Runtimes.Code.cs" />
+    <Compile Include="OperatingSystems\OS.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Scenarios\Scenario_AndroidToolchain.cs" />
+    <Compile Include="Scenarios\Scenario_PrepareExternalGitDependencies.cs" />
+    <Compile Include="Scenarios\Scenario_PrepareImageDependencies.cs" />
+    <Compile Include="Scenarios\Scenario_Required.cs" />
+    <Compile Include="Scenarios\Scenario_Standard.cs" />
+    <Compile Include="Scenarios\Scenario_ThirdPartyNotices.cs" />
+    <Compile Include="Steps\Step_Android_SDK_NDK.cs" />
+    <Compile Include="Steps\Step_BuildMingwDependencies.cs" />
+    <Compile Include="Steps\Step_DownloadMonoArchive.cs" />
+    <Compile Include="Steps\Step_DownloadNuGet.cs" />
+    <Compile Include="Steps\Step_GenerateFiles.cs" />
+    <Compile Include="Steps\Step_Get_Windows_Binutils.cs" />
+    <Compile Include="Steps\Step_InstallCorrettoOpenJDK.cs" />
+    <Compile Include="Steps\Step_InstallMonoRuntimes.cs" />
+    <Compile Include="Steps\Step_PrepareExternal.cs" />
+    <Compile Include="Steps\Step_PrepareExternalGitDependencies.cs" />
+    <Compile Include="Steps\Step_PrepareImageDependencies.cs" />
+    <Compile Include="Steps\Step_PrepareLocal.cs" />
+    <Compile Include="Steps\Step_PrepareMSBuild.cs" />
+    <Compile Include="Steps\Step_PrepareProps.cs" />
+    <Compile Include="Steps\Step_ShowEnabledRuntimes.cs" />
+    <Compile Include="Steps\Step_ThirdPartyNotices.cs" />
+    <Compile Include="ThirdPartyNotices\aapt2.cs" />
+    <Compile Include="ThirdPartyNotices\bundletool.cs" />
+    <Compile Include="ThirdPartyNotices\Java.Interop.cs" />
+    <Compile Include="ThirdPartyNotices\mono.cs" />
+    <Compile Include="ThirdPartyNotices\opentk.cs" />
+    <Compile Include="ThirdPartyNotices\proguard.cs" />
+    <Compile Include="ThirdPartyNotices\r8.cs" />
+    <Compile Include="ThirdPartyNotices\sqlite.cs" />
+    <Compile Include="ThirdPartyNotices\Xamarin.Android.Build.Tasks.cs" />
+    <Compile Include="ThirdPartyNotices\Xamarin.Android.NunitLite.cs" />
+    <Compile Include="ThirdPartyNotices\Xamarin.Android.Tools.Aidl.cs" />
+    <Compile Include="ThirdPartyNotices\Xamarin.Android.Tools.JavadocImporter.cs" />
+    <Compile Include="ThirdPartyNotices\xaprepare.cs" />
+    <Compile Include="ToolRunners\CMakeRunner.cs" />
+    <Compile Include="ToolRunners\CMakeRunner.OutputSink.cs" />
+    <Compile Include="ToolRunners\GitRunner.cs" />
+    <Compile Include="ToolRunners\GitRunner.BlamePorcelainEntry.cs" />
+    <Compile Include="ToolRunners\GitRunner.OutputSink.cs" />
+    <Compile Include="ToolRunners\MSBuildRunner.cs" />
+    <Compile Include="ToolRunners\MSBuildRunner.OutputSink.cs" />
+    <Compile Include="ToolRunners\NinjaRunner.cs" />
+    <Compile Include="ToolRunners\NinjaRunner.OutputSink.cs" />
+    <Compile Include="ToolRunners\NuGetRunner.cs" />
+    <Compile Include="ToolRunners\NuGetRunner.OutputSink.cs" />
+    <Compile Include="ToolRunners\SevenZipRunner.cs" />
+    <Compile Include="ToolRunners\SevenZipRunner.OutputSink.cs" />
+    <Compile Include="ToolRunners\SnRunner.cs" />
+    <Compile Include="ToolRunners\SnRunner.OutputSink.cs" />
+    <Compile Include="ToolRunners\TarRunner.cs" />
+    <Compile Include="ToolRunners\TarRunner.OutputSink.cs" />
+    <Compile Include="ToolRunners\ToolRunner.cs" />
+    <Compile Include="ToolRunners\ToolRunner.OutputSink.cs" />
+    <Compile Include="Application\RefreshableComponent.cs" />
+    <Compile Include="ThirdPartyNotices\LibZipSharp.cs" />
+    <Compile Include="ThirdPartyNotices\libzip.cs" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(OS)' == 'Unix' ">
+    <Compile Include="Application\EssentialTools.Unix.cs" />
+    <Compile Include="Application\Log.Unix.cs" />
+    <Compile Include="Application\Utilities.Unix.cs" />
+    <Compile Include="ConfigAndData\Configurables.Unix.cs" />
+    <Compile Include="ConfigAndData\Runtimes.Unix.cs" />
+    <Compile Include="OperatingSystems\Unix.cs" />
+    <Compile Include="Scenarios\Scenario_Standard.Unix.cs" />
+    <Compile Include="Scenarios\Scenario_UpdateMono.Unix.cs" />
+    <Compile Include="Steps\Step_BuildMonoRuntimes.Unix.cs" />
+    <Compile Include="Steps\Step_GenerateFiles.Unix.cs" />
+    <Compile Include="Steps\Step_PrepareExternal.Unix.cs" />
+    <Compile Include="Steps\Step_PrepareImageDependencies.Unix.cs" />
+    <Compile Include="ToolRunners\MakeRunner.Unix.cs" />
+    <Compile Include="ToolRunners\MakeRunner.OutputSink.Unix.cs" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(HostOS)' == 'Linux' ">
+    <Compile Include="Application\EssentialTools.Linux.cs" />
+    <Compile Include="Application\Context.Linux.cs" />
+    <Compile Include="Application\LlvmRuntime.Linux.cs" />
+    <Compile Include="Application\MonoHostRuntime.Linux.cs" />
+    <Compile Include="Application\Program.Linux.cs" />
+    <Compile Include="Application\Program.DebianLinux.cs" />
+    <Compile Include="Application\Program.ArchLinux.cs" />
+    <Compile Include="ConfigAndData\Configurables.Linux.cs" />
+    <Compile Include="ConfigAndData\Dependencies\AndroidToolchain.Linux.cs" />
+    <Compile Include="ConfigAndData\Dependencies\Linux.Arch.cs" />
+    <Compile Include="ConfigAndData\Dependencies\Linux.Debian.cs" />
+    <Compile Include="ConfigAndData\Dependencies\Linux.DebianCommon.cs" />
+    <Compile Include="ConfigAndData\Dependencies\Linux.Mint.cs" />
+    <Compile Include="ConfigAndData\Dependencies\Linux.Ubuntu.cs" />
+    <Compile Include="ConfigAndData\Dependencies\Linux.UbuntuCommon.cs" />
+    <Compile Include="OperatingSystems\Linux.cs" />
+    <Compile Include="OperatingSystems\Linux.UbuntuCommon.cs" />
+    <Compile Include="Steps\Step_InstallCorrettoOpenJDK.Linux.cs" />
+    <Compile Include="ToolRunners\MakeRunner.Linux.cs" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(HostOS)' == 'Darwin' ">
+    <Compile Include="Application\Context.MacOS.cs" />
+    <Compile Include="Application\EssentialTools.MacOS.cs" />
+    <Compile Include="Application\HomebrewProgram.MacOS.cs" />
+    <Compile Include="Application\LlvmRuntime.MacOS.cs" />
+    <Compile Include="Application\MonoPkgProgram.MacOS.cs" />
+    <Compile Include="Application\PkgProgram.MacOS.cs" />
+    <Compile Include="Application\GeneratedMakeRulesFile.MacOS.cs" />
+    <Compile Include="ConfigAndData\Configurables.MacOS.cs" />
+    <Compile Include="ConfigAndData\Dependencies\AndroidToolchain.MacOS.cs" />
+    <Compile Include="ConfigAndData\Dependencies\MacOS.cs" />
+    <Compile Include="OperatingSystems\MacOS.cs" />
+    <Compile Include="Scenarios\Scenario_Standard.MacOS.cs" />
+    <Compile Include="Steps\Step_ChangeLibMonoSgenDylibID.MacOS.cs" />
+    <Compile Include="Steps\Step_InstallCorrettoOpenJDK.MacOS.cs" />
+    <Compile Include="Steps\Step_PrepareImageDependencies.MacOS.cs" />
+    <Compile Include="ToolRunners\BrewRunner.MacOS.cs" />
+    <Compile Include="ToolRunners\MakeRunner.MacOS.cs" />
+    <Compile Include="ToolRunners\PkgutilRunner.MacOS.cs" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(HostOS)' == 'Windows' ">
+    <Compile Include="..\..\..\tools\vswhere\MSBuildLocator.cs" />
+    <Compile Include="..\..\..\tools\vswhere\VisualStudioInstance.cs" />
+    <Compile Include="Application\Context.Windows.cs" />
+    <Compile Include="Application\DetermineWindowsVersion.Windows.cs" />
+    <Compile Include="Application\LlvmRuntime.Windows.cs" />
+    <Compile Include="Application\Log.Windows.cs" />
+    <Compile Include="Application\MonoCrossRuntime.Windows.cs" />
+    <Compile Include="ConfigAndData\Runtimes.Windows.cs" />
+    <Compile Include="Application\Utilities.Windows.cs" />
+    <Compile Include="ConfigAndData\Configurables.Windows.cs" />
+    <Compile Include="ConfigAndData\Dependencies\AndroidToolchain.Windows.cs" />
+    <Compile Include="ConfigAndData\Dependencies\Windows.cs" />
+    <Compile Include="OperatingSystems\Windows.cs" />
+    <Compile Include="Scenarios\Scenario_Standard.Windows.cs" />
+    <Compile Include="Steps\Step_GenerateFiles.Windows.cs" />
+    <Compile Include="Steps\Step_InstallCorrettoOpenJDK.Windows.cs" />
+    <Compile Include="Steps\Step_PrepareExternal.Windows.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+    <None Include="app.manifest">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="7-Zip.CommandLine">
+      <Version>18.1.0</Version>
+    </PackageReference>
+    <PackageReference Include="Kajabity.Tools.Java">
+      <Version>0.2.6862.30334</Version>
+    </PackageReference>
+    <PackageReference Include="Mono.Options">
+      <Version>5.3.0.1</Version>
+    </PackageReference>
+    <PackageReference Include="Xamarin.LibZipSharp">
+      <Version>1.0.6</Version>
+    </PackageReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ProjectExtensions>
+    <MonoDevelop>
+      <Properties>
+        <Policies>
+          <TextStylePolicy TabWidth="4" TabsToSpaces="False" IndentWidth="4" RemoveTrailingWhitespace="True" NoTabsAfterNonTabs="False" FileWidth="80" EolMarker="Unix" scope="text/x-csharp" />
+          <CSharpFormattingPolicy IndentBlock="True" IndentBraces="False" IndentSwitchCaseSection="True" LabelPositioning="OneLess" NewLinesForBracesInMethods="True" SpaceWithinMethodDeclarationParenthesis="False" SpaceBetweenEmptyMethodDeclarationParentheses="False" SpaceWithinMethodCallParentheses="False" SpaceBetweenEmptyMethodCallParentheses="False" SpaceAfterControlFlowStatementKeyword="True" SpaceWithinExpressionParentheses="False" SpaceWithinCastParentheses="False" SpaceWithinOtherParentheses="False" SpaceAfterCast="False" SpacesIgnoreAroundVariableDeclaration="False" SpaceBetweenEmptySquareBrackets="False" SpaceWithinSquareBrackets="False" SpaceAfterColonInBaseTypeDeclaration="True" SpaceAfterComma="True" SpaceAfterDot="False" SpaceAfterSemicolonsInForStatement="True" SpaceBeforeColonInBaseTypeDeclaration="True" SpaceBeforeComma="False" SpaceBeforeDot="False" SpaceBeforeSemicolonsInForStatement="False" SpacingAroundBinaryOperator="Single" WrappingPreserveSingleLine="True" WrappingKeepStatementsOnSingleLine="True" IndentSwitchSection="False" NewLinesForBracesInTypes="False" NewLinesForBracesInProperties="False" NewLinesForBracesInAccessors="False" NewLinesForBracesInAnonymousMethods="False" NewLinesForBracesInControlBlocks="False" NewLinesForBracesInAnonymousTypes="False" NewLinesForBracesInObjectCollectionArrayInitializers="False" NewLinesForBracesInLambdaExpressionBody="False" NewLineForElse="False" NewLineForCatch="False" NewLineForFinally="False" NewLineForMembersInObjectInit="False" NewLineForMembersInAnonymousTypes="False" NewLineForClausesInQuery="False" SpacingAfterMethodDeclarationName="True" SpaceAfterMethodCallName="True" SpaceBeforeOpenSquareBracket="True" scope="text/x-csharp" />
+        </Policies>
+      </Properties>
+    </MonoDevelop>
+  </ProjectExtensions>
+</Project>

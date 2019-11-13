@@ -1,11 +1,9 @@
-﻿﻿using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Diagnostics;
 using Microsoft.Build.Framework;
-
-using XABuildPaths = Xamarin.Android.Build.Paths;
 
 namespace Xamarin.ProjectTools
 {
@@ -45,13 +43,22 @@ namespace Xamarin.ProjectTools
 			var files = project.Save (saveProject);
 
 			if (!built_before) {
-				if (Directory.Exists (ProjectDirectory)) {
-					FileSystemUtils.SetDirectoryWriteable (ProjectDirectory);
-					Directory.Delete (ProjectDirectory, true);
+				if (project.ShouldPopulate) {
+					if (Directory.Exists (ProjectDirectory)) {
+						FileSystemUtils.SetDirectoryWriteable (ProjectDirectory);
+						Directory.Delete (ProjectDirectory, true);
+					}
+					if (Directory.Exists (PackagesDirectory)) {
+						Directory.Delete (PackagesDirectory, true);
+					}
+					project.Populate (ProjectDirectory, files);
 				}
-				if (Directory.Exists (PackagesDirectory))
-					Directory.Delete (PackagesDirectory, true);
-				project.Populate (ProjectDirectory, files);
+
+				// Copy our solution's NuGet.config
+				var nuget_config = Path.Combine (XABuildPaths.TopDirectory, "NuGet.config");
+				if (File.Exists (nuget_config)) {
+					File.Copy (nuget_config, Path.Combine (Root, ProjectDirectory, "NuGet.config"), overwrite: true);
+				}
 			}
 			else
 				project.UpdateProjectFiles (ProjectDirectory, files, doNotCleanupOnUpdate);
@@ -62,10 +69,12 @@ namespace Xamarin.ProjectTools
 			Save (project, doNotCleanupOnUpdate, saveProject);
 
 			Output = project.CreateBuildOutput (this);
-			
-			project.NuGetRestore (Path.Combine (XABuildPaths.TestOutputDirectory, ProjectDirectory), PackagesDirectory);
 
-			bool result = BuildInternal (Path.Combine (ProjectDirectory, project.ProjectFilePath), Target, parameters, environmentVariables);
+			if (AutomaticNuGetRestore) {
+				project.NuGetRestore (Path.Combine (XABuildPaths.TestOutputDirectory, ProjectDirectory), PackagesDirectory);
+			}
+
+			bool result = BuildInternal (Path.Combine (ProjectDirectory, project.ProjectFilePath), Target, parameters, environmentVariables, restore: project.ShouldRestorePackageReferences);
 			built_before = true;
 
 			if (CleanupAfterSuccessfulBuild)
@@ -74,37 +83,51 @@ namespace Xamarin.ProjectTools
 			return result;
 		}
 
-		public bool Restore (XamarinProject project, bool doNotCleanupOnUpdate = false)
+		public bool Install (XamarinProject project, bool doNotCleanupOnUpdate = false, string [] parameters = null, bool saveProject = true)
 		{
-			var oldTarget = Target;
-			Target = "Restore";
-			try {
-				return Build (project, doNotCleanupOnUpdate);
-			} finally {
-				Target = oldTarget;
-			}
+			//NOTE: since $(BuildingInsideVisualStudio) is set, Build will not happen by default
+			return RunTarget (project, "Build,Install", doNotCleanupOnUpdate, parameters, saveProject: saveProject);
+		}
+
+		public bool Uninstall (XamarinProject project, bool doNotCleanupOnUpdate = false, bool saveProject = true)
+		{
+			return RunTarget (project, "Uninstall", doNotCleanupOnUpdate);
+		}
+
+		public bool Restore (XamarinProject project, bool doNotCleanupOnUpdate = false, string [] parameters = null)
+		{
+			return RunTarget (project, "Restore", doNotCleanupOnUpdate, parameters);
 		}
 
 		public bool Clean (XamarinProject project, bool doNotCleanupOnUpdate = false)
 		{
-			var oldTarget = Target;
-			Target = "Clean";
-			try {
-				return Build (project, doNotCleanupOnUpdate);
-			}
-			finally {
-				Target = oldTarget;
-			}
+			return RunTarget (project, "Clean", doNotCleanupOnUpdate);
 		}
 
 		public bool UpdateAndroidResources (XamarinProject project, bool doNotCleanupOnUpdate = false, string [] parameters = null, Dictionary<string, string> environmentVariables = null)
 		{
-			var oldTarget = Target;
-			Target = "UpdateAndroidResources";
-			try {
-				return Build (project, doNotCleanupOnUpdate: doNotCleanupOnUpdate, parameters: parameters, environmentVariables: environmentVariables);
+			return RunTarget (project, "UpdateAndroidResources", doNotCleanupOnUpdate, parameters, environmentVariables);
+		}
+
+		public bool DesignTimeBuild (XamarinProject project, string target = "Compile", bool doNotCleanupOnUpdate = false, string [] parameters = null)
+		{
+			if (parameters == null) {
+				return RunTarget (project, target, doNotCleanupOnUpdate, parameters: new string [] { "DesignTimeBuild=True" });
+			} else {
+				var designTimeParameters = new string [parameters.Length + 1];
+				parameters.CopyTo (designTimeParameters, 0);
+				designTimeParameters [parameters.Length] = "DesignTimeBuild=True";
+				return RunTarget (project, target, doNotCleanupOnUpdate, parameters: designTimeParameters);
 			}
-			finally {
+		}
+
+		public bool RunTarget (XamarinProject project, string target, bool doNotCleanupOnUpdate = false, string [] parameters = null, Dictionary<string, string> environmentVariables = null, bool saveProject = true)
+		{
+			var oldTarget = Target;
+			Target = target;
+			try {
+				return Build (project, doNotCleanupOnUpdate: doNotCleanupOnUpdate, parameters: parameters, saveProject: saveProject, environmentVariables: environmentVariables);
+			} finally {
 				Target = oldTarget;
 			}
 		}
@@ -135,12 +158,7 @@ namespace Xamarin.ProjectTools
 		public RuntimeInfo [] GetSupportedRuntimes ()
 		{
 			var runtimeInfo = new List<RuntimeInfo> ();
-			var outdir = FrameworkLibDirectory;
-			var path = Path.Combine (outdir, "xbuild", "Xamarin", "Android", "lib");
-			if (!Directory.Exists (path)) {
-				path = outdir;
-			}
-			foreach (var file in Directory.EnumerateFiles (path, "libmono-android.*.so", SearchOption.AllDirectories)) {
+			foreach (var file in Directory.EnumerateFiles (Path.Combine (AndroidMSBuildDirectory, "lib"), "libmono-android.*.so", SearchOption.AllDirectories)) {
 				string fullFilePath = Path.GetFullPath (file);
 				DirectoryInfo parentDir = Directory.GetParent (fullFilePath);
 				if (parentDir == null)

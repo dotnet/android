@@ -1,0 +1,38 @@
+parameters:
+  configuration: []
+  testName: []
+  project: []
+  testResultsFiles: ""
+  extraBuildArgs: ""
+  testResultsFormat: NUnit
+  packageType: Apk
+  artifactName: []
+  artifactFolder: []
+
+steps:
+- task: MSBuild@1
+  displayName: run ${{ parameters.testName }}
+  inputs:
+    solution: ${{ parameters.project }}
+    configuration: ${{ parameters.configuration }}
+    msbuildArguments: >
+      /t:AcquireAndroidTarget,SignAndroidPackage,DeployTest${{ parameters.packageType }}s,RunTestApks,UndeployTestApks,RenameApkTestCases,ReportComponentFailures
+      /bl:$(System.DefaultWorkingDirectory)/bin/Test${{ parameters.configuration }}/run${{ parameters.testName }}.binlog
+      ${{ parameters.extraBuildArgs }}
+  condition: succeededOrFailed()
+
+- script: |
+    SOURCE=$(System.DefaultWorkingDirectory)/bin/Test${{ parameters.configuration }}/${{ parameters.artifactName }}
+    DEST=$(Build.ArtifactStagingDirectory)/${{ parameters.artifactFolder }}/
+    mkdir "$DEST"
+    cp "$SOURCE" "$DEST"
+  displayName: copy apk/aab
+  condition: succeededOrFailed()
+
+- task: PublishTestResults@2
+  displayName: publish ${{ parameters.testName }} results
+  inputs:
+    testResultsFormat: ${{ parameters.testResultsFormat }}
+    testResultsFiles: ${{ parameters.testResultsFiles }}
+    testRunTitle: ${{ parameters.testName }}
+  condition: and(succeededOrFailed(), ne('${{ parameters.testResultsFiles }}', ''))

@@ -1,0 +1,14 @@
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition="'$(Configuration)'==''">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>0c31de30-f9df-4312-bffe-dcad558ccf08</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <OutputPath Condition="'$(OutputPath)'==''">bin\$(Configuration)</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'" />
+  <PropertyGroup Condition="'$(Configuration)'=='Release'" />
+  <Import Project="..\..\Configuration.props" />
+  <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
+  <Import Project="aapt2.targets" />
+</Project>

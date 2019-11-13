@@ -41,6 +41,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 				new CommandInfo {
 					ArgumentsString = $"{AdbTarget} {AdbOptions} logcat -c",
+					IgnoreExitCode = true,
 				},
 
 			};

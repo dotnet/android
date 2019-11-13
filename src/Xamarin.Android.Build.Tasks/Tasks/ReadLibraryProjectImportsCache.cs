@@ -32,8 +32,10 @@ using Microsoft.Build.Framework;
 
 namespace Xamarin.Android.Tasks
 {
-	public class ReadLibraryProjectImportsCache : Task
+	public class ReadLibraryProjectImportsCache : AndroidTask
 	{
+		public override string TaskPrefix => "RLC";
+
 		[Required]
 		public string CacheFile { get; set;} 
 
@@ -52,7 +54,7 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public ITaskItem [] ResolvedResourceDirectoryStamps { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			Log.LogDebugMessage ("Task ReadLibraryProjectImportsCache");
 			Log.LogDebugMessage ("  CacheFile: {0}", CacheFile);

@@ -11,8 +11,10 @@ using Monodroid;
 
 namespace Xamarin.Android.Tasks
 {
-	public class ConvertResourcesCases : Task
+	public class ConvertResourcesCases : AndroidTask
 	{
+		public override string TaskPrefix => "CRC";
+
 		[Required]
 		public ITaskItem[] ResourceDirectories { get; set; }
 
@@ -31,7 +33,7 @@ namespace Xamarin.Android.Tasks
 		Dictionary<string,string> resource_name_case_map;
 		Dictionary<string, HashSet<string>> customViewMap;
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			resource_name_case_map = MonoAndroidHelper.LoadResourceCaseMap (ResourceNameCaseMap);
 			var acw_map = MonoAndroidHelper.LoadAcwMapFile (AcwMapFile);
@@ -52,10 +54,10 @@ namespace Xamarin.Android.Tasks
 		void FixupResources (Dictionary<string, string> acwMap)
 		{
 			foreach (var dir in ResourceDirectories) {
-				var skipResourceProcessing = dir.GetMetadata (ResolveLibraryProjectImports.SkipAndroidResourceProcessing);
+				var skipResourceProcessing = dir.GetMetadata (ResolveLibraryProjectImports.AndroidSkipResourceProcessing);
 				if (skipResourceProcessing != null && skipResourceProcessing.Equals ("true", StringComparison.OrdinalIgnoreCase)) {
 					var originalFile = dir.GetMetadata (ResolveLibraryProjectImports.OriginalFile);
-					Log.LogDebugMessage ($"Skipping: `{dir.ItemSpec}` via `{ResolveLibraryProjectImports.SkipAndroidResourceProcessing}`, original file: `{originalFile}`...");
+					Log.LogDebugMessage ($"Skipping: `{dir.ItemSpec}` via `{ResolveLibraryProjectImports.AndroidSkipResourceProcessing}`, original file: `{originalFile}`...");
 					continue;
 				}
 

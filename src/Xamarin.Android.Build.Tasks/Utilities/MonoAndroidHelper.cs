@@ -2,20 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.IO;
+using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
 using System.Security.Cryptography;
-using Mono.Security.Cryptography;
 using Xamarin.Android.Tools;
 using Xamarin.Tools.Zip;
-using Mono.Cecil;
 
 #if MSBUILD
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 #endif
-
-using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
@@ -83,6 +80,12 @@ namespace Xamarin.Android.Tasks
 		{
 			var toolsDir = Path.GetFullPath (Path.GetDirectoryName (typeof (MonoAndroidHelper).Assembly.Location));
 			return Path.Combine (toolsDir, uname.Value);
+		}
+
+		internal static string GetOSLibPath ()
+		{
+			var toolsDir = Path.GetFullPath (Path.GetDirectoryName (typeof (MonoAndroidHelper).Assembly.Location));
+			return Path.Combine (toolsDir, "lib", $"host-{uname.Value}");
 		}
 
 #if MSBUILD
@@ -253,9 +256,12 @@ namespace Xamarin.Android.Tasks
 
 		public static string GetNativeLibraryAbi (string lib)
 		{
-			var dirs = lib.ToLowerInvariant ().Split ('/', '\\');
-
-			return ValidAbis.Where (p => dirs.Contains (p)).FirstOrDefault ();
+			// The topmost directory the .so file is contained within
+			var dir = Path.GetFileName (Path.GetDirectoryName (lib)).ToLowerInvariant ();
+			if (ValidAbis.Contains (dir)) {
+				return dir;
+			}
+			return null;
 		}
 
 		public static string GetNativeLibraryAbi (ITaskItem lib)
@@ -282,6 +288,16 @@ namespace Xamarin.Android.Tasks
 		}
 #endif
 
+		public static bool IsMonoAndroidAssembly (ITaskItem assembly)
+		{
+			var tfi = assembly.GetMetadata ("TargetFrameworkIdentifier");
+			if (string.Compare (tfi, "MonoAndroid", StringComparison.OrdinalIgnoreCase) == 0)
+				return true;
+
+			var hasReference = assembly.GetMetadata ("HasMonoAndroidReference");
+			return bool.TryParse (hasReference, out bool value) && value;
+		}
+
 		public static bool IsFrameworkAssembly (string assembly)
 		{
 			return IsFrameworkAssembly (assembly, false);
@@ -289,11 +305,9 @@ namespace Xamarin.Android.Tasks
 
 		public static bool IsFrameworkAssembly (string assembly, bool checkSdkPath)
 		{
-			var assemblyName = Path.GetFileName (assembly);
-
-			if (Profile.SharedRuntimeAssemblies.Contains (assemblyName, StringComparer.InvariantCultureIgnoreCase)) {
+			if (IsSharedRuntimeAssembly (assembly)) {
 #if MSBUILD
-				bool treatAsUser = Array.BinarySearch (FrameworkAssembliesToTreatAsUserAssemblies, assemblyName, StringComparer.OrdinalIgnoreCase) >= 0;
+				bool treatAsUser = Array.BinarySearch (FrameworkAssembliesToTreatAsUserAssemblies, Path.GetFileName (assembly), StringComparer.OrdinalIgnoreCase) >= 0;
 				// Framework assemblies don't come from outside the SDK Path;
 				// user assemblies do
 				if (checkSdkPath && treatAsUser && TargetFrameworkDirectories != null) {
@@ -305,18 +319,25 @@ namespace Xamarin.Android.Tasks
 			return TargetFrameworkDirectories == null || !checkSdkPath ? false : ExistsInFrameworkPath (assembly);
 		}
 
-		public static bool IsReferenceAssembly (string assembly)
+		public static bool IsSharedRuntimeAssembly (string assembly)
 		{
-			var rp = new ReaderParameters { ReadSymbols = false };
-			using (var a = AssemblyDefinition.ReadAssembly (assembly, rp))
-				return IsReferenceAssembly (a);
+			return Array.BinarySearch (Profile.SharedRuntimeAssemblies, Path.GetFileName (assembly), StringComparer.OrdinalIgnoreCase) >= 0;
 		}
 
-		public static bool IsReferenceAssembly (AssemblyDefinition assembly)
+		public static bool IsReferenceAssembly (string assembly)
 		{
-			if (!assembly.HasCustomAttributes)
+			using (var stream = File.OpenRead (assembly))
+			using (var pe = new PEReader (stream)) {
+				var reader = pe.GetMetadataReader ();
+				var assemblyDefinition = reader.GetAssemblyDefinition ();
+				foreach (var handle in assemblyDefinition.GetCustomAttributes ()) {
+					var attribute = reader.GetCustomAttribute (handle);
+					var attributeName = reader.GetCustomAttributeFullName (attribute);
+					if (attributeName == "System.Runtime.CompilerServices.ReferenceAssemblyAttribute")
+						return true;
+				}
 				return false;
-			return assembly.CustomAttributes.Any (t => t.AttributeType.FullName == "System.Runtime.CompilerServices.ReferenceAssemblyAttribute");
+			}
 		}
 
 		public static bool ExistsInFrameworkPath (string assembly)
@@ -337,19 +358,6 @@ namespace Xamarin.Android.Tasks
 			}
 			return false;
 		}
-
-#if MSBUILD
-		public static void SetLastAccessAndWriteTimeUtc (string source, DateTime dateUtc, TaskLoggingHelper Log)
-		{
-			try {
-				File.SetLastWriteTimeUtc (source, dateUtc);
-				File.SetLastAccessTimeUtc (source, dateUtc);
-			} catch (Exception ex) {
-				Log.LogWarning ("There was a problem setting the Last Access/Write time on file {0}", source);
-				Log.LogWarningFromException (ex);
-			}
-		}
-#endif  // MSBUILD
 
 		public static void SetWriteable (string source)
 		{
@@ -379,6 +387,22 @@ namespace Xamarin.Android.Tasks
 			foreach (var file in Directory.EnumerateFiles (directory, "*", SearchOption.AllDirectories)) {
 				SetWriteable (Path.GetFullPath (file));
 			}
+		}
+
+		public static bool CopyAssemblyAndSymbols (string source, string destination)
+		{
+			bool changed = CopyIfChanged (source, destination);
+			var mdb = source + ".mdb";
+			if (File.Exists (mdb)) {
+				var mdbDestination = destination + ".mdb";
+				CopyIfChanged (mdb, mdbDestination);
+			}
+			var pdb = Path.ChangeExtension (source, "pdb");
+			if (File.Exists (pdb) && Files.IsPortablePdb (pdb)) {
+				var pdbDestination = Path.ChangeExtension (destination, "pdb");
+				CopyIfChanged (pdb, pdbDestination);
+			}
+			return changed;
 		}
 
 		public static bool CopyIfChanged (string source, string destination)
@@ -446,6 +470,16 @@ namespace Xamarin.Android.Tasks
 			return Files.HashStream (stream);
 		}
 
+		public static string HashBytes (byte[] bytes)
+		{
+			return Files.HashBytes (bytes);
+		}
+
+		public static bool HasFileChanged (string source, string destination)
+		{
+			return Files.HasFileChanged (source, destination);
+		}
+
 		/// <summary>
 		/// Open a file given its path and remove the 3 bytes UTF-8 BOM if there is one
 		/// </summary>
@@ -488,15 +522,14 @@ namespace Xamarin.Android.Tasks
 		}
 
 #if MSBUILD
-		internal static IEnumerable<string> GetFrameworkAssembliesToTreatAsUserAssemblies (ITaskItem[] resolvedAssemblies) 
+		internal static IEnumerable<ITaskItem> GetFrameworkAssembliesToTreatAsUserAssemblies (ITaskItem[] resolvedAssemblies) 
 		{		
 			return resolvedAssemblies
 				.Where (f => Array.BinarySearch (FrameworkAssembliesToTreatAsUserAssemblies, Path.GetFileName (f.ItemSpec), StringComparer.OrdinalIgnoreCase) >= 0)
-				.Select(p => p.ItemSpec);
+				.Select(p => p);
 		}
 #endif
 
-		internal static readonly string [] FrameworkAttributeLookupTargets = {"Mono.Android.GoogleMaps.dll"};
 		internal static readonly string [] FrameworkEmbeddedJarLookupTargets = {
 			"Mono.Android.Support.v13.dll",
 			"Mono.Android.Support.v4.dll",
@@ -508,7 +541,6 @@ namespace Xamarin.Android.Tasks
 		};
 		// MUST BE SORTED CASE-INSENSITIVE
 		internal static readonly string[] FrameworkAssembliesToTreatAsUserAssemblies = {
-			"Mono.Android.GoogleMaps.dll",
 			"Mono.Android.Support.v13.dll",
 			"Mono.Android.Support.v4.dll",
 			"Xamarin.Android.NUnitLite.dll",
@@ -547,20 +579,17 @@ namespace Xamarin.Android.Tasks
 			return map;
 		}
 
-		public static void SaveCustomViewMapFile (IBuildEngine4 engine, string mapFile, Dictionary<string, HashSet<string>> map)
+		public static bool SaveCustomViewMapFile (IBuildEngine4 engine, string mapFile, Dictionary<string, HashSet<string>> map)
 		{
 			engine?.RegisterTaskObject (mapFile, map, RegisteredTaskObjectLifetime.Build, allowEarlyCollection: false);
-			var temp = Path.GetTempFileName ();
-			try {
-				using (var m = new StreamWriter (temp)) {
-					foreach (var i in map.OrderBy (x => x.Key)) {
-						foreach (var v in i.Value.OrderBy (x => x))
-							m.WriteLine ($"{i.Key};{v}");
-					}
+			using (var stream = new MemoryStream ())
+			using (var writer = new StreamWriter (stream)) {
+				foreach (var i in map.OrderBy (x => x.Key)) {
+					foreach (var v in i.Value.OrderBy (x => x))
+						writer.WriteLine ($"{i.Key};{v}");
 				}
-				CopyIfChanged (temp, mapFile);
-			} finally {
-				File.Delete (temp);
+				writer.Flush ();
+				return CopyIfStreamChanged (stream, mapFile);
 			}
 		}
 
@@ -587,15 +616,14 @@ namespace Xamarin.Android.Tasks
 
 		public static IEnumerable<string> Executables (string executable)
 		{
-			yield return executable;
 			var pathExt = Environment.GetEnvironmentVariable ("PATHEXT");
 			var pathExts = pathExt?.Split (new char [] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries);
 
-			if (pathExts == null)
-				yield break;
-
-			foreach (var ext in pathExts)
-				yield return Path.ChangeExtension (executable, ext);
+			if (pathExts != null) {
+				foreach (var ext in pathExts)
+					yield return Path.ChangeExtension (executable, ext);
+			}
+			yield return executable;
 		}
 
 		public static string TryGetAndroidJarPath (TaskLoggingHelper log, string platform)
@@ -603,12 +631,13 @@ namespace Xamarin.Android.Tasks
 			var platformPath = MonoAndroidHelper.AndroidSdk.TryGetPlatformDirectoryFromApiLevel (platform, MonoAndroidHelper.SupportedVersions);
 			if (platformPath == null) {
 				var expectedPath = MonoAndroidHelper.AndroidSdk.GetPlatformDirectoryFromId (platform);
+				var sdkManagerMenuPath = OS.IsWindows ? "Tools > Android > Android SDK Manager..." : "Tools > Open Android SDK Manager...";
 				log.LogCodedError ("XA5207", "Could not find android.jar for API Level {0}. " +
 						"This means the Android SDK platform for API Level {0} is not installed. " +
-						"Either install it in the Android SDK Manager (Tools > Open Android SDK Manager...), " +
+						"Either install it in the Android SDK Manager ({2}), " +
 						"or change your Xamarin.Android project to target an API version that is installed. " +
 						"({1} missing.)",
-						platform, Path.Combine (expectedPath, "android.jar"));
+						platform, Path.Combine (expectedPath, "android.jar"), sdkManagerMenuPath);
 				return null;
 			}
 			return Path.Combine (platformPath, "android.jar");
@@ -622,6 +651,24 @@ namespace Xamarin.Android.Tasks
 					result [arr [1]] = arr [0]; // lowercase -> original
 			}
 			return result;
+		}
+
+		public static string FixUpAndroidResourcePath (string file, string resourceDirectory, string resourceDirectoryFullPath, Dictionary<string, string> resource_name_case_map)
+		{
+			string newfile = null;
+			if (file.StartsWith (resourceDirectory, StringComparison.InvariantCultureIgnoreCase)) {
+				newfile = file.Substring (resourceDirectory.Length).TrimStart (Path.DirectorySeparatorChar);
+			}
+			if (!string.IsNullOrEmpty (resourceDirectoryFullPath) && file.StartsWith (resourceDirectoryFullPath, StringComparison.InvariantCultureIgnoreCase)) {
+				newfile = file.Substring (resourceDirectoryFullPath.Length).TrimStart (Path.DirectorySeparatorChar);
+			}
+			if (!string.IsNullOrEmpty (newfile)) {
+				if (resource_name_case_map.TryGetValue (newfile, out string value))
+					newfile = value;
+				newfile = Path.Combine ("Resources", newfile);
+				return newfile;
+			}
+			return string.Empty;
 		}
 	}
 }

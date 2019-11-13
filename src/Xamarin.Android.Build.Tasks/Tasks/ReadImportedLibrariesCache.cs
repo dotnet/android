@@ -32,8 +32,10 @@ using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks
 {
-	public class ReadImportedLibrariesCache : Task
+	public class ReadImportedLibrariesCache : AndroidTask
 	{
+		public override string TaskPrefix => "RIL";
+
 		[Required]
 		public string CacheFile { get; set;} 
 
@@ -46,10 +48,8 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public ITaskItem [] ManifestDocuments { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
-			Log.LogDebugMessage ("Task ReadImportedLibrariesCache");
-			Log.LogDebugMessage ("  CacheFile: {0}", CacheFile);
 			if (!File.Exists (CacheFile)) {
 				Log.LogDebugMessage ("{0} does not exist. No Imported Libraries found", CacheFile);
 				return !Log.HasLoggedErrors;

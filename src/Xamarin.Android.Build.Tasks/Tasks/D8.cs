@@ -11,6 +11,8 @@ namespace Xamarin.Android.Tasks
 	/// </summary>
 	public class D8 : JavaToolTask
 	{
+		public override string TaskPrefix => "DX8";
+
 		[Required]
 		public string JarPath { get; set; }
 
@@ -29,7 +31,6 @@ namespace Xamarin.Android.Tasks
 		public bool EnableDesugar { get; set; } = true;
 
 		// Java libraries to embed or reference
-		[Required]
 		public string ClassesZip { get; set; }
 		[Required]
 		public string JavaPlatformJarPath { get; set; }
@@ -45,6 +46,8 @@ namespace Xamarin.Android.Tasks
 		}
 
 		protected virtual string MainClass => "com.android.tools.r8.D8";
+
+		protected int MinSdkVersion { get; set; }
 
 		protected virtual CommandLineBuilder GetCommandLineBuilder ()
 		{
@@ -67,8 +70,10 @@ namespace Xamarin.Android.Tasks
 			//NOTE: if this is blank, we can omit --min-api in this call
 			if (!string.IsNullOrEmpty (AndroidManifestFile)) {
 				var doc = AndroidAppManifest.Load (AndroidManifestFile, MonoAndroidHelper.SupportedVersions);
-				int minApiVersion = doc.MinSdkVersion == null ? 4 : (int)doc.MinSdkVersion;
-				cmd.AppendSwitchIfNotNull ("--min-api ", minApiVersion.ToString ());
+				if (doc.MinSdkVersion.HasValue) {
+					MinSdkVersion = doc.MinSdkVersion.Value;
+					cmd.AppendSwitchIfNotNull ("--min-api ", MinSdkVersion.ToString ());
+				}
 			}
 
 			if (!EnableDesugar)
@@ -83,7 +88,7 @@ namespace Xamarin.Android.Tasks
 				}
 			} else if (JavaLibrariesToEmbed != null) {
 				Log.LogDebugMessage ("  processing ClassesZip, JavaLibrariesToEmbed...");
-				if (File.Exists (ClassesZip)) {
+				if (!string.IsNullOrEmpty (ClassesZip) && File.Exists (ClassesZip)) {
 					injars.Add (ClassesZip);
 				}
 				foreach (var jar in JavaLibrariesToEmbed) {

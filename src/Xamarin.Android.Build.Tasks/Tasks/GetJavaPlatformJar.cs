@@ -11,8 +11,10 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
-	public class GetJavaPlatformJar : Task
+	public class GetJavaPlatformJar : AndroidTask
 	{
+		public override string TaskPrefix => "GJP";
+
 		private XNamespace androidNs = "http://schemas.android.com/apk/res/android";
 
 		[Required]
@@ -26,7 +28,7 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public string TargetSdkVersion    { get; set; }
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
 			var platform = AndroidSdkPlatform;
 
@@ -51,6 +53,26 @@ namespace Xamarin.Android.Tasks
 
 							if (target_sdk != null && !string.IsNullOrWhiteSpace (target_sdk.Value))
 								platform = target_sdk.Value;
+
+							var min_sdk = uses_sdk.Attribute (androidNs + "minSdkVersion");
+							if (min_sdk != null && (!int.TryParse (min_sdk.Value, out int minSdkVersion) || minSdkVersion < XABuildConfig.NDKMinimumApiAvailable)) {
+								Log.LogWarningForXmlNode (
+										code:             "XA4216",
+										file:             AndroidManifest,
+										node:             min_sdk,
+										message:          "AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' is less than API-{1}, this configuration is not supported.",
+										messageArgs:      new object [] { min_sdk?.Value, XABuildConfig.NDKMinimumApiAvailable }
+								);
+							}
+							if (target_sdk != null && (!int.TryParse (target_sdk.Value, out int targetSdkVersion) || targetSdkVersion < XABuildConfig.NDKMinimumApiAvailable)) {
+								Log.LogWarningForXmlNode (
+										code:             "XA4216",
+										file:             AndroidManifest,
+										node:             target_sdk,
+										message:          "AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{0}' is less than API-{1}, this configuration is not supported.",
+										messageArgs:      new object [] { target_sdk?.Value, XABuildConfig.NDKMinimumApiAvailable }
+								);
+							}
 						}
 					}
 				} catch (Exception ex) {
@@ -79,24 +101,12 @@ namespace Xamarin.Android.Tasks
 			if (int.TryParse (targetFrameworkVersion, out frameworkSdk) &&
 					int.TryParse (targetSdkVersion, out targetSdk) &&
 					targetSdk < frameworkSdk) {
-				int lineNumber    = 0;
-				int columnNumber  = 0;
-				var lineInfo      = target_sdk as IXmlLineInfo;
-				if (lineInfo != null && lineInfo.HasLineInfo ()) {
-					lineNumber    = lineInfo.LineNumber;
-					columnNumber  = lineInfo.LinePosition;
-				}
-				Log.LogWarning (
-						subcategory:      string.Empty,
-						warningCode:      "XA4211",
-						helpKeyword:      string.Empty,
+				Log.LogWarningForXmlNode (
+						code:             "XA4211",
 						file:             AndroidManifest,
-						lineNumber:       lineNumber,
-						columnNumber:     columnNumber,
-						endLineNumber:    0,
-						endColumnNumber:  0,
+						node:             target_sdk,
 						message:          "AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{0}' is less than $(TargetFrameworkVersion) '{1}'. Using API-{2} for ACW compilation.",
-						messageArgs:      new[]{
+						messageArgs:      new [] {
 							targetSdkVersion,
 							MonoAndroidHelper.SupportedVersions.GetIdFromFrameworkVersion (targetFrameworkVersion),
 							MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (targetFrameworkVersion),

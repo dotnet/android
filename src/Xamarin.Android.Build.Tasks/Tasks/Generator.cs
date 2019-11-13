@@ -12,8 +12,10 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
-	public class BindingsGenerator : AndroidToolTask
+	public class BindingsGenerator : AndroidRunToolTask
 	{
+		public override string TaskPrefix => "BGN";
+
 		public bool OnlyRunXmlAdjuster { get; set; }
 
 		public string XmlAdjusterOutput { get; set; }
@@ -45,6 +47,10 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string MonoAndroidFrameworkDirectories { get; set; }
 
+		public string LangVersion { get; set; }
+
+		public bool EnableInterfaceMembersPreview { get; set; }
+
 		public ITaskItem[] TransformFiles { get; set; }
 		public ITaskItem[] ReferencedManagedLibraries { get; set; }
 		public ITaskItem[] AnnotationsZipFiles { get; set; }
@@ -53,22 +59,8 @@ namespace Xamarin.Android.Tasks
 
 		private List<Tuple<string, string>> transform_files = new List<Tuple<string,string>> ();
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
-			Log.LogDebugMessage ("BindingsGenerator Task");
-			Log.LogDebugMessage ("  OnlyRunXmlAdjuster: {0}", OnlyRunXmlAdjuster);
-			Log.LogDebugMessage ("  OutputDirectory: {0}", OutputDirectory);
-			Log.LogDebugMessage ("  EnumDirectory: {0}", EnumDirectory);
-			Log.LogDebugMessage ("  EnumMetadataDirectory: {0}", EnumMetadataDirectory);
-			Log.LogDebugMessage ("  ApiXmlInput: {0}", ApiXmlInput);
-			Log.LogDebugMessage ("  AssemblyName: {0}", AssemblyName);
-			Log.LogDebugMessage ("  AndroidApiLevel: {0}", AndroidApiLevel);
-			Log.LogDebugMessage ("  UseShortFileNames: {0}", UseShortFileNames);
-			Log.LogDebugTaskItems ("  TransformFiles:", TransformFiles);
-			Log.LogDebugTaskItems ("  ReferencedManagedLibraries:", ReferencedManagedLibraries);
-			Log.LogDebugTaskItems ("  AnnotationsZipFiles:", AnnotationsZipFiles);
-			Log.LogDebugTaskItems ("  TypeMappingReportFile:", TypeMappingReportFile);
-
 			Directory.CreateDirectory (OutputDirectory);
 
 			// We need to do this validation in Execute rather than GenerateCommandLineCommands
@@ -101,7 +93,7 @@ namespace Xamarin.Android.Tasks
 					}
 				}
 
-			return base.Execute ();
+			return base.RunTask ();
 		}
 
 		protected override string GenerateCommandLineCommands ()
@@ -145,6 +137,9 @@ namespace Xamarin.Android.Tasks
 			if (UseShortFileNames)
 				cmd.AppendSwitch ("--use-short-file-names");
 
+			if (EnableInterfaceMembersPreview && SupportsCSharp8)
+				cmd.AppendSwitch ("--lang-features=interface-constants,default-interface-methods");
+
 			return cmd.ToString ();
 		}
 
@@ -155,6 +150,28 @@ namespace Xamarin.Android.Tasks
 		protected override string GenerateFullPathToTool ()
 		{
 			return Path.Combine (ToolPath, ToolExe);
+		}
+
+		bool SupportsCSharp8 {
+			get {
+				// These are the values that pre-date C# 8.  We assume any
+				// new value we encounter is something that supports it.
+				switch (LangVersion) {
+					case "7.3":
+					case "7.2":
+					case "7.1":
+					case "7":
+					case "6":
+					case "5":
+					case "4":
+					case "3":
+					case "ISO-2":
+					case "ISO-1":
+						return false;
+				}
+
+				return true;
+			}
 		}
 	}
 }

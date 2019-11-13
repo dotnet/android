@@ -1,13 +1,15 @@
-#include "globals.h"
+#include "globals.hh"
 
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
 
-DylibMono monoFunctions;
 Util utils;
 AndroidSystem androidSystem;
 OSBridge osBridge;
-
-#ifdef DEBUG
-Debug debug;
+EmbeddedAssemblies embeddedAssemblies;
+MonodroidRuntime monodroidRuntime;
+Timing *timing = nullptr;
+#ifndef ANDROID
+DesignerAssemblies designerAssemblies;
 #endif
+Debug debug;

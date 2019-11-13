@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.XPath;
@@ -29,6 +30,19 @@ namespace Xamarin.Android.Tasks
 			return taskItem;
 		}
 
+		public static IEnumerable<XElement> ToXElements (ICollection<ITaskItem> items, string itemName, string[] knownMetadata)
+		{
+			foreach (var item in items) {
+				var e = new XElement (itemName, item.ItemSpec);
+				foreach (var name in knownMetadata) {
+					var value = item.GetMetadata (name);
+					if (!string.IsNullOrEmpty (value))
+						e.SetAttributeValue (name, value);
+				}
+				yield return e;
+			}
+		}
+
 		public static string[] GetPaths (this XDocument doc, params string[] paths)
 		{
 			var e = doc.Elements (PathsElementName);
@@ -44,14 +58,11 @@ namespace Xamarin.Android.Tasks
 
 		public static bool SaveIfChanged (this XDocument document, string fileName)
 		{
-			var tempFile = System.IO.Path.GetTempFileName ();
-			try {
-				using (var stream = File.OpenWrite (tempFile))
-				using (var xw = new Monodroid.LinePreservedXmlWriter (new StreamWriter (stream)))
-					xw.WriteNode (document.CreateNavigator (), false);
-				return MonoAndroidHelper.CopyIfChanged (tempFile, fileName);
-			} finally {
-				File.Delete (tempFile);
+			using (var stream = new MemoryStream ())
+			using (var xw = new Monodroid.LinePreservedXmlWriter (new StreamWriter (stream))) {
+				xw.WriteNode (document.CreateNavigator (), false);
+				xw.Flush ();
+				return MonoAndroidHelper.CopyIfStreamChanged (stream, fileName);
 			}
 		}
 	}
