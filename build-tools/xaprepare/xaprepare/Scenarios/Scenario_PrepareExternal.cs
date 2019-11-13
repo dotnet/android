@@ -12,6 +12,7 @@ namespace Xamarin.Android.Prepare
 		protected override void AddSteps (Context context)
 		{
 			Steps.Add (new Step_PrepareExternal ());
+			Steps.Add (new Step_PrepareExternalJavaInterop ());
 
 			// disable installation of missing programs...
 			context.SetCondition (KnownConditions.AllowProgramInstallation, false);

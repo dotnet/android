@@ -143,6 +143,7 @@
     <Compile Include="Steps\Step_InstallMonoRuntimes.cs" />
     <Compile Include="Steps\Step_PrepareExternal.cs" />
     <Compile Include="Steps\Step_PrepareExternalGitDependencies.cs" />
+    <Compile Include="Steps\Step_PrepareExternalJavaInterop.cs" />
     <Compile Include="Steps\Step_PrepareImageDependencies.cs" />
     <Compile Include="Steps\Step_PrepareLocal.cs" />
     <Compile Include="Steps\Step_PrepareMSBuild.cs" />
@@ -197,6 +198,7 @@
     <Compile Include="Steps\Step_BuildMonoRuntimes.Unix.cs" />
     <Compile Include="Steps\Step_GenerateFiles.Unix.cs" />
     <Compile Include="Steps\Step_PrepareExternal.Unix.cs" />
+    <Compile Include="Steps\Step_PrepareExternalJavaInterop.Unix.cs" />
     <Compile Include="Steps\Step_PrepareImageDependencies.Unix.cs" />
     <Compile Include="ToolRunners\MakeRunner.Unix.cs" />
     <Compile Include="ToolRunners\MakeRunner.OutputSink.Unix.cs" />
@@ -260,6 +262,7 @@
     <Compile Include="Steps\Step_GenerateFiles.Windows.cs" />
     <Compile Include="Steps\Step_InstallCorrettoOpenJDK.Windows.cs" />
     <Compile Include="Steps\Step_PrepareExternal.Windows.cs" />
+    <Compile Include="Steps\Step_PrepareExternalJavaInterop.Windows.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
