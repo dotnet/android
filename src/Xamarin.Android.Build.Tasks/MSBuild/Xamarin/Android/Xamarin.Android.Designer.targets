@@ -26,9 +26,6 @@ Copyright (C) 2016 Xamarin. All rights reserved.
     <Output TaskParameter="Jars" ItemName="_LibraryJars" />
   </ReadLibraryProjectImportsCache>
   <ItemGroup>
-    <ExtraJarLocation Include="@(_AdditionalJavaLibraryReferences)">
-      <Source>AssemblyCache</Source>
-    </ExtraJarLocation>
     <ExtraJarLocation Include="@(_LibraryJars)">
       <Source>LibraryImport</Source>
     </ExtraJarLocation>

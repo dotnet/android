@@ -27,8 +27,6 @@ namespace Xamarin.Android.Tasks
 
 		public ITaskItem[] LibraryProjectJars { get; set; }
 
-		public ITaskItem[] AdditionalJavaLibraryReferences { get; set; }
-
 		[Output]
 		public ITaskItem[] JavaLibrariesToCompile { get; set; }
 
@@ -50,9 +48,6 @@ namespace Xamarin.Android.Tasks
 				foreach (var jar in LibraryProjectJars)
 					if (!MonoAndroidHelper.IsEmbeddedReferenceJar (jar.ItemSpec))
 						jars.Add (jar);
-			if (AdditionalJavaLibraryReferences != null)
-				foreach (var jar in AdditionalJavaLibraryReferences.Distinct (TaskItemComparer.DefaultComparer))
-					jars.Add (jar);
 
 			var distinct  = MonoAndroidHelper.DistinctFilesByContent (jars);
 

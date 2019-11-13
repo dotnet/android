@@ -1230,7 +1230,6 @@ because xbuild doesn't support framework reference assemblies.
 		@(AndroidBoundLayout);
 		@(_ReferencePath);
 		@(_LibraryResourceDirectoryStamps);
-		@(_AdditonalAndroidResourceCachePaths->'%(Identity)\cache.stamp');
 		$(_AndroidBuildPropertiesCache);
 		$(ProjectAssetsFile);
 	</_ManagedUpdateAndroidResgenInputs>
@@ -1460,12 +1459,6 @@ because xbuild doesn't support framework reference assemblies.
     </CreateItem>
 </Target>
 
-<Target Name="_CollectAdditionalResourceFiles" Condition="'@(_AdditonalAndroidResourceCachePaths)' != ''">
-	<CreateItem Include="@(_AdditonalAndroidResourceCachePaths->'%(Identity)\res\**\*.*')">
-		<Output TaskParameter="Include" ItemName="_AdditonalAndroidResourceCacheFiles" />
-	</CreateItem>
-</Target>
-
 <Target Name="_FindLayoutsForBinding" Condition=" '$(Language)' == 'C#' ">
   <FindLayoutsToBind
       GenerateLayoutBindings="$(AndroidGenerateLayoutBindings)"
@@ -1557,7 +1550,6 @@ because xbuild doesn't support framework reference assemblies.
 		$(MSBuildAllProjects);
 		@(_AndroidResourceDest);
 		@(_LibraryResourceDirectoryStamps);
-		@(_AdditonalAndroidResourceCachePaths->'%(Identity)\cache.stamp');
 		$(_AndroidBuildPropertiesCache);
 		$(ProjectAssetsFile);
 		$(_AndroidLibraryProjectImportsCache);
@@ -1577,8 +1569,8 @@ because xbuild doesn't support framework reference assemblies.
 		Condition=" '$(_AndroidResourceDesignerFile)' != '' And Exists('$(IntermediateOutputPath)R.txt') "
 		ResourceSymbolsTextFile="$(IntermediateOutputPath)R.txt"
 		OutputDirectory="$(_AndroidIntermediateJavaSourceDirectory)"
-		LibraryTextFiles="@(_AdditonalAndroidResourceCachePaths->'%(Identity)\..\R.txt');@(LibraryResourceDirectories->'%(Identity)\..\R.txt')"
-		ManifestFiles="@(_AdditonalAndroidResourceCachePaths->'%(Identity)\AndroidManifest.xml');@(LibraryResourceDirectories->'%(Identity)\..\AndroidManifest.xml')"
+		LibraryTextFiles="@(LibraryResourceDirectories->'%(Identity)\..\R.txt')"
+		ManifestFiles="@(LibraryResourceDirectories->'%(Identity)\..\AndroidManifest.xml')"
 	/>
 	
 	<CopyGeneratedJavaResourceClasses
@@ -2385,7 +2377,6 @@ because xbuild doesn't support framework reference assemblies.
     LibraryProjectJars="@(ExtractedJarImports)"
     DoNotPackageJavaLibraries="@(_ResolvedDoNotPackageAttributes)"
     EnableInstantRun="$(_InstantRunEnabled)"
-    AdditionalJavaLibraryReferences="@(_AdditionalJavaLibraryReferences)"
     >
     <Output TaskParameter="JavaLibrariesToCompile" ItemName="_JavaLibrariesToCompile" />
     <Output TaskParameter="ReferenceJavaLibraries" ItemName="_ReferenceJavaLibs" />
