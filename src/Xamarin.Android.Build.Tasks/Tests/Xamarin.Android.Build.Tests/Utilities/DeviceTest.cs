@@ -125,13 +125,27 @@ namespace Xamarin.Android.Build.Tests
 			return result;
 		}
 
+		static Regex regex = new Regex (@"\s*(\++)(?<seconds>\d)s(?<milliseconds>\d+)ms", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+
 		protected static bool WaitForActivityToStart (string activityNamespace, string activityName, string logcatFilePath, int timeout = 60)
 		{
+			return WaitForActivityToStart (activityNamespace, activityName, logcatFilePath, out TimeSpan time, timeout);
+		}
+
+		protected static bool WaitForActivityToStart (string activityNamespace, string activityName, string logcatFilePath, out TimeSpan startupTime, int timeout = 60)
+		{
+			startupTime = TimeSpan.Zero;
+			string capturedLine = string.Empty;
 			bool result = MonitorAdbLogcat ((line) => {
+				capturedLine = line;
 				var idx1 = line.IndexOf ("ActivityManager: Displayed", StringComparison.OrdinalIgnoreCase);
 				var idx2 = idx1 > 0 ? 0 : line.IndexOf ("ActivityTaskManager: Displayed", StringComparison.OrdinalIgnoreCase);
 				return (idx1 > 0 || idx2 > 0) && line.Contains (activityNamespace) && line.Contains (activityName);
 			}, logcatFilePath, timeout);
+			var match = regex.Match (capturedLine);
+			if (match.Success) {
+				startupTime = new TimeSpan (0, 0, 0, int.Parse (match.Groups ["seconds"].Value), int.Parse (match.Groups ["milliseconds"].Value));
+			}
 			return result;
 		}
 
