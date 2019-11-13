@@ -80,7 +80,6 @@ Copyright (C) 2016 Xamarin. All rights reserved.
       MergedAndroidManifestOutput="$(IntermediateOutputPath)android\AndroidManifest.xml"
       UseSharedRuntime="$(AndroidUseSharedRuntime)"
       EmbedAssemblies="$(EmbedAssembliesIntoApk)"
-      ResourceDirectory="$(MonoAndroidResDirIntermediate)"
       BundledWearApplicationName="$(BundledWearApplicationPackageName)"
       PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
       ApplicationJavaClass="$(AndroidApplicationJavaClass)"
