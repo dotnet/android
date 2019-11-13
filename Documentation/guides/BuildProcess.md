@@ -100,6 +100,10 @@ The following build targets are defined for Xamarin.Android projects:
     (`.apk`). Use with `/p:Configuration=Release` to generate
     self-contained "Release" packages.
 
+-   **StartAndroidActivity** &ndash; Starts *launch* activity on the
+    device or the running emulator. The launch activity can be
+    overriden by `AndroidLaunchActivity` property.
+
 -   **UpdateAndroidResources** &ndash; Updates the
     `Resource.designer.cs` file. This target is usually called by the
     IDE when new resources are added to the project.

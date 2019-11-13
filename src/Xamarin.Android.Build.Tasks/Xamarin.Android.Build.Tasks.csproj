@@ -596,6 +596,7 @@
     <Compile Include="Tasks\AppendCustomMetadataToItemGroup.cs" />
     <Compile Include="Utilities\OutputLine.cs" />
     <Compile Include="Utilities\ResourceIdentifier.cs" />
+    <Compile Include="Tasks\GetAndroidActivityName.cs" />
     <Compile Include="Tasks\ManifestMerger.cs" />
   </ItemGroup>
   <ItemGroup>
