@@ -78,7 +78,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.GetImportedLibraries" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetMonoPlatformJar" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Javac" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.Desugar" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Dx" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.D8" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.R8" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -297,8 +296,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidEnableMultiDex Condition=" '$(AndroidEnableMultiDex)' == '' ">False</AndroidEnableMultiDex>
 	<AndroidDexTool   Condition=" '$(AndroidDexTool)' == '' ">d8</AndroidDexTool>
 	<AndroidDexTool   Condition=" '$(AndroidLinkTool)' == 'r8' ">d8</AndroidDexTool>
+	<AndroidDexTool   Condition=" '$(AndroidEnableDesugar)' == 'True' And '$(AndroidDexTool)' == 'dx' ">d8</AndroidDexTool>
 	<!-- NOTE: $(AndroidLinkTool) would be blank if code shrinking is not used at all -->
 	<AndroidLinkTool       Condition=" '$(AndroidLinkTool)' == '' And '$(AndroidEnableProguard)' == 'True' ">proguard</AndroidLinkTool>
+	<AndroidLinkTool       Condition=" '$(AndroidLinkTool)' == 'proguard' And '$(AndroidEnableDesugar)' == 'True' ">r8</AndroidLinkTool>
 	<AndroidEnableProguard Condition=" '$(AndroidLinkTool)' != '' ">True</AndroidEnableProguard>
 	<AndroidEnableDesugar  Condition=" '$(AndroidEnableDesugar)' == '' And ('$(AndroidDexTool)' == 'd8' Or '$(AndroidLinkTool)' == 'r8') ">True</AndroidEnableDesugar>
 	<AndroidEnableDesugar  Condition=" '$(AndroidEnableDesugar)' == '' ">False</AndroidEnableDesugar>
@@ -966,12 +967,6 @@ because xbuild doesn't support framework reference assemblies.
 	<CreateProperty Value="$(AndroidSdkBuildToolsPath)\lib\dx.jar">
 		<Output TaskParameter="Value" PropertyName="DxJarPath"
 				Condition="'$(DxJarPath)' == ''"
-		/>
-	</CreateProperty>
-
-	<CreateProperty Value="$(MonoAndroidToolsDirectory)\desugar_deploy.jar">
-		<Output TaskParameter="Value" PropertyName="DesugarJarPath"
-				Condition="'$(DesugarJarPath)' == ''"
 		/>
 	</CreateProperty>
 
@@ -2412,30 +2407,7 @@ because xbuild doesn't support framework reference assemblies.
   Inputs="$(_CompileToDalvikInputs)"
   Outputs="$(_AndroidStampDirectory)_CompileToDalvik.stamp">
 
-  <!-- Desugar if exists -->
-  <Error
-    Condition="'$(AndroidEnableDesugar)' == 'True' And !Exists('$(DesugarJarPath)')"
-    Text="'desugar' tool is not found. The specified DesugarJarPath '$(DesugarJarPath)' does not exist." />
-  <Desugar
-    Condition="'$(AndroidEnableDesugar)' == 'True'"
-    DesugarExtraArguments="$(DesugarExtraArguments)"
-    JavaPlatformJarPath="$(JavaPlatformJarPath)"
-    DesugarJarPath="$(DesugarJarPath)"
-    ToolPath="$(JavaToolPath)"
-    JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
-    JavaOptions="$(JavaOptions)"
-    InputJars="@(_JavaLibrariesToCompileForApp)"
-    ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
-    OutputDirectory="$(IntermediateOutputPath)android\bin\desugared">
-    <Output TaskParameter="OutputJars" ItemName="_DesugaredJars" />
-  </Desugar>
-
-  <CreateItem Include="@(_DesugaredJars)"
-    Condition="'$(AndroidEnableDesugar)' == 'True'">
-    <Output TaskParameter="Include" ItemName="_JarsToProguard" />
-  </CreateItem>
-  <CreateItem Include="@(_JavaLibrariesToCompile)"
-    Condition="'$(AndroidEnableDesugar)' != 'True'">
+  <CreateItem Include="@(_JavaLibrariesToCompile)">
     <Output TaskParameter="Include" ItemName="_JarsToProguard" />
   </CreateItem>
   
@@ -2470,11 +2442,6 @@ because xbuild doesn't support framework reference assemblies.
   <CreateItem 
     Include="$(IntermediateOutputPath)proguard\__proguard_output__.jar"
     Condition=" '$(AndroidLinkTool)' == 'proguard' And '$(_ProguardProjectConfiguration)' != '' ">
-    <Output TaskParameter="Include" ItemName="_AlternativeJarForAppDx" />
-  </CreateItem>
-  <CreateItem
-    Include="$(_AndroidIntermediateClassesZip);@(_DesugaredJars)"
-    Condition=" ('$(AndroidLinkTool)' != 'proguard' Or '$(_ProguardProjectConfiguration)' == '') And '$(AndroidEnableDesugar)' == 'True' ">
     <Output TaskParameter="Include" ItemName="_AlternativeJarForAppDx" />
   </CreateItem>
 
