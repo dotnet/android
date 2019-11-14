@@ -552,7 +552,6 @@
     <Compile Include="Utilities\AssemblyIdentityMap.cs" />
     <Compile Include="Utilities\SatelliteAssembly.cs" />
     <Compile Include="Tasks\AndroidApkSigner.cs" />
-    <Compile Include="Tasks\Desugar.cs" />
     <Compile Include="Tasks\D8.cs" />
     <Compile Include="Tasks\R8.cs" />
     <Compile Include="Utilities\NuGetLogger.cs" />
@@ -571,10 +570,6 @@
     <Compile Include="Utilities\ApplicationConfigNativeAssemblyGenerator.cs" />
     <Compile Include="Tasks\CompileNativeAssembly.cs" />
     <Compile Include="Tasks\LinkApplicationSharedLibraries.cs" />
-    <None Include="Resources\desugar_deploy.jar">
-      <Link>desugar_deploy.jar</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="Resources\LayoutBinding.cs">
       <Link>LayoutBinding.cs</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

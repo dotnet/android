@@ -3509,11 +3509,10 @@ namespace UnnamedProject {
 		}
 
 		[Test]
-		public void ProguardBOMError ([Values ("dx")] string dexTool, [Values ("proguard")] string linkTool)
+		public void ProguardBOMError ([Values ("dx", "d8")] string dexTool, [Values ("proguard")] string linkTool)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
-				EnableDesugar = true, //It is certain this test would fail without desugar
 				DexTool = dexTool,
 				LinkTool = linkTool,
 			};
