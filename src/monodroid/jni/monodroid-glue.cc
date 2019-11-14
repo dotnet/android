@@ -903,6 +903,16 @@ MonodroidRuntime::lookup_bridge_info (MonoDomain *domain, MonoImage *image, cons
 	info->handle_type       = mono_class_get_field_from_name (info->klass, const_cast<char*> ("handle_type"));
 	info->refs_added        = mono_class_get_field_from_name (info->klass, const_cast<char*> ("refs_added"));
 	info->weak_handle       = mono_class_get_field_from_name (info->klass, const_cast<char*> ("weak_handle"));
+	if (info->klass == NULL || info->handle == NULL || info->handle_type == NULL ||
+			info->refs_added == NULL || info->weak_handle == NULL) {
+		log_fatal (LOG_DEFAULT, "The type `%s.%s` is missing required instance fields! handle=%p handle_type=%p refs_added=%p weak_handle=%p",
+				type->_namespace, type->_typename,
+				info->handle,
+				info->handle_type,
+				info->refs_added,
+				info->weak_handle);
+		exit (FATAL_EXIT_MONO_MISSING_SYMBOLS);
+	}
 }
 
 void
