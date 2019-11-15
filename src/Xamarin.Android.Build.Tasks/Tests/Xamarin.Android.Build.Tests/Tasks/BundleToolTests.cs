@@ -33,6 +33,19 @@ namespace Xamarin.Android.Build.Tests
 	</resheader>
 	<!--contents-->
 </root>";
+		// Disable split by language
+		const string BuildConfig = @"{
+	""optimizations"": {
+		""splits_config"": {
+			""split_dimension"": [
+				{
+					""value"": ""LANGUAGE"",
+					""negate"": true
+				}
+			]
+		}
+	}
+}";
 
 		[OneTimeSetUp]
 		public void OneTimeSetUp ()
@@ -61,6 +74,9 @@ namespace Xamarin.Android.Build.Tests
 			app.OtherBuildItems.Add (new AndroidItem.AndroidAsset ("foo.wav") {
 				BinaryContent = () => bytes,
 			});
+			app.OtherBuildItems.Add (new BuildItem ("None", "buildConfig.json") {
+				TextContent = () => BuildConfig,
+			});
 			app.SetProperty ("AndroidStoreUncompressedFileExtensions", ".bar");
 			app.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
 
@@ -69,6 +85,7 @@ namespace Xamarin.Android.Build.Tests
 			app.SetProperty (app.ReleaseProperties, "AndroidPackageFormat", "aab");
 			var abis = new string [] { "armeabi-v7a", "arm64-v8a", "x86" };
 			app.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
+			app.SetProperty ("AndroidBundleConfigurationFile", "buildConfig.json");
 
 			libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName), cleanupOnDispose: true);
 			Assert.IsTrue (libBuilder.Build (lib), "Library build should have succeeded.");
@@ -240,10 +257,14 @@ namespace Xamarin.Android.Build.Tests
 
 			var aab = Path.Combine (intermediate, "android", "bin", "UnnamedProject.UnnamedProject.apks");
 			FileAssert.Exists (aab);
-			// Expecting: splits/base-arm64_v8a.apk, splits/base-en.apk, splits/base-master.apk, splits/base-xxxhdpi.apk
-			// This are split up based on: abi, language, base, and dpi
+			// Expecting: splits/base-arm64_v8a.apk, splits/base-master.apk, splits/base-xxxhdpi.apk
+			// This are split up based on: abi, base, and dpi
 			var contents = ListArchiveContents (aab).Where (a => a.EndsWith (".apk", StringComparison.OrdinalIgnoreCase)).ToArray ();
-			Assert.AreEqual (4, contents.Length, "Expecting four APKs!");
+			Assert.AreEqual (3, contents.Length, "Expecting three APKs!");
+
+			// Language split has been removed by the bundle configuration file, and therefore shouldn't be present
+			var languageSplitContent = ListArchiveContents (aab).Where (a => a.EndsWith ("-en.apk", StringComparison.OrdinalIgnoreCase)).ToArray ();
+			Assert.AreEqual (0, languageSplitContent.Length, "Found language split apk in bundle, but disabled by bundle configuration file!");
 
 			using (var stream = new MemoryStream ())
 			using (var apkSet = ZipArchive.Open (aab, FileMode.Open)) {
