@@ -2767,6 +2767,7 @@ because xbuild doesn't support framework reference assemblies.
       JavaOptions="$(JavaOptions)"
       JarPath="$(AndroidBundleToolJarPath)"
       BaseZip="$(_BaseZipIntermediate)"
+      Modules="@(AndroidAppBundleModules)"
       Output="$(_AppBundleIntermediate)"
       UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
       CustomBuildConfigFile="$(AndroidBundleConfigurationFile)"
