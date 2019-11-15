@@ -60,9 +60,6 @@ namespace Xamarin.Android.Tasks
 
 		public bool CreatePackagePerAbi { get; set; }
 
-		[Required]
-		public string UseSharedRuntime { get; set; }
-
 		public bool EmbedAssemblies { get; set; }
 
 		public bool BundleAssemblies { get; set; }
@@ -242,8 +239,6 @@ namespace Xamarin.Android.Tasks
 		private void AddAssemblies (ZipArchiveEx apk)
 		{
 			bool debug = _Debug;
-			bool use_shared_runtime = String.Equals (UseSharedRuntime, "true", StringComparison.OrdinalIgnoreCase);
-
 			int count = 0;
 			foreach (ITaskItem assembly in ResolvedUserAssemblies) {
 				if (bool.TryParse (assembly.GetMetadata ("AndroidSkipAddToPackage"), out bool value) && value) {
@@ -278,9 +273,6 @@ namespace Xamarin.Android.Tasks
 					count = 0;
 				}
 			}
-
-			if (use_shared_runtime)
-				return;
 
 			count = 0;
 			// Add framework assemblies
@@ -420,7 +412,6 @@ namespace Xamarin.Android.Tasks
 
 		void AddRuntimeLibraries (ZipArchiveEx apk, string [] supportedAbis)
 		{
-			bool use_shared_runtime = String.Equals (UseSharedRuntime, "true", StringComparison.OrdinalIgnoreCase);
 			foreach (var abi in supportedAbis) {
 				string library = string.Format ("libmono-android.{0}.so", _Debug ? "debug" : "release");
 				AddNativeLibrary (apk, abi, library, "libmonodroid.so");
@@ -431,10 +422,8 @@ namespace Xamarin.Android.Tasks
 					AddNativeLibraryToArchive (apk, abi, item.ItemSpec, Path.GetFileName (item.ItemSpec));
 				}
 
-				if (!use_shared_runtime) {
-					// include the sgen
-					AddNativeLibrary (apk, abi, "libmonosgen-2.0.so");
-				}
+				// include the sgen
+				AddNativeLibrary (apk, abi, "libmonosgen-2.0.so");
 				AddBtlsLibs (apk, abi);
 				AddProfilers (apk, abi);
 			}

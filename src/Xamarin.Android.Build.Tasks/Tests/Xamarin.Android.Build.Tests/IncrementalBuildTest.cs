@@ -466,7 +466,6 @@ namespace Lib2
 				ProjectName = "MyApp",
 				//NOTE: so _BuildApkEmbed runs in commercial tests
 				EmbedAssembliesIntoApk = true,
-				AndroidUseSharedRuntime = false,
 				Sources = {
 					new BuildItem.Source ("Foo.cs") {
 						TextContent = () => "public class Foo : Bar { }"
@@ -554,7 +553,6 @@ namespace Lib2
 				ProjectName = "MyApp",
 				//NOTE: so _BuildApkEmbed runs in commercial tests
 				EmbedAssembliesIntoApk = true,
-				AndroidUseSharedRuntime = false,
 				Sources = {
 					new BuildItem.Source ("Foo.cs") {
 						TextContent = () => "public class Foo : Bar { }"
@@ -921,7 +919,6 @@ namespace Lib2
 				Deterministic = deterministic,
 				//NOTE: so _BuildApkEmbed runs in commercial tests
 				EmbedAssembliesIntoApk = true,
-				AndroidUseSharedRuntime = false,
 			};
 			// NOTE: Deterministic is only supported for DebugType=portable
 			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugType", "portable");

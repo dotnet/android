@@ -137,14 +137,4 @@ public class MonoPackageManager {
 	{
 		return MonoPackageManager_Resources.Assemblies;
 	}
-
-	public static String[] getDependencies ()
-	{
-		return MonoPackageManager_Resources.Dependencies;
-	}
-
-	public static String getApiPackageName ()
-	{
-		return MonoPackageManager_Resources.ApiPackageName;
-	}
 }

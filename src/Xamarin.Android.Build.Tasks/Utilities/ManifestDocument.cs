@@ -380,6 +380,11 @@ namespace Xamarin.Android.Tasks {
 								new XAttribute (androidNs + "name", "mono.android.intent.action.SEPPUKU")),
 							new XElement ("category",
 								new XAttribute (androidNs + "name", "mono.android.intent.category.SEPPUKU." + PackageName)))));
+				app.Add (new XElement ("receiver",
+						new XAttribute (androidNs + "name", "mono.android.ExternalStorageDirectory"),
+						new XElement ("intent-filter",
+							new XElement ("action",
+								new XAttribute (androidNs + "name", "mono.android.intent.action.EXTERNAL_STORAGE_DIRECTORY")))));
 				if (app.Attribute (androidNs + "debuggable") == null)
 					app.Add (new XAttribute (androidNs + "debuggable", "true"));
 			}

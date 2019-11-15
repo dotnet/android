@@ -22,7 +22,7 @@
     <LibExtension Condition=" '$(HostOS)' == 'Windows' ">dll</LibExtension>
     <IncludeMonoBundleComponents Condition="'$(IncludeMonoBuildComponents)' == ''">True</IncludeMonoBundleComponents>
     <UseCommercialInstallerName Condition="'$(UseCommercialInstallerName)' == ''">False</UseCommercialInstallerName>
-    <_HasCommercialFiles Condition="Exists('$(MSBuildSrcDir)\Mono.Android.DebugRuntime-debug.apk')">True</_HasCommercialFiles>
+    <_HasCommercialFiles Condition="Exists('$(MSBuildSrcDir)\Xamarin.Android.Common.Debugging.targets')">True</_HasCommercialFiles>
   </PropertyGroup>
   <ItemGroup>
     <_MsxDocAssembly Include="Mono.Android">
@@ -344,12 +344,6 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\jar2xml.jar" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.AndroidTools.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.AndroidTools.pdb" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Android.DebugRuntime-arm64-v8a.apk" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Android.DebugRuntime-armeabi-v7a.apk" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Android.DebugRuntime-debug.apk" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Android.DebugRuntime-debug.xml" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Android.DebugRuntime-x86.apk" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Android.DebugRuntime-x86_64.apk" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Analysis.Compatibility.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Analysis.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Analysis.Tasks.dll" />

@@ -55,7 +55,7 @@ namespace Xamarin.Android.Tasks
 					var destination = DestinationFiles [i];
 
 					// Only run the step on "MonoAndroid" assemblies
-					if (MonoAndroidHelper.IsMonoAndroidAssembly (source) && !MonoAndroidHelper.IsSharedRuntimeAssembly (source.ItemSpec)) {
+					if (MonoAndroidHelper.IsMonoAndroidAssembly (source) && !MonoAndroidHelper.IsFrameworkAssembly (source.ItemSpec)) {
 						var assemblyDefinition = resolver.GetAssembly (source.ItemSpec);
 						if (step.FixAbstractMethods (assemblyDefinition)) {
 							Log.LogDebugMessage ($"Saving modified assembly: {destination.ItemSpec}");

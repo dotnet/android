@@ -108,7 +108,6 @@ namespace Xamarin.Android.Build.Tests
 				// Disable fast deployment for aabs, because we give:
 				//	XA0119: Using Fast Deployment and Android App Bundles at the same time is not recommended.
 				proj.EmbedAssembliesIntoApk = true;
-				proj.AndroidUseSharedRuntime = false;
 			}
 			proj.SetProperty ("AndroidPackageFormat", packageFormat);
 			proj.IsRelease = isRelease;
@@ -2851,7 +2850,6 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				EmbedAssembliesIntoApk = true,
-				AndroidUseSharedRuntime = false,
 			};
 			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugType", "portable");
 			using (var b = CreateApkBuilder ("temp/BuildBasicApplicationCheckPdb", false, false)) {
@@ -3401,7 +3399,6 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 </Project>
 ",
 			});
-			app1.SetProperty(KnownProperties.AndroidUseSharedRuntime, "False");
 			sb.Projects.Add(app1);
 			var code = new StringBuilder();
 			code.AppendLine("using System;");
@@ -3717,7 +3714,6 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 		{
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty ("_XASupportsFastDev", "True");
-			proj.SetProperty (KnownProperties.AndroidUseSharedRuntime, "True");
 			proj.SetProperty (proj.DebugProperties, "AndroidLinkMode", "Full");
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				b.Target = "Build"; // SignAndroidPackage would fail for OSS builds
@@ -3730,7 +3726,6 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 		public void FastDeploymentDoesNotAddContentProvider ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
-				AndroidUseSharedRuntime = true,
 				EmbedAssembliesIntoApk = false,
 			};
 			proj.SetProperty ("_XASupportsFastDev", "True");

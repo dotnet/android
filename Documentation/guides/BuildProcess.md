@@ -725,6 +725,8 @@ when packaging Release applications.
     This property should be `True` for Debug builds, and `False` for
     Release projects.
 
+    NOTE: removed in Xamarin.Android 10.2.
+
 -   **AndroidVersionCodePattern** &ndash; A string property which allows
     the developer to customize the `versionCode` in the manifest.
     See [Creating the Version Code for the APK](~/android/deploy-test/building-apps/abi-specific-apks.md)

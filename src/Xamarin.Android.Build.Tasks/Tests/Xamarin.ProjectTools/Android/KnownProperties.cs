@@ -8,7 +8,6 @@ namespace Xamarin.ProjectTools
 		public const string TargetFrameworkVersion = "TargetFrameworkVersion";
 
 		public const string AndroidLinkMode = "AndroidLinkMode";
-		public const string AndroidUseSharedRuntime = "AndroidUseSharedRuntime";
 		public const string EmbedAssembliesIntoApk = "EmbedAssembliesIntoApk";
 		public const string AndroidUseLatestPlatformSdk = "AndroidUseLatestPlatformSdk";
 		public const string AndroidCreatePackagePerAbi = "AndroidCreatePackagePerAbi";

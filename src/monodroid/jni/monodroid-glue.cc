@@ -365,10 +365,7 @@ MonodroidRuntime::gather_bundled_assemblies (JNIEnv *env, jstring_array_wrapper 
 		jstring_wrapper &apk_file = runtimeApks [static_cast<size_t>(i)];
 
 		size_t cur_num_assemblies  = embeddedAssemblies.register_from<should_register_file> (apk_file.get_cstr ());
-
-		if (strstr (apk_file.get_cstr (), "/Mono.Android.DebugRuntime") == nullptr &&
-		    strstr (apk_file.get_cstr (), "/Mono.Android.Platform.ApiLevel_") == nullptr)
-			*out_user_assemblies_count += (cur_num_assemblies - prev_num_assemblies);
+		*out_user_assemblies_count += (cur_num_assemblies - prev_num_assemblies);
 		prev_num_assemblies = cur_num_assemblies;
 	}
 }

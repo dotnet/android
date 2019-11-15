@@ -35,9 +35,6 @@ namespace Xamarin.Android.Tasks
 		public string EnvironmentOutputDirectory { get; set; }
 
 		[Required]
-		public string UseSharedRuntime { get; set; }
-
-		[Required]
 		public string MainAssembly { get; set; }
 
 		[Required]
@@ -82,7 +79,6 @@ namespace Xamarin.Android.Tasks
 			BuildId = buildId.ToString ();
 			Log.LogDebugMessage ("  [Output] BuildId: {0}", BuildId);
 
-			var shared_runtime = string.Compare (UseSharedRuntime, "true", true) == 0;
 			var doc = AndroidAppManifest.Load (Manifest, MonoAndroidHelper.SupportedVersions);
 			int minApiVersion = doc.MinSdkVersion == null ? 4 : (int) doc.MinSdkVersion;
 			// We need to include any special assemblies in the Assemblies list
@@ -105,23 +101,7 @@ namespace Xamarin.Android.Tasks
 				foreach (var assembly in assemblies) {
 					pkgmgr.WriteLine ("\t\t\"" + Path.GetFileName (assembly.ItemSpec) + "\",");
 				}
-
-				// Write the assembly dependencies
 				pkgmgr.WriteLine ("\t};");
-				pkgmgr.WriteLine ("\tpublic static String[] Dependencies = new String[]{");
-
-				//foreach (var assembly in assemblies.Except (args.Assemblies)) {
-				//        if (args.SharedRuntime && !Toolbox.IsInSharedRuntime (assembly))
-				//                pkgmgr.WriteLine ("\t\t\"" + Path.GetFileName (assembly) + "\",");
-				//}
-
-				pkgmgr.WriteLine ("\t};");
-
-				// Write the platform api apk we need
-				pkgmgr.WriteLine ("\tpublic static String ApiPackageName = {0};", shared_runtime
-						? string.Format ("\"Mono.Android.Platform.ApiLevel_{0}\"",
-							MonoAndroidHelper.SupportedVersions.GetApiLevelFromFrameworkVersion (TargetFrameworkVersion))
-						: "null");
 				pkgmgr.WriteLine ("}");
 				pkgmgr.Flush ();
 
@@ -147,7 +127,6 @@ namespace Xamarin.Android.Tasks
 			bool usesAssemblyPreload = EnablePreloadAssembliesDefault;
 			bool brokenExceptionTransitions = false;
 			uint monoAOTMode = 0;
-			string androidPackageName = null;
 			var environmentVariables = new Dictionary<string, string> (StringComparer.Ordinal);
 			var systemProperties = new Dictionary<string, string> (StringComparer.Ordinal);
 

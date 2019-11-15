@@ -166,65 +166,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void InstallWithoutSharedRuntime ()
-		{
-			if (!CommercialBuildAvailable)
-				Assert.Ignore ("Not required on Open Source Builds");
-
-			if (!HasDevices) {
-				Assert.Ignore ("Test Skipped no devices or emulators found.");
-			}
-
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
-			};
-			proj.SetProperty (proj.ReleaseProperties, "Optimize", false);
-			proj.SetProperty (proj.ReleaseProperties, "DebugType", "none");
-			proj.SetProperty (proj.ReleaseProperties, "AndroidUseSharedRuntime", false);
-			proj.RemoveProperty (proj.ReleaseProperties, "EmbedAssembliesIntoApk");
-			var abis = new string [] { "armeabi-v7a", "x86" };
-			proj.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
-			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name), false, false)) {
-				builder.Verbosity = LoggerVerbosity.Diagnostic;
-				if (RunAdbCommand ("shell pm list packages Mono.Android.DebugRuntime").Trim ().Length != 0)
-					RunAdbCommand ("uninstall Mono.Android.DebugRuntime");
-				Assert.IsTrue (builder.Install (proj));
-				var runtimeInfo = builder.GetSupportedRuntimes ();
-				var apkPath = Path.Combine (Root, builder.ProjectDirectory,
-					proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
-				using (var apk = ZipHelper.OpenZip (apkPath)) {
-					foreach (var abi in abis) {
-						var runtime = runtimeInfo.FirstOrDefault (x => x.Abi == abi && x.Runtime == "debug");
-						Assert.IsNotNull (runtime, "Could not find the expected runtime.");
-						var inApk = ZipHelper.ReadFileFromZip (apk, String.Format ("lib/{0}/{1}", abi, runtime.Name));
-						var inApkRuntime = runtimeInfo.FirstOrDefault (x => x.Abi == abi && x.Size == inApk.Length);
-						Assert.IsNotNull (inApkRuntime, "Could not find the actual runtime used.");
-						Assert.AreEqual (runtime.Size, inApkRuntime.Size, "expected {0} got {1}", "debug", inApkRuntime.Runtime);
-					}
-				}
-				//FIXME: https://github.com/xamarin/androidtools/issues/141
-				//Assert.AreEqual (0, RunAdbCommand ("shell pm list packages Mono.Android.DebugRuntime").Trim ().Length,
-				//	"The Shared Runtime should not have been installed.");
-				var overrideDirs = new string [] {
-					$"/data/data/{proj.PackageName}/files/.__override__",
-					$"/storage/emulated/0/Android/data/{proj.PackageName}/files/.__override__",
-					$"/mnt/shell/emulated/0/Android/data/{proj.PackageName}/files/.__override__",
-					$"/storage/sdcard/Android/data/{proj.PackageName}/files/.__override__",
-				};
-				var directorylist = string.Empty;
-				foreach (var dir in overrideDirs) {
-					var listing = RunAdbCommand ($"shell ls {dir}");
-					if (!listing.Contains ("No such file or directory"))
-						directorylist += listing;
-				}
-				StringAssert.Contains ($"{proj.ProjectName}.dll", directorylist, $"{proj.ProjectName}.dll should exist in the .__override__ directory.");
-				StringAssert.Contains ($"System.dll", directorylist, $"System.dll should exist in the .__override__ directory.");
-				StringAssert.Contains ($"Mono.Android.dll", directorylist, $"Mono.Android.dll should exist in the .__override__ directory.");
-
-			}
-		}
-
-		[Test]
 		public void InstallErrorCode ()
 		{
 			if (!CommercialBuildAvailable)
@@ -237,7 +178,6 @@ namespace Xamarin.Android.Build.Tests
 			//Setup a situation where we get INSTALL_FAILED_NO_MATCHING_ABIS
 			var abi = "armeabi-v7a";
 			var proj = new XamarinAndroidApplicationProject {
-				AndroidUseSharedRuntime = false,
 				EmbedAssembliesIntoApk = true,
 			};
 			proj.SetProperty (proj.DebugProperties, KnownProperties.AndroidSupportedAbis, abi);
@@ -263,7 +203,6 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			var proj = new XamarinAndroidApplicationProject {
-				AndroidUseSharedRuntime = true,
 				EmbedAssembliesIntoApk = false,
 			};
 
@@ -285,7 +224,6 @@ namespace Xamarin.Android.Build.Tests
 				StringAssert.Contains ($"{proj.ProjectName}.dll", directorylist, $"{proj.ProjectName}.dll should exist in the .__override__ directory.");
 
 				//Now toggle FastDev to OFF
-				proj.AndroidUseSharedRuntime = false;
 				proj.EmbedAssembliesIntoApk = true;
 				var abis = new string [] { "armeabi-v7a", "x86" };
 				proj.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
@@ -318,7 +256,6 @@ namespace Xamarin.Android.Build.Tests
 
 			var serial = GetAttachedDeviceSerial ();
 			var proj = new XamarinAndroidApplicationProject ();
-			proj.SetProperty (proj.DebugProperties, "AndroidUseSharedRuntime", true);
 			proj.SetProperty (proj.DebugProperties, "EmbedAssembliesIntoApk", false);
 
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {

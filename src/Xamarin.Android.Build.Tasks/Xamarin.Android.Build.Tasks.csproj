@@ -636,17 +636,11 @@
     <EmbeddedResource Include="Resources\machine.config">
       <LogicalName>machine.config</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\MonoRuntimeProvider.Bundled.java">
-      <LogicalName>MonoRuntimeProvider.Bundled.java</LogicalName>
+    <EmbeddedResource Include="Resources\MonoRuntimeProvider.java">
+      <LogicalName>MonoRuntimeProvider.java</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\MonoRuntimeProvider.Bundled.20.java">
-      <LogicalName>MonoRuntimeProvider.Bundled.20.java</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\MonoRuntimeProvider.Shared.java">
-      <LogicalName>MonoRuntimeProvider.Shared.java</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\MonoRuntimeProvider.Shared.20.java">
-      <LogicalName>MonoRuntimeProvider.Shared.20.java</LogicalName>
+    <EmbeddedResource Include="Resources\MonoRuntimeProvider.20.java">
+      <LogicalName>MonoRuntimeProvider.20.java</LogicalName>
     </EmbeddedResource>
     <EmbeddedResource Include="Linker\PreserveLists\mscorlib.xml">
       <LogicalName>mscorlib.xml</LogicalName>

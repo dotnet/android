@@ -8,7 +8,7 @@
   <Import Project="..\..\bin\Build$(Configuration)\ProfileAssemblies.projitems" />
   <Import Project="..\..\build-tools\scripts\XAVersionInfo.targets" />
   <PropertyGroup>
-    <_SharedRuntimeBuildPath Condition=" '$(_SharedRuntimeBuildPath)' == '' ">$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\</_SharedRuntimeBuildPath>
+    <_FrameworkBuildPath Condition=" '$(_FrameworkBuildPath)' == '' ">$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\</_FrameworkBuildPath>
     <_GeneratedProfileClass>$(MSBuildThisFileDirectory)$(IntermediateOutputPath)Profile.g.cs</_GeneratedProfileClass>
     <BuildDependsOn>
       _CopyNDKTools;
@@ -127,16 +127,16 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <_SharedRuntimeAssemblies Include="@(MonoProfileAssembly->'$(_SharedRuntimeBuildPath)v1.0\%(Identity)')" />
-    <_SharedRuntimeAssemblies Include="$(_SharedRuntimeBuildPath)v1.0\Mono.Data.Sqlite.dll" />
-    <_SharedRuntimeAssemblies Include="$(_SharedRuntimeBuildPath)v1.0\Mono.Posix.dll" />
-    <_SharedRuntimeAssemblies Include="$(_SharedRuntimeBuildPath)v1.0\Java.Interop.dll" />
-    <_SharedRuntimeAssemblies Include="$(_SharedRuntimeBuildPath)v1.0\System.EnterpriseServices.dll" />
-    <_SharedRuntimeAssemblies Include="$(_SharedRuntimeBuildPath)$(AndroidFrameworkVersion)\Mono.Android.Export.dll" />
+    <_FrameworkAssemblies Include="@(MonoProfileAssembly->'$(_FrameworkBuildPath)v1.0\%(Identity)')" />
+    <_FrameworkAssemblies Include="$(_FrameworkBuildPath)v1.0\Mono.Data.Sqlite.dll" />
+    <_FrameworkAssemblies Include="$(_FrameworkBuildPath)v1.0\Mono.Posix.dll" />
+    <_FrameworkAssemblies Include="$(_FrameworkBuildPath)v1.0\Java.Interop.dll" />
+    <_FrameworkAssemblies Include="$(_FrameworkBuildPath)v1.0\System.EnterpriseServices.dll" />
+    <_FrameworkAssemblies Include="$(_FrameworkBuildPath)$(AndroidFrameworkVersion)\Mono.Android.Export.dll" />
     <!-- These files are build after Xamarin.Android.Build.Tasks but MUST be included in Profile.g.cs -->
-    <_SharedRuntimeAssemblies Include="$(_SharedRuntimeBuildPath)$(AndroidFrameworkVersion)\Mono.Android.dll" />
-    <_SharedRuntimeAssemblies Include="$(_SharedRuntimeBuildPath)$(AndroidFrameworkVersion)\OpenTK.dll" />
-    <_SharedRuntimeAssemblies Include="$(_SharedRuntimeBuildPath)$(AndroidFrameworkVersion)\OpenTK-1.0.dll" />
+    <_FrameworkAssemblies Include="$(_FrameworkBuildPath)$(AndroidFrameworkVersion)\Mono.Android.dll" />
+    <_FrameworkAssemblies Include="$(_FrameworkBuildPath)$(AndroidFrameworkVersion)\OpenTK.dll" />
+    <_FrameworkAssemblies Include="$(_FrameworkBuildPath)$(AndroidFrameworkVersion)\OpenTK-1.0.dll" />
   </ItemGroup>
   <Target Name="_PrepareNDKToolsItems">
     <PropertyGroup>
@@ -228,12 +228,12 @@
   </Target>
   <Target Name="_GenerateProfileClass"
       BeforeTargets="CoreCompile"
-      Inputs="@(_SharedRuntimeAssemblies)"
+      Inputs="@(_FrameworkAssemblies)"
       Outputs="$(_GeneratedProfileClass)">
     <ItemGroup>
-      <_SharedRuntimeAssemblies Remove="$(_SharedRuntimeBuildPath)v1.0\FSharp.Core.dll" />
+      <_FrameworkAssemblies Remove="$(_FrameworkBuildPath)v1.0\FSharp.Core.dll" />
     </ItemGroup>
-    <GenerateProfile Files="@(_SharedRuntimeAssemblies)" OutputFile="$(_GeneratedProfileClass)" />
+    <GenerateProfile Files="@(_FrameworkAssemblies)" OutputFile="$(_GeneratedProfileClass)" />
     <WriteLinesToFile
         File="$(IntermediateOutputPath)$(CleanFile)"
         Lines="$(_GeneratedProfileClass)"

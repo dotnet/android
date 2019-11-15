@@ -25,11 +25,9 @@ namespace Xamarin.Android.Build.Tests
 			var path = Path.Combine ("temp", TestName);
 			var app = new XamarinAndroidApplicationProject {
 				ProjectName = "MyApp",
-				AndroidUseSharedRuntime = false,
 				EmbedAssembliesIntoApk = true,
 			};
 			var wear = new XamarinAndroidWearApplicationProject {
-				AndroidUseSharedRuntime = false,
 				EmbedAssembliesIntoApk = true,
 			};
 			app.References.Add (new BuildItem.ProjectReference ($"..\\{wear.ProjectName}\\{wear.ProjectName}.csproj", wear.ProjectName, wear.ProjectGuid) {

@@ -305,7 +305,7 @@ namespace Xamarin.Android.Tasks
 
 		public static bool IsFrameworkAssembly (string assembly, bool checkSdkPath)
 		{
-			if (IsSharedRuntimeAssembly (assembly)) {
+			if (Array.BinarySearch (Profile.FrameworkAssemblies, Path.GetFileName (assembly), StringComparer.OrdinalIgnoreCase) >= 0) {
 #if MSBUILD
 				bool treatAsUser = Array.BinarySearch (FrameworkAssembliesToTreatAsUserAssemblies, Path.GetFileName (assembly), StringComparer.OrdinalIgnoreCase) >= 0;
 				// Framework assemblies don't come from outside the SDK Path;
@@ -317,11 +317,6 @@ namespace Xamarin.Android.Tasks
 				return true;
 			}
 			return TargetFrameworkDirectories == null || !checkSdkPath ? false : ExistsInFrameworkPath (assembly);
-		}
-
-		public static bool IsSharedRuntimeAssembly (string assembly)
-		{
-			return Array.BinarySearch (Profile.SharedRuntimeAssemblies, Path.GetFileName (assembly), StringComparer.OrdinalIgnoreCase) >= 0;
 		}
 
 		public static bool IsReferenceAssembly (string assembly)

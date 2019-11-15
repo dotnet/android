@@ -200,7 +200,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_XASupportsFastDev Condition=" Exists ('$(MSBuildThisFileDirectory)Xamarin.Android.Common.Debugging.targets') ">True</_XASupportsFastDev>
 	<_XASupportsFastDev Condition=" '$(_XASupportsFastDev)' == '' ">False</_XASupportsFastDev>
 	<AndroidApplication Condition="'$(AndroidApplication)' == ''">false</AndroidApplication>
-	<AndroidUseSharedRuntime Condition=" '$(AndroidUseSharedRuntime)' == '' Or '$(_XASupportsFastDev)' == 'False' ">False</AndroidUseSharedRuntime>
 	<AndroidNeedsInternetPermission Condition="'$(AndroidNeedsInternetPermission)' == '' And '$(AndroidEmbedProfilers)' == ''">False</AndroidNeedsInternetPermission>
 	<AndroidNeedsInternetPermission Condition="'$(AndroidNeedsInternetPermission)' == '' And '$(AndroidEmbedProfilers)' != ''">True</AndroidNeedsInternetPermission>
 	<AndroidUseLatestPlatformSdk Condition="'$(AndroidUseLatestPlatformSdk)' == ''">False</AndroidUseLatestPlatformSdk>
@@ -208,6 +207,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<MonoAndroidVersion>v$(_XAMajorVersionNumber).0</MonoAndroidVersion>
 	<AndroidUpdateResourceReferences Condition="'$(AndroidUpdateResourceReferences)' == ''">True</AndroidUpdateResourceReferences>
 	<EmbedAssembliesIntoApk Condition=" '$(EmbedAssembliesIntoApk)' == '' And '$(Optimize)' != 'True' And '$(_XASupportsFastDev)' == 'True' ">False</EmbedAssembliesIntoApk>
+	<EmbedAssembliesIntoApk Condition=" '$(EmbedAssembliesIntoApk)' == '' And '$(AndroidUseSharedRuntime)' == 'True' And '$(_XASupportsFastDev)' == 'True' ">False</EmbedAssembliesIntoApk>
 	<EmbedAssembliesIntoApk Condition=" '$(_XASupportsFastDev)' == 'False' ">True</EmbedAssembliesIntoApk>
 	<EmbedAssembliesIntoApk Condition=" '$(EmbedAssembliesIntoApk)' == '' ">True</EmbedAssembliesIntoApk>
 	<AndroidPreferNativeLibrariesWithDebugSymbols Condition=" '$(AndroidPreferNativeLibrariesWithDebugSymbols)' == '' ">False</AndroidPreferNativeLibrariesWithDebugSymbols>
@@ -233,7 +233,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	>False</AndroidUseDebugRuntime>
 	<AndroidUseDebugRuntime Condition="'$(AndroidUseDebugRuntime)' == ''" >True</AndroidUseDebugRuntime>
 
-	<MonoSymbolArchive Condition=" '$(MonoSymbolArchive)' == '' And '$(AndroidUseSharedRuntime)' == 'False' And '$(EmbedAssembliesIntoApk)' == 'True' And '$(DebugSymbols)' == 'True' And '$(Optimize)' == 'True'" >True</MonoSymbolArchive>  
+	<MonoSymbolArchive Condition=" '$(MonoSymbolArchive)' == '' And '$(EmbedAssembliesIntoApk)' == 'True' And '$(DebugSymbols)' == 'True' And '$(Optimize)' == 'True'" >True</MonoSymbolArchive>  
 	<MonoSymbolArchive Condition=" '$(MonoSymbolArchive)' == '' ">False</MonoSymbolArchive>
 
 	<BundleAssemblies Condition="'$(BundleAssemblies)' == ''">False</BundleAssemblies>
@@ -432,7 +432,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		Value="AndroidKeyStore=True;AndroidSigningKeyStore=%(_AndroidSigningKeyStoreFile.FullPath);AndroidSigningStorePass=$(AndroidSigningStorePass);AndroidSigningKeyAlias=$(AndroidSigningKeyAlias);AndroidSigningKeyPass=$(AndroidSigningKeyPass)">
 		<Output TaskParameter="Value" PropertyName="_AdditionaEmbeddedWearAppProperties" />
 	</CreateProperty>
-	<MSBuild Projects="@(_AppExtensionReference)" Properties="Configuration=$(Configuration);AndroidUseSharedRuntime=False;EmbedAssembliesIntoApk=True;$(_AdditionaEmbeddedWearAppProperties)" Targets="Build;SignAndroidPackage"/>
+	<MSBuild Projects="@(_AppExtensionReference)" Properties="Configuration=$(Configuration);EmbedAssembliesIntoApk=True;$(_AdditionaEmbeddedWearAppProperties)" Targets="Build;SignAndroidPackage"/>
 	<CreateProperty
 		Condition="$(BundledWearApplicationApkPath) == '' And ($(WearAppTarget) == 'SignAndroidPackage' Or !Exists('%(_AppExtensionReference.RootDir)%(_AppExtensionReference.Directory)$(_AndroidDebugKeyStoreFlag)'))"
 		Value="%(_AppExtensionReference.RootDir)%(_AppExtensionReference.Directory)bin\$(Configuration)\$(BundledWearApplicationPackageName)-Signed.apk">
@@ -527,19 +527,19 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <Target Name="_CheckNonIdealConfigurations">
   <Warning Code="XA0119"
       Text="Using Fast Deployment and AOT at the same time is not recommended. Use Fast Deployment for Debug configurations and AOT for Release configurations."
-      Condition=" '$(AndroidUseSharedRuntime)' == 'True' And '$(AotAssemblies)' == 'True' "
+      Condition=" '$(EmbedAssembliesIntoApk)' == 'False' And '$(AotAssemblies)' == 'True' "
   />
   <Warning Code="XA0119"
       Text="Using Fast Deployment and the Linker at the same time is not recommended. Use Fast Deployment for Debug configurations and the Linker for Release configurations."
-      Condition=" '$(AndroidUseSharedRuntime)' == 'True' And '$(AndroidLinkMode)' != 'None' "
+      Condition=" '$(EmbedAssembliesIntoApk)' == 'False' And '$(AndroidLinkMode)' != 'None' "
   />
   <Warning Code="XA0119"
       Text="Using Fast Deployment and a Code Shrinker at the same time is not recommended. Use Fast Deployment for Debug configurations and a Code Shrinker for Release configurations."
-      Condition=" '$(AndroidUseSharedRuntime)' == 'True' And '$(AndroidLinkTool)' != '' "
+      Condition=" '$(EmbedAssembliesIntoApk)' == 'False' And '$(AndroidLinkTool)' != '' "
   />
   <Warning Code="XA0119"
       Text="Using Fast Deployment and Android App Bundles at the same time is not recommended. Use Fast Deployment for Debug configurations and Android App Bundles for Release configurations."
-      Condition=" '$(AndroidUseSharedRuntime)' == 'True' And '$(AndroidPackageFormat)' == 'aab' "
+      Condition=" '$(EmbedAssembliesIntoApk)' == 'False' And '$(AndroidPackageFormat)' == 'aab' "
   />
 </Target>
 
@@ -566,7 +566,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 <PropertyGroup Condition="'$(AndroidApplication)' != '' And $(AndroidApplication)">
   <BuildDependsOn>
-    _ValidateLinkMode;
     _CheckNonIdealConfigurations;
     _SetupDesignTimeBuildForBuild;
     _CleanIntermediateIfNuGetsChange;
@@ -586,7 +585,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 <PropertyGroup Condition="'$(AndroidApplication)' == '' Or !($(AndroidApplication))">
   <BuildDependsOn>
-    _ValidateLinkMode;
     _CheckNonIdealConfigurations;
      _SetupDesignTimeBuildForBuild;
     _CleanIntermediateIfNuGetsChange;
@@ -667,12 +665,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		_CleanMonoAndroidIntermediateDir;
 	</CleanDependsOn>
 </PropertyGroup>
-
-<Target Name="_ValidateLinkMode">
-	<CreateProperty Value="None" Condition="'$(AndroidLinkMode)' == 'SdkOnly' And '$(AndroidUseSharedRuntime)' == 'true'">
-		<Output TaskParameter="Value" PropertyName="AndroidLinkMode" />
-	</CreateProperty>
-</Target>
 
 <Target Name="UpdateGeneratedFiles"
 		DependsOnTargets="ResolveAssemblyReferences;_RemoveLegacyDesigner;UpdateAndroidResources"
@@ -1183,7 +1175,6 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="AndroidDexTool=$(AndroidDexTool)" />
 		<_PropertyCacheItems Include="AndroidLinkTool=$(AndroidLinkTool)" />
 		<_PropertyCacheItems Include="AndroidPackageFormat=$(AndroidPackageFormat)" />
-		<_PropertyCacheItems Include="UseSharedRuntime=$(AndroidUseSharedRuntime)" />
 		<_PropertyCacheItems Include="EmbedAssembliesIntoApk=$(EmbedAssembliesIntoApk)" />
 		<_PropertyCacheItems Include="AndroidLinkMode=$(AndroidLinkMode)" />
 		<_PropertyCacheItems Include="AndroidLinkSkip=$(AndroidLinkSkip)" />
@@ -1787,26 +1778,15 @@ because xbuild doesn't support framework reference assemblies.
 		DependsOnTargets="_CollectRuntimeJarFilenames;$(_BeforeAddStaticResources);_CleanupOldStaticResources;_GetMonoPlatformJarPath">
 	<CopyResource ResourceName="machine.config" OutputPath="$(MonoAndroidIntermediateAssemblyDir)machine.config" />
   <CopyResource
-      Condition=" '$(AndroidUseSharedRuntime)' != 'True' And '$(_AndroidApiLevel)' &gt;= '21' "
-      ResourceName="MonoRuntimeProvider.Bundled.java"
+      Condition=" '$(_AndroidApiLevel)' &gt;= '21' "
+      ResourceName="MonoRuntimeProvider.java"
       OutputPath="$(_AndroidIntermediateJavaSourceDirectory)mono\MonoRuntimeProvider.java"
   />
   <CopyResource
-      Condition=" '$(AndroidUseSharedRuntime)' != 'True' And '$(_AndroidApiLevel)' &lt; '21' "
-      ResourceName="MonoRuntimeProvider.Bundled.20.java"
+      Condition=" '$(_AndroidApiLevel)' &lt; '21' "
+      ResourceName="MonoRuntimeProvider.20.java"
       OutputPath="$(_AndroidIntermediateJavaSourceDirectory)mono\MonoRuntimeProvider.java"
   />
-  <CopyResource
-      Condition=" '$(AndroidUseSharedRuntime)' == 'True' And '$(_AndroidApiLevel)' &gt;= '21' "
-      ResourceName="MonoRuntimeProvider.Shared.java"
-      OutputPath="$(_AndroidIntermediateJavaSourceDirectory)mono\MonoRuntimeProvider.java"
-  />
-  <CopyResource
-      ResourceName="MonoRuntimeProvider.Shared.20.java"
-      OutputPath="$(_AndroidIntermediateJavaSourceDirectory)mono\MonoRuntimeProvider.java"
-      Condition=" '$(AndroidUseSharedRuntime)' == 'True' And '$(_AndroidApiLevel)' &lt; '21' "
-  />
-  
   <Copy
     SourceFiles="$(MonoPlatformJarPath)"
     DestinationFiles="$(IntermediateOutputPath)android\bin\mono.android.jar"
@@ -1950,7 +1930,6 @@ because xbuild doesn't support framework reference assemblies.
     <MakeDir Condition=" '$(AndroidLinkTool)' != '' " Directories="$(IntermediateOutputPath)proguard" />
 
     <LinkAssemblies
-      UseSharedRuntime="$(AndroidUseSharedRuntime)"
       MainAssembly="$(_MainAssembly)"
       OutputDirectory="$(MonoAndroidIntermediateAssemblyDir)"
       I18nAssemblies="$(MandroidI18n)"
@@ -2040,13 +2019,13 @@ because xbuild doesn't support framework reference assemblies.
 
   <CreateItem
     Include="@(_ResolvedFrameworkAssemblies)"
-    Condition="'$(AndroidLinkMode)' == 'None' OR '$(AndroidUseSharedRuntime)' == 'true'">
+    Condition="'$(AndroidLinkMode)' == 'None'">
     <Output TaskParameter="Include" ItemName="_ShrunkFrameworkAssemblies" />
   </CreateItem>
 
   <CreateItem
     Include="@(_ResolvedFrameworkAssemblies->'$(MonoAndroidIntermediateAssemblyDir)shrunk\%(Filename)%(Extension)')"
-    Condition="'$(AndroidLinkMode)' != 'None' AND '$(AndroidUseSharedRuntime)' != 'true'">
+    Condition="'$(AndroidLinkMode)' != 'None'">
     <Output TaskParameter="Include" ItemName="_ShrunkFrameworkAssemblies" />
   </CreateItem>
 
@@ -2100,7 +2079,6 @@ because xbuild doesn't support framework reference assemblies.
 	ManifestPlaceholders="$(AndroidManifestPlaceholders)"
 	OutputDirectory="$(IntermediateOutputPath)android"
 	MergedAndroidManifestOutput="$(IntermediateOutputPath)android\AndroidManifest.xml"
-    UseSharedRuntime="$(AndroidUseSharedRuntime)"
 	EmbedAssemblies="$(EmbedAssembliesIntoApk)"
 	BundledWearApplicationName="$(BundledWearApplicationPackageName)"
 	PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
@@ -2195,7 +2173,6 @@ because xbuild doesn't support framework reference assemblies.
     MainAssembly="$(TargetPath)"
     OutputDirectory="$(_AndroidIntermediateJavaSourceDirectory)mono"
     EnvironmentOutputDirectory="$(IntermediateOutputPath)android"
-    UseSharedRuntime="$(AndroidUseSharedRuntime)"
     TargetFrameworkVersion="$(TargetFrameworkVersion)" 
     Manifest="$(IntermediateOutputPath)android\AndroidManifest.xml"
     Environments="@(AndroidEnvironment);@(LibraryEnvironments)"
@@ -2513,7 +2490,7 @@ because xbuild doesn't support framework reference assemblies.
   DependsOnTargets="_PrepareAssemblies"
   Inputs="$(_AndroidLinkFlag)"
   Outputs="$(_RemoveRegisterFlag)"
-  Condition="'$(AndroidLinkMode)' != 'None' AND '$(AndroidUseSharedRuntime)' != 'true'">
+  Condition="'$(AndroidLinkMode)' != 'None'">
 
   <!-- Make a copy of every assembly into assets\shrunk -->
   <Copy
@@ -2527,7 +2504,6 @@ because xbuild doesn't support framework reference assemblies.
   
   <!-- Shrink Mono.Android.dll by removing attribute only needed for GenerateJavaStubs -->
   <RemoveRegisterAttribute
-    Condition="'$(AndroidLinkMode)' != 'None' AND '$(AndroidUseSharedRuntime)' != 'true'"
     Deterministic="$(Deterministic)"
     ShrunkFrameworkAssemblies="@(_ShrunkFrameworkAssemblies)" />
 
@@ -2763,7 +2739,6 @@ because xbuild doesn't support framework reference assemblies.
     DalvikClasses="@(_DexFile)"
     SupportedAbis="@(_BuildTargetAbis)"
     CreatePackagePerAbi="$(AndroidCreatePackagePerAbi)"
-    UseSharedRuntime="$(AndroidUseSharedRuntime)"
     Debug="$(AndroidIncludeDebugSymbols)"
     PreferNativeLibrariesWithDebugSymbols="$(AndroidPreferNativeLibrariesWithDebugSymbols)"
     JavaSourceFiles="@(AndroidJavaSource)"
@@ -2792,7 +2767,6 @@ because xbuild doesn't support framework reference assemblies.
       DalvikClasses="@(_DexFile)"
       SupportedAbis="@(_BuildTargetAbis)"
       CreatePackagePerAbi="False"
-      UseSharedRuntime="$(AndroidUseSharedRuntime)"
       Debug="$(AndroidIncludeDebugSymbols)"
       PreferNativeLibrariesWithDebugSymbols="$(AndroidPreferNativeLibrariesWithDebugSymbols)"
       JavaSourceFiles="@(AndroidJavaSource)"

@@ -30,7 +30,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			sb.AppendLine ("namespace Xamarin.Android.Tasks {");
 			sb.AppendLine ("\tpublic partial class Profile {");
 			sb.AppendLine ("\t\t// KEEP THIS SORTED ALPHABETICALLY, CASE-INSENSITIVE");
-			sb.AppendLine ("\t\tpublic static readonly string [] SharedRuntimeAssemblies = new []{");
+			sb.AppendLine ("\t\tpublic static readonly string [] FrameworkAssemblies = new []{");
 			foreach (var file in Files.Select(x => Path.GetFileName (x.ItemSpec)).Distinct().OrderBy(x => x)) {
 				sb.AppendFormat ("\t\t\t\"{0}\"," + Environment.NewLine, file);
 			}

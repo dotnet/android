@@ -283,8 +283,6 @@ get_libmonosgen_path ()
 		log_fatal (LOG_DEFAULT, "  %s", BasicAndroidSystem::app_lib_directories [i]);
 	}
 
-	log_fatal (LOG_DEFAULT, "Do you have a shared runtime build of your app with AndroidManifest.xml android:minSdkVersion < 10 while running on a 64-bit Android 5.0 target? This combination is not supported.");
-	log_fatal (LOG_DEFAULT, "Please either set android:minSdkVersion >= 10 or use a build without the shared runtime (like default Release configuration).");
 	exit (FATAL_EXIT_CANNOT_FIND_LIBMONOSGEN);
 
 	return libmonoso;

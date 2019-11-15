@@ -61,8 +61,6 @@ namespace Xamarin.Android.Tasks
 		public bool NeedsInternet   { get; set; }
 		public bool InstantRunEnabled { get; set; }
 
-		public bool UseSharedRuntime { get; set; }
-
 		public bool ErrorOnCustomJavaObject { get; set; }
 
 		public string BundledWearApplicationName { get; set; }
@@ -70,8 +68,6 @@ namespace Xamarin.Android.Tasks
 		public string PackageNamingPolicy { get; set; }
 		
 		public string ApplicationJavaClass { get; set; }
-
-		internal const string AndroidSkipJavaStubGeneration = "AndroidSkipJavaStubGeneration";
 
 		public override bool RunTask ()
 		{
@@ -111,7 +107,7 @@ namespace Xamarin.Android.Tasks
 
 			// Put every assembly we'll need in the resolver
 			foreach (var assembly in ResolvedAssemblies) {
-				if (bool.TryParse (assembly.GetMetadata (AndroidSkipJavaStubGeneration), out bool value) && value) {
+				if (ShouldSkipJavaStubGeneration (assembly)) {
 					Log.LogDebugMessage ($"Skipping Java Stub Generation for {assembly.ItemSpec}");
 					continue;
 				}
@@ -121,7 +117,7 @@ namespace Xamarin.Android.Tasks
 			// However we only want to look for JLO types in user code
 			List<string> assemblies = new List<string> ();
 			foreach (var asm in ResolvedUserAssemblies) {
-				if (bool.TryParse (asm.GetMetadata (AndroidSkipJavaStubGeneration), out bool value) && value) {
+				if (ShouldSkipJavaStubGeneration (asm)) {
 					Log.LogDebugMessage ($"Skipping Java Stub Generation for {asm.ItemSpec}");
 					continue;
 				}
@@ -131,7 +127,7 @@ namespace Xamarin.Android.Tasks
 				assemblies.Add (asm.ItemSpec);
 			}
 			foreach (var asm in MonoAndroidHelper.GetFrameworkAssembliesToTreatAsUserAssemblies (ResolvedAssemblies)) {
-				if (bool.TryParse (asm.GetMetadata (AndroidSkipJavaStubGeneration), out bool value) && value) {
+				if (ShouldSkipJavaStubGeneration (asm)) {
 					Log.LogDebugMessage ($"Skipping Java Stub Generation for {asm.ItemSpec}");
 					continue;
 				}
@@ -147,7 +143,7 @@ namespace Xamarin.Android.Tasks
 			};
 			var all_java_types = scanner.GetJavaTypes (assemblies, res);
 
-			WriteTypeMappings (all_java_types);
+			WriteTypeMappings (scanner, res);
 
 			var java_types = all_java_types
 				.Where (t => !JavaTypeScanner.ShouldSkipJavaCallableWrapperGeneration (t))
@@ -160,7 +156,6 @@ namespace Xamarin.Android.Tasks
 				Path.Combine (OutputDirectory, "src"),
 				ApplicationJavaClass,
 				AndroidSdkPlatform,
-				UseSharedRuntime,
 				int.Parse (AndroidSdkPlatform) <= 10,
 				ResolvedAssemblies.Any (assembly => Path.GetFileName (assembly.ItemSpec) == "Mono.Android.Export.dll"));
 			if (!success)
@@ -265,8 +260,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			// Create additional runtime provider java sources.
-			string providerTemplateFile = UseSharedRuntime ? "MonoRuntimeProvider.Shared.java" : "MonoRuntimeProvider.Bundled.java";
-			string providerTemplate = GetResource (providerTemplateFile);
+			string providerTemplate = GetResource ("MonoRuntimeProvider.java");
 			
 			foreach (var provider in additionalProviders) {
 				var contents = providerTemplate.Replace ("MonoRuntimeProvider", provider);
@@ -292,6 +286,10 @@ namespace Xamarin.Android.Tasks
 				template => template.Replace ("// REGISTER_APPLICATION_AND_INSTRUMENTATION_CLASSES_HERE", regCallsWriter.ToString ()));
 		}
 
+		static bool ShouldSkipJavaStubGeneration (ITaskItem assembly) =>
+			bool.TryParse (assembly.GetMetadata ("AndroidSkipJavaStubGeneration"), out bool value) && value ||
+			!MonoAndroidHelper.IsMonoAndroidAssembly (assembly);
+
 		string GetResource (string resource)
 		{
 			using (var stream = GetType ().Assembly.GetManifestResourceStream (resource))
@@ -306,17 +304,20 @@ namespace Xamarin.Android.Tasks
 			MonoAndroidHelper.CopyIfStringChanged (template, Path.Combine (destDir, filename));
 		}
 
-		void WriteTypeMappings (List<TypeDefinition> types)
+		void WriteTypeMappings (JavaTypeScanner scanner, DirectoryAssemblyResolver res)
 		{
-			void logger (TraceLevel level, string value) => Log.LogDebugMessage (value);
-			TypeNameMapGenerator createTypeMapGenerator () => UseSharedRuntime ?
-				new TypeNameMapGenerator (types, logger) :
-				new TypeNameMapGenerator (ResolvedAssemblies.Select (p => p.ItemSpec), logger);
-			using (var gen = createTypeMapGenerator ()) {
-				using (var ms = new MemoryStream ()) {
-					UpdateWhenChanged (Path.Combine (OutputDirectory, "typemap.jm"), "jm", ms, gen.WriteJavaToManaged);
-					UpdateWhenChanged (Path.Combine (OutputDirectory, "typemap.mj"), "mj", ms, gen.WriteManagedToJava);
+			var assemblies = new List<string> (ResolvedAssemblies.Length);
+			foreach (var assembly in ResolvedAssemblies) {
+				if (!ShouldSkipJavaStubGeneration (assembly)) {
+					assemblies.Add (assembly.ItemSpec);
 				}
+			}
+			var types = scanner.GetJavaTypes (assemblies, res);
+			void logger (TraceLevel level, string value) => Log.LogDebugMessage (value);
+			using (var gen = new TypeNameMapGenerator (types, logger))
+			using (var ms = new MemoryStream ()) {
+				UpdateWhenChanged (Path.Combine (OutputDirectory, "typemap.jm"), "jm", ms, gen.WriteJavaToManaged);
+				UpdateWhenChanged (Path.Combine (OutputDirectory, "typemap.mj"), "mj", ms, gen.WriteManagedToJava);
 			}
 		}
 

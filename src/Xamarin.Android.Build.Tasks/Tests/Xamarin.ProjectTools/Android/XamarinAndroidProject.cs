@@ -27,8 +27,6 @@ namespace Xamarin.ProjectTools
 
 			SetProperty (KnownProperties.AndroidUseLatestPlatformSdk, () => UseLatestPlatformSdk ? "True" : "False");
 			SetProperty (KnownProperties.TargetFrameworkVersion, () => TargetFrameworkVersion);
-
-			SetProperty (ReleaseProperties, KnownProperties.AndroidUseSharedRuntime, "False");
 		}
 
 

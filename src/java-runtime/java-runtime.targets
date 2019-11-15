@@ -7,7 +7,7 @@
     <OutputDex>$(OutputPath)java_runtime.dex</OutputDex>
     <IntermediateRuntimeOutputPath>$(IntermediateOutputPath)release</IntermediateRuntimeOutputPath>
     <IntermediateRuntimeClassesTxt>$(IntermediateOutputPath)release.txt</IntermediateRuntimeClassesTxt>
-    <RemoveItems>java\mono\android\debug\MultiDexLoader.java;java\mono\android\MonkeyPatcher.java;java\mono\android\ResourcePatcher.java;java\mono\android\Seppuku.java;java\mono\android\debug\BuildConfig.java</RemoveItems>
+    <RemoveItems>java\mono\android\debug\MultiDexLoader.java;java\mono\android\MonkeyPatcher.java;java\mono\android\ResourcePatcher.java;java\mono\android\Seppuku.java;java\mono\android\ExternalStorageDirectory.java;java\mono\android\debug\BuildConfig.java</RemoveItems>
   </_RuntimeOutput>
   <_RuntimeOutput Include="$(OutputPath)java_runtime_fastdev.jar">
     <OutputJar>$(OutputPath)java_runtime_fastdev.jar</OutputJar>

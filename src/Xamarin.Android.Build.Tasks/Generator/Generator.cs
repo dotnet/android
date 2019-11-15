@@ -14,9 +14,9 @@ namespace Xamarin.Android.Tasks
 	class Generator
 	{
 		public static bool CreateJavaSources (TaskLoggingHelper log, IEnumerable<TypeDefinition> javaTypes, string outputPath, 
-			string applicationJavaClass, string androidSdkPlatform, bool useSharedRuntime, bool generateOnCreateOverrides, bool hasExportReference)
+			string applicationJavaClass, string androidSdkPlatform, bool generateOnCreateOverrides, bool hasExportReference)
 		{
-			string monoInit = GetMonoInitSource (androidSdkPlatform, useSharedRuntime);
+			string monoInit = GetMonoInitSource (androidSdkPlatform);
 
 			bool ok = true;
 			using (var memoryStream = new MemoryStream ())
@@ -69,19 +69,18 @@ namespace Xamarin.Android.Tasks
 			return ok;
 		}
 
-		static string GetMonoInitSource (string androidSdkPlatform, bool useSharedRuntime)
+		static string GetMonoInitSource (string androidSdkPlatform)
 		{
 			// Lookup the mono init section from MonoRuntimeProvider:
 			// Mono Runtime Initialization {{{
 			// }}}
 			var builder = new StringBuilder ();
-			var runtime = useSharedRuntime ? "Shared" : "Bundled";
 			var api = "";
 			if (int.TryParse (androidSdkPlatform, out int apiLevel) && apiLevel < 21) {
 				api = ".20";
 			}
 			var assembly = Assembly.GetExecutingAssembly ();
-			using (var s = assembly.GetManifestResourceStream ($"MonoRuntimeProvider.{runtime}{api}.java"))
+			using (var s = assembly.GetManifestResourceStream ($"MonoRuntimeProvider{api}.java"))
 			using (var reader = new StreamReader (s)) {
 				bool copy = false;
 				string line;
