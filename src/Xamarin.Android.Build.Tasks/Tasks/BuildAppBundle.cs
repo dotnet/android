@@ -82,33 +82,26 @@ namespace Xamarin.Android.Tasks
 					}
 				}
 
-				var json = JObject.FromObject(new { });
-				if(!string.IsNullOrWhiteSpace(CustomBuildConfigFile) && File.Exists(CustomBuildConfigFile))
-				{
-					try
-					{
-						using (StreamReader file = File.OpenText(CustomBuildConfigFile))
-						using (JsonTextReader reader = new JsonTextReader(file))
-						{
-							json = (JObject)JToken.ReadFrom(reader);
-						}
+				var json = JObject.FromObject (new { });
+				if (!string.IsNullOrEmpty (CustomBuildConfigFile) && File.Exists (CustomBuildConfigFile)) {
+					using (StreamReader file = File.OpenText (CustomBuildConfigFile))
+					using (JsonTextReader reader = new JsonTextReader (file)) {
+						json = (JObject)JToken.ReadFrom(reader);
 					}
-					catch (Exception e)
-					{ } // Do nothing for now
 				}
-				var jsonAddition = JObject.FromObject(new {
+				var jsonAddition = JObject.FromObject (new {
 					compression = new {
 						uncompressedGlob = uncompressed,
 					}
 				});
 
-				var mergeSettings = new JsonMergeSettings() {
+				var mergeSettings = new JsonMergeSettings () {
 					MergeArrayHandling = MergeArrayHandling.Replace,
 					MergeNullValueHandling = MergeNullValueHandling.Ignore
 				};
-				json.Merge(jsonAddition, mergeSettings);
+				json.Merge (jsonAddition, mergeSettings);
 				Log.LogDebugMessage ("BundleConfig.json: {0}", json);
-				File.WriteAllText (temp, json.ToString());
+				File.WriteAllText (temp, json.ToString ());
 
 				//NOTE: bundletool will not overwrite
 				if (File.Exists (Output))
