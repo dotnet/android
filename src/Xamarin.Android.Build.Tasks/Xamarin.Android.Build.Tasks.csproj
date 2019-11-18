@@ -122,7 +122,7 @@
       <HintPath>..\..\packages\Mono.Posix.NETStandard.1.0.0\lib\net40\Mono.Posix.NETStandard.dll</HintPath>
     </Reference>
     <Reference Include="libZipSharp">
-      <HintPath>..\..\packages\Xamarin.LibZipSharp.1.0.5\lib\net45\libZipSharp.dll</HintPath>
+      <HintPath>..\..\packages\Xamarin.LibZipSharp.1.0.6\lib\net45\libZipSharp.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -552,7 +552,6 @@
     <Compile Include="Utilities\AssemblyIdentityMap.cs" />
     <Compile Include="Utilities\SatelliteAssembly.cs" />
     <Compile Include="Tasks\AndroidApkSigner.cs" />
-    <Compile Include="Tasks\Desugar.cs" />
     <Compile Include="Tasks\D8.cs" />
     <Compile Include="Tasks\R8.cs" />
     <Compile Include="Utilities\NuGetLogger.cs" />
@@ -571,10 +570,6 @@
     <Compile Include="Utilities\ApplicationConfigNativeAssemblyGenerator.cs" />
     <Compile Include="Tasks\CompileNativeAssembly.cs" />
     <Compile Include="Tasks\LinkApplicationSharedLibraries.cs" />
-    <None Include="Resources\desugar_deploy.jar">
-      <Link>desugar_deploy.jar</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="Resources\LayoutBinding.cs">
       <Link>LayoutBinding.cs</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -588,6 +583,7 @@
     <Compile Include="Tasks\AppendCustomMetadataToItemGroup.cs" />
     <Compile Include="Utilities\OutputLine.cs" />
     <Compile Include="Utilities\ResourceIdentifier.cs" />
+    <Compile Include="Tasks\GetAndroidActivityName.cs" />
   </ItemGroup>
   <ItemGroup>
     <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.LaunchMode.cs" />
@@ -752,5 +748,5 @@
     </ProjectReference>
   </ItemGroup>
   <Import Project="ILRepack.targets" />
-  <Import Project="..\..\packages\Xamarin.LibZipSharp.1.0.5\build\Xamarin.LibZipSharp.targets" Condition="Exists('..\..\packages\Xamarin.LibZipSharp.1.0.5\build\Xamarin.LibZipSharp.targets')" />
+  <Import Project="..\..\packages\Xamarin.LibZipSharp.1.0.6\build\Xamarin.LibZipSharp.targets" Condition="Exists('..\..\packages\Xamarin.LibZipSharp.1.0.6\build\Xamarin.LibZipSharp.targets')" />
 </Project>

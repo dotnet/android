@@ -78,7 +78,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.GetImportedLibraries" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetMonoPlatformJar" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Javac" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.Desugar" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Dx" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.D8" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.R8" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -297,8 +296,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidEnableMultiDex Condition=" '$(AndroidEnableMultiDex)' == '' ">False</AndroidEnableMultiDex>
 	<AndroidDexTool   Condition=" '$(AndroidDexTool)' == '' ">d8</AndroidDexTool>
 	<AndroidDexTool   Condition=" '$(AndroidLinkTool)' == 'r8' ">d8</AndroidDexTool>
+	<AndroidDexTool   Condition=" '$(AndroidEnableDesugar)' == 'True' And '$(AndroidDexTool)' == 'dx' ">d8</AndroidDexTool>
 	<!-- NOTE: $(AndroidLinkTool) would be blank if code shrinking is not used at all -->
 	<AndroidLinkTool       Condition=" '$(AndroidLinkTool)' == '' And '$(AndroidEnableProguard)' == 'True' ">proguard</AndroidLinkTool>
+	<AndroidLinkTool       Condition=" '$(AndroidLinkTool)' == 'proguard' And '$(AndroidEnableDesugar)' == 'True' ">r8</AndroidLinkTool>
 	<AndroidEnableProguard Condition=" '$(AndroidLinkTool)' != '' ">True</AndroidEnableProguard>
 	<AndroidEnableDesugar  Condition=" '$(AndroidEnableDesugar)' == '' And ('$(AndroidDexTool)' == 'd8' Or '$(AndroidLinkTool)' == 'r8') ">True</AndroidEnableDesugar>
 	<AndroidEnableDesugar  Condition=" '$(AndroidEnableDesugar)' == '' ">False</AndroidEnableDesugar>
@@ -969,12 +970,6 @@ because xbuild doesn't support framework reference assemblies.
 		/>
 	</CreateProperty>
 
-	<CreateProperty Value="$(MonoAndroidToolsDirectory)\desugar_deploy.jar">
-		<Output TaskParameter="Value" PropertyName="DesugarJarPath"
-				Condition="'$(DesugarJarPath)' == ''"
-		/>
-	</CreateProperty>
-
 	<CreateProperty Value="$(MonoAndroidToolsDirectory)\r8.jar">
 		<Output TaskParameter="Value" PropertyName="AndroidR8JarPath"
 				Condition="'$(AndroidR8JarPath)' == ''"
@@ -1230,7 +1225,6 @@ because xbuild doesn't support framework reference assemblies.
 		@(AndroidBoundLayout);
 		@(_ReferencePath);
 		@(_LibraryResourceDirectoryStamps);
-		@(_AdditonalAndroidResourceCachePaths->'%(Identity)\cache.stamp');
 		$(_AndroidBuildPropertiesCache);
 		$(ProjectAssetsFile);
 	</_ManagedUpdateAndroidResgenInputs>
@@ -1460,12 +1454,6 @@ because xbuild doesn't support framework reference assemblies.
     </CreateItem>
 </Target>
 
-<Target Name="_CollectAdditionalResourceFiles" Condition="'@(_AdditonalAndroidResourceCachePaths)' != ''">
-	<CreateItem Include="@(_AdditonalAndroidResourceCachePaths->'%(Identity)\res\**\*.*')">
-		<Output TaskParameter="Include" ItemName="_AdditonalAndroidResourceCacheFiles" />
-	</CreateItem>
-</Target>
-
 <Target Name="_FindLayoutsForBinding" Condition=" '$(Language)' == 'C#' ">
   <FindLayoutsToBind
       GenerateLayoutBindings="$(AndroidGenerateLayoutBindings)"
@@ -1557,7 +1545,6 @@ because xbuild doesn't support framework reference assemblies.
 		$(MSBuildAllProjects);
 		@(_AndroidResourceDest);
 		@(_LibraryResourceDirectoryStamps);
-		@(_AdditonalAndroidResourceCachePaths->'%(Identity)\cache.stamp');
 		$(_AndroidBuildPropertiesCache);
 		$(ProjectAssetsFile);
 		$(_AndroidLibraryProjectImportsCache);
@@ -1577,8 +1564,8 @@ because xbuild doesn't support framework reference assemblies.
 		Condition=" '$(_AndroidResourceDesignerFile)' != '' And Exists('$(IntermediateOutputPath)R.txt') "
 		ResourceSymbolsTextFile="$(IntermediateOutputPath)R.txt"
 		OutputDirectory="$(_AndroidIntermediateJavaSourceDirectory)"
-		LibraryTextFiles="@(_AdditonalAndroidResourceCachePaths->'%(Identity)\..\R.txt');@(LibraryResourceDirectories->'%(Identity)\..\R.txt')"
-		ManifestFiles="@(_AdditonalAndroidResourceCachePaths->'%(Identity)\AndroidManifest.xml');@(LibraryResourceDirectories->'%(Identity)\..\AndroidManifest.xml')"
+		LibraryTextFiles="@(LibraryResourceDirectories->'%(Identity)\..\R.txt')"
+		ManifestFiles="@(LibraryResourceDirectories->'%(Identity)\..\AndroidManifest.xml')"
 	/>
 	
 	<CopyGeneratedJavaResourceClasses
@@ -2385,7 +2372,6 @@ because xbuild doesn't support framework reference assemblies.
     LibraryProjectJars="@(ExtractedJarImports)"
     DoNotPackageJavaLibraries="@(_ResolvedDoNotPackageAttributes)"
     EnableInstantRun="$(_InstantRunEnabled)"
-    AdditionalJavaLibraryReferences="@(_AdditionalJavaLibraryReferences)"
     >
     <Output TaskParameter="JavaLibrariesToCompile" ItemName="_JavaLibrariesToCompile" />
     <Output TaskParameter="ReferenceJavaLibraries" ItemName="_ReferenceJavaLibs" />
@@ -2421,30 +2407,7 @@ because xbuild doesn't support framework reference assemblies.
   Inputs="$(_CompileToDalvikInputs)"
   Outputs="$(_AndroidStampDirectory)_CompileToDalvik.stamp">
 
-  <!-- Desugar if exists -->
-  <Error
-    Condition="'$(AndroidEnableDesugar)' == 'True' And !Exists('$(DesugarJarPath)')"
-    Text="'desugar' tool is not found. The specified DesugarJarPath '$(DesugarJarPath)' does not exist." />
-  <Desugar
-    Condition="'$(AndroidEnableDesugar)' == 'True'"
-    DesugarExtraArguments="$(DesugarExtraArguments)"
-    JavaPlatformJarPath="$(JavaPlatformJarPath)"
-    DesugarJarPath="$(DesugarJarPath)"
-    ToolPath="$(JavaToolPath)"
-    JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
-    JavaOptions="$(JavaOptions)"
-    InputJars="@(_JavaLibrariesToCompileForApp)"
-    ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
-    OutputDirectory="$(IntermediateOutputPath)android\bin\desugared">
-    <Output TaskParameter="OutputJars" ItemName="_DesugaredJars" />
-  </Desugar>
-
-  <CreateItem Include="@(_DesugaredJars)"
-    Condition="'$(AndroidEnableDesugar)' == 'True'">
-    <Output TaskParameter="Include" ItemName="_JarsToProguard" />
-  </CreateItem>
-  <CreateItem Include="@(_JavaLibrariesToCompile)"
-    Condition="'$(AndroidEnableDesugar)' != 'True'">
+  <CreateItem Include="@(_JavaLibrariesToCompile)">
     <Output TaskParameter="Include" ItemName="_JarsToProguard" />
   </CreateItem>
   
@@ -2479,11 +2442,6 @@ because xbuild doesn't support framework reference assemblies.
   <CreateItem 
     Include="$(IntermediateOutputPath)proguard\__proguard_output__.jar"
     Condition=" '$(AndroidLinkTool)' == 'proguard' And '$(_ProguardProjectConfiguration)' != '' ">
-    <Output TaskParameter="Include" ItemName="_AlternativeJarForAppDx" />
-  </CreateItem>
-  <CreateItem
-    Include="$(_AndroidIntermediateClassesZip);@(_DesugaredJars)"
-    Condition=" ('$(AndroidLinkTool)' != 'proguard' Or '$(_ProguardProjectConfiguration)' == '') And '$(AndroidEnableDesugar)' == 'True' ">
     <Output TaskParameter="Include" ItemName="_AlternativeJarForAppDx" />
   </CreateItem>
 
@@ -3383,6 +3341,8 @@ because xbuild doesn't support framework reference assemblies.
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Common.Debugging.targets"
         Condition="Exists('$(MSBuildThisFileDirectory)Xamarin.Android.Common.Debugging.targets')"/>
 
+<Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Application.targets"
+        Condition=" '$(AndroidApplication)' == 'True' "/>
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.PCLSupport.targets" />
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Designer.targets" />
 
