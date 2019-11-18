@@ -100,18 +100,15 @@ namespace Xamarin.Android.Tasks
 			PackageNamingPolicy pnp;
 			JavaNativeTypeManager.PackageNamingPolicy = Enum.TryParse (PackageNamingPolicy, out pnp) ? pnp : PackageNamingPolicyEnum.LowercaseCrc64;
 
+			// Add search directories
 			foreach (var dir in FrameworkDirectories) {
-				if (Directory.Exists (dir.ItemSpec))
-					res.SearchDirectories.Add (dir.ItemSpec);
+				res.SearchDirectories.Add (dir.ItemSpec);
 			}
-
-			// Put every assembly we'll need in the resolver
 			foreach (var assembly in ResolvedAssemblies) {
-				if (ShouldSkipJavaStubGeneration (assembly)) {
-					Log.LogDebugMessage ($"Skipping Java Stub Generation for {assembly.ItemSpec}");
-					continue;
+				var directory = Path.GetDirectoryName (assembly.ItemSpec);
+				if (!res.SearchDirectories.Contains (directory)) {
+					res.SearchDirectories.Add (directory);
 				}
-				res.Load (assembly.ItemSpec);
 			}
 
 			// However we only want to look for JLO types in user code
