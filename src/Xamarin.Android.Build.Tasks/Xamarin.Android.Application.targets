@@ -26,4 +26,13 @@ Copyright (C) 2019 Microsoft Corporation. All rights reserved.
     </GetAndroidPackageName>
     <Exec Command="&quot;$(AdbToolPath)adb&quot; $(AdbTarget) shell am start -n &quot;$(_AndroidPackage)/$(AndroidLaunchActivity)&quot;" />
   </Target>
+  <Target Name="StopAndroidPackage"
+      DependsOnTargets="_ResolveMonoAndroidSdks">
+    <GetAndroidPackageName
+        ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
+        AssemblyName="$(AssemblyName)">
+      <Output TaskParameter="PackageName" PropertyName="_AndroidPackage" />
+    </GetAndroidPackageName>
+    <Exec Command="&quot;$(AdbToolPath)adb&quot; $(AdbTarget) shell am force-stop &quot;$(_AndroidPackage)&quot;" />
+  </Target>
 </Project>
