@@ -4,8 +4,8 @@ Test Name,Time in ms (int)
 # Data
 Build_No_Changes,3350
 Build_CSharp_Change,4100
-Build_AndroidResource_Change,4850
-Build_Designer_Change,4250
+Build_AndroidResource_Change,4350
+Build_Designer_Change,3750
 Build_JLO_Change,9000
 Build_CSProj_Change,9500
 Build_XAML_Change,9600
