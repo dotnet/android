@@ -433,6 +433,17 @@ stages:
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
+        condition: and(succeeded(), eq(variables['XA.Commercial.Build'], 'true'))
+        configuration: $(ApkTestConfiguration)
+        testName: Xamarin.Android.JcwGen_Tests_FastDev
+        project: tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj
+        testResultsFiles: TestResult-Xamarin.Android.JcwGen_Tests-$(ApkTestConfiguration).xml
+        artifactName: Xamarin.Android.JcwGen_Tests-Signed.apk
+        artifactFolder: FastDev
+        extraBuildArgs: /p:AndroidFastDeploymentType=Assemblies:Dexes
+
+    - template: yaml-templates/apk-instrumentation.yaml
+      parameters:
         configuration: $(ApkTestConfiguration)
         testName: Xamarin.Android.Locale_Tests
         project: tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
