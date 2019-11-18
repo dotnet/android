@@ -2813,6 +2813,7 @@ because xbuild doesn't support framework reference assemblies.
       BaseZip="$(_BaseZipIntermediate)"
       Output="$(_AppBundleIntermediate)"
       UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
+      CustomBuildConfigFile="$(AndroidBundleConfigurationFile)"
   />
 </Target>
 
