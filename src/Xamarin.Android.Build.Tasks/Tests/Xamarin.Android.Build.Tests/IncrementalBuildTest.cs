@@ -1054,5 +1054,29 @@ namespace Lib2
 				Assert.IsFalse (builder.Build (proj), "Build should *not* have succeeded on the second build.");
 			}
 		}
+
+		[Test]
+		public void AndroidResourceChange ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			using (var builder = CreateApkBuilder ()) {
+				Assert.IsTrue (builder.Build (proj), "first build should succeed");
+
+				// AndroidResource change
+				proj.LayoutMain += $"{Environment.NewLine}<!--comment-->";
+				proj.Touch ("Resources\\layout\\Main.axml");
+				Assert.IsTrue (builder.Build (proj), "second build should succeed");
+
+				var targets = new [] {
+					"_ResolveLibraryProjectImports",
+					"_GenerateJavaStubs",
+					"_CompileJava",
+					"_CompileToDalvikWithD8",
+				};
+				foreach (var target in targets) {
+					Assert.IsTrue (builder.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
+				}
+			}
+		}
 	}
 }

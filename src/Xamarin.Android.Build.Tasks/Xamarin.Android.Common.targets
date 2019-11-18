@@ -2077,7 +2077,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_GenerateJavaStubs"
   DependsOnTargets="$(_GenerateJavaStubsDependsOnTargets);$(BeforeGenerateAndroidManifest)"
-  Inputs="$(MSBuildAllProjects);@(_ResolvedUserMonoAndroidAssemblies);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache);@(_AndroidResourceDest)"
+  Inputs="$(MSBuildAllProjects);@(_ResolvedUserMonoAndroidAssemblies);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache)"
   Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
   <GenerateJavaStubs
     ResolvedAssemblies="@(_ResolvedAssemblies)"
@@ -2097,7 +2097,6 @@ because xbuild doesn't support framework reference assemblies.
 	MergedAndroidManifestOutput="$(IntermediateOutputPath)android\AndroidManifest.xml"
     UseSharedRuntime="$(AndroidUseSharedRuntime)"
 	EmbedAssemblies="$(EmbedAssembliesIntoApk)"
-	ResourceDirectory="$(MonoAndroidResDirIntermediate)"
 	BundledWearApplicationName="$(BundledWearApplicationPackageName)"
 	PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
 	ApplicationJavaClass="$(AndroidApplicationJavaClass)"
