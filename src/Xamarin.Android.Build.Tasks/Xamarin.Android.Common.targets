@@ -514,8 +514,13 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   </ItemGroup>
   <FilterAssemblies
       DesignTimeBuild="$(DesignTimeBuild)"
-      InputAssemblies="@(_ReferencePath);@(_ReferenceDependencyPaths)">
+      InputAssemblies="@(_ReferencePath)">
     <Output TaskParameter="OutputAssemblies" ItemName="_MonoAndroidReferencePath" />
+  </FilterAssemblies>
+  <FilterAssemblies
+      DesignTimeBuild="$(DesignTimeBuild)"
+      InputAssemblies="@(_ReferenceDependencyPaths)">
+    <Output TaskParameter="OutputAssemblies" ItemName="_MonoAndroidReferenceDependencyPaths" />
   </FilterAssemblies>
 </Target>
 
@@ -1223,7 +1228,7 @@ because xbuild doesn't support framework reference assemblies.
 		$(MSBuildAllProjects);
 		@(AndroidResource);
 		@(AndroidBoundLayout);
-		@(_ReferencePath);
+		@(_MonoAndroidReferencePath);
 		@(_LibraryResourceDirectoryStamps);
 		$(_AndroidBuildPropertiesCache);
 		$(ProjectAssetsFile);
@@ -1247,7 +1252,7 @@ because xbuild doesn't support framework reference assemblies.
 		ResourceDirectory="$(MonoAndroidResourcePrefix)"
 		AdditionalResourceDirectories="@(LibraryResourceDirectories)"
 		IsApplication="$(AndroidApplication)"
-		References="@(_ReferencePath)"
+		References="@(_MonoAndroidReferencePath)"
 		UseManagedResourceGenerator="True"
 		DesignTimeBuild="$(DesignTimeBuild)"
 		JavaPlatformJarPath="$(JavaPlatformJarPath)"
@@ -1330,13 +1335,13 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_ResolveLibraryProjectImports"
 		DependsOnTargets="$(CoreResolveReferencesDependsOn)"
-		Inputs="$(ProjectAssetsFile);$(MSBuildProjectFullPath);@(_MonoAndroidReferencePath);@(AndroidAarLibrary);$(_AndroidBuildPropertiesCache)"
+		Inputs="$(ProjectAssetsFile);$(MSBuildProjectFullPath);@(_MonoAndroidReferencePath);@(_MonoAndroidReferenceDependencyPaths);@(AndroidAarLibrary);$(_AndroidBuildPropertiesCache)"
 		Outputs="$(_AndroidStampDirectory)_ResolveLibraryProjectImports.stamp">
 	<ResolveLibraryProjectImports
 		ContinueOnError="$(DesignTimeBuild)"
 		CacheFile="$(_AndroidLibraryProjectImportsCache)"
 		DesignTimeBuild="$(DesignTimeBuild)"
-		Assemblies="@(_MonoAndroidReferencePath)"
+		Assemblies="@(_MonoAndroidReferencePath);@(_MonoAndroidReferenceDependencyPaths)"
 		AarLibraries="@(AndroidAarLibrary)"
 		ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
 		NativeImportsDirectory="$(_NativeLibraryImportsDirectoryName)"
@@ -1601,7 +1606,7 @@ because xbuild doesn't support framework reference assemblies.
 		ResourceDirectory="$(MonoAndroidResDirIntermediate)"
 		AdditionalResourceDirectories="@(LibraryResourceDirectories)"
 		IsApplication="$(AndroidApplication)"
-		References="@(_ReferencePath)"
+		References="@(_MonoAndroidReferencePath)"
 		UseManagedResourceGenerator="$(_UseManagedResourceGenerator)"
 		DesignTimeBuild="$(DesignTimeBuild)"
 		JavaPlatformJarPath="$(JavaPlatformJarPath)"
