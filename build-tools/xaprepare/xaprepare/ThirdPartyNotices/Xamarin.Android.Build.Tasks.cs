@@ -34,17 +34,6 @@ namespace Xamarin.Android.Prepare
 	}
 
 	[TPN]
-	class XamarinAndroidBuildTasks_google_desugar_TPN : ThirdPartyNotice
-	{
-		static readonly Uri    url         = new Uri ("https://android.googlesource.com/platform/external/desugar/+/master/");
-
-		public override string LicenseText => null;
-		public override string LicenseFile => CommonLicenses.Apache20Path;
-		public override string Name        => "google/desugar";
-		public override Uri SourceUrl      => url;
-	}
-
-	[TPN]
 	class XamarinAndroidBuildTasks_External_Dependencies_Group : ThirdPartyNoticeGroup
 	{
 		protected override bool ShouldInclude (bool includeExternalDeps, bool includeBuildDeps) => includeExternalDeps;

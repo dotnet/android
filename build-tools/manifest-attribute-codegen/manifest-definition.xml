@@ -211,6 +211,7 @@
         <a name='roundIcon' api-level='25' />
         <a name='visibleToInstantApps' api-level='26' />
         <a name='splitName' api-level='26' />
+        <a name='foregroundServiceType' api-level='29' />
     </e>
     <e name='receiver'>
         <parent>application</parent>

@@ -9,8 +9,7 @@
   </PropertyGroup>
   <Import Project="$(_TopDir)\Configuration.props" />
   <Target Name="_BuildXAPrepare">
-    <MSBuild Projects="$(MSBuildThisFileDirectory)..\xaprepare\xaprepare.sln" Targets="Restore" />
-    <MSBuild Projects="$(MSBuildThisFileDirectory)..\xaprepare\xaprepare.sln" />
+    <MSBuild Projects="$(MSBuildThisFileDirectory)..\xaprepare\xaprepare.sln" Targets="Restore;Build" />
   </Target>
   <Target Name="PrepareExternal"
           DependsOnTargets="_BuildXAPrepare">
@@ -23,5 +22,6 @@
         Condition="$(AndroidToolchainDirectory.Contains (' '))"
     />
     <Exec Command="$(_XAPrepareExe) $(_XAPrepareStandardArgs) -a" WorkingDirectory="$(_TopDir)" />
+    <MSBuild Projects="$(_TopDir)\Xamarin.Android.BootstrapTasks.sln" Targets="Restore;Build" />
   </Target>
 </Project>

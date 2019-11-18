@@ -270,7 +270,7 @@ endif()
 set(XAMARIN_APP_STUB_SOURCES ${SOURCES_DIR}/application_dso_stub.cc)
 add_library(xamarin-app SHARED ${XAMARIN_APP_STUB_SOURCES})
 
-if(NOT WIN32 AND NOT MINGW)
+if(NOT WIN32 AND NOT MINGW AND CMAKE_BUILD_TYPE STREQUAL Debug)
   set(XAMARIN_DEBUG_APP_HELPER_SOURCES
 	${SOURCES_DIR}/basic-android-system.cc
 	${SOURCES_DIR}/basic-utilities.cc
@@ -325,6 +325,6 @@ endif()
 
 target_link_libraries(${MONO_ANDROID_LIB} ${LINK_LIBS} xamarin-app)
 
-if(NOT WIN32 AND NOT MINGW)
+if(NOT WIN32 AND NOT MINGW AND CMAKE_BUILD_TYPE STREQUAL Debug)
   target_link_libraries(xamarin-debug-app-helper ${DEBUG_HELPER_LINK_LIBS})
 endif()

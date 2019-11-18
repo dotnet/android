@@ -24,7 +24,7 @@ variables:
   HostedMacMojave: Hosted Mac Internal Mojave
   HostedMac: Hosted Mac Internal
   HostedWinVS2019: Hosted Windows 2019 with VS2019
-  VSEngWinVS2019: VSEng-MicroBuildVS2019
+  VSEngWinVS2019: VSEng-Xamarin-Android
 
 # Stage and Job "display names" are shortened because they are combined to form the name of the corresponding GitHub check.
 stages:
@@ -197,7 +197,7 @@ stages:
       displayName: xabuild Xamarin.Android-Tests
       inputs:
         filename: bin\$(XA.Build.Configuration)\bin\xabuild.exe
-        arguments: Xamarin.Android-Tests.sln /p:Configuration=$(XA.Build.Configuration) /p:XAIntegratedTests=False /bl:$(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\msbuild-build-tests.binlog
+        arguments: Xamarin.Android-Tests.sln /p:Configuration=$(XA.Build.Configuration) /bl:$(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\msbuild-build-tests.binlog
 
     - task: MSBuild@1
       displayName: nunit Xamarin.Android.Build.Tests
@@ -380,6 +380,8 @@ stages:
         testName: Mono.Android_Tests
         project: src/Mono.Android/Test/Mono.Android-Tests.csproj
         testResultsFiles: TestResult-Mono.Android_Tests-$(ApkTestConfiguration).xml
+        artifactName: Mono.Android_Tests-Signed.apk
+        artifactFolder: Default
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -388,6 +390,8 @@ stages:
         project: src/Mono.Android/Test/Mono.Android-Tests.csproj
         testResultsFiles: TestResult-Mono.Android_Tests-$(ApkTestConfiguration)-Aot.xml
         extraBuildArgs: /p:AotAssemblies=True /p:EnableLlvm=True
+        artifactName: Mono.Android_Tests-Signed.apk
+        artifactFolder: AotLlvm
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -396,6 +400,8 @@ stages:
         project: src/Mono.Android/Test/Mono.Android-Tests.csproj
         testResultsFiles: TestResult-Mono.Android_Tests-$(ApkTestConfiguration)-Profiled.xml
         extraBuildArgs: /p:AndroidEnableProfiledAot=true
+        artifactName: Mono.Android_Tests-Signed.apk
+        artifactFolder: Profiled
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -404,6 +410,8 @@ stages:
         project: src/Mono.Android/Test/Mono.Android-Tests.csproj
         testResultsFiles: TestResult-Mono.Android_Tests-$(ApkTestConfiguration)-Bundle.xml
         extraBuildArgs: /p:BundleAssemblies=true
+        artifactName: Mono.Android_Tests-Signed.apk
+        artifactFolder: Bundle
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -412,6 +420,8 @@ stages:
         project: tests/Runtime-AppBundle/Mono.Android-TestsAppBundle.csproj
         testResultsFiles: TestResult-Mono.Android_TestsAppBundle-$(ApkTestConfiguration).xml
         packageType: Aab
+        artifactName: Mono.Android_TestsAppBundle-Signed.aab
+        artifactFolder: Aab
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -419,6 +429,8 @@ stages:
         testName: Mono.Android_TestsMultiDex
         project: tests/Runtime-MultiDex/Mono.Android-TestsMultiDex.csproj
         testResultsFiles: TestResult-Mono.Android_TestsMultiDex-$(ApkTestConfiguration).xml
+        artifactName: Mono.Android_Tests-Signed.apk
+        artifactFolder: MultiDex
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -426,6 +438,8 @@ stages:
         testName: Xamarin.Android.JcwGen_Tests
         project: tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj
         testResultsFiles: TestResult-Xamarin.Android.JcwGen_Tests-$(ApkTestConfiguration).xml
+        artifactName: Xamarin.Android.JcwGen_Tests-Signed.apk
+        artifactFolder: Default
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -433,6 +447,8 @@ stages:
         testName: Xamarin.Android.Locale_Tests
         project: tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
         testResultsFiles: TestResult-Xamarin.Android.Locale_Tests-$(ApkTestConfiguration).xml
+        artifactName: Xamarin.Android.Locale_Tests-Signed.apk
+        artifactFolder: Default
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -441,6 +457,8 @@ stages:
         project: tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
         testResultsFiles: TestResult-Xamarin.Android.Locale_Tests-$(ApkTestConfiguration)-Aot.xml
         extraBuildArgs: /p:AotAssemblies=True
+        artifactName: Xamarin.Android.Locale_Tests-Signed.apk
+        artifactFolder: Aot
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -449,6 +467,8 @@ stages:
         project: tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
         testResultsFiles: TestResult-Xamarin.Android.Locale_Tests-$(ApkTestConfiguration)-Profiled.xml
         extraBuildArgs: /p:AndroidEnableProfiledAot=true
+        artifactName: Xamarin.Android.Locale_Tests-Signed.apk
+        artifactFolder: Profiled
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -456,49 +476,43 @@ stages:
         testName: Xamarin.Android.EmbeddedDSO_Test
         project: tests/EmbeddedDSOs/EmbeddedDSO/EmbeddedDSO.csproj
         testResultsFiles: TestResult-Xamarin.Android.EmbeddedDSO_Test.nunit-$(ApkTestConfiguration).xml
+        artifactName: Xamarin.Android.EmbeddedDSO_Test-Signed.apk
+        artifactFolder: Profiled
 
-    - task: MSBuild@1
-      displayName: run Xamarin.Forms-Performance-Integration
-      inputs:
-        solution: tests/Xamarin.Forms-Performance-Integration/Droid/Xamarin.Forms.Performance.Integration.Droid.csproj
+    - template: yaml-templates/apk-instrumentation.yaml
+      parameters:
         configuration: $(ApkTestConfiguration)
-        msbuildArguments: >
-          /t:AcquireAndroidTarget,SignAndroidPackage,DeployTestApks,RunTestApks,UndeployTestApks,ReportComponentFailures
-          /bl:$(System.DefaultWorkingDirectory)/bin/Test$(ApkTestConfiguration)/XamarinFormsPerf.binlog
-      condition: succeededOrFailed()
+        testName: Xamarin.Forms-Performance-Integration
+        project: tests/Xamarin.Forms-Performance-Integration/Droid/Xamarin.Forms.Performance.Integration.Droid.csproj
+        artifactName: Xamarin.Forms_Performance_Integration-Signed.apk
+        artifactFolder: Default
 
-    - task: MSBuild@1
-      displayName: run Xamarin.Forms-Performance-Integration-Aot
-      inputs:
-        solution: tests/Xamarin.Forms-Performance-Integration/Droid/Xamarin.Forms.Performance.Integration.Droid.csproj
+    - template: yaml-templates/apk-instrumentation.yaml
+      parameters:
         configuration: $(ApkTestConfiguration)
-        msbuildArguments: >
-          /t:AcquireAndroidTarget,SignAndroidPackage,DeployTestApks,RunTestApks,UndeployTestApks,ReportComponentFailures
-          /bl:$(System.DefaultWorkingDirectory)/bin/Test$(ApkTestConfiguration)/XamarinFormsPerf-Aot.binlog
-          /p:AotAssemblies=true
-      condition: succeededOrFailed()
+        testName: Xamarin.Forms-Performance-Integration-Aot
+        project: tests/Xamarin.Forms-Performance-Integration/Droid/Xamarin.Forms.Performance.Integration.Droid.csproj
+        extraBuildArgs: /p:AotAssemblies=true
+        artifactName: Xamarin.Forms_Performance_Integration-Signed.apk
+        artifactFolder: Aot
 
-    - task: MSBuild@1
-      displayName: run Xamarin.Forms-Performance-Integration-Profiled
-      inputs:
-        solution: tests/Xamarin.Forms-Performance-Integration/Droid/Xamarin.Forms.Performance.Integration.Droid.csproj
+    - template: yaml-templates/apk-instrumentation.yaml
+      parameters:
         configuration: $(ApkTestConfiguration)
-        msbuildArguments: >
-          /t:AcquireAndroidTarget,SignAndroidPackage,DeployTestApks,RunTestApks,UndeployTestApks,ReportComponentFailures
-          /bl:$(System.DefaultWorkingDirectory)/bin/Test$(ApkTestConfiguration)/XamarinFormsPerf-Profiled.binlog
-          /p:AndroidEnableProfiledAot=true
-      condition: succeededOrFailed()
+        testName: Xamarin.Forms-Performance-Integration-Profiled
+        project: tests/Xamarin.Forms-Performance-Integration/Droid/Xamarin.Forms.Performance.Integration.Droid.csproj
+        extraBuildArgs: /p:AndroidEnableProfiledAot=true
+        artifactName: Xamarin.Forms_Performance_Integration-Signed.apk
+        artifactFolder: Profiled
 
-    - task: MSBuild@1
-      displayName: run Xamarin.Forms-Performance-Integration-Bundle
-      inputs:
-        solution: tests/Xamarin.Forms-Performance-Integration/Droid/Xamarin.Forms.Performance.Integration.Droid.csproj
+    - template: yaml-templates/apk-instrumentation.yaml
+      parameters:
         configuration: $(ApkTestConfiguration)
-        msbuildArguments: >
-          /t:AcquireAndroidTarget,SignAndroidPackage,DeployTestApks,RunTestApks,UndeployTestApks,ReportComponentFailures
-          /bl:$(System.DefaultWorkingDirectory)/bin/Test$(ApkTestConfiguration)/XamarinFormsPerf-Bundle.binlog
-          /p:BundleAssemblies=true
-      condition: succeededOrFailed()
+        testName: Xamarin.Forms-Performance-Integration-Bundle
+        project: tests/Xamarin.Forms-Performance-Integration/Droid/Xamarin.Forms.Performance.Integration.Droid.csproj
+        extraBuildArgs: /p:BundleAssemblies=true
+        artifactName: Xamarin.Forms_Performance_Integration-Signed.apk
+        artifactFolder: Bundle
 
     - task: MSBuild@1
       displayName: shut down emulator
@@ -541,6 +555,8 @@ stages:
         testName: Xamarin.Android.Bcl-Tests
         project: tests/BCL-Tests/Xamarin.Android.Bcl-Tests/Xamarin.Android.Bcl-Tests.csproj
         testResultsFiles: TestResult-Xamarin.Android.Bcl_Tests.nunit-$(XA.Build.Configuration).xml
+        artifactName: Xamarin.Android.Bcl_Tests-Signed.apk
+        artifactFolder: Default
 
     - task: PublishTestResults@2
       displayName: publish Xamarin.Android.Bcl-Tests-XUnit results
@@ -567,7 +583,7 @@ stages:
   # Check - "Xamarin.Android (Test MSBuild - macOS)"
   - job: mac_msbuild_tests
     displayName: MSBuild - macOS
-    pool: $(HostedMacMojave)
+    pool: $(HostedMac)
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:

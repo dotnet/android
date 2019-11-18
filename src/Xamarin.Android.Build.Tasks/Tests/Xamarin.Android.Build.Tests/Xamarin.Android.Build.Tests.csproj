@@ -68,7 +68,7 @@
       <HintPath>..\..\..\..\packages\Mono.Posix.NETStandard.1.0.0\lib\net40\Mono.Posix.NETStandard.dll</HintPath>
     </Reference>
     <Reference Include="libZipSharp">
-      <HintPath>..\..\..\..\packages\Xamarin.LibZipSharp.1.0.5\lib\net45\libZipSharp.dll</HintPath>
+      <HintPath>..\..\..\..\packages\Xamarin.LibZipSharp.1.0.6\lib\net45\libZipSharp.dll</HintPath>
     </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
@@ -95,7 +95,6 @@
   <ItemGroup>
     <Compile Include="Tasks\AndroidRegExTests.cs" />
     <Compile Include="Tasks\CopyIfChangedTests.cs" />
-    <Compile Include="Tasks\GetAdditionalResourcesFromAssembliesTests.cs" />
     <Compile Include="Tasks\GetDependenciesTests.cs" />
     <Compile Include="Tasks\RemoveDirTests.cs" />
     <Compile Include="Tasks\ResolveMonoAndroidSdksTests.cs" />
@@ -132,5 +131,5 @@
   <ItemGroup>
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
   </ItemGroup>
-  <Import Project="..\..\..\..\packages\Xamarin.LibZipSharp.1.0.5\build\Xamarin.LibZipSharp.targets" Condition="Exists('..\..\..\..\packages\Xamarin.LibZipSharp.1.0.5\build\Xamarin.LibZipSharp.targets')" />
+  <Import Project="..\..\..\..\packages\Xamarin.LibZipSharp.1.0.6\build\Xamarin.LibZipSharp.targets" Condition="Exists('..\..\..\..\packages\Xamarin.LibZipSharp.1.0.6\build\Xamarin.LibZipSharp.targets')" />
 </Project>

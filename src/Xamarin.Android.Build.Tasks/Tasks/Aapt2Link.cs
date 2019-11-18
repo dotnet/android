@@ -74,6 +74,8 @@ namespace Xamarin.Android.Tasks {
 
 		public bool ProtobufFormat { get; set; }
 
+		public string ProguardRuleOutput { get; set; }
+
 		AssemblyIdentityMap assemblyMap = new AssemblyIdentityMap ();
 		List<string> tempFiles = new List<string> ();
 
@@ -184,6 +186,9 @@ namespace Xamarin.Android.Tasks {
 					assetDir = Path.Combine (WorkingDirectory, assetDir);
 				if (!string.IsNullOrWhiteSpace (assetDir) && Directory.Exists (assetDir))
 					cmd.AppendSwitchIfNotNull ("-A ", assetDir);
+			}
+			if (!string.IsNullOrEmpty (ProguardRuleOutput)) {
+				cmd.AppendSwitchIfNotNull ("--proguard ", ProguardRuleOutput);
 			}
 			cmd.AppendSwitchIfNotNull ("-o ", currentResourceOutputFile);
 			return cmd.ToString ();

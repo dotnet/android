@@ -348,7 +348,6 @@ namespace Lib2
 			var targets = new List<string> {
 				"_GeneratePackageManagerJava",
 				"_ResolveLibraryProjectImports",
-				"_BuildAdditionalResourcesCache",
 				"_CleanIntermediateIfNuGetsChange",
 				"_CopyConfigFiles",
 			};
@@ -948,6 +947,22 @@ namespace Lib2
 						Assert.AreNotEqual (expectedHash, MonoAndroidHelper.HashFile (output), "hash should *not* match");
 					}
 				}
+			}
+		}
+
+		[Test]
+		public void DesignTimeBuild ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			using (var b = CreateApkBuilder (Path.Combine ("temp", $"{nameof (IncrementalBuildTest)}{TestName}"))) {
+				Assert.IsTrue (b.DesignTimeBuild (proj), "first dtb should have succeeded.");
+				// DesignTimeBuild=true lowercased
+				var parameters = new [] { "DesignTimeBuild=true" };
+				Assert.IsTrue (b.RunTarget (proj, "Compile", doNotCleanupOnUpdate: true, parameters: parameters), "second dtb should have succeeded.");
+				var target = "_ResolveLibraryProjectImports";
+				Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should have been skipped.");
+				Assert.IsTrue (b.RunTarget (proj, "UpdateGeneratedFiles", doNotCleanupOnUpdate: true, parameters: parameters), "UpdateGeneratedFiles should have succeeded.");
+				Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should have been skipped.");
 			}
 		}
 

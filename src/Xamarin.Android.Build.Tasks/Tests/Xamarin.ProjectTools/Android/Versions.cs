@@ -4,6 +4,14 @@ namespace Xamarin.ProjectTools
 {
 	public static class Versions
 	{
+		/// <summary>
+		/// Previously known as Q
+		/// </summary>
+		public const string Android10 = "v10.0";
+		public const string Pie = "v9.0";
+		public const string Oreo_27 = "v8.1";
+		public const string Oreo = "v8.0";
+		public const string Nougat = "v7.0";
 		public const string Marshmallow = "v6.0";
 		public const string Lollipop = "v5.0";
 		public const string KitkatWatch = "v4.4.87";

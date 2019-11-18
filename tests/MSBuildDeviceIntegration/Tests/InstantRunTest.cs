@@ -166,8 +166,8 @@ namespace Xamarin.Android.Build.Tests
 				DexTool = dexTool,
 			};
 			proj.SetDefaultTargetDevice ();
-			proj.Packages.Add (KnownPackages.AndroidSupportV4_22_1_1_1);
-			proj.Packages.Add (KnownPackages.SupportV7AppCompat_22_1_1_1);
+			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
 			proj.MainActivity = proj.DefaultMainActivity.Replace (": Activity", ": Android.Support.V7.App.AppCompatActivity");
 			var b = CreateApkBuilder (Path.Combine ("temp", TestName));
 			Assert.IsTrue (b.Install (proj), "install should have succeeded.");
@@ -191,7 +191,7 @@ namespace Xamarin.Android.Build.Tests
 		#pragma warning disable 414
 		static object [] SkipFastDevAlreadyInstalledResourcesSource = new object [] {
 			new object[] { new Package [0], null },
-			new object[] { new Package [] { KnownPackages.AndroidSupportV4_22_1_1_1, KnownPackages.SupportV7AppCompat_22_1_1_1}, "Android.Support.V7.App.AppCompatActivity" },
+			new object[] { new Package [] { KnownPackages.AndroidSupportV4_27_0_2_1, KnownPackages.SupportV7AppCompat_27_0_2_1}, "Android.Support.V7.App.AppCompatActivity" },
 		};
 		#pragma warning restore 414
 
@@ -208,7 +208,7 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject () { AndroidFastDeploymentType = "Assemblies:Dexes", UseLatestPlatformSdk = true };
 			proj.SetDefaultTargetDevice ();
 			foreach (var pkg in packages)
-				proj.Packages.Add (pkg);
+				proj.PackageReferences.Add (pkg);
 			if (baseActivityClass != null)
 					proj.MainActivity = proj.DefaultMainActivity.Replace (": Activity", ": " + baseActivityClass);
 			var b = CreateApkBuilder ("temp/SkipFastDevAlreadyInstalledResources");
