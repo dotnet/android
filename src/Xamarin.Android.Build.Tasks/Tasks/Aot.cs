@@ -415,7 +415,7 @@ namespace Xamarin.Android.Tasks
 					string aotOptionsStr = (EnableLLVM ? "--llvm " : "") + $"\"--aot={string.Join (",", aotOptions)}\"";
 
 					if (!string.IsNullOrEmpty (ExtraAotOptions)) {
-						aotOptionsStr += (aotOptions.Count > 0 ? "," : "") + ExtraAotOptions;
+						aotOptionsStr += (aotOptions.Count > 0 ? " " : "") + ExtraAotOptions;
 					}
 
 					// Due to a Monodroid MSBuild bug we can end up with paths to assemblies that are not in the intermediate
