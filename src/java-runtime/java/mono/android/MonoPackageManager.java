@@ -44,17 +44,10 @@ public class MonoPackageManager {
 				String cacheDir     = context.getCacheDir ().getAbsolutePath ();
 				String dataDir      = getNativeLibraryPath (context);
 				ClassLoader loader  = context.getClassLoader ();
-				java.io.File external0 = android.os.Environment.getExternalStorageDirectory ();
-				String externalDir = new java.io.File (
-							external0,
-							"Android/data/" + context.getPackageName () + "/files/.__override__").getAbsolutePath ();
-				String externalLegacyDir = new java.io.File (
-							external0,
-							"../legacy/Android/data/" + context.getPackageName () + "/files/.__override__").getAbsolutePath ();
 				boolean embeddedDSOsEnabled = (runtimePackage.flags & FLAG_EXTRACT_NATIVE_LIBS) == 0;
 				String runtimeDir = getNativeLibraryPath (runtimePackage);
 				String[] appDirs = new String[] {filesDir, cacheDir, dataDir};
-				String[] externalStorageDirs = new String[] {externalDir, externalLegacyDir};
+				String tmpDir = "/data/local/tmp/" + context.getPackageName ();
 
 				//
 				// Preload DSOs libmonodroid.so depends on so that the dynamic
@@ -72,7 +65,7 @@ public class MonoPackageManager {
 				//
 				if (BuildConfig.Debug) {
 					System.loadLibrary ("xamarin-debug-app-helper");
-					DebugRuntime.init (apks, runtimeDir, appDirs, externalStorageDirs, android.os.Build.VERSION.SDK_INT, embeddedDSOsEnabled);
+					DebugRuntime.init (apks, runtimeDir, appDirs, tmpDir, android.os.Build.VERSION.SDK_INT, embeddedDSOsEnabled);
 				} else {
 					System.loadLibrary("monosgen-2.0");
 				}
@@ -86,7 +79,7 @@ public class MonoPackageManager {
 						runtimeDir,
 						appDirs,
 						loader,
-						externalStorageDirs,
+						tmpDir,
 						MonoPackageManager_Resources.Assemblies,
 						Build.VERSION.SDK_INT,
 						embeddedDSOsEnabled,

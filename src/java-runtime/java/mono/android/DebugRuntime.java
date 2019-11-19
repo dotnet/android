@@ -4,5 +4,5 @@ public class DebugRuntime {
 	private DebugRuntime ()
 	{}
 
-	public static native void init (String[] apks, String runtimeLibDir, String[] appDirs, String[] externalStorageDirs, int androidApiLevel, boolean embeddedDSOsEnabled);
+	public static native void init (String[] apks, String runtimeLibDir, String[] appDirs, String tmpDir, int androidApiLevel, boolean embeddedDSOsEnabled);
 }

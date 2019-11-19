@@ -59,5 +59,5 @@ BasicAndroidSystem::setup_apk_directories (JNIEnv *env, unsigned short running_o
 char*
 BasicAndroidSystem::determine_primary_override_dir (JNIEnv *env, jstring_wrapper &home)
 {
-	return utils.path_combine (home.get_cstr (), ".__override__");
+	return (char *) home.get_cstr ();
 }

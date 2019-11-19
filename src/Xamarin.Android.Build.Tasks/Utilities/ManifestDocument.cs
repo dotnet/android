@@ -380,19 +380,11 @@ namespace Xamarin.Android.Tasks {
 								new XAttribute (androidNs + "name", "mono.android.intent.action.SEPPUKU")),
 							new XElement ("category",
 								new XAttribute (androidNs + "name", "mono.android.intent.category.SEPPUKU." + PackageName)))));
-				app.Add (new XElement ("receiver",
-						new XAttribute (androidNs + "name", "mono.android.ExternalStorageDirectory"),
-						new XElement ("intent-filter",
-							new XElement ("action",
-								new XAttribute (androidNs + "name", "mono.android.intent.action.EXTERNAL_STORAGE_DIRECTORY")))));
 				if (app.Attribute (androidNs + "debuggable") == null)
 					app.Add (new XAttribute (androidNs + "debuggable", "true"));
 			}
 			if (Debug || NeedsInternet)
 				AddInternetPermissionForDebugger ();
-
-			if (!embed)
-				AddFastDeployPermissions ();
 
 			// If the manifest has android:installLocation, but we are targeting
 			// API 7 or lower, remove it for the user and show a warning
@@ -768,13 +760,6 @@ namespace Xamarin.Android.Tasks {
 			const string permInternet ="android.permission.INTERNET";
 			if (!doc.Root.Descendants ("uses-permission").Any (x => (string)x.Attribute (attName) == permInternet))
 				app.AddBeforeSelf (new XElement ("uses-permission", new XAttribute (attName, permInternet)));
-		}
-
-		public void AddFastDeployPermissions ()
-		{
-			const string permReadExternalStorage  ="android.permission.READ_EXTERNAL_STORAGE";
-			if (!doc.Root.Descendants ("uses-permission").Any (x => (string)x.Attribute (attName) == permReadExternalStorage))
-				app.AddBeforeSelf (new XElement ("uses-permission", new XAttribute (attName, permReadExternalStorage)));
 		}
 
 		void AddPermissions (XElement application)

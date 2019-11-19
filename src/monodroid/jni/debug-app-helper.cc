@@ -71,7 +71,7 @@ JNI_OnLoad (JavaVM *vm, void *reserved)
 JNIEXPORT void JNICALL
 Java_mono_android_DebugRuntime_init (JNIEnv *env, jclass klass, jobjectArray runtimeApksJava,
                                      jstring runtimeNativeLibDir, jobjectArray appDirs,
-                                     jobjectArray externalStorageDirs, jint androidApiLevel,
+                                     jstring tmpdir, jint androidApiLevel,
                                      jboolean embeddedDSOsEnabled)
 {
 	androidSystem.set_embedded_dso_mode_enabled ((bool) embeddedDSOsEnabled);
@@ -79,7 +79,8 @@ Java_mono_android_DebugRuntime_init (JNIEnv *env, jclass klass, jobjectArray run
 	jstring_array_wrapper applicationDirs (env, appDirs);
 	jstring_array_wrapper runtimeApks (env, runtimeApksJava);
 
-	androidSystem.set_primary_override_dir (env, applicationDirs [0]);
+	jstring_wrapper jstr_tmpdir (env, tmpdir);
+	androidSystem.set_primary_override_dir (env, jstr_tmpdir);
 	androidSystem.set_override_dir (0, androidSystem.get_primary_override_dir ());
 	androidSystem.setup_app_library_directories (env, runtimeApks, applicationDirs, androidApiLevel);
 
