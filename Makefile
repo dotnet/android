@@ -24,6 +24,10 @@ _PREPARE_CI_MODE_PR_ARGS = --no-emoji --run-mode=CI
 _PREPARE_CI_MODE_ARGS = $(_PREPARE_CI_MODE_PR_ARGS) -a
 _PREPARE_ARGS =
 
+BOOTSTRAP_SOLUTION = Xamarin.Android.BootstrapTasks.sln
+BOOTSTRAP_BUILD_LOG = bin/Build$(CONFIGURATION)/bootstrap-build.binlog
+BOOTSTRAP_MSBUILD_FLAGS = /binaryLogger:"$(BOOTSTRAP_BUILD_LOG)" $(PREPARE_COMMON_MSBUILD_FLAGS)
+
 all:
 	$(call MSBUILD_BINLOG,all,$(_SLN_BUILD)) $(MSBUILD_FLAGS) $(SOLUTION)
 
@@ -198,6 +202,7 @@ prepare-build: prepare-build-init
 .PHONY: prepare
 prepare: prepare-build
 	mono --debug $(PREPARE_EXE) $(_PREPARE_ARGS)
+	msbuild $(BOOTSTRAP_MSBUILD_FLAGS) $(BOOTSTRAP_SOLUTION)
 
 .PHONY: prepare-help
 prepare-help: prepare-build

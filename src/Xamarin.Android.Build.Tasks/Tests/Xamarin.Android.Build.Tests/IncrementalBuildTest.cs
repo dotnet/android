@@ -348,7 +348,6 @@ namespace Lib2
 			var targets = new List<string> {
 				"_GeneratePackageManagerJava",
 				"_ResolveLibraryProjectImports",
-				"_BuildAdditionalResourcesCache",
 				"_CleanIntermediateIfNuGetsChange",
 				"_CopyConfigFiles",
 			};
@@ -952,6 +951,22 @@ namespace Lib2
 		}
 
 		[Test]
+		public void DesignTimeBuild ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			using (var b = CreateApkBuilder (Path.Combine ("temp", $"{nameof (IncrementalBuildTest)}{TestName}"))) {
+				Assert.IsTrue (b.DesignTimeBuild (proj), "first dtb should have succeeded.");
+				// DesignTimeBuild=true lowercased
+				var parameters = new [] { "DesignTimeBuild=true" };
+				Assert.IsTrue (b.RunTarget (proj, "Compile", doNotCleanupOnUpdate: true, parameters: parameters), "second dtb should have succeeded.");
+				var target = "_ResolveLibraryProjectImports";
+				Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should have been skipped.");
+				Assert.IsTrue (b.RunTarget (proj, "UpdateGeneratedFiles", doNotCleanupOnUpdate: true, parameters: parameters), "UpdateGeneratedFiles should have succeeded.");
+				Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should have been skipped.");
+			}
+		}
+
+		[Test]
 		public void ChangePackageNamingPolicy ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -1037,6 +1052,30 @@ namespace Lib2
 				builder.ThrowOnBuildFailure = false;
 				Assert.IsFalse (builder.Build (proj), "Build should *not* have succeeded on the first build.");
 				Assert.IsFalse (builder.Build (proj), "Build should *not* have succeeded on the second build.");
+			}
+		}
+
+		[Test]
+		public void AndroidResourceChange ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			using (var builder = CreateApkBuilder ()) {
+				Assert.IsTrue (builder.Build (proj), "first build should succeed");
+
+				// AndroidResource change
+				proj.LayoutMain += $"{Environment.NewLine}<!--comment-->";
+				proj.Touch ("Resources\\layout\\Main.axml");
+				Assert.IsTrue (builder.Build (proj), "second build should succeed");
+
+				var targets = new [] {
+					"_ResolveLibraryProjectImports",
+					"_GenerateJavaStubs",
+					"_CompileJava",
+					"_CompileToDalvikWithD8",
+				};
+				foreach (var target in targets) {
+					Assert.IsTrue (builder.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
+				}
 			}
 		}
 	}

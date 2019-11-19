@@ -330,8 +330,7 @@ EmbeddedAssemblies::zip_read_field (uint8_t* buf, size_t buf_len, size_t index, 
 		return false;
 	}
 
-	u = static_cast<uint16_t> (buf [index + 1] << 8) |
-		static_cast<uint16_t> (buf [index]);
+	u = static_cast<uint16_t>((buf [index + 1] << 8) | buf [index]);
 
 	return true;
 }

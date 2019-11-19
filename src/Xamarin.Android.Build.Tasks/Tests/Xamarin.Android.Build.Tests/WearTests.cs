@@ -5,7 +5,6 @@ using Xamarin.ProjectTools;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[NonParallelizable] // <GetAdditionalResourcesFromAssemblies/> is failing in parallel builds
 	public class WearTests : BaseTest
 	{
 		[Test]

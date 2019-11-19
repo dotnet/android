@@ -65,9 +65,6 @@ namespace Xamarin.Android.Tasks
 
 		public bool ErrorOnCustomJavaObject { get; set; }
 
-		[Required]
-		public string ResourceDirectory { get; set; }
-
 		public string BundledWearApplicationName { get; set; }
 
 		public string PackageNamingPolicy { get; set; }

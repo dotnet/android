@@ -107,7 +107,6 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\cil-strip.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\class-parse.exe" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\class-parse.pdb" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\desugar_deploy.jar" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\FSharp.Compiler.CodeDom.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\FSharp.Core.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\generator.exe" />
@@ -191,6 +190,7 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Aapt.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Aapt2.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Analysis.targets" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Application.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Bindings.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Build.Tasks.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Build.Tasks.pdb" />

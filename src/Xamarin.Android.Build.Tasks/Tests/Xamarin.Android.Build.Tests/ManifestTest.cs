@@ -579,13 +579,13 @@ namespace Bug12935
 					new BuildItem.ProjectReference ("..\\Binding1\\Binding1.csproj", lib.ProjectGuid)
 				},
 				PackageReferences = {
-					KnownPackages.SupportMediaCompat_25_4_0_1,
-					KnownPackages.SupportFragment_25_4_0_1,
-					KnownPackages.SupportCoreUtils_25_4_0_1,
-					KnownPackages.SupportCoreUI_25_4_0_1,
-					KnownPackages.SupportCompat_25_4_0_1,
-					KnownPackages.AndroidSupportV4_25_4_0_1,
-					KnownPackages.SupportV7AppCompat_25_4_0_1,
+					KnownPackages.SupportMediaCompat_27_0_2_1,
+					KnownPackages.SupportFragment_27_0_2_1,
+					KnownPackages.SupportCoreUtils_27_0_2_1,
+					KnownPackages.SupportCoreUI_27_0_2_1,
+					KnownPackages.SupportCompat_27_0_2_1,
+					KnownPackages.AndroidSupportV4_27_0_2_1,
+					KnownPackages.SupportV7AppCompat_27_0_2_1,
 				},
 			};
 			proj.Sources.Add (new BuildItem.Source ("TestActivity1.cs") {
@@ -735,5 +735,44 @@ class TestActivity : Activity { }"
 				Assert.AreEqual (expectedOutput, string.Join (" ", e.Attributes ()));
 			}
 		}
+
+		[Test]
+ 		public void AllServiceAttributeProperties ()
+ 		{
+ 			const string expectedOutput = "android:directBootAware=\"true\" android:enabled=\"true\" android:exported=\"true\" android:foregroundServiceType=\"connectedDevice\" android:icon=\"@drawable/icon\" android:isolatedProcess=\"true\" android:label=\"TestActivity\" android:name=\"com.contoso.TestActivity\" android:permission=\"com.contoso.permission.TEST_ACTIVITY\" android:process=\"com.contoso.process.testactivity_process\" android:roundIcon=\"@drawable/icon\"";
+
+ 			var proj = new XamarinAndroidApplicationProject ();
+
+ 			proj.Sources.Add (new BuildItem.Source ("TestActivity.cs") {
+ 				TextContent = () => @"using Android.App;
+ using Android.Content.PM;
+ using Android.Views;
+ [Service (
+ 	DirectBootAware            = true,
+ 	Enabled                    = true,
+ 	Exported                   = true,
+	ForegroundServiceType      = ForegroundService.TypeConnectedDevice,
+ 	Icon                       = ""@drawable/icon"",
+ 	IsolatedProcess            = true,
+ 	Label                      = ""TestActivity"",
+ 	Name                       = ""com.contoso.TestActivity"",
+ 	Permission                 = ""com.contoso.permission.TEST_ACTIVITY"",
+ 	Process                    = ""com.contoso.process.testactivity_process"",
+ 	RoundIcon                  = ""@drawable/icon"")]
+ class TestService : Service { public override Android.OS.IBinder OnBind (Android.Content.Intent intent) { return null; } }"
+ 			});
+
+ 			using (ProjectBuilder builder = CreateDllBuilder (Path.Combine ("temp", TestName))) {
+ 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
+
+ 				string manifest = builder.Output.GetIntermediaryAsText (Path.Combine ("android", "AndroidManifest.xml"));
+ 				var doc = XDocument.Parse (manifest);
+ 				var ns = XNamespace.Get ("http://schemas.android.com/apk/res/android");
+ 				IEnumerable<XElement> activities = doc.Element ("manifest")?.Element ("application")?.Elements ("service");
+ 				XElement e = activities.FirstOrDefault (x => x.Attribute (ns.GetName ("label"))?.Value == "TestActivity");
+ 				Assert.IsNotNull (e, "Manifest should contain an activity labeled TestActivity");
+ 				Assert.AreEqual (expectedOutput, string.Join (" ", e.Attributes ()));
+ 			}
+ 		}
 	}
 }

@@ -1,0 +1,14 @@
+# Comments and blank lines are ignored
+# First non-comment row is human description of columns
+Test Name,Time in ms (int)
+# Data
+Build_No_Changes,3350
+Build_CSharp_Change,4100
+Build_AndroidResource_Change,4350
+Build_Designer_Change,3750
+Build_JLO_Change,9000
+Build_CSProj_Change,9500
+Build_XAML_Change,9600
+Build_XAML_Change_RefAssembly,6350
+Install_CSharp_Change,6000
+Install_XAML_Change,7500

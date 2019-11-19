@@ -1,8 +1,10 @@
 using System;
 using System.CodeDom;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using Mono.Cecil;
+using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
 using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks
@@ -34,52 +36,73 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		public void CreateImportMethods (IEnumerable<AssemblyDefinition> libraries)
+		public void CreateImportMethods (IEnumerable<string> libraries)
 		{
 			var method = new CodeMemberMethod () { Name = "UpdateIdValues", Attributes = MemberAttributes.Public | MemberAttributes.Static };
 			primary.Members.Add (method);
-			foreach (var assembly in libraries) {
-				var att = assembly.CustomAttributes.FirstOrDefault (
-					ca => ca.AttributeType.FullName == "Android.Runtime.ResourceDesignerAttribute");
-				if (att == null)
-					continue;
-				if ((bool) att.Properties.First (p => p.Name == "IsApplication").Argument.Value == true)
-					continue; // application resource IDs are constants, cannot merge.
-				var td = assembly.Modules.SelectMany (m => m.Types).FirstOrDefault (
-					t => t.FullName == (string)att.ConstructorArguments.First ().Value);
-
-				// F# has no nested types, so we need special care.
-				if (td.NestedTypes.Any ())
-					CreateImportFor (true, td.NestedTypes, method);
-				else
-					CreateImportFor (false,
-						assembly.Modules.SelectMany (m => m.Types)
-							.Where (t => !td.Equals (t) && t.FullName.StartsWith (td.FullName, StringComparison.Ordinal)),
-						method);
+			foreach (var assemblyPath in libraries) {
+				using (var pe = new PEReader (File.OpenRead (assemblyPath))) {
+					var reader = pe.GetMetadataReader ();
+					var resourceDesignerName = GetResourceDesignerClass (reader);
+					if (string.IsNullOrEmpty (resourceDesignerName)) {
+						continue;
+					}
+					foreach (var handle in reader.TypeDefinitions) {
+						var typeDefinition = reader.GetTypeDefinition (handle);
+						if (!typeDefinition.IsNested) {
+							continue;
+						}
+						var declaringType = reader.GetTypeDefinition (typeDefinition.GetDeclaringType ());
+						var declaringTypeName = $"{reader.GetString (declaringType.Namespace)}.{reader.GetString (declaringType.Name)}";
+						if (declaringTypeName == resourceDesignerName) {
+							CreateImportFor (declaringTypeName, typeDefinition, method, reader);
+						}
+					}
+				}
 			}
 		}
 
-		void CreateImportFor (bool isNestedSrc, IEnumerable<TypeDefinition> types, CodeMemberMethod method)
+		string GetResourceDesignerClass (MetadataReader reader)
 		{
-			foreach (var type in types) {
-				// If the library was written in F#, those resource ID classes are not nested but rather combined with '_'.
-				var srcClassRef = new CodeTypeReferenceExpression (
-					new CodeTypeReference (primary_name + (isNestedSrc ? '.' : '_') + type.Name, CodeTypeReferenceOptions.GlobalReference));
-				// destination language may not support nested types, but they should take care of such types by themselves.
-				var typeFullName = type.FullName.Replace ('/', '.');
-				var dstClassRef = new CodeTypeReferenceExpression (
-					new CodeTypeReference (typeFullName, CodeTypeReferenceOptions.GlobalReference));
-				foreach (var field in type.Fields) {
-					var dstField = new CodeFieldReferenceExpression (dstClassRef, field.Name);
-					var srcField = new CodeFieldReferenceExpression (srcClassRef, field.Name);
-					var fieldName = CreateIdentifier (type.Name, field.Name);
-					if (!resourceFields.Contains (fieldName)) {
-						Log.LogDebugMessage ($"Value not found for {typeFullName}.{field.Name}, skipping...");
-						continue;
+			// Looking for:
+			// [assembly: Android.Runtime.ResourceDesignerAttribute("MyApp.Resource", IsApplication=true)]
+
+			var assembly = reader.GetAssemblyDefinition ();
+			foreach (var handle in assembly.GetCustomAttributes ()) {
+				var attribute = reader.GetCustomAttribute (handle);
+				var fullName = reader.GetCustomAttributeFullName (attribute);
+				if (fullName == "Android.Runtime.ResourceDesignerAttribute") {
+					var values = attribute.GetCustomAttributeArguments ();
+					foreach (var arg in values.NamedArguments) {
+						// application resource IDs are constants, cannot merge.
+						if (arg.Name == "IsApplication" && arg.Value is bool isApplication && isApplication) {
+							return null;
+						}
 					}
-					// This simply assigns field regardless of whether it is int or int[].
-					method.Statements.Add (new CodeAssignStatement (dstField, srcField));
+					return (string) values.FixedArguments.First ().Value;
 				}
+			}
+			return null;
+		}
+
+		void CreateImportFor (string declaringTypeFullName, TypeDefinition type, CodeMemberMethod method, MetadataReader reader)
+		{
+			var typeName = reader.GetString (type.Name);
+			var srcClassRef = new CodeTypeReferenceExpression (
+				new CodeTypeReference ($"{primary_name}.{typeName}", CodeTypeReferenceOptions.GlobalReference));
+			var dstClassRef = new CodeTypeReferenceExpression (
+				new CodeTypeReference ($"{declaringTypeFullName}.{typeName}", CodeTypeReferenceOptions.GlobalReference));
+			foreach (var handle in type.GetFields ()) {
+				var fieldName = reader.GetString (reader.GetFieldDefinition (handle).Name);
+				var dstField = new CodeFieldReferenceExpression (dstClassRef, fieldName);
+				var srcField = new CodeFieldReferenceExpression (srcClassRef, fieldName);
+				var fieldIdentifier = CreateIdentifier (typeName, fieldName);
+				if (!resourceFields.Contains (fieldIdentifier)) {
+					Log.LogDebugMessage ($"Value not found for {fieldIdentifier}, skipping...");
+					continue;
+				}
+				// This simply assigns field regardless of whether it is int or int[].
+				method.Statements.Add (new CodeAssignStatement (dstField, srcField));
 			}
 		}
 	}

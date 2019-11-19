@@ -33,14 +33,14 @@ namespace Xamarin.Android.Build.Tests
 				},
 			};
 			var proj = new XamarinAndroidApplicationProject () {
-				Packages = {
-					KnownPackages.SupportMediaCompat_25_4_0_1,
-					KnownPackages.SupportFragment_25_4_0_1,
-					KnownPackages.SupportCoreUtils_25_4_0_1,
-					KnownPackages.SupportCoreUI_25_4_0_1,
-					KnownPackages.SupportCompat_25_4_0_1,
-					KnownPackages.AndroidSupportV4_25_4_0_1,
-					KnownPackages.SupportV7AppCompat_25_4_0_1,
+				PackageReferences = {
+					KnownPackages.SupportMediaCompat_27_0_2_1,
+					KnownPackages.SupportFragment_27_0_2_1,
+					KnownPackages.SupportCoreUtils_27_0_2_1,
+					KnownPackages.SupportCoreUI_27_0_2_1,
+					KnownPackages.SupportCompat_27_0_2_1,
+					KnownPackages.AndroidSupportV4_27_0_2_1,
+					KnownPackages.SupportV7AppCompat_27_0_2_1,
 				},
 				References = { new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj") },
 				Imports = {
@@ -162,13 +162,15 @@ namespace UnnamedProject
 			});
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.RunTarget (proj, target, parameters: DesignerParameters), $"first `{target}` should have succeeded.");
-				Assert.IsTrue (b.RunTarget (proj, target, parameters: DesignerParameters), $"second `{target}` should have succeeded.");
+				Assert.IsTrue (b.RunTarget (proj, target, parameters: DesignerParameters, doNotCleanupOnUpdate: true), $"second `{target}` should have succeeded.");
 				Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
+				Assert.IsTrue (b.Output.IsTargetSkipped ("_GeneratePackageManagerJavaForDesigner"), "`_GeneratePackageManagerJavaForDesigner` should be skipped!");
 
 				// Change a java file, run SetupDependenciesForDesigner
 				proj.Touch ("Foo.java");
-				Assert.IsTrue (b.RunTarget (proj, target, parameters: DesignerParameters), $"third `{target}` should have succeeded.");
+				Assert.IsTrue (b.RunTarget (proj, target, parameters: DesignerParameters, doNotCleanupOnUpdate: true), $"third `{target}` should have succeeded.");
 				Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped!");
+				Assert.IsTrue (b.Output.IsTargetSkipped ("_GeneratePackageManagerJavaForDesigner"), "`_GeneratePackageManagerJavaForDesigner` should be skipped!");
 			}
 		}
 
@@ -206,14 +208,14 @@ namespace UnnamedProject
 		{
 			var target = "GetExtraLibraryLocationsForDesigner";
 			var proj = new XamarinAndroidApplicationProject () {
-				Packages = {
-					KnownPackages.SupportMediaCompat_25_4_0_1,
-					KnownPackages.SupportFragment_25_4_0_1,
-					KnownPackages.SupportCoreUtils_25_4_0_1,
-					KnownPackages.SupportCoreUI_25_4_0_1,
-					KnownPackages.SupportCompat_25_4_0_1,
-					KnownPackages.AndroidSupportV4_25_4_0_1,
-					KnownPackages.SupportV7AppCompat_25_4_0_1,
+				PackageReferences = {
+					KnownPackages.SupportMediaCompat_27_0_2_1,
+					KnownPackages.SupportFragment_27_0_2_1,
+					KnownPackages.SupportCoreUtils_27_0_2_1,
+					KnownPackages.SupportCoreUI_27_0_2_1,
+					KnownPackages.SupportCompat_27_0_2_1,
+					KnownPackages.AndroidSupportV4_27_0_2_1,
+					KnownPackages.SupportV7AppCompat_27_0_2_1,
 				},
 			};
 			string jar = "gson-2.7.jar";
@@ -224,14 +226,13 @@ namespace UnnamedProject
 				WebContent = "https://jcenter.bintray.com/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar"
 			});
 			// Each NuGet package and AAR file are in libraryprojectimports.cache, AndroidJavaSource is not
-			int libraryProjectImportsJars = proj.Packages.Count + 1;
+			int libraryProjectImportsJars = 14;
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName), false, false)) {
 				// GetExtraLibraryLocationsForDesigner on new project
 				Assert.IsTrue (b.RunTarget (proj, target, parameters: DesignerParameters), $"build should have succeeded for target `{target}` 1");
 
 				// GetExtraLibraryLocationsForDesigner after DTB
 				Assert.IsTrue (b.DesignTimeBuild (proj), "design-time build should have succeeded");
-				Assert.IsFalse (b.Output.IsTargetSkipped ("_BuildAdditionalResourcesCache"), "_BuildAdditionalResourcesCache should not be skipped!");
 				var resourcepathscache = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "designtime", "libraryprojectimports.cache");
 				FileAssert.Exists (resourcepathscache);
 				var expected = XDocument.Load (resourcepathscache);
@@ -242,7 +243,6 @@ namespace UnnamedProject
 				// GetExtraLibraryLocationsForDesigner after SetupDependenciesForDesigner
 				var setup = "SetupDependenciesForDesigner";
 				Assert.IsTrue (b.RunTarget (proj, setup, parameters: DesignerParameters),  $"build should have succeeded for target `{setup}`");
-				Assert.IsFalse (b.Output.IsTargetSkipped ("_BuildAdditionalResourcesCache"), "_BuildAdditionalResourcesCache should not be skipped!");
 				Assert.IsTrue (b.RunTarget (proj, target, parameters: DesignerParameters), $"build should have succeeded for target `{target}` 3");
 				AssertJarInBuildOutput (b, "ExtraJarLocation", jar);
 				FileAssert.Exists (resourcepathscache);
@@ -252,7 +252,6 @@ namespace UnnamedProject
 
 				// GetExtraLibraryLocationsForDesigner after Build
 				Assert.IsTrue (b.Build (proj), "build should have succeeded");
-				Assert.IsFalse (b.Output.IsTargetSkipped ("_BuildAdditionalResourcesCache"), "_BuildAdditionalResourcesCache should not be skipped!");
 				Assert.IsTrue (b.RunTarget (proj, target, parameters: DesignerParameters), $"build should have succeeded for target `{target}` 4");
 				AssertJarInBuildOutput (b, "ExtraJarLocation", jar);
 				FileAssert.Exists (resourcepathscache);

@@ -100,6 +100,21 @@ The following build targets are defined for Xamarin.Android projects:
     (`.apk`). Use with `/p:Configuration=Release` to generate
     self-contained "Release" packages.
 
+-   **StartAndroidActivity** &ndash; Starts *launch* activity on the
+    device or the running emulator. The launch activity can be
+    overriden by the `$(AndroidLaunchActivity)` property.
+    
+    Added in Xamarin.Android v10.3.
+    
+    This is equivalent to `adb shell am start @PACKAGE_NAME@/$(AndroidLaunchActivity)`.
+
+-   **StopAndroidPackage** &ndash; Completely stops the application
+    package on the device or the running emulator.
+    
+    Added in Xamarin.Android v10.3.
+    
+    This is equivalent to `adb shell am force-stop @PACKAGE_NAME@`.
+
 -   **UpdateAndroidResources** &ndash; Updates the
     `Resource.designer.cs` file. This target is usually called by the
     IDE when new resources are added to the project.
@@ -606,6 +621,21 @@ when packaging Release applications.
 
 [apk]: https://en.wikipedia.org/wiki/Android_application_package
 [bundle]: https://developer.android.com/platform/technology/app-bundle
+
+-   **AndroidBundleConfigurationFile** &ndash; Specifies a filename to use as a
+    configuration base when invoking `bundletool` to create an 
+    [Android App Bundle][bundle]. Xamarin.Android can still set certain
+    settings on top of this (especially extensions that are uncompressed).
+    This file lets you configure some aspects of how the Apks are generated,
+    including on what dimension(s) you want your bundle to get split.
+    Only useful if `AndroidPackageFormat` is set to `aab` mode.
+
+    The format of the configuration file is a JSON as expected by
+    [`bundletool`][bundle-config-format].
+
+    Added in Xamarin.Android 10.2.
+
+[bundle-config-format]: https://developer.android.com/studio/build/building-cmdline#bundleconfig
 
 -   **AndroidPackageNamingPolicy** &ndash; An enum-style property for
     specifying the Java package names of generated Java source code.

@@ -19,11 +19,4 @@
       ResolveReferences;
     </BuildDependsOn>
   </PropertyGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj" Condition=" '$(XAIntegratedTests)' == 'True' ">
-      <Project>{E8492EFB-D14A-4F32-AA28-88848322ECEA}</Project>
-      <Name>Xamarin.Android.Tools.BootstrapTasks</Name>
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-    </ProjectReference>
-  </ItemGroup>
 </Project>

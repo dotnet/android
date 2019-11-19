@@ -17,10 +17,16 @@ namespace xamarin::android
 {
 	struct timing_point
 	{
-		time_t sec;
-		uint64_t ns;
+		time_t sec = 0;
+		uint64_t ns = 0;
 
 		void mark ();
+
+		void reset ()
+		{
+			sec = 0;
+			ns = 0;
+		}
 	};
 
 	struct timing_period
@@ -36,6 +42,12 @@ namespace xamarin::android
 		void mark_end ()
 		{
 			end.mark ();
+		}
+
+		void reset ()
+		{
+			start.reset ();
+			end.reset ();
 		}
 	};
 
@@ -124,7 +136,7 @@ namespace xamarin::android
 
 			std::lock_guard<std::mutex> lock (sequence_lock);
 			if (sequence->dynamic) {
-				memset (sequence, 0, sizeof(*sequence));
+				sequence->period.reset ();
 				delete sequence;
 				return;
 			}
