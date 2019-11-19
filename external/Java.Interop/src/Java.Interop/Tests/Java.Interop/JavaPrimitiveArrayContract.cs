@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 using Java.Interop;
 
@@ -22,11 +21,9 @@ namespace Java.InteropTests
 			return FromInt32 ((int) 'B');
 		}
 
-		protected override ICollection<TElement> CreateCollection (IEnumerable<TElement> values)
-		{
-			var array       = (JavaPrimitiveArray<TElement>) Activator.CreateInstance (typeof (TArray), values);
-			return array;
-		}
+		protected abstract ICollection<TElement> CreateCollection (IList<TElement> values);
+
+		protected abstract ICollection<TElement> CreateCollection (int length);
 
 		protected TElement FromInt32 (int value)
 		{
@@ -36,17 +33,9 @@ namespace Java.InteropTests
 		[Test]
 		public void Constructor_Exceptions ()
 		{
-			var ctor = typeof (TArray).GetConstructor (new[]{ typeof (IList<TElement>) });
-			var ex = Assert.Throws<TargetInvocationException> (() => ctor.Invoke (new object[]{ null }));
-			Assert.IsTrue (ex.InnerException is ArgumentNullException);
-
-			ctor = typeof (TArray).GetConstructor (new[]{ typeof (IEnumerable<TElement>) });
-			ex = Assert.Throws<TargetInvocationException> (() => ctor.Invoke (new object[]{ null }));
-			Assert.IsTrue (ex.InnerException is ArgumentNullException);
-
-			ctor = typeof (TArray).GetConstructor (new[]{ typeof (int) });
-			ex = Assert.Throws<TargetInvocationException> (() => ctor.Invoke (new object[]{ -1 }));
-			Assert.IsTrue (ex.InnerException is ArgumentException);
+			Assert.Throws<ArgumentNullException>(() => CreateCollection ((IEnumerable<TElement>) null));
+			Assert.Throws<ArgumentNullException>(() => CreateCollection ((IList<TElement>) null));
+			Assert.Throws<ArgumentException>(() => CreateCollection (-1));
 		}
 
 		[Test]

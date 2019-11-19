@@ -11,6 +11,21 @@ namespace Java.InteropTests
 	[TestFixture]
 	public class JavaBooleanArrayContractTests : JavaPrimitiveArrayContract<JavaBooleanArray, bool>
 	{
+		protected override ICollection<bool> CreateCollection (IEnumerable<bool> values)
+		{
+			return new JavaBooleanArray (values);
+		}
+
+		protected override ICollection<bool> CreateCollection (IList<bool> values)
+		{
+			return new JavaBooleanArray (values);
+		}
+
+		protected override ICollection<bool> CreateCollection (int length)
+		{
+			return new JavaBooleanArray (length);
+		}
+
 		protected override bool CreateValueA ()
 		{
 			return true;
