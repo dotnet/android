@@ -102,7 +102,18 @@ The following build targets are defined for Xamarin.Android projects:
 
 -   **StartAndroidActivity** &ndash; Starts *launch* activity on the
     device or the running emulator. The launch activity can be
-    overriden by `AndroidLaunchActivity` property.
+    overriden by the `$(AndroidLaunchActivity)` property.
+    
+    Added in Xamarin.Android v10.3.
+    
+    This is equivalent to `adb shell am start @PACKAGE_NAME@/$(AndroidLaunchActivity)`.
+
+-   **StopAndroidPackage** &ndash; Completely stops the application
+    package on the device or the running emulator.
+    
+    Added in Xamarin.Android v10.3.
+    
+    This is equivalent to `adb shell am force-stop @PACKAGE_NAME@`.
 
 -   **UpdateAndroidResources** &ndash; Updates the
     `Resource.designer.cs` file. This target is usually called by the
