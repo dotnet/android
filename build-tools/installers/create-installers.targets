@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\scripts\XAVersionInfo.targets" />
+  <Import Project="..\scripts\LocalizationLanguages.projitems" />
   <Import Project="..\..\bin\Build$(Configuration)\ProfileAssemblies.projitems" />
   <Import Project="..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems" />
   <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
@@ -194,19 +195,7 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Bindings.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Build.Tasks.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Build.Tasks.pdb" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\cs\Xamarin.Android.Build.Tasks.resources.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\de\Xamarin.Android.Build.Tasks.resources.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\es\Xamarin.Android.Build.Tasks.resources.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\fr\Xamarin.Android.Build.Tasks.resources.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\it\Xamarin.Android.Build.Tasks.resources.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\ja\Xamarin.Android.Build.Tasks.resources.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\ko\Xamarin.Android.Build.Tasks.resources.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\pl\Xamarin.Android.Build.Tasks.resources.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\pt-BR\Xamarin.Android.Build.Tasks.resources.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\ru\Xamarin.Android.Build.Tasks.resources.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\tr\Xamarin.Android.Build.Tasks.resources.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\zh-Hans\Xamarin.Android.Build.Tasks.resources.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\zh-Hant\Xamarin.Android.Build.Tasks.resources.dll" />
+    <_MSBuildFiles Include="@(_LocalizationLanguages->'$(MSBuildSrcDir)\%(Identity)\Xamarin.Android.Build.Tasks.resources.dll')" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.BuildInfo.txt" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Cecil.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Cecil.pdb" />

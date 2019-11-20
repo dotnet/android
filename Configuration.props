@@ -175,6 +175,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <XlfLanguages>cs;de;es;fr;it;ja;ko;pl;pt-BR;ru;tr;zh-Hans;zh-Hant</XlfLanguages>
     <UpdateXlfOnBuild Condition="'$(RunningOnCI)' != 'true'">true</UpdateXlfOnBuild>
   </PropertyGroup>
 

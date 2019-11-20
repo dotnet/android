@@ -17,6 +17,7 @@
     <DebugSymbols>True</DebugSymbols>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
+  <Import Project="..\..\build-tools\scripts\LocalizationLanguages.projitems" />
   <Import Project="..\..\build-tools\scripts\MSBuildReferences.projitems" />
   <Import Project="..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -600,19 +601,7 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <None Include="Properties\xlf\Resources.fr.xlf" />
-    <None Include="Properties\xlf\Resources.cs.xlf" />
-    <None Include="Properties\xlf\Resources.de.xlf" />
-    <None Include="Properties\xlf\Resources.es.xlf" />
-    <None Include="Properties\xlf\Resources.it.xlf" />
-    <None Include="Properties\xlf\Resources.ja.xlf" />
-    <None Include="Properties\xlf\Resources.ko.xlf" />
-    <None Include="Properties\xlf\Resources.pl.xlf" />
-    <None Include="Properties\xlf\Resources.pt-BR.xlf" />
-    <None Include="Properties\xlf\Resources.ru.xlf" />
-    <None Include="Properties\xlf\Resources.tr.xlf" />
-    <None Include="Properties\xlf\Resources.zh-Hans.xlf" />
-    <None Include="Properties\xlf\Resources.zh-Hant.xlf" />
+    <None Include="@(_LocalizationLanguages->'Properties\xlf\Resources.%(Identity).xlf')" />
   </ItemGroup>
   <ItemGroup>
     <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.LaunchMode.cs" />
