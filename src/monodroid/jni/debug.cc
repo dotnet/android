@@ -172,12 +172,8 @@ Debug::parse_options (char *options, ConnOptions *opts)
  * start_connection:
  *
  *   Handle the communication with XS on startup. Call process_cmd () for each command received from XS.
- * Returns:
- * - 1 on success
- * - 0 on error
- * - 2 if no connection is neccessary
  */
-int
+DebuggerConnectionStatus
 Debug::start_connection (char *options)
 {
 	int res;
@@ -192,19 +188,21 @@ Debug::start_connection (char *options)
 
 	if (opts.timeout_time && cur_time > opts.timeout_time) {
 		log_warn (LOG_DEBUGGER, "Not connecting to IDE as the timeout value has been reached; current-time: %lli  timeout: %lli", cur_time, opts.timeout_time);
-		return 2;
+		return DebuggerConnectionStatus::Unconnected;
 	}
 
-	if (!conn_port)
-		return 0;
+	if (!conn_port) {
+		// If the port is 0, we should not connect the debugger
+		return DebuggerConnectionStatus::Unconnected;
+	}
 
 	res = pthread_create (&conn_thread_id, nullptr, xamarin::android::conn_thread, this);
 	if (res) {
 		log_error (LOG_DEFAULT, "Failed to create connection thread: %s", strerror (errno));
-		return 1;
+		return DebuggerConnectionStatus::Error;
 	}
 
-	return 0;
+	return DebuggerConnectionStatus::Connected;
 }
 
 void
@@ -213,14 +211,12 @@ Debug::start_debugging_and_profiling ()
 	char *connect_args;
 	androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_CONNECT_PROPERTY, &connect_args);
 
-	if (connect_args != nullptr) {
-		int res = start_connection (connect_args);
-		if (res != 2) {
-			if (res) {
-				log_fatal (LOG_DEBUGGER, "Could not start a connection to the debugger with connection args '%s'.", connect_args);
-				exit (FATAL_EXIT_DEBUGGER_CONNECT);
-			}
-
+	if (connect_args != nullptr && strcmp (connect_args, "") != 0) {
+		DebuggerConnectionStatus res = start_connection (connect_args);
+		if (res == DebuggerConnectionStatus::Error) {
+			log_fatal (LOG_DEBUGGER, "Could not start a connection to the debugger with connection args '%s'.", connect_args);
+			exit (FATAL_EXIT_DEBUGGER_CONNECT);
+		} else if (res == DebuggerConnectionStatus::Connected) {
 			/* Wait for XS to configure debugging/profiling */
 			gettimeofday(&wait_tv, nullptr);
 			wait_ts.tv_sec = wait_tv.tv_sec + 2;
