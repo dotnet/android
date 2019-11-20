@@ -17,6 +17,7 @@
     <AssemblyName>Mono.Android-Tests</AssemblyName>
     <AndroidManifest>Properties\AndroidManifest.xml</AndroidManifest>
     <AndroidSupportedAbis>armeabi-v7a;x86</AndroidSupportedAbis>
+    <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
     <TargetFrameworkVersion>v10.0</TargetFrameworkVersion>
     <AndroidDexTool Condition=" '$(AndroidDexTool)' == '' ">d8</AndroidDexTool>
   </PropertyGroup>
