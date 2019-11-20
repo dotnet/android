@@ -85,7 +85,8 @@ namespace Xamarin.Android.Tasks
 				foreach (var assembly in Assemblies) {
 					// Add each user assembly and all referenced assemblies (recursive)
 					string resolved_assembly = resolver.Resolve (assembly.ItemSpec);
-					if (MonoAndroidHelper.IsReferenceAssembly (resolved_assembly)) {
+					bool refAssembly = !string.IsNullOrEmpty (assembly.GetMetadata ("NuGetPackageId")) && resolved_assembly.Contains ($"{Path.PathSeparator }ref{Path.PathSeparator }");
+					if (refAssembly || MonoAndroidHelper.IsReferenceAssembly (resolved_assembly)) {
 						// Resolve "runtime" library
 						if (lockFile != null)
 							resolved_assembly = ResolveRuntimeAssemblyForReferenceAssembly (lockFile, assembly.ItemSpec);
