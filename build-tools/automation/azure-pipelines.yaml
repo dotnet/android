@@ -142,9 +142,11 @@ stages:
         targetPath: bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
 
     - task: DotNetCoreCLI@2
+      displayName: pack Xamarin.Android.Sdk
       inputs:
         command: pack
-        projects: $(System.DefaultWorkingDirectory)/build-tools/create-packs/Packager.csproj
+        packagesToPack: $(System.DefaultWorkingDirectory)/build-tools/create-packs/Packager.csproj
+        configuration: $(XA.Build.Configuration)
 
     - task: PublishPipelineArtifact@0
       displayName: upload nupkgs
