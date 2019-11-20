@@ -290,6 +290,35 @@ when packaging Release applications.
 
 [binutils]: https://android.googlesource.com/toolchain/binutils/
 
+-   **AndroidBoundExceptionType** &ndash; A string value which specifies how
+    exceptions should be propagated when a Xamarin.Android-provided type
+    implements a .NET type or interface in terms of Java types, for example
+    `Android.Runtime.InputStreamInvoker` and `System.IO.Stream`, or
+    `Android.Runtime.JavaDictionary` and `System.Collections.IDictionary`.
+    
+    -   `Java`: The original Java exception type is propagated as-is.
+
+        This means that e.g. `InputStreamInvoker` does not property implement
+        the `System.IO.Stream` API, as e.g. `Java.IO.IOException` may be thrown
+        from `Stream.Read()` instead of `System.IO.IOException`.
+        
+        This corresponds to exception propagation behavior in all releases of
+        Xamarin.Android prior to 10.2.
+        
+        This is the default value in Xamarin.Android 10.2.
+
+    -   `System`: The original Java exception type is caught and wrapped in an
+        appropriate .NET exception type.
+	
+        This means that e.g. `InputStreamInvoker` properly implements
+        `System.IO.Stream`, and `Stream.Read()` will *not* throw `Java.IO.IOException`
+        instances.  (It may instead throw a `System.IO.IOException` which has a
+        `Java.IO.IOException` as the `Exception.InnerException` value.)
+
+        This will become the default value in Xamarin.Android 11.0.
+    
+    Added in Xamarin.Android 10.2.
+
 -   **AndroidBuildApplicationPackage** &ndash; A boolean value that
     indicates whether to create and sign the package (.apk). Setting
     this value to `True` is equivalent to using the

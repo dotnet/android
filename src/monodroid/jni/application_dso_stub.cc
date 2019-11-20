@@ -18,6 +18,7 @@ ApplicationConfig application_config = {
 	.uses_assembly_preload = false,
 	.is_a_bundled_app = false,
 	.broken_exception_transitions = false,
+	.bound_exception_type = 0, // System
 	.package_naming_policy = 0,
 	.environment_variable_count = 0,
 	.system_property_count = 0,

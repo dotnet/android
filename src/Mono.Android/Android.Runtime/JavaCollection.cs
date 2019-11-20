@@ -40,16 +40,49 @@ namespace Android.Runtime {
 				Add (item);
 		}
 
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//    Exception wrapping is required.
+		//
+		//  Rationale
+		//    `java.util.Collection.add(E)` throws a number of exceptions, see:
+		//
+		//     https://developer.android.com/reference/java/util/Collection?hl=en#add(E)
+		//
 		internal void Add (object item)
 		{
 			if (id_add == IntPtr.Zero)
 				id_add = JNIEnv.GetMethodID (collection_class, "add", "(Ljava/lang/Object;)Z");
 			JavaConvert.WithLocalJniHandle (item, lref => {
-					JNIEnv.CallBooleanMethod (Handle, id_add, new JValue (lref));
+
+					try {
+						JNIEnv.CallBooleanMethod (Handle, id_add, new JValue (lref));
+					} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+						throw new NotSupportedException (ex.Message, ex);
+					} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+						throw new InvalidCastException (ex.Message, ex);
+					} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+						throw new NullReferenceException (ex.Message, ex);
+					} catch (Java.Lang.IllegalArgumentException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+						throw new ArgumentException (ex.Message, ex);
+					} catch (Java.Lang.IllegalStateException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+						throw new InvalidOperationException (ex.Message, ex);
+					}
 					return IntPtr.Zero;
 			});
 		}
 
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//    No need to wrap thrown exceptions in a BCL class
+		//
+		//  Rationale
+		//    `java.util.Collection.iterator()` is not documented to throw any exceptions.
+		//
 		internal Java.Util.IIterator Iterator ()
 		{
 			if (id_iterator == IntPtr.Zero)
@@ -59,6 +92,15 @@ namespace Android.Runtime {
 					JniHandleOwnership.TransferLocalRef);
 		}
 
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//    No need to wrap thrown exceptions in a BCL class
+		//
+		//  Rationale
+		//    `java.util.Collection.size()` is not documented to throw any exceptions.
+		//
 		public int Count {
 			get {
 				if (id_size == IntPtr.Zero)
@@ -75,6 +117,15 @@ namespace Android.Runtime {
 			get {return null;}
 		}
 
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//    No need to wrap thrown exceptions in a BCL class
+		//
+		//  Rationale
+		//    `java.util.Collection.toArray()` is not documented to throw any exceptions.
+		//
 		internal Java.Lang.Object[] ToArray ()
 		{
 			if (id_toArray == IntPtr.Zero)
@@ -84,6 +135,15 @@ namespace Android.Runtime {
 				return (Java.Lang.Object[]) o;
 		}
 
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//    No need to wrap thrown exceptions in a BCL class
+		//
+		//  Rationale
+		//    `java.util.Collection.toArray()` is not documented to throw any exceptions.
+		//
 		public void CopyTo (Array array, int array_index)
 		{
 			if (array == null)
@@ -150,6 +210,15 @@ namespace Android.Runtime {
 		{
 		}
 
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//    No need to wrap thrown exceptions in a BCL class
+		//
+		//  Rationale
+		//    `java.util.ArrayList.ctor()` is not documented to throw any exceptions.
+		//
 		internal JavaCollection (IEnumerable<T> items)
 			: base (
 					JNIEnv.StartCreateInstance ("java/util/ArrayList", "()V"),
@@ -174,31 +243,96 @@ namespace Android.Runtime {
 			get {return false;}
 		}
 
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//    Exception wrapping is required.
+		//
+		//  Rationale
+		//    `java.util.Collection.add(E)` throws a number of exceptions, see:
+		//
+		//     https://developer.android.com/reference/java/util/Collection?hl=en#add(E)
+		//
 		public void Add (T item)
 		{
 			if (id_add == IntPtr.Zero)
 				id_add = JNIEnv.GetMethodID (collection_class, "add", "(Ljava/lang/Object;)Z");
 			JavaConvert.WithLocalJniHandle (item, lref => {
+				try {
 					JNIEnv.CallBooleanMethod (Handle, id_add, new JValue (lref));
-					return IntPtr.Zero;
+				} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NotSupportedException (ex.Message, ex);
+				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new InvalidCastException (ex.Message, ex);
+				} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NullReferenceException (ex.Message, ex);
+				} catch (Java.Lang.IllegalArgumentException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new ArgumentException (ex.Message, ex);
+				} catch (Java.Lang.IllegalStateException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new InvalidOperationException (ex.Message, ex);
+				}
+				return IntPtr.Zero;
 			});
 		}
 
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//    Exception wrapping is required.
+		//
+		//  Rationale
+		//    `java.util.Collection.clear()` throws an  exception, see:
+		//
+		//     https://developer.android.com/reference/java/util/Collection?hl=en#clear()
+		//
 		public void Clear ()
 		{
 			if (id_clear == IntPtr.Zero)
 				id_clear = JNIEnv.GetMethodID (collection_class, "clear", "()V");
-			JNIEnv.CallVoidMethod (Handle, id_clear);
+			try {
+				JNIEnv.CallVoidMethod (Handle, id_clear);
+			} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+				throw new NotSupportedException (ex.Message, ex);
+			}
 		}
 
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//    Exception wrapping is required.
+		//
+		//  Rationale
+		//    `java.util.Collection.contains(Object)` throws a number of exceptions, see:
+		//
+		//     https://developer.android.com/reference/java/util/Collection?hl=en#contains(java.lang.Object)
+		//
 		public bool Contains (T item)
 		{
 			if (id_contains == IntPtr.Zero)
 				id_contains = JNIEnv.GetMethodID (collection_class, "contains", "(Ljava/lang/Object;)Z");
-			return JavaConvert.WithLocalJniHandle (item,
-					lref => JNIEnv.CallBooleanMethod (Handle, id_contains, new JValue (lref)));
+			return JavaConvert.WithLocalJniHandle (item, lref => {
+				try {
+					return JNIEnv.CallBooleanMethod (Handle, id_contains, new JValue (lref));
+				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new InvalidCastException (ex.Message, ex);
+				} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NullReferenceException (ex.Message, ex);
+				}
+			});
 		}
 
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//    No need to wrap thrown exceptions in a BCL class
+		//
+		//  Rationale
+		//    `java.util.Collection.toArray()` is not documented to throw any exceptions.
+		//
 		public void CopyTo (T[] array, int array_index)
 		{
 			if (array == null)
@@ -219,12 +353,32 @@ namespace Android.Runtime {
 			JNIEnv.DeleteLocalRef (lrefArray);
 		}
 
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//    Exception wrapping is required.
+		//
+		//  Rationale
+		//    `java.util.Collection.remove(Object)` throws a number of exceptions, see:
+		//
+		//     https://developer.android.com/reference/java/util/Collection?hl=en#remove(java.lang.Object)
+		//
 		public bool Remove (T item)
 		{
 			if (id_remove == IntPtr.Zero)
 				id_remove = JNIEnv.GetMethodID (collection_class, "remove", "(I)Ljava/lang/Object;");
-			return JavaConvert.WithLocalJniHandle (item,
-					lref => JNIEnv.CallBooleanMethod (Handle, id_remove, new JValue (lref)));
+			return JavaConvert.WithLocalJniHandle (item, lref => {
+				try {
+					return JNIEnv.CallBooleanMethod (Handle, id_remove, new JValue (lref));
+				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new InvalidCastException (ex.Message, ex);
+				} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NullReferenceException (ex.Message, ex);
+				} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NotSupportedException (ex.Message, ex);
+				}
+			});
 		}
 
 		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator ()

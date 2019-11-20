@@ -267,6 +267,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidDebugKeyAlgorithm Condition=" '$(AndroidDebugKeyAlgorithm)' == '' ">RSA</AndroidDebugKeyAlgorithm>
 	<AndroidDebugKeyValidity Condition=" '$(AndroidDebugKeyValidity)' == '' ">10950</AndroidDebugKeyValidity>
 
+  <!-- Backward compatibility options -->
+  <AndroidBoundExceptionType Condition=" '$(AndroidBoundExceptionType)' == '' ">Java</AndroidBoundExceptionType>
+
 	<!-- Obsolete -->
 	<AndroidGdbDebugServer>None</AndroidGdbDebugServer>
 
@@ -2211,6 +2214,7 @@ because xbuild doesn't support framework reference assemblies.
     AndroidPackageName="$(_AndroidPackage)"
     EnablePreloadAssembliesDefault="$(_AndroidEnablePreloadAssembliesDefault)"
     PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
+    BoundExceptionType="$(AndroidBoundExceptionType)"
   >
     <Output TaskParameter="BuildId" PropertyName="_XamarinBuildId" />
   </GeneratePackageManagerJava>

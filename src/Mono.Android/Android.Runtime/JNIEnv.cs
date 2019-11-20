@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -14,7 +15,7 @@ using Java.Interop;
 using Java.Interop.Tools.TypeNameMappings;
 
 namespace Android.Runtime {
-
+#pragma warning disable 0649
 	struct JnienvInitializeArgs {
 		public IntPtr          javaVm;
 		public IntPtr          env;
@@ -31,7 +32,9 @@ namespace Android.Runtime {
 		public int             isRunningOnDesktop;
 		public byte            brokenExceptionTransitions;
 		public int             packageNamingPolicy;
+		public byte            ioExceptionType;
 	}
+#pragma warning restore 0649
 
 	public static partial class JNIEnv {
 		static IntPtr java_class_loader;
@@ -56,6 +59,7 @@ namespace Android.Runtime {
 		internal static bool IsRunningOnDesktop;
 
 		static AndroidRuntime androidRuntime;
+		static BoundExceptionType BoundExceptionType;
 
 		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
 		extern static void monodroid_log (LogLevel level, LogCategories category, string message);
@@ -86,6 +90,25 @@ namespace Android.Runtime {
 				return false;
 
 			return IsInstanceOf (value, grefIGCUserPeer_class);
+		}
+
+		internal static bool ShouldWrapJavaException (Java.Lang.Throwable t, [CallerMemberName] string caller = null)
+		{
+			if (t == null) {
+				monodroid_log (LogLevel.Warn,
+				               LogCategories.Default,
+				               $"ShouldWrapJavaException was not passed a valid `Java.Lang.Throwable` instance. Called from method `{caller}`");
+				return false;
+			}
+
+			bool wrap = BoundExceptionType == BoundExceptionType.System;
+			if (!wrap) {
+				monodroid_log (LogLevel.Warn,
+				               LogCategories.Default,
+				               $"Not wrapping exception of type {t.GetType().FullName} from method `{caller}`. This will change in a future release.");
+			}
+
+			return wrap;
 		}
 
 		[DllImport ("libc")]
@@ -141,6 +164,7 @@ namespace Android.Runtime {
 
 			Mono.SystemDependencyProvider.Initialize ();
 
+			BoundExceptionType = (BoundExceptionType)args->ioExceptionType;
 			androidRuntime = new AndroidRuntime (args->env, args->javaVm, androidSdkVersion > 10, args->grefLoader, args->Loader_loadClass);
 
 			AllocObjectSupported = androidSdkVersion > 10;
