@@ -17,6 +17,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)BuildTest.TestCaseSource.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DesignerTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DeferredBuildTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)XASdkTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IncrementalBuildTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ManifestTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ManifestTest.TestCaseSource.cs" />

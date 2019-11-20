@@ -45,6 +45,7 @@
   <ItemGroup>
     <Compile Include="Android\AndroidSdkResolver.cs" />
     <Compile Include="Android\XamarinFormsMapsApplicationProject.cs" />
+    <Compile Include="Android\XASdkProject.cs" />
     <Compile Include="Common\ExistingProject.cs" />
     <Compile Include="Android\MSBuildSdkExtrasProject.cs" />
     <Compile Include="Common\TestEnvironment.cs" />

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -29,6 +29,8 @@ namespace Xamarin.ProjectTools
 		public IList<Package> Packages { get; private set; }
 		public IList<BuildItem> References { get; private set; }
 		public IList<Package> PackageReferences { get; private set; }
+		public IList<string> ExtraNuGetConfigSources { get; set; }
+
 		public virtual bool ShouldRestorePackageReferences => PackageReferences?.Count > 0;
 		/// <summary>
 		/// If true, the ProjectDirectory will be deleted and populated on the first build

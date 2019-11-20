@@ -43,8 +43,8 @@
   <!-- Default item includes (globs and implicit references) -->
   <Import Project="Xamarin.Android.Sdk.DefaultItems.props" />
 
-	<PropertyGroup>
-		<XamarinAndroidSdkPropsImported>true</XamarinAndroidSdkPropsImported>
-	</PropertyGroup>
+  <PropertyGroup>
+    <XamarinAndroidSdkPropsImported>true</XamarinAndroidSdkPropsImported>
+  </PropertyGroup>
 
 </Project>
