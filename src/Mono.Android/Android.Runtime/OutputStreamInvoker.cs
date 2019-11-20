@@ -9,25 +9,74 @@ namespace Android.Runtime
 
 		public OutputStreamInvoker (Java.IO.OutputStream stream)
 		{
+			if (stream == null)
+				throw new ArgumentNullException (nameof (stream));
+
 			this.BaseOutputStream = stream;
 		}
 
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//    Exception wrapping is required.
+		//
+		//  Rationale
+		//    `java.io.OutputStream.close()` throws an exception, see:
+		//
+		//     https://developer.android.com/reference/java/io/OutputStream?hl=en#close()
+		//
 		public override void Close ()
 		{
-			BaseOutputStream.Close ();
-		}
-
-		protected override void Dispose (bool disposing)
-		{
-			if (disposing && BaseOutputStream != null) {
-				BaseOutputStream.Dispose ();
-				BaseOutputStream = null;
+			try {
+				BaseOutputStream.Close ();
+			} catch (Java.IO.IOException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+				throw new IOException (ex.Message, ex);
 			}
 		}
 
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//    Exception wrapping is required.
+		//
+		//  Rationale
+		//    `java.io.OutputStream.close()` throws an exception, see:
+		//
+		//     https://developer.android.com/reference/java/io/OutputStream?hl=en#close()
+		//
+		protected override void Dispose (bool disposing)
+		{
+			if (disposing && BaseOutputStream != null) {
+				try {
+					BaseOutputStream.Close ();
+					BaseOutputStream.Dispose ();
+					BaseOutputStream = null;
+				} catch (Java.IO.IOException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new IOException (ex.Message, ex);
+				}
+			}
+		}
+
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//    Exception wrapping is required.
+		//
+		//  Rationale
+		//    `java.io.OutputStream.flush()` throws an exception, see:
+		//
+		//     https://developer.android.com/reference/java/io/OutputStream?hl=en#flush()
+		//
 		public override void Flush ()
 		{
-			BaseOutputStream.Flush ();
+			try {
+				BaseOutputStream.Flush ();
+			} catch (Java.IO.IOException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+				throw new IOException (ex.Message, ex);
+			}
 		}
 
 		public override int Read (byte[] buffer, int offset, int count)
@@ -45,9 +94,24 @@ namespace Android.Runtime
 			throw new NotSupportedException ();
 		}
 
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//    Exception wrapping is required.
+		//
+		//  Rationale
+		//    `java.io.OutputStream.write(byte[],int,int)` throws an exception, see:
+		//
+		//     https://developer.android.com/reference/java/io/OutputStream?hl=en#write(byte%5B%5D)
+		//
 		public override void Write (byte[] buffer, int offset, int count)
 		{
-			BaseOutputStream.Write (buffer, offset, count);
+			try {
+				BaseOutputStream.Write (buffer, offset, count);
+			} catch (Java.IO.IOException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+				throw new IOException (ex.Message, ex);
+			}
 		}
 
 		public override bool CanRead { get { return false; } }
@@ -83,4 +147,3 @@ namespace Android.Runtime
 		}
 	}
 }
-

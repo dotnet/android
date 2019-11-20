@@ -58,16 +58,42 @@ namespace Android.Runtime {
 		static IntPtr id_size;
 		static IntPtr id_values;
 
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//    Exception wrapping is required.
+		//
+		//  Rationale
+		//    `java.util.Collection.get(Object, Object)` throws a number of exceptions, see:
+		//
+		//     https://developer.android.com/reference/java/util/Map#get(java.lang.Object)
+		//
 		internal object Get (object key)
 		{
 			if (id_get == IntPtr.Zero)
 				id_get = JNIEnv.GetMethodID (map_class, "get", "(Ljava/lang/Object;)Ljava/lang/Object;");
 			return JavaConvert.FromJniHandle (
-					JavaConvert.WithLocalJniHandle (key,
-						lref => JNIEnv.CallObjectMethod (Handle, id_get, new JValue (lref))),
-					JniHandleOwnership.TransferLocalRef);
+				JavaConvert.WithLocalJniHandle (key, lref => {
+					try {
+						return JNIEnv.CallObjectMethod (Handle, id_get, new JValue (lref));
+					} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+						throw new InvalidCastException (ex.Message, ex);
+					} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+						throw new NullReferenceException (ex.Message, ex);
+					}
+				}), JniHandleOwnership.TransferLocalRef);
 		}
 
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//    No need to wrap thrown exceptions in a BCL class
+		//
+		//  Rationale
+		//    `java.util.Map.keySet()` is not documented to throw any exceptions.
+		//
 		internal IntPtr GetKeys ()
 		{
 			if (id_keySet == IntPtr.Zero)
@@ -75,6 +101,15 @@ namespace Android.Runtime {
 			return JNIEnv.CallObjectMethod (Handle, id_keySet);
 		}
 
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//    No need to wrap thrown exceptions in a BCL class
+		//
+		//  Rationale
+		//    `java.util.Map.values()` is not documented to throw any exceptions.
+		//
 		internal IntPtr GetValues ()
 		{
 			if (id_values == IntPtr.Zero)
@@ -82,16 +117,52 @@ namespace Android.Runtime {
 			return JNIEnv.CallObjectMethod (Handle, id_values);
 		}
 
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//    Exception wrapping is required.
+		//
+		//  Rationale
+		//    `java.util.Map.put(K, V)` throws a number of exceptions, see:
+		//
+		//     https://developer.android.com/reference/java/util/Map#put(K,%20V)
+		//
 		internal void Put (object key, object value)
 		{
 			if (id_put == IntPtr.Zero)
 				id_put = JNIEnv.GetMethodID (map_class, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
 			IntPtr r = JavaConvert.WithLocalJniHandle (key,
 					lrefKey => JavaConvert.WithLocalJniHandle (value,
-						lrefValue => JNIEnv.CallObjectMethod (Handle, id_put, new JValue (lrefKey), new JValue (lrefValue))));
+						lrefValue => {
+							try {
+								return JNIEnv.CallObjectMethod (Handle, id_put, new JValue (lrefKey), new JValue (lrefValue));
+							} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+								throw new NotSupportedException (ex.Message, ex);
+							} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+								throw new InvalidCastException (ex.Message, ex);
+							} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+								throw new NullReferenceException (ex.Message, ex);
+							} catch (Java.Lang.IllegalArgumentException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+								throw new ArgumentException (ex.Message, ex);
+							}
+						}
+					)
+			);
 			JNIEnv.DeleteLocalRef (r);
 		}
 
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//    No need to wrap thrown exceptions in a BCL class
+		//
+		//  Rationale
+		//    `java.util.HasMap.ctor()` is not documented to throw any exceptions. The `else` clause below
+		//    instantiates a type we don't know at this time, so we have no information about the exceptions
+		//    it may throw.
+		//
 		[Register (".ctor", "()V", "")]
 		public JavaDictionary ()
 			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
@@ -128,6 +199,15 @@ namespace Android.Runtime {
 				Add (item.Key, item.Value);
 		}
 
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//    No need to wrap thrown exceptions in a BCL class
+		//
+		//  Rationale
+		//    `java.util.Map.size()` is not documented to throw any exceptions.
+		//
 		public int Count {
 			get {
 				if (id_size == IntPtr.Zero)
@@ -172,19 +252,52 @@ namespace Android.Runtime {
 			Put (key, value);
 		}
 
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//    Exception wrapping is required.
+		//
+		//  Rationale
+		//    `java.util.Map.clear()` throws an exceptions, see:
+		//
+		//     https://developer.android.com/reference/java/util/Map.html?hl=en#clear()
+		//
 		public void Clear ()
 		{
 			if (id_clear == IntPtr.Zero)
 				id_clear = JNIEnv.GetMethodID (map_class, "clear", "()V");
-			JNIEnv.CallVoidMethod (Handle, id_clear);
+			try {
+				JNIEnv.CallVoidMethod (Handle, id_clear);
+			} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+				throw new NotSupportedException (ex.Message, ex);
+			}
 		}
 
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//    Exception wrapping is required.
+		//
+		//  Rationale
+		//    `java.util.Map.containsKey(Object)` throws a number of exceptions, see:
+		//
+		//     https://developer.android.com/reference/java/util/Map.html?hl=en#containsKey(java.lang.Object)
+		//
 		public bool Contains (object key)
 		{
 			if (id_containsKey == IntPtr.Zero)
 				id_containsKey = JNIEnv.GetMethodID (map_class, "containsKey", "(Ljava/lang/Object;)Z");
-			return JavaConvert.WithLocalJniHandle (key,
-					lref => JNIEnv.CallBooleanMethod (Handle, id_containsKey, new JValue (lref)));
+			return JavaConvert.WithLocalJniHandle (key, lref => {
+				try {
+					return JNIEnv.CallBooleanMethod (Handle, id_containsKey, new JValue (lref));
+				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new InvalidCastException (ex.Message, ex);
+				} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NullReferenceException (ex.Message, ex);
+				}
+			});
 		}
 
 		public void CopyTo (Array array, int array_index)
@@ -211,12 +324,32 @@ namespace Android.Runtime {
 			return new DictionaryEnumerator (this);
 		}
 
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//    Exception wrapping is required.
+		//
+		//  Rationale
+		//    `java.util.Map.remove(Object, Object)` throws a number of exceptions, see:
+		//
+		//     https://developer.android.com/reference/java/util/Map.html?hl=en#remove(java.lang.Object,%20java.lang.Object)
+		//
 		public void Remove (object key)
 		{
 			if (id_remove == IntPtr.Zero)
 				id_remove = JNIEnv.GetMethodID (map_class, "remove", "(Ljava/lang/Object;)Ljava/lang/Object;");
-			IntPtr r = JavaConvert.WithLocalJniHandle (key,
-					lref => JNIEnv.CallObjectMethod (Handle, id_remove, new JValue (lref)));
+			IntPtr r = JavaConvert.WithLocalJniHandle (key, lref => {
+				try {
+					return JNIEnv.CallObjectMethod (Handle, id_remove, new JValue (lref));
+				} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NotSupportedException (ex.Message, ex);
+				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new InvalidCastException (ex.Message, ex);
+				} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NullReferenceException (ex.Message, ex);
+				}
+			});
 			JNIEnv.DeleteLocalRef (r);
 		}
 		
@@ -250,6 +383,17 @@ namespace Android.Runtime {
 		}
 	}
 
+	//
+	// Exception audit:
+	//
+	//  Verdict
+	//    No need to wrap thrown exceptions in a BCL class
+	//
+	//  Rationale
+	//    `java.util.HasMap.ctor()` is not documented to throw any exceptions. The `else` clause below
+	//    instantiates a type we don't know at this time, so we have no information about the exceptions
+	//    it may throw.
+	//
 	[Register ("java/util/HashMap", DoNotGenerateAcw=true)]
 	public class JavaDictionary<K, V> : JavaDictionary, IDictionary<K, V> {
 
@@ -288,22 +432,66 @@ namespace Android.Runtime {
 				Add (key, items [key]);
 		}
 
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//    Exception wrapping is required.
+		//
+		//  Rationale
+		//    `java.util.Collection.get(Object, Object)` throws a number of exceptions, see:
+		//
+		//     https://developer.android.com/reference/java/util/Map#get(java.lang.Object)
+		//
 		internal V Get (K key)
 		{
 			if (id_get == IntPtr.Zero)
 				id_get = JNIEnv.GetMethodID (map_class, "get", "(Ljava/lang/Object;)Ljava/lang/Object;");
-			var v = JavaConvert.WithLocalJniHandle (key,
-					lref => JNIEnv.CallObjectMethod (Handle, id_get, new JValue (lref)));
+			var v = JavaConvert.WithLocalJniHandle (key, lref => {
+				try {
+					return JNIEnv.CallObjectMethod (Handle, id_get, new JValue (lref));
+				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new InvalidCastException (ex.Message, ex);
+				} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NullReferenceException (ex.Message, ex);
+				}
+			});
+
 			return JavaConvert.FromJniHandle<V>(v, JniHandleOwnership.TransferLocalRef);
 		}
 
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//    Exception wrapping is required.
+		//
+		//  Rationale
+		//    `java.util.Map.put(K, V)` throws a number of exceptions, see:
+		//
+		//     https://developer.android.com/reference/java/util/Map#put(K,%20V)
+		//
 		internal void Put (K key, V value)
 		{
 			if (id_put == IntPtr.Zero)
 				id_put = JNIEnv.GetMethodID (map_class, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
 			IntPtr r = JavaConvert.WithLocalJniHandle (key,
 					lrefKey => JavaConvert.WithLocalJniHandle (value,
-						lrefValue => JNIEnv.CallObjectMethod (Handle, id_put, new JValue (lrefKey), new JValue (lrefValue))));
+						lrefValue => {
+							try {
+								return JNIEnv.CallObjectMethod (Handle, id_put, new JValue (lrefKey), new JValue (lrefValue));
+							} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+								throw new NotSupportedException (ex.Message, ex);
+							} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+								throw new InvalidCastException (ex.Message, ex);
+							} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+								throw new NullReferenceException (ex.Message, ex);
+							} catch (Java.Lang.IllegalArgumentException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+								throw new ArgumentException (ex.Message, ex);
+							}
+						}
+					)
+			);
 			JNIEnv.DeleteLocalRef (r);
 		}
 
@@ -343,13 +531,31 @@ namespace Android.Runtime {
 			return ContainsKey (item.Key);
 		}
 
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//    Exception wrapping is required.
+		//
+		//  Rationale
+		//    `java.util.Map.containsKey(Object)` throws a number of exceptions, see:
+		//
+		//     https://developer.android.com/reference/java/util/Map.html?hl=en#containsKey(java.lang.Object)
+		//
 		public bool ContainsKey (K key)
 		{
 			if (id_containsKey == IntPtr.Zero)
 				id_containsKey = JNIEnv.GetMethodID (map_class, "containsKey", "(Ljava/lang/Object;)Z");
 
-			return JavaConvert.WithLocalJniHandle (key,
-					lref => JNIEnv.CallBooleanMethod (Handle, id_containsKey, new JValue (lref)));
+			return JavaConvert.WithLocalJniHandle (key, lref => {
+				try {
+					return JNIEnv.CallBooleanMethod (Handle, id_containsKey, new JValue (lref));
+				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new InvalidCastException (ex.Message, ex);
+				} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NullReferenceException (ex.Message, ex);
+				}
+			});
 		}
 
 		public void CopyTo (KeyValuePair<K, V>[] array, int array_index)
@@ -381,13 +587,33 @@ namespace Android.Runtime {
 			return Remove (pair.Key);
 		}
 
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//    Exception wrapping is required.
+		//
+		//  Rationale
+		//    `java.util.Map.remove(Object, Object)` throws a number of exceptions, see:
+		//
+		//     https://developer.android.com/reference/java/util/Map.html?hl=en#remove(java.lang.Object,%20java.lang.Object)
+		//
 		public bool Remove (K key)
 		{
 			bool contains = ContainsKey (key);
 			if (id_remove == IntPtr.Zero)
 				id_remove = JNIEnv.GetMethodID (map_class, "remove", "(Ljava/lang/Object;)Ljava/lang/Object;");
-			IntPtr r = JavaConvert.WithLocalJniHandle (key,
-					lref => JNIEnv.CallObjectMethod (Handle, id_remove, new JValue (lref)));
+			IntPtr r = JavaConvert.WithLocalJniHandle (key, lref => {
+				try {
+					return JNIEnv.CallObjectMethod (Handle, id_remove, new JValue (lref));
+				} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NotSupportedException (ex.Message, ex);
+				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new InvalidCastException (ex.Message, ex);
+				} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NullReferenceException (ex.Message, ex);
+				}
+			});
 			JNIEnv.DeleteLocalRef (r);
 			return contains;
 		}

@@ -29,6 +29,17 @@ namespace Android.Runtime {
 
 		internal static IntPtr id_ctor;
 
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//    No need to wrap thrown exceptions in a BCL class
+		//
+		//  Rationale
+		//    `java.util.HashSet.ctor()` is not documented to throw any exceptions. The `else` clause below
+		//    instantiates a type we don't know at this time, so we have no information about the exceptions
+		//    it may throw.
+		//
 		[Register (".ctor", "()V", "")]
 		public JavaSet ()
 			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
@@ -65,6 +76,16 @@ namespace Android.Runtime {
 		}
 
 		static IntPtr id_size;
+
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//    No need to wrap thrown exceptions in a BCL class
+		//
+		//  Rationale
+		//    `java.util.Set.size()` is not documented to throw any exceptions.
+		//
 		public int Count {
 			get {
 				if (id_size == IntPtr.Zero)
@@ -89,28 +110,84 @@ namespace Android.Runtime {
 			get { return null; }
 		}
 
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//    Exception wrapping is required.
+		//
+		//  Rationale
+		//    `java.util.Set.add(Object)` throws a number of exceptions, see:
+		//
+		//     https://developer.android.com/reference/java/util/Set?hl=en#add(E)
+		//
 		public void Add (object item)
 		{
 			if (id_add == IntPtr.Zero)
 				id_add = JNIEnv.GetMethodID (set_class, "add", "(Ljava/lang/Object;)Z");
-			JavaConvert.WithLocalJniHandle (item,
-					lref => JNIEnv.CallBooleanMethod (Handle, id_add, new JValue (lref)));
+			JavaConvert.WithLocalJniHandle (item, lref => {
+				try {
+					return JNIEnv.CallBooleanMethod (Handle, id_add, new JValue (lref));
+				} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NotSupportedException (ex.Message, ex);
+				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new InvalidCastException (ex.Message, ex);
+				} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NullReferenceException (ex.Message, ex);
+				} catch (Java.Lang.IllegalArgumentException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new ArgumentException (ex.Message, ex);
+				}
+			});
 		}
 
 		static IntPtr id_clear;
+
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//    Exception wrapping is required.
+		//
+		//  Rationale
+		//    `java.util.Set.clear()` throws an exception, see:
+		//
+		//     https://developer.android.com/reference/java/util/Set?hl=en#clear()
+		//
 		public void Clear ()
 		{
 			if (id_clear == IntPtr.Zero)
 				id_clear = JNIEnv.GetMethodID (set_class, "clear", "()V");
-			JNIEnv.CallVoidMethod (Handle, id_clear);
+			try {
+				JNIEnv.CallVoidMethod (Handle, id_clear);
+			} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+				throw new NotSupportedException (ex.Message, ex);
+			}
 		}
 
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//    Exception wrapping is required.
+		//
+		//  Rationale
+		//    `java.util.Set.contains(Object)` throws a number of exceptions, see:
+		//
+		//     https://developer.android.com/reference/java/util/Set?hl=en#contains(java.lang.Object)
+		//
 		public bool Contains (object item)
 		{
 			if (id_contains == IntPtr.Zero)
 				id_contains = JNIEnv.GetMethodID (set_class, "contains", "(Ljava/lang/Object;)Z");
-			return JavaConvert.WithLocalJniHandle (item,
-					lref => JNIEnv.CallBooleanMethod (Handle, id_contains, new JValue (lref)));
+			return JavaConvert.WithLocalJniHandle (item, lref => {
+				try {
+					return JNIEnv.CallBooleanMethod (Handle, id_contains, new JValue (lref));
+				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new InvalidCastException (ex.Message, ex);
+				} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NullReferenceException (ex.Message, ex);
+				}
+			});
 		}
 
 		public void CopyTo (Array array, int array_index)
@@ -132,12 +209,32 @@ namespace Android.Runtime {
 			return System.Linq.Extensions.ToEnumerator_Dispose (Iterator ());
 		}
 
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//    Exception wrapping is required.
+		//
+		//  Rationale
+		//    `java.util.Set.remove(Object)` throws a number of exceptions, see:
+		//
+		//     https://developer.android.com/reference/java/util/Set?hl=en#remove(java.lang.Object)
+		//
 		public void Remove (object item)
 		{
 			if (id_remove == IntPtr.Zero)
 				id_remove = JNIEnv.GetMethodID (set_class, "remove", "(Ljava/lang/Object;)Z");
-			JavaConvert.WithLocalJniHandle (item,
-					lref => JNIEnv.CallBooleanMethod (Handle, id_remove, new JValue (lref)));
+			JavaConvert.WithLocalJniHandle (item, lref => {
+				try {
+					return JNIEnv.CallBooleanMethod (Handle, id_remove, new JValue (lref));
+				} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NotSupportedException (ex.Message, ex);
+				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new InvalidCastException (ex.Message, ex);
+				} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NullReferenceException (ex.Message, ex);
+				}
+			});
 		}
 
 		[Preserve (Conditional=true)]
@@ -173,6 +270,17 @@ namespace Android.Runtime {
 	[Register ("java/util/HashSet", DoNotGenerateAcw=true)]
 	public class JavaSet<T> : JavaSet, ICollection<T> {
 
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//    No need to wrap thrown exceptions in a BCL class
+		//
+		//  Rationale
+		//    `java.util.HashSet.ctor()` is not documented to throw any exceptions. The `else` clause below
+		//    instantiates a type we don't know at this time, so we have no information about the exceptions
+		//    it may throw.
+		//
 		[Register (".ctor", "()V", "")]
 		public JavaSet () : base ()
 		{
@@ -207,20 +315,60 @@ namespace Android.Runtime {
 				Add (item);
 		}
 
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//    Exception wrapping is required.
+		//
+		//  Rationale
+		//    `java.util.Set.add(Object)` throws a number of exceptions, see:
+		//
+		//     https://developer.android.com/reference/java/util/Set?hl=en#add(E)
+		//
 		public void Add (T item)
 		{
 			if (id_add == IntPtr.Zero)
 				id_add = JNIEnv.GetMethodID (set_class, "add", "(Ljava/lang/Object;)Z");
-			JavaConvert.WithLocalJniHandle (item,
-					lref => JNIEnv.CallBooleanMethod (Handle, id_add, new JValue (lref)));
+			JavaConvert.WithLocalJniHandle (item, lref => {
+				try {
+					return JNIEnv.CallBooleanMethod (Handle, id_add, new JValue (lref));
+				} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NotSupportedException (ex.Message, ex);
+				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new InvalidCastException (ex.Message, ex);
+				} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NullReferenceException (ex.Message, ex);
+				} catch (Java.Lang.IllegalArgumentException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new ArgumentException (ex.Message, ex);
+				}
+			});
 		}
 
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//    Exception wrapping is required.
+		//
+		//  Rationale
+		//    `java.util.Set.contains(Object)` throws a number of exceptions, see:
+		//
+		//     https://developer.android.com/reference/java/util/Set?hl=en#contains(java.lang.Object)
+		//
 		public bool Contains (T item)
 		{
 			if (id_contains == IntPtr.Zero)
 				id_contains = JNIEnv.GetMethodID (set_class, "contains", "(Ljava/lang/Object;)Z");
-			return JavaConvert.WithLocalJniHandle (item,
-					lref => JNIEnv.CallBooleanMethod (Handle, id_contains, new JValue (lref)));
+			return JavaConvert.WithLocalJniHandle (item, lref => {
+				try {
+					return JNIEnv.CallBooleanMethod (Handle, id_contains, new JValue (lref));
+				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new InvalidCastException (ex.Message, ex);
+				} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NullReferenceException (ex.Message, ex);
+				}
+			});
 		}
 
 		public void CopyTo (T[] array, int array_index)
@@ -247,12 +395,32 @@ namespace Android.Runtime {
 			return System.Linq.Extensions.ToEnumerator_Dispose<T> (Iterator ());
 		}
 
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//    Exception wrapping is required.
+		//
+		//  Rationale
+		//    `java.util.Set.remove(Object)` throws a number of exceptions, see:
+		//
+		//     https://developer.android.com/reference/java/util/Set?hl=en#remove(java.lang.Object)
+		//
 		public bool Remove (T item)
 		{
 			if (id_remove == IntPtr.Zero)
 				id_remove = JNIEnv.GetMethodID (set_class, "remove", "(Ljava/lang/Object;)Z");
-			return JavaConvert.WithLocalJniHandle (item,
-					lref => JNIEnv.CallBooleanMethod (Handle, id_remove, new JValue (lref)));
+			return JavaConvert.WithLocalJniHandle (item, lref => {
+				try {
+					return JNIEnv.CallBooleanMethod (Handle, id_remove, new JValue (lref));
+				} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NotSupportedException (ex.Message, ex);
+				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new InvalidCastException (ex.Message, ex);
+				} catch (Java.Lang.NullPointerException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new NullReferenceException (ex.Message, ex);
+				}
+			});
 		}
 
 		[Preserve (Conditional=true)]
