@@ -40,7 +40,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BuildTests.cs" />
-    <Compile Include="$(IntermediateOutputPath)Config.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -52,6 +51,5 @@
       <Name>Xamarin.ProjectTools</Name>
     </ProjectReference>
   </ItemGroup>
-  <Import Project="Xamarin.Android.MakeBundle-UnitTests.targets" />
   <Import Project="..\..\..\packages\Xamarin.LibZipSharp.1.0.6\build\Xamarin.LibZipSharp.targets" Condition="Exists('..\..\..\packages\Xamarin.LibZipSharp.1.0.6\build\Xamarin.LibZipSharp.targets')" />
 </Project>

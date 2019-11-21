@@ -210,6 +210,10 @@ Debug::start_connection (char *options)
 void
 Debug::start_debugging_and_profiling ()
 {
+	timing_period total_time;
+	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)))
+		total_time.mark_start ();
+
 	char *connect_args;
 	androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_CONNECT_PROPERTY, &connect_args);
 
@@ -229,6 +233,11 @@ Debug::start_debugging_and_profiling ()
 			start_profiling ();
 		}
 		delete[] connect_args;
+	}
+
+	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
+		total_time.mark_end ();
+		Timing::info (total_time, "Debug::start_debugging_and_profiling: end");
 	}
 }
 

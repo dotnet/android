@@ -36,6 +36,11 @@ namespace Xamarin.Android.MakeBundle.UnitTests
 		const string ProjectAssemblyName = "Xamarin.Android.MakeBundle-Tests";
 		const string ProjectPackageName = "Xamarin.Android.MakeBundle_Tests";
 
+		static readonly string hostArch = TestEnvironment.IsWindows ? "windows-x86_64" : (TestEnvironment.IsMacOS ? "darwin-x86_64" : "linux-x86_64");
+		static readonly string executableExtension = TestEnvironment.IsWindows ? ".exe" : string.Empty;
+		static readonly string LlvmReadobj = Path.Combine (AndroidSdkResolver.GetAndroidNdkPath(), "toolchains", "llvm", "prebuilt", hostArch, "bin", $"llvm-readobj{executableExtension}");
+		static readonly string GccReadelf = Path.Combine (AndroidSdkResolver.GetAndroidNdkPath (), "toolchains", "x86_64-4.9", "prebuilt", hostArch, "bin", $"x86_64-linux-android-readelf{executableExtension}");
+
 		static readonly char[] ElfDynamicFieldSep = new [] { ' ', '\t' };
 		static readonly string TestProjectRootDirectory;
 		static readonly string TestOutputDir;
@@ -70,14 +75,14 @@ namespace Xamarin.Android.MakeBundle.UnitTests
 		[OneTimeSetUp]
 		public void BuildProject ()
 		{
-			if (File.Exists (Config.LlvmReadobj)) {
-				elfReaderPath = Config.LlvmReadobj;
+			if (File.Exists (LlvmReadobj)) {
+				elfReaderPath = LlvmReadobj;
 				elfReaderLlvm = true;
-			} else if (File.Exists (Config.GccReadelf)) {
-				elfReaderPath = Config.GccReadelf;
+			} else if (File.Exists (GccReadelf)) {
+				elfReaderPath = GccReadelf;
 				elfReaderLlvm = false;
 			} else
-				Assert.Fail ($"No ELF reader found. Tried '{Config.LlvmReadobj}' and '{Config.GccReadelf}'");
+				Assert.Fail ($"No ELF reader found. Tried '{LlvmReadobj}' and '{GccReadelf}'");
 
 			Console.WriteLine ($"Will use the following ELF reader: {elfReaderPath}");
 
