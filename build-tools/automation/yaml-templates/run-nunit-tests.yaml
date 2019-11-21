@@ -19,13 +19,14 @@ steps:
 
 - powershell: |
     if ([Environment]::OSVersion.Platform -eq "Win32NT") {
-      Stop-Process -Name nunit3-console
-      Stop-Process -Name xabuild
-      Stop-Process -Name MSBuild
-      Stop-Process -Name adb
+      Get-Process
+      Stop-Process -Name nunit3-console -ErrorAction SilentlyContinue
+      Stop-Process -Name xabuild -ErrorAction SilentlyContinue
+      Stop-Process -Name MSBuild -ErrorAction SilentlyContinue
+      Stop-Process -Name adb -ErrorAction SilentlyContinue
     }
   displayName: kill leftover processes
-  condition: ${{ parameters.condition }}
+  condition: always()
 
 - task: PublishTestResults@2
   inputs:
