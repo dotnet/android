@@ -17,6 +17,16 @@ steps:
   displayName: run ${{ parameters.testRunTitle }}
   condition: ${{ parameters.condition }}
 
+- powershell: |
+    if ([Environment]::OSVersion.Platform -eq "Win32NT") {
+      Stop-Process -Name nunit3-console
+      Stop-Process -Name xabuild
+      Stop-Process -Name MSBuild
+      Stop-Process -Name adb
+    }
+  displayName: kill leftover processes
+  condition: ${{ parameters.condition }}
+
 - task: PublishTestResults@2
   inputs:
     testResultsFormat: ${{ parameters.testResultsFormat }}
