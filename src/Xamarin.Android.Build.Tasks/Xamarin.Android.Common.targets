@@ -2712,6 +2712,7 @@ because xbuild doesn't support framework reference assemblies.
 	SupportedAbis="@(_BuildTargetAbis)"
 	AndroidSequencePointsMode="$(_SequencePointsMode)"
 	AotAdditionalArguments="$(AndroidAotAdditionalArguments)"
+	ExtraAotOptions="$(AndroidExtraAotOptions)"
 	ResolvedAssemblies="@(_ResolvedUserAssemblies);@(_ShrunkFrameworkAssemblies)"
 	AotOutputDirectory="$(_AndroidAotBinDirectory)"
 	IntermediateAssemblyDir="$(MonoAndroidIntermediateAssemblyDir)"

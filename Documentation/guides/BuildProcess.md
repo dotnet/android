@@ -414,6 +414,13 @@ when packaging Release applications.
 
     This property is `True` by default.
 
+-   **AndroidExtraAotOptions** &ndash; A string property that allows to
+    pass additional options to the mono, when precompiling assemblies
+    in `Aot` task. It is added to the response file, when calling mono
+    as a cross-compiler.
+
+    Added in Xamarin.Android v10.3.
+
 -   **AndroidFastDeploymentType** &ndash; A `:` (colon)-separated list
     of values to control what types can be deployed to the
     [Fast Deployment directory](#Fast_Deployment) on the target device

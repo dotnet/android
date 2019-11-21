@@ -44,9 +44,11 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = true,
 				AndroidEnableProfiledAot = true,
 			};
+			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidExtraAotOptions", "--verbose");
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				StringAssertEx.ContainsRegex (@"\[aot-compiler stdout\] Using profile data file.*build.Xamarin.Android.startup\.aotprofile", b.LastBuildOutput, "Should use default AOT profile", RegexOptions.IgnoreCase);
+				StringAssertEx.ContainsRegex (@"\[aot-compiler stdout\] Method.*emitted at", b.LastBuildOutput, "Should contain verbose AOT compiler output", RegexOptions.IgnoreCase);
 			}
 		}
 
