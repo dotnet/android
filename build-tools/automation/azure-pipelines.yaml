@@ -51,7 +51,7 @@ stages:
   # Check - "Xamarin.Android (Mac Build)"
   - job: mac_build_create_installers
     displayName: Build
-    pool: $(HostedMacMojave)
+    pool: $(MacMojaveBuildPool)
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
     workspace:
@@ -118,6 +118,7 @@ stages:
         DeveloperIdInstaller: $(developer-id-installer)
         IphoneDeveloper: $(iphone-developer)
         MacDeveloper: $(mac-developer)
+        HostedMacKeychainPassword: $(AzDO-OnPrem-KeychainPass)
 
     - script: make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)
       displayName: make create-installers
@@ -142,6 +143,10 @@ stages:
     - template: yaml-templates/upload-results.yaml
       parameters:
         artifactName: Build Results - macOS
+
+    - template: uninstall-certificates/v1.yml@yaml
+      parameters:
+        HostedMacKeychainPassword: $(AzDO-OnPrem-KeychainPass)
 
 # This stage ensures Windows specific build steps continue to work, and runs unit tests.
 # Check - "Xamarin.Android (Windows Build and Test)"
@@ -228,12 +233,12 @@ stages:
 - stage: finalize_installers
   displayName: Finalize Installers
   dependsOn: mac_build
-  condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(variables['XA.Commercial.Build'], 'true'), ne(variables['Build.Reason'], 'PullRequest'))
+  condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(variables['XA.Commercial.Build'], 'true'), ne(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.DefinitionName'], 'Xamarin.Android'))
   jobs:
   # Check - "Xamarin.Android (Finalize Installers Notarize and Upload to Storage)"
   - job: notarize_pkg_upload_storage
     displayName: Notarize and Upload to Storage
-    pool: $(HostedMacMojave)
+    pool: $(MacMojaveBuildPool)
     timeoutInMinutes: 90
     cancelTimeoutInMinutes: 1
     workspace:
@@ -269,6 +274,7 @@ stages:
         cd $(System.DefaultWorkingDirectory)/..
         git clone -b $(ReleaseScriptsBranch) https://$(GitHub.Token):x-oauth-basic@github.com/xamarin/release-scripts
         cd release-scripts
+        sudo xcode-select -s /Applications/$(NotarizationXcode)
         ruby notarize.rb $(XA.Unsigned.Pkg) $(XamarinIdentifier) $(XamarinUserId) $(XamarinPassword) $(TeamID)
       displayName: Notarize PKG
 
@@ -289,6 +295,10 @@ stages:
       inputs:
         artifactName: notarized-pkg
         targetPath: $(Build.ArtifactStagingDirectory)
+
+    - template: uninstall-certificates/v1.yml@yaml
+      parameters:
+        HostedMacKeychainPassword: $(AzDO-OnPrem-KeychainPass)
 
   # Check - "Xamarin.Android (Finalize Installers Queue Vsix Signing)"
   - job: queue_vsix_signing
