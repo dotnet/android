@@ -237,9 +237,7 @@ Debug::start_debugging_and_profiling ()
 
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
 		total_time.mark_end ();
-
-		timing_diff diff (total_time);
-		log_info (LOG_TIMING, "start_debugging_and_profiling; elapsed: %lis:%lu::%lu", diff.sec, diff.ms, diff.ns);
+		Timing::info (total_time, "Debug::start_debugging_and_profiling: end");
 	}
 }
 
