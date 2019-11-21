@@ -917,6 +917,7 @@ MonodroidRuntime::init_android_runtime (MonoDomain *domain, JNIEnv *env, jclass 
 	init.isRunningOnDesktop     = is_running_on_desktop ? 1 : 0;
 	init.brokenExceptionTransitions = application_config.broken_exception_transitions ? 1 : 0;
 	init.packageNamingPolicy    = static_cast<int>(application_config.package_naming_policy);
+	init.boundExceptionType     = application_config.bound_exception_type;
 
 	// GC threshold is 90% of the max GREF count
 	init.grefGcThreshold        = static_cast<int>(androidSystem.get_gref_gc_threshold ());

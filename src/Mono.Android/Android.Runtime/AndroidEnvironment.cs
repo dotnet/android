@@ -136,6 +136,17 @@ namespace Android.Runtime {
 		// This is invoked by
 		// System.dll!System.AndroidPlatform.TrustEvaluateSsl()
 		// DO NOT REMOVE
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//     No need to wrap thrown exceptions in a BCL class
+		//
+		//  Rationale
+		//     This method is called by System.AndroidPlatform.TrustEvaluateSsl which is, eventually, called by
+		//     System/Mono.Net.Security/SystemCertificateValidator(). All exceptions are caught and handled
+		//     by the caller.
+		//
 		static bool TrustEvaluateSsl (List <byte[]> certsRawData)
 		{
 			SetupTrustManager ();
@@ -172,6 +183,17 @@ namespace Android.Runtime {
 		// This is invoked by
 		// System.dll!!System.AndroidPlatform.CertStoreLookup()
 		// DO NOT REMOVE
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//     No need to wrap thrown exceptions in a BCL class
+		//
+		//  Rationale
+		//     This method is called by System.AndroidPlatform.CertStoreLookup which is, eventually, called by
+		//     System.Mono.Btls.MonoBtlsX509LookupMono.OnGetBySubject(). All exceptions are caught and handled
+		//     by the caller.
+		//
 		static byte[] CertStoreLookup (long hash, bool userStore)
 		{
 			SetupCertStore ();
@@ -219,6 +241,14 @@ namespace Android.Runtime {
 		// This is invoked by
 		// System.Drawing!System.Drawing.GraphicsAndroid.FromAndroidSurface ()
 		// DO NOT REMOVE
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//     No need to wrap thrown exceptions in a BCL class
+		//
+		//  Rationale
+		//     No longer called by the indicated caller, however we keep it for backward compatibility.
 		static void GetDisplayDPI (out float x_dpi, out float y_dpi)
 		{
 			var wm = Application.Context.GetSystemService (Context.WindowService).JavaCast <IWindowManager> ();
@@ -235,6 +265,16 @@ namespace Android.Runtime {
 		// This is invoked by
 		// System.Core!System.AndroidPlatform.GetDefaultTimeZone ()
 		// DO NOT REMOVE
+		//
+		// Exception audit:
+		//
+		//  Verdict
+		//    No need to wrap thrown exceptions in a BCL class
+		//
+		//  Rationale
+		//    Java code (invoked from our native runtime) will always return the default timezone and no
+		//    exceptions are documented for the Java API.
+		//
 		static string GetDefaultTimeZone ()
 		{
 			IntPtr id = _monodroid_timezone_get_default_id ();
@@ -254,8 +294,12 @@ namespace Android.Runtime {
 		static SynchronizationContext GetDefaultSyncContext ()
 		{
 			var looper = Android.OS.Looper.MainLooper;
-			if (Android.OS.Looper.MyLooper() == looper)
-				return Android.App.Application.SynchronizationContext;
+			try {
+				if (Android.OS.Looper.MyLooper() == looper)
+					return Android.App.Application.SynchronizationContext;
+			} catch (System.Exception ex) {
+				Logger.Log (LogLevel.Warn, "MonoAndroid", $"GetDefaultSyncContext caught a Java exception: {ex}");
+			}
 			return null;
 		}
 
@@ -328,9 +372,21 @@ namespace Android.Runtime {
 		class _Proxy : IWebProxy {
 			readonly ProxySelector selector = ProxySelector.Default;
 
+			// Exception audit:
+			//
+			//  Verdict
+			//    Exception wrapping required
+			//
+			//  Rationale
+			//    Java code may throw URISyntaxException which we map to the managed UriFormatException
+			//
 			static URI CreateJavaUri (Uri destination)
 			{
-				return new URI (destination.Scheme, destination.UserInfo, destination.Host, destination.Port, destination.AbsolutePath, destination.Query, destination.Fragment);
+				try {
+					return new URI (destination.Scheme, destination.UserInfo, destination.Host, destination.Port, destination.AbsolutePath, destination.Query, destination.Fragment);
+				} catch (Java.Lang.Throwable ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new UriFormatException (ex.Message, ex);
+				}
 			}
 
 			public Uri GetProxy (Uri destination)

@@ -21,6 +21,7 @@ struct ApplicationConfig
 	bool uses_assembly_preload;
 	bool is_a_bundled_app;
 	bool broken_exception_transitions;
+	uint8_t bound_exception_type;
 	uint32_t package_naming_policy;
 	uint32_t environment_variable_count;
 	uint32_t system_property_count;

@@ -7,6 +7,7 @@
   * [Template for new features](#template-for-new-features)
   * [Build and deployment performance](#build-and-deployment-performance)
   * [App startup performance](#app-startup-performance)
+  * [Java exception wrapping](#java-exception-wrapping)
   * [Issues fixed](#issues-fixed)
 
 ### Template for new features
@@ -60,6 +61,19 @@ these methods/fields.
     Description of improvement
 
 ### App startup performance
+
+### Java exception wrapping
+
+`Mono.Android.dll` has been audited to find code which can throw Java exceptions in context where throwing a .NET exception
+would be more logical/expected. `Xamarin.Android`'s has always thrown the Java exceptions, however it poses a problem for
+applications which have most of their code stored in portable assemblies that do not reference `Mono.Android` as they are unable
+to catch and handle the Java exceptions. The simplest solution - to always wrap Java exceptions in BCL ones - is unfortunately
+not viable because of backward compatibility. For this release the old behavior remains the default, but one can opt in to the
+new wrapping behavior by setting the `$(AndroidBoundExceptionType)` MSBuild property to `System`. After this is done, all the
+**documented** Java exceptions will be wrapped in corresponding BCL exceptions (with the original exception placed in the
+`InnerException` property and the original message reused in the wrapper exception).
+Note that this wrapping happens **only** for Java/Android types which use the **.NET** classes (e.g. wherever Java.IO.InputStream
+is used by the Android class but `Xamarin.Android` binds it as `System.IO.Stream`) 
 
 ### Issues fixed
 

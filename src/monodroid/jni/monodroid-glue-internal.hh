@@ -25,6 +25,13 @@ namespace xamarin::android::internal
 		} RuntimeOptions;
 #endif
 
+		// Keep the enum values in sync with those in src/Mono.Android/AndroidRuntime/BoundExceptionType.cs
+		enum class BoundExceptionType : uint8_t
+		{
+			System = 0x00,
+			Java   = 0x01,
+		};
+
 		struct JnienvInitializeArgs {
 			JavaVM         *javaVm;
 			JNIEnv         *env;
@@ -41,6 +48,7 @@ namespace xamarin::android::internal
 			int             isRunningOnDesktop;
 			uint8_t         brokenExceptionTransitions;
 			int             packageNamingPolicy;
+			uint8_t         boundExceptionType;
 		};
 
 	private:
