@@ -137,12 +137,27 @@ BasicUtilities::directory_exists (const char *directory)
 bool
 BasicUtilities::file_copy (const char *to, const char *from)
 {
+	if (to == nullptr || *to == '\0') {
+		log_error (LOG_DEFAULT, "BasicUtilities::file_copy: `to` parameter must not be null or empty");
+		return false;
+	}
+
+	if (from == nullptr || *from == '\0') {
+		log_error (LOG_DEFAULT, "BasicUtilities::file_copy: `from` parameter must not be null or empty");
+		return false;
+	}
+
 	char buffer[BUFSIZ];
 	size_t n;
 	int saved_errno;
 
 	FILE *f1 = monodroid_fopen (from, "r");
+	if (f1 == nullptr)
+		return false;
+
 	FILE *f2 = monodroid_fopen (to, "w+");
+	if (f2 == nullptr)
+		return false;
 
 	while ((n = fread (buffer, sizeof(char), sizeof(buffer), f1)) > 0) {
 		if (fwrite (buffer, sizeof(char), n, f2) != n) {
@@ -178,22 +193,27 @@ BasicUtilities::is_path_rooted (const char *path)
 FILE *
 BasicUtilities::monodroid_fopen (const char *filename, const char *mode)
 {
+	FILE *ret;
 #ifndef WINDOWS
 	/* On Unix, both path and system calls are all assumed
 	 * to be UTF-8 compliant.
 	 */
-	return fopen (filename, mode);
+	ret = fopen (filename, mode);
 #else
 	// Convert the path and mode to a UTF-16 and then use the wide variant of fopen
 	wchar_t *wpath = utf8_to_utf16 (filename);
 	wchar_t *wmode = utf8_to_utf16 (mode);
 
-	FILE* file = _wfopen (wpath, wmode);
+	ret = _wfopen (wpath, wmode);
 	free (wpath);
 	free (wmode);
-
-	return file;
 #endif // ndef WINDOWS
+	if (ret == nullptr) {
+		log_error (LOG_DEFAULT, "fopen failed for file %s: %s", filename, strerror (errno));
+		return nullptr;
+	}
+
+	return ret;
 }
 
 int

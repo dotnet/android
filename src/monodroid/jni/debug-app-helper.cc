@@ -27,10 +27,8 @@ void log_warn (LogCategories category, const char *format, ...);
 void log_error (LogCategories category, const char *format, ...);
 void log_fatal (LogCategories category, const char *format, ...);
 
-#if !defined (RELEASE)
 static void copy_file_to_internal_location (char *to_dir, char *from_dir, char *file);
 static void copy_native_libraries_to_internal_location ();
-#endif
 static char* get_libmonosgen_path ();
 
 bool maybe_load_library (const char *path);
@@ -83,6 +81,20 @@ Java_mono_android_DebugRuntime_init (JNIEnv *env, jclass klass, jobjectArray run
 	androidSystem.set_override_dir (0, androidSystem.get_primary_override_dir ());
 	androidSystem.setup_app_library_directories (env, runtimeApks, applicationDirs, androidApiLevel);
 
+	jstring_wrapper jstr (env);
+	jstr = env->GetObjectArrayElement (externalStorageDirs, 0);
+	androidSystem.set_override_dir (1, utils.strdup_new (jstr.get_cstr ()));
+
+	jstr = env->GetObjectArrayElement (externalStorageDirs, 1);
+	androidSystem.set_override_dir (2, utils.strdup_new (jstr.get_cstr ()));
+
+	for (uint32_t i = 0; i < BasicAndroidSystem::MAX_OVERRIDES; ++i) {
+		const char *p = androidSystem.get_override_dir (i);
+		if (p == nullptr || !utils.directory_exists (p))
+			continue;
+		log_warn (LOG_DEFAULT, "Using override path: %s", p);
+	}
+
 	if (runtimeNativeLibDir != nullptr) {
 		jstring_wrapper jstr (env, runtimeNativeLibDir);
 		androidSystem.set_runtime_libdir (utils.strdup_new (jstr.get_cstr ()));
@@ -97,7 +109,7 @@ Java_mono_android_DebugRuntime_init (JNIEnv *env, jclass klass, jobjectArray run
 	}
 }
 
-#if defined (ANDROID) && !defined (RELEASE)
+#if defined (ANDROID)
 static void
 copy_file_to_internal_location (char *to_dir, char *from_dir, char *file)
 {
@@ -132,14 +144,13 @@ copy_file_to_internal_location (char *to_dir, char *from_dir, char *file)
 	delete[] from_file;
 	delete[] to_file;
 }
-#elif !defined (RELEASE)  /* !defined (ANDROID) */
+#else  /* !defined (ANDROID) */
 static void
 copy_file_to_internal_location (char *to_dir, char *from_dir, char* file)
 {
 }
 #endif /* defined (ANDROID) */
 
-#ifndef RELEASE
 static void
 copy_native_libraries_to_internal_location ()
 {
@@ -180,7 +191,6 @@ copy_native_libraries_to_internal_location ()
 		delete[] dir_path;
 	}
 }
-#endif
 
 static inline bool
 runtime_exists (const char *dir, char*& libmonoso)
@@ -206,7 +216,6 @@ get_libmonosgen_path ()
 	char *libmonoso;
 	bool embedded_dso_mode_enabled = androidSystem.is_embedded_dso_mode_enabled ();
 
-#ifndef RELEASE
 	// Android 5 includes some restrictions on loading dynamic libraries via dlopen() from
 	// external storage locations so we need to file copy the shared object to an internal
 	// storage location before loading it.
@@ -219,7 +228,7 @@ get_libmonosgen_path ()
 			}
 		}
 	}
-#endif
+
 	if (!embedded_dso_mode_enabled) {
 		for (size_t i = 0; i < BasicAndroidSystem::app_lib_directories_size; i++) {
 			if (runtime_exists (BasicAndroidSystem::app_lib_directories [i], libmonoso)) {
@@ -270,7 +279,6 @@ get_libmonosgen_path ()
 		return libmonoso;
 	log_fatal (LOG_DEFAULT, "Cannot find '%s'. Looked in the following locations:", SharedConstants::MONO_SGEN_SO);
 
-#ifndef RELEASE
 	if (!embedded_dso_mode_enabled) {
 		for (size_t i = 0; i < BasicAndroidSystem::MAX_OVERRIDES; ++i) {
 			if (BasicAndroidSystem::override_dirs [i] == nullptr)
@@ -278,7 +286,7 @@ get_libmonosgen_path ()
 			log_fatal (LOG_DEFAULT, "  %s", BasicAndroidSystem::override_dirs [i]);
 		}
 	}
-#endif
+
 	for (size_t i = 0; i < BasicAndroidSystem::app_lib_directories_size; i++) {
 		log_fatal (LOG_DEFAULT, "  %s", BasicAndroidSystem::app_lib_directories [i]);
 	}
