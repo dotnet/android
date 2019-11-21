@@ -90,7 +90,7 @@ Java_mono_android_DebugRuntime_init (JNIEnv *env, jclass klass, jobjectArray run
 
 	for (uint32_t i = 0; i < BasicAndroidSystem::MAX_OVERRIDES; ++i) {
 		const char *p = androidSystem.get_override_dir (i);
-		if (!utils.directory_exists (p))
+		if (p == nullptr || !utils.directory_exists (p))
 			continue;
 		log_warn (LOG_DEFAULT, "Using override path: %s", p);
 	}
