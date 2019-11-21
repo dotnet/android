@@ -147,6 +147,7 @@ stages:
         command: pack
         packagesToPack: $(System.DefaultWorkingDirectory)/build-tools/create-packs/Packager.csproj
         configuration: $(XA.Build.Configuration)
+        packDirectory: $(System.DefaultWorkingDirectory)/bin/packs
 
     - task: PublishPipelineArtifact@0
       displayName: upload nupkgs
@@ -206,6 +207,14 @@ stages:
         solution: build-tools\create-vsix\create-vsix.csproj
         configuration: $(XA.Build.Configuration)
         msbuildArguments: /p:CreateVsixContainer=True /p:ZipPackageCompressionLevel=Normal /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-create-vsix.binlog
+
+    - task: DotNetCoreCLI@2
+      displayName: pack Xamarin.Android.Sdk
+      inputs:
+        command: pack
+        packagesToPack: $(System.DefaultWorkingDirectory)\build-tools\create-packs\Packager.csproj
+        configuration: $(XA.Build.Configuration)
+        packDirectory: $(System.DefaultWorkingDirectory)\bin\packs
 
     - task: CmdLine@1
       displayName: xabuild Xamarin.Android-Tests
