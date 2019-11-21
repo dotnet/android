@@ -439,7 +439,7 @@ stages:
         project: tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj
         testResultsFiles: TestResult-Xamarin.Android.JcwGen_Tests-$(ApkTestConfiguration).xml
         artifactName: Xamarin.Android.JcwGen_Tests-Signed.apk
-        artifactFolder: FastDev
+        artifactFolder: FastDev_Assemblies_Dexes
         extraBuildArgs: /p:AndroidFastDeploymentType=Assemblies:Dexes
 
     - template: yaml-templates/apk-instrumentation.yaml
