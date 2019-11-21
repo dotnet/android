@@ -148,7 +148,6 @@ namespace Xamarin.Android.Tasks
 			bool usesMonoAOT = false;
 			bool usesAssemblyPreload = EnablePreloadAssembliesDefault;
 			bool brokenExceptionTransitions = false;
-			uint monoAOTMode = 0;
 			string androidPackageName = null;
 			var environmentVariables = new Dictionary<string, string> (StringComparer.Ordinal);
 			var systemProperties = new Dictionary<string, string> (StringComparer.Ordinal);
@@ -157,10 +156,9 @@ namespace Xamarin.Android.Tasks
 				pnp = PackageNamingPolicyEnum.LowercaseCrc64;
 			}
 
-			AotMode aotMode;
+			AotMode aotMode = AotMode.None;
 			if (AndroidAotMode != null && Aot.GetAndroidAotMode (AndroidAotMode, out aotMode)) {
 				usesMonoAOT = true;
-				monoAOTMode = (uint)aotMode;
 			}
 
 			bool haveLogLevel = false;
@@ -282,7 +280,7 @@ namespace Xamarin.Android.Tasks
 						UsesMonoAOT = usesMonoAOT,
 						UsesMonoLLVM = EnableLLVM,
 						UsesAssemblyPreload = usesAssemblyPreload,
-						MonoAOTMode = monoAOTMode.ToString ().ToLowerInvariant (),
+						MonoAOTMode = aotMode.ToString ().ToLowerInvariant (),
 						AndroidPackageName = AndroidPackageName,
 						BrokenExceptionTransitions = brokenExceptionTransitions,
 						PackageNamingPolicy = pnp,
