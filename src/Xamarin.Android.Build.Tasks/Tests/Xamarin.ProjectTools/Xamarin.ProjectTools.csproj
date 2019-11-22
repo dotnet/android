@@ -92,6 +92,9 @@
     <Compile Include="XABuildPaths.cs" />
   </ItemGroup>
   <ItemGroup>
+    <AndroidEnvironment Include="Environment.txt" />
+  </ItemGroup>
+  <ItemGroup>
     <EmbeddedResource Include="Resources\Wear\LayoutMain.axml">
       <LogicalName>Xamarin.ProjectTools.Resources.Wear.LayoutMain.axml</LogicalName>
     </EmbeddedResource>
