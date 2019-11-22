@@ -1,13 +1,14 @@
 parameters:
-  configuration: []
-  testName: []
-  project: []
+  configuration: ""
+  testName: ""
+  project: ""
   testResultsFiles: ""
   extraBuildArgs: ""
   testResultsFormat: NUnit
   packageType: Apk
-  artifactName: []
-  artifactFolder: []
+  artifactName: ""
+  artifactFolder: ""
+  condition: succeededOrFailed()
 
 steps:
 - task: MSBuild@1
@@ -19,15 +20,15 @@ steps:
       /t:AcquireAndroidTarget,SignAndroidPackage,DeployTest${{ parameters.packageType }}s,RunTestApks,UndeployTestApks,RenameApkTestCases,ReportComponentFailures
       /bl:$(System.DefaultWorkingDirectory)/bin/Test${{ parameters.configuration }}/run${{ parameters.testName }}.binlog
       ${{ parameters.extraBuildArgs }}
-  condition: succeededOrFailed()
+  condition: ${{ parameters.condition }}
 
 - script: |
     SOURCE=$(System.DefaultWorkingDirectory)/bin/Test${{ parameters.configuration }}/${{ parameters.artifactName }}
     DEST=$(Build.ArtifactStagingDirectory)/${{ parameters.artifactFolder }}/
-    mkdir "$DEST"
+    mkdir -p "$DEST"
     cp "$SOURCE" "$DEST"
   displayName: copy apk/aab
-  condition: succeededOrFailed()
+  condition: ${{ parameters.condition }}
 
 - task: PublishTestResults@2
   displayName: publish ${{ parameters.testName }} results
@@ -35,4 +36,4 @@ steps:
     testResultsFormat: ${{ parameters.testResultsFormat }}
     testResultsFiles: ${{ parameters.testResultsFiles }}
     testRunTitle: ${{ parameters.testName }}
-  condition: and(succeededOrFailed(), ne('${{ parameters.testResultsFiles }}', ''))
+  condition: and(${{ parameters.condition }}, ne('${{ parameters.testResultsFiles }}', ''))

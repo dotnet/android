@@ -9,6 +9,13 @@
 #ifdef __cplusplus
 namespace xamarin::android
 {
+	enum class DebuggerConnectionStatus : int
+	{
+		Connected = 1,
+		Unconnected = 0,
+		Error = -1,
+	};
+
 	class Debug
 	{
 	private:
@@ -53,7 +60,7 @@ namespace xamarin::android
 		void         start_debugging_and_profiling ();
 
 	private:
-		int          start_connection (char *options);
+		DebuggerConnectionStatus start_connection (char *options);
 		void         parse_options (char *options, ConnOptions *opts);
 		bool         process_connection (int fd);
 		int          handle_server_connection (void);
