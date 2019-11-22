@@ -273,7 +273,7 @@
         AddResults="true"
         LabelSuffix="-$(Configuration)$(TestsFlavor)"
         Activity="%(_AllArchives.Activity)" />
-<Exec Command="adb shell run-as %(_AllArchives.Package) cat files/.__override__/grefs.txt" IgnoreExitCode="True" />
+    <Exec Command="adb shell run-as %(_AllArchives.Package) cat files/.__override__/grefs.txt" IgnoreExitCode="True" />
   </Target>
   <Target Name="RenameTestCases">
     <Error
