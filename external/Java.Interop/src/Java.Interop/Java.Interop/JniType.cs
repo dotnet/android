@@ -116,9 +116,9 @@ namespace Java.Interop {
 			AssertValid ();
 
 			if (c == null)
-				throw new ArgumentNullException ("c");
+				throw new ArgumentNullException (nameof (c));
 			if (!c.PeerReference.IsValid)
-				throw new ArgumentException ("'c' has an invalid handle.", "c");
+				throw new ArgumentException ("'c' has an invalid handle.", nameof (c));
 
 			return JniEnvironment.Types.IsAssignableFrom (c.PeerReference, PeerReference);
 		}
@@ -140,7 +140,7 @@ namespace Java.Interop {
 			AssertValid ();
 
 			if (methods == null)
-				throw new ArgumentNullException ("methods");
+				throw new ArgumentNullException (nameof (methods));
 
 			JniEnvironment.Types.RegisterNatives (PeerReference, methods, checked ((int)methods.Length));
 			// Prevents method delegates from being GC'd so long as this type remains

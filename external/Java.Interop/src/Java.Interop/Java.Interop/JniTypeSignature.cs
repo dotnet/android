@@ -169,19 +169,19 @@ namespace Java.Interop
 			return QualifiedReference.GetHashCode ();
 		}
 
-		public override bool Equals (object value)
+		public override bool Equals (object obj)
 		{
-			var v = value as JniTypeSignature?;
+			var v = obj as JniTypeSignature?;
 			if (v.HasValue)
 				return Equals (v.Value);
 			return false;
 		}
 
-		public bool Equals (JniTypeSignature value)
+		public bool Equals (JniTypeSignature other)
 		{
-			return IsKeyword == value.IsKeyword &&
-				SimpleReference == value.SimpleReference &&
-				ArrayRank == value.ArrayRank;
+			return IsKeyword == other.IsKeyword &&
+				SimpleReference == other.SimpleReference &&
+				ArrayRank == other.ArrayRank;
 		}
 
 		public override string ToString ()

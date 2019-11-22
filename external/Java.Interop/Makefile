@@ -12,8 +12,6 @@ NATIVE_EXT = .so
 DLLMAP_OS_NAME = linux
 endif
 
-GENDARME_URL = https://github.com/downloads/spouliot/gendarme/gendarme-2.10-bin.zip
-
 PACKAGES = \
 	packages/NUnit.3.11.0/NUnit.3.11.0.nupkg \
 	packages/NUnit.Console.3.9.0/NUnit.Console.3.9.0.nupkg
@@ -95,15 +93,6 @@ src/Java.Runtime.Environment/Java.Runtime.Environment.dll.config: src/Java.Runti
 		bin/Build$(CONFIGURATION)/JdkInfo.props
 	sed -e 's#@JI_JVM_PATH@#$(JI_JVM_PATH)#g' -e 's#@OS_NAME@#$(DLLMAP_OS_NAME)#g' -e $(JAVA_RUNTIME_ENVIRONMENT_DLLMAP_OVERRIDE_CMD) < $< > $@
 
-fxcop: lib/gendarme-2.10/gendarme.exe bin/GendarmeDebug/netstandard2.0/Java.Interop.dll
-	cp src/Java.Interop/obj/Gendarme/netstandard2.0/Java.Interop.dll.mdb bin/GendarmeDebug/netstandard2.0
-	$(RUNTIME) $< --html gendarme.html $(if @(GENDARME_XML),--xml gendarme.xml) --ignore gendarme-ignore.txt bin/GendarmeDebug/netstandard2.0/Java.Interop.dll
-
-lib/gendarme-2.10/gendarme.exe:
-	-mkdir -p `dirname "$@"`
-	curl -L -o lib/gendarme-2.10/gendarme-2.10-bin.zip $(GENDARME_URL)
-	(cd lib/gendarme-2.10 ; unzip gendarme-2.10-bin.zip)
-
 JAVA_INTEROP_LIB    = libjava-interop$(NATIVE_EXT)
 NATIVE_TIMING_LIB   = libNativeTiming$(NATIVE_EXT)
 
@@ -133,9 +122,6 @@ bin/Test$(CONFIGURATION)/Android.Interop-Tests.dll: $(wildcard src/Android.Inter
 
 bin/$(CONFIGURATION)/Java.Interop.dll: $(wildcard src/Java.Interop/*/*.cs) src/Java.Interop/Java.Interop.csproj
 	$(MSBUILD) $(if $(V),/v:diag,) /p:Configuration=$(CONFIGURATION) $(if $(SNK),"/p:AssemblyOriginatorKeyFile=$(SNK)",)
-
-bin/GendarmeDebug/netstandard2.0/Java.Interop.dll: $(wildcard src/Java.Interop/*/*.cs) src/Java.Interop/Java.Interop.csproj
-	$(MSBUILD) $(if $(V),/v:diag,) /p:Configuration="Gendarme" $(if $(SNK),"/p:AssemblyOriginatorKeyFile=$(SNK)",) /p:CscToolExe=`which mcs` /p:LangVersion=Default /p:DiscoverEditorConfigFiles=False src/Java.Interop/Java.Interop.csproj
 
 CSHARP_REFS = \
 	bin/$(CONFIGURATION)/Java.Interop.dll               \

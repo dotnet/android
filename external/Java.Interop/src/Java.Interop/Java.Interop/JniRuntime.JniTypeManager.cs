@@ -51,9 +51,9 @@ namespace Java.Interop {
 				AssertValid ();
 
 				if (type == null)
-					throw new ArgumentNullException ("type");
+					throw new ArgumentNullException (nameof (type));
 				if (type.GetTypeInfo ().ContainsGenericParameters)
-					throw new ArgumentException ("Generic type definitions are not supported.", "type");
+					throw new ArgumentException ("Generic type definitions are not supported.", nameof (type));
 
 				return CreateGetTypeSignaturesEnumerator (type);
 			}
@@ -64,7 +64,7 @@ namespace Java.Interop {
 				int rank            = 0;
 				while (type.IsArray) {
 					if (type.IsArray && type.GetArrayRank () > 1)
-						throw new ArgumentException ("Multidimensional array '" + originalType.FullName + "' is not supported.", "type");
+						throw new ArgumentException ("Multidimensional array '" + originalType.FullName + "' is not supported.", nameof (type));
 					rank++;
 					type    = type.GetElementType ();
 				}
@@ -125,14 +125,14 @@ namespace Java.Interop {
 				AssertValid ();
 
 				if (type == null)
-					throw new ArgumentNullException ("type");
+					throw new ArgumentNullException (nameof (type));
 				if (type.IsArray)
-					throw new ArgumentException ("Array type '" + type.FullName + "' is not supported.", "type");
+					throw new ArgumentException ("Array type '" + type.FullName + "' is not supported.", nameof (type));
 				return EmptyStringArray;
 			}
 
-			static  readonly    string[]    EmptyStringArray    = new string [0];
-			static  readonly    Type[]      EmptyTypeArray      = new Type [0];
+			static  readonly    string[]    EmptyStringArray    = Array.Empty<string> ();
+			static  readonly    Type[]      EmptyTypeArray      = Array.Empty<Type> ();
 
 
 			public  Type    GetType (JniTypeSignature typeSignature)

@@ -46,12 +46,12 @@ namespace Java.Interop
 		public override T this [int index] {
 			get {
 				if (index < 0 || index >= Length)
-					throw new ArgumentOutOfRangeException ("index", "index < 0 || index >= Length");
+					throw new ArgumentOutOfRangeException (nameof (index), "index < 0 || index >= Length");
 				return GetElementAt (index);
 			}
 			set {
 				if (index < 0 || index >= Length)
-					throw new ArgumentOutOfRangeException ("index", "index < 0 || index >= Length");
+					throw new ArgumentOutOfRangeException (nameof (index), "index < 0 || index >= Length");
 				SetElementAt (index, value);
 			}
 		}
@@ -109,7 +109,7 @@ namespace Java.Interop
 		public override void CopyTo (T[] array, int arrayIndex)
 		{
 			if (array == null)
-				throw new ArgumentNullException ("array");
+				throw new ArgumentNullException (nameof (array));
 			CheckArrayCopy (0, Length, arrayIndex, array.Length, Length);
 			CopyToList (array, arrayIndex);
 		}

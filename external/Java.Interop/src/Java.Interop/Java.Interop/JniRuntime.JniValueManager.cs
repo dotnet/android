@@ -261,7 +261,7 @@ namespace Java.Interop
 				targetType  = GetPeerType (targetType);
 
 				if (!typeof (IJavaPeerable).GetTypeInfo ().IsAssignableFrom (targetType.GetTypeInfo ()))
-					throw new ArgumentException ($"targetType `{targetType.AssemblyQualifiedName}` must implement IJavaPeerable!", "targetType");
+					throw new ArgumentException ($"targetType `{targetType.AssemblyQualifiedName}` must implement IJavaPeerable!", nameof (targetType));
 
 				var ctor = GetPeerConstructor (reference, targetType);
 				if (ctor == null)
@@ -485,10 +485,10 @@ namespace Java.Interop
 					throw new ObjectDisposedException (GetType ().Name);
 
 				if (type == null)
-					throw new ArgumentNullException ("type");
+					throw new ArgumentNullException (nameof (type));
 				var info = type.GetTypeInfo ();
 				if (info.ContainsGenericParameters)
-					throw new ArgumentException ("Generic type definitions are not supported.", "type");
+					throw new ArgumentException ("Generic type definitions are not supported.", nameof (type));
 
 				var marshalerAttr   = info.GetCustomAttribute<JniValueMarshalerAttribute> ();
 				if (marshalerAttr != null)

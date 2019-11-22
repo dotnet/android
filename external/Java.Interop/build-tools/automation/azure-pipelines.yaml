@@ -80,9 +80,6 @@ jobs:
   - script: make all CONFIGURATION=$(Build.Configuration)
     displayName: make all
     
-  - script: make fxcop
-    displayName: Run Gendarme
-    
   - script: |
       r=0
       make run-all-tests CONFIGURATION=$(Build.Configuration) || r=$?
@@ -103,7 +100,6 @@ jobs:
     inputs:
       SourceFolder: $(System.DefaultWorkingDirectory)
       Contents: |
-        gendarme.*
         xatb.jar
         bin.zip 
       TargetFolder: $(Build.ArtifactStagingDirectory)

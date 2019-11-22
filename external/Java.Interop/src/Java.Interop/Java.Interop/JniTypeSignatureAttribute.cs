@@ -28,7 +28,7 @@ namespace Java.Interop
 			get {return arrayRank; }
 			set {
 				if (value < 0)
-					throw new ArgumentException ("ArrayRank cannot be less than zero.", "value");
+					throw new ArgumentException ("ArrayRank cannot be less than zero.", nameof (value));
 				arrayRank = value;
 			}
 		}

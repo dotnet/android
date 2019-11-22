@@ -104,9 +104,9 @@ namespace Android.Runtime
 			return Equals (o.Value);
 		}
 
-		public bool Equals (JniArgumentValue value)
+		public bool Equals (JniArgumentValue other)
 		{
-			return j == value.j;
+			return j == other.j;
 		}
 
 		public static bool operator==(JniArgumentValue lhs, JniArgumentValue rhs)

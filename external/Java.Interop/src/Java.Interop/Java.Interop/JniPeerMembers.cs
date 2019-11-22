@@ -18,9 +18,9 @@ namespace Java.Interop {
 			: this (jniPeerTypeName, managedPeerType, checkManagedPeerType: true, isInterface: false)
 		{
 			if (managedPeerType == null)
-				throw new ArgumentNullException ("managedPeerType");
+				throw new ArgumentNullException (nameof (managedPeerType));
 			if (!typeof (IJavaPeerable).GetTypeInfo ().IsAssignableFrom (managedPeerType.GetTypeInfo ()))
-				throw new ArgumentException ("'managedPeerType' must implement the IJavaPeerable interface.", "managedPeerType");
+				throw new ArgumentException ("'managedPeerType' must implement the IJavaPeerable interface.", nameof (managedPeerType));
 
 #if !XA_INTEGRATION
 			Debug.Assert (
@@ -43,7 +43,7 @@ namespace Java.Interop {
 				if (managedPeerType == null)
 					throw new ArgumentNullException (nameof (managedPeerType));
 				if (!typeof (IJavaPeerable).GetTypeInfo ().IsAssignableFrom (managedPeerType.GetTypeInfo ()))
-					throw new ArgumentException ("'managedPeerType' must implement the IJavaPeerable interface.", "managedPeerType");
+					throw new ArgumentException ("'managedPeerType' must implement the IJavaPeerable interface.", nameof (managedPeerType));
 
 #if !XA_INTEGRATION
 				Debug.Assert (
@@ -155,7 +155,7 @@ namespace Java.Interop {
 		internal static void AssertSelf (IJavaPeerable self)
 		{
 			if (self == null)
-				throw new ArgumentNullException ("self");
+				throw new ArgumentNullException (nameof (self));
 
 			var peer    = self.PeerReference;
 			if (!peer.IsValid)
@@ -177,16 +177,16 @@ namespace Java.Interop {
 		internal static int GetSignatureSeparatorIndex (string encodedMember)
 		{
 			if (encodedMember == null)
-				throw new ArgumentNullException ("encodedMember");
+				throw new ArgumentNullException (nameof (encodedMember));
 			int n = encodedMember.IndexOf ('.');
 			if (n < 0)
 				throw new ArgumentException (
 						"Invalid encoding; 'encodedMember' should be encoded as \"<NAME>.<SIGNATURE>\".",
-						"encodedMember");
+						nameof (encodedMember));
 			if (encodedMember.Length <= (n+1))
 				throw new ArgumentException (
 						"Invalid encoding; 'encodedMember' is missing a JNI signature, and should be in the format \"<NAME>.<SIGNATURE>\".",
-						"encodedMember");
+						nameof (encodedMember));
 			return n;
 		}
 

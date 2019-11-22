@@ -58,7 +58,7 @@ namespace Java.Interop
 		public JniMethodInfo GetConstructor (string signature)
 		{
 			if (signature == null)
-				throw new ArgumentNullException ("signature");
+				throw new ArgumentNullException (nameof (signature));
 			lock (InstanceMethods) {
 				JniMethodInfo m;
 				if (!InstanceMethods.TryGetValue (signature, out m)) {

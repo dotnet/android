@@ -31,7 +31,7 @@ namespace Java.Interop
 			public static unsafe JniObjectReference FindClass (string classname)
 			{
 				if (classname == null)
-					throw new ArgumentNullException ("classname");
+					throw new ArgumentNullException (nameof (classname));
 				if (classname.Length == 0)
 					throw new ArgumentException ("'classname' cannot be a zero-length string.", nameof (classname));
 

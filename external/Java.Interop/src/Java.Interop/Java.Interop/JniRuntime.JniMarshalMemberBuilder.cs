@@ -23,6 +23,7 @@ namespace Java.Interop {
 			}
 		}
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage ("Design", "CA1031:Do not catch general exception types", Justification = "the *.Export assemblies are optional, so we don't care when they cannot be loaded (they are presumably missing)")]
 		partial void SetMarshalMemberBuilder (CreationOptions options)
 		{
 			if (!options.UseMarshalMemberBuilder) {

@@ -91,12 +91,12 @@ namespace Java.Interop {
 			return Equals (o.Value);
 		}
 
-		public bool Equals (JniValueMarshalerState value)
+		public bool Equals (JniValueMarshalerState other)
 		{
-			return JniArgumentValue.Equals (value.JniArgumentValue) &&
-				ReferenceValue.Equals (value.ReferenceValue) &&
-				object.ReferenceEquals (PeerableValue, value.PeerableValue) &&
-				object.ReferenceEquals (Extra, value.Extra);
+			return JniArgumentValue.Equals (other.JniArgumentValue) &&
+				ReferenceValue.Equals (other.ReferenceValue) &&
+				object.ReferenceEquals (PeerableValue, other.PeerableValue) &&
+				object.ReferenceEquals (Extra, other.Extra);
 		}
 
 		public static bool operator == (JniValueMarshalerState a, JniValueMarshalerState b) => a.Equals (b);

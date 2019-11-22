@@ -155,7 +155,7 @@ namespace Java.Interop
 		public static void SetCurrent (JniRuntime newCurrent)
 		{
 			if (newCurrent == null)
-				throw new ArgumentNullException ("newCurrent");
+				throw new ArgumentNullException (nameof (newCurrent));
 			Runtimes.TryAdd (newCurrent.InvocationPointer, newCurrent);
 			current = newCurrent;
 		}
@@ -178,9 +178,9 @@ namespace Java.Interop
 		protected JniRuntime (CreationOptions options)
 		{
 			if (options == null)
-				throw new ArgumentNullException ("options");
+				throw new ArgumentNullException (nameof (options));
 			if (options.InvocationPointer == IntPtr.Zero)
-				throw new ArgumentException ("options.InvocationPointer is null", "options");
+				throw new ArgumentException ("options.InvocationPointer is null", nameof (options));
 
 			TrackIDs     = options.TrackIDs;
 			DestroyRuntimeOnDispose     = options.DestroyRuntimeOnDispose;

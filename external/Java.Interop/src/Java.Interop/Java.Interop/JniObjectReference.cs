@@ -97,21 +97,21 @@ namespace Java.Interop
 			return Handle.GetHashCode ();
 		}
 
-		public override bool Equals (object value)
+		public override bool Equals (object obj)
 		{
-			var o = value as JniObjectReference?;
+			var o = obj as JniObjectReference?;
 			if (o.HasValue)
 				return Equals (o.Value);
 			return false;
 		}
 
-		public bool Equals (JniObjectReference value)
+		public bool Equals (JniObjectReference other)
 		{
 #if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
-			return object.ReferenceEquals (SafeHandle, value.SafeHandle);
+			return object.ReferenceEquals (SafeHandle, other.SafeHandle);
 #endif  // FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 #if FEATURE_JNIOBJECTREFERENCE_INTPTRS
-			return Handle == value.Handle;
+			return Handle == other.Handle;
 #endif  // FEATURE_JNIOBJECTREFERENCE_INTPTRS
 		}
 
