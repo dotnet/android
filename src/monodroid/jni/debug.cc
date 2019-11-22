@@ -212,7 +212,7 @@ Debug::start_debugging_and_profiling ()
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)))
 		total_time.mark_start ();
 
-	char *connect_args;
+	char *connect_args = nullptr;
 	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_CONNECT_PROPERTY, &connect_args) > 0) {
 		DebuggerConnectionStatus res = start_connection (connect_args);
 		if (res == DebuggerConnectionStatus::Error) {
