@@ -27,6 +27,7 @@ steps:
       $LASTEXITCODE=0
     }
   displayName: kill leftover processes
+  failOnStderr: false
   condition: always()
 
 - task: PublishTestResults@2
