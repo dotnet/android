@@ -231,12 +231,16 @@ namespace Android.Runtime {
 
 		protected override IEnumerable<string> GetSimpleReferences (Type type)
 		{
+			foreach (var simpleRef in base.GetSimpleReferences (type)) {
+				yield return simpleRef;
+			}
 			var j = JNIEnv.monodroid_typemap_managed_to_java (type.FullName + ", " + type.Assembly.GetName ().Name);
-			if (j == IntPtr.Zero)
-				return base.GetSimpleReferences (type);
-			var s = Marshal.PtrToStringAnsi (j);
-			return base.GetSimpleReferences (type)
-				.Concat (new [] { s });
+			if (j != IntPtr.Zero) {
+				yield return Marshal.PtrToStringAnsi (j);
+			}
+			if (JNIEnv.IsRunningOnDesktop) {
+				yield return JavaNativeTypeManager.ToJniName (type);
+			}
 		}
 
 		delegate Delegate GetCallbackHandler ();
