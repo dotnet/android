@@ -17,10 +17,6 @@ namespace Xamarin.Forms.Performance.Integration.Droid
 		bool firstOnStart = true;
 		bool firstOnResume = true;
 
-		public MainActivity () : base () {
-			Console.WriteLine ("MAIN ACTIVITY.");
-		}
-
 		protected override void OnCreate (Bundle bundle)
 		{
 			TimingLogger timing = null;
