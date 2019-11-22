@@ -17,14 +17,14 @@ namespace Xamarin.Android.Tasks
 		const string RegisterAttribute = "Android.Runtime.RegisterAttribute";
 
 		[Required]
-		public ITaskItem[] FrameworkAssemblies { get; set; }
+		public ITaskItem[] ShrunkFrameworkAssemblies { get; set; }
 
 		public bool Deterministic { get; set; }
 
 		public override bool RunTask ()
 		{
 			// Find Mono.Android.dll
-			var mono_android = FrameworkAssemblies.First (f => Path.GetFileNameWithoutExtension (f.ItemSpec) == "Mono.Android").ItemSpec;
+			var mono_android = ShrunkFrameworkAssemblies.First (f => Path.GetFileNameWithoutExtension (f.ItemSpec) == "Mono.Android").ItemSpec;
 			var writerParameters = new WriterParameters {
 				DeterministicMvid = Deterministic,
 			};
