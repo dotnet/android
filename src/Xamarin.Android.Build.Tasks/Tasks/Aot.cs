@@ -96,6 +96,7 @@ namespace Xamarin.Android.Tasks
 
 			switch ((androidAotMode ?? string.Empty).ToLowerInvariant().Trim())
 			{
+			case "":
 			case "none":
 				aotMode = AotMode.None;
 				return true;
