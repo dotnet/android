@@ -38,7 +38,6 @@ namespace Android.Runtime {
 				il.Emit (OpCodes.Ldc_I4, i);
 				il.Emit (OpCodes.Ldelem_Ref);
 			}
-
 			il.Emit (OpCodes.Call, cinfo);
 
 			il.Emit (OpCodes.Ret);
