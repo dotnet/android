@@ -37,11 +37,38 @@ namespace Xamarin.Android.Tools.Bytecode
 			return km;
 		}
 
+		public KotlinFile ParseMetadata ()
+		{
+			switch (Kind) {
+				case KotlinMetadataKind.Class:
+					return AsClassMetadata ();
+				case KotlinMetadataKind.File:
+					return AsFileMetadata ();
+				default:
+					return null;
+			}
+		}
+
 		public KotlinClass AsClassMetadata ()
 		{
 			if (Kind != KotlinMetadataKind.Class)
 				return null;
 
+			var data = ParseStream<org.jetbrains.kotlin.metadata.jvm.Class> ();
+			return KotlinClass.FromProtobuf (data.Item1, data.Item2);
+		}
+
+		public KotlinFile AsFileMetadata ()
+		{
+			if (Kind != KotlinMetadataKind.File)
+				return null;
+
+			var data = ParseStream<org.jetbrains.kotlin.metadata.jvm.Package> ();
+			return KotlinFile.FromProtobuf (data.Item1, data.Item2);
+		}
+
+		Tuple<T, JvmNameResolver> ParseStream<T> ()
+		{
 			var md = KotlinBitEncoding.DecodeBytes (Data1);
 
 			using (var ms = ToMemoryStream (md)) {
@@ -65,8 +92,8 @@ namespace Xamarin.Android.Tools.Bytecode
 					partial.MoveNext ();
 
 					// Read the metadata structure from the stream
-					var metadata = Serializer.Deserialize<org.jetbrains.kotlin.metadata.jvm.Class> (partial);
-					return KotlinClass.FromProtobuf (metadata, resolver);
+					var metadata = Serializer.Deserialize<T> (partial);
+					return Tuple.Create (metadata, resolver);
 				}
 			}
 		}
@@ -87,7 +114,7 @@ namespace Xamarin.Android.Tools.Bytecode
 
 		static string GetValue (Annotation annotation, string key)
 		{
-			return (annotation.Values.FirstOrDefault (v => v.Key == key).Value as AnnotationElementConstant)?.Value;
+			return annotation.Values.FirstOrDefault (v => v.Key == key).Value?.ToString ();
 		}
 
 		static string[] GetValues (Annotation annotation, string key)

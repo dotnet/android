@@ -186,6 +186,8 @@ namespace Xamarin.Android.Tools.Bytecode {
 		public bool IsEnum {
 			get {return (AccessFlags & ClassAccessFlags.Enum) != 0;}
 		}
+
+		public override string ToString () => ThisClass?.Name.Value;
 	}
 
 	[Flags]

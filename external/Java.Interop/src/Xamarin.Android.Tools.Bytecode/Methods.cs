@@ -29,7 +29,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		public  ConstantPool        ConstantPool    {get; private set;}
 		public  ClassFile           DeclaringType   {get; private set;}
-		public  MethodAccessFlags   AccessFlags     {get; private set;}
+		public  MethodAccessFlags   AccessFlags     {get; set;}
 		public  AttributeCollection Attributes      {get; private set;}
 
 		public MethodInfo (ConstantPool constantPool, ClassFile declaringType, Stream stream)
@@ -57,6 +57,8 @@ namespace Xamarin.Android.Tools.Bytecode {
 		public bool IsConstructor {
 			get {return Name == "<init>";}
 		}
+
+		public bool IsPubliclyVisible => AccessFlags.HasFlag (MethodAccessFlags.Public) || AccessFlags.HasFlag (MethodAccessFlags.Protected);
 
 		public TypeInfo ReturnType {
 			get {
@@ -232,6 +234,8 @@ namespace Xamarin.Android.Tools.Bytecode {
 				}
 			}
 		}
+
+		public override string ToString () => Name;
 	}
 
 	public sealed class TypeInfo : IEquatable<TypeInfo> {

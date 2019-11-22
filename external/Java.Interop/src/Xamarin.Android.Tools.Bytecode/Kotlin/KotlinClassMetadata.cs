@@ -1,29 +1,48 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using org.jetbrains.kotlin.metadata.jvm;
 using Type = org.jetbrains.kotlin.metadata.jvm.Type;
 
 namespace Xamarin.Android.Tools.Bytecode
 {
-	public class KotlinClass
+	public class KotlinFile
+	{
+		public List<KotlinFunction> Functions { get; set; }
+		public List<KotlinProperty> Properties { get; set; }
+		public List<KotlinTypeAlias> TypeAliases { get; set; }
+		public KotlinTypeTable TypeTable { get; set; }
+		public KotlinVersionRequirementTable VersionRequirementTable { get; set; }
+
+		internal static KotlinFile FromProtobuf (Package c, JvmNameResolver resolver)
+		{
+			return new KotlinFile {
+				Functions = c.Functions?.Select (f => KotlinFunction.FromProtobuf (f, resolver)).ToList (),
+				Properties = c.Properties?.Select (p => KotlinProperty.FromProtobuf (p, resolver)).ToList (),
+				TypeAliases = c.TypeAlias?.Select (tp => KotlinTypeAlias.FromProtobuf (tp, resolver)).ToList (),
+				TypeTable = KotlinTypeTable.FromProtobuf (c.TypeTable, resolver),
+				VersionRequirementTable = KotlinVersionRequirementTable.FromProtobuf (c.VersionRequirementTable, resolver)
+			};
+		}
+	}
+
+	public class KotlinClass : KotlinFile
 	{
 		public string CompanionObjectName { get; set; }
 		public List<KotlinConstructor> Constructors { get; set; }
 		public List<string> EnumEntries { get; set; }
 		public KotlinClassFlags Flags { get; set; }
 		public string FullyQualifiedName { get; set; }
-		public List<KotlinFunction> Functions { get; set; }
+		public KotlinClassInheritability Inheritability { get; set; }
 		public List<string> NestedClassNames { get; set; } = new List<string> ();
-		public List<KotlinProperty> Properties { get; set; }
+		public KotlinClassType ObjectType { get; set; }
 		public List<string> SealedSubclassFullyQualifiedNames { get; set; }
 		public List<string> SuperTypeIds { get; set; }
 		public List<KotlinType> SuperTypes { get; set; }
-		public List<KotlinTypeAlias> TypeAliases { get; set; }
 		public List<KotlinTypeParameter> TypeParameters { get; set; }
-		public KotlinTypeTable TypeTable { get; set; }
 		public int [] VersionRequirements { get; set; }
-		public KotlinVersionRequirementTable VersionRequirementTable { get; set; }
+		public KotlinClassVisibility Visibility { get; set; }
 
 		internal static KotlinClass FromProtobuf (Class c, JvmNameResolver resolver)
 		{
@@ -34,7 +53,9 @@ namespace Xamarin.Android.Tools.Bytecode
 				Flags = (KotlinClassFlags)c.Flags,
 				FullyQualifiedName = c.FqName > 0 ? resolver.GetString (c.FqName) : null,
 				Functions = c.Functions?.Select (f => KotlinFunction.FromProtobuf (f, resolver)).ToList (),
+				Inheritability = (KotlinClassInheritability)((c.Flags & 0b110000) >> 4),
 				NestedClassNames = c.NestedClassNames?.Select (n => resolver.GetString (n)).ToList (),
+				ObjectType = (KotlinClassType) ((c.Flags & 0b111000000) >> 6),
 				Properties = c.Properties?.Select (p => KotlinProperty.FromProtobuf (p, resolver)).ToList (),
 				SealedSubclassFullyQualifiedNames = c.SealedSubclassFqNames?.Select (n => resolver.GetString (n)).ToList (),
 				SuperTypeIds = c.SupertypeIds?.Select (n => resolver.GetString (n)).ToList (),
@@ -43,16 +64,23 @@ namespace Xamarin.Android.Tools.Bytecode
 				TypeParameters = c.TypeParameters?.Select (tp => KotlinTypeParameter.FromProtobuf (tp, resolver)).ToList (),
 				VersionRequirements = c.VersionRequirements,
 				TypeTable = KotlinTypeTable.FromProtobuf (c.TypeTable, resolver),
-				VersionRequirementTable = KotlinVersionRequirementTable.FromProtobuf (c.VersionRequirementTable, resolver)
+				VersionRequirementTable = KotlinVersionRequirementTable.FromProtobuf (c.VersionRequirementTable, resolver),
+				Visibility = (KotlinClassVisibility)((c.Flags & 0b1110) >> 1)
 			};
 		}
 	}
 
-	public class KotlinConstructor
+	public class KotlinMethodBase
 	{
-		public int Flags { get; set; }
-		public List<KotlinValueParameter> ValueParameters { get; set; }
 		public int [] VersionRequirements { get; set; }
+
+		public virtual string GetSignature () => string.Empty;
+	}
+
+	public class KotlinConstructor : KotlinMethodBase
+	{
+		public KotlinConstructorFlags Flags { get; set; }
+		public List<KotlinValueParameter> ValueParameters { get; set; }
 
 		internal static KotlinConstructor FromProtobuf (Constructor c, JvmNameResolver resolver)
 		{
@@ -60,10 +88,15 @@ namespace Xamarin.Android.Tools.Bytecode
 				return null;
 
 			return new KotlinConstructor {
-				Flags = c.Flags,
+				Flags = (KotlinConstructorFlags)c.Flags,
 				ValueParameters = c.ValueParameters?.Select (vp => KotlinValueParameter.FromProtobuf (vp, resolver)).ToList (),
 				VersionRequirements = c.VersionRequirements
 			};
+		}
+
+		public override string GetSignature ()
+		{
+			return $"({ValueParameters.GetSignature ()})V";
 		}
 	}
 
@@ -113,7 +146,7 @@ namespace Xamarin.Android.Tools.Bytecode
 		public KotlinAnnotation Annotation { get; set; }
 		public List<KotlinAnnotationArgumentValue> ArrayElements { get; set; }
 		public int ArrayDimensionCount { get; set; }
-		public int Flags { get; set; }
+		public KotlinAnnotationFlags Flags { get; set; }
 
 		internal static KotlinAnnotationArgumentValue FromProtobuf (org.jetbrains.kotlin.metadata.jvm.Annotation.Argument.Value value, JvmNameResolver resolver)
 		{
@@ -131,7 +164,7 @@ namespace Xamarin.Android.Tools.Bytecode
 				Annotation = KotlinAnnotation.FromProtobuf (value.Annotation, resolver),
 				ArrayDimensionCount = value.ArrayDimensionCount,
 				ArrayElements = value.ArrayElements?.Select (vp => KotlinAnnotationArgumentValue.FromProtobuf (vp, resolver)).ToList (),
-				Flags = value.Flags
+				Flags = (KotlinAnnotationFlags)value.Flags
 			};
 		}
 	}
@@ -159,7 +192,7 @@ namespace Xamarin.Android.Tools.Bytecode
 
 	public class KotlinExpression
 	{
-		public int Flags { get; set; }
+		public KotlinExpressionFlags Flags { get; set; }
 		public int ValueParameterReference { get; set; }
 		public KotlinConstantValue ConstantValue { get; set; }
 		public KotlinType IsInstanceType { get; set; }
@@ -173,7 +206,7 @@ namespace Xamarin.Android.Tools.Bytecode
 				return null;
 
 			return new KotlinExpression {
-				Flags = exp.Flags,
+				Flags = (KotlinExpressionFlags)exp.Flags,
 				ValueParameterReference = exp.ValueParameterReference,
 				ConstantValue = (KotlinConstantValue) exp.constant_value,
 				IsInstanceType = KotlinType.FromProtobuf (exp.IsInstanceType, resolver),
@@ -184,19 +217,18 @@ namespace Xamarin.Android.Tools.Bytecode
 		}
 	}
 
-	public class KotlinFunction
+	public class KotlinFunction : KotlinMethodBase
 	{
-		public int Flags { get; set; }
 		public string Name { get; set; }
+		public KotlinFunctionFlags Flags { get; set; }
 		public KotlinType ReturnType { get; set; }
 		public int ReturnTypeId { get; set; }
 		public List<KotlinTypeParameter> TypeParameters { get; set; }
 		public KotlinType ReceiverType { get; set; }
 		public int ReceiverTypeId { get; set; }
-		public List<KotlinValueParameter> ValueParameters { get; set; }
 		public KotlinTypeTable TypeTable { get; set; }
-		public int [] VersionRequirements { get; set; }
 		public KotlinContract Contract { get; set; }
+		public List<KotlinValueParameter> ValueParameters { get; set; }
 
 		internal static KotlinFunction FromProtobuf (Function f, JvmNameResolver resolver)
 		{
@@ -204,7 +236,7 @@ namespace Xamarin.Android.Tools.Bytecode
 				return null;
 
 			return new KotlinFunction {
-				Flags = f.Flags,
+				Flags = (KotlinFunctionFlags)f.Flags,
 				Name = resolver.GetString (f.Name),
 				ReturnType = KotlinType.FromProtobuf (f.ReturnType, resolver),
 				ReturnTypeId = f.ReturnTypeId,
@@ -214,6 +246,20 @@ namespace Xamarin.Android.Tools.Bytecode
 				ValueParameters = f.ValueParameters?.Select (vp => KotlinValueParameter.FromProtobuf (vp, resolver)).ToList (),
 				VersionRequirements = f.VersionRequirements
 			};
+		}
+
+		public override string ToString () => Name;
+
+		public string GetFlags ()
+		{
+			var sb = new StringBuilder ();
+
+			foreach (var f in Enum.GetNames (typeof (KotlinFunctionFlags))) {
+				if (Flags.HasFlag ((KotlinFunctionFlags)Enum.Parse (typeof (KotlinFunctionFlags), f)))
+					sb.Append (f);
+			}
+
+			return sb.ToString ();
 		}
 	}
 
@@ -229,10 +275,10 @@ namespace Xamarin.Android.Tools.Bytecode
 		}
 	}
 
-	public class KotlinProperty
+	public class KotlinProperty : KotlinMethodBase
 	{
-		public int Flags { get; set; }
 		public string Name { get; set; }
+		public KotlinPropertyFlags Flags { get; set; }
 		public KotlinType ReturnType { get; set; }
 		public int ReturnTypeId { get; set; }
 		public List<KotlinTypeParameter> TypeParameters { get; set; }
@@ -241,7 +287,6 @@ namespace Xamarin.Android.Tools.Bytecode
 		public KotlinValueParameter SetterValueParameter { get; set; }
 		public int GetterFlags { get; set; }
 		public int SetterFlags { get; set; }
-		public int [] VersionRequirements { get; set; }
 
 		internal static KotlinProperty FromProtobuf (Property p, JvmNameResolver resolver)
 		{
@@ -249,7 +294,7 @@ namespace Xamarin.Android.Tools.Bytecode
 				return null;
 
 			return new KotlinProperty {
-				Flags = p.Flags,
+				Flags = (KotlinPropertyFlags)p.Flags,
 				Name = resolver.GetString (p.Name),
 				ReturnTypeId = p.ReturnTypeId,
 				ReturnType = KotlinType.FromProtobuf (p.ReturnType, resolver),
@@ -262,24 +307,26 @@ namespace Xamarin.Android.Tools.Bytecode
 				VersionRequirements = p.VersionRequirements
 			};
 		}
+
+		public override string ToString () => Name;
 	}
 
 	public class KotlinType
 	{
 		public List<KotlinTypeArgument> Arguments { get; set; }
 		public bool Nullable { get; set; }
-		public int FlexibleTypeCapabilitiesId { get; set; }
+		public int? FlexibleTypeCapabilitiesId { get; set; }
 		public KotlinType FlexibleUpperBound { get; set; }
 		public int FlexibleUpperBoundId { get; set; }
 		public string ClassName { get; set; }
-		public int TypeParameter { get; set; }
+		public int? TypeParameter { get; set; }
 		public string TypeParameterName { get; set; }
 		public string TypeAliasName { get; set; }
 		public KotlinType OuterType { get; set; }
-		public int OuterTypeId { get; set; }
+		public int? OuterTypeId { get; set; }
 		public KotlinType AbbreviatedType { get; set; }
-		public int AbbreviatedTypeId { get; set; }
-		public int Flags { get; set; }
+		public int? AbbreviatedTypeId { get; set; }
+		public KotlinTypeFlags Flags { get; set; }
 
 		internal static KotlinType FromProtobuf (Type t, JvmNameResolver resolver)
 		{
@@ -291,15 +338,20 @@ namespace Xamarin.Android.Tools.Bytecode
 				Nullable = t.Nullable,
 				FlexibleTypeCapabilitiesId = t.FlexibleTypeCapabilitiesId,
 				FlexibleUpperBound = FromProtobuf (t.FlexibleUpperBound, resolver),
-				ClassName = t.ClassName > 0 ? resolver.GetString (t.ClassName) : null,
+				ClassName = t.ClassName >= 0 ? resolver.GetString (t.ClassName.Value) : null,
 				TypeParameter = t.TypeParameter,
-				TypeParameterName = t.TypeParameterName > 0 ? resolver.GetString (t.TypeParameterName) : null,
+				TypeParameterName = t.TypeParameterName >= 0 ? resolver.GetString (t.TypeParameterName.GetValueOrDefault ()) : null,
 				OuterType = FromProtobuf (t.OuterType, resolver),
 				OuterTypeId = t.OuterTypeId,
 				AbbreviatedType = FromProtobuf (t.AbbreviatedType, resolver),
 				AbbreviatedTypeId = t.AbbreviatedTypeId,
-				Flags = t.Flags
+				Flags = (KotlinTypeFlags)t.Flags
 			};
+		}
+
+		public string GetSignature ()
+		{
+			return KotlinUtilities.ConvertKotlinTypeSignature (this);
 		}
 	}
 
@@ -436,7 +488,7 @@ namespace Xamarin.Android.Tools.Bytecode
 
 	public class KotlinValueParameter
 	{
-		public int Flags { get; set; }
+		public KotlinParameterFlags Flags { get; set; }
 		public string Name { get; set; }
 		public KotlinType Type { get; set; }
 		public int TypeId { get; set; }
@@ -449,7 +501,7 @@ namespace Xamarin.Android.Tools.Bytecode
 				return null;
 
 			return new KotlinValueParameter {
-				Flags = vp.Flags,
+				Flags = (KotlinParameterFlags)vp.Flags,
 				Name = resolver.GetString (vp.Name),
 				Type = KotlinType.FromProtobuf (vp.Type, resolver),
 				TypeId = vp.TypeId,
@@ -457,6 +509,8 @@ namespace Xamarin.Android.Tools.Bytecode
 				VarArgElementTypeId = vp.VarargElementTypeId
 			};
 		}
+
+		public string GetSignature () => Type.GetSignature ();
 	}
 
 	public enum KotlinVariance
@@ -531,6 +585,62 @@ namespace Xamarin.Android.Tools.Bytecode
 	{
 		HasAnnotations =	0b00_00_000_1,
 
+		IsInner =		0b_00001_000_00_000_0,
+		IsData =		0b_00010_000_00_000_0,
+		IsExternalClass =	0b_00100_000_00_000_0,
+		IsExpectClass =		0b_01000_000_00_000_0,
+		IsInlineClass =		0b_10000_000_00_000_0
+	}
+
+	public enum KotlinClassVisibility
+	{
+		Internal = 0,
+		Private = 1,
+		Protected = 2,
+		Public = 3,
+		PrivateToThis = 4,
+		Local = 5
+	}
+
+	public enum KotlinClassType
+	{
+		Class = 0,
+		Interface = 1,
+		EnumClass = 2,
+		EnumEntry = 3,
+		AnnotationClass = 4,
+		Object = 5,
+		CompanionObject = 6
+	}
+
+	public enum KotlinClassInheritability
+	{
+		Final = 0,
+		Open = 1,
+		Abstract = 2,
+		Sealed = 3
+	}
+
+	[Flags]
+	public enum KotlinConstructorFlags
+	{
+		HasAnnotations =	0b0_000_1,
+
+		Internal =		0b0_000_0,
+		Private =		0b0_001_0,
+		Protected =		0b0_010_0,
+		Public =		0b0_011_0,
+		PrivateToThis =		0b0_100_0,
+		Local =			0b0_101_0,
+
+		IsSecondary =		0b1_000_0
+	}
+
+	[Flags]
+	public enum KotlinFunctionFlags
+	{
+		HasAnnotations =	0b00_00_000_1,
+
 		Internal =		0b00_00_000_0,
 		Private =		0b00_00_001_0,
 		Protected =		0b00_00_010_0,
@@ -543,18 +653,101 @@ namespace Xamarin.Android.Tools.Bytecode
 		Abstract =		0b00_10_000_0,
 		Sealed =		0b00_11_000_0,
 
-		Class =			0b000_00_000_0,
-		Interface =		0b001_00_000_0,
-		EnumClass =		0b010_00_000_0,
-		EnumEntry =		0b011_00_000_0,
-		AnnotationClass =	0b100_00_000_0,
-		Object =		0b101_00_000_0,
-		CompanionObject =	0b111_00_000_0,
+		Declaration =		0b00_00_000_0,
+		FakeOverride =		0b01_00_000_0,
+		Delegation =		0b10_00_000_0,
+		Synthesized =		0b11_00_000_0,
 
-		IsInner =		0b_00001_000_00_000_0,
-		IsData =		0b_00010_000_00_000_0,
-		IsExternalClass =	0b_00100_000_00_000_0,
-		IsExpectClass =		0b_01000_000_00_000_0,
-		IsInlineClass =		0b_10000_000_00_000_0
+		IsOperator =		0b_0000001_00_00_000_0,
+		IsInfix =		0b_0000010_00_00_000_0,
+		IsInline =		0b_0000100_00_00_000_0,
+		IsTailrec =		0b_0001000_00_00_000_0,
+		IsExternalFunction =	0b_0010000_00_00_000_0,
+		IsSuspend =		0b_0100000_00_00_000_0,
+		IsExpectFunction =	0b_1000000_00_00_000_0
+	}
+
+	[Flags]
+	public enum KotlinPropertyFlags
+	{
+		HasAnnotations =	0b00_00_000_1,
+
+		Internal =		0b00_00_000_0,
+		Private =		0b00_00_001_0,
+		Protected =		0b00_00_010_0,
+		Public =		0b00_00_011_0,
+		PrivateToThis =		0b00_00_100_0,
+		Local =			0b00_00_101_0,
+
+		Final =			0b00_00_000_0,
+		Open =			0b00_01_000_0,
+		Abstract =		0b00_10_000_0,
+		Sealed =		0b00_11_000_0,
+
+		Declaration =		0b00_00_000_0,
+		FakeOverride =		0b01_00_000_0,
+		Delegation =		0b10_00_000_0,
+		Synthesized =		0b11_00_000_0,
+
+		IsVar =			0b_000000001_000_00_000_0,
+		HasGetter =		0b_000000010_000_00_000_0,
+		HasSetter =		0b_000000100_000_00_000_0,
+		IsConst =		0b_000001000_000_00_000_0,
+		IsLateInit =		0b_000010000_000_00_000_0,
+		HasConstant =		0b_000100000_000_00_000_0,
+		IsExternalProperty =	0b_001000000_000_00_000_0,
+		IsDelegated =		0b_010000000_000_00_000_0,
+		IsExpectProperty =	0b_100000000_000_00_000_0
+	}
+
+	[Flags]
+	public enum KotlinParameterFlags
+	{
+		HasAnnotations =	0b000_1,
+
+		DeclaresDefaultValue =	0b001_0,
+		IsCrossInline =		0b010_0,
+		IsNoInline =		0b100_0
+	}
+
+	[Flags]
+	public enum KotlinAccessorFlags
+	{
+		HasAnnotations =	0b00_00_000_1,
+
+		Internal =		0b00_00_000_0,
+		Private =		0b00_00_001_0,
+		Protected =		0b00_00_010_0,
+		Public =		0b00_00_011_0,
+		PrivateToThis =		0b00_00_100_0,
+		Local =			0b00_00_101_0,
+
+		Final =			0b00_00_000_0,
+		Open =			0b00_01_000_0,
+		Abstract =		0b00_10_000_0,
+		Sealed =		0b00_11_000_0,
+
+		IsNotDefault =		0b001_00_000_0,
+		IsExternalAccessor =	0b010_00_000_0,
+		IsInlineAccessor =	0b100_00_000_0
+	}
+
+	[Flags]
+	public enum KotlinExpressionFlags
+	{
+		IsNegated =		0b01,
+		IsNullCheckPredicate =	0b10
+	}
+
+	[Flags]
+	public enum KotlinAnnotationFlags
+	{
+		IsUnsigned =		0b01
+	}
+
+	[Flags]
+	public enum KotlinTypeFlags
+	{
+		SuspendType =		0b01
 	}
 }

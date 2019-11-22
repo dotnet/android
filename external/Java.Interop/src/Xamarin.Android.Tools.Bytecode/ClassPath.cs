@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -8,7 +8,6 @@ using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using System.Text;
-using Xamarin.Android.Tools.Bytecode.Kotlin;
 
 namespace Xamarin.Android.Tools.Bytecode {
 

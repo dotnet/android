@@ -254,8 +254,8 @@ namespace org.jetbrains.kotlin.metadata.jvm
 		private bool? __pbn__Nullable;
 
 		[global::ProtoBuf.ProtoMember (4, Name = @"flexible_type_capabilities_id")]
-		public int FlexibleTypeCapabilitiesId {
-			get { return __pbn__FlexibleTypeCapabilitiesId.GetValueOrDefault (); }
+		public int? FlexibleTypeCapabilitiesId {
+			get { return __pbn__FlexibleTypeCapabilitiesId; }
 			set { __pbn__FlexibleTypeCapabilitiesId = value; }
 		}
 		public bool ShouldSerializeFlexibleTypeCapabilitiesId () => __pbn__FlexibleTypeCapabilitiesId != null;
@@ -266,8 +266,8 @@ namespace org.jetbrains.kotlin.metadata.jvm
 		public Type FlexibleUpperBound { get; set; }
 
 		[global::ProtoBuf.ProtoMember (8, Name = @"flexible_upper_bound_id")]
-		public int FlexibleUpperBoundId {
-			get { return __pbn__FlexibleUpperBoundId.GetValueOrDefault (); }
+		public int? FlexibleUpperBoundId {
+			get { return __pbn__FlexibleUpperBoundId; }
 			set { __pbn__FlexibleUpperBoundId = value; }
 		}
 		public bool ShouldSerializeFlexibleUpperBoundId () => __pbn__FlexibleUpperBoundId != null;
@@ -275,8 +275,8 @@ namespace org.jetbrains.kotlin.metadata.jvm
 		private int? __pbn__FlexibleUpperBoundId;
 
 		[global::ProtoBuf.ProtoMember (6, Name = @"class_name")]
-		public int ClassName {
-			get { return __pbn__ClassName.GetValueOrDefault (); }
+		public int? ClassName {
+			get { return __pbn__ClassName; }
 			set { __pbn__ClassName = value; }
 		}
 		public bool ShouldSerializeClassName () => __pbn__ClassName != null;
@@ -284,8 +284,8 @@ namespace org.jetbrains.kotlin.metadata.jvm
 		private int? __pbn__ClassName;
 
 		[global::ProtoBuf.ProtoMember (7, Name = @"type_parameter")]
-		public int TypeParameter {
-			get { return __pbn__TypeParameter.GetValueOrDefault (); }
+		public int? TypeParameter {
+			get { return __pbn__TypeParameter; }
 			set { __pbn__TypeParameter = value; }
 		}
 		public bool ShouldSerializeTypeParameter () => __pbn__TypeParameter != null;
@@ -293,8 +293,8 @@ namespace org.jetbrains.kotlin.metadata.jvm
 		private int? __pbn__TypeParameter;
 
 		[global::ProtoBuf.ProtoMember (9, Name = @"type_parameter_name")]
-		public int TypeParameterName {
-			get { return __pbn__TypeParameterName.GetValueOrDefault (); }
+		public int? TypeParameterName {
+			get { return __pbn__TypeParameterName; }
 			set { __pbn__TypeParameterName = value; }
 		}
 		public bool ShouldSerializeTypeParameterName () => __pbn__TypeParameterName != null;
@@ -302,8 +302,8 @@ namespace org.jetbrains.kotlin.metadata.jvm
 		private int? __pbn__TypeParameterName;
 
 		[global::ProtoBuf.ProtoMember (12, Name = @"type_alias_name")]
-		public int TypeAliasName {
-			get { return __pbn__TypeAliasName.GetValueOrDefault (); }
+		public int? TypeAliasName {
+			get { return __pbn__TypeAliasName; }
 			set { __pbn__TypeAliasName = value; }
 		}
 		public bool ShouldSerializeTypeAliasName () => __pbn__TypeAliasName != null;
@@ -314,8 +314,8 @@ namespace org.jetbrains.kotlin.metadata.jvm
 		public Type OuterType { get; set; }
 
 		[global::ProtoBuf.ProtoMember (11, Name = @"outer_type_id")]
-		public int OuterTypeId {
-			get { return __pbn__OuterTypeId.GetValueOrDefault (); }
+		public int? OuterTypeId {
+			get { return __pbn__OuterTypeId; }
 			set { __pbn__OuterTypeId = value; }
 		}
 		public bool ShouldSerializeOuterTypeId () => __pbn__OuterTypeId != null;
@@ -326,8 +326,8 @@ namespace org.jetbrains.kotlin.metadata.jvm
 		public Type AbbreviatedType { get; set; }
 
 		[global::ProtoBuf.ProtoMember (14, Name = @"abbreviated_type_id")]
-		public int AbbreviatedTypeId {
-			get { return __pbn__AbbreviatedTypeId.GetValueOrDefault (); }
+		public int? AbbreviatedTypeId {
+			get { return __pbn__AbbreviatedTypeId; }
 			set { __pbn__AbbreviatedTypeId = value; }
 		}
 		public bool ShouldSerializeAbbreviatedTypeId () => __pbn__AbbreviatedTypeId != null;

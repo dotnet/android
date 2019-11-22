@@ -52,6 +52,7 @@
     <Compile Include="ExpectedMethodDeclaration.cs" />
     <Compile Include="ExpectedTypeDeclaration.cs" />
     <Compile Include="IJavaInterfaceTests.cs" />
+    <Compile Include="KotlinFixupsTests.cs" />
     <Compile Include="KotlinMetadataTests.cs" />
     <Compile Include="JavaAnnotationTests.cs" />
     <Compile Include="JavaEnumTests.cs" />

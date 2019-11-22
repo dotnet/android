@@ -27,7 +27,7 @@
       Outputs="@(TestKotlinJar->'%(RecursiveDir)%(Filename).class')"
       Condition=" '$(KotlinCPath)' != '' ">
     <Exec
-        Command="&quot;$(KotlinCPath)&quot; @(TestKotlinJar->'%(Identity)', ' ') -d &quot;kotlin&quot;"
+        Command="&quot;$(KotlinCPath)&quot; -Xinline-classes @(TestKotlinJar->'%(Identity)', ' ') -d &quot;kotlin&quot;"
     />
   </Target>
 </Project>
