@@ -213,13 +213,8 @@ Debug::start_debugging_and_profiling ()
 		total_time.mark_start ();
 
 	char *connect_args;
-	androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_CONNECT_PROPERTY, &connect_args);
-
-	if (connect_args != nullptr) {
-		DebuggerConnectionStatus res = DebuggerConnectionStatus::Unconnected;
-		if (strcmp (connect_args, "") != 0) {
-			res = start_connection (connect_args);
-		}
+	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_CONNECT_PROPERTY, &connect_args) > 0) {
+		DebuggerConnectionStatus res = start_connection (connect_args);
 		if (res == DebuggerConnectionStatus::Error) {
 			log_fatal (LOG_DEBUGGER, "Could not start a connection to the debugger with connection args '%s'.", connect_args);
 			exit (FATAL_EXIT_DEBUGGER_CONNECT);
@@ -231,8 +226,8 @@ Debug::start_debugging_and_profiling ()
 			start_debugging ();
 			start_profiling ();
 		}
-		delete[] connect_args;
 	}
+	delete[] connect_args;
 
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
 		total_time.mark_end ();
