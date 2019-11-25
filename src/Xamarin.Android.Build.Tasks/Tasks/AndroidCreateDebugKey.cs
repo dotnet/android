@@ -20,7 +20,7 @@ namespace Xamarin.Android.Tasks
 		public AndroidCreateDebugKey ()
 		{
 			KeyAlgorithm = "RSA";
-			StoreKey = "pkcs12";
+			StoreType = "pkcs12";
 			Validity = 30 * 365; // 30 years
 		}
 
@@ -30,7 +30,7 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendSwitchIfNotNull ("-dname ", dname);
 			cmd.AppendSwitchIfNotNull ("-keyalg ", KeyAlgorithm);
 			cmd.AppendSwitchIfNotNull ("-validity ", Validity.ToString()); 
-			cmd.AppendSwitchIfNotNull ("-deststoretype ", StoreKey);
+			cmd.AppendSwitchIfNotNull ("-deststoretype ", StoreType);
 			return cmd;
 		}
 	}
