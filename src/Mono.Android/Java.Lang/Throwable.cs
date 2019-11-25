@@ -252,6 +252,9 @@ namespace Java.Lang {
 		~Throwable ()
 		{
 			refs_added = 0;
+			if (Environment.HasShutdownStarted) {
+				return;
+			}
 			JniEnvironment.Runtime.ValueManager.FinalizePeer (this);
 		}
 

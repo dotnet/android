@@ -54,6 +54,9 @@ namespace Java.Lang {
 			// handle still contains a java reference, we can't finalize the
 			// object and should "resurrect" it.
 			refs_added = 0;
+			if (Environment.HasShutdownStarted) {
+				return;
+			}
 			JniEnvironment.Runtime.ValueManager.FinalizePeer (this);
 		}
 
