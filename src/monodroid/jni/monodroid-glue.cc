@@ -307,7 +307,7 @@ MonodroidRuntime::open_from_update_dir (MonoAssemblyName *aname, char **assembli
 		log_info (LOG_ASSEMBLY, "open_from_update_dir: trying to open assembly: %s\n", static_cast<const char*>(fullpath));
 		if (utils.file_exists (fullpath))
 			result = mono_assembly_open_full (fullpath, nullptr, 0);
-		if (result) {
+		if (result != nullptr) {
 			// TODO: register .mdb, .pdb file
 			break;
 		}
