@@ -1,10 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
     <IsPackable>false</IsPackable>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <DefineConstants>$(DefineConstants);HAVE_CECIL;JCW_ONLY_TYPE_NAMES</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -16,10 +16,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="Microsoft.CSharp" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="nunit" Version="3.11.0" />
     <PackageReference Include="NUnit.ConsoleRunner" Version="3.9.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="3.13.0" />
@@ -27,11 +23,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Java.Interop\Java.Interop.csproj" />
-    <ProjectReference Include="..\..\src\Java.Interop.Dynamic\Java.Interop.Dynamic.csproj" />
-    <ProjectReference Include="..\..\src\Java.Runtime.Environment\Java.Runtime.Environment.csproj" />
-    <ProjectReference Include="..\TestJVM\TestJVM.csproj" />
-    <ProjectReference Include="..\..\lib\mono.linq.expressions\Mono.Linq.Expressions.csproj" />
+    <ProjectReference Include="..\..\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers.csproj" />
+    <ProjectReference Include="..\..\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil.csproj" />
+    <ProjectReference Include="..\..\src\Java.Interop.Tools.Diagnostics\Java.Interop.Tools.Diagnostics.csproj" />
+    <ProjectReference Include="..\..\src\Xamarin.Android.Cecil\Xamarin.Android.Cecil.csproj" />
   </ItemGroup>
+
+  <Import Project="..\..\src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\..\src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems')" />
 
 </Project>

@@ -1,0 +1,74 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\..\Configuration.props" />
+  
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <OutputPath>..\..\bin\TestDebug</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <OutputPath>..\..\bin\TestRelease</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="nunit" Version="3.11.0" />
+    <PackageReference Include="NUnit.ConsoleRunner" Version="3.9.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="3.13.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Xamarin.Android.Tools.Bytecode\Xamarin.Android.Tools.Bytecode.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\*" />
+    <EmbeddedResource Include="kotlin\**\*.class" />
+
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\IJavaInterface.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\IParameterInterface.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaAnnotation.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaEnum.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaType%241.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaType%24ASC.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaType%24PSC.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaType%24RNC%24RPNC.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaType%24RNC.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaType.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\NestedInterface%24DnsSdTxtRecordListener.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\NestedInterface.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\ParameterAbstractClass.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\ParameterClass.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\ParameterClass2.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\java\util\Collection.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\NonGenericGlobalType.class" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <TestJar Include="java\**\*.java" Exclude="java\java\util\Collection.java" />
+    <TestJarNoParameters Include="java\java\util\Collection.java" />
+    <TestKotlinJar Include="kotlin\**\*.kt" />
+  </ItemGroup>
+
+  <Target Name="BuildClasses" BeforeTargets="BeforeBuild" Inputs="@(TestJar)" Outputs="@(TestJar->'$(IntermediateOutputPath)classes\%(RecursiveDir)%(Filename).class')">
+    <MakeDir Directories="$(IntermediateOutputPath)classes" />
+    <Exec Command="&quot;$(JavaCPath)&quot; -parameters $(_JavacSourceOptions) -g -d &quot;$(IntermediateOutputPath)classes&quot; @(TestJar->'%(Identity)', ' ')" />
+    <Exec Command="&quot;$(JavaCPath)&quot; $(_JavacSourceOptions) -g -d &quot;$(IntermediateOutputPath)classes&quot; @(TestJarNoParameters->'%(Identity)', ' ')" />
+  </Target>
+
+  <!-- 
+      If the Kotlin compiler is available this step will compile .kt files into .class
+      files. Useful for writing new tests. It is not used by CI, you must commit the
+      resulting .class files.  
+  -->
+  <Target Name="BuildKotlinClasses" BeforeTargets="BeforeBuild" Inputs="@(TestKotlinJar)" Outputs="@(TestKotlinJar->'%(RecursiveDir)%(Filename).class')" Condition=" '$(KotlinCPath)' != '' ">
+    <Exec Command="&quot;$(KotlinCPath)&quot; @(TestKotlinJar->'%(Identity)', ' ') -d &quot;kotlin&quot;" />
+  </Target>
+
+</Project>

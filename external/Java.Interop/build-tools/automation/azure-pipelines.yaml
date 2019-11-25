@@ -38,13 +38,14 @@ jobs:
     inputs:
       solution: Java.Interop.sln
       configuration: $(Build.Configuration)
-
+      msbuildArguments: '/t:Restore,Build'
+    
   - task: MSBuild@1
     displayName: MSBuild RunNUnitTests.targets
     inputs:
       solution: build-tools/scripts/RunNUnitTests.targets
       configuration: $(Build.Configuration)
-      msbuildArguments: /p:TestAssembly="bin\Test$(Build.Configuration)\generator-Tests.dll;bin\Test$(Build.Configuration)\Java.Interop.Tools.JavaCallableWrappers-Tests.dll;bin\Test$(Build.Configuration)\LogcatParse-Tests.dll;bin\Test$(Build.Configuration)\Xamarin.Android.Tools.ApiXmlAdjuster-Tests.dll;bin\Test$(Build.Configuration)\Xamarin.Android.Tools.Bytecode-Tests.dll"
+      msbuildArguments: /p:TestAssembly="bin\Test$(Build.Configuration)\generator-Tests.dll;bin\Test$(Build.Configuration)\Java.Interop.Tools.JavaCallableWrappers-Tests.dll;bin\Test$(Build.Configuration)\logcat-parse-Tests.dll;bin\Test$(Build.Configuration)\Xamarin.Android.Tools.ApiXmlAdjuster-Tests.dll;bin\Test$(Build.Configuration)\Xamarin.Android.Tools.Bytecode-Tests.dll"
     condition: succeededOrFailed()
 
   - task: PublishTestResults@2

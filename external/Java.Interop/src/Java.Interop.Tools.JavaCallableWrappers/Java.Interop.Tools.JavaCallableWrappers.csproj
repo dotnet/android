@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -15,10 +15,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Test\**" />
-    <EmbeddedResource Remove="Test\**" />
-    <None Remove="Test\**" />
-
     <Compile Include="..\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings\JavaNativeTypeManager.cs">
       <Link>JavaNativeTypeManager.cs</Link>
     </Compile>

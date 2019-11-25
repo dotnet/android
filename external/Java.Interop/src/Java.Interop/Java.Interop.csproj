@@ -28,7 +28,6 @@
     <JNIEnvGenPath>..\..\bin\BuildRelease</JNIEnvGenPath>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Remove="Tests\**\*.cs" />
     <Compile Remove="Java.Interop\JniLocationException.cs" />
   </ItemGroup>
   <Import Project="..\..\Configuration.props" />

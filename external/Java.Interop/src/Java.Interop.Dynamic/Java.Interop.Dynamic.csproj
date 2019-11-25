@@ -18,9 +18,6 @@
     <OutputPath>..\..\bin\Release</OutputPath>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Remove="Tests\**\*.cs" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\Java.Interop\Java.Interop.csproj">
       <Project>{94BD81F7-B06F-4295-9636-F8A3B6BDC762}</Project>
       <Name>Java.Interop</Name>

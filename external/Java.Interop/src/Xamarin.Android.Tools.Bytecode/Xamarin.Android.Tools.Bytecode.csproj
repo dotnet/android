@@ -13,12 +13,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Tests\**" />
-    <EmbeddedResource Remove="Tests\**" />
-    <None Remove="Tests\**" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="protobuf-net" Version="2.4.1" />
   </ItemGroup>
 

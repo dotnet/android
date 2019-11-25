@@ -27,7 +27,7 @@ TESTS = \
 	bin/Test$(CONFIGURATION)/Java.Interop.Dynamic-Tests.dll \
 	bin/Test$(CONFIGURATION)/Java.Interop.Export-Tests.dll \
 	bin/Test$(CONFIGURATION)/Java.Interop.Tools.JavaCallableWrappers-Tests.dll \
-	bin/Test$(CONFIGURATION)/LogcatParse-Tests.dll \
+	bin/Test$(CONFIGURATION)/logcat-parse-Tests.dll \
 	bin/Test$(CONFIGURATION)/generator-Tests.dll \
 	bin/Test$(CONFIGURATION)/Xamarin.Android.Tools.ApiXmlAdjuster-Tests.dll \
 	bin/Test$(CONFIGURATION)/Xamarin.Android.Tools.Bytecode-Tests.dll
@@ -174,37 +174,37 @@ run-test-jnimarshal: bin/Test$(CONFIGURATION)/Java.Interop.Export-Tests.dll bin/
 define GEN_CORE_OUTPUT
 	-$(RM) -Rf $(1)
 	mkdir -p $(1)
-	$(RUNTIME) bin/Test$(CONFIGURATION)/generator.exe -o $(1) $(3) --api-level=20 tools/generator/Tests-Core/api$(2).xml \
-		--enummethods=tools/generator/Tests-Core/methods$(2).xml \
-		--enumfields=tools/generator/Tests-Core/fields$(2).xml \
+	$(RUNTIME) bin/Test$(CONFIGURATION)/generator.exe -o $(1) $(3) --api-level=20 tests/generator-Tests/Tests-Core/api$(2).xml \
+		--enummethods=tests/generator-Tests/Tests-Core/methods$(2).xml \
+		--enumfields=tests/generator-Tests/Tests-Core/fields$(2).xml \
 		--enumdir=$(1)
 endef
 
 run-test-generator-core: bin/Test$(CONFIGURATION)/generator.exe
 	$(call GEN_CORE_OUTPUT,bin/Test$(CONFIGURATION)/generator-core)
-	diff -rup --strip-trailing-cr tools/generator/Tests-Core/expected bin/Test$(CONFIGURATION)/generator-core
+	diff -rup --strip-trailing-cr tests/generator-Tests/Tests-Core/expected bin/Test$(CONFIGURATION)/generator-core
 	$(call GEN_CORE_OUTPUT,bin/Test$(CONFIGURATION)/generator-core,,--codegen-target=JavaInterop1)
-	diff -rup --strip-trailing-cr tools/generator/Tests-Core/expected.ji bin/Test$(CONFIGURATION)/generator-core
+	diff -rup --strip-trailing-cr tests/generator-Tests/Tests-Core/expected.ji bin/Test$(CONFIGURATION)/generator-core
 	$(call GEN_CORE_OUTPUT,bin/Test$(CONFIGURATION)/generator-core,-cp)
-	diff -rup --strip-trailing-cr tools/generator/Tests-Core/expected.cp bin/Test$(CONFIGURATION)/generator-core
+	diff -rup --strip-trailing-cr tests/generator-Tests/Tests-Core/expected.cp bin/Test$(CONFIGURATION)/generator-core
 
 bin/Test$(CONFIGURATION)/generator.exe: bin/$(CONFIGURATION)/generator.exe
 	cp $<* `dirname "$@"`
 
 update-test-generator-core:
-	$(call GEN_CORE_OUTPUT,tools/generator/Tests-Core/expected)
-	$(call GEN_CORE_OUTPUT,tools/generator/Tests-Core/expected.ji,--codegen-target=JavaInterop1)
+	$(call GEN_CORE_OUTPUT,tests/generator-Tests/Tests-Core/expected)
+	$(call GEN_CORE_OUTPUT,tests/generator-Tests/Tests-Core/expected.ji,--codegen-target=JavaInterop1)
 
 update-test-generator-nunit:
 	-$(MAKE) run-tests TESTS=bin/Test$(CONFIGURATION)/generator-Tests.dll
-	for f in `find tools/generator/Tests/expected -name \*.cs` ; do \
-		source=`echo $$f | sed 's#^tools/generator/Tests/expected#bin/Test$(CONFIGURATION)/out#'` ; \
+	for f in `find tests/generator-Tests/expected -name \*.cs` ; do \
+		source=`echo $$f | sed 's#^tests/generator-Tests/expected#bin/Test$(CONFIGURATION)/out#'` ; \
 		if [ -f "$$source" ]; then \
 			cp -f "$$source" "$$f" ; \
 		fi; \
 	done
 	for source in `find bin/Test$(CONFIGURATION)/out.ji -type f` ; do \
-		f=`echo $$source | sed 's#^bin/Test$(CONFIGURATION)/out.ji#tools/generator/Tests/expected.ji#'` ; \
+		f=`echo $$source | sed 's#^bin/Test$(CONFIGURATION)/out.ji#tests/generator-Tests/expected.ji#'` ; \
 		mkdir -p `dirname $$f`; \
 		cp -f "$$source" "$$f" ; \
 	done
