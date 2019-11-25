@@ -219,6 +219,7 @@ stages:
       condition: succeededOrFailed()
 
     - powershell: |
+        $ErrorActionPreference = 'Continue'
         Get-Process
         Stop-Process -Name nunit3-console
         Stop-Process -Name xabuild

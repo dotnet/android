@@ -19,6 +19,7 @@ steps:
 
 - powershell: |
     if ([Environment]::OSVersion.Platform -eq "Win32NT") {
+      $ErrorActionPreference = 'Continue'
       Get-Process
       Stop-Process -Name nunit3-console
       Stop-Process -Name xabuild
