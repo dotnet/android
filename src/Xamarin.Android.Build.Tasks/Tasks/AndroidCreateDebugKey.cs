@@ -21,6 +21,17 @@ namespace Xamarin.Android.Tasks
 			Validity = 30 * 365; // 30 years
 		}
 
+		public override bool Execute ()
+		{
+			//TODO: this should actually return early and not run base.Execute()
+			// Let it go on for now, to see if we get the warning
+			if (File.Exists (KeyStore)) {
+				Log.LogWarning ($"File already exists at: {KeyStore}");
+			}
+
+			return base.Execute ();
+		}
+
 		protected override CommandLineBuilder CreateCommandLine ()
 		{
 			var cmd = base.CreateCommandLine ();
