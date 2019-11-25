@@ -177,7 +177,6 @@ namespace xamarin::android::internal
 		static void thread_start (MonoProfiler *prof, uintptr_t tid);
 		static void thread_end (MonoProfiler *prof, uintptr_t tid);
 
-#if defined (DEBUG)
 		void set_debug_env_vars (void);
 
 #if !defined (WINDOWS)
@@ -185,7 +184,6 @@ namespace xamarin::android::internal
 		int monodroid_debug_connect (int sock, struct sockaddr_in addr);
 		int monodroid_debug_accept (int sock, struct sockaddr_in addr);
 #endif // !WINDOWS
-#endif // DEBUG
 
 #if !defined (RELEASE)
 		static MonoAssembly* open_from_update_dir (MonoAssemblyName *aname, char **assemblies_path, void *user_data);

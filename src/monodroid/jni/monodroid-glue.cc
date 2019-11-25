@@ -1019,7 +1019,6 @@ MonodroidRuntime::propagate_uncaught_exception (MonoDomain *domain, JNIEnv *env,
 	utils.monodroid_runtime_invoke (domain, method, nullptr, args, nullptr);
 }
 
-#if DEBUG
 static void
 setup_gc_logging (void)
 {
@@ -1028,7 +1027,6 @@ setup_gc_logging (void)
 		log_categories |= LOG_GC;
 	}
 }
-#endif
 
 inline int
 MonodroidRuntime::convert_dl_flags (int flags)
@@ -1142,7 +1140,6 @@ MonodroidRuntime::create_xdg_directories_and_environment (JNIEnv *env, jstring_w
 	create_xdg_directory (homeDir, ".config", "XDG_CONFIG_HOME");
 }
 
-#if DEBUG
 void
 MonodroidRuntime::set_debug_env_vars (void)
 {
@@ -1169,7 +1166,6 @@ MonodroidRuntime::set_debug_env_vars (void)
 	}
 	utils.monodroid_strfreev (args);
 }
-#endif /* DEBUG */
 
 inline void
 MonodroidRuntime::set_trace_options (void)
@@ -1422,10 +1418,8 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	init_reference_logging (androidSystem.get_primary_override_dir ());
 	androidSystem.create_update_dir (androidSystem.get_primary_override_dir ());
 
-#if DEBUG
 	setup_gc_logging ();
 	set_debug_env_vars ();
-#endif
 
 #ifndef RELEASE
 	jstr = env->GetObjectArrayElement (externalStorageDirs, 0);
