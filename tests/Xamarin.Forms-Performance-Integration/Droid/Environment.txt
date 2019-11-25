@@ -1,1 +1,2 @@
 debug.mono.log=gref
+debug.mono.env=MONO_LOG_LEVEL=debug
