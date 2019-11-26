@@ -8,6 +8,8 @@ using System.Diagnostics.CodeAnalysis;
 
 [assembly: SuppressMessage ("Design", "CA1008:Enums should have zero value", Justification = "No thanks", Scope = "type", Target = "~T:Java.Interop.JniVersion")]
 
+[assembly: SuppressMessage ("Design", "CA1012:Abstract types should not have constructors", Justification = "Public API checker in flux - Can change later", Scope = "type", Target = "~T:Java.Interop.JniRuntime.JniObjectReferenceManager")]
+
 [assembly: SuppressMessage ("Design", "CA1030:Use events where appropriate", Justification = "This isn't 'raising' an event; it's 'raising' a pending exception within the JVM.", Scope = "member", Target = "~M:Java.Interop.JniRuntime.RaisePendingException(System.Exception)")]
 
 [assembly: SuppressMessage ("Design", "CA1024:Use properties where appropriate", Justification = "<Pending>", Scope = "member", Target = "~M:Java.Interop.JniRuntime.GetRegisteredRuntimes()")]

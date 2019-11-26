@@ -14,6 +14,10 @@ namespace Java.Interop {
 
 		public abstract class JniObjectReferenceManager : IDisposable, ISetRuntime {
 
+			public JniObjectReferenceManager ()
+			{
+			}
+
 			public  JniRuntime      Runtime { get; private set; }
 
 			public virtual void OnSetRuntime (JniRuntime runtime)
