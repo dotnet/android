@@ -119,7 +119,7 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, monodroid_sh
 			continue;
 		}
 
-		if (!(utils.ends_with (file_name, ".dll") || utils.ends_with (file_name, ".exe")))
+		if (!utils.ends_with (file_name, ".dll"))
 			continue;
 
 		if (entry_is_overridden)

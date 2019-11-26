@@ -38,22 +38,39 @@ namespace Xamarin.Android.Build
 				// Create a Microsoft.Build.NuGetSdkResolver.xml
 				CreateSdkResolverConfig (paths);
 
-				//Symbolic links to be created: key=system, value=in-tree
+				//Symbolic links to be created: key=in-tree-dir, value=system-dir
 				var symbolicLinks = new Dictionary<string, string> ();
 				foreach (var dir in Directory.EnumerateDirectories (paths.SystemFrameworks)) {
 					if (Path.GetFileName (dir) != "MonoAndroid") {
-						symbolicLinks [dir] = Path.Combine (paths.FrameworksDirectory, Path.GetFileName (dir));
+						var inTreeFramework = Path.Combine (paths.FrameworksDirectory, Path.GetFileName (dir));
+						symbolicLinks [inTreeFramework]	= dir;
 					}
 				}
 				foreach (var dir in paths.SystemTargetsDirectories) {
-					symbolicLinks [dir] = Path.Combine (paths.MSBuildExtensionsPath, Path.GetFileName (dir));
+					var inTreeTargetsDir  = Path.Combine (paths.MSBuildExtensionsPath, Path.GetFileName (dir));
+					if (!symbolicLinks.ContainsKey (inTreeTargetsDir)) {
+						symbolicLinks [inTreeTargetsDir] = dir;
+						continue;
+					}
+					var prevTargetDir = symbolicLinks [inTreeTargetsDir];
+					symbolicLinks.Remove (inTreeTargetsDir);
+					if (Directory.Exists (inTreeTargetsDir) && SymbolicLink.IsPathSymlink (inTreeTargetsDir)) {
+						Console.WriteLine ($"Removing old symlink: {inTreeTargetsDir}");
+						Directory.Delete (inTreeTargetsDir);
+					}
+					var subTargetDirs = Directory.EnumerateDirectories (prevTargetDir)
+						.Concat (Directory.EnumerateDirectories (dir));
+					foreach (var subDir in subTargetDirs) {
+						var inTreeTargetSubdir = Path.Combine (inTreeTargetsDir, Path.GetFileName (subDir));
+						symbolicLinks [inTreeTargetSubdir] = subDir;
+					}
 				}
-				if (symbolicLinks.Values.Any (d => !Directory.Exists (d))) {
+				if (symbolicLinks.Keys.Any (d => !Directory.Exists (d))) {
 					//Hold open the file while creating the symbolic links
 					using (var writer = OpenSysLinksFile (paths)) {
 						foreach (var pair in symbolicLinks) {
-							var systemDirectory = pair.Key;
-							var symbolicLink = pair.Value;
+							var systemDirectory = pair.Value;
+							var symbolicLink = pair.Key;
 							Console.WriteLine ($"[xabuild] creating symbolic link '{symbolicLink}' -> '{systemDirectory}'");
 							if (!SymbolicLink.Create (symbolicLink, systemDirectory)) {
 								return 1;
