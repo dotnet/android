@@ -66,6 +66,23 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		[Test, Category ("UsesDevice")]
+		public void BuildBasicApplicationAndAotProfileIt ()
+		{
+			if (!HasDevices)
+				Assert.Ignore ("Skipping test. No devices available.");
+
+			var proj = new XamarinAndroidApplicationProject ();
+			var projDirectory = Path.Combine ("temp", TestName);
+			using (var b = CreateApkBuilder (projDirectory)) {
+				Assert.IsTrue (b.RunTarget (proj, "BuildAndStartAotProfiling"), "Run of BuildAndStartAotProfiling should have succeeded.");
+				System.Threading.Thread.Sleep (5000);
+				Assert.IsTrue (b.RunTarget (proj, "FinishAotProfiling"), "Run of FinishAotProfiling should have succeeded.");
+				var customProfile = Path.Combine (Root, projDirectory, "custom.aprof");
+				FileAssert.Exists (customProfile);
+			}
+		}
+
 		static readonly object [] BuildHasNoWarningsSource = new object [] {
 			new object [] {
 				/* isRelease */     false,
