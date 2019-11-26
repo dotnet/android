@@ -9,7 +9,7 @@ namespace Com.Google.Android.Exoplayer.Drm {
 	[global::Android.Runtime.Register ("com/google/android/exoplayer/drm/FrameworkMediaDrm", DoNotGenerateAcw=true)]
 	public sealed partial class FrameworkMediaDrm : global::Java.Lang.Object, global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrm {
 
-		internal static new readonly JniPeerMembers _members = new JniPeerMembers ("com/google/android/exoplayer/drm/FrameworkMediaDrm", typeof (FrameworkMediaDrm));
+		static readonly JniPeerMembers _members = new JniPeerMembers ("com/google/android/exoplayer/drm/FrameworkMediaDrm", typeof (FrameworkMediaDrm));
 		internal static new IntPtr class_ref {
 			get {
 				return _members.JniPeerType.PeerReference.Handle;

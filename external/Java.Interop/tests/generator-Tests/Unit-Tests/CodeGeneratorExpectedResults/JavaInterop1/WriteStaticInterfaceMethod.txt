@@ -16,7 +16,7 @@ public abstract class MyInterface : Java.Lang.Object {
 	}
 
 
-	static new readonly JniPeerMembers _members = new JniPeerMembers ("java/code/IMyInterface", typeof (MyInterface));
+	static readonly JniPeerMembers _members = new JniPeerMembers ("java/code/IMyInterface", typeof (MyInterface));
 }
 
 [Register ("java/code/IMyInterface", DoNotGenerateAcw=true)]
@@ -31,7 +31,7 @@ public abstract class MyInterfaceConsts : MyInterface {
 // Metadata.xml XPath interface reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']"
 [Register ("java/code/IMyInterface", "", "java.code.IMyInterfaceInvoker")]
 public partial interface IMyInterface : IJavaObject, IJavaPeerable {
-	static new readonly JniPeerMembers _members = new JniPeerMembers ("java/code/IMyInterface", typeof (IMyInterface), isInterface: true);
+	static readonly JniPeerMembers _members = new JniPeerMembers ("java/code/IMyInterface", typeof (IMyInterface), isInterface: true);
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='DoSomething' and count(parameter)=0]"
 	[Register ("DoSomething", "()V", "")]
@@ -49,7 +49,7 @@ public partial interface IMyInterface : IJavaObject, IJavaPeerable {
 [global::Android.Runtime.Register ("java/code/IMyInterface", DoNotGenerateAcw=true)]
 internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterface {
 
-	internal static new readonly JniPeerMembers _members = new JniPeerMembers ("java/code/IMyInterface", typeof (IMyInterfaceInvoker));
+	static readonly JniPeerMembers _members = new JniPeerMembers ("java/code/IMyInterface", typeof (IMyInterfaceInvoker));
 
 	static IntPtr java_class_ref {
 		get { return _members.JniPeerType.PeerReference.Handle; }

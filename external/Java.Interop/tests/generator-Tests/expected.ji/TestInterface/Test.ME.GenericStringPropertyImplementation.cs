@@ -9,7 +9,7 @@ namespace Test.ME {
 	[global::Android.Runtime.Register ("test/me/GenericStringPropertyImplementation", DoNotGenerateAcw=true)]
 	public partial class GenericStringPropertyImplementation : global::Java.Lang.Object, global::Test.ME.IGenericPropertyInterface {
 
-		internal static new readonly JniPeerMembers _members = new JniPeerMembers ("test/me/GenericStringPropertyImplementation", typeof (GenericStringPropertyImplementation));
+		static readonly JniPeerMembers _members = new JniPeerMembers ("test/me/GenericStringPropertyImplementation", typeof (GenericStringPropertyImplementation));
 		internal static new IntPtr class_ref {
 			get {
 				return _members.JniPeerType.PeerReference.Handle;

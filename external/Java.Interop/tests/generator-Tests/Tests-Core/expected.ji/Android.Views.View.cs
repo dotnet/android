@@ -22,7 +22,7 @@ namespace Android.Views {
 		[global::Android.Runtime.Register ("android/view/View$OnClickListener", DoNotGenerateAcw=true)]
 		internal partial class IOnClickListenerInvoker : global::Java.Lang.Object, IOnClickListener {
 
-			internal static new readonly JniPeerMembers _members = new JniPeerMembers ("android/view/View$OnClickListener", typeof (IOnClickListenerInvoker));
+			static readonly JniPeerMembers _members = new JniPeerMembers ("android/view/View$OnClickListener", typeof (IOnClickListenerInvoker));
 
 			static IntPtr java_class_ref {
 				get { return _members.JniPeerType.PeerReference.Handle; }
@@ -128,7 +128,7 @@ namespace Android.Views {
 		}
 
 
-		internal static new readonly JniPeerMembers _members = new JniPeerMembers ("android/view/View", typeof (View));
+		static readonly JniPeerMembers _members = new JniPeerMembers ("android/view/View", typeof (View));
 		internal static new IntPtr class_ref {
 			get {
 				return _members.JniPeerType.PeerReference.Handle;

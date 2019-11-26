@@ -1,4 +1,4 @@
-internal static new readonly JniPeerMembers _members = new XAPeerMembers ("com/mypackage/foo", typeof (Com.MyPackage.Foo));
+static readonly JniPeerMembers _members = new XAPeerMembers ("com/mypackage/foo", typeof (Com.MyPackage.Foo));
 
 public override global::Java.Interop.JniPeerMembers JniPeerMembers {
 	get { return _members; }

@@ -9,7 +9,7 @@ namespace Java.IO {
 	[global::Android.Runtime.Register ("java/io/IOException", DoNotGenerateAcw=true)]
 	public abstract partial class IOException : global::Java.Lang.Throwable {
 
-		internal static new readonly JniPeerMembers _members = new JniPeerMembers ("java/io/IOException", typeof (IOException));
+		static readonly JniPeerMembers _members = new JniPeerMembers ("java/io/IOException", typeof (IOException));
 		internal static new IntPtr class_ref {
 			get {
 				return _members.JniPeerType.PeerReference.Handle;
@@ -64,7 +64,7 @@ namespace Java.IO {
 
 		public IOExceptionInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) {}
 
-		internal static new readonly JniPeerMembers _members = new JniPeerMembers ("java/io/IOException", typeof (IOExceptionInvoker));
+		static readonly JniPeerMembers _members = new JniPeerMembers ("java/io/IOException", typeof (IOExceptionInvoker));
 
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
 			get { return _members; }

@@ -26,7 +26,7 @@ namespace Xamarin.Test {
 			[global::Android.Runtime.Register ("xamarin/test/NotificationCompatBase$Action$Factory", DoNotGenerateAcw=true)]
 			internal partial class IFactoryInvoker : global::Java.Lang.Object, IFactory {
 
-				internal static new readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/NotificationCompatBase$Action$Factory", typeof (IFactoryInvoker));
+				static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/NotificationCompatBase$Action$Factory", typeof (IFactoryInvoker));
 
 				static IntPtr java_class_ref {
 					get { return _members.JniPeerType.PeerReference.Handle; }
@@ -103,7 +103,7 @@ namespace Xamarin.Test {
 			}
 
 
-			internal static new readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/NotificationCompatBase$Action", typeof (Action));
+			static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/NotificationCompatBase$Action", typeof (Action));
 			internal static new IntPtr class_ref {
 				get {
 					return _members.JniPeerType.PeerReference.Handle;
@@ -131,7 +131,7 @@ namespace Xamarin.Test {
 
 			public ActionInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) {}
 
-			internal static new readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/NotificationCompatBase$Action", typeof (ActionInvoker));
+			static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/NotificationCompatBase$Action", typeof (ActionInvoker));
 
 			public override global::Java.Interop.JniPeerMembers JniPeerMembers {
 				get { return _members; }
@@ -148,7 +148,7 @@ namespace Xamarin.Test {
 		[global::Android.Runtime.Register ("xamarin/test/NotificationCompatBase$InstanceInner", DoNotGenerateAcw=true)]
 		public abstract partial class InstanceInner : global::Java.Lang.Object {
 
-			internal static new readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/NotificationCompatBase$InstanceInner", typeof (InstanceInner));
+			static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/NotificationCompatBase$InstanceInner", typeof (InstanceInner));
 			internal static new IntPtr class_ref {
 				get {
 					return _members.JniPeerType.PeerReference.Handle;
@@ -196,7 +196,7 @@ namespace Xamarin.Test {
 
 			public InstanceInnerInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) {}
 
-			internal static new readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/NotificationCompatBase$InstanceInner", typeof (InstanceInnerInvoker));
+			static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/NotificationCompatBase$InstanceInner", typeof (InstanceInnerInvoker));
 
 			public override global::Java.Interop.JniPeerMembers JniPeerMembers {
 				get { return _members; }
@@ -209,7 +209,7 @@ namespace Xamarin.Test {
 		}
 
 
-		internal static new readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/NotificationCompatBase", typeof (NotificationCompatBase));
+		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/NotificationCompatBase", typeof (NotificationCompatBase));
 		internal static new IntPtr class_ref {
 			get {
 				return _members.JniPeerType.PeerReference.Handle;

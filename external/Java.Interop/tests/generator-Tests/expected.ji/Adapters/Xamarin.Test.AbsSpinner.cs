@@ -9,7 +9,7 @@ namespace Xamarin.Test {
 	[global::Android.Runtime.Register ("xamarin/test/AbsSpinner", DoNotGenerateAcw=true)]
 	public abstract partial class AbsSpinner : Xamarin.Test.AdapterView<Xamarin.Test.ISpinnerAdapter> {
 
-		internal static new readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/AbsSpinner", typeof (AbsSpinner));
+		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/AbsSpinner", typeof (AbsSpinner));
 		internal static new IntPtr class_ref {
 			get {
 				return _members.JniPeerType.PeerReference.Handle;
@@ -94,7 +94,7 @@ namespace Xamarin.Test {
 
 		public AbsSpinnerInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) {}
 
-		internal static new readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/AbsSpinner", typeof (AbsSpinnerInvoker));
+		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/AbsSpinner", typeof (AbsSpinnerInvoker));
 
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
 			get { return _members; }

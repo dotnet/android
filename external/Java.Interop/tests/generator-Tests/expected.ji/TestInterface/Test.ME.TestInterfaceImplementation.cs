@@ -31,7 +31,7 @@ namespace Test.ME {
 			}
 		}
 
-		internal static new readonly JniPeerMembers _members = new JniPeerMembers ("test/me/TestInterfaceImplementation", typeof (TestInterfaceImplementation));
+		static readonly JniPeerMembers _members = new JniPeerMembers ("test/me/TestInterfaceImplementation", typeof (TestInterfaceImplementation));
 		internal static new IntPtr class_ref {
 			get {
 				return _members.JniPeerType.PeerReference.Handle;
@@ -158,7 +158,7 @@ namespace Test.ME {
 
 		public TestInterfaceImplementationInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) {}
 
-		internal static new readonly JniPeerMembers _members = new JniPeerMembers ("test/me/TestInterfaceImplementation", typeof (TestInterfaceImplementationInvoker));
+		static readonly JniPeerMembers _members = new JniPeerMembers ("test/me/TestInterfaceImplementation", typeof (TestInterfaceImplementationInvoker));
 
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
 			get { return _members; }

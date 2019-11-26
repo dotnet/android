@@ -16,7 +16,7 @@ public abstract class MyInterface : Java.Lang.Object {
 	}
 
 
-	static new readonly JniPeerMembers _members = new XAPeerMembers ("java/code/IMyInterface", typeof (MyInterface));
+	static readonly JniPeerMembers _members = new XAPeerMembers ("java/code/IMyInterface", typeof (MyInterface));
 }
 
 [Register ("java/code/IMyInterface", DoNotGenerateAcw=true)]
@@ -70,7 +70,7 @@ public partial interface IMyInterface : IJavaObject, IJavaPeerable {
 [global::Android.Runtime.Register ("java/code/IMyInterface", DoNotGenerateAcw=true)]
 internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterface {
 
-	internal static new readonly JniPeerMembers _members = new XAPeerMembers ("java/code/IMyInterface", typeof (IMyInterfaceInvoker));
+	static readonly JniPeerMembers _members = new XAPeerMembers ("java/code/IMyInterface", typeof (IMyInterfaceInvoker));
 
 	static IntPtr java_class_ref {
 		get { return _members.JniPeerType.PeerReference.Handle; }

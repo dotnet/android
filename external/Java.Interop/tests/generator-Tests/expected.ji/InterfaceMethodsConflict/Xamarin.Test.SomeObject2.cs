@@ -9,7 +9,7 @@ namespace Xamarin.Test {
 	[global::Android.Runtime.Register ("xamarin/test/SomeObject2", DoNotGenerateAcw=true)]
 	public abstract partial class SomeObject2 : global::Java.Lang.Object, global::Xamarin.Test.II1, global::Xamarin.Test.II2 {
 
-		internal static new readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/SomeObject2", typeof (SomeObject2));
+		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/SomeObject2", typeof (SomeObject2));
 		internal static new IntPtr class_ref {
 			get {
 				return _members.JniPeerType.PeerReference.Handle;
@@ -84,7 +84,7 @@ namespace Xamarin.Test {
 
 		public SomeObject2Invoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) {}
 
-		internal static new readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/SomeObject2", typeof (SomeObject2Invoker));
+		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/SomeObject2", typeof (SomeObject2Invoker));
 
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
 			get { return _members; }

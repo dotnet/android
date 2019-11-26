@@ -10,7 +10,7 @@ namespace Xamarin.Test {
 	[global::Java.Interop.JavaTypeParameters (new string [] {"T extends xamarin.test.Adapter"})]
 	public abstract partial class AdapterView : global::Java.Lang.Object {
 
-		internal static new readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/AdapterView", typeof (AdapterView));
+		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/AdapterView", typeof (AdapterView));
 		internal static new IntPtr class_ref {
 			get {
 				return _members.JniPeerType.PeerReference.Handle;
@@ -78,7 +78,7 @@ namespace Xamarin.Test {
 
 		public AdapterViewInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) {}
 
-		internal static new readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/AdapterView", typeof (AdapterViewInvoker));
+		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/AdapterView", typeof (AdapterViewInvoker));
 
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
 			get { return _members; }

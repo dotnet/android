@@ -14,7 +14,7 @@ namespace Xamarin.Test {
 	[global::Android.Runtime.Register ("xamarin/test/SpinnerAdapter", DoNotGenerateAcw=true)]
 	internal partial class ISpinnerAdapterInvoker : global::Java.Lang.Object, ISpinnerAdapter {
 
-		internal static new readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/SpinnerAdapter", typeof (ISpinnerAdapterInvoker));
+		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/SpinnerAdapter", typeof (ISpinnerAdapterInvoker));
 
 		static IntPtr java_class_ref {
 			get { return _members.JniPeerType.PeerReference.Handle; }
