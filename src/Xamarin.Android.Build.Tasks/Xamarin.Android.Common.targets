@@ -267,6 +267,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 	<AndroidDebugKeyAlgorithm Condition=" '$(AndroidDebugKeyAlgorithm)' == '' ">RSA</AndroidDebugKeyAlgorithm>
 	<AndroidDebugKeyValidity Condition=" '$(AndroidDebugKeyValidity)' == '' ">10950</AndroidDebugKeyValidity>
+	<AndroidDebugStoreType Condition=" '$(AndroidDebugStoreType)' == '' ">pkcs12</AndroidDebugStoreType>
 
   <!-- Backward compatibility options -->
   <AndroidBoundExceptionType Condition=" '$(AndroidBoundExceptionType)' == '' ">Java</AndroidBoundExceptionType>
@@ -2947,6 +2948,7 @@ because xbuild doesn't support framework reference assemblies.
 		KeyAlias="androiddebugkey"
 		KeyPass="android"
 		StorePass="android"
+		StoreType="$(AndroidDebugStoreType)"
 		KeyAlgorithm="$(AndroidDebugKeyAlgorithm)"
 		Validity="$(AndroidDebugKeyValidity)"
 		ToolPath="$(KeytoolToolPath)"

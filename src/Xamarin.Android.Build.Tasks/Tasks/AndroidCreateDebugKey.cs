@@ -9,20 +9,13 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "ACD";
 
-		public int Validity { get; set; }
+		public int Validity { get; set; } = 30 * 365;
 
-		public string KeyAlgorithm { get; set; }
+		public string KeyAlgorithm { get; set; } = "RSA";
 
-		public string StoreType { get; set; }
+		public string StoreType { get; set; } = "pkcs12";
 
 		string dname = "CN=Android Debug,O=Android,C=US";
-
-		public AndroidCreateDebugKey ()
-		{
-			KeyAlgorithm = "RSA";
-			StoreType = "pkcs12";
-			Validity = 30 * 365; // 30 years
-		}
 
 		protected override CommandLineBuilder CreateCommandLine ()
 		{
