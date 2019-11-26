@@ -1473,16 +1473,15 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 
 	log_info (LOG_DEFAULT, "Probing for Mono AOT mode\n");
 
+	MonoAotMode mode = MonoAotMode::MONO_AOT_MODE_NONE;
 	if (androidSystem.is_mono_aot_enabled ()) {
-		MonoAotMode mode = androidSystem.get_mono_aot_mode ();
+		mode = androidSystem.get_mono_aot_mode ();
 		if (mode == MonoAotMode::MONO_AOT_MODE_LAST)
 			mode = MonoAotMode::MONO_AOT_MODE_NONE;
-
-		if (mode != MonoAotMode::MONO_AOT_MODE_NORMAL && mode != MonoAotMode::MONO_AOT_MODE_NONE) {
+		if (mode != MonoAotMode::MONO_AOT_MODE_NONE)
 			log_info (LOG_DEFAULT, "Enabling AOT mode in Mono");
-			mono_jit_set_aot_mode (mode);
-		}
 	}
+	mono_jit_set_aot_mode (mode);
 
 	log_info (LOG_DEFAULT, "Probing if we should use LLVM\n");
 

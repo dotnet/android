@@ -148,7 +148,6 @@ namespace Xamarin.Android.Tasks
 			bool usesMonoAOT = false;
 			bool usesAssemblyPreload = EnablePreloadAssembliesDefault;
 			bool brokenExceptionTransitions = false;
-			string androidPackageName = null;
 			var environmentVariables = new Dictionary<string, string> (StringComparer.Ordinal);
 			var systemProperties = new Dictionary<string, string> (StringComparer.Ordinal);
 
@@ -157,7 +156,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			AotMode aotMode = AotMode.None;
-			if (AndroidAotMode != null && Aot.GetAndroidAotMode (AndroidAotMode, out aotMode)) {
+			if (!string.IsNullOrEmpty (AndroidAotMode) && Aot.GetAndroidAotMode (AndroidAotMode, out aotMode) && aotMode != AotMode.None) {
 				usesMonoAOT = true;
 			}
 

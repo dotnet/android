@@ -1713,6 +1713,7 @@ namespace App1
 		}
 
 		[Test]
+		[NonParallelizable]
 		public void CheckLintErrorsAndWarnings ()
 		{
 			FixLintOnWindows ();
