@@ -6,6 +6,7 @@ using System.Xml;
 using Microsoft.Build.Construction;
 using System.Diagnostics;
 using System.Text;
+using System.Xml.Linq;
 
 namespace Xamarin.ProjectTools
 {
@@ -355,6 +356,29 @@ namespace Xamarin.ProjectTools
 		public virtual string ProcessSourceTemplate (string source)
 		{
 			return source.Replace ("${ROOT_NAMESPACE}", RootNamespace ?? ProjectName).Replace ("${PROJECT_NAME}", ProjectName);
+		}
+
+		public void CopyNuGetConfig (string relativeDirectory)
+		{
+			// Copy our solution's NuGet.config
+			var repoNuGetConfig = Path.Combine (XABuildPaths.TopDirectory, "NuGet.config");
+			var projNugetConfig = Path.Combine (Root, relativeDirectory, "NuGet.config");
+			if (File.Exists (repoNuGetConfig) && !File.Exists (projNugetConfig)) {
+				File.Copy (repoNuGetConfig, projNugetConfig, overwrite: true);
+				// Write additional sources to NuGet.config if needed
+				if (ExtraNuGetConfigSources != null) {
+					int sourceIndex = 0;
+					var doc = XDocument.Load (projNugetConfig);
+					XElement pkgSourcesElement = doc.Descendants ().FirstOrDefault (d => d.Name.LocalName.ToLowerInvariant () == "packagesources");
+					foreach (var source in ExtraNuGetConfigSources) {
+						var sourceElement = new XElement ("add");
+						sourceElement.SetAttributeValue ("key", $"testsource{++sourceIndex}");
+						sourceElement.SetAttributeValue ("value", source);
+						pkgSourcesElement.Add (sourceElement);
+					}
+					doc.Save (projNugetConfig);
+				}
+			}
 		}
 	}
 }

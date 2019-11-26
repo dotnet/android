@@ -44,17 +44,18 @@ namespace Xamarin.ProjectTools
 				stream.Read (icon_binary_mdpi, 0, (int) stream.Length);
 			}
 
-			// Generate Android content for our project without writing it to the .csproj file
+			// Add relevant Android content to our project without writing it to the .csproj file
 			Sources.Add (new BuildItem.Source ("Properties\\AndroidManifest.xml") {
 				TextContent = () => default_android_manifest.Replace ("${PROJECT_NAME}", ProjectName).Replace ("${PACKAGENAME}", string.Format ("{0}.{0}", ProjectName))
 			});
-			Sources.Add (new BuildItem.Source (() => "MainActivity.cs") { TextContent = () => ProcessSourceTemplate (default_main_activity_cs) });
+			Sources.Add (new BuildItem.Source ($"MainActivity{Language.DefaultExtension}") { TextContent = () => ProcessSourceTemplate (default_main_activity_cs) });
 			Sources.Add (new BuildItem.Source ("Resources\\layout\\Main.axml") { TextContent = () => default_layout_main });
 			Sources.Add (new BuildItem.Source ("Resources\\values\\Strings.xml") { TextContent = () => default_strings_xml.Replace ("${PROJECT_NAME}", ProjectName) });
 			Sources.Add (new BuildItem.Source ("Resources\\drawable-mdpi\\Icon.png") { BinaryContent = () => icon_binary_mdpi });
+			Sources.Add (new BuildItem.Source ($"Resources\\Resource.designer{Language.DefaultExtension}") { TextContent = () => string.Empty });
 		}
 
-		string Configuration => IsRelease ? "Release" : "Debug";
+		public string Configuration => IsRelease ? "Release" : "Debug";
 
 		public string OutputPath => Path.Combine ("bin", Configuration, TargetFramework.ToLowerInvariant ());
 

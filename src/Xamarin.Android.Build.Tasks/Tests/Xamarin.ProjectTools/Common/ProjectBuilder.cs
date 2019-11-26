@@ -55,25 +55,7 @@ namespace Xamarin.ProjectTools
 					project.Populate (ProjectDirectory, files);
 				}
 
-				// Copy our solution's NuGet.config
-				var nuget_config = Path.Combine (XABuildPaths.TopDirectory, "NuGet.config");
-				var projNugetConfig = Path.Combine (Root, ProjectDirectory, "NuGet.config");
-				if (File.Exists (nuget_config) && !File.Exists (projNugetConfig)) {
-					File.Copy (nuget_config, projNugetConfig, overwrite: true);
-					// Write additional sources to NuGet.config if needed
-					if (project.ExtraNuGetConfigSources != null) {
-						int sourceIndex = 0;
-						var doc = XDocument.Load (projNugetConfig);
-						XElement pkgSourcesElement = doc.Descendants ().FirstOrDefault (d => d.Name.LocalName.ToLowerInvariant () == "packagesources");
-						foreach (var source in project.ExtraNuGetConfigSources) {
-							var sourceElement = new XElement ("add");
-							sourceElement.SetAttributeValue ("key", $"testsource{++sourceIndex}");
-							sourceElement.SetAttributeValue ("value", source);
-							pkgSourcesElement.Add (sourceElement);
-						}
-						doc.Save (projNugetConfig);
-					}
-				}
+				project.CopyNuGetConfig (ProjectDirectory);
 			}
 			else
 				project.UpdateProjectFiles (ProjectDirectory, files, doNotCleanupOnUpdate);
