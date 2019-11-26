@@ -55,7 +55,7 @@ namespace Xamarin.Android.Build
 					var prevTargetDir = symbolicLinks [inTreeTargetsDir];
 					symbolicLinks.Remove (inTreeTargetsDir);
 					if (Directory.Exists (inTreeTargetsDir) && SymbolicLink.IsPathSymlink (inTreeTargetsDir)) {
-						Console.WriteLine ($"# jonp: Removing path? {inTreeTargetsDir}");
+						Console.WriteLine ($"Removing old symlink: {inTreeTargetsDir}");
 						Directory.Delete (inTreeTargetsDir);
 					}
 					var subTargetDirs = Directory.EnumerateDirectories (prevTargetDir)
