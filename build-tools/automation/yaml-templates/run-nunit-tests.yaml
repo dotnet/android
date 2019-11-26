@@ -25,7 +25,7 @@ steps:
       Stop-Process -Name xabuild
       Stop-Process -Name MSBuild
       Stop-Process -Name adb
-      $LASTEXITCODE=0
+      $LastExitCode=0
     }
   displayName: kill leftover processes
   failOnStderr: false
