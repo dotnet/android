@@ -293,28 +293,23 @@ MonodroidRuntime::open_from_update_dir (MonoAssemblyName *aname, char **assembli
 
 	simple_pointer_guard<char[]> pname (pname_raw_ptr);
 
-	constexpr const char *formats[] = {
-		"%s" MONODROID_PATH_SEPARATOR "%s",
-		"%s" MONODROID_PATH_SEPARATOR "%s.dll",
-		"%s" MONODROID_PATH_SEPARATOR "%s.exe",
-	};
-	constexpr size_t nformats = sizeof (formats)/sizeof (formats [0]);
+	constexpr const char *format_none = "%s" MONODROID_PATH_SEPARATOR "%s";
+	constexpr const char *format_dll  = "%s" MONODROID_PATH_SEPARATOR "%s.dll";
 
-	for (size_t fi = 0; fi < nformats && result == nullptr; ++fi) {
-		for (uint32_t oi = 0; oi < AndroidSystem::MAX_OVERRIDES; ++oi) {
-			override_dir = androidSystem.get_override_dir (oi);
-			if (override_dir == nullptr || !utils.directory_exists (override_dir))
-				continue;
+	for (uint32_t oi = 0; oi < AndroidSystem::MAX_OVERRIDES; ++oi) {
+		override_dir = androidSystem.get_override_dir (oi);
+		if (override_dir == nullptr || !utils.directory_exists (override_dir))
+			continue;
 
-			simple_pointer_guard<char, false> fullpath (utils.monodroid_strdup_printf (formats [fi], override_dir, pname.get ()));
+		const char *format = utils.ends_with (name, ".dll") ? format_none : format_dll;
+		simple_pointer_guard<char, false> fullpath (utils.monodroid_strdup_printf (format, override_dir, pname.get ()));
 
-			log_info (LOG_ASSEMBLY, "open_from_update_dir: trying to open assembly: %s\n", static_cast<const char*>(fullpath));
-			if (utils.file_exists (fullpath))
-				result = mono_assembly_open_full (fullpath, nullptr, 0);
-			if (result) {
-				// TODO: register .mdb, .pdb file
-				break;
-			}
+		log_info (LOG_ASSEMBLY, "open_from_update_dir: trying to open assembly: %s\n", static_cast<const char*>(fullpath));
+		if (utils.file_exists (fullpath))
+			result = mono_assembly_open_full (fullpath, nullptr, 0);
+		if (result != nullptr) {
+			// TODO: register .mdb, .pdb file
+			break;
 		}
 	}
 

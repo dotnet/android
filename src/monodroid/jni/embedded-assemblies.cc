@@ -56,7 +56,7 @@ EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, bool ref_only)
 	const char *asmname = mono_assembly_name_get_name (aname);
 
 	size_t name_len = culture == nullptr ? 0 : strlen (culture) + 1;
-	name_len += sizeof (".exe");
+	name_len += sizeof (".dll");
 	name_len += strlen (asmname);
 
 	size_t alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, name_len, 1);
@@ -71,25 +71,25 @@ EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, bool ref_only)
 	char *ename = name + strlen (name);
 
 	MonoAssembly *a = nullptr;
-	for (size_t si = 0; si < SUFFIXES_SIZE && a == nullptr; ++si) {
-		MonoBundledAssembly **p;
+	MonoBundledAssembly **p;
 
-		*ename = '\0';
-		strcat (name, suffixes [si]);
+	*ename = '\0';
+	if (!utils.ends_with (name, ".dll")) {
+		strcat (name, ".dll");
+	}
 
-		log_info (LOG_ASSEMBLY, "open_from_bundles: looking for bundled name: '%s'", name);
+	log_info (LOG_ASSEMBLY, "open_from_bundles: looking for bundled name: '%s'", name);
 
-		for (p = bundled_assemblies; p != nullptr && *p; ++p) {
-			MonoImage *image = nullptr;
-			MonoImageOpenStatus status;
-			const MonoBundledAssembly *e = *p;
+	for (p = bundled_assemblies; p != nullptr && *p; ++p) {
+		MonoImage *image = nullptr;
+		MonoImageOpenStatus status;
+		const MonoBundledAssembly *e = *p;
 
-			if (strcmp (e->name, name) == 0 &&
-					(image  = mono_image_open_from_data_with_name ((char*) e->data, e->size, 0, nullptr, ref_only, name)) != nullptr &&
-					(a      = mono_assembly_load_from_full (image, name, &status, ref_only)) != nullptr) {
-				mono_config_for_assembly (image);
-				break;
-			}
+		if (strcmp (e->name, name) == 0 &&
+				(image  = mono_image_open_from_data_with_name ((char*) e->data, e->size, 0, nullptr, ref_only, name)) != nullptr &&
+				(a      = mono_assembly_load_from_full (image, name, &status, ref_only)) != nullptr) {
+			mono_config_for_assembly (image);
+			break;
 		}
 	}
 	delete[] name;
