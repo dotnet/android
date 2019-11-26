@@ -147,7 +147,11 @@ namespace Xamarin.Android.Build
 				MSBuildSdksPath          = DotNetSdkPath ?? Path.Combine (MSBuildPath, "Sdks");
 				SystemFrameworks         = Path.Combine (programFiles, "Reference Assemblies", "Microsoft", "Framework");
 				string msbuildDir        = Path.GetDirectoryName (MSBuildBin);
-				SystemTargetsDirectories = new [] { msbuildDir, Path.Combine (MSBuildPath, "Microsoft") };
+				SystemTargetsDirectories = new [] {
+					msbuildDir,
+					Path.Combine (MSBuildPath, "Microsoft"),
+					Path.Combine (programFiles, "MSBuild", "Microsoft"),
+				};
 				SearchPathsOS            = "windows";
 				string nuget             = Path.Combine (MSBuildPath, "Microsoft", "NuGet", "16.0");
 				if (!Directory.Exists (nuget)) {
