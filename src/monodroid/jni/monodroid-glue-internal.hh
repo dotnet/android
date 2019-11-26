@@ -179,7 +179,6 @@ namespace xamarin::android::internal
 
 		void set_debug_env_vars (void);
 
-#if defined (DEBUG)
 #if !defined (WINDOWS)
 		int parse_runtime_args (char *runtime_args, RuntimeOptions *options);
 		int monodroid_debug_connect (int sock, struct sockaddr_in addr);
@@ -188,7 +187,6 @@ namespace xamarin::android::internal
 
 #if !defined (RELEASE)
 		static MonoAssembly* open_from_update_dir (MonoAssemblyName *aname, char **assemblies_path, void *user_data);
-#endif
 #endif
 	private:
 		MonoMethod         *registerType          = nullptr;
