@@ -23,7 +23,7 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendSwitchIfNotNull ("-dname ", dname);
 			cmd.AppendSwitchIfNotNull ("-keyalg ", KeyAlgorithm);
 			cmd.AppendSwitchIfNotNull ("-validity ", Validity.ToString()); 
-			cmd.AppendSwitchIfNotNull ("-deststoretype ", StoreType);
+			cmd.AppendSwitchIfNotNull ("-storetype ", StoreType);
 			return cmd;
 		}
 	}
