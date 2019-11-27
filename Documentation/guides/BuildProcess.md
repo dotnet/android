@@ -120,23 +120,25 @@ The following build targets are defined for Xamarin.Android projects:
     IDE when new resources are added to the project.
 
 -   **BuildAndStartAotProfiling** &ndash; Builds the package with
-    embedded aot profiler, sets aot profiler socket port to
-    $(AndroidAotProfilerPort) and starts the *launch* activity.
+    embedded AOT profiler, sets the AOT profiler socket port to
+    `$(AndroidAotProfilerPort)` and starts the *launch* activity.
 
     Added in Xamarin.Android v10.3.
 
--   **FinishAotProfiling** &ndash; Collects the aot profiler data from
+-   **FinishAotProfiling** &ndash; Collects the AOT profiler data from
     the device or the emulator through sockets port
-    $(AndroidAotProfilerPort) and writes them to
-    $(AndroidAotCustomProfilePath).
+    `$(AndroidAotProfilerPort)` and writes them to
+    `$(AndroidAotCustomProfilePath)`.
 
     The default values for port and custom profile are `9999` and
     `custom.aprof`.
 
-    This is equivalent to `aprofutil $(AProfUtilExtraOptions) -s -v -f -p $(AndroidAotProfilerPort) -o "$(AndroidAotCustomProfilePath)"`
-
-    The `aprofutil` call might be extended with
+    The `aprofutil` call may be extended with
     `$(AProfUtilExtraOptions)`, to pass additional options.
+
+    This is equivalent to:
+    
+        aprofutil $(AProfUtilExtraOptions) -s -v -f -p $(AndroidAotProfilerPort) -o "$(AndroidAotCustomProfilePath)"
 
     Added in Xamarin.Android v10.3.
 
