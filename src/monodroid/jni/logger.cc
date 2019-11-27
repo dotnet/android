@@ -190,11 +190,14 @@ init_logging_categories ()
 		} else if (!strncmp (arg, "lref-", 5)) {
 			log_categories  |= LOG_LREF;
 			light_lref       = 1;
-		}
-
-		if (!strncmp (arg, "timing=bare", 11)) {
+		} else if (!strncmp (arg, "timing=bare", 11)) {
 			log_timing_categories |= LOG_TIMING_BARE;
 		}
+#if !defined (WINDOWS) && defined (DEBUG)
+		else if (!strncmp (arg, "debugger-log-level=", 19)) {
+			debug.set_debugger_log_level (arg + 19);
+		}
+#endif
 	}
 
 	utils.monodroid_strfreev (args);
