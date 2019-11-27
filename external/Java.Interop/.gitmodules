@@ -1,6 +1,6 @@
 [submodule "lib/mono.linq.expressions"]
 	path = lib/mono.linq.expressions
-	url = https://github.com/jonpryor/mono.linq.expressions.git
+	url = https://github.com/jbevain/mono.linq.expressions.git
 	branch = master
 [submodule "external/cecil"]
 	path = external/cecil
