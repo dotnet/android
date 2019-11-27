@@ -10,7 +10,7 @@
     </TestJarEntry>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <TestJarEntry Include="$(MSBuildThisFileDirectory)..\..\..\..\external\Java.Interop\src\Java.Interop\Tests\java\**\*.java" />
+    <TestJarEntry Include="$(MSBuildThisFileDirectory)..\..\..\..\external\Java.Interop\tests\Java.Interop-Tests\java\**\*.java" />
   </ItemGroup>
   <Target Name="_CopyTestJarFiles">
     <Copy

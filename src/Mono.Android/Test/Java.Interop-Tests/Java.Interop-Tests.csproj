@@ -15,7 +15,7 @@
     <FileAlignment>512</FileAlignment>
     <AndroidResgenFile>Resources\Resource.designer.cs</AndroidResgenFile>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
-    <TargetFrameworkVersion>v9.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v10.0</TargetFrameworkVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <Import Project="..\..\..\..\Configuration.props" />
@@ -54,6 +54,11 @@
     <Compile Include="Java.InteropTests\JavaInterop_Tests_Reference.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)..\..\..\..\external\Java.Interop\tests\Java.Interop-Tests\**\*.cs" />
+    <Compile Remove="$(MSBuildThisFileDirectory)..\..\..\..\external\Java.Interop\tests\Java.Interop-Tests\Java.Interop\JavaVMFixture.cs" />
+    <Compile Remove="$(MSBuildThisFileDirectory)..\..\..\..\external\Java.Interop\tests\Java.Interop-Tests\Java.Interop\JniReferenceSafeHandleTest.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <None Include="Resources\AboutResources.txt" />
   </ItemGroup>
   <ItemGroup>
@@ -66,7 +71,6 @@
       <Name>Mono.Linq.Expressions</Name>
     </ProjectReference>
   </ItemGroup>
-  <Import Project="..\..\..\..\external\Java.Interop\src\Java.Interop\Tests\Interop-Tests.projitems" Label="Shared" Condition="Exists('..\..\..\..\external\Java.Interop\src\Java.Interop\Tests\Interop-Tests.projitems')" />
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <Import Project="Java.Interop-Tests.targets" />
   <PropertyGroup>
