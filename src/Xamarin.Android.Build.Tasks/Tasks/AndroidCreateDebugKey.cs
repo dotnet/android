@@ -9,7 +9,7 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "ACD";
 
-		public int Validity { get; set; } = 30 * 365;
+		public int Validity { get; set; } = 30 * 365; // 30 years
 
 		public string KeyAlgorithm { get; set; } = "RSA";
 
