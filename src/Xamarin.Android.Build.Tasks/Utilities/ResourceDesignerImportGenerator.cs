@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
+using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks
@@ -36,17 +37,19 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		public void CreateImportMethods (IEnumerable<string> libraries)
+		public void CreateImportMethods (IEnumerable<ITaskItem> libraries)
 		{
 			var method = new CodeMemberMethod () { Name = "UpdateIdValues", Attributes = MemberAttributes.Public | MemberAttributes.Static };
 			primary.Members.Add (method);
 			foreach (var assemblyPath in libraries) {
-				using (var pe = new PEReader (File.OpenRead (assemblyPath))) {
+				using (var pe = new PEReader (File.OpenRead (assemblyPath.ItemSpec))) {
 					var reader = pe.GetMetadataReader ();
 					var resourceDesignerName = GetResourceDesignerClass (reader);
 					if (string.IsNullOrEmpty (resourceDesignerName)) {
 						continue;
 					}
+					string alias = assemblyPath.GetMetadata ("Aliases");
+					bool hasAlias = !string.IsNullOrEmpty (alias);
 					foreach (var handle in reader.TypeDefinitions) {
 						var typeDefinition = reader.GetTypeDefinition (handle);
 						if (!typeDefinition.IsNested) {
@@ -55,7 +58,9 @@ namespace Xamarin.Android.Tasks
 						var declaringType = reader.GetTypeDefinition (typeDefinition.GetDeclaringType ());
 						var declaringTypeName = $"{reader.GetString (declaringType.Namespace)}.{reader.GetString (declaringType.Name)}";
 						if (declaringTypeName == resourceDesignerName) {
-							CreateImportFor (declaringTypeName, typeDefinition, method, reader);
+							if (hasAlias)
+								declaringTypeName = $"{alias}.{declaringTypeName}";
+							CreateImportFor (declaringTypeName, typeDefinition, method, reader, hasAlias);
 						}
 					}
 				}
@@ -85,13 +90,14 @@ namespace Xamarin.Android.Tasks
 			return null;
 		}
 
-		void CreateImportFor (string declaringTypeFullName, TypeDefinition type, CodeMemberMethod method, MetadataReader reader)
+		void CreateImportFor (string declaringTypeFullName, TypeDefinition type, CodeMemberMethod method, MetadataReader reader, bool hasAlias)
 		{
 			var typeName = reader.GetString (type.Name);
 			var srcClassRef = new CodeTypeReferenceExpression (
 				new CodeTypeReference ($"{primary_name}.{typeName}", CodeTypeReferenceOptions.GlobalReference));
+			CodeTypeReferenceOptions options = !hasAlias ? CodeTypeReferenceOptions.GlobalReference : CodeTypeReferenceOptions.GenericTypeParameter;
 			var dstClassRef = new CodeTypeReferenceExpression (
-				new CodeTypeReference ($"{declaringTypeFullName}.{typeName}", CodeTypeReferenceOptions.GlobalReference));
+				new CodeTypeReference ($"{declaringTypeFullName}.{typeName}", options));
 			foreach (var handle in type.GetFields ()) {
 				var fieldName = reader.GetString (reader.GetFieldDefinition (handle).Name);
 				var dstField = new CodeFieldReferenceExpression (dstClassRef, fieldName);
