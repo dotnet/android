@@ -21,8 +21,9 @@
     <MonoAndroidAssetsPrefix Condition=" '$(MonoAndroidAssetsPrefix)' == '' ">Assets</MonoAndroidAssetsPrefix>
     <AndroidResgenClass Condition=" '$(AndroidResgenClass)' == '' ">Resource</AndroidResgenClass>
     <AndroidResgenFile Condition=" '$(AndroidResgenFile)' == '' ">$(MonoAndroidResourcePrefix)\$(_AndroidResourceDesigner)</AndroidResgenFile>
-    <AndroidApplication Condition=" '$(AndroidApplication)' == '' And !Exists('$(AndroidManifest)') ">false</AndroidApplication>
+    <AndroidManifest Condition=" '$(AndroidManifest)' == '' ">Properties\AndroidManifest.xml</AndroidManifest>
     <AndroidApplication Condition=" '$(AndroidApplication)' == '' And Exists('$(AndroidManifest)') ">true</AndroidApplication>
+    <AndroidApplication Condition=" '$(AndroidApplication)' == '' ">false</AndroidApplication>
     <AndroidEnableSGenConcurrent Condition=" '$(AndroidEnableSGenConcurrent)' == '' ">true</AndroidEnableSGenConcurrent>
     <AndroidHttpClientHandlerType Condition=" '$(AndroidHttpClientHandlerType)' == '' ">Xamarin.Android.Net.AndroidClientHandler</AndroidHttpClientHandlerType>
   </PropertyGroup>
