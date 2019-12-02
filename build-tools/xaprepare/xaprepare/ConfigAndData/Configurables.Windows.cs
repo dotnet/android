@@ -5,8 +5,8 @@ namespace Xamarin.Android.Prepare
 {
 	partial class Configurables
 	{
-		const string CorrettoDistVersion = "8.222.10.3";
-		const string CorrettoUrlPathVersion = "8.222.10.1";
+		const string CorrettoDistVersion = "8.232.09.1";
+		const string CorrettoUrlPathVersion = CorrettoDistVersion;
 
 		partial class Urls
 		{
