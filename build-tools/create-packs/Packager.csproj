@@ -27,6 +27,11 @@
     </PropertyGroup>
     <!-- Copy only the required tools to new folder. Skip Unix item copying on Windows. -->
     <Copy
+        SourceFiles="@(VersionFiles)"
+        DestinationFolder="$(ToolsSourceDir)"
+        SkipUnchangedFiles="True"
+    />
+    <Copy
         SourceFiles="@(MSBuildItemsWin)"
         DestinationFiles="@(MSBuildItemsWin->'$(ToolsSourceDir)%(RelativePath)')"
         SkipUnchangedFiles="True"
