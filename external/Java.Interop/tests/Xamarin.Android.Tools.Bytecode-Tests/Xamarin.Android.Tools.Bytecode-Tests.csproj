@@ -31,6 +31,7 @@
     <EmbeddedResource Include="Resources\*" />
     <EmbeddedResource Include="kotlin\**\*.class" />
 
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\NotNullClass.class" />
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\IJavaInterface.class" />
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\IParameterInterface.class" />
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaAnnotation.class" />
@@ -51,14 +52,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <TestJar Include="java\**\*.java" Exclude="java\java\util\Collection.java" />
+    <TestJar Include="java\**\*.java" Exclude="java\java\util\Collection.java,java\android\annotation\NonNull.java" />
     <TestJarNoParameters Include="java\java\util\Collection.java" />
     <TestKotlinJar Include="kotlin\**\*.kt" />
   </ItemGroup>
 
   <Target Name="BuildClasses" BeforeTargets="BeforeBuild" Inputs="@(TestJar)" Outputs="@(TestJar->'$(IntermediateOutputPath)classes\%(RecursiveDir)%(Filename).class')">
     <MakeDir Directories="$(IntermediateOutputPath)classes" />
-    <Exec Command="&quot;$(JavaCPath)&quot; -parameters $(_JavacSourceOptions) -g -d &quot;$(IntermediateOutputPath)classes&quot; @(TestJar->'%(Identity)', ' ')" />
+    <Exec Command="&quot;$(JavaCPath)&quot; -parameters $(_JavacSourceOptions) -g -d &quot;$(IntermediateOutputPath)classes&quot; java\android\annotation\NonNull.java @(TestJar->'%(Identity)', ' ')" />
     <Exec Command="&quot;$(JavaCPath)&quot; $(_JavacSourceOptions) -g -d &quot;$(IntermediateOutputPath)classes&quot; @(TestJarNoParameters->'%(Identity)', ' ')" />
   </Target>
 

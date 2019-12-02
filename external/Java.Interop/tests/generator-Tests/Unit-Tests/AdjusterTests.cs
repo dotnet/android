@@ -1,8 +1,10 @@
-﻿using Mono.Cecil;
+using Mono.Cecil;
 using MonoDroid.Generation;
 using NUnit.Framework;
 using System.IO;
 using System.Linq;
+using System.Xml;
+using System.Xml.Linq;
 using Xamarin.Android.Tools.ApiXmlAdjuster;
 
 namespace generatortests
@@ -43,6 +45,11 @@ namespace generatortests
 		</class>
 	</package>
 </api>");
+
+			foreach (var type in module.Types.Where (t => t.IsClass && t.Namespace == "Java.Lang")) {
+				//Make sure we use this method instead of SymbolTable directly, to match what happens in generator.exe
+				Xamarin.Android.Binder.CodeGenerator.ProcessReferencedType (type, options);
+			}
 		}
 
 		[TearDown]
@@ -62,14 +69,50 @@ namespace generatortests
 		[Test]
 		public void Process ()
 		{
-			foreach (var type in module.Types.Where (t => t.IsClass && t.Namespace == "Java.Lang")) {
-				//Make sure we use this method instead of SymbolTable directly, to match what happens in generator.exe
-				Xamarin.Android.Binder.CodeGenerator.ProcessReferencedType (type, options);
-			}
-
 			adjuster.Process (inputFile, options, options.SymbolTable.AllRegisteredSymbols (options).OfType<GenBase> ().ToArray (), outputFile, (int)Log.LoggingLevel.Debug);
 
 			FileAssert.Exists (outputFile);
+		}
+
+		[Test]
+		public void AdjustNotNullAnnotations ()
+		{
+			var input = @"
+<api>
+  <package name=""com.mypackage"">
+    <class abstract=""false"" deprecated=""not deprecated"" jni-extends=""Ljava/lang/Object;"" extends=""java.lang.Object"" extends-generic-aware=""java.lang.Object"" final=""false"" name=""NotNullClass"" jni-signature=""Lcom/xamarin/NotNullClass;"" source-file-name=""NotNullClass.java"" static=""false"" visibility=""public"">
+      <constructor deprecated=""not deprecated"" final=""false"" name=""NotNullClass"" static=""false"" visibility=""public"" bridge=""false"" synthetic=""false"" jni-signature=""()V"" />
+      <method abstract=""false"" deprecated=""not deprecated"" final=""false"" name=""notNullFunc"" native=""false"" return=""void"" jni-return=""V"" static=""false"" synchronized=""false"" visibility=""public"" bridge=""false"" synthetic=""false"" jni-signature=""(Ljava/lang/String;)V"" return-not-null=""true"">
+        <parameter name=""value"" type=""java.lang.String"" jni-type=""Ljava/lang/String;"" not-null=""true"" />
+      </method>
+      <field deprecated=""not deprecated"" final=""false"" name=""notNullField"" static=""false"" synthetic=""false"" transient=""false"" type=""java.lang.String"" type-generic-aware=""java.lang.String"" jni-signature=""Ljava/lang/String;"" not-null=""true"" visibility=""public"" volatile=""false"" />
+    </class>
+  </package>
+</api>";
+
+			var api = new JavaApi ();
+			api.LoadReferences (options, options.SymbolTable.AllRegisteredSymbols (options).OfType<GenBase> ().ToArray ());
+
+			using (var sr = new StringReader (input))
+			using (var xml = XmlReader.Create (sr))
+				api.Load (xml, false);
+
+			api.StripNonBindables ();
+			api.Resolve ();
+			api.CreateGenericInheritanceMapping ();
+			api.MarkOverrides ();
+			api.FindDefects ();
+
+			using (var sb = new StringWriter ()) {
+				using (var writer = XmlWriter.Create (sb))
+					api.Save (writer);
+
+				var root = XElement.Parse (sb.ToString ());
+
+				Assert.AreEqual ("true", root.Element ("package").Element ("class").Element ("method").Attribute ("return-not-null").Value);
+				Assert.AreEqual ("true", root.Element ("package").Element ("class").Element ("method").Element ("parameter").Attribute ("not-null").Value);
+				Assert.AreEqual ("true", root.Element ("package").Element ("class").Element ("field").Attribute ("not-null").Value);
+			}
 		}
 	}
 }

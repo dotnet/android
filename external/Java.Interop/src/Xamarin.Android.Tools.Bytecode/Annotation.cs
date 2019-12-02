@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace Xamarin.Android.Tools.Bytecode
@@ -46,6 +47,33 @@ namespace Xamarin.Android.Tools.Bytecode
 				values.Append (value.Key).Append (": ");
 				values.Append (value.Value);
 			}
+		}
+	}
+
+	public sealed class ParameterAnnotation
+	{
+		public int ParameterIndex { get; }
+		public IList<Annotation> Annotations { get; } = new List<Annotation> ();
+		public ConstantPool ConstantPool { get; }
+
+		public ParameterAnnotation (ConstantPool constantPool, Stream stream, int index)
+		{
+			ConstantPool = constantPool;
+
+			ParameterIndex = index;
+
+			var ann_count = stream.ReadNetworkUInt16 ();
+
+			for (var i = 0; i < ann_count; ++i) {
+				var a = new Annotation (constantPool, stream);
+				Annotations.Add (a);
+			}
+		}
+
+		public override string ToString ()
+		{
+			var annotations = string.Join (", ", Annotations.Select (v => v.ToString ()));
+			return $"Parameter{ParameterIndex}({annotations})";
 		}
 	}
 }

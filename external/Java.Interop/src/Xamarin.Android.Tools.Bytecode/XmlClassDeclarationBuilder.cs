@@ -350,6 +350,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 				new XAttribute ("bridge",       (method.AccessFlags & MethodAccessFlags.Bridge) != 0),
 				new XAttribute ("synthetic",    (method.AccessFlags & MethodAccessFlags.Synthetic) != 0),
 				new XAttribute ("jni-signature",    method.Descriptor),
+				GetNotNull (method),
 				GetTypeParmeters (msig == null ? null : msig.TypeParameters),
 				GetMethodParameters (method),
 				GetExceptions (method));
@@ -382,6 +383,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		IEnumerable<XElement> GetMethodParameters (MethodInfo method)
 		{
+			var annotations = method.Attributes?.OfType<RuntimeInvisibleParameterAnnotationsAttribute> ().FirstOrDefault ()?.Annotations;
 			var varargs     = (method.AccessFlags & MethodAccessFlags.Varargs) != 0;
 			var parameters  = method.GetParameters ();
 			for (int i = 0; i < parameters.Length; ++i) {
@@ -405,7 +407,8 @@ namespace Xamarin.Android.Tools.Bytecode {
 				yield return new XElement ("parameter",
 						new XAttribute ("name", p.Name),
 						new XAttribute ("type",     genericType),
-						new XAttribute ("jni-type", p.Type.TypeSignature));
+						new XAttribute ("jni-type", p.Type.TypeSignature),
+						GetNotNull (annotations, i));
 			}
 		}
 
@@ -419,6 +422,56 @@ namespace Xamarin.Android.Tools.Bytecode {
 							? SignatureToGenericJavaTypeName (t.TypeSignature)
 							: BinaryNameToJavaClassName (t.BinaryName)));
 			}
+		}
+
+		static XAttribute GetNotNull (MethodInfo method)
+		{
+			var annotations = method.Attributes?.OfType<RuntimeInvisibleAnnotationsAttribute> ().FirstOrDefault ()?.Annotations;
+
+			if (annotations?.Any (a => IsNotNullAnnotation (a)) == true)
+				return new XAttribute ("return-not-null", "true");
+
+			return null;
+		}
+
+		static XAttribute GetNotNull (IList<ParameterAnnotation> annotations, int parameterIndex)
+		{
+			var ann = annotations?.FirstOrDefault (a => a.ParameterIndex == parameterIndex)?.Annotations;
+
+			if (ann?.Any (a => IsNotNullAnnotation (a)) == true)
+				return new XAttribute ("not-null", "true");
+
+			return null;
+		}
+
+		static XAttribute GetNotNull (FieldInfo field)
+		{
+			var annotations = field.Attributes?.OfType<RuntimeInvisibleAnnotationsAttribute> ().FirstOrDefault ()?.Annotations;
+
+			if (annotations?.Any (a => IsNotNullAnnotation (a)) == true)
+				return new XAttribute ("not-null", "true");
+
+			return null;
+		}
+
+		static bool IsNotNullAnnotation (Annotation annotation)
+		{
+			// Android ones plus the list from here:
+			// https://stackoverflow.com/questions/4963300/which-notnull-java-annotation-should-i-use
+			switch (annotation.Type) {
+				case "Landroid/annotation/NonNull;":
+				case "Landroidx/annotation/RecentlyNonNull;":
+				case "Ljavax/validation/constraints/NotNull;":
+				case "Ledu/umd/cs/findbugs/annotations/NonNull;":
+				case "Ljavax/annotation/Nonnull;":
+				case "Lorg/jetbrains/annotations/NotNull;":
+				case "Llombok/NonNull;":
+				case "Landroid/support/annotation/NonNull;":
+				case "Lorg/eclipse/jdt/annotation/NonNull;":
+					return true;
+			}
+
+			return false;
 		}
 
 		IEnumerable<XElement> GetFields ()
@@ -437,6 +490,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 						new XAttribute ("type",                 SignatureToJavaTypeName (field.Descriptor)),
 						new XAttribute ("type-generic-aware",   GetGenericType (field)),
 						new XAttribute ("jni-signature",        field.Descriptor),
+						GetNotNull (field),
 						GetValue (field),
 						new XAttribute ("visibility",           visibility),
 						new XAttribute ("volatile",             (field.AccessFlags & FieldAccessFlags.Volatile) != 0));

@@ -49,6 +49,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 		public  const   string  StackMapTable           = "StackMapTable";
 		public	const	string	RuntimeVisibleAnnotations	= "RuntimeVisibleAnnotations";
 		public	const	string	RuntimeInvisibleAnnotations	= "RuntimeInvisibleAnnotations";
+		public	const	string	RuntimeInvisibleParameterAnnotations = "RuntimeInvisibleParameterAnnotations";
 
 		ushort          nameIndex;
 
@@ -115,6 +116,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 			case MethodParameters:      return new MethodParametersAttribute (constantPool, nameIndex, stream);
 			case RuntimeVisibleAnnotations:		return new RuntimeVisibleAnnotationsAttribute (constantPool, nameIndex, stream);
 			case RuntimeInvisibleAnnotations:	return new RuntimeInvisibleAnnotationsAttribute (constantPool, nameIndex, stream);
+			case RuntimeInvisibleParameterAnnotations:	return new RuntimeInvisibleParameterAnnotationsAttribute (constantPool, nameIndex, stream);
 			case Signature:             return new SignatureAttribute (constantPool, nameIndex, stream);
 			case SourceFile:            return new SourceFileAttribute (constantPool, nameIndex, stream);
 			case StackMapTable:         return new StackMapTableAttribute (constantPool, nameIndex, stream);
@@ -543,7 +545,32 @@ namespace Xamarin.Android.Tools.Bytecode {
 		public override string ToString ()
 		{
 			var annotations = string.Join (", ", Annotations.Select (v => v.ToString ()));
-			return $"RuntimeVisibleAnnotations({annotations})";
+			return $"RuntimeInvisibleAnnotations({annotations})";
+		}
+	}
+
+
+	// https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.19
+	public sealed class RuntimeInvisibleParameterAnnotationsAttribute : AttributeInfo
+	{
+		public IList<ParameterAnnotation> Annotations { get; } = new List<ParameterAnnotation> ();
+
+		public RuntimeInvisibleParameterAnnotationsAttribute (ConstantPool constantPool, ushort nameIndex, Stream stream)
+			: base (constantPool, nameIndex, stream)
+		{
+			var length = stream.ReadNetworkUInt32 ();
+			var param_count = stream.ReadNetworkByte ();
+
+			for (var i = 0; i < param_count; ++i) {
+				var a = new ParameterAnnotation (constantPool, stream, i);
+				Annotations.Add (a);
+			}
+		}
+
+		public override string ToString ()
+		{
+			var annotations = string.Join (", ", Annotations.Select (v => v.ToString ()));
+			return $"RuntimeInvisibleParameterAnnotationsAttribute({annotations})";
 		}
 	}
 

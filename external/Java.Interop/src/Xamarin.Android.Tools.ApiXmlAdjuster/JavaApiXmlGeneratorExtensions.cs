@@ -160,12 +160,13 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 				null,
 				null,
 				null,
-				null);
+				null,
+				field.NotNull);
 		}
 		
 		static void Save (this JavaConstructor ctor, XmlWriter writer)
 		{
-			SaveCommon (ctor, writer, "constructor", null, null, null, null, null, ctor.Type ?? ctor.Parent.FullName, null, null, null, ctor.TypeParameters, ctor.Parameters, ctor.Exceptions, ctor.ExtendedBridge, ctor.ExtendedJniReturn, ctor.ExtendedSynthetic);
+			SaveCommon (ctor, writer, "constructor", null, null, null, null, null, ctor.Type ?? ctor.Parent.FullName, null, null, null, ctor.TypeParameters, ctor.Parameters, ctor.Exceptions, ctor.ExtendedBridge, ctor.ExtendedJniReturn, ctor.ExtendedSynthetic, null);
 		}
 		
 		static void Save (this JavaMethod method, XmlWriter writer)
@@ -217,7 +218,8 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 				method.Exceptions,
 				method.ExtendedBridge,
 				method.ExtendedJniReturn,
-				method.ExtendedSynthetic);
+				method.ExtendedSynthetic,
+				method.ReturnNotNull);
 		}
 		
 		static void SaveCommon (this JavaMember m, XmlWriter writer, string elementName,
@@ -227,7 +229,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 					JavaTypeParameters typeParameters,
 					IEnumerable<JavaParameter> parameters,
 					IEnumerable<JavaException> exceptions,
-					bool? extBridge, string jniReturn, bool? extSynthetic)
+					bool? extBridge, string jniReturn, bool? extSynthetic, bool? notNull)
 		{
 			// If any of the parameters contain reference to non-public type, it cannot be generated.
 			if (parameters != null && parameters.Any (p => p.ResolvedType.ReferencedType != null && string.IsNullOrEmpty (p.ResolvedType.ReferencedType.Visibility)))
@@ -248,6 +250,8 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 				writer.WriteAttributeString ("return", ret);
 			if (jniReturn != null)
 				writer.WriteAttributeString ("jni-return", jniReturn);
+			if (notNull.GetValueOrDefault ())
+				writer.WriteAttributeString (m is JavaField ? "not-null" : "return-not-null", "true");
 			writer.WriteAttributeString ("static", XmlConvert.ToString (m.Static));
 			if (sync != null)
 				writer.WriteAttributeString ("synchronized", sync);
@@ -275,6 +279,9 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 					writer.WriteAttributeString ("type", p.GetVisibleTypeName ());
 					if (!string.IsNullOrEmpty (p.JniType)) {
 						writer.WriteAttributeString ("jni-type", p.JniType);
+					}
+					if (p.NotNull == true) {
+						writer.WriteAttributeString ("not-null", "true");
 					}
 					writer.WriteString ("\n        ");
 					writer.WriteFullEndElement ();

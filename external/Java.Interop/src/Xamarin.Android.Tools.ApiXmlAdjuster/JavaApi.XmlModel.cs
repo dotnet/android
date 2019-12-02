@@ -176,7 +176,8 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			: base (parent)
 		{
 		}
-		
+
+		public bool NotNull { get; set; }
 		public bool Transient { get; set; }
 		public string Type { get; set; }
 		public string TypeGeneric { get; set; }
@@ -248,6 +249,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		public bool Abstract { get; set; }
 		public bool Native { get; set; }
 		public string Return { get; set; }
+		public bool ReturnNotNull { get; set; }
 		public bool Synchronized { get; set; }
 
 		// Content of this value is not stable.
@@ -268,6 +270,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		public string Name { get; set; }
 		public string Type { get; set; }
 		public string JniType { get; set; }
+		public bool NotNull { get; set; }
 
 		// Content of this value is not stable.
 		public override string ToString ()

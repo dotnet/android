@@ -215,10 +215,11 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		{
 			field.LoadMemberAttributes (reader);
 			field.Transient = XmlConvert.ToBoolean (XmlUtil.GetRequiredAttribute (reader, "transient"));
-			field.Volatile = XmlConvert.ToBoolean (XmlUtil.GetRequiredAttribute (reader, "transient"));
+			field.Volatile = XmlConvert.ToBoolean (XmlUtil.GetRequiredAttribute (reader, "volatile"));
 			field.Type = XmlUtil.GetRequiredAttribute (reader, "type");
 			field.TypeGeneric = XmlUtil.GetRequiredAttribute (reader, "type-generic-aware");
 			field.Value = reader.GetAttribute ("value");
+			field.NotNull = reader.GetAttribute ("not-null") == "true";
 
 			reader.Skip ();
 		}
@@ -277,9 +278,10 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			method.Abstract = XmlConvert.ToBoolean (XmlUtil.GetRequiredAttribute (reader, "abstract"));
 			method.Native = XmlConvert.ToBoolean (XmlUtil.GetRequiredAttribute (reader, "native"));
 			method.Return = XmlUtil.GetRequiredAttribute (reader, "return");
+			method.ReturnNotNull = reader.GetAttribute ("return-not-null") == "true";
 			method.Synchronized = XmlConvert.ToBoolean (XmlUtil.GetRequiredAttribute (reader, "synchronized"));
 			XmlUtil.CheckExtraneousAttributes ("method", reader, "deprecated", "final", "name", "static", "visibility", "jni-signature", "jni-return", "synthetic", "bridge",
-				"abstract", "native", "return", "synchronized");
+				"abstract", "native", "return", "synchronized", "return-not-null");
 			method.LoadMethodBase ("method", reader);
 		}
 
@@ -288,6 +290,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			p.Name = XmlUtil.GetRequiredAttribute (reader, "name");
 			p.Type = XmlUtil.GetRequiredAttribute (reader, "type");
 			p.JniType = reader.GetAttribute ("jni-type");
+			p.NotNull = reader.GetAttribute ("not-null") == "true";
 			reader.Skip ();
 		}
 
