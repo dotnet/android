@@ -270,7 +270,7 @@ namespace Xamarin.ProjectTools
 				string filedir = directory;
 				if (path.Contains (Path.DirectorySeparatorChar)) {
 					filedir = Path.GetDirectoryName (path);
-					if (!Directory.Exists (filedir))
+					if (!Directory.Exists (filedir) && (p.Content != null || p.BinaryContent != null))
 						Directory.CreateDirectory (filedir);
 				}
 

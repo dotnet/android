@@ -56,8 +56,9 @@ namespace Xamarin.ProjectTools
 
 				// Copy our solution's NuGet.config
 				var nuget_config = Path.Combine (XABuildPaths.TopDirectory, "NuGet.config");
-				if (File.Exists (nuget_config)) {
-					File.Copy (nuget_config, Path.Combine (Root, ProjectDirectory, "NuGet.config"), overwrite: true);
+				var dest = Path.Combine (Root, ProjectDirectory, "NuGet.config");
+				if (File.Exists (nuget_config) && !File.Exists (dest)) {
+					File.Copy (nuget_config, dest, overwrite: true);
 				}
 			}
 			else
