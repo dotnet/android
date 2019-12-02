@@ -411,8 +411,7 @@ namespace Xamarin.Android.Prepare
 			string toolchainsPrefix = Path.Combine (GetProperty (KnownProperties.AndroidToolchainDirectory), "toolchains");
 
 			var ret = new List<string> {
-				 "DISABLE_IOS=1",
-				 "DISABLE_MAC=1",
+				 "ENABLE_ANDROID=1",
 				$"CONFIGURATION={Configurables.Defaults.MonoSdksConfiguration}",
 				 "IGNORE_PROVISION_MXE=false",
 				 "IGNORE_PROVISION_ANDROID=true",
