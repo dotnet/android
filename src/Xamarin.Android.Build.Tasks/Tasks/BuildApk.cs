@@ -409,13 +409,7 @@ namespace Xamarin.Android.Tasks
 
 		void AddBtlsLibs (ZipArchiveEx apk, string abi)
 		{
-			if (string.IsNullOrEmpty (TlsProvider) ||
-					string.Compare ("btls", TlsProvider, StringComparison.OrdinalIgnoreCase) == 0) {
-				AddNativeLibrary (apk, abi, "libmono-btls-shared.so");
-			}
-			// These are the other supported values
-			//  * "default":
-			//  * "legacy":
+			AddNativeLibrary (apk, abi, "libmono-btls-shared.so");
 		}
 
 		void AddRuntimeLibraries (ZipArchiveEx apk, string [] supportedAbis)

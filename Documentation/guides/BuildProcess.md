@@ -705,11 +705,14 @@ when packaging Release applications.
         This corresponds to the **Native TLS 1.2+** setting in the
         Visual Studio property pages.
 
-    -   `legacy`: Use the historical managed SSL implementation for
-        network interaction. This *does not* support TLS 1.2.
+    -   `legacy`: In Xamarin.Android v10.1 and earlier, use the historical
+        managed SSL implementation for network interaction. This *does not* support TLS 1.2.
 
         This corresponds to the **Managed TLS 1.0** setting in the
         Visual Studio property pages.
+
+        In Xamarin.Android v10.2 and later, this value is ignored and the
+        `btls` setting is used.
 
     -   `default`: This value is unlikely to be used in Xamarin.Android
         projects. The recommended value to use instead is the empty string,
