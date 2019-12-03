@@ -10,6 +10,8 @@ namespace Xamarin.ProjectTools
 		public string BuildLogFile { get; set; }
 		public string ProcessLogFile { get; set; }
 		public string Verbosity { get; set; } = "diag";
+		public string AndroidSdkPath {get; set; } = AndroidSdkResolver.GetAndroidSdkPath ();
+		public string AndroidNdkPath {get; set; } = AndroidSdkResolver.GetAndroidNdkPath ();
 
 		string Executable = "dotnet";
 
@@ -70,6 +72,8 @@ namespace Xamarin.ProjectTools
 			var execArgs = new string[] {
 				"build", $"\"{projectOrSolution}\"", $"/p:Configuration={configuration}",
 				string.IsNullOrEmpty (target) ? string.Empty : $"/t:{target}",
+				Directory.Exists (AndroidSdkPath) ? $"/p:AndroidSdkDirectory=\"{AndroidSdkPath}\"" : string.Empty,
+				Directory.Exists (AndroidNdkPath) ? $"/p:AndroidNdkDirectory=\"{AndroidNdkPath}\"" : string.Empty,
 				"/noconsolelogger", $"/flp1:LogFile=\"{BuildLogFile}\";Encoding=UTF-8;Verbosity={Verbosity}",
 				$"/bl:\"{Path.Combine (testDir, "msbuild.binlog")}\""
 			};

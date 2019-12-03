@@ -30,6 +30,7 @@ namespace Xamarin.ProjectTools
 		public IList<Package> Packages { get; private set; }
 		public IList<BuildItem> References { get; private set; }
 		public IList<Package> PackageReferences { get; private set; }
+		public string GlobalPackagesFolder { get; set; }
 		public IList<string> ExtraNuGetConfigSources { get; set; }
 
 		public virtual bool ShouldRestorePackageReferences => PackageReferences?.Count > 0;
@@ -375,6 +376,28 @@ namespace Xamarin.ProjectTools
 						sourceElement.SetAttributeValue ("key", $"testsource{++sourceIndex}");
 						sourceElement.SetAttributeValue ("value", source);
 						pkgSourcesElement.Add (sourceElement);
+					}
+					doc.Save (projNugetConfig);
+				}
+				// Set a local PackageReference installation folder if specified
+				if (!string.IsNullOrEmpty (GlobalPackagesFolder)) {
+					var doc = XDocument.Load (projNugetConfig);
+					XElement gpfElement = doc.Descendants ().FirstOrDefault (c => c.Name.LocalName.ToLowerInvariant () == "add"
+						&& c.Attributes ().Any (a => a.Name.LocalName.ToLowerInvariant () == "key" && a.Value.ToLowerInvariant () == "globalpackagesfolder"));
+					if (gpfElement != default (XElement)) {
+						gpfElement.SetAttributeValue ("value", GlobalPackagesFolder);
+					} else {
+						var configElement = new XElement ("add");
+						configElement.SetAttributeValue ("key", "globalPackagesFolder");
+						configElement.SetAttributeValue ("value", GlobalPackagesFolder);
+						XElement configParentElement = doc.Descendants ().FirstOrDefault (c => c.Name.LocalName.ToLowerInvariant () == "config");
+						if (configParentElement != default (XElement)) {
+							configParentElement.Add (configElement);
+						} else {
+							configParentElement = new XElement ("config");
+							configParentElement.Add (configElement);
+							doc.Root.Add (configParentElement);
+						}
 					}
 					doc.Save (projNugetConfig);
 				}
