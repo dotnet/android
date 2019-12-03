@@ -808,7 +808,7 @@ stages:
       inputs:
         github_token: $(GitHub.Token)
         provisioning_script: $(System.DefaultWorkingDirectory)/designer/bot-provisioning/dependencies.csx
-        provisioning_extra_args: -remove Xamarin.Android -vv
+        provisioning_extra_args: -remove Xamarin.Android -vv DEVDIV_PKGS_NUGET_TOKEN=$(DevDiv.NuGet.Token) SECTOOLS_PKGS_NUGET_TOKEN=$(SecTools.NuGet.Token)
 
     - template: yaml-templates/run-installer.yaml
 
@@ -844,7 +844,7 @@ stages:
       inputs:
         github_token: $(GitHub.Token)
         provisioning_script: $(System.DefaultWorkingDirectory)\designer\bot-provisioning\dependencies.csx
-        provisioning_extra_args: -vv
+        provisioning_extra_args: -vv DEVDIV_PKGS_NUGET_TOKEN=$(DevDiv.NuGet.Token) SECTOOLS_PKGS_NUGET_TOKEN=$(SecTools.NuGet.Token)
 
     - template: yaml-templates\run-installer.yaml
 
