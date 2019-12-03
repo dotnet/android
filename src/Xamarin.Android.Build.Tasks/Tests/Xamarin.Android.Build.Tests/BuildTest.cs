@@ -78,7 +78,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.RunTarget (proj, "BuildAndStartAotProfiling"), "Run of BuildAndStartAotProfiling should have succeeded.");
 				System.Threading.Thread.Sleep (5000);
 				b.BuildLogFile = "build2.log";
-				Assert.IsTrue (b.RunTarget (proj, "FinishAotProfiling"), "Run of FinishAotProfiling should have succeeded.");
+				Assert.IsTrue (b.RunTarget (proj, "FinishAotProfiling", doNotCleanupOnUpdate: true), "Run of FinishAotProfiling should have succeeded.");
 				var customProfile = Path.Combine (Root, projDirectory, "custom.aprof");
 				FileAssert.Exists (customProfile);
 			}
