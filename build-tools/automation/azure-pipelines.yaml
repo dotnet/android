@@ -154,13 +154,13 @@ stages:
     pool: $(VSEngWinVS2019)
     timeoutInMinutes: 360
     cancelTimeoutInMinutes: 5
-    workspace:
-      clean: all
     steps:
     - checkout: self
       submodules: recursive
 
-    - task: xamops.azdevex.lingering-process-task.lingering-process-task@1
+    - template: yaml-templates\kill-processes.yaml
+
+    - template: yaml-templates\clean.yaml
 
     - task: UseDotNet@2
       displayName: install .NET Core $(DotNetCoreVersion)
@@ -213,17 +213,7 @@ stages:
           /bl:$(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\msbuild-run-ji-tests.binlog
       condition: succeededOrFailed()
 
-    - powershell: |
-        $ErrorActionPreference = 'Continue'
-        Get-Process
-        Stop-Process -Name nunit3-console
-        Stop-Process -Name xabuild
-        Stop-Process -Name MSBuild
-        Stop-Process -Name adb
-        $LastExitCode=0
-      displayName: kill leftover processes
-      failOnStderr: false
-      condition: always()
+    - template: yaml-templates\kill-processes.yaml
 
     - task: PublishTestResults@2
       displayName: publish test results
@@ -312,7 +302,6 @@ stages:
     workspace:
       clean: all
     steps:
-    - task: xamops.azdevex.lingering-process-task.lingering-process-task@1
 
     - task: JenkinsQueueJob@2
       displayName: xamarin vsix codesign - run jenkins job
@@ -649,11 +638,14 @@ stages:
     pool: $(VSEngWinVS2019)
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
-    workspace:
-      clean: all
     variables:
       VSINSTALLDIR: C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise
     steps:
+
+    - template: yaml-templates\kill-processes.yaml
+
+    - template: yaml-templates\clean.yaml
+
     - template: yaml-templates\setup-test-environment.yaml
       parameters:
         provisionExtraArgs: -vv PROVISIONATOR_VISUALSTUDIO_LOCATION="$(VSINSTALLDIR)" -f
