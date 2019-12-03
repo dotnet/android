@@ -58,8 +58,9 @@ namespace Xamarin.Android.Tasks
 						var declaringType = reader.GetTypeDefinition (typeDefinition.GetDeclaringType ());
 						var declaringTypeName = $"{reader.GetString (declaringType.Namespace)}.{reader.GetString (declaringType.Name)}";
 						if (declaringTypeName == resourceDesignerName) {
-							if (hasAlias)
-								declaringTypeName = $"{alias}.{declaringTypeName}";
+							if (hasAlias) {
+								declaringTypeName = $"{alias}::{declaringTypeName}";
+							}
 							CreateImportFor (declaringTypeName, typeDefinition, method, reader, hasAlias);
 						}
 					}
