@@ -1,0 +1,6 @@
+steps:
+- powershell: |
+    git clean -xffd
+    git submodule foreach --recursive git clean -xffd
+    Remove-Item -Recurse $(Build.BinariesDirectory) -ErrorAction Ignore
+  displayName: manual clean
