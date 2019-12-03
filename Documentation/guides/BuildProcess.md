@@ -1163,6 +1163,8 @@ server, the following MSBuild properties can be used:
     key store file format to use for the `debug.keystore`. It defaults
     to `pkcs12`.
 
+    Added in Xamarin.Android v10.3.
+
 -   **AndroidKeyStore** &ndash; A boolean value which indicates whether
     custom signing information should be used. The default value is
     `False`, meaning that the default debug-signing key will be used
