@@ -34,12 +34,10 @@ namespace MonoDroid.Tuner
 
 			TypeDefinition type;
 			switch (provider) {
-			case "btls":
-				type = module.GetType ("Mono.Btls.MonoBtlsProvider");
-				break;
 			case "legacy":
 			case "default":
-				type = module.GetType ("Mono.Net.Security.LegacyTlsProvider");
+			case "btls":
+				type = module.GetType ("Mono.Btls.MonoBtlsProvider");
 				break;
 			default:
 				throw new InvalidOperationException (string.Format ("Unknown TlsProvider `{0}`.", provider));

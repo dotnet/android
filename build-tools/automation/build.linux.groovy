@@ -27,6 +27,7 @@ def chRootPackages = '''
     lib32z1
     libc++-dev
     libgdk-pixbuf2.0-dev
+    libmono-btls-interface4.0-cil
     libncurses5-dev
     libsqlite3-dev
     libtinfo-dev:i386
