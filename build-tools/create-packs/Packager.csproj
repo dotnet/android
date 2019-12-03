@@ -25,22 +25,32 @@
     <PropertyGroup>
       <ToolsSourceDir>$(XamarinAndroidSourcePath)bin\$(Configuration)\packs\tools\</ToolsSourceDir>
     </PropertyGroup>
+    <ItemGroup>
+      <_MSBuildNonHostItemsUnix Include="@(MSBuildItemsUnix)" Condition="!$([System.Text.RegularExpressions.Regex]::IsMatch(%(RelativePath), '.*host-$(HostOS).*'))"/>
+      <_MSBuildHostItemsUnix Include="@(MSBuildItemsUnix)" Condition="$([System.Text.RegularExpressions.Regex]::IsMatch(%(RelativePath), '.*host-$(HostOS).*'))"/>
+    </ItemGroup>
     <!-- Copy only the required tools to new folder. Skip Unix item copying on Windows. -->
-    <Copy
-        SourceFiles="@(VersionFiles)"
-        DestinationFolder="$(ToolsSourceDir)"
-        SkipUnchangedFiles="True"
-    />
     <Copy
         SourceFiles="@(MSBuildItemsWin)"
         DestinationFiles="@(MSBuildItemsWin->'$(ToolsSourceDir)%(RelativePath)')"
         SkipUnchangedFiles="True"
     />
     <Copy
-        SourceFiles="@(MSBuildItemsUnix)"
-        DestinationFiles="@(MSBuildItemsUnix->'$(ToolsSourceDir)%(RelativePath)')"
+        SourceFiles="@(_MSBuildNonHostItemsUnix)"
+        DestinationFiles="@(_MSBuildNonHostItemsUnix->'$(ToolsSourceDir)%(RelativePath)')"
         SkipUnchangedFiles="True"
         Condition="$([MSBuild]::IsOSPlatform('osx'))"
+    />
+    <Copy
+        SourceFiles="@(_MSBuildHostItemsUnix)"
+        DestinationFolder="$(ToolsSourceDir)"
+        SkipUnchangedFiles="True"
+        Condition="$([MSBuild]::IsOSPlatform('osx'))"
+    />
+    <Copy
+        SourceFiles="@(VersionFiles)"
+        DestinationFolder="$(ToolsSourceDir)"
+        SkipUnchangedFiles="True"
     />
     <ItemGroup>
       <Content Include="$(ToolsSourceDir)**" >
