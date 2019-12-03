@@ -135,8 +135,8 @@ namespace Xamarin.Android.Tasks {
 				cmd.AppendSwitchIfNotNull ("--custom-package ", PackageName.ToLowerInvariant ());
 			
 			if (AdditionalResourceArchives != null) {
-				foreach (var item in AdditionalResourceArchives) {
-					var flata = Path.Combine (WorkingDirectory, item.ItemSpec);
+				for (int i = AdditionalResourceArchives.Length - 1; i >= 0; i--) {
+					var flata = Path.Combine (WorkingDirectory, AdditionalResourceArchives [i].ItemSpec);
 					if (File.Exists (flata)) {
 						cmd.AppendSwitchIfNotNull ("-R ", flata);
 					} else {
