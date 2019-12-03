@@ -710,15 +710,15 @@ namespace App1
 			using (var nsb = CreateDllBuilder (Path.Combine (path, ns.ProjectName), cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false))
 			using (var xab = CreateApkBuilder (Path.Combine (path, xa.ProjectName), cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
 				nsb.ThrowOnBuildFailure = xab.ThrowOnBuildFailure = false;
-				Assert.IsTrue (nsb.Build (ns));
-				Assert.IsFalse (xab.Build (xa, doNotCleanupOnUpdate: true));
+				Assert.IsTrue (nsb.Build (ns), "Build of NetStandard Library should have succeeded.");
+				Assert.IsFalse (xab.Build (xa, doNotCleanupOnUpdate: true), "Build of App Library should have failed.");
 				File.WriteAllText (Path.Combine (Root, xab.ProjectDirectory, "NuGet.config"), @"<?xml version='1.0' encoding='utf-8'?>
 <configuration>
   <packageSources>
     <add key='bug-testing' value='..\' />
   </packageSources>
 </configuration>");
-				Assert.IsTrue (xab.Build (xa, doNotCleanupOnUpdate: true));
+				Assert.IsTrue (xab.Build (xa, doNotCleanupOnUpdate: true), "Build of App Library should have succeeded.");
 				string expected = Path.Combine ("dummy.package.foo", "1.0.0", "lib", "monoandroid90", "Dummy.dll");
 				Assert.IsTrue (xab.LastBuildOutput.ContainsText (expected), $"Build should be using {expected}");
 			}
