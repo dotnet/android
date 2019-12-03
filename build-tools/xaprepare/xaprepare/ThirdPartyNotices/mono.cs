@@ -19,7 +19,6 @@ namespace Xamarin.Android.Prepare
 			new mono_mono_NUnitLite_TPN (),
 			new mono_mono_rx_net_TPN (),
 			new mono_mono_Ix_net_TPN (),
-			new mono_llvm_Group (),
 		};
 	}
 
