@@ -127,5 +127,40 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("keytool error: java.io.IOException: Keystore was tampered with, or password was incorrect", error.Message);
 			Assert.AreEqual ("ANDKT0000", error.Code);
 		}
+
+		[Test]
+		public void CreateDebugKeyStore ()
+		{
+			string keyfile = Path.Combine (TestName, "debug.keystore");
+			if (File.Exists (keyfile))
+				File.Delete (keyfile);
+			var task = new AndroidCreateDebugKey {
+				BuildEngine = engine,
+				KeyStore = keyfile,
+				StorePass = "android",
+				KeyAlias = "androiddebugkey",
+				KeyPass = "android",
+				KeyAlgorithm="RSA",
+				Validity=10000,
+				StoreType="pkcs12",
+				Command="-genkeypair",
+				ToolPath = keyToolPath,
+			};
+			Assert.IsTrue (task.Execute (), "Task should have succeeded.");
+			Assert.AreEqual (0, errors.Count, "Task should have no errors.");
+			Assert.AreEqual (0, warnings.Count, "Task should have no warnings.");
+
+			var keyToolTask = new KeyTool {
+				BuildEngine = engine,
+				KeyStore = keyfile,
+				StorePass = "android",
+				KeyAlias = "androiddebugkey",
+				KeyPass = "android",
+				Command = "-list",
+				ToolPath = keyToolPath,
+			};
+
+			Assert.IsTrue (keyToolTask.Execute (), "Task should have succeeded.");
+		}
 	}
 }

@@ -9,17 +9,13 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "ACD";
 
-		public int Validity { get; set; }
+		public int Validity { get; set; } = 30 * 365; // 30 years
 
-		public string KeyAlgorithm { get; set; }
+		public string KeyAlgorithm { get; set; } = "RSA";
+
+		public string StoreType { get; set; } = "pkcs12";
 
 		string dname = "CN=Android Debug,O=Android,C=US";
-
-		public AndroidCreateDebugKey ()
-		{
-			KeyAlgorithm = "RSA";
-			Validity = 30 * 365; // 30 years
-		}
 
 		protected override CommandLineBuilder CreateCommandLine ()
 		{
@@ -27,6 +23,7 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendSwitchIfNotNull ("-dname ", dname);
 			cmd.AppendSwitchIfNotNull ("-keyalg ", KeyAlgorithm);
 			cmd.AppendSwitchIfNotNull ("-validity ", Validity.ToString()); 
+			cmd.AppendSwitchIfNotNull ("-storetype ", StoreType);
 			return cmd;
 		}
 	}
