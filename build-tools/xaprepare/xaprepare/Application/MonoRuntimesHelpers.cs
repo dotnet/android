@@ -189,10 +189,17 @@ namespace Xamarin.Android.Prepare
 			return Path.Combine (Configurables.Paths.MonoSDKSRelativeOutputDir, $"android-{runtime.PrefixedName}-{Configurables.Defaults.MonoSdksConfiguration}");
 		}
 
-		public static bool AreRuntimeItemsInstalled (Runtimes runtimes)
+		public static bool AreRuntimeItemsInstalled (Context context, Runtimes runtimes)
 		{
+			if (context == null)
+				throw new ArgumentNullException (nameof (context));
 			if (runtimes == null)
 				throw new ArgumentNullException (nameof (runtimes));
+
+			if (!string.IsNullOrEmpty (context.MonoArchiveCustomUrl)) {
+				context.Log.StatusLine ("Skipping AreRuntimeItemsInstalled check, due to custom mono archive URL.");
+				return false;
+			}
 
 			foreach (var bclFile in runtimes.BclFilesToInstall) {
 				(string destFilePath, string debugSymbolsDestPath) = GetDestinationPaths (bclFile);

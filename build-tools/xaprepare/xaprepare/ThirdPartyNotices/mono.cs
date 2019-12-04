@@ -186,7 +186,7 @@ jeroen@frijters.net
 	class mono_llvm_llvm_TPN : ThirdPartyNotice
 	{
 		static readonly Uri    url         = new Uri ("https://github.com/mono/llvm/");
-		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoSdksTpnExternalPath, "llvm", "LICENSE.TXT");
+		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoLlvmTpnPath, "LICENSE.TXT");
 
 		public override string LicenseFile => licenseFile;
 		public override string Name        => "mono/llvm";
@@ -197,7 +197,7 @@ jeroen@frijters.net
 	class mono_llvm_google_test_TPN : ThirdPartyNotice
 	{
 		static readonly Uri    url         = new Uri ("https://github.com/mono/llvm/tree/master/utils/unittest/googletest/");
-		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoSdksTpnExternalPath, "llvm", "utils", "unittest", "googletest", "LICENSE.TXT");
+		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoLlvmTpnPath, "utils", "unittest", "googletest", "LICENSE.TXT");
 
 		public override string LicenseFile => licenseFile;
 		public override string Name        => "mono/llvm Google Test";
@@ -208,7 +208,7 @@ jeroen@frijters.net
 	class mono_llvm_openbsd_regex_TPN : ThirdPartyNotice
 	{
 		static readonly Uri    url         = new Uri ("https://github.com/mono/llvm/tree/master/lib/Support/");
-		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoSdksTpnExternalPath, "llvm", "lib", "Support", "COPYRIGHT.regex");
+		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoLlvmTpnPath, "lib", "Support", "COPYRIGHT.regex");
 
 		public override string LicenseFile => licenseFile;
 		public override string Name        => "mono/llvm OpenBSD Regex";
@@ -219,7 +219,7 @@ jeroen@frijters.net
 	class mono_llvm_pyyaml_tests_TPN : ThirdPartyNotice
 	{
 		static readonly Uri    url         = new Uri ("https://github.com/mono/llvm/tree/master/test/YAMLParser/");
-		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoSdksTpnExternalPath, "llvm", "test", "YAMLParser", "LICENSE.txt");
+		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoLlvmTpnPath, "test", "YAMLParser", "LICENSE.txt");
 
 		public override string LicenseFile => licenseFile;
 		public override string Name        => "mono/llvm pyyaml tests";
@@ -230,7 +230,7 @@ jeroen@frijters.net
 	class mono_llvm_arm_contributions_TPN : ThirdPartyNotice
 	{
 		static readonly Uri    url         = new Uri ("https://github.com/mono/llvm/tree/master/lib/Target/ARM/");
-		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoSdksTpnExternalPath, "llvm", "lib", "Target", "ARM", "LICENSE.TXT");
+		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoLlvmTpnPath, "lib", "Target", "ARM", "LICENSE.TXT");
 
 		public override string LicenseFile => licenseFile;
 		public override string Name        => "mono/llvm ARM contributions";
