@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
@@ -648,6 +648,10 @@ namespace App1
 		[Test]
 		public void CheckTheCorrectRuntimeAssemblyIsUsedFromNuget ()
 		{
+			string monoandroidFramework;
+			using (var builder = new Builder ()) {
+				monoandroidFramework = builder.LatestMultiTargetFrameworkVersion ();
+			}
 			string path = Path.Combine (Root, "temp", TestName);
 			var ns = new DotNetStandard () {
 				ProjectName = "Dummy",
@@ -672,17 +676,17 @@ namespace App1
 							{ "Pack", "True" }
 						},
 					},
-					new BuildItem.NoActionResource ("$(OutputPath)monoandroid90\\$(AssemblyName).dll") {
+					new BuildItem.NoActionResource ($"$(OutputPath){monoandroidFramework}\\$(AssemblyName).dll") {
 						TextContent = null,
 						BinaryContent = null,
 						Metadata = {
-							{ "PackagePath", "lib\\monoandroid90" },
+							{ "PackagePath", $"lib\\{monoandroidFramework}" },
 							{ "Pack", "True" }
 						},
 					},
 				},
 			};
-			ns.SetProperty ("TargetFrameworks", "netstandard2.0;monoandroid90");
+			ns.SetProperty ("TargetFrameworks", $"netstandard2.0;{monoandroidFramework}");
 			ns.SetProperty ("PackageId", "dummy.package.foo");
 			ns.SetProperty ("PackageVersion", "1.0.0");
 			ns.SetProperty ("GeneratePackageOnBuild", "True");
@@ -720,7 +724,7 @@ namespace App1
   </packageSources>
 </configuration>");
 				Assert.IsTrue (xab.Build (xa, doNotCleanupOnUpdate: true), "Build of App Library should have succeeded.");
-				string expected = Path.Combine ("dummy.package.foo", "1.0.0", "lib", "monoandroid90", "Dummy.dll");
+				string expected = Path.Combine ("dummy.package.foo", "1.0.0", "lib", monoandroidFramework, "Dummy.dll");
 				Assert.IsTrue (xab.LastBuildOutput.ContainsText (expected), $"Build should be using {expected}");
 			}
 		}
