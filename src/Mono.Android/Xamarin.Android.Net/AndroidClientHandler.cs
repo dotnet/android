@@ -18,6 +18,8 @@ using Java.Security;
 using Java.Security.Cert;
 using Javax.Net.Ssl;
 
+using LogLevel = Android.Runtime.LogLevel;
+
 namespace Xamarin.Android.Net
 {
 	/// <summary>

@@ -7,6 +7,8 @@ using Java.Interop;
 
 using Android.Runtime;
 
+using LogLevel = Android.Runtime.LogLevel;
+
 namespace Java.Lang {
 
 	[DataContract]

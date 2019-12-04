@@ -7,6 +7,8 @@ using Java.Interop.Tools.TypeNameMappings;
 
 using Android.Runtime;
 
+using LogLevel = Android.Runtime.LogLevel;
+
 namespace Java.Interop {
 
 	static class TypeManagerMapDictionaries

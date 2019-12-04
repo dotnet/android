@@ -7,6 +7,8 @@ using Android.Runtime;
 
 using Java.Net;
 
+using LogLevel = Android.Runtime.LogLevel;
+
 namespace Xamarin.Android.Net
 {
 	sealed class AuthModuleDigest : IAndroidAuthenticationModule

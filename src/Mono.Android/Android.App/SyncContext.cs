@@ -4,6 +4,8 @@ using System.Threading;
 using Android.OS;
 using Android.Runtime;
 
+using LogLevel = Android.Runtime.LogLevel;
+
 namespace Android.App {
 
 	internal class SyncContext : SynchronizationContext {
