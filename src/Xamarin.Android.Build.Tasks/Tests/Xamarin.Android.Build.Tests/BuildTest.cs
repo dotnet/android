@@ -73,6 +73,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.Ignore ("Skipping test. No devices available.");
 
 			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetProperty (KnownProperties.AndroidSupportedAbis, "armeabi-v7a;x86");
 			var projDirectory = Path.Combine ("temp", TestName);
 			using (var b = CreateApkBuilder (projDirectory)) {
 				Assert.IsTrue (b.RunTarget (proj, "BuildAndStartAotProfiling"), "Run of BuildAndStartAotProfiling should have succeeded.");
