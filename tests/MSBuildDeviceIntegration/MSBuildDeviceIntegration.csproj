@@ -29,18 +29,6 @@
     <Reference Include="System" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
-    <Reference Include="nunit.framework">
-      <HintPath>..\..\packages\NUnit.3.11.0\lib\net45\nunit.framework.dll</HintPath>
-    </Reference>
-    <Reference Include="NodaTime">
-      <HintPath>..\..\packages\NodaTime.2.4.5\lib\net45\NodaTime.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Posix.NETStandard">
-      <HintPath>..\..\packages\Mono.Posix.NETStandard.1.0.0\lib\net40\Mono.Posix.NETStandard.dll</HintPath>
-    </Reference>
-    <Reference Include="libZipSharp">
-      <HintPath>..\..\packages\Xamarin.LibZipSharp.1.0.6\lib\net45\libZipSharp.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Utilities\DeviceTest.cs">
@@ -55,7 +43,8 @@
     <Compile Include="Tests/*.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
+    <PackageReference Include="NodaTime" Version="2.4.5" />
+    <PackageReference Include="NUnit" Version="3.11.0" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -85,5 +74,4 @@
     </ProjectReference>
   </ItemGroup>
   <Import Project="MSBuildDeviceIntegration.targets" />
-  <Import Project="..\..\packages\Xamarin.LibZipSharp.1.0.6\build\Xamarin.LibZipSharp.targets" Condition="Exists('..\..\packages\Xamarin.LibZipSharp.1.0.6\build\Xamarin.LibZipSharp.targets')" />
 </Project>

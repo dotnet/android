@@ -31,19 +31,13 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Xml" />
-    <Reference Include="nunit.framework">
-      <HintPath>..\..\..\packages\NUnit.3.11.0\lib\net45\nunit.framework.dll</HintPath>
-    </Reference>
     <Reference Include="Xamarin.Android.Build.Tasks">
-      <HintPath>..\..\..\bin\$(Configuration)\lib/xamarin.android\xbuild\Xamarin\Android\Xamarin.Android.Build.Tasks.dll</HintPath>
+      <HintPath>..\..\..\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\Xamarin.Android.Build.Tasks.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Xamarin.Android.Tools.AndroidSdk">
-      <HintPath>..\..\..\bin\$(Configuration)\lib/xamarin.android\xbuild\Xamarin\Android\Xamarin.Android.Tools.AndroidSdk.dll</HintPath>
+      <HintPath>..\..\..\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\Xamarin.Android.Tools.AndroidSdk.dll</HintPath>
       <Private>True</Private>
-    </Reference>
-    <Reference Include="libZipSharp">
-      <HintPath>..\..\..\packages\Xamarin.LibZipSharp.1.0.6\lib\net45\libZipSharp.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -55,7 +49,7 @@
     <Compile Include="..\..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Utilities\EnvironmentHelper.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
+    <PackageReference Include="NUnit" Version="3.11.0" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -79,5 +73,4 @@
         Replacements="@ANDROID_SDK_DIRECTORY@=$(AndroidSdkDirectory);@BUILD_TOOLS_FOLDER@=$(XABuildToolsFolder);@EXECUTABLE_EXTENSION@=$(ExecutableExtension)"
     />
   </Target>
-  <Import Project="..\..\..\packages\Xamarin.LibZipSharp.1.0.6\build\Xamarin.LibZipSharp.targets" Condition="Exists('..\..\..\packages\Xamarin.LibZipSharp.1.0.6\build\Xamarin.LibZipSharp.targets')" />
 </Project>

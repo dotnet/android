@@ -32,15 +32,6 @@
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Drawing" />
-    <Reference Include="Microsoft.Web.XmlTransform">
-      <HintPath>..\..\..\..\packages\Microsoft.Web.Xdt.2.1.1\lib\net40\Microsoft.Web.XmlTransform.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Posix.NETStandard">
-      <HintPath>..\..\..\..\packages\Mono.Posix.NETStandard.1.0.0\lib\net40\Mono.Posix.NETStandard.dll</HintPath>
-    </Reference>
-    <Reference Include="libZipSharp">
-      <HintPath>..\..\..\..\packages\Xamarin.LibZipSharp.1.0.6\lib\net45\libZipSharp.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Android\AndroidSdkResolver.cs" />
@@ -151,7 +142,6 @@
     <EmbeddedResource Include="Resources\Forms\styles.xml" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
     <Content Include="..\..\..\..\.nuget\NuGet.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -170,5 +160,4 @@
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
-  <Import Project="..\..\..\..\packages\Xamarin.LibZipSharp.1.0.6\build\Xamarin.LibZipSharp.targets" Condition="Exists('..\..\..\..\packages\Xamarin.LibZipSharp.1.0.6\build\Xamarin.LibZipSharp.targets')" />
 </Project>
