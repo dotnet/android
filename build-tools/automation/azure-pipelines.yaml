@@ -200,14 +200,6 @@ stages:
         arguments: Xamarin.Android-Tests.sln /p:Configuration=$(XA.Build.Configuration) /bl:$(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\msbuild-build-tests.binlog
 
     - task: MSBuild@1
-      displayName: nunit Xamarin.Android.Build.Tests
-      inputs:
-        solution: Xamarin.Android.sln
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:RunNUnitTests /bl:$(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\msbuild-run-nunit-tests.binlog
-      timeoutInMinutes: 150
-
-    - task: MSBuild@1
       displayName: nunit Java.Interop Tests
       inputs:
         solution: Xamarin.Android.sln
@@ -216,17 +208,38 @@ stages:
           /t:RunJavaInteropTests
           /p:TestAssembly="bin\Test$(XA.Build.Configuration)\generator-Tests.dll;bin\Test$(XA.Build.Configuration)\Java.Interop.Tools.JavaCallableWrappers-Tests.dll;bin\Test$(XA.Build.Configuration)\logcat-parse-Tests.dll;bin\Test$(XA.Build.Configuration)\Xamarin.Android.Tools.ApiXmlAdjuster-Tests.dll;bin\Test$(XA.Build.Configuration)\Xamarin.Android.Tools.Bytecode-Tests.dll"
           /bl:$(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\msbuild-run-ji-tests.binlog
-      condition: succeededOrFailed()
-
-    - template: yaml-templates\kill-processes.yaml
 
     - task: PublishTestResults@2
       displayName: publish test results
       inputs:
         testResultsFormat: NUnit
         testResultsFiles: TestResult-*.xml
-        testRunTitle: xamarin-android
+        testRunTitle: Java Interop Tests - Windows Build Tree
       condition: succeededOrFailed()
+
+    - template: yaml-templates\run-nunit-tests.yaml
+      parameters:
+        testRunTitle: CodeBehindUnitTests - Windows Build Tree
+        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\CodeBehind\CodeBehindUnitTests.dll
+        testResultsFile: TestResult-CodeBehindUnitTests-WinBuildTree-$(XA.Build.Configuration).xml
+
+    - template: yaml-templates\run-nunit-tests.yaml
+      parameters:
+        testRunTitle: Xamarin.Android.MakeBundle-UnitTests - Windows Build Tree
+        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\Xamarin.Android.MakeBundle-UnitTests.dll
+        testResultsFile: TestResult-MakeBundleUnitTests-WinBuildTree-$(XA.Build.Configuration).xml
+
+    - template: yaml-templates\run-nunit-tests.yaml
+      parameters:
+        testRunTitle: EmbeddedDSOUnitTests - Windows Build Tree
+        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\EmbeddedDSOUnitTests.dll
+        testResultsFile: TestResult-EmbeddedDSOUnitTests-WinBuildTree-$(XA.Build.Configuration).xml
+
+    - template: yaml-templates\run-nunit-tests.yaml
+      parameters:
+        testRunTitle: Xamarin.Android.Build.Tests - Windows Build Tree
+        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\Xamarin.Android.Build.Tests.dll
+        testResultsFile: TestResult-MSBuildTests-WinBuildTree-$(XA.Build.Configuration).xml
 
     - template: yaml-templates\upload-results.yaml
       parameters:

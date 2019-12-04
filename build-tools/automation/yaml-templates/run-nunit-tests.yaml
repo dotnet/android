@@ -10,9 +10,9 @@ parameters:
 steps:
 - powershell: |
     if ([Environment]::OSVersion.Platform -eq "Unix") {
-        mono ${{ parameters.nunitConsole }} ${{ parameters.testAssembly }} ${{ parameters.whereClause }} --result ${{ parameters.testResultsFile }} ${{ parameters.nunitConsoleExtraArgs }}
+        mono ${{ parameters.nunitConsole }} ${{ parameters.testAssembly }} --result ${{ parameters.testResultsFile }} ${{ parameters.nunitConsoleExtraArgs }}
     } else {
-        ${{ parameters.nunitConsole }} ${{ parameters.testAssembly }} ${{ parameters.whereClause }} --result ${{ parameters.testResultsFile }}  ${{ parameters.nunitConsoleExtraArgs }}
+        ${{ parameters.nunitConsole }} ${{ parameters.testAssembly }} --result ${{ parameters.testResultsFile }}  ${{ parameters.nunitConsoleExtraArgs }}
     }
   displayName: run ${{ parameters.testRunTitle }}
   condition: ${{ parameters.condition }}
