@@ -31,6 +31,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)System\AssemblyInformationalVersionAttributeTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)System\ExceptionTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)System\TimeZoneTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)System.Drawing\TypeConverterTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)System.IO\DriveInfoTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)System.IO.Compression\GZipStreamTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)System.Net\ProxyTest.cs" />
