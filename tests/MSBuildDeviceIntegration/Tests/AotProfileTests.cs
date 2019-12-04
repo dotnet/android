@@ -13,7 +13,7 @@ namespace Xamarin.Android.Build.Tests
 			if (!HasDevices)
 				Assert.Ignore ("Skipping test. No devices available.");
 
-			var proj = new XamarinAndroidApplicationProject ();
+			var proj = new XamarinAndroidApplicationProject () { IsRelease = true };
 			proj.SetProperty (KnownProperties.AndroidSupportedAbis, "armeabi-v7a;x86");
 			var projDirectory = Path.Combine ("temp", TestName);
 			using (var b = CreateApkBuilder (projDirectory)) {
