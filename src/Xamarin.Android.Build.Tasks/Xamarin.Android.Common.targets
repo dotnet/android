@@ -408,13 +408,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 </Target>
 
 <Target Name="_SeparateAppExtensionReferences">
-	<CreateItem Include="@(ProjectReference)" PreserveExistingMetadata="true" Condition="'%(Identity)' != '' AND '%(ProjectReference.IsAppExtension)' == 'true'">
-		<Output ItemName="_AppExtensionReference" TaskParameter="Include" />
-	</CreateItem>
-
-	<ItemGroup>
-		<ProjectReference Remove="@(_AppExtensionReference)" />
-	</ItemGroup>
+  <ItemGroup>
+    <_AppExtensionReference Condition=" '%(ProjectReference.IsAppExtension)' == 'True' " Include="@(ProjectReference)" />
+    <ProjectReference Remove="@(_AppExtensionReference)" />
+  </ItemGroup>
 </Target>
 
 <PropertyGroup>
@@ -427,14 +424,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		<Output TaskParameter="ApplicationManifestFile" PropertyName="BundledWearApplicationManifestFile" />
 		<Output TaskParameter="ApplicationPackageName" PropertyName="BundledWearApplicationPackageName" />
 	</ParseAndroidWearProjectAndManifest>
-	<!-- we don't have ConvertToAbsolutePath in xbuild, so create item instead -->
-	<CreateItem Include="$(AndroidSigningKeyStore)"
-		Condition="$(WearAppTarget) == 'SignAndroidPackage' And '$(AndroidKeyStore)'=='True'">
-		<Output TaskParameter="Include" ItemName="_AndroidSigningKeyStoreFile" />
-	</CreateItem>
 	<CreateProperty
 		Condition="$(WearAppTarget) == 'SignAndroidPackage' And '$(AndroidKeyStore)'=='True'"
-		Value="AndroidKeyStore=True;AndroidSigningKeyStore=%(_AndroidSigningKeyStoreFile.FullPath);AndroidSigningStorePass=$(AndroidSigningStorePass);AndroidSigningKeyAlias=$(AndroidSigningKeyAlias);AndroidSigningKeyPass=$(AndroidSigningKeyPass)">
+		Value="AndroidKeyStore=True;AndroidSigningKeyStore=$([System.IO.Path]::GetFullPath ('$(AndroidSigningKeyStore)'));AndroidSigningStorePass=$(AndroidSigningStorePass);AndroidSigningKeyAlias=$(AndroidSigningKeyAlias);AndroidSigningKeyPass=$(AndroidSigningKeyPass)">
 		<Output TaskParameter="Value" PropertyName="_AdditionaEmbeddedWearAppProperties" />
 	</CreateProperty>
 	<MSBuild Projects="@(_AppExtensionReference)" Properties="Configuration=$(Configuration);AndroidUseSharedRuntime=False;EmbedAssembliesIntoApk=True;$(_AdditionaEmbeddedWearAppProperties)" Targets="Build;SignAndroidPackage"/>
@@ -869,14 +861,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 				Condition="'$(TargetFrameworkMoniker)' != ''"
 		/>
 	</CreateProperty>
-	<CreateItem Include="$(TargetFrameworkMonikerAssemblyAttributesPath)">
-		<Output TaskParameter="Include" ItemName="FileWrites"
-				Condition="'$(TargetFrameworkMonikerAssemblyAttributesPath)' != ''"
-		/>
-	</CreateItem>
-	<CreateItem Include="$(_JavaInteropReferences)">
-		<Output TaskParameter="Include" ItemName="Reference" />
-	</CreateItem>
+	<ItemGroup>
+		<FileWrites Include="$(TargetFrameworkMonikerAssemblyAttributesPath)" />
+		<Reference Include="$(_JavaInteropReferences)" />
+	</ItemGroup>
 	<Warning Code="XA0110"
 		Text="Disabling $(AndroidExplicitCrunch) as it is not supported by `aapt2`. If you wish to use $(AndroidExplicitCrunch) please set $(AndroidUseAapt2) to false."
 		Condition="  '$(_AndroidUseAapt2)' == 'True' And '$(AndroidExplicitCrunch)' == 'True' "
@@ -1373,11 +1361,9 @@ because xbuild doesn't support framework reference assemblies.
 		Condition=" '$(AndroidExplicitCrunch)' == 'True' And '$(AndroidApplication)' != '' And $(AndroidApplication)">
 	<ItemGroup>
 		<_LibraryResourceDirs Include="@(LibraryResourceDirectories)"/>
+		<_LibraryResourceImages Include="@(_LibraryResourceDirs->'%(Identity)\**\*.png')" />
 	</ItemGroup>
-	<CreateItem Include="@(_LibraryResourceDirs->'%(Identity)\\**\*.png')">
-		<Output TaskParameter="Include" ItemName="_Images" />
-	</CreateItem> 
-	<RemoveDuplicates Inputs="@(_Images)">
+	<RemoveDuplicates Inputs="@(_LibraryResourceImages)">
 		<Output TaskParameter="Filtered" ItemName="_LibraryProjectResourceImages"/>
 	</RemoveDuplicates>
 </Target>
@@ -1393,14 +1379,12 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_AddMultiDexDependencyJars">
-	<CreateItem Include="$(_AndroidSdkDirectory)\$(AndroidMultiDexSupportJar)"
-		Condition="'$(AndroidEnableMultiDex)' == 'True' AND '$(AndroidMultiDexSupportJar)' != ''">
-      <Output TaskParameter="Include" ItemName="AndroidJavaLibrary" />
-	</CreateItem>
-	<CreateItem Include="$(MonoAndroidToolsDirectory)\android-support-multidex.jar"
-		Condition="'$(AndroidEnableMultiDex)' == 'True' AND '$(AndroidMultiDexSupportJar)' == ''">
-      <Output TaskParameter="Include" ItemName="AndroidJavaLibrary" />
-	</CreateItem>
+  <ItemGroup Condition=" '$(AndroidEnableMultiDex)' == 'True' AND '$(AndroidMultiDexSupportJar)' != '' ">
+    <AndroidJavaLibrary Include="$(_AndroidSdkDirectory)\$(AndroidMultiDexSupportJar)" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(AndroidEnableMultiDex)' == 'True' AND '$(AndroidMultiDexSupportJar)' == '' ">
+    <AndroidJavaLibrary Include="$(MonoAndroidToolsDirectory)\android-support-multidex.jar" />
+  </ItemGroup>
 </Target>
 
 <PropertyGroup>
@@ -1426,17 +1410,12 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_GetLibraryImports" DependsOnTargets="$(_GetLibraryImportsDependsOnTargets)">
-	<ReadImportedLibrariesCache
-			CacheFile="$(_AndroidLibraryImportsCache)">
-		<Output TaskParameter="Jars" ItemName="ExtractedJarImports" />
-		<Output TaskParameter="NativeLibraries" ItemName="ExtractedNativeLibraryImports" />
-		<Output TaskParameter="ManifestDocuments" ItemName="ExtractedManifestDocuments" />
-	</ReadImportedLibrariesCache>
-	
-    <CreateItem Include="@(ExtractedNativeLibraryImports)"
-        Condition="'@(ExtractedNativeLibraryImports)' != ''">
-      <Output TaskParameter="Include" ItemName="AndroidNativeLibrary" />
-    </CreateItem>
+  <ReadImportedLibrariesCache CacheFile="$(_AndroidLibraryImportsCache)">
+    <Output TaskParameter="Jars"              ItemName="ExtractedJarImports" />
+    <Output TaskParameter="NativeLibraries"   ItemName="ExtractedNativeLibraryImports" />
+    <Output TaskParameter="NativeLibraries"   ItemName="AndroidNativeLibrary" />
+    <Output TaskParameter="ManifestDocuments" ItemName="ExtractedManifestDocuments" />
+  </ReadImportedLibrariesCache>
 </Target>
   
 <Target Name="_CreateNativeLibraryArchive"
@@ -1457,11 +1436,11 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_AddAndroidEnvironmentToCompile">
-    <CreateItem Include="@(AndroidEnvironment)"
-        Condition="@(AndroidEnvironment) !=''"
-        AdditionalMetadata="@(AndroidEnvironment->'LogicalName=__AndroidEnvironment__%(filename)%(extension)')">
-      <Output TaskParameter="Include" ItemName="EmbeddedResource" />
-    </CreateItem>
+  <ItemGroup>
+    <EmbeddedResource Include="@(AndroidEnvironment)">
+      <LogicalName>__AndroidEnvironment__%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
 </Target>
 
 <Target Name="_FindLayoutsForBinding" Condition=" '$(Language)' == 'C#' ">
@@ -1585,16 +1564,9 @@ because xbuild doesn't support framework reference assemblies.
 		<Output TaskParameter="PrimaryJavaResgenFile" PropertyName="_GeneratedPrimaryJavaResgenFile" />
 	</CopyGeneratedJavaResourceClasses>
 
-  <!-- We need to strip out just filename from request Designer file location -->
-  <CreateItem Include="$(_AndroidResourceDesignerFile)">
-    <Output TaskParameter="Include" ItemName="_AndroidResgenFilenameItems" />
-  </CreateItem>
-
-  <CreateProperty Value="@(_AndroidResgenFilenameItems->'%(Filename)%(Extension)')">
-    <Output TaskParameter="Value" PropertyName="AndroidResgenFilename"/>
-  </CreateProperty>
-
   <PropertyGroup>
+    <!-- We need to strip out just filename from request Designer file location -->
+    <AndroidResgenFilename>$([System.IO.Path]::GetFileName ('$(_AndroidResourceDesignerFile)'))</AndroidResgenFilename>
     <_UseManagedResourceGenerator Condition=" '$(_AndroidUseAapt2)' == 'True' ">True</_UseManagedResourceGenerator>
     <_UseManagedResourceGenerator Condition=" '$(_UseManagedResourceGenerator)' == '' ">False</_UseManagedResourceGenerator>
   </PropertyGroup>
@@ -1674,9 +1646,9 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_AddManagedAidlOutputsToCompile" DependsOnTargets="_RunManagedAidlTool">
   <!-- Add the files to list of things to be compiled -->
-  <CreateItem Include="$(IntermediateOutputPath)aidl\\**\*.cs">
-    <Output TaskParameter="Include" ItemName="Compile" />
-  </CreateItem>
+  <ItemGroup Condition="Exists('$(IntermediateOutputPath)aidl\')">
+    <Compile Include="$(IntermediateOutputPath)aidl\**\*.cs" />
+  </ItemGroup>
 </Target>
 
 
@@ -2019,71 +1991,28 @@ because xbuild doesn't support framework reference assemblies.
     <Output TaskParameter="FilesThatExist" ItemName="_ResolvedFrameworkAssemblies" />
   </GetFilesThatExist>
 
-  <CreateItem
-    Include="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')"
-    Condition="'$(AndroidLinkMode)' == 'None'">
-    <Output TaskParameter="Include" ItemName="_ResolvedAssemblies" />
-  </CreateItem>
-
-  <CreateItem
-    Include="@(ResolvedSymbols->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')"
-    Condition="'$(AndroidLinkMode)' == 'None'">
-    <Output TaskParameter="Include" ItemName="_ResolvedSymbols" />
-  </CreateItem>
-
-  <CreateItem
-    Include="@(ResolvedUserAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')"
-    Condition="'$(AndroidLinkMode)' == 'None'">
-    <Output TaskParameter="Include" ItemName="_ResolvedUserAssemblies" />
-  </CreateItem>
-
-  <CreateItem
-    Include="@(ResolvedFrameworkAssemblies)"
-    Condition="'$(AndroidLinkMode)' == 'None'">
-    <Output TaskParameter="Include" ItemName="_ResolvedFrameworkAssemblies" />
-  </CreateItem>
-
-  <CreateItem
-    Include="@(_ResolvedAssemblies)"
-    Condition="'$(AndroidLinkMode)' == 'None' OR '$(AndroidUseSharedRuntime)' == 'true'">
-    <Output TaskParameter="Include" ItemName="_ShrunkAssemblies" />
-  </CreateItem>
-
-  <CreateItem
-    Include="@(_ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)shrunk\%(Filename)%(Extension)')"
-    Condition="'$(AndroidLinkMode)' != 'None' AND '$(AndroidUseSharedRuntime)' != 'true'">
-    <Output TaskParameter="Include" ItemName="_ShrunkAssemblies" />
-  </CreateItem>
-
-  <CreateItem
-    Include="@(_ResolvedUserAssemblies)"
-    Condition="'$(AndroidLinkMode)' == 'None' OR '$(AndroidUseSharedRuntime)' == 'true'">
-    <Output TaskParameter="Include" ItemName="_ShrunkUserAssemblies" />
-  </CreateItem>
-
-  <CreateItem
-    Include="@(_ResolvedUserAssemblies->'$(MonoAndroidIntermediateAssemblyDir)shrunk\%(Filename)%(Extension)')"
-    Condition="'$(AndroidLinkMode)' != 'None' AND '$(AndroidUseSharedRuntime)' != 'true'">
-    <Output TaskParameter="Include" ItemName="_ShrunkUserAssemblies" />
-  </CreateItem>
-
-  <CreateItem
-    Include="@(_ResolvedFrameworkAssemblies)"
-    Condition="'$(AndroidLinkMode)' == 'None' OR '$(AndroidUseSharedRuntime)' == 'true'">
-    <Output TaskParameter="Include" ItemName="_ShrunkFrameworkAssemblies" />
-  </CreateItem>
-
-  <CreateItem
-    Include="@(_ResolvedFrameworkAssemblies->'$(MonoAndroidIntermediateAssemblyDir)shrunk\%(Filename)%(Extension)')"
-    Condition="'$(AndroidLinkMode)' != 'None' AND '$(AndroidUseSharedRuntime)' != 'true'">
-    <Output TaskParameter="Include" ItemName="_ShrunkFrameworkAssemblies" />
-  </CreateItem>
-
-  <CreateItem
-    Include="@(_ResolvedUserAssemblies)"
-    Condition="'%(_ResolvedUserAssemblies.TargetFrameworkIdentifier)' == 'MonoAndroid' Or '%(_ResolvedUserAssemblies.HasMonoAndroidReference)' == 'True'">
-    <Output TaskParameter="Include" ItemName="_ResolvedUserMonoAndroidAssemblies" />
-  </CreateItem>
+  <ItemGroup Condition=" '$(AndroidLinkMode)' == 'None' ">
+    <_ResolvedAssemblies          Include="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')" />
+    <_ResolvedSymbols             Include="@(ResolvedSymbols->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')" />
+    <_ResolvedUserAssemblies      Include="@(ResolvedUserAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')" />
+    <_ResolvedFrameworkAssemblies Include="@(ResolvedFrameworkAssemblies)" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(AndroidLinkMode)' == 'None' Or '$(AndroidUseSharedRuntime)' == 'True' ">
+    <_ShrunkAssemblies          Include="@(_ResolvedAssemblies)" />
+    <_ShrunkUserAssemblies      Include="@(_ResolvedUserAssemblies)" />
+    <_ShrunkFrameworkAssemblies Include="@(_ResolvedFrameworkAssemblies)" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(AndroidLinkMode)' != 'None' And '$(AndroidUseSharedRuntime)' != 'True' ">
+    <_ShrunkAssemblies          Include="@(_ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)shrunk\%(Filename)%(Extension)')" />
+    <_ShrunkUserAssemblies      Include="@(_ResolvedUserAssemblies->'$(MonoAndroidIntermediateAssemblyDir)shrunk\%(Filename)%(Extension)')" />
+    <_ShrunkFrameworkAssemblies Include="@(_ResolvedFrameworkAssemblies->'$(MonoAndroidIntermediateAssemblyDir)shrunk\%(Filename)%(Extension)')" />
+  </ItemGroup>
+  <ItemGroup>
+    <_ResolvedUserMonoAndroidAssemblies
+        Include="@(_ResolvedUserAssemblies)"
+        Condition=" '%(_ResolvedUserAssemblies.TargetFrameworkIdentifier)' == 'MonoAndroid' Or '%(_ResolvedUserAssemblies.HasMonoAndroidReference)' == 'True' "
+    />
+  </ItemGroup>
 </Target>
 
 <Target Name="_PrepareNativeAssemblySources">
@@ -2330,11 +2259,10 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_FindJavaStubFiles" DependsOnTargets="_GenerateJavaStubs;_ConvertCustomView;_FixupCustomViewsForAapt2;_GenerateEnvironmentFiles;">
-  <CreateItem
-    Include="$(_AndroidIntermediateJavaSourceDirectory)**\*.java">
-    <Output TaskParameter="Include" ItemName="_JavaStubFiles" />
-    <Output TaskParameter="Include" ItemName="FileWrites" />
-  </CreateItem>
+  <ItemGroup>
+    <_JavaStubFiles Include="$(_AndroidIntermediateJavaSourceDirectory)**\*.java" />
+    <FileWrites Include="@(_JavaStubFiles)" />
+  </ItemGroup>
 </Target>
 
 <Target Name="_AdjustJavacVersionArguments">
@@ -2441,9 +2369,9 @@ because xbuild doesn't support framework reference assemblies.
   Inputs="$(_CompileToDalvikInputs)"
   Outputs="$(_AndroidStampDirectory)_CompileToDalvik.stamp">
 
-  <CreateItem Include="@(_JavaLibrariesToCompile)">
-    <Output TaskParameter="Include" ItemName="_JarsToProguard" />
-  </CreateItem>
+  <ItemGroup>
+    <_JarsToProguard Include="@(_JavaLibrariesToCompile)" />
+  </ItemGroup>
   
   <MakeDir Directories="$(IntermediateOutputPath)proguard" />
 
@@ -2473,11 +2401,9 @@ because xbuild doesn't support framework reference assemblies.
     ProguardInputJarFilter="$(_AndroidProguardInputJarFilter)"
      />
 
-  <CreateItem 
-    Include="$(IntermediateOutputPath)proguard\__proguard_output__.jar"
-    Condition=" '$(AndroidLinkTool)' == 'proguard' And '$(_ProguardProjectConfiguration)' != '' ">
-    <Output TaskParameter="Include" ItemName="_AlternativeJarForAppDx" />
-  </CreateItem>
+  <ItemGroup Condition=" '$(AndroidLinkTool)' == 'proguard' And '$(_ProguardProjectConfiguration)' != '' ">
+    <_AlternativeJarForAppDx Include="$(IntermediateOutputPath)proguard\__proguard_output__.jar" />
+  </ItemGroup>
 
   <CreateMultiDexMainDexClassList
     Condition="'$(AndroidEnableMultiDex)' == 'True' And '$(AndroidCustomMainDexListFile)' == ''"
@@ -3120,9 +3046,6 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="ConvertDebuggingFiles"
 	Condition=" '$(AndroidIncludeDebugSymbols)' == 'true' And Exists ('$(_IntermediatePdbFile)') And '$(OS)' == 'Windows_NT'"
 	DependsOnTargets="_ConvertDebuggingFiles">
-	<CreateItem Include="$(OutDir)$(TargetFileName).mdb" Condition="Exists('$(OutDir)$(TargetFileName).mdb')">
-		<Output TaskParameter="Include" ItemName="FileWrites" />
-	</CreateItem>
 </Target>
 
 <Target Name="_ConvertDebuggingFiles"
@@ -3131,6 +3054,9 @@ because xbuild doesn't support framework reference assemblies.
 	DependsOnTargets="_ValidateAndroidPackageProperties">
 	<ConvertDebuggingFiles Files="$(OutDir)$(TargetFileName)" />
 	<Touch Files="$(OutDir)$(TargetFileName).mdb" />
+	<ItemGroup>
+		<FileWrites Include="$(OutDir)$(TargetFileName).mdb" />
+	</ItemGroup>
 </Target>
 
 
@@ -3168,9 +3094,9 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CleanGeneratedDeploymentFiles">
-	<CreateItem Include="$(IntermediateOutputPath)*.deployment">
-		<Output TaskParameter="Include" ItemName="_OutputDeploymentFiles" />
-	</CreateItem>
+	<ItemGroup>
+		<_OutputDeploymentFiles Include="$(IntermediateOutputPath)*.deployment" />
+	</ItemGroup>
 	<Delete Files="@(_OutputDeploymentFiles)"/>
 </Target>
 
@@ -3222,46 +3148,21 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CollectMonoAndroidOutputs" DependsOnTargets="_ValidateAndroidPackageProperties">
-	<CreateItem Include="$(ApkFile)">
-		<Output TaskParameter="Include" ItemName="FileWrites"/>
-	</CreateItem>
-	<CreateItem Include="$(ApkFileIntermediate)">
-		<Output TaskParameter="Include" ItemName="FileWrites"/>
-	</CreateItem>
-	<CreateItem Include="$(_AabFile)">
-		<Output TaskParameter="Include" ItemName="FileWrites"/>
-	</CreateItem>
-	<CreateItem Include="$(_AabFileSigned)">
-		<Output TaskParameter="Include" ItemName="FileWrites"/>
-	</CreateItem>
-	<CreateItem Include="$(_BaseZipIntermediate)">
-		<Output TaskParameter="Include" ItemName="FileWrites"/>
-	</CreateItem>
-	<CreateItem Include="$(_AppBundleIntermediate)">
-		<Output TaskParameter="Include" ItemName="FileWrites"/>
-	</CreateItem>
-	<CreateItem Include="$(_ApkSetIntermediate)">
-		<Output TaskParameter="Include" ItemName="FileWrites"/>
-	</CreateItem>
-	<!-- FIXME: check files exists -->
-	<CreateItem Include="@(_AndroidResourceDest)">
-		<Output TaskParameter="Include" ItemName="FileWrites"/>
-	</CreateItem>
-	<CreateItem Include="$(_AndroidResgenFlagFile)">
-		<Output TaskParameter="Include" ItemName="FileWrites"/>
-	</CreateItem>
-	<CreateItem Include="$(IntermediateOutputPath)R.txt">
-		<Output TaskParameter="Include" ItemName="FileWrites"/>
-	</CreateItem>
-	<CreateItem Include="$(ApkFileSigned)">
-		<Output TaskParameter="Include" ItemName="FileWrites"/>
-	</CreateItem>
-	<CreateItem Include="$(_UploadFlagFile)">
-		<Output TaskParameter="Include" ItemName="FileWrites"/>
-	</CreateItem>
-	<CreateItem Include="@(_ModifiedResources)">
- 		<Output TaskParameter="Include" ItemName="FileWrites"/>
- 	</CreateItem>
+  <ItemGroup>
+    <FileWrites Include="$(ApkFile)" />
+    <FileWrites Include="$(ApkFileIntermediate)" />
+    <FileWrites Include="$(_AabFile)" />
+    <FileWrites Include="$(_AabFileSigned)" />
+    <FileWrites Include="$(_BaseZipIntermediate)" />
+    <FileWrites Include="$(_AppBundleIntermediate)" />
+    <FileWrites Include="$(_ApkSetIntermediate)" />
+    <FileWrites Include="@(_AndroidResourceDest)" />
+    <FileWrites Include="$(_AndroidResgenFlagFile)" />
+    <FileWrites Include="$(IntermediateOutputPath)R.txt" />
+    <FileWrites Include="$(ApkFileSigned)" />
+    <FileWrites Include="$(_UploadFlagFile)" />
+    <FileWrites Include="@(_ModifiedResources)" />
+  </ItemGroup>
 </Target>
 
 <Target Name="_lldb"
