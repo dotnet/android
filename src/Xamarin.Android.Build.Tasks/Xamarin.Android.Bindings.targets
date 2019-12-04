@@ -221,14 +221,10 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
        Condition="'$(TargetFrameworkMoniker)' != ''"
     />
     </CreateProperty>
-    <CreateItem Include="$(TargetFrameworkMonikerAssemblyAttributesPath)">
-      <Output TaskParameter="Include" ItemName="FileWrites"
-        Condition="'$(TargetFrameworkMonikerAssemblyAttributesPath)' != ''"
-    />
-    </CreateItem>
-    <CreateItem Include="$(_JavaInteropReferences)">
-      <Output TaskParameter="Include" ItemName="Reference" />
-    </CreateItem>
+    <ItemGroup>
+      <FileWrites Include="$(TargetFrameworkMonikerAssemblyAttributesPath)" />
+      <Reference Include="$(_JavaInteropReferences)" />
+    </ItemGroup>
   </Target>
 
   <!-- Find all the needed SDKs -->
@@ -322,10 +318,9 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 			CacheFile="$(_AndroidLibraryImportsCache)">
 		<Output TaskParameter="Jars" ItemName="ExtractedJarImports" />
 	</GetImportedLibraries>
-
-    <CreateItem Include="@(ZippedLibraryProjectJars);@(ExtractedJarImports)">
-      <Output TaskParameter="Include" ItemName="ReferenceJar" />
-    </CreateItem>
+  <ItemGroup>
+    <ReferenceJar Include="@(ZippedLibraryProjectJars);@(ExtractedJarImports)" />
+  </ItemGroup>
 </Target>
 
 <Target Name="_GetLibraryImports" DependsOnTargets="_BuildLibraryImportsCache">
@@ -353,10 +348,9 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 		
     <Touch Files="@(JavaDocJar->'$(IntermediateOutputPath)javadocs\%(FileName).stamp')" />
 		
-    <CreateItem Include="@(JavaDocJar->'$(IntermediateOutputPath)javadocs\%(FileName)\index.html')">
-      <Output TaskParameter="Include" ItemName="JavaDocIndex" />
-    </CreateItem>
-		
+    <ItemGroup>
+      <JavaDocIndex Include="@(JavaDocJar->'$(IntermediateOutputPath)javadocs\%(FileName)\index.html')" />
+    </ItemGroup>
   </Target>
 
   <Target Name="_GenerateJavaDocFromSourceJars"
@@ -377,9 +371,9 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 	
     <Touch Files="@(JavaSourceJar->'$(IntermediateOutputPath)javasources\%(FileName).stamp')" AlwaysCreate="True" />
 		
-    <CreateItem Include="@(JavaSourceJar->'$(IntermediateOutputPath)javadocs\%(FileName)\index.html')">
-      <Output TaskParameter="Include" ItemName="JavaDocIndex" />
-    </CreateItem>
+    <ItemGroup>
+      <JavaDocIndex Include="@(JavaSourceJar->'$(IntermediateOutputPath)javadocs\%(FileName)\index.html')" />
+    </ItemGroup>
 		
   </Target>
 
@@ -444,9 +438,9 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
     <!-- Delete previous generated files if they still exist -->
     <RemoveDirFixed Directories="$(GeneratedOutputPath)" Condition="Exists ('$(GeneratedOutputPath)')" />
 
-    <CreateItem Include="$(IntermediateOutputPath)library_project_annotations\\*.zip">
-      <Output TaskParameter="Include" ItemName="AnnotationsZip" />
-    </CreateItem>
+    <ItemGroup>
+      <AnnotationsZip Include="$(IntermediateOutputPath)library_project_annotations\*.zip" />
+    </ItemGroup>
 		
 	<!-- Create the .cs binding source files -->
     <BindingsGenerator
@@ -476,31 +470,33 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 
   <Target Name="AddBindingsToCompile" DependsOnTargets="GenerateBindings">
     <!-- Add the files to list of things to be compiled -->
-    <CreateItem Include="$(IntermediateOutputPath)generated\*\*.cs">
-      <Output TaskParameter="Include" ItemName="Compile" />
-    </CreateItem>
+    <ItemGroup>
+      <Compile Include="$(IntermediateOutputPath)generated\*\*.cs" />
+    </ItemGroup>
   </Target>
 
   <Target Name="AddEmbeddedJarsAsResources" DependsOnTargets="GenerateBindings">
-    <CreateItem Include="@(EmbeddedJar)"
-        AdditionalMetadata="LogicalName=%(Filename)%(Extension)">
-      <Output TaskParameter="Include" ItemName="EmbeddedResource" />
-    </CreateItem>
+    <ItemGroup>
+      <EmbeddedResource Include="@(EmbeddedJar)">
+        <LogicalName>%(Filename)%(Extension)</LogicalName>
+      </EmbeddedResource>
+    </ItemGroup>
   </Target>
 
   <Target Name="AddEmbeddedReferenceJarsAsResources" DependsOnTargets="GenerateBindings">
-    <CreateItem Include="@(EmbeddedReferenceJar)"
-                AdditionalMetadata="LogicalName=__reference__%(FileName)%(Extension)">
-      <Output TaskParameter="Include" ItemName="EmbeddedResource" />
-    </CreateItem>
+    <ItemGroup>
+      <EmbeddedResource Include="@(EmbeddedReferenceJar)">
+        <LogicalName>__reference__%(Filename)%(Extension)</LogicalName>
+      </EmbeddedResource>
+    </ItemGroup>
   </Target>
 
   <Target Name="AddLibraryProjectsToCompile" DependsOnTargets="ResolveLibraryProjects">
-    <CreateItem Include="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip"
-        Condition="Exists ('$(IntermediateOutputPath)__AndroidLibraryProjects__.zip')"
-        AdditionalMetadata="LogicalName=__AndroidLibraryProjects__.zip">
-      <Output TaskParameter="Include" ItemName="EmbeddedResource" />
-    </CreateItem>
+    <ItemGroup Condition="Exists ('$(IntermediateOutputPath)__AndroidLibraryProjects__.zip')">
+      <EmbeddedResource Include="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip">
+        <LogicalName>__AndroidLibraryProjects__.zip</LogicalName>
+      </EmbeddedResource>
+    </ItemGroup>
   </Target>
   
   <Target Name="ResolveLibraryProjects"
@@ -515,9 +511,9 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
   </Target>
 
   <Target Name="AddLibraryJarsToBind" DependsOnTargets="ResolveLibraryProjects">
-    <CreateItem Include="$(IntermediateOutputPath)library_project_jars\\*.jar">
-      <Output TaskParameter="Include" ItemName="InputJar" />
-    </CreateItem>
+    <ItemGroup>
+      <InputJar Include="$(IntermediateOutputPath)library_project_jars\*.jar" />
+    </ItemGroup>
   </Target>
 
   <Target Name="BuildDocumentation"
@@ -609,11 +605,11 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
   </Target>
 
   <Target Name="_AddNativeLibraryArchiveToCompile" DependsOnTargets="_CreateNativeLibraryArchive">
-    <CreateItem Include="$(IntermediateOutputPath)__AndroidNativeLibraries__.zip"
-                Condition="Exists ('$(IntermediateOutputPath)__AndroidNativeLibraries__.zip')"
-                AdditionalMetadata="LogicalName=__AndroidNativeLibraries__.zip">
-      <Output TaskParameter="Include" ItemName="EmbeddedResource" />
-    </CreateItem>
+    <ItemGroup Condition="Exists('$(IntermediateOutputPath)__AndroidNativeLibraries__.zip')">
+      <EmbeddedResource Include="$(IntermediateOutputPath)__AndroidNativeLibraries__.zip">
+        <LogicalName>__AndroidNativeLibraries__.zip</LogicalName>
+      </EmbeddedResource>
+    </ItemGroup>
   </Target>
 
   <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.PCLSupport.targets" />

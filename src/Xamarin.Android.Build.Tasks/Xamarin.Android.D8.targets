@@ -72,11 +72,9 @@ Copyright (C) 2018 Xamarin. All rights reserved.
         ProguardInputJarFilter="$(_AndroidProguardInputJarFilter)"
     />
 
-    <CreateItem 
-        Include="$(IntermediateOutputPath)proguard\__proguard_output__.jar"
-        Condition=" '$(AndroidLinkTool)' == 'proguard' And '$(_ProguardProjectConfiguration)' != '' ">
-      <Output TaskParameter="Include" ItemName="_AlternativeJarForAppD8" />
-    </CreateItem>
+    <ItemGroup Condition=" '$(AndroidLinkTool)' == 'proguard' And '$(_ProguardProjectConfiguration)' != '' ">
+      <_AlternativeJarForAppD8 Include="$(IntermediateOutputPath)proguard\__proguard_output__.jar" />
+    </ItemGroup>
 
     <R8
         Condition=" '$(_UseR8)' == 'True' "
