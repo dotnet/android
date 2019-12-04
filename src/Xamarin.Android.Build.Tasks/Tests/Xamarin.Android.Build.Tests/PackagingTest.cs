@@ -716,7 +716,7 @@ namespace App1
 <configuration>
   <packageSources>
     <add key='nuget.org' value='https://api.nuget.org/v3/index.json' protocolVersion='3' />
-    <add key='bug-testing' value='..\' />
+    <add key='bug-testing' value='..' />
   </packageSources>
 </configuration>");
 				Assert.IsTrue (xab.Build (xa, doNotCleanupOnUpdate: true), "Build of App Library should have succeeded.");
