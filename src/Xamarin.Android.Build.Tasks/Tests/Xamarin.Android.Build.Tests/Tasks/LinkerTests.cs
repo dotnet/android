@@ -87,5 +87,29 @@ namespace Xamarin.Android.Build.Tests
 				}
 			}
 		}
+
+		[Test]
+		public void WarnAboutAppDomainsRelease ()
+		{
+			var proj = new XamarinAndroidApplicationProject () { IsRelease = true };
+			WarnAboutAppDomains (proj, TestName);
+		}
+
+		[Test]
+		public void WarnAboutAppDomainsDebug ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			WarnAboutAppDomains (proj, TestName);
+		}
+
+		void WarnAboutAppDomains (XamarinAndroidApplicationProject proj, string testName)
+		{
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("base.OnCreate (bundle);", "base.OnCreate (bundle);\nvar appDomain = System.AppDomain.CreateDomain (\"myDomain\");");
+			var projDirectory = Path.Combine ("temp", testName);
+			using (var b = CreateApkBuilder (projDirectory)) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "Warning: Use of AppDomain::CreateDomain"), "Should warn about creating AppDomain.");
+			}
+		}
 	}
 }
