@@ -110,9 +110,10 @@ namespace Xamarin.Android.Tasks
 			if (isVB)
 				Namespace = string.Empty;
 
+			List<string> aliases = new List<string> ();
 			// Create static resource overwrite methods for each Resource class in libraries.
 			if (IsApplication && References != null && References.Length > 0) {
-				var assemblies = new List<string> (References.Length);
+				var assemblies = new List<ITaskItem> (References.Length);
 				foreach (var assembly in References) {
 					var assemblyPath = assembly.ItemSpec;
 					var fileName = Path.GetFileName (assemblyPath);
@@ -125,7 +126,12 @@ namespace Xamarin.Android.Tasks
 						Log.LogDebugMessage ($"Skipping non-existent dependency '{assemblyPath}'.");
 						continue;
 					}
-					assemblies.Add (assemblyPath);
+					ITaskItem item = new TaskItem (assemblyPath);
+					assembly.CopyMetadataTo (item);
+					assemblies.Add (item);
+					string alias = assembly.GetMetadata ("Aliases");
+					if (!string.IsNullOrEmpty (alias))
+						aliases.Add (alias);
 					Log.LogDebugMessage ("Scan assembly {0} for resource generator", fileName);
 				}
 				new ResourceDesignerImportGenerator (Namespace, resources, Log)
@@ -139,7 +145,7 @@ namespace Xamarin.Android.Tasks
 
 			// Write out our Resources.Designer.cs file
 
-			WriteFile (NetResgenOutputFile, resources, language, isFSharp, isCSharp);
+			WriteFile (NetResgenOutputFile, resources, language, isFSharp, isCSharp, aliases);
 
 			return !Log.HasLoggedErrors;
 		}
@@ -169,7 +175,7 @@ namespace Xamarin.Android.Tasks
 			type.Members.Add (staticCtor);
 		}
 
-		private void WriteFile (string file, CodeTypeDeclaration resources, string language, bool isFSharp, bool isCSharp)
+		private void WriteFile (string file, CodeTypeDeclaration resources, string language, bool isFSharp, bool isCSharp, IEnumerable<string> aliases)
 		{
 			CodeDomProvider provider = 
 				isFSharp ? new FSharp.Compiler.CodeDom.FSharpCodeProvider () :
@@ -198,8 +204,11 @@ namespace Xamarin.Android.Tasks
 				unit.AssemblyCustomAttributes.Add (resgenatt);
 
 				// Add Pragma to disable warnings about no Xml documentation
-				if (isCSharp)
-					provider.GenerateCodeFromCompileUnit(new CodeSnippetCompileUnit("#pragma warning disable 1591"), o, options);
+				if (isCSharp) {
+					foreach (var alias in aliases)
+						provider.GenerateCodeFromStatement (new CodeSnippetStatement ($"extern alias {alias};"), o, options);
+					provider.GenerateCodeFromCompileUnit (new CodeSnippetCompileUnit ("#pragma warning disable 1591"), o, options);
+				}
 
 				provider.CreateGenerator (o).GenerateCodeFromCompileUnit (unit, o, options);
 

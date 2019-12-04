@@ -334,6 +334,10 @@ namespace Xamarin.Android.Prepare
 			public static string MonoSourceFullPath             => ctx.Properties.GetRequiredValue (KnownProperties.MonoSourceFullPath);
 			public static string MonoSdksTpnPath                => GetCachedPath (ref monoSdksTpnPath, ()         => Path.Combine (MonoSDKSOutputDir, "android-tpn"));
 			public static string MonoSdksTpnExternalPath        => GetCachedPath (ref monoSdksTpnExternalPath, () => Path.Combine (MonoSdksTpnPath, "external"));
+			public static string MonoLlvmTpnPath                => GetCachedPath (ref monoLlvmTpnPath, () => {
+				var path = Path.Combine (MonoSdksTpnExternalPath, "llvm-project", "llvm");
+				return Directory.Exists (path) ? path : Path.Combine (MonoSdksTpnExternalPath, "llvm");
+			});
 
 			static string EnsureAndroidToolchainBinDirectories ()
 			{
@@ -392,6 +396,7 @@ namespace Xamarin.Android.Prepare
 			static string monoSdksTpnPath;
 			static string monoSdksTpnExternalPath;
 			static string monoSDKSIncludeDestDir;
+			static string monoLlvmTpnPath;
 		}
 	}
 }

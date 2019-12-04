@@ -323,6 +323,11 @@ namespace Xamarin.Android.Prepare
 		public RefreshableComponent ComponentsToRefresh { get; set; }
 
 		/// <summary>
+		/// Set by the --mono-archive-url flag
+		/// </summary>
+		public string MonoArchiveCustomUrl { get; set; }
+
+		/// <summary>
 		///   Set by <see cref="Step_DownloadMonoArchive"/> if the archive has been downloaded and validated, so
 		///   that the <see cref="Step_InstallMonoRuntimes"/> step doesn't attempt to rebuild Mono.
 		/// </summary>

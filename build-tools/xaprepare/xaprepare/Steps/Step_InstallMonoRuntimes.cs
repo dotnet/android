@@ -36,7 +36,7 @@ namespace Xamarin.Android.Prepare
 
 			Log.StatusLine ("Checking if all runtime files are present");
 			var allRuntimes = new Runtimes ();
-			if (MonoRuntimesHelpers.AreRuntimeItemsInstalled (allRuntimes)) {
+			if (MonoRuntimesHelpers.AreRuntimeItemsInstalled (context, allRuntimes)) {
 
 				// User might have changed the set of ABIs to build, we need to check and rebuild if necessary
 				if (!Utilities.AbiChoiceChanged (context)) {

@@ -38,7 +38,7 @@ namespace Xamarin.Android.Prepare
 
 			Log.StatusLine ("Checking if all runtime files are present");
 			var allRuntimes = new Runtimes ();
-			if (MonoRuntimesHelpers.AreRuntimeItemsInstalled (allRuntimes)) {
+			if (MonoRuntimesHelpers.AreRuntimeItemsInstalled (context, allRuntimes)) {
 
 				// User might have changed the set of ABIs to build, we need to check and rebuild if necessary
 				if (!Utilities.AbiChoiceChanged (context)) {
@@ -50,11 +50,22 @@ namespace Xamarin.Android.Prepare
 			}
 			Log.Instance.StatusLine ($"  {Context.Instance.Characters.Bullet} some files are missing, download and extraction required");
 
+			string localPath, archiveFileName;
+			if (string.IsNullOrEmpty (context.MonoArchiveCustomUrl)) {
+				localPath = Configurables.Paths.MonoArchiveLocalPath;
+				archiveFileName = Configurables.Paths.MonoArchiveFileName;
+			} else {
+				var uri = new Uri (context.MonoArchiveCustomUrl);
+				archiveFileName = Path.GetFileName (uri.LocalPath);
+				localPath = Path.Combine (context.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory), archiveFileName);
+			}
+
 			bool result = await DownloadAndUpackIfNeeded (
 				context,
 				"Mono",
-				Configurables.Paths.MonoArchiveLocalPath,
-				Configurables.Paths.MonoArchiveFileName,
+				context.MonoArchiveCustomUrl,
+				localPath,
+				archiveFileName,
 				Configurables.Paths.MonoSDKSOutputDir
 			);
 
@@ -64,20 +75,23 @@ namespace Xamarin.Android.Prepare
 			return await DownloadAndUpackIfNeeded (
 				context,
 				"Windows Mono",
-				Configurables.Paths.MonoArchiveWindowsLocalPath,
-				Configurables.Paths.MonoArchiveWindowsFileName,
-				Configurables.Paths.BCLWindowsOutputDir
+				customUrl: null,
+				localPath: Configurables.Paths.MonoArchiveWindowsLocalPath,
+				archiveFileName: Configurables.Paths.MonoArchiveWindowsFileName,
+				destinationDirectory: Configurables.Paths.BCLWindowsOutputDir
 			);
 		}
 
-		async Task<bool> DownloadAndUpackIfNeeded (Context context, string name, string localPath, string archiveFileName, string destinationDirectory)
+		async Task<bool> DownloadAndUpackIfNeeded (Context context, string name, string customUrl, string localPath, string archiveFileName, string destinationDirectory)
 		{
 			if (File.Exists (localPath)) {
 				Log.StatusLine ($"{name} archive already downloaded");
 			} else {
 				Utilities.DeleteFileSilent (localPath);
 
-				var url = new Uri (Configurables.Urls.MonoArchive_BaseUri, archiveFileName);
+				var url = string.IsNullOrEmpty (customUrl) ?
+					new Uri (Configurables.Urls.MonoArchive_BaseUri, archiveFileName) :
+					new Uri (customUrl);
 				Log.StatusLine ($"Downloading {name} archive from {url}");
 
 				(bool success, ulong size, HttpStatusCode status) = await Utilities.GetDownloadSizeWithStatus (url);
