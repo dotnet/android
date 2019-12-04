@@ -5,6 +5,8 @@ using Mono.Cecil;
 using System;
 using System.IO;
 
+using MTProfile = Mono.Tuner.Profile;
+
 namespace Xamarin.Android.Tasks
 {
 	/// <summary>
@@ -53,10 +55,18 @@ namespace Xamarin.Android.Tasks
 				for (int i = 0; i < SourceFiles.Length; i++) {
 					var source = SourceFiles [i];
 					var destination = DestinationFiles [i];
+					AssemblyDefinition assemblyDefinition = null;
+
+					if (!MTProfile.IsSdkAssembly (source.ItemSpec) && !MTProfile.IsProductAssembly (source.ItemSpec)) {
+						assemblyDefinition = resolver.GetAssembly (source.ItemSpec);
+						step.CheckAppDomainUsage (assemblyDefinition, (string msg) => Log.LogCodedWarning ("XA2000", msg));
+					}
 
 					// Only run the step on "MonoAndroid" assemblies
 					if (MonoAndroidHelper.IsMonoAndroidAssembly (source) && !MonoAndroidHelper.IsSharedRuntimeAssembly (source.ItemSpec)) {
-						var assemblyDefinition = resolver.GetAssembly (source.ItemSpec);
+						if (assemblyDefinition == null)
+							assemblyDefinition = resolver.GetAssembly (source.ItemSpec);
+
 						if (step.FixAbstractMethods (assemblyDefinition)) {
 							Log.LogDebugMessage ($"Saving modified assembly: {destination.ItemSpec}");
 							writerParameters.WriteSymbols = assemblyDefinition.MainModule.HasSymbols;

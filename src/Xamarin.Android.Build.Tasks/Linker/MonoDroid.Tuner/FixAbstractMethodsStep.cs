@@ -22,9 +22,13 @@ namespace MonoDroid.Tuner
 			if (!Annotations.HasAction (assembly))
 				Annotations.SetAction (assembly, AssemblyAction.Skip);
 
-			bool changed = FixAbstractMethods (assembly);
 
-			if (changed) {
+			if (IsProductOrSdkAssembly (assembly))
+				return;
+
+			CheckAppDomainUsageUnconditional (assembly, (string msg) => Context.Logger.LogMessage (MessageImportance.High, msg));
+
+			if (FixAbstractMethodsUnconditional (assembly)) {
 				Context.SafeReadSymbols (assembly);
 				AssemblyAction action = Annotations.HasAction (assembly) ? Annotations.GetAction (assembly) : AssemblyAction.Skip;
 				if (action == AssemblyAction.Skip || action == AssemblyAction.Copy || action == AssemblyAction.Delete)
@@ -36,16 +40,46 @@ namespace MonoDroid.Tuner
 			}
 		}
 
+
+		internal void CheckAppDomainUsage (AssemblyDefinition assembly, Action<string> warn)
+		{
+			if (IsProductOrSdkAssembly (assembly))
+				return;
+
+			CheckAppDomainUsageUnconditional (assembly, warn);
+		}
+
+		void CheckAppDomainUsageUnconditional (AssemblyDefinition assembly, Action<string> warn)
+		{
+			if (!assembly.MainModule.HasTypeReference ("System.AppDomain"))
+				return;
+
+			foreach (var mr in assembly.MainModule.GetMemberReferences ()) {
+				if (mr.ToString ().Contains ("System.AppDomain System.AppDomain::CreateDomain")) {
+					warn ($"Warning: Use of AppDomain::CreateDomain detected in assembly: {assembly}. The AppDomain's will not be part of .NET 5 and therefore will be missing in newer Xamarin.Android releases.");
+					break;
+				}
+			}
+		}
+
 		internal bool FixAbstractMethods (AssemblyDefinition assembly)
 		{
-			if (Profile.IsSdkAssembly (assembly) || Profile.IsProductAssembly (assembly))
-				return false;
+			return !IsProductOrSdkAssembly (assembly) && FixAbstractMethodsUnconditional (assembly);
+		}
+
+		bool FixAbstractMethodsUnconditional (AssemblyDefinition assembly)
+		{
 			bool changed = false;
 			foreach (var type in assembly.MainModule.Types) {
 				if (MightNeedFix (type))
 					changed |= FixAbstractMethods (type);
 			}
 			return changed;
+		}
+
+		bool IsProductOrSdkAssembly (AssemblyDefinition assembly)
+		{
+			return Profile.IsSdkAssembly (assembly) || Profile.IsProductAssembly (assembly);
 		}
 
 		bool MightNeedFix (TypeDefinition type)
