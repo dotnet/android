@@ -5,9 +5,6 @@ namespace Xamarin.Android.Prepare
 {
 	partial class Configurables
 	{
-		const string CorrettoDistVersion = "8.222.10.1";
-		const string CorrettoUrlPathVersion = CorrettoDistVersion;
-
 		partial class Defaults
 		{
 			public const string DefaultCompiler = "cc";
