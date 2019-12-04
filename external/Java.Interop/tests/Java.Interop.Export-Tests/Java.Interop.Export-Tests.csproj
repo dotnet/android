@@ -16,6 +16,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Mono.Linq.Expressions" Version="2.0.0" />
     <PackageReference Include="nunit" Version="3.11.0" />
     <PackageReference Include="NUnit.ConsoleRunner" Version="3.9.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="3.13.0" />
@@ -27,7 +28,6 @@
     <ProjectReference Include="..\..\src\Java.Interop.Export\Java.Interop.Export.csproj" />
     <ProjectReference Include="..\..\src\Java.Runtime.Environment\Java.Runtime.Environment.csproj" />
     <ProjectReference Include="..\TestJVM\TestJVM.csproj" />
-    <ProjectReference Include="..\..\lib\mono.linq.expressions\Mono.Linq.Expressions.csproj" />
   </ItemGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\JdkInfo.props" />

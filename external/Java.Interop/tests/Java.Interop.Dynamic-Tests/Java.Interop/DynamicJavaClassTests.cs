@@ -7,8 +7,6 @@ using System.Threading;
 using Java.Interop;
 using Java.Interop.Dynamic;
 
-using Mono.Linq.Expressions;
-
 using NUnit.Framework;
 
 namespace Java.Interop.DynamicTests {

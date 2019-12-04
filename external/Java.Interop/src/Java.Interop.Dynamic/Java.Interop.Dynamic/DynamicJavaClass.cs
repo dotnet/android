@@ -9,8 +9,6 @@ using System.Text;
 
 using Java.Interop;
 
-using Mono.Linq.Expressions;
-
 namespace Java.Interop.Dynamic {
 
 	public class DynamicJavaClass : IDynamicMetaObjectProvider, IDisposable

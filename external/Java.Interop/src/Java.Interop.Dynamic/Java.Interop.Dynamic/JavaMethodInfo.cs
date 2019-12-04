@@ -9,8 +9,6 @@ using System.Reflection;
 using System.Threading;
 using System.Text;
 
-using Mono.Linq.Expressions;
-
 using Java.Interop;
 
 namespace Java.Interop.Dynamic {

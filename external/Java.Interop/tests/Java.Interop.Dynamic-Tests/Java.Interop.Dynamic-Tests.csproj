@@ -31,7 +31,6 @@
     <ProjectReference Include="..\..\src\Java.Interop.Dynamic\Java.Interop.Dynamic.csproj" />
     <ProjectReference Include="..\..\src\Java.Runtime.Environment\Java.Runtime.Environment.csproj" />
     <ProjectReference Include="..\TestJVM\TestJVM.csproj" />
-    <ProjectReference Include="..\..\lib\mono.linq.expressions\Mono.Linq.Expressions.csproj" />
   </ItemGroup>
 
 </Project>
