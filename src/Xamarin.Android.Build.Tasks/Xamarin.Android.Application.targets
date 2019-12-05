@@ -35,4 +35,30 @@ Copyright (C) 2019 Microsoft Corporation. All rights reserved.
     </GetAndroidPackageName>
     <Exec Command="&quot;$(AdbToolPath)adb&quot; $(AdbTarget) shell am force-stop &quot;$(_AndroidPackage)&quot;" />
   </Target>
+  <PropertyGroup>
+    <AndroidAotCustomProfilePath Condition=" '$(AndroidAotCustomProfilePath)' == '' ">custom.aprof</AndroidAotCustomProfilePath>
+    <AndroidAotProfilerPort Condition=" '$(AndroidAotProfilerPort)' == '' ">9999</AndroidAotProfilerPort>
+    <_BeginAotProfilingDependsOnTargets>
+      _SetupAotProfiling;
+      Build;
+      Install;
+      _SetAotProfilingPropsOnDevice;
+      StartAndroidActivity;
+    </_BeginAotProfilingDependsOnTargets>
+  </PropertyGroup>
+  <Target Name="_SetupAotProfiling">
+    <PropertyGroup>
+      <AndroidEmbedProfilers>aot</AndroidEmbedProfilers>
+    </PropertyGroup>
+  </Target>
+  <Target Name="_SetAotProfilingPropsOnDevice">
+    <Exec Command="&quot;$(AdbToolPath)adb&quot; $(AdbTarget) shell setprop debug.mono.profile aot:port=$(AndroidAotProfilerPort)" />
+  </Target>
+  <Target Name="BuildAndStartAotProfiling"
+      DependsOnTargets="$(_BeginAotProfilingDependsOnTargets)">
+  </Target>
+  <Target Name="FinishAotProfiling"
+      DependsOnTargets="_ResolveSdks">
+    <Exec Command="&quot;$(MonoAndroidBinDirectory)aprofutil&quot; $(AProfUtilExtraOptions) -s -v -f -p $(AndroidAotProfilerPort) -o &quot;$(AndroidAotCustomProfilePath)&quot;" />
+  </Target>
 </Project>
