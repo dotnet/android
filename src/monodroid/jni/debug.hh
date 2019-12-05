@@ -58,6 +58,17 @@ namespace xamarin::android
 	public:
 		bool         enable_soft_breakpoints ();
 		void         start_debugging_and_profiling ();
+		void         set_debugger_log_level (const char *level);
+
+		bool         have_debugger_log_level () const
+		{
+			return got_debugger_log_level;
+		}
+
+		int          get_debugger_log_level () const
+		{
+			return debugger_log_level;
+		}
 
 	private:
 		DebuggerConnectionStatus start_connection (char *options);
@@ -67,6 +78,7 @@ namespace xamarin::android
 		bool         process_cmd (int fd, char *cmd);
 		void         start_debugging ();
 		void         start_profiling ();
+
 		friend void* conn_thread (void *arg);
 
 	private:
@@ -82,6 +94,8 @@ namespace xamarin::android
 		bool             config_timedout;
 		timeval          wait_tv;
 		timespec         wait_ts;
+		bool             got_debugger_log_level = false;
+		int              debugger_log_level = 0;
 #endif
 	};
 }

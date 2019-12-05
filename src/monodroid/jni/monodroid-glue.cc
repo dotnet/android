@@ -618,9 +618,15 @@ MonodroidRuntime::mono_runtime_init (char *runtime_args)
 	} else if (options.debug && cur_time <= options.timeout_time) {
 		embeddedAssemblies.set_register_debug_symbols (true);
 
+		int loglevel;
+		if (debug.have_debugger_log_level ())
+			loglevel = debug.get_debugger_log_level ();
+		else
+			loglevel = options.loglevel;
+
 		char *debug_arg = utils.monodroid_strdup_printf (
 			"--debugger-agent=transport=dt_socket,loglevel=%d,address=%s:%d,%sembedding=1",
-			options.loglevel,
+			loglevel,
 			options.host,
 			options.sdb_port,
 			options.server ? "server=y," : ""
