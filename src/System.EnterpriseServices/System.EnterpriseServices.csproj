@@ -43,7 +43,7 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <Import Project="$(OutputPath)\..\..\..\xbuild\Xamarin\Android\Xamarin.Android.CSharp.targets" />
+  <Import Project="$(OutputPath)\..\..\..\xbuild\Xamarin\Android\Xamarin.Android.CSharp.targets" Condition="Exists('$(OutputPath)\..\..\..\xbuild\Xamarin\Android\Xamarin.Android.CSharp.targets')" />
   <ItemGroup>
     <ProjectReference Include="..\Mono.Android\Mono.Android.csproj">
       <Project>{66CF299A-CE95-4131-BCD8-DB66E30C4BF7}</Project>

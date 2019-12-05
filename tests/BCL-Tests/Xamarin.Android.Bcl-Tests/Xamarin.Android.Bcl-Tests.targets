@@ -6,7 +6,7 @@
   </PropertyGroup>
   <Import Project="Xamarin.Android.Bcl-Tests.projitems" />
   <Import Project="..\..\..\build-tools\scripts\TestApks.targets" />
-  <Import Project="$(_ProfAssemProjItemsPath)" />
+  <Import Project="$(_ProfAssemProjItemsPath)" Condition="Exists('$(_ProfAssemProjItemsPath)')" />
   <Target Name="_AddTestAssemblies"
       DependsOnTargets="_RemapAssemblies"
       BeforeTargets="ResolveAssemblyReferences">

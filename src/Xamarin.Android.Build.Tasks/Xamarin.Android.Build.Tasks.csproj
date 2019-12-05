@@ -720,11 +720,6 @@
       <Project>{94BD81F7-B06F-4295-9636-F8A3B6BDC762}</Project>
       <Name>Java.Interop</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\build-tools\fetch-windows-assemblers\fetch-windows-assemblers.csproj">
-      <Project>{09518DF2-C7B1-4CDB-849A-9F91F4BEA925}</Project>
-      <Name>fetch-windows-assemblers</Name>
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-    </ProjectReference>
     <ProjectReference Include="..\manifestmerger\manifestmerger.csproj">
       <Project>{af8ac493-40ac-4195-82f6-b08ee4b4e49e}</Project>
       <Name>manifestmerger</Name>
