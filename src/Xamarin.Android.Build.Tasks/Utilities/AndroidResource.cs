@@ -20,12 +20,10 @@ namespace Monodroid {
 				UpdateXmlResource (res, doc.Root, acwMap, additionalDirectories, logMessage, (e) => {
 					registerCustomView?.Invoke (e, filename);
 				});
-				using (var stream = File.OpenWrite (tmpfile)) {
-					using (var sw = new StreamWriter (stream)) {
-						using (var xw = new LinePreservedXmlWriter (sw)) {
-							xw.WriteNode (doc.CreateNavigator (), false);
-						}
-					}
+				using (var stream = File.OpenWrite (tmpfile))
+				using (var sw = new StreamWriter (stream))
+				using (var xw = new LinePreservedXmlWriter (sw)) {
+					xw.WriteNode (doc.CreateNavigator (), false);
 				}
 				return Xamarin.Android.Tasks.MonoAndroidHelper.CopyIfChanged (tmpfile, filename);
 			} catch (Exception e) {
