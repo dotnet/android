@@ -33,6 +33,10 @@ steps:
     version: $(DotNetCoreVersion)
 
 # Restore solutions for Xamarin.Android.Tools.sln, Xamarin.Android.sln, and Xamarin.Android-Tests.sln
+- task: NuGetToolInstaller@0
+  inputs:
+    versionSpec: 5.x
+
 - task: NuGetCommand@2
   displayName: nuget restore Xamarin.Android solutions
   inputs:
