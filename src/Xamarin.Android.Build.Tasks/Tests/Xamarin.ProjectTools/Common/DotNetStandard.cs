@@ -71,7 +71,7 @@ namespace Xamarin.ProjectTools
 					if (bi.DependentUpon != null) sb.Append ($"DependentUpon=\"{bi.DependentUpon ()}\" ");
 					if (bi.Version != null) sb.Append ($"Version=\"{bi.Version ()}\" ");
 					if (bi.SubType != null) sb.Append ($"SubType=\"{bi.SubType ()}\" ");
-					if (bi.Metadata.Any ()) {
+					if (!bi.Metadata.Any ()) {
 						sb.AppendLine ($"\t\t/>");
 					} else {
 						sb.AppendLine ($">");
