@@ -87,13 +87,13 @@ Copyright (C) 2016 Xamarin. All rights reserved.
       SupportedAbis="$(_BuildTargetAbis)">
   </GenerateJavaStubs>
   <ManifestMerger
-    ToolPath="$(JavaToolPath)"
-    JavaOptions="$(JavaOptions)"
-    ManifestMergerJarPath="$(AndroidManifestMergerJarPath)"
-    AndroidManifest="$(IntermediateOutputPath)android\AndroidManifest.xml"
-    OutputManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
-    LibraryManifestFiles="@(ExtractedManifestDocuments)"
-    ManifestPlaceholders="$(AndroidManifestPlaceholders)"
+      ToolPath="$(JavaToolPath)"
+      JavaOptions="$(JavaOptions)"
+      ManifestMergerJarPath="$(AndroidManifestMergerJarPath)"
+      AndroidManifest="$(IntermediateOutputPath)android\AndroidManifest.xml"
+      OutputManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
+      LibraryManifestFiles="@(ExtractedManifestDocuments)"
+      ManifestPlaceholders="$(AndroidManifestPlaceholders)"
   />
   <ConvertCustomView
       Condition="Exists('$(_CustomViewMapFile)')"
