@@ -1,0 +1,45 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <BuildDependsOn>
+      ResolveReferences;
+      _BuildManifestMerger;
+    </BuildDependsOn>
+    <CleanDependsOn>
+      _CleanManifestMerger;
+    </CleanDependsOn>
+    <_Destination>$(XAInstallPrefix)xbuild\Xamarin\Android\manifestmerger.jar</_Destination>
+  </PropertyGroup>
+
+  <Target Name="Build" DependsOnTargets="$(BuildDependsOn)" />
+  <Target Name="Clean" DependsOnTargets="$(CleanDependsOn)" />
+
+  <Target Name="_BuildManifestMerger"
+      Inputs="$(MSBuildThisFile);build.gradle"
+      Outputs="$(_Destination)">
+    <Exec
+        Command="&quot;$(GradleWPath)&quot; build $(GradleArgs)"
+        EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)"
+        WorkingDirectory="$(MSBuildThisFileDirectory)"
+    />
+    <Exec
+        Command="&quot;$(GradleWPath)&quot; jar $(GradleArgs)"
+        EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)"
+        WorkingDirectory="$(MSBuildThisFileDirectory)"
+    />
+    <Copy
+        SourceFiles="build\libs\manifestmerger.jar"
+        DestinationFiles="$(_Destination)"
+    />
+    <Touch Files="$(_Destination)" />
+  </Target>
+
+  <Target Name="_CleanManifestMerger">
+    <Delete Files="$(_Destination)" />
+    <Exec
+        Command="&quot;$(GradleWPath)&quot; clean $(GradleArgs)"
+        EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)"
+        WorkingDirectory="$(MSBuildThisFileDirectory)"
+    />
+  </Target>
+
+</Project>

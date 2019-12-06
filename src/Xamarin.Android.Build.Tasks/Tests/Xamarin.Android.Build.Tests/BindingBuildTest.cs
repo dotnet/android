@@ -316,6 +316,12 @@ namespace Com.Ipaulpro.Afilechooser {
 				var proj = new XamarinAndroidApplicationProject ();
 				proj.OtherBuildItems.Add (new BuildItem ("ProjectReference", "..\\Binding\\UnnamedProject.csproj"));
 				proj.SetProperty (proj.ActiveConfigurationProperties, "UseShortFileNames", useShortFileNames);
+				proj.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
+<manifest xmlns:android=""http://schemas.android.com/apk/res/android"" xmlns:tools=""http://schemas.android.com/tools"" android:versionCode=""1"" android:versionName=""1.0"" package=""{proj.PackageName}"">
+	<uses-sdk />
+	<application android:label=""{proj.ProjectName}"" tools:replace=""android:label"">
+	</application>
+</manifest>";
 				using (var b = CreateApkBuilder (Path.Combine (path, "App"))) {
 					Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 					var assemblyMap = b.Output.GetIntermediaryPath (Path.Combine ("lp", "map.cache"));
