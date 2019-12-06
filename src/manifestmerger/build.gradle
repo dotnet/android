@@ -1,0 +1,36 @@
+plugins {
+    id 'java-library'
+}
+
+repositories {
+    maven { url 'https://maven.google.com' }
+    mavenCentral()
+    maven { url 'https://kotlin.bintray.com/kotlinx' }
+    jcenter()
+}
+
+dependencies {
+    // https://mvnrepository.com/artifact/com.android.tools.build/manifest-merger
+    compile group: 'com.android.tools.build', name: 'manifest-merger', version: '26.5.0'
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ["src"]
+        }
+    }
+}
+
+jar {
+    duplicatesStrategy = 'exclude'
+    manifest {
+        attributes 'Main-Class': 'com.xamarin.manifestmerger.Main'
+    }
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    } {
+        exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
+    }
+    archiveName 'manifestmerger.jar'
+}

@@ -596,6 +596,7 @@
     <Compile Include="Tasks\AppendCustomMetadataToItemGroup.cs" />
     <Compile Include="Utilities\OutputLine.cs" />
     <Compile Include="Utilities\ResourceIdentifier.cs" />
+    <Compile Include="Tasks\ManifestMerger.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">
@@ -769,6 +770,11 @@
     <ProjectReference Include="..\..\build-tools\fetch-windows-assemblers\fetch-windows-assemblers.csproj">
       <Project>{09518DF2-C7B1-4CDB-849A-9F91F4BEA925}</Project>
       <Name>fetch-windows-assemblers</Name>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\manifestmerger\manifestmerger.csproj">
+      <Project>{af8ac493-40ac-4195-82f6-b08ee4b4e49e}</Project>
+      <Name>manifestmerger</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>

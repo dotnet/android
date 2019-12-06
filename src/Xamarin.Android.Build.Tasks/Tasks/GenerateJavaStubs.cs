@@ -43,7 +43,6 @@ namespace Xamarin.Android.Tasks
 		public string [] SupportedAbis { get; set; }
 
 		public string ManifestTemplate { get; set; }
-		public string[] MergedManifestDocuments { get; set; }
 
 		public bool Debug { get; set; }
 		public bool MultiDex { get; set; }
@@ -250,7 +249,7 @@ namespace Xamarin.Android.Tasks
 			manifest.NeedsInternet = NeedsInternet;
 			manifest.InstantRunEnabled = InstantRunEnabled;
 
-			var additionalProviders = manifest.Merge (all_java_types, ApplicationJavaClass, EmbedAssemblies, BundledWearApplicationName, MergedManifestDocuments);
+			var additionalProviders = manifest.Merge (all_java_types, ApplicationJavaClass, EmbedAssemblies, BundledWearApplicationName);
 
 			using (var stream = new MemoryStream ()) {
 				manifest.Save (stream);

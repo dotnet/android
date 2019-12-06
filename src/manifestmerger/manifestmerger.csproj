@@ -1,0 +1,14 @@
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition="'$(Configuration)'==''">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>af8ac493-40ac-4195-82f6-b08ee4b4e49e</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <OutputPath Condition="'$(OutputPath)'==''">bin\$(Configuration)</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'" />
+  <PropertyGroup Condition="'$(Configuration)'=='Release'" />
+  <Import Project="..\..\Configuration.props" />
+  <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
+  <Import Project="manifestmerger.targets" />
+</Project>

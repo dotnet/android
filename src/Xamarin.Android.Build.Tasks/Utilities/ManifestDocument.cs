@@ -224,7 +224,7 @@ namespace Xamarin.Android.Tasks {
 			}
 		}
 		
-		public IList<string> Merge (List<TypeDefinition> subclasses, string applicationClass, bool embed, string bundledWearApplicationName, IEnumerable<string> mergedManifestDocuments)
+		public IList<string> Merge (List<TypeDefinition> subclasses, string applicationClass, bool embed, string bundledWearApplicationName)
 		{
 			string applicationName  = ApplicationName;
 
@@ -409,16 +409,6 @@ namespace Xamarin.Android.Tasks {
 			ReorderActivityAliases (app);
 			ReorderElements (app);
 
-			if (mergedManifestDocuments != null) {
-				foreach (var mergedManifest in mergedManifestDocuments) {
-					try {
-						MergeLibraryManifest (mergedManifest);
-					} catch (Exception ex) {
-						log.LogCodedWarning ("XA4302", "Unhandled exception merging `AndroidManifest.xml`: {0}", ex);
-					}
-				}
-			}
-
 			return providerNames;
 
 			SequencePoint FindSource (IEnumerable<MethodDefinition> methods)
@@ -440,29 +430,6 @@ namespace Xamarin.Android.Tasks {
 				}
 
 				return ret;
-			}
-		}
-
-		// FIXME: our manifest merger is hacky.
-		// To support complete manifest merger, we will have to implement fairly complicated one, described at
-		// http://tools.android.com/tech-docs/new-build-system/user-guide/manifest-merger
-		void MergeLibraryManifest (string mergedManifest)
-		{
-			var nsResolver = new XmlNamespaceManager (new NameTable ());
-			nsResolver.AddNamespace ("android", androidNs.NamespaceName);
-			var xdoc = XDocument.Load (mergedManifest);
-			var package = xdoc.Root.Attribute ("package")?.Value ?? string.Empty;
-			foreach (var top in xdoc.XPathSelectElements ("/manifest/*")) {
-				var name = top.Attribute (AndroidXmlNamespace.GetName ("name"));
-				var existing = (name != null) ?
-					doc.XPathSelectElement (string.Format ("/manifest/{0}[@android:name='{1}']", top.Name.LocalName, name.Value), nsResolver) :
-					doc.XPathSelectElement (string.Format ("/manifest/{0}", top.Name.LocalName));
-				if (existing != null)
-					// if there is existing node with the same android:name, then append contents to existing node.
-					existing.Add (FixupNameElements (package, top.Nodes ()));
-				else
-					// otherwise, just add to the doc.
-					doc.Root.Add (FixupNameElements (package, new XNode [] { top }));
 			}
 		}
 
