@@ -258,6 +258,8 @@ stages:
         testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\EmbeddedDSOUnitTests.dll
         testResultsFile: TestResult-EmbeddedDSOUnitTests-WinBuildTree-$(XA.Build.Configuration).xml
 
+    # Limit the amount of worker threads used to run these tests in parallel to half of what is currently available (8) on the Windows pool.
+    # Using all available cores seems to occasionally bog down our machines and cause parallel test execution to slow down dramatically.
     - template: yaml-templates\run-nunit-tests.yaml
       parameters:
         testRunTitle: Xamarin.Android.Build.Tests - Windows Build Tree
