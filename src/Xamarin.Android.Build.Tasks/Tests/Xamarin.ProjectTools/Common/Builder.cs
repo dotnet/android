@@ -167,6 +167,15 @@ namespace Xamarin.ProjectTools
 			return lastFrameworkVersion;
 		}
 
+		public string LatestMultiTargetFrameworkVersion ()
+		{
+			GetTargetFrameworkVersionRange (out string _, out string _, out string _, out string lastFrameworkVersion);
+			lastFrameworkVersion = lastFrameworkVersion.Replace ("v", string.Empty);
+			if (lastFrameworkVersion != "10.0")
+				lastFrameworkVersion = lastFrameworkVersion.Replace (".", string.Empty);
+			return $"monoandroid{lastFrameworkVersion}";
+		}
+
 		public string LatestTargetFrameworkVersion (out string apiLevel) {
 			GetTargetFrameworkVersionRange (out string _, out string _, out apiLevel, out string lastFrameworkVersion);
 			return lastFrameworkVersion;

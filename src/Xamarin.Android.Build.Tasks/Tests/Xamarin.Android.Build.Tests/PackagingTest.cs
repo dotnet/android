@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
@@ -642,6 +642,90 @@ namespace App1
 							string.Join (Environment.NewLine, additionalFiles.Select (x => x.FullName))));
 					}
 				}
+			}
+		}
+
+		[Test]
+		public void CheckTheCorrectRuntimeAssemblyIsUsedFromNuget ()
+		{
+			string monoandroidFramework;
+			using (var builder = new Builder ()) {
+				monoandroidFramework = builder.LatestMultiTargetFrameworkVersion ();
+			}
+			string path = Path.Combine (Root, "temp", TestName);
+			var ns = new DotNetStandard () {
+				ProjectName = "Dummy",
+				Sdk = "MSBuild.Sdk.Extras/2.0.54",
+				Sources = {
+					new BuildItem.Source ("Class1.cs") {
+						TextContent = () => @"public class Class1 {
+#if __ANDROID__
+	public static string Library => ""Android"";
+#else
+	public static string Library => "".NET Standard"";
+#endif
+}",
+					},
+				},
+				OtherBuildItems = {
+					new BuildItem.NoActionResource ("$(OutputPath)netstandard2.0\\$(AssemblyName).dll") {
+						TextContent = null,
+						BinaryContent = null,
+						Metadata = {
+							{ "PackagePath", "ref\\netstandard2.0" },
+							{ "Pack", "True" }
+						},
+					},
+					new BuildItem.NoActionResource ($"$(OutputPath){monoandroidFramework}\\$(AssemblyName).dll") {
+						TextContent = null,
+						BinaryContent = null,
+						Metadata = {
+							{ "PackagePath", $"lib\\{monoandroidFramework}" },
+							{ "Pack", "True" }
+						},
+					},
+				},
+			};
+			ns.SetProperty ("TargetFrameworks", $"netstandard2.0;{monoandroidFramework}");
+			ns.SetProperty ("PackageId", "dummy.package.foo");
+			ns.SetProperty ("PackageVersion", "1.0.0");
+			ns.SetProperty ("GeneratePackageOnBuild", "True");
+			ns.SetProperty ("IncludeBuildOutput", "False");
+			ns.SetProperty ("Summary", "Test");
+			ns.SetProperty ("Description", "Test");
+			ns.SetProperty ("PackageOutputPath", path);
+
+			
+			var xa = new XamarinAndroidApplicationProject () {
+				ProjectName = "App",
+				PackageReferences = {
+					new Package () {
+						Id = "dummy.package.foo",
+						Version = "1.0.0",
+					},
+				},
+				OtherBuildItems = {
+					new BuildItem.NoActionResource ("NuGet.config") {
+					},
+				},
+			};
+			xa.SetProperty ("RestoreNoCache", "true");
+			xa.SetProperty ("RestorePackagesPath", "$(MSBuildThisFileDirectory)packages");
+			using (var nsb = CreateDllBuilder (Path.Combine (path, ns.ProjectName), cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false))
+			using (var xab = CreateApkBuilder (Path.Combine (path, xa.ProjectName), cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
+				nsb.ThrowOnBuildFailure = xab.ThrowOnBuildFailure = false;
+				Assert.IsTrue (nsb.Build (ns), "Build of NetStandard Library should have succeeded.");
+				Assert.IsFalse (xab.Build (xa, doNotCleanupOnUpdate: true), "Build of App Library should have failed.");
+				File.WriteAllText (Path.Combine (Root, xab.ProjectDirectory, "NuGet.config"), @"<?xml version='1.0' encoding='utf-8'?>
+<configuration>
+  <packageSources>
+    <add key='nuget.org' value='https://api.nuget.org/v3/index.json' protocolVersion='3' />
+    <add key='bug-testing' value='..' />
+  </packageSources>
+</configuration>");
+				Assert.IsTrue (xab.Build (xa, doNotCleanupOnUpdate: true), "Build of App Library should have succeeded.");
+				string expected = Path.Combine ("dummy.package.foo", "1.0.0", "lib", monoandroidFramework, "Dummy.dll");
+				Assert.IsTrue (xab.LastBuildOutput.ContainsText (expected), $"Build should be using {expected}");
 			}
 		}
 	}

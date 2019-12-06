@@ -85,7 +85,8 @@ namespace Xamarin.Android.Tasks
 				foreach (var assembly in Assemblies) {
 					// Add each user assembly and all referenced assemblies (recursive)
 					string resolved_assembly = resolver.Resolve (assembly.ItemSpec);
-					if (MonoAndroidHelper.IsReferenceAssembly (resolved_assembly)) {
+					bool refAssembly = !string.IsNullOrEmpty (assembly.GetMetadata ("NuGetPackageId")) && resolved_assembly.Contains ($"{Path.DirectorySeparatorChar}ref{Path.DirectorySeparatorChar}");
+					if (refAssembly || MonoAndroidHelper.IsReferenceAssembly (resolved_assembly)) {
 						// Resolve "runtime" library
 						if (lockFile != null)
 							resolved_assembly = ResolveRuntimeAssemblyForReferenceAssembly (lockFile, assembly.ItemSpec);
@@ -176,6 +177,8 @@ namespace Xamarin.Android.Tasks
 			}
 			foreach (var folder in lockFile.PackageFolders) {
 				var path = assemblyPath.Replace (folder.Path, string.Empty);
+				if (path.StartsWith ($"{Path.DirectorySeparatorChar}"))
+					path = path.Substring (1);
 				var libraryPath = lockFile.Libraries.FirstOrDefault (x => path.StartsWith (x.Path.Replace('/', Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase));
 				if (libraryPath == null)
 					continue;
