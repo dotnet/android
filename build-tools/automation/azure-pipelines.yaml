@@ -263,6 +263,7 @@ stages:
         testRunTitle: Xamarin.Android.Build.Tests - Windows Build Tree
         testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\Xamarin.Android.Build.Tests.dll
         testResultsFile: TestResult-MSBuildTests-WinBuildTree-$(XA.Build.Configuration).xml
+        nunitConsoleExtraArgs: --workers=4
 
     - template: yaml-templates\upload-results.yaml
       parameters:
