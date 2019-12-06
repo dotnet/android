@@ -7,7 +7,9 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Xml;
 using System.Xml.Linq;
+using System.Xml.XPath;
 using Microsoft.Build.Framework;
 using Mono.Cecil;
 using NUnit.Framework;
@@ -1718,7 +1720,7 @@ namespace App1
 		{
 			FixLintOnWindows ();
 
-			string disabledIssues = "StaticFieldLeak,ObsoleteSdkInt,AllowBackup";
+			string disabledIssues = "StaticFieldLeak,ObsoleteSdkInt,AllowBackup,ExportedReceiver";
 
 			var proj = new XamarinAndroidApplicationProject () {
 				PackageReferences = {
@@ -2319,11 +2321,14 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 		{
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("</application>", "<provider android:name='${applicationId}' android:authorities='example' /></application>");
-			var builder = CreateApkBuilder ("temp/ApplicationIdPlaceholder");
-			builder.Build (proj);
-			var appsrc = File.ReadAllText (Path.Combine (Root, builder.ProjectDirectory, "obj", "Debug", "android", "AndroidManifest.xml"));
-			Assert.IsTrue (appsrc.Contains ("<provider android:name=\"UnnamedProject.UnnamedProject\""), "placeholder not replaced");
-			builder.Dispose ();
+			using (var builder = CreateApkBuilder ("temp/ApplicationIdPlaceholder")) {
+				builder.Build (proj);
+				var manifest = XDocument.Load (Path.Combine (Root, builder.ProjectDirectory, "obj", "Debug", "android", "AndroidManifest.xml"));
+				var namespaceResolver = new XmlNamespaceManager (new NameTable ());
+				namespaceResolver.AddNamespace ("android", "http://schemas.android.com/apk/res/android");
+				var element = manifest.XPathSelectElement ("/manifest/application/provider[@android:name='UnnamedProject.UnnamedProject']", namespaceResolver);
+				Assert.IsNotNull (element, "placeholder not replaced");
+			}
 		}
 
 		[Test]
