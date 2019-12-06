@@ -4,9 +4,9 @@ All new Xamarin.Android MSBuild error or warning messages should be localizable,
 so when adding a new message, follow these steps:
 
  1. Add the new message to
-    `src/Xamarin.Android.Build.Tasks/Properties/Resources.resx`.  Use the
-    message code as the name of the resource.  For example, for the message text
-    associated with code `XA0000`, use `XA0000` as the name:
+    `src/Xamarin.Android.Build.Tasks/Properties/Resources.resx`.  Use the error
+    or warning code as the resource name.  For example, for `XA0000`, use
+    `XA0000` as the name:
 
     ![Managed Resources Editor with XA0000 as the name for a
     resource][resources-editor]
@@ -15,9 +15,12 @@ so when adding a new message, follow these steps:
     file so that the `ResXFileCodeGenerator` tool will run and update the
     corresponding `Resources.Designer.cs` file.
 
- 2. In the call to `LogCodedError()` or `LogCodedWarning()`, reference the
-    message string using the generated C# property name like
-    `Properties.Resources.XA0000`.
+ 2. Use the generated property from `Resources.Designer.cs` in the
+    `LogCodedError()` and `LogCodedWarning()` calls:
+
+    ```csharp
+    Log.LogCodedError ("XA0000", Properties.Resources.XA0000);
+    ```
 
  3. After adding the new message, build `Xamarin.Android.Build.Tasks.csproj`
     locally.  This will run the targets from [dotnet/xliff-tasks][xliff-tasks]
@@ -29,26 +32,33 @@ so when adding a new message, follow these steps:
 
 ## Guidelines
 
-  * If a message code is used in multiple calls to `LogCodedError()` or
-    `LogCodedWarning()` that each logs a different message, append short
-    descriptive phrases to the end of the code to create additional resource
-    names as needed.  For example, you could have names like `XA0000_Files` and
-    `XA0000_Directories` for two different strings.
+  * When an error or warning code is used with more than one output string, use
+    semantically meaningful suffixes to distinguish the resource names.  As a
+    made-up example:
+
+    ```xml
+    <data name="XA0000_Files" xml:space="preserve">
+      <value>Invalid files.</value>
+    </data>
+    <data name="XA0000_Directories" xml:space="preserve">
+      <value>Invalid directories.</value>
+    </data>
+    ```
 
   * To include values of variables in the message, use numbered format items
     like `{0}` and `{1}` rather than string interpolation or string
     concatenation.
 
-    String interpolation won't work because string resources are not subject to
-    interpolation.  String concatenation should also be avoided because it means
-    the message text will be split across multiple string resources, which makes
-    it more complicated to provide appropriate context about the message for the
-    translation team.
+    The `.resx` infrastructure does not interoperate with C# 6 string
+    interpolation.
+
+    String concatenation should also be avoided because it means splitting up
+    the message across multiple string resources, which makes it more
+    complicated to provide appropriate context to the translators.
 
   * Use the comments field in the `.resx` file to provide additional context to
-    the translation team about the message.  For example, for a message that
-    includes a format item like `{0}`, it can sometimes be helpful to add a
-    comment about what will appear for that item in the final formatted string:
+    the translators.  For example, if a format item like `{0}` needs additional
+    explanation, add a comment:
 
     ```
     {0} - The managed type name
