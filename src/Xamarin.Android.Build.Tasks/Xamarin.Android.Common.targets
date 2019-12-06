@@ -2047,32 +2047,32 @@ because xbuild doesn't support framework reference assemblies.
 </PropertyGroup>
 
 <Target Name="_GenerateJavaStubs"
-  DependsOnTargets="$(_GenerateJavaStubsDependsOnTargets);$(BeforeGenerateAndroidManifest)"
-  Inputs="$(MSBuildAllProjects);@(_ResolvedUserMonoAndroidAssemblies);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache)"
-  Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
+    DependsOnTargets="$(_GenerateJavaStubsDependsOnTargets);$(BeforeGenerateAndroidManifest)"
+    Inputs="$(MSBuildAllProjects);@(_ResolvedUserMonoAndroidAssemblies);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache)"
+    Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
   <GenerateJavaStubs
-    ResolvedAssemblies="@(_ResolvedAssemblies)"
-    ResolvedUserAssemblies="@(_ResolvedUserMonoAndroidAssemblies)"
-    ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
-    ManifestTemplate="$(_AndroidManifestAbs)"
-    Debug="$(AndroidIncludeDebugSymbols)"
-    MultiDex="$(AndroidEnableMultiDex)"
-    NeedsInternet="$(AndroidNeedsInternetPermission)"
-    InstantRunEnabled="$(_InstantRunEnabled)"
-    AndroidSdkPlatform="$(_AndroidApiLevel)"
-    AndroidSdkDir="$(_AndroidSdkDirectory)"
-    PackageName="$(_AndroidPackage)"
-    ManifestPlaceholders="$(AndroidManifestPlaceholders)"
-    OutputDirectory="$(IntermediateOutputPath)android"
-    MergedAndroidManifestOutput="$(IntermediateOutputPath)AndroidManifest.xml"
-    UseSharedRuntime="$(AndroidUseSharedRuntime)"
-    EmbedAssemblies="$(EmbedAssembliesIntoApk)"
-    BundledWearApplicationName="$(BundledWearApplicationPackageName)"
-    PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
-    ApplicationJavaClass="$(AndroidApplicationJavaClass)"
-    FrameworkDirectories="$(_XATargetFrameworkDirectories);$(_XATargetFrameworkDirectories)Facades"
-    AcwMapFile="$(_AcwMapFile)"
-    SupportedAbis="@(_BuildTargetAbis)">
+      ResolvedAssemblies="@(_ResolvedAssemblies)"
+      ResolvedUserAssemblies="@(_ResolvedUserMonoAndroidAssemblies)"
+      ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
+      ManifestTemplate="$(_AndroidManifestAbs)"
+      Debug="$(AndroidIncludeDebugSymbols)"
+      MultiDex="$(AndroidEnableMultiDex)"
+      NeedsInternet="$(AndroidNeedsInternetPermission)"
+      InstantRunEnabled="$(_InstantRunEnabled)"
+      AndroidSdkPlatform="$(_AndroidApiLevel)"
+      AndroidSdkDir="$(_AndroidSdkDirectory)"
+      PackageName="$(_AndroidPackage)"
+      ManifestPlaceholders="$(AndroidManifestPlaceholders)"
+      OutputDirectory="$(IntermediateOutputPath)android"
+      MergedAndroidManifestOutput="$(IntermediateOutputPath)AndroidManifest.xml"
+      UseSharedRuntime="$(AndroidUseSharedRuntime)"
+      EmbedAssemblies="$(EmbedAssembliesIntoApk)"
+      BundledWearApplicationName="$(BundledWearApplicationPackageName)"
+      PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
+      ApplicationJavaClass="$(AndroidApplicationJavaClass)"
+      FrameworkDirectories="$(_XATargetFrameworkDirectories);$(_XATargetFrameworkDirectories)Facades"
+      AcwMapFile="$(_AcwMapFile)"
+      SupportedAbis="@(_BuildTargetAbis)">
   </GenerateJavaStubs>
 
   <ItemGroup>
@@ -2088,13 +2088,13 @@ because xbuild doesn't support framework reference assemblies.
     Outputs="$(IntermediateOutputPath)android\AndroidManifest.xml"
   >
   <ManifestMerger
-    ToolPath="$(JavaToolPath)"
-    JavaOptions="$(JavaOptions)"
-    ManifestMergerJarPath="$(AndroidManifestMergerJarPath)"
-    AndroidManifest="$(IntermediateOutputPath)AndroidManifest.xml"
-    OutputManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
-    LibraryManifestFiles="@(ExtractedManifestDocuments)"
-    ManifestPlaceholders="$(AndroidManifestPlaceholders)"
+      ToolPath="$(JavaToolPath)"
+      JavaOptions="$(JavaOptions)"
+      ManifestMergerJarPath="$(AndroidManifestMergerJarPath)"
+      AndroidManifest="$(IntermediateOutputPath)AndroidManifest.xml"
+      OutputManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
+      LibraryManifestFiles="@(ExtractedManifestDocuments)"
+      ManifestPlaceholders="$(AndroidManifestPlaceholders)"
   />
   <ItemGroup>
     <FileWrites Include="$(IntermediateOutputPath)android\AndroidManifest.xml" />
