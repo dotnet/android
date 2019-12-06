@@ -147,7 +147,7 @@ namespace UnnamedProject
 				var resourcepathscache = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "designtime", "libraryprojectimports.cache");
 				FileAssert.Exists (resourcepathscache);
 				var doc = XDocument.Load (resourcepathscache);
-				Assert.AreEqual (40, doc.Root.Element ("Jars").Elements ("Jar").Count (), "libraryprojectimports.cache did not contain expected jar files");
+				Assert.AreEqual (38, doc.Root.Element ("Jars").Elements ("Jar").Count (), "libraryprojectimports.cache did not contain expected jar files");
 			}
 		}
 

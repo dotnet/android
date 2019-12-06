@@ -234,7 +234,7 @@ namespace Xamarin.Android.Build.Tests
 					}
 				},
 				PackageReferences = {
-					KnownPackages.XamarinForms_4_0_0_425677
+					KnownPackages.XamarinForms_LatestStable
 				}
 			};
 			lib.SetProperty ("ProduceReferenceAssembly", produceReferenceAssembly.ToString ());

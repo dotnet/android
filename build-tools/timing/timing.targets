@@ -107,10 +107,9 @@
         Condition=" '%(XACaptureBuildTimingProject.Restore)' != '' "
         Command="$(_TopDir).nuget\NuGet.exe restore &quot;%(XACaptureBuildTimingProject.Restore)&quot;"
     />
-    <MSBuild 
+    <Exec 
         Condition=" '%(XACaptureBuildTimingProject.Restore)' != '' "
-        Projects="%(XACaptureBuildTimingProject.Restore)"
-        Targets="Restore"
+        Command="$(_XABuild) /bl:$(_OutputFile).restore.binlog &quot;%(XACaptureBuildTimingProject.Restore)&quot; /t:Restore"
     />
     <Exec Command="$(_XABuild) /fl /flp:LogFile=$(_OutputFile).log &quot;/logger:$(_TimingLogger);ID=$(_ID);Description=$(_Description);Commit=$(XAVersionHash);OutputPath=$(_OutputFile).xml&quot; /p:Configuration=$(Configuration) /p:AndroidSupportedAbis=x86 %(XACaptureBuildTimingProject.Identity) /t:$(_Target)" />
     <ItemGroup>

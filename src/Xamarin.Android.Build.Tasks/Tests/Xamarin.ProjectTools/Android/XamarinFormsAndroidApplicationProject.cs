@@ -41,7 +41,7 @@ namespace Xamarin.ProjectTools
 			: base (debugConfigurationName, releaseConfigurationName)
 		{
 			//NOTE: we can get all the other dependencies transitively, yay!
-			PackageReferences.Add (KnownPackages.XamarinForms_4_0_0_425677);
+			PackageReferences.Add (KnownPackages.XamarinForms_LatestStable);
 
 			AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\colors.xml") {
 				TextContent = () => colors_xml,

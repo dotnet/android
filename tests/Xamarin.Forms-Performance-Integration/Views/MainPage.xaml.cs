@@ -21,8 +21,6 @@ namespace Xamarin.Forms.Performance.Integration
 					aboutPage = new NavigationPage (new AboutPage ()) {
 						Title = "About"
 					};
-					itemsPage.Icon = "tab_feed.png";
-					aboutPage.Icon = "tab_about.png";
 					break;
 				default:
 					itemsPage = new ItemsPage () {

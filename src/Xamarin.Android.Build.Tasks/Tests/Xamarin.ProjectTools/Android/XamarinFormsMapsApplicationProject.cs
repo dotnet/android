@@ -15,7 +15,7 @@ namespace Xamarin.ProjectTools
 
 		public XamarinFormsMapsApplicationProject ()
 		{
-			PackageReferences.Add (KnownPackages.XamarinFormsMaps_4_0_0_425677);
+			PackageReferences.Add (KnownPackages.XamarinFormsMaps_LatestStable);
 			MainActivity = MainActivity.Replace ("//${AFTER_FORMS_INIT}", "Xamarin.FormsMaps.Init (this, savedInstanceState);");
 			//NOTE: API_KEY metadata just has to *exist*
 			AndroidManifest = AndroidManifest.Replace ("</application>", "<meta-data android:name=\"com.google.android.maps.v2.API_KEY\" android:value=\"\" /></application>");

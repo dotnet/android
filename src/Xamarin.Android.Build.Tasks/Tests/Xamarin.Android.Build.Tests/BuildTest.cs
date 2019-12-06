@@ -118,13 +118,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.IsRelease = isRelease;
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				if (xamarinForms) {
-					// With Android API Level 29, we will get a warning: "... is only compatible with TargetFrameworkVersion: MonoAndroid,v9.0 (Android API Level 28)"
-					// We should allow a maximum of 1 warning to cover this case until the packages get updated to be compatible with Api level 29
-					Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 1 Warning(s)"), "Should have no more than 1 MSBuild warnings.");
-				} else {
-					Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 0 Warning(s)"), "Should have no MSBuild warnings.");
-				}
+				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 0 Warning(s)"), "Should have no MSBuild warnings.");
 				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, "Warning: end of file not at end of a line"),
 					"Should not get a warning from the <CompileNativeAssembly/> task.");
 				var lockFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, ".__lock");
@@ -353,7 +347,6 @@ class MemTest {
 					"Xamarin.Android.Support.Transition.dll",
 					"Xamarin.Android.Support.v7.AppCompat.dll",
 					"Xamarin.Android.Support.v7.CardView.dll",
-					"Xamarin.Android.Support.v7.MediaRouter.dll",
 					"Xamarin.Android.Support.v7.RecyclerView.dll",
 					"material-menu-1.1.0.aar",
 				};
@@ -2804,7 +2797,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 
 				proj.PackageReferences.Clear ();
 				//NOTE: we can get all the other dependencies transitively, yay!
-				proj.PackageReferences.Add (KnownPackages.XamarinForms_4_0_0_425677);
+				proj.PackageReferences.Add (KnownPackages.XamarinForms_LatestStable);
 				b.Save (proj, doNotCleanupOnUpdate: true);
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
 				Assert.IsFalse (b.Output.IsTargetSkipped ("_CleanIntermediateIfNuGetsChange"), "`_CleanIntermediateIfNuGetsChange` should have run!");
@@ -2847,7 +2840,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 
 				proj.PackageReferences.Clear ();
 				//NOTE: we can get all the other dependencies transitively, yay!
-				proj.PackageReferences.Add (KnownPackages.XamarinForms_4_0_0_425677);
+				proj.PackageReferences.Add (KnownPackages.XamarinForms_LatestStable);
 				Assert.IsTrue (b.Build (proj, saveProject: true, doNotCleanupOnUpdate: true), "second build should have succeeded.");
 				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "Refreshing Xamarin.Android.Support.v7.AppCompat.dll"), "`ResolveLibraryProjectImports` should not skip `Xamarin.Android.Support.v7.AppCompat.dll`!");
 				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "Deleting unknown jar: support-annotations.jar"), "`support-annotations.jar` should be deleted!");

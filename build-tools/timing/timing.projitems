@@ -17,7 +17,7 @@
       <DirectoryFullPath>$([System.IO.Path]::GetFullPath('$(_TopDir)tests\Xamarin.Forms-Performance-Integration'))</DirectoryFullPath>
       <CSharpFile>$(_TopDir)tests\Xamarin.Forms-Performance-Integration\Droid\MainActivity.cs</CSharpFile>
       <AndroidResourceFile>$(_TopDir)tests\Xamarin.Forms-Performance-Integration\Droid\Resources\values\styles.xml</AndroidResourceFile>
-      <Restore>$(_TopDir)tests\Xamarin.Forms-Performance-Integration\Xamarin.Forms.Performance.Integration.csproj</Restore>
+      <Restore>$(_TopDir)Xamarin.Android-Tests.sln</Restore>
     </XACaptureBuildTimingProject>
   </ItemGroup>
 </Project>
