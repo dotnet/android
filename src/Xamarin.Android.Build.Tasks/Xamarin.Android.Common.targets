@@ -803,7 +803,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	</ResolveJdkJvmPath>
 	<ValidateJavaVersion
 			Condition=" '$(DesignTimeBuild)' != 'True' Or '$(AndroidUseManagedDesignTimeResourceGenerator)' != 'True' "
-      ContinueOnError="$(_AndroidAllowMissingSdkTooling)"
+			ContinueOnError="$(_AndroidAllowMissingSdkTooling)"
 			TargetFrameworkVersion="$(TargetFrameworkVersion)"
 			AndroidSdkBuildToolsVersion="$(AndroidSdkBuildToolsVersion)"
 			JavaSdkPath="$(_JavaSdkDirectory)"
