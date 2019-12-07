@@ -1,0 +1,7 @@
+// These attributes should be excluded from api-compat check reference assemblies.
+
+T:Java.Interop.JavaTypeParametersAttribute
+
+T:System.Runtime.CompilerServices.AsyncIteratorStateMachineAttribute
+T:System.Runtime.CompilerServices.AsyncStateMachineAttribute
+T:System.Runtime.CompilerServices.IteratorStateMachineAttribute

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
+  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.CheckApiCompatibility" />
   <Import Project="..\..\build-tools\scripts\XAVersionInfo.targets" />
   <Import Project="..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems" />
   <ItemGroup>
@@ -159,5 +160,30 @@
   <Target Name="_CleanBinding"
       AfterTargets="Clean">
     <RemoveDir Directories="$(IntermediateOutputPath)" />
+  </Target>
+  <PropertyGroup>
+    <ApiCompatibilityDir>../../tests/api-compatibility</ApiCompatibilityDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <ApiCompatibilityFiles Include="$(ApiCompatibilityDir)/acceptable-breakages-v*.txt" />
+    <ApiCompatibilityFiles Include="$(ApiCompatibilityDir)/reference/*.*" />
+  </ItemGroup>
+  <Target
+      Name="AfterBuild"
+      Inputs="$(TargetPath);@(ApiCompatibilityFiles)"
+      Outputs="$(IntermediateOutputPath)CheckApiCompatibility.stamp">
+    <CheckApiCompatibility
+        ApiCompatPath="../../packages/Microsoft.DotNet.ApiCompat.5.0.0-beta.19606.1/tools/net472/"
+        ApiLevel="$(AndroidFrameworkVersion)"
+        LastStableApiLevel="$(AndroidLatestStableFrameworkVersion)"
+        TargetImplementationPath="$(OutputPath)"
+        ApiCompatibilityPath = "$(ApiCompatibilityDir)" />
+    <Touch
+      Files="$(IntermediateOutputPath)CheckApiCompatibility.stamp"
+      AlwaysCreate="True" />
+    <ItemGroup>
+      <FileWrites
+        Include="$(IntermediateOutputPath)CheckApiCompatibility.stamp" />
+    </ItemGroup>
   </Target>
 </Project>
