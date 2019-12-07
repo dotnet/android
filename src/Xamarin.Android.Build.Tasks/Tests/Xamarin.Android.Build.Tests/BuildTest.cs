@@ -4197,5 +4197,25 @@ namespace UnnamedProject
 				}
 			}
 		}
+
+		[Test]
+		public void InstallAndroidDependenciesTest ()
+		{
+			if (!CommercialBuildAvailable)
+				Assert.Ignore ("Not required on Open Source Builds");
+			var old = Environment.GetEnvironmentVariable ("ANDROID_SDK_PATH");
+			try {
+				string sdkPath = Path.Combine (Root, "temp", TestName, "android-sdk");
+				Environment.SetEnvironmentVariable ("ANDROID_SDK_PATH", sdkPath);
+				var proj = new XamarinAndroidApplicationProject ();
+				using (var b = CreateApkBuilder ()) {
+					b.Target = "InstallAndroidDependencies";
+
+					Assert.IsTrue (b.Build (proj, parameters: new string [] { "AcceptAndroidSDKLicenses=true" }), "build should have succeeded.");
+				}
+			} finally {
+				Environment.SetEnvironmentVariable ("ANDROID_SDK_PATH", old);
+			}
+		}
 	}
 }
