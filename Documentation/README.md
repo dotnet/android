@@ -39,6 +39,7 @@
   * [Using Your Build](workflow/UsingYourBuild.md)
   * [Jenkins Build Artifacts](workflow/JenkinsBuildArtifacts.md)
   * [Development tips and native debugging](workflow/DevelopmentTips.md)
+  * [Localization](workflow/Localization.md)
 
 
 # Coding Guidelines
