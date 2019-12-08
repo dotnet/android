@@ -177,13 +177,14 @@
         ApiLevel="$(AndroidFrameworkVersion)"
         LastStableApiLevel="$(AndroidLatestStableFrameworkVersion)"
         TargetImplementationPath="$(OutputPath)"
-        ApiCompatibilityPath = "$(ApiCompatibilityDir)" />
+        ApiCompatibilityPath="$(ApiCompatibilityDir)"
+    />
     <Touch
       Files="$(IntermediateOutputPath)CheckApiCompatibility.stamp"
-      AlwaysCreate="True" />
+      AlwaysCreate="True"
+    />
     <ItemGroup>
-      <FileWrites
-        Include="$(IntermediateOutputPath)CheckApiCompatibility.stamp" />
+      <FileWrites Include="$(IntermediateOutputPath)CheckApiCompatibility.stamp" />
     </ItemGroup>
   </Target>
 </Project>
