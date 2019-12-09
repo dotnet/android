@@ -79,6 +79,24 @@ namespace MonoDroid.Generation
 
 		public virtual bool IsGeneric => Parameters.HasGeneric;
 
+		public bool IsKotlinNameMangled {
+			get {
+				// Kotlin generates methods that cannot be referenced in Java,
+				// like `add-impl` and `add-V5j3Lk8`. We will need to fix those later.
+				if (this is Method method) {
+					if (method.JavaName.IndexOf ("-impl") >= 0)
+						return true;
+
+					var index = method.JavaName.IndexOf ('-');
+
+					// `add-V5j3Lk8` is always a 7 character hashcode
+					return index >= 0 && method.JavaName.Length - index == 8;
+				}
+
+				return false;
+			}
+		}
+
 		public virtual bool Matches (MethodBase other)
 		{
 			if (Name != other.Name)

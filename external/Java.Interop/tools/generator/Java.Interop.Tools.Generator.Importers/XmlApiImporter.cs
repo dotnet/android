@@ -245,25 +245,8 @@ namespace MonoDroid.Generation
 
 			if (elem.Attribute ("managedName") != null)
 				method.Name = elem.XGetAttribute ("managedName");
-			else {
-				var name = method.JavaName;
-
-				// Kotlin generates methods that cannot be referenced in Java,
-				// like `add-impl` and `add-V5j3Lk8`. We mangle them back into
-				// something a user would expect by truncating anything after the hyphen.
-				var index = name.IndexOf ("-impl");
-
-				if (index >= 0)
-					name = name.Substring (0, index);
-
-				index = name.IndexOf ('-');
-
-				// `add-V5j3Lk8` is always a 7 character hashcode
-				if (index >= 0 && name.Length - index == 8)
-					name = name.Substring (0, index);
-
-				method.Name = StringRocks.MemberToPascalCase (name);
-			}
+			else
+				method.Name = StringRocks.MemberToPascalCase (method.JavaName);
 
 			if (method.IsReturnEnumified) {
 				method.ManagedReturn = elem.XGetAttribute ("enumReturn");

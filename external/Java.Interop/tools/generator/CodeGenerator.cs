@@ -12,6 +12,7 @@ using Java.Interop.Tools.Cecil;
 using Java.Interop.Tools.Diagnostics;
 using Java.Interop.Tools.TypeNameMappings;
 using MonoDroid.Generation.Utilities;
+using Java.Interop.Tools.Generator.Transformation;
 
 namespace Xamarin.Android.Binder
 {
@@ -148,6 +149,9 @@ namespace Xamarin.Android.Binder
 				if (gen.IsGeneratable)
 					AddTypeToTable (opt, gen);
 			}
+
+			// Apply fixups
+			KotlinFixups.Fixup (gens);
 
 			Validate (gens, opt, new CodeGeneratorContext ());
 
