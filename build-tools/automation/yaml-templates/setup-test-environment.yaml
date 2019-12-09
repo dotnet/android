@@ -33,10 +33,17 @@ steps:
     version: $(DotNetCoreVersion)
 
 # Restore solutions for Xamarin.Android.Tools.sln, Xamarin.Android.sln, and Xamarin.Android-Tests.sln
+- task: MSBuild@1
+  displayName: msbuild restore Xamarin.Android-Tests.sln
+  inputs:
+    solution: Xamarin.Android-Tests.sln
+    configuration: ${{ parameters.configuration }}
+    msbuildArguments: /t:Restore /bl:$(System.DefaultWorkingDirectory)/bin/Test${{ parameters.configuration }}/Xamarin.Android-Tests.restore.binlog
+
 - task: NuGetCommand@2
   displayName: nuget restore Xamarin.Android solutions
   inputs:
-    restoreSolution: '**/Xamarin.Android*.sln'
+    restoreSolution: 'Xamarin.Android*.sln'
     feedsToUse: config
     nugetConfigPath: NuGet.config
 
