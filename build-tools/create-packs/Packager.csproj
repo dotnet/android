@@ -7,7 +7,7 @@
     <PackageVersion>0.0.1</PackageVersion>
     <Authors>Xamarin</Authors>
     <Description>C# Tools and Bindings for the Android SDK</Description>
-    <OutputPath>..\..\bin\packs</OutputPath>
+    <OutputPath>..\..\bin\Build$(Configuration)</OutputPath>
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />
@@ -23,7 +23,7 @@
   <Target Name="_GenerateXAPackContent"
       DependsOnTargets="ConstructInstallerItems" >
     <PropertyGroup>
-      <ToolsSourceDir>$(XamarinAndroidSourcePath)bin\$(Configuration)\packs\tools\</ToolsSourceDir>
+      <ToolsSourceDir>$(XamarinAndroidSourcePath)bin\Build$(Configuration)\packs\tools\</ToolsSourceDir>
     </PropertyGroup>
     <ItemGroup>
       <_MSBuildNonHostItemsUnix Include="@(MSBuildItemsUnix)" Condition="!$([System.Text.RegularExpressions.Regex]::IsMatch(%(RelativePath), '.*host-$(HostOS).*'))"/>

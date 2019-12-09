@@ -147,13 +147,13 @@ stages:
         command: pack
         packagesToPack: $(System.DefaultWorkingDirectory)/build-tools/create-packs/Packager.csproj
         configuration: $(XA.Build.Configuration)
-        packDirectory: $(System.DefaultWorkingDirectory)/bin/packs
+        packDirectory: $(Build.ArtifactStagingDirectory)/$(XA.Build.Configuration)
 
     - task: PublishPipelineArtifact@0
       displayName: upload nupkgs
       inputs:
         artifactName: $(NuGetArtifactName)
-        targetPath: bin/packs
+        targetPath: $(Build.ArtifactStagingDirectory)/$(XA.Build.Configuration)
 
     - template: yaml-templates/upload-results.yaml
       parameters:
@@ -214,7 +214,7 @@ stages:
         command: pack
         packagesToPack: $(System.DefaultWorkingDirectory)\build-tools\create-packs\Packager.csproj
         configuration: $(XA.Build.Configuration)
-        packDirectory: $(System.DefaultWorkingDirectory)\bin\packs
+        packDirectory: $(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)
 
     - task: CmdLine@1
       displayName: xabuild Xamarin.Android-Tests
@@ -650,7 +650,7 @@ stages:
     - task: DownloadPipelineArtifact@1
       inputs:
         artifactName: $(NuGetArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)/bin/packs
+        downloadPath: $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)
 
     - template: yaml-templates/run-nunit-tests.yaml
       parameters:
@@ -712,7 +712,7 @@ stages:
     - task: DownloadPipelineArtifact@1
       inputs:
         artifactName: $(NuGetArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)\bin\packs
+        downloadPath: $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)
 
     - template: yaml-templates\run-nunit-tests.yaml
       parameters:
