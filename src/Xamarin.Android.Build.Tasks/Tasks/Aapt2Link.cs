@@ -158,7 +158,7 @@ namespace Xamarin.Android.Tasks {
 
 			if (!string.IsNullOrWhiteSpace (UncompressedFileExtensions))
 				foreach (var ext in UncompressedFileExtensions.Split (new char [] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries))
-					cmd.AppendSwitchIfNotNull ("-0 ", ext);
+					cmd.AppendSwitchIfNotNull ("-0 ", ext.StartsWith (".", StringComparison.OrdinalIgnoreCase) ? ext : $".{ext}");
 
 			if (!string.IsNullOrEmpty (ExtraPackages))
 				cmd.AppendSwitchIfNotNull ("--extra-packages ", ExtraPackages);
