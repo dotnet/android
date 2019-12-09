@@ -2,6 +2,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
@@ -109,6 +110,21 @@ namespace Xamarin.Android.Tasks
 				cmd.AppendFileNameIfNotNull (jar);
 
 			return cmd;
+		}
+
+		/// <summary>
+		/// r8 tends to print:
+		/// Warning: Resource 'META-INF/MANIFEST.MF' already exists.
+		/// </summary>
+		static readonly Regex resourceWarning = new Regex ("Warning: Resource.+already exists", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
+		{
+			if (resourceWarning.IsMatch (singleLine)) {
+				Log.LogMessage (messageImportance, singleLine);
+			} else {
+				base.LogEventsFromTextOutput (singleLine, messageImportance);
+			}
 		}
 	}
 }
