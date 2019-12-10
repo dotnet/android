@@ -3308,7 +3308,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				Assert.True (builder.Build (proj, parameters: parameters),
 					string.Format ("First Build should have succeeded"));
 				StringAssertEx.Contains ("platforms/android-26", builder.LastBuildOutput, "platforms/android-26 should be a dependency.");
-				StringAssertEx.Contains ("build-tools/28.0.3", builder.LastBuildOutput, "build-tools/28.0.3 should be a dependency.");
+				StringAssertEx.Contains ("build-tools/29.0.2", builder.LastBuildOutput, "build-tools/29.0.2 should be a dependency.");
 				StringAssertEx.Contains ("platform-tools", builder.LastBuildOutput, "platform-tools should be a dependency.");
 			}
 		}
@@ -3341,7 +3341,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				Assert.True (builder.Build (proj, parameters: parameters),
 					string.Format ("First Build should have succeeded"));
 				StringAssertEx.Contains ("platforms/android-26", builder.LastBuildOutput, "platforms/android-26 should be a dependency.");
-				StringAssertEx.Contains ("build-tools/28.0.3", builder.LastBuildOutput, "build-tools/28.0.3 should be a dependency.");
+				StringAssertEx.Contains ("build-tools/29.0.2", builder.LastBuildOutput, "build-tools/29.0.2 should be a dependency.");
 				StringAssertEx.Contains ("platform-tools", builder.LastBuildOutput, "platform-tools should be a dependency.");
 			}
 		}
