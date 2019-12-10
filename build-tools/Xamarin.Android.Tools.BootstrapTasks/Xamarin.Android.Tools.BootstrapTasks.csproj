@@ -8,6 +8,8 @@
     <RootNamespace>Xamarin.Android.Tools.BootstrapTasks</RootNamespace>
     <AssemblyName>Xamarin.Android.Tools.BootstrapTasks</AssemblyName>
     <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
+    <!-- Do not run Microsoft.DotNet.ApiCompat targets by default during build. -->
+    <RunApiCompat>false</RunApiCompat>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <Import Project="..\..\build-tools\scripts\MSBuildReferences.projitems" />
