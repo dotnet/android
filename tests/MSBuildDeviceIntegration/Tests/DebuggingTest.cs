@@ -204,8 +204,10 @@ namespace ${ROOT_NAMESPACE} {
 				session.OutputWriter += (isStderr, text) => { Console.WriteLine (text); };
 				session.DebugWriter += (level, category, message) => { Console.WriteLine (message); };
 				session.Run (startInfo, options);
-				WaitFor (TimeSpan.FromSeconds (30), () => session.IsConnected);
-				Assert.True (session.IsConnected, "Debugger should have connected but it did not.");
+				var expectedTime = TimeSpan.FromSeconds (1);
+				var actualTime = ProfileFor (() => session.IsConnected);
+				TestContext.Out.WriteLine ($"Debugger connected in {actualTime}");
+				Assert.LessOrEqual (actualTime, expectedTime, $"Debugger should have connected within {expectedTime} but it took {actualTime}.");
 				// we need to wait here for a while to allow the breakpoints to hit
 				// but we need to timeout
 				TimeSpan timeout = TimeSpan.FromSeconds (60);
