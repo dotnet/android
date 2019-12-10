@@ -173,7 +173,7 @@
       Inputs="$(TargetPath);@(ApiCompatibilityFiles)"
       Outputs="$(IntermediateOutputPath)CheckApiCompatibility.stamp">
     <!-- $(PkgMicrosoft_DotNet_ApiCompat) is set by the GeneratePathProperty attribute in the
-          PackageReference declared in Xamarin.Android.Tools.BootstrapTasks.csproj -->
+          PackageReference declared in Mono.Android.csproj -->
     <CheckApiCompatibility
         ApiCompatPath="$(PkgMicrosoft_DotNet_ApiCompat)/tools/net472/"
         ApiLevel="$(AndroidFrameworkVersion)"

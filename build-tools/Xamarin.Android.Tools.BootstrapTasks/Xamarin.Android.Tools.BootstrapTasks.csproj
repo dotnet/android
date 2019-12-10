@@ -8,8 +8,6 @@
     <RootNamespace>Xamarin.Android.Tools.BootstrapTasks</RootNamespace>
     <AssemblyName>Xamarin.Android.Tools.BootstrapTasks</AssemblyName>
     <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
-    <!-- Do not run Microsoft.DotNet.ApiCompat targets by default during build. -->
-    <RunApiCompat>false</RunApiCompat>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <Import Project="..\..\build-tools\scripts\MSBuildReferences.projitems" />
@@ -64,7 +62,6 @@
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\JdkInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.DotNet.ApiCompat" Version="5.0.0-beta.19606.1" GeneratePathProperty="true" />
     <PackageReference Include="Microsoft.DotNet.GenAPI" Version="5.0.0-beta.19606.1" />
   </ItemGroup>
   <ItemGroup>
