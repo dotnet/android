@@ -21,9 +21,10 @@ namespace Monodroid {
 					registerCustomView?.Invoke (e, filename);
 				});
 				using (var stream = File.OpenWrite (tmpfile))
-					using (var xw = new LinePreservedXmlWriter (new StreamWriter (stream)))
-						xw.WriteNode (doc.CreateNavigator (), false);
-
+				using (var sw = new StreamWriter (stream))
+				using (var xw = new LinePreservedXmlWriter (sw)) {
+					xw.WriteNode (doc.CreateNavigator (), false);
+				}
 				return Xamarin.Android.Tasks.MonoAndroidHelper.CopyIfChanged (tmpfile, filename);
 			} catch (Exception e) {
 				logMessage?.Invoke (TraceLevel.Warning, $"AndroidResgen: Warning while updating Resource XML '{filename}': {e.Message}");

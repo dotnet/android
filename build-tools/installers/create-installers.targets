@@ -6,14 +6,14 @@
   <Import Project="..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems" />
   <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
   <PropertyGroup>
-    <RootBuildDir>$(XamarinAndroidSourcePath)\bin\$(Configuration)\</RootBuildDir>
+    <RootBuildDir>$(XamarinAndroidSourcePath)bin\$(Configuration)\</RootBuildDir>
     <FrameworkSrcDir>$(RootBuildDir)lib\xamarin.android\xbuild-frameworks\MonoAndroid\</FrameworkSrcDir>
     <AndroidApiDocsPath Condition=" '$(AndroidApiDocsPath)' == '' ">$(XamarinAndroidSourcePath)external\android-api-docs\</AndroidApiDocsPath>
     <_AndroidApiDocsPath>$([MSBuild]::EnsureTrailingSlash($(AndroidApiDocsPath)))</_AndroidApiDocsPath>
     <_LatestStableFrameworkDir>$(FrameworkSrcDir)$(AndroidLatestStableFrameworkVersion)\</_LatestStableFrameworkDir>
     <_MonoDocOutputPath>$(RootBuildDir)lib\monodoc\</_MonoDocOutputPath>
     <MSBuildSrcDir>$(RootBuildDir)lib\xamarin.android\xbuild\Xamarin\Android\</MSBuildSrcDir>
-    <MSBuildTargetsSrcDir>$(XamarinAndroidSourcePath)\src\Xamarin.Android.Build.Tasks\MSBuild\Xamarin\Android</MSBuildTargetsSrcDir>
+    <MSBuildTargetsSrcDir>$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\MSBuild\Xamarin\Android</MSBuildTargetsSrcDir>
     <DefaultRuntimeEntitlementsPath>$(MSBuildThisFileDirectory)\..\create-pkg\runtime-entitlements.plist</DefaultRuntimeEntitlementsPath>
     <FirstInstallerFrameworkVersion Condition="Exists('$(FrameworkSrcDir)\$(AndroidFirstFrameworkVersion)')">$(AndroidFirstFrameworkVersion)</FirstInstallerFrameworkVersion>
     <FirstInstallerFrameworkVersion Condition="'$(FirstInstallerFrameworkVersion)' == ''">$(AndroidLatestStableFrameworkVersion)</FirstInstallerFrameworkVersion>
@@ -154,7 +154,7 @@
     <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libsqlite3_xamarin.so')" />
     <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libxamarin-debug-app-helper.so')" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\libZipSharp.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\libZipSharp.dll.config" Condition=" '$(HostOS)' != 'Windows' " />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\libZipSharp.dll.config" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Posix.NETStandard.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Profiler.Log.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Profiler.Log.pdb" />
@@ -241,19 +241,19 @@
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\proguard\bin\proguard.bat" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\aapt2.exe" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\libwinpthread-1.dll" />
-    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\aarch64-linux-android-as.exe" Condition=" '$(HostOS)' != 'Windows' "/>
-    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\aarch64-linux-android-ld.exe" Condition=" '$(HostOS)' != 'Windows' "/>
-    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\aarch64-linux-android-strip.exe" Condition=" '$(HostOS)' != 'Windows' "/>
-    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\arm-linux-androideabi-as.exe" Condition=" '$(HostOS)' != 'Windows' "/>
-    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\arm-linux-androideabi-ld.exe" Condition=" '$(HostOS)' != 'Windows' "/>
-    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\arm-linux-androideabi-strip.exe" Condition=" '$(HostOS)' != 'Windows' "/>
-    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\i686-linux-android-as.exe" Condition=" '$(HostOS)' != 'Windows' "/>
-    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\i686-linux-android-ld.exe" Condition=" '$(HostOS)' != 'Windows' "/>
-    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\i686-linux-android-strip.exe" Condition=" '$(HostOS)' != 'Windows' "/>
-    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\x86_64-linux-android-as.exe" Condition=" '$(HostOS)' != 'Windows' "/>
-    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\x86_64-linux-android-ld.exe" Condition=" '$(HostOS)' != 'Windows' "/>
-    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\x86_64-linux-android-strip.exe" Condition=" '$(HostOS)' != 'Windows' "/>
-    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\libwinpthread-1.dll" Condition=" '$(HostOS)' != 'Windows' " />
+    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\aarch64-linux-android-as.exe" />
+    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\aarch64-linux-android-ld.exe" />
+    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\aarch64-linux-android-strip.exe" />
+    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\arm-linux-androideabi-as.exe" />
+    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\arm-linux-androideabi-ld.exe" />
+    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\arm-linux-androideabi-strip.exe" />
+    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\i686-linux-android-as.exe" />
+    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\i686-linux-android-ld.exe" />
+    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\i686-linux-android-strip.exe" />
+    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\x86_64-linux-android-as.exe" />
+    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\x86_64-linux-android-ld.exe" />
+    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\x86_64-linux-android-strip.exe" />
+    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\libwinpthread-1.dll" />
     <_MSBuildLibHostFilesWin Include="$(MSBuildSrcDir)\lib\host-mxe-Win64\libmono-android.debug.dll"   Condition=" '$(HostOS)' != 'Windows' " />
     <_MSBuildLibHostFilesWin Include="$(MSBuildSrcDir)\lib\host-mxe-Win64\libmono-android.release.dll" Condition=" '$(HostOS)' != 'Windows' " />
     <_MSBuildLibHostFilesWin Include="$(MSBuildSrcDir)\lib\host-mxe-Win64\libMonoPosixHelper.dll" />

@@ -1,9 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Diagnostics;
 using Microsoft.Build.Framework;
+using System.Xml.Linq;
 
 namespace Xamarin.ProjectTools
 {
@@ -54,12 +55,7 @@ namespace Xamarin.ProjectTools
 					project.Populate (ProjectDirectory, files);
 				}
 
-				// Copy our solution's NuGet.config
-				var nuget_config = Path.Combine (XABuildPaths.TopDirectory, "NuGet.config");
-				var dest = Path.Combine (Root, ProjectDirectory, "NuGet.config");
-				if (File.Exists (nuget_config) && !File.Exists (dest)) {
-					File.Copy (nuget_config, dest, overwrite: true);
-				}
+				project.CopyNuGetConfig (ProjectDirectory);
 			}
 			else
 				project.UpdateProjectFiles (ProjectDirectory, files, doNotCleanupOnUpdate);
