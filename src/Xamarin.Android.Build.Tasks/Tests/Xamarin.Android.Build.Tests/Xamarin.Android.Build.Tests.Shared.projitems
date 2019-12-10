@@ -33,5 +33,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\EnvironmentHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\PackagingUtilsTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)WearTests.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)AndroidDependenciesTests.cs" />
   </ItemGroup>
 </Project>
