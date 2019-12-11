@@ -69,6 +69,9 @@ namespace MonoDroid.Tuner
 
 		bool FixAbstractMethodsUnconditional (AssemblyDefinition assembly)
 		{
+			if (!assembly.MainModule.HasTypeReference ("Java.Lang.Object"))
+				return false;
+
 			bool changed = false;
 			foreach (var type in assembly.MainModule.Types) {
 				if (MightNeedFix (type))
