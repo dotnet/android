@@ -83,23 +83,8 @@ stages:
       displayName: make jenkins
 
     # Build and package test assemblies
-    - task: MSBuild@1
-      displayName: msbuild tests/CodeBehind/UnitTests/CodeBehindUnitTests.csproj
-      inputs:
-        solution: $(System.DefaultWorkingDirectory)/tests/CodeBehind/UnitTests/CodeBehindUnitTests.csproj
-        configuration: $(XA.Build.Configuration)
-
-    - task: MSBuild@1
-      displayName: msbuild tests/CodeGen-MkBundle/Xamarin.Android.MakeBundle-UnitTests/Xamarin.Android.MakeBundle-UnitTests.csproj
-      inputs:
-        solution: $(System.DefaultWorkingDirectory)/tests/CodeGen-MkBundle/Xamarin.Android.MakeBundle-UnitTests/Xamarin.Android.MakeBundle-UnitTests.csproj
-        configuration: $(XA.Build.Configuration)
-
-    - task: MSBuild@1
-      displayName: msbuild tests/EmbeddedDSOs/EmbeddedDSO-UnitTests/EmbeddedDSO-UnitTests.csproj
-      inputs:
-        solution: $(System.DefaultWorkingDirectory)/tests/EmbeddedDSOs/EmbeddedDSO-UnitTests/EmbeddedDSO-UnitTests.csproj
-        configuration: $(XA.Build.Configuration)
+    - script: make all-tests V=1 CONFIGURATION=$(XA.Build.Configuration)
+      displayName: make all-tests
 
     - script: |
         cp -r bin/$(XA.Build.Configuration)/bcl-tests bin/Test$(XA.Build.Configuration)/bcl-tests
