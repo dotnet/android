@@ -869,8 +869,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		<Reference Include="$(_JavaInteropReferences)" />
 	</ItemGroup>
 	<Warning Code="XA0110"
-		Text="Disabling $(AndroidExplicitCrunch) as it is not supported by `aapt2`. If you wish to use $(AndroidExplicitCrunch) please set $(AndroidUseAapt2) to false."
-		Condition="  '$(_AndroidUseAapt2)' == 'True' And '$(AndroidExplicitCrunch)' == 'True' "
+		Text="Disabling %24(AndroidExplicitCrunch) as it is not supported by `aapt2`. If you wish to use %24(AndroidExplicitCrunch) please set %24(AndroidUseAapt2) to false."
+		Condition=" '$(_AndroidUseAapt2)' == 'True' And '$(AndroidExplicitCrunch)' == 'True' "
 	/>
 	<PropertyGroup>
 		<AndroidExplicitCrunch Condition=" '$(_AndroidUseAapt2)' == 'True' ">false</AndroidExplicitCrunch>
