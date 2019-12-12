@@ -66,17 +66,27 @@ Copyright (C) 2016 Xamarin. All rights reserved.
     DependsOnTargets="_AddStaticResources;_ResolveAssemblies;_CopyAssembliesForDesigner;_PrepareAssembliesForDesigner;$(BeforeGenerateAndroidManifest)"
     Inputs="$(_ResolvedUserAssembliesHashFile);@(ResolvedAssemblies);@(ResolvedUserAssemblies);$(_AndroidManifestAbs);"
     Outputs="$(_AndroidIntermediateJavaSourceDirectory)mono\MonoPackageManager_Resources.java;$(_AcwMapFile)">
+
+  <PropertyGroup>
+    <_ManifestOutput Condition=" '$(AndroidManifestMerger)' == 'legacy' ">$(IntermediateOutputPath)android\AndroidManifest.xml</_ManifestOutput>
+    <_ManifestOutput Condition=" '$(AndroidManifestMerger)' != 'legacy' ">$(IntermediateOutputPath)AndroidManifest.xml</_ManifestOutput>
+  </PropertyGroup>
+  <ItemGroup>
+    <_MergedManifestDocuments Condition=" '$(AndroidManifestMerger)' == 'legacy' " Include="@(ExtractedManifestDocuments)" />
+  </ItemGroup>
+
   <GenerateJavaStubs
       ResolvedAssemblies="@(_ResolvedAssemblies)"
       ResolvedUserAssemblies="@(_ResolvedUserMonoAndroidAssembliesForDesigner)"
       ManifestTemplate="$(_AndroidManifestAbs)"
+      MergedManifestDocuments="@(_MergedManifestDocuments)"
       Debug="$(AndroidIncludeDebugSymbols)"
       NeedsInternet="$(AndroidNeedsInternetPermission)"
       AndroidSdkPlatform="$(_AndroidApiLevel)"
       AndroidSdkDir="$(_AndroidSdkDirectory)"
       PackageName="$(_AndroidPackage)"
       OutputDirectory="$(IntermediateOutputPath)android"
-      MergedAndroidManifestOutput="$(IntermediateOutputPath)android\AndroidManifest.xml"
+      MergedAndroidManifestOutput="$(_ManifestOutput)"
       UseSharedRuntime="$(AndroidUseSharedRuntime)"
       EmbedAssemblies="$(EmbedAssembliesIntoApk)"
       BundledWearApplicationName="$(BundledWearApplicationPackageName)"
@@ -87,6 +97,7 @@ Copyright (C) 2016 Xamarin. All rights reserved.
       SupportedAbis="$(_BuildTargetAbis)">
   </GenerateJavaStubs>
   <ManifestMerger
+      Condition=" '$(AndroidManifestMerger)' == 'manifestmerger.jar' "
       ToolPath="$(JavaToolPath)"
       JavaOptions="$(JavaOptions)"
       ManifestMergerJarPath="$(AndroidManifestMergerJarPath)"
