@@ -227,6 +227,34 @@ namespace Xamarin.Android.ToolsTests {
 		}
 	}
 
+	[Register ("Kotlin.InvalidRegisterName")]
+	class KotlinInvalidRegisterName : Java.Lang.Object
+	{
+		[Register ("foo-impl")]
+		public virtual void Foo ()
+		{
+		}
+
+		[Register ("foo-f8k2a13")]
+		public virtual void Bar ()
+		{
+		}
+	}
+
+	[Register ("Kotlin.InvalidRegisterNameSubclass")]
+	class KotlinInvalidImplRegisterName : KotlinInvalidRegisterName
+	{
+		[Register ("foo-impl")]
+		public override void Foo () => base.Foo ();
+	}
+
+	[Register ("Kotlin.InvalidRegisterNameSubclass")]
+	class KotlinInvalidHashRegisterName : KotlinInvalidRegisterName
+	{
+		[Register ("foo-f8k2a13")]
+		public override void Bar () => base.Foo ();
+	}
+
 	[Service (Name = "service.Name")]
 	class ServiceName : Java.Lang.Object
 	{

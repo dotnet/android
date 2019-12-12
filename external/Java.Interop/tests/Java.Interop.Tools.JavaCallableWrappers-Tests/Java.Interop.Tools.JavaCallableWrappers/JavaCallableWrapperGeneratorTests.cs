@@ -31,6 +31,28 @@ namespace Java.Interop.Tools.JavaCallableWrappersTests
 		}
 
 		[Test]
+		public void KotlinInvalidImplRegisterName ()
+		{
+			Action<string, object []> logger = (f, o) => { };
+
+			// Contains invalid [Register] name of "foo-impl"
+			var td = SupportDeclarations.GetTypeDefinition (typeof (KotlinInvalidImplRegisterName));
+			var e = Assert.Throws<XamarinAndroidException> (() => new JavaCallableWrapperGenerator (td, logger));
+			Assert.AreEqual (4213, e.Code);
+		}
+
+		[Test]
+		public void KotlinInvalidHashRegisterName ()
+		{
+			Action<string, object []> logger = (f, o) => { };
+
+			// Contains invalid [Register] name of "foo-f8k2a13"
+			var td = SupportDeclarations.GetTypeDefinition (typeof (KotlinInvalidHashRegisterName));
+			var e = Assert.Throws<XamarinAndroidException> (() => new JavaCallableWrapperGenerator (td, logger));
+			Assert.AreEqual (4213, e.Code);
+		}
+
+		[Test]
 		public void GenerateApplication (
 				[Values (null, "android.app.Application", "android.support.multidex.MultiDexApplication")] string applicationJavaClass
 		)
