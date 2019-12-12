@@ -840,9 +840,9 @@ stages:
     steps:
     - powershell: |
         $branchPrefix = "/refs/heads/"
-        $branchName = $(System.PullRequest.TargetBranch) -replace $branchPrefix, ""
+        $branchName = "$(System.PullRequest.TargetBranch)" -replace $branchPrefix, ""
         if ([string]::IsNullOrEmpty($branchName)) {
-            $branchName = $(Build.SourceBranch) -replace $branchPrefix, ""
+            $branchName = "$(Build.SourceBranch)" -replace $branchPrefix, ""
         }
         git clone -q https://$(GitHub.Token)@github.com/xamarin/designer.git --branch $branchName
         Set-Location -Path $(System.DefaultWorkingDirectory)/designer
@@ -881,9 +881,9 @@ stages:
     steps:
     - powershell: |
         $branchPrefix = "/refs/heads/"
-        $branchName = $(System.PullRequest.TargetBranch) -replace $branchPrefix, ""
+        $branchName = "$(System.PullRequest.TargetBranch)" -replace $branchPrefix, ""
         if ([string]::IsNullOrEmpty($branchName)) {
-            $branchName = $(Build.SourceBranch) -replace $branchPrefix, ""
+            $branchName = "$(Build.SourceBranch)" -replace $branchPrefix, ""
         }
         git clone -q https://$(GitHub.Token)@github.com/xamarin/designer.git --branch $branchName
         Set-Location -Path $(System.DefaultWorkingDirectory)\designer
