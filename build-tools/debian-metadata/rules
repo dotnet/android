@@ -28,21 +28,35 @@ override_dh_install:
 
 override_dh_clideps:
 	dh_clideps -X/usr/lib/xamarin.android/xbuild-frameworks/ \
+		--exclude-moduleref=api-ms-win-core-heap-l1-1-0.dll \
+		--exclude-moduleref=api-ms-win-core-timezone-l1-1-0.dll \
+		--exclude-moduleref=BCrypt.dll \
 		--exclude-moduleref=clr.dll \
 		--exclude-moduleref=crypt32.dll \
 		--exclude-moduleref=dbghelp.dll \
 		--exclude-moduleref=fusion \
 		--exclude-moduleref=fusion.dll \
+		--exclude-moduleref=iphlpapi.dll \
 		--exclude-moduleref=java-interop \
+		--exclude-moduleref=libfam.so.0 \
+		--exclude-moduleref=libgamin-1.so.0 \
 		--exclude-moduleref=lzo.dll \
 		--exclude-moduleref=mscoree.dll \
 		--exclude-moduleref=mscorwks.dll \
 		--exclude-moduleref=msvcrt \
 		--exclude-moduleref=ntdll.dll \
 		--exclude-moduleref=NTDLL.DLL \
+		--exclude-moduleref=Ole32 \
 		--exclude-moduleref=ole32.dll \
 		--exclude-moduleref=sfc.dll \
-		--exclude-moduleref=wintrust.dll
+		--exclude-moduleref=sspicli.dll \
+		--exclude-moduleref=wintrust.dll \
+		--exclude-moduleref=/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation \
+		--exclude-moduleref=/System/Library/Frameworks/CoreServices.framework/Frameworks/CFNetwork.framework/CFNetwork \
+		--exclude-moduleref=/System/Library/Frameworks/Security.framework/Security \
+		--exclude-moduleref=/System/Library/Frameworks/SystemConfiguration.framework/SystemConfiguration \
+		--exclude-moduleref=/usr/lib/libSystem.dylib \
+		--exclude-moduleref=__Internal
 
 %:
 	dh $@ --with cli
