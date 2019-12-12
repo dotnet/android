@@ -714,11 +714,14 @@ stages:
         artifactName: $(NuGetArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)
 
+    # Limit the amount of worker threads used to run these tests in parallel to half of what is currently available (8) on the Windows pool.
+    # Using all available cores seems to occasionally bog down our machines and cause parallel test execution to slow down dramatically.
     - template: yaml-templates\run-nunit-tests.yaml
       parameters:
         testRunTitle: Xamarin.Android.Build.Tests - Windows
         testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\Xamarin.Android.Build.Tests.dll
         testResultsFile: TestResult-MSBuildTests-Windows-$(XA.Build.Configuration).xml
+        nunitConsoleExtraArgs: --workers=4
 
     - template: yaml-templates\run-nunit-tests.yaml
       parameters:
