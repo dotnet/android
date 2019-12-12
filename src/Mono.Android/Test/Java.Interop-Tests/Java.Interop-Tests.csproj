@@ -66,10 +66,9 @@
       <Project>{D1243BAB-23CA-4566-A2A3-3ADA2C2DC3AF}</Project>
       <Name>Java.Interop.GenericMarshaler</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\external\Java.Interop\lib\mono.linq.expressions\Mono.Linq.Expressions.csproj">
-      <Project>{0C001D50-4176-45AE-BDC8-BA626508B0CC}</Project>
-      <Name>Mono.Linq.Expressions</Name>
-    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Mono.Linq.Expressions" Version="2.0.0" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <Import Project="Java.Interop-Tests.targets" />
