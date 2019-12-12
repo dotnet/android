@@ -13,7 +13,7 @@
 [submodule "external/Java.Interop"]
     path = external/Java.Interop
     url = https://github.com/xamarin/java.interop.git
-    branch = master
+    branch = jonp-fix-JniTypeTest
 [submodule "external/mman-win32"]
     path = external/mman-win32
     url = https://github.com/witwall/mman-win32.git
