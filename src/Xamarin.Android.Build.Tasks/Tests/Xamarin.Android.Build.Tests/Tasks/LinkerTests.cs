@@ -14,12 +14,20 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void FixAbstractMethodsStep_SkipDimMembers ()
 		{
+			var path = Path.Combine (Path.GetFullPath (XABuildPaths.TestOutputDirectory), "temp", TestName);
+
 			var step = new FixAbstractMethodsStep ();
 			var pipeline = new Pipeline ();
 			var context = new LinkContext (pipeline);
 
+			context.Resolver.AddSearchDirectory (path);
+
 			var android = CreateFauxMonoAndroidAssembly ();
-			var jlo = android.MainModule.GetType ("Java.Lang.Object");
+			var monoAndroidPath = Path.Combine (path, "Mono.Android.dll");
+			var myAssemblyPath = Path.Combine (path, "MyAssembly.dll");
+
+			Directory.CreateDirectory (path);
+			android.Write (monoAndroidPath);
 
 			context.Resolver.CacheAssembly (android);
 
@@ -38,20 +46,24 @@ namespace Xamarin.Android.Build.Tests
 			assm.MainModule.Types.Add (iface);
 
 			// Create implementing class
+			var jlo = assm.MainModule.Import (android.MainModule.GetType ("Java.Lang.Object"));
 			var impl = new TypeDefinition ("MyNamespace", "MyClass", TypeAttributes.Public, jlo);
 			impl.Interfaces.Add (new InterfaceImplementation (iface));
 
 			assm.MainModule.Types.Add (impl);
 
-			context.Resolver.CacheAssembly (assm);
+			// Write it and load so that the AssemblyDefinition has image and ModuleDefinition::HasTypeReference works
+			assm.Write (myAssemblyPath);
+			assm = context.Resolve (myAssemblyPath);
 
 			step.Process (context);
 
-			// We should have generated an override for MyAbstractMethod
-			Assert.IsTrue (impl.Methods.Any (m => m.Name == "MyAbstractMethod"));
+			impl = assm.MainModule.GetType ("MyNamespace.MyClass");
 
-			// We should not have generated an override for MyDefaultMethod
-			Assert.IsFalse (impl.Methods.Any (m => m.Name == "MyDefaultMethod"));
+			Assert.IsTrue (impl.Methods.Any (m => m.Name == "MyAbstractMethod"), "We should have generated an override for MyAbstractMethod");
+			Assert.IsFalse (impl.Methods.Any (m => m.Name == "MyDefaultMethod"), "We should not have generated an override for MyDefaultMethod");
+
+			Directory.Delete (path, true);
 		}
 
 		static AssemblyDefinition CreateFauxMonoAndroidAssembly ()
