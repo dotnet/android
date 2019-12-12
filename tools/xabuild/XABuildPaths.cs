@@ -79,6 +79,12 @@ namespace Xamarin.Android.Build
 		public string SystemFrameworks { get; private set; }
 
 		/// <summary>
+		/// Path to the system directory containing .NET Framework assembly directories (e.g. `4.7.2-api`) on macOS.
+		/// The .NETFramework directories identified in <see cref="SystemFrameworks"/> redirect to this location.
+		/// </summary>
+		public string MonoSystemFrameworkRoot { get; private set; }
+
+		/// <summary>
 		/// Path to the system directories for MSBuild targets, such as 15.0 and Microsoft, under $(MSBuildExtensionsPath) to be merged with in-tree MSBuildExtensionsPath
 		/// </summary>
 		public string [] SystemTargetsDirectories { get; private set; }
@@ -181,6 +187,7 @@ namespace Xamarin.Android.Build
 				DotNetSdkPath            = FindLatestDotNetSdk ("/usr/local/share/dotnet/sdk");
 				MSBuildSdksPath          = DotNetSdkPath ?? Path.Combine (MSBuildBin, "Sdks");
 				SystemFrameworks         = Path.Combine (mono, "xbuild-frameworks");
+				MonoSystemFrameworkRoot  = mono;
 
 				var systemTargetDirs = new List <string> ();
 				foreach (string vsVersion in vsVersions) {
