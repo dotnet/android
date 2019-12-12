@@ -172,10 +172,8 @@
       Name="AfterBuild"
       Inputs="$(TargetPath);@(ApiCompatibilityFiles)"
       Outputs="$(IntermediateOutputPath)CheckApiCompatibility.stamp">
-    <!-- $(PkgMicrosoft_DotNet_ApiCompat) is set by the GeneratePathProperty attribute in the
-          PackageReference declared in Mono.Android.csproj -->
     <CheckApiCompatibility
-        ApiCompatPath="$(PkgMicrosoft_DotNet_ApiCompat)/tools/net472/"
+        ApiCompatPath="$([System.Environment]::GetFolderPath(SpecialFolder.UserProfile))\.nuget\packages\microsoft.dotnet.apicompat\5.0.0-beta.19606.1\tools\net472\"
         ApiLevel="$(AndroidFrameworkVersion)"
         LastStableApiLevel="$(AndroidLatestStableFrameworkVersion)"
         TargetImplementationPath="$(OutputPath)"
