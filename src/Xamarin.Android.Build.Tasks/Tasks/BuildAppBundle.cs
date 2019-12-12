@@ -5,6 +5,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace Xamarin.Android.Tasks
 {
@@ -61,6 +62,8 @@ namespace Xamarin.Android.Tasks
 		public string BaseZip { get; set; }
 
 		public string CustomBuildConfigFile { get; set; }
+		
+		public string [] Modules { get; set; }
 
 		[Required]
 		public string Output { get; set; }
@@ -119,7 +122,11 @@ namespace Xamarin.Android.Tasks
 		{
 			var cmd = base.GetCommandLineBuilder ();
 			cmd.AppendSwitch ("build-bundle");
-			cmd.AppendSwitchIfNotNull ("--modules ", BaseZip);
+			var modules = new List<string> ();
+			modules.Add (BaseZip);
+			if (Modules != null && Modules.Any ())
+				modules.AddRange (Modules);
+			cmd.AppendSwitchIfNotNull ("--modules ", string.Join (",", modules));
 			cmd.AppendSwitchIfNotNull ("--output ", Output);
 			cmd.AppendSwitchIfNotNull ("--config ", temp);
 			return cmd;

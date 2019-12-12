@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="ja" original="../Resources.resx">
+    <body>
+      <trans-unit id="XA4214">
+        <source>The managed type `{0}` exists in multiple assemblies: {1}. Please refactor the managed type names in these assemblies so that they are not identical.</source>
+        <target state="new">The managed type `{0}` exists in multiple assemblies: {1}. Please refactor the managed type names in these assemblies so that they are not identical.</target>
+        <note>{0} - The managed type name
+{1} - Comma-separated list of all the assemblies where the managed type exists</note>
+      </trans-unit>
+      <trans-unit id="XA4214_Result">
+        <source>References to the type `{0}` will refer to `{0}, {1}`.</source>
+        <target state="new">References to the type `{0}` will refer to `{0}, {1}`.</target>
+        <note>The phrase "`{0}, {1}`" does not need to be translated.
+{0} - The managed type name
+{1} - The the name of the library that contains the type</note>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

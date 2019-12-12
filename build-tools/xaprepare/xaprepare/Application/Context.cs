@@ -18,8 +18,15 @@ namespace Xamarin.Android.Prepare
 		public const ConsoleColor FailureColor                = ConsoleColor.Red;
 		public const ConsoleColor WarningColor                = ConsoleColor.Yellow;
 
-		static readonly string XASolutionFilePath             = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "Xamarin.Android.sln");
-		static readonly string XATestsSolutionFilePath        = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "Xamarin.Android-Tests.sln");
+		static readonly IEnumerable<string> XASolutionFilesPath         = new string [] {
+			Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "Xamarin.Android.BootstrapTasks.sln"),
+			Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "Xamarin.Android.Build.Tasks.sln"),
+			Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "Xamarin.Android.sln"),
+		};
+
+		static readonly IEnumerable<string> XATestsSolutionFilesPath    = new string [] {
+			Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "Xamarin.Android-Tests.sln"),
+		};
 
 		string logDirectory;
 		string mainLogFilePath;
@@ -171,12 +178,12 @@ namespace Xamarin.Android.Prepare
 		/// <summary>
 		///   Path to the Xamarin.Android solution file
 		/// </summary>
-		public string XASolutionFile                      => XASolutionFilePath;
+		public IEnumerable<string> XASolutionFiles        => XASolutionFilesPath;
 
 		/// <summary>
 		///   Path to the Xamarin.Android tests solution file
 		/// </summary>
-		public string XATestsSolutionFile                 => XATestsSolutionFilePath;
+		public IEnumerable<string> XATestsSolutionFiles   => XATestsSolutionFilesPath;
 
 		/// <summary>
 		///   If <c>true</c>, the current console is capable of displayig UTF-8 characters

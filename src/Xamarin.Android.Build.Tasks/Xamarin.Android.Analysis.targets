@@ -41,7 +41,7 @@ Copyright (C) 2015 Xamarin. All rights reserved.
 *******************************************
 -->
 
-<Target Name="CheckAbiAndMinSDK" DependsOnTargets="_GenerateJavaStubs">
+<Target Name="CheckAbiAndMinSDK" DependsOnTargets="_GenerateJavaStubs;_ManifestMerger">
 	<XmlPeek
 			Condition="Exists('$(IntermediateOutputPath)android\AndroidManifest.xml')"
 			Namespaces="&lt;Namespace Prefix='android' Uri='http://schemas.android.com/apk/res/android' /&gt;"

@@ -14,13 +14,18 @@ namespace Xamarin.Android.Prepare
 		{
 			var nuget = new NuGetRunner (context);
 
-			if (!await NuGetRestore (nuget, context.XASolutionFile)) {
-				return false;
+			foreach (var solutionFile in context.XASolutionFiles) {
+				if (!await NuGetRestore (nuget, solutionFile)) {
+					return false;
+				}
 			}
 
 			Log.StatusLine ();
-			if (!await NuGetRestore (nuget, context.XATestsSolutionFile)) {
-				return false;
+
+			foreach (var solutionFile in context.XATestsSolutionFiles) {
+				if (!await NuGetRestore (nuget, solutionFile)) {
+					return false;
+				}
 			}
 
 			var msbuild = new MSBuildRunner (context);

@@ -63,6 +63,15 @@ namespace Xamarin.Android.Build.Tests
 			RunAdbCommand ($"shell am start -S -n \"{activity}\"");
 		}
 
+		protected TimeSpan ProfileFor (Func<bool> func, TimeSpan? timeout = null)
+		{
+			var stopwatch = new Stopwatch ();
+			stopwatch.Start ();
+			WaitFor (timeout ?? TimeSpan.FromMinutes (1), func);
+			stopwatch.Stop ();
+			return stopwatch.Elapsed;
+		}
+
 		protected void WaitFor (TimeSpan timeSpan, Func<bool> func)
 		{
 			var pause = new ManualResetEvent (false);

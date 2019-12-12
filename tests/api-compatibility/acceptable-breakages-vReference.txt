@@ -1,0 +1,5 @@
+Compat issues with assembly Mono.Android:
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.IncludeAndroidResourcesFromAttribute' in the contract but not the implementation.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.NativeLibraryReferenceAttribute' in the contract but not the implementation.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.ReferenceFilesAttribute' in the contract but not the implementation.
+CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Java.Interop.JavaLibraryReferenceAttribute' in the contract but not the implementation.

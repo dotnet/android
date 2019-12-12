@@ -17,6 +17,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)BuildTest.TestCaseSource.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DesignerTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DeferredBuildTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)XASdkTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IncrementalBuildTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ManifestTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ManifestTest.TestCaseSource.cs" />
@@ -32,5 +33,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\EnvironmentHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utilities\PackagingUtilsTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)WearTests.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)AndroidDependenciesTests.cs" />
   </ItemGroup>
 </Project>

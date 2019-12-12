@@ -114,7 +114,7 @@ call][managed_timing] or [this native call][native_timing].
 [managed_timing]: https://github.com/xamarin/xamarin-android/blob/faf2a3d7271e2e321b2fa500f85fa0f824abcf89/src/Mono.Android/Android.Runtime/JNIEnv.cs#L160
 [native_timing]: https://github.com/xamarin/xamarin-android/blob/6be4bdbcfd9f2fbe6267aceb934394bcdd0f13b4/src/monodroid/jni/monodroid-glue.cc#L2062
 
-## Profiling the AOT
+## Profiling the AOT Compiler
 
 The application needs to be built with embedded AOT profiler. That can
 be done by using `AndroidEmbedProfilers` property, like:
@@ -156,7 +156,7 @@ It is useful for scenarios like speeding up the startup of your
 application or other performance critical parts, by selectively
 AOT'ing only the methods included in the profile.
 
-## Profiling the JIT
+## Profiling the JIT Compiler
 
 Before launching the app, run the `adb` command:
 
@@ -323,3 +323,90 @@ JIT the method. The JIT time can be significant, for methods which are
 called just once it can be 50% of that time for example.
 
 [mono_docs]: https://www.mono-project.com/docs/debug+profile/profile/profiler/#profiler-option-documentation
+
+## Profiling Native Code
+
+[simpleperf][simpleperf] is a tool included with the Android NDK for
+profiling native code.
+
+If using the Visual Studio installation, you find this tool in
+`C:\Program Files (x86)\Android\android-sdk\ndk-bundle\simpleperf`.
+It also requires an installation of python.
+
+Step 1, you will need to setup a shell script inside your app. You
+will take these files:
+
+* `C:\Program Files (x86)\Android\android-sdk\ndk-bundle\wrap.sh\asan.arm64-v8a.sh`
+* `C:\Program Files (x86)\Android\android-sdk\ndk-bundle\wrap.sh\asan.armeabi-v7a.sh`
+* `C:\Program Files (x86)\Android\android-sdk\ndk-bundle\wrap.sh\asan.x86.sh`
+* `C:\Program Files (x86)\Android\android-sdk\ndk-bundle\wrap.sh\asan.x86_64.sh`
+
+You will need to place these files inside your app as `AndroidAsset`,
+renamed to these paths:
+
+* `Assets\lib\arm64-v8a\wrap.sh`
+* `Assets\lib\armeabi-v7a\wrap.sh`
+* `Assets\lib\x86\wrap.sh`
+* `Assets\lib\x86_64\wrap.sh`
+
+If you plan on profiling on a single device, I would only do this for
+the single ABI you need.
+
+To profile app startup, I was running the command:
+
+    python app_profiler.py -p com.yourcompany.yourapp -a yourpackage.MainActivity
+
+* `app_profiler.py` is `"C:\Program Files (x86)\Android\android-sdk\ndk-bundle\simpleperf\app_profiler.py"`
+* You might additionally need `--ndk_path="C:\Program Files (x86)\Android\android-sdk\ndk-bundle\simpleperf"`
+
+This generates a bunch of files in the current directory, such as:
+`binary_cache\`, `perf.data`, and `perf.report`.
+
+To view the results, run commands such as:
+
+```
+> python report.py
+Cmdline: /data/data/Xamarin.Forms_Performance_Integration/simpleperf record --in-app --tracepoint-events /data/local/tmp/tracepoint_events -o perf.data -e task-clock:u -f 1000 -g --duration 10 --symfs /data/local/tmp/native_libs/ --app Xamarin.Forms_Performance_Integration
+Arch: x86
+Event: task-clock:u (type 1, config 1)
+Samples: 1558
+Event count: 1558000000
+
+Overhead  Command                                Pid   Tid   Shared Object                                                                                  Symbol
+97.88%    Xamarin.Forms_Performance_Integration  6527  6527  [vdso]                                                                                         __vdso_clock_gettime
+0.13%     RenderThread                           6527  6548  [vdso]                                                                                         __vdso_clock_gettime
+0.13%     Xamarin.Forms_Performance_Integration  6527  6527  /system/lib/libdexfile.so                                                                      art::IsValidPartOfMemberNameUtf8(char const**)
+0.06%     Binder:6527_3                          6527  6542  [vdso]                                                                                         __vdso_clock_gettime
+0.06%     Jit thread pool                        6527  6533  [vdso]                                                                                         __vdso_clock_gettime
+0.06%     Xamarin.Forms_Performance_Integration  6527  6527  /data/app/Mono.Android.DebugRuntime-wbwmv22rlkqD4wNWY5gjpQ==/lib/x86/libmonosgen-32bit-2.0.so  libmonosgen-32bit-2.0.so[+21bf4c]
+0.06%     Xamarin.Forms_Performance_Integration  6527  6527  /data/app/Mono.Android.DebugRuntime-wbwmv22rlkqD4wNWY5gjpQ==/lib/x86/libmonosgen-32bit-2.0.so  libmonosgen-32bit-2.0.so[+23ddf9]
+...
+```
+
+Or some other examples:
+
+```
+> python report.py --sort dso
+Cmdline: /data/data/Xamarin.Forms_Performance_Integration/simpleperf record --in-app --tracepoint-events /data/local/tmp/tracepoint_events -o perf.data -e task-clock:u -f 1000 -g --duration 10 --symfs /data/local/tmp/native_libs/ --app Xamarin.Forms_Performance_Integration
+Arch: x86
+Event: task-clock:u (type 1, config 1)
+Samples: 1558
+Event count: 1558000000
+
+Overhead  Shared Object
+98.14%    [vdso]
+0.71%     /system/lib/libart.so
+0.58%     /data/app/Mono.Android.DebugRuntime-wbwmv22rlkqD4wNWY5gjpQ==/lib/x86/libmonosgen-32bit-2.0.so
+0.32%     /system/lib/libdexfile.so
+0.19%     /system/lib/libc.so
+0.06%     /system/lib/libandroidfw.so
+```
+
+Or to get a full tree with a GUI:
+
+    > python report.py -g --gui
+
+See further details on `simpleperf`'s [README][simpleperf-readme].
+
+[simpleperf]: https://developer.android.com/ndk/guides/simpleperf
+[simpleperf-readme]: https://android.googlesource.com/platform/system/extras/+/master/simpleperf/doc/README.md

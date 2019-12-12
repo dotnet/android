@@ -7,7 +7,9 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Xml;
 using System.Xml.Linq;
+using System.Xml.XPath;
 using Microsoft.Build.Framework;
 using Mono.Cecil;
 using NUnit.Framework;
@@ -70,55 +72,70 @@ namespace Xamarin.Android.Build.Tests
 			new object [] {
 				/* isRelease */     false,
 				/* xamarinForms */  false,
+				/* multidex */      false,
 				/* packageFormat */ "apk",
 			},
 			new object [] {
 				/* isRelease */     false,
 				/* xamarinForms */  true,
+				/* multidex */      false,
+				/* packageFormat */ "apk",
+			},
+			new object [] {
+				/* isRelease */     false,
+				/* xamarinForms */  true,
+				/* multidex */      true,
 				/* packageFormat */ "apk",
 			},
 			new object [] {
 				/* isRelease */     true,
 				/* xamarinForms */  false,
+				/* multidex */      false,
 				/* packageFormat */ "apk",
 			},
 			new object [] {
 				/* isRelease */     true,
 				/* xamarinForms */  true,
+				/* multidex */      false,
 				/* packageFormat */ "apk",
 			},
 			new object [] {
 				/* isRelease */     false,
 				/* xamarinForms */  false,
+				/* multidex */      false,
 				/* packageFormat */ "aab",
 			},
 			new object [] {
 				/* isRelease */     true,
 				/* xamarinForms */  false,
+				/* multidex */      false,
 				/* packageFormat */ "aab",
 			},
 		};
 
 		[Test]
 		[TestCaseSource (nameof (BuildHasNoWarningsSource))]
-		public void BuildHasNoWarnings (bool isRelease, bool xamarinForms, string packageFormat)
+		public void BuildHasNoWarnings (bool isRelease, bool xamarinForms, bool multidex, string packageFormat)
 		{
 			var proj = xamarinForms ?
 				new XamarinFormsAndroidApplicationProject () :
 				new XamarinAndroidApplicationProject ();
+			if (multidex) {
+				proj.SetProperty ("AndroidEnableMultiDex", "True");
+			}
 			if (packageFormat == "aab") {
 				// Disable fast deployment for aabs, because we give:
 				//	XA0119: Using Fast Deployment and Android App Bundles at the same time is not recommended.
 				proj.EmbedAssembliesIntoApk = true;
 				proj.AndroidUseSharedRuntime = false;
 			}
+			proj.SetProperty ("XamarinAndroidSupportSkipVerifyVersions", "True"); // Disables API 29 warning in Xamarin.Build.Download
 			proj.SetProperty ("AndroidPackageFormat", packageFormat);
 			proj.IsRelease = isRelease;
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				if (xamarinForms) {
-					// With Android API Level 29, we will get a warning: "... is only compatible with TargetFrameworkVersion: MonoAndroid,v9.0 (Android API Level 28)"
-					// We should allow a maximum of 1 warning to cover this case until the packages get updated to be compatible with Api level 29
+				if (multidex) {
+					// R8 currently gives: The rule `-keep public class * extends java.lang.annotation.Annotation { *; }` uses extends but actually matches implements.
 					Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 1 Warning(s)"), "Should have no more than 1 MSBuild warnings.");
 				} else {
 					Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 0 Warning(s)"), "Should have no MSBuild warnings.");
@@ -1718,7 +1735,7 @@ namespace App1
 		{
 			FixLintOnWindows ();
 
-			string disabledIssues = "StaticFieldLeak,ObsoleteSdkInt,AllowBackup";
+			string disabledIssues = "StaticFieldLeak,ObsoleteSdkInt,AllowBackup,ExportedReceiver";
 
 			var proj = new XamarinAndroidApplicationProject () {
 				PackageReferences = {
@@ -2319,11 +2336,14 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 		{
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("</application>", "<provider android:name='${applicationId}' android:authorities='example' /></application>");
-			var builder = CreateApkBuilder ("temp/ApplicationIdPlaceholder");
-			builder.Build (proj);
-			var appsrc = File.ReadAllText (Path.Combine (Root, builder.ProjectDirectory, "obj", "Debug", "android", "AndroidManifest.xml"));
-			Assert.IsTrue (appsrc.Contains ("<provider android:name=\"UnnamedProject.UnnamedProject\""), "placeholder not replaced");
-			builder.Dispose ();
+			using (var builder = CreateApkBuilder ("temp/ApplicationIdPlaceholder")) {
+				builder.Build (proj);
+				var manifest = XDocument.Load (Path.Combine (Root, builder.ProjectDirectory, "obj", "Debug", "android", "AndroidManifest.xml"));
+				var namespaceResolver = new XmlNamespaceManager (new NameTable ());
+				namespaceResolver.AddNamespace ("android", "http://schemas.android.com/apk/res/android");
+				var element = manifest.XPathSelectElement ("/manifest/application/provider[@android:name='UnnamedProject.UnnamedProject']", namespaceResolver);
+				Assert.IsNotNull (element, "placeholder not replaced");
+			}
 		}
 
 		[Test]

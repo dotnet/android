@@ -7,6 +7,7 @@ obj
 packages
 .DS_Store
 .nuget
+*.nupkg
 TestResult.xml
 TestResult-*.xml
 TestResult-*.csv
@@ -22,3 +23,4 @@ src/Xamarin.Android.Build.Tasks/Xamarin.Android.Common.props
 *~
 external/monodroid/
 external/mono/
+tests/api-compatibility/reference/*.dll

@@ -372,7 +372,7 @@ namespace Xamarin.Android.Tasks
 
 		CompressionMethod GetCompressionMethod (string fileName)
 		{
-			if (uncompressedFileExtensions.Any (x => string.Compare (x, Path.GetExtension (fileName), StringComparison.OrdinalIgnoreCase) == 0))
+			if (uncompressedFileExtensions.Any (x => string.Compare (x.StartsWith (".", StringComparison.OrdinalIgnoreCase) ? x : $".{x}", Path.GetExtension (fileName), StringComparison.OrdinalIgnoreCase) == 0))
 				return UncompressedMethod;
 			return CompressionMethod.Default;
 		}

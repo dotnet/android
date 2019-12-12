@@ -17,6 +17,7 @@ resources:
 
 # Global variables
 variables:
+  NuGetArtifactName: nupkgs
   InstallerArtifactName: installers
   TestAssembliesArtifactName: test-assemblies
   NUnitConsoleVersion: 3.9.0
@@ -140,6 +141,20 @@ stages:
         artifactName: $(InstallerArtifactName)
         targetPath: bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
 
+    - task: DotNetCoreCLI@2
+      displayName: pack Xamarin.Android.Sdk
+      inputs:
+        command: pack
+        packagesToPack: $(System.DefaultWorkingDirectory)/build-tools/create-packs/Packager.csproj
+        configuration: $(XA.Build.Configuration)
+        packDirectory: $(Build.ArtifactStagingDirectory)/$(XA.Build.Configuration)
+
+    - task: PublishPipelineArtifact@0
+      displayName: upload nupkgs
+      inputs:
+        artifactName: $(NuGetArtifactName)
+        targetPath: $(Build.ArtifactStagingDirectory)/$(XA.Build.Configuration)
+
     - template: yaml-templates/upload-results.yaml
       parameters:
         artifactName: Build Results - macOS
@@ -193,6 +208,14 @@ stages:
         configuration: $(XA.Build.Configuration)
         msbuildArguments: /p:CreateVsixContainer=True /p:ZipPackageCompressionLevel=Normal /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-create-vsix.binlog
 
+    - task: DotNetCoreCLI@2
+      displayName: pack Xamarin.Android.Sdk
+      inputs:
+        command: pack
+        packagesToPack: $(System.DefaultWorkingDirectory)\build-tools\create-packs\Packager.csproj
+        configuration: $(XA.Build.Configuration)
+        packDirectory: $(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)
+
     - task: CmdLine@1
       displayName: xabuild Xamarin.Android-Tests
       inputs:
@@ -235,11 +258,14 @@ stages:
         testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\EmbeddedDSOUnitTests.dll
         testResultsFile: TestResult-EmbeddedDSOUnitTests-WinBuildTree-$(XA.Build.Configuration).xml
 
+    # Limit the amount of worker threads used to run these tests in parallel to half of what is currently available (8) on the Windows pool.
+    # Using all available cores seems to occasionally bog down our machines and cause parallel test execution to slow down dramatically.
     - template: yaml-templates\run-nunit-tests.yaml
       parameters:
         testRunTitle: Xamarin.Android.Build.Tests - Windows Build Tree
         testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\Xamarin.Android.Build.Tests.dll
         testResultsFile: TestResult-MSBuildTests-WinBuildTree-$(XA.Build.Configuration).xml
+        nunitConsoleExtraArgs: --workers=4
 
     - template: yaml-templates\upload-results.yaml
       parameters:
@@ -621,6 +647,11 @@ stages:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
+    - task: DownloadPipelineArtifact@1
+      inputs:
+        artifactName: $(NuGetArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)
+
     - template: yaml-templates/run-nunit-tests.yaml
       parameters:
         testRunTitle: CodeBehindUnitTests - macOS
@@ -678,11 +709,19 @@ stages:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)
 
+    - task: DownloadPipelineArtifact@1
+      inputs:
+        artifactName: $(NuGetArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)
+
+    # Limit the amount of worker threads used to run these tests in parallel to half of what is currently available (8) on the Windows pool.
+    # Using all available cores seems to occasionally bog down our machines and cause parallel test execution to slow down dramatically.
     - template: yaml-templates\run-nunit-tests.yaml
       parameters:
         testRunTitle: Xamarin.Android.Build.Tests - Windows
         testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\Xamarin.Android.Build.Tests.dll
         testResultsFile: TestResult-MSBuildTests-Windows-$(XA.Build.Configuration).xml
+        nunitConsoleExtraArgs: --workers=4
 
     - template: yaml-templates\run-nunit-tests.yaml
       parameters:

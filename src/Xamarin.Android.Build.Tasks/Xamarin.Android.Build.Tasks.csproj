@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\..\packages\Xamarin.Build.AsyncTask.0.3.4\build\Xamarin.Build.AsyncTask.props" Condition="Exists('..\..\packages\Xamarin.Build.AsyncTask.0.3.4\build\Xamarin.Build.AsyncTask.props')" />
+  <Import Project="..\..\packages\XliffTasks.1.0.0-beta.19252.1\build\XliffTasks.props" Condition="Exists('..\..\packages\XliffTasks.1.0.0-beta.19252.1\build\XliffTasks.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -16,6 +17,7 @@
     <DebugSymbols>True</DebugSymbols>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
+  <Import Project="..\..\build-tools\scripts\LocalizationLanguages.projitems" />
   <Import Project="..\..\build-tools\scripts\MSBuildReferences.projitems" />
   <Import Project="..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -96,7 +98,6 @@
     <Reference Include="System.IdentityModel" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Net.Http.WebRequest" />
-    <Reference Include="System.ServiceModel" />
     <Reference Include="NuGet.DependencyResolver.Core">
       <HintPath>..\..\packages\NuGet.DependencyResolver.Core.4.6.0\lib\net46\NuGet.DependencyResolver.Core.dll</HintPath>
     </Reference>
@@ -186,6 +187,11 @@
     <Compile Include="Tasks\AndroidToolTask.cs" />
     <Compile Include="Tasks\PrepareAbiItems.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Mono.Android\ApplicationAttribute.Partial.cs" />
     <Compile Include="Mono.Android\BroadcastReceiverAttribute.Partial.cs" />
     <Compile Include="Mono.Android\ActivityAttribute.Partial.cs" />
@@ -590,6 +596,15 @@
     <Compile Include="Utilities\OutputLine.cs" />
     <Compile Include="Utilities\ResourceIdentifier.cs" />
     <Compile Include="Tasks\GetAndroidActivityName.cs" />
+    <Compile Include="Tasks\ManifestMerger.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <None Include="@(_LocalizationLanguages->'Properties\xlf\Resources.%(Identity).xlf')" />
   </ItemGroup>
   <ItemGroup>
     <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.LaunchMode.cs" />
@@ -752,7 +767,13 @@
       <Name>fetch-windows-assemblers</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
+    <ProjectReference Include="..\manifestmerger\manifestmerger.csproj">
+      <Project>{af8ac493-40ac-4195-82f6-b08ee4b4e49e}</Project>
+      <Name>manifestmerger</Name>
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="ILRepack.targets" />
   <Import Project="..\..\packages\Xamarin.LibZipSharp.1.0.6\build\Xamarin.LibZipSharp.targets" Condition="Exists('..\..\packages\Xamarin.LibZipSharp.1.0.6\build\Xamarin.LibZipSharp.targets')" />
+  <Import Project="..\..\packages\XliffTasks.1.0.0-beta.19252.1\build\XliffTasks.targets" Condition="Exists('..\..\packages\XliffTasks.1.0.0-beta.19252.1\build\XliffTasks.targets')" />
 </Project>

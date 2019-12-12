@@ -43,7 +43,6 @@ namespace Xamarin.Android.Tasks
 		public string [] SupportedAbis { get; set; }
 
 		public string ManifestTemplate { get; set; }
-		public string[] MergedManifestDocuments { get; set; }
 
 		public bool Debug { get; set; }
 		public bool MultiDex { get; set; }
@@ -221,13 +220,8 @@ namespace Xamarin.Android.Tasks
 			}
 
 			foreach (var kvp in managedConflicts) {
-				Log.LogCodedWarning (
-					"XA4214",
-					"The managed type `{0}` exists in multiple assemblies: {1}. " +
-					"Please refactor the managed type names in these assemblies so that they are not identical.",
-					kvp.Key,
-					string.Join (", ", kvp.Value));
-				Log.LogCodedWarning ("XA4214", "References to the type `{0}` will refer to `{0}, {1}`.", kvp.Key, kvp.Value [0]);
+				Log.LogCodedWarning ("XA4214", Properties.Resources.XA4214, kvp.Key, string.Join (", ", kvp.Value));
+				Log.LogCodedWarning ("XA4214", Properties.Resources.XA4214_Result, kvp.Key, kvp.Value [0]);
 			}
 
 			foreach (var kvp in javaConflicts) {
@@ -255,7 +249,7 @@ namespace Xamarin.Android.Tasks
 			manifest.NeedsInternet = NeedsInternet;
 			manifest.InstantRunEnabled = InstantRunEnabled;
 
-			var additionalProviders = manifest.Merge (all_java_types, ApplicationJavaClass, EmbedAssemblies, BundledWearApplicationName, MergedManifestDocuments);
+			var additionalProviders = manifest.Merge (all_java_types, ApplicationJavaClass, EmbedAssemblies, BundledWearApplicationName);
 
 			using (var stream = new MemoryStream ()) {
 				manifest.Save (stream);

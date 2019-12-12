@@ -1,0 +1,32 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!-- Default Resource file inclusion -->
+  <!-- https://developer.android.com/guide/topics/resources/providing-resources -->
+  <ItemGroup Condition=" '$(EnableDefaultAndroidResourceItems)' == 'true' ">
+    <AndroidResource Include="$(MonoAndroidResourcePrefix)\**\*.xml" />
+    <AndroidResource Include="$(MonoAndroidResourcePrefix)\**\*.axml" />
+    <AndroidResource Include="$(MonoAndroidResourcePrefix)\**\*.png" />
+    <AndroidResource Include="$(MonoAndroidResourcePrefix)\**\*.jpg" />
+    <AndroidResource Include="$(MonoAndroidResourcePrefix)\**\*.gif" />
+    <AndroidResource Include="$(MonoAndroidResourcePrefix)\font\**\*.ttf" />
+    <AndroidResource Include="$(MonoAndroidResourcePrefix)\font\**\*.otf" />
+    <AndroidResource Include="$(MonoAndroidResourcePrefix)\font\**\*.ttc" />
+    <AndroidResource Include="$(MonoAndroidResourcePrefix)\raw\**\*" />
+  </ItemGroup>
+
+  <!-- Default Asset file inclusion -->
+  <ItemGroup Condition=" '$(EnableDefaultAndroidAssetItems)' == 'true' ">
+    <AndroidAsset Include="$(MonoAndroidAssetsPrefix)\**\*" />
+  </ItemGroup>
+
+  <!-- Default References -->
+  <ItemGroup Condition="'$(DisableImplicitFrameworkReferences)' != 'true'">
+    <Reference Include="Mono.Android" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+
+</Project>

@@ -119,6 +119,29 @@ The following build targets are defined for Xamarin.Android projects:
     `Resource.designer.cs` file. This target is usually called by the
     IDE when new resources are added to the project.
 
+-   **BuildAndStartAotProfiling** &ndash; Builds the package with
+    embedded AOT profiler, sets the AOT profiler socket port to
+    `$(AndroidAotProfilerPort)` and starts the *launch* activity.
+
+    Added in Xamarin.Android v10.3.
+
+-   **FinishAotProfiling** &ndash; Collects the AOT profiler data from
+    the device or the emulator through sockets port
+    `$(AndroidAotProfilerPort)` and writes them to
+    `$(AndroidAotCustomProfilePath)`.
+
+    The default values for port and custom profile are `9999` and
+    `custom.aprof`.
+
+    The `aprofutil` call may be extended with
+    `$(AProfUtilExtraOptions)`, to pass additional options.
+
+    This is equivalent to:
+    
+        aprofutil $(AProfUtilExtraOptions) -s -v -f -p $(AndroidAotProfilerPort) -o "$(AndroidAotCustomProfilePath)"
+
+    Added in Xamarin.Android v10.3.
+
 <a name="Build_Extension_Points" />
 
 ## Build Extension Points

@@ -143,15 +143,33 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void Build_JLO_Change ()
 		{
+			var className = "Foo";
 			var proj = new XamarinAndroidApplicationProject ();
-			proj.MainActivity = proj.DefaultMainActivity;
+			proj.Sources.Add (new BuildItem.Source ("Foo.cs") {
+				TextContent = () => $"class {className} : Java.Lang.Object {{}}"
+			});
 			using (var builder = CreateApkBuilder ()) {
 				builder.Target = "Build";
 				builder.Build (proj);
 
 				// Profile Java.Lang.Object rename
-				proj.MainActivity = proj.MainActivity.Replace ("MainActivity", "MainActivity2");
-				proj.Touch ("MainActivity.cs");
+				className = "Foo2";
+				proj.Touch ("Foo.cs");
+				Profile (builder, b => b.Build (proj));
+			}
+		}
+
+		[Test]
+		public void Build_AndroidManifest_Change ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			using (var builder = CreateApkBuilder ()) {
+				builder.Target = "Build";
+				builder.Build (proj);
+
+				// Profile AndroidManifest.xml change
+				proj.AndroidManifest += $"{Environment.NewLine}<!--comment-->";
+				proj.Touch ("Properties\\AndroidManifest.xml");
 				Profile (builder, b => b.Build (proj));
 			}
 		}
