@@ -178,6 +178,9 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		{
 			// Load issues into a dictionary
 			var issuesFound = LoadIssues (content);
+			if (Log.HasLoggedErrors) {
+				return;
+			}
 
 			Dictionary<string, HashSet<string>> acceptableIssues = null;
 
@@ -194,6 +197,9 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				// Read and Convert the acceptable issues into a dictionary
 				using (var streamReader = new StreamReader (acceptableIssuesFile)) {
 					acceptableIssues = LoadIssues (streamReader);
+					if (Log.HasLoggedErrors) {
+						return;
+					}
 				}
 			}
 
@@ -267,7 +273,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 				if (currentSet == null) {
 					// Hashset should never be null, unless exception file is not defining assembly line.
-					Log.LogError ($"Exception report/file should start with: Compat issues with assembly");
+					Log.LogError ($"Exception report/file should start with: 'Compat issues with assembly'; was: '{line}'");
 					return null;
 				}
 
