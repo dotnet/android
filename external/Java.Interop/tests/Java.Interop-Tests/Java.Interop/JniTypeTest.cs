@@ -141,9 +141,11 @@ namespace Java.InteropTests
 				var Class_getMethod         = Class_class.GetInstanceMethod ("getMethod", "(Ljava/lang/String;[Ljava/lang/Class;)Ljava/lang/reflect/Method;");
 				var Method_getReturnType    = Method_class.GetInstanceMethod ("getReturnType", "()Ljava/lang/Class;");
 				var hashCode_str            = JniEnvironment.Strings.NewString ("hashCode");
-				var hashCode_args           = stackalloc JniArgumentValue [1];
-				hashCode_args [0]           = new JniArgumentValue (hashCode_str);
-				var Object_hashCode         = JniEnvironment.InstanceMethods.CallObjectMethod (Object_class.PeerReference, Class_getMethod, hashCode_args);
+				var emptyArray              = JniEnvironment.Arrays.NewObjectArray (0, Class_class.PeerReference, new JniObjectReference ());
+				var getHashcodeMethodArgs   = stackalloc JniArgumentValue [2];
+				getHashcodeMethodArgs [0]   = new JniArgumentValue (hashCode_str);
+				getHashcodeMethodArgs [1]   = new JniArgumentValue (emptyArray);
+				var Object_hashCode         = JniEnvironment.InstanceMethods.CallObjectMethod (Object_class.PeerReference, Class_getMethod, getHashcodeMethodArgs);
 				var Object_hashCode_rt      = JniEnvironment.InstanceMethods.CallObjectMethod (Object_hashCode, Method_getReturnType);
 				try {
 					Assert.AreEqual ("java/lang/Object", Object_class.Name);
@@ -154,6 +156,7 @@ namespace Java.InteropTests
 					JniObjectReference.Dispose (ref hashCode_str);
 					JniObjectReference.Dispose (ref Object_hashCode);
 					JniObjectReference.Dispose (ref Object_hashCode_rt);
+					JniObjectReference.Dispose (ref emptyArray);
 				}
 			}
 		}

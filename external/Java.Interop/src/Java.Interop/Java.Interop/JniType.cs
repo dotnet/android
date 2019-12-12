@@ -57,6 +57,11 @@ namespace Java.Interop {
 			}
 		}
 
+		public override string ToString ()
+		{
+			return $"JniType(Name='{Name}' PeerReference={PeerReference})";
+		}
+
 #if XA_INTEGRATION
 		internal
 #else   // !XA_INTEGRATION
