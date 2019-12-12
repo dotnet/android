@@ -63,6 +63,10 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (impl.Methods.Any (m => m.Name == "MyAbstractMethod"), "We should have generated an override for MyAbstractMethod");
 			Assert.IsFalse (impl.Methods.Any (m => m.Name == "MyDefaultMethod"), "We should not have generated an override for MyDefaultMethod");
 
+			context.Dispose ();
+			assm.Dispose ();
+			android.Dispose ();
+
 			Directory.Delete (path, true);
 		}
 
