@@ -17,9 +17,18 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void JarManifest ()
+		public void SigningFiles ()
 		{
 			AssertIsNotValid ("META-INF/MANIFEST.MF");
+			AssertIsNotValid ("META-INF/MANIFEST.SF");
+			AssertIsNotValid ("META-INF/MSFTSIG.SF");
+			AssertIsNotValid ("META-INF/MSFTSIG.RSA");
+			AssertIsNotValid ("META-INF/GOOG.RSA");
+			AssertIsNotValid ("META-INF\\MANIFEST.MF");
+			AssertIsNotValid ("META-INF\\MANIFEST.SF");
+			AssertIsNotValid ("META-INF\\MSFTSIG.SF");
+			AssertIsNotValid ("META-INF\\MSFTSIG.RSA");
+			AssertIsNotValid ("META-INF\\GOOG.RSA");
 		}
 
 		[Test]
