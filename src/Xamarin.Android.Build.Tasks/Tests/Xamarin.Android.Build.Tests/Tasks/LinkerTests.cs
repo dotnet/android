@@ -15,59 +15,59 @@ namespace Xamarin.Android.Build.Tests
 		public void FixAbstractMethodsStep_SkipDimMembers ()
 		{
 			var path = Path.Combine (Path.GetFullPath (XABuildPaths.TestOutputDirectory), "temp", TestName);
-
 			var step = new FixAbstractMethodsStep ();
 			var pipeline = new Pipeline ();
-			var context = new LinkContext (pipeline);
-
-			context.Resolver.AddSearchDirectory (path);
-
-			var android = CreateFauxMonoAndroidAssembly ();
-			var monoAndroidPath = Path.Combine (path, "Mono.Android.dll");
-			var myAssemblyPath = Path.Combine (path, "MyAssembly.dll");
 
 			Directory.CreateDirectory (path);
-			android.Write (monoAndroidPath);
 
-			context.Resolver.CacheAssembly (android);
+			using (var context = new LinkContext (pipeline)) {
 
-			var assm = AssemblyDefinition.CreateAssembly (new AssemblyNameDefinition ("DimTest", new Version ()), "DimTest", ModuleKind.Dll);
-			var void_type = assm.MainModule.ImportReference (typeof (void));
+				context.Resolver.AddSearchDirectory (path);
 
-			// Create interface
-			var iface = new TypeDefinition ("MyNamespace", "IMyInterface", TypeAttributes.Interface);
+				var myAssemblyPath = Path.Combine (path, "MyAssembly.dll");
 
-			var abstract_method = new MethodDefinition ("MyAbstractMethod", MethodAttributes.Abstract, void_type);
-			var default_method = new MethodDefinition ("MyDefaultMethod", MethodAttributes.Public, void_type);
+				using (var android = CreateFauxMonoAndroidAssembly ()) {
+					android.Write (Path.Combine (path, "Mono.Android.dll"));
+					CreateAbstractIfaceImplementation (myAssemblyPath, android);
+				}
 
-			iface.Methods.Add (abstract_method);
-			iface.Methods.Add (default_method);
+				using (var assm = context.Resolve (myAssemblyPath)) {
+					step.Process (context);
 
-			assm.MainModule.Types.Add (iface);
+					var impl = assm.MainModule.GetType ("MyNamespace.MyClass");
 
-			// Create implementing class
-			var jlo = assm.MainModule.Import (android.MainModule.GetType ("Java.Lang.Object"));
-			var impl = new TypeDefinition ("MyNamespace", "MyClass", TypeAttributes.Public, jlo);
-			impl.Interfaces.Add (new InterfaceImplementation (iface));
-
-			assm.MainModule.Types.Add (impl);
-
-			// Write it and load so that the AssemblyDefinition has image and ModuleDefinition::HasTypeReference works
-			assm.Write (myAssemblyPath);
-			assm = context.Resolve (myAssemblyPath);
-
-			step.Process (context);
-
-			impl = assm.MainModule.GetType ("MyNamespace.MyClass");
-
-			Assert.IsTrue (impl.Methods.Any (m => m.Name == "MyAbstractMethod"), "We should have generated an override for MyAbstractMethod");
-			Assert.IsFalse (impl.Methods.Any (m => m.Name == "MyDefaultMethod"), "We should not have generated an override for MyDefaultMethod");
-
-			context.Dispose ();
-			assm.Dispose ();
-			android.Dispose ();
+					Assert.IsTrue (impl.Methods.Any (m => m.Name == "MyAbstractMethod"), "We should have generated an override for MyAbstractMethod");
+					Assert.IsFalse (impl.Methods.Any (m => m.Name == "MyDefaultMethod"), "We should not have generated an override for MyDefaultMethod");
+				}
+			}
 
 			Directory.Delete (path, true);
+		}
+
+		static void CreateAbstractIfaceImplementation (string assemblyPath, AssemblyDefinition android)
+		{
+			using (var assm = AssemblyDefinition.CreateAssembly (new AssemblyNameDefinition ("DimTest", new Version ()), "DimTest", ModuleKind.Dll)) {
+				var void_type = assm.MainModule.ImportReference (typeof (void));
+
+				// Create interface
+				var iface = new TypeDefinition ("MyNamespace", "IMyInterface", TypeAttributes.Interface);
+
+				var abstract_method = new MethodDefinition ("MyAbstractMethod", MethodAttributes.Abstract, void_type);
+				var default_method = new MethodDefinition ("MyDefaultMethod", MethodAttributes.Public, void_type);
+
+				iface.Methods.Add (abstract_method);
+				iface.Methods.Add (default_method);
+
+				assm.MainModule.Types.Add (iface);
+
+				// Create implementing class
+				var jlo = assm.MainModule.Import (android.MainModule.GetType ("Java.Lang.Object"));
+				var impl = new TypeDefinition ("MyNamespace", "MyClass", TypeAttributes.Public, jlo);
+				impl.Interfaces.Add (new InterfaceImplementation (iface));
+
+				assm.MainModule.Types.Add (impl);
+				assm.Write (assemblyPath);
+			}
 		}
 
 		static AssemblyDefinition CreateFauxMonoAndroidAssembly ()
