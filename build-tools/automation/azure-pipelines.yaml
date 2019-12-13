@@ -841,9 +841,19 @@ stages:
     variables:
       EnableRegressionTest: true
     steps:
-    - script: |
-        git clone -q https://$(GitHub.Token)@github.com/xamarin/designer.git
-        cd designer
+    - powershell: |
+        # Use the branch name of the source being built or the PR target branch name. Fall back to 'master' if the branch is unknown.
+        $branchPrefix = "/refs/heads/"
+        $branchName = "$(Build.SourceBranch)" -replace $branchPrefix, ""
+        if ("$(Build.Reason)" -eq "PullRequest") {
+            $branchName = "$(System.PullRequest.TargetBranch)" -replace $branchPrefix, ""
+        }
+        if (("$branchName" -ne "master") -and ("$branchName" -notlike "d16*")) {
+            $branchName = "master"
+        }
+        Write-Host "cloning designer source from branch - '$branchName'"
+        git clone -q https://$(GitHub.Token)@github.com/xamarin/designer.git --branch $branchName
+        Set-Location -Path $(System.DefaultWorkingDirectory)/designer
         git submodule update -q --init --recursive
       displayName: Clone and update designer
 
@@ -877,9 +887,19 @@ stages:
       RegressionTestSuiteOutputDir: C:\Git\ADesRegTestSuite
       VisualStudioInstallationPath: C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise
     steps:
-    - script: |
-        git clone -q https://$(GitHub.Token)@github.com/xamarin/designer.git
-        cd designer
+    - powershell: |
+        # Use the branch name of the source being built or the PR target branch name. Fall back to 'master' if the branch is unknown.
+        $branchPrefix = "/refs/heads/"
+        $branchName = "$(Build.SourceBranch)" -replace $branchPrefix, ""
+        if ("$(Build.Reason)" -eq "PullRequest") {
+            $branchName = "$(System.PullRequest.TargetBranch)" -replace $branchPrefix, ""
+        }
+        if (("$branchName" -ne "master") -and ("$branchName" -notlike "d16*")) {
+            $branchName = "master"
+        }
+        Write-Host "cloning designer source from branch - '$branchName'"
+        git clone -q https://$(GitHub.Token)@github.com/xamarin/designer.git --branch $branchName
+        Set-Location -Path $(System.DefaultWorkingDirectory)/designer
         git submodule update -q --init --recursive
       displayName: Clone and update designer
 
