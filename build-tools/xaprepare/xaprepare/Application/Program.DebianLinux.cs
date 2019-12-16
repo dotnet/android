@@ -38,7 +38,7 @@ namespace Xamarin.Android.Prepare
 
 		public override async Task<bool> Install ()
 		{
-			var runner = new ProcessRunner ("sudo", "apt-get", "-f", "-u", "install", PackageName) {
+			var runner = new ProcessRunner ("sudo", "apt-get", "-y", "-f", "-u", "install", PackageName) {
 				EchoStandardOutput = true,
 				EchoStandardError = true,
 				ProcessTimeout = TimeSpan.FromMinutes (30),
