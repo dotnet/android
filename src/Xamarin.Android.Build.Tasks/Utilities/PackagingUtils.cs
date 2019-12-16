@@ -28,11 +28,6 @@ namespace Xamarin.Android.Tasks
 	/// </summary>
 	internal class PackagingUtils
 	{
-		static readonly string [] InvalidEntryPaths = new []{
-			// http://hg.openjdk.java.net/jdk8u/jdk8u-dev/jdk/file/0fc878b99541/src/share/classes/java/util/jar/JarFile.java#l91
-			"META-INF/MANIFEST.MF",
-		};
-
 		static readonly Regex pathRegex = new Regex (@"\\|\/", RegexOptions.Compiled);
 
 		/// <summary>
@@ -42,9 +37,6 @@ namespace Xamarin.Android.Tasks
 		/// <returns>true if the entry is valid for packaging.</returns>
 		public static bool CheckEntryForPackaging (string entryName)
 		{
-			if (InvalidEntryPaths.Contains (entryName))
-				return false;
-
 			var segments = pathRegex.Split (entryName);
 			for (int i = 0; i < segments.Length - 1; i++) {
 				if (!CheckFolderForPackaging (segments [i])) {
@@ -55,7 +47,9 @@ namespace Xamarin.Android.Tasks
 			var fileName = segments [segments.Length - 1];
 			if (string.IsNullOrEmpty (fileName))
 				return false;
-			return CheckFileForPackaging (fileName, Path.GetExtension (fileName));
+			var extension = Path.GetExtension (fileName);
+			return CheckSignatureFile (segments [0], extension) &&
+				CheckFileForPackaging (fileName, extension);
 		}
 
 		/// <summary>
@@ -69,6 +63,20 @@ namespace Xamarin.Android.Tasks
 				!EqualsIgnoreCase (folderName, ".svn") &&
 				!EqualsIgnoreCase (folderName, "SCCS") &&
 				!folderName.StartsWith ("_");
+		}
+
+		/// <summary>
+		/// Checks for signing related files such as META-INF/MANIFEST.MF or META-INF/GOOG.RSA
+		/// </summary>
+		/// <param name="folderName">the name of the folder.</param>
+		/// <param name="extension">the extension of the file (including '.')</param>
+		/// <returns></returns>
+		static bool CheckSignatureFile (string folderName, string extension)
+		{
+			return folderName != "META-INF" ||
+				!EqualsIgnoreCase (".SF", extension) &&
+				!EqualsIgnoreCase (".MF", extension) &&
+				!EqualsIgnoreCase (".RSA", extension);
 		}
 
 		/// <summary>
