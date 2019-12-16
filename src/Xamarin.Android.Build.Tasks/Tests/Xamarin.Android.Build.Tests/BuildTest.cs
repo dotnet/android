@@ -286,6 +286,42 @@ class MemTest {
 		}
 
 		[Test]
+		public void DuplicateRJavaOutput ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				PackageReferences = {
+					new Package { Id = "Xamarin.Android.Support.Annotations", Version = "28.0.0.3" },
+					new Package { Id = "Xamarin.Android.Support.Compat", Version = "28.0.0.3" },
+					new Package { Id = "Xamarin.Android.Support.Core.UI", Version = "28.0.0.3" },
+					new Package { Id = "Xamarin.Android.Support.Core.Utils", Version = "28.0.0.3" },
+					new Package { Id = "Xamarin.Android.Support.Design", Version = "28.0.0.3" },
+					new Package { Id = "Xamarin.Android.Support.Fragment", Version = "28.0.0.3" },
+					new Package { Id = "Xamarin.Android.Support.VersionedParcelable", Version = "28.0.0.3" },
+					new Package { Id = "Xamarin.Android.Support.v4", Version = "28.0.0.3" },
+					new Package { Id = "Xamarin.Build.Download", Version = "0.7.1" },
+					new Package { Id = "Xamarin.Essentials", Version = "1.3.1" },
+					new Package { Id = "Xamarin.GooglePlayServices.Ads.Identifier", Version = "71.1600.0" },
+					new Package { Id = "Xamarin.GooglePlayServices.Base", Version = "71.1610.0" },
+					new Package { Id = "Xamarin.GooglePlayServices.Basement", Version = "71.1620.0" },
+					new Package { Id = "Xamarin.GooglePlayServices.Clearcut", Version = "71.1600.0" },
+					new Package { Id = "Xamarin.GooglePlayServices.Measurement.Api", Version = "71.1630.0" },
+					new Package { Id = "Xamarin.GooglePlayServices.Measurement.Base", Version = "71.1630.0" },
+					new Package { Id = "Xamarin.GooglePlayServices.Phenotype", Version = "71.1600.0" },
+					new Package { Id = "Xamarin.GooglePlayServices.Stats", Version = "71.1601.0" },
+					new Package { Id = "Xamarin.GooglePlayServices.Tasks", Version = "71.1601.0" },
+				}
+			};
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
+				var lines = b.LastBuildOutput.Where (l => l.Contains ("Writing:") && l.Contains ("R.java"));
+				var hash = new HashSet<string> (StringComparer.Ordinal);
+				foreach (var duplicate in lines.Where (i => !hash.Add (i))) {
+					Assert.Fail ($"Duplicate: {duplicate}");
+				}
+			}
+		}
+
+		[Test]
 		public void BuildXamarinFormsMapsApplication ()
 		{
 			var proj = new XamarinFormsMapsApplicationProject ();
