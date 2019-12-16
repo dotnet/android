@@ -594,7 +594,7 @@
             <Link>WindowState.cs</Link>
         </Compile>
    </ItemGroup>
-  <Import Project="$(OutputPath)\..\..\..\xbuild\Xamarin\Android\Xamarin.Android.CSharp.targets" />
+  <Import Project="$(OutputPath)\..\..\..\xbuild\Xamarin\Android\Xamarin.Android.CSharp.targets" Condition="Exists('$(OutputPath)\..\..\..\xbuild\Xamarin\Android\Xamarin.Android.CSharp.targets')" />
   <PropertyGroup>
     <JavacSourceVersion Condition=" '$(JavacSourceVersion)' == '' And '$(AndroidApiLevel)' != '' And $(AndroidApiLevel) &gt; 23 ">1.8</JavacSourceVersion>
     <JavacSourceVersion Condition=" '$(JavacSourceVersion)' == '' ">1.6</JavacSourceVersion>

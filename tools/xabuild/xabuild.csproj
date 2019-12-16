@@ -13,7 +13,6 @@
     <_MSBuildExtension Condition=" '$(OS)' != 'Windows_NT' ">dll</_MSBuildExtension>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
-  <Import Project="..\..\build-tools\scripts\MSBuildReferences.projitems" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>x86</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
@@ -33,7 +32,19 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="MSBuild">
-      <HintPath>$(MSBuildReferencePath)\MSBuild.$(_MSBuildExtension)</HintPath>
+      <HintPath>$(MSBuildToolsPath)\MSBuild.$(_MSBuildExtension)</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Build">
+      <HintPath>$(MSBuildToolsPath)\Microsoft.Build.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Build.Framework">
+      <HintPath>$(MSBuildToolsPath)\Microsoft.Build.Framework.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Build.Tasks.Core">
+      <HintPath>$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Build.Utilities.Core">
+      <HintPath>$(MSBuildToolsPath)\Microsoft.Build.Utilities.Core.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

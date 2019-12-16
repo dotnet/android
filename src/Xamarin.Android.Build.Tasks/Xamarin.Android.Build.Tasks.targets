@@ -5,7 +5,7 @@
   <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"       TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
   <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"       TaskName="Xamarin.Android.BuildTools.PrepTasks.Which" />
 
-  <Import Project="..\..\bin\Build$(Configuration)\ProfileAssemblies.projitems" />
+  <Import Project="..\..\bin\Build$(Configuration)\ProfileAssemblies.projitems" Condition="Exists('..\..\bin\Build$(Configuration)\ProfileAssemblies.projitems')" />
   <Import Project="..\..\build-tools\scripts\XAVersionInfo.targets" />
   <PropertyGroup>
     <_SharedRuntimeBuildPath Condition=" '$(_SharedRuntimeBuildPath)' == '' ">$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\</_SharedRuntimeBuildPath>
