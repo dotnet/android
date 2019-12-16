@@ -6,7 +6,6 @@ namespace Xamarin.Android.Prepare
 	class LinuxDebian : LinuxDebianCommon
 	{
 		static readonly List<DebianLinuxProgram> packages = new List<DebianLinuxProgram> {
-			new DebianLinuxProgram ("zlib1g-dev"),
 			new DebianLinuxProgram ("libtool-bin", "libtool"),
 		};
 
