@@ -29,11 +29,6 @@ namespace Xamarin.Android.Prepare
 				return true;
 			}
 
-			if (!context.MonoArchiveDownloaded) {
-				// https://github.com/xamarin/xamarin-android/pull/3816
-				throw new NotImplementedException ("Unable to build mono runtimes from sources.");
-			}
-
 			Log.StatusLine ("Checking if all runtime files are present");
 			var allRuntimes = new Runtimes ();
 			if (MonoRuntimesHelpers.AreRuntimeItemsInstalled (context, allRuntimes)) {
