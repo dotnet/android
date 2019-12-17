@@ -185,6 +185,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <AvailableItemName Include="AndroidJavaLibrary" />
   <AvailableItemName Include="AndroidJavaSource" />
   <AvailableItemName Include="AndroidLintConfig" />
+  <AvailableItemName Include="AndroidRuleSet" />
   <AvailableItemName Include="AndroidNativeLibrary" />
   <AvailableItemName Include="AndroidResource" />
   <AvailableItemName Include="AndroidBoundLayout" />
