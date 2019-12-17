@@ -604,6 +604,20 @@ when packaging Release applications.
     produce the actual `AndroidManifest.xml`.
     The `$(AndroidManifest)` must contain the package name in the `/manifest/@package` attribute.
 
+-   **AndroidManifestMerger** &ndash; Specifies the implementation for
+    merging `AndroidManifest.xml` files. This is an enum-style property
+    where `legacy` is the original C# implementation in Xamarin.Android,
+    and `manifestmerger.jar` uses Google's Java implementation for Android.
+
+    Going forward, we will be migrating to Google's implementation to
+    match behavior with applications built with Android Studio. Google's
+    merger enables support for `xmlns:tools="http://schemas.android.com/tools"`
+    as described in the [Android documentation][manifest-merger].
+
+    Introduced in Xamarin.Android 10.2
+
+    [manifest-merger]: https://developer.android.com/studio/build/manifest-merge
+
 -   **AndroidMultiDexClassListExtraArgs** &ndash; A string property
     which allows developers to pass additional arguments to the
     `com.android.multidex.MainDexListBuilder` when generating the

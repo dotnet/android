@@ -111,6 +111,11 @@ namespace Xamarin.ProjectTools
 			set { SetProperty (KnownProperties.AndroidDexTool, value); }
 		}
 
+		public string ManifestMerger {
+			get { return GetProperty (KnownProperties.AndroidManifestMerger); }
+			set { SetProperty (KnownProperties.AndroidManifestMerger, value); }
+		}
+
 		public string LinkTool {
 			get { return GetProperty (KnownProperties.AndroidLinkTool); }
 			set { SetProperty (KnownProperties.AndroidLinkTool, value); }
