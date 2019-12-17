@@ -100,7 +100,6 @@ Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		src\Mono.Android\Test\Mono.Android-Test.Shared.projitems*{0ab4956e-6fb9-4da0-9d49-ab65a3ff403a}*SharedItemsImports = 13
 		src\Mono.Android\Test\Mono.Android-Test.Shared.projitems*{40ead437-216b-4df4-8258-3f47e1672c3a}*SharedItemsImports = 4
-		external\Java.Interop\src\Java.Interop\Tests\Interop-Tests.projitems*{6cb00820-a66b-43e5-8785-ed456c6e9f39}*SharedItemsImports = 4
 		src\Mono.Android\Test\Mono.Android-Test.Shared.projitems*{9ecbea14-b79f-4f92-9266-495c03a32571}*SharedItemsImports = 4
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
