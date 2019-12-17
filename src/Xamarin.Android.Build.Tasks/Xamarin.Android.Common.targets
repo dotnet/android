@@ -315,6 +315,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidCreatePackagePerAbi Condition=" '$(AndroidCreatePackagePerAbi)' == 'aab' ">False</AndroidCreatePackagePerAbi>
 	<AndroidApkSigningAlgorithm Condition=" '$(AndroidApkSigningAlgorithm)' == '' ">SHA256withRSA</AndroidApkSigningAlgorithm>
 	<AndroidApkDigestAlgorithm  Condition=" '$(AndroidApkDigestAlgorithm)' == '' ">SHA-256</AndroidApkDigestAlgorithm>
+	<AndroidManifestMerger      Condition=" '$(AndroidManifestMerger)' == '' ">legacy</AndroidManifestMerger>
 
 	<!-- Default Java heap size to 1GB (-Xmx1G) if not specified-->
 	<JavaMaximumHeapSize Condition=" '$(JavaMaximumHeapSize)' == '' ">1G</JavaMaximumHeapSize>
@@ -2051,11 +2052,21 @@ because xbuild doesn't support framework reference assemblies.
     DependsOnTargets="$(_GenerateJavaStubsDependsOnTargets);$(BeforeGenerateAndroidManifest)"
     Inputs="$(MSBuildAllProjects);@(_ResolvedUserMonoAndroidAssemblies);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache)"
     Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
+
+  <PropertyGroup>
+    <_ManifestOutput Condition=" '$(AndroidManifestMerger)' == 'legacy' ">$(IntermediateOutputPath)android\AndroidManifest.xml</_ManifestOutput>
+    <_ManifestOutput Condition=" '$(AndroidManifestMerger)' != 'legacy' ">$(IntermediateOutputPath)AndroidManifest.xml</_ManifestOutput>
+  </PropertyGroup>
+  <ItemGroup>
+    <_MergedManifestDocuments Condition=" '$(AndroidManifestMerger)' == 'legacy' " Include="@(ExtractedManifestDocuments)" />
+  </ItemGroup>
+
   <GenerateJavaStubs
       ResolvedAssemblies="@(_ResolvedAssemblies)"
       ResolvedUserAssemblies="@(_ResolvedUserMonoAndroidAssemblies)"
       ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
       ManifestTemplate="$(_AndroidManifestAbs)"
+      MergedManifestDocuments="@(_MergedManifestDocuments)"
       Debug="$(AndroidIncludeDebugSymbols)"
       MultiDex="$(AndroidEnableMultiDex)"
       NeedsInternet="$(AndroidNeedsInternetPermission)"
@@ -2065,7 +2076,7 @@ because xbuild doesn't support framework reference assemblies.
       PackageName="$(_AndroidPackage)"
       ManifestPlaceholders="$(AndroidManifestPlaceholders)"
       OutputDirectory="$(IntermediateOutputPath)android"
-      MergedAndroidManifestOutput="$(IntermediateOutputPath)AndroidManifest.xml"
+      MergedAndroidManifestOutput="$(_ManifestOutput)"
       UseSharedRuntime="$(AndroidUseSharedRuntime)"
       EmbedAssemblies="$(EmbedAssembliesIntoApk)"
       BundledWearApplicationName="$(BundledWearApplicationPackageName)"
@@ -2078,13 +2089,14 @@ because xbuild doesn't support framework reference assemblies.
 
   <ItemGroup>
     <FileWrites Include="@(_TypeMapAssemblySource)" />
-    <FileWrites Include="$(IntermediateOutputPath)AndroidManifest.xml" />
+    <FileWrites Include="$(_ManifestOutput)" />
   </ItemGroup>
 
   <Touch Files="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp" AlwaysCreate="True" />
 </Target>
 
 <Target Name="_ManifestMerger"
+    Condition=" '$(AndroidManifestMerger)' == 'manifestmerger.jar' "
     Inputs="$(IntermediateOutputPath)AndroidManifest.xml;@(ExtractedManifestDocuments);$(_AndroidBuildPropertiesCache);$(MSBuildAllProjects)"
     Outputs="$(IntermediateOutputPath)android\AndroidManifest.xml"
   >
