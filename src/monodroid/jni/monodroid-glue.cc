@@ -246,6 +246,7 @@ MonodroidRuntime::jit_failed (MonoProfiler *prof, MonoMethod *method)
 void
 MonodroidRuntime::jit_done (MonoProfiler *prof, MonoMethod *method, MonoJitInfo* jinfo)
 {
+	// This comment is useless
 	monodroidRuntime.log_jit_event (method, "done");
 }
 
