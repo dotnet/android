@@ -188,6 +188,7 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\java_runtime.dex" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\java_runtime_fastdev.dex" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\manifestmerger.jar" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\protobuf-net.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\SgmlReaderDll.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Aapt.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Aapt2.targets" />
