@@ -308,15 +308,20 @@
   </ItemGroup>
 
   <Target Name="ILRepacker"
-      AfterTargets="CopyFilesToOutputDirectory"
+      BeforeTargets="CopyFilesToOutputDirectory"
       Inputs="@(InputAssemblies)"
       Outputs="$(IntermediateOutputPath)ILRepacker.stamp"
       Condition=" '$(HostOS)' != 'Linux' ">
     <ItemGroup>
       <_InputAssembliesThatExist Include="@(InputAssemblies)" Condition="Exists('%(Identity)')" />
     </ItemGroup>
+    <PropertyGroup>
+      <_ILRepackArgs>/out:&quot;$(MSBuildThisFileDirectory)$(IntermediateOutputPath)$(AssemblyName).dll&quot; /internalize</_ILRepackArgs>
+      <_ILRepackArgs>$(_ILRepackArgs) &quot;$(MSBuildThisFileDirectory)$(IntermediateOutputPath)$(AssemblyName).dll&quot;</_ILRepackArgs>
+      <_ILRepackArgs>$(_ILRepackArgs) @(_InputAssembliesThatExist->'&quot;%(Identity)&quot;', ' ')</_ILRepackArgs>
+    </PropertyGroup>
     <Exec
-      Command="&quot;$(ILRepack)&quot; /out:$(AssemblyName).dll /internalize $(AssemblyName).dll @(_InputAssembliesThatExist->'%(Filename)%(Extension)', ' ')"
+      Command="&quot;$(ILRepack)&quot; $(_ILRepackArgs)"
       WorkingDirectory="$(OutputPath)"
     />
     <Delete Files="@(_InputAssembliesThatExist)" />
