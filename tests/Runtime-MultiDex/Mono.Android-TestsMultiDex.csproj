@@ -65,6 +65,9 @@
     <Compile Include="Resources\Resource.designer.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProguardConfiguration Include="..\..\src\Mono.Android\Test\proguard.cfg" />
+  </ItemGroup>
+  <ItemGroup>
     <AndroidResource Include="Resources\drawable\Icon.png" />
     <AndroidResource Include="Resources\drawable\AndroidPressed.png" />
     <AndroidResource Include="Resources\drawable\android_focused.png" />

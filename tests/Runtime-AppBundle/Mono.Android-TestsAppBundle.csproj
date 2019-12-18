@@ -66,6 +66,9 @@
     <Compile Include="Resources\Resource.designer.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProguardConfiguration Include="..\..\src\Mono.Android\Test\proguard.cfg" />
+  </ItemGroup>
+  <ItemGroup>
     <AndroidResource Include="$(_MonoAndroidTest)Resources\drawable\Icon.png">
       <Link>Resources\drawable\Icon.png</Link>
     </AndroidResource>
