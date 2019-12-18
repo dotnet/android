@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 using Java.Interop;
@@ -78,6 +79,7 @@ namespace Java.Interop {
 			registered = true;
 		}
 
+		[MethodImpl (MethodImplOptions.AggressiveInlining)]
 		void AssertValid ()
 		{
 			if (!PeerReference.IsValid)

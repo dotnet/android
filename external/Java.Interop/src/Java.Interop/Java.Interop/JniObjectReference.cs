@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 #if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES && FEATURE_JNIOBJECTREFERENCE_INTPTRS
@@ -24,6 +25,7 @@ namespace Java.Interop
 			get {return gcHandle.IsAllocated ? ((JniReferenceSafeHandle) gcHandle.Target) : JniReferenceSafeHandle.Null;}
 		}
 		public      IntPtr                  Handle  {
+			[MethodImpl (MethodImplOptions.AggressiveInlining)]
 			get {
 				var h = SafeHandle;
 				return h == null
@@ -32,7 +34,11 @@ namespace Java.Interop
 			}
 		}
 #elif FEATURE_JNIOBJECTREFERENCE_INTPTRS
-		public      IntPtr                  Handle  {get; private set;}
+		public      IntPtr                  Handle  {
+			[MethodImpl (MethodImplOptions.AggressiveInlining)]
+			get; 
+			private set;
+		}
 #endif
 
 		uint    referenceInfo;
@@ -47,6 +53,7 @@ namespace Java.Interop
 		}
 
 		public  bool                        IsValid {
+			[MethodImpl (MethodImplOptions.AggressiveInlining)]
 			get {
 #if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 				return SafeHandle != null && !SafeHandle.IsInvalid && !SafeHandle.IsClosed;

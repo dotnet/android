@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 
@@ -12,6 +13,7 @@ namespace Java.Interop {
 		internal    static  readonly    ThreadLocal<JniEnvironmentInfo>     Info    = new ThreadLocal<JniEnvironmentInfo> (() => new JniEnvironmentInfo (), trackAllValues: true);
 
 		internal    static  JniEnvironmentInfo      CurrentInfo {
+			[MethodImpl (MethodImplOptions.AggressiveInlining)]
 			get {
 				var e = Info.Value;
 				if (!e.IsValid)
@@ -21,22 +23,27 @@ namespace Java.Interop {
 		}
 
 		public      static  JniRuntime              Runtime {
+			[MethodImpl (MethodImplOptions.AggressiveInlining)]
 			get {return CurrentInfo.Runtime;}
 		}
 
 		public      static  IntPtr                  EnvironmentPointer {
+			[MethodImpl (MethodImplOptions.AggressiveInlining)]
 			get {return CurrentInfo.EnvironmentPointer;}
 		}
 
 		public      static  JniVersion              JniVersion {
+			[MethodImpl (MethodImplOptions.AggressiveInlining)]
 			get {return (JniVersion) Versions.GetVersion ();}
 		}
 
 		public      static  int                     LocalReferenceCount {
+			[MethodImpl (MethodImplOptions.AggressiveInlining)]
 			get {return CurrentInfo.LocalReferenceCount;}
 		}
 
 		public      static  bool                    WithinNewObjectScope {
+			[MethodImpl (MethodImplOptions.AggressiveInlining)]
 			get {return CurrentInfo.WithinNewObjectScope;}
 			internal set {CurrentInfo.WithinNewObjectScope = value;}
 		}
