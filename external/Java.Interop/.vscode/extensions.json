@@ -5,5 +5,6 @@
       "ms-vscode.mono-debug",
       "wghats.vscode-nxunit-test-adapter",
       "visualstudioexptteam.vscodeintellicode",
+      "zbecknell.t4-support",
     ]
 }
