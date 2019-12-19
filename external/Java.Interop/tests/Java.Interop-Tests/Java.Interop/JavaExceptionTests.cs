@@ -12,31 +12,30 @@ namespace Java.InteropTests
 		[Test]
 		public void StackTrace ()
 		{
+			void AssertMembers (string message, string stackTraceMember, string stackTrace) {
+				var containsMessage = message.Replace ('/', '.');
+				Assert.IsTrue (
+						containsMessage.IndexOf ("this.type.had.better.not.exist", StringComparison.OrdinalIgnoreCase) >= 0,
+						$"Message: {message}");
+				Assert.IsTrue (
+						// ART
+						(stackTrace.IndexOf ("java.lang.ClassNotFoundException: ", StringComparison.Ordinal) >= 0) ||
+						// Dalvik, JVM
+						(stackTrace.IndexOf ("java.lang.NoClassDefFoundError: this/type/had/better/not/exist", StringComparison.Ordinal) >= 0),
+						$"{stackTraceMember}: {stackTrace}");
+			}
+
 			try {
 				new JniType ("this/type/had/better/not/exist");
 			}
 #if __ANDROID__
 			catch (Java.Lang.Throwable e) {
-				Assert.IsTrue (
-						string.Equals ("this/type/had/better/not/exist", e.Message, StringComparison.OrdinalIgnoreCase) ||
-						e.Message.StartsWith ("Didn't find class \"this.type.had.better.not.exist\" on path: DexPathList"));
-				Assert.IsTrue (
-						// ART
-						e.StackTrace.Contains ("java.lang.ClassNotFoundException: ", StringComparison.Ordinal) ||
-						// Dalvik, JVM
-						e.StackTrace.Contains ("java.lang.NoClassDefFoundError: this/type/had/better/not/exist", StringComparison.Ordinal));
+				AssertMembers (e.Message, "Throwable.StackTrace", e.StackTrace);
 				e.Dispose ();
 			}
 #endif  // __ANDROID__
 			catch (JavaException e) {
-				Assert.IsTrue (
-						string.Equals ("this/type/had/better/not/exist", e.Message, StringComparison.OrdinalIgnoreCase) ||
-						e.Message.StartsWith ("Didn't find class \"this.type.had.better.not.exist\" on path: DexPathList"));
-				Assert.IsTrue (
-						// ART
-						e.JavaStackTrace.StartsWith ("java.lang.ClassNotFoundException: ", StringComparison.Ordinal) ||
-						// Dalvik, JVM
-						e.JavaStackTrace.StartsWith ("java.lang.NoClassDefFoundError: this/type/had/better/not/exist", StringComparison.Ordinal));
+				AssertMembers (e.Message, "JavaException.JavaStackTrace", e.JavaStackTrace);
 				e.Dispose ();
 			}
 		}
