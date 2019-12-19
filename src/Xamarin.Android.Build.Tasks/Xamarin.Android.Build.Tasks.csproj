@@ -64,7 +64,7 @@
    <ItemGroup>
     <PackageReference Include="FSharp.Compiler.CodeDom" Version="1.0.0.1" />
     <PackageReference Include="FSharp.Core" Version="3.1.2.5" />
-    <PackageReference Include="ILRepack.Lib.MSBuild.Task" Version="2.0.15.4" />
+    <PackageReference Include="ILRepack" Version="2.0.18" />
     <PackageReference Include="Irony" Version="0.9.1" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.1" />
     <PackageReference Include="NuGet.Common" Version="4.6.0" />
@@ -582,7 +582,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Xamarin.Android.Build.Tasks.targets" />
-    <None Include="ILRepack.targets" />
   </ItemGroup>
   <ItemGroup>
     <None Include="updateinfo.dat">

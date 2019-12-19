@@ -290,4 +290,48 @@
     />
     <Exec Command="chmod +x @(_MonoScriptDestination->'%(Identity)', ' ')" />
   </Target>
+
+  <ItemGroup>
+    <InputAssemblies Include="$(OutputPath)Newtonsoft.Json.dll" />
+    <InputAssemblies Include="$(OutputPath)NuGet.Common.dll" />
+    <InputAssemblies Include="$(OutputPath)NuGet.Configuration.dll" />
+    <InputAssemblies Include="$(OutputPath)NuGet.DependencyResolver.Core.dll" />
+    <InputAssemblies Include="$(OutputPath)NuGet.Frameworks.dll" />
+    <InputAssemblies Include="$(OutputPath)NuGet.LibraryModel.dll" />
+    <InputAssemblies Include="$(OutputPath)NuGet.Packaging.dll" />
+    <InputAssemblies Include="$(OutputPath)NuGet.Packaging.Core.dll" />
+    <InputAssemblies Include="$(OutputPath)NuGet.ProjectModel.dll" />
+    <InputAssemblies Include="$(OutputPath)NuGet.Protocol.dll" />
+    <InputAssemblies Include="$(OutputPath)NuGet.Versioning.dll" />
+    <InputAssemblies Include="$(OutputPath)System.Collections.Immutable.dll" />
+    <InputAssemblies Include="$(OutputPath)System.Reflection.Metadata.dll" />
+  </ItemGroup>
+
+  <Target Name="ILRepacker"
+      BeforeTargets="CopyFilesToOutputDirectory"
+      Inputs="@(InputAssemblies)"
+      Outputs="$(IntermediateOutputPath)ILRepacker.stamp"
+      Condition=" '$(HostOS)' != 'Linux' ">
+    <ItemGroup>
+      <_InputAssembliesThatExist Include="@(InputAssemblies)" Condition="Exists('%(Identity)')" />
+    </ItemGroup>
+    <PropertyGroup>
+      <_ILRepackArgs>/out:&quot;$(MSBuildThisFileDirectory)$(IntermediateOutputPath)$(AssemblyName).dll&quot; /internalize</_ILRepackArgs>
+      <_ILRepackArgs>$(_ILRepackArgs) &quot;$(MSBuildThisFileDirectory)$(IntermediateOutputPath)$(AssemblyName).dll&quot;</_ILRepackArgs>
+      <_ILRepackArgs>$(_ILRepackArgs) @(_InputAssembliesThatExist->'&quot;%(Identity)&quot;', ' ')</_ILRepackArgs>
+    </PropertyGroup>
+    <Exec
+      Command="&quot;$(ILRepack)&quot; $(_ILRepackArgs)"
+      WorkingDirectory="$(OutputPath)"
+    />
+    <Delete Files="@(_InputAssembliesThatExist)" />
+    <Touch
+      Files="$(IntermediateOutputPath)ILRepacker.stamp"
+      AlwaysCreate="True"
+    />
+    <ItemGroup>
+      <FileWrites Include="$(IntermediateOutputPath)ILRepacker.stamp" />
+    </ItemGroup>
+  </Target>
+
 </Project>
