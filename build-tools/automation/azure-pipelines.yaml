@@ -172,6 +172,18 @@ stages:
       inputs:
         version: $(DotNetCoreVersion)
 
+    # Downgrade the XA .vsix installed into the instance of VS that we are building with so that we don't restore/build against a test version.
+    # VSIXInstaller.exe will exit non-zero when the downgrade attempt is a no-op, so we will allow this step to fail silently.
+    - powershell: |
+        $vsixInstaller = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\resources\app\ServiceHub\Services\Microsoft.VisualStudio.Setup.Service\VSIXInstaller.exe"
+        $ts = Get-Date -Format FileDateTimeUniversal
+        $log = "xavsixdowngrade-$ts.log"
+        $process = Start-Process -NoNewWindow -FilePath $vsixInstaller -ArgumentList "/downgrade:Xamarin.Android.Sdk /admin /quiet /logFile:$log" -Wait -PassThru
+        Get-Content "${env:TEMP}\$log" | Write-Host
+        Write-Host "VSInstaller.exe exited with code:" $process.ExitCode
+        Exit 0
+      displayName: downgrade XA to stable
+
     - task: MSBuild@1
       displayName: msbuild Xamarin.Android /t:Prepare
       inputs:
