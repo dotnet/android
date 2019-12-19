@@ -13,12 +13,6 @@ namespace Xamarin.Android.Prepare
 		{
 			Steps.Add (new Step_PrepareExternal ());
 			Steps.Add (new Step_PrepareExternalJavaInterop ());
-
-			// disable installation of missing programs...
-			context.SetCondition (KnownConditions.AllowProgramInstallation, false);
-
-			// ...but do not signal an error when any are missing
-			context.SetCondition (KnownConditions.IgnoreMissingPrograms, true);
 		}
 	}
 }
