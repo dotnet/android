@@ -6,6 +6,8 @@ namespace Java.Interop
 {
 	public class JavaObjectArray<T> : JavaArray<T>
 	{
+		internal    static  readonly    ValueMarshaler   Instance           = new ValueMarshaler ();
+
 		public JavaObjectArray (ref JniObjectReference handle, JniObjectReferenceOptions transfer)
 			: base (ref handle, transfer)
 		{

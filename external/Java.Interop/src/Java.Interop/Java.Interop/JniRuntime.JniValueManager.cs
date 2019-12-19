@@ -521,7 +521,7 @@ namespace Java.Interop
 						}
 					}
 
-					return (JniValueMarshaler) Activator.CreateInstance (typeof (JavaObjectArray<>.ValueMarshaler).MakeGenericType (elementType));
+					return GetObjectArrayMarshaler (elementType);
 				}
 
 				if (typeof (IJavaPeerable).GetTypeInfo ().IsAssignableFrom (info)) {
@@ -542,6 +542,20 @@ namespace Java.Interop
 					return (JniValueMarshaler) Activator.CreateInstance (ifaceAttribute.MarshalerType);
 
 				return GetValueMarshalerCore (type);
+			}
+
+			static JniValueMarshaler GetObjectArrayMarshaler (Type elementType)
+			{
+				Func<JniValueMarshaler> indirect = GetObjectArrayMarshalerHelper<object>;
+				var reifiedMethodInfo = indirect.Method.GetGenericMethodDefinition ()
+					.MakeGenericMethod (elementType);
+				Func<JniValueMarshaler> direct = (Func<JniValueMarshaler>) Delegate.CreateDelegate (typeof (Func<JniValueMarshaler>), reifiedMethodInfo);
+				return direct ();
+			}
+
+			static JniValueMarshaler GetObjectArrayMarshalerHelper<T> ()
+			{
+				return JavaObjectArray<T>.Instance;
 			}
 
 			protected virtual JniValueMarshaler GetValueMarshalerCore (Type type)
