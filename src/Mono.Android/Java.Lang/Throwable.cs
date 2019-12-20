@@ -226,7 +226,7 @@ namespace Java.Lang {
 
 		protected void SetHandle (IntPtr value, JniHandleOwnership transfer)
 		{
-			Java.Lang.Object.RegisterInstance (this, value, transfer, out handle);
+			JNIEnv.AndroidValueManager.AddPeer (this, value, transfer, out handle);
 			handle_type = JObjectRefType.Global;
 		}
 
@@ -251,18 +251,11 @@ namespace Java.Lang {
 
 		~Throwable ()
 		{
-			if (Logger.LogGlobalRef) {
-				JNIEnv._monodroid_gref_log (
-						string.Format ("Finalizing Throwable handle 0x{0}\n", handle.ToString ("x")));
-			}
-
 			refs_added = 0;
-			if (handle != IntPtr.Zero)
-				GC.ReRegisterForFinalize (this);
-			else {
-				Dispose (false);
-				Object.DeregisterInstance (this, key_handle);
+			if (Environment.HasShutdownStarted) {
+				return;
 			}
+			JniEnvironment.Runtime.ValueManager.FinalizePeer (this);
 		}
 
 #if JAVA_INTEROP
@@ -288,17 +281,17 @@ namespace Java.Lang {
 
 		public void UnregisterFromRuntime ()
 		{
-			Object.DeregisterInstance (this, key_handle);
+			JNIEnv.AndroidValueManager.RemovePeer (this, key_handle);
 		}
 
 		void IJavaPeerable.Disposed ()
 		{
-			throw new NotSupportedException ();
+			Dispose (disposing: true);
 		}
 
 		void IJavaPeerable.Finalized ()
 		{
-			throw new NotSupportedException ();
+			Dispose (disposing: false);
 		}
 
 		void IJavaPeerable.SetJniIdentityHashCode (int value)
@@ -324,10 +317,7 @@ namespace Java.Lang {
 
 		public void Dispose ()
 		{
-			Dispose (true);
-			Java.Lang.Object.Dispose (this, ref handle, key_handle, handle_type);
-			key_handle = IntPtr.Zero;
-			GC.SuppressFinalize (this);
+			JNIEnv.AndroidValueManager.DisposePeer (this);
 		}
 
 		protected virtual void Dispose (bool disposing)

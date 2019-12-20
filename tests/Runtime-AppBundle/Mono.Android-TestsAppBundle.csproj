@@ -46,6 +46,7 @@
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AndroidLinkTool Condition=" '$(AndroidLinkTool)' == '' ">r8</AndroidLinkTool>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -63,6 +64,9 @@
     <None Include="Assets\AboutAssets.txt" />
     <Compile Remove="$(_MonoAndroidTest)Resources\Resource.designer.cs" />
     <Compile Include="Resources\Resource.designer.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProguardConfiguration Include="..\..\src\Mono.Android\Test\proguard.cfg" />
   </ItemGroup>
   <ItemGroup>
     <AndroidResource Include="$(_MonoAndroidTest)Resources\drawable\Icon.png">
@@ -117,6 +121,10 @@
     <ProjectReference Include="..\TestRunner.NUnit\TestRunner.NUnit.csproj">
       <Project>{CB2335CB-0050-4020-8A05-E9614EDAA05E}</Project>
       <Name>TestRunner.NUnit</Name>
+    </ProjectReference>
+    <ProjectReference Include="$(_MonoAndroidTest)Java.Interop-Tests\Java.Interop-Tests.csproj">
+      <Project>{6CB00820-A66B-43E5-8785-ED456C6E9F39}</Project>
+      <Name>Java.Interop-Tests</Name>
     </ProjectReference>
     <ProjectReference Include="$(_MonoAndroidTest)Mono.Android-Test.Library\Mono.Android-Test.Library.csproj">
       <Project>{8CB5FF58-FF95-43B9-9064-9ACE9525866F}</Project>

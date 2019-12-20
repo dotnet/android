@@ -236,12 +236,12 @@ namespace Java.Interop {
 			return null;
 		}
 
-		internal static IJavaObject CreateInstance (IntPtr handle, JniHandleOwnership transfer)
+		internal static IJavaPeerable CreateInstance (IntPtr handle, JniHandleOwnership transfer)
 		{
 			return CreateInstance (handle, transfer, null);
 		}
 
-		internal static IJavaObject CreateInstance (IntPtr handle, JniHandleOwnership transfer, Type targetType)
+		internal static IJavaPeerable CreateInstance (IntPtr handle, JniHandleOwnership transfer, Type targetType)
 		{
 			Type type = null;
 			IntPtr class_ptr = JNIEnv.GetObjectClass (handle);
@@ -284,13 +284,13 @@ namespace Java.Interop {
 			}
 
 
-			IJavaObject result = null;
+			IJavaPeerable result = null;
 
 			try {
-				result = (IJavaObject) CreateProxy (type, handle, transfer);
-				var ex = result as IJavaObjectEx;
-				if (Runtime.IsGCUserPeer (result) && ex != null)
-					ex.IsProxy = true;
+				result = (IJavaPeerable) CreateProxy (type, handle, transfer);
+				if (Runtime.IsGCUserPeer (result.PeerReference.Handle)) {
+					result.SetJniManagedPeerState (JniManagedPeerStates.Replaceable);
+				}
 			} catch (MissingMethodException e) {
 				var key_handle  = JNIEnv.IdentityHash (handle);
 				JNIEnv.DeleteRef (handle, transfer);
@@ -302,18 +302,30 @@ namespace Java.Interop {
 			return result;
  		}
 
+		static  readonly    Type[]  XAConstructorSignature  = new Type [] { typeof (IntPtr), typeof (JniHandleOwnership) };
+		static  readonly    Type[]  JIConstructorSignature  = new Type [] { typeof (JniObjectReference).MakeByRefType (), typeof (JniObjectReferenceOptions) };
+
 		internal static object CreateProxy (Type type, IntPtr handle, JniHandleOwnership transfer)
 		{
 			// Skip Activator.CreateInstance() as that requires public constructors,
 			// and we want to hide some constructors for sanity reasons.
 			BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
-			ConstructorInfo c = type.GetConstructor (flags, null, new[]{typeof (IntPtr), typeof (JniHandleOwnership)}, null);
-			if (c == null) {
-				throw new MissingMethodException (
-						"No constructor found for " + type.FullName + "::.ctor(System.IntPtr, Android.Runtime.JniHandleOwnership)",
-						CreateJavaLocationException ());
+			ConstructorInfo c = type.GetConstructor (flags, null, XAConstructorSignature, null);
+			if (c != null) {
+				return c.Invoke (new object [] { handle, transfer });
 			}
-			return c.Invoke (new object[]{handle, transfer});
+			c = type.GetConstructor (flags, null, JIConstructorSignature, null);
+			if (c != null) {
+				JniObjectReference          r = new JniObjectReference (handle);
+				JniObjectReferenceOptions   o = JniObjectReferenceOptions.Copy;
+				var peer = (IJavaPeerable) c.Invoke (new object [] { r, o });
+				JNIEnv.DeleteRef (handle, transfer);
+				peer.SetJniManagedPeerState (peer.JniManagedPeerState | JniManagedPeerStates.Replaceable);
+				return peer;
+			}
+			throw new MissingMethodException (
+					"No constructor found for " + type.FullName + "::.ctor(System.IntPtr, Android.Runtime.JniHandleOwnership)",
+					CreateJavaLocationException ());
 		}
 
 		public static void RegisterType (string java_class, Type t)

@@ -19,6 +19,7 @@
 		<AndroidSdkToolsVersion Condition="'$(AndroidSdkToolsVersion)' == ''">26.1.1</AndroidSdkToolsVersion>
 		<AndroidNdkVersion Condition="'$(AndroidNdkVersion)' == ''">16.1</AndroidNdkVersion>
 		<BundleToolVersion Condition="'$(BundleToolVersion)' == ''">@BUNDLETOOL_VERSION@</BundleToolVersion>
+		<_XamarinAndroidMSBuildDirectory>$(MSBuildThisFileDirectory)</_XamarinAndroidMSBuildDirectory>
 
 		<!-- Enable nuget package conflict resolution -->
 		<ResolveAssemblyConflicts>true</ResolveAssemblyConflicts>

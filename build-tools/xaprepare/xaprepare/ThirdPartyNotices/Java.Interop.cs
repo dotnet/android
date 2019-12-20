@@ -13,7 +13,7 @@ namespace Xamarin.Android.Prepare
 			new JavaInterop_xamarin_Java_Interop_TPN (),
 			new JavaInterop_gityf_crc_TPN (),
 			new JavaInterop_xamarin_mono_cecil_TPN (),
-			new JavaInterop_jonpryor_mono_linq_expressions_TPN (),
+			new JavaInterop_jbevain_mono_linq_expressions_TPN (),
 			new JavaInterop_mono_csharp_TPN (),
 			new JavaInterop_mono_LineEditor_TPN (),
 			new JavaInterop_mono_Options_TPN (),
@@ -82,12 +82,12 @@ POSSIBILITY OF SUCH DAMAGE.
 		public override string LicenseText => null;
 	}
 
-	class JavaInterop_jonpryor_mono_linq_expressions_TPN : ThirdPartyNotice
+	class JavaInterop_jbevain_mono_linq_expressions_TPN : ThirdPartyNotice
 	{
-		static readonly Uri    url         = new Uri ("https://github.com/jonpryor/mono.linq.expressions/");
+		static readonly Uri    url         = new Uri ("https://github.com/jbevain/mono.linq.expressions/");
 
 		public override string LicenseFile => null;
-		public override string Name        => "jonpryor/mono.linq.expressions";
+		public override string Name        => "jbevain/mono.linq.expressions";
 		public override Uri    SourceUrl   => url;
 
 		public override string LicenseText => @"
