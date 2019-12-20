@@ -48,6 +48,9 @@ namespace MonoDroid.Tuner {
 			case "DebuggerTypeProxyAttribute":
 			case "DebuggerVisualizerAttribute":
 				return !DebugBuild && attr_type.Namespace == "System.Diagnostics";
+			case "NullableContextAttribute":
+			case "NullableAttribute":
+				return attr_type.Namespace == "System.Runtime.CompilerServices";
 			default:
 				return false;
 			}
