@@ -13,7 +13,7 @@ namespace Xamarin.Android.Prepare
 			: base (context, log, nugetPath ?? Configurables.Paths.LocalNugetPath)
 		{}
 
-		public async Task<bool> Restore (string solutionFilePath)
+		public async Task<bool> Restore (string solutionFilePath, string outputDirectory = null)
 		{
 			if (String.IsNullOrEmpty (solutionFilePath))
 				throw new ArgumentException ("must not be null or empty", nameof (solutionFilePath));
@@ -22,6 +22,10 @@ namespace Xamarin.Android.Prepare
 				throw new InvalidOperationException ($"Solution file '{solutionFilePath}' does not exist");
 
 			ProcessRunner runner = CreateProcessRunner ("restore");
+
+			if (!String.IsNullOrEmpty (outputDirectory)) {
+				runner.AddArgument ("-OutputDirectory").AddArgument (outputDirectory);
+			}
 
 			runner.AddArgument ("-Verbosity").AddArgument ("detailed");
 			runner.AddArgument ("-NonInteractive");

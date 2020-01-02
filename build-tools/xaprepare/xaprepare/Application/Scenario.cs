@@ -58,6 +58,7 @@ namespace Xamarin.Android.Prepare
 		{
 			// These are steps that have to be executed by all the scenarios
 			Steps.Add (new Step_DownloadNuGet ());
+			Steps.Add (new Step_RestorePackagesLocally ());
 		}
 
 		protected virtual void AddEndSteps (Context context)
