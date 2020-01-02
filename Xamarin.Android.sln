@@ -95,7 +95,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mono.Android.Export", "src\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Tools.AndroidSdk", "external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj", "{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Tools.AndroidSdk-Tests", "external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Tests\Xamarin.Android.Tools.AndroidSdk-Tests.csproj", "{1E5501E8-49C1-4659-838D-CC9720C5208F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Tools.AndroidSdk-Tests", "external\xamarin-android-tools\tests\Xamarin.Android.Tools.AndroidSdk-Tests\Xamarin.Android.Tools.AndroidSdk-Tests.csproj", "{1E5501E8-49C1-4659-838D-CC9720C5208F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "r8", "src\r8\r8.csproj", "{1BAFA0CC-0377-46CE-AB7B-7BB2E7B62F63}"
 EndProject
