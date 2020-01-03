@@ -260,9 +260,13 @@ namespace Java.InteropTests {
 				: (Expression) Expression.Empty ();
 			var expr    = Expression.TryFinally (body, cleanup);
 			var block   = Expression.Block (context.LocalVariables, expr);
+			// Convert line endings to Unix style to support building and running on different OS types.
+			string blockCSharp = block.ToCSharpCode ();
+			blockCSharp = blockCSharp.Replace ("\r\n", "\n");
+			expected = expected.Replace ("\r\n", "\n");
 			Console.WriteLine ("# jonp: expected: {0}", GetType ().Name);
-			Console.WriteLine (block.ToCSharpCode ());
-			Assert.AreEqual (expected, block.ToCSharpCode ());
+			Console.WriteLine (blockCSharp);
+			Assert.AreEqual (expected, blockCSharp);
 		}
 
 		protected static string GetTypeName (Type type)
