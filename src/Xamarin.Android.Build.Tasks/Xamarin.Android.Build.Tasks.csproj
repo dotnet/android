@@ -64,7 +64,7 @@
    <ItemGroup>
     <PackageReference Include="FSharp.Compiler.CodeDom" Version="1.0.0.1" />
     <PackageReference Include="FSharp.Core" Version="3.1.2.5" />
-    <PackageReference Include="ILRepack.Lib.MSBuild.Task" Version="2.0.15.4" />
+    <PackageReference Include="ILRepack" Version="2.0.18" />
     <PackageReference Include="Irony" Version="0.9.1" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.1" />
     <PackageReference Include="NuGet.Common" Version="4.6.0" />
@@ -356,10 +356,10 @@
       <Link>Linker\Linker.Steps\SweepStep.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\MarkStep.cs">
-      <Link>Linker\Linker.Stepsq\MarkStep.cs</Link>
+      <Link>Linker\Linker.Steps\MarkStep.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\PreserveDependencyLookupStep.cs">
-      <Link>Linker\Linker.Stepsq\PreserveDependencyLookupStep.cs</Link>
+      <Link>Linker\Linker.Steps\PreserveDependencyLookupStep.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\LoadException.cs">
       <Link>Linker\Linker\LoadException.cs</Link>
@@ -582,7 +582,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Xamarin.Android.Build.Tasks.targets" />
-    <None Include="ILRepack.targets" />
   </ItemGroup>
   <ItemGroup>
     <None Include="updateinfo.dat">
@@ -625,6 +624,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\MonoRuntimeProvider.Shared.20.java">
       <LogicalName>MonoRuntimeProvider.Shared.20.java</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Linker\PreserveLists\Java.Interop.xml">
+      <LogicalName>Java.Interop.xml</LogicalName>
     </EmbeddedResource>
     <EmbeddedResource Include="Linker\PreserveLists\mscorlib.xml">
       <LogicalName>mscorlib.xml</LogicalName>

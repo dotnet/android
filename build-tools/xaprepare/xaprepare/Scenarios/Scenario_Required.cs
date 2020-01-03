@@ -15,6 +15,7 @@ namespace Xamarin.Android.Prepare
 				throw new ArgumentNullException (nameof (context));
 
 			Steps.Add (new Step_GenerateFiles (atBuildStart: true, onlyRequired: true));
+			Steps.Add (new Step_PrepareExternalJavaInterop ());
 		}
 	}
 }

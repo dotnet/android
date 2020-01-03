@@ -37,9 +37,14 @@ FILE  *lref_log;
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
 
-const OSBridge::MonoJavaGCBridgeType OSBridge::mono_java_gc_bridge_types[] = {
+const OSBridge::MonoJavaGCBridgeType OSBridge::mono_xa_gc_bridge_types[] = {
 	{ "Java.Lang",  "Object" },
 	{ "Java.Lang",  "Throwable" },
+};
+
+const OSBridge::MonoJavaGCBridgeType OSBridge::mono_ji_gc_bridge_types[] = {
+	{ "Java.Interop",       "JavaObject" },
+	{ "Java.Interop",       "JavaException" },
 };
 
 const OSBridge::MonoJavaGCBridgeType OSBridge::empty_bridge_type = {
@@ -47,7 +52,10 @@ const OSBridge::MonoJavaGCBridgeType OSBridge::empty_bridge_type = {
 	""
 };
 
-const uint32_t OSBridge::NUM_GC_BRIDGE_TYPES = (sizeof (mono_java_gc_bridge_types)/sizeof (mono_java_gc_bridge_types [0]));
+const uint32_t OSBridge::NUM_XA_GC_BRIDGE_TYPES = (sizeof (mono_xa_gc_bridge_types)/sizeof (mono_xa_gc_bridge_types [0]));
+const uint32_t OSBridge::NUM_JI_GC_BRIDGE_TYPES = (sizeof (mono_ji_gc_bridge_types)/sizeof (mono_ji_gc_bridge_types [0]));
+const uint32_t OSBridge::NUM_GC_BRIDGE_TYPES    = NUM_XA_GC_BRIDGE_TYPES + NUM_JI_GC_BRIDGE_TYPES;
+
 OSBridge::MonoJavaGCBridgeInfo OSBridge::mono_java_gc_bridge_info [NUM_GC_BRIDGE_TYPES];
 
 OSBridge::MonoJavaGCBridgeInfo OSBridge::empty_bridge_info = {

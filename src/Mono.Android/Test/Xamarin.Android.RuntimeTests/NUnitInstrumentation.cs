@@ -30,10 +30,13 @@ namespace Xamarin.Android.RuntimeTests
         protected override IList<TestAssemblyInfo> GetTestAssemblies()
         {
             Assembly asm = Assembly.GetExecutingAssembly();
+            Assembly ji  = typeof (Java.InteropTests.JavaInterop_Tests_Reference).Assembly;
+
 
             return new List<TestAssemblyInfo>()
             {
-                new TestAssemblyInfo(asm, asm.Location ?? String.Empty)
+                new TestAssemblyInfo (asm, asm.Location ?? String.Empty),
+                new TestAssemblyInfo (ji, ji.Location ?? String.Empty),
             };
         }
     }

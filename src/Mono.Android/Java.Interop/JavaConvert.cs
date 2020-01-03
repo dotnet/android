@@ -104,7 +104,7 @@ namespace Java.Interop {
 				return default (T);
 			}
 
-			IJavaObject interned = Java.Lang.Object.PeekObject (handle);
+			IJavaObject interned = (IJavaObject) Java.Lang.Object.PeekObject (handle);
 			if (interned != null) {
 				T r = FromJavaObject<T>(interned, out set);
 				if (set) {
@@ -138,7 +138,7 @@ namespace Java.Interop {
 				return null;
 			}
 
-			IJavaObject interned = Java.Lang.Object.PeekObject (handle);
+			IJavaObject interned = (IJavaObject) Java.Lang.Object.PeekObject (handle);
 			if (interned != null) {
 				var unwrapped = FromJavaObject (interned, targetType);
 				if (unwrapped != null) {

@@ -903,6 +903,16 @@ MonodroidRuntime::lookup_bridge_info (MonoDomain *domain, MonoImage *image, cons
 	info->handle_type       = mono_class_get_field_from_name (info->klass, const_cast<char*> ("handle_type"));
 	info->refs_added        = mono_class_get_field_from_name (info->klass, const_cast<char*> ("refs_added"));
 	info->weak_handle       = mono_class_get_field_from_name (info->klass, const_cast<char*> ("weak_handle"));
+	if (info->klass == NULL || info->handle == NULL || info->handle_type == NULL ||
+			info->refs_added == NULL || info->weak_handle == NULL) {
+		log_fatal (LOG_DEFAULT, "The type `%s.%s` is missing required instance fields! handle=%p handle_type=%p refs_added=%p weak_handle=%p",
+				type->_namespace, type->_typename,
+				info->handle,
+				info->handle_type,
+				info->refs_added,
+				info->weak_handle);
+		exit (FATAL_EXIT_MONO_MISSING_SYMBOLS);
+	}
 }
 
 void
@@ -932,7 +942,9 @@ MonodroidRuntime::init_android_runtime (MonoDomain *domain, JNIEnv *env, jclass 
 	MonoAssembly *assm = utils.monodroid_load_assembly (domain, "Mono.Android");
 	MonoImage *image = mono_assembly_get_image (assm);
 
-	for (uint32_t i = 0; i < OSBridge::NUM_GC_BRIDGE_TYPES; ++i) {
+	uint32_t i = 0;
+
+	for ( ; i < OSBridge::NUM_XA_GC_BRIDGE_TYPES; ++i) {
 		lookup_bridge_info (domain, image, &osBridge.get_java_gc_bridge_type (i), &osBridge.get_java_gc_bridge_info (i));
 	}
 
@@ -944,6 +956,13 @@ MonodroidRuntime::init_android_runtime (MonoDomain *domain, JNIEnv *env, jclass 
 		log_fatal (LOG_DEFAULT, "INTERNAL ERROR: Unable to find Android.Runtime.JNIEnv.Initialize!");
 		exit (FATAL_EXIT_MISSING_INIT);
 	}
+
+	MonoAssembly    *ji_assm    = utils.monodroid_load_assembly (domain, "Java.Interop");
+	MonoImage       *ji_image   = mono_assembly_get_image  (ji_assm);
+	for ( ; i < OSBridge::NUM_XA_GC_BRIDGE_TYPES + OSBridge::NUM_JI_GC_BRIDGE_TYPES; ++i) {
+		lookup_bridge_info (domain, ji_image, &osBridge.get_java_gc_bridge_type (i), &osBridge.get_java_gc_bridge_info (i));
+	}
+
 	/* If running on desktop, we may be swapping in a new Mono.Android image when calling this
 	 * so always make sure we have the freshest handle to the method.
 	 */

@@ -12,6 +12,14 @@
     <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\*.projitems" />
     <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\*.cmake" />
     <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\*.targets" />
+    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\XABuildConfig.cs" Condition="Exists('$(XamarinAndroidSourcePath)bin\Test$(Configuration)\XABuildConfig.cs')" />
+    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\*.binlog" />
+    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\prepare*.log" />
+    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\*.mk" />
+    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\*.projitems" />
+    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\*.cmake" />
+    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\*.targets" />
+    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)external\Java.Interop\bin\Build$(Configuration)\*.props" />
     <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)**\ThirdPartyNotices.txt" />
     <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)**\config.log" />
     <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)**\config.status" />

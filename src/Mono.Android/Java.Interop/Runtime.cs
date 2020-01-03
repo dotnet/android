@@ -8,9 +8,16 @@ namespace Java.Interop {
 
 	public static class Runtime {
 
+		[Obsolete ("Please use Java.Interop.JniEnvironment.Runtime.ValueManager.GetSurfacedPeers()")]
 		public static List<WeakReference> GetSurfacedObjects ()
 		{
-			return Java.Lang.Object.GetSurfacedObjects_ForDiagnosticsOnly ();
+			var peers = JNIEnv.AndroidValueManager.GetSurfacedPeers ();
+			var r = new List<WeakReference> (peers.Count);
+			foreach (var p in peers) {
+				if (p.SurfacedPeer.TryGetTarget (out var target))
+					r.Add (new WeakReference (target, trackResurrection: true));
+			}
+			return r;
 		}
 
 		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]

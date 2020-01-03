@@ -21,6 +21,7 @@ namespace Xamarin.Android.RuntimeTests {
 		protected override void AddTests ()
 		{
 			AddTest (Assembly.GetExecutingAssembly ());
+			AddTest (typeof (Java.InteropTests.JavaInterop_Tests_Reference).Assembly);
 		}
 	}
 }

@@ -55,11 +55,14 @@ namespace xamarin::android::internal
 		using MonodroidGCTakeRefFunc = mono_bool (OSBridge::*) (JNIEnv *env, MonoObject *obj);
 
 		static const MonoJavaGCBridgeType empty_bridge_type;
-		static const MonoJavaGCBridgeType mono_java_gc_bridge_types[];
+		static const MonoJavaGCBridgeType mono_xa_gc_bridge_types[];
+		static const MonoJavaGCBridgeType mono_ji_gc_bridge_types[];
 		static MonoJavaGCBridgeInfo empty_bridge_info;
 		static MonoJavaGCBridgeInfo mono_java_gc_bridge_info [];
 
 	public:
+		static const uint32_t NUM_XA_GC_BRIDGE_TYPES;
+		static const uint32_t NUM_JI_GC_BRIDGE_TYPES;
 		static const uint32_t NUM_GC_BRIDGE_TYPES;
 
 	public:
@@ -73,10 +76,15 @@ namespace xamarin::android::internal
 
 		const MonoJavaGCBridgeType& get_java_gc_bridge_type (uint32_t index)
 		{
-			if (index >= NUM_GC_BRIDGE_TYPES)
-				return empty_bridge_type; // Not ideal...
+			if (index < NUM_XA_GC_BRIDGE_TYPES)
+				return mono_xa_gc_bridge_types [index];
 
-			return mono_java_gc_bridge_types [index];
+			index -= NUM_XA_GC_BRIDGE_TYPES;
+			if (index < NUM_JI_GC_BRIDGE_TYPES)
+				return mono_ji_gc_bridge_types [index];
+
+			index -= NUM_JI_GC_BRIDGE_TYPES;
+			return empty_bridge_type; // Not ideal...
 		}
 
 		MonoJavaGCBridgeInfo& get_java_gc_bridge_info (uint32_t index)
