@@ -6,12 +6,39 @@ trigger:
   - master
   - d16-*
 
-# External yaml template files
+# External sources, scripts, tests, and yaml template files.
 resources:
   repositories:
   - repository: yaml
     type: github
     name: xamarin/yaml-templates
+    ref: refs/heads/master
+    endpoint: xamarin
+  - repository: monodroid
+    type: github
+    name: xamarin/monodroid
+    endpoint: xamarin
+  - repository: release_scripts
+    type: github
+    name: xamarin/release-scripts
+    endpoint: xamarin
+  - repository: designer
+    type: github
+    name: xamarin/designer
+    endpoint: xamarin
+  - repository: qa
+    type: github
+    name: xamarin/QualityAssurance
+    ref: refs/heads/master
+    endpoint: xamarin
+  - repository: samples
+    type: github
+    name: xamarin/monodroid-samples
+    ref: refs/heads/master
+    endpoint: xamarin
+  - repository: xfsamples
+    type: github
+    name: xamarin/xamarin-forms-samples
     ref: refs/heads/master
     endpoint: xamarin
 
@@ -116,27 +143,36 @@ stages:
         downloadPath: $(System.DefaultWorkingDirectory)
 
     - script: make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1 PREPARE_ARGS="--bundle-path=$(System.DefaultWorkingDirectory)"
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: make prepare-update-mono
 
+    - checkout: monodroid
+      clean: true
+      submodules: recursive
+      path: s/xamarin-android/external/monodroid
+      persistCredentials: true
+      condition: and(succeeded(), eq(variables['XA.Commercial.Build'], 'true'))
+
     - script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: make prepare-external-git-dependencies
       condition: and(succeeded(), eq(variables['XA.Commercial.Build'], 'true'))
-      env:
-        GH_AUTH_SECRET: $(Github.Token)
 
     - script: make jenkins V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1 PREPARE_ARGS="--bundle-path=$(System.DefaultWorkingDirectory)"
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: make jenkins
 
     - script: |
         cp -r bin/$(XA.Build.Configuration)/bcl-tests bin/Test$(XA.Build.Configuration)/bcl-tests
         cp bin/Build$(XA.Build.Configuration)/ProfileAssemblies.projitems bin/Test$(XA.Build.Configuration)/bcl-tests/
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: copy bcl-tests assemblies
 
     - task: PublishPipelineArtifact@0
       displayName: upload test assemblies
       inputs:
         artifactName: $(TestAssembliesArtifactName)
-        targetPath: bin/Test$(XA.Build.Configuration)
+        targetPath: xamarin-android/bin/Test$(XA.Build.Configuration)
 
     - template: install-certificates.yml@yaml
       parameters:
@@ -146,28 +182,32 @@ stages:
         MacDeveloper: $(mac-developer)
 
     - script: make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: make create-installers
 
     - script: |
         mkdir -p bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
         cp bin/Build$(XA.Build.Configuration)/*.vsix bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
         cp bin/Build$(XA.Build.Configuration)/*.pkg bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: copy unsigned installers
 
     - script: |
         VERSION=`LANG=C; export LANG && git log --no-color --first-parent -n1 --pretty=format:%ct`
         echo "d1ec039f-f3db-468b-a508-896d7c382999 $VERSION" > bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)/updateinfo
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: create updateinfo file
 
     - task: PublishPipelineArtifact@0
       displayName: upload installers
       inputs:
         artifactName: $(InstallerArtifactName)
-        targetPath: bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
+        targetPath: xamarin-android/bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
 
     - template: yaml-templates/upload-results.yaml
       parameters:
-        artifactName: mac-build-results
+        solution: xamarin-android/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
+        artifactName: Build Results - macOS
 
 # This stage ensures Windows specific build steps continue to work, and runs unit tests.
 # Check - "Xamarin.Android (Windows Build and Test)"
@@ -300,10 +340,15 @@ stages:
       parameters:
         UnsignedPkgPath: $(XA.Unsigned.Pkg)
 
+    - checkout: release_scripts
+      clean: true
+      path: s/release-scripts
+      persistCredentials: true
+
     - script: |
-        cd $(System.DefaultWorkingDirectory)/..
-        git clone -b $(ReleaseScriptsBranch) https://$(GitHub.Token):x-oauth-basic@github.com/xamarin/release-scripts
-        cd release-scripts
+        cd $(System.DefaultWorkingDirectory)/release-scripts
+        git checkout $(ReleaseScriptsBranch)
+        sudo xcode-select -s /Applications/$(NotarizationXcode)
         ruby notarize.rb $(XA.Unsigned.Pkg) $(XamarinIdentifier) $(XamarinUserId) $(XamarinPassword) $(TeamID)
       displayName: Notarize PKG
 
@@ -753,9 +798,24 @@ stages:
     variables:
       EnableRegressionTest: true
     steps:
-    - script: |
-        git clone -q https://$(GitHub.Token)@github.com/xamarin/designer.git --branch d16-4
-        cd designer
+    - checkout: designer
+      clean: true
+      submodules: recursive
+      path: s/designer
+      persistCredentials: true
+
+    - powershell: |
+        # Use the branch name of the source being built or the PR target branch name. Fall back to 'master' if the branch is unknown.
+        $branchPrefix = "/refs/heads/"
+        $branchName = "$(Build.SourceBranch)" -replace $branchPrefix, ""
+        if ("$(Build.Reason)" -eq "PullRequest") {
+            $branchName = "$(System.PullRequest.TargetBranch)" -replace $branchPrefix, ""
+        }
+        if (("$branchName" -ne "master") -and ("$branchName" -notlike "d16*")) {
+            $branchName = "master"
+        }
+        Set-Location -Path $(System.DefaultWorkingDirectory)/designer
+        git checkout $branchName
         git submodule update -q --init --recursive
       displayName: Clone and update designer
 
@@ -789,9 +849,24 @@ stages:
       RegressionTestSuiteOutputDir: C:\Git\ADesRegTestSuite
       VisualStudioInstallationPath: C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise
     steps:
-    - script: |
-        git clone -q https://$(GitHub.Token)@github.com/xamarin/designer.git --branch d16-4
-        cd designer
+    - checkout: designer
+      clean: true
+      submodules: recursive
+      path: s\designer
+      persistCredentials: true
+
+    - powershell: |
+        # Use the branch name of the source being built or the PR target branch name. Fall back to 'master' if the branch is unknown.
+        $branchPrefix = "/refs/heads/"
+        $branchName = "$(Build.SourceBranch)" -replace $branchPrefix, ""
+        if ("$(Build.Reason)" -eq "PullRequest") {
+            $branchName = "$(System.PullRequest.TargetBranch)" -replace $branchPrefix, ""
+        }
+        if (("$branchName" -ne "master") -and ("$branchName" -notlike "d16*")) {
+            $branchName = "master"
+        }
+        Set-Location -Path $(System.DefaultWorkingDirectory)\designer
+        git checkout $branchName
         git submodule update -q --init --recursive
       displayName: Clone and update designer
 
