@@ -352,6 +352,7 @@ stages:
 
     - checkout: release_scripts
       clean: true
+      path: s/release-scripts
       persistCredentials: true
 
     - script: |
@@ -886,6 +887,7 @@ stages:
     - checkout: designer
       clean: true
       submodules: recursive
+      path: s/designer
       persistCredentials: true
 
     - powershell: |
@@ -936,6 +938,7 @@ stages:
     - checkout: designer
       clean: true
       submodules: recursive
+      path: s\designer
       persistCredentials: true
 
     - powershell: |
