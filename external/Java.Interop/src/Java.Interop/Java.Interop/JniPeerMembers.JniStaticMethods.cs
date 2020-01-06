@@ -13,7 +13,7 @@ namespace Java.Interop
 
 		internal    readonly    JniPeerMembers              Members;
 
-		Dictionary<string, JniMethodInfo>                   StaticMethods   = new Dictionary<string, JniMethodInfo>();
+		Dictionary<string, JniMethodInfo>                   StaticMethods   = new Dictionary<string, JniMethodInfo>(StringComparer.Ordinal);
 
 		internal void Dispose ()
 		{

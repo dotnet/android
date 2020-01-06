@@ -13,7 +13,7 @@ namespace Java.Interop
 
 		readonly JniPeerMembers                             Members;
 
-		Dictionary<string, JniFieldInfo>                    StaticFields  = new Dictionary<string, JniFieldInfo>();
+		Dictionary<string, JniFieldInfo>                    StaticFields  = new Dictionary<string, JniFieldInfo>(StringComparer.Ordinal);
 
 		public JniFieldInfo GetFieldInfo (string encodedMember)
 		{

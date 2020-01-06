@@ -35,7 +35,7 @@ namespace Java.Interop
 
 		readonly Type                                       DeclaringType;
 
-		Dictionary<string, JniMethodInfo>                   InstanceMethods = new Dictionary<string, JniMethodInfo>();
+		Dictionary<string, JniMethodInfo>                   InstanceMethods = new Dictionary<string, JniMethodInfo>(StringComparer.Ordinal);
 		Dictionary<Type, JniInstanceMethods>                SubclassConstructors = new Dictionary<Type, JniInstanceMethods> ();
 
 		internal void Dispose ()

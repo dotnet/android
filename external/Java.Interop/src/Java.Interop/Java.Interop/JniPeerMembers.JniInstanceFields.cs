@@ -13,7 +13,7 @@ namespace Java.Interop
 
 		readonly JniPeerMembers                             Members;
 
-		Dictionary<string, JniFieldInfo>                    InstanceFields  = new Dictionary<string, JniFieldInfo>();
+		Dictionary<string, JniFieldInfo>                    InstanceFields  = new Dictionary<string, JniFieldInfo>(StringComparer.Ordinal);
 
 		internal void Dispose ()
 		{
