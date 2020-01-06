@@ -1,11 +1,23 @@
+resources:
+  repositories:
+  - repository: qa
+    type: github
+    name: xamarin/QualityAssurance
+    ref: refs/heads/master
+    endpoint: xamarin
+  - repository: samples
+    type: github
+    name: xamarin/monodroid-samples
+    ref: refs/heads/master
+    endpoint: xamarin
+  - repository: xfsamples
+    type: github
+    name: xamarin/xamarin-forms-samples
+    ref: refs/heads/master
+    endpoint: xamarin
+
 steps:
 - task: xamops.azdevex.lingering-process-task.lingering-process-task@1
-
-- script: |
-    git clone -q https://github.com/xamarin/monodroid-samples.git
-    git clone -q https://github.com/xamarin/xamarin-forms-samples.git
-    git clone -q https://$(GitHub.Token)@github.com/xamarin/QualityAssurance.git
-  displayName: clone test dependencies
 
 - task: DownloadBuildArtifacts@0
   inputs:
@@ -20,6 +32,21 @@ steps:
       provisionator/**
       NUnit.ConsoleRunner/**
     downloadPath: $(System.DefaultWorkingDirectory)
+
+- checkout: qa
+  clean: true
+  fetchDepth: 1
+  path: $(System.DefaultWorkingDirectory)/QualityAssurance
+
+- checkout: samples
+  clean: true
+  fetchDepth: 1
+  path: $(System.DefaultWorkingDirectory)/monodroid-samples
+
+- checkout: xfsamples
+  clean: true
+  fetchDepth: 1
+  path: $(System.DefaultWorkingDirectory)/xamarin-forms-samples
 
 - task: xamops.azdevex.provisionator-task.provisionator@2
   displayName: Provision Android Dependencies
