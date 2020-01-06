@@ -14,14 +14,13 @@ resources:
     name: xamarin/yaml-templates
     ref: refs/heads/master
     endpoint: xamarin
-  - repository: release_scripts
-    type: github
-    name: xamarin/release-scripts
-    ref: refs/heads/$(ReleaseScriptsBranch)
-    endpoint: xamarin
   - repository: monodroid
     type: github
     name: xamarin/monodroid
+    endpoint: xamarin
+  - repository: release_scripts
+    type: github
+    name: xamarin/release-scripts
     endpoint: xamarin
   - repository: designer
     type: github
@@ -344,9 +343,11 @@ stages:
     - checkout: release_scripts
       clean: true
       path: $(System.DefaultWorkingDirectory)/release-scripts
+      persistCredentials: true
 
     - script: |
         cd $(System.DefaultWorkingDirectory)/release-scripts
+        git checkout $(ReleaseScriptsBranch)
         sudo xcode-select -s /Applications/$(NotarizationXcode)
         ruby notarize.rb $(XA.Unsigned.Pkg) $(XamarinIdentifier) $(XamarinUserId) $(XamarinPassword) $(TeamID)
       displayName: Notarize PKG
