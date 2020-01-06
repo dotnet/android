@@ -103,6 +103,7 @@ stages:
 
     - checkout: monodroid
       clean: true
+      submodules: recursive
       path: s/xamarin-android/external/monodroid
       persistCredentials: true
       condition: and(succeeded(), eq(variables['XA.Commercial.Build'], 'true'))
