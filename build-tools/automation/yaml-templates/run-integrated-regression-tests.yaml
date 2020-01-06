@@ -15,20 +15,21 @@ steps:
       NUnit.ConsoleRunner/**
     downloadPath: $(System.DefaultWorkingDirectory)
 
+- checkout: self
+  clean: true
+  submodules: recursive
+
 - checkout: qa
   clean: true
   fetchDepth: 1
-  path: $(System.DefaultWorkingDirectory)/QualityAssurance
 
 - checkout: samples
   clean: true
   fetchDepth: 1
-  path: $(System.DefaultWorkingDirectory)/monodroid-samples
 
 - checkout: xfsamples
   clean: true
   fetchDepth: 1
-  path: $(System.DefaultWorkingDirectory)/xamarin-forms-samples
 
 - task: xamops.azdevex.provisionator-task.provisionator@2
   displayName: Provision Android Dependencies

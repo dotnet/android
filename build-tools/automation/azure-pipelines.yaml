@@ -98,35 +98,40 @@ stages:
 
     # Prepare and build everything
     - script: make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: make prepare-update-mono
 
     - checkout: monodroid
       clean: true
-      path: $(System.DefaultWorkingDirectory)/external/monodroid
+      path: s/xamarin-android/external/monodroid
       persistCredentials: true
       condition: and(succeeded(), eq(variables['XA.Commercial.Build'], 'true'))
 
     - script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: make prepare-external-git-dependencies
       condition: and(succeeded(), eq(variables['XA.Commercial.Build'], 'true'))
 
     - script: make jenkins V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: make jenkins
 
     # Build and package test assemblies
     - script: make all-tests V=1 CONFIGURATION=$(XA.Build.Configuration)
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: make all-tests
 
     - script: |
         cp -r bin/$(XA.Build.Configuration)/bcl-tests bin/Test$(XA.Build.Configuration)/bcl-tests
         cp bin/Build$(XA.Build.Configuration)/ProfileAssemblies.projitems bin/Test$(XA.Build.Configuration)/bcl-tests/
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: copy bcl-tests assemblies
 
     - task: PublishPipelineArtifact@0
       displayName: upload test assemblies
       inputs:
         artifactName: $(TestAssembliesArtifactName)
-        targetPath: bin/Test$(XA.Build.Configuration)
+        targetPath: xamarin-android/bin/Test$(XA.Build.Configuration)
 
     # Create installers
     - template: install-certificates.yml@yaml
@@ -138,41 +143,45 @@ stages:
         HostedMacKeychainPassword: $(AzDO-OnPrem-KeychainPass)
 
     - script: make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: make create-installers
 
     - script: |
         mkdir -p bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
         cp bin/Build$(XA.Build.Configuration)/*.vsix bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
         cp bin/Build$(XA.Build.Configuration)/*.pkg bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: copy unsigned installers
 
     - script: |
         VERSION=`LANG=C; export LANG && git log --no-color --first-parent -n1 --pretty=format:%ct`
         echo "d1ec039f-f3db-468b-a508-896d7c382999 $VERSION" > bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)/updateinfo
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: create updateinfo file
 
     - task: PublishPipelineArtifact@0
       displayName: upload installers
       inputs:
         artifactName: $(InstallerArtifactName)
-        targetPath: bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
+        targetPath: xamarin-android/bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
 
     - task: DotNetCoreCLI@2
       displayName: pack Xamarin.Android.Sdk
       inputs:
         command: pack
-        packagesToPack: $(System.DefaultWorkingDirectory)/build-tools/create-packs/Packager.csproj
+        packagesToPack: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/create-packs/Packager.csproj
         configuration: $(XA.Build.Configuration)
-        packDirectory: $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
+        packDirectory: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
 
     - task: PublishPipelineArtifact@0
       displayName: upload nupkgs
       inputs:
         artifactName: $(NuGetArtifactName)
-        targetPath: $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
+        targetPath: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
 
     - template: yaml-templates/upload-results.yaml
       parameters:
+        solution: xamarin-android/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
         artifactName: Build Results - macOS
 
     - template: uninstall-certificates/v1.yml@yaml
@@ -342,7 +351,6 @@ stages:
 
     - checkout: release_scripts
       clean: true
-      path: $(System.DefaultWorkingDirectory)/release-scripts
       persistCredentials: true
 
     - script: |
@@ -877,7 +885,6 @@ stages:
     - checkout: designer
       clean: true
       submodules: recursive
-      path: $(System.DefaultWorkingDirectory)/designer
       persistCredentials: true
 
     - powershell: |
@@ -928,7 +935,6 @@ stages:
     - checkout: designer
       clean: true
       submodules: recursive
-      path: $(System.DefaultWorkingDirectory)\designer
       persistCredentials: true
 
     - powershell: |
