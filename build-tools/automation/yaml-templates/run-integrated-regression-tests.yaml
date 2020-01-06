@@ -19,6 +19,12 @@ steps:
   clean: true
   submodules: recursive
 
+- checkout: monodroid
+  clean: true
+  submodules: recursive
+  path: s/xamarin-android/external/monodroid
+  persistCredentials: true
+
 - checkout: qa
   clean: true
   fetchDepth: 1
@@ -39,6 +45,7 @@ steps:
     provisioning_extra_args: -vv
 
 - script: make prepare-update-mono V=1 PREPARE_CI=1 PREPARE_AUTOPROVISION=1
+  workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
   displayName: install mono
   condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
 
@@ -51,9 +58,6 @@ steps:
        $(System.DefaultWorkingDirectory)\NUnit.ConsoleRunner\tools\nunit3-console.exe $(System.DefaultWorkingDirectory)\XQA.Android\XQA.Android.dll --where "cat == XAUnitTestSetup || cat == XATestPrep || cat == EnvironmentInfo"
     }
   displayName: Test Environment Setup
-  condition: and(succeeded(), eq(variables['XA.Commercial.Build'], 'true'))
-  env:
-    GH_AUTH_SECRET: $(Github.Token)
 
 - template: run-nunit-tests.yaml
   parameters:
