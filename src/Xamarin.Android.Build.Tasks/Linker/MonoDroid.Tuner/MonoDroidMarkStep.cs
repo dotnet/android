@@ -438,6 +438,9 @@ namespace MonoDroid.Tuner
 
 		protected override bool ShouldMarkInterfaceImplementation (TypeDefinition type, InterfaceImplementation iface, TypeDefinition resolvedInterfaceType)
 		{
+			if (Annotations.IsMarked (iface))
+				return false;
+
 			if (base.ShouldMarkInterfaceImplementation (type, iface, resolvedInterfaceType))
 				return true;
 
