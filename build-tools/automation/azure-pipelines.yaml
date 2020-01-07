@@ -516,7 +516,7 @@ stages:
         testName: Mono.Android_TestsMultiDex
         project: tests/Runtime-MultiDex/Mono.Android-TestsMultiDex.csproj
         testResultsFiles: TestResult-Mono.Android_TestsMultiDex-$(ApkTestConfiguration).xml
-        artifactName: Mono.Android_Tests-Signed.apk
+        artifactName: Mono.Android_TestsMultiDex-Signed.apk
         artifactFolder: MultiDex
 
     - template: yaml-templates/apk-instrumentation.yaml
