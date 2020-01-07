@@ -268,7 +268,15 @@ namespace MonoDroid.Generation {
 					if (all_symbols_cache == null)
 						all_symbols_cache = new ConcurrentDictionary<string, ISymbol> (symbols.Values.SelectMany (v => v).GroupBy (s => s.FullName).ToDictionary (s => s.Key, s => s.FirstOrDefault ()));
 
-					all_symbols_cache.TryGetValue (key, out sym);
+					if (!all_symbols_cache.TryGetValue (key, out sym)) {
+						// We may be looking for a type like:
+						// - System.Collections.Generic.IList<Java.Util.Locale.LanguageRange>
+						// Our key is "System.Collections.Generic.IList", but it's stored in
+						// the symbol table with the arity so we need to look for
+						// "System.Collections.Generic.IList`1" to find a match
+						key = AddArity (key, type_params);
+						all_symbols_cache.TryGetValue (key, out sym);
+					}
 				}
 			}
 			ISymbol result;
@@ -298,7 +306,32 @@ namespace MonoDroid.Generation {
 
 			return result;
 		}
-		
+
+		private string AddArity (string key, string typeParams)
+		{
+			if (string.IsNullOrWhiteSpace (typeParams) || !typeParams.StartsWith ("<") || !typeParams.EndsWith (">"))
+				return key;
+
+			var nested_count = 0;
+			var arity = 1;
+
+			// Remove the outer <>
+			typeParams = typeParams.Substring (1, typeParams.Length - 2);
+
+			foreach (var c in typeParams) {
+				if (c == '>')
+					nested_count--;
+
+				if (c == '<')
+					nested_count++;
+
+				if (nested_count == 0 && c == ',')
+					arity++;
+			}
+
+			return $"{key}`{arity}";
+		}
+
 		public void Dump ()
 		{
 			foreach (var p in symbols) {
