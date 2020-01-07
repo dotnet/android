@@ -18,6 +18,18 @@ namespace Xamarin.Android.Build.Tests
 			ClearDebugProperty ();
 		}
 
+		void SetTargetFrameworkAndManifest(XamarinAndroidApplicationProject proj, Builder builder)
+		{
+			string apiLevel;
+			proj.TargetFrameworkVersion = builder.LatestTargetFrameworkVersion (out apiLevel);
+			proj.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
+<manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""UnnamedProject.UnnamedProject"">
+	<uses-sdk android:minSdkVersion=""24"" android:targetSdkVersion=""{apiLevel}"" />
+	<application android:label=""${{PROJECT_NAME}}"">
+	</application >
+</manifest>";
+		}
+
 		[Test]
 		[Retry (1)]
 		public void ApplicationRunsWithoutDebugger ([Values (false, true)] bool isRelease)
@@ -36,14 +48,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 			proj.SetDefaultTargetDevice ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
-				string apiLevel;
-				proj.TargetFrameworkVersion = b.LatestTargetFrameworkVersion (out apiLevel);
-				proj.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
-<manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""UnnamedProject.UnnamedProject"">
-	<uses-sdk android:minSdkVersion=""24"" android:targetSdkVersion=""{apiLevel}"" />
-	<application android:label=""${{PROJECT_NAME}}"">
-	</application >
-</manifest>";
+				SetTargetFrameworkAndManifest (proj, b);
 				b.Save (proj, saveProject: true);
 				proj.NuGetRestore (Path.Combine (Root, b.ProjectDirectory), b.PackagesDirectory);
 				Assert.True (b.Build (proj), "Project should have built.");
@@ -57,6 +62,61 @@ namespace Xamarin.Android.Build.Tests
 				Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
 					Path.Combine (Root, b.ProjectDirectory, "logcat.log"), 30), "Activity should have started.");
 				Assert.True (b.Uninstall (proj), "Project should have uninstalled.");
+			}
+		}
+
+		[Test]
+		public void ClassLibraryMainLauncherRuns ()
+		{
+			if (!HasDevices) {
+				Assert.Ignore ("Test needs a device attached.");
+				return;
+			}
+
+			var path = Path.Combine ("temp", TestName);
+
+			var app = new XamarinAndroidApplicationProject {
+				ProjectName = "MyApp",
+			};
+			if (!CommercialBuildAvailable) {
+				var abis = new string [] { "armeabi-v7a", "x86" };
+				app.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
+			}
+			app.SetDefaultTargetDevice ();
+
+			var lib = new XamarinAndroidLibraryProject {
+				ProjectName = "MyLibrary"
+			};
+			lib.Sources.Add (new BuildItem.Source ("MainActivity.cs") {
+				TextContent = () => lib.ProcessSourceTemplate (app.DefaultMainActivity).Replace ("${JAVA_PACKAGENAME}", app.JavaPackageName),
+			});
+			lib.AndroidResources.Clear ();
+			foreach (var resource in app.AndroidResources) {
+				lib.AndroidResources.Add (resource);
+			}
+			var reference = $"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj";
+			app.References.Add (new BuildItem.ProjectReference (reference, lib.ProjectName, lib.ProjectGuid));
+
+			// Remove the default MainActivity.cs & AndroidResources
+			app.AndroidResources.Clear ();
+			app.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\layout\\foo.xml") {
+				TextContent = () => "<?xml version=\"1.0\" encoding=\"utf-8\" ?><LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\" />"
+			});
+			app.Sources.Remove (app.GetItem ("MainActivity.cs"));
+
+			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
+			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+				SetTargetFrameworkAndManifest (app, appBuilder);
+				Assert.IsTrue (libBuilder.Build (lib), "library build should have succeeded.");
+				Assert.True (appBuilder.Install (app), "app should have installed.");
+				ClearAdbLogcat ();
+				if (CommercialBuildAvailable)
+					Assert.True (appBuilder.RunTarget (app, "_Run"), "Project should have run.");
+				else
+					AdbStartActivity ($"{app.PackageName}/{app.JavaPackageName}.MainActivity");
+
+				Assert.True (WaitForActivityToStart (app.PackageName, "MainActivity",
+					Path.Combine (Root, appBuilder.ProjectDirectory, "logcat.log"), 30), "Activity should have started.");
 			}
 		}
 
@@ -147,14 +207,7 @@ namespace ${ROOT_NAMESPACE} {
 "),
 			});
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
-				string apiLevel;
-				proj.TargetFrameworkVersion = b.LatestTargetFrameworkVersion (out apiLevel);
-				proj.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
-<manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""UnnamedProject.UnnamedProject"">
-	<uses-sdk android:minSdkVersion=""24"" android:targetSdkVersion=""{apiLevel}"" />
-	<application android:label=""${{PROJECT_NAME}}"">
-	</application >
-</manifest>";
+				SetTargetFrameworkAndManifest (proj, b);
 				b.Save (proj, saveProject: true);
 				proj.NuGetRestore (Path.Combine (Root, b.ProjectDirectory), b.PackagesDirectory);
 				Assert.True (b.Build (proj), "Project should have built.");
@@ -279,14 +332,7 @@ namespace ${ROOT_NAMESPACE} {
 			proj.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
 			proj.SetDefaultTargetDevice ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
-				string apiLevel;
-				proj.TargetFrameworkVersion = b.LatestTargetFrameworkVersion (out apiLevel);
-				proj.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
-<manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""UnnamedProject.UnnamedProject"">
-	<uses-sdk android:minSdkVersion=""24"" android:targetSdkVersion=""{apiLevel}"" />
-	<application android:label=""${{PROJECT_NAME}}"">
-	</application >
-</manifest>";
+				SetTargetFrameworkAndManifest (proj, b);
 				b.Save (proj, saveProject: true);
 				proj.NuGetRestore (Path.Combine (Root, b.ProjectDirectory), b.PackagesDirectory);
 				Assert.True (b.Build (proj), "Project should have built.");

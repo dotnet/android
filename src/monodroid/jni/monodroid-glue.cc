@@ -1340,8 +1340,7 @@ MonodroidRuntime::load_assemblies (MonoDomain *domain, JNIEnv *env, jstring_arra
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)))
 		total_time.mark_start ();
 
-	/* skip element 0, as that's loaded in create_domain() */
-	for (size_t i = 1; i < assemblies.get_length (); ++i) {
+	for (size_t i = 0; i < assemblies.get_length (); ++i) {
 		jstring_wrapper &assembly = assemblies [i];
 		load_assembly (domain, env, assembly);
 	}
