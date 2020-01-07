@@ -1,12 +1,6 @@
 steps:
 - task: xamops.azdevex.lingering-process-task.lingering-process-task@1
 
-- script: |
-    git clone -q https://github.com/xamarin/monodroid-samples.git
-    git clone -q https://github.com/xamarin/xamarin-forms-samples.git
-    git clone -q https://$(GitHub.Token)@github.com/xamarin/QualityAssurance.git
-  displayName: clone test dependencies
-
 - task: DownloadBuildArtifacts@0
   inputs:
     buildType: specific
@@ -21,6 +15,28 @@ steps:
       NUnit.ConsoleRunner/**
     downloadPath: $(System.DefaultWorkingDirectory)
 
+- checkout: self
+  clean: true
+  submodules: recursive
+
+- checkout: monodroid
+  clean: true
+  submodules: recursive
+  path: s/xamarin-android/external/monodroid
+  persistCredentials: true
+
+- checkout: qa
+  clean: true
+  fetchDepth: 1
+
+- checkout: samples
+  clean: true
+  fetchDepth: 1
+
+- checkout: xfsamples
+  clean: true
+  fetchDepth: 1
+
 - task: xamops.azdevex.provisionator-task.provisionator@2
   displayName: Provision Android Dependencies
   inputs:
@@ -29,6 +45,7 @@ steps:
     provisioning_extra_args: -vv
 
 - script: make prepare-update-mono V=1 PREPARE_CI=1 PREPARE_AUTOPROVISION=1
+  workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
   displayName: install mono
   condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
 
@@ -41,9 +58,6 @@ steps:
        $(System.DefaultWorkingDirectory)\NUnit.ConsoleRunner\tools\nunit3-console.exe $(System.DefaultWorkingDirectory)\XQA.Android\XQA.Android.dll --where "cat == XAUnitTestSetup || cat == XATestPrep || cat == EnvironmentInfo"
     }
   displayName: Test Environment Setup
-  condition: and(succeeded(), eq(variables['XA.Commercial.Build'], 'true'))
-  env:
-    GH_AUTH_SECRET: $(Github.Token)
 
 - template: run-nunit-tests.yaml
   parameters:
