@@ -24,6 +24,14 @@ steps:
   submodules: recursive
   path: s/xamarin-android/external/monodroid
   persistCredentials: true
+  condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
+
+- checkout: monodroid
+  clean: true
+  submodules: recursive
+  path: s\xamarin-android\external\monodroid
+  persistCredentials: true
+  condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
 
 - checkout: qa
   clean: true
