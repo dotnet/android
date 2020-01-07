@@ -314,11 +314,9 @@ stages:
 
     - checkout: release_scripts
       clean: true
-      path: s/release-scripts
       persistCredentials: true
 
     - script: |
-        cd $(System.DefaultWorkingDirectory)/release-scripts
         git checkout $(ReleaseScriptsBranch)
         sudo xcode-select -s /Applications/$(NotarizationXcode)
         ruby notarize.rb $(XA.Unsigned.Pkg) $(XamarinIdentifier) $(XamarinUserId) $(XamarinPassword) $(TeamID)
