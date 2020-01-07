@@ -34,6 +34,8 @@ namespace Android.Runtime
 			b = value;
 		}
 
+		public JniArgumentValue (byte value) : this ((sbyte)value) { }
+
 		public JniArgumentValue (char value)
 		{
 			this = new JniArgumentValue ();
@@ -46,17 +48,23 @@ namespace Android.Runtime
 			s = value;
 		}
 
+		public JniArgumentValue (ushort value) : this ((short)value) { }
+
 		public JniArgumentValue (int value)
 		{
 			this = new JniArgumentValue ();
 			i = value;
 		}
 
+		public JniArgumentValue (uint value) : this ((int)value) { }
+
 		public JniArgumentValue (long value)
 		{
 			this = new JniArgumentValue ();
 			j = value;
 		}
+
+		public JniArgumentValue (ulong value) : this ((long) value) { }
 
 		public JniArgumentValue (float value)
 		{

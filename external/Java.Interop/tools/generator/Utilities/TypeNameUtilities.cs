@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MonoDroid.Utils;
 
 namespace MonoDroid.Generation
 {
@@ -100,6 +101,28 @@ namespace MonoDroid.Generation
 					builder.Append (c);
 			}
 			return builder.ToString ();
+		}
+
+		public static string GetCallPrefix (ISymbol symbol)
+		{
+			if (symbol is SimpleSymbol || symbol.IsEnum) {
+				var ret = StringRocks.MemberToPascalCase (symbol.JavaName);
+
+				// We do not have unsigned versions of GetIntValue, etc.
+				// We use the signed versions and cast the result
+				if (ret == "Uint")
+					return "Int";
+				if (ret == "Ushort")
+					return "Short";
+				if (ret == "Ulong")
+					return "Long";
+				if (ret == "Ubyte")
+					return "Byte";
+
+				return ret;
+
+			} else
+				return "Object";
 		}
 	}
 }

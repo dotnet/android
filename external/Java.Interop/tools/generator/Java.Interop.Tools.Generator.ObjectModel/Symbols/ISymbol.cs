@@ -13,6 +13,7 @@ namespace MonoDroid.Generation {
 		bool   IsEnum { get; }
 		bool   IsArray { get; }
 		string ElementType { get; }
+		string ReturnCast { get; }
 
 		string GetObjectHandleProperty (string variable);
 

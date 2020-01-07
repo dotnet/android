@@ -26,7 +26,7 @@ namespace generatortests
 		[Test]
 		public void CreateMethod_EnsureKotlinHashcodeFix ()
 		{
-			var xml = XDocument.Parse ("<package name=\"com.example.test\" jni-name=\"com/example/test\"><class name=\"test\"><method name=\"add-h4F1V8i\" final=\"false\" /></class></package>");
+			var xml = XDocument.Parse ("<package name=\"com.example.test\" jni-name=\"com/example/test\"><class name=\"test\"><method name=\"add-h-_1V8i\" final=\"false\" /></class></package>");
 			var klass = XmlApiImporter.CreateClass (xml.Root, xml.Root.Element ("class"));
 
 			KotlinFixups.Fixup (new [] { (GenBase) klass }.ToList ());

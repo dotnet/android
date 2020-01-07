@@ -1212,7 +1212,7 @@ namespace MonoDroid.Generation
 				writer.WriteLine ("{0}{1}", indent, prep);
 			WriteParameterListCallArgs (method.Parameters, indent, invoker: true);
 			string env_method = "Call" + method.RetVal.CallMethodPrefix + "Method";
-			string call = "JNIEnv." + env_method + " (" +
+			string call = method.RetVal.ReturnCast + "JNIEnv." + env_method + " (" +
 			    Context.ContextType.GetObjectHandleProperty ("this") + ", " + method.EscapedIdName + method.Parameters.GetCallArgs (opt, invoker: true) + ")";
 			if (method.IsVoid)
 				writer.WriteLine ("{0}{1};", indent, call);

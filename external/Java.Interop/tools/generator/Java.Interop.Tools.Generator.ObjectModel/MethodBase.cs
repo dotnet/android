@@ -87,10 +87,7 @@ namespace MonoDroid.Generation
 					if (method.JavaName.IndexOf ("-impl") >= 0)
 						return true;
 
-					var index = method.JavaName.IndexOf ('-');
-
-					// `add-V5j3Lk8` is always a 7 character hashcode
-					return index >= 0 && method.JavaName.Length - index == 8;
+					return method.JavaName.Length >= 8 && method.JavaName [method.JavaName.Length - 8] == '-';
 				}
 
 				return false;

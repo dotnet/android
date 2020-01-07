@@ -232,9 +232,15 @@ namespace Java.Interop.Tools.TypeNameMappings
 				return "F";
 			if (type == typeof (int))
 				return "I";
+			if (type == typeof (uint))
+				return "I";
 			if (type == typeof (long))
 				return "J";
+			if (type == typeof (ulong))
+				return "J";
 			if (type == typeof (short))
+				return "S";
+			if (type == typeof (ushort))
 				return "S";
 			if (type == typeof (bool))
 				return "Z";

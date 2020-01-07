@@ -23,7 +23,7 @@ namespace MonoDroid.Generation
 		public string Value { get; set; }
 		public string Visibility { get; set; }
 
-		internal string GetMethodPrefix => (Symbol is SimpleSymbol || Symbol.IsEnum) ? StringRocks.MemberToPascalCase (Symbol.JavaName) : "Object";
+		internal string GetMethodPrefix => TypeNameUtilities.GetCallPrefix (Symbol);
 
 		internal string ID => JavaName + "_jfieldId";
 

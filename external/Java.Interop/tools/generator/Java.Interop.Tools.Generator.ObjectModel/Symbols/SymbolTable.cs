@@ -33,6 +33,10 @@ namespace MonoDroid.Generation {
 			"int",
 			"long",
 			"short",
+			"ubyte",
+			"uint",
+			"ulong",
+			"ushort",
 			"void",
 		};
 
@@ -55,6 +59,10 @@ namespace MonoDroid.Generation {
 			AddType (new SimpleSymbol ("0", "int", "int", "I"));
 			AddType (new SimpleSymbol ("0L", "long", "long", "J"));
 			AddType (new SimpleSymbol ("0", "short", "short", "S"));
+			AddType (new SimpleSymbol ("0", "uint", "uint", "I", returnCast: "(uint)"));
+			AddType (new SimpleSymbol ("0", "ushort", "ushort", "S", returnCast: "(ushort)"));
+			AddType (new SimpleSymbol ("0", "ulong", "ulong", "J", returnCast: "(ulong)"));
+			AddType (new SimpleSymbol ("0", "ubyte", "byte", "B", returnCast: "(byte)"));
 			AddType ("Android.Graphics.Color", new ColorSymbol ());
 			char_seq = new CharSequenceSymbol ();
 			instream_sym = new StreamSymbol ("InputStream");

@@ -63,6 +63,8 @@ namespace MonoDroid.Generation {
 			get { return type_params; }
 		}
 
+		public string ReturnCast => string.Empty;
+
 		public string GetObjectHandleProperty (string variable)
 		{
 			return gen.GetObjectHandleProperty (variable);

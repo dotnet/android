@@ -8,7 +8,7 @@ namespace Xamarin.Android.Tools.Bytecode
 {
 	public static class KotlinUtilities
 	{
-		public static string ConvertKotlinTypeSignature (KotlinType type, KotlinClass klass = null)
+		public static string ConvertKotlinTypeSignature (KotlinType type, KotlinFile metadata = null)
 		{
 			if (type is null)
 				return string.Empty;
@@ -16,7 +16,7 @@ namespace Xamarin.Android.Tools.Bytecode
 			var class_name = type.ClassName;
 
 			if (string.IsNullOrWhiteSpace (class_name)) {
-				if (klass is object) {
+				if (metadata is KotlinClass klass) {
 
 				var tp = klass.TypeParameters.FirstOrDefault (t => t.Id == type.TypeParameter);
 

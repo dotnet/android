@@ -332,6 +332,8 @@ namespace Xamarin.Android.Tools.Bytecode {
 			var ret     = returns != null
 				? new XAttribute ("return",     SignatureToGenericJavaTypeName (returns))
 				: null;
+			if (!string.IsNullOrWhiteSpace (method.KotlinReturnType))
+				ret?.SetValue (method.KotlinReturnType);
 			var jniRet  = returns != null
 				? new XAttribute ("jni-return", returns)
 				: null;
@@ -400,6 +402,8 @@ namespace Xamarin.Android.Tools.Bytecode {
 					genericType = genericType.Substring (1);
 				}
 				genericType = SignatureToGenericJavaTypeName (genericType);
+				if (!string.IsNullOrWhiteSpace (p.KotlinType))
+					genericType = p.KotlinType;
 				if (varargArray) {
 					type        += "...";
 					genericType += "...";
@@ -480,6 +484,9 @@ namespace Xamarin.Android.Tools.Bytecode {
 				var visibility = GetVisibility (field.AccessFlags);
 				if (visibility == "private" || visibility == "")
 					continue;
+				var type = new XAttribute ("type", SignatureToJavaTypeName (field.Descriptor));
+				if (!string.IsNullOrWhiteSpace (field.KotlinType))
+					type.SetValue (field.KotlinType);
 				yield return new XElement ("field",
 						new XAttribute ("deprecated",           GetDeprecatedValue (field.Attributes)),
 						new XAttribute ("final",                (field.AccessFlags & FieldAccessFlags.Final) != 0),
@@ -487,7 +494,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 						new XAttribute ("static",               (field.AccessFlags & FieldAccessFlags.Static) != 0),
 						new XAttribute ("synthetic",            (field.AccessFlags & FieldAccessFlags.Synthetic) != 0),
 						new XAttribute ("transient",            (field.AccessFlags & FieldAccessFlags.Transient) != 0),
-						new XAttribute ("type",                 SignatureToJavaTypeName (field.Descriptor)),
+						type,
 						new XAttribute ("type-generic-aware",   GetGenericType (field)),
 						new XAttribute ("jni-signature",        field.Descriptor),
 						GetNotNull (field),

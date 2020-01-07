@@ -77,6 +77,8 @@ namespace MonoDroid.Generation
 			get { return enum_type; }
 		}
 
+		public string ReturnCast => string.Empty;
+
 		public string GetObjectHandleProperty (string variable)
 		{
 			return null;

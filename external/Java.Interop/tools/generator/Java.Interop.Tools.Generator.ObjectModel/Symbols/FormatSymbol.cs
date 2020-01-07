@@ -13,8 +13,9 @@ namespace MonoDroid.Generation {
 		string native_type;
 		string to_fmt;
 		string type;
+		string return_cast;
 
-		public FormatSymbol (string default_value, string java_type, string jni_type, string native_type, string type, string from_fmt, string to_fmt)
+		public FormatSymbol (string default_value, string java_type, string jni_type, string native_type, string type, string from_fmt, string to_fmt, string returnCast)
 		{
 			this.default_value = default_value;
 			this.java_type = java_type;
@@ -23,6 +24,7 @@ namespace MonoDroid.Generation {
 			this.type = type;
 			this.from_fmt = from_fmt;
 			this.to_fmt = to_fmt;
+			this.return_cast = returnCast ?? string.Empty;
 		}
 		
 		public string DefaultValue {
@@ -60,6 +62,8 @@ namespace MonoDroid.Generation {
 		public string ElementType {
 			get { return null; }
 		}
+
+		public string ReturnCast => return_cast;
 
 		public string GetObjectHandleProperty (string variable)
 		{

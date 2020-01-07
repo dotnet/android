@@ -16,7 +16,11 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		public static readonly JavaTypeReference Float;
 		public static readonly JavaTypeReference Double;
 		public static readonly JavaTypeReference GenericWildcard;
-		
+		public static readonly JavaTypeReference UInt;
+		public static readonly JavaTypeReference UShort;
+		public static readonly JavaTypeReference ULong;
+		public static readonly JavaTypeReference UByte;
+
 		internal static JavaTypeReference GetSpecialType (string name)
 		{
 			switch (name) {
@@ -29,6 +33,10 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			case "long": return Long;
 			case "float": return Float;
 			case "double": return Double;
+			case "uint": return UInt;
+			case "ushort": return UShort;
+			case "ulong": return ULong;
+			case "ubyte": return UByte;
 			case "?": return GenericWildcard;
 			}
 			return null;
@@ -46,8 +54,12 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			Float = new JavaTypeReference ("float");
 			Double = new JavaTypeReference ("double");
 			GenericWildcard = new JavaTypeReference ("?");
+			UInt = new JavaTypeReference ("uint");
+			UShort = new JavaTypeReference ("ushort");
+			ULong = new JavaTypeReference ("ulong");
+			UByte = new JavaTypeReference ("ubyte");
 		}
-		
+
 		JavaTypeReference (string specialName)
 		{
 			SpecialName = specialName;

@@ -19,6 +19,10 @@ namespace MonoDroid.Generation {
 			case "Short":           return "Int16";
 			case "Long":            return "Int64";
 			case "Float":           return "Single";
+			case "UInt":            return "Int32";
+			case "UShort":          return "Int16";
+			case "ULong":           return "Int64";
+			case "UByte":           return "SByte";
 			default:                return type;
 			}
 		}
@@ -171,7 +175,7 @@ namespace MonoDroid.Generation {
 
 			if (!method.IsVoid) {
 				var r   = invokeType == "Object" ? "__rm.Handle" : "__rm";
-				writer.WriteLine ("{0}return {1};", indent, method.RetVal.FromNative (opt, r, true));
+				writer.WriteLine ("{0}return {2}{1};", indent, method.RetVal.FromNative (opt, r, true), method.RetVal.ReturnCast);
 			}
 
 			indent = oldindent;
@@ -196,19 +200,21 @@ namespace MonoDroid.Generation {
 			var invoke      = "Get{0}Value";
 			invoke          = string.Format (invoke, invokeType);
 
-			writer.WriteLine ("{0}var __v = _members.{1}.{2} (__id{3});",
+			writer.WriteLine ("{0}var __v = {4}_members.{1}.{2} (__id{3});",
 					indent,
 					indirect,
 					invoke,
-					field.IsStatic ? "" : ", this");
+					field.IsStatic ? "" : ", this",
+					field.Symbol.ReturnCast);
 
 			if (field.Symbol.IsArray) {
 				writer.WriteLine ("{0}return global::Android.Runtime.JavaArray<{1}>.FromJniHandle (__v.Handle, JniHandleOwnership.TransferLocalRef);", indent, opt.GetOutputName (field.Symbol.ElementType));
 			}
 			else if (field.Symbol.NativeType != field.Symbol.FullName) {
-				writer.WriteLine ("{0}return {1};",
+				writer.WriteLine ("{0}return {2}{1};",
 						indent,
-						field.Symbol.FromNative (opt, invokeType != "Object" ? "__v" : "__v.Handle", true));
+						field.Symbol.FromNative (opt, invokeType != "Object" ? "__v" : "__v.Handle", true),
+						field.Symbol.ReturnCast);
 			} else {
 				writer.WriteLine ("{0}return __v;", indent);
 			}

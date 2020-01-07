@@ -33,6 +33,8 @@ namespace MonoDroid.Generation
 		public string DefaultValue { get; set; }
 		public bool HasVirtualMethods { get; set; }
 
+		public string ReturnCast => string.Empty;
+
 		// This means Ctors/Methods/Properties/Fields has not been populated yet.
 		// If this type is retrieved from the SymbolTable, it will call PopulateAction
 		// to fill in members before returning it to the user.

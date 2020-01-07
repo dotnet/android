@@ -11,6 +11,94 @@ namespace generatortests
 	class JavaInteropCodeGeneratorTests : CodeGeneratorTests
 	{
 		protected override CodeGenerationTarget Target => CodeGenerationTarget.JavaInterop1;
+
+		[Test]
+		public void WriteKotlinUnsignedTypeMethodsClass ()
+		{
+			var @class = new TestClass ("Object", "java.code.MyClass");
+
+			@class.AddMethod (SupportTypeBuilder.CreateMethod (@class, "Echo", options, "uint", false, false, new Parameter ("value", "uint", "uint", false)));
+			@class.AddMethod (SupportTypeBuilder.CreateMethod (@class, "Echo", options, "ushort", false, false, new Parameter ("value", "ushort", "ushort", false)));
+			@class.AddMethod (SupportTypeBuilder.CreateMethod (@class, "Echo", options, "ulong", false, false, new Parameter ("value", "ulong", "ulong", false)));
+			@class.AddMethod (SupportTypeBuilder.CreateMethod (@class, "Echo", options, "ubyte", false, false, new Parameter ("value", "ubyte", "byte", false)));
+
+			// Kotlin methods with unsigned types are name-mangled and don't support virtual
+			foreach (var m in @class.Methods)
+				m.IsVirtual = false;
+
+			generator.Context.ContextTypes.Push (@class);
+			generator.WriteClass (@class, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			Assert.AreEqual (GetTargetedExpected (nameof (WriteKotlinUnsignedTypeMethodsClass)), writer.ToString ().NormalizeLineEndings ());
+		}
+
+		[Test]
+		public void WriteKotlinUnsignedTypePropertiesClass ()
+		{
+			var @class = new TestClass ("Object", "java.code.MyClass");
+
+			@class.Properties.Add (SupportTypeBuilder.CreateProperty (@class, "UIntProp", "uint", options, false, false));
+			@class.Properties.Add (SupportTypeBuilder.CreateProperty (@class, "UShortProp", "ushort", options, false, false));
+			@class.Properties.Add (SupportTypeBuilder.CreateProperty (@class, "ULongProp", "ulong", options, false, false));
+			@class.Properties.Add (SupportTypeBuilder.CreateProperty (@class, "UByteProp", "ubyte", options, false, false));
+
+			// Kotlin methods with unsigned types are name-mangled and don't support virtual
+			foreach (var m in @class.Properties) {
+				m.Getter.IsVirtual = false;
+				m.Setter.IsVirtual = false;
+			}
+
+			generator.Context.ContextTypes.Push (@class);
+			generator.WriteClass (@class, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			Assert.AreEqual (GetTargetedExpected (nameof (WriteKotlinUnsignedTypePropertiesClass)), writer.ToString ().NormalizeLineEndings ());
+		}
+
+		[Test]
+		public void WriteKotlinUnsignedArrayTypeMethodsClass ()
+		{
+			var @class = new TestClass ("Object", "java.code.MyClass");
+
+			@class.AddMethod (SupportTypeBuilder.CreateMethod (@class, "Echo", options, "uint[]", false, false, new Parameter ("value", "uint[]", "uint[]", false)));
+			@class.AddMethod (SupportTypeBuilder.CreateMethod (@class, "Echo", options, "ushort[]", false, false, new Parameter ("value", "ushort[]", "ushort[]", false)));
+			@class.AddMethod (SupportTypeBuilder.CreateMethod (@class, "Echo", options, "ulong[]", false, false, new Parameter ("value", "ulong[]", "ulong[]", false)));
+			@class.AddMethod (SupportTypeBuilder.CreateMethod (@class, "Echo", options, "ubyte[]", false, false, new Parameter ("value", "ubyte[]", "byte[]", false)));
+
+			// Kotlin methods with unsigned types are name-mangled and don't support virtual
+			foreach (var m in @class.Methods)
+				m.IsVirtual = false;
+
+			generator.Context.ContextTypes.Push (@class);
+			generator.WriteClass (@class, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			Assert.AreEqual (GetTargetedExpected (nameof (WriteKotlinUnsignedArrayTypeMethodsClass)), writer.ToString ().NormalizeLineEndings ());
+		}
+
+		[Test]
+		public void WriteKotlinUnsignedArrayTypePropertiesClass ()
+		{
+			var @class = new TestClass ("Object", "java.code.MyClass");
+
+			@class.Properties.Add (SupportTypeBuilder.CreateProperty (@class, "UIntProp", "uint[]", options, false, false));
+			@class.Properties.Add (SupportTypeBuilder.CreateProperty (@class, "UShortProp", "ushort[]", options, false, false));
+			@class.Properties.Add (SupportTypeBuilder.CreateProperty (@class, "ULongProp", "ulong[]", options, false, false));
+			@class.Properties.Add (SupportTypeBuilder.CreateProperty (@class, "UByteProp", "ubyte[]", options, false, false));
+
+			// Kotlin methods with unsigned types are name-mangled and don't support virtual
+			foreach (var m in @class.Properties) {
+				m.Getter.IsVirtual = false;
+				m.Setter.IsVirtual = false;
+			}
+
+			generator.Context.ContextTypes.Push (@class);
+			generator.WriteClass (@class, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			Assert.AreEqual (GetTargetedExpected (nameof (WriteKotlinUnsignedArrayTypePropertiesClass)), writer.ToString ().NormalizeLineEndings ());
+		}
 	}
 
 	[TestFixture]

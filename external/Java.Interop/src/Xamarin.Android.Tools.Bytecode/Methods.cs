@@ -31,6 +31,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 		public  ClassFile           DeclaringType   {get; private set;}
 		public  MethodAccessFlags   AccessFlags     {get; set;}
 		public  AttributeCollection Attributes      {get; private set;}
+		public  string              KotlinReturnType {get; set;}
 
 		public MethodInfo (ConstantPool constantPool, ClassFile declaringType, Stream stream)
 		{
@@ -290,6 +291,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 		public  string      Name;
 		public  int         Position;
 		public  TypeInfo    Type    = new TypeInfo ();
+		public  string      KotlinType;
 
 		public  MethodParameterAccessFlags      AccessFlags;
 

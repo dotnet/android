@@ -22,14 +22,7 @@ namespace MonoDroid.Generation {
 			this.is_enumified = isEnumified;
 		}
 
-		public string CallMethodPrefix {
-			get {
-				if (sym is SimpleSymbol || sym.IsEnum)
-					return StringRocks.MemberToPascalCase (sym.JavaName);
-				else
-					return "Object";
-			}
-		}
+		public string CallMethodPrefix => TypeNameUtilities.GetCallPrefix (sym);
 
 		public string DefaultValue {
 			get { return sym.DefaultValue; }
@@ -88,6 +81,8 @@ namespace MonoDroid.Generation {
 		public string RawJavaType {
 			get { return raw_type; }
 		}
+
+		public string ReturnCast => sym?.ReturnCast ?? string.Empty;
 
 		public string FromNative (CodeGenerationOptions opt, string var_name, bool owned)
 		{

@@ -1,12 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using org.jetbrains.kotlin.metadata.jvm;
+using ProtoBuf;
 using Type = org.jetbrains.kotlin.metadata.jvm.Type;
 
 namespace Xamarin.Android.Tools.Bytecode
 {
+	// https://github.com/JetBrains/kotlin/blob/master/core/metadata.jvm/src/jvm_metadata.proto
 	public class KotlinFile
 	{
 		public List<KotlinFunction> Functions { get; set; }
@@ -220,6 +223,8 @@ namespace Xamarin.Android.Tools.Bytecode
 	public class KotlinFunction : KotlinMethodBase
 	{
 		public string Name { get; set; }
+		public string JvmName { get; set; }
+		public string JvmSignature { get; set; }
 		public KotlinFunctionFlags Flags { get; set; }
 		public KotlinType ReturnType { get; set; }
 		public int ReturnTypeId { get; set; }
@@ -235,9 +240,13 @@ namespace Xamarin.Android.Tools.Bytecode
 			if (f is null)
 				return null;
 
+			var sig = Extensible.GetValue<JvmMethodSignature> (f, 100);
+
 			return new KotlinFunction {
 				Flags = (KotlinFunctionFlags)f.Flags,
 				Name = resolver.GetString (f.Name),
+				JvmName = resolver.GetString ((sig?.Name ?? 0) > 0 ? sig.Name : f.Name),
+				JvmSignature = sig is null ? null : resolver.GetString (sig.Desc),
 				ReturnType = KotlinType.FromProtobuf (f.ReturnType, resolver),
 				ReturnTypeId = f.ReturnTypeId,
 				ReceiverType = KotlinType.FromProtobuf (f.ReceiverType, resolver),

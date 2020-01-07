@@ -33,6 +33,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 		public  ConstantPool        ConstantPool    {get; private set;}
 		public  FieldAccessFlags    AccessFlags     {get; private set;}
 		public  AttributeCollection Attributes      {get; private set;}
+		public  string              KotlinType      { get; set; }
 
 		public FieldInfo (ConstantPool constantPool, Stream stream)
 		{

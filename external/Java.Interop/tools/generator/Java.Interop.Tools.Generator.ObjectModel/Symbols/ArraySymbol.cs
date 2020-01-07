@@ -64,6 +64,8 @@ namespace MonoDroid.Generation {
 			get { return true; }
 		}
 
+		public string ReturnCast => string.Empty;
+
 		public string GetObjectHandleProperty (string variable)
 		{
 			return sym.GetObjectHandleProperty (variable);
@@ -120,10 +122,25 @@ namespace MonoDroid.Generation {
 
 		public string[] PreCall (CodeGenerationOptions opt, string var_name)
 		{
-			return new string[] { String.Format ("IntPtr {0} = JNIEnv.NewArray ({1});", opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName (var_name)), opt.GetSafeIdentifier (var_name)) };
+
+			return new string[] { String.Format ("IntPtr {0} = JNIEnv.NewArray ({2}{1});", opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName (var_name)), opt.GetSafeIdentifier (var_name), GetPreCallCast ()) };
 		}
 
 		public bool NeedsPrep { get { return true; } }
+
+		string GetPreCallCast ()
+		{
+			switch (sym.FullName) {
+				case "uint":
+					return "(int[])(object)";
+				case "ushort":
+					return "(short[])(object)";
+				case "ulong":
+					return "(long[])(object)";
+				default:
+					return string.Empty;
+			}
+		}
 	}
 }
 
