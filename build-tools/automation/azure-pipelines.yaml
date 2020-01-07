@@ -101,11 +101,17 @@ stages:
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: make prepare-update-mono
 
+    # Clone monodroid wth submodules, but disregard the unused xamarin-android submodule.
     - checkout: monodroid
       clean: true
       submodules: recursive
       path: s/xamarin-android/external/monodroid
       persistCredentials: true
+      condition: and(succeeded(), eq(variables['XA.Commercial.Build'], 'true'))
+
+    - script: rm -rf external/monodroid/external/xamarin-android
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
+      displayName: delete legacy xamarin-android submodule
       condition: and(succeeded(), eq(variables['XA.Commercial.Build'], 'true'))
 
     - script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
