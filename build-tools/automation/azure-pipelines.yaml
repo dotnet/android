@@ -332,6 +332,10 @@ stages:
     variables:
     - group: Xamarin Notarization
     steps:
+    - checkout: release_scripts
+      clean: true
+      persistCredentials: true
+
     - template: install-certificates.yml@yaml
       parameters:
         DeveloperIdApplication: $(developer-id-application)
@@ -355,10 +359,6 @@ stages:
     - template: productsign-pkg.yml@yaml
       parameters:
         UnsignedPkgPath: $(XA.Unsigned.Pkg)
-
-    - checkout: release_scripts
-      clean: true
-      persistCredentials: true
 
     - script: |
         git checkout $(ReleaseScriptsBranch)
