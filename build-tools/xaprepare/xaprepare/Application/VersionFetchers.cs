@@ -15,6 +15,7 @@ namespace Xamarin.Android.Prepare
 
 		public readonly Dictionary<string, ProgramVersionParser> Fetchers = new Dictionary <string, ProgramVersionParser> (Context.Instance.OS.DefaultStringComparer) {
 			{"7z",       "--help",    MakeRegex ($"Version {StandardVersionRegex}"),   3},
+			{"7za",      "--help",    MakeRegex ($"Version {StandardVersionRegex}"),   3},
 			{"autoconf", "--version", StandardVersionAtEOL,                            1},
 			{"automake", "--version", StandardVersionAtEOL,                            1},
 			{"brew",     "--version", MakeRegex ($"^Homebrew {StandardVersionRegex}"), 1},

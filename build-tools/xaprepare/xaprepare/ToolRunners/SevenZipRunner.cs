@@ -9,6 +9,8 @@ namespace Xamarin.Android.Prepare
 	partial class SevenZipRunner : ToolRunner
 	{
 		const double DefaultTimeout = 30; // minutes
+		static readonly Version bsoepMinVersion = new Version (15, 5);
+		Version version;
 
 		protected override string DefaultToolExecutableName => "7za";
 		protected override string ToolName                  => "7zip";
@@ -17,6 +19,10 @@ namespace Xamarin.Android.Prepare
 			: base (context, log, toolPath ?? Context.Instance.Tools.SevenZipPath)
 		{
 			ProcessTimeout = TimeSpan.FromMinutes (DefaultTimeout);
+
+			string vs = VersionString?.Trim ();
+			if (String.IsNullOrEmpty (vs) || !Version.TryParse (vs, out version))
+				version = new Version (0, 0);
 		}
 
 		public async Task<bool> Extract (string archivePath, string outputDirectory, List<string> extraArguments = null)
@@ -108,14 +114,17 @@ namespace Xamarin.Android.Prepare
 			// Disable progress indicator (doesn't appear to have any effect with some versions of 7z)
 			runner.AddArgument ("-bd");
 
-			// Write standard messages to stdout
-			runner.AddArgument ("-bso1");
+			// These switches were added in 7zip 15.05
+			if (version >= bsoepMinVersion) {
+				// Write standard messages to stdout
+				runner.AddArgument ("-bso1");
 
-			// Write progress updates to stdout
-			runner.AddArgument ("-bsp1");
+				// Write progress updates to stdout
+				runner.AddArgument ("-bsp1");
 
-			// Write errors to stderr
-			runner.AddArgument ("-bse2");
+				// Write errors to stderr
+				runner.AddArgument ("-bse2");
+			}
 
 			// Answer 'yes' to all questions
 			runner.AddArgument ("-y");
