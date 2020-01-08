@@ -288,6 +288,8 @@ stages:
     variables:
     - group: Xamarin Notarization
     steps:
+    - checkout: self
+
     - checkout: release_scripts
       clean: true
       persistCredentials: true
@@ -317,6 +319,7 @@ stages:
         UnsignedPkgPath: $(XA.Unsigned.Pkg)
 
     - script: |
+        cd $(System.DefaultWorkingDirectory)/release-scripts
         git checkout $(ReleaseScriptsBranch)
         sudo xcode-select -s /Applications/$(NotarizationXcode)
         ruby notarize.rb $(XA.Unsigned.Pkg) $(XamarinIdentifier) $(XamarinUserId) $(XamarinPassword) $(TeamID)
@@ -330,6 +333,7 @@ stages:
         BuildPackages: $(System.DefaultWorkingDirectory)/storage-artifacts
         AzureContainerName: $(Azure.Container.Name)
         AzureUploadLocation: $(Build.DefinitionName)/$(Build.BuildId)/$(Build.SourceBranchName)/$(Build.SourceVersion)
+        SourceDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
 
     - script: cp $(System.DefaultWorkingDirectory)/storage-artifacts/*.pkg $(Build.ArtifactStagingDirectory)
       displayName: copy notarized pkg
