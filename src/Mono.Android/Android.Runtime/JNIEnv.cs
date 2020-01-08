@@ -1120,13 +1120,28 @@ namespace Android.Runtime {
 					CopyArray (source, r);
 					return r;
 				} },
+				{ typeof (ushort), (type, source, len) => {
+					var r = new ushort [len];
+					CopyArray (source, r);
+					return r;
+				} },
 				{ typeof (int), (type, source, len) => {
 					var r = new int[len];
 					CopyArray (source, r);
 					return r;
 				} },
+				{ typeof (uint), (type, source, len) => {
+					var r = new uint[len];
+					CopyArray (source, r);
+					return r;
+				} },
 				{ typeof (long), (type, source, len) => {
 					var r = new long[len];
+					CopyArray (source, r);
+					return r;
+				} },
+				{ typeof (ulong), (type, source, len) => {
+					var r = new ulong[len];
 					CopyArray (source, r);
 					return r;
 				} },
@@ -1589,6 +1604,29 @@ namespace Android.Runtime {
 			return ret;
 		}
 
+		public static unsafe void CopyArray (IntPtr src, uint[] dest)
+		{
+			if (src == IntPtr.Zero)
+				return;
+			fixed (uint* __p = dest)
+				JniEnvironment.Arrays.GetIntArrayRegion (new JniObjectReference (src), 0, dest.Length, (int*) __p);
+		}
+
+		public static unsafe void CopyArray (IntPtr src, ushort[] dest)
+		{
+			if (src == IntPtr.Zero)
+				return;
+			fixed (ushort* __p = dest)
+				JniEnvironment.Arrays.GetShortArrayRegion (new JniObjectReference (src), 0, dest.Length, (short*) __p);
+		}
+
+		public static unsafe void CopyArray (IntPtr src, ulong[] dest)
+		{
+			if (src == IntPtr.Zero)
+				return;
+			fixed (ulong* __p = dest)
+				JniEnvironment.Arrays.GetLongArrayRegion (new JniObjectReference (src), 0, dest.Length, (long*) __p);
+		}
 #if ANDROID_8
 		[DllImport ("libjnigraphics.so")]
 		static extern int AndroidBitmap_getInfo (IntPtr env, IntPtr jbitmap, out Android.Graphics.AndroidBitmapInfo info);
