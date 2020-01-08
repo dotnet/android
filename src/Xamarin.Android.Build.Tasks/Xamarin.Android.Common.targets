@@ -1243,7 +1243,7 @@ because xbuild doesn't support framework reference assemblies.
     <_ManagedUpdateAndroidResgenInputs Condition="Exists ('$(_AndroidResourcePathsDesignTimeCache)')">$(_ManagedUpdateAndroidResgenInputs);$(_AndroidResourcePathsDesignTimeCache);</_ManagedUpdateAndroidResgenInputs>
     <_ManagedUpdateAndroidResgenInputs Condition="Exists ('$(_AndroidLibraryImportsDesignTimeCache)')">$(_ManagedUpdateAndroidResgenInputs);$(_AndroidLibraryImportsDesignTimeCache);</_ManagedUpdateAndroidResgenInputs>
     <_ManagedUpdateAndroidResgenInputs Condition="Exists ('$(_AndroidLibraryProjectImportsDesignTimeCache)')">$(_ManagedUpdateAndroidResgenInputs);$(_AndroidLibraryProjectImportsDesignTimeCache);</_ManagedUpdateAndroidResgenInputs>
-  <PropertyGroup>
+  </PropertyGroup>
 </Target>
 
 <!-- Managed DesignTime Resource Generation -->
