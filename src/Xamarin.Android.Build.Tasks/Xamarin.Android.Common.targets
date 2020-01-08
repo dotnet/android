@@ -1237,11 +1237,13 @@ because xbuild doesn't support framework reference assemblies.
       @(_LibraryResourceDirectoryStamps);
       $(_AndroidBuildPropertiesCache);
       $(ProjectAssetsFile);
-      $(_AndroidResourcePathsDesignTimeCache);
-      $(_AndroidLibraryProjectImportsDesignTimeCache);
-      $(_AndroidLibraryImportsDesignTimeCache);
     </_ManagedUpdateAndroidResgenInputs>
   </PropertyGroup>
+  <PropertyGroup>
+    <_ManagedUpdateAndroidResgenInputs Condition="Exists ('$(_AndroidResourcePathsDesignTimeCache)')">$(_ManagedUpdateAndroidResgenInputs);$(_AndroidResourcePathsDesignTimeCache);</_ManagedUpdateAndroidResgenInputs>
+    <_ManagedUpdateAndroidResgenInputs Condition="Exists ('$(_AndroidLibraryImportsDesignTimeCache)')">$(_ManagedUpdateAndroidResgenInputs);$(_AndroidLibraryImportsDesignTimeCache);</_ManagedUpdateAndroidResgenInputs>
+    <_ManagedUpdateAndroidResgenInputs Condition="Exists ('$(_AndroidLibraryProjectImportsDesignTimeCache)')">$(_ManagedUpdateAndroidResgenInputs);$(_AndroidLibraryProjectImportsDesignTimeCache);</_ManagedUpdateAndroidResgenInputs>
+  <PropertyGroup>
 </Target>
 
 <!-- Managed DesignTime Resource Generation -->
