@@ -15,10 +15,10 @@
     <_XABuildProperties>$(_XABuildDiag)/p:Configuration=$(Configuration)</_XABuildProperties>
   </PropertyGroup>
   <ItemGroup>
-    <_TestAssembly Include="$(_TopDir)\bin\Test$(Configuration)\net472\Xamarin.Android.Build.Tests.dll" />
-    <_TestAssembly Include="$(_TopDir)\bin\Test$(Configuration)\CodeBehind\net472\CodeBehindUnitTests.dll" />
-    <_TestAssembly Include="$(_TopDir)\bin\Test$(Configuration)\net472\EmbeddedDSOUnitTests.dll" />
-    <_TestAssembly Include="$(_TopDir)\bin\Test$(Configuration)\net472\Xamarin.Android.MakeBundle-UnitTests.dll" />
+    <_TestAssembly Include="$(_TopDir)\bin\Test$(Configuration)\Xamarin.Android.Build.Tests.dll" />
+    <_TestAssembly Include="$(_TopDir)\bin\Test$(Configuration)\CodeBehind\CodeBehindUnitTests.dll" />
+    <_TestAssembly Include="$(_TopDir)\bin\Test$(Configuration)\EmbeddedDSOUnitTests.dll" />
+    <_TestAssembly Include="$(_TopDir)\bin\Test$(Configuration)\Xamarin.Android.MakeBundle-UnitTests.dll" />
     <_ApkTestProject Include="$(_TopDir)\src\Mono.Android\Test\Mono.Android-Tests.csproj" />
     <_ApkTestProject Include="$(_TopDir)\tests\CodeGen-Binding\Xamarin.Android.JcwGen-Tests\Xamarin.Android.JcwGen-Tests.csproj" />
     <_ApkTestProject Include="$(_TopDir)\tests\CodeGen-MkBundle\Xamarin.Android.MakeBundle-Tests\Xamarin.Android.MakeBundle-Tests.csproj" />

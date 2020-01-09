@@ -294,19 +294,19 @@ stages:
     - template: yaml-templates\run-nunit-tests.yaml
       parameters:
         testRunTitle: CodeBehindUnitTests - Windows Build Tree
-        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\CodeBehind\net472\CodeBehindUnitTests.dll
+        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\CodeBehind\CodeBehindUnitTests.dll
         testResultsFile: TestResult-CodeBehindUnitTests-WinBuildTree-$(XA.Build.Configuration).xml
 
     - template: yaml-templates\run-nunit-tests.yaml
       parameters:
         testRunTitle: Xamarin.Android.MakeBundle-UnitTests - Windows Build Tree
-        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\net472\Xamarin.Android.MakeBundle-UnitTests.dll
+        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\Xamarin.Android.MakeBundle-UnitTests.dll
         testResultsFile: TestResult-MakeBundleUnitTests-WinBuildTree-$(XA.Build.Configuration).xml
 
     - template: yaml-templates\run-nunit-tests.yaml
       parameters:
         testRunTitle: EmbeddedDSOUnitTests - Windows Build Tree
-        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\net472\EmbeddedDSOUnitTests.dll
+        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\EmbeddedDSOUnitTests.dll
         testResultsFile: TestResult-EmbeddedDSOUnitTests-WinBuildTree-$(XA.Build.Configuration).xml
 
     # Limit the amount of worker threads used to run these tests in parallel to half of what is currently available (8) on the Windows pool.
@@ -314,7 +314,7 @@ stages:
     - template: yaml-templates\run-nunit-tests.yaml
       parameters:
         testRunTitle: Xamarin.Android.Build.Tests - Windows Build Tree
-        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\net472\Xamarin.Android.Build.Tests.dll
+        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\Xamarin.Android.Build.Tests.dll
         testResultsFile: TestResult-MSBuildTests-WinBuildTree-$(XA.Build.Configuration).xml
         nunitConsoleExtraArgs: --workers=4
 
@@ -731,31 +731,31 @@ stages:
     - template: yaml-templates/run-nunit-tests.yaml
       parameters:
         testRunTitle: CodeBehindUnitTests - macOS
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/CodeBehind/net472/CodeBehindUnitTests.dll
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/CodeBehind/CodeBehindUnitTests.dll
         testResultsFile: TestResult-CodeBehindUnitTests-macOS-$(XA.Build.Configuration).xml
 
     - template: yaml-templates/run-nunit-tests.yaml
       parameters:
         testRunTitle: Xamarin.Android.MakeBundle-UnitTests - macOS
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/net472/Xamarin.Android.MakeBundle-UnitTests.dll
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/Xamarin.Android.MakeBundle-UnitTests.dll
         testResultsFile: TestResult-MakeBundleUnitTests-macOS-$(XA.Build.Configuration).xml
 
     - template: yaml-templates/run-nunit-tests.yaml
       parameters:
         testRunTitle: EmbeddedDSOUnitTests - macOS
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/net472/EmbeddedDSOUnitTests.dll
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/EmbeddedDSOUnitTests.dll
         testResultsFile: TestResult-EmbeddedDSOUnitTests-macOS-$(XA.Build.Configuration).xml
 
     - template: yaml-templates/run-nunit-tests.yaml
       parameters:
         testRunTitle: Xamarin.Android.Build.Tests - macOS
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/net472/Xamarin.Android.Build.Tests.dll
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/Xamarin.Android.Build.Tests.dll
         testResultsFile: TestResult-MSBuildTests-macOS-$(XA.Build.Configuration).xml
 
     - template: yaml-templates/run-nunit-tests.yaml
       parameters:
         testRunTitle: Xamarin.Android.Build.Tests.Commercial - macOS
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/net472/Xamarin.Android.Build.Tests.Commercial.dll
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/Xamarin.Android.Build.Tests.Commercial.dll
         testResultsFile: TestResult-MSBuildTestsCommercial-macOS-$(XA.Build.Configuration).xml
 
     - template: yaml-templates/upload-results.yaml
@@ -795,14 +795,14 @@ stages:
     - template: yaml-templates\run-nunit-tests.yaml
       parameters:
         testRunTitle: Xamarin.Android.Build.Tests - Windows
-        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\net472\Xamarin.Android.Build.Tests.dll
+        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\Xamarin.Android.Build.Tests.dll
         testResultsFile: TestResult-MSBuildTests-Windows-$(XA.Build.Configuration).xml
         nunitConsoleExtraArgs: --workers=4
 
     - template: yaml-templates\run-nunit-tests.yaml
       parameters:
         testRunTitle: Xamarin.Android.Build.Tests.Commercial - Windows
-        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\net472\Xamarin.Android.Build.Tests.Commercial.dll
+        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\Xamarin.Android.Build.Tests.Commercial.dll
         testResultsFile: TestResult-MSBuildTestsCommercial-Windows-$(XA.Build.Configuration).xml
 
     - template: yaml-templates\upload-results.yaml
@@ -836,7 +836,7 @@ stages:
     - template: yaml-templates/run-nunit-tests.yaml
       parameters:
         testRunTitle: Xamarin.Android.Build.Tests On Device - macOS
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/net472/Xamarin.Android.Build.Tests.dll
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/Xamarin.Android.Build.Tests.dll
         nunitConsoleExtraArgs: --where "cat == UsesDevice"
         testResultsFile: TestResult-MSBuildDeviceTests-$(XA.Build.Configuration).xml
 
@@ -844,7 +844,11 @@ stages:
       parameters:
         testRunTitle: MSBuildDeviceIntegration On Device - macOS
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/MSBuildDeviceIntegration.dll
+<<<<<<< HEAD
         nunitConsoleExtraArgs: --where "cat != TimeZoneInfo"
+=======
+        nunitConsoleExtraArgs: --where "test != Xamarin.Android.Build.Tests.DeploymentTest.CheckTimeZoneInfoIsCorrect"
+>>>>>>> [tests] Don't append TF to output path
         testResultsFile: TestResult-MSBuildDeviceIntegration-$(XA.Build.Configuration).xml
 
     - task: MSBuild@1
@@ -861,6 +865,54 @@ stages:
       parameters:
         artifactName: Test Results - MSBuild With Emulator - macOS
 
+<<<<<<< HEAD
+=======
+  # Check - "Xamarin.Android (Test TimeZoneInfo With Emulator - macOS)"
+  - job: mac_timezonedevice_tests
+    displayName: TimeZoneInfo With Emulator - macOS
+    pool: $(HostedMac)
+    timeoutInMinutes: 240
+    cancelTimeoutInMinutes: 5
+    workspace:
+      clean: all
+    steps:
+    - template: yaml-templates/setup-test-environment.yaml
+
+    - task: DownloadPipelineArtifact@1
+      inputs:
+        artifactName: $(TestAssembliesArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
+
+    - task: MSBuild@1
+      displayName: start emulator
+      inputs:
+        solution: src/Mono.Android/Test/Mono.Android-Tests.csproj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: >
+          /t:AcquireAndroidTarget /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/start-emulator.binlog
+
+    - template: yaml-templates/run-nunit-tests.yaml
+      parameters:
+        testRunTitle: TimeZoneInfoTests On Device - macOS
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/MSBuildDeviceIntegration.dll
+        nunitConsoleExtraArgs: --where "test == Xamarin.Android.Build.Tests.DeploymentTest.CheckTimeZoneInfoIsCorrect"
+        testResultsFile: TestResult-TimeZoneInfoTests-$(XA.Build.Configuration).xml
+
+    - task: MSBuild@1
+      displayName: shut down emulator
+      inputs:
+        solution: src/Mono.Android/Test/Mono.Android-Tests.csproj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: >
+          /t:AcquireAndroidTarget,ReleaseAndroidTarget
+          /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/shutdown-emulator.binlog
+      condition: always()
+
+    - template: yaml-templates/upload-results.yaml
+      parameters:
+        artifactName: Test Results - TimeZoneInfo With Emulator - macOS
+
+>>>>>>> [tests] Don't append TF to output path
   # Check - "Xamarin.Android (Test Designer - macOS)"
   - job: designer_integration_mac
     displayName: Designer - macOS

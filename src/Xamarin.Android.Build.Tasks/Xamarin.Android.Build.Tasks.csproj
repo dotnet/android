@@ -239,6 +239,24 @@
     <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\RemoveSecurity.cs">
       <Link>Linker\Mono.Tuner\RemoveSecurity.cs</Link>
     </Compile>
+    <Compile Include="..\Mono.Android\\Android.App\IntentFilterAttribute.cs">
+      <Link>Mono.Android\IntentFilterAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\Mono.Android\\Android.App\MetaDataAttribute.cs">
+      <Link>Mono.Android\MetaDataAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\Mono.Android\\Android.Content\GrantUriPermissionAttribute.cs">
+      <Link>Mono.Android\GrantUriPermissionAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\Mono.Android\Android.Runtime\IntDefinitionAttribute.cs">
+      <Link>Mono.Android\IntDefinitionAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\Mono.Android\Android.Runtime\BoundExceptionType.cs">
+      <Link>Mono.Android\BoundExceptionType.cs</Link>
+    </Compile>
+    <Compile Include="..\..\external\Java.Interop\src\utils\StringRocks.cs">
+      <Link>Utilities\StringRocks.cs</Link>
+    </Compile>
     <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\FilterAttributes.cs">
       <Link>Linker\Mono.Tuner\FilterAttributes.cs</Link>
     </Compile>
@@ -253,24 +271,6 @@
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\TunerAnnotations.cs">
       <Link>Linker\Mono.Tuner\TunerAnnotations.cs</Link>
-    </Compile>
-    <Compile Include="..\..\external\Java.Interop\src\utils\StringRocks.cs">
-      <Link>Utilities\StringRocks.cs</Link>
-    </Compile>
-    <Compile Include="..\Mono.Android\Android.Runtime\BoundExceptionType.cs">
-      <Link>Mono.Android\BoundExceptionType.cs</Link>
-    </Compile>
-    <Compile Include="..\Mono.Android\Android.App\IntentFilterAttribute.cs">
-      <Link>Mono.Android\IntentFilterAttribute.cs</Link>
-    </Compile>
-    <Compile Include="..\Mono.Android\Android.App\MetaDataAttribute.cs">
-      <Link>Mono.Android\MetaDataAttribute.cs</Link>
-    </Compile>
-    <Compile Include="..\Mono.Android\Android.Content\GrantUriPermissionAttribute.cs">
-      <Link>Mono.Android\GrantUriPermissionAttribute.cs</Link>
-    </Compile>
-    <Compile Include="..\Mono.Android\Android.Runtime\IntDefinitionAttribute.cs">
-      <Link>Mono.Android\IntDefinitionAttribute.cs</Link>
     </Compile>
     <Compile Include="..\Mono.Android\\Android.App\UsesLibraryAttribute.cs">
       <Link>Mono.Android\UsesLibraryAttribute.cs</Link>

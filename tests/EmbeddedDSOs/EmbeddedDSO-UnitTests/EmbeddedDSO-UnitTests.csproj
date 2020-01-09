@@ -4,6 +4,7 @@
     <TargetFramework>net472</TargetFramework>
     <RootNamespace>EmbeddedDSOUnitTests</RootNamespace>
     <AssemblyName>EmbeddedDSOUnitTests</AssemblyName>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>..\..\..\bin\Test$(Configuration)</OutputPath>
   </PropertyGroup>
 
