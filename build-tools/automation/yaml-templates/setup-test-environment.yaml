@@ -38,15 +38,20 @@ steps:
     versionSpec: 5.x
 
 - task: NuGetCommand@2
-  displayName: nuget restore Xamarin.Android solutions
+  displayName: nuget restore Xamarin.Android.Build.Tasks.sln
   inputs:
-    restoreSolution: '**/Xamarin.Android*.sln'
-    feedsToUse: config
-    nugetConfigPath: NuGet.config
+    command: custom
+    arguments: restore Xamarin.Android.Build.Tasks.sln -ConfigFile NuGet.config
+
+- task: NuGetCommand@2
+  displayName: nuget restore Xamarin.Android-Tests.sln
+  inputs:
+    command: custom
+    arguments: restore Xamarin.Android-Tests.sln -ConfigFile NuGet.config
 
 - task: MSBuild@1
   displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj
   inputs:
     solution: build-tools/xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
     configuration: ${{ parameters.configuration }}
-    msbuildArguments: /bl:$(System.DefaultWorkingDirectory)/bin/Test${{ parameters.configuration }}/BootstrapTasks.binlog
+    msbuildArguments: /t:Restore,Build /bl:$(System.DefaultWorkingDirectory)/bin/Test${{ parameters.configuration }}/BootstrapTasks.binlog
