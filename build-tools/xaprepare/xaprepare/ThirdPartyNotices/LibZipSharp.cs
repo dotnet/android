@@ -9,8 +9,8 @@ namespace Xamarin.Android.Prepare
 	{
 		static readonly Uri url = new Uri ("https://github.com/xamarin/LibZipSharp/");
 		internal static readonly string LibZipSharpVersion = "1.0.6";
-		static readonly string licenseFile = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.UserProfile),
-			".nuget", "packages", "xamarin.libzipsharp", LibZipSharpVersion,
+		static readonly string licenseFile = Path.Combine (BuildPaths.XamarinAndroidSourceRoot,
+			"packages", "xamarin.libzipsharp", LibZipSharpVersion,
 			"Licences", "LICENSE");
 
 		public override string LicenseFile => licenseFile;
