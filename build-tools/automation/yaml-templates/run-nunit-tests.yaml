@@ -1,5 +1,5 @@
 parameters:
-  nunitConsole: packages/NUnit.ConsoleRunner.$(NUnitConsoleVersion)/tools/nunit3-console.exe
+  nunitConsole: packages/nunit.consolerunner/$(NUnitConsoleVersion)/tools/nunit3-console.exe
   testRunTitle: Xamarin Android Tests
   testAssembly: []
   testResultsFile: TestResult.xml
