@@ -1227,23 +1227,30 @@ because xbuild doesn't support framework reference assemblies.
 	</ItemGroup>
 </Target>
 
-<PropertyGroup>
-	<_ManagedUpdateAndroidResgenInputs>
-		$(MSBuildAllProjects);
-		@(AndroidResource);
-		@(AndroidBoundLayout);
-		@(_MonoAndroidReferencePath);
-		@(_LibraryResourceDirectoryStamps);
-		$(_AndroidBuildPropertiesCache);
-		$(ProjectAssetsFile);
-	</_ManagedUpdateAndroidResgenInputs>
-</PropertyGroup>
+<Target Name="_BeforeManagedUpdateAndroidResgen">
+  <PropertyGroup>
+    <_ManagedUpdateAndroidResgenInputs>
+      $(MSBuildAllProjects);
+      @(AndroidResource);
+      @(AndroidBoundLayout);
+      @(_MonoAndroidReferencePath);
+      @(_LibraryResourceDirectoryStamps);
+      $(_AndroidBuildPropertiesCache);
+      $(ProjectAssetsFile);
+    </_ManagedUpdateAndroidResgenInputs>
+  </PropertyGroup>
+  <PropertyGroup>
+    <_ManagedUpdateAndroidResgenInputs Condition="Exists ('$(_AndroidResourcePathsDesignTimeCache)')">$(_ManagedUpdateAndroidResgenInputs);$(_AndroidResourcePathsDesignTimeCache);</_ManagedUpdateAndroidResgenInputs>
+    <_ManagedUpdateAndroidResgenInputs Condition="Exists ('$(_AndroidLibraryImportsDesignTimeCache)')">$(_ManagedUpdateAndroidResgenInputs);$(_AndroidLibraryImportsDesignTimeCache);</_ManagedUpdateAndroidResgenInputs>
+    <_ManagedUpdateAndroidResgenInputs Condition="Exists ('$(_AndroidLibraryProjectImportsDesignTimeCache)')">$(_ManagedUpdateAndroidResgenInputs);$(_AndroidLibraryProjectImportsDesignTimeCache);</_ManagedUpdateAndroidResgenInputs>
+  </PropertyGroup>
+</Target>
 
 <!-- Managed DesignTime Resource Generation -->
 <Target Name="_ManagedUpdateAndroidResgen" Condition=" '$(ManagedDesignTimeBuild)' == 'True' "
-		Inputs="$(_ManagedUpdateAndroidResgenInputs);$(_AndroidLibraryProjectImportsCache);$(_AndroidLibraryImportsCache);"
+		Inputs="$(_ManagedUpdateAndroidResgenInputs)"
 		Outputs="$(_AndroidManagedResourceDesignerFile)"
-		DependsOnTargets="_CreatePropertiesCache;_ExtractLibraryProjectImports;_ValidateAndroidPackageProperties">
+		DependsOnTargets="_CreatePropertiesCache;_ExtractLibraryProjectImports;_ValidateAndroidPackageProperties;_BeforeManagedUpdateAndroidResgen">
 	<MakeDir Directories="$(_AndroidIntermediateDesignTimeBuildDirectory)" />
 	<!-- Parse primary R.java and create Resources.Designer.cs -->
 	<GenerateResourceDesigner
