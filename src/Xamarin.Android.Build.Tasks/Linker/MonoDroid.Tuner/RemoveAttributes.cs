@@ -15,8 +15,52 @@ namespace MonoDroid.Tuner {
 
 	public class RemoveAttributes : RemoveAttributesBase {
 
+		bool changed;
+
 		protected virtual bool DebugBuild {
 			get { return context.LinkSymbols; }
+		}
+
+		public override bool IsActiveFor (AssemblyDefinition assembly)
+		{
+			return true;
+		}
+
+		void SetAssemblyAction (AssemblyDefinition assembly)
+		{
+			switch (Annotations.GetAction (assembly)) {
+				case AssemblyAction.Copy:
+				case AssemblyAction.CopyUsed:
+					Annotations.SetAction (assembly, AssemblyAction.Save);
+					break;
+			}
+		}
+
+		public override void ProcessAssembly (AssemblyDefinition assembly)
+		{
+			changed = false;
+
+			base.ProcessAssembly (assembly);
+
+			if (changed)
+				SetAssemblyAction (assembly);
+		}
+
+		public override void ProcessType (TypeDefinition type)
+		{
+			changed = false;
+
+			base.ProcessType (type);
+
+			if (changed)
+				SetAssemblyAction (type.Module.Assembly);
+		}
+
+		protected override void WillRemoveAttribute (ICustomAttributeProvider provider, CustomAttribute attribute)
+		{
+			base.WillRemoveAttribute (provider, attribute);
+
+			changed = true;
 		}
 
 		protected override bool IsRemovedAttribute (CustomAttribute attribute)
