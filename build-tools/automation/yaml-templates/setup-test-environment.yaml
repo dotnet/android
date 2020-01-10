@@ -54,4 +54,4 @@ steps:
   inputs:
     solution: build-tools/xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
     configuration: ${{ parameters.configuration }}
-    msbuildArguments: /t:Restore,Build /bl:$(System.DefaultWorkingDirectory)/bin/Test${{ parameters.configuration }}/BootstrapTasks.binlog
+    msbuildArguments: /restore /bl:$(System.DefaultWorkingDirectory)/bin/Test${{ parameters.configuration }}/BootstrapTasks.binlog
