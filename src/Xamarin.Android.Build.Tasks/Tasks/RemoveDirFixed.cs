@@ -29,7 +29,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
@@ -52,31 +51,42 @@ namespace Xamarin.Android.Tasks
 					// try to do a normal "fast" delete of the directory.
 					Directory.Delete (fullPath, true);
 					temporaryRemovedDirectories.Add (directory);
-				} catch (UnauthorizedAccessException) {
+				} catch (UnauthorizedAccessException ex) {
 					// if that fails we probably have readonly files (or locked files)
 					// so try to make them writable and try again.
-					MonoAndroidHelper.SetDirectoryWriteable (fullPath);
-					Directory.Delete (fullPath, true);
-					temporaryRemovedDirectories.Add (directory);
-				} catch (DirectoryNotFoundException ex) {
-					// This could be a file inside the directory over MAX_PATH, we can attempt using the \\?\ syntax
-					if (OS.IsWindows) {
-						fullPath = Files.ToLongPath (fullPath);
-						Log.LogDebugMessage ("Trying long path: " + fullPath);
+					try {
+						MonoAndroidHelper.SetDirectoryWriteable (fullPath);
 						Directory.Delete (fullPath, true);
 						temporaryRemovedDirectories.Add (directory);
-						continue;
+					} catch (Exception inner) {
+						Log.LogUnhandledException (TaskPrefix, ex);
+						Log.LogUnhandledException (TaskPrefix, inner);
 					}
-					Log.LogErrorFromException (ex);
+				} catch (DirectoryNotFoundException ex) {
+					// This could be a file inside the directory over MAX_PATH.
+					// We can attempt using the \\?\ syntax.
+					if (OS.IsWindows) {
+						try {
+							fullPath = Files.ToLongPath (fullPath);
+							Log.LogDebugMessage ("Trying long path: " + fullPath);
+							Directory.Delete (fullPath, true);
+							temporaryRemovedDirectories.Add (directory);
+						} catch (Exception inner) {
+							Log.LogUnhandledException (TaskPrefix, ex);
+							Log.LogUnhandledException (TaskPrefix, inner);
+						}
+					} else {
+						Log.LogUnhandledException (TaskPrefix, ex);
+					}
 				} catch (Exception ex) {
-					Log.LogErrorFromException (ex);
+					Log.LogUnhandledException (TaskPrefix, ex);
 				}
 			}
 
 			RemovedDirectories = temporaryRemovedDirectories.ToArray ();
 			Log.LogDebugTaskItems ("  RemovedDirectories: ", RemovedDirectories);
 
-			return true;
+			return !Log.HasLoggedErrors;
 		}
 
 		[Required]
