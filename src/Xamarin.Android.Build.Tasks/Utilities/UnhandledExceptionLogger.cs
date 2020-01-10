@@ -69,8 +69,8 @@ namespace Xamarin.Android.Tasks
 				log.LogCodedError (prefix + "7028", ex.ToString ());
 			else if (ex is IOException) 
 				log.LogCodedError (prefix + "7024", ex.ToString ());
-
-			log.LogCodedError (prefix + "7000", ex.ToString ());
+			else
+				log.LogCodedError (prefix + "7000", ex.ToString ());
 		}
 	}
 }
