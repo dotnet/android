@@ -2,7 +2,7 @@
 
   <!-- Default Resource file inclusion -->
   <!-- https://developer.android.com/guide/topics/resources/providing-resources -->
-  <ItemGroup Condition=" '$(EnableDefaultAndroidResourceItems)' == 'true' ">
+  <ItemGroup Condition=" '$(EnableDefaultItems)' == 'true' And '$(EnableDefaultAndroidResourceItems)' == 'true' ">
     <AndroidResource Include="$(MonoAndroidResourcePrefix)\**\*.xml" />
     <AndroidResource Include="$(MonoAndroidResourcePrefix)\**\*.axml" />
     <AndroidResource Include="$(MonoAndroidResourcePrefix)\**\*.png" />
@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <!-- Default Asset file inclusion -->
-  <ItemGroup Condition=" '$(EnableDefaultAndroidAssetItems)' == 'true' ">
+  <ItemGroup Condition=" '$(EnableDefaultItems)' == 'true' And '$(EnableDefaultAndroidAssetItems)' == 'true' ">
     <AndroidAsset Include="$(MonoAndroidAssetsPrefix)\**\*" />
   </ItemGroup>
 
