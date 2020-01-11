@@ -1,4 +1,4 @@
-﻿using Microsoft.Build.Framework;
+using Microsoft.Build.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -60,55 +60,60 @@ namespace Xamarin.Android.Tasks
 			Directory.CreateDirectory (OutputDirectory);
 			output_directory = Path.GetFullPath (OutputDirectory);
 
-			var libraries = LibraryTextFiles.Zip (ManifestFiles, (textFile, manifestFile) => new Library (textFile, manifestFile));
-			await this.WhenAll (libraries, GenerateJava);
+			var libraries = new Dictionary<string, Package> ();
+			for (int i = 0; i < LibraryTextFiles.Length; i++) {
+				var libraryTextFile = LibraryTextFiles [i];
+				var manifestFile = ManifestFiles [i];
+				if (!File.Exists (manifestFile)) {
+					LogDebugMessage ($"Skipping, AndroidManifest.xml does not exist: {manifestFile}");
+					continue;
+				}
+
+				var manifest = AndroidAppManifest.Load (Path.GetFullPath (manifestFile), MonoAndroidHelper.SupportedVersions);
+				var packageName = manifest.PackageName;
+				if (!libraries.TryGetValue (packageName, out Package library)) {
+					libraries.Add (packageName, library = new Package {
+						Name = packageName,
+					});
+				}
+				library.TextFiles.Add (Path.GetFullPath (libraryTextFile));
+			}
+			await this.WhenAll (libraries.Values, GenerateJava);
 		}
 
 		/// <summary>
-		/// A quick class to combine the paths to R.txt and Manifest
+		/// A class that represents the input to generate an `R.java` file for a given package
 		/// </summary>
-		class Library
+		class Package
 		{
-			public Library (string textFile, string manifestFile)
-			{
-				TextFile = Path.GetFullPath (textFile);
-				ManifestFile = Path.GetFullPath (manifestFile);
-			}
+			/// <summary>
+			/// A list of full paths to R.txt files
+			/// </summary>
+			public List<string> TextFiles { get; private set; } = new List<string> (1); // Usually one item
 
 			/// <summary>
-			/// A full path to the R.txt file
+			/// The package name found in the AndroidManifest.xml file
 			/// </summary>
-			public string TextFile { get; }
-
-			/// <summary>
-			/// A full path to the AndroidManifest.xml file
-			/// </summary>
-			public string ManifestFile { get; }
+			public string Name { get; set; }
 		}
 
 		/// <summary>
 		/// NOTE: all file paths used in this method should be full paths. (Or use AsyncTask.WorkingDirectory)
 		/// </summary>
-		void GenerateJava (Library library)
+		void GenerateJava (Package package)
 		{
 			// In some cases (such as ancient support libraries), R.txt does not exist.
 			// We can just use the main app's R.txt file and write *all fields* in this case.
-			bool using_main_r_txt = false;
-			var r_txt = library.TextFile;
-			if (!File.Exists (r_txt)) {
-				LogDebugMessage ($"Using main R.txt, R.txt does not exist: {r_txt}");
-				using_main_r_txt = true;
-				r_txt = main_r_txt;
+			foreach (var r_txt in package.TextFiles) {
+				if (!File.Exists (r_txt)) {
+					LogDebugMessage ($"Using main R.txt, R.txt does not exist: {r_txt}");
+					package.TextFiles.Clear ();
+					package.TextFiles.Add (main_r_txt);
+					break;
+				}
 			}
 
-			var manifestFile = library.ManifestFile;
-			if (!File.Exists (manifestFile)) {
-				LogDebugMessage ($"Skipping, AndroidManifest.xml does not exist: {manifestFile}");
-				return;
-			}
-
-			var manifest = AndroidAppManifest.Load (manifestFile, MonoAndroidHelper.SupportedVersions);
-
+			var lines = LoadValues (package);
 			using (var memory = new MemoryStream ())
 			using (var writer = new StreamWriter (memory, Encoding)) {
 				// This code is based on the Android gradle plugin
@@ -122,57 +127,52 @@ namespace Xamarin.Android.Tasks
 				writer.WriteLine (" */");
 
 				writer.Write ("package ");
-				writer.Write (manifest.PackageName);
+				writer.Write (package.Name);
 				writer.WriteLine (';');
 				writer.WriteLine ();
 				writer.WriteLine ("public final class R {");
 
-				using (var reader = File.OpenText (r_txt)) {
-					string currentClass = null;
-					foreach (var line in ParseFile (reader)) {
-						var type  = line [Index.Type];
-						var clazz = line [Index.Class];
-						var name  = line [Index.Name];
-						if (GetValue (clazz, name, line, using_main_r_txt, out string value)) {
-							if (clazz != currentClass) {
-								// If not the first inner class
-								if (currentClass != null) {
-									writer.WriteLine ("\t}");
-								}
-
-								currentClass = clazz;
-								writer.Write ("\tpublic static final class ");
-								writer.Write (currentClass);
-								writer.WriteLine (" {");
-							}
-
-							writer.Write ("\t\tpublic static final ");
-							writer.Write (type);
-							writer.Write (' ');
-							writer.Write (name);
-							writer.Write (" = ");
-							// It may be an int[]
-							if (value.StartsWith ("{", StringComparison.Ordinal)) {
-								writer.Write ("new ");
-								writer.Write (type);
-								writer.Write (' ');
-							}
-							writer.Write (value);
-							writer.WriteLine (';');
-						} else {
-							LogDebugMessage ($"{r_txt}: `{type} {clazz} {name}` value not found");
+				string currentClass = null;
+				foreach (var line in lines) {
+					var type  = line [Index.Type];
+					var clazz = line [Index.Class];
+					var name  = line [Index.Name];
+					var value = line [Index.Value];
+					if (clazz != currentClass) {
+						// If not the first inner class
+						if (currentClass != null) {
+							writer.WriteLine ("\t}");
 						}
+
+						currentClass = clazz;
+						writer.Write ("\tpublic static final class ");
+						writer.Write (currentClass);
+						writer.WriteLine (" {");
 					}
 
-					// If we wrote at least one inner class
-					if (currentClass != null) {
-						writer.WriteLine ("\t}");
+					writer.Write ("\t\tpublic static final ");
+					writer.Write (type);
+					writer.Write (' ');
+					writer.Write (name);
+					writer.Write (" = ");
+					// It may be an int[]
+					if (value.StartsWith ("{", StringComparison.Ordinal)) {
+						writer.Write ("new ");
+						writer.Write (type);
+						writer.Write (' ');
 					}
-					writer.WriteLine ('}');
+					writer.Write (value);
+					writer.WriteLine (';');
 				}
 
+				// If we wrote at least one inner class
+				if (currentClass != null) {
+					writer.WriteLine ("\t}");
+				}
+				writer.WriteLine ('}');
+
 				writer.Flush ();
-				var r_java = Path.Combine (output_directory, manifest.PackageName.Replace ('.', Path.DirectorySeparatorChar), "R.java");
+				var r_java = Path.Combine (output_directory, package.Name.Replace ('.', Path.DirectorySeparatorChar), "R.java");
 				if (MonoAndroidHelper.CopyIfStreamChanged (memory, r_java)) {
 					LogDebugMessage ($"Writing: {r_java}");
 				} else {
@@ -181,16 +181,51 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		bool GetValue (string clazz, string name, string[] line, bool using_main_r_txt, out string value)
+		/// <summary>
+		/// There can be multiple AndroidManifest.xml with the same package name.
+		/// We must merge the combination of the resource IDs to be generated in a "merged" R.java file.
+		/// </summary>
+		string [][] LoadValues (Package library)
 		{
-			// If this is the main R.txt file, we don't need to do a lookup
-			if (using_main_r_txt) {
-				value = line [Index.Value];
+			var dictionary = new Dictionary<string, string []> ();
+			foreach (var r_txt in library.TextFiles) {
+				using (var reader = File.OpenText (r_txt)) {
+					foreach (var line in ParseFile (reader)) {
+						var type = line [Index.Type];
+						var clazz = line [Index.Class];
+						var name = line [Index.Name];
+						var key = clazz + " " + name;
+						if (!dictionary.ContainsKey (key)) {
+							if (SetValue (key, line, r_txt)) {
+								dictionary.Add (key, line);
+							} else {
+								LogDebugMessage ($"{r_txt}: `{type} {clazz} {name}` value not found");
+							}
+						}
+					}
+				}
+			}
+			return dictionary.Values.ToArray ();
+		}
+
+		/// <summary>
+		/// Sets the actual value from the app's main R.txt file
+		/// </summary>
+		/// <param name="key">Combination of `clazz + " " + name`</param>
+		/// <param name="line">string[] representing a line of the R.txt file</param>
+		/// <param name="r_txt">path to the R.txt file on disk</param>
+		/// <returns>true if the value was found</returns>
+		bool SetValue (string key, string[] line, string r_txt)
+		{
+			// If this is the main R.txt file, `line` already contains the value
+			if (r_txt == main_r_txt) {
 				return true;
 			}
-
-			var key = clazz + " " + name;
-			return r_txt_mapping.TryGetValue (key, out value);
+			if (r_txt_mapping.TryGetValue (key, out string value)) {
+				line [Index.Value] = value;
+				return true;
+			}
+			return false;
 		}
 
 		static readonly Encoding Encoding = new UTF8Encoding (encoderShouldEmitUTF8Identifier: false);

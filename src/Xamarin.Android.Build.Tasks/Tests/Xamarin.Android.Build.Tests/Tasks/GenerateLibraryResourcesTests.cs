@@ -1,5 +1,8 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text;
 using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests
@@ -73,14 +76,14 @@ int styleable Foo_styleable_baz 1";
 
 		string ReplaceLineEndings (string s) => s.Replace ("\r\n", "\n");
 
-		void RunTask (string expected = null, bool fileExists = true)
+		void RunTask (string expected = null, bool fileExists = true, string[] libraryTextFiles = null, string[] manifestFiles = null)
 		{
 			var task = new GenerateLibraryResources {
 				BuildEngine = new MockBuildEngine (TestContext.Out),
 				ResourceSymbolsTextFile = main_r_txt,
 				OutputDirectory = output_dir,
-				LibraryTextFiles = new [] { r_txt },
-				ManifestFiles = new [] { manifest },
+				LibraryTextFiles = libraryTextFiles ?? new [] { r_txt },
+				ManifestFiles = manifestFiles ?? new [] { manifest },
 			};
 			Assert.IsTrue (task.Execute (), "Execute() failed!");
 
@@ -141,6 +144,42 @@ public final class R {
 	}
 }
 ");
+		}
+
+		[Test]
+		public void Collision ()
+		{
+			const int count = 10;
+			var r_txt_files = new List<string> ();
+			var builder = new StringBuilder ();
+			for (int i = 0; i < count; i++) {
+				var path = r_txt.Replace ("R.txt", $"R{i}.txt");
+				File.WriteAllText (path, $"int id foo_id_{i} 0x00000000");
+				builder.AppendLine ($"int id foo_id_{i} 0x{(i + 1).ToString ("X8")}");
+				r_txt_files.Add (path);
+			}
+			File.WriteAllText (main_r_txt, builder.ToString ());
+
+			RunTask (expected:
+@"package com.mycompanyname.foo;
+
+public final class R {
+	public static final class id {
+		public static final int foo_id_0 = 0x00000001;
+		public static final int foo_id_1 = 0x00000002;
+		public static final int foo_id_2 = 0x00000003;
+		public static final int foo_id_3 = 0x00000004;
+		public static final int foo_id_4 = 0x00000005;
+		public static final int foo_id_5 = 0x00000006;
+		public static final int foo_id_6 = 0x00000007;
+		public static final int foo_id_7 = 0x00000008;
+		public static final int foo_id_8 = 0x00000009;
+		public static final int foo_id_9 = 0x0000000A;
+	}
+}
+",
+				libraryTextFiles: r_txt_files.ToArray (),
+				manifestFiles: Enumerable.Repeat (manifest, count).ToArray ());
 		}
 
 		[Test]
