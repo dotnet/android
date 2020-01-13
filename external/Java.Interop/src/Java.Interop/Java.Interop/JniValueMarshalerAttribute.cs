@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Reflection;
 
 namespace Java.Interop {
@@ -15,7 +15,7 @@ namespace Java.Interop {
 		{
 			if (marshalerType == null)
 				throw new ArgumentNullException (nameof (marshalerType));
-			if (!typeof (JniValueMarshaler).GetTypeInfo ().IsAssignableFrom (marshalerType.GetTypeInfo ()))
+			if (!typeof (JniValueMarshaler).IsAssignableFrom (marshalerType))
 				throw new ArgumentException (
 						string.Format ("`{0}` must inherit from JniValueMarshaler!", marshalerType.FullName),
 						nameof (marshalerType));

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
@@ -83,8 +83,7 @@ namespace Java.Interop {
 				}
 
 				var type    = Type.GetType (JniEnvironment.Strings.ToString (n_assemblyQualifiedName), throwOnError: true);
-				var info    = type.GetTypeInfo ();
-				if (info.IsGenericTypeDefinition) {
+				if (type.IsGenericTypeDefinition) {
 					throw new NotSupportedException (
 							"Constructing instances of generic types from Java is not supported, as the type parameters cannot be determined.",
 							CreateJniLocationException ());
@@ -92,8 +91,8 @@ namespace Java.Interop {
 
 				var ptypes  = GetParameterTypes (JniEnvironment.Strings.ToString (n_constructorSignature));
 				var pvalues = GetValues (runtime, new JniObjectReference (n_constructorArguments), ptypes);
-				var ctor    = info.DeclaredConstructors
-					.FirstOrDefault (c => !c.IsStatic &&
+				var ctor    = type.GetConstructors (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+					.FirstOrDefault (c =>
 						c.GetParameters ().Select (p => p.ParameterType).SequenceEqual (ptypes));
 				if (ctor == null) {
 					throw CreateMissingConstructorException (type, ptypes);

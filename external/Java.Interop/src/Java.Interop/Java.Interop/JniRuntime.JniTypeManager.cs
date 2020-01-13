@@ -226,8 +226,8 @@ namespace Java.Interop {
 
 			static bool TryLoadJniMarshalMethods (JniType nativeClass, Type type, string methods)
 			{
-				var marshalType = type.GetTypeInfo ()?.GetDeclaredNestedType ("__<$>_jni_marshal_methods")?.AsType ();
-				if (marshalType == null || !(marshalType is Type))
+				var marshalType = type?.GetNestedType ("__<$>_jni_marshal_methods", BindingFlags.NonPublic);
+				if (marshalType == null)
 					return false;
 
 				var registerMethod = marshalType.GetRuntimeMethod ("__RegisterNativeMembers", registerMethodParameters);

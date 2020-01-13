@@ -277,8 +277,7 @@ namespace Java.Interop
 
 		public virtual void FailFast (string message)
 		{
-			var t = typeof (Environment).GetTypeInfo ();
-			var m = t.DeclaredMethods.FirstOrDefault (x => x.Name == "FailFast");
+			var m = typeof (Environment).GetMethod ("FailFast");
 			m.Invoke (null, new object[]{ message });
 		}
 

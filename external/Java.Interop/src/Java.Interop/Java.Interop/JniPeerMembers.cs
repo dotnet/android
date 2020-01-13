@@ -19,7 +19,7 @@ namespace Java.Interop {
 		{
 			if (managedPeerType == null)
 				throw new ArgumentNullException (nameof (managedPeerType));
-			if (!typeof (IJavaPeerable).GetTypeInfo ().IsAssignableFrom (managedPeerType.GetTypeInfo ()))
+			if (!typeof (IJavaPeerable).IsAssignableFrom (managedPeerType))
 				throw new ArgumentException ("'managedPeerType' must implement the IJavaPeerable interface.", nameof (managedPeerType));
 
 #if !XA_INTEGRATION
@@ -42,7 +42,7 @@ namespace Java.Interop {
 			if (checkManagedPeerType) {
 				if (managedPeerType == null)
 					throw new ArgumentNullException (nameof (managedPeerType));
-				if (!typeof (IJavaPeerable).GetTypeInfo ().IsAssignableFrom (managedPeerType.GetTypeInfo ()))
+				if (!typeof (IJavaPeerable).IsAssignableFrom (managedPeerType))
 					throw new ArgumentException ("'managedPeerType' must implement the IJavaPeerable interface.", nameof (managedPeerType));
 
 #if !XA_INTEGRATION

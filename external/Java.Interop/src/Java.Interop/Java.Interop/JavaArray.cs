@@ -102,7 +102,7 @@ namespace Java.Interop
 		{
 			if (TargetTypeIsCurrentType (targetType))
 				return this;
-			if (targetType == typeof (T[]) || targetType.GetTypeInfo ().IsAssignableFrom (typeof (IList<T>).GetTypeInfo ())) {
+			if (targetType == typeof (T[]) || targetType.IsAssignableFrom (typeof (IList<T>))) {
 				try {
 					return ToArray ();
 				} finally {

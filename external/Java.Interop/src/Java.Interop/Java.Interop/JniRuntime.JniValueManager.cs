@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -260,7 +260,7 @@ namespace Java.Interop
 				targetType  = targetType ?? typeof (JavaObject);
 				targetType  = GetPeerType (targetType);
 
-				if (!typeof (IJavaPeerable).GetTypeInfo ().IsAssignableFrom (targetType.GetTypeInfo ()))
+				if (!typeof (IJavaPeerable).IsAssignableFrom (targetType))
 					throw new ArgumentException ($"targetType `{targetType.AssemblyQualifiedName}` must implement IJavaPeerable!", nameof (targetType));
 
 				var ctor = GetPeerConstructor (reference, targetType);
@@ -321,7 +321,7 @@ namespace Java.Interop
 			static ConstructorInfo GetActivationConstructor (Type type)
 			{
 				return
-					(from c in type.GetTypeInfo ().DeclaredConstructors
+					(from c in type.GetConstructors (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
 					 let p = c.GetParameters ()
 					 where p.Length == 2 && p [0].ParameterType == ByRefJniObjectReference && p [1].ParameterType == typeof (JniObjectReferenceOptions)
 					 select c)
@@ -337,7 +337,7 @@ namespace Java.Interop
 				if (!reference.IsValid)
 					return null;
 
-				if (targetType != null && typeof (IJavaPeerable).GetTypeInfo ().IsAssignableFrom (targetType.GetTypeInfo ())) {
+				if (targetType != null && typeof (IJavaPeerable).IsAssignableFrom (targetType)) {
 					return JavaPeerableValueMarshaler.Instance.CreateGenericValue (ref reference, options, targetType);
 				}
 
@@ -366,7 +366,7 @@ namespace Java.Interop
 				if (!reference.IsValid)
 					return default (T);
 
-				if (targetType != null && !typeof (T).GetTypeInfo ().IsAssignableFrom (targetType.GetTypeInfo ()))
+				if (targetType != null && !typeof (T).IsAssignableFrom (targetType))
 					throw new ArgumentException (
 							string.Format ("Requested runtime '{0}' value of '{1}' is not compatible with requested compile-time type T of '{2}'.",
 								nameof (targetType),
@@ -382,7 +382,7 @@ namespace Java.Interop
 
 				targetType  = targetType ?? typeof (T);
 
-				if (typeof (IJavaPeerable).GetTypeInfo ().IsAssignableFrom (targetType.GetTypeInfo ())) {
+				if (typeof (IJavaPeerable).IsAssignableFrom (targetType)) {
 					return (T) JavaPeerableValueMarshaler.Instance.CreateGenericValue (ref reference, options, targetType);
 				}
 
@@ -407,12 +407,12 @@ namespace Java.Interop
 					return null;
 
 				var existing = PeekValue (reference);
-				if (existing != null && (targetType == null || targetType.GetTypeInfo ().IsAssignableFrom (existing.GetType ().GetTypeInfo ()))) {
+				if (existing != null && (targetType == null || targetType.IsAssignableFrom (existing.GetType ()))) {
 					JniObjectReference.Dispose (ref reference, options);
 					return existing;
 				}
 
-				if (targetType != null && typeof (IJavaPeerable).GetTypeInfo ().IsAssignableFrom (targetType.GetTypeInfo ())) {
+				if (targetType != null && typeof (IJavaPeerable).IsAssignableFrom (targetType)) {
 					return JavaPeerableValueMarshaler.Instance.CreateGenericValue (ref reference, options, targetType);
 				}
 
@@ -436,7 +436,7 @@ namespace Java.Interop
 				if (!reference.IsValid)
 					return default (T);
 
-				if (targetType != null && !typeof (T).GetTypeInfo ().IsAssignableFrom (targetType.GetTypeInfo ()))
+				if (targetType != null && !typeof (T).IsAssignableFrom (targetType))
 					throw new ArgumentException (
 							string.Format ("Requested runtime '{0}' value of '{1}' is not compatible with requested compile-time type T of '{2}'.",
 								nameof (targetType),
@@ -447,12 +447,12 @@ namespace Java.Interop
 				targetType  = targetType ?? typeof (T);
 
 				var existing = PeekValue (reference);
-				if (existing != null && (targetType == null || targetType.GetTypeInfo ().IsAssignableFrom (existing.GetType ().GetTypeInfo ()))) {
+				if (existing != null && (targetType == null || targetType.IsAssignableFrom (existing.GetType ()))) {
 					JniObjectReference.Dispose (ref reference, options);
 					return (T) existing;
 				}
 
-				if (typeof (IJavaPeerable).GetTypeInfo ().IsAssignableFrom (targetType.GetTypeInfo ())) {
+				if (typeof (IJavaPeerable).IsAssignableFrom (targetType)) {
 					return (T) JavaPeerableValueMarshaler.Instance.CreateGenericValue (ref reference, options, targetType);
 				}
 
@@ -486,11 +486,10 @@ namespace Java.Interop
 
 				if (type == null)
 					throw new ArgumentNullException (nameof (type));
-				var info = type.GetTypeInfo ();
-				if (info.ContainsGenericParameters)
+				if (type.ContainsGenericParameters)
 					throw new ArgumentException ("Generic type definitions are not supported.", nameof (type));
 
-				var marshalerAttr   = info.GetCustomAttribute<JniValueMarshalerAttribute> ();
+				var marshalerAttr   = type.GetCustomAttribute<JniValueMarshalerAttribute> ();
 				if (marshalerAttr != null)
 					return (JniValueMarshaler) Activator.CreateInstance (marshalerAttr.MarshalerType);
 
@@ -505,18 +504,17 @@ namespace Java.Interop
 						return marshaler.Value;
 				}
 
-				var listIface   = typeof(IList<>).GetTypeInfo ();
+				var listIface   = typeof (IList<>);
 				var listType    =
-					(from iface in info.ImplementedInterfaces.Concat (new[]{type})
-					 let iinfo = iface.GetTypeInfo ()
-					 where (listIface).IsAssignableFrom (iinfo.IsGenericType ? iinfo.GetGenericTypeDefinition ().GetTypeInfo () : iinfo)
-					 select iinfo)
+					(from iface in type.GetInterfaces ().Concat (new[]{type})
+					 where (listIface).IsAssignableFrom (iface.IsGenericType ? iface.GetGenericTypeDefinition () : iface)
+					 select iface)
 					.FirstOrDefault ();
 				if (listType != null) {
 					var elementType = listType.GenericTypeArguments [0];
-					if (elementType.GetTypeInfo ().IsValueType) {
+					if (elementType.IsValueType) {
 						foreach (var marshaler in JniPrimitiveArrayMarshalers.Value) {
-							if (info.IsAssignableFrom (marshaler.Key.GetTypeInfo ()))
+							if (type.IsAssignableFrom (marshaler.Key))
 								return marshaler.Value;
 						}
 					}
@@ -524,13 +522,13 @@ namespace Java.Interop
 					return GetObjectArrayMarshaler (elementType);
 				}
 
-				if (typeof (IJavaPeerable).GetTypeInfo ().IsAssignableFrom (info)) {
+				if (typeof (IJavaPeerable).IsAssignableFrom (type)) {
 					return JavaPeerableValueMarshaler.Instance;
 				}
 
 				JniValueMarshalerAttribute ifaceAttribute = null;
-				foreach (var iface in info.ImplementedInterfaces) {
-					marshalerAttr = iface.GetTypeInfo ().GetCustomAttribute<JniValueMarshalerAttribute> ();
+				foreach (var iface in type.GetInterfaces ()) {
+					marshalerAttr = iface.GetCustomAttribute<JniValueMarshalerAttribute> ();
 					if (marshalerAttr != null) {
 						if (ifaceAttribute != null)
 							throw new NotSupportedException ($"There is more than one interface with custom marshaler for type {type}.");
