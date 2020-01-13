@@ -1,0 +1,33 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup>
+    <GeneratedSdkVersionFile Condition="'$(GeneratedSdkVersionFile)' ==''">$(BaseIntermediateOutputPath)$(MSBuildProjectName).SdkVersion$(DefaultLanguageSourceExtension)</GeneratedSdkVersionFile>
+    <GenerateSdkVersionInfo Condition="'$(GenerateSdkVersionInfo)' == ''">true</GenerateSdkVersionInfo>
+    <VersionFile>$([MSBuild]::GetDirectoryNameOfFileAbove('$(MSBuildProjectDirectory)', 'ThirdPartyNotices.txt'))\bin\$(Configuration)\Version</VersionFile>
+    <_SdkVersion Condition="Exists('$(VersionFile)')">$([System.IO.File]::ReadAllText('$(VersionFile)').Trim())</_SdkVersion>
+  </PropertyGroup>
+    
+  <Target Name="GenerateSdkVersionInfo"
+          Condition="'$(GenerateSdkVersionInfo)' == 'true' and Exists('$(VersionFile)') and ('$(Language)'=='VB' or '$(Language)'=='C#')"
+          BeforeTargets="CoreCompile"
+          DependsOnTargets="PrepareForBuild"
+          Inputs="$(VersionFile)" 
+          Outputs="$(GeneratedSdkVersionFile)">
+
+    <ItemGroup>
+      <!-- Ensure the generated assemblyinfo file is not already part of the Compile sources, as a workaround for https://github.com/dotnet/sdk/issues/114 -->
+      <Compile Remove="$(GeneratedSdkVersionFile)" />
+      <_SdkVersionInfo Include="System.Reflection.AssemblyMetadata">
+        <_Parameter1>SdkVersion</_Parameter1>
+        <_Parameter2>$(_SdkVersion)</_Parameter2>
+      </_SdkVersionInfo>
+    </ItemGroup>
+
+    <WriteCodeFragment AssemblyAttributes="@(_SdkVersionInfo)" Language="$(Language)" OutputFile="$(GeneratedSdkVersionFile)" >
+      <Output TaskParameter="OutputFile" ItemName="Compile" />
+      <Output TaskParameter="OutputFile" ItemName="FileWrites" />
+    </WriteCodeFragment>
+
+  </Target>
+
+</Project>
