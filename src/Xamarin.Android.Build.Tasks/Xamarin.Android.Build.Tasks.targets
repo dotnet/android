@@ -309,7 +309,7 @@
 
   <Target Name="ILRepacker"
       BeforeTargets="CopyFilesToOutputDirectory"
-      Inputs="@(InputAssemblies)"
+      Inputs="$(MSBuildAllProjects);@(IntermediateAssembly);@(InputAssemblies)"
       Outputs="$(IntermediateOutputPath)ILRepacker.stamp"
       Condition=" '$(HostOS)' != 'Linux' ">
     <ItemGroup>
