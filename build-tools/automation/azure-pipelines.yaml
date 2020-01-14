@@ -97,7 +97,7 @@ stages:
         version: $(DotNetCoreVersion)
 
     # Prepare and build everything
-    - script: make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
+    - script: make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1 BOOTSTRAP_MSBUILD_FLAGS="/p:UseSharedCompilation=false /nodeReuse:false"
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: make prepare-update-mono
 
