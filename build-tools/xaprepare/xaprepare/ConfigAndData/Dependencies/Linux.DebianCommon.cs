@@ -19,7 +19,6 @@ namespace Xamarin.Android.Prepare
 			new DebianLinuxProgram ("libncurses5-dev"),
 			new DebianLinuxProgram ("libtool"),
 			new DebianLinuxProgram ("libz-mingw-w64-dev"),
-			new DebianLinuxProgram ("libzip-dev"),
 			new DebianLinuxProgram ("linux-libc-dev"),
 			new DebianLinuxProgram ("make"),
 			new DebianLinuxProgram ("ninja-build", "ninja"),
