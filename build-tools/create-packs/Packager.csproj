@@ -5,7 +5,7 @@
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <PackageId>Xamarin.Android.Sdk</PackageId>
     <PackageVersion Condition="Exists('..\..\bin\$(Configuration)\Version')">$([System.IO.File]::ReadAllText('..\..\bin\$(Configuration)\Version'))</PackageVersion>
-    <PackageVersion Condition="$(PackageVersion) == ''">0.0.1</PackageVersion>
+    <PackageVersion Condition="'$(PackageVersion)' == ''">0.0.1</PackageVersion>
     <Authors>Xamarin</Authors>
     <Description>C# Tools and Bindings for the Android SDK</Description>
     <OutputPath>..\..\bin\Build$(Configuration)</OutputPath>
