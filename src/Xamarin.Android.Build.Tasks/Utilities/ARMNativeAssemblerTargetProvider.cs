@@ -5,9 +5,15 @@ namespace Xamarin.Android.Tasks
 {
 	class ARMNativeAssemblerTargetProvider : NativeAssemblerTargetProvider
 	{
+		const string ARMV7a = "armeabi-v7a";
+		const string ARMV8a = "arm64-v8a";
+
 		public override bool Is64Bit { get; }
 		public override string PointerFieldType { get; }
 		public override string TypePrefix { get; }
+		public override string AbiName => Is64Bit ? ARMV8a : ARMV7a;
+		public override uint MapModulesAlignBits => Is64Bit ? 3u : 2u;
+		public override uint MapJavaAlignBits { get; } = 2;
 
 		public ARMNativeAssemblerTargetProvider (bool is64Bit)
 		{

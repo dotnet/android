@@ -58,6 +58,9 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public bool EnablePreloadAssembliesDefault { get; set; }
 
+		[Required]
+		public bool InstantRunEnabled { get; set; }
+
 		public string BoundExceptionType { get; set; }
 
 		public string PackageNamingPolicy { get; set; }
@@ -252,7 +255,8 @@ namespace Xamarin.Android.Tasks
 				foreach (string abi in SupportedAbis) {
 					ms.SetLength (0);
 					NativeAssemblerTargetProvider asmTargetProvider;
-					string asmFileName = Path.Combine (EnvironmentOutputDirectory, $"environment.{abi.ToLowerInvariant ()}.s");
+					string baseAsmFilePath = Path.Combine (EnvironmentOutputDirectory, $"environment.{abi.ToLowerInvariant ()}");
+					string asmFilePath = $"{baseAsmFilePath}.s";
 					switch (abi.Trim ()) {
 						case "armeabi-v7a":
 							asmTargetProvider = new ARMNativeAssemblerTargetProvider (false);
@@ -274,7 +278,7 @@ namespace Xamarin.Android.Tasks
 							throw new InvalidOperationException ($"Unknown ABI {abi}");
 					}
 
-					var asmgen = new ApplicationConfigNativeAssemblyGenerator (asmTargetProvider, environmentVariables, systemProperties) {
+					var asmgen = new ApplicationConfigNativeAssemblyGenerator (asmTargetProvider, baseAsmFilePath, environmentVariables, systemProperties) {
 						IsBundledApp = IsBundledApplication,
 						UsesMonoAOT = usesMonoAOT,
 						UsesMonoLLVM = EnableLLVM,
@@ -284,11 +288,12 @@ namespace Xamarin.Android.Tasks
 						BrokenExceptionTransitions = brokenExceptionTransitions,
 						PackageNamingPolicy = pnp,
 						BoundExceptionType = boundExceptionType,
+						InstantRunEnabled = InstantRunEnabled,
 					};
 
 					using (var sw = new StreamWriter (ms, utf8Encoding, bufferSize: 8192, leaveOpen: true)) {
-						asmgen.Write (sw, asmFileName);
-						MonoAndroidHelper.CopyIfStreamChanged (ms, asmFileName);
+						asmgen.Write (sw);
+						MonoAndroidHelper.CopyIfStreamChanged (ms, asmFilePath);
 					}
 
 				}

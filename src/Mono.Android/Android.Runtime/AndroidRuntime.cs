@@ -231,9 +231,9 @@ namespace Android.Runtime {
 
 		protected override string GetSimpleReference (Type type)
 		{
-			var j = JNIEnv.monodroid_typemap_managed_to_java (type.FullName + ", " + type.Assembly.GetName ().Name);
-			if (j != IntPtr.Zero) {
-				return Marshal.PtrToStringAnsi (j);
+			string j = JNIEnv.TypemapManagedToJava (type);
+			if (j != null) {
+				return j;
 			}
 			if (JNIEnv.IsRunningOnDesktop) {
 				return JavaNativeTypeManager.ToJniName (type);
@@ -243,9 +243,9 @@ namespace Android.Runtime {
 
 		protected override IEnumerable<string> GetSimpleReferences (Type type)
 		{
-			var j = JNIEnv.monodroid_typemap_managed_to_java (type.FullName + ", " + type.Assembly.GetName ().Name);
-			if (j != IntPtr.Zero) {
-				yield return Marshal.PtrToStringAnsi (j);
+			string j = JNIEnv.TypemapManagedToJava (type);
+			if (j != null) {
+				yield return j;
 			}
 			if (JNIEnv.IsRunningOnDesktop) {
 				yield return JavaNativeTypeManager.ToJniName (type);

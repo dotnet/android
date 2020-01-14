@@ -68,7 +68,7 @@
 #include "mkbundle-api.h"
 #include "monodroid-glue-internal.hh"
 #include "globals.hh"
-#include "xamarin-app.h"
+#include "xamarin-app.hh"
 #include "timing.hh"
 
 #ifndef WINDOWS
@@ -345,12 +345,14 @@ inline void
 MonodroidRuntime::gather_bundled_assemblies (jstring_array_wrapper &runtimeApks, size_t *out_user_assemblies_count)
 {
 #if defined(DEBUG) || !defined (ANDROID)
-	for (size_t i = 0; i < AndroidSystem::MAX_OVERRIDES; ++i) {
-		const char *p = androidSystem.get_override_dir (i);
-		if (!utils.directory_exists (p))
-			continue;
-		log_info (LOG_ASSEMBLY, "Loading TypeMaps from %s", p);
-		embeddedAssemblies.try_load_typemaps_from_directory (p);
+	if (application_config.instant_run_enabled) {
+		for (size_t i = 0; i < AndroidSystem::MAX_OVERRIDES; ++i) {
+			const char *p = androidSystem.get_override_dir (i);
+			if (!utils.directory_exists (p))
+				continue;
+			log_info (LOG_ASSEMBLY, "Loading TypeMaps from %s", p);
+			embeddedAssemblies.try_load_typemaps_from_directory (p);
+		}
 	}
 #endif
 
@@ -918,6 +920,8 @@ MonodroidRuntime::lookup_bridge_info (MonoDomain *domain, MonoImage *image, cons
 void
 MonodroidRuntime::init_android_runtime (MonoDomain *domain, JNIEnv *env, jclass runtimeClass, jobject loader)
 {
+	mono_add_internal_call ("Java.Interop.TypeManager::monodroid_typemap_java_to_managed", reinterpret_cast<const void*>(typemap_java_to_managed));
+
 	struct JnienvInitializeArgs init = {};
 	init.javaVm                 = osBridge.get_jvm ();
 	init.env                    = env;
@@ -1398,6 +1402,12 @@ MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass
 	osBridge.add_monodroid_domain (domain);
 
 	return domain;
+}
+
+MonoReflectionType*
+MonodroidRuntime::typemap_java_to_managed (MonoString *java_type_name)
+{
+	return embeddedAssemblies.typemap_java_to_managed (java_type_name);
 }
 
 inline void

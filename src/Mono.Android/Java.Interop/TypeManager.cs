@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Java.Interop.Tools.TypeNameMappings;
 
@@ -203,22 +204,25 @@ namespace Java.Interop {
 				return new JavaLocationException (loc.ToString ());
 		}
 
-		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr monodroid_typemap_java_to_managed (string java);
+		[MethodImplAttribute(MethodImplOptions.InternalCall)]
+		static extern Type monodroid_typemap_java_to_managed (string java_type_name);
 
 		internal static Type GetJavaToManagedType (string class_name)
 		{
-			var t = monodroid_typemap_java_to_managed (class_name);
-			if (t != IntPtr.Zero)
-				return Type.GetType (Marshal.PtrToStringAnsi (t));
+			Type type = monodroid_typemap_java_to_managed (class_name);
+			if (type != null)
+				return type;
 
 			if (!JNIEnv.IsRunningOnDesktop) {
+				// Miss message is logged in the native runtime
+				if (JNIEnv.LogTypemapMissStackTrace)
+					JNIEnv.LogTypemapTrace (new System.Diagnostics.StackTrace (true));
 				return null;
 			}
 
 			__TypeRegistrations.RegisterPackages ();
 
-			var type    = (Type) null;
+			type = null;
 			int ls      = class_name.LastIndexOf ('/');
 			var package = ls >= 0 ? class_name.Substring (0, ls) : "";
 			List<Converter<string, Type>> mappers;
