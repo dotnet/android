@@ -378,7 +378,7 @@ timestamps {
                     title: 'Runtime test sizes',
                     csvFileName: 'plot-runtime-test-sizes.csv',
                     csvSeries: [[
-                        displayTableFlag: true, file: 'TestResult-Mono.Android_Tests-values.csv', inclusionFlag: 'OFF'
+                        displayTableFlag: true, file: "TestResult-Mono.Android_Tests-values-${env.BuildFlavor}.csv", inclusionFlag: 'OFF'
                     ]],
                     group: 'Tests size',
                     logarithmic: true,
@@ -411,7 +411,7 @@ timestamps {
                     title: 'Xamarin.Forms app',
                     csvFileName: 'plot-xamarin-forms-tests-size.csv',
                     csvSeries: [[
-                        displayTableFlag: true, file: 'TestResult-Xamarin.Forms_Tests-values.csv', inclusionFlag: 'OFF'
+                        displayTableFlag: true, file: "TestResult-Xamarin.Forms_Tests-values-${env.BuildFlavor}.csv", inclusionFlag: 'OFF'
                     ]],
                     group: 'Tests size',
                     ogarithmic: true,

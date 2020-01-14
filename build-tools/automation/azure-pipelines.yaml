@@ -6,12 +6,39 @@ trigger:
   - master
   - d16-*
 
-# External yaml template files
+# External sources, scripts, tests, and yaml template files.
 resources:
   repositories:
   - repository: yaml
     type: github
     name: xamarin/yaml-templates
+    ref: refs/heads/master
+    endpoint: xamarin
+  - repository: monodroid
+    type: github
+    name: xamarin/monodroid
+    endpoint: xamarin
+  - repository: release_scripts
+    type: github
+    name: xamarin/release-scripts
+    endpoint: xamarin
+  - repository: designer
+    type: github
+    name: xamarin/designer
+    endpoint: xamarin
+  - repository: qa
+    type: github
+    name: xamarin/QualityAssurance
+    ref: refs/heads/master
+    endpoint: xamarin
+  - repository: samples
+    type: github
+    name: xamarin/monodroid-samples
+    ref: refs/heads/master
+    endpoint: xamarin
+  - repository: xfsamples
+    type: github
+    name: xamarin/xamarin-forms-samples
     ref: refs/heads/master
     endpoint: xamarin
 
@@ -71,31 +98,47 @@ stages:
 
     # Prepare and build everything
     - script: make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: make prepare-update-mono
 
+    # Clone monodroid wth submodules, but disregard the unused xamarin-android submodule.
+    - checkout: monodroid
+      clean: true
+      submodules: recursive
+      path: s/xamarin-android/external/monodroid
+      persistCredentials: true
+      condition: and(succeeded(), eq(variables['XA.Commercial.Build'], 'true'))
+
+    - script: rm -rf external/monodroid/external/xamarin-android
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
+      displayName: delete legacy xamarin-android submodule
+      condition: and(succeeded(), eq(variables['XA.Commercial.Build'], 'true'))
+
     - script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: make prepare-external-git-dependencies
       condition: and(succeeded(), eq(variables['XA.Commercial.Build'], 'true'))
-      env:
-        GH_AUTH_SECRET: $(Github.Token)
 
     - script: make jenkins V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: make jenkins
 
     # Build and package test assemblies
     - script: make all-tests V=1 CONFIGURATION=$(XA.Build.Configuration)
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: make all-tests
 
     - script: |
         cp -r bin/$(XA.Build.Configuration)/bcl-tests bin/Test$(XA.Build.Configuration)/bcl-tests
         cp bin/Build$(XA.Build.Configuration)/ProfileAssemblies.projitems bin/Test$(XA.Build.Configuration)/bcl-tests/
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: copy bcl-tests assemblies
 
     - task: PublishPipelineArtifact@0
       displayName: upload test assemblies
       inputs:
         artifactName: $(TestAssembliesArtifactName)
-        targetPath: bin/Test$(XA.Build.Configuration)
+        targetPath: xamarin-android/bin/Test$(XA.Build.Configuration)
 
     # Create installers
     - template: install-certificates.yml@yaml
@@ -107,41 +150,45 @@ stages:
         HostedMacKeychainPassword: $(AzDO-OnPrem-KeychainPass)
 
     - script: make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: make create-installers
 
     - script: |
         mkdir -p bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
         cp bin/Build$(XA.Build.Configuration)/*.vsix bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
         cp bin/Build$(XA.Build.Configuration)/*.pkg bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: copy unsigned installers
 
     - script: |
         VERSION=`LANG=C; export LANG && git log --no-color --first-parent -n1 --pretty=format:%ct`
         echo "d1ec039f-f3db-468b-a508-896d7c382999 $VERSION" > bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)/updateinfo
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: create updateinfo file
 
     - task: PublishPipelineArtifact@0
       displayName: upload installers
       inputs:
         artifactName: $(InstallerArtifactName)
-        targetPath: bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
+        targetPath: xamarin-android/bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
 
     - task: DotNetCoreCLI@2
       displayName: pack Xamarin.Android.Sdk
       inputs:
         command: pack
-        packagesToPack: $(System.DefaultWorkingDirectory)/build-tools/create-packs/Packager.csproj
+        packagesToPack: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/create-packs/Packager.csproj
         configuration: $(XA.Build.Configuration)
-        packDirectory: $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
+        packDirectory: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
 
     - task: PublishPipelineArtifact@0
       displayName: upload nupkgs
       inputs:
         artifactName: $(NuGetArtifactName)
-        targetPath: $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
+        targetPath: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
 
     - template: yaml-templates/upload-results.yaml
       parameters:
+        solution: xamarin-android/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
         artifactName: Build Results - macOS
 
     - template: uninstall-certificates/v1.yml@yaml
@@ -285,6 +332,12 @@ stages:
     variables:
     - group: Xamarin Notarization
     steps:
+    - checkout: self
+
+    - checkout: release_scripts
+      clean: true
+      persistCredentials: true
+
     - template: install-certificates.yml@yaml
       parameters:
         DeveloperIdApplication: $(developer-id-application)
@@ -310,9 +363,8 @@ stages:
         UnsignedPkgPath: $(XA.Unsigned.Pkg)
 
     - script: |
-        cd $(System.DefaultWorkingDirectory)/..
-        git clone -b $(ReleaseScriptsBranch) https://$(GitHub.Token):x-oauth-basic@github.com/xamarin/release-scripts
-        cd release-scripts
+        cd $(System.DefaultWorkingDirectory)/release-scripts
+        git checkout $(ReleaseScriptsBranch)
         sudo xcode-select -s /Applications/$(NotarizationXcode)
         ruby notarize.rb $(XA.Unsigned.Pkg) $(XamarinIdentifier) $(XamarinUserId) $(XamarinPassword) $(TeamID)
       displayName: Notarize PKG
@@ -325,6 +377,7 @@ stages:
         BuildPackages: $(System.DefaultWorkingDirectory)/storage-artifacts
         AzureContainerName: $(Azure.Container.Name)
         AzureUploadLocation: $(Build.DefinitionName)/$(Build.BuildId)/$(Build.SourceBranchName)/$(Build.SourceVersion)
+        SourceDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
 
     - script: cp $(System.DefaultWorkingDirectory)/storage-artifacts/*.pkg $(Build.ArtifactStagingDirectory)
       displayName: copy notarized pkg
@@ -467,7 +520,7 @@ stages:
         testName: Mono.Android_TestsMultiDex
         project: tests/Runtime-MultiDex/Mono.Android-TestsMultiDex.csproj
         testResultsFiles: TestResult-Mono.Android_TestsMultiDex-$(ApkTestConfiguration).xml
-        artifactName: Mono.Android_Tests-Signed.apk
+        artifactName: Mono.Android_TestsMultiDex-Signed.apk
         artifactFolder: MultiDex
 
     - template: yaml-templates/apk-instrumentation.yaml
@@ -839,6 +892,12 @@ stages:
     variables:
       EnableRegressionTest: true
     steps:
+    - checkout: designer
+      clean: true
+      submodules: recursive
+      path: s/designer
+      persistCredentials: true
+
     - powershell: |
         # Use the branch name of the source being built or the PR target branch name. Fall back to 'master' if the branch is unknown.
         $branchPrefix = "/refs/heads/"
@@ -849,9 +908,8 @@ stages:
         if (("$branchName" -ne "master") -and ("$branchName" -notlike "d16*")) {
             $branchName = "master"
         }
-        Write-Host "cloning designer source from branch - '$branchName'"
-        git clone -q https://$(GitHub.Token)@github.com/xamarin/designer.git --branch $branchName
         Set-Location -Path $(System.DefaultWorkingDirectory)/designer
+        git checkout $branchName
         git submodule update -q --init --recursive
       displayName: Clone and update designer
 
@@ -885,6 +943,12 @@ stages:
       RegressionTestSuiteOutputDir: C:\Git\ADesRegTestSuite
       VisualStudioInstallationPath: C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise
     steps:
+    - checkout: designer
+      clean: true
+      submodules: recursive
+      path: s\designer
+      persistCredentials: true
+
     - powershell: |
         # Use the branch name of the source being built or the PR target branch name. Fall back to 'master' if the branch is unknown.
         $branchPrefix = "/refs/heads/"
@@ -895,9 +959,8 @@ stages:
         if (("$branchName" -ne "master") -and ("$branchName" -notlike "d16*")) {
             $branchName = "master"
         }
-        Write-Host "cloning designer source from branch - '$branchName'"
-        git clone -q https://$(GitHub.Token)@github.com/xamarin/designer.git --branch $branchName
-        Set-Location -Path $(System.DefaultWorkingDirectory)/designer
+        Set-Location -Path $(System.DefaultWorkingDirectory)\designer
+        git checkout $branchName
         git submodule update -q --init --recursive
       displayName: Clone and update designer
 

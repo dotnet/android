@@ -134,6 +134,12 @@
       <OutputFile>Jars/xamarin-test.jar</OutputFile>
     </TestJarEntry>
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedJar Include="Jars\KotlinUnsignedTypes.jar" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedReferenceJar Include="Jars\org.jetbrains.kotlin.kotlin-stdlib.jar" />
+  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.Bindings.targets" />
   <Import Project="..\..\..\build-tools\scripts\Jar.targets" />
   <Import Project="Xamarin.Android.McwGen-Tests.targets" />
