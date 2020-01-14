@@ -56,7 +56,7 @@ namespace MonoDroid.Tuner
 
 			foreach (var mr in assembly.MainModule.GetMemberReferences ()) {
 				if (mr.ToString ().Contains ("System.AppDomain System.AppDomain::CreateDomain")) {
-					warn ($"Warning: Use of AppDomain::CreateDomain detected in assembly: {assembly}. The AppDomain's will not be part of .NET 5 and therefore will be missing in newer Xamarin.Android releases.");
+					warn ($"Use of AppDomain.CreateDomain() detected in assembly: {assembly}. .NET 5 will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 5 is released.");
 					break;
 				}
 			}
