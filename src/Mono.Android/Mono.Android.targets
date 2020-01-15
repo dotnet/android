@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <UsingTask AssemblyFile="$(SupportingBuildTasksDirectory)\xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
-  <UsingTask AssemblyFile="$(SupportingBuildTasksDirectory)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.CheckApiCompatibility" />
+  <UsingTask AssemblyFile="$(SupportingBuildTasksDirectory)xa-prep-tasks.dll"   TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
+  <UsingTask AssemblyFile="$(SupportingBuildTasksDirectory)Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.CheckApiCompatibility" />
   <Import Project="..\..\build-tools\scripts\XAVersionInfo.targets" />
   <Import Project="..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems" Condition="Exists('..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems')"/>
   <ItemGroup>

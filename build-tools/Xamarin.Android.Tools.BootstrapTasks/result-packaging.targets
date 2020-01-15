@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <UsingTask AssemblyFile="$(SupportingBuildTasksDirectory)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.Zip" />
+  <UsingTask AssemblyFile="$(SupportingBuildTasksDirectory)Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.Zip" />
   <Import Project="..\scripts\XAVersionInfo.targets" />
   <ItemGroup>
     <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)Configuration.OperatingSystem.props" Condition="Exists('$(XamarinAndroidSourcePath)Configuration.OperatingSystem.props')" />

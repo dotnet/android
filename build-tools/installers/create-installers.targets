@@ -4,7 +4,7 @@
   <Import Project="..\scripts\LocalizationLanguages.projitems" />
   <Import Project="..\..\bin\Build$(Configuration)\ProfileAssemblies.projitems" Condition="Exists('..\..\bin\Build$(Configuration)\ProfileAssemblies.projitems')" />
   <Import Project="..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems" Condition="Exists('..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems')" />
-  <UsingTask AssemblyFile="$(SupportingBuildTasksDirectory)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
+  <UsingTask AssemblyFile="$(SupportingBuildTasksDirectory)xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
   <PropertyGroup>
     <RootBuildDir>$(XamarinAndroidSourcePath)bin\$(Configuration)\</RootBuildDir>
     <FrameworkSrcDir>$(RootBuildDir)lib\xamarin.android\xbuild-frameworks\MonoAndroid\</FrameworkSrcDir>
