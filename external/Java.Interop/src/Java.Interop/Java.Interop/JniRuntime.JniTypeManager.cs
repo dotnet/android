@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace Java.Interop {
@@ -32,6 +33,7 @@ namespace Java.Interop {
 				disposed    = true;
 			}
 
+			[MethodImpl (MethodImplOptions.AggressiveInlining)]
 			void AssertValid ()
 			{
 				if (!disposed)
@@ -39,41 +41,72 @@ namespace Java.Interop {
 				throw new ObjectDisposedException (nameof (JniTypeManager));
 			}
 
+			// NOTE: This method needs to be kept in sync with GetTypeSignatures()
+			// This version of the method has removed IEnumerable for performance reasons.
 			public JniTypeSignature GetTypeSignature (Type type)
 			{
 				AssertValid ();
 
-				return GetTypeSignatures (type).FirstOrDefault ();
+				if (type == null)
+					throw new ArgumentNullException (nameof (type));
+				if (type.ContainsGenericParameters)
+					throw new ArgumentException ($"'{type}' contains a generic type definition. This is not supported.", nameof (type));
+
+				type = GetUnderlyingType (type, out int rank);
+
+				foreach (var mapping in JniBuiltinTypeNameMappings.Value) {
+					if (mapping.Key == type) {
+						var r = mapping.Value;
+						return r.AddArrayRank (rank);
+					}
+				}
+
+				foreach (var mapping in JniBuiltinArrayMappings.Value) {
+					if (mapping.Key == type) {
+						var r = mapping.Value;
+						return r.AddArrayRank (rank);
+					}
+				}
+
+				var name = type.GetCustomAttribute<JniTypeSignatureAttribute> (inherit: false);
+				if (name != null) {
+					return new JniTypeSignature (name.SimpleReference, name.ArrayRank + rank, name.IsKeyword);
+				}
+
+				var isGeneric = type.IsGenericType;
+				var genericDef = isGeneric ? type.GetGenericTypeDefinition () : type;
+				if (isGeneric) {
+					if (genericDef == typeof (JavaArray<>) || genericDef == typeof (JavaObjectArray<>)) {
+						var r = GetTypeSignature (type.GenericTypeArguments [0]);
+						return r.AddArrayRank (rank + 1);
+					}
+				}
+
+				var simpleRef = GetSimpleReference (type);
+				if (simpleRef != null)
+					return new JniTypeSignature (simpleRef, rank, false);
+
+				if (isGeneric) {
+					simpleRef = GetSimpleReference (genericDef);
+					if (simpleRef != null)
+						return new JniTypeSignature (simpleRef, rank, false);
+				}
+
+				return default;
 			}
 
+			// NOTE: This method needs to be kept in sync with GetTypeSignature()
 			public IEnumerable<JniTypeSignature> GetTypeSignatures (Type type)
 			{
 				AssertValid ();
 
 				if (type == null)
 					throw new ArgumentNullException (nameof (type));
-				if (type.GetTypeInfo ().ContainsGenericParameters)
-					throw new ArgumentException ("Generic type definitions are not supported.", nameof (type));
+				if (type.ContainsGenericParameters)
+					throw new ArgumentException ($"'{type}' contains a generic type definition. This is not supported.", nameof (type));
 
-				return CreateGetTypeSignaturesEnumerator (type);
-			}
+				type = GetUnderlyingType (type, out int rank);
 
-			IEnumerable<JniTypeSignature> CreateGetTypeSignaturesEnumerator (Type type)
-			{
-				var originalType    = type;
-				int rank            = 0;
-				while (type.IsArray) {
-					if (type.IsArray && type.GetArrayRank () > 1)
-						throw new ArgumentException ("Multidimensional array '" + originalType.FullName + "' is not supported.", nameof (type));
-					rank++;
-					type    = type.GetElementType ();
-				}
-
-				var info    = type.GetTypeInfo ();
-				if (info.IsEnum)
-					type = Enum.GetUnderlyingType (type);
-
-#if !XA_INTEGRATION
 				foreach (var mapping in JniBuiltinTypeNameMappings.Value) {
 					if (mapping.Key == type) {
 						var r = mapping.Value;
@@ -87,23 +120,21 @@ namespace Java.Interop {
 						yield return r.AddArrayRank (rank);
 					}
 				}
-#endif  // !XA_INTEGRATION
 
-				var name = info.GetCustomAttribute<JniTypeSignatureAttribute> (inherit: false);
+				var name = type.GetCustomAttribute<JniTypeSignatureAttribute> (inherit: false);
 				if (name != null) {
 					yield return new JniTypeSignature (name.SimpleReference, name.ArrayRank + rank, name.IsKeyword);
 				}
 
-				var isGeneric   = info.IsGenericType;
-				var genericDef  = isGeneric ? info.GetGenericTypeDefinition () : type;
-#if !XA_INTEGRATION
+				var isGeneric   = type.IsGenericType;
+				var genericDef  = isGeneric ? type.GetGenericTypeDefinition () : type;
 				if (isGeneric) {
 					if (genericDef == typeof(JavaArray<>) || genericDef == typeof(JavaObjectArray<>)) {
-						var r = GetTypeSignature (info.GenericTypeArguments [0]);
+						var r = GetTypeSignature (type.GenericTypeArguments [0]);
 						yield return r.AddArrayRank (rank + 1);
 					}
 				}
-#endif  // !XA_INTEGRATION
+
 				foreach (var simpleRef in GetSimpleReferences (type)) {
 					if (simpleRef == null)
 						continue;
@@ -117,6 +148,29 @@ namespace Java.Interop {
 						yield return new JniTypeSignature (simpleRef, rank, false);
 					}
 				}
+			}
+
+			static Type GetUnderlyingType (Type type, out int rank)
+			{
+				rank = 0;
+				var originalType = type;
+				while (type.IsArray) {
+					if (type.IsArray && type.GetArrayRank () > 1)
+						throw new ArgumentException ("Multidimensional array '" + originalType.FullName + "' is not supported.", nameof (type));
+					rank++;
+					type = type.GetElementType ();
+				}
+
+				if (type.IsEnum)
+					type = Enum.GetUnderlyingType (type);
+
+				return type;
+			}
+
+			// `type` will NOT be an array type.
+			protected virtual string GetSimpleReference (Type type)
+			{
+				return GetSimpleReferences (type).FirstOrDefault ();
 			}
 
 			// `type` will NOT be an array type.
