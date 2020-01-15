@@ -182,6 +182,14 @@ stages:
       displayName: pack Xamarin.Android.Sdk
       inputs:
         command: pack
+        packagesToPack: $(System.DefaultWorkingDirectory)/xamarin-android/src/Xamarin.Android.Sdk/Xamarin.Android.Sdk.Lite.proj
+        configuration: $(XA.Build.Configuration)
+        packDirectory: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
+
+    - task: DotNetCoreCLI@2
+      displayName: pack Xamarin.Android.Sdk.Lite
+      inputs:
+        command: pack
         packagesToPack: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/create-packs/Packager.csproj
         configuration: $(XA.Build.Configuration)
         packDirectory: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
