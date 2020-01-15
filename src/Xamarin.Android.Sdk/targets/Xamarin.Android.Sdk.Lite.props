@@ -1,0 +1,17 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!-- This is the renamed-on-pack Xamarin.Android.Sdk.props from the full SDK -->
+  <Import Project="Xamarin.Android.Sdk.Default.props" />
+
+  <PropertyGroup>
+    <!-- Reset, so the full SDK install can override these in turn -->
+    <TargetFrameworkRootPath />
+    <FrameworkPathOverride />
+    <!-- Reset, since we're overloading this prop as there is a VS-provided Xamarin.Android.Sdk.props already which we need to import  -->
+    <XamarinAndroidSdkPropsImported>false</XamarinAndroidSdkPropsImported>
+
+    <LanguageTargets Condition="'$(MSBuildProjectExtension)' == '.csproj'">$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets</LanguageTargets>
+    <LanguageTargets Condition="'$(MSBuildProjectExtension)' == '.fsproj'">$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.FSharp.targets</LanguageTargets>
+  </PropertyGroup>
+
+</Project>

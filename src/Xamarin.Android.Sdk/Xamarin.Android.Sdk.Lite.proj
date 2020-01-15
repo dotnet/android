@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.Build.NoTargets/1.0.88">
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <PackageId>Xamarin.Android.Sdk.Lite</PackageId>
+        <PackageVersion Condition="Exists('..\..\bin\$(Configuration)\Version')">$([System.IO.File]::ReadAllText('..\..\bin\$(Configuration)\Version'))</PackageVersion>
+        <PackageVersion Condition="'$(PackageVersion)' == ''">1.0.0</PackageVersion>
+        <Authors>Xamarin</Authors>
+        <Description>Lightweight SDK that depends on an existing full installation of the Xamarin.Android SDK tools from Visual Studio</Description>
+        <OutputPath>..\..\bin\Build$(Configuration)</OutputPath>
+    </PropertyGroup>
+    <ItemGroup>
+        <_PackageFiles Include="targets\Xamarin.Android.Sdk.DefaultItems.props" PackagePath="targets\Xamarin.Android.Sdk.DefaultItems.props" />
+        <_PackageFiles Include="targets\Xamarin.Android.TargetFrameworkInference.targets" PackagePath="targets\Xamarin.Android.TargetFrameworkInference.targets" />
+        <!-- The Lite SDK replaces the full Sdk.props/Sdk.targets -->
+        <_PackageFiles Include="targets\Xamarin.Android.Sdk.Lite.props" PackagePath="targets\Xamarin.Android.Sdk.props" />
+        <_PackageFiles Include="targets\Xamarin.Android.Sdk.Lite.targets" PackagePath="targets\Xamarin.Android.Sdk.targets" />
+        <!-- But it still imports the full SDK props by renaming it -->
+        <_PackageFiles Include="targets\Xamarin.Android.Sdk.props" PackagePath="targets\Xamarin.Android.Sdk.Default.props" />
+
+        <_PackageFiles Include="Sdk\*.*" PackagePath="Sdk" />
+        <_PackageFiles Include="README.md" PackagePath="." />
+    </ItemGroup> 
+</Project>
