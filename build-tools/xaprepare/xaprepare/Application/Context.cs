@@ -340,6 +340,21 @@ namespace Xamarin.Android.Prepare
 		/// </summary>
 		public bool MonoArchiveDownloaded { get; set; }
 
+		/// <summary>
+		///   Determines whether or not we are running on a hosted azure pipelines agent.
+		///   These agents have certain limitations, the most pressing being the amount of available storage.
+		///   https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=azure-devops#capabilities-and-limitations.
+		/// </summary>
+		public bool IsRunningOnHostedAzureAgent {
+			get {
+				string agentNameValue = Environment.GetEnvironmentVariable ("AGENT_NAME");
+				bool hasHostedAgentName = !string.IsNullOrEmpty (agentNameValue) && agentNameValue.ToUpperInvariant ().Contains ("AZURE PIPELINES");
+				string serverTypeValue = Environment.GetEnvironmentVariable ("SYSTEM_SERVERTYPE");
+				bool isHostedServerType = !string.IsNullOrEmpty (serverTypeValue) && serverTypeValue.ToUpperInvariant ().Contains ("HOSTED");
+				return hasHostedAgentName || isHostedServerType;
+			}
+		}
+
 		static Context ()
 		{
 			Instance = new Context ();

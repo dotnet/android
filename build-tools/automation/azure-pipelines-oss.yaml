@@ -39,19 +39,20 @@ jobs:
     displayName: make package-deb
 
   - script: |
-      mkdir -p $(System.DefaultWorkingDirectory)/bin/BuildRelease/linux-artifacts
-      cp $(System.DefaultWorkingDirectory)/*xamarin.android*.tar* $(System.DefaultWorkingDirectory)/bin/BuildRelease/linux-artifacts
-      cp $(System.DefaultWorkingDirectory)/*.changes $(System.DefaultWorkingDirectory)/bin/BuildRelease/linux-artifacts
-      cp $(System.DefaultWorkingDirectory)/*.dsc $(System.DefaultWorkingDirectory)/bin/BuildRelease/linux-artifacts
-      cp $(System.DefaultWorkingDirectory)/*.deb $(System.DefaultWorkingDirectory)/bin/BuildRelease/linux-artifacts
+      mkdir -p $(System.DefaultWorkingDirectory)/bin/Build$(OSSBuildConfiguration)/linux-artifacts
+      cp $(System.DefaultWorkingDirectory)/*xamarin.android*.tar* $(System.DefaultWorkingDirectory)/bin/Build$(OSSBuildConfiguration)/linux-artifacts
+      cp $(System.DefaultWorkingDirectory)/*.changes $(System.DefaultWorkingDirectory)/bin/Build$(OSSBuildConfiguration)/linux-artifacts
+      cp $(System.DefaultWorkingDirectory)/*.dsc $(System.DefaultWorkingDirectory)/bin/Build$(OSSBuildConfiguration)/linux-artifacts
+      cp $(System.DefaultWorkingDirectory)/*.deb $(System.DefaultWorkingDirectory)/bin/Build$(OSSBuildConfiguration)/linux-artifacts
     displayName: copy linux artifacts
 
   - task: PublishPipelineArtifact@1
     displayName: publish linux artifacts
     inputs:
       artifactName: Linux Packages
-      targetPath: $(System.DefaultWorkingDirectory)/bin/BuildRelease/linux-artifacts
+      targetPath: $(System.DefaultWorkingDirectory)/bin/Build$(OSSBuildConfiguration)/linux-artifacts
 
   - template: yaml-templates/upload-results.yaml
     parameters:
+      configuration: $(OSSBuildConfiguration)
       artifactName: OSS Build Results - Linux

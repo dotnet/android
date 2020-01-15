@@ -61,6 +61,9 @@ namespace Xamarin.Android.Prepare
 				Utilities.MoveDirectoryContentsRecursively (rootDir, corettoInstallDir);
 			} finally {
 				Utilities.DeleteDirectorySilent (tempDir);
+				// Clean up zip after extraction if running on a hosted azure pipelines agent.
+				if (context.IsRunningOnHostedAzureAgent)
+					Utilities.DeleteFileSilent (localPackagePath);
 			}
 
 			return true;
