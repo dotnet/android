@@ -190,7 +190,8 @@ stages:
       displayName: push Xamarin.Android.Sdk
       continueOnError: true
       inputs:
-        command: push
+        command: custom
+        arguments: 'push --skip-duplicate'
         packagesToPush: '$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)/*.nupkg'
         nuGetFeedType: external
         publishFeedCredentials: 'xamarin-impl public feed'
