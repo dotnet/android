@@ -191,7 +191,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 
 		public static string GetPackageName (Type type)
 		{
-			string assemblyName = type.Assembly.GetName ().Name;
+			string assemblyName = GetAssemblyName (type.Assembly);
 			if (IsPackageNamePreservedForAssembly (assemblyName))
 				return type.Namespace.ToLowerInvariant ();
 			switch (PackageNamingPolicy) {
@@ -205,6 +205,19 @@ namespace Java.Interop.Tools.TypeNameMappings
 			default:
 					throw new NotSupportedException ($"PackageNamingPolicy.{PackageNamingPolicy} is no longer supported.");
 			}
+		}
+
+		/// <summary>
+		/// A more performant equivalent of `Assembly.GetName().Name`
+		/// </summary>
+		static string GetAssemblyName (Assembly assembly)
+		{
+			var name = assembly.FullName;
+			int index = name.IndexOf (',');
+			if (index != -1) {
+				return name.Substring (0, index);
+			}
+			return name;
 		}
 
 		public static int GetArrayInfo (Type type, out Type elementType)
