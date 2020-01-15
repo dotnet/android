@@ -48,8 +48,4 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-  <!-- Copy PackageReference content (as specified above) to OutputDir. This no longer happens by default in short-form projects. -->
-  <PropertyGroup>
-      <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-  </PropertyGroup>
 </Project>

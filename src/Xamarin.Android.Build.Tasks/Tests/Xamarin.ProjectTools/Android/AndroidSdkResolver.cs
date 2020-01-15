@@ -10,9 +10,19 @@ namespace Xamarin.ProjectTools
 		static string AzureToolchainPathMacOS = Path.Combine (HomeDirectory, "Library", "Android");
 		static string ToolchainPath = (TestEnvironment.IsMacOS && TestEnvironment.IsRunningOnCI) ? AzureToolchainPathMacOS : DefaultToolchainPath;
 
+		static string GetPathFromRegistry (string valueName)
+		{
+			if (TestEnvironment.IsWindows) {
+				return (string) Microsoft.Win32.Registry.GetValue ("HKEY_CURRENT_USER\\SOFTWARE\\Novell\\Mono for Android", valueName, null);
+			}
+			return null;
+		}
+
 		public static string GetAndroidSdkPath ()
 		{
 			var sdkPath = Environment.GetEnvironmentVariable ("ANDROID_SDK_PATH");
+			if (String.IsNullOrEmpty (sdkPath))
+				sdkPath = GetPathFromRegistry ("AndroidSdkDirectory");
 			if (String.IsNullOrEmpty (sdkPath))
 				sdkPath = Path.GetFullPath (Path.Combine (ToolchainPath, "sdk"));
 
@@ -23,6 +33,8 @@ namespace Xamarin.ProjectTools
 		public static string GetAndroidNdkPath ()
 		{
 			var ndkPath = Environment.GetEnvironmentVariable ("ANDROID_NDK_PATH");
+			if (String.IsNullOrEmpty (ndkPath))
+				ndkPath = GetPathFromRegistry ("AndroidNdkDirectory");
 			if (String.IsNullOrEmpty (ndkPath))
 				ndkPath = Path.GetFullPath (Path.Combine (ToolchainPath, "ndk"));
 

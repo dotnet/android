@@ -844,11 +844,7 @@ stages:
       parameters:
         testRunTitle: MSBuildDeviceIntegration On Device - macOS
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/MSBuildDeviceIntegration.dll
-<<<<<<< HEAD
         nunitConsoleExtraArgs: --where "cat != TimeZoneInfo"
-=======
-        nunitConsoleExtraArgs: --where "test != Xamarin.Android.Build.Tests.DeploymentTest.CheckTimeZoneInfoIsCorrect"
->>>>>>> [tests] Don't append TF to output path
         testResultsFile: TestResult-MSBuildDeviceIntegration-$(XA.Build.Configuration).xml
 
     - task: MSBuild@1
@@ -865,54 +861,6 @@ stages:
       parameters:
         artifactName: Test Results - MSBuild With Emulator - macOS
 
-<<<<<<< HEAD
-=======
-  # Check - "Xamarin.Android (Test TimeZoneInfo With Emulator - macOS)"
-  - job: mac_timezonedevice_tests
-    displayName: TimeZoneInfo With Emulator - macOS
-    pool: $(HostedMac)
-    timeoutInMinutes: 240
-    cancelTimeoutInMinutes: 5
-    workspace:
-      clean: all
-    steps:
-    - template: yaml-templates/setup-test-environment.yaml
-
-    - task: DownloadPipelineArtifact@1
-      inputs:
-        artifactName: $(TestAssembliesArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
-
-    - task: MSBuild@1
-      displayName: start emulator
-      inputs:
-        solution: src/Mono.Android/Test/Mono.Android-Tests.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: >
-          /t:AcquireAndroidTarget /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/start-emulator.binlog
-
-    - template: yaml-templates/run-nunit-tests.yaml
-      parameters:
-        testRunTitle: TimeZoneInfoTests On Device - macOS
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/MSBuildDeviceIntegration.dll
-        nunitConsoleExtraArgs: --where "test == Xamarin.Android.Build.Tests.DeploymentTest.CheckTimeZoneInfoIsCorrect"
-        testResultsFile: TestResult-TimeZoneInfoTests-$(XA.Build.Configuration).xml
-
-    - task: MSBuild@1
-      displayName: shut down emulator
-      inputs:
-        solution: src/Mono.Android/Test/Mono.Android-Tests.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: >
-          /t:AcquireAndroidTarget,ReleaseAndroidTarget
-          /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/shutdown-emulator.binlog
-      condition: always()
-
-    - template: yaml-templates/upload-results.yaml
-      parameters:
-        artifactName: Test Results - TimeZoneInfo With Emulator - macOS
-
->>>>>>> [tests] Don't append TF to output path
   # Check - "Xamarin.Android (Test Designer - macOS)"
   - job: designer_integration_mac
     displayName: Designer - macOS
