@@ -1,0 +1,57 @@
+# Xamarin.Android-OSS Pipeline
+
+name: $(Build.SourceBranchName)-$(Build.SourceVersion)-$(Rev:r)
+
+trigger:
+  - master
+  - d16-*
+
+pr:
+  - master
+  - d16-*
+
+# Global variables
+variables:
+  OSSBuildConfiguration: Release
+
+jobs:
+- job: linux_build_package
+  displayName: Linux Build
+  pool:
+    vmImage: ubuntu-18.04
+  timeoutInMinutes: 180
+  cancelTimeoutInMinutes: 5
+  workspace:
+    clean: all
+  steps:
+  - checkout: self
+    submodules: recursive
+
+  - task: NuGetToolInstaller@1
+    displayName: 'Use NuGet 5.x'
+    inputs:
+      versionSpec: 5.x
+
+  - script: make jenkins V=1 PREPARE_CI_PR=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(OSSBuildConfiguration)
+    displayName: make jenkins
+
+  - script: make package-deb V=1 CONFIGURATION=$(OSSBuildConfiguration)
+    displayName: make package-deb
+
+  - script: |
+      mkdir -p $(System.DefaultWorkingDirectory)/bin/BuildRelease/linux-artifacts
+      cp $(System.DefaultWorkingDirectory)/*xamarin.android*.tar* $(System.DefaultWorkingDirectory)/bin/BuildRelease/linux-artifacts
+      cp $(System.DefaultWorkingDirectory)/*.changes $(System.DefaultWorkingDirectory)/bin/BuildRelease/linux-artifacts
+      cp $(System.DefaultWorkingDirectory)/*.dsc $(System.DefaultWorkingDirectory)/bin/BuildRelease/linux-artifacts
+      cp $(System.DefaultWorkingDirectory)/*.deb $(System.DefaultWorkingDirectory)/bin/BuildRelease/linux-artifacts
+    displayName: copy linux artifacts
+
+  - task: PublishPipelineArtifact@1
+    displayName: publish linux artifacts
+    inputs:
+      artifactName: Linux Packages
+      targetPath: $(System.DefaultWorkingDirectory)/bin/BuildRelease/linux-artifacts
+
+  - template: yaml-templates/upload-results.yaml
+    parameters:
+      artifactName: OSS Build Results - Linux
