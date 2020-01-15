@@ -9,7 +9,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Build.Tests
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Xamarin.Android.Build.Tests.Shared", "src\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Xamarin.Android.Build.Tests.Shared.shproj", "{BD1D66BF-5AC7-4926-8EBE-B2198A112EB0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.ProjectTools", "src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Xamarin.ProjectTools.csproj", "{2DD1EE75-6D8D-4653-A800-0A24367F7F38}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.ProjectTools", "src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Xamarin.ProjectTools.csproj", "{2DD1EE75-6D8D-4653-A800-0A24367F7F38}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "external", "external", "{385E71CC-BAE5-488B-805E-ACAE55F01DF5}"
 EndProject
@@ -24,6 +24,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mono.Debugger.Soft", "external\debugger-libs\Mono.Debugger.Soft\Mono.Debugger.Soft.csproj", "{372E8E3E-29D5-4B4D-88A2-4711CD628C4E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mono.Debugging.Soft", "external\debugger-libs\Mono.Debugging.Soft\Mono.Debugging.Soft.csproj", "{DE40756E-57F6-4AF2-B155-55E3A88CCED8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "vswhere", "tools\vswhere\vswhere.csproj", "{DBDC804F-8406-4F5E-83C6-720CB0CB6C6F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Tools.AndroidSdk", "external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj", "{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -72,12 +76,17 @@ Global
 		{DE40756E-57F6-4AF2-B155-55E3A88CCED8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DE40756E-57F6-4AF2-B155-55E3A88CCED8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DE40756E-57F6-4AF2-B155-55E3A88CCED8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DBDC804F-8406-4F5E-83C6-720CB0CB6C6F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DBDC804F-8406-4F5E-83C6-720CB0CB6C6F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DBDC804F-8406-4F5E-83C6-720CB0CB6C6F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DBDC804F-8406-4F5E-83C6-720CB0CB6C6F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {F32556C5-6FD4-4F1D-884A-DEDF2EE865F6}
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{3B2A5653-EC97-4001-BB9B-D90F1AF2C371} = {385E71CC-BAE5-488B-805E-ACAE55F01DF5}
@@ -85,5 +94,9 @@ Global
 		{90C99ADB-7D4B-4EB4-98C2-40BD1B14C7D2} = {385E71CC-BAE5-488B-805E-ACAE55F01DF5}
 		{372E8E3E-29D5-4B4D-88A2-4711CD628C4E} = {385E71CC-BAE5-488B-805E-ACAE55F01DF5}
 		{DE40756E-57F6-4AF2-B155-55E3A88CCED8} = {385E71CC-BAE5-488B-805E-ACAE55F01DF5}
+		{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157} = {385E71CC-BAE5-488B-805E-ACAE55F01DF5}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F32556C5-6FD4-4F1D-884A-DEDF2EE865F6}
 	EndGlobalSection
 EndGlobal

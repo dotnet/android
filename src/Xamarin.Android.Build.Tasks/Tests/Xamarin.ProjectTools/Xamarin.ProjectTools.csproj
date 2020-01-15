@@ -1,90 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{2DD1EE75-6D8D-4653-A800-0A24367F7F38}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <RootNamespace>Xamarin.ProjectTools</RootNamespace>
-    <AssemblyName>Xamarin.ProjectTools</AssemblyName>
     <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
+    <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <Import Project="..\..\..\..\Configuration.props" />
   <Import Project="..\..\..\..\build-tools\scripts\MSBuildReferences.projitems" />
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <Optimize>false</Optimize>
-    <OutputPath>..\..\..\..\bin\TestDebug</OutputPath>
-    <DefineConstants>DEBUG;</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <ConsolePause>false</ConsolePause>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <Optimize>true</Optimize>
-    <OutputPath>..\..\..\..\bin\TestRelease</OutputPath>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <ConsolePause>false</ConsolePause>
-  </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Drawing" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Android\AndroidSdkResolver.cs" />
-    <Compile Include="Android\XamarinFormsMapsApplicationProject.cs" />
-    <Compile Include="Android\XASdkProject.cs" />
-    <Compile Include="Common\DotNetCLI.cs" />
-    <Compile Include="Common\ExistingProject.cs" />
-    <Compile Include="Android\MSBuildSdkExtrasProject.cs" />
-    <Compile Include="Common\TestEnvironment.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Common\BuildActions.cs" />
-    <Compile Include="Common\BuildItem.cs" />
-    <Compile Include="Common\Package.cs" />
-    <Compile Include="Common\ProjectLanguage.cs" />
-    <Compile Include="Common\ProjectResource.cs" />
-    <Compile Include="Common\Property.cs" />
-    <Compile Include="Common\PropertyGroup.cs" />
-    <Compile Include="Common\XamarinProject.cs" />
-    <Compile Include="Android\AndroidBuildActions.cs" />
-    <Compile Include="Android\XamarinAndroidApplicationProject.cs" />
-    <Compile Include="Android\XamarinAndroidBindingProject.cs" />
-    <Compile Include="Android\XamarinAndroidCommonProject.cs" />
-    <Compile Include="Android\XamarinAndroidLibraryProject.cs" />
-    <Compile Include="Android\XamarinAndroidProject.cs" />
-    <Compile Include="Android\XamarinAndroidProjectLanguage.cs" />
-    <Compile Include="Android\XamarinAndroidWearApplicationProject.cs" />
-    <Compile Include="Android\XamarinFormsAndroidApplicationProject.cs" />
-    <Compile Include="Android\AndroidItem.cs" />
-    <Compile Include="Common\DownloadedCache.cs" />
-    <Compile Include="Common\ProjectBuilder.cs" />
-    <Compile Include="Android\Versions.cs" />
-    <Compile Include="Android\KnownPackages.cs" />
-    <Compile Include="Android\KnownProperties.cs" />
-    <Compile Include="Android\AndroidLinkMode.cs" />
-    <Compile Include="Common\FailedBuildException.cs" />
-    <Compile Include="Utilities\DexUtils.cs" />
-    <Compile Include="Utilities\PNGChecker.cs" />
-    <Compile Include="Utilities\ZipHelper.cs" />
-    <Compile Include="Common\XamarinPCLProject.cs" />
-    <Compile Include="Common\Import.cs" />
-    <Compile Include="Common\SolutionBuilder.cs" />
-    <Compile Include="Common\Builder.cs" />
-    <Compile Include="Common\BuildOutput.cs" />
-    <Compile Include="Android\ApkContents.cs" />
-    <Compile Include="Common\BuildOutputFiles.cs" />
-    <Compile Include="Utilities\FileSystemUtils.cs" />
-    <Compile Include="Android\JarContentBuilder.cs" />
-    <Compile Include="Common\ContentBuilder.cs" />
-    <Compile Include="Common\DotNetStandard.cs" />
-    <Compile Include="Common\DotNetXamarinProject.cs" />
-    <Compile Include="XABuildPaths.cs" />
-  </ItemGroup>
-  <ItemGroup>
+    <Compile Remove="Resources\**\*.cs" />
     <EmbeddedResource Include="Resources\Wear\LayoutMain.axml">
       <LogicalName>Xamarin.ProjectTools.Resources.Wear.LayoutMain.axml</LogicalName>
     </EmbeddedResource>
@@ -151,6 +75,8 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="System.Drawing.Common" Version="4.7.0" />
+    <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
     <ProjectReference Include="..\..\..\..\external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj">
       <Project>{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}</Project>
       <Name>Xamarin.Android.Tools.AndroidSdk</Name>
@@ -160,5 +86,4 @@
       <Name>vswhere</Name>
     </ProjectReference>
   </ItemGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
