@@ -76,6 +76,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="System.Drawing.Common" Version="4.7.0" />
+    <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
     <ProjectReference Include="..\..\..\..\external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj">
       <Project>{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}</Project>
       <Name>Xamarin.Android.Tools.AndroidSdk</Name>
