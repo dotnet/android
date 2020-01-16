@@ -8,8 +8,8 @@ namespace Xamarin.Android.Prepare
 	class libzip_nih_at_libzip_TPN : ThirdPartyNotice
 	{
 		static readonly Uri url = new Uri ("https://github.com/nih-at/libzip/");
-		static readonly string licenseFile = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.UserProfile),
-			".nuget", "packages", "xamarin.libzipsharp", LibZipSharp_grendello_LibZipSharp_TPN.LibZipSharpVersion,
+		static readonly string licenseFile = Path.Combine (BuildPaths.XamarinAndroidSourceRoot,
+			"packages", "xamarin.libzipsharp", LibZipSharp_grendello_LibZipSharp_TPN.LibZipSharpVersion,
 			"Licences", "libzip", "LICENSE");
 
 		public override string LicenseFile => licenseFile;

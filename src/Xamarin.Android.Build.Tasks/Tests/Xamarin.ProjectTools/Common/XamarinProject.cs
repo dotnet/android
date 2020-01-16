@@ -30,7 +30,7 @@ namespace Xamarin.ProjectTools
 		public IList<Package> Packages { get; private set; }
 		public IList<BuildItem> References { get; private set; }
 		public IList<Package> PackageReferences { get; private set; }
-		public string GlobalPackagesFolder { get; set; }
+		public string GlobalPackagesFolder { get; set; } = Path.Combine (XABuildPaths.TopDirectory, "packages");
 		public IList<string> ExtraNuGetConfigSources { get; set; }
 
 		public virtual bool ShouldRestorePackageReferences => PackageReferences?.Count > 0;
