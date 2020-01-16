@@ -3,6 +3,7 @@
         <TargetFramework>netstandard2.0</TargetFramework>
         <PackageId>Xamarin.Android.Sdk.Lite</PackageId>
         <PackageVersion Condition="Exists('..\..\bin\$(Configuration)\Version')">$([System.IO.File]::ReadAllText('..\..\bin\$(Configuration)\Version'))</PackageVersion>
+        <PackageVersion Condition="Exists('..\..\bin\$(Configuration)\Version.rev')">$(PackageVersion).$([System.IO.File]::ReadAllText('..\..\bin\$(Configuration)\Version.rev'))</PackageVersion>
         <PackageVersion Condition="'$(PackageVersion)' == ''">1.0.0</PackageVersion>
         <Authors>Xamarin</Authors>
         <Description>Lightweight SDK that depends on an existing full installation of the Xamarin.Android SDK tools from Visual Studio</Description>
