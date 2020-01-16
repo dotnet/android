@@ -320,6 +320,27 @@ int xml myxml 0x7f140000
 			}
 		}
 
+		void CompareFilesIgnoreRuntimeInfoString (string file1, string file2)
+		{
+			FileAssert.Exists (file1);
+			FileAssert.Exists (file2);
+			var content1 = File.ReadAllText (file1);
+			var content2 = File.ReadAllText (file2);
+			// This string is only generated when running on mono, replace with a new line that will be stripped when comparing.
+			string versionInfo = "//     Runtime Version:4.0.30319.42000";
+			content1 = content1.Replace (versionInfo, Environment.NewLine);
+			content2 = content2.Replace (versionInfo, Environment.NewLine);
+
+			using (var s1 = new MemoryStream (Encoding.UTF8.GetBytes (content1)))
+			using (var s2 = new MemoryStream (Encoding.UTF8.GetBytes (content2))) {
+				if (!StreamCompare (s1, s2)) {
+					TestContext.AddTestAttachment (file1, Path.GetFileName (file1));
+					TestContext.AddTestAttachment (file2, Path.GetFileName (file2));
+					Assert.Fail ($"{file1} and {file2} do not match.");
+				}
+			}
+		}
+
 		[Test]
 		public void GenerateDesignerFileWithÜmläüts ()
 		{
@@ -348,7 +369,7 @@ int xml myxml 0x7f140000
 			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
 			Assert.IsTrue (File.Exists (task.NetResgenOutputFile), $"{task.NetResgenOutputFile} should have been created.");
 			var expected = Path.Combine (Root, "Expected", "GenerateDesignerFileExpected.cs");
-			AssertFileContentsMatch (task.NetResgenOutputFile, expected);
+			CompareFilesIgnoreRuntimeInfoString (task.NetResgenOutputFile, expected);
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
@@ -388,7 +409,7 @@ int xml myxml 0x7f140000
 			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
 			Assert.IsTrue (File.Exists (task.NetResgenOutputFile), $"{task.NetResgenOutputFile} should have been created.");
 			var expected = Path.Combine (Root, "Expected", withLibraryReference ? "GenerateDesignerFileWithLibraryReferenceExpected.cs" : "GenerateDesignerFileExpected.cs");
-			AssertFileContentsMatch (task.NetResgenOutputFile, expected);
+			CompareFilesIgnoreRuntimeInfoString (task.NetResgenOutputFile, expected);
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
@@ -424,7 +445,7 @@ int xml myxml 0x7f140000
 			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
 			Assert.IsTrue (File.Exists (task.NetResgenOutputFile), $"{task.NetResgenOutputFile} should have been created.");
 			var expected = Path.Combine (Root, "Expected", "GenerateDesignerFileExpected.cs");
-			AssertFileContentsMatch (task.NetResgenOutputFile, expected);
+			CompareFilesIgnoreRuntimeInfoString (task.NetResgenOutputFile, expected);
 			// Update the id, and force the managed parser to re-parse the output
 			File.WriteAllText (Path.Combine (Root, path, "res", "layout", "main.xml"), Main.Replace ("@+id/textview.withperiod", "@+id/textview.withperiod2"));
 			File.SetLastWriteTimeUtc (task.ResourceFlagFile, DateTime.UtcNow);
@@ -433,7 +454,7 @@ int xml myxml 0x7f140000
 			var data = File.ReadAllText (expected);
 			var expectedWithNewId = Path.Combine (Root, path, "GenerateDesignerFileExpectedWithNewId.cs");
 			File.WriteAllText (expectedWithNewId, data.Replace ("withperiod", "withperiod2"));
-			AssertFileContentsMatch (task.NetResgenOutputFile, expectedWithNewId);
+			CompareFilesIgnoreRuntimeInfoString (task.NetResgenOutputFile, expectedWithNewId);
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
@@ -516,7 +537,7 @@ int xml myxml 0x7f140000
 			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
 			string aapt2Designer = Path.Combine (Root, path, "Resource.designer.aapt2.cs");
 			string managedDesigner = Path.Combine (Root, path, "Resource.designer.managed.cs");
-			AssertFileContentsMatch (managedDesigner, aapt2Designer);
+			CompareFilesIgnoreRuntimeInfoString (managedDesigner, aapt2Designer);
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 
 		}
@@ -589,7 +610,7 @@ int xml myxml 0x7f140000
 			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
 
 			string managedDesignerRtxt = Path.Combine (Root, path, "Resource.designer.managedrtxt.cs");
-			AssertFileContentsMatch (managedDesignerRtxt, aaptDesigner);
+			CompareFilesIgnoreRuntimeInfoString (managedDesignerRtxt, aaptDesigner);
 
 			File.WriteAllText (task.ResourceFlagFile, string.Empty);
 			File.Delete (Path.Combine (Root, path, "R.txt.bak"));
@@ -710,7 +731,7 @@ int styleable ElevenAttributes_attr10 10";
 			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
 			Assert.IsTrue (File.Exists (task.NetResgenOutputFile), $"{task.NetResgenOutputFile} should have been created.");
 			var expected = Path.Combine (Root, "Expected", "GenerateDesignerFileWithElevenStyleableAttributesExpected.cs");
-			AssertFileContentsMatch (task.NetResgenOutputFile, expected);
+			CompareFilesIgnoreRuntimeInfoString (task.NetResgenOutputFile, expected);
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 	}

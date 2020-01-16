@@ -34,8 +34,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Mono.Posix.NETStandard" Version="1.0.0" />
-    <PackageReference Include="Xamarin.Build.AsyncTask" Version="0.3.4" />
+    <PackageReference Include="Mono.Posix.NETStandard" Version="1.0.0" GeneratePathProperty="true" />
+    <PackageReference Include="Xamarin.Build.AsyncTask" Version="0.3.4" GeneratePathProperty="true" />
     <PackageReference Include="Xamarin.LibZipSharp" Version="$(LibZipSharpVersion)" />
   </ItemGroup>
   <ItemGroup>
