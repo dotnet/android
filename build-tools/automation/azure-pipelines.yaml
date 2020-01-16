@@ -487,12 +487,12 @@ stages:
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
         configuration: $(ApkTestConfiguration)
-        testName: Mono.Android_Tests-Profiled
+        testName: Mono.Android_Tests-Profiled-Aot
         project: src/Mono.Android/Test/Mono.Android-Tests.csproj
-        testResultsFiles: TestResult-Mono.Android_Tests-$(ApkTestConfiguration)-Profiled.xml
-        extraBuildArgs: /p:AndroidEnableProfiledAot=true
+        testResultsFiles: TestResult-Mono.Android_Tests-$(ApkTestConfiguration)-Profiled-Aot.xml
+        extraBuildArgs: /p:AotAssemblies=True /p:AndroidEnableProfiledAot=true
         artifactName: Mono.Android_Tests-Signed.apk
-        artifactFolder: Profiled
+        artifactFolder: Profiled-Aot
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -565,12 +565,12 @@ stages:
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
         configuration: $(ApkTestConfiguration)
-        testName: Xamarin.Android.Locale_Tests-Profiled
+        testName: Xamarin.Android.Locale_Tests-Profiled-Aot
         project: tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
-        testResultsFiles: TestResult-Xamarin.Android.Locale_Tests-$(ApkTestConfiguration)-Profiled.xml
-        extraBuildArgs: /p:AndroidEnableProfiledAot=true
+        testResultsFiles: TestResult-Xamarin.Android.Locale_Tests-$(ApkTestConfiguration)-Profiled-Aot.xml
+        extraBuildArgs: /p:AotAssemblies=True /p:AndroidEnableProfiledAot=true
         artifactName: Xamarin.Android.Locale_Tests-Signed.apk
-        artifactFolder: Profiled
+        artifactFolder: Profiled-Aot
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -579,7 +579,7 @@ stages:
         project: tests/EmbeddedDSOs/EmbeddedDSO/EmbeddedDSO.csproj
         testResultsFiles: TestResult-Xamarin.Android.EmbeddedDSO_Test.nunit-$(ApkTestConfiguration).xml
         artifactName: Xamarin.Android.EmbeddedDSO_Test-Signed.apk
-        artifactFolder: Profiled
+        artifactFolder: Default
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -601,11 +601,11 @@ stages:
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
         configuration: $(ApkTestConfiguration)
-        testName: Xamarin.Forms-Performance-Integration-Profiled
+        testName: Xamarin.Forms-Performance-Integration-Profiled-Aot
         project: tests/Xamarin.Forms-Performance-Integration/Droid/Xamarin.Forms.Performance.Integration.Droid.csproj
-        extraBuildArgs: /p:AndroidEnableProfiledAot=true
+        extraBuildArgs: /p:AotAssemblies=True /p:AndroidEnableProfiledAot=true
         artifactName: Xamarin.Forms_Performance_Integration-Signed.apk
-        artifactFolder: Profiled
+        artifactFolder: Profiled-Aot
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
