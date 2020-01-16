@@ -1,6 +1,5 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="sqlite-xamarin.props" />
-  <Import Project="..\..\build-tools\scripts\RequiredPrograms.targets" />
   <Import Project="sources.projitems" Condition="Exists ('sources.projitems')" />
 
   <PropertyGroup>
