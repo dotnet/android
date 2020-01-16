@@ -40,7 +40,7 @@ namespace Xamarin.Android.Build
 
 				//Symbolic links to be created: key=in-tree-dir, value=system-dir
 				var symbolicLinks = new Dictionary<string, string> ();
-				if (paths.IsMacOS) {
+				if (paths.IsMacOS || paths.IsLinux) {
 					foreach (var dir in Directory.EnumerateDirectories (paths.MonoSystemFrameworkRoot)) {
 						if (Path.GetFileName (dir).EndsWith ("-api", StringComparison.OrdinalIgnoreCase)){
 							var inTreeFramework = Path.Combine (paths.XamarinAndroidBuildOutput, "lib", "xamarin.android", Path.GetFileName (dir));
