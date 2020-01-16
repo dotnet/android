@@ -982,8 +982,8 @@ stages:
         designerSourcePath: $(System.DefaultWorkingDirectory)\designer
 
   # Check - "Xamarin.Android (Test Integrated Regression - macOS)"
-  - job: integrated_regression_mac
-    displayName: Integrated Regression - macOS
+  - job: integrated_regression_mac_1
+    displayName: Integrated Regression - macOS - Lane 1
     pool:
       name: VSEng-Xamarin-Mac-Devices
       demands:
@@ -993,12 +993,48 @@ stages:
     condition: and(eq(variables['XA.Commercial.Build'], 'true'), ne(variables['System.PullRequest.IsFork'], 'True'))
     workspace:
       clean: all
+    variables:
+      parallel-id: '1'
+    steps:
+    - template: yaml-templates/run-integrated-regression-tests.yaml
+
+  # Check - "Xamarin.Android (Test Integrated Regression - macOS)"
+  - job: integrated_regression_mac_2
+    displayName: Integrated Regression - macOS - Lane 2
+    pool:
+      name: VSEng-Xamarin-Mac-Devices
+      demands:
+      - android
+    timeoutInMinutes: 240
+    cancelTimeoutInMinutes: 5
+    condition: and(eq(variables['XA.Commercial.Build'], 'true'), ne(variables['System.PullRequest.IsFork'], 'True'))
+    workspace:
+      clean: all
+    variables:
+      parallel-id: '2'
+    steps:
+    - template: yaml-templates/run-integrated-regression-tests.yaml
+
+  # Check - "Xamarin.Android (Test Integrated Regression - macOS)"
+  - job: integrated_regression_mac_3
+    displayName: Integrated Regression - macOS - Lane 3
+    pool:
+      name: VSEng-Xamarin-Mac-Devices
+      demands:
+      - android
+    timeoutInMinutes: 240
+    cancelTimeoutInMinutes: 5
+    condition: and(eq(variables['XA.Commercial.Build'], 'true'), ne(variables['System.PullRequest.IsFork'], 'True'))
+    workspace:
+      clean: all
+    variables:
+      parallel-id: '3'
     steps:
     - template: yaml-templates/run-integrated-regression-tests.yaml
 
   # Check - "Xamarin.Android (Test Integrated Regression - Windows)"
-  - job: integrated_regression_Win
-    displayName: Integrated Regression - Windows
+  - job: integrated_regression_Win_1
+    displayName: Integrated Regression - Windows - Lane 1
     pool:
       name: VSEng-Xamarin-Win-XMA
       demands:
@@ -1010,6 +1046,51 @@ stages:
       clean: all
     variables:
       XQA_VISUALSTUDIO_LOCATION: '%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Enterprise'
+      parallel-id: '1'
+    steps:
+    - template: remove-visualstudio.yml@yaml
+
+    - template: yaml-templates\run-integrated-regression-tests.yaml
+
+    - template: remove-visualstudio.yml@yaml
+
+  # Check - "Xamarin.Android (Test Integrated Regression - Windows)"
+  - job: integrated_regression_Win_2
+    displayName: Integrated Regression - Windows - Lane 2
+    pool:
+      name: VSEng-Xamarin-Win-XMA
+      demands:
+      - android
+    timeoutInMinutes: 240
+    cancelTimeoutInMinutes: 5
+    condition: and(eq(variables['XA.Commercial.Build'], 'true'), ne(variables['System.PullRequest.IsFork'], 'True'))
+    workspace:
+      clean: all
+    variables:
+      XQA_VISUALSTUDIO_LOCATION: '%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Enterprise'
+      parallel-id: '2'
+    steps:
+    - template: remove-visualstudio.yml@yaml
+
+    - template: yaml-templates\run-integrated-regression-tests.yaml
+
+    - template: remove-visualstudio.yml@yaml
+
+  # Check - "Xamarin.Android (Test Integrated Regression - Windows)"
+  - job: integrated_regression_Win_3
+    displayName: Integrated Regression - Windows - Lane 3
+    pool:
+      name: VSEng-Xamarin-Win-XMA
+      demands:
+      - android
+    timeoutInMinutes: 240
+    cancelTimeoutInMinutes: 5
+    condition: and(eq(variables['XA.Commercial.Build'], 'true'), ne(variables['System.PullRequest.IsFork'], 'True'))
+    workspace:
+      clean: all
+    variables:
+      XQA_VISUALSTUDIO_LOCATION: '%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Enterprise'
+      parallel-id: '3'
     steps:
     - template: remove-visualstudio.yml@yaml
 

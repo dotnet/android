@@ -65,6 +65,7 @@ steps:
     testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: Mono.Android-Tests Debug on Device
     nunitConsoleExtraArgs: --where "cat == RuntimeTests"
+    condition: and(succeededOrFailed(), eq(variables['parallel-id'], '1'))
 
 - template: run-nunit-tests.yaml
   parameters:
@@ -72,7 +73,7 @@ steps:
     testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: Hello Tests on Device
     nunitConsoleExtraArgs: --where "cat == Hello"
-    condition: and(succeededOrFailed(), eq(variables['XA.Commercial.Build'], 'true'))
+    condition: and(succeededOrFailed(), eq(variables['XA.Commercial.Build'], 'true'), eq(variables['parallel-id'], '1'))
 
 - template: run-nunit-tests.yaml
   parameters:
@@ -80,6 +81,7 @@ steps:
     testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: Smoke Tests on Device
     nunitConsoleExtraArgs: --where "cat == RegressionDeviceTests"
+    condition: and(succeededOrFailed(), eq(variables['parallel-id'], '1'))
 
 - template: run-nunit-tests.yaml
   parameters:
@@ -87,6 +89,7 @@ steps:
     testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: Smoke Tests
     nunitConsoleExtraArgs: --where "cat == RegressionTests"
+    condition: and(succeededOrFailed(), eq(variables['parallel-id'], '1'))
 
 - template: run-nunit-tests.yaml
   parameters:
@@ -94,6 +97,7 @@ steps:
     testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: Installer Tests
     nunitConsoleExtraArgs: --where "cat == InstallationTests"
+    condition: and(succeededOrFailed(), eq(variables['parallel-id'], '1'))
 
 - template: run-nunit-tests.yaml
   parameters:
@@ -101,7 +105,7 @@ steps:
     testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: Fast Deploy Tests
     nunitConsoleExtraArgs: --where "cat == FastDevTests"
-    condition: and(succeededOrFailed(), eq(variables['XA.Commercial.Build'], 'true'))
+    condition: and(succeededOrFailed(), eq(variables['XA.Commercial.Build'], 'true'), eq(variables['parallel-id'], '1'))
 
 - template: run-nunit-tests.yaml
   parameters:
@@ -109,7 +113,7 @@ steps:
     testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: Debug Tests
     nunitConsoleExtraArgs: --where "cat == DebuggerTests"
-    condition: and(succeededOrFailed(), eq(variables['XA.Commercial.Build'], 'true'))
+    condition: and(succeededOrFailed(), eq(variables['XA.Commercial.Build'], 'true'), eq(variables['parallel-id'], '1'))
 
 - template: run-nunit-tests.yaml
   parameters:
@@ -117,6 +121,7 @@ steps:
     testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: Incremental Build Tests
     nunitConsoleExtraArgs: --where "cat == BuildPerformance"
+    condition: and(succeededOrFailed(), eq(variables['parallel-id'], '2'))
 
 - template: run-nunit-tests.yaml
   parameters:
@@ -124,6 +129,7 @@ steps:
     testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: AOT Tests
     nunitConsoleExtraArgs: --where "cat == AotSupport"
+    condition: and(succeededOrFailed(), eq(variables['parallel-id'], '2'))
 
 - template: run-nunit-tests.yaml
   parameters:
@@ -131,6 +137,7 @@ steps:
     testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: Linker Tests
     nunitConsoleExtraArgs: --where "cat == LinkerTests"
+    condition: and(succeededOrFailed(), eq(variables['parallel-id'], '1'))
 
 - template: run-nunit-tests.yaml
   parameters:
@@ -138,6 +145,7 @@ steps:
     testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: Wearable Tests
     nunitConsoleExtraArgs: --where "cat == Wearable"
+    condition: and(succeededOrFailed(), eq(variables['parallel-id'], '1'))
 
 - template: run-nunit-tests.yaml
   parameters:
@@ -145,6 +153,7 @@ steps:
     testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: Proguard Tests
     nunitConsoleExtraArgs: --where "cat == Proguard"
+    condition: and(succeededOrFailed(), eq(variables['parallel-id'], '3'))
 
 - template: run-nunit-tests.yaml
   parameters:
@@ -152,6 +161,7 @@ steps:
     testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: Multidex Tests
     nunitConsoleExtraArgs: --where "cat == Multidex"
+    condition: and(succeededOrFailed(), eq(variables['parallel-id'], '3'))
 
 - template: run-nunit-tests.yaml
   parameters:
@@ -159,6 +169,7 @@ steps:
     testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: ExplicitCrunch Tests
     nunitConsoleExtraArgs: --where "cat == ExplicitCrunch"
+    condition: and(succeededOrFailed(), eq(variables['parallel-id'], '3'))
 
 - template: run-nunit-tests.yaml
   parameters:
@@ -166,6 +177,7 @@ steps:
     testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: TargetFrameworkVersion Tests
     nunitConsoleExtraArgs: --where "cat == TargetFrameworkTests"
+    condition: and(succeededOrFailed(), eq(variables['parallel-id'], '3'))
 
 - template: run-nunit-tests.yaml
   parameters:
@@ -173,6 +185,7 @@ steps:
     testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: Resource Cache Tests
     nunitConsoleExtraArgs: --where "cat == ResourceCacheTests"
+    condition: and(succeededOrFailed(), eq(variables['parallel-id'], '3'))
 
 - template: run-nunit-tests.yaml
   parameters:
@@ -180,6 +193,7 @@ steps:
     testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: Property Cache Tests
     nunitConsoleExtraArgs: --where "cat == PropertyCacheTests"
+    condition: and(succeededOrFailed(), eq(variables['parallel-id'], '3'))
 
 - template: run-nunit-tests.yaml
   parameters:
@@ -187,6 +201,7 @@ steps:
     testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: Code Analysis Tests
     nunitConsoleExtraArgs: --where "cat == CodeAnalysisTests"
+    condition: and(succeededOrFailed(), eq(variables['parallel-id'], '3'))
 
 - template: run-nunit-tests.yaml
   parameters:
@@ -194,6 +209,7 @@ steps:
     testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: Networking Options Tests
     nunitConsoleExtraArgs: --where "cat == HttpClientAndTlsProviderPackageTests"
+    condition: and(succeededOrFailed(), eq(variables['parallel-id'], '3'))
 
 - template: run-nunit-tests.yaml
   parameters:
@@ -201,6 +217,7 @@ steps:
     testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: AndroidApiInfo Tests
     nunitConsoleExtraArgs: --where "cat == AndroidApiInfoTests"
+    condition: and(succeededOrFailed(), eq(variables['parallel-id'], '3'))
 
 - template: run-nunit-tests.yaml
   parameters:
@@ -208,3 +225,4 @@ steps:
     testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: Test Environment Cleanup
     nunitConsoleExtraArgs: --where "cat == XATestCleanUp"
+    condition: and(succeededOrFailed(), eq(variables['parallel-id'], '3'))
