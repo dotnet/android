@@ -54,15 +54,15 @@ steps:
 
 - template: run-installer.yaml
 
-- ${{ if eq(parameters.node_id, 1) }}:
-  - powershell: |   
-      if ([Environment]::OSVersion.Platform -eq "Unix") {
-         mono $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll --where "cat == XAUnitTestSetup || cat == XATestPrep || cat == EnvironmentInfo"
-      } else {
-         $(System.DefaultWorkingDirectory)\NUnit.ConsoleRunner\tools\nunit3-console.exe $(System.DefaultWorkingDirectory)\XQA.Android\XQA.Android.dll --where "cat == XAUnitTestSetup || cat == XATestPrep || cat == EnvironmentInfo"
-      }
-    displayName: Test Environment Setup
+- powershell: |   
+    if ([Environment]::OSVersion.Platform -eq "Unix") {
+       mono $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll --where "cat == XAUnitTestSetup || cat == XATestPrep || cat == EnvironmentInfo"
+    } else {
+       $(System.DefaultWorkingDirectory)\NUnit.ConsoleRunner\tools\nunit3-console.exe $(System.DefaultWorkingDirectory)\XQA.Android\XQA.Android.dll --where "cat == XAUnitTestSetup || cat == XATestPrep || cat == EnvironmentInfo"
+    }
+  displayName: Test Environment Setup
 
+- ${{ if eq(parameters.node_id, 1) }}:
   - template: run-nunit-tests.yaml
     parameters:
       nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
