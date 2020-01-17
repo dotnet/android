@@ -993,10 +993,10 @@ stages:
     condition: and(eq(variables['XA.Commercial.Build'], 'true'), ne(variables['System.PullRequest.IsFork'], 'True'))
     workspace:
       clean: all
-    variables:
-      parallel-id: '1'
     steps:
     - template: yaml-templates/run-integrated-regression-tests.yaml
+      parameters:
+        node_id: 1
 
   # Check - "Xamarin.Android (Test Integrated Regression - macOS)"
   - job: integrated_regression_mac_2
@@ -1010,10 +1010,10 @@ stages:
     condition: and(eq(variables['XA.Commercial.Build'], 'true'), ne(variables['System.PullRequest.IsFork'], 'True'))
     workspace:
       clean: all
-    variables:
-      parallel-id: '2'
     steps:
     - template: yaml-templates/run-integrated-regression-tests.yaml
+      parameters:
+        node_id: 2
 
   # Check - "Xamarin.Android (Test Integrated Regression - macOS)"
   - job: integrated_regression_mac_3
@@ -1027,10 +1027,10 @@ stages:
     condition: and(eq(variables['XA.Commercial.Build'], 'true'), ne(variables['System.PullRequest.IsFork'], 'True'))
     workspace:
       clean: all
-    variables:
-      parallel-id: '3'
     steps:
     - template: yaml-templates/run-integrated-regression-tests.yaml
+      parameters:
+        node_id: 3
 
   # Check - "Xamarin.Android (Test Integrated Regression - Windows)"
   - job: integrated_regression_Win_1
@@ -1046,11 +1046,12 @@ stages:
       clean: all
     variables:
       XQA_VISUALSTUDIO_LOCATION: '%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Enterprise'
-      parallel-id: '1'
     steps:
     - template: remove-visualstudio.yml@yaml
 
     - template: yaml-templates\run-integrated-regression-tests.yaml
+      parameters:
+        node_id: 1
 
     - template: remove-visualstudio.yml@yaml
 
@@ -1068,11 +1069,12 @@ stages:
       clean: all
     variables:
       XQA_VISUALSTUDIO_LOCATION: '%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Enterprise'
-      parallel-id: '2'
     steps:
     - template: remove-visualstudio.yml@yaml
 
     - template: yaml-templates\run-integrated-regression-tests.yaml
+      parameters:
+        node_id: 2
 
     - template: remove-visualstudio.yml@yaml
 
@@ -1090,10 +1092,11 @@ stages:
       clean: all
     variables:
       XQA_VISUALSTUDIO_LOCATION: '%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Enterprise'
-      parallel-id: '3'
     steps:
     - template: remove-visualstudio.yml@yaml
 
     - template: yaml-templates\run-integrated-regression-tests.yaml
+      parameters:
+        node_id: 3
 
     - template: remove-visualstudio.yml@yaml
