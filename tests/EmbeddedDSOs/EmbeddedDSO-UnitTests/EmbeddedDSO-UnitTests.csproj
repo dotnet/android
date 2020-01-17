@@ -1,36 +1,18 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{8B5E63B7-8C18-4BA7-BAAB-A1955B257F5E}</ProjectGuid>
-    <OutputType>Library</OutputType>
+    <TargetFramework>net472</TargetFramework>
     <RootNamespace>EmbeddedDSOUnitTests</RootNamespace>
     <AssemblyName>EmbeddedDSOUnitTests</AssemblyName>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <OutputPath>..\..\..\bin\Test$(Configuration)</OutputPath>
   </PropertyGroup>
 
   <Import Project="..\..\..\Configuration.props" />
   <Import Project="..\..\..\build-tools\scripts\MSBuildReferences.projitems" />
   <UsingTask AssemblyFile="..\..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
 
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <Optimize>false</Optimize>
-    <OutputPath>..\..\..\bin\TestDebug</OutputPath>
-    <DefineConstants>DEBUG;</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <Optimize>true</Optimize>
-    <OutputPath>..\..\..\bin\TestRelease</OutputPath>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Xml" />
     <Reference Include="Xamarin.Android.Build.Tasks">
       <HintPath>..\..\..\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\Xamarin.Android.Build.Tasks.dll</HintPath>
       <Private>True</Private>
@@ -40,23 +22,21 @@
       <Private>True</Private>
     </Reference>
   </ItemGroup>
+
   <ItemGroup>
-    <Compile Include="BuildTests.cs" />
     <Compile Include="$(IntermediateOutputPath)Config.cs" />
-    <Compile Include="..\..\..\bin\Build$(CONFIGURATION)/XABuildConfig.cs">
+    <Compile Include="..\..\..\bin\Build$(CONFIGURATION)\XABuildConfig.cs">
        <Link>XABuildConfig.cs</Link>
     </Compile>
     <Compile Include="..\..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Utilities\EnvironmentHelper.cs" />
   </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="NUnit" Version="3.11.0" />
   </ItemGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Xamarin.ProjectTools.csproj">
-      <Project>{2DD1EE75-6D8D-4653-A800-0A24367F7F38}</Project>
-      <Name>Xamarin.ProjectTools</Name>
-    </ProjectReference>
+    <ProjectReference Include="..\..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Xamarin.ProjectTools.csproj" />
   </ItemGroup>
 
   <Target Name="Prepare"
@@ -73,4 +53,5 @@
         Replacements="@ANDROID_SDK_DIRECTORY@=$(AndroidSdkDirectory);@BUILD_TOOLS_FOLDER@=$(XABuildToolsFolder);@EXECUTABLE_EXTENSION@=$(ExecutableExtension)"
     />
   </Target>
+
 </Project>
