@@ -67,7 +67,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		public IList<JavaMember> Members { get; set; }
 
 		public string FullName {
-			get { return Parent.Name + (Parent.Name.Length > 0 ? "." : string.Empty) + Name; }
+			get { return Parent?.Name + ((Parent?.Name?.Length ?? 0) > 0 ? "." : string.Empty) + Name; }
 		}
 		
 		// Content of this value is not stable.

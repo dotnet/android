@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <ProjectGuid>{5C0B3562-8DA0-4726-9762-75B9709ED6B7}</ProjectGuid>
+    <AssemblyTitle>Java.Interop.Tools.JavaSource</AssemblyTitle>
+    <Company>Microsoft Corporation</Company>
+    <Copyright>Microsoft Corporation</Copyright>
+    <AssemblyVersion>0.1.0.0</AssemblyVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <OutputPath>..\..\bin\Debug</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OutputPath>..\..\bin\Release</OutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Irony" Version="1.1.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Xamarin.Android.Tools.ApiXmlAdjuster\Xamarin.Android.Tools.ApiXmlAdjuster.csproj" />
+  </ItemGroup>
+</Project>

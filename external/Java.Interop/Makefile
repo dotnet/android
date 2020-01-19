@@ -27,6 +27,7 @@ TESTS = \
 	bin/Test$(CONFIGURATION)/Java.Interop.Dynamic-Tests.dll \
 	bin/Test$(CONFIGURATION)/Java.Interop.Export-Tests.dll \
 	bin/Test$(CONFIGURATION)/Java.Interop.Tools.JavaCallableWrappers-Tests.dll \
+	bin/Test$(CONFIGURATION)/Java.Interop.Tools.JavaSource-Tests.dll \
 	bin/Test$(CONFIGURATION)/logcat-parse-Tests.dll \
 	bin/Test$(CONFIGURATION)/generator-Tests.dll \
 	bin/Test$(CONFIGURATION)/Xamarin.Android.Tools.ApiXmlAdjuster-Tests.dll \

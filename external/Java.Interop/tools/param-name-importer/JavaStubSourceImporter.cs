@@ -3,7 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+
 using Irony.Parsing;
+
+using Java.Interop.Tools.JavaSource;
+
 using Xamarin.Android.Tools.ApiXmlAdjuster;
 
 namespace Xamarin.Android.ApiTools.JavaStubImporter
@@ -62,19 +66,18 @@ namespace Xamarin.Android.ApiTools.JavaStubImporter
 				api.WriteParameterNamesXml (options.OutputXmlFile);
 		}
 
-		JavaStubGrammar grammar = new JavaStubGrammar () { LanguageFlags = LanguageFlags.Default | LanguageFlags.CreateAst };
+		JavaStubParser  parser = new JavaStubParser ();
 		JavaApi api = new JavaApi ();
 
 		bool ParseJava (string javaSourceText)
 		{
-			var parser = new Irony.Parsing.Parser (grammar);
-			var result = parser.Parse (javaSourceText);
-			foreach (var m in result.ParserMessages)
+			var parsedPackage = parser.TryParse (javaSourceText, out var parseTree);
+			foreach (var m in parseTree.ParserMessages) {
 				Console.WriteLine ($"{m.Level} {m.Location} {m.Message}");
-			if (result.HasErrors ())
+			}
+			if (parsedPackage == null) {
 				return false;
-			var parsedPackage = (JavaPackage)result.Root.AstNode;
-			FlattenNestedTypes (parsedPackage);
+			}
 			var pkg = api.Packages.FirstOrDefault (p => p.Name == parsedPackage.Name);
 			if (pkg == null) {
 				api.Packages.Add (parsedPackage);
@@ -84,25 +87,6 @@ namespace Xamarin.Android.ApiTools.JavaStubImporter
 					pkg.Types.Add (t);
 			pkg.Types = pkg.Types.OrderBy (t => t.Name).ToList ();
 			return true;
-		}
-
-		void FlattenNestedTypes (JavaPackage package)
-		{
-			Action<List<JavaType>,JavaType> flatten = null;
-			flatten = (list, t) => {
-				list.Add (t);
-				foreach (var nt in t.Members.OfType<JavaStubGrammar.NestedType> ()) {
-					nt.Type.Name = t.Name + '.' + nt.Type.Name;
-					foreach (var nc in nt.Type.Members.OfType<JavaConstructor> ())
-						nc.Name = nt.Type.Name;
-					flatten (list, nt.Type);
-				}
-				t.Members = t.Members.Where (_ => !(_ is JavaStubGrammar.NestedType)).ToArray ();
-			};
-			var results = new List<JavaType> ();
-			foreach (var t in package.Types)
-				flatten (results, t);
-			package.Types = results.ToList ();
 		}
 	}
 }

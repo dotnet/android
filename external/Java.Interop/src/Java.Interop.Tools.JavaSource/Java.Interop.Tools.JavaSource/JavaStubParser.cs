@@ -1,25 +1,18 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+
 using Irony.Parsing;
 using Irony.Ast;
-using System.Collections.Generic;
+
 using Xamarin.Android.Tools.ApiXmlAdjuster;
 
-namespace Xamarin.Android.ApiTools.JavaStubImporter
-{
+namespace Java.Interop.Tools.JavaSource {
+
 	[Language ("JavaStub", "1.0", "Java Stub grammar in Android SDK (android-stubs-src.jar)")]
 	public partial class JavaStubGrammar : Grammar
 	{
-		internal class NestedType : JavaMember
-		{
-			public NestedType (JavaType type)
-				: base (type)
-			{
-			}
-
-			public JavaType Type { get; set; }
-		}
-
 		NonTerminal DefaultNonTerminal (string label)
 		{
 			var nt = new NonTerminal (label);
@@ -412,7 +405,7 @@ namespace Xamarin.Android.ApiTools.JavaStubImporter
 			type_member.AstConfig.NodeCreator = SelectSingleChild;
 			nested_type_decl.AstConfig.NodeCreator = (ctx, node) => {
 				ProcessChildren (ctx, node);
-				node.AstNode = new NestedType (null) { Type = (JavaType) node.ChildNodes [0].AstNode };
+				node.AstNode = new JavaNestedType (null) { Type = (JavaType) node.ChildNodes [0].AstNode };
 			};
 			Action<ParseTreeNode, JavaMethodBase> fillMethodBase = (node, method) => {
 				bool ctor = node.ChildNodes.Count == 8;
@@ -599,6 +592,74 @@ namespace Xamarin.Android.ApiTools.JavaStubImporter
 
 			this.Root = compile_unit;
 		}
+	}
+
+	public class JavaStubParser : Irony.Parsing.Parser {
+
+		public JavaStubParser ()
+			: base (new JavaStubGrammar () {LanguageFlags = LanguageFlags.Default | LanguageFlags.CreateAst})
+		{
+
+		}
+
+		public JavaPackage TryLoad (string uri)
+		{
+			return TryLoad (uri, out var _);
+		}
+
+		public JavaPackage TryLoad (string uri, out ParseTree parseTree)
+		{
+			return TryParse (File.ReadAllText (uri), uri, out parseTree);
+		}
+
+		public JavaPackage TryParse (string text)
+		{
+			return TryParse (text, null, out var _);
+		}
+
+		public JavaPackage TryParse (string text, out ParseTree parseTree)
+		{
+			return TryParse (text, null, out parseTree);
+		}
+
+		public JavaPackage TryParse (string text, string fileName, out ParseTree parseTree)
+		{
+			parseTree = base.Parse (text, fileName);
+			if (parseTree.HasErrors ())
+				return null;
+			var parsedPackage = (JavaPackage) parseTree.Root.AstNode;
+			FlattenNestedTypes (parsedPackage);
+			return parsedPackage;
+		}
+
+		void FlattenNestedTypes (JavaPackage package)
+		{
+			Action<List<JavaType>,JavaType> flatten = null;
+			flatten = (list, t) => {
+				list.Add (t);
+				foreach (var nt in t.Members.OfType<JavaNestedType> ()) {
+					nt.Type.Name = t.Name + '.' + nt.Type.Name;
+					foreach (var nc in nt.Type.Members.OfType<JavaConstructor> ())
+						nc.Name = nt.Type.Name;
+					flatten (list, nt.Type);
+				}
+				t.Members = t.Members.Where (_ => !(_ is JavaNestedType)).ToArray ();
+			};
+			var results = new List<JavaType> ();
+			foreach (var t in package.Types)
+				flatten (results, t);
+			package.Types = results.ToList ();
+		}
+	}
+
+	class JavaNestedType : JavaMember
+	{
+		public JavaNestedType (JavaType type)
+			: base (type)
+		{
+		}
+
+		public JavaType Type { get; set; }
 	}
 }
 
