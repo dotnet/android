@@ -116,45 +116,50 @@ call][managed_timing] or [this native call][native_timing].
 
 ## Profiling the AOT Compiler
 
-The application needs to be built with embedded AOT profiler. That can
-be done by using `AndroidEmbedProfilers` property, like:
+The application needs to be built with embedded AOT profiler, the
+profiler needs to be enabled and the application run on device or
+emulator. That can be done by using `BuildAndStartAotProfiling`
+target:
 
-    > msbuild /p:AndroidEmbedProfilers=aot /t:Install <your.csproj>
+    > msbuild /t:BuildAndStartAotProfiling <your.csproj>
 
-Before running the application, run the `adb` command to enable the
-profiler:
+Related to that target is `$(AndroidAotProfilerPort)` property, which can
+be used to choose the socket port number for communication with the
+profiler. The default value is 9999.
 
-    > adb shell setprop debug.mono.profile aot:port=9999
+Once the application starts, the `FinishAotProfiling` target can be
+used to collect the profile from the device or emulator:
 
-The AOT profiler maps which methods are JIT'ed during runtime. Once
-you get to the point in time, where you would like to get the profile
-file, run `aprofutil` tool like this:
+    > msbuild /t:FinishAotProfiling <your.csproj>
 
-    > aprofutil -s -v -f -p 9999 -o myprofile.aprof
-
-It collects the AOT profile from the device, through the forwarded tcp
-port 9999, and writes it to the `myprofile.aprof` file. The output
-should look like this:
-
-    Calling 'adb forward tcp:9999 tcp:9999'...
-    Reading from '127.0.0.1:9999'...
-    Read total 94903 bytes...
-    Summary:
-        Modules:          6
-        Types:          262
-        Methods:      1,162
-    Going to write the profile to 'myprofile.aprof'
-
-The `aprofutil` can be also used to inspect or filter the `.aprof`
-file.
+The `FinishAotProfiling` target uses the `$(AndroidAotProfilerPort)` for
+socket port number and `$(AndroidAotCustomProfilePath)` for the newly
+created profile file, the default value is `custom.aprof`.
 
 The profile can be used to build your app with AOT profile. Add it to
-the `AndroidAotProfile` item group in your csproj and set the
-`AndroidEnableProfiledAot` property to `true`.
+the `@(AndroidAotProfile)` item group in your `.csproj` file and set the
+`$(AndroidEnableProfiledAot)` property to `true`. You might also disable
+the default AOT profile with `$(AndroidUseDefaultAotProfile)`
+property. Part of your `.csproj` file might look like:
 
-It is useful for scenarios like speeding up the startup of your
-application or other performance critical parts, by selectively
-AOT'ing only the methods included in the profile.
+```xml
+<ItemGroup>
+  <AndroidAotProfile Include="$(MSBuildThisFileDirectory)custom.aprof" />
+</ItemGroup>
+<PropertyGroup>
+  <AndroidEnableProfiledAot>true</AndroidEnableProfiledAot>
+  <AndroidUseDefaultAotProfile>false</AndroidUseDefaultAotProfile>
+</PropertyGroup>
+```
+
+The profile itself can be inspected and optionally filtered by the
+[`aprofutil`][aprofutil] tool.
+
+[aprofutil]: https://github.com/mono/mono/blob/2019-10/mcs/tools/aprofutil/README.md
+
+Using the AOT profile is useful for scenarios like speeding up the
+startup of your application or other performance critical parts, by
+selectively AOT'ing only the methods included in the profile.
 
 ## Profiling the JIT Compiler
 
