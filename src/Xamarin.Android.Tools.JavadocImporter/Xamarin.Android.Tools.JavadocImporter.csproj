@@ -74,7 +74,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Xml.SgmlReader" Version="1.8.14" />
     <PackageReference Include="Mono.Posix.NETStandard" Version="1.0.0" />
-    <PackageReference Include="Xamarin.LibZipSharp" Version="1.0.6" />
+    <PackageReference Include="Xamarin.LibZipSharp" Version="1.0.7" />
   </ItemGroup>
   <Import Project="..\..\external\Java.Interop\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.projitems" Label="Shared" Condition="Exists('..\..\external\Java.Interop\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.projitems')" />
   <Import Project="..\..\external\Java.Interop\src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\..\external\Java.Interop\src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems')" />
