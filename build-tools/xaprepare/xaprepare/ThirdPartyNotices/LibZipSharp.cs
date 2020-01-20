@@ -11,7 +11,7 @@ namespace Xamarin.Android.Prepare
 	{
 		static readonly Uri url = new Uri ("https://github.com/xamarin/LibZipSharp/");
 		internal static readonly string LibZipSharpVersion => {
-			var doc = XDocumment.Load (Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "Configuration.props"));
+			var doc = XDocument.Load (Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "Configuration.props"));
 			return doc.Descendants(XName.Get("LibZipSharpVersion", @"http://schemas.microsoft.com/developer/msbuild/2003")).First().Value;
 		};
 		static readonly string licenseFile = Path.Combine (BuildPaths.XamarinAndroidSourceRoot,
