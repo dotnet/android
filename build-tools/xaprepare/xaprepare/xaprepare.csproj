@@ -281,7 +281,7 @@
       <Version>5.3.0.1</Version>
     </PackageReference>
     <PackageReference Include="Xamarin.LibZipSharp">
-      <Version>1.0.7</Version>
+      <Version>$(LibZipSharpVersion)</Version>
     </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
