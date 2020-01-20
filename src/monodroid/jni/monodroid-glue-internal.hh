@@ -65,15 +65,15 @@ namespace xamarin::android::internal
 		static constexpr int XA_LOG_COUNTERS = MONO_COUNTER_JIT | MONO_COUNTER_METADATA | MONO_COUNTER_GC | MONO_COUNTER_GENERICS;
 
 	public:
-		void Java_mono_android_Runtime_register (JNIEnv *env, jclass klass, jstring managedType, jclass nativeClass, jstring methods);
+		void Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType, jclass nativeClass, jstring methods);
 		void Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
 		                                             jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader,
 		                                             jobjectArray externalStorageDirs, jobjectArray assembliesJava,
 		                                             jint apiLevel, jboolean embeddedDSOsEnabled, jboolean isEmulator);
 		jint Java_mono_android_Runtime_createNewContextWithData (JNIEnv *env, jclass klass, jobjectArray runtimeApksJava, jobjectArray assembliesJava,
 		                                                         jobjectArray assembliesBytes, jobjectArray assembliesPaths, jobject loader, jboolean force_preload_assemblies);
-		void Java_mono_android_Runtime_switchToContext (JNIEnv *env, jclass klass, jint contextID);
-		void Java_mono_android_Runtime_destroyContexts (JNIEnv *env, jclass klass, jintArray array);
+		void Java_mono_android_Runtime_switchToContext (JNIEnv *env, jint contextID);
+		void Java_mono_android_Runtime_destroyContexts (JNIEnv *env, jintArray array);
 		jint Java_JNI_OnLoad (JavaVM *vm, void *reserved);
 
 		int get_android_api_level () const
@@ -135,40 +135,39 @@ namespace xamarin::android::internal
 		static void* monodroid_dlopen_log_and_return (void *handle, char **err, const char *full_name, bool free_memory);
 		int LocalRefsAreIndirect (JNIEnv *env, jclass runtimeClass, int version);
 		void create_xdg_directory (jstring_wrapper& home, const char *relativePath, const char *environmentVariableName);
-		void create_xdg_directories_and_environment (JNIEnv *env, jstring_wrapper &homeDir);
+		void create_xdg_directories_and_environment (jstring_wrapper &homeDir);
 		void disable_external_signal_handlers ();
 		void lookup_bridge_info (MonoDomain *domain, MonoImage *image, const OSBridge::MonoJavaGCBridgeType *type, OSBridge::MonoJavaGCBridgeInfo *info);
-		void load_assembly (MonoDomain *domain, JNIEnv *env, jstring_wrapper &assembly);
-		void load_assemblies (MonoDomain *domain, JNIEnv *env, jstring_array_wrapper &assemblies);
+		void load_assembly (MonoDomain *domain, jstring_wrapper &assembly);
+		void load_assemblies (MonoDomain *domain, jstring_array_wrapper &assemblies);
 		void set_debug_options ();
 		void parse_gdb_options ();
 		void mono_runtime_init (char *runtime_args);
 		void setup_bundled_app (const char *dso_name);
 		void init_android_runtime (MonoDomain *domain, JNIEnv *env, jclass runtimeClass, jobject loader);
-		void set_environment_variable_for_directory (JNIEnv *env, const char *name, jstring_wrapper &value, bool createDirectory, mode_t mode);
+		void set_environment_variable_for_directory (const char *name, jstring_wrapper &value, bool createDirectory, mode_t mode);
 
-		void set_environment_variable_for_directory (JNIEnv *env, const char *name, jstring_wrapper &value)
+		void set_environment_variable_for_directory (const char *name, jstring_wrapper &value)
 		{
-			set_environment_variable_for_directory (env, name, value, true, DEFAULT_DIRECTORY_MODE);
+			set_environment_variable_for_directory (name, value, true, DEFAULT_DIRECTORY_MODE);
 		}
 
-		void set_environment_variable (JNIEnv *env, const char *name, jstring_wrapper &value)
+		void set_environment_variable (const char *name, jstring_wrapper &value)
 		{
-			set_environment_variable_for_directory (env, name, value, false, 0);
+			set_environment_variable_for_directory (name, value, false, 0);
 		}
 
 		MonoClass* get_android_runtime_class (MonoDomain *domain);
 		void shutdown_android_runtime (MonoDomain *domain);
-		MonoDomain*	create_domain (JNIEnv *env, jclass runtimeClass, jstring_array_wrapper &runtimeApks, jobject loader, bool is_root_domain);
+		MonoDomain*	create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks, bool is_root_domain);
 		MonoDomain* create_and_initialize_domain (JNIEnv* env, jclass runtimeClass, jstring_array_wrapper &runtimeApks,
 		                                          jstring_array_wrapper &assemblies, jobjectArray assembliesBytes, jstring_array_wrapper &assembliesPaths,
 		                                          jobject loader, bool is_root_domain, bool force_preload_assemblies);
 
-		void gather_bundled_assemblies (JNIEnv *env, jstring_array_wrapper &runtimeApks,
-		                                bool register_debug_symbols, size_t *out_user_assemblies_count);
+		void gather_bundled_assemblies (jstring_array_wrapper &runtimeApks, size_t *out_user_assemblies_count);
 		static bool should_register_file (const char *filename);
 		void set_trace_options ();
-		void set_profile_options (JNIEnv *env);
+		void set_profile_options ();
 
 		void log_jit_event (MonoMethod *method, const char *event_name);
 		static void jit_begin (MonoProfiler *prof, MonoMethod *method);

@@ -51,7 +51,7 @@ is_64_bit ()
 }
 
 static int
-get_built_for_cpu_windows (unsigned short *built_for_cpu)
+get_built_for_cpu_windows ([[maybe_unused]] unsigned short *built_for_cpu)
 {
 #if _WIN32
 #if _M_AMD64 || _M_X64
@@ -70,7 +70,7 @@ get_built_for_cpu_windows (unsigned short *built_for_cpu)
 }
 
 static int
-get_built_for_cpu_apple (unsigned short *built_for_cpu)
+get_built_for_cpu_apple ([[maybe_unused]] unsigned short *built_for_cpu)
 {
 #if __APPLE__
 #if __x86_64__
@@ -87,7 +87,7 @@ get_built_for_cpu_apple (unsigned short *built_for_cpu)
 }
 
 static int
-get_built_for_cpu_android (unsigned short *built_for_cpu)
+get_built_for_cpu_android ([[maybe_unused]] unsigned short *built_for_cpu)
 {
 	int retval = 1;
 	
@@ -124,7 +124,7 @@ get_built_for_cpu (unsigned short *built_for_cpu)
 }
 
 static int
-get_running_on_cpu_windows (unsigned short *running_on_cpu)
+get_running_on_cpu_windows ([[maybe_unused]] unsigned short *running_on_cpu)
 {
 #if _WIN32
 	SYSTEM_INFO si;
@@ -155,7 +155,7 @@ get_running_on_cpu_windows (unsigned short *running_on_cpu)
 }
 
 static int
-get_running_on_cpu_apple (unsigned short *running_on_cpu)
+get_running_on_cpu_apple ([[maybe_unused]] unsigned short *running_on_cpu)
 {
 #if __APPLE__
 	cpu_type_t cputype;
@@ -184,7 +184,7 @@ get_running_on_cpu_apple (unsigned short *running_on_cpu)
 }
 
 static int
-get_running_on_cpu_android (unsigned short *running_on_cpu)
+get_running_on_cpu_android ([[maybe_unused]] unsigned short *running_on_cpu)
 {
 	int retval = 1;
 	

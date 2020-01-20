@@ -219,7 +219,7 @@ namespace xamarin::android
 			return strlen (s1) + calculate_length (strings...);
 		}
 
-		int make_directory (const char *path, mode_t mode)
+		int make_directory (const char *path, [[maybe_unused]] mode_t mode)
 		{
 #if WINDOWS
 			return mkdir (path);

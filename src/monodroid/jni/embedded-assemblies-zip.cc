@@ -26,9 +26,9 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, monodroid_sh
 	log_info (LOG_ASSEMBLY, "Central directory size: %u", cd_size);
 	log_info (LOG_ASSEMBLY, "Central directory entries: %u", cd_entries);
 #endif
-	off_t result = ::lseek (fd, static_cast<off_t>(cd_offset), SEEK_SET);
-	if (result < 0) {
-		log_fatal (LOG_ASSEMBLY, "Failed to seek to central directory position in the APK file %s. %s (result: %d; errno: %d)", apk_name, std::strerror (errno), result, errno);
+	off_t retval = ::lseek (fd, static_cast<off_t>(cd_offset), SEEK_SET);
+	if (retval < 0) {
+		log_fatal (LOG_ASSEMBLY, "Failed to seek to central directory position in the APK file %s. %s (result: %d; errno: %d)", apk_name, std::strerror (errno), retval, errno);
 		exit (FATAL_EXIT_NO_ASSEMBLIES);
 	}
 
@@ -142,8 +142,8 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, monodroid_sh
 			const char *p = (const char*) cur->data;
 
 			char header[9];
-			for (size_t i = 0; i < sizeof(header)-1; ++i)
-				header[i] = isprint (p [i]) ? p [i] : '.';
+			for (size_t j = 0; j < sizeof(header)-1; ++j)
+				header[j] = isprint (p [j]) ? p [j] : '.';
 			header [sizeof(header)-1] = '\0';
 
 			log_info_nocheck (LOG_ASSEMBLY, "file-offset: % 8x  start: %08p  end: %08p  len: % 12i  zip-entry:  %s name: %s [%s]",

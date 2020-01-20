@@ -313,7 +313,7 @@ AndroidSystem::_monodroid_get_system_property_from_file (const char *path, char 
 #endif
 
 size_t
-AndroidSystem::monodroid_get_system_property_from_overrides (const char *name, char ** value)
+AndroidSystem::monodroid_get_system_property_from_overrides ([[maybe_unused]] const char *name, [[maybe_unused]] char ** value)
 {
 #if defined (DEBUG) || !defined (ANDROID)
 	for (size_t oi = 0; oi < MAX_OVERRIDES; ++oi) {
@@ -413,7 +413,7 @@ AndroidSystem::load_dso_from_app_lib_dirs (const char *name, int dl_flags)
 }
 
 void*
-AndroidSystem::load_dso_from_override_dirs (const char *name, int dl_flags)
+AndroidSystem::load_dso_from_override_dirs ([[maybe_unused]] const char *name, [[maybe_unused]] int dl_flags)
 {
 #ifdef RELEASE
 	return nullptr;
@@ -719,7 +719,7 @@ AndroidSystem::setup_environment ()
 }
 
 void
-AndroidSystem::setup_process_args_apk (const char *apk, size_t index, size_t apk_count, void *user_data)
+AndroidSystem::setup_process_args_apk (const char *apk, size_t index, size_t apk_count, [[maybe_unused]] void *user_data)
 {
 	if (apk == nullptr || index != apk_count - 1)
 		return;
@@ -729,9 +729,9 @@ AndroidSystem::setup_process_args_apk (const char *apk, size_t index, size_t apk
 }
 
 void
-AndroidSystem::setup_process_args (JNIEnv *env, jstring_array_wrapper &runtimeApks)
+AndroidSystem::setup_process_args (jstring_array_wrapper &runtimeApks)
 {
-	for_each_apk (env, runtimeApks, static_cast<BasicAndroidSystem::ForEachApkHandler> (&AndroidSystem::setup_process_args_apk), nullptr);
+	for_each_apk (runtimeApks, static_cast<BasicAndroidSystem::ForEachApkHandler> (&AndroidSystem::setup_process_args_apk), nullptr);
 }
 
 monodroid_dirent_t*
@@ -781,7 +781,7 @@ AndroidSystem::get_libmonoandroid_directory_path ()
 }
 
 int
-AndroidSystem::setenv (const char *name, const char *value, int overwrite)
+AndroidSystem::setenv (const char *name, const char *value, [[maybe_unused]] int overwrite)
 {
 	wchar_t *wname  = utils.utf8_to_utf16 (name);
 	wchar_t *wvalue = utils.utf8_to_utf16 (value);

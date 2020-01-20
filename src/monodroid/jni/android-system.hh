@@ -41,7 +41,7 @@ namespace xamarin::android::internal
 
 	public:
 		void  setup_environment ();
-		void  setup_process_args (JNIEnv *env, jstring_array_wrapper &runtimeApks);
+		void  setup_process_args (jstring_array_wrapper &runtimeApks);
 		void  create_update_dir (char *override_dir);
 		int   monodroid_get_system_property (const char *name, char **value);
 		size_t monodroid_get_system_property_from_overrides (const char *name, char ** value);
