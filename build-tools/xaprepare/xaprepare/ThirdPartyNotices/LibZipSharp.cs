@@ -8,7 +8,7 @@ namespace Xamarin.Android.Prepare
 	class LibZipSharp_grendello_LibZipSharp_TPN : ThirdPartyNotice
 	{
 		static readonly Uri url = new Uri ("https://github.com/xamarin/LibZipSharp/");
-		internal static readonly string LibZipSharpVersion = "1.0.6";
+		internal static readonly string LibZipSharpVersion = "1.0.7";
 		static readonly string licenseFile = Path.Combine (BuildPaths.XamarinAndroidSourceRoot,
 			"packages", "xamarin.libzipsharp", LibZipSharpVersion,
 			"Licences", "LICENSE");
