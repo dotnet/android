@@ -17,7 +17,9 @@ namespace MonoDroid.Tuner {
 
 		protected override bool IsSdk (string assemblyName)
 		{
-			return assemblyName.Equals ("Java.Interop", StringComparison.Ordinal) || base.IsSdk (assemblyName);
+			return assemblyName.Equals ("Java.Interop", StringComparison.Ordinal)
+			       || assemblyName.Equals ("Java.Interop.GenericMarshaler", StringComparison.Ordinal)
+			       || base.IsSdk (assemblyName);
 		}
 	}
 }
