@@ -16,7 +16,8 @@ can also be used by setting the `$(MSBUILD)` make variable to `xbuild`.
 
  4. (Optional) [Configure the build](../configuration.md).
 
- 5. (Optional) Prepare external/proprietary git dependencies
+ 5. (For Microsoft team members only) (Optional) Prepare external
+    proprietary git dependencies
 
         make prepare-external-git-dependencies
 

@@ -18,7 +18,9 @@ MSBuild version 15 or later is required.
 
  4. (Optional) [Configure the build](../configuration.md).
 
- 5. (Optional) In a [Developer Command Prompt][developer-prompt], prepare external git dependencies:
+ 5. (For Microsoft team members only) (Optional) In a [Developer Command
+    Prompt][developer-prompt], prepare external proprietary git
+    dependencies:
 
         msbuild Xamarin.Android.sln /t:PrepareExternal
 
