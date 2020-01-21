@@ -229,11 +229,20 @@ namespace Android.Runtime {
 				.Concat (Enumerable.Repeat (t, 1));
 		}
 
+		protected override string GetSimpleReference (Type type)
+		{
+			var j = JNIEnv.monodroid_typemap_managed_to_java (type.FullName + ", " + type.Assembly.GetName ().Name);
+			if (j != IntPtr.Zero) {
+				return Marshal.PtrToStringAnsi (j);
+			}
+			if (JNIEnv.IsRunningOnDesktop) {
+				return JavaNativeTypeManager.ToJniName (type);
+			}
+			return null;
+		}
+
 		protected override IEnumerable<string> GetSimpleReferences (Type type)
 		{
-			foreach (var simpleRef in base.GetSimpleReferences (type)) {
-				yield return simpleRef;
-			}
 			var j = JNIEnv.monodroid_typemap_managed_to_java (type.FullName + ", " + type.Assembly.GetName ().Name);
 			if (j != IntPtr.Zero) {
 				yield return Marshal.PtrToStringAnsi (j);
