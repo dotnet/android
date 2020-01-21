@@ -1,105 +1,35 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{53E4ABF0-1085-45F9-B964-DCAE4B819998}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <RootNamespace>Xamarin.Android.Build.Tests</RootNamespace>
-    <AssemblyName>Xamarin.Android.Build.Tests</AssemblyName>
-    <_MSBuildExtension Condition=" '$(OS)' == 'Windows_NT' ">exe</_MSBuildExtension>
-    <_MSBuildExtension Condition=" '$(OS)' != 'Windows_NT' ">dll</_MSBuildExtension>
-    <_MSBuildToolsPath Condition=" !$(MSBuildToolsPath.Contains('xbuild')) ">$(MSBuildToolsPath)</_MSBuildToolsPath>
-    <_MSBuildToolsPath Condition=" $(MSBuildToolsPath.Contains('xbuild')) ">$([System.IO.Path]::GetFullPath ('$(MSBuildToolsPath)\..\..\..\msbuild\15.0\bin'))</_MSBuildToolsPath>
+    <TargetFramework>net472</TargetFramework>
     <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <OutputPath>..\..\..\..\bin\Test$(Configuration)</OutputPath>
   </PropertyGroup>
-  <Import Project="Xamarin.Android.Build.Tests.Shared.projitems" Label="Shared" Condition="Exists('Xamarin.Android.Build.Tests.Shared.projitems')" />
+
   <Import Project="..\..\..\..\Configuration.props" />
   <Import Project="..\..\..\..\build-tools\scripts\MSBuildReferences.projitems" />
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <Optimize>false</Optimize>
-    <OutputPath>..\..\..\..\bin\TestDebug</OutputPath>
-    <DefineConstants>DEBUG;</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <ConsolePause>false</ConsolePause>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <Optimize>true</Optimize>
-    <OutputPath>..\..\..\..\bin\TestRelease</OutputPath>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <ConsolePause>false</ConsolePause>
-  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Xml.Linq" />
-    <!-- Because Xamarin.Android.Build.Tasks.csproj doesn't build in VsForMac :(
-    <Reference Include="Xamarin.Android.Build.Tasks" Condition="Exists('$(OutputPath)..\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\Xamarin.Android.Build.Tasks.dll')">
-      <HintPath>$(OutputPath)..\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\Xamarin.Android.Build.Tasks.dll</HintPath>
-    </Reference>
-    -->
-    <Reference Include="System.Core" />
-    <Reference Include="mscorlib" />
-    <Reference Include="System.ComponentModel.Composition" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Numerics" />
     <Reference Include="Xamarin.Android.Cecil">
       <HintPath>..\..\..\..\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\Xamarin.Android.Cecil.dll</HintPath>
     </Reference>
   </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="NUnit" Version="3.11.0" />
     <PackageReference Include="NUnit.ConsoleRunner" Version="3.9.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="3.12.0" />
   </ItemGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+
   <ItemGroup>
-    <ProjectReference Include="..\Xamarin.ProjectTools\Xamarin.ProjectTools.csproj">
-      <Project>{2DD1EE75-6D8D-4653-A800-0A24367F7F38}</Project>
-      <Name>Xamarin.ProjectTools</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Xamarin.Android.Build.Tasks.csproj">
-      <Project>{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}</Project>
-      <Name>Xamarin.Android.Build.Tasks</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\..\external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj">
-      <Project>{e34bcfa0-caa4-412c-aa1c-75db8d67d157}</Project>
-      <Name>Xamarin.Android.Tools.AndroidSdk</Name>
-    </ProjectReference>
+    <ProjectReference Include="..\Xamarin.ProjectTools\Xamarin.ProjectTools.csproj" />
+    <ProjectReference Include="..\..\Xamarin.Android.Build.Tasks.csproj" />
+    <ProjectReference Include="..\..\..\..\external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
   </ItemGroup>
+
   <ItemGroup>
-    <Folder Include="Properties\" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Tasks\AndroidRegExTests.cs" />
-    <Compile Include="Tasks\CopyIfChangedTests.cs" />
-    <Compile Include="Tasks\GetDependenciesTests.cs" />
-    <Compile Include="Tasks\RemoveDirTests.cs" />
-    <Compile Include="Tasks\ResolveMonoAndroidSdksTests.cs" />
-    <Compile Include="Tasks\LinkerTests.cs" />
-    <Compile Include="Tasks\ResolveSdksTaskTests.cs" />
-    <Compile Include="Tasks\AndroidResourceTests.cs" />
-    <Compile Include="Tasks\ManagedResourceParserTests.cs" />
-    <Compile Include="Tasks\CopyResourceTests.cs" />
-    <Compile Include="Tasks\FilterAssembliesTests.cs" />
-    <Compile Include="Tasks\GenerateLibraryResourcesTests.cs" />
-    <Compile Include="Tasks\KeyToolTests.cs" />
-    <Compile Include="Tasks\Aapt2Tests.cs" />
-    <Compile Include="Tasks\MakeBundleNativeCodeExternalTests.cs" />
-    <Compile Include="Tasks\ValidateJavaVersionTests.cs" />
-    <Compile Include="Tasks\BundleToolTests.cs" />
-    <Compile Include="ZipArchiveExTests.cs" />
-    <Compile Include="Tasks\ConvertResourcesCasesTests.cs" />
-    <Compile Include="Tasks\NdkUtilTests.cs" />
-    <Compile Include="Tasks\CheckGoogleSdkRequirementsTests.cs" />
-    <Compile Include="Tasks\AndroidComputeResPathsTests.cs" />
-    <Compile Include="Tasks\ZipAlignTests.cs" />
-  </ItemGroup>
-  <ItemGroup>
+    <Compile Remove="Expected\**" />
     <Content Include="Expected\GenerateDesignerFileExpected.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -110,7 +40,5 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-  <ItemGroup>
-    <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
-  </ItemGroup>
+
 </Project>
