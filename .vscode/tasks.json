@@ -40,6 +40,30 @@
             ]
         },
         {
+            "label": "Build Xamarin.Android Build Device Tests",
+            "type": "shell",
+            "command": "msbuild tests/MSBuildDeviceIntegration/MSBuildDeviceIntegration.csproj /restore /t:Build",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$msCompile"
+            ]
+        },
+        {
+            "label": "Build Xamarin.Android Build Commercial Tests",
+            "type": "shell",
+            "command": "msbuild external/monodroid/tests/msbuild/nunit/Xamarin.Android.Build.Tests/Xamarin.Android.Build.Tests/Xamarin.Android.Build.Tests.csproj /restore /t:Build",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$msCompile"
+            ]
+        },
+        {
             "label": "Run Xamarin.Android Build Tasks Unit Tests",
             "type": "shell",
             "command": "msbuild Xamarin.Android.sln /t:RunNunitTests",
