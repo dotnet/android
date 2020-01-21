@@ -53,8 +53,8 @@ namespace xamarin::android::internal
 		static size_t app_lib_directories_size;
 
 	public:
-		void setup_app_library_directories (JNIEnv *env, jstring_array_wrapper& runtimeApks, jstring_array_wrapper& appDirs, int androidApiLevel);
-		void setup_apk_directories (JNIEnv *env, unsigned short running_on_cpu, jstring_array_wrapper &runtimeApks);
+		void setup_app_library_directories (jstring_array_wrapper& runtimeApks, jstring_array_wrapper& appDirs, int androidApiLevel);
+		void setup_apk_directories (unsigned short running_on_cpu, jstring_array_wrapper &runtimeApks);
 
 		const char* get_override_dir (size_t index) const
 		{
@@ -97,17 +97,17 @@ namespace xamarin::android::internal
 			return primary_override_dir;
 		}
 
-		void set_primary_override_dir (JNIEnv *env, jstring_wrapper& home)
+		void set_primary_override_dir (jstring_wrapper& home)
 		{
-			primary_override_dir = determine_primary_override_dir (env, home);
+			primary_override_dir = determine_primary_override_dir (home);
 		}
 
 	protected:
 		void  add_apk_libdir (const char *apk, size_t index, size_t apk_count, void *user_data);
-		void  for_each_apk (JNIEnv *env, jstring_array_wrapper &runtimeApks, ForEachApkHandler handler, void *user_data);
+		void  for_each_apk (jstring_array_wrapper &runtimeApks, ForEachApkHandler handler, void *user_data);
 
 	private:
-		char* determine_primary_override_dir (JNIEnv *env, jstring_wrapper &home);
+		char* determine_primary_override_dir (jstring_wrapper &home);
 
 	private:
 		bool  embedded_dso_mode_enabled = false;

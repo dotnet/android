@@ -15,25 +15,25 @@ namespace xamarin::android
 	class jstring_wrapper
 	{
 	public:
-		explicit jstring_wrapper (JNIEnv *env) noexcept
-			: env (env),
+		explicit jstring_wrapper (JNIEnv *_env) noexcept
+			: env (_env),
 			  jstr (nullptr)
 		{
-			assert (env);
+			assert (_env);
 		}
 
-		explicit jstring_wrapper (JNIEnv *env, const jobject jo) noexcept
-			: env (env),
+		explicit jstring_wrapper (JNIEnv *_env, const jobject jo) noexcept
+			: env (_env),
 			  jstr (reinterpret_cast<jstring> (jo))
 		{
-			assert (env);
+			assert (_env);
 		}
 
-		explicit jstring_wrapper (JNIEnv *env, const jstring js) noexcept
-			: env (env),
+		explicit jstring_wrapper (JNIEnv *_env, const jstring js) noexcept
+			: env (_env),
 			  jstr (js)
 		{
-			assert (env);
+			assert (_env);
 		}
 
 		jstring_wrapper (const jstring_wrapper&) = delete;
@@ -127,18 +127,18 @@ namespace xamarin::android
 	class jstring_array_wrapper
 	{
 	public:
-		explicit jstring_array_wrapper (JNIEnv *env) noexcept
-			: jstring_array_wrapper(env, nullptr)
+		explicit jstring_array_wrapper (JNIEnv *_env) noexcept
+			: jstring_array_wrapper(_env, nullptr)
 		{
 		}
 
-		explicit jstring_array_wrapper (JNIEnv *env, jobjectArray arr)
-			: env (env),
-			  arr (arr)
+		explicit jstring_array_wrapper (JNIEnv *_env, jobjectArray _arr)
+			: env (_env),
+			  arr (_arr)
 		{
-			assert (env);
-			if (arr != nullptr) {
-				len = static_cast<size_t>(env->GetArrayLength (arr));
+			assert (_env);
+			if (_arr != nullptr) {
+				len = static_cast<size_t>(_env->GetArrayLength (_arr));
 				if (len > sizeof (static_wrappers) / sizeof (jstring_wrapper))
 					wrappers = new jstring_wrapper [len];
 				else
