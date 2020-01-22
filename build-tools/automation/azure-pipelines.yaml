@@ -981,31 +981,69 @@ stages:
       parameters:
         designerSourcePath: $(System.DefaultWorkingDirectory)\designer
 
+- stage: integrated_regression_test
+  displayName: Regression Tests
+  dependsOn: mac_build
+  condition: and(eq(variables['XA.Commercial.Build'], 'true'), ne(variables['System.PullRequest.IsFork'], 'True'))
+  jobs:
+
   # Check - "Xamarin.Android (Test Integrated Regression - macOS)"
-  - job: integrated_regression_mac
-    displayName: Integrated Regression - macOS
+  - job: integrated_regression_mac_1
+    displayName: macOS - Node 1
     pool:
       name: VSEng-Xamarin-Mac-Devices
       demands:
       - android
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
-    condition: and(eq(variables['XA.Commercial.Build'], 'true'), ne(variables['System.PullRequest.IsFork'], 'True'))
     workspace:
       clean: all
     steps:
     - template: yaml-templates/run-integrated-regression-tests.yaml
+      parameters:
+        node_id: 1
+
+  # Check - "Xamarin.Android (Test Integrated Regression - macOS)"
+  - job: integrated_regression_mac_2
+    displayName: macOS - Node 2
+    pool:
+      name: VSEng-Xamarin-Mac-Devices
+      demands:
+      - android
+    timeoutInMinutes: 240
+    cancelTimeoutInMinutes: 5
+    workspace:
+      clean: all
+    steps:
+    - template: yaml-templates/run-integrated-regression-tests.yaml
+      parameters:
+        node_id: 2
+
+  # Check - "Xamarin.Android (Test Integrated Regression - macOS)"
+  - job: integrated_regression_mac_3
+    displayName: macOS - Node 3
+    pool:
+      name: VSEng-Xamarin-Mac-Devices
+      demands:
+      - android
+    timeoutInMinutes: 240
+    cancelTimeoutInMinutes: 5
+    workspace:
+      clean: all
+    steps:
+    - template: yaml-templates/run-integrated-regression-tests.yaml
+      parameters:
+        node_id: 3
 
   # Check - "Xamarin.Android (Test Integrated Regression - Windows)"
-  - job: integrated_regression_Win
-    displayName: Integrated Regression - Windows
+  - job: integrated_regression_Win_1
+    displayName: Windows - Node 1
     pool:
       name: VSEng-Xamarin-Win-XMA
       demands:
       - android
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
-    condition: and(eq(variables['XA.Commercial.Build'], 'true'), ne(variables['System.PullRequest.IsFork'], 'True'))
     workspace:
       clean: all
     variables:
@@ -1014,5 +1052,51 @@ stages:
     - template: remove-visualstudio.yml@yaml
 
     - template: yaml-templates\run-integrated-regression-tests.yaml
+      parameters:
+        node_id: 1
+
+    - template: remove-visualstudio.yml@yaml
+
+  # Check - "Xamarin.Android (Test Integrated Regression - Windows)"
+  - job: integrated_regression_Win_2
+    displayName: Windows - Node 2
+    pool:
+      name: VSEng-Xamarin-Win-XMA
+      demands:
+      - android
+    timeoutInMinutes: 240
+    cancelTimeoutInMinutes: 5
+    workspace:
+      clean: all
+    variables:
+      XQA_VISUALSTUDIO_LOCATION: '%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Enterprise'
+    steps:
+    - template: remove-visualstudio.yml@yaml
+
+    - template: yaml-templates\run-integrated-regression-tests.yaml
+      parameters:
+        node_id: 2
+
+    - template: remove-visualstudio.yml@yaml
+
+  # Check - "Xamarin.Android (Test Integrated Regression - Windows)"
+  - job: integrated_regression_Win_3
+    displayName: Windows - Node 3
+    pool:
+      name: VSEng-Xamarin-Win-XMA
+      demands:
+      - android
+    timeoutInMinutes: 240
+    cancelTimeoutInMinutes: 5
+    workspace:
+      clean: all
+    variables:
+      XQA_VISUALSTUDIO_LOCATION: '%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Enterprise'
+    steps:
+    - template: remove-visualstudio.yml@yaml
+
+    - template: yaml-templates\run-integrated-regression-tests.yaml
+      parameters:
+        node_id: 3
 
     - template: remove-visualstudio.yml@yaml
