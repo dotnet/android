@@ -182,7 +182,9 @@ namespace Xamarin.Android.Build.Tests
 			}, Path.Combine (Root, builder.ProjectDirectory, "button-logcat.log")), "Button Should have been Clicked.");
 		}
 
-		static object [] GetTimeZoneTestCases ()
+		private const int NODE_COUNT = 3;
+
+		static object [] GetTimeZoneTestCases (int node)
 		{
 			List<object> tests = new List<object> ();
 			var ignore = new string [] {
@@ -197,12 +199,27 @@ namespace Xamarin.Android.Build.Tests
 					tz,
 				});
 			}
-			return tests.ToArray ();
+			return tests.Where (p => tests.IndexOf (p) % NODE_COUNT == node).ToArray ();
 		}
 
 		[Test]
-		[TestCaseSource (nameof (GetTimeZoneTestCases))]
+		[TestCaseSource (nameof (GetTimeZoneTestCases), new object [] { 0 })]
 		[Retry (1)]
+		[Category ("TimeZoneInfo")]
+		public void CheckTimeZoneInfoIsCorrectNode1 (string timeZone) => CheckTimeZoneInfoIsCorrect (timeZone);
+
+		[Test]
+		[TestCaseSource (nameof (GetTimeZoneTestCases), new object [] { 1 })]
+		[Retry (1)]
+		[Category ("TimeZoneInfo")]
+		public void CheckTimeZoneInfoIsCorrectNode2 (string timeZone) => CheckTimeZoneInfoIsCorrect (timeZone);
+
+		[Test]
+		[TestCaseSource (nameof (GetTimeZoneTestCases), new object [] { 2 })]
+		[Retry (1)]
+		[Category ("TimeZoneInfo")]
+		public void CheckTimeZoneInfoIsCorrectNode3 (string timeZone) => CheckTimeZoneInfoIsCorrect (timeZone);
+
 		public void CheckTimeZoneInfoIsCorrect (string timeZone)
 		{
 			if (!HasDevices)
