@@ -223,51 +223,61 @@ namespace Xamarin.ProjectTools
 		};
 		public static Package AndroidXMigration = new Package {
 			Id = "Xamarin.AndroidX.Migration",
-			Version = "1.0.0-preview04",
+			Version = "1.0.0-rc1",
 			TargetFramework = "MonoAndroid10",
 		};
 		public static Package AndroidXAppCompat = new Package {
 			Id = "Xamarin.AndroidX.AppCompat",
-			Version = "1.0.2-preview02",
+			Version = "1.1.0-rc1",
 			TargetFramework = "MonoAndroid10",
 		};
 		public static Package AndroidXBrowser = new Package {
 			Id = "Xamarin.AndroidX.Browser",
-			Version = "1.0.0-preview02",
+			Version = "1.0.0-rc1",
 			TargetFramework = "MonoAndroid90",
 			References =  {
 				new BuildItem.Reference ("Xamarin.AndroidX.Browser") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.AndroidX.Browser.1.0.0-preview02\\lib\\MonoAndroid90\\Xamarin.AndroidX.Browser.dll"
+					MetadataValues = "HintPath=..\\packages\\Xamarin.AndroidX.Browser.1.0.0-rc1\\lib\\MonoAndroid90\\Xamarin.AndroidX.Browser.dll"
 				},
 			}
 		};
 		public static Package AndroidXMediaRouter = new Package {
 			Id = "Xamarin.AndroidX.MediaRouter",
-			Version = "1.0.0-preview02",
+			Version = "1.1.0-rc1",
 			TargetFramework = "MonoAndroid90",
 			References =  {
 				new BuildItem.Reference ("Xamarin.AndroidX.MediaRouter") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.AndroidX.MediaRouter.1.0.0-preview02\\lib\\MonoAndroid90\\Xamarin.AndroidX.MediaRouter.dll"
+					MetadataValues = "HintPath=..\\packages\\Xamarin.AndroidX.MediaRouter.1.1.0-rc1\\lib\\MonoAndroid90\\Xamarin.AndroidX.MediaRouter.dll"
 				},
 			}
 		};
 		public static Package AndroidXLegacySupportV4 = new Package {
 			Id = "Xamarin.AndroidX.Legacy.Support.V4",
-			Version = "1.0.0-preview02",
+			Version = "1.0.0-rc1",
 			TargetFramework = "MonoAndroid90",
 			References =  {
 				new BuildItem.Reference ("Xamarin.AndroidX.Legacy.Support.V4") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.AndroidX.Legacy.Support.V4.1.0.0-preview02\\lib\\MonoAndroid90\\Xamarin.AndroidX.Legacy.Support.V4.dll"
+					MetadataValues = "HintPath=..\\packages\\Xamarin.AndroidX.Legacy.Support.V4.1.0.0-rc1\\lib\\MonoAndroid90\\Xamarin.AndroidX.Legacy.Support.V4.dll"
+				},
+			}
+		};
+		public static Package AndroidXLifecycleLiveData = new Package {
+			Id = "Xamarin.AndroidX.Lifecycle.LiveData",
+			Version = "2.1.0-rc1",
+			TargetFramework = "MonoAndroid90",
+			References =  {
+				new BuildItem.Reference ("Xamarin.AndroidX.Lifecycle.LiveData") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.AndroidX.Lifecycle.LiveData.2.1.0-rc1\\lib\\MonoAndroid90\\Xamarin.AndroidX.Lifecycle.LiveData.dll"
 				},
 			}
 		};
 		public static Package XamarinGoogleAndroidMaterial = new Package {
 			Id = "Xamarin.Google.Android.Material",
-			Version = "1.0.0-preview02",
+			Version = "1.0.0-rc1",
 			TargetFramework = "MonoAndroid90",
 			References =  {
 				new BuildItem.Reference ("Xamarin.Google.Android.Material") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Google.Android.Material.1.0.0-preview02\\lib\\MonoAndroid90\\Xamarin.Google.Android.Material.dll"
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Google.Android.Material.1.0.0-rc1\\lib\\MonoAndroid90\\Xamarin.Google.Android.Material.dll"
 				},
 			}
 		};
