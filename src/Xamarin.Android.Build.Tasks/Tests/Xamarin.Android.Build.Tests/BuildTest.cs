@@ -242,6 +242,7 @@ class MemTest {
 			proj.PackageReferences.Add (KnownPackages.AndroidXBrowser);
 			proj.PackageReferences.Add (KnownPackages.AndroidXMediaRouter);
 			proj.PackageReferences.Add (KnownPackages.AndroidXLegacySupportV4);
+			proj.PackageReferences.Add (KnownPackages.AndroidXLifecycleLiveData);
 			proj.PackageReferences.Add (KnownPackages.XamarinGoogleAndroidMaterial);
 
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {

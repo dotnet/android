@@ -2265,7 +2265,6 @@ because xbuild doesn't support framework reference assemblies.
 		_CheckDuplicateJavaLibraries;
 		UpdateAndroidAssets;
 		$(_AfterCreateBaseApkDependsOnTargets);
-		_PrepareCreateBaseApk;
 	</_CreateBaseApkDependsOnTargets>
 	<_CreateBaseApkInputs>
 		$(MSBuildAllProjects)
@@ -2279,7 +2278,7 @@ because xbuild doesn't support framework reference assemblies.
 </PropertyGroup>
 
 <Target Name="_CreateBaseApk"
-  DependsOnTargets="$(_CreateBaseApkDependsOnTargets);$(AfterGenerateAndroidManifest)"
+  DependsOnTargets="$(_CreateBaseApkDependsOnTargets);$(AfterGenerateAndroidManifest);_PrepareCreateBaseApk"
   Inputs="$(_CreateBaseApkInputs)"
   Outputs="$(_PackagedResources)">
 
