@@ -15,6 +15,16 @@ namespace Xamarin.Android.Build.Tests
 	[Category ("Commercial")]
 	public class InstallTests : DeviceTest
 	{
+		static byte [] GetKeystore ()
+		{
+			var assembly = typeof (XamarinAndroidCommonProject).Assembly;
+			using (var stream = assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.test.keystore")) {
+				var data = new byte [stream.Length];
+				stream.Read (data, 0, (int) stream.Length);
+				return data;
+			}
+		}
+
 		[Test]
 		public void ReInstallIfUserUninstalled ([Values (false, true)] bool isRelease)
 		{
@@ -90,6 +100,38 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (builder.Uninstall (proj));
 				Assert.AreNotEqual ($"package:{proj.PackageName}", RunAdbCommand ($"shell pm list packages {proj.PackageName}").Trim (),
 					$"{proj.PackageName} is installed on the device.");
+			}
+		}
+
+		[Test]
+		public void ChangeKeystoreRedeploy ()
+		{
+			if (!CommercialBuildAvailable)
+				Assert.Ignore ("Not required on Open Source Builds");
+
+			if (!HasDevices) {
+				Assert.Ignore ("Test Skipped no devices or emulators found.");
+			}
+
+			var proj = new XamarinAndroidApplicationProject ();
+			var abis = new string [] { "armeabi-v7a", "x86" };
+			proj.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
+			using (var builder = CreateApkBuilder ()) {
+				// Use the default debug.keystore XA generates
+				Assert.IsTrue (builder.Install (proj), "first install should succeed.");
+				byte [] data = GetKeystore ();
+				proj.OtherBuildItems.Add (new BuildItem (BuildActions.None, "test.keystore") {
+					BinaryContent = () => data
+				});
+
+				string password = "android";
+				proj.SetProperty ("AndroidSigningStorePass", password);
+				proj.SetProperty ("AndroidSigningKeyPass", password);
+				proj.SetProperty ("AndroidKeyStore", "True");
+				proj.SetProperty ("AndroidSigningKeyStore", "test.keystore");
+				proj.SetProperty ("AndroidSigningKeyAlias", "mykey");
+
+				Assert.IsTrue (builder.Install (proj), "second install should succeed.");
 			}
 		}
 
@@ -367,11 +409,7 @@ namespace Xamarin.Android.Build.Tests
 			string path = Path.Combine ("temp", TestName.Replace (expected, expected.Replace ("-", "_")));
 			string storepassfile = Path.Combine (Root, path, "storepass.txt");
 			string keypassfile = Path.Combine (Root, path, "keypass.txt");
-			byte [] data;
-			using (var stream = typeof (XamarinAndroidCommonProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.test.keystore")) {
-				data = new byte [stream.Length];
-				stream.Read (data, 0, (int) stream.Length);
-			}
+			byte [] data = GetKeystore ();
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease
 			};
