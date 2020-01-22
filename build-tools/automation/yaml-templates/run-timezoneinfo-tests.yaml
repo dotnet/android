@@ -1,0 +1,49 @@
+# Runs TimeZoneInfo tests against an emulator running on macOS
+
+parameters:
+  node_id: 0
+
+-jobs
+  - job: mac_timezoneinfo_tests
+    displayName: TimeZoneInfo - macOS - ${{ parameters.node_id }}
+    pool: $(HostedMac)
+    timeoutInMinutes: 90
+    cancelTimeoutInMinutes: 5
+    workspace:
+      clean: all
+    steps:
+    - template: setup-test-environment.yaml
+
+    - task: DownloadPipelineArtifact@1
+      inputs:
+        artifactName: $(TestAssembliesArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
+
+    - task: MSBuild@1
+      displayName: start emulator
+      inputs:
+        solution: src/Mono.Android/Test/Mono.Android-Tests.csproj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: >
+          /t:AcquireAndroidTarget /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/start-emulator.binlog
+
+    - template: run-nunit-tests.yaml
+      parameters:
+        testRunTitle: TimeZoneInfoTests On Device - macOS
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/MSBuildDeviceIntegration.dll
+        nunitConsoleExtraArgs: --where "test == Xamarin.Android.Build.Tests.DeploymentTest.CheckTimeZoneInfoIsCorrectNode${{ parameters.node_id }}"
+        testResultsFile: TestResult-TimeZoneInfoTests-Node${{ parameters.node_id }}-$(XA.Build.Configuration).xml
+
+    - task: MSBuild@1
+      displayName: shut down emulator
+      inputs:
+        solution: src/Mono.Android/Test/Mono.Android-Tests.csproj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: >
+          /t:AcquireAndroidTarget,ReleaseAndroidTarget
+          /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/shutdown-emulator.binlog
+      condition: always()
+
+    - template: upload-results.yaml
+      parameters:
+        artifactName: Test Results - TimeZoneInfo With Emulator - macOS - ${{ parameters.node_id }}
