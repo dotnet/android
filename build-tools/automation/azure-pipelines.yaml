@@ -53,6 +53,12 @@ variables:
   HostedMac: Hosted Mac Internal
   HostedWinVS2019: Hosted Windows 2019 with VS2019
   VSEngWinVS2019: VSEng-Xamarin-Android
+  # Run all tests if:
+  # - User who queued the job requested it (They set XA.RunAllTests to true)
+  # - This is the master integration branch (Pipeline defaults XA.RunAllTests to true)
+  # - This is a non-fork branch with name containing "mono-" (for Mono bumps)
+  IsMonoBranch: $[and(eq(variables['XA.Commercial.Build'], 'true'), ne(variables['System.PullRequest.IsFork'], 'True'), contains(variables['Build.SourceBranchName'], 'mono-'))]
+  RunAllTests: $[or(eq(variables['XA.RunAllTests'], true), eq(variables['IsMonoBranch'], true))]
 
 # Stage and Job "display names" are shortened because they are combined to form the name of the corresponding GitHub check.
 stages:
@@ -939,12 +945,12 @@ stages:
 - stage: integrated_regression_test
   displayName: Regression Tests
   dependsOn: mac_build
-  condition: and(eq(variables['XA.Commercial.Build'], 'true'), ne(variables['System.PullRequest.IsFork'], 'True'))
+  condition: eq(variables['RunAllTests'], true)
   jobs:
 
   # Check - "Xamarin.Android (Test Integrated Regression - macOS)"
   - job: integrated_regression_mac_1
-    displayName: macOS - Node 1
+    displayName: Mac-1
     pool:
       name: VSEng-Xamarin-Mac-Devices
       demands:
@@ -960,7 +966,7 @@ stages:
 
   # Check - "Xamarin.Android (Test Integrated Regression - macOS)"
   - job: integrated_regression_mac_2
-    displayName: macOS - Node 2
+    displayName: Mac-2
     pool:
       name: VSEng-Xamarin-Mac-Devices
       demands:
@@ -976,7 +982,7 @@ stages:
 
   # Check - "Xamarin.Android (Test Integrated Regression - macOS)"
   - job: integrated_regression_mac_3
-    displayName: macOS - Node 3
+    displayName: Mac-3
     pool:
       name: VSEng-Xamarin-Mac-Devices
       demands:
@@ -992,7 +998,7 @@ stages:
 
   # Check - "Xamarin.Android (Test Integrated Regression - Windows)"
   - job: integrated_regression_Win_1
-    displayName: Windows - Node 1
+    displayName: Windows-1
     pool:
       name: VSEng-Xamarin-Win-XMA
       demands:
@@ -1014,7 +1020,7 @@ stages:
 
   # Check - "Xamarin.Android (Test Integrated Regression - Windows)"
   - job: integrated_regression_Win_2
-    displayName: Windows - Node 2
+    displayName: Windows-2
     pool:
       name: VSEng-Xamarin-Win-XMA
       demands:
@@ -1036,7 +1042,7 @@ stages:
 
   # Check - "Xamarin.Android (Test Integrated Regression - Windows)"
   - job: integrated_regression_Win_3
-    displayName: Windows - Node 3
+    displayName: Windows-3
     pool:
       name: VSEng-Xamarin-Win-XMA
       demands:

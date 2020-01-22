@@ -5,7 +5,7 @@ parameters:
 
 jobs:
   - job: mac_timezoneinfo_tests_${{ parameters.node_id }}
-    displayName: TimeZoneInfo - macOS - ${{ parameters.node_id }}
+    displayName: TimeZone - Mac-${{ parameters.node_id }}
     pool: $(HostedMac)
     timeoutInMinutes: 90
     cancelTimeoutInMinutes: 5
