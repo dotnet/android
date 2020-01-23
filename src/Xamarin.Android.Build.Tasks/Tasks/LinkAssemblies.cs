@@ -149,7 +149,7 @@ namespace Xamarin.Android.Tasks
 			if (importance == ML.MessageImportance.High)
 				mbfImportance = MBF.MessageImportance.High;
 
-			Log.LogMessage (mbfImportance, message, values);
+			Log.LogMessageFromText (string.Format (message, values), mbfImportance);
 		}
 	}
 }
