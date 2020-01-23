@@ -20,26 +20,51 @@ namespace Xamarin.Android.Prepare
 			Architecture = Utilities.GetStringFromStdout ("uname", "-m")?.Trim ();
 		}
 
+		string GetCompiler (string fromEnv, string defaultName)
+		{
+			if (!String.IsNullOrEmpty (fromEnv))
+				return fromEnv;
+			return defaultName;
+		}
+
 		protected override void DetectCompilers ()
 		{
-			string ccVersion = Utilities.GetStringFromStdout (Configurables.Defaults.DefaultCompiler, "--version");
-			if (String.IsNullOrEmpty (ccVersion))
-				throw new InvalidOperationException ($"Failed to obtain version information from the {Configurables.Defaults.DefaultCompiler} compiler");
+			string cc = Environment.GetEnvironmentVariable ("CC")?.Trim ();
+			string cxx = Environment.GetEnvironmentVariable ("CXX")?.Trim ();
+			string defaultCompiler = null;
 
-			Log.DebugLine ($"Default compiler {Configurables.Defaults.DefaultCompiler} identifies as:");
+			if (!String.IsNullOrEmpty (cc)) {
+				Log.DebugLine ($"Unix C compiler read from environment variable CC: {cc}");
+				defaultCompiler = cc;
+			}
+
+			if (!String.IsNullOrEmpty (cxx)) {
+				Log.DebugLine ($"Unix C++ compiler read from environment variable CXX: {cxx}");
+				if (String.IsNullOrEmpty (defaultCompiler))
+					defaultCompiler = cxx;
+			}
+
+			if (String.IsNullOrEmpty (defaultCompiler))
+				defaultCompiler = Configurables.Defaults.DefaultCompiler;
+
+			string ccVersion = Utilities.GetStringFromStdout (defaultCompiler, "--version");
+			if (String.IsNullOrEmpty (ccVersion))
+				throw new InvalidOperationException ($"Failed to obtain version information from the {defaultCompiler} compiler");
+
+			Log.DebugLine ($"Compiler {defaultCompiler} identifies as:");
 			Log.DebugLine (ccVersion);
 
 			bool clang = false;
 			if (ccVersion.IndexOf ("Free Software Foundation", StringComparison.OrdinalIgnoreCase) >= 0) {
-				CC = "gcc";
-				CXX = "g++";
+				CC = GetCompiler (cc, "gcc");
+				CXX = GetCompiler (cxx, "g++");
 			} else if (ccVersion.IndexOf ("clang", StringComparison.OrdinalIgnoreCase) >= 0) {
-				CC = "clang";
-				CXX = "clang++";
+				CC = GetCompiler (cc, "clang");
+				CXX = GetCompiler (cxx, "clang++");
 				clang = true;
 			} else {
-				CC = "cc";
-				CXX = "c++";
+				CC = GetCompiler (cc, "cc");
+				CXX = GetCompiler (cxx, "c++");
 			}
 
 			VerifyCompilersExist ();
