@@ -11,6 +11,7 @@ using System.Collections.Generic;
 
 namespace Xamarin.Android.Build.Tests
 {
+	[Category ("Node-3")]
 	[Parallelizable (ParallelScope.Children)]
 	public partial class ManifestTest : BaseTest
 	{

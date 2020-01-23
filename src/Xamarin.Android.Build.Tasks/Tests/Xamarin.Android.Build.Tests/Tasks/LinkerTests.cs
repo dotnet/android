@@ -10,6 +10,7 @@ using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
+	[Category ("Node-2")]
 	public class LinkerTests : BaseTest
 	{
 		[Test]

@@ -10,6 +10,7 @@ using Xamarin.Android.Tools;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
+	[Category ("Node-2")]
 	public class RemoveDirTests : BaseTest
 	{
 		List<BuildMessageEventArgs> messages;

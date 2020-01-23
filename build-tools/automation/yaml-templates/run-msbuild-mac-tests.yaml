@@ -1,0 +1,69 @@
+# Runs MSBuild tests against a device running on macOS
+
+parameters:
+  node_id: 0
+
+jobs:
+  - job: mac_msbuild_tests${{ parameters.node_id }}
+    displayName: MSBuild - Mac-${{ parameters.node_id }}
+    pool: $(HostedMac)
+    timeoutInMinutes: 180
+    cancelTimeoutInMinutes: 5
+    workspace:
+      clean: all
+    steps:
+    - template: setup-test-environment.yaml
+
+    - task: DownloadPipelineArtifact@1
+      inputs:
+        artifactName: $(TestAssembliesArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
+
+    - task: DownloadPipelineArtifact@1
+      inputs:
+        artifactName: $(NuGetArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)
+
+    - template: run-nunit-tests.yaml
+      parameters:
+        testRunTitle: Xamarin.Android.Build.Tests - macOS-${{ parameters.node_id }}
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/Xamarin.Android.Build.Tests.dll
+        nunitConsoleExtraArgs: --where "cat == Node-${{ parameters.node_id }}"
+        testResultsFile: TestResult-MSBuildTests-macOS-Node${{ parameters.node_id }}-$(XA.Build.Configuration).xml
+
+    # Only run these tests on node 2
+    - ${{ if eq(parameters.node_id, 2) }}:
+      - template: run-nunit-tests.yaml
+        parameters:
+          testRunTitle: CodeBehindUnitTests - macOS
+          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/CodeBehind/CodeBehindUnitTests.dll
+          testResultsFile: TestResult-CodeBehindUnitTests-macOS-$(XA.Build.Configuration).xml
+
+      - template: run-nunit-tests.yaml
+        parameters:
+          testRunTitle: Xamarin.Android.MakeBundle-UnitTests - macOS
+          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/Xamarin.Android.MakeBundle-UnitTests.dll
+          testResultsFile: TestResult-MakeBundleUnitTests-macOS-$(XA.Build.Configuration).xml
+
+      - template: run-nunit-tests.yaml
+        parameters:
+          testRunTitle: EmbeddedDSOUnitTests - macOS
+          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/EmbeddedDSOUnitTests.dll
+          testResultsFile: TestResult-EmbeddedDSOUnitTests-macOS-$(XA.Build.Configuration).xml
+
+      - template: run-nunit-tests.yaml
+        parameters:
+          testRunTitle: Xamarin.Android.Build.Tests.Commercial - macOS
+          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/Xamarin.Android.Build.Tests.Commercial.dll
+          testResultsFile: TestResult-MSBuildTestsCommercial-macOS-$(XA.Build.Configuration).xml
+          
+      - template: run-nunit-tests.yaml
+        parameters:
+          testRunTitle: Xamarin.Android.Build.Tests - macOS - No Node
+          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/Xamarin.Android.Build.Tests.dll
+          nunitConsoleExtraArgs: --where "cat != Node-1 && cat != Node-2 && cat != Node-3"
+          testResultsFile: TestResult-MSBuildTests-macOS-NoNode-$(XA.Build.Configuration).xml
+
+    - template: upload-results.yaml
+      parameters:
+        artifactName: Test Results - MSBuild - Mac-${{ parameters.node_id }}
