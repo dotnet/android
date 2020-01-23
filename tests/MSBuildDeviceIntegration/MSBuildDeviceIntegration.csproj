@@ -1,35 +1,16 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{16DB2680-399B-4111-AA26-6CDBBFA334D8}</ProjectGuid>
-    <OutputType>Library</OutputType>
+    <TargetFramework>net472</TargetFramework>
     <RootNamespace>Xamarin.Android.Build.Tests</RootNamespace>
-    <AssemblyName>MSBuildDeviceIntegration</AssemblyName>
     <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <OutputPath>..\..\bin\Test$(Configuration)\MSBuildDeviceIntegration</OutputPath>
   </PropertyGroup>
+
   <Import Project="..\..\Configuration.props" />
   <Import Project="..\..\build-tools\scripts\MSBuildReferences.projitems" />
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <Optimize>false</Optimize>
-    <OutputPath>..\..\bin\TestDebug\MSBuildDeviceIntegration</OutputPath>
-    <DefineConstants>DEBUG;</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <Optimize>true</Optimize>
-    <OutputPath>..\..\bin\TestRelease\MSBuildDeviceIntegration</OutputPath>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Xml.Linq" />
-  </ItemGroup>
+
   <ItemGroup>
     <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Utilities\DeviceTest.cs">
       <Link>Utilities\DeviceTest.cs</Link>
@@ -40,39 +21,23 @@
     <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Utilities\BaseTest.cs">
       <Link>Utilities\BaseTest.cs</Link>
     </Compile>
-    <Compile Include="Tests/*.cs" />
   </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="NodaTime" Version="2.4.5" />
     <PackageReference Include="NUnit" Version="3.11.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="3.12.0" />
   </ItemGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj">
-      <Project>{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}</Project>
-      <Name>Xamarin.Android.Build.Tasks</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Xamarin.ProjectTools.csproj">
-      <Project>{2DD1EE75-6D8D-4653-A800-0A24367F7F38}</Project>
-      <Name>Xamarin.ProjectTools</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\external\debugger-libs\Mono.Debugging.Soft\Mono.Debugging.Soft.csproj">
-      <Project>{DE40756E-57F6-4AF2-B155-55E3A88CCED8}</Project>
-      <Name>Mono.Debugging.Soft</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\external\debugger-libs\Mono.Debugger.Soft\Mono.Debugger.Soft.csproj">
-      <Project>{372E8E3E-29D5-4B4D-88A2-4711CD628C4E}</Project>
-      <Name>Mono.Debugger.Soft</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\external\debugger-libs\Mono.Debugging\Mono.Debugging.csproj">
-      <Project>{90C99ADB-7D4B-4EB4-98C2-40BD1B14C7D2}</Project>
-      <Name>Mono.Debugging</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\external\nrefactory\ICSharpCode.NRefactory\ICSharpCode.NRefactory.csproj">
-      <Project>{3B2A5653-EC97-4001-BB9B-D90F1AF2C371}</Project>
-      <Name>ICSharpCode.NRefactory</Name>
-    </ProjectReference>
+    <ProjectReference Include="..\..\src\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj" />
+    <ProjectReference Include="..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Xamarin.ProjectTools.csproj" />
+    <ProjectReference Include="..\..\external\debugger-libs\Mono.Debugging.Soft\Mono.Debugging.Soft.csproj" />
+    <ProjectReference Include="..\..\external\debugger-libs\Mono.Debugger.Soft\Mono.Debugger.Soft.csproj" />
+    <ProjectReference Include="..\..\external\debugger-libs\Mono.Debugging\Mono.Debugging.csproj" />
+    <ProjectReference Include="..\..\external\nrefactory\ICSharpCode.NRefactory\ICSharpCode.NRefactory.csproj" />
   </ItemGroup>
+
   <Import Project="MSBuildDeviceIntegration.targets" />
+
 </Project>
