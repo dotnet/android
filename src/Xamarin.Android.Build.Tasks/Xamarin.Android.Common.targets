@@ -3264,6 +3264,7 @@ because xbuild doesn't support framework reference assemblies.
       JavaOptions="$(JavaOptions)"
       JarPath="$(AndroidBundleToolJarPath)"
       AdbToolPath="$(AdbToolPath)"
+      AdbTarget="$(AdbTarget)"
       Aapt2ToolPath="$(Aapt2ToolPath)"
       AppBundle="$(_AppBundleIntermediate)"
       Output="$(_ApkSetIntermediate)"
@@ -3278,6 +3279,7 @@ because xbuild doesn't support framework reference assemblies.
       JavaOptions="$(JavaOptions)"
       JarPath="$(AndroidBundleToolJarPath)"
       AdbToolPath="$(AdbToolPath)"
+      AdbTarget="$(AdbTarget)"
       ApkSet="$(_ApkSetIntermediate)"
   />
 </Target>

@@ -11,7 +11,7 @@ namespace Xamarin.Android.Tasks
 	/// 
 	/// Usage: bundletool build-apks --bundle=foo.aab --output=foo.apks
 	/// </summary>
-	public class BuildApkSet : BundleTool
+	public class BuildApkSet : BundleToolAdbTask
 	{
 		public override string TaskPrefix => "BAS";
 
@@ -20,16 +20,6 @@ namespace Xamarin.Android.Tasks
 
 		[Required]
 		public string Output { get; set; }
-
-		/// <summary>
-		/// This is used to detect the attached device and generate an APK set specifically for it
-		/// </summary>
-		[Required]
-		public string AdbToolPath { get; set; }
-
-		public string AdbToolExe { get; set; }
-
-		public string AdbToolName => OS.IsWindows ? "adb.exe" : "adb";
 
 		[Required]
 		public string Aapt2ToolPath { get; set; }
@@ -72,9 +62,8 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		protected override CommandLineBuilder GetCommandLineBuilder ()
+		internal override CommandLineBuilder GetCommandLineBuilder ()
 		{
-			var adb   = string.IsNullOrEmpty (AdbToolExe) ? AdbToolName : AdbToolExe;
 			var aapt2 = string.IsNullOrEmpty (Aapt2ToolExe) ? Aapt2ToolName : Aapt2ToolExe;
 			var cmd   = base.GetCommandLineBuilder ();
 			cmd.AppendSwitch ("build-apks");
@@ -82,7 +71,7 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendSwitchIfNotNull ("--bundle ", AppBundle);
 			cmd.AppendSwitchIfNotNull ("--output ", Output);
 			cmd.AppendSwitchIfNotNull ("--mode ", "default");
-			cmd.AppendSwitchIfNotNull ("--adb ", Path.Combine (AdbToolPath, adb));
+			AppendAdbOptions (cmd);
 			cmd.AppendSwitchIfNotNull ("--aapt2 ", Path.Combine (Aapt2ToolPath, aapt2));
 			cmd.AppendSwitchIfNotNull ("--ks ", KeyStore);
 			cmd.AppendSwitchIfNotNull ("--ks-key-alias ", KeyAlias);
