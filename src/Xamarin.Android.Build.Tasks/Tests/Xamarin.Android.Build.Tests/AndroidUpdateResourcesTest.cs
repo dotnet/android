@@ -518,7 +518,8 @@ namespace UnnamedProject
 		{
 			//Due to the MSBuild project automatically sorting <ItemGroup />, we can't possibly get the F# projects to build here on Windows
 			//  This API is sorting them: https://github.com/xamarin/xamarin-android/blob/c588bfe07aab224c97996a264579f4d4f18a151c/src/Xamarin.Android.Build.Tasks/Tests/Xamarin.ProjectTools/Common/DotNetXamarinProject.cs#L117
-			if (IsWindows && language == XamarinAndroidProjectLanguage.FSharp) {
+			bool isFSharp = language == XamarinAndroidProjectLanguage.FSharp;
+			if (IsWindows && isFSharp) {
 				Assert.Ignore ("Skipping this F# test on Windows.");
 			}
 
@@ -529,13 +530,17 @@ namespace UnnamedProject
 			proj.SetProperty ("AndroidUseIntermediateDesignerFile", "True");
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				var outputFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
-					"Resource.designer" + proj.Language.DefaultDesignerExtension);
+				// Intermediate designer file support is not compatible with F# projects using Xamarin.Android.FSharp.ResourceProvider.
+				var outputFile = isFSharp ? Path.Combine (Root, b.ProjectDirectory, "Resources", "Resource.designer" + proj.Language.DefaultDesignerExtension)
+					: Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "Resource.designer" + proj.Language.DefaultDesignerExtension);
 				Assert.IsTrue (File.Exists (outputFile), "Resource.designer{1} should have been created in {0}",
-					proj.IntermediateOutputPath, proj.Language.DefaultDesignerExtension);
+					isFSharp ? Path.Combine (Root, b.ProjectDirectory, "Resources") : proj.IntermediateOutputPath,
+					proj.Language.DefaultDesignerExtension);
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
-				Assert.IsFalse (File.Exists (outputFile), "Resource.designer{1} should have been cleaned in {0}",
-					proj.IntermediateOutputPath, proj.Language.DefaultDesignerExtension);
+				if (!isFSharp) {
+					Assert.IsFalse (File.Exists (outputFile), "Resource.designer{1} should have been cleaned in {0}",
+						proj.IntermediateOutputPath, proj.Language.DefaultDesignerExtension);
+				}
 			}
 		}
 
