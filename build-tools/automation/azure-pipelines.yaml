@@ -984,7 +984,7 @@ stages:
 - stage: integrated_regression_test
   displayName: Regression Tests
   dependsOn: mac_build
-  condition: and(eq(variables['XA.Commercial.Build'], 'true'), ne(variables['System.PullRequest.IsFork'], 'True'))
+  condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(variables['XA.Commercial.Build'], 'true'), ne(variables['System.PullRequest.IsFork'], 'True'))
   jobs:
 
   # Check - "Xamarin.Android (Test Integrated Regression - macOS)"
