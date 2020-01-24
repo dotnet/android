@@ -945,7 +945,7 @@ stages:
 - stage: integrated_regression_test
   displayName: Regression Tests
   dependsOn: mac_build
-  condition: eq(variables['RunAllTests'], true)
+  condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(variables['RunAllTests'], true))
   jobs:
 
   # Check - "Xamarin.Android (Test Integrated Regression - macOS)"
