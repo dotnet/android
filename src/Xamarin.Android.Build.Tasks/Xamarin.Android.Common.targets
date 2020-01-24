@@ -491,7 +491,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidCustomMetaDataForReferences Include="@(_AndroidAssemblySkipCases)" />
 </ItemGroup>
 	
-<Target Name="_AddAndroidCustomMetaData">
+<Target Name="_AddAndroidCustomMetaData"
+    DependsOnTargets="ImplicitlyExpandDesignTimeFacades">
   <AppendCustomMetadataToItemGroup
       Condition="'$(AndroidApplication)' != '' And $(AndroidApplication)"
       Inputs="@(ReferencePath)"
@@ -868,7 +869,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	</CreateProperty>
 	<ItemGroup>
 		<FileWrites Include="$(TargetFrameworkMonikerAssemblyAttributesPath)" />
-		<Reference Include="$(_JavaInteropReferences)" />
+		<Reference Include="$(_RequiredXamarinAndroidReferences)" />
 	</ItemGroup>
 	<Warning Code="XA0110"
 		Text="Disabling %24(AndroidExplicitCrunch) as it is not supported by `aapt2`. If you wish to use %24(AndroidExplicitCrunch) please set %24(AndroidUseAapt2) to false."
@@ -1694,16 +1695,15 @@ because xbuild doesn't support framework reference assemblies.
 	<ItemGroup>
 		<FilteredAssemblies Include="$(OutDir)$(TargetFileName)"
 				Condition="Exists ('$(OutDir)$(TargetFileName)')" />
-		<FilteredAssemblies Include="@(ReferenceCopyLocalPaths)"
-				Condition="'%(ReferenceCopyLocalPaths.ResolvedFrom)' != 'ImplicitlyExpandDesignTimeFacades' And '%(ReferenceCopyLocalPaths.Extension)' == '.dll' And '%(ReferenceCopyLocalPaths.RelativeDir)' == '' And Exists('%(ReferenceCopyLocalPaths.Identity)') "/>
+		<FilteredAssemblies Include="@(_ReferenceDependencyPaths)"
+				Condition="Exists ('%(_ReferenceDependencyPaths.Identity)')"/>
 		<FilteredAssemblies Include="@(_ReferencePath)"
-				Condition="'%(ReferencePath.ResolvedFrom)' != 'ImplicitlyExpandDesignTimeFacades' And Exists('%(_ReferencePath.Identity)') "/>
+				Condition="Exists ('%(_ReferencePath.Identity)')"/>
 	</ItemGroup>
 	<!-- Find all the assemblies this app requires -->
 	<ResolveAssemblies
 		Assemblies="@(FilteredAssemblies)"
 		I18nAssemblies="$(MandroidI18n)"
-		LinkMode="$(AndroidLinkMode)"
 		ProjectFile="$(MSBuildProjectFullPath)"
 		TargetFrameworkVersion="$(TargetFrameworkVersion)"
 		ProjectAssetFile="$(ProjectLockFile)"
@@ -1950,6 +1950,7 @@ because xbuild doesn't support framework reference assemblies.
     <LinkAssemblies
       UseSharedRuntime="$(AndroidUseSharedRuntime)"
       MainAssembly="$(_MainAssembly)"
+      FrameworkDirectories="$(_XATargetFrameworkDirectories);$(_XATargetFrameworkDirectories)Facades"
       OutputDirectory="$(MonoAndroidIntermediateAssemblyDir)"
       I18nAssemblies="$(MandroidI18n)"
       LinkMode="$(AndroidLinkMode)"

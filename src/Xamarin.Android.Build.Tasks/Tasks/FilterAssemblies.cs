@@ -40,6 +40,9 @@ namespace Xamarin.Android.Tasks
 					Log.LogDebugMessage ($"Skipping non-existent dependency '{assemblyItem.ItemSpec}'.");
 					continue;
 				}
+				if (assemblyItem.GetMetadata ("ResolvedFrom") == "ImplicitlyExpandDesignTimeFacades") {
+					continue; // skip facade assemblies
+				}
 				using (var pe = new PEReader (File.OpenRead (assemblyItem.ItemSpec))) {
 					var reader = pe.GetMetadataReader ();
 					var assemblyDefinition = reader.GetAssemblyDefinition ();

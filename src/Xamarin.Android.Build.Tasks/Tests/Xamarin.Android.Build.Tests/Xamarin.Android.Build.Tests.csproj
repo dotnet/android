@@ -11,6 +11,7 @@
   <Import Project="..\..\..\..\build-tools\scripts\MSBuildReferences.projitems" />
 
   <ItemGroup>
+    <Reference Include="System.Net.Http" />
     <Reference Include="Xamarin.Android.Cecil">
       <HintPath>..\..\..\..\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\Xamarin.Android.Cecil.dll</HintPath>
     </Reference>

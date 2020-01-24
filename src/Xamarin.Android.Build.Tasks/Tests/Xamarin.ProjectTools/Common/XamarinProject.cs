@@ -316,7 +316,7 @@ namespace Xamarin.ProjectTools
 					var subname = fi.FullName.Substring (dirFullPath.Length).Replace ('\\', '/');
 					if (subname.StartsWith ("bin", StringComparison.OrdinalIgnoreCase) || subname.StartsWith ("obj", StringComparison.OrdinalIgnoreCase))
 						continue;
-					if (!projectFiles.Any (p => p.Path.Replace ('\\', '/').Equals (subname))) {
+					if (!projectFiles.Any (p => p.Path != null && p.Path.Replace ('\\', '/').Equals (subname))) {
 						fi.Delete ();
 					}
 				}

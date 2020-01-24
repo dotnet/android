@@ -330,14 +330,19 @@ namespace Xamarin.Android.Tasks
 			using (var pe = new PEReader (stream)) {
 				var reader = pe.GetMetadataReader ();
 				var assemblyDefinition = reader.GetAssemblyDefinition ();
-				foreach (var handle in assemblyDefinition.GetCustomAttributes ()) {
-					var attribute = reader.GetCustomAttribute (handle);
-					var attributeName = reader.GetCustomAttributeFullName (attribute);
-					if (attributeName == "System.Runtime.CompilerServices.ReferenceAssemblyAttribute")
-						return true;
-				}
-				return false;
+				return IsReferenceAssembly (reader, assemblyDefinition);
 			}
+		}
+
+		public static bool IsReferenceAssembly (MetadataReader reader, AssemblyDefinition assemblyDefinition)
+		{
+			foreach (var handle in assemblyDefinition.GetCustomAttributes ()) {
+				var attribute = reader.GetCustomAttribute (handle);
+				var attributeName = reader.GetCustomAttributeFullName (attribute);
+				if (attributeName == "System.Runtime.CompilerServices.ReferenceAssemblyAttribute")
+					return true;
+			}
+			return false;
 		}
 
 		public static bool ExistsInFrameworkPath (string assembly)

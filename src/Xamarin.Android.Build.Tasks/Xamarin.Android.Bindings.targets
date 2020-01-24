@@ -223,7 +223,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
     </CreateProperty>
     <ItemGroup>
       <FileWrites Include="$(TargetFrameworkMonikerAssemblyAttributesPath)" />
-      <Reference Include="$(_JavaInteropReferences)" />
+      <Reference Include="$(_RequiredXamarinAndroidReferences)" />
     </ItemGroup>
   </Target>
 

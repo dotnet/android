@@ -1,7 +1,15 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<PropertyGroup>
 		<XamarinAndroidVersion>@PACKAGE_VERSION@-@PACKAGE_VERSION_BUILD@</XamarinAndroidVersion>
-		<_JavaInteropReferences>Java.Interop;System.Runtime</_JavaInteropReferences>
+		<_RequiredXamarinAndroidReferences>
+			Java.Interop;
+			Mono.Security;
+			System.Net.Http;
+			System.Numerics;
+			System.Runtime;
+			System.Runtime.Serialization;
+			System.ServiceModel.Internals;
+		</_RequiredXamarinAndroidReferences>
 		<Debugger Condition=" '$(Debugger)' == '' ">Xamarin</Debugger>
 		<DependsOnSystemRuntime Condition=" '$(DependsOnSystemRuntime)' == '' ">true</DependsOnSystemRuntime>
 		<ImplicitlyExpandNETStandardFacades>false</ImplicitlyExpandNETStandardFacades>
