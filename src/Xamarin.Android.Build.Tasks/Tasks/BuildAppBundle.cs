@@ -98,7 +98,7 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
-		protected override CommandLineBuilder GetCommandLineBuilder ()
+		internal override CommandLineBuilder GetCommandLineBuilder ()
 		{
 			var cmd = base.GetCommandLineBuilder ();
 			cmd.AppendSwitch ("build-bundle");

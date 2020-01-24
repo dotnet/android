@@ -149,6 +149,7 @@
     <Compile Include="Tasks\BuildAppBundle.cs" />
     <Compile Include="Tasks\BundleTool.cs" />
     <Compile Include="Tasks\BuildApkSet.cs" />
+    <Compile Include="Tasks\BundleToolAdbTask.cs" />
     <Compile Include="Tasks\InstallApkSet.cs" />
     <Compile Include="Tasks\CilStrip.cs" />
     <Compile Include="Tasks\ConvertDebuggingFiles.cs" />
