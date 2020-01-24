@@ -59,7 +59,7 @@ namespace Xamarin.Android.Tasks
 						};
 						var asm = Assembly.GetExecutingAssembly().GetName();
 						var codeAttrDecl =
-							new CodeAttributeDeclaration("System.CodeDom.Compiler.GeneratedCodeAttribute",
+							new CodeAttributeDeclaration(new CodeTypeReference ("System.CodeDom.Compiler.GeneratedCodeAttribute", CodeTypeReferenceOptions.GlobalReference),
 								new CodeAttributeArgument(
 									new CodePrimitiveExpression(asm.Name)),
 								new CodeAttributeArgument(
