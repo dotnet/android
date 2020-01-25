@@ -79,7 +79,13 @@ ms.date: 08/23/2019
 
 ## XA2xxx: Linker
 
-## XA3xxx: AOT
+## XA3xxx: Unmanaged code compilation
+
++ XA3001: Could not AOT the assembly: {assembly}
++ XA3002: Invalid AOT mode: {mode}
++ XA3003: Could not strip IL of assembly: {assembly}
++ XA3004: Could not compile native assembly file: {file}
++ XA3005: Could not link native shared library: {library}
 
 ## XA4xxx: Code generation
 
