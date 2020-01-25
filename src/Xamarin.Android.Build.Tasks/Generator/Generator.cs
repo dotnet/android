@@ -38,7 +38,7 @@ namespace Xamarin.Android.Tasks
 						var path = jti.GetDestinationPath (outputPath);
 						MonoAndroidHelper.CopyIfStreamChanged (memoryStream, path);
 						if (jti.HasExport && !hasExportReference)
-							Diagnostic.Error (4210, "You need to add a reference to Mono.Android.Export.dll when you use ExportAttribute or ExportFieldAttribute.");
+							Diagnostic.Error (4210, Properties.Resources.XA4210);
 					} catch (XamarinAndroidException xae) {
 						ok = false;
 						log.LogError (
@@ -56,13 +56,13 @@ namespace Xamarin.Android.Tasks
 					} catch (DirectoryNotFoundException ex) {
 						ok = false;
 						if (OS.IsWindows) {
-							Diagnostic.Error (5301, "Failed to create JavaTypeInfo for class: {0} due to MAX_PATH: {1}", t.FullName, ex);
+							Diagnostic.Error (5301, Properties.Resources.XA5301, t.FullName, ex);
 						} else {
-							Diagnostic.Error (4209, "Failed to create JavaTypeInfo for class: {0} due to {1}", t.FullName, ex);
+							Diagnostic.Error (4209, Properties.Resources.XA4209, t.FullName, ex);
 						}
 					} catch (Exception ex) {
 						ok = false;
-						Diagnostic.Error (4209, "Failed to create JavaTypeInfo for class: {0} due to {1}", t.FullName, ex);
+						Diagnostic.Error (4209, Properties.Resources.XA4209, t.FullName, ex);
 					}
 				}
 			}

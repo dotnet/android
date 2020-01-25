@@ -27,6 +27,17 @@
         <target state="new">Could not link native shared library: {0}</target>
         <note />
       </trans-unit>
+      <trans-unit id="XA4209">
+        <source>Failed to generate Java type for class: {0} due to {1}</source>
+        <target state="new">Failed to generate Java type for class: {0} due to {1}</target>
+        <note>{0} - The managed type name
+{1} - The exception message of the associated exception</note>
+      </trans-unit>
+      <trans-unit id="XA4210">
+        <source>You need to add a reference to Mono.Android.Export.dll when you use ExportAttribute or ExportFieldAttribute.</source>
+        <target state="new">You need to add a reference to Mono.Android.Export.dll when you use ExportAttribute or ExportFieldAttribute.</target>
+        <note>The following are literal names and should not be translated: Mono.Android.Export.dll, ExportAttribute, ExportFieldAttribute.</note>
+      </trans-unit>
       <trans-unit id="XA4214">
         <source>The managed type `{0}` exists in multiple assemblies: {1}. Please refactor the managed type names in these assemblies so that they are not identical.</source>
         <target state="new">The managed type `{0}` exists in multiple assemblies: {1}. Please refactor the managed type names in these assemblies so that they are not identical.</target>
@@ -38,7 +49,14 @@
         <target state="new">References to the type `{0}` will refer to `{0}, {1}`.</target>
         <note>The phrase "`{0}, {1}`" does not need to be translated.
 {0} - The managed type name
-{1} - The the name of the library that contains the type</note>
+{1} - The name of the library that contains the type</note>
+      </trans-unit>
+      <trans-unit id="XA5301">
+        <source>Failed to generate Java type for class: {0} due to MAX_PATH: {1}</source>
+        <target state="new">Failed to generate Java type for class: {0} due to MAX_PATH: {1}</target>
+        <note>The following are literal names and should not be translated: MAX_PATH.
+{0} - The managed type name
+{1} - The exception message of the associated exception</note>
       </trans-unit>
     </body>
   </file>
