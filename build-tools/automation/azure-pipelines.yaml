@@ -53,6 +53,12 @@ variables:
   HostedMac: Hosted Mac Internal
   HostedWinVS2019: Hosted Windows 2019 with VS2019
   VSEngWinVS2019: VSEng-Xamarin-Android
+  # Run all tests if:
+  # - User who queued the job requested it (They set XA.RunAllTests to true)
+  # - This is the master integration branch (Pipeline defaults XA.RunAllTests to true)
+  # - This is a non-fork branch with name containing "mono-" (for Mono bumps)
+  IsMonoBranch: $[and(eq(variables['XA.Commercial.Build'], 'true'), ne(variables['System.PullRequest.IsFork'], 'True'), contains(variables['Build.SourceBranchName'], 'mono-'))]
+  RunAllTests: $[or(eq(variables['XA.RunAllTests'], true), eq(variables['IsMonoBranch'], true))]
 
 # Stage and Job "display names" are shortened because they are combined to form the name of the corresponding GitHub check.
 stages:
@@ -819,7 +825,7 @@ stages:
       parameters:
         testRunTitle: MSBuildDeviceIntegration On Device - macOS
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/MSBuildDeviceIntegration.dll
-        nunitConsoleExtraArgs: --where "test != Xamarin.Android.Build.Tests.DeploymentTest.CheckTimeZoneInfoIsCorrect"
+        nunitConsoleExtraArgs: --where "cat != TimeZoneInfo"
         testResultsFile: TestResult-MSBuildDeviceIntegration-$(XA.Build.Configuration).xml
 
     - task: MSBuild@1
@@ -835,51 +841,6 @@ stages:
     - template: yaml-templates/upload-results.yaml
       parameters:
         artifactName: Test Results - MSBuild With Emulator - macOS
-
-  # Check - "Xamarin.Android (Test TimeZoneInfo With Emulator - macOS)"
-  - job: mac_timezonedevice_tests
-    displayName: TimeZoneInfo With Emulator - macOS
-    pool: $(HostedMac)
-    timeoutInMinutes: 240
-    cancelTimeoutInMinutes: 5
-    workspace:
-      clean: all
-    steps:
-    - template: yaml-templates/setup-test-environment.yaml
-
-    - task: DownloadPipelineArtifact@1
-      inputs:
-        artifactName: $(TestAssembliesArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
-
-    - task: MSBuild@1
-      displayName: start emulator
-      inputs:
-        solution: src/Mono.Android/Test/Mono.Android-Tests.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: >
-          /t:AcquireAndroidTarget /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/start-emulator.binlog
-
-    - template: yaml-templates/run-nunit-tests.yaml
-      parameters:
-        testRunTitle: TimeZoneInfoTests On Device - macOS
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/MSBuildDeviceIntegration.dll
-        nunitConsoleExtraArgs: --where "test == Xamarin.Android.Build.Tests.DeploymentTest.CheckTimeZoneInfoIsCorrect"
-        testResultsFile: TestResult-TimeZoneInfoTests-$(XA.Build.Configuration).xml
-
-    - task: MSBuild@1
-      displayName: shut down emulator
-      inputs:
-        solution: src/Mono.Android/Test/Mono.Android-Tests.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: >
-          /t:AcquireAndroidTarget,ReleaseAndroidTarget
-          /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/shutdown-emulator.binlog
-      condition: always()
-
-    - template: yaml-templates/upload-results.yaml
-      parameters:
-        artifactName: Test Results - TimeZoneInfo With Emulator - macOS
 
   # Check - "Xamarin.Android (Test Designer - macOS)"
   - job: designer_integration_mac
@@ -984,12 +945,12 @@ stages:
 - stage: integrated_regression_test
   displayName: Regression Tests
   dependsOn: mac_build
-  condition: and(eq(variables['XA.Commercial.Build'], 'true'), ne(variables['System.PullRequest.IsFork'], 'True'))
+  condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(variables['RunAllTests'], true))
   jobs:
 
   # Check - "Xamarin.Android (Test Integrated Regression - macOS)"
   - job: integrated_regression_mac_1
-    displayName: macOS - Node 1
+    displayName: Mac-1
     pool:
       name: VSEng-Xamarin-Mac-Devices
       demands:
@@ -1005,7 +966,7 @@ stages:
 
   # Check - "Xamarin.Android (Test Integrated Regression - macOS)"
   - job: integrated_regression_mac_2
-    displayName: macOS - Node 2
+    displayName: Mac-2
     pool:
       name: VSEng-Xamarin-Mac-Devices
       demands:
@@ -1021,7 +982,7 @@ stages:
 
   # Check - "Xamarin.Android (Test Integrated Regression - macOS)"
   - job: integrated_regression_mac_3
-    displayName: macOS - Node 3
+    displayName: Mac-3
     pool:
       name: VSEng-Xamarin-Mac-Devices
       demands:
@@ -1037,7 +998,7 @@ stages:
 
   # Check - "Xamarin.Android (Test Integrated Regression - Windows)"
   - job: integrated_regression_Win_1
-    displayName: Windows - Node 1
+    displayName: Windows-1
     pool:
       name: VSEng-Xamarin-Win-XMA
       demands:
@@ -1059,7 +1020,7 @@ stages:
 
   # Check - "Xamarin.Android (Test Integrated Regression - Windows)"
   - job: integrated_regression_Win_2
-    displayName: Windows - Node 2
+    displayName: Windows-2
     pool:
       name: VSEng-Xamarin-Win-XMA
       demands:
@@ -1081,7 +1042,7 @@ stages:
 
   # Check - "Xamarin.Android (Test Integrated Regression - Windows)"
   - job: integrated_regression_Win_3
-    displayName: Windows - Node 3
+    displayName: Windows-3
     pool:
       name: VSEng-Xamarin-Win-XMA
       demands:
@@ -1100,3 +1061,16 @@ stages:
         node_id: 3
 
     - template: remove-visualstudio.yml@yaml
+
+  # TimeZoneInfo tests
+  - template: yaml-templates\run-timezoneinfo-tests.yaml
+    parameters:
+      node_id: 1
+
+  - template: yaml-templates\run-timezoneinfo-tests.yaml
+    parameters:
+      node_id: 2
+
+  - template: yaml-templates\run-timezoneinfo-tests.yaml
+    parameters:
+      node_id: 3
