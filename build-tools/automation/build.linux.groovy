@@ -34,7 +34,6 @@ def chRootPackages = '''
     libtool
     libtool-bin
     libz-mingw-w64-dev
-    libzip-dev
     linux-libc-dev:i386
     mono-csharp-shell
     mono-devel
