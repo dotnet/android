@@ -3607,6 +3607,19 @@ namespace UnnamedProject {
 				DexTool = dexTool,
 				LinkTool = linkTool,
 			};
+
+			//Add a BroadcastReceiver
+			proj.Sources.Add (new BuildItem.Source ("MyReceiver.cs") {
+				TextContent = () => @"
+using Android.Content;
+
+[BroadcastReceiver(Process = "":remote"", Name = ""foo.MyReceiver"")]
+public class MyReceiver : BroadcastReceiver
+{
+    public override void OnReceive(Context context, Intent intent) { }
+}",
+			});
+
 			//Okhttp and Okio
 			//https://github.com/square/okhttp
 			//https://github.com/square/okio
@@ -3690,6 +3703,8 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 				var className = "Lmono/MonoRuntimeProvider;";
 				var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
 				FileAssert.Exists (dexFile);
+				Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
+				className = "Lmono/MonoRuntimeProvider_1;";
 				Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
 			}
 		}
