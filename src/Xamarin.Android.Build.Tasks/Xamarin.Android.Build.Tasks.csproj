@@ -50,7 +50,7 @@
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Xml" />
     <Reference Include="Irony">
-      <HintPath>..\..\packages\Irony.0.9.1\lib\net40\Irony.dll</HintPath>
+      <HintPath>..\..\packages\Irony.1.1.0\lib\net40\Irony.dll</HintPath>
     </Reference>
     <Reference Include="FSharp.Compiler.CodeDom">
       <HintPath>..\..\packages\FSharp.Compiler.CodeDom.1.0.0.1\lib\net40\FSharp.Compiler.CodeDom.dll</HintPath>
