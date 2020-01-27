@@ -49,7 +49,7 @@ jobs:
 
   - script: |
       mkdir -p $(System.DefaultWorkingDirectory)/bin/Build$(OSSBuildConfiguration)/linux-artifacts
-      cp $(System.DefaultWorkingDirectory)/*xamarin.android*.tar* $(System.DefaultWorkingDirectory)/bin/Build$(OSSBuildConfiguration)/linux-artifacts
+      cp $(System.DefaultWorkingDirectory)/*xamarin.android*.tar.bz2 $(System.DefaultWorkingDirectory)/bin/Build$(OSSBuildConfiguration)/linux-artifacts
       cp $(System.DefaultWorkingDirectory)/*.changes $(System.DefaultWorkingDirectory)/bin/Build$(OSSBuildConfiguration)/linux-artifacts
       cp $(System.DefaultWorkingDirectory)/*.dsc $(System.DefaultWorkingDirectory)/bin/Build$(OSSBuildConfiguration)/linux-artifacts
       cp $(System.DefaultWorkingDirectory)/*.deb $(System.DefaultWorkingDirectory)/bin/Build$(OSSBuildConfiguration)/linux-artifacts
