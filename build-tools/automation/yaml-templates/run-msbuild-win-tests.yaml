@@ -6,7 +6,7 @@ parameters:
 jobs:
   - job: win_msbuild_tests${{ parameters.node_id }}
     displayName: MSBuild - Windows-${{ parameters.node_id }}
-    pool: $(VSEngWinVS2019)
+    pool: $(HostedWinVS2019)
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     variables:
