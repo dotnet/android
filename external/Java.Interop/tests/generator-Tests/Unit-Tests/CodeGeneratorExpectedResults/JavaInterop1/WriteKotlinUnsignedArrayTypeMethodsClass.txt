@@ -16,7 +16,7 @@ public partial class MyClass  {
 	public unsafe uint[] Echo (uint[] value)
 	{
 		const string __id = "Echo.([I)[I";
-		IntPtr native_value = JNIEnv.NewArray ((int[])(object)value);
+		IntPtr native_value = JNIEnv.NewArray (value);
 		try {
 			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
 			__args [0] = new JniArgumentValue (native_value);
@@ -35,7 +35,7 @@ public partial class MyClass  {
 	public unsafe ushort[] Echo (ushort[] value)
 	{
 		const string __id = "Echo.([S)[S";
-		IntPtr native_value = JNIEnv.NewArray ((short[])(object)value);
+		IntPtr native_value = JNIEnv.NewArray (value);
 		try {
 			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
 			__args [0] = new JniArgumentValue (native_value);
@@ -54,7 +54,7 @@ public partial class MyClass  {
 	public unsafe ulong[] Echo (ulong[] value)
 	{
 		const string __id = "Echo.([J)[J";
-		IntPtr native_value = JNIEnv.NewArray ((long[])(object)value);
+		IntPtr native_value = JNIEnv.NewArray (value);
 		try {
 			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
 			__args [0] = new JniArgumentValue (native_value);

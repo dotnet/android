@@ -26,7 +26,7 @@ public partial class MyClass  {
 		[Register ("set_UIntProp", "([I)V", "")]
 		set {
 			const string __id = "set_UIntProp.([I)V";
-			IntPtr native_value = JNIEnv.NewArray ((int[])(object)value);
+			IntPtr native_value = JNIEnv.NewArray (value);
 			try {
 				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
 				__args [0] = new JniArgumentValue (native_value);
@@ -55,7 +55,7 @@ public partial class MyClass  {
 		[Register ("set_UShortProp", "([S)V", "")]
 		set {
 			const string __id = "set_UShortProp.([S)V";
-			IntPtr native_value = JNIEnv.NewArray ((short[])(object)value);
+			IntPtr native_value = JNIEnv.NewArray (value);
 			try {
 				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
 				__args [0] = new JniArgumentValue (native_value);
@@ -84,7 +84,7 @@ public partial class MyClass  {
 		[Register ("set_ULongProp", "([J)V", "")]
 		set {
 			const string __id = "set_ULongProp.([J)V";
-			IntPtr native_value = JNIEnv.NewArray ((long[])(object)value);
+			IntPtr native_value = JNIEnv.NewArray (value);
 			try {
 				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
 				__args [0] = new JniArgumentValue (native_value);
