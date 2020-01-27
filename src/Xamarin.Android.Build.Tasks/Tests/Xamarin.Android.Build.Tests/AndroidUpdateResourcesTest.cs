@@ -41,6 +41,29 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void BuildAppWithSystemNamespace ()
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			var library = new XamarinAndroidLibraryProject () {
+				ProjectName = "Library1.System",
+			};
+			var proj = new XamarinAndroidApplicationProject () {
+				References = {
+					new BuildItem.ProjectReference (Path.Combine("..", library.ProjectName, Path.GetFileName (library.ProjectFilePath)), "Library1.System") {
+					},
+				},
+			};
+			using (var builder = CreateDllBuilder (Path.Combine (path, library.ProjectName), cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
+				builder.ThrowOnBuildFailure = false;
+				Assert.IsTrue (builder.Build (library), "Library should have built.");
+				using (var b = CreateApkBuilder (Path.Combine (path, proj.ProjectName), cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
+					b.ThrowOnBuildFailure = false;
+					Assert.IsTrue (b.Build (proj), "Project should have built.");
+				}
+			}
+		}
+
+		[Test]
 		public void RepetitiveBuild ()
 		{
 			if (Directory.Exists ("temp/RepetitiveBuild"))
