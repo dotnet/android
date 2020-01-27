@@ -2,6 +2,31 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="tr" original="../Resources.resx">
     <body>
+      <trans-unit id="XA3001">
+        <source>Could not AOT the assembly: {0}</source>
+        <target state="new">Could not AOT the assembly: {0}</target>
+        <note>The abbreviation "AOT" should not be translated.</note>
+      </trans-unit>
+      <trans-unit id="XA3002">
+        <source>Invalid AOT mode: {0}</source>
+        <target state="new">Invalid AOT mode: {0}</target>
+        <note>The abbreviation "AOT" should not be translated.</note>
+      </trans-unit>
+      <trans-unit id="XA3003">
+        <source>Could not strip IL of assembly: {0}</source>
+        <target state="new">Could not strip IL of assembly: {0}</target>
+        <note>The abbreviation "IL" should not be translated.</note>
+      </trans-unit>
+      <trans-unit id="XA3004">
+        <source>Could not compile native assembly file: {0}</source>
+        <target state="new">Could not compile native assembly file: {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="XA3005">
+        <source>Could not link native shared library: {0}</source>
+        <target state="new">Could not link native shared library: {0}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="XA4214">
         <source>The managed type `{0}` exists in multiple assemblies: {1}. Please refactor the managed type names in these assemblies so that they are not identical.</source>
         <target state="new">The managed type `{0}` exists in multiple assemblies: {1}. Please refactor the managed type names in these assemblies so that they are not identical.</target>

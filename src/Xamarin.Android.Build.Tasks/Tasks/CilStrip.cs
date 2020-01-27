@@ -31,12 +31,7 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
-			try {
-				return DoExecute ();
-			} catch (Exception e) {
-				Log.LogCodedError ("XA3001", "{0}", e);
-				return false;
-			}
+			return DoExecute ();
 		}
 
 		bool DoExecute () {
@@ -45,7 +40,7 @@ namespace Xamarin.Android.Tasks
 			AotMode aotMode;
 			bool hasValidAotMode = Aot.GetAndroidAotMode (AndroidAotMode, out aotMode);
 			if (!hasValidAotMode) {
-				Log.LogCodedError ("XA3001", "Invalid AOT mode: {0}", AndroidAotMode);
+				Log.LogCodedError ("XA3002", Properties.Resources.XA3002, AndroidAotMode);
 				return false;
 			}
 
@@ -74,7 +69,7 @@ namespace Xamarin.Android.Tasks
 				File.Copy (assemblyPath, nonstripPath, overwrite: true);
 
 				if (!RunCilStrip (nonstripPath, assemblyPath)) {
-					Log.LogCodedError ("XA3001", "Could not strip IL of assembly: {0}", assembly.ItemSpec);
+					Log.LogCodedError ("XA3003", Properties.Resources.XA3003, assembly.ItemSpec);
 					return false;
 				}
 			}

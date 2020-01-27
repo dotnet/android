@@ -61,6 +61,51 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Could not AOT the assembly: {0}.
+        /// </summary>
+        internal static string XA3001 {
+            get {
+                return ResourceManager.GetString("XA3001", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid AOT mode: {0}.
+        /// </summary>
+        internal static string XA3002 {
+            get {
+                return ResourceManager.GetString("XA3002", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not strip IL of assembly: {0}.
+        /// </summary>
+        internal static string XA3003 {
+            get {
+                return ResourceManager.GetString("XA3003", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not compile native assembly file: {0}.
+        /// </summary>
+        internal static string XA3004 {
+            get {
+                return ResourceManager.GetString("XA3004", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not link native shared library: {0}.
+        /// </summary>
+        internal static string XA3005 {
+            get {
+                return ResourceManager.GetString("XA3005", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The managed type `{0}` exists in multiple assemblies: {1}. Please refactor the managed type names in these assemblies so that they are not identical..
         /// </summary>
         internal static string XA4214 {
