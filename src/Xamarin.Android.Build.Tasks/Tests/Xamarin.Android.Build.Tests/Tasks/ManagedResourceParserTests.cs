@@ -9,6 +9,7 @@ using System.Text;
 using Xamarin.Android.Tasks;
 using Microsoft.Build.Utilities;
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 
 namespace Xamarin.Android.Build.Tests {
 	[TestFixture]
