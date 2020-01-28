@@ -341,8 +341,8 @@
       Inputs="$(PkgMono_Posix_NETStandard)\runtimes\osx\lib\netstandard2.0\Mono.Posix.NETStandard.dll;$(PkgXamarin_Build_AsyncTask)\lib\netstandard2.0\Xamarin.Build.AsyncTask.pdb"
       Outputs="$(OutputPath)\Mono.Posix.NETStandard.dll;$(OutputPath)\Xamarin.Build.AsyncTask.pdb" >
     <Copy
-      SourceFiles="$(PkgMono_Posix_NETStandard)\runtimes\osx\lib\netstandard2.0\Mono.Posix.NETStandard.dll;$(PkgXamarin_Build_AsyncTask)\lib\netstandard2.0\Xamarin.Build.AsyncTask.pdb"
-      DestinationFolder="$(OutputPath)"
+        SourceFiles="$(PkgMono_Posix_NETStandard)\runtimes\osx\lib\netstandard2.0\Mono.Posix.NETStandard.dll;$(PkgXamarin_Build_AsyncTask)\lib\netstandard2.0\Xamarin.Build.AsyncTask.pdb"
+        DestinationFolder="$(OutputPath)"
     />
   </Target>
 
