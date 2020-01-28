@@ -2,7 +2,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Tools.AndroidSdk", "src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj", "{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Tools.AndroidSdk-Tests", "src\Xamarin.Android.Tools.AndroidSdk\Tests\Xamarin.Android.Tools.AndroidSdk-Tests.csproj", "{1E5501E8-49C1-4659-838D-CC9720C5208F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Tools.AndroidSdk-Tests", "tests\Xamarin.Android.Tools.AndroidSdk-Tests\Xamarin.Android.Tools.AndroidSdk-Tests.csproj", "{1E5501E8-49C1-4659-838D-CC9720C5208F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

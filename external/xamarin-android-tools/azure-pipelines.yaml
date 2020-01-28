@@ -1,11 +1,16 @@
 name: Xamarin.Android.Tools $(Rev:r)
+
 jobs:
 - job: windows
   displayName: windows
   pool: Hosted VS2017
   steps:
+  - task: NuGetToolInstaller@1
+    displayName: 'Install NuGet'
+    inputs:
+      versionSpec: '5.4.x'
   - task: NuGetCommand@2
-    displayName: 'NuGet restore'
+    displayName: 'NuGet Restore'
     inputs:
       restoreSolution: Xamarin.Android.Tools.sln
   - task: MSBuild@1
@@ -13,39 +18,43 @@ jobs:
     inputs:
       solution: Xamarin.Android.Tools.sln
   - task: VSTest@2
-    displayName: 'VsTest - NUnit3'
+    displayName: 'Run Tests'
     inputs:
       testAssemblyVer2: 'bin\TestDebug\*-Tests.dll'
-      pathtoCustomTestAdapters: 'packages\NUnit3TestAdapter.3.13.0\build\net35'
   - powershell: |
       $hashOfLastVersionChange = & "git" "log" "--follow" "-1" "--pretty=%H" "nuget.version"
       $commitsSinceVersionChange = & "git" "rev-list" "--count" "$hashOfLastVersionChange..HEAD"
       $majorMinor = Get-Content "nuget.version"
       $version = "$majorMinor.$commitsSinceVersionChange"
       Write-Host "##vso[task.setvariable variable=xat.nuget.version]$version"
-  - task: NuGetCommand@2
-    displayName: NuGet pack
+  - task: MSBuild@1
+    displayName: 'Build NuGet'
     inputs:
-      command: custom
-      arguments: pack src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj -Version $(xat.nuget.version) -OutputDirectory $(Build.ArtifactStagingDirectory)
+      solution: 'src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj'
+      msbuildArguments: '/t:pack /p:Version=$(xat.nuget.version) /p:OutputPath=$(Build.ArtifactStagingDirectory)'
   - task: PublishBuildArtifacts@1
-    displayName: upload artifacts
+    displayName: Upload Artifacts
     inputs:
       pathtoPublish: $(Build.ArtifactStagingDirectory)
 - job: mac
   displayName: mac
   pool: Hosted macOS
   steps:
+  - task: NuGetToolInstaller@1
+    displayName: 'Install NuGet'
+    inputs:
+      versionSpec: '5.4.x'
   - task: NuGetCommand@2
-    displayName: 'NuGet restore'
+    displayName: 'NuGet Restore'
     inputs:
       restoreSolution: Xamarin.Android.Tools.sln
+      restoreDirectory: 'packages'
   - task: MSBuild@1
     displayName: 'Build solution Xamarin.Android.Tools.sln'
     inputs:
       solution: Xamarin.Android.Tools.sln
-  - script: mono packages/NUnit.ConsoleRunner.3.9.0/tools/nunit3-console.exe bin/TestDebug/Xamarin.Android.Tools.AndroidSdk-Tests.dll
-    displayName: Run NUnit Tests
+  - script: mono packages/nunit.consolerunner/3.9.0/tools/nunit3-console.exe bin/TestDebug/Xamarin.Android.Tools.AndroidSdk-Tests.dll
+    displayName: Run Tests
   - task: PublishTestResults@2
     condition: always()
     inputs:
