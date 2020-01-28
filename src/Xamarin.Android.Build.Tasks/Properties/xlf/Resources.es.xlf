@@ -34,8 +34,8 @@
 {1} - The exception message of the associated exception</note>
       </trans-unit>
       <trans-unit id="XA4210">
-        <source>You need to add a reference to Mono.Android.Export.dll when you use ExportAttribute or ExportFieldAttribute.</source>
-        <target state="new">You need to add a reference to Mono.Android.Export.dll when you use ExportAttribute or ExportFieldAttribute.</target>
+        <source>Please add a reference to Mono.Android.Export.dll when using ExportAttribute or ExportFieldAttribute.</source>
+        <target state="new">Please add a reference to Mono.Android.Export.dll when using ExportAttribute or ExportFieldAttribute.</target>
         <note>The following are literal names and should not be translated: Mono.Android.Export.dll, ExportAttribute, ExportFieldAttribute.</note>
       </trans-unit>
       <trans-unit id="XA4214">

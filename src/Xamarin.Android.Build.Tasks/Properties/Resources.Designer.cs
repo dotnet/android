@@ -115,7 +115,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to You need to add a reference to Mono.Android.Export.dll when you use ExportAttribute or ExportFieldAttribute..
+        ///   Looks up a localized string similar to Please add a reference to Mono.Android.Export.dll when using ExportAttribute or ExportFieldAttribute..
         /// </summary>
         internal static string XA4210 {
             get {

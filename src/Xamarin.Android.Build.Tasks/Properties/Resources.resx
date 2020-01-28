@@ -141,7 +141,7 @@
 {1} - The exception message of the associated exception</comment>
   </data>
   <data name="XA4210" xml:space="preserve">
-    <value>You need to add a reference to Mono.Android.Export.dll when you use ExportAttribute or ExportFieldAttribute.</value>
+    <value>Please add a reference to Mono.Android.Export.dll when using ExportAttribute or ExportFieldAttribute.</value>
     <comment>The following are literal names and should not be translated: Mono.Android.Export.dll, ExportAttribute, ExportFieldAttribute.</comment>
   </data>
   <data name="XA4214" xml:space="preserve">
