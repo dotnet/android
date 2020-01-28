@@ -106,6 +106,24 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to generate Java type for class: {0} due to {1}.
+        /// </summary>
+        internal static string XA4209 {
+            get {
+                return ResourceManager.GetString("XA4209", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please add a reference to Mono.Android.Export.dll when using ExportAttribute or ExportFieldAttribute..
+        /// </summary>
+        internal static string XA4210 {
+            get {
+                return ResourceManager.GetString("XA4210", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The managed type `{0}` exists in multiple assemblies: {1}. Please refactor the managed type names in these assemblies so that they are not identical..
         /// </summary>
         internal static string XA4214 {
@@ -120,6 +138,15 @@ namespace Xamarin.Android.Tasks.Properties {
         internal static string XA4214_Result {
             get {
                 return ResourceManager.GetString("XA4214_Result", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to generate Java type for class: {0} due to MAX_PATH: {1}.
+        /// </summary>
+        internal static string XA5301 {
+            get {
+                return ResourceManager.GetString("XA5301", resourceCulture);
             }
         }
     }

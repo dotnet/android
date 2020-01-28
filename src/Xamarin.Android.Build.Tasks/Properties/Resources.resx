@@ -135,6 +135,15 @@
   <data name="XA3005" xml:space="preserve">
     <value>Could not link native shared library: {0}</value>
   </data>
+  <data name="XA4209" xml:space="preserve">
+    <value>Failed to generate Java type for class: {0} due to {1}</value>
+    <comment>{0} - The managed type name
+{1} - The exception message of the associated exception</comment>
+  </data>
+  <data name="XA4210" xml:space="preserve">
+    <value>Please add a reference to Mono.Android.Export.dll when using ExportAttribute or ExportFieldAttribute.</value>
+    <comment>The following are literal names and should not be translated: Mono.Android.Export.dll, ExportAttribute, ExportFieldAttribute.</comment>
+  </data>
   <data name="XA4214" xml:space="preserve">
     <value>The managed type `{0}` exists in multiple assemblies: {1}. Please refactor the managed type names in these assemblies so that they are not identical.</value>
     <comment>{0} - The managed type name
@@ -144,6 +153,12 @@
     <value>References to the type `{0}` will refer to `{0}, {1}`.</value>
     <comment>The phrase "`{0}, {1}`" does not need to be translated.
 {0} - The managed type name
-{1} - The the name of the library that contains the type</comment>
+{1} - The name of the library that contains the type</comment>
+  </data>
+  <data name="XA5301" xml:space="preserve">
+    <value>Failed to generate Java type for class: {0} due to MAX_PATH: {1}</value>
+    <comment>The following are literal names and should not be translated: MAX_PATH.
+{0} - The managed type name
+{1} - The exception message of the associated exception</comment>
   </data>
 </root>
