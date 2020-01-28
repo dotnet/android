@@ -327,9 +327,9 @@ int xml myxml 0x7f140000
 			var content1 = File.ReadAllText (file1);
 			var content2 = File.ReadAllText (file2);
 			// This string is only generated when running on mono, replace with a new line that will be stripped when comparing.
-			string versionInfo = "//     Runtime Version:4.0.30319.42000";
-			content1 = content1.Replace (versionInfo, Environment.NewLine);
-			content2 = content2.Replace (versionInfo, Environment.NewLine);
+			var runtimeVersionRegex = new Regex (@"//\s*Runtime Version:.*");
+			content1 = runtimeVersionRegex.Replace (content1, Environment.NewLine);
+			content2 = runtimeVersionRegex.Replace (content2, Environment.NewLine);
 
 			using (var s1 = new MemoryStream (Encoding.UTF8.GetBytes (content1)))
 			using (var s2 = new MemoryStream (Encoding.UTF8.GetBytes (content2))) {
