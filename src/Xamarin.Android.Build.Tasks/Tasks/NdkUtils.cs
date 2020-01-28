@@ -25,18 +25,21 @@ namespace Xamarin.Android.Tasks
 
 		public static bool Init (string ndkPath)
 		{
-			return Init (null, ndkPath); // For tests which don't have access to a TaskLoggingHelper
+			return Init (delegate { }, ndkPath); // For tests which don't have access to a TaskLoggingHelper
 		}
 
-		public static bool Init (TaskLoggingHelper log, string ndkPath)
+		public static bool Init (TaskLoggingHelper log, string ndkPath) =>
+			Init ((c, m) => log.LogCodedError (c, m), ndkPath);
+
+		public static bool Init (Action<string, string> logError, string ndkPath)
 		{
 			Version ndkVersion;
 			bool hasNdkVersion = GetNdkToolchainRelease (ndkPath ?? "", out ndkVersion);
 
 			if (!hasNdkVersion) {
-				log?.LogCodedError ("XA5101",
-						"Could not locate the Android NDK. Please make sure the Android NDK is installed in the Android SDK Manager, " +
-						"or if using a custom NDK path, please ensure the $(AndroidNdkDirectory) MSBuild property is set to the custom path.");
+				logError ("XA5101",
+					"Could not locate the Android NDK. Please make sure the Android NDK is installed in the Android SDK Manager, " +
+					"or if using a custom NDK path, please ensure the $(AndroidNdkDirectory) MSBuild property is set to the custom path.");
 				return false;
 			}
 
@@ -47,17 +50,22 @@ namespace Xamarin.Android.Tasks
 
 		public static bool ValidateNdkPlatform (TaskLoggingHelper log, string ndkPath, AndroidTargetArch arch, bool enableLLVM)
 		{
+			return ValidateNdkPlatform ((m) => log.LogMessage (m), (c, m) => log.LogCodedError (c, m), ndkPath, arch, enableLLVM);
+		}
+
+		public static bool ValidateNdkPlatform (Action<string> logMessage, Action<string, string> logError, string ndkPath, AndroidTargetArch arch, bool enableLLVM)
+		{
 			if (!UsingClangNDK)
-				return NdkUtilOld.ValidateNdkPlatform (log, ndkPath, arch, enableLLVM);
+				return NdkUtilOld.ValidateNdkPlatform (logMessage, logError, ndkPath, arch, enableLLVM);
 
 			// Check that we have a compatible NDK version for the targeted ABIs.
 			Version ndkVersion;
 			bool hasNdkVersion = GetNdkToolchainRelease (ndkPath, out ndkVersion);
 
 			if (hasNdkVersion && ndkVersion.Major < 19) {
-				log.LogMessage (MessageImportance.High,
-						"The detected Android NDK version is incompatible with this version of Xamarin.Android, " +
-						"please upgrade to NDK r19 or newer.");
+				logMessage (
+					"The detected Android NDK version is incompatible with this version of Xamarin.Android, " +
+					"please upgrade to NDK r19 or newer.");
 			}
 
 			return true;
