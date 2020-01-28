@@ -12,6 +12,27 @@
         <target state="new">If the above fixup fails, please add a `xamarin:managedType` attribute to the element to specify the fully qualified managed type name of the element.</target>
         <note>"xamarin:managedType" is a literal name and should not be translated.</note>
       </trans-unit>
+      <trans-unit id="XA1006">
+        <source>The TargetFrameworkVersion (Android API level {0}) is higher than the targetSdkVersion ({1}). Please increase the `android:targetSdkVersion` in the `AndroidManifest.xml` so that the API levels match.</source>
+        <target state="new">The TargetFrameworkVersion (Android API level {0}) is higher than the targetSdkVersion ({1}). Please increase the `android:targetSdkVersion` in the `AndroidManifest.xml` so that the API levels match.</target>
+        <note>The following are literal names and should not be translated: targetSdkVersion, TargetFrameworkVersion, android:targetSdkVersion, AndroidManifest.xml
+{0} - The target framework version number
+{1} - The target SDK version number</note>
+      </trans-unit>
+      <trans-unit id="XA1007">
+        <source>The minSdkVersion ({0}) is greater than the targetSdkVersion. Please change the value such that the minSdkVersion is less than or equal to the targetSdkVersion ({1}).</source>
+        <target state="new">The minSdkVersion ({0}) is greater than the targetSdkVersion. Please change the value such that the minSdkVersion is less than or equal to the targetSdkVersion ({1}).</target>
+        <note>The following are literal names and should not be translated: minSdkVersion, targetSdkVersion
+{0} - The minimum SDK version number
+{1} - The target SDK version number</note>
+      </trans-unit>
+      <trans-unit id="XA1008">
+        <source>The TargetFrameworkVersion (Android API level {0}) is lower than the targetSdkVersion ({1}). Please increase the `$(TargetFrameworkVersion)` or decrease the `android:targetSdkVersion` in the `AndroidManifest.xml` so that the API levels match.</source>
+        <target state="new">The TargetFrameworkVersion (Android API level {0}) is lower than the targetSdkVersion ({1}). Please increase the `$(TargetFrameworkVersion)` or decrease the `android:targetSdkVersion` in the `AndroidManifest.xml` so that the API levels match.</target>
+        <note>The following are literal names and should not be translated: targetSdkVersion, TargetFrameworkVersion, android:targetSdkVersion, AndroidManifest.xml
+{0} - The target framework version number
+{1} - The target SDK version number</note>
+      </trans-unit>
       <trans-unit id="XA2001">
         <source>Source file '{0}' could not be found.</source>
         <target state="new">Source file '{0}' could not be found.</target>

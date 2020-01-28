@@ -125,6 +125,24 @@
     <value>If the above fixup fails, please add a `xamarin:managedType` attribute to the element to specify the fully qualified managed type name of the element.</value>
     <comment>"xamarin:managedType" is a literal name and should not be translated.</comment>
   </data>
+  <data name="XA1006" xml:space="preserve">
+    <value>The TargetFrameworkVersion (Android API level {0}) is higher than the targetSdkVersion ({1}). Please increase the `android:targetSdkVersion` in the `AndroidManifest.xml` so that the API levels match.</value>
+    <comment>The following are literal names and should not be translated: targetSdkVersion, TargetFrameworkVersion, android:targetSdkVersion, AndroidManifest.xml
+{0} - The target framework version number
+{1} - The target SDK version number</comment>
+  </data>
+  <data name="XA1007" xml:space="preserve">
+    <value>The minSdkVersion ({0}) is greater than the targetSdkVersion. Please change the value such that the minSdkVersion is less than or equal to the targetSdkVersion ({1}).</value>
+    <comment>The following are literal names and should not be translated: minSdkVersion, targetSdkVersion
+{0} - The minimum SDK version number
+{1} - The target SDK version number</comment>
+  </data>
+  <data name="XA1008" xml:space="preserve">
+    <value>The TargetFrameworkVersion (Android API level {0}) is lower than the targetSdkVersion ({1}). Please increase the `$(TargetFrameworkVersion)` or decrease the `android:targetSdkVersion` in the `AndroidManifest.xml` so that the API levels match.</value>
+    <comment>The following are literal names and should not be translated: targetSdkVersion, TargetFrameworkVersion, android:targetSdkVersion, AndroidManifest.xml
+{0} - The target framework version number
+{1} - The target SDK version number</comment>
+  </data>
   <data name="XA2001" xml:space="preserve">
     <value>Source file '{0}' could not be found.</value>
   </data>
