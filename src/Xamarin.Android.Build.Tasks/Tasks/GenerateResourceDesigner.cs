@@ -107,8 +107,7 @@ namespace Xamarin.Android.Tasks
 			bool isCSharp = string.Equals (language, "C#", StringComparison.OrdinalIgnoreCase);
 
 
-			if (isFSharp)
-			{
+			if (isFSharp) {
 				language = "C#";
 				isCSharp = true;
 				NetResgenOutputFile = Path.ChangeExtension (NetResgenOutputFile, ".cs");
