@@ -1931,9 +1931,11 @@ because xbuild doesn't support framework reference assemblies.
       <_AssembliesToLink Include="@(ResolvedAssemblies)" />
     </ItemGroup>
     <ItemGroup Condition=" '$(AndroidGenerateJniMarshalMethods)' == 'True' ">
-      <_JniAssembliesToLink Include="@(ResolvedAssemblies->'$(_JniMarshalMethodsOutputDir)%(Filename)%(Extension)')" />
-      <_AssembliesToLink Condition="Exists(%(Identity))" Include="@(_JniAssembliesToLink)" />
-      <_AssembliesToLink Condition="!Exists(@(JniAssembliesToLink))" Include="@(ResolvedAssemblies)" />
+      <_PossibleAssembliesToLink Include="@(ResolvedAssemblies)">
+        <JniAssembly>$(_JniMarshalMethodsOutputDir)%(Filename)%(Extension)</JniAssembly>
+      </_PossibleAssembliesToLink>
+      <_AssembliesToLink Condition="Exists(%(_PossibleAssembliesToLink.JniAssembly))" Include="%(_PossibleAssembliesToLink.JniAssembly)" />
+      <_AssembliesToLink Condition="!Exists(%(_PossibleAssembliesToLink.JniAssembly))" Include="%(_PossibleAssembliesToLink.Identity)" />
     </ItemGroup>
 
     <CreateProperty
