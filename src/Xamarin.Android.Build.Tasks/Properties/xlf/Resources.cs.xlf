@@ -2,6 +2,21 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="cs" original="../Resources.resx">
     <body>
+      <trans-unit id="XA1005">
+        <source>Attempting naive type name fixup for element with ID '{0}' and type '{1}'</source>
+        <target state="new">Attempting naive type name fixup for element with ID '{0}' and type '{1}'</target>
+        <note>{0} - The Android resource ID name</note>
+      </trans-unit>
+      <trans-unit id="XA1005_Instructions">
+        <source>If the above fixup fails, please add a `xamarin:managedType` attribute to the element to specify the fully qualified managed type name of the element.</source>
+        <target state="new">If the above fixup fails, please add a `xamarin:managedType` attribute to the element to specify the fully qualified managed type name of the element.</target>
+        <note>"xamarin:managedType" is a literal name and should not be translated.</note>
+      </trans-unit>
+      <trans-unit id="XA2001">
+        <source>Source file '{0}' could not be found.</source>
+        <target state="new">Source file '{0}' could not be found.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="XA3001">
         <source>Could not AOT the assembly: {0}</source>
         <target state="new">Could not AOT the assembly: {0}</target>

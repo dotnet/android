@@ -117,6 +117,17 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="XA1005" xml:space="preserve">
+    <value>Attempting naive type name fixup for element with ID '{0}' and type '{1}'</value>
+    <comment>{0} - The Android resource ID name</comment>
+  </data>
+  <data name="XA1005_Instructions" xml:space="preserve">
+    <value>If the above fixup fails, please add a `xamarin:managedType` attribute to the element to specify the fully qualified managed type name of the element.</value>
+    <comment>"xamarin:managedType" is a literal name and should not be translated.</comment>
+  </data>
+  <data name="XA2001" xml:space="preserve">
+    <value>Source file '{0}' could not be found.</value>
+  </data>
   <data name="XA3001" xml:space="preserve">
     <value>Could not AOT the assembly: {0}</value>
     <comment>The abbreviation "AOT" should not be translated.</comment>
