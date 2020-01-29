@@ -49,6 +49,8 @@ namespace Xamarin.Android.Tasks
 		public bool LowercaseFilenames { get; set; }
 
 		public string ProjectDir { get; set; }
+
+		public string AndroidLibraryFlatFilesDirectory { get; set; }
 		
 		[Output]
 		public ITaskItem[] IntermediateFiles { get; set; }
@@ -131,6 +133,8 @@ namespace Xamarin.Android.Tasks
 				}
 				var newItem = new TaskItem (dest);
 				newItem.SetMetadata ("LogicalName", rel);
+				newItem.SetMetadata ("_FlatFile", Monodroid.AndroidResource.CalculateAapt2FlatArchiveFileName (dest));
+				newItem.SetMetadata ("_ArchiveDirectory", AndroidLibraryFlatFilesDirectory);
 				item.CopyMetadataTo (newItem);
 				intermediateFiles.Add (newItem);
 				resolvedFiles.Add (item);

@@ -24,10 +24,17 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public ITaskItem[] DestinationFiles { get; set; }
 
+		public bool CompareFileLengths { get; set; }
+
 		[Output]
 		public ITaskItem[] ModifiedFiles { get; set; }
 
 		private List<ITaskItem> modifiedFiles = new List<ITaskItem>();
+
+		public CopyIfChanged ()
+		{
+			CompareFileLengths = true;
+		}
 
 		public override bool RunTask ()
 		{
@@ -41,7 +48,7 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 				var dest = new FileInfo (DestinationFiles [i].ItemSpec);
-				if (dest.Exists && dest.LastWriteTimeUtc > src.LastWriteTimeUtc && dest.Length == src.Length) {
+				if (dest.Exists && dest.LastWriteTimeUtc > src.LastWriteTimeUtc && (CompareFileLengths ? dest.Length == src.Length : true)) {
 					Log.LogDebugMessage ($"  Skipping {src} it is up to date");
 					continue;
 				}

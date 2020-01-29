@@ -228,5 +228,20 @@ namespace Monodroid {
 			}
 			return value;
 		}
+
+
+		/// Compute the output filename that aapt2 will produce for a resource
+		/// for example
+		///		layout\main.xml => layout_main.xml.flat
+		///		values\values.xml -> values_values.arsc.flat
+		///		values\strings.xml -> values_strings.arsc.flat
+		public static string CalculateAapt2FlatArchiveFileName (string file)
+		{
+			var dir = Path.GetFileName (Path.GetDirectoryName (file)).TrimEnd ('\\').TrimEnd ('/');
+			var ext = Path.GetExtension (file);
+			if (dir.StartsWith ("values", StringComparison.OrdinalIgnoreCase))
+				ext = ".arsc";
+			return $"{dir}_{Path.GetFileNameWithoutExtension (file)}{ext}.flat";
+		}
 	}
 }

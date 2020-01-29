@@ -252,6 +252,11 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (
 					b.Output.IsTargetSkipped ("_LinkAssembliesNoShrink"),
 					"The Target _LinkAssembliesNoShrink should have been skipped");
+				if (useAapt2) {
+					Assert.IsTrue (
+						b.Output.IsTargetSkipped ("_CompileResources"),
+						"The target _CompileResources should have been skipped");
+				}
 				image1.Timestamp = DateTimeOffset.UtcNow;
 				var layout = proj.AndroidResources.First (x => x.Include() == "Resources\\layout\\Main.axml");
 				layout.Timestamp = DateTimeOffset.UtcNow;
@@ -271,6 +276,11 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsFalse (
 					b.Output.IsTargetSkipped ("_CreateBaseApk"),
 					"The Target _CreateBaseApk should not have been skipped");
+				if (useAapt2) {
+					Assert.IsTrue (
+						b.Output.IsTargetPartiallyBuilt ("_CompileResources"),
+						"The target _CompileResources should have been partially built");
+				}
 			}
 		}
 
@@ -502,9 +512,9 @@ namespace UnnamedProject
 			var doc = XDocument.Load (customViewPath);
 			Assert.IsNotNull (doc.Element ("LinearLayout"), "PreferenceScreen should be present in preferences.xml");
 			Assert.IsNull (doc.Element ("LinearLayout").Element ("Classlibrary1.CustomTextView"),
-				"Classlibrary1.CustomTextView should have been replaced with an $(Hash).CustomTextView");
+				$"Classlibrary1.CustomTextView should have been replaced with an $(Hash).CustomTextView in {customViewPath}");
 			Assert.IsNull (doc.Element ("LinearLayout").Element ("classlibrary1.CustomTextView"),
-				"classlibrary1.CustomTextView should have been replaced with an $(Hash).CustomTextView");
+				$"classlibrary1.CustomTextView should have been replaced with an $(Hash).CustomTextView in {customViewPath}");
 
 			//Now check the zip
 			var customViewInZip = "res/layout/" + Path.GetFileName (customViewPath);
@@ -520,9 +530,9 @@ namespace UnnamedProject
 					//      Don't use `StringAssert` because `contents` make the failure message unreadable.
 					var contents = reader.ReadToEnd ();
 					Assert.IsFalse (contents.Contains ("Classlibrary1.CustomTextView"),
-							"Classlibrary1.CustomTextView should have been replaced with an $(Hash).CustomTextView");
+							$"Classlibrary1.CustomTextView should have been replaced with an $(Hash).CustomTextView in {customViewInZip} in package");
 					Assert.IsFalse (contents.Contains ("classlibrary1.CustomTextView"),
-							"classlibrary1.CustomTextView should have been replaced with an $(Hash).CustomTextView");
+							$"classlibrary1.CustomTextView should have been replaced with an $(Hash).CustomTextView in {customViewInZip} in package");
 				}
 			}
 		}
@@ -1030,7 +1040,7 @@ namespace Lib1 {
 					Assert.LessOrEqual (libBuilder.LastBuildTime.TotalMilliseconds, maxBuildTimeMs, $"DesignTime build should be less than {maxBuildTimeMs} milliseconds.");
 					Assert.IsFalse (libProj.CreateBuildOutput (libBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
 						"Target '_ManagedUpdateAndroidResgen' should have run.");
-					Assert.AreEqual (!appBuilder.RunningMSBuild, appBuilder.DesignTimeBuild (appProj), "Application project should have built");
+					Assert.IsFalse (appBuilder.DesignTimeBuild (appProj), "Application project should have built");
 					Assert.LessOrEqual (appBuilder.LastBuildTime.TotalMilliseconds, maxBuildTimeMs, $"DesignTime build should be less than {maxBuildTimeMs} milliseconds.");
 					Assert.IsFalse (appProj.CreateBuildOutput (appBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
 						"Target '_ManagedUpdateAndroidResgen' should have run.");
@@ -1259,7 +1269,14 @@ namespace UnnamedProject
 				proj.Touch (@"Resources\layout\Main.axml");
 
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build should have succeeded");
-
+				if (useAapt2) {
+					Assert.IsTrue (
+						b.Output.IsTargetPartiallyBuilt ("_CompileResources"),
+						"The target _CompileResources should have been partially built");
+					Assert.IsTrue (
+						b.Output.IsTargetSkipped ("_FixupCustomViewsForAapt2"),
+						"The target _FixupCustomViewsForAapt2 should have been skipped");
+				}
 				var r_java = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "src", "unnamedproject", "unnamedproject", "R.java");
 				FileAssert.Exists (r_java);
 				var r_java_contents = File.ReadAllLines (r_java);

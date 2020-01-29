@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.Build.Framework;
@@ -18,11 +19,11 @@ namespace Xamarin.Android.Build.Tests
 
 		private TextWriter Output { get; }
 
-		private IList<BuildErrorEventArgs> Errors { get; }
+		public IList<BuildErrorEventArgs> Errors { get; }
 
-		private IList<BuildWarningEventArgs> Warnings { get; }
+		public IList<BuildWarningEventArgs> Warnings { get; }
 
-		private IList<BuildMessageEventArgs> Messages { get; }
+		public IList<BuildMessageEventArgs> Messages { get; }
 
 		int IBuildEngine.ColumnNumberOfTaskNode => -1;
 
@@ -62,11 +63,15 @@ namespace Xamarin.Android.Build.Tests
 				Warnings.Add (e);
 		}
 
-		private Dictionary<object, object> Tasks = new Dictionary<object, object> ();
+		private ConcurrentDictionary<object, object> Tasks = new ConcurrentDictionary<object, object> ();
 
 		void IBuildEngine4.RegisterTaskObject (object key, object obj, RegisteredTaskObjectLifetime lifetime, bool allowEarlyCollection)
 		{
-			Tasks [key] = obj;
+			if (key is null)
+				throw new ArgumentNullException ("key");
+			if (obj is null)
+				throw new ArgumentNullException ("obj");
+			Tasks.TryAdd (key, obj);
 		}
 
 		object IBuildEngine4.GetRegisteredTaskObject (object key, RegisteredTaskObjectLifetime lifetime)
@@ -78,7 +83,7 @@ namespace Xamarin.Android.Build.Tests
 		object IBuildEngine4.UnregisterTaskObject (object key, RegisteredTaskObjectLifetime lifetime)
 		{
 			if (Tasks.TryGetValue (key, out object value)) {
-				Tasks.Remove (key);
+				Tasks.TryRemove (key, out value);
 			}
 			return value;
 		}

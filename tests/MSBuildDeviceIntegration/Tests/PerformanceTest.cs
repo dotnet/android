@@ -62,8 +62,21 @@ namespace Xamarin.Android.Build.Tests
 
 			action (builder);
 			var actual = builder.LastBuildTime.TotalMilliseconds;
+			TestContext.Out.WriteLine($"expected: {expected}ms, actual: {actual}ms");
 			if (actual > expected) {
 				Assert.Fail ($"Exceeded expected time of {expected}ms, actual {actual}ms");
+			}
+		}
+
+		[Test]
+		public void Build_From_Clean_DontIncludeRestore ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.MainActivity = proj.DefaultMainActivity;
+			using (var builder = CreateApkBuilder ()) {
+				builder.Target = "Build";
+				builder.Restore (proj);
+				Profile (builder, b => b.Build (proj));
 			}
 		}
 

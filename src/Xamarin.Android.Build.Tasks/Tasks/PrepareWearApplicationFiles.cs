@@ -17,6 +17,7 @@ namespace Xamarin.Android.Tasks
 		public string PackageName { get; set; }
 		public string WearAndroidManifestFile { get; set; }
 		public string IntermediateOutputPath { get; set; }
+		public string AndroidLibraryFlatFilesDirectory { get; set; }
 		public string WearApplicationApkPath { get; set; }
 		[Output]
 		public ITaskItem WearableApplicationDescriptionFile { get; set; }
@@ -62,8 +63,12 @@ namespace Xamarin.Android.Tasks
 				modified.Add (intermediateXmlFile);
 			}
 			WearableApplicationDescriptionFile = new TaskItem (intermediateXmlFile);
+			WearableApplicationDescriptionFile.SetMetadata ("_FlatFile", Monodroid.AndroidResource.CalculateAapt2FlatArchiveFileName (intermediateXmlFile));
+			WearableApplicationDescriptionFile.SetMetadata ("_ArchiveDirectory", AndroidLibraryFlatFilesDirectory);
 			WearableApplicationDescriptionFile.SetMetadata ("IsWearApplicationResource", "True");
 			BundledWearApplicationApkResourceFile = new TaskItem (intermediateApkPath);
+			BundledWearApplicationApkResourceFile.SetMetadata ("_FlatFile", Monodroid.AndroidResource.CalculateAapt2FlatArchiveFileName (intermediateApkPath));
+			BundledWearApplicationApkResourceFile.SetMetadata ("_ArchiveDirectory", AndroidLibraryFlatFilesDirectory);
 			BundledWearApplicationApkResourceFile.SetMetadata ("IsWearApplicationResource", "True");
 			ModifiedFiles = modified.ToArray ();
 

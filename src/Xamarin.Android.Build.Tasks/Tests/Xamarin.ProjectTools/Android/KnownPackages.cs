@@ -221,6 +221,28 @@ namespace Xamarin.ProjectTools
 				},
 			}
 		};
+		public static Package XamarinForms_4_4_0_991265 = new Package {
+			Id = "Xamarin.Forms",
+			Version = "4.4.0.991265",
+			TargetFramework = "MonoAndroid90",
+			References =  {
+				new BuildItem.Reference ("Xamarin.Forms.Platform.Android") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.4.4.0.991265\\lib\\MonoAndroid90\\Xamarin.Forms.Platform.Android.dll"
+				},
+				new BuildItem.Reference ("FormsViewGroup") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.4.4.0.991265\\lib\\MonoAndroid90\\FormsViewGroup.dll"
+				},
+				new BuildItem.Reference ("Xamarin.Forms.Core") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.4.4.0.991265\\lib\\MonoAndroid90\\Xamarin.Forms.Core.dll"
+				},
+				new BuildItem.Reference ("Xamarin.Forms.Xaml") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.4.4.0.991265\\lib\\MonoAndroid90\\Xamarin.Forms.Xaml.dll"
+				},
+				new BuildItem.Reference ("Xamarin.Forms.Platform") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.4.4.0.991265\\lib\\MonoAndroid90\\Xamarin.Forms.Platform.dll"
+				},
+			}
+		};
 		public static Package AndroidXMigration = new Package {
 			Id = "Xamarin.AndroidX.Migration",
 			Version = "1.0.0-rc1",

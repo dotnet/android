@@ -12,6 +12,7 @@ using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using Xamarin.Android.Tools;
 using ThreadingTasks = System.Threading.Tasks;
 using Xamarin.Build;
@@ -20,7 +21,11 @@ namespace Xamarin.Android.Tasks {
 	
 	public abstract class Aapt2 : AndroidAsyncTask {
 
+		private static readonly int DefaultMaxAapt2Daemons = 6;
 		protected Dictionary<string, string> resource_name_case_map;
+		public int DaemonMaxInstanceCount { get; set; }
+
+		public bool DaemonKeepInDomain { get; set; }
 
 		public ITaskItem [] ResourceDirectories { get; set; }
 
@@ -39,80 +44,60 @@ namespace Xamarin.Android.Tasks {
 			return (Path.IsPathRooted (resourceDirectory) ? resourceDirectory : Path.Combine (WorkingDirectory, resourceDirectory)).TrimEnd ('\\');
 		}
 
+		protected string GetFullPath (string dir)
+		{
+			return (Path.IsPathRooted (dir) ? dir : Path.GetFullPath (Path.Combine (WorkingDirectory, dir)));
+		}
+
 		protected string GenerateFullPathToTool ()
 		{
 			return Path.Combine (ToolPath, string.IsNullOrEmpty (ToolExe) ? ToolName : ToolExe);
 		}
 
-		protected bool RunAapt (string commandLine, IList<OutputLine> output)
+		protected virtual int GetRequiredDaemonInstances ()
 		{
-			var stdout_completed = new ManualResetEvent (false);
-			var stderr_completed = new ManualResetEvent (false);
-			var psi = new ProcessStartInfo () {
-				FileName = GenerateFullPathToTool (),
-				Arguments = commandLine,
-				UseShellExecute = false,
-				RedirectStandardOutput = true,
-				RedirectStandardError = true,
-				StandardOutputEncoding = Encoding.UTF8,
-				CreateNoWindow = true,
-				WindowStyle = ProcessWindowStyle.Hidden,
-				WorkingDirectory = WorkingDirectory,
-			};
-			object lockObject = new object ();
-			using (var proc = new Process ()) {
-				proc.OutputDataReceived += (sender, e) => {
-					if (e.Data != null)
-						lock (lockObject)
-							output.Add (new OutputLine (e.Data, stdError: false));
-					else
-						stdout_completed.Set ();
-				};
-				proc.ErrorDataReceived += (sender, e) => {
-					if (e.Data != null)
-						lock (lockObject)
-							output.Add (new OutputLine (e.Data, stdError: !IsAapt2Warning (e.Data)));
-					else
-						stderr_completed.Set ();
-				};
-				LogDebugMessage ("Executing {0}", commandLine);
-				proc.StartInfo = psi;
-				proc.Start ();
-				proc.BeginOutputReadLine ();
-				proc.BeginErrorReadLine ();
-				CancellationToken.Register (() => {
-					try {
-						proc.Kill ();
-					} catch (Exception) {
-					}
-				});
-				proc.WaitForExit ();
-				if (psi.RedirectStandardError)
-					stderr_completed.WaitOne (TimeSpan.FromSeconds (30));
-				if (psi.RedirectStandardOutput)
-					stdout_completed.WaitOne (TimeSpan.FromSeconds (30));
-				return proc.ExitCode == 0 && !output.Any (x => x.StdError);
-			}
+			return 1;
+		} 
+
+		Aapt2Daemon daemon;
+
+		internal Aapt2Daemon Daemon => daemon;
+		public override bool Execute ()
+		{
+			// Must register on the UI thread!
+			// We don't want to use up ALL the available cores especially when 
+			// running in the IDE. So lets cap it at DefaultMaxAapt2Daemons (6).
+			int maxInstances = Math.Min (Environment.ProcessorCount-1, DefaultMaxAapt2Daemons);
+			if (DaemonMaxInstanceCount == 0)
+				DaemonMaxInstanceCount = maxInstances;
+			else
+				DaemonMaxInstanceCount = Math.Min (DaemonMaxInstanceCount, maxInstances);
+			daemon  = Aapt2Daemon.GetInstance (BuildEngine4, GenerateFullPathToTool (),
+				DaemonMaxInstanceCount, GetRequiredDaemonInstances (), registerInDomain: DaemonKeepInDomain);
+			return base.Execute ();
 		}
 
-		bool IsAapt2Warning (string singleLine)
+		ConcurrentBag<long> jobs = new ConcurrentBag<long> ();
+
+		protected long RunAapt (string [] args, string outputFile)
 		{
-			var match = AndroidRunToolTask.AndroidErrorRegex.Match (singleLine.Trim ());
-			if (match.Success) {
-				var file = match.Groups ["file"].Value;
-				var level = match.Groups ["level"].Value.ToLowerInvariant ();
-				var message = match.Groups ["message"].Value;
-				if (singleLine.StartsWith ($"{ToolName} W", StringComparison.OrdinalIgnoreCase))
-					return true;
-				if (file.StartsWith ("W/", StringComparison.OrdinalIgnoreCase))
-					return true;
-				if (message.Contains ("warn:"))
-					return true;
-				if (level.Contains ("warning"))
-					return true;
-			}
-			return false;
+			LogDebugMessage ($"Executing {string.Join (" ", args)}");
+			long jobid = daemon.QueueCommand (args, outputFile);
+			jobs.Add (jobid);
+			return jobid;
 		}
+
+		protected void ProcessOutput ()
+		{
+			Aapt2Daemon.Job[] completedJobs = Daemon.WaitForJobsToComplete (jobs);
+			foreach (var job in completedJobs) {
+				foreach (var line in job.Output) {
+					if (!LogAapt2EventsFromOutput (line.Line, MessageImportance.Normal, job.Succeeded)) {
+						break;
+					}
+				}
+			}
+		} 
 
 		protected bool LogAapt2EventsFromOutput (string singleLine, MessageImportance messageImportance, bool apptResult)
 		{

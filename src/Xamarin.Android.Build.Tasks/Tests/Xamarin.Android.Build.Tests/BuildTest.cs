@@ -333,11 +333,24 @@ class MemTest {
 			var proj = new XamarinFormsMapsApplicationProject ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "first should have succeeded.");
+				b.BuildLogFile = "build2.log";
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second should have succeeded.");
 				var targets = new [] {
-					"_CompileAndroidLibraryResources",
+					"_CompileResources",
 					"_UpdateAndroidResgen",
 				};
+				foreach (var target in targets) {
+					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped.");
+				}
+				proj.Touch ("MainPage.xaml");
+				b.BuildLogFile = "build3.log";
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "third should have succeeded.");
+				foreach (var target in targets) {
+					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped.");
+				}
+				Assert.IsFalse (b.Output.IsTargetSkipped ("CoreCompile"), $"`CoreCompile` should not be skipped.");
+				b.BuildLogFile = "build4.log";
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "forth should have succeeded.");
 				foreach (var target in targets) {
 					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped.");
 				}
@@ -2780,6 +2793,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 			proj.PackageReferences.Add (KnownPackages.SupportV7MediaRouter_27_0_2_1);
 
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				b.ThrowOnBuildFailure = false;
 				var projectDir = Path.Combine (Root, b.ProjectDirectory);
 				if (Directory.Exists (projectDir))
 					Directory.Delete (projectDir, true);
@@ -2787,7 +2801,8 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 
 				proj.PackageReferences.Clear ();
 				//NOTE: we can get all the other dependencies transitively, yay!
-				proj.PackageReferences.Add (KnownPackages.XamarinForms_4_0_0_425677);
+				proj.PackageReferences.Add (KnownPackages.XamarinForms_4_4_0_991265);
+				Assert.IsTrue (b.Restore (proj, doNotCleanupOnUpdate: true), "Restore should have worked.");
 				Assert.IsTrue (b.Build (proj, saveProject: true, doNotCleanupOnUpdate: true), "second build should have succeeded.");
 				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "Refreshing Xamarin.Android.Support.v7.AppCompat.dll"), "`ResolveLibraryProjectImports` should not skip `Xamarin.Android.Support.v7.AppCompat.dll`!");
 				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "Deleting unknown jar: support-annotations.jar"), "`support-annotations.jar` should be deleted!");

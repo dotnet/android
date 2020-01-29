@@ -4,5 +4,6 @@
         "bin/TestDebug/MSBuildDeviceIntegration/MSBuildDeviceIntegration.dll",
         "bin/TestDebug/Xamarin.Android.Build.Tests.dll",
         "bin/TestDebug/Xamarin.Android.Build.Tests.Commercial.dll",
-    ]
+    ],
+    "cmake.configureOnOpen": false
 }

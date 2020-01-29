@@ -599,12 +599,26 @@ namespace Lib2
 
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName), false))
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+				libBuilder.BuildLogFile = "build.log";
 				Assert.IsTrue (libBuilder.Build (lib), "first library build should have succeeded.");
+				appBuilder.BuildLogFile = "build.log";
 				Assert.IsTrue (appBuilder.Build (app), "first app build should have succeeded.");
+
+				if (useAapt2) {
+					var aapt2TargetsShouldRun = new [] {
+						"_FixupCustomViewsForAapt2",
+						"_CompileResources"
+					};
+					foreach (var target in aapt2TargetsShouldRun) {
+						Assert.IsFalse (appBuilder.Output.IsTargetSkipped (target), $"{target} should run!");
+					}
+				}
 
 				lib.Touch ("Bar.cs");
 
+				libBuilder.BuildLogFile = "build2.log";
 				Assert.IsTrue (libBuilder.Build (lib, doNotCleanupOnUpdate: true, saveProject: false), "second library build should have succeeded.");
+				appBuilder.BuildLogFile = "build2.log";
 				Assert.IsTrue (appBuilder.Build (app, doNotCleanupOnUpdate: true, saveProject: false), "second app build should have succeeded.");
 
 				var targetsShouldSkip = new [] {
@@ -626,6 +640,16 @@ namespace Lib2
 				};
 				foreach (var target in targetsShouldRun) {
 					Assert.IsFalse (appBuilder.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped!");
+				}
+
+				if (useAapt2) {
+					var aapt2TargetsShouldBeSkipped = new [] {
+						"_FixupCustomViewsForAapt2",
+						"_CompileResources"
+					};
+					foreach (var target in aapt2TargetsShouldBeSkipped) {
+						Assert.IsTrue (appBuilder.Output.IsTargetSkipped (target), $"{target} should be skipped!");
+					}
 				}
 			}
 		}
@@ -687,7 +711,7 @@ namespace Lib2
 					"_CreateBaseApk",
 				};
 				if (useAapt2) {
-					targets.Add ("_ConvertLibraryResourcesCases");
+					targets.Add ("_ConvertResourcesCases");
 				}
 				foreach (var targetName in targets) {
 					Assert.IsTrue (b.Output.IsTargetSkipped (targetName), $"`{targetName}` should be skipped!");
@@ -1102,6 +1126,14 @@ namespace Lib2
 				source = source.Replace ("Foo", "Bar");
 				proj.Touch ("Foo.cs");
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build should have succeeded.");
+				var targets = new [] {
+					"_CompileResources",
+					"_UpdateAndroidResgen",
+					"_GenerateAndroidResourceDir",
+				};
+				foreach (var target in targets) {
+					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped.");
+				}
 			}
 		}
 	}

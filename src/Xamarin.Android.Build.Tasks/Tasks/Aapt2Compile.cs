@@ -19,54 +19,104 @@ namespace Xamarin.Android.Tasks {
 		public override string TaskPrefix => "A2C";
 
 		List<ITaskItem> archives = new List<ITaskItem> ();
+		List<ITaskItem> files = new List<ITaskItem> ();
 
 		public string ExtraArgs { get; set; }
 
 		public string FlatArchivesDirectory { get; set; }
 
+		public string FlatFilesDirectory { get; set; }
+		public ITaskItem [] ResourcesToCompile { get; set; }
+
 		[Output]
 		public ITaskItem [] CompiledResourceFlatArchives => archives.ToArray ();
 
-		public override System.Threading.Tasks.Task RunTaskAsync ()
+		[Output]
+		public ITaskItem [] CompiledResourceFlatFiles => files.ToArray ();
+
+		protected override int GetRequiredDaemonInstances ()
+		{
+			return Math.Min ((ResourcesToCompile ?? ResourceDirectories).Length, DaemonMaxInstanceCount);
+		} 
+
+		public async override System.Threading.Tasks.Task RunTaskAsync ()
 		{
 			LoadResourceCaseMap ();
 
-			return this.WhenAllWithLock (ResourceDirectories, ProcessDirectory);
+			await this.WhenAllWithLock (ResourcesToCompile ?? ResourceDirectories, ProcessDirectory);
+
+			ProcessOutput ();
+
+			for (int i = archives.Count -1; i > 0; i-- ) {
+				if (!File.Exists (archives[i].ItemSpec)) {
+					archives.RemoveAt (i);
+				}
+			}
 		}
 
-		void ProcessDirectory (ITaskItem resourceDirectory, object lockObject)
+		void ProcessDirectory (ITaskItem item, object lockObject)
 		{
-			if (!Directory.EnumerateDirectories (resourceDirectory.ItemSpec).Any ())
+			var flatFile = item.GetMetadata ("_FlatFile");
+			bool isDirectory = flatFile.EndsWith (".flata", StringComparison.OrdinalIgnoreCase);
+			if (string.IsNullOrEmpty (flatFile)) {
+				FileAttributes fa = File.GetAttributes (item.ItemSpec);
+				isDirectory = (fa & FileAttributes.Directory) == FileAttributes.Directory;
+			}
+
+			string fileOrDirectory = item.GetMetadata ("ResourceDirectory");
+			if (string.IsNullOrEmpty (fileOrDirectory) || !isDirectory)
+				fileOrDirectory = item.ItemSpec;
+			if (isDirectory && !Directory.EnumerateDirectories (fileOrDirectory).Any ())
 				return;
 			
-			var output = new List<OutputLine> ();
-			var hash = resourceDirectory.GetMetadata ("Hash");
-			var filename = !string.IsNullOrEmpty (hash) ? hash : "compiled";
-			var outputArchive = Path.Combine (FlatArchivesDirectory, $"{filename}.flata");
-			var success = RunAapt (GenerateCommandLineCommands (resourceDirectory, outputArchive), output);
-			if (success && File.Exists (Path.Combine (WorkingDirectory, outputArchive))) {
-				lock (lockObject)
-					archives.Add (new TaskItem (outputArchive));
+			string outputArchive = isDirectory ?  GetFullPath (FlatArchivesDirectory) : GetFullPath (FlatFilesDirectory);
+			string targetDir = item.GetMetadata ("_ArchiveDirectory");
+			if (!string.IsNullOrEmpty (targetDir)) {
+				outputArchive = GetFullPath (targetDir);
 			}
-			foreach (var line in output) {
-				if (!LogAapt2EventsFromOutput (line.Line, MessageImportance.Normal, success))
-					break;
+			Directory.CreateDirectory (outputArchive);
+			string expectedOutputFile;
+			if (isDirectory) {
+				if (string.IsNullOrEmpty (flatFile))
+					flatFile = item.GetMetadata ("Hash");
+				var filename = !string.IsNullOrEmpty (flatFile) ? flatFile : "compiled";
+				if (!filename.EndsWith (".flata", StringComparison.OrdinalIgnoreCase))
+					filename = $"{filename}.flata";
+				outputArchive = Path.Combine (outputArchive, filename);
+				expectedOutputFile = outputArchive;
+			} else {
+				expectedOutputFile = Path.Combine (outputArchive, flatFile);
+			}
+			RunAapt (GenerateCommandLineCommands (fileOrDirectory, isDirectory, outputArchive), expectedOutputFile);
+			if (isDirectory) {
+				lock (lockObject)
+					archives.Add (new TaskItem (expectedOutputFile));
+			} else {
+				lock (lockObject)
+					files.Add (new TaskItem (expectedOutputFile));
 			}
 		}
 
-		protected string GenerateCommandLineCommands (ITaskItem dir, string outputArchive)
+		protected string[] GenerateCommandLineCommands (string fileOrDirectory, bool isDirectory, string outputArchive)
 		{
-			var cmd = new CommandLineBuilder ();
-			cmd.AppendSwitch ("compile");
-			cmd.AppendSwitchIfNotNull ("-o ", outputArchive);
-			if (!string.IsNullOrEmpty (ResourceSymbolsTextFile))
-				cmd.AppendSwitchIfNotNull ("--output-text-symbols ", ResourceSymbolsTextFile);
-			cmd.AppendSwitchIfNotNull ("--dir ", dir.ItemSpec.TrimEnd ('\\'));
+			List<string> cmd = new List<string> ();
+			cmd.Add ("compile");
+			cmd.Add ($"-o");
+			cmd.Add (GetFullPath (outputArchive));
+			if (!string.IsNullOrEmpty (ResourceSymbolsTextFile)) {
+				cmd.Add ($"--output-text-symbols");
+				cmd.Add (GetFullPath (ResourceSymbolsTextFile));
+			}
+			if (isDirectory) {
+				cmd.Add ("--dir");
+				cmd.Add (GetFullPath (fileOrDirectory).TrimEnd ('\\'));
+			} else
+				cmd.Add (GetFullPath (fileOrDirectory));
 			if (!string.IsNullOrEmpty (ExtraArgs))
-				cmd.AppendSwitch (ExtraArgs);
+				cmd.Add (ExtraArgs);
 			if (MonoAndroidHelper.LogInternalExceptions)
-				cmd.AppendSwitch ("-v");
-			return cmd.ToString ();
+				cmd.Add ("-v");
+			return cmd.ToArray ();
 		}
 
 	}
