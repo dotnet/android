@@ -1401,6 +1401,13 @@ used to specify the ABI that the library targets. Thus, if you add
 `armeabi-v7a`.
 
 
+### AndroidResourceAnalysisConfig
+
+The Build action `AndroidResourceAnalysisConfig` marks a file as a severity level configuration file for Xamarin Android Designer layout diagnostics tool. This is currently only used in the layout editor and not for build messages.
+
+See the [Android Resource Analysis documentation](https://aka.ms/androidresourceanalysis) for more details.
+
+
 #### Item Attribute Name
 
 **Abi** &ndash; Specifies the ABI of the native library.
