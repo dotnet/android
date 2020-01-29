@@ -61,6 +61,24 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} is a Reference Assembly..
+        /// </summary>
+        internal static string XA0107 {
+            get {
+                return ResourceManager.GetString("XA0107", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ignoring Reference Assembly `{0}`..
+        /// </summary>
+        internal static string XA0107_Ignoring {
+            get {
+                return ResourceManager.GetString("XA0107_Ignoring", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Attempting naive type name fixup for element with ID &apos;{0}&apos; and type &apos;{1}&apos;.
         /// </summary>
         internal static string XA1005 {
@@ -165,6 +183,33 @@ namespace Xamarin.Android.Tasks.Properties {
         internal static string XA4214_Result {
             get {
                 return ResourceManager.GetString("XA4214_Result", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to APK already contains the item {0}; ignoring..
+        /// </summary>
+        internal static string XA4301 {
+            get {
+                return ResourceManager.GetString("XA4301", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot determine ABI of native library {0}..
+        /// </summary>
+        internal static string XA4301_ABI {
+            get {
+                return ResourceManager.GetString("XA4301_ABI", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not determine ABI of some native libraries. Ignoring those: {0}.
+        /// </summary>
+        internal static string XA4301_ABI_Ignoring {
+            get {
+                return ResourceManager.GetString("XA4301_ABI_Ignoring", resourceCulture);
             }
         }
         

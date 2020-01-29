@@ -117,6 +117,13 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="XA0107" xml:space="preserve">
+    <value>{0} is a Reference Assembly.</value>
+  </data>
+  <data name="XA0107_Ignoring" xml:space="preserve">
+    <value>Ignoring Reference Assembly `{0}`.</value>
+    <comment>{0} - File name of the assembly.</comment>
+  </data>
   <data name="XA1005" xml:space="preserve">
     <value>Attempting naive type name fixup for element with ID '{0}' and type '{1}'</value>
     <comment>{0} - The Android resource ID name</comment>
@@ -165,6 +172,20 @@
     <comment>The phrase "`{0}, {1}`" does not need to be translated.
 {0} - The managed type name
 {1} - The name of the library that contains the type</comment>
+  </data>
+  <data name="XA4301" xml:space="preserve">
+    <value>APK already contains the item {0}; ignoring.</value>
+    <comment>The abbreviation "APK" should not be translated.
+{0} - The file name.</comment>
+  </data>
+  <data name="XA4301_ABI" xml:space="preserve">
+    <value>Cannot determine ABI of native library {0}.</value>
+    <comment>The abbreviation "ABI" should not be translated.</comment>
+  </data>
+  <data name="XA4301_ABI_Ignoring" xml:space="preserve">
+    <value>Could not determine ABI of some native libraries. Ignoring those: {0}</value>
+    <comment>The abbreviation "ABI" should not be translated.
+{0} - Comma-separated list of the ignored library file names.</comment>
   </data>
   <data name="XA5301" xml:space="preserve">
     <value>Failed to generate Java type for class: {0} due to MAX_PATH: {1}</value>
