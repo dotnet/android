@@ -142,44 +142,41 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 					File.Copy (implementationAssembly, Path.Combine (targetImplementationPathDirectory, assemblyToValidate), true);
 				}
 
-				using (var genApiProcess = new Process ()) {
+				for (int i = 0; i < 3; i++) {
+					using (var genApiProcess = new Process ()) {
 
-					genApiProcess.StartInfo.FileName = apiCompat;
-					genApiProcess.StartInfo.Arguments = $"\"{contractPathDirectory}\" -i \"{targetImplementationPathDirectory}\" ";
+						genApiProcess.StartInfo.FileName = apiCompat;
+						genApiProcess.StartInfo.Arguments = $"\"{contractPathDirectory}\" -i \"{targetImplementationPathDirectory}\" ";
 
-					// Verify if there is an exclusion list
-					var excludeAttributes = Path.Combine (ApiCompatibilityPath, $"api-compat-exclude-attributes.txt");
-					if (File.Exists (excludeAttributes)) {
-						genApiProcess.StartInfo.Arguments += $"--exclude-attributes {excludeAttributes} ";
-					}
+						// Verify if there is an exclusion list
+						var excludeAttributes = Path.Combine (ApiCompatibilityPath, $"api-compat-exclude-attributes.txt");
+						if (File.Exists (excludeAttributes)) {
+							genApiProcess.StartInfo.Arguments += $"--exclude-attributes {excludeAttributes} ";
+						}
 
-					genApiProcess.StartInfo.UseShellExecute = false;
-					genApiProcess.StartInfo.CreateNoWindow = true;
-					genApiProcess.StartInfo.RedirectStandardOutput = true;
-					genApiProcess.StartInfo.RedirectStandardError = true;
-					genApiProcess.EnableRaisingEvents = true;
+						genApiProcess.StartInfo.UseShellExecute = false;
+						genApiProcess.StartInfo.CreateNoWindow = true;
+						genApiProcess.StartInfo.RedirectStandardOutput = true;
+						genApiProcess.StartInfo.RedirectStandardError = true;
+						genApiProcess.EnableRaisingEvents = true;
 
-					var lines = new List<string> ();
-					var processHasCrashed = false;
-					void dataReceived (object sender, DataReceivedEventArgs args)
-					{
-						if (!string.IsNullOrWhiteSpace (args.Data)) {
-							lines.Add (args.Data.Trim ());
+						var lines = new List<string> ();
+						var processHasCrashed = false;
+						void dataReceived (object sender, DataReceivedEventArgs args)
+						{
+							if (!string.IsNullOrWhiteSpace (args.Data)) {
+								lines.Add (args.Data.Trim ());
 
-							if (args.Data.IndexOf ("Native Crash Reporting") != -1) {
-								processHasCrashed = true;
+								if (args.Data.IndexOf ("Native Crash Reporting") != -1) {
+									processHasCrashed = true;
+								}
 							}
 						}
-					}
 
-					genApiProcess.OutputDataReceived += dataReceived;
-					genApiProcess.ErrorDataReceived += dataReceived;
+						genApiProcess.OutputDataReceived += dataReceived;
+						genApiProcess.ErrorDataReceived += dataReceived;
 
-					// Get api definition for previous Api
-					for (int i = 0; i < 3; i++) {
-						lines.Clear ();
-						processHasCrashed = false;
-
+						// Get api definition for previous Api
 						compatApiCommand = $"CompatApi command: {genApiProcess.StartInfo.FileName} {genApiProcess.StartInfo.Arguments}";
 						Log.LogMessage (MessageImportance.High, compatApiCommand);
 
@@ -198,7 +195,8 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 						if (processHasCrashed) {
 							if (i + 1 < 3) {
-								Log.LogWarning ($"Process has crashed.'{Environment.NewLine}Crash report:{Environment.NewLine}{String.Join (Environment.NewLine, lines)}");
+								Log.LogWarning ($"Process has crashed.");
+								Log.LogMessage (MessageImportance.High, String.Join (Environment.NewLine, lines));
 								Log.LogWarning ($"We will retry.");
 								continue;
 							} else {
@@ -328,13 +326,15 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			return issues;
 		}
 
-		void LogError(string errorMessage)
+		void LogError (string errorMessage)
 		{
+			var message = string.Empty;
 			if (!string.IsNullOrWhiteSpace (compatApiCommand)) {
-				Log.LogError ($"{compatApiCommand}{Environment.NewLine}{errorMessage}");
-			} else {
-				Log.LogError (errorMessage);
+				errorMessage = $"{compatApiCommand}{Environment.NewLine}{errorMessage}";
 			}
+
+			Log.LogMessage (MessageImportance.High, errorMessage);
+			Log.LogError (errorMessage);
 		}
 	}
 }
