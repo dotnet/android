@@ -61,6 +61,33 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Attempting naive type name fixup for element with ID &apos;{0}&apos; and type &apos;{1}&apos;.
+        /// </summary>
+        internal static string XA1005 {
+            get {
+                return ResourceManager.GetString("XA1005", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If the above fixup fails, please add a `xamarin:managedType` attribute to the element to specify the fully qualified managed type name of the element..
+        /// </summary>
+        internal static string XA1005_Instructions {
+            get {
+                return ResourceManager.GetString("XA1005_Instructions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Source file &apos;{0}&apos; could not be found..
+        /// </summary>
+        internal static string XA2001 {
+            get {
+                return ResourceManager.GetString("XA2001", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Could not AOT the assembly: {0}.
         /// </summary>
         internal static string XA3001 {
