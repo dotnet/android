@@ -16,6 +16,7 @@
       $(BuildDependsOn);
       _CopyExtractedMultiDexJar;
       _BuildMonoScripts;
+      _CopyExtraPackageContent;
     </BuildDependsOn>
     <_AndroidSdkLocation Condition="'$(_AndroidSdkLocation)'==''">$(AndroidSdkDirectory)</_AndroidSdkLocation>
     <_MultiDexAarInAndroidSdk>extras\android\m2repository\com\android\support\multidex\1.0.1\multidex-1.0.1.aar</_MultiDexAarInAndroidSdk>
@@ -303,6 +304,7 @@
     <InputAssemblies Include="$(OutputPath)NuGet.ProjectModel.dll" />
     <InputAssemblies Include="$(OutputPath)NuGet.Protocol.dll" />
     <InputAssemblies Include="$(OutputPath)NuGet.Versioning.dll" />
+    <InputAssemblies Include="$(OutputPath)System.CodeDom.dll" />
     <InputAssemblies Include="$(OutputPath)System.Collections.Immutable.dll" />
     <InputAssemblies Include="$(OutputPath)System.Reflection.Metadata.dll" />
   </ItemGroup>
@@ -332,6 +334,16 @@
     <ItemGroup>
       <FileWrites Include="$(IntermediateOutputPath)ILRepacker.stamp" />
     </ItemGroup>
+  </Target>
+
+    <!-- Copy extra package ref content for our installers. '$(Pkg*)' props are set during NuGet restore when GeneratePathProperty="true" -->
+  <Target Name="_CopyExtraPackageContent"
+      Inputs="$(PkgMono_Posix_NETStandard)\runtimes\osx\lib\netstandard2.0\Mono.Posix.NETStandard.dll;$(PkgXamarin_Build_AsyncTask)\lib\netstandard2.0\Xamarin.Build.AsyncTask.pdb"
+      Outputs="$(OutputPath)\Mono.Posix.NETStandard.dll;$(OutputPath)\Xamarin.Build.AsyncTask.pdb" >
+    <Copy
+        SourceFiles="$(PkgMono_Posix_NETStandard)\runtimes\osx\lib\netstandard2.0\Mono.Posix.NETStandard.dll;$(PkgXamarin_Build_AsyncTask)\lib\netstandard2.0\Xamarin.Build.AsyncTask.pdb"
+        DestinationFolder="$(OutputPath)"
+    />
   </Target>
 
 </Project>

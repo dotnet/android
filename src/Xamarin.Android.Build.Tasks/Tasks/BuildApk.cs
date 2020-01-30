@@ -13,7 +13,7 @@ using Microsoft.Build.Framework;
 
 using Java.Interop.Tools.Cecil;
 
-using ArchiveFileList = System.Collections.Generic.List<System.Tuple<string, string>>;
+using ArchiveFileList = System.Collections.Generic.List<(string filePath, string archivePath)>;
 using Mono.Cecil;
 using Xamarin.Android.Tools;
 using Xamarin.Tools.Zip;
@@ -109,22 +109,61 @@ namespace Xamarin.Android.Tasks
 
 		protected virtual void FixupArchive (ZipArchiveEx zip) { }
 
+		List<string> existingEntries = new List<string> ();
+
 		void ExecuteWithAbi (string [] supportedAbis, string apkInputPath, string apkOutputPath)
 		{
-			var temp = apkOutputPath + "new";
 			ArchiveFileList files = new ArchiveFileList ();
-			if (apkInputPath != null)
-				File.Copy (apkInputPath, temp, overwrite: true);
+			bool refresh = true;
+			if (apkInputPath != null && File.Exists (apkInputPath) && !File.Exists (apkOutputPath)) {
+				Log.LogDebugMessage ($"Copying {apkInputPath} to {apkInputPath}");
+				File.Copy (apkInputPath, apkOutputPath, overwrite: true);
+				refresh = false;
+			}
 			using (var notice = Assembly.GetExecutingAssembly ().GetManifestResourceStream ("NOTICE.txt"))
-			using (var apk = new ZipArchiveEx (temp, apkInputPath != null ? FileMode.Open : FileMode.Create )) {
+			using (var apk = new ZipArchiveEx (apkOutputPath, File.Exists (apkOutputPath) ? FileMode.Open : FileMode.Create )) {
+				if (refresh) {
+					for (long i = 0; i < apk.Archive.EntryCount; i++) {
+						ZipEntry e = apk.Archive.ReadEntry ((ulong) i);
+						Log.LogDebugMessage ($"Registering item {e.FullName}");
+						existingEntries.Add (e.FullName);
+					}
+				}
+				if (apkInputPath != null && File.Exists (apkInputPath) && refresh) {
+					var lastWriteOutput = File.Exists (apkOutputPath) ? File.GetLastWriteTimeUtc (apkOutputPath) : DateTime.MinValue;
+					var lastWriteInput = File.GetLastWriteTimeUtc (apkInputPath);
+					using (var packaged = new ZipArchiveEx (apkInputPath, FileMode.Open)) {
+						foreach (var entry in packaged.Archive) {
+							Log.LogDebugMessage ($"Deregistering item {entry.FullName}");
+							existingEntries.Remove (entry.FullName);
+							if (lastWriteInput <= lastWriteOutput)
+								continue;
+							if (apk.Archive.ContainsEntry (entry.FullName)) {
+								ZipEntry e = apk.Archive.ReadEntry (entry.FullName);
+								// check the CRC values as the ModifiedDate is always 01/01/1980 in the aapt generated file.
+								if (entry.CRC == e.CRC) {
+									Log.LogDebugMessage ($"Skipping {entry.FullName} from {apkInputPath} as its up to date.");
+									continue;
+								}
+							}
+							var ms = new MemoryStream ();
+							entry.Extract (ms);
+							Log.LogDebugMessage ($"Refreshing {entry.FullName} from {apkInputPath}");
+							apk.Archive.AddStream (ms, entry.FullName, compressionMethod: entry.CompressionMethod);
+						}
+					}
+				}
 				apk.FixupWindowsPathSeparators ((a, b) => Log.LogDebugMessage ($"Fixing up malformed entry `{a}` -> `{b}`"));
-				apk.Archive.AddEntry (RootPath + "NOTICE", notice);
+				string noticeName = RootPath + "NOTICE";
+				existingEntries.Remove (noticeName);
+				if (!apk.Archive.ContainsEntry (noticeName))
+					apk.Archive.AddEntry (noticeName, notice);
 
 				// Add classes.dx
 				foreach (var dex in DalvikClasses) {
 					string apkName = dex.GetMetadata ("ApkName");
 					string dexPath = string.IsNullOrWhiteSpace (apkName) ? Path.GetFileName (dex.ItemSpec) : apkName;
-					apk.Archive.AddFile (dex.ItemSpec, DalvikPath + dexPath);
+					AddFileToArchiveIfNewer (apk, dex.ItemSpec, DalvikPath + dexPath);
 				}
 
 				if (EmbedAssemblies && !BundleAssemblies)
@@ -133,25 +172,25 @@ namespace Xamarin.Android.Tasks
 				AddRuntimeLibraries (apk, supportedAbis);
 				apk.Flush();
 				AddNativeLibraries (files, supportedAbis);
-				apk.Flush();
 				AddAdditionalNativeLibraries (files, supportedAbis);
-				apk.Flush();
 
 				if (TypeMappings != null) {
 					foreach (ITaskItem typemap in TypeMappings) {
-						apk.Archive.AddFile (typemap.ItemSpec, RootPath + Path.GetFileName(typemap.ItemSpec), compressionMethod: UncompressedMethod);
+						AddFileToArchiveIfNewer (apk, typemap.ItemSpec, RootPath + Path.GetFileName(typemap.ItemSpec), compressionMethod: UncompressedMethod);
 					}
 				}
 
 				int count = 0;
 				foreach (var file in files) {
-					var item = Path.Combine (file.Item2, Path.GetFileName (file.Item1))
+					var item = Path.Combine (file.archivePath, Path.GetFileName (file.filePath))
 						.Replace (Path.DirectorySeparatorChar, '/');
-					if (apk.Archive.ContainsEntry (item)) {
-						Log.LogCodedWarning ("XA4301", file.Item1, 0, "Apk already contains the item {0}; ignoring.", item);
+					existingEntries.Remove (item);
+					if (apk.SkipExistingFile (file.filePath, item)) {
+						Log.LogDebugMessage ($"Skipping {file.filePath} as the archive file is up to date.");
 						continue;
 					}
-					apk.Archive.AddFile (file.Item1, item, compressionMethod: GetCompressionMethod (file.Item1));
+					Log.LogDebugMessage ("\tAdding {0}", file.filePath);
+					apk.Archive.AddFile (file.filePath, item, compressionMethod: GetCompressionMethod (file.filePath));
 					count++;
 					if (count == ZipArchiveEx.ZipFlushLimit) {
 						apk.Flush();
@@ -181,16 +220,19 @@ namespace Xamarin.Android.Tasks
 							if (!PackagingUtils.CheckEntryForPackaging (name)) {
 								continue;
 							}
+							var path = RootPath + name;
+							existingEntries.Remove (path);
+							if (apk.SkipExistingEntry (jarItem, path)) {
+								Log.LogDebugMessage ($"Skipping {path} as the archive file is up to date.");
+								continue;
+							}
 							byte [] data;
-							using (var d = new System.IO.MemoryStream ()) {
+							using (var d = new MemoryStream ()) {
 								jarItem.Extract (d);
 								data = d.ToArray ();
 							}
-							var path = RootPath + name;
-							if (apk.Archive.Any (e => e.FullName == path))
-								Log.LogMessage ("Warning: failed to add jar entry {0} from {1}: the same file already exists in the apk", name, Path.GetFileName (jarFile));
-							else
-								apk.Archive.AddEntry (data, path);
+							Log.LogDebugMessage ($"Adding {path} as the archive file is out of date.");
+							apk.Archive.AddEntry (data, path);
 						}
 					}
 					count++;
@@ -199,14 +241,14 @@ namespace Xamarin.Android.Tasks
 						count = 0;
 					}
 				}
+				// Clean up Removed files. 
+				foreach (var entry in existingEntries) {
+					Log.LogDebugMessage ($"Removing {entry} as it is not longer required.");
+					apk.Archive.DeleteEntry (entry);
+				}
+				apk.Flush ();
 				FixupArchive (apk);
 			}
-			if (MonoAndroidHelper.CopyIfZipChanged (temp, apkOutputPath)) {
-				Log.LogDebugMessage ($"Copied {temp} to {apkOutputPath}");
-			} else {
-				Log.LogDebugMessage ($"Skipped {apkOutputPath}: up to date");
-			}
-			File.Delete (temp);
 		}
 
 		public override bool RunTask ()
@@ -220,10 +262,12 @@ namespace Xamarin.Android.Tasks
 			var outputFiles = new List<string> ();
 			uncompressedFileExtensions = UncompressedFileExtensions?.Split (new char [] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries) ?? new string [0];
 
+			existingEntries.Clear ();
 			ExecuteWithAbi (SupportedAbis, ApkInputPath, ApkOutputPath);
 			outputFiles.Add (ApkOutputPath);
 			if (CreatePackagePerAbi && SupportedAbis.Length > 1) {
 				foreach (var abi in SupportedAbis) {
+					existingEntries.Clear ();
 					var path = Path.GetDirectoryName (ApkOutputPath);
 					var apk = Path.GetFileNameWithoutExtension (ApkOutputPath);
 					ExecuteWithAbi (new [] { abi }, String.Format ("{0}-{1}", ApkInputPath, abi), 
@@ -254,7 +298,7 @@ namespace Xamarin.Android.Tasks
 					Log.LogCodedWarning ("XA0107", assembly.ItemSpec, 0, "{0} is a Reference Assembly!", assembly.ItemSpec);
 				}
 				// Add assembly
-				apk.Archive.AddFile (assembly.ItemSpec, GetTargetDirectory (assembly.ItemSpec) + "/"  + Path.GetFileName (assembly.ItemSpec), compressionMethod: UncompressedMethod);
+				AddFileToArchiveIfNewer (apk, assembly.ItemSpec, GetTargetDirectory (assembly.ItemSpec) + "/"  + Path.GetFileName (assembly.ItemSpec), compressionMethod: UncompressedMethod);
 
 				// Try to add config if exists
 				var config = Path.ChangeExtension (assembly.ItemSpec, "dll.config");
@@ -265,12 +309,12 @@ namespace Xamarin.Android.Tasks
 					var symbols = Path.ChangeExtension (assembly.ItemSpec, "dll.mdb");
 
 					if (File.Exists (symbols))
-						apk.Archive.AddFile (symbols, AssembliesPath + Path.GetFileName (symbols), compressionMethod: UncompressedMethod);
+						AddFileToArchiveIfNewer (apk, symbols, AssembliesPath + Path.GetFileName (symbols), compressionMethod: UncompressedMethod);
 
 					symbols = Path.ChangeExtension (assembly.ItemSpec, "pdb");
 
 					if (File.Exists (symbols))
-						apk.Archive.AddFile (symbols, AssembliesPath + Path.GetFileName (symbols), compressionMethod: UncompressedMethod);
+						AddFileToArchiveIfNewer (apk, symbols, AssembliesPath + Path.GetFileName (symbols), compressionMethod: UncompressedMethod);
 				}
 				count++;
 				if (count == ZipArchiveEx.ZipFlushLimit) {
@@ -292,7 +336,7 @@ namespace Xamarin.Android.Tasks
 				if (MonoAndroidHelper.IsReferenceAssembly (assembly.ItemSpec)) {
 					Log.LogCodedWarning ("XA0107", assembly.ItemSpec, 0, "{0} is a Reference Assembly!", assembly.ItemSpec);
 				}
-				apk.Archive.AddFile (assembly.ItemSpec, AssembliesPath + Path.GetFileName (assembly.ItemSpec), compressionMethod: UncompressedMethod);
+				AddFileToArchiveIfNewer (apk, assembly.ItemSpec, AssembliesPath + Path.GetFileName (assembly.ItemSpec), compressionMethod: UncompressedMethod);
 				var config = Path.ChangeExtension (assembly.ItemSpec, "dll.config");
 				AddAssemblyConfigEntry (apk, config);
 				// Try to add symbols if Debug
@@ -300,12 +344,12 @@ namespace Xamarin.Android.Tasks
 					var symbols = Path.ChangeExtension (assembly.ItemSpec, "dll.mdb");
 
 					if (File.Exists (symbols))
-						apk.Archive.AddFile (symbols, AssembliesPath + Path.GetFileName (symbols), compressionMethod: UncompressedMethod);
+						AddFileToArchiveIfNewer (apk, symbols, AssembliesPath + Path.GetFileName (symbols), compressionMethod: UncompressedMethod);
 
 					symbols = Path.ChangeExtension (assembly.ItemSpec, "pdb");
 
 					if (File.Exists (symbols))
-						apk.Archive.AddFile (symbols, AssembliesPath + Path.GetFileName (symbols), compressionMethod: UncompressedMethod);
+						AddFileToArchiveIfNewer (apk, symbols, AssembliesPath + Path.GetFileName (symbols), compressionMethod: UncompressedMethod);
 				}
 				count++;
 				if (count == ZipArchiveEx.ZipFlushLimit) {
@@ -315,17 +359,38 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
+		bool AddFileToArchiveIfNewer (ZipArchiveEx apk, string file, string inArchivePath, CompressionMethod compressionMethod = CompressionMethod.Default)
+		{
+			existingEntries.Remove (inArchivePath);
+			if (apk.SkipExistingFile (file, inArchivePath)) {
+				Log.LogDebugMessage ($"Skipping {file} as the archive file is up to date.");
+				return false;
+			}
+			Log.LogDebugMessage ($"Adding {file} as the archive file is out of date.");
+			apk.Archive.AddFile (file, inArchivePath, compressionMethod: compressionMethod);
+			return true;
+		}
+
 		void AddAssemblyConfigEntry (ZipArchiveEx apk, string configFile)
 		{
+			string inArchivePath = AssembliesPath + Path.GetFileName (configFile);
+			existingEntries.Remove (inArchivePath);
+
 			if (!File.Exists (configFile))
 				return;
 
+			if (apk.SkipExistingFile (configFile, inArchivePath)) {
+				Log.LogDebugMessage ($"Skipping {configFile} as the archive file is up to date.");
+				return;
+			}
+
+			Log.LogDebugMessage ($"Adding {configFile} as the archive file is out of date.");
 			using (var source = File.OpenRead (configFile)) {
 				var dest = new MemoryStream ();
 				source.CopyTo (dest);
 				dest.WriteByte (0);
 				dest.Position = 0;
-				apk.Archive.AddEntry (AssembliesPath + Path.GetFileName (configFile), dest, compressionMethod: UncompressedMethod);
+				apk.Archive.AddEntry (inArchivePath, dest, compressionMethod: UncompressedMethod);
 			}
 		}
 
@@ -380,6 +445,11 @@ namespace Xamarin.Android.Tasks
 		void AddNativeLibraryToArchive (ZipArchiveEx apk, string abi, string filesystemPath, string inArchiveFileName)
 		{
 			string archivePath = $"lib/{abi}/{inArchiveFileName}";
+			existingEntries.Remove (archivePath);
+			if (apk.SkipExistingFile (filesystemPath, archivePath)) {
+				Log.LogDebugMessage ($"Skipping {filesystemPath} (APK path: {archivePath}) as it is up to date.");
+				return;
+			}
 			Log.LogDebugMessage ($"Adding native library: {filesystemPath} (APK path: {archivePath})");
 			apk.Archive.AddEntry (archivePath, File.OpenRead (filesystemPath), compressionMethod: GetCompressionMethod (archivePath));
 		}
@@ -484,8 +554,14 @@ namespace Xamarin.Android.Tasks
 
 		void AddNativeLibrary (ArchiveFileList files, string path, string abi)
 		{
-			Log.LogMessage (MessageImportance.Low, "\tAdding {0}", path);
-			files.Add (new Tuple<string, string> (path, string.Format ("lib/{0}", abi)));
+			var item = (filePath: path, archivePath: $"lib/{abi}");
+			string filename = "/" + Path.GetFileName (item.filePath);
+			string inArchivePath = item.archivePath + filename;
+			if (files.Any (x => (x.archivePath + "/" + Path.GetFileName(x.filePath)) == inArchivePath)) {
+				Log.LogCodedWarning ("XA4301", path, 0, $"Apk already contains the item {inArchivePath}; ignoring.");
+				return;
+			}
+			files.Add (item);
 		}
 	}
 }

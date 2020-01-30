@@ -287,13 +287,13 @@ path_combine (const char *path1, const char *path2)
 }
 
 MONO_API void*
-monodroid_dylib_mono_new (const char *libmono_path)
+monodroid_dylib_mono_new ([[maybe_unused]] const char *libmono_path)
 {
 	return nullptr;
 }
 
 MONO_API void
-monodroid_dylib_mono_free (void *mono_imports)
+monodroid_dylib_mono_free ([[maybe_unused]] void *mono_imports)
 {
 	// no-op
 }
@@ -305,7 +305,7 @@ monodroid_dylib_mono_free (void *mono_imports)
   it should also accept libmono_path = nullptr parameter
 */
 MONO_API int
-monodroid_dylib_mono_init (void *mono_imports, const char *libmono_path)
+monodroid_dylib_mono_init (void *mono_imports, [[maybe_unused]] const char *libmono_path)
 {
 	if (mono_imports == nullptr)
 		return FALSE;

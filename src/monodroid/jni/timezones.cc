@@ -45,7 +45,7 @@ init ()
 }
 
 static void
-clear_time_zone_caches_within_domain (void *user_data)
+clear_time_zone_caches_within_domain ([[maybe_unused]] void *user_data)
 {
 	mono_runtime_invoke (
 			AndroidEnvironment_NotifyTimeZoneChanged, /* method */
@@ -62,7 +62,7 @@ clear_time_zone_caches (MonoDomain *domain, void *user_data)
 }
 
 extern "C" JNIEXPORT void
-JNICALL Java_mono_android_Runtime_notifyTimeZoneChanged (JNIEnv *env, jclass klass)
+JNICALL Java_mono_android_Runtime_notifyTimeZoneChanged ([[maybe_unused]] JNIEnv *env, [[maybe_unused]] jclass klass)
 {
 	init ();
 	mono_domain_foreach (clear_time_zone_caches, nullptr);

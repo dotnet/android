@@ -32,7 +32,11 @@ namespace MonoDroid.Tuner
 			HashSet<string> markedMethods = new HashSet<string> ();
 			var updated = false;
 
-			marshalTypes.Add (GetType ("Mono.Android", "Java.Interop.TypeManager/JavaTypeManager/__<$>_jni_marshal_methods"));
+			var typeName = "Java.Interop.TypeManager/JavaTypeManager/__<$>_jni_marshal_methods";
+			var javaTypeManager = GetType ("Mono.Android", typeName);
+			if (javaTypeManager == null)
+				throw new InvalidOperationException ($"Unable to find '{typeName}' in Mono.Android.dll!");
+			marshalTypes.Add (javaTypeManager);
 
 			foreach (var type in marshalTypes) {
 				registerMethod = null;

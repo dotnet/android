@@ -10,27 +10,19 @@ namespace Xamarin.Android.Tasks
 	/// 
 	/// Usage: bundletool install-apks --apks=foo.apks
 	/// </summary>
-	public class InstallApkSet : BundleTool
+	public class InstallApkSet : BundleToolAdbTask
 	{
 		public override string TaskPrefix => "IAS";
 
 		[Required]
 		public string ApkSet { get; set; }
 
-		[Required]
-		public string AdbToolPath { get; set; }
-
-		public string AdbToolExe { get; set; }
-
-		public string AdbToolName => OS.IsWindows ? "adb.exe" : "adb";
-
-		protected override CommandLineBuilder GetCommandLineBuilder ()
+		internal override CommandLineBuilder GetCommandLineBuilder ()
 		{
-			var adb = string.IsNullOrEmpty (AdbToolExe) ? AdbToolName : AdbToolExe;
 			var cmd = base.GetCommandLineBuilder ();
 			cmd.AppendSwitch ("install-apks");
 			cmd.AppendSwitchIfNotNull ("--apks ", ApkSet);
-			cmd.AppendSwitchIfNotNull ("--adb ", Path.Combine (AdbToolPath, adb));
+			AppendAdbOptions (cmd);
 			cmd.AppendSwitch ("--allow-downgrade");
 
 			// --modules: List of modules to be installed, or "_ALL_" for all modules.

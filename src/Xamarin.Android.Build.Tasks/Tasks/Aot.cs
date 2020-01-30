@@ -230,7 +230,7 @@ namespace Xamarin.Android.Tasks
 		{
 			bool hasValidAotMode = GetAndroidAotMode (AndroidAotMode, out AotMode);
 			if (!hasValidAotMode) {
-				LogCodedError ("XA3001", "Invalid AOT mode: {0}", AndroidAotMode);
+				LogCodedError ("XA3002", Properties.Resources.XA3002, AndroidAotMode);
 				return;
 			}
 
@@ -246,7 +246,7 @@ namespace Xamarin.Android.Tasks
 					}
 
 					if (!RunAotCompiler (config.AssembliesPath, config.AotCompiler, config.AotOptions, config.AssemblyPath, config.ResponseFile)) {
-						LogCodedError ("XA3001", "Could not AOT the assembly: {0}", Path.GetFileName (config.AssemblyPath));
+						LogCodedError ("XA3001", Properties.Resources.XA3001, Path.GetFileName (config.AssemblyPath));
 						Cancel ();
 						return;
 					}

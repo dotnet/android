@@ -1,22 +1,50 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildReferenceVersion>15.1.0.0</MSBuildReferenceVersion>
+  </PropertyGroup>
   <!--Import this file in projects needing to reference Microsoft.Build.*.dll -->
   <ItemGroup>
     <!-- Compile against Microsoft.Build* NuGet refs, but do not copy to OutputDir. -->
-    <PackageReference Include="Microsoft.Build" Version="15.9.20" IncludeAssets="compile" />
-    <PackageReference Include="Microsoft.Build.Framework" Version="15.9.20" IncludeAssets="compile" />
-    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="15.9.20" IncludeAssets="compile" />
-    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="15.9.20" IncludeAssets="compile"/>
-    <PackageReference Include="Mono.Posix.NETStandard" Version="1.0.0" />
-    <PackageReference Include="Xamarin.Build.AsyncTask" Version="0.3.4" />
-    <PackageReference Include="Xamarin.LibZipSharp" Version="1.0.6" />
+    <!-- Only use these on Windows as it causes problems with running unit tests in the IDE's on MacOS -->
+    <PackageReference Include="Microsoft.Build" Version="15.9.20" IncludeAssets="compile" Condition=" '$(OS)' == 'Windows_NT' " />
+    <PackageReference Include="Microsoft.Build.Framework" Version="15.9.20" IncludeAssets="compile" Condition=" '$(OS)' == 'Windows_NT' " />
+    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="15.9.20" IncludeAssets="compile" Condition=" '$(OS)' == 'Windows_NT' " />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="15.9.20" IncludeAssets="compile" Condition=" '$(OS)' == 'Windows_NT' " />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.Build, Version=$(MSBuildReferenceVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" Condition=" '$(OS)' != 'Windows_NT' ">
+      <SpecificVersion>True</SpecificVersion>
+      <HintPath>$(MSBuildToolsPath)\Microsoft.Build.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Build.Engine, Version=$(MSBuildReferenceVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" Condition=" '$(OS)' != 'Windows_NT' ">
+      <SpecificVersion>True</SpecificVersion>
+      <HintPath>$(MSBuildToolsPath)\Microsoft.Build.Engine.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Build.Framework, Version=$(MSBuildReferenceVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" Condition=" '$(OS)' != 'Windows_NT' ">
+      <SpecificVersion>True</SpecificVersion>
+      <HintPath>$(MSBuildToolsPath)\Microsoft.Build.Framework.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Build.Tasks.Core, Version=$(MSBuildReferenceVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" Condition=" '$(OS)' != 'Windows_NT' ">
+      <SpecificVersion>True</SpecificVersion>
+      <HintPath>$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Build.Utilities.Core, Version=$(MSBuildReferenceVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" Condition=" '$(OS)' != 'Windows_NT' ">
+      <SpecificVersion>True</SpecificVersion>
+      <HintPath>$(MSBuildToolsPath)\Microsoft.Build.Utilities.Core.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Mono.Posix.NETStandard" Version="1.0.0" GeneratePathProperty="true" />
+    <PackageReference Include="Xamarin.Build.AsyncTask" Version="0.3.4" GeneratePathProperty="true" />
+    <PackageReference Include="Xamarin.LibZipSharp" Version="$(LibZipSharpVersion)" />
   </ItemGroup>
   <ItemGroup>
     <!-- Copy system Microsoft.Build*.dll and dependencies for tests to run against. We can remove this
           and rely entirely on NuGet assets when mono/msbuild is merged into microsoft/msbuild. -->
-    <None Include="$(MSBuildToolsPath)\Microsoft.Build*.dll" >
+    <None Include="$(MSBuildToolsPath)\Microsoft.Build*.dll" Condition=" '$(OS)' == 'Windows_NT' " >
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildToolsPath)\System.*.dll" >
+    <None Include="$(MSBuildToolsPath)\System.*.dll" Condition=" '$(OS)' == 'Windows_NT' " >
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

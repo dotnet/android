@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 using Xamarin.Tools.Zip;
 
@@ -284,6 +285,53 @@ namespace Xamarin.Android.Build.Tests
 					}
 				}
 			}
+		}
+
+		[Test]
+		public void BuildAppBundleCommand ()
+		{
+			var task = new BuildAppBundle {
+				BaseZip = "base.zip",
+				Output = "foo.aab",
+			};
+			string cmd = task.GetCommandLineBuilder ().ToString ();
+			Assert.AreEqual ($"build-bundle --modules base.zip --output foo.aab", cmd);
+		}
+
+		[Test]
+		public void BuildApkSetCommand ()
+		{
+			var task = new BuildApkSet {
+				AppBundle = "foo.aab",
+				Output = "foo.apks",
+				KeyStore = "foo.keystore",
+				KeyAlias = "alias",
+				KeyPass = "keypass",
+				StorePass = "storepass",
+				Aapt2ToolPath = Path.Combine ("aapt", "with spaces"),
+				Aapt2ToolExe = "aapt2",
+				AdbToolPath = Path.Combine ("adb", "with spaces"),
+				AdbToolExe = "adb",
+				AdbTarget = "-s emulator-5554"
+			};
+			string aapt2 = Path.Combine (task.Aapt2ToolPath, task.Aapt2ToolExe);
+			string adb = Path.Combine (task.AdbToolPath, task.AdbToolExe);
+			string cmd = task.GetCommandLineBuilder ().ToString ();
+			Assert.AreEqual ($"build-apks --connected-device --bundle foo.aab --output foo.apks --mode default --adb \"{adb}\" --device-id emulator-5554 --aapt2 \"{aapt2}\" --ks foo.keystore --ks-key-alias alias --key-pass pass:keypass --ks-pass pass:storepass", cmd);
+		}
+
+		[Test]
+		public void InstallApkSetCommand ()
+		{
+			var task = new InstallApkSet {
+				ApkSet = "foo.apks",
+				AdbToolPath = Path.Combine ("path", "with spaces"),
+				AdbToolExe = "adb",
+				AdbTarget = "-s emulator-5554"
+			};
+			string adb = Path.Combine (task.AdbToolPath, task.AdbToolExe);
+			string cmd = task.GetCommandLineBuilder ().ToString ();
+			Assert.AreEqual ($"install-apks --apks foo.apks --adb \"{adb}\" --device-id emulator-5554 --allow-downgrade --modules _ALL_", cmd);
 		}
 	}
 }

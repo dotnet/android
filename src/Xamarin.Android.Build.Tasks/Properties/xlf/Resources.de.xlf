@@ -2,6 +2,57 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="de" original="../Resources.resx">
     <body>
+      <trans-unit id="XA1005">
+        <source>Attempting naive type name fixup for element with ID '{0}' and type '{1}'</source>
+        <target state="new">Attempting naive type name fixup for element with ID '{0}' and type '{1}'</target>
+        <note>{0} - The Android resource ID name</note>
+      </trans-unit>
+      <trans-unit id="XA1005_Instructions">
+        <source>If the above fixup fails, please add a `xamarin:managedType` attribute to the element to specify the fully qualified managed type name of the element.</source>
+        <target state="new">If the above fixup fails, please add a `xamarin:managedType` attribute to the element to specify the fully qualified managed type name of the element.</target>
+        <note>"xamarin:managedType" is a literal name and should not be translated.</note>
+      </trans-unit>
+      <trans-unit id="XA2001">
+        <source>Source file '{0}' could not be found.</source>
+        <target state="new">Source file '{0}' could not be found.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="XA3001">
+        <source>Could not AOT the assembly: {0}</source>
+        <target state="new">Could not AOT the assembly: {0}</target>
+        <note>The abbreviation "AOT" should not be translated.</note>
+      </trans-unit>
+      <trans-unit id="XA3002">
+        <source>Invalid AOT mode: {0}</source>
+        <target state="new">Invalid AOT mode: {0}</target>
+        <note>The abbreviation "AOT" should not be translated.</note>
+      </trans-unit>
+      <trans-unit id="XA3003">
+        <source>Could not strip IL of assembly: {0}</source>
+        <target state="new">Could not strip IL of assembly: {0}</target>
+        <note>The abbreviation "IL" should not be translated.</note>
+      </trans-unit>
+      <trans-unit id="XA3004">
+        <source>Could not compile native assembly file: {0}</source>
+        <target state="new">Could not compile native assembly file: {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="XA3005">
+        <source>Could not link native shared library: {0}</source>
+        <target state="new">Could not link native shared library: {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="XA4209">
+        <source>Failed to generate Java type for class: {0} due to {1}</source>
+        <target state="new">Failed to generate Java type for class: {0} due to {1}</target>
+        <note>{0} - The managed type name
+{1} - The exception message of the associated exception</note>
+      </trans-unit>
+      <trans-unit id="XA4210">
+        <source>Please add a reference to Mono.Android.Export.dll when using ExportAttribute or ExportFieldAttribute.</source>
+        <target state="new">Please add a reference to Mono.Android.Export.dll when using ExportAttribute or ExportFieldAttribute.</target>
+        <note>The following are literal names and should not be translated: Mono.Android.Export.dll, ExportAttribute, ExportFieldAttribute.</note>
+      </trans-unit>
       <trans-unit id="XA4214">
         <source>The managed type `{0}` exists in multiple assemblies: {1}. Please refactor the managed type names in these assemblies so that they are not identical.</source>
         <target state="new">The managed type `{0}` exists in multiple assemblies: {1}. Please refactor the managed type names in these assemblies so that they are not identical.</target>
@@ -13,7 +64,14 @@
         <target state="new">References to the type `{0}` will refer to `{0}, {1}`.</target>
         <note>The phrase "`{0}, {1}`" does not need to be translated.
 {0} - The managed type name
-{1} - The the name of the library that contains the type</note>
+{1} - The name of the library that contains the type</note>
+      </trans-unit>
+      <trans-unit id="XA5301">
+        <source>Failed to generate Java type for class: {0} due to MAX_PATH: {1}</source>
+        <target state="new">Failed to generate Java type for class: {0} due to MAX_PATH: {1}</target>
+        <note>The following are literal names and should not be translated: MAX_PATH.
+{0} - The managed type name
+{1} - The exception message of the associated exception</note>
       </trans-unit>
     </body>
   </file>

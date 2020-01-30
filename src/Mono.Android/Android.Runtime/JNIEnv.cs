@@ -1295,6 +1295,14 @@ namespace Android.Runtime {
 			return result;
 		}
 
+		// We do these translations here instead of in the binding to force a compile
+		// time error if using an older Java.Interop.dll instead of a runtime error
+		public static IntPtr NewArray (uint[] array) => NewArray ((int[])(object)array);
+
+		public static IntPtr NewArray (ushort[] array) => NewArray ((short[])(object)array);
+
+		public static IntPtr NewArray (ulong[] array) => NewArray ((long[])(object)array);
+
 		public static IntPtr NewObjectArray (int length, IntPtr elementClass)
 		{
 			return NewObjectArray (length, elementClass, IntPtr.Zero);

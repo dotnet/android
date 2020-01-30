@@ -29,7 +29,7 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="Irony">
-      <HintPath>..\..\packages\Irony.0.9.1\lib\net40\Irony.dll</HintPath>
+      <HintPath>..\..\packages\Irony.1.1.0\lib\net40\Irony.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Xamarin.Android.Cecil">

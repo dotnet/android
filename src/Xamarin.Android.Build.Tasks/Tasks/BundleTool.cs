@@ -14,7 +14,7 @@ namespace Xamarin.Android.Tasks
 			return GetCommandLineBuilder ().ToString ();
 		}
 
-		protected virtual CommandLineBuilder GetCommandLineBuilder ()
+		internal virtual CommandLineBuilder GetCommandLineBuilder ()
 		{
 			var cmd = new CommandLineBuilder ();
 

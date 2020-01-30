@@ -126,7 +126,7 @@ namespace Xamarin.Android.Tasks
 					dest = Path.GetFullPath (Path.Combine (IntermediateDir, Path.GetFileName (baseFileName)));
 				}
 				if (!File.Exists (item.ItemSpec)) {
-					Log.LogCodedError ("XA2001", file: item.ItemSpec, lineNumber: 0, message: $"Source file '{item.ItemSpec}' could not be found.");
+					Log.LogCodedError ("XA2001", file: item.ItemSpec, lineNumber: 0, message: Properties.Resources.XA2001, item.ItemSpec);
 					continue;
 				}
 				var newItem = new TaskItem (dest);

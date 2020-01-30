@@ -67,7 +67,7 @@ BasicUtilities::create_directory (const char *pathname, mode_t mode)
 	oldumask = umask (022);
 	simple_pointer_guard<char[]> path (strdup_new (pathname));
 	int rv, ret = 0;
-	for (char *d = path; *d; ++d) {
+	for (char *d = path; d != nullptr && *d; ++d) {
 		if (*d != '/')
 			continue;
 		*d = 0;
@@ -89,7 +89,7 @@ BasicUtilities::create_directory (const char *pathname, mode_t mode)
 }
 
 void
-BasicUtilities::set_world_accessable (const char *path)
+BasicUtilities::set_world_accessable ([[maybe_unused]] const char *path)
 {
 #ifdef ANDROID
 	int r;
@@ -103,7 +103,7 @@ BasicUtilities::set_world_accessable (const char *path)
 }
 
 void
-BasicUtilities::set_user_executable (const char *path)
+BasicUtilities::set_user_executable ([[maybe_unused]] const char *path)
 {
 #ifdef ANDROID
 	int r;

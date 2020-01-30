@@ -87,9 +87,17 @@ set(TEST_COMPILER_ARGS_CPP ${XA_COMPILER_FLAGS}
   Wall
   Wconversion
   Wdeprecated
+  Wduplicated-branches
+  Wduplicated-cond
   Werror=format-security
+  Werror=return-type
+  Wextra
   Wformat
   Wformat-security
+  Wmisleading-indentation
+  Wnull-dereference
+  Wpointer-arith
+  Wshadow
   Wsign-compare
   Wuninitialized
   )

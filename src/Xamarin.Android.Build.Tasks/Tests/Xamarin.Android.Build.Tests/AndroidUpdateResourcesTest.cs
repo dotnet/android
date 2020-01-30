@@ -41,6 +41,29 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void BuildAppWithSystemNamespace ()
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			var library = new XamarinAndroidLibraryProject () {
+				ProjectName = "Library1.System",
+			};
+			var proj = new XamarinAndroidApplicationProject () {
+				References = {
+					new BuildItem.ProjectReference (Path.Combine("..", library.ProjectName, Path.GetFileName (library.ProjectFilePath)), "Library1.System") {
+					},
+				},
+			};
+			using (var builder = CreateDllBuilder (Path.Combine (path, library.ProjectName), cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
+				builder.ThrowOnBuildFailure = false;
+				Assert.IsTrue (builder.Build (library), "Library should have built.");
+				using (var b = CreateApkBuilder (Path.Combine (path, proj.ProjectName), cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
+					b.ThrowOnBuildFailure = false;
+					Assert.IsTrue (b.Build (proj), "Project should have built.");
+				}
+			}
+		}
+
+		[Test]
 		public void RepetitiveBuild ()
 		{
 			if (Directory.Exists ("temp/RepetitiveBuild"))
@@ -518,7 +541,8 @@ namespace UnnamedProject
 		{
 			//Due to the MSBuild project automatically sorting <ItemGroup />, we can't possibly get the F# projects to build here on Windows
 			//  This API is sorting them: https://github.com/xamarin/xamarin-android/blob/c588bfe07aab224c97996a264579f4d4f18a151c/src/Xamarin.Android.Build.Tasks/Tests/Xamarin.ProjectTools/Common/DotNetXamarinProject.cs#L117
-			if (IsWindows && language == XamarinAndroidProjectLanguage.FSharp) {
+			bool isFSharp = language == XamarinAndroidProjectLanguage.FSharp;
+			if (IsWindows && isFSharp) {
 				Assert.Ignore ("Skipping this F# test on Windows.");
 			}
 
@@ -529,13 +553,17 @@ namespace UnnamedProject
 			proj.SetProperty ("AndroidUseIntermediateDesignerFile", "True");
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				var outputFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
-					"Resource.designer"  + proj.Language.DefaultExtension);
+				// Intermediate designer file support is not compatible with F# projects using Xamarin.Android.FSharp.ResourceProvider.
+				var outputFile = isFSharp ? Path.Combine (Root, b.ProjectDirectory, "Resources", "Resource.designer" + proj.Language.DefaultDesignerExtension)
+					: Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "Resource.designer" + proj.Language.DefaultDesignerExtension);
 				Assert.IsTrue (File.Exists (outputFile), "Resource.designer{1} should have been created in {0}",
-					proj.IntermediateOutputPath, proj.Language.DefaultExtension);
+					isFSharp ? Path.Combine (Root, b.ProjectDirectory, "Resources") : proj.IntermediateOutputPath,
+					proj.Language.DefaultDesignerExtension);
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
-				Assert.IsFalse (File.Exists (outputFile), "Resource.designer{1} should have been cleaned in {0}",
-					proj.IntermediateOutputPath, proj.Language.DefaultExtension);
+				if (!isFSharp) {
+					Assert.IsFalse (File.Exists (outputFile), "Resource.designer{1} should have been cleaned in {0}",
+						proj.IntermediateOutputPath, proj.Language.DefaultDesignerExtension);
+				}
 			}
 		}
 
@@ -555,7 +583,7 @@ namespace UnnamedProject
 			};
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				var designerPath = Path.Combine (Root, b.ProjectDirectory, "Resources", "Resource.designer" + language.DefaultDesignerExtension);
+				var designerPath = Path.Combine (Root, b.ProjectDirectory, "Resources", "Resource.designer" + proj.Language.DefaultDesignerExtension);
 				var attr = File.GetAttributes (designerPath);
 				File.SetAttributes (designerPath, FileAttributes.ReadOnly);
 				Assert.IsTrue ((File.GetAttributes (designerPath) & FileAttributes.ReadOnly) == FileAttributes.ReadOnly,
@@ -626,7 +654,7 @@ namespace UnnamedProject
 				IsRelease = isRelease,
 			};
 			proj.SetProperty ("AndroidUseIntermediateDesignerFile", "True");
-			proj.SetProperty ("AndroidResgenFile", "Resources\\Resource.designer" + proj.Language.DefaultExtension);
+			proj.SetProperty ("AndroidResgenFile", "Resources\\Resource.designer" + proj.Language.DefaultDesignerExtension);
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				var designer = proj.Sources.FirstOrDefault (x => x.Include() == "Resources\\Resource.designer" + proj.Language.DefaultDesignerExtension);
 				designer = designer ?? proj.OtherBuildItems.FirstOrDefault (x => x.Include () == "Resources\\Resource.designer" + proj.Language.DefaultDesignerExtension);
@@ -1057,6 +1085,12 @@ namespace Lib1 {
 	<color name=""theme_devicedefault_background"">#ffffffff</color>
 </resources>", 
 			};
+			var raw = new AndroidItem.AndroidResource ("Resources\\raw\\test.txt") {
+				TextContent = () => @"Test Build 1",
+			};
+			var rawToDelete = new AndroidItem.AndroidResource ("Resources\\raw\\test2.txt") {
+				TextContent = () => @"Test Raw To Delete",
+			};
 			var libProj = new XamarinAndroidLibraryProject () {
 				IsRelease = true,
 				ProjectName = "Lib1",
@@ -1065,6 +1099,8 @@ namespace Lib1 {
 				},
 				AndroidResources = {
 					theme,
+					raw,
+					rawToDelete,
 				},
 			};
 			var appProj = new XamarinAndroidApplicationProject () {
@@ -1084,20 +1120,42 @@ namespace Lib1 {
 					foo.Timestamp = DateTimeOffset.UtcNow;
 					Assert.IsTrue (libBuilder.Build (libProj, doNotCleanupOnUpdate: true, saveProject: false), "Library project should have built");
 					Assert.IsTrue (libBuilder.Output.IsTargetSkipped ("_CreateManagedLibraryResourceArchive"), "_CreateManagedLibraryResourceArchive should be skipped.");
+					appBuilder.BuildLogFile = "build1.log";
 					Assert.IsTrue (appBuilder.Build (appProj, doNotCleanupOnUpdate: true, saveProject: false), "Application Build should have succeeded.");
 					Assert.IsTrue (appBuilder.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "_UpdateAndroidResgen target should be skipped.");
+					// Check Contents of the file in the apk are correct.
+					string apk = Path.Combine (Root, appBuilder.ProjectDirectory, appProj.OutputPath, appProj.PackageName + "-Signed.apk");
+					byte[] rawContentBuildOne = ZipHelper.ReadFileFromZip (apk,
+						"res/raw/test.txt");
+
+					Assert.IsNotNull (rawContentBuildOne, "res/raw/test.txt should have been in the apk ");
+					string txt = Encoding.UTF8.GetString (rawContentBuildOne ?? new byte[0]);
+					StringAssert.Contains ("Test Build 1", txt, $"res/raw/test.txt should have been 'Test Build 1' not {txt}");
+					Assert.IsNotNull (ZipHelper.ReadFileFromZip (apk, "res/raw/test2.txt"), "res/raw/test2.txt should have been in the apk.");
 					theme.TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
 <resources>
 	<color name=""theme_devicedefault_background"">#00000000</color>
 	<color name=""theme_devicedefault_background2"">#ffffffff</color>
 </resources>";
 					theme.Timestamp = DateTimeOffset.UtcNow;
+					raw.TextContent = () => @"Test Build 2 Now";
+					raw.Timestamp = DateTimeOffset.UtcNow;
 					Assert.IsTrue (libBuilder.Build (libProj, doNotCleanupOnUpdate: true, saveProject: false), "Library project should have built");
 					Assert.IsFalse (libBuilder.Output.IsTargetSkipped ("_CreateManagedLibraryResourceArchive"), "_CreateManagedLibraryResourceArchive should not be skipped.");
+					appBuilder.BuildLogFile = "build2.log";
 					Assert.IsTrue (appBuilder.Build (appProj, doNotCleanupOnUpdate: true, saveProject: false), "Application Build should have succeeded.");
 					string text = File.ReadAllText (Path.Combine (Root, path, appProj.ProjectName, "Resources", "Resource.designer.cs"));
 					Assert.IsTrue (text.Contains ("theme_devicedefault_background2"), "Resource.designer.cs was not updated.");
 					Assert.IsFalse (appBuilder.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "_UpdateAndroidResgen target should NOT be skipped.");
+					Assert.IsFalse (appBuilder.Output.IsTargetSkipped ("_CreateBaseApk"), "_CreateBaseApk target should NOT be skipped.");
+					Assert.IsFalse (appBuilder.Output.IsTargetSkipped ("_BuildApkEmbed"), "_BuildApkEmbed target should NOT be skipped.");
+					byte[] rawContentBuildTwo = ZipHelper.ReadFileFromZip (apk,
+						"res/raw/test.txt");
+					Assert.IsNotNull (rawContentBuildTwo, "res/raw/test.txt should have been in the apk ");
+					txt = Encoding.UTF8.GetString (rawContentBuildTwo ?? new byte[0]);
+					StringAssert.Contains ("Test Build 2 Now", txt, $"res/raw/test.txt should have been 'Test Build 2' not {txt}");
+					rawToDelete.Deleted = true;
+					rawToDelete.Timestamp = DateTimeOffset.UtcNow;
 					theme.Deleted = true;
 					theme.Timestamp = DateTimeOffset.UtcNow;
 					Assert.IsTrue (libBuilder.Build (libProj, saveProject: true), "Library project should have built");
@@ -1105,6 +1163,9 @@ namespace Lib1 {
 					Assert.IsTrue (!File.Exists (themeFile), $"{themeFile} should have been deleted.");
 					var archive = Path.Combine (Root, path, libProj.ProjectName, libProj.IntermediateOutputPath, "__AndroidLibraryProjects__.zip");
 					Assert.IsNull (ZipHelper.ReadFileFromZip (archive, "res/values/theme.xml"), "res/values/theme.xml should have been removed from __AndroidLibraryProjects__.zip");
+					appBuilder.BuildLogFile = "build3.log";
+					Assert.IsTrue (appBuilder.Build (appProj, doNotCleanupOnUpdate: true, saveProject: false), "Application Build should have succeeded.");
+					Assert.IsNull (ZipHelper.ReadFileFromZip (apk, "res/raw/test2.txt"), "res/raw/test2.txt should have been removed from the apk.");
 				}
 			}
 		}

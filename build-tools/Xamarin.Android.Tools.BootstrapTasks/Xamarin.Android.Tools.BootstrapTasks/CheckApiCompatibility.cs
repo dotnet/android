@@ -33,6 +33,8 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			"Mono.Android.dll",
 		};
 
+		static string compatApiCommand = null;
+
 		// Path where Microsoft.DotNet.ApiCompat nuget package is located
 		[Required]
 		public string ApiCompatPath { get; set; }
@@ -60,7 +62,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 			// Check to see if Api has a previous Api defined.
 			if (!api_versions.TryGetValue (ApiLevel, out string previousApiLevel)) {
-				Log.LogError ($"Please add ApiLevel:{ApiLevel} to the list of supported apis.");
+				LogError ($"Please add ApiLevel:{ApiLevel} to the list of supported apis.");
 				return !Log.HasLoggedErrors;
 			}
 
@@ -88,7 +90,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				// Check xamarin-android-api-compatibility reference directory exists
 				var referenceContractPath = Path.Combine (ApiCompatibilityPath, "reference");
 				if (!Directory.Exists (referenceContractPath)) {
-					Log.LogMessage (MessageImportance.High, $"CheckApiCompatibility Warning: Skipping reference contract check.\n{referenceContractPath} does not exist.");
+					Log.LogWarning ($"CheckApiCompatibility Warning: Skipping reference contract check.\n{referenceContractPath} does not exist.");
 					return !Log.HasLoggedErrors;
 				}
 
@@ -126,13 +128,13 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				foreach (var assemblyToValidate in assemblies) {
 					var contractAssembly = Path.Combine (contractPath, assemblyToValidate);
 					if (!File.Exists (contractAssembly)) {
-						Log.LogMessage ($"Contract assembly {assemblyToValidate} does not exists in the contract path.");
+						Log.LogWarning ($"Contract assembly {assemblyToValidate} does not exists in the contract path.");
 						continue;
 					}
 
 					var implementationAssembly = Path.Combine (TargetImplementationPath, assemblyToValidate);
 					if (!File.Exists (implementationAssembly)) {
-						Log.LogError ($"Implementation assembly {assemblyToValidate} exists in the contract path but not on the implementation folder.");
+						LogError ($"Implementation assembly {assemblyToValidate} exists in the contract path but not on the implementation folder.");
 						return;
 					}
 
@@ -140,27 +142,72 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 					File.Copy (implementationAssembly, Path.Combine (targetImplementationPathDirectory, assemblyToValidate), true);
 				}
 
-				using (var genApiProcess = new Process ()) {
+				for (int i = 0; i < 3; i++) {
+					using (var genApiProcess = new Process ()) {
 
-					genApiProcess.StartInfo.FileName = apiCompat;
-					genApiProcess.StartInfo.Arguments = $"\"{contractPathDirectory}\" -i \"{targetImplementationPathDirectory}\" ";
+						genApiProcess.StartInfo.FileName = apiCompat;
+						genApiProcess.StartInfo.Arguments = $"\"{contractPathDirectory}\" -i \"{targetImplementationPathDirectory}\" ";
 
-					// Verify if there is an exclusion list
-					var excludeAttributes = Path.Combine (ApiCompatibilityPath, $"api-compat-exclude-attributes.txt");
-					if (File.Exists (excludeAttributes)) {
-						genApiProcess.StartInfo.Arguments += $"--exclude-attributes {excludeAttributes} ";
+						// Verify if there is an exclusion list
+						var excludeAttributes = Path.Combine (ApiCompatibilityPath, $"api-compat-exclude-attributes.txt");
+						if (File.Exists (excludeAttributes)) {
+							genApiProcess.StartInfo.Arguments += $"--exclude-attributes {excludeAttributes} ";
+						}
+
+						genApiProcess.StartInfo.UseShellExecute = false;
+						genApiProcess.StartInfo.CreateNoWindow = true;
+						genApiProcess.StartInfo.RedirectStandardOutput = true;
+						genApiProcess.StartInfo.RedirectStandardError = true;
+						genApiProcess.EnableRaisingEvents = true;
+
+						var lines = new List<string> ();
+						var processHasCrashed = false;
+						void dataReceived (object sender, DataReceivedEventArgs args)
+						{
+							if (!string.IsNullOrWhiteSpace (args.Data)) {
+								lines.Add (args.Data.Trim ());
+
+								if (args.Data.IndexOf ("Native Crash Reporting") != -1) {
+									processHasCrashed = true;
+								}
+							}
+						}
+
+						genApiProcess.OutputDataReceived += dataReceived;
+						genApiProcess.ErrorDataReceived += dataReceived;
+
+						// Get api definition for previous Api
+						compatApiCommand = $"CompatApi command: {genApiProcess.StartInfo.FileName} {genApiProcess.StartInfo.Arguments}";
+						Log.LogMessage (MessageImportance.High, compatApiCommand);
+
+						genApiProcess.Start ();
+						genApiProcess.BeginOutputReadLine ();
+						genApiProcess.BeginErrorReadLine ();
+
+						genApiProcess.WaitForExit ();
+
+						genApiProcess.CancelOutputRead ();
+						genApiProcess.CancelErrorRead ();
+
+						if (lines.Count == 0) {
+							return;
+						}
+
+						if (processHasCrashed) {
+							if (i + 1 < 3) {
+								Log.LogWarning ($"Process has crashed.");
+								Log.LogMessage (MessageImportance.High, String.Join (Environment.NewLine, lines));
+								Log.LogWarning ($"We will retry.");
+								continue;
+							} else {
+								LogError ($"Unable to get a valid report. Process has crashed.'{Environment.NewLine}Crash report:{Environment.NewLine}{String.Join (Environment.NewLine, lines)}");
+								return;
+							}
+						}
+
+						ValidateIssues (lines, validateAgainstReference);
+						break;
 					}
-
-					genApiProcess.StartInfo.UseShellExecute = false;
-					genApiProcess.StartInfo.CreateNoWindow = true;
-					genApiProcess.StartInfo.RedirectStandardOutput = true;
-
-					Log.LogMessage (MessageImportance.High, $"CompatApi command: {genApiProcess.StartInfo.FileName} {genApiProcess.StartInfo.Arguments}");
-
-					// Get api definition for previous Api
-					genApiProcess.Start ();
-					ValidateIssues (genApiProcess.StandardOutput, validateAgainstReference);
-					genApiProcess.WaitForExit ();
 				}
 			} finally {
 				if (Directory.Exists (contractPathDirectory)) {
@@ -174,7 +221,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		}
 
 		// Validates there is no issue or issues found are acceptable
-		void ValidateIssues (StreamReader content, bool validateAgainstReference)
+		void ValidateIssues (IEnumerable<string> content, bool validateAgainstReference)
 		{
 			// Load issues into a dictionary
 			var issuesFound = LoadIssues (content);
@@ -195,22 +242,20 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			} else {
 
 				// Read and Convert the acceptable issues into a dictionary
-				using (var streamReader = new StreamReader (acceptableIssuesFile)) {
-					acceptableIssues = LoadIssues (streamReader);
-					if (Log.HasLoggedErrors) {
-						return;
-					}
+				var lines = File.ReadAllLines (acceptableIssuesFile);
+				acceptableIssues = LoadIssues (lines);
+				if (Log.HasLoggedErrors) {
+					return;
 				}
 			}
 
 			// Now remove all acceptable issues form the dictionary of issues found.
-			var count = 0;
+			var errors = new List<string> ();
 			if (acceptableIssues != null) {
 				foreach (var item in acceptableIssues) {
 					if (!issuesFound.TryGetValue (item.Key, out HashSet<string> issues)) {
 						// we should always be able to find the assembly that is reporting the issues
-						Log.LogMessage (MessageImportance.High, $"There is an invalid assembly listed on the acceptable breakages file: {item.Key}");
-						count++;
+						errors.Add ($"There is an invalid assembly listed on the acceptable breakages file: {item.Key}");
 						continue;
 					}
 
@@ -218,8 +263,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 						// we should always be able to remove the issue, if we try to remove an issue that does not exist,
 						// it means the acceptable list is incorrect and should be reported.
 						if (!issues.Remove (issue)) {
-							Log.LogMessage (MessageImportance.High, $"There is an invalid issue listed on the acceptable breakages file: {issue}");
-							count++;
+							errors.Add ($"There is an invalid issue listed on the acceptable breakages file: {issue}");
 						}
 					}
 				}
@@ -231,33 +275,29 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 					continue;
 				}
 
-				Log.LogMessage (MessageImportance.High, item.Key);
+				errors.Add (item.Key);
 				foreach (var issue in item.Value) {
-					Log.LogMessage (MessageImportance.High, issue);
-					count++;
+					errors.Add (issue);
 				}
 			}
 
-			if (count > 0) {
-				Log.LogMessage (MessageImportance.High, $"Total Issues: {count}");
-				Log.LogError ($"CheckApiCompatibility found nonacceptable Api breakages for ApiLevel: {ApiLevel}.");
+			if (errors.Count > 0) {
+				errors.Add ($"Total Issues: {errors.Count}");
+				LogError ($"CheckApiCompatibility found nonacceptable Api breakages for ApiLevel: {ApiLevel}.{Environment.NewLine}{String.Join (Environment.NewLine, errors)}");
 			}
 		}
 
 		// Converts list of issue into a dictionary
-		Dictionary<string, HashSet<string>> LoadIssues (StreamReader content)
+		Dictionary<string, HashSet<string>> LoadIssues (IEnumerable<string> content)
 		{
 			var issues = new Dictionary<string, HashSet<string>> ();
 			HashSet<string> currentSet = null;
 
-			while (!content.EndOfStream) {
-				var line = content.ReadLine ();
+			foreach (var line in content) {
 
 				if (string.IsNullOrWhiteSpace (line) || line.StartsWith ("#")) {
 					continue;
 				}
-
-				line = line.Trim ();
 
 				// Create hashset per assembly
 				if (line.StartsWith ("Compat issues with assembly", StringComparison.InvariantCultureIgnoreCase)) {
@@ -273,7 +313,9 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 				if (currentSet == null) {
 					// Hashset should never be null, unless exception file is not defining assembly line.
-					Log.LogError ($"Exception report/file should start with: 'Compat issues with assembly'; was: '{line}'");
+					// Finish reading stream
+					var reportContent = Environment.NewLine + "Current content:" + Environment.NewLine + String.Join (Environment.NewLine, content);
+					LogError ($"Exception report/file should start with: 'Compat issues with assembly ...'{reportContent}");
 					return null;
 				}
 
@@ -282,6 +324,17 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			}
 
 			return issues;
+		}
+
+		void LogError (string errorMessage)
+		{
+			var message = string.Empty;
+			if (!string.IsNullOrWhiteSpace (compatApiCommand)) {
+				errorMessage = $"{compatApiCommand}{Environment.NewLine}{errorMessage}";
+			}
+
+			Log.LogMessage (MessageImportance.High, errorMessage);
+			Log.LogError (errorMessage);
 		}
 	}
 }

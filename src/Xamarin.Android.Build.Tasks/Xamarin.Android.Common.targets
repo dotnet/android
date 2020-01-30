@@ -185,6 +185,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <AvailableItemName Include="AndroidJavaLibrary" />
   <AvailableItemName Include="AndroidJavaSource" />
   <AvailableItemName Include="AndroidLintConfig" />
+  <AvailableItemName Include="AndroidResourceAnalysisConfig" />
   <AvailableItemName Include="AndroidNativeLibrary" />
   <AvailableItemName Include="AndroidResource" />
   <AvailableItemName Include="AndroidBoundLayout" />
@@ -1931,9 +1932,11 @@ because xbuild doesn't support framework reference assemblies.
       <_AssembliesToLink Include="@(ResolvedAssemblies)" />
     </ItemGroup>
     <ItemGroup Condition=" '$(AndroidGenerateJniMarshalMethods)' == 'True' ">
-      <_JniAssembliesToLink Include="@(ResolvedAssemblies->'$(_JniMarshalMethodsOutputDir)%(Filename)%(Extension)')" />
-      <_AssembliesToLink Condition="Exists(%(Identity))" Include="@(_JniAssembliesToLink)" />
-      <_AssembliesToLink Condition="!Exists(@(JniAssembliesToLink))" Include="@(ResolvedAssemblies)" />
+      <_PossibleAssembliesToLink Include="@(ResolvedAssemblies)">
+        <JniAssembly>$(_JniMarshalMethodsOutputDir)%(Filename)%(Extension)</JniAssembly>
+      </_PossibleAssembliesToLink>
+      <_AssembliesToLink Condition="Exists(%(_PossibleAssembliesToLink.JniAssembly))" Include="%(_PossibleAssembliesToLink.JniAssembly)" />
+      <_AssembliesToLink Condition="!Exists(%(_PossibleAssembliesToLink.JniAssembly))" Include="%(_PossibleAssembliesToLink.Identity)" />
     </ItemGroup>
 
     <CreateProperty
@@ -2265,7 +2268,6 @@ because xbuild doesn't support framework reference assemblies.
 		_CheckDuplicateJavaLibraries;
 		UpdateAndroidAssets;
 		$(_AfterCreateBaseApkDependsOnTargets);
-		_PrepareCreateBaseApk;
 	</_CreateBaseApkDependsOnTargets>
 	<_CreateBaseApkInputs>
 		$(MSBuildAllProjects)
@@ -2279,7 +2281,7 @@ because xbuild doesn't support framework reference assemblies.
 </PropertyGroup>
 
 <Target Name="_CreateBaseApk"
-  DependsOnTargets="$(_CreateBaseApkDependsOnTargets);$(AfterGenerateAndroidManifest)"
+  DependsOnTargets="$(_CreateBaseApkDependsOnTargets);$(AfterGenerateAndroidManifest);_PrepareCreateBaseApk"
   Inputs="$(_CreateBaseApkInputs)"
   Outputs="$(_PackagedResources)">
 
@@ -3265,6 +3267,7 @@ because xbuild doesn't support framework reference assemblies.
       JavaOptions="$(JavaOptions)"
       JarPath="$(AndroidBundleToolJarPath)"
       AdbToolPath="$(AdbToolPath)"
+      AdbTarget="$(AdbTarget)"
       Aapt2ToolPath="$(Aapt2ToolPath)"
       AppBundle="$(_AppBundleIntermediate)"
       Output="$(_ApkSetIntermediate)"
@@ -3279,6 +3282,7 @@ because xbuild doesn't support framework reference assemblies.
       JavaOptions="$(JavaOptions)"
       JarPath="$(AndroidBundleToolJarPath)"
       AdbToolPath="$(AdbToolPath)"
+      AdbTarget="$(AdbTarget)"
       ApkSet="$(_ApkSetIntermediate)"
   />
 </Target>

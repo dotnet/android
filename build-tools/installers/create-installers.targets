@@ -108,7 +108,6 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\cil-strip.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\class-parse.exe" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\class-parse.pdb" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\FSharp.Compiler.CodeDom.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\FSharp.Core.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\generator.exe" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\generator.pdb" />

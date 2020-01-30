@@ -1078,5 +1078,29 @@ namespace Lib2
 				}
 			}
 		}
+
+		[Test]
+		[NonParallelizable]
+		public void AndroidXMigrationBug ()
+		{
+			var proj = new XamarinFormsAndroidApplicationProject ();
+			proj.PackageReferences.Add (KnownPackages.AndroidXMigration);
+			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
+			proj.PackageReferences.Add (KnownPackages.AndroidXBrowser);
+			proj.PackageReferences.Add (KnownPackages.AndroidXMediaRouter);
+			proj.PackageReferences.Add (KnownPackages.AndroidXLegacySupportV4);
+			proj.PackageReferences.Add (KnownPackages.AndroidXLifecycleLiveData);
+			proj.PackageReferences.Add (KnownPackages.XamarinGoogleAndroidMaterial);
+
+			string source = "class Foo { }";
+			proj.Sources.Add (new BuildItem.Source ("Foo.cs") { TextContent = () => source });
+
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
+				source = source.Replace ("Foo", "Bar");
+				proj.Touch ("Foo.cs");
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build should have succeeded.");
+			}
+		}
 	}
 }

@@ -242,6 +242,7 @@ class MemTest {
 			proj.PackageReferences.Add (KnownPackages.AndroidXBrowser);
 			proj.PackageReferences.Add (KnownPackages.AndroidXMediaRouter);
 			proj.PackageReferences.Add (KnownPackages.AndroidXLegacySupportV4);
+			proj.PackageReferences.Add (KnownPackages.AndroidXLifecycleLiveData);
 			proj.PackageReferences.Add (KnownPackages.XamarinGoogleAndroidMaterial);
 
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
@@ -713,6 +714,7 @@ namespace UnamedProject
 		}
 
 		[Test]
+		[NonParallelizable] // On MacOS, parallel /restore causes issues
 		public void BuildApplicationAndClean ([Values (false, true)] bool isRelease, [Values ("apk", "aab")] string packageFormat)
 		{
 			var proj = new XamarinFormsAndroidApplicationProject {
@@ -1064,6 +1066,7 @@ namespace UnamedProject
 		}
 
 		[Test]
+		[NonParallelizable] // On MacOS, parallel /restore causes issues
 		public void BuildProguardEnabledProject ([Values (true, false)] bool isRelease, [Values ("dx", "d8")] string dexTool, [Values ("", "proguard", "r8")] string linkTool)
 		{
 			var proj = new XamarinFormsAndroidApplicationProject {
@@ -3436,6 +3439,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 					KnownPackages.SupportFragment_27_0_2_1,
 					KnownPackages.SupportMediaCompat_27_0_2_1,
 					KnownPackages.GooglePlayServicesMaps_42_1021_1,
+					KnownPackages.Xamarin_Build_Download_0_4_11,
 				},
 			};
 			//NOTE: BuildingInsideVisualStudio prevents the projects from being built as dependencies
@@ -3603,6 +3607,19 @@ namespace UnnamedProject {
 				DexTool = dexTool,
 				LinkTool = linkTool,
 			};
+
+			//Add a BroadcastReceiver
+			proj.Sources.Add (new BuildItem.Source ("MyReceiver.cs") {
+				TextContent = () => @"
+using Android.Content;
+
+[BroadcastReceiver(Process = "":remote"", Name = ""foo.MyReceiver"")]
+public class MyReceiver : BroadcastReceiver
+{
+    public override void OnReceive(Context context, Intent intent) { }
+}",
+			});
+
 			//Okhttp and Okio
 			//https://github.com/square/okhttp
 			//https://github.com/square/okio
@@ -3625,23 +3642,23 @@ namespace UnnamedProject {
 				});
 			}
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "okio-1.13.0.jar") {
-				WebContent = "http://central.maven.org/maven2/com/squareup/okio/okio/1.13.0/okio-1.13.0.jar"
+				WebContent = "https://repo1.maven.org/maven2/com/squareup/okio/okio/1.13.0/okio-1.13.0.jar"
 			});
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "okhttp-3.8.0.jar") {
-				WebContent = "http://central.maven.org/maven2/com/squareup/okhttp3/okhttp/3.8.0/okhttp-3.8.0.jar"
+				WebContent = "https://repo1.maven.org/maven2/com/squareup/okhttp3/okhttp/3.8.0/okhttp-3.8.0.jar"
 			});
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "retrofit-2.3.0.jar") {
-				WebContent = "http://central.maven.org/maven2/com/squareup/retrofit2/retrofit/2.3.0/retrofit-2.3.0.jar"
+				WebContent = "https://repo1.maven.org/maven2/com/squareup/retrofit2/retrofit/2.3.0/retrofit-2.3.0.jar"
 			});
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "converter-gson-2.3.0.jar") {
-				WebContent = "http://central.maven.org/maven2/com/squareup/retrofit2/converter-gson/2.3.0/converter-gson-2.3.0.jar"
+				WebContent = "https://repo1.maven.org/maven2/com/squareup/retrofit2/converter-gson/2.3.0/converter-gson-2.3.0.jar"
 			});
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "gson-2.7.jar") {
-				WebContent = "http://central.maven.org/maven2/com/google/code/gson/gson/2.7/gson-2.7.jar"
+				WebContent = "https://repo1.maven.org/maven2/com/google/code/gson/gson/2.7/gson-2.7.jar"
 			});
 			//Twitter SDK https://mvnrepository.com/artifact/com.twitter.sdk.android/twitter-core/3.3.0
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidAarLibrary", "twitter-core-3.3.0.aar") {
-				WebContent = "http://repo.spring.io/libs-release/com/twitter/sdk/android/twitter-core/3.3.0/twitter-core-3.3.0.aar",
+				WebContent = "https://repo.spring.io/libs-release/com/twitter/sdk/android/twitter-core/3.3.0/twitter-core-3.3.0.aar",
 			});
 			/* The source is simple:
 			 *
@@ -3686,6 +3703,8 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 				var className = "Lmono/MonoRuntimeProvider;";
 				var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
 				FileAssert.Exists (dexFile);
+				Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
+				className = "Lmono/MonoRuntimeProvider_1;";
 				Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
 			}
 		}
@@ -4227,7 +4246,7 @@ namespace UnnamedProject
 				WebContent = "https://repo1.maven.org/maven2/org/jetbrains/kotlinx/kotlinx-coroutines-android/1.3.2/kotlinx-coroutines-android-1.3.2.jar"
 			});
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "gson-2.7.jar") {
-				WebContent = "http://central.maven.org/maven2/com/google/code/gson/gson/2.7/gson-2.7.jar"
+				WebContent = "https://repo1.maven.org/maven2/com/google/code/gson/gson/2.7/gson-2.7.jar"
 			});
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");

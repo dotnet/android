@@ -10,8 +10,8 @@ namespace xamarin::android
 	{
 	public:
 		simple_pointer_guard_type () = default;
-		simple_pointer_guard_type (T* tp)
-			: tp (tp)
+		simple_pointer_guard_type (T* _tp)
+			: tp (_tp)
 		{}
 		simple_pointer_guard_type (simple_pointer_guard_type &other) = delete;
 		simple_pointer_guard_type (const simple_pointer_guard_type &other) = delete;
@@ -71,8 +71,8 @@ namespace xamarin::android
 	{
 	public:
 		simple_pointer_guard () = default;
-		simple_pointer_guard (T* tp)
-			: simple_pointer_guard_type<T> (tp)
+		simple_pointer_guard (T* _tp)
+			: simple_pointer_guard_type<T> (_tp)
 		{}
 		simple_pointer_guard (simple_pointer_guard &other) = delete;
 		simple_pointer_guard (const simple_pointer_guard &other) = delete;
@@ -98,8 +98,8 @@ namespace xamarin::android
 	{
 	public:
 		simple_pointer_guard () = default;
-		simple_pointer_guard (T* tp)
-			: simple_pointer_guard_type<T> (tp)
+		simple_pointer_guard (T* _tp)
+			: simple_pointer_guard_type<T> (_tp)
 		{}
 		simple_pointer_guard (simple_pointer_guard &other) = delete;
 		simple_pointer_guard (const simple_pointer_guard &other) = delete;

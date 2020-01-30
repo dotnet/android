@@ -61,13 +61,13 @@ BasicUtilities utils;
 BasicAndroidSystem androidSystem;
 
 JNIEXPORT jint JNICALL
-JNI_OnLoad (JavaVM *vm, void *reserved)
+JNI_OnLoad ([[maybe_unused]] JavaVM *vm, [[maybe_unused]] void *reserved)
 {
 	return JNI_VERSION_1_6;
 }
 
 JNIEXPORT void JNICALL
-Java_mono_android_DebugRuntime_init (JNIEnv *env, jclass klass, jobjectArray runtimeApksJava,
+Java_mono_android_DebugRuntime_init (JNIEnv *env, [[maybe_unused]] jclass klass, jobjectArray runtimeApksJava,
                                      jstring runtimeNativeLibDir, jobjectArray appDirs,
                                      jobjectArray externalStorageDirs, jint androidApiLevel,
                                      jboolean embeddedDSOsEnabled)
@@ -77,9 +77,9 @@ Java_mono_android_DebugRuntime_init (JNIEnv *env, jclass klass, jobjectArray run
 	jstring_array_wrapper applicationDirs (env, appDirs);
 	jstring_array_wrapper runtimeApks (env, runtimeApksJava);
 
-	androidSystem.set_primary_override_dir (env, applicationDirs [0]);
+	androidSystem.set_primary_override_dir (applicationDirs [0]);
 	androidSystem.set_override_dir (0, androidSystem.get_primary_override_dir ());
-	androidSystem.setup_app_library_directories (env, runtimeApks, applicationDirs, androidApiLevel);
+	androidSystem.setup_app_library_directories (runtimeApks, applicationDirs, androidApiLevel);
 
 	jstring_wrapper jstr (env);
 	jstr = env->GetObjectArrayElement (externalStorageDirs, 0);
@@ -96,7 +96,7 @@ Java_mono_android_DebugRuntime_init (JNIEnv *env, jclass klass, jobjectArray run
 	}
 
 	if (runtimeNativeLibDir != nullptr) {
-		jstring_wrapper jstr (env, runtimeNativeLibDir);
+		jstr = runtimeNativeLibDir;
 		androidSystem.set_runtime_libdir (utils.strdup_new (jstr.get_cstr ()));
 		log_warn (LOG_DEFAULT, "Using runtime path: %s", androidSystem.get_runtime_libdir ());
 	}
@@ -146,7 +146,7 @@ copy_file_to_internal_location (char *to_dir, char *from_dir, char *file)
 }
 #else  /* !defined (ANDROID) */
 static void
-copy_file_to_internal_location (char *to_dir, char *from_dir, char* file)
+copy_file_to_internal_location ([[maybe_unused]] char *to_dir, [[maybe_unused]] char *from_dir, [[maybe_unused]] char* file)
 {
 }
 #endif /* defined (ANDROID) */
@@ -299,7 +299,7 @@ get_libmonosgen_path ()
 }
 
 void
-log_info (LogCategories category, const char *format, ...)
+log_info ([[maybe_unused]] LogCategories category, const char *format, ...)
 {
 	va_list args;
 
@@ -307,7 +307,7 @@ log_info (LogCategories category, const char *format, ...)
 }
 
 void
-log_info_nocheck (LogCategories category, const char *format, ...)
+log_info_nocheck ([[maybe_unused]] LogCategories category, const char *format, ...)
 {
 	va_list args;
 
@@ -317,21 +317,21 @@ log_info_nocheck (LogCategories category, const char *format, ...)
 	DO_LOG (ANDROID_LOG_INFO, TAG, format, args);
 }
 
-void log_error (LogCategories category, const char* format, ...)
+void log_error ([[maybe_unused]] LogCategories category, const char* format, ...)
 {
 	va_list args;
 
 	DO_LOG (ANDROID_LOG_ERROR, TAG, format, args);
 }
 
-void log_fatal (LogCategories category, const char* format, ...)
+void log_fatal ([[maybe_unused]] LogCategories category, const char* format, ...)
 {
 	va_list args;
 
 	DO_LOG (ANDROID_LOG_FATAL, TAG, format, args);
 }
 
-void log_warn (LogCategories category, const char* format, ...)
+void log_warn ([[maybe_unused]] LogCategories category, const char* format, ...)
 {
 	va_list args;
 

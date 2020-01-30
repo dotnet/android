@@ -184,7 +184,7 @@ MonodroidRuntime::setup_bundled_app (const char *dso_name)
 }
 
 void
-MonodroidRuntime::thread_start (MonoProfiler *prof, uintptr_t tid)
+MonodroidRuntime::thread_start ([[maybe_unused]] MonoProfiler *prof, [[maybe_unused]] uintptr_t tid)
 {
 	JNIEnv* env;
 	int r;
@@ -202,7 +202,7 @@ MonodroidRuntime::thread_start (MonoProfiler *prof, uintptr_t tid)
 }
 
 void
-MonodroidRuntime::thread_end (MonoProfiler *prof, uintptr_t tid)
+MonodroidRuntime::thread_end ([[maybe_unused]] MonoProfiler *prof, [[maybe_unused]] uintptr_t tid)
 {
 	int r;
 	r = osBridge.get_jvm ()->DetachCurrentThread ();
@@ -232,26 +232,26 @@ MonodroidRuntime::log_jit_event (MonoMethod *method, const char *event_name)
 }
 
 void
-MonodroidRuntime::jit_begin (MonoProfiler *prof, MonoMethod *method)
+MonodroidRuntime::jit_begin ([[maybe_unused]] MonoProfiler *prof, MonoMethod *method)
 {
 	monodroidRuntime.log_jit_event (method, "begin");
 }
 
 void
-MonodroidRuntime::jit_failed (MonoProfiler *prof, MonoMethod *method)
+MonodroidRuntime::jit_failed ([[maybe_unused]] MonoProfiler *prof, MonoMethod *method)
 {
 	monodroidRuntime.log_jit_event (method, "failed");
 }
 
 void
-MonodroidRuntime::jit_done (MonoProfiler *prof, MonoMethod *method, MonoJitInfo* jinfo)
+MonodroidRuntime::jit_done ([[maybe_unused]] MonoProfiler *prof, MonoMethod *method, [[maybe_unused]] MonoJitInfo* jinfo)
 {
 	monodroidRuntime.log_jit_event (method, "done");
 }
 
 #ifndef RELEASE
 MonoAssembly*
-MonodroidRuntime::open_from_update_dir (MonoAssemblyName *aname, char **assemblies_path, void *user_data)
+MonodroidRuntime::open_from_update_dir (MonoAssemblyName *aname, [[maybe_unused]] char **assemblies_path, [[maybe_unused]] void *user_data)
 {
 	MonoAssembly *result = nullptr;
 
@@ -321,7 +321,7 @@ MonodroidRuntime::open_from_update_dir (MonoAssemblyName *aname, char **assembli
 #endif
 
 bool
-MonodroidRuntime::should_register_file (const char *filename)
+MonodroidRuntime::should_register_file ([[maybe_unused]] const char *filename)
 {
 #ifndef RELEASE
 	for (size_t i = 0; i < AndroidSystem::MAX_OVERRIDES; ++i) {
@@ -342,7 +342,7 @@ MonodroidRuntime::should_register_file (const char *filename)
 }
 
 inline void
-MonodroidRuntime::gather_bundled_assemblies (JNIEnv *env, jstring_array_wrapper &runtimeApks, bool register_debug_symbols, size_t *out_user_assemblies_count)
+MonodroidRuntime::gather_bundled_assemblies (jstring_array_wrapper &runtimeApks, size_t *out_user_assemblies_count)
 {
 #if defined(DEBUG) || !defined (ANDROID)
 	for (size_t i = 0; i < AndroidSystem::MAX_OVERRIDES; ++i) {
@@ -443,7 +443,7 @@ MonodroidRuntime::monodroid_debug_accept (int sock, struct sockaddr_in addr)
 #endif
 
 inline jint
-MonodroidRuntime::Java_JNI_OnLoad (JavaVM *vm, void *reserved)
+MonodroidRuntime::Java_JNI_OnLoad (JavaVM *vm, [[maybe_unused]] void *reserved)
 {
 	JNIEnv *env;
 
@@ -602,7 +602,7 @@ MonodroidRuntime::set_debug_options (void)
 }
 
 void
-MonodroidRuntime::mono_runtime_init (char *runtime_args)
+MonodroidRuntime::mono_runtime_init ([[maybe_unused]] char *runtime_args)
 {
 #if defined (DEBUG) && !defined (WINDOWS)
 	RuntimeOptions options;
@@ -778,11 +778,11 @@ MonodroidRuntime::mono_runtime_init (char *runtime_args)
 }
 
 MonoDomain*
-MonodroidRuntime::create_domain (JNIEnv *env, jclass runtimeClass, jstring_array_wrapper &runtimeApks, jobject loader, bool is_root_domain)
+MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks, bool is_root_domain)
 {
 	size_t user_assemblies_count   = 0;;
 
-	gather_bundled_assemblies (env, runtimeApks, embeddedAssemblies.get_register_debug_symbols (), &user_assemblies_count);
+	gather_bundled_assemblies (runtimeApks, &user_assemblies_count);
 
 	if (!mono_mkbundle_init && user_assemblies_count == 0 && androidSystem.count_override_assemblies () == 0 && !is_running_on_desktop) {
 		log_fatal (LOG_DEFAULT, "No assemblies found in '%s' or '%s'. Assuming this is part of Fast Deployment. Exiting...",
@@ -1077,7 +1077,7 @@ MonodroidRuntime::monodroid_dlopen_log_and_return (void *handle, char **err, con
 }
 
 void*
-MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err, void *user_data)
+MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err, [[maybe_unused]] void *user_data)
 {
 	int dl_flags = monodroidRuntime.convert_dl_flags (flags);
 	bool libmonodroid_fallback = false;
@@ -1119,7 +1119,7 @@ MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err, voi
 }
 
 void*
-MonodroidRuntime::monodroid_dlsym (void *handle, const char *name, char **err, void *user_data)
+MonodroidRuntime::monodroid_dlsym (void *handle, const char *name, char **err, [[maybe_unused]] void *user_data)
 {
 	void *s;
 
@@ -1133,7 +1133,7 @@ MonodroidRuntime::monodroid_dlsym (void *handle, const char *name, char **err, v
 }
 
 inline void
-MonodroidRuntime::set_environment_variable_for_directory (JNIEnv *env, const char *name, jstring_wrapper &value, bool createDirectory, mode_t mode)
+MonodroidRuntime::set_environment_variable_for_directory (const char *name, jstring_wrapper &value, bool createDirectory, mode_t mode)
 {
 	if (createDirectory) {
 		int rv = utils.create_directory (value.get_cstr (), mode);
@@ -1156,7 +1156,7 @@ MonodroidRuntime::create_xdg_directory (jstring_wrapper& home, const char *relat
 }
 
 inline void
-MonodroidRuntime::create_xdg_directories_and_environment (JNIEnv *env, jstring_wrapper &homeDir)
+MonodroidRuntime::create_xdg_directories_and_environment (jstring_wrapper &homeDir)
 {
 	create_xdg_directory (homeDir, ".local/share", "XDG_DATA_HOME");
 	create_xdg_directory (homeDir, ".config", "XDG_CONFIG_HOME");
@@ -1204,7 +1204,7 @@ MonodroidRuntime::set_trace_options (void)
 }
 
 inline void
-MonodroidRuntime::set_profile_options (JNIEnv *env)
+MonodroidRuntime::set_profile_options ()
 {
 	constexpr const char mlpd_ext[] = "mlpd";
 	constexpr const char aot_ext[] = "aotprofile";
@@ -1314,7 +1314,7 @@ MonodroidRuntime::disable_external_signal_handlers (void)
 }
 
 inline void
-MonodroidRuntime::load_assembly (MonoDomain *domain, JNIEnv *env, jstring_wrapper &assembly)
+MonodroidRuntime::load_assembly (MonoDomain *domain, jstring_wrapper &assembly)
 {
 	timing_period total_time;
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)))
@@ -1348,7 +1348,7 @@ MonodroidRuntime::load_assembly (MonoDomain *domain, JNIEnv *env, jstring_wrappe
 }
 
 inline void
-MonodroidRuntime::load_assemblies (MonoDomain *domain, JNIEnv *env, jstring_array_wrapper &assemblies)
+MonodroidRuntime::load_assemblies (MonoDomain *domain, jstring_array_wrapper &assemblies)
 {
 	timing_period total_time;
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)))
@@ -1356,7 +1356,7 @@ MonodroidRuntime::load_assemblies (MonoDomain *domain, JNIEnv *env, jstring_arra
 
 	for (size_t i = 0; i < assemblies.get_length (); ++i) {
 		jstring_wrapper &assembly = assemblies [i];
-		load_assembly (domain, env, assembly);
+		load_assembly (domain, assembly);
 	}
 
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
@@ -1367,17 +1367,18 @@ MonodroidRuntime::load_assemblies (MonoDomain *domain, JNIEnv *env, jstring_arra
 }
 
 [[maybe_unused]] static void
-monodroid_Mono_UnhandledException_internal (MonoException *ex)
+monodroid_Mono_UnhandledException_internal ([[maybe_unused]] MonoException *ex)
 {
 	// Do nothing with it here, we let the exception naturally propagate on the managed side
 }
 
 MonoDomain*
 MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass, jstring_array_wrapper &runtimeApks,
-                                                jstring_array_wrapper &assemblies, jobjectArray assembliesBytes, jstring_array_wrapper &assembliesPaths,
-                                                jobject loader, bool is_root_domain, bool force_preload_assemblies)
+                                                jstring_array_wrapper &assemblies, [[maybe_unused]] jobjectArray assembliesBytes,
+												[[maybe_unused]] jstring_array_wrapper &assembliesPaths, jobject loader, bool is_root_domain,
+												bool force_preload_assemblies)
 {
-	MonoDomain* domain = create_domain (env, runtimeClass, runtimeApks, loader, is_root_domain);
+	MonoDomain* domain = create_domain (env, runtimeApks, is_root_domain);
 
 	// When running on desktop, the root domain is only a dummy so don't initialize it
 	if constexpr (is_running_on_desktop) {
@@ -1391,7 +1392,7 @@ MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass
 		designerAssemblies.add_or_update_from_java (domain, env, assemblies, assembliesBytes, assembliesPaths);
 #endif
 	if (androidSystem.is_assembly_preload_enabled () || (is_running_on_desktop && force_preload_assemblies))
-		load_assemblies (domain, env, assemblies);
+		load_assemblies (domain, assemblies);
 	init_android_runtime (domain, env, runtimeClass, loader);
 
 	osBridge.add_monodroid_domain (domain);
@@ -1402,7 +1403,7 @@ MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass
 inline void
 MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
                                                           jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader,
-                                                          jobjectArray externalStorageDirs, jobjectArray assembliesJava,
+                                                          [[maybe_unused]] jobjectArray externalStorageDirs, jobjectArray assembliesJava,
                                                           jint apiLevel, jboolean embeddedDSOsEnabled, jboolean isEmulator)
 {
 	init_logging_categories ();
@@ -1422,21 +1423,21 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	utils.monodroid_store_package_name (application_config.android_package_name);
 
 	jstring_wrapper jstr (env, lang);
-	set_environment_variable (env, "LANG", jstr);
+	set_environment_variable ("LANG", jstr);
 
 	androidSystem.setup_environment ();
 
 	jstring_array_wrapper applicationDirs (env, appDirs);
 	jstring_wrapper &home = applicationDirs[0];
-	set_environment_variable_for_directory (env, "TMPDIR", applicationDirs[1]);
-	set_environment_variable_for_directory (env, "HOME", home);
-	create_xdg_directories_and_environment (env, home);
-	androidSystem.set_primary_override_dir (env, home);
+	set_environment_variable_for_directory ("TMPDIR", applicationDirs[1]);
+	set_environment_variable_for_directory ("HOME", home);
+	create_xdg_directories_and_environment (home);
+	androidSystem.set_primary_override_dir (home);
 
 	disable_external_signal_handlers ();
 
 	jstring_array_wrapper runtimeApks (env, runtimeApksJava);
-	androidSystem.setup_app_library_directories (env, runtimeApks, applicationDirs, apiLevel);
+	androidSystem.setup_app_library_directories (runtimeApks, applicationDirs, apiLevel);
 
 	init_reference_logging (androidSystem.get_primary_override_dir ());
 	androidSystem.create_update_dir (androidSystem.get_primary_override_dir ());
@@ -1468,7 +1469,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 		log_warn (LOG_DEFAULT, "Using runtime path: %s", androidSystem.get_runtime_libdir ());
 	}
 
-	androidSystem.setup_process_args (env, runtimeApks);
+	androidSystem.setup_process_args (runtimeApks);
 
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)) && !(log_timing_categories & LOG_TIMING_BARE)) {
 		mono_counters_enable (static_cast<int>(XA_LOG_COUNTERS));
@@ -1481,7 +1482,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 
 	mono_dl_fallback_register (monodroid_dlopen, monodroid_dlsym, nullptr, nullptr);
 
-	set_profile_options (env);
+	set_profile_options ();
 
 	set_trace_options ();
 
@@ -1590,8 +1591,8 @@ JNI_OnLoad (JavaVM *vm, void *reserved)
 JNIEXPORT void JNICALL
 Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
                                 jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader,
-                                jobjectArray externalStorageDirs, jobjectArray assembliesJava, jstring packageName,
-                                jint apiLevel, jobjectArray environmentVariables)
+                                jobjectArray externalStorageDirs, jobjectArray assembliesJava, [[maybe_unused]] jstring packageName,
+                                jint apiLevel, [[maybe_unused]] jobjectArray environmentVariables)
 {
 	monodroidRuntime.Java_mono_android_Runtime_initInternal (
 		env,
@@ -1632,7 +1633,7 @@ Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang,
 }
 
 inline void
-MonodroidRuntime::Java_mono_android_Runtime_register (JNIEnv *env, jclass klass, jstring managedType, jclass nativeClass, jstring methods)
+MonodroidRuntime::Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType, jclass nativeClass, jstring methods)
 {
 	timing_period total_time;
 
@@ -1684,9 +1685,9 @@ MonodroidRuntime::Java_mono_android_Runtime_register (JNIEnv *env, jclass klass,
 }
 
 JNIEXPORT void
-JNICALL Java_mono_android_Runtime_register (JNIEnv *env, jclass klass, jstring managedType, jclass nativeClass, jstring methods)
+JNICALL Java_mono_android_Runtime_register (JNIEnv *env, [[maybe_unused]] jclass klass, jstring managedType, jclass nativeClass, jstring methods)
 {
-	monodroidRuntime.Java_mono_android_Runtime_register (env, klass, managedType, nativeClass, methods);
+	monodroidRuntime.Java_mono_android_Runtime_register (env, managedType, nativeClass, methods);
 }
 
 // DO NOT USE ON NORMAL X.A
@@ -1724,7 +1725,7 @@ MonodroidRuntime::Java_mono_android_Runtime_createNewContextWithData (JNIEnv *en
 }
 
 inline void
-MonodroidRuntime::Java_mono_android_Runtime_switchToContext (JNIEnv *env, jclass klass, jint contextID)
+MonodroidRuntime::Java_mono_android_Runtime_switchToContext (JNIEnv *env, jint contextID)
 {
 	log_info (LOG_DEFAULT, "SWITCHING CONTEXT");
 	MonoDomain *domain = mono_domain_get_by_id ((int)contextID);
@@ -1737,7 +1738,7 @@ MonodroidRuntime::Java_mono_android_Runtime_switchToContext (JNIEnv *env, jclass
 }
 
 inline void
-MonodroidRuntime::Java_mono_android_Runtime_destroyContexts (JNIEnv *env, jclass klass, jintArray array)
+MonodroidRuntime::Java_mono_android_Runtime_destroyContexts (JNIEnv *env, jintArray array)
 {
 	MonoDomain *root_domain = mono_get_root_domain ();
 	mono_jit_thread_attach (root_domain);
@@ -1841,19 +1842,19 @@ JNICALL Java_mono_android_Runtime_createNewContext (JNIEnv *env, jclass klass, j
 }
 
 JNIEXPORT void
-JNICALL Java_mono_android_Runtime_switchToContext (JNIEnv *env, jclass klass, jint contextID)
+JNICALL Java_mono_android_Runtime_switchToContext (JNIEnv *env, [[maybe_unused]] jclass klass, jint contextID)
 {
-	monodroidRuntime.Java_mono_android_Runtime_switchToContext (env, klass, contextID);
+	monodroidRuntime.Java_mono_android_Runtime_switchToContext (env, contextID);
 }
 
 JNIEXPORT void
-JNICALL Java_mono_android_Runtime_destroyContexts (JNIEnv *env, jclass klass, jintArray array)
+JNICALL Java_mono_android_Runtime_destroyContexts (JNIEnv *env, [[maybe_unused]] jclass klass, jintArray array)
 {
-	monodroidRuntime.Java_mono_android_Runtime_destroyContexts (env, klass, array);
+	monodroidRuntime.Java_mono_android_Runtime_destroyContexts (env, array);
 }
 
 JNIEXPORT void
-JNICALL Java_mono_android_Runtime_propagateUncaughtException (JNIEnv *env, jclass klass, jobject javaThread, jthrowable javaException)
+JNICALL Java_mono_android_Runtime_propagateUncaughtException (JNIEnv *env, [[maybe_unused]] jclass klass, jobject javaThread, jthrowable javaException)
 {
 	MonoDomain *domain = mono_domain_get ();
 	monodroidRuntime.propagate_uncaught_exception (domain, env, javaThread, javaException);

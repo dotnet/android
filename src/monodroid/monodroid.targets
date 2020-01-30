@@ -3,7 +3,6 @@
   <Import Project="..\..\external\Java.Interop\bin\Build$(Configuration)\JdkInfo.props" Condition="Exists('..\..\external\Java.Interop\bin\Build$(Configuration)\JdkInfo.props')"/>
   <Import Project="monodroid.props" />
   <Import Project="monodroid.projitems" />
-  <Import Project="..\..\build-tools\scripts\RequiredPrograms.targets" />
   <Import Project="..\..\build-tools\scripts\JavaInteropDllConfigs.targets" />
   <Import Project="sources.projitems" Condition="Exists ('sources.projitems')" />
   <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.GenerateMonoDroidIncludes" />

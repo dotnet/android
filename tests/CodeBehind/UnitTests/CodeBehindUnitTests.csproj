@@ -1,43 +1,20 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{F4DAFD78-BE76-46C9-A1AD-85D8C91CD77B}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <RootNamespace>CodeBehindUnitTests</RootNamespace>
-    <AssemblyName>CodeBehindUnitTests</AssemblyName>
+    <TargetFramework>net472</TargetFramework>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <OutputPath>..\..\..\bin\Test$(Configuration)\CodeBehind</OutputPath>
   </PropertyGroup>
+
   <Import Project="..\..\..\Configuration.props" />
   <Import Project="..\..\..\build-tools\scripts\MSBuildReferences.projitems" />
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <Optimize>false</Optimize>
-    <OutputPath>..\..\..\bin\TestDebug\CodeBehind</OutputPath>
-    <DefineConstants>DEBUG;</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <Optimize>true</Optimize>
-    <OutputPath>..\..\..\bin\TestRelease\CodeBehind</OutputPath>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="System" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="BuildTests.cs" />
-  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="NUnit" Version="3.11.0" />
   </ItemGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Xamarin.ProjectTools.csproj">
-      <Project>{2DD1EE75-6D8D-4653-A800-0A24367F7F38}</Project>
-      <Name>Xamarin.ProjectTools</Name>
-    </ProjectReference>
+    <ProjectReference Include="..\..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Xamarin.ProjectTools.csproj" />
   </ItemGroup>
+
 </Project>

@@ -79,6 +79,10 @@
       Outputs="$(IntermediateOutputPath)mcw\Mono.Android.projitems">
     <MakeDir Directories="$(IntermediateOutputPath)mcw" />
     <PropertyGroup>
+      <_ApiVersions Condition="Exists('$(AndroidSdkDirectory)\platforms\android-$(AndroidApiLevel)\data\api-versions.xml')">"$(AndroidSdkDirectory)\platforms\android-$(AndroidApiLevel)\data\api-versions.xml"</_ApiVersions>
+      <_ApiVersions Condition="'$(_ApiVersions)'==''">"$(AndroidSdkDirectory)\platform-tools\api\api-versions.xml"</_ApiVersions>
+    </PropertyGroup>
+    <PropertyGroup>
       <Generator>"$(XAInstallPrefix)xbuild\Xamarin\Android\generator.exe"</Generator>
       <_GenFlags>--public --product-version=7</_GenFlags>
       <_ApiLevel>--api-level=$(AndroidApiLevel)</_ApiLevel>
@@ -87,7 +91,7 @@
       <_Fixup>--fixup=metadata</_Fixup>
       <_Enums1>--preserve-enums --enumflags=enumflags --enumfields=map.csv --enummethods=methodmap.csv</_Enums1>
       <_Enums2>--enummetadata=$(IntermediateOutputPath)mcw\enummetadata</_Enums2>
-      <_Versions>--apiversions="$(AndroidSdkDirectory)\platform-tools\api\api-versions.xml"</_Versions>
+      <_Versions>--apiversions=$(_ApiVersions)</_Versions>
       <_Annotations>--annotations="$(AndroidSdkDirectory)\platform-tools\api\annotations.zip"</_Annotations>
       <_Assembly>--assembly="Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"</_Assembly>
       <_TypeMap>--type-map-report=$(IntermediateOutputPath)mcw\type-mapping.txt</_TypeMap>
@@ -173,7 +177,7 @@
       Inputs="$(TargetPath);@(ApiCompatibilityFiles)"
       Outputs="$(IntermediateOutputPath)CheckApiCompatibility.stamp">
     <CheckApiCompatibility
-        ApiCompatPath="$([System.Environment]::GetFolderPath(SpecialFolder.UserProfile))\.nuget\packages\microsoft.dotnet.apicompat\5.0.0-beta.19606.1\tools\net472\"
+        ApiCompatPath="$(XamarinAndroidSourcePath)\packages\microsoft.dotnet.apicompat\5.0.0-beta.20078.1\tools\net472\"
         ApiLevel="$(AndroidFrameworkVersion)"
         LastStableApiLevel="$(AndroidLatestStableFrameworkVersion)"
         TargetImplementationPath="$(OutputPath)"

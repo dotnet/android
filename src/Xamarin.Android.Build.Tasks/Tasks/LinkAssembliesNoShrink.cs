@@ -59,7 +59,7 @@ namespace Xamarin.Android.Tasks
 
 					if (!MTProfile.IsSdkAssembly (source.ItemSpec) && !MTProfile.IsProductAssembly (source.ItemSpec)) {
 						assemblyDefinition = resolver.GetAssembly (source.ItemSpec);
-						step.CheckAppDomainUsage (assemblyDefinition, (string msg) => Log.LogCodedWarning ("XA2000", msg));
+						step.CheckAppDomainUsage (assemblyDefinition, (string msg) => Log.LogMessageFromText (msg, MessageImportance.High));
 					}
 
 					// Only run the step on "MonoAndroid" assemblies

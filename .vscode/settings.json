@@ -1,5 +1,5 @@
 {
-    "nxunitExplorer.nunit": "packages/NUnit.ConsoleRunner.3.9.0/tools/nunit3-console.exe",
+    "nxunitExplorer.nunit": "packages/nunit.consolerunner/3.9.0/tools/nunit3-console.exe",
     "nxunitExplorer.modules": [
         "bin/TestDebug/MSBuildDeviceIntegration/MSBuildDeviceIntegration.dll",
         "bin/TestDebug/Xamarin.Android.Build.Tests.dll",

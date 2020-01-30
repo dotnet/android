@@ -365,21 +365,21 @@ _monodroid_freeifaddrs (struct _monodroid_ifaddrs *ifa)
 }
 
 static void
-get_ifaddrs_impl (int (**getifaddrs_impl) (struct _monodroid_ifaddrs **ifap), void (**freeifaddrs_impl) (struct _monodroid_ifaddrs *ifa))
+get_ifaddrs_impl (int (**getifaddrs_implementation) (struct _monodroid_ifaddrs **ifap), void (**freeifaddrs_implementation) (struct _monodroid_ifaddrs *ifa))
 {
 	void *libc;
 
-	assert (getifaddrs_impl);
-	assert (freeifaddrs_impl);
+	assert (getifaddrs_implementation);
+	assert (freeifaddrs_implementation);
 
 	libc = dlopen ("libc.so", RTLD_NOW);
 	if (libc) {
-		*getifaddrs_impl = reinterpret_cast<int (*)(struct _monodroid_ifaddrs**)> (dlsym (libc, "getifaddrs"));
-		if (*getifaddrs_impl)
-			*freeifaddrs_impl = reinterpret_cast<void (*) (struct _monodroid_ifaddrs*)> (dlsym (libc, "freeifaddrs"));
+		*getifaddrs_implementation = reinterpret_cast<int (*)(struct _monodroid_ifaddrs**)> (dlsym (libc, "getifaddrs"));
+		if (*getifaddrs_implementation)
+			*freeifaddrs_implementation = reinterpret_cast<void (*) (struct _monodroid_ifaddrs*)> (dlsym (libc, "freeifaddrs"));
 	}
 
-	if (!*getifaddrs_impl) {
+	if (!*getifaddrs_implementation) {
 		log_info (LOG_NET, "This libc does not have getifaddrs/freeifaddrs, using Xamarin's\n");
 	} else {
 		log_info (LOG_NET, "This libc has getifaddrs/freeifaddrs\n");
