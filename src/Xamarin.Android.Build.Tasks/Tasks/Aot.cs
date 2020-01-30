@@ -84,7 +84,7 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
-			if (EnableLLVM && !NdkUtil.Init (Log, AndroidNdkDirectory))
+			if (EnableLLVM && !NdkUtil.Init (LogCodedError, AndroidNdkDirectory))
 				return false;
 
 			return base.RunTask ();
@@ -174,11 +174,6 @@ namespace Xamarin.Android.Tasks
 			var builder = new CommandLineBuilder();
 			builder.AppendFileNameIfNotNull(fileName);
 			return builder.ToString();
-		}
-
-		static bool ValidateAotConfiguration (TaskLoggingHelper log, AndroidTargetArch arch, bool enableLLVM)
-		{
-			return true;
 		}
 
 		int GetNdkApiLevel(string androidNdkPath, string androidApiLevel, AndroidTargetArch arch)
@@ -312,12 +307,7 @@ namespace Xamarin.Android.Tasks
 					throw new Exception ("Unsupported Android target architecture ABI: " + abi);
 				}
 
-				if (EnableLLVM && !NdkUtil.ValidateNdkPlatform (Log, AndroidNdkDirectory, arch, enableLLVM:EnableLLVM)) {
-					yield return Config.Invalid;
-					yield break;
-				}
-
-				if (!ValidateAotConfiguration(Log, arch, EnableLLVM)) {
+				if (EnableLLVM && !NdkUtil.ValidateNdkPlatform (LogMessage, LogCodedError, AndroidNdkDirectory, arch, enableLLVM:EnableLLVM)) {
 					yield return Config.Invalid;
 					yield break;
 				}
