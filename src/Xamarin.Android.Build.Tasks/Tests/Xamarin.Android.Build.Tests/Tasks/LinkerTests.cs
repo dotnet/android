@@ -124,8 +124,9 @@ namespace Xamarin.Android.Build.Tests
 			var projDirectory = Path.Combine ("temp", testName);
 			using (var b = CreateApkBuilder (projDirectory)) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "1 Warning(s)"), "MSBuild should count 1 warning.");
-				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "warning XA2000: Use of AppDomain.CreateDomain()"), "Should warn about creating AppDomain.");
+				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "2 Warning(s)"), "MSBuild should count 2 warnings.");
+				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "warning CS0618: 'AppDomain.CreateDomain(string)' is obsolete: 'AppDomain.CreateDomain will no longer be supported in .NET 5 and later."), "Should warn CS0618 about creating AppDomain.");
+				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "warning XA2000: Use of AppDomain.CreateDomain()"), "Should warn XA2000 about creating AppDomain.");
 			}
 		}
 	}
