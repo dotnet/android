@@ -6,7 +6,7 @@ namespace Android.Runtime
 	public class InputStreamInvoker : Stream
 	{
 		public Java.IO.InputStream BaseInputStream {get; private set;}
-		public Java.Nio.Channels.FileChannel BaseFileChannel {get; private set;}
+		protected Java.Nio.Channels.FileChannel BaseFileChannel {get; set;}
 
 		public InputStreamInvoker (Java.IO.InputStream stream)
 		{
@@ -16,7 +16,7 @@ namespace Android.Runtime
 			BaseInputStream = stream;
 
 			Java.IO.FileInputStream fileStream = stream as Java.IO.FileInputStream;
-			if (fileStream is object)
+			if (fileStream != null)
 				BaseFileChannel = fileStream.Channel;
 		}
 
@@ -98,22 +98,21 @@ namespace Android.Runtime
 
 		public override long Seek (long offset, SeekOrigin origin)
 		{
-			if (BaseFileChannel is object) {
-				switch (origin) {
-				case SeekOrigin.Begin:
-					BaseFileChannel.Position (offset);
-					break;
-				case SeekOrigin.Current:
-					BaseFileChannel.Position (BaseFileChannel.Position() + offset);
-					break;
-				case SeekOrigin.End:
-					BaseFileChannel.Position (BaseFileChannel.Size() + offset);
-					break;
-				}
-				return BaseFileChannel.Position ();
-			} else {
-				throw new NotSupportedException ();
+			if (BaseFileChannel == null)
+				throw new NotSupportedException();
+
+			switch (origin) {
+			case SeekOrigin.Begin:
+				BaseFileChannel.Position (offset);
+				break;
+			case SeekOrigin.Current:
+				BaseFileChannel.Position (BaseFileChannel.Position() + offset);
+				break;
+			case SeekOrigin.End:
+				BaseFileChannel.Position (BaseFileChannel.Size() + offset);
+				break;
 			}
+			return BaseFileChannel.Position ();
 		}
 
 		public override void SetLength (long value)
@@ -127,12 +126,12 @@ namespace Android.Runtime
 		}
 
 		public override bool CanRead { get { return true; } }
-		public override bool CanSeek { get { return (BaseFileChannel is object); } }
+		public override bool CanSeek { get { return (BaseFileChannel != null); } }
 		public override bool CanWrite { get { return false; } }
 
 		public override long Length {
 			get {
-				if (BaseFileChannel is object)
+				if (BaseFileChannel != null)
 					return BaseFileChannel.Size ();
 				else
 					throw new NotSupportedException ();
@@ -141,13 +140,13 @@ namespace Android.Runtime
 
 		public override long Position {
 			get {
-				if (BaseFileChannel is object)
+				if (BaseFileChannel != null)
 					return BaseFileChannel.Position ();
 				else
 					throw new NotSupportedException ();
 			}
 			set {
-				if (BaseFileChannel is object)
+				if (BaseFileChannel != null)
 					BaseFileChannel.Position (value);
 				else
 					throw new NotSupportedException ();
