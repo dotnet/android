@@ -347,6 +347,10 @@
         LabelSuffix="-$(Configuration)$(TestsFlavor)"
         ContinueOnError="ErrorAndContinue"
     />
+    <Exec
+        Command="&quot;$(XAInstallPrefix)xbuild\Xamarin\Android\$(HostOS)\apkdiff&quot; -v -c &quot;HEAD/`git branch --show-current`: `git rev-parse HEAD`&quot; -s &quot;%(_AllArchives.Identity)&quot;"
+        ContinueOnError="ErrorAndContinue"
+    />
   </Target>
   <Target Name="CheckBootTimes"
       DependsOnTargets="AcquireAndroidTarget;ReleaseAndroidTarget">
