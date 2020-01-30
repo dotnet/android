@@ -6,13 +6,18 @@ namespace Android.Runtime
 	public class InputStreamInvoker : Stream
 	{
 		public Java.IO.InputStream BaseInputStream {get; private set;}
+		public Java.Nio.Channels.FileChannel BaseFileChannel {get; private set;}
 
 		public InputStreamInvoker (Java.IO.InputStream stream)
 		{
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 
-			this.BaseInputStream = stream;
+			BaseInputStream = stream;
+
+			Java.IO.FileInputStream fileStream = stream as Java.IO.FileInputStream;
+			if (fileStream is object)
+				BaseFileChannel = fileStream.Channel;
 		}
 
 		//
@@ -30,6 +35,7 @@ namespace Android.Runtime
 		{
 			if (disposing && BaseInputStream != null) {
 				try {
+					BaseFileChannel = null;
 					BaseInputStream.Close ();
 					BaseInputStream.Dispose ();
 					BaseInputStream = null;
@@ -92,7 +98,22 @@ namespace Android.Runtime
 
 		public override long Seek (long offset, SeekOrigin origin)
 		{
-			throw new NotSupportedException ();
+			if (BaseFileChannel is object) {
+				switch (origin) {
+				case SeekOrigin.Begin:
+					BaseFileChannel.Position (offset);
+					break;
+				case SeekOrigin.Current:
+					BaseFileChannel.Position (BaseFileChannel.Position() + offset);
+					break;
+				case SeekOrigin.End:
+					BaseFileChannel.Position (BaseFileChannel.Size() + offset);
+					break;
+				}
+				return BaseFileChannel.Position ();
+			} else {
+				throw new NotSupportedException ();
+			}
 		}
 
 		public override void SetLength (long value)
@@ -106,14 +127,31 @@ namespace Android.Runtime
 		}
 
 		public override bool CanRead { get { return true; } }
-		public override bool CanSeek { get { return false; } }
+		public override bool CanSeek { get { return (BaseFileChannel is object); } }
 		public override bool CanWrite { get { return false; } }
 
-		public override long Length { get { throw new NotSupportedException (); } }
+		public override long Length {
+			get {
+				if (BaseFileChannel is object)
+					return BaseFileChannel.Size ();
+				else
+					throw new NotSupportedException ();
+			}
+		}
 
 		public override long Position {
-			get { throw new NotSupportedException (); }
-			set { throw new NotSupportedException (); }
+			get {
+				if (BaseFileChannel is object)
+					return BaseFileChannel.Position ();
+				else
+					throw new NotSupportedException ();
+			}
+			set {
+				if (BaseFileChannel is object)
+					BaseFileChannel.Position (value);
+				else
+					throw new NotSupportedException ();
+			}
 		}
 		
 		[Preserve (Conditional=true)]
