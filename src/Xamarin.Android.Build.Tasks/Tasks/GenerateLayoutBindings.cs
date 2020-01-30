@@ -96,17 +96,17 @@ namespace Xamarin.Android.Tasks
 			BindingGenerator generator = GetBindingGenerator (OutputLanguage);
 
 			if (generator == null) {
-				Log.LogMessage ($"Unknown binding output language '{OutputLanguage}', will use {DefaultOutputGenerator.Name} instead");
+				LogMessage ($"Unknown binding output language '{OutputLanguage}', will use {DefaultOutputGenerator.Name} instead");
 				generator = DefaultOutputGenerator.Creator ();
 			}
 
 			if (generator == null) {
 				// Should "never" happen
-				Log.LogError ($"Cannot find binding generator for language {OutputLanguage} or {DefaultOutputGenerator.Name}");
+				LogError ($"Cannot find binding generator for language {OutputLanguage} or {DefaultOutputGenerator.Name}");
 				return;
 			}
 
-			Log.LogDebugMessage ($"Generating {generator.LanguageName} binding sources");
+			LogDebugMessage ($"Generating {generator.LanguageName} binding sources");
 
 			var layoutGroups = new Dictionary <string, LayoutGroup> (StringComparer.Ordinal);
 			string layoutGroupName;
@@ -133,7 +133,7 @@ namespace Xamarin.Android.Tasks
 					if (!GetRequiredMetadata (item, CalculateLayoutCodeBehind.LayoutGroupMetadata, out layoutGroupName))
 						return;
 					if (!layoutGroups.TryGetValue (layoutGroupName, out group) || group == null) {
-						Log.LogError ($"Partial class item without associated binding for layout group '{layoutGroupName}'");
+						LogError ($"Partial class item without associated binding for layout group '{layoutGroupName}'");
 						return;
 					}
 
@@ -177,7 +177,7 @@ namespace Xamarin.Android.Tasks
 			if (ResourceFiles.Length >= CalculateLayoutCodeBehind.ParallelGenerationThreshold) {
 				// NOTE: Update the tests in $TOP_DIR/tests/CodeBehind/UnitTests/BuildTests.cs if this message
 				// is changed!
-				Log.LogDebugMessage ($"Generating binding code in parallel (threshold of {CalculateLayoutCodeBehind.ParallelGenerationThreshold} layouts met)");
+				LogDebugMessage ($"Generating binding code in parallel (threshold of {CalculateLayoutCodeBehind.ParallelGenerationThreshold} layouts met)");
 				var fileSet = new ConcurrentBag <string> ();
 				await this.WhenAll (layoutGroups, kvp => GenerateSourceForLayoutGroup (generator, kvp.Value, rpath => fileSet.Add (rpath)));
 				generatedFilePaths = fileSet;
@@ -190,8 +190,8 @@ namespace Xamarin.Android.Tasks
 
 			GeneratedFiles = generatedFilePaths.Where (gfp => !String.IsNullOrEmpty (gfp)).Select (gfp => new TaskItem (gfp)).ToArray ();
 			if (GeneratedFiles.Length == 0)
-				Log.LogWarning ("No layout binding source files generated");
-			Log.LogDebugTaskItems ("  GeneratedFiles:", GeneratedFiles);
+				LogWarning ("No layout binding source files generated");
+			LogDebugTaskItems ("  GeneratedFiles:", GeneratedFiles);
 		}
 
 		void GenerateSourceForLayoutGroup (BindingGenerator generator, LayoutGroup group, Action <string> pathAdder)

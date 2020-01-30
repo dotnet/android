@@ -34,12 +34,17 @@ namespace Xamarin.Android.Tasks
 
 		public abstract string TaskPrefix { get; }
 
+		[Obsolete ("You should not use the 'Log' property directly for AsyncTask. Use the 'Log*' methods instead.", error: true)]
+		public new TaskLoggingHelper Log {
+			get => base.Log;
+		}
+
 		public override bool Execute ()
 		{
 			try {
 				return RunTask ();
 			} catch (Exception ex) {
-				Log.LogUnhandledException (TaskPrefix, ex);
+				this.LogUnhandledException (TaskPrefix, ex);
 				return false;
 			}
 		}

@@ -107,13 +107,13 @@ namespace Xamarin.Android.Tasks {
 			string manifestDir = Path.Combine (Path.GetDirectoryName (ManifestFile), currentAbi != null ? currentAbi : "manifest");
 			Directory.CreateDirectory (manifestDir);
 			string manifestFile = Path.Combine (manifestDir, Path.GetFileName (ManifestFile));
-			ManifestDocument manifest = new ManifestDocument (ManifestFile, this.Log);
+			ManifestDocument manifest = new ManifestDocument (ManifestFile);
 			manifest.SdkVersion = AndroidSdkPlatform;
 			if (!string.IsNullOrEmpty (VersionCodePattern)) {
 				try {
 					manifest.CalculateVersionCode (currentAbi, VersionCodePattern, VersionCodeProperties);
 				} catch (ArgumentOutOfRangeException ex) {
-					Log.LogCodedError ("XA0003", ManifestFile, 0, ex.Message);
+					LogCodedError ("XA0003", ManifestFile, 0, ex.Message);
 					return string.Empty;
 				}
 			}
@@ -121,11 +121,11 @@ namespace Xamarin.Android.Tasks {
 				manifest.SetAbi (currentAbi);
 			}
 			if (!manifest.ValidateVersionCode (out string error, out string errorCode)) {
-				Log.LogCodedError (errorCode, ManifestFile, 0, error);
+				LogCodedError (errorCode, ManifestFile, 0, error);
 				return string.Empty;
 			}
 			manifest.ApplicationName = ApplicationName;
-			manifest.Save (manifestFile);
+			manifest.Save (LogWarning, manifestFile);
 
 			cmd.AppendSwitchIfNotNull ("--manifest ", manifestFile);
 			if (!string.IsNullOrEmpty (JavaDesignerOutputDirectory)) {
@@ -142,7 +142,7 @@ namespace Xamarin.Android.Tasks {
 					if (File.Exists (flata)) {
 						cmd.AppendSwitchIfNotNull ("-R ", flata);
 					} else {
-						Log.LogDebugMessage ("Archive does not exist: " + flata);
+						LogDebugMessage ("Archive does not exist: " + flata);
 					}
 				}
 			}
@@ -152,7 +152,7 @@ namespace Xamarin.Android.Tasks {
 				if (File.Exists (flata)) {
 					cmd.AppendSwitchIfNotNull ("-R ", flata);
 				} else {
-					Log.LogDebugMessage ("Archive does not exist: " + flata);
+					LogDebugMessage ("Archive does not exist: " + flata);
 				}
 			}
 			
@@ -175,7 +175,7 @@ namespace Xamarin.Android.Tasks {
 
 			var extraArgsExpanded = ExpandString (ExtraArgs);
 			if (extraArgsExpanded != ExtraArgs)
-				Log.LogDebugMessage ("  ExtraArgs expanded: {0}", extraArgsExpanded);
+				LogDebugMessage ("  ExtraArgs expanded: {0}", extraArgsExpanded);
 
 			if (!string.IsNullOrWhiteSpace (extraArgsExpanded))
 				cmd.AppendSwitch (extraArgsExpanded);
