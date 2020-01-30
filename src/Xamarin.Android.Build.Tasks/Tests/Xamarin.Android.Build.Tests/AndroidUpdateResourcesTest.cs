@@ -1085,6 +1085,12 @@ namespace Lib1 {
 	<color name=""theme_devicedefault_background"">#ffffffff</color>
 </resources>", 
 			};
+			var raw = new AndroidItem.AndroidResource ("Resources\\raw\\test.txt") {
+				TextContent = () => @"Test Build 1",
+			};
+			var rawToDelete = new AndroidItem.AndroidResource ("Resources\\raw\\test2.txt") {
+				TextContent = () => @"Test Raw To Delete",
+			};
 			var libProj = new XamarinAndroidLibraryProject () {
 				IsRelease = true,
 				ProjectName = "Lib1",
@@ -1093,6 +1099,8 @@ namespace Lib1 {
 				},
 				AndroidResources = {
 					theme,
+					raw,
+					rawToDelete,
 				},
 			};
 			var appProj = new XamarinAndroidApplicationProject () {
@@ -1112,20 +1120,42 @@ namespace Lib1 {
 					foo.Timestamp = DateTimeOffset.UtcNow;
 					Assert.IsTrue (libBuilder.Build (libProj, doNotCleanupOnUpdate: true, saveProject: false), "Library project should have built");
 					Assert.IsTrue (libBuilder.Output.IsTargetSkipped ("_CreateManagedLibraryResourceArchive"), "_CreateManagedLibraryResourceArchive should be skipped.");
+					appBuilder.BuildLogFile = "build1.log";
 					Assert.IsTrue (appBuilder.Build (appProj, doNotCleanupOnUpdate: true, saveProject: false), "Application Build should have succeeded.");
 					Assert.IsTrue (appBuilder.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "_UpdateAndroidResgen target should be skipped.");
+					// Check Contents of the file in the apk are correct.
+					string apk = Path.Combine (Root, appBuilder.ProjectDirectory, appProj.OutputPath, appProj.PackageName + "-Signed.apk");
+					byte[] rawContentBuildOne = ZipHelper.ReadFileFromZip (apk,
+						"res/raw/test.txt");
+
+					Assert.IsNotNull (rawContentBuildOne, "res/raw/test.txt should have been in the apk ");
+					string txt = Encoding.UTF8.GetString (rawContentBuildOne ?? new byte[0]);
+					StringAssert.Contains ("Test Build 1", txt, $"res/raw/test.txt should have been 'Test Build 1' not {txt}");
+					Assert.IsNotNull (ZipHelper.ReadFileFromZip (apk, "res/raw/test2.txt"), "res/raw/test2.txt should have been in the apk.");
 					theme.TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
 <resources>
 	<color name=""theme_devicedefault_background"">#00000000</color>
 	<color name=""theme_devicedefault_background2"">#ffffffff</color>
 </resources>";
 					theme.Timestamp = DateTimeOffset.UtcNow;
+					raw.TextContent = () => @"Test Build 2 Now";
+					raw.Timestamp = DateTimeOffset.UtcNow;
 					Assert.IsTrue (libBuilder.Build (libProj, doNotCleanupOnUpdate: true, saveProject: false), "Library project should have built");
 					Assert.IsFalse (libBuilder.Output.IsTargetSkipped ("_CreateManagedLibraryResourceArchive"), "_CreateManagedLibraryResourceArchive should not be skipped.");
+					appBuilder.BuildLogFile = "build2.log";
 					Assert.IsTrue (appBuilder.Build (appProj, doNotCleanupOnUpdate: true, saveProject: false), "Application Build should have succeeded.");
 					string text = File.ReadAllText (Path.Combine (Root, path, appProj.ProjectName, "Resources", "Resource.designer.cs"));
 					Assert.IsTrue (text.Contains ("theme_devicedefault_background2"), "Resource.designer.cs was not updated.");
 					Assert.IsFalse (appBuilder.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "_UpdateAndroidResgen target should NOT be skipped.");
+					Assert.IsFalse (appBuilder.Output.IsTargetSkipped ("_CreateBaseApk"), "_CreateBaseApk target should NOT be skipped.");
+					Assert.IsFalse (appBuilder.Output.IsTargetSkipped ("_BuildApkEmbed"), "_BuildApkEmbed target should NOT be skipped.");
+					byte[] rawContentBuildTwo = ZipHelper.ReadFileFromZip (apk,
+						"res/raw/test.txt");
+					Assert.IsNotNull (rawContentBuildTwo, "res/raw/test.txt should have been in the apk ");
+					txt = Encoding.UTF8.GetString (rawContentBuildTwo ?? new byte[0]);
+					StringAssert.Contains ("Test Build 2 Now", txt, $"res/raw/test.txt should have been 'Test Build 2' not {txt}");
+					rawToDelete.Deleted = true;
+					rawToDelete.Timestamp = DateTimeOffset.UtcNow;
 					theme.Deleted = true;
 					theme.Timestamp = DateTimeOffset.UtcNow;
 					Assert.IsTrue (libBuilder.Build (libProj, saveProject: true), "Library project should have built");
@@ -1133,6 +1163,9 @@ namespace Lib1 {
 					Assert.IsTrue (!File.Exists (themeFile), $"{themeFile} should have been deleted.");
 					var archive = Path.Combine (Root, path, libProj.ProjectName, libProj.IntermediateOutputPath, "__AndroidLibraryProjects__.zip");
 					Assert.IsNull (ZipHelper.ReadFileFromZip (archive, "res/values/theme.xml"), "res/values/theme.xml should have been removed from __AndroidLibraryProjects__.zip");
+					appBuilder.BuildLogFile = "build3.log";
+					Assert.IsTrue (appBuilder.Build (appProj, doNotCleanupOnUpdate: true, saveProject: false), "Application Build should have succeeded.");
+					Assert.IsNull (ZipHelper.ReadFileFromZip (apk, "res/raw/test2.txt"), "res/raw/test2.txt should have been removed from the apk.");
 				}
 			}
 		}

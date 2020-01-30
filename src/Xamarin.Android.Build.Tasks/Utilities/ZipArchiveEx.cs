@@ -129,6 +129,30 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
+		public bool SkipExistingFile (string file, string fileInArchive)
+		{
+			if (!zip.ContainsEntry (fileInArchive)) {
+				return false;
+			}
+			var lastWrite = File.GetLastWriteTimeUtc (file);
+			var entry = zip.ReadEntry (fileInArchive);
+			return WithoutMilliseconds (lastWrite) <= WithoutMilliseconds (entry.ModificationTime);
+		}
+
+		public bool SkipExistingEntry (ZipEntry sourceEntry, string fileInArchive)
+		{
+			if (!zip.ContainsEntry (fileInArchive)) {
+				return false;
+			}
+			var entry = zip.ReadEntry (fileInArchive);
+			return WithoutMilliseconds (sourceEntry.ModificationTime) <= WithoutMilliseconds (entry.ModificationTime);
+		}
+
+		// The zip file and macOS/mono does not contain milliseconds
+		// Windows *does* contain milliseconds
+		static DateTime WithoutMilliseconds (DateTime t) =>
+			new DateTime (t.Year, t.Month, t.Day, t.Hour, t.Minute, t.Second, t.Kind);
+
 		public void Dispose ()
 		{
 			Dispose(true);
