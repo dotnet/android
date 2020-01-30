@@ -121,11 +121,8 @@ namespace Xamarin.Android.Tasks {
 			return targetAttr.Value;
 		}
 
-		TaskLoggingHelper log;
-
-		public ManifestDocument (string templateFilename, TaskLoggingHelper log) : base ()
+		public ManifestDocument (string templateFilename) : base ()
 		{
-			this.log = log;
 			Assemblies = new List<string> ();
 
 			attName = androidNs + "name";
@@ -206,7 +203,7 @@ namespace Xamarin.Android.Tasks {
 			}
 		}
 
-		void ReorderActivityAliases (XElement app)
+		void ReorderActivityAliases (TaskLoggingHelper log, XElement app)
 		{
 			var aliases = app.Elements ("activity-alias").ToList ();
 
@@ -224,7 +221,7 @@ namespace Xamarin.Android.Tasks {
 			}
 		}
 		
-		public IList<string> Merge (List<TypeDefinition> subclasses, string applicationClass, bool embed, string bundledWearApplicationName, IEnumerable<string> mergedManifestDocuments)
+		public IList<string> Merge (TaskLoggingHelper log, List<TypeDefinition> subclasses, string applicationClass, bool embed, string bundledWearApplicationName, IEnumerable<string> mergedManifestDocuments)
 		{
 			string applicationName  = ApplicationName;
 
@@ -406,7 +403,7 @@ namespace Xamarin.Android.Tasks {
 			AddUsesFeatures (app);
 			AddSupportsGLTextures (app);
 
-			ReorderActivityAliases (app);
+			ReorderActivityAliases (log, app);
 			ReorderElements (app);
 
 			if (mergedManifestDocuments != null) {
@@ -883,20 +880,26 @@ namespace Xamarin.Android.Tasks {
 						manifest.Add (xe);
 				}
 		}
-		
-		public void Save (string filename)
+
+		public void Save (TaskLoggingHelper log, string filename) =>
+			Save (m => log.LogWarning (m), filename);
+
+		public void Save (Action<string> logWarning, string filename)
 		{
 			using (var file = new StreamWriter (filename, append: false, encoding: new UTF8Encoding (false)))
-				Save (file);
+				Save (logWarning, file);
 		}
 
-		public void Save (Stream stream)
+		public void Save (TaskLoggingHelper log, Stream stream) =>
+			Save (m => log.LogWarning (m), stream);
+
+		public void Save (Action<string> logWarning, Stream stream)
 		{
 			using (var file = new StreamWriter (stream, new UTF8Encoding (false), bufferSize: 1024, leaveOpen: true))
-				Save (file);
+				Save (logWarning, file);
 		}
 
-		public void Save (System.IO.TextWriter stream)
+		public void Save (Action<string> logWarning, TextWriter stream)
 		{
 			RemoveDuplicateElements ();
 			var ms = new MemoryStream ();
@@ -911,7 +914,7 @@ namespace Xamarin.Android.Tasks {
 					if (entry.Length == 2)
 						s = s.Replace ("${" + entry [0] + "}", entry [1]);
 					else
-						log.LogWarning ("Invalid application placeholders (AndroidApplicationPlaceholders) value. Use 'key1=value1;key2=value2, ...' format. The specified value was: " + Placeholders);
+						logWarning ("Invalid application placeholders (AndroidApplicationPlaceholders) value. Use 'key1=value1;key2=value2, ...' format. The specified value was: " + Placeholders);
 				}
 			stream.Write (s);
 		}

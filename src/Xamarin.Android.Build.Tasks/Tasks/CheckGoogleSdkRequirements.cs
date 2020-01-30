@@ -22,7 +22,7 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
-			ManifestDocument manifest = new ManifestDocument (ManifestFile, this.Log);
+			ManifestDocument manifest = new ManifestDocument (ManifestFile);
 
 			var compileSdk = MonoAndroidHelper.SupportedVersions.GetApiLevelFromFrameworkVersion (TargetFrameworkVersion);
 

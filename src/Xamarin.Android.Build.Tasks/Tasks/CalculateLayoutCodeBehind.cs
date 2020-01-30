@@ -119,7 +119,7 @@ namespace Xamarin.Android.Tasks
 
 			GenerateLayoutBindings.BindingGeneratorLanguage gen;
 			if (!GenerateLayoutBindings.KnownBindingGenerators.TryGetValue (OutputLanguage, out gen) || gen == null) {
-				Log.LogDebugMessage ($"Language {OutputLanguage} isn't supported, will use {GenerateLayoutBindings.DefaultOutputGenerator.Name} instead");
+				LogDebugMessage ($"Language {OutputLanguage} isn't supported, will use {GenerateLayoutBindings.DefaultOutputGenerator.Name} instead");
 				sourceFileExtension = GenerateLayoutBindings.DefaultOutputGenerator.Extension;
 			} else
 				sourceFileExtension = OutputFileExtension;
@@ -138,7 +138,7 @@ namespace Xamarin.Android.Tasks
 			if (layoutsByName.Count >= ParallelGenerationThreshold) {
 				// NOTE: Update the tests in $TOP_DIR/tests/CodeBehind/UnitTests/BuildTests.cs if this message
 				// is changed!
-				Log.LogDebugMessage ($"Parsing layouts in parallel (threshold of {ParallelGenerationThreshold} layouts met)");
+				LogDebugMessage ($"Parsing layouts in parallel (threshold of {ParallelGenerationThreshold} layouts met)");
 
 				await this.WhenAll (layoutsByName, kvp =>
 					ParseAndLoadGroup (layoutsByName, kvp.Key, kvp.Value.InputItems, ref kvp.Value.LayoutBindingItems, ref kvp.Value.LayoutPartialClassItems));
@@ -160,11 +160,11 @@ namespace Xamarin.Android.Tasks
 
 			LayoutBindingFiles = layoutBindingFiles.ToArray ();
 			if (LayoutBindingFiles.Length == 0)
-				Log.LogDebugMessage ("  No layout file qualifies for code-behind generation");
+				LogDebugMessage ("  No layout file qualifies for code-behind generation");
 			LayoutPartialClassFiles = layoutPartialClassFiles.ToArray ();
 
-			Log.LogDebugTaskItems ("  LayoutBindingFiles:", LayoutBindingFiles, true);
-			Log.LogDebugTaskItems ("  LayoutPartialClassFiles:", LayoutPartialClassFiles, true);
+			LogDebugTaskItems ("  LayoutBindingFiles:", LayoutBindingFiles);
+			LogDebugTaskItems ("  LayoutPartialClassFiles:", LayoutPartialClassFiles);
 		}
 
 		void ParseAndLoadGroup (Dictionary <string, LayoutGroup> groupIndex, string groupName, List<ITaskItem> items, ref List<ITaskItem> layoutBindingFiles, ref List<ITaskItem> layoutPartialClassFiles)
