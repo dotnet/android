@@ -79,6 +79,33 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The TargetFrameworkVersion (Android API level {0}) is higher than the targetSdkVersion ({1}). Please increase the `android:targetSdkVersion` in the `AndroidManifest.xml` so that the API levels match..
+        /// </summary>
+        internal static string XA1006 {
+            get {
+                return ResourceManager.GetString("XA1006", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The minSdkVersion ({0}) is greater than the targetSdkVersion. Please change the value such that the minSdkVersion is less than or equal to the targetSdkVersion ({1})..
+        /// </summary>
+        internal static string XA1007 {
+            get {
+                return ResourceManager.GetString("XA1007", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The TargetFrameworkVersion (Android API level {0}) is lower than the targetSdkVersion ({1}). Please increase the `$(TargetFrameworkVersion)` or decrease the `android:targetSdkVersion` in the `AndroidManifest.xml` so that the API levels match..
+        /// </summary>
+        internal static string XA1008 {
+            get {
+                return ResourceManager.GetString("XA1008", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Source file &apos;{0}&apos; could not be found..
         /// </summary>
         internal static string XA2001 {

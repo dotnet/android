@@ -35,18 +35,15 @@ namespace Xamarin.Android.Tasks
 
 			//We should throw a warning if the targetSdkVersion is lower than compileSdkVersion(TargetFrameworkVersion).
 			if (targetSdk < compileSdk) {
-				Log.LogCodedWarning ("XA1006",
-					$"You are building against version of Android ({compileSdk}) that is more recent than your targetSdkVersion specifies ({targetSdk}). Set your targetSdkVersion to the highest version of Android available to match your TargetFrameworkVersion ({compileSdk}).");
+				Log.LogCodedWarning ("XA1006", Properties.Resources.XA1006, compileSdk, targetSdk);
 			}
 			//We should throw an warning if the compileSdkVersion(TargetFrameworkVersion) is lower than targetSdkVersion.
 			if (compileSdk < targetSdk) {
-				Log.LogCodedWarning ("XA1008",
-					$"The TargetFrameworkVersion ({compileSdk}) must not be lower than targetSdkVersion ({targetSdk}). You should either, increase the `$(TargetFrameworkVersion)` of your project. Or decrease the `android:targetSdkVersion` in your `AndroidManifest.xml` to correct this issue.");
+				Log.LogCodedWarning ("XA1008", Properties.Resources.XA1008, compileSdk, targetSdk);
 			}
 			//We should throw an warning if the minSdkVersion is greater than targetSdkVers1ion.
 			if (minSdk > targetSdk) {
-				Log.LogCodedWarning ("XA1007",
-					$"The minSdkVersion ({minSdk}) is greater than targetSdkVersion. Please change the value such that minSdkVersion is less than or equal to targetSdkVersion ({targetSdk}).");
+				Log.LogCodedWarning ("XA1007", Properties.Resources.XA1007, minSdk, targetSdk);
 			}
 
 			return !Log.HasLoggedErrors;
