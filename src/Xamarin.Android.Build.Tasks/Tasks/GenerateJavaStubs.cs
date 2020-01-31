@@ -236,7 +236,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			// Step 3 - Merge [Activity] and friends into AndroidManifest.xml
-			var manifest = new ManifestDocument (ManifestTemplate, this.Log);
+			var manifest = new ManifestDocument (ManifestTemplate);
 
 			manifest.PackageName = PackageName;
 			manifest.ApplicationName = ApplicationName ?? PackageName;
@@ -250,10 +250,10 @@ namespace Xamarin.Android.Tasks
 			manifest.NeedsInternet = NeedsInternet;
 			manifest.InstantRunEnabled = InstantRunEnabled;
 
-			var additionalProviders = manifest.Merge (all_java_types, ApplicationJavaClass, EmbedAssemblies, BundledWearApplicationName, MergedManifestDocuments);
+			var additionalProviders = manifest.Merge (Log, all_java_types, ApplicationJavaClass, EmbedAssemblies, BundledWearApplicationName, MergedManifestDocuments);
 
 			using (var stream = new MemoryStream ()) {
-				manifest.Save (stream);
+				manifest.Save (Log, stream);
 
 				// Only write the new manifest if it actually changed
 				MonoAndroidHelper.CopyIfStreamChanged (stream, MergedAndroidManifestOutput);

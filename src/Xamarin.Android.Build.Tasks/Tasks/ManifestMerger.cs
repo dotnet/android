@@ -39,9 +39,9 @@ namespace Xamarin.Android.Tasks
 				bool result = base.Execute ();
 				if (!result)
 					return result;
-				var m = new ManifestDocument (tempFile, Log);
+				var m = new ManifestDocument (tempFile);
 				using (var ms = new MemoryStream ()) {
-					m.Save (ms);
+					m.Save (Log, ms);
 					MonoAndroidHelper.CopyIfStreamChanged (ms, OutputManifestFile);
 					return result;
 				}
