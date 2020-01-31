@@ -17,6 +17,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Android.Content\IntentTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Android.Graphics\NinePatchTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Android.Runtime\CharSequenceTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Android.Runtime\InputStreamInvokerTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Android.Runtime\JavaCollectionTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Android.Runtime\JnienvArrayMarshaling.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Android.Runtime\XmlReaderPullParserTest.cs" />
