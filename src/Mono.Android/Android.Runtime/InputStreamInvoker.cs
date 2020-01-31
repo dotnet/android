@@ -99,7 +99,7 @@ namespace Android.Runtime
 		public override long Seek (long offset, SeekOrigin origin)
 		{
 			if (BaseFileChannel == null)
-				throw new NotSupportedException();
+				throw new NotSupportedException ();
 
 			switch (origin) {
 			case SeekOrigin.Begin:
