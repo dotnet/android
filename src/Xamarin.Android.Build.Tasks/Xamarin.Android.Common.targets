@@ -1462,7 +1462,8 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 </Target>
 
-<Target Name="_FindLayoutsForBinding" Condition=" '$(Language)' == 'C#' ">
+<Target Name="_FindLayoutsForBinding"
+    Condition=" '$(Language)' == 'C#' And ('$(AndroidGenerateLayoutBindings)' == 'True' Or '@(AndroidBoundLayout)' != '') ">
   <FindLayoutsToBind
       GenerateLayoutBindings="$(AndroidGenerateLayoutBindings)"
       BoundLayouts="@(AndroidBoundLayout)"
