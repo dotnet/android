@@ -12,9 +12,15 @@ steps:
     msbuildArguments: /restore /t:Build,ZipBuildStatus,ZipTestResults /p:BuildStatusZipOutputPath=$(Build.ArtifactStagingDirectory) /p:TestResultZipOutputPath=$(Build.ArtifactStagingDirectory)
   condition: always()
 
+# Add the "(Attempt X)" for retries, but leave the initial run blank
+- powershell: |
+    $UploadAttemptSuffix = If ($(System.JobAttempt) -gt 1) {"(Attempt $(System.JobAttempt))"} Else {""}
+    Write-Host "##vso[task.setvariable variable=UploadAttemptSuffix;]$UploadAttemptSuffix"
+  displayName: Set upload artifact name
+
 - task: PublishPipelineArtifact@1
   displayName: upload build and test results
   inputs:
-    artifactName: ${{ parameters.artifactName }}
+    artifactName: ${{ parameters.artifactName }} $(UploadAttemptSuffix)
     targetPath: $(Build.ArtifactStagingDirectory)
   condition: always()
