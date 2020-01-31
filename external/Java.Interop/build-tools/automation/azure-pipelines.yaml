@@ -26,6 +26,15 @@ jobs:
     inputs:
       version: $(DotNetCoreVersion)
 
+  - task: NuGetToolInstaller@0
+    inputs:
+      versionSpec: 5.x
+
+  - task: NuGetCommand@2
+    inputs:
+      command: restore
+      restoreSolution: 'external\xamarin-android-tools\Xamarin.Android.Tools.sln'
+      
   - task: MSBuild@1
     displayName: MSBuild Java.Interop.sln /t:Prepare
     inputs:
