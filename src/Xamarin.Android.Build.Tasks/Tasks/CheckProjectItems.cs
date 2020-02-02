@@ -30,7 +30,7 @@ namespace Xamarin.Android.Tasks
 							columnNumber:     0,
 							endLineNumber:    0,
 							endColumnNumber:  0,
-							message:          "EmbeddedNativeLibrary '{0}' is invalid in Android Application project. Please use AndroidNativeLibrary instead.",
+							message:          Properties.Resources.XA0100,
 							messageArgs:      new [] {lib.ItemSpec}
 					);
 				}
