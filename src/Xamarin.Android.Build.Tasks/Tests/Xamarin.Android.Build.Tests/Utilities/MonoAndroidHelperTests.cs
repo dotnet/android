@@ -1,4 +1,5 @@
-﻿using System.IO;
+using System.IO;
+using System.Text;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 
@@ -140,6 +141,27 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (MonoAndroidHelper.CopyIfStreamChanged (foo, temp), "Should write on new file.");
 				FileAssert.Exists (temp);
 			}
+		}
+
+		[Test]
+		public void CleanBOM_Readonly ()
+		{
+			var encoding = Encoding.UTF8;
+			Directory.CreateDirectory (temp);
+			temp = Path.Combine (temp, "foo.txt");
+			if (File.Exists (temp)) {
+				File.SetAttributes (temp, FileAttributes.Normal);
+			}
+			using (var stream = File.Create (temp))
+			using (var writer = new StreamWriter (stream, encoding)) {
+				writer.Write ("This will have a BOM");
+			}
+			File.SetAttributes (temp, FileAttributes.ReadOnly);
+			var before = File.ReadAllBytes (temp);
+			MonoAndroidHelper.CleanBOM (temp);
+			var after = File.ReadAllBytes (temp);
+			var preamble = encoding.GetPreamble ();
+			Assert.AreEqual (before.Length, after.Length + preamble.Length, "BOM should be removed!");
 		}
 	}
 }
