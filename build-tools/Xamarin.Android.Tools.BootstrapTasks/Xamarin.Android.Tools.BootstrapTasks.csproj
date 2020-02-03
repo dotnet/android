@@ -1,13 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="..\..\Configuration.props" />
-
   <PropertyGroup>
     <TargetFramework>$(TargetFrameworkNETStandard)</TargetFramework>
     <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
-    <OutputPath>$(SupportingBuildTasksOutputRoot)</OutputPath>
+    <OutputPath>$(SupplementalBuildOutputDirectory)</OutputPath>
   </PropertyGroup>
 
+  <Import Project="..\..\Configuration.props" />
   <Import Project="..\..\build-tools\scripts\MSBuildReferences.projitems" />
 
   <ItemGroup>
@@ -21,4 +20,5 @@
   </ItemGroup>
 
   <Import Project="result-packaging.targets" />
+
 </Project>

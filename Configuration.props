@@ -12,12 +12,7 @@
       Condition=" Exists('$(MSBuildThisFileDirectory)Configuration.OperatingSystem.props') And '$(DoNotLoadOSProperties)' != 'True' "
   />
   <PropertyGroup>
-    <ConfigurationPropsImported>true</ConfigurationPropsImported>
     <ProductVersion>10.2.99</ProductVersion>
-    <!-- TF and output paths for MSBuild task projects -->
-    <TargetFrameworkNETStandard>netstandard2.0</TargetFrameworkNETStandard>
-    <SupportingBuildTasksOutputRoot>$(MSBuildThisFileDirectory)bin\Build$(Configuration)\</SupportingBuildTasksOutputRoot>
-    <SupportingBuildTasksDirectory>$(SupportingBuildTasksOutputRoot)$(TargetFrameworkNETStandard)\</SupportingBuildTasksDirectory>
     <!-- TFV for all projects, try v4.7.2 but fallback if needed -->
     <_StandardLibraryPath Condition=" '$(TargetFrameworkVersion)' == '' ">$([Microsoft.Build.Utilities.ToolLocationHelper]::GetPathToStandardLibraries('.NETFramework', 'v4.7.2', ''))</_StandardLibraryPath>
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' And '$(UsingMicrosoftNETSdk)' != 'true' And '$(_StandardLibraryPath)' != '' ">v4.7.2</TargetFrameworkVersion>

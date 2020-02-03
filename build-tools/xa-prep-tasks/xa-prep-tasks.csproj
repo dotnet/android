@@ -1,13 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="..\..\Configuration.props" />
-
   <PropertyGroup>
     <TargetFramework>$(TargetFrameworkNETStandard)</TargetFramework>
     <RootNamespace>Xamarin.Android.BuildTools.PrepTasks</RootNamespace>
-    <OutputPath>$(SupportingBuildTasksOutputRoot)</OutputPath>
+    <OutputPath>$(SupplementalBuildOutputDirectory)</OutputPath>
   </PropertyGroup>
 
+  <Import Project="..\..\Configuration.props" />
   <Import Project="..\..\build-tools\scripts\MSBuildReferences.projitems" />
   <Import Project="xa-prep-tasks.targets" />
 

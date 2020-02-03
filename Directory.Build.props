@@ -1,0 +1,12 @@
+<Project>
+
+  <PropertyGroup>
+    <TargetFrameworkNETStandard>netstandard2.0</TargetFrameworkNETStandard>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <BuildOutputDirectory>$(MSBuildThisFileDirectory)bin\$(Configuration)\</BuildOutputDirectory>
+    <SupplementalBuildOutputDirectory>$(MSBuildThisFileDirectory)bin\Build$(Configuration)\</SupplementalBuildOutputDirectory>
+    <TestOutputDirectory>$(MSBuildThisFileDirectory)bin\Test$(Configuration)\</TestOutputDirectory>
+    <SupportingBuildTasksDirectory>$(SupplementalBuildOutputDirectory)$(TargetFrameworkNETStandard)\</SupportingBuildTasksDirectory>
+  </PropertyGroup>
+
+</Project>
