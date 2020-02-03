@@ -2,7 +2,7 @@ Source: xamarin.android-oss
 Section: unknown
 Priority: optional
 Maintainer: Xamarin <hello@xamarin.com>
-Build-Depends: debhelper (>=9), cli-common-dev (>= 0.9~), libzip-dev
+Build-Depends: debhelper (>=9), cli-common-dev (>= 0.9~)
 Standards-Version: 3.9.6
 Homepage: https://www.xamarin.com/platform
 Vcs-Git: https://github.com/xamarin/xamarin-android.git

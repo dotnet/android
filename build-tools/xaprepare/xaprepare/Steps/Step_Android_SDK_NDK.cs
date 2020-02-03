@@ -163,6 +163,10 @@ namespace Xamarin.Android.Prepare
 				throw new InvalidOperationException ($"Failed to unpack {pkg.LocalPackagePath}");
 			}
 
+			// Clean up zip after extraction if running on a hosted azure pipelines agent.
+			if (context.IsRunningOnHostedAzureAgent)
+				Utilities.DeleteFileSilent (pkg.LocalPackagePath);
+
 			if (pkg.Component.NoSubdirectory) {
 				Utilities.MoveDirectoryContentsRecursively (tempDir, pkg.DestinationDir);
 				return;

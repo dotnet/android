@@ -5,11 +5,6 @@ namespace Xamarin.Android.Prepare
 {
 	abstract partial class LinuxUbuntuCommon : LinuxDebianCommon
 	{
-		static readonly List<DebianLinuxProgram> commonPackages64bit = new List<DebianLinuxProgram> {
-			new DebianLinuxProgram ("linux-libc-dev:i386"),
-			new DebianLinuxProgram ("zlib1g-dev:i386"),
-		};
-
 		static readonly List<DebianLinuxProgram> libtoolPackages = new List<DebianLinuxProgram> {
 			new DebianLinuxProgram ("libtool-bin", "libtool"),
 		};
@@ -19,14 +14,6 @@ namespace Xamarin.Android.Prepare
 		protected LinuxUbuntuCommon (Context context)
 			: base (context)
 		{}
-
-		protected override void InitializeDependencies ()
-		{
-			base.InitializeDependencies ();
-
-			if (Is64Bit)
-				Dependencies.AddRange (commonPackages64bit);
-		}
 
 		protected override bool InitOS ()
 		{

@@ -10,8 +10,14 @@
 # The other targets depended upon by leeroy also require rules.mk to be present and thus they
 # are invoked in the same way framework-assemblies is
 #
+# Local `make jenkins` invocations should build everything by default. We need to ensure `-a` is passed to xaprepare when no CI flags are set.
+#
 jenkins:
-	$(MAKE) PREPARE_CI=1 prepare
+ifeq ($(PREPARE_CI_PR)$(PREPARE_CI),00)
+	$(MAKE) PREPARE_ARGS=-a prepare
+else
+	$(MAKE) prepare
+endif
 	$(MAKE) leeroy $(ZIP_OUTPUT)
 ifeq ($(XA_INVERTED_COMMERCIAL_BUILD),true)
 	$(MAKE) commercial
