@@ -7,6 +7,8 @@
     <SupplementalBuildOutputDirectory>$(MSBuildThisFileDirectory)bin\Build$(Configuration)\</SupplementalBuildOutputDirectory>
     <TestOutputDirectory>$(MSBuildThisFileDirectory)bin\Test$(Configuration)\</TestOutputDirectory>
     <SupportingBuildTasksDirectory>$(SupplementalBuildOutputDirectory)$(TargetFrameworkNETStandard)\</SupportingBuildTasksDirectory>
+    <!-- Copy PackageReference content to OutputDir for our build tasks, tests, and installer creation logic. This no longer happens by default in short-form projects. -->
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
 </Project>
