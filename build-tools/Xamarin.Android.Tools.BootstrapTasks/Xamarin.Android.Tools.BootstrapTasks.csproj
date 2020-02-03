@@ -58,6 +58,7 @@
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\Zip.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\KillProcess.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\RunUITests.cs" />
+    <Compile Include="Xamarin.Android.Tools.BootstrapTasks\RunAndroidEmulatorCheckBootTimes.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\RunInstrumentationTests.cs" />
     <Compile Include="Xamarin.Android.Tools.BootstrapTasks\JdkInfo.cs" />
   </ItemGroup>

@@ -471,6 +471,25 @@ stages:
       parameters:
         configuration: $(ApkTestConfiguration)
 
+    - task: MSBuild@1
+      displayName: build check-boot-times.csproj
+      inputs:
+        solution: build-tools/check-boot-times/check-boot-times.csproj
+        configuration: $(ApkTestConfiguration)
+        msbuildArguments: >
+          /restore
+          /t:Build
+          /bl:$(System.DefaultWorkingDirectory)/bin/Test$(ApkTestConfiguration)/build-check-boot-times.binlog
+
+    - task: MSBuild@1
+      displayName: Run check-boot-times
+      inputs:
+        solution: src/Mono.Android/Test/Mono.Android-Tests.csproj
+        configuration: $(ApkTestConfiguration)
+        msbuildArguments: >
+          /t:CheckBootTimes
+          /bl:$(System.DefaultWorkingDirectory)/bin/Test$(ApkTestConfiguration)/run-check-boot-times.binlog
+
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
         configuration: $(ApkTestConfiguration)
