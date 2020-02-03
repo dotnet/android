@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <UsingTask AssemblyFile="$(SupportingBuildTasksDirectory)Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.Zip" />
+  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.Zip" />
   <Import Project="..\scripts\XAVersionInfo.targets" />
   <ItemGroup>
     <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)Configuration.OperatingSystem.props" Condition="Exists('$(XamarinAndroidSourcePath)Configuration.OperatingSystem.props')" />
     <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)Configuration.Override.props" Condition="Exists('$(XamarinAndroidSourcePath)Configuration.Override.props')" />
-    <_BuildStatusFiles Include="$(SupplementalBuildOutputDirectory)XABuildConfig.cs" Condition="Exists('$(SupplementalBuildOutputDirectory)XABuildConfig.cs')" />
-    <_BuildStatusFiles Include="$(SupplementalBuildOutputDirectory)*.binlog" />
-    <_BuildStatusFiles Include="$(SupplementalBuildOutputDirectory)prepare*.log" />
-    <_BuildStatusFiles Include="$(SupplementalBuildOutputDirectory)*.mk" />
-    <_BuildStatusFiles Include="$(SupplementalBuildOutputDirectory)*.projitems" />
-    <_BuildStatusFiles Include="$(SupplementalBuildOutputDirectory)*.cmake" />
-    <_BuildStatusFiles Include="$(SupplementalBuildOutputDirectory)*.targets" />
+    <_BuildStatusFiles Include="$(BootstrapOutputDirectory)XABuildConfig.cs" Condition="Exists('$(BootstrapOutputDirectory)XABuildConfig.cs')" />
+    <_BuildStatusFiles Include="$(BootstrapOutputDirectory)*.binlog" />
+    <_BuildStatusFiles Include="$(BootstrapOutputDirectory)prepare*.log" />
+    <_BuildStatusFiles Include="$(BootstrapOutputDirectory)*.mk" />
+    <_BuildStatusFiles Include="$(BootstrapOutputDirectory)*.projitems" />
+    <_BuildStatusFiles Include="$(BootstrapOutputDirectory)*.cmake" />
+    <_BuildStatusFiles Include="$(BootstrapOutputDirectory)*.targets" />
     <_BuildStatusFiles Include="$(TestOutputDirectory)XABuildConfig.cs" Condition="Exists('$(TestOutputDirectory)XABuildConfig.cs')" />
     <_BuildStatusFiles Include="$(TestOutputDirectory)*.binlog" />
     <_BuildStatusFiles Include="$(TestOutputDirectory)prepare*.log" />

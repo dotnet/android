@@ -10,7 +10,7 @@
 
   <Import Project="..\..\..\Configuration.props" />
   <Import Project="..\..\..\build-tools\scripts\MSBuildReferences.projitems" />
-  <UsingTask AssemblyFile="$(SupportingBuildTasksDirectory)xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
+  <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
 
   <ItemGroup>
     <Reference Include="Xamarin.Android.Build.Tasks">

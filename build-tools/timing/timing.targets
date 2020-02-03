@@ -3,9 +3,9 @@
   <Import Project="timing.projitems" />
   <Import Project="..\scripts\TestApks.targets" />
   <Import Project="..\scripts\XAVersionInfo.targets" />
-  <UsingTask AssemblyFile="$(SupportingBuildTasksDirectory)xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.Git" />
-  <UsingTask AssemblyFile="$(SupportingBuildTasksDirectory)xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitHash" />
-  <UsingTask AssemblyFile="$(SupportingBuildTasksDirectory)Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.ProcessMSBuildTiming" />
+  <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.Git" />
+  <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitHash" />
+  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.ProcessMSBuildTiming" />
   <Target Name="LogcatTiming">
     <PropertyGroup>
       <_TmpLogcatInputFilename>logcat-$([System.IO.Path]::GetRandomFileName()).txt</_TmpLogcatInputFilename>
@@ -60,7 +60,7 @@
       <!--NOTE: prefer a Release build of xamarin-android if it exists-->
       <_XABuild Condition="Exists('$(_TopDir)bin\Release\bin\xabuild')">$(_TopDir)bin\Release\bin\xabuild</_XABuild>
       <_XABuild Condition=" '$(_XABuild)' == '' ">$(_TopDir)bin\$(Configuration)\bin\xabuild</_XABuild>
-      <_TimingLogger>Xamarin.Android.Tools.BootstrapTasks.TimingLogger,$(SupportingBuildTasksDirectory)Xamarin.Android.Tools.BootstrapTasks.dll</_TimingLogger>
+      <_TimingLogger>Xamarin.Android.Tools.BootstrapTasks.TimingLogger,$(BootstrapTasksAssembly)</_TimingLogger>
     </PropertyGroup>
     <ItemGroup>
       <_FilesToDelete Include="$(_OutputDir)Timing_*" />

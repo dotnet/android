@@ -3,10 +3,12 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <_TopDir>$(MSBuildThisFileDirectory)..\..</_TopDir>
+    <BootstrapTasksAssembly Condition="!Exists('$(BootstrapTasksAssembly)')">$(_TopDir)\bin\Build$(Configuration)\netstandard2.0\Xamarin.Android.Tools.BootstrapTasks.dll</BootstrapTasksAssembly>
+    <PrepTasksAssembly Condition="!Exists('$(PrepTasksAssembly)')">$(_TopDir)\bin\Build$(Configuration)\netstandard2.0\xa-prep-tasks.dll</PrepTasksAssembly>
   </PropertyGroup>
   <Import Project="$(_TopDir)\Configuration.props" />
-  <UsingTask AssemblyFile="$(SupportingBuildTasksDirectory)xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.RunParallelTargets" />
-  <UsingTask AssemblyFile="$(SupportingBuildTasksDirectory)xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.SetEnvironmentVariable" />
+  <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.RunParallelTargets" />
+  <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.SetEnvironmentVariable" />
   <PropertyGroup>
     <_Test Condition=" '$(TEST)' != '' ">--test=&quot;$(TEST)&quot;</_Test>
     <_XABuild>$(_TopDir)\bin\$(Configuration)\bin\xabuild</_XABuild>

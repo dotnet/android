@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <UsingTask TaskName="Xamarin.Android.Tools.BootstrapTasks.GenerateProfile"        AssemblyFile="$(SupportingBuildTasksDirectory)Xamarin.Android.Tools.BootstrapTasks.dll" />
-  <UsingTask TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren" AssemblyFile="$(SupportingBuildTasksDirectory)Xamarin.Android.Tools.BootstrapTasks.dll" />
-  <UsingTask AssemblyFile="$(SupportingBuildTasksDirectory)xa-prep-tasks.dll"       TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
-  <UsingTask AssemblyFile="$(SupportingBuildTasksDirectory)xa-prep-tasks.dll"       TaskName="Xamarin.Android.BuildTools.PrepTasks.Which" />
+  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.GenerateProfile" />
+  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren" />
+  <UsingTask AssemblyFile="$(PrepTasksAssembly)"      TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
+  <UsingTask AssemblyFile="$(PrepTasksAssembly)"      TaskName="Xamarin.Android.BuildTools.PrepTasks.Which" />
 
   <Import Project="..\..\bin\Build$(Configuration)\ProfileAssemblies.projitems" Condition="Exists('..\..\bin\Build$(Configuration)\ProfileAssemblies.projitems')" />
   <Import Project="..\..\build-tools\scripts\XAVersionInfo.targets" />

@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>$(TargetFrameworkNETStandard)</TargetFramework>
     <RootNamespace>Xamarin.Android.BuildTools.PrepTasks</RootNamespace>
-    <OutputPath>$(SupplementalBuildOutputDirectory)</OutputPath>
+    <OutputPath>$(BootstrapOutputDirectory)</OutputPath>
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />

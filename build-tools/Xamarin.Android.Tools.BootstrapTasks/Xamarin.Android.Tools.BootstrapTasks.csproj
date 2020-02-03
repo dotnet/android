@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>$(TargetFrameworkNETStandard)</TargetFramework>
     <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
-    <OutputPath>$(SupplementalBuildOutputDirectory)</OutputPath>
+    <OutputPath>$(BootstrapOutputDirectory)</OutputPath>
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />
