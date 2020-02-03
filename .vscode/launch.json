@@ -17,6 +17,16 @@
             "request": "attach",
             "address": "localhost",
             "port": 55555
+        },
+        {
+          "name": "Launch emulator boot benchmark",
+          "type": "mono",
+          "request": "launch",
+          "preLaunchTask": "build-emulator-checkboottimes",
+          "program": "${workspaceRoot}/bin/BuildDebug/check-boot-times.exe",
+          "args": [ ],
+          "cwd": "${workspaceRoot}",
+          "stopAtEntry": false
         }
     ]
 }

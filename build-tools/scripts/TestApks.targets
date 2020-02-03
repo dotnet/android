@@ -5,6 +5,7 @@
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.CheckAdbTarget" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.CreateAndroidEmulator" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.RenameTestCases" />
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.RunAndroidEmulatorCheckBootTimes" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.RunInstrumentationTests" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.RunUITests" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.StartAndroidEmulator" />
@@ -345,6 +346,12 @@
         AddResults="True"
         LabelSuffix="-$(Configuration)$(TestsFlavor)"
         ContinueOnError="ErrorAndContinue"
+    />
+  </Target>
+  <Target Name="CheckBootTimes"
+      DependsOnTargets="AcquireAndroidTarget;ReleaseAndroidTarget">
+    <RunAndroidEmulatorCheckBootTimes
+      CheckBootTimesPath="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\check-boot-times.exe"
     />
   </Target>
 </Project>
