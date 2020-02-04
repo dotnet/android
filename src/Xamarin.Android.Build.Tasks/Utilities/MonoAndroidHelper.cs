@@ -488,26 +488,30 @@ namespace Xamarin.Android.Tasks
 			if (string.IsNullOrEmpty (filePath) || !File.Exists (filePath))
 				return;
 
-			string outputFilePath = null;
-			using (var input = File.OpenRead (filePath)) {
-				// Check if the file actually has a BOM
-				for (int i = 0; i < Utf8Preamble.Length; i++) {
-					var next = input.ReadByte ();
-					if (next == -1)
-						return;
-					if (Utf8Preamble [i] != (byte)next)
-						return;
+			string temp = null;
+			try {
+				using (var input = File.OpenRead (filePath)) {
+					// Check if the file actually has a BOM
+					for (int i = 0; i < Utf8Preamble.Length; i++) {
+						var next = input.ReadByte ();
+						if (next == -1)
+							return;
+						if (Utf8Preamble [i] != (byte) next)
+							return;
+					}
+
+					temp = Path.GetTempFileName ();
+					using (var stream = File.OpenWrite (temp))
+						input.CopyTo (stream);
 				}
 
-				outputFilePath = Path.GetTempFileName ();
-				using (var tempOutput = File.OpenWrite (outputFilePath))
-					input.CopyTo (tempOutput);
-			}
-
-			CopyIfChanged (outputFilePath, filePath);
-			try {
-				File.Delete (outputFilePath);
-			} catch {
+				SetWriteable (filePath);
+				File.Delete (filePath);
+				File.Copy (temp, filePath);
+			} finally {
+				if (temp != null) {
+					File.Delete (temp);
+				}
 			}
 		}
 
