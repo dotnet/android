@@ -2,6 +2,16 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="de" original="../Resources.resx">
     <body>
+      <trans-unit id="XA0107">
+        <source>{0} is a Reference Assembly.</source>
+        <target state="new">{0} is a Reference Assembly.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="XA0107_Ignoring">
+        <source>Ignoring Reference Assembly `{0}`.</source>
+        <target state="new">Ignoring Reference Assembly `{0}`.</target>
+        <note>{0} - File name of the assembly.</note>
+      </trans-unit>
       <trans-unit id="XA1005">
         <source>Attempting naive type name fixup for element with ID '{0}' and type '{1}'</source>
         <target state="new">Attempting naive type name fixup for element with ID '{0}' and type '{1}'</target>
@@ -86,6 +96,23 @@
         <note>The phrase "`{0}, {1}`" does not need to be translated.
 {0} - The managed type name
 {1} - The name of the library that contains the type</note>
+      </trans-unit>
+      <trans-unit id="XA4301">
+        <source>APK already contains the item {0}; ignoring.</source>
+        <target state="new">APK already contains the item {0}; ignoring.</target>
+        <note>The abbreviation "APK" should not be translated.
+{0} - The file name.</note>
+      </trans-unit>
+      <trans-unit id="XA4301_ABI">
+        <source>Cannot determine ABI of native library {0}.</source>
+        <target state="new">Cannot determine ABI of native library {0}.</target>
+        <note>The abbreviation "ABI" should not be translated.</note>
+      </trans-unit>
+      <trans-unit id="XA4301_ABI_Ignoring">
+        <source>Could not determine ABI of some native libraries. Ignoring those: {0}</source>
+        <target state="new">Could not determine ABI of some native libraries. Ignoring those: {0}</target>
+        <note>The abbreviation "ABI" should not be translated.
+{0} - Comma-separated list of the ignored library file names.</note>
       </trans-unit>
       <trans-unit id="XA5301">
         <source>Failed to generate Java type for class: {0} due to MAX_PATH: {1}</source>

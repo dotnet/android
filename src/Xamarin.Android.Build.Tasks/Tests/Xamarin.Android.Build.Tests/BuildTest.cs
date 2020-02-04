@@ -2202,7 +2202,7 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 						Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 						var apk = Path.Combine (Root, builder.ProjectDirectory,
 							proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
-						Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, "warning XA4301: Apk already contains the item lib/armeabi-v7a/libRSSupport.so; ignoring."),
+						Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, "warning XA4301: APK already contains the item lib/armeabi-v7a/libRSSupport.so; ignoring."),
 							"warning about skipping libRSSupport.so should have been raised");
 						using (var zipFile = ZipHelper.OpenZip (apk)) {
 							var data = ZipHelper.ReadFileFromZip (zipFile, "lib/x86/libtest.so");
@@ -2249,7 +2249,7 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				builder.ThrowOnBuildFailure = false;
 				Assert.IsFalse (builder.Build (proj), "Build should have failed.");
-				Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, $"error XA4301: Cannot determine abi of native library not-a-real-abi{Path.DirectorySeparatorChar}libtest.so."),
+				Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, $"error XA4301: Cannot determine ABI of native library not-a-real-abi{Path.DirectorySeparatorChar}libtest.so."),
 					"error about libtest.so should have been raised");
 			}
 		}
