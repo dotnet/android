@@ -15,12 +15,15 @@ namespace Xamarin.Android.Prepare
 	//
 	partial class Configurables
 	{
+		const string CorrettoDistVersion = "8.242.08.1";
+		const string CorrettoUrlPathVersion = CorrettoDistVersion;
+
 		static Context ctx => Context.Instance;
 
 		public static partial class Urls
 		{
 			// Keep the trailing slash here - OS-specific code assumes it's there.
-			public const string Corretto_BaseUri = "https://d3pxv6yz143wms.cloudfront.net/";
+			public const string Corretto_BaseUri = "https://corretto.aws/downloads/resources/";
 
 			/// <summary>
 			///   Base URL for all Android SDK and NDK downloads. Used in <see cref="AndroidToolchain"/>
