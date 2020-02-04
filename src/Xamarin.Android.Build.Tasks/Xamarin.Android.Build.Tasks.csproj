@@ -38,21 +38,21 @@
     <PackageReference Include="FSharp.Core" Version="3.1.2.5" />
     <PackageReference Include="ILRepack" Version="2.0.18" />
     <PackageReference Include="Irony" Version="1.1.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="11.0.1" />
-    <PackageReference Include="NuGet.Common" Version="4.6.0" />
-    <PackageReference Include="NuGet.Configuration" Version="4.6.0" />
-    <PackageReference Include="NuGet.DependencyResolver.Core" Version="4.6.0" />
-    <PackageReference Include="NuGet.Frameworks" Version="4.6.0" />
-    <PackageReference Include="NuGet.LibraryModel" Version="4.6.0" />
-    <PackageReference Include="NuGet.Packaging" Version="4.6.0" />
-    <PackageReference Include="NuGet.Packaging.Core" Version="4.6.0" />
-    <PackageReference Include="NuGet.ProjectModel" Version="4.6.0" />
-    <PackageReference Include="NuGet.Protocol" Version="4.6.0" />
-    <PackageReference Include="NuGet.Versioning" Version="4.6.0" />
-    <PackageReference Include="System.CodeDom" Version="4.6.0" />
-    <PackageReference Include="System.Collections.Immutable" Version="1.5.0" />
-    <PackageReference Include="System.Reflection.Metadata" Version="1.6.0" />
-    <PackageReference Include="System.Runtime" Version="4.3.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="NuGet.Common" Version="$(NuGetApiPackageVersion)" />
+    <PackageReference Include="NuGet.Configuration" Version="$(NuGetApiPackageVersion)" />
+    <PackageReference Include="NuGet.DependencyResolver.Core" Version="$(NuGetApiPackageVersion)" />
+    <PackageReference Include="NuGet.Frameworks" Version="$(NuGetApiPackageVersion)" />
+    <PackageReference Include="NuGet.LibraryModel" Version="$(NuGetApiPackageVersion)" />
+    <PackageReference Include="NuGet.Packaging" Version="$(NuGetApiPackageVersion)" />
+    <PackageReference Include="NuGet.Packaging.Core" Version="$(NuGetApiPackageVersion)" />
+    <PackageReference Include="NuGet.ProjectModel" Version="$(NuGetApiPackageVersion)" />
+    <PackageReference Include="NuGet.Protocol" Version="$(NuGetApiPackageVersion)" />
+    <PackageReference Include="NuGet.Versioning" Version="$(NuGetApiPackageVersion)" />
+    <PackageReference Include="System.CodeDom" Version="4.7.0" />
+    <PackageReference Include="System.Collections.Immutable" Version="1.7.0" />
+    <PackageReference Include="System.Reflection.Metadata" Version="1.8.0" />
+    <PackageReference Include="System.Runtime" Version="4.3.1" />
     <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
     <PackageReference Include="XliffTasks" Version="1.0.0-beta.19252.1" PrivateAssets="all" />
   </ItemGroup>
