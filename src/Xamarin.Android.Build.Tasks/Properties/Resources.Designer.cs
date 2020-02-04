@@ -61,6 +61,33 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid file name: It must contain only {0}..
+        /// </summary>
+        internal static string APT0002 {
+            get {
+                return ResourceManager.GetString("APT0002", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid file name: It must contain only {0}..
+        /// </summary>
+        internal static string APT0003 {
+            get {
+                return ResourceManager.GetString("APT0003", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to EmbeddedNativeLibrary &apos;{0}&apos; is invalid in Android Application projects. Please use AndroidNativeLibrary instead..
+        /// </summary>
+        internal static string XA0100 {
+            get {
+                return ResourceManager.GetString("XA0100", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} is a Reference Assembly..
         /// </summary>
         internal static string XA0107 {
@@ -237,6 +264,24 @@ namespace Xamarin.Android.Tasks.Properties {
         internal static string XA4301_ABI_Ignoring {
             get {
                 return ResourceManager.GetString("XA4301_ABI_Ignoring", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MultiDex is enabled, but &apos;{0}&apos; was not specified..
+        /// </summary>
+        internal static string XA4305 {
+            get {
+                return ResourceManager.GetString("XA4305", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MultiDex is enabled, but main dex list file &apos;{0}&apos; does not exist..
+        /// </summary>
+        internal static string XA4305_File_Missing {
+            get {
+                return ResourceManager.GetString("XA4305_File_Missing", resourceCulture);
             }
         }
         
