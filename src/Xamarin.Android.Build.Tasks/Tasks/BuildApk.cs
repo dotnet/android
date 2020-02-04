@@ -295,7 +295,7 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 				if (MonoAndroidHelper.IsReferenceAssembly (assembly.ItemSpec)) {
-					Log.LogCodedWarning ("XA0107", assembly.ItemSpec, 0, "{0} is a Reference Assembly!", assembly.ItemSpec);
+					Log.LogCodedWarning ("XA0107", assembly.ItemSpec, 0, Properties.Resources.XA0107, assembly.ItemSpec);
 				}
 				// Add assembly
 				AddFileToArchiveIfNewer (apk, assembly.ItemSpec, GetTargetDirectory (assembly.ItemSpec) + "/"  + Path.GetFileName (assembly.ItemSpec), compressionMethod: UncompressedMethod);
@@ -334,7 +334,7 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 				if (MonoAndroidHelper.IsReferenceAssembly (assembly.ItemSpec)) {
-					Log.LogCodedWarning ("XA0107", assembly.ItemSpec, 0, "{0} is a Reference Assembly!", assembly.ItemSpec);
+					Log.LogCodedWarning ("XA0107", assembly.ItemSpec, 0, Properties.Resources.XA0107, assembly.ItemSpec);
 				}
 				AddFileToArchiveIfNewer (apk, assembly.ItemSpec, AssembliesPath + Path.GetFileName (assembly.ItemSpec), compressionMethod: UncompressedMethod);
 				var config = Path.ChangeExtension (assembly.ItemSpec, "dll.config");
@@ -518,7 +518,7 @@ namespace Xamarin.Android.Tasks
 			var lib_abi = MonoAndroidHelper.GetNativeLibraryAbi (lib);
 			
 			if (string.IsNullOrWhiteSpace (lib_abi)) {
-				Log.LogCodedError ("XA4301", lib.ItemSpec, 0, "Cannot determine abi of native library {0}.", lib.ItemSpec);
+				Log.LogCodedError ("XA4301", lib.ItemSpec, 0, Properties.Resources.XA4301_ABI, lib.ItemSpec);
 				return null;
 			}
 
@@ -530,8 +530,8 @@ namespace Xamarin.Android.Tasks
 			if (libs.Any (lib => lib.Abi == null))
 				Log.LogCodedWarning (
 						"XA4301",
-						"Could not determine abi of some native libraries, ignoring those: " +
-				                    string.Join (", ", libs.Where (lib => lib.Abi == null).Select (lib => lib.Path)));
+						Properties.Resources.XA4301_ABI_Ignoring,
+						string.Join (", ", libs.Where (lib => lib.Abi == null).Select (lib => lib.Path)));
 			libs = libs.Where (lib => lib.Abi != null);
 			libs = libs.Where (lib => supportedAbis.Contains (lib.Abi));
 			foreach (var arm in ArmAbis)
@@ -558,7 +558,7 @@ namespace Xamarin.Android.Tasks
 			string filename = "/" + Path.GetFileName (item.filePath);
 			string inArchivePath = item.archivePath + filename;
 			if (files.Any (x => (x.archivePath + "/" + Path.GetFileName(x.filePath)) == inArchivePath)) {
-				Log.LogCodedWarning ("XA4301", path, 0, $"Apk already contains the item {inArchivePath}; ignoring.");
+				Log.LogCodedWarning ("XA4301", path, 0, Properties.Resources.XA4301, inArchivePath);
 				return;
 			}
 			files.Add (item);
