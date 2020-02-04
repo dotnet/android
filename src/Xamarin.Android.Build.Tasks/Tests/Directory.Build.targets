@@ -4,14 +4,16 @@
     <GeneratedSdkVersionFile Condition="'$(GeneratedSdkVersionFile)' ==''">$(BaseIntermediateOutputPath)$(MSBuildProjectName).SdkVersion$(DefaultLanguageSourceExtension)</GeneratedSdkVersionFile>
     <GenerateSdkVersionInfo Condition="'$(GenerateSdkVersionInfo)' == ''">true</GenerateSdkVersionInfo>
     <VersionFile>$([MSBuild]::GetDirectoryNameOfFileAbove('$(MSBuildProjectDirectory)', 'ThirdPartyNotices.txt'))\bin\$(Configuration)\Version</VersionFile>
+    <VersionRevFile>$([MSBuild]::GetDirectoryNameOfFileAbove('$(MSBuildProjectDirectory)', 'ThirdPartyNotices.txt'))\bin\$(Configuration)\Version.rev</VersionRevFile>
     <_SdkVersion Condition="Exists('$(VersionFile)')">$([System.IO.File]::ReadAllText('$(VersionFile)').Trim())</_SdkVersion>
+    <_SdkVersion Condition="Exists('$(VersionRevFile)')">$(_SdkVersion).$([System.IO.File]::ReadAllText('$(VersionRevFile)').Trim())</_SdkVersion>
   </PropertyGroup>
     
   <Target Name="GenerateSdkVersionInfo"
           Condition="'$(GenerateSdkVersionInfo)' == 'true' and Exists('$(VersionFile)') and ('$(Language)'=='VB' or '$(Language)'=='C#')"
           BeforeTargets="CoreCompile"
           DependsOnTargets="PrepareForBuild"
-          Inputs="$(VersionFile)" 
+          Inputs="$(VersionFile);$(VersionRevFile)" 
           Outputs="$(GeneratedSdkVersionFile)">
 
     <ItemGroup>
