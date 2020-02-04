@@ -109,6 +109,7 @@
     <_TestsBundleName Condition=" '$(BundleAssemblies)' == 'true' ">-Bundle</_TestsBundleName>
     <TestsFlavor>$(_TestsProfiledAotName)$(_TestsAotName)$(_TestsBundleName)</TestsFlavor>
     <LibZipSharpVersion>1.0.8</LibZipSharpVersion>
+    <NuGetApiPackageVersion>5.4.0</NuGetApiPackageVersion>
   </PropertyGroup>
   <PropertyGroup>
     <MingwCommandPrefix32>i686-w64-mingw32</MingwCommandPrefix32>
