@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -58,9 +60,9 @@ namespace Java.Interop
 			public  JniObjectReference          ClassLoader                 {get; set;}
 			public  IntPtr                      ClassLoader_LoadClass_id    {get; set;}
 
-			public  JniObjectReferenceManager   ObjectReferenceManager      {get; set;}
-			public  JniTypeManager              TypeManager                 {get; set;}
-			public  string                      JvmLibraryPath              {get; set;}
+			public  JniObjectReferenceManager?  ObjectReferenceManager      {get; set;}
+			public  JniTypeManager?             TypeManager                 {get; set;}
+			public  string?                     JvmLibraryPath              {get; set;}
 
 			public CreationOptions ()
 			{
@@ -80,7 +82,7 @@ namespace Java.Interop
 		const string JavaInteropLibrary = "java-interop";
 
 		[DllImport (JavaInteropLibrary, CallingConvention=CallingConvention.Cdecl)]
-		internal static extern int java_interop_jvm_list ([Out] IntPtr[] handles, int bufLen, out int nVMs);
+		internal static extern int java_interop_jvm_list ([Out] IntPtr[]? handles, int bufLen, out int nVMs);
 	}
 
 	public partial class JniRuntime : IDisposable
@@ -89,22 +91,24 @@ namespace Java.Interop
 		const   int     JNI_EDETACHED   = -2;
 		const   int     JNI_EVERSION    = -3;
 
-		static ConcurrentDictionary<IntPtr, JniRuntime>     Runtimes = new ConcurrentDictionary<IntPtr, JniRuntime> ();
+		static Dictionary<IntPtr, JniRuntime>   Runtimes = new Dictionary<IntPtr, JniRuntime> ();
 
 		public static IEnumerable<JniRuntime> GetRegisteredRuntimes ()
 		{
 			return Runtimes.Values;
 		}
 
-		public static JniRuntime GetRegisteredRuntime (IntPtr invocationPointer)
+		public static JniRuntime? GetRegisteredRuntime (IntPtr invocationPointer)
 		{
 			JniRuntime vm;
-			return Runtimes.TryGetValue (invocationPointer, out vm)
-				? vm
-				: null;
+			lock (Runtimes) {
+				return Runtimes.TryGetValue (invocationPointer, out vm)
+					? vm
+					: null;
+			}
 		}
 
-		internal static int GetCreatedJavaVMs (IntPtr[] handles, int bufLen, out int nVMs)
+		internal static int GetCreatedJavaVMs (IntPtr[]? handles, int bufLen, out int nVMs)
 		{
 			return NativeMethods.java_interop_jvm_list (handles, bufLen, out nVMs);
 		}
@@ -122,20 +126,22 @@ namespace Java.Interop
 			return handles;
 		}
 
-		static JniRuntime current;
+		static JniRuntime? current;
 		public static JniRuntime CurrentRuntime {
 			get {
 				var c   = current;
 				if (c != null)
 					return c;
 				int     count   = 0;
-				foreach (var vm in Runtimes.Values) {
-					if (count++ == 0)
-						c = vm;
+				lock (Runtimes) {
+					foreach (var vm in Runtimes.Values) {
+						if (count++ == 0)
+							c = vm;
+					}
 				}
 				if (count == 1) {
 					Interlocked.CompareExchange (ref current, c, null);
-					return c;
+					return c!;
 				}
 				if (count > 1)
 					throw new NotSupportedException (string.Format ("Found {0} Java Runtimes. Don't know which to use. Use JniRuntime.SetCurrent().", count));
@@ -156,7 +162,9 @@ namespace Java.Interop
 		{
 			if (newCurrent == null)
 				throw new ArgumentNullException (nameof (newCurrent));
-			Runtimes.TryAdd (newCurrent.InvocationPointer, newCurrent);
+			lock (Runtimes) {
+				Runtimes [newCurrent.InvocationPointer] = newCurrent;
+			}
 			current = newCurrent;
 		}
 
@@ -166,7 +174,7 @@ namespace Java.Interop
 		bool                                            DestroyRuntimeOnDispose;
 
 		internal    JniObjectReference                  ClassLoader;
-		internal    JniMethodInfo                       ClassLoader_LoadClass;
+		internal    JniMethodInfo?                      ClassLoader_LoadClass;
 
 		public  IntPtr                                  InvocationPointer   {get; private set;}
 
@@ -194,14 +202,16 @@ namespace Java.Interop
 			SetValueManager (options);
 			SetMarshalMemberBuilder (options);
 
-			ObjectReferenceManager      = SetRuntime (options.ObjectReferenceManager);
+			ObjectReferenceManager      = SetRuntime (options.ObjectReferenceManager ?? throw new NotSupportedException ($"Please set {nameof (CreationOptions)}.{nameof (options.ObjectReferenceManager)}!"));
 			TypeManager                 = SetRuntime (options.TypeManager ?? new JniTypeManager ());
 
 			if (Interlocked.CompareExchange (ref current, this, null) != null) {
 				Debug.WriteLine ("WARNING: More than one JniRuntime instance created. This is DOOMED TO FAIL.");
 			}
 
-			Runtimes.TryAdd (InvocationPointer, this);
+			lock (Runtimes) {
+				Runtimes [InvocationPointer] = this;
+			}
 
 			var envp    = options.EnvironmentPointer;
 			if (envp == IntPtr.Zero &&
@@ -245,7 +255,7 @@ namespace Java.Interop
 			where T : class, ISetRuntime
 		{
 			if (value == null)
-				return null;
+				throw new NotSupportedException ();
 
 			value.OnSetRuntime (this);
 			return value;
@@ -265,20 +275,20 @@ namespace Java.Interop
 			Dispose (false);
 		}
 
-		public virtual string GetCurrentManagedThreadName ()
+		public virtual string? GetCurrentManagedThreadName ()
 		{
 			return null;
 		}
 
-		public virtual string GetCurrentManagedThreadStackTrace (int skipFrames = 0, bool fNeedFileInfo = false)
+		public virtual string? GetCurrentManagedThreadStackTrace (int skipFrames = 0, bool fNeedFileInfo = false)
 		{
 			return null;
 		}
 
-		public virtual void FailFast (string message)
+		public virtual void FailFast (string? message)
 		{
 			var m = typeof (Environment).GetMethod ("FailFast");
-			m.Invoke (null, new object[]{ message });
+			m.Invoke (null, new object?[]{ message });
 		}
 
 		public override string ToString ()
@@ -299,7 +309,11 @@ namespace Java.Interop
 
 			Interlocked.CompareExchange (ref current, null, this);
 
-			Runtimes.TryUpdate (InvocationPointer, null, this);
+			lock (Runtimes) {
+				if (Runtimes.TryGetValue (InvocationPointer, out var vm) && vm == this) {
+					Runtimes.Remove (InvocationPointer);
+				}
+			}
 
 			if (disposing) {
 				JniObjectReference.Dispose (ref ClassLoader);
@@ -328,13 +342,13 @@ namespace Java.Interop
 			Invoker             = default (JavaVMInterface);
 		}
 
-		public void AttachCurrentThread (string name = null, JniObjectReference group = default (JniObjectReference))
+		public void AttachCurrentThread (string? name = null, JniObjectReference group = default (JniObjectReference))
 		{
 			var jnienv  = _AttachCurrentThread (name, group);
 			JniEnvironment.SetEnvironmentPointer (jnienv, this);
 		}
 
-		internal    IntPtr  _AttachCurrentThread (string name = null, JniObjectReference group = default (JniObjectReference))
+		internal    IntPtr  _AttachCurrentThread (string? name = null, JniObjectReference group = default (JniObjectReference))
 		{
 			AssertValid ();
 			var threadArgs = new JavaVMThreadAttachArgs () {
@@ -367,7 +381,7 @@ namespace Java.Interop
 			Invoker.DestroyJavaVM (InvocationPointer);
 		}
 
-		public virtual Exception GetExceptionForThrowable (ref JniObjectReference reference, JniObjectReferenceOptions options)
+		public virtual Exception? GetExceptionForThrowable (ref JniObjectReference reference, JniObjectReferenceOptions options)
 		{
 #if XA_INTEGRATION
 			throw new NotSupportedException ("Do not know h ow to convert a JniObjectReference to a System.Exception!");

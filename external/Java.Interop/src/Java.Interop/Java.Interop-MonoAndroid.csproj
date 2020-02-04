@@ -15,6 +15,7 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <BaseIntermediateOutputPath>obj-MonoAndroid\</BaseIntermediateOutputPath>
+    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -22,11 +23,12 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>..\..\bin\Debug</OutputPath>
-    <DefineConstants>DEBUG;INTEROP;FEATURE_JNIENVIRONMENT_JI_PINVOKES;FEATURE_JNIOBJECTREFERENCE_INTPTRS</DefineConstants>
+    <DefineConstants>DEBUG;INTEROP;FEATURE_JNIENVIRONMENT_JI_PINVOKES;FEATURE_JNIOBJECTREFERENCE_INTPTRS;INTERNAL_NULLABLE_ATTRIBUTES</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>enable</Nullable>
     <DocumentationFile>..\..\bin\Debug\Java.Interop.xml</DocumentationFile>
     <JNIEnvGenPath>..\..\bin\BuildDebug</JNIEnvGenPath>
   </PropertyGroup>
@@ -37,8 +39,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
-    <DefineConstants>INTEROP;FEATURE_JNIENVIRONMENT_JI_PINVOKES;FEATURE_JNIOBJECTREFERENCE_INTPTRS</DefineConstants>
+    <DefineConstants>INTEROP;FEATURE_JNIENVIRONMENT_JI_PINVOKES;FEATURE_JNIOBJECTREFERENCE_INTPTRS;INTERNAL_NULLABLE_ATTRIBUTES</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>enable</Nullable>
     <DocumentationFile>..\..\bin\Release\Java.Interop.xml</DocumentationFile>
     <JNIEnvGenPath>..\..\bin\BuildRelease</JNIEnvGenPath>
   </PropertyGroup>

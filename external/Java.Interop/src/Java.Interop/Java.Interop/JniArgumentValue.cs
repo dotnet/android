@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Runtime.InteropServices;
 
@@ -90,7 +92,7 @@ namespace Android.Runtime
 			l = value.Handle;
 		}
 
-		public JniArgumentValue (IJavaPeerable value)
+		public JniArgumentValue (IJavaPeerable? value)
 		{
 			this = new JniArgumentValue ();
 			if (value != null)
@@ -104,7 +106,7 @@ namespace Android.Runtime
 			return j.GetHashCode ();
 		}
 
-		public override bool Equals (object obj)
+		public override bool Equals (object? obj)
 		{
 			var o   = obj as JniArgumentValue?;
 			if (!o.HasValue)

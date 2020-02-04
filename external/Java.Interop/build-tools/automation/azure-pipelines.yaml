@@ -6,7 +6,7 @@ trigger:
 
 # Global variables
 variables:
-  DotNetCoreVersion: 2.1.701
+  DotNetCoreVersion: 3.1.x
   HostedMac: Hosted Mac Internal
   HostedWinVS2019: Hosted Windows 2019 with VS2019
 
@@ -80,7 +80,7 @@ jobs:
       version: $(DotNetCoreVersion)
     
   - script: |
-      dotnet tool install --global boots --version 1.0.0.291   
+      dotnet tool install --global boots  
       boots https://download.mono-project.com/archive/6.4.0/macos-10-universal/MonoFramework-MDK-6.4.0.198.macos10.xamarin.universal.pkg
     displayName: Install Mono 6.4
     

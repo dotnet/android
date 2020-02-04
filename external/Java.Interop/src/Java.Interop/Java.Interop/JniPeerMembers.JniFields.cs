@@ -1,4 +1,6 @@
-﻿namespace Java.Interop {
+﻿#nullable enable
+
+namespace Java.Interop {
 
 	partial class JniPeerMembers {
 	partial class JniInstanceFields {

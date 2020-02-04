@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 
 namespace Java.Interop
@@ -8,7 +10,7 @@ namespace Java.Interop
 		internal    const   string          JniTypeName = "java/lang/Throwable";
 		readonly    static  JniPeerMembers  _members    = new JniPeerMembers (JniTypeName, typeof (JavaException));
 
-		public string                   JavaStackTrace { get; private set; }
+		public string?                  JavaStackTrace { get; private set; }
 		public int                      JniIdentityHashCode { get; private set; }
 		public JniManagedPeerStates     JniManagedPeerState { get; private set; }
 
@@ -177,7 +179,7 @@ namespace Java.Interop
 			return _members.InstanceMethods.InvokeVirtualInt32Method ("hashCode.()I", this, null);
 		}
 
-		static string GetMessage (ref JniObjectReference reference, JniObjectReferenceOptions transfer)
+		static string? GetMessage (ref JniObjectReference reference, JniObjectReferenceOptions transfer)
 		{
 			if (transfer == JniObjectReferenceOptions.None)
 				return null;
@@ -187,7 +189,7 @@ namespace Java.Interop
 			return JniEnvironment.Strings.ToString (ref s, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
-		static Exception GetCause (ref JniObjectReference reference, JniObjectReferenceOptions transfer)
+		static Exception? GetCause (ref JniObjectReference reference, JniObjectReferenceOptions transfer)
 		{
 			if (transfer == JniObjectReferenceOptions.None)
 				return null;
@@ -197,7 +199,7 @@ namespace Java.Interop
 			return JniEnvironment.Runtime.GetExceptionForThrowable (ref e, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
-		unsafe string GetJavaStack (JniObjectReference handle)
+		unsafe string? GetJavaStack (JniObjectReference handle)
 		{
 			using (var StringWriter_class   = new JniType ("java/io/StringWriter"))
 			using (var PrintWriter_class    = new JniType ("java/io/PrintWriter")) {

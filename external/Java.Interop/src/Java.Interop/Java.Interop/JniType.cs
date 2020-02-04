@@ -1,4 +1,7 @@
+#nullable enable
+
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -11,7 +14,8 @@ namespace Java.Interop {
 
 	public sealed class JniType : IDisposable {
 
-		public static unsafe JniType DefineClass (string name, JniObjectReference loader, byte[] classFileData)
+		[return: NotNullIfNotNull ("name")]
+		public static unsafe JniType? DefineClass (string name, JniObjectReference loader, byte[] classFileData)
 		{
 			if (classFileData == null)
 				return null;
@@ -54,7 +58,7 @@ namespace Java.Interop {
 			get {
 				AssertValid ();
 
-				return JniEnvironment.Types.GetJniTypeNameFromClass (PeerReference);
+				return JniEnvironment.Types.GetJniTypeNameFromClass (PeerReference)!;
 			}
 		}
 
@@ -86,7 +90,7 @@ namespace Java.Interop {
 				throw new ObjectDisposedException (GetType ().FullName);
 		}
 
-		public static JniType GetCachedJniType (ref JniType cachedType, string classname)
+		public static JniType GetCachedJniType ([NotNull] ref JniType? cachedType, string classname)
 		{
 			if (cachedType != null && cachedType.PeerReference.IsValid)
 				return cachedType;
@@ -108,7 +112,7 @@ namespace Java.Interop {
 			JniObjectReference.Dispose (ref peerReference);
 		}
 
-		public JniType GetSuperclass ()
+		public JniType? GetSuperclass ()
 		{
 			AssertValid ();
 
@@ -139,7 +143,7 @@ namespace Java.Interop {
 
 #pragma warning disable 0414
 		// This isn't used anywhere; it's just present so that the GC won't collect the referenced delegates.
-		JniNativeMethodRegistration[] methods;
+		JniNativeMethodRegistration[]? methods;
 #pragma warning restore 0414
 
 		public void RegisterNativeMethods (params JniNativeMethodRegistration[] methods)
@@ -169,7 +173,7 @@ namespace Java.Interop {
 			return JniEnvironment.InstanceMethods.GetMethodID (PeerReference, "<init>", signature);
 		}
 
-		public JniMethodInfo GetCachedConstructor (ref JniMethodInfo cachedMethod, string signature)
+		public JniMethodInfo GetCachedConstructor ([NotNull] ref JniMethodInfo? cachedMethod, string signature)
 		{
 			AssertValid ();
 
@@ -197,7 +201,7 @@ namespace Java.Interop {
 			return JniEnvironment.InstanceFields.GetFieldID (PeerReference, name, signature);
 		}
 
-		public JniFieldInfo GetCachedInstanceField (ref JniFieldInfo cachedField, string name, string signature)
+		public JniFieldInfo GetCachedInstanceField ([NotNull] ref JniFieldInfo? cachedField, string name, string signature)
 		{
 			AssertValid ();
 
@@ -217,7 +221,7 @@ namespace Java.Interop {
 			return JniEnvironment.StaticFields.GetStaticFieldID (PeerReference, name, signature);
 		}
 
-		public JniFieldInfo GetCachedStaticField (ref JniFieldInfo cachedField, string name, string signature)
+		public JniFieldInfo GetCachedStaticField ([NotNull] ref JniFieldInfo? cachedField, string name, string signature)
 		{
 			AssertValid ();
 
@@ -237,7 +241,7 @@ namespace Java.Interop {
 			return JniEnvironment.InstanceMethods.GetMethodID (PeerReference, name, signature);
 		}
 
-		public JniMethodInfo GetCachedInstanceMethod (ref JniMethodInfo cachedMethod, string name, string signature)
+		public JniMethodInfo GetCachedInstanceMethod ([NotNull] ref JniMethodInfo? cachedMethod, string name, string signature)
 		{
 			AssertValid ();
 
@@ -257,7 +261,7 @@ namespace Java.Interop {
 			return JniEnvironment.StaticMethods.GetStaticMethodID (PeerReference, name, signature);
 		}
 
-		public JniMethodInfo GetCachedStaticMethod (ref JniMethodInfo cachedMethod, string name, string signature)
+		public JniMethodInfo GetCachedStaticMethod ([NotNull] ref JniMethodInfo? cachedMethod, string name, string signature)
 		{
 			AssertValid ();
 

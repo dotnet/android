@@ -1,4 +1,7 @@
+#nullable enable
+
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -14,7 +17,7 @@ namespace Java.Interop
 
 		internal    bool        IsKeyword           {get; private set;}
 
-		public      string      SimpleReference     {get; private set;}
+		public      string?     SimpleReference     {get; private set;}
 		public      int         ArrayRank           {get; private set;}
 
 		public      bool        IsValid {
@@ -24,7 +27,7 @@ namespace Java.Interop
 		public      string      QualifiedReference {
 			get {
 				string typename = IsKeyword
-					? SimpleReference
+					? SimpleReference ?? throw new InvalidOperationException ()
 					: "L" + SimpleReference + ";";
 				return ArrayRank == 0
 					? typename
@@ -33,7 +36,7 @@ namespace Java.Interop
 		}
 
 		public      string      Name {
-			get {return ArrayRank == 0 ? SimpleReference : QualifiedReference;}
+			get {return ArrayRank == 0 ? SimpleReference ?? throw new InvalidOperationException (): QualifiedReference;}
 		}
 
 		public JniTypeSignature (string simpleReference, int arrayRank = 0, bool keyword = false)
@@ -54,6 +57,8 @@ namespace Java.Interop
 
 		public JniTypeSignature AddArrayRank (int rank)
 		{
+			if (SimpleReference == null)
+				throw new InvalidOperationException ();
 			return new JniTypeSignature (SimpleReference, ArrayRank + rank, IsKeyword);
 		}
 
@@ -85,7 +90,7 @@ namespace Java.Interop
 			return r;
 		}
 
-		public static bool TryParse (string signature, out JniTypeSignature result)
+		public static bool TryParse (string signature, [NotNullWhen (true)] out JniTypeSignature result)
 		{
 			var e = TryParseWithException (signature, out result);
 			if (e != null)
@@ -93,7 +98,7 @@ namespace Java.Interop
 			return true;
 		}
 
-		static Exception TryParseWithException (string signature, out JniTypeSignature result)
+		static Exception? TryParseWithException (string signature, out JniTypeSignature result)
 		{
 			result  = default (JniTypeSignature);
 
@@ -102,7 +107,7 @@ namespace Java.Interop
 
 			int i = 0;
 			int r = 0;
-			var n = (string) null;
+			var n = (string?) null;
 			var k = false;
 			while (i < signature.Length && signature [i] == '[') {
 				i++;

@@ -1,4 +1,7 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace Java.Interop {
@@ -39,21 +42,22 @@ namespace Java.Interop {
 			return Value.GetHashCode ();
 		}
 
-		public override bool Equals (object obj)
+		public override bool Equals (object? obj)
 		{
 			if (obj is JavaProxyObject other)
 				return object.Equals (Value, other.Value);
 			return object.Equals (Value, obj);
 		}
 
-		public bool Equals (JavaProxyObject other) => object.Equals (Value, other.Value);
+		public bool Equals (JavaProxyObject? other) => object.Equals (Value, other?.Value);
 
 		public override string ToString ()
 		{
 			return Value.ToString ();
 		}
 
-		public static JavaProxyObject GetProxy (object value)
+		[return: NotNullIfNotNull ("object")]
+		public static JavaProxyObject? GetProxy (object value)
 		{
 			if (value == null)
 				return null;
@@ -73,10 +77,10 @@ namespace Java.Interop {
 		{
 			var envp = new JniTransition (jnienv);
 			try {
-				var self    = (JavaProxyObject) JniEnvironment.Runtime.ValueManager.PeekPeer (new JniObjectReference (n_self));
+				var self    = (JavaProxyObject?) JniEnvironment.Runtime.ValueManager.PeekPeer (new JniObjectReference (n_self));
 				var r_value = new JniObjectReference (n_value);
 				var value   = JniEnvironment.Runtime.ValueManager.GetValue (ref r_value, JniObjectReferenceOptions.Copy);
-				return self.Equals (value);
+				return self?.Equals (value) ?? false;
 			}
 			catch (Exception e) when (JniEnvironment.Runtime.ExceptionShouldTransitionToJni (e)) {
 				envp.SetPendingException (e);
@@ -92,8 +96,8 @@ namespace Java.Interop {
 		{
 			var envp = new JniTransition (jnienv);
 			try {
-				var self = (JavaProxyObject) JniEnvironment.Runtime.ValueManager.PeekPeer (new JniObjectReference (n_self));
-				return self.GetHashCode ();
+				var self = (JavaProxyObject?) JniEnvironment.Runtime.ValueManager.PeekPeer (new JniObjectReference (n_self));
+				return self?.GetHashCode () ?? 0;
 			}
 			catch (Exception e) when (JniEnvironment.Runtime.ExceptionShouldTransitionToJni (e)) {
 				envp.SetPendingException (e);
@@ -108,8 +112,8 @@ namespace Java.Interop {
 		{
 			var envp = new JniTransition (jnienv);
 			try {
-				var self    = (JavaProxyObject) JniEnvironment.Runtime.ValueManager.PeekPeer (new JniObjectReference (n_self));
-				var s       = self.ToString ();
+				var self    = (JavaProxyObject?) JniEnvironment.Runtime.ValueManager.PeekPeer (new JniObjectReference (n_self));
+				var s       = self?.ToString ();
 				var r       = JniEnvironment.Strings.NewString (s);
 				try {
 					return JniEnvironment.References.NewReturnToJniRef (r);

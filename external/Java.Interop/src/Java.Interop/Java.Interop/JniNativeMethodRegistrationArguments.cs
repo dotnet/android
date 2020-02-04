@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Collections.Generic;
 
 namespace Java.Interop
@@ -10,10 +12,10 @@ namespace Java.Interop
 		public ICollection<JniNativeMethodRegistration> Registrations {
 			get { return _registrations ?? throw new InvalidOperationException (invalidStateMessage); }
 		}
-		public string Methods { get; }
+		public string? Methods { get; }
 		ICollection<JniNativeMethodRegistration> _registrations;
 
-		public JniNativeMethodRegistrationArguments (ICollection<JniNativeMethodRegistration> registrations, string methods)
+		public JniNativeMethodRegistrationArguments (ICollection<JniNativeMethodRegistration> registrations, string? methods)
 		{
 			_registrations = registrations ?? throw new ArgumentNullException (nameof (registrations));
 			Methods = methods;

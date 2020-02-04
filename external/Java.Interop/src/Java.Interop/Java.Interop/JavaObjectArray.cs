@@ -1,5 +1,8 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace Java.Interop
@@ -45,6 +48,7 @@ namespace Java.Interop
 		{
 		}
 
+		[MaybeNull]
 		public override T this [int index] {
 			get {
 				if (index < 0 || index >= Length)
@@ -58,6 +62,7 @@ namespace Java.Interop
 			}
 		}
 
+		[return: MaybeNull]
 		T GetElementAt (int index)
 		{
 			var lref = JniEnvironment.Arrays.GetObjectArrayElement (PeerReference, index);
@@ -76,7 +81,9 @@ namespace Java.Interop
 		{
 			int len = Length;
 			for (int i = 0; i < len; ++i) {
+#pragma warning disable CS8603 // Possible null reference return.
 				yield return GetElementAt (i);
+#pragma warning restore CS8603 // Possible null reference return.
 			}
 		}
 
@@ -84,11 +91,13 @@ namespace Java.Interop
 		{
 			int len = Length;
 			var vm  = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T> ();
+#pragma warning disable 8653
 			var s   = vm.CreateArgumentState (default (T));
 			for (int i = 0; i < len; i++) {
 				JniEnvironment.Arrays.SetObjectArrayElement (PeerReference, i, s.ReferenceValue);
 			}
 			vm.DestroyGenericArgumentState (default (T), ref s, 0);
+#pragma warning restore 8653
 		}
 
 		public override int IndexOf (T item)
@@ -97,7 +106,9 @@ namespace Java.Interop
 			for (int i = 0; i < len; i++) {
 				var at = GetElementAt (i);
 				try {
+#pragma warning disable CS8604 // Possible null reference argument.
 					if (EqualityComparer<T>.Default.Equals (item, at) || JniMarshal.RecursiveEquals (item, at))
+#pragma warning restore CS8604 // Possible null reference argument.
 						return i;
 				} finally {
 					var j = at as IJavaPeerable;
@@ -121,7 +132,9 @@ namespace Java.Interop
 			int len = Length;
 			for (int i = 0; i < len; i++) {
 				var item         = GetElementAt (i);
+#pragma warning disable CS8601 // Possible null reference assignment.
 				list [index + i] = item;
+#pragma warning restore CS8601 // Possible null reference assignment.
 				if (forMarshalCollection) {
 					var d = item as IJavaPeerable;
 					if (d != null)
@@ -130,7 +143,7 @@ namespace Java.Interop
 			}
 		}
 
-		internal override bool TargetTypeIsCurrentType (Type targetType)
+		internal override bool TargetTypeIsCurrentType (Type? targetType)
 		{
 			return base.TargetTypeIsCurrentType (targetType) ||
 				targetType == typeof (JavaObjectArray<T>);
@@ -138,7 +151,7 @@ namespace Java.Interop
 
 		internal sealed class ValueMarshaler : JniValueMarshaler<IList<T>> {
 
-			public override IList<T> CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+			public override IList<T> CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
 			{
 				return JavaArray<T>.CreateValue (ref reference, options, targetType, (ref JniObjectReference h, JniObjectReferenceOptions t) => new JavaObjectArray<T> (ref h, t) {
 					forMarshalCollection    = true,

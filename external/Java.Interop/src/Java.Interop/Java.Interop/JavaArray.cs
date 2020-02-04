@@ -1,7 +1,10 @@
+#nullable enable
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 
@@ -25,6 +28,7 @@ namespace Java.Interop
 			get {return JniEnvironment.Arrays.GetArrayLength (PeerReference);}
 		}
 
+		[MaybeNull]
 		public abstract T this [int index] {
 			get;
 			set;
@@ -56,7 +60,9 @@ namespace Java.Interop
 		{
 			int len = Length;
 			for (int i = 0; i < len; ++i)
+#pragma warning disable CS8603 // Possible null reference return.
 				yield return this [i];
+#pragma warning restore CS8603 // Possible null reference return.
 		}
 
 		internal static void CheckArrayCopy (int sourceIndex, int sourceLength, int destinationIndex, int destinationLength, int length)
@@ -98,7 +104,7 @@ namespace Java.Interop
 			return value.ToList ();
 		}
 
-		internal IList<T> ToTargetType (Type targetType, bool dispose)
+		internal IList<T> ToTargetType (Type? targetType, bool dispose)
 		{
 			if (TargetTypeIsCurrentType (targetType))
 				return this;
@@ -113,26 +119,27 @@ namespace Java.Interop
 			throw CreateMarshalNotSupportedException (GetType (), targetType);
 		}
 
-		internal virtual bool TargetTypeIsCurrentType (Type targetType)
+		internal virtual bool TargetTypeIsCurrentType ([NotNullWhen (false)]Type? targetType)
 		{
 			return targetType == null || targetType == typeof (JavaArray<T>);
 		}
 
-		internal static Exception CreateMarshalNotSupportedException (Type sourceType, Type targetType)
+		internal static Exception CreateMarshalNotSupportedException (Type sourceType, Type? targetType)
 		{
-			throw new NotSupportedException (
-					string.Format ("Do not know how to marshal a '{0}' into a '{1}'.",
-						sourceType.FullName, targetType.FullName));
+			return new NotSupportedException (
+					string.Format ("Do not know how to marshal a `{0}`{1}.",
+						sourceType.FullName,
+						targetType != null ? $" into a `{targetType.FullName}`" : ""));
 		}
 
-		internal static IList<T> CreateValue<TArray> (ref JniObjectReference reference, JniObjectReferenceOptions transfer, Type targetType, ArrayCreator<TArray> creator)
+		internal static IList<T> CreateValue<TArray> (ref JniObjectReference reference, JniObjectReferenceOptions transfer, Type? targetType, ArrayCreator<TArray> creator)
 			where TArray : JavaArray<T>
 		{
 			return creator (ref reference, transfer)
 				.ToTargetType (targetType, dispose: true);
 		}
 
-		internal    static  JniValueMarshalerState  CreateArgumentState<TArray> (IList<T> value, ParameterAttributes synchronize, Func<IList<T>, bool, TArray> creator)
+		internal    static  JniValueMarshalerState  CreateArgumentState<TArray> (IList<T>? value, ParameterAttributes synchronize, Func<IList<T>, bool, TArray> creator)
 			where TArray : JavaArray<T>
 		{
 			if (value == null)
@@ -149,10 +156,10 @@ namespace Java.Interop
 			return new JniValueMarshalerState (a);
 		}
 
-		internal static void DestroyArgumentState<TArray> (IList<T> value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+		internal static void DestroyArgumentState<TArray> (IList<T>? value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
 			where TArray : JavaArray<T>
 		{
-			var source = (TArray) state.PeerableValue;
+			var source = (TArray?) state.PeerableValue;
 			if (source == null)
 				return;
 
@@ -187,7 +194,9 @@ namespace Java.Interop
 		{
 			int len = Length;
 			for (int i = 0; i < len; i++) {
+#pragma warning disable CS8601 // Possible null reference assignment.
 				list [index + i] = this [i];
+#pragma warning restore CS8601 // Possible null reference assignment.
 			}
 		}
 
@@ -217,9 +226,11 @@ namespace Java.Interop
 			}
 		}
 
-		object IList.this [int index] {
+		object? IList.this [int index] {
 			get {return this [index];}
+#pragma warning disable 8601
 			set {this [index] = (T) value;}
+#pragma warning restore 8601
 		}
 
 		void ICollection.CopyTo (Array array, int index)

@@ -3,6 +3,8 @@
 <#@ import    namespace="System.Collections.Generic" #>
 <#@ import    namespace="System.Linq" #>
 <#@ import    namespace="System.Text" #>
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -72,12 +74,12 @@ namespace Java.Interop {
 	static class Jni<#= type.Name #> {
 		internal    const   string  JniTypeName = "java/lang/<#= type.Name #>";
 
-		static JniType _TypeRef;
+		static JniType? _TypeRef;
 		static JniType TypeRef {
 			get {return JniType.GetCachedJniType (ref _TypeRef, JniTypeName);}
 		}
 
-		static JniMethodInfo init;
+		static JniMethodInfo? init;
 		internal static unsafe JniObjectReference CreateLocalRef (<#= type.Type #> value)
 		{
 			var args    = stackalloc JniArgumentValue [1];
@@ -87,8 +89,8 @@ namespace Java.Interop {
 			return TypeRef.NewObject (init, args);
 		}
 
-		static JniMethodInfo <#= type.GetValue #>;
-		internal static <#= type.Type #> GetValueFromJni (ref JniObjectReference self, JniObjectReferenceOptions transfer, Type targetType)
+		static JniMethodInfo? <#= type.GetValue #>;
+		internal static <#= type.Type #> GetValueFromJni (ref JniObjectReference self, JniObjectReferenceOptions transfer, Type? targetType)
 		{
 			Debug.Assert (targetType == null || targetType == typeof (<#= type.Type #>), "Expected targetType==typeof(<#= type.Type #>); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref <#= type.GetValue #>, "<#= type.GetValue #>", "()<#= type.JniType #>");
@@ -112,14 +114,14 @@ namespace Java.Interop {
 		    get {return typeof (<#= type.Type #>);}
 		}
 
-		public override object CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		public override object? CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
 		{
 			if (!reference.IsValid)
 				return null;
 			return CreateGenericValue (ref reference, options, targetType);
 		}
 
-		public override <#= type.Type #> CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		public override <#= type.Type #> CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
 		{
 			if (!reference.IsValid)
 				return default (<#= type.Type #>);
@@ -138,7 +140,7 @@ namespace Java.Interop {
 			return new JniValueMarshalerState (r);
 		}
 
-		public override void DestroyArgumentState (object value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+		public override void DestroyArgumentState (object? value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
 		{
 			var r   = state.ReferenceValue;
 			JniObjectReference.Dispose (ref r);
@@ -152,7 +154,7 @@ namespace Java.Interop {
 			state   = new JniValueMarshalerState ();
 		}
 
-		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type targetType)
+		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type? targetType)
 		{
 		    return sourceValue;
 		}
@@ -172,7 +174,7 @@ namespace Java.Interop {
 
 		internal    static  readonly    JniNullable<#= type.Type #>ValueMarshaler   Instance    = new JniNullable<#= type.Type #>ValueMarshaler ();
 
-		public override <#= type.Type #>? CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		public override <#= type.Type #>? CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
 		{
 			if (!reference.IsValid)
 				return null;

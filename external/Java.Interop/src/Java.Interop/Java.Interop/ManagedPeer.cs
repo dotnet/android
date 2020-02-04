@@ -1,3 +1,5 @@
+﻿#nullable enable
+
 using System;
 using System.Diagnostics;
 using System.Linq;
@@ -148,18 +150,18 @@ namespace Java.Interop {
 			return new NotSupportedException (message.ToString (), CreateJniLocationException ());
 		}
 
-		static Type[] GetParameterTypes (string signature)
+		static Type[] GetParameterTypes (string? signature)
 		{
 			if (string.IsNullOrEmpty (signature))
 				return Array.Empty<Type> ();
-			var typeNames   = signature.Split (':');
+			var typeNames   = signature!.Split (':');
 			var ptypes      = new Type [typeNames.Length];
 			for (int i = 0; i < typeNames.Length; i++)
 				ptypes [i] = Type.GetType (typeNames [i], throwOnError:true);
 			return ptypes;
 		}
 
-		static object[] GetValues (JniRuntime runtime, JniObjectReference values, Type[] types)
+		static object?[]? GetValues (JniRuntime runtime, JniObjectReference values, Type[] types)
 		{
 			if (!values.IsValid)
 				return null;
@@ -167,7 +169,7 @@ namespace Java.Interop {
 			int len = JniEnvironment.Arrays.GetArrayLength (values);
 			Debug.Assert (len == types.Length,
 					string.Format ("Unexpected number of parameter types! Expected {0}, got {1}", types.Length, len));
-			var pvalues = new object [types.Length];
+			var pvalues = new object? [types.Length];
 			for (int i = 0; i < pvalues.Length; ++i) {
 				var n_value = JniEnvironment.Arrays.GetObjectArrayElement (values, i);
 				var value   = runtime.ValueManager.GetValue (ref n_value, JniObjectReferenceOptions.CopyAndDispose, types [i]);

@@ -1,11 +1,13 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 
 namespace Java.Interop {
 
 	public struct JniTransition : IDisposable {
 
 		bool        disposed;
-		Exception   pendingException;
+		Exception?  pendingException;
 
 		public JniTransition (IntPtr environmentPointer)
 		{

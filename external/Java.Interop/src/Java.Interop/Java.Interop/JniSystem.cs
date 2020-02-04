@@ -1,14 +1,16 @@
+#nullable enable
+
 using System;
 
 namespace Java.Interop
 {
 	static class JniSystem {
-		static JniType _typeRef;
+		static JniType? _typeRef;
 		static JniType TypeRef {
 			get {return JniType.GetCachedJniType (ref _typeRef, "java/lang/System");}
 		}
 
-		static JniMethodInfo _identityHashCode;
+		static JniMethodInfo? _identityHashCode;
 		internal static unsafe int IdentityHashCode (JniObjectReference value)
 		{
 			var args = stackalloc JniArgumentValue [1];

@@ -2,11 +2,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <ProjectGuid>{94BD81F7-B06F-4295-9636-F8A3B6BDC762}</ProjectGuid>
     <NoWarn>1591</NoWarn>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
-    <DefineConstants>INTEROP;FEATURE_JNIENVIRONMENT_JI_PINVOKES;FEATURE_JNIOBJECTREFERENCE_INTPTRS</DefineConstants>
+    <DefineConstants>INTEROP;FEATURE_JNIENVIRONMENT_JI_PINVOKES;FEATURE_JNIOBJECTREFERENCE_INTPTRS;INTERNAL_NULLABLE_ATTRIBUTES</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
@@ -14,18 +13,16 @@
     <OutputPath>..\..\bin\Debug</OutputPath>
     <DocumentationFile>..\..\bin\Debug\Java.Interop.xml</DocumentationFile>
     <JNIEnvGenPath>..\..\bin\BuildDebug</JNIEnvGenPath>
-    <DefineConstants>DEBUG;$(DefineConstants)</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Gendarme|AnyCPU' ">
-    <OutputPath>..\..\bin\GendarmeDebug</OutputPath>
-    <DefineConstants>DEBUG;$(DefineConstants)</DefineConstants>
-    <DocumentationFile>..\..\bin\Debug\Java.Interop.xml</DocumentationFile>
-    <JNIEnvGenPath>..\..\bin\BuildDebug</JNIEnvGenPath>
+    <DefineConstants>$(DefineConstants);DEBUG;NETSTANDARD;NETSTANDARD2_0</DefineConstants>
+    <LangVersion>8.0</LangVersion>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <OutputPath>..\..\bin\Release</OutputPath>
     <DocumentationFile>..\..\bin\Release\Java.Interop.xml</DocumentationFile>
     <JNIEnvGenPath>..\..\bin\BuildRelease</JNIEnvGenPath>
+    <LangVersion>8.0</LangVersion>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Java.Interop\JniLocationException.cs" />
@@ -64,9 +61,32 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <ProjectReference Include="..\..\build-tools\jnienv-gen\jnienv-gen.csproj">
-      <Project>{6410DA0F-5E14-4FC0-9AEE-F4C542C96C7A}</Project>
-      <Name>jnienv-gen</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <Compile Condition=" '$(EnableDefaultCompileItems)' == 'true' " Update="Java.Interop\JavaPrimitiveArrays.cs">
+      <DependentUpon>JavaPrimitiveArrays.tt</DependentUpon>
+    </Compile>
+    <Compile Condition=" '$(EnableDefaultCompileItems)' == 'true' " Update="Java.Interop\JniBuiltinMarshalers.cs">
+      <DependentUpon>JniBuiltinMarshalers.tt</DependentUpon>
+    </Compile>
+    <Compile Condition=" '$(EnableDefaultCompileItems)' == 'true' " Update="Java.Interop\JniPeerMembers.JniFields.cs">
+      <DependentUpon>JniPeerMembers.JniFields.tt</DependentUpon>
+    </Compile>
+    <Compile Condition=" '$(EnableDefaultCompileItems)' == 'true' " Update="Java.Interop\JniPeerMembers.JniInstanceMethods_Invoke.cs">
+      <DependentUpon>JniPeerMembers.JniInstanceMethods_Invoke.tt</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ProjectExtensions>
+    <MonoDevelop>
+      <Properties>
+        <Policies>
+          <VersionControlPolicy>
+            <CommitMessageStyle Indent="&#x9;" LineAlign="0" IncludeDirectoryPaths="True" />
+          </VersionControlPolicy>
+        </Policies>
+      </Properties>
+    </MonoDevelop>
+  </ProjectExtensions>
 </Project>

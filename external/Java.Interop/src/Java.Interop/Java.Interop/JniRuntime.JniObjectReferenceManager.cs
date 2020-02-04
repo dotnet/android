@@ -1,3 +1,5 @@
+# nullable enable
+
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -18,11 +20,14 @@ namespace Java.Interop {
 			{
 			}
 
-			public  JniRuntime      Runtime { get; private set; }
+			JniRuntime?             runtime;
+			public  JniRuntime      Runtime {
+				get => runtime ?? throw new NotSupportedException ();
+			}
 
 			public virtual void OnSetRuntime (JniRuntime runtime)
 			{
-				Runtime = runtime;
+				this.runtime = runtime;
 			}
 
 			public abstract int GlobalReferenceCount {
@@ -118,7 +123,7 @@ namespace Java.Interop {
 				get {return false;}
 			}
 
-			public virtual void WriteGlobalReferenceLine (string format, params object[] args)
+			public virtual void WriteGlobalReferenceLine (string format, params object?[] args)
 			{
 			}
 

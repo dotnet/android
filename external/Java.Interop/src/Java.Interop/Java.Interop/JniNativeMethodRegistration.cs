@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Threading;
 
@@ -13,9 +15,9 @@ namespace Java.Interop {
 
 		public JniNativeMethodRegistration (string name, string signature, Delegate marshaler)
 		{
-			Name        = name;
-			Signature   = signature;
-			Marshaler   = marshaler;
+			Name        = name      ?? throw new ArgumentNullException (nameof (name));
+			Signature   = signature ?? throw new ArgumentNullException (nameof (signature));
+			Marshaler   = marshaler ?? throw new ArgumentNullException (nameof (marshaler));
 		}
 	}
 }

@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -7,22 +9,22 @@ using Java.Interop.Expressions;
 
 namespace Java.Interop {
 
-	sealed class JniStringValueMarshaler : JniValueMarshaler<string> {
+	sealed class JniStringValueMarshaler : JniValueMarshaler<string?> {
 
 		internal    static  readonly    JniStringValueMarshaler     Instance    = new JniStringValueMarshaler ();
 
-		public override string CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		public override string? CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
 		{
 			return JniEnvironment.Strings.ToString (ref reference, options, targetType ?? typeof (string));
 		}
 
-		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (string value, ParameterAttributes synchronize)
+		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (string? value, ParameterAttributes synchronize)
 		{
 			var r   = JniEnvironment.Strings.NewString (value);
 			return new JniValueMarshalerState (r);
 		}
 
-		public override void DestroyGenericArgumentState (string value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+		public override void DestroyGenericArgumentState (string? value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
 		{
 			var r   = state.ReferenceValue;
 			JniObjectReference.Dispose (ref r);
@@ -54,9 +56,9 @@ namespace Java.Interop {
 			return ReturnObjectReferenceToJni (context, sourceValue.Name, obj);
 		}
 
-		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type targetType)
+		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type? targetType)
 		{
-			Func<IntPtr, String>    m   = JniEnvironment.Strings.ToString;
+			Func<IntPtr, string?>   m   = JniEnvironment.Strings.ToString;
 
 			var value = Expression.Variable (targetType, sourceValue.Name + "_val");
 			context.LocalVariables.Add (value);

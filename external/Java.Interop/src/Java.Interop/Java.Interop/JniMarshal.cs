@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -10,7 +12,7 @@ namespace Java.Interop {
 
 	public static class JniMarshal {
 
-		public static bool RecursiveEquals (object objA, object objB)
+		public static bool RecursiveEquals (object? objA, object? objB)
 		{
 			if (object.Equals (objA, objB))
 				return true;

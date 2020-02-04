@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Diagnostics;
 
@@ -7,7 +9,7 @@ namespace Java.Interop
 
 		partial class Strings {
 
-			public static unsafe JniObjectReference NewString (string value)
+			public static unsafe JniObjectReference NewString (string? value)
 			{
 				if (value == null)
 					return new JniObjectReference ();
@@ -16,24 +18,24 @@ namespace Java.Interop
 			}
 
 #if !XA_INTEGRATION
-			public static string ToString (IntPtr reference)
+			public static string? ToString (IntPtr reference)
 			{
 				return ToString (new JniObjectReference (reference));
 			}
 
-			internal static unsafe string ToString (ref JniObjectReference reference, JniObjectReferenceOptions transfer, Type targetType)
+			internal static unsafe string? ToString (ref JniObjectReference reference, JniObjectReferenceOptions transfer, Type targetType)
 			{
 				Debug.Assert (targetType == typeof (string), "Expected targetType==typeof(string); was: " + targetType);
 				return ToString (ref reference, transfer);
 			}
 #endif  // !XA_INTEGRATION
 
-			public static unsafe string ToString (JniObjectReference value)
+			public static unsafe string? ToString (JniObjectReference value)
 			{
 				return ToString (ref value, JniObjectReferenceOptions.Copy);
 			}
 
-			public static unsafe string ToString (ref JniObjectReference value, JniObjectReferenceOptions transfer)
+			public static unsafe string? ToString (ref JniObjectReference value, JniObjectReferenceOptions transfer)
 			{
 				if (!value.IsValid)
 					return null;

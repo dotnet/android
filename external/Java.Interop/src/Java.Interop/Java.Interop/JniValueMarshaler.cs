@@ -1,5 +1,8 @@
+#nullable enable
+
 using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
@@ -18,7 +21,7 @@ namespace Java.Interop.Expressions {
 
 	public sealed class JniValueMarshalerContext {
 		public  Expression                                      Runtime             {get;}
-		public  Expression                                      ValueManager        {get;}
+		public  Expression?                                     ValueManager        {get;}
 
 		public  KeyedCollection<string, ParameterExpression>    LocalVariables      {get;}  = new VariableCollection ();
 		public  Collection<Expression>                          CreationStatements  {get;}  = new Collection<Expression> ();
@@ -29,7 +32,7 @@ namespace Java.Interop.Expressions {
 		{
 		}
 
-		public JniValueMarshalerContext (Expression runtime, Expression vm)
+		public JniValueMarshalerContext (Expression runtime, Expression? vm)
 		{
 			Runtime        = runtime ?? throw new ArgumentNullException (nameof (runtime));
 			ValueManager   = vm;
@@ -43,10 +46,10 @@ namespace Java.Interop {
 
 		public  JniArgumentValue        JniArgumentValue    {get; private set;}
 		public  JniObjectReference      ReferenceValue      {get; private set;}
-		public  IJavaPeerable           PeerableValue       {get; private set;}
-		public  object                  Extra               {get; private set;}
+		public  IJavaPeerable?          PeerableValue       {get; private set;}
+		public  object?                 Extra               {get; private set;}
 
-		public JniValueMarshalerState (JniArgumentValue jniArgumentValue, object extra = null)
+		public JniValueMarshalerState (JniArgumentValue jniArgumentValue, object? extra = null)
 		{
 			JniArgumentValue    = jniArgumentValue;
 			ReferenceValue      = default (JniObjectReference);
@@ -54,7 +57,7 @@ namespace Java.Interop {
 			Extra               = extra;
 		}
 
-		public JniValueMarshalerState (JniObjectReference referenceValue, object extra = null)
+		public JniValueMarshalerState (JniObjectReference referenceValue, object? extra = null)
 		{
 			JniArgumentValue    = new JniArgumentValue (referenceValue);
 			ReferenceValue      = referenceValue;
@@ -62,7 +65,7 @@ namespace Java.Interop {
 			Extra               = extra;
 		}
 
-		public JniValueMarshalerState (IJavaPeerable peerableValue, object extra = null)
+		public JniValueMarshalerState (IJavaPeerable? peerableValue, object? extra = null)
 		{
 			PeerableValue       = peerableValue;
 			ReferenceValue      = peerableValue == null ? default (JniObjectReference) : peerableValue.PeerReference;
@@ -70,7 +73,7 @@ namespace Java.Interop {
 			Extra               = extra;
 		}
 
-		internal JniValueMarshalerState (JniValueMarshalerState copy, object extra = null)
+		internal JniValueMarshalerState (JniValueMarshalerState copy, object? extra = null)
 		{
 			JniArgumentValue    = copy.JniArgumentValue;
 			ReferenceValue      = copy.ReferenceValue;
@@ -83,7 +86,7 @@ namespace Java.Interop {
 			return JniArgumentValue.GetHashCode ();
 		}
 
-		public override bool Equals (object obj)
+		public override bool Equals (object? obj)
 		{
 			var o = obj as JniValueMarshalerState?;
 			if (!o.HasValue)
@@ -123,25 +126,25 @@ namespace Java.Interop {
 			get {return IntPtr_type;}
 		}
 
-		public  abstract    object                  CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType = null);
+		public  abstract    object?                 CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType = null);
 
-		public  virtual     JniValueMarshalerState  CreateArgumentState (object value, ParameterAttributes synchronize = 0)
+		public  virtual     JniValueMarshalerState  CreateArgumentState (object? value, ParameterAttributes synchronize = 0)
 		{
 			return CreateObjectReferenceArgumentState (value, synchronize);
 		}
 
-		public  abstract    JniValueMarshalerState  CreateObjectReferenceArgumentState (object value, ParameterAttributes synchronize = 0);
-		public  abstract    void                    DestroyArgumentState (object value, ref JniValueMarshalerState state, ParameterAttributes synchronize = 0);
+		public  abstract    JniValueMarshalerState  CreateObjectReferenceArgumentState (object? value, ParameterAttributes synchronize = 0);
+		public  abstract    void                    DestroyArgumentState (object? value, ref JniValueMarshalerState state, ParameterAttributes synchronize = 0);
 
-		internal object CreateValue (IntPtr handle, Type targetType)
+		internal object? CreateValue (IntPtr handle, Type? targetType)
 		{
 			var r = new JniObjectReference (handle);
 			return CreateValue (ref r, JniObjectReferenceOptions.Copy, targetType);
 		}
 
-		public  virtual     Expression              CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize = 0, Type targetType = null)
+		public  virtual     Expression              CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize = 0, Type? targetType = null)
 		{
-			Func<IntPtr, Type, object>  m   = CreateValue;
+			Func<IntPtr, Type, object?> m   = CreateValue;
 
 			var self    = CreateSelf (context, sourceValue);
 
@@ -212,34 +215,35 @@ namespace Java.Interop {
 
 	public abstract class JniValueMarshaler<T> : JniValueMarshaler {
 
-		public  abstract    T                       CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType = null);
+		[return: MaybeNull]
+		public  abstract    T                       CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType = null);
 
-		public  virtual     JniValueMarshalerState  CreateGenericArgumentState (T value, ParameterAttributes synchronize = 0)
+		public  virtual     JniValueMarshalerState  CreateGenericArgumentState ([MaybeNull] T value, ParameterAttributes synchronize = 0)
 		{
 			return CreateGenericObjectReferenceArgumentState (value, synchronize);
 		}
 
-		public  abstract    JniValueMarshalerState  CreateGenericObjectReferenceArgumentState (T value, ParameterAttributes synchronize = 0);
-		public  abstract    void                    DestroyGenericArgumentState (T value, ref JniValueMarshalerState state, ParameterAttributes synchronize = 0);
+		public  abstract    JniValueMarshalerState  CreateGenericObjectReferenceArgumentState ([MaybeNull] T value, ParameterAttributes synchronize = 0);
+		public  abstract    void                    DestroyGenericArgumentState ([AllowNull] T value, ref JniValueMarshalerState state, ParameterAttributes synchronize = 0);
 
-		public override object CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType = null)
+		public override object? CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType = null)
 		{
 			return CreateGenericValue (ref reference, options, targetType ?? typeof (T));
 		}
 
-		public override JniValueMarshalerState CreateArgumentState (object value, ParameterAttributes synchronize = 0)
+		public override JniValueMarshalerState CreateArgumentState (object? value, ParameterAttributes synchronize = 0)
 		{
-			return CreateGenericArgumentState ((T) value, synchronize);
+			return CreateGenericArgumentState ((T) value!, synchronize);
 		}
 
-		public override JniValueMarshalerState CreateObjectReferenceArgumentState (object value, ParameterAttributes synchronize = 0)
+		public override JniValueMarshalerState CreateObjectReferenceArgumentState (object? value, ParameterAttributes synchronize = 0)
 		{
-			return CreateGenericObjectReferenceArgumentState ((T) value, synchronize);
+			return CreateGenericObjectReferenceArgumentState ((T) value!, synchronize);
 		}
 
-		public override void DestroyArgumentState (object value, ref JniValueMarshalerState state, ParameterAttributes synchronize = 0)
+		public override void DestroyArgumentState (object? value, ref JniValueMarshalerState state, ParameterAttributes synchronize = 0)
 		{
-			DestroyGenericArgumentState ((T) value, ref state, synchronize);
+			DestroyGenericArgumentState ((T) value!, ref state, synchronize);
 		}
 	}
 }

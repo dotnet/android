@@ -17,6 +17,8 @@
 	};
 
 #>
+#nullable enable
+
 namespace Java.Interop {
 
 	partial class JniPeerMembers {

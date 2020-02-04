@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Collections.Generic;
 
 namespace Java.Interop
@@ -17,10 +19,7 @@ namespace Java.Interop
 
 		internal void Dispose ()
 		{
-			if (InstanceFields == null)
-				return;
-
-			InstanceFields  = null;
+			InstanceFields.Clear ();
 		}
 
 		public JniFieldInfo GetFieldInfo (string encodedMember)

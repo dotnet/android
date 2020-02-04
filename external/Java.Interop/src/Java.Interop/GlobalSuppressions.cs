@@ -72,6 +72,10 @@ using System.Diagnostics.CodeAnalysis;
 
 [assembly: SuppressMessage ("Performance", "CA1822:Mark members as static", Justification = "<Pending>", Scope = "member", Target = "~M:Java.Interop.JniRuntime.JniMarshalMemberBuilder.IsDirectMethod(System.Reflection.ParameterInfo[])~System.Boolean")]
 [assembly: SuppressMessage ("Performance", "CA1822:Mark members as static", Justification = "<Pending>", Scope = "member", Target = "~M:Java.Interop.JniRuntime.JniValueManager.GetJniIdentityHashCode(Java.Interop.JniObjectReference)~System.Int32")]
+[assembly: SuppressMessage ("Performance", "CA1822:Mark members as static", Justification = "<Pending>", Scope = "member", Target = "~P:Java.Interop.JniFieldInfo.Name")]
+[assembly: SuppressMessage ("Performance", "CA1822:Mark members as static", Justification = "<Pending>", Scope = "member", Target = "~P:Java.Interop.JniFieldInfo.Signature")]
+[assembly: SuppressMessage ("Performance", "CA1822:Mark members as static", Justification = "<Pending>", Scope = "member", Target = "~P:Java.Interop.JniMethodInfo.Name")]
+[assembly: SuppressMessage ("Performance", "CA1822:Mark members as static", Justification = "<Pending>", Scope = "member", Target = "~P:Java.Interop.JniMethodInfo.Signature")]
 
 [assembly: SuppressMessage ("Performance", "CA1823:Avoid unused private fields", Justification = "Used for native interop", Scope = "type", Target = "~T:Java.Interop.JavaException")]
 [assembly: SuppressMessage ("Performance", "CA1823:Avoid unused private fields", Justification = "Used for native interop", Scope = "type", Target = "~T:Java.Interop.JavaObject")]
@@ -85,3 +89,5 @@ using System.Diagnostics.CodeAnalysis;
 
 [assembly: SuppressMessage ("Usage", "CA2208:Instantiate argument exceptions correctly", Justification = "<Pending>", Scope = "member", Target = "~M:Java.Interop.JniEnvironment.Exceptions.Throw(Java.Interop.JniObjectReference)")]
 [assembly: SuppressMessage ("Usage", "CA2208:Instantiate argument exceptions correctly", Justification = "<Pending>", Scope = "member", Target = "~M:Java.Interop.JniEnvironment.Exceptions.ThrowNew(Java.Interop.JniObjectReference,System.String)")]
+
+[assembly: SuppressMessage ("Usage", "CA2213:Disposable fields should be disposed", Justification = "<Pending>", Scope = "member", Target = "~F:Java.Interop.JniRuntime.valueManager")]

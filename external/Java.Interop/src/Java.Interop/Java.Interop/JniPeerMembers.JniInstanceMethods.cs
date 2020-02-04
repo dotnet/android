@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Collections.Generic;
 
 namespace Java.Interop
@@ -9,7 +11,7 @@ namespace Java.Interop
 		internal JniInstanceMethods (JniPeerMembers members)
 		{
 			DeclaringType   = members.ManagedPeerType;
-			Members         = members;
+			this.members    = members;
 		}
 
 		JniInstanceMethods (Type declaringType)
@@ -26,11 +28,13 @@ namespace Java.Interop
 			jniPeerType.RegisterWithRuntime ();
 		}
 
-		JniPeerMembers                                      Members;
-		JniType                                             jniPeerType;
+		JniPeerMembers?                                     members;
+		JniType?                                            jniPeerType;
+
+		internal    JniPeerMembers                          Members => members ?? throw new InvalidOperationException ();
 
 		internal    JniType                                 JniPeerType {
-			get {return jniPeerType ?? Members.JniPeerType;}
+			get {return jniPeerType ?? Members?.JniPeerType ?? throw new InvalidOperationException ();}
 		}
 
 		readonly Type                                       DeclaringType;
@@ -40,15 +44,10 @@ namespace Java.Interop
 
 		internal void Dispose ()
 		{
-			if (InstanceMethods == null)
-				return;
-
-			// Don't dispose JniPeerType; it's shared with others.
-			InstanceMethods         = null;
-
+			InstanceMethods.Clear ();
 			foreach (var p in SubclassConstructors.Values)
 				p.Dispose ();
-			SubclassConstructors    = null;
+			SubclassConstructors.Clear ();
 
 			if (jniPeerType != null)
 				jniPeerType.Dispose ();

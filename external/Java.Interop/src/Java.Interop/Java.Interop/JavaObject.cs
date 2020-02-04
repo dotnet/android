@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 
 namespace Java.Interop
@@ -125,7 +127,7 @@ namespace Java.Interop
 			return _members.InstanceMethods.InvokeVirtualInt32Method ("hashCode.()I", this, null);
 		}
 
-		public override unsafe string ToString ()
+		public override unsafe string? ToString ()
 		{
 			var lref = _members.InstanceMethods.InvokeVirtualObjectMethod (
 					"toString.()Ljava/lang/String;",

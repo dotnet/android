@@ -1,3 +1,5 @@
+﻿#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,15 +14,18 @@ namespace Java.Interop {
 
 		public class JniTypeManager : IDisposable, ISetRuntime {
 
+			JniRuntime?             runtime;
 			bool                    disposed;
 
 
-			public      JniRuntime  Runtime { get; private set; }
+			public      JniRuntime  Runtime {
+				get => runtime ?? throw new NotSupportedException ();
+			}
 
 			public virtual void OnSetRuntime (JniRuntime runtime)
 			{
 				AssertValid ();
-				Runtime = runtime;
+				this.runtime = runtime;
 			}
 
 			public void Dispose ()
@@ -207,7 +212,9 @@ namespace Java.Interop {
 
 			IEnumerable<Type> CreateGetTypesEnumerator (JniTypeSignature typeSignature)
 			{
-				foreach (var type in GetTypesForSimpleReference (typeSignature.SimpleReference)) {
+				if (!typeSignature.IsValid)
+					yield break;
+				foreach (var type in GetTypesForSimpleReference (typeSignature.SimpleReference ?? throw new InvalidOperationException ("Should not be reached")) ){
 					if (typeSignature.ArrayRank == 0) {
 						yield return type;
 						continue;
@@ -250,7 +257,8 @@ namespace Java.Interop {
 				if (jniSimpleReference != null && jniSimpleReference.StartsWith ("L", StringComparison.Ordinal) && jniSimpleReference.EndsWith (";", StringComparison.Ordinal))
 					throw new ArgumentException ("Only simplified type references are supported.", nameof (jniSimpleReference));
 
-				return CreateGetTypesForSimpleReferenceEnumerator (jniSimpleReference);
+				// Not sure why CS8604 is reported on following line when we check against null ~9 lines above...
+				return CreateGetTypesForSimpleReferenceEnumerator (jniSimpleReference!);
 			}
 
 			IEnumerable<Type> CreateGetTypesForSimpleReferenceEnumerator (string jniSimpleReference)
@@ -264,12 +272,12 @@ namespace Java.Interop {
 				yield break;
 			}
 
-			public virtual void RegisterNativeMembers (JniType nativeClass, Type type, string methods)
+			public virtual void RegisterNativeMembers (JniType nativeClass, Type type, string? methods)
 			{
 				TryRegisterNativeMembers (nativeClass, type, methods);
 			}
 
-			protected bool TryRegisterNativeMembers (JniType nativeClass, Type type, string methods)
+			protected bool TryRegisterNativeMembers (JniType nativeClass, Type type, string? methods)
 			{
 				AssertValid ();
 
@@ -278,7 +286,7 @@ namespace Java.Interop {
 
 			static Type [] registerMethodParameters = new Type [] { typeof (JniNativeMethodRegistrationArguments) };
 
-			static bool TryLoadJniMarshalMethods (JniType nativeClass, Type type, string methods)
+			static bool TryLoadJniMarshalMethods (JniType nativeClass, Type type, string? methods)
 			{
 				var marshalType = type?.GetNestedType ("__<$>_jni_marshal_methods", BindingFlags.NonPublic);
 				if (marshalType == null)
@@ -291,7 +299,7 @@ namespace Java.Interop {
 
 			static List<JniNativeMethodRegistration> sharedRegistrations = new List<JniNativeMethodRegistration> ();
 
-			static bool TryRegisterNativeMembers (JniType nativeClass, Type marshalType, string methods, MethodInfo registerMethod)
+			static bool TryRegisterNativeMembers (JniType nativeClass, Type marshalType, string? methods, MethodInfo? registerMethod)
 			{
 				bool lockTaken = false;
 				bool rv = false;

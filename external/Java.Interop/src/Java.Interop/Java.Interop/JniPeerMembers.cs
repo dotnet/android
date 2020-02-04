@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Reflection;
@@ -71,8 +73,7 @@ namespace Java.Interop {
 			return new JniPeerMembers (jniPeerTypeName, managedPeerType, checkManagedPeerType: false);
 		}
 
-		JniType     jniPeerType;
-
+		JniType?            jniPeerType;
 		JniInstanceMethods  instanceMethods;
 		JniInstanceFields   instanceFields;
 		JniStaticMethods    staticMethods;
@@ -118,18 +119,11 @@ namespace Java.Interop {
 				return;
 
 			instanceMethods.Dispose ();
-			instanceMethods = null;
-
 			instanceFields.Dispose ();
-			instanceFields  = null;
-
 			staticMethods.Dispose ();
-			staticMethods   = null;
-
 			staticFields.Dispose ();
-			staticFields    = null;
-
 			jniPeerType.Dispose ();
+
 			jniPeerType     = null;
 		}
 
@@ -140,7 +134,7 @@ namespace Java.Interop {
 			members.Dispose (true);
 		}
 
-		protected virtual bool UsesVirtualDispatch (IJavaPeerable value, Type declaringType)
+		protected virtual bool UsesVirtualDispatch (IJavaPeerable value, Type? declaringType)
 		{
 			return value.GetType () == declaringType ||
 				declaringType == null ||

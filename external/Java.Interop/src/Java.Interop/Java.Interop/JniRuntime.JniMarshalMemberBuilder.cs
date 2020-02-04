@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -11,10 +13,10 @@ namespace Java.Interop {
 
 		partial class CreationOptions {
 			public  bool                       UseMarshalMemberBuilder     {get; set;}      = true;
-			public  JniMarshalMemberBuilder    MarshalMemberBuilder        {get; set;}
+			public  JniMarshalMemberBuilder?   MarshalMemberBuilder        {get; set;}
 		}
 
-		JniMarshalMemberBuilder                marshalMemberBuilder;
+		JniMarshalMemberBuilder?               marshalMemberBuilder;
 		public  JniMarshalMemberBuilder        MarshalMemberBuilder        {
 			get {
 				if (marshalMemberBuilder == null)
@@ -51,8 +53,12 @@ namespace Java.Interop {
 
 		public abstract class JniMarshalMemberBuilder : IDisposable, ISetRuntime
 		{
-			public      JniRuntime  Runtime     {get; private set;}
+			JniRuntime?             runtime;
 			bool                    disposed;
+
+			public JniRuntime  Runtime     {
+				get => runtime ?? throw new NotSupportedException ();
+			}
 
 			protected JniMarshalMemberBuilder ()
 			{
@@ -63,7 +69,7 @@ namespace Java.Interop {
 				if (disposed)
 					throw new ObjectDisposedException (GetType ().Name);
 
-				Runtime = runtime;
+				this.runtime = runtime;
 			}
 
 			public void Dispose ()
@@ -86,9 +92,9 @@ namespace Java.Interop {
 			public  abstract    LambdaExpression                            CreateMarshalToManagedExpression (MethodInfo method);
 			public  abstract    IEnumerable<JniNativeMethodRegistration>    GetExportedMemberRegistrations (Type declaringType);
 
-			public  abstract    Expression<Func<ConstructorInfo, JniObjectReference, object[], object>>     CreateConstructActivationPeerExpression (ConstructorInfo constructor);
+			public  abstract    Expression<Func<ConstructorInfo, JniObjectReference, object?[]?, object>>   CreateConstructActivationPeerExpression (ConstructorInfo constructor);
 
-			public  Func<ConstructorInfo, JniObjectReference, object[], object>                             CreateConstructActivationPeerFunc (ConstructorInfo constructor)
+			public  Func<ConstructorInfo, JniObjectReference, object?[]?, object>                           CreateConstructActivationPeerFunc (ConstructorInfo constructor)
 			{
 				if (constructor == null)
 					throw new ArgumentNullException (nameof (constructor));
@@ -141,7 +147,7 @@ namespace Java.Interop {
 				if (parameter.ParameterType == typeof (IntPtr))
 					return IntPtrValueMarshaler.Instance;
 
-				JniValueMarshalerAttribute attr;
+				JniValueMarshalerAttribute? attr;
 				try {
 					attr = parameter.GetCustomAttribute<JniValueMarshalerAttribute> ();
 				} catch (System.IndexOutOfRangeException) {
@@ -171,7 +177,7 @@ namespace Java.Interop {
 			return sourceValue;
 		}
 
-		public override Expression CreateParameterToManagedExpression (Java.Interop.Expressions.JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type targetType)
+		public override Expression CreateParameterToManagedExpression (Java.Interop.Expressions.JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type? targetType)
 		{
 			return sourceValue;
 		}
@@ -182,17 +188,17 @@ namespace Java.Interop {
 		}
 
 
-		public override object CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		public override object? CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
 		{
 			throw new NotSupportedException ();
 		}
 
-		public override IntPtr CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		public override IntPtr CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
 		{
 			throw new NotSupportedException ();
 		}
 
-		public override JniValueMarshalerState CreateArgumentState (object value, ParameterAttributes synchronize)
+		public override JniValueMarshalerState CreateArgumentState (object? value, ParameterAttributes synchronize)
 		{
 			throw new NotSupportedException ();
 		}
@@ -202,7 +208,7 @@ namespace Java.Interop {
 			throw new NotSupportedException ();
 		}
 
-		public override JniValueMarshalerState CreateObjectReferenceArgumentState (object value, ParameterAttributes synchronize)
+		public override JniValueMarshalerState CreateObjectReferenceArgumentState (object? value, ParameterAttributes synchronize)
 		{
 			throw new NotSupportedException ();
 		}
@@ -212,7 +218,7 @@ namespace Java.Interop {
 			throw new NotSupportedException ();
 		}
 
-		public override void DestroyArgumentState (object value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+		public override void DestroyArgumentState (object? value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
 		{
 			throw new NotSupportedException ();
 		}

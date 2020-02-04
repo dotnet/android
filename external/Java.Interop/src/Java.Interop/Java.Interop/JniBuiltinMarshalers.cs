@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq.Expressions;
@@ -68,12 +70,12 @@ namespace Java.Interop {
 	static class JniBoolean {
 		internal    const   string  JniTypeName = "java/lang/Boolean";
 
-		static JniType _TypeRef;
+		static JniType? _TypeRef;
 		static JniType TypeRef {
 			get {return JniType.GetCachedJniType (ref _TypeRef, JniTypeName);}
 		}
 
-		static JniMethodInfo init;
+		static JniMethodInfo? init;
 		internal static unsafe JniObjectReference CreateLocalRef (Boolean value)
 		{
 			var args    = stackalloc JniArgumentValue [1];
@@ -83,8 +85,8 @@ namespace Java.Interop {
 			return TypeRef.NewObject (init, args);
 		}
 
-		static JniMethodInfo booleanValue;
-		internal static Boolean GetValueFromJni (ref JniObjectReference self, JniObjectReferenceOptions transfer, Type targetType)
+		static JniMethodInfo? booleanValue;
+		internal static Boolean GetValueFromJni (ref JniObjectReference self, JniObjectReferenceOptions transfer, Type? targetType)
 		{
 			Debug.Assert (targetType == null || targetType == typeof (Boolean), "Expected targetType==typeof(Boolean); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref booleanValue, "booleanValue", "()Z");
@@ -108,14 +110,14 @@ namespace Java.Interop {
 		    get {return typeof (Boolean);}
 		}
 
-		public override object CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		public override object? CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
 		{
 			if (!reference.IsValid)
 				return null;
 			return CreateGenericValue (ref reference, options, targetType);
 		}
 
-		public override Boolean CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		public override Boolean CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
 		{
 			if (!reference.IsValid)
 				return default (Boolean);
@@ -134,7 +136,7 @@ namespace Java.Interop {
 			return new JniValueMarshalerState (r);
 		}
 
-		public override void DestroyArgumentState (object value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+		public override void DestroyArgumentState (object? value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
 		{
 			var r   = state.ReferenceValue;
 			JniObjectReference.Dispose (ref r);
@@ -148,7 +150,7 @@ namespace Java.Interop {
 			state   = new JniValueMarshalerState ();
 		}
 
-		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type targetType)
+		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type? targetType)
 		{
 		    return sourceValue;
 		}
@@ -168,7 +170,7 @@ namespace Java.Interop {
 
 		internal    static  readonly    JniNullableBooleanValueMarshaler   Instance    = new JniNullableBooleanValueMarshaler ();
 
-		public override Boolean? CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		public override Boolean? CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
 		{
 			if (!reference.IsValid)
 				return null;
@@ -195,12 +197,12 @@ namespace Java.Interop {
 	static class JniByte {
 		internal    const   string  JniTypeName = "java/lang/Byte";
 
-		static JniType _TypeRef;
+		static JniType? _TypeRef;
 		static JniType TypeRef {
 			get {return JniType.GetCachedJniType (ref _TypeRef, JniTypeName);}
 		}
 
-		static JniMethodInfo init;
+		static JniMethodInfo? init;
 		internal static unsafe JniObjectReference CreateLocalRef (SByte value)
 		{
 			var args    = stackalloc JniArgumentValue [1];
@@ -210,8 +212,8 @@ namespace Java.Interop {
 			return TypeRef.NewObject (init, args);
 		}
 
-		static JniMethodInfo byteValue;
-		internal static SByte GetValueFromJni (ref JniObjectReference self, JniObjectReferenceOptions transfer, Type targetType)
+		static JniMethodInfo? byteValue;
+		internal static SByte GetValueFromJni (ref JniObjectReference self, JniObjectReferenceOptions transfer, Type? targetType)
 		{
 			Debug.Assert (targetType == null || targetType == typeof (SByte), "Expected targetType==typeof(SByte); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref byteValue, "byteValue", "()B");
@@ -235,14 +237,14 @@ namespace Java.Interop {
 		    get {return typeof (SByte);}
 		}
 
-		public override object CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		public override object? CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
 		{
 			if (!reference.IsValid)
 				return null;
 			return CreateGenericValue (ref reference, options, targetType);
 		}
 
-		public override SByte CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		public override SByte CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
 		{
 			if (!reference.IsValid)
 				return default (SByte);
@@ -261,7 +263,7 @@ namespace Java.Interop {
 			return new JniValueMarshalerState (r);
 		}
 
-		public override void DestroyArgumentState (object value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+		public override void DestroyArgumentState (object? value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
 		{
 			var r   = state.ReferenceValue;
 			JniObjectReference.Dispose (ref r);
@@ -275,7 +277,7 @@ namespace Java.Interop {
 			state   = new JniValueMarshalerState ();
 		}
 
-		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type targetType)
+		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type? targetType)
 		{
 		    return sourceValue;
 		}
@@ -295,7 +297,7 @@ namespace Java.Interop {
 
 		internal    static  readonly    JniNullableSByteValueMarshaler   Instance    = new JniNullableSByteValueMarshaler ();
 
-		public override SByte? CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		public override SByte? CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
 		{
 			if (!reference.IsValid)
 				return null;
@@ -322,12 +324,12 @@ namespace Java.Interop {
 	static class JniCharacter {
 		internal    const   string  JniTypeName = "java/lang/Character";
 
-		static JniType _TypeRef;
+		static JniType? _TypeRef;
 		static JniType TypeRef {
 			get {return JniType.GetCachedJniType (ref _TypeRef, JniTypeName);}
 		}
 
-		static JniMethodInfo init;
+		static JniMethodInfo? init;
 		internal static unsafe JniObjectReference CreateLocalRef (Char value)
 		{
 			var args    = stackalloc JniArgumentValue [1];
@@ -337,8 +339,8 @@ namespace Java.Interop {
 			return TypeRef.NewObject (init, args);
 		}
 
-		static JniMethodInfo charValue;
-		internal static Char GetValueFromJni (ref JniObjectReference self, JniObjectReferenceOptions transfer, Type targetType)
+		static JniMethodInfo? charValue;
+		internal static Char GetValueFromJni (ref JniObjectReference self, JniObjectReferenceOptions transfer, Type? targetType)
 		{
 			Debug.Assert (targetType == null || targetType == typeof (Char), "Expected targetType==typeof(Char); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref charValue, "charValue", "()C");
@@ -362,14 +364,14 @@ namespace Java.Interop {
 		    get {return typeof (Char);}
 		}
 
-		public override object CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		public override object? CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
 		{
 			if (!reference.IsValid)
 				return null;
 			return CreateGenericValue (ref reference, options, targetType);
 		}
 
-		public override Char CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		public override Char CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
 		{
 			if (!reference.IsValid)
 				return default (Char);
@@ -388,7 +390,7 @@ namespace Java.Interop {
 			return new JniValueMarshalerState (r);
 		}
 
-		public override void DestroyArgumentState (object value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+		public override void DestroyArgumentState (object? value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
 		{
 			var r   = state.ReferenceValue;
 			JniObjectReference.Dispose (ref r);
@@ -402,7 +404,7 @@ namespace Java.Interop {
 			state   = new JniValueMarshalerState ();
 		}
 
-		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type targetType)
+		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type? targetType)
 		{
 		    return sourceValue;
 		}
@@ -422,7 +424,7 @@ namespace Java.Interop {
 
 		internal    static  readonly    JniNullableCharValueMarshaler   Instance    = new JniNullableCharValueMarshaler ();
 
-		public override Char? CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		public override Char? CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
 		{
 			if (!reference.IsValid)
 				return null;
@@ -449,12 +451,12 @@ namespace Java.Interop {
 	static class JniShort {
 		internal    const   string  JniTypeName = "java/lang/Short";
 
-		static JniType _TypeRef;
+		static JniType? _TypeRef;
 		static JniType TypeRef {
 			get {return JniType.GetCachedJniType (ref _TypeRef, JniTypeName);}
 		}
 
-		static JniMethodInfo init;
+		static JniMethodInfo? init;
 		internal static unsafe JniObjectReference CreateLocalRef (Int16 value)
 		{
 			var args    = stackalloc JniArgumentValue [1];
@@ -464,8 +466,8 @@ namespace Java.Interop {
 			return TypeRef.NewObject (init, args);
 		}
 
-		static JniMethodInfo shortValue;
-		internal static Int16 GetValueFromJni (ref JniObjectReference self, JniObjectReferenceOptions transfer, Type targetType)
+		static JniMethodInfo? shortValue;
+		internal static Int16 GetValueFromJni (ref JniObjectReference self, JniObjectReferenceOptions transfer, Type? targetType)
 		{
 			Debug.Assert (targetType == null || targetType == typeof (Int16), "Expected targetType==typeof(Int16); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref shortValue, "shortValue", "()S");
@@ -489,14 +491,14 @@ namespace Java.Interop {
 		    get {return typeof (Int16);}
 		}
 
-		public override object CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		public override object? CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
 		{
 			if (!reference.IsValid)
 				return null;
 			return CreateGenericValue (ref reference, options, targetType);
 		}
 
-		public override Int16 CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		public override Int16 CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
 		{
 			if (!reference.IsValid)
 				return default (Int16);
@@ -515,7 +517,7 @@ namespace Java.Interop {
 			return new JniValueMarshalerState (r);
 		}
 
-		public override void DestroyArgumentState (object value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+		public override void DestroyArgumentState (object? value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
 		{
 			var r   = state.ReferenceValue;
 			JniObjectReference.Dispose (ref r);
@@ -529,7 +531,7 @@ namespace Java.Interop {
 			state   = new JniValueMarshalerState ();
 		}
 
-		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type targetType)
+		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type? targetType)
 		{
 		    return sourceValue;
 		}
@@ -549,7 +551,7 @@ namespace Java.Interop {
 
 		internal    static  readonly    JniNullableInt16ValueMarshaler   Instance    = new JniNullableInt16ValueMarshaler ();
 
-		public override Int16? CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		public override Int16? CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
 		{
 			if (!reference.IsValid)
 				return null;
@@ -576,12 +578,12 @@ namespace Java.Interop {
 	static class JniInteger {
 		internal    const   string  JniTypeName = "java/lang/Integer";
 
-		static JniType _TypeRef;
+		static JniType? _TypeRef;
 		static JniType TypeRef {
 			get {return JniType.GetCachedJniType (ref _TypeRef, JniTypeName);}
 		}
 
-		static JniMethodInfo init;
+		static JniMethodInfo? init;
 		internal static unsafe JniObjectReference CreateLocalRef (Int32 value)
 		{
 			var args    = stackalloc JniArgumentValue [1];
@@ -591,8 +593,8 @@ namespace Java.Interop {
 			return TypeRef.NewObject (init, args);
 		}
 
-		static JniMethodInfo intValue;
-		internal static Int32 GetValueFromJni (ref JniObjectReference self, JniObjectReferenceOptions transfer, Type targetType)
+		static JniMethodInfo? intValue;
+		internal static Int32 GetValueFromJni (ref JniObjectReference self, JniObjectReferenceOptions transfer, Type? targetType)
 		{
 			Debug.Assert (targetType == null || targetType == typeof (Int32), "Expected targetType==typeof(Int32); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref intValue, "intValue", "()I");
@@ -616,14 +618,14 @@ namespace Java.Interop {
 		    get {return typeof (Int32);}
 		}
 
-		public override object CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		public override object? CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
 		{
 			if (!reference.IsValid)
 				return null;
 			return CreateGenericValue (ref reference, options, targetType);
 		}
 
-		public override Int32 CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		public override Int32 CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
 		{
 			if (!reference.IsValid)
 				return default (Int32);
@@ -642,7 +644,7 @@ namespace Java.Interop {
 			return new JniValueMarshalerState (r);
 		}
 
-		public override void DestroyArgumentState (object value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+		public override void DestroyArgumentState (object? value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
 		{
 			var r   = state.ReferenceValue;
 			JniObjectReference.Dispose (ref r);
@@ -656,7 +658,7 @@ namespace Java.Interop {
 			state   = new JniValueMarshalerState ();
 		}
 
-		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type targetType)
+		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type? targetType)
 		{
 		    return sourceValue;
 		}
@@ -676,7 +678,7 @@ namespace Java.Interop {
 
 		internal    static  readonly    JniNullableInt32ValueMarshaler   Instance    = new JniNullableInt32ValueMarshaler ();
 
-		public override Int32? CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		public override Int32? CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
 		{
 			if (!reference.IsValid)
 				return null;
@@ -703,12 +705,12 @@ namespace Java.Interop {
 	static class JniLong {
 		internal    const   string  JniTypeName = "java/lang/Long";
 
-		static JniType _TypeRef;
+		static JniType? _TypeRef;
 		static JniType TypeRef {
 			get {return JniType.GetCachedJniType (ref _TypeRef, JniTypeName);}
 		}
 
-		static JniMethodInfo init;
+		static JniMethodInfo? init;
 		internal static unsafe JniObjectReference CreateLocalRef (Int64 value)
 		{
 			var args    = stackalloc JniArgumentValue [1];
@@ -718,8 +720,8 @@ namespace Java.Interop {
 			return TypeRef.NewObject (init, args);
 		}
 
-		static JniMethodInfo longValue;
-		internal static Int64 GetValueFromJni (ref JniObjectReference self, JniObjectReferenceOptions transfer, Type targetType)
+		static JniMethodInfo? longValue;
+		internal static Int64 GetValueFromJni (ref JniObjectReference self, JniObjectReferenceOptions transfer, Type? targetType)
 		{
 			Debug.Assert (targetType == null || targetType == typeof (Int64), "Expected targetType==typeof(Int64); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref longValue, "longValue", "()J");
@@ -743,14 +745,14 @@ namespace Java.Interop {
 		    get {return typeof (Int64);}
 		}
 
-		public override object CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		public override object? CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
 		{
 			if (!reference.IsValid)
 				return null;
 			return CreateGenericValue (ref reference, options, targetType);
 		}
 
-		public override Int64 CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		public override Int64 CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
 		{
 			if (!reference.IsValid)
 				return default (Int64);
@@ -769,7 +771,7 @@ namespace Java.Interop {
 			return new JniValueMarshalerState (r);
 		}
 
-		public override void DestroyArgumentState (object value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+		public override void DestroyArgumentState (object? value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
 		{
 			var r   = state.ReferenceValue;
 			JniObjectReference.Dispose (ref r);
@@ -783,7 +785,7 @@ namespace Java.Interop {
 			state   = new JniValueMarshalerState ();
 		}
 
-		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type targetType)
+		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type? targetType)
 		{
 		    return sourceValue;
 		}
@@ -803,7 +805,7 @@ namespace Java.Interop {
 
 		internal    static  readonly    JniNullableInt64ValueMarshaler   Instance    = new JniNullableInt64ValueMarshaler ();
 
-		public override Int64? CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		public override Int64? CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
 		{
 			if (!reference.IsValid)
 				return null;
@@ -830,12 +832,12 @@ namespace Java.Interop {
 	static class JniFloat {
 		internal    const   string  JniTypeName = "java/lang/Float";
 
-		static JniType _TypeRef;
+		static JniType? _TypeRef;
 		static JniType TypeRef {
 			get {return JniType.GetCachedJniType (ref _TypeRef, JniTypeName);}
 		}
 
-		static JniMethodInfo init;
+		static JniMethodInfo? init;
 		internal static unsafe JniObjectReference CreateLocalRef (Single value)
 		{
 			var args    = stackalloc JniArgumentValue [1];
@@ -845,8 +847,8 @@ namespace Java.Interop {
 			return TypeRef.NewObject (init, args);
 		}
 
-		static JniMethodInfo floatValue;
-		internal static Single GetValueFromJni (ref JniObjectReference self, JniObjectReferenceOptions transfer, Type targetType)
+		static JniMethodInfo? floatValue;
+		internal static Single GetValueFromJni (ref JniObjectReference self, JniObjectReferenceOptions transfer, Type? targetType)
 		{
 			Debug.Assert (targetType == null || targetType == typeof (Single), "Expected targetType==typeof(Single); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref floatValue, "floatValue", "()F");
@@ -870,14 +872,14 @@ namespace Java.Interop {
 		    get {return typeof (Single);}
 		}
 
-		public override object CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		public override object? CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
 		{
 			if (!reference.IsValid)
 				return null;
 			return CreateGenericValue (ref reference, options, targetType);
 		}
 
-		public override Single CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		public override Single CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
 		{
 			if (!reference.IsValid)
 				return default (Single);
@@ -896,7 +898,7 @@ namespace Java.Interop {
 			return new JniValueMarshalerState (r);
 		}
 
-		public override void DestroyArgumentState (object value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+		public override void DestroyArgumentState (object? value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
 		{
 			var r   = state.ReferenceValue;
 			JniObjectReference.Dispose (ref r);
@@ -910,7 +912,7 @@ namespace Java.Interop {
 			state   = new JniValueMarshalerState ();
 		}
 
-		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type targetType)
+		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type? targetType)
 		{
 		    return sourceValue;
 		}
@@ -930,7 +932,7 @@ namespace Java.Interop {
 
 		internal    static  readonly    JniNullableSingleValueMarshaler   Instance    = new JniNullableSingleValueMarshaler ();
 
-		public override Single? CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		public override Single? CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
 		{
 			if (!reference.IsValid)
 				return null;
@@ -957,12 +959,12 @@ namespace Java.Interop {
 	static class JniDouble {
 		internal    const   string  JniTypeName = "java/lang/Double";
 
-		static JniType _TypeRef;
+		static JniType? _TypeRef;
 		static JniType TypeRef {
 			get {return JniType.GetCachedJniType (ref _TypeRef, JniTypeName);}
 		}
 
-		static JniMethodInfo init;
+		static JniMethodInfo? init;
 		internal static unsafe JniObjectReference CreateLocalRef (Double value)
 		{
 			var args    = stackalloc JniArgumentValue [1];
@@ -972,8 +974,8 @@ namespace Java.Interop {
 			return TypeRef.NewObject (init, args);
 		}
 
-		static JniMethodInfo doubleValue;
-		internal static Double GetValueFromJni (ref JniObjectReference self, JniObjectReferenceOptions transfer, Type targetType)
+		static JniMethodInfo? doubleValue;
+		internal static Double GetValueFromJni (ref JniObjectReference self, JniObjectReferenceOptions transfer, Type? targetType)
 		{
 			Debug.Assert (targetType == null || targetType == typeof (Double), "Expected targetType==typeof(Double); was: " + targetType);
 			TypeRef.GetCachedInstanceMethod (ref doubleValue, "doubleValue", "()D");
@@ -997,14 +999,14 @@ namespace Java.Interop {
 		    get {return typeof (Double);}
 		}
 
-		public override object CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		public override object? CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
 		{
 			if (!reference.IsValid)
 				return null;
 			return CreateGenericValue (ref reference, options, targetType);
 		}
 
-		public override Double CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		public override Double CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
 		{
 			if (!reference.IsValid)
 				return default (Double);
@@ -1023,7 +1025,7 @@ namespace Java.Interop {
 			return new JniValueMarshalerState (r);
 		}
 
-		public override void DestroyArgumentState (object value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+		public override void DestroyArgumentState (object? value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
 		{
 			var r   = state.ReferenceValue;
 			JniObjectReference.Dispose (ref r);
@@ -1037,7 +1039,7 @@ namespace Java.Interop {
 			state   = new JniValueMarshalerState ();
 		}
 
-		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type targetType)
+		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type? targetType)
 		{
 		    return sourceValue;
 		}
@@ -1057,7 +1059,7 @@ namespace Java.Interop {
 
 		internal    static  readonly    JniNullableDoubleValueMarshaler   Instance    = new JniNullableDoubleValueMarshaler ();
 
-		public override Double? CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		public override Double? CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
 		{
 			if (!reference.IsValid)
 				return null;

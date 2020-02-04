@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -67,7 +69,7 @@ namespace Java.Interop {
 			Info.Value  = info;
 		}
 
-		internal    static  Exception   GetExceptionForLastThrowable ()
+		internal    static  Exception?  GetExceptionForLastThrowable ()
 		{
 			var e   = JniEnvironment.Exceptions.ExceptionOccurred ();
 			if (!e.IsValid)
@@ -78,7 +80,7 @@ namespace Java.Interop {
 			return Runtime.GetExceptionForThrowable (ref e, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
-		internal    static  Exception   GetExceptionForLastThrowable (IntPtr thrown)
+		internal    static  Exception?  GetExceptionForLastThrowable (IntPtr thrown)
 		{
 			if (thrown == IntPtr.Zero)
 				return null;
@@ -183,14 +185,18 @@ namespace Java.Interop {
 		const   int             NameBufferLength        = 512;
 
 		IntPtr                  environmentPointer;
-		char[]                  nameBuffer;
+		char[]?                 nameBuffer;
 		bool                    disposed;
+		JniRuntime?             runtime;
 
-		public      JniRuntime              Runtime                 {get; private set;}
 		public      int                     LocalReferenceCount     {get; internal set;}
 		public      bool                    WithinNewObjectScope    {get; set;}
+		public      JniRuntime              Runtime {
+			get => runtime ?? throw new NotSupportedException ();
+			private set => runtime = value;
+		}
 
-		public      IntPtr                  EnvironmentPointer {
+		public IntPtr                  EnvironmentPointer {
 			get {return environmentPointer;}
 			set {
 				if (disposed)
@@ -266,7 +272,7 @@ namespace Java.Interop {
 		{
 			if (disposed)
 				return;
-			Runtime                 = null;
+			runtime                 = null;
 			environmentPointer      = IntPtr.Zero;
 			nameBuffer              = null;
 			LocalReferenceCount     = 0;
