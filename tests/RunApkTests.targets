@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Project DefaultTargets="RunApkTests" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props'))" />
   <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.SetEnvironmentVariable" />
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <OutputPath>$(MSBuildThisFileDirectory)..\bin\Test$(Configuration)\</OutputPath>
+    <OutputPath>$(TestOutputDirectory)</OutputPath>
     <_TopDir>$(MSBuildThisFileDirectory)..</_TopDir>
   </PropertyGroup>
   <Import Project="..\Configuration.props" />
