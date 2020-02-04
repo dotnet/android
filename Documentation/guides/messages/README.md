@@ -27,6 +27,8 @@ ms.date: 01/24/2020
 
 + [APT0000](apt0000.md): Generic `aapt` error/warning.
 + [APT0001](apt0001.md): unknown option -- `{option}` . This is the result of using `aapt` command line arguments with `aapt2`. The arguments are not compatible.
++ APT0002: Invalid file name: It must contain only \[^a-zA-Z0-9_.-\]+.
++ APT0003: Invalid file name: It must contain only \[^a-zA-Z0-9_.\]+.
 
 ## JAVACxxxx: Java compiler
 
@@ -44,7 +46,7 @@ ms.date: 01/24/2020
 + [XA0032](xa0032.md): Java SDK {requiredJavaForBuildTools} or above is required when using build-tools {buildToolsVersion}.
 + [XA0033](xa0033.md): Failed to get the Java SDK version as it does not appear to contain a valid version number.
 + [XA0034](xa0034.md): Failed to get the Java SDK version.
-+ XA0100: EmbeddedNativeLibrary is invalid in Android Application project. Please use AndroidNativeLibrary instead.
++ XA0100: EmbeddedNativeLibrary is invalid in Android Application projects. Please use AndroidNativeLibrary instead.
 + [XA0101](xa0101.md): warning XA0101: @(Content) build action is not supported.
 + [XA0102](xa0102.md): Generic `lint` Warning.
 + [XA0103](xa0103.md): Generic `lint` Error.

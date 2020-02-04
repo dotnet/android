@@ -32,12 +32,12 @@ namespace Xamarin.Android.Tasks {
 				if (directory.StartsWith ("values", StringComparison.OrdinalIgnoreCase)) {
 					var match = fileNameWithHyphenCheck.Match (fileName);
 					if (match.Success) {
-						Log.LogCodedError ("APT0002", resource.ItemSpec, 0, $"Invalid file name: It must contain only {fileNameWithHyphenCheck}.");
+						Log.LogCodedError ("APT0002", resource.ItemSpec, 0, Properties.Resources.APT0002, fileNameWithHyphenCheck);
 					}
 				} else {
 					var match = fileNameCheck.Match (fileName);
 					if (match.Success) {
-						Log.LogCodedError ("APT0003", resource.ItemSpec, 0, $"Invalid file name: It must contain only {fileNameCheck}.");
+						Log.LogCodedError ("APT0003", resource.ItemSpec, 0, Properties.Resources.APT0003, fileNameCheck);
 					}
 				}
 			}
