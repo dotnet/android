@@ -76,9 +76,15 @@
             ]
         },
         {
+<<<<<<< HEAD
           "label": "build-emulator-checkboottimes",
           "type": "shell",
           "command": "msbuild build-tools/check-boot-times/check-boot-times.csproj",
+=======
+          "label": "Build api-xml-adjuster",
+          "type": "shell",
+          "command": "msbuild build-tools/api-xml-adjuster/api-xml-adjuster.csproj /restore /t:Build",
+>>>>>>> missing fields
           "group": {
               "kind": "build",
               "isDefault": true
@@ -86,6 +92,22 @@
           "problemMatcher": [
               "$msCompile"
           ]
+<<<<<<< HEAD
       },
+=======
+        },
+        {
+          "label": "Build api-merge",
+          "type": "shell",
+          "command": "msbuild build-tools/api-merge/api-merge.csproj /restore /t:Build",
+          "group": {
+              "kind": "build",
+              "isDefault": true
+          },
+          "problemMatcher": [
+              "$msCompile"
+          ]
+        }
+>>>>>>> missing fields
     ]
 }

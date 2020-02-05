@@ -4,6 +4,7 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
         {
             "name": "Launch",
             "type": "mono",
@@ -19,6 +20,7 @@
             "port": 55555
         },
         {
+<<<<<<< HEAD
           "name": "Launch emulator boot benchmark",
           "type": "mono",
           "request": "launch",
@@ -27,6 +29,49 @@
           "args": [ ],
           "cwd": "${workspaceRoot}",
           "stopAtEntry": false
+=======
+          "name": "Launch api-xml-adjuster",
+          "type": "mono",
+          "request": "launch",
+          "preLaunchTask": "Build api-xml-adjuster",
+          "program": "${workspaceRoot}/bin/BuildDebug/api-xml-adjuster.exe",
+          "args": [
+            "${workspaceRoot}/bin/BuildDebug/api/api-29.xml.class-parse",
+            "${workspaceRoot}/bin/BuildDebug/api/debug-api-29.xml.in",
+          ],
+          "cwd": "${workspaceRoot}",
+        },
+        {
+          "name": "Launch api-merge",
+          "type": "mono",
+          "request": "launch",
+          "preLaunchTask": "Build api-merge",
+          "program": "${workspaceRoot}/bin/BuildDebug/api-merge.exe",
+          "args": [
+            "-o",
+            "'src/Mono.Android/obj/Debug/android-29/mcw/api.xml'",
+            "-s",
+            "'bin/BuildDebug/api/api-*.xml.in'",
+            "bin/BuildDebug/api/api-10.xml.in",
+            "bin/BuildDebug/api/api-15.xml.in",
+            "bin/BuildDebug/api/api-16.xml.in",
+            "bin/BuildDebug/api/api-17.xml.in",
+            "bin/BuildDebug/api/api-18.xml.in",
+            "bin/BuildDebug/api/api-19.xml.in",
+            "bin/BuildDebug/api/api-20.xml.in",
+            "bin/BuildDebug/api/api-21.xml.in",
+            "bin/BuildDebug/api/api-22.xml.in",
+            "bin/BuildDebug/api/api-23.xml.in",
+            "bin/BuildDebug/api/api-24.xml.in",
+            "bin/BuildDebug/api/api-25.xml.in",
+            "bin/BuildDebug/api/api-26.xml.in",
+            "bin/BuildDebug/api/api-27.xml.in",
+            "bin/BuildDebug/api/api-28.xml.in",
+            "bin/BuildDebug/api/api-29.xml.in",
+            "--last-description=bin/BuildDebug/api/api-29.xml.in"
+          ],
+          "cwd": "${workspaceRoot}",
+>>>>>>> missing fields
         }
     ]
 }
