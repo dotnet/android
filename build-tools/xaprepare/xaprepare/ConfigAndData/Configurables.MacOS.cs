@@ -4,9 +4,6 @@ namespace Xamarin.Android.Prepare
 {
 	partial class Configurables
 	{
-		const string CorrettoDistVersion = "8.232.09.2";
-		const string CorrettoUrlPathVersion = CorrettoDistVersion;
-
 		partial class Urls
 		{
 			public static readonly Uri Corretto = new Uri ($"{Corretto_BaseUri}{CorrettoUrlPathVersion}/amazon-corretto-{CorrettoDistVersion}-macosx-x64.tar.gz");

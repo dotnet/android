@@ -2,6 +2,22 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="ko" original="../Resources.resx">
     <body>
+      <trans-unit id="APT0002">
+        <source>Invalid file name: It must contain only {0}.</source>
+        <target state="new">Invalid file name: It must contain only {0}.</target>
+        <note>{0} - The regular expression that the file name must match</note>
+      </trans-unit>
+      <trans-unit id="APT0003">
+        <source>Invalid file name: It must contain only {0}.</source>
+        <target state="new">Invalid file name: It must contain only {0}.</target>
+        <note>{0} - The regular expression that the file name must match</note>
+      </trans-unit>
+      <trans-unit id="XA0100">
+        <source>EmbeddedNativeLibrary '{0}' is invalid in Android Application projects. Please use AndroidNativeLibrary instead.</source>
+        <target state="new">EmbeddedNativeLibrary '{0}' is invalid in Android Application projects. Please use AndroidNativeLibrary instead.</target>
+        <note>The following are literal names and should not be translated: EmbeddedNativeLibrary, AndroidNativeLibrary
+{0} - The library name.</note>
+      </trans-unit>
       <trans-unit id="XA0107">
         <source>{0} is a Reference Assembly.</source>
         <target state="new">{0} is a Reference Assembly.</target>
@@ -113,6 +129,17 @@
         <target state="new">Could not determine ABI of some native libraries. Ignoring those: {0}</target>
         <note>The abbreviation "ABI" should not be translated.
 {0} - Comma-separated list of the ignored library file names.</note>
+      </trans-unit>
+      <trans-unit id="XA4305">
+        <source>MultiDex is enabled, but '{0}' was not specified.</source>
+        <target state="new">MultiDex is enabled, but '{0}' was not specified.</target>
+        <note>The following are literal names and should not be translated: MultiDex
+{0} - The MSBuild property name.</note>
+      </trans-unit>
+      <trans-unit id="XA4305_File_Missing">
+        <source>MultiDex is enabled, but main dex list file '{0}' does not exist.</source>
+        <target state="new">MultiDex is enabled, but main dex list file '{0}' does not exist.</target>
+        <note>The following are literal names and should not be translated: MultiDex</note>
       </trans-unit>
       <trans-unit id="XA5301">
         <source>Failed to generate Java type for class: {0} due to MAX_PATH: {1}</source>
