@@ -54,7 +54,7 @@ namespace Android.RuntimeTests
                                 Assert.Throws<NotSupportedException> (() => { stream.Position = 1; });
                                 Assert.Throws<NotSupportedException> (() => { stream.Seek (1, SeekOrigin.Begin); });
                                 Assert.AreEqual (stream.Read (bytes, 0, text.Length), text.Length);
-                                Assert.AreEqual (text, Encoding.ASCII.GetString (bytes, 0, 1));
+                                Assert.AreEqual (text, Encoding.ASCII.GetString (bytes, 0, text.Length));
                         }
 
                         File.Delete (path);
