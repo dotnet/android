@@ -57,7 +57,7 @@ Copyright (C) 2016 Xamarin. All rights reserved.
     />
     <_ResolvedUserMonoAndroidAssembliesForDesigner
         Include="@(ResolvedUserAssemblies)"
-        Condition="'%(ResolvedUserAssemblies.TargetFrameworkIdentifier)' == 'MonoAndroid' Or '%(ResolvedUserAssemblies.HasMonoAndroidReference)' == 'True'"
+        Condition="'%(ResolvedUserAssemblies.HasMonoAndroidReference)' == 'True'"
     />
   </ItemGroup>
 </Target>

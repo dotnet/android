@@ -290,10 +290,6 @@ namespace Xamarin.Android.Tasks
 
 		public static bool IsMonoAndroidAssembly (ITaskItem assembly)
 		{
-			var tfi = assembly.GetMetadata ("TargetFrameworkIdentifier");
-			if (string.Compare (tfi, "MonoAndroid", StringComparison.OrdinalIgnoreCase) == 0)
-				return true;
-
 			var hasReference = assembly.GetMetadata ("HasMonoAndroidReference");
 			return bool.TryParse (hasReference, out bool value) && value;
 		}

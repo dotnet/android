@@ -214,23 +214,16 @@ namespace Xamarin.Android.Tasks
 			if (resolutionPath == null)
 				resolutionPath = new List<string>();
 
-			CheckAssemblyAttributes (assembly, reader, out string targetFrameworkIdentifier);
+			CheckAssemblyAttributes (assembly, reader);
 
 			LogMessage ("{0}Adding assembly reference for {1}, recursively...", new string (' ', indent), assemblyName);
 			resolutionPath.Add (assemblyName);
 			indent += 2;
 
 			// Add this assembly
-			ITaskItem assemblyItem = null;
-			if (topLevel) {
-				if (assemblies.TryGetValue (assemblyName, out assemblyItem)) {
-					if (!string.IsNullOrEmpty (targetFrameworkIdentifier) && string.IsNullOrEmpty (assemblyItem.GetMetadata ("TargetFrameworkIdentifier"))) {
-						assemblyItem.SetMetadata ("TargetFrameworkIdentifier", targetFrameworkIdentifier);
-					}
-				}
-			} else {
+			if (!assemblies.TryGetValue (assemblyName, out ITaskItem assemblyItem) && !topLevel) {
 				assemblies [assemblyName] = 
-					assemblyItem = CreateAssemblyTaskItem (assemblyPath, targetFrameworkIdentifier);
+					assemblyItem = CreateAssemblyTaskItem (assemblyPath);
 			}
 
 			// Recurse into each referenced assembly
@@ -239,8 +232,8 @@ namespace Xamarin.Android.Tasks
 				string reference_assembly;
 				try {
 					var referenceName = reader.GetString (reference.Name);
-					if (assemblyItem != null && referenceName == "Mono.Android") {
-						assemblyItem.SetMetadata ("HasMonoAndroidReference", "True");
+					if (referenceName == "Mono.Android" || referenceName == "Java.Interop") {
+						assemblyItem?.SetMetadata ("HasMonoAndroidReference", "True");
 					}
 					reference_assembly = resolver.Resolve (referenceName);
 				} catch (FileNotFoundException ex) {
@@ -272,10 +265,8 @@ namespace Xamarin.Android.Tasks
 			resolutionPath.RemoveAt (resolutionPath.Count - 1);
 		}
 
-		void CheckAssemblyAttributes (AssemblyDefinition assembly, MetadataReader reader, out string targetFrameworkIdentifier)
+		void CheckAssemblyAttributes (AssemblyDefinition assembly, MetadataReader reader)
 		{
-			targetFrameworkIdentifier = null;
-
 			foreach (var handle in assembly.GetCustomAttributes ()) {
 				var attribute = reader.GetCustomAttribute (handle);
 				switch (reader.GetCustomAttributeFullName (attribute)) {
@@ -293,11 +284,12 @@ namespace Xamarin.Android.Tasks
 							var arguments = attribute.GetCustomAttributeArguments ();
 							foreach (var p in arguments.FixedArguments) {
 								// Of the form "MonoAndroid,Version=v8.1"
+								// If this is a .NET 5 TFM, we won't emit these warnings
 								var value = p.Value?.ToString ();
 								if (!string.IsNullOrEmpty (value)) {
 									int commaIndex = value.IndexOf (",", StringComparison.Ordinal);
 									if (commaIndex != -1) {
-										targetFrameworkIdentifier = value.Substring (0, commaIndex);
+										string targetFrameworkIdentifier = value.Substring (0, commaIndex);
 										if (targetFrameworkIdentifier == "MonoAndroid") {
 											const string match = "Version=";
 											var versionIndex = value.IndexOf (match, commaIndex, StringComparison.Ordinal);
@@ -368,14 +360,12 @@ namespace Xamarin.Android.Tasks
 			assemblies [name] = CreateAssemblyTaskItem (assembly);
 		}
 
-		static ITaskItem CreateAssemblyTaskItem (string assembly, string targetFrameworkIdentifier = null)
+		static ITaskItem CreateAssemblyTaskItem (string assembly)
 		{
 			var assemblyFullPath = Path.GetFullPath (assembly);
-			var dictionary = new Dictionary<string, string> (2) {
+			var dictionary = new Dictionary<string, string> (1) {
 				{ "ReferenceAssembly", assemblyFullPath },
 			};
-			if (!string.IsNullOrEmpty (targetFrameworkIdentifier))
-				dictionary.Add ("TargetFrameworkIdentifier", targetFrameworkIdentifier);
 			return new TaskItem (assemblyFullPath, dictionary);
 		}
 	}

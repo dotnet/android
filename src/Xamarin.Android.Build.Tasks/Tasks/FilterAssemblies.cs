@@ -19,9 +19,6 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "FLT";
 
-		const string TargetFrameworkIdentifier = "MonoAndroid";
-		const string MonoAndroidReference = "Mono.Android";
-
 		public bool DesignTimeBuild { get; set; }
 
 		public ITaskItem [] InputAssemblies { get; set; }
@@ -42,19 +39,9 @@ namespace Xamarin.Android.Tasks
 				}
 				using (var pe = new PEReader (File.OpenRead (assemblyItem.ItemSpec))) {
 					var reader = pe.GetMetadataReader ();
-					var assemblyDefinition = reader.GetAssemblyDefinition ();
-					var targetFrameworkIdentifier = GetTargetFrameworkIdentifier (assemblyDefinition, reader);
-					if (string.Compare (targetFrameworkIdentifier, TargetFrameworkIdentifier, StringComparison.OrdinalIgnoreCase) == 0) {
-						output.Add (assemblyItem);
-						continue;
-					}
-
-					// In the rare case, [assembly: TargetFramework("MonoAndroid,Version=v9.0")] may not match
-					Log.LogDebugMessage ($"{nameof (TargetFrameworkIdentifier)} did not match: {assemblyItem.ItemSpec}");
-
-					// Fallback to looking for a Mono.Android reference
+					// By default look for a reference to Mono.Android.dll
 					if (HasReference (reader)) {
-						Log.LogDebugMessage ($"{MonoAndroidReference} reference found: {assemblyItem.ItemSpec}");
+						CheckAssemblyAttributes (reader);
 						output.Add (assemblyItem);
 						continue;
 					}
@@ -71,27 +58,13 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
-		string GetTargetFrameworkIdentifier (AssemblyDefinition assembly, MetadataReader reader)
+		void CheckAssemblyAttributes (MetadataReader reader)
 		{
-			string targetFrameworkIdentifier = null;
+			var assembly = reader.GetAssemblyDefinition ();
 			foreach (var handle in assembly.GetCustomAttributes ()) {
 				var attribute = reader.GetCustomAttribute (handle);
 				var name = reader.GetCustomAttributeFullName (attribute);
 				switch (name) {
-					case "System.Runtime.Versioning.TargetFrameworkAttribute":
-						var arguments = attribute.GetCustomAttributeArguments ();
-						foreach (var p in arguments.FixedArguments) {
-							// Of the form "MonoAndroid,Version=v8.1"
-							var value = p.Value?.ToString ();
-							if (!string.IsNullOrEmpty (value)) {
-								int commaIndex = value.IndexOf (",", StringComparison.Ordinal);
-								if (commaIndex != -1) {
-									targetFrameworkIdentifier = value.Substring (0, commaIndex);
-									break;
-								}
-							}
-						}
-						break;
 					case "Android.IncludeAndroidResourcesFromAttribute":
 					case "Android.NativeLibraryReferenceAttribute":
 					case "Java.Interop.JavaLibraryReferenceAttribute":
@@ -102,7 +75,6 @@ namespace Xamarin.Android.Tasks
 						break;
 				}
 			}
-			return targetFrameworkIdentifier;
 		}
 
 		bool HasReference (MetadataReader reader)
@@ -110,7 +82,7 @@ namespace Xamarin.Android.Tasks
 			foreach (var handle in reader.AssemblyReferences) {
 				var reference = reader.GetAssemblyReference (handle);
 				var name = reader.GetString (reference.Name);
-				if (MonoAndroidReference == name) {
+				if (name == "Mono.Android" || name == "Java.Interop") {
 					return true;
 				}
 			}

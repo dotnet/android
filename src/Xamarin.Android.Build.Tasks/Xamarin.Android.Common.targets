@@ -2032,7 +2032,7 @@ because xbuild doesn't support framework reference assemblies.
   <ItemGroup>
     <_ResolvedUserMonoAndroidAssemblies
         Include="@(_ResolvedUserAssemblies)"
-        Condition=" '%(_ResolvedUserAssemblies.TargetFrameworkIdentifier)' == 'MonoAndroid' Or '%(_ResolvedUserAssemblies.HasMonoAndroidReference)' == 'True' "
+        Condition=" '%(_ResolvedUserAssemblies.HasMonoAndroidReference)' == 'True' "
     />
   </ItemGroup>
 </Target>

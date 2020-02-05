@@ -92,7 +92,6 @@ namespace Xamarin.Android.Build.Tests
 			var expected = new [] {
 				"FormsViewGroup.dll",
 				"Xamarin.Forms.Platform.Android.dll",
-				"Xamarin.Forms.Platform.dll",
 			};
 			CollectionAssert.AreEqual (expected, actual);
 		}
