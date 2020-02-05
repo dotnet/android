@@ -2545,19 +2545,11 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_ResolveSatellitePaths"
     DependsOnTargets="_ResolveAssemblies"
 >
-  <ResolveAssemblyReference
-      AllowedAssemblyExtensions="$(AllowedReferenceAssemblyFileExtensions)"
-      AssemblyFiles="@(ResolvedUserAssemblies)"
-      AutoUnify="$(AutoUnifyAssemblyReferences)"
-      FindDependencies="True"
-      FindRelatedFiles="False"
-      FindSatellites="True"
-      SearchPaths="$(AssemblySearchPaths)"
-      TargetFrameworkMoniker="$(TargetFrameworkMoniker)"
-      TargetFrameworkMonikerDisplayName="$(TargetFrameworkMonikerDisplayName)"
-      TargetFrameworkDirectories="$(TargetFrameworkDirectory)">
-    <Output TaskParameter="SatelliteFiles" ItemName="_AndroidResolvedSatellitePaths"/>
-  </ResolveAssemblyReference>
+  <ItemGroup>
+    <_AndroidResolvedSatellitePaths Include="@(ReferenceSatellitePaths)" />
+    <!-- Satellites from the current project, see: https://github.com/microsoft/msbuild/blob/master/src/Tasks/Microsoft.Common.CurrentVersion.targets#L4283-L4299 -->
+    <_AndroidResolvedSatellitePaths Include="@(IntermediateSatelliteAssembliesWithTargetPath->'$(OutDir)%(Culture)\$(TargetName).resources.dll')" />
+  </ItemGroup>
 </Target>
 
 <Target Name="_CheckApkPerAbiFlag">
