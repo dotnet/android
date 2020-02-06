@@ -177,9 +177,6 @@
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\BodySubstituterStep.cs">
       <Link>Linker\Linker.Steps\BodySubstituterStep.cs</Link>
     </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\RemoveUnreachableBlocksStep.cs">
-      <Link>Linker\Linker.Steps\RemoveUnreachableBlocksStep.cs</Link>
-    </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\IDependencyRecorder.cs">
       <Link>Linker\Linker\IDependencyRecorder.cs</Link>
     </Compile>
