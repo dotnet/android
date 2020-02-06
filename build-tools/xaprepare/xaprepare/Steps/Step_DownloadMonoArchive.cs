@@ -116,6 +116,7 @@ namespace Xamarin.Android.Prepare
 
 			string tempDir = $"{destinationDirectory}.tmp";
 			if (!await Utilities.Unpack (localPath, tempDir, cleanDestinatioBeforeUnpacking: true)) {
+				Utilities.DeleteFileSilent (localPath);
 				Utilities.DeleteDirectorySilent (destinationDirectory);
 				Log.WarningLine ($"Failed to unpack {name} archive {localPath}, Mono will be rebuilt");
 				return false;
