@@ -6,7 +6,8 @@ namespace Android.Runtime
 	public class InputStreamInvoker : Stream
 	{
 		public Java.IO.InputStream BaseInputStream {get; private set;}
-		protected Java.Nio.Channels.FileChannel BaseFileChannel {get; set;}
+
+		protected Java.Nio.Channels.FileChannel BaseFileChannel {get; private set;}
 
 		public InputStreamInvoker (Java.IO.InputStream stream)
 		{
