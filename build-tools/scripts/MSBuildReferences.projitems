@@ -16,10 +16,6 @@
       <SpecificVersion>True</SpecificVersion>
       <HintPath>$(MSBuildToolsPath)\Microsoft.Build.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Build.Engine, Version=$(MSBuildReferenceVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" Condition=" '$(OS)' != 'Windows_NT' ">
-      <SpecificVersion>True</SpecificVersion>
-      <HintPath>$(MSBuildToolsPath)\Microsoft.Build.Engine.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.Build.Framework, Version=$(MSBuildReferenceVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" Condition=" '$(OS)' != 'Windows_NT' ">
       <SpecificVersion>True</SpecificVersion>
       <HintPath>$(MSBuildToolsPath)\Microsoft.Build.Framework.dll</HintPath>
