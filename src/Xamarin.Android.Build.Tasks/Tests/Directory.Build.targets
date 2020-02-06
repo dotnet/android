@@ -25,11 +25,13 @@
       </_SdkVersionInfo>
     </ItemGroup>
 
-    <WriteCodeFragment AssemblyAttributes="@(_SdkVersionInfo)" Language="$(Language)" OutputFile="$(GeneratedSdkVersionFile)" >
-      <Output TaskParameter="OutputFile" ItemName="Compile" />
-      <Output TaskParameter="OutputFile" ItemName="FileWrites" />
-    </WriteCodeFragment>
+    <WriteCodeFragment AssemblyAttributes="@(_SdkVersionInfo)" Language="$(Language)" OutputFile="$(GeneratedSdkVersionFile)" />
 
+    <ItemGroup>
+      <Compile Include="$(GeneratedSdkVersionFile)" />
+      <FileWrites Include="$(GeneratedSdkVersionFile)" />
+    </ItemGroup>
+    
   </Target>
 
 </Project>
