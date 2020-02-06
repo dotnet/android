@@ -7,7 +7,7 @@ namespace Xamarin.Android.Prepare
 		partial class Urls
 		{
 			public static readonly Uri Corretto = new Uri ($"{Corretto_BaseUri}{CorrettoUrlPathVersion}/amazon-corretto-{CorrettoDistVersion}-macosx-x64.tar.gz");
-			public static readonly Uri MonoPackage = new Uri ("https://xamjenkinsartifact.azureedge.net/build-package-osx-mono/2020-02/4/75a7ff235acef8c89da3bc3511773c9843c042f5/MonoFramework-MDK-6.12.0.3.macos10.xamarin.universal.pkg");
+			public static readonly Uri MonoPackage = new Uri ("https://xamjenkinsartifact.azureedge.net/build-package-osx-mono/2020-02/6/9af77d009314e997a1e9cf36b7440c2185542975/MonoFramework-MDK-6.12.0.4.macos10.xamarin.universal.pkg");
 		}
 
 		partial class Defaults
