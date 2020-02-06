@@ -62,6 +62,8 @@
     <Compile Remove="MSBuild\**" />
     <Compile Remove="Resources\**" />
     <Compile Remove="Tests\**" />
+    <EmbeddedResource Remove="Tests\**" />
+    <None Remove="Tests\**" />
     <Compile Include="$(IntermediateOutputPath)Profile.g.cs" />
     <Compile Include="..\..\bin\Build$(Configuration)\XABuildConfig.cs" />
     <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\AdjustVisibility.cs">
