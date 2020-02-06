@@ -1,7 +1,9 @@
+#nullable enable
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
-
+using System.Diagnostics.CodeAnalysis;
 using Android.Runtime;
 
 using Java.Interop;
@@ -36,7 +38,7 @@ namespace Android.Runtime {
 		//
 		//     https://developer.android.com/reference/java/util/List.html?hl=en#get(int)
 		//
-		internal object InternalGet (int location, Type targetType = null)
+		internal object? InternalGet (int location, Type? targetType = null)
 		{
 			if (id_get == IntPtr.Zero)
 				id_get = JNIEnv.GetMethodID (arraylist_class, "get", "(I)Ljava/lang/Object;");
@@ -63,7 +65,7 @@ namespace Android.Runtime {
 		//  Rationale
 		//    `java.util.List.iterator()` is not documented to throw any exceptions.
 		//
-		public virtual Java.Util.IIterator Iterator ()
+		public virtual Java.Util.IIterator? Iterator ()
 		{
 			if (id_iterator == IntPtr.Zero)
 				id_iterator = JNIEnv.GetMethodID (arraylist_class, "iterator", "()Ljava/util/Iterator;");
@@ -83,7 +85,7 @@ namespace Android.Runtime {
 		//
 		//     https://developer.android.com/reference/java/util/List.html?hl=en#set(int,%20E)
 		//
-		internal void InternalSet (int location, object value)
+		internal void InternalSet (int location, object? value)
 		{
 			if (id_set == IntPtr.Zero)
 				id_set = JNIEnv.GetMethodID (arraylist_class, "set", "(ILjava/lang/Object;)Ljava/lang/Object;");
@@ -178,11 +180,11 @@ namespace Android.Runtime {
 			get { return false; }
 		}
 
-		public object SyncRoot {
+		public object? SyncRoot {
 			get { return null; }
 		}
 
-		public object this [int index] {
+		public object? this [int index] {
 			get {
 				if (index < 0 || index >= Count)
 					throw new ArgumentOutOfRangeException ("index");
@@ -421,7 +423,7 @@ namespace Android.Runtime {
 		//
 		//     https://developer.android.com/reference/java/util/List?hl=en#set(int,%20E)
 		//
-		public virtual Java.Lang.Object Set (int location, Java.Lang.Object item)
+		public virtual Java.Lang.Object? Set (int location, Java.Lang.Object item)
 		{
 			if (id_set == IntPtr.Zero)
 				id_set = JNIEnv.GetMethodID (arraylist_class, "set", "(ILjava/lang/Object;)Ljava/lang/Object;");
@@ -475,12 +477,12 @@ namespace Android.Runtime {
 		}
 		
 		[Preserve (Conditional=true)]
-		public static IList FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
+		public static IList? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
 
-			IJavaObject inst = (IJavaObject) Java.Lang.Object.PeekObject (handle);
+			var inst = (IJavaObject?) Java.Lang.Object.PeekObject (handle);
 			if (inst == null)
 				inst = new JavaList (handle, transfer);
 			else
@@ -490,7 +492,7 @@ namespace Android.Runtime {
 		}
 
 		[Preserve (Conditional=true)]
-		public static IntPtr ToLocalJniHandle (IList items)
+		public static IntPtr ToLocalJniHandle (IList? items)
 		{
 			if (items == null)
 				return IntPtr.Zero;
@@ -576,14 +578,14 @@ namespace Android.Runtime {
 				return false;
 			// I'm not sure if this should be valid (i.e. Count doesn't change), hopefully it can be premised...
 			for (int i = 0; i < Count; i++)
-				if (!this [i].Equals (collection [i]))
+				if (!(this [i]?.Equals (collection [i]) == true))
 					return false;
 			return true;
 		}
 		
-		public virtual Java.Lang.Object Get (int location)
+		public virtual Java.Lang.Object? Get (int location)
 		{
-			return (Java.Lang.Object) InternalGet (location);
+			return (Java.Lang.Object?) InternalGet (location);
 		}
 
 		public virtual int IndexOf (Java.Lang.Object item)
@@ -601,7 +603,7 @@ namespace Android.Runtime {
 		
 		// ListIterator does not exist in MfA, so listIterator() methods cannot be implemented.
 		
-		public virtual Java.Lang.Object Remove (int location)
+		public virtual Java.Lang.Object? Remove (int location)
 		{
 			var ret = Get (location);
 			RemoveAt (location);
@@ -630,8 +632,8 @@ namespace Android.Runtime {
 			bool ret = false;
 			for (int i = 0; i < Count; i++) {
 				var item = Get (i);
-				if (!collection.Contains (item)) {
-					Remove (item);
+				if (!collection.Contains (item!)) {
+					Remove (item!);
 					ret = true;
 					i--;
 				}
@@ -723,6 +725,7 @@ namespace Android.Runtime {
 		//
 		//     https://developer.android.com/reference/java/util/List.html?hl=en#get(int)
 		//
+		[return: MaybeNull]
 		internal T InternalGet (int location)
 		{
 			if (id_get == IntPtr.Zero)
@@ -773,6 +776,7 @@ namespace Android.Runtime {
 			JNIEnv.DeleteLocalRef (r);
 		}
 
+		[MaybeNull]
 		public T this [int index] {
 			get {
 				if (index < 0 || index >= Count)
@@ -848,7 +852,9 @@ namespace Android.Runtime {
 				throw new ArgumentException ("array");
 
 			for (int i = 0; i < Count; i++)
+#pragma warning disable CS8601 // Possible null reference assignment.
 				array [array_index + i] = this [i];
+#pragma warning restore CS8601 // Possible null reference assignment.
 		}
 
 		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator ()
@@ -931,12 +937,12 @@ namespace Android.Runtime {
 		}
 		
 		[Preserve (Conditional=true)]
-		public static IList<T> FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
+		public static IList<T>? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
 
-			IJavaObject inst = (IJavaObject) Java.Lang.Object.PeekObject (handle, typeof (IList<T>));
+			var inst = (IJavaObject?) Java.Lang.Object.PeekObject (handle, typeof (IList<T>));
 			if (inst == null)
 				inst = new JavaList<T> (handle, transfer);
 			else
@@ -946,7 +952,7 @@ namespace Android.Runtime {
 		}
 
 		[Preserve (Conditional=true)]
-		public static IntPtr ToLocalJniHandle (IList<T> items)
+		public static IntPtr ToLocalJniHandle (IList<T>? items)
 		{
 			if (items == null)
 				return IntPtr.Zero;

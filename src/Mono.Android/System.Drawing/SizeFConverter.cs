@@ -1,3 +1,5 @@
+#nullable enable
+
 //
 // Copyright (C) 2005, 2008 Novell, Inc (http://www.novell.com)
 //
@@ -68,7 +70,7 @@ namespace System.Drawing
 
 		public override object ConvertFrom (ITypeDescriptorContext context, CultureInfo culture, object value)
 		{
-			string s = value as string;
+			var s = value as string;
 			if (s == null)
 				return base.ConvertFrom (context, culture, value);
 

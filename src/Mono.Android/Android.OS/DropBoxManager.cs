@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 
 using Android.Content;
@@ -8,9 +10,9 @@ namespace Android.OS {
 
 	public partial class DropBoxManager {
 
-		public static DropBoxManager FromContext (Context context)
+		public static DropBoxManager? FromContext (Context context)
 		{
-			return context.GetSystemService (Context.DropboxService) as DropBoxManager;
+			return context.GetSystemService (Context.DropboxService!) as DropBoxManager;
 		}
 	}
 

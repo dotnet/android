@@ -1,3 +1,5 @@
+#nullable enable
+
 //
 // Adapted from:
 //
@@ -30,27 +32,27 @@ namespace Xamarin.Android.Net
 
 		DateTime lastUse = DateTime.UtcNow;
 		int _nc = 1;
-		HashAlgorithm hash;
-		AuthDigestHeaderParser parser;
-		string _cnonce;
+		HashAlgorithm? hash;
+		AuthDigestHeaderParser? parser;
+		string? _cnonce;
 
-		public string Algorithm {
+		public string? Algorithm {
 			get { return parser?.Algorithm; }
 		}
 
-		public string Realm {
+		public string? Realm {
 			get { return parser?.Realm; }
 		}
 
-		public string Nonce {
+		public string? Nonce {
 			get { return parser?.Nonce; }
 		}
 
-		public string Opaque {
+		public string? Opaque {
 			get { return parser?.Opaque; }
 		}
 
-		public string QOP {
+		public string? QOP {
 			get { return parser?.QOP; }
 		}
 
@@ -85,7 +87,7 @@ namespace Xamarin.Android.Net
 			return true;
 		}
 
-		string HashToHexString (string toBeHashed) 
+		string? HashToHexString (string toBeHashed) 
 		{
 			if (hash == null)
 				return null;
@@ -99,7 +101,7 @@ namespace Xamarin.Android.Net
 			return sb.ToString ();
 		}
 
-		string HA1 (string username, string password) 
+		string? HA1 (string username, string password) 
 		{
 			string ha1 = $"{username}:{Realm}:{password}";
 			if (String.Compare (Algorithm, "md5-sess", StringComparison.OrdinalIgnoreCase) == 0)
@@ -107,9 +109,9 @@ namespace Xamarin.Android.Net
 			return HashToHexString (ha1);
 		}
 
-		string HA2 (HttpURLConnection webRequest) 
+		string? HA2 (HttpURLConnection webRequest) 
 		{
-			var uri = new Uri (webRequest.URL.ToString ());
+			var uri = new Uri (webRequest.URL?.ToString ());
 			string ha2 = $"{webRequest.RequestMethod}:{uri.PathAndQuery}";
 			if (QOP == "auth-int") {
 				// TODO
@@ -118,7 +120,7 @@ namespace Xamarin.Android.Net
 			return HashToHexString (ha2);
 		}
 
-		string Response (string username, string password, HttpURLConnection webRequest) 
+		string? Response (string username, string password, HttpURLConnection webRequest) 
 		{
 			string response = $"{HA1 (username, password)}:{Nonce}:";
 			if (QOP != null)
@@ -127,7 +129,7 @@ namespace Xamarin.Android.Net
 			return HashToHexString (response);
 		}
 
-		public Authorization Authenticate (HttpURLConnection request, ICredentials credentials) 
+		public Authorization? Authenticate (HttpURLConnection request, ICredentials credentials) 
 		{
 			if (parser == null)
 				throw new InvalidOperationException ();
@@ -135,7 +137,7 @@ namespace Xamarin.Android.Net
 				return null;
 	
 			lastUse = DateTime.Now;
-			var uri = new Uri (request.URL.ToString ());
+			var uri = new Uri (request.URL?.ToString ());
 			NetworkCredential cred = credentials.GetCredential (uri, "digest");
 			if (cred == null)
 				return null;

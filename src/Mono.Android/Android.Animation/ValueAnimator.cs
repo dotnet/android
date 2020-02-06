@@ -1,3 +1,5 @@
+#nullable enable
+
 #if ANDROID_11
 
 using System;
@@ -30,7 +32,7 @@ namespace Android.Animation
 			}
 		}
 		
-		private static Delegate cb_setDuration_J;
+		private static Delegate? cb_setDuration_J;
 		
 		private static Delegate GetSetDuration_JHandler ()
 		{

@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -48,7 +50,7 @@ namespace Android.Runtime {
 
 		public void CopyTo (T[] array, int array_index)
 		{
-			T[] items = JNIEnv.GetArray<T> (Handle);
+			var items = JNIEnv.GetArray<T> (Handle)!;
 			for (int i = 0; i < Count; i++)
 				array [array_index + i] = items [i];
 		}
@@ -60,14 +62,14 @@ namespace Android.Runtime {
 
 		public IEnumerator<T> GetEnumerator ()
 		{
-			T[] items = JNIEnv.GetArray<T> (Handle);
-                        for (int i = 0; i < items.Length; i++)
+			var items = JNIEnv.GetArray<T> (Handle);
+                        for (int i = 0; i < items!.Length; i++)
                                 yield return items [i];
 		}
 
 		public int IndexOf (T item)
 		{
-			T[] items = JNIEnv.GetArray<T> (Handle);
+			var items = JNIEnv.GetArray<T> (Handle);
 			return Array.IndexOf (items, item);
 		}
 
@@ -87,7 +89,7 @@ namespace Android.Runtime {
 		}
 
 		[Preserve (Conditional=true)]
-		public static JavaArray<T> FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
+		public static JavaArray<T>? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
@@ -101,7 +103,7 @@ namespace Android.Runtime {
 		}
 
 		[Preserve (Conditional=true)]
-		public static IntPtr ToLocalJniHandle (IList<T> value)
+		public static IntPtr ToLocalJniHandle (IList<T>? value)
 		{
 			if (value == null)
 				return IntPtr.Zero;

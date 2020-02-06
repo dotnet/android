@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.IO;
 using System.Text;
@@ -10,7 +12,7 @@ namespace Android.Runtime
 	public class XmlReaderResourceParser : XmlReaderPullParser, IXmlResourceParser
 	{
 		[Preserve (Conditional=true)]
-		public static IntPtr ToLocalJniHandle (XmlReader value)
+		public static IntPtr ToLocalJniHandle (XmlReader? value)
 		{
 			if (value == null)
 				return IntPtr.Zero;
@@ -42,7 +44,7 @@ namespace Android.Runtime
 			return index < AttributeCount ? XmlConvert.ToBoolean (GetAttributeValue (index)) : defaultValue;
 		}
 	
-		public bool GetAttributeBooleanValue (string namespaceURI, string attribute, bool defaultValue)
+		public bool GetAttributeBooleanValue (string? namespaceURI, string? attribute, bool defaultValue)
 		{
 			var v = GetAttributeValue (namespaceURI, attribute);
 			return v != null ? XmlConvert.ToBoolean (v) : defaultValue;
@@ -53,7 +55,7 @@ namespace Android.Runtime
 			return index < AttributeCount ? XmlConvert.ToSingle (GetAttributeValue (index)) : defaultValue;
 		}
 	
-		public float GetAttributeFloatValue (string namespaceURI, string attribute, float defaultValue)
+		public float GetAttributeFloatValue (string? namespaceURI, string? attribute, float defaultValue)
 		{
 			var v = GetAttributeValue (namespaceURI, attribute);
 			return v != null ? XmlConvert.ToSingle (v) : defaultValue;
@@ -64,18 +66,18 @@ namespace Android.Runtime
 			return index < AttributeCount ? XmlConvert.ToInt32 (GetAttributeValue (index)) : defaultValue;
 		}
 	
-		public int GetAttributeIntValue (string namespaceURI, string attribute, int defaultValue)
+		public int GetAttributeIntValue (string? namespaceURI, string? attribute, int defaultValue)
 		{
 			var v = GetAttributeValue (namespaceURI, attribute);
 			return v != null ? XmlConvert.ToInt32 (v) : defaultValue;
 		}
 	
-		public int GetAttributeListValue (int index, string[] options, int defaultValue)
+		public int GetAttributeListValue (int index, string[]? options, int defaultValue)
 		{
 			throw new NotSupportedException ();
 		}
 	
-		public int GetAttributeListValue (string namespaceURI, string attribute, string[] options, int defaultValue)
+		public int GetAttributeListValue (string? namespaceURI, string? attribute, string[]? options, int defaultValue)
 		{
 			throw new NotSupportedException ();
 		}
@@ -90,7 +92,7 @@ namespace Android.Runtime
 			throw new NotSupportedException ();
 		}
 	
-		public int GetAttributeResourceValue (string namespaceURI, string attribute, int defaultValue)
+		public int GetAttributeResourceValue (string? namespaceURI, string? attribute, int defaultValue)
 		{
 			throw new NotSupportedException ();
 		}
@@ -100,7 +102,7 @@ namespace Android.Runtime
 			return index < AttributeCount ? (int) XmlConvert.ToUInt32 (GetAttributeValue (index)) : defaultValue;
 		}
 	
-		public int GetAttributeUnsignedIntValue (string namespaceURI, string attribute, int defaultValue)
+		public int GetAttributeUnsignedIntValue (string? namespaceURI, string? attribute, int defaultValue)
 		{
 			var v = GetAttributeValue (namespaceURI, attribute);
 			return v != null ? (int) XmlConvert.ToUInt32 (v) : defaultValue;
@@ -128,7 +130,7 @@ namespace Android.Runtime
 	public class XmlReaderPullParser : Java.Lang.Object, IXmlPullParser
 	{
 		[Preserve (Conditional=true)]
-		public static IntPtr ToLocalJniHandle (XmlReader value)
+		public static IntPtr ToLocalJniHandle (XmlReader? value)
 		{
 			if (value == null)
 				return IntPtr.Zero;
@@ -148,7 +150,7 @@ namespace Android.Runtime
 		}
 	
 		#region IXmlPullParser implementation
-		public void DefineEntityReplacementText (string entityName, string replacementText)
+		public void DefineEntityReplacementText (string? entityName, string? replacementText)
 		{
 			throw new NotSupportedException ();
 		}
@@ -181,12 +183,12 @@ namespace Android.Runtime
 			return r.GetAttribute (index);
 		}
 	
-		public string GetAttributeValue (string namespaceURI, string name)
+		public string GetAttributeValue (string? namespaceURI, string? name)
 		{
 			return r.GetAttribute (name, namespaceURI);
 		}
 	
-		public bool GetFeature (string name)
+		public bool GetFeature (string? name)
 		{
 			switch (name) {
 			case XmlPullParser.FeatureProcessNamespaces:
@@ -196,7 +198,7 @@ namespace Android.Runtime
 			return false;
 		}
 	
-		public string GetNamespace (string prefix)
+		public string GetNamespace (string? prefix)
 		{
 			return r.LookupNamespace (prefix);
 		}
@@ -216,7 +218,7 @@ namespace Android.Runtime
 			throw new NotSupportedException ();
 		}
 	
-		public Java.Lang.Object GetProperty (string name)
+		public Java.Lang.Object GetProperty (string? name)
 		{
 			throw new NotSupportedException ();
 		}
@@ -327,13 +329,13 @@ namespace Android.Runtime
 			return XmlPullParserNode.EndDocument;
 		}
 	
-		public void Require (Org.XmlPull.V1.XmlPullParserNode type, string namespaceURI, string name)
+		public void Require (Org.XmlPull.V1.XmlPullParserNode type, string? namespaceURI, string? name)
 		{
 			if (type != EventType || namespaceURI != this.Namespace || name != this.Name)
 				throw new XmlPullParserException( "expected " + type + " " + PositionDescription);
 		}
 	
-		public void SetFeature (string name, bool state)
+		public void SetFeature (string? name, bool state)
 		{
 			switch (name) {
 			case XmlPullParser.FeatureProcessNamespaces:
@@ -345,21 +347,21 @@ namespace Android.Runtime
 			throw new NotSupportedException ();
 		}
 
-		string input_encoding;
+		string? input_encoding;
 		
-		public void SetInput (Stream inputStream, string inputEncoding)
+		public void SetInput (Stream? inputStream, string? inputEncoding)
 		{
 			r = XmlReader.Create (new StreamReader (inputStream, Encoding.GetEncoding (inputEncoding)));
 			r.Read ();
 			input_encoding = inputEncoding;
 		}
 	
-		public void SetInput (Java.IO.Reader input)
+		public void SetInput (Java.IO.Reader? input)
 		{
 			throw new System.NotSupportedException ();
 		}
 	
-		public void SetProperty (string name, Java.Lang.Object value)
+		public void SetProperty (string? name, Java.Lang.Object? value)
 		{
 			throw new System.NotSupportedException ();
 		}
@@ -418,7 +420,7 @@ namespace Android.Runtime
 			}
 		}
 	
-		public string InputEncoding {
+		public string? InputEncoding {
 			get { return input_encoding; }
 		}
 	
@@ -459,7 +461,7 @@ namespace Android.Runtime
 			get {
 				r.MoveToElement ();
 				var xi = r as IXmlLineInfo;
-				var loc = xi == null && xi.HasLineInfo () ?
+				var loc = xi == null || !xi.HasLineInfo () ?
 					"(location N/A)" :
 					String.Format ("({0}, {1})", xi.LineNumber, xi.LinePosition);
 				return String.Format ("Node {0} at {1} {2}", r.NodeType, String.IsNullOrEmpty (r.BaseURI) ? null : r.BaseURI, loc);

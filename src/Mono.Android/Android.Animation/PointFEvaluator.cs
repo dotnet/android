@@ -1,3 +1,5 @@
+#nullable enable
+
 #if ANDROID_21
 
 using Java.Lang;
@@ -7,9 +9,9 @@ namespace Android.Animation
 {
 	public partial class PointFEvaluator
 	{
-		Object ITypeEvaluator.Evaluate (float fraction, Object startValue, Object endValue)
+		Object? ITypeEvaluator.Evaluate (float fraction, Object? startValue, Object? endValue)
 		{
-			return Evaluate (fraction, (PointF) startValue, (PointF) endValue);
+			return Evaluate (fraction, (PointF?) startValue, (PointF?) endValue);
 		}
 	}
 }

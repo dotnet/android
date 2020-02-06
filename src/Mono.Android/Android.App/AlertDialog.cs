@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 
@@ -13,7 +15,7 @@ namespace Android.App {
 
 		public partial class Builder {
 
-			WeakReference weak_implementor_SetOnItemSelectedListener ;
+			WeakReference? weak_implementor_SetOnItemSelectedListener ;
 
 			public event EventHandler<Android.Widget.AdapterView.ItemSelectedEventArgs> ItemSelected {
 				add {
@@ -60,12 +62,13 @@ namespace Android.App {
 			}
 
 			// extra(neous) event
-			List<EventHandler> selection_cleared;
+			List<EventHandler>? selection_cleared;
 			
 			void OnSelectionCleared (object o, Android.Widget.AdapterView.NothingSelectedEventArgs args)
 			{
-				foreach (var h in selection_cleared)
-					h (o, EventArgs.Empty);
+				if (selection_cleared != null)
+					foreach (var h in selection_cleared)
+						h (o, EventArgs.Empty);
 			}
 			
 			[Obsolete ("Use NothingSelected event instead")]
@@ -78,121 +81,121 @@ namespace Android.App {
 					selection_cleared.Add (value);
 				}
 				remove {
-					selection_cleared.Remove (value);
+					selection_cleared?.Remove (value);
 				}
 			}
 
-			public Android.App.AlertDialog.Builder SetAdapter (Android.Widget.IListAdapter adapter, EventHandler<Android.Content.DialogClickEventArgs> handler)
+			public Android.App.AlertDialog.Builder? SetAdapter (Android.Widget.IListAdapter adapter, EventHandler<Android.Content.DialogClickEventArgs> handler)
 			{
 				return SetAdapter (adapter, new IDialogInterfaceOnClickListenerImplementor () { Handler = handler });
 			}
 
-			public Android.App.AlertDialog.Builder SetCursor (Android.Database.ICursor cursor, EventHandler<Android.Content.DialogClickEventArgs> handler, string labelColumn)
+			public Android.App.AlertDialog.Builder? SetCursor (Android.Database.ICursor cursor, EventHandler<Android.Content.DialogClickEventArgs> handler, string labelColumn)
 			{
 				return SetCursor (cursor, new IDialogInterfaceOnClickListenerImplementor () { Handler = handler }, labelColumn);
 			}
 
-			public Android.App.AlertDialog.Builder SetItems (int itemsId, EventHandler<Android.Content.DialogClickEventArgs> handler)
+			public Android.App.AlertDialog.Builder? SetItems (int itemsId, EventHandler<Android.Content.DialogClickEventArgs> handler)
 			{
 				return SetItems (itemsId, new IDialogInterfaceOnClickListenerImplementor () { Handler = handler });
 			}
 
-			public Android.App.AlertDialog.Builder SetItems (Java.Lang.ICharSequence[] items, EventHandler<Android.Content.DialogClickEventArgs> handler)
+			public Android.App.AlertDialog.Builder? SetItems (Java.Lang.ICharSequence[] items, EventHandler<Android.Content.DialogClickEventArgs> handler)
 			{
 				return SetItems (items, new IDialogInterfaceOnClickListenerImplementor () { Handler = handler });
 			}
 
-			public Android.App.AlertDialog.Builder SetItems (string[] items, EventHandler<Android.Content.DialogClickEventArgs> handler)
+			public Android.App.AlertDialog.Builder? SetItems (string[] items, EventHandler<Android.Content.DialogClickEventArgs> handler)
 			{
 				return SetItems (items, new IDialogInterfaceOnClickListenerImplementor () { Handler = handler });
 			}
 
-			public Android.App.AlertDialog.Builder SetMultiChoiceItems (int itemsId, bool[] checkedItems, EventHandler<Android.Content.DialogMultiChoiceClickEventArgs> handler)
+			public Android.App.AlertDialog.Builder? SetMultiChoiceItems (int itemsId, bool[] checkedItems, EventHandler<Android.Content.DialogMultiChoiceClickEventArgs> handler)
 			{
 				return SetMultiChoiceItems (itemsId, checkedItems, new IDialogInterfaceOnMultiChoiceClickListenerImplementor () { Handler = handler });
 			}
 
-			public Android.App.AlertDialog.Builder SetMultiChoiceItems (Java.Lang.ICharSequence[] items, bool[] checkedItems, EventHandler<Android.Content.DialogMultiChoiceClickEventArgs> handler)
+			public Android.App.AlertDialog.Builder? SetMultiChoiceItems (Java.Lang.ICharSequence[] items, bool[] checkedItems, EventHandler<Android.Content.DialogMultiChoiceClickEventArgs> handler)
 			{
 				return SetMultiChoiceItems (items, checkedItems, new IDialogInterfaceOnMultiChoiceClickListenerImplementor () { Handler = handler });
 			}
 
-			public Android.App.AlertDialog.Builder SetMultiChoiceItems (string[] items, bool[] checkedItems, EventHandler<Android.Content.DialogMultiChoiceClickEventArgs> handler)
+			public Android.App.AlertDialog.Builder? SetMultiChoiceItems (string[] items, bool[] checkedItems, EventHandler<Android.Content.DialogMultiChoiceClickEventArgs> handler)
 			{
 				return SetMultiChoiceItems (items, checkedItems, new IDialogInterfaceOnMultiChoiceClickListenerImplementor () { Handler = handler });
 			}
 
-			public Android.App.AlertDialog.Builder SetMultiChoiceItems (Android.Database.ICursor cursor, string isCheckedColumn, string labelColumn, EventHandler<Android.Content.DialogMultiChoiceClickEventArgs> handler)
+			public Android.App.AlertDialog.Builder? SetMultiChoiceItems (Android.Database.ICursor cursor, string isCheckedColumn, string labelColumn, EventHandler<Android.Content.DialogMultiChoiceClickEventArgs> handler)
 			{
 				return SetMultiChoiceItems (cursor, isCheckedColumn, labelColumn, new IDialogInterfaceOnMultiChoiceClickListenerImplementor () { Handler = handler });
 			}
 
-			public Android.App.AlertDialog.Builder SetNegativeButton (int textId, EventHandler<Android.Content.DialogClickEventArgs> handler)
+			public Android.App.AlertDialog.Builder? SetNegativeButton (int textId, EventHandler<Android.Content.DialogClickEventArgs> handler)
 			{
 				return SetNegativeButton (textId, new IDialogInterfaceOnClickListenerImplementor () { Handler = handler });
 			}
 
-			public Android.App.AlertDialog.Builder SetNegativeButton (Java.Lang.ICharSequence text, EventHandler<Android.Content.DialogClickEventArgs> handler)
+			public Android.App.AlertDialog.Builder? SetNegativeButton (Java.Lang.ICharSequence text, EventHandler<Android.Content.DialogClickEventArgs> handler)
 			{
 				return SetNegativeButton (text, new IDialogInterfaceOnClickListenerImplementor () { Handler = handler } );
 			}
 
-			public Android.App.AlertDialog.Builder SetNegativeButton (string text, EventHandler<Android.Content.DialogClickEventArgs> handler)
+			public Android.App.AlertDialog.Builder? SetNegativeButton (string text, EventHandler<Android.Content.DialogClickEventArgs> handler)
 			{
 				return SetNegativeButton (text, new IDialogInterfaceOnClickListenerImplementor () { Handler = handler });
 			}
 
-			public Android.App.AlertDialog.Builder SetNeutralButton (int textId, EventHandler<Android.Content.DialogClickEventArgs> handler)
+			public Android.App.AlertDialog.Builder? SetNeutralButton (int textId, EventHandler<Android.Content.DialogClickEventArgs> handler)
 			{
 				return SetNeutralButton (textId, new IDialogInterfaceOnClickListenerImplementor () { Handler = handler });
 			}
 
-			public Android.App.AlertDialog.Builder SetNeutralButton (Java.Lang.ICharSequence text, EventHandler<Android.Content.DialogClickEventArgs> handler)
+			public Android.App.AlertDialog.Builder? SetNeutralButton (Java.Lang.ICharSequence text, EventHandler<Android.Content.DialogClickEventArgs> handler)
 			{
 				return SetNeutralButton (text, new IDialogInterfaceOnClickListenerImplementor () { Handler = handler });
 			}
 
-			public Android.App.AlertDialog.Builder SetNeutralButton (string text, EventHandler<Android.Content.DialogClickEventArgs> handler)
+			public Android.App.AlertDialog.Builder? SetNeutralButton (string text, EventHandler<Android.Content.DialogClickEventArgs> handler)
 			{
 				return SetNeutralButton (text, new IDialogInterfaceOnClickListenerImplementor () { Handler = handler });
 			}
 
-			public Android.App.AlertDialog.Builder SetPositiveButton (int textId, EventHandler<Android.Content.DialogClickEventArgs> handler)
+			public Android.App.AlertDialog.Builder? SetPositiveButton (int textId, EventHandler<Android.Content.DialogClickEventArgs> handler)
 			{
 				return SetPositiveButton (textId, new IDialogInterfaceOnClickListenerImplementor () { Handler = handler });
 			}
 
-			public Android.App.AlertDialog.Builder SetPositiveButton (Java.Lang.ICharSequence text, EventHandler<Android.Content.DialogClickEventArgs> handler)
+			public Android.App.AlertDialog.Builder? SetPositiveButton (Java.Lang.ICharSequence text, EventHandler<Android.Content.DialogClickEventArgs> handler)
 			{
 				return SetPositiveButton (text, new IDialogInterfaceOnClickListenerImplementor () { Handler = handler });
 			}
 
-			public Android.App.AlertDialog.Builder SetPositiveButton (string text, EventHandler<Android.Content.DialogClickEventArgs> handler)
+			public Android.App.AlertDialog.Builder? SetPositiveButton (string text, EventHandler<Android.Content.DialogClickEventArgs> handler)
 			{
 				return SetPositiveButton (text, new IDialogInterfaceOnClickListenerImplementor () { Handler = handler });
 			}
 
-			public Android.App.AlertDialog.Builder SetSingleChoiceItems (int itemsId, int checkedItem, EventHandler<Android.Content.DialogClickEventArgs> handler)
+			public Android.App.AlertDialog.Builder? SetSingleChoiceItems (int itemsId, int checkedItem, EventHandler<Android.Content.DialogClickEventArgs> handler)
 			{
 				return SetSingleChoiceItems (itemsId, checkedItem, new IDialogInterfaceOnClickListenerImplementor () { Handler = handler });
 			}
 
-			public Android.App.AlertDialog.Builder SetSingleChoiceItems (Android.Database.ICursor cursor, int checkedItem, string labelColumn, EventHandler<Android.Content.DialogClickEventArgs> handler)
+			public Android.App.AlertDialog.Builder? SetSingleChoiceItems (Android.Database.ICursor cursor, int checkedItem, string labelColumn, EventHandler<Android.Content.DialogClickEventArgs> handler)
 			{
 				return SetSingleChoiceItems (cursor, checkedItem, labelColumn, new IDialogInterfaceOnClickListenerImplementor () { Handler = handler });
 			}
 
-			public Android.App.AlertDialog.Builder SetSingleChoiceItems (Java.Lang.ICharSequence[] items, int checkedItem, EventHandler<Android.Content.DialogClickEventArgs> handler)
+			public Android.App.AlertDialog.Builder? SetSingleChoiceItems (Java.Lang.ICharSequence[] items, int checkedItem, EventHandler<Android.Content.DialogClickEventArgs> handler)
 			{
 				return SetSingleChoiceItems (items, checkedItem, new IDialogInterfaceOnClickListenerImplementor () { Handler = handler });
 			}
 
-			public Android.App.AlertDialog.Builder SetSingleChoiceItems (string[] items, int checkedItem, EventHandler<Android.Content.DialogClickEventArgs> handler)
+			public Android.App.AlertDialog.Builder? SetSingleChoiceItems (string[] items, int checkedItem, EventHandler<Android.Content.DialogClickEventArgs> handler)
 			{
 				return SetSingleChoiceItems (items, checkedItem, new IDialogInterfaceOnClickListenerImplementor () { Handler = handler });
 			}
 
-			public Android.App.AlertDialog.Builder SetSingleChoiceItems (Android.Widget.IListAdapter adapter, int checkedItem, EventHandler<Android.Content.DialogClickEventArgs> handler)
+			public Android.App.AlertDialog.Builder? SetSingleChoiceItems (Android.Widget.IListAdapter adapter, int checkedItem, EventHandler<Android.Content.DialogClickEventArgs> handler)
 			{
 				return SetSingleChoiceItems (adapter, checkedItem, new IDialogInterfaceOnClickListenerImplementor () { Handler = handler });
 			}

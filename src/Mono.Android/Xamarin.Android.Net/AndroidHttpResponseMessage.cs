@@ -1,3 +1,5 @@
+#nullable enable
+
 using System.Collections.Generic;
 using System.Net.Http;
 
@@ -11,14 +13,14 @@ namespace Xamarin.Android.Net
 	/// </summary>
 	public class AndroidHttpResponseMessage : HttpResponseMessage
 	{
-		URL javaUrl;
-		HttpURLConnection httpConnection;
+		URL? javaUrl;
+		HttpURLConnection? httpConnection;
 
 		/// <summary>
 		/// Set to the same value as <see cref="AndroidClientHandler.RequestedAuthentication"/>.
 		/// </summary>
 		/// <value>The requested authentication.</value>
-		public IList <AuthenticationData> RequestedAuthentication { get; internal set; }
+		public IList <AuthenticationData>? RequestedAuthentication { get; internal set; }
 
 		/// <summary>
 		/// Set to the same value as <see cref="AndroidClientHandler.RequestNeedsAuthorization"/>

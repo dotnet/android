@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.ComponentModel;
 
@@ -17,7 +19,7 @@ namespace Android.App
 		{
 		}
 
-		public string                 Name                    {get; set;}
+		public string?                Name                    {get; set;}
 
 #if ANDROID_20
 		public bool                   AllowEmbedded           {get; set;}
@@ -28,14 +30,14 @@ namespace Android.App
 		public bool                   AutoRemoveFromRecents   {get; set;}
 #endif
 #if ANDROID_20
-		public string                 Banner                  {get; set;}
+		public string?                Banner                  {get; set;}
 #endif
 		public bool                   ClearTaskOnLaunch       {get; set;}
 #if ANDROID_26
-		public string                 ColorMode               {get; set;}
+		public string?                ColorMode               {get; set;}
 #endif
 		public ConfigChanges          ConfigurationChanges    {get; set;}
-		public string                 Description             {get; set;}
+		public string?                Description             {get; set;}
 #if ANDROID_24
 		public bool                   DirectBootAware         {get; set;}
 #endif
@@ -43,7 +45,7 @@ namespace Android.App
 		public DocumentLaunchMode     DocumentLaunchMode      {get; set;}
 #endif
 #if ANDROID_24
-		public string                 EnableVrMode            {get; set;}
+		public string?                EnableVrMode            {get; set;}
 #endif
 		public bool                   Enabled                 {get; set;}
 		public bool                   ExcludeFromRecents      {get; set;}
@@ -54,15 +56,15 @@ namespace Android.App
 		public bool                   HardwareAccelerated     {get; set;}
 #endif
 		[Category ("@drawable;@mipmap")]
-		public string                 Icon                    {get; set;}
+		public string?                Icon                    {get; set;}
 		[Category ("@string")]
-		public string                 Label                   {get; set;}
+		public string?                Label                   {get; set;}
 		public LaunchMode             LaunchMode              {get; set;}
 #if ANDROID_23
-		public string                 LockTaskMode            {get; set;}
+		public string?                LockTaskMode            {get; set;}
 #endif
 #if ANDROID_11
-		public string                 Logo                    {get; set;}
+		public string?                Logo                    {get; set;}
 #endif
 #if ANDROID_17
 		[Obsolete ("There is no //activity/@android:layoutDirection attribute. This was a mistake. " +
@@ -79,13 +81,13 @@ namespace Android.App
 		public bool                   MultiProcess            {get; set;}
 		public bool                   NoHistory               {get; set;}
 #if ANDROID_16
-		public Type                   ParentActivity          {get; set;}
+		public Type?                  ParentActivity          {get; set;}
 #endif
-		public string                 Permission              {get; set;}
+		public string?                Permission              {get; set;}
 #if ANDROID_21
 		public ActivityPersistableMode      PersistableMode   {get; set;}
 #endif
-		public string                 Process                 {get; set;}
+		public string?                Process                 {get; set;}
 #if ANDROID_26
 		public ConfigChanges          RecreateOnConfigChanges    {get; set;}
 #endif
@@ -103,7 +105,7 @@ namespace Android.App
 #endif
 #if ANDROID_25
 		[Category ("@drawable;@mipmap")]
-		public string                 RoundIcon               {get; set;}
+		public string?                RoundIcon               {get; set;}
 #endif
 #if ANDROID_23
 		public bool                   ShowForAllUsers         {get; set;}
@@ -123,9 +125,9 @@ namespace Android.App
 		public bool                   SingleUser              {get; set;}
 #endif
 		public bool                   StateNotNeeded          {get; set;}
-		public string                 TaskAffinity            {get; set;}
+		public string?                TaskAffinity            {get; set;}
 		[Category ("@style")]
-		public string                 Theme                   {get; set;}
+		public string?                Theme                   {get; set;}
 #if ANDROID_27
 		public bool                   TurnScreenOn            {get; set;}
 #endif

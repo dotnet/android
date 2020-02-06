@@ -68,7 +68,7 @@ namespace System.Drawing {
 		{
 			if (culture == null)
 				culture = CultureInfo.CurrentCulture;
-			string s = value as string;
+			var s = value as string;
 			if (s == null)
 				return base.ConvertFrom (context, culture, value);
 

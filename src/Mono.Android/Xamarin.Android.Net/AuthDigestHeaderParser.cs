@@ -1,3 +1,5 @@
+#nullable enable
+
 //
 // Adapted from:
 //
@@ -29,7 +31,7 @@ namespace Xamarin.Android.Net
 		const string ALGORITHM = "algorithm";
 		const string QOP_      = "qop";
 		
-		static readonly Dictionary <string, string> keywords = new Dictionary <string, string> (StringComparer.OrdinalIgnoreCase) {
+		static readonly Dictionary <string, string?> keywords = new Dictionary <string, string?> (StringComparer.OrdinalIgnoreCase) {
 			[REALM]     = null,
 			[OPAQUE]    = null,
 			[NONCE]     = null,
@@ -41,29 +43,29 @@ namespace Xamarin.Android.Net
 		int length;
 		int pos;
 
-		public string Realm {
+		public string? Realm {
 			get { return keywords [REALM]; }
 		}        
 
-                public string Opaque {
+                public string? Opaque {
 			get { return keywords [OPAQUE]; }
 		}
 
-		public string Nonce {
+		public string? Nonce {
 			get { return keywords [NONCE]; }
 		}
  
-		public string Algorithm {
+		public string? Algorithm {
 			get { return keywords [ALGORITHM]; }
 		}
 
-		public string QOP {
+		public string? QOP {
 			get { return keywords [QOP_]; }
 		}
 		
-		public AuthDigestHeaderParser (string header)
+		public AuthDigestHeaderParser (string? header)
 		{
-			this.header = header?.Trim ();
+			this.header = header?.Trim () ?? string.Empty;
 		}
                 
 		public bool Parse ()
@@ -74,7 +76,7 @@ namespace Xamarin.Android.Net
 			pos = "digest".Length;
 			length = header.Length;
 			while (pos < length) {
-				string key, value;
+				string? key, value;
 				if (!GetKeywordAndValue (out key, out value))
 					return false;
 
@@ -117,9 +119,8 @@ namespace Xamarin.Android.Net
 			return header.Substring (begin, pos - begin).Trim ().ToLowerInvariant ();
 		}
 
-		bool GetKeywordAndValue (out string key, out string value)
+		bool GetKeywordAndValue (out string key, out string? value)
 		{
-			key = null;
 			value = null;
 			key = GetKey ();
 			if (pos >= length)

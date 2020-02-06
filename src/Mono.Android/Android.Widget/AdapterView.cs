@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using Android.Views;
@@ -24,12 +26,13 @@ namespace Android.Widget {
 	
 	public abstract partial class AdapterView {	
 		
-		List<EventHandler> selection_cleared;
+		List<EventHandler>? selection_cleared;
 		
 		void OnSelectionCleared (object o, Android.Widget.AdapterView.NothingSelectedEventArgs args)
 		{
-			foreach (var h in selection_cleared)
-				h (o, EventArgs.Empty);
+			if (selection_cleared != null)
+				foreach (var h in selection_cleared)
+					h (o, EventArgs.Empty);
 		}
 		
 		[Obsolete ("Use NothingSelected event instead")]
@@ -42,7 +45,7 @@ namespace Android.Widget {
 				selection_cleared.Add (value);
 			}
 			remove {
-				selection_cleared.Remove (value);
+				selection_cleared?.Remove (value);
 			}
 		}
 	}
@@ -125,8 +128,8 @@ namespace Android.Widget {
 		}
 
 		protected override Java.Lang.Object RawAdapter {
-			get { return JavaObjectExtensions.JavaCast<Java.Lang.Object>(JavaConvert.ToJavaObject (Adapter)); }
-			set { Adapter = JavaConvert.FromJavaObject<T>(value); }
+			get { return JavaObjectExtensions.JavaCast<Java.Lang.Object>(JavaConvert.ToJavaObject (Adapter))!; }
+			set { Adapter = JavaConvert.FromJavaObject<T>(value)!; }
 		}
 
 		public abstract T Adapter {

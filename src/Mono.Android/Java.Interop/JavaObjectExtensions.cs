@@ -1,6 +1,9 @@
+#nullable enable
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Android.Runtime;
 
@@ -44,13 +47,15 @@ namespace Java.Interop {
 			return instance is JavaDictionary<K,V> ? (JavaDictionary<K,V>) instance : new JavaDictionary<K,V> (instance);
 		}
 
-		public static TResult JavaCast<TResult> (this IJavaObject instance)
+		[return: MaybeNull]
+		public static TResult JavaCast<TResult> (this IJavaObject? instance)
 			where TResult : class, IJavaObject
 		{
 			return _JavaCast<TResult> (instance);
 		}
 
-		internal static TResult _JavaCast<TResult> (this IJavaObject instance)
+		[return: MaybeNull]
+		internal static TResult _JavaCast<TResult> (this IJavaObject? instance)
 		{
 			if (instance == null)
 				return default (TResult);
@@ -86,7 +91,7 @@ namespace Java.Interop {
 
 			if (resultType.IsAbstract) {
 				// TODO: keep in sync with TypeManager.CreateInstance() algorithm
-				Type invokerType = GetHelperType (resultType, "Invoker");
+				var invokerType = GetHelperType (resultType, "Invoker");
 				if (invokerType == null)
 					throw new ArgumentException ("Unable to get Invoker for abstract type '" + resultType.FullName + "'.", "TResult");
 				resultType = invokerType;
@@ -94,7 +99,7 @@ namespace Java.Interop {
 			return (IJavaObject) TypeManager.CreateProxy (resultType, instance.Handle, JniHandleOwnership.DoNotTransfer);
 		}
 
-		internal static IJavaObject JavaCast (IJavaObject instance, Type resultType)
+		internal static IJavaObject? JavaCast (IJavaObject? instance, Type resultType)
 		{
 			if (resultType == null)
 				throw new ArgumentNullException ("resultType");
@@ -109,7 +114,7 @@ namespace Java.Interop {
 				return CastClass (instance, resultType);
 			}
 			else if (resultType.IsInterface) {
-				return (IJavaObject) Java.Lang.Object.GetObject (instance.Handle, JniHandleOwnership.DoNotTransfer, resultType);
+				return (IJavaObject?) Java.Lang.Object.GetObject (instance.Handle, JniHandleOwnership.DoNotTransfer, resultType);
 			}
 			else
 				throw new NotSupportedException (string.Format ("Unable to convert type '{0}' to '{1}'.",
@@ -118,7 +123,7 @@ namespace Java.Interop {
 
 		// typeof(Foo) -> FooSuffix
 		// typeof(Foo<>) -> FooSuffix`1
-		internal static Type GetHelperType (Type type, string suffix)
+		internal static Type? GetHelperType (Type type, string suffix)
 		{
 			Type[] arguments = type.GetGenericArguments ();
 			if (arguments.Length == 0)

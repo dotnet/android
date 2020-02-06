@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 
 using Android.Content.PM;
@@ -15,11 +16,11 @@ namespace Android.App {
 		{
 		}
 
-		public string                 Icon                    {get; set;}
-		public string                 Label                   {get; set;}
-		public string                 Name                    {get; set;}
+		public string?                Icon                    {get; set;}
+		public string?                Label                   {get; set;}
+		public string?                Name                    {get; set;}
 #if ANDROID_25
-		public string                 RoundIcon               {get; set;}
+		public string?                RoundIcon               {get; set;}
 #endif
 	}
 }

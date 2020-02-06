@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using Android.AccessibilityServices;
 
@@ -14,17 +16,17 @@ namespace Android.Views.Accessibility {
 #endif // ANDROID_16
 
 #if ANDROID_14
-		public new string BeforeText {
+		public new string? BeforeText {
 			get {return base.BeforeText;}
 			set {base.BeforeText = value;}
 		}
 
-		public new string ClassName {
+		public new string? ClassName {
 			get {return base.ClassName;}
 			set {base.ClassName = value;}
 		}
 
-		public new string ContentDescription {
+		public new string? ContentDescription {
 			get {return base.ContentDescription;}
 			set {base.ContentDescription = value;}
 		}

@@ -10,7 +10,7 @@ namespace Android.Widget {
 
 	public partial class MediaController {
 
-		WeakReference weak_implementor_NextClick;
+		WeakReference? weak_implementor_NextClick;
 		public event EventHandler NextClick {
 			add {
 				AndroidEventHelper.AddEventHandler<View.IOnClickListener, View.IOnClickListenerImplementor>(
@@ -40,7 +40,7 @@ namespace Android.Widget {
 				: null;
 		}
 
-		WeakReference weak_implementor_PrevClick;
+		WeakReference? weak_implementor_PrevClick;
 		public event EventHandler PreviousClick {
 			add {
 				AndroidEventHelper.AddEventHandler<View.IOnClickListener, View.IOnClickListenerImplementor>(

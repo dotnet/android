@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
@@ -8,6 +10,7 @@ using Java.Interop;
 using Android.Runtime;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Java.Lang {
 
@@ -169,7 +172,7 @@ namespace Java.Lang {
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		public void UnregisterFromRuntime ()
 		{
-			JNIEnv.AndroidValueManager.RemovePeer (this, key_handle);
+			JNIEnv.AndroidValueManager?.RemovePeer (this, key_handle);
 		}
 
 		void IJavaPeerable.Disposed ()
@@ -206,7 +209,7 @@ namespace Java.Lang {
 
 		public void Dispose ()
 		{
-			JNIEnv.AndroidValueManager.DisposePeer (this);
+			JNIEnv.AndroidValueManager?.DisposePeer (this);
 		}
 
 		protected virtual void Dispose (bool disposing)
@@ -223,7 +226,7 @@ namespace Java.Lang {
 						string.Format ("Disposing handle 0x{0}\n", handle.ToString ("x")));
 			}
 
-			JNIEnv.AndroidValueManager.RemovePeer (instance, key_handle);
+			JNIEnv.AndroidValueManager?.RemovePeer (instance, key_handle);
 
 			switch (handle_type) {
 				case JObjectRefType.Global:
@@ -247,13 +250,13 @@ namespace Java.Lang {
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		protected void SetHandle (IntPtr value, JniHandleOwnership transfer)
 		{
-			JNIEnv.AndroidValueManager.AddPeer (this, value, transfer, out handle);
+			JNIEnv.AndroidValueManager?.AddPeer (this, value, transfer, out handle);
 			handle_type = JObjectRefType.Global;
 		}
 
-		internal static IJavaPeerable PeekObject (IntPtr handle, Type requiredType = null)
+		internal static IJavaPeerable? PeekObject (IntPtr handle, Type? requiredType = null)
 		{
-			var peeked  = JNIEnv.AndroidValueManager.PeekPeer (new JniObjectReference (handle));
+			var peeked  = JNIEnv.AndroidValueManager?.PeekPeer (new JniObjectReference (handle));
 			if (peeked == null)
 				return null;
 			if (requiredType != null && !requiredType.IsAssignableFrom (peeked.GetType ()))
@@ -261,24 +264,26 @@ namespace Java.Lang {
 			return peeked;
 		}
 
+		[return: MaybeNull]
 		internal static T PeekObject <T> (IntPtr handle)
 		{
 			return (T)PeekObject (handle, typeof (T));
 		}
 
-		public static T GetObject<T> (IntPtr jnienv, IntPtr handle, JniHandleOwnership transfer)
+		public static T? GetObject<T> (IntPtr jnienv, IntPtr handle, JniHandleOwnership transfer)
 			where T : class, IJavaObject
 		{
 			JNIEnv.CheckHandle (jnienv);
 			return GetObject<T> (handle, transfer);
 		}
 
-		public static T GetObject<T> (IntPtr handle, JniHandleOwnership transfer)
+		public static T? GetObject<T> (IntPtr handle, JniHandleOwnership transfer)
 			where T : class, IJavaObject
 		{
 			return _GetObject<T>(handle, transfer);
 		}
 
+		[return: MaybeNull]
 		internal static T _GetObject<T> (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
@@ -287,7 +292,7 @@ namespace Java.Lang {
 			return (T) GetObject (handle, transfer, typeof (T));
 		}
 
-		internal static IJavaPeerable GetObject (IntPtr handle, JniHandleOwnership transfer, Type type = null)
+		internal static IJavaPeerable? GetObject (IntPtr handle, JniHandleOwnership transfer, Type? type = null)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
@@ -302,12 +307,13 @@ namespace Java.Lang {
 		}
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
+		[return: MaybeNull]
 		public T[] ToArray<T>()
 		{
 			return JNIEnv.GetArray<T>(Handle);
 		}
 
-		public static Java.Lang.Object FromArray<T>(T[] value)
+		public static Java.Lang.Object? FromArray<T>(T[] value)
 		{
 			if (value == null)
 				return null;
@@ -367,7 +373,7 @@ namespace Java.Lang {
 			return new Java.Lang.Double (value);
 		}
 
-		public static implicit operator Java.Lang.Object (string value)
+		public static implicit operator Java.Lang.Object? (string value)
 		{
 			if (value == null)
 				return null;
@@ -427,133 +433,142 @@ namespace Java.Lang {
 			return Convert.ToDouble (value);
 		}
 
-		public static explicit operator string (Java.Lang.Object value)
+		public static explicit operator string? (Java.Lang.Object? value)
 		{
 			if (value == null)
 				return null;
 			return Convert.ToString (value);
 		}
 
-		public static implicit operator Java.Lang.Object (Java.Lang.Object[] value)
+		[return: NotNullIfNotNull ("value")]
+		public static implicit operator Java.Lang.Object? (Java.Lang.Object[]? value)
 		{
 			if (value == null)
 				return null;
 			return new Java.Lang.Object (JNIEnv.NewArray (value), JniHandleOwnership.TransferLocalRef);
 		}
 
-		public static implicit operator Java.Lang.Object (bool[] value)
+		[return: NotNullIfNotNull ("value")]
+		public static implicit operator Java.Lang.Object? (bool[]? value)
 		{
 			if (value == null)
 				return null;
 			return new Java.Lang.Object (JNIEnv.NewArray (value), JniHandleOwnership.TransferLocalRef);
 		}
 
-		public static implicit operator Java.Lang.Object (byte[] value)
+		[return: NotNullIfNotNull ("value")]
+		public static implicit operator Java.Lang.Object? (byte[]? value)
 		{
 			if (value == null)
 				return null;
 			return new Java.Lang.Object (JNIEnv.NewArray (value), JniHandleOwnership.TransferLocalRef);
 		}
 
-		public static implicit operator Java.Lang.Object (char[] value)
+		[return: NotNullIfNotNull ("value")]
+		public static implicit operator Java.Lang.Object? (char[]? value)
 		{
 			if (value == null)
 				return null;
 			return new Java.Lang.Object (JNIEnv.NewArray (value), JniHandleOwnership.TransferLocalRef);
 		}
 
-		public static implicit operator Java.Lang.Object (int[] value)
+		[return: NotNullIfNotNull ("value")]
+		public static implicit operator Java.Lang.Object? (int[]? value)
 		{
 			if (value == null)
 				return null;
 			return new Java.Lang.Object (JNIEnv.NewArray (value), JniHandleOwnership.TransferLocalRef);
 		}
 
-		public static implicit operator Java.Lang.Object (long[] value)
+		[return: NotNullIfNotNull ("value")]
+		public static implicit operator Java.Lang.Object? (long[]? value)
 		{
 			if (value == null)
 				return null;
 			return new Java.Lang.Object (JNIEnv.NewArray (value), JniHandleOwnership.TransferLocalRef);
 		}
 
-		public static implicit operator Java.Lang.Object (float[] value)
+		[return: NotNullIfNotNull ("value")]
+		public static implicit operator Java.Lang.Object? (float[]? value)
 		{
 			if (value == null)
 				return null;
 			return new Java.Lang.Object (JNIEnv.NewArray (value), JniHandleOwnership.TransferLocalRef);
 		}
 
-		public static implicit operator Java.Lang.Object (double[] value)
+		[return: NotNullIfNotNull ("value")]
+		public static implicit operator Java.Lang.Object? (double[]? value)
 		{
 			if (value == null)
 				return null;
 			return new Java.Lang.Object (JNIEnv.NewArray (value), JniHandleOwnership.TransferLocalRef);
 		}
 
-		public static implicit operator Java.Lang.Object (string[] value)
+		[return: NotNullIfNotNull ("value")]
+		public static implicit operator Java.Lang.Object? (string[]? value)
 		{
 			if (value == null)
 				return null;
 			return new Java.Lang.Object (JNIEnv.NewArray (value), JniHandleOwnership.TransferLocalRef);
 		}
 
-		public static explicit operator Java.Lang.Object[] (Java.Lang.Object value)
+		public static explicit operator Java.Lang.Object[]? (Java.Lang.Object? value)
 		{
 			if (value == null)
 				return null;
 			return value.ToArray<Java.Lang.Object>();
 		}
 
-		public static explicit operator bool[] (Java.Lang.Object value)
+		public static explicit operator bool[]? (Java.Lang.Object? value)
 		{
 			if (value == null)
 				return null;
 			return value.ToArray<bool>();
 		}
 
-		public static explicit operator byte[] (Java.Lang.Object value)
+		public static explicit operator byte[]? (Java.Lang.Object? value)
 		{
 			if (value == null)
 				return null;
 			return value.ToArray<byte>();
 		}
 
-		public static explicit operator char[] (Java.Lang.Object value)
+		public static explicit operator char[]? (Java.Lang.Object? value)
 		{
 			if (value == null)
 				return null;
 			return value.ToArray<char>();
 		}
 
-		public static explicit operator int[] (Java.Lang.Object value)
+		public static explicit operator int[]? (Java.Lang.Object? value)
 		{
 			if (value == null)
 				return null;
 			return value.ToArray<int>();
 		}
 
-		public static explicit operator long[] (Java.Lang.Object value)
+		public static explicit operator long[]? (Java.Lang.Object? value)
 		{
 			if (value == null)
 				return null;
 			return value.ToArray<long>();
 		}
 
-		public static explicit operator float[] (Java.Lang.Object value)
+		public static explicit operator float[]? (Java.Lang.Object? value)
 		{
 			if (value == null)
 				return null;
 			return value.ToArray<float>();
 		}
 
-		public static explicit operator double[] (Java.Lang.Object value)
+		public static explicit operator double[]? (Java.Lang.Object? value)
 		{
 			if (value == null)
 				return null;
 			return value.ToArray<double>();
 		}
 
-		public static explicit operator string[] (Java.Lang.Object value)
+		public static explicit operator string[]? (Java.Lang.Object? value)
 		{
 			if (value == null)
 				return null;

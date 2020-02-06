@@ -1,3 +1,5 @@
+#nullable enable
+
 //
 // ActivityTracker.cs
 //
@@ -19,7 +21,7 @@ namespace Android.App
 	{
 		readonly List<Activity> startedActivities = new List<Activity> ();
 
-		public event EventHandler ActivityStarted;
+		public event EventHandler? ActivityStarted;
 
 		public IReadOnlyList<Activity> StartedActivities {
 			get { return startedActivities; }
@@ -36,7 +38,7 @@ namespace Android.App
 			startedActivities.Remove (activity);
 		}
 
-		public void OnActivityCreated (Activity activity, Bundle savedInstanceState)
+		public void OnActivityCreated (Activity activity, Bundle? savedInstanceState)
 		{
 		}
 

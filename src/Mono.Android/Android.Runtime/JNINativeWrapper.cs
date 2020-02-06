@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Diagnostics;
 using System.Reflection;
@@ -7,9 +9,9 @@ using System.Threading;
 namespace Android.Runtime {
 	public static class JNINativeWrapper {
 
-		static MethodInfo mono_unhandled_exception_method;
-		static MethodInfo exception_handler_method;
-		static MethodInfo wait_for_bridge_processing_method;
+		static MethodInfo? mono_unhandled_exception_method;
+		static MethodInfo? exception_handler_method;
+		static MethodInfo? wait_for_bridge_processing_method;
 
 		static void get_runtime_types ()
 		{
@@ -52,7 +54,7 @@ namespace Android.Runtime {
 			var dynamic = new DynamicMethod (DynamicMethodNameCounter.GetUniqueName (), ret_type, param_types, typeof (DynamicMethodNameCounter), true);
 			var ig = dynamic.GetILGenerator ();
 
-			LocalBuilder retval = null;
+			LocalBuilder? retval = null;
 			if (ret_type != typeof (void))
 				retval = ig.DeclareLocal (ret_type);
 

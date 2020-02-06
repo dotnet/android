@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 
 namespace Android.Runtime
@@ -9,8 +11,8 @@ namespace Android.Runtime
 		{
 		}
 
-		public string Java { get; set; }
-		public string Managed { get; set; }
+		public string? Java { get; set; }
+		public string? Managed { get; set; }
 	}
 }
 

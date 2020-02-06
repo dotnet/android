@@ -1,3 +1,5 @@
+#nullable enable
+
 namespace Android.Runtime
 {
 	enum CPUArchitecture : ushort

@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 
 using Android.Runtime;
@@ -45,7 +47,7 @@ namespace Android.Widget {
 			JNIEnv.FinishCreateInstance (Handle, class_ref, id_ctor);
 		}
 
-		public override Java.Lang.Object GetItem (int position)
+		public override Java.Lang.Object? GetItem (int position)
 		{
 			return JavaObjectExtensions.JavaCast<Java.Lang.Object>(JavaConvert.ToJavaObject (this [position]));
 		}

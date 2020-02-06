@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -13,7 +15,7 @@ namespace Android.Runtime {
 		static FieldInfo Throwable_handle = typeof (Java.Lang.Throwable).GetField ("handle", BindingFlags.NonPublic | BindingFlags.Instance);
 
 
-		internal static Action <IntPtr, object []> CreateDelegate (Type type, ConstructorInfo cinfo, Type [] parameter_types) {
+		internal static Action <IntPtr, object? []?> CreateDelegate (Type type, ConstructorInfo cinfo, Type [] parameter_types) {
 			var handle = handlefld;
 			if (typeof (Java.Lang.Throwable).IsAssignableFrom (type)) {
 				handle = Throwable_handle;
@@ -42,7 +44,7 @@ namespace Android.Runtime {
 
 			il.Emit (OpCodes.Ret);
 
-			return (Action<IntPtr, object[]>) method.CreateDelegate (typeof (Action <IntPtr, object []>));
+			return (Action<IntPtr, object?[]?>) method.CreateDelegate (typeof (Action <IntPtr, object []>));
 		}
 	}
 }

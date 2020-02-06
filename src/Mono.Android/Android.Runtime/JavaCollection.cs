@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -113,7 +115,7 @@ namespace Android.Runtime {
 			get {return false;}
 		}
 
-		public object SyncRoot {
+		public object? SyncRoot {
 			get {return null;}
 		}
 
@@ -132,7 +134,7 @@ namespace Android.Runtime {
 				id_toArray = JNIEnv.GetMethodID (collection_class, "toArray", "()[Ljava/lang/Object;");
 			using (var o = new Java.Lang.Object (JNIEnv.CallObjectMethod (Handle, id_toArray),
 					JniHandleOwnership.TransferLocalRef | JniHandleOwnership.DoNotRegister))
-				return (Java.Lang.Object[]) o;
+				return ((Java.Lang.Object[]) o)!;
 		}
 
 		//
@@ -173,12 +175,12 @@ namespace Android.Runtime {
 		}
 
 		[Preserve (Conditional=true)]
-		public static ICollection FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
+		public static ICollection? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
 
-			IJavaObject inst = (IJavaObject) Java.Lang.Object.PeekObject (handle);
+			var inst = (IJavaObject?) Java.Lang.Object.PeekObject (handle);
 			if (inst == null)
 				inst = new JavaCollection (handle, transfer);
 			else
@@ -188,7 +190,7 @@ namespace Android.Runtime {
 		}
 
 		[Preserve (Conditional=true)]
-		public static IntPtr ToLocalJniHandle (ICollection items)
+		public static IntPtr ToLocalJniHandle (ICollection? items)
 		{
 			if (items == null)
 				return IntPtr.Zero;
@@ -392,12 +394,12 @@ namespace Android.Runtime {
 		}
 		
 		[Preserve (Conditional=true)]
-		public static ICollection<T> FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
+		public static ICollection<T>? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
 
-			IJavaObject inst = (IJavaObject) Java.Lang.Object.PeekObject (handle);
+			var inst = (IJavaObject?) Java.Lang.Object.PeekObject (handle);
 			if (inst == null)
 				inst = new JavaCollection<T> (handle, transfer);
 			else
@@ -407,7 +409,7 @@ namespace Android.Runtime {
 		}
 
 		[Preserve (Conditional=true)]
-		public static IntPtr ToLocalJniHandle (ICollection<T> items)
+		public static IntPtr ToLocalJniHandle (ICollection<T>? items)
 		{
 			if (items == null)
 				return IntPtr.Zero;

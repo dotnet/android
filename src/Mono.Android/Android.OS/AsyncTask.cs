@@ -1,6 +1,8 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
-
+using System.Diagnostics.CodeAnalysis;
 using Android.Runtime;
 
 using Java.Interop;
@@ -55,11 +57,13 @@ namespace Android.OS {
 		}
 
 		[Preserve (Conditional = true)]
-		protected override Java.Lang.Object DoInBackground (params Java.Lang.Object[] native_parms)
+		protected override Java.Lang.Object? DoInBackground (params Java.Lang.Object[]? native_parms)
 		{
-			TParams[] parms = new TParams[native_parms.Length];
+			TParams[] parms = new TParams[native_parms?.Length ?? 0];
 			for (int i = 0; i < parms.Length; i++)
-				parms [i] = JavaConvert.FromJavaObject<TParams>(native_parms [i]);
+#pragma warning disable CS8601 // Possible null reference assignment.
+				parms [i] = JavaConvert.FromJavaObject<TParams>(native_parms? [i]);
+#pragma warning restore CS8601 // Possible null reference assignment.
 			return JavaObjectExtensions.JavaCast<Java.Lang.Object>(JavaConvert.ToJavaObject (RunInBackground (parms)));
 		}
 
@@ -68,13 +72,13 @@ namespace Android.OS {
 
 		static IntPtr id_execute_arrayLjava_lang_Object_;
 		[Register ("execute", "([Ljava/lang/Object;)Landroid/os/AsyncTask;", "")]
-		public Android.OS.AsyncTask<TParams, TProgress, TResult> Execute (params TParams[] @params)
+		public Android.OS.AsyncTask<TParams, TProgress, TResult>? Execute (params TParams[] @params)
 		{
 			if (id_execute_arrayLjava_lang_Object_ == IntPtr.Zero)
 				id_execute_arrayLjava_lang_Object_ = JNIEnv.GetMethodID (class_ref, "execute", "([Ljava/lang/Object;)Landroid/os/AsyncTask;");
 			IntPtr native__params = JNIEnv.NewObjectArray<TParams> (@params);
 			try {
-				Android.OS.AsyncTask<TParams, TProgress, TResult> __ret = Java.Lang.Object.GetObject<Android.OS.AsyncTask<TParams, TProgress, TResult>> (JNIEnv.CallObjectMethod  (Handle, id_execute_arrayLjava_lang_Object_, new JValue (native__params)), JniHandleOwnership.TransferLocalRef);
+				var __ret = Java.Lang.Object.GetObject<Android.OS.AsyncTask<TParams, TProgress, TResult>> (JNIEnv.CallObjectMethod  (Handle, id_execute_arrayLjava_lang_Object_, new JValue (native__params)), JniHandleOwnership.TransferLocalRef);
 				if (@params != null)
 					JNIEnv.CopyObjectArray (native__params, @params);
 				return __ret;
@@ -86,6 +90,7 @@ namespace Android.OS {
 		}
 
 		static IntPtr id_get;
+		[return: MaybeNull]
 		[Register ("get", "()Ljava/lang/Object;", "")]
 		public TResult GetResult ()
 		{
@@ -94,22 +99,24 @@ namespace Android.OS {
 			return JavaConvert.FromJniHandle<TResult>(JNIEnv.CallObjectMethod  (Handle, id_get), JniHandleOwnership.TransferLocalRef);
 		}
 
-		protected override void OnPostExecute (Java.Lang.Object result)
+		protected override void OnPostExecute (Java.Lang.Object? result)
 		{
 			OnPostExecute (JavaConvert.FromJavaObject<TResult> (result));
 		}
 
 		[Register ("onPostExecute", "(Ljava/lang/Object;)V", "GetOnPostExecute_Ljava_lang_Object_Handler")]
-		protected virtual void OnPostExecute (TResult result)
+		protected virtual void OnPostExecute ([AllowNull]TResult result)
 		{
 			base.OnPostExecute (JavaObjectExtensions.JavaCast<Java.Lang.Object>(JavaConvert.ToJavaObject (result)));
 		}
 
-		protected override void OnProgressUpdate (params Java.Lang.Object[] native_values)
+		protected override void OnProgressUpdate (params Java.Lang.Object[]? native_values)
 		{
-			TProgress[] values = new TProgress [native_values.Length];
+			TProgress[] values = new TProgress [native_values?.Length ?? 0];
 			for (int i = 0; i < values.Length; i++)
-				values [i] = JavaConvert.FromJavaObject<TProgress>(native_values [i]);
+#pragma warning disable CS8601 // Possible null reference assignment.
+				values [i] = JavaConvert.FromJavaObject<TProgress>(native_values? [i]);
+#pragma warning restore CS8601 // Possible null reference assignment.
 			OnProgressUpdate (values);
 		}
 
@@ -118,7 +125,9 @@ namespace Android.OS {
 		{
 			Java.Lang.Object[] native_values = new Java.Lang.Object [values.Length];
 			for (int i = 0; i < values.Length; i++)
+#pragma warning disable CS8601 // Possible null reference assignment.
 				native_values [i] = JavaObjectExtensions.JavaCast<Java.Lang.Object>(JavaConvert.ToJavaObject (values [i]));
+#pragma warning restore CS8601 // Possible null reference assignment.
 			base.OnProgressUpdate (native_values);
 		}
 
@@ -126,7 +135,9 @@ namespace Android.OS {
 		{
 			Java.Lang.Object[] native_values = new Java.Lang.Object [values.Length];
 			for (int i = 0; i < values.Length; i++)
+#pragma warning disable CS8601 // Possible null reference assignment.
 				native_values [i] = JavaObjectExtensions.JavaCast<Java.Lang.Object>(JavaConvert.ToJavaObject (values [i]));
+#pragma warning restore CS8601 // Possible null reference assignment.
 			base.PublishProgress (native_values);
 		}
 	}

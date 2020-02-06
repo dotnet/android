@@ -1,6 +1,8 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
-
+using System.Diagnostics.CodeAnalysis;
 using Android.Runtime;
 
 using Java.Interop;
@@ -181,10 +183,11 @@ namespace Android.Widget {
 				id_createFromResource_Landroid_content_Context_II = JNIEnv.GetStaticMethodID (class_ref, "createFromResource", "(Landroid/content/Context;II)Landroid/widget/ArrayAdapter;");
 			return JavaConvert.FromJniHandle<ArrayAdapter<Java.Lang.ICharSequence>> (
 					JNIEnv.CallStaticObjectMethod (class_ref, id_createFromResource_Landroid_content_Context_II, new JValue (context), new JValue (textArrayResId), new JValue (textViewResId)),
-						JniHandleOwnership.TransferLocalRef);
+						JniHandleOwnership.TransferLocalRef)!;
 		}
 
 		static IntPtr id_getItem_I;
+		[return: MaybeNull]
 		[Register ("getItem", "(I)Ljava/lang/Object;", "GetGetItem_IHandler")]
 		public T GetItem (int position)
 		{

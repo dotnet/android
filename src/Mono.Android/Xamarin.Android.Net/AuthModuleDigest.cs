@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -37,7 +39,7 @@ namespace Xamarin.Android.Net
 
 			DateTime t = DateTime.MaxValue;
 			DateTime now = DateTime.Now;
-			List <int> list = null;
+			List <int>? list = null;
 			foreach (KeyValuePair <int, AuthDigestSession> kvp in cache) {
 				AuthDigestSession elem = kvp.Value;
 				if (elem.LastUse < t && (elem.LastUse - now).Ticks > TimeSpan.TicksPerMinute * 10) {
@@ -55,7 +57,7 @@ namespace Xamarin.Android.Net
 			}
 		}
 		
-		public Authorization Authenticate (string challenge, HttpURLConnection request, ICredentials credentials) 
+		public Authorization? Authenticate (string challenge, HttpURLConnection request, ICredentials credentials) 
 		{
 			if (credentials == null || challenge == null) {
 				Logger.Log (LogLevel.Info, LOG_APP, "No credentials or no challenge");
@@ -74,16 +76,16 @@ namespace Xamarin.Android.Net
 				return null;
 			}
 
-			var uri = new Uri (request.URL.ToString ());
-			int hashcode = uri.GetHashCode () ^ credentials.GetHashCode () ^ currDS.Nonce.GetHashCode ();
-			AuthDigestSession ds = null;
+			var uri = new Uri (request.URL?.ToString ());
+			int hashcode = uri.GetHashCode () ^ credentials.GetHashCode () ^ (currDS.Nonce?.GetHashCode () ?? 1);
+			AuthDigestSession? ds = null;
 			bool addDS = false;
 			if (!Cache.TryGetValue (hashcode, out ds) || ds == null)
 				addDS = true;
 
 			if (addDS)
 				ds = currDS;
-			else if (!ds.Parse (challenge)) {
+			else if (!ds!.Parse (challenge)) {
 				Logger.Log (LogLevel.Info, LOG_APP, "Current DS failed to parse the challenge");
 				return null;
 			}
@@ -94,16 +96,16 @@ namespace Xamarin.Android.Net
 			return ds.Authenticate (request, credentials);
 		}
 
-		public Authorization PreAuthenticate (HttpURLConnection request, ICredentials credentials) 
+		public Authorization? PreAuthenticate (HttpURLConnection request, ICredentials credentials) 
 		{
 			if (request == null || credentials == null) {
 				Logger.Log (LogLevel.Info, LOG_APP, "No credentials or no challenge");
 				return null;
 			}
 
-			var uri = new Uri (request.URL.ToString ());
+			var uri = new Uri (request.URL?.ToString ());
 			int hashcode = uri.GetHashCode () ^ credentials.GetHashCode ();
-			AuthDigestSession ds = null;
+			AuthDigestSession? ds = null;
 			if (!Cache.TryGetValue (hashcode, out ds) || ds == null)
 				return null;
 

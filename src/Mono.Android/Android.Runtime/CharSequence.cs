@@ -1,12 +1,16 @@
+#nullable enable
+
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Android.Runtime {
 
-	public static class CharSequence { 
+	public static class CharSequence {
 
-		public static Java.Lang.ICharSequence[] ArrayFromStringArray (string[] val)
+		[return: NotNullIfNotNull (parameterName: "val")]
+		public static Java.Lang.ICharSequence[]? ArrayFromStringArray (string[]? val)
 		{
 			if (val == null)
 				return null;
@@ -18,7 +22,8 @@ namespace Android.Runtime {
 			return ret;
 		}
 
-		public static string[] ArrayToStringArray (Java.Lang.ICharSequence[] val)
+		[return: NotNullIfNotNull (parameterName: "val")]
+		public static string[]? ArrayToStringArray (Java.Lang.ICharSequence[]? val)
 		{
 			if (val == null)
 				return null;
@@ -31,24 +36,24 @@ namespace Android.Runtime {
 		}
 
 		[Preserve (Conditional=true)]
-		public static IntPtr ToLocalJniHandle (string value)
+		public static IntPtr ToLocalJniHandle (string? value)
 		{
 			return JNIEnv.NewString (value);
 		}
 
 		[Preserve (Conditional=true)]
-		public static IntPtr ToLocalJniHandle (Java.Lang.ICharSequence value)
+		public static IntPtr ToLocalJniHandle (Java.Lang.ICharSequence? value)
 		{
 			return value == null ? IntPtr.Zero : JNIEnv.ToLocalJniHandle (value);
 		}
 
 		[Preserve (Conditional=true)]
-		public static IntPtr ToLocalJniHandle (IEnumerable<char> value)
+		public static IntPtr ToLocalJniHandle (IEnumerable<char>? value)
 		{
 			if (value == null) {
 				return IntPtr.Zero;
-			} else if (value is string) {
-				return JNIEnv.NewString (value as string);
+			} else if (value is string s) {
+				return JNIEnv.NewString (s);
 			} else if (value is Java.Lang.ICharSequence) {
 				return JNIEnv.ToLocalJniHandle ((Java.Lang.ICharSequence) value);
 			} else {

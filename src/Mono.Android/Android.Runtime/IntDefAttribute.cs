@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 
 namespace Android.Runtime
@@ -7,8 +9,8 @@ namespace Android.Runtime
 	public class IntDefAttribute : Attribute
 	{
 		public bool Flag { get; set; }
-		public string Type { get; set; }
-		public string [] Fields { get; set; }
+		public string? Type { get; set; }
+		public string []? Fields { get; set; }
 	}
 }
 

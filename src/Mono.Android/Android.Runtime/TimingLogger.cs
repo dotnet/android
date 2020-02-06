@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 
 namespace Android.Runtime
@@ -13,14 +15,14 @@ namespace Android.Runtime
 	{
 		bool disposed = false;
 		IntPtr sequence;
-		string initStartMessage;
+		string? initStartMessage;
 
 		/// <summary>
 		///   Construct a TimeLogger instance and start measuring time immediately, if the <paramref
 		///   name="startImmediately"/> parameter is left out or set to <c>true</c>. If the <paramref
 		///   name="startMessage"/> is not <c>null</c> then the message is logged at the start.
 		/// </summary>
-		public TimingLogger (string startMessage = null, bool startImmediately = true)
+		public TimingLogger (string? startMessage = null, bool startImmediately = true)
 		{
 			if (startImmediately)
 				Start (startMessage);
@@ -40,7 +42,7 @@ namespace Android.Runtime
 		///   passed a message to use when starting) it will be output to the log, otherwise the measurement
 		///   start is silent. The method does anything only if no measurement is active.
 		/// </summary>
-		public void Start (string startMessage = null)
+		public void Start (string? startMessage = null)
 		{
 			if (sequence != IntPtr.Zero)
 				return;

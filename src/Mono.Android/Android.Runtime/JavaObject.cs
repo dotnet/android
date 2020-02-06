@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 
 namespace Android.Runtime {
@@ -30,14 +32,14 @@ namespace Android.Runtime {
 			else if (type == typeof (string))
 				return JNIEnv.NewString ((string)obj);
 			else if (typeof (IJavaObject).IsAssignableFrom (type))
-				return (obj as IJavaObject).Handle;
+				return ((IJavaObject)obj).Handle;
 			else
 				return new JavaObject (obj).Handle;
 		}
 
-		public static object GetObject (IntPtr handle, JniHandleOwnership transfer)
+		public static object? GetObject (IntPtr handle, JniHandleOwnership transfer)
 		{
-			Java.Lang.Object jlo = Java.Lang.Object.GetObject (handle, transfer) as Java.Lang.Object;
+			Java.Lang.Object? jlo = Java.Lang.Object.GetObject (handle, transfer) as Java.Lang.Object;
 			if (jlo == null)
 				return null;
 			else if (jlo is Java.Lang.Boolean)
@@ -92,16 +94,15 @@ namespace Android.Runtime {
 
 		protected override Java.Lang.Object Clone ()
 		{
-			if (inst is ICloneable)
-				return new JavaObject ((inst as ICloneable).Clone ());
+			if (inst is ICloneable c)
+				return new JavaObject (c.Clone ());
 			else
 				return new JavaObject (inst);
 		}
 
-		public override bool Equals (Java.Lang.Object obj)
+		public override bool Equals (Java.Lang.Object? obj)
 		{
-			if (obj is JavaObject) {
-				JavaObject jobj = obj as JavaObject;
+			if (obj is JavaObject jobj) {
 				return jobj.inst == inst;
 			}
 			return false;

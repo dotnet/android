@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 
 using Android.Content.PM;
@@ -20,7 +22,7 @@ namespace Android.App {
 			Name = name;
 		}
 
-		public string                 Name                    {get; set;}
+		public string?                Name                    {get; set;}
 #if ANDROID_19
 		public int                    MaxSdkVersion           {get; set;}
 #endif

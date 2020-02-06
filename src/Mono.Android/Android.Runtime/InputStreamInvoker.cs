@@ -1,4 +1,6 @@
-﻿using System;
+#nullable enable
+
+using System;
 using System.IO;
 
 namespace Android.Runtime
@@ -39,7 +41,6 @@ namespace Android.Runtime
 					BaseFileChannel = null;
 					BaseInputStream.Close ();
 					BaseInputStream.Dispose ();
-					BaseInputStream = null;
 				} catch (Java.IO.IOException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
 					throw new IOException (ex.Message, ex);
 				}
@@ -155,12 +156,12 @@ namespace Android.Runtime
 		}
 		
 		[Preserve (Conditional=true)]
-		public static Stream FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
+		public static Stream? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
 
-			IJavaObject inst = (IJavaObject) Java.Lang.Object.PeekObject (handle);
+			var inst = (IJavaObject?) Java.Lang.Object.PeekObject (handle);
 
 			if (inst == null)
 				inst = (IJavaObject) Java.Interop.TypeManager.CreateInstance (handle, transfer);

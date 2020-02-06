@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.ComponentModel;
 
@@ -16,7 +18,7 @@ namespace Android.App {
 		{
 		}
 
-		public string                 Name                    {get; set;}
+		public string?                Name                    {get; set;}
 
 #if ANDROID_24
 		public bool                   DirectBootAware         {get; set;}
@@ -27,17 +29,17 @@ namespace Android.App {
 		public ForegroundService      ForegroundServiceType   {get; set;}
 #endif
 		[Category ("@drawable;@mipmap")]
-		public string                 Icon                    {get; set;}
+		public string?                Icon                    {get; set;}
 #if ANDROID_16
 		public bool                   IsolatedProcess         {get; set;}
 #endif
 		[Category ("@string")]
-		public string                 Label                   {get; set;}
-		public string                 Permission              {get; set;}
-		public string                 Process                 {get; set;}
+		public string?                Label                   {get; set;}
+		public string?                Permission              {get; set;}
+		public string?                Process                 {get; set;}
 #if ANDROID_25
 		[Category ("@drawable;@mipmap")]
-		public string                 RoundIcon               {get; set;}
+		public string?                RoundIcon               {get; set;}
 #endif
 	}
 }

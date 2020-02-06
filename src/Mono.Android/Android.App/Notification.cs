@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 
@@ -17,7 +19,7 @@ namespace Android.App {
 			get {
 				if (vibrate_jfieldId == IntPtr.Zero)
 					vibrate_jfieldId = JNIEnv.GetFieldID (class_ref, "vibrate", "[J");
-				return (long[]) JNIEnv.GetArray (JNIEnv.GetObjectField (Handle, vibrate_jfieldId), JniHandleOwnership.TransferLocalRef, typeof (long));
+				return (long[]) JNIEnv.GetArray (JNIEnv.GetObjectField (Handle, vibrate_jfieldId), JniHandleOwnership.TransferLocalRef, typeof (long))!;
 			}
 			set {
 				if (vibrate_jfieldId == IntPtr.Zero)

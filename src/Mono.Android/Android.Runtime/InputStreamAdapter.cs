@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.IO;
 
@@ -28,12 +30,12 @@ namespace Android.Runtime {
 			return BaseStream.ReadByte ();
 		}
 
-		public override int Read (byte[] bytes)
+		public override int Read (byte[]? bytes)
 		{
-			return Read (bytes, 0, bytes.Length);
+			return Read (bytes, 0, bytes?.Length ?? 0);
 		}
 
-		public override int Read (byte[] bytes, int offset, int length)
+		public override int Read (byte[]? bytes, int offset, int length)
 		{
 			int res = BaseStream.Read (bytes, offset, length);
 			if (res == 0)
@@ -42,7 +44,7 @@ namespace Android.Runtime {
 		}
 
 		[Preserve (Conditional=true)]
-		public static IntPtr ToLocalJniHandle (Stream value)
+		public static IntPtr ToLocalJniHandle (Stream? value)
 		{
 			if (value == null)
 				return IntPtr.Zero;

@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -60,9 +62,9 @@ namespace Xamarin.Android.Net
 	{
 		sealed class RequestRedirectionState
 		{
-			public Uri NewUrl;
+			public Uri? NewUrl;
 			public int RedirectCounter;
-			public HttpMethod Method;
+			public HttpMethod? Method;
 			public bool MethodChanged;
 		}
 
@@ -116,7 +118,7 @@ namespace Xamarin.Android.Net
 		/// </para>
 		/// </summary>
 		/// <value>The pre authentication data.</value>
-		public AuthenticationData PreAuthenticationData { get; set; }
+		public AuthenticationData? PreAuthenticationData { get; set; }
 		
 		/// <summary>
 		/// If the website requires authentication, this property will contain data about each scheme supported
@@ -129,7 +131,7 @@ namespace Xamarin.Android.Net
 		/// instance of <see cref="IAndroidAuthenticationModule"/> which handles this kind of authorization scheme
 		/// (<see cref="AuthenticationData.AuthModule"/>
 		/// </summary>
-		public IList <AuthenticationData> RequestedAuthentication { get; private set; }
+		public IList <AuthenticationData>? RequestedAuthentication { get; private set; }
 
 		/// <summary>
 		/// Server authentication response indicates that the request to authorize comes from a proxy if this property is <c>true</c>.
@@ -159,7 +161,7 @@ namespace Xamarin.Android.Net
 		/// instead</para>
 		/// </summary>
 		/// <value>The trusted certs.</value>
-		public IList <Certificate> TrustedCerts { get; set; }
+		public IList <Certificate>? TrustedCerts { get; set; }
 
 		/// <summary>
 		/// <para>
@@ -232,7 +234,7 @@ namespace Xamarin.Android.Net
 		/// </summary>
 		/// <returns>Instance of IHostnameVerifier to be used for this HTTPS connection</returns>
 		/// <param name="connection">HTTPS connection object.</param>
-		protected virtual IHostnameVerifier GetSSLHostnameVerifier (HttpsURLConnection connection)
+		protected virtual IHostnameVerifier? GetSSLHostnameVerifier (HttpsURLConnection connection)
 		{
 			return null;
 		}
@@ -259,7 +261,7 @@ namespace Xamarin.Android.Net
 			};
 			while (true) {
 				URL java_url = new URL (EncodeUrl (redirectState.NewUrl));
-				URLConnection java_connection;
+				URLConnection? java_connection;
 				if (UseProxy) {
 					var javaProxy = await GetJavaProxy (redirectState.NewUrl, cancellationToken).ConfigureAwait (continueOnCapturedContext: false);
 					// When you use the parameter Java.Net.Proxy.NoProxy the system proxy is overriden. Leave the parameter out to respect the default settings.
@@ -271,19 +273,19 @@ namespace Xamarin.Android.Net
 
 				var httpsConnection = java_connection as HttpsURLConnection;
 				if (httpsConnection != null) {
-					IHostnameVerifier hnv = GetSSLHostnameVerifier (httpsConnection);
+					IHostnameVerifier? hnv = GetSSLHostnameVerifier (httpsConnection);
 					if (hnv != null)
 						httpsConnection.HostnameVerifier = hnv;
 				}
 
 				if (ConnectTimeout != TimeSpan.Zero)
-					java_connection.ConnectTimeout = checked ((int)ConnectTimeout.TotalMilliseconds);
+					java_connection!.ConnectTimeout = checked ((int)ConnectTimeout.TotalMilliseconds);
 
 				if (ReadTimeout != TimeSpan.Zero)
-					java_connection.ReadTimeout = checked ((int)ReadTimeout.TotalMilliseconds);
+					java_connection!.ReadTimeout = checked ((int)ReadTimeout.TotalMilliseconds);
 
-				HttpURLConnection httpConnection = await SetupRequestInternal (request, java_connection).ConfigureAwait (continueOnCapturedContext: false);;
-				HttpResponseMessage response = await ProcessRequest (request, java_url, httpConnection, cancellationToken, redirectState).ConfigureAwait (continueOnCapturedContext: false);;
+				HttpURLConnection httpConnection = await SetupRequestInternal (request, java_connection!).ConfigureAwait (continueOnCapturedContext: false);;
+				var response = await ProcessRequest (request, java_url, httpConnection, cancellationToken, redirectState).ConfigureAwait (continueOnCapturedContext: false);;
 				if (response != null)
 					return response;
 
@@ -293,9 +295,9 @@ namespace Xamarin.Android.Net
 			}
 		}
 
-		protected virtual async Task <Java.Net.Proxy> GetJavaProxy (Uri destination, CancellationToken cancellationToken)
+		protected virtual async Task <Java.Net.Proxy?> GetJavaProxy (Uri destination, CancellationToken cancellationToken)
 		{
-			Java.Net.Proxy proxy = Java.Net.Proxy.NoProxy;
+			var proxy = Java.Net.Proxy.NoProxy;
 
 			if (destination == null || Proxy == null) {
 				goto done;
@@ -316,7 +318,7 @@ namespace Xamarin.Android.Net
 			return proxy;
 		}
 
-		Task <HttpResponseMessage> ProcessRequest (HttpRequestMessage request, URL javaUrl, HttpURLConnection httpConnection, CancellationToken cancellationToken, RequestRedirectionState redirectState)
+		Task <HttpResponseMessage?> ProcessRequest (HttpRequestMessage request, URL javaUrl, HttpURLConnection httpConnection, CancellationToken cancellationToken, RequestRedirectionState redirectState)
 		{
 			cancellationToken.ThrowIfCancellationRequested ();
 			httpConnection.InstanceFollowRedirects = false; // We handle it ourselves
@@ -374,7 +376,7 @@ namespace Xamarin.Android.Net
 			}
 		}
 
-		async Task <HttpResponseMessage> DoProcessRequest (HttpRequestMessage request, URL javaUrl, HttpURLConnection httpConnection, CancellationToken cancellationToken, RequestRedirectionState redirectState)
+		async Task <HttpResponseMessage?> DoProcessRequest (HttpRequestMessage request, URL javaUrl, HttpURLConnection httpConnection, CancellationToken cancellationToken, RequestRedirectionState redirectState)
 		{
 			if (Logger.LogNet)
 				Logger.Log (LogLevel.Info, LOG_APP, $"{this}.DoProcessRequest ()");
@@ -410,7 +412,7 @@ namespace Xamarin.Android.Net
 
 			CancellationTokenRegistration cancelRegistration = default (CancellationTokenRegistration);
 			HttpStatusCode statusCode = HttpStatusCode.OK;
-			Uri connectionUri = null;
+			Uri? connectionUri = null;
 
 			try {
 				cancelRegistration = cancellationToken.Register (() => {
@@ -424,7 +426,7 @@ namespace Xamarin.Android.Net
 					await WriteRequestContentToOutput (request, httpConnection, cancellationToken);
 
 				statusCode = await Task.Run (() => (HttpStatusCode)httpConnection.ResponseCode).ConfigureAwait (false);
-				connectionUri = new Uri (httpConnection.URL.ToString ());
+				connectionUri = new Uri (httpConnection.URL?.ToString ());
 			} finally {
 				cancelRegistration.Dispose ();
 			}
@@ -476,7 +478,7 @@ namespace Xamarin.Android.Net
 
 				if (disposeRet) {
 					ret.Dispose ();
-					ret = null;
+					ret = null!;
 				} else {
 					CopyHeaders (httpConnection, ret);
 					ParseCookies (ret, connectionUri);
@@ -536,11 +538,11 @@ namespace Xamarin.Android.Net
 			return fallbackContent;
 		}
 
-		HttpContent GetContent (URLConnection httpConnection, Stream contentStream)
+		HttpContent GetContent (URLConnection httpConnection, Stream? contentStream)
 		{
 			Stream inputStream = new BufferedStream (contentStream);
 			if (decompress_here) {
-				string[] encodings = httpConnection.ContentEncoding?.Split (',');
+				var encodings = httpConnection.ContentEncoding?.Split (',');
 				if (encodings != null) {
 					if (encodings.Contains (GZIP_ENCODING, StringComparer.OrdinalIgnoreCase))
 						inputStream = new GZipStream (inputStream, CompressionMode.Decompress);
@@ -586,11 +588,11 @@ namespace Xamarin.Android.Net
 					return false;
 			}
 
-			IDictionary <string, IList <string>> headers = httpConnection.HeaderFields;
-			IList <string> locationHeader;
-			string location = null;
+			var headers = httpConnection.HeaderFields;
+			IList <string>? locationHeader = null;
+			string? location = null;
 
-			if (headers.TryGetValue ("Location", out locationHeader) && locationHeader != null && locationHeader.Count > 0) {
+			if (headers?.TryGetValue ("Location", out locationHeader) == true && locationHeader != null && locationHeader.Count > 0) {
 				if (locationHeader.Count == 1) {
 					location = locationHeader [0]?.Trim ();
 				} else {
@@ -624,8 +626,8 @@ namespace Xamarin.Android.Net
 				if (Logger.LogNet)
 					Logger.Log (LogLevel.Debug, LOG_APP, $"Raw redirect location: {location}");
 
-				var baseUrl = new Uri (httpConnection.URL.ToString ());
-				if (location [0] == '/') {
+				var baseUrl = new Uri (httpConnection.URL?.ToString ());
+				if (location? [0] == '/') {
 					// Shortcut for the '/' and '//' cases, simplifies logic since URI won't treat
 					// such URLs as relative and we'd have to work around it in the `else` block
 					// below.
@@ -651,13 +653,13 @@ namespace Xamarin.Android.Net
 				throw new WebException ($"Invalid redirect URI received: {location}", ex);
 			}
 
-			UriBuilder builder = null;
-			if (!String.IsNullOrEmpty (httpConnection.URL.Ref) && String.IsNullOrEmpty (redirectUrl.Fragment)) {
+			UriBuilder? builder = null;
+			if (!String.IsNullOrEmpty (httpConnection.URL?.Ref) && String.IsNullOrEmpty (redirectUrl.Fragment)) {
 				if (Logger.LogNet)
-					Logger.Log (LogLevel.Debug, LOG_APP, $"Appending fragment '{httpConnection.URL.Ref}' to redirect URL '{redirectUrl}'");
+					Logger.Log (LogLevel.Debug, LOG_APP, $"Appending fragment '{httpConnection.URL?.Ref}' to redirect URL '{redirectUrl}'");
 
 				builder = new UriBuilder (redirectUrl) {
-					Fragment = httpConnection.URL.Ref
+					Fragment = httpConnection.URL?.Ref
 				};
 			}
 
@@ -724,8 +726,8 @@ namespace Xamarin.Android.Net
 
 		void CopyHeaders (HttpURLConnection httpConnection, HttpResponseMessage response)
 		{
-			IDictionary <string, IList <string>> headers = httpConnection.HeaderFields;
-			foreach (string key in headers.Keys) {
+			var headers = httpConnection.HeaderFields;
+			foreach (var key in headers!.Keys) {
 				if (key == null) // First header entry has null key, it corresponds to the response message
 					continue;
 
@@ -761,7 +763,7 @@ namespace Xamarin.Android.Net
 		/// </summary>
 		/// <returns>The key store.</returns>
 		/// <param name="keyStore">Key store to configure.</param>
-		protected virtual KeyStore ConfigureKeyStore (KeyStore keyStore)
+		protected virtual KeyStore? ConfigureKeyStore (KeyStore? keyStore)
 		{
 			AssertSelf ();
 
@@ -777,7 +779,7 @@ namespace Xamarin.Android.Net
 		/// </summary>
 		/// <returns>The key manager factory or <c>null</c>.</returns>
 		/// <param name="keyStore">Key store.</param>
-		protected virtual KeyManagerFactory ConfigureKeyManagerFactory (KeyStore keyStore)
+		protected virtual KeyManagerFactory? ConfigureKeyManagerFactory (KeyStore? keyStore)
 		{
 			AssertSelf ();
 
@@ -794,14 +796,14 @@ namespace Xamarin.Android.Net
 		/// </summary>
 		/// <returns>The trust manager factory.</returns>
 		/// <param name="keyStore">Key store.</param>
-		protected virtual TrustManagerFactory ConfigureTrustManagerFactory (KeyStore keyStore)
+		protected virtual TrustManagerFactory? ConfigureTrustManagerFactory (KeyStore? keyStore)
 		{
 			AssertSelf ();
 
 			return null;
 		}
 
-		void AppendEncoding (string encoding, ref List <string> list)
+		void AppendEncoding (string encoding, ref List <string>? list)
 		{
 			if (list == null)
 				list = new List <string> ();
@@ -816,7 +818,7 @@ namespace Xamarin.Android.Net
 				throw new ArgumentNullException (nameof (conn));
 			var httpConnection = conn.JavaCast <HttpURLConnection> ();
 			if (httpConnection == null)
-				throw new InvalidOperationException ($"Unsupported URL scheme {conn.URL.Protocol}");
+				throw new InvalidOperationException ($"Unsupported URL scheme {conn.URL?.Protocol}");
 
 			httpConnection.RequestMethod = request.Method.ToString ();
 
@@ -827,7 +829,7 @@ namespace Xamarin.Android.Net
 				AddHeaders (httpConnection, request.Content.Headers);
 			AddHeaders (httpConnection, request.Headers);
 			
-			List <string> accept_encoding = null;
+			List <string>? accept_encoding = null;
 
 			decompress_here = false;
 			if ((AutomaticDecompression & DecompressionMethods.GZip) != 0) {
@@ -872,17 +874,17 @@ namespace Xamarin.Android.Net
 		/// </summary>
 		/// <returns>Instance of SSLSocketFactory ready to use with the HTTPS connection.</returns>
 		/// <param name="connection">HTTPS connection to return socket factory for</param>
-		protected virtual SSLSocketFactory ConfigureCustomSSLSocketFactory (HttpsURLConnection connection)
+		protected virtual SSLSocketFactory? ConfigureCustomSSLSocketFactory (HttpsURLConnection connection)
 		{
 			return null;
 		}
 
-		void SetupSSL (HttpsURLConnection httpsConnection)
+		void SetupSSL (HttpsURLConnection? httpsConnection)
 		{
 			if (httpsConnection == null)
 				return;
 
-			SSLSocketFactory socketFactory = ConfigureCustomSSLSocketFactory (httpsConnection);
+			var socketFactory = ConfigureCustomSSLSocketFactory (httpsConnection);
 			if (socketFactory != null) {
 				httpsConnection.SSLSocketFactory = socketFactory;
 				return;
@@ -895,20 +897,20 @@ namespace Xamarin.Android.Net
 				return;
 			}
 
-			KeyStore keyStore = KeyStore.GetInstance (KeyStore.DefaultType);
-			keyStore.Load (null, null);
+			var keyStore = KeyStore.GetInstance (KeyStore.DefaultType);
+			keyStore?.Load (null, null);
 			bool gotCerts = TrustedCerts?.Count > 0;
 			if (gotCerts) {
-				for (int i = 0; i < TrustedCerts.Count; i++) {
+				for (int i = 0; i < TrustedCerts!.Count; i++) {
 					Certificate cert = TrustedCerts [i];
 					if (cert == null)
 						continue;
-					keyStore.SetCertificateEntry ($"ca{i}", cert);
+					keyStore?.SetCertificateEntry ($"ca{i}", cert);
 				}
 			}
 			keyStore = ConfigureKeyStore (keyStore);
-			KeyManagerFactory kmf = ConfigureKeyManagerFactory (keyStore);
-			TrustManagerFactory tmf = ConfigureTrustManagerFactory (keyStore);
+			var kmf = ConfigureKeyManagerFactory (keyStore);
+			var tmf = ConfigureTrustManagerFactory (keyStore);
 
 			if (tmf == null) {
 				// If there are no certs and no trust manager factory, we can't use a custom manager
@@ -918,28 +920,28 @@ namespace Xamarin.Android.Net
 					return;
 				
 				tmf = TrustManagerFactory.GetInstance (TrustManagerFactory.DefaultAlgorithm);
-				tmf.Init (keyStore);
+				tmf?.Init (keyStore);
 			}
 
-			SSLContext context = SSLContext.GetInstance ("TLS");
-			context.Init (kmf?.GetKeyManagers (), tmf.GetTrustManagers (), null);
-			httpsConnection.SSLSocketFactory = context.SocketFactory;
+			var context = SSLContext.GetInstance ("TLS");
+			context?.Init (kmf?.GetKeyManagers (), tmf?.GetTrustManagers (), null);
+			httpsConnection.SSLSocketFactory = context?.SocketFactory;
 		}
 		
 		void HandlePreAuthentication (HttpURLConnection httpConnection)
 		{
-			AuthenticationData data = PreAuthenticationData;
+			var data = PreAuthenticationData;
 			if (!PreAuthenticate || data == null)
 				return;
 
-			ICredentials creds = data.UseProxyAuthentication ? Proxy?.Credentials : Credentials;
+			var creds = data.UseProxyAuthentication ? Proxy?.Credentials : Credentials;
 			if (creds == null) {
 				if (Logger.LogNet)
 					Logger.Log (LogLevel.Info, LOG_APP, $"Authentication using scheme {data.Scheme} requested but no credentials found. No authentication will be performed");
 				return;
 			}
 
-			IAndroidAuthenticationModule auth = data.Scheme == AuthenticationScheme.Unsupported ? data.AuthModule : authModules.Find (m => m?.Scheme == data.Scheme);
+			var auth = data.Scheme == AuthenticationScheme.Unsupported ? data.AuthModule : authModules.Find (m => m?.Scheme == data.Scheme);
 			if (auth == null) {
 				if (Logger.LogNet)
 					Logger.Log (LogLevel.Info, LOG_APP, $"Authentication module for scheme '{data.Scheme}' not found. No authentication will be performed");

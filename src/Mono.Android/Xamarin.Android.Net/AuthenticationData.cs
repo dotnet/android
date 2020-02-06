@@ -1,3 +1,5 @@
+#nullable enable
+
 namespace Xamarin.Android.Net
 {
 	/// <summary>
@@ -18,7 +20,7 @@ namespace Xamarin.Android.Net
 		/// authentication module (<see cref="AuthModule"/>)
 		/// </summary>
 		/// <value>The challenge.</value>
-		public string Challenge { get; internal set; }
+		public string? Challenge { get; internal set; }
 
 		/// <summary>
 		/// Indicates whether authentication performed using data in this instance should be done for the end server or a proxy. If instance of 
@@ -34,6 +36,6 @@ namespace Xamarin.Android.Net
 		/// in the <see cref="Challenge"/> property.
 		/// </summary>
 		/// <value>The auth module.</value>
-		public IAndroidAuthenticationModule AuthModule { get; set; }
+		public IAndroidAuthenticationModule? AuthModule { get; set; }
 	}
 }

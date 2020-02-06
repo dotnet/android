@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.ComponentModel;
 
@@ -16,23 +18,23 @@ namespace Android.App {
 		{
 		}
 
-		public string                 Name                    {get; set;}
+		public string?                Name                    {get; set;}
 
 		public bool                   AllowBackup             {get; set;}
 		public bool                   AllowClearUserData      {get; set;}
 		public bool                   AllowTaskReparenting    {get; set;}
 #if ANDROID_8
-		public Type                   BackupAgent             {get; set;}
+		public Type?                  BackupAgent             {get; set;}
 #endif
 #if ANDROID_24
 		public bool                   BackupInForeground      {get; set;}
 #endif
 #if ANDROID_21
-		public string                 Banner                  {get; set;}
+		public string?                Banner                  {get; set;}
 #endif
 		public bool                   Debuggable              {get; set;}
 		[Category ("@string")]
-		public string                 Description             {get; set;}
+		public string?                Description             {get; set;}
 #if ANDROID_24
 		public bool                   DirectBootAware         {get; set;}
 #endif
@@ -49,41 +51,41 @@ namespace Android.App {
 #endif
 		public bool                   HasCode                 {get; set;}
 		[Category ("@drawable;@mipmap")]
-		public string                 Icon                    {get; set;}
+		public string?                Icon                    {get; set;}
 		public bool                   KillAfterRestore        {get; set;}
 #if ANDROID_11
 		public bool                   LargeHeap               {get; set;}
 #endif
 		[Category ("@string")]
-		public string                 Label                   {get; set;}
+		public string?                Label                   {get; set;}
 #if ANDROID_11
 		[Category ("@drawable;@mipmap")]
-		public string                 Logo                    {get; set;}
+		public string?                Logo                    {get; set;}
 #endif
-		public Type                   ManageSpaceActivity     {get; set;}
+		public Type?                  ManageSpaceActivity     {get; set;}
 #if ANDROID_26
-		public string                 NetworkSecurityConfig   {get; set;}
+		public string?                NetworkSecurityConfig   {get; set;}
 #endif 
-		public string                 Permission              {get; set;}
+		public string?                Permission              {get; set;}
 		public bool                   Persistent              {get; set;}
-		public string                 Process                 {get; set;}
+		public string?                Process                 {get; set;}
 #if ANDROID_18
-		public string                 RequiredAccountType     {get; set;}
+		public string?                RequiredAccountType     {get; set;}
 #endif
 		public bool                   RestoreAnyVersion       {get; set;}
 #if ANDROID_18
-		public string                 RestrictedAccountType   {get; set;}
+		public string?                RestrictedAccountType   {get; set;}
 #endif
 #if ANDROID_25
 		[Category ("@drawable;@mipmap")]
-		public string                 RoundIcon               {get; set;}
+		public string?                RoundIcon               {get; set;}
 #endif
 #if ANDROID_17
 		public bool                   SupportsRtl             {get; set;}
 #endif
-		public string                 TaskAffinity            {get; set;}
+		public string?                TaskAffinity            {get; set;}
 		[Category ("@style")]
-		public string                 Theme                   {get; set;}
+		public string?                Theme                   {get; set;}
 #if ANDROID_14
 		public UiOptions              UiOptions               {get; set;}
 #endif

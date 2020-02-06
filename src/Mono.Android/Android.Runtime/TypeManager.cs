@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -8,7 +10,7 @@ namespace Android.Runtime {
 	[Obsolete ("Use Java.Interop.TypeManager")]
 	public static partial class TypeManager {
 
-		public static string LookupTypeMapping (string[] mappings, string javaType)
+		public static string? LookupTypeMapping (string[] mappings, string javaType)
 		{
 			return Java.Interop.TypeManager.LookupTypeMapping (mappings, javaType);
 		}

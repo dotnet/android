@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 
@@ -19,7 +21,7 @@ namespace Android.Runtime {
 		{
 		}
 
-		protected override bool UsesVirtualDispatch (IJavaPeerable value, Type declaringType)
+		protected override bool UsesVirtualDispatch (IJavaPeerable value, Type? declaringType)
 		{
 			var peerType  = GetThresholdType (value);
 			if (peerType != null) {
@@ -47,7 +49,7 @@ namespace Android.Runtime {
 			}
 		}
 
-		static Type GetThresholdType (IJavaPeerable value)
+		static Type? GetThresholdType (IJavaPeerable value)
 		{
 			var o = value as Java.Lang.Object;
 			if (o != null) {

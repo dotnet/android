@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -12,8 +14,8 @@ namespace Java.Interop {
 
 	static class TypeManagerMapDictionaries
 	{
-		static Dictionary<string, Type> _jniToManaged;
-		static Dictionary<Type, string> _managedToJni;
+		static Dictionary<string, Type>? _jniToManaged;
+		static Dictionary<Type, string>? _managedToJni;
 
 		public static readonly object AccessLock = new object ();
 
@@ -50,7 +52,7 @@ namespace Java.Interop {
 			return ret;
 		}
 
-		internal static string GetJniTypeName (Type type)
+		internal static string? GetJniTypeName (Type type)
 		{
 			string jni;
 			lock (TypeManagerMapDictionaries.AccessLock) {
@@ -89,7 +91,7 @@ namespace Java.Interop {
 
 		static readonly TypeNameComparer JavaNameComparer = new TypeNameComparer ();
 
-		public static string LookupTypeMapping (string[] mappings, string javaType)
+		public static string? LookupTypeMapping (string[] mappings, string javaType)
 		{
 			int i = Array.BinarySearch (mappings, javaType, JavaNameComparer);
 			if (i < 0)
@@ -98,7 +100,7 @@ namespace Java.Interop {
 			return mappings [i].Substring (c+1);
 		}
 
-		static Action<IntPtr, IntPtr, IntPtr, IntPtr, IntPtr, IntPtr> cb_activate;
+		static Action<IntPtr, IntPtr, IntPtr, IntPtr, IntPtr, IntPtr>? cb_activate;
 		internal static Delegate GetActivateHandler ()
 		{
 			if (cb_activate == null)
@@ -121,11 +123,11 @@ namespace Java.Interop {
 		}
 #endif	// !JAVA_INTEROP
 
-		static Type[] GetParameterTypes (string signature)
+		static Type[] GetParameterTypes (string? signature)
 		{
 			if (String.IsNullOrEmpty (signature))
 				return new Type[0];
-			string[] typenames = signature.Split (':');
+			string[] typenames = signature!.Split (':');
 			Type[] result = new Type [typenames.Length];
 			for (int i = 0; i < typenames.Length; i++)
 				result [i] = Type.GetType (typenames [i], throwOnError:true);
@@ -146,7 +148,7 @@ namespace Java.Interop {
 							string.Format ("warning: Skipping managed constructor invocation for handle 0x{0} (key_handle 0x{1}). " +
 								"Please use JNIEnv.StartCreateInstance() + JNIEnv.FinishCreateInstance() instead of " +
 								"JNIEnv.NewObject() and/or JNIEnv.CreateInstance().",
-								jobject.ToString ("x"), JNIEnv.IdentityHash (jobject).ToString ("x")));
+								jobject.ToString ("x"), JNIEnv.IdentityHash! (jobject).ToString ("x")));
 				}
 				return;
 			}
@@ -158,7 +160,7 @@ namespace Java.Interop {
 						CreateJavaLocationException ());
 			}
 			Type[] ptypes = GetParameterTypes (JNIEnv.GetString (signature_ptr, JniHandleOwnership.DoNotTransfer));
-			object[] parms = JNIEnv.GetObjectArray (parameters_ptr, ptypes);
+			var parms = JNIEnv.GetObjectArray (parameters_ptr, ptypes);
 			ConstructorInfo cinfo = type.GetConstructor (ptypes);
 			if (cinfo == null) {
 				throw CreateMissingConstructorException (type, ptypes);
@@ -172,7 +174,7 @@ namespace Java.Interop {
 				activator (jobject, parms);
 			} catch (Exception e) {
 				var m = string.Format ("Could not activate JNI Handle 0x{0} (key_handle 0x{1}) of Java type '{2}' as managed type '{3}'.",
-						jobject.ToString ("x"), JNIEnv.IdentityHash (jobject).ToString ("x"), JNIEnv.GetClassNameFromInstance (jobject), type.FullName);
+						jobject.ToString ("x"), JNIEnv.IdentityHash! (jobject).ToString ("x"), JNIEnv.GetClassNameFromInstance (jobject), type.FullName);
 				Logger.Log (LogLevel.Warn, "monodroid", m);
 				Logger.Log (LogLevel.Warn, "monodroid", CreateJavaLocationException ().ToString ());
 
@@ -207,7 +209,7 @@ namespace Java.Interop {
 		[MethodImplAttribute(MethodImplOptions.InternalCall)]
 		static extern Type monodroid_typemap_java_to_managed (string java_type_name);
 
-		internal static Type GetJavaToManagedType (string class_name)
+		internal static Type? GetJavaToManagedType (string class_name)
 		{
 			Type type = monodroid_typemap_java_to_managed (class_name);
 			if (type != null)
@@ -225,9 +227,9 @@ namespace Java.Interop {
 			type = null;
 			int ls      = class_name.LastIndexOf ('/');
 			var package = ls >= 0 ? class_name.Substring (0, ls) : "";
-			List<Converter<string, Type>> mappers;
+			List<Converter<string, Type?>> mappers;
 			if (packageLookup.TryGetValue (package, out mappers)) {
-				foreach (Converter<string, Type> c in mappers) {
+				foreach (Converter<string, Type?> c in mappers) {
 					type = c (class_name);
 					if (type == null)
 						continue;
@@ -245,9 +247,9 @@ namespace Java.Interop {
 			return CreateInstance (handle, transfer, null);
 		}
 
-		internal static IJavaPeerable CreateInstance (IntPtr handle, JniHandleOwnership transfer, Type targetType)
+		internal static IJavaPeerable CreateInstance (IntPtr handle, JniHandleOwnership transfer, Type? targetType)
 		{
-			Type type = null;
+			Type? type = null;
 			IntPtr class_ptr = JNIEnv.GetObjectClass (handle);
 			string class_name = GetClassName (class_ptr);
 			lock (TypeManagerMapDictionaries.AccessLock) {
@@ -288,7 +290,7 @@ namespace Java.Interop {
 			}
 
 
-			IJavaPeerable result = null;
+			IJavaPeerable? result = null;
 
 			try {
 				result = (IJavaPeerable) CreateProxy (type, handle, transfer);
@@ -296,7 +298,7 @@ namespace Java.Interop {
 					result.SetJniManagedPeerState (JniManagedPeerStates.Replaceable);
 				}
 			} catch (MissingMethodException e) {
-				var key_handle  = JNIEnv.IdentityHash (handle);
+				var key_handle  = JNIEnv.IdentityHash! (handle);
 				JNIEnv.DeleteRef (handle, transfer);
 				throw new NotSupportedException (
 						string.Format ("Unable to activate instance of type {0} from native handle 0x{1} (key_handle 0x{2}).",
@@ -350,19 +352,19 @@ namespace Java.Interop {
 			}
 		}
 
-		static Dictionary<string, List<Converter<string, Type>>> packageLookup = new Dictionary<string, List<Converter<string, Type>>> ();
+		static Dictionary<string, List<Converter<string, Type?>>> packageLookup = new Dictionary<string, List<Converter<string, Type?>>> ();
 
 		public static void RegisterPackage (string package, Converter<string, Type> lookup)
 		{
 			lock (packageLookup) {
-				List<Converter<string, Type>> lookups;
+				List<Converter<string, Type?>> lookups;
 				if (!packageLookup.TryGetValue (package, out lookups))
-					packageLookup.Add (package, lookups = new List<Converter<string, Type>> ());
+					packageLookup.Add (package, lookups = new List<Converter<string, Type?>> ());
 				lookups.Add (lookup);
 			}
 		}
 
-		public static void RegisterPackages (string[] packages, Converter<string, Type>[] lookups)
+		public static void RegisterPackages (string[] packages, Converter<string, Type?>[] lookups)
 		{
 			if (packages == null)
 				throw new ArgumentNullException ("packages");
@@ -374,11 +376,11 @@ namespace Java.Interop {
 			lock (packageLookup) {
 				for (int i = 0; i < packages.Length; ++i) {
 					string package                  = packages [i];
-					Converter<string, Type> lookup  = lookups [i];
+					var lookup			= lookups [i];
 
-					List<Converter<string, Type>> _lookups;
+					List<Converter<string, Type?>> _lookups;
 					if (!packageLookup.TryGetValue (package, out _lookups))
-						packageLookup.Add (package, _lookups = new List<Converter<string, Type>> ());
+						packageLookup.Add (package, _lookups = new List<Converter<string, Type?>> ());
 					_lookups.Add (lookup);
 				}
 			}

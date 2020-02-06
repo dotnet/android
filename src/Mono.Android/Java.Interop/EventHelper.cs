@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 
 namespace Java.Interop {
@@ -5,13 +7,13 @@ namespace Java.Interop {
 	public static class EventHelper {
 		
 		public static void AddEventHandler<TInterface, TImplementor> (
-				ref WeakReference implementor,
+				ref WeakReference? implementor,
 				Func<TImplementor> creator,
 				Action<TInterface> setListener,
 				Action<TImplementor> add)
 			where TImplementor : Java.Lang.Object, TInterface
 		{
-			TImplementor impl = null;
+			TImplementor? impl = null;
 			if (implementor == null || (impl = (TImplementor) implementor.Target) == null) {
 				impl = creator ();
 				implementor = new WeakReference (impl, true);
@@ -21,13 +23,13 @@ namespace Java.Interop {
 		}
 
 		public static void RemoveEventHandler<TInterface, TImplementor> (
-				ref WeakReference implementor,
+				ref WeakReference? implementor,
 				Func<TImplementor, bool> empty,
 				Action<TInterface> unsetListener,
 				Action<TImplementor> remove)
 			where TImplementor : Java.Lang.Object, TInterface
 		{
-			TImplementor impl = null;
+			TImplementor? impl = null;
 			if (implementor == null || (impl = (TImplementor) implementor.Target) == null)
 				return;
 			remove (impl);

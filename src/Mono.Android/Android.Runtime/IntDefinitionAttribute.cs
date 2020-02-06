@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 
 namespace Android.Runtime
@@ -5,13 +7,13 @@ namespace Android.Runtime
 	[AttributeUsage (AttributeTargets.Field)]
 	public class IntDefinitionAttribute : Attribute
 	{
-		public IntDefinitionAttribute (string constantMember)
+		public IntDefinitionAttribute (string? constantMember)
 		{
 			ConstantMember = constantMember;
 		}
 
-		public string ConstantMember { get; set; }
-		public string JniField { get; set; }
+		public string? ConstantMember { get; set; }
+		public string? JniField { get; set; }
 	}
 }
 

@@ -1,4 +1,6 @@
-﻿#if ANDROID_24
+#nullable enable
+
+#if ANDROID_24
 using System;
 
 using Android.Content.PM;
@@ -13,11 +15,11 @@ namespace Android.App
 			Inherited = false)]
 	public sealed partial class LayoutAttribute : Attribute
 	{
-		public string DefaultWidth { get; set; }
-		public string DefaultHeight { get; set; }
-		public string Gravity { get; set; }
-		public string MinHeight { get; set; }
-		public string MinWidth { get; set; }
+		public string? DefaultWidth { get; set; }
+		public string? DefaultHeight { get; set; }
+		public string? Gravity { get; set; }
+		public string? MinHeight { get; set; }
+		public string? MinWidth { get; set; }
 	}
 }
 #endif

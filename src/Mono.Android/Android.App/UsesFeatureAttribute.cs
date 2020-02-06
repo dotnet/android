@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 
 namespace Android.App
@@ -17,7 +19,7 @@ namespace Android.App
 			Name = name;
 		}
 
-		public string                 Name                    {get; private set;}
+		public string?                Name                    {get; private set;}
 #if ANDROID_7
 		public bool                   Required                {get; set;}
 #endif

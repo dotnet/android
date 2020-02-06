@@ -1,3 +1,5 @@
+#nullable enable
+
 #if ANDROID_11
 
 using System;
@@ -8,7 +10,7 @@ namespace Android.Animation {
 
 	partial class Animator {
 
-		WeakReference dispatcher;
+		WeakReference? dispatcher;
 		AnimatorEventDispatcher Dispatcher {
 			get {
 				if (dispatcher == null || !dispatcher.IsAlive) {
@@ -67,33 +69,33 @@ namespace Android.Animation {
 			JNIEnv.FinishCreateInstance (Handle, "()V");
 		}
 
-		public EventHandler AnimationCancel;
-		public EventHandler AnimationEnd;
-		public EventHandler AnimationRepeat;
-		public EventHandler AnimationStart;
+		public EventHandler? AnimationCancel;
+		public EventHandler? AnimationEnd;
+		public EventHandler? AnimationRepeat;
+		public EventHandler? AnimationStart;
 
-		public void OnAnimationCancel (Animator animation)
+		public void OnAnimationCancel (Animator? animation)
 		{
 			var h = AnimationCancel;
 			if (h != null)
 				h (animation, EventArgs.Empty);
 		}
 
-		public void OnAnimationEnd (Animator animation)
+		public void OnAnimationEnd (Animator? animation)
 		{
 			var h = AnimationEnd;
 			if (h != null)
 				h (animation, EventArgs.Empty);
 		}
 
-		public void OnAnimationRepeat (Animator animation)
+		public void OnAnimationRepeat (Animator? animation)
 		{
 			var h = AnimationRepeat;
 			if (h != null)
 				h (animation, EventArgs.Empty);
 		}
 
-		public void OnAnimationStart (Animator animation)
+		public void OnAnimationStart (Animator? animation)
 		{
 			var h = AnimationStart;
 			if (h != null)

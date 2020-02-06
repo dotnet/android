@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 
 namespace Java.Interop {
@@ -20,10 +22,10 @@ namespace Java.Interop {
 			Name = name;
 		}
 
-		public string                 Name                    {get; private set;}
-		public string                 SuperArgumentsString    {get; set;}
-		public Type []                Throws                  {get; set;}
-		internal string []            ThrownNames             {get; set;} // msbuild internal use
+		public string?                Name                    {get; private set;}
+		public string?                SuperArgumentsString    {get; set;}
+		public Type []?               Throws                  {get; set;}
+		internal string []?           ThrownNames             {get; set;} // msbuild internal use
 	}
 }
 

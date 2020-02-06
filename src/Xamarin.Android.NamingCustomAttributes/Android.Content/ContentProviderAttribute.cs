@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.ComponentModel;
 
@@ -26,20 +28,20 @@ namespace Android.Content {
 		public bool                   Exported                {get; set;}
 		public bool                   GrantUriPermissions     {get; set;}
 		[Category ("@drawable;@mipmap")]
-		public string                 Icon                    {get; set;}
+		public string?                Icon                    {get; set;}
 		public int                    InitOrder               {get; set;}
 		[Category ("@string")]
-		public string                 Label                   {get; set;}
+		public string?                Label                   {get; set;}
 		public bool                   MultiProcess            {get; set;}
-		public string                 Name                    {get; set;}
-		public string                 Permission              {get; set;}
-		public string                 Process                 {get; set;}
-		public string                 ReadPermission          {get; set;}
+		public string?                Name                    {get; set;}
+		public string?                Permission              {get; set;}
+		public string?                Process                 {get; set;}
+		public string?                ReadPermission          {get; set;}
 #if ANDROID_25
 		[Category ("@drawable;@mipmap")]
-		public string                 RoundIcon               {get; set;}
+		public string?                RoundIcon               {get; set;}
 #endif
 		public bool                   Syncable                {get; set;}
-		public string                 WritePermission         {get; set;}
+		public string?                WritePermission         {get; set;}
 	}
 }

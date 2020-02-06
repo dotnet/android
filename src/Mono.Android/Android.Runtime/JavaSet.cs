@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -106,7 +108,7 @@ namespace Android.Runtime {
 			get { return false; }
 		}
 
-		public object SyncRoot {
+		public object? SyncRoot {
 			get { return null; }
 		}
 
@@ -238,12 +240,12 @@ namespace Android.Runtime {
 		}
 
 		[Preserve (Conditional=true)]
-		public static ICollection FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
+		public static ICollection? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
 
-			IJavaObject inst = (IJavaObject) Java.Lang.Object.PeekObject (handle);
+			var inst = (IJavaObject?) Java.Lang.Object.PeekObject (handle);
 			if (inst == null)
 				inst = new JavaSet (handle, transfer);
 			else
@@ -253,7 +255,7 @@ namespace Android.Runtime {
 		}
 		
 		[Preserve (Conditional=true)]
-		public static IntPtr ToLocalJniHandle (ICollection items)
+		public static IntPtr ToLocalJniHandle (ICollection? items)
 		{
 			if (items == null)
 				return IntPtr.Zero;
@@ -424,12 +426,12 @@ namespace Android.Runtime {
 		}
 
 		[Preserve (Conditional=true)]
-		public static ICollection<T> FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
+		public static ICollection<T>? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
 
-			IJavaObject inst = (IJavaObject) Java.Lang.Object.PeekObject (handle);
+			var inst = (IJavaObject?) Java.Lang.Object.PeekObject (handle);
 			if (inst == null)
 				inst = new JavaSet<T> (handle, transfer);
 			else
@@ -439,7 +441,7 @@ namespace Android.Runtime {
 		}
 
 		[Preserve (Conditional=true)]
-		public static IntPtr ToLocalJniHandle (ICollection<T> items)
+		public static IntPtr ToLocalJniHandle (ICollection<T>? items)
 		{
 			if (items == null)
 				return IntPtr.Zero;

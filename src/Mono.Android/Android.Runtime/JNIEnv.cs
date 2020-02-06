@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -13,6 +15,7 @@ using System.Text;
 
 using Java.Interop;
 using Java.Interop.Tools.TypeNameMappings;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Android.Runtime {
 #pragma warning disable 0649
@@ -53,26 +56,27 @@ namespace Android.Runtime {
 		internal static int    gref_gc_threshold;
 
 		internal  static  bool  PropagateExceptions;
+		static UncaughtExceptionHandler? defaultUncaughtExceptionHandler;
 
 		internal static bool IsRunningOnDesktop;
 		internal static bool LogTypemapMissStackTrace;
 
-		static AndroidRuntime androidRuntime;
+		static AndroidRuntime? androidRuntime;
 		static BoundExceptionType BoundExceptionType;
 
 		[ThreadStatic]
 		static byte[] mvid_bytes;
 
-		internal    static      AndroidValueManager AndroidValueManager;
+		internal    static      AndroidValueManager? AndroidValueManager;
 
 		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
 		extern static void monodroid_log (LogLevel level, LogCategories category, string message);
 
 		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
-		internal extern static IntPtr monodroid_timing_start (string message);
+		internal extern static IntPtr monodroid_timing_start (string? message);
 
 		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
-		internal extern static void monodroid_timing_stop (IntPtr sequence, string message);
+		internal extern static void monodroid_timing_stop (IntPtr sequence, string? message);
 
 		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
 		internal extern static void monodroid_free (IntPtr ptr);
@@ -96,7 +100,7 @@ namespace Android.Runtime {
 			return IsInstanceOf (value, grefIGCUserPeer_class);
 		}
 
-		internal static bool ShouldWrapJavaException (Java.Lang.Throwable t, [CallerMemberName] string caller = null)
+		internal static bool ShouldWrapJavaException (Java.Lang.Throwable? t, [CallerMemberName] string? caller = null)
 		{
 			if (t == null) {
 				monodroid_log (LogLevel.Warn,
@@ -132,10 +136,10 @@ namespace Android.Runtime {
 			var className = Java.Interop.TypeManager.GetClassName (jniClass);
 			Java.Interop.TypeManager.RegisterType (className, type);
 
-			JniType jniType = null;
+			JniType? jniType = null;
 			JniType.GetCachedJniType (ref jniType, className);
 
-			androidRuntime.TypeManager.RegisterNativeMembers (jniType, type, methods_ptr == IntPtr.Zero ? null : new string ((char*) methods_ptr, 0, methods_len));
+			androidRuntime!.TypeManager.RegisterNativeMembers (jniType, type, methods_ptr == IntPtr.Zero ? null : new string ((char*) methods_ptr, 0, methods_len));
 		}
 
 		internal static unsafe void Initialize (JnienvInitializeArgs* args)
@@ -308,7 +312,7 @@ namespace Android.Runtime {
 		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
 		extern static IntPtr _monodroid_get_identity_hash_code (IntPtr env, IntPtr value);
 
-		internal static Func<IntPtr, IntPtr> IdentityHash;
+		internal static Func<IntPtr, IntPtr>? IdentityHash;
 
 		public static IntPtr AllocObject (string jniClassName)
 		{
@@ -477,7 +481,7 @@ namespace Android.Runtime {
 				if (!((e is Java.Lang.NoClassDefFoundError) || (e is Java.Lang.ClassNotFoundException)))
 					throw;
 				monodroid_log (LogLevel.Warn, LogCategories.Default, $"JNIEnv.FindClass(Type) caught unexpected exception: {e}");
-				string jni = Java.Interop.TypeManager.GetJniTypeName (type);
+				var jni = Java.Interop.TypeManager.GetJniTypeName (type);
 				if (jni != null) {
 					e.Dispose ();
 					return FindClass (JavaNativeTypeManager.ToJniName (jni, rank));
@@ -497,7 +501,7 @@ namespace Android.Runtime {
 		}
 
 		static readonly int nameBufferLength = 1024;
-		[ThreadStatic] static char[] nameBuffer;
+		[ThreadStatic] static char[]? nameBuffer;
 
 		static unsafe IntPtr BinaryName (string classname)
 		{
@@ -596,16 +600,16 @@ namespace Android.Runtime {
 		internal static extern int _monodroid_gref_log (string message);
 
 		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int _monodroid_gref_log_new (IntPtr curHandle, byte curType, IntPtr newHandle, byte newType, string threadName, int threadId, [In] StringBuilder from, int from_writable);
+		internal static extern int _monodroid_gref_log_new (IntPtr curHandle, byte curType, IntPtr newHandle, byte newType, string? threadName, int threadId, [In] StringBuilder? from, int from_writable);
 
 		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void _monodroid_gref_log_delete (IntPtr handle, byte type, string threadName, int threadId, [In] StringBuilder from, int from_writable);
+		internal static extern void _monodroid_gref_log_delete (IntPtr handle, byte type, string? threadName, int threadId, [In] StringBuilder? from, int from_writable);
 
 		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void _monodroid_weak_gref_new (IntPtr curHandle, byte curType, IntPtr newHandle, byte newType, string threadName, int threadId, [In] StringBuilder from, int from_writable);
+		internal static extern void _monodroid_weak_gref_new (IntPtr curHandle, byte curType, IntPtr newHandle, byte newType, string? threadName, int threadId, [In] StringBuilder? from, int from_writable);
 
 		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void _monodroid_weak_gref_delete (IntPtr handle, byte type, string threadName, int threadId, [In] StringBuilder from, int from_writable);
+		internal static extern void _monodroid_weak_gref_delete (IntPtr handle, byte type, string? threadName, int threadId, [In] StringBuilder? from, int from_writable);
 
 		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int _monodroid_lref_log_new (int lrefc, IntPtr handle, byte type, string threadName, int threadId, [In] StringBuilder from, int from_writable);
@@ -727,14 +731,14 @@ namespace Android.Runtime {
 				: java;
 		}
 
-		public static IntPtr ToJniHandle (IJavaObject value)
+		public static IntPtr ToJniHandle (IJavaObject? value)
 		{
 			if (value == null)
 				return IntPtr.Zero;
 			return value.Handle;
 		}
 
-		public static IntPtr ToLocalJniHandle (IJavaObject value)
+		public static IntPtr ToLocalJniHandle (IJavaObject? value)
 		{
 			if (value == null)
 				return IntPtr.Zero;
@@ -744,7 +748,7 @@ namespace Android.Runtime {
 			return NewLocalRef (value.Handle);
 		}
 
-		public static string GetCharSequence (IntPtr jobject, JniHandleOwnership transfer)
+		public static string? GetCharSequence (IntPtr jobject, JniHandleOwnership transfer)
 		{
 			if (jobject == IntPtr.Zero)
 				return null;
@@ -753,7 +757,7 @@ namespace Android.Runtime {
 			return JniEnvironment.Strings.ToString (ref r, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
-		public static unsafe string GetString (IntPtr value, JniHandleOwnership transfer)
+		public static unsafe string? GetString (IntPtr value, JniHandleOwnership transfer)
 		{
 			if (value == IntPtr.Zero)
 				return null;
@@ -763,7 +767,7 @@ namespace Android.Runtime {
 			return s;
 		}
 
-		public static unsafe IntPtr NewString (string text)
+		public static unsafe IntPtr NewString (string? text)
 		{
 			if (text == null)
 				return IntPtr.Zero;
@@ -771,7 +775,7 @@ namespace Android.Runtime {
 			return JniEnvironment.Strings.NewString (text).Handle;
 		}
 
-		public static unsafe IntPtr NewString (char[] text, int length)
+		public static unsafe IntPtr NewString (char[]? text, int length)
 		{
 			if (text == null)
 				return IntPtr.Zero;
@@ -828,11 +832,11 @@ namespace Android.Runtime {
 				throw new ArgumentNullException ("dest");
 
 			for (int i = 0; i < dest.Length; i++)
-				dest [i] = GetString (GetObjectArrayElement (src, i), JniHandleOwnership.TransferLocalRef);
+				dest [i] = GetString (GetObjectArrayElement (src, i), JniHandleOwnership.TransferLocalRef)!;
 		}
 
-		static Dictionary<Type, Func<Type, IntPtr, int, object>> nativeArrayElementToManaged;
-		static Dictionary<Type, Func<Type, IntPtr, int, object>> NativeArrayElementToManaged {
+		static Dictionary<Type, Func<Type?, IntPtr, int, object?>>? nativeArrayElementToManaged;
+		static Dictionary<Type, Func<Type?, IntPtr, int, object?>> NativeArrayElementToManaged {
 			get {
 				if (nativeArrayElementToManaged != null)
 					return nativeArrayElementToManaged;
@@ -843,9 +847,9 @@ namespace Android.Runtime {
 			}
 		}
 
-		static Dictionary<Type, Func<Type, IntPtr, int, object>> CreateNativeArrayElementToManaged ()
+		static Dictionary<Type, Func<Type?, IntPtr, int, object?>> CreateNativeArrayElementToManaged ()
 		{
-			return new Dictionary<Type, Func<Type, IntPtr, int, object>> () {
+			return new Dictionary<Type, Func<Type?, IntPtr, int, object?>> () {
 				{ typeof (bool), (type, source, index) => {
 					var r = new bool [1];
 					_GetBooleanArrayRegion (source, index, 1, r);
@@ -905,7 +909,7 @@ namespace Android.Runtime {
 			};
 		}
 
-		static TValue GetConverter<TValue>(Dictionary<Type, TValue> dict, Type elementType, IntPtr array)
+		static TValue GetConverter<TValue>(Dictionary<Type, TValue> dict, Type? elementType, IntPtr array)
 		{
 			TValue converter;
 
@@ -995,7 +999,7 @@ namespace Android.Runtime {
 				JniEnvironment.Arrays.GetDoubleArrayRegion (new JniObjectReference (array), start, length, p);
 		}
 
-		public static void CopyArray (IntPtr src, Array dest, Type elementType = null)
+		public static void CopyArray (IntPtr src, Array dest, Type? elementType = null)
 		{
 			if (dest == null)
 				throw new ArgumentNullException ("dest");
@@ -1019,13 +1023,13 @@ namespace Android.Runtime {
 				return;
 			}
 
-			Func<Type, IntPtr, int, object> converter = GetConverter (NativeArrayElementToManaged, elementType, src);
+			var converter = GetConverter (NativeArrayElementToManaged, elementType, src);
 
 			for (int i = 0; i < dest.Length; i++)
 				dest.SetValue (converter (elementType, src, i), i);
 		}
 
-		static void AssertIsJavaObject (Type targetType)
+		static void AssertIsJavaObject (Type? targetType)
 		{
 			if (targetType != null && !typeof (IJavaObject).IsAssignableFrom (targetType))
 				throw new NotSupportedException ("Don't know how to convert type '" + targetType.FullName + "' to an Android.Runtime.IJavaObject.");
@@ -1044,10 +1048,10 @@ namespace Android.Runtime {
 				return;
 			}
 
-			Func<Type, IntPtr, int, object> converter = GetConverter (NativeArrayElementToManaged, typeof (T), src);
+			var converter = GetConverter (NativeArrayElementToManaged, typeof (T), src);
 
 			for (int i = 0; i < dest.Length; i++)
-				dest [i] = (T) converter (typeof (T), src, i);
+				dest [i] = (T) converter (typeof (T), src, i)!;
 		}
 
 		public static unsafe void CopyArray (bool[] src, IntPtr dest)
@@ -1084,7 +1088,7 @@ namespace Android.Runtime {
 			}
 		}
 
-		static Dictionary<Type, Action<Array, IntPtr>> copyManagedToNativeArray;
+		static Dictionary<Type, Action<Array, IntPtr>>? copyManagedToNativeArray;
 		static Dictionary<Type, Action<Array, IntPtr>> CopyManagedToNativeArray {
 			get {
 				if (copyManagedToNativeArray != null)
@@ -1159,7 +1163,7 @@ namespace Android.Runtime {
 			CopyArray (src, typeof (T), dest);
 		}
 
-		public static Array GetArray (IntPtr array_ptr, JniHandleOwnership transfer, Type element_type = null)
+		public static Array? GetArray (IntPtr array_ptr, JniHandleOwnership transfer, Type? element_type = null)
 		{
 			try {
 				return _GetArray (array_ptr, element_type);
@@ -1169,8 +1173,8 @@ namespace Android.Runtime {
 			}
 		}
 
-		static Dictionary<Type, Func<Type, IntPtr, int, Array>> nativeArrayToManaged;
-		static Dictionary<Type, Func<Type, IntPtr, int, Array>> NativeArrayToManaged {
+		static Dictionary<Type, Func<Type?, IntPtr, int, Array>>? nativeArrayToManaged;
+		static Dictionary<Type, Func<Type?, IntPtr, int, Array>> NativeArrayToManaged {
 			get {
 				if (nativeArrayToManaged != null)
 					return nativeArrayToManaged;
@@ -1181,9 +1185,9 @@ namespace Android.Runtime {
 			}
 		}
 
-		static Dictionary<Type, Func<Type, IntPtr, int, Array>> CreateNativeArrayToManaged ()
+		static Dictionary<Type, Func<Type?, IntPtr, int, Array>> CreateNativeArrayToManaged ()
 		{
-			return new Dictionary<Type, Func<Type, IntPtr, int, Array>> () {
+			return new Dictionary<Type, Func<Type?, IntPtr, int, Array>> () {
 				{ typeof (bool), (type, source, len) => {
 					var r = new bool [len];
 					CopyArray (source, r);
@@ -1263,7 +1267,7 @@ namespace Android.Runtime {
 			};
 		}
 
-		static Array _GetArray (IntPtr array_ptr, Type element_type)
+		static Array? _GetArray (IntPtr array_ptr, Type? element_type)
 		{
 			if (array_ptr == IntPtr.Zero)
 				return null;
@@ -1273,7 +1277,7 @@ namespace Android.Runtime {
 
 			int cnt = _GetArrayLength (array_ptr);
 
-			Func<Type, IntPtr, int, Array> converter = GetConverter (NativeArrayToManaged, element_type, array_ptr);
+			var converter = GetConverter (NativeArrayToManaged, element_type, array_ptr);
 
 			return converter (element_type, array_ptr, cnt);
 		}
@@ -1283,20 +1287,20 @@ namespace Android.Runtime {
 			return JniEnvironment.Arrays.GetArrayLength (new JniObjectReference (array_ptr));
 		}
 
-		public static object[] GetObjectArray (IntPtr array_ptr, Type[] element_types)
+		public static object?[]? GetObjectArray (IntPtr array_ptr, Type[] element_types)
 		{
 			if (array_ptr == IntPtr.Zero)
 				return null;
 
 			int cnt = _GetArrayLength (array_ptr);
 
-			Func<Type, IntPtr, int, object> converter = GetConverter (NativeArrayElementToManaged, null, array_ptr);
+			var converter = GetConverter (NativeArrayElementToManaged, null, array_ptr);
 
-			object[] ret = new object [cnt];
+			object?[] ret = new object [cnt];
 
 			for (int i = 0; i < cnt; i++) {
-				Type targetType	= (element_types != null && i < element_types.Length) ? element_types [i] : null;
-				object value    = converter ((targetType == null || targetType.IsValueType) ? null : targetType,
+				Type? targetType	= (element_types != null && i < element_types.Length) ? element_types [i] : null;
+				object? value    = converter ((targetType == null || targetType.IsValueType) ? null : targetType,
 						array_ptr, i);
 
 				ret [i] = value;
@@ -1308,7 +1312,7 @@ namespace Android.Runtime {
 			return ret;
 		}
 
-		public static T[] GetArray<T> (IntPtr array_ptr)
+		public static T[]? GetArray<T> (IntPtr array_ptr)
 		{
 			if (array_ptr == IntPtr.Zero)
 				return null;
@@ -1322,7 +1326,7 @@ namespace Android.Runtime {
 			return ret;
 		}
 
-		public static T[] GetArray<T> (Java.Lang.Object[] array)
+		public static T[]? GetArray<T> (Java.Lang.Object[] array)
 		{
 			if (array == null)
 				return null;
@@ -1339,9 +1343,9 @@ namespace Android.Runtime {
 			if (index < 0 || index >= GetArrayLength (array_ptr))
 				throw new ArgumentOutOfRangeException ("index");
 
-			Func<Type, IntPtr, int, object> converter = GetConverter (NativeArrayElementToManaged, typeof (T), array_ptr);
+			var converter = GetConverter (NativeArrayElementToManaged, typeof (T), array_ptr);
 
-			return (T) converter (typeof (T), array_ptr, index);
+			return (T) converter (typeof (T), array_ptr, index)!;
 		}
 
 		public static int GetArrayLength (IntPtr array_ptr)
@@ -1351,7 +1355,7 @@ namespace Android.Runtime {
 			return _GetArrayLength (array_ptr);
 		}
 
-		public static unsafe IntPtr NewArray (bool[] array)
+		public static unsafe IntPtr NewArray (bool[]? array)
 		{
 			if (array == null)
 				return IntPtr.Zero;
@@ -1365,7 +1369,7 @@ namespace Android.Runtime {
 			return result;
 		}
 
-		public static IntPtr NewArray (string[] array)
+		public static IntPtr NewArray (string[]? array)
 		{
 			if (array == null)
 				return IntPtr.Zero;
@@ -1394,7 +1398,7 @@ namespace Android.Runtime {
 			return JniEnvironment.Arrays.NewObjectArray (length, new JniObjectReference (elementClass), new JniObjectReference (initialElement)).Handle;
 		}
 
-		public static IntPtr NewObjectArray<T>(params T[] values)
+		public static IntPtr NewObjectArray<T>(params T[]? values)
 		{
 			if (values == null)
 				return IntPtr.Zero;
@@ -1425,7 +1429,7 @@ namespace Android.Runtime {
 		static IntPtr GetArrayElementClass<T>(T[] values)
 		{
 			Type    elementType = typeof (T);
-			string  jniClass    = JavaConvert.GetJniClassForType (elementType);
+			var jniClass    = JavaConvert.GetJniClassForType (elementType);
 			if (jniClass != null) {
 				return FindClass (jniClass);
 			}
@@ -1450,7 +1454,7 @@ namespace Android.Runtime {
 			}
 		}
 
-		public static void CopyObjectArray<T>(T[] source, IntPtr destination)
+		public static void CopyObjectArray<T>(T[]? source, IntPtr destination)
 		{
 			if (source == null)
 				return;
@@ -1466,7 +1470,7 @@ namespace Android.Runtime {
 			}
 		}
 
-		public static IntPtr NewArray (IJavaObject[] array)
+		public static IntPtr NewArray (IJavaObject[]? array)
 		{
 			if (array == null)
 				return IntPtr.Zero;
@@ -1484,7 +1488,7 @@ namespace Android.Runtime {
 			return result;
 		}
 
-		static Dictionary<Type, Func<Array, IntPtr>> createManagedToNativeArray;
+		static Dictionary<Type, Func<Array, IntPtr>>? createManagedToNativeArray;
 		static Dictionary<Type, Func<Array, IntPtr>> CreateManagedToNativeArray {
 			get {
 				if (createManagedToNativeArray != null)
@@ -1513,7 +1517,7 @@ namespace Android.Runtime {
 			};
 		}
 
-		public static IntPtr NewArray (Array value, Type elementType = null)
+		public static IntPtr NewArray (Array value, Type? elementType = null)
 		{
 			if (value == null)
 				throw new ArgumentNullException ("value");
@@ -1546,7 +1550,7 @@ namespace Android.Runtime {
 			return creator (value);
 		}
 
-		public static IntPtr NewArray<T> (T[] array)
+		public static IntPtr NewArray<T> (T[]? array)
 		{
 			if (array == null)
 				return IntPtr.Zero;
@@ -1560,8 +1564,8 @@ namespace Android.Runtime {
 			return creator (array);
 		}
 
-		static Dictionary<Type, Action<IntPtr, int, object>> setNativeArrayElement;
-		static Dictionary<Type, Action<IntPtr, int, object>> SetNativeArrayElement {
+		static Dictionary<Type, Action<IntPtr, int, object?>>? setNativeArrayElement;
+		static Dictionary<Type, Action<IntPtr, int, object?>> SetNativeArrayElement {
 			get {
 				if (setNativeArrayElement != null)
 					return setNativeArrayElement;
@@ -1572,43 +1576,43 @@ namespace Android.Runtime {
 			}
 		}
 
-		static Dictionary<Type, Action<IntPtr, int, object>> CreateSetNativeArrayElement ()
+		static Dictionary<Type, Action<IntPtr, int, object?>> CreateSetNativeArrayElement ()
 		{
-			return new Dictionary<Type, Action<IntPtr, int, object>> () {
+			return new Dictionary<Type, Action<IntPtr, int, object?>> () {
 				{ typeof (bool), (dest, index, value) => {
-					var _value = new[]{(bool) value};
+					var _value = new[]{(bool) value!};
 					_SetBooleanArrayRegion (dest, index, _value.Length, _value);
 				} },
 				{ typeof (byte), (dest, index, value) => {
-					var _value = new[]{(byte) value};
+					var _value = new[]{(byte) value!};
 					_SetByteArrayRegion (dest, index, _value.Length, _value);
 				} },
 				{ typeof (char), (dest, index, value) => {
-					var _value = new[]{(char) value};
+					var _value = new[]{(char) value!};
 					_SetCharArrayRegion (dest, index, _value.Length, _value);
 				} },
 				{ typeof (short), (dest, index, value) => {
-					var _value = new[]{(short) value};
+					var _value = new[]{(short) value!};
 					_SetShortArrayRegion (dest, index, _value.Length, _value);
 				} },
 				{ typeof (int), (dest, index, value) => {
-					var _value = new[]{(int) value};
+					var _value = new[]{(int) value!};
 					_SetIntArrayRegion (dest, index, _value.Length, _value);
 				} },
 				{ typeof (long), (dest, index, value) => {
-					var _value = new[]{(long) value};
+					var _value = new[]{(long) value!};
 					_SetLongArrayRegion (dest, index, _value.Length, _value);
 				} },
 				{ typeof (float), (dest, index, value) => {
-					var _value = new[]{(float) value};
+					var _value = new[]{(float) value!};
 					_SetFloatArrayRegion (dest, index, _value.Length, _value);
 				} },
 				{ typeof (double), (dest, index, value) => {
-					var _value = new[]{(double) value};
+					var _value = new[]{(double) value!};
 					_SetDoubleArrayRegion (dest, index, _value.Length, _value);
 				} },
 				{ typeof (string), (dest, index, value) => {
-					IntPtr s = NewString (value.ToString ());
+					IntPtr s = NewString (value!.ToString ());
 					try {
 						SetObjectArrayElement (dest, index, s);
 					} finally {
@@ -1619,7 +1623,7 @@ namespace Android.Runtime {
 					SetObjectArrayElement (dest, index, value == null ? IntPtr.Zero : ((IJavaObject) value).Handle);
 				} },
 				{ typeof (Array), (dest, index, value) => {
-					IntPtr _v = NewArray ((Array) value);
+					IntPtr _v = NewArray ((Array) value!);
 					SetObjectArrayElement (dest, index, _v);
 					JNIEnv.DeleteLocalRef (_v);
 				} },
@@ -1681,12 +1685,13 @@ namespace Android.Runtime {
 			if (index < 0 || index >= GetArrayLength (array_ptr))
 				throw new ArgumentOutOfRangeException ("index");
 
-			Action<IntPtr, int, object> setter = GetConverter (SetNativeArrayElement, typeof (T), array_ptr);
+			var setter = GetConverter (SetNativeArrayElement, typeof (T), array_ptr);
 
 			setter (array_ptr, index, value);
 		}
 
-		public static Java.Lang.Object[] ToObjectArray<T> (T[] array)
+		[return: NotNullIfNotNull (parameterName: "array")]
+		public static Java.Lang.Object[]? ToObjectArray<T> (T[]? array)
 		{
 			if (array == null)
 				return null;

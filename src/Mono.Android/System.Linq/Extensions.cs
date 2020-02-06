@@ -1,6 +1,8 @@
+#nullable enable
+
 using System.Collections;
 using System.Collections.Generic;
-
+using System.Diagnostics.CodeAnalysis;
 using Android.Runtime;
 
 using Java.Interop;
@@ -40,6 +42,7 @@ namespace System.Linq {
 				}
 		}
 
+		[return: MaybeNull]
 		public static IEnumerable<T> ToEnumerable<T> (this Java.Lang.IIterable source)
 		{
 			if (source == null)
@@ -52,6 +55,7 @@ namespace System.Linq {
 				}
 		}
 
+		[return: MaybeNull]
 		internal static IEnumerator<T> ToEnumerator_Dispose<T> (this Java.Util.IIterator source)
 		{
 			using (source)

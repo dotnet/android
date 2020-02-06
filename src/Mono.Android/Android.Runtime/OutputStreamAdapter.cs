@@ -1,4 +1,6 @@
-﻿using System;
+#nullable enable
+
+using System;
 using System.IO;
 
 namespace Android.Runtime
@@ -29,12 +31,12 @@ namespace Android.Runtime
 			BaseStream.Flush ();
 		}
 
-		public override void Write (byte[] buffer)
+		public override void Write (byte[]? buffer)
 		{
-			BaseStream.Write (buffer, 0, buffer.Length);
+			BaseStream.Write (buffer, 0, buffer?.Length ?? 0);
 		}
 
-		public override void Write (byte[] buffer, int offset, int length)
+		public override void Write (byte[]? buffer, int offset, int length)
 		{
 			BaseStream.Write (buffer, offset, length);
 		}
@@ -45,7 +47,7 @@ namespace Android.Runtime
 		}
 
 		[Preserve (Conditional=true)]
-		public static IntPtr ToLocalJniHandle (Stream value)
+		public static IntPtr ToLocalJniHandle (Stream? value)
 		{
 			if (value == null)
 				return IntPtr.Zero;

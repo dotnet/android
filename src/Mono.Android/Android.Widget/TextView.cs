@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using Android.Runtime;
@@ -15,7 +17,7 @@ namespace Android.Widget {
 			JNIEnv.CallVoidMethod (Handle, id_addTextChangedListener, new JValue (watcher));
 		}
 
-		WeakReference implementor_TextWatcher;
+		WeakReference? implementor_TextWatcher;
 
 		public event EventHandler<AfterTextChangedEventArgs> AfterTextChanged {
 			add {

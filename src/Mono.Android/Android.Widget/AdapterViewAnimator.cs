@@ -1,3 +1,5 @@
+#nullable enable
+
 #if ANDROID_12
 using System;
 using System.Collections.Generic;
@@ -74,14 +76,14 @@ namespace Android.Widget {
 		}
 		*/
 
-		protected override Java.Lang.Object RawAdapter {
+		protected override Java.Lang.Object? RawAdapter {
 			get { return JavaObjectExtensions.JavaCast<Java.Lang.Object>(JavaConvert.ToJavaObject (Adapter)); }
 			set { Adapter = JavaConvert.FromJavaObject<Android.Widget.IAdapter>(value); }
 		}
 
                 static IntPtr id_getAdapter;
                 static IntPtr id_setAdapter_Landroid_widget_Adapter_;
-                public Android.Widget.IAdapter Adapter {
+                public Android.Widget.IAdapter? Adapter {
                         [Register ("getAdapter", "()Landroid/widget/Adapter;", "GetGetAdapterHandler")]
                         get {
                                 if (id_getAdapter == IntPtr.Zero)
@@ -107,7 +109,7 @@ namespace Android.Widget {
                                                 Handle,
                                                 ThresholdClass,
                                                 JNIEnv.GetMethodID (ThresholdClass, "setAdapter", "(Landroid/widget/Adapter;)V"),
-                                                new JValue (JNIEnv.ToJniHandle ((IJavaObject) value)));
+                                                new JValue (JNIEnv.ToJniHandle ((IJavaObject?) value)));
                         }
 
                 }

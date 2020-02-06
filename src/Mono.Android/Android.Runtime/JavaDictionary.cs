@@ -1,7 +1,9 @@
+#nullable enable
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
-
+using System.Diagnostics.CodeAnalysis;
 using Android.Runtime;
 
 using Java.Interop;
@@ -69,7 +71,7 @@ namespace Android.Runtime {
 		//
 		//     https://developer.android.com/reference/java/util/Map#get(java.lang.Object)
 		//
-		internal object Get (object key)
+		internal object? Get (object key)
 		{
 			if (id_get == IntPtr.Zero)
 				id_get = JNIEnv.GetMethodID (map_class, "get", "(Ljava/lang/Object;)Ljava/lang/Object;");
@@ -128,7 +130,7 @@ namespace Android.Runtime {
 		//
 		//     https://developer.android.com/reference/java/util/Map#put(K,%20V)
 		//
-		internal void Put (object key, object value)
+		internal void Put (object key, object? value)
 		{
 			if (id_put == IntPtr.Zero)
 				id_put = JNIEnv.GetMethodID (map_class, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
@@ -232,7 +234,7 @@ namespace Android.Runtime {
 			get { return new JavaSet (GetKeys (), JniHandleOwnership.TransferLocalRef); }
 		}
 
-		public object SyncRoot {
+		public object? SyncRoot {
 			get { return null; }
 		}
 
@@ -240,7 +242,7 @@ namespace Android.Runtime {
 			get { return new JavaCollection (GetValues (), JniHandleOwnership.TransferLocalRef); }
 		}
 
-		public object this [object key] {
+		public object? this [object key] {
 			get { return Get (key); }
 			set { Put (key, value); }
 		}
@@ -354,12 +356,12 @@ namespace Android.Runtime {
 		}
 		
 		[Preserve (Conditional=true)]
-		public static IDictionary FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
+		public static IDictionary? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
 
-			IJavaObject inst = (IJavaObject) Java.Lang.Object.PeekObject (handle);
+			var inst = (IJavaObject?) Java.Lang.Object.PeekObject (handle);
 			if (inst == null)
 				inst = new JavaDictionary (handle, transfer);
 			else
@@ -369,7 +371,7 @@ namespace Android.Runtime {
 		}
 
 		[Preserve (Conditional=true)]
-		public static IntPtr ToLocalJniHandle (IDictionary dictionary)
+		public static IntPtr ToLocalJniHandle (IDictionary? dictionary)
 		{
 			if (dictionary == null)
 				return IntPtr.Zero;
@@ -443,6 +445,7 @@ namespace Android.Runtime {
 		//
 		//     https://developer.android.com/reference/java/util/Map#get(java.lang.Object)
 		//
+		[return: MaybeNull]
 		internal V Get (K key)
 		{
 			if (id_get == IntPtr.Zero)
@@ -495,9 +498,10 @@ namespace Android.Runtime {
 			JNIEnv.DeleteLocalRef (r);
 		}
 
+		[MaybeNull]
 		public V this [K key] {
 			get {
-				if (!Contains (key))
+				if (!Contains (key!))
 					throw new KeyNotFoundException ();
 				return Get (key);
 			}
@@ -579,7 +583,9 @@ namespace Android.Runtime {
 		public IEnumerator<KeyValuePair<K, V>> GetEnumerator ()
 		{
 			foreach (K key in Keys)
+#pragma warning disable CS8604 // Possible null reference argument.
 				yield return new KeyValuePair<K, V> (key, this [key]);
+#pragma warning restore CS8604 // Possible null reference argument.
 		}
 
 		public bool Remove (KeyValuePair<K, V> pair)
@@ -620,17 +626,19 @@ namespace Android.Runtime {
 
 		public bool TryGetValue (K key, out V value)
 		{
+#pragma warning disable CS8601 // Possible null reference assignment.
 			value = Get (key);
+#pragma warning restore CS8601 // Possible null reference assignment.
 			return ContainsKey (key);
 		}
 		
 		[Preserve (Conditional=true)]
-		public static IDictionary<K, V> FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
+		public static IDictionary<K, V>? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
 
-			IJavaObject inst = (IJavaObject) Java.Lang.Object.PeekObject (handle);
+			var inst = (IJavaObject?) Java.Lang.Object.PeekObject (handle);
 			if (inst == null)
 				inst = new JavaDictionary<K, V> (handle, transfer);
 			else
@@ -640,7 +648,7 @@ namespace Android.Runtime {
 		}
 
 		[Preserve (Conditional=true)]
-		public static IntPtr ToLocalJniHandle (IDictionary<K, V> dictionary)
+		public static IntPtr ToLocalJniHandle (IDictionary<K, V>? dictionary)
 		{
 			if (dictionary == null)
 				return IntPtr.Zero;
