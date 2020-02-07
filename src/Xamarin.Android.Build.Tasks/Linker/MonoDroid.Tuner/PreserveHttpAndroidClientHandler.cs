@@ -10,7 +10,7 @@ namespace MonoDroid.Tuner
 
 		public override bool IsActiveFor (Mono.Cecil.AssemblyDefinition assembly)
 		{
-			return HttpClientHandlerType != null && (assembly.Name.Name == "System.Net.Http" || assembly.Name.Name == "Mono.Android");
+			return HttpClientHandlerType != null && (assembly.Name.Name == "System.Net.Http" || assembly.Name.Name == "System.Net.Http.WebRequest" || assembly.Name.Name == "Mono.Android");
 		}
 
 		public override SubStepTargets Targets {
@@ -81,6 +81,25 @@ namespace MonoDroid.Tuner
 
 			if (MarkType ("Mono.Android", HttpClientHandlerType))
 				return;
+
+			if (HttpClientHandlerType.Contains("System.Net.Http.WebRequestHandler"))
+			{
+				// we need to preserve two things: internal MonoWebRequestHandler type and an internal ctor in HttpHandler
+				var monoWebRequestHandlerType = GetType ("System.Net.Http", "System.Net.Http.MonoWebRequestHandler");
+				var httpHandlerType = GetType ("System.Net.Http", "System.Net.Http.HttpHandler");
+				
+				if (monoWebRequestHandlerType != null && httpHandlerType != null)
+				{
+					var monoWebRequestHandlerTypeDef = monoWebRequestHandlerType.Resolve ();
+					var httpHandlerTypeDef = httpHandlerType.Resolve ();
+					context.Annotations.Mark (monoWebRequestHandlerTypeDef);
+					context.Annotations.SetPreserve (monoWebRequestHandlerTypeDef, Mono.Linker.TypePreserve.All);
+					context.Annotations.Mark (httpHandlerTypeDef);
+					context.Annotations.SetPreserve (httpHandlerTypeDef, Mono.Linker.TypePreserve.All);
+					// don't do break here because the code below will also handle `System.Net.Http.WebRequestHandler` 
+					// if System.Net.Http.WebRequest.dll is referenced (which is not reqired)
+				}
+			}
 
 			string simpleTypeName;
 			var assemblyName = GetAssemblyNameFromTypeName (HttpClientHandlerType, out simpleTypeName);

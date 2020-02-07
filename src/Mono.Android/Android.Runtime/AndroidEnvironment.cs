@@ -363,6 +363,33 @@ namespace Android.Runtime {
 				handlerType = Type.GetType (envvar, false);
 			else
 				return null;
+
+			if (handlerType == null && envvar.Contains("System.Net.Http.WebRequestHandler"))
+			{
+				// if WebRequestHandler is null it means System.Net.Http.WebRequest assembly is not referenced,
+				// however, we stil can create it since underlying parts of it are located in System.Net.Http.
+				// So basically it can be create via reflection:
+				//
+				//    return new HttpClientHandler(new MonoWebRequestHandler());
+				//
+				Type monoHandlerType = Type.GetType("System.Net.Http.MonoWebRequestHandler, System.Net.Http");
+				if (monoHandlerType == null)
+					return null;
+
+				ConstructorInfo[] internalMonoHandlerCtors = monoHandlerType.GetConstructors(
+					BindingFlags.NonPublic | BindingFlags.Instance);
+				if (internalMonoHandlerCtors.Length < 1)
+					return null;
+
+				object internalMonoHandler = internalMonoHandlerCtors[0].Invoke(null);
+				ConstructorInfo[] httpClientHandlerCtors =
+					typeof(HttpClientHandler).GetConstructors(BindingFlags.NonPublic | BindingFlags.Instance);
+				if (httpClientHandlerCtors.Length < 1)
+					return null;
+
+				return (HttpClientHandler)httpClientHandlerCtors[0].Invoke(new [] { internalMonoHandler });
+			}
+
 			if (handlerType == null)
 				return null;
 			// We don't do any type checking or casting here to avoid dependency on System.Net.Http in Mono.Android.dll
