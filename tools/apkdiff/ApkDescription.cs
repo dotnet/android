@@ -35,12 +35,14 @@ namespace apkdiff {
 			var extension = Path.GetExtension (path);
 			switch (extension.ToLower ()) {
 			case ".apk":
+			case ".aab":
 				var nd = new ApkDescription ();
 
 				nd.LoadApk (path);
 
 				return nd;
 			case ".apkdesc":
+			case ".aabdesc":
 				return LoadDescription (path);
 			default:
 				Program.Error ($"Unknown file extension '{extension}'");
@@ -75,7 +77,7 @@ namespace apkdiff {
 			}
 
 			if (Program.SaveDescriptions) {
-				var descPath = Path.ChangeExtension (path, ".apkdesc");
+				var descPath = Path.ChangeExtension (path, Path.GetExtension (path) + "desc");
 
 				Program.ColorWriteLine ($"Saving apk description to '{descPath}'", ConsoleColor.Yellow);
 				SaveDescription (descPath);

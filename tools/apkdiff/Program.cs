@@ -29,21 +29,21 @@ namespace apkdiff {
 		{
 			var help = false;
 			var options = new OptionSet {
-				$"Usage: {Name}.exe OPTIONS* <package1.apk[desc]> [<package2.apk[desc]>]",
+				$"Usage: {Name}.exe OPTIONS* <package1.[apk|aab][desc]> [<package2.[apk|aab][desc]>]",
 				"",
-				"Compares APK packages content or APK package with content description",
+				"Compares APK/AAB packages content or APK/AAB package with content description",
 				"",
 				"Copyright 2020 Microsoft Corporation",
 				"",
 				"Options:",
 				{ "c|comment=",
-					"Comment to be saved inside .apkdesc file",
+					"Comment to be saved inside description file",
 				  v => Comment = v },
 				{ "h|help|?",
 					"Show this message and exit",
 				  v => help = v != null },
 				{ "s|save-descriptions",
-					"Save .apkdesc files next to the apk package(s)",
+					"Save .[apk|aab]desc description files next to the package(s)",
 				  v => SaveDescriptions = true },
 				{ "v|verbose",
 					"Output information about progress during the run of the tool",
@@ -59,7 +59,7 @@ namespace apkdiff {
 			}
 
 			if (remaining.Count != 2 && (remaining.Count != 1 || !SaveDescriptions)) {
-				Error ("Please specify 2 APK packages to compare or 1 and use -s option.");
+				Error ("Please specify 2 APK/AAB packages to compare or 1 when using the -s option.");
 				Environment.Exit (1);
 			}
 
