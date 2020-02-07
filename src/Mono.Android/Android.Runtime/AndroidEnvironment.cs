@@ -1,5 +1,6 @@
 using System;
 using System.Net;
+using System.Reflection;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Security;
@@ -376,18 +377,21 @@ namespace Android.Runtime {
 				if (monoHandlerType == null)
 					return null;
 
-				ConstructorInfo[] internalMonoHandlerCtors = monoHandlerType.GetConstructors(
-					BindingFlags.NonPublic | BindingFlags.Instance);
+				Type httpClientHandlerType = Type.GetType("System.Net.Http.HttpClientHandler, System.Net.Http");
+				if (httpClientHandlerType == null)
+					return null;
+
+				BindingFlags internalBf = BindingFlags.NonPublic | BindingFlags.Instance;
+				ConstructorInfo[] internalMonoHandlerCtors = monoHandlerType.GetConstructors(internalBf);
 				if (internalMonoHandlerCtors.Length < 1)
 					return null;
 
 				object internalMonoHandler = internalMonoHandlerCtors[0].Invoke(null);
-				ConstructorInfo[] httpClientHandlerCtors =
-					typeof(HttpClientHandler).GetConstructors(BindingFlags.NonPublic | BindingFlags.Instance);
+				ConstructorInfo[] httpClientHandlerCtors = httpClientHandlerType.GetConstructors(internalBf);
 				if (httpClientHandlerCtors.Length < 1)
 					return null;
 
-				return (HttpClientHandler)httpClientHandlerCtors[0].Invoke(new [] { internalMonoHandler });
+				return httpClientHandlerCtors[0].Invoke(new [] { internalMonoHandler });
 			}
 
 			if (handlerType == null)
