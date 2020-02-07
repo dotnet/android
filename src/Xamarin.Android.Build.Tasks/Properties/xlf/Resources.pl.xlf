@@ -28,6 +28,19 @@
         <target state="new">Ignoring Reference Assembly `{0}`.</target>
         <note>{0} - File name of the assembly.</note>
       </trans-unit>
+      <trans-unit id="XA1001">
+        <source>AndroidResgen: Warning while updating resource XML '{0}': {1}</source>
+        <target state="new">AndroidResgen: Warning while updating resource XML '{0}': {1}</target>
+        <note>The following are literal names and should not be translated: AndroidResgen
+{0} - The name of the XML file
+{1} - The exception message of the associated exception</note>
+      </trans-unit>
+      <trans-unit id="XA1002">
+        <source>The closest match found for '{0}' is '{1}', but the capitalization does not match. Please correct the capitalization.</source>
+        <target state="new">The closest match found for '{0}' is '{1}', but the capitalization does not match. Please correct the capitalization.</target>
+        <note>{0} - The user-provided type name
+{1} - The type name found</note>
+      </trans-unit>
       <trans-unit id="XA1005">
         <source>Attempting naive type name fixup for element with ID '{0}' and type '{1}'</source>
         <target state="new">Attempting naive type name fixup for element with ID '{0}' and type '{1}'</target>

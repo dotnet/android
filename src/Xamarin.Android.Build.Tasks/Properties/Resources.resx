@@ -137,6 +137,17 @@
     <value>Ignoring Reference Assembly `{0}`.</value>
     <comment>{0} - File name of the assembly.</comment>
   </data>
+  <data name="XA1001" xml:space="preserve">
+    <value>AndroidResgen: Warning while updating resource XML '{0}': {1}</value>
+    <comment>The following are literal names and should not be translated: AndroidResgen
+{0} - The name of the XML file
+{1} - The exception message of the associated exception</comment>
+  </data>
+  <data name="XA1002" xml:space="preserve">
+    <value>The closest match found for '{0}' is '{1}', but the capitalization does not match. Please correct the capitalization.</value>
+    <comment>{0} - The user-provided type name
+{1} - The type name found</comment>
+  </data>
   <data name="XA1005" xml:space="preserve">
     <value>Attempting naive type name fixup for element with ID '{0}' and type '{1}'</value>
     <comment>{0} - The Android resource ID name</comment>

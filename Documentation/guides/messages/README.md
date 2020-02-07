@@ -70,7 +70,7 @@ ms.date: 01/24/2020
 
 + [XA1000](xa1000.md): There was an problem parsing {file}. This is likely due to incomplete or invalid xml.
 + [XA1001](xa1001.md): AndroidResgen: Warning while updating Resource XML '{filename}': {Message}
-+ [XA1002](xa1002.md): We found a matching key '{Key}' for '{Item}'. But the casing was incorrect. Please correct the casing
++ [XA1002](xa1002.md): The closest match found for '{customViewName}' is '{customViewLookupName}', but the capitalization does not match. Please correct the capitalization.
 + [XA1003](xa1003.md): '{zip}' does not exist. Please rebuild the project.
 + [XA1004](xa1004.md): There was an error opening {filename}. The file is probably corrupt. Try deleting it and building again.
 + [XA1005](xa1005.md): Attempting naive type name fixup for element with ID '{id}' and type '{managedType}'
