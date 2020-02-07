@@ -57,9 +57,7 @@ namespace Xamarin.Android.Tasks
 		{
 			var toolchains  = GetNdkToolchainDirectories (Path.Combine (androidNdkPath, "toolchains"), arch);
 			if (!toolchains.Any ())
-				Diagnostic.Error (5101,
-						"Toolchain directory for target {0} was not found.",
-						arch);
+				Diagnostic.Error (5101, Properties.Resources.XA5101_Toolchain, arch);
 			// Sort the toolchains paths in reverse so that we prefer the latest versions.
 			Array.Sort(toolchains);
 			Array.Reverse(toolchains);
@@ -89,9 +87,7 @@ namespace Xamarin.Android.Tasks
 				toolPaths.Add (path);
                        }
 
-			Diagnostic.Error (5101,
-					"C compiler for target {0} was not found. Tried paths: \"{1}\"",
-					arch, string.Join ("; ", toolPaths));
+			Diagnostic.Error (5101, Properties.Resources.XA5101_C_Compiler, arch, string.Join ("; ", toolPaths));
 			return null;
 		}
 
@@ -190,9 +186,7 @@ namespace Xamarin.Android.Tasks
 		static string[] GetNdkToolchainDirectories (string toolchainsPath, AndroidTargetArch arch)
 		{
 			if (!Directory.Exists (toolchainsPath))
-				Diagnostic.Error (5101,
-						"Missing Android NDK toolchains directory '{0}'. Please install the Android NDK.",
-						toolchainsPath);
+				Diagnostic.Error (5101, Properties.Resources.XA5101, toolchainsPath);
 			switch (arch) {
 			case AndroidTargetArch.Arm:
 				return Directory.GetDirectories (toolchainsPath, "arm-linux-androideabi-*");
