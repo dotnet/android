@@ -223,7 +223,7 @@ namespace Xamarin.Android.Tasks
 			if (resolutionPath == null)
 				resolutionPath = new List<string>();
 
-			CheckAssemblyAttributes (assembly, reader, out string targetFrameworkIdentifier);
+			CheckAssemblyAttributes (assembly, assemblyName, reader, out string targetFrameworkIdentifier);
 
 			LogMessage ("{0}Adding assembly reference for {1}, recursively...", new string (' ', indent), assemblyName);
 			resolutionPath.Add (assemblyName);
@@ -281,14 +281,16 @@ namespace Xamarin.Android.Tasks
 			resolutionPath.RemoveAt (resolutionPath.Count - 1);
 		}
 
-		void CheckAssemblyAttributes (AssemblyDefinition assembly, MetadataReader reader, out string targetFrameworkIdentifier)
+		void CheckAssemblyAttributes (AssemblyDefinition assembly, string assemblyName, MetadataReader reader, out string targetFrameworkIdentifier)
 		{
 			targetFrameworkIdentifier = null;
 
 			foreach (var handle in assembly.GetCustomAttributes ()) {
 				var attribute = reader.GetCustomAttribute (handle);
-				switch (reader.GetCustomAttributeFullName (attribute)) {
+				var attributeFullName = reader.GetCustomAttributeFullName (attribute);
+				switch (attributeFullName) {
 					case "Java.Interop.DoNotPackageAttribute": {
+							LogCodedWarning ("XA0122", Properties.Resources.XA0122, assemblyName, attributeFullName);
 							var arguments = attribute.GetCustomAttributeArguments ();
 							if (arguments.FixedArguments.Length > 0) {
 								string file = arguments.FixedArguments [0].Value?.ToString ();
@@ -315,7 +317,6 @@ namespace Xamarin.Android.Tasks
 												string version = value.Substring (versionIndex, value.Length - versionIndex);
 												var apiLevel = MonoAndroidHelper.SupportedVersions.GetApiLevelFromFrameworkVersion (version);
 												if (apiLevel != null) {
-													var assemblyName = reader.GetString (assembly.Name);
 													api_levels [assemblyName] = apiLevel.Value;
 												}
 											}

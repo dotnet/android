@@ -137,6 +137,10 @@
     <value>Ignoring Reference Assembly `{0}`.</value>
     <comment>{0} - File name of the assembly.</comment>
   </data>
+  <data name="XA0122" xml:space="preserve">
+    <value>Assembly '{0}' is using a deprecated attribute '[assembly: {1}]'. Use a newer version of this NuGet package or notify the library author.</value>
+    <comment>The following are literal names and should not be translated: [assembly: {1}], NuGet</comment>
+  </data>
   <data name="XA1001" xml:space="preserve">
     <value>AndroidResgen: Warning while updating resource XML '{0}': {1}</value>
     <comment>The following are literal names and should not be translated: AndroidResgen
