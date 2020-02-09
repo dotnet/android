@@ -37,9 +37,7 @@ namespace Xamarin.Android.Tasks
 			bool hasNdkVersion = GetNdkToolchainRelease (ndkPath ?? "", out ndkVersion);
 
 			if (!hasNdkVersion) {
-				logError ("XA5101",
-					"Could not locate the Android NDK. Please make sure the Android NDK is installed in the Android SDK Manager, " +
-					"or if using a custom NDK path, please ensure the $(AndroidNdkDirectory) MSBuild property is set to the custom path.");
+				logError ("XA5102", Properties.Resources.XA5102);
 				return false;
 			}
 
@@ -187,8 +185,7 @@ namespace Xamarin.Android.Tasks
 			if (File.Exists (toolPath))
 				return toolPath;
 
-			Diagnostic.Error (5101,
-					$"Toolchain utility '{toolName}' for target {arch} was not found. Tried in path: \"{toolchainDir}\"");
+			Diagnostic.Error (5103, Properties.Resources.XA5103, toolName, arch, toolchainDir);
 			return null;
 		}
 
