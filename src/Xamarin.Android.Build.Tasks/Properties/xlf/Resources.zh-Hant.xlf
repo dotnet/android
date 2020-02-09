@@ -154,6 +154,35 @@
         <target state="new">MultiDex is enabled, but main dex list file '{0}' does not exist.</target>
         <note>The following are literal names and should not be translated: MultiDex</note>
       </trans-unit>
+      <trans-unit id="XA5101">
+        <source>Missing Android NDK toolchains directory '{0}'. Please install the Android NDK.</source>
+        <target state="new">Missing Android NDK toolchains directory '{0}'. Please install the Android NDK.</target>
+        <note>{0} - The path of the missing directory</note>
+      </trans-unit>
+      <trans-unit id="XA5101_C_Compiler">
+        <source>C compiler for target {0} was not found. Tried paths: "{1}"</source>
+        <target state="new">C compiler for target {0} was not found. Tried paths: "{1}"</target>
+        <note>The following are literal names and should not be translated: C
+{0} - The target architecture, such as Arm, Arm64, or X86_64
+{1} - Semicolon-separated list of the paths searched</note>
+      </trans-unit>
+      <trans-unit id="XA5101_Toolchain">
+        <source>Toolchain directory for target {0} was not found.</source>
+        <target state="new">Toolchain directory for target {0} was not found.</target>
+        <note>{0} - The target architecture, such as Arm, Arm64, or X86_64</note>
+      </trans-unit>
+      <trans-unit id="XA5102">
+        <source>Could not locate the Android NDK. Please make sure the Android NDK is installed in the Android SDK Manager, or if using a custom NDK path, please ensure the $(AndroidNdkDirectory) MSBuild property is set to the custom path.</source>
+        <target state="new">Could not locate the Android NDK. Please make sure the Android NDK is installed in the Android SDK Manager, or if using a custom NDK path, please ensure the $(AndroidNdkDirectory) MSBuild property is set to the custom path.</target>
+        <note>The following are literal names and should not be translated: $(AndroidNdkDirectory)</note>
+      </trans-unit>
+      <trans-unit id="XA5103">
+        <source>Toolchain utility '{0}' for target {1} was not found. Tried in path: "{2}"</source>
+        <target state="new">Toolchain utility '{0}' for target {1} was not found. Tried in path: "{2}"</target>
+        <note>{0} - The missing utility name, such as gcc or clang
+{1} - The target architecture, such as Arm, Arm64, or X86_64
+{2} - The path of the directory that was searched</note>
+      </trans-unit>
       <trans-unit id="XA5301">
         <source>Failed to generate Java type for class: {0} due to MAX_PATH: {1}</source>
         <target state="new">Failed to generate Java type for class: {0} due to MAX_PATH: {1}</target>

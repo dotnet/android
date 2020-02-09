@@ -304,6 +304,51 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Missing Android NDK toolchains directory &apos;{0}&apos;. Please install the Android NDK..
+        /// </summary>
+        internal static string XA5101 {
+            get {
+                return ResourceManager.GetString("XA5101", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to C compiler for target {0} was not found. Tried paths: &quot;{1}&quot;.
+        /// </summary>
+        internal static string XA5101_C_Compiler {
+            get {
+                return ResourceManager.GetString("XA5101_C_Compiler", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Toolchain directory for target {0} was not found..
+        /// </summary>
+        internal static string XA5101_Toolchain {
+            get {
+                return ResourceManager.GetString("XA5101_Toolchain", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not locate the Android NDK. Please make sure the Android NDK is installed in the Android SDK Manager, or if using a custom NDK path, please ensure the $(AndroidNdkDirectory) MSBuild property is set to the custom path..
+        /// </summary>
+        internal static string XA5102 {
+            get {
+                return ResourceManager.GetString("XA5102", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Toolchain utility &apos;{0}&apos; for target {1} was not found. Tried in path: &quot;{2}&quot;.
+        /// </summary>
+        internal static string XA5103 {
+            get {
+                return ResourceManager.GetString("XA5103", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to generate Java type for class: {0} due to MAX_PATH: {1}.
         /// </summary>
         internal static string XA5301 {
