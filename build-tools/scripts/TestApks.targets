@@ -353,7 +353,7 @@
     </PropertyGroup>
     <Exec
         Condition=" Exists('$(ApkDiffPath)') "
-        Command="&quot;$(ApkDiffPath)&quot; -v -c &quot;HEAD/`git branch --show-current`: `git rev-parse HEAD`&quot; -s &quot;%(_AllArchives.Identity)&quot;;mv &quot;%(_AllArchives.RelativeDir)\%(_AllArchives.Filename).apkdesc&quot; &quot;%(_AllArchives.RelativeDir)\%(_AllArchives.Filename)-$(Configuration)$(TestsFlavor).apkdesc&quot;"
+        Command="&quot;$(ApkDiffPath)&quot; -v -c &quot;HEAD/`git branch --show-current`: `git rev-parse HEAD`&quot; -s &quot;%(_AllArchives.Identity)&quot;;mv &quot;%(_AllArchives.RelativeDir)\%(_AllArchives.Filename)%(_AllArchives.Extension)desc&quot; &quot;%(_AllArchives.RelativeDir)\%(_AllArchives.Filename)-$(Configuration)$(TestsFlavor)%(_AllArchives.Extension)desc&quot;"
         ContinueOnError="ErrorAndContinue"
     />
   </Target>

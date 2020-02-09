@@ -31,6 +31,7 @@
   <ItemGroup>
     <_TestResultFiles Include="$(XamarinAndroidSourcePath)TestResult-*.xml" />
     <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\*.apkdesc" />
+    <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\*.aabdesc" />
     <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\TestResult-*.xml" />
     <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\compatibility\*" />
     <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\logcat*" />
