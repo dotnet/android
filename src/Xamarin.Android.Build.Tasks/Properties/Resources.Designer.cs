@@ -106,6 +106,24 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to AndroidResgen: Warning while updating resource XML &apos;{0}&apos;: {1}.
+        /// </summary>
+        internal static string XA1001 {
+            get {
+                return ResourceManager.GetString("XA1001", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The closest match found for &apos;{0}&apos; is &apos;{1}&apos;, but the capitalization does not match. Please correct the capitalization..
+        /// </summary>
+        internal static string XA1002 {
+            get {
+                return ResourceManager.GetString("XA1002", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Attempting naive type name fixup for element with ID &apos;{0}&apos; and type &apos;{1}&apos;.
         /// </summary>
         internal static string XA1005 {
