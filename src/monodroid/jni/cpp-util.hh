@@ -51,17 +51,6 @@ namespace xamarin::android
 			return tp;
 		}
 
-	protected:
-		void set_pointer (T* ptr) noexcept
-		{
-			tp = ptr;
-		}
-
-		void set_pointer (const T* ptr) noexcept
-		{
-			tp = ptr;
-		}
-
 	private:
 		T *tp = nullptr;
 	};

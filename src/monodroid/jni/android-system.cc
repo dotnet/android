@@ -25,7 +25,7 @@
 #include "monodroid.h"
 #include "monodroid-glue-internal.hh"
 #include "jni-wrappers.hh"
-#include "xamarin-app.h"
+#include "xamarin-app.hh"
 #include "cpp-util.hh"
 
 #if defined (DEBUG) || !defined (ANDROID)
@@ -251,27 +251,6 @@ AndroidSystem::monodroid_get_system_property (const char *name, char **value)
 		(*value)[len] = '\0';
 	}
 	return len;
-}
-
-size_t
-AndroidSystem::monodroid_read_file_into_memory (const char *path, char *&value)
-{
-	size_t r = 0;
-	value = nullptr;
-	FILE *fp = utils.monodroid_fopen (path, "r");
-	if (fp != nullptr) {
-		struct stat fileStat;
-		if (fstat (fileno (fp), &fileStat) == 0) {
-			r = ADD_WITH_OVERFLOW_CHECK (size_t, static_cast<size_t>(fileStat.st_size), 1);
-			value = new char[r];
-			size_t nread = fread (value, 1, static_cast<size_t>(fileStat.st_size), fp);
-			if (nread == 0 || nread != static_cast<size_t>(fileStat.st_size)) {
-				log_warn(LOG_DEFAULT, "While reading file %s: expected to read %u bytes, actually read %u bytes", path, r, nread);
-			}
-		}
-		fclose (fp);
-	}
-	return r;
 }
 
 #if defined (DEBUG) || !defined (ANDROID)

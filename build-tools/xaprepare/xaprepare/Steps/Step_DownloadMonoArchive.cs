@@ -60,26 +60,39 @@ namespace Xamarin.Android.Prepare
 				localPath = Path.Combine (context.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory), archiveFileName);
 			}
 
-			bool result = await DownloadAndUpackIfNeeded (
-				context,
-				"Mono",
-				context.MonoArchiveCustomUrl,
-				localPath,
-				archiveFileName,
-				Configurables.Paths.MonoSDKSOutputDir
-			);
+			bool result = false;
+			for (uint i = 0; i < 3; i++) {
+				result = await DownloadAndUpackIfNeeded (
+					context,
+					"Mono",
+					context.MonoArchiveCustomUrl,
+					localPath,
+					archiveFileName,
+					Configurables.Paths.MonoSDKSOutputDir
+				);
+
+				if (result)
+					break;
+			}
 
 			if (!result)
 				return false;
 
-			return await DownloadAndUpackIfNeeded (
-				context,
-				"Windows Mono",
-				customUrl: null,
-				localPath: Configurables.Paths.MonoArchiveWindowsLocalPath,
-				archiveFileName: Configurables.Paths.MonoArchiveWindowsFileName,
-				destinationDirectory: Configurables.Paths.BCLWindowsOutputDir
-			);
+			for (uint i = 0; i < 3; i++) {
+				result = await DownloadAndUpackIfNeeded (
+					context,
+					"Windows Mono",
+					customUrl: null,
+					localPath: Configurables.Paths.MonoArchiveWindowsLocalPath,
+					archiveFileName: Configurables.Paths.MonoArchiveWindowsFileName,
+					destinationDirectory: Configurables.Paths.BCLWindowsOutputDir
+				);
+
+				if (result)
+					break;
+			}
+
+			return result;
 		}
 
 		async Task<bool> DownloadAndUpackIfNeeded (Context context, string name, string customUrl, string localPath, string archiveFileName, string destinationDirectory)
@@ -109,7 +122,7 @@ namespace Xamarin.Android.Prepare
 				await Download (context, url, localPath, $"{name} Archive", archiveFileName, downloadStatus);
 
 				if (!File.Exists (localPath)) {
-					Log.InfoLine ($"Download of {name} archive from {url} failed, Mono will be rebuilt");
+					Log.InfoLine ($"Download of {name} archive from {url} failed");
 					return false;
 				}
 			}
@@ -118,7 +131,8 @@ namespace Xamarin.Android.Prepare
 			if (!await Utilities.Unpack (localPath, tempDir, cleanDestinatioBeforeUnpacking: true)) {
 				Utilities.DeleteFileSilent (localPath);
 				Utilities.DeleteDirectorySilent (destinationDirectory);
-				Log.WarningLine ($"Failed to unpack {name} archive {localPath}, Mono will be rebuilt");
+				Log.WarningLine ($"Failed to unpack {name} archive {localPath}");
+				Utilities.DeleteFileSilent (localPath);
 				return false;
 			}
 

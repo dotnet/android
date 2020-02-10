@@ -9,7 +9,7 @@
 
 #include "util.hh"
 #include "cppcompat.hh"
-#include "xamarin-app.h"
+#include "xamarin-app.hh"
 #include "shared-constants.hh"
 #include "basic-android-system.hh"
 
@@ -45,7 +45,6 @@ namespace xamarin::android::internal
 		void  create_update_dir (char *override_dir);
 		int   monodroid_get_system_property (const char *name, char **value);
 		size_t monodroid_get_system_property_from_overrides (const char *name, char ** value);
-		size_t monodroid_read_file_into_memory (const char *path, char *&value);
 		char* get_bundled_app (JNIEnv *env, jstring dir);
 		int   count_override_assemblies ();
 		long  get_gref_gc_threshold ();

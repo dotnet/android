@@ -17,6 +17,8 @@
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
     <TargetFrameworkVersion>v10.0</TargetFrameworkVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\..\..\..\product.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <Import Project="..\..\..\..\Configuration.props" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -48,12 +50,11 @@
     <Reference Include="Mono.Android" />
     <Reference Include="Xamarin.Android.NUnitLite" />
     <Reference Include="Mono.Linq.Expressions">
-      <HintPath>..\..\..\..\packages\mono.linq.expressions.2.0.0\lib\netstandard2.0\Mono.Linq.Expressions.dll</HintPath>
+      <HintPath>..\..\..\..\packages\Mono.Linq.Expressions.2.0.0\lib\netstandard2.0\Mono.Linq.Expressions.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Resources\Resource.designer.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Java.InteropTests\JavaInterop_Tests_Reference.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -56,8 +56,8 @@ Copyright (C) 2016 Xamarin. All rights reserved.
         Include="@(ResolvedUserAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')"
     />
     <_ResolvedUserMonoAndroidAssembliesForDesigner
-        Include="@(ResolvedUserAssemblies)"
-        Condition="'%(ResolvedUserAssemblies.TargetFrameworkIdentifier)' == 'MonoAndroid' Or '%(ResolvedUserAssemblies.HasMonoAndroidReference)' == 'True'"
+        Include="@(_ResolvedUserAssemblies)"
+        Condition="'%(_ResolvedUserAssemblies.TargetFrameworkIdentifier)' == 'MonoAndroid' Or '%(_ResolvedUserAssemblies.HasMonoAndroidReference)' == 'True'"
     />
   </ItemGroup>
 </Target>
@@ -86,6 +86,8 @@ Copyright (C) 2016 Xamarin. All rights reserved.
       AndroidSdkDir="$(_AndroidSdkDirectory)"
       PackageName="$(_AndroidPackage)"
       OutputDirectory="$(IntermediateOutputPath)android"
+      TypemapOutputDirectory="$(_NativeAssemblySourceDir)"
+      GenerateNativeAssembly="false"
       MergedAndroidManifestOutput="$(_ManifestOutput)"
       UseSharedRuntime="$(AndroidUseSharedRuntime)"
       EmbedAssemblies="$(EmbedAssembliesIntoApk)"
@@ -94,7 +96,8 @@ Copyright (C) 2016 Xamarin. All rights reserved.
       ApplicationJavaClass="$(AndroidApplicationJavaClass)"
       FrameworkDirectories="$(_XATargetFrameworkDirectories);$(_XATargetFrameworkDirectories)Facades"
       AcwMapFile="$(_AcwMapFile)"
-      SupportedAbis="$(_BuildTargetAbis)">
+      SupportedAbis="$(_BuildTargetAbis)"
+      InstantRunEnabled="$(_InstantRunEnabled)">
   </GenerateJavaStubs>
   <ManifestMerger
       Condition=" '$(AndroidManifestMerger)' == 'manifestmerger.jar' "
@@ -134,7 +137,8 @@ Copyright (C) 2016 Xamarin. All rights reserved.
       IsBundledApplication="$(BundleAssemblies)"
       SupportedAbis="$(_BuildTargetAbis)"
       AndroidPackageName="$(_AndroidPackage)"
-      EnablePreloadAssembliesDefault="$(_AndroidEnablePreloadAssembliesDefault)">
+      EnablePreloadAssembliesDefault="$(_AndroidEnablePreloadAssembliesDefault)"
+      InstantRunEnabled="$(_InstantRunEnabled)">
     <Output TaskParameter="BuildId" PropertyName="_XamarinBuildId" />
   </GeneratePackageManagerJava>
 </Target>
