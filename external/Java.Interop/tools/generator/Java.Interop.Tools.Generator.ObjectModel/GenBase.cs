@@ -727,10 +727,44 @@ namespace MonoDroid.Generation
 
 		public string RawVisibility => support.Visibility;
 
-		public bool RequiresNew (string memberName)
+		public bool RequiresNew (Property property)
 		{
-			if (ObjectRequiresNew.Contains (memberName))
-				return true;
+			switch (property.AdjustedName.ToLowerInvariant ()) {
+				case "handle":
+				case "gethashcode":
+				case "gettype":
+				case "tostring":
+				case "equals":
+				case "referenceequals":
+					return true;
+			}
+
+			return IsThrowable () && ThrowableRequiresNew.Contains (property.AdjustedName);
+		}
+
+		public bool RequiresNew (string memberName, Method method)
+		{
+			switch (memberName.ToLowerInvariant ()) {
+				case "handle":
+					// The same name as a property always requires new, no matter the parameters
+					return true;
+				case "gethashcode":
+				case "gettype":
+				case "tostring":
+					return method.Parameters.Count == 0;
+				case "equals":
+					if (method.Parameters.Count == 1 && method.Parameters.All (p => p.Type == "object"))
+						return true;
+					if (method.Parameters.Count == 2 && method.Parameters.All (p => p.Type == "object"))
+						return true;
+
+					break;
+				case "referenceequals":
+					if (method.Parameters.Count == 2 && method.Parameters.All (p => p.Type == "object"))
+						return true;
+
+					break;
+			}
 
 			return IsThrowable () && ThrowableRequiresNew.Contains (memberName);
 		}

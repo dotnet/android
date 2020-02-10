@@ -1119,7 +1119,7 @@ namespace MonoDroid.Generation
 				WriteMethodCustomAttributes (method, indent);
 				writer.WriteLine ("{0}{1}{2} abstract {3} {4} ({5});",
 					indent,
-					impl.RequiresNew (method.Name) ? "new " : "",
+					impl.RequiresNew (method.Name, method) ? "new " : "",
 					method.Visibility,
 					opt.GetOutputName (method.RetVal.FullName),
 					name,
@@ -1367,7 +1367,7 @@ namespace MonoDroid.Generation
 				seal = string.Empty;
 			}
 
-			if ((string.IsNullOrEmpty (virt_ov) || virt_ov == " virtual") && type.RequiresNew (method.AdjustedName)) {
+			if ((string.IsNullOrEmpty (virt_ov) || virt_ov == " virtual") && type.RequiresNew (method.AdjustedName, method)) {
 				virt_ov = " new" + virt_ov;
 			}
 			string ret = opt.GetOutputName (method.RetVal.FullName);
@@ -1460,7 +1460,7 @@ namespace MonoDroid.Generation
 				force_override = true;
 
 			string decl_name = property.AdjustedName;
-			string needNew = gen.RequiresNew (decl_name) ? " new" : "";
+			string needNew = gen.RequiresNew (property) ? " new" : "";
 			string virtual_override = String.Empty;
 			bool is_virtual = property.Getter.IsVirtual && (property.Setter == null || property.Setter.IsVirtual);
 			if (with_callbacks && is_virtual) {
@@ -1537,7 +1537,7 @@ namespace MonoDroid.Generation
 			string abstract_name = property.AdjustedName;
 			string visibility = property.Getter.RetVal.IsGeneric ? "protected" : property.Getter.Visibility;
 			if (!overrides) {
-				requiresNew = gen.RequiresNew (abstract_name);
+				requiresNew = gen.RequiresNew (property);
 				WritePropertyCallbacks (property, indent, gen, abstract_name);
 			}
 			writer.WriteLine ("{0}{1}{2} abstract{3} {4} {5} {{",
