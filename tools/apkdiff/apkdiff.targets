@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Target Name="CopyNewtonsoftJsonLicense"
+      AfterTargets="Build">
+    <Copy
+        SourceFiles="..\..\packages\newtonsoft.json\12.0.3\LICENSE.md"
+        DestinationFiles="$(OutputPath)\Newtonsoft.Json-LICENSE.md"
+    />
+  </Target>
+</Project>

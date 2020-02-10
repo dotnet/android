@@ -27,7 +27,7 @@ namespace Monodroid {
 				}
 				return Xamarin.Android.Tasks.MonoAndroidHelper.CopyIfChanged (tmpfile, filename);
 			} catch (Exception e) {
-				logMessage?.Invoke (TraceLevel.Warning, $"AndroidResgen: Warning while updating Resource XML '{filename}': {e.Message}");
+				logMessage?.Invoke (TraceLevel.Warning, string.Format (Xamarin.Android.Tasks.Properties.Resources.XA1001, filename, e.Message));
 				return false;
 			} finally {
 				if (File.Exists (tmpfile)) {

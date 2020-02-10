@@ -162,7 +162,7 @@ namespace Xamarin.Android.Tasks {
 			if (matchingKey.Key != null) {
 				// we have elements with slightly different casing.
 				// lets issue a error.
-				logMessage (TraceLevel.Error, $"We found a matching key '{matchingKey.Key}' for '{name}'. But the casing was incorrect. Please correct the casing");
+				logMessage (TraceLevel.Error, string.Format (Properties.Resources.XA1002, name, matchingKey.Key));
 			}
 			return false;
 		}
