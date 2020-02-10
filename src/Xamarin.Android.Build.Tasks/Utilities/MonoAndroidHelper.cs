@@ -6,6 +6,7 @@ using System.IO;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using System.Security.Cryptography;
+using System.Text;
 using Xamarin.Android.Tools;
 using Xamarin.Tools.Zip;
 
@@ -26,7 +27,8 @@ namespace Xamarin.Android.Tasks
 		public static AndroidVersions   SupportedVersions;
 		public static AndroidSdkInfo    AndroidSdk;
 
-		readonly static byte[] Utf8Preamble = System.Text.Encoding.UTF8.GetPreamble ();
+		public static readonly Encoding UTF8withoutBOM = new UTF8Encoding (encoderShouldEmitUTF8Identifier: false);
+		readonly static byte[] Utf8Preamble = Encoding.UTF8.GetPreamble ();
 
 		public static int RunProcess (string name, string args, DataReceivedEventHandler onOutput, DataReceivedEventHandler onError, Dictionary<string, string> environmentVariables = null)
 		{
@@ -589,14 +591,13 @@ namespace Xamarin.Android.Tasks
 		public static bool SaveCustomViewMapFile (IBuildEngine4 engine, string mapFile, Dictionary<string, HashSet<string>> map)
 		{
 			engine?.RegisterTaskObject (mapFile, map, RegisteredTaskObjectLifetime.Build, allowEarlyCollection: false);
-			using (var stream = new MemoryStream ())
-			using (var writer = new StreamWriter (stream)) {
+			using (var writer = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 				foreach (var i in map.OrderBy (x => x.Key)) {
 					foreach (var v in i.Value.OrderBy (x => x))
 						writer.WriteLine ($"{i.Key};{v}");
 				}
 				writer.Flush ();
-				return CopyIfStreamChanged (stream, mapFile);
+				return CopyIfStreamChanged (writer.BaseStream, mapFile);
 			}
 		}
 

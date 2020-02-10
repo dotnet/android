@@ -435,7 +435,7 @@ namespace Xamarin.Android.Tasks
 			var stdout_completed = new ManualResetEvent (false);
 			var stderr_completed = new ManualResetEvent (false);
 
-			using (var sw = new StreamWriter (responseFile, append: false, encoding: new UTF8Encoding (encoderShouldEmitUTF8Identifier: false))) {
+			using (var sw = new StreamWriter (responseFile, append: false, encoding: MonoAndroidHelper.UTF8withoutBOM)) {
 				sw.WriteLine (aotOptions + " " + QuoteFileName (assembly));
 			}
 

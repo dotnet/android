@@ -98,8 +98,7 @@ namespace Xamarin.Android.Tasks
 			Func<string,string,bool> fileNameEq = (a,b) => a.Equals (b, StringComparison.OrdinalIgnoreCase);
 			assemblies = assemblies.Where (a => fileNameEq (a.ItemSpec, mainFileName)).Concat (assemblies.Where (a => !fileNameEq (a.ItemSpec, mainFileName))).ToList ();
 
-			using (var stream = new MemoryStream ())
-			using (var pkgmgr = new StreamWriter (stream)) {
+			using (var pkgmgr = MemoryStreamPool.Shared.CreateStreamWriter (MonoAndroidHelper.UTF8withoutBOM)) {
 				pkgmgr.WriteLine ("package mono;");
 
 				// Write all the user assemblies
@@ -133,7 +132,7 @@ namespace Xamarin.Android.Tasks
 				// Only copy to the real location if the contents actually changed
 				var dest = Path.GetFullPath (Path.Combine (OutputDirectory, "MonoPackageManager_Resources.java"));
 
-				MonoAndroidHelper.CopyIfStreamChanged (stream, dest);
+				MonoAndroidHelper.CopyIfStreamChanged (pkgmgr.BaseStream, dest);
 			}
 
 			AddEnvironment ();
@@ -250,52 +249,48 @@ namespace Xamarin.Android.Tasks
 				throw new InvalidOperationException ($"Unsupported BoundExceptionType value '{BoundExceptionType}'");
 			}
 
-			using (var ms = new MemoryStream ()) {
-				var utf8Encoding = new UTF8Encoding (false);
-				foreach (string abi in SupportedAbis) {
-					ms.SetLength (0);
-					NativeAssemblerTargetProvider asmTargetProvider;
-					string baseAsmFilePath = Path.Combine (EnvironmentOutputDirectory, $"environment.{abi.ToLowerInvariant ()}");
-					string asmFilePath = $"{baseAsmFilePath}.s";
-					switch (abi.Trim ()) {
-						case "armeabi-v7a":
-							asmTargetProvider = new ARMNativeAssemblerTargetProvider (false);
-							break;
+			foreach (string abi in SupportedAbis) {
+				NativeAssemblerTargetProvider asmTargetProvider;
+				string baseAsmFilePath = Path.Combine (EnvironmentOutputDirectory, $"environment.{abi.ToLowerInvariant ()}");
+				string asmFilePath = $"{baseAsmFilePath}.s";
+				switch (abi.Trim ()) {
+					case "armeabi-v7a":
+						asmTargetProvider = new ARMNativeAssemblerTargetProvider (false);
+						break;
 
-						case "arm64-v8a":
-							asmTargetProvider = new ARMNativeAssemblerTargetProvider (true);
-							break;
+					case "arm64-v8a":
+						asmTargetProvider = new ARMNativeAssemblerTargetProvider (true);
+						break;
 
-						case "x86":
-							asmTargetProvider = new X86NativeAssemblerTargetProvider (false);
-							break;
+					case "x86":
+						asmTargetProvider = new X86NativeAssemblerTargetProvider (false);
+						break;
 
-						case "x86_64":
-							asmTargetProvider = new X86NativeAssemblerTargetProvider (true);
-							break;
+					case "x86_64":
+						asmTargetProvider = new X86NativeAssemblerTargetProvider (true);
+						break;
 
-						default:
-							throw new InvalidOperationException ($"Unknown ABI {abi}");
-					}
+					default:
+						throw new InvalidOperationException ($"Unknown ABI {abi}");
+				}
 
-					var asmgen = new ApplicationConfigNativeAssemblyGenerator (asmTargetProvider, baseAsmFilePath, environmentVariables, systemProperties) {
-						IsBundledApp = IsBundledApplication,
-						UsesMonoAOT = usesMonoAOT,
-						UsesMonoLLVM = EnableLLVM,
-						UsesAssemblyPreload = usesAssemblyPreload,
-						MonoAOTMode = aotMode.ToString ().ToLowerInvariant (),
-						AndroidPackageName = AndroidPackageName,
-						BrokenExceptionTransitions = brokenExceptionTransitions,
-						PackageNamingPolicy = pnp,
-						BoundExceptionType = boundExceptionType,
-						InstantRunEnabled = InstantRunEnabled,
-					};
+				var asmgen = new ApplicationConfigNativeAssemblyGenerator (asmTargetProvider, baseAsmFilePath, environmentVariables, systemProperties) {
+					IsBundledApp = IsBundledApplication,
+					UsesMonoAOT = usesMonoAOT,
+					UsesMonoLLVM = EnableLLVM,
+					UsesAssemblyPreload = usesAssemblyPreload,
+					MonoAOTMode = aotMode.ToString ().ToLowerInvariant (),
+					AndroidPackageName = AndroidPackageName,
+					BrokenExceptionTransitions = brokenExceptionTransitions,
+					PackageNamingPolicy = pnp,
+					BoundExceptionType = boundExceptionType,
+					InstantRunEnabled = InstantRunEnabled,
+				};
 
-					using (var sw = new StreamWriter (ms, utf8Encoding, bufferSize: 8192, leaveOpen: true)) {
-						asmgen.Write (sw);
-						MonoAndroidHelper.CopyIfStreamChanged (ms, asmFilePath);
-					}
-
+				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter (MonoAndroidHelper.UTF8withoutBOM)) {
+					asmgen.Write (sw);
+					sw.Flush ();
+					MonoAndroidHelper.CopyIfStreamChanged (sw.BaseStream, asmFilePath);
 				}
 			}
 
