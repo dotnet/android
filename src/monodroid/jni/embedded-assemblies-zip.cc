@@ -74,19 +74,6 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, monodroid_sh
 		if (compression_method != 0)
 			continue;
 
-#if defined (DEBUG)
-		if (utils.ends_with (file_name, ".jm")) {
-			md_mmap_info map_info   = md_mmap_apk_file (fd, data_offset, file_size, file_name, apk_name);
-			add_type_mapping (&java_to_managed_maps, apk_name, file_name, (const char*)map_info.area);
-			continue;
-		}
-
-		if (utils.ends_with (file_name, ".mj")) {
-			md_mmap_info map_info   = md_mmap_apk_file (fd, data_offset, file_size, file_name, apk_name);
-			add_type_mapping (&managed_to_java_maps, apk_name, file_name, (const char*)map_info.area);
-			continue;
-		}
-#endif
 		if (strncmp (prefix, file_name, prefix_len) != 0)
 			continue;
 

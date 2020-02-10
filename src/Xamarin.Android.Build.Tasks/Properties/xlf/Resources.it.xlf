@@ -154,6 +154,11 @@
         <target state="new">MultiDex is enabled, but main dex list file '{0}' does not exist.</target>
         <note>The following are literal names and should not be translated: MultiDex</note>
       </trans-unit>
+      <trans-unit id="XA4308">
+        <source>Failed to generate type maps</source>
+        <target state="new">Failed to generate type maps</target>
+        <note />
+      </trans-unit>
       <trans-unit id="XA5101">
         <source>Missing Android NDK toolchains directory '{0}'. Please install the Android NDK.</source>
         <target state="new">Missing Android NDK toolchains directory '{0}'. Please install the Android NDK.</target>

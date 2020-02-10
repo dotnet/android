@@ -21,6 +21,8 @@
     <AndroidDexTool Condition=" '$(AndroidDexTool)' == '' ">d8</AndroidDexTool>
     <AndroidPackageFormat>aab</AndroidPackageFormat>
     <_MonoAndroidTest>..\..\src\Mono.Android\Test\</_MonoAndroidTest>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <Import Project="$(_MonoAndroidTest)Mono.Android-Test.Shared.projitems" Label="Shared" Condition="Exists('$(_MonoAndroidTest)Mono.Android-Test.Shared.projitems')" />
   <Import Project="..\..\Configuration.props" />

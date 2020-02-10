@@ -57,9 +57,13 @@ namespace Android.Runtime {
 		static UncaughtExceptionHandler defaultUncaughtExceptionHandler;
 
 		internal static bool IsRunningOnDesktop;
+		internal static bool LogTypemapMissStackTrace;
 
 		static AndroidRuntime androidRuntime;
 		static BoundExceptionType BoundExceptionType;
+
+		[ThreadStatic]
+		static byte[] mvid_bytes;
 
 		internal    static      AndroidValueManager AndroidValueManager;
 
@@ -145,6 +149,8 @@ namespace Android.Runtime {
 				total_timing_sequence = monodroid_timing_start ("JNIEnv.Initialize start");
 				partial_timing_sequence = monodroid_timing_start (null);
 			}
+
+			LogTypemapMissStackTrace = (args->logCategories & (uint)LogCategories.Assembly) != 0;
 
 			gref_gc_threshold = args->grefGcThreshold;
 
@@ -632,16 +638,55 @@ namespace Android.Runtime {
 		}
 
 		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern IntPtr monodroid_typemap_managed_to_java (string managed);
+		static extern IntPtr monodroid_typemap_managed_to_java (byte[] mvid, int token);
+
+		internal static void LogTypemapTrace (StackTrace st)
+		{
+			string trace = st.ToString ()?.Trim ();
+			if (String.IsNullOrEmpty (trace))
+				return;
+
+			monodroid_log (LogLevel.Warn, LogCategories.Assembly, "typemap: called from");
+			foreach (string line in trace.Split ('\n')) {
+				monodroid_log (LogLevel.Warn, LogCategories.Assembly, line);
+			}
+		}
+
+		internal static string TypemapManagedToJava (Type type)
+		{
+			if (mvid_bytes == null)
+				mvid_bytes = new byte[16];
+
+			Span<byte> mvid = new Span<byte>(mvid_bytes);
+			byte[] mvid_slow = null;
+			if (!type.Module.ModuleVersionId.TryWriteBytes (mvid)) {
+				monodroid_log (LogLevel.Warn, LogCategories.Default, $"Failed to obtain module MVID using the fast method, falling back to the slow one");
+				mvid_slow = type.Module.ModuleVersionId.ToByteArray ();
+			}
+
+			IntPtr ret = monodroid_typemap_managed_to_java (mvid_slow == null ? mvid_bytes : mvid_slow, type.MetadataToken);
+
+			if (ret == IntPtr.Zero) {
+				if (LogTypemapMissStackTrace) {
+					monodroid_log (LogLevel.Warn, LogCategories.Default, $"typemap: failed to map managed type to Java type: {type.AssemblyQualifiedName} (Module ID: {type.Module.ModuleVersionId}; Type token: {type.MetadataToken})");
+					LogTypemapTrace (new StackTrace (true));
+				}
+
+				return null;
+			}
+
+			return Marshal.PtrToStringAnsi (ret);
+		}
 
 		public static string GetJniName (Type type)
 		{
 			if (type == null)
 				throw new ArgumentNullException ("type");
-			var java  = monodroid_typemap_managed_to_java (type.FullName + ", " + type.Assembly.GetName ().Name);
-			return java == IntPtr.Zero
+
+			string java = TypemapManagedToJava (type);
+			return java == null
 				? JavaNativeTypeManager.ToJniName (type)
-				: Marshal.PtrToStringAnsi (java);
+				: java;
 		}
 
 		public static IntPtr ToJniHandle (IJavaObject value)

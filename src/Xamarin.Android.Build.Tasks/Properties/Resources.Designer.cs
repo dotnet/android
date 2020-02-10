@@ -303,6 +303,14 @@ namespace Xamarin.Android.Tasks.Properties {
             }
         }
         
+        ///   Looks up a localized string similar to Failed to generate type maps.
+        /// </summary>
+        internal static string XA4308 {
+            get {
+                return ResourceManager.GetString("XA4308", resourceCulture);
+            }
+        }
+        
         /// <summary>
         ///   Looks up a localized string similar to Missing Android NDK toolchains directory &apos;{0}&apos;. Please install the Android NDK..
         /// </summary>

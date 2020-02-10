@@ -8,6 +8,9 @@ namespace Xamarin.Android.Tasks
 		public abstract bool Is64Bit { get; }
 		public abstract string PointerFieldType { get; }
 		public abstract string TypePrefix { get; }
+		public abstract string AbiName { get; }
+		public abstract uint MapModulesAlignBits { get; }
+		public abstract uint MapJavaAlignBits { get; }
 
 		public virtual string MapType <T> ()
 		{
@@ -30,22 +33,27 @@ namespace Xamarin.Android.Tasks
 
 		public virtual uint GetTypeSize <T> ()
 		{
-			if (typeof(T) == typeof(byte))
+			return GetTypeSize (typeof(T));
+		}
+
+		public virtual uint GetTypeSize (Type type)
+		{
+			if (type == typeof(byte))
 				return 1u;
 
-			if (typeof(T) == typeof(bool))
+			if (type == typeof(bool))
 				return 1u;
 
-			if (typeof(T) == typeof(string))
+			if (type == typeof(string))
 				return GetPointerSize();
 
-			if (typeof(T) == typeof(Int32) || typeof(T) == typeof(UInt32))
+			if (type == typeof(Int32) || type == typeof(UInt32))
 				return 4u;
 
-			if (typeof(T) == typeof(Int64) || typeof(T) == typeof(UInt64))
+			if (type == typeof(Int64) || type == typeof(UInt64))
 				return 8u;
 
-			throw new InvalidOperationException ($"Unable to map managed type {typeof(T)} to native assembly type");
+			throw new InvalidOperationException ($"Unable to map managed type {type} to native assembly type");
 		}
 
 		public virtual uint GetStructureAlignment (bool hasPointers)

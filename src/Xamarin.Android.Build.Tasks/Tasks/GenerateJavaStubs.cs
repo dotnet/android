@@ -42,6 +42,12 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string [] SupportedAbis { get; set; }
 
+		[Required]
+		public string TypemapOutputDirectory { get; set; }
+
+		[Required]
+		public bool GenerateNativeAssembly { get; set; }
+
 		public string ManifestTemplate { get; set; }
 		public string[] MergedManifestDocuments { get; set; }
 
@@ -71,6 +77,9 @@ namespace Xamarin.Android.Tasks
 		
 		public string ApplicationJavaClass { get; set; }
 
+		[Output]
+		public string [] GeneratedBinaryTypeMaps { get; set; }
+
 		internal const string AndroidSkipJavaStubGeneration = "AndroidSkipJavaStubGeneration";
 
 		public override bool RunTask ()
@@ -92,8 +101,6 @@ namespace Xamarin.Android.Tasks
 				// by ensuring that the target outputs have been deleted.
 				Files.DeleteFile (MergedAndroidManifestOutput, Log);
 				Files.DeleteFile (AcwMapFile, Log);
-				Files.DeleteFile (Path.Combine (OutputDirectory, "typemap.jm"), Log);
-				Files.DeleteFile (Path.Combine (OutputDirectory, "typemap.mj"), Log);
 			}
 
 			return !Log.HasLoggedErrors;
@@ -110,73 +117,95 @@ namespace Xamarin.Android.Tasks
 			}
 
 			// Put every assembly we'll need in the resolver
+			bool hasExportReference = false;
+			bool haveMonoAndroid = false;
+			var allTypemapAssemblies = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+			var userAssemblies = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase);
 			foreach (var assembly in ResolvedAssemblies) {
-				if (bool.TryParse (assembly.GetMetadata (AndroidSkipJavaStubGeneration), out bool value) && value) {
+				bool value;
+				if (bool.TryParse (assembly.GetMetadata (AndroidSkipJavaStubGeneration), out value) && value) {
 					Log.LogDebugMessage ($"Skipping Java Stub Generation for {assembly.ItemSpec}");
 					continue;
 				}
+
+				bool addAssembly = false;
+				string fileName = Path.GetFileName (assembly.ItemSpec);
+				if (!hasExportReference && String.Compare ("Mono.Android.Export.dll", fileName, StringComparison.OrdinalIgnoreCase) == 0) {
+					hasExportReference = true;
+					addAssembly = true;
+				} else if (!haveMonoAndroid && String.Compare ("Mono.Android.dll", fileName, StringComparison.OrdinalIgnoreCase) == 0) {
+					haveMonoAndroid = true;
+					addAssembly = true;
+				} else if (MonoAndroidHelper.FrameworkAssembliesToTreatAsUserAssemblies.Contains (fileName)) {
+					if (!bool.TryParse (assembly.GetMetadata (AndroidSkipJavaStubGeneration), out value) || !value) {
+						string name = Path.GetFileNameWithoutExtension (fileName);
+						if (!userAssemblies.ContainsKey (name))
+							userAssemblies.Add (name, assembly.ItemSpec);
+						addAssembly = true;
+					}
+				}
+
+				if (addAssembly) {
+					allTypemapAssemblies.Add (assembly.ItemSpec);
+				}
+
 				res.Load (assembly.ItemSpec);
 			}
 
-			// However we only want to look for JLO types in user code
-			List<string> assemblies = new List<string> ();
+			// However we only want to look for JLO types in user code for Java stub code generation
 			foreach (var asm in ResolvedUserAssemblies) {
 				if (bool.TryParse (asm.GetMetadata (AndroidSkipJavaStubGeneration), out bool value) && value) {
 					Log.LogDebugMessage ($"Skipping Java Stub Generation for {asm.ItemSpec}");
 					continue;
 				}
-				if (!assemblies.All (x => Path.GetFileName (x) != Path.GetFileName (asm.ItemSpec)))
-					continue;
-				Log.LogDebugMessage ($"Adding {asm.ItemSpec} to assemblies.");
-				assemblies.Add (asm.ItemSpec);
-			}
-			foreach (var asm in MonoAndroidHelper.GetFrameworkAssembliesToTreatAsUserAssemblies (ResolvedAssemblies)) {
-				if (bool.TryParse (asm.GetMetadata (AndroidSkipJavaStubGeneration), out bool value) && value) {
-					Log.LogDebugMessage ($"Skipping Java Stub Generation for {asm.ItemSpec}");
-					continue;
-				}
-				if (!assemblies.All (x => Path.GetFileName (x) != Path.GetFileName (asm.ItemSpec)))
-					continue;
-				Log.LogDebugMessage ($"Adding {asm.ItemSpec} to assemblies.");
-				assemblies.Add (asm.ItemSpec);
+				allTypemapAssemblies.Add (asm.ItemSpec);
+				userAssemblies.Add (Path.GetFileNameWithoutExtension (asm.ItemSpec), asm.ItemSpec);
 			}
 
 			// Step 1 - Find all the JLO types
 			var scanner = new JavaTypeScanner (this.CreateTaskLogger ()) {
 				ErrorOnCustomJavaObject     = ErrorOnCustomJavaObject,
 			};
-			var all_java_types = scanner.GetJavaTypes (assemblies, res);
 
-			WriteTypeMappings (all_java_types);
+			List<TypeDefinition> allJavaTypes = scanner.GetJavaTypes (allTypemapAssemblies, res);
 
-			var java_types = all_java_types
-				.Where (t => !JavaTypeScanner.ShouldSkipJavaCallableWrapperGeneration (t))
-				.ToArray ();
+			// Step 2 - Generate type maps
+			//   Type mappings need to use all the assemblies, always.
+			WriteTypeMappings (res, allJavaTypes);
 
-			// Step 2 - Generate Java stub code
+			var javaTypes = new List<TypeDefinition> ();
+			foreach (TypeDefinition td in allJavaTypes) {
+				if (!userAssemblies.ContainsKey (td.Module.Assembly.Name.Name) || JavaTypeScanner.ShouldSkipJavaCallableWrapperGeneration (td)) {
+					continue;
+				}
+
+				javaTypes.Add (td);
+			}
+
+			// Step 3 - Generate Java stub code
 			var success = Generator.CreateJavaSources (
 				Log,
-				java_types,
+				javaTypes,
 				Path.Combine (OutputDirectory, "src"),
 				ApplicationJavaClass,
 				AndroidSdkPlatform,
 				UseSharedRuntime,
 				int.Parse (AndroidSdkPlatform) <= 10,
-				ResolvedAssemblies.Any (assembly => Path.GetFileName (assembly.ItemSpec) == "Mono.Android.Export.dll"));
+				hasExportReference);
 			if (!success)
 				return;
 
 			// We need to save a map of .NET type -> ACW type for resource file fixups
-			var managed = new Dictionary<string, TypeDefinition> (java_types.Length, StringComparer.Ordinal);
-			var java    = new Dictionary<string, TypeDefinition> (java_types.Length, StringComparer.Ordinal);
+			var managed = new Dictionary<string, TypeDefinition> (javaTypes.Count, StringComparer.Ordinal);
+			var java    = new Dictionary<string, TypeDefinition> (javaTypes.Count, StringComparer.Ordinal);
 
 			var managedConflicts = new Dictionary<string, List<string>> (0, StringComparer.Ordinal);
 			var javaConflicts    = new Dictionary<string, List<string>> (0, StringComparer.Ordinal);
 
 			// Allocate a MemoryStream with a reasonable guess at its capacity
-			using (var stream = new MemoryStream (java_types.Length * 32))
+			using (var stream = new MemoryStream (javaTypes.Count * 32))
 			using (var acw_map = new StreamWriter (stream)) {
-				foreach (var type in java_types) {
+				foreach (TypeDefinition type in javaTypes) {
 					string managedKey = type.FullName.Replace ('/', '.');
 					string javaKey = JavaNativeTypeManager.ToJniName (type).Replace ('/', '.');
 
@@ -241,7 +270,7 @@ namespace Xamarin.Android.Tasks
 			manifest.PackageName = PackageName;
 			manifest.ApplicationName = ApplicationName ?? PackageName;
 			manifest.Placeholders = ManifestPlaceholders;
-			manifest.Assemblies.AddRange (assemblies);
+			manifest.Assemblies.AddRange (userAssemblies.Values);
 			manifest.Resolver = res;
 			manifest.SdkDir = AndroidSdkDir;
 			manifest.SdkVersion = AndroidSdkPlatform;
@@ -250,7 +279,7 @@ namespace Xamarin.Android.Tasks
 			manifest.NeedsInternet = NeedsInternet;
 			manifest.InstantRunEnabled = InstantRunEnabled;
 
-			var additionalProviders = manifest.Merge (Log, all_java_types, ApplicationJavaClass, EmbedAssemblies, BundledWearApplicationName, MergedManifestDocuments);
+			var additionalProviders = manifest.Merge (Log, allJavaTypes, ApplicationJavaClass, EmbedAssemblies, BundledWearApplicationName, MergedManifestDocuments);
 
 			using (var stream = new MemoryStream ()) {
 				manifest.Save (Log, stream);
@@ -272,7 +301,7 @@ namespace Xamarin.Android.Tasks
 			// Create additional application java sources.
 			StringWriter regCallsWriter = new StringWriter ();
 			regCallsWriter.WriteLine ("\t\t// Application and Instrumentation ACWs must be registered first.");
-			foreach (var type in java_types) {
+			foreach (var type in javaTypes) {
 				if (JavaNativeTypeManager.IsApplication (type) || JavaNativeTypeManager.IsInstrumentation (type)) {
 					string javaKey = JavaNativeTypeManager.ToJniName (type).Replace ('/', '.');				
 					regCallsWriter.WriteLine ("\t\tmono.android.Runtime.register (\"{0}\", {1}.class, {1}.__md_methods);",
@@ -301,75 +330,12 @@ namespace Xamarin.Android.Tasks
 			MonoAndroidHelper.CopyIfStringChanged (template, Path.Combine (destDir, filename));
 		}
 
-		void WriteTypeMappings (List<TypeDefinition> types)
+		void WriteTypeMappings (DirectoryAssemblyResolver resolver, List<TypeDefinition> types)
 		{
-			void logger (TraceLevel level, string value) => Log.LogDebugMessage (value);
-			TypeNameMapGenerator createTypeMapGenerator () => UseSharedRuntime ?
-				new TypeNameMapGenerator (types, logger) :
-				new TypeNameMapGenerator (ResolvedAssemblies.Select (p => p.ItemSpec), logger);
-			using (var gen = createTypeMapGenerator ()) {
-				using (var ms = new MemoryStream ()) {
-					UpdateWhenChanged (Path.Combine (OutputDirectory, "typemap.jm"), "jm", ms, gen.WriteJavaToManaged);
-					UpdateWhenChanged (Path.Combine (OutputDirectory, "typemap.mj"), "mj", ms, gen.WriteManagedToJava);
-				}
-			}
-		}
-
-		void UpdateWhenChanged (string path, string type, MemoryStream ms, Action<Stream> generator)
-		{
-			if (!EmbedAssemblies) {
-				ms.SetLength (0);
-				generator (ms);
-				MonoAndroidHelper.CopyIfStreamChanged (ms, path);
-			}
-
-			string dataFilePath = $"{path}.inc";
-			using (var stream = new NativeAssemblyDataStream ()) {
-				if (EmbedAssemblies) {
-					generator (stream);
-					stream.EndOfFile ();
-					MonoAndroidHelper.CopyIfStreamChanged (stream, dataFilePath);
-				} else {
-					stream.EmptyFile ();
-				}
-
-				var generatedFiles = new List <ITaskItem> ();
-				string mappingFieldName = $"{type}_typemap";
-				string dataFileName = Path.GetFileName (dataFilePath);
-				NativeAssemblerTargetProvider asmTargetProvider;
-				var utf8Encoding = new UTF8Encoding (false);
-				foreach (string abi in SupportedAbis) {
-					ms.SetLength (0);
-					switch (abi.Trim ()) {
-						case "armeabi-v7a":
-							asmTargetProvider = new ARMNativeAssemblerTargetProvider (is64Bit: false);
-							break;
-
-						case "arm64-v8a":
-							asmTargetProvider = new ARMNativeAssemblerTargetProvider (is64Bit: true);
-							break;
-
-						case "x86":
-							asmTargetProvider = new X86NativeAssemblerTargetProvider (is64Bit: false);
-							break;
-
-						case "x86_64":
-							asmTargetProvider = new X86NativeAssemblerTargetProvider (is64Bit: true);
-							break;
-
-						default:
-							throw new InvalidOperationException ($"Unknown ABI {abi}");
-					}
-
-					var asmgen = new TypeMappingNativeAssemblyGenerator (asmTargetProvider, stream, dataFileName, stream.MapByteCount, mappingFieldName);
-					asmgen.EmbedAssemblies = EmbedAssemblies;
-					string asmFileName = $"{path}.{abi.Trim ()}.s";
-					using (var sw = new StreamWriter (ms, utf8Encoding, bufferSize: 8192, leaveOpen: true)) {
-						asmgen.Write (sw, dataFileName);
-						MonoAndroidHelper.CopyIfStreamChanged (ms, asmFileName);
-					}
-				}
-			}
+			var tmg = new TypeMapGenerator ((string message) => Log.LogDebugMessage (message), SupportedAbis);
+			if (!tmg.Generate (types, TypemapOutputDirectory, GenerateNativeAssembly))
+				throw new XamarinAndroidException (4308, Properties.Resources.XA4308);
+			GeneratedBinaryTypeMaps = tmg.GeneratedBinaryTypeMaps.ToArray ();
 		}
 	}
 }

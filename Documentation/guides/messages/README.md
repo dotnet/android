@@ -104,6 +104,7 @@ ms.date: 01/24/2020
 + [XA4305](xa4305.md): MultiDex is enabled, but '{nameof (MultiDexMainDexListFile)}' was not specified.
 + [XA4306](xa4306.md): R8 does not support \`@(MultiDexMainDexList)\` files when android:minSdkVersion >= 21
 + [XA4307](xa4307.md): Invalid ProGuard configuration file.
++ [XA4308](xa4308.md): Failed to generate type maps
 
 ## XA5xxx: GCC and toolchain
 

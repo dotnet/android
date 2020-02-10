@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 
@@ -373,32 +374,27 @@ namespace Java.InteropTests
 			Assert.IsNull (ignore_t2, string.Format ("No exception should be thrown [t2]! Got: {0}", ignore_t2));
 		}
 
-		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr monodroid_typemap_java_to_managed (string java);
-
 		[Test]
 		public void JavaToManagedTypeMapping ()
 		{
-			var m = monodroid_typemap_java_to_managed ("android/content/res/Resources");
-			Assert.AreNotEqual (IntPtr.Zero, m);
-			m = monodroid_typemap_java_to_managed ("this/type/does/not/exist");
-			Assert.AreEqual (IntPtr.Zero, m);
+			Type m = Java.Interop.TypeManager.GetJavaToManagedType ("android/content/res/Resources");
+			Assert.AreNotEqual (null, m);
+			m = Java.Interop.TypeManager.GetJavaToManagedType ("this/type/does/not/exist");
+			Assert.AreEqual (null, m);
 		}
 
 		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr monodroid_typemap_managed_to_java (string java);
-
-		string GetTypeName (Type type)
-		{
-			return type.FullName + ", " + type.Assembly.GetName ().Name;
-		}
+		static extern IntPtr monodroid_typemap_managed_to_java (byte[] mvid, int token);
 
 		[Test]
 		public void ManagedToJavaTypeMapping ()
 		{
-			var m = monodroid_typemap_managed_to_java (GetTypeName (typeof (Activity)));
+			Type type = typeof(Activity);
+			var m = monodroid_typemap_managed_to_java (type.Module.ModuleVersionId.ToByteArray (), type.MetadataToken);
 			Assert.AreNotEqual (IntPtr.Zero, m, "`Activity` subclasses Java.Lang.Object, it should be in the typemap!");
-			m = monodroid_typemap_managed_to_java (GetTypeName (typeof (JnienvTest)));
+
+			type = typeof (JnienvTest);
+			m = monodroid_typemap_managed_to_java (type.Module.ModuleVersionId.ToByteArray (), type.MetadataToken);
 			Assert.AreEqual (IntPtr.Zero, m, "`JnienvTest` does *not* subclass Java.Lang.Object, it should *not* be in the typemap!");
 		}
 
