@@ -72,15 +72,6 @@ namespace Xamarin.Android.Tasks
 
 			var assemblies = new Dictionary<string, ITaskItem> (Assemblies.Length);
 			var topAssemblyReferences = new List<string> (Assemblies.Length);
-			var logger = new NuGetLogger((s) => {
-				LogDebugMessage ("{0}", s);
-			});
-
-			LockFile lockFile = null;
-			if (!string.IsNullOrEmpty (ProjectAssetFile) && File.Exists (ProjectAssetFile)) {
-				lockFile = LockFileUtilities.GetLockFile (ProjectAssetFile, logger);
-			}
-
 			try {
 				foreach (var assembly in Assemblies) {
 					// Add each user assembly and all referenced assemblies (recursive)
@@ -88,6 +79,7 @@ namespace Xamarin.Android.Tasks
 					bool refAssembly = !string.IsNullOrEmpty (assembly.GetMetadata ("NuGetPackageId")) && resolved_assembly.Contains ($"{Path.DirectorySeparatorChar}ref{Path.DirectorySeparatorChar}");
 					if (refAssembly || MonoAndroidHelper.IsReferenceAssembly (resolved_assembly)) {
 						// Resolve "runtime" library
+						var lockFile = lock_file.Value;
 						if (lockFile != null)
 							resolved_assembly = ResolveRuntimeAssemblyForReferenceAssembly (lockFile, assembly.ItemSpec);
 						if (lockFile == null || resolved_assembly == null) {
@@ -96,7 +88,6 @@ namespace Xamarin.Android.Tasks
 							continue;
 						}
 					}
-					LogDebugMessage ($"Adding {resolved_assembly} to topAssemblyReferences");
 					topAssemblyReferences.Add (resolved_assembly);
 					resolver.AddSearchDirectory (Path.GetDirectoryName (resolved_assembly));
 					var taskItem = new TaskItem (assembly) {
@@ -158,7 +149,25 @@ namespace Xamarin.Android.Tasks
 
 		readonly List<string> do_not_package_atts = new List<string> ();
 		readonly Dictionary<string, int> api_levels = new Dictionary<string, int> ();
+		readonly Lazy<LockFile> lock_file;
 		int indent = 2;
+
+		public ResolveAssemblies ()
+		{
+			lock_file = new Lazy<LockFile> (LoadLockFile);
+		}
+
+		LockFile LoadLockFile ()
+		{
+			if (!string.IsNullOrEmpty (ProjectAssetFile) && File.Exists (ProjectAssetFile)) {
+				LogDebugMessage ($"Loading NuGet LockFile: {ProjectAssetFile}");
+				var logger = new NuGetLogger ((s) => {
+					LogDebugMessage ("{0}", s);
+				});
+				return LockFileUtilities.GetLockFile (ProjectAssetFile, logger);
+			}
+			return null;
+		}
 
 		string ResolveRuntimeAssemblyForReferenceAssembly (LockFile lockFile, string assemblyPath)
 		{
@@ -307,7 +316,6 @@ namespace Xamarin.Android.Tasks
 												var apiLevel = MonoAndroidHelper.SupportedVersions.GetApiLevelFromFrameworkVersion (version);
 												if (apiLevel != null) {
 													var assemblyName = reader.GetString (assembly.Name);
-													LogDebugMessage ("{0}={1}", assemblyName, apiLevel);
 													api_levels [assemblyName] = apiLevel.Value;
 												}
 											}
