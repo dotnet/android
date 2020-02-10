@@ -1605,7 +1605,13 @@ namespace MonoDroid.Generation
 				if (property.Setter.GenericArguments != null && property.Setter.GenericArguments.Any ())
 					writer.WriteLine ("{0}{1}", indent, property.Setter.GenericArguments.ToGeneratedAttributeString ());
 				writer.WriteLine ("{0}\t[Register (\"{1}\", \"{2}\", \"{3}:{4}\"{5})] set {{", indent, property.Setter.JavaName, property.Setter.JniSignature, property.Setter.ConnectorName, property.Setter.GetAdapterName (opt, adapter), property.Setter.AdditionalAttributeString ());
+
+				// Temporarily rename the parameter to "value"
+				var pname = property.Setter.Parameters [0].Name;
+				property.Setter.Parameters [0].Name = "value";
 				writer.WriteLine ("{0}\t\t{1} = {2};", indent, property.Name, property.Setter.Parameters.GetGenericCall (opt, mappings));
+				property.Setter.Parameters [0].Name = pname;
+
 				writer.WriteLine ("{0}\t}}", indent);
 			}
 			writer.WriteLine ("{0}}}", indent);

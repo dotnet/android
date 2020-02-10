@@ -967,5 +967,54 @@ namespace generatortests
 			// Ensure we escape dollar signs
 			Assert.False (result.Contains ("$this"));
 		}
+
+		[Test]
+		public void WritePropertyExplicitInterfaceParameterName ()
+		{
+			// Fix a case where we were not overriding a property setter's parameter name ("p0")
+			// to "value", resulting in invalid C#.  Like:
+			// public string MyProperty {
+			//   set => my_property = p0;
+			// }
+			var gens = ParseApiDefinition (@"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' final='false' name='Long' static='false' visibility='public' jni-signature='Ljava/lang/Long;' />
+			  </package>
+
+			  <package name='com.google.android.material.datepicker' jni-name='com/google/android/material/datepicker'>
+			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='false' name='SingleDateSelector' static='false' visibility='public' jni-signature='Lcom/google/android/material/datepicker/SingleDateSelector;'>
+			      <implements name='com.google.android.material.datepicker.DateSelector' name-generic-aware='com.google.android.material.datepicker.DateSelector&lt;java.lang.Long&gt;' jni-type='Lcom/google/android/material/datepicker/DateSelector&lt;Ljava/lang/Long;&gt;;'>
+			      </implements>
+			      <method abstract='false' deprecated='not deprecated' final='false' name='getSelection' jni-signature='()Ljava/lang/Long;' bridge='false' native='false' return='java.lang.Long' jni-return='Ljava/lang/Long;' static='false' synchronized='false' synthetic='false' visibility='public'>
+			      </method>
+			      <method abstract='false' deprecated='not deprecated' final='false' name='setSelection' jni-signature='(Ljava/lang/Long;)V' bridge='false' native='false' return='void' jni-return='V' static='false' synchronized='false' synthetic='false' visibility='public'>
+				<parameter name='selection' type='java.lang.Long' jni-type='Ljava/lang/Long;'>
+				</parameter>
+			      </method>
+			    </class>
+			    <interface abstract='true' deprecated='not deprecated' final='false' name='DateSelector' static='false' visibility='public' jni-signature='Lcom/google/android/material/datepicker/DateSelector;'>
+			      <typeParameters>
+				<typeParameter name='S' classBound='java.lang.Object' jni-classBound='Ljava/lang/Object;'></typeParameter>
+			      </typeParameters>
+			      <method abstract='true' deprecated='not deprecated' final='false' name='getSelection' jni-signature='()Ljava/lang/Object;' bridge='false' native='false' return='S' jni-return='TS;' static='false' synchronized='false' synthetic='false' visibility='public'>
+			      </method>
+			      <method abstract='true' deprecated='not deprecated' final='false' name='setSelection' jni-signature='(Ljava/lang/Object;)V' bridge='false' native='false' return='void' jni-return='V' static='false' synchronized='false' synthetic='false' visibility='public'>
+				<parameter name='p0' type='S' jni-type='TS;'>
+				</parameter>
+			      </method>
+			    </interface>
+			  </package>
+			</api>");
+
+			var @class = gens.OfType<ClassGen> ().First (c => c.Name == "SingleDateSelector");
+
+			generator.Context.ContextTypes.Push (@class);
+			generator.WriteClass (@class, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			var result = writer.ToString ().NormalizeLineEndings ();
+			Assert.False (result.Contains ("p0"));
+		}
 	}
 }
