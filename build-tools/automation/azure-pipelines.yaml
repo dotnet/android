@@ -12,7 +12,7 @@ resources:
   - repository: yaml
     type: github
     name: xamarin/yaml-templates
-    ref: refs/heads/master
+    ref: refs/heads/pjcollins_credscan2
     endpoint: xamarin
   - repository: monodroid
     type: github
@@ -74,7 +74,7 @@ stages:
     steps:
     - checkout: self
       submodules: recursive
-    - template: security\xa-static-analysis\v1.yml@yaml
+    - template: security\xa-static-analysis\v2.yml@yaml
       parameters:
         credScanSuppressionsFile: $(System.DefaultWorkingDirectory)\build-tools\automation\CredScanSuppressions.json
 
@@ -140,7 +140,7 @@ stages:
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: copy bcl-tests assemblies
 
-    - task: PublishPipelineArtifact@0
+    - task: PublishPipelineArtifact@1
       displayName: upload test assemblies
       inputs:
         artifactName: $(TestAssembliesArtifactName)
@@ -172,7 +172,7 @@ stages:
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: create updateinfo file
 
-    - task: PublishPipelineArtifact@0
+    - task: PublishPipelineArtifact@1
       displayName: upload installers
       inputs:
         artifactName: $(InstallerArtifactName)
@@ -186,7 +186,7 @@ stages:
         configuration: $(XA.Build.Configuration)
         packDirectory: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
 
-    - task: PublishPipelineArtifact@0
+    - task: PublishPipelineArtifact@1
       displayName: upload nupkgs
       inputs:
         artifactName: $(NuGetArtifactName)
@@ -388,7 +388,7 @@ stages:
     - script: cp $(System.DefaultWorkingDirectory)/storage-artifacts/*.pkg $(Build.ArtifactStagingDirectory)
       displayName: copy notarized pkg
 
-    - task: PublishPipelineArtifact@0
+    - task: PublishPipelineArtifact@1
       displayName: upload notarized pkg
       inputs:
         artifactName: notarized-pkg
@@ -664,7 +664,7 @@ stages:
     steps:
     - template: yaml-templates/setup-test-environment.yaml
 
-    - task: DownloadPipelineArtifact@1
+    - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/$(XA.Build.Configuration)
@@ -718,12 +718,12 @@ stages:
     steps:
     - template: yaml-templates/setup-test-environment.yaml
 
-    - task: DownloadPipelineArtifact@1
+    - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
-    - task: DownloadPipelineArtifact@1
+    - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: $(NuGetArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)
@@ -780,12 +780,12 @@ stages:
       parameters:
         provisionExtraArgs: -vv PROVISIONATOR_VISUALSTUDIO_LOCATION="$(VSINSTALLDIR)" -f
 
-    - task: DownloadPipelineArtifact@1
+    - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)
 
-    - task: DownloadPipelineArtifact@1
+    - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: $(NuGetArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)
@@ -820,7 +820,7 @@ stages:
     steps:
     - template: yaml-templates/setup-test-environment.yaml
 
-    - task: DownloadPipelineArtifact@1
+    - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
