@@ -22,11 +22,16 @@
 /build-tools/timing @jonathanpeppers @radekdoulik
 /build-tools/xaprepare @grendello
 
+/Documentation/guides/messages @brendanzagaeski @jonpryor
+/Documentation/release-notes @brendanzagaeski @jonpryor
+
 /src/OpenTK-1.0 @radekdoulik @jonpryor
 /src/Mono.Android.Export @jonpryor
 /src/r8 @jonathanpeppers @jonpryor
 /src/Xamarin.Android.Build.Tasks @dellis1972 @jonathanpeppers
 /src/Xamarin.Android.Build.Tasks/Linker @radekdoulik
+/src/Xamarin.Android.Build.Tasks/Properties/Resources.resx @brendanzagaeski @jonpryor
+/src/Xamarin.Android.Build.Tasks/Properties/xlf @brendanzagaeski @jonpryor
 /src/Xamarin.Android.NamingCustomAttributes @jonpryor
 /src/Xamarin.Android.Tools.Aidl @jonpryor
 /src/monodroid/ @jonpryor @grendello
