@@ -28,6 +28,11 @@
         <target state="new">Ignoring Reference Assembly `{0}`.</target>
         <note>{0} - File name of the assembly.</note>
       </trans-unit>
+      <trans-unit id="XA0122">
+        <source>Assembly '{0}' is using a deprecated attribute '[assembly: {1}]'. Use a newer version of this NuGet package or notify the library author.</source>
+        <target state="new">Assembly '{0}' is using a deprecated attribute '[assembly: {1}]'. Use a newer version of this NuGet package or notify the library author.</target>
+        <note>The following are literal names and should not be translated: [assembly: {1}], NuGet</note>
+      </trans-unit>
       <trans-unit id="XA1001">
         <source>AndroidResgen: Warning while updating resource XML '{0}': {1}</source>
         <target state="new">AndroidResgen: Warning while updating resource XML '{0}': {1}</target>
