@@ -427,6 +427,12 @@
     <ProjectReference Include="..\..\external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
     <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Export\Java.Interop.Export.csproj" />
     <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop\Java.Interop.csproj" />
+    <!--
+      Build `apkdiff` tool first to avoid replacing `libZipSharp` assembly in `lib/xamarin.android/xbuild/Xamarin/Android/`
+      -->
+    <ProjectReference Include="..\..\tools\apkdiff\apkdiff.csproj">
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
   </ItemGroup>
 
   <!-- Import Microsoft.NET.Sdk targets before our targets so we can override behavior -->
