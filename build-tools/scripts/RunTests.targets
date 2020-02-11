@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="RunAllTests" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props'))" />
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <_TopDir>$(MSBuildThisFileDirectory)..\..</_TopDir>
   </PropertyGroup>
   <Import Project="$(_TopDir)\Configuration.props" />
-  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.RunParallelTargets" />
-  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll" TaskName="Xamarin.Android.BuildTools.PrepTasks.SetEnvironmentVariable" />
+  <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.RunParallelTargets" />
+  <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.SetEnvironmentVariable" />
   <PropertyGroup>
     <_Test Condition=" '$(TEST)' != '' ">--test=&quot;$(TEST)&quot;</_Test>
     <_XABuild>$(_TopDir)\bin\$(Configuration)\bin\xabuild</_XABuild>
@@ -66,7 +66,7 @@
         ContinueOnError="ErrorAndContinue"
         Projects="$(MSBuildThisFileDirectory)TestApks.targets"
         Targets="RenameTestCases"
-        Properties="Configuration=$(Configuration);RenameTestCasesGlob=$(_RenamedTestCases)"
+        Properties="Configuration=$(Configuration);RenameTestCasesGlob=$(_RenamedTestCases);BootstrapTasksAssembly=$(BootstrapTasksAssembly);PrepTasksAssembly=$(PrepTasksAssembly)"
     />
   </Target>
   <Target Name="RunJavaInteropTests">
@@ -95,7 +95,7 @@
         ContinueOnError="ErrorAndContinue"
         Projects="$(MSBuildThisFileDirectory)TestApks.targets"
         Targets="RenameTestCases"
-        Properties="Configuration=$(Configuration);RenameTestCasesGlob=$(_RenamedTestCases)"
+        Properties="Configuration=$(Configuration);RenameTestCasesGlob=$(_RenamedTestCases);BootstrapTasksAssembly=$(BootstrapTasksAssembly);PrepTasksAssembly=$(PrepTasksAssembly)"
     />
     <ItemGroup>
       <_JavaInteropTestResults Include="$(JavaInteropSourceDirectory)\TestResult-*.xml" />

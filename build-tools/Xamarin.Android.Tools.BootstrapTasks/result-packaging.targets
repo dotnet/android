@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <UsingTask AssemblyFile="..\..\bin\Build$(Configuration)\Xamarin.Android.Tools.BootstrapTasks.dll" TaskName="Xamarin.Android.Tools.BootstrapTasks.Zip" />
+  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.Zip" />
   <Import Project="..\scripts\XAVersionInfo.targets" />
   <ItemGroup>
     <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)Configuration.OperatingSystem.props" Condition="Exists('$(XamarinAndroidSourcePath)Configuration.OperatingSystem.props')" />
     <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)Configuration.Override.props" Condition="Exists('$(XamarinAndroidSourcePath)Configuration.Override.props')" />
-    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\XABuildConfig.cs" Condition="Exists('$(XamarinAndroidSourcePath)bin\Build$(Configuration)\XABuildConfig.cs')" />
-    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\*.binlog" />
-    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\prepare*.log" />
-    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\*.mk" />
-    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\*.projitems" />
-    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\*.cmake" />
-    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\*.targets" />
-    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\XABuildConfig.cs" Condition="Exists('$(XamarinAndroidSourcePath)bin\Test$(Configuration)\XABuildConfig.cs')" />
-    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\*.binlog" />
-    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\prepare*.log" />
-    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\*.mk" />
-    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\*.projitems" />
-    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\*.cmake" />
-    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\*.targets" />
+    <_BuildStatusFiles Include="$(BootstrapOutputDirectory)XABuildConfig.cs" Condition="Exists('$(BootstrapOutputDirectory)XABuildConfig.cs')" />
+    <_BuildStatusFiles Include="$(BootstrapOutputDirectory)*.binlog" />
+    <_BuildStatusFiles Include="$(BootstrapOutputDirectory)prepare*.log" />
+    <_BuildStatusFiles Include="$(BootstrapOutputDirectory)*.mk" />
+    <_BuildStatusFiles Include="$(BootstrapOutputDirectory)*.projitems" />
+    <_BuildStatusFiles Include="$(BootstrapOutputDirectory)*.cmake" />
+    <_BuildStatusFiles Include="$(BootstrapOutputDirectory)*.targets" />
+    <_BuildStatusFiles Include="$(TestOutputDirectory)XABuildConfig.cs" Condition="Exists('$(TestOutputDirectory)XABuildConfig.cs')" />
+    <_BuildStatusFiles Include="$(TestOutputDirectory)*.binlog" />
+    <_BuildStatusFiles Include="$(TestOutputDirectory)prepare*.log" />
+    <_BuildStatusFiles Include="$(TestOutputDirectory)*.mk" />
+    <_BuildStatusFiles Include="$(TestOutputDirectory)*.projitems" />
+    <_BuildStatusFiles Include="$(TestOutputDirectory)*.cmake" />
+    <_BuildStatusFiles Include="$(TestOutputDirectory)*.targets" />
     <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)external\Java.Interop\bin\Build$(Configuration)\*.props" />
     <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)**\ThirdPartyNotices.txt" />
     <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)**\config.log" />
@@ -30,15 +30,15 @@
   </ItemGroup>
   <ItemGroup>
     <_TestResultFiles Include="$(XamarinAndroidSourcePath)TestResult-*.xml" />
-    <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\TestResult-*.xml" />
-    <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\compatibility\*" />
-    <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\logcat*" />
-    <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\*log" />
-    <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\temp\**\*" Exclude="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\temp\packages\**">
+    <_TestResultFiles Include="$(TestOutputDirectory)TestResult-*.xml" />
+    <_TestResultFiles Include="$(TestOutputDirectory)compatibility\*" />
+    <_TestResultFiles Include="$(TestOutputDirectory)logcat*" />
+    <_TestResultFiles Include="$(TestOutputDirectory)*log" />
+    <_TestResultFiles Include="$(TestOutputDirectory)temp\**\*" Exclude="$(TestOutputDirectory)temp\packages\**">
       <SubDirectory>temp\</SubDirectory>
     </_TestResultFiles>
-    <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\TestOutput-*.txt" />
-    <_TestResultFiles Include="$(XamarinAndroidSourcePath)bin\Test$(Configuration)\Timing_*" />
+    <_TestResultFiles Include="$(TestOutputDirectory)TestOutput-*.txt" />
+    <_TestResultFiles Include="$(TestOutputDirectory)Timing_*" />
     <_TestResultFiles Include="$(XamarinAndroidSourcePath)*.csv" />
     <_TestResultFiles Include="$(TEMP)\llc.exe-*" />
   </ItemGroup>
