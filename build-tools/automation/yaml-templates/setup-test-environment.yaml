@@ -12,7 +12,7 @@ steps:
   inputs:
     solution: build-tools/xaprepare/xaprepare.sln
     configuration: ${{ parameters.configuration }}
-    msbuildArguments: /t:Restore,Build
+    msbuildArguments: /restore
 
 - script: |
     mono build-tools/xaprepare/xaprepare/bin/${{ parameters.configuration }}/xaprepare.exe --s=UpdateMono --auto-provision=yes --auto-provision-uses-sudo=yes --no-emoji --run-mode=CI
