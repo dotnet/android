@@ -124,7 +124,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Attempting naive type name fixup for element with ID &apos;{0}&apos; and type &apos;{1}&apos;.
+        ///   Looks up a localized string similar to Attempting basic type name matching for element with ID &apos;{0}&apos; and type &apos;{1}&apos;.
         /// </summary>
         internal static string XA1005 {
             get {
@@ -133,7 +133,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to If the above fixup fails, please add a `xamarin:managedType` attribute to the element to specify the fully qualified managed type name of the element..
+        ///   Looks up a localized string similar to If basic type name matching fails, please add a `xamarin:managedType` attribute to the element to specify the fully qualified managed type name of the element..
         /// </summary>
         internal static string XA1005_Instructions {
             get {
@@ -303,6 +303,7 @@ namespace Xamarin.Android.Tasks.Properties {
             }
         }
         
+        /// <summary>
         ///   Looks up a localized string similar to Failed to generate type maps.
         /// </summary>
         internal static string XA4308 {
