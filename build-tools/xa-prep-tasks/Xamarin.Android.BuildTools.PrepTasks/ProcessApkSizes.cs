@@ -62,6 +62,11 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 			return $"the reference {refSize} and actual size {size} for {key} differs too much (>{difference}kb).\nplease check if it is correct and update the reference apk sizes files if it is.\nit can be done by running `make CONFIGURATION=<Debug or Release> update-apk-sizes-reference` in XA root directory";
 		}
 
+		string SizesMessage2 (int size, int refSize, int difference, string key)
+		{
+			return $"the reference {refSize} is larger than actual size {size} for {key} and differs more than the set threshold (>{difference}kb).\nplease check if it is correct and update the reference apk sizes files if it is.\nit can be done by running `make CONFIGURATION=<Debug or Release> update-apk-sizes-reference` in XA root directory";
+		}
+
 		const int errorThreshold = 100;
 		const int warningThreshold = 50;
 
@@ -85,14 +90,17 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 					return false;
 				}
 
-				if (Math.Abs (resSize - refSize) > errorThreshold * 1024) {
+				if (resSize - refSize > errorThreshold * 1024) {
 					Log.LogError (SizesMessage (resSize, refSize, errorThreshold, key));
 
 					return false;
 				}
 
-				if (Math.Abs (resSize - refSize) > warningThreshold * 1024)
+				if (resSize - refSize > warningThreshold * 1024)
 					Log.LogWarning (SizesMessage (resSize, refSize, warningThreshold, key));
+
+				if (resSize < refSize && refSize - resSize > warningThreshold * 1024)
+					Log.LogWarning (SizesMessage2 (resSize, refSize, warningThreshold, key));
 			}
 
 			return true;
