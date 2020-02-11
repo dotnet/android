@@ -104,6 +104,7 @@
     <Compile Include="Java.Interop.Tools.Generator.ObjectModel\NamespaceMapping.cs" />
     <Compile Include="Java.Interop.Tools.Generator.ObjectModel\Parameter.cs" />
     <Compile Include="Java.Interop.Tools.Generator.ObjectModel\ParameterList.cs" />
+    <Compile Include="Java.Interop.Tools.Generator.Transformation\SealedProtectedFixups.cs" />
     <Compile Include="Java.Interop.Tools.Generator.Transformation\KotlinFixups.cs" />
     <Compile Include="Java.Interop.Tools.Generator.Transformation\Parser.cs" />
     <Compile Include="Utilities\AncestorDescendantCache.cs" />
