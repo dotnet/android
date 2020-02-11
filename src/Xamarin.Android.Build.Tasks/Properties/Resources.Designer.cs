@@ -104,6 +104,15 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA0107_Ignoring", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Assembly &apos;{0}&apos; is using a deprecated attribute &apos;[assembly: {1}]&apos;. Use a newer version of this NuGet package or notify the library author..
+        /// </summary>
+        internal static string XA0122 {
+            get {
+                return ResourceManager.GetString("XA0122", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to AndroidResgen: Warning while updating resource XML &apos;{0}&apos;: {1}.
