@@ -12,7 +12,7 @@ resources:
   - repository: yaml
     type: github
     name: xamarin/yaml-templates
-    ref: refs/heads/pjcollins_credscan2
+    ref: refs/heads/master
     endpoint: xamarin
   - repository: monodroid
     type: github
