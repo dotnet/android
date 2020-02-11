@@ -73,7 +73,7 @@ ms.date: 01/24/2020
 + [XA1002](xa1002.md): The closest match found for '{customViewName}' is '{customViewLookupName}', but the capitalization does not match. Please correct the capitalization.
 + [XA1003](xa1003.md): '{zip}' does not exist. Please rebuild the project.
 + [XA1004](xa1004.md): There was an error opening {filename}. The file is probably corrupt. Try deleting it and building again.
-+ [XA1005](xa1005.md): Attempting naive type name fixup for element with ID '{id}' and type '{managedType}'
++ [XA1005](xa1005.md): Attempting basic type name matching for element with ID '{id}' and type '{managedType}'
 + [XA1006](xa1006.md): The TargetFrameworkVersion (Android API level {compileSdk}) is higher than the targetSdkVersion ({targetSdk}).
 + [XA1007](xa1007.md): The minSdkVersion ({minSdk}) is greater than targetSdkVersion. Please change the value such that minSdkVersion is less than or equal to targetSdkVersion ({targetSdk}).
 + [XA1008](xa1008.md): The TargetFrameworkVersion (Android API level {compileSdk}) is lower than the targetSdkVersion ({targetSdk}).
