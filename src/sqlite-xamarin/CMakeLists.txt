@@ -79,7 +79,7 @@ if(CMAKE_BUILD_TYPE STREQUAL Debug)
   set(TEST_COMPILER_ARGS ${TEST_COMPILER_ARGS} ggdb3 fno-omit-frame-pointer)
   set(LOCAL_CMAKE_C_FLAGS "${LOCAL_CMAKE_C_FLAGS} -O0")
 else()
-  set(TEST_COMPILER_ARGS ${TEST_COMPILER_ARGS} g fomit-frame-pointer O2)
+  set(TEST_COMPILER_ARGS ${TEST_COMPILER_ARGS} s fomit-frame-pointer O2)
   set(LOCAL_CMAKE_C_FLAGS "${LOCAL_CMAKE_C_FLAGS} -O2")
 endif()
 
