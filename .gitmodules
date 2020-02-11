@@ -33,7 +33,7 @@
 [submodule "external/sqlite"]
     path = external/sqlite
     url = https://github.com/xamarin/sqlite.git
-    branch = 3.28.0
+    branch = 3.31.1
 [submodule "external/xamarin-android-api-compatibility"]
     path = external/xamarin-android-api-compatibility
     url = https://github.com/xamarin/xamarin-android-api-compatibility.git
