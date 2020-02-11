@@ -149,11 +149,11 @@
 {1} - The type name found</comment>
   </data>
   <data name="XA1005" xml:space="preserve">
-    <value>Attempting naive type name fixup for element with ID '{0}' and type '{1}'</value>
+    <value>Attempting basic type name matching for element with ID '{0}' and type '{1}'</value>
     <comment>{0} - The Android resource ID name</comment>
   </data>
   <data name="XA1005_Instructions" xml:space="preserve">
-    <value>If the above fixup fails, please add a `xamarin:managedType` attribute to the element to specify the fully qualified managed type name of the element.</value>
+    <value>If basic type name matching fails, please add a `xamarin:managedType` attribute to the element to specify the fully qualified managed type name of the element.</value>
     <comment>"xamarin:managedType" is a literal name and should not be translated.</comment>
   </data>
   <data name="XA1006" xml:space="preserve">
