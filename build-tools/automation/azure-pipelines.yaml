@@ -12,7 +12,7 @@ resources:
   - repository: yaml
     type: github
     name: xamarin/yaml-templates
-    ref: refs/heads/master
+    ref: refs/heads/pjcollins_fail-on-analysis-error
     endpoint: xamarin
   - repository: monodroid
     type: github
@@ -80,7 +80,7 @@ stages:
 
 - stage: mac_build
   displayName: Mac
-  dependsOn: []
+  # dependsOn: [] -- TODO: Remove this comment
   jobs:
   # Check - "Xamarin.Android (Mac Build)"
   - job: mac_build_create_installers
