@@ -83,7 +83,7 @@
     <MonoRequiredMinimumVersion Condition=" '$(MonoRequiredMinimumVersion)' == '' ">6.12.0</MonoRequiredMinimumVersion>
     <MonoRequiredMaximumVersion Condition=" '$(MonoRequiredMaximumVersion)' == '' ">6.13.0</MonoRequiredMaximumVersion>
     <IgnoreMaxMonoVersion Condition=" '$(IgnoreMaxMonoVersion)' == '' ">True</IgnoreMaxMonoVersion>
-    <MonoRequiredDarwinMinimumVersion>$(MonoRequiredMinimumVersion).7</MonoRequiredDarwinMinimumVersion>
+    <MonoRequiredDarwinMinimumVersion>$(MonoRequiredMinimumVersion).8</MonoRequiredDarwinMinimumVersion>
     <LinkerSourceDirectory>$(MSBuildThisFileDirectory)external\mono\sdks\out\android-sources\external\linker\src</LinkerSourceDirectory>
     <OpenTKSourceDirectory>$(MSBuildThisFileDirectory)external\opentk</OpenTKSourceDirectory>
     <MingwZlibRootDirectory Condition=" '$(ZlibRootDirectory)' == '' And '$(HostOS)' == 'Linux' ">\usr</MingwZlibRootDirectory>
