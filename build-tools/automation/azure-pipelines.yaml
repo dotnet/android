@@ -205,7 +205,7 @@ stages:
 # Check - "Xamarin.Android (Windows Build and Test)"
 - stage: win_build_test
   displayName: Windows
-  dependsOn: []
+  # dependsOn: [] -- TODO: Remove this comment
   jobs:
   - job: win_build_test
     displayName: Build and Test
