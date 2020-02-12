@@ -64,9 +64,10 @@ namespace generatortests
 			return this;
 		}
 
-		public TestField SetDeprecated (string comment = null)
+		public TestField SetDeprecated (string comment = null, bool error = false)
 		{
 			IsDeprecated = true;
+			IsDeprecatedError = error;
 			DeprecatedComment = comment;
 			return this;
 		}
@@ -280,7 +281,7 @@ namespace generatortests
 			return iface;
 		}
 
-		public static TestMethod CreateMethod (GenBase parent, string methodName, CodeGenerationOptions options, string returnType = "void", bool isStatic = false, bool isAbstract = false, params Parameter[] parameters)
+		public static TestMethod CreateMethod (GenBase parent, string methodName, CodeGenerationOptions options, string returnType = "void", bool isStatic = false, bool isAbstract = false, params Parameter [] parameters)
 		{
 			var method = new TestMethod (parent, methodName, returnType);
 

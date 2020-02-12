@@ -346,11 +346,11 @@ namespace generatortests
 		{
 			var comment = "Don't use this!";
 			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
-			var field = new TestField ("int", "bar").SetConstant ("1234").SetDeprecated (comment);
+			var field = new TestField ("int", "bar").SetConstant ("1234").SetDeprecated (comment, true);
 			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "field.Validate failed!");
 			generator.WriteField (field, string.Empty, @class);
 
-			StringAssert.Contains ($"[Obsolete (\"{comment}\")]", builder.ToString (), "Should contain ObsoleteAttribute!");
+			StringAssert.Contains ($"[Obsolete (\"{comment}\", error: true)]", builder.ToString (), "Should contain ObsoleteAttribute!");
 		}
 
 		[Test]
@@ -535,7 +535,7 @@ namespace generatortests
 			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
 
 			generator.Context.ContextTypes.Push (iface);
-			generator.WriteInterfaceEventArgs (iface, iface.Methods[0], string.Empty);
+			generator.WriteInterfaceEventArgs (iface, iface.Methods [0], string.Empty);
 			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetExpected (nameof (WriteInterfaceEventArgs)), writer.ToString ().NormalizeLineEndings ());
@@ -572,7 +572,7 @@ namespace generatortests
 			var handlers = new List<string> ();
 
 			generator.Context.ContextTypes.Push (iface);
-			generator.WriteInterfaceEventHandlerImplContent (iface, iface.Methods[0], string.Empty, true, string.Empty, handlers);
+			generator.WriteInterfaceEventHandlerImplContent (iface, iface.Methods [0], string.Empty, true, string.Empty, handlers);
 			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (1, handlers.Count);

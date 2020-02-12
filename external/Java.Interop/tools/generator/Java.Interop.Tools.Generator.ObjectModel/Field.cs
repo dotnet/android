@@ -11,6 +11,7 @@ namespace MonoDroid.Generation
 		public string DeprecatedComment { get; set; }
 		public bool IsAcw { get; set; }
 		public bool IsDeprecated { get; set; }
+		public bool IsDeprecatedError { get; set; }
 		public bool IsEnumified { get; set; }
 		public bool IsFinal { get; set; }
 		public bool IsStatic { get; set; }

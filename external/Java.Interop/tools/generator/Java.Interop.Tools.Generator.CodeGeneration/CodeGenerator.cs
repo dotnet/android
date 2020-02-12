@@ -437,8 +437,10 @@ namespace MonoDroid.Generation
 			} else {
 				writer.WriteLine ("{0}// Metadata.xml XPath field reference: path=\"{1}/field[@name='{2}']\"", indent, type.MetadataXPathReference, field.JavaName);
 				writer.WriteLine ("{0}[Register (\"{1}\"{2})]", indent, field.JavaName, field.AdditionalAttributeString ());
-				if (field.IsDeprecated)
-					writer.WriteLine ("{0}[Obsolete (\"{1}\")]", indent, field.DeprecatedComment);
+				if (field.IsDeprecated) {
+					var deprecatedError = field.IsDeprecatedError ? ", error: true" : string.Empty;
+					writer.WriteLine ("{0}[Obsolete (\"{1}\"{2})]", indent, field.DeprecatedComment, deprecatedError);
+				}
 				if (field.Annotation != null)
 					writer.WriteLine ("{0}{1}", indent, field.Annotation);
 

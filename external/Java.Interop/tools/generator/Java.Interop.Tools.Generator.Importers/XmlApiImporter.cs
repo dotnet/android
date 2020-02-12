@@ -95,6 +95,7 @@ namespace MonoDroid.Generation
 				DeprecatedComment = elem.XGetAttribute ("deprecated"),
 				IsAcw = true,
 				IsDeprecated = elem.XGetAttribute ("deprecated") != "not deprecated",
+				IsDeprecatedError = elem.XGetAttribute ("deprecated-error") == "true",
 				IsFinal = elem.XGetAttribute ("final") == "true",
 				IsStatic = elem.XGetAttribute ("static") == "true",
 				JavaName = elem.XGetAttribute ("name"),

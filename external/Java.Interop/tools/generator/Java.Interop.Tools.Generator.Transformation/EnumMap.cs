@@ -24,9 +24,9 @@ namespace MonoDroid.Generation
 			fix_constants_instead_of_removing = fixConstantsInsteadOfRemove;
 		}
 
-		internal Dictionary<string,EnumDescription> Process (string fieldMap, string flagsFile, string methodMap)
+		internal Dictionary<string, EnumDescription> Process (string fieldMap, string flagsFile, string methodMap)
 		{
-			remove_nodes = new List<KeyValuePair<string,string>> ();
+			remove_nodes = new List<KeyValuePair<string, string>> ();
 			var enums = (fieldMap ?? "").EndsWith (".csv")
 				? ParseFieldMappings (fieldMap, flagsFile, version, remove_nodes)
 				: ParseXmlFieldMappings (fieldMap, version, remove_nodes);
@@ -48,12 +48,12 @@ namespace MonoDroid.Generation
 					FixOldConstants (sw);
 				else
 					RemoveOldConstants (sw);
-				
+
 				sw.WriteLine ("</metadata>");
 			}
 			return enums;
 		}
-		
+
 		//  <remove-node path="/api/package[@name='java.lang']/class[@name='Float']/field[@name='MAX_VALUE']" />
 		void RemoveOldConstants (StreamWriter sw)
 		{
@@ -81,14 +81,16 @@ namespace MonoDroid.Generation
 
 				if (pair.Value != null) {
 					sw.WriteLine ("  <attr path=\"/api/package[@name='{0}']/{3}[@name='{1}']/field[@name='{2}']\" name=\"type\">{4}</attr>",
-					              package, type, member, enu.StartsWith ("I:") ? "interface" : "class", pair.Value);
+						      package, type, member, enu.StartsWith ("I:") ? "interface" : "class", pair.Value);
 					sw.WriteLine ("  <attr path=\"/api/package[@name='{0}']/{3}[@name='{1}']/field[@name='{2}']\" name=\"deprecated\">This constant will be removed in the future version. Use {4} enum directly instead of this field.</attr>",
-					              package, type, member, enu.StartsWith ("I:") ? "interface" : "class", pair.Value);
+						      package, type, member, enu.StartsWith ("I:") ? "interface" : "class", pair.Value);
+					sw.WriteLine ("  <attr path=\"/api/package[@name='{0}']/{3}[@name='{1}']/field[@name='{2}']\" name=\"deprecated-error\">true</attr>",
+						      package, type, member, enu.StartsWith ("I:") ? "interface" : "class", pair.Value);
 					continue;
 				}
 				try {
 					sw.WriteLine ("  <remove-node path=\"/api/package[@name='{0}']/{3}[@name='{1}']/field[@name='{2}']\" />",
-					              package, type, member, enu.StartsWith ("I:") ? "interface" : "class");
+						      package, type, member, enu.StartsWith ("I:") ? "interface" : "class");
 				} catch (Exception) {
 					Console.Error.WriteLine ("ERROR: failed to remove old comments: " + enu);
 					throw;
