@@ -101,10 +101,11 @@ ms.date: 01/24/2020
 + [XA4302](xa4302.md): Unhandled exception merging \`AndroidManifest.xml]`: {ex}
 + [XA4303](xa4303.md): Error extracting resources from "{assemblyPath}": {ex}
 + [XA4304](xa4304.md): Proguard configuration file '{file}' was not found.
-+ [XA4305](xa4305.md): MultiDex is enabled, but '{nameof (MultiDexMainDexListFile)}' was not specified.
++ [XA4305](xa4305.md): Multidex is enabled, but the path of the merged keep file was not specified.
 + [XA4306](xa4306.md): R8 does not support \`@(MultiDexMainDexList)\` files when android:minSdkVersion >= 21
 + [XA4307](xa4307.md): Invalid ProGuard configuration file.
 + [XA4308](xa4308.md): Failed to generate type maps
++ [XA4309](xa4309.md): 'MultiDexMainDexList' file '{file}' does not exist.
 
 ## XA5xxx: GCC and toolchain
 
