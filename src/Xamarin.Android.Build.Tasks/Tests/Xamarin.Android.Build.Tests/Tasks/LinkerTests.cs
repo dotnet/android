@@ -70,6 +70,69 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		[Test]
+		public void FixAbstractMethodsStep_Explicit ()
+		{
+			var path = Path.Combine (Path.GetFullPath (XABuildPaths.TestOutputDirectory), "temp", TestName);
+			var step = new FixAbstractMethodsStep ();
+			var pipeline = new Pipeline ();
+
+			Directory.CreateDirectory (path);
+
+			using (var context = new LinkContext (pipeline)) {
+
+				context.Resolver.AddSearchDirectory (path);
+
+				var myAssemblyPath = Path.Combine (path, "MyAssembly.dll");
+
+				using (var android = CreateFauxMonoAndroidAssembly ()) {
+					android.Write (Path.Combine (path, "Mono.Android.dll"));
+					CreateExplicitInterface (myAssemblyPath, android);
+				}
+
+				using (var assm = context.Resolve (myAssemblyPath)) {
+					step.Process (context);
+
+					var impl = assm.MainModule.GetType ("MyNamespace.MyClass");
+					Assert.AreEqual (2, impl.Methods.Count, "MyClass should contain 2 methods");
+					var method = impl.Methods.FirstOrDefault (m => m.Name == "MyNamespace.IMyInterface.MyMethod");
+					Assert.IsNotNull (method, "MyNamespace.IMyInterface.MyMethod should exist");
+					method = impl.Methods.FirstOrDefault (m => m.Name == "MyMissingMethod");
+					Assert.IsNotNull (method, "MyMissingMethod should exist");
+				}
+			}
+
+			Directory.Delete (path, true);
+		}
+
+		static void CreateExplicitInterface (string assemblyPath, AssemblyDefinition android)
+		{
+			using (var assm = AssemblyDefinition.CreateAssembly (new AssemblyNameDefinition ("NestedIFaceTest", new Version ()), "NestedIFaceTest", ModuleKind.Dll)) {
+				var void_type = assm.MainModule.ImportReference (typeof (void));
+
+				// Create interface
+				var iface = new TypeDefinition ("MyNamespace", "IMyInterface", TypeAttributes.Interface);
+
+				var iface_method = new MethodDefinition ("MyMethod", MethodAttributes.Abstract, void_type);
+				iface.Methods.Add (iface_method);
+				iface.Methods.Add (new MethodDefinition ("MyMissingMethod", MethodAttributes.Abstract, void_type));
+
+				assm.MainModule.Types.Add (iface);
+
+				// Create implementing class
+				var jlo = assm.MainModule.Import (android.MainModule.GetType ("Java.Lang.Object"));
+				var impl = new TypeDefinition ("MyNamespace", "MyClass", TypeAttributes.Public, jlo);
+				impl.Interfaces.Add (new InterfaceImplementation (iface));
+
+				var explicit_method = new MethodDefinition ("MyNamespace.IMyInterface.MyMethod", MethodAttributes.Abstract, void_type);
+				explicit_method.Overrides.Add (new MethodReference (iface_method.Name, void_type, iface));
+				impl.Methods.Add (explicit_method);
+
+				assm.MainModule.Types.Add (impl);
+				assm.Write (assemblyPath);
+			}
+		}
+
 		static AssemblyDefinition CreateFauxMonoAndroidAssembly ()
 		{
 			var assm = AssemblyDefinition.CreateAssembly (new AssemblyNameDefinition ("Mono.Android", new Version ()), "DimTest", ModuleKind.Dll);
