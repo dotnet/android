@@ -90,6 +90,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.MakeBundleNativeCodeExternal" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ManifestMerger" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.MergeResources" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.MonoSymbolicate" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.RemoveDirFixed" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.RemoveRegisterAttribute" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ResolveAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -351,7 +352,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<!-- If true it will cause all the assemblies in the apk to be preloaded on startup time -->
         <_AndroidEnablePreloadAssembliesDefault>True</_AndroidEnablePreloadAssembliesDefault>
 	<AndroidEnablePreloadAssemblies Condition=" '$(AndroidEnablePreloadAssemblies)' == '' ">$(_AndroidEnablePreloadAssembliesDefault)</AndroidEnablePreloadAssemblies>
-        <_NativeAssemblySourceDir>$(IntermediateOutputPath)android\</_NativeAssemblySourceDir>
+	<_NativeAssemblySourceDir>$(IntermediateOutputPath)android\</_NativeAssemblySourceDir>
+	<_AndroidUseNewTypemaps>True</_AndroidUseNewTypemaps>
 </PropertyGroup>
 
 <Choose>
@@ -1162,8 +1164,6 @@ because xbuild doesn't support framework reference assemblies.
 	<_RemoveRegisterFlag>$(MonoAndroidIntermediateAssemblyDir)shrunk\shrunk.flag</_RemoveRegisterFlag>
 	<_AcwMapFile>$(IntermediateOutputPath)acw-map.txt</_AcwMapFile>
 	<_CustomViewMapFile>$(IntermediateOutputPath)customview-map.txt</_CustomViewMapFile>
-	<_AndroidTypeMappingJavaToManaged>$(IntermediateOutputPath)android\typemap.jm</_AndroidTypeMappingJavaToManaged>
-	<_AndroidTypeMappingManagedToJava>$(IntermediateOutputPath)android\typemap.mj</_AndroidTypeMappingManagedToJava>
 	<AndroidResgenNamespace Condition="'$(AndroidResgenNamespace)'==''" >$(RootNamespace)</AndroidResgenNamespace>
 	<_AndroidLintConfigFile>$(IntermediateOutputPath)lint.xml</_AndroidLintConfigFile>
 	<_AndroidResourceDesignerFile Condition=" '$(AndroidUseIntermediateDesignerFile)' == 'True' ">$(IntermediateOutputPath)$(_AndroidResourceDesigner)</_AndroidResourceDesignerFile>
@@ -2039,23 +2039,19 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_PrepareNativeAssemblySources">
   <PrepareAbiItems
-    BuildTargetAbis="@(_BuildTargetAbis)"
-    ItemNamePattern="$(_NativeAssemblySourceDir)typemap.jm.@abi@.s">
-      <Output TaskParameter="OutputItems" ItemName="_TypeMapAssemblySource" />
-  </PrepareAbiItems>
-
-  <PrepareAbiItems
-    BuildTargetAbis="@(_BuildTargetAbis)"
-    ItemNamePattern="$(_NativeAssemblySourceDir)typemap.mj.@abi@.s" >
-      <Output TaskParameter="OutputItems" ItemName="_TypeMapAssemblySource" />
+      BuildTargetAbis="@(_BuildTargetAbis)"
+      NativeSourcesDir="$(_NativeAssemblySourceDir)"
+      TypeMapMode="True">
+    <Output TaskParameter="AssemblySources" ItemName="_TypeMapAssemblySource" />
+    <Output TaskParameter="AssemblyIncludes" ItemName="_TypeMapAssemblyInclude" />
   </PrepareAbiItems>
 </Target>
 
 <PropertyGroup>
   <_GenerateJavaStubsDependsOnTargets>
     _SetLatestTargetFrameworkVersion;
-    _PrepareNativeAssemblySources;
     _PrepareAssemblies;
+    _PrepareNativeAssemblySources;
     $(_AfterPrepareAssemblies);
   </_GenerateJavaStubsDependsOnTargets>
 </PropertyGroup>
@@ -2088,6 +2084,8 @@ because xbuild doesn't support framework reference assemblies.
       PackageName="$(_AndroidPackage)"
       ManifestPlaceholders="$(AndroidManifestPlaceholders)"
       OutputDirectory="$(IntermediateOutputPath)android"
+      TypemapOutputDirectory="$(_NativeAssemblySourceDir)"
+      GenerateNativeAssembly="!$(_InstantRunEnabled)"
       MergedAndroidManifestOutput="$(_ManifestOutput)"
       UseSharedRuntime="$(AndroidUseSharedRuntime)"
       EmbedAssemblies="$(EmbedAssembliesIntoApk)"
@@ -2097,10 +2095,13 @@ because xbuild doesn't support framework reference assemblies.
       FrameworkDirectories="$(_XATargetFrameworkDirectories);$(_XATargetFrameworkDirectories)Facades"
       AcwMapFile="$(_AcwMapFile)"
       SupportedAbis="@(_BuildTargetAbis)">
+    <Output TaskParameter="GeneratedBinaryTypeMaps" ItemName="_AndroidTypeMapping" Condition=" '$(_InstantRunEnabled)' == 'True' " />
   </GenerateJavaStubs>
 
   <ItemGroup>
     <FileWrites Include="@(_TypeMapAssemblySource)" />
+    <FileWrites Include="@(_TypeMapAssemblyInclude)" />
+    <FileWrites Include="@(_AndroidTypeMapping)" Condition=" '$(_InstantRunEnabled)' == 'True' " />
     <FileWrites Include="$(_ManifestOutput)" />
   </ItemGroup>
 
@@ -2157,8 +2158,9 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_PrepareEnvironmentAssemblySources">
   <PrepareAbiItems
     BuildTargetAbis="@(_BuildTargetAbis)"
-    ItemNamePattern="$(_NativeAssemblySourceDir)environment.@abi@.s">
-      <Output TaskParameter="OutputItems" ItemName="_EnvironmentAssemblySource" />
+    NativeSourcesDir="$(_NativeAssemblySourceDir)"
+    TypeMapMode="false">
+      <Output TaskParameter="AssemblySources" ItemName="_EnvironmentAssemblySource" />
   </PrepareAbiItems>
 </Target>
 
@@ -2222,6 +2224,7 @@ because xbuild doesn't support framework reference assemblies.
     EnablePreloadAssembliesDefault="$(_AndroidEnablePreloadAssembliesDefault)"
     PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
     BoundExceptionType="$(AndroidBoundExceptionType)"
+    InstantRunEnabled="$(_InstantRunEnabled)"
   >
     <Output TaskParameter="BuildId" PropertyName="_XamarinBuildId" />
   </GeneratePackageManagerJava>
@@ -2535,7 +2538,6 @@ because xbuild doesn't support framework reference assemblies.
   <!-- Shrink Mono.Android.dll by removing attribute only needed for GenerateJavaStubs -->
   <RemoveRegisterAttribute
     Condition="'$(AndroidLinkMode)' != 'None' AND '$(AndroidUseSharedRuntime)' != 'true'"
-    Deterministic="$(Deterministic)"
     ShrunkFrameworkAssemblies="@(_ShrunkAssemblies)" />
 
   <MakeDir Directories="$(MonoAndroidIntermediateAssemblyDir)shrunk" />
@@ -2578,7 +2580,7 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 </Target>
 
-<Target Name="_PrepareNativeAssemblyItems">
+<Target Name="_PrepareNativeAssemblyItems" DependsOnTargets="_GenerateJavaStubs">
   <ItemGroup>
     <_NativeAssemblyTarget Include="@(_TypeMapAssemblySource->Replace('.s', '.o'))">
       <abi>%(_TypeMapAssemblySource.abi)</abi>
@@ -2591,7 +2593,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_CompileNativeAssemblySources"
     DependsOnTargets="_PrepareNativeAssemblyItems"
-    Inputs="@(_TypeMapAssemblySource);@(_EnvironmentAssemblySource)"
+    Inputs="@(_TypeMapAssemblySource);@(_TypeMapAssemblyInclude);@(_EnvironmentAssemblySource)"
     Outputs="@(_NativeAssemblyTarget)">
   <CompileNativeAssembly
       Sources="@(_TypeMapAssemblySource);@(_EnvironmentAssemblySource)"
@@ -2870,9 +2872,11 @@ because xbuild doesn't support framework reference assemblies.
   <Copy Condition=" '$(AndroidPackageFormat)' == 'aab' " SourceFiles="$(_AppBundleIntermediate)" DestinationFolder="$(OutDir)" />
 
   <MakeDir Directories="$(_MSYMDirectory)" Condition=" '$(MonoSymbolArchive)' == 'True' " />
-  <Exec
-    Command="&quot;$(MonoAndroidBinDirectory)mono-symbolicate&quot; store-symbols &quot;$(_MSYMDirectory)&quot; &quot;$(IntermediateOutputPath)android/assets&quot;"
-    Condition=" '$(MonoSymbolArchive)' == 'True' "
+  <MonoSymbolicate
+      Condition=" '$(MonoSymbolArchive)' == 'True' "
+      ToolPath="$(MonoAndroidBinDirectory)"
+      InputDirectory="$(IntermediateOutputPath)android\assets"
+      OutputDirectory="$(_MSYMDirectory)"
   />
 
   <ItemGroup>

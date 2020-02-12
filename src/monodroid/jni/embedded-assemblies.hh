@@ -3,7 +3,10 @@
 #define INC_MONODROID_EMBEDDED_ASSEMBLIES_H
 
 #include <cstring>
+#include <mono/metadata/object.h>
 #include <mono/metadata/assembly.h>
+
+#include "xamarin-app.hh"
 
 struct TypeMapHeader;
 
@@ -39,8 +42,8 @@ namespace xamarin::android::internal {
 		void try_load_typemaps_from_directory (const char *path);
 #endif
 		void install_preload_hooks ();
-		const char* typemap_java_to_managed (const char *java);
-		const char* typemap_managed_to_java (const char *managed);
+		MonoReflectionType* typemap_java_to_managed (MonoString *java_type);
+		const char* typemap_managed_to_java (const uint8_t *mvid, const int32_t token);
 
 		/* returns current number of *all* assemblies found from all invocations */
 		template<bool (*should_register_fn)(const char*)>
@@ -66,9 +69,14 @@ namespace xamarin::android::internal {
 		size_t register_from (const char *apk_file, monodroid_should_register should_register);
 		void gather_bundled_assemblies_from_apk (const char* apk, monodroid_should_register should_register);
 		MonoAssembly* open_from_bundles (MonoAssemblyName* aname, bool ref_only);
-		void extract_int (const char **header, const char *source_apk, const char *source_entry, const char *key_name, int *value);
 #if defined (DEBUG) || !defined (ANDROID)
-		bool add_type_mapping (TypeMappingInfo **info, const char *source_apk, const char *source_entry, const char *addr);
+		template<typename H>
+		bool typemap_read_header (int dir_fd, const char *file_type, const char *dir_path, const char *file_path, uint32_t expected_magic, H &header, size_t &file_size, int &fd);
+		uint8_t* typemap_load_index (int dir_fd, const char *dir_path, const char *index_path);
+		uint8_t* typemap_load_index (TypeMapIndexHeader &header, size_t file_size, int index_fd);
+		bool typemap_load_file (int dir_fd, const char *dir_path, const char *file_path, TypeMapModule &module);
+		bool typemap_load_file (BinaryTypeMapHeader &header, const char *dir_path, const char *file_path, int file_fd, TypeMapModule &module);
+		static ssize_t do_read (int fd, void *buf, size_t count);
 #endif // DEBUG || !ANDROID
 		bool register_debug_symbols_for_assembly (const char *entry_name, MonoBundledAssembly *assembly, const mono_byte *debug_contents, int debug_size);
 
@@ -76,8 +84,6 @@ namespace xamarin::android::internal {
 
 		static MonoAssembly* open_from_bundles_full (MonoAssemblyName *aname, char **assemblies_path, void *user_data);
 		static MonoAssembly* open_from_bundles_refonly (MonoAssemblyName *aname, char **assemblies_path, void *user_data);
-		static int TypeMappingInfo_compare_key (const void *a, const void *b);
-		const char *find_entry_in_type_map (const char *name, uint8_t map[], TypeMapHeader& header);
 
 		void zip_load_entries (int fd, const char *apk_name, monodroid_should_register should_register);
 		bool zip_read_cd_info (int fd, uint32_t& cd_offset, uint32_t& cd_size, uint16_t& cd_entries);
@@ -95,6 +101,16 @@ namespace xamarin::android::internal {
 			return assemblies_prefix_override != nullptr ? assemblies_prefix_override : assemblies_prefix;
 		}
 
+		template<typename Key, typename Entry, int (*compare)(const Key*, const Entry*), bool use_extra_size = false>
+		const Entry* binary_search (const Key *key, const Entry *base, size_t nmemb, size_t extra_size = 0);
+
+		static int compare_mvid (const uint8_t *mvid, const TypeMapModule *module);
+		static int compare_type_token (const int32_t *token, const TypeMapModuleEntry *entry);
+		static int compare_java_name (const char *java_name, const TypeMapJava *entry);
+#if defined (DEBUG) || !defined (ANDROID)
+		static int compare_java_name (const char *java_name, const uint8_t *java_map);
+#endif
+
 	private:
 		bool                   register_debug_symbols;
 		MonoBundledAssembly  **bundled_assemblies = nullptr;
@@ -102,6 +118,8 @@ namespace xamarin::android::internal {
 #if defined (DEBUG) || !defined (ANDROID)
 		TypeMappingInfo       *java_to_managed_maps;
 		TypeMappingInfo       *managed_to_java_maps;
+		TypeMapModule         *modules;
+		size_t                 module_count;
 #endif // DEBUG || !ANDROID
 		const char            *assemblies_prefix_override = nullptr;
 	};

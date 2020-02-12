@@ -16,9 +16,9 @@ namespace Xamarin.Android.Prepare
 
 			new HomebrewProgram ("make"),
 
-			new HomebrewProgram ("mingw-w64", new Uri ("https://raw.githubusercontent.com/Homebrew/homebrew-core/a6542037a48a55061a4c319e6bb174b3715f7cbe/Formula/mingw-w64.rb")) {
-				MinimumVersion = "6.0.0_1",
-				MaximumVersion = "6.0.0_2",
+			new HomebrewProgram ("mingw-w64", new Uri ("https://raw.githubusercontent.com/Homebrew/homebrew-core/c6829c44d27f756b302c8ca76b75edf231d076ee/Formula/mingw-w64.rb")) {
+				MinimumVersion = "7.0.0_1",
+				MaximumVersion = "7.0.0_2",
 				Pin = true,
 			},
 

@@ -175,6 +175,7 @@ namespace xamarin::android::internal
 		static void jit_done (MonoProfiler *prof, MonoMethod *method, MonoJitInfo* jinfo);
 		static void thread_start (MonoProfiler *prof, uintptr_t tid);
 		static void thread_end (MonoProfiler *prof, uintptr_t tid);
+		static MonoReflectionType* typemap_java_to_managed (MonoString *java_type_name);
 
 #if defined (DEBUG)
 		void set_debug_env_vars (void);

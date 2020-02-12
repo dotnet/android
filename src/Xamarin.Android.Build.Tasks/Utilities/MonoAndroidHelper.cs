@@ -307,7 +307,7 @@ namespace Xamarin.Android.Tasks
 		{
 			if (IsSharedRuntimeAssembly (assembly)) {
 #if MSBUILD
-				bool treatAsUser = Array.BinarySearch (FrameworkAssembliesToTreatAsUserAssemblies, Path.GetFileName (assembly), StringComparer.OrdinalIgnoreCase) >= 0;
+				bool treatAsUser = FrameworkAssembliesToTreatAsUserAssemblies.Contains (Path.GetFileName (assembly));
 				// Framework assemblies don't come from outside the SDK Path;
 				// user assemblies do
 				if (checkSdkPath && treatAsUser && TargetFrameworkDirectories != null) {
@@ -527,10 +527,14 @@ namespace Xamarin.Android.Tasks
 
 #if MSBUILD
 		internal static IEnumerable<ITaskItem> GetFrameworkAssembliesToTreatAsUserAssemblies (ITaskItem[] resolvedAssemblies) 
-		{		
-			return resolvedAssemblies
-				.Where (f => Array.BinarySearch (FrameworkAssembliesToTreatAsUserAssemblies, Path.GetFileName (f.ItemSpec), StringComparer.OrdinalIgnoreCase) >= 0)
-				.Select(p => p);
+		{
+			var ret = new List<ITaskItem> ();
+			foreach (ITaskItem item in resolvedAssemblies) {
+				if (FrameworkAssembliesToTreatAsUserAssemblies.Contains (Path.GetFileName (item.ItemSpec)))
+					ret.Add (item);
+			}
+
+			return ret;
 		}
 #endif
 
@@ -543,8 +547,7 @@ namespace Xamarin.Android.Tasks
 			"Mono.Data.Sqlite.dll",
 			"Mono.Posix.dll",
 		};
-		// MUST BE SORTED CASE-INSENSITIVE
-		internal static readonly string[] FrameworkAssembliesToTreatAsUserAssemblies = {
+		internal static readonly HashSet<string> FrameworkAssembliesToTreatAsUserAssemblies = new HashSet<string> (StringComparer.OrdinalIgnoreCase) {
 			"Mono.Android.Support.v13.dll",
 			"Mono.Android.Support.v4.dll",
 			"Xamarin.Android.NUnitLite.dll",

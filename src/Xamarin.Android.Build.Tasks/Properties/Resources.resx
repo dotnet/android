@@ -137,6 +137,10 @@
     <value>Ignoring Reference Assembly `{0}`.</value>
     <comment>{0} - File name of the assembly.</comment>
   </data>
+  <data name="XA0122" xml:space="preserve">
+    <value>Assembly '{0}' is using a deprecated attribute '[assembly: {1}]'. Use a newer version of this NuGet package or notify the library author.</value>
+    <comment>The following are literal names and should not be translated: [assembly: {1}], NuGet</comment>
+  </data>
   <data name="XA1001" xml:space="preserve">
     <value>AndroidResgen: Warning while updating resource XML '{0}': {1}</value>
     <comment>The following are literal names and should not be translated: AndroidResgen
@@ -149,11 +153,11 @@
 {1} - The type name found</comment>
   </data>
   <data name="XA1005" xml:space="preserve">
-    <value>Attempting naive type name fixup for element with ID '{0}' and type '{1}'</value>
+    <value>Attempting basic type name matching for element with ID '{0}' and type '{1}'</value>
     <comment>{0} - The Android resource ID name</comment>
   </data>
   <data name="XA1005_Instructions" xml:space="preserve">
-    <value>If the above fixup fails, please add a `xamarin:managedType` attribute to the element to specify the fully qualified managed type name of the element.</value>
+    <value>If basic type name matching fails, please add a `xamarin:managedType` attribute to the element to specify the fully qualified managed type name of the element.</value>
     <comment>"xamarin:managedType" is a literal name and should not be translated.</comment>
   </data>
   <data name="XA1006" xml:space="preserve">
@@ -237,6 +241,9 @@
   <data name="XA4305_File_Missing" xml:space="preserve">
     <value>MultiDex is enabled, but main dex list file '{0}' does not exist.</value>
     <comment>The following are literal names and should not be translated: MultiDex</comment>
+  </data>
+  <data name="XA4308" xml:space="preserve">
+    <value>Failed to generate type maps</value>
   </data>
   <data name="XA5101" xml:space="preserve">
     <value>Missing Android NDK toolchains directory '{0}'. Please install the Android NDK.</value>

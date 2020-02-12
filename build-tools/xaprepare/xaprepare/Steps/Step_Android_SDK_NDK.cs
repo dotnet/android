@@ -103,7 +103,7 @@ namespace Xamarin.Android.Prepare
 			Log.Todo ("Modify ProcessRunner to allow standard input writing and switch to it here");
 			// var runner = new ProcessRunner (sdkManager, "--licenses");
 			// runner.StartInfoCallback = (ProcessStartInfo psi) => {
-			// 	if (String.IsNullOrEmpty (jdkDir))
+			// 	if (!String.IsNullOrEmpty (jdkDir))
 			// 		psi.EnvironmentVariables.Add ("JAVA_HOME", jdkDir);
 			// 	psi.RedirectStandardInput = true;
 			// };
@@ -112,7 +112,7 @@ namespace Xamarin.Android.Prepare
 				UseShellExecute = false,
 				RedirectStandardInput = true
 			};
-			if (String.IsNullOrEmpty (jdkDir) && !psi.EnvironmentVariables.ContainsKey ("JAVA_HOME"))
+			if (!String.IsNullOrEmpty (jdkDir) && !psi.EnvironmentVariables.ContainsKey ("JAVA_HOME"))
 				psi.EnvironmentVariables.Add ("JAVA_HOME", jdkDir);
 
 			Log.DebugLine ($"Starting {psi.FileName} {psi.Arguments}");

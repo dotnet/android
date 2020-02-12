@@ -20,6 +20,8 @@
     <AndroidUseSharedRuntime>False</AndroidUseSharedRuntime>
     <AndroidEnableMultiDex>true</AndroidEnableMultiDex>
     <AndroidDexTool Condition=" '$(AndroidDexTool)' == '' ">d8</AndroidDexTool>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <Import Project="..\..\src\Mono.Android\Test\Mono.Android-Test.Shared.projitems" Label="Shared" Condition="Exists('..\..\src\Mono.Android\Test\Mono.Android-Test.Shared.projitems')" />
   <Import Project="..\..\Configuration.props" />

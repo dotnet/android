@@ -1,4 +1,9 @@
+debug.mono.debug=1
+debug.mono.log=default,timing=bare
+MONO_LOG_LEVEL=debug
+MONO_LOG_MASK=asm
+MONO_XDEBUG=1
+
 # Force runtime to use fr-FR locale instead of default locale.
 LANG=fr-FR
 __XA_USE_JAVA_DEFAULT_TIMEZONE_ID__=true
-

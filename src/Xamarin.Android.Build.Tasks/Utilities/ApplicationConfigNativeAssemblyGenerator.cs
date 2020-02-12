@@ -20,11 +20,12 @@ namespace Xamarin.Android.Tasks
 		public string AndroidPackageName { get; set; }
 		public bool BrokenExceptionTransitions { get; set; }
 		public global::Android.Runtime.BoundExceptionType BoundExceptionType { get; set; }
+		public bool InstantRunEnabled { get; set; }
 
 		public PackageNamingPolicy PackageNamingPolicy { get; set; }
 
-		public ApplicationConfigNativeAssemblyGenerator (NativeAssemblerTargetProvider targetProvider, IDictionary<string, string> environmentVariables, IDictionary<string, string> systemProperties)
-			: base (targetProvider)
+		public ApplicationConfigNativeAssemblyGenerator (NativeAssemblerTargetProvider targetProvider, string baseFileName, IDictionary<string, string> environmentVariables, IDictionary<string, string> systemProperties)
+			: base (targetProvider, baseFileName)
 		{
 			if (environmentVariables != null)
 				this.environmentVariables = new SortedDictionary<string, string> (environmentVariables, StringComparer.Ordinal);
@@ -44,7 +45,7 @@ namespace Xamarin.Android.Tasks
 			WriteData (output, AndroidPackageName, stringLabel);
 
 			WriteDataSection (output, "application_config");
-			WriteSymbol (output, "application_config", TargetProvider.GetStructureAlignment (true), fieldAlignBytes: 4, isGlobal: true, alwaysWriteSize: true, structureWriter: () => {
+			WriteSymbol (output, "application_config", TargetProvider.GetStructureAlignment (true), packed: false, isGlobal: true, alwaysWriteSize: true, structureWriter: () => {
 				// Order of fields and their type must correspond *exactly* to that in
 				// src/monodroid/jni/xamarin-app.h ApplicationConfig structure
 				WriteCommentLine (output, "uses_mono_llvm");
@@ -62,6 +63,9 @@ namespace Xamarin.Android.Tasks
 				WriteCommentLine (output, "broken_exception_transitions");
 				size += WriteData (output, BrokenExceptionTransitions);
 
+				WriteCommentLine (output, "instant_run_enabled");
+				size += WriteData (output, InstantRunEnabled);
+
 				WriteCommentLine (output, "bound_exception_type");
 				size += WriteData (output, (byte)BoundExceptionType);
 
@@ -74,13 +78,8 @@ namespace Xamarin.Android.Tasks
 				WriteCommentLine (output, "system_property_count");
 				size += WriteData (output, systemProperties == null ? 0 : systemProperties.Count * 2);
 
-				// After uses_embedded_dsos was removed, we need padding on 64-bit
-				if (TargetProvider.Is64Bit) {
-					size += WriteDataPadding (output, 4);
-				}
-
 				WriteCommentLine (output, "android_package_name");
-				size += WritePointer (output, stringLabel);
+				size += WritePointer (output, MakeLocalLabel (stringLabel));
 
 				return size;
 			});
@@ -88,7 +87,7 @@ namespace Xamarin.Android.Tasks
 			stringLabel = GetStringLabel ();
 			WriteData (output, MonoAOTMode ?? String.Empty, stringLabel);
 			WriteDataSection (output, "mono_aot_mode_name");
-			WritePointer (output, stringLabel, "mono_aot_mode_name", isGlobal: true);
+			WritePointer (output, MakeLocalLabel (stringLabel), "mono_aot_mode_name", isGlobal: true);
 
 			WriteNameValueStringArray (output, "app_environment_variables", environmentVariables);
 			WriteNameValueStringArray (output, "app_system_properties", systemProperties);
@@ -98,7 +97,7 @@ namespace Xamarin.Android.Tasks
 		{
 			if (entries == null || entries.Count == 0) {
 				WriteDataSection (output, label);
-				WriteSymbol (output, label, TargetProvider.GetStructureAlignment (true), fieldAlignBytes: 4, isGlobal: true, alwaysWriteSize: true, structureWriter: null);
+				WriteSymbol (output, label, TargetProvider.GetStructureAlignment (true), packed: false, isGlobal: true, alwaysWriteSize: true, structureWriter: null);
 				return;
 			}
 
@@ -117,11 +116,11 @@ namespace Xamarin.Android.Tasks
 			}
 
 			WriteDataSection (output, label);
-			WriteSymbol (output, label, TargetProvider.GetStructureAlignment (true), fieldAlignBytes: 4, isGlobal: true, alwaysWriteSize: true, structureWriter: () => {
+			WriteSymbol (output, label, TargetProvider.GetStructureAlignment (true), packed: false, isGlobal: true, alwaysWriteSize: true, structureWriter: () => {
 				uint size = 0;
 
 				foreach (string l in entry_labels) {
-					size += WritePointer (output, l);
+					size += WritePointer (output, MakeLocalLabel (l));
 				}
 
 				return size;
@@ -136,7 +135,7 @@ namespace Xamarin.Android.Tasks
 		string GetStringLabel ()
 		{
 			stringCounter++;
-			return $".L.str.{stringCounter}";
+			return $"env.str.{stringCounter}";
 		}
 	};
 }

@@ -15,9 +15,6 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <DefineConstants>$(DefineConstants);TRACE;HAVE_CECIL;MSBUILD;ANDROID_24</DefineConstants>
     <AndroidGeneratedClassDirectory Condition=" '$(AndroidGeneratedClassDirectory)' == '' ">..\..\src\Mono.Android\obj\$(Configuration)\android-$(AndroidLatestStableApiLevel)\mcw</AndroidGeneratedClassDirectory>
-     <!-- Copy PackageReference content to OutputDir for our installer creation logic. This no longer happens by default in short-form projects. -->
-    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

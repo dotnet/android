@@ -285,15 +285,14 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Install (proj), "packaging should have succeeded. 0");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
 					proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
-				Assert.IsNull (ZipHelper.ReadFileFromZip (apk, "typemap.jm"), $"typemap.jm should NOT be in {apk}.");
-				Assert.IsNull (ZipHelper.ReadFileFromZip (apk, "typemap.mj"), $"typemap.mj should NOT be in  {apk}.");
+				Assert.IsNull (ZipHelper.ReadFileFromZip (apk, "MonoAndroid.0.typemap"), $"MonoAndroid.0.typemap should NOT be in {apk}.");
 				var logLines = b.LastBuildOutput;
 				Assert.IsTrue (logLines.Any (l => l.Contains ("Building target \"_BuildApkFastDev\" completely.") ||
 					l.Contains ("Target _BuildApkFastDev needs to be built")),
 					"Apk should have been built");
 				Assert.IsTrue (logLines.Any (l => l.Contains ("Building target \"_Upload\" completely")), "_Upload target should have run");
-				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync CopyFile") && l.Contains ("typemap.jm")), "typemap.jm should have been uploaded");
-				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync CopyFile") && l.Contains ("typemap.mj")), "typemap.mj should have been uploaded");
+				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync CopyFile") && l.Contains ("Mono.Android.0.typemap")), "Mono.Android.0.typemap should have been uploaded");
+				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync CopyFile") && l.Contains ("typemap.index")), "typemap.index should have been uploaded");
 			}
 		}
 
