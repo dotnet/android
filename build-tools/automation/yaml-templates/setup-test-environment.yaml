@@ -20,3 +20,8 @@ steps:
 - task: NuGetToolInstaller@0
   inputs:
     versionSpec: 5.x
+    
+- task: NuGetCommand@2
+  inputs:
+    command: 'custom'
+    arguments: 'install NUnit.ConsoleRunner -Version 3.9.0 -OutputDirectory packages'
