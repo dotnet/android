@@ -286,7 +286,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Multidex is enabled, but the path of the merged keep file was not specified..
+        ///   Looks up a localized string similar to Multidex is enabled, but `$(_AndroidMainDexListFile)` is empty..
         /// </summary>
         internal static string XA4305 {
             get {
@@ -295,7 +295,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Multidex is enabled, but the merged keep file &apos;{0}&apos; does not exist..
+        ///   Looks up a localized string similar to Multidex is enabled, but the `$(_AndroidMainDexListFile)` &apos;{0}&apos; does not exist..
         /// </summary>
         internal static string XA4305_File_Missing {
             get {

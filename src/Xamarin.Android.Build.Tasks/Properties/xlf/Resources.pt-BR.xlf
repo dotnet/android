@@ -144,14 +144,14 @@
 {0} - Comma-separated list of the ignored library file names.</note>
       </trans-unit>
       <trans-unit id="XA4305">
-        <source>Multidex is enabled, but the path of the merged keep file was not specified.</source>
-        <target state="new">Multidex is enabled, but the path of the merged keep file was not specified.</target>
-        <note>The following are literal names and should not be translated: Multidex</note>
+        <source>Multidex is enabled, but `$(_AndroidMainDexListFile)` is empty.</source>
+        <target state="new">Multidex is enabled, but `$(_AndroidMainDexListFile)` is empty.</target>
+        <note>The following are literal names and should not be translated: Multidex, $(_AndroidMainDexListFile)</note>
       </trans-unit>
       <trans-unit id="XA4305_File_Missing">
-        <source>Multidex is enabled, but the merged keep file '{0}' does not exist.</source>
-        <target state="new">Multidex is enabled, but the merged keep file '{0}' does not exist.</target>
-        <note>The following are literal names and should not be translated: Multidex</note>
+        <source>Multidex is enabled, but the `$(_AndroidMainDexListFile)` '{0}' does not exist.</source>
+        <target state="new">Multidex is enabled, but the `$(_AndroidMainDexListFile)` '{0}' does not exist.</target>
+        <note>The following are literal names and should not be translated: Multidex, $(_AndroidMainDexListFile)</note>
       </trans-unit>
       <trans-unit id="XA4306">
         <source>R8 does not support `@(MultiDexMainDexList)` files when android:minSdkVersion &gt;= 21</source>
