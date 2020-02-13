@@ -322,7 +322,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to MultiDex is enabled, but &apos;{0}&apos; was not specified..
+        ///   Looks up a localized string similar to Multidex is enabled, but `$(_AndroidMainDexListFile)` is empty..
         /// </summary>
         internal static string XA4305 {
             get {
@@ -331,11 +331,20 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to MultiDex is enabled, but main dex list file &apos;{0}&apos; does not exist..
+        ///   Looks up a localized string similar to Multidex is enabled, but the `$(_AndroidMainDexListFile)` file &apos;{0}&apos; does not exist..
         /// </summary>
         internal static string XA4305_File_Missing {
             get {
                 return ResourceManager.GetString("XA4305_File_Missing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to R8 does not support `@(MultiDexMainDexList)` files when android:minSdkVersion &gt;= 21.
+        /// </summary>
+        internal static string XA4306 {
+            get {
+                return ResourceManager.GetString("XA4306", resourceCulture);
             }
         }
         
@@ -345,6 +354,15 @@ namespace Xamarin.Android.Tasks.Properties {
         internal static string XA4308 {
             get {
                 return ResourceManager.GetString("XA4308", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;MultiDexMainDexList&apos; file &apos;{0}&apos; does not exist..
+        /// </summary>
+        internal static string XA4309 {
+            get {
+                return ResourceManager.GetString("XA4309", resourceCulture);
             }
         }
         

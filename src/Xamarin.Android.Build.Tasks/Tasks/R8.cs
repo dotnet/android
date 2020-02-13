@@ -55,10 +55,10 @@ namespace Xamarin.Android.Tasks
 			if (EnableMultiDex) {
 				if (MinSdkVersion >= 21) {
 					if (CustomMainDexListFiles?.Length > 0) {
-						Log.LogCodedWarning ("XA4306", "R8 does not support `@(MultiDexMainDexList)` files when android:minSdkVersion >= 21");
+						Log.LogCodedWarning ("XA4306", Properties.Resources.XA4306);
 					}
 				} else if (string.IsNullOrEmpty (MultiDexMainDexListFile)) {
-					Log.LogCodedWarning ("XA4305", $"MultiDex is enabled, but '{nameof (MultiDexMainDexListFile)}' was not specified.");
+					Log.LogCodedWarning ("XA4305", Properties.Resources.XA4305);
 				} else {
 					var content = new List<string> ();
 					var temp = Path.GetTempFileName ();
@@ -68,7 +68,7 @@ namespace Xamarin.Android.Tasks
 							if (File.Exists (file.ItemSpec)) {
 								content.Add (File.ReadAllText (file.ItemSpec));
 							} else {
-								Log.LogCodedWarning ("XA4305", file.ItemSpec, 0, $"'MultiDexMainDexList' file '{file.ItemSpec}' does not exist.");
+								Log.LogCodedWarning ("XA4309", file.ItemSpec, 0, Properties.Resources.XA4309, file.ItemSpec);
 							}
 						}
 					}

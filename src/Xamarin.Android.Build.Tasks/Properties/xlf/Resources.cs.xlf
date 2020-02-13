@@ -171,20 +171,29 @@
 {0} - Comma-separated list of the ignored library file names.</note>
       </trans-unit>
       <trans-unit id="XA4305">
-        <source>MultiDex is enabled, but '{0}' was not specified.</source>
-        <target state="new">MultiDex is enabled, but '{0}' was not specified.</target>
-        <note>The following are literal names and should not be translated: MultiDex
-{0} - The MSBuild property name.</note>
+        <source>Multidex is enabled, but `$(_AndroidMainDexListFile)` is empty.</source>
+        <target state="new">Multidex is enabled, but `$(_AndroidMainDexListFile)` is empty.</target>
+        <note>The following are literal names and should not be translated: Multidex, $(_AndroidMainDexListFile)</note>
       </trans-unit>
       <trans-unit id="XA4305_File_Missing">
-        <source>MultiDex is enabled, but main dex list file '{0}' does not exist.</source>
-        <target state="new">MultiDex is enabled, but main dex list file '{0}' does not exist.</target>
-        <note>The following are literal names and should not be translated: MultiDex</note>
+        <source>Multidex is enabled, but the `$(_AndroidMainDexListFile)` file '{0}' does not exist.</source>
+        <target state="new">Multidex is enabled, but the `$(_AndroidMainDexListFile)` file '{0}' does not exist.</target>
+        <note>The following are literal names and should not be translated: Multidex, $(_AndroidMainDexListFile)</note>
+      </trans-unit>
+      <trans-unit id="XA4306">
+        <source>R8 does not support `@(MultiDexMainDexList)` files when android:minSdkVersion &gt;= 21</source>
+        <target state="new">R8 does not support `@(MultiDexMainDexList)` files when android:minSdkVersion &gt;= 21</target>
+        <note>The following are literal names and should not be translated: R8, @(MultiDexMainDexList),  android:minSdkVersion</note>
       </trans-unit>
       <trans-unit id="XA4308">
         <source>Failed to generate type maps</source>
         <target state="new">Failed to generate type maps</target>
         <note />
+      </trans-unit>
+      <trans-unit id="XA4309">
+        <source>'MultiDexMainDexList' file '{0}' does not exist.</source>
+        <target state="new">'MultiDexMainDexList' file '{0}' does not exist.</target>
+        <note>The following are literal names and should not be translated: MultiDexMainDexList</note>
       </trans-unit>
       <trans-unit id="XA5101">
         <source>Missing Android NDK toolchains directory '{0}'. Please install the Android NDK.</source>
