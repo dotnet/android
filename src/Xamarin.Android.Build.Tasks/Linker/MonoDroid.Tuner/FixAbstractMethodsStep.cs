@@ -26,7 +26,7 @@ namespace MonoDroid.Tuner
 			if (IsProductOrSdkAssembly (assembly))
 				return;
 
-			CheckAppDomainUsageUnconditional (assembly, (string msg) => Context.Logger.LogMessage (MessageImportance.High, msg));
+			CheckAppDomainUsageUnconditional (assembly, (string msg) => Context.LogMessage (MessageImportance.High, msg));
 
 			if (FixAbstractMethodsUnconditional (assembly)) {
 				Context.SafeReadSymbols (assembly);
