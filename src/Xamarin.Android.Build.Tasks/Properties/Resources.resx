@@ -208,6 +208,13 @@
     <value>Please add a reference to Mono.Android.Export.dll when using ExportAttribute or ExportFieldAttribute.</value>
     <comment>The following are literal names and should not be translated: Mono.Android.Export.dll, ExportAttribute, ExportFieldAttribute.</comment>
   </data>
+  <data name="XA4211" xml:space="preserve">
+    <value>AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{0}' is less than $(TargetFrameworkVersion) '{1}'. Using API-{2} for ACW compilation.</value>
+    <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:targetSdkVersion , $(TargetFrameworkVersion), API-{2}, ACW
+{0} - The target SDK version number
+{1} - The target framework version number
+{2} - The API version number</comment>
+  </data>
   <data name="XA4214" xml:space="preserve">
     <value>The managed type `{0}` exists in multiple assemblies: {1}. Please refactor the managed type names in these assemblies so that they are not identical.</value>
     <comment>{0} - The managed type name
@@ -218,6 +225,18 @@
     <comment>The phrase "`{0}, {1}`" does not need to be translated.
 {0} - The managed type name
 {1} - The name of the library that contains the type</comment>
+  </data>
+  <data name="XA4216_MinSdkVersion" xml:space="preserve">
+    <value>AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' is less than API-{1}, this configuration is not supported.</value>
+    <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:minSdkVersion,  API-{1}
+{0} - The minimum SDK version number
+{1} - The API version number</comment>
+  </data>
+  <data name="XA4216_TargetSdkVersion" xml:space="preserve">
+    <value>AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{0}' is less than API-{1}, this configuration is not supported.</value>
+    <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:targetSdkVersion , API-{1}
+{0} - The target SDK version number
+{1} - The API version number</comment>
   </data>
   <data name="XA4301" xml:space="preserve">
     <value>APK already contains the item {0}; ignoring.</value>

@@ -104,7 +104,7 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA0107_Ignoring", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Assembly &apos;{0}&apos; is using a deprecated attribute &apos;[assembly: {1}]&apos;. Use a newer version of this NuGet package or notify the library author..
         /// </summary>
@@ -250,6 +250,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to AndroidManifest.xml //uses-sdk/@android:targetSdkVersion &apos;{0}&apos; is less than $(TargetFrameworkVersion) &apos;{1}&apos;. Using API-{2} for ACW compilation..
+        /// </summary>
+        internal static string XA4211 {
+            get {
+                return ResourceManager.GetString("XA4211", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The managed type `{0}` exists in multiple assemblies: {1}. Please refactor the managed type names in these assemblies so that they are not identical..
         /// </summary>
         internal static string XA4214 {
@@ -264,6 +273,24 @@ namespace Xamarin.Android.Tasks.Properties {
         internal static string XA4214_Result {
             get {
                 return ResourceManager.GetString("XA4214_Result", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to AndroidManifest.xml //uses-sdk/@android:minSdkVersion &apos;{0}&apos; is less than API-{1}, this configuration is not supported..
+        /// </summary>
+        internal static string XA4216_MinSdkVersion {
+            get {
+                return ResourceManager.GetString("XA4216_MinSdkVersion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to AndroidManifest.xml //uses-sdk/@android:targetSdkVersion &apos;{0}&apos; is less than API-{1}, this configuration is not supported..
+        /// </summary>
+        internal static string XA4216_TargetSdkVersion {
+            get {
+                return ResourceManager.GetString("XA4216_TargetSdkVersion", resourceCulture);
             }
         }
         
