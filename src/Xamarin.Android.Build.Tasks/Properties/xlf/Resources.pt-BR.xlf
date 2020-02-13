@@ -118,6 +118,14 @@
         <target state="new">Please add a reference to Mono.Android.Export.dll when using ExportAttribute or ExportFieldAttribute.</target>
         <note>The following are literal names and should not be translated: Mono.Android.Export.dll, ExportAttribute, ExportFieldAttribute.</note>
       </trans-unit>
+      <trans-unit id="XA4211">
+        <source>AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{0}' is less than $(TargetFrameworkVersion) '{1}'. Using API-{2} for ACW compilation.</source>
+        <target state="new">AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{0}' is less than $(TargetFrameworkVersion) '{1}'. Using API-{2} for ACW compilation.</target>
+        <note>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:targetSdkVersion , $(TargetFrameworkVersion), API-{2}, ACW
+{0} - The target SDK version number
+{1} - The target framework version number
+{2} - The API version number</note>
+      </trans-unit>
       <trans-unit id="XA4214">
         <source>The managed type `{0}` exists in multiple assemblies: {1}. Please refactor the managed type names in these assemblies so that they are not identical.</source>
         <target state="new">The managed type `{0}` exists in multiple assemblies: {1}. Please refactor the managed type names in these assemblies so that they are not identical.</target>
@@ -130,6 +138,20 @@
         <note>The phrase "`{0}, {1}`" does not need to be translated.
 {0} - The managed type name
 {1} - The name of the library that contains the type</note>
+      </trans-unit>
+      <trans-unit id="XA4216_MinSdkVersion">
+        <source>AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' is less than API-{1}, this configuration is not supported.</source>
+        <target state="new">AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' is less than API-{1}, this configuration is not supported.</target>
+        <note>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:minSdkVersion,  API-{1}
+{0} - The minimum SDK version number
+{1} - The API version number</note>
+      </trans-unit>
+      <trans-unit id="XA4216_TargetSdkVersion">
+        <source>AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{0}' is less than API-{1}, this configuration is not supported.</source>
+        <target state="new">AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{0}' is less than API-{1}, this configuration is not supported.</target>
+        <note>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:targetSdkVersion , API-{1}
+{0} - The target SDK version number
+{1} - The API version number</note>
       </trans-unit>
       <trans-unit id="XA4301">
         <source>APK already contains the item {0}; ignoring.</source>
