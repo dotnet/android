@@ -11,7 +11,7 @@ using Xamarin.ProjectTools;
 namespace Xamarin.Android.Build.Tests
 {
 	[Parallelizable (ParallelScope.Children)]
-	public class EnvironmentContent : BaseTest
+	public class EnvironmentContentTests : BaseTest
 	{
 		[Test]
 		public void BuildApplicationWithMonoEnvironment ([Values ("", "Normal", "Offline")] string sequencePointsMode)
