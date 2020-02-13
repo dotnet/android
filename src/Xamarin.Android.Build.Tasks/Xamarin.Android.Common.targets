@@ -1173,7 +1173,6 @@ because xbuild doesn't support framework reference assemblies.
 	<AndroidUseManagedDesignTimeResourceGenerator Condition=" '$(AndroidUseManagedDesignTimeResourceGenerator)' == '' " >True</AndroidUseManagedDesignTimeResourceGenerator>
 	<_AndroidLibraryImportsDesignTimeCache>$(_AndroidIntermediateDesignTimeBuildDirectory)libraryimports.cache</_AndroidLibraryImportsDesignTimeCache>
 	<_AndroidLibraryProjectImportsDesignTimeCache>$(_AndroidIntermediateDesignTimeBuildDirectory)libraryprojectimports.cache</_AndroidLibraryProjectImportsDesignTimeCache>
-	<_AndroidManagedResourceDesignerFile>$(_AndroidIntermediateDesignTimeBuildDirectory)$(_AndroidResourceDesigner)</_AndroidManagedResourceDesignerFile>
 </PropertyGroup>
 
 <Target Name="_CreatePropertiesCache" DependsOnTargets="_SetupDesignTimeBuildForBuild;_SetLatestTargetFrameworkVersion;_ResolveMonoAndroidSdks">
@@ -1250,13 +1249,12 @@ because xbuild doesn't support framework reference assemblies.
 <!-- Managed DesignTime Resource Generation -->
 <Target Name="_ManagedUpdateAndroidResgen" Condition=" '$(ManagedDesignTimeBuild)' == 'True' "
 		Inputs="$(_ManagedUpdateAndroidResgenInputs)"
-		Outputs="$(_AndroidManagedResourceDesignerFile)"
+		Outputs="$(_AndroidStampDirectory)_ManagedUpdateAndroidResgen.stamp"
 		DependsOnTargets="_CreatePropertiesCache;_ExtractLibraryProjectImports;_ValidateAndroidPackageProperties;_BeforeManagedUpdateAndroidResgen">
-	<MakeDir Directories="$(_AndroidIntermediateDesignTimeBuildDirectory)" />
 	<!-- Parse primary R.java and create Resources.Designer.cs -->
 	<GenerateResourceDesigner
 		ContinueOnError="$(DesignTimeBuild)"
-		NetResgenOutputFile="$(_AndroidManagedResourceDesignerFile)"
+		NetResgenOutputFile="$(_AndroidResourceDesignerFile)"
 		JavaResgenInputFile="$(_GeneratedPrimaryJavaResgenFile)"
 		Namespace="$(AndroidResgenNamespace)"
 		ProjectDir="$(ProjectDir)"
@@ -1271,12 +1269,7 @@ because xbuild doesn't support framework reference assemblies.
 		ResourceFlagFile="$(_AndroidResFlagFile)"
 		Condition="Exists ('$(MonoAndroidResourcePrefix)')"
 	/>
-	<ItemGroup>
-		<CorrectCasedItem Include="%(Compile.Identity)" Condition="'%(Compile.Identity)' == '$(AndroidResgenFile)'"/>
-		<CorrectCasedItem Include="%(Compile.Identity)" Condition="'%(Compile.Identity)' == 'Resources\Resource.designer.cs'"/>
-		<Compile Remove="@(CorrectCasedItem)" Condition=" '$(ManagedDesignTimeBuild)' == 'True' And '%(CorrectCasedItem.Identity)' != '' "/>
-		<Compile Include="$(_AndroidManagedResourceDesignerFile)" Condition=" '$(ManagedDesignTimeBuild)' == 'True' And Exists ('$(_AndroidManagedResourceDesignerFile)')" />
-	</ItemGroup>
+	<Touch Files="$(_AndroidStampDirectory)_ManagedUpdateAndroidResgen.stamp" AlwaysCreate="True" />
 </Target>
 	
 <!-- Resource Build -->

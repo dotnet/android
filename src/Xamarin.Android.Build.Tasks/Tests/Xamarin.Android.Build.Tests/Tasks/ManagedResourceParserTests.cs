@@ -735,5 +735,32 @@ int styleable ElevenAttributes_attr10 10";
 			CompareFilesIgnoreRuntimeInfoString (task.NetResgenOutputFile, expected);
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
+
+		[Test]
+		public void BuildAfterDesignTimeBuild ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.DesignTimeBuild (proj), "first dtb should have succeeded.");
+				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
+
+				// Add a new AndroidResource, so Resource.designer.cs changes
+				proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\foo.xml") {
+					TextContent = () =>
+@"<?xml version=""1.0"" encoding=""utf-8""?>
+<resources>
+	<string name=""foo"">bar</string>
+</resources>"
+				});
+
+				Assert.IsTrue (b.DesignTimeBuild (proj), "second dtb should have succeeded.");
+				Assert.IsFalse (b.Output.IsTargetSkipped ("_ManagedUpdateAndroidResgen"), "_ManagedUpdateAndroidResgen should *not* be skipped!");
+				Assert.IsTrue (b.Output.IsTargetSkipped ("_UpdateAndroidResources"), "_UpdateAndroidResources should be skipped!");
+
+				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
+				Assert.IsTrue (b.Output.IsTargetSkipped ("_ManagedUpdateAndroidResgen"), "_ManagedUpdateAndroidResgen should be skipped!");
+				Assert.IsFalse (b.Output.IsTargetSkipped ("_UpdateAndroidResources"), "_UpdateAndroidResources should *not* be skipped!");
+			}
+		}
 	}
 }

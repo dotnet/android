@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Linq;
 using System.Xml.Linq;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
@@ -363,6 +362,35 @@ namespace UnnamedProject
 				}
 			}
 			return builder.ToString ().Trim ();
+		}
+
+
+		[Test]
+		public void DesignerAfterDesignTimeBuild ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			using (var b = CreateApkBuilder ()) {
+				b.Target = "SetupDependenciesForDesigner";
+				Assert.IsTrue (b.DesignTimeBuild (proj), "first dtb should have succeeded.");
+				Assert.IsTrue (b.Build (proj, parameters: DesignerParameters), "first designer build should have succeeded.");
+
+				// Add a new AndroidResource, so Resource.designer.cs changes
+				proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\foo.xml") {
+					TextContent = () =>
+@"<?xml version=""1.0"" encoding=""utf-8""?>
+<resources>
+	<string name=""foo"">bar</string>
+</resources>"
+				});
+
+				Assert.IsTrue (b.DesignTimeBuild (proj), "second dtb should have succeeded.");
+				Assert.IsFalse (b.Output.IsTargetSkipped ("_ManagedUpdateAndroidResgen"), "_ManagedUpdateAndroidResgen should *not* be skipped!");
+				Assert.IsTrue (b.Output.IsTargetSkipped ("_UpdateAndroidResources"), "_UpdateAndroidResources should be skipped!");
+
+				Assert.IsTrue (b.Build (proj, parameters: DesignerParameters), "second designer build should have succeeded.");
+				Assert.IsTrue (b.Output.IsTargetSkipped ("_ManagedUpdateAndroidResgen"), "_ManagedUpdateAndroidResgen should be skipped!");
+				Assert.IsFalse (b.Output.IsTargetSkipped ("_UpdateAndroidResources"), "_UpdateAndroidResources should *not* be skipped!");
+			}
 		}
 	}
 }
