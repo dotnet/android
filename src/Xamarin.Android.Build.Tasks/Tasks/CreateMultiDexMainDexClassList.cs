@@ -60,7 +60,7 @@ namespace Xamarin.Android.Tasks
 					if (File.Exists (file.ItemSpec)) {
 						content.Add (File.ReadAllText (file.ItemSpec));
 					} else {
-						Log.LogCodedWarning ("XA4305", file.ItemSpec, 0, $"'MultiDexMainDexList' file '{file.ItemSpec}' does not exist.");
+						Log.LogCodedWarning ("XA4309", file.ItemSpec, 0, Properties.Resources.XA4309, file.ItemSpec);
 					}
 				}
 				File.AppendAllText (MultiDexMainDexListFile, string.Concat (content));
