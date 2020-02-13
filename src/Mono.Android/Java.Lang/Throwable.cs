@@ -17,9 +17,7 @@ namespace Java.Lang {
 		IntPtr handle;
 
 		IntPtr           key_handle;
-		IntPtr           weak_handle;
 		JObjectRefType   handle_type;
-		int              refs_added;
 
 		bool             isProxy;
 		bool             needsActivation;
@@ -251,7 +249,6 @@ namespace Java.Lang {
 
 		~Throwable ()
 		{
-			refs_added = 0;
 			if (Environment.HasShutdownStarted) {
 				return;
 			}

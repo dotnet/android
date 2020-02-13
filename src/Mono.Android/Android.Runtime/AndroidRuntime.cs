@@ -327,7 +327,9 @@ namespace Android.Runtime {
 		}
 
 		class MagicRegistrationMap {
+#pragma warning disable CS0649 // Field is never assigned to
 			static Dictionary<string, int> typesMap;
+#pragma warning restore CS0649
 
 			static void Prefill ()
 			{

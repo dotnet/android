@@ -16,10 +16,8 @@ namespace Java.Lang {
 #endif  // JAVA_INTEROP
 	{
 		IntPtr key_handle;
-		IntPtr weak_handle;
 		JObjectRefType handle_type;
 		IntPtr handle;
-		int refs_added;
 		bool             needsActivation;
 		bool             isProxy;
 
@@ -53,7 +51,6 @@ namespace Java.Lang {
 			// Finalization occurs after a test of java persistence.  If the
 			// handle still contains a java reference, we can't finalize the
 			// object and should "resurrect" it.
-			refs_added = 0;
 			if (Environment.HasShutdownStarted) {
 				return;
 			}
@@ -106,9 +103,6 @@ namespace Java.Lang {
 
 		public IntPtr Handle {
 			get {
-				if (weak_handle != IntPtr.Zero)
-					Logger.Log (LogLevel.Warn, "Mono.Android.dll", "Accessing object which is out for collection via original handle");
-
 				return handle;
 			}
 		}

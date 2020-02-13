@@ -25,8 +25,6 @@ namespace Android.Runtime {
 		static KeyStore certStore;
 		static object lock_ = new object ();
 
-		static IntPtr java_lang_Object_toString;
-
 		static void SetupTrustManager ()
 		{
 			if (sslTrustManager != null)
@@ -166,7 +164,7 @@ namespace Android.Runtime {
 				sslTrustManager.CheckServerTrusted (nativeCerts, TrustManagerFactory.DefaultAlgorithm);
 				return true;
 			}
-			catch (Exception e) {
+			catch (Exception) {
 				// ignore
 			}
 			try {
@@ -175,7 +173,7 @@ namespace Android.Runtime {
 				sslTrustManager.CheckServerTrusted (new[]{ nativeCerts [0] }, TrustManagerFactory.DefaultAlgorithm);
 				return true;
 			}
-			catch (Exception e) {
+			catch (Exception) {
 				return false;
 			}
 		}
