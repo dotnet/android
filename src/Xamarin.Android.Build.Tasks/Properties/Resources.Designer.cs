@@ -295,7 +295,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Multidex is enabled, but the `$(_AndroidMainDexListFile)` &apos;{0}&apos; does not exist..
+        ///   Looks up a localized string similar to Multidex is enabled, but the `$(_AndroidMainDexListFile)` file &apos;{0}&apos; does not exist..
         /// </summary>
         internal static string XA4305_File_Missing {
             get {

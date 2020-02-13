@@ -149,8 +149,8 @@
         <note>The following are literal names and should not be translated: Multidex, $(_AndroidMainDexListFile)</note>
       </trans-unit>
       <trans-unit id="XA4305_File_Missing">
-        <source>Multidex is enabled, but the `$(_AndroidMainDexListFile)` '{0}' does not exist.</source>
-        <target state="new">Multidex is enabled, but the `$(_AndroidMainDexListFile)` '{0}' does not exist.</target>
+        <source>Multidex is enabled, but the `$(_AndroidMainDexListFile)` file '{0}' does not exist.</source>
+        <target state="new">Multidex is enabled, but the `$(_AndroidMainDexListFile)` file '{0}' does not exist.</target>
         <note>The following are literal names and should not be translated: Multidex, $(_AndroidMainDexListFile)</note>
       </trans-unit>
       <trans-unit id="XA4306">

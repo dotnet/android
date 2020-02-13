@@ -234,7 +234,7 @@
     <comment>The following are literal names and should not be translated: Multidex, $(_AndroidMainDexListFile)</comment>
   </data>
   <data name="XA4305_File_Missing" xml:space="preserve">
-    <value>Multidex is enabled, but the `$(_AndroidMainDexListFile)` '{0}' does not exist.</value>
+    <value>Multidex is enabled, but the `$(_AndroidMainDexListFile)` file '{0}' does not exist.</value>
     <comment>The following are literal names and should not be translated: Multidex, $(_AndroidMainDexListFile)</comment>
   </data>
   <data name="XA4306" xml:space="preserve">
