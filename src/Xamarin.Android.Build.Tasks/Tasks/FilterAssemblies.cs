@@ -95,8 +95,7 @@ namespace Xamarin.Android.Tasks
 					case "Android.IncludeAndroidResourcesFromAttribute":
 					case "Android.NativeLibraryReferenceAttribute":
 					case "Java.Interop.JavaLibraryReferenceAttribute":
-						Log.LogCodedError ("XA0121",
-							$"Assembly '{reader.GetString (assembly.Name)}' is using '[assembly: {name}]', which is no longer supported. Use a newer version of this NuGet package or notify the library author.");
+						Log.LogCodedError ("XA0121", Properties.Resources.XA0121, reader.GetString (assembly.Name), name);
 						break;
 					default:
 						break;
