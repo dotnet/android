@@ -17,7 +17,7 @@ jobs:
 
     - template: clean.yaml
 
-    - template: setup-test-environment.yaml
+    - template: setup-win-test-environment.yaml
       parameters:
         provisionExtraArgs: -vv PROVISIONATOR_VISUALSTUDIO_LOCATION="$(VSINSTALLDIR)" -f
 
