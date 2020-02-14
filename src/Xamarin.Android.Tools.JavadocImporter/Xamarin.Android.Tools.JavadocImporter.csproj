@@ -45,7 +45,6 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Xml.SgmlReader" Version="1.8.14" />
-    <PackageReference Include="Mono.Posix.NETStandard" Version="1.0.0" />
     <PackageReference Include="Xamarin.LibZipSharp" Version="$(LibZipSharpVersion)" />
   </ItemGroup>
 
