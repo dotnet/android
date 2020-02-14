@@ -12,7 +12,7 @@ steps:
     msbuildArguments: /restore /t:Build,ZipBuildStatus,ZipTestResults /p:BuildStatusZipOutputPath=$(Build.ArtifactStagingDirectory) /p:TestResultZipOutputPath=$(Build.ArtifactStagingDirectory)
   condition: always()
 
-- task: PublishPipelineArtifact@0
+- task: PublishPipelineArtifact@1
   displayName: upload build and test results
   inputs:
     artifactName: ${{ parameters.artifactName }}
