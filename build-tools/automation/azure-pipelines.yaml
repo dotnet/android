@@ -209,10 +209,7 @@ stages:
   jobs:
   - job: win_build_test
     displayName: Build and Smoke Test
-    pool:
-      name: $(VSEngWinVS2019)
-      demands:
-      - agent.name -equals vs2019xam000007-1
+    pool: $(VSEngWinVS2019)
     timeoutInMinutes: 360
     cancelTimeoutInMinutes: 5
     steps:
@@ -234,7 +231,8 @@ stages:
     - powershell: |
         $vsWhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
         & "$vsWhere" -all -prerelease -latest | Out-Default
-        if (& "$vsWhere" -all -prerelease -latest -property isLaunchable -eq 0) {
+        $isLatestVSLaunchable = & "$vsWhere" -all -prerelease -latest -property isLaunchable
+        if ($isLatestVSLaunchable -eq 0) {
             $vsPath = & "$vsWhere" -all -prerelease -latest -property installationPath
             Write-Host "Attempting to repair VS instance:" $vsPath
             $vsInstaller = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vs_installer.exe"
@@ -322,13 +320,15 @@ stages:
         testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\EmbeddedDSOUnitTests.dll
         testResultsFile: TestResult-EmbeddedDSOUnitTests-WinBuildTree-$(XA.Build.Configuration).xml
 
+    # Limit the amount of worker threads used to run these tests in parallel to half of what is currently available (8) on the Windows pool.
+    # Using all available cores seems to occasionally bog down our machines and cause parallel test execution to slow down dramatically.
     # Only run a subset of the Xamarin.Android.Build.Tests against the local Windows build tree.
     - template: yaml-templates\run-nunit-tests.yaml
       parameters:
         testRunTitle: Smoke MSBuild Tests - Windows Build Tree
         testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\Xamarin.Android.Build.Tests.dll
         testResultsFile: TestResult-SmokeMSBuildTests-WinBuildTree-$(XA.Build.Configuration).xml
-        nunitConsoleExtraArgs: --where "cat == SmokeTests"
+        nunitConsoleExtraArgs: --where "cat == SmokeTests" --workers=4
 
     - template: yaml-templates\upload-results.yaml
       parameters:
