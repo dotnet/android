@@ -114,7 +114,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			var lines = LoadValues (package);
-			using (var writer = MemoryStreamPool.Shared.CreateStreamWriter (MonoAndroidHelper.UTF8withoutBOM)) {
+			using (var writer = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 				// This code is based on the Android gradle plugin
 				// https://android.googlesource.com/platform/tools/base/+/908b391a9c006af569dfaff08b37f8fdd6c4da89/build-system/builder/src/main/java/com/android/builder/internal/SymbolWriter.java
 

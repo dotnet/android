@@ -591,7 +591,7 @@ namespace Xamarin.Android.Tasks
 		public static bool SaveCustomViewMapFile (IBuildEngine4 engine, string mapFile, Dictionary<string, HashSet<string>> map)
 		{
 			engine?.RegisterTaskObject (mapFile, map, RegisteredTaskObjectLifetime.Build, allowEarlyCollection: false);
-			using (var writer = MemoryStreamPool.Shared.CreateStreamWriter ()) {
+			using (var writer = MemoryStreamPool.Shared.CreateStreamWriter (Encoding.Default)) {
 				foreach (var i in map.OrderBy (x => x.Key)) {
 					foreach (var v in i.Value.OrderBy (x => x))
 						writer.WriteLine ($"{i.Key};{v}");

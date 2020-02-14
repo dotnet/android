@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Xml.XPath;
 using System.Xml.Linq;
 using Microsoft.Build.Framework;
@@ -58,7 +59,7 @@ namespace Xamarin.Android.Tasks
 
 		public static bool SaveIfChanged (this XDocument document, string fileName)
 		{
-			using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ())
+			using (var sw = MemoryStreamPool.Shared.CreateStreamWriter (Encoding.Default))
 			using (var xw = new Monodroid.LinePreservedXmlWriter (sw)) {
 				xw.WriteNode (document.CreateNavigator (), false);
 				xw.Flush ();

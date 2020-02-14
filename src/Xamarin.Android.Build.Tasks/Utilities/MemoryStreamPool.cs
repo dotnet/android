@@ -28,8 +28,9 @@ namespace Xamarin.Android.Tasks
 
 		/// <summary>
 		/// Creates a StreamWriter that uses the underlying MemoryStreamPool. Calling Dispose() will Return() the MemoryStream.
+		/// By default uses MonoAndroidHelper.UTF8withoutBOM for the encoding.
 		/// </summary>
-		public StreamWriter CreateStreamWriter () => CreateStreamWriter (Encoding.Default);
+		public StreamWriter CreateStreamWriter () => CreateStreamWriter (MonoAndroidHelper.UTF8withoutBOM);
 
 		/// <summary>
 		/// Creates a StreamWriter that uses the underlying MemoryStreamPool. Calling Dispose() will Return() the MemoryStream.

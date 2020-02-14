@@ -98,7 +98,7 @@ namespace Xamarin.Android.Tasks
 			Func<string,string,bool> fileNameEq = (a,b) => a.Equals (b, StringComparison.OrdinalIgnoreCase);
 			assemblies = assemblies.Where (a => fileNameEq (a.ItemSpec, mainFileName)).Concat (assemblies.Where (a => !fileNameEq (a.ItemSpec, mainFileName))).ToList ();
 
-			using (var pkgmgr = MemoryStreamPool.Shared.CreateStreamWriter (MonoAndroidHelper.UTF8withoutBOM)) {
+			using (var pkgmgr = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 				pkgmgr.WriteLine ("package mono;");
 
 				// Write all the user assemblies
@@ -287,7 +287,7 @@ namespace Xamarin.Android.Tasks
 					InstantRunEnabled = InstantRunEnabled,
 				};
 
-				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter (MonoAndroidHelper.UTF8withoutBOM)) {
+				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 					asmgen.Write (sw);
 					sw.Flush ();
 					MonoAndroidHelper.CopyIfStreamChanged (sw.BaseStream, asmFilePath);
