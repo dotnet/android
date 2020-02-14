@@ -30,6 +30,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Category ("SmokeTests")]
 		public void Aapt2Link ()
 		{
 			var path = Path.Combine (Root, "temp", "Aapt2Link");
@@ -84,6 +85,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Category ("SmokeTests")]
 		public void Aapt2Compile ()
 		{
 			var path = Path.Combine (Root, "temp", "Aapt2Compile");

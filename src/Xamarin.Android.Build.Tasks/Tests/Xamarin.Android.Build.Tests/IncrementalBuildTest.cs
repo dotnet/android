@@ -459,6 +459,7 @@ namespace Lib2
 		}
 
 		[Test]
+		[Category ("SmokeTests")]
 		public void ProduceReferenceAssembly ()
 		{
 			var path = Path.Combine ("temp", TestName);

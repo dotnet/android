@@ -268,6 +268,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 		}
 
 		[Test]
+		[Category ("SmokeTests")]
 		public void CheckSignApk ([Values(true, false)] bool useApkSigner, [Values(true, false)] bool perAbiApk)
 		{
 			string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".bat" : "";
@@ -354,6 +355,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 		}
 
 		[Test]
+		[Category ("SmokeTests")]
 		public void CheckAppBundle ([Values (true, false)] bool isRelease)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -380,6 +382,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 		}
 
 		[Test]
+		[Category ("SmokeTests")]
 		public void NetStandardReferenceTest ()
 		{
 			var netStandardProject = new DotNetStandard () {
