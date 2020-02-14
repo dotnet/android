@@ -210,7 +210,9 @@ prepare-help: prepare-build
 
 .PHONY: prepare-update-mono
 prepare-update-mono: prepare-build
+	pgrep -lfi VBCSCompiler.exe
 	mono --debug $(PREPARE_EXE) $(_PREPARE_ARGS) -s:UpdateMono
+	pgrep -lfi VBCSCompiler.exe
 
 prepare-external-git-dependencies: prepare-build
 	mono --debug $(PREPARE_EXE) $(_PREPARE_ARGS) -s:PrepareExternalGitDependencies
