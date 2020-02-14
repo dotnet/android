@@ -105,7 +105,6 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\apkdiff.exe" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\apkdiff.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\Mono.Options.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\Mono.Posix.NETStandard.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\libZipSharp.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\libZipSharp.dll.config" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\Newtonsoft.Json.dll" />

@@ -30,9 +30,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="Mono.Posix.NETStandard">
-      <HintPath>packages\Mono.Posix.NETStandard.1.0.0\lib\net40\Mono.Posix.NETStandard.dll</HintPath>
-    </Reference>
     <Reference Include="Mono.Posix" />
     <Reference Include="libZipSharp">
       <HintPath>packages\Xamarin.LibZipSharp.$(LibZipSharpVersion)\lib\net45\libZipSharp.dll</HintPath>
@@ -53,7 +50,6 @@
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="Mono.Options" Version="6.6.0.161" />
-    <PackageReference Include="Mono.Posix.NETStandard" Version="1.0.0" />
     <PackageReference Include="Xamarin.LibZipSharp" Version="$(LibZipSharpVersion)" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
