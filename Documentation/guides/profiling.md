@@ -415,3 +415,136 @@ See further details on `simpleperf`'s [README][simpleperf-readme].
 
 [simpleperf]: https://developer.android.com/ndk/guides/simpleperf
 [simpleperf-readme]: https://android.googlesource.com/platform/system/extras/+/master/simpleperf/doc/README.md
+
+# Profiling MSBuild
+
+At a high level, you can get a performance summary from MSBuild via:
+
+    > msbuild YourProject.csproj /clp:performancesummary
+
+This prints out a breakdown for evaluation, and every MSBuild task &
+target:
+
+    Project Evaluation Performance Summary:
+           12 ms  samples\HelloWorld\HelloLibrary\HelloLibrary.csproj   1 calls
+           98 ms  samples\HelloWorld\HelloWorld.csproj   1 calls
+    
+    Target Performance Summary:
+          275 ms  _UpdateAndroidResgen                       2 calls
+          354 ms  _GenerateJavaStubs                         1 calls
+          665 ms  _CompileJava                               1 calls
+          684 ms  CoreCompile                                2 calls
+          865 ms  _ResolveSdks                               2 calls
+          953 ms  ResolveProjectReferences                   2 calls
+         1219 ms  _CompileToDalvikWithD8                     1 calls
+    
+    Task Performance Summary:
+          681 ms  Csc                                        2 calls
+          809 ms  ValidateJavaVersion                        2 calls
+          983 ms  MSBuild                                    5 calls
+         1217 ms  D8                                         1 calls
+
+Depending on what you're looking for, the MSBuild target timings may
+be the most useful. `<MSBuild/>` or `<CallTarget/>` task calls can be
+misleading, because they merely invoke other targets and don't spend
+much time themselves.
+
+See the [MSBuild documentation][msbuild_cmd] for details about
+`/clp:performancesummary`.
+
+[msbuild_cmd]: https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
+
+## MSBuild Binary Logs
+
+Using MSBuild binary logs is helpful for performance profiling, as
+well as general MSBuild "debugging". You can generate a binary log with:
+
+    > msbuild YourProject.csproj /bl
+
+This will generate a `msbuild.binlog` file in the current directory
+you can open with the [MSBuild Binary Log Viewer][msbuildlog].
+
+In addition to showing you absolutely *everything* about the build, it
+can show the top 10 most expensive tasks:
+
+    Top 10 most expensive tasks
+        D8 = 3.895 s
+        AndroidApkSigner = 2.555 s
+        BuildApk = 2.396 s
+        Javac = 2.060 s
+        ResolveLibraryProjectImports = 1.246 s
+        LinkAssembliesNoShrink = 840 ms
+        CallTarget = 814 ms
+        Aapt2Link = 812 ms
+        Exec = 657 ms
+        Aapt2Compile = 623 ms
+
+It also has a timeline view:
+
+![MSBuild Log Viewer Timeline](..\images\msbuildlog.png)
+
+[msbuildlog]: http://msbuildlog.com/
+[msbuild_bl]: https://github.com/microsoft/msbuild/blob/master/documentation/wiki/Binary-Log.md
+
+## MSBuild Profiling in IDEs
+
+For Visual Studio on Windows, you can use the [Project System
+Tools][projectsystemtools] extension for recording `.binlog` files.
+This is extremely useful, as you can get logs for IDE-specific builds,
+such as design-time builds or builds related to the Android designer.
+
+In Visual Studio for Mac, the only option for measuring build times at
+the moment is to enable [diagnostic build logging][diagnostic].
+Diagnostic logging includes the results of `/clp:performancesummary`
+in the build output window.
+
+> Important! Using diagnostic MSBuild logging slows down the build
+> quite a bit! Even a "short" build with no changes can take as much
+> as 3X longer! Keep that in mind while profiling.
+
+[projectsystemtools]: https://marketplace.visualstudio.com/items?itemName=VisualStudioProductTeam.ProjectSystemTools
+[diagnostic]: https://docs.microsoft.com/xamarin/android/troubleshooting/troubleshooting#diagnostic-msbuild-output
+
+## Profiling MSBuild with the Mono Profiler
+
+Similiar to how you can [use the Mono Profiler](#profiling-managed-code)
+on Android, you can also profile MSBuild with `mono --profile`. With a
+local build of xamarin-android on macOS, you can run:
+
+    $ mono --profile=log:calls,alloc ./bin/Release/bin/xabuild.exe YourProject.csproj
+
+`xabuild.exe` is a tool for running MSBuild using your local
+xamarin-android working tree. I would also recommend using a `Release`
+build of Xamarin.Android when profiling.
+
+This will create an `output.mlpd` file in the current directory. To
+view its contents:
+
+    $ mprof-report output.mlpd
+
+This will display output such as:
+
+    Allocation summary
+         Bytes      Count  Average Type name
+     165520032      19363     8548 System.Byte[]
+      28813336     432701       66 System.String
+    
+    Method call summary
+    Total(ms) Self(ms)      Calls Method name
+      139368        1        703 (wrapper runtime-invoke) object:runtime_invoke_void__this__ (object,intptr,intptr,intptr)
+      132472   132472        287 (wrapper managed-to-native) System.Threading.WaitHandle:Wait_internal (intptr*,int,bool,int)
+       71685        2          2 Microsoft.Build.BackEnd.RequestBuilder/DedicatedThreadsTaskScheduler:<InjectThread>b__6_0 ()
+
+> NOTE: I've hit an error in the past such as: `unhandled profiler
+> event: 0x6f at file offset: 3095192 + 60144 (len: 62655)`. Sometimes
+> I have just tried again, making sure I'm profiling a `Release` build.
+
+You can also get stacktrace information:
+
+    $ mprof-report --traces output.mlpd > output.txt
+
+I would recomment redirecting this output to a file, as it can
+generate text well over 100MB!
+
+See the [Mono documentation][mono_docs] for more details about the
+profiler.
