@@ -136,7 +136,7 @@ namespace Xamarin.Android.Tasks
 					MonoAndroidHelper.CopyAssemblyAndSymbols (copysrc, assemblyDestination);
 				}
 			} catch (ResolutionException ex) {
-				Diagnostic.Error (2006, ex, "Could not resolve reference to '{0}' (defined in assembly '{1}') with scope '{2}'. When the scope is different from the defining assembly, it usually means that the type is forwarded.", ex.Member, ex.Member.Module.Assembly, ex.Scope);
+				Diagnostic.Error (2006, ex, Properties.Resources.XA2006, ex.Member, ex.Member.Module.Assembly, ex.Scope);
 			}
 
 			return true;

@@ -137,6 +137,10 @@
     <value>Ignoring Reference Assembly `{0}`.</value>
     <comment>{0} - File name of the assembly.</comment>
   </data>
+  <data name="XA0108" xml:space="preserve">
+    <value>Could not get version from '{0}'. Defaulting to 1.0</value>
+    <comment>{0} - The tool name</comment>
+  </data>
   <data name="XA0116" xml:space="preserve">
     <value>Unable to find `EmbeddedResource` named `{0}`.</value>
     <comment>The following are literal names and should not be translated: EmbeddedResource
@@ -191,6 +195,12 @@
   </data>
   <data name="XA2001" xml:space="preserve">
     <value>Source file '{0}' could not be found.</value>
+  </data>
+  <data name="XA2006" xml:space="preserve">
+    <value>Could not resolve reference to '{0}' (defined in assembly '{1}') with scope '{2}'. When the scope is different from the defining assembly, it usually means that the type is forwarded.</value>
+    <comment>{0} - The member name, such as a class name
+{1} - The assembly name
+{2} - The scope of the member, such as the name of a different assembly</comment>
   </data>
   <data name="XA3001" xml:space="preserve">
     <value>Could not AOT the assembly: {0}</value>
@@ -333,6 +343,12 @@ In this message, the term "bundled" is a short way of saying "included into the 
     <value>Cannot find `{0}` in the Android SDK. Please set its path via /p:LintToolPath.</value>
     <comment>The following are literal names and should not be translated: /p:LintToolPath
 {0} - The missing tool name</comment>
+  </data>
+  <data name="XA5213" xml:space="preserve">
+    <value>java.lang.OutOfMemoryError. Consider increasing the value of $(JavaMaximumHeapSize). Java ran out of memory while executing '{0} {1}'</value>
+    <comment>The following are literal names and should not be translated: java.lang.OutOfMemoryError, $(JavaMaximumHeapSize)
+{0} - The tool name
+{1} - The command line arguments used for the tool</comment>
   </data>
   <data name="XA5300_Android_Platforms" xml:space="preserve">
     <value>No Android platforms installed at '{0}'. Please install an SDK Platform with the `{1}{2}tools{2}{3}` program.</value>
