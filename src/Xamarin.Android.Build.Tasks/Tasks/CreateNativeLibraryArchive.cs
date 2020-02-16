@@ -45,7 +45,7 @@ namespace Xamarin.Android.Tasks
 							columnNumber:     0,
 							endLineNumber:    0,
 							endColumnNumber:  0,
-							message:          "Native library '{0}' will not be bundled because it has an unsupported ABI.",
+							message:          Properties.Resources.XA4300,
 							messageArgs:      new []{
 								lib.ItemSpec,
 							}
