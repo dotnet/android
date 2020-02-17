@@ -354,6 +354,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidEnablePreloadAssemblies Condition=" '$(AndroidEnablePreloadAssemblies)' == '' ">$(_AndroidEnablePreloadAssembliesDefault)</AndroidEnablePreloadAssemblies>
 	<_NativeAssemblySourceDir>$(IntermediateOutputPath)android\</_NativeAssemblySourceDir>
 	<_AndroidUseNewTypemaps>True</_AndroidUseNewTypemaps>
+	<_SkipJniAddNativeMethodRegistrationAttributeScan Condition=" '$(_SkipJniAddNativeMethodRegistrationAttributeScan)' == '' ">False</_SkipJniAddNativeMethodRegistrationAttributeScan>
 </PropertyGroup>
 
 <Choose>
@@ -2094,7 +2095,8 @@ because xbuild doesn't support framework reference assemblies.
       ApplicationJavaClass="$(AndroidApplicationJavaClass)"
       FrameworkDirectories="$(_XATargetFrameworkDirectories);$(_XATargetFrameworkDirectories)Facades"
       AcwMapFile="$(_AcwMapFile)"
-      SupportedAbis="@(_BuildTargetAbis)">
+      SupportedAbis="@(_BuildTargetAbis)"
+      SkipJniAddNativeMethodRegistrationAttributeScan="$(_SkipJniAddNativeMethodRegistrationAttributeScan)">
     <Output TaskParameter="GeneratedBinaryTypeMaps" ItemName="_AndroidTypeMapping" Condition=" '$(_InstantRunEnabled)' == 'True' " />
   </GenerateJavaStubs>
 

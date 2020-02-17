@@ -77,6 +77,8 @@ namespace Xamarin.Android.Tasks
 		
 		public string ApplicationJavaClass { get; set; }
 
+		public bool SkipJniAddNativeMethodRegistrationAttributeScan { get; set; }
+
 		[Output]
 		public string [] GeneratedBinaryTypeMaps { get; set; }
 
@@ -400,9 +402,10 @@ namespace Xamarin.Android.Tasks
 		void WriteTypeMappings (List<TypeDefinition> types)
 		{
 			var tmg = new TypeMapGenerator ((string message) => Log.LogDebugMessage (message), SupportedAbis);
-			if (!tmg.Generate (types, TypemapOutputDirectory, GenerateNativeAssembly))
+			if (!tmg.Generate (SkipJniAddNativeMethodRegistrationAttributeScan, types, TypemapOutputDirectory, GenerateNativeAssembly, out ApplicationConfigTaskState appConfState))
 				throw new XamarinAndroidException (4308, Properties.Resources.XA4308);
 			GeneratedBinaryTypeMaps = tmg.GeneratedBinaryTypeMaps.ToArray ();
+			BuildEngine4.RegisterTaskObject (ApplicationConfigTaskState.RegisterTaskObjectKey, appConfState, RegisteredTaskObjectLifetime.Build, allowEarlyCollection: false);
 		}
 	}
 }

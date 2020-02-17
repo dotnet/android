@@ -87,7 +87,22 @@ namespace Xamarin.Android.Tasks
 			typemapIndexMagicString = outputEncoding.GetBytes (TypeMapIndexMagicString);
 		}
 
-		public bool Generate (List<TypeDefinition> javaTypes, string outputDirectory, bool generateNativeAssembly)
+		void UpdateApplicationConfig (TypeDefinition javaType, ApplicationConfigTaskState appConfState)
+		{
+			if (appConfState.JniAddNativeMethodRegistrationAttributePresent)
+				return;
+			if (!javaType.HasCustomAttributes)
+				return;
+
+			foreach (CustomAttribute ca in javaType.CustomAttributes) {
+				if (!appConfState.JniAddNativeMethodRegistrationAttributePresent && String.Compare ("JniAddNativeMethodRegistrationAttribute", ca.AttributeType.Name, StringComparison.Ordinal) == 0) {
+					appConfState.JniAddNativeMethodRegistrationAttributePresent = true;
+					break;
+				}
+			}
+		}
+
+		public bool Generate (bool skipJniAddNativeMethodRegistrationAttributeScan, List<TypeDefinition> javaTypes, string outputDirectory, bool generateNativeAssembly, out ApplicationConfigTaskState appConfState)
 		{
 			if (String.IsNullOrEmpty (outputDirectory))
 				throw new ArgumentException ("must not be null or empty", nameof (outputDirectory));
@@ -102,8 +117,13 @@ namespace Xamarin.Android.Tasks
 			var tempModules = new Dictionary<byte[], ModuleData> ();
 			Dictionary <AssemblyDefinition, int> moduleCounter = null;
 			var mvidCache = new Dictionary <Guid, byte[]> ();
+			appConfState = new ApplicationConfigTaskState {
+				JniAddNativeMethodRegistrationAttributePresent = skipJniAddNativeMethodRegistrationAttributeScan
+			};
 
 			foreach (TypeDefinition td in javaTypes) {
+				UpdateApplicationConfig (td, appConfState);
+
 				string assemblyName = td.Module.Assembly.FullName;
 
 				if (!knownAssemblies.ContainsKey (assemblyName)) {

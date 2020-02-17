@@ -33,6 +33,7 @@ namespace Android.Runtime {
 		public byte            brokenExceptionTransitions;
 		public int             packageNamingPolicy;
 		public byte            ioExceptionType;
+		public int             jniAddNativeMethodRegistrationAttributePresent;
 	}
 #pragma warning restore 0649
 
@@ -54,7 +55,6 @@ namespace Android.Runtime {
 		internal static int    gref_gc_threshold;
 
 		internal  static  bool  PropagateExceptions;
-		static UncaughtExceptionHandler defaultUncaughtExceptionHandler;
 
 		internal static bool IsRunningOnDesktop;
 		internal static bool LogTypemapMissStackTrace;
@@ -173,7 +173,7 @@ namespace Android.Runtime {
 			Mono.SystemDependencyProvider.Initialize ();
 
 			BoundExceptionType = (BoundExceptionType)args->ioExceptionType;
-			androidRuntime = new AndroidRuntime (args->env, args->javaVm, androidSdkVersion > 10, args->grefLoader, args->Loader_loadClass);
+			androidRuntime = new AndroidRuntime (args->env, args->javaVm, androidSdkVersion > 10, args->grefLoader, args->Loader_loadClass, args->jniAddNativeMethodRegistrationAttributePresent != 0);
 			AndroidValueManager = (AndroidValueManager) androidRuntime.ValueManager;
 
 			AllocObjectSupported = androidSdkVersion > 10;
@@ -182,12 +182,6 @@ namespace Android.Runtime {
 			grefIGCUserPeer_class = args->grefIGCUserPeer;
 
 			PropagateExceptions = args->brokenExceptionTransitions == 0;
-
-			if (PropagateExceptions) {
-				defaultUncaughtExceptionHandler = new UncaughtExceptionHandler (Java.Lang.Thread.DefaultUncaughtExceptionHandler);
-				if (!IsRunningOnDesktop)
-					Java.Lang.Thread.DefaultUncaughtExceptionHandler = defaultUncaughtExceptionHandler;
-			}
 
 			JavaNativeTypeManager.PackageNamingPolicy = (PackageNamingPolicy)args->packageNamingPolicy;
 			if (IsRunningOnDesktop) {
@@ -204,13 +198,6 @@ namespace Android.Runtime {
 
 		internal static void Exit ()
 		{
-			/* Reset uncaught exception handler so that we don't mistakenly reuse a
-			 * now-invalid handler the next time we reinitialize JNIEnv.
-			 */
-			var uncaughtExceptionHandler = Java.Lang.Thread.DefaultUncaughtExceptionHandler as UncaughtExceptionHandler;
-			if (uncaughtExceptionHandler != null && uncaughtExceptionHandler == defaultUncaughtExceptionHandler)
-				Java.Lang.Thread.DefaultUncaughtExceptionHandler = uncaughtExceptionHandler.DefaultHandler;
-
 			/* Manually dispose surfaced objects and close the current JniEnvironment to
 			 * avoid ObjectDisposedException thrown on finalizer threads after shutdown
 			 */
@@ -249,15 +236,59 @@ namespace Android.Runtime {
 			GC.SuppressFinalize (obj);
 		}
 
+		static Action<Exception> mono_unhandled_exception;
+		static Action<AppDomain, UnhandledExceptionEventArgs> AppDomain_DoUnhandledException;
+
+		static void Initialize ()
+		{
+			if (mono_unhandled_exception == null) {
+				var mono_UnhandledException = typeof (System.Diagnostics.Debugger)
+					.GetMethod ("Mono_UnhandledException", BindingFlags.NonPublic | BindingFlags.Static);
+				mono_unhandled_exception = (Action<Exception>) Delegate.CreateDelegate (typeof(Action<Exception>), mono_UnhandledException);
+			}
+
+			if (AppDomain_DoUnhandledException == null) {
+				var ad_due = typeof (AppDomain)
+					.GetMethod ("DoUnhandledException",
+					            bindingAttr:  BindingFlags.NonPublic | BindingFlags.Instance,
+					            binder:       null,
+					            types:        new []{typeof (UnhandledExceptionEventArgs)},
+					            modifiers:    null);
+				if (ad_due != null) {
+					AppDomain_DoUnhandledException  = (Action<AppDomain, UnhandledExceptionEventArgs>) Delegate.CreateDelegate (
+						typeof (Action<AppDomain, UnhandledExceptionEventArgs>), ad_due);
+				}
+			}
+		}
+
 		internal static void PropagateUncaughtException (IntPtr env, IntPtr javaThreadPtr, IntPtr javaExceptionPtr)
 		{
-			if (defaultUncaughtExceptionHandler == null)
+			if (!PropagateExceptions)
 				return;
 
-			var javaThread = JavaObject.GetObject<Java.Lang.Thread> (env, javaThreadPtr, JniHandleOwnership.DoNotTransfer);
+			try {
+				Initialize ();
+			} catch (Exception e) {
+				Android.Runtime.AndroidEnvironment.FailFast ($"Unable to initialize UncaughtExceptionHandler. Nested exception caught: {e}");
+			}
+
 			var javaException = JavaObject.GetObject<Java.Lang.Throwable> (env, javaExceptionPtr, JniHandleOwnership.DoNotTransfer);
 
-			defaultUncaughtExceptionHandler.UncaughtException (javaThread, javaException);
+			// Disabled until Linker error surfaced in https://github.com/xamarin/xamarin-android/pull/4302#issuecomment-596400025 is resolved
+			//System.Diagnostics.Debugger.Mono_UnhandledException (javaException);
+			mono_unhandled_exception (javaException);
+
+			try {
+				var jltp = javaException as JavaProxyThrowable;
+				Exception innerException = jltp?.InnerException;
+				var args  = new UnhandledExceptionEventArgs (innerException ?? javaException, isTerminating: true);
+
+				// Disabled until Linker error surfaced in https://github.com/xamarin/xamarin-android/pull/4302#issuecomment-596400025 is resolved
+				//AppDomain.CurrentDomain.DoUnhandledException (args);
+				AppDomain_DoUnhandledException (AppDomain.CurrentDomain, args);
+			} catch (Exception e) {
+				Logger.Log (LogLevel.Error, "monodroid", "Exception thrown while raising AppDomain.UnhandledException event: " + e.ToString ());
+			}
 		}
 
 		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]

@@ -7,7 +7,7 @@ namespace Android.Runtime {
 
 	public class XAPeerMembers : JniPeerMembers {
 
-		static  Dictionary<string,  JniPeerMembers>         LegacyPeerMembers = new Dictionary<string, JniPeerMembers> ();
+		static  Dictionary<string,  JniPeerMembers>         LegacyPeerMembers = new Dictionary<string, JniPeerMembers> (StringComparer.Ordinal);
 
 		public XAPeerMembers (string jniPeerTypeName, Type managedPeerType)
 			: base (jniPeerTypeName, managedPeerType)

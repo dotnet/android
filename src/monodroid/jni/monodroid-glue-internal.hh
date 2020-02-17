@@ -49,6 +49,7 @@ namespace xamarin::android::internal
 			uint8_t         brokenExceptionTransitions;
 			int             packageNamingPolicy;
 			uint8_t         boundExceptionType;
+			int             jniAddNativeMethodRegistrationAttributePresent;
 		};
 
 	private:

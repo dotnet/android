@@ -249,6 +249,7 @@ namespace Xamarin.Android.Tasks
 				throw new InvalidOperationException ($"Unsupported BoundExceptionType value '{BoundExceptionType}'");
 			}
 
+			var appConfState = BuildEngine4.GetRegisteredTaskObject (ApplicationConfigTaskState.RegisterTaskObjectKey, RegisteredTaskObjectLifetime.Build) as ApplicationConfigTaskState;
 			foreach (string abi in SupportedAbis) {
 				NativeAssemblerTargetProvider asmTargetProvider;
 				string baseAsmFilePath = Path.Combine (EnvironmentOutputDirectory, $"environment.{abi.ToLowerInvariant ()}");
@@ -285,6 +286,7 @@ namespace Xamarin.Android.Tasks
 					PackageNamingPolicy = pnp,
 					BoundExceptionType = boundExceptionType,
 					InstantRunEnabled = InstantRunEnabled,
+					JniAddNativeMethodRegistrationAttributePresent = appConfState != null ? appConfState.JniAddNativeMethodRegistrationAttributePresent : false,
 				};
 
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
