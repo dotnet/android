@@ -73,6 +73,10 @@ namespace Java.Interop {
 					}
 				}
 
+				var simpleRef = GetSimpleReference (type);
+				if (simpleRef != null)
+					return new JniTypeSignature (simpleRef, rank, false);
+
 				var name = type.GetCustomAttribute<JniTypeSignatureAttribute> (inherit: false);
 				if (name != null) {
 					return new JniTypeSignature (name.SimpleReference, name.ArrayRank + rank, name.IsKeyword);
@@ -86,10 +90,6 @@ namespace Java.Interop {
 						return r.AddArrayRank (rank + 1);
 					}
 				}
-
-				var simpleRef = GetSimpleReference (type);
-				if (simpleRef != null)
-					return new JniTypeSignature (simpleRef, rank, false);
 
 				if (isGeneric) {
 					simpleRef = GetSimpleReference (genericDef);
@@ -126,6 +126,12 @@ namespace Java.Interop {
 					}
 				}
 
+				foreach (var simpleRef in GetSimpleReferences (type)) {
+					if (simpleRef == null)
+						continue;
+					yield return new JniTypeSignature (simpleRef, rank, false);
+				}
+
 				var name = type.GetCustomAttribute<JniTypeSignatureAttribute> (inherit: false);
 				if (name != null) {
 					yield return new JniTypeSignature (name.SimpleReference, name.ArrayRank + rank, name.IsKeyword);
@@ -138,12 +144,6 @@ namespace Java.Interop {
 						var r = GetTypeSignature (type.GenericTypeArguments [0]);
 						yield return r.AddArrayRank (rank + 1);
 					}
-				}
-
-				foreach (var simpleRef in GetSimpleReferences (type)) {
-					if (simpleRef == null)
-						continue;
-					yield return new JniTypeSignature (simpleRef, rank, false);
 				}
 
 				if (isGeneric) {
