@@ -117,7 +117,7 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendSwitchIfNotNull ("--output ", Path.GetDirectoryName (ClassesOutputDirectory));
 
 			using (var sw = new StreamWriter (path: inputListFile, append: false,
-					encoding: new UTF8Encoding (encoderShouldEmitUTF8Identifier: false))) {
+					encoding: MonoAndroidHelper.UTF8withoutBOM)) {
 				// .jar files
 				if (AlternativeJarFiles != null && AlternativeJarFiles.Any ()) {
 					Log.LogDebugMessage ("  processing AlternativeJarFiles...");

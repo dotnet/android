@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Xml.Linq;
+using System.Reflection;
 using System.Text;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -171,7 +171,7 @@ namespace Xamarin.Android.Tasks
 
 			// Step 2 - Generate type maps
 			//   Type mappings need to use all the assemblies, always.
-			WriteTypeMappings (res, allJavaTypes);
+			WriteTypeMappings (allJavaTypes);
 
 			var javaTypes = new List<TypeDefinition> ();
 			foreach (TypeDefinition td in allJavaTypes) {
@@ -183,15 +183,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			// Step 3 - Generate Java stub code
-			var success = Generator.CreateJavaSources (
-				Log,
-				javaTypes,
-				Path.Combine (OutputDirectory, "src"),
-				ApplicationJavaClass,
-				AndroidSdkPlatform,
-				UseSharedRuntime,
-				int.Parse (AndroidSdkPlatform) <= 10,
-				hasExportReference);
+			var success = CreateJavaSources (javaTypes);
 			if (!success)
 				return;
 
@@ -202,9 +194,7 @@ namespace Xamarin.Android.Tasks
 			var managedConflicts = new Dictionary<string, List<string>> (0, StringComparer.Ordinal);
 			var javaConflicts    = new Dictionary<string, List<string>> (0, StringComparer.Ordinal);
 
-			// Allocate a MemoryStream with a reasonable guess at its capacity
-			using (var stream = new MemoryStream (javaTypes.Count * 32))
-			using (var acw_map = new StreamWriter (stream)) {
+			using (var acw_map = MemoryStreamPool.Shared.CreateStreamWriter (Encoding.Default)) {
 				foreach (TypeDefinition type in javaTypes) {
 					string managedKey = type.FullName.Replace ('/', '.');
 					string javaKey = JavaNativeTypeManager.ToJniName (type).Replace ('/', '.');
@@ -246,7 +236,7 @@ namespace Xamarin.Android.Tasks
 				}
 
 				acw_map.Flush ();
-				MonoAndroidHelper.CopyIfStreamChanged (stream, AcwMapFile);
+				MonoAndroidHelper.CopyIfStreamChanged (acw_map.BaseStream, AcwMapFile);
 			}
 
 			foreach (var kvp in managedConflicts) {
@@ -281,11 +271,9 @@ namespace Xamarin.Android.Tasks
 
 			var additionalProviders = manifest.Merge (Log, allJavaTypes, ApplicationJavaClass, EmbedAssemblies, BundledWearApplicationName, MergedManifestDocuments);
 
-			using (var stream = new MemoryStream ()) {
-				manifest.Save (Log, stream);
-
-				// Only write the new manifest if it actually changed
-				MonoAndroidHelper.CopyIfStreamChanged (stream, MergedAndroidManifestOutput);
+			// Only write the new manifest if it actually changed
+			if (manifest.SaveIfChanged (Log, MergedAndroidManifestOutput)) {
+				Log.LogDebugMessage ($"Saving: {MergedAndroidManifestOutput}");
 			}
 
 			// Create additional runtime provider java sources.
@@ -316,6 +304,88 @@ namespace Xamarin.Android.Tasks
 				template => template.Replace ("// REGISTER_APPLICATION_AND_INSTRUMENTATION_CLASSES_HERE", regCallsWriter.ToString ()));
 		}
 
+		bool CreateJavaSources (IEnumerable<TypeDefinition> javaTypes)
+		{
+			string outputPath = Path.Combine (OutputDirectory, "src");
+			string monoInit = GetMonoInitSource (AndroidSdkPlatform, UseSharedRuntime);
+			bool hasExportReference = ResolvedAssemblies.Any (assembly => Path.GetFileName (assembly.ItemSpec) == "Mono.Android.Export.dll");
+			bool generateOnCreateOverrides = int.Parse (AndroidSdkPlatform) <= 10;
+
+			bool ok = true;
+			foreach (var t in javaTypes) {
+				using (var writer = MemoryStreamPool.Shared.CreateStreamWriter ()) {
+					try {
+						var jti = new JavaCallableWrapperGenerator (t, Log.LogWarning) {
+							GenerateOnCreateOverrides = generateOnCreateOverrides,
+							ApplicationJavaClass = ApplicationJavaClass,
+							MonoRuntimeInitialization = monoInit,
+						};
+
+						jti.Generate (writer);
+						writer.Flush ();
+
+						var path = jti.GetDestinationPath (outputPath);
+						MonoAndroidHelper.CopyIfStreamChanged (writer.BaseStream, path);
+						if (jti.HasExport && !hasExportReference)
+							Diagnostic.Error (4210, Properties.Resources.XA4210);
+					} catch (XamarinAndroidException xae) {
+						ok = false;
+						Log.LogError (
+								subcategory: "",
+								errorCode: "XA" + xae.Code,
+								helpKeyword: string.Empty,
+								file: xae.SourceFile,
+								lineNumber: xae.SourceLine,
+								columnNumber: 0,
+								endLineNumber: 0,
+								endColumnNumber: 0,
+								message: xae.MessageWithoutCode,
+								messageArgs: new object [0]
+						);
+					} catch (DirectoryNotFoundException ex) {
+						ok = false;
+						if (OS.IsWindows) {
+							Diagnostic.Error (5301, Properties.Resources.XA5301, t.FullName, ex);
+						} else {
+							Diagnostic.Error (4209, Properties.Resources.XA4209, t.FullName, ex);
+						}
+					} catch (Exception ex) {
+						ok = false;
+						Diagnostic.Error (4209, Properties.Resources.XA4209, t.FullName, ex);
+					}
+				}
+			}
+			return ok;
+		}
+
+		static string GetMonoInitSource (string androidSdkPlatform, bool useSharedRuntime)
+		{
+			// Lookup the mono init section from MonoRuntimeProvider:
+			// Mono Runtime Initialization {{{
+			// }}}
+			var builder = new StringBuilder ();
+			var runtime = useSharedRuntime ? "Shared" : "Bundled";
+			var api = "";
+			if (int.TryParse (androidSdkPlatform, out int apiLevel) && apiLevel < 21) {
+				api = ".20";
+			}
+			var assembly = Assembly.GetExecutingAssembly ();
+			using (var s = assembly.GetManifestResourceStream ($"MonoRuntimeProvider.{runtime}{api}.java"))
+			using (var reader = new StreamReader (s)) {
+				bool copy = false;
+				string line;
+				while ((line = reader.ReadLine ()) != null) {
+					if (string.CompareOrdinal ("\t\t// Mono Runtime Initialization {{{", line) == 0)
+						copy = true;
+					if (copy)
+						builder.AppendLine (line);
+					if (string.CompareOrdinal ("\t\t// }}}", line) == 0)
+						break;
+				}
+			}
+			return builder.ToString ();
+		}
+
 		string GetResource (string resource)
 		{
 			using (var stream = GetType ().Assembly.GetManifestResourceStream (resource))
@@ -330,7 +400,7 @@ namespace Xamarin.Android.Tasks
 			MonoAndroidHelper.CopyIfStringChanged (template, Path.Combine (destDir, filename));
 		}
 
-		void WriteTypeMappings (DirectoryAssemblyResolver resolver, List<TypeDefinition> types)
+		void WriteTypeMappings (List<TypeDefinition> types)
 		{
 			var tmg = new TypeMapGenerator ((string message) => Log.LogDebugMessage (message), SupportedAbis);
 			if (!tmg.Generate (types, TypemapOutputDirectory, GenerateNativeAssembly))

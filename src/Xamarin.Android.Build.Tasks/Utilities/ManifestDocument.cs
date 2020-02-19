@@ -881,12 +881,23 @@ namespace Xamarin.Android.Tasks {
 				}
 		}
 
+		public bool SaveIfChanged (TaskLoggingHelper log, string filename)
+		{
+			MemoryStream stream = MemoryStreamPool.Shared.Rent ();
+			try {
+				Save (log, stream);
+				return MonoAndroidHelper.CopyIfStreamChanged (stream, filename);
+			} finally {
+				MemoryStreamPool.Shared.Return (stream);
+			}
+		}
+
 		public void Save (TaskLoggingHelper log, string filename) =>
 			Save (m => log.LogWarning (m), filename);
 
 		public void Save (Action<string> logWarning, string filename)
 		{
-			using (var file = new StreamWriter (filename, append: false, encoding: new UTF8Encoding (false)))
+			using (var file = new StreamWriter (filename, append: false, encoding: MonoAndroidHelper.UTF8withoutBOM))
 				Save (logWarning, file);
 		}
 
@@ -895,18 +906,23 @@ namespace Xamarin.Android.Tasks {
 
 		public void Save (Action<string> logWarning, Stream stream)
 		{
-			using (var file = new StreamWriter (stream, new UTF8Encoding (false), bufferSize: 1024, leaveOpen: true))
+			using (var file = new StreamWriter (stream, MonoAndroidHelper.UTF8withoutBOM, bufferSize: 1024, leaveOpen: true))
 				Save (logWarning, file);
 		}
 
 		public void Save (Action<string> logWarning, TextWriter stream)
 		{
 			RemoveDuplicateElements ();
-			var ms = new MemoryStream ();
-			doc.Save (ms);
-			ms.Flush ();
-			ms.Position = 0;
-			var s = new StreamReader (ms).ReadToEnd ();
+			string s;
+			var ms = MemoryStreamPool.Shared.Rent ();
+			try {
+				doc.Save (ms);
+				ms.Flush ();
+				ms.Position = 0;
+				s = new StreamReader (ms).ReadToEnd ();
+			} finally {
+				MemoryStreamPool.Shared.Return (ms);
+			}
 			if (ApplicationName != null)
 				s = s.Replace ("${applicationId}", ApplicationName);
 			if (Placeholders != null)

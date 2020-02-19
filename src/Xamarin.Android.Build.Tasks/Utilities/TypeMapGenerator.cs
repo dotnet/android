@@ -82,7 +82,7 @@ namespace Xamarin.Android.Tasks
 				throw new ArgumentNullException (nameof (supportedAbis));
 			this.supportedAbis = supportedAbis;
 
-			outputEncoding = new UTF8Encoding (false);
+			outputEncoding = MonoAndroidHelper.UTF8withoutBOM;
 			moduleMagicString = outputEncoding.GetBytes (TypeMapMagicString);
 			typemapIndexMagicString = outputEncoding.GetBytes (TypeMapIndexMagicString);
 		}
@@ -240,14 +240,12 @@ namespace Xamarin.Android.Tasks
 
 				var generator = new TypeMappingNativeAssemblyGenerator (asmTargetProvider, data, Path.Combine (outputDirectory, "typemaps"), sharedBitsWritten, sharedIncludeUsesAbiPrefix);
 
-				using (var ms = new MemoryStream ()) {
-					using (var sw = new StreamWriter (ms, outputEncoding)) {
-						generator.Write (sw);
-						sw.Flush ();
-						MonoAndroidHelper.CopyIfStreamChanged (ms, generator.MainSourceFile);
-						if (!sharedIncludeUsesAbiPrefix)
-							sharedBitsWritten = true;
-					}
+				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter (outputEncoding)) {
+					generator.Write (sw);
+					sw.Flush ();
+					MonoAndroidHelper.CopyIfStreamChanged (sw.BaseStream, generator.MainSourceFile);
+					if (!sharedIncludeUsesAbiPrefix)
+						sharedBitsWritten = true;
 				}
 			}
 			return true;

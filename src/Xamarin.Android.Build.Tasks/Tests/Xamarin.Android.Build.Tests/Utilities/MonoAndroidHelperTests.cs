@@ -163,5 +163,25 @@ namespace Xamarin.Android.Build.Tests
 			var preamble = encoding.GetPreamble ();
 			Assert.AreEqual (before.Length, after.Length + preamble.Length, "BOM should be removed!");
 		}
+
+		[Test]
+		public void CopyIfStreamChanged_MemoryStreamPool ()
+		{
+			var pool = new MemoryStreamPool ();
+			var expected = pool.Rent ();
+			pool.Return (expected);
+
+			using (var writer = pool.CreateStreamWriter ()) {
+				writer.WriteLine ("bar");
+				writer.Flush ();
+
+				Assert.IsTrue (MonoAndroidHelper.CopyIfStreamChanged (writer.BaseStream, temp), "Should write on new file.");
+				FileAssert.Exists (temp);
+			}
+
+			var actual = pool.Rent ();
+			Assert.AreSame (expected, actual);
+			Assert.AreEqual (0, actual.Length);
+		}
 	}
 }
