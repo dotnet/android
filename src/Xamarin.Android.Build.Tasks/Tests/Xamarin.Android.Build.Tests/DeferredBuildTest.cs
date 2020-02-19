@@ -8,6 +8,7 @@ namespace Xamarin.Android.Build.Tests
 	public class DeferredBuildTest : BaseTest
 	{
 		[Test]
+		[Category ("SmokeTests")]
 		public void SelectivelyRunUpdateAndroidResources ()
 		{
 			var path = Path.Combine ("temp", TestName);
