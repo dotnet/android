@@ -327,6 +327,7 @@ class MemTest {
 		}
 
 		[Test]
+		[Category ("SmokeTests")]
 		public void BuildXamarinFormsMapsApplication ()
 		{
 			var proj = new XamarinFormsMapsApplicationProject ();
