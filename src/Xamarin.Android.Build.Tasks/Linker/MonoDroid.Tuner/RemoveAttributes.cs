@@ -51,6 +51,12 @@ namespace MonoDroid.Tuner {
 			case "NullableContextAttribute":
 			case "NullableAttribute":
 				return attr_type.Namespace == "System.Runtime.CompilerServices";
+			case "AllowNullAttribute":
+			case "MaybeNullAttribute":
+			case "NotNullAttribute":
+			case "NotNullWhenAttribute":
+			case "NotNullIfNotNullAttribute":
+				return attr_type.Namespace == "System.Diagnostics.CodeAnalysis";
 			default:
 				return false;
 			}
