@@ -17,20 +17,54 @@ to avoid potential merge conflicts with other PRs.
 
 ## Templates
 
-### Build time or app performance improvement
+These templates are listed roughly in order from more specific to less specific.
+Use the most specific template that matches.  For example, for a build time
+improvement, use the build time improvement template rather than the new feature
+template or small improvement template.
+
+### Template for feature infrastructure
+
+  * Use this template for PRs that add only feature *infrastructure*.  This will
+    let the team know that although the PR changes shipping code, the release
+    notes can skip it until additional work is completed.
+
+  * For comparison, for PRs that change only non-shipping code such as in
+    `build-tools/` or `*/Tests/*`, don't worry about adding any note at all.
+
+Example:
+
+```
+This change provides infrastructure for an upcoming feature.
+```
+
+### Template for build time or app performance improvement
 
   * Use a command form verb in the first sentence, as if you were telling
     someone to do something.
-  * Include a before and after time comparsion if possible.
+
+  * Include a before and after time comparison if possible.
+
+  * Use one of the following headings:
+
+      * `### Build and deployment performance`
+      * `### App startup performance`
+
+  * (Optional) If the PR already exists, include a link to the PR.
 
 Examples:
 
 ```
+### Build and deployment performance
+
   * [GitHub PR 3640](https://github.com/xamarin/xamarin-android/pull/3640):
     Use System.Reflection.Metadata rather than Cecil for
     `ResolveLibraryProjectImports`.  This reduced the time for the
     `ResolveLibraryProjectImports` task from about 4.8 seconds to about 4.5
     seconds for a small test Xamarin.Forms app on an initial clean build.
+```
+
+```
+### App startup performance
 
   * [GitHub PR 3729](https://github.com/xamarin/xamarin-android/pull/3729):
     Initialize application logging and uncaught exception handling lazily.  This
@@ -39,15 +73,44 @@ Examples:
     configuration build on a Google Pixel 3 XL device.
 ```
 
-### New feature or behavior
+### Template for external tool or library version update
+
+  * Include a heading that starts with the tool or library name and ends with
+    `version update` or `version update to $VERSION`.
+
+  * Link to the upstream release notes if possible.
+
+Examples:
+
+```
+### Mono.Data.Sqlite SQLite version update
+
+The version of SQLite used by Mono.Data.Sqlite in Xamarin.Android has been
+updated from 3.27.1 to [3.28.0](https://sqlite.org/releaselog/3_28_0.html),
+bringing in several improvements and bug fixes.
+```
+
+```
+### AAPT2 version update to 3.5.0-5435860
+
+The version of the Android Asset Packaging Tool AAPT2 included in
+Xamarin.Android has been updated from 3.4.1-5326820 to 3.5.0-5435860.
+```
+
+### Template for new feature or behavior
 
   * Describe what the change is, why it was added, and how to enable it or
     account for it.
 
+  * Include a descriptive heading for the change.  The heading will also appear
+    in the "what's new" section at the top of the release notes.
+
+  * List any known issues under a `#### Known issues` subheading.
+
 Example:
 
 ````
-#### XA0119 warning for non-ideal Debug build configurations
+### XA0119 warning for non-ideal Debug build configurations
 
 Xamarin.Android 10.1 adds a new XA0119 build warning to identify cases where
 projects might have unintentionally enabled settings that slow down deployments
@@ -75,47 +138,57 @@ Be sure to disable these settings for the best Debug configuration deployment
 performance.
 ````
 
-### External tool or library version update
+### Template for other issue fix or small improvement
 
-Example:
+  * Use past tense verbs to describe the old problematic behavior.
 
-```
-#### Mono.Data.Sqlite SQLite version update
+  * List all public GitHub or Developer Community items fixed by the change,
+    excluding items closed as duplicates.  If no public items were fixed, or if
+    the scope of the fix was larger than any of the individual items, you can
+    skip this step, or if the PR already exists, you can list that instead.
 
-The version of SQLite used by Mono.Data.Sqlite in Xamarin.Android has been
-updated from 3.27.1 to [3.28.0](https://sqlite.org/releaselog/3_28_0.html),
-bringing in several improvements and bug fixes.
-```
-
-### Other issue fix or small improvement
-
-  * Use past tense verbs when describing the previous problematic behavior.
-  * List all public GitHub or Developer Community items that were fixed by the
-    change.  If no public items were fixed, or if the scope of the fix was
-    larger than any of the individual items, list the PR instead.
   * Where possible and appropriate, include the error text that users would have
     seen before the fix.
+
+  * For items based on internal findings rather than end-user reports, aim to
+    include information about how end-user projects could have in theory
+    encountered the behavior.
+
   * If the fix is for a regression and you know when the problem started,
     include that version info.
+
+  * Use one of the following headings:
+
+      * `#### Application and library build and deployment`
+      * `#### Application behavior on device and emulator`
+      * `#### Android API bindings`
+      * `#### Design-time build process`
+      * `#### Xamarin.Android SDK installation`
+      * `#### Application Mono Framework behavior on device and emulator`
 
 Examples:
 
 ```
+#### Application behavior on device and emulator
+
   * [Developer Community 743965](https://developercommunity.visualstudio.com/content/problem/743965/newtonsoftjsonjsonreaderexception-unexpected-chara.html),
     [GitHub 3626](https://github.com/xamarin/xamarin-android/issues/3626):
     Starting in Xamarin.Android 10.0, *Newtonsoft.Json.JsonReaderException:
     Unexpected character encountered* caused `JsonConvert.DeserializeObject()`
     to fail in apps built in the Release configuration.
+```
+
+```
+#### Application behavior on device and emulator
 
   * [GitHub 3498](https://github.com/xamarin/xamarin-android/issues/3498):
     Writing to the `System.IO.Stream` returned by
     `Application.Context.ContentResolver.OpenOutputStream()` completed without
     error but did not write any bytes to the output location.
+```
 
-  * [GitHub PR 3561](https://github.com/xamarin/xamarin-android/pull/3561):
-    Starting in Xamarin.Android 10.0, the `_GenerateJavaStubs` target could run
-    during builds where it wasn't needed if any of the previous builds had
-    involved a change to a class that inherited from `Java.Lang.Object`.
+```
+#### Application and library build and deployment
 
   * [GitHub PR 3685](https://github.com/xamarin/xamarin-android/pull/3685):
     *warning ANDJS0000* was always shown for the `jarsigner` warnings *The
@@ -125,16 +198,19 @@ Examples:
     informational messages rather than warnings.
 ```
 
-### Submodule or `.external` bump
+### Template for submodule or `.external` bump
 
-  * Use a single file for all of the notes for the bump.
+  * Use a single file for all the notes.
+
   * Use section headings to help organize the notes.
-  * For items that do not have a public issue or PR on GitHub or Developer
-    Community, use the xamarin-android bump PR as the item link instead.
-  * For Mono Framework version updates, the main focus for now is to include an
-    entry for every issue in the xamarin-android repo that is fixed by the bump.
 
-Example showing mutiple release notes sections for a Java.Interop bump:
+  * For items that do not have a public issue or PR on GitHub or Developer
+    Community, don't worry about including a link.
+
+  * For Mono Framework version updates, the main focus for now is to include
+    entries for any issues in the xamarin-android repo fixed by the bump.
+
+Example showing multiple release notes sections for a Java.Interop bump:
 
 ```
 ### Build and deployment performance
@@ -149,7 +225,7 @@ Example showing mutiple release notes sections for a Java.Interop bump:
     binding like *Mono.Android.dll* itself, this reduced the total build time in
     a test environment by about 50 seconds.
 
-### Issues fixed
+#### Application and library build and deployment
 
   * [Java.Interop GitHub PR 458](https://github.com/xamarin/java.interop/pull/458):
     Bindings projects did not yet automatically generate event handlers for Java
@@ -167,8 +243,7 @@ guidelines][docs-guidelines].  For example, it's fine to use backticks around
 paths in these notes rather than italics.  That makes it easier to avoid
 unintentional formatting issues when paths include characters like `_` or `*`.
 
-Similarly, you can use any list indentation or line wrapping style that you
-like.
+Similarly, you can use any list indentation or line wrapping style you like.
 
 [docs-guidelines]: https://github.com/MicrosoftDocs/xamarin-docs/blob/live/contributing-guidelines/template.md
 
