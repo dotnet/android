@@ -114,7 +114,7 @@ Overridable MSBuild properties include:
   * `$(IgnoreMaxMonoVersion)`: Skip the enforcement of the `$(MonoRequiredMaximumVersion)`
     property. This is so that developers can run against the latest
     and greatest. But the build system can enforce the min and max 
-    versions. The default is `true`, however on Jenkins we use:
+    versions. The default is `true`, however on CI we use:
 
          /p:IgnoreMaxMonoVersion=False
 
