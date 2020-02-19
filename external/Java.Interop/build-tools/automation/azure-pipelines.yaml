@@ -6,7 +6,7 @@ trigger:
 
 # Global variables
 variables:
-  DotNetCoreVersion: 3.1.x
+  DotNetCoreVersion: 3.1.100
   HostedMac: Hosted Mac Internal
   HostedWinVS2019: Hosted Windows 2019 with VS2019
 
