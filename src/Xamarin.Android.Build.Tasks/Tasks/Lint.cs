@@ -191,7 +191,7 @@ namespace Xamarin.Android.Tasks
 		public override bool RunTask ()
 		{
 			if (string.IsNullOrEmpty (ToolPath) || !File.Exists (GenerateFullPathToTool ())) {
-				Log.LogCodedError ("XA5205", $"Cannot find `{ToolName}` in the Android SDK. Please set its path via /p:LintToolPath.");
+				Log.LogCodedError ("XA5205", Properties.Resources.XA5205_Lint, ToolName);
 				return false;
 			}
 

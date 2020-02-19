@@ -82,10 +82,10 @@ namespace Xamarin.Android.Tasks
 			}
 			catch (InvalidOperationException e) {
 				if (e.Message.Contains (" Android ")) {
-					Log.LogCodedError ("XA5300", "The Android SDK Directory could not be found. Please set via /p:AndroidSdkDirectory.");
+					Log.LogCodedError ("XA5300", Properties.Resources.XA5300_Android_SDK);
 				}
 				if (e.Message.Contains (" Java ")) {
-					Log.LogCodedError ("XA5300", "The Java SDK Directory could not be found. Please set via /p:JavaSdkDirectory.");
+					Log.LogCodedError ("XA5300", Properties.Resources.XA5300_Java_SDK);
 				}
 				return false;
 			}
@@ -95,11 +95,11 @@ namespace Xamarin.Android.Tasks
 			JavaSdkPath    = MonoAndroidHelper.AndroidSdk.JavaSdkPath;
 
 			if (string.IsNullOrEmpty (AndroidSdkPath)) {
-				Log.LogCodedError ("XA5300", "The Android SDK Directory could not be found. Please set via /p:AndroidSdkDirectory.");
+				Log.LogCodedError ("XA5300", Properties.Resources.XA5300_Android_SDK);
 				return false;
 			}
 			if (string.IsNullOrEmpty (JavaSdkPath)) {
-				Log.LogCodedError ("XA5300", "The Java SDK Directory could not be found. Please set via /p:JavaSdkDirectory.");
+				Log.LogCodedError ("XA5300", Properties.Resources.XA5300_Java_SDK);
 				return false;
 			}
 
