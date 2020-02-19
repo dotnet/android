@@ -3,7 +3,7 @@
   <Target Name="CopyNewtonsoftJsonLicense"
       AfterTargets="Build">
     <Copy
-        SourceFiles="..\..\packages\newtonsoft.json\12.0.3\LICENSE.md"
+        SourceFiles="$(XAPackagesDir)\newtonsoft.json\12.0.3\LICENSE.md"
         DestinationFiles="$(OutputPath)\Newtonsoft.Json-LICENSE.md"
     />
   </Target>
