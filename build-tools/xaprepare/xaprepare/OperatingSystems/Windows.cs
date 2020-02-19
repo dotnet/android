@@ -58,11 +58,7 @@ namespace Xamarin.Android.Prepare
 					return base.Which (programPath, required);
 				}
 
-				string packagePath = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "packages", "7-zip.commandline", "18.1.0", "tools");
-				string nugetPackagesOverride = Environment.GetEnvironmentVariable ("NUGET_PACKAGES");
-				if (!String.IsNullOrEmpty(nugetPackagesOverride)) {
-					packagePath = Path.Combine (nugetPackagesOverride, "7-zip.commandline", "18.1.0", "tools");
-				}
+				string packagePath = Path.Combine (Configurables.Paths.XAPackagesDir, "7-zip.commandline", "18.1.0", "tools");
 
 				if (Is64Bit)
 					packagePath = Path.Combine (packagePath, "x64");

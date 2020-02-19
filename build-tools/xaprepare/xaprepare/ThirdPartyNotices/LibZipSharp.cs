@@ -15,7 +15,7 @@ namespace Xamarin.Android.Prepare
 			var doc = XDocument.Load (Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "Configuration.props"));
 			return doc.Descendants(XName.Get("LibZipSharpVersion", @"http://schemas.microsoft.com/developer/msbuild/2003")).First().Value;
 		}
-		static readonly string licenseFile = Path.Combine (GetNugetLocation (),
+		static readonly string licenseFile = Path.Combine (Configurables.Paths.XAPackagesDir,
 			"xamarin.libzipsharp", LibZipSharpVersion (),
 			"Licences", "LICENSE");
 
@@ -25,15 +25,5 @@ namespace Xamarin.Android.Prepare
 		public override string LicenseText => null;
 
 		public override bool Include (bool includeExternalDeps, bool includeBuildDeps) => includeExternalDeps;
-
-		private static string GetNugetLocation ()
-		{
-			string nugetPackagesOverride = Environment.GetEnvironmentVariable ("NUGET_PACKAGES");
-			if (!String.IsNullOrEmpty (nugetPackagesOverride)) {
-				return nugetPackagesOverride;
-			}
-
-			return Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "packages");
-		}
 	}
 }
