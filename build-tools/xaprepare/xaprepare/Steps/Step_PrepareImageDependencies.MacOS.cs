@@ -21,7 +21,7 @@ namespace Xamarin.Android.Prepare
 					brewPackages.Add (homebrewProgram.Name);
 			}
 
-			pkgUrls.Add (Configurables.Urls.MonoPackage.ToString ());
+			pkgUrls.Add (Context.Instance.Properties.GetRequiredValue (KnownProperties.MonoDarwinPackageUrl));
 		}
 	}
 }

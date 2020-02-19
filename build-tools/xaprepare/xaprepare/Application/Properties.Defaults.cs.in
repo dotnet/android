@@ -34,7 +34,9 @@ namespace Xamarin.Android.Prepare
 			properties.Add (KnownProperties.MingwZlibLibraryName,                StripQuotes ("@MingwZlibLibraryName@"));
 			properties.Add (KnownProperties.MingwZlibRootDirectory32,            StripQuotes (@"@MingwZlibRootDirectory32@"));
 			properties.Add (KnownProperties.MingwZlibRootDirectory64,            StripQuotes (@"@MingwZlibRootDirectory64@"));
+			properties.Add (KnownProperties.MonoDarwinPackageUrl,                StripQuotes ("@MonoDarwinPackageUrl@"));
 			properties.Add (KnownProperties.MonoRequiredMinimumVersion,          StripQuotes ("@MonoRequiredMinimumVersion@"));
+			properties.Add (KnownProperties.MonoRequiredMaximumVersion,          StripQuotes ("@MonoRequiredMaximumVersion@"));
 			properties.Add (KnownProperties.MonoSourceFullPath,                  StripQuotes (@"@MonoSourceFullPath@"));
 			properties.Add (KnownProperties.ProductVersion,                      StripQuotes ("@ProductVersion@"));
 			properties.Add (KnownProperties.RemapAssemblyRefToolExecutable,      StripQuotes (@"@RemapAssemblyRefToolExecutable@"));

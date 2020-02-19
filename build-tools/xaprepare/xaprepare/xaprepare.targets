@@ -66,7 +66,9 @@
       <Replacement Include="@MingwZlibLibraryName@=$(MingwZlibLibraryName)" />
       <Replacement Include="@MingwZlibRootDirectory32@=$(MingwZlibRootDirectory32)" />
       <Replacement Include="@MingwZlibRootDirectory64@=$(MingwZlibRootDirectory64)" />
+      <Replacement Include="@MonoDarwinPackageUrl@=$(MonoDarwinPackageUrl)" />
       <Replacement Include="@MonoRequiredMinimumVersion@=$(MonoRequiredMinimumVersion)" />
+      <Replacement Include="@MonoRequiredMaximumVersion@=$(MonoRequiredMaximumVersion)" />
       <Replacement Include="@MonoSourceFullPath@=$(MonoSourceFullPath)" />
       <Replacement Include="@ProductVersion@=$(ProductVersion)" />
       <Replacement Include="@RemapAssemblyRefToolExecutable@=$(RemapAssemblyRefToolExecutable)" />

@@ -52,22 +52,18 @@ namespace Xamarin.Android.Tasks
 			output.WriteLine ();
 
 			if (!sharedBitsWritten && haveAssemblyNames) {
-				using (var ms = new MemoryStream ()) {
-					using (var sharedOutput = new StreamWriter (ms, output.Encoding)) {
-						WriteAssemblyNames (sharedOutput);
-						sharedOutput.Flush ();
-						MonoAndroidHelper.CopyIfStreamChanged (ms, SharedIncludeFile);
-					}
+				using (var sharedOutput = MemoryStreamPool.Shared.CreateStreamWriter (output.Encoding)) {
+					WriteAssemblyNames (sharedOutput);
+					sharedOutput.Flush ();
+					MonoAndroidHelper.CopyIfStreamChanged (sharedOutput.BaseStream, SharedIncludeFile);
 				}
 			}
 
 			if (haveModules) {
-				using (var ms = new MemoryStream ()) {
-					using (var mapOutput = new StreamWriter (ms, output.Encoding)) {
-						WriteMapModules (output, mapOutput, "map_modules");
-						mapOutput.Flush ();
-						MonoAndroidHelper.CopyIfStreamChanged (ms, TypemapsIncludeFile);
-					}
+				using (var mapOutput = MemoryStreamPool.Shared.CreateStreamWriter (output.Encoding)) {
+					WriteMapModules (output, mapOutput, "map_modules");
+					mapOutput.Flush ();
+					MonoAndroidHelper.CopyIfStreamChanged (mapOutput.BaseStream, TypemapsIncludeFile);
 				}
 			} else {
 				WriteMapModules (output, null, "map_modules");

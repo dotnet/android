@@ -74,7 +74,7 @@ stages:
     steps:
     - checkout: self
       submodules: recursive
-    - template: security\xa-static-analysis\v1.yml@yaml
+    - template: security\xa-static-analysis\v2.yml@yaml
       parameters:
         credScanSuppressionsFile: $(System.DefaultWorkingDirectory)\build-tools\automation\CredScanSuppressions.json
 
@@ -140,7 +140,7 @@ stages:
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: copy bcl-tests assemblies
 
-    - task: PublishPipelineArtifact@0
+    - task: PublishPipelineArtifact@1
       displayName: upload test assemblies
       inputs:
         artifactName: $(TestAssembliesArtifactName)
@@ -172,7 +172,7 @@ stages:
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: create updateinfo file
 
-    - task: PublishPipelineArtifact@0
+    - task: PublishPipelineArtifact@1
       displayName: upload installers
       inputs:
         artifactName: $(InstallerArtifactName)
@@ -186,7 +186,7 @@ stages:
         configuration: $(XA.Build.Configuration)
         packDirectory: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
 
-    - task: PublishPipelineArtifact@0
+    - task: PublishPipelineArtifact@1
       displayName: upload nupkgs
       inputs:
         artifactName: $(NuGetArtifactName)
@@ -388,7 +388,7 @@ stages:
     - script: cp $(System.DefaultWorkingDirectory)/storage-artifacts/*.pkg $(Build.ArtifactStagingDirectory)
       displayName: copy notarized pkg
 
-    - task: PublishPipelineArtifact@0
+    - task: PublishPipelineArtifact@1
       displayName: upload notarized pkg
       inputs:
         artifactName: notarized-pkg
@@ -426,35 +426,6 @@ stages:
   displayName: Test
   dependsOn: mac_build
   jobs:
-  # Check - "Xamarin.Android (Test API Compatibility)"
-  - job: mac_api_compat
-    displayName: API Compatibility
-    pool: $(HostedMacMojave)
-    timeoutInMinutes: 60
-    cancelTimeoutInMinutes: 5
-    workspace:
-      clean: all
-    steps:
-    - checkout: self
-      submodules: recursive
-
-    - template: yaml-templates/run-installer.yaml
-
-    - script: |
-        make prepare-update-mono PREPARE_CI=1 V=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
-        make prepare PREPARE_CI=1 PREPARE_AUTOPROVISION=1 V=1 CONFIGURATION=$(XA.Build.Configuration)
-      displayName: make prepare
-
-    - script: >
-        make run-api-compatibility-tests V=1 CONFIGURATION=$(XA.Build.Configuration)
-        FRAMEWORK_DIR=/Library/Frameworks/Xamarin.Android.framework/Versions/Current/lib/xamarin.android/xbuild-frameworks/MonoAndroid
-      displayName: make run-api-compatibility-tests
-
-    - powershell: |
-        $breakageReports = Get-ChildItem $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/compatibility -Filter *.html
-        foreach ($report in $breakageReports) {
-            Write-Host "##vso[task.uploadsummary]$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/compatibility/$report"
-        }
 
   # Check - "Xamarin.Android (Test APK Instrumentation - macOS)"
   - job: mac_apk_tests
@@ -664,7 +635,7 @@ stages:
     steps:
     - template: yaml-templates/setup-test-environment.yaml
 
-    - task: DownloadPipelineArtifact@1
+    - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/$(XA.Build.Configuration)
@@ -718,12 +689,12 @@ stages:
     steps:
     - template: yaml-templates/setup-test-environment.yaml
 
-    - task: DownloadPipelineArtifact@1
+    - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
-    - task: DownloadPipelineArtifact@1
+    - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: $(NuGetArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)
@@ -780,12 +751,12 @@ stages:
       parameters:
         provisionExtraArgs: -vv PROVISIONATOR_VISUALSTUDIO_LOCATION="$(VSINSTALLDIR)" -f
 
-    - task: DownloadPipelineArtifact@1
+    - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)
 
-    - task: DownloadPipelineArtifact@1
+    - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: $(NuGetArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)
@@ -820,7 +791,7 @@ stages:
     steps:
     - template: yaml-templates/setup-test-environment.yaml
 
-    - task: DownloadPipelineArtifact@1
+    - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)

@@ -26,10 +26,9 @@ namespace Xamarin.Android.Prepare
 			new HomebrewProgram ("p7zip", "7za"),
 			new HomebrewProgram ("xamarin/xamarin-android-windeps/mingw-zlib", "xamarin/xamarin-android-windeps", null),
 
-			// If you change the minimum Mono version here, please change the URL as well
-			new MonoPkgProgram ("Mono", "com.xamarin.mono-MDK.pkg", Configurables.Urls.MonoPackage) {
-				MinimumVersion = "6.12.0.15",
-				MaximumVersion = "6.99.0.0",
+			new MonoPkgProgram ("Mono", "com.xamarin.mono-MDK.pkg", new Uri (Context.Instance.Properties.GetRequiredValue (KnownProperties.MonoDarwinPackageUrl))) {
+				MinimumVersion = Context.Instance.Properties.GetRequiredValue (KnownProperties.MonoRequiredMinimumVersion),
+				MaximumVersion = Context.Instance.Properties.GetRequiredValue (KnownProperties.MonoRequiredMaximumVersion),
 			},
 		};
 
