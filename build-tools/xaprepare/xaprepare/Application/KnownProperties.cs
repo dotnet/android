@@ -30,7 +30,9 @@ namespace Xamarin.Android.Prepare
 		public const string MingwZlibLibraryName                = "MingwZlibLibraryName";
 		public const string MingwZlibRootDirectory32            = "MingwZlibRootDirectory32";
 		public const string MingwZlibRootDirectory64            = "MingwZlibRootDirectory64";
+		public const string MonoDarwinPackageUrl                = "MonoDarwinPackageUrl";
 		public const string MonoRequiredMinimumVersion          = "MonoRequiredMinimumVersion";
+		public const string MonoRequiredMaximumVersion          = "MonoRequiredMaximumVersion";
 		public const string MonoSourceFullPath                  = "MonoSourceFullPath";
 		public const string ProductVersion                      = "ProductVersion";
 		public const string RemapAssemblyRefToolExecutable      = "RemapAssemblyRefToolExecutable";

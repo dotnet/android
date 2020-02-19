@@ -106,7 +106,7 @@ namespace Xamarin.Android.Tasks
 
 			if (MultiDexEnabled) {
 				if (string.IsNullOrEmpty (MultiDexMainDexListFile)) {
-					Log.LogCodedWarning ("XA4305", Properties.Resources.XA4305, nameof (MultiDexMainDexListFile));
+					Log.LogCodedWarning ("XA4305", Properties.Resources.XA4305);
 				} else if (!File.Exists (MultiDexMainDexListFile)) {
 					Log.LogCodedWarning ("XA4305", MultiDexMainDexListFile, 0, Properties.Resources.XA4305_File_Missing, MultiDexMainDexListFile);
 				} else {
@@ -117,7 +117,7 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendSwitchIfNotNull ("--output ", Path.GetDirectoryName (ClassesOutputDirectory));
 
 			using (var sw = new StreamWriter (path: inputListFile, append: false,
-					encoding: new UTF8Encoding (encoderShouldEmitUTF8Identifier: false))) {
+					encoding: MonoAndroidHelper.UTF8withoutBOM)) {
 				// .jar files
 				if (AlternativeJarFiles != null && AlternativeJarFiles.Any ()) {
 					Log.LogDebugMessage ("  processing AlternativeJarFiles...");

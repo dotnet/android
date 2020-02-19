@@ -102,8 +102,13 @@
   </ItemGroup>
   <ItemGroup>
     <_MSBuildFiles Include="$(MSBuildSrcDir)\android-support-multidex.jar" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff.exe" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff.pdb" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\apkdiff.exe" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\apkdiff.pdb" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\Mono.Options.dll" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\libZipSharp.dll" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\libZipSharp.dll.config" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\Newtonsoft.Json.dll" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\Newtonsoft.Json-LICENSE.md" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\aprofutil.exe" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\aprofutil.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\cil-strip.exe" />
@@ -156,11 +161,9 @@
     <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libxamarin-debug-app-helper.so')" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\libZipSharp.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\libZipSharp.dll.config" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Posix.NETStandard.dll" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\libZipSharp.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Profiler.Log.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Profiler.Log.pdb" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Newtonsoft.Json.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Newtonsoft.Json-LICENSE.md" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\logcat-parse.exe" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\logcat-parse.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\mdoc.exe" />
@@ -242,6 +245,8 @@
   <ItemGroup>
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\libzip.dll" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\lib64\libzip.dll" />
+    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\apkdiff\libzip.dll" />
+    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\apkdiff\lib64\libzip.dll" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\proguard\bin\proguard.bat" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\aapt2.exe" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\libwinpthread-1.dll" />
@@ -307,6 +312,7 @@
     <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libmonosgen-2.0.$(LibExtension)" />
     <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libxamarin-app.$(LibExtension)" />
     <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\libzip.$(LibExtension)" />
+    <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\apkdiff\libzip.$(LibExtension)" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\proguard\bin\proguard.sh" />
   </ItemGroup>
   <!-- Allow us to exclude mono bundle files for PR builds -->

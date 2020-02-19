@@ -13,6 +13,7 @@ using System.Xml.XPath;
 using Microsoft.Build.Framework;
 using Mono.Cecil;
 using NUnit.Framework;
+using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 
@@ -131,7 +132,9 @@ namespace Xamarin.Android.Build.Tests
 			}
 			proj.SetProperty ("XamarinAndroidSupportSkipVerifyVersions", "True"); // Disables API 29 warning in Xamarin.Build.Download
 			proj.SetProperty ("AndroidPackageFormat", packageFormat);
-			proj.IsRelease = isRelease;
+			if (proj.IsRelease = isRelease) {
+				proj.SetProperty ("MonoSymbolArchive", "True");
+			}
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				if (multidex) {
@@ -2041,99 +2044,6 @@ namespace App1
 		}
 
 		[Test]
-		public void BuildApplicationWithMonoEnvironment ([Values ("", "Normal", "Offline")] string sequencePointsMode)
-		{
-			const string supportedAbis = "armeabi-v7a;x86";
-
-			var lib = new XamarinAndroidLibraryProject {
-				ProjectName = "Library1",
-				IsRelease = true,
-				OtherBuildItems = { new AndroidItem.AndroidEnvironment ("Mono.env") {
-						TextContent = () => "MONO_DEBUG=soft-breakpoints"
-					},
-				},
-			};
-			var app = new XamarinFormsAndroidApplicationProject () {
-				IsRelease = true,
-				AndroidLinkModeRelease = AndroidLinkMode.Full,
-				References = {
-					new BuildItem ("ProjectReference","..\\Library1\\Library1.csproj"),
-				},
-			};
-			//LinkSkip one assembly that contains __AndroidLibraryProjects__.zip
-			string linkSkip = KnownPackages.SupportV7AppCompat_27_0_2_1.Id;
-			app.SetProperty ("AndroidLinkSkip", linkSkip);
-			app.SetProperty ("_AndroidSequencePointsMode", sequencePointsMode);
-			app.SetProperty (app.ReleaseProperties, KnownProperties.AndroidSupportedAbis, supportedAbis);
-			using (var libb = CreateDllBuilder (Path.Combine ("temp", TestName, lib.ProjectName)))
-			using (var appb = CreateApkBuilder (Path.Combine ("temp", TestName, app.ProjectName))) {
-				Assert.IsTrue (libb.Build (lib), "Library build should have succeeded.");
-				Assert.IsTrue (appb.Build (app), "App should have succeeded.");
-				Assert.IsTrue (StringAssertEx.ContainsText (appb.LastBuildOutput, $"Save assembly: {linkSkip}"), $"{linkSkip} should be saved, and not linked!");
-
-				string intermediateOutputDir = Path.Combine (Root, appb.ProjectDirectory, app.IntermediateOutputPath);
-				List<string> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true);
-				Dictionary<string, string> envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles);
-				Assert.IsTrue (envvars.Count > 0, $"No environment variables defined");
-
-				string monoDebugVar;
-				Assert.IsTrue (envvars.TryGetValue ("MONO_DEBUG", out monoDebugVar), "Environment should contain MONO_DEBUG");
-				Assert.IsFalse (String.IsNullOrEmpty (monoDebugVar), "Environment must contain MONO_DEBUG with a value");
-				Assert.IsTrue (monoDebugVar.IndexOf ("soft-breakpoints") >= 0, "Environment must contain MONO_DEBUG with 'soft-breakpoints' in its value");
-
-				if (!String.IsNullOrEmpty (sequencePointsMode))
-					Assert.IsTrue (monoDebugVar.IndexOf ("gen-compact-seq-points") >= 0, "The values from Mono.env should have been merged into environment");
-
-				EnvironmentHelper.AssertValidEnvironmentSharedLibrary (intermediateOutputDir, AndroidSdkPath, AndroidNdkPath, supportedAbis);
-
-				var assemblyDir = Path.Combine (Root, appb.ProjectDirectory, app.IntermediateOutputPath, "android", "assets");
-				var rp = new ReaderParameters { ReadSymbols = false };
-				foreach (var assemblyFile in Directory.EnumerateFiles (assemblyDir, "*.dll")) {
-					using (var assembly = AssemblyDefinition.ReadAssembly (assemblyFile)) {
-						foreach (var module in assembly.Modules) {
-							var resources = module.Resources.Select (r => r.Name).ToArray ();
-							Assert.IsFalse (StringAssertEx.ContainsText (resources, "__AndroidEnvironment__"), "AndroidEnvironment EmbeddedResource should be stripped!");
-							Assert.IsFalse (StringAssertEx.ContainsText (resources, "__AndroidLibraryProjects__.zip"), "__AndroidLibraryProjects__.zip should be stripped!");
-							Assert.IsFalse (StringAssertEx.ContainsText (resources, "__AndroidNativeLibraries__.zip"), "__AndroidNativeLibraries__.zip should be stripped!");
-						}
-					}
-				}
-			}
-		}
-
-		[Test]
-		public void CheckMonoDebugIsAddedToEnvironment ([Values ("", "Normal", "Offline")] string sequencePointsMode)
-		{
-			const string supportedAbis = "armeabi-v7a;x86";
-
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
-			};
-			proj.SetProperty ("_AndroidSequencePointsMode", sequencePointsMode);
-			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidSupportedAbis, supportedAbis);
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
-				b.Verbosity = LoggerVerbosity.Diagnostic;
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-
-				string intermediateOutputDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
-				List<string> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true);
-				Dictionary<string, string> envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles);
-				Assert.IsTrue (envvars.Count > 0, $"No environment variables defined");
-
-				string monoDebugVar;
-				bool monoDebugVarFound = envvars.TryGetValue ("MONO_DEBUG", out monoDebugVar);
-				if (String.IsNullOrEmpty (sequencePointsMode))
-					Assert.IsFalse (monoDebugVarFound, $"environment should not contain MONO_DEBUG={monoDebugVar}");
-				else {
-					Assert.IsTrue (monoDebugVarFound, "environment should contain MONO_DEBUG");
-					Assert.AreEqual ("gen-compact-seq-points", monoDebugVar, "environment should contain MONO_DEBUG=gen-compact-seq-points");
-				}
-
-				EnvironmentHelper.AssertValidEnvironmentSharedLibrary (intermediateOutputDir, AndroidSdkPath, AndroidNdkPath, supportedAbis);
-			}
-		}
-
-		[Test]
 		[NonParallelizable]
 		public void BuildWithNativeLibraries ([Values (true, false)] bool isRelease)
 		{
@@ -2752,43 +2662,6 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				} else {
 					Assert.IsTrue (appBuilder.LastBuildOutput.ContainsText ($"{error} `Microsoft.Azure.Amqp`, referenced by `Microsoft.Azure.EventHubs`. Please add a NuGet package or assembly reference for `Microsoft.Azure.Amqp`, or remove the reference to `Microsoft.Azure.EventHubs`."),
 						$"Should recieve '{error}' regarding `Microsoft.Azure.Services.Amqp`!");
-				}
-			}
-		}
-
-		static object [] TlsProviderTestCases =
-		{
-			// androidTlsProvider, isRelease, extpected
-			new object[] { "", true, true, },
-			new object[] { "default", true, true, },
-			new object[] { "legacy", true, true, },
-			new object[] { "btls", true, true, }
-		};
-
-
-		[Test]
-		[TestCaseSource (nameof (TlsProviderTestCases))]
-		public void BuildWithTlsProvider (string androidTlsProvider, bool isRelease, bool expected)
-		{
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
-			};
-			using (var b = CreateApkBuilder (Path.Combine ("temp", $"BuildWithTlsProvider_{androidTlsProvider}_{isRelease}_{expected}"))) {
-				proj.SetProperty ("AndroidTlsProvider", androidTlsProvider);
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				var apk = Path.Combine(Root, b.ProjectDirectory,
-					proj.IntermediateOutputPath,"android", "bin", "UnnamedProject.UnnamedProject.apk");
-				using (var zipFile = ZipHelper.OpenZip (apk)) {
-					if (expected) {
-						Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
-						   "lib/armeabi-v7a/libmono-btls-shared.so"),
-						   "lib/armeabi-v7a/libmono-btls-shared.so should exist in the apk.");
-					}
-					else {
-						Assert.IsNull (ZipHelper.ReadFileFromZip (zipFile,
-						   "lib/armeabi-v7a/libmono-btls-shared.so"),
-						   "lib/armeabi-v7a/libmono-btls-shared.so should not exist in the apk.");
-					}
 				}
 			}
 		}
@@ -3635,8 +3508,7 @@ public class MyReceiver : BroadcastReceiver
 					rules.Add ("-dontwarn java.lang.invoke.LambdaMetafactory");
 				}
 				//FIXME: We aren't de-BOM'ing proguard files?
-				var encoding = new UTF8Encoding (encoderShouldEmitUTF8Identifier: false);
-				var bytes = encoding.GetBytes (string.Join (Environment.NewLine, rules));
+				var bytes = MonoAndroidHelper.UTF8withoutBOM.GetBytes (string.Join (Environment.NewLine, rules));
 				proj.OtherBuildItems.Add (new BuildItem ("ProguardConfiguration", "okhttp3.pro") {
 					BinaryContent = () => bytes,
 				});

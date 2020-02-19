@@ -15,7 +15,7 @@
     <IncludeAssemblyInVSIXContainer>true</IncludeAssemblyInVSIXContainer>
     <IncludeCopyLocalReferencesInVSIXContainer>False</IncludeCopyLocalReferencesInVSIXContainer>
     <IncludeDebugSymbolsInLocalVSIXDeployment>False</IncludeDebugSymbolsInLocalVSIXDeployment>
-    <IncludeDebugSymbolsInVSIXContainer>False</IncludeDebugSymbolsInVSIXContainer>
+    <IncludeDebugSymbolsInVSIXContainer>true</IncludeDebugSymbolsInVSIXContainer>
     <IsExperimental Condition=" '$(IsExperimental)' == '' ">true</IsExperimental>
     <IsProductComponent Condition=" '$(IsProductComponent)' == '' ">True</IsProductComponent>
     <ZipPackageCompressionLevel Condition=" '$(ZipPackageCompressionLevel)' == '' ">Normal</ZipPackageCompressionLevel>

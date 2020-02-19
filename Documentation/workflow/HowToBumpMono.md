@@ -5,7 +5,6 @@ Android uses a binary artifcats package from mono that is tied to a specific ver
 The folloing checklist covers what you need to do.  Note, if you know the system mono version does not need changed, you can skip the first step.
 
   - [ ] [Update system mono used for the build](#update-system-mono).
-  - [ ] [Update MonoRequiredDarwinMinimumVersion used in the build](#update-configuration-props).
   - [ ] [Update external mono commit in .external](#update-mono-external-commit).
   - [ ] [Ensure it *builds*](#build).
   - [ ] [Ensure unit tests *pass*](#unit-tests).
@@ -17,9 +16,12 @@ The folloing checklist covers what you need to do.  Note, if you know the system
 
 ### Update system mono
 
-The `$(MonoRequiredMinimumVersion)` and `$(MonoRequiredMaximumVersion)` values
-within [`Configuration.props`](../../Configuration.props)
-should be updated to correspond to the version number used in the mono submodule.
+The `$(MonoDarwinPackageUrl)` property within [`Configuration.props`](../../Configuration.props)
+should be updated to point to the absolute URL of the package.
+
+The `$(MonoRequiredMinimumVersion)` and `$(MonoRequiredMaximumVersion)` properties
+should be updated to correspond to the version number used in the mono submodule, and
+the maximum version that should be used to build against.
 
 These version numbers can be found in
 [mono's `configure.ac`](https://github.com/mono/mono/blob/master/configure.ac)

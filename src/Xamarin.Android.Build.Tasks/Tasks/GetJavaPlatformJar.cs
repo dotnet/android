@@ -60,7 +60,7 @@ namespace Xamarin.Android.Tasks
 										code:             "XA4216",
 										file:             AndroidManifest,
 										node:             min_sdk,
-										message:          "AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' is less than API-{1}, this configuration is not supported.",
+										message:          Properties.Resources.XA4216_MinSdkVersion,
 										messageArgs:      new object [] { min_sdk?.Value, XABuildConfig.NDKMinimumApiAvailable }
 								);
 							}
@@ -69,7 +69,7 @@ namespace Xamarin.Android.Tasks
 										code:             "XA4216",
 										file:             AndroidManifest,
 										node:             target_sdk,
-										message:          "AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{0}' is less than API-{1}, this configuration is not supported.",
+										message:          Properties.Resources.XA4216_TargetSdkVersion,
 										messageArgs:      new object [] { target_sdk?.Value, XABuildConfig.NDKMinimumApiAvailable }
 								);
 							}
@@ -105,7 +105,7 @@ namespace Xamarin.Android.Tasks
 						code:             "XA4211",
 						file:             AndroidManifest,
 						node:             target_sdk,
-						message:          "AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{0}' is less than $(TargetFrameworkVersion) '{1}'. Using API-{2} for ACW compilation.",
+						message:          Properties.Resources.XA4211,
 						messageArgs:      new [] {
 							targetSdkVersion,
 							MonoAndroidHelper.SupportedVersions.GetIdFromFrameworkVersion (targetFrameworkVersion),
