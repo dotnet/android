@@ -40,10 +40,13 @@ namespace Xamarin.Android.Tasks
 				if (!result)
 					return result;
 				var m = new ManifestDocument (tempFile);
-				using (var ms = new MemoryStream ()) {
+				var ms = MemoryStreamPool.Shared.Rent ();
+				try {
 					m.Save (Log, ms);
 					MonoAndroidHelper.CopyIfStreamChanged (ms, OutputManifestFile);
 					return result;
+				} finally {
+					MemoryStreamPool.Shared.Return (ms);
 				}
 			} finally {
 				if (File.Exists (tempFile))

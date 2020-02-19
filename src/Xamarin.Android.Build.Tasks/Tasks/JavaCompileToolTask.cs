@@ -61,7 +61,7 @@ namespace Xamarin.Android.Tasks
 			TemporarySourceListFile = Path.GetTempFileName ();
 
 			using (var sw = new StreamWriter (path:TemporarySourceListFile, append:false,
-						encoding:new UTF8Encoding (encoderShouldEmitUTF8Identifier:false))) {
+						encoding: MonoAndroidHelper.UTF8withoutBOM)) {
 
 				WriteOptionsToResponseFile (sw);
 				// Include any user .java files

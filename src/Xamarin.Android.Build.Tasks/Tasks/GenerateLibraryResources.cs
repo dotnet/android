@@ -114,8 +114,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			var lines = LoadValues (package);
-			using (var memory = new MemoryStream ())
-			using (var writer = new StreamWriter (memory, Encoding)) {
+			using (var writer = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 				// This code is based on the Android gradle plugin
 				// https://android.googlesource.com/platform/tools/base/+/908b391a9c006af569dfaff08b37f8fdd6c4da89/build-system/builder/src/main/java/com/android/builder/internal/SymbolWriter.java
 
@@ -173,7 +172,7 @@ namespace Xamarin.Android.Tasks
 
 				writer.Flush ();
 				var r_java = Path.Combine (output_directory, package.Name.Replace ('.', Path.DirectorySeparatorChar), "R.java");
-				if (MonoAndroidHelper.CopyIfStreamChanged (memory, r_java)) {
+				if (MonoAndroidHelper.CopyIfStreamChanged (writer.BaseStream, r_java)) {
 					LogDebugMessage ($"Writing: {r_java}");
 				} else {
 					LogDebugMessage ($"Up to date: {r_java}");
@@ -227,8 +226,6 @@ namespace Xamarin.Android.Tasks
 			}
 			return false;
 		}
-
-		static readonly Encoding Encoding = new UTF8Encoding (encoderShouldEmitUTF8Identifier: false);
 		static readonly char [] Delimiter = new [] { ' ' };
 
 		class Index

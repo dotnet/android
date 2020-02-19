@@ -28,7 +28,7 @@ namespace Xamarin.Android.Tasks
 		public override bool RunTask ()
 		{
 			using (var output = new StreamWriter (OutputFile, append: false, 
-						encoding: new UTF8Encoding (encoderShouldEmitUTF8Identifier: false))) {
+						encoding: MonoAndroidHelper.UTF8withoutBOM)) {
 				Bytecode.Log.OnLog = LogEventHandler;
 				var classPath = new Bytecode.ClassPath () {
 					ApiSource = "class-parse",

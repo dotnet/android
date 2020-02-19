@@ -320,8 +320,9 @@ namespace Xamarin.Android.Tools
 			int i = 0;
 			int total = (int)zip.EntryCount;
 			bool updated = false;
-			HashSet<string> files = new HashSet<string> ();
-			using (var memoryStream = new MemoryStream ()) {
+			var files = new HashSet<string> ();
+			var memoryStream = MemoryStreamPool.Shared.Rent ();
+			try {
 				foreach (var entry in zip) {
 					progressCallback?.Invoke (i++, total);
 					if (entry.IsDirectory)
@@ -341,6 +342,8 @@ namespace Xamarin.Android.Tools
 						throw new PathTooLongException ($"Could not extract \"{fullName}\" to \"{outfile}\". Path is too long.");
 					}
 				}
+			} finally {
+				MemoryStreamPool.Shared.Return (memoryStream);
 			}
 			if (Directory.Exists (destination)) {
 				foreach (var file in Directory.GetFiles (destination, "*", SearchOption.AllDirectories)) {
