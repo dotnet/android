@@ -232,8 +232,7 @@ namespace Xamarin.Android.Tools.Bytecode
 
 		static MethodInfo FindJavaPropertyGetter (KotlinFile kotlinClass, KotlinProperty property, ClassFile klass)
 		{
-			var possible_methods = klass.Methods.Where (method => (string.Compare (method.GetMethodNameWithoutSuffix (), $"get{property.Name}", true) == 0 ||
-									       string.Compare (method.GetMethodNameWithoutSuffix (), property.Name, true) == 0) &&
+			var possible_methods = klass.Methods.Where (method => string.Compare (method.GetMethodNameWithoutSuffix (), $"get{property.Name}", true) == 0 &&
 									      method.GetParameters ().Length == 0 &&
 									      TypesMatch (method.ReturnType, property.ReturnType, kotlinClass));
 
@@ -245,6 +244,7 @@ namespace Xamarin.Android.Tools.Bytecode
 			var possible_methods = klass.Methods.Where (method => string.Compare (method.GetMethodNameWithoutSuffix (), $"set{property.Name}", true) == 0 &&
 									      property.ReturnType != null &&
 									      method.GetParameters ().Length == 1 &&
+									      method.ReturnType.BinaryName == "V" &&
 									      TypesMatch (method.GetParameters () [0].Type, property.ReturnType, kotlinClass));
 
 			return possible_methods.FirstOrDefault ();

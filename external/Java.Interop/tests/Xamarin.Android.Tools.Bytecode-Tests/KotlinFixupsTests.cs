@@ -236,5 +236,17 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.AreEqual ("ubyte[]", xml.Elements ("method").Single (f => f.Attribute ("name").Value == "foo_ubytearray-GBYM_sE").Attribute ("return").Value);
 			Assert.AreEqual ("ubyte[]", xml.Elements ("method").Single (f => f.Attribute ("name").Value == "foo_ubytearray-GBYM_sE").Element ("parameter").Attribute ("type").Value);
 		}
+
+		[Test]
+		public void HandleKotlinNameShadowing ()
+		{
+			var klass = LoadClassFile ("NameShadowing.class");
+
+			KotlinFixups.Fixup (new [] { klass });
+
+			Assert.True (klass.Methods.Single (m => m.Name == "count").AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.True (klass.Methods.Single (m => m.Name == "hitCount").AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.True (klass.Methods.Single (m => m.Name == "setType").AccessFlags.HasFlag (MethodAccessFlags.Public));
+		}
 	}
 }
