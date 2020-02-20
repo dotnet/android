@@ -258,7 +258,7 @@ namespace Xamarin.Android.NetTests {
 				try {
 					Assert.AreEqual ("SocketsHttpHandler", GetInnerHandlerType (c).Name, 
 						"Underlying HttpClientHandler is expected to use SocketsHttpHandler by default. " + 
-						"XA_HTTP_CLIENT_HANDLER_TYPE=" + Environment.GetEnvironmentVariable ("XA_HTTP_CLIENT_HANDLER_TYPE"));
+						"XA_HTTP_CLIENT_HANDLER_TYPE=" + global::System.Environment.GetEnvironmentVariable ("XA_HTTP_CLIENT_HANDLER_TYPE"));
 
 					var tr = ConnectIgnoreFailure (() => c.GetAsync (Tls_1_2_Url), out bool connectionFailed);
 					if (connectionFailed)
