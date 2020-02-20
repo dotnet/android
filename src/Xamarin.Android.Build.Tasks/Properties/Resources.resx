@@ -295,6 +295,35 @@
 {1} - The target architecture, such as Arm, Arm64, or X86_64
 {2} - The path of the directory that was searched</comment>
   </data>
+  <data name="XA5205" xml:space="preserve">
+    <value>Cannot find `{0}`. Please install the Android SDK Build-Tools package with the `{1}{2}tools{2}{3}` program.</value>
+    <comment>The following are literal names and should not be translated: Android SDK Build-Tools, {1}{2}tools{2}{3}
+{0} - The missing tool name
+{1} - The parent directory
+{2} - The directory separator character
+{3} - The installer program name</comment>
+  </data>
+  <data name="XA5205_Lint" xml:space="preserve">
+    <value>Cannot find `{0}` in the Android SDK. Please set its path via /p:LintToolPath.</value>
+    <comment>The following are literal names and should not be translated: /p:LintToolPath
+{0} - The missing tool name</comment>
+  </data>
+  <data name="XA5300_Android_Platforms" xml:space="preserve">
+    <value>No Android platforms installed at '{0}'. Please install an SDK Platform with the `{1}{2}tools{2}{3}` program.</value>
+    <comment>The following are literal names and should not be translated: SDK Platform, {1}{2}tools{2}{3}
+{0} - The missing tool name
+{1} - The parent directory
+{2} - The directory separator character
+{3} - The installer program name</comment>
+  </data>
+  <data name="XA5300_Android_SDK" xml:space="preserve">
+    <value>The Android SDK directory could not be found. Please set via /p:AndroidSdkDirectory.</value>
+    <comment>The following are literal names and should not be translated: /p:AndroidSdkDirectory</comment>
+  </data>
+  <data name="XA5300_Java_SDK" xml:space="preserve">
+    <value>The Java SDK directory could not be found. Please set via /p:JavaSdkDirectory.</value>
+    <comment>The following are literal names and should not be translated: /p:JavaSdkDirectory</comment>
+  </data>
   <data name="XA5301" xml:space="preserve">
     <value>Failed to generate Java type for class: {0} due to MAX_PATH: {1}</value>
     <comment>The following are literal names and should not be translated: MAX_PATH.
