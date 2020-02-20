@@ -255,6 +255,40 @@ In this message, the term "bundled" is a short way of saying "included into the 
 {1} - The target architecture, such as Arm, Arm64, or X86_64
 {2} - The path of the directory that was searched</note>
       </trans-unit>
+      <trans-unit id="XA5205">
+        <source>Cannot find `{0}`. Please install the Android SDK Build-Tools package with the `{1}{2}tools{2}{3}` program.</source>
+        <target state="new">Cannot find `{0}`. Please install the Android SDK Build-Tools package with the `{1}{2}tools{2}{3}` program.</target>
+        <note>The following are literal names and should not be translated: Android SDK Build-Tools, {1}{2}tools{2}{3}
+{0} - The missing tool name
+{1} - The parent directory
+{2} - The directory separator character
+{3} - The installer program name</note>
+      </trans-unit>
+      <trans-unit id="XA5205_Lint">
+        <source>Cannot find `{0}` in the Android SDK. Please set its path via /p:LintToolPath.</source>
+        <target state="new">Cannot find `{0}` in the Android SDK. Please set its path via /p:LintToolPath.</target>
+        <note>The following are literal names and should not be translated: /p:LintToolPath
+{0} - The missing tool name</note>
+      </trans-unit>
+      <trans-unit id="XA5300_Android_Platforms">
+        <source>No Android platforms installed at '{0}'. Please install an SDK Platform with the `{1}{2}tools{2}{3}` program.</source>
+        <target state="new">No Android platforms installed at '{0}'. Please install an SDK Platform with the `{1}{2}tools{2}{3}` program.</target>
+        <note>The following are literal names and should not be translated: SDK Platform, {1}{2}tools{2}{3}
+{0} - The missing tool name
+{1} - The parent directory
+{2} - The directory separator character
+{3} - The installer program name</note>
+      </trans-unit>
+      <trans-unit id="XA5300_Android_SDK">
+        <source>The Android SDK directory could not be found. Please set via /p:AndroidSdkDirectory.</source>
+        <target state="new">The Android SDK directory could not be found. Please set via /p:AndroidSdkDirectory.</target>
+        <note>The following are literal names and should not be translated: /p:AndroidSdkDirectory</note>
+      </trans-unit>
+      <trans-unit id="XA5300_Java_SDK">
+        <source>The Java SDK directory could not be found. Please set via /p:JavaSdkDirectory.</source>
+        <target state="new">The Java SDK directory could not be found. Please set via /p:JavaSdkDirectory.</target>
+        <note>The following are literal names and should not be translated: /p:JavaSdkDirectory</note>
+      </trans-unit>
       <trans-unit id="XA5301">
         <source>Failed to generate Java type for class: {0} due to MAX_PATH: {1}</source>
         <target state="new">Failed to generate Java type for class: {0} due to MAX_PATH: {1}</target>
