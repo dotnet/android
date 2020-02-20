@@ -87,21 +87,28 @@ namespace Xamarin.Android.Build.Tests
 			return assm;
 		}
 
-		[Test]
-		public void PreserveAndroidHttpClientHandler ()
+		private void PreserveCustomHttpClientHandler (string handlerType, string testProjectName, string assembly)
 		{
-			var handlerType = "Xamarin.Android.Net.AndroidClientHandler";
 			var proj = new XamarinAndroidApplicationProject () { IsRelease = true };
 			proj.AddReferences ("System.Net.Http");
 			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidHttpClientHandlerType", handlerType);
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("base.OnCreate (bundle);", "base.OnCreate (bundle);\nvar client = new System.Net.Http.HttpClient ();");
-			using (var b = CreateApkBuilder ("temp/PreserveAndroidHttpClientHandler")) {
+			using (var b = CreateApkBuilder (testProjectName)) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
-				using (var assembly = AssemblyDefinition.ReadAssembly (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/assets/Mono.Android.dll"))) {
-					Assert.IsTrue (assembly.MainModule.GetType (handlerType) != null, "Xamarin.Android.Net.AndroidClientHandler should have been preserved by the linker.");
+				using (var assembly = AssemblyDefinition.ReadAssembly (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, assembly))) {
+					Assert.IsTrue (assembly.MainModule.GetType (handlerType) != null, $"'{handlerType}' should have been preserved by the linker.");
 				}
 			}
+		}
+
+		[Test]
+		public void PreserveCustomHttpClientHandlers ()
+		{
+			PreserveCustomHttpClientHandler ("Xamarin.Android.Net.AndroidClientHandler", 
+				"temp/PreserveAndroidHttpClientHandler", "android/assets/Mono.Android.dll");
+			PreserveCustomHttpClientHandler ("System.Net.Http.MonoWebRequestHandler, System.Net.Http", 
+				"temp/PreserveMonoWebRequestHandler", "android/assets/System.Net.Http.dll");
 		}
 
 		[Test]
