@@ -1,17 +1,12 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <ImportGroup Condition="'$(IsMultiTargetingBuild)' != 'true'">
-    <Import Project="Xamarin.Android.TargetFrameworkInference.targets"
-        Condition="'$(TargetFramework)' != '' AND !($(TargetFramework.Contains(',')) OR $(TargetFramework.Contains(';')))"/>
-  </ImportGroup>
+  <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.targets" />
+
+  <Import Project="$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.DefaultOutputPaths.targets" Condition="'$(EnableDefaultOutputPaths)' == 'true'" />
+  <Import Project="Xamarin.Android.Sdk.Common.targets" />
 
   <PropertyGroup>
     <XamarinAndroidSdkTargetsImported>true</XamarinAndroidSdkTargetsImported>
   </PropertyGroup>
-
-  <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.targets" />
-
-  <Import Project="$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.DefaultOutputPaths.targets" Condition="'$(EnableDefaultOutputPaths)' == 'true'" />
-  <Import Project="$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Common.targets" />
 
 </Project>

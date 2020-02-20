@@ -20,13 +20,20 @@
   </ItemGroup>
 
   <!-- Default References -->
+  <!-- HACK: Declare the XA framework bundled with this version of the SDK. See Microsoft.NETCoreSdk.BundledVersions.props -->
+  <ItemGroup>
+    <KnownFrameworkReference Include="Xamarin.Android.App"
+                            TargetFramework="netcoreapp5.0"
+                            TargetingPackName="Xamarin.Android.App.Ref"
+                            TargetingPackVersion="0.0.1"
+                            Profile="Android"
+                            />
+  </ItemGroup>
+
   <ItemGroup Condition="'$(DisableImplicitFrameworkReferences)' != 'true'">
-    <Reference Include="Mono.Android" />
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Numerics" />
-    <Reference Include="System.Numerics.Vectors" />
-    <Reference Include="System.Xml" />
+    <FrameworkReference Include="Xamarin.Android.App" IsImplicitlyDefined="true"
+                        Pack="false"
+                        PrivateAssets="All" />
   </ItemGroup>
 
 </Project>

@@ -57,14 +57,13 @@
         <Pack>true</Pack>
         <PackagePath>tools</PackagePath>
       </Content>
-      <!-- Only include @(FrameworkItemsWin), as it is a superset of @(FrameworkItemsUnix) -->
-      <Content Include="@(FrameworkItemsWin)" >
+      <Content Include="$(XamarinAndroidSourcePath)\src\Xamarin.Android.Sdk\Sdk\**" >
         <Pack>true</Pack>
-        <PackagePath>lib\MonoAndroid\%(FrameworkItemsWin.RelativePath)</PackagePath>
+        <PackagePath>Sdk</PackagePath>
       </Content>
-      <Content Include="$(XamarinAndroidSourcePath)\src\Xamarin.Android.Sdk\**" >
+      <Content Include="$(XamarinAndroidSourcePath)\src\Xamarin.Android.Sdk\targets\**" >
         <Pack>true</Pack>
-        <PackagePath>\</PackagePath>
+        <PackagePath>targets</PackagePath>
       </Content>
     </ItemGroup>
   </Target>
