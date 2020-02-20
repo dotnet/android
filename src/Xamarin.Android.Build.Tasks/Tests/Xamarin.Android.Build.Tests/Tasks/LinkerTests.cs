@@ -87,7 +87,7 @@ namespace Xamarin.Android.Build.Tests
 			return assm;
 		}
 
-		private void PreserveCustomHttpClientHandler (string handlerType, string testProjectName, string assembly)
+		private void PreserveCustomHttpClientHandler (string handlerType, string testProjectName, string assemblyPath)
 		{
 			var proj = new XamarinAndroidApplicationProject () { IsRelease = true };
 			proj.AddReferences ("System.Net.Http");
@@ -96,7 +96,7 @@ namespace Xamarin.Android.Build.Tests
 			using (var b = CreateApkBuilder (testProjectName)) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
-				using (var assembly = AssemblyDefinition.ReadAssembly (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, assembly))) {
+				using (var assembly = AssemblyDefinition.ReadAssembly (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, assemblyPath))) {
 					Assert.IsTrue (assembly.MainModule.GetType (handlerType) != null, $"'{handlerType}' should have been preserved by the linker.");
 				}
 			}
