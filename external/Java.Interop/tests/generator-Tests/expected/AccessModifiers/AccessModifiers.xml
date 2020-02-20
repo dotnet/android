@@ -18,6 +18,11 @@
 			public class PublicClass extends PackageClass {
 				@Override
 				public void foo();
+				
+				// This nested type should not be generated because it is package-private
+				/* package */ static interface OnPressedChangeListener {
+				  void onPressedChanged ();
+				}
 			}
 		-->
 		<class abstract="false" deprecated="not deprecated" extends="xamarin.test.PackageClass" extends-generic-aware="xamarin.test.PackageClass" final="false" name="PublicClass" static="false" visibility="public">
@@ -25,6 +30,9 @@
 			<method abstract="false" deprecated="not deprecated" final="false" name="foo" native="false" return="void" static="false" synchronized="false" visibility="public">
 			</method>
 		</class>
+		<interface abstract="true" deprecated="not deprecated" final="false" name="PublicClass.OnPressedChangeListener" static="true" visibility="" >
+			<method abstract="true" deprecated="not deprecated" final="false" name="onPressedChanged" jni-signature="V" bridge="false" native="false" return="void" jni-return="V" static="false" synchronized="false" synthetic="false" visibility="public" />
+		</interface>
 		<!-- 
 			/* package */ abstract class ExtendPackageClass extends PackageClass {
 			}

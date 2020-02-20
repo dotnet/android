@@ -232,6 +232,8 @@ namespace Xamarin.Android.Binder
 		{
 			//int cycle = 1;
 			List<GenBase> removed = new List<GenBase> ();
+			var nested_removes = new List<GenBase> ();
+
 			// This loop is required because we cannot really split type validation and member
 			// validation apart (unlike C# compiler), because invalidated members will result
 			// in the entire interface invalidation (since we cannot implement it), and use of
@@ -253,6 +255,22 @@ namespace Xamarin.Android.Binder
 						}
 						removed.Add (gen);
 					}
+
+				// Remove any nested types that are package-private
+				foreach (var gen in gens) {
+					foreach (var nest in gen.NestedTypes)
+						if (opt.IgnoreNonPublicType && (nest.RawVisibility != "public" && nest.RawVisibility != "internal")) {
+							// We still add it to "removed" even though the removal
+							// code later won't work, so that it triggers a new cycle
+							removed.Add (nest);
+							nested_removes.Add (nest);
+						}
+
+					foreach (var nest in nested_removes)
+						gen.NestedTypes.Remove (nest);
+
+					nested_removes.Clear ();
+				}
 
 				foreach (GenBase gen in removed)
 					gens.Remove (gen);
