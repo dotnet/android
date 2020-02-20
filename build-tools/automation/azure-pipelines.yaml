@@ -322,6 +322,8 @@ stages:
       parameters:
         artifactName: Build Results - Windows
 
+    - template: yaml-templates\fail-on-issue.yaml
+
 - stage: finalize_installers
   displayName: Finalize Installers
   dependsOn: mac_build
@@ -629,6 +631,8 @@ stages:
         configuration: $(ApkTestConfiguration)
         artifactName: Test Results - APK Instrumentation - macOS
 
+    - template: yaml-templates/fail-on-issue.yaml
+
   # Check - "Xamarin.Android (Test BCL With Emulator - macOS)"
   - job: mac_bcl_tests
     displayName: BCL With Emulator - macOS
@@ -678,6 +682,8 @@ stages:
     - template: yaml-templates/upload-results.yaml
       parameters:
         artifactName: Test Results - BCL With Emulator - macOS
+
+    - template: yaml-templates/fail-on-issue.yaml
 
   # Check - "Xamarin.Android (Test MSBuild - macOS)"
   - job: mac_msbuild_tests
@@ -734,6 +740,8 @@ stages:
       parameters:
         artifactName: Test Results - MSBuild - macOS
 
+    - template: yaml-templates/fail-on-issue.yaml
+
   # Check - "Xamarin.Android (Test MSBuild - Windows)"
   - job: win_msbuild_tests
     displayName: MSBuild - Windows
@@ -780,6 +788,8 @@ stages:
     - template: yaml-templates\upload-results.yaml
       parameters:
         artifactName: Test Results - MSBuild - Windows
+
+    - template: yaml-templates\fail-on-issue.yaml
 
   # Check - "Xamarin.Android (Test MSBuild With Emulator - macOS)"
   - job: mac_msbuilddevice_tests
@@ -832,6 +842,8 @@ stages:
     - template: yaml-templates/upload-results.yaml
       parameters:
         artifactName: Test Results - MSBuild With Emulator - macOS
+
+    - template: yaml-templates/fail-on-issue.yaml
 
   # Check - "Xamarin.Android (Test Designer - macOS)"
   - job: designer_integration_mac

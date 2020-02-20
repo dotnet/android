@@ -1,0 +1,11 @@
+parameters:
+  condition: succeeded()
+
+steps:
+- powershell: |
+    Write-Host "Current job status is: $env:AGENT_JOBSTATUS"
+    if ($env:AGENT_JOBSTATUS -eq "SucceededWithIssues") {
+        Write-Host "Marking this job as failed because one (or more) steps exited with a 'SuccessWithIssues' status."
+        exit 1
+    }
+  displayName: fail if any issues occurred

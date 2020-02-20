@@ -214,3 +214,5 @@ steps:
       testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
       testRunTitle: Test Environment Cleanup
       nunitConsoleExtraArgs: --where "cat == XATestCleanUp"
+
+- template: yaml-templates/fail-on-issue.yaml
