@@ -6,8 +6,8 @@ namespace Xamarin.Android.Prepare
 	/// </summary>
 	abstract class ScenarioNoStandardEndSteps : Scenario
 	{
-		protected ScenarioNoStandardEndSteps (string name, string description, Context context)
-			: base (name, description, context)
+		protected ScenarioNoStandardEndSteps (string name, string description)
+			: base (name, description)
 		{}
 
 		protected override void AddEndSteps (Context context)

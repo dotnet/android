@@ -36,7 +36,7 @@ and re-enable it after building with the following command:
 		};
 
 		bool warnBinFmt;
-		string codeName;
+		string codeName = String.Empty;
 
 		public override string Type { get; } = "Linux";
 		public override List<Program> Dependencies { get; }
@@ -133,7 +133,7 @@ and re-enable it after building with the following command:
 
 			string[] lines = File.ReadAllLines (FlatpakInfoPath);
 			foreach (string l in lines) {
-				string line = l?.Trim ();
+				string line = l.Trim ();
 				if (String.IsNullOrEmpty (line))
 					continue;
 

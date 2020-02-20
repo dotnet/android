@@ -5,7 +5,7 @@ namespace Xamarin.Android.Prepare
 {
 	class ArchLinuxProgram : LinuxProgram
 	{
-		public ArchLinuxProgram (string packageName, string executableName = null)
+		public ArchLinuxProgram (string packageName, string? executableName = null)
 			: base (packageName, executableName)
 		{}
 

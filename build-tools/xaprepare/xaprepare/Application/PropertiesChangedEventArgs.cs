@@ -6,9 +6,9 @@ namespace Xamarin.Android.Prepare
 	{
 		public string Name { get; }
 		public string NewValue { get; }
-		public string OldValue { get; }
+		public string? OldValue { get; }
 
-		public PropertiesChangedEventArgs (string name, string newValue, string oldValue)
+		public PropertiesChangedEventArgs (string name, string newValue, string? oldValue)
 		{
 			if (String.IsNullOrEmpty (name))
 				throw new ArgumentException ("must not be null or empty", nameof (name));

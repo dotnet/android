@@ -19,7 +19,7 @@ namespace Xamarin.Android.Prepare
 
 			public static readonly string MonoRuntimeHostMingwNativeLibraryPrefix = Path.Combine ("..", "bin");
 
-			static string hostRuntimeDir;
+			static string? hostRuntimeDir;
 		}
 	}
 }

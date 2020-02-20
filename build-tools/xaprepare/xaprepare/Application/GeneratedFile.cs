@@ -11,7 +11,8 @@ namespace Xamarin.Android.Prepare
 
 		protected GeneratedFile (string outputPath)
 		{
-			OutputPath = outputPath?.Trim ();
+			InputPath = String.Empty;
+			OutputPath = outputPath.Trim ();
 			if (String.IsNullOrEmpty (OutputPath))
 				throw new ArgumentException ("must not be null or empty", nameof (outputPath));
 		}
@@ -19,7 +20,7 @@ namespace Xamarin.Android.Prepare
 		protected GeneratedFile (string inputPath, string outputPath)
 			: this (outputPath)
 		{
-			InputPath = inputPath?.Trim ();
+			InputPath = inputPath.Trim ();
 			if (String.IsNullOrEmpty (InputPath))
 				throw new ArgumentException ("must not be null or empty", nameof (inputPath));
 

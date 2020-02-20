@@ -131,7 +131,7 @@ implication, estoppel or otherwise."			}
 					string underline = "=".PadRight (heading.Length, '=');
 					sw.WriteLine (heading);
 					sw.WriteLine (underline);
-					if (tpn.LicenseText != null)
+					if (tpn.LicenseText.Length > 0)
 						sw.WriteLine (tpn.LicenseText.TrimStart ());
 					else
 						sw.WriteLine (FetchTPNLicense (tpn.LicenseFile));
@@ -160,7 +160,7 @@ implication, estoppel or otherwise."			}
 				throw new InvalidOperationException ($"TPN type must be a non-abstract class ({type})");
 		}
 
-		void ProcessTPN (SortedDictionary <string, ThirdPartyNotice> licenses, ThirdPartyNotice tpn, bool includeExternalDeps, bool includeBuildDeps)
+		void ProcessTPN (SortedDictionary <string, ThirdPartyNotice> licenses, ThirdPartyNotice? tpn, bool includeExternalDeps, bool includeBuildDeps)
 		{
 			if (tpn == null)
 				throw new ArgumentNullException (nameof (tpn));
@@ -179,7 +179,7 @@ implication, estoppel or otherwise."			}
 			licenses.Add (tpn.Name, tpn);
 		}
 
-		void ProcessTPN (SortedDictionary <string, ThirdPartyNotice> licenses, ThirdPartyNoticeGroup tpng, bool includeExternalDeps, bool includeBuildDeps)
+		void ProcessTPN (SortedDictionary <string, ThirdPartyNotice> licenses, ThirdPartyNoticeGroup? tpng, bool includeExternalDeps, bool includeBuildDeps)
 		{
 			if (tpng == null)
 				throw new ArgumentNullException (nameof (tpng));

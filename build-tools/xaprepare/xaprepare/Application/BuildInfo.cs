@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Threading.Tasks;
 
 namespace Xamarin.Android.Prepare
@@ -13,7 +12,7 @@ namespace Xamarin.Android.Prepare
 		static readonly char[] NDKPropertySeparator = new [] { '=' };
 		static readonly char[] NDKPlatformDirectorySeparator = new [] { '-' };
 
-		public string CommitOfLastVersionChange { get; private set; }
+		public string CommitOfLastVersionChange { get; private set; } = String.Empty;
 
 		// Not available from the start, only after NDK is installed
 		public string NDKRevision            { get; private set; } = String.Empty;
@@ -100,12 +99,12 @@ namespace Xamarin.Android.Prepare
 
 			Log.StatusLine ($"  {context.Characters.Bullet} Mono commit hash", ConsoleColor.Gray);
 			List<ExternalGitDependency> externalDependencies = ExternalGitDependency.GetDependencies (context, Configurables.Paths.ExternalGitDepsFilePath, quiet: true);
-			ExternalGitDependency mono = externalDependencies?.Where (
+			ExternalGitDependency? mono = externalDependencies.Where (
 				eg => eg != null &&
 				      String.Compare ("mono", eg.Owner, StringComparison.Ordinal) == 0 &&
 				      String.Compare ("mono", eg.Name, StringComparison.Ordinal) == 0).FirstOrDefault ();
 
-			FullMonoHash = mono?.Commit?.Trim ();
+			FullMonoHash = (mono?.Commit ?? String.Empty).Trim ();
 			MonoHash = EnsureHash ("Mono", Utilities.ShortenGitHash (FullMonoHash));
 
 			string EnsureHash (string name, string hash)
@@ -123,7 +122,7 @@ namespace Xamarin.Android.Prepare
 		{
 			Log.StatusLine ($"  {context.Characters.Bullet} Commit of last version change", ConsoleColor.Gray);
 			GitRunner git = CreateGitRunner (context);
-			IList <GitRunner.BlamePorcelainEntry> blameEntries;
+			IList <GitRunner.BlamePorcelainEntry>? blameEntries;
 
 			blameEntries = await git.Blame ("Configuration.props");
 			if (blameEntries == null || blameEntries.Count == 0)

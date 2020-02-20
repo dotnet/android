@@ -806,7 +806,7 @@ namespace Xamarin.Android.Prepare
 			new RuntimeFile (
 				sourceCreator: (Runtime runtime) => GetProfilerOutputSourcePath (runtime),
 				destinationCreator: (Runtime runtime) => GetProfilerOutputDestinationPath (runtime, debug: false),
-				shouldSkip: (Runtime runtime) => !IsHostOrTargetRuntime (runtime) || String.IsNullOrEmpty (runtime.As<MonoRuntime>().OutputProfilerFilename),
+				shouldSkip: (Runtime runtime) => !IsHostOrTargetRuntime (runtime) || String.IsNullOrEmpty (runtime.As<MonoRuntime>()?.OutputProfilerFilename),
 				type: RuntimeFileType.StrippableBinary
 			),
 
@@ -814,7 +814,7 @@ namespace Xamarin.Android.Prepare
 			new RuntimeFile (
 				sourceCreator: (Runtime runtime) => GetProfilerOutputSourcePath (runtime),
 				destinationCreator: (Runtime runtime) => GetProfilerOutputDestinationPath (runtime, debug: true),
-				shouldSkip: (Runtime runtime) => !IsHostOrTargetRuntime (runtime) || String.IsNullOrEmpty (runtime.As<MonoRuntime>().OutputProfilerFilename),
+				shouldSkip: (Runtime runtime) => !IsHostOrTargetRuntime (runtime) || String.IsNullOrEmpty (runtime.As<MonoRuntime>()?.OutputProfilerFilename),
 				type: RuntimeFileType.StrippableBinary,
 				strip: false
 			),
@@ -823,7 +823,7 @@ namespace Xamarin.Android.Prepare
 			new RuntimeFile (
 				sourceCreator: (Runtime runtime) => GetAotProfilerOutputSourcePath (runtime),
 				destinationCreator: (Runtime runtime) => GetAotProfilerOutputDestinationPath (runtime, debug: false),
-				shouldSkip: (Runtime runtime) => !IsHostOrTargetRuntime (runtime) || String.IsNullOrEmpty (runtime.As<MonoRuntime>().OutputAotProfilerFilename),
+				shouldSkip: (Runtime runtime) => !IsHostOrTargetRuntime (runtime) || String.IsNullOrEmpty (runtime.As<MonoRuntime>()?.OutputAotProfilerFilename),
 				type: RuntimeFileType.StrippableBinary
 			),
 
@@ -831,7 +831,7 @@ namespace Xamarin.Android.Prepare
 			new RuntimeFile (
 				sourceCreator: (Runtime runtime) => GetAotProfilerOutputSourcePath (runtime),
 				destinationCreator: (Runtime runtime) => GetAotProfilerOutputDestinationPath (runtime, debug: true),
-				shouldSkip: (Runtime runtime) => !IsHostOrTargetRuntime (runtime) || String.IsNullOrEmpty (runtime.As<MonoRuntime>().OutputAotProfilerFilename),
+				shouldSkip: (Runtime runtime) => !IsHostOrTargetRuntime (runtime) || String.IsNullOrEmpty (runtime.As<MonoRuntime>()?.OutputAotProfilerFilename),
 				type: RuntimeFileType.StrippableBinary,
 				strip: false
 			),
@@ -840,7 +840,7 @@ namespace Xamarin.Android.Prepare
 			new RuntimeFile (
 				sourceCreator: (Runtime runtime) => GetMonoBtlsOutputSourcePath (runtime),
 				destinationCreator: (Runtime runtime) => GetMonoBtlsOutputDestinationPath (runtime, debug: false),
-				shouldSkip: (Runtime runtime) => !IsHostOrTargetRuntime (runtime) || String.IsNullOrEmpty (runtime.As<MonoRuntime>().OutputMonoBtlsFilename),
+				shouldSkip: (Runtime runtime) => !IsHostOrTargetRuntime (runtime) || String.IsNullOrEmpty (runtime.As<MonoRuntime>()?.OutputMonoBtlsFilename),
 				type: RuntimeFileType.StrippableBinary
 			),
 
@@ -848,7 +848,7 @@ namespace Xamarin.Android.Prepare
 			new RuntimeFile (
 				sourceCreator: (Runtime runtime) => GetMonoBtlsOutputSourcePath (runtime),
 				destinationCreator: (Runtime runtime) => GetMonoBtlsOutputDestinationPath (runtime, debug: true),
-				shouldSkip: (Runtime runtime) => !IsHostOrTargetRuntime (runtime) || String.IsNullOrEmpty (runtime.As<MonoRuntime>().OutputMonoBtlsFilename),
+				shouldSkip: (Runtime runtime) => !IsHostOrTargetRuntime (runtime) || String.IsNullOrEmpty (runtime.As<MonoRuntime>()?.OutputMonoBtlsFilename),
 				type: RuntimeFileType.StrippableBinary,
 				strip: false
 			),
@@ -857,7 +857,7 @@ namespace Xamarin.Android.Prepare
 			new RuntimeFile (
 				sourceCreator: (Runtime runtime) => GetMonoPosixHelperOutputSourcePath (runtime),
 				destinationCreator: (Runtime runtime) => GetMonoPosixHelperOutputDestinationPath (runtime, debug: false),
-				shouldSkip: (Runtime runtime) => !IsHostOrTargetRuntime (runtime) || String.IsNullOrEmpty (runtime.As<MonoRuntime>().OutputMonoPosixHelperFilename),
+				shouldSkip: (Runtime runtime) => !IsHostOrTargetRuntime (runtime) || String.IsNullOrEmpty (runtime.As<MonoRuntime>()?.OutputMonoPosixHelperFilename),
 				type: RuntimeFileType.StrippableBinary
 			),
 
@@ -865,24 +865,24 @@ namespace Xamarin.Android.Prepare
 			new RuntimeFile (
 				sourceCreator: (Runtime runtime) => GetMonoPosixHelperOutputSourcePath (runtime),
 				destinationCreator: (Runtime runtime) => GetMonoPosixHelperOutputDestinationPath (runtime, debug: true),
-				shouldSkip: (Runtime runtime) => !IsHostOrTargetRuntime (runtime) || String.IsNullOrEmpty (runtime.As<MonoRuntime>().OutputMonoPosixHelperFilename),
+				shouldSkip: (Runtime runtime) => !IsHostOrTargetRuntime (runtime) || String.IsNullOrEmpty (runtime.As<MonoRuntime>()?.OutputMonoPosixHelperFilename),
 				type: RuntimeFileType.StrippableBinary,
 				strip: false
 			),
 
 			// LLVM opt
 			new RuntimeFile (
-				sourceCreator: (Runtime runtime) => Path.Combine (GetLlvmOutputSourcePath(runtime), $"opt{runtime.As<LlvmRuntime>().ExeSuffix}"),
-				destinationCreator: (Runtime runtime) => Path.Combine (GetLlvmOutputDestinationPath (runtime), $"opt{runtime.As<LlvmRuntime>().ExeSuffix}"),
-				shouldSkip: (Runtime runtime) => !IsRuntimeType<LlvmRuntime> (runtime) || !runtime.As<LlvmRuntime>().InstallBinaries || (Context.IsWindows && !IsWindowsRuntime (runtime)),
+				sourceCreator: (Runtime runtime) => Path.Combine (GetLlvmOutputSourcePath(runtime), $"opt{runtime.As<LlvmRuntime>()?.ExeSuffix}"),
+				destinationCreator: (Runtime runtime) => Path.Combine (GetLlvmOutputDestinationPath (runtime), $"opt{runtime.As<LlvmRuntime>()?.ExeSuffix}"),
+				shouldSkip: (Runtime runtime) => !IsRuntimeType<LlvmRuntime> (runtime) || !runtime.As<LlvmRuntime>()!.InstallBinaries || (Context.IsWindows && !IsWindowsRuntime (runtime)),
 				type: RuntimeFileType.StrippableBinary
 			),
 
 			// LLVM llc
 			new RuntimeFile (
-				sourceCreator: (Runtime runtime) => Path.Combine (GetLlvmOutputSourcePath(runtime), $"llc{runtime.As<LlvmRuntime>().ExeSuffix}"),
-				destinationCreator: (Runtime runtime) => Path.Combine (GetLlvmOutputDestinationPath (runtime), $"llc{runtime.As<LlvmRuntime>().ExeSuffix}"),
-				shouldSkip: (Runtime runtime) => !IsRuntimeType<LlvmRuntime> (runtime) || !runtime.As<LlvmRuntime>().InstallBinaries || (Context.IsWindows && !IsWindowsRuntime (runtime)),
+				sourceCreator: (Runtime runtime) => Path.Combine (GetLlvmOutputSourcePath(runtime), $"llc{runtime.As<LlvmRuntime>()?.ExeSuffix}"),
+				destinationCreator: (Runtime runtime) => Path.Combine (GetLlvmOutputDestinationPath (runtime), $"llc{runtime.As<LlvmRuntime>()?.ExeSuffix}"),
+				shouldSkip: (Runtime runtime) => !IsRuntimeType<LlvmRuntime> (runtime) || !runtime.As<LlvmRuntime>()!.InstallBinaries || (Context.IsWindows && !IsWindowsRuntime (runtime)),
 				type: RuntimeFileType.StrippableBinary
 			)
 		};

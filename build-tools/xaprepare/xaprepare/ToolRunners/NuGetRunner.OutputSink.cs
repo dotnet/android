@@ -14,7 +14,7 @@ namespace Xamarin.Android.Prepare
 
 			public override Encoding Encoding => Encoding.Default;
 
-			public OutputSink (Log log, string logFilePath, string indent = null)
+			public OutputSink (Log log, string? logFilePath, string? indent = null)
 				: base (log, logFilePath)
 			{
 				this.indent = indent ?? DefaultIndent;
@@ -30,7 +30,7 @@ namespace Xamarin.Android.Prepare
 				if (String.IsNullOrEmpty (value))
 					return;
 
-				string consoleMessage = null;
+				string? consoleMessage = null;
 				if (value.StartsWith (RestoringPackagePrefix, StringComparison.OrdinalIgnoreCase)) {
 					consoleMessage = $"{packageBullet} {value.Substring (RestoringPackagePrefix.Length).Trim ().TrimEnd ('.')}";
 				} else if (value.StartsWith (AllPackagesRestoredPrefix, StringComparison.OrdinalIgnoreCase)) {

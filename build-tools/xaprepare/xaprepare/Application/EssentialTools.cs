@@ -4,8 +4,8 @@ namespace Xamarin.Android.Prepare
 {
 	partial class EssentialTools : AppObject
 	{
-		string gitPath;
-		string sevenZipPath;
+		string gitPath = String.Empty;
+		string sevenZipPath = String.Empty;
 		bool initialized;
 
 		public string GitPath {

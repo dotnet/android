@@ -6,7 +6,7 @@ namespace Xamarin.Android.Prepare
 	partial class Scenario_Standard : Scenario
 	{
 		public Scenario_Standard ()
-			: base ("Standard", "Standard init", Context.Instance)
+			: base ("Standard", "Standard init")
 		{
 			NeedsGitSubmodules = true;
 			NeedsCompilers = true;

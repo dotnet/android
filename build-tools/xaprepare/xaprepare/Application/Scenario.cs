@@ -8,13 +8,13 @@ namespace Xamarin.Android.Prepare
 	{
 		public string Name        { get; }
 		public string Description { get; }
-		public string LogFilePath { get; protected set; }
+		public string? LogFilePath { get; protected set; }
 		public List<Step> Steps   { get; } = new List<Step> ();
 		public bool NeedsGitSubmodules { get; protected set; }
 		public bool NeedsGitBuildInfo { get; protected set; }
 		public bool NeedsCompilers { get; protected set; }
 
-		protected Scenario (string name, string description, Context context)
+		protected Scenario (string name, string description)
 		{
 			if (String.IsNullOrEmpty (name))
 				throw new ArgumentException ("must not be null or empty", nameof (name));
@@ -24,14 +24,15 @@ namespace Xamarin.Android.Prepare
 			Description = description;
 		}
 
-		public async Task Run (Context context, Log log = null)
+		public async Task Run (Context context, Log? log = null)
 		{
-			Log = log;
+			if (log != null)
+				Log = log;
 			foreach (Step step in Steps) {
 				context.Banner (step.Description ?? step.GetType ().FullName);
 
 				bool success;
-				Exception stepEx = null;
+				Exception? stepEx = null;
 				try {
 					success = await step.Run (context);
 				} catch (Exception ex) {

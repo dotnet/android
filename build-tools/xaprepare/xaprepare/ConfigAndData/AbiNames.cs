@@ -5,7 +5,7 @@ namespace Xamarin.Android.Prepare
 {
 	static class AbiNames
 	{
-		static HashSet <string> allHostAbis;
+		static HashSet <string>? allHostAbis;
 
 		public static class TargetJit
 		{

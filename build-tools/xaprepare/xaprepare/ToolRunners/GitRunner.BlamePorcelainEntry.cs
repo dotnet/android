@@ -7,8 +7,8 @@ namespace Xamarin.Android.Prepare
 	{
 		sealed class BlameParserState
 		{
-			public BlamePorcelainEntry CurrentEntry;
-			public List<BlamePorcelainEntry> Entries;
+			public BlamePorcelainEntry? CurrentEntry;
+			public List<BlamePorcelainEntry> Entries = new List<BlamePorcelainEntry> ();
 		}
 
 		// Encompasses the `git blame -p` output as documented in https://www.git-scm.com/docs/git-blame#_the_porcelain_format
@@ -17,31 +17,31 @@ namespace Xamarin.Android.Prepare
 			static readonly char[] FieldSeparator = new [] { ' ' };
 
 			// Standard/known headers
-			public string Author                            { get; private set; }
-			public string AuthorMail                        { get; private set; }
+			public string Author                            { get; private set; } = String.Empty;
+			public string AuthorMail                        { get; private set; } = String.Empty;
 			public uint AuthorTime                          { get; private set; }
-			public string AuthorTZ                          { get; private set; }
+			public string AuthorTZ                          { get; private set; } = String.Empty;
 
-			public string Committer                         { get; private set; }
-			public string CommitterMail                     { get; private set; }
+			public string Committer                         { get; private set; } = String.Empty;
+			public string CommitterMail                     { get; private set; } = String.Empty;
 			public uint CommitterTime                       { get; private set; }
-			public string CommitterTZ                       { get; private set; }
+			public string CommitterTZ                       { get; private set; } = String.Empty;
 
-			public string Summary                           { get; private set; }
-			public string PreviousCommit                    { get; private set; }
-			public string PreviousCommitFile                { get; private set; }
-			public string Filename                          { get; private set; }
+			public string Summary                           { get; private set; } = String.Empty;
+			public string PreviousCommit                    { get; private set; } = String.Empty;
+			public string PreviousCommitFile                { get; private set; } = String.Empty;
+			public string Filename                          { get; private set; } = String.Empty;
 
 			// Unknown headers
-			public IDictionary<string, string> OtherHeaders { get; private set; }
+			public IDictionary<string, string>? OtherHeaders { get; private set; }
 
-			public string Commit                            { get; private set; }
+			public string Commit                            { get; private set; } = String.Empty;
 			public int OriginalFileLine                     { get; private set; }
 			public int FinalFileLine                        { get; private set; }
 			public int NumberOfLinesInGroup                 { get; private set; }
 
 			// Contents of the changed line
-			public string Line                              { get; private set; }
+			public string Line                              { get; private set; } = String.Empty;
 
 			public bool ProcessLine (string line)
 			{

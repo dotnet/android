@@ -16,20 +16,20 @@ namespace Xamarin.Android.Prepare
 			public bool DumpProps              { get; set; } = false;
 			public bool NoEmoji                { get; set; } = !Configurables.Defaults.UseEmoji;
 			public bool ForceRuntimesBuild     { get; set; } = false;
-			public string HashAlgorithm        { get; set; } = null;
+			public string? HashAlgorithm       { get; set; }
 			public uint MakeConcurrency        { get; set; } = 0;
 			public ExecutionMode ExecutionMode { get; set; } = Configurables.Defaults.ExecutionMode;
 			public LoggingVerbosity Verbosity  { get; set; } = Configurables.Defaults.LoggingVerbosity;
 			public string DebugFileExtension   { get; set; } = Configurables.Defaults.DebugFileExtension;
-			public string ScenarioName         { get; set; } = null;
+			public string? ScenarioName        { get; set; }
 			public bool ListScenarios          { get; set; } = false;
 			public string CompressionFormat    { get; set; } = Configurables.Defaults.DefaultCompressionFormat.Name;
-			public string Configuration        { get; set; }
+			public string? Configuration       { get; set; }
 			public bool AutoProvision          { get; set; }
 			public bool AutoProvisionUsesSudo  { get; set; }
 			public bool IgnoreMaxMonoVersion   { get; set; }
 			public bool IgnoreMinMonoVersion   { get; set; }
-			public string MonoArchiveCustomUrl { get; set; }
+			public string? MonoArchiveCustomUrl { get; set; }
 			public bool EnableAll              { get; set; }
 			public RefreshableComponent RefreshList { get; set; }
 		}
@@ -92,14 +92,14 @@ namespace Xamarin.Android.Prepare
 				{"r|run-mode=", $"Specify the execution mode: {GetExecutionModes()}. See documentation for mode descriptions. Default: {Configurables.Defaults.ExecutionMode}", v => parsedOptions.ExecutionMode = ParseExecutionMode (v)},
 				{"f|build-runtimes", $"Build runtimes even if the bundle/archives are available.", v => parsedOptions.ForceRuntimesBuild = true },
 				{"H|hash-algorithm=", "Use the specified hash algorithm instead of the default {Configurables.Defaults.HashAlgorithm}", v => parsedOptions.HashAlgorithm = v?.Trim () },
-				{"D|debug-ext=", $"Extension of files with debug information for managed DLLs and executables. Default: {parsedOptions.DebugFileExtension}", v => parsedOptions.DebugFileExtension = v?.Trim () },
+				{"D|debug-ext=", $"Extension of files with debug information for managed DLLs and executables. Default: {parsedOptions.DebugFileExtension}", v => parsedOptions.DebugFileExtension = v?.Trim () ?? String.Empty },
 				{"v|verbosity=", $"Set console log verbosity to {{LEVEL}}. Level name may be abbreviated to the smallest unique part (one of: {GetVerbosityLevels ()}). Default: {Context.Instance.LoggingVerbosity.ToString().ToLowerInvariant ()}", v => parsedOptions.Verbosity = ParseLogVerbosity (v) },
 				{"s|scenario=", "Run the specified scenario (use --ls to list all known scenarios) instead of the default one", v => parsedOptions.ScenarioName = v },
 				{"ls", "List names of all known scenarios", v => parsedOptions.ListScenarios = true },
-				{"cf=", $"{{NAME}} of the compression format to use for some archives (e.g. the XA bundle). One of: {GetCompressionFormatNames ()}; Default: {parsedOptions.CompressionFormat}", v => parsedOptions.CompressionFormat = v?.Trim ()},
+				{"cf=", $"{{NAME}} of the compression format to use for some archives (e.g. the XA bundle). One of: {GetCompressionFormatNames ()}; Default: {parsedOptions.CompressionFormat}", v => parsedOptions.CompressionFormat = v?.Trim () ?? String.Empty},
 				{"c|configuration=", $"Build {{CONFIGURATION}}. Default: {Context.Instance.Configuration}", v => parsedOptions.Configuration = v?.Trim ()},
 				{"a|enable-all", "Enable preparation of all the supported targets, ABIs etc", v => parsedOptions.EnableAll = true},
-				{"refresh:", "[sdk,ndk] Comma separated list of components which should be reinstalled. Defaults to all supported components if no value is provided.", v => parsedOptions.RefreshList = ParseRefreshableComponents (v?.Trim ())},
+				{"refresh:", "[sdk,ndk] Comma separated list of components which should be reinstalled. Defaults to all supported components if no value is provided.", v => parsedOptions.RefreshList = ParseRefreshableComponents (v?.Trim () ?? String.Empty)},
 				"",
 				{"auto-provision=", $"Automatically install software required by Xamarin.Android", v => parsedOptions.AutoProvision = ParseBoolean (v)},
 				{"auto-provision-uses-sudo=", $"Allow use of sudo(1) when provisioning", v => parsedOptions.AutoProvisionUsesSudo = ParseBoolean (v)},
@@ -138,15 +138,15 @@ namespace Xamarin.Android.Prepare
 			Context.Instance.AutoProvisionUsesSudo = parsedOptions.AutoProvisionUsesSudo;
 			Context.Instance.IgnoreMaxMonoVersion  = parsedOptions.IgnoreMaxMonoVersion;
 			Context.Instance.IgnoreMinMonoVersion  = parsedOptions.IgnoreMinMonoVersion;
-			Context.Instance.MonoArchiveCustomUrl  = parsedOptions.MonoArchiveCustomUrl;
+			Context.Instance.MonoArchiveCustomUrl  = parsedOptions.MonoArchiveCustomUrl ?? String.Empty;
 			Context.Instance.EnableAllTargets      = parsedOptions.EnableAll;
 			Context.Instance.ComponentsToRefresh   = parsedOptions.RefreshList;
 
 			if (!String.IsNullOrEmpty (parsedOptions.Configuration))
-				Context.Instance.Configuration = parsedOptions.Configuration;
+				Context.Instance.Configuration = parsedOptions.Configuration!;
 
 			if (!String.IsNullOrEmpty (parsedOptions.HashAlgorithm))
-				Context.Instance.HashAlgorithm = parsedOptions.HashAlgorithm;
+				Context.Instance.HashAlgorithm = parsedOptions.HashAlgorithm!;
 
 			SetCompressionFormat (parsedOptions.CompressionFormat);
 
@@ -288,9 +288,9 @@ namespace Xamarin.Android.Prepare
 			}
 		}
 
-		static bool ParseBoolean (string value)
+		static bool ParseBoolean (string? value)
 		{
-			string v = value?.Trim ();
+			string? v = value?.Trim ();
 			if (String.IsNullOrEmpty (v))
 				throw new ArgumentException ("must not be null or empty", nameof (v));
 

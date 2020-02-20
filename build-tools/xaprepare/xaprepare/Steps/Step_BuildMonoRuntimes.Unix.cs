@@ -14,9 +14,9 @@ namespace Xamarin.Android.Prepare
 		const string StatusIndent    = "  ";
 		const string SubStatusIndent = "    ";
 
-		List<string> runtimeBuildMakeOptions;
-		List<string> runtimeBuildMakeTargets;
-		Runtimes     allRuntimes;
+		List<string>? runtimeBuildMakeOptions;
+		List<string>? runtimeBuildMakeTargets;
+		Runtimes?     allRuntimes;
 
 		public Step_BuildMonoRuntimes ()
 			: base ("Preparing Mono runtimes")
@@ -62,9 +62,16 @@ namespace Xamarin.Android.Prepare
 			return true;
 		}
 
+		void EnsureAllRuntimes ()
+		{
+			if (allRuntimes == null)
+				throw new InvalidOperationException ("Step not initialized properly, allRuntimes is not set");
+		}
+
 		void CleanupBeforeInstall ()
 		{
-			foreach (string dir in allRuntimes.OutputDirectories) {
+			EnsureAllRuntimes ();
+			foreach (string dir in allRuntimes!.OutputDirectories) {
 				Utilities.DeleteDirectorySilent (dir);
 			}
 		}
@@ -137,7 +144,8 @@ namespace Xamarin.Android.Prepare
 			string targetCecil = Utilities.GetRelativePath (BuildPaths.XamarinAndroidSourceRoot, Path.Combine (Configurables.Paths.BuildBinDir, "Xamarin.Android.Cecil.dll"));
 
 			StatusStep (context, "Installing runtime utilities");
-			foreach (MonoUtilityFile muf in allRuntimes.UtilityFilesToInstall) {
+			EnsureAllRuntimes ();
+			foreach (MonoUtilityFile muf in allRuntimes!.UtilityFilesToInstall) {
 				(string destFilePath, string debugSymbolsDestPath) = MonoRuntimesHelpers.GetDestinationPaths (muf);
 				Utilities.CopyFile (muf.SourcePath, destFilePath);
 				if (!muf.IgnoreDebugInfo) {
@@ -179,11 +187,12 @@ namespace Xamarin.Android.Prepare
 		{
 			Log.DebugLine ($"Generating {filePath}");
 
+			EnsureAllRuntimes ();
 			var contents = new XElement (
 				"FileList",
 				new XAttribute ("Redist", Runtimes.FrameworkListRedist),
 				new XAttribute ("Name", Runtimes.FrameworkListName),
-				allRuntimes.BclFilesToInstall.Where (f => f.Type == BclFileType.FacadeAssembly || f.Type == BclFileType.ProfileAssembly).Select (f => ToFileElement (f))
+				allRuntimes!.BclFilesToInstall.Where (f => f.Type == BclFileType.FacadeAssembly || f.Type == BclFileType.ProfileAssembly).Select (f => ToFileElement (f))
 			);
 			contents.Save (filePath);
 			return true;
@@ -206,7 +215,7 @@ namespace Xamarin.Android.Prepare
 
 					default:
 						Log.Debug ("unsupported");
-						fullFilePath = null;
+						fullFilePath = String.Empty;
 						break;
 				}
 
@@ -215,7 +224,7 @@ namespace Xamarin.Android.Prepare
 					throw new InvalidOperationException ($"Unsupported BCL file type {bcf.Type}");
 
 				AssemblyName aname = AssemblyName.GetAssemblyName (fullFilePath);
-				string version = bcf.Version;
+				string version = bcf.Version ?? String.Empty;
 				if (String.IsNullOrEmpty (version) && !Runtimes.FrameworkListVersionOverrides.TryGetValue (bcf.Name, out version))
 					version = aname.Version.ToString ();
 
@@ -244,7 +253,8 @@ namespace Xamarin.Android.Prepare
 			Utilities.CreateDirectory (redistListDir);
 
 			StatusStep (context, "Installing Android BCL assemblies");
-			InstallBCLFiles (allRuntimes.BclFilesToInstall);
+			EnsureAllRuntimes ();
+			InstallBCLFiles (allRuntimes!.BclFilesToInstall);
 
 			StatusStep (context, "Installing Designer Host BCL assemblies");
 			InstallBCLFiles (allRuntimes.DesignerHostBclFilesToInstall);
@@ -266,15 +276,16 @@ namespace Xamarin.Android.Prepare
 				(string destFilePath, string debugSymbolsDestPath) = MonoRuntimesHelpers.GetDestinationPaths (bf);
 
 				Utilities.CopyFile (bf.SourcePath, destFilePath);
-				if (!bf.ExcludeDebugSymbols)
-					Utilities.CopyFile (bf.DebugSymbolsPath, debugSymbolsDestPath);
+				if (!bf.ExcludeDebugSymbols && !String.IsNullOrEmpty (bf.DebugSymbolsPath) && debugSymbolsDestPath.Length > 0)
+					Utilities.CopyFile (bf.DebugSymbolsPath!, debugSymbolsDestPath);
 			}
 		}
 
 		async Task<bool> InstallRuntimes (Context context, List<Runtime> enabledRuntimes)
 		{
 			StatusStep (context, "Installing tests");
-			foreach (TestAssembly tasm in allRuntimes.TestAssemblies) {
+			EnsureAllRuntimes ();
+			foreach (TestAssembly tasm in allRuntimes!.TestAssemblies) {
 				string sourceBasePath;
 
 				switch (tasm.TestType) {
@@ -295,7 +306,7 @@ namespace Xamarin.Android.Prepare
 
 				(string destFilePath, string debugSymbolsDestPath) = MonoRuntimesHelpers.GetDestinationPaths (tasm);
 				CopyFile (Path.Combine (sourceBasePath, tasm.Name), destFilePath);
-				if (debugSymbolsDestPath != null)
+				if (debugSymbolsDestPath.Length > 0)
 					CopyFile (Path.Combine (sourceBasePath, Utilities.GetDebugSymbolsPath (tasm.Name)), debugSymbolsDestPath);
 			}
 
@@ -318,7 +329,7 @@ namespace Xamarin.Android.Prepare
 						continue;
 
 					(skipFile, src, dst) = MonoRuntimesHelpers.GetRuntimeFilePaths (runtime, rtf);
-					if (skipFile)
+					if (skipFile || src.Length == 0 || dst.Length == 0)
 						continue;
 
 					CopyFile (src, dst);
@@ -431,7 +442,7 @@ namespace Xamarin.Android.Prepare
 			runtimeBuildMakeOptions = new List<string> (ret);
 			runtimeBuildMakeTargets = new List<string> ();
 
-			List<string> standardArgs = null;
+			List<string>? standardArgs = null;
 			var make = new MakeRunner (context);
 			make.GetStandardArguments (ref standardArgs, workingDirectory);
 			if (standardArgs != null && standardArgs.Count > 0) {
@@ -461,7 +472,7 @@ namespace Xamarin.Android.Prepare
 				foreach (Runtime runtime in items) {
 					string target = $"{prefix}-{runtime.Name}";
 					ret.Add (target);
-					runtimeBuildMakeTargets.Add (target);
+					runtimeBuildMakeTargets!.Add (target);
 				}
 			}
 

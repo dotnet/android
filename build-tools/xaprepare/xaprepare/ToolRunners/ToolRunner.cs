@@ -9,8 +9,8 @@ namespace Xamarin.Android.Prepare
 	{
 		static readonly TimeSpan DefaultProcessTimeout = TimeSpan.FromMinutes (15);
 
-		ThumbTwiddler twiddler;
-		string programVersion;
+		ThumbTwiddler? twiddler;
+		string? programVersion;
 
 		protected const ConsoleColor CommandMessageColor = ConsoleColor.White;
 
@@ -27,7 +27,7 @@ namespace Xamarin.Android.Prepare
 		public string LogMessageIndent         { get; set; } = String.Empty;
 		public virtual TimeSpan ProcessTimeout { get; set; } = DefaultProcessTimeout;
 
-		protected ToolRunner (Context context, Log log = null, string toolPath = null)
+		protected ToolRunner (Context context, Log? log = null, string? toolPath = null)
 			: base (log)
 		{
 			Context = context ?? throw new ArgumentNullException (nameof (context));
@@ -37,7 +37,7 @@ namespace Xamarin.Android.Prepare
 				FullToolPath = context.OS.Which (DefaultToolExecutableName);
 			} else {
 				Log.DebugLine ($"Custom NuGet path: {toolPath}");
-				if (toolPath.IndexOf (Path.DirectorySeparatorChar) < 0) {
+				if (toolPath!.IndexOf (Path.DirectorySeparatorChar) < 0) {
 					Log.DebugLine ($"Locating custom {ToolName} executable '{toolPath}'");
 					FullToolPath = context.OS.Which (toolPath);
 				} else if (Path.IsPathRooted (toolPath)) {
@@ -67,13 +67,13 @@ namespace Xamarin.Android.Prepare
 			return $"{message} ";
 		}
 
-		protected void AddArguments (ProcessRunner runner, IEnumerable<string> arguments)
+		protected void AddArguments (ProcessRunner runner, IEnumerable<string>? arguments)
 		{
 			if (arguments == null)
 				return;
 
 			foreach (string a in arguments) {
-				string arg = a?.Trim ();
+				string arg = a.Trim ();
 				if (String.IsNullOrEmpty (arg))
 					continue;
 
@@ -83,11 +83,17 @@ namespace Xamarin.Android.Prepare
 
 		protected virtual ProcessRunner CreateProcessRunner (params string[] initialParams)
 		{
-			string managedRunner = Context.OS.GetManagedProgramRunner (FullToolPath);
-			if (managedRunner != null)
-				managedRunner = Context.OS.Which (managedRunner);
+			bool usingManagedRunner;
+			string command = Context.OS.GetManagedProgramRunner (FullToolPath);
+			if (command.Length > 0) {
+				command = Context.OS.Which (command);
+				usingManagedRunner = true;
+			} else {
+				command = FullToolPath;
+				usingManagedRunner = false;
+			}
 
-			var runner = new ProcessRunner (managedRunner ?? FullToolPath) {
+			var runner = new ProcessRunner (command) {
 				ProcessTimeout = ProcessTimeout,
 				EchoCmdAndArguments = EchoCmdAndArguments,
 				EchoStandardError = EchoStandardError,
@@ -100,7 +106,7 @@ namespace Xamarin.Android.Prepare
 				}
 			}
 
-			if (managedRunner != null)
+			if (usingManagedRunner)
 				runner.AddQuotedArgument (FullToolPath);
 
 			runner.AddArguments (initialParams);
@@ -112,9 +118,9 @@ namespace Xamarin.Android.Prepare
 			return await Task.Run (runner);
 		}
 
-		protected TextWriter SetupOutputSink (ProcessRunner runner, string tags = null, string messagePrefix = null)
+		protected TextWriter SetupOutputSink (ProcessRunner runner, string? tags = null, string? messagePrefix = null)
 		{
-			string logFilePath = null;
+			string? logFilePath = null;
 
 			if (!String.IsNullOrEmpty (tags)) {
 				logFilePath = Context.GetLogFilePath (tags ?? String.Empty);
@@ -132,7 +138,7 @@ namespace Xamarin.Android.Prepare
 			return ret;
 		}
 
-		protected virtual TextWriter CreateLogSink (string logFilePath)
+		protected virtual TextWriter CreateLogSink (string? logFilePath)
 		{
 			throw new NotSupportedException ("Child class must implement this method if it uses GetLogFileSink");
 		}
@@ -155,11 +161,11 @@ namespace Xamarin.Android.Prepare
 		string GetVersion ()
 		{
 			if (!String.IsNullOrEmpty (programVersion))
-				return programVersion;
+				return programVersion!;
 
 			(bool success, string version) = Utilities.GetProgramVersion (FullToolPath);
 			if (!success)
-				return null;
+				return String.Empty;
 
 			programVersion = version;
 			return version;

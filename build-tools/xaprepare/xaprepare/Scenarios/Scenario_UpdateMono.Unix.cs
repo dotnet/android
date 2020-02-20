@@ -9,7 +9,7 @@ namespace Xamarin.Android.Prepare
 		public const string MyName = "UpdateMono";
 
 		public Scenario_UpdateMono ()
-			: base (MyName, "Perform basic detection steps AND update Mono if necessary", Context.Instance)
+			: base (MyName, "Perform basic detection steps AND update Mono if necessary")
 		{}
 
 		protected override void AddSteps (Context context)

@@ -9,7 +9,7 @@ namespace Xamarin.Android.Prepare
 		protected override string DefaultToolExecutableName => "nuget";
 		protected override string ToolName                  => "NuGet";
 
-		public NuGetRunner (Context context, Log log = null, string nugetPath = null)
+		public NuGetRunner (Context context, Log? log = null, string? nugetPath = null)
 			: base (context, log, nugetPath ?? Configurables.Paths.LocalNugetPath)
 		{}
 
@@ -43,7 +43,7 @@ namespace Xamarin.Android.Prepare
 			}
 		}
 
-		protected override TextWriter CreateLogSink (string logFilePath)
+		protected override TextWriter CreateLogSink (string? logFilePath)
 		{
 			return new OutputSink (Log, logFilePath);
 		}

@@ -8,14 +8,14 @@ namespace Xamarin.Android.Prepare
 	{
 		protected abstract class ToolOutputSink : TextWriter
 		{
-			protected Log Log             { get; }
-			protected StreamWriter Writer { get; private set; }
+			protected Log Log              { get; }
+			protected StreamWriter? Writer { get; private set; }
 
 			public override Encoding Encoding => Encoding.Default;
 
-			protected ToolOutputSink (Log log, string logFilePath)
+			protected ToolOutputSink (Log log, string? logFilePath)
 			{
-				Log = log ?? throw new ArgumentNullException (nameof (log));
+				Log = log;
 				if (!String.IsNullOrEmpty (logFilePath))
 					Writer = new StreamWriter (File.Open (logFilePath, FileMode.Create, FileAccess.Write), Utilities.UTF8NoBOM);
 			}

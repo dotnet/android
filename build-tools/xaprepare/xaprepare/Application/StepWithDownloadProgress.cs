@@ -17,7 +17,7 @@ namespace Xamarin.Android.Prepare
 				LogStatus ($"downloading {fileName} ", 4, ConsoleColor.Gray);
 
 			bool success;
-			Exception downloadEx = null;
+			Exception? downloadEx = null;
 			try {
 				Log.DebugLine ("About to start downloading");
 				success = await Utilities.Download (url, destinationFilePath, downloadStatus);

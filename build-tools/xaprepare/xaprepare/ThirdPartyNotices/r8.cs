@@ -10,7 +10,7 @@ namespace Xamarin.Android.Prepare
 	{
 		static readonly Uri    url         = new Uri ("https://r8.googlesource.com/r8/");
 
-		public override string LicenseFile => null;
+		public override string LicenseFile => String.Empty;
 		public override string Name        => "google/r8";
 		public override Uri    SourceUrl   => url;
 
