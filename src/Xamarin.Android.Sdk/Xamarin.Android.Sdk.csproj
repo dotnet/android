@@ -5,13 +5,13 @@
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <PackageId>Xamarin.Android.Sdk</PackageId>
     <PackageVersion>0.0.1</PackageVersion>
-    <Authors>Xamarin</Authors>
+    <Authors>Microsoft</Authors>
     <Description>C# Tools and Bindings for the Android SDK</Description>
     <OutputPath>..\..\bin\Build$(Configuration)</OutputPath>
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />
-  <Import Project="..\installers\create-installers.targets" />
+  <Import Project="..\..\build-tools\installers\create-installers.targets" />
 
   <PropertyGroup>
     <BeforePack>

@@ -1,0 +1,79 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <PackageId>Xamarin.Android.App.Ref</PackageId>
+    <PackageVersion>0.0.1</PackageVersion>
+    <Authors>Microsoft</Authors>
+    <Description>Xamarin.Android Reference Assemblies</Description>
+    <OutputPath>..\..\bin\Build$(Configuration)</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.DotNet.Build.Tasks.Packaging" Version="5.0.0-beta.20120.1" />
+    <PackageReference Include="Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk" Version="5.0.0-beta.20120.1" />
+  </ItemGroup>
+
+  <Import Project="..\..\Configuration.props" />
+  <Import Project="..\..\build-tools\installers\create-installers.targets" />
+  <Import Project="Sdk.props" Sdk="Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk" />
+
+  <UsingTask TaskName="CreateFrameworkListFile" AssemblyFile="$(DotNetBuildTasksSharedFrameworkTaskFile)"/>
+
+  <PropertyGroup>
+    <BeforePack>
+      _GatherPackContent;
+      $(BeforePack);
+    </BeforePack>
+  </PropertyGroup>
+
+  <!-- https://github.com/dotnet/runtime/blob/0647ec314948904319da5eb15e9931f7c85ed1e2/src/installer/pkg/projects/Directory.Build.targets#L281 -->
+  <!-- TODO: Do we need to generate a PlatformManifest.txt? -->
+  <Target Name="_GatherPackContent" 
+      BeforeTargets="GetFiles" >
+
+    <!-- Hardcode pack assemblies for now -->
+    <ItemGroup>
+      <Content Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild-frameworks\MonoAndroid\v10.0\Mono.Android.dll" >
+        <Pack>true</Pack>
+        <PackagePath>ref\netcoreapp5.0</PackagePath>
+        <TargetPath>%(PackagePath)</TargetPath>
+      </Content>
+      <Content Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild-frameworks\MonoAndroid\v1.0\Java.Interop.dll" >
+        <Pack>true</Pack>
+        <PackagePath>ref\netcoreapp5.0</PackagePath>
+        <TargetPath>%(PackagePath)</TargetPath>
+      </Content>
+    </ItemGroup>
+  
+    <PropertyGroup>
+      <FrameworkListFilename Condition="'$(FrameworkListFilename)' == ''">FrameworkList.xml</FrameworkListFilename>
+      <FrameworkListFile>$(IntermediateOutputPath)$(FrameworkListFilename)</FrameworkListFile>
+    </PropertyGroup>
+
+    <!-- Hardcode framework attributes for now -->
+    <ItemGroup>
+      <FrameworkListRootAttributes Include="Name" Value="Xamarin Android - NET 5.0" />
+      <FrameworkListRootAttributes Include="TargetFrameworkIdentifier" Value=".NETCoreApp" />
+      <FrameworkListRootAttributes Include="TargetFrameworkVersion" Value="5.0" />
+      <FrameworkListRootAttributes Include="FrameworkName" Value="Xamarin.Android.App" />
+    </ItemGroup>
+
+    <!-- https://github.com/dotnet/arcade/blob/1924d7ea148c9f26ca3d82b60f0a775a5389ed22/src/Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk/src/CreateFrameworkListFile.cs -->
+    <CreateFrameworkListFile
+      Files="@(Content)"
+      TargetFile="$(FrameworkListFile)"
+      TargetFilePrefixes="ref"
+      RootAttributes="@(FrameworkListRootAttributes)" />
+
+    <ItemGroup>
+      <Content Include="$(FrameworkListFile)">
+        <Pack>true</Pack>
+        <PackagePath>data\</PackagePath>
+      </Content>
+    </ItemGroup>
+
+  </Target>
+
+</Project>

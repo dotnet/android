@@ -182,7 +182,7 @@ stages:
       displayName: pack Xamarin.Android.Sdk
       inputs:
         command: pack
-        packagesToPack: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/create-packs/Packager.csproj
+        packagesToPack: $(System.DefaultWorkingDirectory)/xamarin-android/src/Xamarin.Android.Sdk/Xamarin.Android.Sdk.csproj
         configuration: $(XA.Build.Configuration)
         packDirectory: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
 
@@ -274,7 +274,7 @@ stages:
       displayName: pack Xamarin.Android.Sdk
       inputs:
         command: pack
-        packagesToPack: $(System.DefaultWorkingDirectory)\build-tools\create-packs\Packager.csproj
+        packagesToPack: $(System.DefaultWorkingDirectory)\src\Xamarin.Android.Sdk\Xamarin.Android.Sdk.csproj
         configuration: $(XA.Build.Configuration)
         packDirectory: $(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)
 
