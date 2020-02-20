@@ -50,7 +50,7 @@ namespace Xamarin.Android.Prepare
 			if (String.IsNullOrEmpty (packageName))
 				throw new ArgumentException ("must not be null or empty", nameof (packageName));
 
-			return await RunBrew (echoOutput, echoError, "install", packageName);
+			return await RunBrew (echoOutput, echoError, "install", "-d", "-v", packageName);
 		}
 
 		public async Task<bool> Upgrade (string packageName, bool echoOutput = true, bool echoError = true)
@@ -58,7 +58,7 @@ namespace Xamarin.Android.Prepare
 			if (String.IsNullOrEmpty (packageName))
 				throw new ArgumentException ("must not be null or empty", nameof (packageName));
 
-			return await RunBrew (echoOutput, echoError, "upgrade", packageName);
+			return await RunBrew (echoOutput, echoError, "upgrade", "-v", packageName);
 		}
 
 		public async Task<bool> Pin (string packageName, bool echoOutput = false, bool echoError = false)
@@ -66,7 +66,7 @@ namespace Xamarin.Android.Prepare
 			if (String.IsNullOrEmpty (packageName))
 				throw new ArgumentException ("must not be null or empty", nameof (packageName));
 
-			return await RunBrew (echoOutput, echoError, "pin", packageName);
+			return await RunBrew (echoOutput, echoError, "pin", "-d", packageName);
 		}
 
 		public async Task<bool> UnPin (string packageName, bool echoOutput = false, bool echoError = false)
@@ -74,7 +74,7 @@ namespace Xamarin.Android.Prepare
 			if (String.IsNullOrEmpty (packageName))
 				throw new ArgumentException ("must not be null or empty", nameof (packageName));
 
-			return await RunBrew (echoOutput, echoError, "unpin", packageName);;
+			return await RunBrew (echoOutput, echoError, "unpin", "-d", "-v", packageName);;
 		}
 
 		public bool List (string packageName, out List<string> lines)
