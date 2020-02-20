@@ -48,4 +48,4 @@ jobs:
       parameters:
         artifactName: Test Results - TimeZoneInfo With Emulator - macOS - ${{ parameters.node_id }}
 
-    - template: yaml-templates/fail-on-issue.yaml
+    - template: fail-on-issue.yaml

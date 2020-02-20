@@ -215,4 +215,4 @@ steps:
       testRunTitle: Test Environment Cleanup
       nunitConsoleExtraArgs: --where "cat == XATestCleanUp"
 
-- template: yaml-templates/fail-on-issue.yaml
+- template: fail-on-issue.yaml
