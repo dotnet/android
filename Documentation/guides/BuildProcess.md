@@ -99,9 +99,47 @@ The following build targets are defined for Xamarin.Android projects:
   (`.apk`). Use with `/p:Configuration=Release` to generate
   self-contained "Release" packages.
 
+-   **StartAndroidActivity** &ndash; Starts *launch* activity on the
+    device or the running emulator. The launch activity can be
+    overriden by the `$(AndroidLaunchActivity)` property.
+    
+    Added in Xamarin.Android v10.3.
+    
+    This is equivalent to `adb shell am start @PACKAGE_NAME@/$(AndroidLaunchActivity)`.
+
+-   **StopAndroidPackage** &ndash; Completely stops the application
+    package on the device or the running emulator.
+    
+    Added in Xamarin.Android v10.3.
+    
+    This is equivalent to `adb shell am force-stop @PACKAGE_NAME@`.
+
 - **UpdateAndroidResources** &ndash; Updates the
   `Resource.designer.cs` file. This target is usually called by the
   IDE when new resources are added to the project.
+
+-   **BuildAndStartAotProfiling** &ndash; Builds the package with
+    embedded AOT profiler, sets the AOT profiler socket port to
+    `$(AndroidAotProfilerPort)` and starts the *launch* activity.
+
+    Added in Xamarin.Android v10.3.
+
+-   **FinishAotProfiling** &ndash; Collects the AOT profiler data from
+    the device or the emulator through sockets port
+    `$(AndroidAotProfilerPort)` and writes them to
+    `$(AndroidAotCustomProfilePath)`.
+
+    The default values for port and custom profile are `9999` and
+    `custom.aprof`.
+
+    The `aprofutil` call may be extended with
+    `$(AProfUtilExtraOptions)`, to pass additional options.
+
+    This is equivalent to:
+    
+        aprofutil $(AProfUtilExtraOptions) -s -v -f -p $(AndroidAotProfilerPort) -o "$(AndroidAotCustomProfilePath)"
+
+    Added in Xamarin.Android v10.3.
 
 ## Build Extension Points
 
@@ -213,10 +251,17 @@ used by the `Install` and `SignAndroidPackage` targets.
 The [Signing Properties](#Signing_Properties) are also relevant
 when packaging Release applications.
 
+-   **AndroidAotProfiles** &ndash; A string property which allows the
+    developer to add AOT profiles from the command line. It is
+    semicolon or comma separated list of absolute paths.
+
+    Added in Xamarin.Android 10.1.
+
 - **AndroidApkDigestAlgorithm** &ndash; A string value which specifies
   the digest algorithm to use with `jarsigner -digestalg`.
 
-  The default value is `SHA1` for APKs and `SHA-256` for App Bundles.
+    The default value is `SHA-256`, which was `SHA1` in previous
+    versions of Xamarin.Android.
 
   Added in Xamarin.Android 9.4.
 
@@ -228,7 +273,8 @@ when packaging Release applications.
 - **AndroidApkSigningAlgorithm** &ndash; A string value which specifies
   the signing algorithm to use with `jarsigner -sigalg`.
 
-  The default value is `md5withRSA` for APKs and `SHA256withRSA` for App Bundles.
+    The default value is `SHA256withRSA`, which was `md5withRSA` in
+    previous versions of Xamarin.Android.
 
   Added in Xamarin.Android 8.2.
 
@@ -250,6 +296,45 @@ when packaging Release applications.
   `$(AndroidEnableMultiDex)` MSBuild property.
 
   Added in Xamarin.Android 6.1.
+
+-   **AndroidBinUtilsPath** &ndash; A path to a directory containing
+    the Android [binutils][binutils] such as `ld`, the native linker,
+    and `as`, the native assembler. These binaries a subset of the
+    Android NDK, and are bundled with the Xamarin.Android
+    installation. `$(MonoAndroidBinDirectory)\ndk\` by default.
+
+    Added in Xamarin.Android 10.0.
+
+[binutils]: https://android.googlesource.com/toolchain/binutils/
+
+-   **AndroidBoundExceptionType** &ndash; A string value which specifies how
+    exceptions should be propagated when a Xamarin.Android-provided type
+    implements a .NET type or interface in terms of Java types, for example
+    `Android.Runtime.InputStreamInvoker` and `System.IO.Stream`, or
+    `Android.Runtime.JavaDictionary` and `System.Collections.IDictionary`.
+    
+    -   `Java`: The original Java exception type is propagated as-is.
+
+        This means that e.g. `InputStreamInvoker` does not property implement
+        the `System.IO.Stream` API, as e.g. `Java.IO.IOException` may be thrown
+        from `Stream.Read()` instead of `System.IO.IOException`.
+        
+        This corresponds to exception propagation behavior in all releases of
+        Xamarin.Android prior to 10.2.
+        
+        This is the default value in Xamarin.Android 10.2.
+
+    -   `System`: The original Java exception type is caught and wrapped in an
+        appropriate .NET exception type.
+	
+        This means that e.g. `InputStreamInvoker` properly implements
+        `System.IO.Stream`, and `Stream.Read()` will *not* throw `Java.IO.IOException`
+        instances.  (It may instead throw a `System.IO.IOException` which has a
+        `Java.IO.IOException` as the `Exception.InnerException` value.)
+
+        This will become the default value in Xamarin.Android 11.0.
+    
+    Added in Xamarin.Android 10.2.
 
 - **AndroidBuildApplicationPackage** &ndash; A boolean value that
   indicates whether to create and sign the package (.apk). Setting
@@ -360,6 +445,13 @@ when packaging Release applications.
   Support for this property was added in Xamarin.Android 8.1.
 
   This property is `True` by default.
+
+-   **AndroidExtraAotOptions** &ndash; A string property that allows to
+    pass additional options to the mono, when precompiling assemblies
+    in `Aot` task. It is added to the response file, when calling mono
+    as a cross-compiler.
+
+    Added in Xamarin.Android v10.3.
 
 - **AndroidFastDeploymentType** &ndash; A `:` (colon)-separated list
   of values to control what types can be deployed to the
@@ -546,6 +638,20 @@ when packaging Release applications.
   produce the actual `AndroidManifest.xml`.
   The `$(AndroidManifest)` must contain the package name in the `/manifest/@package` attribute.
 
+-   **AndroidManifestMerger** &ndash; Specifies the implementation for
+    merging `AndroidManifest.xml` files. This is an enum-style property
+    where `legacy` is the original C# implementation in Xamarin.Android,
+    and `manifestmerger.jar` uses Google's Java implementation for Android.
+
+    Going forward, we will be migrating to Google's implementation to
+    match behavior with applications built with Android Studio. Google's
+    merger enables support for `xmlns:tools="http://schemas.android.com/tools"`
+    as described in the [Android documentation][manifest-merger].
+
+    Introduced in Xamarin.Android 10.2
+
+    [manifest-merger]: https://developer.android.com/studio/build/manifest-merge
+
 - **AndroidMultiDexClassListExtraArgs** &ndash; A string property
   which allows developers to pass additional arguments to the
   `com.android.multidex.MainDexListBuilder` when generating the
@@ -586,6 +692,29 @@ when packaging Release applications.
 
   [apk]: https://en.wikipedia.org/wiki/Android_application_package
   [bundle]: https://developer.android.com/platform/technology/app-bundle
+
+-   **AndroidBundleConfigurationFile** &ndash; Specifies a filename to use as a
+    configuration base when invoking `bundletool` to create an 
+    [Android App Bundle][bundle]. Xamarin.Android can still set certain
+    settings on top of this (especially extensions that are uncompressed).
+    This file lets you configure some aspects of how the Apks are generated,
+    including on what dimension(s) you want your bundle to get split.
+    Only useful if `AndroidPackageFormat` is set to `aab` mode.
+
+    The format of the configuration file is a JSON as expected by
+    [`bundletool`][bundle-config-format].
+
+    Added in Xamarin.Android 10.2.
+
+[bundle-config-format]: https://developer.android.com/studio/build/building-cmdline#bundleconfig
+
+-   **AndroidPackageNamingPolicy** &ndash; An enum-style property for
+    specifying the Java package names of generated Java source code.
+    The default value is `LowercaseCrc64`. In previous versions of
+    Xamarin.Android, MD5-based names were used via `LowercaseMD5`
+    which is no longer supported.
+
+    Added in Xamarin.Android 10.1.
 
 - **AndroidR8JarPath** &ndash; The path to `r8.jar` for use with the
   r8 dex-compiler and shrinker. Defaults to a path in the
@@ -641,11 +770,14 @@ when packaging Release applications.
     This corresponds to the **Native TLS 1.2+** setting in the
     Visual Studio property pages.
 
-  - `legacy`: Use the historical managed SSL implementation for
-    network interaction. This *does not* support TLS 1.2.
+    -   `legacy`: In Xamarin.Android v10.1 and earlier, use the historical
+        managed SSL implementation for network interaction. This *does not* support TLS 1.2.
 
     This corresponds to the **Managed TLS 1.0** setting in the
     Visual Studio property pages.
+
+        In Xamarin.Android v10.2 and later, this value is ignored and the
+        `btls` setting is used.
 
   - `default`: This value is unlikely to be used in Xamarin.Android
     projects. The recommended value to use instead is the empty string,
@@ -663,6 +795,11 @@ when packaging Release applications.
     use the to the `apksigner` tool rather than the `jarsigner`.
 
     Added in Xamarin.Android 8.2.
+
+-   **AndroidUseDefaultAotProfile** &ndash; A bool property which allows
+    the developer to suppress usage of the default AOT profiles.
+
+    Added in Xamarin.Android 10.1.
 
 - **AndroidUseLegacyVersionCode** &ndash; A boolean property will allows
   the developer to revert the versionCode calculation back to its old pre
@@ -769,6 +906,8 @@ when packaging Release applications.
 - **EnableLLVM** &ndash; A boolean property that determines whether
   or not LLVM will be used when Ahead-of-Time compiling assemblies
   into native code.
+
+    Enabling this propery requires Android NDK to be installed.
 
   Support for this property was added in Xamarin.Android 5.1.
 
@@ -1053,6 +1192,12 @@ server, the following MSBuild properties can be used:
   validity to use for the `debug.keystore`. It defaults to
   `10950` or `30 * 365` or `30 years`.
 
+-   **AndroidDebugStoreType** &ndash; Specifies the default
+    key store file format to use for the `debug.keystore`. It defaults
+    to `pkcs12`.
+
+    Added in Xamarin.Android v10.3.
+
 - **AndroidKeyStore** &ndash; A boolean value which indicates whether
   custom signing information should be used. The default value is
   `False`, meaning that the default debug-signing key will be used
@@ -1067,6 +1212,17 @@ server, the following MSBuild properties can be used:
   the value entered when `keytool` asks **Enter key password for
   $(AndroidSigningKeyAlias)**.
 
+  You can use the raw password here, however if you want to hide your password in logs
+  you can use a prefix of env: or file: to point it to an Environment variable or 
+  a file. For example
+
+  ```
+      env:<PasswordEnvironentVariable>
+      file:<PasswordFile> 
+  ```
+
+    Note: `env:` is not supported when using `AndroidPackageFormat`=`aab`. 
+
 - **AndroidSigningKeyStore** &ndash; Specifies the filename of the
   keystore file created by `keytool`. This corresponds to the value
   provided to the **keytool -keystore** option.
@@ -1075,6 +1231,40 @@ server, the following MSBuild properties can be used:
   `$(AndroidSigningKeyStore)`. This is the value provided to
   `keytool` when creating the keystore file and asked **Enter
   keystore password:**.
+
+    You can use the raw password here, however if you want to hide your password in logs
+    you can use a prefix of env: or file: to point it to an Environment variable or 
+    a file. For example
+
+    ```
+        env:<PasswordEnvironentVariable>
+        file:<PasswordFile> 
+    ```
+
+    Note: `env:` is not supported when using `AndroidPackageFormat`=`aab`. 
+
+-   **JarsignerTimestampAuthorityUrl** &ndash; This property
+    allows you to specify a URL to a timestamp authority
+    service. This can be used to make sure your `.apk` signature
+    includes a timestamp.
+    See the Java [Signature Timestamp Support](https://docs.oracle.com/javase/8/docs/technotes/guides/security/time-of-signing.html) documentation for more details.
+
+    ```xml
+    <PropertyGroup>
+        <JarsignerTimestampAuthorityUrl>http://example.tsa.url</JarsignerTimestampAuthorityUrl>
+    </PropertyGroup>
+    ```
+
+-   **JarsignerTimestampAuthorityCertificateAlias** &ndash; This 
+    property allows you to specify an alias in the keystore
+    for a timestamp authority.
+    See the Java [Signature Timestamp Support](https://docs.oracle.com/javase/8/docs/technotes/guides/security/time-of-signing.html) documentation for more details.
+
+    ```xml
+    <PropertyGroup>
+        <JarsignerTimestampAuthorityCertificateAlias>Alias</JarsignerTimestampAuthorityCertificateAlias>
+    </PropertyGroup>
+    ```
 
 For example, consider the following `keytool` invocation:
 
@@ -1102,6 +1292,26 @@ To use the keystore generated above, use the property group:
     <AndroidSigningStorePass>keystore.filename password</AndroidSigningStorePass>
     <AndroidSigningKeyAlias>keystore.alias</AndroidSigningKeyAlias>
     <AndroidSigningKeyPass>keystore.alias password</AndroidSigningKeyPass>
+</PropertyGroup>
+```
+
+To use an environment variable to store your password you can do the following
+
+```xml
+<PropertyGroup>
+    <AndroidSigningStorePass>env:SomeEnvironmentVariableWithThePassword</AndroidSigningStorePass>
+    <AndroidSigningKeyPass>env:SomeEnvironmentVariableWithThePassword</AndroidSigningKeyPass>
+</PropertyGroup>
+```
+
+to use a file you can do the following
+
+To use an environment variable to store your password you can do the following
+
+```xml
+<PropertyGroup>
+    <AndroidSigningStorePass>file:SomeFileWithThePassword</AndroidSigningStorePass>
+    <AndroidSigningKeyPass>file:SomeFileWithThePassword</AndroidSigningKeyPass>
 </PropertyGroup>
 ```
 
@@ -1192,6 +1402,12 @@ With path sniffing, the parent directory name of the native library is
 used to specify the ABI that the library targets. Thus, if you add
 `lib/armeabi-v7a/libfoo.so` to the build, then the ABI will be "sniffed" as
 `armeabi-v7a`.
+
+### AndroidResourceAnalysisConfig
+
+The Build action `AndroidResourceAnalysisConfig` marks a file as a severity level configuration file for Xamarin Android Designer layout diagnostics tool. This is currently only used in the layout editor and not for build messages.
+
+See the [Android Resource Analysis documentation](https://aka.ms/androidresourceanalysis) for more details.
 
 #### Item Attribute Name
 
