@@ -61,21 +61,28 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 		List<TypeDefinition>            Types;
 		DirectoryAssemblyResolver       Resolver;
 		JavaTypeScanner                 Scanner;
+		readonly TypeDefinitionCache    Cache;
 
-		[Obsolete ("Use TypeNameMapGenerator(IEnumerable<string>, Action<TraceLevel, string>)")]
+		[Obsolete ("Use TypeNameMapGenerator(IEnumerable<string>, Action<TraceLevel, string>, TypeDefinitionCache)")]
 		public TypeNameMapGenerator (IEnumerable<string> assemblies, Action<string, object []> logMessage)
-			: this (assemblies, (TraceLevel level, string value) => logMessage?.Invoke ("{0}", new[]{value}))
+			: this (assemblies, (TraceLevel level, string value) => logMessage?.Invoke ("{0}", new[]{value}), cache: null)
 		{
 			if (logMessage == null)
 				throw new ArgumentNullException (nameof (logMessage));
 		}
 
+		[Obsolete ("Use TypeNameMapGenerator(IEnumerable<string>, Action<TraceLevel, string>, TypeDefinitionCache)")]
 		public TypeNameMapGenerator (IEnumerable<string> assemblies, Action<TraceLevel, string> logger)
+			: this (assemblies, logger, cache: null)
+		{ }
+
+		public TypeNameMapGenerator (IEnumerable<string> assemblies, Action<TraceLevel, string> logger, TypeDefinitionCache cache)
 		{
 			if (assemblies == null)
 				throw new ArgumentNullException ("assemblies");
 			if (logger == null)
 				throw new ArgumentNullException (nameof (logger));
+			Cache = cache ?? new TypeDefinitionCache ();
 
 			Log             = logger;
 			var Assemblies  = assemblies.ToList ();
@@ -93,26 +100,32 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				Resolver.Load (Path.GetFullPath (assembly));
 			}
 
-			Scanner     = new JavaTypeScanner (Log) {
+			Scanner     = new JavaTypeScanner (Log, cache) {
 				ErrorOnCustomJavaObject     = false,
 			};
 			Types       = Scanner.GetJavaTypes (Assemblies, Resolver);
 		}
 
-		[Obsolete ("Use TypeNameMapGenerator(IEnumerable<TypeDefinition>, Action<TraceLevel, string>)")]
+		[Obsolete ("Use TypeNameMapGenerator(IEnumerable<TypeDefinition>, Action<TraceLevel, string>, TypeDefinitionCache)")]
 		public TypeNameMapGenerator (IEnumerable<TypeDefinition> types, Action<string, object[]> logMessage)
-			: this (types, (TraceLevel level, string value) => logMessage?.Invoke ("{0}", new [] { value }))
+			: this (types, (TraceLevel level, string value) => logMessage?.Invoke ("{0}", new [] { value }), cache: null)
 		{
 			if (logMessage == null)
 				throw new ArgumentNullException (nameof (logMessage));
 		}
 
+		[Obsolete ("Use TypeNameMapGenerator(IEnumerable<TypeDefinition>, Action<TraceLevel, string>, TypeDefinitionCache)")]
 		public TypeNameMapGenerator (IEnumerable<TypeDefinition> types, Action<TraceLevel, string> logger)
+			: this (types, logger, cache: null)
+		{ }
+
+		public TypeNameMapGenerator (IEnumerable<TypeDefinition> types, Action<TraceLevel, string> logger, TypeDefinitionCache cache)
 		{
 			if (types == null)
 				throw new ArgumentNullException ("types");
 			if (logger == null)
 				throw new ArgumentNullException (nameof (logger));
+			Cache = cache ?? new TypeDefinitionCache ();
 
 			Log         = logger;
 			Types       = types.ToList ();
@@ -141,7 +154,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			var typeMap = GetTypeMapping (
 					t => t.IsInterface || t.HasGenericParameters,
 					JavaNativeTypeManager.ToJniName,
-					t => t.GetPartialAssemblyQualifiedName ());
+					t => t.GetPartialAssemblyQualifiedName (Cache));
 
 			WriteBinaryMapping (output, typeMap);
 		}
@@ -163,7 +176,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 					// Two separate types w/ the same key; a JavaToManaged issue.
 					// Prefer the base (abstract?) class over the invoker.
 					var b = e;
-					if (type.IsAssignableFrom (e))
+					if (type.IsAssignableFrom (e, Cache))
 						b = type;
 					typeMap [k] = b;
 				} else {
@@ -234,7 +247,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 
 			var typeMap = GetTypeMapping (
 					t => false,
-					t => t.GetPartialAssemblyQualifiedName (),
+					t => t.GetPartialAssemblyQualifiedName (Cache),
 					JavaNativeTypeManager.ToJniName);
 
 			WriteBinaryMapping (output, typeMap);

@@ -8,54 +8,82 @@ namespace Java.Interop.Tools.Cecil {
 
 	public static class TypeDefinitionRocks {
 
-		public static TypeDefinition GetBaseType (this TypeDefinition type)
+		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
+		public static TypeDefinition GetBaseType (this TypeDefinition type) =>
+			GetBaseType (type, cache: null);
+
+		public static TypeDefinition GetBaseType (this TypeDefinition type, TypeDefinitionCache cache)
 		{
 			var bt = type.BaseType;
-			return bt == null ? null : bt.Resolve ();
+			if (bt == null)
+				return null;
+			if (cache != null)
+				return cache.Resolve (bt);
+			return bt.Resolve ();
 		}
 
-		public static IEnumerable<TypeDefinition> GetTypeAndBaseTypes (this TypeDefinition type)
+		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
+		public static IEnumerable<TypeDefinition> GetTypeAndBaseTypes (this TypeDefinition type) =>
+			GetTypeAndBaseTypes (type, cache: null);
+
+		public static IEnumerable<TypeDefinition> GetTypeAndBaseTypes (this TypeDefinition type, TypeDefinitionCache cache)
 		{
 			while (type != null) {
 				yield return type;
-				type = type.GetBaseType ();
+				type = type.GetBaseType (cache);
 			}
 		}
 
-		public static IEnumerable<TypeDefinition> GetBaseTypes (this TypeDefinition type)
+		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
+		public static IEnumerable<TypeDefinition> GetBaseTypes (this TypeDefinition type) =>
+			GetBaseTypes (type, cache: null);
+
+		public static IEnumerable<TypeDefinition> GetBaseTypes (this TypeDefinition type, TypeDefinitionCache cache)
 		{
-			while ((type = type.GetBaseType ()) != null) {
+			while ((type = type.GetBaseType (cache)) != null) {
 				yield return type;
 			}
 		}
 
-		public static bool IsAssignableFrom (this TypeReference type, TypeReference c)
+		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
+		public static bool IsAssignableFrom (this TypeReference type, TypeReference c) =>
+			IsAssignableFrom (type, c, cache: null);
+
+		public static bool IsAssignableFrom (this TypeReference type, TypeReference c, TypeDefinitionCache cache)
 		{
 			if (type.FullName == c.FullName)
 				return true;
 			var d = c.Resolve ();
 			if (d == null)
 				return false;
-			foreach (var t in d.GetTypeAndBaseTypes ()) {
+			foreach (var t in d.GetTypeAndBaseTypes (cache)) {
 				if (type.FullName == t.FullName)
 					return true;
 				foreach (var ifaceImpl in t.Interfaces) {
 					var i   = ifaceImpl.InterfaceType;
-					if (IsAssignableFrom (type, i))
+					if (IsAssignableFrom (type, i, cache))
 						return true;
 				}
 			}
 			return false;
 		}
 
-		public static bool IsSubclassOf (this TypeDefinition type, string typeName)
+		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
+		public static bool IsSubclassOf (this TypeDefinition type, string typeName) =>
+			IsSubclassOf (type, typeName, cache: null);
+
+		public static bool IsSubclassOf (this TypeDefinition type, string typeName, TypeDefinitionCache cache)
 		{
-			return type.GetTypeAndBaseTypes ().Any (t => t.FullName == typeName);
+			return type.GetTypeAndBaseTypes (cache).Any (t => t.FullName == typeName);
 		}
 
-		public static bool ImplementsInterface (this TypeDefinition type, string interfaceName)
+		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
+		public static bool ImplementsInterface (this TypeDefinition type, string interfaceName) =>
+			ImplementsInterface (type, interfaceName, cache: null);
+
+		public static bool ImplementsInterface (this TypeDefinition type, string interfaceName, TypeDefinitionCache cache)
 		{
-			foreach (var t in type.GetTypeAndBaseTypes ()) {
+			foreach (var t in type.GetTypeAndBaseTypes (cache)) {
 				foreach (var i in t.Interfaces) {
 					if (i.InterfaceType.FullName == interfaceName) {
 						return true;
@@ -65,24 +93,36 @@ namespace Java.Interop.Tools.Cecil {
 			return false;
 		}
 
-		public static string GetPartialAssemblyName (this TypeReference type)
+		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
+		public static string GetPartialAssemblyName (this TypeReference type) =>
+			GetPartialAssemblyName (type, cache: null);
+
+		public static string GetPartialAssemblyName (this TypeReference type, TypeDefinitionCache cache)
 		{
-			TypeDefinition def = type.Resolve ();
+			TypeDefinition def = cache != null ? cache.Resolve (type) : type.Resolve ();
 			return (def ?? type).Module.Assembly.Name.Name;
 		}
 
-		public static string GetPartialAssemblyQualifiedName (this TypeReference type)
+		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
+		public static string GetPartialAssemblyQualifiedName (this TypeReference type) =>
+			GetPartialAssemblyQualifiedName (type, cache: null);
+
+		public static string GetPartialAssemblyQualifiedName (this TypeReference type, TypeDefinitionCache cache)
 		{
 			return string.Format ("{0}, {1}",
 					// Cecil likes to use '/' as the nested type separator, while
 					// Reflection uses '+' as the nested type separator. Use Reflection.
 					type.FullName.Replace ('/', '+'),
-					type.GetPartialAssemblyName ());
+					type.GetPartialAssemblyName (cache));
 		}
 
-		public static string GetAssemblyQualifiedName (this TypeReference type)
+		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
+		public static string GetAssemblyQualifiedName (this TypeReference type) =>
+			GetAssemblyQualifiedName (type, cache: null);
+
+		public static string GetAssemblyQualifiedName (this TypeReference type, TypeDefinitionCache cache)
 		{
-			TypeDefinition def = type.Resolve ();
+			TypeDefinition def = cache != null ? cache.Resolve (type) : type.Resolve ();
 			return string.Format ("{0}, {1}",
 					// Cecil likes to use '/' as the nested type separator, while
 					// Reflection uses '+' as the nested type separator. Use Reflection.

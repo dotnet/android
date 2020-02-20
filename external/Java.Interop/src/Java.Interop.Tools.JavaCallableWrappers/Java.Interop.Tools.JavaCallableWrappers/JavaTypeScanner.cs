@@ -16,11 +16,19 @@ namespace Java.Interop.Tools.JavaCallableWrappers
 		public  Action<TraceLevel, string>      Logger                      { get; private set; }
 		public  bool                            ErrorOnCustomJavaObject     { get; set; }
 
+		readonly TypeDefinitionCache cache;
+
+		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
 		public JavaTypeScanner (Action<TraceLevel, string> logger)
+			: this (logger, cache: null)
+		{ }
+
+		public JavaTypeScanner (Action<TraceLevel, string> logger, TypeDefinitionCache cache)
 		{
 			if (logger == null)
 				throw new ArgumentNullException (nameof (logger));
 			Logger      = logger;
+			this.cache = cache ?? new TypeDefinitionCache ();
 		}
 
 		public List<TypeDefinition> GetJavaTypes (IEnumerable<string> assemblies, IAssemblyResolver resolver)
@@ -42,11 +50,11 @@ namespace Java.Interop.Tools.JavaCallableWrappers
 
 		void AddJavaTypes (List<TypeDefinition> javaTypes, TypeDefinition type)
 		{
-			if (type.IsSubclassOf ("Java.Lang.Object") || type.IsSubclassOf ("Java.Lang.Throwable")) {
+			if (type.IsSubclassOf ("Java.Lang.Object", cache) || type.IsSubclassOf ("Java.Lang.Throwable", cache)) {
 
 				// For subclasses of e.g. Android.App.Activity.
 				javaTypes.Add (type);
-			} else if (type.IsClass && !type.IsSubclassOf ("System.Exception") && type.ImplementsInterface ("Android.Runtime.IJavaObject")) {
+			} else if (type.IsClass && !type.IsSubclassOf ("System.Exception", cache) && type.ImplementsInterface ("Android.Runtime.IJavaObject", cache)) {
 				var level   = ErrorOnCustomJavaObject ? TraceLevel.Error : TraceLevel.Warning;
 				var prefix  = ErrorOnCustomJavaObject ? "error" : "warning";
 				Logger (
@@ -62,9 +70,13 @@ namespace Java.Interop.Tools.JavaCallableWrappers
 				AddJavaTypes (javaTypes, nested);
 		}
 
-		public static bool ShouldSkipJavaCallableWrapperGeneration (TypeDefinition type)
+		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
+		public static bool ShouldSkipJavaCallableWrapperGeneration (TypeDefinition type) =>
+			ShouldSkipJavaCallableWrapperGeneration (type, cache: null);
+
+		public static bool ShouldSkipJavaCallableWrapperGeneration (TypeDefinition type, TypeDefinitionCache cache)
 		{
-			if (JavaNativeTypeManager.IsNonStaticInnerClass (type))
+			if (JavaNativeTypeManager.IsNonStaticInnerClass (type, cache))
 				return true;
 
 			foreach (var r in type.GetCustomAttributes (typeof (global::Android.Runtime.RegisterAttribute))) {
@@ -76,11 +88,16 @@ namespace Java.Interop.Tools.JavaCallableWrappers
 
 			return false;
 		}
+
+		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
+		public static List<TypeDefinition> GetJavaTypes (IEnumerable<string> assemblies, IAssemblyResolver resolver, Action<string, object []> log) =>
+			GetJavaTypes (assemblies, resolver, log, cache: null);
+
 		// Returns all types for which we need to generate Java delegate types.
-		public static List<TypeDefinition> GetJavaTypes (IEnumerable<string> assemblies, IAssemblyResolver resolver, Action<string, object []> log)
+		public static List<TypeDefinition> GetJavaTypes (IEnumerable<string> assemblies, IAssemblyResolver resolver, Action<string, object []> log, TypeDefinitionCache cache)
 		{
 			Action<TraceLevel, string> l = (level, value) => log ("{0}", new string [] { value });
-			return new JavaTypeScanner (l).GetJavaTypes (assemblies, resolver);
+			return new JavaTypeScanner (l, cache).GetJavaTypes (assemblies, resolver);
 		}
 	}
 }

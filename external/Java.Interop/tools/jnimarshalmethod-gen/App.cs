@@ -20,6 +20,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 
 		internal const string Name = "jnimarshalmethod-gen";
 		static DirectoryAssemblyResolver resolver = new DirectoryAssemblyResolver (logger: (l, v) => { Console.WriteLine (v); }, loadDebugSymbols: true, loadReaderParameters: new ReaderParameters () { ReadSymbols = true, InMemory = true });
+		static readonly TypeDefinitionCache cache = new TypeDefinitionCache ();
 		static Dictionary<string, TypeBuilder> definedTypes = new Dictionary<string, TypeBuilder> ();
 		static Dictionary<string, TypeDefinition> typeMap = new Dictionary<string, TypeDefinition> ();
 		static List<string> references = new List<string> ();
@@ -341,12 +342,12 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 						Warning ($"Unable to find cecil's TypeDefinition of type {type}");
 					continue;
 				}
-				if (!td.ImplementsInterface ("Java.Interop.IJavaPeerable"))
+				if (!td.ImplementsInterface ("Java.Interop.IJavaPeerable", cache))
 					continue;
 
 				var existingMarshalMethodsType = td.GetNestedType (TypeMover.NestedName);
 				if (existingMarshalMethodsType != null && !forceRegeneration) {
-					Warning ($"Marshal methods type '{existingMarshalMethodsType.GetAssemblyQualifiedName ()}' already exists. Skipped generation of marshal methods in assembly '{assemblyName}'. Use -f to force regeneration when desired.");
+					Warning ($"Marshal methods type '{existingMarshalMethodsType.GetAssemblyQualifiedName (cache)}' already exists. Skipped generation of marshal methods in assembly '{assemblyName}'. Use -f to force regeneration when desired.");
 
 					return;
 				}
@@ -388,7 +389,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 							continue;
 						}
 
-						if (!md.NeedsMarshalMethod (resolver, method, ref name, ref methodName, ref signature))
+						if (!md.NeedsMarshalMethod (resolver, cache, method, ref name, ref methodName, ref signature))
 							continue;
 					}
 
@@ -440,7 +441,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 			if (!string.IsNullOrEmpty (outDirectory))
 				path = Path.Combine (outDirectory, Path.GetFileName (path));
 
-			var mover = new TypeMover (dstAssembly, ad, path, definedTypes, resolver);
+			var mover = new TypeMover (dstAssembly, ad, path, definedTypes, resolver, cache);
 			mover.Move ();
 
 			if (!keepTemporary)
@@ -637,7 +638,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 			return false;
 		}
 
-		public static bool NeedsMarshalMethod (this MethodDefinition md, DirectoryAssemblyResolver resolver, MethodInfo method, ref string name, ref string methodName, ref string signature)
+		public static bool NeedsMarshalMethod (this MethodDefinition md, DirectoryAssemblyResolver resolver, TypeDefinitionCache cache, MethodInfo method, ref string name, ref string methodName, ref string signature)
 		{
 			var m = md;
 
@@ -645,7 +646,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 				if (CheckMethod (m, ref name, ref methodName, ref signature))
 					return true;
 
-				m = m.GetBaseDefinition ();
+				m = m.GetBaseDefinition (cache);
 
 				if (m == md)
 					break;

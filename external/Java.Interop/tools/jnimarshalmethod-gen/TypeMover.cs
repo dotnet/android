@@ -17,13 +17,15 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator
 		Dictionary<string, System.Reflection.Emit.TypeBuilder> Types { get; }
 
 		MethodReference consoleWriteLine;
+		TypeDefinitionCache cache;
 
-		public TypeMover (AssemblyDefinition source, AssemblyDefinition destination, string destinationPath, Dictionary<string, System.Reflection.Emit.TypeBuilder> types, DirectoryAssemblyResolver resolver)
+		public TypeMover (AssemblyDefinition source, AssemblyDefinition destination, string destinationPath, Dictionary<string, System.Reflection.Emit.TypeBuilder> types, DirectoryAssemblyResolver resolver, TypeDefinitionCache cache)
 		{
 			Source = source;
 			Destination = destination;
 			DestinationPath = destinationPath;
 			Types = types;
+			this.cache = cache;
 
 			if (App.Debug) {
 				consoleWriteLine = GetSingleParameterMethod (resolver, Destination.MainModule, "mscorlib", "System.Console", "WriteLine", "System.String");
@@ -83,7 +85,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator
 
 			if (toRemove != null) {
 				foreach (var t in toRemove) {
-					App.ColorWriteLine ($"Removing original '{t.GetAssemblyQualifiedName ()}' type. (forced)", ConsoleColor.Cyan);
+					App.ColorWriteLine ($"Removing original '{t.GetAssemblyQualifiedName (cache)}' type. (forced)", ConsoleColor.Cyan);
 					typeDst.NestedTypes.Remove (t);
 				}
 			}

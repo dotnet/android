@@ -43,7 +43,8 @@ namespace Java.Interop.Tools
 				  "Show this message and exit",
 				  v => help = v != null },
 			};
-			var scanner = new JavaTypeScanner (Diagnostic.CreateConsoleLogger ());
+			var cache = new TypeDefinitionCache ();
+			var scanner = new JavaTypeScanner (Diagnostic.CreateConsoleLogger (), cache);
 			try {
 				var assemblies = options.Parse (args);
 				if (assemblies.Count == 0 || outputPath == null || help) {
@@ -64,9 +65,9 @@ namespace Java.Interop.Tools
 					resolver.Load (assembly);
 				}
 				var types = scanner.GetJavaTypes (assemblies, resolver)
-					.Where (td => !JavaTypeScanner.ShouldSkipJavaCallableWrapperGeneration (td));
+					.Where (td => !JavaTypeScanner.ShouldSkipJavaCallableWrapperGeneration (td, cache));
 				foreach (var type in types) {
-					GenerateJavaCallableWrapper (type, outputPath);
+					GenerateJavaCallableWrapper (type, outputPath, cache);
 				}
 				return 0;
 			}
@@ -79,9 +80,9 @@ namespace Java.Interop.Tools
 			}
 		}
 
-		static void GenerateJavaCallableWrapper (TypeDefinition type, string outputPath)
+		static void GenerateJavaCallableWrapper (TypeDefinition type, string outputPath, TypeDefinitionCache cache)
 		{
-			var generator = new JavaCallableWrapperGenerator (type, log: Console.WriteLine) {
+			var generator = new JavaCallableWrapperGenerator (type, log: Console.WriteLine, cache) {
 			};
 			generator.Generate (outputPath);
 		}

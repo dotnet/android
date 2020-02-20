@@ -16,17 +16,18 @@ using Java.Interop.Tools.Diagnostics;
 using Java.Interop.Tools.TypeNameMappings;
 
 using MethodAttributes = Mono.Cecil.MethodAttributes;
+using static Java.Interop.Tools.TypeNameMappings.JavaNativeTypeManager;
 
 namespace Java.Interop.Tools.JavaCallableWrappers {
 
 	 public class JavaCallableWrapperGenerator {
 
 		class JavaFieldInfo {
-			public JavaFieldInfo (MethodDefinition method, string fieldName)
+			public JavaFieldInfo (MethodDefinition method, string fieldName, TypeDefinitionCache cache)
 			{
 				this.FieldName = fieldName;
 				InitializerName = method.Name;
-				TypeName = JavaNativeTypeManager.ReturnTypeFromSignature (GetJniSignature (method)).Type;
+				TypeName = JavaNativeTypeManager.ReturnTypeFromSignature (GetJniSignature (method, cache)).Type;
 				IsStatic = method.IsStatic;
 				Access = method.Attributes & MethodAttributes.MemberAccessMask;
 				Annotations = GetAnnotationsString ("\t", method.CustomAttributes);
@@ -53,9 +54,15 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 		List<Signature> methods = new List<Signature> ();
 		List<Signature> ctors   = new List<Signature> ();
 		List<JavaCallableWrapperGenerator> children;
+		readonly TypeDefinitionCache cache;
 
-		public JavaCallableWrapperGenerator (TypeDefinition type, Action<string, object[]> log)
-			: this (type, null, log)
+		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
+		public JavaCallableWrapperGenerator (TypeDefinition type, Action<string, object []> log)
+			: this (type, null, log, cache: null)
+		{ }
+
+		public JavaCallableWrapperGenerator (TypeDefinition type, Action<string, object[]> log, TypeDefinitionCache cache)
+			: this (type, null, log, cache)
 		{
 			if (type.HasNestedTypes) {
 				children = new List<JavaCallableWrapperGenerator> ();
@@ -85,21 +92,22 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 		void AddNestedTypes (TypeDefinition type)
 		{
 			foreach (TypeDefinition nt in type.NestedTypes) {
-				if (!nt.IsSubclassOf ("Java.Lang.Object"))
+				if (!nt.IsSubclassOf ("Java.Lang.Object", cache))
 					continue;
-				if (!JavaNativeTypeManager.IsNonStaticInnerClass (nt))
+				if (!JavaNativeTypeManager.IsNonStaticInnerClass (nt, cache))
 					continue;
-				children.Add (new JavaCallableWrapperGenerator (nt, JavaNativeTypeManager.ToJniName (type), log));
+				children.Add (new JavaCallableWrapperGenerator (nt, JavaNativeTypeManager.ToJniName (type), log, cache));
 				if (nt.HasNestedTypes)
 					AddNestedTypes (nt);
 			}
 			HasExport |= children.Any (t => t.HasExport);
 		}
 
-		JavaCallableWrapperGenerator (TypeDefinition type, string outerType, Action<string, object[]> log)
+		JavaCallableWrapperGenerator (TypeDefinition type, string outerType, Action<string, object[]> log, TypeDefinitionCache cache)
 		{
 			this.type = type;
 			this.log = log;
+			this.cache = cache ?? new TypeDefinitionCache ();
 
 			if (type.IsEnum || type.IsInterface || type.IsValueType)
 				Diagnostic.Error (4200, LookupSource (type), "Can only generate Java wrappers for 'class' types, not type '{0}'.", type.FullName);
@@ -114,11 +122,11 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			}
 			ExtractJavaNames (jniName, out package, out name);
 			if (string.IsNullOrEmpty (package) &&
-					(type.IsSubclassOf ("Android.App.Activity") ||
-					 type.IsSubclassOf ("Android.App.Application") ||
-					 type.IsSubclassOf ("Android.App.Service") ||
-					 type.IsSubclassOf ("Android.Content.BroadcastReceiver") ||
-					 type.IsSubclassOf ("Android.Content.ContentProvider")))
+					(type.IsSubclassOf ("Android.App.Activity", cache) ||
+					 type.IsSubclassOf ("Android.App.Application", cache) ||
+					 type.IsSubclassOf ("Android.App.Service", cache) ||
+					 type.IsSubclassOf ("Android.Content.BroadcastReceiver", cache) ||
+					 type.IsSubclassOf ("Android.Content.ContentProvider", cache)))
 				Diagnostic.Error (4203, LookupSource (type), "The Name property must be a fully qualified 'package.TypeName' value, and no package was found for '{0}'.", jniName);
 
 			foreach (MethodDefinition minfo in type.Methods.Where (m => !m.IsConstructor)) {
@@ -152,7 +160,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			var ctorTypes = new List<TypeDefinition> () {
 				type,
 			};
-			foreach (var bt in type.GetBaseTypes ()) {
+			foreach (var bt in type.GetBaseTypes (cache)) {
 				ctorTypes.Add (bt);
 				RegisterAttribute rattr = GetRegisterAttributes (bt).FirstOrDefault ();
 				if (rattr != null && rattr.DoNotGenerateAcw)
@@ -252,7 +260,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 					if (!string.IsNullOrEmpty (eattr.Name)) {
 						// Diagnostic.Warning (log, "Use of ExportAttribute.Name property is invalid on constructors");
 					}
-					ctors.Add (new Signature (ctor, eattr));
+					ctors.Add (new Signature (ctor, eattr, cache));
 					curCtors.Add (ctor);
 					return;
 				}
@@ -269,7 +277,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				if (onlyRegisteredOrExportedCtors)
 					return;
 
-				string jniSignature = GetJniSignature (ctor);
+				string jniSignature = GetJniSignature (ctor, cache);
 
 				if (jniSignature == null)
 					return;
@@ -277,7 +285,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				if (ctors.Any (c => c.JniSignature == jniSignature))
 					return;
 
-				if (baseCtors.Any (m => m.Parameters.AreParametersCompatibleWith (ctor.Parameters))) {
+				if (baseCtors.Any (m => m.Parameters.AreParametersCompatibleWith (ctor.Parameters, cache))) {
 					ctors.Add (new Signature (".ctor", jniSignature, "", managedParameters, outerType, null));
 					curCtors.Add (ctor);
 					return;
@@ -289,10 +297,10 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				}
 		}
 
-		static MethodDefinition GetBaseRegisteredMethod (MethodDefinition method)
+		MethodDefinition GetBaseRegisteredMethod (MethodDefinition method)
 		{
 			MethodDefinition bmethod;
-			while ((bmethod = method.GetBaseDefinition ()) != method) {
+			while ((bmethod = method.GetBaseDefinition (cache)) != method) {
 				method = bmethod;
 
 				var attributes = method.GetCustomAttributes (typeof (RegisterAttribute));
@@ -321,13 +329,13 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			return r;
 		}
 
-		internal static ExportAttribute ToExportAttribute (CustomAttribute attr, IMemberDefinition declaringMember)
+		ExportAttribute ToExportAttribute (CustomAttribute attr, IMemberDefinition declaringMember)
 		{
 			var name = attr.ConstructorArguments.Count > 0 ? (string) attr.ConstructorArguments [0].Value : declaringMember.Name;
 			if (attr.Properties.Count == 0)
 				return new ExportAttribute (name);
 			var typeArgs = (CustomAttributeArgument []) attr.Properties.FirstOrDefault (p => p.Name == "Throws").Argument.Value;
-			var thrown = typeArgs != null && typeArgs.Any () ? (from caa in typeArgs select JavaNativeTypeManager.Parse (GetJniTypeName ((TypeReference)caa.Value)).Type).ToArray () : null;
+			var thrown = typeArgs != null && typeArgs.Any () ? (from caa in typeArgs select JavaNativeTypeManager.Parse (GetJniTypeName ((TypeReference)caa.Value, cache)).Type).ToArray () : null;
 			var superArgs = (string) attr.Properties.FirstOrDefault (p => p.Name == "SuperArgumentsString").Argument.Value;
 			return new ExportAttribute (name) {ThrownNames = thrown, SuperArgumentsString = superArgs};
 		}
@@ -342,7 +350,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			return GetAttributes<RegisterAttribute> (p, a => ToRegisterAttribute (a));
 		}
 
-		static IEnumerable<ExportAttribute> GetExportAttributes (Mono.Cecil.IMemberDefinition p)
+		IEnumerable<ExportAttribute> GetExportAttributes (IMemberDefinition p)
 		{
 			return GetAttributes<ExportAttribute> (p, a => ToExportAttribute (a, p));
 		}
@@ -374,7 +382,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				if (type.HasGenericParameters)
 					Diagnostic.Error (4206, LookupSource (implementedMethod), "[Export] cannot be used on a generic type.");
 
-				var msig = new Signature (implementedMethod, attr);
+				var msig = new Signature (implementedMethod, attr, cache);
 				if (!string.IsNullOrEmpty (attr.SuperArgumentsString)) {
 					// Diagnostic.Warning (log, "Use of ExportAttribute.SuperArgumentsString property is invalid on methods");
 				}
@@ -385,10 +393,10 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				if (type.HasGenericParameters)
 					Diagnostic.Error (4207, LookupSource (implementedMethod), "[ExportField] cannot be used on a generic type.");
 
-				var msig = new Signature (implementedMethod, attr);
+				var msig = new Signature (implementedMethod, attr, cache);
 				if (!implementedMethod.IsConstructor && !methods.Any (m => m.Name == msig.Name && m.Params == msig.Params)) {
 					methods.Add (msig);
-					exported_fields.Add (new JavaFieldInfo (implementedMethod, attr.Name));
+					exported_fields.Add (new JavaFieldInfo (implementedMethod, attr.Name, cache));
 				}
 			}
 		}
@@ -400,26 +408,11 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				if (sb.Length > 0)
 					sb.Append (':');
 				if (outerType != null && sb.Length == 0)
-					sb.Append (type.DeclaringType.GetPartialAssemblyQualifiedName ());
+					sb.Append (type.DeclaringType.GetPartialAssemblyQualifiedName (cache));
 				else
-					sb.Append (pdef.ParameterType.GetPartialAssemblyQualifiedName ());
+					sb.Append (pdef.ParameterType.GetPartialAssemblyQualifiedName (cache));
 			}
 			return sb.ToString ();
-		}
-
-		static string GetJniTypeName (TypeReference typeRef)
-		{
-			return GetJniTypeName (typeRef, ExportParameterKind.Unspecified);
-		}
-
-		static string GetJniTypeName (TypeReference typeRef, ExportParameterKind exportKind)
-		{
-			return JavaNativeTypeManager.GetJniTypeName (typeRef, exportKind);
-		}
-
-		static string GetJniSignature (MethodDefinition ctor)
-		{
-			return JavaNativeTypeManager.GetJniSignature (ctor);
 		}
 
 		// example of java target to generate for a type
@@ -567,7 +560,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 		void GenerateBody (TextWriter sw)
 		{
 			foreach (Signature ctor in ctors) {
-				if (string.IsNullOrEmpty (ctor.Params) && JavaNativeTypeManager.IsApplication (type))
+				if (string.IsNullOrEmpty (ctor.Params) && JavaNativeTypeManager.IsApplication (type, cache))
 					continue;
 				GenerateConstructor (ctor, sw);
 			}
@@ -580,14 +573,14 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			foreach (Signature method in methods)
 				GenerateMethod (method, sw);
 
-			if (GenerateOnCreateOverrides && JavaNativeTypeManager.IsApplication (type) && !methods.Any (m => m.Name == "onCreate"))
+			if (GenerateOnCreateOverrides && JavaNativeTypeManager.IsApplication (type, cache) && !methods.Any (m => m.Name == "onCreate"))
 				WriteApplicationOnCreate (sw, w => {
-						w.WriteLine ("\t\tmono.android.Runtime.register (\"{0}\", {1}.class, __md_methods);", type.GetPartialAssemblyQualifiedName (), name);
+						w.WriteLine ("\t\tmono.android.Runtime.register (\"{0}\", {1}.class, __md_methods);", type.GetPartialAssemblyQualifiedName (cache), name);
 						w.WriteLine ("\t\tsuper.onCreate ();");
 				});
-			if (GenerateOnCreateOverrides && JavaNativeTypeManager.IsInstrumentation (type) && !methods.Any (m => m.Name == "onCreate"))
+			if (GenerateOnCreateOverrides && JavaNativeTypeManager.IsInstrumentation (type, cache) && !methods.Any (m => m.Name == "onCreate"))
 				WriteInstrumentationOnCreate (sw, w => {
-						w.WriteLine ("\t\tmono.android.Runtime.register (\"{0}\", {1}.class, __md_methods);", type.GetPartialAssemblyQualifiedName (), name);
+						w.WriteLine ("\t\tmono.android.Runtime.register (\"{0}\", {1}.class, __md_methods);", type.GetPartialAssemblyQualifiedName (cache), name);
 						w.WriteLine ("\t\tsuper.onCreate (arguments);");
 				});
 
@@ -607,7 +600,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			sw.WriteLine ("\t}");
 		}
 
-		static void GenerateRegisterType (TextWriter sw, JavaCallableWrapperGenerator self, string field)
+		void GenerateRegisterType (TextWriter sw, JavaCallableWrapperGenerator self, string field)
 		{
 			sw.WriteLine ("\t\t{0} = ", field);
 			foreach (Signature method in self.methods)
@@ -615,7 +608,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			sw.WriteLine ("\t\t\t\"\";");
 			if (!CannotRegisterInStaticConstructor (self.type))
 				sw.WriteLine ("\t\tmono.android.Runtime.register (\"{0}\", {1}.class, {2});",
-						self.type.GetPartialAssemblyQualifiedName (), self.name, field);
+						self.type.GetPartialAssemblyQualifiedName (cache), self.name, field);
 		}
 
 		void GenerateFooter (TextWriter sw)
@@ -646,9 +639,9 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			return jniName.Replace ('/', '.').Replace ('$', '.');
 		}
 
-		static bool CannotRegisterInStaticConstructor (TypeDefinition type)
+		bool CannotRegisterInStaticConstructor (TypeDefinition type)
 		{
-			return JavaNativeTypeManager.IsApplication (type) || JavaNativeTypeManager.IsInstrumentation (type);
+			return JavaNativeTypeManager.IsApplication (type, cache) || JavaNativeTypeManager.IsInstrumentation (type, cache);
 		}
 
 		class Signature {
@@ -661,8 +654,8 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				Annotations = JavaCallableWrapperGenerator.GetAnnotationsString ("\t", method.CustomAttributes);
 			}
 
-			public Signature (MethodDefinition method, ExportAttribute export)
-				: this (method.Name, GetJniSignature (method), "__export__", null, null, export.SuperArgumentsString)
+			public Signature (MethodDefinition method, ExportAttribute export, TypeDefinitionCache cache)
+				: this (method.Name, GetJniSignature (method, cache), "__export__", null, null, export.SuperArgumentsString)
 			{
 				IsExport = true;
 				IsStatic = method.IsStatic;
@@ -672,8 +665,8 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				Annotations = JavaCallableWrapperGenerator.GetAnnotationsString ("\t", method.CustomAttributes);
 			}
 
-			public Signature (MethodDefinition method, ExportFieldAttribute exportField)
-				: this (method.Name, GetJniSignature (method), "__export__", null, null, null)
+			public Signature (MethodDefinition method, ExportFieldAttribute exportField, TypeDefinitionCache cache)
+				: this (method.Name, GetJniSignature (method, cache), "__export__", null, null, null)
 			{
 				if (method.HasParameters)
 					Diagnostic.Error (4205, JavaCallableWrapperGenerator.LookupSource (method), "[ExportField] can only be used on methods with 0 parameters.");
@@ -782,14 +775,14 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 #endif
 			if (!CannotRegisterInStaticConstructor (type)) {
 				sw.WriteLine ("\t\tif (getClass () == {0}.class)", name);
-				sw.WriteLine ("\t\t\tmono.android.TypeManager.Activate (\"{0}\", \"{1}\", this, new java.lang.Object[] {{ {2} }});", type.GetPartialAssemblyQualifiedName (), ctor.ManagedParameters, ctor.ActivateCall);
+				sw.WriteLine ("\t\t\tmono.android.TypeManager.Activate (\"{0}\", \"{1}\", this, new java.lang.Object[] {{ {2} }});", type.GetPartialAssemblyQualifiedName (cache), ctor.ManagedParameters, ctor.ActivateCall);
 			}
 			sw.WriteLine ("\t}");
 		}
 
 		void GenerateApplicationConstructor (TextWriter sw)
 		{
-			if (!JavaNativeTypeManager.IsApplication (type)) {
+			if (!JavaNativeTypeManager.IsApplication (type, cache)) {
 				return;
 			}
 

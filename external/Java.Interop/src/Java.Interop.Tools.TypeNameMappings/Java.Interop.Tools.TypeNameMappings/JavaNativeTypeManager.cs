@@ -402,18 +402,30 @@ namespace Java.Interop.Tools.TypeNameMappings
 			return new ExportParameterAttribute ((ExportParameterKind)attr.ConstructorArguments [0].Value);
 		}
 
-		public static bool IsApplication (TypeDefinition type)
+		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
+		public static bool IsApplication (TypeDefinition type) =>
+			IsApplication (type, cache: null);
+
+		public static bool IsApplication (TypeDefinition type, TypeDefinitionCache cache)
 		{
-			return type.GetBaseTypes ().Any (b => b.FullName == "Android.App.Application");
+			return type.GetBaseTypes (cache).Any (b => b.FullName == "Android.App.Application");
 		}
 
-		public static bool IsInstrumentation (TypeDefinition type)
+		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
+		public static bool IsInstrumentation (TypeDefinition type) =>
+			IsInstrumentation (type, cache: null);
+
+		public static bool IsInstrumentation (TypeDefinition type, TypeDefinitionCache cache)
 		{
-			return type.GetBaseTypes ().Any (b => b.FullName == "Android.App.Instrumentation");
+			return type.GetBaseTypes (cache).Any (b => b.FullName == "Android.App.Instrumentation");
 		}
 
 		// moved from JavaTypeInfo
-		public static string GetJniSignature (MethodDefinition method)
+		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
+		public static string GetJniSignature (MethodDefinition method) =>
+			GetJniSignature (method, cache: null);
+
+		public static string GetJniSignature (MethodDefinition method, TypeDefinitionCache cache)
 		{
 			return GetJniSignature<TypeReference,ParameterDefinition> (
 				method.Parameters,
@@ -421,43 +433,54 @@ namespace Java.Interop.Tools.TypeNameMappings
 				p => GetExportKind (p),
 				method.ReturnType,
 				GetExportKind (method.MethodReturnType),
-				(t, k) => GetJniTypeName (t, k),
+				(t, k) => GetJniTypeName (t, k, cache),
 				method.IsConstructor);
 		}
 
 		// moved from JavaTypeInfo
-		public static string GetJniTypeName (TypeReference typeRef)
+		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
+		public static string GetJniTypeName (TypeReference typeRef) =>
+			GetJniTypeName (typeRef, cache: null);
+
+		public static string GetJniTypeName (TypeReference typeRef, TypeDefinitionCache cache)
 		{
-			return GetJniTypeName (typeRef, ExportParameterKind.Unspecified);
+			return GetJniTypeName (typeRef, ExportParameterKind.Unspecified, cache);
 		}
 
-		internal static string GetJniTypeName (TypeReference typeRef, ExportParameterKind exportKind)
+		internal static string GetJniTypeName (TypeReference typeRef, ExportParameterKind exportKind, TypeDefinitionCache cache)
 		{
 			return GetJniTypeName<TypeReference, TypeDefinition> (typeRef, exportKind, t => t.Resolve (), t => {
 				TypeReference etype;
 				int rank = GetArrayInfo (typeRef, out etype);
 				return new KeyValuePair<int,TypeReference> (rank,etype);
-				}, t => t.FullName, (t, k) => ToJniName (t, k));
+				}, t => t.FullName, (t, k) => ToJniName (t, k, cache));
 		}
 
-		public static string ToCompatJniName (Mono.Cecil.TypeDefinition type)
+		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
+		public static string ToCompatJniName (TypeDefinition type) =>
+			ToCompatJniName (type, cache: null);
+
+		public static string ToCompatJniName (TypeDefinition type, TypeDefinitionCache cache)
 		{
-			return ToJniName (type, t => t.DeclaringType, t => t.Name, ToCompatPackageName, ToJniNameFromAttributes, t => IsNonStaticInnerClass (t as TypeDefinition));
+			return ToJniName (type, t => t.DeclaringType, t => t.Name, ToCompatPackageName, ToJniNameFromAttributes, t => IsNonStaticInnerClass (t as TypeDefinition, cache));
 		}
 
-		static string ToCompatPackageName (Mono.Cecil.TypeDefinition type)
+		static string ToCompatPackageName (TypeDefinition type)
 		{
 			return type.Namespace;
 		}
 
 		// Keep in sync with ToJniNameFromAttributes(Type) and ToJniName(Type)
-		public static string ToJniName (Mono.Cecil.TypeDefinition type)
+		public static string ToJniName (TypeDefinition type) =>
+			ToJniName (type, cache: null);
+
+		public static string ToJniName (TypeDefinition type, TypeDefinitionCache cache)
 		{
-			return ToJniName (type, ExportParameterKind.Unspecified) ??
+			return ToJniName (type, ExportParameterKind.Unspecified, cache) ??
 				"java/lang/Object";
 		}
 
-		static string ToJniName (TypeDefinition type, ExportParameterKind exportKind)
+		static string ToJniName (TypeDefinition type, ExportParameterKind exportKind, TypeDefinitionCache cache)
 		{
 			if (type == null)
 				throw new ArgumentNullException ("type");
@@ -468,11 +491,11 @@ namespace Java.Interop.Tools.TypeNameMappings
 			if (type.FullName == "System.String")
 				return "java/lang/String";
 
-			if (!type.ImplementsInterface ("Android.Runtime.IJavaObject")) {
+			if (!type.ImplementsInterface ("Android.Runtime.IJavaObject", cache)) {
 				return GetSpecialExportJniType (type.FullName, exportKind);
 			}
 
-			return ToJniName (type, t => t.DeclaringType, t => t.Name, GetPackageName, ToJniNameFromAttributes, t => IsNonStaticInnerClass (t as TypeDefinition));
+			return ToJniName (type, t => t.DeclaringType, t => t.Name, t => GetPackageName (t, cache), ToJniNameFromAttributes, t => IsNonStaticInnerClass (t as TypeDefinition, cache));
 		}
 
 		static string ToJniNameFromAttributes (TypeDefinition type)
@@ -532,18 +555,22 @@ namespace Java.Interop.Tools.TypeNameMappings
 			return null;
 		}
 
-		public static string GetPackageName (TypeDefinition type)
+		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
+		public static string GetPackageName (TypeDefinition type) =>
+			GetPackageName (type, cache: null);
+
+		public static string GetPackageName (TypeDefinition type, TypeDefinitionCache cache)
 		{
-			if (IsPackageNamePreservedForAssembly (type.GetPartialAssemblyName ()))
+			if (IsPackageNamePreservedForAssembly (type.GetPartialAssemblyName (cache)))
 				return type.Namespace.ToLowerInvariant ();
 			switch (PackageNamingPolicy) {
 			case PackageNamingPolicy.Lowercase:
 				return type.Namespace.ToLowerInvariant ();
 			case PackageNamingPolicy.LowercaseWithAssemblyName:
-				return "assembly_" + (type.GetPartialAssemblyName ().Replace ('.', '_') + "." + type.Namespace).ToLowerInvariant ();
+				return "assembly_" + (type.GetPartialAssemblyName (cache).Replace ('.', '_') + "." + type.Namespace).ToLowerInvariant ();
 			case PackageNamingPolicy.LowercaseCrc64:
 				using (var crc = new Crc64 ())
-					return "crc64" + ToHash (type.Namespace + ":" + type.GetPartialAssemblyName (), crc);
+					return "crc64" + ToHash (type.Namespace + ":" + type.GetPartialAssemblyName (cache), crc);
 			default:
 					throw new NotSupportedException ($"PackageNamingPolicy.{PackageNamingPolicy} is no longer supported.");
 			}
@@ -589,23 +616,23 @@ namespace Java.Interop.Tools.TypeNameMappings
 		}
 
 #if HAVE_CECIL
-		internal static bool IsNonStaticInnerClass (TypeDefinition type)
+		internal static bool IsNonStaticInnerClass (TypeDefinition type, TypeDefinitionCache cache)
 		{
 			if (type == null)
 				return false;
 			if (!type.IsNested)
 				return false;
 
-			if (!type.DeclaringType.IsSubclassOf ("Java.Lang.Object"))
+			if (!type.DeclaringType.IsSubclassOf ("Java.Lang.Object", cache))
 				return false;
 
-			return GetBaseConstructors (type)
+			return GetBaseConstructors (type, cache)
 				.Any (ctor => ctor.Parameters.Any (p => p.Name == "__self"));
 		}
 
-		static IEnumerable<MethodDefinition> GetBaseConstructors (TypeDefinition type)
+		static IEnumerable<MethodDefinition> GetBaseConstructors (TypeDefinition type, TypeDefinitionCache cache)
 		{
-			var baseType = type.GetBaseTypes ().FirstOrDefault (t => t.GetCustomAttributes (typeof (RegisterAttribute)).Any ());
+			var baseType = type.GetBaseTypes (cache).FirstOrDefault (t => t.GetCustomAttributes (typeof (RegisterAttribute)).Any ());
 			if (baseType != null)
 				return baseType.Methods.Where (m => m.IsConstructor && !m.IsStatic);
 			return Enumerable.Empty<MethodDefinition> ();

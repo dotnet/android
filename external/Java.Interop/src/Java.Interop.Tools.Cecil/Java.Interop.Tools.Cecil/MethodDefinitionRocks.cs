@@ -9,17 +9,21 @@ namespace Java.Interop.Tools.Cecil {
 
 	public static class MethodDefinitionRocks
 	{
-		public static MethodDefinition GetBaseDefinition (this MethodDefinition method)
+		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
+		public static MethodDefinition GetBaseDefinition (this MethodDefinition method) =>
+			GetBaseDefinition (method, cache: null);
+
+		public static MethodDefinition GetBaseDefinition (this MethodDefinition method, TypeDefinitionCache cache)
 		{
 			if (method.IsStatic || method.IsNewSlot || !method.IsVirtual)
 				return method;
 
-			foreach (var baseType in method.DeclaringType.GetBaseTypes ()) {
+			foreach (var baseType in method.DeclaringType.GetBaseTypes (cache)) {
 				foreach (var m in baseType.Methods) {
 					if (!m.IsConstructor &&
 							m.Name == method.Name &&
 							(m.IsVirtual || m.IsAbstract) &&
-							AreParametersCompatibleWith (m.Parameters, method.Parameters)) {
+							AreParametersCompatibleWith (m.Parameters, method.Parameters, cache)) {
 						return m;
 					}
 				}
@@ -27,19 +31,27 @@ namespace Java.Interop.Tools.Cecil {
 			return method;
 		}
 
-		public static IEnumerable<MethodDefinition> GetOverriddenMethods (MethodDefinition method, bool inherit)
+		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
+		public static IEnumerable<MethodDefinition> GetOverriddenMethods (MethodDefinition method, bool inherit) =>
+			GetOverriddenMethods (method, inherit, cache: null);
+
+		public static IEnumerable<MethodDefinition> GetOverriddenMethods (MethodDefinition method, bool inherit, TypeDefinitionCache cache)
 		{
 			yield return method;
 			if (inherit) {
 				MethodDefinition baseMethod = method;
-				while ((baseMethod = method.GetBaseDefinition ()) != null && baseMethod != method) {
+				while ((baseMethod = method.GetBaseDefinition (cache)) != null && baseMethod != method) {
 					yield return method;
 					method = baseMethod;
 				}
 			}
 		}
 
-		public static bool AreParametersCompatibleWith (this Collection<ParameterDefinition> a, Collection<ParameterDefinition> b)
+		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
+		public static bool AreParametersCompatibleWith (this Collection<ParameterDefinition> a, Collection<ParameterDefinition> b) =>
+			AreParametersCompatibleWith (a, b, cache: null);
+
+		public static bool AreParametersCompatibleWith (this Collection<ParameterDefinition> a, Collection<ParameterDefinition> b, TypeDefinitionCache cache)
 		{
 			if (a.Count != b.Count)
 				return false;
@@ -48,34 +60,34 @@ namespace Java.Interop.Tools.Cecil {
 				return true;
 
 			for (int i = 0; i < a.Count; i++)
-				if (!IsParameterCompatibleWith (a [i].ParameterType, b [i].ParameterType))
+				if (!IsParameterCompatibleWith (a [i].ParameterType, b [i].ParameterType, cache))
 					return false;
 
 			return true;
 		}
 
-		static bool IsParameterCompatibleWith (IModifierType a, IModifierType b)
+		static bool IsParameterCompatibleWith (IModifierType a, IModifierType b, TypeDefinitionCache cache)
 		{
-			if (!IsParameterCompatibleWith (a.ModifierType, b.ModifierType))
+			if (!IsParameterCompatibleWith (a.ModifierType, b.ModifierType, cache))
 				return false;
 
-			return IsParameterCompatibleWith (a.ElementType, b.ElementType);
+			return IsParameterCompatibleWith (a.ElementType, b.ElementType, cache);
 		}
 
-		static bool IsParameterCompatibleWith (TypeSpecification a, TypeSpecification b)
+		static bool IsParameterCompatibleWith (TypeSpecification a, TypeSpecification b, TypeDefinitionCache cache)
 		{
 			if (a is GenericInstanceType)
-				return IsParameterCompatibleWith ((GenericInstanceType) a, (GenericInstanceType) b);
+				return IsParameterCompatibleWith ((GenericInstanceType) a, (GenericInstanceType) b, cache);
 
 			if (a is IModifierType)
-				return IsParameterCompatibleWith ((IModifierType) a, (IModifierType) b);
+				return IsParameterCompatibleWith ((IModifierType) a, (IModifierType) b, cache);
 
-			return IsParameterCompatibleWith (a.ElementType, b.ElementType);
+			return IsParameterCompatibleWith (a.ElementType, b.ElementType, cache);
 		}
 
-		static bool IsParameterCompatibleWith (GenericInstanceType a, GenericInstanceType b)
+		static bool IsParameterCompatibleWith (GenericInstanceType a, GenericInstanceType b, TypeDefinitionCache cache)
 		{
-			if (!IsParameterCompatibleWith (a.ElementType, b.ElementType))
+			if (!IsParameterCompatibleWith (a.ElementType, b.ElementType, cache))
 				return false;
 
 			if (a.GenericArguments.Count != b.GenericArguments.Count)
@@ -85,24 +97,19 @@ namespace Java.Interop.Tools.Cecil {
 				return true;
 
 			for (int i = 0; i < a.GenericArguments.Count; i++)
-				if (!IsParameterCompatibleWith (a.GenericArguments [i], b.GenericArguments [i]))
+				if (!IsParameterCompatibleWith (a.GenericArguments [i], b.GenericArguments [i], cache))
 					return false;
 
 			return true;
 		}
 
-		static bool IsParameterCompatibleWith (GenericParameter a, GenericParameter b)
-		{
-			return a.Position == b.Position;
-		}
-
-		static bool IsParameterCompatibleWith (TypeReference a, TypeReference b)
+		static bool IsParameterCompatibleWith (TypeReference a, TypeReference b, TypeDefinitionCache cache)
 		{
 			if (a is TypeSpecification || b is TypeSpecification) {
 				if (a.GetType () != b.GetType ())
 					return false;
 
-				return IsParameterCompatibleWith ((TypeSpecification) a, (TypeSpecification) b);
+				return IsParameterCompatibleWith ((TypeSpecification) a, (TypeSpecification) b, cache);
 			}
 
 			if (a.IsGenericParameter) {
@@ -110,7 +117,7 @@ namespace Java.Interop.Tools.Cecil {
 					return true;
 				var gpa = (GenericParameter) a;
 				foreach (var c in gpa.Constraints) {
-					if (!c.ConstraintType.IsAssignableFrom (b))
+					if (!c.ConstraintType.IsAssignableFrom (b, cache))
 						return false;
 				}
 				return true;

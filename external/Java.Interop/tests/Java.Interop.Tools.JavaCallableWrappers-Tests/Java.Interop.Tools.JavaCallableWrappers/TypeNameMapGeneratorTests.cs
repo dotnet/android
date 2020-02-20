@@ -29,11 +29,11 @@ namespace Xamarin.Android.ToolsTests
 			Action<string, object []> nullLogger = null;
 			Action<TraceLevel, string> levelLogger = (l, v) => { };
 			Action<TraceLevel, string> nullLevelLogger = null;
+#pragma warning disable 0618
 			Assert.Throws<ArgumentNullException> (() => new TypeNameMapGenerator ((string []) null, levelLogger));
 			Assert.Throws<ArgumentNullException> (() => new TypeNameMapGenerator ((TypeDefinition []) null, levelLogger));
 			Assert.Throws<ArgumentNullException> (() => new TypeNameMapGenerator (new string [0], nullLevelLogger));
 			Assert.Throws<ArgumentNullException> (() => new TypeNameMapGenerator (new TypeDefinition [0], nullLevelLogger));
-#pragma warning disable 0618
 			Assert.Throws<ArgumentNullException> (() => new TypeNameMapGenerator ((string []) null, logger));
 			Assert.Throws<ArgumentNullException> (() => new TypeNameMapGenerator ((TypeDefinition []) null, logger));
 			Assert.Throws<ArgumentNullException> (() => new TypeNameMapGenerator (new string [0], nullLogger));
@@ -45,7 +45,7 @@ namespace Xamarin.Android.ToolsTests
 		public void WriteJavaToManaged ()
 		{
 			var types = SupportDeclarations.GetTestTypeDefinitions ();
-			var v = new TypeNameMapGenerator (types, logger: Diagnostic.CreateConsoleLogger ());
+			var v = new TypeNameMapGenerator (types, logger: Diagnostic.CreateConsoleLogger (), cache: null);
 			var o = new MemoryStream ();
 			v.WriteJavaToManaged (o);
 			var a = ToArray (o);
@@ -112,7 +112,7 @@ namespace Xamarin.Android.ToolsTests
 		[Test]
 		public void WriteManagedToJavaWithNoTypes ()
 		{
-			var v = new TypeNameMapGenerator (new string[0], logger: Diagnostic.CreateConsoleLogger ());
+			var v = new TypeNameMapGenerator (new string[0], logger: Diagnostic.CreateConsoleLogger (), cache: null);
 			var o = new MemoryStream ();
 			v.WriteManagedToJava (o);
 			var a = ToArray (o);
@@ -123,7 +123,7 @@ namespace Xamarin.Android.ToolsTests
 		public void WriteManagedToJava ()
 		{
 			var types = SupportDeclarations.GetTestTypeDefinitions ();
-			var v = new TypeNameMapGenerator (types, logger: Diagnostic.CreateConsoleLogger ());
+			var v = new TypeNameMapGenerator (types, logger: Diagnostic.CreateConsoleLogger (), cache: null);
 			var o = new MemoryStream ();
 			v.WriteManagedToJava (o);
 			var a = ToArray (o);

@@ -69,6 +69,7 @@ namespace Xamarin.Android.Binder
 				SupportInterfaceConstants = options.SupportInterfaceConstants,
 				SupportDefaultInterfaceMethods = options.SupportDefaultInterfaceMethods,
 			};
+			var resolverCache       = new TypeDefinitionCache ();
 
 			// Load reference libraries
 
@@ -106,7 +107,7 @@ namespace Xamarin.Android.Binder
 							var nonGenericOverload  = td.HasGenericParameters
 								? md.GetType (td.FullName.Substring (0, td.FullName.IndexOf ('`')))
 								: null;
-							if (BindSameType (td, nonGenericOverload))
+							if (BindSameType (td, nonGenericOverload, resolverCache))
 								continue;
 							ProcessReferencedType (td, opt);
 						}
@@ -209,11 +210,11 @@ namespace Xamarin.Android.Binder
 				AddTypeToTable (opt, nt);
 		}
 
-		static bool BindSameType (TypeDefinition a, TypeDefinition b)
+		static bool BindSameType (TypeDefinition a, TypeDefinition b, TypeDefinitionCache cache)
 		{
 			if (a == null || b == null)
 				return false;
-			if (!a.ImplementsInterface ("Android.Runtime.IJavaObject") || !b.ImplementsInterface ("Android.Runtime.IJavaObject"))
+			if (!a.ImplementsInterface ("Android.Runtime.IJavaObject", cache) || !b.ImplementsInterface ("Android.Runtime.IJavaObject", cache))
 				return false;
 			return JavaNativeTypeManager.ToJniName (a) == JavaNativeTypeManager.ToJniName (b);
 		}

@@ -26,7 +26,7 @@ namespace Java.Interop.Tools.JavaCallableWrappersTests
 
 			// structs aren't supported
 			var td  = SupportDeclarations.GetTypeDefinition (typeof (int));
-			var e   = Assert.Throws<XamarinAndroidException> (() => new JavaCallableWrapperGenerator (td, logger));
+			var e   = Assert.Throws<XamarinAndroidException> (() => new JavaCallableWrapperGenerator (td, logger, cache: null));
 			Assert.AreEqual (4200, e.Code);
 		}
 
@@ -37,7 +37,7 @@ namespace Java.Interop.Tools.JavaCallableWrappersTests
 
 			// Contains invalid [Register] name of "foo-impl"
 			var td = SupportDeclarations.GetTypeDefinition (typeof (KotlinInvalidImplRegisterName));
-			var e = Assert.Throws<XamarinAndroidException> (() => new JavaCallableWrapperGenerator (td, logger));
+			var e = Assert.Throws<XamarinAndroidException> (() => new JavaCallableWrapperGenerator (td, logger, cache: null));
 			Assert.AreEqual (4213, e.Code);
 		}
 
@@ -48,7 +48,7 @@ namespace Java.Interop.Tools.JavaCallableWrappersTests
 
 			// Contains invalid [Register] name of "foo-f8k2a13"
 			var td = SupportDeclarations.GetTypeDefinition (typeof (KotlinInvalidHashRegisterName));
-			var e = Assert.Throws<XamarinAndroidException> (() => new JavaCallableWrapperGenerator (td, logger));
+			var e = Assert.Throws<XamarinAndroidException> (() => new JavaCallableWrapperGenerator (td, logger, cache: null));
 			Assert.AreEqual (4213, e.Code);
 		}
 
@@ -105,7 +105,7 @@ public class Name
 		static string Generate (Type type, string applicationJavaClass = null, string monoRuntimeInit = null)
 		{
 			var td  = SupportDeclarations.GetTypeDefinition (type);
-			var g   = new JavaCallableWrapperGenerator (td, null) {
+			var g   = new JavaCallableWrapperGenerator (td, log: null, cache: null) {
 				ApplicationJavaClass        = applicationJavaClass,
 				GenerateOnCreateOverrides   = true,
 				MonoRuntimeInitialization   = monoRuntimeInit,
