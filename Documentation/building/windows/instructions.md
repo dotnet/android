@@ -90,9 +90,13 @@ So for example:
 # Building Unit Tests
 
 Once `msbuild Xamarin.Android.sln` has completed, the unit tests may
-be built with:
+be built with e.g.:
 
 	bin\Debug\bin\xabuild.exe Xamarin.Android-Tests.sln /restore /p:Configuration=Debug /bl:bin\TestDebug\msbuild-build-tests.binlog
+
+Note that the `Debug` in `bin\Debug` must match the Configuration which was
+built.  If xamarin-android was built with `msbuild /p:Configuration=Release ...`,
+then this should be `bin\Release`, not `bin\Debug`.
 
 *NOTE*: There is currently no equivalent to [`make
 jenkins`](../unix/instructions.md) on Windows.
