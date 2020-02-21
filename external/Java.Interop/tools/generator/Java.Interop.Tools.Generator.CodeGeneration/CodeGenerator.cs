@@ -1028,12 +1028,14 @@ namespace MonoDroid.Generation
 		#region "if you're changing this part, also change method in https://github.com/xamarin/xamarin-android/blob/master/src/Mono.Android.Export/CallbackCode.cs"
 		public virtual void WriteMethodCallback (Method method, string indent, GenBase type, string property_name, bool as_formatted = false)
 		{
+			var is_private = method.IsInterfaceDefaultMethod ? "private " : string.Empty;
+
 			string delegate_type = method.GetDelegateType ();
-			writer.WriteLine ("{0}static Delegate {1};", indent, method.EscapedCallbackName);
+			writer.WriteLine ("{0}{2}static Delegate {1};", indent, method.EscapedCallbackName, is_private);
 			writer.WriteLine ("#pragma warning disable 0169");
 			if (method.Deprecated != null)
 				writer.WriteLine ($"{indent}[Obsolete]");
-			writer.WriteLine ("{0}static Delegate {1} ()", indent, method.ConnectorName);
+			writer.WriteLine ("{0}{2}static Delegate {1} ()", indent, method.ConnectorName, is_private);
 			writer.WriteLine ("{0}{{", indent);
 			writer.WriteLine ("{0}\tif ({1} == null)", indent, method.EscapedCallbackName);
 			writer.WriteLine ("{0}\t\t{1} = JNINativeWrapper.CreateDelegate (({2}) n_{3});", indent, method.EscapedCallbackName, delegate_type, method.Name + method.IDSignature);
@@ -1042,7 +1044,7 @@ namespace MonoDroid.Generation
 			writer.WriteLine ();
 			if (method.Deprecated != null)
 				writer.WriteLine ($"{indent}[Obsolete]");
-			writer.WriteLine ("{0}static {1} n_{2} (IntPtr jnienv, IntPtr native__this{3})", indent, method.RetVal.NativeType, method.Name + method.IDSignature, method.Parameters.GetCallbackSignature (opt));
+			writer.WriteLine ("{0}{4}static {1} n_{2} (IntPtr jnienv, IntPtr native__this{3})", indent, method.RetVal.NativeType, method.Name + method.IDSignature, method.Parameters.GetCallbackSignature (opt), is_private);
 			writer.WriteLine ("{0}{{", indent);
 			writer.WriteLine ("{0}\t{1} __this = global::Java.Lang.Object.GetObject<{1}> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);", indent, opt.GetOutputName (type.FullName));
 			foreach (string s in method.Parameters.GetCallbackPrep (opt))

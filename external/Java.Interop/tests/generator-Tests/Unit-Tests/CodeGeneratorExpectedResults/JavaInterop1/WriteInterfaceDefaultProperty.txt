@@ -1,34 +1,34 @@
 // Metadata.xml XPath interface reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']"
 [Register ("java/code/IMyInterface", "", "java.code.IMyInterfaceInvoker")]
 public partial interface IMyInterface : IJavaObject, IJavaPeerable {
-	static readonly JniPeerMembers _members = new JniPeerMembers ("java/code/IMyInterface", typeof (IMyInterface), isInterface: true);
+	private static readonly JniPeerMembers _members = new JniPeerMembers ("java/code/IMyInterface", typeof (IMyInterface), isInterface: true);
 
-	static Delegate cb_get_Value;
+	private static Delegate cb_get_Value;
 #pragma warning disable 0169
-	static Delegate Getget_ValueHandler ()
+	private static Delegate Getget_ValueHandler ()
 	{
 		if (cb_get_Value == null)
 			cb_get_Value = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, int>) n_get_Value);
 		return cb_get_Value;
 	}
 
-	static int n_get_Value (IntPtr jnienv, IntPtr native__this)
+	private static int n_get_Value (IntPtr jnienv, IntPtr native__this)
 	{
 		java.code.IMyInterface __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 		return __this.Value;
 	}
 #pragma warning restore 0169
 
-	static Delegate cb_set_Value_I;
+	private static Delegate cb_set_Value_I;
 #pragma warning disable 0169
-	static Delegate Getset_Value_IHandler ()
+	private static Delegate Getset_Value_IHandler ()
 	{
 		if (cb_set_Value_I == null)
 			cb_set_Value_I = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr, int>) n_set_Value_I);
 		return cb_set_Value_I;
 	}
 
-	static void n_set_Value_I (IntPtr jnienv, IntPtr native__this, int value)
+	private static void n_set_Value_I (IntPtr jnienv, IntPtr native__this, int value)
 	{
 		java.code.IMyInterface __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 		__this.Value = value;

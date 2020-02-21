@@ -1,18 +1,18 @@
 // Metadata.xml XPath interface reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']"
 [Register ("java/code/IMyInterface", "", "java.code.IMyInterfaceInvoker")]
 public partial interface IMyInterface : IJavaObject, IJavaPeerable {
-	static readonly JniPeerMembers _members = new JniPeerMembers ("java/code/IMyInterface", typeof (IMyInterface), isInterface: true);
+	private static readonly JniPeerMembers _members = new JniPeerMembers ("java/code/IMyInterface", typeof (IMyInterface), isInterface: true);
 
-	static Delegate cb_DoSomething;
+	private static Delegate cb_DoSomething;
 #pragma warning disable 0169
-	static Delegate GetDoSomethingHandler ()
+	private static Delegate GetDoSomethingHandler ()
 	{
 		if (cb_DoSomething == null)
 			cb_DoSomething = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr>) n_DoSomething);
 		return cb_DoSomething;
 	}
 
-	static void n_DoSomething (IntPtr jnienv, IntPtr native__this)
+	private static void n_DoSomething (IntPtr jnienv, IntPtr native__this)
 	{
 		java.code.IMyInterface __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 		__this.DoSomething ();

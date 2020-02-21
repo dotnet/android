@@ -270,7 +270,7 @@ namespace MonoDroid.Generation {
 
 		void WritePeerMembers (string indent, string rawJniType, string declaringType, bool isInterface)
 		{
-			var signature = "static readonly JniPeerMembers _members = ";
+			var signature = $"{(isInterface ? "private " : "")}static readonly JniPeerMembers _members = ";
 			var type = $"new {GetPeerMembersType ()} (\"{rawJniType}\", typeof ({declaringType}){(isInterface ? ", isInterface: true" : string.Empty)});";
 
 			writer.WriteLine ($"{indent}{signature}{type}");
