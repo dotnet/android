@@ -8,6 +8,86 @@ namespace Xamarin.Test {
 	[global::Android.Runtime.Register ("xamarin/test/PublicClass", DoNotGenerateAcw=true)]
 	public partial class PublicClass : global::Java.Lang.Object {
 
+		// Metadata.xml XPath interface reference: path="/api/package[@name='xamarin.test']/interface[@name='PublicClass.ProtectedInterface']"
+		[Register ("xamarin/test/PublicClass$ProtectedInterface", "", "Xamarin.Test.PublicClass/IProtectedInterfaceInvoker")]
+		protected internal partial interface IProtectedInterface : IJavaObject {
+
+			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/interface[@name='PublicClass.ProtectedInterface']/method[@name='foo' and count(parameter)=0]"
+			[Register ("foo", "()V", "GetFooHandler:Xamarin.Test.PublicClass/IProtectedInterfaceInvoker, Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null")]
+			void Foo ();
+
+		}
+
+		[global::Android.Runtime.Register ("xamarin/test/PublicClass$ProtectedInterface", DoNotGenerateAcw=true)]
+		internal partial class IProtectedInterfaceInvoker : global::Java.Lang.Object, IProtectedInterface {
+
+			static IntPtr java_class_ref = JNIEnv.FindClass ("xamarin/test/PublicClass$ProtectedInterface");
+
+			protected override IntPtr ThresholdClass {
+				get { return class_ref; }
+			}
+
+			protected override global::System.Type ThresholdType {
+				get { return typeof (IProtectedInterfaceInvoker); }
+			}
+
+			new IntPtr class_ref;
+
+			public static IProtectedInterface GetObject (IntPtr handle, JniHandleOwnership transfer)
+			{
+				return global::Java.Lang.Object.GetObject<IProtectedInterface> (handle, transfer);
+			}
+
+			static IntPtr Validate (IntPtr handle)
+			{
+				if (!JNIEnv.IsInstanceOf (handle, java_class_ref))
+					throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.",
+								JNIEnv.GetClassNameFromInstance (handle), "xamarin.test.PublicClass.ProtectedInterface"));
+				return handle;
+			}
+
+			protected override void Dispose (bool disposing)
+			{
+				if (this.class_ref != IntPtr.Zero)
+					JNIEnv.DeleteGlobalRef (this.class_ref);
+				this.class_ref = IntPtr.Zero;
+				base.Dispose (disposing);
+			}
+
+			public IProtectedInterfaceInvoker (IntPtr handle, JniHandleOwnership transfer) : base (Validate (handle), transfer)
+			{
+				IntPtr local_ref = JNIEnv.GetObjectClass (((global::Java.Lang.Object) this).Handle);
+				this.class_ref = JNIEnv.NewGlobalRef (local_ref);
+				JNIEnv.DeleteLocalRef (local_ref);
+			}
+
+			static Delegate cb_foo;
+#pragma warning disable 0169
+			static Delegate GetFooHandler ()
+			{
+				if (cb_foo == null)
+					cb_foo = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr>) n_Foo);
+				return cb_foo;
+			}
+
+			static void n_Foo (IntPtr jnienv, IntPtr native__this)
+			{
+				global::Xamarin.Test.PublicClass.IProtectedInterface __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.PublicClass.IProtectedInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				__this.Foo ();
+			}
+#pragma warning restore 0169
+
+			IntPtr id_foo;
+			public unsafe void Foo ()
+			{
+				if (id_foo == IntPtr.Zero)
+					id_foo = JNIEnv.GetMethodID (class_ref, "foo", "()V");
+				JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_foo);
+			}
+
+		}
+
+
 		internal static new IntPtr java_class_handle;
 		internal static new IntPtr class_ref {
 			get {

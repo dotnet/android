@@ -259,7 +259,7 @@ namespace Xamarin.Android.Binder
 				// Remove any nested types that are package-private
 				foreach (var gen in gens) {
 					foreach (var nest in gen.NestedTypes)
-						if (opt.IgnoreNonPublicType && (nest.RawVisibility != "public" && nest.RawVisibility != "internal")) {
+						if (opt.IgnoreNonPublicType && (nest.RawVisibility != "public" && nest.RawVisibility != "internal" && nest.RawVisibility != "protected internal")) {
 							// We still add it to "removed" even though the removal
 							// code later won't work, so that it triggers a new cycle
 							removed.Add (nest);

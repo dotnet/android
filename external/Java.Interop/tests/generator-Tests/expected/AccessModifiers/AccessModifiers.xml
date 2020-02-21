@@ -23,6 +23,11 @@
 				/* package */ static interface OnPressedChangeListener {
 				  void onPressedChanged ();
 				}
+				
+				// This nested type should be generated because it is protected
+				protected interface ProtectedInterface {
+				  void foo ();
+				}
 			}
 		-->
 		<class abstract="false" deprecated="not deprecated" extends="xamarin.test.PackageClass" extends-generic-aware="xamarin.test.PackageClass" final="false" name="PublicClass" static="false" visibility="public">
@@ -32,6 +37,9 @@
 		</class>
 		<interface abstract="true" deprecated="not deprecated" final="false" name="PublicClass.OnPressedChangeListener" static="true" visibility="" >
 			<method abstract="true" deprecated="not deprecated" final="false" name="onPressedChanged" jni-signature="V" bridge="false" native="false" return="void" jni-return="V" static="false" synchronized="false" synthetic="false" visibility="public" />
+		</interface>
+		<interface abstract="true" deprecated="not deprecated" final="false" name="PublicClass.ProtectedInterface" static="true" visibility="protected" >
+			<method abstract="true" deprecated="not deprecated" final="false" name="foo" jni-signature="V" bridge="false" native="false" return="void" jni-return="V" static="false" synchronized="false" synthetic="false" visibility="public" />
 		</interface>
 		<!-- 
 			/* package */ abstract class ExtendPackageClass extends PackageClass {
