@@ -15,47 +15,47 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "generator", "tools\generato
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{4C173212-371D-45D8-BA83-9226194F48DC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop", "src\Java.Interop\Java.Interop.csproj", "{94BD81F7-B06F-4295-9636-F8A3B6BDC762}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Java.Interop", "src\Java.Interop\Java.Interop.csproj", "{94BD81F7-B06F-4295-9636-F8A3B6BDC762}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "java-interop", "src\java-interop\java-interop.csproj", "{BB0AB9F7-0979-41A7-B7A9-877260655F94}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop.Dynamic", "src\Java.Interop.Dynamic\Java.Interop.Dynamic.csproj", "{AD4468F8-8883-434B-9D4C-E1801BB3B52A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Java.Interop.Dynamic", "src\Java.Interop.Dynamic\Java.Interop.Dynamic.csproj", "{AD4468F8-8883-434B-9D4C-E1801BB3B52A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop.Export", "src\Java.Interop.Export\Java.Interop.Export.csproj", "{B501D075-6183-4E1D-92C9-F7B5002475B1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Java.Interop.Export", "src\Java.Interop.Export\Java.Interop.Export.csproj", "{B501D075-6183-4E1D-92C9-F7B5002475B1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop.Tools.JavaSource", "src\Java.Interop.Tools.JavaSource\Java.Interop.Tools.JavaSource.csproj", "{5C0B3562-8DA0-4726-9762-75B9709ED6B7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Java.Interop.Tools.JavaSource", "src\Java.Interop.Tools.JavaSource\Java.Interop.Tools.JavaSource.csproj", "{5C0B3562-8DA0-4726-9762-75B9709ED6B7}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Desktop", "Desktop", "{0998E45F-8BCE-4791-A944-962CD54E2D80}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Runtime.Environment", "src\Java.Runtime.Environment\Java.Runtime.Environment.csproj", "{5887B410-D448-4257-A46B-EAC03C80BE93}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Java.Runtime.Environment", "src\Java.Runtime.Environment\Java.Runtime.Environment.csproj", "{5887B410-D448-4257-A46B-EAC03C80BE93}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Tools.Bytecode", "src\Xamarin.Android.Tools.Bytecode\Xamarin.Android.Tools.Bytecode.csproj", "{B17475BC-45A2-47A3-B8FC-62F3A0959EE0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.Android.Tools.Bytecode", "src\Xamarin.Android.Tools.Bytecode\Xamarin.Android.Tools.Bytecode.csproj", "{B17475BC-45A2-47A3-B8FC-62F3A0959EE0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Tools.AnnotationSupport", "src\Xamarin.Android.Tools.AnnotationSupport\Xamarin.Android.Tools.AnnotationSupport.csproj", "{07BC4495-1267-4B78-9EA6-B76FEEA2A64A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.Android.Tools.AnnotationSupport", "src\Xamarin.Android.Tools.AnnotationSupport\Xamarin.Android.Tools.AnnotationSupport.csproj", "{07BC4495-1267-4B78-9EA6-B76FEEA2A64A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Tools.ApiXmlAdjuster", "src\Xamarin.Android.Tools.ApiXmlAdjuster\Xamarin.Android.Tools.ApiXmlAdjuster.csproj", "{1268EADF-8344-431C-81F6-FCB7CBC99F49}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.Android.Tools.ApiXmlAdjuster", "src\Xamarin.Android.Tools.ApiXmlAdjuster\Xamarin.Android.Tools.ApiXmlAdjuster.csproj", "{1268EADF-8344-431C-81F6-FCB7CBC99F49}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Tools.AnnotationSupport.Cecil", "src\Xamarin.Android.Tools.AnnotationSupport.Cecil\Xamarin.Android.Tools.AnnotationSupport.Cecil.csproj", "{41DFB021-F795-4EB6-8E53-0D069C0BED9F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.Android.Tools.AnnotationSupport.Cecil", "src\Xamarin.Android.Tools.AnnotationSupport.Cecil\Xamarin.Android.Tools.AnnotationSupport.Cecil.csproj", "{41DFB021-F795-4EB6-8E53-0D069C0BED9F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Desktop-Tests", "Desktop-Tests", "{271C9F30-F679-4793-942B-0D9527CB3E2F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestJVM", "tests\TestJVM\TestJVM.csproj", "{A76309AB-98AC-4AE2-BA30-75481420C52F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestJVM", "tests\TestJVM\TestJVM.csproj", "{A76309AB-98AC-4AE2-BA30-75481420C52F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop-PerformanceTests", "tests\Java.Interop-PerformanceTests\Java.Interop-PerformanceTests.csproj", "{6970466B-F6D1-417A-8A27-4FED8555EBD0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Java.Interop-PerformanceTests", "tests\Java.Interop-PerformanceTests\Java.Interop-PerformanceTests.csproj", "{6970466B-F6D1-417A-8A27-4FED8555EBD0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop-Tests", "tests\Java.Interop-Tests\Java.Interop-Tests.csproj", "{04E28441-36FF-4964-ADD7-EFBB47CCE406}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Java.Interop-Tests", "tests\Java.Interop-Tests\Java.Interop-Tests.csproj", "{04E28441-36FF-4964-ADD7-EFBB47CCE406}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop.Dynamic-Tests", "tests\Java.Interop.Dynamic-Tests\Java.Interop.Dynamic-Tests.csproj", "{82B1DD53-69CA-4A61-B6B1-F06F1525EF4D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Java.Interop.Dynamic-Tests", "tests\Java.Interop.Dynamic-Tests\Java.Interop.Dynamic-Tests.csproj", "{82B1DD53-69CA-4A61-B6B1-F06F1525EF4D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop.Export-Tests", "tests\Java.Interop.Export-Tests\Java.Interop.Export-Tests.csproj", "{82F24161-F0CA-44CC-AEC3-885D613605E0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Java.Interop.Export-Tests", "tests\Java.Interop.Export-Tests\Java.Interop.Export-Tests.csproj", "{82F24161-F0CA-44CC-AEC3-885D613605E0}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "logcat-parse-Tests", "tests\logcat-parse-Tests\logcat-parse-Tests.csproj", "{DB05D566-0BA0-4935-868D-689E2F03688E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Tools.Bytecode-Tests", "tests\Xamarin.Android.Tools.Bytecode-Tests\Xamarin.Android.Tools.Bytecode-Tests.csproj", "{C9FA4492-DEB0-4932-A6B8-E2C4E0581692}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.Android.Tools.Bytecode-Tests", "tests\Xamarin.Android.Tools.Bytecode-Tests\Xamarin.Android.Tools.Bytecode-Tests.csproj", "{C9FA4492-DEB0-4932-A6B8-E2C4E0581692}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Tools.ApiXmlAdjuster-Tests", "tests\Xamarin.Android.Tools.ApiXmlAdjuster-Tests\Xamarin.Android.Tools.ApiXmlAdjuster-Tests.csproj", "{891F2E04-5614-4A26-A78F-3778025ECF43}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.Android.Tools.ApiXmlAdjuster-Tests", "tests\Xamarin.Android.Tools.ApiXmlAdjuster-Tests\Xamarin.Android.Tools.ApiXmlAdjuster-Tests.csproj", "{891F2E04-5614-4A26-A78F-3778025ECF43}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "generator-Tests", "tests\generator-Tests\generator-Tests.csproj", "{4EEAB1A7-99C1-4302-9C18-01A7B481409B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "generator-Tests", "tests\generator-Tests\generator-Tests.csproj", "{4EEAB1A7-99C1-4302-9C18-01A7B481409B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{D5A93398-AEB1-49F3-89DC-3904A47DB0C7}"
 EndProject
@@ -67,29 +67,29 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "jnienv-gen", "build-tools\j
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Java.Interop.NamingCustomAttributes", "src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.shproj", "{FE789F04-5E95-42C5-AEF1-E33F8DF06B3F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop.Tools.JavaCallableWrappers", "src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers.csproj", "{D18FCF91-8876-48A0-A693-2DC1E7D3D80A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Java.Interop.Tools.JavaCallableWrappers", "src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers.csproj", "{D18FCF91-8876-48A0-A693-2DC1E7D3D80A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop.Tools.Cecil", "src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil.csproj", "{D48EE8D0-0A0A-4493-AEF5-DAF5F8CF86AD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Java.Interop.Tools.Cecil", "src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil.csproj", "{D48EE8D0-0A0A-4493-AEF5-DAF5F8CF86AD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop.Tools.Diagnostics", "src\Java.Interop.Tools.Diagnostics\Java.Interop.Tools.Diagnostics.csproj", "{64CC4E44-CE3A-4319-BF3F-6CF8BD513870}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Java.Interop.Tools.Diagnostics", "src\Java.Interop.Tools.Diagnostics\Java.Interop.Tools.Diagnostics.csproj", "{64CC4E44-CE3A-4319-BF3F-6CF8BD513870}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "jcw-gen", "tools\jcw-gen\jcw-gen.csproj", "{52C7D9B6-E8C8-47D0-9471-652D278D7D77}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop.Tools.JavaCallableWrappers-Tests", "tests\Java.Interop.Tools.JavaCallableWrappers-Tests\Java.Interop.Tools.JavaCallableWrappers-Tests.csproj", "{58B564A1-570D-4DA2-B02D-25BDDB1A9F4F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Java.Interop.Tools.JavaCallableWrappers-Tests", "tests\Java.Interop.Tools.JavaCallableWrappers-Tests\Java.Interop.Tools.JavaCallableWrappers-Tests.csproj", "{58B564A1-570D-4DA2-B02D-25BDDB1A9F4F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Cecil", "src\Xamarin.Android.Cecil\Xamarin.Android.Cecil.csproj", "{15945D4B-FF56-4BCC-B598-2718D199DD08}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Cecil.Mdb", "src\Xamarin.Android.Cecil\Xamarin.Android.Cecil.Mdb.csproj", "{C0487169-8F81-497F-919E-EB42B1D0243F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop.GenericMarshaler", "src\Java.Interop.GenericMarshaler\Java.Interop.GenericMarshaler.csproj", "{D1243BAB-23CA-4566-A2A3-3ADA2C2DC3AF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Java.Interop.GenericMarshaler", "src\Java.Interop.GenericMarshaler\Java.Interop.GenericMarshaler.csproj", "{D1243BAB-23CA-4566-A2A3-3ADA2C2DC3AF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop.BootstrapTasks", "build-tools\Java.Interop.BootstrapTasks\Java.Interop.BootstrapTasks.csproj", "{3E8E5C8C-59A6-4A9A-B55D-46AB14431B2A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Tools.AndroidSdk", "external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj", "{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.Android.Tools.AndroidSdk", "external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj", "{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop.Tools.JavaSource-Tests", "tests\Java.Interop.Tools.JavaSource-Tests\Java.Interop.Tools.JavaSource-Tests.csproj", "{093B5E94-7FB7-499F-9C11-30944BAFEE25}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Java.Interop.Tools.JavaSource-Tests", "tests\Java.Interop.Tools.JavaSource-Tests\Java.Interop.Tools.JavaSource-Tests.csproj", "{093B5E94-7FB7-499F-9C11-30944BAFEE25}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "param-name-importer", "tools\param-name-importer\param-name-importer.csproj", "{0E3AF6C1-7638-464D-9174-485D494499DC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "param-name-importer", "tools\param-name-importer\param-name-importer.csproj", "{0E3AF6C1-7638-464D-9174-485D494499DC}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -134,6 +134,10 @@ Global
 		{B501D075-6183-4E1D-92C9-F7B5002475B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B501D075-6183-4E1D-92C9-F7B5002475B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B501D075-6183-4E1D-92C9-F7B5002475B1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5C0B3562-8DA0-4726-9762-75B9709ED6B7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5C0B3562-8DA0-4726-9762-75B9709ED6B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5C0B3562-8DA0-4726-9762-75B9709ED6B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5C0B3562-8DA0-4726-9762-75B9709ED6B7}.Release|Any CPU.Build.0 = Release|Any CPU
 		{5887B410-D448-4257-A46B-EAC03C80BE93}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{5887B410-D448-4257-A46B-EAC03C80BE93}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5887B410-D448-4257-A46B-EAC03C80BE93}.Release|Any CPU.ActiveCfg = Release|Any CPU
