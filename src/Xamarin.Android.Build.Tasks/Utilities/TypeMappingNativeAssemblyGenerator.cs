@@ -39,13 +39,23 @@ namespace Xamarin.Android.Tasks
 
 			output.WriteLine ();
 			if (haveAssemblyNames) {
-				output.WriteLine ($"{Indent}.include{Indent}\"{Path.GetFileName (SharedIncludeFile)}\"");
+				output.Write (Indent);
+				output.Write (".include");
+				output.Write (Indent);
+				output.Write ('"');
+				output.Write (Path.GetFileName (SharedIncludeFile));
+				output.WriteLine ('"');
 			} else {
 				WriteCommentLine (output, $"No shared data present, {Path.GetFileName (SharedIncludeFile)} not generated");
 			}
 
 			if (haveModules) {
-				output.WriteLine ($"{Indent}.include{Indent}\"{Path.GetFileName (TypemapsIncludeFile)}\"");
+				output.Write (Indent);
+				output.Write (".include");
+				output.Write (Indent);
+				output.Write ('"');
+				output.Write (Path.GetFileName (TypemapsIncludeFile));
+				output.WriteLine ('"');
 			} else {
 				WriteCommentLine (output, $"No modules defined, {Path.GetFileName (TypemapsIncludeFile)} not generated");
 			}
