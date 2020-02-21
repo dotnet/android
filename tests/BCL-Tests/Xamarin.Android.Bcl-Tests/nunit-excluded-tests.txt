@@ -35,3 +35,6 @@ MonoTests.System.Web.Services.Description.ServiceDescriptionTest.ReadAndRetrieva
 MonoTests.System.Web.Services.Description.ServiceDescriptionTest.ReadInvalid
 MonoTests.System.Web.Services.Description.ServiceDescriptionTest.SimpleWrite
 MonoTests.System.Web.Services.Description.ServiceDescriptionTest.ValidatingRead
+
+# the test is incorrect and will be removed soon: https://github.com/mono/mono/pull/18952
+System.Net.Http.Tests.HttpClientHandlerTestsAndroid.TestEnvVarSwitchForInnerHttpHandler
