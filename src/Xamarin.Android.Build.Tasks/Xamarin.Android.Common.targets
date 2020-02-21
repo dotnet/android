@@ -3001,15 +3001,6 @@ because xbuild doesn't support framework reference assemblies.
 		<_JarSignerSuffix Condition=" '$(AndroidPackageFormat)' != 'aab' ">-Signed-Unaligned</_JarSignerSuffix>
 		<_JarSignerSuffix Condition=" '$(AndroidPackageFormat)' == 'aab' ">-Signed</_JarSignerSuffix>
 	</PropertyGroup>
-	<KeyTool
-		KeyStore="$(_ApkKeyStore)"
-		KeyAlias="$(_ApkKeyAlias)"
-		KeyPass="$(_ApkKeyPass)"
-		StorePass="$(_ApkStorePass)"
-		ToolPath="$(KeytoolToolPath)"
-		ToolExe="$(KeytoolToolExe)"
-		Command="-list"
-		Condition="'$(AndroidKeyStore)'==''" />
 	<AndroidSignPackage Condition=" '$(AndroidUseApkSigner)' != 'true' "
 		UnsignedApk="%(ApkAbiFilesIntermediate.FullPath)"
 		SignedApkDirectory="$(OutDir)"
