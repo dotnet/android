@@ -271,10 +271,13 @@ namespace Xamarin.Android.Prepare
 				Log.Status ($"Checking ", $"{p.Name}".PadRight (maxNameLength), tailColor: ConsoleColor.White);
 				bool installed = await p.IsInstalled ();
 				if (installed) {
-					if (!p.InstalledButWrongVersion) {
+					if (!p.InstalledButWrongVersion && !p.MustReinstall) {
 						Log.StatusLine ($" [FOUND {p.CurrentVersion}]", Context.SuccessColor);
 					} else {
-						Log.StatusLine ($" [WRONG VERSION {p.CurrentVersion}]", Context.WarningColor);
+						if (p.MustReinstall)
+							Log.StatusLine ($" [MUST REINSTALL {p.CurrentVersion}]", Context.WarningColor);
+						else
+							Log.StatusLine ($" [WRONG VERSION {p.CurrentVersion}]", Context.WarningColor);
 						missing.Add (p);
 					}
 				} else {
