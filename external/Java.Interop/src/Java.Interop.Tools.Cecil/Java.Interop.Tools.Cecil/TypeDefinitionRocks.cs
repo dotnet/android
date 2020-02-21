@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 using Mono.Cecil;
 
@@ -74,7 +73,12 @@ namespace Java.Interop.Tools.Cecil {
 
 		public static bool IsSubclassOf (this TypeDefinition type, string typeName, TypeDefinitionCache cache)
 		{
-			return type.GetTypeAndBaseTypes (cache).Any (t => t.FullName == typeName);
+			foreach (var t in type.GetTypeAndBaseTypes (cache)) {
+				if (t.FullName == typeName) {
+					return true;
+				}
+			}
+			return false;
 		}
 
 		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
