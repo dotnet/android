@@ -46,6 +46,7 @@ namespace Xamarin.Android.Prepare
 		public bool IgnoreMinimumVersion        { get; set; }
 		public bool IgnoreMaximumVersion        { get; set; }
 		public bool InstalledButWrongVersion    { get; private set; }
+		public bool MustReinstall               { get; private set; }
 
 		public abstract Task<bool> Install ();
 
@@ -67,6 +68,7 @@ namespace Xamarin.Android.Prepare
 
 		async Task<bool> Detect ()
 		{
+			MustReinstall = false;
 			if (!CheckWhetherInstalled ()) {
 				await AfterDetect (false);
 				return false;
@@ -85,6 +87,10 @@ namespace Xamarin.Android.Prepare
 			}
 
 			await AfterDetect (true);
+			if (ForceReinstall ()) {
+				Log.DebugLine ($"Program {Name} must be forcibly reinstalled");
+				MustReinstall = true;
+			}
 			return true;
 		}
 
@@ -122,6 +128,11 @@ namespace Xamarin.Android.Prepare
 		protected virtual async Task AfterDetect (bool installed)
 		{}
 #pragma warning restore CS1998
+
+		protected virtual bool ForceReinstall ()
+		{
+			return false;
+		}
 
 		protected virtual bool ParseVersion (string version, out Version ver)
 		{

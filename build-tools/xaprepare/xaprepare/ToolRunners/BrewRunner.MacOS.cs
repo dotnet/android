@@ -53,6 +53,33 @@ namespace Xamarin.Android.Prepare
 			return await RunBrew (echoOutput, echoError, "install", packageName);
 		}
 
+		public async Task<bool> Uninstall (string packageName, bool ignoreDependencies = false, bool force = false, bool echoOutput = true, bool echoError = true)
+		{
+			if (String.IsNullOrEmpty (packageName))
+				throw new ArgumentException ("must not be null or empty", nameof (packageName));
+
+			var arguments = new List<string> {
+				"uninstall"
+			};
+			
+			
+			if (ignoreDependencies)
+				arguments.Add ("--ignore-dependencies");
+			if (force)
+				arguments.Add ("--force");
+			arguments.Add (packageName);
+			
+			return await RunBrew (echoOutput, echoError, arguments);
+		}
+
+		public async Task<bool> Unlink (string packageName, bool echoOutput = true, bool echoError = true)
+		{
+			if (String.IsNullOrEmpty (packageName))
+				throw new ArgumentException ("must not be null or empty", nameof (packageName));
+
+			return await RunBrew (echoOutput, echoError, "unlink", packageName);
+		}
+
 		public async Task<bool> Upgrade (string packageName, bool echoOutput = true, bool echoError = true)
 		{
 			if (String.IsNullOrEmpty (packageName))
@@ -91,14 +118,24 @@ namespace Xamarin.Android.Prepare
 			return true;
 		}
 
-		string CaptureBrewOutput (params string[] parameters)
+		string CaptureBrewOutput (string command, string packageName)
 		{
-			return Utilities.GetStringFromStdout (GetBrewRunner (false, true, parameters));
+			return CaptureBrewOutput (new List<string> { command, packageName });
 		}
 
-		async Task<bool> RunBrew (bool echoOutput, bool echoError, params string[] parameters)
+		string CaptureBrewOutput (List<string> arguments)
 		{
-			ProcessRunner runner = GetBrewRunner (echoOutput, echoError, parameters);
+			return Utilities.GetStringFromStdout (GetBrewRunner (false, true, arguments));
+		}
+
+		async Task<bool> RunBrew (bool echoOutput, bool echoError, string command, string packageName)
+		{
+			return await RunBrew (echoOutput, echoError, new List<string> { command, packageName });
+		}
+
+		async Task<bool> RunBrew (bool echoOutput, bool echoError, List<string> arguments)
+		{
+			ProcessRunner runner = GetBrewRunner (echoOutput, echoError, arguments);
 			bool success = await RunTool (() => runner.Run ());
 			if (!success) {
 				var os = Context.Instance.OS as MacOS;
@@ -108,7 +145,7 @@ namespace Xamarin.Android.Prepare
 			return success;
 		}
 
-		ProcessRunner GetBrewRunner (bool echoOutput, bool echoError, params string[] parameters)
+		ProcessRunner GetBrewRunner (bool echoOutput, bool echoError, List<string> arguments)
 		{
 			ProcessRunner runner = CreateProcessRunner ();
 
@@ -116,7 +153,7 @@ namespace Xamarin.Android.Prepare
 				runner.AddArgument (BrewPath);
 			}
 
-			AddArguments (runner, parameters);
+			AddArguments (runner, arguments);
 
 			if (!echoOutput) {
 				runner.EchoStandardOutputLevel = ProcessStandardStreamWrapper.LogLevel.Debug;
