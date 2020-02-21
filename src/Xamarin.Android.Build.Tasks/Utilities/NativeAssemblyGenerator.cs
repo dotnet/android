@@ -56,7 +56,11 @@ namespace Xamarin.Android.Tasks
 
 		protected void WriteComment (StreamWriter output, string comment, bool indent = true)
 		{
-			output.Write ($"{(indent ? Indent : String.Empty)}/* {comment} */");
+			if (indent)
+				output.Write (Indent);
+			output.Write ("/* ");
+			output.Write (comment);
+			output.Write (" */");
 		}
 
 		protected void WriteCommentLine (StreamWriter output, string comment, bool indent = true)
@@ -68,7 +72,12 @@ namespace Xamarin.Android.Tasks
 		protected virtual void WriteFileHeader (StreamWriter output)
 		{
 			TargetProvider.WriteFileHeader (output, Indent);
-			output.WriteLine ($"{Indent}.file{Indent}\"{Path.GetFileName (MainSourceFile)}\"");
+			output.Write (Indent);
+			output.Write (".file");
+			output.Write (Indent);
+			output.Write ('"');
+			output.Write (Path.GetFileName (MainSourceFile));
+			output.WriteLine ('"');
 		}
 
 		protected virtual void WriteFileFooter (StreamWriter output)
@@ -76,13 +85,19 @@ namespace Xamarin.Android.Tasks
 
 		protected virtual void WriteSection (StreamWriter output, string sectionName, bool hasStrings, bool writable)
 		{
-			output.Write ($"{Indent}.section{Indent}{sectionName},\"a"); // a - section is allocatable
+			output.Write (Indent);
+			output.Write (".section");
+			output.Write (Indent);
+			output.Write (sectionName);
+			output.Write (",\"a"); // a - section is allocatable
 			if (hasStrings)
 				output.Write ("MS"); // M - section is mergeable, S - section contains zero-terminated strings
 			else if (writable)
-				output.Write ("w");
+				output.Write ('w');
 
-			output.Write ($"\",{TargetProvider.TypePrefix}progbits");
+			output.Write ("\",");
+			output.Write (TargetProvider.TypePrefix);
+			output.Write ("progbits");
 			if (hasStrings)
 				output.Write (",1");
 			output.WriteLine ();
@@ -100,18 +115,45 @@ namespace Xamarin.Android.Tasks
 
 		protected void WriteSymbol (StreamWriter output, string symbolType, string symbolValue, string symbolName, ulong size, uint alignBits, bool isGlobal, bool isObject, bool alwaysWriteSize)
 		{
-			if (isObject)
-				output.WriteLine ($"{Indent}.type{Indent}{symbolName}, {TargetProvider.TypePrefix}object");
-			if (alignBits > 0)
-				output.WriteLine ($"{Indent}.p2align{Indent}{alignBits}");
-			if (isGlobal)
-				output.WriteLine ($"{Indent}.global{Indent}{symbolName}");
-			if (!String.IsNullOrEmpty (symbolName))
-				output.WriteLine ($"{symbolName}:");
-			if (!String.IsNullOrEmpty (symbolType) && !String.IsNullOrEmpty (symbolValue))
-				output.WriteLine ($"{Indent}{symbolType}{Indent}{symbolValue}");
-			if (alwaysWriteSize || size > 0)
-				output.WriteLine ($"{Indent}.size{Indent}{symbolName}, {size}");
+			if (isObject) {
+				output.Write (Indent);
+				output.Write (".type");
+				output.Write (Indent);
+				output.Write (symbolName);
+				output.Write (", ");
+				output.Write (TargetProvider.TypePrefix);
+				output.WriteLine ("object");
+			}
+			if (alignBits > 0) {
+				output.Write (Indent);
+				output.Write (".p2align");
+				output.Write (Indent);
+				output.WriteLine (alignBits);
+			}
+			if (isGlobal) {
+				output.Write (Indent);
+				output.Write (".global");
+				output.Write (Indent);
+				output.WriteLine (symbolName);
+			}
+			if (!String.IsNullOrEmpty (symbolName)) {
+				output.Write (symbolName);
+				output.WriteLine (':');
+			}
+			if (!String.IsNullOrEmpty (symbolType) && !String.IsNullOrEmpty (symbolValue)) {
+				output.Write (Indent);
+				output.Write (symbolType);
+				output.Write (Indent);
+				output.WriteLine (symbolValue);
+			}
+			if (alwaysWriteSize || size > 0) {
+				output.Write (Indent);
+				output.Write (".size");
+				output.Write (Indent);
+				output.Write (symbolName);
+				output.Write (", ");
+				output.WriteLine (size);
+			}
 		}
 
 		protected void WriteSymbol (StreamWriter output, string label, uint size, bool isGlobal, bool isObject, bool alwaysWriteSize)
@@ -133,13 +175,30 @@ namespace Xamarin.Android.Tasks
 
 		protected void WriteStructureSymbol (StreamWriter output, string symbolName, uint alignBits, bool isGlobal)
 		{
-			output.WriteLine ($"{Indent}.type{Indent}{symbolName}, {TargetProvider.TypePrefix}object");
-			if (alignBits > 0)
-				output.WriteLine ($"{Indent}.p2align{Indent}{alignBits}");
-			if (isGlobal)
-				output.WriteLine ($"{Indent}.global{Indent}{symbolName}");
-			if (!String.IsNullOrEmpty (symbolName))
-				output.WriteLine ($"{symbolName}:");
+			output.Write (Indent);
+			output.Write (".type");
+			output.Write (Indent);
+			output.Write (symbolName);
+			output.Write (", ");
+			output.Write (TargetProvider.TypePrefix);
+			output.WriteLine ("object");
+
+			if (alignBits > 0) {
+				output.Write (Indent);
+				output.Write (".p2align");
+				output.Write (Indent);
+				output.WriteLine (alignBits);
+			}
+			if (isGlobal) {
+				output.Write (Indent);
+				output.Write (".global");
+				output.Write (Indent);
+				output.WriteLine (symbolName);
+			}
+			if (!String.IsNullOrEmpty (symbolName)) {
+				output.Write (symbolName);
+				output.WriteLine (':');
+			}
 		}
 
 		protected void WriteStructureSize (StreamWriter output, string symbolName, uint size, bool alwaysWriteSize = false)
@@ -150,7 +209,12 @@ namespace Xamarin.Android.Tasks
 			if (String.IsNullOrEmpty (symbolName))
 				throw new ArgumentException ("symbol name must be non-empty in order to write structure size", nameof (symbolName));
 
-			output.WriteLine ($"{Indent}.size{Indent}{symbolName}, {size}");
+			output.Write (Indent);
+			output.Write (".size");
+			output.Write (Indent);
+			output.Write (symbolName);
+			output.Write (", ");
+			output.WriteLine (size);
 		}
 
 		protected uint WriteStructure (StreamWriter output, bool packed, Func<uint> structureWriter)
@@ -207,7 +271,10 @@ namespace Xamarin.Android.Tasks
 			if (nbytes == 0)
 				return 0;
 
-			output.WriteLine ($"{Indent}.zero{Indent}{nbytes}");
+			output.Write (Indent);
+			output.Write (".zero");
+			output.Write (Indent);
+			output.WriteLine (nbytes);
 			return nbytes;
 		}
 
@@ -230,7 +297,12 @@ namespace Xamarin.Android.Tasks
 
 			uint size = (uint)output.Encoding.GetByteCount (value);
 			if (size > 0) {
-				output.WriteLine ($"{Indent}.ascii{Indent}\"{value}\"");
+				output.Write (Indent);
+				output.Write (".ascii");
+				output.Write (Indent);
+				output.Write ('"');
+				output.Write (value);
+				output.WriteLine ('"');
 			} else if (padToWidth == 0) {
 				return WriteDataPadding (output, 1);
 			}
