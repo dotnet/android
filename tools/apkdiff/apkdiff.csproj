@@ -31,6 +31,15 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="Mono.Posix" />
+    <Reference Include="libZipSharp">
+      <HintPath>$(XAPackagesDir)\Xamarin.LibZipSharp.$(LibZipSharpVersion)\lib\net45\libZipSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Options">
+      <HintPath>$(XAPackagesDir)\Mono.Options.6.6.0.161\lib\net40\Mono.Options.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>$(XAPackagesDir)\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System.Runtime.Serialization" />
   </ItemGroup>
   <ItemGroup>
