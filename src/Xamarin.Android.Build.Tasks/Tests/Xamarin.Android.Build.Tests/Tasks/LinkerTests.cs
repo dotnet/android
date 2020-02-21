@@ -150,21 +150,29 @@ namespace Xamarin.Android.Build.Tests
 			return assm;
 		}
 
-		[Test]
-		public void PreserveAndroidHttpClientHandler ()
+		private void PreserveCustomHttpClientHandler (string handlerType, string handlerAssembly, string testProjectName, string assemblyPath)
 		{
-			var handlerType = "Xamarin.Android.Net.AndroidClientHandler";
 			var proj = new XamarinAndroidApplicationProject () { IsRelease = true };
 			proj.AddReferences ("System.Net.Http");
-			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidHttpClientHandlerType", handlerType);
+			string handlerTypeFullName = string.IsNullOrEmpty(handlerAssembly) ? handlerType : handlerType + ", " + handlerAssembly;
+			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidHttpClientHandlerType", handlerTypeFullName);
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("base.OnCreate (bundle);", "base.OnCreate (bundle);\nvar client = new System.Net.Http.HttpClient ();");
-			using (var b = CreateApkBuilder ("temp/PreserveAndroidHttpClientHandler")) {
+			using (var b = CreateApkBuilder (testProjectName)) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
-				using (var assembly = AssemblyDefinition.ReadAssembly (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/assets/Mono.Android.dll"))) {
-					Assert.IsTrue (assembly.MainModule.GetType (handlerType) != null, "Xamarin.Android.Net.AndroidClientHandler should have been preserved by the linker.");
+				using (var assembly = AssemblyDefinition.ReadAssembly (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, assemblyPath))) {
+					Assert.IsTrue (assembly.MainModule.GetType (handlerType) != null, $"'{handlerTypeFullName}' should have been preserved by the linker.");
 				}
 			}
+		}
+
+		[Test]
+		public void PreserveCustomHttpClientHandlers ()
+		{
+			PreserveCustomHttpClientHandler ("Xamarin.Android.Net.AndroidClientHandler", "",
+				"temp/PreserveAndroidHttpClientHandler", "android/assets/Mono.Android.dll");
+			PreserveCustomHttpClientHandler ("System.Net.Http.MonoWebRequestHandler", "System.Net.Http",
+				"temp/PreserveMonoWebRequestHandler", "android/assets/System.Net.Http.dll");
 		}
 
 		[Test]
