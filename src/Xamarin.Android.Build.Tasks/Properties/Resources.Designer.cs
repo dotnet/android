@@ -457,6 +457,51 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot find `{0}`. Please install the Android SDK Build-Tools package with the `{1}{2}tools{2}{3}` program..
+        /// </summary>
+        internal static string XA5205 {
+            get {
+                return ResourceManager.GetString("XA5205", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot find `{0}` in the Android SDK. Please set its path via /p:LintToolPath..
+        /// </summary>
+        internal static string XA5205_Lint {
+            get {
+                return ResourceManager.GetString("XA5205_Lint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No Android platforms installed at &apos;{0}&apos;. Please install an SDK Platform with the `{1}{2}tools{2}{3}` program..
+        /// </summary>
+        internal static string XA5300_Android_Platforms {
+            get {
+                return ResourceManager.GetString("XA5300_Android_Platforms", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The Android SDK directory could not be found. Please set via /p:AndroidSdkDirectory..
+        /// </summary>
+        internal static string XA5300_Android_SDK {
+            get {
+                return ResourceManager.GetString("XA5300_Android_SDK", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The Java SDK directory could not be found. Please set via /p:JavaSdkDirectory..
+        /// </summary>
+        internal static string XA5300_Java_SDK {
+            get {
+                return ResourceManager.GetString("XA5300_Java_SDK", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to generate Java type for class: {0} due to MAX_PATH: {1}.
         /// </summary>
         internal static string XA5301 {

@@ -221,7 +221,7 @@ namespace Xamarin.Android.Tasks {
 			}
 		}
 		
-		public IList<string> Merge (TaskLoggingHelper log, List<TypeDefinition> subclasses, string applicationClass, bool embed, string bundledWearApplicationName, IEnumerable<string> mergedManifestDocuments)
+		public IList<string> Merge (TaskLoggingHelper log, TypeDefinitionCache cache, List<TypeDefinition> subclasses, string applicationClass, bool embed, string bundledWearApplicationName, IEnumerable<string> mergedManifestDocuments)
 		{
 			string applicationName  = ApplicationName;
 
@@ -241,7 +241,7 @@ namespace Xamarin.Android.Tasks {
 			if (manifest.Attribute (androidNs + "versionName") == null)
 				manifest.SetAttributeValue (androidNs + "versionName", "1.0");
 			
-			app = CreateApplicationElement (manifest, applicationClass, subclasses);
+			app = CreateApplicationElement (manifest, applicationClass, subclasses, cache);
 			
 			if (app.Attribute (androidNs + "label") == null && applicationName != null)
 				app.SetAttributeValue (androidNs + "label", applicationName);
@@ -296,12 +296,12 @@ namespace Xamarin.Android.Tasks {
 					PackageName = t.Namespace;
 
 				var name        = JavaNativeTypeManager.ToJniName (t).Replace ('/', '.');
-				var compatName  = JavaNativeTypeManager.ToCompatJniName (t).Replace ('/', '.');
+				var compatName  = JavaNativeTypeManager.ToCompatJniName (t, cache).Replace ('/', '.');
 				if (((string) app.Attribute (attName)) == compatName) {
 					app.SetAttributeValue (attName, name);
 				}
 
-				Func<TypeDefinition, string, int, XElement> generator = GetGenerator (t);
+				Func<TypeDefinition, string, int, XElement> generator = GetGenerator (t, cache);
 				if (generator == null)
 					continue;
 
@@ -395,7 +395,7 @@ namespace Xamarin.Android.Tasks {
 				}
 			}
 
-			AddInstrumentations (manifest, subclasses, targetSdkVersionValue);
+			AddInstrumentations (manifest, subclasses, targetSdkVersionValue, cache);
 			AddPermissions (app);
 			AddPermissionGroups (app);
 			AddPermissionTrees (app);
@@ -492,20 +492,20 @@ namespace Xamarin.Android.Tasks {
 			return nodes;
 		}
 
-		Func<TypeDefinition, string, int, XElement> GetGenerator (TypeDefinition type)
+		Func<TypeDefinition, string, int, XElement> GetGenerator (TypeDefinition type, TypeDefinitionCache cache)
 		{
-			if (type.IsSubclassOf ("Android.App.Activity"))
+			if (type.IsSubclassOf ("Android.App.Activity", cache))
 				return ActivityFromTypeDefinition;
-			if (type.IsSubclassOf ("Android.App.Service"))
+			if (type.IsSubclassOf ("Android.App.Service", cache))
 				return (t, name, v) => ToElement (t, name, ServiceAttribute.FromTypeDefinition, x => x.ToElement (PackageName));
-			if (type.IsSubclassOf ("Android.Content.BroadcastReceiver"))
+			if (type.IsSubclassOf ("Android.Content.BroadcastReceiver", cache))
 				return (t, name, v) => ToElement (t, name, BroadcastReceiverAttribute.FromTypeDefinition, x => x.ToElement (PackageName));
-			if (type.IsSubclassOf ("Android.Content.ContentProvider"))
+			if (type.IsSubclassOf ("Android.Content.ContentProvider", cache))
 				return (t, name, v) => ToProviderElement (t, name);
 			return null;
 		}
 
-		XElement CreateApplicationElement (XElement manifest, string applicationClass, List<TypeDefinition> subclasses)
+		XElement CreateApplicationElement (XElement manifest, string applicationClass, List<TypeDefinition> subclasses, TypeDefinitionCache cache)
 		{
 			var application = manifest.Descendants ("application").FirstOrDefault ();
 
@@ -534,7 +534,7 @@ namespace Xamarin.Android.Tasks {
 				if (aa == null)
 					continue;
 
-				if (!t.IsSubclassOf ("Android.App.Application"))
+				if (!t.IsSubclassOf ("Android.App.Application", cache))
 					throw new InvalidOperationException (string.Format ("Found [Application] on type {0}.  [Application] can only be used on subclasses of Application.", t.FullName));
 
 				typeAttr.Add (aa);
@@ -860,7 +860,7 @@ namespace Xamarin.Android.Tasks {
 			}
 		}
 
-		void AddInstrumentations (XElement manifest, IList<TypeDefinition> subclasses, int targetSdkVersion)
+		void AddInstrumentations (XElement manifest, IList<TypeDefinition> subclasses, int targetSdkVersion, TypeDefinitionCache cache)
 		{
 			var assemblyAttrs = 
 				Assemblies.SelectMany (path => InstrumentationAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)));
@@ -874,7 +874,7 @@ namespace Xamarin.Android.Tasks {
 			}
 			
 			foreach (var type in subclasses)
-				if (type.IsSubclassOf ("Android.App.Instrumentation")) {
+				if (type.IsSubclassOf ("Android.App.Instrumentation", cache)) {
 					var xe = InstrumentationFromTypeDefinition (type, JavaNativeTypeManager.ToJniName (type).Replace ('/', '.'), targetSdkVersion);
 					if (xe != null)
 						manifest.Add (xe);

@@ -177,7 +177,7 @@
       Inputs="$(TargetPath);@(ApiCompatibilityFiles)"
       Outputs="$(IntermediateOutputPath)CheckApiCompatibility.stamp">
     <CheckApiCompatibility
-        ApiCompatPath="$(XamarinAndroidSourcePath)\packages\microsoft.dotnet.apicompat\5.0.0-beta.20078.1\tools\net472\"
+        ApiCompatPath="$(XAPackagesDir)\microsoft.dotnet.apicompat\5.0.0-beta.20078.1\tools\net472\"
         ApiLevel="$(AndroidFrameworkVersion)"
         LastStableApiLevel="$(AndroidLatestStableFrameworkVersion)"
         TargetImplementationPath="$(OutputPath)"

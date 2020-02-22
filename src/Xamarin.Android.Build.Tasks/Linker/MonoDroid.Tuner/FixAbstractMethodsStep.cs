@@ -158,7 +158,7 @@ namespace MonoDroid.Tuner
 			if (IsInOverrides (iMethod, tMethod))
 				return true;
 
-			if (iMethod.Name != tMethod.Name && (iMethod.DeclaringType == null || (iMethod.DeclaringType.DeclaringType == null ? (string.Format ("{0}.{1}", iface.FullName, iMethod.Name) != tMethod.Name) : (string.Format ("{0}.{1}.{2}", iMethod.DeclaringType.DeclaringType, iface.Name, iMethod.Name) != tMethod.Name))))
+			if (iMethod.Name != tMethod.Name)
 				return false;
 
 			if (!CompareTypes (iMethod.MethodReturnType.ReturnType, tMethod.MethodReturnType.ReturnType))

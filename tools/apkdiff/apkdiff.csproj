@@ -32,13 +32,13 @@
     <Reference Include="System" />
     <Reference Include="Mono.Posix" />
     <Reference Include="libZipSharp">
-      <HintPath>packages\Xamarin.LibZipSharp.$(LibZipSharpVersion)\lib\net45\libZipSharp.dll</HintPath>
+      <HintPath>$(XAPackagesDir)\Xamarin.LibZipSharp.$(LibZipSharpVersion)\lib\net45\libZipSharp.dll</HintPath>
     </Reference>
     <Reference Include="Mono.Options">
-      <HintPath>packages\Mono.Options.6.6.0.161\lib\net40\Mono.Options.dll</HintPath>
+      <HintPath>$(XAPackagesDir)\Mono.Options.6.6.0.161\lib\net40\Mono.Options.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json">
-      <HintPath>packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <HintPath>$(XAPackagesDir)\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System.Runtime.Serialization" />
   </ItemGroup>
@@ -53,6 +53,6 @@
     <PackageReference Include="Xamarin.LibZipSharp" Version="$(LibZipSharpVersion)" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
-  <Import Project="packages\Xamarin.LibZipSharp.$(LibZipSharpVersion)\build\Xamarin.LibZipSharp.targets" Condition="Exists('packages\Xamarin.LibZipSharp.$(LibZipSharpVersion)\build\Xamarin.LibZipSharp.targets')" />
+  <Import Project="$(XAPackagesDir)\Xamarin.LibZipSharp.$(LibZipSharpVersion)\build\Xamarin.LibZipSharp.targets" Condition="Exists('$(XAPackagesDir)\Xamarin.LibZipSharp.$(LibZipSharpVersion)\build\Xamarin.LibZipSharp.targets')" />
   <Import Project="apkdiff.targets" />
 </Project>

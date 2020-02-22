@@ -1,8 +1,4 @@
 Compat issues with assembly Mono.Android:
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.IncludeAndroidResourcesFromAttribute' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.NativeLibraryReferenceAttribute' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.ReferenceFilesAttribute' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Java.Interop.JavaLibraryReferenceAttribute' in the contract but not the implementation.
 CannotChangeAttribute : Attribute 'Android.Runtime.RegisterAttribute' on 'System.String Android.Manifest.Permission.AccessBackgroundLocation' changed from '[RegisterAttribute("ACCESS_BACKGROUND_LOCATION")]' in the contract to '[RegisterAttribute("ACCESS_BACKGROUND_LOCATION", ApiSince=29)]' in the implementation.
 CannotChangeAttribute : Attribute 'Android.Runtime.RegisterAttribute' on 'System.String Android.Manifest.Permission.AccessMediaLocation' changed from '[RegisterAttribute("ACCESS_MEDIA_LOCATION")]' in the contract to '[RegisterAttribute("ACCESS_MEDIA_LOCATION", ApiSince=29)]' in the implementation.
 CannotChangeAttribute : Attribute 'Android.Runtime.RegisterAttribute' on 'System.String Android.Manifest.Permission.ActivityRecognition' changed from '[RegisterAttribute("ACTIVITY_RECOGNITION")]' in the contract to '[RegisterAttribute("ACTIVITY_RECOGNITION", ApiSince=29)]' in the implementation.

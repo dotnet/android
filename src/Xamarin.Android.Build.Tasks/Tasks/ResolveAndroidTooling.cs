@@ -128,10 +128,8 @@ namespace Xamarin.Android.Tasks
 			}
 
 			if (string.IsNullOrEmpty (AndroidSdkBuildToolsPath)) {
-				Log.LogCodedError ("XA5205",
-						string.Format (
-							"Cannot find `{0}`. Please install the Android SDK Build-tools package with the `{1}{2}tools{2}{3}` program.",
-							Aapt, AndroidSdkPath, Path.DirectorySeparatorChar, Android));
+				Log.LogCodedError ("XA5205", Properties.Resources.XA5205,
+						Aapt, AndroidSdkPath, Path.DirectorySeparatorChar, Android);
 				return false;
 			}
 
@@ -170,10 +168,8 @@ namespace Xamarin.Android.Tasks
 					.FirstOrDefault ();
 			}
 			if (string.IsNullOrEmpty (ZipAlignPath)) {
-				Log.LogCodedError ("XA5205",
-						string.Format (
-							"Cannot find `{0}`. Please install the Android SDK Build-tools package with the `{1}{2}tools{2}{3}` program.",
-							ZipAlign, AndroidSdkPath, Path.DirectorySeparatorChar, Android));
+				Log.LogCodedError ("XA5205", Properties.Resources.XA5205,
+						ZipAlign, AndroidSdkPath, Path.DirectorySeparatorChar, Android);
 				return false;
 			}
 
@@ -365,8 +361,7 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 			if (maxApiLevel < 0)
-				Log.LogCodedError ("XA5300",
-						"No Android platforms installed at '{0}'. Please install an SDK Platform with the `{1}{2}tools{2}{3}` program.",
+				Log.LogCodedError ("XA5300", Properties.Resources.XA5300_Android_Platforms,
 						platformsDir, Path.DirectorySeparatorChar, Android);
 			return maxApiLevel;
 		}

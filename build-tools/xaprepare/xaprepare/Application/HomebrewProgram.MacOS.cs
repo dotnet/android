@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Xamarin.Android.Prepare
@@ -6,8 +7,9 @@ namespace Xamarin.Android.Prepare
 	class HomebrewProgram : Program
 	{
 		string cachedVersionOutput;
-		bool brewNeedsSudo;
-
+		bool brewNeedsSudo = false;
+		bool multipleVersionsPickle = false;
+		
 		public override bool NeedsSudoToInstall => brewNeedsSudo;
 		public string HomebrewTapName           { get; }
 		public Uri HomebrewFormulaUrl           { get; }
@@ -40,14 +42,26 @@ namespace Xamarin.Android.Prepare
 					return false;
 			}
 
+			bool install = !InstalledButWrongVersion;
 			bool success;
-			if (InstalledButWrongVersion) {
-				if (HomebrewFormulaUrl != null)
-					success = await runner.Upgrade (HomebrewFormulaUrl.ToString ());
-				else
-					success = await runner.Upgrade (Name);
+			if (multipleVersionsPickle) {
+				Log.InfoLine ($"{Name} has multiple versions installed, let's get out of this pickle");
+				// 1. unpin
+				success = await runner.UnPin (Name);
+				
+				// 2. unlink
+				success = await runner.Unlink (Name);
+				
+				// 3. uninstall --ignore-dependencies
+				success = await runner.Uninstall (Name, ignoreDependencies: true, force: true);
+				install = true;
+			}
+
+			string installName = HomebrewFormulaUrl != null ? HomebrewFormulaUrl.ToString () : Name;
+			if (!install) {
+				success = await runner.Upgrade (installName);
 			} else
-				success = await runner.Install (Name);
+				success = await runner.Install (installName);
 
 			if (!success || !Pin)
 				return success;
@@ -66,6 +80,12 @@ namespace Xamarin.Android.Prepare
 			return !String.IsNullOrEmpty (cachedVersionOutput);
 		}
 
+		protected override bool ForceReinstall ()
+		{
+			Log.DebugLine ($"ForceReinstall called, pickle? {multipleVersionsPickle}");
+			return multipleVersionsPickle;
+		}
+
 		protected override bool ParseVersion (string version, out Version ver)
 		{
 			if (base.ParseVersion (version, out ver))
@@ -75,20 +95,54 @@ namespace Xamarin.Android.Prepare
 			if (String.IsNullOrEmpty (version))
 				return false;
 
-			// Some brew packages (e.g. mingw-w64) have "weird" version formats, we'll handle them here on the
-			// case-by-case basis. First we should try some general rules to handle the weird versions, checking package
-			// name should be the very last resort.
-			int pos =  version.IndexOf ('_');
-			if (pos > 0) {
-				// e.g. 6.0.0_1
-				string v = version.Replace ('_', '.');
-				if (Version.TryParse (v, out ver))
-					return true;
+			// It is sometimes possible (if one tries hard) to have two versions of the same package installed.
+			// In such instances brew will report *all* the versions in a single line, e.g.:
+			//
+			//   $ brew ls --versions -1 mingw-w64
+			//   mingw-w64 7.0.0_1 6.0.0_1
+			//
+			// We need to handle it here *and* on install time (see Install above)
 
-				Log.DebugLine ($"Failed to parse {Name} version {version} as {v}");
+			int pos = version.IndexOf (' ');
+			if (pos > 0) {
+				Log.DebugLine ($"Brew reported more than one version of {Name} is installed: {version}");
+				multipleVersionsPickle = true;
+				var versions = new List<Version> ();
+				foreach (string v in version.Split (' ')) {
+					string cvs = GetCleanedUpVersion (v);
+					if (Version.TryParse (cvs, out Version tempVer)) {
+						versions.Add (tempVer);
+					}
+				}
+
+				if (versions.Count == 0) {
+					Log.DebugLine ($"Failed to parse any valid versions for {Name} from {version}");
+					return false;
+				}
+
+				versions.Sort ();
+				ver = versions [0];
+				Log.DebugLine ($"Will use version {ver}");
+				return true;
 			}
 
+			string cv = GetCleanedUpVersion (version);
+			if (Version.TryParse (cv, out ver))
+				return true;
+
+			Log.DebugLine ($"Failed to parse {Name} version {version}");
 			return false;
+
+			string GetCleanedUpVersion (string inVer)
+			{
+				// Some brew packages (e.g. mingw-w64) have "weird" version formats, we'll handle them here on the
+				// case-by-case basis. First we should try some general rules to handle the weird versions, checking package
+				// name should be the very last resort.
+				pos =  inVer.IndexOf ('_');
+				if (pos < 0)
+					return inVer;
+				return inVer.Replace ('_', '.');
+			}
 		}
 
 		protected override async Task<bool> DetermineCurrentVersion ()
@@ -116,6 +170,10 @@ namespace Xamarin.Android.Prepare
 			}
 
 			CurrentVersion = currentVersion;
+			if (multipleVersionsPickle) {
+				Log.DebugLine ($"Multiple versions of {Name} are installed, forcing reinstallation");
+				return false;
+			}
 
 			return true;
 		}
