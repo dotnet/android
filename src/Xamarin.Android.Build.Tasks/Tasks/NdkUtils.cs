@@ -37,7 +37,7 @@ namespace Xamarin.Android.Tasks
 			bool hasNdkVersion = GetNdkToolchainRelease (ndkPath ?? "", out ndkVersion);
 
 			if (!hasNdkVersion) {
-				logError ("XA5102", Properties.Resources.XA5102);
+				logError ("XA5104", Properties.Resources.XA5104);
 				return false;
 			}
 
@@ -185,7 +185,7 @@ namespace Xamarin.Android.Tasks
 			if (File.Exists (toolPath))
 				return toolPath;
 
-			Diagnostic.Error (5103, Properties.Resources.XA5103, toolName, arch, toolchainDir);
+			Diagnostic.Error (5105, Properties.Resources.XA5105, toolName, arch, toolchainDir);
 			return null;
 		}
 

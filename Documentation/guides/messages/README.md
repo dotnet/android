@@ -113,8 +113,11 @@ ms.date: 01/24/2020
 ## XA5xxx: GCC and toolchain
 
 + XA5101: Missing Android NDK toolchains directory '{path}'. Please install the Android NDK.
-+ XA5102: Could not locate the Android NDK.
-+ XA5103: Toolchain utility '{utility}' for target {arch} was not found. Tried in path: "{path}"
++ XA5102: Conversion from assembly to native code failed. Exit code {exitCode}
++ XA5103: NDK C compiler exited with an error. Exit code {0}
++ XA5104: Could not locate the Android NDK.
++ XA5105: Toolchain utility '{utility}' for target {arch} was not found. Tried in path: "{path}"
++ XA5201: NDK linker exited with an error. Exit code {0}
 + [XA5205](xa5205.md): Cannot find `{ToolName}` in the Android SDK.
 + [XA5207](xa5207.md): Could not find android.jar for API Level `{compileSdk}`.
 + [XA5300](xa5300.md): The Android/Java SDK Directory could not be found.
