@@ -104,6 +104,8 @@
     <XAIncludeProprietaryBits Condition="'$(XAIncludeProprietaryBits)' == ''">False</XAIncludeProprietaryBits>
     <XABundleToolVersion Condition="'$(XABundleToolVersion)' == ''">0.10.2</XABundleToolVersion>
     <XAManifestMergerToolVersion Condition="'$(XAManifestMergerToolVersion)' == ''">26.5.0</XAManifestMergerToolVersion>
+    <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' And '$(NUGET_PACKAGES)' != '' ">$(NUGET_PACKAGES)</XAPackagesDir>
+    <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' ">$(XamarinAndroidSourcePath)\packages</XAPackagesDir>
     <PathSeparator>$([System.IO.Path]::PathSeparator)</PathSeparator>
     <_TestsAotName Condition=" '$(AotAssemblies)' == 'true' ">-Aot</_TestsAotName>
     <_TestsProfiledAotName Condition=" '$(AndroidEnableProfiledAot)' == 'true' ">-Profiled</_TestsProfiledAotName>
@@ -185,7 +187,7 @@
   <!-- Unit Test Properties -->
   <PropertyGroup>
     <_Runtime Condition=" '$(HostOS)' != 'Windows' ">$(ManagedRuntime) $(ManagedRuntimeArgs)</_Runtime>
-    <_NUnit>$(_Runtime) packages\nunit.consolerunner\3.9.0\tools\nunit3-console.exe</_NUnit>
+    <_NUnit>$(_Runtime) $(XAPackagesDir)\nunit.consolerunner\3.9.0\tools\nunit3-console.exe</_NUnit>
   </PropertyGroup>
 
   <!-- Fix for IDEs -->

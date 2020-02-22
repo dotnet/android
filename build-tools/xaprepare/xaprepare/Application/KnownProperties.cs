@@ -40,6 +40,7 @@ namespace Xamarin.Android.Prepare
 		public const string XABuildToolsVersion                 = "XABuildToolsVersion";
 		public const string XABinRelativeInstallPrefix          = "XABinRelativeInstallPrefix";
 		public const string XAInstallPrefix                     = "XAInstallPrefix";
+		public const string XAPackagesDir                       = "XAPackagesDir";
 		public const string XAPlatformToolsVersion              = "XAPlatformToolsVersion";
 	}
 }
