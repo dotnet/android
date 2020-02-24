@@ -133,5 +133,35 @@ namespace Xamarin.Android.Build.Tests
 				}
 			}
 		}
+
+		[Test]
+		public void FullPath ()
+		{
+			var assetPath = Path.GetFullPath (Path.Combine (Root, "temp", TestName, "Assets", "foo.txt"));
+			Directory.CreateDirectory (Path.GetDirectoryName (assetPath));
+			File.WriteAllText (assetPath, contents: "bar");
+			var proj = new XamarinAndroidLibraryProject {
+				OtherBuildItems = {
+					new AndroidItem.AndroidAsset (assetPath) {
+						Metadata = { { "LogicalName", Path.Combine ("Assets", "foo.txt") } },
+					},
+				},
+			};
+			using (var b = CreateDllBuilder (Path.Combine ("temp", TestName, "SubDir"))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				var libraryProjectImports = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "__AndroidLibraryProjects__.zip");
+				FileAssert.Exists (libraryProjectImports);
+				using (var zip = ZipHelper.OpenZip (libraryProjectImports)) {
+					var entryName = "library_project_imports/assets/foo.txt";
+					var entry = zip.ReadEntry (entryName);
+					Assert.IsNotNull (entry, $"{libraryProjectImports} should contain {entryName}");
+					using (var memory = new MemoryStream ()) {
+						entry.Extract (memory);
+						memory.Position = 0;
+						Assert.AreEqual ("bar", Encoding.Default.GetString (memory.ToArray ()));
+					}
+				}
+			}
+		}
 	}
 }
