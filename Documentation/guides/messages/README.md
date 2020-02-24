@@ -82,6 +82,8 @@ ms.date: 01/24/2020
 
 ## XA2xxx: Linker
 
++ XA2006: Could not resolve reference to '{member}' (defined in assembly '{assembly}') with scope '{scope}'. When the scope is different from the defining assembly, it usually means that the type is forwarded.
+
 ## XA3xxx: Unmanaged code compilation
 
 + XA3001: Could not AOT the assembly: {assembly}
@@ -117,6 +119,7 @@ ms.date: 01/24/2020
 + XA5103: Toolchain utility '{utility}' for target {arch} was not found. Tried in path: "{path}"
 + [XA5205](xa5205.md): Cannot find `{ToolName}` in the Android SDK.
 + [XA5207](xa5207.md): Could not find android.jar for API Level `{compileSdk}`.
++ XA5213: java.lang.OutOfMemoryError. Consider increasing the value of $(JavaMaximumHeapSize). Java ran out of memory while executing '{tool} {arguments}'
 + [XA5300](xa5300.md): The Android/Java SDK Directory could not be found.
 + [XA5301](xa5301.md): Failed to generate Java type for class: {managedType} due to MAX_PATH: {exception}
 + [XA5302](xa5302.md): Two processes may be building this project at once. Lock file exists at path: {path}
