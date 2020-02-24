@@ -108,6 +108,10 @@ Overridable MSBuild properties include:
     Android NDK and SDK files. This value defaults to
     `$(HOME)\android-toolchain`.
 
+  * `$(DisableApiCompatibilityCheck)`: disable running the API compatibility
+    check when building Mono.Android if set to `True`. The check is performed
+    by default.
+
   * `$(HostCc)`, `$(HostCxx)`: The C and C++ compilers to use to generate
     host-native binaries.
 
