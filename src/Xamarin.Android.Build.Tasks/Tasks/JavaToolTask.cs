@@ -108,9 +108,7 @@ namespace Xamarin.Android.Tasks
 		void LogFromException (string exception, string error) {
 			switch (exception) {
 				case "java.lang.OutOfMemoryError":
-					Log.LogCodedError ("XA5213", 
-						"java.lang.OutOfMemoryError. Consider increasing the value of $(JavaMaximumHeapSize). Java ran out of memory while executing '{0} {1}'",
-						ToolName, GenerateCommandLineCommands ());
+					Log.LogCodedError ("XA5213", Properties.Resources.XA5213, ToolName, GenerateCommandLineCommands ());
 					break;
 				default:
 					Log.LogCodedError (DefaultErrorCode, "{0} : {1}", exception, error);

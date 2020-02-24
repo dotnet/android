@@ -106,6 +106,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Could not get version from &apos;{0}&apos;. Defaulting to 1.0.
+        /// </summary>
+        internal static string XA0108 {
+            get {
+                return ResourceManager.GetString("XA0108", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unable to find `EmbeddedResource` named `{0}`..
         /// </summary>
         internal static string XA0116 {
@@ -201,6 +210,15 @@ namespace Xamarin.Android.Tasks.Properties {
         internal static string XA2001 {
             get {
                 return ResourceManager.GetString("XA2001", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not resolve reference to &apos;{0}&apos; (defined in assembly &apos;{1}&apos;) with scope &apos;{2}&apos;. When the scope is different from the defining assembly, it usually means that the type is forwarded..
+        /// </summary>
+        internal static string XA2006 {
+            get {
+                return ResourceManager.GetString("XA2006", resourceCulture);
             }
         }
         
@@ -471,6 +489,15 @@ namespace Xamarin.Android.Tasks.Properties {
         internal static string XA5205_Lint {
             get {
                 return ResourceManager.GetString("XA5205_Lint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to java.lang.OutOfMemoryError. Consider increasing the value of $(JavaMaximumHeapSize). Java ran out of memory while executing &apos;{0} {1}&apos;.
+        /// </summary>
+        internal static string XA5213 {
+            get {
+                return ResourceManager.GetString("XA5213", resourceCulture);
             }
         }
         
