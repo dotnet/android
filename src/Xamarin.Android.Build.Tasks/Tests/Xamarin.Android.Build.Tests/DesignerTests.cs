@@ -109,9 +109,9 @@ namespace UnnamedProject
 				Assert.IsNotNull (doc.Element ("LinearLayout").Element ("unnamedproject.CustomTextView"),
 					"unnamedproject.CustomTextView should have not been replaced with a $(Hash).CustomTextView");
 				// Build the library project now
-				Assert.IsTrue (libb.Build (lib), "library build should have succeeded.");
+				Assert.IsTrue (libb.Build (lib, doNotCleanupOnUpdate: true), "library build should have succeeded.");
 				appb.Target = "Build";
-				Assert.IsTrue (appb.Build (proj), "app build should have succeeded.");
+				Assert.IsTrue (appb.Build (proj, doNotCleanupOnUpdate: true), "app build should have succeeded.");
 				Assert.IsTrue (appb.Output.AreTargetsAllBuilt ("_UpdateAndroidResgen"), "_UpdateAndroidResgen should have run completely.");
 				Assert.IsTrue (appb.Output.AreTargetsAllBuilt ("_Foo"), "_Foo should have run completely");
 				doc = XDocument.Load (customViewPath);
@@ -120,7 +120,7 @@ namespace UnnamedProject
 				Assert.IsNull (doc.Element ("LinearLayout").Element ("unnamedproject.CustomTextView"),
 					"unnamedproject.CustomTextView should have been replaced with a $(Hash).CustomTextView");
 				appb.Target = target;
-				Assert.IsTrue (appb.Build (proj, parameters: DesignerParameters), $"build should have succeeded for target `{target}`");
+				Assert.IsTrue (appb.Build (proj, parameters: DesignerParameters, doNotCleanupOnUpdate: true), $"build should have succeeded for target `{target}`");
 				Assert.IsTrue (appb.Output.AreTargetsAllSkipped ("_UpdateAndroidResgen"), "_UpdateAndroidResgen should have been skipped.");
 				Assert.IsTrue (appb.Output.AreTargetsAllBuilt ("_Foo"), "_Foo should have run completely");
 				doc = XDocument.Load (customViewPath);
