@@ -190,6 +190,11 @@
 {0} - The target SDK version number
 {1} - The API version number</note>
       </trans-unit>
+      <trans-unit id="XA4218">
+        <source>Unable to find //manifest/application/uses-library at path: {0}</source>
+        <target state="new">Unable to find //manifest/application/uses-library at path: {0}</target>
+        <note>The following are literal names and should not be translated: //manifest/application/uses-library</note>
+      </trans-unit>
       <trans-unit id="XA4300">
         <source>Native library '{0}' will not be bundled because it has an unsupported ABI.</source>
         <target state="new">Native library '{0}' will not be bundled because it has an unsupported ABI.</target>
@@ -213,6 +218,11 @@ In this message, the term "bundled" is a short way of saying "included into the 
         <note>The abbreviation "ABI" should not be translated.
 {0} - Comma-separated list of the ignored library file names.</note>
       </trans-unit>
+      <trans-unit id="XA4304">
+        <source>ProGuard configuration file '{0}' was not found.</source>
+        <target state="new">ProGuard configuration file '{0}' was not found.</target>
+        <note>The following are literal names and should not be translated: ProGuard</note>
+      </trans-unit>
       <trans-unit id="XA4305">
         <source>Multidex is enabled, but `$(_AndroidMainDexListFile)` is empty.</source>
         <target state="new">Multidex is enabled, but `$(_AndroidMainDexListFile)` is empty.</target>
@@ -227,6 +237,12 @@ In this message, the term "bundled" is a short way of saying "included into the 
         <source>R8 does not support `@(MultiDexMainDexList)` files when android:minSdkVersion &gt;= 21</source>
         <target state="new">R8 does not support `@(MultiDexMainDexList)` files when android:minSdkVersion &gt;= 21</target>
         <note>The following are literal names and should not be translated: R8, @(MultiDexMainDexList),  android:minSdkVersion</note>
+      </trans-unit>
+      <trans-unit id="XA4307">
+        <source>Invalid ProGuard configuration file. {0}</source>
+        <target state="new">Invalid ProGuard configuration file. {0}</target>
+        <note>The following are literal names and should not be translated: ProGuard
+{0} - The error message returned by the ProGuard tool.</note>
       </trans-unit>
       <trans-unit id="XA4308">
         <source>Failed to generate type maps</source>

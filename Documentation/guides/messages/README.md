@@ -105,7 +105,7 @@ ms.date: 01/24/2020
 + [XA4301](xa4301.md): Apk already contains the item `xxx`.
 + [XA4302](xa4302.md): Unhandled exception merging \`AndroidManifest.xml]`: {ex}
 + [XA4303](xa4303.md): Error extracting resources from "{assemblyPath}": {ex}
-+ [XA4304](xa4304.md): Proguard configuration file '{file}' was not found.
++ [XA4304](xa4304.md): ProGuard configuration file '{file}' was not found.
 + [XA4305](xa4305.md): Multidex is enabled, but \`$(\_AndroidMainDexListFile)\` is empty.
 + [XA4306](xa4306.md): R8 does not support \`@(MultiDexMainDexList)\` files when android:minSdkVersion >= 21
 + [XA4307](xa4307.md): Invalid ProGuard configuration file.
