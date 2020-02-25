@@ -119,9 +119,6 @@ The following build targets are defined for Xamarin.Android projects:
 - **Install** &ndash; Installs the package onto the default device or
   virtual device.
 
-- **Uninstall** &ndash; Uninstalls the package from the default
-  device or virtual device.
-
 - **SignAndroidPackage** &ndash; Creates and signs the package
   (`.apk`). Use with `/p:Configuration=Release` to generate
   self-contained "Release" packages.
@@ -140,6 +137,9 @@ The following build targets are defined for Xamarin.Android projects:
   This is equivalent to `adb shell am force-stop @PACKAGE_NAME@`.
 
   Added in Xamarin.Android 10.2.
+
+- **Uninstall** &ndash; Uninstalls the package from the default
+  device or virtual device.
 
 - **UpdateAndroidResources** &ndash; Updates the
   `Resource.designer.cs` file. This target is usually called by the
