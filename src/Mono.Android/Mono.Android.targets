@@ -184,6 +184,7 @@
   </ItemGroup>
   <Target
       Name="AfterBuild"
+      Condition=" '$(DisableApiCompatibilityCheck)' != 'True' "
       Inputs="$(TargetPath);@(ApiCompatibilityFiles)"
       Outputs="$(IntermediateOutputPath)CheckApiCompatibility.stamp">
     <CheckApiCompatibility
