@@ -176,11 +176,6 @@ namespace Android.Graphics
 		{
 			return c.color;
 		}
-		
-		public static implicit operator Color(int argb)
-		{
-			return new Color(argb);
-		}
 
 		public override int GetHashCode ()
 		{
