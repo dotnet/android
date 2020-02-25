@@ -190,6 +190,11 @@ namespace Xamarin.Android.Prepare
 				return;
 			}
 
+			// It may happen that the package is installed but not linked to the prefix that's in the user's PATH.
+			// Detecting whether the package is linked would require requesting and parsing JSON for all the packages which
+			// would be more trouble than it's worth. Let's just link the package
+			await runner.Link (Name, echoOutput: false, echoError: false);
+
 			if (!Pin)
 				return;
 

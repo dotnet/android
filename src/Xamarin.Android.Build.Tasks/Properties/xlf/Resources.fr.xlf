@@ -28,6 +28,11 @@
         <target state="new">Ignoring Reference Assembly `{0}`.</target>
         <note>{0} - File name of the assembly.</note>
       </trans-unit>
+      <trans-unit id="XA0108">
+        <source>Could not get version from '{0}'. Defaulting to 1.0</source>
+        <target state="new">Could not get version from '{0}'. Defaulting to 1.0</target>
+        <note>{0} - The tool name</note>
+      </trans-unit>
       <trans-unit id="XA0116">
         <source>Unable to find `EmbeddedResource` named `{0}`.</source>
         <target state="new">Unable to find `EmbeddedResource` named `{0}`.</target>
@@ -94,6 +99,13 @@
         <source>Source file '{0}' could not be found.</source>
         <target state="new">Source file '{0}' could not be found.</target>
         <note />
+      </trans-unit>
+      <trans-unit id="XA2006">
+        <source>Could not resolve reference to '{0}' (defined in assembly '{1}') with scope '{2}'. When the scope is different from the defining assembly, it usually means that the type is forwarded.</source>
+        <target state="new">Could not resolve reference to '{0}' (defined in assembly '{1}') with scope '{2}'. When the scope is different from the defining assembly, it usually means that the type is forwarded.</target>
+        <note>{0} - The member name, such as a class name
+{1} - The assembly name
+{2} - The scope of the member, such as the name of a different assembly</note>
       </trans-unit>
       <trans-unit id="XA3001">
         <source>Could not AOT the assembly: {0}</source>
@@ -269,6 +281,13 @@ In this message, the term "bundled" is a short way of saying "included into the 
         <target state="new">Cannot find `{0}` in the Android SDK. Please set its path via /p:LintToolPath.</target>
         <note>The following are literal names and should not be translated: /p:LintToolPath
 {0} - The missing tool name</note>
+      </trans-unit>
+      <trans-unit id="XA5213">
+        <source>java.lang.OutOfMemoryError. Consider increasing the value of $(JavaMaximumHeapSize). Java ran out of memory while executing '{0} {1}'</source>
+        <target state="new">java.lang.OutOfMemoryError. Consider increasing the value of $(JavaMaximumHeapSize). Java ran out of memory while executing '{0} {1}'</target>
+        <note>The following are literal names and should not be translated: java.lang.OutOfMemoryError, $(JavaMaximumHeapSize)
+{0} - The tool name
+{1} - The command line arguments used for the tool</note>
       </trans-unit>
       <trans-unit id="XA5300_Android_Platforms">
         <source>No Android platforms installed at '{0}'. Please install an SDK Platform with the `{1}{2}tools{2}{3}` program.</source>

@@ -67,7 +67,7 @@ namespace Xamarin.Android.Tasks
 					var path = item.GetMetadata ("Link");
 					path = !string.IsNullOrWhiteSpace (path) ? path : item.ItemSpec;
 					var head = string.Join ("\\", path.Split (dir_sep).TakeWhile (s => !s.Equals (MonoAndroidAssetsPrefix, StringComparison.OrdinalIgnoreCase)));
-					path = head.Length == path.Length ? path : path.Substring ((head.Length == 0 ? 0 : head.Length + Path.DirectorySeparatorChar) + MonoAndroidAssetsPrefix.Length).TrimStart (dir_sep);
+					path = head.Length == path.Length ? path : path.Substring ((head.Length == 0 ? 0 : head.Length + 1) + MonoAndroidAssetsPrefix.Length).TrimStart (dir_sep);
 					MonoAndroidHelper.CopyIfChanged (item.ItemSpec, Path.Combine (dstsub, path));
 				}
 			}

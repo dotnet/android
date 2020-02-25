@@ -21,6 +21,8 @@ namespace Xamarin.Android.Prepare
 			: base (context, log, toolPath)
 		{
 			ProcessTimeout = TimeSpan.FromMinutes (30);
+			EchoStandardError = true;
+			EchoStandardOutput = true;
 		}
 
 		string GetDefaultExecutableName ()
@@ -78,6 +80,14 @@ namespace Xamarin.Android.Prepare
 				throw new ArgumentException ("must not be null or empty", nameof (packageName));
 
 			return await RunBrew (echoOutput, echoError, "unlink", packageName);
+		}
+
+		public async Task<bool> Link (string packageName, bool echoOutput = true, bool echoError = true)
+		{
+			if (String.IsNullOrEmpty (packageName))
+				throw new ArgumentException ("must not be null or empty", nameof (packageName));
+
+			return await RunBrew (echoOutput, echoError, "link", packageName);
 		}
 
 		public async Task<bool> Upgrade (string packageName, bool echoOutput = true, bool echoError = true)
