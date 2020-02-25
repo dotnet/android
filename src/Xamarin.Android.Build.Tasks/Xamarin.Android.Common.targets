@@ -101,6 +101,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.ResolveLibraryProjectImports" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ReadJavaStubsCache" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ReadLibraryProjectImportsCache" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.ReadXamarinAndroidVersion" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ScanAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.SplitProperty" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckProjectItems" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -571,8 +572,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     _ValidateLinkMode;
     _CheckNonIdealConfigurations;
     _SetupDesignTimeBuildForBuild;
-    _CleanIntermediateIfNuGetsChange;
-    _CleanIntermediateIfPackageNamingPolicyChanges;
+    _CleanIntermediateIfNeeded;
     _CreatePropertiesCache;
     _CheckProjectItems;
     _CheckForContent;
@@ -591,8 +591,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     _ValidateLinkMode;
     _CheckNonIdealConfigurations;
      _SetupDesignTimeBuildForBuild;
-    _CleanIntermediateIfNuGetsChange;
-    _CleanIntermediateIfPackageNamingPolicyChanges;
+    _CleanIntermediateIfNeeded;
      _CreatePropertiesCache;
     _AddAndroidDefines;
     _CreateNativeLibraryArchive;
@@ -718,6 +717,21 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		<_AabFileSigned>$(OutDir)$(_AndroidPackage)-Signed.aab</_AabFileSigned>
 		<_MSYMDirectory>$(OutDir)$(_AndroidPackage).$(AndroidPackageFormat).mSYM</_MSYMDirectory>
 	</PropertyGroup>
+</Target>
+
+<Target Name="_CleanIntermediateIfNeeded"
+    DependsOnTargets="_CleanIntermediateIfXAVersionChanges;_CleanIntermediateIfNuGetsChange;_CleanIntermediateIfPackageNamingPolicyChanges">
+</Target>
+
+<Target Name="_CleanIntermediateIfXAVersionChanges">
+  <ReadXamarinAndroidVersion BuildPropertiesCache="$(_AndroidBuildPropertiesCache)">
+    <Output TaskParameter="XamarinAndroidVersion" PropertyName="_XAVersion" />
+  </ReadXamarinAndroidVersion>
+  <CallTarget
+      Targets="_CleanMonoAndroidIntermediateDir"
+      Condition=" '$(XamarinAndroidVersion)' != '$(_XAVersion)' And Exists ('$(_AndroidBuildPropertiesCache)') "
+  />
+  <MakeDir Directories="$(_AndroidStampDirectory)" Condition=" !Exists('$(_AndroidStampDirectory)') " />
 </Target>
 
 <Target Name="_BeforeCleanIntermediateIfNuGetsChange">
