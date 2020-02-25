@@ -52,6 +52,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="**\*.cs" />
+    <Compile Remove="obj\**\*.cs" />
     <Compile Remove="Tests\**\*.cs" />
     <Compile Remove="Java.Interop\JniLocationException.cs" />
   </ItemGroup>
