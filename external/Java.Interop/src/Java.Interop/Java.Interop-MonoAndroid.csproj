@@ -14,7 +14,6 @@
     <NoWarn>1591</NoWarn>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
-    <BaseIntermediateOutputPath>obj-MonoAndroid\</BaseIntermediateOutputPath>
     <LangVersion>8.0</LangVersion>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
@@ -49,11 +48,11 @@
     <NoStdLib Condition=" '$(XAInstallPrefix)' != '' ">true</NoStdLib>
     <OutputPath>..\..\bin\$(Configuration)Net45</OutputPath>
     <DocumentationFile>$(OutputPath)\Java.Interop.xml</DocumentationFile>
+    <BaseIntermediateOutputPath>..\..\bin\Build$(Configuration)\Java.Interop-MonoAndroid\</BaseIntermediateOutputPath>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="**\*.cs" />
     <Compile Remove="Tests\**\*.cs" />
-    <Compile Remove="obj*\**\*.cs" />
     <Compile Remove="Java.Interop\JniLocationException.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
