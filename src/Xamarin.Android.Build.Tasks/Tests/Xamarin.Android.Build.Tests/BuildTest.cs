@@ -953,7 +953,7 @@ namespace UnamedProject
 
 		[Test]
 		[TestCaseSource (nameof (AotChecks))]
-		[Category ("Minor")]
+		[Category ("SmokeTests")]
 		public void BuildAotApplicationAndÜmläüts (string supportedAbis, bool enableLLVM, bool expectedResult)
 		{
 			var path = Path.Combine ("temp", string.Format ("BuildAotApplication AndÜmläüts_{0}_{1}_{2}", supportedAbis, enableLLVM, expectedResult));
@@ -2537,6 +2537,7 @@ public class Test
 		}
 
 		[Test]
+		[Category ("SmokeTests")]
 		public void BuildApplicationWithSpacesInPath ([Values (true, false)] bool enableMultiDex, [Values ("dx", "d8")] string dexTool, [Values ("", "proguard", "r8")] string linkTool)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
