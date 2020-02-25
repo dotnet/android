@@ -6,7 +6,14 @@ steps:
 - template: run-installer.yaml
   parameters:
     provisionExtraArgs: ${{ parameters.provisionExtraArgs }}
-
+      
+- task: provisionator@2
+  inputs:
+    provisionator_uri: $(provisionator-uri)
+    github_token: $(GitHub.Token)
+    provisioning_script: build-tools\scripts\provision-ndk.csx
+    provisioning_extra_args: ${{ parameters.provisionExtraArgs }}
+    
 - task: UseDotNet@2
   displayName: install .NET Core $(DotNetCoreVersion)
   inputs:
