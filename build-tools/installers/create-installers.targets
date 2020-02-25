@@ -109,6 +109,7 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\libZipSharp.dll.config" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\Newtonsoft.Json.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\Newtonsoft.Json-LICENSE.md" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\System.Buffers.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\aprofutil.exe" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\aprofutil.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\cil-strip.exe" />
@@ -196,6 +197,7 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\manifestmerger.jar" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\protobuf-net.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\SgmlReaderDll.dll" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\System.Buffers.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Aapt.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Aapt2.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Analysis.targets" />
