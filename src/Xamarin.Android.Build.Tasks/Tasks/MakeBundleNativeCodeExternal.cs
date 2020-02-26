@@ -158,7 +158,7 @@ namespace Xamarin.Android.Tasks
 				proc.BeginErrorReadLine ();
 				proc.WaitForExit ();
 				if (proc.ExitCode != 0) {
-					Log.LogCodedError ("XA5102", "Conversion from assembly to native code failed. Exit code {0}", proc.ExitCode);
+					Log.LogCodedError ("XA5102", Properties.Resources.XA5102, proc.ExitCode);
 					return false;
 				}
 
@@ -198,7 +198,7 @@ namespace Xamarin.Android.Tasks
 				clb.AppendFileNameIfNotNull (Path.Combine (outpath, "temp.c"));
 				Log.LogDebugMessage ("[CC] " + compiler + " " + clb);
 				if (MonoAndroidHelper.RunProcess (compilerNoQuotes, clb.ToString (), OnCcOutputData,  OnCcErrorData) != 0) {
-					Log.LogCodedError ("XA5103", "NDK C compiler resulted in an error. Exit code {0}", proc.ExitCode);
+					Log.LogCodedError ("XA5103", Properties.Resources.XA5103, proc.ExitCode);
 					return false;
 				}
 
@@ -224,7 +224,7 @@ namespace Xamarin.Android.Tasks
 				string ld = NdkUtil.GetNdkTool (AndroidNdkDirectory, arch, "ld", level);
 				Log.LogMessage (MessageImportance.Normal, "[LD] " + ld + " " + clb);
 				if (MonoAndroidHelper.RunProcess (ld, clb.ToString (), OnLdOutputData,  OnLdErrorData) != 0) {
-					Log.LogCodedError ("XA5201", "NDK Linker resulted in an error. Exit code {0}", proc.ExitCode);
+					Log.LogCodedError ("XA5201", Properties.Resources.XA5201, proc.ExitCode);
 					return false;
 				}
 				results.Add (new TaskItem (Path.Combine (outpath, "libmonodroid_bundle_app.so")));

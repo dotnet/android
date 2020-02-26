@@ -29,7 +29,7 @@ namespace Xamarin.Android.Build.Tests {
 		[TestCase (null)]
 		[TestCase ("")]
 		[TestCase ("DoesNotExist")]
-		public void XA5102AndroidNdkNotFound (string androidNdkDirectory)
+		public void XA5104AndroidNdkNotFound (string androidNdkDirectory)
 		{
 			var task1 = new MakeBundleNativeCodeExternal {
 				BuildEngine = engine,
@@ -43,7 +43,7 @@ namespace Xamarin.Android.Build.Tests {
 
 			Assert.IsFalse (task1.Execute (), "Task should fail!");
 			BuildErrorEventArgs error1 = errors [0];
-			Assert.AreEqual ("XA5102", error1.Code);
+			Assert.AreEqual ("XA5104", error1.Code);
 			StringAssert.Contains (" NDK ", error1.Message);
 			StringAssert.Contains ("AndroidNdkDirectory", error1.Message);
 			StringAssert.Contains ("SDK Manager", error1.Message);
