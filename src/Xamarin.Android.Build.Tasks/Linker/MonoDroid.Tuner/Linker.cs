@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Xml.XPath;
+using Java.Interop.Tools.Cecil;
 using Mono.Linker;
 using Mono.Linker.Steps;
 using Mono.Cecil.Mdb;
@@ -59,10 +60,11 @@ namespace MonoDroid.Tuner
 
 		static Pipeline CreatePipeline (LinkerOptions options)
 		{
+			var cache = new TypeDefinitionCache ();
 			var pipeline = new Pipeline ();
 
 			if (options.LinkNone) {
-				pipeline.AppendStep (new FixAbstractMethodsStep ());
+				pipeline.AppendStep (new FixAbstractMethodsStep (cache));
 				pipeline.AppendStep (new OutputStepWithTimestamps ());
 				return pipeline;
 			}
@@ -108,8 +110,8 @@ namespace MonoDroid.Tuner
 			pipeline.AppendStep (new RemoveResources (options.I18nAssemblies)); // remove collation tables
 			// end monodroid specific
 
-			pipeline.AppendStep (new FixAbstractMethodsStep ());
-			pipeline.AppendStep (new MonoDroidMarkStep ());
+			pipeline.AppendStep (new FixAbstractMethodsStep (cache));
+			pipeline.AppendStep (new MonoDroidMarkStep (cache));
 			pipeline.AppendStep (new SweepStep ());
 			pipeline.AppendStep (new CleanStep ());
 			// monodroid tuner steps

@@ -16,6 +16,12 @@ namespace MonoDroid.Tuner
 	{
 		const string ICustomMarshalerName = "System.Runtime.InteropServices.ICustomMarshaler";
 		HashSet<TypeDefinition> marshalTypes = new HashSet<TypeDefinition> ();
+		readonly TypeDefinitionCache cache;
+
+		public MonoDroidMarkStep (TypeDefinitionCache cache)
+		{
+			this.cache = cache;
+		}
 
 		public override void Process (LinkContext context)
 		{
@@ -421,7 +427,7 @@ namespace MonoDroid.Tuner
 			if (!method.TryGetRegisterMember (out member, out nativeMethod, out signature)) {
 				if (PreserveJniMarshalMethods () &&
 				    method.DeclaringType.GetMarshalMethodsType () != null &&
-				    method.TryGetBaseOrInterfaceRegisterMember (out member, out nativeMethod, out signature)) {
+				    method.TryGetBaseOrInterfaceRegisterMember (cache, out member, out nativeMethod, out signature)) {
 					preserveJniMarshalMethodOnly = true;
 				} else {
 					return;
