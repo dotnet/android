@@ -19,6 +19,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Category ("SmokeTests")]
 		public void BundledWearApp ()
 		{
 			var target = "_UpdateAndroidResgen";

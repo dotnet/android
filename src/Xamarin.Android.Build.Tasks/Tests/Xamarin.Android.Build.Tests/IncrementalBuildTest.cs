@@ -343,6 +343,7 @@ namespace Lib2
 
 		//https://github.com/xamarin/xamarin-android/issues/2247
 		[Test]
+		[Category ("SmokeTests")]
 		public void AppProjectTargetsDoNotBreak ()
 		{
 			var targets = new List<string> {
@@ -459,6 +460,7 @@ namespace Lib2
 		}
 
 		[Test]
+		[Category ("SmokeTests")]
 		public void ProduceReferenceAssembly ()
 		{
 			var path = Path.Combine ("temp", TestName);

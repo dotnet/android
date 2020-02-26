@@ -657,6 +657,7 @@ public class TestActivity2 : FragmentActivity {
 		}
 
 		[Test]
+		[Category ("SmokeTests")]
 		public void AllActivityAttributeProperties ([Values ("legacy", "manifestmerger.jar")] string manifestMerger)
 		{
 			string expectedOutput = manifestMerger == "legacy" ?
