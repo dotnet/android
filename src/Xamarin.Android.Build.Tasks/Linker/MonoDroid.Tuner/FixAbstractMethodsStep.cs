@@ -17,11 +17,17 @@ namespace MonoDroid.Tuner
 	/// </summary>
 	public class FixAbstractMethodsStep : BaseStep
 	{
+		readonly TypeDefinitionCache cache;
+
+		public FixAbstractMethodsStep (TypeDefinitionCache cache)
+		{
+			this.cache = cache;
+		}
+
 		protected override void ProcessAssembly (AssemblyDefinition assembly)
 		{
 			if (!Annotations.HasAction (assembly))
 				Annotations.SetAction (assembly, AssemblyAction.Skip);
-
 
 			if (IsProductOrSdkAssembly (assembly))
 				return;
@@ -87,7 +93,7 @@ namespace MonoDroid.Tuner
 
 		bool MightNeedFix (TypeDefinition type)
 		{
-			return !type.IsAbstract && type.IsSubclassOf ("Java.Lang.Object");
+			return !type.IsAbstract && type.IsSubclassOf ("Java.Lang.Object", cache);
 		}
 
 		static bool CompareTypes (TypeReference iType, TypeReference tType)
@@ -196,7 +202,7 @@ namespace MonoDroid.Tuner
 
 			bool rv = false;
 			List<MethodDefinition> typeMethods = new List<MethodDefinition> (type.Methods);
-			foreach (var baseType in type.GetBaseTypes ())
+			foreach (var baseType in type.GetBaseTypes (cache))
 				typeMethods.AddRange (baseType.Methods);
 
 			foreach (var ifaceInfo in type.Interfaces) {
