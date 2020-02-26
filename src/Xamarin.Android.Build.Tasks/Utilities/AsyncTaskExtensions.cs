@@ -84,7 +84,7 @@ namespace Xamarin.Android.Tasks
 
 		static void LogErrorAndCancel (AsyncTask asyncTask, Exception exc)
 		{
-			asyncTask.LogCodedError ("XA0000", "Unhandled exception: {0}", exc);
+			asyncTask.LogCodedError ("XA0000", Properties.Resources.XA0000_Exception, exc);
 			asyncTask.Cancel ();
 		}
 

@@ -125,10 +125,37 @@
     <value>Invalid file name: It must contain only {0}.</value>
     <comment>{0} - The regular expression that the file name must match</comment>
   </data>
+  <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
+    <value>Could not determine API level for $(TargetFrameworkVersion) of '{0}'.</value>
+    <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
+{0} - The current value of $(TargetFrameworkVersion)</comment>
+  </data>
+  <data name="XA0000_API_or_TargetFrameworkVersion_Fail" xml:space="preserve">
+    <value>Could not determine $(AndroidApiLevel) or $(TargetFrameworkVersion); should not be reached.</value>
+    <comment>The following are literal names and should not be translated: $(AndroidApiLevel), $(TargetFrameworkVersion)
+In this message, the phrase "should not be reached" means that this error message is not expected to appear in normal usage.</comment>
+  </data>
+  <data name="XA0000_Exception" xml:space="preserve">
+    <value>Unhandled exception: {0}</value>
+    <comment>{0} - The exception message of the associated exception</comment>
+  </data>
+  <data name="XA0000_TargetFrameworkVersion_for_API" xml:space="preserve">
+    <value>Could not determine $(TargetFrameworkVersion) for API level '{0}.'</value>
+    <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
+{0} - The API level number</comment>
+  </data>
+  <data name="XA0001" xml:space="preserve">
+    <value>Unsupported or invalid $(TargetFrameworkVersion) value of '{0}'. Please update your Project Options.</value>
+    <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)</comment>
+  </data>
   <data name="XA0100" xml:space="preserve">
     <value>EmbeddedNativeLibrary '{0}' is invalid in Android Application projects. Please use AndroidNativeLibrary instead.</value>
     <comment>The following are literal names and should not be translated: EmbeddedNativeLibrary, AndroidNativeLibrary
 {0} - The library name.</comment>
+  </data>
+  <data name="XA0104" xml:space="preserve">
+    <value>Invalid value for `$(AndroidSequencePointsMode)`: {0}</value>
+    <comment>The following are literal names and should not be translated: `$(AndroidSequencePointsMode)`</comment>
   </data>
   <data name="XA0107" xml:space="preserve">
     <value>{0} is a Reference Assembly.</value>
@@ -141,10 +168,29 @@
     <value>Could not get version from '{0}'. Defaulting to 1.0</value>
     <comment>{0} - The tool name</comment>
   </data>
+  <data name="XA0111" xml:space="preserve">
+    <value>Could not get the `aapt2` version. Disabling `aapt2` support. Please check it is installed correctly.</value>
+    <comment>The following are literal names and should not be translated: `aapt2`</comment>
+  </data>
+  <data name="XA0112" xml:space="preserve">
+    <value>`aapt2` is not installed. Disabling `aapt2` support. Please check it is installed correctly.</value>
+    <comment>The following are literal names and should not be translated: `aapt2`</comment>
+  </data>
+  <data name="XA0113" xml:space="preserve">
+    <value>Google Play requires that new applications and updates must use a TargetFrameworkVersion of v8.0 (API level 26) or above. You are currently targeting {0} (API level {1}).</value>
+    <comment>The following are literal names and should not be translated: TargetFrameworkVersion, v8.0
+{0} - The current value of TargetFrameworkVersion
+{1} - The corresponding API level number</comment>
+  </data>
   <data name="XA0116" xml:space="preserve">
     <value>Unable to find `EmbeddedResource` named `{0}`.</value>
     <comment>The following are literal names and should not be translated: EmbeddedResource
 {0} - The name of the missing resource</comment>
+  </data>
+  <data name="XA0117" xml:space="preserve">
+    <value>The TargetFrameworkVersion {0} is deprecated. Please update it to be v4.4 or higher.</value>
+    <comment>The following are literal names and should not be translated: TargetFrameworkVersion, v4.4
+{0} - The current value of TargetFrameworkVersion</comment>
   </data>
   <data name="XA0121" xml:space="preserve">
     <value>Assembly '{0}' is using '[assembly: {1}]', which is no longer supported. Use a newer version of this NuGet package or notify the library author.</value>

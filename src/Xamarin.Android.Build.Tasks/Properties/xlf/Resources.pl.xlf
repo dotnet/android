@@ -12,11 +12,44 @@
         <target state="new">Invalid file name: It must contain only {0}.</target>
         <note>{0} - The regular expression that the file name must match</note>
       </trans-unit>
+      <trans-unit id="XA0000_API_for_TargetFrameworkVersion">
+        <source>Could not determine API level for $(TargetFrameworkVersion) of '{0}'.</source>
+        <target state="new">Could not determine API level for $(TargetFrameworkVersion) of '{0}'.</target>
+        <note>The following are literal names and should not be translated: $(TargetFrameworkVersion)
+{0} - The current value of $(TargetFrameworkVersion)</note>
+      </trans-unit>
+      <trans-unit id="XA0000_API_or_TargetFrameworkVersion_Fail">
+        <source>Could not determine $(AndroidApiLevel) or $(TargetFrameworkVersion); should not be reached.</source>
+        <target state="new">Could not determine $(AndroidApiLevel) or $(TargetFrameworkVersion); should not be reached.</target>
+        <note>The following are literal names and should not be translated: $(AndroidApiLevel), $(TargetFrameworkVersion)
+In this message, the phrase "should not be reached" means that this error message is not expected to appear in normal usage.</note>
+      </trans-unit>
+      <trans-unit id="XA0000_Exception">
+        <source>Unhandled exception: {0}</source>
+        <target state="new">Unhandled exception: {0}</target>
+        <note>{0} - The exception message of the associated exception</note>
+      </trans-unit>
+      <trans-unit id="XA0000_TargetFrameworkVersion_for_API">
+        <source>Could not determine $(TargetFrameworkVersion) for API level '{0}.'</source>
+        <target state="new">Could not determine $(TargetFrameworkVersion) for API level '{0}.'</target>
+        <note>The following are literal names and should not be translated: $(TargetFrameworkVersion)
+{0} - The API level number</note>
+      </trans-unit>
+      <trans-unit id="XA0001">
+        <source>Unsupported or invalid $(TargetFrameworkVersion) value of '{0}'. Please update your Project Options.</source>
+        <target state="new">Unsupported or invalid $(TargetFrameworkVersion) value of '{0}'. Please update your Project Options.</target>
+        <note>The following are literal names and should not be translated: $(TargetFrameworkVersion)</note>
+      </trans-unit>
       <trans-unit id="XA0100">
         <source>EmbeddedNativeLibrary '{0}' is invalid in Android Application projects. Please use AndroidNativeLibrary instead.</source>
         <target state="new">EmbeddedNativeLibrary '{0}' is invalid in Android Application projects. Please use AndroidNativeLibrary instead.</target>
         <note>The following are literal names and should not be translated: EmbeddedNativeLibrary, AndroidNativeLibrary
 {0} - The library name.</note>
+      </trans-unit>
+      <trans-unit id="XA0104">
+        <source>Invalid value for `$(AndroidSequencePointsMode)`: {0}</source>
+        <target state="new">Invalid value for `$(AndroidSequencePointsMode)`: {0}</target>
+        <note>The following are literal names and should not be translated: `$(AndroidSequencePointsMode)`</note>
       </trans-unit>
       <trans-unit id="XA0107">
         <source>{0} is a Reference Assembly.</source>
@@ -33,11 +66,34 @@
         <target state="new">Could not get version from '{0}'. Defaulting to 1.0</target>
         <note>{0} - The tool name</note>
       </trans-unit>
+      <trans-unit id="XA0111">
+        <source>Could not get the `aapt2` version. Disabling `aapt2` support. Please check it is installed correctly.</source>
+        <target state="new">Could not get the `aapt2` version. Disabling `aapt2` support. Please check it is installed correctly.</target>
+        <note>The following are literal names and should not be translated: `aapt2`</note>
+      </trans-unit>
+      <trans-unit id="XA0112">
+        <source>`aapt2` is not installed. Disabling `aapt2` support. Please check it is installed correctly.</source>
+        <target state="new">`aapt2` is not installed. Disabling `aapt2` support. Please check it is installed correctly.</target>
+        <note>The following are literal names and should not be translated: `aapt2`</note>
+      </trans-unit>
+      <trans-unit id="XA0113">
+        <source>Google Play requires that new applications and updates must use a TargetFrameworkVersion of v8.0 (API level 26) or above. You are currently targeting {0} (API level {1}).</source>
+        <target state="new">Google Play requires that new applications and updates must use a TargetFrameworkVersion of v8.0 (API level 26) or above. You are currently targeting {0} (API level {1}).</target>
+        <note>The following are literal names and should not be translated: TargetFrameworkVersion, v8.0
+{0} - The current value of TargetFrameworkVersion
+{1} - The corresponding API level number</note>
+      </trans-unit>
       <trans-unit id="XA0116">
         <source>Unable to find `EmbeddedResource` named `{0}`.</source>
         <target state="new">Unable to find `EmbeddedResource` named `{0}`.</target>
         <note>The following are literal names and should not be translated: EmbeddedResource
 {0} - The name of the missing resource</note>
+      </trans-unit>
+      <trans-unit id="XA0117">
+        <source>The TargetFrameworkVersion {0} is deprecated. Please update it to be v4.4 or higher.</source>
+        <target state="new">The TargetFrameworkVersion {0} is deprecated. Please update it to be v4.4 or higher.</target>
+        <note>The following are literal names and should not be translated: TargetFrameworkVersion, v4.4
+{0} - The current value of TargetFrameworkVersion</note>
       </trans-unit>
       <trans-unit id="XA0121">
         <source>Assembly '{0}' is using '[assembly: {1}]', which is no longer supported. Use a newer version of this NuGet package or notify the library author.</source>
