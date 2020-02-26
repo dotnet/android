@@ -29,7 +29,7 @@ resources:
   - repository: qa
     type: github
     name: xamarin/QualityAssurance
-    ref: refs/heads/master
+    ref: refs/heads/dont-delete-cache
     endpoint: xamarin
   - repository: samples
     type: github
