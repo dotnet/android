@@ -89,8 +89,10 @@ ms.date: 01/24/2020
 + XA3001: Could not AOT the assembly: {assembly}
 + XA3002: Invalid AOT mode: {mode}
 + XA3003: Could not strip IL of assembly: {assembly}
-+ XA3004: Could not compile native assembly file: {file}
-+ XA3005: Could not link native shared library: {library}
++ XA3004: Android NDK r10d is buggy and provides an incompatible x86_64 libm.so.
++ XA3005: The detected Android NDK version is incompatible with the targeted LLVM configuration.
++ XA3006: Could not compile native assembly file: {file}
++ XA3007: Could not link native shared library: {library}
 
 ## XA4xxx: Code generation
 

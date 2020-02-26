@@ -215,10 +215,20 @@
     <comment>The abbreviation "IL" should not be translated.</comment>
   </data>
   <data name="XA3004" xml:space="preserve">
+    <value>Android NDK r10d is buggy and provides an incompatible x86_64 libm.so. See https://code.google.com/p/android/issues/detail?id=161422.</value>
+    <comment>The following are literal names and should not be translated: NDK, r10d, x86_64, libm.so
+"r10d" is the problematic version of the NDK. "x86_64" is the architecture of the libm.so file.</comment>
+  </data>
+  <data name="XA3005" xml:space="preserve">
+    <value>The detected Android NDK version is incompatible with the targeted LLVM configuration. Please upgrade to NDK r10d or newer.</value>
+    <comment>The following are literal names and should not be translated: NDK, LLVM, r10d
+"r10d" is the version of the NDK.</comment>
+  </data>
+  <data name="XA3006" xml:space="preserve">
     <value>Could not compile native assembly file: {0}</value>
     <comment>In this message, the term "assembly" means the low-level language that an assembler like `as` takes as input. (This is different from most of the other messages, where the term "assembly" means the file type that the C# compiler produces.)</comment>
   </data>
-  <data name="XA3005" xml:space="preserve">
+  <data name="XA3007" xml:space="preserve">
     <value>Could not link native shared library: {0}</value>
   </data>
   <data name="XA4209" xml:space="preserve">

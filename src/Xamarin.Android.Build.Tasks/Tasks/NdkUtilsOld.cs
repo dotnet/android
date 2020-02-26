@@ -31,15 +31,12 @@ namespace Xamarin.Android.Tasks
 			// NDK r10d is buggy and cannot link x86_64 ABI shared libraries because they are 32-bits.
 			// See https://code.google.com/p/android/issues/detail?id=161421
 			if (enableLLVM && ndkVersion.Version == 10 && ndkVersion.Revision == "d" && arch == AndroidTargetArch.X86_64) {
-				logError ("XA3004", "Android NDK r10d is buggy and provides an incompatible x86_64 libm.so. " +
-					"See https://code.google.com/p/android/issues/detail?id=161422.");
+				logError ("XA3004", Properties.Resources.XA3004);
 				return false;
 			}
 
 			if (enableLLVM && (ndkVersion.Version < 10 || (ndkVersion.Version == 10 && ndkVersion.Revision[0] < 'd'))) {
-				logError ("XA3005",
-					"The detected Android NDK version is incompatible with the targeted LLVM configuration, " +
-					"please upgrade to NDK r10d or newer.");
+				logError ("XA3005", Properties.Resources.XA3005);
 			}
 
 			return true;
