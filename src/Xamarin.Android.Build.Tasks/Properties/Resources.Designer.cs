@@ -349,6 +349,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to find //manifest/application/uses-library at path: {0}.
+        /// </summary>
+        internal static string XA4218 {
+            get {
+                return ResourceManager.GetString("XA4218", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Native library &apos;{0}&apos; will not be bundled because it has an unsupported ABI..
         /// </summary>
         internal static string XA4300 {
@@ -385,6 +394,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to ProGuard configuration file &apos;{0}&apos; was not found..
+        /// </summary>
+        internal static string XA4304 {
+            get {
+                return ResourceManager.GetString("XA4304", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Multidex is enabled, but `$(_AndroidMainDexListFile)` is empty..
         /// </summary>
         internal static string XA4305 {
@@ -408,6 +426,15 @@ namespace Xamarin.Android.Tasks.Properties {
         internal static string XA4306 {
             get {
                 return ResourceManager.GetString("XA4306", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid ProGuard configuration file. {0}.
+        /// </summary>
+        internal static string XA4307 {
+            get {
+                return ResourceManager.GetString("XA4307", resourceCulture);
             }
         }
         
