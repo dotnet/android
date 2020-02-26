@@ -1,6 +1,6 @@
 ﻿<!--
 ***********************************************************************************************
-Xamarin.Android.Common.Sdk.targets
+Xamarin.Android.Sdk.Common.targets
 
 WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and have
   created a backup copy.  Incorrect changes to this file will make it
@@ -26,8 +26,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.AppendCustomMetadataToItemGroup" AssemblyFile="$(XamarinAndroidBuildTasksAssembly)" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetAndroidPackageName" AssemblyFile="$(XamarinAndroidBuildTasksAssembly)" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ResolveSdks" AssemblyFile="$(XamarinAndroidBuildTasksAssembly)" />
-<UsingTask TaskName="Xamarin.Android.Tasks.ValidateJavaVersion" AssemblyFile="$(XamarinAndroidBuildTasksAssembly)" />
-<UsingTask TaskName="Xamarin.Android.Tasks.ResolveAndroidTooling" AssemblyFile="$(XamarinAndroidBuildTasksAssembly)" />
+<UsingTask TaskName="Xamarin.Android.Tasks.ValidateJavaVersion2" AssemblyFile="$(XamarinAndroidBuildTasksAssembly)" />
+<UsingTask TaskName="Xamarin.Android.Tasks.ResolveAndroidTooling2" AssemblyFile="$(XamarinAndroidBuildTasksAssembly)" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ResolveJdkJvmPath" AssemblyFile="$(XamarinAndroidBuildTasksAssembly)" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Aapt" AssemblyFile="$(XamarinAndroidBuildTasksAssembly)" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Aapt2Compile" AssemblyFile="$(XamarinAndroidBuildTasksAssembly)" />
@@ -93,7 +93,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.MonoSymbolicate" AssemblyFile="$(XamarinAndroidBuildTasksAssembly)" />
 <UsingTask TaskName="Xamarin.Android.Tasks.RemoveDirFixed" AssemblyFile="$(XamarinAndroidBuildTasksAssembly)" />
 <UsingTask TaskName="Xamarin.Android.Tasks.RemoveRegisterAttribute" AssemblyFile="$(XamarinAndroidBuildTasksAssembly)" />
-<UsingTask TaskName="Xamarin.Android.Tasks.ResolveAssemblies" AssemblyFile="$(XamarinAndroidBuildTasksAssembly)" />
+<UsingTask TaskName="Xamarin.Android.Tasks.ResolveAssemblies2" AssemblyFile="$(XamarinAndroidBuildTasksAssembly)" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ReadImportedLibrariesCache" AssemblyFile="$(XamarinAndroidBuildTasksAssembly)" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ReadAndroidManifest" AssemblyFile="$(XamarinAndroidBuildTasksAssembly)" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetExtraPackages" AssemblyFile="$(XamarinAndroidBuildTasksAssembly)" />
@@ -191,11 +191,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_XAMajorVersionNumber>1</_XAMajorVersionNumber>
 	<_XASupportsFastDev Condition=" Exists ('$(XamarinAndroidBuildToolsDirectory)Xamarin.Android.Common.Debugging.targets') ">True</_XASupportsFastDev>
 	<_XASupportsFastDev Condition=" '$(_XASupportsFastDev)' == '' ">False</_XASupportsFastDev>
-	<AndroidApplication Condition="'$(AndroidApplication)' == ''">false</AndroidApplication>
 	<AndroidUseSharedRuntime Condition=" '$(AndroidUseSharedRuntime)' == '' Or '$(_XASupportsFastDev)' == 'False' ">False</AndroidUseSharedRuntime>
 	<AndroidNeedsInternetPermission Condition="'$(AndroidNeedsInternetPermission)' == '' And '$(AndroidEmbedProfilers)' == ''">False</AndroidNeedsInternetPermission>
 	<AndroidNeedsInternetPermission Condition="'$(AndroidNeedsInternetPermission)' == '' And '$(AndroidEmbedProfilers)' != ''">True</AndroidNeedsInternetPermission>
-	<AndroidUseLatestPlatformSdk Condition="'$(AndroidUseLatestPlatformSdk)' == ''">False</AndroidUseLatestPlatformSdk>
 	<TargetFrameworkIdentifier Condition="'$(TargetFrameworkIdentifier)' == ''">MonoAndroid</TargetFrameworkIdentifier>
 	<MonoAndroidVersion>v$(_XAMajorVersionNumber).0</MonoAndroidVersion>
 	<AndroidUpdateResourceReferences Condition="'$(AndroidUpdateResourceReferences)' == ''">True</AndroidUpdateResourceReferences>
@@ -565,7 +563,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     _CreatePropertiesCache;
     _CheckProjectItems;
     _CheckForContent;
-    _CheckTargetFramework;
     _RemoveLegacyDesigner;
     _ValidateAndroidPackageProperties;
     $(BuildDependsOn);
@@ -587,7 +584,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     _CreateNativeLibraryArchive;
     _AddAndroidEnvironmentToCompile;
     _CheckForContent;
-    _CheckTargetFramework;
     _RemoveLegacyDesigner;
     _ValidateAndroidPackageProperties;
     $(BuildDependsOn);
@@ -746,21 +742,11 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		DependsOnTargets="$(_OnResolveMonoAndroidSdks)">
 </Target>
 
-<!--
-  NOTE:
-  This target runs during Restore, and there is no $(RestoreDependsOn) property.
-  There appears to be no other way to do this other than use BeforeTargets.
--->
-<Target Name="_SetLatestTargetFrameworkVersionForPackageReference"
-    Condition=" '$(AndroidUseLatestPlatformSdk)' == 'True' "
-    BeforeTargets="_GetRestoreTargetFrameworksOutput"
-    DependsOnTargets="_SetLatestTargetFrameworkVersion">
-</Target>
-
 <Target Name="_SetLatestTargetFrameworkVersion" DependsOnTargets="_ResolveSdks;_CreateAapt2VersionCache">
 </Target>
 
-<Target Name="_ResolveSdks">
+<!-- https://github.com/dotnet/sdk/blob/3c0344ff8129c0dbe78018fd56efedd0da7b3cf5/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.Sdk.FrameworkReferenceResolution.targets#L164 -->
+<Target Name="_ResolveSdks" DependsOnTargets="ResolveFrameworkReferences">
 	<PropertyGroup>
     <_AndroidAllowMissingSdkTooling Condition=" '$(_AndroidAllowMissingSdkTooling)' == '' ">False</_AndroidAllowMissingSdkTooling>
 	</PropertyGroup>
@@ -769,7 +755,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 			AndroidSdkPath="$(AndroidSdkDirectory)"
 			AndroidNdkPath="$(AndroidNdkDirectory)"
 			JavaSdkPath="$(JavaSdkDirectory)"
-			ReferenceAssemblyPaths="$(_XATargetFrameworkDirectories)">
+			ReferenceAssemblyPaths="@(ResolvedFrameworkReference->'%(TargetingPackPath)\data\')">
 		<Output TaskParameter="AndroidNdkPath"            PropertyName="AndroidNdkDirectory" Condition=" '$(AndroidNdkDirectory)' == '' " />
 		<Output TaskParameter="AndroidSdkPath"            PropertyName="AndroidSdkDirectory" Condition=" '$(AndroidSdkDirectory)' == '' " />
 		<Output TaskParameter="JavaSdkPath"               PropertyName="JavaSdkDirectory"    Condition=" '$(JavaSdkDirectory)' == '' " />
@@ -786,11 +772,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 			Condition=" '$(DesignTimeBuild)' != 'True' And '$(AndroidGenerateJniMarshalMethods)' == 'True' And '$(JdkJvmPath)' == '' ">
 		<Output TaskParameter="JdkJvmPath"                PropertyName="JdkJvmPath" />
 	</ResolveJdkJvmPath>
-	<ValidateJavaVersion
+	<ValidateJavaVersion2
 			Condition=" '$(DesignTimeBuild)' != 'True' Or '$(AndroidUseManagedDesignTimeResourceGenerator)' != 'True' "
 			ContinueOnError="$(_AndroidAllowMissingSdkTooling)"
-			TargetFrameworkVersion="$(TargetFrameworkVersion)"
-			AndroidSdkBuildToolsVersion="$(AndroidSdkBuildToolsVersion)"
 			JavaSdkPath="$(_JavaSdkDirectory)"
 			JavaToolExe="$(JavaToolExe)"
 			JavacToolExe="$(JavacToolExe)"
@@ -798,15 +782,11 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 			MinimumSupportedJavaVersion="$(MinimumSupportedJavaVersion)">
 		<Output TaskParameter="JdkVersion"                PropertyName="_JdkVersion" />
 		<Output TaskParameter="MinimumRequiredJdkVersion" PropertyName="_DefaultJdkVersion" />
-	</ValidateJavaVersion>
-	<ResolveAndroidTooling
+	</ValidateJavaVersion2>
+	<ResolveAndroidTooling2
 			ContinueOnError="$(_AndroidAllowMissingSdkTooling)"
-			TargetFrameworkVersion="$(TargetFrameworkVersion)"
-			AndroidApiLevel="$(AndroidApiLevel)"
-			AndroidApplication="$(AndroidApplication)"
 			AndroidSdkPath="$(_AndroidSdkDirectory)"
 			AndroidSdkBuildToolsVersion="$(AndroidSdkBuildToolsVersion)"
-			UseLatestAndroidPlatformSdk="$(AndroidUseLatestPlatformSdk)"
 			AndroidUseAapt2="$(AndroidUseAapt2)"
 			AotAssemblies="$(AotAssemblies)"
 			Aapt2ToolPath="$(Aapt2ToolPath)"
@@ -814,9 +794,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 			ProjectFilePath="$(MSBuildProjectFullPath)"			
 			LintToolPath="$(LintToolPath)"
 			ZipAlignPath="$(ZipAlignToolPath)">
-		<Output TaskParameter="TargetFrameworkVersion"      PropertyName="TargetFrameworkVersion" />
-		<Output TaskParameter="AndroidApiLevel"             PropertyName="_AndroidApiLevel"            Condition="'$(_AndroidApiLevel)' == ''" />
-		<Output TaskParameter="AndroidApiLevelName"         PropertyName="_AndroidApiLevelName" />
 		<Output TaskParameter="AndroidSdkBuildToolsPath"    PropertyName="AndroidSdkBuildToolsPath"    Condition="'$(AndroidSdkBuildToolsPath)' == ''" />
 		<Output TaskParameter="AndroidSdkBuildToolsBinPath" PropertyName="AndroidSdkBuildToolsBinPath" Condition="'$(AndroidSdkBuildToolsBinPath)' == ''" />
 		<Output TaskParameter="ZipAlignPath"                PropertyName="ZipAlignToolPath"            Condition="'$(ZipAlignToolPath)' == ''" />
@@ -827,23 +804,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		<Output TaskParameter="AndroidUseAapt2"             PropertyName="_AndroidUseAapt2" />
 		<Output TaskParameter="Aapt2Version"                PropertyName="_Aapt2Version" />
 		<Output TaskParameter="Aapt2ToolPath"               PropertyName="Aapt2ToolPath"               Condition="'$(Aapt2ToolPath)' == ''" />
-	</ResolveAndroidTooling>
-	<CreateProperty Value="$(TargetFrameworkIdentifier),Version=$(TargetFrameworkVersion),Profile=$(TargetFrameworkProfile)">
-		<Output TaskParameter="Value" PropertyName="TargetFrameworkMoniker"
-				Condition="'$(TargetFrameworkProfile)' != ''"
-		/>
-		<Output TaskParameter="Value" PropertyName="NuGetTargetMoniker"
-				Condition="'$(TargetFrameworkProfile)' != ''"
-		/>
-	</CreateProperty>
-	<CreateProperty Value="$(TargetFrameworkIdentifier),Version=$(TargetFrameworkVersion)">
-		<Output TaskParameter="Value" PropertyName="TargetFrameworkMoniker"
-				Condition="'$(TargetFrameworkProfile)' == ''"
-		/>
-		<Output TaskParameter="Value" PropertyName="NuGetTargetMoniker"
-				Condition="'$(TargetFrameworkProfile)' == ''"
-		/>
-	</CreateProperty>
+	</ResolveAndroidTooling2>
 	<CreateProperty Value="$(IntermediateOutputPath)$(TargetFrameworkMoniker).AssemblyAttributes$(DefaultLanguageSourceExtension)">
 		<Output TaskParameter="Value" PropertyName="TargetFrameworkMonikerAssemblyAttributesPath"
 				Condition="'$(TargetFrameworkMoniker)' != ''"
@@ -851,7 +812,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	</CreateProperty>
 	<ItemGroup>
 		<FileWrites Include="$(TargetFrameworkMonikerAssemblyAttributesPath)" />
-		<Reference Include="$(_JavaInteropReferences)" />
 	</ItemGroup>
 	<Warning Code="XA0110"
 		Text="Disabling %24(AndroidExplicitCrunch) as it is not supported by `aapt2`. If you wish to use %24(AndroidExplicitCrunch) please set %24(AndroidUseAapt2) to false."
@@ -904,7 +864,6 @@ because xbuild doesn't support framework reference assemblies.
 
 	<Message Text="MonoAndroid Tools: $(_MonoAndroidToolsDirectory)"/>
 	<Message Text="Android Platform API level: $(_AndroidApiLevel)"/>
-	<Message Text="TargetFrameworkVersion: $(TargetFrameworkVersion)"/>
 	<Message Text="Android NDK: $(_AndroidNdkDirectory)"/>
 	<Message Text="Android SDK: $(_AndroidSdkDirectory)"/>
 	<Message Text="Android SDK Build Tools: $(AndroidSdkBuildToolsPath)"/>
@@ -1058,10 +1017,6 @@ because xbuild doesn't support framework reference assemblies.
       EmbeddedNativeLibraries="@(EmbeddedNativeLibrary)" />
 </Target>
 
-<Target Name="_CheckTargetFramework">
-	<Warning Code="XA0109" Text="Unsupported or invalid %24(TargetFrameworkVersion) value of 'v4.5'. Please update your Project Options." Condition=" '$(TargetFrameworkVersion)' == 'v4.5' "/> 
-</Target>
-
 <Target Name="_CheckForContent">
 	<LogWarningsForFiles
 		Files="@(Content)"
@@ -1180,8 +1135,6 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="AndroidSequencePointsMode=$(_AndroidSequencePointsMode)" />
 		<_PropertyCacheItems Include="XamarinAndroidVersion=$(XamarinAndroidVersion)" />
 		<_PropertyCacheItems Include="MonoSymbolArchive=$(MonoSymbolArchive)" />
-		<_PropertyCacheItems Include="AndroidUseLatestPlatformSdk=$(AndroidUseLatestPlatformSdk)" />
-		<_PropertyCacheItems Include="TargetFrameworkVersion=$(TargetFrameworkVersion)" />
 		<_PropertyCacheItems Include="AndroidCreatePackagePerAbi=$(AndroidCreatePackagePerAbi)" />
 		<_PropertyCacheItems Include="AndroidGenerateJniMarshalMethods=$(AndroidGenerateJniMarshalMethods)" />
 		<_PropertyCacheItems Include="OS=$(OS)" />
@@ -1682,21 +1635,20 @@ because xbuild doesn't support framework reference assemblies.
 				Condition="'%(ReferencePath.ResolvedFrom)' != 'ImplicitlyExpandDesignTimeFacades' And Exists('%(_ReferencePath.Identity)') "/>
 	</ItemGroup>
 	<!-- Find all the assemblies this app requires -->
-	<ResolveAssemblies
+	<ResolveAssemblies2
 		Assemblies="@(FilteredAssemblies)"
 		I18nAssemblies="$(MandroidI18n)"
 		LinkMode="$(AndroidLinkMode)"
 		ProjectFile="$(MSBuildProjectFullPath)"
-		TargetFrameworkVersion="$(TargetFrameworkVersion)"
 		ProjectAssetFile="$(ProjectLockFile)"
-		TargetMoniker="$(NuGetTargetMoniker)"
-		ReferenceAssembliesDirectory="$(TargetFrameworkDirectory)">
+		TargetMoniker="$(TargetFrameworkMoniker)"
+		ReferenceAssembliesDirectories="@(ResolvedFrameworkReference->'%(TargetingPackPath)\ref\$(TargetFramework)')">
       <Output TaskParameter="ResolvedAssemblies" ItemName="ResolvedAssemblies" />
       <Output TaskParameter="ResolvedUserAssemblies" ItemName="ResolvedUserAssemblies" />
       <Output TaskParameter="ResolvedFrameworkAssemblies" ItemName="ResolvedFrameworkAssemblies" />
       <Output TaskParameter="ResolvedSymbols" ItemName="ResolvedSymbols" />
       <Output TaskParameter="ResolvedDoNotPackageAttributes" ItemName="_ResolvedDoNotPackageAttributes" />
-  </ResolveAssemblies>
+  </ResolveAssemblies2>
   <Hash ItemsToHash="@(ResolvedAssemblies)">
     <Output TaskParameter="HashResult" PropertyName="_ResolvedUserAssembliesHash" />
   </Hash>

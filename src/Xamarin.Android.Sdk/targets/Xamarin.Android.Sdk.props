@@ -12,6 +12,11 @@
     <!-- Enable nuget package conflict resolution -->
     <ResolveAssemblyConflicts>true</ResolveAssemblyConflicts>
     <_AndroidResourceDesigner>Resource.designer.cs</_AndroidResourceDesigner>
+    <!-- TODO Fix duplicates in Xamarin.Android.Common.props, and generate Android API related info -->
+    <LatestSupportedJavaVersion Condition="'$(LatestSupportedJavaVersion)' == ''">1.8.0</LatestSupportedJavaVersion>
+    <MinimumSupportedJavaVersion Condition="'$(MinimumSupportedJavaVersion)' == ''">1.8.0</MinimumSupportedJavaVersion>
+    <_AndroidApiLevel>29</_AndroidApiLevel>
+    <_AndroidApiLevelName>Android 10</_AndroidApiLevelName>
   </PropertyGroup>
 
   <!-- User-facing configuration-agnostic defaults -->

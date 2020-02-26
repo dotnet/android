@@ -35,6 +35,10 @@
 
     <!-- Hardcode pack assemblies for now -->
     <ItemGroup>
+      <Content Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild-frameworks\MonoAndroid\v10.0\AndroidApiInfo.xml">
+        <Pack>true</Pack>
+        <PackagePath>data\</PackagePath>
+      </Content>
       <Content Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild-frameworks\MonoAndroid\v10.0\Mono.Android.dll" >
         <Pack>true</Pack>
         <PackagePath>ref\netcoreapp5.0</PackagePath>
@@ -45,6 +49,8 @@
         <PackagePath>ref\netcoreapp5.0</PackagePath>
         <TargetPath>%(PackagePath)</TargetPath>
       </Content>
+      <FrameworkListFileClass Include="Mono.Android.dll" Profile="Android" />
+      <FrameworkListFileClass Include="Java.Interop.dll" Profile="Android" />
     </ItemGroup>
   
     <PropertyGroup>
@@ -63,6 +69,7 @@
     <!-- https://github.com/dotnet/arcade/blob/1924d7ea148c9f26ca3d82b60f0a775a5389ed22/src/Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk/src/CreateFrameworkListFile.cs -->
     <CreateFrameworkListFile
       Files="@(Content)"
+      FileClassifications="@(FrameworkListFileClass)"
       TargetFile="$(FrameworkListFile)"
       TargetFilePrefixes="ref"
       RootAttributes="@(FrameworkListRootAttributes)" />
@@ -72,6 +79,7 @@
         <Pack>true</Pack>
         <PackagePath>data\</PackagePath>
       </Content>
+
     </ItemGroup>
 
   </Target>
