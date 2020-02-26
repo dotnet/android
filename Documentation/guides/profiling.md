@@ -481,7 +481,7 @@ can show the top 10 most expensive tasks:
 
 It also has a timeline view:
 
-![MSBuild Log Viewer Timeline](..\images\msbuildlog.png)
+![MSBuild Log Viewer Timeline](../images/msbuildlog.png)
 
 [msbuildlog]: http://msbuildlog.com/
 [msbuild_bl]: https://github.com/microsoft/msbuild/blob/master/documentation/wiki/Binary-Log.md
