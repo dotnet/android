@@ -51,7 +51,7 @@ namespace Xamarin.Android.Tasks
 						if (File.Exists (path)) {
 							libraries.Add (new TaskItem (path));
 						} else {
-							Log.LogWarningForXmlNode ("XA4218", ManifestFile, attribute, "Unable to find //manifest/application/uses-library at path: {0}", path);
+							Log.LogWarningForXmlNode ("XA4218", ManifestFile, attribute, Properties.Resources.XA4218, path);
 						}
 					}
 				}

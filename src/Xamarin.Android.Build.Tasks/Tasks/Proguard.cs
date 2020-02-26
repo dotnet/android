@@ -140,7 +140,7 @@ namespace Xamarin.Android.Tasks
 				if (File.Exists (file))
 					cmd.AppendSwitchUnquotedIfNotNull ("-include ", $"{enclosingChar}'{file}'{enclosingChar}");
 				else
-					Log.LogCodedWarning ("XA4304", file, 0, "Proguard configuration file '{0}' was not found.", file);
+					Log.LogCodedWarning ("XA4304", file, 0, Properties.Resources.XA4304, file);
 			}
 
 			var injars = new List<string> ();
@@ -188,7 +188,7 @@ namespace Xamarin.Android.Tasks
 				errorText.Clear ();
 				foreach (var line in errorLines)
 					errorText.Append (line);
-				Log.LogCodedError ($"XA4307", $"Invalid ProGuard configuration file. {errorText}");
+				Log.LogCodedError ($"XA4307", Properties.Resources.XA4307, errorText);
 				return !Log.HasLoggedErrors;
 			}
 			return base.HandleTaskExecutionErrors ();
