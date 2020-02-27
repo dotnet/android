@@ -293,6 +293,7 @@ stages:
           /t:RunJavaInteropTests
           /p:TestAssembly="bin\Test$(XA.Build.Configuration)\generator-Tests.dll;bin\Test$(XA.Build.Configuration)\Java.Interop.Tools.JavaCallableWrappers-Tests.dll;bin\Test$(XA.Build.Configuration)\logcat-parse-Tests.dll;bin\Test$(XA.Build.Configuration)\Xamarin.Android.Tools.ApiXmlAdjuster-Tests.dll;bin\Test$(XA.Build.Configuration)\Xamarin.Android.Tools.Bytecode-Tests.dll"
           /bl:$(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\msbuild-run-ji-tests.binlog
+      continueOnError: True
 
     - task: PublishTestResults@2
       displayName: publish test results
@@ -300,7 +301,6 @@ stages:
         testResultsFormat: NUnit
         testResultsFiles: TestResult-*.xml
         testRunTitle: Java Interop Tests - Windows Build Tree
-      condition: succeededOrFailed()
 
     - template: yaml-templates\run-nunit-tests.yaml
       parameters:
@@ -333,6 +333,8 @@ stages:
     - template: yaml-templates\upload-results.yaml
       parameters:
         artifactName: Build Results - Windows
+
+    - template: yaml-templates\fail-on-issue.yaml
 
 - stage: finalize_installers
   displayName: Finalize Installers
@@ -463,6 +465,7 @@ stages:
           /restore
           /t:Build
           /bl:$(System.DefaultWorkingDirectory)/bin/Test$(ApkTestConfiguration)/build-check-boot-times.binlog
+      continueOnError: true
 
     - task: MSBuild@1
       displayName: Run check-boot-times
@@ -472,6 +475,7 @@ stages:
         msbuildArguments: >
           /t:CheckBootTimes
           /bl:$(System.DefaultWorkingDirectory)/bin/Test$(ApkTestConfiguration)/run-check-boot-times.binlog
+      continueOnError: true
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -639,6 +643,8 @@ stages:
         configuration: $(ApkTestConfiguration)
         artifactName: Test Results - APK Instrumentation - macOS
 
+    - template: yaml-templates/fail-on-issue.yaml
+
   # Check - "Xamarin.Android (Test BCL With Emulator - macOS)"
   - job: mac_bcl_tests
     displayName: BCL With Emulator - macOS
@@ -674,7 +680,6 @@ stages:
         testResultsFormat: NUnit
         testResultsFiles: TestResult-Xamarin.Android.Bcl_Tests.xunit-$(XA.Build.Configuration).xml
         testRunTitle: Xamarin.Android.Bcl-Tests-NUnit
-      condition: succeededOrFailed()
 
     - task: MSBuild@1
       displayName: shut down emulator
@@ -689,6 +694,8 @@ stages:
     - template: yaml-templates/upload-results.yaml
       parameters:
         artifactName: Test Results - BCL With Emulator - macOS
+
+    - template: yaml-templates/fail-on-issue.yaml
 
   # Check - "Xamarin.Android (Test MSBuild - macOS)"
   - job: mac_msbuild_tests
@@ -745,6 +752,8 @@ stages:
       parameters:
         artifactName: Test Results - MSBuild - macOS
 
+    - template: yaml-templates/fail-on-issue.yaml
+
   # Check - "Xamarin.Android (Test MSBuild - Windows)"
   - job: win_msbuild_tests
     displayName: MSBuild - Windows
@@ -791,6 +800,8 @@ stages:
     - template: yaml-templates\upload-results.yaml
       parameters:
         artifactName: Test Results - MSBuild - Windows
+
+    - template: yaml-templates\fail-on-issue.yaml
 
   # Check - "Xamarin.Android (Test MSBuild With Emulator - macOS)"
   - job: mac_msbuilddevice_tests
@@ -843,6 +854,8 @@ stages:
     - template: yaml-templates/upload-results.yaml
       parameters:
         artifactName: Test Results - MSBuild With Emulator - macOS
+
+    - template: yaml-templates/fail-on-issue.yaml
 
   # Check - "Xamarin.Android (Test Designer - macOS)"
   - job: designer_integration_mac

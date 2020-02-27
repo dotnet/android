@@ -8,7 +8,7 @@ parameters:
   packageType: Apk
   artifactName: ""
   artifactFolder: ""
-  condition: succeededOrFailed()
+  condition: succeeded()
 
 steps:
 - task: MSBuild@1
@@ -21,6 +21,7 @@ steps:
       /bl:$(System.DefaultWorkingDirectory)/bin/Test${{ parameters.configuration }}/run${{ parameters.testName }}.binlog
       ${{ parameters.extraBuildArgs }}
   condition: ${{ parameters.condition }}
+  continueOnError: true
 
 - script: |
     SOURCE=$(System.DefaultWorkingDirectory)/bin/Test${{ parameters.configuration }}/${{ parameters.artifactName }}
@@ -29,6 +30,7 @@ steps:
     cp "$SOURCE" "$DEST"
   displayName: copy apk/aab
   condition: ${{ parameters.condition }}
+  continueOnError: true
 
 - task: PublishTestResults@2
   displayName: publish ${{ parameters.testName }} results

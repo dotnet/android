@@ -47,3 +47,5 @@ jobs:
     - template: upload-results.yaml
       parameters:
         artifactName: Test Results - TimeZoneInfo With Emulator - macOS - ${{ parameters.node_id }}
+
+    - template: fail-on-issue.yaml

@@ -5,7 +5,7 @@ parameters:
   testResultsFile: TestResult.xml
   testResultsFormat: NUnit
   nunitConsoleExtraArgs: ''
-  condition: succeededOrFailed()
+  condition: succeeded()
 
 steps:
 - powershell: |
@@ -16,6 +16,7 @@ steps:
     }
   displayName: run ${{ parameters.testRunTitle }}
   condition: ${{ parameters.condition }}
+  continueOnError: true
 
 - template: kill-processes.yaml
 

@@ -30,15 +30,15 @@ steps:
 
 - checkout: qa
   clean: true
-  fetchDepth: 1
+  fetchDepth: 10
 
 - checkout: samples
   clean: true
-  fetchDepth: 1
+  fetchDepth: 10
 
 - checkout: xfsamples
   clean: true
-  fetchDepth: 1
+  fetchDepth: 10
 
 - task: xamops.azdevex.provisionator-task.provisionator@2
   displayName: Provision Android Dependencies
@@ -76,7 +76,7 @@ steps:
       testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
       testRunTitle: Hello Tests on Device
       nunitConsoleExtraArgs: --where "cat == Hello"
-      condition: and(succeededOrFailed(), eq(variables['XA.Commercial.Build'], 'true'))
+      condition: and(succeeded(), eq(variables['XA.Commercial.Build'], 'true'))
 
   - template: run-nunit-tests.yaml
     parameters:
@@ -105,7 +105,7 @@ steps:
       testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
       testRunTitle: Fast Deploy Tests
       nunitConsoleExtraArgs: --where "cat == FastDevTests"
-      condition: and(succeededOrFailed(), eq(variables['XA.Commercial.Build'], 'true'))
+      condition: and(succeeded(), eq(variables['XA.Commercial.Build'], 'true'))
 
   - template: run-nunit-tests.yaml
     parameters:
@@ -113,7 +113,7 @@ steps:
       testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
       testRunTitle: Debug Tests
       nunitConsoleExtraArgs: --where "cat == DebuggerTests"
-      condition: and(succeededOrFailed(), eq(variables['XA.Commercial.Build'], 'true'))
+      condition: and(succeeded(), eq(variables['XA.Commercial.Build'], 'true'))
 
   - template: run-nunit-tests.yaml
     parameters:
@@ -214,3 +214,5 @@ steps:
       testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
       testRunTitle: Test Environment Cleanup
       nunitConsoleExtraArgs: --where "cat == XATestCleanUp"
+
+- template: fail-on-issue.yaml
