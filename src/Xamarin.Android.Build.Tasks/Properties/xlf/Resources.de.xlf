@@ -179,11 +179,23 @@ In this message, the phrase "should not be reached" means that this error messag
         <note>The abbreviation "IL" should not be translated.</note>
       </trans-unit>
       <trans-unit id="XA3004">
+        <source>Android NDK r10d is buggy and provides an incompatible x86_64 libm.so. See https://code.google.com/p/android/issues/detail?id=161422.</source>
+        <target state="new">Android NDK r10d is buggy and provides an incompatible x86_64 libm.so. See https://code.google.com/p/android/issues/detail?id=161422.</target>
+        <note>The following are literal names and should not be translated: NDK, r10d, x86_64, libm.so
+"r10d" is the problematic version of the NDK. "x86_64" is the architecture of the libm.so file.</note>
+      </trans-unit>
+      <trans-unit id="XA3005">
+        <source>The detected Android NDK version is incompatible with the targeted LLVM configuration. Please upgrade to NDK r10d or newer.</source>
+        <target state="new">The detected Android NDK version is incompatible with the targeted LLVM configuration. Please upgrade to NDK r10d or newer.</target>
+        <note>The following are literal names and should not be translated: NDK, LLVM, r10d
+"r10d" is the version of the NDK.</note>
+      </trans-unit>
+      <trans-unit id="XA3006">
         <source>Could not compile native assembly file: {0}</source>
         <target state="new">Could not compile native assembly file: {0}</target>
         <note>In this message, the term "assembly" means the low-level language that an assembler like `as` takes as input. (This is different from most of the other messages, where the term "assembly" means the file type that the C# compiler produces.)</note>
       </trans-unit>
-      <trans-unit id="XA3005">
+      <trans-unit id="XA3007">
         <source>Could not link native shared library: {0}</source>
         <target state="new">Could not link native shared library: {0}</target>
         <note />
