@@ -141,14 +141,12 @@ include build-tools/scripts/BuildEverything.mk
 
 # Must be after BuildEverything.mk - it uses variables defined there
 include build-tools/scripts/Packaging.mk
-include tests/api-compatibility/api-compatibility.mk
 
 run-all-tests:
 	@echo "PRINTING MONO VERSION"
 	mono --version
 	_r=0 ; \
 	$(call MSBUILD_BINLOG,run-all-tests,,Test) $(TEST_TARGETS) /t:RunAllTests || _r=$$? ; \
-	$(MAKE) run-api-compatibility-tests || _r=$$?; \
 	exit $$_r
 
 clean:
