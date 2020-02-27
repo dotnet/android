@@ -307,15 +307,6 @@ timestamps {
             }
         }
 
-        utils.stageWithTimeout('run API compatibility tests', 60, 'MINUTES', XADir, false) {
-            echo "running performance tests"
-
-            commandStatus = sh (script: "make run-api-compatibility-tests CONFIGURATION=${env.BuildFlavor} V=1", returnStatus: true)
-            if (commandStatus != 0) {
-                error "run-api-compatibility-tests FAILED, status: ${commandStatus}"     // Ensure stage is labeled as 'failed' and red failure indicator is displayed in Jenkins pipeline steps view
-            }
-        }
-
         utils.stageWithTimeout('publish test error logs to Azure', 30, 'MINUTES', '', false, 3) {  // Typically takes less than a minute, but provide ample time in situations where logs may be quite large
             if (skipTest) {
                 echo "Skipping 'publish test error logs' stage. Clear the SkipTest variable setting to build and run tests"
