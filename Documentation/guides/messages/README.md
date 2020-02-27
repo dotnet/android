@@ -50,7 +50,7 @@ ms.date: 01/24/2020
 + [XA0101](xa0101.md): warning XA0101: @(Content) build action is not supported.
 + [XA0102](xa0102.md): Generic `lint` Warning.
 + [XA0103](xa0103.md): Generic `lint` Error.
-+ XA0104: Invalid Sequence Point mode.
++ XA0104: Invalid value for \`$(AndroidSequencePointsMode)\`
 + [XA0105](xa0105.md): The $(TargetFrameworkVersion) for a dll is greater than the $(TargetFrameworkVersion) for your project.
 + [XA0107](xa0107.md): `{Assmebly}` is a Reference Assembly.
 + [XA0108](xa0108.md): Could not get version from `lint`.

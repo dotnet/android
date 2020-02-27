@@ -79,11 +79,65 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Could not determine API level for $(TargetFrameworkVersion) of &apos;{0}&apos;..
+        /// </summary>
+        internal static string XA0000_API_for_TargetFrameworkVersion {
+            get {
+                return ResourceManager.GetString("XA0000_API_for_TargetFrameworkVersion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not determine $(AndroidApiLevel) or $(TargetFrameworkVersion); should not be reached..
+        /// </summary>
+        internal static string XA0000_API_or_TargetFrameworkVersion_Fail {
+            get {
+                return ResourceManager.GetString("XA0000_API_or_TargetFrameworkVersion_Fail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unhandled exception: {0}.
+        /// </summary>
+        internal static string XA0000_Exception {
+            get {
+                return ResourceManager.GetString("XA0000_Exception", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not determine $(TargetFrameworkVersion) for API level &apos;{0}.&apos;.
+        /// </summary>
+        internal static string XA0000_TargetFrameworkVersion_for_API {
+            get {
+                return ResourceManager.GetString("XA0000_TargetFrameworkVersion_for_API", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unsupported or invalid $(TargetFrameworkVersion) value of &apos;{0}&apos;. Please update your Project Options..
+        /// </summary>
+        internal static string XA0001 {
+            get {
+                return ResourceManager.GetString("XA0001", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to EmbeddedNativeLibrary &apos;{0}&apos; is invalid in Android Application projects. Please use AndroidNativeLibrary instead..
         /// </summary>
         internal static string XA0100 {
             get {
                 return ResourceManager.GetString("XA0100", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid value for `$(AndroidSequencePointsMode)`: {0}.
+        /// </summary>
+        internal static string XA0104 {
+            get {
+                return ResourceManager.GetString("XA0104", resourceCulture);
             }
         }
         
@@ -115,11 +169,47 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Could not get the `aapt2` version. Disabling `aapt2` support. Please check it is installed correctly..
+        /// </summary>
+        internal static string XA0111 {
+            get {
+                return ResourceManager.GetString("XA0111", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to `aapt2` is not installed. Disabling `aapt2` support. Please check it is installed correctly..
+        /// </summary>
+        internal static string XA0112 {
+            get {
+                return ResourceManager.GetString("XA0112", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Google Play requires that new applications and updates must use a TargetFrameworkVersion of v8.0 (API level 26) or above. You are currently targeting {0} (API level {1})..
+        /// </summary>
+        internal static string XA0113 {
+            get {
+                return ResourceManager.GetString("XA0113", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unable to find `EmbeddedResource` named `{0}`..
         /// </summary>
         internal static string XA0116 {
             get {
                 return ResourceManager.GetString("XA0116", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The TargetFrameworkVersion {0} is deprecated. Please update it to be v4.4 or higher..
+        /// </summary>
+        internal static string XA0117 {
+            get {
+                return ResourceManager.GetString("XA0117", resourceCulture);
             }
         }
         
