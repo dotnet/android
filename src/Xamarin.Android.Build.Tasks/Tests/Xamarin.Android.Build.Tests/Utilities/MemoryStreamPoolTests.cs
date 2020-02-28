@@ -1,13 +1,9 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 
-namespace Xamarin.Android.Build.Tests.Utilities
+namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
 	public class MemoryStreamPoolTests
@@ -46,6 +42,21 @@ namespace Xamarin.Android.Build.Tests.Utilities
 			var expected = pool.Rent ();
 			using (var writer = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 				writer.WriteLine ("foobar");
+			}
+			pool.Return (expected);
+
+			var actual = pool.Rent ();
+			Assert.AreSame (expected, actual);
+			Assert.AreEqual (0, actual.Length);
+		}
+
+		[Test]
+		public void CreateBinaryWriter ()
+		{
+			var pool = new MemoryStreamPool ();
+			var expected = pool.Rent ();
+			using (var writer = MemoryStreamPool.Shared.CreateBinaryWriter ()) {
+				writer.Write (42);
 			}
 			pool.Return (expected);
 

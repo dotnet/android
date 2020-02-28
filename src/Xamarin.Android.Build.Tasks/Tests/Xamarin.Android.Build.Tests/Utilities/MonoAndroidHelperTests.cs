@@ -165,7 +165,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void CopyIfStreamChanged_MemoryStreamPool ()
+		public void CopyIfStreamChanged_MemoryStreamPool_StreamWriter ()
 		{
 			var pool = new MemoryStreamPool ();
 			var expected = pool.Rent ();
@@ -173,6 +173,26 @@ namespace Xamarin.Android.Build.Tests
 
 			using (var writer = pool.CreateStreamWriter ()) {
 				writer.WriteLine ("bar");
+				writer.Flush ();
+
+				Assert.IsTrue (MonoAndroidHelper.CopyIfStreamChanged (writer.BaseStream, temp), "Should write on new file.");
+				FileAssert.Exists (temp);
+			}
+
+			var actual = pool.Rent ();
+			Assert.AreSame (expected, actual);
+			Assert.AreEqual (0, actual.Length);
+		}
+
+		[Test]
+		public void CopyIfStreamChanged_MemoryStreamPool_BinaryWriter ()
+		{
+			var pool = new MemoryStreamPool ();
+			var expected = pool.Rent ();
+			pool.Return (expected);
+
+			using (var writer = pool.CreateBinaryWriter ()) {
+				writer.Write (42);
 				writer.Flush ();
 
 				Assert.IsTrue (MonoAndroidHelper.CopyIfStreamChanged (writer.BaseStream, temp), "Should write on new file.");
