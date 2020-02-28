@@ -24,8 +24,13 @@
   <ItemGroup>
     <KnownFrameworkReference Include="Xamarin.Android.App"
                             TargetFramework="netcoreapp5.0"
+                            RuntimeFrameworkName="Xamarin.Android.App"
+                            DefaultRuntimeFrameworkVersion="0.0.1"
+                            LatestRuntimeFrameworkVersion="0.0.1"
                             TargetingPackName="Xamarin.Android.App.Ref"
                             TargetingPackVersion="0.0.1"
+                            RuntimePackNamePatterns="Xamarin.Android.App.Runtime.**RID**"
+                            RuntimePackRuntimeIdentifiers="android-arm;android-arm64;android-x64;android-x86"
                             Profile="Android"
                             />
   </ItemGroup>

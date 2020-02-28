@@ -1,0 +1,56 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AndroidRID Condition="'$(AndroidRID)' == ''">android-arm64</AndroidRID>
+    <AndroidABI Condition="'$(AndroidABI)' == ''">arm64-v8a</AndroidABI>
+    <PackageId>Xamarin.Android.App.Runtime.$(AndroidRID)</PackageId>
+    <PackageVersion>0.0.1</PackageVersion>
+    <Authors>Microsoft</Authors>
+    <Description>Xamarin.Android runtime components. Please do not reference directly.</Description>
+    <OutputPath>..\..\bin\Build$(Configuration)</OutputPath>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <BeforePack>
+      _GatherRuntimePackContent;
+      _GenerateFrameworkListFile;
+      $(BeforePack);
+    </BeforePack>
+  </PropertyGroup>
+
+  <Target Name="_GatherRuntimePackContent" >
+
+    <!-- Hardcode pack content for now -->
+    <ItemGroup>
+      <XARuntimeNative Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\lib\$(AndroidABI)\libmono-android.release.so" />
+      <XARuntimeNative Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\lib\$(AndroidABI)\libsqlite3_xamarin.so" />
+      <XARuntimeNative Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\lib\$(AndroidABI)\libxamarin-debug-app-helper.so" />
+      <FrameworkListFileClass Include="libmono-android.release.so" Profile="Android" />
+      <FrameworkListFileClass Include="libsqlite3_xamarin.so" Profile="Android" />
+      <FrameworkListFileClass Include="libxamarin-debug-app-helper.so" Profile="Android" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="@(XAPackAssemblies)" >
+        <Pack>true</Pack>
+        <PackagePath>runtimes\$(AndroidRID)\lib\netcoreapp5.0</PackagePath>
+        <TargetPath>runtimes\$(AndroidRID)\lib\netcoreapp5.0</TargetPath>
+      </Content>
+      <Content Include="@(XARuntimeNative)" >
+        <Pack>true</Pack>
+        <PackagePath>runtimes\$(AndroidRID)\native</PackagePath>
+        <TargetPath>runtimes\$(AndroidRID)\native</TargetPath>
+        <IsNative>true</IsNative>
+      </Content>
+    </ItemGroup>
+  
+    <PropertyGroup>
+      <FrameworkListFilename Condition="'$(FrameworkListFilename)' == ''">RuntimeList.xml</FrameworkListFilename>
+      <FrameworkListFile>$(IntermediateOutputPath)$(AndroidRID)\$(FrameworkListFilename)</FrameworkListFile>
+    </PropertyGroup>
+
+  </Target>
+
+</Project>

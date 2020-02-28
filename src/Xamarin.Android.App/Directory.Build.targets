@@ -1,0 +1,48 @@
+<Project>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.DotNet.Build.Tasks.Packaging" Version="5.0.0-beta.20120.1" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk" Version="5.0.0-beta.20120.1" PrivateAssets="all" />
+  </ItemGroup>
+
+  <Import Project="..\..\Configuration.props" />
+  <Import Project="Sdk.props" Sdk="Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk" />
+  <UsingTask TaskName="CreateFrameworkListFile" AssemblyFile="$(DotNetBuildTasksSharedFrameworkTaskFile)"/>
+
+  <!-- Hardcode some pack content and metadata for now. We aren't yet generating separate reference and runtime assemblies. -->
+  <ItemGroup>
+    <XAPackAssemblies Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild-frameworks\MonoAndroid\v10.0\Mono.Android.dll" />
+    <XAPackAssemblies Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild-frameworks\MonoAndroid\v1.0\Java.Interop.dll" />
+    <FrameworkListFileClass Include="Mono.Android.dll" Profile="Android" />
+    <FrameworkListFileClass Include="Java.Interop.dll" Profile="Android" />
+  </ItemGroup>
+
+  <!-- TODO: Do we need to generate a PlatformManifest.txt? -->
+  <Target Name="_GenerateFrameworkListFile">
+
+    <!-- Hardcode framework attributes for now -->
+    <ItemGroup>
+      <FrameworkListRootAttributes Include="Name" Value="Xamarin Android - NET 5.0" />
+      <FrameworkListRootAttributes Include="TargetFrameworkIdentifier" Value=".NETCoreApp" />
+      <FrameworkListRootAttributes Include="TargetFrameworkVersion" Value="5.0" />
+      <FrameworkListRootAttributes Include="FrameworkName" Value="Xamarin.Android.App" />
+    </ItemGroup>
+
+    <!-- https://github.com/dotnet/arcade/blob/1924d7ea148c9f26ca3d82b60f0a775a5389ed22/src/Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk/src/CreateFrameworkListFile.cs -->
+    <CreateFrameworkListFile
+      Files="@(Content)"
+      FileClassifications="@(FrameworkListFileClass)"
+      TargetFile="$(FrameworkListFile)"
+      TargetFilePrefixes="ref;runtimes"
+      RootAttributes="@(FrameworkListRootAttributes)" />
+
+    <ItemGroup>
+      <Content Include="$(FrameworkListFile)">
+        <Pack>true</Pack>
+        <PackagePath>data\</PackagePath>
+      </Content>
+    </ItemGroup>
+
+  </Target>
+
+</Project>
