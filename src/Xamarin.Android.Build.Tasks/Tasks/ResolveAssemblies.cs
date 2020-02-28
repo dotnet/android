@@ -117,9 +117,8 @@ namespace Xamarin.Android.Tasks
 			var mainapiLevel = MonoAndroidHelper.SupportedVersions.GetApiLevelFromFrameworkVersion (TargetFrameworkVersion);
 			foreach (var item in api_levels.Where (x => mainapiLevel < x.Value)) {
 				var itemOSVersion = MonoAndroidHelper.SupportedVersions.GetFrameworkVersionFromApiLevel (item.Value);
-				LogCodedWarning ("XA0105", ProjectFile, 0,
-					"The $(TargetFrameworkVersion) for {0} ({1}) is greater than the $(TargetFrameworkVersion) for your project ({2}). " +
-					"You need to increase the $(TargetFrameworkVersion) for your project.", Path.GetFileName (item.Key), itemOSVersion, TargetFrameworkVersion);
+				LogCodedWarning ("XA0105", ProjectFile, 0, Properties.Resources.XA0105,
+					Path.GetFileName (item.Key), itemOSVersion, TargetFrameworkVersion);
 			}
 
 			var resolvedAssemblies          = new List<ITaskItem> (assemblies.Count);
@@ -176,12 +175,12 @@ namespace Xamarin.Android.Tasks
 
 			var framework = NuGetFramework.Parse (TargetMoniker);
 			if (framework == null) {
-				LogCodedWarning ("XA0118", $"Could not parse '{TargetMoniker}'");
+				LogCodedWarning ("XA0118", Properties.Resources.XA0118_Parse, TargetMoniker);
 				return null;
 			}
 			var target = lockFile.GetTarget (framework, string.Empty);
 			if (target == null) {
-				LogCodedWarning ("XA0118", $"Could not resolve target for '{TargetMoniker}'");
+				LogCodedWarning ("XA0118", Properties.Resources.XA0118_Target, TargetMoniker);
 				return null;
 			}
 			foreach (var folder in lockFile.PackageFolders) {
@@ -266,11 +265,10 @@ namespace Xamarin.Android.Tasks
 					if (missingAssembly.EndsWith (".dll", StringComparison.OrdinalIgnoreCase)) {
 						missingAssembly = Path.GetFileNameWithoutExtension (missingAssembly);
 					}
-					string message = $"Can not resolve reference: `{missingAssembly}`, referenced by {references}.";
 					if (MonoAndroidHelper.IsFrameworkAssembly (ex.FileName)) {
-						LogCodedError ("XA2002", $"{message} Perhaps it doesn't exist in the Mono for Android profile?");
+						LogCodedError ("XA2002", Properties.Resources.XA2002_Framework, missingAssembly, references);
 					} else {
-						LogCodedError ("XA2002", $"{message} Please add a NuGet package or assembly reference for `{missingAssembly}`, or remove the reference to `{resolutionPath [0]}`.");
+						LogCodedError ("XA2002", Properties.Resources.XA2002_NuGet, missingAssembly, references, resolutionPath [0]);
 					}
 					return;
 				}

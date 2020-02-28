@@ -157,6 +157,13 @@ In this message, the phrase "should not be reached" means that this error messag
     <value>Invalid value for `$(AndroidSequencePointsMode)`: {0}</value>
     <comment>The following are literal names and should not be translated: `$(AndroidSequencePointsMode)`</comment>
   </data>
+  <data name="XA0105" xml:space="preserve">
+    <value>The $(TargetFrameworkVersion) for {0} ({1}) is greater than the $(TargetFrameworkVersion) for the application project ({2}). Please increase the $(TargetFrameworkVersion) for the application project.</value>
+    <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
+{0} - The file name of the library referenced by the application
+{1} - The target framework version number for the library
+{2} - The target framework version number for the application project</comment>
+  </data>
   <data name="XA0107" xml:space="preserve">
     <value>{0} is a Reference Assembly.</value>
   </data>
@@ -191,6 +198,18 @@ In this message, the phrase "should not be reached" means that this error messag
     <value>The TargetFrameworkVersion {0} is deprecated. Please update it to be v4.4 or higher.</value>
     <comment>The following are literal names and should not be translated: TargetFrameworkVersion, v4.4
 {0} - The current value of TargetFrameworkVersion</comment>
+  </data>
+  <data name="XA0118_Parse" xml:space="preserve">
+    <value>Could not parse '{0}'</value>
+    <comment>{0} - A NuGet target framework moniker string</comment>
+  </data>
+  <data name="XA0118_Target" xml:space="preserve">
+    <value>Could not resolve `target` in lock file for '{0}'</value>
+    <comment>The following are literal names and should not be translated: `target`
+
+The term "lock file" comes from NuGet. For example, search for "UnauthorizedLockFail" in https://github.com/NuGet/NuGet.Build.Localization to see some example localizations of "lock file."
+
+{0} - A NuGet target framework moniker string</comment>
   </data>
   <data name="XA0121" xml:space="preserve">
     <value>Assembly '{0}' is using '[assembly: {1}]', which is no longer supported. Use a newer version of this NuGet package or notify the library author.</value>
@@ -241,6 +260,12 @@ In this message, the phrase "should not be reached" means that this error messag
   </data>
   <data name="XA2001" xml:space="preserve">
     <value>Source file '{0}' could not be found.</value>
+  </data>
+  <data name="XA2002_Framework" xml:space="preserve">
+    <value>Can not resolve reference: `{0}`, referenced by {1}. Perhaps it doesn't exist in the Mono for Android profile?</value>
+  </data>
+  <data name="XA2002_NuGet" xml:space="preserve">
+    <value>Can not resolve reference: `{0}`, referenced by {1}. Please add a NuGet package or assembly reference for `{0}`, or remove the reference to `{2}`.</value>
   </data>
   <data name="XA2006" xml:space="preserve">
     <value>Could not resolve reference to '{0}' (defined in assembly '{1}') with scope '{2}'. When the scope is different from the defining assembly, it usually means that the type is forwarded.</value>
