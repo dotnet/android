@@ -51,7 +51,7 @@ ms.date: 01/24/2020
 + [XA0102](xa0102.md): Generic `lint` Warning.
 + [XA0103](xa0103.md): Generic `lint` Error.
 + XA0104: Invalid value for \`$(AndroidSequencePointsMode)\`
-+ [XA0105](xa0105.md): The $(TargetFrameworkVersion) for a dll is greater than the $(TargetFrameworkVersion) for your project.
++ [XA0105](xa0105.md): The $(TargetFrameworkVersion) for a library is greater than the $(TargetFrameworkVersion) for the application project.
 + [XA0107](xa0107.md): `{Assmebly}` is a Reference Assembly.
 + [XA0108](xa0108.md): Could not get version from `lint`.
 + [XA0109](xa0109.md): Unsupported or invalid `$(TargetFrameworkVersion)` value of 'v4.5'.
