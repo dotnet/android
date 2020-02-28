@@ -208,7 +208,7 @@ stages:
   dependsOn: []
   jobs:
   - job: win_build_test
-    displayName: Build and Test
+    displayName: Build and Smoke Test
     pool: $(VSEngWinVS2019)
     timeoutInMinutes: 360
     cancelTimeoutInMinutes: 5
@@ -226,8 +226,19 @@ stages:
         version: $(DotNetCoreVersion)
 
     # Downgrade the XA .vsix installed into the instance of VS that we are building with so that we don't restore/build against a test version.
+    # The VS installer will attempt to resume any failed or partial installation before trying to downgrade Xamarin.Android.
     # VSIXInstaller.exe will exit non-zero when the downgrade attempt is a no-op, so we will allow this step to fail silently.
     - powershell: |
+        $vsWhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+        & "$vsWhere" -all -prerelease -latest | Out-Default
+        $isLatestVSLaunchable = & "$vsWhere" -all -prerelease -latest -property isLaunchable
+        if ($isLatestVSLaunchable -eq 0) {
+            $vsPath = & "$vsWhere" -all -prerelease -latest -property installationPath
+            Write-Host "Attempting to repair VS instance:" $vsPath
+            $vsInstaller = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vs_installer.exe"
+            & "$vsInstaller" resume --installPath $vsPath --quiet --norestart | Out-Default
+            Write-Host "vs_installer.exe resume attempt complete"
+        }
         $vsixInstaller = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\resources\app\ServiceHub\Services\Microsoft.VisualStudio.Setup.Service\VSIXInstaller.exe"
         $ts = Get-Date -Format FileDateTimeUniversal
         $log = "xavsixdowngrade-$ts.log"
@@ -235,8 +246,8 @@ stages:
         Get-Content "${env:TEMP}\$log" | Write-Host
         Write-Host "VSInstaller.exe exited with code:" $process.ExitCode
         Remove-Item "${env:TEMP}\$log"
-        Exit 0
       displayName: downgrade XA to stable
+      ignoreLASTEXITCODE: true
 
     - task: MSBuild@1
       displayName: msbuild Xamarin.Android /t:Prepare
@@ -282,6 +293,7 @@ stages:
           /t:RunJavaInteropTests
           /p:TestAssembly="bin\Test$(XA.Build.Configuration)\generator-Tests.dll;bin\Test$(XA.Build.Configuration)\Java.Interop.Tools.JavaCallableWrappers-Tests.dll;bin\Test$(XA.Build.Configuration)\logcat-parse-Tests.dll;bin\Test$(XA.Build.Configuration)\Xamarin.Android.Tools.ApiXmlAdjuster-Tests.dll;bin\Test$(XA.Build.Configuration)\Xamarin.Android.Tools.Bytecode-Tests.dll"
           /bl:$(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\msbuild-run-ji-tests.binlog
+      continueOnError: True
 
     - task: PublishTestResults@2
       displayName: publish test results
@@ -289,7 +301,6 @@ stages:
         testResultsFormat: NUnit
         testResultsFiles: TestResult-*.xml
         testRunTitle: Java Interop Tests - Windows Build Tree
-      condition: succeededOrFailed()
 
     - template: yaml-templates\run-nunit-tests.yaml
       parameters:
@@ -311,16 +322,19 @@ stages:
 
     # Limit the amount of worker threads used to run these tests in parallel to half of what is currently available (8) on the Windows pool.
     # Using all available cores seems to occasionally bog down our machines and cause parallel test execution to slow down dramatically.
+    # Only run a subset of the Xamarin.Android.Build.Tests against the local Windows build tree.
     - template: yaml-templates\run-nunit-tests.yaml
       parameters:
-        testRunTitle: Xamarin.Android.Build.Tests - Windows Build Tree
+        testRunTitle: Smoke MSBuild Tests - Windows Build Tree
         testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\Xamarin.Android.Build.Tests.dll
-        testResultsFile: TestResult-MSBuildTests-WinBuildTree-$(XA.Build.Configuration).xml
-        nunitConsoleExtraArgs: --workers=4
+        testResultsFile: TestResult-SmokeMSBuildTests-WinBuildTree-$(XA.Build.Configuration).xml
+        nunitConsoleExtraArgs: --where "cat == SmokeTests" --workers=4
 
     - template: yaml-templates\upload-results.yaml
       parameters:
         artifactName: Build Results - Windows
+
+    - template: yaml-templates\fail-on-issue.yaml
 
 - stage: finalize_installers
   displayName: Finalize Installers
@@ -451,6 +465,7 @@ stages:
           /restore
           /t:Build
           /bl:$(System.DefaultWorkingDirectory)/bin/Test$(ApkTestConfiguration)/build-check-boot-times.binlog
+      continueOnError: true
 
     - task: MSBuild@1
       displayName: Run check-boot-times
@@ -460,6 +475,7 @@ stages:
         msbuildArguments: >
           /t:CheckBootTimes
           /bl:$(System.DefaultWorkingDirectory)/bin/Test$(ApkTestConfiguration)/run-check-boot-times.binlog
+      continueOnError: true
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -627,6 +643,8 @@ stages:
         configuration: $(ApkTestConfiguration)
         artifactName: Test Results - APK Instrumentation - macOS
 
+    - template: yaml-templates/fail-on-issue.yaml
+
   # Check - "Xamarin.Android (Test BCL With Emulator - macOS)"
   - job: mac_bcl_tests
     displayName: BCL With Emulator - macOS
@@ -662,7 +680,6 @@ stages:
         testResultsFormat: NUnit
         testResultsFiles: TestResult-Xamarin.Android.Bcl_Tests.xunit-$(XA.Build.Configuration).xml
         testRunTitle: Xamarin.Android.Bcl-Tests-NUnit
-      condition: succeededOrFailed()
 
     - task: MSBuild@1
       displayName: shut down emulator
@@ -677,6 +694,8 @@ stages:
     - template: yaml-templates/upload-results.yaml
       parameters:
         artifactName: Test Results - BCL With Emulator - macOS
+
+    - template: yaml-templates/fail-on-issue.yaml
 
   # Check - "Xamarin.Android (Test MSBuild - macOS)"
   - job: mac_msbuild_tests
@@ -733,6 +752,8 @@ stages:
       parameters:
         artifactName: Test Results - MSBuild - macOS
 
+    - template: yaml-templates/fail-on-issue.yaml
+
   # Check - "Xamarin.Android (Test MSBuild - Windows)"
   - job: win_msbuild_tests
     displayName: MSBuild - Windows
@@ -779,6 +800,8 @@ stages:
     - template: yaml-templates\upload-results.yaml
       parameters:
         artifactName: Test Results - MSBuild - Windows
+
+    - template: yaml-templates\fail-on-issue.yaml
 
   # Check - "Xamarin.Android (Test MSBuild With Emulator - macOS)"
   - job: mac_msbuilddevice_tests
@@ -831,6 +854,8 @@ stages:
     - template: yaml-templates/upload-results.yaml
       parameters:
         artifactName: Test Results - MSBuild With Emulator - macOS
+
+    - template: yaml-templates/fail-on-issue.yaml
 
   # Check - "Xamarin.Android (Test Designer - macOS)"
   - job: designer_integration_mac

@@ -95,7 +95,7 @@ namespace Xamarin.Android.Tasks
 					stdout_completed.WaitOne (TimeSpan.FromSeconds (30));
 
 				if (proc.ExitCode != 0) {
-					LogCodedError ("XA3005", Properties.Resources.XA3005, Path.GetFileName (config.OutputSharedLibrary));
+					LogCodedError ("XA3007", Properties.Resources.XA3007, Path.GetFileName (config.OutputSharedLibrary));
 					Cancel ();
 				}
 			}

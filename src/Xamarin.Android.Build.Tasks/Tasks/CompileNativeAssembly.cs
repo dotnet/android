@@ -86,7 +86,7 @@ namespace Xamarin.Android.Tasks
 					stdout_completed.WaitOne (TimeSpan.FromSeconds (30));
 
 				if (proc.ExitCode != 0) {
-					LogCodedError ("XA3004", Properties.Resources.XA3004, Path.GetFileName (config.InputSource));
+					LogCodedError ("XA3006", Properties.Resources.XA3006, Path.GetFileName (config.InputSource));
 					Cancel ();
 				}
 			}

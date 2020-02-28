@@ -41,6 +41,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Category ("SmokeTests")]
 		public void BuildBasicApplicationReleaseProfiledAot ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -326,6 +327,7 @@ class MemTest {
 		}
 
 		[Test]
+		[Category ("SmokeTests")]
 		public void BuildXamarinFormsMapsApplication ()
 		{
 			var proj = new XamarinFormsMapsApplicationProject ();
@@ -895,6 +897,7 @@ namespace UnamedProject
 		}
 
 		[Test]
+		[Category ("SmokeTests")]
 		public void BuildMkBundleApplicationRelease ()
 		{
 			var proj = new XamarinAndroidApplicationProject () { IsRelease = true, BundleAssemblies = true };
@@ -950,7 +953,7 @@ namespace UnamedProject
 
 		[Test]
 		[TestCaseSource (nameof (AotChecks))]
-		[Category ("Minor")]
+		[Category ("SmokeTests")]
 		public void BuildAotApplicationAndÜmläüts (string supportedAbis, bool enableLLVM, bool expectedResult)
 		{
 			var path = Path.Combine ("temp", string.Format ("BuildAotApplication AndÜmläüts_{0}_{1}_{2}", supportedAbis, enableLLVM, expectedResult));
@@ -1070,6 +1073,7 @@ namespace UnamedProject
 
 		[Test]
 		[NonParallelizable] // On MacOS, parallel /restore causes issues
+		[Category ("SmokeTests")]
 		public void BuildProguardEnabledProject ([Values (true, false)] bool isRelease, [Values ("dx", "d8")] string dexTool, [Values ("", "proguard", "r8")] string linkTool)
 		{
 			var proj = new XamarinFormsAndroidApplicationProject {
@@ -1332,6 +1336,7 @@ namespace UnnamedProject {
 		}
 
 		[Test]
+		[Category ("SmokeTests")]
 		public void BasicApplicationRepetitiveReleaseBuild ()
 		{
 			var proj = new XamarinAndroidApplicationProject () { IsRelease = true };
@@ -2045,6 +2050,7 @@ namespace App1
 
 		[Test]
 		[NonParallelizable]
+		[Category ("SmokeTests")]
 		public void BuildWithNativeLibraries ([Values (true, false)] bool isRelease)
 		{
 			var dll = new XamarinAndroidLibraryProject () {
@@ -2165,6 +2171,7 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 		}
 
 		[Test]
+		[Category ("SmokeTests")]
 		public void BuildWithExternalJavaLibrary ()
 		{
 			var path = Path.Combine ("temp", "BuildWithExternalJavaLibrary");
@@ -2530,6 +2537,7 @@ public class Test
 		}
 
 		[Test]
+		[Category ("SmokeTests")]
 		public void BuildApplicationWithSpacesInPath ([Values (true, false)] bool enableMultiDex, [Values ("dx", "d8")] string dexTool, [Values ("", "proguard", "r8")] string linkTool)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -2782,6 +2790,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		}
 
 		[Test]
+		[Category ("SmokeTests")]
 		public void BuildBasicApplicationCheckPdb ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
@@ -3291,6 +3300,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 
 		[Test]
 		[NonParallelizable]
+		[Category ("SmokeTests")]
 		public void BuildAMassiveApp()
 		{
 			var testPath = Path.Combine("temp", "BuildAMassiveApp");
@@ -3472,6 +3482,7 @@ namespace UnnamedProject {
 		}
 
 		[Test]
+		[Category ("SmokeTests")]
 		public void Desugar ([Values (true, false)] bool isRelease, [Values ("dx", "d8")] string dexTool, [Values ("", "proguard", "r8")] string linkTool)
 		{
 			var proj = new XamarinAndroidApplicationProject () {

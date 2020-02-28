@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using Java.Interop.Tools.Cecil;
 using Mono.Cecil;
 using Mono.Linker;
 using MonoDroid.Tuner;
@@ -15,7 +16,7 @@ namespace Xamarin.Android.Build.Tests
 		public void FixAbstractMethodsStep_SkipDimMembers ()
 		{
 			var path = Path.Combine (Path.GetFullPath (XABuildPaths.TestOutputDirectory), "temp", TestName);
-			var step = new FixAbstractMethodsStep ();
+			var step = new FixAbstractMethodsStep (new TypeDefinitionCache ());
 			var pipeline = new Pipeline ();
 
 			Directory.CreateDirectory (path);
@@ -74,7 +75,7 @@ namespace Xamarin.Android.Build.Tests
 		public void FixAbstractMethodsStep_Explicit ()
 		{
 			var path = Path.Combine (Path.GetFullPath (XABuildPaths.TestOutputDirectory), "temp", TestName);
-			var step = new FixAbstractMethodsStep ();
+			var step = new FixAbstractMethodsStep (new TypeDefinitionCache ());
 			var pipeline = new Pipeline ();
 
 			Directory.CreateDirectory (path);

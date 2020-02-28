@@ -182,7 +182,7 @@ namespace MonoDroid.Tuner {
 			return null;
 		}
 
-		public static bool TryGetBaseOrInterfaceRegisterMember (this MethodDefinition method, out string member, out string nativeMethod, out string signature)
+		public static bool TryGetBaseOrInterfaceRegisterMember (this MethodDefinition method, TypeDefinitionCache cache, out string member, out string nativeMethod, out string signature)
 		{
 			var type = method.DeclaringType;
 
@@ -191,7 +191,7 @@ namespace MonoDroid.Tuner {
 			if (method.IsConstructor || type == null || !type.HasNestedTypes)
 				return false;
 
-			var m = method.GetBaseDefinition ();
+			var m = method.GetBaseDefinition (cache);
 
 			while (m != null) {
 				if (m == method)
@@ -202,7 +202,7 @@ namespace MonoDroid.Tuner {
 				if (m.TryGetRegisterMember (out member, out nativeMethod, out signature))
 					return true;
 
-				m = m.GetBaseDefinition ();
+				m = m.GetBaseDefinition (cache);
 			}
 
 			if (!method.DeclaringType.HasInterfaces || !method.IsNewSlot)
@@ -217,19 +217,19 @@ namespace MonoDroid.Tuner {
 					continue;
 
 				foreach (var im in itype.Methods)
-					if (im.IsEqual (method))
+					if (im.IsEqual (method, cache))
 						return im.TryGetRegisterMember (out member, out nativeMethod, out signature);
                         }
 
                         return false;
 		}
 
-		public static bool IsEqual (this MethodDefinition m1, MethodDefinition m2)
+		public static bool IsEqual (this MethodDefinition m1, MethodDefinition m2, TypeDefinitionCache cache)
 		{
 			if (m1.Name != m2.Name || m1.ReturnType.Name != m2.ReturnType.Name)
 				return false;
 
-			return m1.Parameters.AreParametersCompatibleWith (m2.Parameters);
+			return m1.Parameters.AreParametersCompatibleWith (m2.Parameters, cache);
 		}
 
 		public static bool TryGetMarshalMethod (this MethodDefinition method, string nativeMethod, string signature, out MethodDefinition marshalMethod)

@@ -112,7 +112,7 @@ namespace Xamarin.Android.Tasks
 						if (File.Exists (file))
 							cmd.AppendSwitchIfNotNull ("--pg-conf ", file);
 						else
-							Log.LogCodedWarning ("XA4304", file, 0, "Proguard configuration file '{0}' was not found.", file);
+							Log.LogCodedWarning ("XA4304", file, 0, Properties.Resources.XA4304, file);
 					}
 				}
 			} else {

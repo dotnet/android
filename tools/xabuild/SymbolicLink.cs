@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -116,7 +116,8 @@ namespace Xamarin.Android.Build
 
 		public static bool IsPathSymlink (string path)
 		{
-			return Path.GetFullPath (path) != GetRealPath (path);
+			// Sometimes case for disk drives was different on Windows.
+			return !string.Equals(Path.GetFullPath (path), GetRealPath (path), StringComparison.OrdinalIgnoreCase);
 		}
 
 		[DllImport ("kernel32.dll")]

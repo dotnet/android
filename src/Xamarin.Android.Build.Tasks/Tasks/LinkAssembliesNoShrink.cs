@@ -51,7 +51,7 @@ namespace Xamarin.Android.Tasks
 				}
 
 				// Run the FixAbstractMethodsStep
-				var step = new FixAbstractMethodsStep (resolver, Log);
+				var step = new FixAbstractMethodsStep (resolver, new TypeDefinitionCache (), Log);
 				for (int i = 0; i < SourceFiles.Length; i++) {
 					var source = SourceFiles [i];
 					var destination = DestinationFiles [i];
@@ -94,7 +94,8 @@ namespace Xamarin.Android.Tasks
 			readonly DirectoryAssemblyResolver resolver;
 			readonly TaskLoggingHelper logger;
 
-			public FixAbstractMethodsStep (DirectoryAssemblyResolver resolver, TaskLoggingHelper logger)
+			public FixAbstractMethodsStep (DirectoryAssemblyResolver resolver, TypeDefinitionCache cache, TaskLoggingHelper logger)
+				: base (cache)
 			{
 				this.resolver = resolver;
 				this.logger = logger;

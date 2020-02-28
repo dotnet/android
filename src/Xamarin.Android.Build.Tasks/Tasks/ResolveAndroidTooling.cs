@@ -148,13 +148,13 @@ namespace Xamarin.Android.Tasks
 				if (!GetAapt2Version ()) {
 					AndroidUseAapt2 = false;
 					aapt2Installed = false;
-					Log.LogCodedWarning ("XA0111", "Could not get the `aapt2` version. Disabling `aapt2` support. Please check it is installed correctly.");
+					Log.LogCodedWarning ("XA0111", Properties.Resources.XA0111);
 				}
 			}
 			if (AndroidUseAapt2) {
 				if (!aapt2Installed) {
 					AndroidUseAapt2 = false;
-					Log.LogCodedWarning ("XA0112", "`aapt2` is not installed. Disabling `aapt2` support. Please check it is installed correctly.");
+					Log.LogCodedWarning ("XA0112", Properties.Resources.XA0112);
 				}
 			}
 
@@ -186,7 +186,7 @@ namespace Xamarin.Android.Tasks
 					columnNumber: 0,
 					endLineNumber: 0,
 					endColumnNumber: 0,
-					message: "Unsupported or invalid $(TargetFrameworkVersion) value of '{0}'. Please update your Project Options.",
+					message: Properties.Resources.XA0001,
 					messageArgs: new []{
 						TargetFrameworkVersion,
 					}
@@ -197,14 +197,14 @@ namespace Xamarin.Android.Tasks
 			int apiLevel;
 			if (AndroidApplication && int.TryParse (AndroidApiLevel, out apiLevel)) {
 				if (apiLevel < 26)
-					Log.LogCodedWarning ("XA0113", $"Google Play requires that new applications and updates must use a TargetFrameworkVersion of v8.0 (API level 26) or above. You are currently targeting {TargetFrameworkVersion} (API level {AndroidApiLevel}).");
+					Log.LogCodedWarning ("XA0113", Properties.Resources.XA0113,TargetFrameworkVersion, AndroidApiLevel);
 				if (apiLevel < 19)
-					Log.LogCodedWarning ("XA0117", $"The TargetFrameworkVersion {TargetFrameworkVersion} is deprecated. Please update it to be v4.4 or higher.");
+					Log.LogCodedWarning ("XA0117", Properties.Resources.XA0117, TargetFrameworkVersion);
 			}
 
 			SequencePointsMode mode;
 			if (!Aot.TryGetSequencePointsMode (SequencePointsMode ?? "None", out mode))
-				Log.LogCodedError ("XA0104", "Invalid Sequence Point mode: {0}", SequencePointsMode);
+				Log.LogCodedError ("XA0104", Properties.Resources.XA0104, SequencePointsMode);
 			AndroidSequencePointsMode = mode.ToString ();
 
 			AndroidApiLevelName = MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (AndroidApiLevel);
@@ -324,9 +324,7 @@ namespace Xamarin.Android.Tasks
 				TargetFrameworkVersion = TargetFrameworkVersion.Trim ();
 				string id = MonoAndroidHelper.SupportedVersions.GetIdFromFrameworkVersion (TargetFrameworkVersion);
 				if (id == null) {
-					Log.LogCodedError ("XA0000",
-							"Could not determine API level for $(TargetFrameworkVersion) of '{0}'.",
-							TargetFrameworkVersion);
+					Log.LogCodedError ("XA0000", Properties.Resources.XA0000_API_for_TargetFrameworkVersion, TargetFrameworkVersion);
 					return false;
 				}
 				AndroidApiLevel = MonoAndroidHelper.SupportedVersions.GetApiLevelFromId (id).ToString ();
@@ -339,7 +337,7 @@ namespace Xamarin.Android.Tasks
 				return TargetFrameworkVersion != null;
 			}
 
-			Log.LogCodedError ("XA0000", "Could not determine $(AndroidApiLevel) or $(TargetFrameworkVersion); SHOULD NOT BE REACHED.");
+			Log.LogCodedError ("XA0000", Properties.Resources.XA0000_API_or_TargetFrameworkVersion_Fail);
 			return false;
 		}
 
@@ -398,9 +396,7 @@ namespace Xamarin.Android.Tasks
 			string targetFramework = MonoAndroidHelper.SupportedVersions.GetFrameworkVersionFromId (AndroidApiLevel);
 			if (targetFramework != null)
 				return targetFramework;
-			Log.LogCodedError ("XA0000",
-					"Could not determine $(TargetFrameworkVersion) for API level '{0}.'",
-					AndroidApiLevel);
+			Log.LogCodedError ("XA0000", Properties.Resources.XA0000_TargetFrameworkVersion_for_API, AndroidApiLevel);
 			return null;
 		}
 	}

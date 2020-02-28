@@ -50,7 +50,7 @@ ms.date: 01/24/2020
 + [XA0101](xa0101.md): warning XA0101: @(Content) build action is not supported.
 + [XA0102](xa0102.md): Generic `lint` Warning.
 + [XA0103](xa0103.md): Generic `lint` Error.
-+ XA0104: Invalid Sequence Point mode.
++ XA0104: Invalid value for \`$(AndroidSequencePointsMode)\`
 + [XA0105](xa0105.md): The $(TargetFrameworkVersion) for a dll is greater than the $(TargetFrameworkVersion) for your project.
 + [XA0107](xa0107.md): `{Assmebly}` is a Reference Assembly.
 + [XA0108](xa0108.md): Could not get version from `lint`.
@@ -89,8 +89,10 @@ ms.date: 01/24/2020
 + XA3001: Could not AOT the assembly: {assembly}
 + XA3002: Invalid AOT mode: {mode}
 + XA3003: Could not strip IL of assembly: {assembly}
-+ XA3004: Could not compile native assembly file: {file}
-+ XA3005: Could not link native shared library: {library}
++ XA3004: Android NDK r10d is buggy and provides an incompatible x86_64 libm.so.
++ XA3005: The detected Android NDK version is incompatible with the targeted LLVM configuration.
++ XA3006: Could not compile native assembly file: {file}
++ XA3007: Could not link native shared library: {library}
 
 ## XA4xxx: Code generation
 
@@ -105,7 +107,7 @@ ms.date: 01/24/2020
 + [XA4301](xa4301.md): Apk already contains the item `xxx`.
 + [XA4302](xa4302.md): Unhandled exception merging \`AndroidManifest.xml]`: {ex}
 + [XA4303](xa4303.md): Error extracting resources from "{assemblyPath}": {ex}
-+ [XA4304](xa4304.md): Proguard configuration file '{file}' was not found.
++ [XA4304](xa4304.md): ProGuard configuration file '{file}' was not found.
 + [XA4305](xa4305.md): Multidex is enabled, but \`$(\_AndroidMainDexListFile)\` is empty.
 + [XA4306](xa4306.md): R8 does not support \`@(MultiDexMainDexList)\` files when android:minSdkVersion >= 21
 + [XA4307](xa4307.md): Invalid ProGuard configuration file.
@@ -115,8 +117,11 @@ ms.date: 01/24/2020
 ## XA5xxx: GCC and toolchain
 
 + XA5101: Missing Android NDK toolchains directory '{path}'. Please install the Android NDK.
-+ XA5102: Could not locate the Android NDK.
-+ XA5103: Toolchain utility '{utility}' for target {arch} was not found. Tried in path: "{path}"
++ XA5102: Conversion from assembly to native code failed. Exit code {exitCode}
++ XA5103: NDK C compiler exited with an error. Exit code {0}
++ XA5104: Could not locate the Android NDK.
++ XA5105: Toolchain utility '{utility}' for target {arch} was not found. Tried in path: "{path}"
++ XA5201: NDK linker exited with an error. Exit code {0}
 + [XA5205](xa5205.md): Cannot find `{ToolName}` in the Android SDK.
 + [XA5207](xa5207.md): Could not find android.jar for API Level `{compileSdk}`.
 + XA5213: java.lang.OutOfMemoryError. Consider increasing the value of $(JavaMaximumHeapSize). Java ran out of memory while executing '{tool} {arguments}'

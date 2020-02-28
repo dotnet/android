@@ -20,6 +20,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Category ("SmokeTests")]
 		public void DotNetPackageXASdkProject ([Values (false, true)] bool isRelease)
 		{
 			var proj = new XASdkProject ("0.0.1") {

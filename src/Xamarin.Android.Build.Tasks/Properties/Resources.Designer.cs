@@ -79,11 +79,65 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Could not determine API level for $(TargetFrameworkVersion) of &apos;{0}&apos;..
+        /// </summary>
+        internal static string XA0000_API_for_TargetFrameworkVersion {
+            get {
+                return ResourceManager.GetString("XA0000_API_for_TargetFrameworkVersion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not determine $(AndroidApiLevel) or $(TargetFrameworkVersion); should not be reached..
+        /// </summary>
+        internal static string XA0000_API_or_TargetFrameworkVersion_Fail {
+            get {
+                return ResourceManager.GetString("XA0000_API_or_TargetFrameworkVersion_Fail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unhandled exception: {0}.
+        /// </summary>
+        internal static string XA0000_Exception {
+            get {
+                return ResourceManager.GetString("XA0000_Exception", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not determine $(TargetFrameworkVersion) for API level &apos;{0}.&apos;.
+        /// </summary>
+        internal static string XA0000_TargetFrameworkVersion_for_API {
+            get {
+                return ResourceManager.GetString("XA0000_TargetFrameworkVersion_for_API", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unsupported or invalid $(TargetFrameworkVersion) value of &apos;{0}&apos;. Please update your Project Options..
+        /// </summary>
+        internal static string XA0001 {
+            get {
+                return ResourceManager.GetString("XA0001", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to EmbeddedNativeLibrary &apos;{0}&apos; is invalid in Android Application projects. Please use AndroidNativeLibrary instead..
         /// </summary>
         internal static string XA0100 {
             get {
                 return ResourceManager.GetString("XA0100", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid value for `$(AndroidSequencePointsMode)`: {0}.
+        /// </summary>
+        internal static string XA0104 {
+            get {
+                return ResourceManager.GetString("XA0104", resourceCulture);
             }
         }
         
@@ -115,11 +169,47 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Could not get the `aapt2` version. Disabling `aapt2` support. Please check it is installed correctly..
+        /// </summary>
+        internal static string XA0111 {
+            get {
+                return ResourceManager.GetString("XA0111", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to `aapt2` is not installed. Disabling `aapt2` support. Please check it is installed correctly..
+        /// </summary>
+        internal static string XA0112 {
+            get {
+                return ResourceManager.GetString("XA0112", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Google Play requires that new applications and updates must use a TargetFrameworkVersion of v8.0 (API level 26) or above. You are currently targeting {0} (API level {1})..
+        /// </summary>
+        internal static string XA0113 {
+            get {
+                return ResourceManager.GetString("XA0113", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unable to find `EmbeddedResource` named `{0}`..
         /// </summary>
         internal static string XA0116 {
             get {
                 return ResourceManager.GetString("XA0116", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The TargetFrameworkVersion {0} is deprecated. Please update it to be v4.4 or higher..
+        /// </summary>
+        internal static string XA0117 {
+            get {
+                return ResourceManager.GetString("XA0117", resourceCulture);
             }
         }
         
@@ -250,7 +340,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Could not compile native assembly file: {0}.
+        ///   Looks up a localized string similar to Android NDK r10d is buggy and provides an incompatible x86_64 libm.so. See https://code.google.com/p/android/issues/detail?id=161422..
         /// </summary>
         internal static string XA3004 {
             get {
@@ -259,11 +349,29 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Could not link native shared library: {0}.
+        ///   Looks up a localized string similar to The detected Android NDK version is incompatible with the targeted LLVM configuration. Please upgrade to NDK r10d or newer..
         /// </summary>
         internal static string XA3005 {
             get {
                 return ResourceManager.GetString("XA3005", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not compile native assembly file: {0}.
+        /// </summary>
+        internal static string XA3006 {
+            get {
+                return ResourceManager.GetString("XA3006", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not link native shared library: {0}.
+        /// </summary>
+        internal static string XA3007 {
+            get {
+                return ResourceManager.GetString("XA3007", resourceCulture);
             }
         }
         
@@ -349,6 +457,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to find //manifest/application/uses-library at path: {0}.
+        /// </summary>
+        internal static string XA4218 {
+            get {
+                return ResourceManager.GetString("XA4218", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Native library &apos;{0}&apos; will not be bundled because it has an unsupported ABI..
         /// </summary>
         internal static string XA4300 {
@@ -385,6 +502,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to ProGuard configuration file &apos;{0}&apos; was not found..
+        /// </summary>
+        internal static string XA4304 {
+            get {
+                return ResourceManager.GetString("XA4304", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Multidex is enabled, but `$(_AndroidMainDexListFile)` is empty..
         /// </summary>
         internal static string XA4305 {
@@ -408,6 +534,15 @@ namespace Xamarin.Android.Tasks.Properties {
         internal static string XA4306 {
             get {
                 return ResourceManager.GetString("XA4306", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid ProGuard configuration file. {0}.
+        /// </summary>
+        internal static string XA4307 {
+            get {
+                return ResourceManager.GetString("XA4307", resourceCulture);
             }
         }
         
@@ -457,7 +592,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Could not locate the Android NDK. Please make sure the Android NDK is installed in the Android SDK Manager, or if using a custom NDK path, please ensure the $(AndroidNdkDirectory) MSBuild property is set to the custom path..
+        ///   Looks up a localized string similar to Conversion from assembly to native code failed. Exit code {0}.
         /// </summary>
         internal static string XA5102 {
             get {
@@ -466,11 +601,38 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Toolchain utility &apos;{0}&apos; for target {1} was not found. Tried in path: &quot;{2}&quot;.
+        ///   Looks up a localized string similar to NDK C compiler exited with an error. Exit code {0}.
         /// </summary>
         internal static string XA5103 {
             get {
                 return ResourceManager.GetString("XA5103", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not locate the Android NDK. Please make sure the Android NDK is installed in the Android SDK Manager, or if using a custom NDK path, please ensure the $(AndroidNdkDirectory) MSBuild property is set to the custom path..
+        /// </summary>
+        internal static string XA5104 {
+            get {
+                return ResourceManager.GetString("XA5104", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Toolchain utility &apos;{0}&apos; for target {1} was not found. Tried in path: &quot;{2}&quot;.
+        /// </summary>
+        internal static string XA5105 {
+            get {
+                return ResourceManager.GetString("XA5105", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to NDK linker exited with an error. Exit code {0}.
+        /// </summary>
+        internal static string XA5201 {
+            get {
+                return ResourceManager.GetString("XA5201", resourceCulture);
             }
         }
         

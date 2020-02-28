@@ -125,10 +125,37 @@
     <value>Invalid file name: It must contain only {0}.</value>
     <comment>{0} - The regular expression that the file name must match</comment>
   </data>
+  <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
+    <value>Could not determine API level for $(TargetFrameworkVersion) of '{0}'.</value>
+    <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
+{0} - The current value of $(TargetFrameworkVersion)</comment>
+  </data>
+  <data name="XA0000_API_or_TargetFrameworkVersion_Fail" xml:space="preserve">
+    <value>Could not determine $(AndroidApiLevel) or $(TargetFrameworkVersion); should not be reached.</value>
+    <comment>The following are literal names and should not be translated: $(AndroidApiLevel), $(TargetFrameworkVersion)
+In this message, the phrase "should not be reached" means that this error message is not expected to appear in normal usage.</comment>
+  </data>
+  <data name="XA0000_Exception" xml:space="preserve">
+    <value>Unhandled exception: {0}</value>
+    <comment>{0} - The exception message of the associated exception</comment>
+  </data>
+  <data name="XA0000_TargetFrameworkVersion_for_API" xml:space="preserve">
+    <value>Could not determine $(TargetFrameworkVersion) for API level '{0}.'</value>
+    <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
+{0} - The API level number</comment>
+  </data>
+  <data name="XA0001" xml:space="preserve">
+    <value>Unsupported or invalid $(TargetFrameworkVersion) value of '{0}'. Please update your Project Options.</value>
+    <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)</comment>
+  </data>
   <data name="XA0100" xml:space="preserve">
     <value>EmbeddedNativeLibrary '{0}' is invalid in Android Application projects. Please use AndroidNativeLibrary instead.</value>
     <comment>The following are literal names and should not be translated: EmbeddedNativeLibrary, AndroidNativeLibrary
 {0} - The library name.</comment>
+  </data>
+  <data name="XA0104" xml:space="preserve">
+    <value>Invalid value for `$(AndroidSequencePointsMode)`: {0}</value>
+    <comment>The following are literal names and should not be translated: `$(AndroidSequencePointsMode)`</comment>
   </data>
   <data name="XA0107" xml:space="preserve">
     <value>{0} is a Reference Assembly.</value>
@@ -141,10 +168,29 @@
     <value>Could not get version from '{0}'. Defaulting to 1.0</value>
     <comment>{0} - The tool name</comment>
   </data>
+  <data name="XA0111" xml:space="preserve">
+    <value>Could not get the `aapt2` version. Disabling `aapt2` support. Please check it is installed correctly.</value>
+    <comment>The following are literal names and should not be translated: `aapt2`</comment>
+  </data>
+  <data name="XA0112" xml:space="preserve">
+    <value>`aapt2` is not installed. Disabling `aapt2` support. Please check it is installed correctly.</value>
+    <comment>The following are literal names and should not be translated: `aapt2`</comment>
+  </data>
+  <data name="XA0113" xml:space="preserve">
+    <value>Google Play requires that new applications and updates must use a TargetFrameworkVersion of v8.0 (API level 26) or above. You are currently targeting {0} (API level {1}).</value>
+    <comment>The following are literal names and should not be translated: TargetFrameworkVersion, v8.0
+{0} - The current value of TargetFrameworkVersion
+{1} - The corresponding API level number</comment>
+  </data>
   <data name="XA0116" xml:space="preserve">
     <value>Unable to find `EmbeddedResource` named `{0}`.</value>
     <comment>The following are literal names and should not be translated: EmbeddedResource
 {0} - The name of the missing resource</comment>
+  </data>
+  <data name="XA0117" xml:space="preserve">
+    <value>The TargetFrameworkVersion {0} is deprecated. Please update it to be v4.4 or higher.</value>
+    <comment>The following are literal names and should not be translated: TargetFrameworkVersion, v4.4
+{0} - The current value of TargetFrameworkVersion</comment>
   </data>
   <data name="XA0121" xml:space="preserve">
     <value>Assembly '{0}' is using '[assembly: {1}]', which is no longer supported. Use a newer version of this NuGet package or notify the library author.</value>
@@ -215,9 +261,20 @@
     <comment>The abbreviation "IL" should not be translated.</comment>
   </data>
   <data name="XA3004" xml:space="preserve">
-    <value>Could not compile native assembly file: {0}</value>
+    <value>Android NDK r10d is buggy and provides an incompatible x86_64 libm.so. See https://code.google.com/p/android/issues/detail?id=161422.</value>
+    <comment>The following are literal names and should not be translated: NDK, r10d, x86_64, libm.so
+"r10d" is the problematic version of the NDK. "x86_64" is the architecture of the libm.so file.</comment>
   </data>
   <data name="XA3005" xml:space="preserve">
+    <value>The detected Android NDK version is incompatible with the targeted LLVM configuration. Please upgrade to NDK r10d or newer.</value>
+    <comment>The following are literal names and should not be translated: NDK, LLVM, r10d
+"r10d" is the version of the NDK.</comment>
+  </data>
+  <data name="XA3006" xml:space="preserve">
+    <value>Could not compile native assembly file: {0}</value>
+    <comment>In this message, the term "assembly" means the low-level language that an assembler like `as` takes as input. (This is different from most of the other messages, where the term "assembly" means the file type that the C# compiler produces.)</comment>
+  </data>
+  <data name="XA3007" xml:space="preserve">
     <value>Could not link native shared library: {0}</value>
   </data>
   <data name="XA4209" xml:space="preserve">
@@ -269,6 +326,10 @@
 {0} - The target SDK version number
 {1} - The API version number</comment>
   </data>
+  <data name="XA4218" xml:space="preserve">
+    <value>Unable to find //manifest/application/uses-library at path: {0}</value>
+    <comment>The following are literal names and should not be translated: //manifest/application/uses-library</comment>
+  </data>
   <data name="XA4300" xml:space="preserve">
     <value>Native library '{0}' will not be bundled because it has an unsupported ABI.</value>
     <comment>The abbreviation "ABI" should not be translated.
@@ -288,6 +349,10 @@ In this message, the term "bundled" is a short way of saying "included into the 
     <comment>The abbreviation "ABI" should not be translated.
 {0} - Comma-separated list of the ignored library file names.</comment>
   </data>
+  <data name="XA4304" xml:space="preserve">
+    <value>ProGuard configuration file '{0}' was not found.</value>
+    <comment>The following are literal names and should not be translated: ProGuard</comment>
+  </data>
   <data name="XA4305" xml:space="preserve">
     <value>Multidex is enabled, but `$(_AndroidMainDexListFile)` is empty.</value>
     <comment>The following are literal names and should not be translated: Multidex, $(_AndroidMainDexListFile)</comment>
@@ -299,6 +364,11 @@ In this message, the term "bundled" is a short way of saying "included into the 
   <data name="XA4306" xml:space="preserve">
     <value>R8 does not support `@(MultiDexMainDexList)` files when android:minSdkVersion &gt;= 21</value>
     <comment>The following are literal names and should not be translated: R8, @(MultiDexMainDexList),  android:minSdkVersion</comment>
+  </data>
+  <data name="XA4307" xml:space="preserve">
+    <value>Invalid ProGuard configuration file. {0}</value>
+    <comment>The following are literal names and should not be translated: ProGuard
+{0} - The error message returned by the ProGuard tool.</comment>
   </data>
   <data name="XA4308" xml:space="preserve">
     <value>Failed to generate type maps</value>
@@ -322,14 +392,29 @@ In this message, the term "bundled" is a short way of saying "included into the 
     <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64</comment>
   </data>
   <data name="XA5102" xml:space="preserve">
+    <value>Conversion from assembly to native code failed. Exit code {0}</value>
+    <comment>In this message, the term "assembly" means the low-level language that an assembler like `as` takes as input. (This is different from most of the other messages, where the term "assembly" means the file type that the C# compiler produces.)
+{0} - The exit code number</comment>
+  </data>
+  <data name="XA5103" xml:space="preserve">
+    <value>NDK C compiler exited with an error. Exit code {0}</value>
+    <comment>The following are literal names and should not be translated: NDK, C
+{0} - The exit code number</comment>
+  </data>
+  <data name="XA5104" xml:space="preserve">
     <value>Could not locate the Android NDK. Please make sure the Android NDK is installed in the Android SDK Manager, or if using a custom NDK path, please ensure the $(AndroidNdkDirectory) MSBuild property is set to the custom path.</value>
     <comment>The following are literal names and should not be translated: $(AndroidNdkDirectory)</comment>
   </data>
-  <data name="XA5103" xml:space="preserve">
+  <data name="XA5105" xml:space="preserve">
     <value>Toolchain utility '{0}' for target {1} was not found. Tried in path: "{2}"</value>
     <comment>{0} - The missing utility name, such as gcc or clang
 {1} - The target architecture, such as Arm, Arm64, or X86_64
 {2} - The path of the directory that was searched</comment>
+  </data>
+  <data name="XA5201" xml:space="preserve">
+    <value>NDK linker exited with an error. Exit code {0}</value>
+    <comment>The following are literal names and should not be translated: NDK
+{0} - The exit code number</comment>
   </data>
   <data name="XA5205" xml:space="preserve">
     <value>Cannot find `{0}`. Please install the Android SDK Build-Tools package with the `{1}{2}tools{2}{3}` program.</value>
