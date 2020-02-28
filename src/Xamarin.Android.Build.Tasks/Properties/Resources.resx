@@ -148,6 +148,32 @@ In this message, the phrase "should not be reached" means that this error messag
     <value>Unsupported or invalid $(TargetFrameworkVersion) value of '{0}'. Please update your Project Options.</value>
     <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)</comment>
   </data>
+  <data name="XA0030" xml:space="preserve">
+    <value>Building with JDK version `{0}` is not supported. Please install JDK version `{1}`. See https://aka.ms/xamarin/jdk9-errors</value>
+    <comment>The abbreviation "JDK" should not be translated.</comment>
+  </data>
+  <data name="XA0031" xml:space="preserve">
+    <value>Java SDK {0} or above is required when using $(TargetFrameworkVersion) {1}.</value>
+    <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
+{0} - The Java SDK version number
+{1} - The target framework version number</comment>
+  </data>
+  <data name="XA0032" xml:space="preserve">
+    <value>Java SDK {0} or above is required when using Android SDK Build-Tools {1}.</value>
+    <comment>The following are literal names and should not be translated: Android SDK Build-Tools
+{0} - The Java SDK version number
+{1} - The Android SDK Build-Tools version number</comment>
+  </data>
+  <data name="XA0033" xml:space="preserve">
+    <value>Failed to get the Java SDK version because the returned value does not appear to contain a valid version number. `{0} -version` returned: ```{1}```</value>
+    <comment>The following are literal names and should not be translated: `{0} -version`, ```{1}```
+{0} - The name of the Java command
+{1} - The output of the command</comment>
+  </data>
+  <data name="XA0034" xml:space="preserve">
+    <value>Failed to get the Java SDK version. Please ensure you have Java {0} or above installed.</value>
+    <comment>{0} - The Java version number</comment>
+  </data>
   <data name="XA0100" xml:space="preserve">
     <value>EmbeddedNativeLibrary '{0}' is invalid in Android Application projects. Please use AndroidNativeLibrary instead.</value>
     <comment>The following are literal names and should not be translated: EmbeddedNativeLibrary, AndroidNativeLibrary
