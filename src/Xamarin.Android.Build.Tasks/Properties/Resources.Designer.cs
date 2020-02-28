@@ -142,6 +142,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The $(TargetFrameworkVersion) for {0} ({1}) is greater than the $(TargetFrameworkVersion) for the application project ({2}). Please increase the $(TargetFrameworkVersion) for the application project..
+        /// </summary>
+        internal static string XA0105 {
+            get {
+                return ResourceManager.GetString("XA0105", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} is a Reference Assembly..
         /// </summary>
         internal static string XA0107 {
@@ -210,6 +219,24 @@ namespace Xamarin.Android.Tasks.Properties {
         internal static string XA0117 {
             get {
                 return ResourceManager.GetString("XA0117", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not parse &apos;{0}&apos;.
+        /// </summary>
+        internal static string XA0118_Parse {
+            get {
+                return ResourceManager.GetString("XA0118_Parse", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not resolve `target` in lock file for &apos;{0}&apos;.
+        /// </summary>
+        internal static string XA0118_Target {
+            get {
+                return ResourceManager.GetString("XA0118_Target", resourceCulture);
             }
         }
         
@@ -300,6 +327,24 @@ namespace Xamarin.Android.Tasks.Properties {
         internal static string XA2001 {
             get {
                 return ResourceManager.GetString("XA2001", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Can not resolve reference: `{0}`, referenced by {1}. Perhaps it doesn&apos;t exist in the Mono for Android profile?.
+        /// </summary>
+        internal static string XA2002_Framework {
+            get {
+                return ResourceManager.GetString("XA2002_Framework", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Can not resolve reference: `{0}`, referenced by {1}. Please add a NuGet package or assembly reference for `{0}`, or remove the reference to `{2}`..
+        /// </summary>
+        internal static string XA2002_NuGet {
+            get {
+                return ResourceManager.GetString("XA2002_NuGet", resourceCulture);
             }
         }
         

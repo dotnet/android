@@ -51,6 +51,14 @@ In this message, the phrase "should not be reached" means that this error messag
         <target state="new">Invalid value for `$(AndroidSequencePointsMode)`: {0}</target>
         <note>The following are literal names and should not be translated: `$(AndroidSequencePointsMode)`</note>
       </trans-unit>
+      <trans-unit id="XA0105">
+        <source>The $(TargetFrameworkVersion) for {0} ({1}) is greater than the $(TargetFrameworkVersion) for the application project ({2}). Please increase the $(TargetFrameworkVersion) for the application project.</source>
+        <target state="new">The $(TargetFrameworkVersion) for {0} ({1}) is greater than the $(TargetFrameworkVersion) for the application project ({2}). Please increase the $(TargetFrameworkVersion) for the application project.</target>
+        <note>The following are literal names and should not be translated: $(TargetFrameworkVersion)
+{0} - The file name of the library referenced by the application
+{1} - The target framework version number for the library
+{2} - The target framework version number for the application project</note>
+      </trans-unit>
       <trans-unit id="XA0107">
         <source>{0} is a Reference Assembly.</source>
         <target state="new">{0} is a Reference Assembly.</target>
@@ -94,6 +102,20 @@ In this message, the phrase "should not be reached" means that this error messag
         <target state="new">The TargetFrameworkVersion {0} is deprecated. Please update it to be v4.4 or higher.</target>
         <note>The following are literal names and should not be translated: TargetFrameworkVersion, v4.4
 {0} - The current value of TargetFrameworkVersion</note>
+      </trans-unit>
+      <trans-unit id="XA0118_Parse">
+        <source>Could not parse '{0}'</source>
+        <target state="new">Could not parse '{0}'</target>
+        <note>{0} - A NuGet target framework moniker string</note>
+      </trans-unit>
+      <trans-unit id="XA0118_Target">
+        <source>Could not resolve `target` in lock file for '{0}'</source>
+        <target state="new">Could not resolve `target` in lock file for '{0}'</target>
+        <note>The following are literal names and should not be translated: `target`
+
+The term "lock file" comes from NuGet. For example, search for "UnauthorizedLockFail" in https://github.com/NuGet/NuGet.Build.Localization to see some example localizations of "lock file."
+
+{0} - A NuGet target framework moniker string</note>
       </trans-unit>
       <trans-unit id="XA0121">
         <source>Assembly '{0}' is using '[assembly: {1}]', which is no longer supported. Use a newer version of this NuGet package or notify the library author.</source>
@@ -154,6 +176,16 @@ In this message, the phrase "should not be reached" means that this error messag
       <trans-unit id="XA2001">
         <source>Source file '{0}' could not be found.</source>
         <target state="new">Source file '{0}' could not be found.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="XA2002_Framework">
+        <source>Can not resolve reference: `{0}`, referenced by {1}. Perhaps it doesn't exist in the Mono for Android profile?</source>
+        <target state="new">Can not resolve reference: `{0}`, referenced by {1}. Perhaps it doesn't exist in the Mono for Android profile?</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="XA2002_NuGet">
+        <source>Can not resolve reference: `{0}`, referenced by {1}. Please add a NuGet package or assembly reference for `{0}`, or remove the reference to `{2}`.</source>
+        <target state="new">Can not resolve reference: `{0}`, referenced by {1}. Please add a NuGet package or assembly reference for `{0}`, or remove the reference to `{2}`.</target>
         <note />
       </trans-unit>
       <trans-unit id="XA2006">
