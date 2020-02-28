@@ -6,14 +6,7 @@ steps:
 - template: run-installer.yaml
   parameters:
     provisionExtraArgs: ${{ parameters.provisionExtraArgs }}
-      
-- task: provisionator@2
-  inputs:
-    provisionator_uri: $(provisionator-uri)
-    github_token: $(GitHub.Token)
-    provisioning_script: build-tools\scripts\provision-ndk.csx
-    provisioning_extra_args: ${{ parameters.provisionExtraArgs }}
-    
+
 - task: UseDotNet@2
   displayName: install .NET Core $(DotNetCoreVersion)
   inputs:
@@ -28,3 +21,10 @@ steps:
   inputs:
     command: 'custom'
     arguments: 'install NUnit.ConsoleRunner -Version 3.9.0 -OutputDirectory packages'
+
+- task: MSBuild@1
+  displayName: Provision NDK
+  inputs:
+    solution: tests\Runtime-AppBundle\Mono.Android-TestsAppBundle.csproj
+    configuration: $(XA.Build.Configuration)
+    msbuildArguments: /t:InstallAndroidDependencies /p:_NdkRequired=True /p:AndroidNdkVersion=16.1
