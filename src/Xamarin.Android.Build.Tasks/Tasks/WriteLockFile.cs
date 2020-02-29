@@ -25,7 +25,7 @@ namespace Xamarin.Android.Tasks
 				var existing = BuildEngine4.GetRegisteredTaskObject (key, RegisteredTaskObjectLifetime.Build) as DeleteFileAfterBuild;
 				if (existing == null) {
 					if (File.Exists (path)) {
-						Log.LogCodedWarning ("XA5302", "Two processes may be building this project at once. Lock file exists at path: {0}", path);
+						Log.LogCodedWarning ("XA5302", Properties.Resources.XA5302, path);
 					} else {
 						Directory.CreateDirectory (Path.GetDirectoryName (path));
 						File.WriteAllText (path, "");

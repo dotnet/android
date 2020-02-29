@@ -3161,7 +3161,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 					$"_AndroidApiLevel=27",
 				}), "Build should have failed");
 				Assert.IsTrue (builder.LastBuildOutput.ContainsText ("error XA5207:"), "XA5207 should have been raised.");
-				Assert.IsTrue (builder.LastBuildOutput.ContainsText ("Could not find android.jar for API Level 27"), "XA5207 should have had a good error message.");
+				Assert.IsTrue (builder.LastBuildOutput.ContainsText ("Could not find android.jar for API level 27"), "XA5207 should have had a good error message.");
 			}
 			Directory.Delete (AndroidSdkDirectory, recursive: true);
 		}

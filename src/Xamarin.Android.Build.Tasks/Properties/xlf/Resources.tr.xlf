@@ -129,6 +129,12 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
         <target state="new">Assembly '{0}' is using a deprecated attribute '[assembly: {1}]'. Use a newer version of this NuGet package or notify the library author.</target>
         <note>The following are literal names and should not be translated: [assembly: {1}], NuGet</note>
       </trans-unit>
+      <trans-unit id="XA1000">
+        <source>There was a problem parsing {0}. This is likely due to incomplete or invalid XML. Exception: {1}</source>
+        <target state="new">There was a problem parsing {0}. This is likely due to incomplete or invalid XML. Exception: {1}</target>
+        <note>{0} - The file name
+{1} - The exception message of the associated exception</note>
+      </trans-unit>
       <trans-unit id="XA1001">
         <source>AndroidResgen: Warning while updating resource XML '{0}': {1}</source>
         <target state="new">AndroidResgen: Warning while updating resource XML '{0}': {1}</target>
@@ -318,6 +324,12 @@ In this message, the term "bundled" is a short way of saying "included into the 
         <note>The abbreviation "ABI" should not be translated.
 {0} - Comma-separated list of the ignored library file names.</note>
       </trans-unit>
+      <trans-unit id="XA4303">
+        <source>Error extracting resources from "{0}": {1}</source>
+        <target state="new">Error extracting resources from "{0}": {1}</target>
+        <note>{0} - The file name
+{1} - The exception message of the associated exception</note>
+      </trans-unit>
       <trans-unit id="XA4304">
         <source>ProGuard configuration file '{0}' was not found.</source>
         <target state="new">ProGuard configuration file '{0}' was not found.</target>
@@ -416,6 +428,24 @@ In this message, the term "bundled" is a short way of saying "included into the 
         <note>The following are literal names and should not be translated: /p:LintToolPath
 {0} - The missing tool name</note>
       </trans-unit>
+      <trans-unit id="XA5207">
+        <source>Could not find android.jar for API level {0}. This means the Android SDK platform for API level {0} is not installed. Either install it in the Android SDK Manager ({2}), or change the Xamarin.Android project to target an API version that is installed. ({1} missing.)</source>
+        <target state="new">Could not find android.jar for API level {0}. This means the Android SDK platform for API level {0} is not installed. Either install it in the Android SDK Manager ({2}), or change the Xamarin.Android project to target an API version that is installed. ({1} missing.)</target>
+        <note>The following are literal names and should not be translated: android.jar
+{0} - The API level name
+{1} - The expected path of the android.jar file
+{2} - The menu location in Visual Studio that can be used to launch the Android SDK Manager</note>
+      </trans-unit>
+      <trans-unit id="XA5207_SDK_Manager_Windows">
+        <source>Tools &gt; Android &gt; Android SDK Manager...</source>
+        <target state="new">Tools &gt; Android &gt; Android SDK Manager...</target>
+        <note>This string is the location of a menu command in Visual Studio.</note>
+      </trans-unit>
+      <trans-unit id="XA5207_SDK_Manager_macOS">
+        <source>Tools &gt; Open Android SDK Manager...</source>
+        <target state="new">Tools &gt; Open Android SDK Manager...</target>
+        <note>This string is the location of a menu command in Visual Studio for Mac.</note>
+      </trans-unit>
       <trans-unit id="XA5213">
         <source>java.lang.OutOfMemoryError. Consider increasing the value of $(JavaMaximumHeapSize). Java ran out of memory while executing '{0} {1}'</source>
         <target state="new">java.lang.OutOfMemoryError. Consider increasing the value of $(JavaMaximumHeapSize). Java ran out of memory while executing '{0} {1}'</target>
@@ -448,6 +478,11 @@ In this message, the term "bundled" is a short way of saying "included into the 
         <note>The following are literal names and should not be translated: MAX_PATH.
 {0} - The managed type name
 {1} - The exception message of the associated exception</note>
+      </trans-unit>
+      <trans-unit id="XA5302">
+        <source>Two processes may be building this project at once. Lock file exists at path: {0}</source>
+        <target state="new">Two processes may be building this project at once. Lock file exists at path: {0}</target>
+        <note />
       </trans-unit>
     </body>
   </file>
