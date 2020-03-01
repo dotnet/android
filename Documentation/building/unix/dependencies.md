@@ -7,8 +7,8 @@ Building Xamarin.Android requires:
   * [Autotools (`autoconf`, `automake`, etc.)](#autotools)
   * [The Android SDK and NDK](#ndk)
   * [Linux](#Linux) and [macOS](#macOS) Dependencies
-  * C++ compiler with support for C++17 (clang or gcc)
-  * MinGW 6 or newer, if cross-building of Windows tooling on the 
+  * C++ compiler with support for C++17 (clang 5, gcc 7 or higher)
+  * MinGW 6 or newer, if cross-building of Windows tooling on the
     Unix host is desired
 
 The `make prepare` build step (or `/t:Prepare` on Windows) will
@@ -99,7 +99,7 @@ URL to download files from is controlled by the `$(AndroidUri)` property.
 
 If you have the `binfmt_misc` module enabled with any of Mono or Wine installed and
 you plan to cross-build the Windows compilers and tools (by enabling the `mxe-Win32`
-or `mxe-Win64` host targets) as well as LLVM+AOT targets, you will need to disable 
+or `mxe-Win64` host targets) as well as LLVM+AOT targets, you will need to disable
 `binfmt_misc` for the duration of the build or the Mono/LLVM configure scripts will
 fail to detect they are cross-compiling and they will produce Windows PE executables
 for tools required by the build.
