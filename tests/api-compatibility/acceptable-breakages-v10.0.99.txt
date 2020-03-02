@@ -1,0 +1,5 @@
+Compat issues with assembly Mono.Android:
+CannotAddAbstractMembers : Member 'Android.Telephony.CellInfo.CellIdentity' is abstract in the implementation but is missing in the contract.
+CannotAddAbstractMembers : Member 'Android.Telephony.CellInfo.CellSignalStrength' is abstract in the implementation but is missing in the contract.
+CannotAddAbstractMembers : Member 'Android.Telephony.CellInfo.CellIdentity.get()' is abstract in the implementation but is missing in the contract.
+CannotAddAbstractMembers : Member 'Android.Telephony.CellInfo.CellSignalStrength.get()' is abstract in the implementation but is missing in the contract.
