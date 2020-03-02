@@ -7,7 +7,11 @@ namespace Xamarin.Android.Prepare
 	class Scenario_Required : Scenario
 	{
 		public Scenario_Required () : base ("Required", "Just the basic steps to quickly install required tools and generate build files.", Context.Instance)
-		{}
+		{
+			NeedsGitSubmodules = true;
+			NeedsCompilers = true;
+			NeedsGitBuildInfo = true;
+		}
 
 		protected override void AddSteps (Context context)
 		{

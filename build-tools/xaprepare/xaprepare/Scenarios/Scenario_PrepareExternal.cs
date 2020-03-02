@@ -7,7 +7,9 @@ namespace Xamarin.Android.Prepare
 	{
 		public Scenario_PrepareExternal ()
 			: base ("PrepareExternal", "Prepare external submodules", Context.Instance)
-		{}
+		{
+			NeedsGitSubmodules = true;
+		}
 
 		protected override void AddSteps (Context context)
 		{
