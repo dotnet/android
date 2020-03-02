@@ -765,16 +765,21 @@ namespace Xamarin.Android.Prepare
 
 			Tools.Init (this);
 
-			Banner ("Updating Git submodules");
+			if (SelectedScenario.NeedsGitSubmodules) {
+				Banner ("Updating Git submodules");
 
-			var git = new GitRunner (this);
-			if (!await git.SubmoduleUpdate ()) {
-				Log.ErrorLine ("Failed to update Git submodules");
-				return false;
+				var git = new GitRunner (this);
+				if (!await git.SubmoduleUpdate ()) {
+					Log.ErrorLine ("Failed to update Git submodules");
+					return false;
+				}
 			}
 
 			BuildInfo = new BuildInfo ();
-			await BuildInfo.GatherGitInfo (this);
+			if (SelectedScenario.NeedsGitBuildInfo) {
+				await BuildInfo.GatherGitInfo (this);
+			}
+
 			AbiNames.LogAllNames (this);
 
 			if (MakeConcurrency == 0)

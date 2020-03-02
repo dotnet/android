@@ -368,7 +368,8 @@ namespace Xamarin.Android.Prepare
 				Environment.SetEnvironmentVariable (name, value);
 			}
 
-			DetectCompilers ();
+			if (Context.SelectedScenario.NeedsCompilers)
+				DetectCompilers ();
 		}
 
 		/// <summary>

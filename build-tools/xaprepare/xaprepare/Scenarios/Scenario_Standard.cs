@@ -7,7 +7,11 @@ namespace Xamarin.Android.Prepare
 	{
 		public Scenario_Standard ()
 			: base ("Standard", "Standard init", Context.Instance)
-		{}
+		{
+			NeedsGitSubmodules = true;
+			NeedsCompilers = true;
+			NeedsGitBuildInfo = true;
+		}
 
 		protected override void AddSteps (Context context)
 		{

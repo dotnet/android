@@ -26,7 +26,7 @@ namespace Xamarin.Android.Prepare
 			// ...and disable installation of other programs...
 			context.SetCondition (KnownConditions.AllowProgramInstallation, false);
 
-			// ...but do not signal an error when any are missing
+			// ...but do not signal an error when any are missing...
 			context.SetCondition (KnownConditions.IgnoreMissingPrograms, true);
 		}
 	}
