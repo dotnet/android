@@ -6,10 +6,13 @@ Building Xamarin.Android requires:
   * [The Java Development Kit (JDK)](#jdk)
   * [Autotools (`autoconf`, `automake`, etc.)](#autotools)
   * [The Android SDK and NDK](#ndk)
+  * [The Microsoft .NET SDK][dotnetsdk]
   * [Linux](#Linux) and [macOS](#macOS) Dependencies
   * C++ compiler with support for C++17 (clang 5, gcc 7 or higher)
   * MinGW 6 or newer, if cross-building of Windows tooling on the
     Unix host is desired
+
+[dotnetsdk]: https://docs.microsoft.com/de-de/dotnet/core/install/sdk
 
 The `make prepare` build step (or `/t:Prepare` on Windows) will
 check that all required dependencies are present.
