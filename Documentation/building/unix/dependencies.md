@@ -45,9 +45,11 @@ The minimum Mono version which is checked for can be overridden by the
 
 ## Java Development Kit
 
-The Java Development Kit may be downloaded from the
+Most Linux distributions include [OpenJDK][openjdk].
+Alternatively, the Java Development Kit may be downloaded from the
 [Oracle Java SE Downloads page][download-jdk].
 
+[openjdk]: https://openjdk.java.net
 [download-jdk]: http://www.oracle.com/technetwork/java/javase/downloads/
 
 At this time, we only support building with JDK 1.8.
