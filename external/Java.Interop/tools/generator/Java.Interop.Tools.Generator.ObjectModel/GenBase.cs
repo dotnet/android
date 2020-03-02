@@ -817,6 +817,12 @@ namespace MonoDroid.Generation
 
 		public GenericParameterDefinitionList TypeParameters => support.TypeParameters;
 
+		// Prior to DIM, interfaces could not contain nested types so we generated them
+		// as sibling types.  When DIM is enabled we can now generate them properly nested.
+		// However this is an API break for existing bindings.  Setting this property
+		// to true opts this interface into the sibling compatibility behavior.
+		public bool Unnest { get; set; }
+
 		public virtual void UpdateEnums (CodeGenerationOptions opt, AncestorDescendantCache cache)
 		{
 			if (enum_updated || !IsGeneratable)

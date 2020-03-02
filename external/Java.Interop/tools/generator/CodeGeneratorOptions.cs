@@ -41,6 +41,7 @@ namespace Xamarin.Android.Binder
 		public string               ApiXmlAdjusterOutput { get; set; }
 		public bool                 SupportInterfaceConstants { get; set; }
 		public bool		    SupportDefaultInterfaceMethods { get; set; }
+		public bool		    SupportNestedInterfaceTypes { get; set; }
 
 		public static CodeGeneratorOptions Parse (string[] args)
 		{
@@ -92,6 +93,7 @@ namespace Xamarin.Android.Binder
 					v => {
 						opts.SupportInterfaceConstants = v?.Contains ("interface-constants") == true;
 						opts.SupportDefaultInterfaceMethods = v?.Contains ("default-interface-methods") == true;
+						opts.SupportNestedInterfaceTypes = v?.Contains ("nested-interface-types") == true;
 						}},
 				{ "preserve-enums",
 					"For internal use.",

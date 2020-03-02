@@ -68,6 +68,7 @@ namespace Xamarin.Android.Binder
 				ProductVersion        = options.ProductVersion,
 				SupportInterfaceConstants = options.SupportInterfaceConstants,
 				SupportDefaultInterfaceMethods = options.SupportDefaultInterfaceMethods,
+				SupportNestedInterfaceTypes = options.SupportNestedInterfaceTypes,
 			};
 			var resolverCache       = new TypeDefinitionCache ();
 

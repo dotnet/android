@@ -52,7 +52,7 @@ namespace generatortests
 			options = new CodeGenerationOptions ();
 			var javaLang = xml.Element ("api").Element ("package");
 			foreach (var type in javaLang.Elements("class")) {
-				var @class = XmlApiImporter.CreateClass (javaLang, type);
+				var @class = XmlApiImporter.CreateClass (javaLang, type, options);
 				Assert.IsTrue (@class.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "@class.Validate failed!");
 				options.SymbolTable.AddType (@class);
 			}
@@ -64,7 +64,7 @@ namespace generatortests
 		public void Class ()
 		{
 			var element = package.Element ("class");
-			var @class = XmlApiImporter.CreateClass (package, element);
+			var @class = XmlApiImporter.CreateClass (package, element, options);
 			Assert.IsTrue (@class.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "@class.Validate failed!");
 
 			Assert.AreEqual ("public", @class.Visibility);
@@ -81,7 +81,7 @@ namespace generatortests
 		public void Method ()
 		{
 			var element = package.Element ("class");
-			var @class = XmlApiImporter.CreateClass (package, element);
+			var @class = XmlApiImporter.CreateClass (package, element, options);
 			var method = XmlApiImporter.CreateMethod (@class, element.Element ("method"));
 			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "method.Validate failed!");
 
@@ -101,7 +101,7 @@ namespace generatortests
 		public void Method_Matches_True ()
 		{
 			var element = package.Element ("class");
-			var @class = XmlApiImporter.CreateClass (package, element);
+			var @class = XmlApiImporter.CreateClass (package, element, options);
 			var unknownTypes = element.Elements ("method").Where (e => e.Attribute ("name").Value == "unknownTypes").First ();
 			var methodA = XmlApiImporter.CreateMethod (@class, unknownTypes);
 			var methodB = XmlApiImporter.CreateMethod (@class, unknownTypes);
@@ -112,7 +112,7 @@ namespace generatortests
 		public void Method_Matches_False ()
 		{
 			var element = package.Element ("class");
-			var @class = XmlApiImporter.CreateClass (package, element);
+			var @class = XmlApiImporter.CreateClass (package, element, options);
 			var unknownTypesA = element.Elements ("method").Where (e => e.Attribute ("name").Value == "unknownTypes").First ();
 			var unknownTypesB = element.Elements ("method").Where (e => e.Attribute ("name").Value == "unknownTypesReturn").First ();
 			unknownTypesB.Attribute ("name").Value = "unknownTypes";
@@ -126,7 +126,7 @@ namespace generatortests
 		public void MethodWithParameters ()
 		{
 			var element = package.Element ("class");
-			var @class = XmlApiImporter.CreateClass (package, element);
+			var @class = XmlApiImporter.CreateClass (package, element, options);
 			var method = XmlApiImporter.CreateMethod (@class, element.Elements ("method").Where (e => e.Attribute ("name").Value == "barWithParams").First ());
 			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "method.Validate failed!");
 			Assert.AreEqual ("(ZID)Ljava/lang/String;", method.JniSignature);
@@ -156,7 +156,7 @@ namespace generatortests
 		public void Ctor ()
 		{
 			var element = package.Element ("class");
-			var @class = XmlApiImporter.CreateClass (package, element);
+			var @class = XmlApiImporter.CreateClass (package, element, options);
 			var ctor = XmlApiImporter.CreateCtor (@class, element.Element ("constructor"));
 			Assert.IsTrue (ctor.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "ctor.Validate failed!");
 
@@ -170,7 +170,7 @@ namespace generatortests
 		public void Field ()
 		{
 			var element = package.Element ("class");
-			var @class = XmlApiImporter.CreateClass (package, element);
+			var @class = XmlApiImporter.CreateClass (package, element, options);
 			var field = XmlApiImporter.CreateField (element.Element ("field"));
 			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "field.Validate failed!");
 
@@ -186,7 +186,7 @@ namespace generatortests
 		public void Interface ()
 		{
 			var element = package.Element ("interface");
-			var @interface = XmlApiImporter.CreateInterface (package, element);
+			var @interface = XmlApiImporter.CreateInterface (package, element, options);
 			Assert.IsTrue (@interface.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "interface.Validate failed!");
 
 			Assert.AreEqual ("public", @interface.Visibility);

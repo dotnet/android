@@ -511,7 +511,7 @@ namespace generatortests
 			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
 
 			generator.Context.ContextTypes.Push (iface);
-			generator.WriteInterfaceDeclaration (iface, string.Empty);
+			generator.WriteInterfaceDeclaration (iface, string.Empty, new GenerationInfo (null, null, null));
 			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteInterfaceDeclaration)), writer.ToString ().NormalizeLineEndings ());

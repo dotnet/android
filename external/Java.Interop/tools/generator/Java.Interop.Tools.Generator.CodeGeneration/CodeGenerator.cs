@@ -453,8 +453,8 @@ namespace MonoDroid.Generation
 		{
 			Context.ContextTypes.Push (@interface);
 
-			// interfaces don't nest, so generate as siblings
-			foreach (GenBase nest in @interface.NestedTypes) {
+			// Generate sibling types for nested types we don't want to nest
+			foreach (var nest in @interface.NestedTypes.Where (t => t.Unnest)) {
 				WriteType (nest, indent, gen_info);
 				writer.WriteLine ();
 			}
@@ -466,7 +466,7 @@ namespace MonoDroid.Generation
 			if (@interface.IsConstSugar && @interface.GetGeneratableFields (opt).Count () == 0)
 				return;
 
-			WriteInterfaceDeclaration (@interface, indent);
+			WriteInterfaceDeclaration (@interface, indent, gen_info);
 
 			// If this interface is just constant fields we don't need to write all the invoker bits
 			if (@interface.IsConstSugar)
@@ -507,7 +507,7 @@ namespace MonoDroid.Generation
 			}
 		}
 
-		public void WriteInterfaceDeclaration (InterfaceGen @interface, string indent)
+		public void WriteInterfaceDeclaration (InterfaceGen @interface, string indent, GenerationInfo gen_info)
 		{
 			StringBuilder sb = new StringBuilder ();
 			foreach (ISymbol isym in @interface.Interfaces) {
@@ -544,6 +544,13 @@ namespace MonoDroid.Generation
 			writer.WriteLine ();
 			WriteInterfaceProperties (@interface, indent + "\t");
 			WriteInterfaceMethods (@interface, indent + "\t");
+
+			// Generate nested types for supported nested types
+			foreach (var nest in @interface.NestedTypes.Where (t => !t.Unnest)) {
+				WriteType (nest, indent + "\t", gen_info);
+				writer.WriteLine ();
+			}
+
 			writer.WriteLine (indent + "}");
 			writer.WriteLine ();
 		}

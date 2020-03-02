@@ -12,13 +12,17 @@ namespace MonoDroid.Generation
 	{
 		static readonly Regex api_level = new Regex (@"api-(\d+).xml");
 
-		public static ClassGen CreateClass (XElement pkg, XElement elem)
+		public static ClassGen CreateClass (XElement pkg, XElement elem, CodeGenerationOptions options)
 		{
 			var klass = new ClassGen (CreateGenBaseSupport (pkg, elem, false)) {
 				BaseType = elem.XGetAttribute ("extends"),
 				FromXml = true,
 				IsAbstract = elem.XGetAttribute ("abstract") == "true",
-				IsFinal = elem.XGetAttribute ("final") == "true"
+				IsFinal = elem.XGetAttribute ("final") == "true",
+				// Only use an explicitly set XML attribute
+				Unnest = elem.XGetAttribute ("unnest") == "true" ? true :
+					 elem.XGetAttribute ("unnest") == "false" ? false :
+					 !options.SupportNestedInterfaceTypes
 			};
 
 			foreach (var child in elem.Elements ()) {
@@ -188,11 +192,15 @@ namespace MonoDroid.Generation
 			return support;
 		}
 
-		public static InterfaceGen CreateInterface (XElement pkg, XElement elem)
+		public static InterfaceGen CreateInterface (XElement pkg, XElement elem, CodeGenerationOptions options)
 		{
 			var iface = new InterfaceGen (CreateGenBaseSupport (pkg, elem, true)) {
 				ArgsType = elem.XGetAttribute ("argsType"),
-				HasManagedName = elem.Attribute ("managedName") != null
+				HasManagedName = elem.Attribute ("managedName") != null,
+				// Only use an explicitly set XML attribute
+				Unnest = elem.XGetAttribute ("unnest") == "true" ? true :
+					 elem.XGetAttribute ("unnest") == "false" ? false :
+					 !options.SupportNestedInterfaceTypes
 			};
 
 			foreach (var child in elem.Elements ()) {

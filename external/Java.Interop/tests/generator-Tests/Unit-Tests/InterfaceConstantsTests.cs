@@ -39,7 +39,7 @@ namespace generatortests
 			iface.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ());
 
 			generator.Context.ContextTypes.Push (iface);
-			generator.WriteInterfaceDeclaration (iface, string.Empty);
+			generator.WriteInterfaceDeclaration (iface, string.Empty, new GenerationInfo (null, null, null));
 			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteInterfaceFields)), writer.ToString ().NormalizeLineEndings ());
@@ -64,7 +64,7 @@ namespace generatortests
 			iface.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ());
 
 			generator.Context.ContextTypes.Push (iface);
-			generator.WriteInterfaceDeclaration (iface, string.Empty);
+			generator.WriteInterfaceDeclaration (iface, string.Empty, new GenerationInfo (null, null, null));
 			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteConstSugarInterfaceFields)), writer.ToString ().NormalizeLineEndings ());

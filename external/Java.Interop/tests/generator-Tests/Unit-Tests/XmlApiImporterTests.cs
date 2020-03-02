@@ -8,11 +8,13 @@ namespace generatortests
 	[TestFixture]
 	public class XmlApiImporterTests
 	{
+		CodeGenerationOptions opt = new CodeGenerationOptions ();
+
 		[Test]
 		public void CreateClass_EnsureValidName ()
 		{
 			var xml = XDocument.Parse ("<package name=\"com.example.test\" jni-name=\"com/example/test\"><class name=\"$3\" /></package>");
-			var klass = XmlApiImporter.CreateClass (xml.Root, xml.Root.Element ("class"));
+			var klass = XmlApiImporter.CreateClass (xml.Root, xml.Root.Element ("class"), opt);
 
 			Assert.AreEqual ("_3", klass.Name);
 		}
@@ -21,7 +23,7 @@ namespace generatortests
 		public void CreateCtor_EnsureValidName ()
 		{
 			var xml = XDocument.Parse ("<package name=\"com.example.test\" jni-name=\"com/example/test\"><class name=\"test\"><constructor name=\"$3\" /></class></package>");
-			var klass = XmlApiImporter.CreateClass (xml.Root, xml.Root.Element ("class"));
+			var klass = XmlApiImporter.CreateClass (xml.Root, xml.Root.Element ("class"), opt);
 
 			Assert.AreEqual ("_3", klass.Ctors[0].Name);
 		}
@@ -66,7 +68,7 @@ namespace generatortests
 		public void CreateInterface_EnsureValidName ()
 		{
 			var xml = XDocument.Parse ("<package name=\"com.example.test\" jni-name=\"com/example/test\"><interface name=\"$3\" /></package>");
-			var iface = XmlApiImporter.CreateInterface (xml.Root, xml.Root.Element ("interface"));
+			var iface = XmlApiImporter.CreateInterface (xml.Root, xml.Root.Element ("interface"), opt);
 
 			Assert.AreEqual ("I_3", iface.Name);
 		}
@@ -75,7 +77,7 @@ namespace generatortests
 		public void CreateMethod_EnsureValidName ()
 		{
 			var xml = XDocument.Parse ("<package name=\"com.example.test\" jni-name=\"com/example/test\"><class name=\"test\"><method name=\"$3\" /></class></package>");
-			var klass = XmlApiImporter.CreateClass (xml.Root, xml.Root.Element ("class"));
+			var klass = XmlApiImporter.CreateClass (xml.Root, xml.Root.Element ("class"), opt);
 
 			Assert.AreEqual ("_3", klass.Methods [0].Name);
 		}
@@ -84,7 +86,7 @@ namespace generatortests
 		public void CreateMethod_EnsureValidNameHyphen ()
 		{
 			var xml = XDocument.Parse ("<package name=\"com.example.test\" jni-name=\"com/example/test\"><class name=\"test\"><method name=\"-3\" /></class></package>");
-			var klass = XmlApiImporter.CreateClass (xml.Root, xml.Root.Element ("class"));
+			var klass = XmlApiImporter.CreateClass (xml.Root, xml.Root.Element ("class"), opt);
 
 			Assert.AreEqual ("_3", klass.Methods [0].Name);
 		}

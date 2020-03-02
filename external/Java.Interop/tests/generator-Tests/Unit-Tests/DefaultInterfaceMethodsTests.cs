@@ -40,7 +40,7 @@ namespace generatortests
 
 			iface.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ());
 
-			generator.WriteInterfaceDeclaration (iface, string.Empty);
+			generator.WriteInterfaceDeclaration (iface, string.Empty, new GenerationInfo (null, null, null));
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteInterfaceDefaultMethod)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -61,7 +61,7 @@ namespace generatortests
 			iface.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ());
 			iface2.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ());
 
-			generator.WriteInterfaceDeclaration (iface2, string.Empty);
+			generator.WriteInterfaceDeclaration (iface2, string.Empty, new GenerationInfo (null, null, null));
 
 			// IMyInterface2 should generate the method as abstract, not a default method
 			Assert.AreEqual (GetExpected (nameof (WriteInterfaceRedeclaredDefaultMethod)), writer.ToString ().NormalizeLineEndings ());
@@ -81,7 +81,7 @@ namespace generatortests
 
 			iface.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ());
 
-			generator.WriteInterfaceDeclaration (iface, string.Empty);
+			generator.WriteInterfaceDeclaration (iface, string.Empty, new GenerationInfo (null, null, null));
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteInterfaceDefaultProperty)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -100,7 +100,7 @@ namespace generatortests
 
 			iface.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ());
 
-			generator.WriteInterfaceDeclaration (iface, string.Empty);
+			generator.WriteInterfaceDeclaration (iface, string.Empty, new GenerationInfo (null, null, null));
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteInterfaceDefaultPropertyGetterOnly)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -222,9 +222,56 @@ namespace generatortests
 
 			iface.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ());
 
-			generator.WriteInterfaceDeclaration (iface, string.Empty);
+			generator.WriteInterfaceDeclaration (iface, string.Empty, new GenerationInfo (null, null, null));
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteStaticInterfaceProperty)), writer.ToString ().NormalizeLineEndings ());
+		}
+
+		readonly string nested_interface_api = @"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/EmptyOverrideClass;' />
+			  </package>
+			  <package name='com.xamarin.android' jni-name='com/xamarin/android'>
+			    <interface abstract='true' deprecated='not deprecated' final='false' name='Parent' static='false' visibility='public' jni-signature='Lcom/xamarin/android/Parent;'>
+			      <method abstract='true' deprecated='not deprecated' final='false' name='getBar' jni-signature='()I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public'></method>
+			    </interface>
+			    <interface abstract='true' deprecated='not deprecated' final='false' name='Parent.Child' static='false' visibility='public' jni-signature='Lcom/xamarin/android/Parent$Child;'>
+			      <method abstract='true' deprecated='not deprecated' final='false' name='getBar' jni-signature='()I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public'></method>
+			    </interface>
+			  </package>
+			</api>";
+
+		[Test]
+		public void WriteUnnestedInterfaceTypes ()
+		{
+			// Ensure we don't break the original un-nested interface types
+			var gens = ParseApiDefinition (nested_interface_api);
+
+			var parent_iface = gens.OfType<InterfaceGen> ().Single ();
+
+			parent_iface.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ());
+
+			generator.WriteInterface (parent_iface, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
+
+			Assert.AreEqual (GetTargetedExpected (nameof (WriteUnnestedInterfaceTypes)), writer.ToString ().NormalizeLineEndings ());
+		}
+
+		[Test]
+		public void WriteNestedInterfaceTypes ()
+		{
+			// Traditionally this would have created namespace.IParent and namespace.IParentChild
+			// With nested types this creates namespace.IParent and namespace.IParent.IChild
+			options.SupportNestedInterfaceTypes = true;
+
+			var gens = ParseApiDefinition (nested_interface_api);
+
+			var parent_iface = gens.OfType<InterfaceGen> ().Single ();
+
+			parent_iface.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ());
+
+			generator.WriteInterface (parent_iface, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
+
+			Assert.AreEqual (GetTargetedExpected (nameof (WriteNestedInterfaceTypes)), writer.ToString ().NormalizeLineEndings ());
 		}
 	}
 }
