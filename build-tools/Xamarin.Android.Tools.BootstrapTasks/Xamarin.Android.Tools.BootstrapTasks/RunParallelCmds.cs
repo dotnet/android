@@ -40,12 +40,13 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 						using (var proc = Process.Start (procStartInfo)) {
 							proc.WaitForExit ();
 
+							var output = proc.StandardOutput.ReadToEnd ();
+							var errOutput = proc.StandardError.ReadToEnd ();
+
 							if (proc.ExitCode != 0) {
-								Log.LogMessage (MessageImportance.High, $"Non-zero exit code: {proc.ExitCode}  Error output: {proc.StandardError.ReadToEnd ()}");
+								Log.LogMessage (MessageImportance.High, $"Non-zero exit code: {proc.ExitCode}  Error output: {errOutput}");
 								success = false;
 							}
-
-							var output = proc.StandardOutput.ReadToEnd ();
 
 							if (!string.IsNullOrEmpty (output))
 								Log.LogMessage (MessageImportance.Normal, $"Output: {output}");

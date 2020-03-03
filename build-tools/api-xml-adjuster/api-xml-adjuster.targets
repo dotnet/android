@@ -61,7 +61,7 @@
       AfterTargets="Build"
       DependsOnTargets="_AdjustApiXmlPrepare"
       Inputs="@(ApiFileDefinition.ClassParseXml)"
-      Outputs="@(ApiFileDefinition.ApiAdjustedXml);abc">
+      Outputs="@(ApiFileDefinition.ApiAdjustedXml)">
     <RunParallelCmds
         Commands="@(_AdjustApiXmlPrepareCommands)"
         ManagedRuntime="$(ManagedRuntime)"
