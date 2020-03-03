@@ -74,6 +74,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "sqlite-xamarin", "src\sqlite-xamarin\sqlite-xamarin.csproj", "{B8F799C5-D7CE-4E09-9CE6-BAA4173E7EC8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenTK", "src\OpenTK-1.0\OpenTK.csproj", "{5EB9E888-E357-417E-9F39-DDEC195CE47F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7} = {3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Cecil", "external\Java.Interop\src\Xamarin.Android.Cecil\Xamarin.Android.Cecil.csproj", "{15945D4B-FF56-4BCC-B598-2718D199DD08}"
 EndProject
