@@ -38,6 +38,7 @@ namespace Xamarin.Android.Prepare
 			new AndroidPlatform (apiName: "Oreo",                   apiLevel: 27, platformID: "27",  include: "v8.1",    framework: "v8.1"),
 			new AndroidPlatform (apiName: "Pie",                    apiLevel: 28, platformID: "28",  include: "v9.0",    framework: "v9.0"),
 			new AndroidPlatform (apiName: "Q",                      apiLevel: 29, platformID: "29",  include: "v10.0",   framework: "v10.0"),
+			new AndroidPlatform (apiName: "R",                      apiLevel: 30, platformID: "R",   include: "v10.0.99",  framework: "v10.0.99",  stable: false),
 		};
 
 		public static readonly Dictionary<string, uint> NdkMinimumAPI = new Dictionary<string, uint> {
