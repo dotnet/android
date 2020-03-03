@@ -41,10 +41,10 @@ ms.date: 01/24/2020
 + [XA0002](xa0002.md): Could not find mono.android.jar
 + [XA0003](xa0003.md): Invalid `android:versionCode` value. It must be an integer value.
 + [XA0004](xa0004.md): VersionCode {code} is outside 0, {maxVersionCode} interval.
-+ [XA0030](xa0030.md): Building with JDK Version `{versionNumber}` is not supported.
-+ [XA0031](xa0031.md): Java SDK {requiredJavaForFrameworkVersion} or above is required when targeting FrameworkVersion {targetFrameworkVersion}.
-+ [XA0032](xa0032.md): Java SDK {requiredJavaForBuildTools} or above is required when using build-tools {buildToolsVersion}.
-+ [XA0033](xa0033.md): Failed to get the Java SDK version as it does not appear to contain a valid version number.
++ [XA0030](xa0030.md): Building with JDK version `{versionNumber}` is not supported.
++ [XA0031](xa0031.md): Java SDK {requiredJavaForFrameworkVersion} or above is required when when using $(TargetFrameworkVersion) {targetFrameworkVersion}.
++ [XA0032](xa0032.md): Java SDK {requiredJavaForBuildTools} or above is required when using Android SDK Build-Tools {buildToolsVersion}.
++ [XA0033](xa0033.md): Failed to get the Java SDK version because the returned value does not appear to contain a valid version number.
 + [XA0034](xa0034.md): Failed to get the Java SDK version.
 + XA0100: EmbeddedNativeLibrary is invalid in Android Application projects. Please use AndroidNativeLibrary instead.
 + [XA0101](xa0101.md): warning XA0101: @(Content) build action is not supported.

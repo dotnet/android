@@ -124,6 +124,51 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Building with JDK version `{0}` is not supported. Please install JDK version `{1}`. See https://aka.ms/xamarin/jdk9-errors.
+        /// </summary>
+        internal static string XA0030 {
+            get {
+                return ResourceManager.GetString("XA0030", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Java SDK {0} or above is required when using $(TargetFrameworkVersion) {1}..
+        /// </summary>
+        internal static string XA0031 {
+            get {
+                return ResourceManager.GetString("XA0031", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Java SDK {0} or above is required when using Android SDK Build-Tools {1}..
+        /// </summary>
+        internal static string XA0032 {
+            get {
+                return ResourceManager.GetString("XA0032", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to get the Java SDK version because the returned value does not appear to contain a valid version number. `{0} -version` returned: ```{1}```.
+        /// </summary>
+        internal static string XA0033 {
+            get {
+                return ResourceManager.GetString("XA0033", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to get the Java SDK version. Please ensure you have Java {0} or above installed..
+        /// </summary>
+        internal static string XA0034 {
+            get {
+                return ResourceManager.GetString("XA0034", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to EmbeddedNativeLibrary &apos;{0}&apos; is invalid in Android Application projects. Please use AndroidNativeLibrary instead..
         /// </summary>
         internal static string XA0100 {
