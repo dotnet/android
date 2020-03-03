@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -11,34 +12,141 @@ using Java.Interop.Expressions;
 namespace Java.Interop {
 
 	partial class JniRuntime {
+		static JniTypeSignature __StringTypeSignature;
+		static JniTypeSignature __VoidTypeSignature;
+		static JniTypeSignature __BooleanTypeSignature;
+		static JniTypeSignature __BooleanNullableTypeSignature;
+		static JniTypeSignature __SByteTypeSignature;
+		static JniTypeSignature __SByteNullableTypeSignature;
+		static JniTypeSignature __CharTypeSignature;
+		static JniTypeSignature __CharNullableTypeSignature;
+		static JniTypeSignature __Int16TypeSignature;
+		static JniTypeSignature __Int16NullableTypeSignature;
+		static JniTypeSignature __Int32TypeSignature;
+		static JniTypeSignature __Int32NullableTypeSignature;
+		static JniTypeSignature __Int64TypeSignature;
+		static JniTypeSignature __Int64NullableTypeSignature;
+		static JniTypeSignature __SingleTypeSignature;
+		static JniTypeSignature __SingleNullableTypeSignature;
+		static JniTypeSignature __DoubleTypeSignature;
+		static JniTypeSignature __DoubleNullableTypeSignature;
 
-		static readonly Lazy<KeyValuePair<Type, JniTypeSignature>[]> JniBuiltinTypeNameMappings = new Lazy<KeyValuePair<Type, JniTypeSignature>[]> (InitJniBuiltinTypeNameMappings);
-
-		static KeyValuePair<Type, JniTypeSignature>[] InitJniBuiltinTypeNameMappings ()
+		[MethodImpl (MethodImplOptions.AggressiveInlining)]
+		static JniTypeSignature GetCachedTypeSignature (ref JniTypeSignature field, string signature, int arrayRank = 0, bool keyword = false)
 		{
-			return new []{
-				new KeyValuePair<Type, JniTypeSignature>(typeof (string),    new JniTypeSignature ("java/lang/String")),
+			if (!field.IsValid)
+				field = new JniTypeSignature (signature, arrayRank, keyword);
+			return field;
+		}
 
-				new KeyValuePair<Type, JniTypeSignature>(typeof (void),      new JniTypeSignature ("V", arrayRank: 0, keyword: true)),
-				new KeyValuePair<Type, JniTypeSignature>(typeof (void),      new JniTypeSignature ("java/lang/Void")),
+		static bool GetBuiltInTypeSignature (Type type, ref JniTypeSignature signature)
+		{
+			switch (Type.GetTypeCode (type)) {
+				case TypeCode.String:
+					signature = GetCachedTypeSignature (ref __StringTypeSignature, "java/lang/String");
+					return true;
+				case TypeCode.Boolean:
+					signature = GetCachedTypeSignature (ref __BooleanTypeSignature, "Z", arrayRank: 0, keyword: true);
+					return true;
+				case TypeCode.SByte:
+					signature = GetCachedTypeSignature (ref __SByteTypeSignature, "B", arrayRank: 0, keyword: true);
+					return true;
+				case TypeCode.Char:
+					signature = GetCachedTypeSignature (ref __CharTypeSignature, "C", arrayRank: 0, keyword: true);
+					return true;
+				case TypeCode.Int16:
+					signature = GetCachedTypeSignature (ref __Int16TypeSignature, "S", arrayRank: 0, keyword: true);
+					return true;
+				case TypeCode.Int32:
+					signature = GetCachedTypeSignature (ref __Int32TypeSignature, "I", arrayRank: 0, keyword: true);
+					return true;
+				case TypeCode.Int64:
+					signature = GetCachedTypeSignature (ref __Int64TypeSignature, "J", arrayRank: 0, keyword: true);
+					return true;
+				case TypeCode.Single:
+					signature = GetCachedTypeSignature (ref __SingleTypeSignature, "F", arrayRank: 0, keyword: true);
+					return true;
+				case TypeCode.Double:
+					signature = GetCachedTypeSignature (ref __DoubleTypeSignature, "D", arrayRank: 0, keyword: true);
+					return true;
+				case TypeCode.DateTime:
+				case TypeCode.DBNull:
+				case TypeCode.Decimal:
+				case TypeCode.Empty:
+				case TypeCode.UInt16:
+				case TypeCode.UInt32:
+				case TypeCode.UInt64:
+					return false;
+			}
 
-				new KeyValuePair<Type, JniTypeSignature>(typeof (Boolean),     new JniTypeSignature ("Z", 0, keyword: true)),
-				new KeyValuePair<Type, JniTypeSignature>(typeof (Boolean?),    new JniTypeSignature ("java/lang/Boolean")),
-				new KeyValuePair<Type, JniTypeSignature>(typeof (SByte),     new JniTypeSignature ("B", 0, keyword: true)),
-				new KeyValuePair<Type, JniTypeSignature>(typeof (SByte?),    new JniTypeSignature ("java/lang/Byte")),
-				new KeyValuePair<Type, JniTypeSignature>(typeof (Char),     new JniTypeSignature ("C", 0, keyword: true)),
-				new KeyValuePair<Type, JniTypeSignature>(typeof (Char?),    new JniTypeSignature ("java/lang/Character")),
-				new KeyValuePair<Type, JniTypeSignature>(typeof (Int16),     new JniTypeSignature ("S", 0, keyword: true)),
-				new KeyValuePair<Type, JniTypeSignature>(typeof (Int16?),    new JniTypeSignature ("java/lang/Short")),
-				new KeyValuePair<Type, JniTypeSignature>(typeof (Int32),     new JniTypeSignature ("I", 0, keyword: true)),
-				new KeyValuePair<Type, JniTypeSignature>(typeof (Int32?),    new JniTypeSignature ("java/lang/Integer")),
-				new KeyValuePair<Type, JniTypeSignature>(typeof (Int64),     new JniTypeSignature ("J", 0, keyword: true)),
-				new KeyValuePair<Type, JniTypeSignature>(typeof (Int64?),    new JniTypeSignature ("java/lang/Long")),
-				new KeyValuePair<Type, JniTypeSignature>(typeof (Single),     new JniTypeSignature ("F", 0, keyword: true)),
-				new KeyValuePair<Type, JniTypeSignature>(typeof (Single?),    new JniTypeSignature ("java/lang/Float")),
-				new KeyValuePair<Type, JniTypeSignature>(typeof (Double),     new JniTypeSignature ("D", 0, keyword: true)),
-				new KeyValuePair<Type, JniTypeSignature>(typeof (Double?),    new JniTypeSignature ("java/lang/Double")),
-			};
+			if (type == typeof (void)) {
+				signature = GetCachedTypeSignature (ref __VoidTypeSignature, "V", arrayRank: 0, keyword: true);
+				return true;
+			}
+
+			if (!type.IsValueType)
+				return false;
+
+			if (type == typeof (Boolean?)) {
+				signature = GetCachedTypeSignature (ref __BooleanNullableTypeSignature, "java/lang/Boolean");
+				return true;
+			}
+			if (type == typeof (SByte?)) {
+				signature = GetCachedTypeSignature (ref __SByteNullableTypeSignature, "java/lang/Byte");
+				return true;
+			}
+			if (type == typeof (Char?)) {
+				signature = GetCachedTypeSignature (ref __CharNullableTypeSignature, "java/lang/Character");
+				return true;
+			}
+			if (type == typeof (Int16?)) {
+				signature = GetCachedTypeSignature (ref __Int16NullableTypeSignature, "java/lang/Short");
+				return true;
+			}
+			if (type == typeof (Int32?)) {
+				signature = GetCachedTypeSignature (ref __Int32NullableTypeSignature, "java/lang/Integer");
+				return true;
+			}
+			if (type == typeof (Int64?)) {
+				signature = GetCachedTypeSignature (ref __Int64NullableTypeSignature, "java/lang/Long");
+				return true;
+			}
+			if (type == typeof (Single?)) {
+				signature = GetCachedTypeSignature (ref __SingleNullableTypeSignature, "java/lang/Float");
+				return true;
+			}
+			if (type == typeof (Double?)) {
+				signature = GetCachedTypeSignature (ref __DoubleNullableTypeSignature, "java/lang/Double");
+				return true;
+			}
+
+			return false;
+		}
+
+		static readonly Lazy<Dictionary<string, Type>> JniBuiltinSimpleReferenceToType = new Lazy<Dictionary<string, Type>> (InitJniBuiltinSimpleReferenceToType);
+
+		static Dictionary<string, Type> InitJniBuiltinSimpleReferenceToType ()
+		{
+				return new Dictionary<string, Type> (StringComparer.Ordinal) {
+					{"java/lang/String", typeof (string)},
+					{"V", typeof (void)},
+					{"Z", typeof (Boolean)},
+					{"java/lang/Boolean", typeof (Boolean?)},
+					{"B", typeof (SByte)},
+					{"java/lang/Byte", typeof (SByte?)},
+					{"C", typeof (Char)},
+					{"java/lang/Character", typeof (Char?)},
+					{"S", typeof (Int16)},
+					{"java/lang/Short", typeof (Int16?)},
+					{"I", typeof (Int32)},
+					{"java/lang/Integer", typeof (Int32?)},
+					{"J", typeof (Int64)},
+					{"java/lang/Long", typeof (Int64?)},
+					{"F", typeof (Single)},
+					{"java/lang/Float", typeof (Single?)},
+					{"D", typeof (Double)},
+					{"java/lang/Double", typeof (Double?)},
+				};
 		}
 
 		static readonly Lazy<KeyValuePair<Type, JniValueMarshaler>[]> JniBuiltinMarshalers = new Lazy<KeyValuePair<Type, JniValueMarshaler>[]> (InitJniBuiltinMarshalers);

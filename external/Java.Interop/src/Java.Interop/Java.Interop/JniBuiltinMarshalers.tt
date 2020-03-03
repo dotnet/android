@@ -7,6 +7,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -28,26 +29,88 @@ namespace Java.Interop {
 #>
 
 	partial class JniRuntime {
+		static JniTypeSignature __StringTypeSignature;
+		static JniTypeSignature __VoidTypeSignature;
+<#
+	foreach (var type in types) {
+#>
+		static JniTypeSignature __<#= type.Type #>TypeSignature;
+		static JniTypeSignature __<#= type.Type #>NullableTypeSignature;
+<#
+	}
+#>
 
-		static readonly Lazy<KeyValuePair<Type, JniTypeSignature>[]> JniBuiltinTypeNameMappings = new Lazy<KeyValuePair<Type, JniTypeSignature>[]> (InitJniBuiltinTypeNameMappings);
-
-		static KeyValuePair<Type, JniTypeSignature>[] InitJniBuiltinTypeNameMappings ()
+		[MethodImpl (MethodImplOptions.AggressiveInlining)]
+		static JniTypeSignature GetCachedTypeSignature (ref JniTypeSignature field, string signature, int arrayRank = 0, bool keyword = false)
 		{
-			return new []{
-				new KeyValuePair<Type, JniTypeSignature>(typeof (string),    new JniTypeSignature ("java/lang/String")),
+			if (!field.IsValid)
+				field = new JniTypeSignature (signature, arrayRank, keyword);
+			return field;
+		}
 
-				new KeyValuePair<Type, JniTypeSignature>(typeof (void),      new JniTypeSignature ("V", arrayRank: 0, keyword: true)),
-				new KeyValuePair<Type, JniTypeSignature>(typeof (void),      new JniTypeSignature ("java/lang/Void")),
+		static bool GetBuiltInTypeSignature (Type type, ref JniTypeSignature signature)
+		{
+			switch (Type.GetTypeCode (type)) {
+				case TypeCode.String:
+					signature = GetCachedTypeSignature (ref __StringTypeSignature, "java/lang/String");
+					return true;
+<#
+	foreach (var type in types) {
+#>
+				case TypeCode.<#= type.Type #>:
+					signature = GetCachedTypeSignature (ref __<#= type.Type #>TypeSignature, "<#= type.JniType #>", arrayRank: 0, keyword: true);
+					return true;
+<#
+	}
+#>
+				case TypeCode.DateTime:
+				case TypeCode.DBNull:
+				case TypeCode.Decimal:
+				case TypeCode.Empty:
+				case TypeCode.UInt16:
+				case TypeCode.UInt32:
+				case TypeCode.UInt64:
+					return false;
+			}
+
+			if (type == typeof (void)) {
+				signature = GetCachedTypeSignature (ref __VoidTypeSignature, "V", arrayRank: 0, keyword: true);
+				return true;
+			}
+
+			if (!type.IsValueType)
+				return false;
 
 <#
 	foreach (var type in types) {
 #>
-				new KeyValuePair<Type, JniTypeSignature>(typeof (<#= type.Type #>),     new JniTypeSignature ("<#= type.JniType #>", 0, keyword: true)),
-				new KeyValuePair<Type, JniTypeSignature>(typeof (<#= type.Type #>?),    new JniTypeSignature ("java/lang/<#= type.Name #>")),
+			if (type == typeof (<#= type.Type #>?)) {
+				signature = GetCachedTypeSignature (ref __<#= type.Type #>NullableTypeSignature, "java/lang/<#= type.Name #>");
+				return true;
+			}
 <#
-	}
+	 }
 #>
-			};
+
+			return false;
+		}
+
+		static readonly Lazy<Dictionary<string, Type>> JniBuiltinSimpleReferenceToType = new Lazy<Dictionary<string, Type>> (InitJniBuiltinSimpleReferenceToType);
+
+		static Dictionary<string, Type> InitJniBuiltinSimpleReferenceToType ()
+		{
+				return new Dictionary<string, Type> (StringComparer.Ordinal) {
+					{"java/lang/String", typeof (string)},
+					{"V", typeof (void)},
+<#
+	foreach (var type in types) {
+#>
+					{"<#= type.JniType #>", typeof (<#= type.Type #>)},
+					{"java/lang/<#= type.Name #>", typeof (<#= type.Type #>?)},
+<#
+	 }
+#>
+				};
 		}
 
 		static readonly Lazy<KeyValuePair<Type, JniValueMarshaler>[]> JniBuiltinMarshalers = new Lazy<KeyValuePair<Type, JniValueMarshaler>[]> (InitJniBuiltinMarshalers);

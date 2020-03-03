@@ -28,20 +28,27 @@ namespace Java.Interop {
 	};
 #>
 	partial class JniRuntime {
-		static readonly Lazy<KeyValuePair<Type, JniTypeSignature>[]> JniBuiltinArrayMappings = new Lazy<KeyValuePair<Type, JniTypeSignature>[]> (InitJniBuiltinArrayMappings);
-
-		static KeyValuePair<Type, JniTypeSignature>[] InitJniBuiltinArrayMappings ()
-		{
-			return new[] {
 <#
-	foreach (var info in arrayTypeInfo) {
+	foreach (var type in arrayTypeInfo) { 
 #>
-				new KeyValuePair<Type, JniTypeSignature>(typeof (JavaPrimitiveArray<<#= info.ManagedType #>>),  new JniTypeSignature ("<#= info.JniType #>", arrayRank: 1, keyword: true)),
-				new KeyValuePair<Type, JniTypeSignature>(typeof (JavaArray<<#= info.ManagedType #>>),           new JniTypeSignature ("<#= info.JniType #>", arrayRank: 1, keyword: true)),
+		static JniTypeSignature __<#= type.ManagedType #>TypeArraySignature;
 <#
 	}
 #>
-			};
+
+		static bool GetBuiltInTypeArraySignature (Type type, ref JniTypeSignature signature)
+		{
+<#
+	foreach (var info in arrayTypeInfo) {
+#>
+			if (type == typeof (JavaArray<<#= info.ManagedType #>>) || type == typeof (JavaPrimitiveArray<<#= info.ManagedType #>>)) {
+				signature = GetCachedTypeSignature (ref __<#= info.ManagedType #>TypeArraySignature, "<#= info.JniType #>", arrayRank: 1, keyword: true);
+				return true;
+			}
+<#
+	}
+#>
+			return false;
 		}
 
 		static readonly Lazy<KeyValuePair<Type, JniValueMarshaler>[]> JniPrimitiveArrayMarshalers = new Lazy<KeyValuePair<Type, JniValueMarshaler>[]> (InitJniPrimitiveArrayMarshalers);

@@ -63,6 +63,7 @@ namespace Java.Interop
 			public  JniObjectReferenceManager?  ObjectReferenceManager      {get; set;}
 			public  JniTypeManager?             TypeManager                 {get; set;}
 			public  string?                     JvmLibraryPath              {get; set;}
+			public  bool                        JniAddNativeMethodRegistrationAttributePresent { get; set; } = true;
 
 			public CreationOptions ()
 			{
@@ -182,6 +183,7 @@ namespace Java.Interop
 
 		internal    bool                                TrackIDs            {get; private set;}
 		internal    bool                                NewObjectRequired   {get; private set;}
+		internal    bool                                JniAddNativeMethodRegistrationAttributePresent { get; }
 
 		protected JniRuntime (CreationOptions options)
 		{
@@ -192,6 +194,7 @@ namespace Java.Interop
 
 			TrackIDs     = options.TrackIDs;
 			DestroyRuntimeOnDispose     = options.DestroyRuntimeOnDispose;
+			JniAddNativeMethodRegistrationAttributePresent = options.JniAddNativeMethodRegistrationAttributePresent;
 
 			NewObjectRequired   = options.NewObjectRequired;
 

@@ -14,6 +14,7 @@ namespace Java.Interop
 {
 	public struct JniTypeSignature : IEquatable<JniTypeSignature>
 	{
+		public static readonly JniTypeSignature Empty;
 
 		internal    bool        IsKeyword           {get; private set;}
 
@@ -39,7 +40,7 @@ namespace Java.Interop
 			get {return ArrayRank == 0 ? SimpleReference ?? throw new InvalidOperationException (): QualifiedReference;}
 		}
 
-		public JniTypeSignature (string simpleReference, int arrayRank = 0, bool keyword = false)
+		public JniTypeSignature (string? simpleReference, int arrayRank = 0, bool keyword = false)
 		{
 			if (simpleReference != null) {
 				if (simpleReference.Contains ("."))

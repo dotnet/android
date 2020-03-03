@@ -53,25 +53,17 @@ namespace Java.Interop {
 				AssertValid ();
 
 				if (type == null)
-					throw new ArgumentNullException (nameof (type));
+ 					throw new ArgumentNullException (nameof (type));
 				if (type.ContainsGenericParameters)
 					throw new ArgumentException ($"'{type}' contains a generic type definition. This is not supported.", nameof (type));
 
 				type = GetUnderlyingType (type, out int rank);
 
-				foreach (var mapping in JniBuiltinTypeNameMappings.Value) {
-					if (mapping.Key == type) {
-						var r = mapping.Value;
-						return r.AddArrayRank (rank);
-					}
-				}
-
-				foreach (var mapping in JniBuiltinArrayMappings.Value) {
-					if (mapping.Key == type) {
-						var r = mapping.Value;
-						return r.AddArrayRank (rank);
-					}
-				}
+				JniTypeSignature signature = JniTypeSignature.Empty;
+				if (GetBuiltInTypeSignature (type, ref signature))
+					return signature.AddArrayRank (rank);
+				if (GetBuiltInTypeArraySignature (type, ref signature))
+					return signature.AddArrayRank (rank);
 
 				var simpleRef = GetSimpleReference (type);
 				if (simpleRef != null)
@@ -105,26 +97,16 @@ namespace Java.Interop {
 			{
 				AssertValid ();
 
-				if (type == null)
-					throw new ArgumentNullException (nameof (type));
 				if (type.ContainsGenericParameters)
 					throw new ArgumentException ($"'{type}' contains a generic type definition. This is not supported.", nameof (type));
 
 				type = GetUnderlyingType (type, out int rank);
 
-				foreach (var mapping in JniBuiltinTypeNameMappings.Value) {
-					if (mapping.Key == type) {
-						var r = mapping.Value;
-						yield return r.AddArrayRank (rank);
-					}
-				}
-
-				foreach (var mapping in JniBuiltinArrayMappings.Value) {
-					if (mapping.Key == type) {
-						var r = mapping.Value;
-						yield return r.AddArrayRank (rank);
-					}
-				}
+				var signature = new JniTypeSignature (null);
+				if (GetBuiltInTypeSignature (type, ref signature))
+					yield return signature.AddArrayRank (rank);
+				if (GetBuiltInTypeArraySignature (type, ref signature))
+					yield return signature.AddArrayRank (rank);
 
 				foreach (var simpleRef in GetSimpleReferences (type)) {
 					if (simpleRef == null)
@@ -263,12 +245,9 @@ namespace Java.Interop {
 
 			IEnumerable<Type> CreateGetTypesForSimpleReferenceEnumerator (string jniSimpleReference)
 			{
-#if !XA_INTEGRATION
-				foreach (var mapping in JniBuiltinTypeNameMappings.Value) {
-					if (mapping.Value.SimpleReference == jniSimpleReference)
-						yield return mapping.Key;
+				if (JniBuiltinSimpleReferenceToType.Value.TryGetValue (jniSimpleReference, out Type ret)) {
+					yield return ret;
 				}
-#endif  // !XA_INTEGRATION
 				yield break;
 			}
 
@@ -286,7 +265,7 @@ namespace Java.Interop {
 
 			static Type [] registerMethodParameters = new Type [] { typeof (JniNativeMethodRegistrationArguments) };
 
-			static bool TryLoadJniMarshalMethods (JniType nativeClass, Type type, string? methods)
+			bool TryLoadJniMarshalMethods (JniType nativeClass, Type type, string? methods)
 			{
 				var marshalType = type?.GetNestedType ("__<$>_jni_marshal_methods", BindingFlags.NonPublic);
 				if (marshalType == null)
@@ -299,7 +278,7 @@ namespace Java.Interop {
 
 			static List<JniNativeMethodRegistration> sharedRegistrations = new List<JniNativeMethodRegistration> ();
 
-			static bool TryRegisterNativeMembers (JniType nativeClass, Type marshalType, string? methods, MethodInfo? registerMethod)
+			bool TryRegisterNativeMembers (JniType nativeClass, Type marshalType, string? methods, MethodInfo? registerMethod)
 			{
 				bool lockTaken = false;
 				bool rv = false;
@@ -331,8 +310,11 @@ namespace Java.Interop {
 				return rv;
 			}
 
-			static bool FindAndCallRegisterMethod (Type marshalType, JniNativeMethodRegistrationArguments arguments)
+			bool FindAndCallRegisterMethod (Type marshalType, JniNativeMethodRegistrationArguments arguments)
 			{
+				if (!Runtime.JniAddNativeMethodRegistrationAttributePresent)
+					return false;
+
 				bool found = false;
 
 				foreach (var methodInfo in marshalType.GetRuntimeMethods ()) {
