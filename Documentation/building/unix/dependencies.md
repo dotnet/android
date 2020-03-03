@@ -6,10 +6,13 @@ Building Xamarin.Android requires:
   * [The Java Development Kit (JDK)](#jdk)
   * [Autotools (`autoconf`, `automake`, etc.)](#autotools)
   * [The Android SDK and NDK](#ndk)
+  * [The Microsoft .NET SDK][dotnetsdk]
   * [Linux](#Linux) and [macOS](#macOS) Dependencies
-  * C++ compiler with support for C++17 (clang or gcc)
-  * MinGW 6 or newer, if cross-building of Windows tooling on the 
+  * C++ compiler with support for C++17 (clang 5, gcc 7 or higher)
+  * MinGW 6 or newer, if cross-building of Windows tooling on the
     Unix host is desired
+
+[dotnetsdk]: https://docs.microsoft.com/de-de/dotnet/core/install/sdk
 
 The `make prepare` build step (or `/t:Prepare` on Windows) will
 check that all required dependencies are present.
@@ -45,9 +48,11 @@ The minimum Mono version which is checked for can be overridden by the
 
 ## Java Development Kit
 
-The Java Development Kit may be downloaded from the
+Most Linux distributions include [OpenJDK][openjdk].
+Alternatively, the Java Development Kit may be downloaded from the
 [Oracle Java SE Downloads page][download-jdk].
 
+[openjdk]: https://openjdk.java.net
 [download-jdk]: http://www.oracle.com/technetwork/java/javase/downloads/
 
 At this time, we only support building with JDK 1.8.
@@ -99,7 +104,7 @@ URL to download files from is controlled by the `$(AndroidUri)` property.
 
 If you have the `binfmt_misc` module enabled with any of Mono or Wine installed and
 you plan to cross-build the Windows compilers and tools (by enabling the `mxe-Win32`
-or `mxe-Win64` host targets) as well as LLVM+AOT targets, you will need to disable 
+or `mxe-Win64` host targets) as well as LLVM+AOT targets, you will need to disable
 `binfmt_misc` for the duration of the build or the Mono/LLVM configure scripts will
 fail to detect they are cross-compiling and they will produce Windows PE executables
 for tools required by the build.
