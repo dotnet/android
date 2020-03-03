@@ -1,5 +1,6 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
+  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.RunParallelCmds" />
   <Import Project="..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems" Condition="Exists('..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems')" />
 
   <PropertyGroup>
@@ -20,19 +21,28 @@
     </CreateItem>
   </Target>
 
-  <Target Name="_ClassParse"
-      BeforeTargets="_AdjustApiXml"
-      DependsOnTargets="_DefineApiFiles"
-      Inputs="%(ApiFileDefinition.ParameterDescription)"
-      Outputs="%(ApiFileDefinition.ApiAdjustedXml)">
+  <Target Name="_ClassParsePrepare"
+      DependsOnTargets="_DefineApiFiles">
     <PropertyGroup>
       <ClassParse>$(_TopDir)\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\class-parse.exe</ClassParse>
     </PropertyGroup>
     <MakeDir Directories="$(_OutputPath)api" />
-    <Exec
-        Condition="Exists('$(_TopDir)\src\Mono.Android\Profiles\api-%(ApiFileDefinition.Id).params.txt')"
-        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(ClassParse) $(AndroidSdkDirectory)\platforms\android-%(ApiFileDefinition.Id)\android.jar -platform=%(ApiFileDefinition.Id) -parameter-names=&quot;%(ApiFileDefinition.ParameterDescription)&quot; -o=&quot;%(ApiFileDefinition.ClassParseXml)&quot;"
-    />
+    <CreateItem
+        Include="@(ApiFileDefinition)"
+        AdditionalMetadata='Command=$(ClassParse);Arguments=$(AndroidSdkDirectory)\platforms\android-%(ApiFileDefinition.Id)\android.jar -platform=%(ApiFileDefinition.Id) -parameter-names=&quot;%(ApiFileDefinition.ParameterDescription)&quot; -o=&quot;%(ApiFileDefinition.ClassParseXml)&quot;'>
+      <Output TaskParameter="Include" ItemName="ClassParseCommands"/>
+    </CreateItem>
+  </Target>
+  <Target Name="_ClassParse"
+      BeforeTargets="_AdjustApiXml"
+      DependsOnTargets="_ClassParsePrepare"
+      Inputs="@(ApiFileDefinition.ParameterDescription)"
+      Outputs="@(ApiFileDefinition.ApiAdjustedXml)">
+    <RunParallelCmds
+        Commands="@(ClassParseCommands)"
+        ManagedRuntime="$(ManagedRuntime)"
+        ManagedRuntimeArguments="$(ManagedRuntimeArgs)"
+      />
   </Target>
   <Target Name="_AdjustApiXml"
       AfterTargets="Build"
