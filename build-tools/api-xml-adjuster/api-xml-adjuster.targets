@@ -28,9 +28,10 @@
     </PropertyGroup>
     <MakeDir Directories="$(_OutputPath)api" />
     <CreateItem
+        Condition="Exists('$(_TopDir)\src\Mono.Android\Profiles\api-%(ApiFileDefinition.Id).params.txt')"
         Include="@(ApiFileDefinition)"
         AdditionalMetadata='Command=$(ClassParse);Arguments=$(AndroidSdkDirectory)\platforms\android-%(ApiFileDefinition.Id)\android.jar -platform=%(ApiFileDefinition.Id) -parameter-names=&quot;%(ApiFileDefinition.ParameterDescription)&quot; -o=&quot;%(ApiFileDefinition.ClassParseXml)&quot;'>
-      <Output TaskParameter="Include" ItemName="ClassParseCommands"/>
+      <Output TaskParameter="Include" ItemName="_ClassParseCommands"/>
     </CreateItem>
   </Target>
   <Target Name="_ClassParse"
@@ -39,23 +40,33 @@
       Inputs="@(ApiFileDefinition.ParameterDescription)"
       Outputs="@(ApiFileDefinition.ApiAdjustedXml)">
     <RunParallelCmds
-        Commands="@(ClassParseCommands)"
+        Commands="@(_ClassParseCommands)"
         ManagedRuntime="$(ManagedRuntime)"
         ManagedRuntimeArguments="$(ManagedRuntimeArgs)"
       />
   </Target>
-  <Target Name="_AdjustApiXml"
-      AfterTargets="Build"
-      DependsOnTargets="_DefineApiFiles"
-      Inputs="%(ApiFileDefinition.ClassParseXml)"
-      Outputs="%(ApiFileDefinition.ApiAdjustedXml)">
+  <Target Name="_AdjustApiXmlPrepare"
+      DependsOnTargets="_DefineApiFiles">
     <PropertyGroup>
       <ApiXmlAdjuster>$(_TopDir)\bin\Build$(Configuration)\api-xml-adjuster.exe</ApiXmlAdjuster>
     </PropertyGroup>
-    <Exec
+    <CreateItem
         Condition="Exists('$(_TopDir)\src\Mono.Android\Profiles\api-%(ApiFileDefinition.Id).params.txt')"
-        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(ApiXmlAdjuster) %(ApiFileDefinition.ClassParseXml) %(ApiFileDefinition.ApiAdjustedXml)"
-    />
+        Include="@(ApiFileDefinition)"
+        AdditionalMetadata='Command=$(ApiXmlAdjuster);Arguments=%(ApiFileDefinition.ClassParseXml) %(ApiFileDefinition.ApiAdjustedXml)'>
+      <Output TaskParameter="Include" ItemName="_AdjustApiXmlPrepareCommands"/>
+    </CreateItem>
+  </Target>
+  <Target Name="_AdjustApiXml"
+      AfterTargets="Build"
+      DependsOnTargets="_AdjustApiXmlPrepare"
+      Inputs="@(ApiFileDefinition.ClassParseXml)"
+      Outputs="@(ApiFileDefinition.ApiAdjustedXml);abc">
+    <RunParallelCmds
+        Commands="@(_AdjustApiXmlPrepareCommands)"
+        ManagedRuntime="$(ManagedRuntime)"
+        ManagedRuntimeArguments="$(ManagedRuntimeArgs)"
+      />
   </Target>
 
   <Target Name="_CleanApiXml"
