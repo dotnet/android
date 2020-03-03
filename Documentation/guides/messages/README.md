@@ -69,7 +69,7 @@ ms.date: 01/24/2020
 
 ## XA1xxx: Project related
 
-+ [XA1000](xa1000.md): There was an problem parsing {file}. This is likely due to incomplete or invalid xml.
++ [XA1000](xa1000.md): There was a problem parsing {file}. This is likely due to incomplete or invalid XML.
 + [XA1001](xa1001.md): AndroidResgen: Warning while updating Resource XML '{filename}': {Message}
 + [XA1002](xa1002.md): The closest match found for '{customViewName}' is '{customViewLookupName}', but the capitalization does not match. Please correct the capitalization.
 + [XA1003](xa1003.md): '{zip}' does not exist. Please rebuild the project.
@@ -123,7 +123,7 @@ ms.date: 01/24/2020
 + XA5105: Toolchain utility '{utility}' for target {arch} was not found. Tried in path: "{path}"
 + XA5201: NDK linker exited with an error. Exit code {0}
 + [XA5205](xa5205.md): Cannot find `{ToolName}` in the Android SDK.
-+ [XA5207](xa5207.md): Could not find android.jar for API Level `{compileSdk}`.
++ [XA5207](xa5207.md): Could not find android.jar for API level `{compileSdk}`.
 + XA5213: java.lang.OutOfMemoryError. Consider increasing the value of $(JavaMaximumHeapSize). Java ran out of memory while executing '{tool} {arguments}'
 + [XA5300](xa5300.md): The Android/Java SDK Directory could not be found.
 + [XA5301](xa5301.md): Failed to generate Java type for class: {managedType} due to MAX_PATH: {exception}
