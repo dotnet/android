@@ -375,6 +375,7 @@
 1, android.location,Criteria,setAccuracy,accuracy,Android.Locations.Accuracy
 1, android.location,Criteria,getPowerRequirement,return,Android.Locations.Power
 1, android.location,Criteria,setPowerRequirement,level,Android.Locations.Power
+1, android.location,Criteria,setPowerRequirement,powerRequirement,Android.Locations.Power
 0, android.location,[Interface]GpsStatus.Listener,onGpsStatusChanged,event,Android.Locations.GpsEvent
 0, android.location,Location,convert,outputType,Android.Locations.Format
 1, android.location,[Interface]LocationListener,onStatusChanged,status,Android.Locations.Availability
