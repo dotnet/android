@@ -259,6 +259,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to There was a problem parsing {0}. This is likely due to incomplete or invalid XML. Exception: {1}.
+        /// </summary>
+        internal static string XA1000 {
+            get {
+                return ResourceManager.GetString("XA1000", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to AndroidResgen: Warning while updating resource XML &apos;{0}&apos;: {1}.
         /// </summary>
         internal static string XA1001 {
@@ -547,6 +556,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error extracting resources from &quot;{0}&quot;: {1}.
+        /// </summary>
+        internal static string XA4303 {
+            get {
+                return ResourceManager.GetString("XA4303", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to ProGuard configuration file &apos;{0}&apos; was not found..
         /// </summary>
         internal static string XA4304 {
@@ -700,6 +718,33 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Could not find android.jar for API level {0}. This means the Android SDK platform for API level {0} is not installed. Either install it in the Android SDK Manager ({2}), or change the Xamarin.Android project to target an API version that is installed. ({1} missing.).
+        /// </summary>
+        internal static string XA5207 {
+            get {
+                return ResourceManager.GetString("XA5207", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Tools &gt; Open Android SDK Manager....
+        /// </summary>
+        internal static string XA5207_SDK_Manager_macOS {
+            get {
+                return ResourceManager.GetString("XA5207_SDK_Manager_macOS", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Tools &gt; Android &gt; Android SDK Manager....
+        /// </summary>
+        internal static string XA5207_SDK_Manager_Windows {
+            get {
+                return ResourceManager.GetString("XA5207_SDK_Manager_Windows", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to java.lang.OutOfMemoryError. Consider increasing the value of $(JavaMaximumHeapSize). Java ran out of memory while executing &apos;{0} {1}&apos;.
         /// </summary>
         internal static string XA5213 {
@@ -741,6 +786,15 @@ namespace Xamarin.Android.Tasks.Properties {
         internal static string XA5301 {
             get {
                 return ResourceManager.GetString("XA5301", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Two processes may be building this project at once. Lock file exists at path: {0}.
+        /// </summary>
+        internal static string XA5302 {
+            get {
+                return ResourceManager.GetString("XA5302", resourceCulture);
             }
         }
     }

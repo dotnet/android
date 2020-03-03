@@ -404,7 +404,7 @@ namespace Xamarin.Android.Tasks
 				try {
 					ProcessXmlFile (file);
 				} catch (XmlException ex) {
-					Log.LogCodedWarning ("XA1000", $"There was an problem parsing {file}. This is likely due to incomplete or invalid xml. Exception: {ex}");
+					Log.LogCodedWarning ("XA1000", Properties.Resources.XA1000, file, ex);
 				}
 				break;
 			default:
