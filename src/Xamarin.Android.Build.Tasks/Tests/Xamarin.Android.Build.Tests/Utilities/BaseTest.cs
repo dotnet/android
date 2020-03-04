@@ -407,7 +407,8 @@ namespace Xamarin.Android.Build.Tests
 		protected string GetPathToLatestBuildTools (string exe)
 		{
 			var path = Path.Combine (AndroidSdkPath, "build-tools");
-			foreach (var dir in Directory.GetDirectories (path, "*", SearchOption.TopDirectoryOnly).OrderByDescending (x => new Version (Path.GetFileName (x)))) {
+			foreach (var dir in Directory.GetDirectories (path, "*", SearchOption.TopDirectoryOnly).OrderByDescending (x => Path.GetFileName (x))) {
+				TestContext.Out.WriteLine ($"Found build tools version: {dir}.");
 				var aapt2 = Path.Combine (dir, exe);
 				if (File.Exists (aapt2))
 					return dir;
