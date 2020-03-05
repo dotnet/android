@@ -241,6 +241,18 @@ namespace generatortests
 			  </package>
 			</api>";
 
+		readonly string nested_class_api = @"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/EmptyOverrideClass;' />
+			  </package>
+			  <package name='com.xamarin.android' jni-name='com/xamarin/android'>
+			    <interface abstract='true' deprecated='not deprecated' final='false' name='Parent' static='false' visibility='public' jni-signature='Lcom/xamarin/android/Parent;'>
+			      <method abstract='true' deprecated='not deprecated' final='false' name='getBar' jni-signature='()I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public'></method>
+			    </interface>
+			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;'  final='false' name='Parent.Child' static='false' visibility='public' jni-signature='Lcom/xamarin/android/Parent$Child;' />
+			  </package>
+			</api>";
+
 		[Test]
 		public void WriteUnnestedInterfaceTypes ()
 		{
@@ -272,6 +284,24 @@ namespace generatortests
 			generator.WriteInterface (parent_iface, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteNestedInterfaceTypes)), writer.ToString ().NormalizeLineEndings ());
+		}
+
+		[Test]
+		public void WriteNestedInterfaceClass ()
+		{
+			// Traditionally this would have created namespace.IParent and namespace.IParentChild
+			// With nested types this creates namespace.IParent and namespace.IParent.IChild
+			options.SupportNestedInterfaceTypes = true;
+
+			var gens = ParseApiDefinition (nested_class_api);
+
+			var parent_iface = gens.OfType<InterfaceGen> ().Single ();
+
+			parent_iface.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ());
+
+			generator.WriteInterface (parent_iface, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
+
+			Assert.AreEqual (GetTargetedExpected (nameof (WriteNestedInterfaceClass)), writer.ToString ().NormalizeLineEndings ());
 		}
 	}
 }

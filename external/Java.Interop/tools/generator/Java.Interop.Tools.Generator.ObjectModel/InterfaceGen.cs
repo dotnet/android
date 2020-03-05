@@ -20,15 +20,14 @@ namespace MonoDroid.Generation
 			var nest_name = gen.JavaName.Substring (JavaName.Length + 1);
 
 			if (nest_name.IndexOf (".") < 0) {
+				// We don't need to mangle the name if we support nested interface types
+				// ex: my.namespace.IParent.IChild
+				if (!gen.Unnest) {
+					gen.FullName = FullName + "." + gen.Name;
+					return;
+				}
+
 				if (gen is InterfaceGen) {
-
-					// We don't need to mangle the name if we support nested interface types
-					// ex: my.namespace.IParent.IChild
-					if (!gen.Unnest) {
-						gen.FullName = FullName + "." + gen.Name;
-						return;
-					}
-
 					// ex: my.namespace.IParentChild
 					gen.FullName = FullName + gen.Name.Substring (1);
 					gen.Name = Name + gen.Name.Substring (1);
