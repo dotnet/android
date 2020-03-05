@@ -124,6 +124,24 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid `android:versionCode` value `{0}` in `AndroidManifest.xml`. It must be an integer value..
+        /// </summary>
+        internal static string XA0003 {
+            get {
+                return ResourceManager.GetString("XA0003", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid `android:versionCode` value `{0}` in `AndroidManifest.xml`. The value must be in the range of 0 to {1}..
+        /// </summary>
+        internal static string XA0004 {
+            get {
+                return ResourceManager.GetString("XA0004", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Building with JDK version `{0}` is not supported. Please install JDK version `{1}`. See https://aka.ms/xamarin/jdk9-errors.
         /// </summary>
         internal static string XA0030 {
@@ -502,6 +520,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The type &apos;{0}&apos; must provide a public default constructor.
+        /// </summary>
+        internal static string XA4213 {
+            get {
+                return ResourceManager.GetString("XA4213", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The managed type `{0}` exists in multiple assemblies: {1}. Please refactor the managed type names in these assemblies so that they are not identical..
         /// </summary>
         internal static string XA4214 {
@@ -597,6 +624,15 @@ namespace Xamarin.Android.Tasks.Properties {
         internal static string XA4301_ABI_Ignoring {
             get {
                 return ResourceManager.GetString("XA4301_ABI_Ignoring", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unhandled exception merging `AndroidManifest.xml`: {0}.
+        /// </summary>
+        internal static string XA4302 {
+            get {
+                return ResourceManager.GetString("XA4302", resourceCulture);
             }
         }
         

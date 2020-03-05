@@ -40,6 +40,18 @@ In this message, the phrase "should not be reached" means that this error messag
         <target state="new">Unsupported or invalid $(TargetFrameworkVersion) value of '{0}'. Please update your Project Options.</target>
         <note>The following are literal names and should not be translated: $(TargetFrameworkVersion)</note>
       </trans-unit>
+      <trans-unit id="XA0003">
+        <source>Invalid `android:versionCode` value `{0}` in `AndroidManifest.xml`. It must be an integer value.</source>
+        <target state="new">Invalid `android:versionCode` value `{0}` in `AndroidManifest.xml`. It must be an integer value.</target>
+        <note>The following are literal names and should not be translated: `android:versionCode`, `AndroidManifest.xml`</note>
+      </trans-unit>
+      <trans-unit id="XA0004">
+        <source>Invalid `android:versionCode` value `{0}` in `AndroidManifest.xml`. The value must be in the range of 0 to {1}.</source>
+        <target state="new">Invalid `android:versionCode` value `{0}` in `AndroidManifest.xml`. The value must be in the range of 0 to {1}.</target>
+        <note>The following are literal names and should not be translated: `android:versionCode`, `AndroidManifest.xml`
+{0} - The current value
+{1} - The maximum allowed value</note>
+      </trans-unit>
       <trans-unit id="XA0030">
         <source>Building with JDK version `{0}` is not supported. Please install JDK version `{1}`. See https://aka.ms/xamarin/jdk9-errors</source>
         <target state="new">Building with JDK version `{0}` is not supported. Please install JDK version `{1}`. See https://aka.ms/xamarin/jdk9-errors</target>
@@ -288,6 +300,11 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
 {1} - The target framework version number
 {2} - The API version number</note>
       </trans-unit>
+      <trans-unit id="XA4213">
+        <source>The type '{0}' must provide a public default constructor</source>
+        <target state="new">The type '{0}' must provide a public default constructor</target>
+        <note />
+      </trans-unit>
       <trans-unit id="XA4214">
         <source>The managed type `{0}` exists in multiple assemblies: {1}. Please refactor the managed type names in these assemblies so that they are not identical.</source>
         <target state="new">The managed type `{0}` exists in multiple assemblies: {1}. Please refactor the managed type names in these assemblies so that they are not identical.</target>
@@ -354,6 +371,12 @@ In this message, the term "bundled" is a short way of saying "included into the 
         <target state="new">Could not determine ABI of some native libraries. Ignoring those: {0}</target>
         <note>The abbreviation "ABI" should not be translated.
 {0} - Comma-separated list of the ignored library file names.</note>
+      </trans-unit>
+      <trans-unit id="XA4302">
+        <source>Unhandled exception merging `AndroidManifest.xml`: {0}</source>
+        <target state="new">Unhandled exception merging `AndroidManifest.xml`: {0}</target>
+        <note>The following are literal names and should not be translated: `AndroidManifest.xml`
+{0} - The exception message of the associated exception</note>
       </trans-unit>
       <trans-unit id="XA4303">
         <source>Error extracting resources from "{0}": {1}</source>
