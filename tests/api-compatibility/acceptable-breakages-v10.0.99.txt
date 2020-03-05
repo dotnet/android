@@ -3,3 +3,249 @@ CannotAddAbstractMembers : Member 'Android.Telephony.CellInfo.CellIdentity' is a
 CannotAddAbstractMembers : Member 'Android.Telephony.CellInfo.CellSignalStrength' is abstract in the implementation but is missing in the contract.
 CannotAddAbstractMembers : Member 'Android.Telephony.CellInfo.CellIdentity.get()' is abstract in the implementation but is missing in the contract.
 CannotAddAbstractMembers : Member 'Android.Telephony.CellInfo.CellSignalStrength.get()' is abstract in the implementation but is missing in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.App.Application.IActivityLifecycleCallbacks.OnActivityPostCreated(Android.App.Activity, Android.OS.Bundle)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.App.Application.IActivityLifecycleCallbacks.OnActivityPostDestroyed(Android.App.Activity)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.App.Application.IActivityLifecycleCallbacks.OnActivityPostPaused(Android.App.Activity)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.App.Application.IActivityLifecycleCallbacks.OnActivityPostResumed(Android.App.Activity)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.App.Application.IActivityLifecycleCallbacks.OnActivityPostSaveInstanceState(Android.App.Activity, Android.OS.Bundle)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.App.Application.IActivityLifecycleCallbacks.OnActivityPostStarted(Android.App.Activity)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.App.Application.IActivityLifecycleCallbacks.OnActivityPostStopped(Android.App.Activity)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.App.Application.IActivityLifecycleCallbacks.OnActivityPreCreated(Android.App.Activity, Android.OS.Bundle)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.App.Application.IActivityLifecycleCallbacks.OnActivityPreDestroyed(Android.App.Activity)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.App.Application.IActivityLifecycleCallbacks.OnActivityPrePaused(Android.App.Activity)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.App.Application.IActivityLifecycleCallbacks.OnActivityPreResumed(Android.App.Activity)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.App.Application.IActivityLifecycleCallbacks.OnActivityPreSaveInstanceState(Android.App.Activity, Android.OS.Bundle)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.App.Application.IActivityLifecycleCallbacks.OnActivityPreStarted(Android.App.Activity)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.App.Application.IActivityLifecycleCallbacks.OnActivityPreStopped(Android.App.Activity)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Content.IServiceConnection.OnBindingDied(Android.Content.ComponentName)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Content.IServiceConnection.OnNullBinding(Android.Content.ComponentName)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Database.ICursor.NotificationUris' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Database.ICursor.NotificationUris.get()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Database.ICursor.SetNotificationUris(Android.Content.ContentResolver, System.Collections.Generic.IList<Android.Net.Uri>)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Media.AudioRecord.IOnRoutingChangedListener.Android.Media.IAudioRoutingOnRoutingChangedListener.OnRoutingChanged(Android.Media.IAudioRouting)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Media.AudioTrack.IOnRoutingChangedListener.Android.Media.IAudioRoutingOnRoutingChangedListener.OnRoutingChanged(Android.Media.IAudioRouting)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Media.MediaCas.IEventListener.OnPluginStatusUpdate(Android.Media.MediaCas, System.Int32, System.Int32)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Media.MediaCas.IEventListener.OnResourceLost(Android.Media.MediaCas)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Media.MediaCas.IEventListener.OnSessionEvent(Android.Media.MediaCas, Android.Media.MediaCas.Session, System.Int32, System.Int32, System.Byte[])' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.OS.IBinder.SuggestedMaxIpcSizeBytes' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.OS.IBinder.SuggestedMaxIpcSizeBytes.get()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Preferences.IPreferenceDataStore.GetBoolean(System.String, System.Boolean)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Preferences.IPreferenceDataStore.GetFloat(System.String, System.Single)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Preferences.IPreferenceDataStore.GetInt(System.String, System.Int32)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Preferences.IPreferenceDataStore.GetLong(System.String, System.Int64)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Preferences.IPreferenceDataStore.GetString(System.String, System.String)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Preferences.IPreferenceDataStore.GetStringSet(System.String, System.Collections.Generic.ICollection<System.String>)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Preferences.IPreferenceDataStore.PutBoolean(System.String, System.Boolean)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Preferences.IPreferenceDataStore.PutFloat(System.String, System.Single)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Preferences.IPreferenceDataStore.PutInt(System.String, System.Int32)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Preferences.IPreferenceDataStore.PutLong(System.String, System.Int64)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Preferences.IPreferenceDataStore.PutString(System.String, System.String)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Preferences.IPreferenceDataStore.PutStringSet(System.String, System.Collections.Generic.ICollection<System.String>)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Speech.Tts.ISynthesisCallback.RangeStart(System.Int32, System.Int32, System.Int32)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Telephony.Mbms.IGroupCallCallback.OnBroadcastSignalStrengthUpdated(System.Int32)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Telephony.Mbms.IGroupCallCallback.OnError(System.Int32, System.String)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Telephony.Mbms.IGroupCallCallback.OnGroupCallStateChanged(System.Int32, System.Int32)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Telephony.Mbms.IMbmsGroupCallSessionCallback.OnAvailableSaisUpdated(System.Collections.Generic.IList<Java.Lang.Integer>, System.Collections.Generic.IList<System.Collections.Generic.IList<Java.Lang.Integer>>)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Telephony.Mbms.IMbmsGroupCallSessionCallback.OnError(System.Int32, System.String)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Telephony.Mbms.IMbmsGroupCallSessionCallback.OnMiddlewareReady()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Telephony.Mbms.IMbmsGroupCallSessionCallback.OnServiceInterfaceAvailable(System.String, System.Int32)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Util.IAttributeSet.GetAttributeNamespace(System.Int32)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.IMenu.SetGroupDividerEnabled(System.Boolean)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.IMenuItem.AlphabeticModifiers' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.IMenuItem.ContentDescription' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.IMenuItem.ContentDescriptionFormatted' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.IMenuItem.IconTintBlendMode' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.IMenuItem.IconTintList' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.IMenuItem.IconTintMode' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.IMenuItem.NumericModifiers' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.IMenuItem.TooltipText' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.IMenuItem.TooltipTextFormatted' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.IMenuItem.AlphabeticModifiers.get()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.IMenuItem.ContentDescription.get()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.IMenuItem.ContentDescriptionFormatted.get()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.IMenuItem.IconTintBlendMode.get()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.IMenuItem.IconTintList.get()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.IMenuItem.IconTintMode.get()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.IMenuItem.NumericModifiers.get()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.IMenuItem.SetAlphabeticShortcut(System.Char, System.Int32)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.IMenuItem.SetContentDescription(Java.Lang.ICharSequence)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.IMenuItem.SetContentDescription(System.String)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.IMenuItem.SetIconTintBlendMode(Android.Graphics.BlendMode)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.IMenuItem.SetIconTintList(Android.Content.Res.ColorStateList)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.IMenuItem.SetIconTintMode(Android.Graphics.PorterDuff.Mode)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.IMenuItem.SetNumericShortcut(System.Char, System.Int32)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.IMenuItem.SetShortcut(System.Char, System.Char, System.Int32, System.Int32)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.IMenuItem.SetTooltipText(Java.Lang.ICharSequence)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.IMenuItem.SetTooltipText(System.String)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.IMenuItem.TooltipText.get()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.IMenuItem.TooltipTextFormatted.get()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.ISurfaceHolder.LockHardwareCanvas()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.ISurfaceHolderCallback2.SurfaceRedrawNeededAsync(Android.Views.ISurfaceHolder, Java.Lang.IRunnable)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.IViewParent.OnDescendantInvalidated(Android.Views.View, Android.Views.View)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.Window.ICallback.OnPointerCaptureChanged(System.Boolean)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.Window.ICallback.OnProvideKeyboardShortcuts(System.Collections.Generic.IList<Android.Views.KeyboardShortcutGroup>, Android.Views.IMenu, System.Int32)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.TextClassifiers.ITextClassifier.IsDestroyed' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.TextClassifiers.ITextClassifier.MaxGenerateLinksTextLength' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.TextClassifiers.ITextClassifier.ClassifyText(Android.Views.TextClassifiers.TextClassification.Request)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.TextClassifiers.ITextClassifier.Destroy()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.TextClassifiers.ITextClassifier.DetectLanguage(Android.Views.TextClassifiers.TextLanguage.Request)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.TextClassifiers.ITextClassifier.GenerateLinks(Android.Views.TextClassifiers.TextLinks.Request)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.TextClassifiers.ITextClassifier.IsDestroyed.get()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.TextClassifiers.ITextClassifier.MaxGenerateLinksTextLength.get()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.TextClassifiers.ITextClassifier.OnSelectionEvent(Android.Views.TextClassifiers.SelectionEvent)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.TextClassifiers.ITextClassifier.OnTextClassifierEvent(Android.Views.TextClassifiers.TextClassifierEvent)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.TextClassifiers.ITextClassifier.SuggestConversationActions(Android.Views.TextClassifiers.ConversationActions.Request)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Views.TextClassifiers.ITextClassifier.SuggestSelection(Android.Views.TextClassifiers.TextSelection.Request)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Widget.IAdapter.GetAutofillOptions()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Android.Widget.IAdapter.GetAutofillOptionsFormatted()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Lang.IIterable.ForEach(Java.Util.Functions.IConsumer)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Lang.IIterable.Spliterator()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Lang.Invoke.IMethodHandleInfo.IsVarArgs' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Lang.Invoke.IMethodHandleInfo.IsVarArgs.get()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Lang.Invoke.IMethodHandleInfo.ReferenceKindToString(Java.Lang.Invoke.ReferenceKind)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Lang.Invoke.IMethodHandleInfo.RefKindIsField(Java.Lang.Invoke.ReferenceKind)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Lang.Invoke.IMethodHandleInfo.RefKindIsValid(Java.Lang.Invoke.ReferenceKind)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Lang.Invoke.IMethodHandleInfo.RefKindName(Java.Lang.Invoke.ReferenceKind)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Lang.Invoke.IMethodHandleInfo.ToString(Java.Lang.Invoke.ReferenceKind, Java.Lang.Class, System.String, Java.Lang.Invoke.MethodType)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Lang.Reflect.IAnnotatedElement.GetAnnotationsByType(Java.Lang.Class)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Lang.Reflect.IAnnotatedElement.GetDeclaredAnnotation(Java.Lang.Class)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Lang.Reflect.IAnnotatedElement.GetDeclaredAnnotationsByType(Java.Lang.Class)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Lang.Reflect.IType.TypeName' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Lang.Reflect.IType.TypeName.get()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Security.IPrincipal.Implies(Javax.Security.Auth.Subject)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Security.KeyStore.IEntry.Attributes' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Security.KeyStore.IEntry.Attributes.get()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.ICollection.Java.Lang.IIterable.Spliterator()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.ICollection.RemoveIf(Java.Util.Functions.IPredicate)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IComparator.Comparing(Java.Util.Functions.IFunction)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IComparator.Comparing(Java.Util.Functions.IFunction, Java.Util.IComparator)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IComparator.ComparingDouble(Java.Util.Functions.IToDoubleFunction)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IComparator.ComparingInt(Java.Util.Functions.IToIntFunction)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IComparator.ComparingLong(Java.Util.Functions.IToLongFunction)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IComparator.NaturalOrder()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IComparator.NullsFirst(Java.Util.IComparator)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IComparator.NullsLast(Java.Util.IComparator)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IComparator.Reversed()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IComparator.ReverseOrder()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IComparator.ThenComparing(Java.Util.Functions.IFunction)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IComparator.ThenComparing(Java.Util.Functions.IFunction, Java.Util.IComparator)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IComparator.ThenComparing(Java.Util.IComparator)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IComparator.ThenComparingDouble(Java.Util.Functions.IToDoubleFunction)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IComparator.ThenComparingInt(Java.Util.Functions.IToIntFunction)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IComparator.ThenComparingLong(Java.Util.Functions.IToLongFunction)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IIterator.ForEachRemaining(Java.Util.Functions.IConsumer)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IList.Java.Lang.IIterable.Spliterator()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IList.Of()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IList.Of(Java.Lang.Object)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IList.Of(Java.Lang.Object, Java.Lang.Object)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IList.Of(Java.Lang.Object, Java.Lang.Object, Java.Lang.Object)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IList.Of(Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IList.Of(Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IList.Of(Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IList.Of(Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IList.Of(Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IList.Of(Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IList.Of(Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IList.Of(Java.Lang.Object[])' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IList.ReplaceAll(Java.Util.Functions.IUnaryOperator)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IList.Sort(Java.Util.IComparator)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IMap.Compute(Java.Lang.Object, Java.Util.Functions.IBiFunction)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IMap.ComputeIfAbsent(Java.Lang.Object, Java.Util.Functions.IFunction)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IMap.ComputeIfPresent(Java.Lang.Object, Java.Util.Functions.IBiFunction)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IMap.Entry(Java.Lang.Object, Java.Lang.Object)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IMap.ForEach(Java.Util.Functions.IBiConsumer)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IMap.GetOrDefault(Java.Lang.Object, Java.Lang.Object)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IMap.Merge(Java.Lang.Object, Java.Lang.Object, Java.Util.Functions.IBiFunction)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IMap.Of()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IMap.Of(Java.Lang.Object, Java.Lang.Object)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IMap.Of(Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IMap.Of(Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IMap.Of(Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IMap.Of(Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IMap.Of(Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IMap.Of(Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IMap.OfEntries(Java.Util.IMapEntry[])' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IMap.PutIfAbsent(Java.Lang.Object, Java.Lang.Object)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IMap.Remove(Java.Lang.Object, Java.Lang.Object)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IMap.Replace(Java.Lang.Object, Java.Lang.Object)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IMap.Replace(Java.Lang.Object, Java.Lang.Object, Java.Lang.Object)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IMap.ReplaceAll(Java.Util.Functions.IBiFunction)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IMapEntry.ComparingByKey()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IMapEntry.ComparingByKey(Java.Util.IComparator)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IMapEntry.ComparingByValue()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IMapEntry.ComparingByValue(Java.Util.IComparator)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IPrimitiveIteratorOfDouble.ForEachRemaining(Java.Util.Functions.IConsumer)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IPrimitiveIteratorOfDouble.ForEachRemaining(Java.Util.Functions.IDoubleConsumer)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IPrimitiveIteratorOfDouble.Java.Util.IIterator.Next()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IPrimitiveIteratorOfInt.ForEachRemaining(Java.Util.Functions.IConsumer)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IPrimitiveIteratorOfInt.ForEachRemaining(Java.Util.Functions.IIntConsumer)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IPrimitiveIteratorOfInt.Java.Util.IIterator.Next()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IPrimitiveIteratorOfLong.ForEachRemaining(Java.Util.Functions.IConsumer)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IPrimitiveIteratorOfLong.ForEachRemaining(Java.Util.Functions.ILongConsumer)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.IPrimitiveIteratorOfLong.Java.Util.IIterator.Next()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.ISet.Java.Lang.IIterable.Spliterator()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.ISet.Of()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.ISet.Of(Java.Lang.Object)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.ISet.Of(Java.Lang.Object, Java.Lang.Object)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.ISet.Of(Java.Lang.Object, Java.Lang.Object, Java.Lang.Object)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.ISet.Of(Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.ISet.Of(Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.ISet.Of(Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.ISet.Of(Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.ISet.Of(Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.ISet.Of(Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.ISet.Of(Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object, Java.Lang.Object)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.ISet.Of(Java.Lang.Object[])' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.ISortedSet.Java.Lang.IIterable.Spliterator()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.ISpliterator.Comparator' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.ISpliterator.ExactSizeIfKnown' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.ISpliterator.Comparator.get()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.ISpliterator.ExactSizeIfKnown.get()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.ISpliterator.ForEachRemaining(Java.Util.Functions.IConsumer)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.ISpliterator.HasCharacteristics(System.Int32)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Concurrent.IConcurrentMap.Java.Util.IMap.Compute(Java.Lang.Object, Java.Util.Functions.IBiFunction)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Concurrent.IConcurrentMap.Java.Util.IMap.ComputeIfAbsent(Java.Lang.Object, Java.Util.Functions.IFunction)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Concurrent.IConcurrentMap.Java.Util.IMap.ComputeIfPresent(Java.Lang.Object, Java.Util.Functions.IBiFunction)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Concurrent.IConcurrentMap.Java.Util.IMap.ForEach(Java.Util.Functions.IBiConsumer)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Concurrent.IConcurrentMap.Java.Util.IMap.GetOrDefault(Java.Lang.Object, Java.Lang.Object)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Concurrent.IConcurrentMap.Java.Util.IMap.Merge(Java.Lang.Object, Java.Lang.Object, Java.Util.Functions.IBiFunction)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Concurrent.IConcurrentMap.Java.Util.IMap.ReplaceAll(Java.Util.Functions.IBiFunction)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Functions.IBiConsumer.AndThen(Java.Util.Functions.IBiConsumer)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Functions.IBiFunction.AndThen(Java.Util.Functions.IFunction)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Functions.IBinaryOperator.MaxBy(Java.Util.IComparator)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Functions.IBinaryOperator.MinBy(Java.Util.IComparator)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Functions.IBiPredicate.And(Java.Util.Functions.IBiPredicate)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Functions.IBiPredicate.Negate()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Functions.IBiPredicate.Or(Java.Util.Functions.IBiPredicate)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Functions.IConsumer.AndThen(Java.Util.Functions.IConsumer)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Functions.IDoubleConsumer.AndThen(Java.Util.Functions.IDoubleConsumer)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Functions.IDoublePredicate.And(Java.Util.Functions.IDoublePredicate)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Functions.IDoublePredicate.Negate()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Functions.IDoublePredicate.Or(Java.Util.Functions.IDoublePredicate)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Functions.IDoubleUnaryOperator.AndThen(Java.Util.Functions.IDoubleUnaryOperator)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Functions.IDoubleUnaryOperator.Compose(Java.Util.Functions.IDoubleUnaryOperator)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Functions.IDoubleUnaryOperator.Identity()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Functions.IFunction.AndThen(Java.Util.Functions.IFunction)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Functions.IFunction.Compose(Java.Util.Functions.IFunction)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Functions.IFunction.Identity()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Functions.IIntConsumer.AndThen(Java.Util.Functions.IIntConsumer)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Functions.IIntPredicate.And(Java.Util.Functions.IIntPredicate)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Functions.IIntPredicate.Negate()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Functions.IIntPredicate.Or(Java.Util.Functions.IIntPredicate)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Functions.IIntUnaryOperator.AndThen(Java.Util.Functions.IIntUnaryOperator)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Functions.IIntUnaryOperator.Compose(Java.Util.Functions.IIntUnaryOperator)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Functions.IIntUnaryOperator.Identity()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Functions.ILongConsumer.AndThen(Java.Util.Functions.ILongConsumer)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Functions.ILongPredicate.And(Java.Util.Functions.ILongPredicate)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Functions.ILongPredicate.Negate()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Functions.ILongPredicate.Or(Java.Util.Functions.ILongPredicate)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Functions.ILongUnaryOperator.AndThen(Java.Util.Functions.ILongUnaryOperator)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Functions.ILongUnaryOperator.Compose(Java.Util.Functions.ILongUnaryOperator)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Functions.ILongUnaryOperator.Identity()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Functions.IPredicate.And(Java.Util.Functions.IPredicate)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Functions.IPredicate.IsEqual(Java.Lang.Object)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Functions.IPredicate.Negate()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Functions.IPredicate.Or(Java.Util.Functions.IPredicate)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Functions.IUnaryOperator.Identity()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Streams.ICollector.Of(Java.Util.Functions.ISupplier, Java.Util.Functions.IBiConsumer, Java.Util.Functions.IBinaryOperator, Java.Util.Functions.IFunction, Java.Util.Streams.CollectorCharacteristics[])' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'Java.Util.Streams.ICollector.Of(Java.Util.Functions.ISupplier, Java.Util.Functions.IBiConsumer, Java.Util.Functions.IBinaryOperator, Java.Util.Streams.CollectorCharacteristics[])' is present in the implementation but not in the contract.

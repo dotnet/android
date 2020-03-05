@@ -5,7 +5,7 @@ using Java.Interop;
 
 namespace Android.Telephony.Mbms
 {
-	public interface IGroupCallCallback : IJavaObject
+	public partial interface IGroupCallCallback : IJavaObject
 	{
 		// This is not generated because all the methods in this
 		// interface are default interface mthods, and the interface
