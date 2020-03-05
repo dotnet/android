@@ -372,7 +372,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				foreach (RegisterAttribute attr in GetRegisterAttributes (registeredMethod)) {
 					// Check for Kotlin-mangled methods that cannot be overridden
 					if (attr.Name.Contains ("-impl") || (attr.Name.Length > 7 && attr.Name[attr.Name.Length - 8] == '-'))
-						Diagnostic.Error (4213, LookupSource (implementedMethod), $"Cannot override Kotlin-generated method '{attr.Name}' because it is not a valid Java method name. This method can only be overridden from Kotlin.");
+						Diagnostic.Error (4217, LookupSource (implementedMethod), $"Cannot override Kotlin-generated method '{attr.Name}' because it is not a valid Java method name. This method can only be overridden from Kotlin.");
 
 					var msig = new Signature (implementedMethod, attr);
 					if (!registeredMethod.IsConstructor && !methods.Any (m => m.Name == msig.Name && m.Params == msig.Params))

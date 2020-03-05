@@ -103,7 +103,7 @@ namespace Java.Interop.Tools.Diagnostics {
 	//					XA4210 "You need to add a reference to Mono.Android.Export.dll when you use ExportAttribute or ExportFieldAttribute."
 	//					XA4211  AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{0}' is less than $(TargetFrameworkVersion) '{1}'. Using API-{1} for ACW compilation.
 	//					XA4212  Type `{0}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported.
-	//					XA4213  Cannot override Kotlin-generated method '{0}' because it is not a valid Java method name. This method can only be overridden from Kotlin."
+	//					XA4217  Cannot override Kotlin-generated method '{0}' because it is not a valid Java method name. This method can only be overridden from Kotlin."
 	// XA5xxx	GCC and toolchain
 	//			XA32xx	.apk generation
 	//					XA4300  Unsupported $(AndroidSupportedAbis) value '{0}'; ignoring.

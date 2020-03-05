@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -38,7 +38,7 @@ namespace Java.Interop.Tools.JavaCallableWrappersTests
 			// Contains invalid [Register] name of "foo-impl"
 			var td = SupportDeclarations.GetTypeDefinition (typeof (KotlinInvalidImplRegisterName));
 			var e = Assert.Throws<XamarinAndroidException> (() => new JavaCallableWrapperGenerator (td, logger, cache: null));
-			Assert.AreEqual (4213, e.Code);
+			Assert.AreEqual (4217, e.Code);
 		}
 
 		[Test]
@@ -49,7 +49,7 @@ namespace Java.Interop.Tools.JavaCallableWrappersTests
 			// Contains invalid [Register] name of "foo-f8k2a13"
 			var td = SupportDeclarations.GetTypeDefinition (typeof (KotlinInvalidHashRegisterName));
 			var e = Assert.Throws<XamarinAndroidException> (() => new JavaCallableWrapperGenerator (td, logger, cache: null));
-			Assert.AreEqual (4213, e.Code);
+			Assert.AreEqual (4217, e.Code);
 		}
 
 		[Test]
