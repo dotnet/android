@@ -10,6 +10,7 @@ namespace Xamarin.Android.Binder
 	{
 		public CodeGeneratorOptions ()
 		{
+			ApiVersionsXmlFiles = new Collection<string> ();
 			AssemblyReferences  = new Collection<string> ();
 			FixupFiles          = new Collection<string> ();
 			LibraryPaths        = new Collection<string> ();
@@ -26,7 +27,9 @@ namespace Xamarin.Android.Binder
 		public bool                 GlobalTypeNames {get; set;}
 		public bool                 OnlyBindPublicTypes {get; set;}
 		public string               ApiDescriptionFile {get; set;}
+		[Obsolete ("Use ApiVersionsXmlFiles")]
 		public string               ApiVersionsXmlFile {get; set;}
+		public Collection<string>   ApiVersionsXmlFiles {get; set;}
 		public Collection<string>   AnnotationsZipFiles {get; set;}
 		public string               EnumFieldsMapFile {get; set;}
 		public string               EnumFlagsFile {get; set;}
@@ -138,7 +141,7 @@ namespace Xamarin.Android.Binder
 					v => opts.EnumMethodsMapFile = v },
 				{ "apiversions=",
 					"For internal use.",
-					v => opts.ApiVersionsXmlFile = v },
+					v => opts.ApiVersionsXmlFiles.Add (v) },
 				{ "annotations=",
 					"For internal use.",
 					v => opts.AnnotationsZipFiles.Add (v) },

@@ -53,7 +53,6 @@ namespace Xamarin.Android.Binder
 			string enum_flags       = options.EnumFlagsFile;
 			string enum_methods_map = options.EnumMethodsMapFile;
 			var fixups              = options.FixupFiles;
-			string api_versions_xml = options.ApiVersionsXmlFile;
 			var annotations_zips    = options.AnnotationsZipFiles;
 			string filename         = options.ApiDescriptionFile;
 			string mapping_file     = options.MappingReportFile;
@@ -157,8 +156,9 @@ namespace Xamarin.Android.Binder
 
 			Validate (gens, opt, new CodeGeneratorContext ());
 
-			if (api_versions_xml != null)
+			foreach (var api_versions_xml in options.ApiVersionsXmlFiles) {
 				ApiVersionsSupport.AssignApiLevels (gens, api_versions_xml);
+			}
 
 			foreach (GenBase gen in gens)
 				gen.FillProperties ();
