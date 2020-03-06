@@ -24,7 +24,7 @@
   <Target Name="_ClassParsePrepare"
       DependsOnTargets="_DefineApiFiles">
     <PropertyGroup>
-      <ClassParse>$(_TopDir)\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\class-parse.exe</ClassParse>
+      <ClassParse>$(_TopDir)\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\net472\class-parse.exe</ClassParse>
     </PropertyGroup>
     <MakeDir Directories="$(_OutputPath)api" />
     <ItemGroup>

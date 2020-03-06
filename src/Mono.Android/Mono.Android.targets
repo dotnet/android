@@ -93,7 +93,7 @@
       />
     </ItemGroup>
     <PropertyGroup>
-      <Generator>"$(XAInstallPrefix)xbuild\Xamarin\Android\generator.exe"</Generator>
+      <Generator>"$(XAInstallPrefix)xbuild\Xamarin\Android\net472\generator.exe"</Generator>
       <_GenFlags>--public --product-version=7</_GenFlags>
       <_ApiLevel>--api-level=$(AndroidApiLevel)</_ApiLevel>
       <_Out>-o "$(IntermediateOutputPath)mcw"</_Out>

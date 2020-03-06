@@ -127,13 +127,13 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\aprofutil.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\cil-strip.exe" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\cil-strip.pdb" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\class-parse.exe" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\class-parse.pdb" />
+    <_MSBuildFilesWithTF Include="$(MSBuildSrcDir)\net472\class-parse.exe" />
+    <_MSBuildFilesWithTF Include="$(MSBuildSrcDir)\net472\class-parse.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\FSharp.Core.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\generator.exe" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\generator.pdb" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\HtmlAgilityPack.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\HtmlAgilityPack.pdb" />
+    <_MSBuildFilesWithTF Include="$(MSBuildSrcDir)\net472\generator.exe" />
+    <_MSBuildFilesWithTF Include="$(MSBuildSrcDir)\net472\generator.pdb" />
+    <_MSBuildFilesWithTF Include="$(MSBuildSrcDir)\net472\HtmlAgilityPack.dll" />
+    <_MSBuildFilesWithTF Include="$(MSBuildSrcDir)\net472\HtmlAgilityPack.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\ICSharpCode.SharpZipLib.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\ICSharpCode.SharpZipLib.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\illinkanalyzer.exe" />
@@ -153,15 +153,15 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Tools.Diagnostics.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Tools.JavaCallableWrappers.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Tools.JavaCallableWrappers.pdb" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Runtime.Environment.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Runtime.Environment.pdb" />
+    <_MSBuildFilesWithTF Include="$(MSBuildSrcDir)\net472\Java.Runtime.Environment.dll" />
+    <_MSBuildFilesWithTF Include="$(MSBuildSrcDir)\net472\Java.Runtime.Environment.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Runtime.Environment.dll.config" Condition=" '$(HostOS)' != 'Windows' " />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\jcw-gen.exe" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\jcw-gen.pdb" />
+    <_MSBuildFilesWithTF Include="$(MSBuildSrcDir)\net472\jcw-gen.exe" />
+    <_MSBuildFilesWithTF Include="$(MSBuildSrcDir)\net472\jcw-gen.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\jit-times.exe" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\jit-times.pdb" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\jnimarshalmethod-gen.exe" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\jnimarshalmethod-gen.pdb" />
+    <_MSBuildFilesWithTF Include="$(MSBuildSrcDir)\net472\jnimarshalmethod-gen.exe" />
+    <_MSBuildFilesWithTF Include="$(MSBuildSrcDir)\net472\jnimarshalmethod-gen.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\LayoutBinding.cs" />
     <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libmono-android.debug.so')" />
     <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libmono-android.release.so')" />
@@ -178,8 +178,8 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\libZipSharp.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Profiler.Log.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Profiler.Log.pdb" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\logcat-parse.exe" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\logcat-parse.pdb" />
+    <_MSBuildFilesWithTF Include="$(MSBuildSrcDir)\net472\logcat-parse.exe" />
+    <_MSBuildFilesWithTF Include="$(MSBuildSrcDir)\net472\logcat-parse.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\mdoc.exe" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\mdoc.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\mkbundle.exe" />
@@ -187,11 +187,11 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\mkbundle-api.h" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\mono-symbolicate.exe" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\mono-symbolicate.pdb" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.CSharp.dll" />
+    <_MSBuildFilesWithTF Include="$(MSBuildSrcDir)\net472\Mono.CSharp.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.CompilerServices.SymbolWriter.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.CompilerServices.SymbolWriter.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Options.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Terminal.dll" />
+    <_MSBuildFilesWithTF Include="$(MSBuildSrcDir)\net472\Mono.Terminal.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\monodoc.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\monodoc.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\MULTIDEX_JAR_LICENSE" />
@@ -237,10 +237,10 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.Aidl.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.AndroidSdk.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.AndroidSdk.pdb" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.AnnotationSupport.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.AnnotationSupport.pdb" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.ApiXmlAdjuster.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.ApiXmlAdjuster.pdb" />
+    <_MSBuildFilesWithTF Include="$(MSBuildSrcDir)\net472\Xamarin.Android.Tools.AnnotationSupport.dll" />
+    <_MSBuildFilesWithTF Include="$(MSBuildSrcDir)\net472\Xamarin.Android.Tools.AnnotationSupport.pdb" />
+    <_MSBuildFilesWithTF Include="$(MSBuildSrcDir)\net472\Xamarin.Android.Tools.ApiXmlAdjuster.dll" />
+    <_MSBuildFilesWithTF Include="$(MSBuildSrcDir)\net472\Xamarin.Android.Tools.ApiXmlAdjuster.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.Bytecode.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.Bytecode.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.JavaDocImporter.dll" />
@@ -417,6 +417,9 @@
       <FrameworkItemsUnix Include="@(_FrameworkFiles)">
         <RelativePath>$([MSBuild]::MakeRelative($(FrameworkSrcDir), %(FullPath)))</RelativePath>
       </FrameworkItemsUnix>
+      <MSBuildItemsWin Include="@(_MSBuildFilesWithTF)">
+        <RelativePath>$([MSBuild]::MakeRelative($([System.IO.Path]::Combine($(MSBuildSrcDir), net472)), %(FullPath)))</RelativePath>
+      </MSBuildItemsWin>
       <MSBuildItemsWin Include="@(_MSBuildFiles);@(_MSBuildFilesWin)">
         <RelativePath>$([MSBuild]::MakeRelative($(MSBuildSrcDir), %(FullPath)))</RelativePath>
       </MSBuildItemsWin>
@@ -429,6 +432,9 @@
       <MSBuildItemsWin Include="@(_DesignerFilesWin)">
         <RelativePath>bcl\%(RecursiveDir)\%(Filename)%(Extension)</RelativePath>
       </MSBuildItemsWin>
+      <MSBuildItemsUnix Include="@(_MSBuildFilesWithTF)">
+        <RelativePath>$([MSBuild]::MakeRelative($([System.IO.Path]::Combine($(MSBuildSrcDir), net472)), %(FullPath)))</RelativePath>
+      </MSBuildItemsUnix>
       <MSBuildItemsUnix Include="@(_MSBuildFiles);@(_MSBuildFilesUnix);@(_MSBuildFilesUnixSwab);@(_MSBuildFilesUnixSign);@(_MSBuildFilesUnixSignAndHarden)">
         <RelativePath>$([MSBuild]::MakeRelative($(MSBuildSrcDir), %(FullPath)))</RelativePath>
       </MSBuildItemsUnix>

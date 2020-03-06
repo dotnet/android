@@ -12,7 +12,7 @@ DOCS_DIR=~/android-toolchain/docs
 MANDROID = ../../bin/$(CONFIGURATION)/lib/xamarin.android/xbuild/Xamarin/Android
 BUILDBIN = ../../bin/Build$(CONFIGURATION)
 
-CLASS_PARSE = $(MANDROID)/class-parse.exe
+CLASS_PARSE = $(MANDROID)/net472/class-parse.exe
 API_XML_TOOL = $(BUILDBIN)/api-xml-adjuster.exe
 RUNTIME = mono --debug
 RUN_CLASS_PARSE = $(RUNTIME) $(CLASS_PARSE)
