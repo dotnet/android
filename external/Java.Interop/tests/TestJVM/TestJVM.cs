@@ -16,6 +16,7 @@ namespace Java.InteropTests
 			var dir = Path.GetDirectoryName (typeof (TestJVM).Assembly.Location);
 			var builder = new JreRuntimeOptions () {
 				JvmLibraryPath              = Environment.GetEnvironmentVariable ("JI_JVM_PATH"),
+				JniAddNativeMethodRegistrationAttributePresent = true,
 			};
 			if (jars != null) {
 				foreach (var jar in jars)
