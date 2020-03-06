@@ -97,7 +97,7 @@
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <ImplicitlyExpandDesignTimeFacades>False</ImplicitlyExpandDesignTimeFacades>
-    <IntermediateOutputPath>$(IntermediateOutputPath)android-$(AndroidApiLevel)\</IntermediateOutputPath>
+    <IntermediateOutputPath>$(IntermediateOutputPath)android-$(AndroidPlatformId)\</IntermediateOutputPath>
   </PropertyGroup>
   <Import Project="Mono.Android.targets" />
   <PropertyGroup>
