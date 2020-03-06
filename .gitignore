@@ -24,4 +24,5 @@ src/Xamarin.Android.Build.Tasks/Xamarin.Android.Common.props
 external/monodroid/
 external/mono/
 tests/api-compatibility/reference/*.dll
+tests/api-compatibility/reference/*.cs
 Novell

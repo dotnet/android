@@ -26,6 +26,10 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 			get { return true; }
 		}
 
+		protected   virtual      bool           PreserveOutput {
+			get { return true; }
+		}
+
 		protected   override    string          ToolBaseName {
 			get { return "git"; }
 		}
@@ -68,7 +72,9 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
 		{
 			base.LogEventsFromTextOutput (singleLine, messageImportance);
-			Lines.Add (singleLine);
+			if (PreserveOutput) {
+				Lines.Add (singleLine);
+			}
 		}
 	}
 }
