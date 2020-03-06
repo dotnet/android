@@ -1560,4 +1560,44 @@
   <remove-node api-since="30" path="/api/package[@name='android.animation']/interface[@name='Animator.AnimatorListener']/method[@name='onAnimationStart' and count(parameter)=2]" />
   <remove-node api-since="30" path="/api/package[@name='android.animation']/interface[@name='Animator.AnimatorListener']/method[@name='onAnimationEnd' and count(parameter)=2]" />
 
+  <!-- Starting with API added in API-30, we are going to allow interfaces to contain nested types.
+       To preserve backwards compatibility, we need to "un-nest" anything added before API-30 -->
+  
+  <!-- Handle everything that has always existed (no @merge.SourceFile) -->
+  <attr api-since="30" path="/api/package/interface[not(@merge.SourceFile)]" name="unnest">true</attr>
+  <attr api-since="30" path="/api/package/class[not(@merge.SourceFile)]" name="unnest">true</attr>
+
+  <!-- Need these for each platform prior to 30 -->
+  <attr api-since="30" path="/api/package/interface[contains(@merge.SourceFile,'api-10.xml.in')]" name="unnest">true</attr>
+  <attr api-since="30" path="/api/package/class[contains(@merge.SourceFile,'api-10.xml.in')]" name="unnest">true</attr>
+  <attr api-since="30" path="/api/package/interface[contains(@merge.SourceFile,'api-15.xml.in')]" name="unnest">true</attr>
+  <attr api-since="30" path="/api/package/class[contains(@merge.SourceFile,'api-15.xml.in')]" name="unnest">true</attr>
+  <attr api-since="30" path="/api/package/interface[contains(@merge.SourceFile,'api-16.xml.in')]" name="unnest">true</attr>
+  <attr api-since="30" path="/api/package/class[contains(@merge.SourceFile,'api-16.xml.in')]" name="unnest">true</attr>
+  <attr api-since="30" path="/api/package/interface[contains(@merge.SourceFile,'api-17.xml.in')]" name="unnest">true</attr>
+  <attr api-since="30" path="/api/package/class[contains(@merge.SourceFile,'api-17.xml.in')]" name="unnest">true</attr>
+  <attr api-since="30" path="/api/package/interface[contains(@merge.SourceFile,'api-18.xml.in')]" name="unnest">true</attr>
+  <attr api-since="30" path="/api/package/class[contains(@merge.SourceFile,'api-18.xml.in')]" name="unnest">true</attr>
+  <attr api-since="30" path="/api/package/interface[contains(@merge.SourceFile,'api-19.xml.in')]" name="unnest">true</attr>
+  <attr api-since="30" path="/api/package/class[contains(@merge.SourceFile,'api-19.xml.in')]" name="unnest">true</attr>
+  <attr api-since="30" path="/api/package/interface[contains(@merge.SourceFile,'api-20.xml.in')]" name="unnest">true</attr>
+  <attr api-since="30" path="/api/package/class[contains(@merge.SourceFile,'api-20.xml.in')]" name="unnest">true</attr>
+  <attr api-since="30" path="/api/package/interface[contains(@merge.SourceFile,'api-21.xml.in')]" name="unnest">true</attr>
+  <attr api-since="30" path="/api/package/class[contains(@merge.SourceFile,'api-21.xml.in')]" name="unnest">true</attr>
+  <attr api-since="30" path="/api/package/interface[contains(@merge.SourceFile,'api-22.xml.in')]" name="unnest">true</attr>
+  <attr api-since="30" path="/api/package/class[contains(@merge.SourceFile,'api-22.xml.in')]" name="unnest">true</attr>
+  <attr api-since="30" path="/api/package/interface[contains(@merge.SourceFile,'api-23.xml.in')]" name="unnest">true</attr>
+  <attr api-since="30" path="/api/package/class[contains(@merge.SourceFile,'api-23.xml.in')]" name="unnest">true</attr>
+  <attr api-since="30" path="/api/package/interface[contains(@merge.SourceFile,'api-24.xml.in')]" name="unnest">true</attr>
+  <attr api-since="30" path="/api/package/class[contains(@merge.SourceFile,'api-24.xml.in')]" name="unnest">true</attr>
+  <attr api-since="30" path="/api/package/interface[contains(@merge.SourceFile,'api-25.xml.in')]" name="unnest">true</attr>
+  <attr api-since="30" path="/api/package/class[contains(@merge.SourceFile,'api-25.xml.in')]" name="unnest">true</attr>
+  <attr api-since="30" path="/api/package/interface[contains(@merge.SourceFile,'api-26.xml.in')]" name="unnest">true</attr>
+  <attr api-since="30" path="/api/package/class[contains(@merge.SourceFile,'api-26.xml.in')]" name="unnest">true</attr>
+  <attr api-since="30" path="/api/package/interface[contains(@merge.SourceFile,'api-27.xml.in')]" name="unnest">true</attr>
+  <attr api-since="30" path="/api/package/class[contains(@merge.SourceFile,'api-27.xml.in')]" name="unnest">true</attr>
+  <attr api-since="30" path="/api/package/interface[contains(@merge.SourceFile,'api-28.xml.in')]" name="unnest">true</attr>
+  <attr api-since="30" path="/api/package/class[contains(@merge.SourceFile,'api-28.xml.in')]" name="unnest">true</attr>
+  <attr api-since="30" path="/api/package/interface[contains(@merge.SourceFile,'api-29.xml.in')]" name="unnest">true</attr>
+  <attr api-since="30" path="/api/package/class[contains(@merge.SourceFile,'api-29.xml.in')]" name="unnest">true</attr>
 </metadata>
