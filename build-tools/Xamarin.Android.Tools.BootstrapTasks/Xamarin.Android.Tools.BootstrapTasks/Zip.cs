@@ -57,7 +57,13 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 					if (prefix != null && entryDir.StartsWith (prefix, StringComparison.OrdinalIgnoreCase)) {
 						zipDir = entryDir.Substring (prefix.Length);
 					}
-					zip.AddFileToDirectory (entryPath, zipDir, useFileDirectory: false);
+					if (string.IsNullOrEmpty (zipDir)) {
+						// JonP can't figure out how to actually clear the archive directory name
+						// using AddFileToDirectory().  This works as desired.
+						zip.AddFile (entryPath, Path.GetFileName (entryPath));
+					} else {
+						zip.AddFileToDirectory (entryPath, zipDir, useFileDirectory: false);
+					}
 				}
 			}
 			return !Log.HasLoggedErrors;
