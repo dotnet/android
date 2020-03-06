@@ -79,9 +79,18 @@
       Outputs="$(IntermediateOutputPath)mcw\Mono.Android.projitems">
     <MakeDir Directories="$(IntermediateOutputPath)mcw" />
     <PropertyGroup>
-      <_ApiVersions Condition="Exists('$(AndroidSdkDirectory)\platforms\android-$(AndroidApiLevel)\data\api-versions.xml')">"$(AndroidSdkDirectory)\platforms\android-$(AndroidApiLevel)\data\api-versions.xml"</_ApiVersions>
-      <_ApiVersions Condition="'$(_ApiVersions)'==''">"$(AndroidSdkDirectory)\platform-tools\api\api-versions.xml"</_ApiVersions>
+      <_PlatformIdVersions>$(AndroidSdkDirectory)\platforms\android-$(AndroidPlatformId)\data\api-versions.xml</_PlatformIdVersions>
     </PropertyGroup>
+    <ItemGroup>
+      <_ApiVersion
+          Condition=" '$(AndroidApiLevel)' > 29 Or !Exists ('$(_PlatformIdVersions)')"
+          Include="$(AndroidSdkDirectory)\platform-tools\api\api-versions.xml"
+      />
+      <_ApiVersion
+          Condition="Exists('$(_PlatformIdVersions)')"
+          Include="$(_PlatformIdVersions)"
+      />
+    </ItemGroup>
     <PropertyGroup>
       <Generator>"$(XAInstallPrefix)xbuild\Xamarin\Android\generator.exe"</Generator>
       <_GenFlags>--public --product-version=7</_GenFlags>
@@ -91,7 +100,7 @@
       <_Fixup>--fixup=metadata</_Fixup>
       <_Enums1>--preserve-enums --enumflags=enumflags --enumfields=map.csv --enummethods=methodmap.csv</_Enums1>
       <_Enums2>--enummetadata=$(IntermediateOutputPath)mcw\enummetadata</_Enums2>
-      <_Versions>--apiversions=$(_ApiVersions)</_Versions>
+      <_Versions>@(_ApiVersion->'--apiversions="%(Identity)"', ' ')</_Versions>
       <_Annotations>--annotations="$(AndroidSdkDirectory)\platform-tools\api\annotations.zip"</_Annotations>
       <_Assembly>--assembly="Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"</_Assembly>
       <_TypeMap>--type-map-report=$(IntermediateOutputPath)mcw\type-mapping.txt</_TypeMap>
