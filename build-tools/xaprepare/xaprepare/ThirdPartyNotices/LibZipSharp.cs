@@ -15,8 +15,8 @@ namespace Xamarin.Android.Prepare
 			var doc = XDocument.Load (Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "Configuration.props"));
 			return doc.Descendants(XName.Get("LibZipSharpVersion", @"http://schemas.microsoft.com/developer/msbuild/2003")).First().Value;
 		}
-		static readonly string licenseFile = Path.Combine (BuildPaths.XamarinAndroidSourceRoot,
-			"packages", "xamarin.libzipsharp", LibZipSharpVersion (),
+		static readonly string licenseFile = Path.Combine (Configurables.Paths.XAPackagesDir,
+			"xamarin.libzipsharp", LibZipSharpVersion (),
 			"Licences", "LICENSE");
 
 		public override string LicenseFile => licenseFile;
