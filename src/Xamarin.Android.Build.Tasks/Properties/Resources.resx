@@ -148,6 +148,16 @@ In this message, the phrase "should not be reached" means that this error messag
     <value>Unsupported or invalid $(TargetFrameworkVersion) value of '{0}'. Please update your Project Options.</value>
     <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)</comment>
   </data>
+  <data name="XA0003" xml:space="preserve">
+    <value>Invalid `android:versionCode` value `{0}` in `AndroidManifest.xml`. It must be an integer value.</value>
+    <comment>The following are literal names and should not be translated: `android:versionCode`, `AndroidManifest.xml`</comment>
+  </data>
+  <data name="XA0004" xml:space="preserve">
+    <value>Invalid `android:versionCode` value `{0}` in `AndroidManifest.xml`. The value must be in the range of 0 to {1}.</value>
+    <comment>The following are literal names and should not be translated: `android:versionCode`, `AndroidManifest.xml`
+{0} - The current value
+{1} - The maximum allowed value</comment>
+  </data>
   <data name="XA0030" xml:space="preserve">
     <value>Building with JDK version `{0}` is not supported. Please install JDK version `{1}`. See https://aka.ms/xamarin/jdk9-errors</value>
     <comment>The abbreviation "JDK" should not be translated.</comment>
@@ -349,6 +359,9 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
 {1} - The target framework version number
 {2} - The API version number</comment>
   </data>
+  <data name="XA4213" xml:space="preserve">
+    <value>The type '{0}' must provide a public default constructor</value>
+  </data>
   <data name="XA4214" xml:space="preserve">
     <value>The managed type `{0}` exists in multiple assemblies: {1}. Please refactor the managed type names in these assemblies so that they are not identical.</value>
     <comment>{0} - The managed type name
@@ -404,6 +417,11 @@ In this message, the term "bundled" is a short way of saying "included into the 
     <value>Could not determine ABI of some native libraries. Ignoring those: {0}</value>
     <comment>The abbreviation "ABI" should not be translated.
 {0} - Comma-separated list of the ignored library file names.</comment>
+  </data>
+  <data name="XA4302" xml:space="preserve">
+    <value>Unhandled exception merging `AndroidManifest.xml`: {0}</value>
+    <comment>The following are literal names and should not be translated: `AndroidManifest.xml`
+{0} - The exception message of the associated exception</comment>
   </data>
   <data name="XA4303" xml:space="preserve">
     <value>Error extracting resources from "{0}": {1}</value>
