@@ -20,8 +20,6 @@ namespace Xamarin.Android.Tasks {
 
 		List<ITaskItem> archives = new List<ITaskItem> ();
 
-		public bool ExplicitCrunch { get; set; }
-
 		public string ExtraArgs { get; set; }
 
 		public string FlatArchivesDirectory { get; set; }
@@ -64,8 +62,6 @@ namespace Xamarin.Android.Tasks {
 			if (!string.IsNullOrEmpty (ResourceSymbolsTextFile))
 				cmd.AppendSwitchIfNotNull ("--output-text-symbols ", ResourceSymbolsTextFile);
 			cmd.AppendSwitchIfNotNull ("--dir ", dir.ItemSpec.TrimEnd ('\\'));
-			if (ExplicitCrunch)
-				cmd.AppendSwitch ("--no-crunch");
 			if (!string.IsNullOrEmpty (ExtraArgs))
 				cmd.AppendSwitch (ExtraArgs);
 			if (MonoAndroidHelper.LogInternalExceptions)

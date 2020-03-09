@@ -54,14 +54,12 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.ConvertCustomView" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CopyIfChanged" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CopyResource" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.CopyAndConvertResources" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CreateManagedLibraryResourceArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CreateNativeLibraryArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CreateResgenManifest" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CreateTemporaryDirectory" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CreateAdditionalLibraryResourceCache" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CreateMsymManifest" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.Crunch" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.FilterAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.FindLayoutsToBind" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateLayoutBindings" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -231,7 +229,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AotAssemblies Condition=" '$(AndroidAotMode)' != '' And '$(AndroidAotMode)' != 'None' ">True</AotAssemblies>
 	<AotAssemblies Condition=" '$(AotAssemblies)' == '' ">False</AotAssemblies>
 
-	<AndroidExplicitCrunch Condition=" '$(AndroidExplicitCrunch)' == '' ">False</AndroidExplicitCrunch>
 	<AndroidUseDebugRuntime
 			Condition="'$(AndroidUseDebugRuntime)' == '' And '$(EmbedAssembliesIntoApk)' == 'True' And '$(Optimize)' == 'True' "
 	>False</AndroidUseDebugRuntime>
@@ -873,13 +870,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		<FileWrites Include="$(TargetFrameworkMonikerAssemblyAttributesPath)" />
 		<Reference Include="$(_JavaInteropReferences)" />
 	</ItemGroup>
-	<Warning Code="XA0110"
-		Text="Disabling %24(AndroidExplicitCrunch) as it is not supported by `aapt2`. If you wish to use %24(AndroidExplicitCrunch) please set %24(AndroidUseAapt2) to false."
-		Condition=" '$(_AndroidUseAapt2)' == 'True' And '$(AndroidExplicitCrunch)' == 'True' "
-	/>
-	<PropertyGroup>
-		<AndroidExplicitCrunch Condition=" '$(_AndroidUseAapt2)' == 'True' ">false</AndroidExplicitCrunch>
-	</PropertyGroup>
 </Target>
 
 <PropertyGroup>
@@ -1185,7 +1175,6 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="AndroidAotMode=$(AndroidAotMode)" />
 		<_PropertyCacheItems Include="AndroidEmbedProfilers=$(AndroidEmbedProfilers)" />
 		<_PropertyCacheItems Include="AndroidEnableProfiledAot=$(AndroidEnableProfiledAot)" />
-		<_PropertyCacheItems Include="ExplicitCrunch=$(AndroidExplicitCrunch)" />
 		<_PropertyCacheItems Include="AndroidDexTool=$(AndroidDexTool)" />
 		<_PropertyCacheItems Include="AndroidLinkTool=$(AndroidLinkTool)" />
 		<_PropertyCacheItems Include="AndroidPackageFormat=$(AndroidPackageFormat)" />
@@ -1315,21 +1304,8 @@ because xbuild doesn't support framework reference assemblies.
 		Condition=" '$(_AndroidUseAapt2)' == 'True' "
 		Resources="@(_AndroidResolvedResources)"
 	/>
-	<CopyAndConvertResources SourceFiles="@(_AndroidResolvedResources)"
-			DestinationFiles="@(_AndroidResourceDest)"
-			AcwMapFile="$(_AcwMapFile)"
-			CacheFile="$(_AndroidResourcesCacheFile)"
-			CustomViewMapFile="$(_CustomViewMapFile)"
-			ResourceDirectories="$(MonoAndroidResDirIntermediate);@(LibraryResourceDirectories)"
-			ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
-			Condition="  '$(AndroidExplicitCrunch)' == 'True' And '$(AndroidApplication)' != '' And $(AndroidApplication)">
-		<Output ItemName="_ModifiedResources" TaskParameter="ModifiedFiles"/>
-	</CopyAndConvertResources>
-	<Crunch SourceFiles="@(_ModifiedResources)" ToolPath="$(AaptToolPath)" ToolExe="$(AaptToolExe)"
-			Condition=" '$(AndroidExplicitCrunch)' == 'True' And '$(AndroidApplication)' != '' And $(AndroidApplication)" />
 	<CopyIfChanged SourceFiles="@(_AndroidResolvedResources)"
 		DestinationFiles="@(_AndroidResourceDest)"
-		Condition=" '$(AndroidExplicitCrunch)' != 'True' Or '$(AndroidApplication)' == '' Or !($(AndroidApplication))"
 	>
 		<Output ItemName="_ModifiedResources" TaskParameter="ModifiedFiles"/>
 	</CopyIfChanged>
@@ -1377,27 +1353,6 @@ because xbuild doesn't support framework reference assemblies.
 	</ReadLibraryProjectImportsCache>
 </Target>
 
-<Target Name="_GetLibraryResourceImages"
-		Condition=" '$(AndroidExplicitCrunch)' == 'True' And '$(AndroidApplication)' != '' And $(AndroidApplication)">
-	<ItemGroup>
-		<_LibraryResourceDirs Include="@(LibraryResourceDirectories)"/>
-		<_LibraryResourceImages Include="@(_LibraryResourceDirs->'%(Identity)\**\*.png')" />
-	</ItemGroup>
-	<RemoveDuplicates Inputs="@(_LibraryResourceImages)">
-		<Output TaskParameter="Filtered" ItemName="_LibraryProjectResourceImages"/>
-	</RemoveDuplicates>
-</Target>
-
-<Target Name="_CrunchLibraryProjectImports"
-		Inputs="@(_LibraryProjectResourceImages->'%(Identity)');$(_AndroidBuildPropertiesCache)"
-		Outputs="@(_LibraryResourceDirs->'%(Identity)\..\crunch.stamp')"
-		DependsOnTargets="_GetLibraryResourceImages"
-		Condition=" '$(AndroidExplicitCrunch)' == 'True' And '$(AndroidApplication)' != '' And $(AndroidApplication)">
-	<Crunch SourceFiles="@(_LibraryProjectResourceImages->'%(Identity)')" ToolPath="$(AaptToolPath)" ToolExe="$(AaptToolExe)"
-			Condition=" '$(AndroidExplicitCrunch)' == 'True' And '$(AndroidApplication)' != '' And $(AndroidApplication)" />
-	<Touch Files="@(_LibraryResourceDirs->'%(Identity)\..\crunch.stamp')" AlwaysCreate="True" />
-</Target>
-
 <Target Name="_AddMultiDexDependencyJars">
   <ItemGroup Condition=" '$(AndroidEnableMultiDex)' == 'True' AND '$(AndroidMultiDexSupportJar)' != '' ">
     <AndroidJavaLibrary Include="$(_AndroidSdkDirectory)\$(AndroidMultiDexSupportJar)" />
@@ -1410,7 +1365,6 @@ because xbuild doesn't support framework reference assemblies.
 <PropertyGroup>
 	<_GetLibraryImportsDependsOnTargets>
 		_ExtractLibraryProjectImports;
-		_CrunchLibraryProjectImports;
 		_AddMultiDexDependencyJars
 		;_BuildLibraryImportsCache
 	</_GetLibraryImportsDependsOnTargets>
