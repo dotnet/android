@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using System.Diagnostics;
 
 using Microsoft.Build.Framework;
@@ -25,23 +26,36 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				cmd => {
 					var useManagedRuntime = !string.IsNullOrEmpty (ManagedRuntime);
 					var argumentsBeginning = useManagedRuntime ? ManagedRuntimeArguments + " " : "";
-					var procStartInfo = new ProcessStartInfo () {
-						FileName =  useManagedRuntime ? ManagedRuntime : cmd.GetMetadata ("Command"),
-						Arguments = $"{argumentsBeginning}{cmd.GetMetadata ("Arguments")}",
-						CreateNoWindow = true,
-						UseShellExecute = false,
-						RedirectStandardOutput = true,
-						RedirectStandardError = true,
-					};
 
 					Log.LogMessage (MessageImportance.Normal, $"Starting Command: {cmd.GetMetadata ("Command")} Arguments: {cmd.GetMetadata ("Arguments")}");
 
 					try {
-						using (var proc = Process.Start (procStartInfo)) {
+						using (var proc = new Process ()) {
+							StringBuilder standardOutput = new StringBuilder (), errorOutput = new StringBuilder ();
+
+							proc.StartInfo.FileName = useManagedRuntime ? ManagedRuntime : cmd.GetMetadata ("Command");
+							proc.StartInfo.Arguments = $"{argumentsBeginning}{cmd.GetMetadata ("Arguments")}";
+							proc.StartInfo.CreateNoWindow = true;
+							proc.StartInfo.UseShellExecute = false;
+							proc.StartInfo.RedirectStandardOutput = true;
+							proc.StartInfo.RedirectStandardError = true;
+
+							proc.OutputDataReceived += new DataReceivedEventHandler ((sender, e) => {
+								if (!string.IsNullOrEmpty (e.Data))
+									standardOutput.Append (e.Data);
+							});
+							proc.ErrorDataReceived += new DataReceivedEventHandler ((sender, e) => {
+								if (!string.IsNullOrEmpty (e.Data))
+									errorOutput.Append (e.Data);
+							});
+
+							proc.Start ();
+							proc.BeginOutputReadLine ();
+							proc.BeginErrorReadLine ();
 							proc.WaitForExit ();
 
-							var output = proc.StandardOutput.ReadToEnd ();
-							var errOutput = proc.StandardError.ReadToEnd ();
+							var output = standardOutput.ToString ();
+							var errOutput = errorOutput.ToString ();
 
 							if (proc.ExitCode != 0) {
 								Log.LogMessage (MessageImportance.High, $"Non-zero exit code: {proc.ExitCode}  Error output: {errOutput}");
