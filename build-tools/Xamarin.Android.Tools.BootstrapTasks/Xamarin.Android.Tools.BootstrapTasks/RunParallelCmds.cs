@@ -5,11 +5,13 @@ using System.Diagnostics;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
+using Xamarin.Build;
+
 using Tasks = System.Threading.Tasks;
 
 namespace Xamarin.Android.Tools.BootstrapTasks
 {
-	public class RunParallelCmds : Task
+	public class RunParallelCmds : AsyncTask
 	{
 		[Required]
 		public ITaskItem[] Commands { get; set; }
@@ -27,7 +29,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 					var useManagedRuntime = !string.IsNullOrEmpty (ManagedRuntime);
 					var argumentsBeginning = useManagedRuntime ? ManagedRuntimeArguments + " " : "";
 
-					Log.LogMessage (MessageImportance.Normal, $"Starting Command: {cmd.GetMetadata ("Command")} Arguments: {cmd.GetMetadata ("Arguments")}");
+					LogMessage ($"Starting Command: {cmd.GetMetadata ("Command")} Arguments: {cmd.GetMetadata ("Arguments")}");
 
 					try {
 						using (var proc = new Process ()) {
@@ -58,15 +60,15 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 							var errOutput = errorOutput.ToString ();
 
 							if (proc.ExitCode != 0) {
-								Log.LogMessage (MessageImportance.High, $"Non-zero exit code: {proc.ExitCode}  Error output: {errOutput}");
+								LogMessage ($"Non-zero exit code: {proc.ExitCode}  Error output: {errOutput}", MessageImportance.High);
 								success = false;
 							}
 
 							if (!string.IsNullOrEmpty (output))
-								Log.LogMessage (MessageImportance.Normal, $"Output: {output}");
+								LogMessage ($"Output: {output}");
 						}
 					} catch (Exception e) {
-						Log.LogError ($"Unable to run command: {cmd.GetMetadata ("Command")}\nException:\n{e}");
+						LogError ($"Unable to run command: {cmd.GetMetadata ("Command")}\nException:\n{e}");
 						success = false;
 					}
 				});
