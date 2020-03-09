@@ -884,7 +884,7 @@ stages:
         if (("$branchName" -ne "master") -and ("$branchName" -notlike "d16*")) {
             $branchName = "master"
         }
-        Set-Location -Path $(System.DefaultWorkingDirectory)/designer
+        Set-Location -Path $(System.DefaultWorkingDirectory)
         git checkout $branchName
         git submodule update -q --init --recursive
       displayName: Clone and update designer
@@ -893,18 +893,18 @@ stages:
       displayName: provision designer dependencies
       inputs:
         github_token: $(GitHub.Token)
-        provisioning_script: $(System.DefaultWorkingDirectory)/designer/bot-provisioning/dependencies.csx
+        provisioning_script: $(System.DefaultWorkingDirectory)/bot-provisioning/dependencies.csx
         provisioning_extra_args: -remove Xamarin.Android -vv DEVDIV_PKGS_NUGET_TOKEN=$(DevDiv.NuGet.Token) SECTOOLS_PKGS_NUGET_TOKEN=$(SecTools.NuGet.Token)
 
     - template: yaml-templates/run-installer.yaml
 
     - template: designer/android-designer-build-mac.yaml@yaml
       parameters:
-        designerSourcePath: $(System.DefaultWorkingDirectory)/designer
+        designerSourcePath: $(System.DefaultWorkingDirectory)
 
     - template: designer/android-designer-tests.yaml@yaml
       parameters:
-        designerSourcePath: $(System.DefaultWorkingDirectory)/designer
+        designerSourcePath: $(System.DefaultWorkingDirectory)
 
   # Check - "Xamarin.Android (Test Designer Windows)"
   - job: designer_integration_win
@@ -935,7 +935,7 @@ stages:
         if (("$branchName" -ne "master") -and ("$branchName" -notlike "d16*")) {
             $branchName = "master"
         }
-        Set-Location -Path $(System.DefaultWorkingDirectory)\designer
+        Set-Location -Path $(System.DefaultWorkingDirectory)
         git checkout $branchName
         git submodule update -q --init --recursive
       displayName: Clone and update designer
@@ -944,18 +944,18 @@ stages:
       displayName: provision designer dependencies
       inputs:
         github_token: $(GitHub.Token)
-        provisioning_script: $(System.DefaultWorkingDirectory)\designer\bot-provisioning\dependencies.csx
+        provisioning_script: $(System.DefaultWorkingDirectory)\bot-provisioning\dependencies.csx
         provisioning_extra_args: -vv DEVDIV_PKGS_NUGET_TOKEN=$(DevDiv.NuGet.Token) SECTOOLS_PKGS_NUGET_TOKEN=$(SecTools.NuGet.Token)
 
     - template: yaml-templates\run-installer.yaml
 
     - template: designer\android-designer-build-win.yaml@yaml
       parameters:
-        designerSourcePath: $(System.DefaultWorkingDirectory)\designer
+        designerSourcePath: $(System.DefaultWorkingDirectory)
 
     - template: designer\android-designer-tests.yaml@yaml
       parameters:
-        designerSourcePath: $(System.DefaultWorkingDirectory)\designer
+        designerSourcePath: $(System.DefaultWorkingDirectory)
 
 - stage: integrated_regression_test
   displayName: Regression Tests
