@@ -254,27 +254,15 @@ namespace Java.Interop.Tools.Cecil {
 			if (Path.IsPathRooted (name) && File.Exists (name))
 				return name;
 
-			var file = DirectoryGetFile (directory, name + ".dll");
-			if (file.Length > 0)
+			var file = Path.Combine (directory, name + ".dll");
+			if (File.Exists (file))
 				return file;
 
-			file = DirectoryGetFile (directory, name + ".exe");
-			if (file.Length > 0)
+			file = Path.Combine (directory, name + ".exe");
+			if (File.Exists (file))
 				return file;
 
 			return null;
-		}
-
-		static string DirectoryGetFile (string directory, string file)
-		{
-			if (!Directory.Exists (directory))
-				return "";
-
-			var files = Directory.GetFiles (directory, file);
-			if (files != null && files.Length > 0)
-				return files [0];
-
-			return "";
 		}
 	}
 }
