@@ -899,12 +899,8 @@ stages:
     - template: yaml-templates/run-installer.yaml
 
     - template: designer/android-designer-build-mac.yaml@yaml
-      parameters:
-        designerSourcePath: $(System.DefaultWorkingDirectory)
 
     - template: designer/android-designer-tests.yaml@yaml
-      parameters:
-        designerSourcePath: $(System.DefaultWorkingDirectory)
 
   # Check - "Xamarin.Android (Test Designer Windows)"
   - job: designer_integration_win
@@ -950,12 +946,8 @@ stages:
     - template: yaml-templates\run-installer.yaml
 
     - template: designer\android-designer-build-win.yaml@yaml
-      parameters:
-        designerSourcePath: $(System.DefaultWorkingDirectory)
 
     - template: designer\android-designer-tests.yaml@yaml
-      parameters:
-        designerSourcePath: $(System.DefaultWorkingDirectory)
 
 - stage: integrated_regression_test
   displayName: Regression Tests
