@@ -39,8 +39,8 @@
   <Target Name="_ClassParse"
       BeforeTargets="_AdjustApiXml"
       DependsOnTargets="_ClassParsePrepare"
-      Inputs="@(ApiFileDefinition.ParameterDescription)"
-      Outputs="@(ApiFileDefinition.ApiAdjustedXml)">
+      Inputs="@(ApiFileDefinition->'%(ParameterDescription)')"
+      Outputs="@(ApiFileDefinition->'%(ApiAdjustedXml)')">
     <RunParallelCmds
         Commands="@(_ClassParseCommands)"
         ManagedRuntime="$(ManagedRuntime)"
@@ -64,8 +64,8 @@
   <Target Name="_AdjustApiXml"
       AfterTargets="Build"
       DependsOnTargets="_AdjustApiXmlPrepare"
-      Inputs="@(ApiFileDefinition.ClassParseXml)"
-      Outputs="@(ApiFileDefinition.ApiAdjustedXml)">
+      Inputs="@(ApiFileDefinition->'%(ClassParseXml)')"
+      Outputs="@(ApiFileDefinition->'%(ApiAdjustedXml)')">
     <RunParallelCmds
         Commands="@(_AdjustApiXmlPrepareCommands)"
         ManagedRuntime="$(ManagedRuntime)"
