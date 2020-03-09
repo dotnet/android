@@ -71,7 +71,11 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 						LogError ($"Unable to run command: {cmd.GetMetadata ("Command")}\nException:\n{e}");
 						success = false;
 					}
+
+					Complete ();
 				});
+
+			WaitForCompletion ();
 
 			if (!success)
 				return false;
