@@ -27,12 +27,14 @@
       <ClassParse>$(_TopDir)\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\class-parse.exe</ClassParse>
     </PropertyGroup>
     <MakeDir Directories="$(_OutputPath)api" />
-    <CreateItem
-        Condition="Exists('$(_TopDir)\src\Mono.Android\Profiles\api-%(ApiFileDefinition.Id).params.txt')"
-        Include="@(ApiFileDefinition)"
-        AdditionalMetadata='Command=$(ClassParse);Arguments=$(AndroidSdkDirectory)\platforms\android-%(ApiFileDefinition.Id)\android.jar -platform=%(ApiFileDefinition.Id) -parameter-names=&quot;%(ApiFileDefinition.ParameterDescription)&quot; -o=&quot;%(ApiFileDefinition.ClassParseXml)&quot;'>
-      <Output TaskParameter="Include" ItemName="_ClassParseCommands"/>
-    </CreateItem>
+    <ItemGroup>
+      <_ClassParseCommands
+          Condition="Exists('$(_TopDir)\src\Mono.Android\Profiles\api-%(ApiFileDefinition.Id).params.txt')"
+          Include="@(ApiFileDefinition)">
+        <Command>$(ClassParse)</Command>
+        <Arguments>$(AndroidSdkDirectory)\platforms\android-%(ApiFileDefinition.Id)\android.jar -platform=%(ApiFileDefinition.Id) -parameter-names=&quot;%(ApiFileDefinition.ParameterDescription)&quot; -o=&quot;%(ApiFileDefinition.ClassParseXml)&quot;</Arguments>
+      </_ClassParseCommands>
+    </ItemGroup>
   </Target>
   <Target Name="_ClassParse"
       BeforeTargets="_AdjustApiXml"
@@ -50,12 +52,14 @@
     <PropertyGroup>
       <ApiXmlAdjuster>$(_TopDir)\bin\Build$(Configuration)\api-xml-adjuster.exe</ApiXmlAdjuster>
     </PropertyGroup>
-    <CreateItem
-        Condition="Exists('$(_TopDir)\src\Mono.Android\Profiles\api-%(ApiFileDefinition.Id).params.txt')"
-        Include="@(ApiFileDefinition)"
-        AdditionalMetadata='Command=$(ApiXmlAdjuster);Arguments=%(ApiFileDefinition.ClassParseXml) %(ApiFileDefinition.ApiAdjustedXml)'>
-      <Output TaskParameter="Include" ItemName="_AdjustApiXmlPrepareCommands"/>
-    </CreateItem>
+    <ItemGroup>
+      <_AdjustApiXmlPrepareCommands
+          Condition="Exists('$(_TopDir)\src\Mono.Android\Profiles\api-%(ApiFileDefinition.Id).params.txt')"
+          Include="@(ApiFileDefinition)">
+        <Command>$(ApiXmlAdjuster)</Command>
+        <Arguments>%(ApiFileDefinition.ClassParseXml) %(ApiFileDefinition.ApiAdjustedXml)</Arguments>
+      </_AdjustApiXmlPrepareCommands>
+    </ItemGroup>
   </Target>
   <Target Name="_AdjustApiXml"
       AfterTargets="Build"
