@@ -24,6 +24,7 @@ namespace Xamarin.ProjectTools
 			SetProperty ("OutputType", "Library");
 			SetProperty ("MonoAndroidAssetsPrefix", "Assets");
 			SetProperty ("MonoAndroidResourcePrefix", "Resources");
+			SetProperty ("_ApkDebugKeyStore", "debug.keystore");
 
 			SetProperty (KnownProperties.AndroidUseLatestPlatformSdk, () => UseLatestPlatformSdk ? "True" : "False");
 			SetProperty (KnownProperties.TargetFrameworkVersion, () => TargetFrameworkVersion);
