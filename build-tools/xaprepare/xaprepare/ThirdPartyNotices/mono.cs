@@ -11,6 +11,7 @@ namespace Xamarin.Android.Prepare
 
 		public override List<ThirdPartyNotice> Notices => new List <ThirdPartyNotice> {
 			new mono_mono_mono_TPN (),
+			new mono_mono_cecil_TPN (),
 			new mono_mono_boringssl_TPN (),
 			new mono_mono_ikdasm_TPN (),
 			new mono_mono_ikvm_fork_TPN (),
@@ -21,6 +22,17 @@ namespace Xamarin.Android.Prepare
 			new mono_mono_Ix_net_TPN (),
 			new mono_llvm_Group (),
 		};
+	}
+
+	class mono_mono_cecil_TPN : ThirdPartyNotice
+	{
+		static readonly Uri    url         = new Uri ("https://github.com/mono/cecil/");
+		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoSdksTpnPath, "external", "cecil", "LICENSE.txt");
+
+		public override string LicenseFile => licenseFile;
+		public override string Name        => "mono/cecil";
+		public override Uri    SourceUrl   => url;
+		public override string LicenseText => null;
 	}
 
 	class mono_mono_mono_TPN : ThirdPartyNotice
