@@ -24,6 +24,8 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		{
 			bool success = true;
 
+			LogMessage ($"RunParallelCmds max parallelism: {Environment.ProcessorCount}");
+
 			Tasks.Parallel.ForEach (Commands, new Tasks.ParallelOptions () { MaxDegreeOfParallelism = Environment.ProcessorCount },
 				cmd => {
 					var command = cmd.GetMetadata ("Command");
