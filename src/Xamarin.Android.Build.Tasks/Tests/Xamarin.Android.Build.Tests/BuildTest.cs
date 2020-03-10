@@ -4165,8 +4165,11 @@ namespace UnnamedProject
 				builder.ThrowOnBuildFailure = false;
 				builder.Target = "SignAndroidPackage";
 				Assert.IsFalse (builder.Build (proj), "Build should have failed with XA4310.");
-				StringAssertEx.Contains ($"error XA4310", builder.LastBuildOutput, "Error should be XA4310");
-				StringAssertEx.Contains ($"`DoesNotExist`", builder.LastBuildOutput, "Error should include the name of the nonexistent file");
+
+				StringAssertEx.Contains ("error XA4310", builder.LastBuildOutput, "Error should be XA4310");
+				StringAssertEx.Contains ("`DoesNotExist`", builder.LastBuildOutput, "Error should include the name of the nonexistent file");
+				StringAssertEx.Contains ("0 Warning(s)", builder.LastBuildOutput, "Should have no MSBuild warnings.");
+
 			}
 		}
 	}
