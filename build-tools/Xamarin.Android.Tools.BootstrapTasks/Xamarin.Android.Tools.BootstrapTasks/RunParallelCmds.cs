@@ -26,16 +26,17 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 			Tasks.Parallel.ForEach (Commands, new Tasks.ParallelOptions () { MaxDegreeOfParallelism = Environment.ProcessorCount },
 				cmd => {
+					var command = cmd.GetMetadata ("Command");
 					var useManagedRuntime = !string.IsNullOrEmpty (ManagedRuntime);
-					var argumentsBeginning = useManagedRuntime ? ManagedRuntimeArguments + " " : "";
+					var argumentsBeginning = useManagedRuntime ? $"{ManagedRuntimeArguments} {command} " : "";
 
-					LogMessage ($"Starting Command: {cmd.GetMetadata ("Command")} Arguments: {cmd.GetMetadata ("Arguments")}");
+					LogMessage ($"Starting Command: {command} Arguments: {cmd.GetMetadata ("Arguments")}");
 
 					try {
 						using (var proc = new Process ()) {
 							StringBuilder standardOutput = new StringBuilder (), errorOutput = new StringBuilder ();
 
-							proc.StartInfo.FileName = useManagedRuntime ? ManagedRuntime : cmd.GetMetadata ("Command");
+							proc.StartInfo.FileName = useManagedRuntime ? ManagedRuntime : command;
 							proc.StartInfo.Arguments = $"{argumentsBeginning}{cmd.GetMetadata ("Arguments")}";
 							proc.StartInfo.CreateNoWindow = true;
 							proc.StartInfo.UseShellExecute = false;
@@ -68,7 +69,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 								LogMessage ($"Output: {output}");
 						}
 					} catch (Exception e) {
-						LogError ($"Unable to run command: {cmd.GetMetadata ("Command")}\nException:\n{e}");
+						LogError ($"Unable to run command: {command}\nException:\n{e}");
 						success = false;
 					}
 
