@@ -114,6 +114,7 @@ ms.date: 01/24/2020
 + [XA4307](xa4307.md): Invalid ProGuard configuration file.
 + [XA4308](xa4308.md): Failed to generate type maps
 + [XA4309](xa4309.md): 'MultiDexMainDexList' file '{file}' does not exist.
++ [XA4310](xa4310.md): \`$(AndroidSigningKeyStore)\` file \`{keystore}\` could not be found.
 
 ## XA5xxx: GCC and toolchain
 

@@ -420,6 +420,11 @@ In this message, the term "bundled" is a short way of saying "included into the 
         <target state="new">'MultiDexMainDexList' file '{0}' does not exist.</target>
         <note>The following are literal names and should not be translated: MultiDexMainDexList</note>
       </trans-unit>
+      <trans-unit id="XA4310">
+        <source>`$(AndroidSigningKeyStore)` file `{0}` could not be found.</source>
+        <target state="new">`$(AndroidSigningKeyStore)` file `{0}` could not be found.</target>
+        <note>The following are literal names and should not be translated: `$(AndroidSigningKeyStore)`</note>
+      </trans-unit>
       <trans-unit id="XA5101">
         <source>Missing Android NDK toolchains directory '{0}'. Please install the Android NDK.</source>
         <target state="new">Missing Android NDK toolchains directory '{0}'. Please install the Android NDK.</target>

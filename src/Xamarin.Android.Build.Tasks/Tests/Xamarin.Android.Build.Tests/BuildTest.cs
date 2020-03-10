@@ -4150,5 +4150,24 @@ namespace UnnamedProject
 				}
 			}
 		}
+
+		[Test]
+		public void XA4310 ([Values ("apk", "aab")] string packageFormat)
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetProperty ("AndroidKeyStore", "true");
+			proj.SetProperty ("AndroidSigningKeyStore", "DoesNotExist");
+			proj.SetProperty ("AndroidSigningStorePass", "android");
+			proj.SetProperty ("AndroidSigningKeyAlias", "mykey");
+			proj.SetProperty ("AndroidSigningKeyPass", "android");
+			proj.SetProperty ("AndroidPackageFormat", packageFormat);
+			using (var builder = CreateApkBuilder ()) {
+				builder.ThrowOnBuildFailure = false;
+				builder.Target = "SignAndroidPackage";
+				Assert.IsFalse (builder.Build (proj), "Build should have failed with XA4310.");
+				StringAssertEx.Contains ($"error XA4310", builder.LastBuildOutput, "Error should be XA4310");
+				StringAssertEx.Contains ($"`DoesNotExist`", builder.LastBuildOutput, "Error should include the name of the nonexistent file");
+			}
+		}
 	}
 }

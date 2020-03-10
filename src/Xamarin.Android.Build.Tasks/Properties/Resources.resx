@@ -456,6 +456,10 @@ In this message, the term "bundled" is a short way of saying "included into the 
     <value>'MultiDexMainDexList' file '{0}' does not exist.</value>
     <comment>The following are literal names and should not be translated: MultiDexMainDexList</comment>
   </data>
+  <data name="XA4310" xml:space="preserve">
+    <value>`$(AndroidSigningKeyStore)` file `{0}` could not be found.</value>
+    <comment>The following are literal names and should not be translated: `$(AndroidSigningKeyStore)`</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>Missing Android NDK toolchains directory '{0}'. Please install the Android NDK.</value>
     <comment>{0} - The path of the missing directory</comment>
