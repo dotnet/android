@@ -709,6 +709,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to `$(AndroidSigningKeyStore)` file `{0}` could not be found..
+        /// </summary>
+        internal static string XA4310 {
+            get {
+                return ResourceManager.GetString("XA4310", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Missing Android NDK toolchains directory &apos;{0}&apos;. Please install the Android NDK..
         /// </summary>
         internal static string XA5101 {
