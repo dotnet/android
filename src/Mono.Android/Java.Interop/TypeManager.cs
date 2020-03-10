@@ -23,7 +23,7 @@ namespace Java.Interop {
 		public static Dictionary<string, Type> JniToManaged {
 			get {
 				if (_jniToManaged == null)
-					_jniToManaged = new Dictionary<string, Type> ();
+					_jniToManaged = new Dictionary<string, Type> (StringComparer.Ordinal);
 				return _jniToManaged;
 			}
 		}

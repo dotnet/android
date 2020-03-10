@@ -1099,7 +1099,7 @@ namespace UnamedProject
 				FileAssert.Exists (dexFile);
 				var classes = new [] {
 					"Lmono/MonoRuntimeProvider;",
-					"Landroid/runtime/UncaughtExceptionHandler;",
+					"Landroid/runtime/JavaProxyThrowable;",
 					"Landroid/support/v7/widget/Toolbar;"
 				};
 				foreach (var className in classes) {

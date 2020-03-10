@@ -19,6 +19,7 @@ ApplicationConfig application_config = {
 	/*.is_a_bundled_app =*/ false,
 	/*.broken_exception_transitions =*/ false,
 	/*.instant_run_enabled =*/ false,
+	/*.jni_add_native_method_registration_attribute_present =*/ false,
 	/*.bound_exception_type =*/ 0, // System
 	/*.package_naming_policy =*/ 0,
 	/*.environment_variable_count =*/ 0,
