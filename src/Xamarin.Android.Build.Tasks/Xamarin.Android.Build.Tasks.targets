@@ -322,7 +322,6 @@
       <_ILRepackArgs>/out:&quot;$(MSBuildThisFileDirectory)$(IntermediateOutputPath)$(AssemblyName).dll&quot; /internalize</_ILRepackArgs>
       <_ILRepackArgs>$(_ILRepackArgs) &quot;$(MSBuildThisFileDirectory)$(IntermediateOutputPath)$(AssemblyName).dll&quot;</_ILRepackArgs>
       <_ILRepackArgs>$(_ILRepackArgs) @(_InputAssembliesThatExist->'&quot;%(Identity)&quot;', ' ')</_ILRepackArgs>
-      <_ILRepackArgs>$(_ILRepackArgs) /lib:&quot;$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\v1.0\facades&quot;</_ILRepackArgs> <!-- Path to netstandard.dll -->
     </PropertyGroup>
     <Exec
       Command="&quot;$(ILRepack)&quot; $(_ILRepackArgs)"
