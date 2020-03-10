@@ -4,6 +4,10 @@ trigger:
   - master
   - d16-*
 
+pr:
+  - master
+  - d16-*
+
 # Global variables
 variables:
   DotNetCoreVersion: 3.1.100
