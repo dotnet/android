@@ -23,6 +23,7 @@
     <_MonoAndroidTest>..\..\src\Mono.Android\Test\</_MonoAndroidTest>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
+    <_SkipJniAddNativeMethodRegistrationAttributeScan>True</_SkipJniAddNativeMethodRegistrationAttributeScan>
   </PropertyGroup>
   <Import Project="$(_MonoAndroidTest)Mono.Android-Test.Shared.projitems" Label="Shared" Condition="Exists('$(_MonoAndroidTest)Mono.Android-Test.Shared.projitems')" />
   <Import Project="..\..\Configuration.props" />
