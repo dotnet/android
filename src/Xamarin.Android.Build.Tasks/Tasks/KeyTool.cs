@@ -37,7 +37,7 @@ namespace Xamarin.Android.Tasks
 			// Ensure the path where are going to write the key exists
 			var store_dir = Path.GetDirectoryName (KeyStore);
 
-			if (!Directory.Exists (store_dir))
+			if (!string.IsNullOrEmpty (store_dir) && !Directory.Exists (store_dir))
 				Directory.CreateDirectory (store_dir);
 
 			return base.RunTask ();
