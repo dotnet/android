@@ -90,10 +90,6 @@ namespace Xamarin.Android.Tasks
 
 			cmd.AppendSwitchIfNotNull ("-jar ", ApkSignerJar);
 			cmd.AppendSwitch ("sign");
-			if (!string.IsNullOrEmpty (KeyStore) && !File.Exists (KeyStore)) {
-				Log.LogCodedError ("XA4310", Properties.Resources.XA4310, KeyStore);
-				return string.Empty;
-			}
 			cmd.AppendSwitchIfNotNull ("--ks ", KeyStore);
 			AddStorePass (cmd, "--ks-pass", StorePass);
 			cmd.AppendSwitchIfNotNull ("--ks-key-alias ", KeyAlias);
@@ -125,6 +121,15 @@ namespace Xamarin.Android.Tasks
 
 		protected override string ToolName {
 			get { return OS.IsWindows ? "java.exe" : "java"; }
+		}
+
+		protected override bool ValidateParameters ()
+		{
+			if (!string.IsNullOrEmpty (KeyStore) && !File.Exists (KeyStore)) {
+				Log.LogCodedError ("XA4310", Properties.Resources.XA4310, KeyStore);
+				return false;
+			}
+			return base.ValidateParameters ();
 		}
 	}
 }
