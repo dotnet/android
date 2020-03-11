@@ -78,8 +78,6 @@ namespace Xamarin.Android.Tasks
 
 		public string ResourceNameCaseMap { get; set; }
 
-		public bool ExplicitCrunch { get; set; }
-
 		// pattern to use for the version code. Used in CreatePackagePerAbi
 		// eg. {abi:00}{dd}{version}
 		// known keyworks
@@ -336,10 +334,6 @@ namespace Xamarin.Android.Tasks
 
 			if (!string.IsNullOrEmpty (ExtraPackages))
 				cmd.AppendSwitchIfNotNull ("--extra-packages ", ExtraPackages);
-
-			// TODO: handle resource names
-			if (ExplicitCrunch)
-				cmd.AppendSwitch ("--no-crunch");
 
 			cmd.AppendSwitch ("--auto-add-overlay");
 
