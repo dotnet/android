@@ -384,6 +384,12 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	</AllowedReferenceRelatedFileExtensions>
 </PropertyGroup>
 
+<!-- Automatically supply project capabilities for IDE use -->
+<ItemGroup>
+  <ProjectCapability Include="Android" />
+  <ProjectCapability Include="AndroidApplication" Condition="$(AndroidApplication)" />
+</ItemGroup>
+
 <!--
 *******************************************
           Imports
