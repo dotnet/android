@@ -315,7 +315,7 @@ namespace Xamarin.Android.Tools
 		}
 
 		public static bool ExtractAll (ZipArchive zip, string destination, Action<int, int> progressCallback = null, Func<string, string> modifyCallback = null,
-			Func<string, bool> deleteCallback = null)
+			Func<string, bool> deleteCallback = null, Func<string, bool> skipCallback = null)
 		{
 			int i = 0;
 			int total = (int)zip.EntryCount;
@@ -330,6 +330,8 @@ namespace Xamarin.Android.Tools
 					if (entry.FullName.Contains ("/__MACOSX/") ||
 							entry.FullName.EndsWith ("/__MACOSX", StringComparison.OrdinalIgnoreCase) ||
 							entry.FullName.EndsWith ("/.DS_Store", StringComparison.OrdinalIgnoreCase))
+						continue;
+					if (skipCallback != null && skipCallback (entry.FullName))
 						continue;
 					var fullName = modifyCallback?.Invoke (entry.FullName) ?? entry.FullName;
 					var outfile = Path.GetFullPath (Path.Combine (destination, fullName));
