@@ -89,10 +89,6 @@ namespace Xamarin.Android.Tasks
 
 			cmd.AppendSwitchIfNotNull ("-tsa ", TimestampAuthorityUrl);
 			cmd.AppendSwitchIfNotNull ("-tsacert ", TimestampAuthorityCertificateAlias);
-			if (!string.IsNullOrEmpty (KeyStore) && !File.Exists (KeyStore)) {
-				Log.LogCodedError ("XA4310", Properties.Resources.XA4310, KeyStore);
-				return string.Empty;
-			}
 			cmd.AppendSwitchIfNotNull ("-keystore ", KeyStore);
 			AddStorePass (cmd, "-storepass", StorePass);
 			AddStorePass (cmd, "-keypass", KeyPass);
@@ -149,6 +145,15 @@ namespace Xamarin.Android.Tasks
 		protected override string ToolName
 		{
 			get { return IsWindows ? "jarsigner.exe" : "jarsigner"; }
+		}
+
+		protected override bool ValidateParameters ()
+		{
+			if (!string.IsNullOrEmpty (KeyStore) && !File.Exists (KeyStore)) {
+				Log.LogCodedError ("XA4310", Properties.Resources.XA4310, KeyStore);
+				return false;
+			}
+			return base.ValidateParameters ();
 		}
 	}
 }
