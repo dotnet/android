@@ -131,11 +131,6 @@ namespace Xamarin.ProjectTools
 			set { SetProperty (KnownProperties.UseJackAndJill, value.ToString ()); }
 		}
 
-		public bool AndroidExplicitCrunch {
-			get { return string.Equals (GetProperty (KnownProperties.AndroidExplicitCrunch), "True", StringComparison.OrdinalIgnoreCase); }
-			set { SetProperty (KnownProperties.AndroidExplicitCrunch, value.ToString ()); }
-		}
-
 		public AndroidLinkMode AndroidLinkModeDebug {
 			get {
 				AndroidLinkMode m;

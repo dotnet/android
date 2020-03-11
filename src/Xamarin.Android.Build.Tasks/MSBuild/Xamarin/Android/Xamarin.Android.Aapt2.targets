@@ -87,7 +87,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <Aapt2Compile
       Condition=" '@(_LibraryResourceHashDirectories)' != '' "
       ContinueOnError="$(DesignTimeBuild)"
-      ExplicitCrunch="$(AndroidExplicitCrunch)"
       ExtraArgs="$(AndroidAapt2CompileExtraArgs)"
       FlatArchivesDirectory="$(_AndroidLibraryFlatArchivesDirectory)"
       ResourceDirectories="@(_LibraryResourceHashDirectories)"
@@ -138,7 +137,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   >
   <Aapt2Compile
       ContinueOnError="$(DesignTimeBuild)"
-      ExplicitCrunch="$(AndroidExplicitCrunch)"
       ExtraArgs="$(AndroidAapt2CompileExtraArgs)"
       FlatArchivesDirectory="$(_AndroidLibraryFlatArchivesDirectory)"
       ResourceDirectories="$(MonoAndroidResDirIntermediate)"
@@ -203,7 +201,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       Condition=" '$(AndroidUseAapt2)' == 'True' And '@(_ProcessedCustomViews)' != '' "
       ContinueOnError="$(DesignTimeBuild)"
       ResourceDirectories="@(_ProcessedCustomViews->'%(ResourceDirectory)'->Distinct())"
-      ExplicitCrunch="$(AndroidExplicitCrunch)"
       ExtraArgs="$(AndroidAapt2CompileExtraArgs)"
       FlatArchivesDirectory="$(_AndroidLibraryFlatArchivesDirectory)"
       ToolPath="$(Aapt2ToolPath)"

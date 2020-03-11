@@ -276,9 +276,9 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[NonParallelizable]
-		public void Check9PatchFilesAreProcessed ([Values(false, true)] bool explicitCrunch)
+		public void Check9PatchFilesAreProcessed ()
 		{
-			var projectPath = string.Format ("temp/Check9PatchFilesAreProcessed_{0}", explicitCrunch.ToString ());
+			var projectPath = Path.Combine ("temp", "Check9PatchFilesAreProcessed");
 			var libproj = new XamarinAndroidLibraryProject () { ProjectName = "Library1"};
 			using (var stream = typeof (XamarinAndroidCommonProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.Image.9.png")) {
 				var image_data = new byte [stream.Length];
@@ -301,7 +301,6 @@ namespace Xamarin.Android.Build.Tests
 				proj.PackageReferences.Add (KnownPackages.SupportV7MediaRouter_27_0_2_1);
 				proj.PackageReferences.Add (KnownPackages.GooglePlayServicesMaps_42_1021_1);
 				proj.PackageReferences.Add (KnownPackages.Xamarin_Build_Download_0_4_11);
-				proj.AndroidExplicitCrunch = explicitCrunch;
 				using (var b = CreateApkBuilder (Path.Combine (projectPath, "Application1"), false, false)) {
 					b.Verbosity = LoggerVerbosity.Diagnostic;
 					Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
@@ -861,172 +860,6 @@ namespace UnnamedProject
 					Assert.IsTrue (doc.Element ("resources").Elements ().Any (x => x.Attribute ("name").Value == "some_string_value"), "some_string_value should exist in strings.xml");
 					Assert.IsTrue (doc.Element ("resources").Elements ().Any (x => x.Attribute ("name").Value == "some_string_value" && x.Value == "Hello Me From the App"),
 						"some_string_value should have the value of \"Hello Me From the App\"");
-				}
-			}
-		}
-
-		[Test]
-		[Ignore ("Enable once Merge Resources is finished")]
-		public void InternationalResourceTest ([Values (false, true)] bool explicitCrunch)
-		{
-			var library = new XamarinAndroidLibraryProject () {
-				ProjectName = "Library1",
-				AndroidResources = {
-					new AndroidItem.AndroidResource ("Resources\\values-de\\Strings.xml") {
-						TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
-<resources>
-	<string name=""greeting"">Ja</string>
-</resources>",
-					},
-				},
-			};
-
-			var strings = library.AndroidResources.First (x => x.Include () == "Resources\\values\\Strings.xml");
-			strings.TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
-<resources>
-	<string name=""greeting"">Yes</string>
-	<string name=""library_name"">Library1</string>
-</resources>";
-			var project = new XamarinAndroidApplicationProject () {
-				ProjectName = "Application1",
-				AndroidExplicitCrunch = explicitCrunch,
-				References =  { new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj")},
-					AndroidResources ={
-						new AndroidItem.AndroidResource ("Resources\\values-de\\Strings.xml") {
-							TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
-<resources>
-	<string name=""hello"">Hallo Welt, Klick mich!</string>
-</resources>",
-					}
-				},
-			};
-			var projectPath = string.Format ("temp/InternationalResourceTest{0}", explicitCrunch);
-			using (var dllBuilder = CreateDllBuilder (Path.Combine (projectPath, "Library1"))) {
-				dllBuilder.Verbosity = LoggerVerbosity.Diagnostic;
-				Assert.IsTrue (dllBuilder.Build (library), "Library1 build should have succeeded");
-				using (var b = CreateApkBuilder (Path.Combine (projectPath, "Application1"))) {
-					b.Verbosity = LoggerVerbosity.Diagnostic;
-					b.ThrowOnBuildFailure = false;
-					Assert.IsTrue (b.Build (project),"Applications1 build should have succeeded");
-
-					var stringsXml = Path.Combine (Root, b.ProjectDirectory, project.IntermediateOutputPath, "res", "values", "strings.xml");
-					Assert.IsTrue (File.Exists (stringsXml), "{0} should exist", stringsXml);
-					var doc = XDocument.Load (stringsXml);
-					Assert.IsTrue (doc.Element ("resources").Elements ().Any (x => x.Attribute ("name").Value == "greeting" && x.Value == "Yes"), "greeting should have a value of Yes");
-					Assert.IsTrue (doc.Element ("resources").Elements ().Any (x => x.Attribute ("name").Value == "hello" && x.Value == "Hello World, Click Me!"), "hello should have a value of Hello World, Click Me!");
-
-					var stringsXml_de = Path.Combine (Root, b.ProjectDirectory, project.IntermediateOutputPath, "res", "values-de", "strings.xml");
-					Assert.IsTrue (File.Exists (stringsXml), "{0} should exist", stringsXml_de);
-
-					doc = XDocument.Load (stringsXml_de);
-					Assert.IsTrue (doc.Element ("resources").Elements ().Any (x => x.Attribute ("name").Value == "greeting" && x.Value == "Ja"), "greeting should have a value of Ja");
-					Assert.IsTrue (doc.Element ("resources").Elements ().Any (x => x.Attribute ("name").Value == "hello" && x.Value == "Hallo Welt, Klick mich!"), "hello should have a value of Hallo Welt, Klick mich!");
-
-					Assert.IsTrue (dllBuilder.Build (library), "Second Library1 build should have succeeded");
-					Assert.IsTrue (b.Build (project), "Second Applications1 build should have succeeded");
-
-					var strings_de = (AndroidItem.AndroidResource)library.AndroidResources.First (x => x.Include() == "Resources\\values-de\\Strings.xml");
-					strings_de.TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
-<resources>
-	<string name=""greeting"">Foo</string>
-</resources>";
-					strings_de.Timestamp = DateTimeOffset.UtcNow;
-
-					Assert.IsTrue (dllBuilder.Build (library), "Third Library1 build should have succeeded");
-					Assert.IsTrue (b.Build (project), "Third Applications1 build should have succeeded");
-
-					doc = XDocument.Load (stringsXml_de);
-					Assert.IsTrue (doc.Element ("resources").Elements ().Any (x => x.Attribute ("name").Value == "greeting" && x.Value == "Foo"), "greeting should have a value of Foo");
-					Assert.IsTrue (doc.Element ("resources").Elements ().Any (x => x.Attribute ("name").Value == "hello" && x.Value == "Hallo Welt, Klick mich!"), "hello should have a value of Hallo Welt, Klick mich!");
-
-					Directory.Delete (projectPath, recursive: true);
-				}
-			}
-		}
-
-		[Test]
-		[Ignore ("Enable once Merge Resources is finished")]
-		public void MergeResources ([Values(false, true)] bool explicitCrunch)
-		{
-			var lib1 = new XamarinAndroidLibraryProject () {
-				ProjectName = "Library1",
-				AndroidResources = { new AndroidItem.AndroidResource ("Resources\\values\\Colors.xml") {
-						TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
-<resources>
-	<color name=""dark_red"">#440000</color>
-	<color name=""dark_blue"">#000044</color>
-</resources>"
-					},
-				}
-			};
-
-			var proj = new XamarinAndroidApplicationProject () {
-				AndroidExplicitCrunch = explicitCrunch,
-				References =  { new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj")},
-				AndroidResources = { new AndroidItem.AndroidResource ("Resources\\values\\Values.xml") {
-						TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
-<resources>
-	<color name=""dark_red"">#FF0000</color>
-	<color name=""xamarin_green"">#00FF00</color>
-	<color name=""xamarin_green1"">#00FF00</color>
-</resources>"
-					},
-					new AndroidItem.AndroidResource ("Resources\\values\\Colors.xml") {
-						TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
-<resources>
-	<color name=""dark_blue"">#0000FF</color>
-</resources>"
-					},
-				},
-			};
-			var projectPath = string.Format ("temp/MergeResources_{0}", explicitCrunch);
-			using (var dllBuilder = CreateDllBuilder (Path.Combine (projectPath, "Library1"), false, false)) {
-				dllBuilder.Verbosity = LoggerVerbosity.Diagnostic;
-				Assert.IsTrue (dllBuilder.Build (lib1), "Library project should have built");
-				using (var b = CreateApkBuilder (Path.Combine (projectPath, "UnamedApp"), false, false)) {
-					b.Verbosity = LoggerVerbosity.Diagnostic;
-					b.ThrowOnBuildFailure = false;
-					Assert.IsTrue (b.Build (proj), "Build should have succeeded");
-					StringAssertEx.Contains ("XA5215: Duplicate Resource found for", b.LastBuildOutput);
-					var colorsXml = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "res", "values", "colors.xml");
-					Assert.IsTrue (File.Exists (colorsXml), "{0} should exist", colorsXml);
-					var doc = XDocument.Load (colorsXml);
-					Assert.IsTrue (doc.Element ("resources").Elements ().Any (x => x.Attribute ("name").Value == "dark_red" && x.Value == "#FF0000"), "dark_red should have a value of #FF0000");
-					Assert.IsTrue (doc.Element ("resources").Elements ().Any (x => x.Attribute ("name").Value == "dark_blue" && x.Value == "#0000FF"), "dark_blue should have a value of #0000FF");
-
-					var valuesXml = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "res", "values", "values.xml");
-					Assert.IsTrue (File.Exists (valuesXml), "{0} should exist", valuesXml);
-					doc = XDocument.Load (valuesXml);
-					Assert.IsTrue (doc.Element ("resources").Elements ().Any (x => x.Attribute ("name").Value == "xamarin_green"), "xamarin_green should exist in values.xml");
-					Assert.IsFalse (doc.Element ("resources").Elements ().Any (x => x.Attribute ("name").Value == "dark_red"), "dark_red should exist in values.xml");
-					Assert.IsFalse (doc.Element ("resources").Elements ().Any (x => x.Attribute ("name").Value == "dark_blue"), "dark_blue should not exist in values.xml");
-
-					Assert.IsTrue (b.Build (proj), "Second Build should have succeeded");
-
-					var values = (AndroidItem.AndroidResource)proj.AndroidResources.First (x => x.Include() == "Resources\\values\\Values.xml");
-					values.TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
-<resources>
-	<color name=""dark_red"">#FFFFFF</color>
-	<color name=""xamarin_green"">#00AA00</color>
-</resources>";
-					values.Timestamp = DateTimeOffset.UtcNow;
-					Assert.IsTrue (b.Build (proj), "Third Build should have succeeded");
-
-					Assert.IsTrue (File.Exists (colorsXml), "{0} should exist", colorsXml);
-					doc = XDocument.Load (colorsXml);
-					Assert.IsTrue (doc.Element ("resources").Elements ().Any (x => x.Attribute ("name").Value == "dark_red" && x.Value == "#FFFFFF"), "dark_red should have a value of #FFFFFF");
-					Assert.IsTrue (doc.Element ("resources").Elements ().Any (x => x.Attribute ("name").Value == "dark_blue" && x.Value == "#0000FF"), "dark_blue should have a value of #0000FF");
-
-					Assert.IsTrue (File.Exists (valuesXml), "{0} should exist", valuesXml);
-					doc = XDocument.Load (valuesXml);
-					Assert.IsTrue (doc.Element ("resources").Elements ().Any (x => x.Attribute ("name").Value == "xamarin_green"), "xamarin_green should exist in values.xml");
-					Assert.IsFalse (doc.Element ("resources").Elements ().Any (x => x.Attribute ("name").Value == "dark_red"), "dark_red should not exist in values.xml");
-					Assert.IsFalse (doc.Element ("resources").Elements ().Any (x => x.Attribute ("name").Value == "dark_blue"), "dark_blue should not exist in values.xml");
-
-					Assert.IsTrue (doc.Element ("resources").Elements ().Any (x => x.Attribute ("name").Value == "xamarin_green" && x.Value == "#00AA00"), "xamarin_green should have a value of #00AA00");
-					Assert.IsFalse (doc.Element ("resources").Elements ().Any (x => x.Attribute ("name").Value == "xamarin_green1"), "xamarin_green1 should not exist in values.xml");
-
-					Directory.Delete (projectPath, recursive: true);
 				}
 			}
 		}
