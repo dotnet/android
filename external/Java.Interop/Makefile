@@ -12,10 +12,6 @@ NATIVE_EXT = .so
 DLLMAP_OS_NAME = linux
 endif
 
-PACKAGES = \
-	packages/NUnit.3.11.0/NUnit.3.11.0.nupkg \
-	packages/NUnit.Console.3.9.0/NUnit.Console.3.9.0.nupkg
-
 PREPARE_EXTERNAL_FILES  = \
 	external/xamarin-android-tools/src/Xamarin.Android.Tools.AndroidSdk/Xamarin.Android.Tools.AndroidSdk.csproj
 
@@ -38,8 +34,6 @@ PTESTS = \
 
 ATESTS = \
 	bin/Test$(CONFIGURATION)/Android.Interop-Tests.dll
-
-NUNIT_CONSOLE = packages/NUnit.ConsoleRunner.3.9.0/tools/nunit3-console.exe
 
 BUILD_PROPS = bin/Build$(CONFIGURATION)/JdkInfo.props bin/Build$(CONFIGURATION)/MonoInfo.props
 
@@ -68,9 +62,10 @@ bin/Build$(CONFIGURATION)/Java.Interop.BootstrapTasks.dll: build-tools/Java.Inte
 		$(wildcard build-tools/Java.Interop.BootstrapTasks/Java.Interop.BootstrapTasks/*.cs)
 	$(MSBUILD) $(MSBUILD_FLAGS) /restore "$<"
 
-prepare-external $(PREPARE_EXTERNAL_FILES): $(PACKAGES) $(NUNIT_CONSOLE)
+prepare-external $(PREPARE_EXTERNAL_FILES):
 	git submodule update --init --recursive
 	(cd external/xamarin-android-tools && $(MAKE) prepare)
+	nuget restore
 
 clean:
 	-$(MSBUILD) $(MSBUILD_FLAGS) /t:Clean
@@ -79,9 +74,6 @@ clean:
 
 include build-tools/scripts/mono.mk
 include build-tools/scripts/jdk.mk
-
-$(PACKAGES) $(NUNIT_CONSOLE):
-	nuget restore
 
 JAVA_RUNTIME_ENVIRONMENT_DLLMAP_OVERRIDE = Java.Runtime.Environment.Override.dllmap
 ifeq ($(wildcard $(JAVA_RUNTIME_ENVIRONMENT_DLLMAP_OVERRIDE)),)
