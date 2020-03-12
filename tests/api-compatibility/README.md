@@ -16,6 +16,15 @@ current version of an assembly.  We could also called it the V2 assembly.
 [mdac]: https://github.com/dotnet/arcade/tree/master/src/Microsoft.DotNet.ApiCompat
 
 
+## Update Contract Assembly
+
+To update the contract assembly, run the `UpdateMonoAndroidContract` target
+and provide the `$(ContractAssembly)` MSBuild property.  `$(ContractAssembly)`
+should be the path to the new contract assembly to use:
+
+	msbuild Xamarin.Android.sln /t:UpdateMonoAndroidContract '/p:ContractAssembly=/Users/example/Downloads/\$ReferenceAssemblies/Microsoft/Framework/MonoAndroid/v10.0/Mono.Android.dll'
+
+
 ## Build Task
 
 We have developed a build task that will wrap *Microsoft.DotNet.ApiCompat.exe*

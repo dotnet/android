@@ -11,6 +11,7 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <NoWarn>0618;0809;0108;0114</NoWarn>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <PropertyGroup>
@@ -96,7 +97,7 @@
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <ImplicitlyExpandDesignTimeFacades>False</ImplicitlyExpandDesignTimeFacades>
-    <IntermediateOutputPath>$(IntermediateOutputPath)android-$(AndroidApiLevel)\</IntermediateOutputPath>
+    <IntermediateOutputPath>$(IntermediateOutputPath)android-$(AndroidPlatformId)\</IntermediateOutputPath>
   </PropertyGroup>
   <Import Project="Mono.Android.targets" />
   <PropertyGroup>
@@ -233,7 +234,6 @@
     <Compile Include="Android.Runtime\StringDefAttribute.cs" />
     <Compile Include="Android.Runtime\TimingLogger.cs" />
     <Compile Include="Android.Runtime\TypeManager.cs" />
-    <Compile Include="Android.Runtime\UncaughtExceptionHandler.cs" />
     <Compile Include="Android.Runtime\XAPeerMembers.cs" />
     <Compile Include="Android.Runtime\XmlPullParserReader.cs" />
     <Compile Include="Android.Runtime\XmlReaderPullParser.cs" />

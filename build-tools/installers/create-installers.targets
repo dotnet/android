@@ -32,6 +32,9 @@
     <_MonoDocAssembly Include="@(_MsxDocAssembly);OpenTK-1.0;Xamarin.Android.NUnitLite">
       <SourceDir>$(_AndroidApiDocsPath)docs\%(Identity)\en\</SourceDir>
     </_MonoDocAssembly>
+    <_BclDocsAssembly Include="mscorlib;System.Core;System.ComponentModel.Composition;System.ComponentModel.DataAnnotations;System.Data;System" />
+    <_BclDocsAssembly Include="System.EnterpriseServices;System.Json;System.Numerics;System.Runtime.Serialization;System.ServiceModel" />
+    <_BclDocsAssembly Include="System.ServiceModel.Web;System.Transactions;System.Web.Services;System.Xml;System.Xml.Linq" />
   </ItemGroup>
   <Target Name="_FindFrameworkDirs">
     <ItemGroup>
@@ -68,6 +71,14 @@
     <MakeDir Directories="$(_MonoDocOutputPath)"/>
     <Exec Command="$(ManagedRuntime) &quot;$(MSBuildSrcDir)mdoc.exe&quot; --debug assemble -o &quot;$(_MonoDocOutputPath)MonoAndroid-lib&quot; @(_MonoDocAssembly->'&quot;%(SourceDir)\&quot;', ' ')" />
   </Target>
+  <Target Name="_GenerateBclAssemblyDocXmlRedirects"
+      Inputs="$(XamarinAndroidSourcePath)build-tools\scripts\redirect-BCL.xml.in"
+      Outputs="@(_BclDocsAssembly->'$(FrameworkSrcDir)$(BclFrameworkVersion)\%(Identity).xml')">
+    <ReplaceFileContents
+        SourceFile="$(XamarinAndroidSourcePath)build-tools\scripts\redirect-BCL.xml.in"
+        DestinationFile="$(FrameworkSrcDir)$(BclFrameworkVersion)\%(_BclDocsAssembly.Identity).xml"
+        Replacements="@ASSEMBLY@=%(_BclDocsAssembly.Identity)" />
+  </Target>
   <Target Name="_CopyMonoAndroidDocsSource"
       Inputs="$(_AndroidApiDocsPath)MonoAndroid-docs.source"
       Outputs="$(_MonodocOutputPath)MonoAndroid-docs.source">
@@ -77,7 +88,7 @@
   </Target>
   <Target
       Name="AssembleApiDocs"
-      DependsOnTargets="_GenerateMsxDocXmls;_GenerateMsxDocXmlRedirects;_GenerateMonoAndroidLibArchive;_CopyMonoAndroidDocsSource" />
+      DependsOnTargets="_GenerateMsxDocXmls;_GenerateMsxDocXmlRedirects;_GenerateMonoAndroidLibArchive;_GenerateBclAssemblyDocXmlRedirects;_CopyMonoAndroidDocsSource" />
   <ItemGroup>
     <_DesignerFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\bcl\**\*" />
     <_DesignerFilesWin Include="$(MSBuildSrcDir)\bcl\**\* "/>
@@ -99,6 +110,8 @@
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Xamarin.Android.NUnitLite.dll" />
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Xamarin.Android.NUnitLite.pdb" />
     <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(FirstInstallerFrameworkVersion)\OpenTK-1.0.xml" />
+    <_FrameworkFilesWin Include="@(_BclDocsAssembly->'$(FrameworkSrcDir)$(BclFrameworkVersion)\%(Identity).xml')" />
+    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Xamarin.Android.NUnitLite.xml" />
   </ItemGroup>
   <ItemGroup>
     <_MSBuildFiles Include="$(MSBuildSrcDir)\android-support-multidex.jar" />
@@ -109,6 +122,7 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\libZipSharp.dll.config" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\Newtonsoft.Json.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\Newtonsoft.Json-LICENSE.md" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\System.Buffers.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\aprofutil.exe" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\aprofutil.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\cil-strip.exe" />
@@ -196,6 +210,7 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\manifestmerger.jar" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\protobuf-net.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\SgmlReaderDll.dll" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\System.Buffers.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Aapt.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Aapt2.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Analysis.targets" />
@@ -384,27 +399,6 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Installer.Common.targets" />
     <LegacyTargetsFiles Include="$(RootBuildDir)\lib\xamarin.android\xbuild\Novell\Xamarin.Android.Bindings.targets" />
     <LegacyTargetsFiles Include="$(RootBuildDir)\lib\xamarin.android\xbuild\Novell\Xamarin.Android.VisualBasic.targets" />
-    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Mono.CompilerServices.SymbolWriter.xml" />
-    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Mono.Data.Sqlite.xml" />
-    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Mono.Data.Tds.xml" />
-    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Mono.Security.xml" />
-    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\mscorlib.xml" />
-    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\System.Core.xml" />
-    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\System.ComponentModel.Composition.xml" />
-    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\System.ComponentModel.DataAnnotations.xml" />
-    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\System.Data.xml" />
-    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\System.xml" />
-    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\System.EnterpriseServices.xml" />
-    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\System.Json.xml" />
-    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\System.Numerics.xml" />
-    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\System.Runtime.Serialization.xml" />
-    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\System.ServiceModel.xml" />
-    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\System.ServiceModel.Web.xml" />
-    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\System.Transactions.xml" />
-    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\System.Web.Services.xml" />
-    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\System.Xml.xml" />
-    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\System.Xml.Linq.xml" />
-    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Xamarin.Android.NUnitLite.xml" />
   </ItemGroup>
   <Target Name="ConstructInstallerItems"
       DependsOnTargets="_FindFrameworkDirs;AssembleApiDocs"

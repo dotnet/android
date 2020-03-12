@@ -40,6 +40,49 @@ In this message, the phrase "should not be reached" means that this error messag
         <target state="new">Unsupported or invalid $(TargetFrameworkVersion) value of '{0}'. Please update your Project Options.</target>
         <note>The following are literal names and should not be translated: $(TargetFrameworkVersion)</note>
       </trans-unit>
+      <trans-unit id="XA0003">
+        <source>Invalid `android:versionCode` value `{0}` in `AndroidManifest.xml`. It must be an integer value.</source>
+        <target state="new">Invalid `android:versionCode` value `{0}` in `AndroidManifest.xml`. It must be an integer value.</target>
+        <note>The following are literal names and should not be translated: `android:versionCode`, `AndroidManifest.xml`</note>
+      </trans-unit>
+      <trans-unit id="XA0004">
+        <source>Invalid `android:versionCode` value `{0}` in `AndroidManifest.xml`. The value must be in the range of 0 to {1}.</source>
+        <target state="new">Invalid `android:versionCode` value `{0}` in `AndroidManifest.xml`. The value must be in the range of 0 to {1}.</target>
+        <note>The following are literal names and should not be translated: `android:versionCode`, `AndroidManifest.xml`
+{0} - The current value
+{1} - The maximum allowed value</note>
+      </trans-unit>
+      <trans-unit id="XA0030">
+        <source>Building with JDK version `{0}` is not supported. Please install JDK version `{1}`. See https://aka.ms/xamarin/jdk9-errors</source>
+        <target state="new">Building with JDK version `{0}` is not supported. Please install JDK version `{1}`. See https://aka.ms/xamarin/jdk9-errors</target>
+        <note>The abbreviation "JDK" should not be translated.</note>
+      </trans-unit>
+      <trans-unit id="XA0031">
+        <source>Java SDK {0} or above is required when using $(TargetFrameworkVersion) {1}.</source>
+        <target state="new">Java SDK {0} or above is required when using $(TargetFrameworkVersion) {1}.</target>
+        <note>The following are literal names and should not be translated: $(TargetFrameworkVersion)
+{0} - The Java SDK version number
+{1} - The target framework version number</note>
+      </trans-unit>
+      <trans-unit id="XA0032">
+        <source>Java SDK {0} or above is required when using Android SDK Build-Tools {1}.</source>
+        <target state="new">Java SDK {0} or above is required when using Android SDK Build-Tools {1}.</target>
+        <note>The following are literal names and should not be translated: Android SDK Build-Tools
+{0} - The Java SDK version number
+{1} - The Android SDK Build-Tools version number</note>
+      </trans-unit>
+      <trans-unit id="XA0033">
+        <source>Failed to get the Java SDK version because the returned value does not appear to contain a valid version number. `{0} -version` returned: ```{1}```</source>
+        <target state="new">Failed to get the Java SDK version because the returned value does not appear to contain a valid version number. `{0} -version` returned: ```{1}```</target>
+        <note>The following are literal names and should not be translated: `{0} -version`, ```{1}```
+{0} - The name of the Java command
+{1} - The output of the command</note>
+      </trans-unit>
+      <trans-unit id="XA0034">
+        <source>Failed to get the Java SDK version. Please ensure you have Java {0} or above installed.</source>
+        <target state="new">Failed to get the Java SDK version. Please ensure you have Java {0} or above installed.</target>
+        <note>{0} - The Java version number</note>
+      </trans-unit>
       <trans-unit id="XA0100">
         <source>EmbeddedNativeLibrary '{0}' is invalid in Android Application projects. Please use AndroidNativeLibrary instead.</source>
         <target state="new">EmbeddedNativeLibrary '{0}' is invalid in Android Application projects. Please use AndroidNativeLibrary instead.</target>
@@ -50,6 +93,14 @@ In this message, the phrase "should not be reached" means that this error messag
         <source>Invalid value for `$(AndroidSequencePointsMode)`: {0}</source>
         <target state="new">Invalid value for `$(AndroidSequencePointsMode)`: {0}</target>
         <note>The following are literal names and should not be translated: `$(AndroidSequencePointsMode)`</note>
+      </trans-unit>
+      <trans-unit id="XA0105">
+        <source>The $(TargetFrameworkVersion) for {0} ({1}) is greater than the $(TargetFrameworkVersion) for the application project ({2}). Please increase the $(TargetFrameworkVersion) for the application project.</source>
+        <target state="new">The $(TargetFrameworkVersion) for {0} ({1}) is greater than the $(TargetFrameworkVersion) for the application project ({2}). Please increase the $(TargetFrameworkVersion) for the application project.</target>
+        <note>The following are literal names and should not be translated: $(TargetFrameworkVersion)
+{0} - The file name of the library referenced by the application
+{1} - The target framework version number for the library
+{2} - The target framework version number for the application project</note>
       </trans-unit>
       <trans-unit id="XA0107">
         <source>{0} is a Reference Assembly.</source>
@@ -95,6 +146,20 @@ In this message, the phrase "should not be reached" means that this error messag
         <note>The following are literal names and should not be translated: TargetFrameworkVersion, v4.4
 {0} - The current value of TargetFrameworkVersion</note>
       </trans-unit>
+      <trans-unit id="XA0118_Parse">
+        <source>Could not parse '{0}'</source>
+        <target state="new">Could not parse '{0}'</target>
+        <note>{0} - A NuGet target framework moniker string</note>
+      </trans-unit>
+      <trans-unit id="XA0118_Target">
+        <source>Could not resolve `target` in lock file for '{0}'</source>
+        <target state="new">Could not resolve `target` in lock file for '{0}'</target>
+        <note>The following are literal names and should not be translated: `target`
+
+The term "lock file" comes from NuGet. For example, search for "UnauthorizedLockFail" in https://github.com/NuGet/NuGet.Build.Localization to see some example localizations of "lock file."
+
+{0} - A NuGet target framework moniker string</note>
+      </trans-unit>
       <trans-unit id="XA0121">
         <source>Assembly '{0}' is using '[assembly: {1}]', which is no longer supported. Use a newer version of this NuGet package or notify the library author.</source>
         <target state="new">Assembly '{0}' is using '[assembly: {1}]', which is no longer supported. Use a newer version of this NuGet package or notify the library author.</target>
@@ -106,6 +171,12 @@ In this message, the phrase "should not be reached" means that this error messag
         <source>Assembly '{0}' is using a deprecated attribute '[assembly: {1}]'. Use a newer version of this NuGet package or notify the library author.</source>
         <target state="new">Assembly '{0}' is using a deprecated attribute '[assembly: {1}]'. Use a newer version of this NuGet package or notify the library author.</target>
         <note>The following are literal names and should not be translated: [assembly: {1}], NuGet</note>
+      </trans-unit>
+      <trans-unit id="XA1000">
+        <source>There was a problem parsing {0}. This is likely due to incomplete or invalid XML. Exception: {1}</source>
+        <target state="new">There was a problem parsing {0}. This is likely due to incomplete or invalid XML. Exception: {1}</target>
+        <note>{0} - The file name
+{1} - The exception message of the associated exception</note>
       </trans-unit>
       <trans-unit id="XA1001">
         <source>AndroidResgen: Warning while updating resource XML '{0}': {1}</source>
@@ -154,6 +225,16 @@ In this message, the phrase "should not be reached" means that this error messag
       <trans-unit id="XA2001">
         <source>Source file '{0}' could not be found.</source>
         <target state="new">Source file '{0}' could not be found.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="XA2002_Framework">
+        <source>Can not resolve reference: `{0}`, referenced by {1}. Perhaps it doesn't exist in the Mono for Android profile?</source>
+        <target state="new">Can not resolve reference: `{0}`, referenced by {1}. Perhaps it doesn't exist in the Mono for Android profile?</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="XA2002_NuGet">
+        <source>Can not resolve reference: `{0}`, referenced by {1}. Please add a NuGet package or assembly reference for `{0}`, or remove the reference to `{2}`.</source>
+        <target state="new">Can not resolve reference: `{0}`, referenced by {1}. Please add a NuGet package or assembly reference for `{0}`, or remove the reference to `{2}`.</target>
         <note />
       </trans-unit>
       <trans-unit id="XA2006">
@@ -218,6 +299,11 @@ In this message, the phrase "should not be reached" means that this error messag
 {0} - The target SDK version number
 {1} - The target framework version number
 {2} - The API version number</note>
+      </trans-unit>
+      <trans-unit id="XA4213">
+        <source>The type '{0}' must provide a public default constructor</source>
+        <target state="new">The type '{0}' must provide a public default constructor</target>
+        <note />
       </trans-unit>
       <trans-unit id="XA4214">
         <source>The managed type `{0}` exists in multiple assemblies: {1}. Please refactor the managed type names in these assemblies so that they are not identical.</source>
@@ -286,6 +372,18 @@ In this message, the term "bundled" is a short way of saying "included into the 
         <note>The abbreviation "ABI" should not be translated.
 {0} - Comma-separated list of the ignored library file names.</note>
       </trans-unit>
+      <trans-unit id="XA4302">
+        <source>Unhandled exception merging `AndroidManifest.xml`: {0}</source>
+        <target state="new">Unhandled exception merging `AndroidManifest.xml`: {0}</target>
+        <note>The following are literal names and should not be translated: `AndroidManifest.xml`
+{0} - The exception message of the associated exception</note>
+      </trans-unit>
+      <trans-unit id="XA4303">
+        <source>Error extracting resources from "{0}": {1}</source>
+        <target state="new">Error extracting resources from "{0}": {1}</target>
+        <note>{0} - The file name
+{1} - The exception message of the associated exception</note>
+      </trans-unit>
       <trans-unit id="XA4304">
         <source>ProGuard configuration file '{0}' was not found.</source>
         <target state="new">ProGuard configuration file '{0}' was not found.</target>
@@ -321,6 +419,11 @@ In this message, the term "bundled" is a short way of saying "included into the 
         <source>'MultiDexMainDexList' file '{0}' does not exist.</source>
         <target state="new">'MultiDexMainDexList' file '{0}' does not exist.</target>
         <note>The following are literal names and should not be translated: MultiDexMainDexList</note>
+      </trans-unit>
+      <trans-unit id="XA4310">
+        <source>`$(AndroidSigningKeyStore)` file `{0}` could not be found.</source>
+        <target state="new">`$(AndroidSigningKeyStore)` file `{0}` could not be found.</target>
+        <note>The following are literal names and should not be translated: `$(AndroidSigningKeyStore)`</note>
       </trans-unit>
       <trans-unit id="XA5101">
         <source>Missing Android NDK toolchains directory '{0}'. Please install the Android NDK.</source>
@@ -384,6 +487,24 @@ In this message, the term "bundled" is a short way of saying "included into the 
         <note>The following are literal names and should not be translated: /p:LintToolPath
 {0} - The missing tool name</note>
       </trans-unit>
+      <trans-unit id="XA5207">
+        <source>Could not find android.jar for API level {0}. This means the Android SDK platform for API level {0} is not installed. Either install it in the Android SDK Manager ({2}), or change the Xamarin.Android project to target an API version that is installed. ({1} missing.)</source>
+        <target state="new">Could not find android.jar for API level {0}. This means the Android SDK platform for API level {0} is not installed. Either install it in the Android SDK Manager ({2}), or change the Xamarin.Android project to target an API version that is installed. ({1} missing.)</target>
+        <note>The following are literal names and should not be translated: android.jar
+{0} - The API level name
+{1} - The expected path of the android.jar file
+{2} - The menu location in Visual Studio that can be used to launch the Android SDK Manager</note>
+      </trans-unit>
+      <trans-unit id="XA5207_SDK_Manager_Windows">
+        <source>Tools &gt; Android &gt; Android SDK Manager...</source>
+        <target state="new">Tools &gt; Android &gt; Android SDK Manager...</target>
+        <note>This string is the location of a menu command in Visual Studio.</note>
+      </trans-unit>
+      <trans-unit id="XA5207_SDK_Manager_macOS">
+        <source>Tools &gt; Open Android SDK Manager...</source>
+        <target state="new">Tools &gt; Open Android SDK Manager...</target>
+        <note>This string is the location of a menu command in Visual Studio for Mac.</note>
+      </trans-unit>
       <trans-unit id="XA5213">
         <source>java.lang.OutOfMemoryError. Consider increasing the value of $(JavaMaximumHeapSize). Java ran out of memory while executing '{0} {1}'</source>
         <target state="new">java.lang.OutOfMemoryError. Consider increasing the value of $(JavaMaximumHeapSize). Java ran out of memory while executing '{0} {1}'</target>
@@ -416,6 +537,11 @@ In this message, the term "bundled" is a short way of saying "included into the 
         <note>The following are literal names and should not be translated: MAX_PATH.
 {0} - The managed type name
 {1} - The exception message of the associated exception</note>
+      </trans-unit>
+      <trans-unit id="XA5302">
+        <source>Two processes may be building this project at once. Lock file exists at path: {0}</source>
+        <target state="new">Two processes may be building this project at once. Lock file exists at path: {0}</target>
+        <note />
       </trans-unit>
     </body>
   </file>

@@ -15,8 +15,18 @@ namespace Android.Runtime {
 
 	class AndroidRuntime : JniRuntime {
 
-		internal AndroidRuntime (IntPtr jnienv, IntPtr vm, bool allocNewObjectSupported, IntPtr classLoader, IntPtr classLoader_loadClass)
-			: base (new AndroidRuntimeOptions (jnienv, vm, allocNewObjectSupported, classLoader, classLoader_loadClass))
+		internal AndroidRuntime (IntPtr jnienv,
+				IntPtr vm,
+				bool allocNewObjectSupported,
+				IntPtr classLoader,
+				IntPtr classLoader_loadClass,
+				bool jniAddNativeMethodRegistrationAttributePresent)
+			: base (new AndroidRuntimeOptions (jnienv,
+					vm,
+					allocNewObjectSupported,
+					classLoader,
+					classLoader_loadClass,
+					jniAddNativeMethodRegistrationAttributePresent))
 		{
 		}
 
@@ -67,8 +77,12 @@ namespace Android.Runtime {
 	}
 
 	class AndroidRuntimeOptions : JniRuntime.CreationOptions {
-
-		public AndroidRuntimeOptions (IntPtr jnienv, IntPtr vm, bool allocNewObjectSupported, IntPtr classLoader, IntPtr classLoader_loadClass)
+		public AndroidRuntimeOptions (IntPtr jnienv,
+				IntPtr vm,
+				bool allocNewObjectSupported,
+				IntPtr classLoader,
+				IntPtr classLoader_loadClass,
+				bool jniAddNativeMethodRegistrationAttributePresent)
 		{
 			EnvironmentPointer      = jnienv;
 			ClassLoader             = new JniObjectReference (classLoader, JniObjectReferenceType.Global);
@@ -76,9 +90,10 @@ namespace Android.Runtime {
 			InvocationPointer       = vm;
 			NewObjectRequired       = !allocNewObjectSupported;
 			ObjectReferenceManager  = new AndroidObjectReferenceManager ();
-			TypeManager             = new AndroidTypeManager ();
+			TypeManager             = new AndroidTypeManager (jniAddNativeMethodRegistrationAttributePresent);
 			ValueManager            = new AndroidValueManager ();
 			UseMarshalMemberBuilder = false;
+			JniAddNativeMethodRegistrationAttributePresent = jniAddNativeMethodRegistrationAttributePresent;
 		}
 	}
 
@@ -219,6 +234,12 @@ namespace Android.Runtime {
 	}
 
 	class AndroidTypeManager : JniRuntime.JniTypeManager {
+		bool jniAddNativeMethodRegistrationAttributePresent;
+
+		public AndroidTypeManager (bool jniAddNativeMethodRegistrationAttributePresent)
+		{
+			this.jniAddNativeMethodRegistrationAttributePresent = jniAddNativeMethodRegistrationAttributePresent;
+		}
 
 		protected override IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
 		{
@@ -347,13 +368,15 @@ namespace Android.Runtime {
 				return;
 
 			if (string.IsNullOrEmpty (methods)) {
-				base.RegisterNativeMembers (nativeClass, type, methods);
+				if (jniAddNativeMethodRegistrationAttributePresent)
+					base.RegisterNativeMembers (nativeClass, type, methods);
 				return;
 			}
 
 			string[] members = methods.Split ('\n');
 			if (members.Length < 2) {
-				base.RegisterNativeMembers (nativeClass, type, methods);
+				if (jniAddNativeMethodRegistrationAttributePresent)
+					base.RegisterNativeMembers (nativeClass, type, methods);
 				return;
 			}
 

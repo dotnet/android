@@ -23,13 +23,14 @@ namespace Xamarin.Android.Build.Tests
 			public bool   is_a_bundled_app;
 			public bool   broken_exception_transitions;
 			public bool   instant_run_enabled;
+			public bool   jni_add_native_method_registration_attribute_present;
 			public byte   bound_stream_io_exception_type;
 			public uint   package_naming_policy;
 			public uint   environment_variable_count;
 			public uint   system_property_count;
 			public string android_package_name;
 		};
-		const uint ApplicationConfigFieldCount = 11;
+		const uint ApplicationConfigFieldCount = 12;
 
 		static readonly object ndkInitLock = new object ();
 		static readonly char[] readElfFieldSeparator = new [] { ' ', '\t' };
@@ -143,27 +144,32 @@ namespace Xamarin.Android.Build.Tests
 						ret.instant_run_enabled = ConvertFieldToBool ("instant_run_enabled", envFile, i, field [1]);
 						break;
 
-					case 6: // bound_stream_io_exception_type: byte / .byte
+					case 6: // jni_add_native_method_registration_attribute_present: bool / .byte
+						AssertFieldType (envFile, ".byte", field [0], i);
+						ret.jni_add_native_method_registration_attribute_present = ConvertFieldToBool ("jni_add_native_method_registration_attribute_present", envFile, i, field [1]);
+						break;
+
+					case 7: // bound_stream_io_exception_type: byte / .byte
 						AssertFieldType (envFile, ".byte", field [0], i);
 						ret.bound_stream_io_exception_type = ConvertFieldToByte ("bound_stream_io_exception_type", envFile, i, field [1]);
 						break;
 
-					case 7: // package_naming_policy: uint32_t / .word | .long
+					case 8: // package_naming_policy: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile}:{i}': {field [0]}");
 						ret.package_naming_policy = ConvertFieldToUInt32 ("package_naming_policy", envFile, i, field [1]);
 						break;
 
-					case 8: // environment_variable_count: uint32_t / .word | .long
+					case 9: // environment_variable_count: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile}:{i}': {field [0]}");
 						ret.environment_variable_count = ConvertFieldToUInt32 ("environment_variable_count", envFile, i, field [1]);
 						break;
 
-					case 9: // system_property_count: uint32_t / .word | .long
+					case 10: // system_property_count: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile}:{i}': {field [0]}");
 						ret.system_property_count = ConvertFieldToUInt32 ("system_property_count", envFile, i, field [1]);
 						break;
 
-					case 10: // android_package_name: string / [pointer type]
+					case 11: // android_package_name: string / [pointer type]
 						Assert.IsTrue (expectedPointerTypes.Contains (field [0]), $"Unexpected pointer field type in '{envFile}:{i}': {field [0]}");
 						pointers.Add (field [1].Trim ());
 						break;

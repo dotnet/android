@@ -124,6 +124,69 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid `android:versionCode` value `{0}` in `AndroidManifest.xml`. It must be an integer value..
+        /// </summary>
+        internal static string XA0003 {
+            get {
+                return ResourceManager.GetString("XA0003", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid `android:versionCode` value `{0}` in `AndroidManifest.xml`. The value must be in the range of 0 to {1}..
+        /// </summary>
+        internal static string XA0004 {
+            get {
+                return ResourceManager.GetString("XA0004", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Building with JDK version `{0}` is not supported. Please install JDK version `{1}`. See https://aka.ms/xamarin/jdk9-errors.
+        /// </summary>
+        internal static string XA0030 {
+            get {
+                return ResourceManager.GetString("XA0030", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Java SDK {0} or above is required when using $(TargetFrameworkVersion) {1}..
+        /// </summary>
+        internal static string XA0031 {
+            get {
+                return ResourceManager.GetString("XA0031", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Java SDK {0} or above is required when using Android SDK Build-Tools {1}..
+        /// </summary>
+        internal static string XA0032 {
+            get {
+                return ResourceManager.GetString("XA0032", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to get the Java SDK version because the returned value does not appear to contain a valid version number. `{0} -version` returned: ```{1}```.
+        /// </summary>
+        internal static string XA0033 {
+            get {
+                return ResourceManager.GetString("XA0033", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to get the Java SDK version. Please ensure you have Java {0} or above installed..
+        /// </summary>
+        internal static string XA0034 {
+            get {
+                return ResourceManager.GetString("XA0034", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to EmbeddedNativeLibrary &apos;{0}&apos; is invalid in Android Application projects. Please use AndroidNativeLibrary instead..
         /// </summary>
         internal static string XA0100 {
@@ -138,6 +201,15 @@ namespace Xamarin.Android.Tasks.Properties {
         internal static string XA0104 {
             get {
                 return ResourceManager.GetString("XA0104", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The $(TargetFrameworkVersion) for {0} ({1}) is greater than the $(TargetFrameworkVersion) for the application project ({2}). Please increase the $(TargetFrameworkVersion) for the application project..
+        /// </summary>
+        internal static string XA0105 {
+            get {
+                return ResourceManager.GetString("XA0105", resourceCulture);
             }
         }
         
@@ -214,6 +286,24 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Could not parse &apos;{0}&apos;.
+        /// </summary>
+        internal static string XA0118_Parse {
+            get {
+                return ResourceManager.GetString("XA0118_Parse", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not resolve `target` in lock file for &apos;{0}&apos;.
+        /// </summary>
+        internal static string XA0118_Target {
+            get {
+                return ResourceManager.GetString("XA0118_Target", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Assembly &apos;{0}&apos; is using &apos;[assembly: {1}]&apos;, which is no longer supported. Use a newer version of this NuGet package or notify the library author..
         /// </summary>
         internal static string XA0121 {
@@ -228,6 +318,15 @@ namespace Xamarin.Android.Tasks.Properties {
         internal static string XA0122 {
             get {
                 return ResourceManager.GetString("XA0122", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There was a problem parsing {0}. This is likely due to incomplete or invalid XML. Exception: {1}.
+        /// </summary>
+        internal static string XA1000 {
+            get {
+                return ResourceManager.GetString("XA1000", resourceCulture);
             }
         }
         
@@ -300,6 +399,24 @@ namespace Xamarin.Android.Tasks.Properties {
         internal static string XA2001 {
             get {
                 return ResourceManager.GetString("XA2001", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Can not resolve reference: `{0}`, referenced by {1}. Perhaps it doesn&apos;t exist in the Mono for Android profile?.
+        /// </summary>
+        internal static string XA2002_Framework {
+            get {
+                return ResourceManager.GetString("XA2002_Framework", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Can not resolve reference: `{0}`, referenced by {1}. Please add a NuGet package or assembly reference for `{0}`, or remove the reference to `{2}`..
+        /// </summary>
+        internal static string XA2002_NuGet {
+            get {
+                return ResourceManager.GetString("XA2002_NuGet", resourceCulture);
             }
         }
         
@@ -403,6 +520,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The type &apos;{0}&apos; must provide a public default constructor.
+        /// </summary>
+        internal static string XA4213 {
+            get {
+                return ResourceManager.GetString("XA4213", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The managed type `{0}` exists in multiple assemblies: {1}. Please refactor the managed type names in these assemblies so that they are not identical..
         /// </summary>
         internal static string XA4214 {
@@ -502,6 +628,24 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unhandled exception merging `AndroidManifest.xml`: {0}.
+        /// </summary>
+        internal static string XA4302 {
+            get {
+                return ResourceManager.GetString("XA4302", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error extracting resources from &quot;{0}&quot;: {1}.
+        /// </summary>
+        internal static string XA4303 {
+            get {
+                return ResourceManager.GetString("XA4303", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to ProGuard configuration file &apos;{0}&apos; was not found..
         /// </summary>
         internal static string XA4304 {
@@ -561,6 +705,15 @@ namespace Xamarin.Android.Tasks.Properties {
         internal static string XA4309 {
             get {
                 return ResourceManager.GetString("XA4309", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to `$(AndroidSigningKeyStore)` file `{0}` could not be found..
+        /// </summary>
+        internal static string XA4310 {
+            get {
+                return ResourceManager.GetString("XA4310", resourceCulture);
             }
         }
         
@@ -655,6 +808,33 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Could not find android.jar for API level {0}. This means the Android SDK platform for API level {0} is not installed. Either install it in the Android SDK Manager ({2}), or change the Xamarin.Android project to target an API version that is installed. ({1} missing.).
+        /// </summary>
+        internal static string XA5207 {
+            get {
+                return ResourceManager.GetString("XA5207", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Tools &gt; Open Android SDK Manager....
+        /// </summary>
+        internal static string XA5207_SDK_Manager_macOS {
+            get {
+                return ResourceManager.GetString("XA5207_SDK_Manager_macOS", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Tools &gt; Android &gt; Android SDK Manager....
+        /// </summary>
+        internal static string XA5207_SDK_Manager_Windows {
+            get {
+                return ResourceManager.GetString("XA5207_SDK_Manager_Windows", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to java.lang.OutOfMemoryError. Consider increasing the value of $(JavaMaximumHeapSize). Java ran out of memory while executing &apos;{0} {1}&apos;.
         /// </summary>
         internal static string XA5213 {
@@ -696,6 +876,15 @@ namespace Xamarin.Android.Tasks.Properties {
         internal static string XA5301 {
             get {
                 return ResourceManager.GetString("XA5301", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Two processes may be building this project at once. Lock file exists at path: {0}.
+        /// </summary>
+        internal static string XA5302 {
+            get {
+                return ResourceManager.GetString("XA5302", resourceCulture);
             }
         }
     }

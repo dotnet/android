@@ -256,10 +256,10 @@ namespace Xamarin.Android.Tasks
 										return !files.Contains (fileToDelete);
 									});
 								} catch (PathTooLongException ex) {
-									Log.LogCodedError ("XA4303", $"Error extracting resources from \"{assemblyPath}\": {ex}");
+									Log.LogCodedError ("XA4303", Properties.Resources.XA4303, assemblyPath, ex);
 									return;
 								} catch (NotSupportedException ex) {
-									Log.LogCodedError ("XA4303", $"Error extracting resources from \"{assemblyPath}\": {ex}");
+									Log.LogCodedError ("XA4303", Properties.Resources.XA4303, assemblyPath, ex);
 									return;
 								}
 							}
@@ -283,10 +283,10 @@ namespace Xamarin.Android.Tasks
 										return !jars.ContainsKey (fileToDelete);
 									});
 								} catch (PathTooLongException ex) {
-									Log.LogCodedError ("XA4303", $"Error extracting resources from \"{assemblyPath}\": {ex}");
+									Log.LogCodedError ("XA4303", Properties.Resources.XA4303, assemblyPath, ex);
 									return;
 								} catch (NotSupportedException ex) {
-									Log.LogCodedError ("XA4303", $"Error extracting resources from \"{assemblyPath}\": {ex}");
+									Log.LogCodedError ("XA4303", Properties.Resources.XA4303, assemblyPath, ex);
 									return;
 								}
 							}

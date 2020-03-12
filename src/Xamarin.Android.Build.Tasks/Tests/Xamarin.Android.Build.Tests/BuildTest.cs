@@ -1099,7 +1099,7 @@ namespace UnamedProject
 				FileAssert.Exists (dexFile);
 				var classes = new [] {
 					"Lmono/MonoRuntimeProvider;",
-					"Landroid/runtime/UncaughtExceptionHandler;",
+					"Landroid/runtime/JavaProxyThrowable;",
 					"Landroid/support/v7/widget/Toolbar;"
 				};
 				foreach (var className in classes) {
@@ -3161,7 +3161,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 					$"_AndroidApiLevel=27",
 				}), "Build should have failed");
 				Assert.IsTrue (builder.LastBuildOutput.ContainsText ("error XA5207:"), "XA5207 should have been raised.");
-				Assert.IsTrue (builder.LastBuildOutput.ContainsText ("Could not find android.jar for API Level 27"), "XA5207 should have had a good error message.");
+				Assert.IsTrue (builder.LastBuildOutput.ContainsText ("Could not find android.jar for API level 27"), "XA5207 should have had a good error message.");
 			}
 			Directory.Delete (AndroidSdkDirectory, recursive: true);
 		}
@@ -4148,6 +4148,28 @@ namespace UnnamedProject
 						Assert.IsTrue (zip.ContainsEntry (expected, caseSensitive: true), $"{expected} should exist in {archive}");
 					}
 				}
+			}
+		}
+
+		[Test]
+		public void XA4310 ([Values ("apk", "aab")] string packageFormat)
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetProperty ("AndroidKeyStore", "true");
+			proj.SetProperty ("AndroidSigningKeyStore", "DoesNotExist");
+			proj.SetProperty ("AndroidSigningStorePass", "android");
+			proj.SetProperty ("AndroidSigningKeyAlias", "mykey");
+			proj.SetProperty ("AndroidSigningKeyPass", "android");
+			proj.SetProperty ("AndroidPackageFormat", packageFormat);
+			using (var builder = CreateApkBuilder ()) {
+				builder.ThrowOnBuildFailure = false;
+				builder.Target = "SignAndroidPackage";
+				Assert.IsFalse (builder.Build (proj), "Build should have failed with XA4310.");
+
+				StringAssertEx.Contains ("error XA4310", builder.LastBuildOutput, "Error should be XA4310");
+				StringAssertEx.Contains ("`DoesNotExist`", builder.LastBuildOutput, "Error should include the name of the nonexistent file");
+				StringAssertEx.Contains ("0 Warning(s)", builder.LastBuildOutput, "Should have no MSBuild warnings.");
+
 			}
 		}
 	}

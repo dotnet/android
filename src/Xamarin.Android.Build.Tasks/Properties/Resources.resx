@@ -148,6 +148,42 @@ In this message, the phrase "should not be reached" means that this error messag
     <value>Unsupported or invalid $(TargetFrameworkVersion) value of '{0}'. Please update your Project Options.</value>
     <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)</comment>
   </data>
+  <data name="XA0003" xml:space="preserve">
+    <value>Invalid `android:versionCode` value `{0}` in `AndroidManifest.xml`. It must be an integer value.</value>
+    <comment>The following are literal names and should not be translated: `android:versionCode`, `AndroidManifest.xml`</comment>
+  </data>
+  <data name="XA0004" xml:space="preserve">
+    <value>Invalid `android:versionCode` value `{0}` in `AndroidManifest.xml`. The value must be in the range of 0 to {1}.</value>
+    <comment>The following are literal names and should not be translated: `android:versionCode`, `AndroidManifest.xml`
+{0} - The current value
+{1} - The maximum allowed value</comment>
+  </data>
+  <data name="XA0030" xml:space="preserve">
+    <value>Building with JDK version `{0}` is not supported. Please install JDK version `{1}`. See https://aka.ms/xamarin/jdk9-errors</value>
+    <comment>The abbreviation "JDK" should not be translated.</comment>
+  </data>
+  <data name="XA0031" xml:space="preserve">
+    <value>Java SDK {0} or above is required when using $(TargetFrameworkVersion) {1}.</value>
+    <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
+{0} - The Java SDK version number
+{1} - The target framework version number</comment>
+  </data>
+  <data name="XA0032" xml:space="preserve">
+    <value>Java SDK {0} or above is required when using Android SDK Build-Tools {1}.</value>
+    <comment>The following are literal names and should not be translated: Android SDK Build-Tools
+{0} - The Java SDK version number
+{1} - The Android SDK Build-Tools version number</comment>
+  </data>
+  <data name="XA0033" xml:space="preserve">
+    <value>Failed to get the Java SDK version because the returned value does not appear to contain a valid version number. `{0} -version` returned: ```{1}```</value>
+    <comment>The following are literal names and should not be translated: `{0} -version`, ```{1}```
+{0} - The name of the Java command
+{1} - The output of the command</comment>
+  </data>
+  <data name="XA0034" xml:space="preserve">
+    <value>Failed to get the Java SDK version. Please ensure you have Java {0} or above installed.</value>
+    <comment>{0} - The Java version number</comment>
+  </data>
   <data name="XA0100" xml:space="preserve">
     <value>EmbeddedNativeLibrary '{0}' is invalid in Android Application projects. Please use AndroidNativeLibrary instead.</value>
     <comment>The following are literal names and should not be translated: EmbeddedNativeLibrary, AndroidNativeLibrary
@@ -156,6 +192,13 @@ In this message, the phrase "should not be reached" means that this error messag
   <data name="XA0104" xml:space="preserve">
     <value>Invalid value for `$(AndroidSequencePointsMode)`: {0}</value>
     <comment>The following are literal names and should not be translated: `$(AndroidSequencePointsMode)`</comment>
+  </data>
+  <data name="XA0105" xml:space="preserve">
+    <value>The $(TargetFrameworkVersion) for {0} ({1}) is greater than the $(TargetFrameworkVersion) for the application project ({2}). Please increase the $(TargetFrameworkVersion) for the application project.</value>
+    <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
+{0} - The file name of the library referenced by the application
+{1} - The target framework version number for the library
+{2} - The target framework version number for the application project</comment>
   </data>
   <data name="XA0107" xml:space="preserve">
     <value>{0} is a Reference Assembly.</value>
@@ -192,6 +235,18 @@ In this message, the phrase "should not be reached" means that this error messag
     <comment>The following are literal names and should not be translated: TargetFrameworkVersion, v4.4
 {0} - The current value of TargetFrameworkVersion</comment>
   </data>
+  <data name="XA0118_Parse" xml:space="preserve">
+    <value>Could not parse '{0}'</value>
+    <comment>{0} - A NuGet target framework moniker string</comment>
+  </data>
+  <data name="XA0118_Target" xml:space="preserve">
+    <value>Could not resolve `target` in lock file for '{0}'</value>
+    <comment>The following are literal names and should not be translated: `target`
+
+The term "lock file" comes from NuGet. For example, search for "UnauthorizedLockFail" in https://github.com/NuGet/NuGet.Build.Localization to see some example localizations of "lock file."
+
+{0} - A NuGet target framework moniker string</comment>
+  </data>
   <data name="XA0121" xml:space="preserve">
     <value>Assembly '{0}' is using '[assembly: {1}]', which is no longer supported. Use a newer version of this NuGet package or notify the library author.</value>
     <comment>The following are literal names and should not be translated: [assembly: {1}], NuGet
@@ -201,6 +256,11 @@ In this message, the phrase "should not be reached" means that this error messag
   <data name="XA0122" xml:space="preserve">
     <value>Assembly '{0}' is using a deprecated attribute '[assembly: {1}]'. Use a newer version of this NuGet package or notify the library author.</value>
     <comment>The following are literal names and should not be translated: [assembly: {1}], NuGet</comment>
+  </data>
+  <data name="XA1000" xml:space="preserve">
+    <value>There was a problem parsing {0}. This is likely due to incomplete or invalid XML. Exception: {1}</value>
+    <comment>{0} - The file name
+{1} - The exception message of the associated exception</comment>
   </data>
   <data name="XA1001" xml:space="preserve">
     <value>AndroidResgen: Warning while updating resource XML '{0}': {1}</value>
@@ -241,6 +301,12 @@ In this message, the phrase "should not be reached" means that this error messag
   </data>
   <data name="XA2001" xml:space="preserve">
     <value>Source file '{0}' could not be found.</value>
+  </data>
+  <data name="XA2002_Framework" xml:space="preserve">
+    <value>Can not resolve reference: `{0}`, referenced by {1}. Perhaps it doesn't exist in the Mono for Android profile?</value>
+  </data>
+  <data name="XA2002_NuGet" xml:space="preserve">
+    <value>Can not resolve reference: `{0}`, referenced by {1}. Please add a NuGet package or assembly reference for `{0}`, or remove the reference to `{2}`.</value>
   </data>
   <data name="XA2006" xml:space="preserve">
     <value>Could not resolve reference to '{0}' (defined in assembly '{1}') with scope '{2}'. When the scope is different from the defining assembly, it usually means that the type is forwarded.</value>
@@ -292,6 +358,9 @@ In this message, the phrase "should not be reached" means that this error messag
 {0} - The target SDK version number
 {1} - The target framework version number
 {2} - The API version number</comment>
+  </data>
+  <data name="XA4213" xml:space="preserve">
+    <value>The type '{0}' must provide a public default constructor</value>
   </data>
   <data name="XA4214" xml:space="preserve">
     <value>The managed type `{0}` exists in multiple assemblies: {1}. Please refactor the managed type names in these assemblies so that they are not identical.</value>
@@ -349,6 +418,16 @@ In this message, the term "bundled" is a short way of saying "included into the 
     <comment>The abbreviation "ABI" should not be translated.
 {0} - Comma-separated list of the ignored library file names.</comment>
   </data>
+  <data name="XA4302" xml:space="preserve">
+    <value>Unhandled exception merging `AndroidManifest.xml`: {0}</value>
+    <comment>The following are literal names and should not be translated: `AndroidManifest.xml`
+{0} - The exception message of the associated exception</comment>
+  </data>
+  <data name="XA4303" xml:space="preserve">
+    <value>Error extracting resources from "{0}": {1}</value>
+    <comment>{0} - The file name
+{1} - The exception message of the associated exception</comment>
+  </data>
   <data name="XA4304" xml:space="preserve">
     <value>ProGuard configuration file '{0}' was not found.</value>
     <comment>The following are literal names and should not be translated: ProGuard</comment>
@@ -376,6 +455,10 @@ In this message, the term "bundled" is a short way of saying "included into the 
   <data name="XA4309" xml:space="preserve">
     <value>'MultiDexMainDexList' file '{0}' does not exist.</value>
     <comment>The following are literal names and should not be translated: MultiDexMainDexList</comment>
+  </data>
+  <data name="XA4310" xml:space="preserve">
+    <value>`$(AndroidSigningKeyStore)` file `{0}` could not be found.</value>
+    <comment>The following are literal names and should not be translated: `$(AndroidSigningKeyStore)`</comment>
   </data>
   <data name="XA5101" xml:space="preserve">
     <value>Missing Android NDK toolchains directory '{0}'. Please install the Android NDK.</value>
@@ -429,6 +512,21 @@ In this message, the term "bundled" is a short way of saying "included into the 
     <comment>The following are literal names and should not be translated: /p:LintToolPath
 {0} - The missing tool name</comment>
   </data>
+  <data name="XA5207" xml:space="preserve">
+    <value>Could not find android.jar for API level {0}. This means the Android SDK platform for API level {0} is not installed. Either install it in the Android SDK Manager ({2}), or change the Xamarin.Android project to target an API version that is installed. ({1} missing.)</value>
+    <comment>The following are literal names and should not be translated: android.jar
+{0} - The API level name
+{1} - The expected path of the android.jar file
+{2} - The menu location in Visual Studio that can be used to launch the Android SDK Manager</comment>
+  </data>
+  <data name="XA5207_SDK_Manager_macOS" xml:space="preserve">
+    <value>Tools &gt; Open Android SDK Manager...</value>
+    <comment>This string is the location of a menu command in Visual Studio for Mac.</comment>
+  </data>
+  <data name="XA5207_SDK_Manager_Windows" xml:space="preserve">
+    <value>Tools &gt; Android &gt; Android SDK Manager...</value>
+    <comment>This string is the location of a menu command in Visual Studio.</comment>
+  </data>
   <data name="XA5213" xml:space="preserve">
     <value>java.lang.OutOfMemoryError. Consider increasing the value of $(JavaMaximumHeapSize). Java ran out of memory while executing '{0} {1}'</value>
     <comment>The following are literal names and should not be translated: java.lang.OutOfMemoryError, $(JavaMaximumHeapSize)
@@ -456,5 +554,8 @@ In this message, the term "bundled" is a short way of saying "included into the 
     <comment>The following are literal names and should not be translated: MAX_PATH.
 {0} - The managed type name
 {1} - The exception message of the associated exception</comment>
+  </data>
+  <data name="XA5302" xml:space="preserve">
+    <value>Two processes may be building this project at once. Lock file exists at path: {0}</value>
   </data>
 </root>

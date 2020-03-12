@@ -31,7 +31,8 @@ namespace Xamarin.Android.Prepare
 			if (UbuntuRelease.Major < 18 || (UbuntuRelease.Major == 18 && UbuntuRelease.Minor < 10))
 				Dependencies.AddRange (preCosmicPackages);
 			else {
-				Dependencies.AddRange (cosmicPackages);
+				if (UbuntuRelease.Major < 20)
+					Dependencies.AddRange (cosmicPackages);
 				if (UbuntuRelease.Major < 19)
 					Dependencies.AddRange (preDiscoPackages);
 			}

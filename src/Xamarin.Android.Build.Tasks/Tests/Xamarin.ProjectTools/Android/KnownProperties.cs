@@ -26,7 +26,6 @@ namespace Xamarin.ProjectTools
 		public const string AotAssemblies = "AotAssemblies";
 		public const string AndroidEnableProfiledAot = "AndroidEnableProfiledAot";
 
-		public const string AndroidExplicitCrunch = "AndroidExplicitCrunch";
 		public const string OutputPath = "OutputPath";
 		public const string IntermediateOutputPath = "IntermediateOutputPath";
 		public const string AndroidFastDeploymentType = "AndroidFastDeploymentType";

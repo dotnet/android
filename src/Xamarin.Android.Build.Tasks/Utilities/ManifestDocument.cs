@@ -314,7 +314,6 @@ namespace Xamarin.Android.Tasks {
 
 						IEnumerable <MethodDefinition> constructors = t.Methods.Where (m => m.IsConstructor).Cast<MethodDefinition> ();
 						if (!constructors.Any (c => !c.HasParameters && c.IsPublic)) {
-							string message = $"The type '{t.FullName}' must provide a public default constructor";
 							SequencePoint sourceLocation = FindSource (constructors);
 
 							if (sourceLocation != null && sourceLocation.Document?.Url != null) {
@@ -327,9 +326,10 @@ namespace Xamarin.Android.Tasks {
 									columnNumber:     sourceLocation.StartColumn,
 									endLineNumber:    sourceLocation.EndLine,
 									endColumnNumber:  sourceLocation.EndColumn,
-									message:          message);
+									message:          Properties.Resources.XA4213,
+									t.FullName);
 							} else
-								log.LogCodedError ("XA4213", message);
+								log.LogCodedError ("XA4213", Properties.Resources.XA4213, t.FullName);
 							continue;
 						}
 						app.Add (fromCode);
@@ -411,7 +411,7 @@ namespace Xamarin.Android.Tasks {
 					try {
 						MergeLibraryManifest (mergedManifest);
 					} catch (Exception ex) {
-						log.LogCodedWarning ("XA4302", "Unhandled exception merging `AndroidManifest.xml`: {0}", ex);
+						log.LogCodedWarning ("XA4302", Properties.Resources.XA4302, ex);
 					}
 				}
 			}
@@ -983,12 +983,12 @@ namespace Xamarin.Android.Tasks {
 			int code;
 			error = errorCode = string.Empty;
 			if (!int.TryParse (VersionCode, out code)) {
-				error = $"VersionCode {VersionCode} is invalid. It must be an integer value.";
+				error = string.Format (Properties.Resources.XA0003, VersionCode);
 				errorCode = "XA0003";
 				return false;
 			}
 			if (code > maxVersionCode || code < 0) {
-				error = $"VersionCode {code} is outside 0, {maxVersionCode} interval";
+				error = string.Format (Properties.Resources.XA0004, code, maxVersionCode);
 				errorCode = "XA0004";
 				return false;
 			}

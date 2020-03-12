@@ -87,7 +87,22 @@ namespace Xamarin.Android.Tasks
 			typemapIndexMagicString = outputEncoding.GetBytes (TypeMapIndexMagicString);
 		}
 
-		public bool Generate (List<TypeDefinition> javaTypes, string outputDirectory, bool generateNativeAssembly)
+		void UpdateApplicationConfig (TypeDefinition javaType, ApplicationConfigTaskState appConfState)
+		{
+			if (appConfState.JniAddNativeMethodRegistrationAttributePresent)
+				return;
+			if (!javaType.HasCustomAttributes)
+				return;
+
+			foreach (CustomAttribute ca in javaType.CustomAttributes) {
+				if (!appConfState.JniAddNativeMethodRegistrationAttributePresent && String.Compare ("JniAddNativeMethodRegistrationAttribute", ca.AttributeType.Name, StringComparison.Ordinal) == 0) {
+					appConfState.JniAddNativeMethodRegistrationAttributePresent = true;
+					break;
+				}
+			}
+		}
+
+		public bool Generate (bool skipJniAddNativeMethodRegistrationAttributeScan, List<TypeDefinition> javaTypes, string outputDirectory, bool generateNativeAssembly, out ApplicationConfigTaskState appConfState)
 		{
 			if (String.IsNullOrEmpty (outputDirectory))
 				throw new ArgumentException ("must not be null or empty", nameof (outputDirectory));
@@ -102,8 +117,13 @@ namespace Xamarin.Android.Tasks
 			var tempModules = new Dictionary<byte[], ModuleData> ();
 			Dictionary <AssemblyDefinition, int> moduleCounter = null;
 			var mvidCache = new Dictionary <Guid, byte[]> ();
+			appConfState = new ApplicationConfigTaskState {
+				JniAddNativeMethodRegistrationAttributePresent = skipJniAddNativeMethodRegistrationAttributeScan
+			};
 
 			foreach (TypeDefinition td in javaTypes) {
+				UpdateApplicationConfig (td, appConfState);
+
 				string assemblyName = td.Module.Assembly.FullName;
 
 				if (!knownAssemblies.ContainsKey (assemblyName)) {
@@ -193,15 +213,10 @@ namespace Xamarin.Android.Tasks
 			NativeTypeMappingData data;
 			if (!generateNativeAssembly) {
 				string typeMapIndexPath = Path.Combine (outputDirectory, "typemap.index");
-				// Try to approximate the index size:
-				//   16 bytes for the header
-				//   16 bytes (UUID) + filename length per each entry
-				using (var ms = new MemoryStream (16 + (modules.Length * (16 + 128)))) {
-					using (var indexWriter = new BinaryWriter (ms)) {
-						OutputModules (outputDirectory, modules, indexWriter, maxModuleFileNameLength + 1);
-						indexWriter.Flush ();
-						MonoAndroidHelper.CopyIfStreamChanged (ms, typeMapIndexPath);
-					}
+				using (var indexWriter = MemoryStreamPool.Shared.CreateBinaryWriter ()) {
+					OutputModules (modules, indexWriter, maxModuleFileNameLength + 1);
+					indexWriter.Flush ();
+					MonoAndroidHelper.CopyIfStreamChanged (indexWriter.BaseStream, typeMapIndexPath);
 				}
 				GeneratedBinaryTypeMaps.Add (typeMapIndexPath);
 
@@ -268,17 +283,15 @@ namespace Xamarin.Android.Tasks
 		//   [Module UUID] is 16 bytes long
 		//   [File name] is right-padded with <NUL> characters to the [Module file name width] boundary.
 		//
-		void OutputModules (string outputDirectory, ModuleData[] modules, BinaryWriter indexWriter, int moduleFileNameWidth)
+		void OutputModules (ModuleData[] modules, BinaryWriter indexWriter, int moduleFileNameWidth)
 		{
-			var moduleCounter = new Dictionary <AssemblyDefinition, int> ();
-
 			indexWriter.Write (typemapIndexMagicString);
 			indexWriter.Write (TypeMapFormatVersion);
 			indexWriter.Write (modules.Length);
 			indexWriter.Write (moduleFileNameWidth);
 
 			foreach (ModuleData data in modules) {
-				OutputModule (outputDirectory, data.MvidBytes, data, moduleCounter);
+				OutputModule (data.MvidBytes, data);
 				indexWriter.Write (data.MvidBytes);
 
 				string outputFilePath = Path.GetFileName (data.OutputFilePath);
@@ -287,23 +300,15 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		void OutputModule (string outputDirectory, byte[] moduleUUID, ModuleData moduleData, Dictionary <AssemblyDefinition, int> moduleCounter)
+		void OutputModule (byte[] moduleUUID, ModuleData moduleData)
 		{
 			if (moduleData.Types.Length == 0)
 				return;
 
-			int initialStreamSize =
-				(36 + 128) + // Static header size + assembly file name
-				((128 + 4) * moduleData.Types.Length) + // java-to-managed size
-				(8 * moduleData.Types.Length) + // managed-to-java size
-				(8 * moduleData.DuplicateTypes.Count); // managed-to-java duplicates;
-
-			using (var ms = new MemoryStream (initialStreamSize)) {
-				using (var bw = new BinaryWriter (ms)) {
-					OutputModule (bw, moduleUUID, moduleData);
-					bw.Flush ();
-					MonoAndroidHelper.CopyIfStreamChanged (ms, moduleData.OutputFilePath);
-				}
+			using (var bw = MemoryStreamPool.Shared.CreateBinaryWriter ()) {
+				OutputModule (bw, moduleUUID, moduleData);
+				bw.Flush ();
+				MonoAndroidHelper.CopyIfStreamChanged (bw.BaseStream, moduleData.OutputFilePath);
 			}
 			GeneratedBinaryTypeMaps.Add (moduleData.OutputFilePath);
 		}
