@@ -386,6 +386,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 <!-- Automatically supply project capabilities for IDE use -->
 <ItemGroup>
+  <ProjectCapability Include="Mobile" />
   <ProjectCapability Include="Android" />
   <ProjectCapability Include="AndroidApplication" Condition="$(AndroidApplication)" />
 </ItemGroup>
