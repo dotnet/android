@@ -36,7 +36,7 @@ namespace Xamarin.Android.Tasks
 			var modified = new List<string> ();
 
 			if (PackageName != wearPackageName)
-				Log.LogCodedError ("XA5211", "Embedded wear app package name differs from handheld app package name ({0} != {1}).", wearPackageName, PackageName);
+				Log.LogCodedError ("XA5211", Properties.Resources.XA5211, wearPackageName, PackageName);
 
 			if (!File.Exists (WearApplicationApkPath)) {
 				Log.LogWarning ("This application won't contain the paired Wear package because the Wear application package .apk is not created yet. If you are using MSBuild or XBuild, you have to invoke \"SignAndroidPackage\" target.");
