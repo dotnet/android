@@ -202,7 +202,7 @@ namespace Monodroid {
 		{
 			if (attr.Name.Namespace != res_auto)
 				return false;
-			if (!attr.Value.StartsWith ("@")) // only lowercase if we reference another resource.
+			if (!attr.Value.StartsWith ("@", StringComparison.Ordinal)) // only lowercase if we reference another resource.
 				return false;
 			if (attr.Name.LocalName.EndsWith ("Layout", StringComparison.Ordinal)) {
 				attr.Value = attr.Value.ToLowerInvariant ();
