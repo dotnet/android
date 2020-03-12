@@ -102,5 +102,42 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.True (actionsText.Contains ("@layout/servinglayout"), "'@layout/ServingLayout' was not converted to '@layout/servinglayout'");
 			Directory.Delete (path, recursive: true);
 		}
+
+		[Test]
+		public void UserLayout ()
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			Directory.CreateDirectory (path);
+			var layoutDir = Path.Combine (path, "res", "layout");
+			var valuesDir = Path.Combine (path, "res", "values");
+			Directory.CreateDirectory (layoutDir);
+			Directory.CreateDirectory (valuesDir);
+			var main = Path.Combine (layoutDir, "main.xml");
+			File.WriteAllText (main, @"<?xml version=""1.0"" encoding=""utf-8""?>
+<LinearLayout xmlns:android=""http://schemas.android.com/apk/res/android""
+	xmlns:app=""http://schemas.android.com/apk/res-auto""
+	android:orientation = ""horizontal""
+	android:layout_width = ""match_parent""
+	android:layout_height = ""match_parent""
+	app:UserLayout=""FixedWidth""
+	>
+</LinearLayout>");
+
+			var attrs = Path.Combine (valuesDir, "attrs.xml");
+			File.WriteAllText (attrs, @"<?xml version=""1.0"" encoding=""utf-8""?>
+<resources>
+	<declare-styleable name=""UserLayoutAttributes"">
+		<attr name=""UserLayout"">
+			<enum name=""FixedWidth"" value=""0""/>
+		</attr>
+	</declare-styleable>
+</resources>
+");
+			Monodroid.AndroidResource.UpdateXmlResource (Path.Combine (path, "res"), attrs, new Dictionary<string, string> (), null);
+			Monodroid.AndroidResource.UpdateXmlResource (Path.Combine (path, "res"), main, new Dictionary<string, string> (), null);
+			var mainText = File.ReadAllText (main);
+			Assert.True (mainText.Contains ("FixedWidth"), "'FixedWidth' was converted to 'fixedwidth'");
+			Directory.Delete (path, recursive: true);
+		}
 	}
 }
