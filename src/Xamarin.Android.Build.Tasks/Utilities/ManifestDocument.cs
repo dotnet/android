@@ -893,24 +893,24 @@ namespace Xamarin.Android.Tasks {
 		}
 
 		public void Save (TaskLoggingHelper log, string filename) =>
-			Save (m => log.LogWarning (m), filename);
+			Save ((c, m) => log.LogCodedWarning (c, m), filename);
 
-		public void Save (Action<string> logWarning, string filename)
+		public void Save (Action<string, string> logCodedWarning, string filename)
 		{
 			using (var file = new StreamWriter (filename, append: false, encoding: MonoAndroidHelper.UTF8withoutBOM))
-				Save (logWarning, file);
+				Save (logCodedWarning, file);
 		}
 
 		public void Save (TaskLoggingHelper log, Stream stream) =>
-			Save (m => log.LogWarning (m), stream);
+			Save ((c, m) => log.LogCodedWarning (c, m), stream);
 
-		public void Save (Action<string> logWarning, Stream stream)
+		public void Save (Action<string, string> logCodedWarning, Stream stream)
 		{
 			using (var file = new StreamWriter (stream, MonoAndroidHelper.UTF8withoutBOM, bufferSize: 1024, leaveOpen: true))
-				Save (logWarning, file);
+				Save (logCodedWarning, file);
 		}
 
-		public void Save (Action<string> logWarning, TextWriter stream)
+		public void Save (Action<string, string> logCodedWarning, TextWriter stream)
 		{
 			RemoveDuplicateElements ();
 			string s;
@@ -930,7 +930,7 @@ namespace Xamarin.Android.Tasks {
 					if (entry.Length == 2)
 						s = s.Replace ("${" + entry [0] + "}", entry [1]);
 					else
-						logWarning ("Invalid application placeholders (AndroidApplicationPlaceholders) value. Use 'key1=value1;key2=value2, ...' format. The specified value was: " + Placeholders);
+						logCodedWarning ("XA1010", string.Format (Properties.Resources.XA1010, string.Join (";", Placeholders)));
 				}
 			stream.Write (s);
 		}

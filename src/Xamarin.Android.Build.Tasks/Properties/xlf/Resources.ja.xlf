@@ -222,6 +222,11 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
 {0} - The target framework version number
 {1} - The target SDK version number</note>
       </trans-unit>
+      <trans-unit id="XA1010">
+        <source>Invalid `$(AndroidManifestPlaceholders)` value for Android manifest placeholders. Please use `key1=value1;key2=value2` format. The specified value was: `{0}`</source>
+        <target state="new">Invalid `$(AndroidManifestPlaceholders)` value for Android manifest placeholders. Please use `key1=value1;key2=value2` format. The specified value was: `{0}`</target>
+        <note>The following are literal names and should not be translated: `$(AndroidManifestPlaceholders)`</note>
+      </trans-unit>
       <trans-unit id="XA2001">
         <source>Source file '{0}' could not be found.</source>
         <target state="new">Source file '{0}' could not be found.</target>

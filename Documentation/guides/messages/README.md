@@ -79,6 +79,7 @@ ms.date: 01/24/2020
 + [XA1007](xa1007.md): The minSdkVersion ({minSdk}) is greater than targetSdkVersion. Please change the value such that minSdkVersion is less than or equal to targetSdkVersion ({targetSdk}).
 + [XA1008](xa1008.md): The TargetFrameworkVersion (Android API level {compileSdk}) is lower than the targetSdkVersion ({targetSdk}).
 + [XA1009](xa1009.md): The {assembly} is Obsolete. Please upgrade to {assembly} {version}
++ [XA1010](xa1010.md): Invalid \`$(AndroidManifestPlaceholders)\` value for Android manifest placeholders. Please use \`key1=value1;key2=value2\` format. The specified value was: `{placeholders}`
 
 ## XA2xxx: Linker
 
