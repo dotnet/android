@@ -5046,15 +5046,15 @@ CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Javax.Cr
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Javax.Crypto.KeyType Javax.Crypto.Cipher.PrivateKey' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Javax.Crypto.KeyType Javax.Crypto.Cipher.PublicKey' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Javax.Crypto.KeyType Javax.Crypto.Cipher.SecretKey' in the contract but not the implementation.
-MembersMustExist : Member 'Android.OS.Parcel.Obtain(System.Int32)' does not exist in the implementation but it does exist in the contract.
-MembersMustExist : Member 'Android.Preferences.PreferenceScreen.OnCreateRootAdapter()' does not exist in the implementation but it does exist in the contract.
-MembersMustExist : Member 'System.String Android.Webkit.CookieSyncManager.Logtag' does not exist in the implementation but it does exist in the contract.
-MembersMustExist : Member 'Android.Webkit.CookieSyncManager.SyncFromRamToFlash()' does not exist in the implementation but it does exist in the contract.
-MembersMustExist : Member 'Java.Net.URL.Set(System.String, System.String, System.Int32, System.String, System.String)' does not exist in the implementation but it does exist in the contract.
-MembersMustExist : Member 'Java.Net.URL.Set(System.String, System.String, System.Int32, System.String, System.String, System.String, System.String, System.String)' does not exist in the implementation but it does exist in the contract.
-MembersMustExist : Member 'Org.Apache.Http.HttpHost.Hostname.get()' does not exist in the implementation but it does exist in the contract.
-MembersMustExist : Member 'Org.Apache.Http.HttpHost.Hostname.set(System.String)' does not exist in the implementation but it does exist in the contract.
-MembersMustExist : Member 'Org.Apache.Http.HttpHost.LcHostname.get()' does not exist in the implementation but it does exist in the contract.
-MembersMustExist : Member 'Org.Apache.Http.HttpHost.LcHostname.set(System.String)' does not exist in the implementation but it does exist in the contract.
-MembersMustExist : Member 'Org.Apache.Http.Params.BasicHttpParams.CopyParams(Org.Apache.Http.Params.IHttpParams)' does not exist in the implementation but it does exist in the contract.
-MembersMustExist : Member 'Org.Apache.Http.Protocol.BasicHttpProcessor.CopyInterceptors(Org.Apache.Http.Protocol.BasicHttpProcessor)' does not exist in the implementation but it does exist in the contract.
+MembersMustExist : Member 'protected Android.OS.Parcel Android.OS.Parcel.Obtain(System.Int32)' does not exist in the implementation but it does exist in the contract.
+MembersMustExist : Member 'protected Android.Widget.IListAdapter Android.Preferences.PreferenceScreen.OnCreateRootAdapter()' does not exist in the implementation but it does exist in the contract.
+MembersMustExist : Member 'protected System.String System.String Android.Webkit.CookieSyncManager.Logtag' does not exist in the implementation but it does exist in the contract.
+MembersMustExist : Member 'protected void Android.Webkit.CookieSyncManager.SyncFromRamToFlash()' does not exist in the implementation but it does exist in the contract.
+MembersMustExist : Member 'protected void Java.Net.URL.Set(System.String, System.String, System.Int32, System.String, System.String)' does not exist in the implementation but it does exist in the contract.
+MembersMustExist : Member 'protected void Java.Net.URL.Set(System.String, System.String, System.Int32, System.String, System.String, System.String, System.String, System.String)' does not exist in the implementation but it does exist in the contract.
+MembersMustExist : Member 'protected System.String Org.Apache.Http.HttpHost.Hostname.get()' does not exist in the implementation but it does exist in the contract.
+MembersMustExist : Member 'protected void Org.Apache.Http.HttpHost.Hostname.set(System.String)' does not exist in the implementation but it does exist in the contract.
+MembersMustExist : Member 'protected System.String Org.Apache.Http.HttpHost.LcHostname.get()' does not exist in the implementation but it does exist in the contract.
+MembersMustExist : Member 'protected void Org.Apache.Http.HttpHost.LcHostname.set(System.String)' does not exist in the implementation but it does exist in the contract.
+MembersMustExist : Member 'protected void Org.Apache.Http.Params.BasicHttpParams.CopyParams(Org.Apache.Http.Params.IHttpParams)' does not exist in the implementation but it does exist in the contract.
+MembersMustExist : Member 'protected void Org.Apache.Http.Protocol.BasicHttpProcessor.CopyInterceptors(Org.Apache.Http.Protocol.BasicHttpProcessor)' does not exist in the implementation but it does exist in the contract.

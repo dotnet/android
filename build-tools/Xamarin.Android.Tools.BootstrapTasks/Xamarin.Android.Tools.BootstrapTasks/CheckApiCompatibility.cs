@@ -147,7 +147,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 					using (var genApiProcess = new Process ()) {
 
 						genApiProcess.StartInfo.FileName = apiCompat;
-						genApiProcess.StartInfo.Arguments = $"\"{contractPathDirectory}\" -i \"{targetImplementationPathDirectory}\" ";
+						genApiProcess.StartInfo.Arguments = $"\"{contractPathDirectory}\" -i \"{targetImplementationPathDirectory}\" --allow-default-interface-methods ";
 
 						// Verify if there is an exclusion list
 						var excludeAttributes = Path.Combine (ApiCompatibilityPath, $"api-compat-exclude-attributes.txt");

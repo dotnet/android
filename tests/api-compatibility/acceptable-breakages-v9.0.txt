@@ -1,5 +1,5 @@
 Compat issues with assembly Mono.Android:
-InterfacesShouldHaveSameMembers : Interface member 'Android.Content.Res.IXmlResourceParser.GetAttributeNamespace(System.Int32)' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'public System.String Android.Content.Res.IXmlResourceParser.GetAttributeNamespace(System.Int32)' is present in the implementation but not in the contract.
 CannotChangeAttribute : Attribute 'Android.Runtime.RegisterAttribute' on 'Android.Database.Sqlite.SQLiteDatabase.Path.get()' changed from '[RegisterAttribute("getPath", "()Ljava/lang/String;", "")]' in the contract to '[RegisterAttribute("getPath", "()Ljava/lang/String;", "GetGetPathHandler")]' in the implementation.
 CannotChangeAttribute : Attribute 'Android.Runtime.IntDefinitionAttribute' on 'Android.Telecom.ConnectionProperties Android.Telecom.ConnectionProperties.IsRtt' changed from '[IntDefinitionAttribute(null, JniField="android/telecom/Connection.PROPERTY_IS_RTT")]' in the contract to '[IntDefinitionAttribute("Android.Telecom.Connection.PropertyIsRtt", JniField="android/telecom/Connection.PROPERTY_IS_RTT")]' in the implementation.
 TypesMustExist : Type 'Android.Telephony.CellIdentityCdma.InterfaceConsts' does not exist in the implementation but it does exist in the contract.
