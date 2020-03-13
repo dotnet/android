@@ -186,6 +186,10 @@ namespace MonoDroid.Generation
 		internal bool NeedsSender =>
 			Methods.Any (m => (m.RetVal.IsVoid && !m.Parameters.HasSender) || (m.IsEventHandlerWithHandledProperty && !m.Parameters.HasSender));
 
+		// If true, we will no longer generate the "interface alternative" legacy classes
+		// used to hold interface constants/static methods before we had C#8
+		public bool NoAlternatives { get; set; }
+
 		protected override bool OnValidate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params, CodeGeneratorContext context)
 		{
 			if (validated)

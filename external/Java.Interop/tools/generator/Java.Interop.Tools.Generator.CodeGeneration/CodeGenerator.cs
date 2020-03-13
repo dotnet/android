@@ -732,6 +732,11 @@ namespace MonoDroid.Generation
 			// in order to maintain backward compatibility.
 			// If we're creating a binding that supports DIM, we remove the XXXConsts class as they've been
 			// [Obsolete:iserror] for a long time, and we add [Obsolete] to the interface "class".
+
+			// Bail if requested we not produce alternative classes for this interface
+			if (@interface.NoAlternatives)
+				return;
+
 			var staticMethods = @interface.Methods.Where (m => m.IsStatic);
 			var should_obsolete = opt.SupportInterfaceConstants && opt.SupportDefaultInterfaceMethods;
 

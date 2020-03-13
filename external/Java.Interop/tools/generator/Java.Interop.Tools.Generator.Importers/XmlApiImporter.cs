@@ -197,6 +197,7 @@ namespace MonoDroid.Generation
 			var iface = new InterfaceGen (CreateGenBaseSupport (pkg, elem, true)) {
 				ArgsType = elem.XGetAttribute ("argsType"),
 				HasManagedName = elem.Attribute ("managedName") != null,
+				NoAlternatives = elem.XGetAttribute ("no-alternatives") == "true",
 				// Only use an explicitly set XML attribute
 				Unnest = elem.XGetAttribute ("unnest") == "true" ? true :
 					 elem.XGetAttribute ("unnest") == "false" ? false :
