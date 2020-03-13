@@ -237,6 +237,7 @@
     <Compile Include="Android.Runtime\XAPeerMembers.cs" />
     <Compile Include="Android.Runtime\XmlPullParserReader.cs" />
     <Compile Include="Android.Runtime\XmlReaderPullParser.cs" />
+    <Compile Include="Android.Telephony\CellInfo.cs" />
     <Compile Include="Android.Telephony\PhoneNumberUtils.cs" />
     <Compile Include="Android.Telephony\TelephonyManager.cs" />
     <Compile Include="Android.Telephony.Mbms\IGroupCallCallback.cs" />
