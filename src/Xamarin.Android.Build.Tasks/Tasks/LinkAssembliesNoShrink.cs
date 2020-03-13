@@ -106,9 +106,9 @@ namespace Xamarin.Android.Tasks
 				return resolver.GetAssembly ("Mono.Android.dll");
 			}
 
-			public override void LogMessage (string message, params object [] values)
+			public override void LogMessage (string message)
 			{
-				logger.LogDebugMessage (message, values);
+				logger.LogDebugMessage ("{0}", message);
 			}
 		}
 	}

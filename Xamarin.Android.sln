@@ -50,6 +50,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "monodroid", "src\monodroid\monodroid.csproj", "{53EE4C57-1C03-405A-8243-8DA539546C88}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.NUnitLite", "src\Xamarin.Android.NUnitLite\Xamarin.Android.NUnitLite.csproj", "{4D603AA3-3BFD-43C8-8050-0CD6C2601126}"
+	ProjectSection(ProjectDependencies) = postProject
+		{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7} = {3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{CAB438D8-B0F5-4AF0-BEBD-9E2ADBD7B483}"
 EndProject
@@ -58,6 +61,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Build.Tests", "src\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Xamarin.Android.Build.Tests.csproj", "{53E4ABF0-1085-45F9-B964-DCAE4B819998}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "System.EnterpriseServices", "src\System.EnterpriseServices\System.EnterpriseServices.csproj", "{2868FC32-A4E7-4008-87C8-2C7879CACB58}"
+	ProjectSection(ProjectDependencies) = postProject
+		{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7} = {3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "unix-distribution-setup", "build-tools\unix-distribution-setup\unix-distribution-setup.csproj", "{2CF172E5-BDAE-4ABA-8BC8-08040ED3E77A}"
 EndProject
@@ -68,6 +74,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "sqlite-xamarin", "src\sqlite-xamarin\sqlite-xamarin.csproj", "{B8F799C5-D7CE-4E09-9CE6-BAA4173E7EC8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenTK", "src\OpenTK-1.0\OpenTK.csproj", "{5EB9E888-E357-417E-9F39-DDEC195CE47F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7} = {3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Cecil", "external\Java.Interop\src\Xamarin.Android.Cecil\Xamarin.Android.Cecil.csproj", "{15945D4B-FF56-4BCC-B598-2718D199DD08}"
 EndProject

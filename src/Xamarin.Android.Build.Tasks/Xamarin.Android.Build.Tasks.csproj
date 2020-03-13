@@ -15,6 +15,7 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <DefineConstants>$(DefineConstants);TRACE;HAVE_CECIL;MSBUILD;ANDROID_24</DefineConstants>
     <AndroidGeneratedClassDirectory Condition=" '$(AndroidGeneratedClassDirectory)' == '' ">..\..\src\Mono.Android\obj\$(Configuration)\android-$(AndroidLatestStableApiLevel)\mcw</AndroidGeneratedClassDirectory>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -170,6 +171,21 @@
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\PreserveDependencyLookupStep.cs">
       <Link>Linker\Linker.Steps\PreserveDependencyLookupStep.cs</Link>
+    </Compile>
+    <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\BodySubstituterStep.cs">
+      <Link>Linker\Linker.Steps\BodySubstituterStep.cs</Link>
+    </Compile>
+    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\IDependencyRecorder.cs">
+      <Link>Linker\Linker\IDependencyRecorder.cs</Link>
+    </Compile>
+    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\IReflectionPatternRecorder.cs">
+      <Link>Linker\Linker\IReflectionPatternRecorder.cs</Link>
+    </Compile>
+    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\LoggingReflectionPatternRecorder.cs">
+      <Link>Linker\Linker\LoggingReflectionPatternRecorder.cs</Link>
+    </Compile>
+    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\XmlDependencyRecorder.cs">
+      <Link>Linker\Linker\XmlDependencyRecorder.cs</Link>
     </Compile>
     <Compile Include="$(LinkerSourceFullPath)\linker\Linker\LoadException.cs">
       <Link>Linker\Linker\LoadException.cs</Link>
