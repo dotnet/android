@@ -10,8 +10,8 @@
   <Import Project="..\..\build-tools\scripts\MSBuildReferences.projitems" />
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.DotNet.ApiCompat" Version="5.0.0-beta.20078.1" IncludeAssets="none" />
-    <PackageReference Include="Microsoft.DotNet.GenAPI" Version="5.0.0-beta.20078.1" />
+    <PackageReference Include="Microsoft.DotNet.ApiCompat" Version="5.0.0-beta.20162.4" IncludeAssets="none" />
+    <PackageReference Include="Microsoft.DotNet.GenAPI" Version="5.0.0-beta.20162.4" />
   </ItemGroup>
 
   <ItemGroup>
