@@ -7,32 +7,28 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using System.Xml.XPath;
+using Xamarin.Android.Tasks;
 
 namespace Monodroid {
 	static class AndroidResource {
 		
 		public static bool UpdateXmlResource (string res, string filename, Dictionary<string, string> acwMap, IEnumerable<string> additionalDirectories = null, Action<TraceLevel, string> logMessage = null, Action<string, string> registerCustomView = null)
 		{
-			// use a temporary file so we only update the real file if things actually changed
-			string tmpfile = filename + ".bk";
 			try {
 				XDocument doc = XDocument.Load (filename, LoadOptions.SetLineInfo);
-				UpdateXmlResource (res, doc.Root, acwMap, additionalDirectories, logMessage, (e) => {
+				UpdateXmlResource (res, doc.Root, acwMap, additionalDirectories, (e) => {
 					registerCustomView?.Invoke (e, filename);
 				});
-				using (var stream = File.OpenWrite (tmpfile))
-				using (var sw = new StreamWriter (stream))
+				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ())
 				using (var xw = new LinePreservedXmlWriter (sw)) {
 					xw.WriteNode (doc.CreateNavigator (), false);
+					xw.Flush ();
+					sw.Flush ();
+					return MonoAndroidHelper.CopyIfStreamChanged (sw.BaseStream, filename);
 				}
-				return Xamarin.Android.Tasks.MonoAndroidHelper.CopyIfChanged (tmpfile, filename);
 			} catch (Exception e) {
 				logMessage?.Invoke (TraceLevel.Warning, string.Format (Xamarin.Android.Tasks.Properties.Resources.XA1001, filename, e.Message));
 				return false;
-			} finally {
-				if (File.Exists (tmpfile)) {
-					File.Delete (tmpfile);
-				}
 			}
 		}
 
@@ -56,7 +52,7 @@ namespace Monodroid {
 			UpdateXmlResource (null, e, acwMap);
 		}
 
-		static void UpdateXmlResource (string resourcesBasePath, XElement e, Dictionary<string, string> acwMap, IEnumerable<string> additionalDirectories = null, Action<TraceLevel, string> logMessage = null, Action<string> registerCustomView = null)
+		static void UpdateXmlResource (string resourcesBasePath, XElement e, Dictionary<string, string> acwMap, IEnumerable<string> additionalDirectories = null, Action<string> registerCustomView = null)
 		{
 			foreach (var elem in GetElements (e).Prepend (e)) {
 				registerCustomView?.Invoke (elem.Name.ToString ());
