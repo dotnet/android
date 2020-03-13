@@ -303,5 +303,65 @@ namespace generatortests
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteNestedInterfaceClass)), writer.ToString ().NormalizeLineEndings ());
 		}
+
+		[Test]
+		public void DontWriteInterfaceConstsClass ()
+		{
+			// If SupportInterfaceConstants is true we no longer write the legacy
+			// XXXXConsts class that has been [Obsolete (iseeror: true)] for a while.
+			options.SupportInterfaceConstants = true;
+
+			var xml = @"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/EmptyOverrideClass;' />
+			  </package>
+			  <package name='com.xamarin.android' jni-name='com/xamarin/android'>
+			    <interface abstract='true' deprecated='not deprecated' final='false' name='Parent' static='false' visibility='public' jni-signature='Lcom/xamarin/android/Parent;'>
+			      <field deprecated='not deprecated' final='true' name='ACCEPT_HANDOVER' jni-signature='Ljava/lang/String;' static='true' transient='false' type='java.lang.String' type-generic-aware='java.lang.String' value='&quot;android.permission.ACCEPT_HANDOVER&quot;' visibility='public' volatile='false'></field>
+			    </interface>
+			  </package>
+			</api>";
+
+			var gens = ParseApiDefinition (xml);
+			var iface = gens.OfType<InterfaceGen> ().Single ();
+
+			iface.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ());
+
+			generator.WriteInterface (iface, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
+
+			Assert.False (writer.ToString ().Contains ("class ParentConsts"));
+		}
+
+		[Test]
+		public void ObsoleteInterfaceAlternativeClass ()
+		{
+			// If SupportInterfaceConstants and SupportDefaultInterfaceMethods is true we want to
+			// [Obsolete] the members of the "interface alternative" class so we can eventually remove it.
+			options.SupportInterfaceConstants = true;
+
+			var xml = @"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/EmptyOverrideClass;' />
+			  </package>
+			  <package name='com.xamarin.android' jni-name='com/xamarin/android'>
+			    <interface abstract='true' deprecated='not deprecated' final='false' name='Parent' static='false' visibility='public' jni-signature='Lcom/xamarin/android/Parent;'>
+			      <field deprecated='not deprecated' final='true' name='ACCEPT_HANDOVER' jni-signature='Ljava/lang/String;' static='true' transient='false' type='java.lang.String' type-generic-aware='java.lang.String' value='&quot;android.permission.ACCEPT_HANDOVER&quot;' visibility='public' volatile='false'></field>
+			      <field deprecated='deprecated' final='true' name='ALREADY_OBSOLETE' jni-signature='Ljava/lang/String;' static='true' transient='false' type='java.lang.String' type-generic-aware='java.lang.String' value='&quot;android.permission.ACCEPT_HANDOVER&quot;' visibility='public' volatile='false'></field>
+			      <field deprecated='not deprecated' final='true' name='API_NAME' jni-signature='Ljava/lang/String;' static='true' transient='false' type='java.lang.String' type-generic-aware='java.lang.String' visibility='public' volatile='false'></field>
+			      <method abstract='false' deprecated='not deprecated' final='false' name='comparing' jni-signature='()I' bridge='false' native='false' return='int' jni-return='I' static='true' synchronized='false' synthetic='false' visibility='public' />
+			      <method abstract='false' deprecated='deprecated' final='false' name='comparingOld' jni-signature='()I' bridge='false' native='false' return='int' jni-return='I' static='true' synchronized='false' synthetic='false' visibility='public' />
+			    </interface>
+			  </package>
+			</api>";
+
+			var gens = ParseApiDefinition (xml);
+			var iface = gens.OfType<InterfaceGen> ().Single ();
+
+			iface.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ());
+
+			generator.WriteInterface (iface, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
+
+			Assert.AreEqual (GetTargetedExpected (nameof (ObsoleteInterfaceAlternativeClass)), writer.ToString ().NormalizeLineEndings ());
+		}
 	}
 }

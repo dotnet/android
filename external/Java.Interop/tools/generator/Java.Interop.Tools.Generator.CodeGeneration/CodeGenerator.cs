@@ -423,6 +423,10 @@ namespace MonoDroid.Generation
 				writer.WriteLine ();
 				writer.WriteLine ("{0}// Metadata.xml XPath field reference: path=\"{1}/field[@name='{2}']\"", indent, type.MetadataXPathReference, field.JavaName);
 				writer.WriteLine ("{0}[Register (\"{1}\"{2})]", indent, field.JavaName, field.AdditionalAttributeString ());
+				if (field.IsDeprecated) {
+					var deprecatedError = field.IsDeprecatedError ? ", error: true" : string.Empty;
+					writer.WriteLine ("{0}[Obsolete (\"{1}\"{2})]", indent, field.DeprecatedComment, deprecatedError);
+				}
 				writer.WriteLine ("{0}{1} {2}{3} {4} {{", indent, field.Visibility, field.IsStatic ? "static " : String.Empty, fieldType, field.Name);
 				writer.WriteLine ("{0}\tget {{", indent);
 				WriteFieldGetBody (field, indent + "\t\t", type);
@@ -726,13 +730,20 @@ namespace MonoDroid.Generation
 			// IMyInterface -> MyInterface
 			// In this case the XXXConsts class is [Obsolete]'d and simply inherits from the newer class
 			// in order to maintain backward compatibility.
+			// If we're creating a binding that supports DIM, we remove the XXXConsts class as they've been
+			// [Obsolete:iserror] for a long time, and we add [Obsolete] to the interface "class".
 			var staticMethods = @interface.Methods.Where (m => m.IsStatic);
+			var should_obsolete = opt.SupportInterfaceConstants && opt.SupportDefaultInterfaceMethods;
 
 			if (@interface.Fields.Any () || staticMethods.Any ()) {
 				string name = @interface.HasManagedName
 					? @interface.Name.Substring (1) + "Consts"
 					: @interface.Name.Substring (1);
 				writer.WriteLine ("{0}[Register (\"{1}\"{2}, DoNotGenerateAcw=true)]", indent, @interface.RawJniName, @interface.AdditionalAttributeString ());
+
+				if (should_obsolete)
+					writer.WriteLine ("{0}[global::System.Obsolete (\"Use the '{1}' type. This class will be removed in a future release.\")]", indent, @interface.FullName);
+
 				writer.WriteLine ("{0}public abstract class {1} : Java.Lang.Object {{", indent, name);
 				writer.WriteLine ();
 				writer.WriteLine ("{0}\tinternal {1} ()", indent, name);
@@ -740,16 +751,30 @@ namespace MonoDroid.Generation
 				writer.WriteLine ("{0}\t}}", indent);
 
 				var seen = new HashSet<string> ();
+
+				var original_fields = DeprecateFields (@interface, should_obsolete);
 				bool needsClassRef = WriteFields (@interface.Fields, indent + "\t", @interface, seen) || staticMethods.Any ();
+				RestoreDeprecatedFields (original_fields);
+
 				foreach (var iface in @interface.GetAllImplementedInterfaces ().OfType<InterfaceGen> ()) {
 					writer.WriteLine ();
 					writer.WriteLine ("{0}\t// The following are fields from: {1}", indent, iface.JavaName);
+					original_fields = DeprecateFields (iface, should_obsolete);
 					bool v = WriteFields (iface.Fields, indent + "\t", iface, seen);
+					RestoreDeprecatedFields (original_fields);
 					needsClassRef = needsClassRef || v;
 				}
 
-				foreach (var m in @interface.Methods.Where (m => m.IsStatic))
+				foreach (var m in @interface.Methods.Where (m => m.IsStatic)) {
+					var original = m.Deprecated;
+
+					if (should_obsolete && string.IsNullOrWhiteSpace (m.Deprecated))
+						m.Deprecated = $"Use '{@interface.FullName}.{m.AdjustedName}'. This class will be removed in a future release.";
+
 					WriteMethod (m, indent + "\t", @interface, true);
+
+					m.Deprecated = original;
+				}
 
 				if (needsClassRef) {
 					writer.WriteLine ();
@@ -759,7 +784,7 @@ namespace MonoDroid.Generation
 				writer.WriteLine ("{0}}}", indent, @interface.Name);
 				writer.WriteLine ();
 
-				if (!@interface.HasManagedName) {
+				if (!@interface.HasManagedName && !opt.SupportInterfaceConstants) {
 					writer.WriteLine ("{0}[Register (\"{1}\"{2}, DoNotGenerateAcw=true)]", indent, @interface.RawJniName, @interface.AdditionalAttributeString ());
 					writer.WriteLine ("{0}[global::System.Obsolete (\"Use the '{1}' type. This type will be removed in a future release.\", error: true)]", indent, name);
 					writer.WriteLine ("{0}public abstract class {1}Consts : {1} {{", indent, name);
@@ -770,6 +795,32 @@ namespace MonoDroid.Generation
 					writer.WriteLine ("{0}}}", indent);
 					writer.WriteLine ();
 				}
+			}
+		}
+
+		List<(Field field, bool deprecated, string comment)> DeprecateFields (InterfaceGen iface, bool shouldObsolete)
+		{
+			var original_fields = iface.Fields.Select (f => (f, f.IsDeprecated, f.DeprecatedComment)).ToList ();
+
+			if (!shouldObsolete)
+				return original_fields;
+
+			foreach (var f in iface.Fields) {
+				// Only use this derprecation if it's not already deprecated for another reason
+				if (!f.IsDeprecated) {
+					f.IsDeprecated = true;
+					f.DeprecatedComment = $"Use '{iface.FullName}.{f.Name}'. This class will be removed in a future release."; ;
+				}
+			}
+
+			return original_fields;
+		}
+
+		void RestoreDeprecatedFields (List<(Field field, bool deprecated, string comment)> fields)
+		{
+			foreach (var tuple in fields) {
+				tuple.field.IsDeprecated = tuple.deprecated;
+				tuple.field.DeprecatedComment = tuple.comment;
 			}
 		}
 
