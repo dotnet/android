@@ -27,6 +27,7 @@
 //
 
 using System;
+using System.Reflection;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -236,6 +237,18 @@ namespace Xamarin.Android.NetTests {
 			return Exceptions (e).Any (v => (v as WebException)?.Status == WebExceptionStatus.SecureChannelFailure);
 		}
 
+		static Type GetInnerHandlerType (HttpClient httpClient)
+		{
+			BindingFlags bflasgs = BindingFlags.Instance | BindingFlags.NonPublic;
+			FieldInfo handlerField = typeof (HttpMessageInvoker).GetField("_handler", bflasgs);
+			Assert.IsNotNull (handlerField);
+			object handler = handlerField.GetValue (httpClient);
+			FieldInfo innerHandlerField = handler.GetType ().GetField ("_delegatingHandler", bflasgs);
+			Assert.IsNotNull (handlerField);
+			object innerHandler = innerHandlerField.GetValue (handler);
+			return innerHandler.GetType ();
+		}
+
 		[Test]
 		public void Sanity_Tls_1_2_Url_WithMonoClientHandlerFails ()
 		{
@@ -243,6 +256,10 @@ namespace Xamarin.Android.NetTests {
 			var supportTls1_2 = tlsProvider.Equals ("btls", StringComparison.OrdinalIgnoreCase);
 			using (var c = new HttpClient (new HttpClientHandler ())) {
 				try {
+					Assert.AreEqual ("SocketsHttpHandler", GetInnerHandlerType (c).Name, 
+						"Underlying HttpClientHandler is expected to use SocketsHttpHandler by default. " + 
+						"XA_HTTP_CLIENT_HANDLER_TYPE=" + global::System.Environment.GetEnvironmentVariable ("XA_HTTP_CLIENT_HANDLER_TYPE"));
+
 					var tr = ConnectIgnoreFailure (() => c.GetAsync (Tls_1_2_Url), out bool connectionFailed);
 					if (connectionFailed)
 						return;

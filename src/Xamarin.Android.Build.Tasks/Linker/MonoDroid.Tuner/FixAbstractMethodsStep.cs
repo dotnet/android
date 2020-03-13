@@ -32,7 +32,7 @@ namespace MonoDroid.Tuner
 			if (IsProductOrSdkAssembly (assembly))
 				return;
 
-			CheckAppDomainUsageUnconditional (assembly, (string msg) => Context.Logger.LogMessage (MessageImportance.High, msg));
+			CheckAppDomainUsageUnconditional (assembly, (string msg) => Context.LogMessage (MessageImportance.High, msg));
 
 			if (FixAbstractMethodsUnconditional (assembly)) {
 				Context.SafeReadSymbols (assembly);
@@ -209,7 +209,7 @@ namespace MonoDroid.Tuner
 				var iface    = ifaceInfo.InterfaceType;
 				var ifaceDef = iface.Resolve ();
 				if (ifaceDef == null) {
-					LogMessage ("Unable to unresolve interface: {0}", iface.FullName);
+					LogMessage ($"Unable to unresolve interface: {iface.FullName}");
 					continue;
 				}
 				if (ifaceDef.HasGenericParameters)
@@ -257,7 +257,7 @@ namespace MonoDroid.Tuner
 
 			type.Methods.Add (newMethod);
 
-			LogMessage ("Added method: {0} to type: {1} scope: {2}", method, type.FullName, type.Scope);
+			LogMessage ($"Added method: {method} to type: {type.FullName} scope: {type.Scope}");
 		}
 
 		MethodReference abstractMethodErrorConstructor;
@@ -287,9 +287,9 @@ namespace MonoDroid.Tuner
 			}
 		}
 
-		public virtual void LogMessage (string message, params object [] values)
+		public virtual void LogMessage (string message)
 		{
-			Context.LogMessage (message, values);
+			Context.LogMessage (message);
 		}
 
 		protected virtual AssemblyDefinition GetMonoAndroidAssembly ()
