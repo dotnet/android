@@ -902,6 +902,22 @@ stages:
 
     - template: designer/android-designer-tests.yaml@yaml
 
+    - task: CopyFiles@2
+      displayName: 'Copy binlogs'
+      inputs:
+        sourceFolder: Xamarin.Designer.Android
+        contents: '**/*.binlog'
+        targetFolder: $(Build.ArtifactStagingDirectory)/designer-binlogs
+        overWrite: true
+        flattenFolders: true
+      condition: always()
+
+    - task: PublishPipelineArtifact@1
+      displayName: upload designer binlogs
+      inputs:
+        artifactName: Test Results - Designer - macOS
+        targetPath: $(Build.ArtifactStagingDirectory)/designer-binlogs
+
   # Check - "Xamarin.Android (Test Designer Windows)"
   - job: designer_integration_win
     displayName: Designer - Windows
@@ -948,6 +964,22 @@ stages:
     - template: designer\android-designer-build-win.yaml@yaml
 
     - template: designer\android-designer-tests.yaml@yaml
+
+    - task: CopyFiles@2
+      displayName: 'Copy binlogs'
+      inputs:
+        sourceFolder: Xamarin.Designer.Android
+        contents: '**/*.binlog'
+        targetFolder: $(Build.ArtifactStagingDirectory)/designer-binlogs
+        overWrite: true
+        flattenFolders: true
+      condition: always()
+
+    - task: PublishPipelineArtifact@1
+      displayName: upload designer binlogs
+      inputs:
+        artifactName: Test Results - Designer - Windows
+        targetPath: $(Build.ArtifactStagingDirectory)/designer-binlogs
 
 - stage: integrated_regression_test
   displayName: Regression Tests
