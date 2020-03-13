@@ -191,7 +191,7 @@
       Outputs="$(IntermediateOutputPath)CheckApiCompatibility.stamp">
     <CheckApiCompatibility
         ContinueOnError="ErrorAndContinue"
-        ApiCompatPath="$(XAPackagesDir)\microsoft.dotnet.apicompat\5.0.0-beta.20078.1\tools\net472\"
+        ApiCompatPath="$(XAPackagesDir)\microsoft.dotnet.apicompat\5.0.0-beta.20162.4\tools\net472\"
         ApiLevel="$(AndroidFrameworkVersion)"
         LastStableApiLevel="$(AndroidLatestStableFrameworkVersion)"
         TargetImplementationPath="$(OutputPath)"
@@ -199,7 +199,7 @@
     />
     <PropertyGroup>
       <_RunApiDiff Condition=" '$(MSBuildLastTaskResult)' == 'False' ">True</_RunApiDiff>
-      <_GenAPI>"$(XAPackagesDir)\microsoft.dotnet.genapi\5.0.0-beta.20078.1\tools\net472\Microsoft.DotNet.GenAPI.exe"</_GenAPI>
+      <_GenAPI>"$(XAPackagesDir)\microsoft.dotnet.genapi\5.0.0-beta.20162.4\tools\net472\Microsoft.DotNet.GenAPI.exe"</_GenAPI>
       <_ContractRefSrc>"$(ApiCompatibilityDir)\reference\Mono.Android.dll.cs"</_ContractRefSrc>
       <_TargetRefSrc>"$(TargetPath).cs"</_TargetRefSrc>
     </PropertyGroup>
