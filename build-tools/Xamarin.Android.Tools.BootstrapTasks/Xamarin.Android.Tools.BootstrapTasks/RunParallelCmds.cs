@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Text;
 using System.Diagnostics;
 
@@ -39,19 +40,23 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 							StringBuilder standardOutput = new StringBuilder (), errorOutput = new StringBuilder ();
 
 							proc.StartInfo.FileName = useManagedRuntime ? ManagedRuntime : command;
-							proc.StartInfo.Arguments = $"{argumentsBeginning}{cmd.GetMetadata ("Arguments")}";
+							proc.StartInfo.Arguments = $"{argumentsBeginning}{cmd.GetMetadata ("Arguments")}".Replace ('\\', Path.DirectorySeparatorChar);
 							proc.StartInfo.CreateNoWindow = true;
 							proc.StartInfo.UseShellExecute = false;
 							proc.StartInfo.RedirectStandardOutput = true;
 							proc.StartInfo.RedirectStandardError = true;
 
+							var wd = cmd.GetMetadata ("WorkingDirectory");
+							if (!string.IsNullOrEmpty (wd))
+								proc.StartInfo.WorkingDirectory = wd;
+
 							proc.OutputDataReceived += new DataReceivedEventHandler ((sender, e) => {
 								if (!string.IsNullOrEmpty (e.Data))
-									standardOutput.Append (e.Data);
+									standardOutput.Append (Environment.NewLine + e.Data);
 							});
 							proc.ErrorDataReceived += new DataReceivedEventHandler ((sender, e) => {
 								if (!string.IsNullOrEmpty (e.Data))
-									errorOutput.Append (e.Data);
+									errorOutput.Append (Environment.NewLine + e.Data);
 							});
 
 							proc.Start ();
