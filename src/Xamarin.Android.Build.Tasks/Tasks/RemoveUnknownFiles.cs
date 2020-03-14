@@ -48,7 +48,7 @@ namespace Xamarin.Android.Tasks
 					Log.LogDebugMessage ("Deleting File {0}", f);
 					var item = new TaskItem (f.Replace (absDir, "res" + Path.DirectorySeparatorChar));
 					removedFiles.Add (item);
-					MonoAndroidHelper.SetWriteable (f);
+					Tools.Files.SetWriteableUnchecked (f);
 					File.Delete (f);
 				}
 			
@@ -60,7 +60,7 @@ namespace Xamarin.Android.Tasks
 					if (!knownDirs.Contains (d) && IsDirectoryEmpty (d)) {
 						Log.LogDebugMessage ("Deleting Directory {0}", d);
 						removedDirectories.Add (new TaskItem(d));
-						MonoAndroidHelper.SetDirectoryWriteable (d);
+						Tools.Files.SetDirectoryWriteable (d);
 						System.IO.Directory.Delete (d);
 					}
 			}

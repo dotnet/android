@@ -4,10 +4,10 @@ using System;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Monodroid;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
@@ -99,7 +99,7 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 				Log.LogDebugMessage ("  Processing: {0}   {1} > {2}", file, srcmodifiedDate, lastUpdate);
-				MonoAndroidHelper.SetWriteable (file);
+				Files.SetWriteableUnchecked (file);
 				bool success = AndroidResource.UpdateXmlResource (resdir, file, acwMap,
 					resourcedirectories, (level, message) => {
 						switch (level) {

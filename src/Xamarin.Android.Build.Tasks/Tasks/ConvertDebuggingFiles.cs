@@ -28,7 +28,7 @@ namespace Xamarin.Android.Tasks
 					continue;
 
 				try {
-					MonoAndroidHelper.SetWriteable (pdb);
+					Tools.Files.SetWriteableUnchecked (pdb);
 					Converter.Convert (Path.ChangeExtension (pdb, ".dll"));
 					convertedFiles.Add (new TaskItem (Path.ChangeExtension (pdb, ".dll")));
 				} catch (Exception ex) {

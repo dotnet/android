@@ -361,36 +361,6 @@ namespace Xamarin.Android.Tasks
 			return false;
 		}
 
-		public static void SetWriteable (string source)
-		{
-			if (!File.Exists (source))
-				return;
-
-			var fileInfo = new FileInfo (source);
-			if (fileInfo.IsReadOnly)
-				fileInfo.IsReadOnly = false;
-		}
-
-		public static void SetDirectoryWriteable (string directory)
-		{
-			if (!Directory.Exists (directory))
-				return;
-
-			var dirInfo = new DirectoryInfo (directory);
-			if ((dirInfo.Attributes | FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
-				dirInfo.Attributes &= ~FileAttributes.ReadOnly;
-
-			foreach (var dir in Directory.EnumerateDirectories (directory, "*", SearchOption.AllDirectories)) {
-				dirInfo = new DirectoryInfo (dir);
-				if ((dirInfo.Attributes | FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
-					dirInfo.Attributes &= ~FileAttributes.ReadOnly;
-			}
-
-			foreach (var file in Directory.EnumerateFiles (directory, "*", SearchOption.AllDirectories)) {
-				SetWriteable (Path.GetFullPath (file));
-			}
-		}
-
 		public static bool CopyAssemblyAndSymbols (string source, string destination)
 		{
 			bool changed = CopyIfChanged (source, destination);
@@ -477,11 +447,6 @@ namespace Xamarin.Android.Tasks
 			return Files.HashBytes (bytes);
 		}
 
-		public static bool HasFileChanged (string source, string destination)
-		{
-			return Files.HasFileChanged (source, destination);
-		}
-
 		/// <summary>
 		/// Open a file given its path and remove the 3 bytes UTF-8 BOM if there is one
 		/// </summary>
@@ -507,7 +472,7 @@ namespace Xamarin.Android.Tasks
 						input.CopyTo (stream);
 				}
 
-				SetWriteable (filePath);
+				Files.SetWriteableUnchecked (filePath);
 				File.Delete (filePath);
 				File.Copy (temp, filePath);
 			} finally {

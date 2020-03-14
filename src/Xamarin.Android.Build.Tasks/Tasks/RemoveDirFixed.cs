@@ -55,7 +55,7 @@ namespace Xamarin.Android.Tasks
 					// if that fails we probably have readonly files (or locked files)
 					// so try to make them writable and try again.
 					try {
-						MonoAndroidHelper.SetDirectoryWriteable (fullPath);
+						Files.SetDirectoryWriteable (fullPath);
 						Directory.Delete (fullPath, true);
 						temporaryRemovedDirectories.Add (directory);
 					} catch (Exception inner) {

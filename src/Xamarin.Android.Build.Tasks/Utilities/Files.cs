@@ -80,6 +80,38 @@ namespace Xamarin.Android.Tools
 			return changed;
 		}
 
+		/// <summary>
+		/// NOTE: assumes the file exists, will throw FileNotFoundExcpetion.
+		/// </summary>
+		public static void SetWriteableUnchecked (string source)
+		{
+			var fromAttr = File.GetAttributes (source);
+			var toAttr = fromAttr & ~FileAttributes.ReadOnly;
+			if (fromAttr != toAttr) {
+				File.SetAttributes (source, toAttr);
+			}
+		}
+
+		public static void SetDirectoryWriteable (string directory)
+		{
+			var root = new DirectoryInfo (directory);
+			if (!root.Exists)
+				return;
+			SetWriteable (root);
+
+			foreach (FileSystemInfo child in root.EnumerateFileSystemInfos ("*", SearchOption.AllDirectories)) {
+				SetWriteable (child);
+			}
+		}
+
+		static void SetWriteable (FileSystemInfo info)
+		{
+			var fromAttr = info.Attributes;
+			var toAttr = fromAttr & ~FileAttributes.ReadOnly;
+			if (fromAttr != toAttr)
+				info.Attributes = toAttr;
+		}
+
 		public static bool CopyIfChanged (string source, string destination)
 		{
 			if (HasFileChanged (source, destination)) {
@@ -88,10 +120,12 @@ namespace Xamarin.Android.Tools
 					Directory.CreateDirectory (directory);
 
 				if (!Directory.Exists (source)) {
-					MonoAndroidHelper.SetWriteable (destination);
-					File.Delete (destination);
+					if (File.Exists (destination)) {
+						SetWriteableUnchecked (destination);
+						File.Delete (destination);
+					}
 					File.Copy (source, destination);
-					MonoAndroidHelper.SetWriteable (destination);
+					SetWriteableUnchecked (destination);
 					File.SetLastWriteTimeUtc (destination, DateTime.UtcNow);
 					return true;
 				}
@@ -114,8 +148,10 @@ namespace Xamarin.Android.Tools
 				if (!string.IsNullOrEmpty (directory))
 					Directory.CreateDirectory (directory);
 
-				MonoAndroidHelper.SetWriteable (destination);
-				File.Delete (destination);
+				if (File.Exists (destination)) {
+					SetWriteableUnchecked (destination);
+					File.Delete (destination);
+				}
 				File.WriteAllBytes (destination, bytes);
 				return true;
 			}
@@ -129,8 +165,10 @@ namespace Xamarin.Android.Tools
 				if (!string.IsNullOrEmpty (directory))
 					Directory.CreateDirectory (directory);
 
-				MonoAndroidHelper.SetWriteable (destination);
-				File.Delete (destination);
+				if (File.Exists (destination)) {
+					SetWriteableUnchecked (destination);
+					File.Delete (destination);
+				}
 				using (var fileStream = File.Create (destination)) {
 					stream.Position = 0; //HasStreamChanged read to the end
 					stream.CopyTo (fileStream);
@@ -179,7 +217,7 @@ namespace Xamarin.Android.Tools
 			return false;
 		}
 
-		public static bool HasZipChanged (Stream source, string destination, out string hash)
+		static bool HasZipChanged (Stream source, string destination, out string hash)
 		{
 			hash = null;
 
@@ -196,7 +234,7 @@ namespace Xamarin.Android.Tools
 			return src_hash != dst_hash;
 		}
 
-		public static bool HasZipChanged (string source, string destination, out string hash)
+		static bool HasZipChanged (string source, string destination, out string hash)
 		{
 			hash = null;
 			if (!File.Exists (source))
@@ -218,10 +256,10 @@ namespace Xamarin.Android.Tools
 		// This is for if the file contents have changed.  Often we have to
 		// regenerate a file, but we don't want to update it if hasn't changed
 		// so that incremental build is as efficient as possible
-		public static bool HasFileChanged (string source, string destination)
+		static bool HasFileChanged (string source, string destination)
 		{
-			// If either are missing, that's definitely a change
-			if (!File.Exists (source) || !File.Exists (destination))
+			//If destination is missing, that's definitely a change
+			if (!File.Exists (destination))
 				return true;
 
 			var src_hash = HashFile (source);
@@ -234,7 +272,7 @@ namespace Xamarin.Android.Tools
 			return false;
 		}
 
-		public static bool HasStreamChanged (Stream source, string destination)
+		static bool HasStreamChanged (Stream source, string destination)
 		{
 			//If destination is missing, that's definitely a change
 			if (!File.Exists (destination))
@@ -250,7 +288,7 @@ namespace Xamarin.Android.Tools
 			return false;
 		}
 
-		public static bool HasBytesChanged (byte [] bytes, string destination)
+		static bool HasBytesChanged (byte [] bytes, string destination)
 		{
 			//If destination is missing, that's definitely a change
 			if (!File.Exists (destination))
@@ -339,7 +377,7 @@ namespace Xamarin.Android.Tools
 					memoryStream.SetLength (0); //Reuse the stream
 					entry.Extract (memoryStream);
 					try {
-						updated |= MonoAndroidHelper.CopyIfStreamChanged (memoryStream, outfile);
+						updated |= CopyIfStreamChanged (memoryStream, outfile);
 					} catch (PathTooLongException) {
 						throw new PathTooLongException ($"Could not extract \"{fullName}\" to \"{outfile}\". Path is too long.");
 					}

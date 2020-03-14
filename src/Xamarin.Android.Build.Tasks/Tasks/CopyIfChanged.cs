@@ -6,7 +6,7 @@ using System.IO;
 using System.Text;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using System.Security.Cryptography;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
@@ -45,9 +45,9 @@ namespace Xamarin.Android.Tasks
 					Log.LogDebugMessage ($"  Skipping {src} it is up to date");
 					continue;
 				}
-				if (!MonoAndroidHelper.CopyIfChanged (src.FullName, dest.FullName)) {
+				if (!Files.CopyIfChanged (src.FullName, dest.FullName)) {
 					Log.LogDebugMessage ($"  Skipping {src} it was not changed.");
-					MonoAndroidHelper.SetWriteable (dest.FullName);
+					Files.SetWriteableUnchecked (dest.FullName);
 					continue;
 				}
 				modifiedFiles.Add (new TaskItem (dest.FullName));
