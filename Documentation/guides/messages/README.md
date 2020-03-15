@@ -228,7 +228,6 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `LWF` - `LogWarningsForFiles`
 * `MBN` - `MakeBundleNativeCodeExternal`
 * `MDC` - `MDoc`
-* `MER` - `MergeResources`
 * `PAI` - `PrepareAbiItems`
 * `PAW` - `ParseAndroidWearProjectAndManifest`
 * `PRO` - `Proguard`
