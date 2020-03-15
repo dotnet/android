@@ -24,7 +24,7 @@ namespace Xamarin.Android.Prepare
 			}
 		}
 
-        partial void AddUnixPostBuildSteps (Context context, List<GeneratedFile> steps)
+		partial void AddUnixPostBuildSteps (Context context, List<GeneratedFile> steps)
 		{
 			steps.Add (new GeneratedMakeRulesFile (Path.Combine (Configurables.Paths.BuildBinDir, "rules.mk")));
 			steps.Add (new GeneratedConfigurationFile (Path.Combine (Configurables.Paths.BinDirRoot, "configuration.mk")));
