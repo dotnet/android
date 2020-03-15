@@ -38,6 +38,11 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (contents, File.ReadAllText (fullPath), $"Contents did not match at path: {path}");
 		}
 
+		void AssertFileDoesNotExist (string path)
+		{
+			FileAssert.DoesNotExist (Path.Combine (tempDir, path));
+		}
+
 		bool ExtractAll (MemoryStream stream)
 		{
 			using (var zip = ZipArchive.Open (stream)) {
@@ -370,6 +375,24 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			AssertFile ("a.txt", "a");
+			AssertFile (Path.Combine ("b", "b.txt"), "b");
+		}
+
+		[Test]
+		public void ExtractAll_SkipCallback ()
+		{
+			using (var zip = ZipArchive.Create (stream)) {
+				zip.AddEntry ("a.txt", "a", encoding);
+				zip.AddEntry ("b/b.txt", "b", encoding);
+			}
+
+			stream.Position = 0;
+			using (var zip = ZipArchive.Open (stream)) {
+				bool changes = Files.ExtractAll (zip, tempDir, skipCallback: e => e == "a.txt");
+				Assert.IsTrue (changes, "ExtractAll should report changes.");
+			}
+
+			AssertFileDoesNotExist ("a.txt");
 			AssertFile (Path.Combine ("b", "b.txt"), "b");
 		}
 
