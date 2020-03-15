@@ -685,6 +685,21 @@ when packaging Release applications.
 
   [manifest-merger]: https://developer.android.com/studio/build/manifest-merge
 
+- **AndroidManifestPlaceholders** &ndash; A semicolon-separated list of
+  key-value replacement pairs for *AndroidManifest.xml*, where each pair
+  has the format `key=value`.
+
+  For example, a property value of `assemblyName=$(AssemblyName)`
+  defines an `${assemblyName}` placeholder that can then appear in
+  *AndroidManifest.xml*:
+
+  ```xml
+  <application android:label="${assemblyName}"
+  ```
+
+  This provides a way to insert variables from the build process into
+  the *AndroidManifest.xml* file.
+
 - **AndroidMultiDexClassListExtraArgs** &ndash; A string property
   which allows developers to pass additional arguments to the
   `com.android.multidex.MainDexListBuilder` when generating the

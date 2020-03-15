@@ -86,7 +86,7 @@ namespace Xamarin.Android.Tasks
 						sb.AppendLine ("--placeholder");
 						sb.AppendLine ($"{entry [0]}={entry [1]}");
 					} else
-						Log.LogWarning ("Invalid application placeholders (AndroidApplicationPlaceholders) value. Use 'key1=value1;key2=value2, ...' format. The specified value was: " + ManifestPlaceholders);
+						Log.LogCodedWarning ("XA1010", string.Format (Properties.Resources.XA1010, string.Join (";", ManifestPlaceholders)));
 				}
 			}
 			sb.AppendLine ("--out");

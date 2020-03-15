@@ -283,7 +283,7 @@ namespace Xamarin.Android.Tasks
 				return string.Empty;
 			}
 			manifest.ApplicationName = ApplicationName;
-			manifest.Save (LogWarning, manifestFile);
+			manifest.Save (LogCodedWarning, manifestFile);
 
 			cmd.AppendSwitchIfNotNull ("-M ", manifestFile);
 			var designerDirectory = Path.IsPathRooted (JavaDesignerOutputDirectory) ? JavaDesignerOutputDirectory : Path.Combine (WorkingDirectory, JavaDesignerOutputDirectory);

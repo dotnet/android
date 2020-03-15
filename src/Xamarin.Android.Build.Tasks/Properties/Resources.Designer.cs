@@ -403,6 +403,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid `$(AndroidManifestPlaceholders)` value for Android manifest placeholders. Please use `key1=value1;key2=value2` format. The specified value was: `{0}`.
+        /// </summary>
+        internal static string XA1010 {
+            get {
+                return ResourceManager.GetString("XA1010", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Source file &apos;{0}&apos; could not be found..
         /// </summary>
         internal static string XA2001 {

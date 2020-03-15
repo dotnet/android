@@ -125,7 +125,7 @@ namespace Xamarin.Android.Tasks {
 				return string.Empty;
 			}
 			manifest.ApplicationName = ApplicationName;
-			manifest.Save (LogWarning, manifestFile);
+			manifest.Save (LogCodedWarning, manifestFile);
 
 			cmd.AppendSwitchIfNotNull ("--manifest ", manifestFile);
 			if (!string.IsNullOrEmpty (JavaDesignerOutputDirectory)) {
