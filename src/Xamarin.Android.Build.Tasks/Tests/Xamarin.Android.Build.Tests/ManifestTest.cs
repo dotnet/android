@@ -476,6 +476,32 @@ namespace Bug12935
 		}
 
 		[Test]
+		public void ManifestPlaceHoldersXA1010 ([Values ("legacy", "manifestmerger.jar")] string manifestMerger)
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				ManifestMerger = manifestMerger
+			};
+			proj.AndroidManifest = proj.AndroidManifest.Replace ("application android:label=\"${PROJECT_NAME}\"", "application android:label=\"${ph1}\" x='${ph2}' ");
+			proj.SetProperty ("AndroidManifestPlaceholders", "ph2=a=b\\c;ph1");
+			using (var builder = CreateApkBuilder ()) {
+				IEnumerable<string> messages;
+				if (string.CompareOrdinal (manifestMerger, "legacy") == 0) {
+					Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+					messages = builder.LastBuildOutput.SkipWhile (x => !x.StartsWith ("Build succeeded."));
+				}
+				else {
+					builder.ThrowOnBuildFailure = false;
+					Assert.IsFalse (builder.Build (proj), "Build should have failed.");
+					messages = builder.LastBuildOutput.SkipWhile (x => !x.StartsWith ("Build FAILED."));
+				}
+				string warning = messages.FirstOrDefault (x => x.Contains ("warning XA1010:"));
+				Assert.IsNotNull (warning, "Warning should be XA1010");
+				StringAssert.Contains ("AndroidManifestPlaceholders", warning, "Warning should mention AndroidManifestPlaceholders");
+				StringAssert.Contains ("ph1", warning, "Warning should mention invalid placeholder");
+			}
+		}
+
+		[Test]
 		[TestCaseSource (nameof (DebuggerAttributeCases))]
 		public void DebuggerAttribute (string debugType, bool isRelease, bool expected)
 		{
