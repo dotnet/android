@@ -2331,6 +2331,9 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 			var proj = new XamarinAndroidApplicationProject () {
 				OtherBuildItems = {
 					aar,
+					new AndroidItem.AndroidAarLibrary ("fragment-1.2.2.aar") {
+						WebContent = "https://maven.google.com/androidx/fragment/fragment/1.2.2/fragment-1.2.2.aar"
+					}
 				},
 			};
 			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
@@ -2344,8 +2347,8 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 				foreach (var s in File.ReadLines (assemblyMap)) {
 					assemblyIdentityMap.Add (s);
 				}
-				FileAssert.Exists (Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "lp",
-					assemblyIdentityMap.IndexOf ("android-crop-1.0.1").ToString (), "jl", "classes.jar"),
+				var libraryProjects = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "lp");
+				FileAssert.Exists (Path.Combine (libraryProjects, assemblyIdentityMap.IndexOf ("android-crop-1.0.1").ToString (), "jl", "classes.jar"),
 					"classes.jar was not extracted from the aar.");
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
 				Assert.IsTrue (builder.Output.IsTargetSkipped ("_ResolveLibraryProjectImports"),
@@ -2365,13 +2368,15 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 
 				//NOTE: the designer requires the paths to be full paths
 				foreach (var paths in doc.Elements ("Paths")) {
-					foreach (var element in paths.Elements ()) {
+					foreach (var element in paths.Elements ("Path")) {
 						var path = element.Value;
 						if (!string.IsNullOrEmpty (path)) {
 							Assert.IsTrue (path == Path.GetFullPath (path), $"`{path}` is not a full path!");
 						}
 					}
 				}
+				Assert.IsFalse (Directory.EnumerateFiles (libraryProjects, "lint.jar", SearchOption.AllDirectories).Any (),
+					"`lint.jar` should not be extracted!");
 			}
 		}
 
