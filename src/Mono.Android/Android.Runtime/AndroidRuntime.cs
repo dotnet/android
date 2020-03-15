@@ -364,9 +364,6 @@ namespace Android.Runtime {
 
 		public override void RegisterNativeMembers (JniType nativeClass, Type type, string methods)
 		{
-			if (type.IsGenericTypeDefinition) {
-				return;
-			}
 			if (FastRegisterNativeMembers (nativeClass, type, methods))
 				return;
 
