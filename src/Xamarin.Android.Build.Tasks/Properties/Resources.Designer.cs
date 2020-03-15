@@ -124,6 +124,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Could not find mono.android.jar.
+        /// </summary>
+        internal static string XA0002 {
+            get {
+                return ResourceManager.GetString("XA0002", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid `android:versionCode` value `{0}` in `AndroidManifest.xml`. It must be an integer value..
         /// </summary>
         internal static string XA0003 {
@@ -831,6 +840,15 @@ namespace Xamarin.Android.Tasks.Properties {
         internal static string XA5207_SDK_Manager_Windows {
             get {
                 return ResourceManager.GetString("XA5207_SDK_Manager_Windows", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Embedded Wear app package name differs from handheld app package name ({0} != {1})..
+        /// </summary>
+        internal static string XA5211 {
+            get {
+                return ResourceManager.GetString("XA5211", resourceCulture);
             }
         }
         

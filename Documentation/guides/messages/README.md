@@ -126,6 +126,7 @@ ms.date: 01/24/2020
 + XA5201: NDK linker exited with an error. Exit code {0}
 + [XA5205](xa5205.md): Cannot find `{ToolName}` in the Android SDK.
 + [XA5207](xa5207.md): Could not find android.jar for API level `{compileSdk}`.
++ XA5211: Embedded Wear app package name differs from handheld app package name ({wearPackageName} != {handheldPackageName}).
 + XA5213: java.lang.OutOfMemoryError. Consider increasing the value of $(JavaMaximumHeapSize). Java ran out of memory while executing '{tool} {arguments}'
 + [XA5300](xa5300.md): The Android/Java SDK Directory could not be found.
 + [XA5301](xa5301.md): Failed to generate Java type for class: {managedType} due to MAX_PATH: {exception}

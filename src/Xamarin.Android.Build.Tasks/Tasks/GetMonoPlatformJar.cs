@@ -34,7 +34,7 @@ namespace Xamarin.Android.Tasks
 					return true;
 				}
 
-			Log.LogError ("Could not find mono.android.jar");
+			Log.LogCodedError ("XA0002", "Could not find mono.android.jar");
 
 			return false;
 		}

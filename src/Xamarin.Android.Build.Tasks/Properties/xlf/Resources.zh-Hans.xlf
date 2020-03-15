@@ -40,6 +40,11 @@ In this message, the phrase "should not be reached" means that this error messag
         <target state="new">Unsupported or invalid $(TargetFrameworkVersion) value of '{0}'. Please update your Project Options.</target>
         <note>The following are literal names and should not be translated: $(TargetFrameworkVersion)</note>
       </trans-unit>
+      <trans-unit id="XA0002">
+        <source>Could not find mono.android.jar</source>
+        <target state="new">Could not find mono.android.jar</target>
+        <note>The following are literal names and should not be translated: mono.android.jar</note>
+      </trans-unit>
       <trans-unit id="XA0003">
         <source>Invalid `android:versionCode` value `{0}` in `AndroidManifest.xml`. It must be an integer value.</source>
         <target state="new">Invalid `android:versionCode` value `{0}` in `AndroidManifest.xml`. It must be an integer value.</target>
@@ -504,6 +509,15 @@ In this message, the term "bundled" is a short way of saying "included into the 
         <source>Tools &gt; Open Android SDK Manager...</source>
         <target state="new">Tools &gt; Open Android SDK Manager...</target>
         <note>This string is the location of a menu command in Visual Studio for Mac.</note>
+      </trans-unit>
+      <trans-unit id="XA5211">
+        <source>Embedded Wear app package name differs from handheld app package name ({0} != {1}).</source>
+        <target state="new">Embedded Wear app package name differs from handheld app package name ({0} != {1}).</target>
+        <note>The following are literal names and should not be translated: Wear
+"Wear" is a short version of the full product name "Wear OS" and so should not be translated.
+In this message, the term "handheld app" means "app for handheld devices."
+{0} - The Wear app package name
+{1} - The handheld app package name</note>
       </trans-unit>
       <trans-unit id="XA5213">
         <source>java.lang.OutOfMemoryError. Consider increasing the value of $(JavaMaximumHeapSize). Java ran out of memory while executing '{0} {1}'</source>
