@@ -48,7 +48,7 @@ This change provides infrastructure for an upcoming feature.
 
       * `### Build and deployment performance`
       * `### App startup performance`
-      * `### Android resource editing performance
+      * `### Android resource editing performance`
 
   * (Optional) If the PR already exists, include a link to the PR.
 
