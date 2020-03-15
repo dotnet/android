@@ -48,6 +48,7 @@ This change provides infrastructure for an upcoming feature.
 
       * `### Build and deployment performance`
       * `### App startup performance`
+      * `### Android resource editing performance`
 
   * (Optional) If the PR already exists, include a link to the PR.
 
@@ -64,6 +65,20 @@ Examples:
 ```
 
 ```
+### Build and deployment performance
+
+  * [GitHub PR 3535](https://github.com/xamarin/xamarin-android/pull/3535),
+    [GitHub PR 3600](https://github.com/xamarin/xamarin-android/pull/3600):
+    Add and switch to a new specialized `LinkAssembliesNoShrink` MSBuild task
+    for Debug builds.  In the Debug scenario, where the managed linker is not
+    set to remove any types, the managed linker only needs to run a quick step
+    to adjust abstract methods in Xamarin.Android assemblies.  The new
+    specialized task reduced the time for the `_LinkAssembliesNoShrink` target
+    from about 340 milliseconds to about 10 milliseconds for a test
+    Xamarin.Forms app when one line of a XAML file was changed between builds.
+```
+
+```
 ### App startup performance
 
   * [GitHub PR 3729](https://github.com/xamarin/xamarin-android/pull/3729):
@@ -71,6 +86,20 @@ Examples:
     reduced the time to display the first screen of a small test Xamarin.Forms
     app from about 783 milliseconds to about 754 milliseconds for a Release
     configuration build on a Google Pixel 3 XL device.
+```
+
+```
+### Android resource editing performance
+
+  * [GitHub PR 3891](https://github.com/xamarin/xamarin-android/pull/3891):
+    Avoid unnecessary changes to the *build.props* intermediate file during
+    design-time builds so that the `UpdateGeneratedFiles` and
+    `SetupDependenciesForDesigner` targets can skip the
+    `_ResolveLibraryProjectImports` target.  This reduced the time for the
+    `UpdateGeneratedFiles` target by about 300 milliseconds for a small app on a
+    test system.  The `UpdateGeneratedFiles` target runs in the foreground each
+    time an Android resource is saved, so this makes Visual Studio more
+    responsive when working on Android resources.
 ```
 
 ### Template for external tool or library version update
