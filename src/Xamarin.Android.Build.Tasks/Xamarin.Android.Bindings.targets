@@ -346,7 +346,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 		
     <Unzip Sources="@(JavaDocJar)" DestinationDirectories="@(JavaDocJar->'$(IntermediateOutputPath)javadocs\%(FileName)')" />
 		
-    <Touch Files="@(JavaDocJar->'$(IntermediateOutputPath)javadocs\%(FileName).stamp')" />
+    <Touch Files="@(JavaDocJar->'$(IntermediateOutputPath)javadocs\%(FileName).stamp')" AlwaysCreate="True" />
 		
     <ItemGroup>
       <JavaDocIndex Include="@(JavaDocJar->'$(IntermediateOutputPath)javadocs\%(FileName)\index.html')" />
