@@ -1592,4 +1592,9 @@
   <attr api-since="30" path="/api/package/class[contains(@merge.SourceFile,'api-28.xml.in')]" name="unnest">true</attr>
   <attr api-since="30" path="/api/package/interface[contains(@merge.SourceFile,'api-29.xml.in')]" name="unnest">true</attr>
   <attr api-since="30" path="/api/package/class[contains(@merge.SourceFile,'api-29.xml.in')]" name="unnest">true</attr>
+
+  <!-- This keeps us from creating any Constants classes for interface constants in new DIM-enabled API -->
+  <attr api-since="30" path="/api/package/interface[contains(@merge.SourceFile,'api-30.xml.in')]" name="no-alternatives">true</attr>
+  <attr api-since="30" path="/api/package/interface[contains(@merge.SourceFile,'api-R.xml.in')]" name="no-alternatives">true</attr>
+
 </metadata>
