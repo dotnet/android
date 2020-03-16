@@ -17,6 +17,7 @@ steps:
     $UploadAttemptSuffix = If ($(System.JobAttempt) -gt 1) {"(Attempt $(System.JobAttempt))"} Else {""}
     Write-Host "##vso[task.setvariable variable=UploadAttemptSuffix;]$UploadAttemptSuffix"
   displayName: Set upload artifact name
+  condition: always()
 
 - task: PublishPipelineArtifact@1
   displayName: upload build and test results
