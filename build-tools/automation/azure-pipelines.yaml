@@ -262,7 +262,6 @@ stages:
         solution: Xamarin.Android.sln
         configuration: $(XA.Build.Configuration)
         msbuildArguments: /t:Build /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-build.binlog
-        maximumCpuCount: true
 
     - task: MSBuild@1
       displayName: msbuild create-vsix
