@@ -16,7 +16,7 @@ namespace Xamarin.Android.JcwGenTests {
 		public void ManagedJavaManaged_FinallyExecuted ()
 		{
 			using (var t = new Bxc7634 ()) {
-				using (var r = new Java.Lang.Runnable (() => {throw new InvalidOperationException ();})) {
+				using (var r = new MyGenericRunnable<int> ()) {
 					Assert.IsFalse (t.FinallyBlockRun);
 					bool ioeThrown = false;
 					try {
@@ -39,6 +39,14 @@ namespace Xamarin.Android.JcwGenTests {
 				}
 				Assert.IsNotNull (t.ThrowableCaught);
 				Assert.AreEqual ("Android.Runtime.JavaProxyThrowable", t.ThrowableCaught.GetType ().FullName);
+			}
+		}
+
+		class MyGenericRunnable<T> : Java.Lang.Object, Java.Lang.IRunnable {
+
+			public void Run ()
+			{
+				throw new InvalidOperationException ();
 			}
 		}
 	}
