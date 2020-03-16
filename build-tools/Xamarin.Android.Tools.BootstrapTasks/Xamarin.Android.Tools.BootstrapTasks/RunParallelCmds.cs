@@ -24,6 +24,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		public override bool Execute ()
 		{
 			bool success = true;
+			int tasks = 0;
 
 			LogMessage ($"RunParallelCmds max parallelism: {Environment.ProcessorCount}");
 
@@ -33,7 +34,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 					var useManagedRuntime = !string.IsNullOrEmpty (ManagedRuntime);
 					var argumentsBeginning = useManagedRuntime ? $"{ManagedRuntimeArguments} {command} " : "";
 
-					LogMessage ($"Starting Command: {command} Arguments: {cmd.GetMetadata ("Arguments")}");
+					LogMessage ($"[{++tasks}/{Commands.Length}] Starting Command: {command} Arguments: {cmd.GetMetadata ("Arguments")}");
 
 					try {
 						using (var proc = new Process ()) {
@@ -84,6 +85,8 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				});
 
 			WaitForCompletion ();
+
+			LogMessage ($"RunParallelCmds completed {tasks} commands");
 
 			if (!success)
 				return false;
