@@ -33,6 +33,7 @@ namespace Xamarin.ProjectTools
 			JavaPackageName = JavaPackageName ?? PackageName.ToLowerInvariant ();
 			ExtraNuGetConfigSources = new List<string> { XABuildPaths.BuildOutputDirectory };
 			GlobalPackagesFolder = Path.Combine (XABuildPaths.TopDirectory, "packages");
+			SetProperty ("_ApkDebugKeyStore", "debug.keystore");
 
 			using (var sr = new StreamReader (typeof (XamarinAndroidApplicationProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.AndroidManifest.xml")))
 				default_android_manifest = sr.ReadToEnd ();
