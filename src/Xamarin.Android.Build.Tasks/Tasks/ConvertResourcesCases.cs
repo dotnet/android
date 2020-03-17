@@ -18,8 +18,6 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public ITaskItem[] ResourceDirectories { get; set; }
 
-		public ITaskItem[] AdditionalResourceDirectories { get; set; }
-
 		[Required]
 		public string AcwMapFile { get; set; }
 
@@ -93,17 +91,11 @@ namespace Xamarin.Android.Tasks
 					continue;
 				resourcedirectories.Add (dir.ItemSpec);
 			}
-			foreach (var dir in AdditionalResourceDirectories ?? new ITaskItem[0]) {
-				if (dir == item)
-					continue;
-				resourcedirectories.Add (dir.ItemSpec);
-			}
 
 			// Fix up each file
 			foreach (string file in xmls) {
 				var srcmodifiedDate = File.GetLastWriteTimeUtc (file);
 				if (srcmodifiedDate <= lastUpdate) {
-					Log.LogDebugMessage ("  Skipping: {0}  {1} <= {2}", file, srcmodifiedDate, lastUpdate);
 					continue;
 				}
 				Log.LogDebugMessage ("  Processing: {0}   {1} > {2}", file, srcmodifiedDate, lastUpdate);
