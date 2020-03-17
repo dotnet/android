@@ -23,11 +23,11 @@ Copyright (C) 2018 Xamarin. All rights reserved.
     <!-- Target-level properties to simplify conditions-->
     <PropertyGroup>
       <!--Flag indicating if using d8 or r8-->
-      <_UseR8>False</_UseR8>
       <_UseR8 Condition=" ('$(AndroidLinkTool)' == 'r8' And '$(_ProguardProjectConfiguration)' != '') Or '$(AndroidEnableMultiDex)' == 'True' ">True</_UseR8>
+      <_UseR8 Condition=" '$(_UseR8)' == '' ">False</_UseR8>
       <!--Flag indicating if r8 should have EnableShrinking-->
-      <_R8EnableShrinking>False</_R8EnableShrinking>
       <_R8EnableShrinking Condition=" '$(AndroidLinkTool)' == 'r8' ">True</_R8EnableShrinking>
+      <_R8EnableShrinking Condition=" '$(_R8EnableShrinking)' == '' ">False</_R8EnableShrinking>
     </PropertyGroup>
 
     <Error
@@ -45,36 +45,6 @@ Copyright (C) 2018 Xamarin. All rights reserved.
         Directories="$(IntermediateOutputPath)proguard"
         Condition=" '$(AndroidLinkTool)' != '' "
     />
-
-    <Proguard
-        Condition=" '$(AndroidLinkTool)' == 'proguard' And '$(_ProguardProjectConfiguration)' != '' "
-        ProguardJarPath="$(ProguardJarPath)"
-        AndroidSdkDirectory="$(_AndroidSdkDirectory)"
-        JavaToolPath="$(JavaToolPath)"
-        ProguardToolPath="$(ProguardToolPath)"
-        ToolExe="$(ProguardToolExe)"
-        UseProguard="$(UseProguard)"
-        JavaPlatformJarPath="$(JavaPlatformJarPath)"
-        ClassesOutputDirectory="$(_AndroidIntermediateJavaClassDirectory)"
-        AcwMapFile="$(_AcwMapFile)"
-        ProguardCommonXamarinConfiguration="$(IntermediateOutputPath)proguard\proguard_xamarin.cfg"
-        ProguardGeneratedReferenceConfiguration="$(_ProguardProjectConfiguration)"
-        ProguardGeneratedApplicationConfiguration="$(IntermediateOutputPath)proguard\proguard_project_primary.cfg"
-        ProguardConfigurationFiles="$(ProguardConfigFiles)"
-        JavaLibrariesToEmbed="@(_JavaLibrariesToCompileForApp);@(_InstantRunJavaReference)"
-        JavaLibrariesToReference="@(AndroidExternalJavaLibrary)"
-        ProguardJarOutput="$(IntermediateOutputPath)proguard\__proguard_output__.jar"
-        EnableLogging="$(ProguardEnableLogging)"
-        DumpOutput="$(IntermediateOutputPath)proguard\dump.txt"
-        PrintSeedsOutput="$(IntermediateOutputPath)proguard\seeds.txt"
-        PrintUsageOutput="$(IntermediateOutputPath)proguard\usage.txt"
-        PrintMappingOutput="$(IntermediateOutputPath)proguard\mapping.txt"
-        ProguardInputJarFilter="$(_AndroidProguardInputJarFilter)"
-    />
-
-    <ItemGroup Condition=" '$(AndroidLinkTool)' == 'proguard' And '$(_ProguardProjectConfiguration)' != '' ">
-      <_AlternativeJarForAppD8 Include="$(IntermediateOutputPath)proguard\__proguard_output__.jar" />
-    </ItemGroup>
 
     <R8
         Condition=" '$(_UseR8)' == 'True' "

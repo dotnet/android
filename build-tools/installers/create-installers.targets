@@ -229,6 +229,7 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.CSharp.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.D8.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Designer.targets" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.DX.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.FSharp.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.PCLSupport.props" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.PCLSupport.targets" />

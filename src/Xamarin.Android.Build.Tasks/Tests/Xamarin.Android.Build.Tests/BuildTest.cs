@@ -3460,25 +3460,23 @@ namespace UnnamedProject {
 		}
 
 		[Test]
-		public void ProguardBOMError ([Values ("dx", "d8")] string dexTool, [Values ("proguard")] string linkTool)
+		public void ProguardBOMError ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
-				DexTool = dexTool,
-				LinkTool = linkTool,
+				DexTool = "dx",
+				LinkTool = "proguard",
 			};
-			if (!string.IsNullOrEmpty (linkTool)) {
-				var rules = new List<string> {
-					"-dontwarn com.google.devtools.build.android.desugar.**",
-					"-dontwarn javax.annotation.**",
-					"-dontwarn org.codehaus.mojo.animal_sniffer.*",
-				};
-				var encoding = new UTF8Encoding (encoderShouldEmitUTF8Identifier: true);
-				proj.OtherBuildItems.Add (new BuildItem ("ProguardConfiguration", "proguard.cfg") {
-					TextContent = () => string.Join (Environment.NewLine, rules),
-					Encoding = encoding,
-				});
-			}
+			var rules = new List<string> {
+				"-dontwarn com.google.devtools.build.android.desugar.**",
+				"-dontwarn javax.annotation.**",
+				"-dontwarn org.codehaus.mojo.animal_sniffer.*",
+			};
+			var encoding = new UTF8Encoding (encoderShouldEmitUTF8Identifier: true);
+			proj.OtherBuildItems.Add (new BuildItem ("ProguardConfiguration", "proguard.cfg") {
+				TextContent = () => string.Join (Environment.NewLine, rules),
+				Encoding = encoding,
+			});
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				builder.ThrowOnBuildFailure = false;
 				Assert.IsFalse (builder.Build (proj), "Build should have failed.");
