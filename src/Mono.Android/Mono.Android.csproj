@@ -1,47 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\..\Configuration.props" />
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{66CF299A-CE95-4131-BCD8-DB66E30C4BF7}</ProjectGuid>
-    <ProjectTypeGuids>{EFBA0AD7-5A72-4C68-AF49-83D382785DCF};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <OutputType>Library</OutputType>
+    <TargetFramework>monoandroid10</TargetFramework>
     <RootNamespace>Android</RootNamespace>
-    <AssemblyName>Mono.Android</AssemblyName>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <NoWarn>0618;0809;0108;0114</NoWarn>
     <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DefineConstants>$(DefineConstants);JAVA_INTEROP;NET_2_0</DefineConstants>
+    <OutputPath Condition=" '$(TargetFramework)' == 'monoandroid10' ">$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\$(TargetFramework)\android-$(AndroidPlatformId)\</IntermediateOutputPath>
+    <ImplicitlyExpandDesignTimeFacades>false</ImplicitlyExpandDesignTimeFacades>
+    <JavaCallableWrapperAbsAssembly>$([System.IO.Path]::GetFullPath ('$(OutputPath)$(AssemblyName).dll'))</JavaCallableWrapperAbsAssembly>
+    <JavaCallableWrapperAfterTargets>CoreBuild</JavaCallableWrapperAfterTargets>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
-  <Import Project="..\..\Configuration.props" />
-  <PropertyGroup>
+
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'monoandroid10' ">
     <TargetFrameworkIdentifier>MonoAndroid</TargetFrameworkIdentifier>
     <TargetFrameworkVersion>v1.0</TargetFrameworkVersion>
     <TargetFrameworkRootPath>$(XAInstallPrefix)xbuild-frameworks</TargetFrameworkRootPath>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <Optimize>false</Optimize>
-    <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)\</OutputPath>
-    <DefineConstants>DEBUG;JAVA_INTEROP;NET_2_0</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <ConsolePause>false</ConsolePause>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <NoStdLib>true</NoStdLib>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <Optimize>true</Optimize>
-    <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)\</OutputPath>
-    <DefineConstants>JAVA_INTEROP;NET_2_0</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <ConsolePause>false</ConsolePause>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <NoStdLib>true</NoStdLib>
-  </PropertyGroup>
-  <ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'monoandroid10' ">
     <Reference Include="mscorlib">
       <HintPath>$(OutputPath)..\v1.0\mscorlib.dll</HintPath>
       <Private>False</Private>
@@ -83,6 +69,7 @@
       <Private>False</Private>
     </Reference>
   </ItemGroup>
+
   <ItemGroup>
     <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings\JavaNativeTypeManager.cs">
       <Link>JavaNativeTypeManager.cs</Link>
@@ -90,288 +77,22 @@
     <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64.cs">
       <Link>Crc64.cs</Link>
     </Compile>
-    <Compile Include="Android.Runtime\DynamicMethodNameCounter.cs" />
-    <Compile Include="Android.Runtime\IJavaObjectValueMarshaler.cs" />
+    <Compile Remove="Test\**" />
   </ItemGroup>
+
   <Import Project="..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <ImplicitlyExpandDesignTimeFacades>False</ImplicitlyExpandDesignTimeFacades>
-    <IntermediateOutputPath>$(IntermediateOutputPath)android-$(AndroidPlatformId)\</IntermediateOutputPath>
-  </PropertyGroup>
   <Import Project="Mono.Android.targets" />
-  <PropertyGroup>
-    <JavaCallableWrapperAbsAssembly>$([System.IO.Path]::GetFullPath ('$(OutputPath)$(AssemblyName).dll'))</JavaCallableWrapperAbsAssembly>
-    <JavaCallableWrapperAfterTargets>CoreBuild</JavaCallableWrapperAfterTargets>
-  </PropertyGroup>
   <Import Project="..\..\build-tools\scripts\JavaCallableWrappers.targets" />
   <Import Project="$(IntermediateOutputPath)mcw\Mono.Android.projitems" Condition="Exists('$(IntermediateOutputPath)mcw\Mono.Android.projitems')" />
+
   <ItemGroup>
-    <Compile Include="Android\IncludeAndroidResourcesFromAttribute.cs" />
-    <Compile Include="Android\LinkerSafeAttribute.cs" />
-    <Compile Include="Android\NativeLibraryReferenceAttribute.cs" />
-    <Compile Include="Android\ReferenceFilesAttribute.cs" />
-    <Compile Include="Android.Accounts\AccountManager.cs" />
-    <Compile Include="Android.Animation\Animator.cs" />
-    <Compile Include="Android.Animation\AnimatorSet.cs" />
-    <Compile Include="Android.Animation\FloatArrayEvaluator.cs" />
-    <Compile Include="Android.Animation\FloatEvaluator.cs" />
-    <Compile Include="Android.Animation\IntArrayEvaluator.cs" />
-    <Compile Include="Android.Animation\IntEvaluator.cs" />
-    <Compile Include="Android.Animation\PointFEvaluator.cs" />
-    <Compile Include="Android.Animation\RectEvaluator.cs" />
-    <Compile Include="Android.Animation\ValueAnimator.cs" />
-    <Compile Include="Android.App\ActionBar.cs" />
-    <Compile Include="Android.App\Activity.cs" />
-    <Compile Include="Android.App\ActivityManager.cs" />
-    <Compile Include="Android.App\ActivityTracker.cs" />
-    <Compile Include="Android.App\AlarmManager.cs" />
-    <Compile Include="Android.App\AlertDialog.cs" />
-    <Compile Include="Android.App\Application.cs" />
-    <Compile Include="Android.App\DatePickerDialog.cs" />
-    <Compile Include="Android.App\Dialog.cs" />
-    <Compile Include="Android.App\DownloadManager.cs" />
-    <Compile Include="Android.App\FragmentManager.cs" />
-    <Compile Include="Android.App\Instrumentation.cs" />
-    <Compile Include="Android.App\IntentFilterAttribute.cs" />
-    <Compile Include="Android.App\IntentService.cs" />
-    <Compile Include="Android.App\MetaDataAttribute.cs" />
-    <Compile Include="Android.App\Notification.cs" />
-    <Compile Include="Android.App\NotificationManager.cs" />
-    <Compile Include="Android.App\PermissionAttribute.cs" />
-    <Compile Include="Android.App\PermissionGroupAttribute.cs" />
-    <Compile Include="Android.App\PermissionTreeAttribute.cs" />
-    <Compile Include="Android.App\ProgressDialog.cs" />
-    <Compile Include="Android.App\SearchManager.cs" />
-    <Compile Include="Android.App\SupportsGLTextureAttribute.cs" />
-    <Compile Include="Android.App\SyncContext.cs" />
-    <Compile Include="Android.App\TimePickerDialog.cs" />
-    <Compile Include="Android.App\UiModeManager.cs" />
-    <Compile Include="Android.App\UsesFeatureAttribute.cs" />
-    <Compile Include="Android.App\UsesLibraryAttribute.cs" />
-    <Compile Include="Android.App\UsesPermissionAttribute.cs" />
-    <Compile Include="Android.App.Admin\DevicePolicyManager.cs" />
-    <Compile Include="Android.Bluetooth\BluetoothGattServer.cs" />
-    <Compile Include="Android.Bluetooth\BluetoothGattServerCallback.cs" />
-    <Compile Include="Android.Content\ContentProvider.cs" />
-    <Compile Include="Android.Content\ContentValues.cs" />
-    <Compile Include="Android.Content\Context.cs" />
-    <Compile Include="Android.Content\CursorLoader.cs" />
-    <Compile Include="Android.Content\GrantUriPermissionAttribute.cs" />
-    <Compile Include="Android.Content\Intent.cs" />
-    <Compile Include="Android.Content.Res\IXmlResourceParser.cs" />
-    <Compile Include="Android.Graphics\AndroidBitmapInfo.cs" />
-    <Compile Include="Android.Graphics\Bitmap.cs" />
-    <Compile Include="Android.Graphics\Canvas.cs" />
-    <Compile Include="Android.Graphics\Color.cs" />
-    <Compile Include="Android.Graphics.Drawables\ClipDrawable.cs" />
-    <Compile Include="Android.Graphics.Drawables\Drawable.cs" />
-    <Compile Include="Android.Graphics.Drawables\DrawableContainer.cs" />
-    <Compile Include="Android.Graphics.Drawables\InsetDrawable.cs" />
-    <Compile Include="Android.Graphics.Drawables\LayerDrawable.cs" />
-    <Compile Include="Android.Graphics.Drawables\RotateDrawable.cs" />
-    <Compile Include="Android.Graphics.Drawables\ScaleDrawable.cs" />
-    <Compile Include="Android.Hardware\SensorManager.cs" />
-    <Compile Include="Android.Hardware.Camera2.Params\LensShadingMap.cs" />
-    <Compile Include="Android.Hardware.Camera2.Params\RggbChannelVector.cs" />
-    <Compile Include="Android.Hardware.Camera2.Params\TonemapCurve.cs" />
-    <Compile Include="Android.InputMethodServices\KeyboardView.cs" />
-    <Compile Include="Android.Locations\LocationManager.cs" />
-    <Compile Include="Android.Media\AudioManager.cs" />
-    <Compile Include="Android.Media\AudioRecord.cs" />
-    <Compile Include="Android.Media\AudioTrack.cs" />
-    <Compile Include="Android.Media\MediaMetadataRetriever.cs" />
-    <Compile Include="Android.Media\MediaPlayer.cs" />
-    <Compile Include="Android.Media\MediaRouter.cs" />
-    <Compile Include="Android.Media\ToneGenerator.cs" />
-    <Compile Include="Android.Net\ConnectivityManager.cs" />
-    <Compile Include="Android.Net.Wifi\WifiManager.cs" />
-    <Compile Include="Android.OS\AsyncTask.cs" />
-    <Compile Include="Android.OS\DropBoxManager.cs" />
-    <Compile Include="Android.OS\Handler.cs" />
-    <Compile Include="Android.OS\Message.cs" />
-    <Compile Include="Android.OS\PowerManager.cs" />
-    <Compile Include="Android.OS\Vibrator.cs" />
-    <Compile Include="Android.OS.Storage\StorageManager.cs" />
-    <Compile Include="Android.Opengl\GLSurfaceView.cs" />
-    <Compile Include="Android.Preferences\CheckBoxPreference.cs" />
-    <Compile Include="Android.Runtime\AndroidEnvironment.cs" />
-    <Compile Include="Android.Runtime\AndroidRuntime.cs" />
-    <Compile Include="Android.Runtime\AnnotationAttribute.cs" />
-    <Compile Include="Android.Runtime\BoundExceptionType.cs" />
-    <Compile Include="Android.Runtime\CharSequence.cs" />
-    <Compile Include="Android.Runtime\ConstructorBuilder.cs" />
-    <Compile Include="Android.Runtime\CPUArchitecture.cs" />
-    <Compile Include="Android.Runtime\Extensions.cs" />
-    <Compile Include="Android.Runtime\GeneratedEnumAttribute.cs" />
-    <Compile Include="Android.Runtime\IJavaObject.cs" />
-    <Compile Include="Android.Runtime\InputStreamAdapter.cs" />
-    <Compile Include="Android.Runtime\InputStreamInvoker.cs" />
-    <Compile Include="Android.Runtime\IntDefAttribute.cs" />
-    <Compile Include="Android.Runtime\IntDefinitionAttribute.cs" />
-    <Compile Include="Android.Runtime\JavaArray.cs" />
-    <Compile Include="Android.Runtime\JavaCollection.cs" />
-    <Compile Include="Android.Runtime\JavaDictionary.cs" />
-    <Compile Include="Android.Runtime\JavaList.cs" />
-    <Compile Include="Android.Runtime\JavaObject.cs" />
-    <Compile Include="Android.Runtime\JavaProxyThrowable.cs" />
-    <Compile Include="Android.Runtime\JavaSet.cs" />
-    <Compile Include="Android.Runtime\JNIEnv.cs" />
-    <Compile Include="Android.Runtime\JNIEnv.g.cs" />
-    <Compile Include="Android.Runtime\JniHandleOwnership.cs" />
-    <Compile Include="Android.Runtime\JNINativeWrapper.cs" />
-    <Compile Include="Android.Runtime\JObjectRefType.cs" />
-    <Compile Include="Android.Runtime\JValue.cs" />
-    <Compile Include="Android.Runtime\Logger.cs" />
-    <Compile Include="Android.Runtime\NamespaceMappingAttribute.cs" />
-    <Compile Include="Android.Runtime\OutputStreamAdapter.cs" />
-    <Compile Include="Android.Runtime\OutputStreamInvoker.cs" />
-    <Compile Include="Android.Runtime\PreserveAttribute.cs" />
-    <Compile Include="Android.Runtime\RaiseThrowableEventArgs.cs" />
-    <Compile Include="Android.Runtime\RequiresPermissionAttribute.cs" />
-    <Compile Include="Android.Runtime\ResourceDesignerAttribute.cs" />
-    <Compile Include="Android.Runtime\ResourceIdManager.cs" />
-    <Compile Include="Android.Runtime\StringDefAttribute.cs" />
-    <Compile Include="Android.Runtime\TimingLogger.cs" />
-    <Compile Include="Android.Runtime\TypeManager.cs" />
-    <Compile Include="Android.Runtime\XAPeerMembers.cs" />
-    <Compile Include="Android.Runtime\XmlPullParserReader.cs" />
-    <Compile Include="Android.Runtime\XmlReaderPullParser.cs" />
-    <Compile Include="Android.Telephony\CellInfo.cs" />
-    <Compile Include="Android.Telephony\PhoneNumberUtils.cs" />
-    <Compile Include="Android.Telephony\TelephonyManager.cs" />
-    <Compile Include="Android.Telephony.Mbms\IGroupCallCallback.cs" />
-    <Compile Include="Android.Test\MoreAsserts.cs" />
-    <Compile Include="Android.Text\ClipboardManager.cs" />
-    <Compile Include="Android.Text\ITextWatcher.cs" />
-    <Compile Include="Android.Text.Format\DateUtils.cs" />
-    <Compile Include="Android.Util\Base64InputStream.cs" />
-    <Compile Include="Android.Util\Base64OutputStream.cs" />
-    <Compile Include="Android.Util\Log.cs" />
-    <Compile Include="Android.Util\SparseArray.cs" />
-    <Compile Include="Android.Views\View.AccessibilityDelegate.cs" />
-    <Compile Include="Android.Views\InputDevice.cs" />
-    <Compile Include="Android.Views\KeyCharacterMap.cs" />
-    <Compile Include="Android.Views\KeyEvent.cs" />
-    <Compile Include="Android.Views\LayoutInflater.cs" />
-    <Compile Include="Android.Views\MotionEvent.cs" />
-    <Compile Include="Android.Views\View.cs" />
-    <Compile Include="Android.Views\ViewTreeObserver.cs" />
-    <Compile Include="Android.Views\Window.cs" />
-    <Compile Include="Android.Views.Accessibility\AccessibilityEvent.cs" />
-    <Compile Include="Android.Views.Accessibility\AccessibilityManager.cs" />
-    <Compile Include="Android.Views.Accessibility\AccessibilityNodeProvider.cs" />
-    <Compile Include="Android.Views.InputMethods\InputMethodManager.cs" />
-    <Compile Include="Android.Widget\AbsListView.cs" />
-    <Compile Include="Android.Widget\AdapterView.cs" />
-    <Compile Include="Android.Widget\AdapterViewAnimator.cs" />
-    <Compile Include="Android.Widget\ArrayAdapter.cs" />
-    <Compile Include="Android.Widget\AutoCompleteTextView.cs" />
-    <Compile Include="Android.Widget\BaseAdapter.cs" />
-    <Compile Include="Android.Widget\DatePicker.cs" />
-    <Compile Include="Android.Widget\MediaController.cs" />
-    <Compile Include="Android.Widget\TextView.cs" />
-    <Compile Include="Java.IO\ObjectStreamField.cs" />
-    <Compile Include="Java.Interop\AndroidEventHelper.cs" />
-    <Compile Include="Java.Interop\DoNotPackageAttribute.cs" />
-    <Compile Include="Java.Interop\EventHelper.cs" />
-    <Compile Include="Java.Interop\IJavaObjectEx.cs" />
-    <Compile Include="Java.Interop\JavaConvert.cs" />
-    <Compile Include="Java.Interop\JavaInterfaceDefaultMethodAttribute.cs" />
-    <Compile Include="Java.Interop\JavaLibraryReferenceAttribute.cs" />
-    <Compile Include="Java.Interop\JavaLocationException.cs" />
-    <Compile Include="Java.Interop\JavaObjectExtensions.cs" />
-    <Compile Include="Java.Interop\JavaTypeParametersAttribute.cs" />
-    <Compile Include="Java.Interop\Runtime.cs" />
-    <Compile Include="Java.Interop\TypeManager.cs" />
-    <Compile Include="Java.Lang\Boolean.cs" />
-    <Compile Include="Java.Lang\Byte.cs" />
-    <Compile Include="Java.Lang\Character.cs" />
-    <Compile Include="Java.Lang\Class.cs" />
-    <Compile Include="Java.Lang\ClassNotFoundException.cs" />
-    <Compile Include="Java.Lang\Double.cs" />
-    <Compile Include="Java.Lang\Exception.cs" />
-    <Compile Include="Java.Lang\Float.cs" />
-    <Compile Include="Java.Lang\ICharSequence.cs" />
-    <Compile Include="Java.Lang\IllegalAccessException.cs" />
-    <Compile Include="Java.Lang\InstantiationException.cs" />
-    <Compile Include="Java.Lang\Integer.cs" />
-    <Compile Include="Java.Lang\Long.cs" />
-    <Compile Include="Java.Lang\NoSuchFieldException.cs" />
-    <Compile Include="Java.Lang\NoSuchMethodException.cs" />
-    <Compile Include="Java.Lang\Object.cs" />
-    <Compile Include="Java.Lang\Runnable.cs" />
-    <Compile Include="Java.Lang\RuntimeException.cs" />
-    <Compile Include="Java.Lang\Short.cs" />
-    <Compile Include="Java.Lang\String.cs" />
-    <Compile Include="Java.Lang\StringBuffer.cs" />
-    <Compile Include="Java.Lang\StringBuilder.cs" />
-    <Compile Include="Java.Lang\Thread.cs" />
-    <Compile Include="Java.Lang\Throwable.cs" />
-    <Compile Include="Java.Lang.Reflect\InvocationTargetException.cs" />
-    <Compile Include="Java.Lang.Reflect\Parameter.cs" />
-    <Compile Include="Java.Nio\Buffer.cs" />
-    <Compile Include="Java.Nio\CharBuffer.cs" />
-    <Compile Include="Java.Nio\FileChannel.cs" />
-    <Compile Include="Java.Security\IdentityScope.cs" />
-    <Compile Include="Java.Util\Spliterators.cs" />
-    <Compile Include="Java.Util.Concurrent.Atomic\AtomicInteger.cs" />
-    <Compile Include="Java.Util.Concurrent.Atomic\AtomicLong.cs" />
-    <Compile Include="Javax.Microedition.Khronos.Egl\EGLContext.cs" />
-    <Compile Include="Org.Apache.Http.Impl.Conn\DefaultClientConnection.cs" />
-    <Compile Include="Org.Apache.Http.Impl.Cookie\BasicClientCookie.cs" />
-    <Compile Include="System.Drawing/PointConverter.cs" />
-    <Compile Include="System.Drawing/RectangleConverter.cs" />
-    <Compile Include="System.Drawing/SizeConverter.cs" />
-    <Compile Include="System.Drawing/SizeFConverter.cs" />
-    <Compile Include="System.IO\AndroidExtensions.cs" />
-    <Compile Include="System.Linq\Extensions.cs" />
-    <Compile Include="Xamarin.Android.Net\AndroidClientHandler.cs" />
-    <Compile Include="Xamarin.Android.Net\AndroidHttpResponseMessage.cs" />
-    <Compile Include="Xamarin.Android.Net\AuthDigestHeaderParser.cs" />
-    <Compile Include="Xamarin.Android.Net\AuthDigestSession.cs" />
-    <Compile Include="Xamarin.Android.Net\AuthenticationData.cs" />
-    <Compile Include="Xamarin.Android.Net\AuthenticationScheme.cs" />
-    <Compile Include="Xamarin.Android.Net\AuthModuleBasic.cs" />
-    <Compile Include="Xamarin.Android.Net\AuthModuleDigest.cs" />
-    <Compile Include="Xamarin.Android.Net\IAndroidAuthenticationModule.cs" />
-    <Compile Include="Xamarin.Android.Net\OldAndroidSSLSocketFactory.cs" />
+    <ProjectReference Include="..\..\build-tools\api-xml-adjuster\api-xml-adjuster.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\build-tools\api-merge\api-merge.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\build-tools\api-xml-adjuster\api-xml-adjuster.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\build-tools\jnienv-gen\jnienv-gen.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\external\Java.Interop\tools\generator\generator.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\external\Java.Interop\tools\jcw-gen\jcw-gen.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\src\java-runtime\java-runtime.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\build-tools\api-xml-adjuster\api-xml-adjuster.csproj">
-      <Project>{8A6CB07C-E493-4A4F-AB94-038645A27118}</Project>
-      <Name>api-xml-adjuster</Name>
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\..\build-tools\api-merge\api-merge.csproj">
-      <Project>{3FC3E78B-F7D4-42EA-BBE8-4535DF42BFF8}</Project>
-      <Name>api-merge</Name>
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\..\build-tools\api-xml-adjuster\api-xml-adjuster.csproj">
-      <Project>{8A6CB07C-E493-4A4F-AB94-038645A27118}</Project>
-      <Name>api-xml-adjuster</Name>
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\..\build-tools\jnienv-gen\jnienv-gen.csproj">
-      <Project>{AFB8F6D1-6EA9-42C3-950B-98F34C669AD2}</Project>
-      <Name>jnienv-gen</Name>
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\..\external\Java.Interop\tools\generator\generator.csproj">
-      <Project>{D14A1B5C-2060-4930-92BE-F7190256C735}</Project>
-      <Name>generator</Name>
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\..\external\Java.Interop\tools\jcw-gen\jcw-gen.csproj">
-      <Project>{52C7D9B6-E8C8-47D0-9471-652D278D7D77}</Project>
-      <Name>jcw-gen</Name>
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\..\src\java-runtime\java-runtime.csproj">
-      <Project>{1D4FC8F1-0DA4-4F38-BE68-11AEBA9A0EA4}</Project>
-      <Name>java-runtime</Name>
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-    </ProjectReference>
-  </ItemGroup>
+
 </Project>
