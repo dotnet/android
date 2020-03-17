@@ -120,10 +120,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <ConvertResourcesCases
       ContinueOnError="$(DesignTimeBuild)"
       AcwMapFile="$(_AcwMapFile)"
-      AdditionalResourceDirectories="@(_LibraryResourceDirectories)"
       AndroidConversionFlagFile="$(_AndroidStampDirectory)_ConvertResourcesCases.stamp"
       CustomViewMapFile="$(_CustomViewMapFile)"
-      ResourceDirectories="$(MonoAndroidResDirIntermediate)"
+      ResourceDirectories="$(MonoAndroidResDirIntermediate);@(_LibraryResourceDirectories)"
       ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
   />
   <Touch Files="$(_AndroidStampDirectory)_ConvertResourcesCases.stamp" AlwaysCreate="True" />
