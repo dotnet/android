@@ -18,6 +18,10 @@ namespace Xamarin.Android.ApiMerge {
 			string dest = null;
 			string glob = null;
 			string lastDescription = null;
+			string configFile = null;
+			string configBaseInput = string.Empty;
+			string configBaseOutput = string.Empty;
+
 			var options = new OptionSet () {
 				"Usage: api-merge -o=FILE DESCRIPTIONS+",
 				"",
@@ -33,6 +37,15 @@ namespace Xamarin.Android.ApiMerge {
 				{ "last-description=",
 				  "Last {DESCRIPTION} to process. Any later descriptions are ignored.",
 				  v => lastDescription = NormalizePath (v) },
+				{ "config=",
+				  "XML configuration file (used instead of other options).",
+				  v => configFile = v },
+				{ "config-input-dir=",
+				  "Base input directory for XML configuration file.",
+				  v => configBaseInput = v },
+				{ "config-output-dir=",
+				  "Base output directory for XML configuration file.",
+				  v => configBaseOutput = v },
 				{ "version",
 				  "Output version information and exit.",
 				  v => show_version = v != null },
@@ -56,6 +69,8 @@ namespace Xamarin.Android.ApiMerge {
 				options.WriteOptionDescriptions (Console.Out);
 				return 0;
 			}
+			if (!string.IsNullOrEmpty (configFile))
+				return RunConfigurationFile (configFile, configBaseInput, configBaseOutput);
 			for (int i = sources.Count - 1; i >= 0; i--) {
 				if (!File.Exists (sources [i])) {
 					Console.WriteLine ("warning: skipping file {0}...", sources [i]);
@@ -74,6 +89,55 @@ namespace Xamarin.Android.ApiMerge {
 				context.Merge (sources [i]);
 			}
 			context.Save (dest);
+			return 0;
+		}
+
+		static int RunConfigurationFile (string config, string inputDir, string outputDir)
+		{
+			if (!File.Exists (config)) {
+				Console.WriteLine ($"error: config file {config} not found");
+				return 3;
+			}
+
+			var doc = XDocument.Load (config);
+			var inputs = doc.Root.Element ("Inputs").Elements ("File").Select (elem => Tuple.Create (Path.Combine (inputDir, elem.Attribute ("Path").Value), elem.Attribute ("Level").Value)).ToList ();
+
+			// Remove any missing inputs
+			foreach (var missing in inputs.Where (i => !File.Exists (i.Item1)).ToList ()) {
+				Console.WriteLine ($"warning: skipping missing file {missing.Item1}...");
+				inputs.Remove (missing);
+			}
+
+			if (inputs.Count == 0) {
+				Console.WriteLine ($"error: no input files found...");
+				return 4;
+			}
+
+			// Create the initial context
+			var context = new ApiDescription (inputs [0].Item1);
+
+			var outputs = doc.Root.Element ("Outputs").Elements ("File").Select (elem => Tuple.Create (Path.Combine (outputDir, elem.Attribute ("Path").Value), elem.Attribute ("LastLevel").Value)).ToList ();
+			var current_input = 0;
+			var current_output = 0;
+
+			// Handle the initial case if needed
+			if (inputs[current_input].Item2 == outputs[current_output].Item2) {
+				Console.WriteLine ($"api-merge: writing output {outputs [current_output].Item1}...");
+				context.Save (outputs [current_output].Item1);
+				current_output++;
+			}
+
+			// Write each output
+			while (current_output < outputs.Count) {
+				context.Merge (inputs [++current_input].Item1);
+
+				if (inputs [current_input].Item2 == outputs [current_output].Item2) {
+					Console.WriteLine ($"api-merge: writing output {outputs [current_output].Item1}...");
+					context.Save (outputs [current_output].Item1);
+					current_output++;
+				}
+			}
+
 			return 0;
 		}
 

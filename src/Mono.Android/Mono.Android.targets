@@ -65,13 +65,12 @@
     </ItemGroup>
     <PropertyGroup>
       <ApiMerge>..\..\bin\Build$(Configuration)\api-merge.exe</ApiMerge>
-      <_Profiles>@(_AndroidProfile->'%(Identity)', ' ')</_Profiles>
-      <_Glob>-s '..\..\bin\Build$(Configuration)\api\api-*.xml.in'</_Glob>
-      <_LastProfile>--last-description=..\..\bin\Build$(Configuration)\api\api-$(AndroidPlatformId).xml.in</_LastProfile>
-      <_Out>-o "$(IntermediateOutputPath)mcw\api.xml"</_Out>
+      <_ConfigurationFile>..\..\bin\Build$(Configuration)\merge-configuration.xml</_ConfigurationFile>
+      <_ConfigurationInputBaseDirectory>..\..\bin\Build$(Configuration)\api\</_ConfigurationInputBaseDirectory>
+      <_ConfigurationOutputBaseDirectory>obj\$(Configuration)\</_ConfigurationOutputBaseDirectory>
     </PropertyGroup>
     <Exec
-        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(ApiMerge) $(_Out) $(_Glob) $(_Profiles) $(_LastProfile)"
+        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(ApiMerge) -config=$(_ConfigurationFile) -config-input-dir=$(_ConfigurationInputBaseDirectory) -config-output-dir=$(_ConfigurationOutputBaseDirectory)"
     />
   </Target>
   <Target Name="_GenerateBinding"
