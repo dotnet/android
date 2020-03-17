@@ -29,7 +29,7 @@
     <ProjectReference Include="..\TestJVM\TestJVM.csproj" />
   </ItemGroup>
 
-  <Import Project="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\JdkInfo.props" />
+  <Import Condition="Exists('$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\JdkInfo.props')" Project="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\JdkInfo.props" />
 
   <ItemGroup>
     <JavaPerformanceTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\performance\JavaTiming.java" />

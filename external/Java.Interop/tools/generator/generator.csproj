@@ -1,55 +1,18 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>8.0.30703</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{D14A1B5C-2060-4930-92BE-F7190256C735}</ProjectGuid>
+    <TargetFramework>net472</TargetFramework>
     <OutputType>Exe</OutputType>
-    <RootNamespace>MonoDroid.Generation</RootNamespace>
-    <AssemblyName>generator</AssemblyName>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <EnvironmentVariables>
-      <EnvironmentVariables>
-        <Variable name="FACADES_PATH" value="$(XABuildOutputPath)\lib\xbuild-frameworks\MonoAndroid\v1.0\Facades" />
-      </EnvironmentVariables>
-    </EnvironmentVariables>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <DefineConstants>$(DefineConstants);GENERATOR;HAVE_CECIL;JCW_ONLY_TYPE_NAMES</DefineConstants>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
+
   <Import Project="..\..\Configuration.props" />
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>True</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>False</Optimize>
+
+  <PropertyGroup>
     <OutputPath>$(UtilityOutputFullPath)</OutputPath>
-    <DefineConstants>DEBUG;GENERATOR;HAVE_CECIL;JCW_ONLY_TYPE_NAMES</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <ConsolePause>false</ConsolePause>
-    <PlatformTarget>anycpu</PlatformTarget>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>full</DebugType>
-    <Optimize>False</Optimize>
-    <OutputPath>$(UtilityOutputFullPath)</OutputPath>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Externalconsole>True</Externalconsole>
-    <DefineConstants>GENERATOR;HAVE_CECIL;JCW_ONLY_TYPE_NAMES</DefineConstants>
-  </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="HtmlAgilityPack, Version=1.8.14.0, Culture=neutral, PublicKeyToken=bd319b19eaf3b43a, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\HtmlAgilityPack.1.8.14\lib\Net45\HtmlAgilityPack.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="Mono.Options">
-      <HintPath>..\..\packages\Mono.Options.4.4.0.0\lib\net4-client\Mono.Options.dll</HintPath>
-    </Reference>
-  </ItemGroup>
+
   <ItemGroup>
     <Compile Include="..\..\src\utils\StringRocks.cs">
       <Link>utils\StringRocks.cs</Link>
@@ -60,103 +23,25 @@
     <Compile Include="..\..\src\utils\XmlExtensions.cs">
       <Link>utils\XmlExtensions.cs</Link>
     </Compile>
-    <Compile Include="CodeGenerationTarget.cs" />
-    <Compile Include="CodeGeneratorContext.cs" />
-    <Compile Include="CodeGeneratorOptions.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.CodeGeneration\EnumGenerator.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.Importers\CecilApiImporter.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.Importers\XmlApiImporter.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.ObjectModel\InterfaceExtensionInfo.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.Transformation\ApiFixup.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.Transformation\ApiTransform.cs" />
-    <Compile Include="ApiVersionsProvider.cs" />
-    <Compile Include="ApiVersionsSupport.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.ObjectModel\Symbols\ArraySymbol.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.ObjectModel\Symbols\CharSequenceSymbol.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.ObjectModel\ClassGen.cs" />
-    <Compile Include="CodeGenerationOptions.cs" />
-    <Compile Include="CodeGenerator.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.ObjectModel\Symbols\CollectionSymbol.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.ObjectModel\Symbols\ColorSymbol.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.ObjectModel\Ctor.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.Transformation\EnumMap.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.Transformation\EnumMappings.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.ObjectModel\Symbols\EnumSymbol.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.ObjectModel\Field.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.ObjectModel\Symbols\FormatSymbol.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.ObjectModel\GenBase.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.ObjectModel\GenBaseSupport.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.ObjectModel\Symbols\GeneratedEnumSymbol.cs" />
-    <Compile Include="GenerationInfo.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.ObjectModel\GenericParameterDefinition.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.ObjectModel\GenericParameterList.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.ObjectModel\Symbols\GenericSymbol.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.ObjectModel\Symbols\GenericTypeParameter.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.ObjectModel\IGeneratable.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.ObjectModel\InterfaceGen.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.ObjectModel\IRequireGenericMarshal.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.ObjectModel\Symbols\ISymbol.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.CodeGeneration\CodeGenerator.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.CodeGeneration\JavaInteropCodeGenerator.cs" />
-    <Compile Include="Extensions\ManagedExtensions.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.ObjectModel\Method.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.ObjectModel\MethodBase.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.ObjectModel\NamespaceMapping.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.ObjectModel\Parameter.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.ObjectModel\ParameterList.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.Transformation\SealedProtectedFixups.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.Transformation\KotlinFixups.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.Transformation\Parser.cs" />
-    <Compile Include="Utilities\AncestorDescendantCache.cs" />
-    <Compile Include="Utilities\ProcessRocks.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.ObjectModel\Property.cs" />
-    <Compile Include="Utilities\Report.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.ObjectModel\ReturnValue.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.ObjectModel\Symbols\SimpleSymbol.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.ObjectModel\Symbols\StreamSymbol.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.ObjectModel\Symbols\StringSymbol.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.ObjectModel\Symbols\SymbolTable.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.CodeGeneration\XAJavaInteropCodeGenerator.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.CodeGeneration\XamarinAndroidCodeGenerator.cs" />
-    <Compile Include="Extensions\XmlExtensions.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.ObjectModel\Symbols\XmlPullParserSymbol.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.ObjectModel\Symbols\XmlResourceParserSymbol.cs" />
-    <Compile Include="Java.Interop.Tools.Generator.Transformation\ApiXmlAdjuster.cs" />
-    <Compile Include="Extensions\JavaApiDllLoaderExtensions.cs" />
-    <Compile Include="ManagedTypeFinderGeneratorTypeSystem.cs" />
-    <Compile Include="Extensions\GenBaseExtensions.cs" />
-    <Compile Include="Utilities\TypeNameUtilities.cs" />
   </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Xamarin.Android.Tools.AnnotationSupport\Xamarin.Android.Tools.AnnotationSupport.csproj">
-      <Project>{07BC4495-1267-4B78-9EA6-B76FEEA2A64A}</Project>
-      <Name>Xamarin.Android.Tools.AnnotationSupport</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\src\Xamarin.Android.Tools.ApiXmlAdjuster\Xamarin.Android.Tools.ApiXmlAdjuster.csproj">
-      <Project>{1268EADF-8344-431C-81F6-FCB7CBC99F49}</Project>
-      <Name>Xamarin.Android.Tools.ApiXmlAdjuster</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\src\Java.Interop.Tools.Diagnostics\Java.Interop.Tools.Diagnostics.csproj">
-      <Project>{64CC4E44-CE3A-4319-BF3F-6CF8BD513870}</Project>
-      <Name>Java.Interop.Tools.Diagnostics</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil.csproj">
-      <Project>{D48EE8D0-0A0A-4493-AEF5-DAF5F8CF86AD}</Project>
-      <Name>Java.Interop.Tools.Cecil</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\src\Xamarin.Android.Cecil\Xamarin.Android.Cecil.csproj">
-      <Project>{15945D4B-FF56-4BCC-B598-2718D199DD08}</Project>
-      <Name>Xamarin.Android.Cecil</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers.csproj">
-      <Project>{D18FCF91-8876-48A0-A693-2DC1E7D3D80A}</Project>
-      <Name>Java.Interop.Tools.JavaCallableWrappers</Name>
-    </ProjectReference>
+    <PackageReference Include="Mono.Options" Version="5.3.0.1" />
+    <!-- Since we are sharing an OutputDirectory, and HtmlAgilityPack is also referenced by a different netstandard2.0 libary,
+          we can explicitly reference the netstandard2.0 version here. This will also ensure symbol files are copied to the output directory. -->
+    <PackageReference Include="HtmlAgilityPack" Version="1.8.14" ExcludeAssets="Compile" GeneratePathProperty="true" />
+    <Reference Include="HtmlAgilityPack">
+        <HintPath>$(PkgHtmlAgilityPack)\lib\netstandard2.0\HtmlAgilityPack.dll</HintPath>
+    </Reference>
   </ItemGroup>
+
   <ItemGroup>
-    <None Include="packages.config" />
+    <ProjectReference Include="..\..\src\Xamarin.Android.Tools.AnnotationSupport\Xamarin.Android.Tools.AnnotationSupport.csproj" />
+    <ProjectReference Include="..\..\src\Xamarin.Android.Tools.ApiXmlAdjuster\Xamarin.Android.Tools.ApiXmlAdjuster.csproj" />
+    <ProjectReference Include="..\..\src\Java.Interop.Tools.Diagnostics\Java.Interop.Tools.Diagnostics.csproj" />
+    <ProjectReference Include="..\..\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil.csproj" />
+    <ProjectReference Include="..\..\src\Xamarin.Android.Cecil\Xamarin.Android.Cecil.csproj" />
+    <ProjectReference Include="..\..\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers.csproj" />
   </ItemGroup>
+
 </Project>

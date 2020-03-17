@@ -26,7 +26,7 @@
     <DefineSymbols>JI_DLL_EXPORT MONODEVELOP MONO_DLL_EXPORT</DefineSymbols>
     <SourceDirectory>.</SourceDirectory>
   </PropertyGroup>
-  <Import Project="$(JNIEnvGenPath)\JdkInfo.props" />
+  <Import Project="$(JNIEnvGenPath)\JdkInfo.props" Condition="Exists('$(JNIEnvGenPath)\JdkInfo.props')" />
   <Import Project="$(JNIEnvGenPath)\MonoInfo.props" Condition="Exists('$(JNIEnvGenPath)\MonoInfo.props')" />
   <ItemGroup>
     <ClInclude Include="java-interop.h" />

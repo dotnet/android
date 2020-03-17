@@ -97,7 +97,7 @@ jobs:
   - script: |
       r=0
       make run-all-tests CONFIGURATION=$(Build.Configuration) || r=$?
-      jar cf xatb.jar -C src/Xamarin.Android.Tools.Bytecode/Tests/obj/*/classes .
+      jar cf xatb.jar -C tests/Xamarin.Android.Tools.Bytecode-Tests/obj/*/classes .
       zip -r bin.zip bin
       exit $r
     displayName: Run Tests
