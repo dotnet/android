@@ -170,7 +170,9 @@ namespace Android.Runtime {
 			else
 				IdentityHash = v => v;
 
+#if MONOANDROID1_0
 			Mono.SystemDependencyProvider.Initialize ();
+#endif
 
 			BoundExceptionType = (BoundExceptionType)args->ioExceptionType;
 			androidRuntime = new AndroidRuntime (args->env, args->javaVm, androidSdkVersion > 10, args->grefLoader, args->Loader_loadClass, args->jniAddNativeMethodRegistrationAttributePresent != 0);

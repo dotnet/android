@@ -4,7 +4,7 @@
   <Import Project="..\..\Configuration.props" />
 
   <PropertyGroup>
-    <TargetFramework>monoandroid10</TargetFramework>
+    <TargetFrameworks>monoandroid10;netstandard2.1</TargetFrameworks>
     <RootNamespace>Android</RootNamespace>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
@@ -27,6 +27,11 @@
     <TargetFrameworkRootPath>$(XAInstallPrefix)xbuild-frameworks</TargetFrameworkRootPath>
     <DefineConstants>$(DefineConstants);NET_2_0</DefineConstants>
     <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+   <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
+    <OutputPath>$(XAInstallPrefix)xbuild-frameworks\Xamarin.Android.App\$(AndroidFrameworkVersion)\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
 
@@ -71,6 +76,11 @@
       <HintPath>$(OutputPath)..\v1.0\Facades\System.Drawing.Common.dll</HintPath>
       <Private>False</Private>
     </Reference>
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
+    <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop\Java.Interop.csproj" />
+    <PackageReference Include="System.Drawing.Common" Version="4.7.0" />
   </ItemGroup>
 
   <ItemGroup>
