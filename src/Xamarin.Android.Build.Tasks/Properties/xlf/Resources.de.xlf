@@ -4,40 +4,40 @@
     <body>
       <trans-unit id="APT0002">
         <source>Invalid file name: It must contain only {0}.</source>
-        <target state="new">Invalid file name: It must contain only {0}.</target>
+        <target state="translated">Ungültiger Dateiname: Der Name darf nur {0} enthalten.</target>
         <note>{0} - The regular expression that the file name must match</note>
       </trans-unit>
       <trans-unit id="APT0003">
         <source>Invalid file name: It must contain only {0}.</source>
-        <target state="new">Invalid file name: It must contain only {0}.</target>
+        <target state="translated">Ungültiger Dateiname: Der Name darf nur {0} enthalten.</target>
         <note>{0} - The regular expression that the file name must match</note>
       </trans-unit>
       <trans-unit id="XA0000_API_for_TargetFrameworkVersion">
         <source>Could not determine API level for $(TargetFrameworkVersion) of '{0}'.</source>
-        <target state="new">Could not determine API level for $(TargetFrameworkVersion) of '{0}'.</target>
+        <target state="translated">Die API-Ebene für $(TargetFrameworkVersion) {0} konnte nicht bestimmt werden.</target>
         <note>The following are literal names and should not be translated: $(TargetFrameworkVersion)
 {0} - The current value of $(TargetFrameworkVersion)</note>
       </trans-unit>
       <trans-unit id="XA0000_API_or_TargetFrameworkVersion_Fail">
         <source>Could not determine $(AndroidApiLevel) or $(TargetFrameworkVersion); should not be reached.</source>
-        <target state="new">Could not determine $(AndroidApiLevel) or $(TargetFrameworkVersion); should not be reached.</target>
+        <target state="translated">$(AndroidApiLevel) oder $(TargetFrameworkVersion) konnte nicht bestimmt werden. Dieser Fehler sollte nicht auftreten.</target>
         <note>The following are literal names and should not be translated: $(AndroidApiLevel), $(TargetFrameworkVersion)
 In this message, the phrase "should not be reached" means that this error message is not expected to appear in normal usage.</note>
       </trans-unit>
       <trans-unit id="XA0000_Exception">
         <source>Unhandled exception: {0}</source>
-        <target state="new">Unhandled exception: {0}</target>
+        <target state="translated">Ausnahmefehler: {0}</target>
         <note>{0} - The exception message of the associated exception</note>
       </trans-unit>
       <trans-unit id="XA0000_TargetFrameworkVersion_for_API">
         <source>Could not determine $(TargetFrameworkVersion) for API level '{0}.'</source>
-        <target state="new">Could not determine $(TargetFrameworkVersion) for API level '{0}.'</target>
+        <target state="translated">$(TargetFrameworkVersion) für API-Ebene {0} konnte nicht bestimmt werden.</target>
         <note>The following are literal names and should not be translated: $(TargetFrameworkVersion)
 {0} - The API level number</note>
       </trans-unit>
       <trans-unit id="XA0001">
         <source>Unsupported or invalid $(TargetFrameworkVersion) value of '{0}'. Please update your Project Options.</source>
-        <target state="new">Unsupported or invalid $(TargetFrameworkVersion) value of '{0}'. Please update your Project Options.</target>
+        <target state="translated">Nicht unterstützter oder ungültiger $(TargetFrameworkVersion)-Wert von {0}. Aktualisieren Sie Ihre Projektoptionen.</target>
         <note>The following are literal names and should not be translated: $(TargetFrameworkVersion)</note>
       </trans-unit>
       <trans-unit id="XA0002">
@@ -47,61 +47,61 @@ In this message, the phrase "should not be reached" means that this error messag
       </trans-unit>
       <trans-unit id="XA0003">
         <source>Invalid `android:versionCode` value `{0}` in `AndroidManifest.xml`. It must be an integer value.</source>
-        <target state="new">Invalid `android:versionCode` value `{0}` in `AndroidManifest.xml`. It must be an integer value.</target>
+        <target state="translated">Ungültiger android:versionCode-Wert "{0}" in "AndroidManifest.xml". Es muss sich um einen ganzzahligen Wert handeln.</target>
         <note>The following are literal names and should not be translated: `android:versionCode`, `AndroidManifest.xml`</note>
       </trans-unit>
       <trans-unit id="XA0004">
         <source>Invalid `android:versionCode` value `{0}` in `AndroidManifest.xml`. The value must be in the range of 0 to {1}.</source>
-        <target state="new">Invalid `android:versionCode` value `{0}` in `AndroidManifest.xml`. The value must be in the range of 0 to {1}.</target>
+        <target state="translated">Ungültiger android:versionCode-Wert "{0}" in "AndroidManifest.xml". Der Wert muss zwischen 0 und {1} liegen.</target>
         <note>The following are literal names and should not be translated: `android:versionCode`, `AndroidManifest.xml`
 {0} - The current value
 {1} - The maximum allowed value</note>
       </trans-unit>
       <trans-unit id="XA0030">
         <source>Building with JDK version `{0}` is not supported. Please install JDK version `{1}`. See https://aka.ms/xamarin/jdk9-errors</source>
-        <target state="new">Building with JDK version `{0}` is not supported. Please install JDK version `{1}`. See https://aka.ms/xamarin/jdk9-errors</target>
+        <target state="translated">Eine Kompilierung mit JDK-Version {0} wird nicht unterstützt. Installieren Sie JDK-Version {1}. Siehe https://aka.ms/xamarin/jdk9-errors.</target>
         <note>The abbreviation "JDK" should not be translated.</note>
       </trans-unit>
       <trans-unit id="XA0031">
         <source>Java SDK {0} or above is required when using $(TargetFrameworkVersion) {1}.</source>
-        <target state="new">Java SDK {0} or above is required when using $(TargetFrameworkVersion) {1}.</target>
+        <target state="translated">Bei Verwendung von $(TargetFrameworkVersion) {1} ist Java SDK {0} oder höher erforderlich.</target>
         <note>The following are literal names and should not be translated: $(TargetFrameworkVersion)
 {0} - The Java SDK version number
 {1} - The target framework version number</note>
       </trans-unit>
       <trans-unit id="XA0032">
         <source>Java SDK {0} or above is required when using Android SDK Build-Tools {1}.</source>
-        <target state="new">Java SDK {0} or above is required when using Android SDK Build-Tools {1}.</target>
+        <target state="translated">Bei Verwendung der Android SDK Build-Tools {1} ist Java SDK {0} oder höher erforderlich.</target>
         <note>The following are literal names and should not be translated: Android SDK Build-Tools
 {0} - The Java SDK version number
 {1} - The Android SDK Build-Tools version number</note>
       </trans-unit>
       <trans-unit id="XA0033">
         <source>Failed to get the Java SDK version because the returned value does not appear to contain a valid version number. `{0} -version` returned: ```{1}```</source>
-        <target state="new">Failed to get the Java SDK version because the returned value does not appear to contain a valid version number. `{0} -version` returned: ```{1}```</target>
+        <target state="translated">Fehler beim Abrufen der Java SDK-Version, weil der zurückgegebene Wert offenbar keine gültige Versionsnummer enthält. Von "{0} -version" zurückgegebener Wert: "{1}"</target>
         <note>The following are literal names and should not be translated: `{0} -version`, ```{1}```
 {0} - The name of the Java command
 {1} - The output of the command</note>
       </trans-unit>
       <trans-unit id="XA0034">
         <source>Failed to get the Java SDK version. Please ensure you have Java {0} or above installed.</source>
-        <target state="new">Failed to get the Java SDK version. Please ensure you have Java {0} or above installed.</target>
+        <target state="translated">Fehler beim Abrufen der Java SDK-Version. Stellen Sie sicher, dass Java {0} oder höher installiert ist.</target>
         <note>{0} - The Java version number</note>
       </trans-unit>
       <trans-unit id="XA0100">
         <source>EmbeddedNativeLibrary '{0}' is invalid in Android Application projects. Please use AndroidNativeLibrary instead.</source>
-        <target state="new">EmbeddedNativeLibrary '{0}' is invalid in Android Application projects. Please use AndroidNativeLibrary instead.</target>
+        <target state="translated">EmbeddedNativeLibrary "{0}" ist in Android-Anwendungsprojekten ungültig. Verwenden Sie stattdessen AndroidNativeLibrary.</target>
         <note>The following are literal names and should not be translated: EmbeddedNativeLibrary, AndroidNativeLibrary
 {0} - The library name.</note>
       </trans-unit>
       <trans-unit id="XA0104">
         <source>Invalid value for `$(AndroidSequencePointsMode)`: {0}</source>
-        <target state="new">Invalid value for `$(AndroidSequencePointsMode)`: {0}</target>
+        <target state="translated">Ungültiger Wert für "$(AndroidSequencePointsMode)": {0}</target>
         <note>The following are literal names and should not be translated: `$(AndroidSequencePointsMode)`</note>
       </trans-unit>
       <trans-unit id="XA0105">
         <source>The $(TargetFrameworkVersion) for {0} ({1}) is greater than the $(TargetFrameworkVersion) for the application project ({2}). Please increase the $(TargetFrameworkVersion) for the application project.</source>
-        <target state="new">The $(TargetFrameworkVersion) for {0} ({1}) is greater than the $(TargetFrameworkVersion) for the application project ({2}). Please increase the $(TargetFrameworkVersion) for the application project.</target>
+        <target state="translated">Die $(TargetFrameworkVersion) für "{0}" ({1}) ist höher als die $(TargetFrameworkVersion) für das Anwendungsprojekt ({2}). Erhöhen Sie die $(TargetFrameworkVersion) für das Anwendungsprojekt.</target>
         <note>The following are literal names and should not be translated: $(TargetFrameworkVersion)
 {0} - The file name of the library referenced by the application
 {1} - The target framework version number for the library
@@ -109,56 +109,56 @@ In this message, the phrase "should not be reached" means that this error messag
       </trans-unit>
       <trans-unit id="XA0107">
         <source>{0} is a Reference Assembly.</source>
-        <target state="new">{0} is a Reference Assembly.</target>
+        <target state="translated">"{0}" ist eine Referenzassembly.</target>
         <note />
       </trans-unit>
       <trans-unit id="XA0107_Ignoring">
         <source>Ignoring Reference Assembly `{0}`.</source>
-        <target state="new">Ignoring Reference Assembly `{0}`.</target>
+        <target state="translated">Die Referenzassembly "{0}" wird ignoriert.</target>
         <note>{0} - File name of the assembly.</note>
       </trans-unit>
       <trans-unit id="XA0108">
         <source>Could not get version from '{0}'. Defaulting to 1.0</source>
-        <target state="new">Could not get version from '{0}'. Defaulting to 1.0</target>
+        <target state="translated">Die Version konnte nicht aus "{0}" abgerufen werden. Es wird die Standardeinstellung 1.0 verwendet.</target>
         <note>{0} - The tool name</note>
       </trans-unit>
       <trans-unit id="XA0111">
         <source>Could not get the `aapt2` version. Disabling `aapt2` support. Please check it is installed correctly.</source>
-        <target state="new">Could not get the `aapt2` version. Disabling `aapt2` support. Please check it is installed correctly.</target>
+        <target state="translated">Die aapt2-Version konnte nicht abgerufen werden. Die Unterstützung für "aapt2" wird deaktiviert. Überprüfen Sie, ob das Tool ordnungsgemäß installiert ist.</target>
         <note>The following are literal names and should not be translated: `aapt2`</note>
       </trans-unit>
       <trans-unit id="XA0112">
         <source>`aapt2` is not installed. Disabling `aapt2` support. Please check it is installed correctly.</source>
-        <target state="new">`aapt2` is not installed. Disabling `aapt2` support. Please check it is installed correctly.</target>
+        <target state="translated">"aapt2" ist nicht installiert. Die Unterstützung für "aapt2" wird deaktiviert. Überprüfen Sie, ob das Tool ordnungsgemäß installiert ist.</target>
         <note>The following are literal names and should not be translated: `aapt2`</note>
       </trans-unit>
       <trans-unit id="XA0113">
         <source>Google Play requires that new applications and updates must use a TargetFrameworkVersion of v8.0 (API level 26) or above. You are currently targeting {0} (API level {1}).</source>
-        <target state="new">Google Play requires that new applications and updates must use a TargetFrameworkVersion of v8.0 (API level 26) or above. You are currently targeting {0} (API level {1}).</target>
+        <target state="translated">Google Play erfordert, dass neue Anwendungen und Updates die TargetFrameworkVersion v8.0 (API-Ebene 26) oder höher verwenden müssen. Sie verwenden als Ziel aktuell Version {0} (API-Ebene {1}).</target>
         <note>The following are literal names and should not be translated: TargetFrameworkVersion, v8.0
 {0} - The current value of TargetFrameworkVersion
 {1} - The corresponding API level number</note>
       </trans-unit>
       <trans-unit id="XA0116">
         <source>Unable to find `EmbeddedResource` named `{0}`.</source>
-        <target state="new">Unable to find `EmbeddedResource` named `{0}`.</target>
+        <target state="translated">Die EmbeddedResource namens "{0}" wurde nicht gefunden.</target>
         <note>The following are literal names and should not be translated: EmbeddedResource
 {0} - The name of the missing resource</note>
       </trans-unit>
       <trans-unit id="XA0117">
         <source>The TargetFrameworkVersion {0} is deprecated. Please update it to be v4.4 or higher.</source>
-        <target state="new">The TargetFrameworkVersion {0} is deprecated. Please update it to be v4.4 or higher.</target>
+        <target state="translated">Die TargetFrameworkVersion {0} ist veraltet. Führen Sie eine Aktualisierung auf Version 4.4 oder höher durch.</target>
         <note>The following are literal names and should not be translated: TargetFrameworkVersion, v4.4
 {0} - The current value of TargetFrameworkVersion</note>
       </trans-unit>
       <trans-unit id="XA0118_Parse">
         <source>Could not parse '{0}'</source>
-        <target state="new">Could not parse '{0}'</target>
+        <target state="translated">"{0}" konnte nicht analysiert werden.</target>
         <note>{0} - A NuGet target framework moniker string</note>
       </trans-unit>
       <trans-unit id="XA0118_Target">
         <source>Could not resolve `target` in lock file for '{0}'</source>
-        <target state="new">Could not resolve `target` in lock file for '{0}'</target>
+        <target state="translated">"target" konnte in der Sperrdatei für "{0}" nicht aufgelöst werden.</target>
         <note>The following are literal names and should not be translated: `target`
 
 The term "lock file" comes from NuGet. For example, search for "UnauthorizedLockFail" in https://github.com/NuGet/NuGet.Build.Localization to see some example localizations of "lock file."
@@ -167,62 +167,62 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
       </trans-unit>
       <trans-unit id="XA0121">
         <source>Assembly '{0}' is using '[assembly: {1}]', which is no longer supported. Use a newer version of this NuGet package or notify the library author.</source>
-        <target state="new">Assembly '{0}' is using '[assembly: {1}]', which is no longer supported. Use a newer version of this NuGet package or notify the library author.</target>
+        <target state="translated">Die Assembly "{0}" verwendet das Attribut "[assembly: {1}]", dieses wird nicht mehr unterstützt. Verwenden Sie eine neuere Version dieses NuGet-Pakets, oder benachrichtigen Sie den Bibliotheksautor.</target>
         <note>The following are literal names and should not be translated: [assembly: {1}], NuGet
 {0} - The assembly name
 {1} - The unsupported attribute</note>
       </trans-unit>
       <trans-unit id="XA0122">
         <source>Assembly '{0}' is using a deprecated attribute '[assembly: {1}]'. Use a newer version of this NuGet package or notify the library author.</source>
-        <target state="new">Assembly '{0}' is using a deprecated attribute '[assembly: {1}]'. Use a newer version of this NuGet package or notify the library author.</target>
+        <target state="translated">Die Assembly "{0}" verwendet ein veraltetes Attribut "[assembly: {1}]". Verwenden Sie eine neuere Version dieses NuGet-Pakets, oder benachrichtigen Sie den Bibliotheksautor.</target>
         <note>The following are literal names and should not be translated: [assembly: {1}], NuGet</note>
       </trans-unit>
       <trans-unit id="XA1000">
         <source>There was a problem parsing {0}. This is likely due to incomplete or invalid XML. Exception: {1}</source>
-        <target state="new">There was a problem parsing {0}. This is likely due to incomplete or invalid XML. Exception: {1}</target>
+        <target state="translated">Problem beim Analysieren von "{0}". Dies ist wahrscheinlich auf eine unvollständige oder ungültige XML-Datei zurückzuführen. Ausnahme: {1}</target>
         <note>{0} - The file name
 {1} - The exception message of the associated exception</note>
       </trans-unit>
       <trans-unit id="XA1001">
         <source>AndroidResgen: Warning while updating resource XML '{0}': {1}</source>
-        <target state="new">AndroidResgen: Warning while updating resource XML '{0}': {1}</target>
+        <target state="translated">AndroidResgen: Warnung beim Aktualisieren der Ressourcen-XML-Datei "{0}": {1}</target>
         <note>The following are literal names and should not be translated: AndroidResgen
 {0} - The name of the XML file
 {1} - The exception message of the associated exception</note>
       </trans-unit>
       <trans-unit id="XA1002">
         <source>The closest match found for '{0}' is '{1}', but the capitalization does not match. Please correct the capitalization.</source>
-        <target state="new">The closest match found for '{0}' is '{1}', but the capitalization does not match. Please correct the capitalization.</target>
+        <target state="translated">Die nächste Übereinstimmung für "{0}" ist "{1}", aber die Groß-/Kleinschreibung stimmt nicht überein. Korrigieren Sie die Groß-/Kleinschreibung.</target>
         <note>{0} - The user-provided type name
 {1} - The type name found</note>
       </trans-unit>
       <trans-unit id="XA1005">
         <source>Attempting basic type name matching for element with ID '{0}' and type '{1}'</source>
-        <target state="new">Attempting basic type name matching for element with ID '{0}' and type '{1}'</target>
+        <target state="translated">Es wird versucht, einen Basistypnamen für das Element mit der ID {0} und dem Typ "{1}" abzugleichen.</target>
         <note>{0} - The Android resource ID name</note>
       </trans-unit>
       <trans-unit id="XA1005_Instructions">
         <source>If basic type name matching fails, please add a `xamarin:managedType` attribute to the element to specify the fully qualified managed type name of the element.</source>
-        <target state="new">If basic type name matching fails, please add a `xamarin:managedType` attribute to the element to specify the fully qualified managed type name of the element.</target>
+        <target state="translated">Wenn der Abgleich des Basistypnamens nicht erfolgreich ist, fügen Sie dem Element ein xamarin:managedType-Attribut hinzu, um den vollqualifizierten Namen des verwalteten Typs für das Element anzugeben.</target>
         <note>"xamarin:managedType" is a literal name and should not be translated.</note>
       </trans-unit>
       <trans-unit id="XA1006">
         <source>The TargetFrameworkVersion (Android API level {0}) is higher than the targetSdkVersion ({1}). Please increase the `android:targetSdkVersion` in the `AndroidManifest.xml` so that the API levels match.</source>
-        <target state="new">The TargetFrameworkVersion (Android API level {0}) is higher than the targetSdkVersion ({1}). Please increase the `android:targetSdkVersion` in the `AndroidManifest.xml` so that the API levels match.</target>
+        <target state="translated">Die TargetFrameworkVersion (Android-API-Ebene {0}) ist höher als die targetSdkVersion ({1}). Erhöhen Sie "android:targetSdkVersion" in "AndroidManifest.xml", sodass die API-Ebenen übereinstimmen.</target>
         <note>The following are literal names and should not be translated: targetSdkVersion, TargetFrameworkVersion, android:targetSdkVersion, AndroidManifest.xml
 {0} - The target framework version number
 {1} - The target SDK version number</note>
       </trans-unit>
       <trans-unit id="XA1007">
         <source>The minSdkVersion ({0}) is greater than the targetSdkVersion. Please change the value such that the minSdkVersion is less than or equal to the targetSdkVersion ({1}).</source>
-        <target state="new">The minSdkVersion ({0}) is greater than the targetSdkVersion. Please change the value such that the minSdkVersion is less than or equal to the targetSdkVersion ({1}).</target>
+        <target state="translated">Die minSdkVersion ({0}) ist größer als die targetSdkVersion. Ändern Sie den Wert so ab, dass der minSdkVersion-Wert kleiner ist als der targetSdkVersion-Wert ({1}) oder diesem entspricht.</target>
         <note>The following are literal names and should not be translated: minSdkVersion, targetSdkVersion
 {0} - The minimum SDK version number
 {1} - The target SDK version number</note>
       </trans-unit>
       <trans-unit id="XA1008">
         <source>The TargetFrameworkVersion (Android API level {0}) is lower than the targetSdkVersion ({1}). Please increase the `$(TargetFrameworkVersion)` or decrease the `android:targetSdkVersion` in the `AndroidManifest.xml` so that the API levels match.</source>
-        <target state="new">The TargetFrameworkVersion (Android API level {0}) is lower than the targetSdkVersion ({1}). Please increase the `$(TargetFrameworkVersion)` or decrease the `android:targetSdkVersion` in the `AndroidManifest.xml` so that the API levels match.</target>
+        <target state="translated">Die TargetFrameworkVersion (Android-API-Ebene {0}) ist niedriger als die targetSdkVersion ({1}). Erhöhen Sie "$(TargetFrameworkVersion)", oder verringern Sie den Wert für "android:targetSdkVersion" in "AndroidManifest.xml", sodass die API-Ebenen übereinstimmen.</target>
         <note>The following are literal names and should not be translated: targetSdkVersion, TargetFrameworkVersion, android:targetSdkVersion, AndroidManifest.xml
 {0} - The target framework version number
 {1} - The target SDK version number</note>
@@ -234,77 +234,77 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
       </trans-unit>
       <trans-unit id="XA2001">
         <source>Source file '{0}' could not be found.</source>
-        <target state="new">Source file '{0}' could not be found.</target>
+        <target state="translated">Die Quelldatei "{0}" wurde nicht gefunden.</target>
         <note />
       </trans-unit>
       <trans-unit id="XA2002_Framework">
         <source>Can not resolve reference: `{0}`, referenced by {1}. Perhaps it doesn't exist in the Mono for Android profile?</source>
-        <target state="new">Can not resolve reference: `{0}`, referenced by {1}. Perhaps it doesn't exist in the Mono for Android profile?</target>
+        <target state="translated">Der durch "{1}" referenzierte Verweis "{0}" kann nicht aufgelöst werden. Möglicherweise ist er nicht im Mono für Android-Profil vorhanden.</target>
         <note />
       </trans-unit>
       <trans-unit id="XA2002_NuGet">
         <source>Can not resolve reference: `{0}`, referenced by {1}. Please add a NuGet package or assembly reference for `{0}`, or remove the reference to `{2}`.</source>
-        <target state="new">Can not resolve reference: `{0}`, referenced by {1}. Please add a NuGet package or assembly reference for `{0}`, or remove the reference to `{2}`.</target>
+        <target state="translated">Der durch "{1}" referenzierte Verweis "{0}" kann nicht aufgelöst werden. Fügen Sie einen Verweis auf ein NuGet-Paket oder eine Assembly für "{0}" hinzu, oder entfernen Sie den Verweis auf "{2}".</target>
         <note />
       </trans-unit>
       <trans-unit id="XA2006">
         <source>Could not resolve reference to '{0}' (defined in assembly '{1}') with scope '{2}'. When the scope is different from the defining assembly, it usually means that the type is forwarded.</source>
-        <target state="new">Could not resolve reference to '{0}' (defined in assembly '{1}') with scope '{2}'. When the scope is different from the defining assembly, it usually means that the type is forwarded.</target>
+        <target state="translated">Der Verweis auf "{0}" (definiert in Assembly "{1}") mit dem Bereich "{2}" konnte nicht aufgelöst werden. Wenn sich der Bereich von der definierenden Assembly unterscheidet, weist dies üblicherweise auf einen weitergeleiteten Typ hin.</target>
         <note>{0} - The member name, such as a class name
 {1} - The assembly name
 {2} - The scope of the member, such as the name of a different assembly</note>
       </trans-unit>
       <trans-unit id="XA3001">
         <source>Could not AOT the assembly: {0}</source>
-        <target state="new">Could not AOT the assembly: {0}</target>
+        <target state="translated">AOT für Assembly nicht möglich: {0}</target>
         <note>The abbreviation "AOT" should not be translated.</note>
       </trans-unit>
       <trans-unit id="XA3002">
         <source>Invalid AOT mode: {0}</source>
-        <target state="new">Invalid AOT mode: {0}</target>
+        <target state="translated">Ungültiger AOT-Modus: {0}</target>
         <note>The abbreviation "AOT" should not be translated.</note>
       </trans-unit>
       <trans-unit id="XA3003">
         <source>Could not strip IL of assembly: {0}</source>
-        <target state="new">Could not strip IL of assembly: {0}</target>
+        <target state="translated">IL für Assembly konnte nicht entfernt werden: {0}</target>
         <note>The abbreviation "IL" should not be translated.</note>
       </trans-unit>
       <trans-unit id="XA3004">
         <source>Android NDK r10d is buggy and provides an incompatible x86_64 libm.so. See https://code.google.com/p/android/issues/detail?id=161422.</source>
-        <target state="new">Android NDK r10d is buggy and provides an incompatible x86_64 libm.so. See https://code.google.com/p/android/issues/detail?id=161422.</target>
+        <target state="translated">Android NDK r10d ist fehlerhaft und stellt eine inkompatible x86_64-Bibliothek "libm.so" bereit. Siehe https://code.google.com/p/android/issues/detail?id=161422.</target>
         <note>The following are literal names and should not be translated: NDK, r10d, x86_64, libm.so
 "r10d" is the problematic version of the NDK. "x86_64" is the architecture of the libm.so file.</note>
       </trans-unit>
       <trans-unit id="XA3005">
         <source>The detected Android NDK version is incompatible with the targeted LLVM configuration. Please upgrade to NDK r10d or newer.</source>
-        <target state="new">The detected Android NDK version is incompatible with the targeted LLVM configuration. Please upgrade to NDK r10d or newer.</target>
+        <target state="translated">Die erkannte Android-NDK-Version ist nicht mit der LLVM-Zielkonfiguration kompatibel. Führen Sie ein Upgrade auf NDK r10d oder höher aus.</target>
         <note>The following are literal names and should not be translated: NDK, LLVM, r10d
 "r10d" is the version of the NDK.</note>
       </trans-unit>
       <trans-unit id="XA3006">
         <source>Could not compile native assembly file: {0}</source>
-        <target state="new">Could not compile native assembly file: {0}</target>
+        <target state="translated">Die native Assemblydatei konnte nicht kompiliert werden: {0}</target>
         <note>In this message, the term "assembly" means the low-level language that an assembler like `as` takes as input. (This is different from most of the other messages, where the term "assembly" means the file type that the C# compiler produces.)</note>
       </trans-unit>
       <trans-unit id="XA3007">
         <source>Could not link native shared library: {0}</source>
-        <target state="new">Could not link native shared library: {0}</target>
+        <target state="translated">Die native freigegebene Bibliothek konnte nicht verknüpft werden: {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="XA4209">
         <source>Failed to generate Java type for class: {0} due to {1}</source>
-        <target state="new">Failed to generate Java type for class: {0} due to {1}</target>
+        <target state="translated">Fehler beim Generieren des Java-Typs für die Klasse "{0}". Ursache: {1}</target>
         <note>{0} - The managed type name
 {1} - The exception message of the associated exception</note>
       </trans-unit>
       <trans-unit id="XA4210">
         <source>Please add a reference to Mono.Android.Export.dll when using ExportAttribute or ExportFieldAttribute.</source>
-        <target state="new">Please add a reference to Mono.Android.Export.dll when using ExportAttribute or ExportFieldAttribute.</target>
+        <target state="translated">Fügen Sie einen Verweis auf "Mono.Android.Export.dll" hinzu, wenn Sie "ExportAttribute" oder "ExportFieldAttribute" verwenden.</target>
         <note>The following are literal names and should not be translated: Mono.Android.Export.dll, ExportAttribute, ExportFieldAttribute.</note>
       </trans-unit>
       <trans-unit id="XA4211">
         <source>AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{0}' is less than $(TargetFrameworkVersion) '{1}'. Using API-{2} for ACW compilation.</source>
-        <target state="new">AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{0}' is less than $(TargetFrameworkVersion) '{1}'. Using API-{2} for ACW compilation.</target>
+        <target state="translated">AndroidManifest.xml //uses-sdk/@android:targetSdkVersion "{0}" ist niedriger als $(TargetFrameworkVersion) "{1}". Für die ACW-Kompilierung wird API-{2} verwendet.</target>
         <note>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:targetSdkVersion , $(TargetFrameworkVersion), API-{2}, ACW
 {0} - The target SDK version number
 {1} - The target framework version number
@@ -312,122 +312,122 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
       </trans-unit>
       <trans-unit id="XA4213">
         <source>The type '{0}' must provide a public default constructor</source>
-        <target state="new">The type '{0}' must provide a public default constructor</target>
+        <target state="translated">Der Typ "{0}" muss einen öffentlichen Standardkonstruktor angeben.</target>
         <note />
       </trans-unit>
       <trans-unit id="XA4214">
         <source>The managed type `{0}` exists in multiple assemblies: {1}. Please refactor the managed type names in these assemblies so that they are not identical.</source>
-        <target state="new">The managed type `{0}` exists in multiple assemblies: {1}. Please refactor the managed type names in these assemblies so that they are not identical.</target>
+        <target state="translated">Der verwaltete Typ "{0}" ist in mehreren Assemblys vorhanden: {1}. Gestalten Sie die Namen der verwalteten Typen in diesen Assemblys so um, dass sie nicht übereinstimmen.</target>
         <note>{0} - The managed type name
 {1} - Comma-separated list of all the assemblies where the managed type exists</note>
       </trans-unit>
       <trans-unit id="XA4214_Result">
         <source>References to the type `{0}` will refer to `{0}, {1}`.</source>
-        <target state="new">References to the type `{0}` will refer to `{0}, {1}`.</target>
+        <target state="translated">Verweise auf den Typ "{0}" verweisen auf "{0}, {1}".</target>
         <note>The phrase "`{0}, {1}`" does not need to be translated.
 {0} - The managed type name
 {1} - The name of the library that contains the type</note>
       </trans-unit>
       <trans-unit id="XA4215">
         <source>The Java type `{0}` is generated by more than one managed type. Please change the [Register] attribute so that the same Java type is not emitted.</source>
-        <target state="new">The Java type `{0}` is generated by more than one managed type. Please change the [Register] attribute so that the same Java type is not emitted.</target>
+        <target state="translated">Der Java-Typ "{0}" wird von mehr als einem verwalteten Typ generiert. Ändern Sie das [Register]-Attribut, sodass nicht derselbe Java-Typ ausgegeben wird.</target>
         <note>The following are literal names and should not be translated: Java, [Register]</note>
       </trans-unit>
       <trans-unit id="XA4215_Details">
         <source>  `{0}` generated by: {1}</source>
-        <target state="new">  `{0}` generated by: {1}</target>
+        <target state="translated"> "{0}" generiert von: {1}</target>
         <note>The two spaces indentation at the beginning of this message should be preserved in the translations where possible.
 {0} - The generated Java type name
 {1} - The managed type name</note>
       </trans-unit>
       <trans-unit id="XA4216_MinSdkVersion">
         <source>AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' is less than API-{1}, this configuration is not supported.</source>
-        <target state="new">AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' is less than API-{1}, this configuration is not supported.</target>
+        <target state="translated">AndroidManifest.xml //uses-sdk/@android:minSdkVersion "{0}" ist niedriger als API-{1}, diese Konfiguration wird nicht unterstützt.</target>
         <note>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:minSdkVersion,  API-{1}
 {0} - The minimum SDK version number
 {1} - The API version number</note>
       </trans-unit>
       <trans-unit id="XA4216_TargetSdkVersion">
         <source>AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{0}' is less than API-{1}, this configuration is not supported.</source>
-        <target state="new">AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{0}' is less than API-{1}, this configuration is not supported.</target>
+        <target state="translated">AndroidManifest.xml //uses-sdk/@android:targetSdkVersion "{0}" ist niedriger als API-{1}, diese Konfiguration wird nicht unterstützt.</target>
         <note>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:targetSdkVersion , API-{1}
 {0} - The target SDK version number
 {1} - The API version number</note>
       </trans-unit>
       <trans-unit id="XA4218">
         <source>Unable to find //manifest/application/uses-library at path: {0}</source>
-        <target state="new">Unable to find //manifest/application/uses-library at path: {0}</target>
+        <target state="translated">"//manifest/application/uses-library" wurde nicht im Pfad "{0}" gefunden.</target>
         <note>The following are literal names and should not be translated: //manifest/application/uses-library</note>
       </trans-unit>
       <trans-unit id="XA4300">
         <source>Native library '{0}' will not be bundled because it has an unsupported ABI.</source>
-        <target state="new">Native library '{0}' will not be bundled because it has an unsupported ABI.</target>
+        <target state="translated">Die native Bibliothek "{0}" wird nicht gebündelt, weil sie eine nicht unterstützte ABI umfasst.</target>
         <note>The abbreviation "ABI" should not be translated.
 In this message, the term "bundled" is a short way of saying "included into the final application package."</note>
       </trans-unit>
       <trans-unit id="XA4301">
         <source>APK already contains the item {0}; ignoring.</source>
-        <target state="new">APK already contains the item {0}; ignoring.</target>
+        <target state="translated">APK enthält bereits das Element "{0}". Das Element wird ignoriert.</target>
         <note>The abbreviation "APK" should not be translated.
 {0} - The file name.</note>
       </trans-unit>
       <trans-unit id="XA4301_ABI">
         <source>Cannot determine ABI of native library {0}.</source>
-        <target state="new">Cannot determine ABI of native library {0}.</target>
+        <target state="translated">ABI der nativen Bibliothek "{0}" kann nicht ermittelt werden.</target>
         <note>The abbreviation "ABI" should not be translated.</note>
       </trans-unit>
       <trans-unit id="XA4301_ABI_Ignoring">
         <source>Could not determine ABI of some native libraries. Ignoring those: {0}</source>
-        <target state="new">Could not determine ABI of some native libraries. Ignoring those: {0}</target>
+        <target state="translated">ABI konnte für einige native Bibliotheken nicht ermittelt werden. Diese werden ignoriert: {0}</target>
         <note>The abbreviation "ABI" should not be translated.
 {0} - Comma-separated list of the ignored library file names.</note>
       </trans-unit>
       <trans-unit id="XA4302">
         <source>Unhandled exception merging `AndroidManifest.xml`: {0}</source>
-        <target state="new">Unhandled exception merging `AndroidManifest.xml`: {0}</target>
+        <target state="translated">Unbehandelte Ausnahme beim Zusammenführen von "AndroidManifest.xml": {0}</target>
         <note>The following are literal names and should not be translated: `AndroidManifest.xml`
 {0} - The exception message of the associated exception</note>
       </trans-unit>
       <trans-unit id="XA4303">
         <source>Error extracting resources from "{0}": {1}</source>
-        <target state="new">Error extracting resources from "{0}": {1}</target>
+        <target state="translated">Fehler beim Extrahieren von Ressourcen aus "{0}": {1}</target>
         <note>{0} - The file name
 {1} - The exception message of the associated exception</note>
       </trans-unit>
       <trans-unit id="XA4304">
         <source>ProGuard configuration file '{0}' was not found.</source>
-        <target state="new">ProGuard configuration file '{0}' was not found.</target>
+        <target state="translated">Die ProGuard-Konfigurationsdatei "{0}" wurde nicht gefunden.</target>
         <note>The following are literal names and should not be translated: ProGuard</note>
       </trans-unit>
       <trans-unit id="XA4305">
         <source>Multidex is enabled, but `$(_AndroidMainDexListFile)` is empty.</source>
-        <target state="new">Multidex is enabled, but `$(_AndroidMainDexListFile)` is empty.</target>
+        <target state="translated">Multidex ist aktiviert, aber "$(_AndroidMainDexListFile)" ist leer.</target>
         <note>The following are literal names and should not be translated: Multidex, $(_AndroidMainDexListFile)</note>
       </trans-unit>
       <trans-unit id="XA4305_File_Missing">
         <source>Multidex is enabled, but the `$(_AndroidMainDexListFile)` file '{0}' does not exist.</source>
-        <target state="new">Multidex is enabled, but the `$(_AndroidMainDexListFile)` file '{0}' does not exist.</target>
+        <target state="translated">Multidex ist aktiviert, aber die $(_AndroidMainDexListFile)-Datei "{0}" ist nicht vorhanden.</target>
         <note>The following are literal names and should not be translated: Multidex, $(_AndroidMainDexListFile)</note>
       </trans-unit>
       <trans-unit id="XA4306">
         <source>R8 does not support `@(MultiDexMainDexList)` files when android:minSdkVersion &gt;= 21</source>
-        <target state="new">R8 does not support `@(MultiDexMainDexList)` files when android:minSdkVersion &gt;= 21</target>
+        <target state="translated">R8 unterstützt keine @(MultiDexMainDexList)-Dateien, wenn "android:minSdkVersion" größer oder gleich 21 ist.</target>
         <note>The following are literal names and should not be translated: R8, @(MultiDexMainDexList),  android:minSdkVersion</note>
       </trans-unit>
       <trans-unit id="XA4307">
         <source>Invalid ProGuard configuration file. {0}</source>
-        <target state="new">Invalid ProGuard configuration file. {0}</target>
+        <target state="translated">Ungültige ProGuard-Konfigurationsdatei. {0}</target>
         <note>The following are literal names and should not be translated: ProGuard
 {0} - The error message returned by the ProGuard tool.</note>
       </trans-unit>
       <trans-unit id="XA4308">
         <source>Failed to generate type maps</source>
-        <target state="new">Failed to generate type maps</target>
+        <target state="translated">Fehler beim Generieren von Typzuordnungen.</target>
         <note />
       </trans-unit>
       <trans-unit id="XA4309">
         <source>'MultiDexMainDexList' file '{0}' does not exist.</source>
-        <target state="new">'MultiDexMainDexList' file '{0}' does not exist.</target>
+        <target state="translated">Die MultiDexMainDexList-Datei "{0}" ist nicht vorhanden.</target>
         <note>The following are literal names and should not be translated: MultiDexMainDexList</note>
       </trans-unit>
       <trans-unit id="XA4310">
@@ -437,54 +437,54 @@ In this message, the term "bundled" is a short way of saying "included into the 
       </trans-unit>
       <trans-unit id="XA5101">
         <source>Missing Android NDK toolchains directory '{0}'. Please install the Android NDK.</source>
-        <target state="new">Missing Android NDK toolchains directory '{0}'. Please install the Android NDK.</target>
+        <target state="translated">Das Android NDK-Toolkettenverzeichnis "{0}" fehlt. Installieren Sie das Android NDK.</target>
         <note>{0} - The path of the missing directory</note>
       </trans-unit>
       <trans-unit id="XA5101_C_Compiler">
         <source>C compiler for target {0} was not found. Tried paths: "{1}"</source>
-        <target state="new">C compiler for target {0} was not found. Tried paths: "{1}"</target>
+        <target state="translated">Der C-Compiler für das Ziel "{0}" wurde nicht gefunden. Durchsuchte Pfade: {1}</target>
         <note>The following are literal names and should not be translated: C
 {0} - The target architecture, such as Arm, Arm64, or X86_64
 {1} - Semicolon-separated list of the paths searched</note>
       </trans-unit>
       <trans-unit id="XA5101_Toolchain">
         <source>Toolchain directory for target {0} was not found.</source>
-        <target state="new">Toolchain directory for target {0} was not found.</target>
+        <target state="translated">Das Toolkettenverzeichnis für das Ziel "{0}" wurde nicht gefunden.</target>
         <note>{0} - The target architecture, such as Arm, Arm64, or X86_64</note>
       </trans-unit>
       <trans-unit id="XA5102">
         <source>Conversion from assembly to native code failed. Exit code {0}</source>
-        <target state="new">Conversion from assembly to native code failed. Exit code {0}</target>
+        <target state="translated">Fehler beim Konvertieren der Assembly in nativen Code. Exitcode: {0}</target>
         <note>In this message, the term "assembly" means the low-level language that an assembler like `as` takes as input. (This is different from most of the other messages, where the term "assembly" means the file type that the C# compiler produces.)
 {0} - The exit code number</note>
       </trans-unit>
       <trans-unit id="XA5103">
         <source>NDK C compiler exited with an error. Exit code {0}</source>
-        <target state="new">NDK C compiler exited with an error. Exit code {0}</target>
+        <target state="translated">Der NDK C-Compiler wurde mit einem Fehler beendet. Exitcode: {0}</target>
         <note>The following are literal names and should not be translated: NDK, C
 {0} - The exit code number</note>
       </trans-unit>
       <trans-unit id="XA5104">
         <source>Could not locate the Android NDK. Please make sure the Android NDK is installed in the Android SDK Manager, or if using a custom NDK path, please ensure the $(AndroidNdkDirectory) MSBuild property is set to the custom path.</source>
-        <target state="new">Could not locate the Android NDK. Please make sure the Android NDK is installed in the Android SDK Manager, or if using a custom NDK path, please ensure the $(AndroidNdkDirectory) MSBuild property is set to the custom path.</target>
+        <target state="translated">Das Android NDK wurde nicht gefunden. Stellen Sie sicher, dass das Android NDK im Android SDK Manager installiert ist, oder stellen Sie bei Verwendung eines benutzerdefinierten NDK-Pfads sicher, dass die MSBuild-Eigenschaft "$(AndroidNdkDirectory)" auf den benutzerdefinierten Pfad festgelegt ist.</target>
         <note>The following are literal names and should not be translated: $(AndroidNdkDirectory)</note>
       </trans-unit>
       <trans-unit id="XA5105">
         <source>Toolchain utility '{0}' for target {1} was not found. Tried in path: "{2}"</source>
-        <target state="new">Toolchain utility '{0}' for target {1} was not found. Tried in path: "{2}"</target>
+        <target state="translated">Das Toolketten-Hilfsprogramm "{0}" für das Ziel "{1}" wurde nicht gefunden. Durchsuchter Pfad: {2}</target>
         <note>{0} - The missing utility name, such as gcc or clang
 {1} - The target architecture, such as Arm, Arm64, or X86_64
 {2} - The path of the directory that was searched</note>
       </trans-unit>
       <trans-unit id="XA5201">
         <source>NDK linker exited with an error. Exit code {0}</source>
-        <target state="new">NDK linker exited with an error. Exit code {0}</target>
+        <target state="translated">Der NDK-Linker wurde mit einem Fehler beendet. Exitcode: {0}</target>
         <note>The following are literal names and should not be translated: NDK
 {0} - The exit code number</note>
       </trans-unit>
       <trans-unit id="XA5205">
         <source>Cannot find `{0}`. Please install the Android SDK Build-Tools package with the `{1}{2}tools{2}{3}` program.</source>
-        <target state="new">Cannot find `{0}`. Please install the Android SDK Build-Tools package with the `{1}{2}tools{2}{3}` program.</target>
+        <target state="translated">"{0}" wurde nicht gefunden. Installieren Sie das Paket mit den Android SDK-Buildtools mit dem Programm "{1}{2}tools{2}{3}".</target>
         <note>The following are literal names and should not be translated: Android SDK Build-Tools, {1}{2}tools{2}{3}
 {0} - The missing tool name
 {1} - The parent directory
@@ -493,13 +493,13 @@ In this message, the term "bundled" is a short way of saying "included into the 
       </trans-unit>
       <trans-unit id="XA5205_Lint">
         <source>Cannot find `{0}` in the Android SDK. Please set its path via /p:LintToolPath.</source>
-        <target state="new">Cannot find `{0}` in the Android SDK. Please set its path via /p:LintToolPath.</target>
+        <target state="translated">"{0}" wurde nicht im Android SDK gefunden. Legen Sie den Pfad über "/p:LintToolPath" fest.</target>
         <note>The following are literal names and should not be translated: /p:LintToolPath
 {0} - The missing tool name</note>
       </trans-unit>
       <trans-unit id="XA5207">
         <source>Could not find android.jar for API level {0}. This means the Android SDK platform for API level {0} is not installed. Either install it in the Android SDK Manager ({2}), or change the Xamarin.Android project to target an API version that is installed. ({1} missing.)</source>
-        <target state="new">Could not find android.jar for API level {0}. This means the Android SDK platform for API level {0} is not installed. Either install it in the Android SDK Manager ({2}), or change the Xamarin.Android project to target an API version that is installed. ({1} missing.)</target>
+        <target state="translated">"android.jar" wurde für API-Ebene {0} nicht gefunden. Dies bedeutet, dass die Android SDK-Plattform für API-Ebene {0} nicht installiert ist. Führen Sie die Installation entweder im Android-SDK-Manager ({2}) durch, oder ändern Sie das Xamarin.Android-Projekt, um eine installierte API-Version als Ziel zu verwenden ("{1}" fehlt.)</target>
         <note>The following are literal names and should not be translated: android.jar
 {0} - The API level name
 {1} - The expected path of the android.jar file
@@ -507,12 +507,12 @@ In this message, the term "bundled" is a short way of saying "included into the 
       </trans-unit>
       <trans-unit id="XA5207_SDK_Manager_Windows">
         <source>Tools &gt; Android &gt; Android SDK Manager...</source>
-        <target state="new">Tools &gt; Android &gt; Android SDK Manager...</target>
+        <target state="translated">Extras &gt; Android &gt; Android-SDK-Manager...</target>
         <note>This string is the location of a menu command in Visual Studio.</note>
       </trans-unit>
       <trans-unit id="XA5207_SDK_Manager_macOS">
         <source>Tools &gt; Open Android SDK Manager...</source>
-        <target state="new">Tools &gt; Open Android SDK Manager...</target>
+        <target state="translated">Extras &gt; Android-SDK-Manager öffnen...</target>
         <note>This string is the location of a menu command in Visual Studio for Mac.</note>
       </trans-unit>
       <trans-unit id="XA5211">
@@ -526,14 +526,14 @@ In this message, the term "handheld app" means "app for handheld devices."
       </trans-unit>
       <trans-unit id="XA5213">
         <source>java.lang.OutOfMemoryError. Consider increasing the value of $(JavaMaximumHeapSize). Java ran out of memory while executing '{0} {1}'</source>
-        <target state="new">java.lang.OutOfMemoryError. Consider increasing the value of $(JavaMaximumHeapSize). Java ran out of memory while executing '{0} {1}'</target>
+        <target state="translated">java.lang.OutOfMemoryError. Erwägen Sie eine Erhöhung des Werts von $(JavaMaximumHeapSize). Für Java stand während der Ausführung von "{0} {1}" nicht genügend Arbeitsspeicher zur Verfügung.</target>
         <note>The following are literal names and should not be translated: java.lang.OutOfMemoryError, $(JavaMaximumHeapSize)
 {0} - The tool name
 {1} - The command line arguments used for the tool</note>
       </trans-unit>
       <trans-unit id="XA5300_Android_Platforms">
         <source>No Android platforms installed at '{0}'. Please install an SDK Platform with the `{1}{2}tools{2}{3}` program.</source>
-        <target state="new">No Android platforms installed at '{0}'. Please install an SDK Platform with the `{1}{2}tools{2}{3}` program.</target>
+        <target state="translated">Auf "{0}" wurden keine Android-Plattformen installiert. Installieren Sie eine SDK-Plattform mit dem Programm "{1}{2}tools{2}{3}".</target>
         <note>The following are literal names and should not be translated: SDK Platform, {1}{2}tools{2}{3}
 {0} - The missing tool name
 {1} - The parent directory
@@ -542,24 +542,24 @@ In this message, the term "handheld app" means "app for handheld devices."
       </trans-unit>
       <trans-unit id="XA5300_Android_SDK">
         <source>The Android SDK directory could not be found. Please set via /p:AndroidSdkDirectory.</source>
-        <target state="new">The Android SDK directory could not be found. Please set via /p:AndroidSdkDirectory.</target>
+        <target state="translated">Das Android SDK-Verzeichnis wurde nicht gefunden. Legen Sie es über "/p:AndroidSdkDirectory" fest.</target>
         <note>The following are literal names and should not be translated: /p:AndroidSdkDirectory</note>
       </trans-unit>
       <trans-unit id="XA5300_Java_SDK">
         <source>The Java SDK directory could not be found. Please set via /p:JavaSdkDirectory.</source>
-        <target state="new">The Java SDK directory could not be found. Please set via /p:JavaSdkDirectory.</target>
+        <target state="translated">Das Java SDK-Verzeichnis wurde nicht gefunden. Legen Sie es über "/p:JavaSdkDirectory" fest.</target>
         <note>The following are literal names and should not be translated: /p:JavaSdkDirectory</note>
       </trans-unit>
       <trans-unit id="XA5301">
         <source>Failed to generate Java type for class: {0} due to MAX_PATH: {1}</source>
-        <target state="new">Failed to generate Java type for class: {0} due to MAX_PATH: {1}</target>
+        <target state="translated">Fehler beim Generieren des Java-Typs für die Klasse "{0}" aufgrund von MAX_PATH: {1}.</target>
         <note>The following are literal names and should not be translated: MAX_PATH.
 {0} - The managed type name
 {1} - The exception message of the associated exception</note>
       </trans-unit>
       <trans-unit id="XA5302">
         <source>Two processes may be building this project at once. Lock file exists at path: {0}</source>
-        <target state="new">Two processes may be building this project at once. Lock file exists at path: {0}</target>
+        <target state="translated">Möglicherweise wird dieses Projekt von zwei Prozessen gleichzeitig kompiliert. Im Pfad ist eine Sperrdatei vorhanden: {0}</target>
         <note />
       </trans-unit>
     </body>
