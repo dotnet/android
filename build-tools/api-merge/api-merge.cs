@@ -100,11 +100,11 @@ namespace Xamarin.Android.ApiMerge {
 			}
 
 			var doc = XDocument.Load (config);
-			var inputs = doc.Root.Element ("Inputs").Elements ("File").Select (elem => Tuple.Create (Path.Combine (inputDir, elem.Attribute ("Path").Value), elem.Attribute ("Level").Value)).ToList ();
+			var inputs = doc.Root.Element ("Inputs").Elements ("File").Select (elem => (Path: Path.Combine (inputDir, elem.Attribute ("Path").Value), Level: elem.Attribute ("Level").Value)).ToList ();
 
 			// Remove any missing inputs
-			foreach (var missing in inputs.Where (i => !File.Exists (i.Item1)).ToList ()) {
-				Console.WriteLine ($"warning: skipping missing file {missing.Item1}...");
+			foreach (var missing in inputs.Where (i => !File.Exists (i.Path)).ToList ()) {
+				Console.WriteLine ($"warning: skipping missing file {missing.Path}...");
 				inputs.Remove (missing);
 			}
 
@@ -114,26 +114,26 @@ namespace Xamarin.Android.ApiMerge {
 			}
 
 			// Create the initial context
-			var context = new ApiDescription (inputs [0].Item1);
+			var context = new ApiDescription (inputs [0].Path);
 
-			var outputs = doc.Root.Element ("Outputs").Elements ("File").Select (elem => Tuple.Create (Path.Combine (outputDir, elem.Attribute ("Path").Value), elem.Attribute ("LastLevel").Value)).ToList ();
+			var outputs = doc.Root.Element ("Outputs").Elements ("File").Select (elem => (Path: Path.Combine (outputDir, elem.Attribute ("Path").Value), LastLevel: elem.Attribute ("LastLevel").Value)).ToList ();
 			var current_input = 0;
 			var current_output = 0;
 
 			// Handle the initial case if needed
-			if (inputs[current_input].Item2 == outputs[current_output].Item2) {
-				Console.WriteLine ($"api-merge: writing output {outputs [current_output].Item1}...");
-				context.Save (outputs [current_output].Item1);
+			if (inputs[current_input].Level == outputs[current_output].LastLevel) {
+				Console.WriteLine ($"api-merge: writing output {outputs [current_output].Path}...");
+				context.Save (outputs [current_output].Path);
 				current_output++;
 			}
 
 			// Write each output
 			while (current_output < outputs.Count) {
-				context.Merge (inputs [++current_input].Item1);
+				context.Merge (inputs [++current_input].Path);
 
-				if (inputs [current_input].Item2 == outputs [current_output].Item2) {
-					Console.WriteLine ($"api-merge: writing output {outputs [current_output].Item1}...");
-					context.Save (outputs [current_output].Item1);
+				if (inputs [current_input].Level == outputs [current_output].LastLevel) {
+					Console.WriteLine ($"api-merge: writing output {outputs [current_output].Path}...");
+					context.Save (outputs [current_output].Path);
 					current_output++;
 				}
 			}
