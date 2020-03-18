@@ -1,47 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\..\Configuration.props" />
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{66CF299A-CE95-4131-BCD8-DB66E30C4BF7}</ProjectGuid>
-    <ProjectTypeGuids>{EFBA0AD7-5A72-4C68-AF49-83D382785DCF};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <OutputType>Library</OutputType>
+    <TargetFramework>monoandroid10</TargetFramework>
     <RootNamespace>Android</RootNamespace>
-    <AssemblyName>Mono.Android</AssemblyName>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <NoWarn>0618;0809;0108;0114</NoWarn>
     <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DefineConstants>$(DefineConstants);JAVA_INTEROP</DefineConstants>
+    <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\$(TargetFramework)\android-$(AndroidPlatformId)\</IntermediateOutputPath>
+    <ImplicitlyExpandDesignTimeFacades>false</ImplicitlyExpandDesignTimeFacades>
+    <JavaCallableWrapperAbsAssembly>$([System.IO.Path]::GetFullPath ('$(OutputPath)$(AssemblyName).dll'))</JavaCallableWrapperAbsAssembly>
+    <JavaCallableWrapperAfterTargets>CoreBuild</JavaCallableWrapperAfterTargets>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <!-- @(Compile) ordering matters! See https://github.com/xamarin/java.interop/commit/d7dfa0bb7b03261d5eceb51ac22cd33aa15fa865 -->
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
-  <Import Project="..\..\Configuration.props" />
-  <PropertyGroup>
+
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'monoandroid10' ">
     <TargetFrameworkIdentifier>MonoAndroid</TargetFrameworkIdentifier>
     <TargetFrameworkVersion>v1.0</TargetFrameworkVersion>
     <TargetFrameworkRootPath>$(XAInstallPrefix)xbuild-frameworks</TargetFrameworkRootPath>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <Optimize>false</Optimize>
+    <DefineConstants>$(DefineConstants);NET_2_0</DefineConstants>
     <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)\</OutputPath>
-    <DefineConstants>DEBUG;JAVA_INTEROP;NET_2_0</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <ConsolePause>false</ConsolePause>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <NoStdLib>true</NoStdLib>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <Optimize>true</Optimize>
-    <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)\</OutputPath>
-    <DefineConstants>JAVA_INTEROP;NET_2_0</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <ConsolePause>false</ConsolePause>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <NoStdLib>true</NoStdLib>
-  </PropertyGroup>
-  <ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'monoandroid10' ">
     <Reference Include="mscorlib">
       <HintPath>$(OutputPath)..\v1.0\mscorlib.dll</HintPath>
       <Private>False</Private>
@@ -83,6 +72,7 @@
       <Private>False</Private>
     </Reference>
   </ItemGroup>
+
   <ItemGroup>
     <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings\JavaNativeTypeManager.cs">
       <Link>JavaNativeTypeManager.cs</Link>
@@ -93,20 +83,13 @@
     <Compile Include="Android.Runtime\DynamicMethodNameCounter.cs" />
     <Compile Include="Android.Runtime\IJavaObjectValueMarshaler.cs" />
   </ItemGroup>
+
   <Import Project="..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <ImplicitlyExpandDesignTimeFacades>False</ImplicitlyExpandDesignTimeFacades>
-    <IntermediateOutputPath>$(IntermediateOutputPath)android-$(AndroidPlatformId)\</IntermediateOutputPath>
-  </PropertyGroup>
   <Import Project="Mono.Android.targets" />
-  <PropertyGroup>
-    <JavaCallableWrapperAbsAssembly>$([System.IO.Path]::GetFullPath ('$(OutputPath)$(AssemblyName).dll'))</JavaCallableWrapperAbsAssembly>
-    <JavaCallableWrapperAfterTargets>CoreBuild</JavaCallableWrapperAfterTargets>
-  </PropertyGroup>
   <Import Project="..\..\build-tools\scripts\JavaCallableWrappers.targets" />
   <Import Project="$(IntermediateOutputPath)mcw\Mono.Android.projitems" Condition="Exists('$(IntermediateOutputPath)mcw\Mono.Android.projitems')" />
-  <ItemGroup>
+
+<ItemGroup>
     <Compile Include="Android\IncludeAndroidResourcesFromAttribute.cs" />
     <Compile Include="Android\LinkerSafeAttribute.cs" />
     <Compile Include="Android\NativeLibraryReferenceAttribute.cs" />
@@ -337,41 +320,14 @@
     <Compile Include="Xamarin.Android.Net\IAndroidAuthenticationModule.cs" />
     <Compile Include="Xamarin.Android.Net\OldAndroidSSLSocketFactory.cs" />
   </ItemGroup>
+
   <ItemGroup>
-    <ProjectReference Include="..\..\build-tools\api-xml-adjuster\api-xml-adjuster.csproj">
-      <Project>{8A6CB07C-E493-4A4F-AB94-038645A27118}</Project>
-      <Name>api-xml-adjuster</Name>
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\..\build-tools\api-merge\api-merge.csproj">
-      <Project>{3FC3E78B-F7D4-42EA-BBE8-4535DF42BFF8}</Project>
-      <Name>api-merge</Name>
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\..\build-tools\api-xml-adjuster\api-xml-adjuster.csproj">
-      <Project>{8A6CB07C-E493-4A4F-AB94-038645A27118}</Project>
-      <Name>api-xml-adjuster</Name>
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\..\build-tools\jnienv-gen\jnienv-gen.csproj">
-      <Project>{AFB8F6D1-6EA9-42C3-950B-98F34C669AD2}</Project>
-      <Name>jnienv-gen</Name>
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\..\external\Java.Interop\tools\generator\generator.csproj">
-      <Project>{D14A1B5C-2060-4930-92BE-F7190256C735}</Project>
-      <Name>generator</Name>
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\..\external\Java.Interop\tools\jcw-gen\jcw-gen.csproj">
-      <Project>{52C7D9B6-E8C8-47D0-9471-652D278D7D77}</Project>
-      <Name>jcw-gen</Name>
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\..\src\java-runtime\java-runtime.csproj">
-      <Project>{1D4FC8F1-0DA4-4F38-BE68-11AEBA9A0EA4}</Project>
-      <Name>java-runtime</Name>
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-    </ProjectReference>
+    <ProjectReference Include="..\..\build-tools\api-merge\api-merge.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\build-tools\api-xml-adjuster\api-xml-adjuster.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\build-tools\jnienv-gen\jnienv-gen.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\external\Java.Interop\tools\generator\generator.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\external\Java.Interop\tools\jcw-gen\jcw-gen.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\src\java-runtime\java-runtime.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
+
 </Project>
