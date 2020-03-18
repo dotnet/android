@@ -97,18 +97,6 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${LOCAL_C_FLAGS}")
 
 file(TO_CMAKE_PATH "${SQLITE_SOURCE_DIR}/dist/sqlite3.c" SQLITE_XAMARIN_SOURCES)
 
-set(SOURCES_FRAGMENT_FILE "sources.projitems")
-file(WRITE ${SOURCES_FRAGMENT_FILE} "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n\
-<Project xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">\n\
-  <ItemGroup>\n")
-
-foreach(file ${SQLITE_XAMARIN_SOURCES})
-  file(APPEND ${SOURCES_FRAGMENT_FILE} "    <_SqliteSource Include=\"${file}\" />\n")
-endforeach(file)
-
-file(APPEND ${SOURCES_FRAGMENT_FILE} "  </ItemGroup>\n\
-</Project>\n")
-
 add_library(${SQLITE_LIBRARY_NAME} SHARED ${SQLITE_XAMARIN_SOURCES})
 
 set(LINK_LIBS "-ldl -llog")

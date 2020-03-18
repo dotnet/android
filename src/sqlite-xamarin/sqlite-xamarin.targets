@@ -1,6 +1,5 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="sqlite-xamarin.props" />
-  <Import Project="sources.projitems" Condition="Exists ('sources.projitems')" />
 
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.RunParallelCmds" />
 
@@ -44,7 +43,7 @@
 
   <Target Name="_BuildAndroidSqlite"
 	  DependsOnTargets="_PrepareBuildAndroidSqlite"
-	  Inputs="@(_SqliteSource);@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-$(Configure)\build.ninja');;..\..\build-tools\scripts\Ndk.targets"
+	  Inputs="$(SqliteSourceFullPath)\dist\sqlite3.c;@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-$(Configuration)\build.ninja');;..\..\build-tools\scripts\Ndk.targets"
 	  Outputs="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\$(_SqliteLibName)')">
     <RunParallelCmds Commands="@(_BuildSqliteCommands)" />
     <Copy SourceFiles="Mono.Data.Sqlite.dll.config" DestinationFolder="$(_BclFrameworkDir)" SkipUnchangedFiles="True" />
