@@ -86,7 +86,7 @@
   </Target>
 
   <Target Name="_BuildAndroidRuntimes"
-      Inputs="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Debug\CMakeCache.txt');@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Release\CMakeCache.txt');jni\*.cc;jni\*.h;jni\**\*.c;;..\..\build-tools\scripts\Ndk.targets"
+      Inputs="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Debug\CMakeCache.txt');@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Release\CMakeCache.txt');jni\*.cc;jni\*.h;jni\*.hh;jni\**\*.c;;..\..\build-tools\scripts\Ndk.targets"
       Outputs="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.debug.so');@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.release.so');@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Debug\libxamarin-app.so');@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Release\libxamarin-app.so')">
     <Exec
         Command="$(NinjaPath) -v"
@@ -101,7 +101,7 @@
 
   <Target Name="_BuildHostRuntimes"
       DependsOnTargets="_CreateJavaInteropDllConfigs"
-      Inputs="@(_HostRuntime->'$(IntermediatePath)%(OutputDirectory)-Debug\CMakeCache.txt');@(_HostRuntime->'$(IntermediatePath)%(OutputDirectory)-Release\CMakeCache.txt');jni\*.cc;jni\*.h;jni\**\*.c;"
+      Inputs="@(_HostRuntime->'$(IntermediatePath)%(OutputDirectory)-Debug\CMakeCache.txt');@(_HostRuntime->'$(IntermediatePath)%(OutputDirectory)-Release\CMakeCache.txt');jni\*.cc;jni\*.h;jni\*.hh;jni\**\*.c;"
       Outputs="@(_HostRuntime->'$(OutputPath)%(OutputDirectory)\libmono-android.debug.%(NativeLibraryExtension)');@(_HostRuntime->'$(OutputPath)%(OutputDirectory)\libmono-android.release.%(NativeLibraryExtension)');@(_HostRuntime->'$(OutputPath)%(OutputDirectory)\libxamarin-app.%(NativeLibraryExtension)')">
     <Message Text="Building host runtime %(_HostRuntime.Identity) in $(OutputPath)%(_HostRuntime.OutputDirectory)"/>
     <MakeDir Directories="$(OutputPath)%(_HostRuntime.OutputDirectory)" />
