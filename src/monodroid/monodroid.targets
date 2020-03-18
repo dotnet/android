@@ -4,7 +4,6 @@
   <Import Project="monodroid.props" />
   <Import Project="monodroid.projitems" />
   <Import Project="..\..\build-tools\scripts\JavaInteropDllConfigs.targets" />
-  <Import Project="sources.projitems" Condition="Exists ('sources.projitems')" />
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.GenerateMonoDroidIncludes" />
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.RunParallelCmds" />
   <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
@@ -87,7 +86,7 @@
   </Target>
 
   <Target Name="_BuildAndroidRuntimes"
-      Inputs="@(_MonodroidSource);@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Debug\CMakeCache.txt');@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Release\CMakeCache.txt');jni\*.cc;jni\*.h;jni\**\*.c;;..\..\build-tools\scripts\Ndk.targets"
+      Inputs="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Debug\CMakeCache.txt');@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Release\CMakeCache.txt');jni\*.cc;jni\*.h;jni\**\*.c;;..\..\build-tools\scripts\Ndk.targets"
       Outputs="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.debug.so');@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.release.so');@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Debug\libxamarin-app.so');@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Release\libxamarin-app.so')">
     <Exec
         Command="$(NinjaPath) -v"
@@ -102,7 +101,7 @@
 
   <Target Name="_BuildHostRuntimes"
       DependsOnTargets="_CreateJavaInteropDllConfigs"
-      Inputs="@(_MonodroidSource);@(_HostRuntime->'$(IntermediatePath)%(OutputDirectory)-Debug\CMakeCache.txt');@(_HostRuntime->'$(IntermediatePath)%(OutputDirectory)-Release\CMakeCache.txt');jni\*.cc;jni\*.h;jni\**\*.c;"
+      Inputs="@(_HostRuntime->'$(IntermediatePath)%(OutputDirectory)-Debug\CMakeCache.txt');@(_HostRuntime->'$(IntermediatePath)%(OutputDirectory)-Release\CMakeCache.txt');jni\*.cc;jni\*.h;jni\**\*.c;"
       Outputs="@(_HostRuntime->'$(OutputPath)%(OutputDirectory)\libmono-android.debug.%(NativeLibraryExtension)');@(_HostRuntime->'$(OutputPath)%(OutputDirectory)\libmono-android.release.%(NativeLibraryExtension)');@(_HostRuntime->'$(OutputPath)%(OutputDirectory)\libxamarin-app.%(NativeLibraryExtension)')">
     <Message Text="Building host runtime %(_HostRuntime.Identity) in $(OutputPath)%(_HostRuntime.OutputDirectory)"/>
     <MakeDir Directories="$(OutputPath)%(_HostRuntime.OutputDirectory)" />

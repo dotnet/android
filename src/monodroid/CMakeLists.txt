@@ -294,18 +294,6 @@ if(NOT WIN32 AND NOT MINGW AND CMAKE_BUILD_TYPE STREQUAL Debug)
 	)
 endif()
 
-set(SOURCES_FRAGMENT_FILE "sources.projitems")
-file(WRITE ${SOURCES_FRAGMENT_FILE} "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n\
-<Project xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">\n\
-  <ItemGroup>\n")
-
-foreach(file ${MONODROID_SOURCES})
-  file(APPEND ${SOURCES_FRAGMENT_FILE} "    <_MonodroidSource Include=\"${file}\" />\n")
-endforeach(file)
-
-file(APPEND ${SOURCES_FRAGMENT_FILE} "  </ItemGroup>\n\
-</Project>\n")
-
 string(TOLOWER ${CMAKE_BUILD_TYPE} MONO_ANDROID_SUFFIX)
 set(MONO_ANDROID_LIB "mono-android.${MONO_ANDROID_SUFFIX}")
 add_library(${MONO_ANDROID_LIB} SHARED ${MONODROID_SOURCES})
