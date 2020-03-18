@@ -53,9 +53,6 @@
         Command="$(ManagedRuntime) $(ManagedRuntimeArgs) ..\..\bin\Build$(Configuration)\jnienv-gen.exe -o Android.Runtime\JNIEnv.g.cs --use-java-interop"
     />
     <Touch Files="Android.Runtime\JNIEnv.g.cs" />
-    <ItemGroup Condition="!@(Compile->AnyHaveMetadataValue('Filename', 'JNIEnv.g'))">
-      <Compile Include="Android.Runtime\JNIEnv.g.cs" />
-    </ItemGroup>
   </Target>
   <Target Name="_GenerateApiDescription"
       BeforeTargets="_GenerateBinding"
