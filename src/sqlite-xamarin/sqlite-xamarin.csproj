@@ -6,10 +6,10 @@
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <PropertyGroup Condition="'$(Configuration)'=='Debug'">
-    <OutputPath>\..\..\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\lib</OutputPath>
+    <OutputPath>..\..\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\lib</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
-    <OutputPath>\..\..\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\lib</OutputPath>
+    <OutputPath>..\..\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\lib</OutputPath>
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
   <PropertyGroup>
