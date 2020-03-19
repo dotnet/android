@@ -7,6 +7,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
+using Tasks = System.Threading.Tasks;
+
 using Mono.Options;
 
 namespace Xamarin.Android.ApiMerge {
@@ -82,14 +84,29 @@ namespace Xamarin.Android.ApiMerge {
 				return 2;
 			}
 			SortSources (sources, glob);
-			ApiDescription context = new ApiDescription (sources [0]);
+			ApiDescription context = ApiDescription.LoadFrom (sources [0]);
 			for (int i = 1; i < sources.Count; i++) {
 				if (NormalizePath (sources [i-1]) == lastDescription)
 					break;
-				context.Merge (sources [i]);
+				context.Merge (XDocument.Load (sources [i]), sources [i]);
 			}
 			context.Save (dest);
 			return 0;
+		}
+
+		static XDocument[] PreloadInputs (List<(string Path, string Level)> inputs)
+		{
+			var docs = new XDocument [inputs.Count];
+
+			Tasks.Parallel.For (0, inputs.Count, new Tasks.ParallelOptions () { MaxDegreeOfParallelism = Environment.ProcessorCount },
+				idx => {
+					var path = inputs [idx].Path;
+					docs [idx] = XDocument.Load (path);
+				});
+
+			Console.WriteLine ($"preloaded {inputs.Count} documents");
+
+			return docs;
 		}
 
 		static int RunConfigurationFile (string config, string inputDir, string outputDir)
@@ -113,8 +130,10 @@ namespace Xamarin.Android.ApiMerge {
 				return 4;
 			}
 
+			var docs = PreloadInputs (inputs);
+
 			// Create the initial context
-			var context = new ApiDescription (inputs [0].Path);
+			var context = new ApiDescription (docs [0], inputs [0].Path);
 
 			var outputs = doc.Root.Element ("Outputs").Elements ("File").Select (elem => (Path: FixPath (Path.Combine (outputDir, elem.Attribute ("Path").Value)), LastLevel: elem.Attribute ("LastLevel").Value)).ToList ();
 			var current_input = 0;
@@ -129,7 +148,8 @@ namespace Xamarin.Android.ApiMerge {
 
 			// Write each output
 			while (current_output < outputs.Count) {
-				context.Merge (inputs [++current_input].Path);
+				var idx = ++current_input;
+				context.Merge (docs [idx], inputs [idx].Path);
 
 				if (inputs [current_input].Level == outputs [current_output].LastLevel) {
 					Console.WriteLine ($"api-merge: writing output {outputs [current_output].Path}...");
