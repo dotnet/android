@@ -65,8 +65,8 @@ MSbuild properties may be placed into the file `Configuration.Override.props`,
 which can be copied from
 [`Configuration.Override.props.in`](Configuration.Override.props.in).
 The `Configuration.Override.props` file is `<Import/>`ed by
-[`Configuration.props`](Configuration.props); there is no need to `<Import/>`
-it within other project files.
+[`Directory.Build.props`](Directory.Build.props); there is no need to
+`<Import/>` it within other project files.
 
 Overridable MSBuild properties include:
 

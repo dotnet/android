@@ -28,7 +28,6 @@
   <ItemGroup>
     <Compile Remove="Java.Interop\JniLocationException.cs" />
   </ItemGroup>
-  <Import Project="..\..\Configuration.props" />
   <Import Project="Java.Interop.targets" />
   <PropertyGroup>
     <BuildDependsOn>

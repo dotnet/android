@@ -7,7 +7,6 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
 
-  <Import Project="..\..\Configuration.props" />
   <Import Project="..\..\src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\..\src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems')" />
 
   <PropertyGroup>

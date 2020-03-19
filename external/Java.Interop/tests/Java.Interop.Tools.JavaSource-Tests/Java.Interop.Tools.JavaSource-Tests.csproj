@@ -4,11 +4,8 @@
     <IsPackable>False</IsPackable>
     <AppendTargetFrameworkToOutputPath>False</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <OutputPath>..\..\bin\TestDebug</OutputPath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <OutputPath>..\..\bin\TestRelease</OutputPath>
+  <PropertyGroup>
+    <OutputPath>$(TestOutputFullPath)</OutputPath>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="nunit" Version="3.11.0" />

@@ -16,7 +16,7 @@
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <LangVersion>8.0</LangVersion>
   </PropertyGroup>
-  <Import Project="..\..\Configuration.props" />
+  <Import Project="..\..\Directory.Build.props" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>

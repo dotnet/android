@@ -7,8 +7,6 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
 
-  <Import Project="..\..\Configuration.props" />
-
   <PropertyGroup>
     <OutputPath>$(UtilityOutputFullPath)</OutputPath>
   </PropertyGroup>

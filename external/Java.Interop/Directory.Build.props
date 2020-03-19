@@ -18,10 +18,22 @@
       Project="$(_OutputPath)MonoInfo.props"
       Condition="Exists('$(_OutputPath)MonoInfo.props')"
   />
+  <PropertyGroup Condition=" '$(TargetFramework)' != '' And $(TargetFramework.StartsWith ('netcoreapp')) ">
+    <BuildToolOutputFullPath>$(MSBuildThisFileDirectory)bin\Build$(_Configuration)-$(TargetFramework)\</BuildToolOutputFullPath>
+    <ToolOutputFullPath>$(MSBuildThisFileDirectory)bin\$(_Configuration)-$(TargetFramework)\</ToolOutputFullPath>
+    <TestOutputFullPath>$(MSBuildThisFileDirectory)bin\Test$(_Configuration)-$(TargetFramework)\</TestOutputFullPath>
+    <UtilityOutputFullPath Condition=" '$(UtilityOutputFullPathCoreApps)' != '' ">$(UtilityOutputFullPathCoreApps)</UtilityOutputFullPath>
+    <UtilityOutputFullPath Condition=" '$(UtilityOutputFullPathCoreApps)' == '' ">$(ToolOutputFullPath)</UtilityOutputFullPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == '' Or !$(TargetFramework.StartsWith ('netcoreapp')) ">
+    <BuildToolOutputFullPath>$(MSBuildThisFileDirectory)bin\Build$(_Configuration)\</BuildToolOutputFullPath>
+    <ToolOutputFullPath>$(MSBuildThisFileDirectory)bin\$(_Configuration)\</ToolOutputFullPath>
+    <TestOutputFullPath>$(MSBuildThisFileDirectory)bin\Test$(_Configuration)\</TestOutputFullPath>
+    <UtilityOutputFullPath Condition=" '$(UtilityOutputFullPath)' == '' ">$(ToolOutputFullPath)</UtilityOutputFullPath>
+  </PropertyGroup>
   <PropertyGroup>
     <CecilRestoreConfiguration Condition=" '$(CecilRestoreConfiguration)' == '' ">$(Configuration)</CecilRestoreConfiguration>
     <CecilSourceDirectory   Condition=" '$(CecilSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\cecil</CecilSourceDirectory>
-    <UtilityOutputFullPath  Condition=" '$(UtilityOutputFullPath)' == '' ">$(MSBuildThisFileDirectory)bin\$(_Configuration)\</UtilityOutputFullPath>
     <XamarinAndroidToolsDirectory   Condition=" '$(XamarinAndroidToolsDirectory)' == '' ">$(MSBuildThisFileDirectory)external\xamarin-android-tools</XamarinAndroidToolsDirectory>
   </PropertyGroup>
   <PropertyGroup>

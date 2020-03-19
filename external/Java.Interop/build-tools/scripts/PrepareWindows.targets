@@ -7,7 +7,6 @@
     <_NuGetPath>$(_TopDir)\.nuget</_NuGetPath>
     <_NuGet>$(_NuGetPath)\NuGet.exe</_NuGet>
   </PropertyGroup>
-  <Import Project="$(_TopDir)\Configuration.props" />
   <UsingTask AssemblyFile="$(_TopDir)\bin\Build$(Configuration)\Java.Interop.BootstrapTasks.dll" TaskName="Java.Interop.BootstrapTasks.JdkInfo" />
   <UsingTask AssemblyFile="$(_TopDir)\bin\Build$(Configuration)\Java.Interop.BootstrapTasks.dll" TaskName="Java.Interop.BootstrapTasks.DownloadUri" />
   <Target Name="Prepare">

@@ -8,19 +8,20 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{BB0AB9F7-0979-41A7-B7A9-877260655F94}</ProjectGuid>
   </PropertyGroup>
+  <Import Project="..\..\Directory.Build.props" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\..\bin\Debug</OutputPath>
-    <JNIEnvGenPath>..\..\bin\BuildDebug</JNIEnvGenPath>
+    <OutputPath>$(ToolOutputFullPath)</OutputPath>
+    <JNIEnvGenPath>$(BuildToolOutputFullPath)</JNIEnvGenPath>
     <OutputName>java-interop</OutputName>
     <CompileTarget>SharedLibrary</CompileTarget>
     <DefineSymbols>DEBUG JI_DLL_EXPORT MONODEVELOP MONO_DLL_EXPORT</DefineSymbols>
     <SourceDirectory>.</SourceDirectory>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <OutputPath>..\..\bin\Release</OutputPath>
+    <OutputPath>$(ToolOutputFullPath)</OutputPath>
     <OutputName>java-interop</OutputName>
-    <JNIEnvGenPath>..\..\bin\BuildRelease</JNIEnvGenPath>
+    <JNIEnvGenPath>$(BuildToolOutputFullPath)</JNIEnvGenPath>
     <CompileTarget>SharedLibrary</CompileTarget>
     <OptimizationLevel>3</OptimizationLevel>
     <DefineSymbols>JI_DLL_EXPORT MONODEVELOP MONO_DLL_EXPORT</DefineSymbols>

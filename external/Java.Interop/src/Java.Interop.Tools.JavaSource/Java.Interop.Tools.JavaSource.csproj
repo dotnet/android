@@ -8,11 +8,8 @@
     <Copyright>Microsoft Corporation</Copyright>
     <AssemblyVersion>0.1.0.0</AssemblyVersion>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <OutputPath>..\..\bin\Debug</OutputPath>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <OutputPath>..\..\bin\Release</OutputPath>
+  <PropertyGroup>
+    <OutputPath>$(ToolOutputFullPath)</OutputPath>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Irony" Version="1.1.0" />
