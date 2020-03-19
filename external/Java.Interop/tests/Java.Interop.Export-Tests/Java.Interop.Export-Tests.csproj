@@ -25,8 +25,6 @@
     <ProjectReference Include="..\..\src\Java.Runtime.Environment\Java.Runtime.Environment.csproj" />
     <ProjectReference Include="..\TestJVM\TestJVM.csproj" />
   </ItemGroup>
-
-  <Import Condition="Exists('$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\JdkInfo.props')" Project="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\JdkInfo.props" />
   
   <ItemGroup>
     <JavaExportTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\export\ExportType.java" />
