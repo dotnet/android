@@ -26,7 +26,7 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject () {
 				References = {
 					new BuildItem.ProjectReference (Path.Combine("..", library.ProjectName, Path.GetFileName (library.ProjectFilePath)), "Library1") {
-						Metadata = { { "Aliases", "Lib1" } },
+						Metadata = { { "Aliases", "Lib1, LibA1,LibB1" } },
 					},
 				},
 			};
