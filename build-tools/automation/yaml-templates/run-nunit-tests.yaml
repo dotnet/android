@@ -14,6 +14,11 @@ steps:
     } else {
         ${{ parameters.nunitConsole }} ${{ parameters.testAssembly }} --result ${{ parameters.testResultsFile }}  ${{ parameters.nunitConsoleExtraArgs }}
     }
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "##vso[task.logissue type=error]Test suite had $LASTEXITCODE failure(s)."
+        Write-Host "##vso[task.complete result=Failed;]"
+        exit 0
+    }
   displayName: run ${{ parameters.testRunTitle }}
   condition: ${{ parameters.condition }}
   continueOnError: true
