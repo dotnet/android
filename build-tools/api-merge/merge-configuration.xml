@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Configuration>
+  <!-- Both lists should be sorted in chronological order -->
+  <Inputs>
+    <File Path="api-10.xml.in" Level="10" />
+    <File Path="api-15.xml.in" Level="15" />
+    <File Path="api-16.xml.in" Level="16" />
+    <File Path="api-17.xml.in" Level="17" />
+    <File Path="api-18.xml.in" Level="18" />
+    <File Path="api-19.xml.in" Level="19" />
+    <File Path="api-20.xml.in" Level="20" />
+    <File Path="api-21.xml.in" Level="21" />
+    <File Path="api-22.xml.in" Level="22" />
+    <File Path="api-23.xml.in" Level="23" />
+    <File Path="api-24.xml.in" Level="24" />
+    <File Path="api-25.xml.in" Level="25" />
+    <File Path="api-26.xml.in" Level="26" />
+    <File Path="api-27.xml.in" Level="27" />
+    <File Path="api-28.xml.in" Level="28" />
+    <File Path="api-29.xml.in" Level="29" />
+    <File Path="api-R.xml.in" Level="R" />
+  </Inputs>
+  <Outputs>
+    <File Path="android-19\mcw\api.xml" LastLevel="19" />
+    <File Path="android-20\mcw\api.xml" LastLevel="20" />
+    <File Path="android-21\mcw\api.xml" LastLevel="21" />
+    <File Path="android-22\mcw\api.xml" LastLevel="22" />
+    <File Path="android-23\mcw\api.xml" LastLevel="23" />
+    <File Path="android-24\mcw\api.xml" LastLevel="24" />
+    <File Path="android-25\mcw\api.xml" LastLevel="25" />
+    <File Path="android-26\mcw\api.xml" LastLevel="26" />
+    <File Path="android-27\mcw\api.xml" LastLevel="27" />
+    <File Path="android-28\mcw\api.xml" LastLevel="28" />
+    <File Path="android-29\mcw\api.xml" LastLevel="29" />
+    <File Path="android-R\mcw\api.xml" LastLevel="R" />
+  </Outputs>
+</Configuration>
