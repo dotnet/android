@@ -61,6 +61,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unknown option `{0}`. Please check `$(AndroidAapt2CompileExtraArgs)` and `$(AndroidAapt2CompileExtraArgs)` to see if they include any `aapt` command line arguments that are no longer valid for `aapt2` and ensure that all other arguments are valid for `aapt2`..
+        /// </summary>
+        internal static string APT0001 {
+            get {
+                return ResourceManager.GetString("APT0001", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid file name: It must contain only {0}..
         /// </summary>
         internal static string APT0002 {
@@ -408,6 +417,15 @@ namespace Xamarin.Android.Tasks.Properties {
         internal static string XA1010 {
             get {
                 return ResourceManager.GetString("XA1010", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 5 will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 5 is released..
+        /// </summary>
+        internal static string XA2000 {
+            get {
+                return ResourceManager.GetString("XA2000", resourceCulture);
             }
         }
         

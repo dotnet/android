@@ -2,6 +2,12 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="de" original="../Resources.resx">
     <body>
+      <trans-unit id="APT0001">
+        <source>Unknown option `{0}`. Please check `$(AndroidAapt2CompileExtraArgs)` and `$(AndroidAapt2CompileExtraArgs)` to see if they include any `aapt` command line arguments that are no longer valid for `aapt2` and ensure that all other arguments are valid for `aapt2`.</source>
+        <target state="new">Unknown option `{0}`. Please check `$(AndroidAapt2CompileExtraArgs)` and `$(AndroidAapt2CompileExtraArgs)` to see if they include any `aapt` command line arguments that are no longer valid for `aapt2` and ensure that all other arguments are valid for `aapt2`.</target>
+        <note>The following are literal names and should not be translated: `aapt`, `aapt2`,  `$(AndroidAapt2CompileExtraArgs)`, `$(AndroidAapt2CompileExtraArgs)`
+{0} - The invalid option name</note>
+      </trans-unit>
       <trans-unit id="APT0002">
         <source>Invalid file name: It must contain only {0}.</source>
         <target state="translated">Ungültiger Dateiname: Der Name darf nur {0} enthalten.</target>
@@ -231,6 +237,11 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
         <source>Invalid `$(AndroidManifestPlaceholders)` value for Android manifest placeholders. Please use `key1=value1;key2=value2` format. The specified value was: `{0}`</source>
         <target state="new">Invalid `$(AndroidManifestPlaceholders)` value for Android manifest placeholders. Please use `key1=value1;key2=value2` format. The specified value was: `{0}`</target>
         <note>The following are literal names and should not be translated: `$(AndroidManifestPlaceholders)`</note>
+      </trans-unit>
+      <trans-unit id="XA2000">
+        <source>Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 5 will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 5 is released.</source>
+        <target state="new">Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 5 will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 5 is released.</target>
+        <note>{0} - The name of the assembly</note>
       </trans-unit>
       <trans-unit id="XA2001">
         <source>Source file '{0}' could not be found.</source>

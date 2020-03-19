@@ -26,7 +26,7 @@ ms.date: 01/24/2020
 ## APTxxxx: AAPT tooling
 
 + [APT0000](apt0000.md): Generic `aapt` error/warning.
-+ [APT0001](apt0001.md): unknown option -- `{option}` . This is the result of using `aapt` command line arguments with `aapt2`. The arguments are not compatible.
++ [APT0001](apt0001.md): Unknown option \`{option}\`. Please check \`$(AndroidAapt2CompileExtraArgs)\` and \`$(AndroidAapt2CompileExtraArgs)\` to see if they include any \`aapt\` command line arguments that are no longer valid for \`aapt2\` and ensure that all other arguments are valid for `aapt2`.
 + APT0002: Invalid file name: It must contain only \[^a-zA-Z0-9_.-\]+.
 + APT0003: Invalid file name: It must contain only \[^a-zA-Z0-9_.\]+.
 

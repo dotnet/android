@@ -117,6 +117,11 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="APT0001" xml:space="preserve">
+    <value>Unknown option `{0}`. Please check `$(AndroidAapt2CompileExtraArgs)` and `$(AndroidAapt2CompileExtraArgs)` to see if they include any `aapt` command line arguments that are no longer valid for `aapt2` and ensure that all other arguments are valid for `aapt2`.</value>
+    <comment>The following are literal names and should not be translated: `aapt`, `aapt2`,  `$(AndroidAapt2CompileExtraArgs)`, `$(AndroidAapt2CompileExtraArgs)`
+{0} - The invalid option name</comment>
+  </data>
   <data name="APT0002" xml:space="preserve">
     <value>Invalid file name: It must contain only {0}.</value>
     <comment>{0} - The regular expression that the file name must match</comment>
@@ -306,6 +311,10 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
   <data name="XA1010" xml:space="preserve">
     <value>Invalid `$(AndroidManifestPlaceholders)` value for Android manifest placeholders. Please use `key1=value1;key2=value2` format. The specified value was: `{0}`</value>
     <comment>The following are literal names and should not be translated: `$(AndroidManifestPlaceholders)`</comment>
+  </data>
+  <data name="XA2000" xml:space="preserve">
+    <value>Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 5 will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 5 is released.</value>
+    <comment>{0} - The name of the assembly</comment>
   </data>
   <data name="XA2001" xml:space="preserve">
     <value>Source file '{0}' could not be found.</value>
