@@ -3,7 +3,9 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Microsoft.CSharp;
+
+using Java.Interop.Tools.JavaCallableWrappers;
+
 using Xamarin.Android.Binder;
 using Xamarin.AndroidTools.AnnotationSupport;
 
@@ -97,21 +99,29 @@ namespace MonoDroid.Generation
 			return GetOutputName (s.Substring (0, idx)) + '<' + String.Join (", ", typeParams.ToArray ()) + '>';
 		}
 
-		CSharpCodeProvider code_provider = new CSharpCodeProvider ();
-
 		public string GetSafeIdentifier (string name)
 		{
+			if (string.IsNullOrEmpty (name))
+				return name;
+
 			// NOTE: "partial" differs in behavior on macOS vs. Windows, Windows reports "partial" as a valid identifier
 			//	This check ensures the same output on both platforms
-			if (name == "partial")
-				return name;
+			switch (name) {
+				case "partial": return name;
+				// `this` isn't in TypeNameUtilities.reserved_keywords; special-case.
+				case "this": return "this_";
+			}
 
 			// In the ideal world, it should not be applied twice.
 			// Sadly that is not true in reality, so we need to exclude non-symbols
 			// when replacing the argument name with a valid identifier.
 			// (ReturnValue.ToNative() takes an argument which could be either an expression or mere symbol.)
-			if (name.LastOrDefault () != ')' && !name.Contains ('.'))
-				name = code_provider.IsValidIdentifier (name) ? name : name + '_';
+			if (name [name.Length-1] != ')' && !name.Contains ('.') && !name.StartsWith ("@")) {
+				if (!IdentifierValidator.IsValidIdentifier (name) ||
+						Array.BinarySearch (TypeNameUtilities.reserved_keywords, name) >= 0) {
+					name = name + "_";
+				}
+			}
 			return name.Replace ('$', '_');
 		}
 

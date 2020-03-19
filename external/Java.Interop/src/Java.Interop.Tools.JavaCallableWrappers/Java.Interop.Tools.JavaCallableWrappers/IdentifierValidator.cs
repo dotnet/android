@@ -41,6 +41,11 @@ namespace Java.Interop.Tools.JavaCallableWrappers
 			return validIdentifier.Replace (normalizedIdentifier, "_");
 		}
 
+		public static bool IsValidIdentifier (string identifier)
+		{
+			return !validIdentifier.IsMatch (identifier);
+		}
+
 		// Makes uglier but unique identifiers by encoding each invalid character with its character value
 		static string EncodeReplacement (Match match) => $"_x{(ushort) match.Value [0]}_";
 	}

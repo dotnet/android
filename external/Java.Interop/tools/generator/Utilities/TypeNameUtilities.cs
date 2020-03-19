@@ -11,7 +11,7 @@ namespace MonoDroid.Generation
 	{
 		// These must be sorted for BinarySearch to work
 		// Missing "this" because it's handled elsewhere as "this_"
-		static string [] reserved_keywords = new [] {
+		internal static string [] reserved_keywords = new [] {
 			"abstract", "as", "base", "bool", "break", "byte", "callback", "case", "catch", "char", "checked", "class", "const",
 			"continue", "decimal", "default", "delegate", "do", "double", "else", "enum", "event", "explicit", "extern", "false",
 			"finally", "fixed", "float", "for", "foreach", "goto", "if", "implicit", "in", "int", "interface", "internal",
