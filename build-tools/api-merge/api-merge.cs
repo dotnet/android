@@ -100,7 +100,7 @@ namespace Xamarin.Android.ApiMerge {
 			}
 
 			var doc = XDocument.Load (config);
-			var inputs = doc.Root.Element ("Inputs").Elements ("File").Select (elem => (Path: Path.Combine (inputDir, elem.Attribute ("Path").Value), Level: elem.Attribute ("Level").Value)).ToList ();
+			var inputs = doc.Root.Element ("Inputs").Elements ("File").Select (elem => (Path: FixPath (Path.Combine (inputDir, elem.Attribute ("Path").Value)), Level: elem.Attribute ("Level").Value)).ToList ();
 
 			// Remove any missing inputs
 			foreach (var missing in inputs.Where (i => !File.Exists (i.Path)).ToList ()) {
@@ -116,7 +116,7 @@ namespace Xamarin.Android.ApiMerge {
 			// Create the initial context
 			var context = new ApiDescription (inputs [0].Path);
 
-			var outputs = doc.Root.Element ("Outputs").Elements ("File").Select (elem => (Path: Path.Combine (outputDir, elem.Attribute ("Path").Value), LastLevel: elem.Attribute ("LastLevel").Value)).ToList ();
+			var outputs = doc.Root.Element ("Outputs").Elements ("File").Select (elem => (Path: FixPath (Path.Combine (outputDir, elem.Attribute ("Path").Value)), LastLevel: elem.Attribute ("LastLevel").Value)).ToList ();
 			var current_input = 0;
 			var current_output = 0;
 
@@ -140,6 +140,8 @@ namespace Xamarin.Android.ApiMerge {
 
 			return 0;
 		}
+
+		static string FixPath (string path) => path?.Replace ('\\', Path.DirectorySeparatorChar);
 
 		static string NormalizePath (string path)
 		{
