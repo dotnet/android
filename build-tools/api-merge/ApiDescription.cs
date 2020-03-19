@@ -202,9 +202,10 @@ namespace Xamarin.Android.ApiMerge {
 		public void Save (string filename)
 		{
 			FixupOverrides ();
-			if (filename != null)
+			if (filename != null) {
+				Directory.CreateDirectory (Path.GetDirectoryName (filename));
 				Contents.Save (filename);
-			else
+			}  else
 				Contents.Save (Console.Out);
 		}
 
