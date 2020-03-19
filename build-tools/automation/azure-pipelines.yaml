@@ -485,6 +485,7 @@ stages:
         testResultsFiles: TestResult-Mono.Android_Tests-$(ApkTestConfiguration).xml
         artifactName: Mono.Android_Tests-Signed.apk
         artifactFolder: Default
+        msbuildArguments: /restore
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
