@@ -335,8 +335,9 @@
     <ProjectReference Include="..\..\build-tools\api-merge\api-merge.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\build-tools\api-xml-adjuster\api-xml-adjuster.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\build-tools\jnienv-gen\jnienv-gen.csproj" ReferenceOutputAssembly="false" />
-    <ProjectReference Include="..\..\external\Java.Interop\tools\generator\generator.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" />
-    <ProjectReference Include="..\..\external\Java.Interop\tools\jcw-gen\jcw-gen.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" />
+    <!-- Explicitly pass the target framework of the project so we don't have conflicts with the multiple targets in this file. -->
+    <ProjectReference Include="..\..\external\Java.Interop\tools\generator\generator.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="TargetFramework=net472"/>
+    <ProjectReference Include="..\..\external\Java.Interop\tools\jcw-gen\jcw-gen.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="TargetFramework=net472" />
     <ProjectReference Include="..\..\src\java-runtime\java-runtime.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
