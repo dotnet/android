@@ -1,3 +1,0 @@
-class CompanionObject {
-    companion object { }
-}
