@@ -18,9 +18,9 @@ namespace Xamarin.Android.ApiMerge {
 		XAttribute contentsPlatform;
 		Dictionary<string, XElement> Types = new Dictionary<string, XElement>();
 
-		public ApiDescription (string source)
+		public ApiDescription (XDocument contents, string source)
 		{
-			Contents = XDocument.Load (source);
+			Contents = contents;
 
 			string platform;
 			XElement api = GetRoot (Contents, source, out platform);
@@ -29,6 +29,11 @@ namespace Xamarin.Android.ApiMerge {
 			}
 
 			contentsPlatform = api.Attributes ("platform").LastOrDefault ();
+		}
+
+		public static ApiDescription LoadFrom (string source)
+		{
+			return new ApiDescription (XDocument.Load (source), source);
 		}
 
 		XElement GetRoot (XDocument doc, string sourcePath, out string platform)
@@ -46,13 +51,12 @@ namespace Xamarin.Android.ApiMerge {
 			return api;
 		}
 
-		public void Merge (string apiLocation)
+		public void Merge (XDocument n, string apiLocation)
 		{
 #if ADD_OBSOLETE_ON_DISAPPEARANCE
 			var filename = Path.GetFileName (apiLocation);
 			int apiLevel = int.Parse (filename.Substring (4, filename.IndexOf ('.', 4) - 4));
 #endif
-			var n = XDocument.Load (apiLocation);
 			string platform = null;
 			XElement api = GetRoot (n, apiLocation, out platform);
 			if (!String.IsNullOrEmpty (platform) && contentsPlatform != null) {
