@@ -401,8 +401,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 *******************************************
 -->
 <!-- As we split up/refactor this file, put new imports here -->
-<Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.D8.targets" />
-<Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.DX.targets" />
+<Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.D8.targets" Condition=" '$(AndroidDexTool)' == 'd8' " />
+<Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.DX.targets" Condition=" '$(AndroidDexTool)' == 'dx' " />
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Aapt.targets" />
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Aapt2.targets" />
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.SkipCases.projitems" />
@@ -2377,8 +2377,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <PropertyGroup>
 	<_CompileDexDependsOn>
-		_CompileToDalvikWithDx;
-		_CompileToDalvikWithD8;
+		_CompileToDalvik;
 	</_CompileDexDependsOn>
 </PropertyGroup>
 

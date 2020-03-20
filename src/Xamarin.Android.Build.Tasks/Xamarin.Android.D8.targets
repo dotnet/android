@@ -14,9 +14,8 @@ Copyright (C) 2018 Xamarin. All rights reserved.
 
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <Target Name="_CompileToDalvikWithD8"
-      Condition=" '$(AndroidDexTool)' == 'd8' "
-      DependsOnTargets="$(_CompileToDalvikDependsOnTargets)"
+  <Target Name="_CompileToDalvik"
+      DependsOnTargets="$(_BeforeCompileToDalvik);$(_CompileToDalvikDependsOnTargets)"
       Inputs="$(_CompileToDalvikInputs)"
       Outputs="$(_AndroidStampDirectory)_CompileToDalvik.stamp">
 
