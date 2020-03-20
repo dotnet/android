@@ -33,6 +33,7 @@ namespace Xamarin.Android.Build.Tests
 				RunAdbCommand ($"shell rm {remote}");
 				RunAdbCommand ($"logcat > {deviceLog}", timeout: 5);
 				TestContext.AddTestAttachment (local);
+				TestContext.AddTestAttachment (deviceLog);
 			}
 
 			base.CleanupTest ();
