@@ -319,6 +319,7 @@
     <Compile Include="Xamarin.Android.Net\AuthModuleDigest.cs" />
     <Compile Include="Xamarin.Android.Net\IAndroidAuthenticationModule.cs" />
     <Compile Include="Xamarin.Android.Net\OldAndroidSSLSocketFactory.cs" />
+    <Compile Remove="Test\**" />
   </ItemGroup>
 
   <ItemGroup>
