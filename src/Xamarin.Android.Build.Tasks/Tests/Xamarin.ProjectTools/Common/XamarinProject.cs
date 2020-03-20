@@ -313,6 +313,9 @@ namespace Xamarin.ProjectTools
 			if (!doNotCleanup) {
 				var dirFullPath = Path.GetFullPath (directory) + '/';
 				foreach (var fi in new DirectoryInfo (directory).GetFiles ("*", SearchOption.AllDirectories)) {
+					// Don't delete our debug.keystore file
+					if (fi.Name == "debug.keystore")
+						continue;
 					var subname = fi.FullName.Substring (dirFullPath.Length).Replace ('\\', '/');
 					if (subname.StartsWith ("bin", StringComparison.OrdinalIgnoreCase) || subname.StartsWith ("obj", StringComparison.OrdinalIgnoreCase))
 						continue;

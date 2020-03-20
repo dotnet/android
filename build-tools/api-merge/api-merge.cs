@@ -7,6 +7,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
+using Tasks = System.Threading.Tasks;
+
 using Mono.Options;
 
 namespace Xamarin.Android.ApiMerge {
@@ -18,6 +20,10 @@ namespace Xamarin.Android.ApiMerge {
 			string dest = null;
 			string glob = null;
 			string lastDescription = null;
+			string configFile = null;
+			string configBaseInput = string.Empty;
+			string configBaseOutput = string.Empty;
+
 			var options = new OptionSet () {
 				"Usage: api-merge -o=FILE DESCRIPTIONS+",
 				"",
@@ -33,6 +39,15 @@ namespace Xamarin.Android.ApiMerge {
 				{ "last-description=",
 				  "Last {DESCRIPTION} to process. Any later descriptions are ignored.",
 				  v => lastDescription = NormalizePath (v) },
+				{ "config=",
+				  "XML configuration file (used instead of other options).",
+				  v => configFile = v },
+				{ "config-input-dir=",
+				  "Base input directory for XML configuration file.",
+				  v => configBaseInput = v },
+				{ "config-output-dir=",
+				  "Base output directory for XML configuration file.",
+				  v => configBaseOutput = v },
 				{ "version",
 				  "Output version information and exit.",
 				  v => show_version = v != null },
@@ -56,6 +71,8 @@ namespace Xamarin.Android.ApiMerge {
 				options.WriteOptionDescriptions (Console.Out);
 				return 0;
 			}
+			if (!string.IsNullOrEmpty (configFile))
+				return RunConfigurationFile (configFile, configBaseInput, configBaseOutput);
 			for (int i = sources.Count - 1; i >= 0; i--) {
 				if (!File.Exists (sources [i])) {
 					Console.WriteLine ("warning: skipping file {0}...", sources [i]);
@@ -67,15 +84,84 @@ namespace Xamarin.Android.ApiMerge {
 				return 2;
 			}
 			SortSources (sources, glob);
-			ApiDescription context = new ApiDescription (sources [0]);
+			ApiDescription context = ApiDescription.LoadFrom (sources [0]);
 			for (int i = 1; i < sources.Count; i++) {
 				if (NormalizePath (sources [i-1]) == lastDescription)
 					break;
-				context.Merge (sources [i]);
+				context.Merge (XDocument.Load (sources [i]), sources [i]);
 			}
 			context.Save (dest);
 			return 0;
 		}
+
+		static XDocument[] PreloadInputs (List<(string Path, string Level)> inputs)
+		{
+			var docs = new XDocument [inputs.Count];
+
+			Tasks.Parallel.For (0, inputs.Count, new Tasks.ParallelOptions () { MaxDegreeOfParallelism = Environment.ProcessorCount },
+				idx => {
+					var path = inputs [idx].Path;
+					docs [idx] = XDocument.Load (path);
+				});
+
+			Console.WriteLine ($"preloaded {inputs.Count} documents");
+
+			return docs;
+		}
+
+		static int RunConfigurationFile (string config, string inputDir, string outputDir)
+		{
+			if (!File.Exists (config)) {
+				Console.WriteLine ($"error: config file {config} not found");
+				return 3;
+			}
+
+			var doc = XDocument.Load (config);
+			var inputs = doc.Root.Element ("Inputs").Elements ("File").Select (elem => (Path: FixPath (Path.Combine (inputDir, elem.Attribute ("Path").Value)), Level: elem.Attribute ("Level").Value)).ToList ();
+
+			// Remove any missing inputs
+			foreach (var missing in inputs.Where (i => !File.Exists (i.Path)).ToList ()) {
+				Console.WriteLine ($"warning: skipping missing file {missing.Path}...");
+				inputs.Remove (missing);
+			}
+
+			if (inputs.Count == 0) {
+				Console.WriteLine ($"error: no input files found...");
+				return 4;
+			}
+
+			var docs = PreloadInputs (inputs);
+
+			// Create the initial context
+			var context = new ApiDescription (docs [0], inputs [0].Path);
+
+			var outputs = doc.Root.Element ("Outputs").Elements ("File").Select (elem => (Path: FixPath (Path.Combine (outputDir, elem.Attribute ("Path").Value)), LastLevel: elem.Attribute ("LastLevel").Value)).ToList ();
+			var current_input = 0;
+			var current_output = 0;
+
+			// Handle the initial case if needed
+			if (inputs[current_input].Level == outputs[current_output].LastLevel) {
+				Console.WriteLine ($"api-merge: writing output {outputs [current_output].Path}...");
+				context.Save (outputs [current_output].Path);
+				current_output++;
+			}
+
+			// Write each output
+			while (current_output < outputs.Count) {
+				var idx = ++current_input;
+				context.Merge (docs [idx], inputs [idx].Path);
+
+				if (inputs [current_input].Level == outputs [current_output].LastLevel) {
+					Console.WriteLine ($"api-merge: writing output {outputs [current_output].Path}...");
+					context.Save (outputs [current_output].Path);
+					current_output++;
+				}
+			}
+
+			return 0;
+		}
+
+		static string FixPath (string path) => path?.Replace ('\\', Path.DirectorySeparatorChar);
 
 		static string NormalizePath (string path)
 		{

@@ -312,9 +312,14 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
   </data>
   <data name="XA2002_Framework" xml:space="preserve">
     <value>Can not resolve reference: `{0}`, referenced by {1}. Perhaps it doesn't exist in the Mono for Android profile?</value>
+    <comment>{0} - The name of the missing assembly
+{1} - The chain of references that causes a reference to the missing assembly, with &gt; as the separator between items. Example: `System.Memory` &gt; `System.Buffers`</comment>
   </data>
   <data name="XA2002_NuGet" xml:space="preserve">
     <value>Can not resolve reference: `{0}`, referenced by {1}. Please add a NuGet package or assembly reference for `{0}`, or remove the reference to `{2}`.</value>
+    <comment>{0} - The name of the missing assembly
+{1} -  The chain of references that causes a reference to the missing assembly, with &gt; as the separator between items. Example: `System.Memory` &gt; `System.Buffers`
+{2} - The name of the first assembly in the chain of references. Example: System.Memory</comment>
   </data>
   <data name="XA2006" xml:space="preserve">
     <value>Could not resolve reference to '{0}' (defined in assembly '{1}') with scope '{2}'. When the scope is different from the defining assembly, it usually means that the type is forwarded.</value>

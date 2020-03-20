@@ -137,8 +137,10 @@ namespace Xamarin.Android.Tasks
 					assembly.CopyMetadataTo (item);
 					assemblies.Add (item);
 					string alias = assembly.GetMetadata ("Aliases");
-					if (!string.IsNullOrEmpty (alias))
-						aliases.Add (alias);
+					if (!string.IsNullOrEmpty (alias)) {
+						foreach (var a in alias.Split (new [] {','}, StringSplitOptions.RemoveEmptyEntries))
+							aliases.Add (a.Trim ());
+					}
 					Log.LogDebugMessage ("Scan assembly {0} for resource generator", fileName);
 				}
 				new ResourceDesignerImportGenerator (Namespace, resources, Log)

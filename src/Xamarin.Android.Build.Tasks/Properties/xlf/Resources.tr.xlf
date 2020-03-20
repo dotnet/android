@@ -239,13 +239,16 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
       </trans-unit>
       <trans-unit id="XA2002_Framework">
         <source>Can not resolve reference: `{0}`, referenced by {1}. Perhaps it doesn't exist in the Mono for Android profile?</source>
-        <target state="translated">{1} tarafından başvurulan `{0}` başvurusu çözümlenemiyor. Mono for Android profilinde bulunmuyor olabilir.</target>
-        <note />
+        <target state="needs-review-translation">{1} tarafından başvurulan `{0}` başvurusu çözümlenemiyor. Mono for Android profilinde bulunmuyor olabilir.</target>
+        <note>{0} - The name of the missing assembly
+{1} - The chain of references that causes a reference to the missing assembly, with &gt; as the separator between items. Example: `System.Memory` &gt; `System.Buffers`</note>
       </trans-unit>
       <trans-unit id="XA2002_NuGet">
         <source>Can not resolve reference: `{0}`, referenced by {1}. Please add a NuGet package or assembly reference for `{0}`, or remove the reference to `{2}`.</source>
-        <target state="translated">{1} tarafından başvurulan `{0}` başvurusu çözümlenemiyor. Lütfen `{0}` için bir NuGet paketi veya bütünleştirilmiş kod başvurusu ekleyin ya da `{2}` başvurusunu kaldırın.</target>
-        <note />
+        <target state="needs-review-translation">{1} tarafından başvurulan `{0}` başvurusu çözümlenemiyor. Lütfen `{0}` için bir NuGet paketi veya bütünleştirilmiş kod başvurusu ekleyin ya da `{2}` başvurusunu kaldırın.</target>
+        <note>{0} - The name of the missing assembly
+{1} -  The chain of references that causes a reference to the missing assembly, with &gt; as the separator between items. Example: `System.Memory` &gt; `System.Buffers`
+{2} - The name of the first assembly in the chain of references. Example: System.Memory</note>
       </trans-unit>
       <trans-unit id="XA2006">
         <source>Could not resolve reference to '{0}' (defined in assembly '{1}') with scope '{2}'. When the scope is different from the defining assembly, it usually means that the type is forwarded.</source>
