@@ -24,5 +24,18 @@ namespace Java.Interop.Tools.JavaCallableWrappersTests
 			Assert.AreEqual ("my_x45_identifier_x36_test", IdentifierValidator.CreateValidIdentifier ("my-identifier$test", true));
 			Assert.AreEqual ("myidentifier_x55357__x56842_test", IdentifierValidator.CreateValidIdentifier ("myidentifier😊test", true));
 		}
+
+		[Test]
+		public void IsValidIdentifier ()
+		{
+			Assert.IsTrue (IdentifierValidator.IsValidIdentifier ("name"));
+			Assert.IsTrue (IdentifierValidator.IsValidIdentifier ("Name_With_Underscores"));
+
+			// Yes, this is "wrong" -- keywords aren't identifiers -- but the keyword check is done elsewhere.
+			Assert.IsTrue (IdentifierValidator.IsValidIdentifier ("true"));
+
+			Assert.IsFalse (IdentifierValidator.IsValidIdentifier ("name-with-hyphens and spaces"));
+			Assert.IsFalse (IdentifierValidator.IsValidIdentifier ("123"));
+		}
 	}
 }

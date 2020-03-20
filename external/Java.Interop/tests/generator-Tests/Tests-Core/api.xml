@@ -6,6 +6,10 @@
         <parameter name="l" type="android.view.View.OnClickListener">
         </parameter>
       </method>
+      <method abstract="false" deprecated="not deprecated" final="false" name="setOn123Listener" native="false" return="void" static="false" synchronized="false" visibility="public">
+        <parameter name="l" type="android.view.View.OnClickListener">
+        </parameter>
+      </method>
       <method abstract="false" deprecated="not deprecated" final="false" name="addTouchables" native="false" return="void" static="false" synchronized="false" visibility="public">
         <parameter name="views" type="java.util.ArrayList&lt;android.view.View&gt;">
         </parameter>

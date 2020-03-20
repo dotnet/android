@@ -179,6 +179,36 @@ namespace Android.Views {
 			}
 		}
 
+		static Delegate cb_setOn123Listener_Landroid_view_View_OnClickListener_;
+#pragma warning disable 0169
+		static Delegate GetSetOn123Listener_Landroid_view_View_OnClickListener_Handler ()
+		{
+			if (cb_setOn123Listener_Landroid_view_View_OnClickListener_ == null)
+				cb_setOn123Listener_Landroid_view_View_OnClickListener_ = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr, IntPtr>) n_SetOn123Listener_Landroid_view_View_OnClickListener_);
+			return cb_setOn123Listener_Landroid_view_View_OnClickListener_;
+		}
+
+		static void n_SetOn123Listener_Landroid_view_View_OnClickListener_ (IntPtr jnienv, IntPtr native__this, IntPtr native_l)
+		{
+			Android.Views.View __this = global::Java.Lang.Object.GetObject<Android.Views.View> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			Android.Views.View.IOnClickListener l = (Android.Views.View.IOnClickListener)global::Java.Lang.Object.GetObject<Android.Views.View.IOnClickListener> (native_l, JniHandleOwnership.DoNotTransfer);
+			__this.SetOn123Listener (l);
+		}
+#pragma warning restore 0169
+
+		// Metadata.xml XPath method reference: path="/api/package[@name='android.view']/class[@name='View']/method[@name='setOn123Listener' and count(parameter)=1 and parameter[1][@type='android.view.View.OnClickListener']]"
+		[Register ("setOn123Listener", "(Landroid/view/View$OnClickListener;)V", "GetSetOn123Listener_Landroid_view_View_OnClickListener_Handler")]
+		public virtual unsafe void SetOn123Listener (Android.Views.View.IOnClickListener l)
+		{
+			const string __id = "setOn123Listener.(Landroid/view/View$OnClickListener;)V";
+			try {
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue ((l == null) ? IntPtr.Zero : ((global::Java.Lang.Object) l).Handle);
+				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
+			} finally {
+			}
+		}
+
 		static Delegate cb_addTouchables_Ljava_util_ArrayList_;
 #pragma warning disable 0169
 		static Delegate GetAddTouchables_Ljava_util_ArrayList_Handler ()

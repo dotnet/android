@@ -26,6 +26,8 @@ namespace Java.Interop.Tools.JavaCallableWrappers
 
 		private const string Identifier = IdentifierStartCharacter + "(" + IdentifierPartCharacter + ")";
 
+		static Regex IsValidIdentifierRegex = new Regex ($"^[{IdentifierStartCharacter}][{IdentifierPartCharacter}]*$", RegexOptions.Compiled);
+
 		// We use [^ ...] to detect any character that is NOT a match.
 		static Regex validIdentifier = new Regex ($"[^{Identifier}]", RegexOptions.Compiled);
 
@@ -43,7 +45,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers
 
 		public static bool IsValidIdentifier (string identifier)
 		{
-			return !validIdentifier.IsMatch (identifier);
+			return IsValidIdentifierRegex.IsMatch (identifier);
 		}
 
 		// Makes uglier but unique identifiers by encoding each invalid character with its character value

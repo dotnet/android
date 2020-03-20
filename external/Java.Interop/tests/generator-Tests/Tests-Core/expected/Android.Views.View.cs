@@ -172,6 +172,42 @@ namespace Android.Views {
 			}
 		}
 
+		static Delegate cb_setOn123Listener_Landroid_view_View_OnClickListener_;
+#pragma warning disable 0169
+		static Delegate GetSetOn123Listener_Landroid_view_View_OnClickListener_Handler ()
+		{
+			if (cb_setOn123Listener_Landroid_view_View_OnClickListener_ == null)
+				cb_setOn123Listener_Landroid_view_View_OnClickListener_ = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr, IntPtr>) n_SetOn123Listener_Landroid_view_View_OnClickListener_);
+			return cb_setOn123Listener_Landroid_view_View_OnClickListener_;
+		}
+
+		static void n_SetOn123Listener_Landroid_view_View_OnClickListener_ (IntPtr jnienv, IntPtr native__this, IntPtr native_l)
+		{
+			Android.Views.View __this = global::Java.Lang.Object.GetObject<Android.Views.View> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			Android.Views.View.IOnClickListener l = (Android.Views.View.IOnClickListener)global::Java.Lang.Object.GetObject<Android.Views.View.IOnClickListener> (native_l, JniHandleOwnership.DoNotTransfer);
+			__this.SetOn123Listener (l);
+		}
+#pragma warning restore 0169
+
+		static IntPtr id_setOn123Listener_Landroid_view_View_OnClickListener_;
+		// Metadata.xml XPath method reference: path="/api/package[@name='android.view']/class[@name='View']/method[@name='setOn123Listener' and count(parameter)=1 and parameter[1][@type='android.view.View.OnClickListener']]"
+		[Register ("setOn123Listener", "(Landroid/view/View$OnClickListener;)V", "GetSetOn123Listener_Landroid_view_View_OnClickListener_Handler")]
+		public virtual unsafe void SetOn123Listener (Android.Views.View.IOnClickListener l)
+		{
+			if (id_setOn123Listener_Landroid_view_View_OnClickListener_ == IntPtr.Zero)
+				id_setOn123Listener_Landroid_view_View_OnClickListener_ = JNIEnv.GetMethodID (class_ref, "setOn123Listener", "(Landroid/view/View$OnClickListener;)V");
+			try {
+				JValue* __args = stackalloc JValue [1];
+				__args [0] = new JValue (l);
+
+				if (((object) this).GetType () == ThresholdType)
+					JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_setOn123Listener_Landroid_view_View_OnClickListener_, __args);
+				else
+					JNIEnv.CallNonvirtualVoidMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "setOn123Listener", "(Landroid/view/View$OnClickListener;)V"), __args);
+			} finally {
+			}
+		}
+
 		static Delegate cb_addTouchables_Ljava_util_ArrayList_;
 #pragma warning disable 0169
 		static Delegate GetAddTouchables_Ljava_util_ArrayList_Handler ()
