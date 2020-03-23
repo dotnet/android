@@ -6,7 +6,7 @@ parameters:
 jobs:
   - job: win_msbuild_tests${{ parameters.node_id }}
     displayName: MSBuild - Windows-${{ parameters.node_id }}
-    pool: $(HostedWinVS2019)
+    pool: $(VSEngWinVS2019)
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     variables:
@@ -17,7 +17,7 @@ jobs:
 
     - template: clean.yaml
 
-    - template: setup-win-test-environment.yaml
+    - template: setup-test-environment.yaml
       parameters:
         provisionExtraArgs: -vv PROVISIONATOR_VISUALSTUDIO_LOCATION="$(VSINSTALLDIR)" -f
 
@@ -58,3 +58,5 @@ jobs:
     - template: upload-results.yaml
       parameters:
         artifactName: Test Results - MSBuild - Windows-${{ parameters.node_id }}
+
+    - template: fail-on-issue.yaml

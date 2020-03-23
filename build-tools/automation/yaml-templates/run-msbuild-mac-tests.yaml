@@ -67,3 +67,5 @@ jobs:
     - template: upload-results.yaml
       parameters:
         artifactName: Test Results - MSBuild - Mac-${{ parameters.node_id }}
+
+    - template: fail-on-issue.yaml
