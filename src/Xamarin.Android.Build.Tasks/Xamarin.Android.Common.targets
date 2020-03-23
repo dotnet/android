@@ -1563,8 +1563,11 @@ because xbuild doesn't support framework reference assemblies.
 		JavaPlatformJarPath="$(JavaPlatformJarPath)"
 	/>
 
-	<!-- Delete our temporary directory -->
-	<RemoveDirFixed Directories="$(ResgenTemporaryDirectory)" />
+  <!-- Delete our temporary directory -->
+  <RemoveDirFixed
+      Directories="$(ResgenTemporaryDirectory)"
+      ContinueOnError="WarnAndContinue"
+  />
 
   <Touch Files="$(_AndroidResgenFlagFile)" AlwaysCreate="True" />
   <ItemGroup>
@@ -2260,7 +2263,10 @@ because xbuild doesn't support framework reference assemblies.
   </CopyGeneratedJavaResourceClasses>
 
   <!-- Delete our temporary directory -->
-  <RemoveDirFixed Directories="$(AaptTemporaryDirectory)" />
+  <RemoveDirFixed
+      Directories="$(AaptTemporaryDirectory)"
+      ContinueOnError="WarnAndContinue"
+  />
 
   <ItemGroup>
     <FileWrites Include="$(_PackagedResources)" />
