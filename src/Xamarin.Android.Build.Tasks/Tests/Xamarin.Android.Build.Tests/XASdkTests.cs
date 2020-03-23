@@ -1,4 +1,6 @@
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
 
@@ -8,10 +10,16 @@ namespace Xamarin.Android.Build.Tests
 	[NonParallelizable] // On MacOS, parallel /restore causes issues
 	public class XASdkTests : BaseTest
 	{
+		static readonly string SdkVersion = Assembly.GetExecutingAssembly ()
+			.GetCustomAttributes<AssemblyMetadataAttribute> ()
+			.Where (attr => attr.Key == "SdkVersion")
+			.Select (attr => attr.Value)
+			.FirstOrDefault () ?? "0.0.1";
+
 		[Test]
 		public void BuildXASdkProject ([Values (false, true)] bool isRelease)
 		{
-			var proj = new XASdkProject ("0.0.1") {
+			var proj = new XASdkProject (SdkVersion) {
 				IsRelease = isRelease
 			};
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
@@ -23,7 +31,7 @@ namespace Xamarin.Android.Build.Tests
 		[Category ("SmokeTests")]
 		public void DotNetPackageXASdkProject ([Values (false, true)] bool isRelease)
 		{
-			var proj = new XASdkProject ("0.0.1") {
+			var proj = new XASdkProject (SdkVersion) {
 				IsRelease = isRelease
 			};
 			var relativeProjDir = Path.Combine ("temp", TestName);
