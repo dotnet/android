@@ -1073,7 +1073,7 @@ namespace Lib2
 					"_ResolveLibraryProjectImports",
 					"_GenerateJavaStubs",
 					"_CompileJava",
-					"_CompileToDalvikWithD8",
+					"_CompileToDalvik",
 				};
 				foreach (var target in targets) {
 					Assert.IsTrue (builder.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");

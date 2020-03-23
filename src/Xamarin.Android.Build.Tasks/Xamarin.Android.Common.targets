@@ -304,6 +304,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<!-- NOTE: $(AndroidLinkTool) would be blank if code shrinking is not used at all -->
 	<AndroidLinkTool       Condition=" '$(AndroidLinkTool)' == '' And '$(AndroidEnableProguard)' == 'True' ">proguard</AndroidLinkTool>
 	<AndroidLinkTool       Condition=" '$(AndroidLinkTool)' == 'proguard' And '$(AndroidEnableDesugar)' == 'True' ">r8</AndroidLinkTool>
+	<AndroidLinkTool       Condition=" '$(AndroidLinkTool)' == 'proguard' And '$(AndroidDexTool)' == 'd8' ">r8</AndroidLinkTool>
 	<AndroidEnableProguard Condition=" '$(AndroidLinkTool)' != '' ">True</AndroidEnableProguard>
 	<AndroidEnableDesugar  Condition=" '$(AndroidEnableDesugar)' == '' And ('$(AndroidDexTool)' == 'd8' Or '$(AndroidLinkTool)' == 'r8') ">True</AndroidEnableDesugar>
 	<AndroidEnableDesugar  Condition=" '$(AndroidEnableDesugar)' == '' ">False</AndroidEnableDesugar>
@@ -400,7 +401,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 *******************************************
 -->
 <!-- As we split up/refactor this file, put new imports here -->
-<Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.D8.targets" />
+<Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.D8.targets" Condition=" '$(AndroidDexTool)' == 'd8' " />
+<Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.DX.targets" Condition=" '$(AndroidDexTool)' == 'dx' " />
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Aapt.targets" />
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Aapt2.targets" />
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.SkipCases.projitems" />
@@ -2379,97 +2381,9 @@ because xbuild doesn't support framework reference assemblies.
 	</_CompileToDalvikInputs>
 </PropertyGroup>
 
-<Target Name="_CompileToDalvikWithDx"
-  DependsOnTargets="$(_BeforeCompileToDalvikWithDx);$(_CompileToDalvikDependsOnTargets)"
-  Condition=" '$(AndroidDexTool)' == 'dx' "
-  Inputs="$(_CompileToDalvikInputs)"
-  Outputs="$(_AndroidStampDirectory)_CompileToDalvik.stamp">
-
-  <ItemGroup>
-    <_JarsToProguard Include="@(_JavaLibrariesToCompile)" />
-  </ItemGroup>
-  
-  <MakeDir Directories="$(IntermediateOutputPath)proguard" />
-
-  <Proguard
-    Condition=" '$(AndroidLinkTool)' == 'proguard' And '$(_ProguardProjectConfiguration)' != '' "
-    ProguardJarPath="$(ProguardJarPath)"
-    AndroidSdkDirectory="$(_AndroidSdkDirectory)"
-    JavaToolPath="$(JavaToolPath)"
-    ProguardToolPath="$(ProguardToolPath)"
-    ToolExe="$(ProguardToolExe)"
-    UseProguard="$(UseProguard)"
-    JavaPlatformJarPath="$(JavaPlatformJarPath)"
-    ClassesOutputDirectory="$(_AndroidIntermediateJavaClassDirectory)"
-    AcwMapFile="$(_AcwMapFile)"
-    ProguardCommonXamarinConfiguration="$(IntermediateOutputPath)proguard\proguard_xamarin.cfg"
-    ProguardGeneratedReferenceConfiguration="$(_ProguardProjectConfiguration)"
-    ProguardGeneratedApplicationConfiguration="$(IntermediateOutputPath)proguard\proguard_project_primary.cfg"
-    ProguardConfigurationFiles="$(ProguardConfigFiles)"
-    JavaLibrariesToEmbed="@(_JarsToProguard);@(_InstantRunJavaReference)"
-    JavaLibrariesToReference="@(AndroidExternalJavaLibrary)"
-    ProguardJarOutput="$(IntermediateOutputPath)proguard\__proguard_output__.jar"
-    EnableLogging="$(ProguardEnableLogging)"
-    DumpOutput="$(IntermediateOutputPath)proguard\dump.txt"
-    PrintSeedsOutput="$(IntermediateOutputPath)proguard\seeds.txt"
-    PrintUsageOutput="$(IntermediateOutputPath)proguard\usage.txt"
-    PrintMappingOutput="$(IntermediateOutputPath)proguard\mapping.txt"
-    ProguardInputJarFilter="$(_AndroidProguardInputJarFilter)"
-     />
-
-  <ItemGroup Condition=" '$(AndroidLinkTool)' == 'proguard' And '$(_ProguardProjectConfiguration)' != '' ">
-    <_AlternativeJarForAppDx Include="$(IntermediateOutputPath)proguard\__proguard_output__.jar" />
-  </ItemGroup>
-
-  <CreateMultiDexMainDexClassList
-    Condition="'$(AndroidEnableMultiDex)' == 'True' And '$(AndroidCustomMainDexListFile)' == ''"
-    ToolPath="$(JavaToolPath)"
-    ToolExe="$(JavaToolExe)"
-    ProguardJarPath="$(ProguardJarPath)"
-    AndroidSdkBuildToolsPath="$(AndroidSdkBuildToolsPath)"
-    ClassesOutputDirectory="$(_AndroidIntermediateJavaClassDirectory)"
-    JavaLibraries="@(_JarsToProguard)"
-    MultiDexMainDexListFile="$(_AndroidMainDexListFile)"
-    CustomMainDexListFiles="@(MultiDexMainDexList)"
-    ProguardInputJarFilter="$(_AndroidProguardInputJarFilter)"
-    ExtraArgs="$(AndroidMultiDexClassListExtraArgs)"
-    >
-  </CreateMultiDexMainDexClassList>
-
-  <!-- remove existing dex files that may be previous multidex outputs. -->
-  <ItemGroup>
-    <_DexesToDelete Include="$(IntermediateOutputPath)android\bin\*.dex" />
-  </ItemGroup>
-  <Delete Files="@(_DexesToDelete)" />
-
-  <!-- Compile java code to dalvik -->
-  <CompileToDalvik 
-    DxJarPath="$(DxJarPath)"
-    DxExtraArguments="$(DxExtraArguments)"
-    JavaToolPath="$(JavaToolPath)"
-    JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
-    JavaOptions="$(JavaOptions)"
-    ClassesOutputDirectory="$(_AndroidIntermediateJavaClassDirectory.TrimEnd('\'))"
-    ClassesZip="$(_AndroidIntermediateClassesZip)"
-    ToolPath="$(DxToolPath)"
-    ToolExe="$(DxToolExe)"
-    UseDx="$(UseDx)"
-    MultiDexEnabled="$(AndroidEnableMultiDex)"
-    MultiDexMainDexListFile="$(_AndroidMainDexListFile)"
-    JavaLibrariesToCompile="@(_JavaLibrariesToCompileForApp)"
-    AlternativeJarFiles="@(_AlternativeJarForAppDx)"
-  />
-  <Touch Files="$(_AndroidStampDirectory)_CompileToDalvik.stamp" AlwaysCreate="true" />
-  <ItemGroup>
-    <FileWrites Include="$(IntermediateOutputPath)android\bin\*.dex" />
-  </ItemGroup>
-
-</Target>
-
 <PropertyGroup>
 	<_CompileDexDependsOn>
-		_CompileToDalvikWithDx;
-		_CompileToDalvikWithD8;
+		_CompileToDalvik;
 	</_CompileDexDependsOn>
 </PropertyGroup>
 

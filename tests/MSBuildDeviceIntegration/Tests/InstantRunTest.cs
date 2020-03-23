@@ -74,8 +74,8 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (b.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "2 _UpdateAndroidResgen was not skipped");
 			// CoreCompile should not be built.
 			Assert.IsTrue (b.Output.IsTargetSkipped ("CoreCompile"), "2 CoreCompile was not skipped");
-			// _CompileToDalvikWithDx should not be built either.
-			Assert.IsTrue (b.Output.IsTargetSkipped ("_CompileToDalvikWithDx"), "2 _CompileToDalvikWithDx was not skipped");
+			// _CompileToDalvik should not be built either.
+			Assert.IsTrue (b.Output.IsTargetSkipped ("_CompileToDalvik"), "2 _CompileToDalvik was not skipped");
 
 			// make insignificant changes in C# code and build
 			proj.MainActivity = proj.DefaultMainActivity + "// extra";
@@ -85,8 +85,8 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (b.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "3 _UpdateAndroidResgen was not skipped");
 			// CoreCompile should be built.
 			Assert.IsTrue (!b.Output.IsTargetSkipped ("CoreCompile"), "3 CoreCompile was skipped");
-			// _CompileToDalvikWithDx should not be built either.
-			Assert.IsTrue (b.Output.IsTargetSkipped ("_CompileToDalvikWithDx"), "3 _CompileToDalvikWithDx was not skipped");
+			// _CompileToDalvik should not be built either.
+			Assert.IsTrue (b.Output.IsTargetSkipped ("_CompileToDalvik"), "3 _CompileToDalvik was not skipped");
 
 			// make significant changes (but doesn't impact Resource.Designer.cs) in layout XML resource and build
 			proj.LayoutMain = proj.LayoutMain.Replace ("LinearLayout", "RelativeLayout"); // without this, resource designer .cs will be identical and further tasks will be skipped.
@@ -96,8 +96,8 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (!b.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "4 _UpdateAndroidResgen was skipped");
 			// CoreCompile should not be built.
 			Assert.IsTrue (b.Output.IsTargetSkipped ("CoreCompile"), "4 CoreCompile was not skipped");
-			// _CompileToDalvikWithDx should not be built either.
-			Assert.IsTrue (b.Output.IsTargetSkipped ("_CompileToDalvikWithDx"), "4 _CompileToDalvikWithDx was not skipped");
+			// _CompileToDalvik should not be built either.
+			Assert.IsTrue (b.Output.IsTargetSkipped ("_CompileToDalvik"), "4 _CompileToDalvik was not skipped");
 
 			// make significant changes (but doesn't impact Resource.Designer.cs) in layout XML resource,
 			// then call AndroidUpdateResource, then build (which is what our IDEs do).
@@ -124,8 +124,8 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Output.IsTargetSkipped ("CoreCompile"), "5 CoreCompile was not skipped");
 			}
 
-			// _CompileToDalvikWithDx should not be built either.
-			Assert.IsTrue (b.Output.IsTargetSkipped ("_CompileToDalvikWithDx"), "5 _CompileToDalvikWithDx should be skipped");
+			// _CompileToDalvik should not be built either.
+			Assert.IsTrue (b.Output.IsTargetSkipped ("_CompileToDalvik"), "5 _CompileToDalvik should be skipped");
 
 			b.Dispose ();
 		}
