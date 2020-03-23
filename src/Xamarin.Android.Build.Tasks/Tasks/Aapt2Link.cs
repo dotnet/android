@@ -304,7 +304,8 @@ namespace Xamarin.Android.Tasks {
 
 		bool ExecuteForAbi (string [] cmd, string currentResourceOutputFile)
 		{
-			apks.Add (currentResourceOutputFile, RunAapt (cmd, currentResourceOutputFile));
+			lock (apks)
+				apks.Add (currentResourceOutputFile, RunAapt (cmd, currentResourceOutputFile));
 			return true;
 		}
 

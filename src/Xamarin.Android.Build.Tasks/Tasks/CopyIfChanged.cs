@@ -24,7 +24,7 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public ITaskItem[] DestinationFiles { get; set; }
 
-		public bool CompareFileLengths { get; set; }
+		public bool CompareFileLengths { get; set; } = true;
 
 		[Output]
 		public ITaskItem[] ModifiedFiles { get; set; }
@@ -33,7 +33,6 @@ namespace Xamarin.Android.Tasks
 
 		public CopyIfChanged ()
 		{
-			CompareFileLengths = true;
 		}
 
 		public override bool RunTask ()

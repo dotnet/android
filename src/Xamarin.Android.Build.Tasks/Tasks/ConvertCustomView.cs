@@ -79,7 +79,7 @@ namespace Xamarin.Android.Tasks {
 					}
 				}
 			}
-			var output = new Dictionary<string, ITaskItem> ();
+			var output = new Dictionary<string, ITaskItem> (processed.Count);
 			foreach (var file in processed) {
 				ITaskItem resdir = ResourceDirectories?.FirstOrDefault (x => file.StartsWith (x.ItemSpec)) ?? null;
 				if (output.ContainsKey (file))
