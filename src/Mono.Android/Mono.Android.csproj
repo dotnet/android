@@ -32,8 +32,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
-    <OutputPath>$(XAInstallPrefix)xbuild-frameworks\Xamarin.Android.App\$(AndroidFrameworkVersion)\</OutputPath>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <OutputPath>$(XAInstallPrefix)xbuild-frameworks\Xamarin.Android.App\</OutputPath>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'monoandroid10' ">
