@@ -190,7 +190,7 @@ namespace UnnamedProject
 
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
 
-				var targets = new [] { "_CompileJava", "_CompileToDalvikWithDx" };
+				var targets = new [] { "_CompileJava", "_CompileToDalvik" };
 				foreach (var t in targets) {
 					Assert.IsTrue (b.Output.IsTargetSkipped (t), $"`{t}` should be skipped!");
 				}
