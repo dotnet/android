@@ -224,6 +224,18 @@ add_definitions("-DMONO_DLL_EXPORT")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_COMPILER_FLAGS} ${EXTRA_C_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_COMPILER_FLAGS} ${EXTRA_CXX_FLAGS}")
 
+if(CMAKE_BUILD_TYPE STREQUAL Debug)
+  # Convince NDK to really optimize our Debug builds. Without this, NDK's cmake toolchain definition
+  # will force a -O0 on us and our "debug" build is not really for debugging of our native code but
+  # rather for "debug" builds of user apps - it has extra code but it has to be as fast as possible.
+  if(ENABLE_NDK)
+	# This is specific to clang, enable only for Android builds
+	set(XA_COMPILER_FLAGS_DEBUG -fno-limit-debug-info)
+  endif()
+  set(CMAKE_C_FLAGS_DEBUG "${XA_COMPILER_FLAGS_DEBUG}")
+  set(CMAKE_CXX_FLAGS_DEBUG "${XA_COMPILER_FLAGS_DEBUG}")
+endif()
+
 include_directories("${DEFAULT_BIN_DIR}/include/mono-2.0")
 include_directories("jni")
 include_directories("${DEFAULT_BIN_DIR}/include")
