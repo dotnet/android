@@ -73,6 +73,8 @@ def execChRootCommand(chRootName, chRootPackages, pBuilderBindMounts, makeComman
         command: """
             export LC_ALL=en_US.UTF-8
             export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
+            export DOTNET_ROOT=\$HOME/dotnet
+            export PATH=\$PATH:\$HOME/dotnet
             locale
 
             ${makeCommand}
@@ -148,7 +150,9 @@ timestamps {
                     buildTarget = 'all'
                 }
             }
-            
+            // Install .NET Core globally
+            sh "curl -o dotnet-sdk-3.1.100-linux-x64.tar.gz https://dotnetcli.azureedge.net/dotnet/Sdk/3.1.100/dotnet-sdk-3.1.100-linux-x64.tar.gz"
+            sh "mkdir -p \$HOME/dotnet && tar zxf dotnet-sdk-3.1.100-linux-x64.tar.gz -C \$HOME/dotnet"
             sh "env"
         }
 
