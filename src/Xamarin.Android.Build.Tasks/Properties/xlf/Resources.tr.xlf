@@ -63,11 +63,11 @@ In this message, the phrase "should not be reached" means that this error messag
         <note>The abbreviation "JDK" should not be translated.</note>
       </trans-unit>
       <trans-unit id="XA0031">
-        <source>Java SDK {0} or above is required when using $(TargetFrameworkVersion) {1}.</source>
-        <target state="translated">$(TargetFrameworkVersion) {1} kullanılırken Java SDK {0} veya üzeri bir sürüm gerekir.</target>
-        <note>The following are literal names and should not be translated: $(TargetFrameworkVersion)
+        <source>Java SDK {0} or above is required when using {1}.</source>
+        <target state="needs-review-translation">$(TargetFrameworkVersion) {1} kullanılırken Java SDK {0} veya üzeri bir sürüm gerekir.</target>
+        <note>
 {0} - The Java SDK version number
-{1} - The target framework version number</note>
+{1} - The feature being used: `$(TargetFrameworkVersion) v10.0` or `&lt;Project Sdk="Xamarin.Android.Sdk"&gt;`</note>
       </trans-unit>
       <trans-unit id="XA0032">
         <source>Java SDK {0} or above is required when using Android SDK Build-Tools {1}.</source>

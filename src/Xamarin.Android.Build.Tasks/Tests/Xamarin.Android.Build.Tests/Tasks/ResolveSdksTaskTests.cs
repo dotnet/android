@@ -1,13 +1,13 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using NUnit.Framework;
-using Xamarin.ProjectTools;
 using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
-using System.Text;
 using Xamarin.Android.Tasks;
-using Microsoft.Build.Utilities;
+using Xamarin.ProjectTools;
+using ResolveAndroidTooling = Xamarin.Android.Tasks.Legacy.ResolveAndroidTooling;
+using ValidateJavaVersion = Xamarin.Android.Tasks.Legacy.ValidateJavaVersion;
 
 namespace Xamarin.Android.Build.Tests {
 

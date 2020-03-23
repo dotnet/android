@@ -231,9 +231,11 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Designer.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.DX.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.FSharp.targets" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Legacy.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.PCLSupport.props" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.PCLSupport.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.SkipCases.projitems" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tooling.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.Aidl.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.Aidl.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.AndroidSdk.dll" />
