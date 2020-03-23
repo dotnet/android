@@ -342,7 +342,7 @@
   </ItemGroup>
 
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
-
+  <!-- Only build the 'netcoreapp3.1' version of 'Mono.Android.dll' once for the latest stable Android version. -->
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' And '$(AndroidFrameworkVersion)' != '$(AndroidLatestStableFrameworkVersion)' ">
     <BuildDependsOn></BuildDependsOn>
   </PropertyGroup>
