@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project Sdk="Microsoft.NET.Sdk">
+<Project>
 
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
   <Import Project="..\..\Configuration.props" />
 
   <PropertyGroup>
-    <TargetFramework>monoandroid10</TargetFramework>
+    <TargetFrameworks>monoandroid10;netcoreapp3.1</TargetFrameworks>
     <RootNamespace>Android</RootNamespace>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
@@ -27,6 +28,11 @@
     <TargetFrameworkRootPath>$(XAInstallPrefix)xbuild-frameworks</TargetFrameworkRootPath>
     <DefineConstants>$(DefineConstants);NET_2_0</DefineConstants>
     <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
+    <OutputPath>$(XAInstallPrefix)xbuild-frameworks\Xamarin.Android.App\$(TargetFramework)\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
 
@@ -71,6 +77,10 @@
       <HintPath>$(OutputPath)..\v1.0\Facades\System.Drawing.Common.dll</HintPath>
       <Private>False</Private>
     </Reference>
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
+    <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop\Java.Interop.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -331,9 +341,16 @@
     <ProjectReference Include="..\..\build-tools\api-merge\api-merge.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\build-tools\api-xml-adjuster\api-xml-adjuster.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\build-tools\jnienv-gen\jnienv-gen.csproj" ReferenceOutputAssembly="false" />
-    <ProjectReference Include="..\..\external\Java.Interop\tools\generator\generator.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" />
-    <ProjectReference Include="..\..\external\Java.Interop\tools\jcw-gen\jcw-gen.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" />
+    <!-- Explicitly pass the target framework of the project so we don't have conflicts with the multiple targets in this file. -->
+    <ProjectReference Include="..\..\external\Java.Interop\tools\generator\generator.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="TargetFramework=net472"/>
+    <ProjectReference Include="..\..\external\Java.Interop\tools\jcw-gen\jcw-gen.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="TargetFramework=net472" />
     <ProjectReference Include="..\..\src\java-runtime\java-runtime.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
+
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+  <!-- Only build the 'netcoreapp3.1' version of 'Mono.Android.dll' once for the latest stable Android version. -->
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' And '$(AndroidFrameworkVersion)' != '$(AndroidLatestStableFrameworkVersion)' ">
+    <BuildDependsOn></BuildDependsOn>
+  </PropertyGroup>
 
 </Project>

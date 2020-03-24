@@ -10,6 +10,7 @@
   </ItemGroup>
   <Target Name="_BuildJavaInterop"
       BeforeTargets="BeforeResolveReferences"
+      Condition=" '$(TargetFramework)' == 'monoandroid10' "
       Inputs="$(MSBuildThisFile);$(JavaInteropFullPath)\src\Java.Interop\Java.Interop.csproj"
       Outputs="$(OutputPath)\..\v1.0\Java.Interop.dll">
     <PropertyGroup>
@@ -134,6 +135,7 @@
   </ItemGroup>
   <Target Name="_GenerateFrameworkList"
       BeforeTargets="GetTargetFrameworkProperties;GetReferenceAssemblyPaths;ResolveReferences"
+      Condition=" '$(TargetFramework)' == 'monoandroid10' "
       Inputs="$(MSBuildProjectFullPath)"
       Outputs="$(OutputPath)RedistList\FrameworkList.xml">
    <MakeDir Directories="$(OutputPath)RedistList" />
@@ -185,7 +187,7 @@
   <Target
       Name="_CheckApiCompatibility"
       Condition=" '$(DisableApiCompatibilityCheck)' != 'True' "
-      AfterTargets="Build"
+      AfterTargets="CopyFilesToOutputDirectory"
       Inputs="$(TargetPath);@(ApiCompatibilityFiles)"
       Outputs="$(IntermediateOutputPath)CheckApiCompatibility.stamp">
     <CheckApiCompatibility
