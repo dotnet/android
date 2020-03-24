@@ -1493,10 +1493,10 @@ because xbuild doesn't support framework reference assemblies.
       $(_UpdateAndroidResgenInputs);
       @(_ModifiedResources);
     </_UpdateAndroidResgenInputs>
-      <_CreateBaseApkInputs>
-        $(_CreateBaseApkInputs);
-        @(_ModifiedResources);
-      </_CreateBaseApkInputs>
+    <_CreateBaseApkInputs>
+      $(_CreateBaseApkInputs);
+      @(_ModifiedResources);
+    </_CreateBaseApkInputs>
   </PropertyGroup>
 </Target>
 
