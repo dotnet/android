@@ -94,7 +94,7 @@ namespace Xamarin.Android.Binder
 			// every type to be fully populated.
 			opt.UseShallowReferencedTypes = apiSourceAttr != "class-parse";
 
-			foreach (var reference in references) {
+			foreach (var reference in references.Distinct ()) {
 				try {
 					Report.Verbose (0, "resolving assembly {0}.", reference);
 					var assembly    = resolver.Load (reference);
