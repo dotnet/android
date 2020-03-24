@@ -30,7 +30,7 @@ namespace Xamarin.Android.Prepare
 			/// </summary>
 			public static readonly Uri AndroidToolchain_AndroidUri = new Uri ("https://dl.google.com/android/repository/");
 
-			public static readonly Uri NugetUri = new Uri ("https://dist.nuget.org/win-x86-commandline/v4.9.4/nuget.exe");
+			public static readonly Uri NugetUri = new Uri ("https://dist.nuget.org/win-x86-commandline/v5.5.0/nuget.exe");
 
 			public static Uri MonoArchive_BaseUri = new Uri ("https://xamjenkinsartifact.azureedge.net/mono-sdks/");
 		}
