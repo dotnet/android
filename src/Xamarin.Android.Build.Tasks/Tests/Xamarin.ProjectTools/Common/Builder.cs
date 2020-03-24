@@ -433,12 +433,54 @@ namespace Xamarin.ProjectTools
 					File.AppendAllText (buildLogFullPath, File.ReadAllText (processLog));
 			}
 			if (!result && ThrowOnBuildFailure) {
-				string message = "Build failure: " + Path.GetFileName (projectOrSolution) + (BuildLogFile != null && File.Exists (buildLogFullPath) ? "Build log recorded at " + buildLogFullPath : null);
+				var sb = new StringBuilder ();
+
+				sb.AppendLine ();
+				sb.AppendLine ("Build failure: " + Path.GetFileName (projectOrSolution));
+
+				if (BuildLogFile != null && File.Exists (buildLogFullPath)) {
+					sb.AppendLine ("Build log recorded at " + buildLogFullPath);
+					sb.AppendLine (SummarizeBuildFailure (buildLogFullPath));
+				}
+
 				//NOTE: enormous logs will lock up IDE's UI. Build result files should be appended to the TestResult on failure.
-				throw new FailedBuildException (message);
+				throw new FailedBuildException (sb.ToString ());
 			}
 
 			return result;
+		}
+
+		static readonly Regex ErrorMessage = new Regex (@"^(?<source>[^: ]+)\s*:\s*(?<type>error) (?<code>[^:]+): (?<message>.*)");
+
+		string SummarizeBuildFailure (string logFile)
+		{
+			if (!File.Exists (logFile))
+				return string.Empty;
+
+			var errors = new List<string> ();
+
+			foreach (var line in File.ReadAllLines (logFile)) {
+				if (ErrorMessage.IsMatch (line))
+					errors.Add (line);
+			}
+
+			if (errors.Count == 0)
+				return string.Empty;
+
+			var sb = new StringBuilder ();
+
+			// Display up to 2 errors in the logged message
+			sb.AppendLine ();
+			sb.AppendLine ("Error(s):");
+			sb.AppendLine (errors [0]);
+
+			if (errors.Count > 1)
+				sb.AppendLine (errors [1]);
+
+			if (errors.Count > 2)
+				sb.AppendLine ($"+ {errors.Count - 2} more error(s).");
+
+			return sb.ToString ();
 		}
 
 		bool IsRunningInIDE {
