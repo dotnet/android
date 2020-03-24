@@ -22,10 +22,10 @@ Copyright (C) 2019  Microsoft Corporation. All rights reserved.
       $(_UpdateAndroidResgenInputs);
       @(_LibraryResourceDirectoryStamps);
     </_UpdateAndroidResgenInputs>
-      <_CreateBaseApkInputs>
-        $(_CreateBaseApkInputs);
-        @(_LibraryResourceDirectoryStamps);
-      </_CreateBaseApkInputs>
+    <_CreateBaseApkInputs>
+      $(_CreateBaseApkInputs);
+      @(_LibraryResourceDirectoryStamps);
+    </_CreateBaseApkInputs>
   </PropertyGroup>
 </Target>
 
