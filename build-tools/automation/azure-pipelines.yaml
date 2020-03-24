@@ -229,8 +229,6 @@ stages:
     pool: $(VSEngWinVS2019)
     timeoutInMinutes: 360
     cancelTimeoutInMinutes: 5
-    workspace:
-      clean: all
     steps:
     - checkout: self
       submodules: recursive
@@ -781,8 +779,6 @@ stages:
     pool: $(VSEngWinVS2019)
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
-    workspace:
-      clean: all
     variables:
       VSINSTALLDIR: C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise
     steps:
