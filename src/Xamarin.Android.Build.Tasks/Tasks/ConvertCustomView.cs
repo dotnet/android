@@ -79,24 +79,21 @@ namespace Xamarin.Android.Tasks {
 					}
 				}
 			}
-			var output = new List<ITaskItem> ();
+			var output = new Dictionary<string, ITaskItem> (processed.Count);
 			foreach (var file in processed) {
 				ITaskItem resdir = ResourceDirectories?.FirstOrDefault (x => file.StartsWith (x.ItemSpec)) ?? null;
-				if (resdir == null) {
-					continue;
-				}
-				var hash = resdir.GetMetadata ("Hash");
-				var stamp = resdir.GetMetadata ("StampFile");
+				var hash = resdir?.GetMetadata ("Hash") ?? null;
+				var stamp = resdir?.GetMetadata ("StampFile") ?? null;
 				var filename = !string.IsNullOrEmpty (hash) ? hash : "compiled";
 				var stampFile = !string.IsNullOrEmpty (stamp) ? stamp : $"{filename}.stamp";
 				Log.LogDebugMessage ($"{filename} {stampFile}");
-				output.Add (new TaskItem (file, new Dictionary<string, string> {
+				output.Add (file, new TaskItem (Path.GetFullPath (file), new Dictionary<string, string> {
 					{ "StampFile" , stampFile },
 					{ "Hash" , filename },
-					{ "ResourceDirectory", resdir.ItemSpec }
+					{ "Resource", resdir?.ItemSpec ?? file },
 				}));
 			}
-			Processed = output.ToArray ();
+			Processed = output.Values.ToArray ();
 			return !Log.HasLoggedErrors;
 		}
 

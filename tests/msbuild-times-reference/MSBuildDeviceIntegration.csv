@@ -2,6 +2,7 @@
 # First non-comment row is human description of columns
 Test Name,Time in ms (int)
 # Data
+Build_From_Clean_DontIncludeRestore,10000
 Build_No_Changes,3250
 Build_CSharp_Change,4450
 Build_AndroidResource_Change,4150

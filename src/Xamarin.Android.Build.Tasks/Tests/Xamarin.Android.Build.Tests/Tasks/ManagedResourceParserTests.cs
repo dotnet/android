@@ -467,7 +467,8 @@ int xml myxml 0x7f140000
 			CreateResourceDirectory (path);
 			File.WriteAllText (Path.Combine (Root, path, "foo.map"), @"a\nb");
 			Directory.CreateDirectory (Path.Combine (Root, path, "java"));
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out);
+			List<BuildErrorEventArgs> errors = new List<BuildErrorEventArgs> ();
+			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors: errors);
 			var aapt2Compile = new Aapt2Compile {
 				BuildEngine = engine,
 				ToolPath = GetPathToAapt2 (),
@@ -480,9 +481,10 @@ int xml myxml 0x7f140000
 					}),
 				},
 				FlatArchivesDirectory = Path.Combine (Root, path),
+				FlatFilesDirectory = Path.Combine (Root, path),
 			};
 			
-			Assert.IsTrue (aapt2Compile.Execute (), "Aapt2 Compile should have succeeded.");
+			Assert.IsTrue (aapt2Compile.Execute (), $"Aapt2 Compile should have succeeded. {string.Join (" ", errors.Select (x => x.Message))}");
 			int platform = 0;
 			using (var b = new Builder ()) {
 				platform = b.GetMaxInstalledPlatform ();

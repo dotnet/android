@@ -16,6 +16,19 @@ Copyright (C) 2019  Microsoft Corporation. All rights reserved.
 
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
+<Target Name="_InjectAaptDependencies" AfterTargets="_ResolveSdks" Condition=" '$(_AndroidUseAapt2)' != 'True' ">
+  <PropertyGroup>
+    <_UpdateAndroidResgenInputs>
+      $(_UpdateAndroidResgenInputs);
+      @(_LibraryResourceDirectoryStamps);
+    </_UpdateAndroidResgenInputs>
+    <_CreateBaseApkInputs>
+      $(_CreateBaseApkInputs);
+      @(_LibraryResourceDirectoryStamps);
+    </_CreateBaseApkInputs>
+  </PropertyGroup>
+</Target>
+
 <Target Name="_UpdateAndroidResgenAapt"
     Condition="'$(_AndroidUseAapt2)' != 'True'">
 

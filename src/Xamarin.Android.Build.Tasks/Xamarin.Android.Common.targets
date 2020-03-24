@@ -289,6 +289,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_AndroidAapt2VersionFile>$(IntermediateOutputPath)aapt2.version</_AndroidAapt2VersionFile>
 	<_AndroidIntermediateDesignTimeBuildDirectory>$(IntermediateOutputPath)designtime\</_AndroidIntermediateDesignTimeBuildDirectory>
 	<_AndroidLibraryFlatArchivesDirectory>$(IntermediateOutputPath)flata\</_AndroidLibraryFlatArchivesDirectory>
+	<_AndroidLibraryFlatFilesDirectory>$(IntermediateOutputPath)flat\</_AndroidLibraryFlatFilesDirectory>
 	<_AndroidStampDirectory>$(IntermediateOutputPath)stamp\</_AndroidStampDirectory>
 	<_AndroidBuildIdFile>$(IntermediateOutputPath)buildid.txt</_AndroidBuildIdFile>
         <_AndroidApplicationSharedLibraryPath>$(IntermediateOutputPath)app_shared_libraries\</_AndroidApplicationSharedLibraryPath>
@@ -447,6 +448,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<PrepareWearApplicationFiles
 		PackageName="$(_AndroidPackage)"
 		IntermediateOutputPath="$(IntermediateOutputPath)"
+		AndroidLibraryFlatFilesDirectory="$(_AndroidLibraryFlatFilesDirectory)"
 		WearAndroidManifestFile="$(BundledWearApplicationManifestFile)"
 		WearApplicationApkPath="$(BundledWearApplicationApkPath)">
 		<Output TaskParameter="WearableApplicationDescriptionFile" ItemName="_WearableApplicationDescriptionFile" />
@@ -775,7 +777,13 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     DependsOnTargets="_SetLatestTargetFrameworkVersion">
 </Target>
 
-<Target Name="_SetLatestTargetFrameworkVersion" DependsOnTargets="_ResolveSdks;_CreateAapt2VersionCache">
+<PropertyGroup>
+	<_SetLatestTargetFrameworkVersionDependsOnTargets>
+		_ResolveSdks;
+	</_SetLatestTargetFrameworkVersionDependsOnTargets>
+</PropertyGroup>
+
+<Target Name="_SetLatestTargetFrameworkVersion" DependsOnTargets="$(_SetLatestTargetFrameworkVersionDependsOnTargets)">
 </Target>
 
 <Target Name="_ResolveSdks" DependsOnTargets="_GetReferenceAssemblyPaths">
@@ -1288,7 +1296,13 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
   
 <Target Name="_ComputeAndroidResourcePaths">
-	<AndroidComputeResPaths ResourceFiles="@(AndroidResource);@(AndroidBoundLayout)" IntermediateDir="$(MonoAndroidResDirIntermediate)" Prefixes="$(MonoAndroidResourcePrefix)" LowercaseFilenames="True" ProjectDir="$(ProjectDir)">
+	<AndroidComputeResPaths ResourceFiles="@(AndroidResource);@(AndroidBoundLayout)"
+			IntermediateDir="$(MonoAndroidResDirIntermediate)"
+			Prefixes="$(MonoAndroidResourcePrefix)"
+			LowercaseFilenames="True"
+			ProjectDir="$(ProjectDir)"
+			AndroidLibraryFlatFilesDirectory="$(_AndroidLibraryFlatFilesDirectory)"
+	>
 		<Output ItemName="_AndroidResourceDest" TaskParameter="IntermediateFiles" />
 		<Output PropertyName="_AndroidResourceNameCaseMap" TaskParameter="ResourceNameCaseMap" />
 		<Output ItemName="_AndroidResolvedResources" TaskParameter="ResolvedResourceFiles" />
@@ -1307,6 +1321,7 @@ because xbuild doesn't support framework reference assemblies.
 	/>
 	<CopyIfChanged SourceFiles="@(_AndroidResolvedResources)"
 		DestinationFiles="@(_AndroidResourceDest)"
+		CompareFileLengths="False"
 	>
 		<Output ItemName="_ModifiedResources" TaskParameter="ModifiedFiles"/>
 	</CopyIfChanged>
@@ -1474,7 +1489,27 @@ because xbuild doesn't support framework reference assemblies.
 	</ItemGroup>
 </Target>
 
+<Target Name="_IncludeModifiedFilesInUpdateAndroidResgenInputs">
+  <PropertyGroup>
+    <_UpdateAndroidResgenInputs>
+      $(_UpdateAndroidResgenInputs);
+      @(_ModifiedResources);
+    </_UpdateAndroidResgenInputs>
+    <_CreateBaseApkInputs>
+      $(_CreateBaseApkInputs);
+      @(_ModifiedResources);
+    </_CreateBaseApkInputs>
+  </PropertyGroup>
+</Target>
+
+<PropertyGroup>
+  <_PrepareUpdateAndroidResgenDependsOnTargets>
+    _IncludeModifiedFilesInUpdateAndroidResgenInputs;
+  </_PrepareUpdateAndroidResgenDependsOnTargets>
+</PropertyGroup>
+
 <Target Name="_PrepareUpdateAndroidResgen"
+    DependsOnTargets="$(_PrepareUpdateAndroidResgenDependsOnTargets)"
     Inputs="$(_UpdateAndroidResgenInputs)"
     Outputs="$(_AndroidResgenFlagFile)">
     
@@ -1509,18 +1544,18 @@ because xbuild doesn't support framework reference assemblies.
 	<_UpdateAndroidResgenInputs>
 		$(MSBuildAllProjects);
 		@(_AndroidResourceDest);
-		@(_LibraryResourceDirectoryStamps);
 		$(_AndroidBuildPropertiesCache);
 		$(ProjectAssetsFile);
 		$(_AndroidLibraryProjectImportsCache);
 		$(_AndroidLibraryImportsCache);
+		@(_ModifiedResources);
 	</_UpdateAndroidResgenInputs>
 </PropertyGroup>
 
 <Target Name="_UpdateAndroidResgen"
 	Inputs="$(_UpdateAndroidResgenInputs)"
 	Outputs="$(_AndroidResgenFlagFile)"
-	DependsOnTargets="$(_UpdateAndroidResgenDependsOnTargets);$(_AfterGenerateAndroidResourceDir);_CompileAndroidLibraryResources;_CompileResources;_PrepareUpdateAndroidResgen">
+	DependsOnTargets="$(_UpdateAndroidResgenDependsOnTargets);$(_AfterGenerateAndroidResourceDir);_PrepareUpdateAndroidResgen">
 
 	<CallTarget Targets="_UpdateAndroidResgenAapt" Condition="'$(_AndroidUseAapt2)' != 'True'" />
 	<CallTarget Targets="_UpdateAndroidResgenAapt2" Condition="'$(_AndroidUseAapt2)' == 'True'" />
@@ -2146,7 +2181,7 @@ because xbuild doesn't support framework reference assemblies.
     _GenerateJavaStubs;
     _ManifestMerger;
     _ConvertCustomView;
-    _FixupCustomViewsForAapt2;
+    $(_AfterConvertCustomView);
     _GenerateEnvironmentFiles;
     _AddStaticResources;
     $(_AfterAddStaticResources);
@@ -2226,7 +2261,7 @@ because xbuild doesn't support framework reference assemblies.
 		_GenerateJavaStubs;
 		_ManifestMerger;
 		_ConvertCustomView;
-		_FixupCustomViewsForAapt2;
+		$(_AfterConvertCustomView);
 		_GenerateEnvironmentFiles;
 		_GetLibraryImports;
 		_CheckDuplicateJavaLibraries;
@@ -2239,7 +2274,6 @@ because xbuild doesn't support framework reference assemblies.
 		;@(_AndroidResourceDest)
 		;@(_AndroidAssetsDest)
 		;$(_AcwMapFile)
-		;@(_LibraryResourceDirectoryStamps)
 		;$(_AndroidBuildPropertiesCache)
 	</_CreateBaseApkInputs>
 </PropertyGroup>
@@ -2276,7 +2310,7 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 </Target>
 
-<Target Name="_FindJavaStubFiles" DependsOnTargets="_GenerateJavaStubs;_ManifestMerger;_ConvertCustomView;_FixupCustomViewsForAapt2;_GenerateEnvironmentFiles;">
+<Target Name="_FindJavaStubFiles" DependsOnTargets="_GenerateJavaStubs;_ManifestMerger;_ConvertCustomView;$(_AfterConvertCustomView);_GenerateEnvironmentFiles;">
   <ItemGroup>
     <_JavaStubFiles Include="$(_AndroidIntermediateJavaSourceDirectory)**\*.java" />
     <FileWrites Include="@(_JavaStubFiles)" />
@@ -2518,7 +2552,7 @@ because xbuild doesn't support framework reference assemblies.
 		_GenerateJavaStubs;
 		_ManifestMerger;
 		_ConvertCustomView;
-		_FixupCustomViewsForAapt2;
+		$(_AfterConvertCustomView);
 		$(AfterGenerateAndroidManifest);
 		_GenerateEnvironmentFiles;
 		_CompileJava;
@@ -3033,6 +3067,7 @@ because xbuild doesn't support framework reference assemblies.
 	<RemoveDirFixed Directories="$(MonoAndroidIntermediateResourceCache)" Condition="Exists ('$(MonoAndroidIntermediateResourceCache)')" />
 	<RemoveDirFixed Directories="$(_AndroidAotBinDirectory)" Condition="Exists ('$(_AndroidAotBinDirectory)')" />
 	<RemoveDirFixed Directories="$(_AndroidLibraryFlatArchivesDirectory)" Condition="Exists ('$(_AndroidLibraryFlatArchivesDirectory)')" />
+	<RemoveDirFixed Directories="$(_AndroidLibraryFlatFilesDirectory)" Condition="Exists ('$(_AndroidLibraryFlatFilesDirectory)')" />
 	<RemoveDirFixed Directories="$(_AndroidStampDirectory)" Condition="Exists ('$(_AndroidStampDirectory)')" />
 	<RemoveDirFixed Directories="$(_AndroidApplicationSharedLibraryPath)" Condition="Exists ('$(_AndroidApplicationSharedLibraryPath)')" />
  	<Delete Files="$(IntermediateOutputPath)R.cs.flag" />

@@ -351,6 +351,8 @@ namespace Xamarin.Android.Tools
 				foreach (var file in Directory.GetFiles (destination, "*", SearchOption.AllDirectories)) {
 					var outfile = Path.GetFullPath (file);
 					if (outfile.Contains ("/__MACOSX/") ||
+							outfile.EndsWith (".flat", StringComparison.OrdinalIgnoreCase) ||
+							outfile.EndsWith ("files.cache", StringComparison.OrdinalIgnoreCase) ||
 							outfile.EndsWith ("__AndroidLibraryProjects__.zip", StringComparison.OrdinalIgnoreCase) ||
 							outfile.EndsWith ("/__MACOSX", StringComparison.OrdinalIgnoreCase) ||
 							outfile.EndsWith ("/.DS_Store", StringComparison.OrdinalIgnoreCase))

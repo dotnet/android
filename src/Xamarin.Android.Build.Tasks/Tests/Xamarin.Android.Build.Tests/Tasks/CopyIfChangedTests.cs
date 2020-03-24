@@ -96,6 +96,26 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void DestinationOlderNoLengthCheck ()
+		{
+			var src = NewFile ("foo");
+			var dest = NewFile ("bar");
+			var now = DateTime.UtcNow;
+			File.SetLastWriteTimeUtc (src, now);
+			File.SetLastWriteTimeUtc (dest, now.AddSeconds (-1)); // destination is older
+
+			var task = new CopyIfChanged {
+				BuildEngine = new MockBuildEngine (TestContext.Out),
+				SourceFiles = ToArray (src),
+				DestinationFiles = ToArray (dest),
+				CompareFileLengths = false,
+			};
+			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
+			Assert.AreEqual (1, task.ModifiedFiles.Length, "Changes should have been made.");
+			FileAssert.AreEqual (src, dest);
+		}
+
+		[Test]
 		public void SourceOlder ()
 		{
 			var src = NewFile ("foo");
@@ -130,6 +150,26 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
 			Assert.AreEqual (1, task.ModifiedFiles.Length, "Changes should have been made.");
 			FileAssert.AreEqual (src, dest);
+		}
+
+		[Test]
+		public void SourceOlderDifferentLengthButNoLengthCheck ()
+		{
+			var src = NewFile ("foo");
+			var dest = NewFile ("foofoo");
+			var now = DateTime.UtcNow;
+			File.SetLastWriteTimeUtc (src, now.AddSeconds (-1)); // source is older
+			File.SetLastWriteTimeUtc (dest, now);
+
+			var task = new CopyIfChanged {
+				BuildEngine = new MockBuildEngine (TestContext.Out),
+				SourceFiles = ToArray (src),
+				DestinationFiles = ToArray (dest),
+				CompareFileLengths = false,
+			};
+			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
+			Assert.AreEqual (0, task.ModifiedFiles.Length, "Changes should not have been made.");
+			FileAssert.AreNotEqual (src, dest);
 		}
 
 		[Test]
