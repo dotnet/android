@@ -174,10 +174,8 @@ timestamps {
                     }
                 }
             }
-            // Install .NET Core globally
+            // Install .NET Core and temporarily append it to PATH
             sh "curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin -version 3.1.100"
-            sh "\$HOME/.dotnet/dotnet tool install --global boots || true"
-            sh "DOTNET_ROOT=\$HOME/.dotnet && \$HOME/.dotnet/tools/boots https://dotnetcli.azureedge.net/dotnet/Sdk/3.1.100/dotnet-sdk-3.1.100-osx-x64.pkg"
         }
 
         utils.stageWithTimeout('build', 6, 'HOURS', XADir, true) {    // Typically takes less than one hour except a build on a new bot to populate local caches can take several hours
