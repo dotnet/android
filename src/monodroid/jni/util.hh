@@ -42,6 +42,8 @@ constexpr int FALSE = 0;
 #include "java-interop-util.h"
 #include "logger.hh"
 
+#include <mono/metadata/mono-private-unstable.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
@@ -76,6 +78,7 @@ namespace xamarin::android
 	public:
 		void             monodroid_store_package_name (const char *name);
 		MonoAssembly    *monodroid_load_assembly (MonoDomain *domain, const char *basename);
+		MonoAssembly    *monodroid_load_assembly_alc (MonoDomain *domain, MonoAssemblyLoadContextGCHandle alc, const char *basename);
 		MonoObject      *monodroid_runtime_invoke (MonoDomain *domain, MonoMethod *method, void *obj, void **params, MonoObject **exc);
 		MonoClass       *monodroid_get_class_from_name (MonoDomain *domain, const char* assembly, const char *_namespace, const char *type);
 		MonoDomain      *monodroid_create_appdomain (MonoDomain *parent_domain, const char *friendly_name, int shadow_copy, const char *shadow_directories);

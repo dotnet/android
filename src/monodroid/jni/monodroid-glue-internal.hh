@@ -139,13 +139,13 @@ namespace xamarin::android::internal
 		void create_xdg_directories_and_environment (jstring_wrapper &homeDir);
 		void disable_external_signal_handlers ();
 		void lookup_bridge_info (MonoDomain *domain, MonoImage *image, const OSBridge::MonoJavaGCBridgeType *type, OSBridge::MonoJavaGCBridgeInfo *info);
-		void load_assembly (MonoDomain *domain, jstring_wrapper &assembly);
-		void load_assemblies (MonoDomain *domain, jstring_array_wrapper &assemblies);
+		void load_assembly (MonoDomain *domain, int context_id, jstring_wrapper &assembly);
+		void load_assemblies (MonoDomain *domain, int context_id, jstring_array_wrapper &assemblies);
 		void set_debug_options ();
 		void parse_gdb_options ();
 		void mono_runtime_init (char *runtime_args);
 		void setup_bundled_app (const char *dso_name);
-		void init_android_runtime (MonoDomain *domain, JNIEnv *env, jclass runtimeClass, jobject loader);
+		void init_android_runtime (MonoDomain *domain, JNIEnv *env, int context_id, jclass runtimeClass, jobject loader);
 		void set_environment_variable_for_directory (const char *name, jstring_wrapper &value, bool createDirectory, mode_t mode);
 
 		void set_environment_variable_for_directory (const char *name, jstring_wrapper &value)
@@ -158,8 +158,8 @@ namespace xamarin::android::internal
 			set_environment_variable_for_directory (name, value, false, 0);
 		}
 
-		MonoClass* get_android_runtime_class (MonoDomain *domain);
-		void shutdown_android_runtime (MonoDomain *domain);
+		MonoClass* get_android_runtime_class (MonoDomain *domain, int context_id);
+		void shutdown_android_runtime (MonoDomain *domain, int context_id);
 		MonoDomain*	create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks, bool is_root_domain);
 		MonoDomain* create_and_initialize_domain (JNIEnv* env, jclass runtimeClass, jstring_array_wrapper &runtimeApks,
 		                                          jstring_array_wrapper &assemblies, jobjectArray assembliesBytes, jstring_array_wrapper &assembliesPaths,
@@ -191,7 +191,7 @@ namespace xamarin::android::internal
 #endif // DEBUG
 
 #if !defined (RELEASE)
-		static MonoAssembly* open_from_update_dir (MonoAssemblyName *aname, char **assemblies_path, void *user_data);
+		static MonoAssembly* open_from_update_dir (MonoAssemblyLoadContextGCHandle *alc_gchandle, MonoAssemblyName *aname, char **assemblies_path, void *user_data, MonoError *error);
 #endif
 	private:
 		MonoMethod         *registerType          = nullptr;

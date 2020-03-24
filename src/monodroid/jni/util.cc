@@ -31,6 +31,8 @@
 #include "monodroid-glue.hh"
 #include "cpp-util.hh"
 
+#include <mono/metadata/mono-private-unstable.h>
+
 using namespace xamarin::android;
 
 #if defined (ANDROID) || defined (LINUX)
@@ -177,6 +179,12 @@ Util::monodroid_store_package_name (const char *name)
 MonoAssembly *
 Util::monodroid_load_assembly (MonoDomain *domain, const char *basename)
 {
+	return monodroid_load_assembly_alc (domain, mono_alc_get_default_gchandle (), basename);
+}
+
+MonoAssembly *
+Util::monodroid_load_assembly_alc (MonoDomain *domain, MonoAssemblyLoadContextGCHandle alc, const char *basename)
+{
 	MonoAssembly         *assm;
 	MonoAssemblyName     *aname;
 	MonoImageOpenStatus   status;
@@ -186,10 +194,10 @@ Util::monodroid_load_assembly (MonoDomain *domain, const char *basename)
 
 	if (domain != current) {
 		mono_domain_set (domain, FALSE);
-		assm  = mono_assembly_load_full (aname, nullptr, &status, 0);
+		assm  = mono_assembly_load_full_alc (alc, aname, nullptr, &status);
 		mono_domain_set (current, FALSE);
 	} else {
-		assm  = mono_assembly_load_full (aname, nullptr, &status, 0);
+		assm  = mono_assembly_load_full_alc (alc, aname, nullptr, &status);
 	}
 
 	mono_assembly_name_free (aname);

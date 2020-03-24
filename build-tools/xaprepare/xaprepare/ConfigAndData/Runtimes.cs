@@ -624,6 +624,14 @@ namespace Xamarin.Android.Prepare
 			),
 
 			new RuntimeFile (
+				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), Configurables.Paths.MonoSDKRelativeIncludeSourceDir, "metadata", "mono-private-unstable.h"),
+				destinationCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.MonoSDKIncludeDestinationDir, "metadata", "mono-private-unstable.h"),
+				strip: false,
+				shared: true,
+				type: RuntimeFileType.SdkHeader
+			),
+
+			new RuntimeFile (
 				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), Configurables.Paths.MonoSDKRelativeIncludeSourceDir, "utils", "mono-counters.h"),
 				destinationCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.MonoSDKIncludeDestinationDir, "utils", "mono-counters.h"),
 				strip: false,
