@@ -1,0 +1,58 @@
+<Project>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.DotNet.Build.Tasks.Packaging" Version="5.0.0-beta.20120.1" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk" Version="5.0.0-beta.20120.1" PrivateAssets="all" />
+  </ItemGroup>
+
+  <Import Project="..\..\Configuration.props" />
+  <Import Project="..\..\build-tools\scripts\XAVersionInfo.targets" />
+  <Import Project="Sdk.props" Sdk="Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk" />
+  <UsingTask TaskName="CreateFrameworkListFile" AssemblyFile="$(DotNetBuildTasksSharedFrameworkTaskFile)"/>
+
+  <!-- Include initial pack content in ref and runtime. We aren't yet generating separate reference and runtime assemblies. -->
+  <ItemGroup>
+    <_AndroidAppPackAssemblies Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild-frameworks\Xamarin.Android.App\netcoreapp3.1\Java.Interop.dll" />
+    <_AndroidAppPackAssemblies Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild-frameworks\Xamarin.Android.App\netcoreapp3.1\Mono.Android.dll" />
+    <_AndroidAppPackAssemblies Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild-frameworks\Xamarin.Android.App\netcoreapp3.1\Mono.Android.Export.dll" />
+    <FrameworkListFileClass Include="@(_AndroidAppPackAssemblies->'%(Filename)%(Extension)')" Profile="Android" />
+  </ItemGroup>
+
+ <!-- https://github.com/dotnet/runtime/blob/0647ec314948904319da5eb15e9931f7c85ed1e2/src/installer/pkg/projects/Directory.Build.targets#L281 -->
+  <Target Name="_GenerateFrameworkListFile" >
+    <!-- Hardcode framework attributes -->
+    <ItemGroup>
+      <FrameworkListRootAttributes Include="Name" Value="Xamarin Android - NET 5.0" />
+      <FrameworkListRootAttributes Include="TargetFrameworkIdentifier" Value=".NETCoreApp" />
+      <FrameworkListRootAttributes Include="TargetFrameworkVersion" Value="5.0" />
+      <FrameworkListRootAttributes Include="FrameworkName" Value="Xamarin.Android.App" />
+    </ItemGroup>
+
+    <!-- https://github.com/dotnet/arcade/blob/1924d7ea148c9f26ca3d82b60f0a775a5389ed22/src/Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk/src/CreateFrameworkListFile.cs -->
+    <CreateFrameworkListFile
+        Files="@(_PackageFiles)"
+        FileClassifications="@(FrameworkListFileClass)"
+        TargetFile="$(FrameworkListFile)"
+        TargetFilePrefixes="ref;runtimes"
+        RootAttributes="@(FrameworkListRootAttributes)"
+    />
+    <ItemGroup>
+      <_PackageFiles Include="$(FrameworkListFile)" PackagePath="data" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_GetDefaultPackageVersion"
+      DependsOnTargets="GetXAVersionInfo" >
+    <PropertyGroup>
+      <PackageVersion>$(ProductVersion).$(XAVersionCommitCount)</PackageVersion>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="_PackAllRuntimePacks" >
+    <MSBuild Targets="Pack" Properties="Configuration=$(Configuration);AndroidRID=android.21-arm;AndroidABI=armeabi-v7a" Projects="$(MSBuildThisFileDirectory)Xamarin.Android.App.Runtime.proj" />
+    <MSBuild Targets="Pack" Properties="Configuration=$(Configuration);AndroidRID=android.21-arm64;AndroidABI=arm64-v8a" Projects="$(MSBuildThisFileDirectory)Xamarin.Android.App.Runtime.proj" />
+    <MSBuild Targets="Pack" Properties="Configuration=$(Configuration);AndroidRID=android.21-x86;AndroidABI=x86" Projects="$(MSBuildThisFileDirectory)Xamarin.Android.App.Runtime.proj" />
+    <MSBuild Targets="Pack" Properties="Configuration=$(Configuration);AndroidRID=android.21-x64;AndroidABI=x86_64" Projects="$(MSBuildThisFileDirectory)Xamarin.Android.App.Runtime.proj" />
+  </Target>
+
+</Project>

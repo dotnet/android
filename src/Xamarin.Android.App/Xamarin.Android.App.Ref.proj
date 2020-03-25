@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.Build.NoTargets/1.0.88">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <PackageId>Xamarin.Android.App.Ref</PackageId>
+    <Authors>Microsoft</Authors>
+    <Description>Xamarin.Android reference assemblies. Please do not reference directly.</Description>
+    <OutputPath>..\..\bin\$(Configuration)\nupkgs\</OutputPath>
+    <_AndroidRefPackAssemblyPath>ref\netcoreapp5.0</_AndroidRefPackAssemblyPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <BeforePack>
+      _GetTargetingPackItems;
+      _GetDefaultPackageVersion;
+      _GenerateFrameworkListFile;
+      $(BeforePack);
+    </BeforePack>
+  </PropertyGroup>
+
+  <Target Name="_GetTargetingPackItems" >
+    <PropertyGroup>
+      <FrameworkListFile>$(IntermediateOutputPath)FrameworkList.xml</FrameworkListFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <_PackageFiles Include="@(_AndroidAppPackAssemblies)" PackagePath="$(_AndroidRefPackAssemblyPath)" TargetPath="$(_AndroidRefPackAssemblyPath)" />
+      <_PackageFiles Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild-frameworks\Xamarin.Android.App\netcoreapp3.1\AndroidApiInfo.xml" PackagePath="data" />
+    </ItemGroup>
+  </Target>
+
+</Project>

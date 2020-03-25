@@ -1,21 +1,15 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.Build.NoTargets/1.0.88">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <IncludeBuildOutput>false</IncludeBuildOutput>
     <PackageId>Xamarin.Android.Sdk</PackageId>
-    <_VersionFile>$(MSBuildThisFileDirectory)..\..\bin\$(Configuration)\Version</_VersionFile>
-    <_RevisionFile>$(MSBuildThisFileDirectory)..\..\bin\$(Configuration)\Version.rev</_RevisionFile>
-    <PackageVersion Condition="Exists('$(_VersionFile)')">$([System.IO.File]::ReadAllText('$(_VersionFile)').Trim())</PackageVersion>
-    <PackageVersion Condition="Exists('$(_RevisionFile)')">$(PackageVersion).$([System.IO.File]::ReadAllText('$(_RevisionFile)').Trim())</PackageVersion>
-    <PackageVersion Condition="'$(PackageVersion)' == ''">0.0.1</PackageVersion>
-    <Authors>Xamarin</Authors>
+    <Authors>Microsoft</Authors>
     <Description>C# Tools and Bindings for the Android SDK</Description>
-    <OutputPath>..\..\bin\Build$(Configuration)</OutputPath>
+    <OutputPath>..\..\bin\$(Configuration)\nupkgs\</OutputPath>
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />
-  <Import Project="..\installers\create-installers.targets" />
+  <Import Project="..\..\build-tools\installers\create-installers.targets" />
 
   <PropertyGroup>
     <BeforePack>
@@ -25,8 +19,9 @@
   </PropertyGroup>
 
   <Target Name="_GenerateXAPackContent"
-      DependsOnTargets="ConstructInstallerItems" >
+      DependsOnTargets="ConstructInstallerItems;GetXAVersionInfo" >
     <PropertyGroup>
+      <PackageVersion>$(ProductVersion).$(XAVersionCommitCount)</PackageVersion>
       <ToolsSourceDir>$(XamarinAndroidSourcePath)bin\Build$(Configuration)\packs\tools\</ToolsSourceDir>
     </PropertyGroup>
     <ItemGroup>
@@ -57,20 +52,11 @@
         SkipUnchangedFiles="True"
     />
     <ItemGroup>
-      <Content Include="$(ToolsSourceDir)**" >
-        <Pack>true</Pack>
-        <PackagePath>tools</PackagePath>
-      </Content>
+      <_PackageFiles Include="$(ToolsSourceDir)**" PackagePath="tools" />
       <!-- Only include @(FrameworkItemsWin), as it is a superset of @(FrameworkItemsUnix) -->
-      <Content Include="@(FrameworkItemsWin)" >
-        <Pack>true</Pack>
-        <PackagePath>lib\MonoAndroid\%(FrameworkItemsWin.RelativePath)</PackagePath>
-      </Content>
-      <Content Include="$(XamarinAndroidSourcePath)\src\Xamarin.Android.Sdk\**" 
-               Exclude="$(XamarinAndroidSourcePath)\src\Xamarin.Android.Sdk\**\*.Lite.*">
-        <Pack>true</Pack>
-        <PackagePath>\</PackagePath>
-      </Content>
+      <_PackageFiles Include="@(FrameworkItemsWin)" PackagePath="lib\MonoAndroid\%(FrameworkItemsWin.RelativePath)" />
+      <_PackageFiles Include="$(XamarinAndroidSourcePath)\src\Xamarin.Android.Sdk\Sdk\**" PackagePath="Sdk" /> 
+      <_PackageFiles Include="$(XamarinAndroidSourcePath)\src\Xamarin.Android.Sdk\targets\**" PackagePath="targets" /> 
     </ItemGroup>
   </Target>
 

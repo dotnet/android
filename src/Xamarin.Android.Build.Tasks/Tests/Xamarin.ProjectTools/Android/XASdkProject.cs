@@ -31,7 +31,7 @@ namespace Xamarin.ProjectTools
 
 			PackageName = PackageName ?? string.Format ("{0}.{0}", ProjectName);
 			JavaPackageName = JavaPackageName ?? PackageName.ToLowerInvariant ();
-			ExtraNuGetConfigSources = new List<string> { XABuildPaths.BuildOutputDirectory };
+			ExtraNuGetConfigSources = new List<string> { Path.Combine (XABuildPaths.PrefixDirectory, "nupkgs") };
 			GlobalPackagesFolder = Path.Combine (XABuildPaths.TopDirectory, "packages");
 
 			using (var sr = new StreamReader (typeof (XamarinAndroidApplicationProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.AndroidManifest.xml")))

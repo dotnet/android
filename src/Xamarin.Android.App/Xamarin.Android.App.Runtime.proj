@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.Build.NoTargets/1.0.88">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <AndroidRID Condition=" '$(AndroidRID)' == '' ">android.21-arm64</AndroidRID>
+    <AndroidABI Condition=" '$(AndroidABI)' == '' ">arm64-v8a</AndroidABI>
+    <PackageId>Xamarin.Android.App.Runtime.$(AndroidRID)</PackageId>
+    <Authors>Microsoft</Authors>
+    <Description>Xamarin.Android runtime components. Please do not reference directly.</Description>
+    <OutputPath>..\..\bin\$(Configuration)\nupkgs\</OutputPath>
+    <_AndroidRuntimePackAssemblyPath>runtimes\$(AndroidRID)\lib\netcoreapp5.0</_AndroidRuntimePackAssemblyPath>
+    <_AndroidRuntimePackNativePath>runtimes\$(AndroidRID)\native</_AndroidRuntimePackNativePath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <BeforePack>
+      _GetRuntimePackItems;
+      _GetDefaultPackageVersion;
+      _GenerateFrameworkListFile;
+      $(BeforePack);
+    </BeforePack>
+  </PropertyGroup>
+
+  <Target Name="_GetRuntimePackItems" >
+    <PropertyGroup>
+      <FrameworkListFile>$(IntermediateOutputPath)$(AndroidRID)RuntimeList.xml</FrameworkListFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <_AndroidRuntimePackAssets Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\lib\$(AndroidABI)\libmono-android.release.so" />
+      <_AndroidRuntimePackAssets Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\lib\$(AndroidABI)\libsqlite3_xamarin.so" />
+      <_AndroidRuntimePackAssets Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\lib\$(AndroidABI)\libxamarin-debug-app-helper.so" />
+      <FrameworkListFileClass Include="@(_AndroidRuntimePackAssets->'%(Filename)%(Extension)')" Profile="Android" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <_PackageFiles Include="@(_AndroidAppPackAssemblies)" PackagePath="$(_AndroidRuntimePackAssemblyPath)" TargetPath="$(_AndroidRuntimePackAssemblyPath)" />
+      <_PackageFiles Include="@(_AndroidRuntimePackAssets)" PackagePath="$(_AndroidRuntimePackNativePath)" TargetPath="$(_AndroidRuntimePackNativePath)" IsNative="true" />
+    </ItemGroup>
+  </Target>
+
+</Project>

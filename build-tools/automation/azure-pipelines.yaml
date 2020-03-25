@@ -48,7 +48,7 @@ variables:
   InstallerArtifactName: installers
   TestAssembliesArtifactName: test-assemblies
   NUnitConsoleVersion: 3.9.0
-  DotNetCoreVersion: 3.1.100
+  DotNetCoreVersion: 3.1.200
   HostedMacMojave: Hosted Mac Internal Mojave
   HostedMac: Hosted Mac Internal
   HostedWinVS2019: Hosted Windows 2019 with VS2019
@@ -178,27 +178,29 @@ stages:
         artifactName: $(InstallerArtifactName)
         targetPath: xamarin-android/bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
 
-    - task: DotNetCoreCLI@2
-      displayName: pack Xamarin.Android.Sdk
+    - task: MSBuild@1
+      displayName: pack runtime nupkgs
       inputs:
-        command: pack
-        packagesToPack: $(System.DefaultWorkingDirectory)/xamarin-android/src/Xamarin.Android.Sdk/Xamarin.Android.Sdk.Lite.proj
+        solution: $(System.DefaultWorkingDirectory)/xamarin-android/src/Xamarin.Android.App/Xamarin.Android.App.Runtime.proj
         configuration: $(XA.Build.Configuration)
-        packDirectory: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
+        msbuildArguments: /t:_PackAllRuntimePacks /restore /bl:$(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/create-runtime-packs.binlog
 
     - task: DotNetCoreCLI@2
-      displayName: pack Xamarin.Android.Sdk.Lite
+      displayName: pack sdk and ref nupkgs
       inputs:
         command: pack
-        packagesToPack: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/create-packs/Packager.csproj
+        packagesToPack: "\
+          $(System.DefaultWorkingDirectory)/xamarin-android/src/Xamarin.Android.App/Xamarin.Android.App.Ref.proj;
+          $(System.DefaultWorkingDirectory)/xamarin-android/src/Xamarin.Android.Sdk/Xamarin.Android.Sdk.proj;
+          $(System.DefaultWorkingDirectory)/xamarin-android/src/Xamarin.Android.Sdk/Xamarin.Android.Sdk.Lite.proj"
         configuration: $(XA.Build.Configuration)
-        packDirectory: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
+        packDirectory: $(System.DefaultWorkingDirectory)/xamarin-android/bin/$(XA.Build.Configuration)/$(NuGetArtifactName)
 
     - task: NuGetCommand@2
-      displayName: push Xamarin.Android.Sdk
+      displayName: push nupkgs
       inputs:
         command: push
-        packagesToPush: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)/*.nupkg
+        packagesToPush: $(System.DefaultWorkingDirectory)/xamarin-android/bin/$(XA.Build.Configuration)/$(NuGetArtifactName)/*.nupkg
         nuGetFeedType: external
         publishFeedCredentials: xamarin-impl public feed
       condition: and(succeeded(), eq(variables['PushXAPackages'], 'true'))
@@ -207,7 +209,7 @@ stages:
       displayName: upload nupkgs
       inputs:
         artifactName: $(NuGetArtifactName)
-        targetPath: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
+        targetPath: $(System.DefaultWorkingDirectory)/xamarin-android/bin/$(XA.Build.Configuration)/$(NuGetArtifactName)
 
     - template: yaml-templates/upload-results.yaml
       parameters:
@@ -287,13 +289,23 @@ stages:
         configuration: $(XA.Build.Configuration)
         msbuildArguments: /p:CreateVsixContainer=True /p:ZipPackageCompressionLevel=Normal /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-create-vsix.binlog
 
+    - task: MSBuild@1
+      displayName: pack runtime nupkgs
+      inputs:
+        solution: $(System.DefaultWorkingDirectory)\src\Xamarin.Android.App\Xamarin.Android.App.Runtime.proj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: /t:_PackAllRuntimePacks /restore /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\create-runtime-packs.binlog
+
     - task: DotNetCoreCLI@2
-      displayName: pack Xamarin.Android.Sdk
+      displayName: pack sdk and ref nupkgs
       inputs:
         command: pack
-        packagesToPack: $(System.DefaultWorkingDirectory)\build-tools\create-packs\Packager.csproj
+        packagesToPack: "\
+          $(System.DefaultWorkingDirectory)\\src\\Xamarin.Android.App\\Xamarin.Android.App.Ref.proj;
+          $(System.DefaultWorkingDirectory)\\src\\Xamarin.Android.Sdk\\Xamarin.Android.Sdk.proj;
+          $(System.DefaultWorkingDirectory)\\src\\Xamarin.Android.Sdk\\Xamarin.Android.Sdk.Lite.proj"
         configuration: $(XA.Build.Configuration)
-        packDirectory: $(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)
+        packDirectory: $(System.DefaultWorkingDirectory)\bin\$(XA.Build.Configuration)\$(NuGetArtifactName)
 
     - task: CmdLine@1
       displayName: xabuild Xamarin.Android-Tests
