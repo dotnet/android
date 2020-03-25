@@ -59,6 +59,11 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		// This Build tasks validates that changes are not breaking Api
 		public override bool Execute ()
 		{
+			// TODO Remove this once logic to handle netcoreapp3.1 be added.
+			if (TargetImplementationPath.IndexOf ("netcoreapp3.1") != -1) {
+				return !Log.HasLoggedErrors;
+			}
+
 			Log.LogMessage (MessageImportance.High, $"CheckApiCompatibility for ApiLevel: {ApiLevel}");
 
 			// Check to see if Api has a previous Api defined.
