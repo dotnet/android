@@ -3,6 +3,10 @@ parameters:
   provisionExtraArgs: -vv -f
 
 steps:
+- checkout: self
+  clean: true
+  submodules: recursive
+
 - template: run-installer.yaml
   parameters:
     provisionExtraArgs: ${{ parameters.provisionExtraArgs }}

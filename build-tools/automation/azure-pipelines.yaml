@@ -667,6 +667,8 @@ stages:
     displayName: BCL With Emulator - macOS
     pool: $(HostedMac)
     timeoutInMinutes: 180
+    workspace:
+      clean: all
     steps:
     - template: yaml-templates/setup-test-environment.yaml
 
