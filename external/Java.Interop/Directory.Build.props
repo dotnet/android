@@ -2,9 +2,8 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <!-- Note: MUST be imported *after* $(Configuration) is set! -->
   <PropertyGroup>
-    <_Configuration Condition=" '$(Configuration)' != 'Gendarme' ">$(Configuration)</_Configuration>
-    <_Configuration Condition=" '$(Configuration)' == 'Gendarme' ">Debug</_Configuration>
-    <_OutputPath>$(MSBuildThisFileDirectory)bin\Build$(_Configuration)\</_OutputPath>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <_OutputPath>$(MSBuildThisFileDirectory)bin\Build$(Configuration)\</_OutputPath>
   </PropertyGroup>
   <Import
       Project="$(MSBuildThisFileDirectory)Configuration.Override.props"
@@ -19,16 +18,16 @@
       Condition="Exists('$(_OutputPath)MonoInfo.props')"
   />
   <PropertyGroup Condition=" '$(TargetFramework)' != '' And $(TargetFramework.StartsWith ('netcoreapp')) ">
-    <BuildToolOutputFullPath>$(MSBuildThisFileDirectory)bin\Build$(_Configuration)-$(TargetFramework)\</BuildToolOutputFullPath>
-    <ToolOutputFullPath>$(MSBuildThisFileDirectory)bin\$(_Configuration)-$(TargetFramework)\</ToolOutputFullPath>
-    <TestOutputFullPath>$(MSBuildThisFileDirectory)bin\Test$(_Configuration)-$(TargetFramework)\</TestOutputFullPath>
+    <BuildToolOutputFullPath>$(MSBuildThisFileDirectory)bin\Build$(Configuration)-$(TargetFramework)\</BuildToolOutputFullPath>
+    <ToolOutputFullPath>$(MSBuildThisFileDirectory)bin\$(Configuration)-$(TargetFramework)\</ToolOutputFullPath>
+    <TestOutputFullPath>$(MSBuildThisFileDirectory)bin\Test$(Configuration)-$(TargetFramework)\</TestOutputFullPath>
     <UtilityOutputFullPath Condition=" '$(UtilityOutputFullPathCoreApps)' != '' ">$(UtilityOutputFullPathCoreApps)</UtilityOutputFullPath>
     <UtilityOutputFullPath Condition=" '$(UtilityOutputFullPathCoreApps)' == '' ">$(ToolOutputFullPath)</UtilityOutputFullPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' == '' Or !$(TargetFramework.StartsWith ('netcoreapp')) ">
-    <BuildToolOutputFullPath>$(MSBuildThisFileDirectory)bin\Build$(_Configuration)\</BuildToolOutputFullPath>
-    <ToolOutputFullPath>$(MSBuildThisFileDirectory)bin\$(_Configuration)\</ToolOutputFullPath>
-    <TestOutputFullPath>$(MSBuildThisFileDirectory)bin\Test$(_Configuration)\</TestOutputFullPath>
+    <BuildToolOutputFullPath>$(MSBuildThisFileDirectory)bin\Build$(Configuration)\</BuildToolOutputFullPath>
+    <ToolOutputFullPath>$(MSBuildThisFileDirectory)bin\$(Configuration)\</ToolOutputFullPath>
+    <TestOutputFullPath>$(MSBuildThisFileDirectory)bin\Test$(Configuration)\</TestOutputFullPath>
     <UtilityOutputFullPath Condition=" '$(UtilityOutputFullPath)' == '' ">$(ToolOutputFullPath)</UtilityOutputFullPath>
   </PropertyGroup>
   <PropertyGroup>
