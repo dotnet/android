@@ -49,9 +49,9 @@ macro(xa_common_prepare)
     fstrict-return
     Wa,-noexecstack
     fPIC
-	g
-	fomit-frame-pointer
-	O2
+    g
+    fomit-frame-pointer
+    O2
     )
 
   if(CMAKE_BUILD_TYPE STREQUAL Release)
