@@ -42,8 +42,6 @@ namespace Mono.CodeGeneration
 			myAsmName.Name = name;
 #if NET_2_1
 			AssemblyBuilder myAsmBuilder = myDomain.DefineDynamicAssembly (myAsmName, AssemblyBuilderAccess.Run);
-#elif MONOANDROID1_0
-			AssemblyBuilder myAsmBuilder = myDomain.DefineDynamicAssembly (myAsmName, AssemblyBuilderAccess.RunAndSave);
 #else
 			AssemblyBuilder myAsmBuilder = AssemblyBuilder.DefineDynamicAssembly (myAsmName, AssemblyBuilderAccess.Run);
 #endif

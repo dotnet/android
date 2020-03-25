@@ -511,13 +511,8 @@ namespace Java.Interop
 	{
 		static DynamicCallbackFactory ()
 		{
-#if MONOANDROID1_0
-			var assembly = AppDomain.CurrentDomain.DefineDynamicAssembly (
-				new AssemblyName ("__callback_factory__"), AssemblyBuilderAccess.Run);
-#else
 			var assembly = AssemblyBuilder.DefineDynamicAssembly (
 				new AssemblyName ("__callback_factory__"), AssemblyBuilderAccess.Run);
-#endif
 			Module = assembly.DefineDynamicModule ("__callback_factory__");
 			CodeClass = new CodeClass (Module, "__callback_factory__class__");
 		}
