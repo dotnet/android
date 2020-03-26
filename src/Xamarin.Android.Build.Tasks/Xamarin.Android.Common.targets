@@ -568,9 +568,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     _ValidateLinkMode;
     _CheckNonIdealConfigurations;
     _SetupDesignTimeBuildForBuild;
-    _CleanIntermediateIfNuGetsChange;
-    _CleanIntermediateIfPackageNamingPolicyChanges;
     _CreatePropertiesCache;
+    _CleanIntermediateIfNeeded;
     _CheckProjectItems;
     _CheckForContent;
     _CheckTargetFramework;
@@ -588,9 +587,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     _ValidateLinkMode;
     _CheckNonIdealConfigurations;
      _SetupDesignTimeBuildForBuild;
-    _CleanIntermediateIfNuGetsChange;
-    _CleanIntermediateIfPackageNamingPolicyChanges;
-     _CreatePropertiesCache;
+    _CreatePropertiesCache;
+    _CleanIntermediateIfNeeded;
     _AddAndroidDefines;
     _CreateNativeLibraryArchive;
     _AddAndroidEnvironmentToCompile;
@@ -664,6 +662,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<CleanDependsOn>
 		$(CleanDependsOn);
 		_CleanMonoAndroidIntermediateDir;
+		_CleanAndroidBuildPropertiesCache;
 	</CleanDependsOn>
 </PropertyGroup>
 
@@ -717,37 +716,15 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	</PropertyGroup>
 </Target>
 
-<Target Name="_BeforeCleanIntermediateIfNuGetsChange">
-  <PropertyGroup>
-    <_NuGetAssetsFile Condition="Exists('$(ProjectLockFile)')">$(ProjectLockFile)</_NuGetAssetsFile>
-    <_NuGetAssetsFile Condition="'$(_NuGetAssetsFile)' == '' and Exists('packages.config')">packages.config</_NuGetAssetsFile>
-  </PropertyGroup>
-</Target>
-
-<Target Name="_CleanIntermediateIfNuGetsChange" DependsOnTargets="_BeforeCleanIntermediateIfNuGetsChange"
-    Inputs="$(_NuGetAssetsFile)"
-    Outputs="$(_AndroidStampDirectory)_CleanIntermediateIfNuGetsChange.stamp">
-  <!--NOTE: only want to clean if the stamp exists, *after* an initial build-->
-  <CallTarget Targets="_CleanMonoAndroidIntermediateDir" Condition=" Exists ('$(_AndroidStampDirectory)_CleanIntermediateIfNuGetsChange.stamp') " />
+<Target Name="_CleanIntermediateIfNeeded"
+    Condition=" '$(DesignTimeBuild)' != 'True' "
+    DependsOnTargets="_CreatePropertiesCache"
+    Inputs="$(_AndroidBuildPropertiesCache)"
+    Outputs="$(_AndroidStampDirectory)_CleanIntermediateIfNeeded.stamp">
+  <!--NOTE: only want to clean if build.props existed at the beginning of the build -->
+  <CallTarget Targets="_CleanMonoAndroidIntermediateDir" Condition=" '$(_AndroidBuildPropertiesCacheExists)' == 'True' " />
   <MakeDir Directories="$(_AndroidStampDirectory)" Condition=" !Exists('$(_AndroidStampDirectory)') " />
-  <Touch Files="$(_AndroidStampDirectory)_CleanIntermediateIfNuGetsChange.stamp" AlwaysCreate="true" />
-</Target>
-
-<Target Name="_CleanIntermediateIfPackageNamingPolicyChanges">
-  <ReadLinesFromFile File="$(IntermediateOutputPath)packagenamingpolicy.props">
-    <Output TaskParameter="Lines" PropertyName="_PackageNamingPolicy" />
-  </ReadLinesFromFile>
-  <CallTarget
-      Targets="_CleanMonoAndroidIntermediateDir"
-      Condition=" '$(AndroidPackageNamingPolicy)' != '$(_PackageNamingPolicy)' And Exists ('$(IntermediateOutputPath)packagenamingpolicy.props') "
-  />
-  <WriteLinesToFile
-      Condition=" '$(AndroidPackageNamingPolicy)' != '$(_PackageNamingPolicy)' "
-      File="$(IntermediateOutputPath)packagenamingpolicy.props"
-      Lines="$(AndroidPackageNamingPolicy)"
-      Overwrite="True"
-  />
-  <MakeDir Directories="$(_AndroidStampDirectory)" Condition=" !Exists('$(_AndroidStampDirectory)') " />
+  <Touch Files="$(_AndroidStampDirectory)_CleanIntermediateIfNeeded.stamp" AlwaysCreate="true" />
 </Target>
 
 <Target Name="_AddAndroidDefines"
@@ -1167,8 +1144,14 @@ because xbuild doesn't support framework reference assemblies.
 </PropertyGroup>
 
 <Target Name="_CreatePropertiesCache" DependsOnTargets="_SetupDesignTimeBuildForBuild;_SetLatestTargetFrameworkVersion;_ResolveMonoAndroidSdks">
+	<PropertyGroup>
+		<_AndroidBuildPropertiesCacheExists Condition=" Exists('$(_AndroidBuildPropertiesCache)') ">True</_AndroidBuildPropertiesCacheExists>
+		<_NuGetAssetsFile      Condition=" Exists('$(ProjectLockFile)') ">$(ProjectLockFile)</_NuGetAssetsFile>
+		<_NuGetAssetsFile      Condition=" '$(_NuGetAssetsFile)' == '' and Exists('packages.config') ">packages.config</_NuGetAssetsFile>
+		<_NuGetAssetsTimestamp Condition=" '$(_NuGetAssetsFile)' != '' ">$([System.IO.File]::GetLastWriteTime('$(_NuGetAssetsFile)').Ticks)</_NuGetAssetsTimestamp>
+	</PropertyGroup>
 	<ItemGroup>
-		<!--- List of items we want to trigger a build if changed -->
+		<!-- List of items we want to trigger a build if changed -->
 		<_PropertyCacheItems Include="BundleAssemblies=$(BundleAssemblies)" />
 		<_PropertyCacheItems Include="AotAssemblies=$(AotAssemblies)" />
 		<_PropertyCacheItems Include="AndroidAotMode=$(AndroidAotMode)" />
@@ -1193,9 +1176,9 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="AndroidCreatePackagePerAbi=$(AndroidCreatePackagePerAbi)" />
 		<_PropertyCacheItems Include="AndroidGenerateJniMarshalMethods=$(AndroidGenerateJniMarshalMethods)" />
 		<_PropertyCacheItems Include="OS=$(OS)" />
-		<_PropertyCacheItems Include="DesignTimeBuild=$(DesignTimeBuild)" />
 		<_PropertyCacheItems Include="AndroidIncludeDebugSymbols=$(AndroidIncludeDebugSymbols)" />
 		<_PropertyCacheItems Include="AndroidPackageNamingPolicy=$(AndroidPackageNamingPolicy)" />
+		<_PropertyCacheItems Include="_NuGetAssetsTimestamp=$(_NuGetAssetsTimestamp)" />
 	</ItemGroup>
 	<MakeDir Directories="$(_AndroidStampDirectory)" Condition="!Exists('$(_AndroidStampDirectory)')" />
 	<WriteLinesToFile
@@ -1702,32 +1685,6 @@ because xbuild doesn't support framework reference assemblies.
   </PropertyGroup>
 </Target>
 
-<Target Name="_CleanupOldStaticResources"
-    Condition=" Exists ('$(_AndroidIntermediateJavaSourceDirectory)mono\android\app\NotifyTimeZoneChanges.java') ">
-  <ItemGroup>
-    <_OldStaticResources Include="$(_AndroidIntermediateJavaSourceDirectory)mono\android\incrementaldeployment\MultiDexLoader.java" />
-    <_OldStaticResources Include="$(_AndroidIntermediateJavaSourceDirectory)mono\android\ResourcePatcher.java" />
-    <_OldStaticResources Include="$(_AndroidIntermediateJavaSourceDirectory)mono\android\Seppuku.java" />
-    <_OldStaticResources Include="$(_AndroidIntermediateJavaSourceDirectory)mono\MonoPackageManager.java" />
-    <_OldStaticResources Include="$(_AndroidIntermediateJavaSourceDirectory)mono\android\incrementaldeployment\IncrementalClassLoader.java" />
-    <_OldStaticResources Include="$(_AndroidIntermediateJavaSourceDirectory)mono\android\incrementaldeployment\Placeholder.java" />
-    <_OldStaticResources Include="$(_AndroidIntermediateJavaSourceDirectory)mono\android\app\NotifyTimeZoneChanges.java" />
-    <_OldStaticResources Include="$(_AndroidIntermediateJavaSourceDirectory)mono\android\incrementaldeployment\MonkeyPatcher.java" />
-    <_OldStaticResources Include="$(_AndroidIntermediateJavaClassDirectory)mono\android\incrementaldeployment\MultiDexLoader.class" />
-    <_OldStaticResources Include="$(_AndroidIntermediateJavaClassDirectory)mono\android\ResourcePatcher.class" />
-    <_OldStaticResources Include="$(_AndroidIntermediateJavaClassDirectory)mono\android\Seppuku.class" />
-    <_OldStaticResources Include="$(_AndroidIntermediateJavaClassDirectory)mono\MonoPackageManager.class" />
-    <_OldStaticResources Include="$(_AndroidIntermediateJavaClassDirectory)mono\MonoPackageManager_Resources.class" />
-    <_OldStaticResources Include="$(_AndroidIntermediateJavaClassDirectory)mono\android\incrementaldeployment\IncrementalClassLoader*.class" />
-    <_OldStaticResources Include="$(_AndroidIntermediateJavaClassDirectory)mono\android\incrementaldeployment\Placeholder.class" />
-    <_OldStaticResources Include="$(_AndroidIntermediateJavaClassDirectory)mono\android\app\NotifyTimeZoneChanges.class" />
-    <_OldStaticResources Include="$(_AndroidIntermediateJavaClassDirectory)mono\android\MonkeyPatcher.class" />
-    <_OldStaticResources Include="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" />
-    <_OldStaticResources Include="$(IntermediateOutputPath)_javac.stamp" />
-  </ItemGroup>
-  <Delete Files="@(_OldStaticResources)" />
-</Target>
-
 <Target Name="_GetMonoPlatformJarPath">
   <GetMonoPlatformJar TargetFrameworkDirectory="$(TargetFrameworkDirectory)">
     <Output TaskParameter="MonoPlatformJarPath" PropertyName="MonoPlatformJarPath" />
@@ -1738,7 +1695,7 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_AddStaticResources"
 		Inputs="$(MonoPlatformJarPath);$(_AndroidBuildPropertiesCache)"
 		Outputs="$(_AndroidStaticResourcesFlag)"
-		DependsOnTargets="_CollectRuntimeJarFilenames;$(_BeforeAddStaticResources);_CleanupOldStaticResources;_GetMonoPlatformJarPath">
+		DependsOnTargets="_CollectRuntimeJarFilenames;$(_BeforeAddStaticResources);_GetMonoPlatformJarPath">
 	<CopyResource ResourceName="machine.config" OutputPath="$(MonoAndroidIntermediateAssemblyDir)machine.config" />
   <CopyResource
       Condition=" '$(AndroidUseSharedRuntime)' != 'True' And '$(_AndroidApiLevel)' &gt;= '21' "
@@ -3132,11 +3089,11 @@ because xbuild doesn't support framework reference assemblies.
 	<Delete Files="$(IntermediateOutputPath)stub_application_data.txt" />
 	<Delete Files="$(IntermediateOutputPath)_javac.stamp" />
 	<Delete Files="$(_AndroidResFlagFile)" />
+	<Delete Files="$(_AndroidResgenFlagFile)" />
 	<Delete Files="$(_AndroidLinkFlag)" />
 	<Delete Files="$(_AndroidDebugKeyStoreFlag)" />
 	<Delete Files="$(_AndroidLintConfigFile)" />
 	<Delete Files="$(_AndroidResourceDesignerFile)" Condition=" '$(AndroidUseIntermediateDesignerFile)' == 'True' " />
-	<Delete Files="$(_AndroidBuildPropertiesCache)" />
 	<Delete Files="$(_AdbPropertiesCache)" />
 	<Delete Files="$(_AndroidLibraryImportsCache)" />
 	<Delete Files="$(_AndroidStaticResourcesFlag)" />
@@ -3147,6 +3104,10 @@ because xbuild doesn't support framework reference assemblies.
 	<Delete Files="$(_AndroidMainDexListFile)" />
 	<Delete Files="$(_AndroidBuildIdFile)" />
 	<Delete Files="$(_ResolvedUserAssembliesHashFile)" />
+</Target>
+
+<Target Name="_CleanAndroidBuildPropertiesCache">
+	<Delete Files="$(_AndroidBuildPropertiesCache)" />
 </Target>
 
 <Target Name="_CollectMonoAndroidOutputs" DependsOnTargets="_ValidateAndroidPackageProperties">
