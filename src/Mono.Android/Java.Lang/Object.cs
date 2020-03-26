@@ -16,6 +16,10 @@ namespace Java.Lang {
 #endif  // JAVA_INTEROP
 	{
 		IntPtr key_handle;
+#pragma warning disable CS0649, CS0169, CS0414 // Suppress fields are never used warnings, these fields are used directly by monodroid-glue.cc
+		IntPtr weak_handle;
+		int refs_added;
+#pragma warning restore CS0649, CS0169, CS0414
 		JObjectRefType handle_type;
 		IntPtr handle;
 		bool             needsActivation;
@@ -51,6 +55,7 @@ namespace Java.Lang {
 			// Finalization occurs after a test of java persistence.  If the
 			// handle still contains a java reference, we can't finalize the
 			// object and should "resurrect" it.
+			refs_added = 0;
 			if (Environment.HasShutdownStarted) {
 				return;
 			}
@@ -103,6 +108,9 @@ namespace Java.Lang {
 
 		public IntPtr Handle {
 			get {
+				if (weak_handle != IntPtr.Zero)
+					Logger.Log (LogLevel.Warn, "Mono.Android.dll", "Accessing object which is out for collection via original handle");
+
 				return handle;
 			}
 		}
