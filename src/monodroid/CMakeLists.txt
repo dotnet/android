@@ -229,8 +229,8 @@ if(CMAKE_BUILD_TYPE STREQUAL Debug)
   # will force a -O0 on us and our "debug" build is not really for debugging of our native code but
   # rather for "debug" builds of user apps - it has extra code but it has to be as fast as possible.
   if(ENABLE_NDK)
-	# This is specific to clang, enable only for Android builds
-	set(XA_COMPILER_FLAGS_DEBUG -fno-limit-debug-info)
+    # This is specific to clang, enable only for Android builds
+    set(XA_COMPILER_FLAGS_DEBUG -fno-limit-debug-info)
   endif()
   set(CMAKE_C_FLAGS_DEBUG "${XA_COMPILER_FLAGS_DEBUG}")
   set(CMAKE_CXX_FLAGS_DEBUG "${XA_COMPILER_FLAGS_DEBUG}")
