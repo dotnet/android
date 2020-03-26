@@ -102,7 +102,7 @@ MSBUILD_FLAGS += /p:AndroidApiLevel=$(API_LEVEL) /p:AndroidFrameworkVersion=$(wo
 endif
 
 all-tests::
-	MSBUILD="$(MSBUILD)" $(call MSBUILD_BINLOG,all-tests,tools/scripts/xabuild) $(MSBUILD_FLAGS) Xamarin.Android-Tests.sln
+	MSBUILD="$(MSBUILD)" $(call MSBUILD_BINLOG,all-tests,tools/scripts/xabuild) $(MSBUILD_FLAGS) /m Xamarin.Android-Tests.sln
 
 install::
 	@if [ ! -d "bin/$(CONFIGURATION)" ]; then \
