@@ -12,16 +12,16 @@ namespace Xamarin.Android.Prepare
 
 		public AndroidToolchain ()
 		{
-			string AndroidNdkVersion       = BuildAndroidPlatforms.AndroidNdkVersion;
-			string AndroidPkgRevision      = BuildAndroidPlatforms.AndroidNdkPkgRevision;
-			string AndroidNdkDirectory     = GetRequiredProperty (KnownProperties.AndroidNdkDirectory);
-			string AndroidCmakeVersion     = GetRequiredProperty (KnownProperties.AndroidCmakeVersion);
+			string AndroidNdkVersion = BuildAndroidPlatforms.AndroidNdkVersion;
+			string AndroidPkgRevision = BuildAndroidPlatforms.AndroidNdkPkgRevision;
+			string AndroidNdkDirectory = GetRequiredProperty (KnownProperties.AndroidNdkDirectory);
+			string AndroidCmakeVersion = GetRequiredProperty (KnownProperties.AndroidCmakeVersion);
 			string AndroidCmakeVersionPath = GetRequiredProperty (KnownProperties.AndroidCmakeVersionPath);
-			string EmulatorVersion         = GetRequiredProperty (KnownProperties.EmulatorVersion);
-			string EmulatorPkgRevision     = GetRequiredProperty (KnownProperties.EmulatorPkgRevision);
-			string XABuildToolsFolder      = GetRequiredProperty (KnownProperties.XABuildToolsFolder);
-			string XABuildToolsVersion     = GetRequiredProperty (KnownProperties.XABuildToolsVersion);
-			string XAPlatformToolsVersion  = GetRequiredProperty (KnownProperties.XAPlatformToolsVersion);
+			string EmulatorVersion = GetRequiredProperty (KnownProperties.EmulatorVersion);
+			string EmulatorPkgRevision = GetRequiredProperty (KnownProperties.EmulatorPkgRevision);
+			string XABuildToolsFolder = GetRequiredProperty (KnownProperties.XABuildToolsFolder);
+			string XABuildToolsVersion = GetRequiredProperty (KnownProperties.XABuildToolsVersion);
+			string XAPlatformToolsVersion = GetRequiredProperty (KnownProperties.XAPlatformToolsVersion);
 
 			Components = new List<AndroidToolchainComponent> {
 				new AndroidPlatformComponent ("android-2.3.3_r02", apiLevel: "10", pkgRevision: "2"),
@@ -40,7 +40,7 @@ namespace Xamarin.Android.Prepare
 				new AndroidPlatformComponent ("platform-27_r03",   apiLevel: "27", pkgRevision: "3"),
 				new AndroidPlatformComponent ("platform-28_r04",   apiLevel: "28", pkgRevision: "4"),
 				new AndroidPlatformComponent ("platform-29_r01",   apiLevel: "29", pkgRevision: "1"),
-				new AndroidPlatformComponent ("platform-R_r01",    apiLevel: "R",  pkgRevision: "1"),
+				new AndroidPlatformComponent ("platform-R_r02",    apiLevel: "R",  pkgRevision: "2"),
 
 				new AndroidToolchainComponent ("docs-24_r01",                                       destDir: "docs", pkgRevision: "1"),
 				new AndroidToolchainComponent ("android_m2repository_r47",                          destDir: Path.Combine ("extras", "android", "m2repository"), pkgRevision: "47.0.0"),
