@@ -349,7 +349,7 @@ namespace Lib2
 			var targets = new List<string> {
 				"_GeneratePackageManagerJava",
 				"_ResolveLibraryProjectImports",
-				"_CleanIntermediateIfNuGetsChange",
+				"_CleanIntermediateIfNeeded",
 				"_CopyConfigFiles",
 			};
 			var proj = new XamarinFormsAndroidApplicationProject {
