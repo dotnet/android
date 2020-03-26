@@ -1,6 +1,8 @@
 steps:
 - powershell: |
+    $ErrorActionPreference = 'Continue'
     git clean -xffd
     git submodule foreach --recursive git clean -xffd
     Remove-Item -Recurse $(Build.BinariesDirectory) -ErrorAction Ignore
+    $LastExitCode = 0
   displayName: manual clean
