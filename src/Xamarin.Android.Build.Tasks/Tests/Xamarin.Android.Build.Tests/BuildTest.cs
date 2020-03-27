@@ -2339,7 +2339,8 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 		public void AarContentExtraction ([Values (false, true)] bool useAapt2)
 		{
 			var aar = new AndroidItem.AndroidAarLibrary ("Jars\\android-crop-1.0.1.aar") {
-				WebContent = "https://jcenter.bintray.com/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar"
+				// https://mvnrepository.com/artifact/com.soundcloud.android/android-crop/1.0.1
+				WebContent = "https://repo1.maven.org/maven2/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar"
 			};
 			var proj = new XamarinAndroidApplicationProject () {
 				OtherBuildItems = {
