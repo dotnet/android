@@ -52,7 +52,6 @@ include build-tools/scripts/msbuild.mk
 prepare:: $(BUILD_PROPS) src/Java.Runtime.Environment/Java.Runtime.Environment.dll.config
 
 prepare:: prepare-bootstrap
-	$(MSBUILD) $(MSBUILD_FLAGS) /t:Restore external/cecil/Mono.Cecil.sln
 	$(MSBUILD) $(MSBUILD_FLAGS) /t:Restore Java.Interop.sln
 
 prepare-bootstrap: prepare-external bin/Build$(CONFIGURATION)/Java.Interop.BootstrapTasks.dll

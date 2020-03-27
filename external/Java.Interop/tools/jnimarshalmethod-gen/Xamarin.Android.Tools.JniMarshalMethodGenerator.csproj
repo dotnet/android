@@ -7,6 +7,7 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
 
+  <Import Project="..\..\build-tools\scripts\cecil.projitems" />
   <Import Project="..\..\src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\..\src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems')" />
 
   <PropertyGroup>
@@ -21,7 +22,6 @@
     <ProjectReference Include="..\..\src\Java.Interop.Export\Java.Interop.Export.csproj" />
     <ProjectReference Include="..\..\src\Java.Interop\Java.Interop.csproj" />
     <ProjectReference Include="..\..\src\Java.Runtime.Environment\Java.Runtime.Environment.csproj" />
-    <ProjectReference Include="..\..\src\Xamarin.Android.Cecil\Xamarin.Android.Cecil.csproj" />
     <ProjectReference Include="..\..\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil.csproj" />
   </ItemGroup>
 

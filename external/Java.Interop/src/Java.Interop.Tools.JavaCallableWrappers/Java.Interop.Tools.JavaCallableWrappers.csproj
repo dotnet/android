@@ -17,6 +17,8 @@
     <DefineConstants>JCW_ONLY_TYPE_NAMES;HAVE_CECIL</DefineConstants>
   </PropertyGroup>
 
+  <Import Project="..\..\build-tools\scripts\cecil.projitems" />
+
   <ItemGroup>
     <Compile Include="..\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings\JavaNativeTypeManager.cs">
       <Link>JavaNativeTypeManager.cs</Link>
@@ -26,7 +28,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil.csproj" />
     <ProjectReference Include="..\Java.Interop.Tools.Diagnostics\Java.Interop.Tools.Diagnostics.csproj" />
-    <ProjectReference Include="..\Xamarin.Android.Cecil\Xamarin.Android.Cecil.csproj" />
   </ItemGroup>
 
   <Import Project="..\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems')" />

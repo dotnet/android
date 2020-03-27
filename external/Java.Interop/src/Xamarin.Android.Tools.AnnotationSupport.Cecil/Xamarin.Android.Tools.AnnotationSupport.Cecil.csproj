@@ -9,8 +9,9 @@
     <OutputPath>$(TestOutputFullPath)</OutputPath>
   </PropertyGroup>
 
+  <Import Project="..\..\build-tools\scripts\cecil.projitems" />
+
   <ItemGroup>
-    <ProjectReference Include="..\Xamarin.Android.Cecil\Xamarin.Android.Cecil.csproj" />
     <ProjectReference Include="..\Xamarin.Android.Tools.AnnotationSupport\Xamarin.Android.Tools.AnnotationSupport.csproj" />
     <ProjectReference Include="..\Xamarin.Android.Tools.ApiXmlAdjuster\Xamarin.Android.Tools.ApiXmlAdjuster.csproj" />
   </ItemGroup>

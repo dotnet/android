@@ -31,8 +31,6 @@
     <UtilityOutputFullPath Condition=" '$(UtilityOutputFullPath)' == '' ">$(ToolOutputFullPath)</UtilityOutputFullPath>
   </PropertyGroup>
   <PropertyGroup>
-    <CecilRestoreConfiguration Condition=" '$(CecilRestoreConfiguration)' == '' ">$(Configuration)</CecilRestoreConfiguration>
-    <CecilSourceDirectory   Condition=" '$(CecilSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\cecil</CecilSourceDirectory>
     <XamarinAndroidToolsDirectory   Condition=" '$(XamarinAndroidToolsDirectory)' == '' ">$(MSBuildThisFileDirectory)external\xamarin-android-tools</XamarinAndroidToolsDirectory>
   </PropertyGroup>
   <PropertyGroup>
@@ -42,7 +40,7 @@
     <_JavacSourceOptions>-source $(JavacSourceVersion) -target $(JavacTargetVersion) -bootclasspath "$(JreRtJarPath)"</_JavacSourceOptions>
   </PropertyGroup>
   <PropertyGroup>
-    <CecilFullPath>$([System.IO.Path]::GetFullPath ('$(CecilSourceDirectory)'))</CecilFullPath>
+    <_XamarinAndroidCecilPath Condition=" '$(CecilSourceDirectory)' != '' And Exists('$(UtilityOutputFullPath)Xamarin.Android.Cecil.dll') ">$(UtilityOutputFullPath)Xamarin.Android.Cecil.dll</_XamarinAndroidCecilPath>
     <XamarinAndroidToolsFullPath>$([System.IO.Path]::GetFullPath ('$(XamarinAndroidToolsDirectory)'))</XamarinAndroidToolsFullPath>
   </PropertyGroup>
 </Project>

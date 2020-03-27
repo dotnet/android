@@ -70,8 +70,9 @@ The `Configuration.Override.props` file is `<Import/>`ed by
 
 Overridable MSBuild properties include:
 
-* `$(CecilSourceDirectory)`: Directory for the `cecil` sources.
-    Defaults to `external/cecil`.
+* `$(CecilSourceDirectory)`: If the empty string, Cecil will be obtained from
+    NuGet packages.  Otherwise, `$(UtilityOutputFullPath)Xamarin.Android.Cecil.dll`
+    will be used to reference Cecil.
 * `$(JdkJvmPath)`: Full path name to the JVM native library to link
     [`java-interop`](src/java-interop) against. By default this is
     probed for from numerous locations within

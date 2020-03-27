@@ -4,12 +4,10 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 
+  <Import Project="..\..\build-tools\scripts\cecil.projitems" />
+
   <PropertyGroup>
     <OutputPath>$(ToolOutputFullPath)</OutputPath>
   </PropertyGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Xamarin.Android.Cecil\Xamarin.Android.Cecil.csproj" />
-  </ItemGroup>
 
 </Project>

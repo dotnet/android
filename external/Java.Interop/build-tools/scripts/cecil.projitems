@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Condition=" '$(_XamarinAndroidCecilPath)' == '' ">
+    <PackageReference Include="Mono.Cecil" Version="0.11.2" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(_XamarinAndroidCecilPath)' != '' ">
+    <Reference Include="$(_XamarinAndroidCecilPath)" />
+  </ItemGroup>
+</Project>

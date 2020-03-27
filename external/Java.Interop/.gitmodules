@@ -1,7 +1,3 @@
-[submodule "external/cecil"]
-	path = external/cecil
-	url = https://github.com/mono/cecil.git
-	branch = master
 [submodule "external/xamarin-android-tools"]
 	path = external/xamarin-android-tools
 	url = https://github.com/xamarin/xamarin-android-tools.git

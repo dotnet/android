@@ -11,6 +11,8 @@
     <OutputPath>$(TestOutputFullPath)</OutputPath>
   </PropertyGroup>
 
+  <Import Project="..\..\build-tools\scripts\cecil.projitems" />
+
   <ItemGroup>
     <PackageReference Include="nunit" Version="3.11.0" />
     <PackageReference Include="NUnit.ConsoleRunner" Version="3.9.0" />
@@ -23,7 +25,6 @@
     <ProjectReference Include="..\..\tools\generator\generator.csproj" />
     <ProjectReference Include="..\..\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers.csproj" />
     <ProjectReference Include="..\..\src\Xamarin.Android.Tools.ApiXmlAdjuster\Xamarin.Android.Tools.ApiXmlAdjuster.csproj" />
-    <ProjectReference Include="..\..\src\Xamarin.Android.Cecil\Xamarin.Android.Cecil.csproj" />
   </ItemGroup>
 
   <ItemGroup>
