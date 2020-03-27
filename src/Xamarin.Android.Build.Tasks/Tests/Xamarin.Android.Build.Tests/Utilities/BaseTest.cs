@@ -150,26 +150,6 @@ namespace Xamarin.Android.Build.Tests
 		/// </summary>
 		public const int MaxFileName = 255;
 
-		static Lazy<bool> longPaths = new Lazy<bool> (() => {
-			if (!TestEnvironment.IsWindows) {
-				return true;
-			}
-			var path = Path.Combine (Path.GetTempPath (), "foo".PadRight (MaxFileName, 'N'));
-			try {
-				File.WriteAllText (path, "");
-				return true;
-			} catch {
-				return false;
-			} finally {
-				// If the file exists, we should be able to delete it
-				if (File.Exists (path)) {
-					File.Delete (path);
-				}
-			}
-		});
-
-		public static bool LongPathsSupported => longPaths.Value;
-
 		protected static void WaitFor(int milliseconds)
 		{
 			var pause = new ManualResetEvent(false);
