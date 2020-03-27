@@ -294,8 +294,14 @@ namespace Android.Runtime {
 		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
 		extern static void _monodroid_gc_wait_for_bridge_processing ();
 
+#pragma warning disable CS0649 // Field is never assigned to.  This field is assigned from monodroid-glue.cc.
+		static volatile bool BridgeProcessing; // = false
+#pragma warning restore CS0649 // Field is never assigned to.
+
 		public static void WaitForBridgeProcessing ()
 		{
+			if (!BridgeProcessing)
+				return;
 			_monodroid_gc_wait_for_bridge_processing ();
 		}
 
