@@ -12,7 +12,6 @@ namespace Xamarin.Android.Prepare
 		public override List<ThirdPartyNotice> Notices => new List <ThirdPartyNotice> {
 			new JavaInterop_xamarin_Java_Interop_TPN (),
 			new JavaInterop_gityf_crc_TPN (),
-			new JavaInterop_xamarin_mono_cecil_TPN (),
 			new JavaInterop_jbevain_mono_linq_expressions_TPN (),
 			new JavaInterop_mono_csharp_TPN (),
 			new JavaInterop_mono_LineEditor_TPN (),
@@ -71,17 +70,6 @@ POSSIBILITY OF SUCH DAMAGE.
 	}
 
 	// git submodules of Java.Interop
-	class JavaInterop_xamarin_mono_cecil_TPN : ThirdPartyNotice
-	{
-		static readonly Uri    url         = new Uri ("https://github.com/mono/cecil/");
-		static readonly string licenseFile = Path.Combine (Configurables.Paths.ExternalJavaInteropDir, "external", "cecil", "LICENSE.txt");
-
-		public override string LicenseFile => licenseFile;
-		public override string Name        => "mono/cecil";
-		public override Uri    SourceUrl   => url;
-		public override string LicenseText => null;
-	}
-
 	class JavaInterop_jbevain_mono_linq_expressions_TPN : ThirdPartyNotice
 	{
 		static readonly Uri    url         = new Uri ("https://github.com/jbevain/mono.linq.expressions/");
