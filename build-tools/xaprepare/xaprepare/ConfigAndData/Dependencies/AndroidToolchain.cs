@@ -12,16 +12,16 @@ namespace Xamarin.Android.Prepare
 
 		public AndroidToolchain ()
 		{
-			string AndroidNdkVersion = BuildAndroidPlatforms.AndroidNdkVersion;
-			string AndroidPkgRevision = BuildAndroidPlatforms.AndroidNdkPkgRevision;
-			string AndroidNdkDirectory = GetRequiredProperty (KnownProperties.AndroidNdkDirectory);
-			string AndroidCmakeVersion = GetRequiredProperty (KnownProperties.AndroidCmakeVersion);
+			string AndroidNdkVersion       = BuildAndroidPlatforms.AndroidNdkVersion;
+			string AndroidPkgRevision      = BuildAndroidPlatforms.AndroidNdkPkgRevision;
+			string AndroidNdkDirectory     = GetRequiredProperty (KnownProperties.AndroidNdkDirectory);
+			string AndroidCmakeVersion     = GetRequiredProperty (KnownProperties.AndroidCmakeVersion);
 			string AndroidCmakeVersionPath = GetRequiredProperty (KnownProperties.AndroidCmakeVersionPath);
-			string EmulatorVersion = GetRequiredProperty (KnownProperties.EmulatorVersion);
-			string EmulatorPkgRevision = GetRequiredProperty (KnownProperties.EmulatorPkgRevision);
-			string XABuildToolsFolder = GetRequiredProperty (KnownProperties.XABuildToolsFolder);
-			string XABuildToolsVersion = GetRequiredProperty (KnownProperties.XABuildToolsVersion);
-			string XAPlatformToolsVersion = GetRequiredProperty (KnownProperties.XAPlatformToolsVersion);
+			string EmulatorVersion         = GetRequiredProperty (KnownProperties.EmulatorVersion);
+			string EmulatorPkgRevision     = GetRequiredProperty (KnownProperties.EmulatorPkgRevision);
+			string XABuildToolsFolder      = GetRequiredProperty (KnownProperties.XABuildToolsFolder);
+			string XABuildToolsVersion     = GetRequiredProperty (KnownProperties.XABuildToolsVersion);
+			string XAPlatformToolsVersion  = GetRequiredProperty (KnownProperties.XAPlatformToolsVersion);
 
 			Components = new List<AndroidToolchainComponent> {
 				new AndroidPlatformComponent ("android-2.3.3_r02", apiLevel: "10", pkgRevision: "2"),
