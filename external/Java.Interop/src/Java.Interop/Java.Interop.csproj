@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0;netcoreapp3.1</TargetFrameworks>
     <NoWarn>1591</NoWarn>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
@@ -9,26 +9,19 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\$(TargetFramework.ToLowerInvariant())\</IntermediateOutputPath>
+    <OutputPath>$(ToolOutputFullPath)</OutputPath>
+    <DocumentationFile>$(ToolOutputFullPath)Java.Interop.xml</DocumentationFile>
+    <JNIEnvGenPath>$(BuildToolOutputFullPath)</JNIEnvGenPath>
+    <LangVersion>8.0</LangVersion>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <OutputPath>..\..\bin\Debug</OutputPath>
-    <DocumentationFile>..\..\bin\Debug\Java.Interop.xml</DocumentationFile>
-    <JNIEnvGenPath>..\..\bin\BuildDebug</JNIEnvGenPath>
-    <DefineConstants>$(DefineConstants);DEBUG;NETSTANDARD;NETSTANDARD2_0</DefineConstants>
-    <LangVersion>8.0</LangVersion>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <OutputPath>..\..\bin\Release</OutputPath>
-    <DocumentationFile>..\..\bin\Release\Java.Interop.xml</DocumentationFile>
-    <JNIEnvGenPath>..\..\bin\BuildRelease</JNIEnvGenPath>
-    <LangVersion>8.0</LangVersion>
-    <Nullable>enable</Nullable>
+    <DefineConstants>DEBUG;$(DefineConstants)</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Java.Interop\JniLocationException.cs" />
   </ItemGroup>
-  <Import Project="Java.Interop.targets" />
   <PropertyGroup>
     <BuildDependsOn>
       BuildJniEnvironment_g_cs;
@@ -60,7 +53,9 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <ProjectReference Include="..\..\build-tools\jnienv-gen\jnienv-gen.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" />
+    <ProjectReference Include="..\..\build-tools\jnienv-gen\jnienv-gen.csproj"
+        ReferenceOutputAssembly="false"
+    />
   </ItemGroup>
   <ItemGroup>
     <Compile Condition=" '$(EnableDefaultCompileItems)' == 'true' " Update="Java.Interop\JavaPrimitiveArrays.cs">

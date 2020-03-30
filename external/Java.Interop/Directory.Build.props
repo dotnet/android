@@ -18,13 +18,16 @@
       Condition="Exists('$(_OutputPath)MonoInfo.props')"
   />
   <PropertyGroup Condition=" '$(TargetFramework)' != '' And $(TargetFramework.StartsWith ('netcoreapp')) ">
+    <JIBuildingForNetCoreApp>True</JIBuildingForNetCoreApp>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(JIBuildingForNetCoreApp)' == 'True' ">
     <BuildToolOutputFullPath>$(MSBuildThisFileDirectory)bin\Build$(Configuration)-$(TargetFramework)\</BuildToolOutputFullPath>
     <ToolOutputFullPath>$(MSBuildThisFileDirectory)bin\$(Configuration)-$(TargetFramework)\</ToolOutputFullPath>
     <TestOutputFullPath>$(MSBuildThisFileDirectory)bin\Test$(Configuration)-$(TargetFramework)\</TestOutputFullPath>
     <UtilityOutputFullPath Condition=" '$(UtilityOutputFullPathCoreApps)' != '' ">$(UtilityOutputFullPathCoreApps)</UtilityOutputFullPath>
     <UtilityOutputFullPath Condition=" '$(UtilityOutputFullPathCoreApps)' == '' ">$(ToolOutputFullPath)</UtilityOutputFullPath>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == '' Or !$(TargetFramework.StartsWith ('netcoreapp')) ">
+  <PropertyGroup Condition=" '$(JIBuildingForNetCoreApp)' != 'True' ">
     <BuildToolOutputFullPath>$(MSBuildThisFileDirectory)bin\Build$(Configuration)\</BuildToolOutputFullPath>
     <ToolOutputFullPath>$(MSBuildThisFileDirectory)bin\$(Configuration)\</ToolOutputFullPath>
     <TestOutputFullPath>$(MSBuildThisFileDirectory)bin\Test$(Configuration)\</TestOutputFullPath>

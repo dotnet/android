@@ -76,7 +76,7 @@
       <Private>False</Private>
     </Reference>
   </ItemGroup>
-  <Import Project="Java.Interop.targets" />
+  <Import Project="Directory.Build.targets" />
   <PropertyGroup>
     <BuildDependsOn>
       BuildJniEnvironment_g_cs;

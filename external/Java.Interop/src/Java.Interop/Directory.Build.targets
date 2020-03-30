@@ -2,6 +2,10 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Runtime Condition="'$(OS)' != 'Windows_NT'">mono</Runtime>
+    <_JNIEnvGenPath Condition=" '$(JIBuildingForNetCoreApp)' == 'True' ">$(BuildToolOutputFullPath)jnienv-gen.dll</_JNIEnvGenPath>
+    <_JNIEnvGenPath Condition=" '$(JIBuildingForNetCoreApp)' != 'True' ">$(BuildToolOutputFullPath)jnienv-gen.exe</_JNIEnvGenPath>
+    <_RunJNIEnvGen Condition=" '$(JIBuildingForNetCoreApp)' == 'True' ">dotnet "$(_JNIEnvGenPath)"</_RunJNIEnvGen>
+    <_RunJNIEnvGen Condition=" '$(JIBuildingForNetCoreApp)' != 'True' ">$(Runtime) "$(_JNIEnvGenPath)"</_RunJNIEnvGen>
   </PropertyGroup>
   <ItemGroup>
     <CompileJavaInteropJar Include="java\com\xamarin\java_interop\internal\JavaProxyObject.java" />
@@ -16,14 +20,14 @@
   </ItemGroup>
   <Target Name="BuildJniEnvironment_g_cs"
       BeforeTargets="BeforeCompile"
-      Inputs="$(JNIEnvGenPath)\jnienv-gen.exe"
+      Inputs="$(_JNIEnvGenPath)"
       Outputs="Java.Interop\JniEnvironment.g.cs;$(IntermediateOutputPath)\jni.c">
     <MakeDir Directories="$(IntermediateOutputPath)" />
     <PropertyGroup>
       <_AddCompile Condition=" !Exists('Java.Interop\JniEnvironment.g.cs') ">True</_AddCompile>
     </PropertyGroup>
     <Exec
-        Command="$(Runtime) &quot;$(JNIEnvGenPath)\jnienv-gen.exe&quot; Java.Interop\JniEnvironment.g.cs $(IntermediateOutputPath)\jni.c"
+        Command="$(_RunJNIEnvGen) Java.Interop\JniEnvironment.g.cs $(IntermediateOutputPath)\jni.c"
     />
     <ItemGroup>
       <Compile Include="Java.Interop\JniEnvironment.g.cs" Condition=" '$(_AddCompile)' == 'True' " />
