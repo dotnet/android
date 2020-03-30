@@ -439,8 +439,13 @@ namespace Xamarin.Android.Build.Tests
 				return;
 			if (TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Passed || 
 			    TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Skipped) {
-				FileSystemUtils.SetDirectoryWriteable (output);
-				Directory.Delete (output, recursive: true);
+				try {
+					FileSystemUtils.SetDirectoryWriteable (output);
+					Directory.Delete (output, recursive: true);
+				} catch (Exception ex) {
+					// Don't fail the test if this occurs, but log instead
+					TestContext.Out.WriteLine ($"[TESTLOG] Test {TestName} failed to delete `{output}`: {ex}");
+				}
 			} else {
 				foreach (var file in Directory.GetFiles (Path.Combine (output), "*.log", SearchOption.AllDirectories)) {
 					TestContext.AddTestAttachment (file, Path.GetFileName (output));

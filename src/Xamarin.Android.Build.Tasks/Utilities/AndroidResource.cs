@@ -27,7 +27,7 @@ namespace Monodroid {
 					return MonoAndroidHelper.CopyIfStreamChanged (sw.BaseStream, filename);
 				}
 			} catch (Exception e) {
-				logMessage?.Invoke (TraceLevel.Warning, string.Format (Xamarin.Android.Tasks.Properties.Resources.XA1001, filename, e.Message));
+				logMessage?.Invoke (TraceLevel.Warning, string.Format (Xamarin.Android.Tasks.Properties.Resources.XA1001, filename, e));
 				return false;
 			}
 		}
