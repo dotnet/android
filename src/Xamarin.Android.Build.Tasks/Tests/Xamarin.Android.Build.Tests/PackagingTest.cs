@@ -600,10 +600,7 @@ namespace App1
 		[Test]
 		public void CheckTheCorrectRuntimeAssemblyIsUsedFromNuget ()
 		{
-			string monoandroidFramework;
-			using (var builder = new Builder ()) {
-				monoandroidFramework = builder.LatestMultiTargetFrameworkVersion ();
-			}
+			string monoandroidFramework = "monoandroid10.0";
 			string path = Path.Combine (Root, "temp", TestName);
 			var ns = new DotNetStandard () {
 				ProjectName = "Dummy",
