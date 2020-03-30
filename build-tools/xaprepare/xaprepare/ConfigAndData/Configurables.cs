@@ -285,7 +285,7 @@ namespace Xamarin.Android.Prepare
 
 			public static string TestBinDir                          => GetCachedPath (ref testBinDir, ()                          => Path.Combine (Configurables.Paths.BinDirRoot, $"Test{ctx.Configuration}"));
 			public static string BinDir                              => GetCachedPath (ref binDir, ()                              => Path.Combine (Configurables.Paths.BinDirRoot, ctx.Configuration));
-			public static string NetCoreBinDir                       => GetCachedPath (ref binDir, ()                              => Path.Combine (Configurables.Paths.BinDirRoot, $"{ctx.Configuration}-netcoreapp3.1"));
+			public static string NetCoreBinDir                       => GetCachedPath (ref netCoreBinDir, ()                       => Path.Combine (Configurables.Paths.BinDirRoot, $"{ctx.Configuration}-netcoreapp3.1"));
 			public static string BuildBinDir                         => GetCachedPath (ref buildBinDir, ()                         => Path.Combine (Configurables.Paths.BinDirRoot, $"Build{ctx.Configuration}"));
 			public static string MingwBinDir                         => GetCachedPath (ref mingwBinDir, ()                         => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidMxeFullPath), "bin"));
 			public static string ProfileAssembliesProjitemsPath      => GetCachedPath (ref profileAssembliesProjitemsPath, ()      => Path.Combine (BuildBinDir, "ProfileAssemblies.projitems"));
@@ -366,6 +366,7 @@ namespace Xamarin.Android.Prepare
 			static string buildBinDir;
 			static string mingwBinDir;
 			static string binDir;
+			static string netCoreBinDir;
 			static string monoSDKsOutputDir;
 			static string androidToolchainBinDirectory;
 			static string monoProfileDir;
