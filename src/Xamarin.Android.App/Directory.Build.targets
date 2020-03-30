@@ -49,10 +49,10 @@
   </Target>
 
   <Target Name="_PackAllRuntimePacks" >
-    <MSBuild Targets="Pack" Properties="Configuration=$(Configuration);AndroidRID=android.21-arm;AndroidABI=armeabi-v7a" Projects="$(MSBuildThisFileDirectory)Xamarin.Android.App.Runtime.proj" />
-    <MSBuild Targets="Pack" Properties="Configuration=$(Configuration);AndroidRID=android.21-arm64;AndroidABI=arm64-v8a" Projects="$(MSBuildThisFileDirectory)Xamarin.Android.App.Runtime.proj" />
-    <MSBuild Targets="Pack" Properties="Configuration=$(Configuration);AndroidRID=android.21-x86;AndroidABI=x86" Projects="$(MSBuildThisFileDirectory)Xamarin.Android.App.Runtime.proj" />
-    <MSBuild Targets="Pack" Properties="Configuration=$(Configuration);AndroidRID=android.21-x64;AndroidABI=x86_64" Projects="$(MSBuildThisFileDirectory)Xamarin.Android.App.Runtime.proj" />
+    <Exec Command="dotnet pack -p:Configuration=$(Configuration) -p:AndroidRID=android.21-arm -p:AndroidABI=armeabi-v7a &quot;$(MSBuildThisFileDirectory)Xamarin.Android.App.Runtime.proj&quot;" />
+    <Exec Command="dotnet pack -p:Configuration=$(Configuration) -p:AndroidRID=android.21-arm64 -p:AndroidABI=arm64-v8a &quot;$(MSBuildThisFileDirectory)Xamarin.Android.App.Runtime.proj&quot;" />
+    <Exec Command="dotnet pack -p:Configuration=$(Configuration) -p:AndroidRID=android.21-x86 -p:AndroidABI=x86 &quot;$(MSBuildThisFileDirectory)Xamarin.Android.App.Runtime.proj&quot;" />
+    <Exec Command="dotnet pack -p:Configuration=$(Configuration) -p:AndroidRID=android.21-x64 -p:AndroidABI=x86_64 &quot;$(MSBuildThisFileDirectory)Xamarin.Android.App.Runtime.proj&quot;" />
   </Target>
 
 </Project>
