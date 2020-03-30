@@ -319,12 +319,12 @@ namespace Xamarin.ProjectTools
 		};
 		public static Package FSharp_Core_Latest = new Package {
 			Id = "FSharp.Core",
-			Version = "4.0.0.1",
-			TargetFramework = "monoandroid71",
+			Version = "4.7.1",
+			TargetFramework = "netstandard2.0",
 			References = {
 				new BuildItem.Reference ("mscorlib"),
 				new BuildItem.Reference ("FSharp.Core") {
-					MetadataValues = "HintPath=..\\packages\\FSharp.Core.4.0.0.1\\lib\\portable-net45+monoandroid10+monotouch10+xamarinios10\\FSharp.Core.dll"
+					MetadataValues = "HintPath=..\\packages\\FSharp.Core.4.7.1\\lib\\netstandard2.0\\FSharp.Core.dll"
 				},
 			}
 		};
