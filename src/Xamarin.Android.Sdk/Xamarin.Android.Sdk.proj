@@ -1,3 +1,11 @@
+<!--
+***********************************************************************************************
+Xamarin.Android.Sdk.proj
+
+This project file is used to create the Xamarin.Android.Sdk NuGet, which will serve as
+the new entry point for short-form style Android projets in .NET 5.
+***********************************************************************************************
+-->
 <Project Sdk="Microsoft.Build.NoTargets/1.0.88">
 
   <PropertyGroup>

@@ -1,3 +1,12 @@
+<!--
+***********************************************************************************************
+Xamarin.Android.App.Ref.proj
+
+This project file is used to create the Xamarin.Android.App.Ref NuGet, which is the
+targeting pack containing reference assemblies and other compile time assets required
+by projects that use the Xamarin.Android.App framework in .NET 5.
+***********************************************************************************************
+-->
 <Project Sdk="Microsoft.Build.NoTargets/1.0.88">
 
   <PropertyGroup>

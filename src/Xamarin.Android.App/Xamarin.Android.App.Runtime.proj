@@ -1,3 +1,12 @@
+<!--
+***********************************************************************************************
+Xamarin.Android.App.Runtime.proj
+
+This project file is used to create Xamarin.Android.App.Runtime NuGets, which are
+runtime packs that contain the assets required for a self-contained publish of
+projects that use the Xamarin.Android.App framework in .NET 5.
+***********************************************************************************************
+-->
 <Project Sdk="Microsoft.Build.NoTargets/1.0.88">
 
   <PropertyGroup>
