@@ -29,7 +29,7 @@ jobs:
     - task: DownloadPipelineArtifact@1
       inputs:
         artifactName: $(NuGetArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)
+        downloadPath: $(System.DefaultWorkingDirectory)\bin\$(XA.Build.Configuration)\$(NuGetArtifactName)
 
     # Limit the amount of worker threads used to run these tests in parallel to half of what is currently available (8) on the Windows pool.
     # Using all available cores seems to occasionally bog down our machines and cause parallel test execution to slow down dramatically.
