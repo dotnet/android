@@ -717,111 +717,31 @@ stages:
 
     - template: yaml-templates/fail-on-issue.yaml
 
-  # Check - "Xamarin.Android (Test MSBuild - macOS)"
-  - job: mac_msbuild_tests
-    displayName: MSBuild - macOS
-    pool: $(HostedMac)
-    timeoutInMinutes: 180
-    cancelTimeoutInMinutes: 5
-    workspace:
-      clean: all
-    steps:
-    - template: yaml-templates/setup-test-environment.yaml
+  # Xamarin.Android (Test MSBuild - macOS)
+  - template: yaml-templates\run-msbuild-mac-tests.yaml
+    parameters:
+      node_id: 1
 
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: $(TestAssembliesArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
+  - template: yaml-templates\run-msbuild-mac-tests.yaml
+    parameters:
+      node_id: 2
 
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: $(NuGetArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)
+  - template: yaml-templates\run-msbuild-mac-tests.yaml
+    parameters:
+      node_id: 3
 
-    - template: yaml-templates/run-nunit-tests.yaml
-      parameters:
-        testRunTitle: CodeBehindUnitTests - macOS
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/CodeBehind/CodeBehindUnitTests.dll
-        testResultsFile: TestResult-CodeBehindUnitTests-macOS-$(XA.Build.Configuration).xml
+  # Xamarin.Android (Test MSBuild - Windows)
+  - template: yaml-templates\run-msbuild-win-tests.yaml
+    parameters:
+      node_id: 1
 
-    - template: yaml-templates/run-nunit-tests.yaml
-      parameters:
-        testRunTitle: Xamarin.Android.MakeBundle-UnitTests - macOS
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/Xamarin.Android.MakeBundle-UnitTests.dll
-        testResultsFile: TestResult-MakeBundleUnitTests-macOS-$(XA.Build.Configuration).xml
+  - template: yaml-templates\run-msbuild-win-tests.yaml
+    parameters:
+      node_id: 2
 
-    - template: yaml-templates/run-nunit-tests.yaml
-      parameters:
-        testRunTitle: EmbeddedDSOUnitTests - macOS
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/EmbeddedDSOUnitTests.dll
-        testResultsFile: TestResult-EmbeddedDSOUnitTests-macOS-$(XA.Build.Configuration).xml
-
-    - template: yaml-templates/run-nunit-tests.yaml
-      parameters:
-        testRunTitle: Xamarin.Android.Build.Tests - macOS
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/Xamarin.Android.Build.Tests.dll
-        testResultsFile: TestResult-MSBuildTests-macOS-$(XA.Build.Configuration).xml
-
-    - template: yaml-templates/run-nunit-tests.yaml
-      parameters:
-        testRunTitle: Xamarin.Android.Build.Tests.Commercial - macOS
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/Xamarin.Android.Build.Tests.Commercial.dll
-        testResultsFile: TestResult-MSBuildTestsCommercial-macOS-$(XA.Build.Configuration).xml
-
-    - template: yaml-templates/upload-results.yaml
-      parameters:
-        artifactName: Test Results - MSBuild - macOS
-
-    - template: yaml-templates/fail-on-issue.yaml
-
-  # Check - "Xamarin.Android (Test MSBuild - Windows)"
-  - job: win_msbuild_tests
-    displayName: MSBuild - Windows
-    pool: $(VSEngWinVS2019)
-    timeoutInMinutes: 180
-    cancelTimeoutInMinutes: 5
-    variables:
-      VSINSTALLDIR: C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise
-    steps:
-
-    - template: yaml-templates\kill-processes.yaml
-
-    - template: yaml-templates\clean.yaml
-
-    - template: yaml-templates\setup-test-environment.yaml
-      parameters:
-        provisionExtraArgs: -vv PROVISIONATOR_VISUALSTUDIO_LOCATION="$(VSINSTALLDIR)" -f
-
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: $(TestAssembliesArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)
-
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: $(NuGetArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)
-
-    # Limit the amount of worker threads used to run these tests in parallel to half of what is currently available (8) on the Windows pool.
-    # Using all available cores seems to occasionally bog down our machines and cause parallel test execution to slow down dramatically.
-    - template: yaml-templates\run-nunit-tests.yaml
-      parameters:
-        testRunTitle: Xamarin.Android.Build.Tests - Windows
-        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\Xamarin.Android.Build.Tests.dll
-        testResultsFile: TestResult-MSBuildTests-Windows-$(XA.Build.Configuration).xml
-        nunitConsoleExtraArgs: --workers=4
-
-    - template: yaml-templates\run-nunit-tests.yaml
-      parameters:
-        testRunTitle: Xamarin.Android.Build.Tests.Commercial - Windows
-        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\Xamarin.Android.Build.Tests.Commercial.dll
-        testResultsFile: TestResult-MSBuildTestsCommercial-Windows-$(XA.Build.Configuration).xml
-
-    - template: yaml-templates\upload-results.yaml
-      parameters:
-        artifactName: Test Results - MSBuild - Windows
-
-    - template: yaml-templates\fail-on-issue.yaml
+  - template: yaml-templates\run-msbuild-win-tests.yaml
+    parameters:
+      node_id: 3
 
   # Check - "Xamarin.Android (Test MSBuild With Emulator - macOS)"
   - job: mac_msbuilddevice_tests

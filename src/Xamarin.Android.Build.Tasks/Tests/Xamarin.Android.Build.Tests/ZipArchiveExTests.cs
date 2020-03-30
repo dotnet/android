@@ -9,6 +9,7 @@ using Xamarin.Android.Tasks;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
+	[Category ("Node-2")]
 	public class ZipArchiveExTests
 	{
 		ConcurrentDictionary<string, string> paths = new ConcurrentDictionary<string, string> ();
