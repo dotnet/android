@@ -2,7 +2,6 @@
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
     <IsPackable>False</IsPackable>
-    <AppendTargetFrameworkToOutputPath>False</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
   <PropertyGroup>
     <OutputPath>$(TestOutputFullPath)</OutputPath>

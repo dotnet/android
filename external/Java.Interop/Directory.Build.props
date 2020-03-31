@@ -17,17 +17,23 @@
       Project="$(_OutputPath)MonoInfo.props"
       Condition="Exists('$(_OutputPath)MonoInfo.props')"
   />
+  <PropertyGroup>
+    <AppendTargetFrameworkToOutputPath Condition=" '$(AppendTargetFrameworkToOutputPath)' == '' ">False</AppendTargetFrameworkToOutputPath>
+    <BaseIntermediateOutputPath Condition=" '$(BaseIntermediateOutputPath)' == '' ">obj\</BaseIntermediateOutputPath>
+  </PropertyGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' != '' And $(TargetFramework.StartsWith ('netcoreapp')) ">
     <JIBuildingForNetCoreApp>True</JIBuildingForNetCoreApp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(JIBuildingForNetCoreApp)' == 'True' ">
-    <BuildToolOutputFullPath>$(MSBuildThisFileDirectory)bin\Build$(Configuration)-$(TargetFramework)\</BuildToolOutputFullPath>
-    <ToolOutputFullPath>$(MSBuildThisFileDirectory)bin\$(Configuration)-$(TargetFramework)\</ToolOutputFullPath>
-    <TestOutputFullPath>$(MSBuildThisFileDirectory)bin\Test$(Configuration)-$(TargetFramework)\</TestOutputFullPath>
+    <IntermediateOutputPath>$(BaseIntermediateOutputPath)\$(Configuration)-$(TargetFramework.ToLowerInvariant())</IntermediateOutputPath>
+    <BuildToolOutputFullPath>$(MSBuildThisFileDirectory)bin\Build$(Configuration)-$(TargetFramework.ToLowerInvariant())\</BuildToolOutputFullPath>
+    <ToolOutputFullPath>$(MSBuildThisFileDirectory)bin\$(Configuration)-$(TargetFramework.ToLowerInvariant())\</ToolOutputFullPath>
+    <TestOutputFullPath>$(MSBuildThisFileDirectory)bin\Test$(Configuration)-$(TargetFramework.ToLowerInvariant())\</TestOutputFullPath>
     <UtilityOutputFullPath Condition=" '$(UtilityOutputFullPathCoreApps)' != '' ">$(UtilityOutputFullPathCoreApps)</UtilityOutputFullPath>
     <UtilityOutputFullPath Condition=" '$(UtilityOutputFullPathCoreApps)' == '' ">$(ToolOutputFullPath)</UtilityOutputFullPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(JIBuildingForNetCoreApp)' != 'True' ">
+    <IntermediateOutputPath>$(BaseIntermediateOutputPath)\$(Configuration)</IntermediateOutputPath>
     <BuildToolOutputFullPath>$(MSBuildThisFileDirectory)bin\Build$(Configuration)\</BuildToolOutputFullPath>
     <ToolOutputFullPath>$(MSBuildThisFileDirectory)bin\$(Configuration)\</ToolOutputFullPath>
     <TestOutputFullPath>$(MSBuildThisFileDirectory)bin\Test$(Configuration)\</TestOutputFullPath>

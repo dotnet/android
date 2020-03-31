@@ -9,7 +9,6 @@
     <Company>Microsoft Corporation</Company>
     <Copyright>Microsoft Corporation</Copyright>
     <AssemblyVersion>0.1.0.0</AssemblyVersion>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
   <PropertyGroup>
     <OutputPath>$(ToolOutputFullPath)</OutputPath>
