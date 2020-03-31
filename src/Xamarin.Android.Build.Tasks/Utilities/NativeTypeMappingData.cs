@@ -6,16 +6,16 @@ namespace Xamarin.Android.Tasks
 {
 	class NativeTypeMappingData
 	{
-		public TypeMapGenerator.ModuleData[] Modules { get; }
+		public TypeMapGenerator.ModuleReleaseData[] Modules { get; }
 		public IDictionary<string, string> AssemblyNames { get; }
 		public string[] JavaTypeNames                    { get; }
-		public TypeMapGenerator.TypeMapEntry[] JavaTypes { get; }
+		public TypeMapGenerator.TypeMapReleaseEntry[] JavaTypes { get; }
 
 		public uint MapModuleCount { get; }
 		public uint JavaTypeCount  { get; }
 		public uint JavaNameWidth  { get; }
 
-		public NativeTypeMappingData (Action<string> logger, TypeMapGenerator.ModuleData[] modules, int javaNameWidth)
+		public NativeTypeMappingData (Action<string> logger, TypeMapGenerator.ModuleReleaseData[] modules, int javaNameWidth)
 		{
 			Modules = modules ?? throw new ArgumentNullException (nameof (modules));
 
@@ -24,11 +24,11 @@ namespace Xamarin.Android.Tasks
 
 			AssemblyNames = new Dictionary<string, string> (StringComparer.Ordinal);
 
-			var tempJavaTypes = new Dictionary<string, TypeMapGenerator.TypeMapEntry> (StringComparer.Ordinal);
+			var tempJavaTypes = new Dictionary<string, TypeMapGenerator.TypeMapReleaseEntry> (StringComparer.Ordinal);
 			int managedStringCounter = 0;
 			var moduleComparer = new TypeMapGenerator.ModuleUUIDArrayComparer ();
 
-			foreach (TypeMapGenerator.ModuleData data in modules) {
+			foreach (TypeMapGenerator.ModuleReleaseData data in modules) {
 				data.AssemblyNameLabel = $"map_aname.{managedStringCounter++}";
 				AssemblyNames.Add (data.AssemblyNameLabel, data.AssemblyName);
 
@@ -36,7 +36,7 @@ namespace Xamarin.Android.Tasks
 				if (moduleIndex < 0)
 					throw new InvalidOperationException ($"Unable to map module with MVID {data.Mvid} to array index");
 
-				foreach (TypeMapGenerator.TypeMapEntry entry in data.Types) {
+				foreach (TypeMapGenerator.TypeMapReleaseEntry entry in data.Types) {
 					entry.ModuleIndex = moduleIndex;
 					if (tempJavaTypes.ContainsKey (entry.JavaName))
 						continue;
@@ -47,7 +47,7 @@ namespace Xamarin.Android.Tasks
 			var javaNames = tempJavaTypes.Keys.ToArray ();
 			Array.Sort (javaNames, StringComparer.Ordinal);
 
-			var javaTypes = new TypeMapGenerator.TypeMapEntry[javaNames.Length];
+			var javaTypes = new TypeMapGenerator.TypeMapReleaseEntry[javaNames.Length];
 			for (int i = 0; i < javaNames.Length; i++) {
 				javaTypes[i] = tempJavaTypes[javaNames[i]];
 			}

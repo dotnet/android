@@ -832,7 +832,6 @@ namespace Lib2
 		readonly string [] ExpectedAssemblyFiles = new [] {
 			Path.Combine ("android", "environment.armeabi-v7a.o"),
 			Path.Combine ("android", "environment.armeabi-v7a.s"),
-			Path.Combine ("android", "typemaps.armeabi-v7a-managed.inc"),
 			Path.Combine ("android", "typemaps.armeabi-v7a-shared.inc"),
 			Path.Combine ("android", "typemaps.armeabi-v7a.o"),
 			Path.Combine ("android", "typemaps.armeabi-v7a.s"),

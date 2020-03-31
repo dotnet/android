@@ -14,6 +14,7 @@ namespace Xamarin.Android.Tasks
 		public override string AbiName => Is64Bit ? ARMV8a : ARMV7a;
 		public override uint MapModulesAlignBits => Is64Bit ? 3u : 2u;
 		public override uint MapJavaAlignBits { get; } = 2;
+		public override uint DebugTypeMapAlignBits => Is64Bit ? 3u : 2u;
 
 		public ARMNativeAssemblerTargetProvider (bool is64Bit)
 		{
