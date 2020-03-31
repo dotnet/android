@@ -69,7 +69,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 							var errOutput = errorOutput.ToString ();
 
 							if (proc.ExitCode != 0) {
-								LogMessage ($"Non-zero exit code: {proc.ExitCode}  Error output: {errOutput}", MessageImportance.High);
+								LogError ($"\"{proc.StartInfo.FileName} {proc.StartInfo.Arguments}\" failed with code: {proc.ExitCode}  Error output: {errOutput}");
 								success = false;
 							}
 
