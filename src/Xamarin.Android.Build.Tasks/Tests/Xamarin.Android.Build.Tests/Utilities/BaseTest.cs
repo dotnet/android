@@ -439,12 +439,22 @@ namespace Xamarin.Android.Build.Tests
 				return;
 			if (TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Passed || 
 			    TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Skipped) {
+				FileSystemUtils.SetDirectoryWriteable (output);
 				try {
-					FileSystemUtils.SetDirectoryWriteable (output);
 					Directory.Delete (output, recursive: true);
 				} catch (Exception ex) {
 					// Don't fail the test if this occurs, but log instead
 					TestContext.Out.WriteLine ($"[TESTLOG] Test {TestName} failed to delete `{output}`: {ex}");
+
+					foreach (var entry in Directory.GetFileSystemEntries (output, "*", SearchOption.AllDirectories)) {
+						TestContext.Out.WriteLine ($"[TESTLOG] file system entry left: {entry}");
+						try {
+							string process = LockCheck.GetProcessesLockingFile (entry);
+							TestContext.Out.WriteLine ($"[TESTLOG] {process} is locking: {entry}");
+						} catch {
+							// Just ignore a failure here
+						}
+					}
 				}
 			} else {
 				foreach (var file in Directory.GetFiles (Path.Combine (output), "*.log", SearchOption.AllDirectories)) {
