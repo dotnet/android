@@ -455,6 +455,7 @@ namespace Xamarin.Android.Build.Tests
 							// Just ignore a failure here
 						}
 					}
+					throw;
 				}
 			} else {
 				foreach (var file in Directory.GetFiles (Path.Combine (output), "*.log", SearchOption.AllDirectories)) {
