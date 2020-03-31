@@ -274,11 +274,11 @@ stages:
         msbuildArguments: /t:Prepare /p:AutoProvision=true /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-prepare.binlog
 
     - task: MSBuild@1
-      displayName: msbuild Xamarin.Android /t:Build
+      displayName: msbuild Xamarin.Android
       inputs:
         solution: Xamarin.Android.sln
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: /restore /t:Build /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-build.binlog
+        msbuildArguments: /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-build.binlog
 
     - task: MSBuild@1
       displayName: msbuild create-vsix

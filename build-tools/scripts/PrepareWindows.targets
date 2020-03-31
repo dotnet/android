@@ -23,5 +23,6 @@
     />
     <Exec Command="$(_XAPrepareExe) $(_XAPrepareStandardArgs) -a" WorkingDirectory="$(_TopDir)" />
     <MSBuild Projects="$(_TopDir)\Xamarin.Android.BootstrapTasks.sln" Targets="Restore;Build" />
+    <MSBuild Projects="$(_TopDir)\Xamarin.Android.sln" Targets="Restore" />
   </Target>
 </Project>
