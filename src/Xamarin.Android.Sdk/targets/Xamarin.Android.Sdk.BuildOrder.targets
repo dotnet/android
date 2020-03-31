@@ -1,0 +1,98 @@
+<!--
+***********************************************************************************************
+Xamarin.Android.Sdk.BuildOrder.targets
+
+This file contains the .NET 5-specific setup for any $(FooDependsOn)
+properties that determine build ordering. For "legacy" Xamarin.Android
+projects, these properties are set in Xamarin.Android.Legacy.targets.
+
+***********************************************************************************************
+-->
+
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup Condition=" '$(AndroidApplication)' == 'True' ">
+    <BuildDependsOn>
+      _ValidateLinkMode;
+      _CheckNonIdealConfigurations;
+      _SetupDesignTimeBuildForBuild;
+      _CreatePropertiesCache;
+      _CleanIntermediateIfNeeded;
+      _CheckProjectItems;
+      _CheckForContent;
+      _ValidateAndroidPackageProperties;
+      $(BuildDependsOn);
+    </BuildDependsOn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(AndroidApplication)' != 'True' ">
+    <BuildDependsOn>
+      _ValidateLinkMode;
+      _CheckNonIdealConfigurations;
+      _SetupDesignTimeBuildForBuild;
+      _CreatePropertiesCache;
+      _CleanIntermediateIfNeeded;
+      _AddAndroidDefines;
+      _CreateNativeLibraryArchive;
+      _AddAndroidEnvironmentToCompile;
+      _CheckForContent;
+      _ValidateAndroidPackageProperties;
+      $(BuildDependsOn);
+    </BuildDependsOn>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <CompileDependsOn>
+      _SetupDesignTimeBuildForCompile;
+      _AddAndroidDefines;
+      _IncludeLayoutBindingSources;
+      $(CompileDependsOn);
+    </CompileDependsOn>
+    <CoreCompileDependsOn>
+      UpdateGeneratedFiles;
+      $(CoreCompileDependsOn)
+    </CoreCompileDependsOn>
+    <CoreResolveReferencesDependsOn>
+      _SeparateAppExtensionReferences;
+      _PrepareWearApplication;
+      $(ResolveReferencesDependsOn);
+      _AddAndroidCustomMetaData;
+    </CoreResolveReferencesDependsOn>
+    <ResolveReferencesDependsOn>
+      $(CoreResolveReferencesDependsOn);
+      UpdateAndroidInterfaceProxies;
+      UpdateAndroidResources;
+      $(ApplicationResolveReferencesDependsOn);
+    </ResolveReferencesDependsOn>
+    <DeferredBuildDependsOn>
+      $(DeferredBuildDependsOn);
+      UpdateAndroidResources;
+    </DeferredBuildDependsOn>
+    <PrepareForRunDependsOn>
+      $(PrepareForRunDependsOn);
+      _CollectMonoAndroidOutputs;
+    </PrepareForRunDependsOn>
+    <CleanDependsOn>
+      $(CleanDependsOn);
+      _CleanMonoAndroidIntermediateDir;
+      _CleanAndroidBuildPropertiesCache;
+    </CleanDependsOn>
+  </PropertyGroup>
+
+  <!--
+    TODO: currently using a private property for hooking into `dotnet publish`
+
+    Revise after this lands: https://github.com/dotnet/sdk/pull/11073
+  -->
+
+  <PropertyGroup>
+    <_CorePublishTargets>
+      $(_CorePublishTargets);
+      _CompileDex;
+      $(_AfterCompileDex);
+      Package;
+      _Sign;
+    </_CorePublishTargets>
+  </PropertyGroup>
+
+</Project>

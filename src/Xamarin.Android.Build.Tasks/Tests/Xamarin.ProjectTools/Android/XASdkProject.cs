@@ -27,7 +27,7 @@ namespace Xamarin.ProjectTools
 		public XASdkProject (string sdkVersion = "")
 		{
 			Sdk = string.IsNullOrEmpty (sdkVersion) ? "Xamarin.Android.Sdk" : $"Xamarin.Android.Sdk/{sdkVersion}";
-			TargetFramework = "MonoAndroid10.0";
+			TargetFramework = "netcoreapp5.0";
 
 			PackageName = PackageName ?? string.Format ("{0}.{0}", ProjectName);
 			JavaPackageName = JavaPackageName ?? PackageName.ToLowerInvariant ();

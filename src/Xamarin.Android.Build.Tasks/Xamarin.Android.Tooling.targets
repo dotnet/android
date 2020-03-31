@@ -41,16 +41,27 @@ projects.
     </ItemGroup>
   </Target>
 
-  <Target Name="_ResolveSdks" DependsOnTargets="_GetReferenceAssemblyPaths">
+  <PropertyGroup Condition=" '$(UsingAndroidNETSdk)' == 'True' ">
+    <_ResolveSdksDependsOnTargets>ResolveFrameworkReferences</_ResolveSdksDependsOnTargets>
+    <TargetFrameworkDirectory>$(MSBuildThisFileDirectory)..\lib\MonoAndroid\v10.0\</TargetFrameworkDirectory>
+    <_XATargetFrameworkDirectories>$(TargetFrameworkDirectory)</_XATargetFrameworkDirectories>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(UsingAndroidNETSdk)' != 'True' ">
+    <_ResolveSdksDependsOnTargets>_GetReferenceAssemblyPaths</_ResolveSdksDependsOnTargets>
+  </PropertyGroup>
+
+  <Target Name="_ResolveSdks" DependsOnTargets="$(_ResolveSdksDependsOnTargets)">
     <PropertyGroup>
       <_AndroidAllowMissingSdkTooling Condition=" '$(_AndroidAllowMissingSdkTooling)' == '' ">False</_AndroidAllowMissingSdkTooling>
+      <_ResolveSdksDirectories Condition=" '$(UsingAndroidNETSdk)' == 'True' ">@(ResolvedFrameworkReference->'%(TargetingPackPath)\data\')</_ResolveSdksDirectories>
+      <_ResolveSdksDirectories Condition=" '$(UsingAndroidNETSdk)' != 'True' ">$(_XATargetFrameworkDirectories)</_ResolveSdksDirectories>
     </PropertyGroup>
     <ResolveSdks
         ContinueOnError="$(_AndroidAllowMissingSdkTooling)"
         AndroidSdkPath="$(AndroidSdkDirectory)"
         AndroidNdkPath="$(AndroidNdkDirectory)"
         JavaSdkPath="$(JavaSdkDirectory)"
-        ReferenceAssemblyPaths="$(_XATargetFrameworkDirectories)">
+        ReferenceAssemblyPaths="$(_ResolveSdksDirectories)">
       <Output TaskParameter="AndroidNdkPath"            PropertyName="AndroidNdkDirectory" Condition=" '$(AndroidNdkDirectory)' == '' " />
       <Output TaskParameter="AndroidSdkPath"            PropertyName="AndroidSdkDirectory" Condition=" '$(AndroidSdkDirectory)' == '' " />
       <Output TaskParameter="JavaSdkPath"               PropertyName="JavaSdkDirectory"    Condition=" '$(JavaSdkDirectory)' == '' " />

@@ -125,37 +125,6 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 	<GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <BuildDependsOn>
-      _SetupDesignTimeBuildForBuild;
-      AddLibraryJarsToBind;
-      $(BuildDependsOn);
-      BuildDocumentation;
-    </BuildDependsOn>
-
-    <CompileDependsOn>
-      _SetupDesignTimeBuildForCompile;
-      AddLibraryJarsToBind;
-      $(CompileDependsOn);
-    </CompileDependsOn>
-
-    <ResolveReferencesDependsOn>
-      $(ResolveReferencesDependsOn);
-      AddBindingsToCompile;
-      AddEmbeddedJarsAsResources;
-      AddEmbeddedReferenceJarsAsResources;
-      AddLibraryProjectsToCompile;
-      _AddNativeLibraryArchiveToCompile
-    </ResolveReferencesDependsOn>
-
-    <CleanDependsOn>
-      $(CleanDependsOn);
-      CleanBindingsOutput;
-      CleanLibraryProjectIntermediaries;
-      CleanNativeLibraryIntermediaries;
-    </CleanDependsOn>
-  </PropertyGroup>
-  
 <Target Name="_GetReferenceAssemblyPaths">
 	<GetReferenceAssemblyPaths
 			TargetFrameworkMoniker="$(TargetFrameworkIdentifier),Version=v1.0"

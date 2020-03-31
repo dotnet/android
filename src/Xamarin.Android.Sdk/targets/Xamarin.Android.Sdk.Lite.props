@@ -14,4 +14,14 @@
     <LanguageTargets Condition="'$(MSBuildProjectExtension)' == '.fsproj'">$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.FSharp.targets</LanguageTargets>
   </PropertyGroup>
 
+  <!-- Default References -->
+  <ItemGroup Condition=" '$(DisableImplicitFrameworkReferences)' != 'true' ">
+    <Reference Include="Mono.Android" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+
 </Project>
