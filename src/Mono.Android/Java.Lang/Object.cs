@@ -16,10 +16,12 @@ namespace Java.Lang {
 #endif  // JAVA_INTEROP
 	{
 		IntPtr key_handle;
+#pragma warning disable CS0649, CS0169, CS0414 // Suppress fields are never used warnings, these fields are used directly by monodroid-glue.cc
 		IntPtr weak_handle;
+		int refs_added;
+#pragma warning restore CS0649, CS0169, CS0414
 		JObjectRefType handle_type;
 		IntPtr handle;
-		int refs_added;
 		bool             needsActivation;
 		bool             isProxy;
 
