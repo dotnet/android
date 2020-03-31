@@ -56,7 +56,6 @@ namespace Android.Runtime {
 		internal static int    gref_gc_threshold;
 
 		internal  static  bool  PropagateExceptions;
-		static UncaughtExceptionHandler? defaultUncaughtExceptionHandler;
 
 		internal static bool IsRunningOnDesktop;
 		internal static bool LogTypemapMissStackTrace;
