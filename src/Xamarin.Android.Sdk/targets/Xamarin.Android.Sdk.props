@@ -3,6 +3,9 @@
   <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.props" />
 
   <PropertyGroup>
+    <UsingAndroidNETSdk>true</UsingAndroidNETSdk>
+    <LatestSupportedJavaVersion  Condition=" '$(LatestSupportedJavaVersion)' == '' ">1.8.0</LatestSupportedJavaVersion>
+    <MinimumSupportedJavaVersion Condition=" '$(MinimumSupportedJavaVersion)' == '' ">1.8.0</MinimumSupportedJavaVersion>
     <!-- We should always override the framework path so that XA resolves to its own mscorlib.dll -->
     <TargetFrameworkRootPath>$(MSBuildThisFileDirectory)..\lib\</TargetFrameworkRootPath>
     <FrameworkPathOverride>$(TargetFrameworkRootPath)MonoAndroid\v1.0</FrameworkPathOverride>

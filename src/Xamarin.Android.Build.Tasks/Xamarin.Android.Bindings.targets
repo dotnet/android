@@ -27,9 +27,6 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
   <UsingTask TaskName="Xamarin.Android.Tasks.RemoveDirFixed" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.ResolveAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.ResolveLibraryProjectImports" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.ResolveSdks" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.ValidateJavaVersion" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.ResolveAndroidTooling" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.ReadLibraryProjectImportsCache" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.ReadImportedLibrariesCache" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.CreateNativeLibraryArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -66,6 +63,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
     <UseShortGeneratorFileNames Condition="'$(UseShortGeneratorFileNames)' == ''">False</UseShortGeneratorFileNames>
     <AndroidClassParser Condition=" '$(AndroidClassParser)' == '' ">jar2xml</AndroidClassParser>
     <AndroidCodegenTarget Condition=" '$(AndroidCodegenTarget)' == '' ">XAJavaInterop1</AndroidCodegenTarget>
+    <_AndroidIsBindingProject>True</_AndroidIsBindingProject>
   </PropertyGroup>
   
   <!-- Get our Build Actions to show up in VS -->
@@ -165,67 +163,6 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 		<Output TaskParameter="ReferenceAssemblyPaths" PropertyName="_XATargetFrameworkDirectories" />
 	</GetReferenceAssemblyPaths>
 </Target>
-
-  <Target Name="_SetLatestTargetFrameworkVersion" DependsOnTargets="_GetReferenceAssemblyPaths">
-    <ResolveSdks
-        AndroidSdkPath="$(AndroidSdkDirectory)"
-        AndroidNdkPath="$(AndroidNdkDirectory)"
-        JavaSdkPath="$(JavaSdkDirectory)"
-        ReferenceAssemblyPaths="$(_XATargetFrameworkDirectories)">
-      <Output TaskParameter="AndroidNdkPath"            PropertyName="AndroidNdkDirectory" Condition=" '$(AndroidNdkDirectory)' == '' " />
-      <Output TaskParameter="AndroidSdkPath"            PropertyName="AndroidSdkDirectory" Condition=" '$(AndroidSdkDirectory)' == '' " />
-      <Output TaskParameter="JavaSdkPath"               PropertyName="JavaSdkDirectory"    Condition=" '$(JavaSdkDirectory)' == '' " />
-      <Output TaskParameter="AndroidNdkPath"            PropertyName="_AndroidNdkDirectory" />
-      <Output TaskParameter="AndroidSdkPath"            PropertyName="_AndroidSdkDirectory" />
-      <Output TaskParameter="JavaSdkPath"               PropertyName="_JavaSdkDirectory" />
-      <Output TaskParameter="MonoAndroidToolsPath"      PropertyName="MonoAndroidToolsDirectory" />
-      <Output TaskParameter="MonoAndroidBinPath"        PropertyName="MonoAndroidBinDirectory" />
-    </ResolveSdks>
-    <ValidateJavaVersion
-        TargetFrameworkVersion="$(TargetFrameworkVersion)"
-        AndroidSdkBuildToolsVersion="$(AndroidSdkBuildToolsVersion)"
-        JavaSdkPath="$(_JavaSdkDirectory)"
-        JavaToolExe="$(JavaToolExe)"
-        JavacToolExe="$(JavacToolExe)"
-        LatestSupportedJavaVersion="$(LatestSupportedJavaVersion)"
-        MinimumSupportedJavaVersion="$(MinimumSupportedJavaVersion)">
-      <Output TaskParameter="JdkVersion"                PropertyName="_JdkVersion" />
-      <Output TaskParameter="MinimumRequiredJdkVersion" PropertyName="_DefaultJdkVersion" />
-    </ValidateJavaVersion>
-    <ResolveAndroidTooling
-        TargetFrameworkVersion="$(TargetFrameworkVersion)"
-        AndroidApiLevel="$(AndroidApiLevel)"
-        AndroidSdkPath="$(_AndroidSdkDirectory)"
-        AndroidSdkBuildToolsVersion="$(AndroidSdkBuildToolsVersion)"
-        UseLatestAndroidPlatformSdk="$(AndroidUseLatestPlatformSdk)"
-        SequencePointsMode="$(AndroidSequencePointsMode)"
-        ProjectFilePath="$(MSBuildProjectFullPath)">
-      <Output TaskParameter="TargetFrameworkVersion"      PropertyName="TargetFrameworkVersion" />
-      <Output TaskParameter="AndroidApiLevel"             PropertyName="_AndroidApiLevel"            Condition="'$(_AndroidApiLevel)' == ''" />
-      <Output TaskParameter="AndroidApiLevelName"         PropertyName="_AndroidApiLevelName" />
-      <Output TaskParameter="AndroidSdkBuildToolsPath"    PropertyName="AndroidSdkBuildToolsPath"    Condition="'$(AndroidSdkBuildToolsPath)' == ''" />
-      <Output TaskParameter="AndroidSdkBuildToolsBinPath" PropertyName="AndroidSdkBuildToolsBinPath" Condition="'$(AndroidSdkBuildToolsBinPath)' == ''" />
-    </ResolveAndroidTooling>
-    <CreateProperty Value="$(TargetFrameworkIdentifier),Version=$(TargetFrameworkVersion),Profile=$(TargetFrameworkProfile)">
-      <Output TaskParameter="Value" PropertyName="TargetFrameworkMoniker"
-          Condition="'$(TargetFrameworkProfile)' != ''"
-      />
-    </CreateProperty>
-    <CreateProperty Value="$(TargetFrameworkIdentifier),Version=$(TargetFrameworkVersion)">
-      <Output TaskParameter="Value" PropertyName="TargetFrameworkMoniker"
-          Condition="'$(TargetFrameworkProfile)' == ''"
-      />
-    </CreateProperty>
-    <CreateProperty Value="$(IntermediateOutputPath)$(TargetFrameworkMoniker).AssemblyAttributes$(DefaultLanguageSourceExtension)">
-      <Output TaskParameter="Value" PropertyName="TargetFrameworkMonikerAssemblyAttributesPath"
-       Condition="'$(TargetFrameworkMoniker)' != ''"
-    />
-    </CreateProperty>
-    <ItemGroup>
-      <FileWrites Include="$(TargetFrameworkMonikerAssemblyAttributesPath)" />
-      <Reference Include="$(_JavaInteropReferences)" />
-    </ItemGroup>
-  </Target>
 
   <!-- Find all the needed SDKs -->
   <Target Name="_ResolveMonoAndroidSdks" DependsOnTargets="_ResolveMonoAndroidFramework">
@@ -613,6 +550,8 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
   </Target>
 
   <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.PCLSupport.targets" />
+  <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Tooling.targets" />
+  <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Legacy.targets" Condition=" '$(UsingAndroidNETSdk)' != 'True' " />
 
   <!--
   *******************************************

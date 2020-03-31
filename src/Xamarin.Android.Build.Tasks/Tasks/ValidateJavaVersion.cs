@@ -1,9 +1,8 @@
-﻿using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 using System;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
+using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
@@ -15,18 +14,16 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "VJV";
 
-		public string TargetFrameworkVersion { get; set; }
-
-		public string AndroidSdkBuildToolsVersion { get; set; }
-
 		public string JavaSdkPath { get; set; }
 
 		public string JavaToolExe { get; set; }
 
 		public string JavacToolExe { get; set; }
 
+		[Required]
 		public string LatestSupportedJavaVersion { get; set; }
 
+		[Required]
 		public string MinimumSupportedJavaVersion { get; set; }
 
 		[Output]
@@ -37,7 +34,7 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
-			if (!ValidateJava (TargetFrameworkVersion, AndroidSdkBuildToolsVersion))
+			if (!ValidateJava ())
 				return false;
 
 			Log.LogDebugMessage ($"{nameof (ValidateJavaVersion)} Outputs:");
@@ -57,36 +54,29 @@ namespace Xamarin.Android.Tasks
 		//  javac 1.8.0_77
 		static readonly Regex JavacVersionRegex = new Regex (@"(?<version>[\d\.]+)(_d+)?");
 
-		bool ValidateJava (string targetFrameworkVersion, string buildToolsVersion)
+		bool ValidateJava ()
 		{
 			var java = JavaToolExe ?? (OS.IsWindows ? "java.exe" : "java");
 			var javac = JavacToolExe ?? (OS.IsWindows ? "javac.exe" : "javac");
 
-			return ValidateJava (java, JavaVersionRegex, targetFrameworkVersion, buildToolsVersion) &&
-				ValidateJava (javac, JavacVersionRegex, targetFrameworkVersion, buildToolsVersion);
+			return ValidateJava (java, JavaVersionRegex) &&
+				ValidateJava (javac, JavacVersionRegex);
 		}
 
-		bool ValidateJava (string javaExe, Regex versionRegex, string targetFrameworkVersion, string buildToolsVersion)
+		protected virtual bool ValidateJava (string javaExe, Regex versionRegex)
 		{
-			Version requiredJavaForFrameworkVersion = GetJavaVersionForFramework (targetFrameworkVersion);
-			Version requiredJavaForBuildTools = GetJavaVersionForBuildTools (buildToolsVersion);
-
-			Version required = requiredJavaForFrameworkVersion > requiredJavaForBuildTools ? requiredJavaForFrameworkVersion : requiredJavaForBuildTools;
-
+			var required = Version.Parse (MinimumSupportedJavaVersion);
 			MinimumRequiredJdkVersion = required.ToString ();
 
 			try {
 				var versionNumber = GetVersionFromTool (javaExe, versionRegex);
 				if (versionNumber != null) {
 					Log.LogMessage (MessageImportance.Normal, $"Found Java SDK version {versionNumber}.");
-					if (versionNumber < requiredJavaForFrameworkVersion) {
-						Log.LogCodedError ("XA0031", Properties.Resources.XA0031, requiredJavaForFrameworkVersion, targetFrameworkVersion);
-					}
-					if (versionNumber < requiredJavaForBuildTools) {
-						Log.LogCodedError ("XA0032", Properties.Resources.XA0032, requiredJavaForBuildTools, buildToolsVersion);
+					if (versionNumber < required) {
+						Log.LogCodedError ("XA0031", Properties.Resources.XA0031, required, "`<Project Sdk=\"Xamarin.Android.Sdk\">`");
 					}
 					if (versionNumber > Version.Parse (LatestSupportedJavaVersion)) {
-						Log.LogCodedError ("XA0030",Properties.Resources.XA0030, versionNumber, LatestSupportedJavaVersion);
+						Log.LogCodedError ("XA0030", Properties.Resources.XA0030, versionNumber, LatestSupportedJavaVersion);
 					}
 				}
 			} catch (Exception ex) {
@@ -98,7 +88,7 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
-		Version GetVersionFromTool (string javaExe, Regex versionRegex)
+		protected Version GetVersionFromTool (string javaExe, Regex versionRegex)
 		{
 			var javaTool = Path.Combine (JavaSdkPath, "bin", javaExe);
 			var key = new Tuple<string, string> (nameof (ValidateJavaVersion), javaTool);
@@ -128,28 +118,6 @@ namespace Xamarin.Android.Tasks
 				Log.LogCodedWarning ("XA0033", Properties.Resources.XA0033, javaExe, versionInfo);
 				return null;
 			}
-		}
-
-		Version GetJavaVersionForFramework (string targetFrameworkVersion)
-		{
-			var apiLevel = MonoAndroidHelper.SupportedVersions.GetApiLevelFromFrameworkVersion (targetFrameworkVersion);
-			if (apiLevel >= 24)
-				return new Version (1, 8);
-			else if (apiLevel == 23)
-				return new Version (1, 7);
-			else
-				return new Version (1, 6);
-		}
-
-		Version GetJavaVersionForBuildTools (string buildToolsVersion)
-		{
-			Version buildTools;
-			if (!Version.TryParse (buildToolsVersion, out buildTools)) {
-				return Version.Parse (LatestSupportedJavaVersion);
-			}
-			if (buildTools >= new Version (24, 0, 1))
-				return new Version (1, 8);
-			return Version.Parse (MinimumSupportedJavaVersion);
 		}
 	}
 }
