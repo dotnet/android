@@ -14,7 +14,7 @@ by projects that use the Xamarin.Android.App framework in .NET 5.
     <PackageId>Xamarin.Android.App.Ref</PackageId>
     <Authors>Microsoft</Authors>
     <Description>Xamarin.Android reference assemblies. Please do not reference directly.</Description>
-    <OutputPath>..\..\bin\$(Configuration)\nupkgs\</OutputPath>
+    <OutputPath>..\..\bin\Build$(Configuration)\nupkgs\</OutputPath>
     <_AndroidRefPackAssemblyPath>ref\netcoreapp5.0</_AndroidRefPackAssemblyPath>
   </PropertyGroup>
 

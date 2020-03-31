@@ -181,7 +181,7 @@ stages:
     - task: MSBuild@1
       displayName: pack runtime nupkgs
       inputs:
-        solution: $(System.DefaultWorkingDirectory)/xamarin-android/src/Xamarin.Android.App/Xamarin.Android.App.Runtime.proj
+        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/Xamarin.Android.App/Xamarin.Android.App.Runtime.proj
         configuration: $(XA.Build.Configuration)
         msbuildArguments: /t:_PackAllRuntimePacks /restore /bl:$(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/create-runtime-packs.binlog
 
@@ -190,17 +190,17 @@ stages:
       inputs:
         command: pack
         packagesToPack: "\
-          $(System.DefaultWorkingDirectory)/xamarin-android/src/Xamarin.Android.App/Xamarin.Android.App.Ref.proj;
+          $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/Xamarin.Android.App/Xamarin.Android.App.Ref.proj;
           $(System.DefaultWorkingDirectory)/xamarin-android/src/Xamarin.Android.Sdk/Xamarin.Android.Sdk.proj;
           $(System.DefaultWorkingDirectory)/xamarin-android/src/Xamarin.Android.Sdk/Xamarin.Android.Sdk.Lite.proj"
         configuration: $(XA.Build.Configuration)
-        packDirectory: $(System.DefaultWorkingDirectory)/xamarin-android/bin/$(XA.Build.Configuration)/$(NuGetArtifactName)
+        packDirectory: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
 
     - task: NuGetCommand@2
       displayName: push nupkgs
       inputs:
         command: push
-        packagesToPush: $(System.DefaultWorkingDirectory)/xamarin-android/bin/$(XA.Build.Configuration)/$(NuGetArtifactName)/*.nupkg
+        packagesToPush: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)/*.nupkg
         nuGetFeedType: external
         publishFeedCredentials: xamarin-impl public feed
       condition: and(succeeded(), eq(variables['PushXAPackages'], 'true'))
@@ -209,7 +209,7 @@ stages:
       displayName: upload nupkgs
       inputs:
         artifactName: $(NuGetArtifactName)
-        targetPath: $(System.DefaultWorkingDirectory)/xamarin-android/bin/$(XA.Build.Configuration)/$(NuGetArtifactName)
+        targetPath: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
 
     - template: yaml-templates/upload-results.yaml
       parameters:
@@ -292,7 +292,7 @@ stages:
     - task: MSBuild@1
       displayName: pack runtime nupkgs
       inputs:
-        solution: $(System.DefaultWorkingDirectory)\src\Xamarin.Android.App\Xamarin.Android.App.Runtime.proj
+        solution: $(System.DefaultWorkingDirectory)\build-tools\Xamarin.Android.App\Xamarin.Android.App.Runtime.proj
         configuration: $(XA.Build.Configuration)
         msbuildArguments: /t:_PackAllRuntimePacks /restore /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\create-runtime-packs.binlog
 
@@ -301,11 +301,11 @@ stages:
       inputs:
         command: pack
         packagesToPack: "\
-          $(System.DefaultWorkingDirectory)\\src\\Xamarin.Android.App\\Xamarin.Android.App.Ref.proj;
+          $(System.DefaultWorkingDirectory)\\build-tools\\Xamarin.Android.App\\Xamarin.Android.App.Ref.proj;
           $(System.DefaultWorkingDirectory)\\src\\Xamarin.Android.Sdk\\Xamarin.Android.Sdk.proj;
           $(System.DefaultWorkingDirectory)\\src\\Xamarin.Android.Sdk\\Xamarin.Android.Sdk.Lite.proj"
         configuration: $(XA.Build.Configuration)
-        packDirectory: $(System.DefaultWorkingDirectory)\bin\$(XA.Build.Configuration)\$(NuGetArtifactName)
+        packDirectory: $(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\$(NuGetArtifactName)
 
     - task: CmdLine@1
       displayName: xabuild Xamarin.Android-Tests

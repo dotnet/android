@@ -13,7 +13,7 @@ the new entry point for short-form style Android projets in .NET 5.
     <PackageId>Xamarin.Android.Sdk</PackageId>
     <Authors>Microsoft</Authors>
     <Description>C# Tools and Bindings for the Android SDK</Description>
-    <OutputPath>..\..\bin\$(Configuration)\nupkgs\</OutputPath>
+    <OutputPath>..\..\bin\Build$(Configuration)\nupkgs\</OutputPath>
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />
