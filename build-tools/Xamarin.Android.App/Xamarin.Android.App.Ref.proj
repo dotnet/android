@@ -34,7 +34,9 @@ by projects that use the Xamarin.Android.App framework in .NET 5.
 
     <ItemGroup>
       <_PackageFiles Include="@(_AndroidAppPackAssemblies)" PackagePath="$(_AndroidRefPackAssemblyPath)" TargetPath="$(_AndroidRefPackAssemblyPath)" />
-      <_PackageFiles Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild-frameworks\Xamarin.Android.App\netcoreapp3.1\AndroidApiInfo.xml" PackagePath="data" />
+      <_PackageFiles Include="$(XAInstallPrefix)xbuild-frameworks\Xamarin.Android.App\netcoreapp3.1\mono.android.jar" PackagePath="$(_AndroidRefPackAssemblyPath)" />
+      <_PackageFiles Include="$(XAInstallPrefix)xbuild-frameworks\Xamarin.Android.App\netcoreapp3.1\mono.android.dex" PackagePath="$(_AndroidRefPackAssemblyPath)" />
+      <_PackageFiles Include="$(XAInstallPrefix)xbuild-frameworks\Xamarin.Android.App\netcoreapp3.1\AndroidApiInfo.xml" PackagePath="data" />
     </ItemGroup>
   </Target>
 

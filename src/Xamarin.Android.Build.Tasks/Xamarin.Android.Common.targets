@@ -1467,7 +1467,12 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_GetMonoPlatformJarPath">
-  <GetMonoPlatformJar TargetFrameworkDirectory="$(TargetFrameworkDirectory)">
+  <PropertyGroup>
+    <_AndroidJarAndDexDirectory Condition=" '$(UsingAndroidNETSdk)' != 'True' ">$(TargetFrameworkDirectory)</_AndroidJarAndDexDirectory>
+    <!-- `@(ResolvedFrameworkReference)` is set through `_ResolveSdks` dependency on `ResolveFrameworkReferences`. -->
+    <_AndroidJarAndDexDirectory Condition=" '$(UsingAndroidNETSdk)' == 'True' ">@(ResolvedFrameworkReference->'%(TargetingPackPath)\ref\$(TargetFramework)')</_AndroidJarAndDexDirectory>
+  </PropertyGroup>
+  <GetMonoPlatformJar TargetFrameworkDirectory="$(_AndroidJarAndDexDirectory)">
     <Output TaskParameter="MonoPlatformJarPath" PropertyName="MonoPlatformJarPath" />
     <Output TaskParameter="MonoPlatformDexPath" PropertyName="MonoPlatformDexPath" />
   </GetMonoPlatformJar>

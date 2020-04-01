@@ -21,12 +21,12 @@ the new entry point for short-form style Android projets in .NET 5.
 
   <PropertyGroup>
     <BeforePack>
-      _GenerateXAPackContent;
+      _GenerateXASdkContent;
       $(BeforePack);
     </BeforePack>
   </PropertyGroup>
 
-  <Target Name="_GenerateXAPackContent"
+  <Target Name="_GenerateXASdkContent"
       DependsOnTargets="ConstructInstallerItems;_GenerateBundledVersions" >
     <PropertyGroup>
       <PackageVersion>$(_AndroidNETSdkVersion)</PackageVersion>
@@ -61,10 +61,10 @@ the new entry point for short-form style Android projets in .NET 5.
     />
     <ItemGroup>
       <_PackageFiles Include="$(ToolsSourceDir)**" PackagePath="tools" />
-      <!-- Only include @(FrameworkItemsWin), as it is a superset of @(FrameworkItemsUnix) -->
-      <_PackageFiles Include="@(FrameworkItemsWin)" PackagePath="lib\MonoAndroid\%(FrameworkItemsWin.RelativePath)" />
-      <_PackageFiles Include="$(XamarinAndroidSourcePath)\src\Xamarin.Android.Sdk\Sdk\**" PackagePath="Sdk" /> 
-      <_PackageFiles Include="$(XamarinAndroidSourcePath)\src\Xamarin.Android.Sdk\targets\**" PackagePath="targets" /> 
+      <_PackageFiles Include="$(XamarinAndroidSourcePath)\src\Xamarin.Android.Sdk\Sdk\**" PackagePath="Sdk" />
+      <_PackageFiles Include="$(XamarinAndroidSourcePath)\src\Xamarin.Android.Sdk\targets\**"
+          Exclude="$(XamarinAndroidSourcePath)\src\Xamarin.Android.Sdk\**\*.Lite.*"
+          PackagePath="targets" />
     </ItemGroup>
   </Target>
 

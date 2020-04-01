@@ -37,7 +37,8 @@ projects.
     </PropertyGroup>
     <ItemGroup>
       <FileWrites Include="$(TargetFrameworkMonikerAssemblyAttributesPath)" />
-      <Reference Include="$(_JavaInteropReferences)" />
+      <!-- These references are implicitly defined in .NET 5 -->
+      <Reference Include="$(_JavaInteropReferences)" Condition=" '$(UsingAndroidNETSdk)' != 'True' " />
     </ItemGroup>
   </Target>
 
