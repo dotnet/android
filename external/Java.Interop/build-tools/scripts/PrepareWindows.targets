@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <_TopDir>$(MSBuildThisFileDirectory)..\..</_TopDir>
-    <_NuGetUri>https://dist.nuget.org/win-x86-commandline/v4.7.1/nuget.exe</_NuGetUri>
+    <_NuGetUri>https://dist.nuget.org/win-x86-commandline/v5.4.0/nuget.exe</_NuGetUri>
     <_NuGetPath>$(_TopDir)\.nuget</_NuGetPath>
     <_NuGet>$(_NuGetPath)\NuGet.exe</_NuGet>
   </PropertyGroup>
