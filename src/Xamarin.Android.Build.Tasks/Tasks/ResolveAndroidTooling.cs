@@ -1,4 +1,4 @@
-﻿using Microsoft.Build.Framework;
+using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System;
 using System.Linq;
@@ -27,14 +27,9 @@ namespace Xamarin.Android.Tasks
 
 		public string SequencePointsMode { get; set; }
 
-		public bool UseLatestAndroidPlatformSdk { get; set; }
-
 		public bool AotAssemblies { get; set; }
 
 		public bool AndroidApplication { get; set; } = true;
-
-		[Output]
-		public string TargetFrameworkVersion { get; set; }
 
 		[Output]
 		public string AndroidApiLevel { get; set; }
@@ -72,13 +67,13 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public string Aapt2ToolPath { get; set; }
 
-		static readonly bool IsWindows = Path.DirectorySeparatorChar == '\\';
-		static readonly string ZipAlign = IsWindows ? "zipalign.exe" : "zipalign";
-		static readonly string Aapt = IsWindows ? "aapt.exe" : "aapt";
-		static readonly string Aapt2 = IsWindows ? "aapt2.exe" : "aapt2";
-		static readonly string Android = IsWindows ? "android.bat" : "android";
-		static readonly string Lint = IsWindows ? "lint.bat" : "lint";
-		static readonly string ApkSigner = "apksigner.jar";
+		protected static readonly bool IsWindows = Path.DirectorySeparatorChar == '\\';
+		protected static readonly string ZipAlign = IsWindows ? "zipalign.exe" : "zipalign";
+		protected static readonly string Aapt = IsWindows ? "aapt.exe" : "aapt";
+		protected static readonly string Aapt2 = IsWindows ? "aapt2.exe" : "aapt2";
+		protected static readonly string Android = IsWindows ? "android.bat" : "android";
+		protected static readonly string Lint = IsWindows ? "lint.bat" : "lint";
+		protected static readonly string ApkSigner = "apksigner.jar";
 
 		public override bool RunTask ()
 		{
@@ -173,34 +168,8 @@ namespace Xamarin.Android.Tasks
 				return false;
 			}
 
-			if (!ValidateApiLevels ())
+			if (!Validate ())
 				return false;
-
-			if (!MonoAndroidHelper.SupportedVersions.FrameworkDirectories.Any (p => Directory.Exists (Path.Combine (p, TargetFrameworkVersion)))) {
-				Log.LogError (
-					subcategory: string.Empty,
-					errorCode: "XA0001",
-					helpKeyword: string.Empty,
-					file: ProjectFilePath,
-					lineNumber: 0,
-					columnNumber: 0,
-					endLineNumber: 0,
-					endColumnNumber: 0,
-					message: Properties.Resources.XA0001,
-					messageArgs: new []{
-						TargetFrameworkVersion,
-					}
-				);
-				return false;
-			}
-
-			int apiLevel;
-			if (AndroidApplication && int.TryParse (AndroidApiLevel, out apiLevel)) {
-				if (apiLevel < 26)
-					Log.LogCodedWarning ("XA0113", Properties.Resources.XA0113,TargetFrameworkVersion, AndroidApiLevel);
-				if (apiLevel < 19)
-					Log.LogCodedWarning ("XA0117", Properties.Resources.XA0117, TargetFrameworkVersion);
-			}
 
 			SequencePointsMode mode;
 			if (!Aot.TryGetSequencePointsMode (SequencePointsMode ?? "None", out mode))
@@ -209,8 +178,20 @@ namespace Xamarin.Android.Tasks
 
 			AndroidApiLevelName = MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (AndroidApiLevel);
 
+			LogOutputs ();
+
+			return !Log.HasLoggedErrors;
+		}
+
+		protected virtual bool Validate ()
+		{
+			AndroidApiLevel = GetMaxStableApiLevel ().ToString ();
+			return true;
+		}
+
+		protected virtual void LogOutputs ()
+		{
 			Log.LogDebugMessage ($"{nameof (ResolveAndroidTooling)} Outputs:");
-			Log.LogDebugMessage ($"  {nameof (TargetFrameworkVersion)}: {TargetFrameworkVersion}");
 			Log.LogDebugMessage ($"  {nameof (AndroidApiLevel)}: {AndroidApiLevel}");
 			Log.LogDebugMessage ($"  {nameof (AndroidApiLevelName)}: {AndroidApiLevelName}");
 			Log.LogDebugMessage ($"  {nameof (AndroidSdkBuildToolsPath)}: {AndroidSdkBuildToolsPath}");
@@ -222,8 +203,6 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ($"  {nameof (AndroidUseApkSigner)}: {AndroidUseApkSigner}");
 			Log.LogDebugMessage ($"  {nameof (AndroidUseAapt2)}: {AndroidUseAapt2}");
 			Log.LogDebugMessage ($"  {nameof (Aapt2Version)}: {Aapt2Version}");
-
-			return !Log.HasLoggedErrors;
 		}
 
 		//  Android Asset Packaging Tool (aapt) 2:19
@@ -267,137 +246,9 @@ namespace Xamarin.Android.Tasks
 			return false;
 		}
 
-		bool ValidateApiLevels ()
-		{
-			// Priority:
-			//    $(UseLatestAndroidPlatformSdk) > $(AndroidApiLevel) > $(TargetFrameworkVersion)
-			//
-			// If $(TargetFrameworkVersion) isn't set, and $(AndroidApiLevel) isn't
-			// set, act as if $(UseLatestAndroidPlatformSdk) is True
-			//
-			// If $(UseLatestAndroidPlatformSdk) is true, we do as it says: use the
-			// latest installed version.
-			//
-			// Otherwise, if $(AndroidApiLevel) is set, use it and set $(TargetFrameworkVersion).
-			//    Rationale: monodroid/samples/xbuild.make uses $(AndroidApiLevel)
-			//    to build for a specific API level.
-			// Otherwise, if $(TargetFrameworkVersion) is set, use it and set $(AndroidApiLevel).
-
-			UseLatestAndroidPlatformSdk = UseLatestAndroidPlatformSdk ||
-				(string.IsNullOrWhiteSpace (AndroidApiLevel) && string.IsNullOrWhiteSpace (TargetFrameworkVersion));
-
-			if (UseLatestAndroidPlatformSdk) {
-				int maxInstalled = GetMaxInstalledApiLevel ();
-				int maxSupported = GetMaxStableApiLevel ();
-				AndroidApiLevel = maxInstalled.ToString ();
-				if (maxInstalled > maxSupported) {
-					Log.LogDebugMessage ($"API Level {maxInstalled} is greater than the maximum supported API level of {maxSupported}. " +
-						"Support for this API will be added in a future release.");
-				}
-				if (!string.IsNullOrWhiteSpace (TargetFrameworkVersion)) {
-					var userSelected = MonoAndroidHelper.SupportedVersions.GetApiLevelFromFrameworkVersion (TargetFrameworkVersion);
-					// overwrite using user version only if it is 
-					// above the maxStableApi and a valid apiLevel.
-					if (userSelected != null && userSelected > maxSupported && userSelected <= maxInstalled) {
-						maxInstalled =
-							maxSupported = userSelected.Value;
-						AndroidApiLevel = userSelected.ToString ();
-					}
-				}
-
-				for (int apiLevel = maxSupported; apiLevel >= MonoAndroidHelper.SupportedVersions.MinStableVersion.ApiLevel; apiLevel--) {
-					var id = MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (apiLevel);
-					var apiPlatformDir = MonoAndroidHelper.AndroidSdk.TryGetPlatformDirectoryFromApiLevel (id, MonoAndroidHelper.SupportedVersions);
-					if (apiPlatformDir != null && Directory.Exists (apiPlatformDir)) {
-						var targetFramework = MonoAndroidHelper.SupportedVersions.GetFrameworkVersionFromId (id);
-						if (targetFramework != null && MonoAndroidHelper.SupportedVersions.InstalledBindingVersions.Any (b => b.FrameworkVersion == targetFramework)) {
-							AndroidApiLevel = apiLevel.ToString ();
-							TargetFrameworkVersion = targetFramework;
-							break;
-						}
-					}
-				}
-				return TargetFrameworkVersion != null;
-			}
-
-			if (!string.IsNullOrWhiteSpace (TargetFrameworkVersion)) {
-				TargetFrameworkVersion = TargetFrameworkVersion.Trim ();
-				string id = MonoAndroidHelper.SupportedVersions.GetIdFromFrameworkVersion (TargetFrameworkVersion);
-				if (id == null) {
-					Log.LogCodedError ("XA0000", Properties.Resources.XA0000_API_for_TargetFrameworkVersion, TargetFrameworkVersion);
-					return false;
-				}
-				AndroidApiLevel = MonoAndroidHelper.SupportedVersions.GetApiLevelFromId (id).ToString ();
-				return true;
-			}
-
-			if (!string.IsNullOrWhiteSpace (AndroidApiLevel)) {
-				AndroidApiLevel = AndroidApiLevel.Trim ();
-				TargetFrameworkVersion = GetTargetFrameworkVersionFromApiLevel ();
-				return TargetFrameworkVersion != null;
-			}
-
-			Log.LogCodedError ("XA0000", Properties.Resources.XA0000_API_or_TargetFrameworkVersion_Fail);
-			return false;
-		}
-
-		int GetMaxInstalledApiLevel ()
-		{
-			int maxApiLevel = int.MinValue;
-			string platformsDir = Path.Combine (AndroidSdkPath, "platforms");
-			if (Directory.Exists (platformsDir)) {
-				var apiIds = Directory.EnumerateDirectories (platformsDir)
-					.Select (platformDir => Path.GetFileName (platformDir))
-					.Where (dir => dir.StartsWith ("android-", StringComparison.OrdinalIgnoreCase))
-					.Select (dir => dir.Substring ("android-".Length))
-					.Select (apiName => MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (apiName));
-				foreach (var id in apiIds) {
-					int? v = MonoAndroidHelper.SupportedVersions.GetApiLevelFromId (id);
-					if (!v.HasValue)
-						continue;
-					maxApiLevel = Math.Max (maxApiLevel, v.Value);
-				}
-			}
-			if (maxApiLevel < 0)
-				Log.LogCodedError ("XA5300", Properties.Resources.XA5300_Android_Platforms,
-						platformsDir, Path.DirectorySeparatorChar, Android);
-			return maxApiLevel;
-		}
-
-		int GetMaxStableApiLevel ()
+		protected int GetMaxStableApiLevel ()
 		{
 			return MonoAndroidHelper.SupportedVersions.MaxStableVersion.ApiLevel;
-		}
-
-		string GetMaxSupportedApiLevel (string apiLevel)
-		{
-			int level = 0;
-			if (!int.TryParse (apiLevel, NumberStyles.Integer, CultureInfo.InvariantCulture, out level))
-				return apiLevel;
-			var referenceAssemblyPaths = MonoAndroidHelper.TargetFrameworkDirectories;
-			if (referenceAssemblyPaths == null)
-				return apiLevel;
-			foreach (string versionedDir in referenceAssemblyPaths) {
-				string parent = Path.GetDirectoryName (versionedDir.TrimEnd (Path.DirectorySeparatorChar));
-				for (int l = level; l > 0; l--) {
-					string tfv = MonoAndroidHelper.SupportedVersions.GetFrameworkVersionFromApiLevel (l);
-					if (tfv == null)
-						continue;
-					string dir = Path.Combine (parent, tfv);
-					if (Directory.Exists (dir))
-						return l.ToString ();
-				}
-			}
-			return apiLevel;
-		}
-
-		string GetTargetFrameworkVersionFromApiLevel ()
-		{
-			string targetFramework = MonoAndroidHelper.SupportedVersions.GetFrameworkVersionFromId (AndroidApiLevel);
-			if (targetFramework != null)
-				return targetFramework;
-			Log.LogCodedError ("XA0000", Properties.Resources.XA0000_TargetFrameworkVersion_for_API, AndroidApiLevel);
-			return null;
 		}
 	}
 }

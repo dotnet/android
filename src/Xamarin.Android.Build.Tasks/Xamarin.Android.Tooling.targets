@@ -1,0 +1,72 @@
+<!--
+***********************************************************************************************
+Xamarin.Android.Tooling.targets
+
+This file contains any calls to the <ResolveSdks/> or
+<ResolveJdkJvmPath/> MSBuild tasks. It is imported and used by
+"legacy" Xamarin.Android projects, binding projects, and .NET 5
+projects.
+
+***********************************************************************************************
+-->
+
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <UsingTask TaskName="Xamarin.Android.Tasks.ResolveSdks" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.ResolveJdkJvmPath" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+
+  <PropertyGroup>
+    <_SetLatestTargetFrameworkVersionDependsOnTargets Condition=" '$(_AndroidIsBindingProject)' == 'True'">
+      _ResolveSdks;
+      _ResolveAndroidTooling;
+    </_SetLatestTargetFrameworkVersionDependsOnTargets>
+    <_SetLatestTargetFrameworkVersionDependsOnTargets Condition=" '$(_AndroidIsBindingProject)' != 'True'">
+      _ResolveSdks;
+      _ResolveAndroidTooling;
+      _InjectAaptDependencies;
+      _InjectAapt2Dependencies;
+    </_SetLatestTargetFrameworkVersionDependsOnTargets>
+  </PropertyGroup>
+
+  <Target Name="_SetLatestTargetFrameworkVersion" DependsOnTargets="$(_SetLatestTargetFrameworkVersionDependsOnTargets)">
+    <PropertyGroup>
+      <TargetFrameworkMoniker Condition=" '$(TargetFrameworkProfile)' == '' ">$(TargetFrameworkIdentifier),Version=$(TargetFrameworkVersion)</TargetFrameworkMoniker>
+      <TargetFrameworkMoniker Condition=" '$(TargetFrameworkProfile)' != '' ">$(TargetFrameworkIdentifier),Version=$(TargetFrameworkVersion),Profile=$(TargetFrameworkProfile)</TargetFrameworkMoniker>
+      <NuGetTargetMoniker>$(TargetFrameworkMoniker)</NuGetTargetMoniker>
+      <TargetFrameworkMonikerAssemblyAttributesPath>$(IntermediateOutputPath)$(TargetFrameworkMoniker).AssemblyAttributes$(DefaultLanguageSourceExtension)</TargetFrameworkMonikerAssemblyAttributesPath>
+    </PropertyGroup>
+    <ItemGroup>
+      <FileWrites Include="$(TargetFrameworkMonikerAssemblyAttributesPath)" />
+      <Reference Include="$(_JavaInteropReferences)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_ResolveSdks" DependsOnTargets="_GetReferenceAssemblyPaths">
+    <PropertyGroup>
+      <_AndroidAllowMissingSdkTooling Condition=" '$(_AndroidAllowMissingSdkTooling)' == '' ">False</_AndroidAllowMissingSdkTooling>
+    </PropertyGroup>
+    <ResolveSdks
+        ContinueOnError="$(_AndroidAllowMissingSdkTooling)"
+        AndroidSdkPath="$(AndroidSdkDirectory)"
+        AndroidNdkPath="$(AndroidNdkDirectory)"
+        JavaSdkPath="$(JavaSdkDirectory)"
+        ReferenceAssemblyPaths="$(_XATargetFrameworkDirectories)">
+      <Output TaskParameter="AndroidNdkPath"            PropertyName="AndroidNdkDirectory" Condition=" '$(AndroidNdkDirectory)' == '' " />
+      <Output TaskParameter="AndroidSdkPath"            PropertyName="AndroidSdkDirectory" Condition=" '$(AndroidSdkDirectory)' == '' " />
+      <Output TaskParameter="JavaSdkPath"               PropertyName="JavaSdkDirectory"    Condition=" '$(JavaSdkDirectory)' == '' " />
+      <Output TaskParameter="AndroidNdkPath"            PropertyName="_AndroidNdkDirectory" />
+      <Output TaskParameter="AndroidSdkPath"            PropertyName="_AndroidSdkDirectory" />
+      <Output TaskParameter="JavaSdkPath"               PropertyName="_JavaSdkDirectory" />
+      <Output TaskParameter="MonoAndroidToolsPath"      PropertyName="MonoAndroidToolsDirectory" />
+      <Output TaskParameter="MonoAndroidBinPath"        PropertyName="MonoAndroidBinDirectory" />
+      <Output TaskParameter="MonoAndroidLibPath"        PropertyName="MonoAndroidLibDirectory" />
+      <Output TaskParameter="AndroidBinUtilsPath"       PropertyName="AndroidBinUtilsDirectory" Condition=" '$(AndroidBinUtilsDirectory)' == '' " />
+    </ResolveSdks>
+    <ResolveJdkJvmPath
+        JavaSdkPath="$(_JavaSdkDirectory)"
+        Condition=" '$(DesignTimeBuild)' != 'True' And '$(_AndroidIsBindingProject)' != 'True' And '$(AndroidGenerateJniMarshalMethods)' == 'True' And '$(JdkJvmPath)' == '' ">
+      <Output TaskParameter="JdkJvmPath"                PropertyName="JdkJvmPath" />
+    </ResolveJdkJvmPath>
+  </Target>
+
+</Project>

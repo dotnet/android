@@ -7,11 +7,13 @@
 
   <PropertyGroup>
     <XamarinAndroidSdkTargetsImported>true</XamarinAndroidSdkTargetsImported>
+    <_XamarinAndroidBuildTasksAssembly>$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Build.Tasks.dll</_XamarinAndroidBuildTasksAssembly>
   </PropertyGroup>
 
   <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.targets" />
 
   <Import Project="$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.DefaultOutputPaths.targets" Condition="'$(EnableDefaultOutputPaths)' == 'true'" />
   <Import Project="$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Common.targets" />
+  <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Sdk.Tooling.targets" />
 
 </Project>

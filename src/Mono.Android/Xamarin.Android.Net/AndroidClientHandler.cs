@@ -730,12 +730,10 @@ namespace Xamarin.Android.Net
 					continue;
 
 				HttpHeaders item_headers;
-				string kind;
+
 				if (known_content_headers.Contains (key)) {
-					kind = "content";
 					item_headers = response.Content.Headers;
 				} else {
-					kind = "response";
 					item_headers = response.Headers;
 				}
 				item_headers.TryAddWithoutValidation (key, headers [key]);
