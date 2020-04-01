@@ -16,4 +16,11 @@
   <Import Project="$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Common.targets" />
   <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Sdk.Tooling.targets" />
 
+  <!-- Automatically supply project capabilities for IDE use -->
+  <ItemGroup>
+    <ProjectCapability Include="Mobile" />
+    <ProjectCapability Include="Android" />
+    <ProjectCapability Include="AndroidApplication" Condition="$(AndroidApplication)" />
+  </ItemGroup>
+
 </Project>
