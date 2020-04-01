@@ -61,7 +61,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unknown option `{0}`. Please check `$(AndroidAapt2CompileExtraArgs)` and `$(AndroidAapt2CompileExtraArgs)` to see if they include any `aapt` command line arguments that are no longer valid for `aapt2` and ensure that all other arguments are valid for `aapt2`..
+        ///   Looks up a localized string similar to Unknown option `{0}`. Please check `$(AndroidAapt2CompileExtraArgs)` and `$(AndroidAapt2LinkExtraArgs)` to see if they include any `aapt` command line arguments that are no longer valid for `aapt2` and ensure that all other arguments are valid for `aapt2`..
         /// </summary>
         internal static string APT0001 {
             get {

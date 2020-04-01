@@ -3,9 +3,9 @@
   <file datatype="xml" source-language="en" target-language="fr" original="../Resources.resx">
     <body>
       <trans-unit id="APT0001">
-        <source>Unknown option `{0}`. Please check `$(AndroidAapt2CompileExtraArgs)` and `$(AndroidAapt2CompileExtraArgs)` to see if they include any `aapt` command line arguments that are no longer valid for `aapt2` and ensure that all other arguments are valid for `aapt2`.</source>
-        <target state="new">Unknown option `{0}`. Please check `$(AndroidAapt2CompileExtraArgs)` and `$(AndroidAapt2CompileExtraArgs)` to see if they include any `aapt` command line arguments that are no longer valid for `aapt2` and ensure that all other arguments are valid for `aapt2`.</target>
-        <note>The following are literal names and should not be translated: `aapt`, `aapt2`,  `$(AndroidAapt2CompileExtraArgs)`, `$(AndroidAapt2CompileExtraArgs)`
+        <source>Unknown option `{0}`. Please check `$(AndroidAapt2CompileExtraArgs)` and `$(AndroidAapt2LinkExtraArgs)` to see if they include any `aapt` command line arguments that are no longer valid for `aapt2` and ensure that all other arguments are valid for `aapt2`.</source>
+        <target state="new">Unknown option `{0}`. Please check `$(AndroidAapt2CompileExtraArgs)` and `$(AndroidAapt2LinkExtraArgs)` to see if they include any `aapt` command line arguments that are no longer valid for `aapt2` and ensure that all other arguments are valid for `aapt2`.</target>
+        <note>The following are literal names and should not be translated: `aapt`, `aapt2`,  `$(AndroidAapt2CompileExtraArgs)`, `$(AndroidAapt2LinkExtraArgs)`
 {0} - The invalid option name</note>
       </trans-unit>
       <trans-unit id="APT0002">

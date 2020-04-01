@@ -118,8 +118,8 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="APT0001" xml:space="preserve">
-    <value>Unknown option `{0}`. Please check `$(AndroidAapt2CompileExtraArgs)` and `$(AndroidAapt2CompileExtraArgs)` to see if they include any `aapt` command line arguments that are no longer valid for `aapt2` and ensure that all other arguments are valid for `aapt2`.</value>
-    <comment>The following are literal names and should not be translated: `aapt`, `aapt2`,  `$(AndroidAapt2CompileExtraArgs)`, `$(AndroidAapt2CompileExtraArgs)`
+    <value>Unknown option `{0}`. Please check `$(AndroidAapt2CompileExtraArgs)` and `$(AndroidAapt2LinkExtraArgs)` to see if they include any `aapt` command line arguments that are no longer valid for `aapt2` and ensure that all other arguments are valid for `aapt2`.</value>
+    <comment>The following are literal names and should not be translated: `aapt`, `aapt2`,  `$(AndroidAapt2CompileExtraArgs)`, `$(AndroidAapt2LinkExtraArgs)`
 {0} - The invalid option name</comment>
   </data>
   <data name="APT0002" xml:space="preserve">
