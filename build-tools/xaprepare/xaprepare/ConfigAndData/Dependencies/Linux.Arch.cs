@@ -46,15 +46,13 @@ namespace Xamarin.Android.Prepare
 		}
 
 		protected override void InitializeDependencies ()
-		{}
+		{
+			
+		}
 
 		protected override bool InitOS ()
 		{
-			if (!base.InitOS ())
-				return false;
-
-			Log.Todo ("Implement");
-			return false;
+			return base.InitOS ();
 		}
 	};
 }
