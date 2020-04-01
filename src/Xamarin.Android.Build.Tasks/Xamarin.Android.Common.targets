@@ -2213,7 +2213,6 @@ because xbuild doesn't support framework reference assemblies.
     JavaPlatformJarPath="$(JavaPlatformJarPath)"
     ClassesOutputDirectory="$(_AndroidIntermediateJavaClassDirectory)"
     ClassesZip="$(_AndroidIntermediateClassesZip)"
-    TargetFrameworkDirectory="$(TargetFrameworkDirectory)"
     StubSourceDirectory="$(_AndroidIntermediateJavaSourceDirectory)"
     JavaSourceFiles="@(AndroidJavaSource)"
     ToolPath="$(JavacToolPath)"

@@ -23,7 +23,6 @@
 
 		<ItemGroup>
 			<_XACandidateNETStandardReferences Include="@(Reference);@(_ResolvedProjectReferencePaths)" />
-			<_XAInboxNETStandardFolders Include="$(TargetFrameworkDirectory)" />
 		</ItemGroup>
 		
 		<PropertyGroup>

@@ -21,9 +21,6 @@ namespace Xamarin.Android.Tasks
 
 		public ITaskItem[] Jars { get; set; }
 
-		[Required]
-		public string TargetFrameworkDirectory { get; set; }
-
 		protected override string ToolName {
 			get { return OS.IsWindows ? "javac.exe" : "javac"; }
 		}
