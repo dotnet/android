@@ -241,7 +241,8 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
       <trans-unit id="XA2000">
         <source>Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 5 will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 5 is released.</source>
         <target state="new">Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 5 will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 5 is released.</target>
-        <note>{0} - The name of the assembly</note>
+        <note>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
+{0} - The name of the assembly</note>
       </trans-unit>
       <trans-unit id="XA2001">
         <source>Source file '{0}' could not be found.</source>
