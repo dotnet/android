@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Xamarin.Tools.Zip;
@@ -29,16 +30,18 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			{ "v10.0.99", "v10.0" },
 		};
 
-		static readonly string [] assemblies =
-		{
-			"Mono.Android.dll",
-		};
+		static readonly string assemblyToValidate = "Mono.Android.dll";
 
+		static readonly string netCoreAppVersion = "netcoreapp3.1";
 		static string compatApiCommand = null;
 
 		// Path where Microsoft.DotNet.ApiCompat nuget package is located
 		[Required]
 		public string ApiCompatPath { get; set; }
+
+		// Path where Microsoft.DotNet.CodeGen nuget package is located
+		[Required]
+		public string CodeGenPath { get; set; }
 
 		// Api level just built
 		[Required]
@@ -59,11 +62,6 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		// This Build tasks validates that changes are not breaking Api
 		public override bool Execute ()
 		{
-			// TODO Remove this once logic to handle netcoreapp3.1 be added.
-			if (TargetImplementationPath.IndexOf ("netcoreapp3.1") != -1) {
-				return !Log.HasLoggedErrors;
-			}
-
 			Log.LogMessage (MessageImportance.High, $"CheckApiCompatibility for ApiLevel: {ApiLevel}");
 
 			// Check to see if Api has a previous Api defined.
@@ -72,43 +70,59 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				return !Log.HasLoggedErrors;
 			}
 
-			// Get the previous api implementation path by replacing the current api string with the previous one.
-			var previousTargetImplementationPath = TargetImplementationPath.Replace (ApiLevel, previousApiLevel);
+			var implementationPath = new DirectoryInfo (TargetImplementationPath);
+			if (!implementationPath.Exists) {
+				LogError ($"Implementation path does not exists:'{TargetImplementationPath}'");
+				return !Log.HasLoggedErrors;
+			}
 
-			// In case previous api is not defined or directory does not exist we can skip the check.
-			var validateAgainstPreviousApi = !(string.IsNullOrWhiteSpace (previousApiLevel) || !Directory.Exists (previousTargetImplementationPath));
-			if (validateAgainstPreviousApi) {
+			TargetImplementationPath = implementationPath.FullName;
+			if (TargetImplementationPath.EndsWith ("\\") || TargetImplementationPath.EndsWith ("/")) {
+				TargetImplementationPath = TargetImplementationPath.Substring (0, TargetImplementationPath.Length - 1);
+			}
 
-				// First we check the Api level assembly against the previous api level assembly
-				// i.e.: check api breakages using "the just built V2.dll" against "the just built V1.dll"
-				ValidateApiCompat (previousTargetImplementationPath, false);
+			// For non netcoreapp assemblies we should compare against previous version.
+			if (TargetImplementationPath.IndexOf (netCoreAppVersion, StringComparison.OrdinalIgnoreCase) == -1) {
 
-				if (Log.HasLoggedErrors) {
-					return !Log.HasLoggedErrors;
+				// Get the previous api implementation path by replacing the current api string with the previous one.
+				var previousTargetImplementationPath = new DirectoryInfo (TargetImplementationPath.Replace (ApiLevel, previousApiLevel));
+
+				// In case previous api is not defined or directory does not exist we can skip the check.
+				var validateAgainstPreviousApi = !(string.IsNullOrWhiteSpace (previousApiLevel) || !previousTargetImplementationPath.Exists);
+				if (validateAgainstPreviousApi) {
+
+					// First we check the Api level assembly against the previous api level assembly
+					// i.e.: check api breakages using "the just built V2.dll" against "the just built V1.dll"
+					ValidateApiCompat (previousTargetImplementationPath.FullName, false);
+
+					if (Log.HasLoggedErrors) {
+						return !Log.HasLoggedErrors;
+					}
 				}
 			}
 
 			// If Api level is the latest we should also compare it against the reference assembly
 			// located on the external folder. (xamarin-android-api-compatibility)
 			// i.e.: check apicompat using "the just built V2.dll" against V2.dll located on xamarin-android-api-compatibility repo
+			// This condition is also valid for netcoreapp
 			if (ApiLevel == LastStableApiLevel) {
 
 				// Check xamarin-android-api-compatibility reference directory exists
-				var referenceContractPath = Path.Combine (ApiCompatibilityPath, "reference");
-				if (!Directory.Exists (referenceContractPath)) {
-					Log.LogWarning ($"CheckApiCompatibility Warning: Skipping reference contract check.\n{referenceContractPath} does not exist.");
+				var referenceContractPath = new DirectoryInfo (Path.Combine (ApiCompatibilityPath, "reference"));
+				if (!referenceContractPath.Exists) {
+					Log.LogWarning ($"CheckApiCompatibility Warning: Skipping reference contract check.\n{referenceContractPath.FullName} does not exist.");
 					return !Log.HasLoggedErrors;
 				}
 
 				// Before validate, check that zip files were decompressed.
-				var zipFiles = Directory.GetFiles (referenceContractPath, "*.zip");
+				var zipFiles = Directory.GetFiles (referenceContractPath.FullName, "*.zip");
 				foreach (var zipFile in zipFiles) {
 					using (var zip = ZipArchive.Open (zipFile, FileMode.Open)) {
-						zip.ExtractAll (referenceContractPath);
+						zip.ExtractAll (referenceContractPath.FullName);
 					}
 				}
 
-				ValidateApiCompat (referenceContractPath, true);
+				ValidateApiCompat (referenceContractPath.FullName, true);
 			}
 
 			return !Log.HasLoggedErrors;
@@ -118,223 +132,128 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		// We do that by using Microsoft.DotNet.ApiCompat.dll
 		void ValidateApiCompat (string contractPath, bool validateAgainstReference)
 		{
-			const string ApiCompatTemp = "ApiCompatTemp";
+			var apiCompat = new FileInfo (Path.Combine (ApiCompatPath, "Microsoft.DotNet.ApiCompat.exe"));
 
-			var apiCompat = Path.Combine (ApiCompatPath, "Microsoft.DotNet.ApiCompat.exe");
-			var contractPathDirectory = Path.Combine (contractPath, ApiCompatTemp);
-			var targetImplementationPathDirectory = Path.Combine (TargetImplementationPath, ApiCompatTemp);
-
-			try {
-				// Copy interesting assemblies to a temp folder.
-				// This is done to avoids the Microsoft.DotNet.ApiCompat.exe to analyze unwanted assemblies
-				// We need to validate assembly exist in both contract and implementation folders.
-				Directory.CreateDirectory (contractPathDirectory);
-				Directory.CreateDirectory (targetImplementationPathDirectory);
-
-				foreach (var assemblyToValidate in assemblies) {
-					var contractAssembly = Path.Combine (contractPath, assemblyToValidate);
-					if (!File.Exists (contractAssembly)) {
-						Log.LogWarning ($"Contract assembly {assemblyToValidate} does not exists in the contract path.");
-						continue;
-					}
-
-					var implementationAssembly = Path.Combine (TargetImplementationPath, assemblyToValidate);
-					if (!File.Exists (implementationAssembly)) {
-						LogError ($"Implementation assembly {assemblyToValidate} exists in the contract path but not on the implementation folder.");
-						return;
-					}
-
-					File.Copy (contractAssembly, Path.Combine (contractPathDirectory, assemblyToValidate), true);
-					File.Copy (implementationAssembly, Path.Combine (targetImplementationPathDirectory, assemblyToValidate), true);
-				}
-
-				for (int i = 0; i < 3; i++) {
-					using (var genApiProcess = new Process ()) {
-
-						genApiProcess.StartInfo.FileName = apiCompat;
-						genApiProcess.StartInfo.Arguments = $"\"{contractPathDirectory}\" -i \"{targetImplementationPathDirectory}\" --allow-default-interface-methods ";
-
-						// Verify if there is an exclusion list
-						var excludeAttributes = Path.Combine (ApiCompatibilityPath, $"api-compat-exclude-attributes.txt");
-						if (File.Exists (excludeAttributes)) {
-							genApiProcess.StartInfo.Arguments += $"--exclude-attributes {excludeAttributes} ";
-						}
-
-						genApiProcess.StartInfo.UseShellExecute = false;
-						genApiProcess.StartInfo.CreateNoWindow = true;
-						genApiProcess.StartInfo.RedirectStandardOutput = true;
-						genApiProcess.StartInfo.RedirectStandardError = true;
-						genApiProcess.EnableRaisingEvents = true;
-
-						var lines = new List<string> ();
-						var processHasCrashed = false;
-						void dataReceived (object sender, DataReceivedEventArgs args)
-						{
-							if (!string.IsNullOrWhiteSpace (args.Data)) {
-								lines.Add (args.Data.Trim ());
-
-								if (args.Data.IndexOf ("Native Crash Reporting") != -1) {
-									processHasCrashed = true;
-								}
-							}
-						}
-
-						genApiProcess.OutputDataReceived += dataReceived;
-						genApiProcess.ErrorDataReceived += dataReceived;
-
-						// Get api definition for previous Api
-						compatApiCommand = $"CompatApi command: {genApiProcess.StartInfo.FileName} {genApiProcess.StartInfo.Arguments}";
-						Log.LogMessage (MessageImportance.High, compatApiCommand);
-
-						genApiProcess.Start ();
-						genApiProcess.BeginOutputReadLine ();
-						genApiProcess.BeginErrorReadLine ();
-
-						genApiProcess.WaitForExit ();
-
-						genApiProcess.CancelOutputRead ();
-						genApiProcess.CancelErrorRead ();
-
-						if (lines.Count == 0) {
-							return;
-						}
-
-						if (processHasCrashed) {
-							if (i + 1 < 3) {
-								Log.LogWarning ($"Process has crashed.");
-								Log.LogMessage (MessageImportance.High, String.Join (Environment.NewLine, lines));
-								Log.LogWarning ($"We will retry.");
-								continue;
-							} else {
-								LogError ($"Unable to get a valid report. Process has crashed.'{Environment.NewLine}Crash report:{Environment.NewLine}{String.Join (Environment.NewLine, lines)}");
-								return;
-							}
-						}
-
-						ValidateIssues (lines, validateAgainstReference);
-						break;
-					}
-				}
-			} finally {
-				if (Directory.Exists (contractPathDirectory)) {
-					Directory.Delete (contractPathDirectory, true);
-				}
-
-				if (Directory.Exists (targetImplementationPathDirectory)) {
-					Directory.Delete (targetImplementationPathDirectory, true);
-				}
-			}
-		}
-
-		// Validates there is no issue or issues found are acceptable
-		void ValidateIssues (IEnumerable<string> content, bool validateAgainstReference)
-		{
-			// Load issues into a dictionary
-			var issuesFound = LoadIssues (content);
-			if (Log.HasLoggedErrors) {
+			var contractAssembly = new FileInfo (Path.Combine (contractPath, assemblyToValidate));
+			if (!contractAssembly.Exists) {
+				LogError ($"Contract assembly {assemblyToValidate} does not exists in the contract path.");
 				return;
 			}
 
-			Dictionary<string, HashSet<string>> acceptableIssues = null;
-
-			// Verify if there is a file with acceptable issues.
-			var acceptableIssuesFile = Path.Combine (ApiCompatibilityPath, $"acceptable-breakages-{ (validateAgainstReference ? "vReference" : ApiLevel) }.txt");
-			if (!File.Exists (acceptableIssuesFile)) {
-
-				// If file does not exist but no issues were reported we can return here.
-				if (issuesFound == null || issuesFound.Count == 0) {
-					return;
-				}
-			} else {
-
-				// Read and Convert the acceptable issues into a dictionary
-				var lines = File.ReadAllLines (acceptableIssuesFile);
-				acceptableIssues = LoadIssues (lines);
-				if (Log.HasLoggedErrors) {
-					return;
-				}
+			var implementationAssembly = new FileInfo (Path.Combine (TargetImplementationPath, assemblyToValidate));
+			if (!implementationAssembly.Exists) {
+				LogError ($"Implementation assembly {assemblyToValidate} exists in the contract path but not on the implementation folder.");
+				return;
 			}
 
-			// Now remove all acceptable issues form the dictionary of issues found.
-			var errors = new List<string> ();
-			if (acceptableIssues != null) {
-				foreach (var item in acceptableIssues) {
-					if (!issuesFound.TryGetValue (item.Key, out HashSet<string> issues)) {
-						// we should always be able to find the assembly that is reporting the issues
-						errors.Add ($"There is an invalid assembly listed on the acceptable breakages file: {item.Key}");
-						continue;
+			for (int i = 0; i < 3; i++) {
+				using (var genApiProcess = new Process ()) {
+
+					genApiProcess.StartInfo.FileName = apiCompat.FullName;
+					genApiProcess.StartInfo.Arguments = $"\"{contractAssembly.FullName}\" -i \"{TargetImplementationPath}\" --allow-default-interface-methods ";
+
+					// Verify if there is a file with acceptable issues.
+					var acceptableIssuesFile = new FileInfo (Path.Combine (ApiCompatibilityPath, $"acceptable-breakages-{ (validateAgainstReference ? "vReference" : ApiLevel) }.txt"));
+					if (acceptableIssuesFile.Exists) {
+						genApiProcess.StartInfo.Arguments += $"--baseline \"{acceptableIssuesFile.FullName}\" --validate-baseline ";
 					}
 
-					foreach (var issue in item.Value) {
-						// we should always be able to remove the issue, if we try to remove an issue that does not exist,
-						// it means the acceptable list is incorrect and should be reported.
-						if (!issues.Remove (issue)) {
-							errors.Add ($"There is an invalid issue listed on the acceptable breakages file: {issue}");
+					// Verify if there is an exclusion list
+					var excludeAttributes = new FileInfo (Path.Combine (ApiCompatibilityPath, $"api-compat-exclude-attributes.txt"));
+					if (excludeAttributes.Exists) {
+						genApiProcess.StartInfo.Arguments += $"--exclude-attributes \"{excludeAttributes.FullName}\" ";
+					}
+
+					genApiProcess.StartInfo.UseShellExecute = false;
+					genApiProcess.StartInfo.CreateNoWindow = true;
+					genApiProcess.StartInfo.RedirectStandardOutput = true;
+					genApiProcess.StartInfo.RedirectStandardError = true;
+					genApiProcess.EnableRaisingEvents = true;
+
+					var lines = new List<string> ();
+					var processHasCrashed = false;
+					void dataReceived (object sender, DataReceivedEventArgs args)
+					{
+						if (!string.IsNullOrWhiteSpace (args.Data)) {
+							lines.Add (args.Data.Trim ());
+
+							if (args.Data.IndexOf ("Native Crash Reporting") != -1) {
+								processHasCrashed = true;
+							}
 						}
 					}
+
+					genApiProcess.OutputDataReceived += dataReceived;
+					genApiProcess.ErrorDataReceived += dataReceived;
+
+					// Get api definition for previous Api
+					compatApiCommand = $"CompatApi command: {genApiProcess.StartInfo.FileName} {genApiProcess.StartInfo.Arguments}";
+					Log.LogMessage (MessageImportance.High, compatApiCommand);
+
+					genApiProcess.Start ();
+					genApiProcess.BeginOutputReadLine ();
+					genApiProcess.BeginErrorReadLine ();
+
+					genApiProcess.WaitForExit ();
+
+					genApiProcess.CancelOutputRead ();
+					genApiProcess.CancelErrorRead ();
+
+					if (lines.Count == 0) {
+						return;
+					}
+
+					if (processHasCrashed) {
+						if (i + 1 < 3) {
+							Log.LogWarning ($"Process has crashed.");
+							Log.LogMessage (MessageImportance.High, string.Join (Environment.NewLine, lines));
+							Log.LogWarning ($"We will retry.");
+							continue;
+						} else {
+							LogError ($"Unable to get a valid report. Process has crashed.'{Environment.NewLine}Crash report:{Environment.NewLine}{string.Join (Environment.NewLine, lines)}");
+							return;
+						}
+					}
+
+					// It is expected to have at least one line of output form ApiCompat, if we don't have it, somethign wrong happened.
+					if (!lines.Any ()) {
+						LogError ($"Unable to run ApiCompat correctly. Argument values may be incorrectly.{Environment.NewLine}{compatApiCommand}");
+						return;
+					}
+
+					if (lines [0].Equals ("Total issues: 0", StringComparison.OrdinalIgnoreCase)) {
+						Log.LogMessage (MessageImportance.High, lines [0]);
+						return;
+					}
+
+					LogError ($"CheckApiCompatibility found nonacceptable Api breakages for ApiLevel: {ApiLevel}.{Environment.NewLine}{string.Join (Environment.NewLine, lines)}");
+
+					var missingItems = CodeGenDiff.GenerateMissingItems (CodeGenPath, contractAssembly.FullName, implementationAssembly.FullName);
+					if (missingItems.Any ()) {
+						Log.LogMessage (MessageImportance.High, $"{Environment.NewLine}*** CodeGen missing items***{Environment.NewLine}");
+						var indent = 0;
+						foreach (var item in missingItems) {
+							if (item.StartsWith ("}")) {
+								indent--;
+							}
+
+							Log.LogMessage (MessageImportance.High, $"{(item.StartsWith ("namespace ") ? Environment.NewLine : string.Empty)}{new string (' ', indent * 2)}{item}");
+
+							if (item.StartsWith ("{")) {
+								indent++;
+							}
+						}
+
+						Log.LogMessage (MessageImportance.High, string.Empty);
+					}
+
+					return;
 				}
 			}
-
-			// Any issue that still exist on issues found means it is a new issue and we should report
-			foreach (var item in issuesFound) {
-				if (item.Value.Count == 0) {
-					continue;
-				}
-
-				errors.Add (item.Key);
-				foreach (var issue in item.Value) {
-					errors.Add (issue);
-				}
-			}
-
-			if (errors.Count > 0) {
-				errors.Add ($"Total Issues: {errors.Count}");
-				LogError ($"CheckApiCompatibility found nonacceptable Api breakages for ApiLevel: {ApiLevel}.{Environment.NewLine}{String.Join (Environment.NewLine, errors)}");
-			}
-		}
-
-		// Converts list of issue into a dictionary
-		Dictionary<string, HashSet<string>> LoadIssues (IEnumerable<string> content)
-		{
-			var issues = new Dictionary<string, HashSet<string>> ();
-			HashSet<string> currentSet = null;
-
-			foreach (var line in content) {
-
-				if (string.IsNullOrWhiteSpace (line) || line.StartsWith ("#")) {
-					continue;
-				}
-
-				// Create hashset per assembly
-				if (line.StartsWith ("Compat issues with assembly", StringComparison.InvariantCultureIgnoreCase)) {
-					currentSet = new HashSet<string> ();
-					issues.Add (line, currentSet);
-					continue;
-				}
-
-				// end of file
-				if (line.StartsWith ("Total Issues:", StringComparison.InvariantCultureIgnoreCase)) {
-					break;
-				}
-
-				if (currentSet == null) {
-					// Hashset should never be null, unless exception file is not defining assembly line.
-					// Finish reading stream
-					var reportContent = Environment.NewLine + "Current content:" + Environment.NewLine + String.Join (Environment.NewLine, content);
-					LogError ($"Exception report/file should start with: 'Compat issues with assembly ...'{reportContent}");
-					return null;
-				}
-
-				// Add rule to hashset
-				currentSet.Add (line);
-			}
-
-			return issues;
 		}
 
 		void LogError (string errorMessage)
 		{
-			var message = string.Empty;
 			if (!string.IsNullOrWhiteSpace (compatApiCommand)) {
 				errorMessage = $"{compatApiCommand}{Environment.NewLine}{errorMessage}";
 			}

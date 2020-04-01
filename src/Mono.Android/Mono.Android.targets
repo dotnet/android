@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.GitDiff" />
   <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.CheckApiCompatibility" />
   <Import Project="..\..\build-tools\scripts\XAVersionInfo.targets" />
@@ -188,38 +187,23 @@
       Name="_CheckApiCompatibility"
       Condition=" '$(DisableApiCompatibilityCheck)' != 'True' "
       AfterTargets="CopyFilesToOutputDirectory"
+
       Inputs="$(TargetPath);@(ApiCompatibilityFiles)"
       Outputs="$(IntermediateOutputPath)CheckApiCompatibility.stamp">
     <CheckApiCompatibility
-        ContinueOnError="ErrorAndContinue"
-        ApiCompatPath="$(XAPackagesDir)\microsoft.dotnet.apicompat\5.0.0-beta.20162.4\tools\net472\"
+        ApiCompatPath="$(XAPackagesDir)\microsoft.dotnet.apicompat\5.0.0-beta.20181.7\tools\net472\"
+        CodeGenPath="$(XAPackagesDir)\microsoft.dotnet.genapi\5.0.0-beta.20181.7\tools\net472\"
         ApiLevel="$(AndroidFrameworkVersion)"
         LastStableApiLevel="$(AndroidLatestStableFrameworkVersion)"
         TargetImplementationPath="$(OutputPath)"
         ApiCompatibilityPath="$(ApiCompatibilityDir)"
     />
-    <PropertyGroup>
-      <_RunApiDiff Condition=" '$(MSBuildLastTaskResult)' == 'False' ">True</_RunApiDiff>
-      <_GenAPI>"$(XAPackagesDir)\microsoft.dotnet.genapi\5.0.0-beta.20162.4\tools\net472\Microsoft.DotNet.GenAPI.exe"</_GenAPI>
-      <_ContractRefSrc>"$(ApiCompatibilityDir)\reference\Mono.Android.dll.cs"</_ContractRefSrc>
-      <_TargetRefSrc>"$(TargetPath).cs"</_TargetRefSrc>
-    </PropertyGroup>
-    <Exec
-        Condition=" '$(_RunApiDiff)' == 'True' "
-        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(_GenAPI) &quot;$(TargetPath)&quot; > $(_TargetRefSrc)"
-    />
-    <GitDiff
-        Condition=" '$(_RunApiDiff)' == 'True' "
-        ContinueOnError="ErrorAndContinue"
-        Arguments="--no-index $(_ContractRefSrc) $(_TargetRefSrc)"
-        WorkingDirectory="$(MSBuildThisFileDirectory)"
-    />
-    <ItemGroup>
-      <FileWrites Include="$(IntermediateOutputPath)CheckApiCompatibility.stamp" />
-    </ItemGroup>
     <Touch
         Files="$(IntermediateOutputPath)CheckApiCompatibility.stamp"
         AlwaysCreate="True"
     />
+    <ItemGroup>
+      <FileWrites Include="$(IntermediateOutputPath)CheckApiCompatibility.stamp" />
+    </ItemGroup>
   </Target>
 </Project>
