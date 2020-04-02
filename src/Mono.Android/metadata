@@ -1336,7 +1336,7 @@
   in very early age of this product, and then Google introduced name conflicts.
   (It's all Xamarin's fault to have introduced enumification, after all. -->
   <attr path="/api/package[@name='android.media']/class[@name='AudioFocusRequest']" name="managedName" api-since="26">AudioFocusRequestClass</attr>
-  
+
   <!-- FIXME: fix build and enable these packages -->
   <remove-node path="/api/package[@name='java.time']" api-since="26" />
   <remove-node path="/api/package[@name='java.time.chrono']" api-since="26" />
@@ -1396,7 +1396,7 @@
        When there's more than one method on the Interface (API-30+), the attribute needs to go on the Method instead. -->
   <attr api-until="30" path="/api/package[@name='android.media']/interface[@name='MediaCas.EventListener']" name="argsType">MediaCasEventArgs</attr>
   <attr api-since="30" path="/api/package[@name='android.media']/interface[@name='MediaCas.EventListener']/method[@name='onEvent']" name="argsType">MediaCasEventArgs</attr>
-
+  
   <attr path="/api/package[@name='android.media']/interface[@name='MediaCas.EventListener']/method[@name='onEvent']/parameter[@name='MediaCas']" name="managedName">mediaCas</attr>
 
   <!-- Until API Level 26, android.graphics.Color was static. In API Level 26,
