@@ -70,6 +70,7 @@ Copyright (C) 2018 Xamarin. All rights reserved.
         EnableMultiDex="$(AndroidEnableMultiDex)"
         MultiDexMainDexListFile="$(_AndroidMainDexListFile)"
         CustomMainDexListFiles="@(MultiDexMainDexList)"
+        IgnoreWarnings="$(AndroidR8IgnoreWarnings)"
         ExtraArguments="$(AndroidR8ExtraArguments)"
     />
     <D8

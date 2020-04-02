@@ -305,6 +305,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidEnableProguard Condition=" '$(AndroidLinkTool)' != '' ">True</AndroidEnableProguard>
 	<AndroidEnableDesugar  Condition=" '$(AndroidEnableDesugar)' == '' And ('$(AndroidDexTool)' == 'd8' Or '$(AndroidLinkTool)' == 'r8') ">True</AndroidEnableDesugar>
 	<AndroidEnableDesugar  Condition=" '$(AndroidEnableDesugar)' == '' ">False</AndroidEnableDesugar>
+	<AndroidR8IgnoreWarnings    Condition=" '$(AndroidR8IgnoreWarnings)' == '' ">True</AndroidR8IgnoreWarnings>
 	<AndroidPackageFormat       Condition=" '$(AndroidPackageFormat)' == '' ">apk</AndroidPackageFormat>
 	<AndroidUseAapt2            Condition=" '$(AndroidPackageFormat)' == 'aab' ">True</AndroidUseAapt2>
 	<AndroidUseApkSigner        Condition=" '$(AndroidPackageFormat)' == 'aab' ">False</AndroidUseApkSigner>
