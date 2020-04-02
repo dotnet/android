@@ -347,6 +347,9 @@
     <ProjectReference Include="..\..\src\java-runtime\java-runtime.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
+  <!--NOTE: a workaround for the test runner in VS Windows-->
+  <Target Name="GetTargetPath" />
+
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
   <!-- Only build the 'netcoreapp3.1' version of 'Mono.Android.dll' once for the latest stable Android version. -->
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' And '$(AndroidFrameworkVersion)' != '$(AndroidLatestStableFrameworkVersion)' ">
