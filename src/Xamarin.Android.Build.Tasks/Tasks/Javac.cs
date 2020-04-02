@@ -54,8 +54,6 @@ namespace Xamarin.Android.Tasks
 			//     "-encoding" "UTF-8"
 			//     "@C:\Users\Jonathan\AppData\Local\Temp\tmp79c4ac38.tmp"
 
-			//var android_dir = MonoDroid.MonoDroidSdk.GetAndroidProfileDirectory (TargetFrameworkDirectory);
-
 			var cmd = new CommandLineBuilder ();
 
 			cmd.AppendSwitchIfNotNull ("-J-Dfile.encoding=", "UTF8");

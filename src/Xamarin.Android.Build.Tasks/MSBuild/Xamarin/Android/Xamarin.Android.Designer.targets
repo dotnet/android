@@ -150,7 +150,6 @@ Copyright (C) 2016 Xamarin. All rights reserved.
   <Javac
       JavaPlatformJarPath="$(JavaPlatformJarPath)"
       ClassesOutputDirectory="$(_AndroidIntermediateJavaClassDirectory)"
-      TargetFrameworkDirectory="$(TargetFrameworkDirectory)"
       StubSourceDirectory="$(_AndroidIntermediateJavaSourceDirectory)"
       JavaSourceFiles=""
       ToolPath="$(JavacToolPath)"
