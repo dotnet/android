@@ -1093,9 +1093,7 @@
   <attr api-since="19" path="/api/package[@name='android.graphics']/class[@name='Bitmap']/method[@name='setPremultiplied']" name="propertyName" />
 
   <!-- API-R adds a Connection.getVideoState() method, but we can't "merge" getVideoState() & setVideoState() into a single property w/o breaking API compat -->
-  <!--
   <attr api-since="23" path="/api/package[@name='android.telecom']/class[@jni-signature='Landroid/telecom/Connection;']/method[@name='setVideoState']" name="propertyName" />
-    -->
 
   <!-- Deprecate Any Class in the API less than 10. Do This last so we override any other deprecate comments -->
   <attr api-until="9" path="/api/package/class" name="deprecated">This platform is deprecated. Please re-target your app for a minumum of API-10</attr>
