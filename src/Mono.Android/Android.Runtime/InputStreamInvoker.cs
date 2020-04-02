@@ -9,7 +9,7 @@ namespace Android.Runtime
 	{
 		public Java.IO.InputStream BaseInputStream {get; private set;}
 
-		protected Java.Nio.Channels.FileChannel BaseFileChannel {get; private set;}
+		protected Java.Nio.Channels.FileChannel? BaseFileChannel {get; private set;}
 
 		public InputStreamInvoker (Java.IO.InputStream stream)
 		{
@@ -18,7 +18,7 @@ namespace Android.Runtime
 
 			BaseInputStream = stream;
 
-			Java.IO.FileInputStream fileStream = stream as Java.IO.FileInputStream;
+			Java.IO.FileInputStream? fileStream = stream as Java.IO.FileInputStream;
 			if (fileStream != null)
 				BaseFileChannel = fileStream.Channel;
 		}

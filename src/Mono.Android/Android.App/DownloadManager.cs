@@ -10,7 +10,7 @@ namespace Android.App {
 
 		public static DownloadManager FromContext (Context context)
 		{
-			return context.GetSystemService (Context.DownloadService) as DownloadManager;
+			return (context.GetSystemService (Context.DownloadService) as DownloadManager)!;
 		}
 	}
 

@@ -36,7 +36,8 @@ namespace Java.Lang {
 					Handler ();
 				if (removable)
 					lock (instances)
-						instances.Remove (Handler);
+						if (Handler != null)
+							instances.Remove (Handler);
 				Dispose ();
 			}
 

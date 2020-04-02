@@ -8,7 +8,7 @@ namespace Javax.Microedition.Khronos.Egl {
 
 		public static IEGL11 EGL11 {
 			get {
-				return EGL.JavaCast<IEGL11> ();
+				return EGL.JavaCast<IEGL11> ()!;
 			}
 		}
 	}

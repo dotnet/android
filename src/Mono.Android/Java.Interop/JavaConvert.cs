@@ -382,7 +382,7 @@ namespace Java.Interop {
 					return action (lref);
 				}
 				Func<object, IntPtr> converter = GetLocalJniHandleConverter (value, typeof (TValue));
-				lref = converter (value);
+				lref = converter (value!);
 				return action (lref);
 			}
 			finally {

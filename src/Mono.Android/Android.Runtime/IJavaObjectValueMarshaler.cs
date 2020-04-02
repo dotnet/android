@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -19,12 +20,12 @@ namespace Android.Runtime
 			throw new NotImplementedException ();
 		}
 
-		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (IJavaObject value, ParameterAttributes synchronize)
+		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState ([MaybeNull]IJavaObject value, ParameterAttributes synchronize)
 		{
 			throw new NotImplementedException ();
 		}
 
-		public override void DestroyGenericArgumentState (IJavaObject value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+		public override void DestroyGenericArgumentState ([AllowNull]IJavaObject value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
 		{
 			throw new NotImplementedException ();
 		}

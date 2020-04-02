@@ -70,7 +70,7 @@ namespace System.Drawing {
 						    CultureInfo culture,
 						    object value)
 		{
-			string s = value as string;
+			string? s = value as string;
 			if (s == null)
 				return base.ConvertFrom (context, culture, value);
 

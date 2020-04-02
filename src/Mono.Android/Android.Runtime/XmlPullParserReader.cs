@@ -42,7 +42,7 @@ namespace Android.Runtime
 				inst = (IJavaObject) Java.Interop.TypeManager.CreateInstance (handle, transfer);
 			else
 				JNIEnv.DeleteRef (handle, transfer);
-			return new XmlResourceParserReader (inst.JavaCast<Android.Content.Res.IXmlResourceParser> ());
+			return new XmlResourceParserReader (inst.JavaCast<Android.Content.Res.IXmlResourceParser> ()!);
 		}
 	}
 	
@@ -399,7 +399,7 @@ namespace Android.Runtime
 				inst = (IJavaObject) Java.Interop.TypeManager.CreateInstance (handle, transfer);
 			else
 				JNIEnv.DeleteRef (handle, transfer);
-			return new XmlPullParserReader (inst.JavaCast<IXmlPullParser> ());
+			return new XmlPullParserReader (inst.JavaCast<IXmlPullParser> ()!);
 		}
 	}
 }

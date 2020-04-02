@@ -3,6 +3,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 using Android.Runtime;
@@ -91,7 +92,7 @@ namespace Android.Runtime {
 				id_iterator = JNIEnv.GetMethodID (collection_class, "iterator", "()Ljava/util/Iterator;");
 			return Java.Lang.Object.GetObject<Java.Util.IIterator> (
 					JNIEnv.CallObjectMethod (Handle, id_iterator),
-					JniHandleOwnership.TransferLocalRef);
+					JniHandleOwnership.TransferLocalRef)!;
 		}
 
 		//
@@ -351,7 +352,7 @@ namespace Android.Runtime {
 			for (int i = 0; i < Count; i++)
 				array [array_index + i] = JavaConvert.FromJniHandle<T>(
 						JNIEnv.GetObjectArrayElement (lrefArray, i),
-						JniHandleOwnership.TransferLocalRef);
+						JniHandleOwnership.TransferLocalRef)!;
 			JNIEnv.DeleteLocalRef (lrefArray);
 		}
 
@@ -383,11 +384,13 @@ namespace Android.Runtime {
 			});
 		}
 
+		[return: MaybeNull]
 		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator ()
 		{
 			return GetEnumerator ();
 		}
 
+		[return: MaybeNull]
 		public IEnumerator<T> GetEnumerator ()
 		{
 			return System.Linq.Extensions.ToEnumerator_Dispose<T> (Iterator());

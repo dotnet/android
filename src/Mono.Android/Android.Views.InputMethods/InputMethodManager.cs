@@ -8,7 +8,7 @@ namespace Android.Views.InputMethods {
 
 		public static InputMethodManager FromContext (Context context)
 		{
-			return context.GetSystemService (Context.InputMethodService) as InputMethodManager;
+			return (context.GetSystemService (Context.InputMethodService) as InputMethodManager)!;
 		}
 	}
 }

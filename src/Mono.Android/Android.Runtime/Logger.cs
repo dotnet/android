@@ -48,7 +48,7 @@ namespace Android.Runtime {
 		[DllImport ("liblog")]
 		static extern void __android_log_print (LogLevel level, string appname, string format, string args, IntPtr zero);
 
-		public static void Log (LogLevel level, string appname, string log) {
+		public static void Log (LogLevel level, string appname, string? log) {
 			foreach (var line in (log ?? "").Split (new[]{Environment.NewLine}, StringSplitOptions.None)) {
 				if (!hasNoLibLog) {
 					try {

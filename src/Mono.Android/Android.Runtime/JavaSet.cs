@@ -3,7 +3,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-
+using System.Diagnostics.CodeAnalysis;
 using Android.Runtime;
 
 using Java.Interop;
@@ -26,7 +26,7 @@ namespace Android.Runtime {
 				id_iterator = JNIEnv.GetMethodID (set_class, "iterator", "()Ljava/util/Iterator;");
 			return Java.Lang.Object.GetObject<Java.Util.IIterator> (
 					JNIEnv.CallObjectMethod (Handle, id_iterator),
-					JniHandleOwnership.TransferLocalRef);
+					JniHandleOwnership.TransferLocalRef)!;
 		}
 
 		internal static IntPtr id_ctor;
@@ -387,11 +387,13 @@ namespace Android.Runtime {
 				array [array_index + i++] = item;
 		}
 
+		[return: MaybeNull]
 		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator ()
 		{
 			return GetEnumerator ();
 		}
 
+		[return: MaybeNull]
 		public IEnumerator<T> GetEnumerator ()
 		{
 			return System.Linq.Extensions.ToEnumerator_Dispose<T> (Iterator ());

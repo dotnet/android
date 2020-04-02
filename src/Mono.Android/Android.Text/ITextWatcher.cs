@@ -53,11 +53,11 @@ namespace Android.Text {
 	internal sealed class TextWatcherImplementor : Java.Lang.Object, ITextWatcher {
 
 		object inst;
-		public EventHandler<AfterTextChangedEventArgs> AfterTextChanged;
-		public EventHandler<TextChangedEventArgs> BeforeTextChanged;
-		public EventHandler<TextChangedEventArgs> TextChanged;
+		public EventHandler<AfterTextChangedEventArgs>? AfterTextChanged;
+		public EventHandler<TextChangedEventArgs>? BeforeTextChanged;
+		public EventHandler<TextChangedEventArgs>? TextChanged;
 
-		public TextWatcherImplementor (object inst, EventHandler<TextChangedEventArgs> changed_handler, EventHandler<TextChangedEventArgs> before_handler, EventHandler<AfterTextChangedEventArgs> after_handler)
+		public TextWatcherImplementor (object inst, EventHandler<TextChangedEventArgs>? changed_handler, EventHandler<TextChangedEventArgs>? before_handler, EventHandler<AfterTextChangedEventArgs>? after_handler)
 			: base (
 					JNIEnv.StartCreateInstance ("mono/android/text/TextWatcherImplementor", "()V"),
 					JniHandleOwnership.TransferLocalRef)

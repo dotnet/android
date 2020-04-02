@@ -217,7 +217,7 @@ namespace Android.Runtime {
 		static Java.Security.Cert.X509Certificate ConvertCertificate (Java.Security.Cert.CertificateFactory factory, byte[] certificateData)
 		{
 			return factory.GenerateCertificate (new System.IO.MemoryStream (certificateData))
-				.JavaCast<Java.Security.Cert.X509Certificate>();
+				.JavaCast<Java.Security.Cert.X509Certificate>()!;
 		}
 
 		// This is invoked by libmonodroid.so.
@@ -254,7 +254,7 @@ namespace Android.Runtime {
 			var wm = Application.Context.GetSystemService (Context.WindowService).JavaCast <IWindowManager> ();
 			var metrics = new DisplayMetrics ();
 #if ANDROID_17
-			wm.DefaultDisplay?.GetRealMetrics (metrics);
+			wm?.DefaultDisplay?.GetRealMetrics (metrics);
 #else
 			wm.DefaultDisplay.GetMetrics (metrics);
 #endif

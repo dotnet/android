@@ -211,7 +211,7 @@ namespace Java.Interop {
 
 		internal static Type? GetJavaToManagedType (string class_name)
 		{
-			Type type = monodroid_typemap_java_to_managed (class_name);
+			Type? type = monodroid_typemap_java_to_managed (class_name);
 			if (type != null)
 				return type;
 

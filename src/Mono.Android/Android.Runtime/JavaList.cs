@@ -65,13 +65,13 @@ namespace Android.Runtime {
 		//  Rationale
 		//    `java.util.List.iterator()` is not documented to throw any exceptions.
 		//
-		public virtual Java.Util.IIterator? Iterator ()
+		public virtual Java.Util.IIterator Iterator ()
 		{
 			if (id_iterator == IntPtr.Zero)
 				id_iterator = JNIEnv.GetMethodID (arraylist_class, "iterator", "()Ljava/util/Iterator;");
 			return Java.Lang.Object.GetObject<Java.Util.IIterator> (
 					JNIEnv.CallObjectMethod (Handle, id_iterator),
-					JniHandleOwnership.TransferLocalRef);
+					JniHandleOwnership.TransferLocalRef)!;
 		}
 
 		//
@@ -776,9 +776,13 @@ namespace Android.Runtime {
 			JNIEnv.DeleteLocalRef (r);
 		}
 
+		// C#'s IList<T> allows nulls but is not annotated as MaybeNull.
 		[MaybeNull]
 		public T this [int index] {
+			[return: MaybeNull]
+#pragma warning disable CS8766 // Nullability of reference types in return type doesn't match implicitly implemented member because of nullability attributes.
 			get {
+#pragma warning restore CS8766 // Nullability of reference types in return type doesn't match implicitly implemented member because of nullability attributes.
 				if (index < 0 || index >= Count)
 					throw new ArgumentOutOfRangeException ("index");
 				return InternalGet (index);
@@ -857,11 +861,13 @@ namespace Android.Runtime {
 #pragma warning restore CS8601 // Possible null reference assignment.
 		}
 
+		[return: MaybeNull]
 		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator ()
 		{
 			return GetEnumerator ();
 		}
 
+		[return: MaybeNull]
 		public IEnumerator<T> GetEnumerator ()
 		{
 			return System.Linq.Extensions.ToEnumerator_Dispose<T> (Iterator ());

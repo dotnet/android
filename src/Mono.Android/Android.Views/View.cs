@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Android.AccessibilityServices;
 using Android.OS;
 using Android.Runtime;
@@ -21,6 +22,7 @@ namespace Android.Views {
 		}
 #endif
 
+		[return: MaybeNull]
 		public T FindViewById<T> (int id)
 			where T : Android.Views.View
 		{

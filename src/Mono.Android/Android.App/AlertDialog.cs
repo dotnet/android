@@ -51,7 +51,7 @@ namespace Android.App {
 				}
 			}
 
-			void __SetOnItemSelectedListener (AdapterView.IOnItemSelectedListener value)
+			void __SetOnItemSelectedListener (AdapterView.IOnItemSelectedListener? value)
 			{
 				SetOnItemSelectedListener (value);
 			}

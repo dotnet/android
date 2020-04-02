@@ -948,7 +948,7 @@ namespace Xamarin.Android.Net
 				return;
 			}
 
-			Authorization authorization = auth.Authenticate (data.Challenge, httpConnection, creds);
+			Authorization authorization = auth.Authenticate (data.Challenge!, httpConnection, creds);
 			if (authorization == null) {
 				if (Logger.LogNet)
 					Logger.Log (LogLevel.Info, LOG_APP, $"Authorization module {auth.GetType ()} for scheme {data.Scheme} returned no authorization");

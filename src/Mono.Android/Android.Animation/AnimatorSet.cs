@@ -19,7 +19,7 @@ namespace Android.Animation
 			if (base.GetType () == this.ThresholdType) {
 				return Java.Lang.Object.GetObject<AnimatorSet> (
 						JNIEnv.CallObjectMethod (base.Handle, id_setDuration_J, new JValue (duration)),
-						JniHandleOwnership.TransferLocalRef);
+						JniHandleOwnership.TransferLocalRef)!;
 			} else {
 				return Java.Lang.Object.GetObject<AnimatorSet> (
 						JNIEnv.CallNonvirtualObjectMethod (
@@ -27,7 +27,7 @@ namespace Android.Animation
 							this.ThresholdClass,
 							JNIEnv.GetMethodID (ThresholdClass, "setDuration", "(J)Landroid/animation/Animator;"),
 							new JValue (duration)),
-						JniHandleOwnership.TransferLocalRef);
+						JniHandleOwnership.TransferLocalRef)!;
 			}
 		}
 		
@@ -42,7 +42,7 @@ namespace Android.Animation
 		
 		private static IntPtr n_SetDuration_J (IntPtr jnienv, IntPtr native__this, long duration)
 		{
-			AnimatorSet @object = Java.Lang.Object.GetObject<AnimatorSet> (native__this, JniHandleOwnership.DoNotTransfer);
+			AnimatorSet @object = Java.Lang.Object.GetObject<AnimatorSet> (native__this, JniHandleOwnership.DoNotTransfer)!;
 			return JNIEnv.ToJniHandle (@object.SetDuration (duration));
 		}
 	}

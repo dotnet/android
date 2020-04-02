@@ -8,7 +8,7 @@ namespace Android.App {
 
 		public static SearchManager FromContext (Context context)
 		{
-			return context.GetSystemService (Context.SearchService) as SearchManager;
+			return (context.GetSystemService (Context.SearchService) as SearchManager)!;
 		}
 	}
 }

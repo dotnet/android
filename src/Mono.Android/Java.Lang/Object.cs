@@ -373,7 +373,7 @@ namespace Java.Lang {
 			return new Java.Lang.Double (value);
 		}
 
-		public static implicit operator Java.Lang.Object? (string value)
+		public static implicit operator Java.Lang.Object? (string? value)
 		{
 			if (value == null)
 				return null;

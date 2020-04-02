@@ -64,7 +64,7 @@ namespace Android.Runtime {
 		static BoundExceptionType BoundExceptionType;
 
 		[ThreadStatic]
-		static byte[] mvid_bytes;
+		static byte[]? mvid_bytes;
 
 		internal    static      AndroidValueManager? AndroidValueManager;
 
@@ -239,8 +239,8 @@ namespace Android.Runtime {
 			GC.SuppressFinalize (obj);
 		}
 
-		static Action<Exception> mono_unhandled_exception;
-		static Action<AppDomain, UnhandledExceptionEventArgs> AppDomain_DoUnhandledException;
+		static Action<Exception> mono_unhandled_exception = null!;
+		static Action<AppDomain, UnhandledExceptionEventArgs> AppDomain_DoUnhandledException = null!;
 
 		static void Initialize ()
 		{
@@ -275,7 +275,7 @@ namespace Android.Runtime {
 				Android.Runtime.AndroidEnvironment.FailFast ($"Unable to initialize UncaughtExceptionHandler. Nested exception caught: {e}");
 			}
 
-			var javaException = JavaObject.GetObject<Java.Lang.Throwable> (env, javaExceptionPtr, JniHandleOwnership.DoNotTransfer);
+			var javaException = JavaObject.GetObject<Java.Lang.Throwable> (env, javaExceptionPtr, JniHandleOwnership.DoNotTransfer)!;
 
 			// Disabled until Linker error surfaced in https://github.com/xamarin/xamarin-android/pull/4302#issuecomment-596400025 is resolved
 			//System.Diagnostics.Debugger.Mono_UnhandledException (javaException);
@@ -283,7 +283,7 @@ namespace Android.Runtime {
 
 			try {
 				var jltp = javaException as JavaProxyThrowable;
-				Exception innerException = jltp?.InnerException;
+				Exception? innerException = jltp?.InnerException;
 				var args  = new UnhandledExceptionEventArgs (innerException ?? javaException, isTerminating: true);
 
 				// Disabled until Linker error surfaced in https://github.com/xamarin/xamarin-android/pull/4302#issuecomment-596400025 is resolved
@@ -678,23 +678,23 @@ namespace Android.Runtime {
 
 		internal static void LogTypemapTrace (StackTrace st)
 		{
-			string trace = st.ToString ()?.Trim ();
+			string? trace = st.ToString ()?.Trim ();
 			if (String.IsNullOrEmpty (trace))
 				return;
 
 			monodroid_log (LogLevel.Warn, LogCategories.Assembly, "typemap: called from");
-			foreach (string line in trace.Split ('\n')) {
+			foreach (string line in trace!.Split ('\n')) {
 				monodroid_log (LogLevel.Warn, LogCategories.Assembly, line);
 			}
 		}
 
-		internal static unsafe string TypemapManagedToJava (Type type)
+		internal static unsafe string? TypemapManagedToJava (Type type)
 		{
 			if (mvid_bytes == null)
 				mvid_bytes = new byte[16];
 
 			var mvid = new Span<byte>(mvid_bytes);
-			byte[] mvid_data = null;
+			byte[]? mvid_data = null;
 			if (!type.Module.ModuleVersionId.TryWriteBytes (mvid)) {
 				monodroid_log (LogLevel.Warn, LogCategories.Default, $"Failed to obtain module MVID using the fast method, falling back to the slow one");
 				mvid_data = type.Module.ModuleVersionId.ToByteArray ();
@@ -724,7 +724,7 @@ namespace Android.Runtime {
 			if (type == null)
 				throw new ArgumentNullException ("type");
 
-			string java = TypemapManagedToJava (type);
+			string? java = TypemapManagedToJava (type);
 			return java == null
 				? JavaNativeTypeManager.ToJniName (type)
 				: java;
@@ -1331,7 +1331,7 @@ namespace Android.Runtime {
 				return null;
 			T[] ret = new T [array.Length];
 			for (int i = 0; i < array.Length; i++)
-				ret [i] = JavaConvert.FromJavaObject<T> (array [i]);
+				ret [i] = JavaConvert.FromJavaObject<T> (array [i])!;
 			return ret;
 		}
 
@@ -1449,7 +1449,7 @@ namespace Android.Runtime {
 			int len = Math.Min (GetArrayLength (source), destination.Length);
 			for (int i = 0; i < len; ++i) {
 				IntPtr value = GetObjectArrayElement (source, i);
-				destination [i] = JavaConvert.FromJniHandle<T>(value, JniHandleOwnership.TransferLocalRef);
+				destination [i] = JavaConvert.FromJniHandle<T>(value, JniHandleOwnership.TransferLocalRef)!;
 			}
 		}
 
@@ -1696,7 +1696,7 @@ namespace Android.Runtime {
 				return null;
 			Java.Lang.Object[] ret = new Java.Lang.Object [array.Length];
 			for (int i = 0; i < array.Length; i++)
-				ret [i] = JavaObjectExtensions.JavaCast<Java.Lang.Object>(JavaConvert.ToJavaObject (array [i]));
+				ret [i] = JavaObjectExtensions.JavaCast<Java.Lang.Object>(JavaConvert.ToJavaObject (array [i]))!;
 			return ret;
 		}
 

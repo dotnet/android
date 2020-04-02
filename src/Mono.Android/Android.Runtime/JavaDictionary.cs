@@ -498,9 +498,14 @@ namespace Android.Runtime {
 			JNIEnv.DeleteLocalRef (r);
 		}
 
+		// C#'s IDictionary is documented as allowing implementations to determine if null is supported or not,
+		// but is not annotated as MaybeNull.  Our implementation allows null.
 		[MaybeNull]
 		public V this [K key] {
+			[return: MaybeNull]
+#pragma warning disable CS8766 // Nullability of reference types in return type doesn't match implicitly implemented member because of nullability attributes.
 			get {
+#pragma warning restore CS8766 // Nullability of reference types in return type doesn't match implicitly implemented member because of nullability attributes.
 				if (!Contains (key!))
 					throw new KeyNotFoundException ();
 				return Get (key);

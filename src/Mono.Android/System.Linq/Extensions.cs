@@ -51,7 +51,7 @@ namespace System.Linq {
 				while (iterator.HasNext) {
 					yield return JavaConvert.FromJniHandle<T>(
 							JNIEnv.CallObjectMethod (iterator.Handle, id_next),
-							JniHandleOwnership.TransferLocalRef);
+							JniHandleOwnership.TransferLocalRef)!;
 				}
 		}
 
@@ -62,7 +62,7 @@ namespace System.Linq {
 				while (source.HasNext) {
 					yield return JavaConvert.FromJniHandle<T>(
 							JNIEnv.CallObjectMethod (source.Handle, id_next),
-							JniHandleOwnership.TransferLocalRef);
+							JniHandleOwnership.TransferLocalRef)!;
 				}
 		}
 	}

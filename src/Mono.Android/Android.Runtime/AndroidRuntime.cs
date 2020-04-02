@@ -11,6 +11,7 @@ using System.Reflection;
 
 using Java.Interop;
 using Java.Interop.Tools.TypeNameMappings;
+using System.Diagnostics.CodeAnalysis;
 
 #if JAVA_INTEROP
 namespace Android.Runtime {
@@ -252,9 +253,9 @@ namespace Android.Runtime {
 				.Concat (Enumerable.Repeat (t, 1));
 		}
 
-		protected override string GetSimpleReference (Type type)
+		protected override string? GetSimpleReference (Type type)
 		{
-			string j = JNIEnv.TypemapManagedToJava (type);
+			string? j = JNIEnv.TypemapManagedToJava (type);
 			if (j != null) {
 				return j;
 			}
@@ -266,7 +267,7 @@ namespace Android.Runtime {
 
 		protected override IEnumerable<string> GetSimpleReferences (Type type)
 		{
-			string j = JNIEnv.TypemapManagedToJava (type);
+			string? j = JNIEnv.TypemapManagedToJava (type);
 			if (j != null) {
 				yield return j;
 			}
@@ -618,7 +619,7 @@ namespace Android.Runtime {
 			return null;
 		}
 
-		protected override bool TryUnboxPeerObject (IJavaPeerable value, out object? result)
+		protected override bool TryUnboxPeerObject (IJavaPeerable value, [NotNullWhen (true)]out object? result)
 		{
 			var proxy = value as JavaProxyThrowable;
 			if (proxy != null) {

@@ -28,12 +28,12 @@ namespace Android.Widget {
 			}
 		}
 
-		void SetNextClickListener (View.IOnClickListener value)
+		void SetNextClickListener (View.IOnClickListener? value)
 		{
 			SetPrevNextListeners (next:value, prev:GetClickListener (weak_implementor_PrevClick));
 		}
 
-		static View.IOnClickListener GetClickListener (WeakReference value)
+		static View.IOnClickListener? GetClickListener (WeakReference? value)
 		{
 			return value != null
 				? (View.IOnClickListener) value.Target
@@ -58,7 +58,7 @@ namespace Android.Widget {
 			}
 		}
 
-		void SetPrevClickListener (View.IOnClickListener value)
+		void SetPrevClickListener (View.IOnClickListener? value)
 		{
 			SetPrevNextListeners (next:GetClickListener (weak_implementor_NextClick), prev:value);
 		}
