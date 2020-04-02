@@ -398,6 +398,7 @@ namespace Foo {
 						"}
 					}
 				};
+				//proj.SetProperty ("AndroidFastDeploymentType", "Assemblies");
 				using (var b = CreateApkBuilder (Path.Combine ("temp", "BindingDoNotPackage", "App"))) {
 					Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				}
