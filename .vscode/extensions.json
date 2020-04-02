@@ -1,6 +1,6 @@
 {
     "recommendations": [
-      "ms-vscode.csharp",
+      "ms-dotnettools.csharp",
       "ms-vscode.cpptools",
       "ms-vscode.mono-debug",
       "wghats.vscode-nxunit-test-adapter",
