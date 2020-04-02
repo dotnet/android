@@ -36,7 +36,7 @@ MSBuild version 15 or later is required.
 
  7. Build the project:
 
-        msbuild /restore Xamarin.Android.sln
+        msbuild Xamarin.Android.sln
 
 After the solution has built successfully, you can [use your
 build][using-your-build] to build Xamarin.Android application and library
