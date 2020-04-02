@@ -114,7 +114,7 @@ namespace Xamarin.Android.Tasks
 					cmd.AppendSwitchIfNotNull ("--main-dex-list=", MultiDexMainDexListFile);
 				}
 			}
-			cmd.AppendSwitchIfNotNull ("--output ", Path.GetDirectoryName (ClassesOutputDirectory));
+			cmd.AppendSwitchIfNotNull ("--output ", ClassesOutputDirectory);
 
 			using (var sw = new StreamWriter (path: inputListFile, append: false,
 					encoding: MonoAndroidHelper.UTF8withoutBOM)) {
