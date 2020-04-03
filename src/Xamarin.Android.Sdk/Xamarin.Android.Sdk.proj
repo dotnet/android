@@ -33,24 +33,25 @@ the new entry point for short-form style Android projets in .NET 5.
       <ToolsSourceDir>$(XamarinAndroidSourcePath)bin\Build$(Configuration)\packs\tools\</ToolsSourceDir>
     </PropertyGroup>
     <ItemGroup>
-      <_MSBuildNonHostItemsUnix Include="@(MSBuildItemsUnix)" Condition="!$([System.Text.RegularExpressions.Regex]::IsMatch(%(RelativePath), '.*host-$(HostOS).*'))"/>
-      <_MSBuildHostItemsUnix Include="@(MSBuildItemsUnix)" Condition="$([System.Text.RegularExpressions.Regex]::IsMatch(%(RelativePath), '.*host-$(HostOS).*'))"/>
+      <AndroidSdkBuildTools Include="@(_MSBuildFiles);@(_MSBuildFilesWin)" >
+        <RelativePath>$([MSBuild]::MakeRelative($(MSBuildSrcDir), %(FullPath)))</RelativePath>
+      </AndroidSdkBuildTools>
+      <AndroidSdkBuildTools Include="@(_MSBuildTargetsSrcFiles)" >
+        <RelativePath>$([MSBuild]::MakeRelative($(MSBuildTargetsSrcDir), %(FullPath)))</RelativePath>
+      </AndroidSdkBuildTools>
+      <AndroidSdkBuildToolsUnix Include="@(_MSBuildFilesUnix);@(_MSBuildFilesUnixSwab);@(_MSBuildFilesUnixSign);@(_MSBuildFilesUnixSignAndHarden)" >
+        <RelativePath>$([MSBuild]::MakeRelative($(MSBuildSrcDir), %(FullPath)))</RelativePath>
+      </AndroidSdkBuildToolsUnix>
     </ItemGroup>
     <!-- Copy only the required tools to new folder. Skip Unix item copying on Windows. -->
     <Copy
-        SourceFiles="@(MSBuildItemsWin)"
-        DestinationFiles="@(MSBuildItemsWin->'$(ToolsSourceDir)%(RelativePath)')"
+        SourceFiles="@(AndroidSdkBuildTools)"
+        DestinationFiles="@(AndroidSdkBuildTools->'$(ToolsSourceDir)%(RelativePath)')"
         SkipUnchangedFiles="True"
     />
     <Copy
-        SourceFiles="@(_MSBuildNonHostItemsUnix)"
-        DestinationFiles="@(_MSBuildNonHostItemsUnix->'$(ToolsSourceDir)%(RelativePath)')"
-        SkipUnchangedFiles="True"
-        Condition="$([MSBuild]::IsOSPlatform('osx'))"
-    />
-    <Copy
-        SourceFiles="@(_MSBuildHostItemsUnix)"
-        DestinationFolder="$(ToolsSourceDir)"
+        SourceFiles="@(AndroidSdkBuildToolsUnix)"
+        DestinationFiles="@(AndroidSdkBuildToolsUnix->'$(ToolsSourceDir)%(RelativePath)')"
         SkipUnchangedFiles="True"
         Condition="$([MSBuild]::IsOSPlatform('osx'))"
     />
