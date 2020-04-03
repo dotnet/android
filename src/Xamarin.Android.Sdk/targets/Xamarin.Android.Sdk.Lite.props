@@ -1,5 +1,9 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
+  <PropertyGroup>
+    <DisableImplicitAndroidFrameworkReference>true</DisableImplicitAndroidFrameworkReference>
+  </PropertyGroup>
+
   <!-- This is the renamed-on-pack Xamarin.Android.Sdk.props from the full SDK -->
   <Import Project="Xamarin.Android.Sdk.Default.props" />
 

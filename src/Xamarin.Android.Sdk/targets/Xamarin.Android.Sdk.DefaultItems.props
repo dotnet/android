@@ -20,8 +20,7 @@
   </ItemGroup>
 
   <!-- Default References -->
-
-  <ItemGroup Condition=" '$(DisableImplicitFrameworkReferences)' != 'true' ">
+  <ItemGroup Condition=" '$(DisableImplicitFrameworkReferences)' != 'true' And '$(DisableImplicitAndroidFrameworkReference)' != 'true' ">
     <FrameworkReference
         Include="Xamarin.Android.App"
         IsImplicitlyDefined="true"
