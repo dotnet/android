@@ -2,11 +2,11 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Target Name="CopyNewtonsoftJsonLicense"
       Inputs="$(XAPackagesDir)\newtonsoft.json\12.0.3\LICENSE.md"
-      Outputs="$(OutDir)\Newtonsoft.Json-LICENSE.md"
+      Outputs="$(OutputPath)\Newtonsoft.Json-LICENSE.md"
       AfterTargets="Build">
     <Copy
         SourceFiles="$(XAPackagesDir)\newtonsoft.json\12.0.3\LICENSE.md"
-        DestinationFiles="$(OutDir)\Newtonsoft.Json-LICENSE.md"
+        DestinationFiles="$(OutputPath)\Newtonsoft.Json-LICENSE.md"
     />
   </Target>
 </Project>

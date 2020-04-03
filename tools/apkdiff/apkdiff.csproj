@@ -3,9 +3,10 @@
   <PropertyGroup>
     <Company>Microsoft Corporation</Company>
     <Copyright>2020 Microsoft Corporation</Copyright>
-    <TargetFramework>net472</TargetFramework>
     <Version>0.0.1</Version>
-    <OutDir>$(XAInstallPrefix)xbuild\Xamarin\Android\apkdiff</OutDir>
+    <TargetFramework>net472</TargetFramework>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android\apkdiff</OutputPath>
     <OutputType>Exe</OutputType>
     <PlatformTarget>x64</PlatformTarget>
     <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
