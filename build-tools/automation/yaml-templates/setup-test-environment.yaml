@@ -32,6 +32,11 @@ steps:
   condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
 
 - task: UseDotNet@2
+  displayName: install .NET Core $(DotNetCorePreviewVersion)
+  inputs:
+    version: $(DotNetCorePreviewVersion)
+
+- task: UseDotNet@2
   displayName: install .NET Core $(DotNetCoreVersion)
   inputs:
     version: $(DotNetCoreVersion)
