@@ -57,6 +57,8 @@ namespace MonoDroid.Tuner
 
 		void CheckAppDomainUsageUnconditional (AssemblyDefinition assembly, Action<string> warn)
 		{
+			//TODO: do we need to warn about AppDomain in .NET 5?
+#if !NET5_LINKER
 			if (!assembly.MainModule.HasTypeReference ("System.AppDomain"))
 				return;
 
@@ -66,6 +68,7 @@ namespace MonoDroid.Tuner
 					break;
 				}
 			}
+#endif
 		}
 
 		internal bool FixAbstractMethods (AssemblyDefinition assembly)

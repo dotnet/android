@@ -1,0 +1,58 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <DefineConstants>NET5_LINKER</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.ILLink" Version="5.0.0-preview.3.20203.2" />
+    <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Export\Java.Interop.Export.csproj" />
+
+    <Compile Include="..\Xamarin.Android.Build.Tasks\obj\$(Configuration)\Profile.g.cs" Link="Profile.g.cs" />
+
+    <!--Include *everything* to start with-->
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\*.cs" Link="MonoDroid.Tuner\%(FileName).cs" />
+
+    <!--Files that probably do not apply at all to the new linker-->
+    <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\AndroidLinkContext.cs" />
+    <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\Linker.cs" />
+    <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\LinkerOptions.cs" />
+
+    <!--Steps that are upstreamed, these are OK to remove-->
+    <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\ApplyPreserveAttribute.cs" />
+    <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\OutputStepWithTimestamps.cs" />
+    <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\PreserveCode.cs" />
+    <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\PreserveDynamicTypes.cs" />
+    <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\PreserveHttpAndroidClientHandler.cs" />
+    <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\PreserveLinqExpressions.cs" />
+    <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\PreserveRuntimeSerialization.cs" />
+    <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\PreserveTlsProvider.cs" />
+    <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\PreserveTypeConverters.cs" />
+
+    <!--TODO: Steps that use ISubStep / BaseSubStep-->
+    <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\MarkJavaObjects.cs" />
+    <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\PreserveApplications.cs" />
+    <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\PreserveExportedTypes.cs" />
+    <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\PreserveJavaExceptions.cs" />
+    <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\PreserveJavaTypeRegistrations.cs" />
+
+    <!--TODO: Subclasses RemoveAttributesBase-->
+    <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\RemoveAttributes.cs" />
+
+    <!--TODO: Subclasses MarkStep-->
+    <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\MonoDroidMarkStep.cs" />
+
+    <!--TODO: Subclasses MonoDroid.Tuner.MobileProfile, then Mono.Tuner.Profile-->
+    <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\MonoDroidProfile.cs" />
+
+    <!--Other Xamarin.Android / Java.Interop files-->
+    <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil\CustomAttributeProviderRocks.cs" Link="Java.Interop\CustomAttributeProviderRocks.cs" />
+    <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil\MethodDefinitionRocks.cs" Link="Java.Interop\MethodDefinitionRocks.cs" />
+    <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil\TypeDefinitionCache.cs" Link="Java.Interop\TypeDefinitionCache.cs" />
+    <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil\TypeDefinitionRocks.cs" Link="Java.Interop\TypeDefinitionRocks.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\MonoAndroidHelper.Linker.cs" Link="Utilities\MonoAndroidHelper.Linker.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Java.Interop\" />
+    <Folder Include="Utilities\" />
+  </ItemGroup>
+</Project>
