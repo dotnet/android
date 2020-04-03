@@ -48,8 +48,9 @@ variables:
   InstallerArtifactName: installers
   TestAssembliesArtifactName: test-assemblies
   NUnitConsoleVersion: 3.9.0
+  DotNetCoreVersion: 3.x
   # Version number from: https://dotnet.microsoft.com/download/dotnet-core/5.0
-  DotNetCoreVersion: 5.0.100-preview.1.20155.7
+  DotNetCorePreviewVersion: 5.0.100-preview.1.20155.7
   HostedMacMojave: Hosted Mac Internal Mojave
   HostedMac: Hosted Mac Internal
   HostedWinVS2019: Hosted Windows 2019 with VS2019
@@ -97,6 +98,11 @@ stages:
 
     - script: echo "##vso[task.setvariable variable=JAVA_HOME]$HOME/Library/Android/jdk"
       displayName: set JAVA_HOME
+
+    - task: UseDotNet@2
+      displayName: install .NET Core $(DotNetCorePreviewVersion)
+      inputs:
+        version: $(DotNetCorePreviewVersion)
 
     - task: UseDotNet@2
       displayName: install .NET Core $(DotNetCoreVersion)
@@ -239,6 +245,11 @@ stages:
     - template: yaml-templates\kill-processes.yaml
 
     - template: yaml-templates\clean.yaml
+
+    - task: UseDotNet@2
+      displayName: install .NET Core $(DotNetCorePreviewVersion)
+      inputs:
+        version: $(DotNetCorePreviewVersion)
 
     - task: UseDotNet@2
       displayName: install .NET Core $(DotNetCoreVersion)
