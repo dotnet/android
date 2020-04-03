@@ -10,8 +10,149 @@ projects. .NET 5 projects will not import this file.
 
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
+  <PropertyGroup Condition=" '$(AndroidBuildApplicationPackage)' == 'True' And '$(AndroidApplication)' == 'True' ">
+    <_PostBuildTargets>
+      _CopyPackage;
+      _Sign
+    </_PostBuildTargets>
+  </PropertyGroup>
+
+  <!-- Application projects -->
+
+  <PropertyGroup Condition=" '$(AndroidApplication)' == 'True' And '$(_AndroidIsBindingProject)' != 'True' ">
+    <BuildDependsOn>
+      _ValidateLinkMode;
+      _CheckNonIdealConfigurations;
+      _SetupDesignTimeBuildForBuild;
+      _CreatePropertiesCache;
+      _CleanIntermediateIfNeeded;
+      _CheckProjectItems;
+      _CheckForContent;
+      _CheckTargetFramework;
+      _RemoveLegacyDesigner;
+      _ValidateAndroidPackageProperties;
+      $(BuildDependsOn);
+      _CompileDex;
+      $(_AfterCompileDex);
+      $(_PostBuildTargets)
+    </BuildDependsOn>
+    <_BeforeIncrementalClean>
+      _PrepareAssemblies;
+      _CompileDex;
+      $(_AfterCompileDex);
+      _AddFilesToFileWrites;
+    </_BeforeIncrementalClean>
+  </PropertyGroup>
+
+  <!-- Class library projects -->
+
+  <PropertyGroup Condition=" '$(AndroidApplication)' != 'True' And '$(_AndroidIsBindingProject)' != 'True' ">
+    <BuildDependsOn>
+      _ValidateLinkMode;
+      _CheckNonIdealConfigurations;
+      _SetupDesignTimeBuildForBuild;
+      _CreatePropertiesCache;
+      _CleanIntermediateIfNeeded;
+      _AddAndroidDefines;
+      _CreateNativeLibraryArchive;
+      _AddAndroidEnvironmentToCompile;
+      _CheckForContent;
+      _CheckTargetFramework;
+      _RemoveLegacyDesigner;
+      _ValidateAndroidPackageProperties;
+      $(BuildDependsOn);
+    </BuildDependsOn>
+    <_BeforeIncrementalClean>
+      _AddFilesToFileWrites;
+    </_BeforeIncrementalClean>
+  </PropertyGroup>
+
+  <!-- Application *and* Class library projects -->
+
+  <PropertyGroup Condition=" '$(_AndroidIsBindingProject)' != 'True' ">
+    <CoreBuildDependsOn>
+      $([MSBuild]::Unescape($(CoreBuildDependsOn.Replace('IncrementalClean;', '$(_BeforeIncrementalClean);IncrementalClean;'))))
+    </CoreBuildDependsOn>
+    <CompileDependsOn>
+      _SetupDesignTimeBuildForCompile;
+      _AddAndroidDefines;
+      _IncludeLayoutBindingSources;
+      $(CompileDependsOn);
+    </CompileDependsOn>
+    <CoreCompileDependsOn>
+      UpdateGeneratedFiles;
+      $(CoreCompileDependsOn)
+    </CoreCompileDependsOn>
+    <CoreResolveReferencesDependsOn>
+      _SeparateAppExtensionReferences;
+      _PrepareWearApplication;
+      $(ResolveReferencesDependsOn);
+      _AddAndroidCustomMetaData;
+    </CoreResolveReferencesDependsOn>
+    <ResolveReferencesDependsOn>
+      $(CoreResolveReferencesDependsOn);
+      UpdateAndroidInterfaceProxies;
+      UpdateAndroidResources;
+      $(ApplicationResolveReferencesDependsOn);
+    </ResolveReferencesDependsOn>
+    <DeferredBuildDependsOn>
+      $(DeferredBuildDependsOn);
+      UpdateAndroidResources;
+    </DeferredBuildDependsOn>
+    <PrepareForRunDependsOn>
+      $(PrepareForRunDependsOn);
+      _CollectMonoAndroidOutputs;
+    </PrepareForRunDependsOn>
+    <CleanDependsOn>
+      $(CleanDependsOn);
+      _CleanMonoAndroidIntermediateDir;
+      _CleanAndroidBuildPropertiesCache;
+    </CleanDependsOn>
+  </PropertyGroup>
+
+  <!-- Binding projects -->
+
+  <PropertyGroup Condition=" '$(_AndroidIsBindingProject)' == 'True' ">
+    <BuildDependsOn>
+      _SetupDesignTimeBuildForBuild;
+      AddLibraryJarsToBind;
+      $(BuildDependsOn);
+      BuildDocumentation;
+    </BuildDependsOn>
+
+    <CompileDependsOn>
+      _SetupDesignTimeBuildForCompile;
+      AddLibraryJarsToBind;
+      $(CompileDependsOn);
+    </CompileDependsOn>
+
+    <ResolveReferencesDependsOn>
+      $(ResolveReferencesDependsOn);
+      AddBindingsToCompile;
+      AddEmbeddedJarsAsResources;
+      AddEmbeddedReferenceJarsAsResources;
+      AddLibraryProjectsToCompile;
+      _AddNativeLibraryArchiveToCompile
+    </ResolveReferencesDependsOn>
+
+    <CleanDependsOn>
+      $(CleanDependsOn);
+      CleanBindingsOutput;
+      CleanLibraryProjectIntermediaries;
+      CleanNativeLibraryIntermediaries;
+    </CleanDependsOn>
+  </PropertyGroup>
+
   <UsingTask TaskName="Xamarin.Android.Tasks.Legacy.ValidateJavaVersion" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.Legacy.ResolveAndroidTooling" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+
+  <Target Name="_GetReferenceAssemblyPaths">
+    <GetReferenceAssemblyPaths
+        TargetFrameworkMoniker="$(TargetFrameworkIdentifier),Version=v1.0"
+        RootPath="$(TargetFrameworkRootPath)">
+      <Output TaskParameter="ReferenceAssemblyPaths" PropertyName="_XATargetFrameworkDirectories" />
+    </GetReferenceAssemblyPaths>
+  </Target>
 
   <Target Name="_ResolveAndroidTooling">
     <ValidateJavaVersion
@@ -56,6 +197,52 @@ projects. .NET 5 projects will not import this file.
       <Output TaskParameter="Aapt2Version"                PropertyName="_Aapt2Version" />
       <Output TaskParameter="Aapt2ToolPath"               PropertyName="Aapt2ToolPath"               Condition="'$(Aapt2ToolPath)' == ''" />
     </ResolveAndroidTooling>
+  </Target>
+
+  <Target Name="_ResolveAssemblies">
+    <!--- Remove the ImplicitlyExpandDesignTimeFacades assemblies. We have already build the app there are not required for packaging  -->
+    <ItemGroup>
+      <FilteredAssemblies
+          Include="$(OutDir)$(TargetFileName)"
+          Condition="Exists ('$(OutDir)$(TargetFileName)')"
+      />
+      <FilteredAssemblies
+          Include="@(ReferenceCopyLocalPaths)"
+          Condition="'%(ReferenceCopyLocalPaths.ResolvedFrom)' != 'ImplicitlyExpandDesignTimeFacades' And '%(ReferenceCopyLocalPaths.Extension)' == '.dll' And '%(ReferenceCopyLocalPaths.RelativeDir)' == '' And Exists('%(ReferenceCopyLocalPaths.Identity)') "
+      />
+      <FilteredAssemblies
+          Include="@(_ReferencePath)"
+          Condition="'%(ReferencePath.ResolvedFrom)' != 'ImplicitlyExpandDesignTimeFacades' And Exists('%(_ReferencePath.Identity)') "
+      />
+    </ItemGroup>
+    <!-- Find all the assemblies this app requires -->
+    <ResolveAssemblies
+        Assemblies="@(FilteredAssemblies)"
+        I18nAssemblies="$(MandroidI18n)"
+        LinkMode="$(AndroidLinkMode)"
+        ProjectFile="$(MSBuildProjectFullPath)"
+        TargetFrameworkVersion="$(TargetFrameworkVersion)"
+        ProjectAssetFile="$(ProjectLockFile)"
+        TargetMoniker="$(NuGetTargetMoniker)"
+        ReferenceAssembliesDirectory="$(TargetFrameworkDirectory)">
+      <Output TaskParameter="ResolvedAssemblies" ItemName="ResolvedAssemblies" />
+      <Output TaskParameter="ResolvedUserAssemblies" ItemName="ResolvedUserAssemblies" />
+      <Output TaskParameter="ResolvedFrameworkAssemblies" ItemName="ResolvedFrameworkAssemblies" />
+      <Output TaskParameter="ResolvedSymbols" ItemName="ResolvedSymbols" />
+      <Output TaskParameter="ResolvedDoNotPackageAttributes" ItemName="_ResolvedDoNotPackageAttributes" />
+    </ResolveAssemblies>
+    <Hash ItemsToHash="@(ResolvedAssemblies)">
+      <Output TaskParameter="HashResult" PropertyName="_ResolvedUserAssembliesHash" />
+    </Hash>
+    <WriteLinesToFile
+        File="$(_ResolvedUserAssembliesHashFile)"
+        Lines="$(_ResolvedUserAssembliesHash)"
+        Overwrite="true"
+        WriteOnlyWhenDifferent="true"
+    />
+    <ItemGroup>
+      <FileWrites Include="$(_ResolvedUserAssembliesHashFile)" />
+    </ItemGroup>
   </Target>
 
 </Project>

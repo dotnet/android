@@ -1,0 +1,62 @@
+<!--
+***********************************************************************************************
+Xamarin.Android.Sdk.AssemblyResolution.targets
+
+This file contains the .NET 5-specific implementation for the
+_ResolveAssemblies MSBuild target.
+
+***********************************************************************************************
+-->
+
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <Target Name="_ResolveAssemblies" DependsOnTargets="ComputeFilesToPublish">
+
+    <!--
+        TODO: not yet complete.
+
+        Two things here are placeholders for later:
+
+        * %(HasMonoAndroidReference) is always True to disable
+          performance improvements around $(TargetFrameworkVersion)
+          detection.
+
+        * @(ReferencePath) should not be used. We should be able to
+          rely on @(ResolvedFileToPublish) when we have Mono's runtime
+          packs for .NET 5.
+    -->
+
+    <ItemGroup>
+      <ResolvedFrameworkAssemblies
+          Include="@(ReferencePath)"
+          Condition=" '%(ReferencePath.FrameworkReferenceName)' == 'Xamarin.Android.App' "
+          HasMonoAndroidReference="True"
+      />
+      <ResolvedUserAssemblies
+          Include="@(ReferencePath)"
+          Condition=" '%(ReferencePath.FrameworkReferenceName)' != 'Xamarin.Android.App' "
+          HasMonoAndroidReference="True"
+      />
+      <ResolvedUserAssemblies
+          Include="@(ResolvedFileToPublish)"
+          Condition=" '%(ResolvedFileToPublish.Extension)' == '.dll' "
+          HasMonoAndroidReference="True"
+      />
+      <ResolvedAssemblies Include="@(ResolvedFrameworkAssemblies);@(ResolvedUserAssemblies)" />
+    </ItemGroup>
+
+    <Hash ItemsToHash="@(ResolvedAssemblies)">
+      <Output TaskParameter="HashResult" PropertyName="_ResolvedUserAssembliesHash" />
+    </Hash>
+    <WriteLinesToFile
+        File="$(_ResolvedUserAssembliesHashFile)"
+        Lines="$(_ResolvedUserAssembliesHash)"
+        Overwrite="true"
+        WriteOnlyWhenDifferent="true"
+    />
+    <ItemGroup>
+      <FileWrites Include="$(_ResolvedUserAssembliesHashFile)" />
+    </ItemGroup>
+  </Target>
+
+</Project>

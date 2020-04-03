@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -10,17 +11,25 @@ namespace Xamarin.ProjectTools
 		public string BuildLogFile { get; set; }
 		public string ProcessLogFile { get; set; }
 		public string Verbosity { get; set; } = "diag";
-		public string AndroidSdkPath {get; set; } = AndroidSdkResolver.GetAndroidSdkPath ();
-		public string AndroidNdkPath {get; set; } = AndroidSdkResolver.GetAndroidNdkPath ();
+		public string AndroidSdkPath { get; set; } = AndroidSdkResolver.GetAndroidSdkPath ();
+		public string AndroidNdkPath { get; set; } = AndroidSdkResolver.GetAndroidNdkPath ();
 
-		string Executable = "dotnet";
+		const string Executable = "dotnet";
+		readonly XASdkProject project;
+		readonly string projectOrSolution;
+
+		public DotNetCLI (XASdkProject project, string projectOrSolution)
+		{
+			this.project = project;
+			this.projectOrSolution = projectOrSolution;
+		}
 
 		/// <summary>
 		/// Runs the `dotnet` tool with the specified arguments.
 		/// </summary>
 		/// <param name="args">command arguments</param>
 		/// <returns>Whether or not the command succeeded.</returns>
-		protected bool Execute (params string[] args)
+		protected bool Execute (params string [] args)
 		{
 			if (string.IsNullOrEmpty (ProcessLogFile))
 				ProcessLogFile = Path.Combine (XABuildPaths.TestOutputDirectory, $"dotnet{DateTime.Now.ToString ("yyyyMMddHHmmssff")}-process.log");
@@ -60,7 +69,20 @@ namespace Xamarin.ProjectTools
 			return succeeded;
 		}
 
-		public bool Build (string projectOrSolution, string configuration, string target = null)
+		public bool Build (string target = null)
+		{
+			var arguments = GetDefaultCommandLineArgs ("build", target);
+			return Execute (arguments.ToArray ());
+		}
+
+		public bool Publish (bool restore = true)
+		{
+			var arguments = GetDefaultCommandLineArgs ("publish");
+			arguments.Add ("/p:SelfContained=True");
+			return Execute (arguments.ToArray ());
+		}
+
+		List<string> GetDefaultCommandLineArgs (string verb, string target = null)
 		{
 			string testDir = Path.GetDirectoryName (projectOrSolution);
 			if (string.IsNullOrEmpty (ProcessLogFile))
@@ -69,22 +91,24 @@ namespace Xamarin.ProjectTools
 			if (string.IsNullOrEmpty (BuildLogFile))
 				BuildLogFile = Path.Combine (testDir, "build.log");
 
-			var execArgs = new string[] {
-				"build", $"\"{projectOrSolution}\"", $"/p:Configuration={configuration}",
-				string.IsNullOrEmpty (target) ? string.Empty : $"/t:{target}",
-				Directory.Exists (AndroidSdkPath) ? $"/p:AndroidSdkDirectory=\"{AndroidSdkPath}\"" : string.Empty,
-				Directory.Exists (AndroidNdkPath) ? $"/p:AndroidNdkDirectory=\"{AndroidNdkPath}\"" : string.Empty,
-				"/noconsolelogger", $"/flp1:LogFile=\"{BuildLogFile}\";Encoding=UTF-8;Verbosity={Verbosity}",
+			var arguments = new List<string> {
+				verb,
+				$"\"{projectOrSolution}\"",
+				$"/p:Configuration={project.Configuration}",
+				"/noconsolelogger",
+				$"/flp1:LogFile=\"{BuildLogFile}\";Encoding=UTF-8;Verbosity={Verbosity}",
 				$"/bl:\"{Path.Combine (testDir, "msbuild.binlog")}\""
 			};
-
-			bool succeeded = Execute (execArgs);
-			if (succeeded && Directory.Exists (testDir)) {
-				FileSystemUtils.SetDirectoryWriteable (testDir);
-				Directory.Delete (testDir, true);
+			if (!string.IsNullOrEmpty (target)) {
+				arguments.Add ($"/t:{target}");
 			}
-			return succeeded;
+			if (Directory.Exists (AndroidSdkPath)) {
+				arguments.Add ($"/p:AndroidSdkDirectory=\"{AndroidSdkPath}\"");
+			}
+			if (Directory.Exists (AndroidNdkPath)) {
+				arguments.Add ($"/p:AndroidNdkDirectory=\"{AndroidNdkPath}\"");
+			}
+			return arguments;
 		}
-
 	}
 }

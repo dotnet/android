@@ -18,32 +18,37 @@ namespace Xamarin.Android.Build.Tests
 			.FirstOrDefault () ?? "0.0.1";
 
 		[Test]
-		public void BuildXASdkProject ([Values (false, true)] bool isRelease)
+		[Category ("SmokeTests")]
+		public void DotNetBuild ([Values (false, true)] bool isRelease)
 		{
 			var proj = new XASdkProject (SdkVersion) {
 				IsRelease = isRelease
 			};
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-			}
+			var dotnet = CreateDotNetBuilder (proj);
+			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
 		}
 
 		[Test]
 		[Category ("SmokeTests")]
-		public void DotNetPackageXASdkProject ([Values (false, true)] bool isRelease)
+		public void DotNetPublish ([Values (false, true)] bool isRelease)
 		{
 			var proj = new XASdkProject (SdkVersion) {
 				IsRelease = isRelease
 			};
+			proj.SetProperty (KnownProperties.AndroidLinkMode, AndroidLinkMode.None.ToString ());
+			var dotnet = CreateDotNetBuilder (proj);
+			Assert.IsTrue (dotnet.Publish (), "`dotnet publish` should succeed");
+		}
+
+		DotNetCLI CreateDotNetBuilder (XASdkProject project)
+		{
 			var relativeProjDir = Path.Combine ("temp", TestName);
 			var fullProjDir = Path.Combine (Root, relativeProjDir);
 			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = fullProjDir;
-			var files = proj.Save ();
-			proj.Populate (relativeProjDir, files);
-			proj.CopyNuGetConfig (relativeProjDir);
-
-			var dotnet = new DotNetCLI ();
-			Assert.IsTrue (dotnet.Build (Path.Combine (fullProjDir, proj.ProjectFilePath), proj.Configuration, "SignAndroidPackage"));
+			var files = project.Save ();
+			project.Populate (relativeProjDir, files);
+			project.CopyNuGetConfig (relativeProjDir);
+			return new DotNetCLI (project, Path.Combine (fullProjDir, project.ProjectFilePath));
 		}
 	}
 }
