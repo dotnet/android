@@ -135,6 +135,8 @@ ms.date: 01/24/2020
 + [XA5207](xa5207.md): Could not find android.jar for API level `{compileSdk}`.
 + XA5211: Embedded Wear app package name differs from handheld app package name ({wearPackageName} != {handheldPackageName}).
 + XA5213: java.lang.OutOfMemoryError. Consider increasing the value of $(JavaMaximumHeapSize). Java ran out of memory while executing '{tool} {arguments}'
++ XA5215: Duplicate Resource found for {elementName}. Duplicates are in {filenames}
++ XA5216: Resource entry {elementName} is already defined in {filename}
 + [XA5300](xa5300.md): The Android/Java SDK Directory could not be found.
 + [XA5301](xa5301.md): Failed to generate Java type for class: {managedType} due to MAX_PATH: {exception}
 + [XA5302](xa5302.md): Two processes may be building this project at once. Lock file exists at path: {path}
