@@ -64,4 +64,4 @@ Almost everything else happens during `donet publish`:
   after the linker.
 * Compile java code via `javac`
 * Convert java code to `.dex` via d8/r8
-* Create an `.apk` and sign it
+* Create an `.apk` or `.aab` and sign it
