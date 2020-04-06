@@ -5,20 +5,16 @@ using System.Linq;
 
 namespace Xamarin.Android.Tasks
 {
-	class TypeMappingNativeAssemblyGenerator : NativeAssemblyGenerator
+	class TypeMappingReleaseNativeAssemblyGenerator : NativeAssemblyGenerator
 	{
 		readonly string baseFileName;
 		readonly NativeTypeMappingData mappingData;
 		readonly bool sharedBitsWritten;
 
-		public TypeMappingNativeAssemblyGenerator (NativeAssemblerTargetProvider targetProvider, NativeTypeMappingData mappingData, string baseFileName, bool sharedBitsWritten, bool sharedIncludeUsesAbiPrefix = false)
+		public TypeMappingReleaseNativeAssemblyGenerator (NativeAssemblerTargetProvider targetProvider, NativeTypeMappingData mappingData, string baseFileName, bool sharedBitsWritten, bool sharedIncludeUsesAbiPrefix = false)
 			: base (targetProvider, baseFileName, sharedIncludeUsesAbiPrefix)
 		{
 			this.mappingData = mappingData ?? throw new ArgumentNullException (nameof (mappingData));
-
-			if (String.IsNullOrEmpty (baseFileName))
-				throw new ArgumentException("must not be null or empty", nameof (baseFileName));
-
 			this.baseFileName = baseFileName;
 			this.sharedBitsWritten = sharedIncludeUsesAbiPrefix ? false : sharedBitsWritten;
 		}
@@ -93,13 +89,13 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		void WriteManagedMaps (StreamWriter output, string moduleSymbolName, IEnumerable<TypeMapGenerator.TypeMapEntry> entries)
+		void WriteManagedMaps (StreamWriter output, string moduleSymbolName, IEnumerable<TypeMapGenerator.TypeMapReleaseEntry> entries)
 		{
 			if (entries == null)
 				return;
 
 			var tokens = new Dictionary<uint, uint> ();
-			foreach (TypeMapGenerator.TypeMapEntry entry in entries) {
+			foreach (TypeMapGenerator.TypeMapReleaseEntry entry in entries) {
 				int idx = Array.BinarySearch (mappingData.JavaTypeNames, entry.JavaName, StringComparer.Ordinal);
 				if (idx < 0)
 					throw new InvalidOperationException ($"Could not map entry '{entry.JavaName}' to array index");
@@ -138,7 +134,7 @@ namespace Xamarin.Android.Tasks
 
 			uint size = 0;
 			int moduleCounter = 0;
-			foreach (TypeMapGenerator.ModuleData data in mappingData.Modules) {
+			foreach (TypeMapGenerator.ModuleReleaseData data in mappingData.Modules) {
 				string mapName = $"module{moduleCounter++}_managed_to_java";
 				string duplicateMapName;
 
@@ -160,7 +156,7 @@ namespace Xamarin.Android.Tasks
 			output.WriteLine ();
 		}
 
-		uint WriteMapModule (StreamWriter output, string mapName, string duplicateMapName, TypeMapGenerator.ModuleData data)
+		uint WriteMapModule (StreamWriter output, string mapName, string duplicateMapName, TypeMapGenerator.ModuleReleaseData data)
 		{
 			uint size = 0;
 			WriteCommentLine (output, $"module_uuid: {data.Mvid}");
@@ -205,7 +201,7 @@ namespace Xamarin.Android.Tasks
 
 			uint size = 0;
 			int entryCount = 0;
-			foreach (TypeMapGenerator.TypeMapEntry entry in mappingData.JavaTypes) {
+			foreach (TypeMapGenerator.TypeMapReleaseEntry entry in mappingData.JavaTypes) {
 				size += WriteJavaMapEntry (output, entry, entryCount++);
 			}
 
@@ -214,7 +210,7 @@ namespace Xamarin.Android.Tasks
 			output.WriteLine ();
 		}
 
-		uint WriteJavaMapEntry (StreamWriter output, TypeMapGenerator.TypeMapEntry entry, int entryIndex)
+		uint WriteJavaMapEntry (StreamWriter output, TypeMapGenerator.TypeMapReleaseEntry entry, int entryIndex)
 		{
 			uint size = 0;
 

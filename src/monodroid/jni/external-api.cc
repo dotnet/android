@@ -158,12 +158,6 @@ _monodroid_get_display_dpi (float *x_dpi, float *y_dpi)
 	return monodroidRuntime.get_display_dpi (x_dpi, y_dpi);
 }
 
-MONO_API const char *
-monodroid_typemap_managed_to_java (const uint8_t *mvid, const int32_t token)
-{
-	return embeddedAssemblies.typemap_managed_to_java (mvid, token);
-}
-
 MONO_API int monodroid_embedded_assemblies_set_assemblies_prefix (const char *prefix)
 {
 	embeddedAssemblies.set_assemblies_prefix (prefix);

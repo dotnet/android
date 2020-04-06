@@ -8,18 +8,18 @@
 
 #include "monodroid.h"
 
-static constexpr uint32_t MODULE_MAGIC = 0x4D544158;       // 'XATM', little-endian
+static constexpr uint32_t MODULE_MAGIC_NAMES = 0x53544158; // 'XATS', little-endian
 static constexpr uint32_t MODULE_INDEX_MAGIC = 0x49544158; // 'XATI', little-endian
-static constexpr uint8_t  MODULE_FORMAT_VERSION = 1;       // Keep in sync with the value in src/Xamarin.Android.Build.Tasks/Utilities/TypeMapGenerator.cs
+static constexpr uint8_t  MODULE_FORMAT_VERSION = 2;       // Keep in sync with the value in src/Xamarin.Android.Build.Tasks/Utilities/TypeMapGenerator.cs
 
+#if defined (DEBUG) || !defined (ANDROID)
 struct BinaryTypeMapHeader
 {
 	uint32_t magic;
 	uint32_t version;
-	uint8_t  module_uuid[16];
 	uint32_t entry_count;
-	uint32_t duplicate_count;
 	uint32_t java_name_width;
+	uint32_t managed_name_width;
 	uint32_t assembly_name_length;
 };
 
@@ -31,9 +31,25 @@ struct TypeMapIndexHeader
 	uint32_t module_file_name_width;
 };
 
+struct TypeMapEntry
+{
+	const char *from;
+	const char *to;
+};
+
+// MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGenerator.cs
+struct TypeMap
+{
+	uint32_t             entry_count;
+	char                *assembly_name;
+	uint8_t             *data;
+	TypeMapEntry        *java_to_managed;
+	TypeMapEntry        *managed_to_java;
+};
+#else
 struct TypeMapModuleEntry
 {
-	int32_t        type_token_id;
+	uint32_t       type_token_id;
 	uint32_t       java_map_index;
 };
 
@@ -53,9 +69,10 @@ struct TypeMapModule
 struct TypeMapJava
 {
 	uint32_t module_index;
-	int32_t  type_token_id;
+	uint32_t type_token_id;
 	uint8_t  java_name[];
 };
+#endif
 
 struct ApplicationConfig
 {
@@ -73,11 +90,15 @@ struct ApplicationConfig
 	const char *android_package_name;
 };
 
+#if defined (DEBUG) || !defined (ANDROID)
+MONO_API const TypeMap type_map; // MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGenerator.cs
+#else
 MONO_API const uint32_t map_module_count;
 MONO_API const uint32_t java_type_count;
 MONO_API const uint32_t java_name_width;
 MONO_API const TypeMapModule map_modules[];
 MONO_API const TypeMapJava map_java[];
+#endif
 
 MONO_API ApplicationConfig application_config;
 MONO_API const char* app_environment_variables[];
