@@ -319,6 +319,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 		}
 
 		[Test]
+		[NonParallelizable] // Commonly fails NuGet restore
 		public void CheckAapt2WarningsDoNotGenerateErrors ()
 		{
 			//https://github.com/xamarin/xamarin-android/issues/3083
