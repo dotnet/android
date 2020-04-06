@@ -908,6 +908,7 @@ because xbuild doesn't support framework reference assemblies.
 	<MonoAndroidCodeBehindDir>$(IntermediateOutputPath)generated</MonoAndroidCodeBehindDir>
 	<MonoAndroidIntermediateResourceCache>$(IntermediateOutputPath)resourcecache</MonoAndroidIntermediateResourceCache>
 	<_AndroidIntermediateJavaSourceDirectory>$(IntermediateOutputPath)android\src\</_AndroidIntermediateJavaSourceDirectory>
+	<_AndroidIntermediateDexOutputDirectory>$(IntermediateOutputPath)android\bin\</_AndroidIntermediateDexOutputDirectory>
 	<_AndroidIntermediateJavaClassDirectory>$(IntermediateOutputPath)android\bin\classes\</_AndroidIntermediateJavaClassDirectory>
 	<_AndroidIntermediateClassesZip>$(IntermediateOutputPath)android\bin\classes.zip</_AndroidIntermediateClassesZip>
 	<_AndroidAotBinDirectory>$(IntermediateOutputPath)aot</_AndroidAotBinDirectory>
@@ -2126,8 +2127,7 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_CompileDex"
 		DependsOnTargets="$(_BeforeCompileDex);$(_CompileDexDependsOn)">
 	<ItemGroup>
-		<_DexFile Include="$(IntermediateOutputPath)android\bin\dex\*.dex" />
-		<_DexFile Include="$(IntermediateOutputPath)android\bin\*.dex" />
+		<_DexFile Include="$(_AndroidIntermediateDexOutputDirectory)*.dex" />
 	</ItemGroup>
 </Target>
 

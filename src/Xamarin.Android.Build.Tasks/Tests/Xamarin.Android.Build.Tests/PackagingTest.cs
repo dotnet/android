@@ -677,5 +677,23 @@ namespace App1
 				Assert.IsTrue (xab.LastBuildOutput.ContainsText (expected), $"Build should be using {expected}");
 			}
 		}
+
+		[Test]
+		public void MissingDexFile ()
+		{
+			//NOTE: The trailing / was breaking <CompileToDalvik /> in 16.5
+			var parameters = new [] { "_AndroidIntermediateJavaClassDirectory=obj/Debug/android/bin/classes/" };
+			var proj = new XamarinAndroidApplicationProject {
+				DexTool = "dx"
+			};
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj, parameters: parameters), "Build should have succeeded.");
+				var apk = Path.Combine (Root, b.ProjectDirectory,
+					proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
+				using (var zip = ZipHelper.OpenZip (apk)) {
+					Assert.IsTrue (zip.ContainsEntry ("classes.dex"), "Apk should contain classes.dex");
+				}
+			}
+		}
 	}
 }
