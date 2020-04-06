@@ -3,25 +3,21 @@
   <PropertyGroup>
     <GeneratedSdkVersionFile Condition="'$(GeneratedSdkVersionFile)' ==''">$(BaseIntermediateOutputPath)$(MSBuildProjectName).SdkVersion$(DefaultLanguageSourceExtension)</GeneratedSdkVersionFile>
     <GenerateSdkVersionInfo Condition="'$(GenerateSdkVersionInfo)' == ''">true</GenerateSdkVersionInfo>
-    <VersionFile>$([MSBuild]::GetDirectoryNameOfFileAbove('$(MSBuildProjectDirectory)', 'ThirdPartyNotices.txt'))\bin\$(Configuration)\Version</VersionFile>
-    <VersionRevFile>$([MSBuild]::GetDirectoryNameOfFileAbove('$(MSBuildProjectDirectory)', 'ThirdPartyNotices.txt'))\bin\$(Configuration)\Version.rev</VersionRevFile>
-    <_SdkVersion Condition="Exists('$(VersionFile)')">$([System.IO.File]::ReadAllText('$(VersionFile)').Trim())</_SdkVersion>
-    <_SdkVersion Condition="Exists('$(VersionRevFile)')">$(_SdkVersion).$([System.IO.File]::ReadAllText('$(VersionRevFile)').Trim())</_SdkVersion>
   </PropertyGroup>
-    
+
+  <Import Project="..\..\..\build-tools\scripts\XAVersionInfo.targets" />
+
   <Target Name="GenerateSdkVersionInfo"
-          Condition="'$(GenerateSdkVersionInfo)' == 'true' and Exists('$(VersionFile)') and ('$(Language)'=='VB' or '$(Language)'=='C#')"
+          Condition="'$(GenerateSdkVersionInfo)' == 'true' and ('$(Language)'=='VB' or '$(Language)'=='C#')"
           BeforeTargets="CoreCompile"
-          DependsOnTargets="PrepareForBuild"
-          Inputs="$(VersionFile);$(VersionRevFile)" 
-          Outputs="$(GeneratedSdkVersionFile)">
+          DependsOnTargets="PrepareForBuild;GetXAVersionInfo" >
 
     <ItemGroup>
       <!-- Ensure the generated assemblyinfo file is not already part of the Compile sources, as a workaround for https://github.com/dotnet/sdk/issues/114 -->
       <Compile Remove="$(GeneratedSdkVersionFile)" />
       <_SdkVersionInfo Include="System.Reflection.AssemblyMetadata">
         <_Parameter1>SdkVersion</_Parameter1>
-        <_Parameter2>$(_SdkVersion)</_Parameter2>
+        <_Parameter2>$(ProductVersion).$(XAVersionCommitCount)</_Parameter2>
       </_SdkVersionInfo>
     </ItemGroup>
 
