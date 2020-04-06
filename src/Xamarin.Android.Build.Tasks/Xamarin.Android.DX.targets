@@ -71,7 +71,7 @@ Copyright (C) 2018 Xamarin. All rights reserved.
 
     <!-- remove existing dex files that may be previous multidex outputs. -->
     <ItemGroup>
-      <_DexesToDelete Include="$(IntermediateOutputPath)android\bin\*.dex" />
+      <_DexesToDelete Include="$(_AndroidIntermediateDexOutputDirectory)*.dex" />
     </ItemGroup>
     <Delete Files="@(_DexesToDelete)" />
 
@@ -82,7 +82,7 @@ Copyright (C) 2018 Xamarin. All rights reserved.
         JavaToolPath="$(JavaToolPath)"
         JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
         JavaOptions="$(JavaOptions)"
-        ClassesOutputDirectory="$(_AndroidIntermediateJavaClassDirectory.TrimEnd('\'))"
+        ClassesOutputDirectory="$(_AndroidIntermediateDexOutputDirectory)"
         ClassesZip="$(_AndroidIntermediateClassesZip)"
         ToolPath="$(DxToolPath)"
         ToolExe="$(DxToolExe)"
@@ -94,7 +94,7 @@ Copyright (C) 2018 Xamarin. All rights reserved.
     />
     <Touch Files="$(_AndroidStampDirectory)_CompileToDalvik.stamp" AlwaysCreate="true" />
     <ItemGroup>
-      <FileWrites Include="$(IntermediateOutputPath)android\bin\*.dex" />
+      <FileWrites Include="$(_AndroidIntermediateDexOutputDirectory)*.dex" />
     </ItemGroup>
 
   </Target>
