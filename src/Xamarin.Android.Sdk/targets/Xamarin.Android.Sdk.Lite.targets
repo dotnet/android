@@ -23,6 +23,8 @@
     <TargetFrameworkIdentifier Condition="'$(_ShortFrameworkIdentifier)' == 'monoandroid'">MonoAndroid</TargetFrameworkIdentifier>
   </PropertyGroup>
 
+  <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.DefaultOutputPaths.targets" Condition="'$(EnableDefaultOutputPaths)' == 'true'" />
   <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.targets" />
+  <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.Common.targets"/>
 
 </Project>

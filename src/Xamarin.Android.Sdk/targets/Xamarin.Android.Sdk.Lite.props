@@ -14,9 +14,6 @@
     <UsingAndroidNETSdk />
     <!-- Reset, since we're overloading this prop as there is a VS-provided Xamarin.Android.Sdk.props already which we need to import  -->
     <XamarinAndroidSdkPropsImported>false</XamarinAndroidSdkPropsImported>
-
-    <LanguageTargets Condition="'$(MSBuildProjectExtension)' == '.csproj'">$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets</LanguageTargets>
-    <LanguageTargets Condition="'$(MSBuildProjectExtension)' == '.fsproj'">$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.FSharp.targets</LanguageTargets>
   </PropertyGroup>
 
   <!-- Default References -->
