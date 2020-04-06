@@ -41,9 +41,10 @@ namespace xamarin::android::internal {
 #if defined (DEBUG) || !defined (ANDROID)
 		void try_load_typemaps_from_directory (const char *path);
 #endif
+		const char* typemap_managed_to_java (MonoReflectionType *type, const uint8_t *mvid);
+
 		void install_preload_hooks ();
 		MonoReflectionType* typemap_java_to_managed (MonoString *java_type);
-		const char* typemap_managed_to_java (const uint8_t *mvid, const int32_t token);
 
 		/* returns current number of *all* assemblies found from all invocations */
 		template<bool (*should_register_fn)(const char*)>
@@ -66,6 +67,8 @@ namespace xamarin::android::internal {
 		void set_assemblies_prefix (const char *prefix);
 
 	private:
+		const char* typemap_managed_to_java (MonoType *type, MonoClass *klass, const uint8_t *mvid);
+		MonoReflectionType* typemap_java_to_managed (const char *java_type_name);
 		size_t register_from (const char *apk_file, monodroid_should_register should_register);
 		void gather_bundled_assemblies_from_apk (const char* apk, monodroid_should_register should_register);
 		MonoAssembly* open_from_bundles (MonoAssemblyName* aname, bool ref_only);
@@ -74,9 +77,10 @@ namespace xamarin::android::internal {
 		bool typemap_read_header (int dir_fd, const char *file_type, const char *dir_path, const char *file_path, uint32_t expected_magic, H &header, size_t &file_size, int &fd);
 		uint8_t* typemap_load_index (int dir_fd, const char *dir_path, const char *index_path);
 		uint8_t* typemap_load_index (TypeMapIndexHeader &header, size_t file_size, int index_fd);
-		bool typemap_load_file (int dir_fd, const char *dir_path, const char *file_path, TypeMapModule &module);
-		bool typemap_load_file (BinaryTypeMapHeader &header, const char *dir_path, const char *file_path, int file_fd, TypeMapModule &module);
+		bool typemap_load_file (int dir_fd, const char *dir_path, const char *file_path, TypeMap &module);
+		bool typemap_load_file (BinaryTypeMapHeader &header, const char *dir_path, const char *file_path, int file_fd, TypeMap &module);
 		static ssize_t do_read (int fd, void *buf, size_t count);
+		const TypeMapEntry *typemap_managed_to_java (const char *managed_type_name);
 #endif // DEBUG || !ANDROID
 		bool register_debug_symbols_for_assembly (const char *entry_name, MonoBundledAssembly *assembly, const mono_byte *debug_contents, int debug_size);
 
@@ -104,11 +108,12 @@ namespace xamarin::android::internal {
 		template<typename Key, typename Entry, int (*compare)(const Key*, const Entry*), bool use_extra_size = false>
 		const Entry* binary_search (const Key *key, const Entry *base, size_t nmemb, size_t extra_size = 0);
 
-		static int compare_mvid (const uint8_t *mvid, const TypeMapModule *module);
-		static int compare_type_token (const int32_t *token, const TypeMapModuleEntry *entry);
-		static int compare_java_name (const char *java_name, const TypeMapJava *entry);
 #if defined (DEBUG) || !defined (ANDROID)
-		static int compare_java_name (const char *java_name, const uint8_t *java_map);
+		static int compare_type_name (const char *type_name, const TypeMapEntry *entry);
+#else
+		static int compare_mvid (const uint8_t *mvid, const TypeMapModule *module);
+		static int compare_type_token (const uint32_t *token, const TypeMapModuleEntry *entry);
+		static int compare_java_name (const char *java_name, const TypeMapJava *entry);
 #endif
 
 	private:
@@ -118,8 +123,8 @@ namespace xamarin::android::internal {
 #if defined (DEBUG) || !defined (ANDROID)
 		TypeMappingInfo       *java_to_managed_maps;
 		TypeMappingInfo       *managed_to_java_maps;
-		TypeMapModule         *modules;
-		size_t                 module_count;
+		TypeMap               *type_maps;
+		size_t                 type_map_count;
 #endif // DEBUG || !ANDROID
 		const char            *assemblies_prefix_override = nullptr;
 	};

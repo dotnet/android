@@ -178,6 +178,8 @@ namespace xamarin::android::internal
 		static void thread_end (MonoProfiler *prof, uintptr_t tid);
 		static MonoReflectionType* typemap_java_to_managed (MonoString *java_type_name);
 
+		static const char* typemap_managed_to_java (MonoReflectionType *type, const uint8_t *mvid);
+
 #if defined (DEBUG)
 		void set_debug_env_vars (void);
 

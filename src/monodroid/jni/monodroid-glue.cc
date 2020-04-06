@@ -921,6 +921,7 @@ void
 MonodroidRuntime::init_android_runtime (MonoDomain *domain, JNIEnv *env, jclass runtimeClass, jobject loader)
 {
 	mono_add_internal_call ("Java.Interop.TypeManager::monodroid_typemap_java_to_managed", reinterpret_cast<const void*>(typemap_java_to_managed));
+	mono_add_internal_call ("Android.Runtime.JNIEnv::monodroid_typemap_managed_to_java", reinterpret_cast<const void*>(typemap_managed_to_java));
 
 	struct JnienvInitializeArgs init = {};
 	init.javaVm                 = osBridge.get_jvm ();
@@ -1409,6 +1410,12 @@ MonoReflectionType*
 MonodroidRuntime::typemap_java_to_managed (MonoString *java_type_name)
 {
 	return embeddedAssemblies.typemap_java_to_managed (java_type_name);
+}
+
+const char*
+MonodroidRuntime::typemap_managed_to_java (MonoReflectionType *type, const uint8_t *mvid)
+{
+	return embeddedAssemblies.typemap_managed_to_java (type, mvid);
 }
 
 inline void

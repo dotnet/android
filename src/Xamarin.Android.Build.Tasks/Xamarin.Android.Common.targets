@@ -935,6 +935,9 @@ because xbuild doesn't support framework reference assemblies.
 		<_NuGetAssetsFile      Condition=" Exists('$(ProjectLockFile)') ">$(ProjectLockFile)</_NuGetAssetsFile>
 		<_NuGetAssetsFile      Condition=" '$(_NuGetAssetsFile)' == '' and Exists('packages.config') ">packages.config</_NuGetAssetsFile>
 		<_NuGetAssetsTimestamp Condition=" '$(_NuGetAssetsFile)' != '' ">$([System.IO.File]::GetLastWriteTime('$(_NuGetAssetsFile)').Ticks)</_NuGetAssetsTimestamp>
+		<_TypeMapKind Condition=" '$(AndroidIncludeDebugSymbols)' != 'True' ">mvid</_TypeMapKind>
+		<_TypeMapKind Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' And '$(_InstantRunEnabled)' == 'True' ">strings-files</_TypeMapKind>
+		<_TypeMapKind Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' And '$(_InstantRunEnabled)' != 'True' ">strings-asm</_TypeMapKind>
 	</PropertyGroup>
 	<ItemGroup>
 		<!-- List of items we want to trigger a build if changed -->
@@ -965,6 +968,7 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="AndroidIncludeDebugSymbols=$(AndroidIncludeDebugSymbols)" />
 		<_PropertyCacheItems Include="AndroidPackageNamingPolicy=$(AndroidPackageNamingPolicy)" />
 		<_PropertyCacheItems Include="_NuGetAssetsTimestamp=$(_NuGetAssetsTimestamp)" />
+		<_PropertyCacheItems Include="TypeMapKind=$(_TypeMapKind)" />
 	</ItemGroup>
 	<MakeDir Directories="$(_AndroidStampDirectory)" Condition="!Exists('$(_AndroidStampDirectory)')" />
 	<WriteLinesToFile
@@ -1728,6 +1732,8 @@ because xbuild doesn't support framework reference assemblies.
   <PrepareAbiItems
       BuildTargetAbis="@(_BuildTargetAbis)"
       NativeSourcesDir="$(_NativeAssemblySourceDir)"
+      InstantRunEnabled="$(_InstantRunEnabled)"
+      Debug="$(AndroidIncludeDebugSymbols)"
       TypeMapMode="True">
     <Output TaskParameter="AssemblySources" ItemName="_TypeMapAssemblySource" />
     <Output TaskParameter="AssemblyIncludes" ItemName="_TypeMapAssemblyInclude" />
@@ -1847,6 +1853,8 @@ because xbuild doesn't support framework reference assemblies.
   <PrepareAbiItems
     BuildTargetAbis="@(_BuildTargetAbis)"
     NativeSourcesDir="$(_NativeAssemblySourceDir)"
+    InstantRunEnabled="$(_InstantRunEnabled)"
+    Debug="$(AndroidIncludeDebugSymbols)"
     TypeMapMode="false">
       <Output TaskParameter="AssemblySources" ItemName="_EnvironmentAssemblySource" />
   </PrepareAbiItems>

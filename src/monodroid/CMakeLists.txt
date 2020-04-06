@@ -146,12 +146,13 @@ if(ENABLE_NDK)
     add_definitions("-D__ANDROID_API_Q__=29")
   endif()
 
-  link_directories("${XA_LIB_TOP_DIR}/${ANDROID_ABI}")
+  set(XA_LIBRARY_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/${ANDROID_ABI}")
+  link_directories("${XA_LIBRARY_OUTPUT_DIRECTORY}")
 else()
   set(CMAKE_REQUIRED_DEFINITIONS "-D__USE_GNU")
   check_cxx_symbol_exists(gettid unistd.h HAVE_GETTID_IN_UNISTD_H)
   if(HAVE_GETTID_IN_UNISTD_H)
-	add_definitions("-DHAVE_GETTID_IN_UNISTD_H")
+    add_definitions("-DHAVE_GETTID_IN_UNISTD_H")
   endif()
 
   # MinGW needs it for {v,a}sprintf
@@ -166,7 +167,7 @@ else()
       set(HOST_BUILD_NAME "host-Linux")
 
       if(EXISTS "/.flatpak-info")
-		add_definitions("-DLINUX_FLATPAK")
+        add_definitions("-DLINUX_FLATPAK")
       endif()
     endif()
   endif()
@@ -196,10 +197,12 @@ else()
       endif()
     endif()
 
-    link_directories("${XA_LIB_TOP_DIR}/${ANDROID_ABI}")
+    set(XA_LIBRARY_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/${ANDROID_ABI}")
+    link_directories("${XA_LIBRARY_OUTPUT_DIRECTORY}")
   endif()
 
   if(DEFINED HOST_BUILD_NAME)
+    set(XA_LIBRARY_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/${HOST_BUILD_NAME}")
     link_directories("${XA_LIB_TOP_DIR}/${HOST_BUILD_NAME}")
     include_directories("${DEFAULT_BIN_DIR}/include/${HOST_BUILD_NAME}")
     include_directories("${DEFAULT_BIN_DIR}/include/${HOST_BUILD_NAME}/eglib")
@@ -289,21 +292,29 @@ endif()
 
 set(XAMARIN_APP_STUB_SOURCES ${SOURCES_DIR}/application_dso_stub.cc)
 add_library(xamarin-app SHARED ${XAMARIN_APP_STUB_SOURCES})
+if (ENABLE_NDK)
+  # Only Android builds need to go in separate directories, desktop builds have the same ABI
+  set_target_properties(
+    xamarin-app
+    PROPERTIES
+    LIBRARY_OUTPUT_DIRECTORY "${XA_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_BUILD_TYPE}"
+    )
+endif()
 
 if(NOT WIN32 AND NOT MINGW AND CMAKE_BUILD_TYPE STREQUAL Debug)
   set(XAMARIN_DEBUG_APP_HELPER_SOURCES
-	${SOURCES_DIR}/basic-android-system.cc
-	${SOURCES_DIR}/basic-utilities.cc
-	${SOURCES_DIR}/cpu-arch-detect.cc
-	${SOURCES_DIR}/debug-app-helper.cc
-	${SOURCES_DIR}/new_delete.cc
-	${SOURCES_DIR}/shared-constants.cc
-	)
+    ${SOURCES_DIR}/basic-android-system.cc
+    ${SOURCES_DIR}/basic-utilities.cc
+    ${SOURCES_DIR}/cpu-arch-detect.cc
+    ${SOURCES_DIR}/debug-app-helper.cc
+    ${SOURCES_DIR}/new_delete.cc
+    ${SOURCES_DIR}/shared-constants.cc
+    )
   add_library(xamarin-debug-app-helper SHARED ${XAMARIN_DEBUG_APP_HELPER_SOURCES})
   target_compile_definitions(
-	xamarin-debug-app-helper
-	PUBLIC -DDEBUG_APP_HELPER
-	)
+    xamarin-debug-app-helper
+    PUBLIC -DDEBUG_APP_HELPER
+    )
 endif()
 
 string(TOLOWER ${CMAKE_BUILD_TYPE} MONO_ANDROID_SUFFIX)
