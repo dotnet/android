@@ -27,6 +27,7 @@ namespace Xamarin.Android.Tasks
 
 		// proguard-like configuration settings
 		public bool EnableShrinking { get; set; } = true;
+		public bool IgnoreWarnings { get; set; }
 		public string AcwMapFile { get; set; }
 		public string ProguardGeneratedReferenceConfiguration { get; set; }
 		public string ProguardGeneratedApplicationConfiguration { get; set; }
@@ -95,9 +96,14 @@ namespace Xamarin.Android.Tasks
 						}
 					}
 				}
-				if (!string.IsNullOrWhiteSpace (ProguardCommonXamarinConfiguration))
-					using (var xamcfg = File.Create (ProguardCommonXamarinConfiguration))
-						GetType ().Assembly.GetManifestResourceStream ("proguard_xamarin.cfg").CopyTo (xamcfg);
+				if (!string.IsNullOrWhiteSpace (ProguardCommonXamarinConfiguration)) {
+					using (var xamcfg = File.CreateText (ProguardCommonXamarinConfiguration)) {
+						GetType ().Assembly.GetManifestResourceStream ("proguard_xamarin.cfg").CopyTo (xamcfg.BaseStream);
+						if (IgnoreWarnings) {
+							xamcfg.WriteLine ("-ignorewarnings");
+						}
+					}
+				}
 				if (!string.IsNullOrEmpty (ProguardConfigurationFiles)) {
 					var configs = ProguardConfigurationFiles
 						.Replace ("{sdk.dir}", AndroidSdkDirectory + Path.DirectorySeparatorChar)
@@ -121,11 +127,15 @@ namespace Xamarin.Android.Tasks
 				cmd.AppendSwitch ("--no-minification");
 				// Rules to turn off optimizations
 				var temp = Path.GetTempFileName ();
-				File.WriteAllLines (temp, new [] {
+				var lines = new List<string> {
 					"-dontoptimize",
 					"-dontpreverify",
 					"-keepattributes **"
-				});
+				};
+				if (IgnoreWarnings) {
+					lines.Add ("-ignorewarnings");
+				}
+				File.WriteAllLines (temp, lines);
 				tempFiles.Add (temp);
 				cmd.AppendSwitchIfNotNull ("--pg-conf ", temp);
 			}
