@@ -32,7 +32,7 @@ projects that use the Xamarin.Android.App framework in .NET 5.
 
   <Target Name="_GetRuntimePackItems" >
     <PropertyGroup>
-      <FrameworkListFile>$(IntermediateOutputPath)$(AndroidRID)RuntimeList.xml</FrameworkListFile>
+      <FrameworkListFile>$(IntermediateOutputPath)$(AndroidRID)\RuntimeList.xml</FrameworkListFile>
     </PropertyGroup>
 
     <ItemGroup>
