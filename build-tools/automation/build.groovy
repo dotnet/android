@@ -43,11 +43,16 @@ def getBuildTasksRedirect() {
     }
 }
 
+environment {
+    DOTNET_ROOT = "$HOME/.dotnet"
+}
+
 timestamps {
     node("${env.BotLabel}") {
         def scmVars = null
 
         stage ("checkout") {
+            sh('printenv | sort')
             def ctAttempts = 3
             def retryAttempt = 0
             def waitSecondsBeforeRetry = 15
