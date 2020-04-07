@@ -12,22 +12,6 @@ namespace Xamarin.Android.Prepare
 
 		protected override async Task<bool> Execute (Context context)
 		{
-			var nuget = new NuGetRunner (context);
-
-			foreach (var solutionFile in context.XASolutionFiles) {
-				if (!await NuGetRestore (nuget, solutionFile)) {
-					return false;
-				}
-			}
-
-			Log.StatusLine ();
-
-			foreach (var solutionFile in context.XATestsSolutionFiles) {
-				if (!await NuGetRestore (nuget, solutionFile)) {
-					return false;
-				}
-			}
-
 			var msbuild = new MSBuildRunner (context);
 
 			string slnPath = Path.Combine (Configurables.Paths.ExternalDir, "debugger-libs", "debugger-libs.sln");
@@ -43,7 +27,7 @@ namespace Xamarin.Android.Prepare
 			if (!result)
 				return false;
 
-			return await ExecuteOSSpecific (context, nuget);
+			return await ExecuteOSSpecific (context);
 		}
 
 		async Task<bool> NuGetRestore (NuGetRunner nuget, string solutionFilePath)
