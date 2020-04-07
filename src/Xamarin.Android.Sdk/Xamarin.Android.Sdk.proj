@@ -21,36 +21,37 @@ the new entry point for short-form style Android projets in .NET 5.
 
   <PropertyGroup>
     <BeforePack>
-      _GenerateXAPackContent;
+      _GenerateXASdkContent;
       $(BeforePack);
     </BeforePack>
   </PropertyGroup>
 
-  <Target Name="_GenerateXAPackContent"
+  <Target Name="_GenerateXASdkContent"
       DependsOnTargets="ConstructInstallerItems;_GenerateBundledVersions" >
     <PropertyGroup>
       <PackageVersion>$(_AndroidNETSdkVersion)</PackageVersion>
       <ToolsSourceDir>$(XamarinAndroidSourcePath)bin\Build$(Configuration)\packs\tools\</ToolsSourceDir>
     </PropertyGroup>
     <ItemGroup>
-      <_MSBuildNonHostItemsUnix Include="@(MSBuildItemsUnix)" Condition="!$([System.Text.RegularExpressions.Regex]::IsMatch(%(RelativePath), '.*host-$(HostOS).*'))"/>
-      <_MSBuildHostItemsUnix Include="@(MSBuildItemsUnix)" Condition="$([System.Text.RegularExpressions.Regex]::IsMatch(%(RelativePath), '.*host-$(HostOS).*'))"/>
+      <AndroidSdkBuildTools Include="@(_MSBuildFiles);@(_MSBuildFilesWin)" >
+        <RelativePath>$([MSBuild]::MakeRelative($(MSBuildSrcDir), %(FullPath)))</RelativePath>
+      </AndroidSdkBuildTools>
+      <AndroidSdkBuildTools Include="@(_MSBuildTargetsSrcFiles)" >
+        <RelativePath>$([MSBuild]::MakeRelative($(MSBuildTargetsSrcDir), %(FullPath)))</RelativePath>
+      </AndroidSdkBuildTools>
+      <AndroidSdkBuildToolsUnix Include="@(_MSBuildFilesUnix);@(_MSBuildFilesUnixSwab);@(_MSBuildFilesUnixSign);@(_MSBuildFilesUnixSignAndHarden)" >
+        <RelativePath>$([MSBuild]::MakeRelative($(MSBuildSrcDir), %(FullPath)))</RelativePath>
+      </AndroidSdkBuildToolsUnix>
     </ItemGroup>
     <!-- Copy only the required tools to new folder. Skip Unix item copying on Windows. -->
     <Copy
-        SourceFiles="@(MSBuildItemsWin)"
-        DestinationFiles="@(MSBuildItemsWin->'$(ToolsSourceDir)%(RelativePath)')"
+        SourceFiles="@(AndroidSdkBuildTools)"
+        DestinationFiles="@(AndroidSdkBuildTools->'$(ToolsSourceDir)%(RelativePath)')"
         SkipUnchangedFiles="True"
     />
     <Copy
-        SourceFiles="@(_MSBuildNonHostItemsUnix)"
-        DestinationFiles="@(_MSBuildNonHostItemsUnix->'$(ToolsSourceDir)%(RelativePath)')"
-        SkipUnchangedFiles="True"
-        Condition="$([MSBuild]::IsOSPlatform('osx'))"
-    />
-    <Copy
-        SourceFiles="@(_MSBuildHostItemsUnix)"
-        DestinationFolder="$(ToolsSourceDir)"
+        SourceFiles="@(AndroidSdkBuildToolsUnix)"
+        DestinationFiles="@(AndroidSdkBuildToolsUnix->'$(ToolsSourceDir)%(RelativePath)')"
         SkipUnchangedFiles="True"
         Condition="$([MSBuild]::IsOSPlatform('osx'))"
     />
@@ -61,10 +62,10 @@ the new entry point for short-form style Android projets in .NET 5.
     />
     <ItemGroup>
       <_PackageFiles Include="$(ToolsSourceDir)**" PackagePath="tools" />
-      <!-- Only include @(FrameworkItemsWin), as it is a superset of @(FrameworkItemsUnix) -->
-      <_PackageFiles Include="@(FrameworkItemsWin)" PackagePath="lib\MonoAndroid\%(FrameworkItemsWin.RelativePath)" />
-      <_PackageFiles Include="$(XamarinAndroidSourcePath)\src\Xamarin.Android.Sdk\Sdk\**" PackagePath="Sdk" /> 
-      <_PackageFiles Include="$(XamarinAndroidSourcePath)\src\Xamarin.Android.Sdk\targets\**" PackagePath="targets" /> 
+      <_PackageFiles Include="$(XamarinAndroidSourcePath)\src\Xamarin.Android.Sdk\Sdk\**" PackagePath="Sdk" />
+      <_PackageFiles Include="$(XamarinAndroidSourcePath)\src\Xamarin.Android.Sdk\targets\**"
+          Exclude="$(XamarinAndroidSourcePath)\src\Xamarin.Android.Sdk\**\*.Lite.*"
+          PackagePath="targets" />
     </ItemGroup>
   </Target>
 
