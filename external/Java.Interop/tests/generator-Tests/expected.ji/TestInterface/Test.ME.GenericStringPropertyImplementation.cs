@@ -59,7 +59,7 @@ namespace Test.ME {
 
 		static IntPtr n_GetObject (IntPtr jnienv, IntPtr native__this)
 		{
-			global::Test.ME.GenericStringPropertyImplementation __this = global::Java.Lang.Object.GetObject<global::Test.ME.GenericStringPropertyImplementation> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Test.ME.GenericStringPropertyImplementation> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 			return JNIEnv.NewString (__this.Object);
 		}
 #pragma warning restore 0169
@@ -75,8 +75,8 @@ namespace Test.ME {
 
 		static void n_SetObject_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_value)
 		{
-			global::Test.ME.GenericStringPropertyImplementation __this = global::Java.Lang.Object.GetObject<global::Test.ME.GenericStringPropertyImplementation> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			string value = JNIEnv.GetString (native_value, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Test.ME.GenericStringPropertyImplementation> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var value = JNIEnv.GetString (native_value, JniHandleOwnership.DoNotTransfer);
 			__this.Object = value;
 		}
 #pragma warning restore 0169

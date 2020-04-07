@@ -9,7 +9,7 @@ static Delegate GetbarHandler ()
 
 static IntPtr n_bar (IntPtr jnienv, IntPtr native__this)
 {
-	com.mypackage.foo __this = global::Java.Lang.Object.GetObject<com.mypackage.foo> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+	var __this = global::Java.Lang.Object.GetObject<com.mypackage.foo> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 	return JNIEnv.NewString (__this.bar ());
 }
 #pragma warning restore 0169

@@ -213,7 +213,7 @@ namespace MonoDroid.Generation {
 			else if (NeedsPrep)
 				return sym.PreCallback (opt, Name, false);
 			else
-				return new string[] { opt.GetOutputName (Type) + " " + opt.GetSafeIdentifier (Name) + " = " + FromNative (opt, false) + ";" };
+				return new string[] { "var " + opt.GetSafeIdentifier (Name) + " = " + FromNative (opt, false) + ";" };
 		}
 
 		public string Type {

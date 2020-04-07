@@ -59,7 +59,7 @@ namespace Xamarin.Test {
 
 		static void n_Foo (IntPtr jnienv, IntPtr native__this)
 		{
-			global::Xamarin.Test.ExtendPublicClass __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.ExtendPublicClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.ExtendPublicClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 			__this.Foo ();
 		}
 #pragma warning restore 0169

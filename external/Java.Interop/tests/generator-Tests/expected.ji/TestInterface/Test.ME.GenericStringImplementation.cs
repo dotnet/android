@@ -59,8 +59,8 @@ namespace Test.ME {
 
 		static void n_SetObject_arrayLjava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_value)
 		{
-			global::Test.ME.GenericStringImplementation __this = global::Java.Lang.Object.GetObject<global::Test.ME.GenericStringImplementation> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			string[] value = (string[]) JNIEnv.GetArray (native_value, JniHandleOwnership.DoNotTransfer, typeof (string));
+			var __this = global::Java.Lang.Object.GetObject<global::Test.ME.GenericStringImplementation> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var value = (string[]) JNIEnv.GetArray (native_value, JniHandleOwnership.DoNotTransfer, typeof (string));
 			__this.SetObject (value);
 			if (value != null)
 				JNIEnv.CopyArray (value, native_value);

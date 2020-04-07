@@ -710,7 +710,7 @@ namespace MonoDroid.Generation
 
 			return new string []{
 				string.Format ("{0} {1} = {5}global::Java.Lang.Object.GetObject<{4}> ({2}, {3});",
-					       opt.GetOutputName (FullName),
+					       "var",
 					       opt.GetSafeIdentifier (var_name),
 					       opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName (var_name)),
 					       owned ? "JniHandleOwnership.TransferLocalRef" : "JniHandleOwnership.DoNotTransfer",

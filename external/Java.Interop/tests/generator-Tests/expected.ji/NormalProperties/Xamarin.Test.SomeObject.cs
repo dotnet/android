@@ -41,7 +41,7 @@ namespace Xamarin.Test {
 
 		static int n_GetSomeInteger (IntPtr jnienv, IntPtr native__this)
 		{
-			global::Xamarin.Test.SomeObject __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 			return __this.SomeInteger;
 		}
 #pragma warning restore 0169
@@ -57,7 +57,7 @@ namespace Xamarin.Test {
 
 		static void n_SetSomeInteger_I (IntPtr jnienv, IntPtr native__this, int newvalue)
 		{
-			global::Xamarin.Test.SomeObject __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 			__this.SomeInteger = newvalue;
 		}
 #pragma warning restore 0169
@@ -80,7 +80,7 @@ namespace Xamarin.Test {
 
 		static IntPtr n_GetSomeObjectProperty (IntPtr jnienv, IntPtr native__this)
 		{
-			global::Xamarin.Test.SomeObject __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 			return JNIEnv.ToLocalJniHandle (__this.SomeObjectProperty);
 		}
 #pragma warning restore 0169
@@ -96,8 +96,8 @@ namespace Xamarin.Test {
 
 		static void n_SetSomeObjectProperty_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_newvalue)
 		{
-			global::Xamarin.Test.SomeObject __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			global::Java.Lang.Object newvalue = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_newvalue, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var newvalue = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_newvalue, JniHandleOwnership.DoNotTransfer);
 			__this.SomeObjectProperty = newvalue;
 		}
 #pragma warning restore 0169
@@ -120,7 +120,7 @@ namespace Xamarin.Test {
 
 		static IntPtr n_GetSomeString (IntPtr jnienv, IntPtr native__this)
 		{
-			global::Xamarin.Test.SomeObject __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 			return JNIEnv.NewString (__this.SomeString);
 		}
 #pragma warning restore 0169
@@ -136,8 +136,8 @@ namespace Xamarin.Test {
 
 		static void n_SetSomeString_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_newvalue)
 		{
-			global::Xamarin.Test.SomeObject __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			string newvalue = JNIEnv.GetString (native_newvalue, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var newvalue = JNIEnv.GetString (native_newvalue, JniHandleOwnership.DoNotTransfer);
 			__this.SomeString = newvalue;
 		}
 #pragma warning restore 0169

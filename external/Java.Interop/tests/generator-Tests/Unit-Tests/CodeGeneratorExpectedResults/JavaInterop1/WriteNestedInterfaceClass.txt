@@ -98,7 +98,7 @@ internal partial class IParentInvoker : global::Java.Lang.Object, IParent {
 
 	static int n_GetBar (IntPtr jnienv, IntPtr native__this)
 	{
-		Com.Xamarin.Android.IParent __this = global::Java.Lang.Object.GetObject<Com.Xamarin.Android.IParent> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		var __this = global::Java.Lang.Object.GetObject<Com.Xamarin.Android.IParent> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 		return __this.Bar;
 	}
 #pragma warning restore 0169

@@ -73,8 +73,8 @@ namespace Android.Text {
 
 		static int n_GetSpanFlags_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_tag)
 		{
-			Android.Text.ISpannable __this = global::Java.Lang.Object.GetObject<Android.Text.ISpannable> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			Java.Lang.Object tag = global::Java.Lang.Object.GetObject<Java.Lang.Object> (native_tag, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<Android.Text.ISpannable> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var tag = global::Java.Lang.Object.GetObject<Java.Lang.Object> (native_tag, JniHandleOwnership.DoNotTransfer);
 			int __ret = (int) __this.GetSpanFlags (tag);
 			return __ret;
 		}
@@ -87,7 +87,7 @@ namespace Android.Text {
 				id_getSpanFlags_Ljava_lang_Object_ = JNIEnv.GetMethodID (class_ref, "getSpanFlags", "(Ljava/lang/Object;)I");
 			JValue* __args = stackalloc JValue [1];
 			__args [0] = new JValue ((tag == null) ? IntPtr.Zero : ((global::Java.Lang.Object) tag).Handle);
-			Android.Text.SpanTypes __ret = (Android.Text.SpanTypes) JNIEnv.CallIntMethod (((global::Java.Lang.Object) this).Handle, id_getSpanFlags_Ljava_lang_Object_, __args);
+			var __ret = (Android.Text.SpanTypes) JNIEnv.CallIntMethod (((global::Java.Lang.Object) this).Handle, id_getSpanFlags_Ljava_lang_Object_, __args);
 			return __ret;
 		}
 

@@ -9,7 +9,7 @@ static Delegate Getget_CountHandler ()
 
 static int n_get_Count (IntPtr jnienv, IntPtr native__this)
 {
-	java.code.IMyInterface __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+	var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 	return __this.Count;
 }
 #pragma warning restore 0169
@@ -25,7 +25,7 @@ static Delegate Getset_Count_IHandler ()
 
 static void n_set_Count_I (IntPtr jnienv, IntPtr native__this, int value)
 {
-	java.code.IMyInterface __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+	var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 	__this.Count = value;
 }
 #pragma warning restore 0169
@@ -58,7 +58,7 @@ static Delegate Getget_KeyHandler ()
 
 static IntPtr n_get_Key (IntPtr jnienv, IntPtr native__this)
 {
-	java.code.IMyInterface __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+	var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 	return JNIEnv.NewString (__this.Key);
 }
 #pragma warning restore 0169
@@ -74,8 +74,8 @@ static Delegate Getset_Key_Ljava_lang_String_Handler ()
 
 static void n_set_Key_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_value)
 {
-	java.code.IMyInterface __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-	string value = JNIEnv.GetString (native_value, JniHandleOwnership.DoNotTransfer);
+	var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+	var value = JNIEnv.GetString (native_value, JniHandleOwnership.DoNotTransfer);
 	__this.Key = value;
 }
 #pragma warning restore 0169
@@ -110,7 +110,7 @@ static Delegate Getget_StaticCountHandler ()
 
 static int n_get_StaticCount (IntPtr jnienv, IntPtr native__this)
 {
-	java.code.IMyInterface __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+	var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 	return __this.StaticCount;
 }
 #pragma warning restore 0169
@@ -126,7 +126,7 @@ static Delegate Getset_StaticCount_IHandler ()
 
 static void n_set_StaticCount_I (IntPtr jnienv, IntPtr native__this, int value)
 {
-	java.code.IMyInterface __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+	var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 	__this.StaticCount = value;
 }
 #pragma warning restore 0169
@@ -159,7 +159,7 @@ static Delegate Getget_AbstractCountHandler ()
 
 static int n_get_AbstractCount (IntPtr jnienv, IntPtr native__this)
 {
-	java.code.IMyInterface __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+	var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 	return __this.AbstractCount;
 }
 #pragma warning restore 0169
@@ -175,7 +175,7 @@ static Delegate Getset_AbstractCount_IHandler ()
 
 static void n_set_AbstractCount_I (IntPtr jnienv, IntPtr native__this, int value)
 {
-	java.code.IMyInterface __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+	var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 	__this.AbstractCount = value;
 }
 #pragma warning restore 0169

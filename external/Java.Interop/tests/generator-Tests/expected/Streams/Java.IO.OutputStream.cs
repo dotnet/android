@@ -64,7 +64,7 @@ namespace Java.IO {
 
 		static void n_Close (IntPtr jnienv, IntPtr native__this)
 		{
-			global::Java.IO.OutputStream __this = global::Java.Lang.Object.GetObject<global::Java.IO.OutputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Java.IO.OutputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 			__this.Close ();
 		}
 #pragma warning restore 0169
@@ -97,7 +97,7 @@ namespace Java.IO {
 
 		static void n_Flush (IntPtr jnienv, IntPtr native__this)
 		{
-			global::Java.IO.OutputStream __this = global::Java.Lang.Object.GetObject<global::Java.IO.OutputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Java.IO.OutputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 			__this.Flush ();
 		}
 #pragma warning restore 0169
@@ -130,8 +130,8 @@ namespace Java.IO {
 
 		static void n_Write_arrayB (IntPtr jnienv, IntPtr native__this, IntPtr native_buffer)
 		{
-			global::Java.IO.OutputStream __this = global::Java.Lang.Object.GetObject<global::Java.IO.OutputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			byte[] buffer = (byte[]) JNIEnv.GetArray (native_buffer, JniHandleOwnership.DoNotTransfer, typeof (byte));
+			var __this = global::Java.Lang.Object.GetObject<global::Java.IO.OutputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var buffer = (byte[]) JNIEnv.GetArray (native_buffer, JniHandleOwnership.DoNotTransfer, typeof (byte));
 			__this.Write (buffer);
 			if (buffer != null)
 				JNIEnv.CopyArray (buffer, native_buffer);
@@ -173,8 +173,8 @@ namespace Java.IO {
 
 		static void n_Write_arrayBII (IntPtr jnienv, IntPtr native__this, IntPtr native_buffer, int offset, int count)
 		{
-			global::Java.IO.OutputStream __this = global::Java.Lang.Object.GetObject<global::Java.IO.OutputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			byte[] buffer = (byte[]) JNIEnv.GetArray (native_buffer, JniHandleOwnership.DoNotTransfer, typeof (byte));
+			var __this = global::Java.Lang.Object.GetObject<global::Java.IO.OutputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var buffer = (byte[]) JNIEnv.GetArray (native_buffer, JniHandleOwnership.DoNotTransfer, typeof (byte));
 			__this.Write (buffer, offset, count);
 			if (buffer != null)
 				JNIEnv.CopyArray (buffer, native_buffer);
@@ -218,7 +218,7 @@ namespace Java.IO {
 
 		static void n_Write_I (IntPtr jnienv, IntPtr native__this, int oneByte)
 		{
-			global::Java.IO.OutputStream __this = global::Java.Lang.Object.GetObject<global::Java.IO.OutputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Java.IO.OutputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 			__this.Write (oneByte);
 		}
 #pragma warning restore 0169

@@ -1109,7 +1109,7 @@ namespace MonoDroid.Generation
 				writer.WriteLine ($"{indent}[Obsolete]");
 			writer.WriteLine ("{0}{4}static {1} n_{2} (IntPtr jnienv, IntPtr native__this{3})", indent, method.RetVal.NativeType, method.Name + method.IDSignature, method.Parameters.GetCallbackSignature (opt), is_private);
 			writer.WriteLine ("{0}{{", indent);
-			writer.WriteLine ("{0}\t{1} __this = global::Java.Lang.Object.GetObject<{1}> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);", indent, opt.GetOutputName (type.FullName));
+			writer.WriteLine ("{0}\tvar __this = global::Java.Lang.Object.GetObject<{1}> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);", indent, opt.GetOutputName (type.FullName));
 			foreach (string s in method.Parameters.GetCallbackPrep (opt))
 				writer.WriteLine ("{0}\t{1}", indent, s);
 			if (String.IsNullOrEmpty (property_name)) {
@@ -1284,7 +1284,7 @@ namespace MonoDroid.Generation
 			if (method.IsVoid)
 				writer.WriteLine ("{0}{1};", indent, call);
 			else
-				writer.WriteLine ("{0}{1}{2};", indent, method.Parameters.HasCleanup ? opt.GetOutputName (method.RetVal.FullName) + " __ret = " : "return ", method.RetVal.FromNative (opt, call, true));
+				writer.WriteLine ("{0}{1}{2};", indent, method.Parameters.HasCleanup ? "var __ret = " : "return ", method.RetVal.FromNative (opt, call, true));
 
 			foreach (string cleanup in method.Parameters.GetCallCleanup (opt))
 				writer.WriteLine ("{0}{1}", indent, cleanup);
@@ -1300,10 +1300,10 @@ namespace MonoDroid.Generation
 				string pname = p.Name;
 				if (p.Type == "Java.Lang.ICharSequence") {
 					pname = p.GetName ("jls_");
-					writer.WriteLine ("{0}global::Java.Lang.String {1} = {2} == null ? null : new global::Java.Lang.String ({2});", indent, pname, p.Name);
+					writer.WriteLine ("{0}var {1} = {2} == null ? null : new global::Java.Lang.String ({2});", indent, pname, p.Name);
 				} else if (p.Type == "Java.Lang.ICharSequence[]" || p.Type == "params Java.Lang.ICharSequence[]") {
 					pname = p.GetName ("jlca_");
-					writer.WriteLine ("{0}global::Java.Lang.ICharSequence[] {1} = CharSequence.ArrayFromStringArray({2});", indent, pname, p.Name);
+					writer.WriteLine ("{0}var {1} = CharSequence.ArrayFromStringArray({2});", indent, pname, p.Name);
 				}
 				if (call.Length > 0)
 					call.Append (", ");
@@ -1327,7 +1327,7 @@ namespace MonoDroid.Generation
 				if (p.Type == "Java.Lang.ICharSequence")
 					writer.WriteLine ("{0}{1}?.Dispose ();", indent, p.GetName ("jls_"));
 				else if (p.Type == "Java.Lang.ICharSequence[]")
-					writer.WriteLine ("{0}if ({1} != null) foreach (global::Java.Lang.String s in {1}) s?.Dispose ();", indent, p.GetName ("jlca_"));
+					writer.WriteLine ("{0}if ({1} != null) foreach (var s in {1}) s?.Dispose ();", indent, p.GetName ("jlca_"));
 			}
 			if (!method.RetVal.IsVoid) {
 				writer.WriteLine ($"{indent}return __rsval;");
@@ -1741,11 +1741,11 @@ namespace MonoDroid.Generation
 					writer.WriteLine ("{0}\tset {{", indent);
 					writer.WriteLine ("{0}\t\tglobal::Java.Lang.ICharSequence[] jlsa = CharSequence.ArrayFromStringArray (value);", indent);
 					writer.WriteLine ("{0}\t\t{1} = jlsa;", indent, property.AdjustedName);
-					writer.WriteLine ("{0}\t\tforeach (global::Java.Lang.String jls in jlsa) if (jls != null) jls.Dispose ();", indent);
+					writer.WriteLine ("{0}\t\tforeach (var jls in jlsa) if (jls != null) jls.Dispose ();", indent);
 					writer.WriteLine ("{0}\t}}", indent);
 				} else {
 					writer.WriteLine ("{0}\tset {{", indent);
-					writer.WriteLine ("{0}\t\tglobal::Java.Lang.String jls = value == null ? null : new global::Java.Lang.String (value);", indent);
+					writer.WriteLine ("{0}\t\tvar jls = value == null ? null : new global::Java.Lang.String (value);", indent);
 					writer.WriteLine ("{0}\t\t{1} = jls;", indent, property.AdjustedName);
 					writer.WriteLine ("{0}\t\tif (jls != null) jls.Dispose ();", indent);
 					writer.WriteLine ("{0}\t}}", indent);

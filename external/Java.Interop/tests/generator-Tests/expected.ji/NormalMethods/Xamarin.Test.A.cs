@@ -46,7 +46,7 @@ namespace Xamarin.Test {
 
 			static IntPtr n_SetCustomDimension_I (IntPtr jnienv, IntPtr native__this, int index)
 			{
-				global::Xamarin.Test.A.B __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.A.B> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.A.B> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 				return JNIEnv.ToLocalJniHandle (__this.SetCustomDimension (index));
 			}
 #pragma warning restore 0169
@@ -99,7 +99,7 @@ namespace Xamarin.Test {
 
 		static int n_GetHandle (IntPtr jnienv, IntPtr native__this)
 		{
-			global::Xamarin.Test.A __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.A> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.A> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 			return __this.GetHandle ();
 		}
 #pragma warning restore 0169

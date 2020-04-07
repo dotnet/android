@@ -59,8 +59,8 @@ namespace Test.ME {
 
 		static void n_SetObject_arrayB (IntPtr jnienv, IntPtr native__this, IntPtr native_value)
 		{
-			global::Test.ME.GenericImplementation __this = global::Java.Lang.Object.GetObject<global::Test.ME.GenericImplementation> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			byte[] value = (byte[]) JNIEnv.GetArray (native_value, JniHandleOwnership.DoNotTransfer, typeof (byte));
+			var __this = global::Java.Lang.Object.GetObject<global::Test.ME.GenericImplementation> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var value = (byte[]) JNIEnv.GetArray (native_value, JniHandleOwnership.DoNotTransfer, typeof (byte));
 			__this.SetObject (value);
 			if (value != null)
 				JNIEnv.CopyArray (value, native_value);

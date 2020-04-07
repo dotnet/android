@@ -72,7 +72,7 @@ namespace Xamarin.Test {
 
 			static void n_Foo (IntPtr jnienv, IntPtr native__this)
 			{
-				global::Xamarin.Test.PublicClass.IProtectedInterface __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.PublicClass.IProtectedInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.PublicClass.IProtectedInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 				__this.Foo ();
 			}
 #pragma warning restore 0169
@@ -144,7 +144,7 @@ namespace Xamarin.Test {
 
 		static void n_Foo (IntPtr jnienv, IntPtr native__this)
 		{
-			global::Xamarin.Test.PublicClass __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.PublicClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.PublicClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 			__this.Foo ();
 		}
 #pragma warning restore 0169

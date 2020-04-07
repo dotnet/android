@@ -107,7 +107,7 @@ namespace MonoDroid.Generation {
 		public string[] PreCallback (CodeGenerationOptions opt, string var_name, bool owned)
 		{
 			return new string[]{
-				string.Format ("System.IO.Stream {0} = global::Android.Runtime.{1}Invoker.FromJniHandle ({2}, {3});",
+				string.Format ("var {0} = global::Android.Runtime.{1}Invoker.FromJniHandle ({2}, {3});",
 						var_name,
 						base_name,
 						opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName (var_name)),

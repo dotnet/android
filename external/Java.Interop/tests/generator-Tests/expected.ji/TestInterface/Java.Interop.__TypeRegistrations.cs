@@ -25,7 +25,7 @@ namespace Java.Interop {
 
 		static Type Lookup (string[] mappings, string javaType)
 		{
-			string managedType = Java.Interop.TypeManager.LookupTypeMapping (mappings, javaType);
+			var managedType = Java.Interop.TypeManager.LookupTypeMapping (mappings, javaType);
 			if (managedType == null)
 				return null;
 			return Type.GetType (managedType);

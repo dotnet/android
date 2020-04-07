@@ -87,8 +87,8 @@ namespace Test.ME {
 
 		static int n_GetSpanFlags_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_tag)
 		{
-			global::Test.ME.TestInterfaceImplementation __this = global::Java.Lang.Object.GetObject<global::Test.ME.TestInterfaceImplementation> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			global::Java.Lang.Object tag = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_tag, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Test.ME.TestInterfaceImplementation> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var tag = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_tag, JniHandleOwnership.DoNotTransfer);
 			int __ret = __this.GetSpanFlags (tag);
 			return __ret;
 		}
@@ -109,8 +109,8 @@ namespace Test.ME {
 
 		static void n_Append_Ljava_lang_CharSequence_ (IntPtr jnienv, IntPtr native__this, IntPtr native_value)
 		{
-			global::Test.ME.TestInterfaceImplementation __this = global::Java.Lang.Object.GetObject<global::Test.ME.TestInterfaceImplementation> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			global::Java.Lang.ICharSequence value = global::Java.Lang.Object.GetObject<global::Java.Lang.ICharSequence> (native_value, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Test.ME.TestInterfaceImplementation> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var value = global::Java.Lang.Object.GetObject<global::Java.Lang.ICharSequence> (native_value, JniHandleOwnership.DoNotTransfer);
 			__this.Append (value);
 		}
 #pragma warning restore 0169
@@ -121,7 +121,7 @@ namespace Test.ME {
 
 		public void Append (string value)
 		{
-			global::Java.Lang.String jls_value = value == null ? null : new global::Java.Lang.String (value);
+			var jls_value = value == null ? null : new global::Java.Lang.String (value);
 			Append (jls_value);
 			jls_value?.Dispose ();
 		}
@@ -137,8 +137,8 @@ namespace Test.ME {
 
 		static IntPtr n_Identity_Ljava_lang_CharSequence_ (IntPtr jnienv, IntPtr native__this, IntPtr native_value)
 		{
-			global::Test.ME.TestInterfaceImplementation __this = global::Java.Lang.Object.GetObject<global::Test.ME.TestInterfaceImplementation> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			global::Java.Lang.ICharSequence value = global::Java.Lang.Object.GetObject<global::Java.Lang.ICharSequence> (native_value, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Test.ME.TestInterfaceImplementation> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var value = global::Java.Lang.Object.GetObject<global::Java.Lang.ICharSequence> (native_value, JniHandleOwnership.DoNotTransfer);
 			IntPtr __ret = CharSequence.ToLocalJniHandle (__this.IdentityFormatted (value));
 			return __ret;
 		}
@@ -150,7 +150,7 @@ namespace Test.ME {
 
 		public string Identity (string value)
 		{
-			global::Java.Lang.String jls_value = value == null ? null : new global::Java.Lang.String (value);
+			var jls_value = value == null ? null : new global::Java.Lang.String (value);
 			global::Java.Lang.ICharSequence __result = IdentityFormatted (jls_value);
 			var __rsval = __result?.ToString ();
 			jls_value?.Dispose ();
@@ -218,6 +218,7 @@ namespace Test.ME {
 				JNIEnv.DeleteLocalRef (native_value);
 			}
 		}
+
 	}
 
 }

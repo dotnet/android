@@ -36,7 +36,7 @@ namespace Xamarin.Test {
 
 		static IntPtr n_GenericReturn (IntPtr jnienv, IntPtr native__this)
 		{
-			global::Xamarin.Test.GenericReturnObject __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.GenericReturnObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.GenericReturnObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 			return JNIEnv.ToLocalJniHandle (__this.GenericReturn ());
 		}
 #pragma warning restore 0169

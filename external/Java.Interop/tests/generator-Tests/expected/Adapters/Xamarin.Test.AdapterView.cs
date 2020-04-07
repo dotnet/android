@@ -37,7 +37,7 @@ namespace Xamarin.Test {
 
 		static IntPtr n_GetAdapter (IntPtr jnienv, IntPtr native__this)
 		{
-			global::Xamarin.Test.AdapterView __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.AdapterView> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.AdapterView> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 			return JNIEnv.ToLocalJniHandle (__this.RawAdapter);
 		}
 #pragma warning restore 0169
@@ -53,8 +53,8 @@ namespace Xamarin.Test {
 
 		static void n_SetAdapter_Lxamarin_test_Adapter_ (IntPtr jnienv, IntPtr native__this, IntPtr native_adapter)
 		{
-			global::Xamarin.Test.AdapterView __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.AdapterView> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			global::Java.Lang.Object adapter = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_adapter, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.AdapterView> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var adapter = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_adapter, JniHandleOwnership.DoNotTransfer);
 			__this.RawAdapter = adapter;
 		}
 #pragma warning restore 0169

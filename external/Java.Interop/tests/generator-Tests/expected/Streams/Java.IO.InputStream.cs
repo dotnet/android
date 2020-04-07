@@ -64,7 +64,7 @@ namespace Java.IO {
 
 		static int n_Available (IntPtr jnienv, IntPtr native__this)
 		{
-			global::Java.IO.InputStream __this = global::Java.Lang.Object.GetObject<global::Java.IO.InputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Java.IO.InputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 			return __this.Available ();
 		}
 #pragma warning restore 0169
@@ -97,7 +97,7 @@ namespace Java.IO {
 
 		static void n_Close (IntPtr jnienv, IntPtr native__this)
 		{
-			global::Java.IO.InputStream __this = global::Java.Lang.Object.GetObject<global::Java.IO.InputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Java.IO.InputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 			__this.Close ();
 		}
 #pragma warning restore 0169
@@ -130,7 +130,7 @@ namespace Java.IO {
 
 		static void n_Mark_I (IntPtr jnienv, IntPtr native__this, int readlimit)
 		{
-			global::Java.IO.InputStream __this = global::Java.Lang.Object.GetObject<global::Java.IO.InputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Java.IO.InputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 			__this.Mark (readlimit);
 		}
 #pragma warning restore 0169
@@ -165,7 +165,7 @@ namespace Java.IO {
 
 		static bool n_MarkSupported (IntPtr jnienv, IntPtr native__this)
 		{
-			global::Java.IO.InputStream __this = global::Java.Lang.Object.GetObject<global::Java.IO.InputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Java.IO.InputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 			return __this.MarkSupported ();
 		}
 #pragma warning restore 0169
@@ -198,7 +198,7 @@ namespace Java.IO {
 
 		static int n_Read (IntPtr jnienv, IntPtr native__this)
 		{
-			global::Java.IO.InputStream __this = global::Java.Lang.Object.GetObject<global::Java.IO.InputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Java.IO.InputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 			return __this.Read ();
 		}
 #pragma warning restore 0169
@@ -218,8 +218,8 @@ namespace Java.IO {
 
 		static int n_Read_arrayB (IntPtr jnienv, IntPtr native__this, IntPtr native_buffer)
 		{
-			global::Java.IO.InputStream __this = global::Java.Lang.Object.GetObject<global::Java.IO.InputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			byte[] buffer = (byte[]) JNIEnv.GetArray (native_buffer, JniHandleOwnership.DoNotTransfer, typeof (byte));
+			var __this = global::Java.Lang.Object.GetObject<global::Java.IO.InputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var buffer = (byte[]) JNIEnv.GetArray (native_buffer, JniHandleOwnership.DoNotTransfer, typeof (byte));
 			int __ret = __this.Read (buffer);
 			if (buffer != null)
 				JNIEnv.CopyArray (buffer, native_buffer);
@@ -264,8 +264,8 @@ namespace Java.IO {
 
 		static int n_Read_arrayBII (IntPtr jnienv, IntPtr native__this, IntPtr native_buffer, int byteOffset, int byteCount)
 		{
-			global::Java.IO.InputStream __this = global::Java.Lang.Object.GetObject<global::Java.IO.InputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			byte[] buffer = (byte[]) JNIEnv.GetArray (native_buffer, JniHandleOwnership.DoNotTransfer, typeof (byte));
+			var __this = global::Java.Lang.Object.GetObject<global::Java.IO.InputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var buffer = (byte[]) JNIEnv.GetArray (native_buffer, JniHandleOwnership.DoNotTransfer, typeof (byte));
 			int __ret = __this.Read (buffer, byteOffset, byteCount);
 			if (buffer != null)
 				JNIEnv.CopyArray (buffer, native_buffer);
@@ -312,7 +312,7 @@ namespace Java.IO {
 
 		static void n_Reset (IntPtr jnienv, IntPtr native__this)
 		{
-			global::Java.IO.InputStream __this = global::Java.Lang.Object.GetObject<global::Java.IO.InputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Java.IO.InputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 			__this.Reset ();
 		}
 #pragma warning restore 0169
@@ -345,7 +345,7 @@ namespace Java.IO {
 
 		static long n_Skip_J (IntPtr jnienv, IntPtr native__this, long byteCount)
 		{
-			global::Java.IO.InputStream __this = global::Java.Lang.Object.GetObject<global::Java.IO.InputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Java.IO.InputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 			return __this.Skip (byteCount);
 		}
 #pragma warning restore 0169

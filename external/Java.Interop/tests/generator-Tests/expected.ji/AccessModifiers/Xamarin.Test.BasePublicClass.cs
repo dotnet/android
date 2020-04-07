@@ -41,7 +41,7 @@ namespace Xamarin.Test {
 
 		static void n_BaseMethod (IntPtr jnienv, IntPtr native__this)
 		{
-			global::Xamarin.Test.BasePublicClass __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.BasePublicClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.BasePublicClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 			__this.BaseMethod ();
 		}
 #pragma warning restore 0169

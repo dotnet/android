@@ -98,7 +98,7 @@ namespace MonoDroid.Generation {
 		public string[] PreCallback (CodeGenerationOptions opt, string var_name, bool owned)
 		{
 			return new string[]{
-				string.Format ("{0} {1} = global::Java.Lang.Object.GetObject<{0}> ({2}, {3});",
+				string.Format ("var {1} = global::Java.Lang.Object.GetObject<{0}> ({2}, {3});",
 						opt.GetOutputName (FullName),
 						var_name,
 						opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName (var_name)),

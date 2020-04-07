@@ -72,7 +72,7 @@ namespace Xamarin.Test {
 
 		static void n_ExtendedMethod (IntPtr jnienv, IntPtr native__this)
 		{
-			global::Xamarin.Test.IExtendedInterface __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.IExtendedInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.IExtendedInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 			__this.ExtendedMethod ();
 		}
 #pragma warning restore 0169
@@ -96,7 +96,7 @@ namespace Xamarin.Test {
 
 		static void n_BaseMethod (IntPtr jnienv, IntPtr native__this)
 		{
-			global::Xamarin.Test.IExtendedInterface __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.IExtendedInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.IExtendedInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 			__this.BaseMethod ();
 		}
 #pragma warning restore 0169

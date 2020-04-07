@@ -60,7 +60,7 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 
 	static void n_DoDeclaration (IntPtr jnienv, IntPtr native__this)
 	{
-		java.code.IMyInterface __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 		__this.DoDeclaration ();
 	}
 #pragma warning restore 0169

@@ -209,7 +209,7 @@ namespace MonoDroid.Generation
 				sw.WriteLine ();
 				sw.WriteLine ("\t\tstatic Type Lookup (string[] mappings, string javaType)");
 				sw.WriteLine ("\t\t{");
-				sw.WriteLine ("\t\t\tstring managedType = Java.Interop.TypeManager.LookupTypeMapping (mappings, javaType);");
+				sw.WriteLine ("\t\t\tvar managedType = Java.Interop.TypeManager.LookupTypeMapping (mappings, javaType);");
 				sw.WriteLine ("\t\t\tif (managedType == null)");
 				sw.WriteLine ("\t\t\t\treturn null;");
 				sw.WriteLine ("\t\t\treturn Type.GetType (managedType);");

@@ -62,7 +62,7 @@ public abstract partial class ClassWithoutNamespace : global::Java.Lang.Object, 
 
 	static void n_Foo (IntPtr jnienv, IntPtr native__this)
 	{
-		ClassWithoutNamespace __this = global::Java.Lang.Object.GetObject<ClassWithoutNamespace> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		var __this = global::Java.Lang.Object.GetObject<ClassWithoutNamespace> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 		__this.Foo ();
 	}
 #pragma warning restore 0169

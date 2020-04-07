@@ -36,7 +36,7 @@ namespace Xamarin.Test {
 
 		static IntPtr n_GetAdapter (IntPtr jnienv, IntPtr native__this)
 		{
-			global::Xamarin.Test.AbsSpinner __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.AbsSpinner> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.AbsSpinner> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 			return JNIEnv.ToLocalJniHandle (__this.Adapter);
 		}
 #pragma warning restore 0169
@@ -52,8 +52,8 @@ namespace Xamarin.Test {
 
 		static void n_SetAdapter_Lxamarin_test_SpinnerAdapter_ (IntPtr jnienv, IntPtr native__this, IntPtr native_adapter)
 		{
-			global::Xamarin.Test.AbsSpinner __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.AbsSpinner> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			global::Xamarin.Test.ISpinnerAdapter adapter = (global::Xamarin.Test.ISpinnerAdapter)global::Java.Lang.Object.GetObject<global::Xamarin.Test.ISpinnerAdapter> (native_adapter, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.AbsSpinner> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var adapter = (global::Xamarin.Test.ISpinnerAdapter)global::Java.Lang.Object.GetObject<global::Xamarin.Test.ISpinnerAdapter> (native_adapter, JniHandleOwnership.DoNotTransfer);
 			__this.Adapter = adapter;
 		}
 #pragma warning restore 0169

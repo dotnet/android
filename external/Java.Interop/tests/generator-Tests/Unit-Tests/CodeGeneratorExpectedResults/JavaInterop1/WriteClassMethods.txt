@@ -9,8 +9,8 @@ static Delegate GetGetCountForKey_Ljava_lang_String_Handler ()
 
 static int n_GetCountForKey_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_key)
 {
-	java.code.MyClass __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-	string key = JNIEnv.GetString (native_key, JniHandleOwnership.DoNotTransfer);
+	var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+	var key = JNIEnv.GetString (native_key, JniHandleOwnership.DoNotTransfer);
 	int __ret = __this.GetCountForKey (key);
 	return __ret;
 }
@@ -43,7 +43,7 @@ static Delegate GetKeyHandler ()
 
 static IntPtr n_Key (IntPtr jnienv, IntPtr native__this)
 {
-	java.code.MyClass __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+	var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 	return JNIEnv.NewString (__this.Key ());
 }
 #pragma warning restore 0169
@@ -82,7 +82,7 @@ static Delegate GetAbstractMethodHandler ()
 
 static void n_AbstractMethod (IntPtr jnienv, IntPtr native__this)
 {
-	java.code.MyClass __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+	var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 	__this.AbstractMethod ();
 }
 #pragma warning restore 0169

@@ -69,10 +69,10 @@ namespace Com.Google.Android.Exoplayer.Drm {
 
 		static void n_OnEvent_Lcom_google_android_exoplayer_drm_ExoMediaDrm_arrayBIIarrayB (IntPtr jnienv, IntPtr native__this, IntPtr native_p0, IntPtr native_p1, int p2, int p3, IntPtr native_p4)
 		{
-			global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrmOnEventListener __this = global::Java.Lang.Object.GetObject<global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrmOnEventListener> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrm p0 = (global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrm)global::Java.Lang.Object.GetObject<global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrm> (native_p0, JniHandleOwnership.DoNotTransfer);
-			byte[] p1 = (byte[]) JNIEnv.GetArray (native_p1, JniHandleOwnership.DoNotTransfer, typeof (byte));
-			byte[] p4 = (byte[]) JNIEnv.GetArray (native_p4, JniHandleOwnership.DoNotTransfer, typeof (byte));
+			var __this = global::Java.Lang.Object.GetObject<global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrmOnEventListener> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var p0 = (global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrm)global::Java.Lang.Object.GetObject<global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrm> (native_p0, JniHandleOwnership.DoNotTransfer);
+			var p1 = (byte[]) JNIEnv.GetArray (native_p1, JniHandleOwnership.DoNotTransfer, typeof (byte));
+			var p4 = (byte[]) JNIEnv.GetArray (native_p4, JniHandleOwnership.DoNotTransfer, typeof (byte));
 			__this.OnEvent (p0, p1, p2, p3, p4);
 			if (p1 != null)
 				JNIEnv.CopyArray (p1, native_p1);
@@ -242,8 +242,8 @@ namespace Com.Google.Android.Exoplayer.Drm {
 
 		static void n_SetOnEventListener_Lcom_google_android_exoplayer_drm_ExoMediaDrm_OnEventListener_ (IntPtr jnienv, IntPtr native__this, IntPtr native_p0)
 		{
-			global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrm __this = global::Java.Lang.Object.GetObject<global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrm> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrmOnEventListener p0 = (global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrmOnEventListener)global::Java.Lang.Object.GetObject<global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrmOnEventListener> (native_p0, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrm> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var p0 = (global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrmOnEventListener)global::Java.Lang.Object.GetObject<global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrmOnEventListener> (native_p0, JniHandleOwnership.DoNotTransfer);
 			__this.SetOnEventListener (p0);
 		}
 #pragma warning restore 0169

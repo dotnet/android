@@ -66,7 +66,7 @@ internal partial class IInterfaceWithoutNamespaceInvoker : global::Java.Lang.Obj
 
 	static void n_Foo (IntPtr jnienv, IntPtr native__this)
 	{
-		IInterfaceWithoutNamespace __this = global::Java.Lang.Object.GetObject<IInterfaceWithoutNamespace> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		var __this = global::Java.Lang.Object.GetObject<IInterfaceWithoutNamespace> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 		__this.Foo ();
 	}
 #pragma warning restore 0169

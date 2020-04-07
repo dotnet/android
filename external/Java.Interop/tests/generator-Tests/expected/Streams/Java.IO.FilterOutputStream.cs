@@ -68,7 +68,7 @@ namespace Java.IO {
 
 		static void n_Write_I (IntPtr jnienv, IntPtr native__this, int oneByte)
 		{
-			global::Java.IO.FilterOutputStream __this = global::Java.Lang.Object.GetObject<global::Java.IO.FilterOutputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Java.IO.FilterOutputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 			__this.Write (oneByte);
 		}
 #pragma warning restore 0169

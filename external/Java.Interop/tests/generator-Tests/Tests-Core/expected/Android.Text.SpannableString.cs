@@ -98,8 +98,8 @@ namespace Android.Text {
 
 		static int n_GetSpanFlags_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_what)
 		{
-			Android.Text.SpannableString __this = global::Java.Lang.Object.GetObject<Android.Text.SpannableString> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			Java.Lang.Object what = global::Java.Lang.Object.GetObject<Java.Lang.Object> (native_what, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<Android.Text.SpannableString> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var what = global::Java.Lang.Object.GetObject<Java.Lang.Object> (native_what, JniHandleOwnership.DoNotTransfer);
 			int __ret = (int) __this.GetSpanFlags (what);
 			return __ret;
 		}

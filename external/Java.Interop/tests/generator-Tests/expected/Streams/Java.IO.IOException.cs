@@ -36,7 +36,7 @@ namespace Java.IO {
 
 		static void n_PrintStackTrace (IntPtr jnienv, IntPtr native__this)
 		{
-			global::Java.IO.IOException __this = global::Java.Lang.Object.GetObject<global::Java.IO.IOException> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Java.IO.IOException> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 			__this.PrintStackTrace ();
 		}
 #pragma warning restore 0169

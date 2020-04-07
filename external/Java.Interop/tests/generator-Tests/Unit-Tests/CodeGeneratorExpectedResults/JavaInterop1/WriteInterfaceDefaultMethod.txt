@@ -14,7 +14,7 @@ public partial interface IMyInterface : IJavaObject, IJavaPeerable {
 
 	private static void n_DoSomething (IntPtr jnienv, IntPtr native__this)
 	{
-		java.code.IMyInterface __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 		__this.DoSomething ();
 	}
 #pragma warning restore 0169

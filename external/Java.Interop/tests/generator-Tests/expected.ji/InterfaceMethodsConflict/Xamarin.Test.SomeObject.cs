@@ -41,7 +41,7 @@ namespace Xamarin.Test {
 
 		static void n_Close (IntPtr jnienv, IntPtr native__this)
 		{
-			global::Xamarin.Test.SomeObject __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 			__this.Close ();
 		}
 #pragma warning restore 0169

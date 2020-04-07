@@ -36,7 +36,7 @@ namespace Xamarin.Test {
 
 		static IntPtr n_UsePartial_I (IntPtr jnienv, IntPtr native__this, int partial)
 		{
-			global::Xamarin.Test.CSharpKeywords __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.CSharpKeywords> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.CSharpKeywords> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 			return JNIEnv.NewString (__this.UsePartial (partial));
 		}
 #pragma warning restore 0169

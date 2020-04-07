@@ -9,7 +9,7 @@ static Delegate Getget_MyPropertyHandler ()
 
 static int n_get_MyProperty (IntPtr jnienv, IntPtr native__this)
 {
-	com.mypackage.foo __this = global::Java.Lang.Object.GetObject<com.mypackage.foo> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+	var __this = global::Java.Lang.Object.GetObject<com.mypackage.foo> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 	return __this.MyProperty;
 }
 #pragma warning restore 0169
@@ -25,7 +25,7 @@ static Delegate Getset_MyProperty_IHandler ()
 
 static void n_set_MyProperty_I (IntPtr jnienv, IntPtr native__this, int value)
 {
-	com.mypackage.foo __this = global::Java.Lang.Object.GetObject<com.mypackage.foo> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+	var __this = global::Java.Lang.Object.GetObject<com.mypackage.foo> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 	__this.MyProperty = value;
 }
 #pragma warning restore 0169

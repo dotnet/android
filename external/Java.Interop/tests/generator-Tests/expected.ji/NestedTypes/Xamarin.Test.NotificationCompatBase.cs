@@ -85,7 +85,7 @@ namespace Xamarin.Test {
 
 				static IntPtr n_Build_I (IntPtr jnienv, IntPtr native__this, int p0)
 				{
-					global::Xamarin.Test.NotificationCompatBase.Action.IFactory __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.NotificationCompatBase.Action.IFactory> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+					var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.NotificationCompatBase.Action.IFactory> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 					return JNIEnv.ToLocalJniHandle (__this.Build (p0));
 				}
 #pragma warning restore 0169

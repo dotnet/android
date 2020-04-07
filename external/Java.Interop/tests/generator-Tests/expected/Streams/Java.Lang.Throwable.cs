@@ -26,7 +26,7 @@ namespace Java.Lang {
 
 		static IntPtr n_GetMessage (IntPtr jnienv, IntPtr native__this)
 		{
-			global::Java.Lang.Throwable __this = global::Java.Lang.Object.GetObject<global::Java.Lang.Throwable> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Java.Lang.Throwable> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 			return JNIEnv.NewString (__this.Message);
 		}
 #pragma warning restore 0169

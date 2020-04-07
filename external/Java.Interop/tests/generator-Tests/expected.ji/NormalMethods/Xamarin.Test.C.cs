@@ -42,7 +42,7 @@ namespace Xamarin.Test {
 
 		static IntPtr n_SetCustomDimension_I (IntPtr jnienv, IntPtr native__this, int index)
 		{
-			global::Xamarin.Test.C __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.C> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.C> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 			return JNIEnv.ToLocalJniHandle (__this.SetCustomDimension (index));
 		}
 #pragma warning restore 0169

@@ -61,7 +61,7 @@ namespace Xamarin.Test {
 
 		static int n_GetSomeColor (IntPtr jnienv, IntPtr native__this)
 		{
-			global::Xamarin.Test.SomeObject __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 			return __this.SomeColor.ToArgb ();
 		}
 #pragma warning restore 0169
@@ -77,8 +77,8 @@ namespace Xamarin.Test {
 
 		static void n_SetSomeColor_I (IntPtr jnienv, IntPtr native__this, int native_newvalue)
 		{
-			global::Xamarin.Test.SomeObject __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			global::Android.Graphics.Color newvalue = new global::Android.Graphics.Color (native_newvalue);
+			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var newvalue = new global::Android.Graphics.Color (native_newvalue);
 			__this.SomeColor = newvalue;
 		}
 #pragma warning restore 0169

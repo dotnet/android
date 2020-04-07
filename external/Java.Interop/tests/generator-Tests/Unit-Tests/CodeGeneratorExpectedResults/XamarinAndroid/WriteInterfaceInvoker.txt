@@ -52,7 +52,7 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 
 	static int n_get_Count (IntPtr jnienv, IntPtr native__this)
 	{
-		java.code.IMyInterface __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 		return __this.Count;
 	}
 #pragma warning restore 0169
@@ -68,7 +68,7 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 
 	static void n_set_Count_I (IntPtr jnienv, IntPtr native__this, int value)
 	{
-		java.code.IMyInterface __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 		__this.Count = value;
 	}
 #pragma warning restore 0169
@@ -101,7 +101,7 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 
 	static IntPtr n_get_Key (IntPtr jnienv, IntPtr native__this)
 	{
-		java.code.IMyInterface __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 		return JNIEnv.NewString (__this.Key);
 	}
 #pragma warning restore 0169
@@ -117,8 +117,8 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 
 	static void n_set_Key_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_value)
 	{
-		java.code.IMyInterface __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-		string value = JNIEnv.GetString (native_value, JniHandleOwnership.DoNotTransfer);
+		var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		var value = JNIEnv.GetString (native_value, JniHandleOwnership.DoNotTransfer);
 		__this.Key = value;
 	}
 #pragma warning restore 0169
@@ -153,7 +153,7 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 
 	static int n_get_AbstractCount (IntPtr jnienv, IntPtr native__this)
 	{
-		java.code.IMyInterface __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 		return __this.AbstractCount;
 	}
 #pragma warning restore 0169
@@ -169,7 +169,7 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 
 	static void n_set_AbstractCount_I (IntPtr jnienv, IntPtr native__this, int value)
 	{
-		java.code.IMyInterface __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 		__this.AbstractCount = value;
 	}
 #pragma warning restore 0169
@@ -202,8 +202,8 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 
 	static int n_GetCountForKey_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_key)
 	{
-		java.code.IMyInterface __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-		string key = JNIEnv.GetString (native_key, JniHandleOwnership.DoNotTransfer);
+		var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		var key = JNIEnv.GetString (native_key, JniHandleOwnership.DoNotTransfer);
 		int __ret = __this.GetCountForKey (key);
 		return __ret;
 	}
@@ -217,7 +217,7 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 		IntPtr native_key = JNIEnv.NewString (key);
 		JValue* __args = stackalloc JValue [1];
 		__args [0] = new JValue (native_key);
-		int __ret = JNIEnv.CallIntMethod (((global::Java.Lang.Object) this).Handle, id_GetCountForKey_Ljava_lang_String_, __args);
+		var __ret = JNIEnv.CallIntMethod (((global::Java.Lang.Object) this).Handle, id_GetCountForKey_Ljava_lang_String_, __args);
 		JNIEnv.DeleteLocalRef (native_key);
 		return __ret;
 	}
@@ -233,7 +233,7 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 
 	static IntPtr n_Key (IntPtr jnienv, IntPtr native__this)
 	{
-		java.code.IMyInterface __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 		return JNIEnv.NewString (__this.Key ());
 	}
 #pragma warning restore 0169
@@ -257,7 +257,7 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 
 	static void n_AbstractMethod (IntPtr jnienv, IntPtr native__this)
 	{
-		java.code.IMyInterface __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 		__this.AbstractMethod ();
 	}
 #pragma warning restore 0169

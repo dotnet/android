@@ -36,7 +36,7 @@ namespace Xamarin.Test {
 
 		static int n_GetSomeObjectProperty (IntPtr jnienv, IntPtr native__this)
 		{
-			global::Xamarin.Test.SomeObject2 __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject2> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject2> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 			return (int) __this.SomeObjectProperty;
 		}
 #pragma warning restore 0169
@@ -52,8 +52,8 @@ namespace Xamarin.Test {
 
 		static void n_SetSomeObjectProperty_I (IntPtr jnienv, IntPtr native__this, int native_newvalue)
 		{
-			global::Xamarin.Test.SomeObject2 __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject2> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			global::Xamarin.Test.SomeValues newvalue = (global::Xamarin.Test.SomeValues) native_newvalue;
+			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject2> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var newvalue = (global::Xamarin.Test.SomeValues) native_newvalue;
 			__this.SomeObjectProperty = newvalue;
 		}
 #pragma warning restore 0169
@@ -104,7 +104,7 @@ namespace Xamarin.Test {
 
 		static IntPtr n_GetSomeObjectPropertyArray (IntPtr jnienv, IntPtr native__this)
 		{
-			global::Xamarin.Test.SomeObject2 __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject2> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject2> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 			return JNIEnv.NewArray (__this.GetSomeObjectPropertyArray ());
 		}
 #pragma warning restore 0169
@@ -138,8 +138,8 @@ namespace Xamarin.Test {
 
 		static void n_SetSomeObjectPropertyArray_arrayI (IntPtr jnienv, IntPtr native__this, IntPtr native_newvalue)
 		{
-			global::Xamarin.Test.SomeObject2 __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject2> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			global::Xamarin.Test.SomeValues[] newvalue = (global::Xamarin.Test.SomeValues[]) JNIEnv.GetArray (native_newvalue, JniHandleOwnership.DoNotTransfer, typeof (global::Xamarin.Test.SomeValues));
+			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject2> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var newvalue = (global::Xamarin.Test.SomeValues[]) JNIEnv.GetArray (native_newvalue, JniHandleOwnership.DoNotTransfer, typeof (global::Xamarin.Test.SomeValues));
 			__this.SetSomeObjectPropertyArray (newvalue);
 			if (newvalue != null)
 				JNIEnv.CopyArray (newvalue, native_newvalue);

@@ -69,8 +69,8 @@ namespace Java.Lang {
 
 		static int n_CompareTo_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_another)
 		{
-			global::Java.Lang.IComparable __this = global::Java.Lang.Object.GetObject<global::Java.Lang.IComparable> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			global::Java.Lang.Object another = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_another, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Java.Lang.IComparable> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var another = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_another, JniHandleOwnership.DoNotTransfer);
 			int __ret = __this.CompareTo (another);
 			return __ret;
 		}
@@ -84,7 +84,7 @@ namespace Java.Lang {
 			IntPtr native_another = JNIEnv.ToLocalJniHandle (another);
 			JValue* __args = stackalloc JValue [1];
 			__args [0] = new JValue (native_another);
-			int __ret = JNIEnv.CallIntMethod (((global::Java.Lang.Object) this).Handle, id_compareTo_Ljava_lang_Object_, __args);
+			var __ret = JNIEnv.CallIntMethod (((global::Java.Lang.Object) this).Handle, id_compareTo_Ljava_lang_Object_, __args);
 			JNIEnv.DeleteLocalRef (native_another);
 			return __ret;
 		}

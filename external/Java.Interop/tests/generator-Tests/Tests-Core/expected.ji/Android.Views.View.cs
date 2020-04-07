@@ -81,8 +81,8 @@ namespace Android.Views {
 
 			static void n_OnClick_Landroid_view_View_ (IntPtr jnienv, IntPtr native__this, IntPtr native_v)
 			{
-				Android.Views.View.IOnClickListener __this = global::Java.Lang.Object.GetObject<Android.Views.View.IOnClickListener> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-				Android.Views.View v = global::Java.Lang.Object.GetObject<Android.Views.View> (native_v, JniHandleOwnership.DoNotTransfer);
+				var __this = global::Java.Lang.Object.GetObject<Android.Views.View.IOnClickListener> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				var v = global::Java.Lang.Object.GetObject<Android.Views.View> (native_v, JniHandleOwnership.DoNotTransfer);
 				__this.OnClick (v);
 			}
 #pragma warning restore 0169
@@ -160,8 +160,8 @@ namespace Android.Views {
 
 		static void n_SetOnClickListener_Landroid_view_View_OnClickListener_ (IntPtr jnienv, IntPtr native__this, IntPtr native_l)
 		{
-			Android.Views.View __this = global::Java.Lang.Object.GetObject<Android.Views.View> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			Android.Views.View.IOnClickListener l = (Android.Views.View.IOnClickListener)global::Java.Lang.Object.GetObject<Android.Views.View.IOnClickListener> (native_l, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<Android.Views.View> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var l = (Android.Views.View.IOnClickListener)global::Java.Lang.Object.GetObject<Android.Views.View.IOnClickListener> (native_l, JniHandleOwnership.DoNotTransfer);
 			__this.SetOnClickListener (l);
 		}
 #pragma warning restore 0169
@@ -190,8 +190,8 @@ namespace Android.Views {
 
 		static void n_SetOn123Listener_Landroid_view_View_OnClickListener_ (IntPtr jnienv, IntPtr native__this, IntPtr native_l)
 		{
-			Android.Views.View __this = global::Java.Lang.Object.GetObject<Android.Views.View> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			Android.Views.View.IOnClickListener l = (Android.Views.View.IOnClickListener)global::Java.Lang.Object.GetObject<Android.Views.View.IOnClickListener> (native_l, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<Android.Views.View> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var l = (Android.Views.View.IOnClickListener)global::Java.Lang.Object.GetObject<Android.Views.View.IOnClickListener> (native_l, JniHandleOwnership.DoNotTransfer);
 			__this.SetOn123Listener (l);
 		}
 #pragma warning restore 0169
@@ -220,7 +220,7 @@ namespace Android.Views {
 
 		static void n_AddTouchables_Ljava_util_ArrayList_ (IntPtr jnienv, IntPtr native__this, IntPtr native_views)
 		{
-			Android.Views.View __this = global::Java.Lang.Object.GetObject<Android.Views.View> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<Android.Views.View> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 			var views = Android.Runtime.JavaList<Android.Views.View>.FromJniHandle (native_views, JniHandleOwnership.DoNotTransfer);
 			__this.AddTouchables (views);
 		}

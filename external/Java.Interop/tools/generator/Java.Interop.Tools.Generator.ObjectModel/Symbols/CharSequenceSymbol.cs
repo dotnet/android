@@ -87,7 +87,7 @@ namespace MonoDroid.Generation {
 
 		public string[] PreCallback (CodeGenerationOptions opt, string var_name, bool owned)
 		{
-			return new string[] { String.Format ("global::Java.Lang.ICharSequence {0} = global::Java.Lang.Object.GetObject<global::Java.Lang.ICharSequence> ({1}, JniHandleOwnership.DoNotTransfer);", var_name, TypeNameUtilities.GetNativeName (var_name)) };
+			return new string[] { String.Format ("var {0} = global::Java.Lang.Object.GetObject<global::Java.Lang.ICharSequence> ({1}, JniHandleOwnership.DoNotTransfer);", var_name, TypeNameUtilities.GetNativeName (var_name)) };
 		}
 
 		public string[] PreCall (CodeGenerationOptions opt, string var_name)

@@ -87,7 +87,7 @@ namespace MonoDroid.Generation {
 
 		public string[] PreCallback (CodeGenerationOptions opt, string var_name, bool owned)
 		{
-			return new string[] { String.Format ("System.Xml.XmlReader {0} = global::Android.Runtime.XmlPullParserReader.FromJniHandle ({1}, JniHandleOwnership.DoNotTransfer);", opt.GetSafeIdentifier (var_name), opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName (var_name))) };
+			return new string[] { String.Format ("var {0} = global::Android.Runtime.XmlPullParserReader.FromJniHandle ({1}, JniHandleOwnership.DoNotTransfer);", opt.GetSafeIdentifier (var_name), opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName (var_name))) };
 		}
 
 		public string[] PreCall (CodeGenerationOptions opt, string var_name)

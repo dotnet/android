@@ -62,14 +62,14 @@ namespace Test.ME {
 
 		public static void Append (this Test.ME.ITestInterface self, string value)
 		{
-			global::Java.Lang.String jls_value = value == null ? null : new global::Java.Lang.String (value);
+			var jls_value = value == null ? null : new global::Java.Lang.String (value);
 			self.Append (jls_value);
 			jls_value?.Dispose ();
 		}
 
 		public static string Identity (this Test.ME.ITestInterface self, string value)
 		{
-			global::Java.Lang.String jls_value = value == null ? null : new global::Java.Lang.String (value);
+			var jls_value = value == null ? null : new global::Java.Lang.String (value);
 			global::Java.Lang.ICharSequence __result = self.IdentityFormatted (jls_value);
 			var __rsval = __result?.ToString ();
 			jls_value?.Dispose ();
@@ -131,8 +131,8 @@ namespace Test.ME {
 
 		static int n_GetSpanFlags_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_tag)
 		{
-			global::Test.ME.ITestInterface __this = global::Java.Lang.Object.GetObject<global::Test.ME.ITestInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			global::Java.Lang.Object tag = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_tag, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Test.ME.ITestInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var tag = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_tag, JniHandleOwnership.DoNotTransfer);
 			int __ret = __this.GetSpanFlags (tag);
 			return __ret;
 		}
@@ -145,7 +145,7 @@ namespace Test.ME {
 				id_getSpanFlags_Ljava_lang_Object_ = JNIEnv.GetMethodID (class_ref, "getSpanFlags", "(Ljava/lang/Object;)I");
 			JValue* __args = stackalloc JValue [1];
 			__args [0] = new JValue (tag);
-			int __ret = JNIEnv.CallIntMethod (((global::Java.Lang.Object) this).Handle, id_getSpanFlags_Ljava_lang_Object_, __args);
+			var __ret = JNIEnv.CallIntMethod (((global::Java.Lang.Object) this).Handle, id_getSpanFlags_Ljava_lang_Object_, __args);
 			return __ret;
 		}
 
@@ -160,8 +160,8 @@ namespace Test.ME {
 
 		static void n_Append_Ljava_lang_CharSequence_ (IntPtr jnienv, IntPtr native__this, IntPtr native_value)
 		{
-			global::Test.ME.ITestInterface __this = global::Java.Lang.Object.GetObject<global::Test.ME.ITestInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			global::Java.Lang.ICharSequence value = global::Java.Lang.Object.GetObject<global::Java.Lang.ICharSequence> (native_value, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Test.ME.ITestInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var value = global::Java.Lang.Object.GetObject<global::Java.Lang.ICharSequence> (native_value, JniHandleOwnership.DoNotTransfer);
 			__this.Append (value);
 		}
 #pragma warning restore 0169
@@ -189,8 +189,8 @@ namespace Test.ME {
 
 		static IntPtr n_Identity_Ljava_lang_CharSequence_ (IntPtr jnienv, IntPtr native__this, IntPtr native_value)
 		{
-			global::Test.ME.ITestInterface __this = global::Java.Lang.Object.GetObject<global::Test.ME.ITestInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			global::Java.Lang.ICharSequence value = global::Java.Lang.Object.GetObject<global::Java.Lang.ICharSequence> (native_value, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Test.ME.ITestInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var value = global::Java.Lang.Object.GetObject<global::Java.Lang.ICharSequence> (native_value, JniHandleOwnership.DoNotTransfer);
 			IntPtr __ret = CharSequence.ToLocalJniHandle (__this.IdentityFormatted (value));
 			return __ret;
 		}
@@ -204,7 +204,7 @@ namespace Test.ME {
 			IntPtr native_value = CharSequence.ToLocalJniHandle (value);
 			JValue* __args = stackalloc JValue [1];
 			__args [0] = new JValue (native_value);
-			global::Java.Lang.ICharSequence __ret = global::Java.Lang.Object.GetObject<Java.Lang.ICharSequence> (JNIEnv.CallObjectMethod (((global::Java.Lang.Object) this).Handle, id_identity_Ljava_lang_CharSequence_, __args), JniHandleOwnership.TransferLocalRef);
+			var __ret = global::Java.Lang.Object.GetObject<Java.Lang.ICharSequence> (JNIEnv.CallObjectMethod (((global::Java.Lang.Object) this).Handle, id_identity_Ljava_lang_CharSequence_, __args), JniHandleOwnership.TransferLocalRef);
 			JNIEnv.DeleteLocalRef (native_value);
 			return __ret;
 		}
