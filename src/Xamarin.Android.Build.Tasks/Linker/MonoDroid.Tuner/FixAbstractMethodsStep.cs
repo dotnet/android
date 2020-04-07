@@ -35,7 +35,9 @@ namespace MonoDroid.Tuner
 			CheckAppDomainUsageUnconditional (assembly, (string msg) => Context.LogMessage (MessageImportance.High, msg));
 
 			if (FixAbstractMethodsUnconditional (assembly)) {
+#if !NET5_LINKER
 				Context.SafeReadSymbols (assembly);
+#endif
 				AssemblyAction action = Annotations.HasAction (assembly) ? Annotations.GetAction (assembly) : AssemblyAction.Skip;
 				if (action == AssemblyAction.Skip || action == AssemblyAction.Copy || action == AssemblyAction.Delete)
 					Annotations.SetAction (assembly, AssemblyAction.Save);
