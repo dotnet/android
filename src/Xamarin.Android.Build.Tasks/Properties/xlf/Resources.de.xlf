@@ -48,7 +48,7 @@ In this message, the phrase "should not be reached" means that this error messag
       </trans-unit>
       <trans-unit id="XA0002">
         <source>Could not find mono.android.jar</source>
-        <target state="new">Could not find mono.android.jar</target>
+        <target state="translated">"mono.android.jar" wurde nicht gefunden.</target>
         <note>The following are literal names and should not be translated: mono.android.jar</note>
       </trans-unit>
       <trans-unit id="XA0003">
@@ -70,7 +70,7 @@ In this message, the phrase "should not be reached" means that this error messag
       </trans-unit>
       <trans-unit id="XA0031">
         <source>Java SDK {0} or above is required when using {1}.</source>
-        <target state="needs-review-translation">Bei Verwendung von $(TargetFrameworkVersion) {1} ist Java SDK {0} oder höher erforderlich.</target>
+        <target state="translated">Bei Verwendung von {1} ist Java SDK {0} oder höher erforderlich.</target>
         <note>
 {0} - The Java SDK version number
 {1} - The feature being used: `$(TargetFrameworkVersion) v10.0` or `&lt;Project Sdk="Xamarin.Android.Sdk"&gt;`</note>
@@ -235,7 +235,7 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
       </trans-unit>
       <trans-unit id="XA1010">
         <source>Invalid `$(AndroidManifestPlaceholders)` value for Android manifest placeholders. Please use `key1=value1;key2=value2` format. The specified value was: `{0}`</source>
-        <target state="new">Invalid `$(AndroidManifestPlaceholders)` value for Android manifest placeholders. Please use `key1=value1;key2=value2` format. The specified value was: `{0}`</target>
+        <target state="translated">Ungültiger $(AndroidManifestPlaceholders)-Wert für Android-Manifestplatzhalter. Verwenden Sie das Format "Schlüssel1=Wert1;Schlüssel2=Wert2". Der angegebene Wert lautete "{0}".</target>
         <note>The following are literal names and should not be translated: `$(AndroidManifestPlaceholders)`</note>
       </trans-unit>
       <trans-unit id="XA2000">
@@ -251,13 +251,13 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
       </trans-unit>
       <trans-unit id="XA2002_Framework">
         <source>Can not resolve reference: `{0}`, referenced by {1}. Perhaps it doesn't exist in the Mono for Android profile?</source>
-        <target state="needs-review-translation">Der durch "{1}" referenzierte Verweis "{0}" kann nicht aufgelöst werden. Möglicherweise ist er nicht im Mono für Android-Profil vorhanden.</target>
+        <target state="translated">Der durch "{1}" referenzierte Verweis "{0}" kann nicht aufgelöst werden. Möglicherweise ist er nicht im Mono für Android-Profil vorhanden.</target>
         <note>{0} - The name of the missing assembly
 {1} - The chain of references that causes a reference to the missing assembly, with &gt; as the separator between items. Example: `System.Memory` &gt; `System.Buffers`</note>
       </trans-unit>
       <trans-unit id="XA2002_NuGet">
         <source>Can not resolve reference: `{0}`, referenced by {1}. Please add a NuGet package or assembly reference for `{0}`, or remove the reference to `{2}`.</source>
-        <target state="needs-review-translation">Der durch "{1}" referenzierte Verweis "{0}" kann nicht aufgelöst werden. Fügen Sie einen Verweis auf ein NuGet-Paket oder eine Assembly für "{0}" hinzu, oder entfernen Sie den Verweis auf "{2}".</target>
+        <target state="translated">Der durch "{1}" referenzierte Verweis "{0}" kann nicht aufgelöst werden. Fügen Sie einen Verweis auf ein NuGet-Paket oder eine Assembly für "{0}" hinzu, oder entfernen Sie den Verweis auf "{2}".</target>
         <note>{0} - The name of the missing assembly
 {1} -  The chain of references that causes a reference to the missing assembly, with &gt; as the separator between items. Example: `System.Memory` &gt; `System.Buffers`
 {2} - The name of the first assembly in the chain of references. Example: System.Memory</note>
@@ -447,7 +447,7 @@ In this message, the term "bundled" is a short way of saying "included into the 
       </trans-unit>
       <trans-unit id="XA4310">
         <source>`$(AndroidSigningKeyStore)` file `{0}` could not be found.</source>
-        <target state="new">`$(AndroidSigningKeyStore)` file `{0}` could not be found.</target>
+        <target state="translated">Die $(AndroidSigningKeyStore)-Datei "{0}" wurde nicht gefunden.</target>
         <note>The following are literal names and should not be translated: `$(AndroidSigningKeyStore)`</note>
       </trans-unit>
       <trans-unit id="XA5101">
@@ -532,7 +532,7 @@ In this message, the term "bundled" is a short way of saying "included into the 
       </trans-unit>
       <trans-unit id="XA5211">
         <source>Embedded Wear app package name differs from handheld app package name ({0} != {1}).</source>
-        <target state="new">Embedded Wear app package name differs from handheld app package name ({0} != {1}).</target>
+        <target state="translated">Der Name des eingebetteten Wear-App-Pakets weicht vom Namen des Handheld-App-Pakets ab ({0} != {1}).</target>
         <note>The following are literal names and should not be translated: Wear
 "Wear" is a short version of the full product name "Wear OS" and so should not be translated.
 In this message, the term "handheld app" means "app for handheld devices."
