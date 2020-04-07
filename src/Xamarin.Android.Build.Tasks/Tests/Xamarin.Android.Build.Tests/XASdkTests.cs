@@ -40,6 +40,18 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (dotnet.Publish (), "`dotnet publish` should succeed");
 		}
 
+		[Test]
+		public void BuildWithLiteSdk ()
+		{
+			var proj = new XASdkProject () {
+				Sdk = $"Xamarin.Android.Sdk.Lite/{SdkVersion}",
+				TargetFramework = "monoandroid10.0"
+			};
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			}
+		}
+
 		DotNetCLI CreateDotNetBuilder (XASdkProject project)
 		{
 			var relativeProjDir = Path.Combine ("temp", TestName);

@@ -11,6 +11,7 @@
     <FrameworkPathOverride>$(TargetFrameworkRootPath)MonoAndroid\v1.0</FrameworkPathOverride>
     <EnableDefaultOutputPaths Condition=" '$(EnableDefaultOutputPaths)' == '' And '$(OS)' != 'Windows_NT' ">false</EnableDefaultOutputPaths>
     <EnableDefaultOutputPaths Condition=" '$(EnableDefaultOutputPaths)' == '' ">true</EnableDefaultOutputPaths>
+    <DisableImplicitAndroidFrameworkReference Condition=" '$(DisableImplicitAndroidFrameworkReference)' == '' ">false</DisableImplicitAndroidFrameworkReference>
     <EnableDefaultAndroidResourceItems Condition=" '$(EnableDefaultAndroidResourceItems)' == '' ">true</EnableDefaultAndroidResourceItems>
     <EnableDefaultAndroidAssetItems Condition=" '$(EnableDefaultAndroidAssetItems)' == '' ">true</EnableDefaultAndroidAssetItems>
     <!-- Enable nuget package conflict resolution -->
@@ -45,7 +46,7 @@
     <AndroidManagedSymbols Condition=" '$(AndroidManagedSymbols)' == '' ">true</AndroidManagedSymbols>
   </PropertyGroup>
 
-  <Import Project="Xamarin.Android.Sdk.BundledVersions.props" />
+  <Import Project="Xamarin.Android.Sdk.BundledVersions.props" Condition=" Exists('Xamarin.Android.Sdk.BundledVersions.props') " />
 
   <!-- Default item includes (globs and implicit references) -->
   <Import Project="Xamarin.Android.Sdk.DefaultItems.props" />
