@@ -43,13 +43,13 @@ def getBuildTasksRedirect() {
     }
 }
 
-environment {
-    DOTNET_ROOT = "$HOME/.dotnet"
-}
-
 timestamps {
     node("${env.BotLabel}") {
         def scmVars = null
+
+        environment {
+            DOTNET_ROOT = "$HOME/.dotnet"
+        }
 
         stage ("checkout") {
             sh('printenv | sort')
