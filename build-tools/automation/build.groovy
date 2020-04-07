@@ -46,13 +46,7 @@ def getBuildTasksRedirect() {
 timestamps {
     node("${env.BotLabel}") {
         def scmVars = null
-
-        environment {
-            DOTNET_ROOT = "$HOME/.dotnet"
-        }
-
         stage ("checkout") {
-            sh('printenv | sort')
             def ctAttempts = 3
             def retryAttempt = 0
             def waitSecondsBeforeRetry = 15
@@ -181,6 +175,8 @@ timestamps {
             }
             // Install .NET Core and temporarily append it to PATH
             sh "curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin -version 3.1.100"
+            sh 'export DOTNET_ROOT="$HOME/.dotnet"'
+            sh 'printenv | sort'
         }
 
         utils.stageWithTimeout('build', 6, 'HOURS', XADir, true) {    // Typically takes less than one hour except a build on a new bot to populate local caches can take several hours
