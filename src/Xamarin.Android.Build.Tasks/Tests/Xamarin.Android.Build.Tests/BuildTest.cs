@@ -328,9 +328,12 @@ class MemTest {
 
 		[Test]
 		[Category ("SmokeTests")]
-		public void BuildXamarinFormsMapsApplication ()
+		[NonParallelizable] // parallel NuGet restore causes failures
+		public void BuildXamarinFormsMapsApplication ([Values (true, false)] bool multidex)
 		{
 			var proj = new XamarinFormsMapsApplicationProject ();
+			if (multidex)
+				proj.SetProperty ("AndroidEnableMultiDex", "True");
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "first should have succeeded.");
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second should have succeeded.");

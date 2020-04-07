@@ -1168,6 +1168,15 @@ resources.
   command-line options to pass to the **aapt** command when
   processing Android assets and resources.
 
+- **AndroidR8IgnoreWarnings** &ndash; Automatically specifies
+  the `-ignorewarnings` proguard rule for `r8`. This allows `r8`
+  to continue with dex compilation even if certain warnings are
+  encountered. Defaults to `True`, but can be set to `False` to
+  enforce more strict behavior. See the [ProGuard manual](https://www.guardsquare.com/products/proguard/manual/usage)
+  for details.
+
+  Added in Xamarin.Android 10.4.
+
 - **AndroidResgenFile** &ndash; Specifies the name of the Resource
   file to generate. The default template sets this to
   `Resource.designer.cs`.
