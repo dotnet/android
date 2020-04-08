@@ -421,6 +421,24 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Included layout root element override ID &apos;{0}&apos; is not valid..
+        /// </summary>
+        internal static string XA1012 {
+            get {
+                return ResourceManager.GetString("XA1012", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to parse ID of node &apos;{0}&apos; in the layout file &apos;{1}&apos;..
+        /// </summary>
+        internal static string XA1013 {
+            get {
+                return ResourceManager.GetString("XA1013", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 5 will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 5 is released..
         /// </summary>
         internal static string XA2000 {
@@ -624,6 +642,78 @@ namespace Xamarin.Android.Tasks.Properties {
         internal static string XA4218 {
             get {
                 return ResourceManager.GetString("XA4218", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot find binding generator for language {0} or {1}..
+        /// </summary>
+        internal static string XA4219 {
+            get {
+                return ResourceManager.GetString("XA4219", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Partial class item &apos;{0}&apos; does not have an associated binding for layout &apos;{1}&apos;..
+        /// </summary>
+        internal static string XA4220 {
+            get {
+                return ResourceManager.GetString("XA4220", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No layout binding source files were generated..
+        /// </summary>
+        internal static string XA4221 {
+            get {
+                return ResourceManager.GetString("XA4221", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No widgets found for layout ({0})..
+        /// </summary>
+        internal static string XA4222 {
+            get {
+                return ResourceManager.GetString("XA4222", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Malformed full class name &apos;{0}&apos;. Missing namespace..
+        /// </summary>
+        internal static string XA4223 {
+            get {
+                return ResourceManager.GetString("XA4223", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Malformed full class name &apos;{0}&apos;. Missing class name..
+        /// </summary>
+        internal static string XA4224 {
+            get {
+                return ResourceManager.GetString("XA4224", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Widget &apos;{0}&apos; in layout &apos;{1}&apos; has multiple instances with different types. The property type will be set to: {2}.
+        /// </summary>
+        internal static string XA4225 {
+            get {
+                return ResourceManager.GetString("XA4225", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Resource item &apos;{0}&apos; does not have the required metadata item &apos;{1}&apos;..
+        /// </summary>
+        internal static string XA4226 {
+            get {
+                return ResourceManager.GetString("XA4226", resourceCulture);
             }
         }
         
