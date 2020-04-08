@@ -2209,6 +2209,19 @@ because xbuild doesn't support framework reference assemblies.
     <_AndroidNativeLibraryForFastDev Condition=" '$(_InstantRunEnabled)' == 'True' And '$(AndroidUseDebugRuntime)' == 'True' " Include="%(_TargetLibDir.Identity)\libmono-native.so" />
     <_AndroidNativeLibraryForFastDev Condition=" '$(_InstantRunEnabled)' == 'True' And '$(AndroidUseDebugRuntime)' == 'True' " Include="%(_TargetLibDir.Identity)\libxamarin-debug-app-helper.so" />
   </ItemGroup>
+  <ItemGroup Condition=" '$(UsingAndroidNETSdk)' == 'True' ">
+    <AndroidNativeLibrary Include="@(ResolvedFileToPublish)"
+        Condition=" '%(Filename)%(Extension)' == 'libmono-android.debug.so' and '$(AndroidIncludeDebugSymbols)' == 'True' "
+        ArchiveFileName="libmonodroid.so" />
+    <AndroidNativeLibrary Include="@(ResolvedFileToPublish)"
+        Condition=" '%(Filename)%(Extension)' == 'libmono-android.release.so' and '$(AndroidIncludeDebugSymbols)' != 'True' "
+        ArchiveFileName="libmonodroid.so" />
+    <AndroidNativeLibrary Include="@(ResolvedFileToPublish)"
+        Condition=" '%(Extension)' == '.so' and '%(Filename)' != 'libmono-android.debug' and '%(Filename)' != 'libmono-android.release' " />
+    <!-- HACK remove any unexpected runtime components -->
+    <AndroidNativeLibrary Remove="@(ResolvedFileToPublish)"
+        Condition="  $([System.Text.RegularExpressions.Regex]::IsMatch('%(FullPath)', '.*linux-.*'))  " />
+  </ItemGroup>
 </Target>
 
 <Target Name="_PrepareNativeAssemblyItems" DependsOnTargets="_GenerateJavaStubs">
