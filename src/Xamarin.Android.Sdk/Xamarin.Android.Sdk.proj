@@ -33,14 +33,20 @@ the new entry point for short-form style Android projets in .NET 5.
       <ToolsSourceDir>$(XamarinAndroidSourcePath)bin\Build$(Configuration)\packs\tools\</ToolsSourceDir>
     </PropertyGroup>
     <ItemGroup>
-      <AndroidSdkBuildTools Include="@(_MSBuildFiles);@(_MSBuildFilesWin)" >
+      <AndroidSdkBuildTools Include="@(_MSBuildFiles);@(_MSBuildFilesWin)"
+          Condition=" '%(Filename)' != 'jnimarshalmethod-gen' " >
         <RelativePath>$([MSBuild]::MakeRelative($(MSBuildSrcDir), %(FullPath)))</RelativePath>
       </AndroidSdkBuildTools>
       <AndroidSdkBuildTools Include="@(_MSBuildTargetsSrcFiles)" >
         <RelativePath>$([MSBuild]::MakeRelative($(MSBuildTargetsSrcDir), %(FullPath)))</RelativePath>
       </AndroidSdkBuildTools>
-      <AndroidSdkBuildToolsUnix Include="@(_MSBuildFilesUnix);@(_MSBuildFilesUnixSwab);@(_MSBuildFilesUnixSign);@(_MSBuildFilesUnixSignAndHarden)" >
+      <!-- Exclude host-os specific native libraries, aside from libMonoPosixHelper.dylib which is required by LibZipSharp on macOS. -->
+      <AndroidSdkBuildToolsUnix Include="@(_MSBuildFilesUnix);@(_MSBuildFilesUnixSwab);@(_MSBuildFilesUnixSign);@(_MSBuildFilesUnixSignAndHarden)"
+          Condition=" !$([System.Text.RegularExpressions.Regex]::IsMatch(%(FullPath), '.*host-$(HostOS).*')) " >
         <RelativePath>$([MSBuild]::MakeRelative($(MSBuildSrcDir), %(FullPath)))</RelativePath>
+      </AndroidSdkBuildToolsUnix>
+      <AndroidSdkBuildToolsUnix Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libMonoPosixHelper.$(LibExtension)" >
+        <RelativePath>libMonoPosixHelper.$(LibExtension)</RelativePath>
       </AndroidSdkBuildToolsUnix>
     </ItemGroup>
     <!-- Copy only the required tools to new folder. Skip Unix item copying on Windows. -->
