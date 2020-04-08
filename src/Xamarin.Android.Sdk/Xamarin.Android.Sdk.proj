@@ -14,6 +14,8 @@ the new entry point for short-form style Android projets in .NET 5.
     <Authors>Microsoft</Authors>
     <Description>C# Tools and Bindings for the Android SDK</Description>
     <OutputPath>..\..\bin\Build$(Configuration)\nupkgs\</OutputPath>
+    <!-- Excluded mono bundle components declared in `create-installers.targets`. -->
+    <IncludeMonoBundleComponents>false</IncludeMonoBundleComponents>
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />
@@ -34,7 +36,7 @@ the new entry point for short-form style Android projets in .NET 5.
     </PropertyGroup>
     <ItemGroup>
       <AndroidSdkBuildTools Include="@(_MSBuildFiles);@(_MSBuildFilesWin)"
-          Condition=" '%(Filename)' != 'jnimarshalmethod-gen' " >
+          Condition=" '%(Filename)' != 'jnimarshalmethod-gen' and  '%(Extension)' != '.so' " >
         <RelativePath>$([MSBuild]::MakeRelative($(MSBuildSrcDir), %(FullPath)))</RelativePath>
       </AndroidSdkBuildTools>
       <AndroidSdkBuildTools Include="@(_MSBuildTargetsSrcFiles)" >
