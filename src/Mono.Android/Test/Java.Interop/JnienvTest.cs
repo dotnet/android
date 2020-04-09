@@ -85,12 +85,20 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		public void NewGenericTypeThrows ()
+		public void NewOpenGenericTypeThrows ()
 		{
 			try {
 				var lrefInstance = JNIEnv.StartCreateInstance (typeof (GenericHolder<>), "()V");
 				JNIEnv.FinishCreateInstance (lrefInstance, "()V");
+				Assert.Fail ("SHOULD NOT BE REACHED: creation of open generic types is not supported");
 			} catch (NotSupportedException) {
+			}
+		}
+
+		[Test]
+		public void NewClosedGenericTypeWorks ()
+		{
+			using (var holder = new GenericHolder<int>()) {
 			}
 		}
 
