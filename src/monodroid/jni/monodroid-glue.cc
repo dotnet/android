@@ -1786,7 +1786,7 @@ MonodroidRuntime::Java_mono_android_Runtime_destroyContexts (JNIEnv *env, jintAr
 #endif
 	}
 	osBridge.on_destroy_contexts ();
-
+#ifndef ANDROID
 	for (jsize i = 0; i < count; i++) {
 		int domain_id = contextIDs[i];
 		MonoDomain *domain = mono_domain_get_by_id (domain_id);
@@ -1796,7 +1796,7 @@ MonodroidRuntime::Java_mono_android_Runtime_destroyContexts (JNIEnv *env, jintAr
 		log_info (LOG_DEFAULT, "Unloading domain `%d'", contextIDs[i]);
 		mono_domain_unload (domain);
 	}
-
+#endif
 	env->ReleaseIntArrayElements (array, contextIDs, JNI_ABORT);
 
 	reinitialize_android_runtime_type_manager (env);
