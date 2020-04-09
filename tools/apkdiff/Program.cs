@@ -28,13 +28,13 @@ namespace apkdiff {
 				desc1.Compare (desc2);
 
 				if (ApkRegressionThreshold != 0 && (desc2.PackageSize - desc1.PackageSize) > ApkRegressionThreshold) {
-					Error ($"PackageSize differ more than {ApkRegressionThreshold:#,0} bytes. apk1 size: {desc1.PackageSize:#,0} bytes, apk2 size: {desc2.PackageSize:#,0} bytes.");
+					Error ($"PackageSize increase {desc2.PackageSize - desc1.PackageSize:#,0} is {desc2.PackageSize - desc1.PackageSize - ApkRegressionThreshold:#,0} bytes more than the threshold {ApkRegressionThreshold:#,0}. apk1 size: {desc1.PackageSize:#,0} bytes, apk2 size: {desc2.PackageSize:#,0} bytes.");
 					RegressionCount ++;
 				}
 			}
 
 			if (RegressionCount > 0) {
-				Error ($"Size regression occured, {RegressionCount:#,0} test(s) failed.");
+				Error ($"Size regression occured, {RegressionCount:#,0} check(s) failed.");
 				Environment.Exit (3);
 			}
 		}
