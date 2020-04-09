@@ -345,7 +345,7 @@ EmbeddedAssemblies::typemap_managed_to_java ([[maybe_unused]] MonoType *type, Mo
 {
 	constexpr char error_message[] = "typemap: unable to find mapping to a Java type from managed type '%s'";
 
-	simple_pointer_guard<char[], false> type_name (mono_type_get_name_full (type, MONO_TYPE_NAME_FORMAT_REFLECTION));
+	simple_pointer_guard<char[], false> type_name (mono_type_get_name_full (type, MONO_TYPE_NAME_FORMAT_FULL_NAME));
 	MonoImage *image = mono_class_get_image (klass);
 	const char *image_name = mono_image_get_name (image);
 	size_t type_name_len = strlen (type_name.get ());
@@ -490,7 +490,7 @@ EmbeddedAssemblies::typemap_managed_to_java (MonoReflectionType *reflection_type
 		return nullptr;
 	}
 
-	const char *ret = typemap_managed_to_java (type, mono_type_get_class (type), mvid);
+	const char *ret = typemap_managed_to_java (type, mono_class_from_mono_type (type), mvid);
 
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
 		total_time.mark_end ();
