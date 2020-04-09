@@ -1085,6 +1085,16 @@ namespace UnamedProject
 				LinkTool = linkTool,
 			};
 			using (var b = CreateApkBuilder (Path.Combine ("temp", $"BuildProguard Enabled Project(1){isRelease}{dexTool}{linkTool}"))) {
+				if (dexTool == "d8" && linkTool == "proguard") {
+					b.ThrowOnBuildFailure = false;
+					Assert.IsFalse (b.Build (proj), "Build should have failed.");
+					string error = b.LastBuildOutput
+						.SkipWhile (x => !x.StartsWith ("Build FAILED."))
+						.FirstOrDefault (x => x.Contains ("error XA1011:"));
+					Assert.IsNotNull (error, "Build should have failed with XA1011.");
+					return;
+				}
+
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
 				if (isRelease && !string.IsNullOrEmpty (linkTool)) {
@@ -1301,6 +1311,8 @@ namespace UnnamedProject {
 			proj.EnableProguard =
 				proj.IsRelease = true;
 			proj.LinkTool = linkTool;
+			if (linkTool == "proguard")
+				proj.DexTool = "dx";
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
@@ -2584,6 +2596,15 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 ",
 			});
 			using (var b = CreateApkBuilder (Path.Combine ("temp", $"BuildReleaseAppWithA InItAndÜmläüts({enableMultiDex}{dexTool}{linkTool})"))) {
+				if (dexTool == "d8" && linkTool == "proguard") {
+					b.ThrowOnBuildFailure = false;
+					Assert.IsFalse (b.Build (proj), "Build should have failed.");
+					string error = b.LastBuildOutput
+						.SkipWhile (x => !x.StartsWith ("Build FAILED."))
+						.FirstOrDefault (x => x.Contains ("error XA1011:"));
+					Assert.IsNotNull (error, "Build should have failed with XA1011.");
+					return;
+				}
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsFalse (b.LastBuildOutput.ContainsText ("Duplicate zip entry"), "Should not get warning about [META-INF/MANIFEST.MF]");
 
