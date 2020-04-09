@@ -238,6 +238,11 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
         <target state="translated">Недопустимое значение "$(AndroidManifestPlaceholders)" для заполнителей манифеста Android. Используйте формат "ключ1=значение1;ключ2=значение2". Указано значение: "{0}".</target>
         <note>The following are literal names and should not be translated: `$(AndroidManifestPlaceholders)`</note>
       </trans-unit>
+      <trans-unit id="XA1011">
+        <source>Using ProGuard with the D8 DEX compiler is no longer supported. Please update `$(AndroidLinkTool)` to `r8`.</source>
+        <target state="new">Using ProGuard with the D8 DEX compiler is no longer supported. Please update `$(AndroidLinkTool)` to `r8`.</target>
+        <note>The following are literal names and should not be translated: ProGuard, D8, DEX, `$(AndroidLinkTool)`, `r8`</note>
+      </trans-unit>
       <trans-unit id="XA1012">
         <source>Included layout root element override ID '{0}' is not valid.</source>
         <target state="new">Included layout root element override ID '{0}' is not valid.</target>

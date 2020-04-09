@@ -82,6 +82,7 @@ ms.date: 01/24/2020
 + [XA1008](xa1008.md): The TargetFrameworkVersion (Android API level {compileSdk}) is lower than the targetSdkVersion ({targetSdk}).
 + [XA1009](xa1009.md): The {assembly} is Obsolete. Please upgrade to {assembly} {version}
 + [XA1010](xa1010.md): Invalid \`$(AndroidManifestPlaceholders)\` value for Android manifest placeholders. Please use \`key1=value1;key2=value2\` format. The specified value was: `{placeholders}`
++ [XA1011](xa1011.md): Using ProGuard with the D8 DEX compiler is no longer supported. Please update \`$(AndroidLinkTool)\` to \`r8\`.
 + XA1012: Included layout root element override ID '{id}' is not valid.
 + XA1013: Failed to parse ID of node '{name}' in the layout file '{file}'.
 
