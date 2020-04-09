@@ -12,6 +12,10 @@ namespace apkdiff {
 		public static bool SaveDescriptions;
 		public static bool Verbose;
 
+		public static long AssemblyRegressionThreshold;
+		public static long ApkRegressionThreshold;
+		public static int RegressionCount;
+
 		public static void Main (string [] args)
 		{
 			var (path1, path2) = ProcessArguments (args);
@@ -22,12 +26,23 @@ namespace apkdiff {
 				var desc2 = ApkDescription.Load (path2);
 
 				desc1.Compare (desc2);
+
+				if (ApkRegressionThreshold != 0 && (desc2.PackageSize - desc1.PackageSize) > ApkRegressionThreshold) {
+					Error ($"PackageSize increase {desc2.PackageSize - desc1.PackageSize:#,0} is {desc2.PackageSize - desc1.PackageSize - ApkRegressionThreshold:#,0} bytes more than the threshold {ApkRegressionThreshold:#,0}. apk1 size: {desc1.PackageSize:#,0} bytes, apk2 size: {desc2.PackageSize:#,0} bytes.");
+					RegressionCount ++;
+				}
+			}
+
+			if (RegressionCount > 0) {
+				Error ($"Size regression occured, {RegressionCount:#,0} check(s) failed.");
+				Environment.Exit (3);
 			}
 		}
 
 		static (string, string) ProcessArguments (string [] args)
 		{
 			var help = false;
+			int helpExitCode = 0;
 			var options = new OptionSet {
 				$"Usage: {Name}.exe OPTIONS* <package1.[apk|aab][desc]> [<package2.[apk|aab][desc]>]",
 				"",
@@ -42,6 +57,12 @@ namespace apkdiff {
 				{ "h|help|?",
 					"Show this message and exit",
 				  v => help = v != null },
+				{ "test-apk-size-regression=",
+					"Check whether apk size increased more than {BYTES}",
+				  v => ApkRegressionThreshold = long.Parse (v) },
+				{ "test-assembly-size-regression=",
+					"Check whether any assembly size increased more than {BYTES}",
+				  v => AssemblyRegressionThreshold = long.Parse (v) },
 				{ "s|save-descriptions",
 					"Save .[apk|aab]desc description files next to the package(s)",
 				  v => SaveDescriptions = true },
@@ -52,10 +73,23 @@ namespace apkdiff {
 
 			var remaining = options.Parse (args);
 
+			foreach (var s in remaining) {
+				if (s.Length > 0 && (s [0] == '-' || s [0] == '/') && !File.Exists (s)) {
+					Error ($"Unknown option: {s}");
+					help = true;
+					helpExitCode = 99;
+				}
+			}
+
 			if (help || args.Length < 1) {
 				options.WriteOptionDescriptions (Out);
 
-				Environment.Exit (0);
+				Environment.Exit (helpExitCode);
+			}
+
+			if (remaining.Count != 2 && (ApkRegressionThreshold != 0 || AssemblyRegressionThreshold != 0)) {
+				Error ("Please specify 2 APK packages for regression testing.");
+				Environment.Exit (2);
 			}
 
 			if (remaining.Count != 2 && (remaining.Count != 1 || !SaveDescriptions)) {
