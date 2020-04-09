@@ -31,12 +31,12 @@ namespace Android.Runtime
 			BaseStream.Flush ();
 		}
 
-		public override void Write (byte[]? buffer)
+		public override void Write (byte[] buffer)
 		{
 			BaseStream.Write (buffer, 0, buffer?.Length ?? 0);
 		}
 
-		public override void Write (byte[]? buffer, int offset, int length)
+		public override void Write (byte[] buffer, int offset, int length)
 		{
 			BaseStream.Write (buffer, offset, length);
 		}

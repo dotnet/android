@@ -11,6 +11,7 @@ using Java.Interop;
 namespace Android.Runtime {
 
 	[Register ("java/util/ArrayList", DoNotGenerateAcw=true)]
+	// java.util.ArrayList allows null values
 	public partial class JavaList : Java.Lang.Object, System.Collections.IList {
 
 		internal static IntPtr arraylist_class = JNIEnv.FindClass ("java/util/List");
@@ -147,7 +148,7 @@ namespace Android.Runtime {
 				throw new ArgumentNullException ("items");
 			}
 
-			foreach (object item in items)
+			foreach (var item in items)
 				Add (item);
 		}
 
@@ -204,7 +205,7 @@ namespace Android.Runtime {
 		//
 		//     https://developer.android.com/reference/java/util/List?hl=en#add(E)
 		//
-		public int Add (object item)
+		public int Add (object? item)
 		{
 			if (id_add == IntPtr.Zero)
 				id_add = JNIEnv.GetMethodID (arraylist_class, "add", "(Ljava/lang/Object;)Z");
@@ -257,7 +258,7 @@ namespace Android.Runtime {
 		//
 		//     https://developer.android.com/reference/java/util/List?hl=en#contains(java.lang.Object)
 		//
-		public bool Contains (object item)
+		public bool Contains (object? item)
 		{
 			if (id_contains == IntPtr.Zero)
 				id_contains = JNIEnv.GetMethodID (arraylist_class, "contains", "(Ljava/lang/Object;)Z");
@@ -303,7 +304,7 @@ namespace Android.Runtime {
 		//
 		//     https://developer.android.com/reference/java/util/List?hl=en#indexOf(java.lang.Object)
 		//
-		public virtual int IndexOf (object item)
+		public virtual int IndexOf (object? item)
 		{
 			if (id_indexOf == IntPtr.Zero)
 				id_indexOf = JNIEnv.GetMethodID (arraylist_class, "indexOf", "(Ljava/lang/Object;)I");
@@ -355,7 +356,7 @@ namespace Android.Runtime {
 		//
 		//     https://developer.android.com/reference/java/util/List?hl=en#add(int,%20E)
 		//
-		public void Insert (int index, object item)
+		public void Insert (int index, object? item)
 		{
 			if (id_insert == IntPtr.Zero)
 				id_insert = JNIEnv.GetMethodID (arraylist_class, "add", "(ILjava/lang/Object;)V");
@@ -379,7 +380,7 @@ namespace Android.Runtime {
 			});
 		}
 
-		public void Remove (object item)
+		public void Remove (object? item)
 		{
 			int i = IndexOf (item);
 			if (i < 0 && i >= Count)
@@ -529,16 +530,16 @@ namespace Android.Runtime {
 		//
 		// Java.Util.IList does not exist, so we cannot implement explicitly.
 		//	
-		public virtual bool Add (Java.Lang.Object item)
+		public virtual bool Add (Java.Lang.Object? item)
 		{
 			return Add (0, item);
 		}
 
-		public virtual bool Add (int index, Java.Lang.Object item)
+		public virtual bool Add (int index, Java.Lang.Object? item)
 		{
 			if (Contains (item))
 				return false;
-			Add ((object) item);
+			Add ((object?) item);
 			return true;
 		}
 
@@ -551,21 +552,21 @@ namespace Android.Runtime {
 		{
 			int pos = location;
 			bool ret = false;
-			foreach (Java.Lang.Object item in collection)
+			foreach (Java.Lang.Object? item in collection)
 				ret |= Add (pos++, item);
 			return ret;
 		}
 		
 		// Clear() exists.
 		
-		public virtual bool Contains (Java.Lang.Object item)
+		public virtual bool Contains (Java.Lang.Object? item)
 		{
-			return Contains ((object) item);
+			return Contains ((object?) item);
 		}
 		
 		public virtual bool ContainsAll (JavaList collection)
 		{
-			foreach (Java.Lang.Object item in collection)
+			foreach (Java.Lang.Object? item in collection)
 				if (!Contains (item))
 					return false;
 			return true;
@@ -588,9 +589,9 @@ namespace Android.Runtime {
 			return (Java.Lang.Object?) InternalGet (location);
 		}
 
-		public virtual int IndexOf (Java.Lang.Object item)
+		public virtual int IndexOf (Java.Lang.Object? item)
 		{
-			return IndexOf ((object) item);
+			return IndexOf ((object?) item);
 		}
 
 		public virtual bool IsEmpty {
@@ -610,7 +611,7 @@ namespace Android.Runtime {
 			return ret;
 		}
 		
-		public virtual bool Remove (Java.Lang.Object item)
+		public virtual bool Remove (Java.Lang.Object? item)
 		{
 			int i = IndexOf (item);
 			if (i < 0 && i >= Count)
@@ -622,7 +623,7 @@ namespace Android.Runtime {
 		public virtual bool RemoveAll (JavaList collection)
 		{
 			bool ret = false;
-			foreach (Java.Lang.Object item in collection)
+			foreach (Java.Lang.Object? item in collection)
 				ret |= Remove (item);
 			return ret;
 		}
@@ -861,10 +862,9 @@ namespace Android.Runtime {
 #pragma warning restore CS8601 // Possible null reference assignment.
 		}
 
-		[return: MaybeNull]
 		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator ()
 		{
-			return GetEnumerator ();
+			return GetEnumerator ()!;
 		}
 
 		[return: MaybeNull]

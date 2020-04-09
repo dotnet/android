@@ -27,9 +27,9 @@ namespace Android.App {
 				get {
 					if (dispatcher == null || !dispatcher.IsAlive) {
 						dispatcher = new WeakReference (new TabEventDispatcher ());
-						SetTabListener ((TabEventDispatcher) dispatcher.Target);
+						SetTabListener ((TabEventDispatcher) dispatcher.Target!);
 					}
-					return (TabEventDispatcher) dispatcher.Target;
+					return (TabEventDispatcher) dispatcher.Target!;
 				}
 			}
 

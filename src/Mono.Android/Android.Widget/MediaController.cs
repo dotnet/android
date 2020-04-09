@@ -36,7 +36,7 @@ namespace Android.Widget {
 		static View.IOnClickListener? GetClickListener (WeakReference? value)
 		{
 			return value != null
-				? (View.IOnClickListener) value.Target
+				? (View.IOnClickListener?) value.Target
 				: null;
 		}
 

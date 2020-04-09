@@ -69,7 +69,7 @@ namespace Android.Runtime {
 
 		public int IndexOf (T item)
 		{
-			var items = JNIEnv.GetArray<T> (Handle);
+			var items = JNIEnv.GetArray<T> (Handle)!;
 			return Array.IndexOf (items, item);
 		}
 

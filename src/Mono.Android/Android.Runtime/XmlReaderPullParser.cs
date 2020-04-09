@@ -351,7 +351,7 @@ namespace Android.Runtime
 		
 		public void SetInput (Stream? inputStream, string? inputEncoding)
 		{
-			r = XmlReader.Create (new StreamReader (inputStream, Encoding.GetEncoding (inputEncoding)));
+			r = XmlReader.Create (new StreamReader (inputStream!, Encoding.GetEncoding (inputEncoding!)));
 			r.Read ();
 			input_encoding = inputEncoding;
 		}

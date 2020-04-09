@@ -351,7 +351,7 @@ namespace Xamarin.Android.Net
 		protected virtual async Task WriteRequestContentToOutput (HttpRequestMessage request, HttpURLConnection httpConnection, CancellationToken cancellationToken)
 		{
 			using (var stream = await request.Content.ReadAsStreamAsync ().ConfigureAwait (false)) {
-				await stream.CopyToAsync(httpConnection.OutputStream, 4096, cancellationToken).ConfigureAwait(false);
+				await stream.CopyToAsync(httpConnection.OutputStream!, 4096, cancellationToken).ConfigureAwait(false);
 
 				//
 				// Rewind the stream to beginning in case the HttpContent implementation
@@ -426,7 +426,7 @@ namespace Xamarin.Android.Net
 					await WriteRequestContentToOutput (request, httpConnection, cancellationToken);
 
 				statusCode = await Task.Run (() => (HttpStatusCode)httpConnection.ResponseCode).ConfigureAwait (false);
-				connectionUri = new Uri (httpConnection.URL?.ToString ());
+				connectionUri = new Uri (httpConnection.URL?.ToString ()!);
 			} finally {
 				cancelRegistration.Dispose ();
 			}
@@ -450,7 +450,7 @@ namespace Xamarin.Android.Net
 			if (!IsErrorStatusCode (statusCode)) {
 				if (Logger.LogNet)
 					Logger.Log (LogLevel.Info, LOG_APP, $"Reading...");
-				ret.Content = GetContent (httpConnection, httpConnection.InputStream);
+				ret.Content = GetContent (httpConnection, httpConnection.InputStream!);
 			}
 			else {
 				if (Logger.LogNet)
@@ -538,7 +538,7 @@ namespace Xamarin.Android.Net
 			return fallbackContent;
 		}
 
-		HttpContent GetContent (URLConnection httpConnection, Stream? contentStream)
+		HttpContent GetContent (URLConnection httpConnection, Stream contentStream)
 		{
 			Stream inputStream = new BufferedStream (contentStream);
 			if (decompress_here) {
@@ -626,7 +626,7 @@ namespace Xamarin.Android.Net
 				if (Logger.LogNet)
 					Logger.Log (LogLevel.Debug, LOG_APP, $"Raw redirect location: {location}");
 
-				var baseUrl = new Uri (httpConnection.URL?.ToString ());
+				var baseUrl = new Uri (httpConnection.URL?.ToString ()!);
 				if (location? [0] == '/') {
 					// Shortcut for the '/' and '//' cases, simplifies logic since URI won't treat
 					// such URLs as relative and we'd have to work around it in the `else` block
@@ -642,7 +642,7 @@ namespace Xamarin.Android.Net
 					// that would NOT be the right thing to do since it is not what the redirecting server
 					// meant. The fix doesn't belong here, but rather in the Uri class. So we'll throw...
 
-					redirectUrl = new Uri (location, UriKind.RelativeOrAbsolute);
+					redirectUrl = new Uri (location!, UriKind.RelativeOrAbsolute);
 					if (!redirectUrl.IsAbsoluteUri)
 						redirectUrl = new Uri (baseUrl, location);
 				}

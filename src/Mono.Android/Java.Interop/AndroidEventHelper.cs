@@ -15,7 +15,7 @@ namespace Java.Interop {
 			where TImplementor : Java.Lang.Object, TInterface where TInterface : class
 		{
 			TImplementor? impl = null;
-			if (implementor == null || (impl = (TImplementor) implementor.Target) == null) {
+			if (implementor == null || (impl = (TImplementor?) implementor.Target) == null) {
 				impl = creator ();
 				implementor = new WeakReference (impl, true);
 				setListener (impl);
@@ -31,7 +31,7 @@ namespace Java.Interop {
 			where TImplementor : Java.Lang.Object, TInterface where TInterface : class
 		{
 			TImplementor? impl = null;
-			if (implementor == null || (impl = (TImplementor) implementor.Target) == null)
+			if (implementor == null || (impl = (TImplementor?) implementor.Target) == null)
 				return;
 			remove (impl);
 			if (empty (impl)) {

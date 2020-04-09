@@ -114,7 +114,7 @@ namespace System.Drawing {
 					sb.Append (rect.Height.ToString (culture));
 					return sb.ToString ();
 				} else if (destinationType == typeof (InstanceDescriptor)) {
-					ConstructorInfo ctor = typeof(Rectangle).GetConstructor (new Type[] {typeof(int), typeof(int), typeof(int), typeof(int)} );
+					var ctor = typeof(Rectangle).GetConstructor (new Type[] {typeof(int), typeof(int), typeof(int), typeof(int)} );
 					return new InstanceDescriptor (ctor, new object[] {rect.X, rect.Y, rect.Width, rect.Height});
 				}
 			}
@@ -125,10 +125,10 @@ namespace System.Drawing {
 		public override object CreateInstance (ITypeDescriptorContext context,
 						       IDictionary propertyValues)
 		{
-			object ox = propertyValues ["X"];
-			object oy = propertyValues ["Y"];
-			object ow = propertyValues ["Width"];
-			object oh = propertyValues ["Height"];
+			var ox = propertyValues ["X"];
+			var oy = propertyValues ["Y"];
+			var ow = propertyValues ["Width"];
+			var oh = propertyValues ["Height"];
 			if ((ox == null) || (oy == null) || (ow == null) || (oh == null))
 				throw new ArgumentException ("propertyValues");
 

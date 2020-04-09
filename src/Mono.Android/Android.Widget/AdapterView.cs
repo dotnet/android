@@ -28,7 +28,7 @@ namespace Android.Widget {
 		
 		List<EventHandler>? selection_cleared;
 		
-		void OnSelectionCleared (object o, Android.Widget.AdapterView.NothingSelectedEventArgs args)
+		void OnSelectionCleared (object? o, Android.Widget.AdapterView.NothingSelectedEventArgs args)
 		{
 			if (selection_cleared != null)
 				foreach (var h in selection_cleared)

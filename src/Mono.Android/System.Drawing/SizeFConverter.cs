@@ -97,7 +97,7 @@ namespace System.Drawing
 					return size.Width.ToString (culture) + culture.TextInfo.ListSeparator
 						+ " " + size.Height.ToString (culture);
 				} else if (destinationType == typeof (InstanceDescriptor)) {
-					ConstructorInfo ctor = typeof(SizeF).GetConstructor (new Type[] {typeof(float), typeof(float)});
+					var ctor = typeof(SizeF).GetConstructor (new Type[] {typeof(float), typeof(float)});
 					return new InstanceDescriptor (ctor, new object[] { size.Width, size.Height});
 				}
 			}
@@ -107,8 +107,8 @@ namespace System.Drawing
 
 		public override object CreateInstance (ITypeDescriptorContext context, IDictionary propertyValues)
 		{
-			float w = (float) propertyValues ["Width"];
-			float h = (float) propertyValues ["Height"];
+			float w = (float) propertyValues ["Width"]!;
+			float h = (float) propertyValues ["Height"]!;
 			return new SizeF (w, h);
 		}
 

@@ -40,8 +40,7 @@ namespace Android.Runtime {
 
 			var jniClass  = Java.Interop.TypeManager.GetClassName (GetThresholdClass (value));
 			lock (LegacyPeerMembers) {
-				JniPeerMembers members;
-				if (!LegacyPeerMembers.TryGetValue (jniClass, out members)) {
+				if (!LegacyPeerMembers.TryGetValue (jniClass, out var members)) {
 					members = new XAPeerMembers (jniClass, peerType);
 					LegacyPeerMembers.Add (jniClass, members);
 				}

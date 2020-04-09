@@ -76,7 +76,7 @@ namespace Xamarin.Android.Net
 				return null;
 			}
 
-			var uri = new Uri (request.URL?.ToString ());
+			var uri = new Uri (request.URL?.ToString ()!);
 			int hashcode = uri.GetHashCode () ^ credentials.GetHashCode () ^ (currDS.Nonce?.GetHashCode () ?? 1);
 			AuthDigestSession? ds = null;
 			bool addDS = false;
@@ -103,7 +103,7 @@ namespace Xamarin.Android.Net
 				return null;
 			}
 
-			var uri = new Uri (request.URL?.ToString ());
+			var uri = new Uri (request.URL?.ToString ()!);
 			int hashcode = uri.GetHashCode () ^ credentials.GetHashCode ();
 			AuthDigestSession? ds = null;
 			if (!Cache.TryGetValue (hashcode, out ds) || ds == null)

@@ -13,6 +13,7 @@ using Java.Interop;
 namespace Android.Runtime {
 
 	[Register ("java/util/Collection", DoNotGenerateAcw=true)]
+	// java.util.Collection allows null values
 	public class JavaCollection : Java.Lang.Object, System.Collections.ICollection {
 
 		internal static IntPtr collection_class = JNIEnv.FindClass ("java/util/Collection");
@@ -39,8 +40,8 @@ namespace Android.Runtime {
 				throw new ArgumentNullException ("items");
 			}
 
-			foreach (object item in items)
-				Add (item);
+			foreach (var item in items)
+				Add (item!);
 		}
 
 		//
@@ -384,10 +385,9 @@ namespace Android.Runtime {
 			});
 		}
 
-		[return: MaybeNull]
 		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator ()
 		{
-			return GetEnumerator ();
+			return GetEnumerator ()!;
 		}
 
 		[return: MaybeNull]

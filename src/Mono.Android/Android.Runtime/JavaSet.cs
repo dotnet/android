@@ -11,6 +11,7 @@ using Java.Interop;
 namespace Android.Runtime {
 
 	[Register ("java/util/HashSet", DoNotGenerateAcw=true)]
+	// java.util.HashSet allows null values
 	public class JavaSet : Java.Lang.Object, ICollection {
 
 		internal static IntPtr set_class = JNIEnv.FindClass ("java/util/Set");
@@ -73,7 +74,7 @@ namespace Android.Runtime {
 				throw new ArgumentNullException ("items");
 			}
 
-			foreach (object item in items)
+			foreach (object? item in items)
 				Add (item);
 		}
 
@@ -123,7 +124,7 @@ namespace Android.Runtime {
 		//
 		//     https://developer.android.com/reference/java/util/Set?hl=en#add(E)
 		//
-		public void Add (object item)
+		public void Add (object? item)
 		{
 			if (id_add == IntPtr.Zero)
 				id_add = JNIEnv.GetMethodID (set_class, "add", "(Ljava/lang/Object;)Z");
@@ -177,7 +178,7 @@ namespace Android.Runtime {
 		//
 		//     https://developer.android.com/reference/java/util/Set?hl=en#contains(java.lang.Object)
 		//
-		public bool Contains (object item)
+		public bool Contains (object? item)
 		{
 			if (id_contains == IntPtr.Zero)
 				id_contains = JNIEnv.GetMethodID (set_class, "contains", "(Ljava/lang/Object;)Z");
@@ -202,7 +203,7 @@ namespace Android.Runtime {
 				throw new ArgumentException ("array");
 
 			int i = 0;
-			foreach (object item in this)
+			foreach (object? item in this)
 				array.SetValue (item, array_index + i++);
 		}
 
@@ -222,7 +223,7 @@ namespace Android.Runtime {
 		//
 		//     https://developer.android.com/reference/java/util/Set?hl=en#remove(java.lang.Object)
 		//
-		public void Remove (object item)
+		public void Remove (object? item)
 		{
 			if (id_remove == IntPtr.Zero)
 				id_remove = JNIEnv.GetMethodID (set_class, "remove", "(Ljava/lang/Object;)Z");
@@ -270,6 +271,7 @@ namespace Android.Runtime {
 	}
 
 	[Register ("java/util/HashSet", DoNotGenerateAcw=true)]
+	// java.util.HashSet allows null
 	public class JavaSet<T> : JavaSet, ICollection<T> {
 
 		//
@@ -387,10 +389,9 @@ namespace Android.Runtime {
 				array [array_index + i++] = item;
 		}
 
-		[return: MaybeNull]
 		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator ()
 		{
-			return GetEnumerator ();
+			return GetEnumerator ()!;
 		}
 
 		[return: MaybeNull]

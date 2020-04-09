@@ -279,7 +279,7 @@ namespace Android.Runtime {
 		{
 			IntPtr id = _monodroid_timezone_get_default_id ();
 			try {
-				return Marshal.PtrToStringAnsi (id);
+				return Marshal.PtrToStringAnsi (id)!;
 			} finally {
 				JNIEnv.monodroid_free (id);
 			}

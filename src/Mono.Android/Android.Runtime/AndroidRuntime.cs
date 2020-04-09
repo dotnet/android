@@ -40,7 +40,7 @@ namespace Android.Runtime {
 
 		public override string GetCurrentManagedThreadName ()
 		{
-			return Thread.CurrentThread.Name;
+			return Thread.CurrentThread.Name!;
 		}
 
 		public override string GetCurrentManagedThreadStackTrace (int skipFrames, bool fNeedFileInfo)
@@ -161,7 +161,7 @@ namespace Android.Runtime {
 			return r;
 		}
 
-		public override void WriteGlobalReferenceLine (string? format, params object?[] args)
+		public override void WriteGlobalReferenceLine (string format, params object?[] args)
 		{
 			JNIEnv._monodroid_gref_log (string.Format (format, args));
 		}
@@ -293,7 +293,7 @@ namespace Android.Runtime {
 				if (dynamic_callback_gen == null)
 					throw new InvalidOperationException ("The referenced Mono.Android.Export.dll does not match the expected version. The required method was not found.");
 			}
-			return (Delegate)dynamic_callback_gen.Invoke (null, new object [] { method });
+			return (Delegate)dynamic_callback_gen.Invoke (null, new object [] { method })!;
 		}
 
 		static List<JniNativeMethodRegistration> sharedRegistrations = new List<JniNativeMethodRegistration> ();
@@ -316,7 +316,7 @@ namespace Android.Runtime {
 					registrations = new List<JniNativeMethodRegistration> ();
 				}
 				JniNativeMethodRegistrationArguments arguments = new JniNativeMethodRegistrationArguments (registrations, methods);
-				rv = MagicRegistrationMap.CallRegisterMethod (arguments, type.FullName);
+				rv = MagicRegistrationMap.CallRegisterMethod (arguments, type.FullName!);
 
 				if (registrations.Count > 0)
 					nativeClass.RegisterNativeMethods (registrations.ToArray ());
@@ -402,10 +402,10 @@ namespace Android.Runtime {
 				} else {
 					Type callbackDeclaringType = type;
 					if (toks.Length == 4) {
-						callbackDeclaringType = Type.GetType (toks [3], throwOnError: true);
+						callbackDeclaringType = Type.GetType (toks [3], throwOnError: true)!;
 					}
 					while (callbackDeclaringType.ContainsGenericParameters) {
-						callbackDeclaringType = callbackDeclaringType.BaseType;
+						callbackDeclaringType = callbackDeclaringType.BaseType!;
 					}
 					GetCallbackHandler connector = (GetCallbackHandler) Delegate.CreateDelegate (typeof (GetCallbackHandler),
 						callbackDeclaringType, toks [2]);
@@ -453,8 +453,7 @@ namespace Android.Runtime {
 		internal void AddPeer (IJavaPeerable value, JniObjectReference reference, IntPtr hash)
 		{
 			lock (instances) {
-				IdentityHashTargets targets;
-				if (!instances.TryGetValue (hash, out targets)) {
+				if (!instances.TryGetValue (hash, out var targets)) {
 					targets = new IdentityHashTargets (value);
 					instances.Add (hash, targets);
 					return;
@@ -573,13 +572,12 @@ namespace Android.Runtime {
 		internal void RemovePeer (IJavaPeerable value, IntPtr hash)
 		{
 			lock (instances) {
-				IdentityHashTargets targets;
-				if (!instances.TryGetValue (hash, out targets)) {
+				if (!instances.TryGetValue (hash, out var targets)) {
 					return;
 				}
 				for (int i = targets.Count - 1; i >= 0; i--) {
 					var wref = targets [i];
-					if (!wref!.TryGetTarget (out IJavaPeerable target)) {
+					if (!wref!.TryGetTarget (out var target)) {
 						// wref is invalidated; remove it.
 						targets.RemoveAt (i);
 						continue;
@@ -602,8 +600,7 @@ namespace Android.Runtime {
 
 			var hash    = JNIEnv.IdentityHash! (reference.Handle);
 			lock (instances) {
-				IdentityHashTargets targets;
-				if (instances.TryGetValue (hash, out targets)) {
+				if (instances.TryGetValue (hash, out var targets)) {
 					for (int i = targets.Count - 1; i >= 0; i--) {
 						var wref    = targets [i];
 						if (!wref!.TryGetTarget (out var result) || !result.PeerReference.IsValid) {

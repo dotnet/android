@@ -60,8 +60,7 @@ namespace Java.Interop {
 			if (target == null)
 				return null;
 
-			Func<IntPtr, JniHandleOwnership, object> converter;
-			if (JniHandleConverters.TryGetValue (target, out converter))
+			if (JniHandleConverters.TryGetValue (target, out var converter))
 				return converter;
 			if (target.IsArray)
 				return (h, t) => JNIEnv.GetArray (h, t, target.GetElementType ());
@@ -89,7 +88,7 @@ namespace Java.Interop {
 
 		static Func<IntPtr, JniHandleOwnership, object> GetJniHandleConverterForType (Type t)
 		{
-			MethodInfo m = t.GetMethod ("FromJniHandle", BindingFlags.Static | BindingFlags.Public);
+			MethodInfo m = t.GetMethod ("FromJniHandle", BindingFlags.Static | BindingFlags.Public)!;
 			return (Func<IntPtr, JniHandleOwnership, object>) Delegate.CreateDelegate (
 					typeof (Func<IntPtr, JniHandleOwnership, object>), m);
 		}
@@ -167,7 +166,7 @@ namespace Java.Interop {
 
 			// hail mary pass; perhaps there's a MCW which participates in normal
 			// .NET type conversion?
-			return Convert.ChangeType (v, targetType);
+			return Convert.ChangeType (v, targetType!);
 		}
 
 		static Dictionary<string, Type> TypeMappings = new Dictionary<string, Type> {
@@ -185,8 +184,7 @@ namespace Java.Interop {
 		static Type? GetTypeMapping (IntPtr handle)
 		{
 			string className = JNIEnv.GetClassNameFromInstance (handle);
-			Type match;
-			if (TypeMappings.TryGetValue (className, out match))
+			if (TypeMappings.TryGetValue (className, out var match))
 				return match;
 			IntPtr lrefClass = JNIEnv.GetObjectClass (handle);
 			try {
@@ -291,13 +289,12 @@ namespace Java.Interop {
 			{ typeof (long),   value => new Java.Lang.Long ((long) value) },
 			{ typeof (float),  value => new Java.Lang.Float ((float) value) },
 			{ typeof (double), value => new Java.Lang.Double ((double) value) },
-			{ typeof (string), value => new Java.Lang.String (value.ToString ()) },
+			{ typeof (string), value => new Java.Lang.String (value.ToString ()!) },
 		};
 
 		static Func<object, IJavaObject>? GetJavaObjectConverter (Type source)
 		{
-			Func<object, IJavaObject> converter;
-			if (JavaObjectConverters.TryGetValue (source, out converter))
+			if (JavaObjectConverters.TryGetValue (source, out var converter))
 				return converter;
 			return null;
 		}
@@ -354,7 +351,7 @@ namespace Java.Interop {
 			{ typeof (string), value => {
 				if (value == null)
 					return IntPtr.Zero;
-				using (var v = new Java.Lang.String (value.ToString ()))
+				using (var v = new Java.Lang.String (value.ToString ()!))
 					return JNIEnv.ToLocalJniHandle (v);
 			} },
 			{ typeof (Android.Runtime.JavaObject), value => {
@@ -364,7 +361,7 @@ namespace Java.Interop {
 
 		static Func<object, IntPtr> GetLocalJniHandleConverter<T> (T value, Type sourceType)
 		{
-			Func<object, IntPtr> converter;
+			Func<object, IntPtr>? converter;
 			if (LocalJniHandleConverters.TryGetValue (sourceType, out converter))
 				return converter;
 			if (value != null && LocalJniHandleConverters.TryGetValue (value.GetType (), out converter))

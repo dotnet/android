@@ -15,9 +15,9 @@ namespace Android.Animation {
 			get {
 				if (dispatcher == null || !dispatcher.IsAlive) {
 					dispatcher = new WeakReference (new AnimatorEventDispatcher ());
-					AddListener ((AnimatorEventDispatcher) dispatcher.Target);
+					AddListener ((AnimatorEventDispatcher) dispatcher.Target!);
 				}
-				return (AnimatorEventDispatcher) dispatcher.Target;
+				return (AnimatorEventDispatcher) dispatcher.Target!;
 			}
 		}
 

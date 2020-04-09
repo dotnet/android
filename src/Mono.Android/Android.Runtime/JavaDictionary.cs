@@ -11,6 +11,7 @@ using Java.Interop;
 namespace Android.Runtime {
 
 	[Register ("java/util/HashMap", DoNotGenerateAcw=true)]
+	// java.util.HashMap allows null keys and values
 	public class JavaDictionary : Java.Lang.Object, System.Collections.IDictionary {
 
 		class DictionaryEnumerator : IDictionaryEnumerator {
@@ -22,19 +23,19 @@ namespace Android.Runtime {
 				simple_enumerator = (owner as IEnumerable).GetEnumerator ();
 			}
 
-			public object Current {
+			public object? Current {
 				get { return simple_enumerator.Current; }
 			}
 				
 			public DictionaryEntry Entry {
-				get { return (DictionaryEntry) Current; }
+				get { return (DictionaryEntry) Current!; }
 			}
 
 			public object Key {
 				get { return Entry.Key; }
 			}
 
-			public object Value {
+			public object? Value {
 				get { return Entry.Value; }
 			}
 
@@ -197,7 +198,9 @@ namespace Android.Runtime {
 				throw new ArgumentNullException ("items");
 			}
 
+#pragma warning disable CS8605 // Unboxing a possibly null value.
 			foreach (DictionaryEntry item in items)
+#pragma warning restore CS8605 // Unboxing a possibly null value.
 				Add (item.Key, item.Value);
 		}
 
@@ -247,7 +250,7 @@ namespace Android.Runtime {
 			set { Put (key, value); }
 		}
 
-		public void Add (object key, object value)
+		public void Add (object key, object? value)
 		{
 			if (Contains (key))
 				throw new ArgumentException ("The key '" + key + "' already exists.", "key");
@@ -311,14 +314,14 @@ namespace Android.Runtime {
 			else if (array.Length < array_index + Count)
 				throw new ArgumentException ("array");
 			int i = 0;
-			foreach (object o in this)
+			foreach (var o in this)
 				array.SetValue (o, array_index + i++);
 		}
 
 		IEnumerator IEnumerable.GetEnumerator ()
 		{
-			foreach (object key in Keys)
-				yield return new DictionaryEntry (key, this [key]);
+			foreach (var key in Keys)
+				yield return new DictionaryEntry (key!, this [key!]);
 		}
 
 		public IDictionaryEnumerator GetEnumerator ()

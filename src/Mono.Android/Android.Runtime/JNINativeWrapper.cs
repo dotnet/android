@@ -58,7 +58,7 @@ namespace Android.Runtime {
 			if (ret_type != typeof (void))
 				retval = ig.DeclareLocal (ret_type);
 
-			ig.Emit (OpCodes.Call, wait_for_bridge_processing_method);
+			ig.Emit (OpCodes.Call, wait_for_bridge_processing_method!);
 
 			var label = ig.BeginExceptionBlock ();
 
@@ -75,15 +75,15 @@ namespace Android.Runtime {
 			if (filter) {
 				ig.BeginExceptFilterBlock ();
 
-				ig.Emit (OpCodes.Call, mono_unhandled_exception_method);
+				ig.Emit (OpCodes.Call, mono_unhandled_exception_method!);
 				ig.Emit (OpCodes.Ldc_I4_1);
-				ig.BeginCatchBlock (null);
+				ig.BeginCatchBlock (null!);
 			} else {
 				ig.BeginCatchBlock (typeof (Exception));
 			}
 
 			ig.Emit (OpCodes.Dup);
-			ig.Emit (OpCodes.Call, exception_handler_method);
+			ig.Emit (OpCodes.Call, exception_handler_method!);
 
 			if (filter)
 				ig.Emit (OpCodes.Throw);

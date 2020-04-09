@@ -46,7 +46,7 @@ namespace Java.Interop {
 		internal static string GetClassName (IntPtr class_ptr)
 		{
 			IntPtr ptr = monodroid_TypeManager_get_java_class_name (class_ptr);
-			string ret = Marshal.PtrToStringAnsi (ptr);
+			string ret = Marshal.PtrToStringAnsi (ptr)!;
 			JNIEnv.monodroid_free (ptr);
 
 			return ret;
@@ -54,9 +54,8 @@ namespace Java.Interop {
 
 		internal static string? GetJniTypeName (Type type)
 		{
-			string jni;
 			lock (TypeManagerMapDictionaries.AccessLock) {
-				if (TypeManagerMapDictionaries.ManagedToJni.TryGetValue (type, out jni))
+				if (TypeManagerMapDictionaries.ManagedToJni.TryGetValue (type, out var jni))
 					return jni;
 			}
 			return null;
@@ -130,7 +129,7 @@ namespace Java.Interop {
 			string[] typenames = signature!.Split (':');
 			Type[] result = new Type [typenames.Length];
 			for (int i = 0; i < typenames.Length; i++)
-				result [i] = Type.GetType (typenames [i], throwOnError:true);
+				result [i] = Type.GetType (typenames [i], throwOnError:true)!;
 			return result;
 		}
 
@@ -153,7 +152,7 @@ namespace Java.Interop {
 				return;
 			}
 
-			Type type = Type.GetType (JNIEnv.GetString (typename_ptr, JniHandleOwnership.DoNotTransfer), throwOnError:true);
+			Type type = Type.GetType (JNIEnv.GetString (typename_ptr, JniHandleOwnership.DoNotTransfer)!, throwOnError:true)!;
 			if (type.IsGenericTypeDefinition) {
 				throw new NotSupportedException (
 						"Constructing instances of generic types from Java is not supported, as the type parameters cannot be determined.",
@@ -161,7 +160,7 @@ namespace Java.Interop {
 			}
 			Type[] ptypes = GetParameterTypes (JNIEnv.GetString (signature_ptr, JniHandleOwnership.DoNotTransfer));
 			var parms = JNIEnv.GetObjectArray (parameters_ptr, ptypes);
-			ConstructorInfo cinfo = type.GetConstructor (ptypes);
+			var cinfo = type.GetConstructor (ptypes);
 			if (cinfo == null) {
 				throw CreateMissingConstructorException (type, ptypes);
 			}
@@ -227,8 +226,7 @@ namespace Java.Interop {
 			type = null;
 			int ls      = class_name.LastIndexOf ('/');
 			var package = ls >= 0 ? class_name.Substring (0, ls) : "";
-			List<Converter<string, Type?>> mappers;
-			if (packageLookup.TryGetValue (package, out mappers)) {
+			if (packageLookup.TryGetValue (package, out var mappers)) {
 				foreach (Converter<string, Type?> c in mappers) {
 					type = c (class_name);
 					if (type == null)
@@ -316,7 +314,7 @@ namespace Java.Interop {
 			// Skip Activator.CreateInstance() as that requires public constructors,
 			// and we want to hide some constructors for sanity reasons.
 			BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
-			ConstructorInfo c = type.GetConstructor (flags, null, XAConstructorSignature, null);
+			var c = type.GetConstructor (flags, null, XAConstructorSignature, null);
 			if (c != null) {
 				return c.Invoke (new object [] { handle, transfer });
 			}
@@ -338,8 +336,7 @@ namespace Java.Interop {
 		{
 			string jniFromType = JNIEnv.GetJniName (t);
 			lock (TypeManagerMapDictionaries.AccessLock) {
-				Type lookup;
-				if (!TypeManagerMapDictionaries.JniToManaged.TryGetValue (java_class, out lookup)) {
+				if (!TypeManagerMapDictionaries.JniToManaged.TryGetValue (java_class, out var lookup)) {
 					TypeManagerMapDictionaries.JniToManaged.Add (java_class, t);
 					if (String.Compare (jniFromType, java_class, StringComparison.OrdinalIgnoreCase) != 0) {
 						TypeManagerMapDictionaries.ManagedToJni.Add (t, java_class);
@@ -357,8 +354,7 @@ namespace Java.Interop {
 		public static void RegisterPackage (string package, Converter<string, Type> lookup)
 		{
 			lock (packageLookup) {
-				List<Converter<string, Type?>> lookups;
-				if (!packageLookup.TryGetValue (package, out lookups))
+				if (!packageLookup.TryGetValue (package, out var lookups))
 					packageLookup.Add (package, lookups = new List<Converter<string, Type?>> ());
 				lookups.Add (lookup);
 			}
@@ -378,8 +374,7 @@ namespace Java.Interop {
 					string package                  = packages [i];
 					var lookup			= lookups [i];
 
-					List<Converter<string, Type?>> _lookups;
-					if (!packageLookup.TryGetValue (package, out _lookups))
+					if (!packageLookup.TryGetValue (package, out var _lookups))
 						packageLookup.Add (package, _lookups = new List<Converter<string, Type?>> ());
 					_lookups.Add (lookup);
 				}

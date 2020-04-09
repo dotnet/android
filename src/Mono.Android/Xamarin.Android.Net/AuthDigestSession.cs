@@ -111,7 +111,7 @@ namespace Xamarin.Android.Net
 
 		string? HA2 (HttpURLConnection webRequest) 
 		{
-			var uri = new Uri (webRequest.URL?.ToString ());
+			var uri = new Uri (webRequest.URL?.ToString ()!);
 			string ha2 = $"{webRequest.RequestMethod}:{uri.PathAndQuery}";
 			if (QOP == "auth-int") {
 				// TODO
@@ -137,7 +137,7 @@ namespace Xamarin.Android.Net
 				return null;
 	
 			lastUse = DateTime.Now;
-			var uri = new Uri (request.URL?.ToString ());
+			var uri = new Uri (request.URL?.ToString ()!);
 			NetworkCredential cred = credentials.GetCredential (uri, "digest");
 			if (cred == null)
 				return null;

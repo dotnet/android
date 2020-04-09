@@ -30,12 +30,12 @@ namespace Android.Runtime {
 			return BaseStream.ReadByte ();
 		}
 
-		public override int Read (byte[]? bytes)
+		public override int Read (byte[] bytes)
 		{
-			return Read (bytes, 0, bytes?.Length ?? 0);
+			return Read (bytes, 0, bytes.Length);
 		}
 
-		public override int Read (byte[]? bytes, int offset, int length)
+		public override int Read (byte[] bytes, int offset, int length)
 		{
 			int res = BaseStream.Read (bytes, offset, length);
 			if (res == 0)

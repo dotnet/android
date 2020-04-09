@@ -103,7 +103,7 @@ namespace System.Drawing {
 					return point.X.ToString (culture) + culture.TextInfo.ListSeparator 
 						+ " " + point.Y.ToString (culture);
 				} else if (destinationType == typeof (InstanceDescriptor)) {
-					ConstructorInfo ctor = typeof(Point).GetConstructor (new Type[] {typeof(int), typeof(int)} );
+					var ctor = typeof(Point).GetConstructor (new Type[] {typeof(int), typeof(int)} );
 					return new InstanceDescriptor (ctor, new object[] {point.X, point.Y });
 				}
 			}
@@ -114,8 +114,8 @@ namespace System.Drawing {
 		public override object CreateInstance (ITypeDescriptorContext context,
 						       IDictionary propertyValues)
 		{
-			object ox = propertyValues ["X"];
-			object oy = propertyValues ["Y"];
+			var ox = propertyValues ["X"];
+			var oy = propertyValues ["Y"];
 			if ((ox == null) || (oy == null))
 				throw new ArgumentException ("propertyValues");
 

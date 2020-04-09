@@ -47,7 +47,7 @@ namespace Java.Lang {
 			{
 				RunnableImplementor result;
 				lock (instances) {
-					instances.TryGetValue (handler, out result);
+					instances.TryGetValue (handler, out result!);
 					instances.Remove (handler);
 				}
 				return result;

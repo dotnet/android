@@ -124,7 +124,7 @@ namespace Android.Runtime {
 		static unsafe void RegisterJniNatives (IntPtr typeName_ptr, int typeName_len, IntPtr jniClass, IntPtr methods_ptr, int methods_len)
 		{
 			string typeName = new string ((char*) typeName_ptr, 0, typeName_len);
-			Type type = Type.GetType (typeName);
+			var type = Type.GetType (typeName);
 			if (type == null) {
 				monodroid_log (LogLevel.Error,
 				               LogCategories.Default,
@@ -188,7 +188,7 @@ namespace Android.Runtime {
 
 			JavaNativeTypeManager.PackageNamingPolicy = (PackageNamingPolicy)args->packageNamingPolicy;
 			if (IsRunningOnDesktop) {
-				string packageNamingPolicy = Environment.GetEnvironmentVariable ("__XA_PACKAGE_NAMING_POLICY__");
+				var packageNamingPolicy = Environment.GetEnvironmentVariable ("__XA_PACKAGE_NAMING_POLICY__");
 				if (Enum.TryParse (packageNamingPolicy, out PackageNamingPolicy pnp)) {
 					JavaNativeTypeManager.PackageNamingPolicy = pnp;
 				}
@@ -246,7 +246,7 @@ namespace Android.Runtime {
 		{
 			if (mono_unhandled_exception == null) {
 				var mono_UnhandledException = typeof (System.Diagnostics.Debugger)
-					.GetMethod ("Mono_UnhandledException", BindingFlags.NonPublic | BindingFlags.Static);
+					.GetMethod ("Mono_UnhandledException", BindingFlags.NonPublic | BindingFlags.Static)!;
 				mono_unhandled_exception = (Action<Exception>) Delegate.CreateDelegate (typeof(Action<Exception>), mono_UnhandledException);
 			}
 
@@ -611,10 +611,10 @@ namespace Android.Runtime {
 		internal static extern void _monodroid_weak_gref_delete (IntPtr handle, byte type, string? threadName, int threadId, [In] StringBuilder? from, int from_writable);
 
 		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int _monodroid_lref_log_new (int lrefc, IntPtr handle, byte type, string threadName, int threadId, [In] StringBuilder from, int from_writable);
+		internal static extern int _monodroid_lref_log_new (int lrefc, IntPtr handle, byte type, string? threadName, int threadId, [In] StringBuilder from, int from_writable);
 
 		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void _monodroid_lref_log_delete (int lrefc, IntPtr handle, byte type, string threadName, int threadId, [In] StringBuilder from, int from_writable);
+		internal static extern void _monodroid_lref_log_delete (int lrefc, IntPtr handle, byte type, string? threadName, int threadId, [In] StringBuilder from, int from_writable);
 
 		public static IntPtr NewGlobalRef (IntPtr jobject)
 		{
@@ -1010,7 +1010,7 @@ namespace Android.Runtime {
 				for (int i = 0; i < dest.Length; ++i) {
 					IntPtr a = GetObjectArrayElement (src, i);
 					try {
-						Array d = (Array) dest.GetValue (i);
+						var d = (Array?) dest.GetValue (i);
 						if (d == null)
 							dest.SetValue (GetArray (a, JniHandleOwnership.DoNotTransfer, elementType.GetElementType ()), i);
 						else
@@ -1131,8 +1131,8 @@ namespace Android.Runtime {
 					int len = source.GetLength (0);
 					for (int i = 0; i < len; ++i) {
 						IntPtr _dest    = GetObjectArrayElement (dest, i);
-						Array  _source  = (Array) source.GetValue (i);
-						CopyArray (_source, _source.GetType ().GetElementType (), _dest);
+						Array  _source  = (Array) source.GetValue (i)!;
+						CopyArray (_source, _source.GetType ().GetElementType ()!, _dest);
 						JNIEnv.DeleteLocalRef (_dest);
 					}
 				} },
@@ -1254,12 +1254,12 @@ namespace Android.Runtime {
 					}
 				} },
 				{ typeof (IJavaObject), (type, source, len) => {
-					var r = Array.CreateInstance (type, len);
+					var r = Array.CreateInstance (type!, len);
 					CopyArray (source, r, type);
 					return r;
 				} },
 				{ typeof (Array), (type, source, len) => {
-					var r = Array.CreateInstance (type, len);
+					var r = Array.CreateInstance (type!, len);
 					CopyArray (source, r, type);
 					return r;
 				} },
@@ -1475,7 +1475,7 @@ namespace Android.Runtime {
 				return IntPtr.Zero;
 
 			IntPtr result;
-			IntPtr grefClass = FindClass (array.GetType ().GetElementType ());
+			IntPtr grefClass = FindClass (array.GetType ().GetElementType ()!);
 			try {
 				result = NewObjectArray (array.Length, grefClass, IntPtr.Zero);
 			} finally {
@@ -1521,7 +1521,7 @@ namespace Android.Runtime {
 			if (value == null)
 				throw new ArgumentNullException ("value");
 
-			elementType = elementType ?? value.GetType ().GetElementType ();
+			elementType = elementType ?? value.GetType ().GetElementType ()!;
 
 			if (elementType.IsArray) {
 				IntPtr array = IntPtr.Zero;
@@ -1530,7 +1530,7 @@ namespace Android.Runtime {
 					array = NewObjectArray (value.Length, grefArrayClass, IntPtr.Zero);
 
 					for (int i = 0; i < value.Length; ++i) {
-						IntPtr subarray = NewArray ((Array) value.GetValue (i), elementType.GetElementType ());
+						IntPtr subarray = NewArray ((Array) value.GetValue (i)!, elementType.GetElementType ());
 						SetObjectArrayElement (array, i, subarray);
 						DeleteLocalRef (subarray);
 					}
