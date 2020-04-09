@@ -421,6 +421,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Using ProGuard with the D8 DEX compiler is no longer supported. Please update `$(AndroidLinkTool)` to `r8`..
+        /// </summary>
+        internal static string XA1011 {
+            get {
+                return ResourceManager.GetString("XA1011", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Included layout root element override ID &apos;{0}&apos; is not valid..
         /// </summary>
         internal static string XA1012 {
