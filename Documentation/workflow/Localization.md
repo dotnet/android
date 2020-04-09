@@ -23,11 +23,11 @@ so when adding a new message, follow these steps:
     ```
 
     Or, to log a message directly from an MSBuild target, pass the name of the
-    generated property to the `ResourceName` parameter of the `<AndroidError/>`
-    or `<AndroidWarning/>` task instead:
+    resource to the `ResourceName` parameter of the `<AndroidError/>` or
+    `<AndroidWarning/>` task instead:
 
     ```xml
-    <AndroidError Code="XA0000" ResourceName="Properties.Resources.XA0000" />
+    <AndroidError Code="XA0000" ResourceName="XA0000" />
     ```
 
  3. After adding the new message, build `Xamarin.Android.Build.Tasks.csproj`
