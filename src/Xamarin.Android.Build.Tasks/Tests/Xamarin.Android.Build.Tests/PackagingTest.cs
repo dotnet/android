@@ -102,12 +102,13 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void CheckClassesDexIsIncluded ()
+		public void CheckClassesDexIsIncluded ([Values ("dx", "d8", "invalid")] string dexTool)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
+				DexTool = dexTool,
 			};
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
+			using (var b = CreateApkBuilder ()) {
 				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj), "build failed");
