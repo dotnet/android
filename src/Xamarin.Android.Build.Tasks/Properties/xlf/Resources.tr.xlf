@@ -238,6 +238,17 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
         <target state="translated">Android bildirim yer tutucuları için `$(AndroidManifestPlaceholders)` değeri geçersiz. Lütfen `anahtar1=değer1;anahtar2=değer2` biçimini kullanın. Belirtilen değer: `{0}`</target>
         <note>The following are literal names and should not be translated: `$(AndroidManifestPlaceholders)`</note>
       </trans-unit>
+      <trans-unit id="XA1012">
+        <source>Included layout root element override ID '{0}' is not valid.</source>
+        <target state="new">Included layout root element override ID '{0}' is not valid.</target>
+        <note>{0} - The Android resource ID name</note>
+      </trans-unit>
+      <trans-unit id="XA1013">
+        <source>Failed to parse ID of node '{0}' in the layout file '{1}'.</source>
+        <target state="new">Failed to parse ID of node '{0}' in the layout file '{1}'.</target>
+        <note>{0} - The Android resource XML element name
+{1} - The path of the layout file</note>
+      </trans-unit>
       <trans-unit id="XA2000">
         <source>Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 5 will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 5 is released.</source>
         <target state="new">Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 5 will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 5 is released.</target>
@@ -373,6 +384,61 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
         <source>Unable to find //manifest/application/uses-library at path: {0}</source>
         <target state="translated">Yolda //manifest/application/uses-library bulunamıyor: {0}</target>
         <note>The following are literal names and should not be translated: //manifest/application/uses-library</note>
+      </trans-unit>
+      <trans-unit id="XA4219">
+        <source>Cannot find binding generator for language {0} or {1}.</source>
+        <target state="new">Cannot find binding generator for language {0} or {1}.</target>
+        <note>In this message, the term "binding" means a piece of code that makes it easy to access a certain kind of data that is originally stored outside of the target programming language, which is usually C#.
+{0} - The target programming language name, which is usually C#
+{1} - The default programming language name, which is also usually C#</note>
+      </trans-unit>
+      <trans-unit id="XA4220">
+        <source>Partial class item '{0}' does not have an associated binding for layout '{1}'.</source>
+        <target state="new">Partial class item '{0}' does not have an associated binding for layout '{1}'.</target>
+        <note>In this message, the term "partial class item" means a .NET partial class.
+In this message, the term "binding" means a piece of code that makes it easy to access a certain kind of data that is originally stored outside of the target programming language, which is usually C#.
+In this mesage, the term "layout" means an Android UI layout.
+{1} - The path of the partial class file
+{0} - The name of the layout</note>
+      </trans-unit>
+      <trans-unit id="XA4221">
+        <source>No layout binding source files were generated.</source>
+        <target state="new">No layout binding source files were generated.</target>
+        <note>In this message, the term "binding" means a piece of code that makes it easy to access a certain kind of data that is originally stored outside of the target programming language, which is usually C#.
+In this mesage, the term "layout" means an Android UI layout.
+In this message, the term "source files" means files that can be compiled, usually containing C# source code.</note>
+      </trans-unit>
+      <trans-unit id="XA4222">
+        <source>No widgets found for layout ({0}).</source>
+        <target state="new">No widgets found for layout ({0}).</target>
+        <note>In this message, the term "widgets" means Android UI elements.
+In this mesage, the term "layout" means an Android UI layout.
+{0} - Semicolon-separated list of paths for the files that define the layout</note>
+      </trans-unit>
+      <trans-unit id="XA4223">
+        <source>Malformed full class name '{0}'. Missing namespace.</source>
+        <target state="new">Malformed full class name '{0}'. Missing namespace.</target>
+        <note>{0} - The class name</note>
+      </trans-unit>
+      <trans-unit id="XA4224">
+        <source>Malformed full class name '{0}'. Missing class name.</source>
+        <target state="new">Malformed full class name '{0}'. Missing class name.</target>
+        <note>{0} - The class name</note>
+      </trans-unit>
+      <trans-unit id="XA4225">
+        <source>Widget '{0}' in layout '{1}' has multiple instances with different types. The property type will be set to: {2}</source>
+        <target state="new">Widget '{0}' in layout '{1}' has multiple instances with different types. The property type will be set to: {2}</target>
+        <note>In this message, the term "widgets" means Android UI elements.
+In this mesage, the term "layout" means an Android UI layout.
+{0} - The name of the widget
+{1} - The name of the layout
+{2} - The type name that will be used, such as "object"</note>
+      </trans-unit>
+      <trans-unit id="XA4226">
+        <source>Resource item '{0}' does not have the required metadata item '{1}'.</source>
+        <target state="new">Resource item '{0}' does not have the required metadata item '{1}'.</target>
+        <note>{0} - The name of the Android layout resource file
+{1} - The name of the metadata item</note>
       </trans-unit>
       <trans-unit id="XA4300">
         <source>Native library '{0}' will not be bundled because it has an unsupported ABI.</source>

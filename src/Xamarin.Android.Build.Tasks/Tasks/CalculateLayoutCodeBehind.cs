@@ -212,7 +212,7 @@ namespace Xamarin.Android.Tasks
 
 			if (!String.IsNullOrWhiteSpace (rootWidgetIdOverride)) {
 				if (!ParseIdWithError (nav, filePath, rootWidgetIdOverride, true, out parsedId, out name))
-					LogError ($"included layout root element override id '{rootWidgetIdOverride}' is not valid");
+					LogCodedError ("XA1012", Properties.Resources.XA1012, rootWidgetIdOverride);
 				else {
 					skipFirst = true;
 					CreateWidget (nav, filePath, androidNS, xamarinNS, rootWidgetIdOverride, parsedId, name, xamarinClasses, ref widgets);
@@ -383,7 +383,7 @@ namespace Xamarin.Android.Tasks
 		{
 			if (!ParseID (rawId, out parsedId, out name)) {
 				if (!ignoreMissing)
-					LogError ($"Failed to parse ID of node '{navigator.Name}' in the layout file {filePath}");
+					LogCodedError ("XA1013", Properties.Resources.XA1013, navigator.Name, filePath);
 				return false;
 			}
 

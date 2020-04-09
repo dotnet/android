@@ -102,7 +102,7 @@ namespace Xamarin.Android.Tasks
 
 			if (generator == null) {
 				// Should "never" happen
-				LogError ($"Cannot find binding generator for language {OutputLanguage} or {DefaultOutputGenerator.Name}");
+				LogCodedError ("XA4219", Properties.Resources.XA4219, OutputLanguage, DefaultOutputGenerator.Name);
 				return;
 			}
 
@@ -133,7 +133,7 @@ namespace Xamarin.Android.Tasks
 					if (!GetRequiredMetadata (item, CalculateLayoutCodeBehind.LayoutGroupMetadata, out layoutGroupName))
 						return;
 					if (!layoutGroups.TryGetValue (layoutGroupName, out group) || group == null) {
-						LogError ($"Partial class item without associated binding for layout group '{layoutGroupName}'");
+						LogCodedError ("XA4220", Properties.Resources.XA4220, item.ItemSpec, layoutGroupName);
 						return;
 					}
 
@@ -190,7 +190,7 @@ namespace Xamarin.Android.Tasks
 
 			GeneratedFiles = generatedFilePaths.Where (gfp => !String.IsNullOrEmpty (gfp)).Select (gfp => new TaskItem (gfp)).ToArray ();
 			if (GeneratedFiles.Length == 0)
-				LogWarning ("No layout binding source files generated");
+				LogCodedWarning ("XA4221", Properties.Resources.XA4221);
 			LogDebugTaskItems ("  GeneratedFiles:", GeneratedFiles);
 		}
 
@@ -211,7 +211,7 @@ namespace Xamarin.Android.Tasks
 			ICollection<LayoutWidget> widgets;
 			if (!CalculateLayoutCodeBehind.LayoutWidgets.TryGetValue (collectionKey, out widgets) || widgets.Count == 0) {
 				string inputPaths = String.Join ("; ", resourceItems.Select (i => i.ItemSpec));
-				LogWarning ($"No widgets found for layout ({inputPaths})");
+				LogCodedWarning ("XA4222", Properties.Resources.XA4222, inputPaths);
 				return;
 			}
 
@@ -234,13 +234,13 @@ namespace Xamarin.Android.Tasks
 				bool fail = false;
 				classNamespace = fullClassName.Substring (0, idx);
 				if (String.IsNullOrEmpty (classNamespace)) {
-					LogError ($"Malformed full class name '{fullClassName}'. Missing namespace.");
+					LogCodedError ("XA4223", Properties.Resources.XA4223, fullClassName);
 					fail = true;
 				}
 
 				className = fullClassName.Substring (idx + 1);
 				if (String.IsNullOrEmpty (className)) {
-					LogError ($"Malformed full class name '{fullClassName}'. Missing class name.");
+					LogCodedError ("XA4224", Properties.Resources.XA4224, fullClassName);
 					fail = true;
 				}
 
@@ -333,7 +333,7 @@ namespace Xamarin.Android.Tasks
 							throw new InvalidOperationException ($"Widget {widget.Name} is of unknown type {widget.WidgetType}");
 					}
 					widget.Type = decayedType;
-					LogWarning ($"Widget '{widget.Name}' in layout '{className}' has multiple instances with different types. The property type will be set to: {decayedType}");
+					LogCodedWarning ("XA4225", Properties.Resources.XA4225, widget.Name, className, decayedType);
 				}
 
 				if (String.IsNullOrWhiteSpace (widget.Type))
@@ -376,7 +376,7 @@ namespace Xamarin.Android.Tasks
 		{
 			metadataValue = resourceItem.GetMetadata (metadataName);
 			if (String.IsNullOrEmpty (metadataValue)) {
-				LogError ($"Resource item {resourceItem.ItemSpec} does not have the required metadata item '{metadataName}'");
+				LogCodedError ("XA4226", Properties.Resources.XA4226, resourceItem.ItemSpec, metadataName);
 				return false;
 			}
 
