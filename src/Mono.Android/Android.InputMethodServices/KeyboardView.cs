@@ -1,5 +1,3 @@
-#nullable enable
-
 namespace Android.InputMethodServices
 {
 	public partial class KeyboardView

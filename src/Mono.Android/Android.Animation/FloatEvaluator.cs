@@ -1,5 +1,3 @@
-#nullable enable
-
 #if ANDROID_11
 
 using Java.Lang;

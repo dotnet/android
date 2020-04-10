@@ -1,5 +1,3 @@
-#nullable enable
-
 #if ANDROID_18
 using System;
 using Android.Runtime;

@@ -6,9 +6,9 @@ namespace Android.App {
 
 	public partial class SearchManager {
 
-		public static SearchManager FromContext (Context context)
+		public static SearchManager? FromContext (Context context)
 		{
-			return (context.GetSystemService (Context.SearchService) as SearchManager)!;
+			return (context.GetSystemService (Context.SearchService) as SearchManager);
 		}
 	}
 }

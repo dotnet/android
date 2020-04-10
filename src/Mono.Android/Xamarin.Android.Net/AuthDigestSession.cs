@@ -1,5 +1,3 @@
-#nullable enable
-
 //
 // Adapted from:
 //

@@ -1,5 +1,3 @@
-#nullable enable
-
 namespace Org.Apache.Http.Impl.Conn
 {
 	public partial class DefaultClientConnection

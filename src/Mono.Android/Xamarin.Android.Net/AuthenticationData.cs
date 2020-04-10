@@ -1,5 +1,3 @@
-#nullable enable
-
 namespace Xamarin.Android.Net
 {
 	/// <summary>

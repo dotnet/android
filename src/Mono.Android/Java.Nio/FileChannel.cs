@@ -1,5 +1,3 @@
-#nullable enable
-
 #if ANDROID_24
 
 using System;

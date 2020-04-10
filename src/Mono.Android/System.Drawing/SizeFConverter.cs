@@ -1,5 +1,3 @@
-#nullable enable
-
 //
 // Copyright (C) 2005, 2008 Novell, Inc (http://www.novell.com)
 //

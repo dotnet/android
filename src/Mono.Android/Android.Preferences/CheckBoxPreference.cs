@@ -1,5 +1,3 @@
-#nullable enable
-
 namespace Android.Preferences {
 
 	partial class CheckBoxPreference {

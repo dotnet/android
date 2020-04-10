@@ -1,5 +1,3 @@
-#nullable enable
-
 namespace Android.Telephony {
 
 	partial class PhoneNumberUtils {

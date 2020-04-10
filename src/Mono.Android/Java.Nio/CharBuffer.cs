@@ -1,5 +1,3 @@
-#nullable enable
-
 namespace Java.Nio
 {
 	public partial class CharBuffer

@@ -1,5 +1,3 @@
-#nullable enable
-
 namespace Android.Views {
 
 	partial class MotionEvent {

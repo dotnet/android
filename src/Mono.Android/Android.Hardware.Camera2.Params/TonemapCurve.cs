@@ -1,5 +1,3 @@
-#nullable enable
-
 #if ANDROID_21
 namespace Android.Hardware.Camera2.Params {
 
