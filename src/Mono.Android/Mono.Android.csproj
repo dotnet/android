@@ -21,6 +21,7 @@
     <!-- @(Compile) ordering matters! See https://github.com/xamarin/java.interop/commit/d7dfa0bb7b03261d5eceb51ac22cd33aa15fa865 -->
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(TargetFramework)' == 'monoandroid10' ">
@@ -88,6 +89,9 @@
     </Compile>
     <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64.cs">
       <Link>Crc64.cs</Link>
+    </Compile>
+    <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64.Table.cs">
+      <Link>Crc64.Table.cs</Link>
     </Compile>
     <Compile Include="Android.Runtime\DynamicMethodNameCounter.cs" />
     <Compile Include="Android.Runtime\IJavaObjectValueMarshaler.cs" />
