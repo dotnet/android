@@ -12,8 +12,9 @@ namespace ProcessPlotCSVFile
 		public string BuildRepo { get; set; }
 		public string BuildType { get; set; } = "Desktop";
 		public string BuildPipelineName { get; set; }
-		public string BuildPipelineUrl { get; set; }
+		public string BuildId { get; set; }
 		public string BuildNumber { get; set; }
+		public string BuildUrl { get; set; }
 		public DateTime BuildDateUtc { get; set; } = default;
 		public string BuildCommit { get; set; }
 		public string PlotGroup { get; set; }
@@ -39,10 +40,12 @@ namespace ProcessPlotCSVFile
 						v => BuildType = v },
 					{ "p|build-pipeline-name=", "Build pipeline (definition) name such as Xamarin.Android",
 						v => BuildPipelineName = v },
-					{ "u|build-pipeline-url=", "Build pipeline url such as https://devdiv.visualstudio.com/DevDiv/_build?definitionId=11410",
-						v => BuildPipelineUrl = v },
+					{ "i|build-id=", "Build id",
+						v => BuildId = v },
 					{ "n|build-number=", "Build number",
 						v => BuildNumber = v },
+					{ "u|build-url=", "Url link to the build",
+						v => BuildUrl = v },
 					{ "d|build-date=", "Build date in UTC time. Default: Current UTC time when this app is first executed",
 						v => BuildDateUtc = DateTime.Parse(v).ToUniversalTime() },
 					{ "c|commit=", "Commid id for the commit being built",
@@ -99,10 +102,12 @@ namespace ProcessPlotCSVFile
 				setting = "repo";
 			} else if (string.IsNullOrWhiteSpace (BuildPipelineName)) {
 				setting = "build-pipeline-name";
-			} else if (string.IsNullOrWhiteSpace (BuildPipelineUrl)) {
-				setting = "build-pipeline-url";
+			} else if (string.IsNullOrWhiteSpace (BuildId)) {
+				setting = "build-id";
 			} else if (string.IsNullOrWhiteSpace (BuildNumber)) {
 				setting = "build-number";
+			} else if (string.IsNullOrWhiteSpace (BuildUrl)) {
+				setting = "build-url";
 			} else if (string.IsNullOrWhiteSpace (BuildCommit)) {
 				setting = "commit";
 			} else if (string.IsNullOrWhiteSpace (PlotGroup)) {
@@ -134,8 +139,9 @@ namespace ProcessPlotCSVFile
 			tw.WriteLine ($"  BuildRepo: {BuildRepo}");
 			tw.WriteLine ($"  BuildType: {BuildType}");
 			tw.WriteLine ($"  BuildPipelineName: {BuildPipelineName}");
-			tw.WriteLine ($"  BuildPipelineUrl: {BuildPipelineUrl}");
+			tw.WriteLine ($"  BuildId: {BuildId}");
 			tw.WriteLine ($"  BuildNumber: {BuildNumber}");
+			tw.WriteLine ($"  BuildUrl: {BuildUrl}");
 			tw.WriteLine ($"  BuildDateUtc: {BuildDateUtc.ToString (Constants.AzureTimestampFormatUtc)}");
 			tw.WriteLine ($"  BuildCommit: {BuildCommit}");
 			tw.WriteLine ($"  PlotGroup: {PlotGroup}");
