@@ -163,9 +163,9 @@ namespace Java.Interop.Tools.Cecil {
 				return AssemblyDefinition.ReadAssembly (file, reader_parameters);
 			} catch (Exception ex) {
 				logger (
-						TraceLevel.Warning,
+						TraceLevel.Verbose,
 						$"Failed to read '{file}' with debugging symbols. Retrying to load it without it. Error details are logged below.");
-				logger (TraceLevel.Warning, $"{ex.ToString ()}");
+				logger (TraceLevel.Verbose, $"{ex.ToString ()}");
 				reader_parameters.ReadSymbols = false;
 				return AssemblyDefinition.ReadAssembly (file, reader_parameters);
 			}
