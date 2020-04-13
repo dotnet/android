@@ -38,6 +38,7 @@ namespace ProcessPlotCSVFile
 				} else if (!File.Exists (settings.CsvPathAndFilename)) {
 					var message = $"CSV file '{settings.CsvPathAndFilename}' does not exist";
 					Console.WriteLine ($"ERROR: {message}");
+					Console.WriteLine ();
 					result.Status = Status.CsvFileDoesNotExist;
 
 					var appInsightsClient_Error = new AppInsights (settings.AppInsightsTelemetryKey);
