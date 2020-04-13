@@ -13,6 +13,7 @@ parameters:
   plotTitle: ''
   plotPathAndFilename: ''
   appInsightsTelemetryKey: $(XA.Plots.AppInsightsTelemetryKey)  # Defined as a hidden variable on the Xamarin.Android CI build definition: https://devdiv.visualstudio.com/DevDiv/_apps/hub/ms.vss-ciworkflow.build-ci-hub?_a=edit-build-definition&id=11410&view=Tab_Variables
+  condition: succeeded()
 
 steps:
 - powershell: |
@@ -58,3 +59,4 @@ steps:
   continueOnError: true
   ignoreLASTEXITCODE: true
   displayName: 'Plots to AppInsights: ${{ parameters.plotTitle }}'
+  condition: ${{ parameters.condition }}
