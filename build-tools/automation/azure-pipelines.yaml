@@ -706,6 +706,7 @@ stages:
 
     - template: yaml-templates/plots-to-appinsights.yaml
       parameters:
+        condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
         configuration: $(ApkTestConfiguration)
         plotGroup: Test times
         plotTitle: Runtime merged
@@ -713,6 +714,7 @@ stages:
 
     - template: yaml-templates/plots-to-appinsights.yaml
       parameters:
+        condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
         configuration: $(ApkTestConfiguration)
         plotGroup: Test size
         plotTitle: Runtime test sizes
@@ -720,6 +722,7 @@ stages:
 
     - template: yaml-templates/plots-to-appinsights.yaml
       parameters:
+        condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
         configuration: $(ApkTestConfiguration)
         plotGroup: Test times
         plotTitle: Jcw
@@ -727,6 +730,7 @@ stages:
 
     - template: yaml-templates/plots-to-appinsights.yaml
       parameters:
+        condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
         configuration: $(ApkTestConfiguration)
         plotGroup: Test times
         plotTitle: Locale
@@ -734,6 +738,7 @@ stages:
 
     - template: yaml-templates/plots-to-appinsights.yaml
       parameters:
+        condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
         configuration: $(ApkTestConfiguration)
         plotGroup: Test times
         plotTitle: Xamarin.Forms app startup
@@ -741,6 +746,7 @@ stages:
 
     - template: yaml-templates/plots-to-appinsights.yaml
       parameters:
+        condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
         configuration: $(ApkTestConfiguration)
         plotGroup: Test times
         plotTitle: Xamarin.Forms app
