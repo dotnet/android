@@ -123,9 +123,6 @@ namespace ProcessPlotCSVFile
 			if (!string.IsNullOrEmpty (setting)) {
 				result.Message = $"Required argument '{setting}' not set";
 				result.Status = Status.MissingArgument;
-			} else if (!File.Exists (CsvPathAndFilename)) {
-				result.Message = $"CSV file '{CsvPathAndFilename}' does not exist";
-				result.Status = Status.CsvFileDoesNotExist;
 			}
 
 			return result;

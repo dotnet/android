@@ -35,6 +35,14 @@ namespace ProcessPlotCSVFile
 				if (!string.IsNullOrEmpty (result.Message)) {
 					Console.WriteLine (result.Message);
 					Console.WriteLine ();
+				} else if (!File.Exists (settings.CsvPathAndFilename)) {
+					var message = $"CSV file '{settings.CsvPathAndFilename}' does not exist";
+					Console.WriteLine ($"ERROR: {message}");
+					result.Status = Status.CsvFileDoesNotExist;
+
+					var appInsightsClient_Error = new AppInsights (settings.AppInsightsTelemetryKey);
+					var eventName_Error = GetEventName (settings.Environment, Constants.TelemetryEventName_Error);
+					SendTelemetry_Error (appInsightsClient_Error, eventName_Error, message, settings, Console.Out);
 				}
 
 				if (result.Status.HasFlag (Status.ShowHelp) || result.Status != Status.OK) {
