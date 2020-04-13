@@ -56,4 +56,5 @@ steps:
     }
   errorActionPreference: silentlyContinue
   continueOnError: true
+  ignoreLASTEXITCODE: true
   displayName: 'Plots to AppInsights: ${{ parameters.plotTitle }}'
