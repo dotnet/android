@@ -684,6 +684,8 @@ stages:
       parameters:
         configuration: $(ApkTestConfiguration)
         artifactName: Test Results - APK Instrumentation - macOS
+
+    # Plots: Utilize command-line utility built here to send plot information contained in CSV files to AppInsights
     - task: MSBuild@1
       displayName: build plots-to-appinsights
       inputs:
@@ -695,6 +697,7 @@ stages:
           /v:normal
           /bl:$(System.DefaultWorkingDirectory)/bin/Tools$(ApkTestConfiguration)plots-to-appinsights.binlog
       continueOnError: true
+      condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
 
     # Process Plot CSV files and send results to AppInsights
     # XamarinAndroidMetrics: https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/64e11c84-c922-4ffd-bea9-67ab39354edd/resourceGroups/XamarinMetrics/providers/microsoft.insights/components/XamarinAndroidMetrics/overview
