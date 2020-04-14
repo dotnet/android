@@ -41,6 +41,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 	public
 #endif
 	static class JavaNativeTypeManager {
+		const string CRC_PREFIX = "c64r2";
 
 		public static PackageNamingPolicy PackageNamingPolicy { get; set; } = PackageNamingPolicy.LowercaseCrc64;
 
@@ -201,7 +202,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 				return "assembly_" + (assemblyName.Replace ('.', '_') + "." + type.Namespace).ToLowerInvariant ();
 			case PackageNamingPolicy.LowercaseCrc64:
 				using (var crc = new Crc64 ())
-					return "crc64" + ToHash (type.Namespace + ":" + assemblyName, crc);
+					return CRC_PREFIX + ToHash (type.Namespace + ":" + assemblyName, crc);
 			default:
 					throw new NotSupportedException ($"PackageNamingPolicy.{PackageNamingPolicy} is no longer supported.");
 			}
@@ -570,7 +571,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 				return "assembly_" + (type.GetPartialAssemblyName (cache).Replace ('.', '_') + "." + type.Namespace).ToLowerInvariant ();
 			case PackageNamingPolicy.LowercaseCrc64:
 				using (var crc = new Crc64 ())
-					return "crc64" + ToHash (type.Namespace + ":" + type.GetPartialAssemblyName (cache), crc);
+					return CRC_PREFIX + ToHash (type.Namespace + ":" + type.GetPartialAssemblyName (cache), crc);
 			default:
 					throw new NotSupportedException ($"PackageNamingPolicy.{PackageNamingPolicy} is no longer supported.");
 			}

@@ -59,12 +59,12 @@ namespace Xamarin.Android.ToolsTests
 				"value-offset=" + offset + "\u0000" +
 				GetJ2MEntryLine (typeof (ActivityName),                             "activity/Name",                                                                                offset, length) +
 				GetJ2MEntryLine (typeof (ApplicationName),                          "application/Name",                                                                             offset, length) +
-				GetJ2MEntryLine (typeof (DefaultName),                              "crc64197ae30a36756915/DefaultName",                                                            offset, length) +
-				GetJ2MEntryLine (typeof (DefaultName.A),                            "crc64197ae30a36756915/DefaultName_A",                                                          offset, length) +
-				GetJ2MEntryLine (typeof (DefaultName.A.B),                          "crc64197ae30a36756915/DefaultName_A_B",                                                        offset, length) +
-				GetJ2MEntryLine (typeof (DefaultName.C.D),                          "crc64197ae30a36756915/DefaultName_C_D",                                                        offset, length) +
-				GetJ2MEntryLine (typeof (ExampleOuterClass),                        "crc64197ae30a36756915/ExampleOuterClass",                                                      offset, length) +
-				GetJ2MEntryLine (typeof (ExampleOuterClass.ExampleInnerClass),      "crc64197ae30a36756915/ExampleOuterClass$ExampleOuterClass_ExampleInnerClass",                  offset, length) +
+				GetJ2MEntryLine (typeof (DefaultName),                              "c64r2b57424eba1fa9d27/DefaultName",                                                            offset, length) +
+				GetJ2MEntryLine (typeof (DefaultName.A),                            "c64r2b57424eba1fa9d27/DefaultName_A",                                                          offset, length) +
+				GetJ2MEntryLine (typeof (DefaultName.A.B),                          "c64r2b57424eba1fa9d27/DefaultName_A_B",                                                        offset, length) +
+				GetJ2MEntryLine (typeof (DefaultName.C.D),                          "c64r2b57424eba1fa9d27/DefaultName_C_D",                                                        offset, length) +
+				GetJ2MEntryLine (typeof (ExampleOuterClass),                        "c64r2b57424eba1fa9d27/ExampleOuterClass",                                                      offset, length) +
+				GetJ2MEntryLine (typeof (ExampleOuterClass.ExampleInnerClass),      "c64r2b57424eba1fa9d27/ExampleOuterClass$ExampleOuterClass_ExampleInnerClass",                  offset, length) +
 				GetJ2MEntryLine (typeof (InstrumentationName),                      "instrumentation/Name",                                                                         offset, length) +
 				GetJ2MEntryLine (typeof (AbstractClass),                            "my/AbstractClass",                                                                             offset, length) +
 				GetJ2MEntryLine (typeof (ExampleActivity),                          "my/ExampleActivity",                                                                           offset, length) +
@@ -139,14 +139,14 @@ namespace Xamarin.Android.ToolsTests
 				GetM2JEntryLine (typeof (AbstractClassInvoker),                     "my/AbstractClass",                                                                             offset, length) +
 				GetM2JEntryLine (typeof (ActivityName),                             "activity/Name",                                                                                offset, length) +
 				GetM2JEntryLine (typeof (ApplicationName),                          "application/Name",                                                                             offset, length) +
-				GetM2JEntryLine (typeof (DefaultName.A.B),                          "crc64197ae30a36756915/DefaultName_A_B",                                                        offset, length) +
-				GetM2JEntryLine (typeof (DefaultName.A),                            "crc64197ae30a36756915/DefaultName_A",                                                          offset, length) +
-				GetM2JEntryLine (typeof (DefaultName.C.D),                          "crc64197ae30a36756915/DefaultName_C_D",                                                        offset, length) +
-				GetM2JEntryLine (typeof (DefaultName),                              "crc64197ae30a36756915/DefaultName",                                                            offset, length) +
+				GetM2JEntryLine (typeof (DefaultName.A.B),                          "c64r2b57424eba1fa9d27/DefaultName_A_B",                                                        offset, length) +
+				GetM2JEntryLine (typeof (DefaultName.A),                            "c64r2b57424eba1fa9d27/DefaultName_A",                                                          offset, length) +
+				GetM2JEntryLine (typeof (DefaultName.C.D),                          "c64r2b57424eba1fa9d27/DefaultName_C_D",                                                        offset, length) +
+				GetM2JEntryLine (typeof (DefaultName),                              "c64r2b57424eba1fa9d27/DefaultName",                                                            offset, length) +
 				GetM2JEntryLine (typeof (ExampleActivity),                          "my/ExampleActivity",                                                                           offset, length) +
 				GetM2JEntryLine (typeof (ExampleInstrumentation),                   "my/ExampleInstrumentation",                                                                    offset, length) +
-				GetM2JEntryLine (typeof (ExampleOuterClass.ExampleInnerClass),      "crc64197ae30a36756915/ExampleOuterClass$ExampleOuterClass_ExampleInnerClass",                  offset, length) +
-				GetM2JEntryLine (typeof (ExampleOuterClass),                        "crc64197ae30a36756915/ExampleOuterClass",                                                      offset, length) +
+				GetM2JEntryLine (typeof (ExampleOuterClass.ExampleInnerClass),      "c64r2b57424eba1fa9d27/ExampleOuterClass$ExampleOuterClass_ExampleInnerClass",                  offset, length) +
+				GetM2JEntryLine (typeof (ExampleOuterClass),                        "c64r2b57424eba1fa9d27/ExampleOuterClass",                                                      offset, length) +
 				GetM2JEntryLine (typeof (InstrumentationName),                      "instrumentation/Name",                                                                         offset, length) +
 				GetM2JEntryLine (typeof (NonStaticOuterClass.NonStaticInnerClass),  "register/NonStaticOuterClass$NonStaticInnerClass",                                             offset, length) +
 				GetM2JEntryLine (typeof (NonStaticOuterClass),                      "register/NonStaticOuterClass",                                                                 offset, length) +

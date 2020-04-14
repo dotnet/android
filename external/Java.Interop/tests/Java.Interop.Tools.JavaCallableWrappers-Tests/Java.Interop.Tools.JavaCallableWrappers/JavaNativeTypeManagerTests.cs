@@ -29,7 +29,7 @@ namespace Java.Interop.Tools.JavaCallableWrappersTests
 		public void Crc64 ()
 		{
 			JavaNativeTypeManager.PackageNamingPolicy = PackageNamingPolicy.LowercaseCrc64;
-			Assert.AreEqual ("crc64b74743e9328eed0a", JavaNativeTypeManager.GetPackageName (typeof (string)));
+			Assert.AreEqual ("c64r279bf423bcb581100", JavaNativeTypeManager.GetPackageName (typeof (string)));
 		}
 
 		[Test]

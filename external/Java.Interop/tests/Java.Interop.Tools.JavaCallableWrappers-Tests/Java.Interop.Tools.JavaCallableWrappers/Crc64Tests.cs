@@ -34,7 +34,7 @@ namespace Java.Interop.Tools.JavaCallableWrappersTests
 		public void XmlDocument ()
 		{
 			var actual = ToHash ("System.Xml.XmlDocument, System.Xml");
-			Assert.AreEqual ("348bbd9fecf1b865", actual);
+			Assert.AreEqual ("b9c1bdfc7cd47543", actual);
 		}
 
 		[Test]
