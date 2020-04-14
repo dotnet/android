@@ -29,7 +29,7 @@ namespace Xamarin.Android.Tasks
 
 		[Required]
 		public string ResourceDirectory { get; set; }
-		
+
 		public ITaskItem[] AdditionalResourceDirectories { get; set; }
 
 		[Required]
@@ -99,7 +99,7 @@ namespace Xamarin.Android.Tasks
 				var parser = new JavaResourceParser () { Log = Log };
 				resources = parser.Parse (JavaResgenInputFile, IsApplication, resource_fixup);
 			}
-			
+
 			var extension = Path.GetExtension (NetResgenOutputFile);
 			var language = string.Compare (extension, ".fs", StringComparison.OrdinalIgnoreCase) == 0 ? "F#" : CodeDomProvider.GetLanguageFromExtension (extension);
 			bool isVB = string.Equals (extension, ".vb", StringComparison.OrdinalIgnoreCase);
@@ -136,10 +136,17 @@ namespace Xamarin.Android.Tasks
 					ITaskItem item = new TaskItem (assemblyPath);
 					assembly.CopyMetadataTo (item);
 					assemblies.Add (item);
-					string alias = assembly.GetMetadata ("Aliases");
-					if (!string.IsNullOrEmpty (alias)) {
-						foreach (var a in alias.Split (new [] {','}, StringSplitOptions.RemoveEmptyEntries))
-							aliases.Add (a.Trim ());
+					string aliasMetaData = assembly.GetMetadata ("Aliases");
+					if (!string.IsNullOrEmpty (aliasMetaData)) {
+						foreach (var alias in aliasMetaData.Split (new [] {','}, StringSplitOptions.RemoveEmptyEntries)) {
+							string aliasName = alias.Trim ();
+							// don't emit an `extern alias global` as it is implicitly done.
+							if (string.Compare ("global", aliasName, StringComparison.Ordinal) == 0)
+								continue;
+							aliases.Add (aliasName);
+							// only add the first alias for each reference.
+							break;
+						}
 					}
 					Log.LogDebugMessage ("Scan assembly {0} for resource generator", fileName);
 				}
@@ -162,7 +169,7 @@ namespace Xamarin.Android.Tasks
 		// Remove private constructor in F#.
 		// Add static constructor. (but ignored in F#)
 		void AdjustConstructor (CodeTypeDeclaration type)
-		{			
+		{
 			var staticCtor = new CodeTypeConstructor () { Attributes = MemberAttributes.Static };
 			staticCtor.Statements.Add (
 				new CodeExpressionStatement (
@@ -256,7 +263,7 @@ namespace Xamarin.Android.Tasks
 		static string NormalizeAlternative (string value)
 		{
 			int s = value.IndexOfAny (new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
-			
+
 			if (s < 0)
 				return value;
 
