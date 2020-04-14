@@ -233,7 +233,7 @@ namespace ProcessPlotCSVFile
 				plotProperties.ToList ().ForEach (x => properties [x.Key] = x.Value);
 
 				var metrics = new Dictionary<string, double> (StringComparer.OrdinalIgnoreCase) {
-					{ "value", (double) plot.Value }
+					{ "Value", (double) plot.Value }
 				};
 
 				appInsightsClient.SendTelemetry (eventName, properties, metrics);
