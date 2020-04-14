@@ -333,7 +333,7 @@
         ApkDiffTool="$(ApkDiffPath)"
         Package="%(_AllArchives.Identity)"
         ReferenceDescription="$(_ApkSizesReferenceDirectory)\$([System.IO.Path]::GetFileNameWithoutExtension(%(_AllArchives.Identity)))-$(Configuration)$(TestsFlavor)$([System.IO.Path]::GetExtension(%(_AllArchives.Identity)))desc"
-        TestResultDirectory="$(TestOutputDirectory)"
+        TestResultDirectory="$(MSBuildThisFileDirectory)..\.."
         ContinueOnError="ErrorAndContinue"
     />
   </Target>
