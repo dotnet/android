@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Collections.Generic;
 
-namespace ProcessPlotCSVFile
+namespace Xamarin.Android.Tools.Plots
 {
 	internal static class Constants
 	{

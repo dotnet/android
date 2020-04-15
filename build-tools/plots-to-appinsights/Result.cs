@@ -1,4 +1,4 @@
-namespace ProcessPlotCSVFile
+namespace Xamarin.Android.Tools.Plots
 {
 	internal enum Status
 	{

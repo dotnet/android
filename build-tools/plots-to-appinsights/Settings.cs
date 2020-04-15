@@ -2,7 +2,7 @@ using Mono.Options;
 using System;
 using System.IO;
 
-namespace ProcessPlotCSVFile
+namespace Xamarin.Android.Tools.Plots
 {
 	internal class Settings
 	{

@@ -3,7 +3,7 @@ using Microsoft.ApplicationInsights.Extensibility;
 using System;
 using System.Collections.Generic;
 
-namespace Xamarin.Android.Tools
+namespace Xamarin.Android.Tools.Plots
 {
 	internal class AppInsights
 	{
