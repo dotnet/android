@@ -83,6 +83,9 @@ ms.date: 01/24/2020
 + [XA1011](xa1011.md): Using ProGuard with the D8 DEX compiler is no longer supported. Please update \`$(AndroidLinkTool)\` to \`r8\`.
 + XA1012: Included layout root element override ID '{id}' is not valid.
 + XA1013: Failed to parse ID of node '{name}' in the layout file '{file}'.
++ XA1015: More than one Android Wear project is specified as the paired project. It can be at most one.
++ XA1016: Target Wear application's project '{project}' does not specify required 'AndroidManifest' project property.
++ XA1017: Target Wear application's AndroidManifest.xml does not specify required 'package' attribute.
 
 ## XA2xxx: Linker
 
@@ -127,6 +130,7 @@ ms.date: 01/24/2020
 + [XA4308](xa4308.md): Failed to generate type maps
 + [XA4309](xa4309.md): 'MultiDexMainDexList' file '{file}' does not exist.
 + [XA4310](xa4310.md): \`$(AndroidSigningKeyStore)\` file \`{keystore}\` could not be found.
++ XA4311: The application won't contain the paired Wear package because the Wear application package APK is not created yet. If building on the command line, be sure to build the "SignAndroidPackage" target.
 
 ## XA5xxx: GCC and toolchain
 

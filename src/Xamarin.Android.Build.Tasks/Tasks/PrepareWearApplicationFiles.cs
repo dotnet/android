@@ -39,7 +39,7 @@ namespace Xamarin.Android.Tasks
 				Log.LogCodedError ("XA5211", Properties.Resources.XA5211, wearPackageName, PackageName);
 
 			if (!File.Exists (WearApplicationApkPath)) {
-				Log.LogWarning ("This application won't contain the paired Wear package because the Wear application package .apk is not created yet. If you are using MSBuild or XBuild, you have to invoke \"SignAndroidPackage\" target.");
+				Log.LogCodedWarning ("XA4311", Properties.Resources.XA4311);
 				return true;
 			}
 
