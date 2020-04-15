@@ -65,7 +65,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				nameof (ApkDiffCheckRegression),
 				"check apk size regression",
 				new Exception (errorMessage),
-				$"Output:\n{logCopy}");
+				$"apkdiff output:\n{logCopy}");
 
 			return false;
 		}
