@@ -4,6 +4,7 @@ namespace Xamarin.Android.Prepare
 {
 	partial class Configurables
 	{
+		const string JetBrainsOpenJDKOperatingSystem = "osx-x64";
 		partial class Urls
 		{
 			public static readonly Uri Corretto = new Uri ($"{Corretto_BaseUri}{CorrettoUrlPathVersion}/amazon-corretto-{CorrettoDistVersion}-macosx-x64.tar.gz");

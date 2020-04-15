@@ -5,6 +5,8 @@ namespace Xamarin.Android.Prepare
 {
 	partial class Configurables
 	{
+		const string JetBrainsOpenJDKOperatingSystem = "windows-x64";
+
 		partial class Urls
 		{
 			public static Uri Corretto => GetWindowsCorrettoUrl ();
