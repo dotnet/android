@@ -13,6 +13,10 @@ using System.Xml.Linq;
 namespace Xamarin.Android.Tools
 {
 	public class JdkInfo {
+		static readonly string[] JdkLibraryTopDirs = {
+			"jre",
+			"lib",
+		};
 
 		public      string                              HomePath                    {get;}
 
@@ -52,9 +56,23 @@ namespace Xamarin.Android.Tools
 			JarPath             = ProcessUtils.FindExecutablesInDirectory (binPath, "jar").FirstOrDefault ();
 			JavaPath            = ProcessUtils.FindExecutablesInDirectory (binPath, "java").FirstOrDefault ();
 			JavacPath           = ProcessUtils.FindExecutablesInDirectory (binPath, "javac").FirstOrDefault ();
+
+			string topDir = null;
+			foreach (string dir in JdkLibraryTopDirs) {
+				topDir = Path.Combine (HomePath, dir);
+				if (!Directory.Exists (topDir)) {
+					topDir = null;
+					continue;
+				}
+				break;
+			}
+
+			if (String.IsNullOrEmpty (topDir))
+				topDir = Path.Combine (HomePath, JdkLibraryTopDirs [0]);
+
 			JdkJvmPath = OS.IsMac
-				? FindLibrariesInDirectory (Path.Combine (HomePath, "jre"), "jli").FirstOrDefault ()
-				: FindLibrariesInDirectory (Path.Combine (HomePath, "jre"), "jvm").FirstOrDefault ();
+				? FindLibrariesInDirectory (topDir, "jli").FirstOrDefault ()
+				: FindLibrariesInDirectory (topDir, "jvm").FirstOrDefault ();
 
 			ValidateFile ("jar",    JarPath);
 			ValidateFile ("java",   JavaPath);
