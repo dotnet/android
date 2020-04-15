@@ -49,9 +49,7 @@
     <Reference Include="Java.Interop" />
     <Reference Include="Mono.Android" />
     <Reference Include="Xamarin.Android.NUnitLite" />
-    <Reference Include="Mono.Linq.Expressions">
-      <HintPath>..\..\..\..\packages\Mono.Linq.Expressions.2.0.0\lib\netstandard2.0\Mono.Linq.Expressions.dll</HintPath>
-    </Reference>
+    <PackageReference Include="Mono.Linq.Expressions" Version="2.0.0" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Resources\Resource.designer.cs" />
@@ -64,7 +62,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\AboutResources.txt" />
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\external\Java.Interop\src\Java.Interop.GenericMarshaler\Java.Interop.GenericMarshaler.csproj">
