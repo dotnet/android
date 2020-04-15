@@ -41,9 +41,9 @@ namespace Xamarin.Android.Tools.Plots
 					Console.WriteLine ();
 					result.Status = Status.CsvFileDoesNotExist;
 
-					var appInsightsClient_Error = new AppInsights (settings.AppInsightsTelemetryKey);
-					var eventName_Error = GetEventName (settings.Environment, Constants.TelemetryEventName_Error);
-					SendTelemetry_Error (appInsightsClient_Error, eventName_Error, message, settings, Console.Out);
+					var appInsightsClientError = new AppInsights (settings.AppInsightsTelemetryKey);
+					var eventNameError = GetEventName (settings.Environment, Constants.TelemetryEventName_Error);
+					SendTelemetryError (appInsightsClientError, eventNameError, message, settings, Console.Out);
 				}
 
 				if (result.Status.HasFlag (Status.ShowHelp) || result.Status != Status.OK) {
@@ -64,8 +64,8 @@ namespace Xamarin.Android.Tools.Plots
 				SendTelemtry (appInsightsClient, eventName, plots, settings, Console.Out);
 				appInsightsClient.Flush ();
 
-				var eventName_Warning = GetEventName (settings.Environment, Constants.TelemetryEventName_Warning);
-				SendTelemetry_Warnings (appInsightsClient, eventName_Warning, warningMessages, settings, Console.Out);
+				var eventNameWarning = GetEventName (settings.Environment, Constants.TelemetryEventName_Warning);
+				SendTelemetryWarnings (appInsightsClient, eventNameWarning, warningMessages, settings, Console.Out);
 				appInsightsClient.Flush ();
 
 			} catch (Exception e) {
@@ -78,9 +78,9 @@ namespace Xamarin.Android.Tools.Plots
 			try {
 				if (!string.IsNullOrEmpty (errMessage)) {
 					var appInsightsClient = new AppInsights (settings.AppInsightsTelemetryKey);
-					var eventName_Error = GetEventName (settings.Environment, Constants.TelemetryEventName_Error);
+					var eventNameError = GetEventName (settings.Environment, Constants.TelemetryEventName_Error);
 
-					SendTelemetry_Error (appInsightsClient, eventName_Error, errMessage, settings, Console.Out);
+					SendTelemetryError (appInsightsClient, eventNameError, errMessage, settings, Console.Out);
 					appInsightsClient.Flush ();
 				}
 			} catch (Exception e) {
@@ -253,7 +253,7 @@ namespace Xamarin.Android.Tools.Plots
 			}
 		}
 
-		static void SendTelemetry_Warnings (AppInsights appInsightsClient, string eventName, List<string> warnings, Settings settings, TextWriter tw)
+		static void SendTelemetryWarnings (AppInsights appInsightsClient, string eventName, List<string> warnings, Settings settings, TextWriter tw)
 		{
 			if (appInsightsClient == null) {
 				throw new ArgumentNullException (nameof (appInsightsClient));
@@ -297,7 +297,7 @@ namespace Xamarin.Android.Tools.Plots
 			}
 		}
 
-		static void SendTelemetry_Error (AppInsights appInsightsClient, string eventName, string errMessage, Settings settings, TextWriter tw)
+		static void SendTelemetryError (AppInsights appInsightsClient, string eventName, string errMessage, Settings settings, TextWriter tw)
 		{
 			if (appInsightsClient == null) {
 				throw new ArgumentNullException (nameof (appInsightsClient));
