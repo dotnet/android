@@ -36,7 +36,7 @@ the new entry point for short-form style Android projets in .NET 5.
     </PropertyGroup>
     <ItemGroup>
       <AndroidSdkBuildTools Include="@(_MSBuildFiles);@(_MSBuildFilesWin)"
-          Condition=" '%(Filename)' != 'jnimarshalmethod-gen' and  '%(Extension)' != '.so' " >
+          Condition=" '%(Filename)' != 'jnimarshalmethod-gen' and '%(Extension)' != '.so'  and '%(Extension)' != '.apk' " >
         <RelativePath>$([MSBuild]::MakeRelative($(MSBuildSrcDir), %(FullPath)))</RelativePath>
       </AndroidSdkBuildTools>
       <AndroidSdkBuildTools Include="@(_MSBuildTargetsSrcFiles)" >

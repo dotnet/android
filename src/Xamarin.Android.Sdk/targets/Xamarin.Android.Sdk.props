@@ -32,7 +32,8 @@
 
   <!--  User-facing configuration-specific defaults -->
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <AndroidUseSharedRuntime Condition=" '$(AndroidUseSharedRuntime)' == '' ">true</AndroidUseSharedRuntime>
+    <!--FIXME: Disable the shared runtime by default -->
+    <AndroidUseSharedRuntime Condition=" '$(AndroidUseSharedRuntime)' == '' ">false</AndroidUseSharedRuntime>
     <EmbedAssembliesIntoApk Condition=" '$(EmbedAssembliesIntoApk)' == '' ">false</EmbedAssembliesIntoApk>
     <AndroidLinkMode Condition=" '$(AndroidLinkMode)' == '' ">None</AndroidLinkMode>
   </PropertyGroup>
