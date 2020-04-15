@@ -493,6 +493,24 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Exception while loading assemblies: {0}.
+        /// </summary>
+        internal static string XA2007 {
+            get {
+                return ResourceManager.GetString("XA2007", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to In referenced assembly {0}, Java.Interop.DoNotPackageAttribute requires non-null file name..
+        /// </summary>
+        internal static string XA2008 {
+            get {
+                return ResourceManager.GetString("XA2008", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Could not AOT the assembly: {0}.
         /// </summary>
         internal static string XA3001 {

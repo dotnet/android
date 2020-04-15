@@ -100,14 +100,14 @@ namespace Xamarin.Android.Tasks
 					assemblies [assemblyName] = taskItem;
 				}
 			} catch (Exception ex) {
-				LogError ("Exception while loading assemblies: {0}", ex);
+				LogCodedError ("XA2007", Properties.Resources.XA2007, ex);
 				return;
 			}
 			try {
 				foreach (var assembly in topAssemblyReferences)
 					AddAssemblyReferences (resolver, assemblies, assembly, null);
 			} catch (Exception ex) {
-				LogError ("Exception while loading assemblies: {0}", ex);
+				LogCodedError ("XA2007", Properties.Resources.XA2007, ex);
 				return;
 			}
 
@@ -293,7 +293,7 @@ namespace Xamarin.Android.Tasks
 							if (arguments.FixedArguments.Length > 0) {
 								string file = arguments.FixedArguments [0].Value?.ToString ();
 								if (string.IsNullOrWhiteSpace (file))
-									LogError ("In referenced assembly {0}, Java.Interop.DoNotPackageAttribute requires non-null file name.", assembly.GetAssemblyName ().FullName);
+									LogCodedError ("XA2008", Properties.Resources.XA2008, assembly.GetAssemblyName ().FullName);
 								do_not_package_atts.Add (Path.GetFileName (file));
 							}
 						}

@@ -285,6 +285,17 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
 {1} - The assembly name
 {2} - The scope of the member, such as the name of a different assembly</note>
       </trans-unit>
+      <trans-unit id="XA2007">
+        <source>Exception while loading assemblies: {0}</source>
+        <target state="new">Exception while loading assemblies: {0}</target>
+        <note>{0} - The exception message of the associated exception</note>
+      </trans-unit>
+      <trans-unit id="XA2008">
+        <source>In referenced assembly {0}, Java.Interop.DoNotPackageAttribute requires non-null file name.</source>
+        <target state="new">In referenced assembly {0}, Java.Interop.DoNotPackageAttribute requires non-null file name.</target>
+        <note>The following are literal names and should not be translated: Java.Interop.DoNotPackageAttribute
+{0} - The assembly name</note>
+      </trans-unit>
       <trans-unit id="XA3001">
         <source>Could not AOT the assembly: {0}</source>
         <target state="translated">アセンブリを AOT できませんでした: {0}</target>
