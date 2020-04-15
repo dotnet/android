@@ -61,7 +61,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers
 			fixed (ulong* tptr = Table) {
 				fixed (byte* aptr = array) {
 					while (len >= 8) {
-						crc ^= (ulong)aptr[idx];
+						crc ^= *((ulong*)(aptr + idx));
 						crc =
 							tptr [7 * 256 + (crc & 0xff)] ^
 							tptr [6 * 256 + ((crc >> 8) & 0xff)] ^

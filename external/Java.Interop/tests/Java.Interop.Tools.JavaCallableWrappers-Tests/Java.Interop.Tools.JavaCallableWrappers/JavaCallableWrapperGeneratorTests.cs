@@ -124,7 +124,7 @@ public class Name
 		)
 		{
 			var actual      = Generate (typeof (IndirectApplication), applicationJavaClass);
-			var expected    = @"package c64r2b57424eba1fa9d27;
+			var expected    = @"package c64r2197ae30a36756915;
 
 
 public class IndirectApplication
@@ -175,7 +175,7 @@ public class IndirectApplication
 		public void GenerateExportedMembers ()
 		{
 			var actual = Generate (typeof (ExportsMembers));
-			var expected = @"package c64r2b57424eba1fa9d27;
+			var expected = @"package c64r2197ae30a36756915;
 
 
 public class ExportsMembers
@@ -187,7 +187,7 @@ public class ExportsMembers
 	public static final String __md_methods;
 	static {
 		__md_methods = 
-			""n_GetInstance:()Lc64r2b57424eba1fa9d27/ExportsMembers;:__export__\n"" +
+			""n_GetInstance:()Lc64r2197ae30a36756915/ExportsMembers;:__export__\n"" +
 			""n_GetValue:()Ljava/lang/String;:__export__\n"" +
 			""n_methodNamesNotMangled:()V:__export__\n"" +
 			""n_CompletelyDifferentName:(Ljava/lang/String;I)Ljava/lang/String;:__export__\n"" +
@@ -198,17 +198,17 @@ public class ExportsMembers
 	}
 
 
-	public static c64r2b57424eba1fa9d27.ExportsMembers STATIC_INSTANCE = GetInstance ();
+	public static c64r2197ae30a36756915.ExportsMembers STATIC_INSTANCE = GetInstance ();
 
 
 	public java.lang.String VALUE = GetValue ();
 
-	public static c64r2b57424eba1fa9d27.ExportsMembers GetInstance ()
+	public static c64r2197ae30a36756915.ExportsMembers GetInstance ()
 	{
 		return n_GetInstance ();
 	}
 
-	private static native c64r2b57424eba1fa9d27.ExportsMembers n_GetInstance ();
+	private static native c64r2197ae30a36756915.ExportsMembers n_GetInstance ();
 
 	public java.lang.String GetValue ()
 	{
@@ -271,7 +271,7 @@ public class ExportsMembers
 		public void GenerateInnerClass ()
 		{
 			var actual = Generate (typeof (ExampleOuterClass));
-			var expected = @"package c64r2b57424eba1fa9d27;
+			var expected = @"package c64r2197ae30a36756915;
 
 
 public class ExampleOuterClass
