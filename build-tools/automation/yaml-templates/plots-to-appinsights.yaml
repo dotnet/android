@@ -1,5 +1,4 @@
 parameters:
-  framework: net472     # TargetFramework setting for the build-tools/plots-to-appinsights/ProcessPlotCSVFile source project that becomes part of the build output directory
   configuration: ''
   environment: Production
   buildSystem: Azure DevOps
@@ -52,7 +51,7 @@ steps:
         $buildTime = [DateTime]::UtcNow.ToString($azureTimestampFormatUtc)
         Write-Host $buildTime
         Write-Host "Sending plot telemtry"
-        mono "$(System.DefaultWorkingDirectory)/build-tools/plots-to-appinsights/bin/${{ parameters.configuration }}/${{ parameters.framework }}/ProcessPlotCSVFile.exe" -d:"${buildTime}" -e:"${{ parameters.environment }}" -r:"${{ parameters.buildRepo }}" -t:"${buildType}" -p:"${{  parameters.buildPipelineName }}" -c:${{ parameters.buildCommit }} -i:${{ parameters.buildId }} -n:"${{ parameters.buildNumber }}" -u:"${{ parameters.buildUrl }}" -pg:"${{ parameters.plotGroup }}" -pt:"${{ parameters.plotTitle }}" -k:"${{ parameters.appInsightsTelemetryKey }}" "${{ parameters.plotPathAndFilename }}"
+        mono "$(System.DefaultWorkingDirectory)/build-tools/plots-to-appinsights/bin/${{ parameters.configuration }}/ProcessPlotCSVFile.exe" -d:"${buildTime}" -e:"${{ parameters.environment }}" -r:"${{ parameters.buildRepo }}" -t:"${buildType}" -p:"${{  parameters.buildPipelineName }}" -c:${{ parameters.buildCommit }} -i:${{ parameters.buildId }} -n:"${{ parameters.buildNumber }}" -u:"${{ parameters.buildUrl }}" -pg:"${{ parameters.plotGroup }}" -pt:"${{ parameters.plotTitle }}" -k:"${{ parameters.appInsightsTelemetryKey }}" "${{ parameters.plotPathAndFilename }}"
     } else {
         Write-Host "WARNING: Plot telmemetry not sent. Plot telemetry is only sent for continuous integration (CI) or manual builds. buildType: ${buildType}"
     }
