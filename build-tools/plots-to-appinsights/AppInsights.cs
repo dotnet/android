@@ -3,11 +3,11 @@ using Microsoft.ApplicationInsights.Extensibility;
 using System;
 using System.Collections.Generic;
 
-namespace ProcessPlotCSVFile
+namespace Xamarin.Android.Tools
 {
 	internal class AppInsights
 	{
-		private TelemetryClient TelemetryClient { get; set; } = null;
+		private TelemetryClient TelemetryClient;
 
 		public AppInsights (string appInsightsInstrumentationKey)
 		{
@@ -25,12 +25,8 @@ namespace ProcessPlotCSVFile
 
 		public void SendTelemetry (string eventName, Dictionary<string, string> properties, Dictionary<string, double> metrics)
 		{
-			if (TelemetryClient != null && !string.IsNullOrWhiteSpace (TelemetryClient.InstrumentationKey)) {
-				lock (TelemetryClient) {
-					TelemetryClient.TrackEvent (eventName, properties, metrics);
-				}
-			} else {
-				throw new Exception ("TelemetryClient not initialized or AppInsights instrumentation key not set");
+			lock (TelemetryClient) {
+				TelemetryClient.TrackEvent (eventName, properties, metrics);
 			}
 		}
 
