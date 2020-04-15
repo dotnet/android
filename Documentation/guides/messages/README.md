@@ -90,6 +90,8 @@ ms.date: 01/24/2020
 ## XA2xxx: Linker
 
 + XA2006: Could not resolve reference to '{member}' (defined in assembly '{assembly}') with scope '{scope}'. When the scope is different from the defining assembly, it usually means that the type is forwarded.
++ XA2007: Exception while loading assemblies: {exception}
++ XA2008: In referenced assembly {assembly}, Java.Interop.DoNotPackageAttribute requires non-null file name.
 
 ## XA3xxx: Unmanaged code compilation
 
