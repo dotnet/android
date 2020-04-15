@@ -25,13 +25,13 @@ namespace Xamarin.Android.Tasks
 		public override bool RunTask ()
 		{
 			if (ProjectFiles.Length != 1)
-				Log.LogError ("More than one Android Wear project is specified as the paired project. It can be at most one.");
+				Log.LogCodedError ("XA1015", Properties.Resources.XA1015);
 			
 			var wearProj = ProjectFiles.First ();
 			var manifestXml = XDocument.Load (wearProj.ItemSpec)
 				.Root.Elements (msbuildNS + "PropertyGroup").Elements (msbuildNS + "AndroidManifest").Select (e => e.Value).FirstOrDefault ();
 			if (string.IsNullOrEmpty (manifestXml))
-				Log.LogError ("Target Wear application's project '{0}' does not specify required 'AndroidManifest' project property.", wearProj);
+				Log.LogCodedError ("XA1016", Properties.Resources.XA1016, wearProj);
 			manifestXml = Path.Combine (Path.GetDirectoryName (wearProj.ItemSpec), manifestXml.Replace ('\\', Path.DirectorySeparatorChar));
 
 			ApplicationManifestFile = manifestXml;
@@ -40,7 +40,7 @@ namespace Xamarin.Android.Tasks
 
 			ApplicationPackageName = AndroidAppManifest.CanonicalizePackageName (XDocument.Load (manifestXml).Root.Attributes ("package").Select (a => a.Value).FirstOrDefault ());
 			if (string.IsNullOrEmpty (ApplicationPackageName))
-				Log.LogError ("Target Wear application's AndroidManifest.xml does not specify required 'package' attribute.");
+				Log.LogCodedError ("XA1017", Properties.Resources.XA1017);
 			
 			Log.LogDebugMessage ("  [Output] ApplicationPackageName: " + ApplicationPackageName);
 			return true;
