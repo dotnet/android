@@ -143,7 +143,7 @@
     <Compile Include="Steps\Step_DownloadNuGet.cs" />
     <Compile Include="Steps\Step_GenerateFiles.cs" />
     <Compile Include="Steps\Step_Get_Windows_Binutils.cs" />
-    <Compile Include="Steps\Step_InstallCorrettoOpenJDK.cs" />
+    <Compile Include="Steps\Step_InstallJetBrainsOpenJDK.cs" />
     <Compile Include="Steps\Step_InstallMonoRuntimes.cs" />
     <Compile Include="Steps\Step_PrepareExternal.cs" />
     <Compile Include="Steps\Step_PrepareExternalGitDependencies.cs" />
@@ -203,6 +203,7 @@
     <Compile Include="Scenarios\Scenario_UpdateMono.Unix.cs" />
     <Compile Include="Steps\Step_BuildMonoRuntimes.Unix.cs" />
     <Compile Include="Steps\Step_GenerateFiles.Unix.cs" />
+    <Compile Include="Steps\Step_InstallJetBrainsOpenJDK.Unix.cs" />
     <Compile Include="Steps\Step_PrepareExternal.Unix.cs" />
     <Compile Include="Steps\Step_PrepareExternalJavaInterop.Unix.cs" />
     <Compile Include="Steps\Step_PrepareImageDependencies.Unix.cs" />
@@ -229,7 +230,7 @@
     <Compile Include="ConfigAndData\Dependencies\Linux.UbuntuCommon.cs" />
     <Compile Include="OperatingSystems\Linux.cs" />
     <Compile Include="OperatingSystems\Linux.UbuntuCommon.cs" />
-    <Compile Include="Steps\Step_InstallCorrettoOpenJDK.Linux.cs" />
+    <Compile Include="Steps\Step_InstallJetBrainsOpenJDK.Linux.cs" />
     <Compile Include="ToolRunners\MakeRunner.Linux.cs" />
   </ItemGroup>
   <ItemGroup Condition=" '$(HostOS)' == 'Darwin' ">
@@ -246,7 +247,7 @@
     <Compile Include="OperatingSystems\MacOS.cs" />
     <Compile Include="Scenarios\Scenario_Standard.MacOS.cs" />
     <Compile Include="Steps\Step_ChangeLibMonoSgenDylibID.MacOS.cs" />
-    <Compile Include="Steps\Step_InstallCorrettoOpenJDK.MacOS.cs" />
+    <Compile Include="Steps\Step_InstallJetBrainsOpenJDK.MacOS.cs" />
     <Compile Include="Steps\Step_PrepareImageDependencies.MacOS.cs" />
     <Compile Include="ToolRunners\BrewRunner.MacOS.cs" />
     <Compile Include="ToolRunners\MakeRunner.MacOS.cs" />
@@ -268,7 +269,7 @@
     <Compile Include="OperatingSystems\Windows.cs" />
     <Compile Include="Scenarios\Scenario_Standard.Windows.cs" />
     <Compile Include="Steps\Step_GenerateFiles.Windows.cs" />
-    <Compile Include="Steps\Step_InstallCorrettoOpenJDK.Windows.cs" />
+    <Compile Include="Steps\Step_InstallJetBrainsOpenJDK.Windows.cs" />
     <Compile Include="Steps\Step_PrepareExternal.Windows.cs" />
     <Compile Include="Steps\Step_PrepareExternalJavaInterop.Windows.cs" />
   </ItemGroup>
