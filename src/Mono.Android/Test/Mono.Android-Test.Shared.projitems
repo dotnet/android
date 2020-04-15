@@ -9,6 +9,9 @@
     <Import_RootNamespace>Mono.Android-Test.Shared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Mono.Linq.Expressions" Version="2.0.0" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)System.Linq\LinqExpressionTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Resources\Resource.designer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Properties\AssemblyInfo.cs" />

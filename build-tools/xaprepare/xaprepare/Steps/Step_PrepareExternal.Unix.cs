@@ -6,14 +6,14 @@ namespace Xamarin.Android.Prepare
 {
 	partial class Step_PrepareExternal
 	{
-		async Task<bool> ExecuteOSSpecific (Context context, NuGetRunner nuget)
+		async Task<bool> ExecuteOSSpecific (Context context)
 		{
 			Log.StatusLine ();
 			var make = new MakeRunner (context) {
 				NoParallelJobs = true
 			};
 
-			bool result = await make.Run (
+			return await make.Run (
 				logTag: "xamarin-android-tools",
 				workingDirectory: Path.Combine (Configurables.Paths.ExternalDir, "xamarin-android-tools"),
 				arguments: new List <string> {
@@ -21,10 +21,6 @@ namespace Xamarin.Android.Prepare
 					$"CONFIGURATION={context.Configuration}",
 			    }
 			);
-			if (!result)
-				return false;
-
-			return result;
 		}
 	}
 }
