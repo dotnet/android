@@ -254,6 +254,24 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
         <note>{0} - The Android resource XML element name
 {1} - The path of the layout file</note>
       </trans-unit>
+      <trans-unit id="XA1015">
+        <source>More than one Android Wear project is specified as the paired project. It can be at most one.</source>
+        <target state="new">More than one Android Wear project is specified as the paired project. It can be at most one.</target>
+        <note>The following are literal names and should not be translated: Android Wear</note>
+      </trans-unit>
+      <trans-unit id="XA1016">
+        <source>Target Wear application's project '{0}' does not specify required 'AndroidManifest' project property.</source>
+        <target state="new">Target Wear application's project '{0}' does not specify required 'AndroidManifest' project property.</target>
+        <note>The following are literal names and should not be translated: Wear, AndroidManifest
+"Wear" is a short version of the full product name "Wear OS" and so should not be translated.
+{0} - The project file name</note>
+      </trans-unit>
+      <trans-unit id="XA1017">
+        <source>Target Wear application's AndroidManifest.xml does not specify required 'package' attribute.</source>
+        <target state="new">Target Wear application's AndroidManifest.xml does not specify required 'package' attribute.</target>
+        <note>The following are literal names and should not be translated: Wear, AndroidManifest.xml, 'package'
+"Wear" is a short version of the full product name "Wear OS" and so should not be translated.</note>
+      </trans-unit>
       <trans-unit id="XA2000">
         <source>Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 5 will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 5 is released.</source>
         <target state="new">Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 5 will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 5 is released.</target>
@@ -520,6 +538,12 @@ In this message, the term "bundled" is a short way of saying "included into the 
         <source>`$(AndroidSigningKeyStore)` file `{0}` could not be found.</source>
         <target state="translated">Soubor $(AndroidSigningKeyStore) {0} se nepovedlo najít.</target>
         <note>The following are literal names and should not be translated: `$(AndroidSigningKeyStore)`</note>
+      </trans-unit>
+      <trans-unit id="XA4311">
+        <source>The application won't contain the paired Wear package because the Wear application package APK is not created yet. If building on the command line, be sure to build the "SignAndroidPackage" target.</source>
+        <target state="new">The application won't contain the paired Wear package because the Wear application package APK is not created yet. If building on the command line, be sure to build the "SignAndroidPackage" target.</target>
+        <note>The following are literal names and should not be translated: Wear, APK, SignAndroidPackage
+"Wear" is a short version of the full product name "Wear OS" and so should not be translated.</note>
       </trans-unit>
       <trans-unit id="XA5101">
         <source>Missing Android NDK toolchains directory '{0}'. Please install the Android NDK.</source>
