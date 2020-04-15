@@ -92,6 +92,8 @@ ms.date: 01/24/2020
 + [XA2001](xa2001.md): Source file '{filename}' could not be found.
 + [XA2002](xa2002.md): Can not resolve reference: \`{missing}\`, referenced by {assembly}. Perhaps it doesn't exist in the Mono for Android profile?
 + XA2006: Could not resolve reference to '{member}' (defined in assembly '{assembly}') with scope '{scope}'. When the scope is different from the defining assembly, it usually means that the type is forwarded.
++ XA2007: Exception while loading assemblies: {exception}
++ XA2008: In referenced assembly {assembly}, Java.Interop.DoNotPackageAttribute requires non-null file name.
 
 ## XA3xxx: Unmanaged code compilation
 
