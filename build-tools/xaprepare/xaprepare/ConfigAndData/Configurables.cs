@@ -15,6 +15,10 @@ namespace Xamarin.Android.Prepare
 	//
 	partial class Configurables
 	{
+		const string JetBrainsOpenJDKVersion = "11.0.4";
+		const string JetBrainsOpenJDKRelease = "546.1";
+		static readonly string JetBrainsOpenJDKDownloadVersion = JetBrainsOpenJDKVersion.Replace ('.', '_');
+
 		const string CorrettoDistVersion = "8.242.08.1";
 		const string CorrettoUrlPathVersion = CorrettoDistVersion;
 
@@ -22,6 +26,11 @@ namespace Xamarin.Android.Prepare
 
 		public static partial class Urls
 		{
+			// https://bintray.com/jetbrains/intellij-jdk/download_file?file_path=jbrsdk-11_0_4-linux-x64-b546.1.tar.gz
+			// https://bintray.com/jetbrains/intellij-jdk/download_file?file_path=jbrsdk-11_0_4-osx-x64-b546.1.tar.gz
+			// https://bintray.com/jetbrains/intellij-jdk/download_file?file_path=jbrsdk-11_0_4-windows-x64-b546.1.tar.gz
+			public static readonly Uri JetBrainsOpenJDK = new Uri ($"https://bintray.com/jetbrains/intellij-jdk/download_file?file_path=jbrsdk-{JetBrainsOpenJDKDownloadVersion}-{JetBrainsOpenJDKOperatingSystem}-b{JetBrainsOpenJDKRelease}.tar.gz");
+
 			// Keep the trailing slash here - OS-specific code assumes it's there.
 			public const string Corretto_BaseUri = "https://corretto.aws/downloads/resources/";
 
@@ -38,6 +47,9 @@ namespace Xamarin.Android.Prepare
 		public static partial class Defaults
 		{
 			public static readonly char[] PropertyListSeparator            = new [] { ':' };
+
+			public static readonly Version JetBrainsOpenJDKVersion = new Version (Configurables.JetBrainsOpenJDKVersion);
+			public static readonly Version JetBrainsOpenJDKRelease = new Version (Configurables.JetBrainsOpenJDKRelease);
 
 			// Mono runtimes
 			public const string DebugFileExtension                         = ".pdb";
@@ -104,9 +116,9 @@ namespace Xamarin.Android.Prepare
 			public const int DefaultMaximumParallelTasks = 5;
 
 			/// <summary>
-			///   The maximum JDK version we support. Note: this will probably go away with Corretto
+			///   The maximum JDK version we support.
 			/// </summary>
-			public const int MaxJDKVersion = 8;
+			public static readonly Version MaxJDKVersion = new Version (11, 99, 0);
 
 			/// <summary>
 			///   Prefix for all the log files created by the bootstrapper.
@@ -318,6 +330,10 @@ namespace Xamarin.Android.Prepare
 			public static string CorrettoCacheDir                    => GetCachedPath (ref correttoCacheDir, ()                    => ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory));
 			public static string CorrettoInstallDir                  => GetCachedPath (ref correttoInstallDir, ()                  => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainDirectory), "jdk"));
 
+			// JetBrains OpenJDK
+			public static string OpenJDKInstallDir                   => GetCachedPath (ref openJDKInstallDir, ()                   => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainDirectory), "jdk"));
+			public static string OpenJDKCacheDir                     => GetCachedPath (ref openJDKCacheDir, ()                     => ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory));
+
 			// bundle
 			public static string BCLTestsArchiveName                 = "bcl-tests.zip";
 
@@ -403,6 +419,8 @@ namespace Xamarin.Android.Prepare
 			static string monoSdksTpnExternalPath;
 			static string monoSDKSIncludeDestDir;
 			static string monoLlvmTpnPath;
+			static string openJDKInstallDir;
+			static string openJDKCacheDir;
 		}
 	}
 }

@@ -6,12 +6,12 @@ namespace Xamarin.Android.Prepare
 	partial class Scenario_AndroidToolchain : ScenarioNoStandardEndSteps
 	{
 		public Scenario_AndroidToolchain () 
-			: base ("AndroidToolchain", "Install Android SDK, NDK and Corretto JDK.", Context.Instance)
+			: base ("AndroidToolchain", "Install Android SDK, NDK and OpenJDK.", Context.Instance)
 		{}
 
 		protected override void AddSteps (Context context)
 		{
-			Steps.Add (new Step_InstallCorrettoOpenJDK ());
+			Steps.Add (new Step_InstallJetBrainsOpenJDK ());
 			Steps.Add (new Step_Android_SDK_NDK ());
 
 			// disable installation of missing programs...
