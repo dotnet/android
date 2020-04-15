@@ -325,6 +325,21 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
     <comment>{0} - The Android resource XML element name
 {1} - The path of the layout file</comment>
   </data>
+  <data name="XA1015" xml:space="preserve">
+    <value>More than one Android Wear project is specified as the paired project. It can be at most one.</value>
+    <comment>The following are literal names and should not be translated: Android Wear</comment>
+  </data>
+  <data name="XA1016" xml:space="preserve">
+    <value>Target Wear application's project '{0}' does not specify required 'AndroidManifest' project property.</value>
+    <comment>The following are literal names and should not be translated: Wear, AndroidManifest
+"Wear" is a short version of the full product name "Wear OS" and so should not be translated.
+{0} - The project file name</comment>
+  </data>
+  <data name="XA1017" xml:space="preserve">
+    <value>Target Wear application's AndroidManifest.xml does not specify required 'package' attribute.</value>
+    <comment>The following are literal names and should not be translated: Wear, AndroidManifest.xml, 'package'
+"Wear" is a short version of the full product name "Wear OS" and so should not be translated.</comment>
+  </data>
   <data name="XA2000" xml:space="preserve">
     <value>Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 5 will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 5 is released.</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
@@ -542,6 +557,11 @@ In this message, the term "bundled" is a short way of saying "included into the 
   <data name="XA4310" xml:space="preserve">
     <value>`$(AndroidSigningKeyStore)` file `{0}` could not be found.</value>
     <comment>The following are literal names and should not be translated: `$(AndroidSigningKeyStore)`</comment>
+  </data>
+  <data name="XA4311" xml:space="preserve">
+    <value>The application won't contain the paired Wear package because the Wear application package APK is not created yet. If building on the command line, be sure to build the "SignAndroidPackage" target.</value>
+    <comment>The following are literal names and should not be translated: Wear, APK, SignAndroidPackage
+"Wear" is a short version of the full product name "Wear OS" and so should not be translated.</comment>
   </data>
   <data name="XA5101" xml:space="preserve">
     <value>Missing Android NDK toolchains directory '{0}'. Please install the Android NDK.</value>

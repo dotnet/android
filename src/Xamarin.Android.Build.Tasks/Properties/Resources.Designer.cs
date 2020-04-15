@@ -448,6 +448,33 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to More than one Android Wear project is specified as the paired project. It can be at most one..
+        /// </summary>
+        internal static string XA1015 {
+            get {
+                return ResourceManager.GetString("XA1015", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Target Wear application&apos;s project &apos;{0}&apos; does not specify required &apos;AndroidManifest&apos; project property..
+        /// </summary>
+        internal static string XA1016 {
+            get {
+                return ResourceManager.GetString("XA1016", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Target Wear application&apos;s AndroidManifest.xml does not specify required &apos;package&apos; attribute..
+        /// </summary>
+        internal static string XA1017 {
+            get {
+                return ResourceManager.GetString("XA1017", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 5 will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 5 is released..
         /// </summary>
         internal static string XA2000 {
@@ -849,6 +876,15 @@ namespace Xamarin.Android.Tasks.Properties {
         internal static string XA4310 {
             get {
                 return ResourceManager.GetString("XA4310", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The application won&apos;t contain the paired Wear package because the Wear application package APK is not created yet. If building on the command line, be sure to build the &quot;SignAndroidPackage&quot; target..
+        /// </summary>
+        internal static string XA4311 {
+            get {
+                return ResourceManager.GetString("XA4311", resourceCulture);
             }
         }
         
