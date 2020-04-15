@@ -929,7 +929,6 @@ because xbuild doesn't support framework reference assemblies.
 	<_AndroidResourceDesignerFile Condition=" '$(AndroidUseIntermediateDesignerFile)' == 'True' ">$(IntermediateOutputPath)$(_AndroidResourceDesigner)</_AndroidResourceDesignerFile>
 	<_AndroidResourceDesignerFile Condition=" '$(AndroidUseIntermediateDesignerFile)' != 'True' ">$(AndroidResgenFile)</_AndroidResourceDesignerFile>
 	<_AndroidStaticResourcesFlag>$(IntermediateOutputPath)static.flag</_AndroidStaticResourcesFlag>
-	<_AndroidResourcesCacheFile>$(IntermediateOutputPath)mergeresources.cache</_AndroidResourcesCacheFile>
 	<AndroidUseManagedDesignTimeResourceGenerator Condition=" '$(AndroidUseManagedDesignTimeResourceGenerator)' == '' " >True</AndroidUseManagedDesignTimeResourceGenerator>
 	<_AndroidLibraryImportsDesignTimeCache>$(_AndroidIntermediateDesignTimeBuildDirectory)libraryimports.cache</_AndroidLibraryImportsDesignTimeCache>
 	<_AndroidLibraryProjectImportsDesignTimeCache>$(_AndroidIntermediateDesignTimeBuildDirectory)libraryprojectimports.cache</_AndroidLibraryProjectImportsDesignTimeCache>
@@ -2783,7 +2782,6 @@ because xbuild doesn't support framework reference assemblies.
  	<Delete Files="$(IntermediateOutputPath)R.cs.flag" />
 	<Delete Files="$(IntermediateOutputPath)acw-map.txt" />
 	<Delete Files="$(IntermediateOutputPath)customview-map.txt" />
-	<Delete Files="$(IntermediateOutputPath)mergeresources.cache" />
 	<Delete Files="$(IntermediateOutputPath)jarlist.cache" />
 	<Delete Files="$(IntermediateOutputPath)resolved_assemblies.txt" />
 	<Delete Files="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip" />
