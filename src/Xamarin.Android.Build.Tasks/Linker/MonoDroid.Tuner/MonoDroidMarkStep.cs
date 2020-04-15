@@ -140,11 +140,29 @@ namespace MonoDroid.Tuner
 
 		void UpdateRegistrationSwitch (MethodDefinition method, MethodReference[] switchMethods)
 		{
+			if (method.Parameters.Count != 2)
+				return;
+
 			var instructions = method.Body.Instructions;
 			var module = method.DeclaringType.Module;
 			var switchInstructions = new Instruction [switchMethods.Length];
 
 			instructions.Clear ();
+
+			var typeNullable = GetType ("mscorlib", "System.Nullable`1");
+			var methodGetValueOrDefault = GetMethod (typeNullable, "GetValueOrDefault");
+			var genericTypeNullable = new GenericInstanceType (typeNullable);
+			genericTypeNullable.GenericArguments.Add (GetType ("mscorlib", "System.Int32"));
+
+			var typeIdxVariable = new VariableDefinition (module.ImportReference (genericTypeNullable));
+			method.Body.Variables.Add (typeIdxVariable);
+
+			instructions.Add (Instruction.Create (OpCodes.Ldarg_1));
+			instructions.Add (Instruction.Create (OpCodes.Stloc_1));
+			instructions.Add (Instruction.Create (OpCodes.Ldloca_S, typeIdxVariable));
+
+			var genericMethodGetValueOrDefault = CreateGenericMethodReference (methodGetValueOrDefault, genericTypeNullable);
+			instructions.Add (Instruction.Create (OpCodes.Call, module.ImportReference (genericMethodGetValueOrDefault)));
 
 			for (var i = 0; i < switchMethods.Length; i++)
 				switchInstructions [i] = Instruction.Create (OpCodes.Ldtoken, switchMethods [i].DeclaringType);
@@ -153,7 +171,6 @@ namespace MonoDroid.Tuner
 			var methodGetTypeFromHandle = GetMethod ("mscorlib", "System.Type", "GetTypeFromHandle", new string[] { "System.RuntimeTypeHandle" });
 			var callDelegateStart = Instruction.Create (OpCodes.Call, module.ImportReference (methodGetTypeFromHandle));
 
-			instructions.Add (Instruction.Create (OpCodes.Ldarg_1));
 			instructions.Add (Instruction.Create (OpCodes.Switch, switchInstructions));
 
 			for (var i = 0; i < switchMethods.Length; i++) {
