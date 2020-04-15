@@ -140,9 +140,6 @@ namespace MonoDroid.Tuner
 
 		void UpdateRegistrationSwitch (MethodDefinition method, MethodReference[] switchMethods)
 		{
-			if (method.Parameters.Count != 2)
-				return;
-
 			var instructions = method.Body.Instructions;
 			var module = method.DeclaringType.Module;
 			var switchInstructions = new Instruction [switchMethods.Length];
