@@ -13,6 +13,7 @@ called for "legacy" projects in Xamarin.Android.Legacy.targets.
 
   <UsingTask TaskName="Xamarin.Android.Tasks.ValidateJavaVersion" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.ResolveAndroidTooling" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.RuntimeIdentifierToAbi" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <Target Name="_ResolveAndroidTooling">
     <ValidateJavaVersion
@@ -52,6 +53,12 @@ called for "legacy" projects in Xamarin.Android.Legacy.targets.
       <Output TaskParameter="Aapt2Version"                PropertyName="_Aapt2Version" />
       <Output TaskParameter="Aapt2ToolPath"               PropertyName="Aapt2ToolPath"               Condition="'$(Aapt2ToolPath)' == ''" />
     </ResolveAndroidTooling>
+    <RuntimeIdentifierToAbi
+        Condition=" '$(AndroidApplication)' == 'true' "
+        RuntimeIdentifier="$(RuntimeIdentifier)"
+        SupportedAbis="$(AndroidSupportedAbis)">
+      <Output TaskParameter="SupportedAbis" PropertyName="AndroidSupportedAbis" />
+    </RuntimeIdentifierToAbi>
   </Target>
 
 </Project>

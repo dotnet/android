@@ -2,6 +2,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
+using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
@@ -28,15 +29,49 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
 		}
 
+		static readonly object [] DotNetPublishSource = new object [] {
+			new object [] {
+				/* runtimeIdentifier */  "android.21-arm",
+				/* isRelease */          false,
+			},
+			new object [] {
+				/* runtimeIdentifier */  "android.21-arm64",
+				/* isRelease */          false,
+			},
+			new object [] {
+				/* runtimeIdentifier */  "android.21-x86",
+				/* isRelease */          false,
+			},
+			new object [] {
+				/* runtimeIdentifier */  "android.21-x64",
+				/* isRelease */          false,
+			},
+			new object [] {
+				/* runtimeIdentifier */  "android.21-arm",
+				/* isRelease */          true,
+			},
+		};
+
 		[Test]
 		[Category ("SmokeTests")]
-		public void DotNetPublish ([Values (false, true)] bool isRelease)
+		[TestCaseSource (nameof (DotNetPublishSource))]
+		public void DotNetPublish (string runtimeIdentifier, bool isRelease)
 		{
 			var proj = new XASdkProject (SdkVersion) {
 				IsRelease = isRelease
 			};
+			proj.SetProperty (KnownProperties.RuntimeIdentifier, runtimeIdentifier);
+
 			var dotnet = CreateDotNetBuilder (proj);
 			Assert.IsTrue (dotnet.Publish (), "`dotnet publish` should succeed");
+
+			var apk = Path.Combine (Root, dotnet.ProjectDirectory, proj.OutputPath,
+				runtimeIdentifier, "UnnamedProject.UnnamedProject.apk");
+			FileAssert.Exists (apk);
+			var abi = MonoAndroidHelper.RuntimeIdentifierToAbi (runtimeIdentifier);
+			using (var zip = ZipHelper.OpenZip (apk)) {
+				Assert.IsTrue (zip.ContainsEntry ($"lib/{abi}/libmonodroid.so"), "libmonodroid.so should exist.");
+			}
 		}
 
 		[Test]
