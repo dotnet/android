@@ -152,10 +152,11 @@ namespace MonoDroid.Tuner
 			genericTypeNullable.GenericArguments.Add (GetType ("mscorlib", "System.Int32"));
 
 			var typeIdxVariable = new VariableDefinition (module.ImportReference (genericTypeNullable));
+			method.Body.Variables.Clear ();
 			method.Body.Variables.Add (typeIdxVariable);
 
 			instructions.Add (Instruction.Create (OpCodes.Ldarg_1));
-			instructions.Add (Instruction.Create (OpCodes.Stloc_1));
+			instructions.Add (Instruction.Create (OpCodes.Stloc_0));
 			instructions.Add (Instruction.Create (OpCodes.Ldloca_S, typeIdxVariable));
 
 			var genericMethodGetValueOrDefault = CreateGenericMethodReference (methodGetValueOrDefault, genericTypeNullable);
