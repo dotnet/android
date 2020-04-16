@@ -32,9 +32,9 @@
 
   <!--  User-facing configuration-specific defaults -->
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <!--FIXME: Disable the shared runtime by default -->
+    <!--FIXME: Disable the shared runtime and fast deployment default -->
     <AndroidUseSharedRuntime Condition=" '$(AndroidUseSharedRuntime)' == '' ">false</AndroidUseSharedRuntime>
-    <EmbedAssembliesIntoApk Condition=" '$(EmbedAssembliesIntoApk)' == '' ">false</EmbedAssembliesIntoApk>
+    <EmbedAssembliesIntoApk Condition=" '$(EmbedAssembliesIntoApk)' == '' ">true</EmbedAssembliesIntoApk>
     <AndroidLinkMode Condition=" '$(AndroidLinkMode)' == '' ">None</AndroidLinkMode>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
