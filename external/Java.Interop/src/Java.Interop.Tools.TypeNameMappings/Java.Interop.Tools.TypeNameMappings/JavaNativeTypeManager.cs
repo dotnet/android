@@ -41,7 +41,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 	public
 #endif
 	static class JavaNativeTypeManager {
-		const string CRC_PREFIX = "c64r2";
+		const string CRC_PREFIX = "crc64";
 
 		public static PackageNamingPolicy PackageNamingPolicy { get; set; } = PackageNamingPolicy.LowercaseCrc64;
 
