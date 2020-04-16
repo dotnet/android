@@ -448,6 +448,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to JAR library references with identical file names but different contents were found: {0}. Please remove any conflicting libraries from EmbeddedJar, InputJar and AndroidJavaLibrary..
+        /// </summary>
+        internal static string XA1014 {
+            get {
+                return ResourceManager.GetString("XA1014", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to More than one Android Wear project is specified as the paired project. It can be at most one..
         /// </summary>
         internal static string XA1015 {
