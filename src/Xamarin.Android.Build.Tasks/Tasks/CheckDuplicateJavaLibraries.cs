@@ -27,7 +27,7 @@ namespace Xamarin.Android.Tasks
 			var jars = MonoAndroidHelper.DistinctFilesByContent (jarFilePaths).ToArray ();
 			var dups = MonoAndroidHelper.GetDuplicateFileNames (jars, new string [] {"classes.jar"});
 			if (dups.Any ()) {
-				Log.LogError ("You have Jar libraries, {0}, that have the identical name with inconsistent file contents. Please make sure to remove any conflicting libraries in EmbeddedJar, InputJar and AndroidJavaLibrary.", String.Join (", ", dups.ToArray ()));
+				Log.LogCodedError ("XA1014", Properties.Resources.XA1014, String.Join (", ", dups.ToArray ()));
 				return false;
 			}
 			
