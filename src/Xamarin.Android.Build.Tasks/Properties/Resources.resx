@@ -325,6 +325,11 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
     <comment>{0} - The Android resource XML element name
 {1} - The path of the layout file</comment>
   </data>
+  <data name="XA1014" xml:space="preserve">
+    <value>JAR library references with identical file names but different contents were found: {0}. Please remove any conflicting libraries from EmbeddedJar, InputJar and AndroidJavaLibrary.</value>
+    <comment>The following are literal names and should not be translated: JAR, EmbeddedJar, InputJar and AndroidJavaLibrary
+{0} - Comma-separated list of the conflicting JAR library file names</comment>
+  </data>
   <data name="XA1015" xml:space="preserve">
     <value>More than one Android Wear project is specified as the paired project. It can be at most one.</value>
     <comment>The following are literal names and should not be translated: Android Wear</comment>
