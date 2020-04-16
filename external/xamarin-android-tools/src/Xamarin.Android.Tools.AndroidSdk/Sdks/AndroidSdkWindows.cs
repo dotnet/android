@@ -303,19 +303,23 @@ namespace Xamarin.Android.Tools
 		#region Helper Methods
 		private static bool CheckRegistryKeyForExecutable (UIntPtr key, string subkey, string valueName, RegistryEx.Wow64 wow64, string subdir, string exe)
 		{
-			string key_name = string.Format (@"{0}\{1}\{2}", key == RegistryEx.CurrentUser ? "HKCU" : "HKLM", subkey, valueName);
+			try {
+				string key_name = string.Format (@"{0}\{1}\{2}", key == RegistryEx.CurrentUser ? "HKCU" : "HKLM", subkey, valueName);
 
-			var path = NullIfEmpty (RegistryEx.GetValueString (key, subkey, valueName, wow64));
+				var path = NullIfEmpty (RegistryEx.GetValueString (key, subkey, valueName, wow64));
 
-			if (path == null) {
+				if (path == null) {
+					return false;
+				}
+
+				if (!ProcessUtils.FindExecutablesInDirectory (Path.Combine (path, subdir), exe).Any ()) {
+					return false;
+				}
+
+				return true;
+			} catch (Exception) {
 				return false;
 			}
-
-			if (!ProcessUtils.FindExecutablesInDirectory (Path.Combine (path, subdir), exe).Any ()) {
-				return false;
-			}
-
-			return true;
 		}
 		#endregion
 
