@@ -18,7 +18,7 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 		{
 			var c   = LoadClassFile ("JavaType.class");
 			new ExpectedTypeDeclaration {
-				MajorVersion        = 0x32,
+				MajorVersion        = 0x34,
 				MinorVersion        = 0,
 				ConstantPoolCount   = 195,
 				AccessFlags         = ClassAccessFlags.Public | ClassAccessFlags.Super,

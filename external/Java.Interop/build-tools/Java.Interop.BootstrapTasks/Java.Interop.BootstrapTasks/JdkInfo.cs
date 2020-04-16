@@ -17,10 +17,6 @@ namespace Java.Interop.BootstrapTasks
 {
 	public class JdkInfo : Task
 	{
-		const string JARSIGNER = "jarsigner.exe";
-		const string MDREG_KEY = @"SOFTWARE\Novell\Mono for Android";
-		const string MDREG_JAVA_SDK = "JavaSdkDirectory";
-
 		public  string  JdksRoot              { get; set; }
 
 		public  string  MaximumJdkVersion     { get; set; }
@@ -50,13 +46,18 @@ namespace Java.Interop.BootstrapTasks
 				return false;
 			}
 
+			var rtJarPaths  = new[]{
+				Path.Combine (Path.GetDirectoryName (jdk.JavacPath), "..", "jre", "lib", "rt.jar"),
+			};
+			var rtJarPath   = rtJarPaths.FirstOrDefault (p => File.Exists (p));
+
 			JavaHomePath  = jdk.HomePath;
 
 			Directory.CreateDirectory (Path.GetDirectoryName (PropertyFile.ItemSpec));
 			Directory.CreateDirectory (Path.GetDirectoryName (MakeFragmentFile.ItemSpec));
 
-			WritePropertyFile (jdk.JarPath, jdk.JavacPath, jdk.JdkJvmPath, jdk.IncludePath);
-			WriteMakeFragmentFile (jdk.JarPath, jdk.JavacPath, jdk.JdkJvmPath, jdk.IncludePath);
+			WritePropertyFile (jdk.JarPath, jdk.JavacPath, jdk.JdkJvmPath, rtJarPath, jdk.IncludePath);
+			WriteMakeFragmentFile (jdk.JarPath, jdk.JavacPath, jdk.JdkJvmPath, rtJarPath, jdk.IncludePath);
 
 			return !Log.HasLoggedErrors;
 		}
@@ -92,7 +93,7 @@ namespace Java.Interop.BootstrapTasks
 			return logger;
 		}
 
-		void WritePropertyFile (string jarPath, string javacPath, string jdkJvmPath, IEnumerable<string> includes)
+		void WritePropertyFile (string jarPath, string javacPath, string jdkJvmPath, string rtJarPath, IEnumerable<string> includes)
 		{
 			var msbuild = XNamespace.Get ("http://schemas.microsoft.com/developer/msbuild/2003");
 			var project = new XElement (msbuild + "Project",
@@ -106,17 +107,28 @@ namespace Java.Interop.BootstrapTasks
 					new XElement (msbuild + "JavaCPath", new XAttribute ("Condition", " '$(JavaCPath)' == '' "),
 						javacPath),
 					new XElement (msbuild + "JarPath", new XAttribute ("Condition", " '$(JarPath)' == '' "),
-						jarPath)));
+						jarPath),
+					CreateJreRtJarPath (msbuild, rtJarPath)));
 			project.Save (PropertyFile.ItemSpec);
 		}
 
-		void WriteMakeFragmentFile (string jarPath, string javacPath, string jdkJvmPath, IEnumerable<string> includes)
+		static XElement CreateJreRtJarPath (XNamespace msbuild, string rtJarPath)
+		{
+			if (rtJarPath == null)
+				return null;
+			return new XElement (msbuild + "JreRtJarPath",
+					new XAttribute ("Condition", " '$(JreRtJarPath)' == '' "),
+					rtJarPath);
+		}
+
+		void WriteMakeFragmentFile (string jarPath, string javacPath, string jdkJvmPath, string rtJarPath, IEnumerable<string> includes)
 		{
 			using (var o = new StreamWriter (MakeFragmentFile.ItemSpec)) {
 				o.WriteLine ($"export  JI_JAR_PATH          := {jarPath}");
 				o.WriteLine ($"export  JI_JAVAC_PATH        := {javacPath}");
 				o.WriteLine ($"export  JI_JDK_INCLUDE_PATHS := {string.Join (" ", includes)}");
 				o.WriteLine ($"export  JI_JVM_PATH          := {jdkJvmPath}");
+				o.WriteLine ($"export  JI_RT_JAR_PATH       := {rtJarPath}");
 			}
 		}
 	}

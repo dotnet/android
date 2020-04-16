@@ -43,10 +43,10 @@
     <XamarinAndroidToolsDirectory   Condition=" '$(XamarinAndroidToolsDirectory)' == '' ">$(MSBuildThisFileDirectory)external\xamarin-android-tools</XamarinAndroidToolsDirectory>
   </PropertyGroup>
   <PropertyGroup>
-    <JavacSourceVersion Condition=" '$(JavacSourceVersion)' == '' ">1.6</JavacSourceVersion>
-    <JavacTargetVersion Condition=" '$(JavacTargetVersion)' == '' ">1.6</JavacTargetVersion>
-    <JreRtJarPath Condition=" '$(JreRtJarPath)' == '' And '$(JavaCPath)' != '' ">$([System.IO.Path]::GetDirectoryName('$(JavaCPath)'))\..\jre\lib\rt.jar</JreRtJarPath>
-    <_JavacSourceOptions>-source $(JavacSourceVersion) -target $(JavacTargetVersion) -bootclasspath "$(JreRtJarPath)"</_JavacSourceOptions>
+    <JavacSourceVersion Condition=" '$(JavacSourceVersion)' == '' ">1.8</JavacSourceVersion>
+    <JavacTargetVersion Condition=" '$(JavacTargetVersion)' == '' ">1.8</JavacTargetVersion>
+    <_BootClassPath Condition=" '$(JreRtJarPath)' != '' ">-bootclasspath "$(JreRtJarPath)"</_BootClassPath>
+    <_JavacSourceOptions>-source $(JavacSourceVersion) -target $(JavacTargetVersion) $(_BootClassPath)</_JavacSourceOptions>
   </PropertyGroup>
   <PropertyGroup>
     <_XamarinAndroidCecilPath Condition=" '$(CecilSourceDirectory)' != '' And Exists('$(UtilityOutputFullPath)Xamarin.Android.Cecil.dll') ">$(UtilityOutputFullPath)Xamarin.Android.Cecil.dll</_XamarinAndroidCecilPath>
