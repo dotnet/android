@@ -3,10 +3,6 @@
   <Target Name="_GetJavacVersions"
       DependsOnTargets="AndroidPrepareForBuild">
     <PropertyGroup>
-      <_JavacSourceVersion Condition="$(_JdkVersion.StartsWith ('9'))">1.8</_JavacSourceVersion>
-      <_JavacSourceVersion Condition=" '$(_JavacSourceVersion)' == '' ">1.5</_JavacSourceVersion>
-      <_JavacTargetVersion Condition="$(_JdkVersion.StartsWith ('9'))">1.8</_JavacTargetVersion>
-      <_JavacTargetVersion Condition=" '$(_JavacTargetVersion)' == '' ">1.6</_JavacTargetVersion>
       <JarPath Condition=" '$(JarPath)' == '' ">$(JavaSdkDirectory)\bin\jar</JarPath>
       <JavaCPath Condition=" '$(JavaCPath)' == '' ">$(JavaSdkDirectory)\bin\javac</JavaCPath>
     </PropertyGroup>
@@ -35,7 +31,7 @@
     <PropertyGroup>
       <_Javac>"$(JavaCPath)"</_Javac>
       <_Jar>"$(JarPath)"</_Jar>
-      <_Targets>-source $(_JavacSourceVersion) -target $(_JavacTargetVersion)</_Targets>
+      <_Targets>-source $(JavacSourceVersion) -target $(JavacTargetVersion)</_Targets>
       <_DestDir>$(IntermediateOutputPath)__CreateTestJarFile-bin</_DestDir>
       <_AndroidJar>-bootclasspath "$(AndroidSdkDirectory)\platforms\android-$(_AndroidApiLevelName)\android.jar"</_AndroidJar>
       <_CP>-cp "$(_JavaInteropJarPath)"</_CP>
