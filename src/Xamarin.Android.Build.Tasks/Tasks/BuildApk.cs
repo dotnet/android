@@ -43,6 +43,9 @@ namespace Xamarin.Android.Tasks
 		public ITaskItem[] EmbeddedNativeLibraryAssemblies { get; set; }
 
 		[Required]
+		public ITaskItem[] FrameworkNativeLibraries { get; set; }
+
+		[Required]
 		public ITaskItem[] NativeLibraries { get; set; }
 
 		[Required]
@@ -432,12 +435,16 @@ namespace Xamarin.Android.Tasks
 
 		private void AddNativeLibraries (ArchiveFileList files, string [] supportedAbis)
 		{
+			var frameworkLibs = FrameworkNativeLibraries.Select (v => new LibInfo {
+				Path = v.ItemSpec,
+				Abi = GetNativeLibraryAbi (v),
+				ArchiveFileName = v.GetMetadata ("ArchiveFileName")
+			});
+
+			AddNativeLibraries (files, supportedAbis, frameworkLibs);
+
 			var libs = NativeLibraries.Concat (BundleNativeLibraries ?? Enumerable.Empty<ITaskItem> ())
-				.Select (v => new LibInfo {
-					Path = v.ItemSpec,
-					Abi = GetNativeLibraryAbi (v),
-					ArchiveFileName = v.GetMetadata ("ArchiveFileName")
-				});
+				.Select (v => new LibInfo { Path = v.ItemSpec, Abi = GetNativeLibraryAbi (v) });
 
 			AddNativeLibraries (files, supportedAbis, libs);
 		}
