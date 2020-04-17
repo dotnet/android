@@ -689,6 +689,76 @@ stages:
         configuration: $(ApkTestConfiguration)
         artifactName: Test Results - APK Instrumentation - macOS
 
+    # Plots: Utilize command-line utility built here to send plot information contained in CSV files to AppInsights
+    - task: MSBuild@1
+      displayName: build plots-to-appinsights
+      inputs:
+        solution: build-tools/plots-to-appinsights/ProcessPlotCSVFile.csproj
+        configuration: $(ApkTestConfiguration)
+        msbuildArguments: >
+          /restore
+          /t:Build
+          /v:normal
+          /bl:$(System.DefaultWorkingDirectory)/bin/Tools$(ApkTestConfiguration)plots-to-appinsights.binlog
+      continueOnError: true
+      condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
+
+    # Process Plot CSV files and send results to AppInsights
+    # XamarinAndroidMetrics: https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/64e11c84-c922-4ffd-bea9-67ab39354edd/resourceGroups/XamarinMetrics/providers/microsoft.insights/components/XamarinAndroidMetrics/overview
+    # UNDONE: Need plot definitions for the following files:
+    #  TestResult-Mono.Android_TestsAppBundle-times.csv
+    #  TestResult-Mono.Android_TestsMultiDex-times.csv
+    #  TestResult-Mono.Android_TestsMultiDex-values-$(ApkTestConfiguration).csv
+    #  TestResult-Xamarin.Android.EmbeddedDSO_Test-times.csv
+
+    - template: yaml-templates/plots-to-appinsights.yaml
+      parameters:
+        condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
+        configuration: $(ApkTestConfiguration)
+        plotGroup: Test times
+        plotTitle: Runtime merged
+        plotPathAndFilename: $(System.DefaultWorkingDirectory)/TestResult-Mono.Android_Tests-times.csv
+
+    - template: yaml-templates/plots-to-appinsights.yaml
+      parameters:
+        condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
+        configuration: $(ApkTestConfiguration)
+        plotGroup: Test size
+        plotTitle: Runtime test sizes
+        plotPathAndFilename: $(System.DefaultWorkingDirectory)/TestResult-Mono.Android_Tests-values-$(ApkTestConfiguration).csv
+
+    - template: yaml-templates/plots-to-appinsights.yaml
+      parameters:
+        condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
+        configuration: $(ApkTestConfiguration)
+        plotGroup: Test times
+        plotTitle: Jcw
+        plotPathAndFilename: $(System.DefaultWorkingDirectory)/TestResult-Xamarin.Android.JcwGen_Tests-times.csv
+
+    - template: yaml-templates/plots-to-appinsights.yaml
+      parameters:
+        condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
+        configuration: $(ApkTestConfiguration)
+        plotGroup: Test times
+        plotTitle: Locale
+        plotPathAndFilename: $(System.DefaultWorkingDirectory)/TestResult-Xamarin.Android.Locale_Tests-times.csv
+
+    - template: yaml-templates/plots-to-appinsights.yaml
+      parameters:
+        condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
+        configuration: $(ApkTestConfiguration)
+        plotGroup: Test times
+        plotTitle: Xamarin.Forms app startup
+        plotPathAndFilename: $(System.DefaultWorkingDirectory)/TestResult-Xamarin.Forms_Test-times.csv
+
+    - template: yaml-templates/plots-to-appinsights.yaml
+      parameters:
+        condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
+        configuration: $(ApkTestConfiguration)
+        plotGroup: Test times
+        plotTitle: Xamarin.Forms app
+        plotPathAndFilename: $(System.DefaultWorkingDirectory)/TestResult-Xamarin.Forms_Tests-values-$(ApkTestConfiguration).csv
+
     - template: yaml-templates/fail-on-issue.yaml
 
   # Check - "Xamarin.Android (Test BCL With Emulator - macOS)"
