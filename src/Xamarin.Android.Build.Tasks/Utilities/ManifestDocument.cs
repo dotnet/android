@@ -216,7 +216,7 @@ namespace Xamarin.Android.Tasks {
 					alias.Remove ();
 					activity.AddAfterSelf (alias);
 				} else {
-					log.LogWarning ("unable to find target activity for activity alias: " + attr.Value);
+					log.LogCodedWarning ("XA4228", Properties.Resources.XA4228, attr.Value);
 				}
 			}
 		}
