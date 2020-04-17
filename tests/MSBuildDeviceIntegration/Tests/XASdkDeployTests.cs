@@ -7,6 +7,7 @@ using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
+	[NonParallelizable]
 	public class XASdkDeployTests : DeviceTest
 	{
 		static readonly string SdkVersion = Assembly.GetAssembly(typeof(XASdkProject))
