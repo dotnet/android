@@ -1796,7 +1796,7 @@ MonodroidRuntime::Java_mono_android_Runtime_destroyContexts (JNIEnv *env, jintAr
 		log_info (LOG_DEFAULT, "Unloading domain `%d'", contextIDs[i]);
 		mono_domain_unload (domain);
 	}
-#endif
+#endif  // !defined(ANDROID)
 	env->ReleaseIntArrayElements (array, contextIDs, JNI_ABORT);
 
 	reinitialize_android_runtime_type_manager (env);
