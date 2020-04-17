@@ -134,6 +134,8 @@ ms.date: 01/24/2020
 + XA4228: Unable to find specified //activity-alias/@android:targetActivity: '{targetActivity}'
 + XA4229: Unrecognized \`TransformFile\` root element: {element}.
 + XA4230: Error parsing XML: {exception}
++ XA4231: The Android class parser '$(AndroidClassParser)' is deprecated and will be removed in a future version of Xamarin.Android. Use 'class-parse' instead.
++ XA4232: The Android code generator '$(AndroidCodegenTarget)' is deprecated and will be removed in a future version of Xamarin.Android. Use 'XAJavaInterop1' instead.
 + XA4300: Native library '{library}' will not be bundled because it has an unsupported ABI.
 + [XA4301](xa4301.md): Apk already contains the item `xxx`.
 + [XA4302](xa4302.md): Unhandled exception merging \`AndroidManifest.xml\`: {ex}
