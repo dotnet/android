@@ -1,0 +1,3546 @@
+{
+  "Comment": null,
+  "Entries": {
+    "AndroidManifest.xml": {
+      "Size": 3684
+    },
+    "res/anim/abc_fade_in.xml": {
+      "Size": 388
+    },
+    "res/anim/abc_fade_out.xml": {
+      "Size": 388
+    },
+    "res/anim/abc_grow_fade_in_from_bottom.xml": {
+      "Size": 852
+    },
+    "res/anim/abc_popup_enter.xml": {
+      "Size": 508
+    },
+    "res/anim/abc_popup_exit.xml": {
+      "Size": 508
+    },
+    "res/anim/abc_shrink_fade_out_from_bottom.xml": {
+      "Size": 852
+    },
+    "res/anim/abc_slide_in_bottom.xml": {
+      "Size": 396
+    },
+    "res/anim/abc_slide_in_top.xml": {
+      "Size": 396
+    },
+    "res/anim/abc_slide_out_bottom.xml": {
+      "Size": 396
+    },
+    "res/anim/abc_slide_out_top.xml": {
+      "Size": 396
+    },
+    "res/anim/abc_tooltip_enter.xml": {
+      "Size": 388
+    },
+    "res/anim/abc_tooltip_exit.xml": {
+      "Size": 388
+    },
+    "res/anim/design_bottom_sheet_slide_in.xml": {
+      "Size": 616
+    },
+    "res/anim/design_bottom_sheet_slide_out.xml": {
+      "Size": 616
+    },
+    "res/anim/design_snackbar_in.xml": {
+      "Size": 312
+    },
+    "res/anim/design_snackbar_out.xml": {
+      "Size": 312
+    },
+    "res/anim/enterfromleft.xml": {
+      "Size": 640
+    },
+    "res/anim/enterfromright.xml": {
+      "Size": 468
+    },
+    "res/anim/exittoleft.xml": {
+      "Size": 640
+    },
+    "res/anim/exittoright.xml": {
+      "Size": 468
+    },
+    "res/anim-v21/design_bottom_sheet_slide_in.xml": {
+      "Size": 616
+    },
+    "res/anim-v21/design_bottom_sheet_slide_out.xml": {
+      "Size": 616
+    },
+    "res/animator/design_fab_hide_motion_spec.xml": {
+      "Size": 796
+    },
+    "res/animator/design_fab_show_motion_spec.xml": {
+      "Size": 796
+    },
+    "res/animator/mtrl_btn_state_list_anim.xml": {
+      "Size": 2624
+    },
+    "res/animator-v19/mtrl_btn_state_list_anim.xml": {
+      "Size": 2664
+    },
+    "res/animator/mtrl_btn_unelevated_state_list_anim.xml": {
+      "Size": 120
+    },
+    "res/animator/mtrl_chip_state_list_anim.xml": {
+      "Size": 1072
+    },
+    "res/animator/mtrl_fab_hide_motion_spec.xml": {
+      "Size": 796
+    },
+    "res/animator/mtrl_fab_show_motion_spec.xml": {
+      "Size": 796
+    },
+    "res/animator/mtrl_fab_transformation_sheet_collapse_spec.xml": {
+      "Size": 1888
+    },
+    "res/animator/mtrl_fab_transformation_sheet_expand_spec.xml": {
+      "Size": 1888
+    },
+    "res/animator-v21/design_appbar_state_list_animator.xml": {
+      "Size": 1216
+    },
+    "res/color/abc_background_cache_hint_selector_material_dark.xml": {
+      "Size": 468
+    },
+    "res/color/abc_background_cache_hint_selector_material_light.xml": {
+      "Size": 468
+    },
+    "res/color/abc_btn_colored_borderless_text_material.xml": {
+      "Size": 604
+    },
+    "res/color/abc_btn_colored_text_material.xml": {
+      "Size": 604
+    },
+    "res/color/abc_hint_foreground_material_dark.xml": {
+      "Size": 564
+    },
+    "res/color/abc_hint_foreground_material_light.xml": {
+      "Size": 564
+    },
+    "res/color/abc_primary_text_disable_only_material_dark.xml": {
+      "Size": 464
+    },
+    "res/color/abc_primary_text_disable_only_material_light.xml": {
+      "Size": 464
+    },
+    "res/color/abc_primary_text_material_dark.xml": {
+      "Size": 464
+    },
+    "res/color/abc_primary_text_material_light.xml": {
+      "Size": 464
+    },
+    "res/color/abc_search_url_text.xml": {
+      "Size": 588
+    },
+    "res/color/abc_secondary_text_material_dark.xml": {
+      "Size": 464
+    },
+    "res/color/abc_secondary_text_material_light.xml": {
+      "Size": 464
+    },
+    "res/color/abc_tint_btn_checkable.xml": {
+      "Size": 728
+    },
+    "res/color/abc_tint_default.xml": {
+      "Size": 1224
+    },
+    "res/color/abc_tint_edittext.xml": {
+      "Size": 772
+    },
+    "res/color/abc_tint_seek_thumb.xml": {
+      "Size": 604
+    },
+    "res/color/abc_tint_spinner.xml": {
+      "Size": 772
+    },
+    "res/color/abc_tint_switch_track.xml": {
+      "Size": 768
+    },
+    "res/color/design_error.xml": {
+      "Size": 464
+    },
+    "res/color/design_tint_password_toggle.xml": {
+      "Size": 480
+    },
+    "res/color/mtrl_bottom_nav_colored_item_tint.xml": {
+      "Size": 684
+    },
+    "res/color/mtrl_bottom_nav_item_tint.xml": {
+      "Size": 684
+    },
+    "res/color/mtrl_btn_bg_color_selector.xml": {
+      "Size": 464
+    },
+    "res/color/mtrl_btn_ripple_color.xml": {
+      "Size": 948
+    },
+    "res/color/mtrl_btn_stroke_color_selector.xml": {
+      "Size": 376
+    },
+    "res/color/mtrl_btn_text_btn_ripple_color.xml": {
+      "Size": 948
+    },
+    "res/color/mtrl_btn_text_color_selector.xml": {
+      "Size": 464
+    },
+    "res/color/mtrl_chip_background_color.xml": {
+      "Size": 608
+    },
+    "res/color/mtrl_chip_close_icon_tint.xml": {
+      "Size": 1092
+    },
+    "res/color/mtrl_chip_ripple_color.xml": {
+      "Size": 948
+    },
+    "res/color/mtrl_chip_text_color.xml": {
+      "Size": 464
+    },
+    "res/color/mtrl_fab_ripple_color.xml": {
+      "Size": 948
+    },
+    "res/color/mtrl_tabs_colored_ripple_color.xml": {
+      "Size": 948
+    },
+    "res/color/mtrl_tabs_icon_color_selector.xml": {
+      "Size": 464
+    },
+    "res/color/mtrl_tabs_icon_color_selector_colored.xml": {
+      "Size": 464
+    },
+    "res/color/mtrl_tabs_legacy_text_color_selector.xml": {
+      "Size": 464
+    },
+    "res/color/mtrl_tabs_ripple_color.xml": {
+      "Size": 1672
+    },
+    "res/color/mtrl_text_btn_text_color_selector.xml": {
+      "Size": 464
+    },
+    "res/color/switch_thumb_material_dark.xml": {
+      "Size": 464
+    },
+    "res/color/switch_thumb_material_light.xml": {
+      "Size": 464
+    },
+    "res/color-v21/abc_btn_colored_borderless_text_material.xml": {
+      "Size": 464
+    },
+    "res/color-v23/abc_btn_colored_borderless_text_material.xml": {
+      "Size": 500
+    },
+    "res/color-v23/abc_btn_colored_text_material.xml": {
+      "Size": 500
+    },
+    "res/color-v23/abc_color_highlight_material.xml": {
+      "Size": 544
+    },
+    "res/color-v23/abc_tint_btn_checkable.xml": {
+      "Size": 624
+    },
+    "res/color-v23/abc_tint_default.xml": {
+      "Size": 1120
+    },
+    "res/color-v23/abc_tint_edittext.xml": {
+      "Size": 668
+    },
+    "res/color-v23/abc_tint_seek_thumb.xml": {
+      "Size": 500
+    },
+    "res/color-v23/abc_tint_spinner.xml": {
+      "Size": 668
+    },
+    "res/color-v23/abc_tint_switch_track.xml": {
+      "Size": 664
+    },
+    "res/color-v23/design_tint_password_toggle.xml": {
+      "Size": 376
+    },
+    "res/drawable/abc_btn_borderless_material.xml": {
+      "Size": 588
+    },
+    "res/drawable/abc_btn_check_material.xml": {
+      "Size": 464
+    },
+    "res/drawable/abc_btn_colored_material.xml": {
+      "Size": 344
+    },
+    "res/drawable/abc_btn_default_mtrl_shape.xml": {
+      "Size": 932
+    },
+    "res/drawable/abc_btn_radio_material.xml": {
+      "Size": 464
+    },
+    "res/drawable/abc_cab_background_internal_bg.xml": {
+      "Size": 372
+    },
+    "res/drawable/abc_cab_background_top_material.xml": {
+      "Size": 336
+    },
+    "res/drawable/abc_dialog_material_background.xml": {
+      "Size": 716
+    },
+    "res/drawable/abc_edit_text_material.xml": {
+      "Size": 868
+    },
+    "res/drawable/abc_ic_ab_back_material.xml": {
+      "Size": 692
+    },
+    "res/drawable/abc_ic_arrow_drop_right_black_24dp.xml": {
+      "Size": 1000
+    },
+    "res/drawable/abc_ic_clear_material.xml": {
+      "Size": 684
+    },
+    "res/drawable/abc_ic_go_search_api_material.xml": {
+      "Size": 640
+    },
+    "res/drawable/abc_ic_menu_overflow_material.xml": {
+      "Size": 792
+    },
+    "res/drawable/abc_ic_search_api_material.xml": {
+      "Size": 812
+    },
+    "res/drawable/abc_ic_voice_search_api_material.xml": {
+      "Size": 828
+    },
+    "res/drawable/abc_item_background_holo_dark.xml": {
+      "Size": 1012
+    },
+    "res/drawable/abc_item_background_holo_light.xml": {
+      "Size": 1012
+    },
+    "res/drawable/abc_list_divider_material.xml": {
+      "Size": 480
+    },
+    "res/drawable/abc_list_selector_background_transition_holo_dark.xml": {
+      "Size": 424
+    },
+    "res/drawable/abc_list_selector_background_transition_holo_light.xml": {
+      "Size": 424
+    },
+    "res/drawable/abc_list_selector_holo_dark.xml": {
+      "Size": 1064
+    },
+    "res/drawable/abc_list_selector_holo_light.xml": {
+      "Size": 1064
+    },
+    "res/drawable/abc_ratingbar_indicator_material.xml": {
+      "Size": 664
+    },
+    "res/drawable-v21/abc_ratingbar_indicator_material.xml": {
+      "Size": 704
+    },
+    "res/drawable/abc_ratingbar_material.xml": {
+      "Size": 664
+    },
+    "res/drawable-v21/abc_ratingbar_material.xml": {
+      "Size": 704
+    },
+    "res/drawable/abc_ratingbar_small_material.xml": {
+      "Size": 664
+    },
+    "res/drawable-v21/abc_ratingbar_small_material.xml": {
+      "Size": 704
+    },
+    "res/drawable/abc_seekbar_thumb_material.xml": {
+      "Size": 1100
+    },
+    "res/drawable/abc_seekbar_tick_mark_material.xml": {
+      "Size": 516
+    },
+    "res/drawable/abc_seekbar_track_material.xml": {
+      "Size": 1408
+    },
+    "res/drawable/abc_spinner_textfield_background_material.xml": {
+      "Size": 1160
+    },
+    "res/drawable/abc_switch_thumb_material.xml": {
+      "Size": 464
+    },
+    "res/drawable/abc_tab_indicator_material.xml": {
+      "Size": 468
+    },
+    "res/drawable/abc_text_cursor_material.xml": {
+      "Size": 516
+    },
+    "res/drawable/abc_textfield_search_material.xml": {
+      "Size": 756
+    },
+    "res/drawable/abc_vector_test.xml": {
+      "Size": 612
+    },
+    "res/drawable/design_bottom_navigation_item_background.xml": {
+      "Size": 784
+    },
+    "res/drawable/design_fab_background.xml": {
+      "Size": 372
+    },
+    "res/drawable/design_password_eye.xml": {
+      "Size": 464
+    },
+    "res/drawable/design_snackbar_background.xml": {
+      "Size": 484
+    },
+    "res/drawable/ic_mtrl_chip_checked_black.xml": {
+      "Size": 600
+    },
+    "res/drawable/ic_mtrl_chip_checked_circle.xml": {
+      "Size": 940
+    },
+    "res/drawable/ic_mtrl_chip_close_circle.xml": {
+      "Size": 808
+    },
+    "res/drawable/icon.png": {
+      "Size": 1358
+    },
+    "res/drawable/mr_button_connected_dark.xml": {
+      "Size": 3424
+    },
+    "res/drawable/mr_button_connected_light.xml": {
+      "Size": 3424
+    },
+    "res/drawable/mr_button_connecting_dark.xml": {
+      "Size": 3424
+    },
+    "res/drawable/mr_button_connecting_light.xml": {
+      "Size": 3424
+    },
+    "res/drawable/mr_button_dark.xml": {
+      "Size": 756
+    },
+    "res/drawable/mr_button_light.xml": {
+      "Size": 756
+    },
+    "res/drawable/mr_dialog_close_dark.xml": {
+      "Size": 340
+    },
+    "res/drawable/mr_dialog_close_light.xml": {
+      "Size": 444
+    },
+    "res/drawable/mr_dialog_material_background_dark.xml": {
+      "Size": 484
+    },
+    "res/drawable/mr_dialog_material_background_light.xml": {
+      "Size": 484
+    },
+    "res/drawable/mr_group_collapse.xml": {
+      "Size": 1924
+    },
+    "res/drawable/mr_group_expand.xml": {
+      "Size": 1924
+    },
+    "res/drawable/mr_media_pause_dark.xml": {
+      "Size": 340
+    },
+    "res/drawable/mr_media_pause_light.xml": {
+      "Size": 444
+    },
+    "res/drawable/mr_media_play_dark.xml": {
+      "Size": 340
+    },
+    "res/drawable/mr_media_play_light.xml": {
+      "Size": 444
+    },
+    "res/drawable/mr_media_stop_dark.xml": {
+      "Size": 340
+    },
+    "res/drawable/mr_media_stop_light.xml": {
+      "Size": 444
+    },
+    "res/drawable/mr_vol_type_audiotrack_dark.xml": {
+      "Size": 340
+    },
+    "res/drawable/mr_vol_type_audiotrack_light.xml": {
+      "Size": 444
+    },
+    "res/drawable/mtrl_snackbar_background.xml": {
+      "Size": 484
+    },
+    "res/drawable/mtrl_tabs_default_indicator.xml": {
+      "Size": 628
+    },
+    "res/drawable/navigation_empty_icon.xml": {
+      "Size": 516
+    },
+    "res/drawable/notification_bg.xml": {
+      "Size": 532
+    },
+    "res/drawable/notification_bg_low.xml": {
+      "Size": 532
+    },
+    "res/drawable/notification_icon_background.xml": {
+      "Size": 372
+    },
+    "res/drawable/notification_tile_bg.xml": {
+      "Size": 304
+    },
+    "res/drawable/tooltip_frame_dark.xml": {
+      "Size": 484
+    },
+    "res/drawable/tooltip_frame_light.xml": {
+      "Size": 484
+    },
+    "res/drawable/xamarin_logo.png": {
+      "Size": 9799
+    },
+    "res/drawable-watch-v20/abc_dialog_material_background.xml": {
+      "Size": 372
+    },
+    "res/drawable-v21/$avd_hide_password__0.xml": {
+      "Size": 1176
+    },
+    "res/drawable-v21/$avd_hide_password__1.xml": {
+      "Size": 592
+    },
+    "res/drawable-v21/$avd_hide_password__2.xml": {
+      "Size": 556
+    },
+    "res/drawable-v21/$avd_show_password__0.xml": {
+      "Size": 1136
+    },
+    "res/drawable-v21/$avd_show_password__1.xml": {
+      "Size": 592
+    },
+    "res/drawable-v21/$avd_show_password__2.xml": {
+      "Size": 556
+    },
+    "res/drawable-v21/abc_action_bar_item_background_material.xml": {
+      "Size": 264
+    },
+    "res/drawable-v21/abc_btn_colored_material.xml": {
+      "Size": 1716
+    },
+    "res/drawable-v21/abc_dialog_material_background.xml": {
+      "Size": 716
+    },
+    "res/drawable-v21/abc_edit_text_material.xml": {
+      "Size": 1172
+    },
+    "res/drawable-v21/abc_list_divider_material.xml": {
+      "Size": 516
+    },
+    "res/drawable-v21/avd_hide_password.xml": {
+      "Size": 660
+    },
+    "res/drawable-v21/avd_show_password.xml": {
+      "Size": 660
+    },
+    "res/drawable-v21/design_bottom_navigation_item_background.xml": {
+      "Size": 264
+    },
+    "res/drawable-v21/design_password_eye.xml": {
+      "Size": 816
+    },
+    "res/drawable-v21/notification_action_background.xml": {
+      "Size": 1180
+    },
+    "res/drawable-v23/abc_control_background_material.xml": {
+      "Size": 304
+    },
+    "res/drawable-mdpi-v4/abc_ab_share_pack_mtrl_alpha.9.png": {
+      "Size": 267
+    },
+    "res/drawable-mdpi-v4/abc_btn_check_to_on_mtrl_000.png": {
+      "Size": 214
+    },
+    "res/drawable-mdpi-v4/abc_btn_check_to_on_mtrl_015.png": {
+      "Size": 321
+    },
+    "res/drawable-mdpi-v4/abc_btn_radio_to_on_mtrl_000.png": {
+      "Size": 324
+    },
+    "res/drawable-mdpi-v4/abc_btn_radio_to_on_mtrl_015.png": {
+      "Size": 356
+    },
+    "res/drawable-mdpi-v4/abc_btn_switch_to_on_mtrl_00001.9.png": {
+      "Size": 754
+    },
+    "res/drawable-mdpi-v4/abc_btn_switch_to_on_mtrl_00012.9.png": {
+      "Size": 825
+    },
+    "res/drawable-mdpi-v4/abc_cab_background_top_mtrl_alpha.9.png": {
+      "Size": 216
+    },
+    "res/drawable-mdpi-v4/abc_ic_commit_search_api_mtrl_alpha.png": {
+      "Size": 173
+    },
+    "res/drawable-mdpi-v4/abc_ic_menu_copy_mtrl_am_alpha.png": {
+      "Size": 133
+    },
+    "res/drawable-mdpi-v4/abc_ic_menu_cut_mtrl_alpha.png": {
+      "Size": 251
+    },
+    "res/drawable-mdpi-v4/abc_ic_menu_paste_mtrl_am_alpha.png": {
+      "Size": 152
+    },
+    "res/drawable-mdpi-v4/abc_ic_menu_selectall_mtrl_alpha.png": {
+      "Size": 139
+    },
+    "res/drawable-mdpi-v4/abc_ic_menu_share_mtrl_alpha.png": {
+      "Size": 270
+    },
+    "res/drawable-mdpi-v4/abc_ic_star_black_16dp.png": {
+      "Size": 193
+    },
+    "res/drawable-mdpi-v4/abc_ic_star_black_36dp.png": {
+      "Size": 364
+    },
+    "res/drawable-mdpi-v4/abc_ic_star_black_48dp.png": {
+      "Size": 467
+    },
+    "res/drawable-mdpi-v4/abc_ic_star_half_black_16dp.png": {
+      "Size": 146
+    },
+    "res/drawable-mdpi-v4/abc_ic_star_half_black_36dp.png": {
+      "Size": 253
+    },
+    "res/drawable-mdpi-v4/abc_ic_star_half_black_48dp.png": {
+      "Size": 310
+    },
+    "res/drawable-mdpi-v4/abc_list_divider_mtrl_alpha.9.png": {
+      "Size": 167
+    },
+    "res/drawable-mdpi-v4/abc_list_focused_holo.9.png": {
+      "Size": 222
+    },
+    "res/drawable-mdpi-v4/abc_list_longpressed_holo.9.png": {
+      "Size": 211
+    },
+    "res/drawable-mdpi-v4/abc_list_pressed_holo_dark.9.png": {
+      "Size": 207
+    },
+    "res/drawable-mdpi-v4/abc_list_pressed_holo_light.9.png": {
+      "Size": 207
+    },
+    "res/drawable-mdpi-v4/abc_list_selector_disabled_holo_dark.9.png": {
+      "Size": 217
+    },
+    "res/drawable-mdpi-v4/abc_list_selector_disabled_holo_light.9.png": {
+      "Size": 217
+    },
+    "res/drawable-mdpi-v4/abc_menu_hardkey_panel_mtrl_mult.9.png": {
+      "Size": 541
+    },
+    "res/drawable-mdpi-v4/abc_popup_background_mtrl_mult.9.png": {
+      "Size": 776
+    },
+    "res/drawable-mdpi-v4/abc_scrubber_control_off_mtrl_alpha.png": {
+      "Size": 159
+    },
+    "res/drawable-mdpi-v4/abc_scrubber_control_to_pressed_mtrl_000.png": {
+      "Size": 145
+    },
+    "res/drawable-mdpi-v4/abc_scrubber_control_to_pressed_mtrl_005.png": {
+      "Size": 197
+    },
+    "res/drawable-mdpi-v4/abc_scrubber_primary_mtrl_alpha.9.png": {
+      "Size": 203
+    },
+    "res/drawable-mdpi-v4/abc_scrubber_track_mtrl_alpha.9.png": {
+      "Size": 194
+    },
+    "res/drawable-mdpi-v4/abc_spinner_mtrl_am_alpha.9.png": {
+      "Size": 327
+    },
+    "res/drawable-mdpi-v4/abc_switch_track_mtrl_alpha.9.png": {
+      "Size": 395
+    },
+    "res/drawable-mdpi-v4/abc_tab_indicator_mtrl_alpha.9.png": {
+      "Size": 186
+    },
+    "res/drawable-mdpi-v4/abc_text_select_handle_left_mtrl_dark.png": {
+      "Size": 203
+    },
+    "res/drawable-mdpi-v4/abc_text_select_handle_left_mtrl_light.png": {
+      "Size": 203
+    },
+    "res/drawable-mdpi-v4/abc_text_select_handle_middle_mtrl_dark.png": {
+      "Size": 311
+    },
+    "res/drawable-mdpi-v4/abc_text_select_handle_middle_mtrl_light.png": {
+      "Size": 310
+    },
+    "res/drawable-mdpi-v4/abc_text_select_handle_right_mtrl_dark.png": {
+      "Size": 187
+    },
+    "res/drawable-mdpi-v4/abc_text_select_handle_right_mtrl_light.png": {
+      "Size": 186
+    },
+    "res/drawable-mdpi-v4/abc_textfield_activated_mtrl_alpha.9.png": {
+      "Size": 181
+    },
+    "res/drawable-mdpi-v4/abc_textfield_default_mtrl_alpha.9.png": {
+      "Size": 178
+    },
+    "res/drawable-mdpi-v4/abc_textfield_search_activated_mtrl_alpha.9.png": {
+      "Size": 178
+    },
+    "res/drawable-mdpi-v4/abc_textfield_search_default_mtrl_alpha.9.png": {
+      "Size": 178
+    },
+    "res/drawable-mdpi-v4/design_ic_visibility.png": {
+      "Size": 309
+    },
+    "res/drawable-mdpi-v4/design_ic_visibility_off.png": {
+      "Size": 351
+    },
+    "res/drawable-mdpi-v4/ic_audiotrack_dark.png": {
+      "Size": 146
+    },
+    "res/drawable-mdpi-v4/ic_audiotrack_light.png": {
+      "Size": 145
+    },
+    "res/drawable-mdpi-v4/ic_dialog_close_dark.png": {
+      "Size": 168
+    },
+    "res/drawable-mdpi-v4/ic_dialog_close_light.png": {
+      "Size": 164
+    },
+    "res/drawable-mdpi-v4/ic_media_pause_dark.png": {
+      "Size": 90
+    },
+    "res/drawable-mdpi-v4/ic_media_pause_light.png": {
+      "Size": 101
+    },
+    "res/drawable-mdpi-v4/ic_media_play_dark.png": {
+      "Size": 214
+    },
+    "res/drawable-mdpi-v4/ic_media_play_light.png": {
+      "Size": 208
+    },
+    "res/drawable-mdpi-v4/ic_media_stop_dark.png": {
+      "Size": 90
+    },
+    "res/drawable-mdpi-v4/ic_media_stop_light.png": {
+      "Size": 99
+    },
+    "res/drawable-mdpi-v4/ic_mr_button_disabled_dark.png": {
+      "Size": 324
+    },
+    "res/drawable-mdpi-v4/ic_mr_button_disabled_light.png": {
+      "Size": 301
+    },
+    "res/drawable-mdpi-v4/ic_mr_button_disconnected_dark.png": {
+      "Size": 406
+    },
+    "res/drawable-mdpi-v4/ic_mr_button_disconnected_light.png": {
+      "Size": 389
+    },
+    "res/drawable-mdpi-v4/ic_mr_button_grey.png": {
+      "Size": 268
+    },
+    "res/drawable-mdpi-v4/ic_vol_type_speaker_dark.png": {
+      "Size": 256
+    },
+    "res/drawable-mdpi-v4/ic_vol_type_speaker_group_dark.png": {
+      "Size": 250
+    },
+    "res/drawable-mdpi-v4/ic_vol_type_speaker_group_light.png": {
+      "Size": 256
+    },
+    "res/drawable-mdpi-v4/ic_vol_type_speaker_light.png": {
+      "Size": 255
+    },
+    "res/drawable-mdpi-v4/ic_vol_type_tv_dark.png": {
+      "Size": 128
+    },
+    "res/drawable-mdpi-v4/ic_vol_type_tv_light.png": {
+      "Size": 133
+    },
+    "res/drawable-mdpi-v4/notification_bg_low_normal.9.png": {
+      "Size": 215
+    },
+    "res/drawable-mdpi-v4/notification_bg_low_pressed.9.png": {
+      "Size": 223
+    },
+    "res/drawable-mdpi-v4/notification_bg_normal.9.png": {
+      "Size": 215
+    },
+    "res/drawable-mdpi-v4/notification_bg_normal_pressed.9.png": {
+      "Size": 223
+    },
+    "res/drawable-mdpi-v4/notify_panel_notification_icon_bg.png": {
+      "Size": 98
+    },
+    "res/drawable-ldrtl-mdpi-v17/abc_ic_menu_copy_mtrl_am_alpha.png": {
+      "Size": 127
+    },
+    "res/drawable-ldrtl-mdpi-v17/abc_ic_menu_cut_mtrl_alpha.png": {
+      "Size": 253
+    },
+    "res/drawable-ldrtl-mdpi-v17/abc_spinner_mtrl_am_alpha.9.png": {
+      "Size": 318
+    },
+    "res/drawable-hdpi-v4/abc_ab_share_pack_mtrl_alpha.9.png": {
+      "Size": 272
+    },
+    "res/drawable-hdpi-v4/abc_btn_check_to_on_mtrl_000.png": {
+      "Size": 227
+    },
+    "res/drawable-hdpi-v4/abc_btn_check_to_on_mtrl_015.png": {
+      "Size": 404
+    },
+    "res/drawable-hdpi-v4/abc_btn_radio_to_on_mtrl_000.png": {
+      "Size": 464
+    },
+    "res/drawable-hdpi-v4/abc_btn_radio_to_on_mtrl_015.png": {
+      "Size": 563
+    },
+    "res/drawable-hdpi-v4/abc_btn_switch_to_on_mtrl_00001.9.png": {
+      "Size": 1096
+    },
+    "res/drawable-hdpi-v4/abc_btn_switch_to_on_mtrl_00012.9.png": {
+      "Size": 1243
+    },
+    "res/drawable-hdpi-v4/abc_cab_background_top_mtrl_alpha.9.png": {
+      "Size": 226
+    },
+    "res/drawable-hdpi-v4/abc_ic_commit_search_api_mtrl_alpha.png": {
+      "Size": 171
+    },
+    "res/drawable-hdpi-v4/abc_ic_menu_copy_mtrl_am_alpha.png": {
+      "Size": 202
+    },
+    "res/drawable-hdpi-v4/abc_ic_menu_cut_mtrl_alpha.png": {
+      "Size": 404
+    },
+    "res/drawable-hdpi-v4/abc_ic_menu_paste_mtrl_am_alpha.png": {
+      "Size": 226
+    },
+    "res/drawable-hdpi-v4/abc_ic_menu_selectall_mtrl_alpha.png": {
+      "Size": 215
+    },
+    "res/drawable-hdpi-v4/abc_ic_menu_share_mtrl_alpha.png": {
+      "Size": 389
+    },
+    "res/drawable-hdpi-v4/abc_ic_star_black_16dp.png": {
+      "Size": 263
+    },
+    "res/drawable-hdpi-v4/abc_ic_star_black_36dp.png": {
+      "Size": 522
+    },
+    "res/drawable-hdpi-v4/abc_ic_star_black_48dp.png": {
+      "Size": 668
+    },
+    "res/drawable-hdpi-v4/abc_ic_star_half_black_16dp.png": {
+      "Size": 197
+    },
+    "res/drawable-hdpi-v4/abc_ic_star_half_black_36dp.png": {
+      "Size": 328
+    },
+    "res/drawable-hdpi-v4/abc_ic_star_half_black_48dp.png": {
+      "Size": 431
+    },
+    "res/drawable-hdpi-v4/abc_list_divider_mtrl_alpha.9.png": {
+      "Size": 167
+    },
+    "res/drawable-hdpi-v4/abc_list_focused_holo.9.png": {
+      "Size": 244
+    },
+    "res/drawable-hdpi-v4/abc_list_longpressed_holo.9.png": {
+      "Size": 212
+    },
+    "res/drawable-hdpi-v4/abc_list_pressed_holo_dark.9.png": {
+      "Size": 208
+    },
+    "res/drawable-hdpi-v4/abc_list_pressed_holo_light.9.png": {
+      "Size": 208
+    },
+    "res/drawable-hdpi-v4/abc_list_selector_disabled_holo_dark.9.png": {
+      "Size": 228
+    },
+    "res/drawable-hdpi-v4/abc_list_selector_disabled_holo_light.9.png": {
+      "Size": 229
+    },
+    "res/drawable-hdpi-v4/abc_menu_hardkey_panel_mtrl_mult.9.png": {
+      "Size": 738
+    },
+    "res/drawable-hdpi-v4/abc_popup_background_mtrl_mult.9.png": {
+      "Size": 1098
+    },
+    "res/drawable-hdpi-v4/abc_scrubber_control_off_mtrl_alpha.png": {
+      "Size": 201
+    },
+    "res/drawable-hdpi-v4/abc_scrubber_control_to_pressed_mtrl_000.png": {
+      "Size": 196
+    },
+    "res/drawable-hdpi-v4/abc_scrubber_control_to_pressed_mtrl_005.png": {
+      "Size": 272
+    },
+    "res/drawable-hdpi-v4/abc_scrubber_primary_mtrl_alpha.9.png": {
+      "Size": 205
+    },
+    "res/drawable-hdpi-v4/abc_scrubber_track_mtrl_alpha.9.png": {
+      "Size": 196
+    },
+    "res/drawable-hdpi-v4/abc_spinner_mtrl_am_alpha.9.png": {
+      "Size": 345
+    },
+    "res/drawable-hdpi-v4/abc_switch_track_mtrl_alpha.9.png": {
+      "Size": 484
+    },
+    "res/drawable-hdpi-v4/abc_tab_indicator_mtrl_alpha.9.png": {
+      "Size": 190
+    },
+    "res/drawable-hdpi-v4/abc_text_select_handle_left_mtrl_dark.png": {
+      "Size": 278
+    },
+    "res/drawable-hdpi-v4/abc_text_select_handle_left_mtrl_light.png": {
+      "Size": 278
+    },
+    "res/drawable-hdpi-v4/abc_text_select_handle_middle_mtrl_dark.png": {
+      "Size": 398
+    },
+    "res/drawable-hdpi-v4/abc_text_select_handle_middle_mtrl_light.png": {
+      "Size": 396
+    },
+    "res/drawable-hdpi-v4/abc_text_select_handle_right_mtrl_dark.png": {
+      "Size": 263
+    },
+    "res/drawable-hdpi-v4/abc_text_select_handle_right_mtrl_light.png": {
+      "Size": 262
+    },
+    "res/drawable-hdpi-v4/abc_textfield_activated_mtrl_alpha.9.png": {
+      "Size": 186
+    },
+    "res/drawable-hdpi-v4/abc_textfield_default_mtrl_alpha.9.png": {
+      "Size": 192
+    },
+    "res/drawable-hdpi-v4/abc_textfield_search_activated_mtrl_alpha.9.png": {
+      "Size": 178
+    },
+    "res/drawable-hdpi-v4/abc_textfield_search_default_mtrl_alpha.9.png": {
+      "Size": 178
+    },
+    "res/drawable-hdpi-v4/design_ic_visibility.png": {
+      "Size": 470
+    },
+    "res/drawable-hdpi-v4/design_ic_visibility_off.png": {
+      "Size": 507
+    },
+    "res/drawable-hdpi-v4/ic_audiotrack_dark.png": {
+      "Size": 205
+    },
+    "res/drawable-hdpi-v4/ic_audiotrack_light.png": {
+      "Size": 203
+    },
+    "res/drawable-hdpi-v4/ic_dialog_close_dark.png": {
+      "Size": 206
+    },
+    "res/drawable-hdpi-v4/ic_dialog_close_light.png": {
+      "Size": 207
+    },
+    "res/drawable-hdpi-v4/ic_media_pause_dark.png": {
+      "Size": 92
+    },
+    "res/drawable-hdpi-v4/ic_media_pause_light.png": {
+      "Size": 109
+    },
+    "res/drawable-hdpi-v4/ic_media_play_dark.png": {
+      "Size": 279
+    },
+    "res/drawable-hdpi-v4/ic_media_play_light.png": {
+      "Size": 265
+    },
+    "res/drawable-hdpi-v4/ic_media_stop_dark.png": {
+      "Size": 94
+    },
+    "res/drawable-hdpi-v4/ic_media_stop_light.png": {
+      "Size": 111
+    },
+    "res/drawable-hdpi-v4/ic_mr_button_disabled_dark.png": {
+      "Size": 495
+    },
+    "res/drawable-hdpi-v4/ic_mr_button_disabled_light.png": {
+      "Size": 461
+    },
+    "res/drawable-hdpi-v4/ic_mr_button_disconnected_dark.png": {
+      "Size": 559
+    },
+    "res/drawable-hdpi-v4/ic_mr_button_disconnected_light.png": {
+      "Size": 538
+    },
+    "res/drawable-hdpi-v4/ic_mr_button_grey.png": {
+      "Size": 395
+    },
+    "res/drawable-hdpi-v4/ic_vol_type_speaker_dark.png": {
+      "Size": 390
+    },
+    "res/drawable-hdpi-v4/ic_vol_type_speaker_group_dark.png": {
+      "Size": 402
+    },
+    "res/drawable-hdpi-v4/ic_vol_type_speaker_group_light.png": {
+      "Size": 408
+    },
+    "res/drawable-hdpi-v4/ic_vol_type_speaker_light.png": {
+      "Size": 396
+    },
+    "res/drawable-hdpi-v4/ic_vol_type_tv_dark.png": {
+      "Size": 183
+    },
+    "res/drawable-hdpi-v4/ic_vol_type_tv_light.png": {
+      "Size": 190
+    },
+    "res/drawable-hdpi-v4/icon.png": {
+      "Size": 1358
+    },
+    "res/drawable-hdpi-v4/notification_bg_low_normal.9.png": {
+      "Size": 212
+    },
+    "res/drawable-hdpi-v4/notification_bg_low_pressed.9.png": {
+      "Size": 225
+    },
+    "res/drawable-hdpi-v4/notification_bg_normal.9.png": {
+      "Size": 212
+    },
+    "res/drawable-hdpi-v4/notification_bg_normal_pressed.9.png": {
+      "Size": 225
+    },
+    "res/drawable-hdpi-v4/notify_panel_notification_icon_bg.png": {
+      "Size": 107
+    },
+    "res/drawable-ldrtl-hdpi-v17/abc_ic_menu_copy_mtrl_am_alpha.png": {
+      "Size": 199
+    },
+    "res/drawable-ldrtl-hdpi-v17/abc_ic_menu_cut_mtrl_alpha.png": {
+      "Size": 400
+    },
+    "res/drawable-ldrtl-hdpi-v17/abc_spinner_mtrl_am_alpha.9.png": {
+      "Size": 345
+    },
+    "res/drawable-xhdpi-v4/abc_ab_share_pack_mtrl_alpha.9.png": {
+      "Size": 280
+    },
+    "res/drawable-xhdpi-v4/abc_btn_check_to_on_mtrl_000.png": {
+      "Size": 281
+    },
+    "res/drawable-xhdpi-v4/abc_btn_check_to_on_mtrl_015.png": {
+      "Size": 432
+    },
+    "res/drawable-xhdpi-v4/abc_btn_radio_to_on_mtrl_000.png": {
+      "Size": 651
+    },
+    "res/drawable-xhdpi-v4/abc_btn_radio_to_on_mtrl_015.png": {
+      "Size": 785
+    },
+    "res/drawable-xhdpi-v4/abc_btn_switch_to_on_mtrl_00001.9.png": {
+      "Size": 1526
+    },
+    "res/drawable-xhdpi-v4/abc_btn_switch_to_on_mtrl_00012.9.png": {
+      "Size": 1731
+    },
+    "res/drawable-xhdpi-v4/abc_cab_background_top_mtrl_alpha.9.png": {
+      "Size": 229
+    },
+    "res/drawable-xhdpi-v4/abc_ic_commit_search_api_mtrl_alpha.png": {
+      "Size": 228
+    },
+    "res/drawable-xhdpi-v4/abc_ic_menu_copy_mtrl_am_alpha.png": {
+      "Size": 178
+    },
+    "res/drawable-xhdpi-v4/abc_ic_menu_cut_mtrl_alpha.png": {
+      "Size": 492
+    },
+    "res/drawable-xhdpi-v4/abc_ic_menu_paste_mtrl_am_alpha.png": {
+      "Size": 243
+    },
+    "res/drawable-xhdpi-v4/abc_ic_menu_selectall_mtrl_alpha.png": {
+      "Size": 183
+    },
+    "res/drawable-xhdpi-v4/abc_ic_menu_share_mtrl_alpha.png": {
+      "Size": 480
+    },
+    "res/drawable-xhdpi-v4/abc_ic_star_black_16dp.png": {
+      "Size": 333
+    },
+    "res/drawable-xhdpi-v4/abc_ic_star_black_36dp.png": {
+      "Size": 652
+    },
+    "res/drawable-xhdpi-v4/abc_ic_star_black_48dp.png": {
+      "Size": 887
+    },
+    "res/drawable-xhdpi-v4/abc_ic_star_half_black_16dp.png": {
+      "Size": 235
+    },
+    "res/drawable-xhdpi-v4/abc_ic_star_half_black_36dp.png": {
+      "Size": 421
+    },
+    "res/drawable-xhdpi-v4/abc_ic_star_half_black_48dp.png": {
+      "Size": 548
+    },
+    "res/drawable-xhdpi-v4/abc_list_divider_mtrl_alpha.9.png": {
+      "Size": 167
+    },
+    "res/drawable-xhdpi-v4/abc_list_focused_holo.9.png": {
+      "Size": 244
+    },
+    "res/drawable-xhdpi-v4/abc_list_longpressed_holo.9.png": {
+      "Size": 214
+    },
+    "res/drawable-xhdpi-v4/abc_list_pressed_holo_dark.9.png": {
+      "Size": 209
+    },
+    "res/drawable-xhdpi-v4/abc_list_pressed_holo_light.9.png": {
+      "Size": 209
+    },
+    "res/drawable-xhdpi-v4/abc_list_selector_disabled_holo_dark.9.png": {
+      "Size": 236
+    },
+    "res/drawable-xhdpi-v4/abc_list_selector_disabled_holo_light.9.png": {
+      "Size": 235
+    },
+    "res/drawable-xhdpi-v4/abc_menu_hardkey_panel_mtrl_mult.9.png": {
+      "Size": 966
+    },
+    "res/drawable-xhdpi-v4/abc_popup_background_mtrl_mult.9.png": {
+      "Size": 1544
+    },
+    "res/drawable-xhdpi-v4/abc_scrubber_control_off_mtrl_alpha.png": {
+      "Size": 267
+    },
+    "res/drawable-xhdpi-v4/abc_scrubber_control_to_pressed_mtrl_000.png": {
+      "Size": 267
+    },
+    "res/drawable-xhdpi-v4/abc_scrubber_control_to_pressed_mtrl_005.png": {
+      "Size": 391
+    },
+    "res/drawable-xhdpi-v4/abc_scrubber_primary_mtrl_alpha.9.png": {
+      "Size": 208
+    },
+    "res/drawable-xhdpi-v4/abc_scrubber_track_mtrl_alpha.9.png": {
+      "Size": 198
+    },
+    "res/drawable-xhdpi-v4/abc_spinner_mtrl_am_alpha.9.png": {
+      "Size": 448
+    },
+    "res/drawable-xhdpi-v4/abc_switch_track_mtrl_alpha.9.png": {
+      "Size": 618
+    },
+    "res/drawable-xhdpi-v4/abc_tab_indicator_mtrl_alpha.9.png": {
+      "Size": 194
+    },
+    "res/drawable-xhdpi-v4/abc_text_select_handle_left_mtrl_dark.png": {
+      "Size": 336
+    },
+    "res/drawable-xhdpi-v4/abc_text_select_handle_left_mtrl_light.png": {
+      "Size": 335
+    },
+    "res/drawable-xhdpi-v4/abc_text_select_handle_middle_mtrl_dark.png": {
+      "Size": 583
+    },
+    "res/drawable-xhdpi-v4/abc_text_select_handle_middle_mtrl_light.png": {
+      "Size": 585
+    },
+    "res/drawable-xhdpi-v4/abc_text_select_handle_right_mtrl_dark.png": {
+      "Size": 319
+    },
+    "res/drawable-xhdpi-v4/abc_text_select_handle_right_mtrl_light.png": {
+      "Size": 318
+    },
+    "res/drawable-xhdpi-v4/abc_textfield_activated_mtrl_alpha.9.png": {
+      "Size": 189
+    },
+    "res/drawable-xhdpi-v4/abc_textfield_default_mtrl_alpha.9.png": {
+      "Size": 187
+    },
+    "res/drawable-xhdpi-v4/abc_textfield_search_activated_mtrl_alpha.9.png": {
+      "Size": 184
+    },
+    "res/drawable-xhdpi-v4/abc_textfield_search_default_mtrl_alpha.9.png": {
+      "Size": 182
+    },
+    "res/drawable-xhdpi-v4/design_ic_visibility.png": {
+      "Size": 593
+    },
+    "res/drawable-xhdpi-v4/design_ic_visibility_off.png": {
+      "Size": 629
+    },
+    "res/drawable-xhdpi-v4/ic_audiotrack_dark.png": {
+      "Size": 235
+    },
+    "res/drawable-xhdpi-v4/ic_audiotrack_light.png": {
+      "Size": 226
+    },
+    "res/drawable-xhdpi-v4/ic_dialog_close_dark.png": {
+      "Size": 235
+    },
+    "res/drawable-xhdpi-v4/ic_dialog_close_light.png": {
+      "Size": 231
+    },
+    "res/drawable-xhdpi-v4/ic_media_pause_dark.png": {
+      "Size": 94
+    },
+    "res/drawable-xhdpi-v4/ic_media_pause_light.png": {
+      "Size": 111
+    },
+    "res/drawable-xhdpi-v4/ic_media_play_dark.png": {
+      "Size": 343
+    },
+    "res/drawable-xhdpi-v4/ic_media_play_light.png": {
+      "Size": 320
+    },
+    "res/drawable-xhdpi-v4/ic_media_stop_dark.png": {
+      "Size": 95
+    },
+    "res/drawable-xhdpi-v4/ic_media_stop_light.png": {
+      "Size": 112
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_00_dark.png": {
+      "Size": 331
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_00_light.png": {
+      "Size": 331
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_01_dark.png": {
+      "Size": 335
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_01_light.png": {
+      "Size": 335
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_02_dark.png": {
+      "Size": 340
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_02_light.png": {
+      "Size": 340
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_03_dark.png": {
+      "Size": 337
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_03_light.png": {
+      "Size": 337
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_04_dark.png": {
+      "Size": 344
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_04_light.png": {
+      "Size": 344
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_05_dark.png": {
+      "Size": 348
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_05_light.png": {
+      "Size": 348
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_06_dark.png": {
+      "Size": 342
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_06_light.png": {
+      "Size": 342
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_07_dark.png": {
+      "Size": 325
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_07_light.png": {
+      "Size": 325
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_08_dark.png": {
+      "Size": 326
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_08_light.png": {
+      "Size": 326
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_09_dark.png": {
+      "Size": 332
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_09_light.png": {
+      "Size": 332
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_10_dark.png": {
+      "Size": 345
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_10_light.png": {
+      "Size": 345
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_11_dark.png": {
+      "Size": 342
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_11_light.png": {
+      "Size": 344
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_12_dark.png": {
+      "Size": 361
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_12_light.png": {
+      "Size": 361
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_13_dark.png": {
+      "Size": 363
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_13_light.png": {
+      "Size": 362
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_14_dark.png": {
+      "Size": 353
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_14_light.png": {
+      "Size": 345
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_15_dark.png": {
+      "Size": 357
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_15_light.png": {
+      "Size": 357
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_16_dark.png": {
+      "Size": 362
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_16_light.png": {
+      "Size": 362
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_17_dark.png": {
+      "Size": 354
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_17_light.png": {
+      "Size": 354
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_18_dark.png": {
+      "Size": 354
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_18_light.png": {
+      "Size": 354
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_19_dark.png": {
+      "Size": 365
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_19_light.png": {
+      "Size": 365
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_20_dark.png": {
+      "Size": 368
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_20_light.png": {
+      "Size": 368
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_21_dark.png": {
+      "Size": 373
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_21_light.png": {
+      "Size": 373
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_22_dark.png": {
+      "Size": 364
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_22_light.png": {
+      "Size": 385
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_23_dark.png": {
+      "Size": 363
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_23_light.png": {
+      "Size": 363
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_24_dark.png": {
+      "Size": 374
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_24_light.png": {
+      "Size": 374
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_25_dark.png": {
+      "Size": 372
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_25_light.png": {
+      "Size": 372
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_26_dark.png": {
+      "Size": 373
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_26_light.png": {
+      "Size": 373
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_27_dark.png": {
+      "Size": 379
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_27_light.png": {
+      "Size": 398
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_28_dark.png": {
+      "Size": 363
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_28_light.png": {
+      "Size": 363
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_29_dark.png": {
+      "Size": 364
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_29_light.png": {
+      "Size": 364
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_30_dark.png": {
+      "Size": 355
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connected_30_light.png": {
+      "Size": 355
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_00_dark.png": {
+      "Size": 331
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_00_light.png": {
+      "Size": 331
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_01_dark.png": {
+      "Size": 335
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_01_light.png": {
+      "Size": 335
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_02_dark.png": {
+      "Size": 340
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_02_light.png": {
+      "Size": 340
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_03_dark.png": {
+      "Size": 337
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_03_light.png": {
+      "Size": 337
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_04_dark.png": {
+      "Size": 344
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_04_light.png": {
+      "Size": 344
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_05_dark.png": {
+      "Size": 348
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_05_light.png": {
+      "Size": 348
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_06_dark.png": {
+      "Size": 342
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_06_light.png": {
+      "Size": 342
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_07_dark.png": {
+      "Size": 325
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_07_light.png": {
+      "Size": 325
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_08_dark.png": {
+      "Size": 326
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_08_light.png": {
+      "Size": 326
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_09_dark.png": {
+      "Size": 332
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_09_light.png": {
+      "Size": 332
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_10_dark.png": {
+      "Size": 345
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_10_light.png": {
+      "Size": 345
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_11_dark.png": {
+      "Size": 336
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_11_light.png": {
+      "Size": 336
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_12_dark.png": {
+      "Size": 345
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_12_light.png": {
+      "Size": 345
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_13_dark.png": {
+      "Size": 347
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_13_light.png": {
+      "Size": 345
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_14_dark.png": {
+      "Size": 321
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_14_light.png": {
+      "Size": 321
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_15_dark.png": {
+      "Size": 329
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_15_light.png": {
+      "Size": 334
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_16_dark.png": {
+      "Size": 326
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_16_light.png": {
+      "Size": 326
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_17_dark.png": {
+      "Size": 329
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_17_light.png": {
+      "Size": 327
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_18_dark.png": {
+      "Size": 339
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_18_light.png": {
+      "Size": 339
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_19_dark.png": {
+      "Size": 337
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_19_light.png": {
+      "Size": 337
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_20_dark.png": {
+      "Size": 339
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_20_light.png": {
+      "Size": 339
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_21_dark.png": {
+      "Size": 336
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_21_light.png": {
+      "Size": 336
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_22_dark.png": {
+      "Size": 344
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_22_light.png": {
+      "Size": 344
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_23_dark.png": {
+      "Size": 337
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_23_light.png": {
+      "Size": 337
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_24_dark.png": {
+      "Size": 340
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_24_light.png": {
+      "Size": 340
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_25_dark.png": {
+      "Size": 332
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_25_light.png": {
+      "Size": 332
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_26_dark.png": {
+      "Size": 335
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_26_light.png": {
+      "Size": 335
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_27_dark.png": {
+      "Size": 338
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_27_light.png": {
+      "Size": 342
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_28_dark.png": {
+      "Size": 333
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_28_light.png": {
+      "Size": 335
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_29_dark.png": {
+      "Size": 332
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_29_light.png": {
+      "Size": 332
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_30_dark.png": {
+      "Size": 331
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_connecting_30_light.png": {
+      "Size": 331
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_disabled_dark.png": {
+      "Size": 603
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_disabled_light.png": {
+      "Size": 609
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_disconnected_dark.png": {
+      "Size": 752
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_disconnected_light.png": {
+      "Size": 751
+    },
+    "res/drawable-xhdpi-v4/ic_mr_button_grey.png": {
+      "Size": 454
+    },
+    "res/drawable-xhdpi-v4/ic_vol_type_speaker_dark.png": {
+      "Size": 478
+    },
+    "res/drawable-xhdpi-v4/ic_vol_type_speaker_group_dark.png": {
+      "Size": 443
+    },
+    "res/drawable-xhdpi-v4/ic_vol_type_speaker_group_light.png": {
+      "Size": 451
+    },
+    "res/drawable-xhdpi-v4/ic_vol_type_speaker_light.png": {
+      "Size": 483
+    },
+    "res/drawable-xhdpi-v4/ic_vol_type_tv_dark.png": {
+      "Size": 185
+    },
+    "res/drawable-xhdpi-v4/ic_vol_type_tv_light.png": {
+      "Size": 199
+    },
+    "res/drawable-xhdpi-v4/icon.png": {
+      "Size": 1140
+    },
+    "res/drawable-xhdpi-v4/notification_bg_low_normal.9.png": {
+      "Size": 221
+    },
+    "res/drawable-xhdpi-v4/notification_bg_low_pressed.9.png": {
+      "Size": 252
+    },
+    "res/drawable-xhdpi-v4/notification_bg_normal.9.png": {
+      "Size": 221
+    },
+    "res/drawable-xhdpi-v4/notification_bg_normal_pressed.9.png": {
+      "Size": 247
+    },
+    "res/drawable-xhdpi-v4/notify_panel_notification_icon_bg.png": {
+      "Size": 138
+    },
+    "res/drawable-ldrtl-xhdpi-v17/abc_ic_menu_copy_mtrl_am_alpha.png": {
+      "Size": 178
+    },
+    "res/drawable-ldrtl-xhdpi-v17/abc_ic_menu_cut_mtrl_alpha.png": {
+      "Size": 494
+    },
+    "res/drawable-ldrtl-xhdpi-v17/abc_spinner_mtrl_am_alpha.9.png": {
+      "Size": 417
+    },
+    "res/drawable-xxhdpi-v4/abc_ab_share_pack_mtrl_alpha.9.png": {
+      "Size": 286
+    },
+    "res/drawable-xxhdpi-v4/abc_btn_check_to_on_mtrl_000.png": {
+      "Size": 307
+    },
+    "res/drawable-xxhdpi-v4/abc_btn_check_to_on_mtrl_015.png": {
+      "Size": 593
+    },
+    "res/drawable-xxhdpi-v4/abc_btn_radio_to_on_mtrl_000.png": {
+      "Size": 984
+    },
+    "res/drawable-xxhdpi-v4/abc_btn_radio_to_on_mtrl_015.png": {
+      "Size": 1208
+    },
+    "res/drawable-xxhdpi-v4/abc_btn_switch_to_on_mtrl_00001.9.png": {
+      "Size": 2463
+    },
+    "res/drawable-xxhdpi-v4/abc_btn_switch_to_on_mtrl_00012.9.png": {
+      "Size": 2834
+    },
+    "res/drawable-xxhdpi-v4/abc_cab_background_top_mtrl_alpha.9.png": {
+      "Size": 237
+    },
+    "res/drawable-xxhdpi-v4/abc_ic_commit_search_api_mtrl_alpha.png": {
+      "Size": 224
+    },
+    "res/drawable-xxhdpi-v4/abc_ic_menu_copy_mtrl_am_alpha.png": {
+      "Size": 263
+    },
+    "res/drawable-xxhdpi-v4/abc_ic_menu_cut_mtrl_alpha.png": {
+      "Size": 710
+    },
+    "res/drawable-xxhdpi-v4/abc_ic_menu_paste_mtrl_am_alpha.png": {
+      "Size": 348
+    },
+    "res/drawable-xxhdpi-v4/abc_ic_menu_selectall_mtrl_alpha.png": {
+      "Size": 262
+    },
+    "res/drawable-xxhdpi-v4/abc_ic_menu_share_mtrl_alpha.png": {
+      "Size": 700
+    },
+    "res/drawable-xxhdpi-v4/abc_ic_star_black_16dp.png": {
+      "Size": 459
+    },
+    "res/drawable-xxhdpi-v4/abc_ic_star_black_36dp.png": {
+      "Size": 983
+    },
+    "res/drawable-xxhdpi-v4/abc_ic_star_black_48dp.png": {
+      "Size": 1291
+    },
+    "res/drawable-xxhdpi-v4/abc_ic_star_half_black_16dp.png": {
+      "Size": 309
+    },
+    "res/drawable-xxhdpi-v4/abc_ic_star_half_black_36dp.png": {
+      "Size": 577
+    },
+    "res/drawable-xxhdpi-v4/abc_ic_star_half_black_48dp.png": {
+      "Size": 789
+    },
+    "res/drawable-xxhdpi-v4/abc_list_divider_mtrl_alpha.9.png": {
+      "Size": 171
+    },
+    "res/drawable-xxhdpi-v4/abc_list_focused_holo.9.png": {
+      "Size": 245
+    },
+    "res/drawable-xxhdpi-v4/abc_list_longpressed_holo.9.png": {
+      "Size": 221
+    },
+    "res/drawable-xxhdpi-v4/abc_list_pressed_holo_dark.9.png": {
+      "Size": 212
+    },
+    "res/drawable-xxhdpi-v4/abc_list_pressed_holo_light.9.png": {
+      "Size": 212
+    },
+    "res/drawable-xxhdpi-v4/abc_list_selector_disabled_holo_dark.9.png": {
+      "Size": 260
+    },
+    "res/drawable-xxhdpi-v4/abc_list_selector_disabled_holo_light.9.png": {
+      "Size": 258
+    },
+    "res/drawable-xxhdpi-v4/abc_menu_hardkey_panel_mtrl_mult.9.png": {
+      "Size": 1779
+    },
+    "res/drawable-xxhdpi-v4/abc_popup_background_mtrl_mult.9.png": {
+      "Size": 2305
+    },
+    "res/drawable-xxhdpi-v4/abc_scrubber_control_off_mtrl_alpha.png": {
+      "Size": 322
+    },
+    "res/drawable-xxhdpi-v4/abc_scrubber_control_to_pressed_mtrl_000.png": {
+      "Size": 403
+    },
+    "res/drawable-xxhdpi-v4/abc_scrubber_control_to_pressed_mtrl_005.png": {
+      "Size": 595
+    },
+    "res/drawable-xxhdpi-v4/abc_scrubber_primary_mtrl_alpha.9.png": {
+      "Size": 210
+    },
+    "res/drawable-xxhdpi-v4/abc_scrubber_track_mtrl_alpha.9.png": {
+      "Size": 207
+    },
+    "res/drawable-xxhdpi-v4/abc_spinner_mtrl_am_alpha.9.png": {
+      "Size": 524
+    },
+    "res/drawable-xxhdpi-v4/abc_switch_track_mtrl_alpha.9.png": {
+      "Size": 851
+    },
+    "res/drawable-xxhdpi-v4/abc_tab_indicator_mtrl_alpha.9.png": {
+      "Size": 204
+    },
+    "res/drawable-xxhdpi-v4/abc_text_select_handle_left_mtrl_dark.png": {
+      "Size": 420
+    },
+    "res/drawable-xxhdpi-v4/abc_text_select_handle_left_mtrl_light.png": {
+      "Size": 420
+    },
+    "res/drawable-xxhdpi-v4/abc_text_select_handle_middle_mtrl_dark.png": {
+      "Size": 752
+    },
+    "res/drawable-xxhdpi-v4/abc_text_select_handle_middle_mtrl_light.png": {
+      "Size": 753
+    },
+    "res/drawable-xxhdpi-v4/abc_text_select_handle_right_mtrl_dark.png": {
+      "Size": 422
+    },
+    "res/drawable-xxhdpi-v4/abc_text_select_handle_right_mtrl_light.png": {
+      "Size": 422
+    },
+    "res/drawable-xxhdpi-v4/abc_textfield_activated_mtrl_alpha.9.png": {
+      "Size": 199
+    },
+    "res/drawable-xxhdpi-v4/abc_textfield_default_mtrl_alpha.9.png": {
+      "Size": 200
+    },
+    "res/drawable-xxhdpi-v4/abc_textfield_search_activated_mtrl_alpha.9.png": {
+      "Size": 187
+    },
+    "res/drawable-xxhdpi-v4/abc_textfield_search_default_mtrl_alpha.9.png": {
+      "Size": 186
+    },
+    "res/drawable-xxhdpi-v4/design_ic_visibility.png": {
+      "Size": 868
+    },
+    "res/drawable-xxhdpi-v4/design_ic_visibility_off.png": {
+      "Size": 884
+    },
+    "res/drawable-xxhdpi-v4/ic_audiotrack_dark.png": {
+      "Size": 306
+    },
+    "res/drawable-xxhdpi-v4/ic_audiotrack_light.png": {
+      "Size": 304
+    },
+    "res/drawable-xxhdpi-v4/ic_dialog_close_dark.png": {
+      "Size": 308
+    },
+    "res/drawable-xxhdpi-v4/ic_dialog_close_light.png": {
+      "Size": 309
+    },
+    "res/drawable-xxhdpi-v4/ic_media_pause_dark.png": {
+      "Size": 110
+    },
+    "res/drawable-xxhdpi-v4/ic_media_pause_light.png": {
+      "Size": 127
+    },
+    "res/drawable-xxhdpi-v4/ic_media_play_dark.png": {
+      "Size": 461
+    },
+    "res/drawable-xxhdpi-v4/ic_media_play_light.png": {
+      "Size": 392
+    },
+    "res/drawable-xxhdpi-v4/ic_media_stop_dark.png": {
+      "Size": 108
+    },
+    "res/drawable-xxhdpi-v4/ic_media_stop_light.png": {
+      "Size": 125
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_00_dark.png": {
+      "Size": 433
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_00_light.png": {
+      "Size": 433
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_01_dark.png": {
+      "Size": 435
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_01_light.png": {
+      "Size": 437
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_02_dark.png": {
+      "Size": 446
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_02_light.png": {
+      "Size": 446
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_03_dark.png": {
+      "Size": 445
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_03_light.png": {
+      "Size": 445
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_04_dark.png": {
+      "Size": 452
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_04_light.png": {
+      "Size": 449
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_05_dark.png": {
+      "Size": 448
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_05_light.png": {
+      "Size": 448
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_06_dark.png": {
+      "Size": 471
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_06_light.png": {
+      "Size": 462
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_07_dark.png": {
+      "Size": 406
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_07_light.png": {
+      "Size": 406
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_08_dark.png": {
+      "Size": 426
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_08_light.png": {
+      "Size": 426
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_09_dark.png": {
+      "Size": 434
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_09_light.png": {
+      "Size": 434
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_10_dark.png": {
+      "Size": 440
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_10_light.png": {
+      "Size": 440
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_11_dark.png": {
+      "Size": 443
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_11_light.png": {
+      "Size": 453
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_12_dark.png": {
+      "Size": 481
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_12_light.png": {
+      "Size": 481
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_13_dark.png": {
+      "Size": 493
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_13_light.png": {
+      "Size": 492
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_14_dark.png": {
+      "Size": 463
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_14_light.png": {
+      "Size": 463
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_15_dark.png": {
+      "Size": 467
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_15_light.png": {
+      "Size": 467
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_16_dark.png": {
+      "Size": 470
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_16_light.png": {
+      "Size": 470
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_17_dark.png": {
+      "Size": 480
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_17_light.png": {
+      "Size": 478
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_18_dark.png": {
+      "Size": 477
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_18_light.png": {
+      "Size": 477
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_19_dark.png": {
+      "Size": 483
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_19_light.png": {
+      "Size": 483
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_20_dark.png": {
+      "Size": 486
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_20_light.png": {
+      "Size": 486
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_21_dark.png": {
+      "Size": 487
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_21_light.png": {
+      "Size": 488
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_22_dark.png": {
+      "Size": 487
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_22_light.png": {
+      "Size": 487
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_23_dark.png": {
+      "Size": 498
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_23_light.png": {
+      "Size": 498
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_24_dark.png": {
+      "Size": 492
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_24_light.png": {
+      "Size": 493
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_25_dark.png": {
+      "Size": 494
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_25_light.png": {
+      "Size": 493
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_26_dark.png": {
+      "Size": 503
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_26_light.png": {
+      "Size": 503
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_27_dark.png": {
+      "Size": 479
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_27_light.png": {
+      "Size": 479
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_28_dark.png": {
+      "Size": 484
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_28_light.png": {
+      "Size": 484
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_29_dark.png": {
+      "Size": 481
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_29_light.png": {
+      "Size": 481
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_30_dark.png": {
+      "Size": 478
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connected_30_light.png": {
+      "Size": 478
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_00_dark.png": {
+      "Size": 433
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_00_light.png": {
+      "Size": 433
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_01_dark.png": {
+      "Size": 435
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_01_light.png": {
+      "Size": 437
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_02_dark.png": {
+      "Size": 446
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_02_light.png": {
+      "Size": 446
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_03_dark.png": {
+      "Size": 445
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_03_light.png": {
+      "Size": 445
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_04_dark.png": {
+      "Size": 452
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_04_light.png": {
+      "Size": 449
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_05_dark.png": {
+      "Size": 448
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_05_light.png": {
+      "Size": 448
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_06_dark.png": {
+      "Size": 471
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_06_light.png": {
+      "Size": 462
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_07_dark.png": {
+      "Size": 406
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_07_light.png": {
+      "Size": 406
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_08_dark.png": {
+      "Size": 426
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_08_light.png": {
+      "Size": 426
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_09_dark.png": {
+      "Size": 434
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_09_light.png": {
+      "Size": 434
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_10_dark.png": {
+      "Size": 440
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_10_light.png": {
+      "Size": 440
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_11_dark.png": {
+      "Size": 456
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_11_light.png": {
+      "Size": 456
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_12_dark.png": {
+      "Size": 452
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_12_light.png": {
+      "Size": 452
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_13_dark.png": {
+      "Size": 453
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_13_light.png": {
+      "Size": 453
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_14_dark.png": {
+      "Size": 426
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_14_light.png": {
+      "Size": 426
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_15_dark.png": {
+      "Size": 428
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_15_light.png": {
+      "Size": 436
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_16_dark.png": {
+      "Size": 432
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_16_light.png": {
+      "Size": 432
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_17_dark.png": {
+      "Size": 437
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_17_light.png": {
+      "Size": 437
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_18_dark.png": {
+      "Size": 429
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_18_light.png": {
+      "Size": 431
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_19_dark.png": {
+      "Size": 436
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_19_light.png": {
+      "Size": 436
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_20_dark.png": {
+      "Size": 441
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_20_light.png": {
+      "Size": 438
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_21_dark.png": {
+      "Size": 432
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_21_light.png": {
+      "Size": 432
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_22_dark.png": {
+      "Size": 440
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_22_light.png": {
+      "Size": 440
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_23_dark.png": {
+      "Size": 437
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_23_light.png": {
+      "Size": 437
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_24_dark.png": {
+      "Size": 440
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_24_light.png": {
+      "Size": 440
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_25_dark.png": {
+      "Size": 443
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_25_light.png": {
+      "Size": 443
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_26_dark.png": {
+      "Size": 445
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_26_light.png": {
+      "Size": 445
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_27_dark.png": {
+      "Size": 431
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_27_light.png": {
+      "Size": 431
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_28_dark.png": {
+      "Size": 440
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_28_light.png": {
+      "Size": 445
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_29_dark.png": {
+      "Size": 436
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_29_light.png": {
+      "Size": 436
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_30_dark.png": {
+      "Size": 433
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_30_light.png": {
+      "Size": 433
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_disabled_dark.png": {
+      "Size": 891
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_disabled_light.png": {
+      "Size": 889
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_disconnected_dark.png": {
+      "Size": 1091
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_disconnected_light.png": {
+      "Size": 1095
+    },
+    "res/drawable-xxhdpi-v4/ic_mr_button_grey.png": {
+      "Size": 657
+    },
+    "res/drawable-xxhdpi-v4/ic_vol_type_speaker_dark.png": {
+      "Size": 712
+    },
+    "res/drawable-xxhdpi-v4/ic_vol_type_speaker_group_dark.png": {
+      "Size": 678
+    },
+    "res/drawable-xxhdpi-v4/ic_vol_type_speaker_group_light.png": {
+      "Size": 686
+    },
+    "res/drawable-xxhdpi-v4/ic_vol_type_speaker_light.png": {
+      "Size": 724
+    },
+    "res/drawable-xxhdpi-v4/ic_vol_type_tv_dark.png": {
+      "Size": 260
+    },
+    "res/drawable-xxhdpi-v4/ic_vol_type_tv_light.png": {
+      "Size": 270
+    },
+    "res/drawable-xxhdpi-v4/icon.png": {
+      "Size": 1647
+    },
+    "res/drawable-ldrtl-xxhdpi-v17/abc_ic_menu_copy_mtrl_am_alpha.png": {
+      "Size": 260
+    },
+    "res/drawable-ldrtl-xxhdpi-v17/abc_ic_menu_cut_mtrl_alpha.png": {
+      "Size": 705
+    },
+    "res/drawable-ldrtl-xxhdpi-v17/abc_spinner_mtrl_am_alpha.9.png": {
+      "Size": 525
+    },
+    "res/drawable-xxxhdpi-v4/abc_btn_check_to_on_mtrl_000.png": {
+      "Size": 275
+    },
+    "res/drawable-xxxhdpi-v4/abc_btn_check_to_on_mtrl_015.png": {
+      "Size": 476
+    },
+    "res/drawable-xxxhdpi-v4/abc_btn_radio_to_on_mtrl_000.png": {
+      "Size": 785
+    },
+    "res/drawable-xxxhdpi-v4/abc_btn_radio_to_on_mtrl_015.png": {
+      "Size": 946
+    },
+    "res/drawable-xxxhdpi-v4/abc_btn_switch_to_on_mtrl_00001.9.png": {
+      "Size": 2505
+    },
+    "res/drawable-xxxhdpi-v4/abc_btn_switch_to_on_mtrl_00012.9.png": {
+      "Size": 2816
+    },
+    "res/drawable-xxxhdpi-v4/abc_ic_menu_copy_mtrl_am_alpha.png": {
+      "Size": 327
+    },
+    "res/drawable-xxxhdpi-v4/abc_ic_menu_cut_mtrl_alpha.png": {
+      "Size": 910
+    },
+    "res/drawable-xxxhdpi-v4/abc_ic_menu_paste_mtrl_am_alpha.png": {
+      "Size": 461
+    },
+    "res/drawable-xxxhdpi-v4/abc_ic_menu_selectall_mtrl_alpha.png": {
+      "Size": 305
+    },
+    "res/drawable-xxxhdpi-v4/abc_ic_menu_share_mtrl_alpha.png": {
+      "Size": 899
+    },
+    "res/drawable-xxxhdpi-v4/abc_ic_star_black_16dp.png": {
+      "Size": 599
+    },
+    "res/drawable-xxxhdpi-v4/abc_ic_star_black_36dp.png": {
+      "Size": 1269
+    },
+    "res/drawable-xxxhdpi-v4/abc_ic_star_black_48dp.png": {
+      "Size": 1680
+    },
+    "res/drawable-xxxhdpi-v4/abc_ic_star_half_black_16dp.png": {
+      "Size": 376
+    },
+    "res/drawable-xxxhdpi-v4/abc_ic_star_half_black_36dp.png": {
+      "Size": 760
+    },
+    "res/drawable-xxxhdpi-v4/abc_ic_star_half_black_48dp.png": {
+      "Size": 991
+    },
+    "res/drawable-xxxhdpi-v4/abc_scrubber_control_to_pressed_mtrl_000.png": {
+      "Size": 415
+    },
+    "res/drawable-xxxhdpi-v4/abc_scrubber_control_to_pressed_mtrl_005.png": {
+      "Size": 631
+    },
+    "res/drawable-xxxhdpi-v4/abc_spinner_mtrl_am_alpha.9.png": {
+      "Size": 430
+    },
+    "res/drawable-xxxhdpi-v4/abc_switch_track_mtrl_alpha.9.png": {
+      "Size": 813
+    },
+    "res/drawable-xxxhdpi-v4/abc_tab_indicator_mtrl_alpha.9.png": {
+      "Size": 202
+    },
+    "res/drawable-xxxhdpi-v4/abc_text_select_handle_left_mtrl_dark.png": {
+      "Size": 513
+    },
+    "res/drawable-xxxhdpi-v4/abc_text_select_handle_left_mtrl_light.png": {
+      "Size": 513
+    },
+    "res/drawable-xxxhdpi-v4/abc_text_select_handle_right_mtrl_dark.png": {
+      "Size": 513
+    },
+    "res/drawable-xxxhdpi-v4/abc_text_select_handle_right_mtrl_light.png": {
+      "Size": 513
+    },
+    "res/drawable-xxxhdpi-v4/design_ic_visibility.png": {
+      "Size": 1155
+    },
+    "res/drawable-xxxhdpi-v4/design_ic_visibility_off.png": {
+      "Size": 1201
+    },
+    "res/drawable-xxxhdpi-v4/ic_group_collapse_00.png": {
+      "Size": 253
+    },
+    "res/drawable-xxxhdpi-v4/ic_group_collapse_01.png": {
+      "Size": 375
+    },
+    "res/drawable-xxxhdpi-v4/ic_group_collapse_02.png": {
+      "Size": 365
+    },
+    "res/drawable-xxxhdpi-v4/ic_group_collapse_03.png": {
+      "Size": 413
+    },
+    "res/drawable-xxxhdpi-v4/ic_group_collapse_04.png": {
+      "Size": 431
+    },
+    "res/drawable-xxxhdpi-v4/ic_group_collapse_05.png": {
+      "Size": 465
+    },
+    "res/drawable-xxxhdpi-v4/ic_group_collapse_06.png": {
+      "Size": 469
+    },
+    "res/drawable-xxxhdpi-v4/ic_group_collapse_07.png": {
+      "Size": 480
+    },
+    "res/drawable-xxxhdpi-v4/ic_group_collapse_08.png": {
+      "Size": 467
+    },
+    "res/drawable-xxxhdpi-v4/ic_group_collapse_09.png": {
+      "Size": 460
+    },
+    "res/drawable-xxxhdpi-v4/ic_group_collapse_10.png": {
+      "Size": 428
+    },
+    "res/drawable-xxxhdpi-v4/ic_group_collapse_11.png": {
+      "Size": 318
+    },
+    "res/drawable-xxxhdpi-v4/ic_group_collapse_12.png": {
+      "Size": 267
+    },
+    "res/drawable-xxxhdpi-v4/ic_group_collapse_13.png": {
+      "Size": 260
+    },
+    "res/drawable-xxxhdpi-v4/ic_group_collapse_14.png": {
+      "Size": 265
+    },
+    "res/drawable-xxxhdpi-v4/ic_group_collapse_15.png": {
+      "Size": 253
+    },
+    "res/drawable-xxxhdpi-v4/ic_group_expand_00.png": {
+      "Size": 253
+    },
+    "res/drawable-xxxhdpi-v4/ic_group_expand_01.png": {
+      "Size": 373
+    },
+    "res/drawable-xxxhdpi-v4/ic_group_expand_02.png": {
+      "Size": 361
+    },
+    "res/drawable-xxxhdpi-v4/ic_group_expand_03.png": {
+      "Size": 414
+    },
+    "res/drawable-xxxhdpi-v4/ic_group_expand_04.png": {
+      "Size": 430
+    },
+    "res/drawable-xxxhdpi-v4/ic_group_expand_05.png": {
+      "Size": 462
+    },
+    "res/drawable-xxxhdpi-v4/ic_group_expand_06.png": {
+      "Size": 469
+    },
+    "res/drawable-xxxhdpi-v4/ic_group_expand_07.png": {
+      "Size": 479
+    },
+    "res/drawable-xxxhdpi-v4/ic_group_expand_08.png": {
+      "Size": 484
+    },
+    "res/drawable-xxxhdpi-v4/ic_group_expand_09.png": {
+      "Size": 451
+    },
+    "res/drawable-xxxhdpi-v4/ic_group_expand_10.png": {
+      "Size": 416
+    },
+    "res/drawable-xxxhdpi-v4/ic_group_expand_11.png": {
+      "Size": 307
+    },
+    "res/drawable-xxxhdpi-v4/ic_group_expand_12.png": {
+      "Size": 274
+    },
+    "res/drawable-xxxhdpi-v4/ic_group_expand_13.png": {
+      "Size": 260
+    },
+    "res/drawable-xxxhdpi-v4/ic_group_expand_14.png": {
+      "Size": 265
+    },
+    "res/drawable-xxxhdpi-v4/ic_group_expand_15.png": {
+      "Size": 253
+    },
+    "res/drawable-xxxhdpi-v4/ic_mr_button_grey.png": {
+      "Size": 879
+    },
+    "res/drawable-ldrtl-xxxhdpi-v17/abc_ic_menu_copy_mtrl_am_alpha.png": {
+      "Size": 325
+    },
+    "res/drawable-ldrtl-xxxhdpi-v17/abc_ic_menu_cut_mtrl_alpha.png": {
+      "Size": 905
+    },
+    "res/drawable-ldrtl-xxxhdpi-v17/abc_spinner_mtrl_am_alpha.9.png": {
+      "Size": 437
+    },
+    "res/drawable-anydpi-v21/design_ic_visibility.xml": {
+      "Size": 540
+    },
+    "res/drawable-anydpi-v21/design_ic_visibility_off.xml": {
+      "Size": 1144
+    },
+    "res/interpolator/mr_fast_out_slow_in.xml": {
+      "Size": 400
+    },
+    "res/interpolator/mr_linear_out_slow_in.xml": {
+      "Size": 400
+    },
+    "res/interpolator/mtrl_fast_out_linear_in.xml": {
+      "Size": 136
+    },
+    "res/interpolator/mtrl_fast_out_slow_in.xml": {
+      "Size": 144
+    },
+    "res/interpolator/mtrl_linear.xml": {
+      "Size": 132
+    },
+    "res/interpolator/mtrl_linear_out_slow_in.xml": {
+      "Size": 136
+    },
+    "res/interpolator-v21/mtrl_fast_out_linear_in.xml": {
+      "Size": 400
+    },
+    "res/interpolator-v21/mtrl_fast_out_slow_in.xml": {
+      "Size": 400
+    },
+    "res/interpolator-v21/mtrl_linear_out_slow_in.xml": {
+      "Size": 400
+    },
+    "res/layout/abc_action_bar_title_item.xml": {
+      "Size": 872
+    },
+    "res/layout/abc_action_bar_up_container.xml": {
+      "Size": 440
+    },
+    "res/layout/abc_action_menu_item_layout.xml": {
+      "Size": 768
+    },
+    "res/layout/abc_action_menu_layout.xml": {
+      "Size": 576
+    },
+    "res/layout/abc_action_mode_bar.xml": {
+      "Size": 464
+    },
+    "res/layout/abc_action_mode_close_item_material.xml": {
+      "Size": 748
+    },
+    "res/layout-v17/abc_action_mode_close_item_material.xml": {
+      "Size": 840
+    },
+    "res/layout/abc_activity_chooser_view.xml": {
+      "Size": 1684
+    },
+    "res/layout/abc_activity_chooser_view_list_item.xml": {
+      "Size": 1304
+    },
+    "res/layout/abc_alert_dialog_button_bar_material.xml": {
+      "Size": 1492
+    },
+    "res/layout-v17/abc_alert_dialog_button_bar_material.xml": {
+      "Size": 1536
+    },
+    "res/layout-v22/abc_alert_dialog_button_bar_material.xml": {
+      "Size": 1584
+    },
+    "res/layout/abc_alert_dialog_material.xml": {
+      "Size": 2480
+    },
+    "res/layout/abc_alert_dialog_title_material.xml": {
+      "Size": 1424
+    },
+    "res/layout-v17/abc_alert_dialog_title_material.xml": {
+      "Size": 1516
+    },
+    "res/layout/abc_cascading_menu_item_layout.xml": {
+      "Size": 1868
+    },
+    "res/layout/abc_dialog_title_material.xml": {
+      "Size": 1028
+    },
+    "res/layout-v17/abc_dialog_title_material.xml": {
+      "Size": 1072
+    },
+    "res/layout/abc_expanded_menu_layout.xml": {
+      "Size": 388
+    },
+    "res/layout/abc_list_menu_item_checkbox.xml": {
+      "Size": 528
+    },
+    "res/layout/abc_list_menu_item_icon.xml": {
+      "Size": 684
+    },
+    "res/layout/abc_list_menu_item_layout.xml": {
+      "Size": 1396
+    },
+    "res/layout/abc_list_menu_item_radio.xml": {
+      "Size": 532
+    },
+    "res/layout/abc_popup_menu_header_item_layout.xml": {
+      "Size": 804
+    },
+    "res/layout-v17/abc_popup_menu_header_item_layout.xml": {
+      "Size": 848
+    },
+    "res/layout/abc_popup_menu_item_layout.xml": {
+      "Size": 2072
+    },
+    "res/layout/abc_screen_content_include.xml": {
+      "Size": 548
+    },
+    "res/layout/abc_screen_simple.xml": {
+      "Size": 832
+    },
+    "res/layout/abc_screen_simple_overlay_action_mode.xml": {
+      "Size": 792
+    },
+    "res/layout/abc_screen_toolbar.xml": {
+      "Size": 1452
+    },
+    "res/layout-v21/abc_screen_toolbar.xml": {
+      "Size": 1504
+    },
+    "res/layout/abc_search_dropdown_item_icons_2line.xml": {
+      "Size": 1916
+    },
+    "res/layout/abc_search_view.xml": {
+      "Size": 3428
+    },
+    "res/layout-v17/abc_search_view.xml": {
+      "Size": 3472
+    },
+    "res/layout/abc_select_dialog_material.xml": {
+      "Size": 932
+    },
+    "res/layout-v17/abc_select_dialog_material.xml": {
+      "Size": 976
+    },
+    "res/layout/abc_tooltip.xml": {
+      "Size": 972
+    },
+    "res/layout-v17/abc_tooltip.xml": {
+      "Size": 1056
+    },
+    "res/layout/bottomtablayout.xml": {
+      "Size": 816
+    },
+    "res/layout/browser_actions_context_menu_page.xml": {
+      "Size": 1576
+    },
+    "res/layout-v17/browser_actions_context_menu_page.xml": {
+      "Size": 1660
+    },
+    "res/layout/browser_actions_context_menu_row.xml": {
+      "Size": 1032
+    },
+    "res/layout-v17/browser_actions_context_menu_row.xml": {
+      "Size": 1164
+    },
+    "res/layout/design_bottom_navigation_item.xml": {
+      "Size": 1488
+    },
+    "res/layout/design_bottom_sheet_dialog.xml": {
+      "Size": 1180
+    },
+    "res/layout/design_layout_snackbar.xml": {
+      "Size": 520
+    },
+    "res/layout/design_layout_snackbar_include.xml": {
+      "Size": 1344
+    },
+    "res/layout-v17/design_layout_snackbar_include.xml": {
+      "Size": 1436
+    },
+    "res/layout/design_layout_tab_icon.xml": {
+      "Size": 408
+    },
+    "res/layout/design_layout_tab_text.xml": {
+      "Size": 436
+    },
+    "res/layout/design_menu_item_action_area.xml": {
+      "Size": 320
+    },
+    "res/layout/design_navigation_item.xml": {
+      "Size": 532
+    },
+    "res/layout/design_navigation_item_header.xml": {
+      "Size": 440
+    },
+    "res/layout/design_navigation_item_separator.xml": {
+      "Size": 472
+    },
+    "res/layout/design_navigation_item_subheader.xml": {
+      "Size": 564
+    },
+    "res/layout/design_navigation_menu.xml": {
+      "Size": 524
+    },
+    "res/layout/design_navigation_menu_item.xml": {
+      "Size": 856
+    },
+    "res/layout/design_text_input_password_icon.xml": {
+      "Size": 560
+    },
+    "res/layout/flyoutcontent.xml": {
+      "Size": 932
+    },
+    "res/layout/mr_cast_dialog.xml": {
+      "Size": 648
+    },
+    "res/layout/mr_cast_group_item.xml": {
+      "Size": 860
+    },
+    "res/layout-v17/mr_cast_group_item.xml": {
+      "Size": 944
+    },
+    "res/layout/mr_cast_group_volume_item.xml": {
+      "Size": 1292
+    },
+    "res/layout-v17/mr_cast_group_volume_item.xml": {
+      "Size": 1416
+    },
+    "res/layout/mr_cast_media_metadata.xml": {
+      "Size": 2056
+    },
+    "res/layout-v17/mr_cast_media_metadata.xml": {
+      "Size": 2140
+    },
+    "res/layout/mr_cast_route_item.xml": {
+      "Size": 1720
+    },
+    "res/layout-v17/mr_cast_route_item.xml": {
+      "Size": 1804
+    },
+    "res/layout/mr_chooser_dialog.xml": {
+      "Size": 1656
+    },
+    "res/layout/mr_chooser_list_item.xml": {
+      "Size": 1336
+    },
+    "res/layout/mr_controller_material_dialog_b.xml": {
+      "Size": 3296
+    },
+    "res/layout/mr_controller_volume_item.xml": {
+      "Size": 1612
+    },
+    "res/layout/mr_dialog_header_item.xml": {
+      "Size": 472
+    },
+    "res/layout-v17/mr_dialog_header_item.xml": {
+      "Size": 556
+    },
+    "res/layout/mr_picker_dialog.xml": {
+      "Size": 960
+    },
+    "res/layout-v17/mr_picker_dialog.xml": {
+      "Size": 1000
+    },
+    "res/layout/mr_picker_route_item.xml": {
+      "Size": 848
+    },
+    "res/layout-v17/mr_picker_route_item.xml": {
+      "Size": 932
+    },
+    "res/layout/mr_playback_control.xml": {
+      "Size": 1548
+    },
+    "res/layout/mr_volume_control.xml": {
+      "Size": 1420
+    },
+    "res/layout/mtrl_layout_snackbar.xml": {
+      "Size": 520
+    },
+    "res/layout/mtrl_layout_snackbar_include.xml": {
+      "Size": 1304
+    },
+    "res/layout-v17/mtrl_layout_snackbar_include.xml": {
+      "Size": 1396
+    },
+    "res/layout/notification_action.xml": {
+      "Size": 1092
+    },
+    "res/layout-v17/notification_action.xml": {
+      "Size": 1156
+    },
+    "res/layout/notification_action_tombstone.xml": {
+      "Size": 1268
+    },
+    "res/layout-v17/notification_action_tombstone.xml": {
+      "Size": 1332
+    },
+    "res/layout/notification_media_action.xml": {
+      "Size": 564
+    },
+    "res/layout/notification_media_cancel_action.xml": {
+      "Size": 744
+    },
+    "res/layout/notification_template_big_media.xml": {
+      "Size": 1504
+    },
+    "res/layout-v17/notification_template_big_media.xml": {
+      "Size": 1696
+    },
+    "res/layout/notification_template_big_media_custom.xml": {
+      "Size": 2760
+    },
+    "res/layout-v17/notification_template_big_media_custom.xml": {
+      "Size": 3044
+    },
+    "res/layout/notification_template_big_media_narrow.xml": {
+      "Size": 1564
+    },
+    "res/layout-v17/notification_template_big_media_narrow.xml": {
+      "Size": 1824
+    },
+    "res/layout/notification_template_big_media_narrow_custom.xml": {
+      "Size": 2868
+    },
+    "res/layout-v17/notification_template_big_media_narrow_custom.xml": {
+      "Size": 3216
+    },
+    "res/layout-v16/notification_template_custom_big.xml": {
+      "Size": 3012
+    },
+    "res/layout-v17/notification_template_custom_big.xml": {
+      "Size": 3208
+    },
+    "res/layout/notification_template_icon_group.xml": {
+      "Size": 392
+    },
+    "res/layout/notification_template_lines_media.xml": {
+      "Size": 2660
+    },
+    "res/layout-v17/notification_template_lines_media.xml": {
+      "Size": 2872
+    },
+    "res/layout/notification_template_media.xml": {
+      "Size": 1200
+    },
+    "res/layout-v17/notification_template_media.xml": {
+      "Size": 1292
+    },
+    "res/layout/notification_template_media_custom.xml": {
+      "Size": 2528
+    },
+    "res/layout-v17/notification_template_media_custom.xml": {
+      "Size": 2756
+    },
+    "res/layout/notification_template_part_chronometer.xml": {
+      "Size": 440
+    },
+    "res/layout/notification_template_part_time.xml": {
+      "Size": 440
+    },
+    "res/layout/rootlayout.xml": {
+      "Size": 1388
+    },
+    "res/layout/select_dialog_item_material.xml": {
+      "Size": 640
+    },
+    "res/layout/select_dialog_multichoice_material.xml": {
+      "Size": 780
+    },
+    "res/layout-v17/select_dialog_multichoice_material.xml": {
+      "Size": 864
+    },
+    "res/layout/select_dialog_singlechoice_material.xml": {
+      "Size": 780
+    },
+    "res/layout-v17/select_dialog_singlechoice_material.xml": {
+      "Size": 864
+    },
+    "res/layout/shellcontent.xml": {
+      "Size": 1140
+    },
+    "res/layout/support_simple_spinner_dropdown_item.xml": {
+      "Size": 464
+    },
+    "res/layout/tabbar.xml": {
+      "Size": 692
+    },
+    "res/layout/toolbar.xml": {
+      "Size": 452
+    },
+    "res/layout-v21/toolbar.xml": {
+      "Size": 496
+    },
+    "res/layout-sw600dp-v13/design_layout_snackbar.xml": {
+      "Size": 520
+    },
+    "res/layout-sw600dp-v13/mtrl_layout_snackbar.xml": {
+      "Size": 520
+    },
+    "res/layout-watch-v20/abc_alert_dialog_button_bar_material.xml": {
+      "Size": 1208
+    },
+    "res/layout-watch-v20/abc_alert_dialog_title_material.xml": {
+      "Size": 1352
+    },
+    "res/layout-v21/notification_action.xml": {
+      "Size": 1052
+    },
+    "res/layout-v21/notification_action_tombstone.xml": {
+      "Size": 1228
+    },
+    "res/layout-v21/notification_template_custom_big.xml": {
+      "Size": 2456
+    },
+    "res/layout-v21/notification_template_icon_group.xml": {
+      "Size": 988
+    },
+    "res/layout-v26/abc_screen_toolbar.xml": {
+      "Size": 1560
+    },
+    "resources.arsc": {
+      "Size": 493672
+    },
+    "NOTICE": {
+      "Size": 157
+    },
+    "classes.dex": {
+      "Size": 1944832
+    },
+    "assemblies/Xamarin.Forms.Performance.Integration.Droid.dll": {
+      "Size": 183808
+    },
+    "assemblies/FormsViewGroup.dll": {
+      "Size": 15872
+    },
+    "assemblies/Newtonsoft.Json.dll": {
+      "Size": 658432
+    },
+    "assemblies/Plugin.Connectivity.Abstractions.dll": {
+      "Size": 7680
+    },
+    "assemblies/Plugin.Connectivity.dll": {
+      "Size": 17920
+    },
+    "assemblies/Xamarin.Android.Arch.Core.Common.dll": {
+      "Size": 5120
+    },
+    "assemblies/Xamarin.Android.Arch.Core.Runtime.dll": {
+      "Size": 5120
+    },
+    "assemblies/Xamarin.Android.Arch.Lifecycle.Common.dll": {
+      "Size": 17920
+    },
+    "assemblies/Xamarin.Android.Arch.Lifecycle.LiveData.Core.dll": {
+      "Size": 19968
+    },
+    "assemblies/Xamarin.Android.Arch.Lifecycle.LiveData.dll": {
+      "Size": 5632
+    },
+    "assemblies/Xamarin.Android.Arch.Lifecycle.Runtime.dll": {
+      "Size": 5120
+    },
+    "assemblies/Xamarin.Android.Arch.Lifecycle.ViewModel.dll": {
+      "Size": 10240
+    },
+    "assemblies/Xamarin.Android.Support.Animated.Vector.Drawable.dll": {
+      "Size": 6144
+    },
+    "assemblies/Xamarin.Android.Support.Annotations.dll": {
+      "Size": 5632
+    },
+    "assemblies/Xamarin.Android.Support.AsyncLayoutInflater.dll": {
+      "Size": 5120
+    },
+    "assemblies/Xamarin.Android.Support.Collections.dll": {
+      "Size": 5120
+    },
+    "assemblies/Xamarin.Android.Support.Compat.dll": {
+      "Size": 570368
+    },
+    "assemblies/Xamarin.Android.Support.CoordinaterLayout.dll": {
+      "Size": 30720
+    },
+    "assemblies/Xamarin.Android.Support.Core.UI.dll": {
+      "Size": 20480
+    },
+    "assemblies/Xamarin.Android.Support.Core.Utils.dll": {
+      "Size": 6144
+    },
+    "assemblies/Xamarin.Android.Support.CursorAdapter.dll": {
+      "Size": 5120
+    },
+    "assemblies/Xamarin.Android.Support.CustomTabs.dll": {
+      "Size": 10240
+    },
+    "assemblies/Xamarin.Android.Support.CustomView.dll": {
+      "Size": 5632
+    },
+    "assemblies/Xamarin.Android.Support.Design.dll": {
+      "Size": 219648
+    },
+    "assemblies/Xamarin.Android.Support.DocumentFile.dll": {
+      "Size": 5120
+    },
+    "assemblies/Xamarin.Android.Support.DrawerLayout.dll": {
+      "Size": 52736
+    },
+    "assemblies/Xamarin.Android.Support.Fragment.dll": {
+      "Size": 239616
+    },
+    "assemblies/Xamarin.Android.Support.Interpolator.dll": {
+      "Size": 5120
+    },
+    "assemblies/Xamarin.Android.Support.Loader.dll": {
+      "Size": 51200
+    },
+    "assemblies/Xamarin.Android.Support.LocalBroadcastManager.dll": {
+      "Size": 5120
+    },
+    "assemblies/Xamarin.Android.Support.Media.Compat.dll": {
+      "Size": 7168
+    },
+    "assemblies/Xamarin.Android.Support.Print.dll": {
+      "Size": 5120
+    },
+    "assemblies/Xamarin.Android.Support.SlidingPaneLayout.dll": {
+      "Size": 5632
+    },
+    "assemblies/Xamarin.Android.Support.SwipeRefreshLayout.dll": {
+      "Size": 34304
+    },
+    "assemblies/Xamarin.Android.Support.Transition.dll": {
+      "Size": 10752
+    },
+    "assemblies/Xamarin.Android.Support.v7.AppCompat.dll": {
+      "Size": 592384
+    },
+    "assemblies/Xamarin.Android.Support.v7.CardView.dll": {
+      "Size": 22528
+    },
+    "assemblies/Xamarin.Android.Support.v7.MediaRouter.dll": {
+      "Size": 5632
+    },
+    "assemblies/Xamarin.Android.Support.v7.Palette.dll": {
+      "Size": 5120
+    },
+    "assemblies/Xamarin.Android.Support.v7.RecyclerView.dll": {
+      "Size": 572928
+    },
+    "assemblies/Xamarin.Android.Support.Vector.Drawable.dll": {
+      "Size": 5632
+    },
+    "assemblies/Xamarin.Android.Support.VersionedParcelable.dll": {
+      "Size": 6656
+    },
+    "assemblies/Xamarin.Android.Support.ViewPager.dll": {
+      "Size": 74240
+    },
+    "assemblies/Xamarin.Forms.Core.dll": {
+      "Size": 871936
+    },
+    "assemblies/Xamarin.Forms.Performance.Integration.dll": {
+      "Size": 41984
+    },
+    "assemblies/Xamarin.Forms.Platform.Android.dll": {
+      "Size": 753664
+    },
+    "assemblies/Xamarin.Forms.Platform.dll": {
+      "Size": 17536
+    },
+    "assemblies/Xamarin.Forms.Xaml.dll": {
+      "Size": 92160
+    },
+    "assemblies/Java.Interop.dll": {
+      "Size": 164864
+    },
+    "assemblies/Mono.Android.dll": {
+      "Size": 2242048
+    },
+    "assemblies/mscorlib.dll": {
+      "Size": 2090496
+    },
+    "assemblies/System.Core.dll": {
+      "Size": 389632
+    },
+    "assemblies/System.dll": {
+      "Size": 873984
+    },
+    "assemblies/System.Net.Http.dll": {
+      "Size": 218112
+    },
+    "assemblies/System.Xml.dll": {
+      "Size": 1399296
+    },
+    "assemblies/System.Drawing.Common.dll": {
+      "Size": 26112
+    },
+    "assemblies/System.Runtime.Serialization.dll": {
+      "Size": 419328
+    },
+    "assemblies/System.ServiceModel.Internals.dll": {
+      "Size": 55808
+    },
+    "assemblies/System.Data.dll": {
+      "Size": 747520
+    },
+    "assemblies/System.Numerics.dll": {
+      "Size": 38912
+    },
+    "assemblies/System.Xml.Linq.dll": {
+      "Size": 65024
+    },
+    "assemblies/Mono.Security.dll": {
+      "Size": 121856
+    },
+    "lib/armeabi-v7a/libmonodroid.so": {
+      "Size": 170812
+    },
+    "lib/armeabi-v7a/libxamarin-app.so": {
+      "Size": 98020
+    },
+    "lib/armeabi-v7a/libmonosgen-2.0.so": {
+      "Size": 3816228
+    },
+    "lib/armeabi-v7a/libmono-btls-shared.so": {
+      "Size": 856580
+    },
+    "lib/x86/libmonodroid.so": {
+      "Size": 203084
+    },
+    "lib/x86/libxamarin-app.so": {
+      "Size": 97764
+    },
+    "lib/x86/libmonosgen-2.0.so": {
+      "Size": 3799820
+    },
+    "lib/x86/libmono-btls-shared.so": {
+      "Size": 1311172
+    },
+    "lib/armeabi-v7a/libmono-native.so": {
+      "Size": 714476
+    },
+    "lib/x86/libmono-native.so": {
+      "Size": 788196
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.AsyncLayoutInflater.dll.so": {
+      "Size": 8668
+    },
+    "lib/armeabi-v7a/libaot-Java.Interop.dll.so": {
+      "Size": 878844
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Android.Arch.Core.Runtime.dll.so": {
+      "Size": 8640
+    },
+    "lib/armeabi-v7a/libaot-System.dll.so": {
+      "Size": 3969392
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Forms.Performance.Integration.Droid.dll.so": {
+      "Size": 179420
+    },
+    "lib/armeabi-v7a/libaot-System.Net.Http.dll.so": {
+      "Size": 1198956
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.Annotations.dll.so": {
+      "Size": 9128
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.Core.UI.dll.so": {
+      "Size": 70112
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.Collections.dll.so": {
+      "Size": 8644
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Android.Arch.Lifecycle.LiveData.dll.so": {
+      "Size": 8660
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Android.Arch.Lifecycle.Runtime.dll.so": {
+      "Size": 8660
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.CoordinaterLayout.dll.so": {
+      "Size": 117780
+    },
+    "lib/armeabi-v7a/libaot-Plugin.Connectivity.Abstractions.dll.so": {
+      "Size": 22008
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Android.Arch.Core.Common.dll.so": {
+      "Size": 8640
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.CustomView.dll.so": {
+      "Size": 8644
+    },
+    "lib/armeabi-v7a/libaot-System.Xml.dll.so": {
+      "Size": 5982964
+    },
+    "lib/armeabi-v7a/libaot-Newtonsoft.Json.dll.so": {
+      "Size": 3390944
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Android.Arch.Lifecycle.ViewModel.dll.so": {
+      "Size": 35220
+    },
+    "lib/armeabi-v7a/libaot-Plugin.Connectivity.dll.so": {
+      "Size": 80696
+    },
+    "lib/armeabi-v7a/libaot-System.Core.dll.so": {
+      "Size": 2289972
+    },
+    "lib/armeabi-v7a/libaot-FormsViewGroup.dll.so": {
+      "Size": 58348
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.CustomTabs.dll.so": {
+      "Size": 13636
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.Design.dll.so": {
+      "Size": 1111744
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Android.Arch.Lifecycle.LiveData.Core.dll.so": {
+      "Size": 76920
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Android.Arch.Lifecycle.Common.dll.so": {
+      "Size": 66672
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.CursorAdapter.dll.so": {
+      "Size": 8656
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.Animated.Vector.Drawable.dll.so": {
+      "Size": 9196
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.DrawerLayout.dll.so": {
+      "Size": 249832
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.Core.Utils.dll.so": {
+      "Size": 8644
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.DocumentFile.dll.so": {
+      "Size": 8656
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.Compat.dll.so": {
+      "Size": 2485932
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.SlidingPaneLayout.dll.so": {
+      "Size": 8664
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.Interpolator.dll.so": {
+      "Size": 8656
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.v7.Palette.dll.so": {
+      "Size": 8644
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.Vector.Drawable.dll.so": {
+      "Size": 8660
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.v7.RecyclerView.dll.so": {
+      "Size": 2544328
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Forms.Performance.Integration.dll.so": {
+      "Size": 234072
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.Print.dll.so": {
+      "Size": 8632
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.v7.MediaRouter.dll.so": {
+      "Size": 8660
+    },
+    "lib/armeabi-v7a/libaot-mscorlib.dll.so": {
+      "Size": 8664544
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.ViewPager.dll.so": {
+      "Size": 341016
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.VersionedParcelable.dll.so": {
+      "Size": 9164
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Forms.Platform.dll.so": {
+      "Size": 18620
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.Fragment.dll.so": {
+      "Size": 1084512
+    },
+    "lib/armeabi-v7a/libaot-System.Drawing.Common.dll.so": {
+      "Size": 69936
+    },
+    "lib/armeabi-v7a/libaot-System.ServiceModel.Internals.dll.so": {
+      "Size": 187324
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.SwipeRefreshLayout.dll.so": {
+      "Size": 152716
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.Loader.dll.so": {
+      "Size": 228596
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.v7.CardView.dll.so": {
+      "Size": 93480
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.v7.AppCompat.dll.so": {
+      "Size": 2837928
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Forms.Xaml.dll.so": {
+      "Size": 500932
+    },
+    "lib/armeabi-v7a/libaot-Mono.Security.dll.so": {
+      "Size": 443052
+    },
+    "lib/armeabi-v7a/libaot-Mono.Android.dll.so": {
+      "Size": 10474332
+    },
+    "lib/armeabi-v7a/libaot-System.Xml.Linq.dll.so": {
+      "Size": 328340
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.Transition.dll.so": {
+      "Size": 13224
+    },
+    "lib/armeabi-v7a/libaot-System.Numerics.dll.so": {
+      "Size": 161396
+    },
+    "lib/armeabi-v7a/libaot-System.Runtime.Serialization.dll.so": {
+      "Size": 2204344
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Forms.Platform.Android.dll.so": {
+      "Size": 4094016
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.Media.Compat.dll.so": {
+      "Size": 9508
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Forms.Core.dll.so": {
+      "Size": 4643316
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.LocalBroadcastManager.dll.so": {
+      "Size": 8680
+    },
+    "lib/armeabi-v7a/libaot-System.Data.dll.so": {
+      "Size": 3262568
+    },
+    "lib/x86/libaot-FormsViewGroup.dll.so": {
+      "Size": 57680
+    },
+    "lib/x86/libaot-Java.Interop.dll.so": {
+      "Size": 861464
+    },
+    "lib/x86/libaot-Plugin.Connectivity.Abstractions.dll.so": {
+      "Size": 17480
+    },
+    "lib/x86/libaot-Xamarin.Forms.Performance.Integration.Droid.dll.so": {
+      "Size": 133784
+    },
+    "lib/x86/libaot-Plugin.Connectivity.dll.so": {
+      "Size": 76636
+    },
+    "lib/x86/libaot-Xamarin.Android.Arch.Core.Common.dll.so": {
+      "Size": 8316
+    },
+    "lib/x86/libaot-System.Core.dll.so": {
+      "Size": 2288244
+    },
+    "lib/x86/libaot-Xamarin.Android.Arch.Lifecycle.LiveData.Core.dll.so": {
+      "Size": 72080
+    },
+    "lib/x86/libaot-Xamarin.Android.Arch.Lifecycle.LiveData.dll.so": {
+      "Size": 8340
+    },
+    "lib/x86/libaot-Xamarin.Android.Arch.Core.Runtime.dll.so": {
+      "Size": 8320
+    },
+    "lib/x86/libaot-System.Net.Http.dll.so": {
+      "Size": 1158032
+    },
+    "lib/x86/libaot-Newtonsoft.Json.dll.so": {
+      "Size": 3283644
+    },
+    "lib/x86/libaot-System.dll.so": {
+      "Size": 3822632
+    },
+    "lib/x86/libaot-System.Xml.dll.so": {
+      "Size": 5696184
+    },
+    "lib/x86/libaot-mscorlib.dll.so": {
+      "Size": 8410040
+    },
+    "lib/x86/libaot-Xamarin.Android.Support.AsyncLayoutInflater.dll.so": {
+      "Size": 8348
+    },
+    "lib/x86/libaot-Xamarin.Android.Support.CustomTabs.dll.so": {
+      "Size": 9256
+    },
+    "lib/x86/libaot-Xamarin.Android.Support.Animated.Vector.Drawable.dll.so": {
+      "Size": 8920
+    },
+    "lib/x86/libaot-Xamarin.Android.Support.CursorAdapter.dll.so": {
+      "Size": 8336
+    },
+    "lib/x86/libaot-Xamarin.Android.Support.DrawerLayout.dll.so": {
+      "Size": 235996
+    },
+    "lib/x86/libaot-Xamarin.Android.Support.CustomView.dll.so": {
+      "Size": 8320
+    },
+    "lib/x86/libaot-Xamarin.Android.Support.Interpolator.dll.so": {
+      "Size": 8332
+    },
+    "lib/x86/libaot-Xamarin.Android.Arch.Lifecycle.Runtime.dll.so": {
+      "Size": 8336
+    },
+    "lib/x86/libaot-Xamarin.Android.Support.Loader.dll.so": {
+      "Size": 215144
+    },
+    "lib/x86/libaot-Xamarin.Android.Support.Annotations.dll.so": {
+      "Size": 8856
+    },
+    "lib/x86/libaot-Xamarin.Android.Support.DocumentFile.dll.so": {
+      "Size": 8332
+    },
+    "lib/x86/libaot-Xamarin.Android.Arch.Lifecycle.Common.dll.so": {
+      "Size": 66128
+    },
+    "lib/x86/libaot-Xamarin.Android.Support.Fragment.dll.so": {
+      "Size": 1012608
+    },
+    "lib/x86/libaot-Xamarin.Android.Support.Design.dll.so": {
+      "Size": 1043964
+    },
+    "lib/x86/libaot-Xamarin.Android.Support.Collections.dll.so": {
+      "Size": 8324
+    },
+    "lib/x86/libaot-Xamarin.Android.Support.Core.UI.dll.so": {
+      "Size": 69192
+    },
+    "lib/x86/libaot-Xamarin.Android.Arch.Lifecycle.ViewModel.dll.so": {
+      "Size": 30836
+    },
+    "lib/x86/libaot-Xamarin.Android.Support.Compat.dll.so": {
+      "Size": 2351216
+    },
+    "lib/x86/libaot-Xamarin.Android.Support.Core.Utils.dll.so": {
+      "Size": 8320
+    },
+    "lib/x86/libaot-Xamarin.Android.Support.CoordinaterLayout.dll.so": {
+      "Size": 112356
+    },
+    "lib/x86/libaot-Mono.Android.dll.so": {
+      "Size": 9818752
+    },
+    "lib/x86/libaot-Xamarin.Android.Support.v7.MediaRouter.dll.so": {
+      "Size": 8336
+    },
+    "lib/x86/libaot-Xamarin.Android.Support.v7.Palette.dll.so": {
+      "Size": 8320
+    },
+    "lib/x86/libaot-Xamarin.Forms.Platform.dll.so": {
+      "Size": 18080
+    },
+    "lib/x86/libaot-System.Drawing.Common.dll.so": {
+      "Size": 66596
+    },
+    "lib/x86/libaot-Xamarin.Android.Support.SwipeRefreshLayout.dll.so": {
+      "Size": 143664
+    },
+    "lib/x86/libaot-Xamarin.Android.Support.v7.AppCompat.dll.so": {
+      "Size": 2661328
+    },
+    "lib/x86/libaot-Mono.Security.dll.so": {
+      "Size": 429760
+    },
+    "lib/x86/libaot-Xamarin.Android.Support.LocalBroadcastManager.dll.so": {
+      "Size": 8360
+    },
+    "lib/x86/libaot-System.Runtime.Serialization.dll.so": {
+      "Size": 2180364
+    },
+    "lib/x86/libaot-Xamarin.Android.Support.Media.Compat.dll.so": {
+      "Size": 9224
+    },
+    "lib/x86/libaot-Xamarin.Android.Support.Transition.dll.so": {
+      "Size": 12948
+    },
+    "lib/x86/libaot-Xamarin.Forms.Xaml.dll.so": {
+      "Size": 466968
+    },
+    "lib/x86/libaot-System.Numerics.dll.so": {
+      "Size": 155612
+    },
+    "lib/x86/libaot-Xamarin.Android.Support.v7.RecyclerView.dll.so": {
+      "Size": 2380252
+    },
+    "lib/x86/libaot-Xamarin.Android.Support.v7.CardView.dll.so": {
+      "Size": 84140
+    },
+    "lib/x86/libaot-System.ServiceModel.Internals.dll.so": {
+      "Size": 188892
+    },
+    "lib/x86/libaot-Xamarin.Android.Support.ViewPager.dll.so": {
+      "Size": 318960
+    },
+    "lib/x86/libaot-Xamarin.Android.Support.VersionedParcelable.dll.so": {
+      "Size": 8888
+    },
+    "lib/x86/libaot-Xamarin.Forms.Performance.Integration.dll.so": {
+      "Size": 222312
+    },
+    "lib/x86/libaot-Xamarin.Android.Support.Print.dll.so": {
+      "Size": 8312
+    },
+    "lib/x86/libaot-Xamarin.Android.Support.Vector.Drawable.dll.so": {
+      "Size": 8340
+    },
+    "lib/x86/libaot-Xamarin.Android.Support.SlidingPaneLayout.dll.so": {
+      "Size": 8344
+    },
+    "lib/x86/libaot-System.Xml.Linq.dll.so": {
+      "Size": 310956
+    },
+    "lib/x86/libaot-System.Data.dll.so": {
+      "Size": 3110580
+    },
+    "lib/x86/libaot-Xamarin.Forms.Platform.Android.dll.so": {
+      "Size": 3849872
+    },
+    "lib/x86/libaot-Xamarin.Forms.Core.dll.so": {
+      "Size": 4397844
+    },
+    "META-INF/proguard/androidx-annotations.pro": {
+      "Size": 308
+    },
+    "META-INF/androidx.asynclayoutinflater_asynclayoutinflater.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.core_core.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.coordinatorlayout_coordinatorlayout.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.legacy_legacy-support-core-ui.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.legacy_legacy-support-core-utils.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.cursoradapter_cursoradapter.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.browser_browser.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.customview_customview.version": {
+      "Size": 6
+    },
+    "META-INF/android.support.design_material.version": {
+      "Size": 12
+    },
+    "META-INF/com.google.android.material_material.version": {
+      "Size": 10
+    },
+    "META-INF/androidx.documentfile_documentfile.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.drawerlayout_drawerlayout.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.fragment_fragment.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.interpolator_interpolator.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.loader_loader.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.localbroadcastmanager_localbroadcastmanager.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.media_media.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.print_print.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.slidingpanelayout_slidingpanelayout.version": {
+      "Size": 6
+    },
+    "META-INF/android.arch.core_runtime.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.swiperefreshlayout_swiperefreshlayout.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.transition_transition.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.legacy_legacy-support-v4.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.appcompat_appcompat.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.cardview_cardview.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.mediarouter_mediarouter.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.palette_palette.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.recyclerview_recyclerview.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.vectordrawable_vectordrawable.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.versionedparcelable_versionedparcelable.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.viewpager_viewpager.version": {
+      "Size": 6
+    },
+    "META-INF/android.arch.lifecycle_livedata-core.version": {
+      "Size": 6
+    },
+    "META-INF/android.arch.lifecycle_livedata.version": {
+      "Size": 6
+    },
+    "META-INF/android.arch.lifecycle_runtime.version": {
+      "Size": 6
+    },
+    "META-INF/android.arch.lifecycle_viewmodel.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.vectordrawable_vectordrawable-animated.version": {
+      "Size": 6
+    },
+    "META-INF/ANDROIDD.SF": {
+      "Size": 122581
+    },
+    "META-INF/ANDROIDD.RSA": {
+      "Size": 1205
+    },
+    "META-INF/MANIFEST.MF": {
+      "Size": 122473
+    }
+  },
+  "PackageSize": 47332899
+}
