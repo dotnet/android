@@ -16,7 +16,7 @@ namespace Xamarin.Android.Build.Tests
 			.Select (attr => attr.Value)
 			.FirstOrDefault () ?? "0.0.1";
 
-		[Test]
+		[Test, Ignore ("Re-enable when we can install .NET 5 preview 4+ on CI.")]
 		public void DotNetInstallAndRun ([Values (false, true)] bool isRelease)
 		{
 			if (!HasDevices)
