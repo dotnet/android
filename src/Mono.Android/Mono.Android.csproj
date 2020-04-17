@@ -15,7 +15,6 @@
     <DefineConstants>$(DefineConstants);JAVA_INTEROP</DefineConstants>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\$(TargetFramework)\android-$(AndroidPlatformId)\</IntermediateOutputPath>
     <ImplicitlyExpandDesignTimeFacades>false</ImplicitlyExpandDesignTimeFacades>
-    <JavaCallableWrapperAbsAssembly>$([System.IO.Path]::GetFullPath ('$(OutputPath)$(AssemblyName).dll'))</JavaCallableWrapperAbsAssembly>
     <JavaCallableWrapperAfterTargets>CoreBuild</JavaCallableWrapperAfterTargets>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <!-- @(Compile) ordering matters! See https://github.com/xamarin/java.interop/commit/d7dfa0bb7b03261d5eceb51ac22cd33aa15fa865 -->
@@ -33,6 +32,10 @@
 
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
     <OutputPath>$(XAInstallPrefix)xbuild-frameworks\Xamarin.Android.App\$(TargetFramework)\</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <JavaCallableWrapperAbsAssembly>$([System.IO.Path]::GetFullPath ('$(OutputPath)$(AssemblyName).dll'))</JavaCallableWrapperAbsAssembly>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'monoandroid10' ">

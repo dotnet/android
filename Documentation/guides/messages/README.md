@@ -82,6 +82,7 @@ ms.date: 01/24/2020
 + [XA1011](xa1011.md): Using ProGuard with the D8 DEX compiler is no longer supported. Please update \`$(AndroidLinkTool)\` to \`r8\`.
 + XA1012: Included layout root element override ID '{id}' is not valid.
 + XA1013: Failed to parse ID of node '{name}' in the layout file '{file}'.
++ XA1014: JAR library references with identical file names but different contents were found: {libraries}. Please remove any conflicting libraries from EmbeddedJar, InputJar and AndroidJavaLibrary.
 + XA1015: More than one Android Wear project is specified as the paired project. It can be at most one.
 + XA1016: Target Wear application's project '{project}' does not specify required 'AndroidManifest' project property.
 + XA1017: Target Wear application's AndroidManifest.xml does not specify required 'package' attribute.

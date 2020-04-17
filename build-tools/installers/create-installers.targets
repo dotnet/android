@@ -116,6 +116,7 @@
   <ItemGroup>
     <_MSBuildFiles Include="$(MSBuildSrcDir)\android-support-multidex.jar" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\apkdiff.exe" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\apkdiff.exe.config" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\apkdiff.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\Mono.Options.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\libZipSharp.dll" />
@@ -123,6 +124,11 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\Newtonsoft.Json.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\Newtonsoft.Json-LICENSE.md" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\System.Buffers.dll" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\System.Collections.Immutable.dll" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\System.Memory.dll" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\System.Numerics.Vectors.dll" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\System.Reflection.Metadata.dll" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\System.Runtime.CompilerServices.Unsafe.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\aprofutil.exe" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\aprofutil.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\cil-strip.exe" />
