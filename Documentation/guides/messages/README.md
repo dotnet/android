@@ -87,6 +87,7 @@ ms.date: 01/24/2020
 + XA1015: More than one Android Wear project is specified as the paired project. It can be at most one.
 + XA1016: Target Wear application's project '{project}' does not specify required 'AndroidManifest' project property.
 + XA1017: Target Wear application's AndroidManifest.xml does not specify required 'package' attribute.
++ XA1018: Specified AndroidManifest file does not exist: {file}.
 
 ## XA2xxx: Linker
 
@@ -122,6 +123,7 @@ ms.date: 01/24/2020
 + XA4224: Malformed full class name '{name}'. Missing class name.
 + XA4225: Widget '{widget}' in layout '{layout}' has multiple instances with different types. The property type will be set to: {type}
 + XA4226: Resource item '{file}' does not have the required metadata item '{metadataName}'.
++ XA4228: Unable to find specified //activity-alias/@android:targetActivity: '{targetActivity}'
 + XA4300: Native library '{library}' will not be bundled because it has an unsupported ABI.
 + [XA4301](xa4301.md): Apk already contains the item `xxx`.
 + [XA4302](xa4302.md): Unhandled exception merging \`AndroidManifest.xml\`: {ex}
