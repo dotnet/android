@@ -2,7 +2,7 @@
   "Comment": null,
   "Entries": {
     "AndroidManifest.xml": {
-      "Size": 3684
+      "Size": 3664
     },
     "res/anim/abc_fade_in.xml": {
       "Size": 388
@@ -2831,7 +2831,7 @@
       "Size": 157
     },
     "classes.dex": {
-      "Size": 1944832
+      "Size": 2200624
     },
     "assemblies/Xamarin.Forms.Performance.Integration.Droid.dll": {
       "Size": 183808
@@ -2981,7 +2981,7 @@
       "Size": 164864
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 2242048
+      "Size": 2256896
     },
     "assemblies/mscorlib.dll": {
       "Size": 2090496
@@ -2990,7 +2990,7 @@
       "Size": 389632
     },
     "assemblies/System.dll": {
-      "Size": 873984
+      "Size": 874496
     },
     "assemblies/System.Net.Http.dll": {
       "Size": 218112
@@ -3059,7 +3059,7 @@
       "Size": 8640
     },
     "lib/armeabi-v7a/libaot-System.dll.so": {
-      "Size": 3969392
+      "Size": 3970892
     },
     "lib/armeabi-v7a/libaot-Xamarin.Forms.Performance.Integration.Droid.dll.so": {
       "Size": 179420
@@ -3206,7 +3206,7 @@
       "Size": 443052
     },
     "lib/armeabi-v7a/libaot-Mono.Android.dll.so": {
-      "Size": 10474332
+      "Size": 10478660
     },
     "lib/armeabi-v7a/libaot-System.Xml.Linq.dll.so": {
       "Size": 328340
@@ -3215,7 +3215,7 @@
       "Size": 13224
     },
     "lib/armeabi-v7a/libaot-System.Numerics.dll.so": {
-      "Size": 161396
+      "Size": 161492
     },
     "lib/armeabi-v7a/libaot-System.Runtime.Serialization.dll.so": {
       "Size": 2204344
@@ -3272,7 +3272,7 @@
       "Size": 3283644
     },
     "lib/x86/libaot-System.dll.so": {
-      "Size": 3822632
+      "Size": 3824092
     },
     "lib/x86/libaot-System.Xml.dll.so": {
       "Size": 5696184
@@ -3341,7 +3341,7 @@
       "Size": 112356
     },
     "lib/x86/libaot-Mono.Android.dll.so": {
-      "Size": 9818752
+      "Size": 9818980
     },
     "lib/x86/libaot-Xamarin.Android.Support.v7.MediaRouter.dll.so": {
       "Size": 8336
@@ -3380,7 +3380,7 @@
       "Size": 466968
     },
     "lib/x86/libaot-System.Numerics.dll.so": {
-      "Size": 155612
+      "Size": 155712
     },
     "lib/x86/libaot-Xamarin.Android.Support.v7.RecyclerView.dll.so": {
       "Size": 2380252
@@ -3542,5 +3542,5 @@
       "Size": 122473
     }
   },
-  "PackageSize": 47332899
+  "PackageSize": 47455779
 }

@@ -2,7 +2,7 @@
   "Comment": null,
   "Entries": {
     "AndroidManifest.xml": {
-      "Size": 3684
+      "Size": 3664
     },
     "res/anim/abc_fade_in.xml": {
       "Size": 388
@@ -2831,7 +2831,7 @@
       "Size": 157
     },
     "classes.dex": {
-      "Size": 1944832
+      "Size": 2200624
     },
     "assemblies/Xamarin.Forms.Performance.Integration.Droid.dll": {
       "Size": 183808
@@ -2981,7 +2981,7 @@
       "Size": 164864
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 2242048
+      "Size": 2256896
     },
     "assemblies/mscorlib.dll": {
       "Size": 2090496
@@ -2990,7 +2990,7 @@
       "Size": 389632
     },
     "assemblies/System.dll": {
-      "Size": 873984
+      "Size": 874496
     },
     "assemblies/System.Net.Http.dll": {
       "Size": 218112
@@ -3170,5 +3170,5 @@
       "Size": 108895
     }
   },
-  "PackageSize": 21007581
+  "PackageSize": 21130461
 }
