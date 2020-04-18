@@ -484,6 +484,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Specified AndroidManifest file does not exist: {0}..
+        /// </summary>
+        internal static string XA1018 {
+            get {
+                return ResourceManager.GetString("XA1018", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 5 will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 5 is released..
         /// </summary>
         internal static string XA2000 {
@@ -777,6 +786,15 @@ namespace Xamarin.Android.Tasks.Properties {
         internal static string XA4226 {
             get {
                 return ResourceManager.GetString("XA4226", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to find specified //activity-alias/@android:targetActivity: &apos;{0}&apos;.
+        /// </summary>
+        internal static string XA4228 {
+            get {
+                return ResourceManager.GetString("XA4228", resourceCulture);
             }
         }
         
