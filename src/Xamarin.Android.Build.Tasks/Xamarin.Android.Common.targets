@@ -697,7 +697,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<CreateProperty Value="$(ProjectDir)$(AndroidManifest)" Condition="'$(AndroidManifest)' != ''">
 		<Output TaskParameter="Value" PropertyName="_AndroidManifestAbs"/>
 	</CreateProperty>
-	<Error Text="AndroidManifest file does not exist" Condition="'$(_AndroidManifestAbs)'!='' And !Exists ('$(_AndroidManifestAbs)')"/>
+	<AndroidError Code="XA1018"
+		ResourceName="XA1018"
+		FormatArguments="$(_AndroidManifestAbs)"
+		Condition="'$(_AndroidManifestAbs)'!='' And !Exists ('$(_AndroidManifestAbs)')" />
 
 	<GetAndroidPackageName ManifestFile="$(_AndroidManifestAbs)" AssemblyName="$(AssemblyName)">
 		<Output TaskParameter="PackageName" PropertyName="_AndroidPackage" />

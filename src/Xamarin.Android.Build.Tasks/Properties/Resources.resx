@@ -345,6 +345,11 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
     <comment>The following are literal names and should not be translated: Wear, AndroidManifest.xml, 'package'
 "Wear" is a short version of the full product name "Wear OS" and so should not be translated.</comment>
   </data>
+  <data name="XA1018" xml:space="preserve">
+    <value>Specified AndroidManifest file does not exist: {0}.</value>
+    <comment>The following are literal names and should not be translated: AndroidManifest
+{0} - The path of the specified AndroidManifest file</comment>
+  </data>
   <data name="XA2000" xml:space="preserve">
     <value>Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 5 will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 5 is released.</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
@@ -510,6 +515,11 @@ In this mesage, the term "layout" means an Android UI layout.
     <value>Resource item '{0}' does not have the required metadata item '{1}'.</value>
     <comment>{0} - The name of the Android layout resource file
 {1} - The name of the metadata item</comment>
+  </data>
+  <data name="XA4228" xml:space="preserve">
+    <value>Unable to find specified //activity-alias/@android:targetActivity: '{0}'</value>
+    <comment>The following are literal names and should not be translated: //activity-alias/@android:targetActivity
+{0} - The specified targetActivity name</comment>
   </data>
   <data name="XA4300" xml:space="preserve">
     <value>Native library '{0}' will not be bundled because it has an unsupported ABI.</value>

@@ -37,7 +37,7 @@ namespace Xamarin.Android.Tasks
 			// Look for targetSdkVersion in the user's AndroidManifest.xml
 			if (!string.IsNullOrWhiteSpace (AndroidManifest)) {
 				if (!File.Exists (AndroidManifest)) {
-					Log.LogError ("Specified AndroidManifest.xml file does not exist: {0}.", AndroidManifest);
+					Log.LogCodedError ("XA1018", Properties.Resources.XA1018, AndroidManifest);
 					return false;
 				}
 

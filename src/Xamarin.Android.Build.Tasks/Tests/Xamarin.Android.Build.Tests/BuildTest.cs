@@ -4180,6 +4180,22 @@ namespace UnnamedProject
 		}
 
 		[Test]
+		public void XA1018 ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetProperty ("AndroidManifest", "DoesNotExist");
+			using (var builder = CreateApkBuilder ()) {
+				builder.ThrowOnBuildFailure = false;
+				Assert.IsFalse (builder.Build (proj), "Build should have failed.");
+				string error = builder.LastBuildOutput
+						.SkipWhile (x => !x.StartsWith ("Build FAILED."))
+						.FirstOrDefault (x => x.Contains ("error XA1018:"));
+				Assert.IsNotNull (error, "Build should have failed with XA1018.");
+				StringAssert.Contains ("DoesNotExist", error, "Error should include the name of the nonexistent file");
+			}
+		}
+
+		[Test]
 		public void XA4310 ([Values ("apk", "aab")] string packageFormat)
 		{
 			var proj = new XamarinAndroidApplicationProject ();
