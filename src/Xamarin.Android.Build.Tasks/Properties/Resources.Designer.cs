@@ -169,7 +169,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Java SDK {0} or above is required when using $(TargetFrameworkVersion) {1}..
+        ///   Looks up a localized string similar to Java SDK {0} or above is required when using {1}..
         /// </summary>
         internal static string XA0031 {
             get {
