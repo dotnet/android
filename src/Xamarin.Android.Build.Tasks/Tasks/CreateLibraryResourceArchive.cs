@@ -95,7 +95,7 @@ namespace Xamarin.Android.Tasks
 		bool CopyLibraryContent (string projdir, bool isAar)
 		{
 			if (Path.GetFullPath (OutputDirectory).StartsWith (Path.GetFullPath (projdir), StringComparison.InvariantCultureIgnoreCase)) {
-				Log.LogError ("The source directory is under the output directory. Skip it.");
+				Log.LogCodedError ("XA1019", Properties.Resources.XA1019, Path.GetFullPath (projdir));
 				return false;
 			}
 			foreach (var subdir in Directory.GetDirectories (projdir)) {

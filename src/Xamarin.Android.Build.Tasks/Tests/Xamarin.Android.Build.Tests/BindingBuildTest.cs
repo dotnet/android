@@ -577,5 +577,24 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 				Assert.IsTrue (cs.Contains ("set {"), "(Baz) setter not generated.");
 			}
 		}
+
+		[Test]
+		public void BugzillaBug11964 ()
+		{
+			var proj = new XamarinAndroidBindingProject ();
+
+			proj.Sources.Add (new BuildItem ("LibraryProjectProperties", "project.properties") {
+				TextContent = () => ""
+			});
+
+			using (var builder = CreateDllBuilder ()) {
+				builder.ThrowOnBuildFailure = false;
+				Assert.IsFalse (builder.Build (proj), "Build should have failed.");
+				string error = builder.LastBuildOutput
+						.SkipWhile (x => !x.StartsWith ("Build FAILED."))
+						.FirstOrDefault (x => x.Contains ("error XA1019:"));
+				Assert.IsNotNull (error, "Build should have failed with XA1019.");
+			}
+		}
 	}
 }
