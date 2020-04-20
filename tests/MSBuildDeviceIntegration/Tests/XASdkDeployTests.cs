@@ -10,7 +10,7 @@ namespace Xamarin.Android.Build.Tests
 	[NonParallelizable]
 	public class XASdkDeployTests : DeviceTest
 	{
-		static readonly string SdkVersion = Assembly.GetAssembly(typeof(XASdkProject))
+		static readonly string SdkVersion = Assembly.GetAssembly (typeof(XASdkProject))
 			.GetCustomAttributes<AssemblyMetadataAttribute> ()
 			.Where (attr => attr.Key == "SdkVersion")
 			.Select (attr => attr.Value)
@@ -29,7 +29,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetRuntimeIdentifier (DeviceAbi);
 
 			var relativeProjDir = Path.Combine ("temp", TestName);
-			var fullProjDir = Path.Combine (Root, relativeProjDir);
+			var fullProjDir     = Path.Combine (Root, relativeProjDir);
 			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = fullProjDir;
 			var files = proj.Save ();
 			proj.Populate (relativeProjDir, files);
@@ -43,7 +43,5 @@ namespace Xamarin.Android.Build.Tests
 			RunAdbCommand ($"uninstall {proj.PackageName}");
 			Assert.IsTrue(didLaunch, "Activity should have started.");
 		}
-
-
 	}
 }
