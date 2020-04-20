@@ -2195,13 +2195,43 @@ because xbuild doesn't support framework reference assemblies.
   <ItemGroup>
     <_TargetLibDir Include="$(MSBuildThisFileDirectory)lib\%(_TargetArchitecture.Identity)" Condition=" Exists('$(MSBuildThisFileDirectory)lib\%(_TargetArchitecture.Identity)') "/>
   </ItemGroup>
-  <ItemGroup>
+  <SplitProperty Value="$(AndroidEmbedProfilers)" Condition=" '$(AndroidEmbedProfilers)' != '' ">
+    <Output TaskParameter="Output" ItemName="_EmbedProfilers" />
+  </SplitProperty>
+  <ItemGroup Condition=" '$(UsingAndroidNETSdk)' != 'True' ">
     <AndroidNativeLibrary Include="%(_TargetLibDir.Identity)\libsqlite3_xamarin.so" Condition="$(_Assemblies.Contains('Mono.Data.Sqlite.dll'))" />
     <AndroidNativeLibrary Include="%(_TargetLibDir.Identity)\libMonoPosixHelper.so" Condition="$(_Assemblies.Contains('Mono.Posix.dll'))" />
     <AndroidNativeLibrary Include="%(_TargetLibDir.Identity)\libmono-native.so"  />
     <AndroidNativeLibrary Include="%(_TargetLibDir.Identity)\libxamarin-debug-app-helper.so" Condition=" '$(AndroidUseDebugRuntime)' == 'True' "/>
     <_AndroidNativeLibraryForFastDev Condition=" '$(_InstantRunEnabled)' == 'True' And '$(AndroidUseDebugRuntime)' == 'True' " Include="%(_TargetLibDir.Identity)\libmono-native.so" />
     <_AndroidNativeLibraryForFastDev Condition=" '$(_InstantRunEnabled)' == 'True' And '$(AndroidUseDebugRuntime)' == 'True' " Include="%(_TargetLibDir.Identity)\libxamarin-debug-app-helper.so" />
+    <FrameworkNativeLibrary Include="%(_TargetLibDir.Identity)\libmono-android.debug.so" Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' " ArchiveFileName="libmonodroid.so" />
+    <FrameworkNativeLibrary Include="%(_TargetLibDir.Identity)\libmono-android.release.so" Condition=" '$(AndroidIncludeDebugSymbols)' != 'True' " ArchiveFileName="libmonodroid.so" />
+    <FrameworkNativeLibrary Include="%(_TargetLibDir.Identity)\libmono-btls-shared.so"  />
+    <FrameworkNativeLibrary Include="%(_TargetLibDir.Identity)\libmono-profiler-aot.so" Condition=" @(_EmbedProfilers->Count()) > 0 and (@(_EmbedProfilers->AnyHaveMetadataValue('Identity', 'aot')) or @(_EmbedProfilers->AnyHaveMetadataValue('Identity', 'all'))) " />
+    <FrameworkNativeLibrary Include="%(_TargetLibDir.Identity)\libmono-profiler-log.so" Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' or (@(_EmbedProfilers->Count()) > 0 and (@(_EmbedProfilers->AnyHaveMetadataValue('Identity', 'log')) or @(_EmbedProfilers->AnyHaveMetadataValue('Identity', 'all')))) " />
+    <FrameworkNativeLibrary Include="%(_TargetLibDir.Identity)\libmonosgen-2.0.so" Condition=" '$(AndroidUseSharedRuntime)' != 'True' " />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(UsingAndroidNETSdk)' == 'True' ">
+    <FrameworkNativeLibrary
+        Include="@(ResolvedFileToPublish)"
+        Condition=" '%(Filename)%(Extension)' == 'libmono-android.debug.so' and '$(AndroidIncludeDebugSymbols)' == 'True' "
+        ArchiveFileName="libmonodroid.so"
+    />
+    <FrameworkNativeLibrary
+        Include="@(ResolvedFileToPublish)"
+        Condition=" '%(Filename)%(Extension)' == 'libmono-android.release.so' and '$(AndroidIncludeDebugSymbols)' != 'True' "
+        ArchiveFileName="libmonodroid.so"
+    />
+    <FrameworkNativeLibrary
+        Include="@(ResolvedFileToPublish)"
+        Condition=" '%(Extension)' == '.so' and '%(Filename)' != 'libmono-android.debug' and '%(Filename)' != 'libmono-android.release' "
+    />
+    <!-- HACK remove any unexpected runtime components -->
+    <FrameworkNativeLibrary
+        Remove="@(ResolvedFileToPublish)"
+        Condition="  $([System.Text.RegularExpressions.Regex]::IsMatch('%(FullPath)', '.*linux-.*'))  "
+    />
   </ItemGroup>
 </Target>
 
@@ -2383,6 +2413,7 @@ because xbuild doesn't support framework reference assemblies.
     EmbedAssemblies="$(EmbedAssembliesIntoApk)"
     ResolvedUserAssemblies="@(_ShrunkUserAssemblies);@(_AndroidResolvedSatellitePaths)"
     ResolvedFrameworkAssemblies="@(_ShrunkFrameworkAssemblies)"
+    FrameworkNativeLibraries="@(FrameworkNativeLibrary)"
     NativeLibraries="@(AndroidNativeLibrary)"
     ApplicationSharedLibraries="@(_ApplicationSharedLibrary)"
     AdditionalNativeLibraryReferences="@(_AdditionalNativeLibraryReferences)"
@@ -2392,12 +2423,10 @@ because xbuild doesn't support framework reference assemblies.
     CreatePackagePerAbi="$(AndroidCreatePackagePerAbi)"
     UseSharedRuntime="$(AndroidUseSharedRuntime)"
     Debug="$(AndroidIncludeDebugSymbols)"
-    PreferNativeLibrariesWithDebugSymbols="$(AndroidPreferNativeLibrariesWithDebugSymbols)"
     JavaSourceFiles="@(AndroidJavaSource)"
     JavaLibraries="@(AndroidJavaLibrary)"
     AndroidSequencePointsMode="$(_SequencePointsMode)"
     LibraryProjectJars="@(ExtractedJarImports)"
-    AndroidEmbedProfilers="$(AndroidEmbedProfilers)"
     TlsProvider="$(AndroidTlsProvider)"
     UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)">
     <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
@@ -2412,6 +2441,7 @@ because xbuild doesn't support framework reference assemblies.
       EmbedAssemblies="$(EmbedAssembliesIntoApk)"
       ResolvedUserAssemblies="@(_ShrunkUserAssemblies);@(_AndroidResolvedSatellitePaths)"
       ResolvedFrameworkAssemblies="@(_ShrunkFrameworkAssemblies)"
+      FrameworkNativeLibraries="@(FrameworkNativeLibrary)"
       NativeLibraries="@(AndroidNativeLibrary)"
       ApplicationSharedLibraries="@(_ApplicationSharedLibrary)"
       AdditionalNativeLibraryReferences="@(_AdditionalNativeLibraryReferences)"
@@ -2421,12 +2451,10 @@ because xbuild doesn't support framework reference assemblies.
       CreatePackagePerAbi="False"
       UseSharedRuntime="$(AndroidUseSharedRuntime)"
       Debug="$(AndroidIncludeDebugSymbols)"
-      PreferNativeLibrariesWithDebugSymbols="$(AndroidPreferNativeLibrariesWithDebugSymbols)"
       JavaSourceFiles="@(AndroidJavaSource)"
       JavaLibraries="@(AndroidJavaLibrary)"
       AndroidSequencePointsMode="$(_SequencePointsMode)"
       LibraryProjectJars="@(ExtractedJarImports)"
-      AndroidEmbedProfilers="$(AndroidEmbedProfilers)"
       TlsProvider="$(AndroidTlsProvider)"
       UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)">
     <Output TaskParameter="OutputFiles" ItemName="BaseZipFile" />

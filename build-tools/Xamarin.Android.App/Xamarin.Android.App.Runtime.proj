@@ -32,10 +32,11 @@ projects that use the Xamarin.Android.App framework in .NET 5.
 
   <Target Name="_GetRuntimePackItems" >
     <PropertyGroup>
-      <FrameworkListFile>$(IntermediateOutputPath)$(AndroidRID)RuntimeList.xml</FrameworkListFile>
+      <FrameworkListFile>$(IntermediateOutputPath)$(AndroidRID)\RuntimeList.xml</FrameworkListFile>
     </PropertyGroup>
 
     <ItemGroup>
+      <_AndroidRuntimePackAssets Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\lib\$(AndroidABI)\libmono-android.debug.so" />
       <_AndroidRuntimePackAssets Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\lib\$(AndroidABI)\libmono-android.release.so" />
       <_AndroidRuntimePackAssets Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\lib\$(AndroidABI)\libsqlite3_xamarin.so" />
       <_AndroidRuntimePackAssets Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\lib\$(AndroidABI)\libxamarin-debug-app-helper.so" />

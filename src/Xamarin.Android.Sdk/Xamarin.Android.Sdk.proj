@@ -14,7 +14,13 @@ the new entry point for short-form style Android projets in .NET 5.
     <Authors>Microsoft</Authors>
     <Description>C# Tools and Bindings for the Android SDK</Description>
     <OutputPath>..\..\bin\Build$(Configuration)\nupkgs\</OutputPath>
+    <!-- Exclude mono bundle components declared in `create-installers.targets`. -->
+    <IncludeMonoBundleComponents>false</IncludeMonoBundleComponents>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Mono.Posix.NETStandard" Version="1.0.0" GeneratePathProperty="true" />
+  </ItemGroup>
 
   <Import Project="..\..\Configuration.props" />
   <Import Project="..\..\build-tools\installers\create-installers.targets" />
@@ -33,20 +39,18 @@ the new entry point for short-form style Android projets in .NET 5.
       <ToolsSourceDir>$(XamarinAndroidSourcePath)bin\Build$(Configuration)\packs\tools\</ToolsSourceDir>
     </PropertyGroup>
     <ItemGroup>
-      <AndroidSdkBuildTools Include="@(_MSBuildFiles);@(_MSBuildFilesWin)"
-          Condition=" '%(Filename)' != 'jnimarshalmethod-gen' " >
+      <AndroidSdkBuildTools Include="@(_MSBuildFiles);@(_MSBuildFilesWin)" >
         <RelativePath>$([MSBuild]::MakeRelative($(MSBuildSrcDir), %(FullPath)))</RelativePath>
       </AndroidSdkBuildTools>
       <AndroidSdkBuildTools Include="@(_MSBuildTargetsSrcFiles)" >
         <RelativePath>$([MSBuild]::MakeRelative($(MSBuildTargetsSrcDir), %(FullPath)))</RelativePath>
       </AndroidSdkBuildTools>
       <!-- Exclude host-os specific native libraries, aside from libMonoPosixHelper.dylib which is required by LibZipSharp on macOS. -->
-      <AndroidSdkBuildToolsUnix Include="@(_MSBuildFilesUnix);@(_MSBuildFilesUnixSwab);@(_MSBuildFilesUnixSign);@(_MSBuildFilesUnixSignAndHarden)"
-          Condition=" !$([System.Text.RegularExpressions.Regex]::IsMatch(%(FullPath), '.*host-$(HostOS).*')) " >
+      <AndroidSdkBuildToolsUnix Include="@(_MSBuildFilesUnix);@(_MSBuildFilesUnixSwab);@(_MSBuildFilesUnixSign);@(_MSBuildFilesUnixSignAndHarden)" >
         <RelativePath>$([MSBuild]::MakeRelative($(MSBuildSrcDir), %(FullPath)))</RelativePath>
       </AndroidSdkBuildToolsUnix>
-      <AndroidSdkBuildToolsUnix Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libMonoPosixHelper.$(LibExtension)" >
-        <RelativePath>libMonoPosixHelper.$(LibExtension)</RelativePath>
+      <AndroidSdkBuildToolsUnix Include="$(PkgMono_Posix_NETStandard)\runtimes\osx\native\libMonoPosixHelper.dylib" >
+        <RelativePath>libMonoPosixHelper.dylib</RelativePath>
       </AndroidSdkBuildToolsUnix>
     </ItemGroup>
     <!-- Copy only the required tools to new folder. Skip Unix item copying on Windows. -->

@@ -43,6 +43,9 @@ namespace Xamarin.Android.Tasks
 		public ITaskItem[] EmbeddedNativeLibraryAssemblies { get; set; }
 
 		[Required]
+		public ITaskItem[] FrameworkNativeLibraries { get; set; }
+
+		[Required]
 		public ITaskItem[] NativeLibraries { get; set; }
 
 		[Required]
@@ -75,15 +78,10 @@ namespace Xamarin.Android.Tasks
 
 		public string Debug { get; set; }
 
-		public bool PreferNativeLibrariesWithDebugSymbols { get; set; }
-
 		public string AndroidSequencePointsMode { get; set; }
 
-		public string AndroidEmbedProfilers { get; set; }
 		public string TlsProvider { get; set; }
 		public string UncompressedFileExtensions { get; set; }
-
-		static  readonly    string          MSBuildXamarinAndroidDirectory      = Path.GetDirectoryName (typeof (BuildApk).Assembly.Location);
 
 		[Output]
 		public ITaskItem[] OutputFiles { get; set; }
@@ -182,8 +180,7 @@ namespace Xamarin.Android.Tasks
 
 				int count = 0;
 				foreach (var file in files) {
-					var item = Path.Combine (file.archivePath, Path.GetFileName (file.filePath))
-						.Replace (Path.DirectorySeparatorChar, '/');
+					var item = Path.Combine (file.archivePath.Replace (Path.DirectorySeparatorChar, '/'));
 					existingEntries.Remove (item);
 					if (apk.SkipExistingFile (file.filePath, item)) {
 						Log.LogDebugMessage ($"Skipping {file.filePath} as the archive file is up to date.");
@@ -254,10 +251,6 @@ namespace Xamarin.Android.Tasks
 		public override bool RunTask ()
 		{
 			Aot.TryGetSequencePointsMode (AndroidSequencePointsMode, out sequencePointsMode);
-
-			if (string.IsNullOrEmpty (AndroidEmbedProfilers) && _Debug) {
-				AndroidEmbedProfilers = "log";
-			}
 
 			var outputFiles = new List<string> ();
 			uncompressedFileExtensions = UncompressedFileExtensions?.Split (new char [] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries) ?? new string [0];
@@ -407,32 +400,7 @@ namespace Xamarin.Android.Tasks
 		{
 			public string Path;
 			public string Abi;
-		}
-
-		static readonly string[] ArmAbis = new[]{
-			"arm64-v8a",
-			"armeabi-v7a",
-		};
-
-		public static readonly string[] ValidProfilers = new[]{
-			"aot",
-			"log",
-		};
-
-		HashSet<string> ParseProfilers (string value)
-		{
-			var results = new HashSet<string> ();
-			var values = value.Split (',', ';');
-			foreach (var v in values) {
-				if (string.Compare (v, "all", true) == 0) {
-					results.UnionWith (ValidProfilers);
-					break;
-				}
-				if (Array.BinarySearch (ValidProfilers, v, StringComparer.OrdinalIgnoreCase) < 0)
-					throw new InvalidOperationException ("Unsupported --profiler value: " + v + ".");
-				results.Add (v.ToLowerInvariant ());
-			}
-			return results;
+			public string ArchiveFileName;
 		}
 
 		CompressionMethod GetCompressionMethod (string fileName)
@@ -454,58 +422,27 @@ namespace Xamarin.Android.Tasks
 			apk.Archive.AddEntry (archivePath, File.OpenRead (filesystemPath), compressionMethod: GetCompressionMethod (archivePath));
 		}
 
-		void AddNativeLibrary (ZipArchiveEx apk, string abi, string filename, string inArchiveFileName = null)
-		{
-			string libPath = Path.Combine (MSBuildXamarinAndroidDirectory, "lib", abi);
-			string path    = Path.Combine (libPath, filename);
-			if (PreferNativeLibrariesWithDebugSymbols) {
-				string debugPath = Path.Combine (libPath, Path.ChangeExtension (filename, ".d.so"));
-				if (File.Exists (debugPath))
-					path = debugPath;
-			}
-
-			AddNativeLibraryToArchive (apk, abi, path, inArchiveFileName ?? filename);
-		}
-
-		void AddProfilers (ZipArchiveEx apk, string abi)
-		{
-			if (!string.IsNullOrEmpty (AndroidEmbedProfilers)) {
-				foreach (var profiler in ParseProfilers (AndroidEmbedProfilers)) {
-					var library = string.Format ("libmono-profiler-{0}.so", profiler);
-					AddNativeLibrary (apk, abi, library);
-				}
-			}
-		}
-
-		void AddBtlsLibs (ZipArchiveEx apk, string abi)
-		{
-			AddNativeLibrary (apk, abi, "libmono-btls-shared.so");
-		}
-
 		void AddRuntimeLibraries (ZipArchiveEx apk, string [] supportedAbis)
 		{
-			bool use_shared_runtime = String.Equals (UseSharedRuntime, "true", StringComparison.OrdinalIgnoreCase);
 			foreach (var abi in supportedAbis) {
-				string library = string.Format ("libmono-android.{0}.so", _Debug ? "debug" : "release");
-				AddNativeLibrary (apk, abi, library, "libmonodroid.so");
-
 				foreach (ITaskItem item in ApplicationSharedLibraries) {
 					if (String.Compare (abi, item.GetMetadata ("abi"), StringComparison.Ordinal) != 0)
 						continue;
 					AddNativeLibraryToArchive (apk, abi, item.ItemSpec, Path.GetFileName (item.ItemSpec));
 				}
-
-				if (!use_shared_runtime) {
-					// include the sgen
-					AddNativeLibrary (apk, abi, "libmonosgen-2.0.so");
-				}
-				AddBtlsLibs (apk, abi);
-				AddProfilers (apk, abi);
 			}
 		}
 
 		private void AddNativeLibraries (ArchiveFileList files, string [] supportedAbis)
 		{
+			var frameworkLibs = FrameworkNativeLibraries.Select (v => new LibInfo {
+				Path = v.ItemSpec,
+				Abi = GetNativeLibraryAbi (v),
+				ArchiveFileName = v.GetMetadata ("ArchiveFileName")
+			});
+
+			AddNativeLibraries (files, supportedAbis, frameworkLibs);
+
 			var libs = NativeLibraries.Concat (BundleNativeLibraries ?? Enumerable.Empty<ITaskItem> ())
 				.Select (v => new LibInfo { Path = v.ItemSpec, Abi = GetNativeLibraryAbi (v) });
 
@@ -534,11 +471,8 @@ namespace Xamarin.Android.Tasks
 						string.Join (", ", libs.Where (lib => lib.Abi == null).Select (lib => lib.Path)));
 			libs = libs.Where (lib => lib.Abi != null);
 			libs = libs.Where (lib => supportedAbis.Contains (lib.Abi));
-			foreach (var arm in ArmAbis)
-				foreach (var info in libs.Where (lib => lib.Abi == arm))
-					AddNativeLibrary (files, info.Path, info.Abi);
-			foreach (var info in libs.Where (lib => !ArmAbis.Contains (lib.Abi)))
-				AddNativeLibrary (files, info.Path, info.Abi);
+			foreach (var info in libs)
+				AddNativeLibrary (files, info.Path, info.Abi, info.ArchiveFileName);
 		}
 
 		private void AddAdditionalNativeLibraries (ArchiveFileList files, string [] supportedAbis)
@@ -552,13 +486,12 @@ namespace Xamarin.Android.Tasks
 			AddNativeLibraries (files, supportedAbis, libs);
 		}
 
-		void AddNativeLibrary (ArchiveFileList files, string path, string abi)
+		void AddNativeLibrary (ArchiveFileList files, string path, string abi, string archiveFileName)
 		{
-			var item = (filePath: path, archivePath: $"lib/{abi}");
-			string filename = "/" + Path.GetFileName (item.filePath);
-			string inArchivePath = item.archivePath + filename;
-			if (files.Any (x => (x.archivePath + "/" + Path.GetFileName(x.filePath)) == inArchivePath)) {
-				Log.LogCodedWarning ("XA4301", path, 0, Properties.Resources.XA4301, inArchivePath);
+			string fileName = string.IsNullOrEmpty (archiveFileName) ? Path.GetFileName (path) : archiveFileName;
+			var item = (filePath: path, archivePath: $"lib/{abi}/{fileName}");
+			if (files.Any (x => x.archivePath == item.archivePath)) {
+				Log.LogCodedWarning ("XA4301", path, 0, Properties.Resources.XA4301, item.archivePath);
 				return;
 			}
 			files.Add (item);

@@ -35,7 +35,6 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XASdkProject (SdkVersion) {
 				IsRelease = isRelease
 			};
-			proj.SetProperty (KnownProperties.AndroidLinkMode, AndroidLinkMode.None.ToString ());
 			var dotnet = CreateDotNetBuilder (proj);
 			Assert.IsTrue (dotnet.Publish (), "`dotnet publish` should succeed");
 		}
