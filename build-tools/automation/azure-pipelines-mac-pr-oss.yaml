@@ -1,0 +1,33 @@
+name: $(Build.SourceBranchName)-$(Build.SourceVersion)-$(Rev:r)
+
+pr:
+  autoCancel: true
+  branches:
+    include: master
+  # paths
+  # include: <path name>
+
+stages:
+- stage: build
+  displayName: Build
+  jobs:
+  - job: mac_build
+    displayName: Mac Build
+    pool: 
+      name: $(MacOSSPRPool)
+    timeoutInMinutes: 180
+    cancelTimeoutInMinutes: 5
+    workspace:
+      clean: all
+    
+    steps:
+    - checkout: self
+      submodules: recursive
+
+    - script: make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
+      displayName: make prepare-update-mono
+
+    - script: make jenkins V=1 PREPARE_CI_PR=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
+      displayName: make jenkins
