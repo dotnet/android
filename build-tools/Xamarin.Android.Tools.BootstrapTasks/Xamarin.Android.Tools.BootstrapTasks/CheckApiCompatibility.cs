@@ -117,8 +117,19 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				// Before validate, check that zip files were decompressed.
 				var zipFiles = Directory.GetFiles (referenceContractPath.FullName, "*.zip");
 				foreach (var zipFile in zipFiles) {
+					var zipDateTime = File.GetLastWriteTimeUtc (zipFile);
 					using (var zip = ZipArchive.Open (zipFile, FileMode.Open)) {
-						zip.ExtractAll (referenceContractPath.FullName);
+						foreach (var entry in zip) {
+							var path = Path.Combine (referenceContractPath.FullName, entry.NativeFullName);
+							if (!File.Exists (path) || File.GetLastWriteTimeUtc (path) < zipDateTime) {
+								Log.LogMessage ($"Extracting: {path}");
+								using (var fileStream = File.Create (path)) {
+									entry.Extract (fileStream);
+								}
+							} else {
+								Log.LogMessage ($"Skipping, up to date: {path}");
+							}
+						}
 					}
 				}
 
