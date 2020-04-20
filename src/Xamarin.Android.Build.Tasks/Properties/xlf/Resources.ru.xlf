@@ -278,6 +278,12 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
         <note>The following are literal names and should not be translated: Wear, AndroidManifest.xml, 'package'
 "Wear" is a short version of the full product name "Wear OS" and so should not be translated.</note>
       </trans-unit>
+      <trans-unit id="XA1018">
+        <source>Specified AndroidManifest file does not exist: {0}.</source>
+        <target state="new">Specified AndroidManifest file does not exist: {0}.</target>
+        <note>The following are literal names and should not be translated: AndroidManifest
+{0} - The path of the specified AndroidManifest file</note>
+      </trans-unit>
       <trans-unit id="XA2000">
         <source>Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 5 will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 5 is released.</source>
         <target state="new">Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 5 will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 5 is released.</target>
@@ -479,6 +485,12 @@ In this mesage, the term "layout" means an Android UI layout.
         <target state="new">Resource item '{0}' does not have the required metadata item '{1}'.</target>
         <note>{0} - The name of the Android layout resource file
 {1} - The name of the metadata item</note>
+      </trans-unit>
+      <trans-unit id="XA4228">
+        <source>Unable to find specified //activity-alias/@android:targetActivity: '{0}'</source>
+        <target state="new">Unable to find specified //activity-alias/@android:targetActivity: '{0}'</target>
+        <note>The following are literal names and should not be translated: //activity-alias/@android:targetActivity
+{0} - The specified targetActivity name</note>
       </trans-unit>
       <trans-unit id="XA4300">
         <source>Native library '{0}' will not be bundled because it has an unsupported ABI.</source>
