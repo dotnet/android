@@ -273,6 +273,7 @@ namespace Bug12935
 			}
 		}
 
+		// Information about version codes: https://devblogs.microsoft.com/xamarin/advanced-android-versioncode/
 		static object [] VersionCodeTestSource = new object [] {
 			new object[] {
 				/* seperateApk */ false,
@@ -362,7 +363,7 @@ namespace Bug12935
 				/* pattern */ "{abi}{minSDK:00}{versionCode:000}",
 				/* props */ null,
 				/* shouldBuild */ true,
-				/* expected */ "216012;316012",
+				/* expected */ "221012;321012",
 			},
 			new object[] {
 				/* seperateApk */ true,
@@ -372,7 +373,7 @@ namespace Bug12935
 				/* pattern */ "{abi}{minSDK:00}{screen}{versionCode:000}",
 				/* props */ "screen=24",
 				/* shouldBuild */ true,
-				/* expected */ "21624012;31624012",
+				/* expected */ "22124012;32124012",
 			},
 			new object[] {
 				/* seperateApk */ true,
@@ -382,7 +383,7 @@ namespace Bug12935
 				/* pattern */ "{abi}{minSDK:00}{screen}{foo:0}{versionCode:000}",
 				/* props */ "screen=24;foo=$(Foo)",
 				/* shouldBuild */ true,
-				/* expected */ "216241012;316241012",
+				/* expected */ "221241012;321241012",
 			},
 			new object[] {
 				/* seperateApk */ true,
@@ -392,7 +393,7 @@ namespace Bug12935
 				/* pattern */ "{abi}{minSDK:00}{screen}{foo:00}{versionCode:000}",
 				/* props */ "screen=24;foo=$(Foo)",
 				/* shouldBuild */ false,
-				/* expected */ "2162401012;3162401012",
+				/* expected */ "2212401012;3212401012",
 			},
 		};
 

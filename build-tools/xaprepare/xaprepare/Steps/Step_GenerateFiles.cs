@@ -114,10 +114,17 @@ namespace Xamarin.Android.Prepare
 		{
 			const string OutputFileName = "XABuildConfig.cs";
 
+			uint minimumApiAvailable = UInt32.MaxValue;
+			foreach (uint api in BuildAndroidPlatforms.NdkMinimumAPI.Values) {
+				if (api > minimumApiAvailable)
+					continue;
+				minimumApiAvailable = api;
+			}
+
 			var replacements = new Dictionary<string, string> (StringComparer.Ordinal) {
 				{ "@NDK_REVISION@",              context.BuildInfo.NDKRevision },
 				{ "@NDK_RELEASE@",               BuildAndroidPlatforms.AndroidNdkVersion },
-				{ "@NDK_MINIMUM_API_AVAILABLE@", context.BuildInfo.NDKMinimumApiAvailable },
+				{ "@NDK_MINIMUM_API_AVAILABLE@", minimumApiAvailable.ToString () },
 				{ "@NDK_VERSION_MAJOR@",         context.BuildInfo.NDKVersionMajor },
 				{ "@NDK_VERSION_MINOR@",         context.BuildInfo.NDKVersionMinor },
 				{ "@NDK_VERSION_MICRO@",         context.BuildInfo.NDKVersionMicro },
