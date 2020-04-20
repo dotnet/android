@@ -78,7 +78,6 @@ namespace Xamarin.ProjectTools
 		public bool Publish (string target = null)
 		{
 			var arguments = GetDefaultCommandLineArgs ("publish", target);
-			arguments.Add ("/p:SelfContained=True");
 			return Execute (arguments.ToArray ());
 		}
 
