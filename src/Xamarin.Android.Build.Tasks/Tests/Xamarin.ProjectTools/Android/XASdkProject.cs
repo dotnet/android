@@ -70,5 +70,21 @@ namespace Xamarin.ProjectTools
 				.Replace ("${JAVA_PACKAGENAME}", JavaPackageName);
 		}
 
+		public void SetRuntimeIdentifier (string androidAbi)
+		{
+			if (androidAbi == "armeabi-v7a") {
+				SetProperty (KnownProperties.RuntimeIdentifier, "android.21-arm");
+			}
+			else if (androidAbi == "arm64-v8a") {
+				SetProperty (KnownProperties.RuntimeIdentifier, "android.21-arm64");
+			}
+			else if (androidAbi == "x86") {
+				SetProperty (KnownProperties.RuntimeIdentifier, "android.21-x86");
+			}
+			else if (androidAbi == "x86_64") {
+				SetProperty (KnownProperties.RuntimeIdentifier, "android.21-x64");
+			}
+		}
+
 	}
 }

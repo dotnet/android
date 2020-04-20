@@ -21,24 +21,25 @@ _ResolveAssemblies MSBuild target.
           performance improvements around $(TargetFrameworkVersion)
           detection.
 
-        * @(ReferencePath) should not be used. We should be able to
-          rely on @(ResolvedFileToPublish) when we have Mono's runtime
-          packs for .NET 5.
+        * Is there better metadata to use other than %(NuGetPackageId)
+          to determine which runtime components are coming from our
+          known @(FrameworkReference)s?
     -->
 
     <ItemGroup>
       <ResolvedFrameworkAssemblies
-          Include="@(ReferencePath)"
-          Condition=" '%(ReferencePath.FrameworkReferenceName)' == 'Xamarin.Android.App' "
+          Include="@(ResolvedFileToPublish)"
+          Condition=" '%(ResolvedFileToPublish.Extension)' == '.dll' and '%(ResolvedFileToPublish.NuGetPackageId)' == 'Xamarin.Android.App.Runtime.$(RuntimeIdentifier)' "
           HasMonoAndroidReference="True"
       />
-      <ResolvedUserAssemblies
-          Include="@(ReferencePath)"
-          Condition=" '%(ReferencePath.FrameworkReferenceName)' != 'Xamarin.Android.App' "
+      <ResolvedFrameworkAssemblies
+          Include="@(ResolvedFileToPublish)"
+          Condition=" '%(ResolvedFileToPublish.Extension)' == '.dll' and '%(ResolvedFileToPublish.NuGetPackageId)' == 'Microsoft.NETCore.App.Runtime.$(RuntimeIdentifier)' "
           HasMonoAndroidReference="True"
       />
       <ResolvedUserAssemblies
           Include="@(ResolvedFileToPublish)"
+          Exclude="@(ResolvedFrameworkAssemblies)"
           Condition=" '%(ResolvedFileToPublish.Extension)' == '.dll' "
           HasMonoAndroidReference="True"
       />

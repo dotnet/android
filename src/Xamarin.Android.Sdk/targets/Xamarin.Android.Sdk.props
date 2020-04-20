@@ -32,14 +32,16 @@
 
   <!--  User-facing configuration-specific defaults -->
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <AndroidUseSharedRuntime Condition=" '$(AndroidUseSharedRuntime)' == '' ">true</AndroidUseSharedRuntime>
-    <EmbedAssembliesIntoApk Condition=" '$(EmbedAssembliesIntoApk)' == '' ">false</EmbedAssembliesIntoApk>
+    <!--FIXME: Disable the shared runtime and fast deployment default -->
+    <AndroidUseSharedRuntime Condition=" '$(AndroidUseSharedRuntime)' == '' ">false</AndroidUseSharedRuntime>
+    <EmbedAssembliesIntoApk Condition=" '$(EmbedAssembliesIntoApk)' == '' ">true</EmbedAssembliesIntoApk>
     <AndroidLinkMode Condition=" '$(AndroidLinkMode)' == '' ">None</AndroidLinkMode>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <AndroidUseSharedRuntime Condition=" '$(AndroidUseSharedRuntime)' == '' ">false</AndroidUseSharedRuntime>
     <EmbedAssembliesIntoApk Condition=" '$(EmbedAssembliesIntoApk)' == '' ">true</EmbedAssembliesIntoApk>
-    <AndroidLinkMode Condition=" '$(AndroidLinkMode)' == '' ">SdkOnly</AndroidLinkMode>
+    <!--FIXME: Disable linking by default -->
+    <AndroidLinkMode Condition=" '$(AndroidLinkMode)' == '' ">None</AndroidLinkMode>
     <AndroidManagedSymbols Condition=" '$(AndroidManagedSymbols)' == '' ">true</AndroidManagedSymbols>
   </PropertyGroup>
 
