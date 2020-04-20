@@ -2,6 +2,11 @@ plugins {
     id 'java'
 }
 
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
 // See: https://r8.googlesource.com/r8/+/refs/tags/1.5.67/build.gradle#53
 repositories {
     maven {
