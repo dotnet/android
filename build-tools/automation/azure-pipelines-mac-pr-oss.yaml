@@ -14,7 +14,7 @@ stages:
   - job: mac_build
     displayName: Mac Build
     pool: 
-      name: $(MacOSSPRPool)
+      name: $(XA.Build.MacOSSPool)
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:
