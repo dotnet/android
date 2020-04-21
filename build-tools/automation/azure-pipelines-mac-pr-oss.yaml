@@ -6,7 +6,8 @@ variables:
 pr:
   autoCancel: true
   branches:
-    include: master
+    include:
+    - master
   # paths
   # include: <path name>
 
