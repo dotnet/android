@@ -12,6 +12,8 @@ namespace apkdiff {
 				return new AssemblyDiff ();
 			case ".so":
 				return new SharedLibraryDiff ();
+			case ".dex":
+				return new DexDiff ();
 			}
 
 			return null;
