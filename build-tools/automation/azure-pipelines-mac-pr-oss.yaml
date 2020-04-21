@@ -8,8 +8,6 @@ pr:
   branches:
     include:
     - master
-  # paths
-  # include: <path name>
 
 stages:
 - stage: build
