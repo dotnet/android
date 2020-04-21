@@ -41,7 +41,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			var apkDescFile = Path.Combine (ApkDescDirectory, $"{Path.GetFileNameWithoutExtension (Package)}{ApkDescSuffix}{Path.GetExtension (Package)}desc");
 			var cmd = new CommandLineBuilder ();
 			cmd.AppendSwitch ("-s");
-			cmd.AppendSwitch ($"--save-description-1={apkDescFile}");
+			cmd.AppendSwitch ($"--save-description-2={apkDescFile}");
 			cmd.AppendSwitch ($"--test-apk-size-regression={ApkSizeThreshold}");
 			cmd.AppendSwitch ($"--test-assembly-size-regression={AssemblySizeThreshold}");
 			cmd.AppendFileNameIfNotNull (ReferenceDescription);
