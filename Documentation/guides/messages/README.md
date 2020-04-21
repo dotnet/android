@@ -65,6 +65,7 @@ ms.date: 01/24/2020
 + [XA0119](xa0119.md): A non-ideal configuration was found in the project.
 + [XA0121](xa0121.md): Assembly '{assembly}' is using '[assembly: Java.Interop.JavaLibraryReferenceAttribute]', which is no longer supported. Use a newer version of this NuGet package or notify the library author.
 + [XA0122](xa0122.md): Assembly '{assembly}' is using a deprecated attribute '[assembly: Java.Interop.DoNotPackageAttribute]'. Use a newer version of this NuGet package or notify the library author.
++ XA0123: Removing {issue} from {propertyName}. Lint {version} does not support this check.
 
 ## XA1xxx: Project related
 
@@ -87,6 +88,7 @@ ms.date: 01/24/2020
 + XA1016: Target Wear application's project '{project}' does not specify required 'AndroidManifest' project property.
 + XA1017: Target Wear application's AndroidManifest.xml does not specify required 'package' attribute.
 + XA1018: Specified AndroidManifest file does not exist: {file}.
++ XA1019: \`LibraryProjectProperties\` file \`{file}\` is located in a parent directory of the bindings project's intermediate output directory. Please adjust the path to use the original \`project.properties\` file directly from the Android library project directory.
 
 ## XA2xxx: Linker
 
