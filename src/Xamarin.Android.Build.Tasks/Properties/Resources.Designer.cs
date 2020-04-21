@@ -340,6 +340,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Removing {0} from {1}. Lint {2} does not support this check..
+        /// </summary>
+        internal static string XA0123 {
+            get {
+                return ResourceManager.GetString("XA0123", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to There was a problem parsing {0}. This is likely due to incomplete or invalid XML. Exception: {1}.
         /// </summary>
         internal static string XA1000 {
@@ -489,6 +498,15 @@ namespace Xamarin.Android.Tasks.Properties {
         internal static string XA1018 {
             get {
                 return ResourceManager.GetString("XA1018", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to `LibraryProjectProperties` file `{0}` is located in a parent directory of the bindings project&apos;s intermediate output directory. Please adjust the path to use the original `project.properties` file directly from the Android library project directory..
+        /// </summary>
+        internal static string XA1019 {
+            get {
+                return ResourceManager.GetString("XA1019", resourceCulture);
             }
         }
         

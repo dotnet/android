@@ -227,7 +227,7 @@ namespace Xamarin.Android.Tasks
 				var match = issueReplaceRegex.Match (DisabledIssues);
 				if (match.Success) {
 					issues = issues.Replace (match.Value, string.Empty);
-					Log.LogWarning ($"Removing {issueToRemove} from {issuePropertyName}. Lint {lintToolVersion} does not support this check.");
+					Log.LogCodedWarning ("XA0123", issueToRemove, issuePropertyName, lintToolVersion);
 				}
 			}
 			return issues;
