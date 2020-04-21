@@ -25,7 +25,8 @@ stages:
       clean: all
     
     steps:
-    - checkout: self
+    - checkout: self          # https://docs.microsoft.com/en-us/azure/devops/pipelines/yaml-schema?view=azure-devops&tabs=schema#checkout
+      clean: true             # Executes: git clean -ffdx && git reset --hard HEAD
       submodules: recursive
 
     - script: make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
