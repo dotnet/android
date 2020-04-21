@@ -511,6 +511,33 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to At least one Java library is required for binding. Check that a Java library is included in the project and has the appropriate build action: &apos;LibraryProjectZip&apos; (for AAR or ZIP), &apos;EmbeddedJar&apos;, &apos;InputJar&apos; (for JAR), or &apos;LibraryProjectProperties&apos; (project.properties)..
+        /// </summary>
+        internal static string XA1020 {
+            get {
+                return ResourceManager.GetString("XA1020", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specified source Java library not found: {0}.
+        /// </summary>
+        internal static string XA1021 {
+            get {
+                return ResourceManager.GetString("XA1021", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specified reference Java library not found: {0}.
+        /// </summary>
+        internal static string XA1022 {
+            get {
+                return ResourceManager.GetString("XA1022", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 5 will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 5 is released..
         /// </summary>
         internal static string XA2000 {
@@ -813,6 +840,24 @@ namespace Xamarin.Android.Tasks.Properties {
         internal static string XA4228 {
             get {
                 return ResourceManager.GetString("XA4228", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unrecognized `TransformFile` root element: {0}..
+        /// </summary>
+        internal static string XA4229 {
+            get {
+                return ResourceManager.GetString("XA4229", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error parsing XML: {0}.
+        /// </summary>
+        internal static string XA4230 {
+            get {
+                return ResourceManager.GetString("XA4230", resourceCulture);
             }
         }
         

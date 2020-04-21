@@ -89,6 +89,9 @@ ms.date: 01/24/2020
 + XA1017: Target Wear application's AndroidManifest.xml does not specify required 'package' attribute.
 + XA1018: Specified AndroidManifest file does not exist: {file}.
 + XA1019: \`LibraryProjectProperties\` file \`{file}\` is located in a parent directory of the bindings project's intermediate output directory. Please adjust the path to use the original \`project.properties\` file directly from the Android library project directory.
++ XA1020: At least one Java library is required for binding. Check that a Java library is included in the project and has the appropriate build action: 'LibraryProjectZip' (for AAR or ZIP), 'EmbeddedJar', 'InputJar' (for JAR), or 'LibraryProjectProperties' (project.properties).
++ XA1021: Specified source Java library not found: {file}
++ XA1022: Specified reference Java library not found: {file}
 
 ## XA2xxx: Linker
 
@@ -129,6 +132,8 @@ ms.date: 01/24/2020
 + XA4225: Widget '{widget}' in layout '{layout}' has multiple instances with different types. The property type will be set to: {type}
 + XA4226: Resource item '{file}' does not have the required metadata item '{metadataName}'.
 + XA4228: Unable to find specified //activity-alias/@android:targetActivity: '{targetActivity}'
++ XA4229: Unrecognized \`TransformFile\` root element: {element}.
++ XA4230: Error parsing XML: {exception}
 + XA4300: Native library '{library}' will not be bundled because it has an unsupported ABI.
 + [XA4301](xa4301.md): Apk already contains the item `xxx`.
 + [XA4302](xa4302.md): Unhandled exception merging \`AndroidManifest.xml\`: {ex}
