@@ -69,6 +69,7 @@ namespace Xamarin.Android.Build.Tests
 
 			var dotnet = CreateDotNetBuilder (proj);
 			Assert.IsTrue (dotnet.Publish (), "`dotnet publish` should succeed");
+			Assert.IsTrue (StringAssertEx.ContainsText (dotnet.LastBuildOutput, " 0 Warning(s)"), "Should have no MSBuild warnings.");
 
 			var apk = Path.Combine (Root, dotnet.ProjectDirectory, proj.OutputPath,
 				runtimeIdentifier, "UnnamedProject.UnnamedProject.apk");

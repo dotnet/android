@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace Xamarin.ProjectTools
@@ -82,6 +83,15 @@ namespace Xamarin.ProjectTools
 		{
 			var arguments = GetDefaultCommandLineArgs ("publish", target);
 			return Execute (arguments.ToArray ());
+		}
+
+		public IEnumerable<string> LastBuildOutput {
+			get {
+				if (!string.IsNullOrEmpty (BuildLogFile) && File.Exists (BuildLogFile)) {
+					return File.ReadLines (BuildLogFile, Encoding.UTF8);
+				}
+				return Enumerable.Empty<string> ();
+			}
 		}
 
 		List<string> GetDefaultCommandLineArgs (string verb, string target = null)

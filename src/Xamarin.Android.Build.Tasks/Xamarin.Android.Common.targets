@@ -40,7 +40,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.CalculateAdditionalResourceCacheDirectories" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CalculateLayoutCodeBehind" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CalculateProjectDependencies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.CheckGoogleSdkRequirements" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckForRemovedItems" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckForInvalidResourceFileNames" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CompileToDalvik" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -547,14 +546,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <Warning Code="XA0119"
       Text="Using Fast Deployment and Android App Bundles at the same time is not recommended. Use Fast Deployment for Debug configurations and Android App Bundles for Release configurations."
       Condition=" '$(AndroidUseSharedRuntime)' == 'True' And '$(AndroidPackageFormat)' == 'aab' "
-  />
-</Target>
-
-<Target Name="_CheckGoogleSdkRequirements"
-    Condition="Exists('$(IntermediateOutputPath)android\AndroidManifest.xml') And '$(AndroidEnableGooglePlayStoreChecks)' == 'true' ">
-  <CheckGoogleSdkRequirements
-      TargetFrameworkVersion="$(TargetFrameworkVersion)"
-      ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
   />
 </Target>
 
