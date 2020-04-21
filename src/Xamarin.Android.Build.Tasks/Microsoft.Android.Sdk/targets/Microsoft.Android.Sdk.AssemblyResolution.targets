@@ -1,6 +1,6 @@
 <!--
 ***********************************************************************************************
-Xamarin.Android.Sdk.AssemblyResolution.targets
+Microsoft.Android.Sdk.AssemblyResolution.targets
 
 This file contains the .NET 5-specific implementation for the
 _ResolveAssemblies MSBuild target.
@@ -29,7 +29,7 @@ _ResolveAssemblies MSBuild target.
     <ItemGroup>
       <ResolvedFrameworkAssemblies
           Include="@(ResolvedFileToPublish)"
-          Condition=" '%(ResolvedFileToPublish.Extension)' == '.dll' and '%(ResolvedFileToPublish.NuGetPackageId)' == 'Xamarin.Android.App.Runtime.$(RuntimeIdentifier)' "
+          Condition=" '%(ResolvedFileToPublish.Extension)' == '.dll' and '%(ResolvedFileToPublish.NuGetPackageId)' == 'Microsoft.Android.Runtime.$(RuntimeIdentifier)' "
           HasMonoAndroidReference="True"
       />
       <ResolvedFrameworkAssemblies
