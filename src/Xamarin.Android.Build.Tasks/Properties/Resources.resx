@@ -364,6 +364,20 @@ When it appears in the middle of a sentence, "lint" is not capitalized.
 In this message, the term "binding" means a piece of generated code that makes it easy to access an Android API written in Java from a Xamarin.Android project written in C# or F#.
 {0} - The path of the LibraryProjectProperties file</comment>
   </data>
+  <data name="XA1020" xml:space="preserve">
+    <value>At least one Java library is required for binding. Check that a Java library is included in the project and has the appropriate build action: 'LibraryProjectZip' (for AAR or ZIP), 'EmbeddedJar', 'InputJar' (for JAR), or 'LibraryProjectProperties' (project.properties).</value>
+    <comment>The following are literal names and should not be translated: LibraryProjectZip, EmbeddedJar, InputJar, LibraryProjectProperties, project.properties</comment>
+  </data>
+  <data name="XA1021" xml:space="preserve">
+    <value>Specified source Java library not found: {0}</value>
+    <comment>In this message, the term "source Java library" refers to the library that will be processed. In this case, the term "source" does not refer to "source code."
+{0} - The file name of the library</comment>
+  </data>
+  <data name="XA1022" xml:space="preserve">
+    <value>Specified reference Java library not found: {0}</value>
+    <comment>In this message, the term "reference Java library" refers to a library that is included as a reference so that types from the library can be resolved during the build process.
+{0} - The file name of the library</comment>
+  </data>
   <data name="XA2000" xml:space="preserve">
     <value>Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 5 will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 5 is released.</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
@@ -534,6 +548,16 @@ In this mesage, the term "layout" means an Android UI layout.
     <value>Unable to find specified //activity-alias/@android:targetActivity: '{0}'</value>
     <comment>The following are literal names and should not be translated: //activity-alias/@android:targetActivity
 {0} - The specified targetActivity name</comment>
+  </data>
+  <data name="XA4229" xml:space="preserve">
+    <value>Unrecognized `TransformFile` root element: {0}.</value>
+    <comment>The following are literal names and should not be translated: TransformFile
+In this message, "root element" refers to the root element of an XML file.
+{0} - The name of the root element</comment>
+  </data>
+  <data name="XA4230" xml:space="preserve">
+    <value>Error parsing XML: {0}</value>
+    <comment>{0} - The exception message and stack trace of the associated exception</comment>
   </data>
   <data name="XA4300" xml:space="preserve">
     <value>Native library '{0}' will not be bundled because it has an unsupported ABI.</value>
