@@ -93,7 +93,6 @@ namespace Java.Lang {
 		}
 
 #if JAVA_INTEROP
-		[DebuggerBrowsable (DebuggerBrowsableState.Never)]
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		public int JniIdentityHashCode {
 			get {return (int) key_handle;}
@@ -114,7 +113,6 @@ namespace Java.Lang {
 		}
 #endif  // JAVA_INTEROP
 
-		[DebuggerBrowsable (DebuggerBrowsableState.Never)]
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		public IntPtr Handle {
 			get {
