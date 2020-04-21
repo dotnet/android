@@ -1,5 +1,8 @@
 name: $(Build.SourceBranchName)-$(Build.SourceVersion)-$(Rev:r)
 
+variables:
+  XA.Build.Configuration: Release
+
 pr:
   autoCancel: true
   branches:
