@@ -35,6 +35,10 @@ In .NET 5 the behavior of the following MSBuild tasks will change, but
 
 `$(AndroidUseIntermediateDesignerFile)` will be `True` by default.
 
+## Default file inclusion
+
+Default Android related file globbing behavior is defined in `Microsoft.Android.Sdk.DefaultItems.props`.
+
 ## dotnet cli
 
 There are currently two "verbs" we are aiming to get working in
@@ -65,3 +69,43 @@ Almost everything else happens during `donet publish`:
 * Compile java code via `javac`
 * Convert java code to `.dex` via d8/r8
 * Create an `.apk` or `.aab` and sign it
+
+
+### Preview testing
+
+The following instructions can be used for early preview testing.
+
+  1) Install the [latest .NET 5 preview][0]. Preview 4 or later is required.
+
+  2) Create a `nuget.config` file that has a package source pointing to
+     local packages or `xamarin-impl` feed, as well as the .NET 5 feed:
+
+```xml
+<configuration>
+  <packageSources>
+    <add key="xamarin-impl" value="https://pkgs.dev.azure.com/azure-public/vside/_packaging/xamarin-impl/nuget/v3/index.json" />
+    <add key="dotnet5" value="https://dnceng.pkgs.visualstudio.com/public/_packaging/dotnet5/nuget/v3/index.json" />
+  </packageSources>
+</configuration>
+```
+
+  3) Open an existing Android project (ideally something minimal) and
+    tweak it as shown below. The version should match the version of the
+    packages you want to use:
+
+```xml
+<Project Sdk="Microsoft.Android.Sdk/10.4.99.24">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp5.0</TargetFramework>
+    <RuntimeIdentifier>android.21-arm64</RuntimeIdentifier>
+  </PropertyGroup>
+</Project>
+```
+
+  4) Publish (and optionally install) the project:
+
+```
+dotnet publish -t:Install *.csproj
+```
+
+[0]:  https://github.com/dotnet/installer#installers-and-binaries
