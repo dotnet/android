@@ -30,9 +30,9 @@ stages:
       submodules: recursive
 
     - script: make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
-      workingDirectory: $(Build.SourcesDirectory)/xamarin-android
+      workingDirectory: $(Build.SourcesDirectory)
       displayName: make prepare-update-mono
 
     - script: make jenkins V=1 PREPARE_CI_PR=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
-      workingDirectory: $(Build.SourcesDirectory)/xamarin-android
+      workingDirectory: $(Build.SourcesDirectory)
       displayName: make jenkins
