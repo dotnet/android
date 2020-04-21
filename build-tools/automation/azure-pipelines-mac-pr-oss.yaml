@@ -3,6 +3,9 @@ name: $(Build.SourceBranchName)-$(Build.SourceVersion)-$(Rev:r)
 # Predefined variables: https://docs.microsoft.com/en-us/azure/devops/pipelines/build/variables?view=azure-devops&tabs=yaml
 variables:
   XA.Build.Configuration: Release
+  DotNetCoreVersion: 3.x
+  # Version number from: https://dotnet.microsoft.com/download/dotnet-core/5.0
+  DotNetCorePreviewVersion: 5.0.100-preview.1.20155.7
 
 pr:
   autoCancel: true
@@ -28,6 +31,16 @@ stages:
       path: xamarin-android
       clean: true             # Executes: git clean -ffdx && git reset --hard HEAD
       submodules: recursive
+
+    - task: UseDotNet@2
+      displayName: install .NET Core $(DotNetCorePreviewVersion)
+      inputs:
+        version: $(DotNetCorePreviewVersion)
+
+    - task: UseDotNet@2
+      displayName: install .NET Core $(DotNetCoreVersion)
+      inputs:
+        version: $(DotNetCoreVersion)
 
     - script: make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
       workingDirectory: $(Build.SourcesDirectory)
