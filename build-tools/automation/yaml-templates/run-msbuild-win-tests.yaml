@@ -15,6 +15,8 @@ jobs:
 
     - template: kill-processes.yaml
 
+    - template: windows-defender.yaml
+
     - template: clean.yaml
 
     - template: setup-test-environment.yaml

@@ -244,6 +244,8 @@ stages:
 
     - template: yaml-templates\kill-processes.yaml
 
+    - template: yaml-templates\windows-defender.yaml
+
     - template: yaml-templates\clean.yaml
 
     - task: UseDotNet@2

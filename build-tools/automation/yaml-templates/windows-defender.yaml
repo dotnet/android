@@ -1,0 +1,8 @@
+steps:
+- powershell: |
+    $ErrorActionPreference = 'Continue'
+    Add-MpPreference -ExclusionPath "$env:UserProfile\android-toolchain"
+    Add-MpPreference -ExclusionPath "$env:UserProfile\android-archives"
+    Add-MpPreference -ExclusionPath "$(System.DefaultWorkingDirectory)"
+    $LastExitCode = 0
+  displayName: Windows Defender exclusion
