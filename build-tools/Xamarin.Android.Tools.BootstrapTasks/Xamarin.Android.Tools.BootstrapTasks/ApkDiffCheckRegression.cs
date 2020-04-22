@@ -11,6 +11,12 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 	public class ApkDiffCheckRegression : ToolTask
 	{
 		[Required]
+		public string ApkDescDirectory { get; set; }
+
+		[Required]
+		public string ApkDescSuffix { get; set; }
+
+		[Required]
 		public string ApkDiffTool { get; set; }
 
 		[Required]
@@ -32,8 +38,10 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 		protected override string GenerateCommandLineCommands ()
 		{
+			var apkDescFile = Path.Combine (ApkDescDirectory, $"{Path.GetFileNameWithoutExtension (Package)}{ApkDescSuffix}{Path.GetExtension (Package)}desc");
 			var cmd = new CommandLineBuilder ();
 			cmd.AppendSwitch ("-s");
+			cmd.AppendSwitch ($"--save-description-2={apkDescFile}");
 			cmd.AppendSwitch ($"--test-apk-size-regression={ApkSizeThreshold}");
 			cmd.AppendSwitch ($"--test-assembly-size-regression={AssemblySizeThreshold}");
 			cmd.AppendFileNameIfNotNull (ReferenceDescription);

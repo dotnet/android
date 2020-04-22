@@ -330,6 +330,8 @@
     </PropertyGroup>
     <ApkDiffCheckRegression
         Condition="Exists('$(_ApkSizesReferenceDirectory)\$([System.IO.Path]::GetFileNameWithoutExtension(%(_AllArchives.Identity)))-$(Configuration)$(TestsFlavor)$([System.IO.Path]::GetExtension(%(_AllArchives.Identity)))desc')"
+        ApkDescDirectory="$(OutputPath)"
+        ApkDescSuffix="-$(Configuration)$(TestsFlavor)"
         ApkDiffTool="$(ApkDiffPath)"
         Package="%(_AllArchives.Identity)"
         ReferenceDescription="$(_ApkSizesReferenceDirectory)\$([System.IO.Path]::GetFileNameWithoutExtension(%(_AllArchives.Identity)))-$(Configuration)$(TestsFlavor)$([System.IO.Path]::GetExtension(%(_AllArchives.Identity)))desc"
