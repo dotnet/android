@@ -1,6 +1,6 @@
 <!--
 ***********************************************************************************************
-Xamarin.Android.Sdk.Tooling.targets
+Microsoft.Android.Sdk.Tooling.targets
 
 This file contains .NET 5-specific calls to the <ValidateJavaVersion/>
 and <ResolveAndroidTooling/> MSBuild tasks. These MSBuild tasks are

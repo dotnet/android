@@ -31,7 +31,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
-    <OutputPath>$(XAInstallPrefix)xbuild-frameworks\Xamarin.Android.App\$(TargetFramework)\</OutputPath>
+    <OutputPath>$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\$(TargetFramework)\</OutputPath>
   </PropertyGroup>
 
   <PropertyGroup>
