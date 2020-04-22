@@ -12,7 +12,7 @@ namespace Xamarin.ProjectTools
 			SetProperty ("ProjectGuid", () => "{" + ProjectGuid + "}");
 			SetProperty ("TargetFrameworkProfile", "Profile78");
 			SetProperty ("TargetFrameworkVersion", "v4.5");
-			SetProperty ("OutputType", "Library");
+			SetProperty (KnownProperties.OutputType, "Library");
 		}
 
 		public override string ProjectTypeGuid {

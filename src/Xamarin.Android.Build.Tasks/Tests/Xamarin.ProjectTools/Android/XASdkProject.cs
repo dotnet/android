@@ -24,7 +24,7 @@ namespace Xamarin.ProjectTools
 		public string PackageName { get; set; }
 		public string JavaPackageName { get; set; }
 
-		public XASdkProject (string sdkVersion = "")
+		public XASdkProject (string sdkVersion = "", string outputType = "Exe")
 		{
 			Sdk = string.IsNullOrEmpty (sdkVersion) ? "Microsoft.Android.Sdk" : $"Microsoft.Android.Sdk/{sdkVersion}";
 			TargetFramework = "netcoreapp5.0";
@@ -33,6 +33,7 @@ namespace Xamarin.ProjectTools
 			JavaPackageName = JavaPackageName ?? PackageName.ToLowerInvariant ();
 			ExtraNuGetConfigSources = new List<string> { Path.Combine (XABuildPaths.BuildOutputDirectory, "nupkgs") };
 			GlobalPackagesFolder = Path.Combine (XABuildPaths.TopDirectory, "packages");
+			SetProperty (KnownProperties.OutputType, outputType);
 
 			using (var sr = new StreamReader (typeof (XamarinAndroidApplicationProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.AndroidManifest.xml")))
 				default_android_manifest = sr.ReadToEnd ();
@@ -46,9 +47,11 @@ namespace Xamarin.ProjectTools
 			}
 
 			// Add relevant Android content to our project without writing it to the .csproj file
-			Sources.Add (new BuildItem.Source ("Properties\\AndroidManifest.xml") {
-				TextContent = () => default_android_manifest.Replace ("${PROJECT_NAME}", ProjectName).Replace ("${PACKAGENAME}", string.Format ("{0}.{0}", ProjectName))
-			});
+			if (outputType == "Exe") {
+				Sources.Add (new BuildItem.Source ("Properties\\AndroidManifest.xml") {
+					TextContent = () => default_android_manifest.Replace ("${PROJECT_NAME}", ProjectName).Replace ("${PACKAGENAME}", string.Format ("{0}.{0}", ProjectName))
+				});
+			}
 			Sources.Add (new BuildItem.Source ($"MainActivity{Language.DefaultExtension}") { TextContent = () => ProcessSourceTemplate (default_main_activity_cs) });
 			Sources.Add (new BuildItem.Source ("Resources\\layout\\Main.axml") { TextContent = () => default_layout_main });
 			Sources.Add (new BuildItem.Source ("Resources\\values\\Strings.xml") { TextContent = () => default_strings_xml.Replace ("${PROJECT_NAME}", ProjectName) });

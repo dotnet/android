@@ -3,15 +3,20 @@
 _NOTE: this document is very likely to change, as the requirements for
 .NET 5 are better understood._
 
-A .NET 5 project for Xamarin.Android will look something like:
+A .NET 5 project for a Xamarin.Android application will look something
+like:
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net5.0-android</TargetFramework>
+    <OutputType>Exe</OutputType>
   </PropertyGroup>
 </Project>
 ```
+
+For a "library" project, you would omit the `$(OutputType)` property
+completely or specify `Library`.
 
 See the [Target Framework Names in .NET 5][net5spec] spec for details.
 
