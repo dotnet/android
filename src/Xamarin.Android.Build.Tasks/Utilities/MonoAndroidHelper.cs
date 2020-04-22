@@ -256,17 +256,6 @@ namespace Xamarin.Android.Tasks
 			"x86_64",
 		};
 
-		static readonly Dictionary<string, string> RidAbiMap = new Dictionary<string, string> {
-			{ "android.21-arm64", "arm64-v8a" },
-			{ "android.21-arm", "armeabi-v7a" },
-			{ "android.21-x86", "x86" },
-			{ "android.21-x64", "x86_64" },
-			{ "android-arm64", "arm64-v8a" },
-			{ "android-arm", "armeabi-v7a" },
-			{ "android-x86", "x86" },
-			{ "android-x64", "x86_64" },
-		};
-
 		public static string GetNativeLibraryAbi (string lib)
 		{
 			// The topmost directory the .so file is contained within
@@ -296,9 +285,7 @@ namespace Xamarin.Android.Tasks
 			// Check for a RuntimeIdentifier
 			var rid = lib.GetMetadata ("RuntimeIdentifier");
 			if (!string.IsNullOrWhiteSpace (rid)) {
-				if (RidAbiMap.ContainsKey (rid)) {
-					lib_abi = RidAbiMap [rid];
-				}
+				lib_abi = RuntimeIdentifierToAbi (rid);
 			}
 			
 			if (!string.IsNullOrWhiteSpace (lib_abi))
@@ -691,6 +678,39 @@ namespace Xamarin.Android.Tasks
 				return newfile;
 			}
 			return string.Empty;
+		}
+
+		/// <summary>
+		/// Converts .NET 5 RIDs to Android ABIs or an empty string if no match.
+		/// 
+		/// Known RIDs:
+		/// "android.21-arm64" -> "arm64-v8a"
+		/// "android.21-arm"   -> "armeabi-v7a"
+		/// "android.21-x86"   -> "x86"
+		/// "android.21-x64"   -> "x86_64"
+		/// "android-arm64"    -> "arm64-v8a"
+		/// "android-arm"      -> "armeabi-v7a"
+		/// "android-x86"      -> "x86"
+		/// "android-x64"      -> "x86_64"
+		/// </summary>
+		public static string RuntimeIdentifierToAbi (string runtimeIdentifier)
+		{
+			if (string.IsNullOrEmpty (runtimeIdentifier)) {
+				return "";
+			}
+			if (runtimeIdentifier.EndsWith ("-arm64", StringComparison.OrdinalIgnoreCase)) {
+				return "arm64-v8a";
+			}
+			if (runtimeIdentifier.EndsWith ("-arm", StringComparison.OrdinalIgnoreCase)) {
+				return "armeabi-v7a";
+			}
+			if (runtimeIdentifier.EndsWith ("-x86", StringComparison.OrdinalIgnoreCase)) {
+				return "x86";
+			}
+			if (runtimeIdentifier.EndsWith ("-x64", StringComparison.OrdinalIgnoreCase)) {
+				return "x86_64";
+			}
+			return "";
 		}
 	}
 }
