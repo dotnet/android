@@ -18,7 +18,6 @@ namespace Xamarin.ProjectTools
 			ProjectName = "UnnamedProject";
 			Sources = new List<BuildItem> ();
 			OtherBuildItems = new List<BuildItem> ();
-			SetProperty (CommonProperties, "DebugType", "full");
 			ItemGroupList.Add (Sources);
 			ItemGroupList.Add (OtherBuildItems);
 			Language = XamarinAndroidProjectLanguage.CSharp;

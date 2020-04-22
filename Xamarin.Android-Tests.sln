@@ -52,7 +52,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.BindingReso
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.BindingResolveImports-Tests", "tests\ResolveImports\Xamarin.Android.BindingResolveImports-Tests\Xamarin.Android.BindingResolveImports-Tests.csproj", "{B297008B-C313-455E-B230-E119589D2D79}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Xamarin.Forms.Performance.Integration", "tests\Xamarin.Forms-Performance-Integration\Xamarin.Forms.Performance.Integration.csproj", "{195BE9C2-1F91-40DC-BD6D-DE860BF083FB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Forms.Performance.Integration", "tests\Xamarin.Forms-Performance-Integration\Xamarin.Forms.Performance.Integration.csproj", "{195BE9C2-1F91-40DC-BD6D-DE860BF083FB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Forms.Performance.Integration.Droid", "tests\Xamarin.Forms-Performance-Integration\Droid\Xamarin.Forms.Performance.Integration.Droid.csproj", "{576312CC-83FF-48B1-A473-488CDC7121AD}"
 EndProject

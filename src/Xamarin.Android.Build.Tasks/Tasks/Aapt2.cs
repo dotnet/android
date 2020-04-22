@@ -123,7 +123,7 @@ namespace Xamarin.Android.Tasks {
 				}
 				if (message.StartsWith ("unknown option", StringComparison.OrdinalIgnoreCase)) {
 					// we need to filter out the remailing help lines somehow. 
-					LogCodedError ("APT0001", $"{message}. This is the result of using `aapt` command line arguments with `aapt2`. The arguments are not compatible.");
+					LogCodedError ("APT0001", Properties.Resources.APT0001, message.Substring ("unknown option '".Length).TrimEnd ('.', '\''));
 					return false;
 				}
 				if (message.Contains ("in APK") && message.Contains ("is compressed.")) {

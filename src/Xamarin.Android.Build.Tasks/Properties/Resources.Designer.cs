@@ -61,6 +61,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unknown option `{0}`. Please check `$(AndroidAapt2CompileExtraArgs)` and `$(AndroidAapt2LinkExtraArgs)` to see if they include any `aapt` command line arguments that are no longer valid for `aapt2` and ensure that all other arguments are valid for `aapt2`..
+        /// </summary>
+        internal static string APT0001 {
+            get {
+                return ResourceManager.GetString("APT0001", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid file name: It must contain only {0}..
         /// </summary>
         internal static string APT0002 {
@@ -160,7 +169,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Java SDK {0} or above is required when using $(TargetFrameworkVersion) {1}..
+        ///   Looks up a localized string similar to Java SDK {0} or above is required when using {1}..
         /// </summary>
         internal static string XA0031 {
             get {
@@ -331,6 +340,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Removing {0} from {1}. Lint {2} does not support this check..
+        /// </summary>
+        internal static string XA0123 {
+            get {
+                return ResourceManager.GetString("XA0123", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to There was a problem parsing {0}. This is likely due to incomplete or invalid XML. Exception: {1}.
         /// </summary>
         internal static string XA1000 {
@@ -412,6 +430,123 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Using ProGuard with the D8 DEX compiler is no longer supported. Please update `$(AndroidLinkTool)` to `r8`..
+        /// </summary>
+        internal static string XA1011 {
+            get {
+                return ResourceManager.GetString("XA1011", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Included layout root element override ID &apos;{0}&apos; is not valid..
+        /// </summary>
+        internal static string XA1012 {
+            get {
+                return ResourceManager.GetString("XA1012", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to parse ID of node &apos;{0}&apos; in the layout file &apos;{1}&apos;..
+        /// </summary>
+        internal static string XA1013 {
+            get {
+                return ResourceManager.GetString("XA1013", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to JAR library references with identical file names but different contents were found: {0}. Please remove any conflicting libraries from EmbeddedJar, InputJar and AndroidJavaLibrary..
+        /// </summary>
+        internal static string XA1014 {
+            get {
+                return ResourceManager.GetString("XA1014", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to More than one Android Wear project is specified as the paired project. It can be at most one..
+        /// </summary>
+        internal static string XA1015 {
+            get {
+                return ResourceManager.GetString("XA1015", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Target Wear application&apos;s project &apos;{0}&apos; does not specify required &apos;AndroidManifest&apos; project property..
+        /// </summary>
+        internal static string XA1016 {
+            get {
+                return ResourceManager.GetString("XA1016", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Target Wear application&apos;s AndroidManifest.xml does not specify required &apos;package&apos; attribute..
+        /// </summary>
+        internal static string XA1017 {
+            get {
+                return ResourceManager.GetString("XA1017", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specified AndroidManifest file does not exist: {0}..
+        /// </summary>
+        internal static string XA1018 {
+            get {
+                return ResourceManager.GetString("XA1018", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to `LibraryProjectProperties` file `{0}` is located in a parent directory of the bindings project&apos;s intermediate output directory. Please adjust the path to use the original `project.properties` file directly from the Android library project directory..
+        /// </summary>
+        internal static string XA1019 {
+            get {
+                return ResourceManager.GetString("XA1019", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to At least one Java library is required for binding. Check that a Java library is included in the project and has the appropriate build action: &apos;LibraryProjectZip&apos; (for AAR or ZIP), &apos;EmbeddedJar&apos;, &apos;InputJar&apos; (for JAR), or &apos;LibraryProjectProperties&apos; (project.properties)..
+        /// </summary>
+        internal static string XA1020 {
+            get {
+                return ResourceManager.GetString("XA1020", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specified source Java library not found: {0}.
+        /// </summary>
+        internal static string XA1021 {
+            get {
+                return ResourceManager.GetString("XA1021", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specified reference Java library not found: {0}.
+        /// </summary>
+        internal static string XA1022 {
+            get {
+                return ResourceManager.GetString("XA1022", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 5 will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 5 is released..
+        /// </summary>
+        internal static string XA2000 {
+            get {
+                return ResourceManager.GetString("XA2000", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Source file &apos;{0}&apos; could not be found..
         /// </summary>
         internal static string XA2001 {
@@ -444,6 +579,24 @@ namespace Xamarin.Android.Tasks.Properties {
         internal static string XA2006 {
             get {
                 return ResourceManager.GetString("XA2006", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exception while loading assemblies: {0}.
+        /// </summary>
+        internal static string XA2007 {
+            get {
+                return ResourceManager.GetString("XA2007", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to In referenced assembly {0}, Java.Interop.DoNotPackageAttribute requires non-null file name..
+        /// </summary>
+        internal static string XA2008 {
+            get {
+                return ResourceManager.GetString("XA2008", resourceCulture);
             }
         }
         
@@ -610,6 +763,105 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot find binding generator for language {0} or {1}..
+        /// </summary>
+        internal static string XA4219 {
+            get {
+                return ResourceManager.GetString("XA4219", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Partial class item &apos;{0}&apos; does not have an associated binding for layout &apos;{1}&apos;..
+        /// </summary>
+        internal static string XA4220 {
+            get {
+                return ResourceManager.GetString("XA4220", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No layout binding source files were generated..
+        /// </summary>
+        internal static string XA4221 {
+            get {
+                return ResourceManager.GetString("XA4221", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No widgets found for layout ({0})..
+        /// </summary>
+        internal static string XA4222 {
+            get {
+                return ResourceManager.GetString("XA4222", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Malformed full class name &apos;{0}&apos;. Missing namespace..
+        /// </summary>
+        internal static string XA4223 {
+            get {
+                return ResourceManager.GetString("XA4223", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Malformed full class name &apos;{0}&apos;. Missing class name..
+        /// </summary>
+        internal static string XA4224 {
+            get {
+                return ResourceManager.GetString("XA4224", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Widget &apos;{0}&apos; in layout &apos;{1}&apos; has multiple instances with different types. The property type will be set to: {2}.
+        /// </summary>
+        internal static string XA4225 {
+            get {
+                return ResourceManager.GetString("XA4225", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Resource item &apos;{0}&apos; does not have the required metadata item &apos;{1}&apos;..
+        /// </summary>
+        internal static string XA4226 {
+            get {
+                return ResourceManager.GetString("XA4226", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to find specified //activity-alias/@android:targetActivity: &apos;{0}&apos;.
+        /// </summary>
+        internal static string XA4228 {
+            get {
+                return ResourceManager.GetString("XA4228", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unrecognized `TransformFile` root element: {0}..
+        /// </summary>
+        internal static string XA4229 {
+            get {
+                return ResourceManager.GetString("XA4229", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error parsing XML: {0}.
+        /// </summary>
+        internal static string XA4230 {
+            get {
+                return ResourceManager.GetString("XA4230", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Native library &apos;{0}&apos; will not be bundled because it has an unsupported ABI..
         /// </summary>
         internal static string XA4300 {
@@ -732,6 +984,15 @@ namespace Xamarin.Android.Tasks.Properties {
         internal static string XA4310 {
             get {
                 return ResourceManager.GetString("XA4310", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The application won&apos;t contain the paired Wear package because the Wear application package APK is not created yet. If building on the command line, be sure to build the &quot;SignAndroidPackage&quot; target..
+        /// </summary>
+        internal static string XA4311 {
+            get {
+                return ResourceManager.GetString("XA4311", resourceCulture);
             }
         }
         

@@ -31,7 +31,7 @@ BOOTSTRAP_BUILD_LOG = bin/Build$(CONFIGURATION)/bootstrap-build.binlog
 BOOTSTRAP_MSBUILD_FLAGS = /t:Restore,Build /binaryLogger:"$(BOOTSTRAP_BUILD_LOG)" $(PREPARE_COMMON_MSBUILD_FLAGS)
 
 all:
-	$(call MSBUILD_BINLOG,all,$(_SLN_BUILD)) $(MSBUILD_FLAGS) $(SOLUTION)
+	$(call MSBUILD_BINLOG,all,$(_SLN_BUILD)) /restore $(MSBUILD_FLAGS) $(SOLUTION)
 
 -include bin/Build$(CONFIGURATION)/rules.mk
 
@@ -102,7 +102,7 @@ MSBUILD_FLAGS += /p:AndroidApiLevel=$(API_LEVEL) /p:AndroidFrameworkVersion=$(wo
 endif
 
 all-tests::
-	MSBUILD="$(MSBUILD)" $(call MSBUILD_BINLOG,all-tests,tools/scripts/xabuild) $(MSBUILD_FLAGS) /m Xamarin.Android-Tests.sln
+	MSBUILD="$(MSBUILD)" $(call MSBUILD_BINLOG,all-tests,tools/scripts/xabuild) /restore $(MSBUILD_FLAGS) Xamarin.Android-Tests.sln
 
 install::
 	@if [ ! -d "bin/$(CONFIGURATION)" ]; then \

@@ -48,8 +48,6 @@ namespace Android.Runtime {
 
 		static bool AllocObjectSupported;
 
-		static IntPtr cid_System;
-		static IntPtr mid_System_identityHashCode;
 		static IntPtr grefIGCUserPeer_class;
 
 		internal static int    gref_gc_threshold;
@@ -296,7 +294,9 @@ namespace Android.Runtime {
 		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
 		extern static void _monodroid_gc_wait_for_bridge_processing ();
 
+#pragma warning disable CS0649 // Field is never assigned to.  This field is assigned from monodroid-glue.cc.
 		static volatile bool BridgeProcessing; // = false
+#pragma warning restore CS0649 // Field is never assigned to.
 
 		public static void WaitForBridgeProcessing ()
 		{
@@ -670,8 +670,8 @@ namespace Android.Runtime {
 			}
 		}
 
-		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr monodroid_typemap_managed_to_java (byte[] mvid, int token);
+		[MethodImplAttribute(MethodImplOptions.InternalCall)]
+		static extern unsafe IntPtr monodroid_typemap_managed_to_java (Type type, byte* mvid);
 
 		internal static void LogTypemapTrace (StackTrace st)
 		{
@@ -685,19 +685,24 @@ namespace Android.Runtime {
 			}
 		}
 
-		internal static string TypemapManagedToJava (Type type)
+		internal static unsafe string TypemapManagedToJava (Type type)
 		{
 			if (mvid_bytes == null)
 				mvid_bytes = new byte[16];
 
-			Span<byte> mvid = new Span<byte>(mvid_bytes);
-			byte[] mvid_slow = null;
+			var mvid = new Span<byte>(mvid_bytes);
+			byte[] mvid_data = null;
 			if (!type.Module.ModuleVersionId.TryWriteBytes (mvid)) {
 				monodroid_log (LogLevel.Warn, LogCategories.Default, $"Failed to obtain module MVID using the fast method, falling back to the slow one");
-				mvid_slow = type.Module.ModuleVersionId.ToByteArray ();
+				mvid_data = type.Module.ModuleVersionId.ToByteArray ();
+			} else {
+				mvid_data = mvid_bytes;
 			}
 
-			IntPtr ret = monodroid_typemap_managed_to_java (mvid_slow == null ? mvid_bytes : mvid_slow, type.MetadataToken);
+			IntPtr ret;
+			fixed (byte* mvidptr = mvid_data) {
+				ret = monodroid_typemap_managed_to_java (type, mvidptr);
+			}
 
 			if (ret == IntPtr.Zero) {
 				if (LogTypemapMissStackTrace) {
@@ -738,8 +743,6 @@ namespace Android.Runtime {
 				return ex.ToLocalJniHandle ();
 			return NewLocalRef (value.Handle);
 		}
-
-		static IntPtr char_sequence_to_string_id;
 
 		public static string GetCharSequence (IntPtr jobject, JniHandleOwnership transfer)
 		{

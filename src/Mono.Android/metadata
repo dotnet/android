@@ -1092,6 +1092,9 @@
   <!-- Similarly, API-18 only had android.graphics.Bitmap.isPremultiplied(); Don't merge with the API-19+ Bitmap.setPremultiplied() method. -->
   <attr api-since="19" path="/api/package[@name='android.graphics']/class[@name='Bitmap']/method[@name='setPremultiplied']" name="propertyName" />
 
+  <!-- API-R adds a Connection.getVideoState() method, but we can't "merge" getVideoState() & setVideoState() into a single property w/o breaking API compat -->
+  <attr api-since="23" path="/api/package[@name='android.telecom']/class[@jni-signature='Landroid/telecom/Connection;']/method[@name='setVideoState']" name="propertyName" />
+
   <!-- Deprecate Any Class in the API less than 10. Do This last so we override any other deprecate comments -->
   <attr api-until="9" path="/api/package/class" name="deprecated">This platform is deprecated. Please re-target your app for a minumum of API-10</attr>
   <attr api-until="9" path="/api/package/interface" name="deprecated">This platform is deprecated. Please re-target your app for a minumum of API-10</attr>
@@ -1596,5 +1599,23 @@
   <!-- This keeps us from creating any Constants classes for interface constants in new DIM-enabled API -->
   <attr api-since="30" path="/api/package/interface[contains(@merge.SourceFile,'api-30.xml.in')]" name="no-alternatives">true</attr>
   <attr api-since="30" path="/api/package/interface[contains(@merge.SourceFile,'api-R.xml.in')]" name="no-alternatives">true</attr>
+
+  <!-- These members are not explicitly marked as deprecated in Java code, but they are deprecated in Java docs.
+       They override explicitly deprecated members, which causes a warning in C#. -->
+  <attr api-since="15" path="/api/package[@name='android.location']/class[@name='SettingInjectorService']/method[@name='onStart' and count(parameter)=2 and parameter[1][@type='android.content.Intent'] and parameter[2][@type='int']]" name="deprecated">Implement onStartCommand(android.content.Intent, int, int) instead.</attr>
+  <attr api-since="21" path="/api/package[@name='android.media']/class[@name='RemoteControlClient.MetadataEditor']/method[@name='clear' and count(parameter)=0]" name="deprecated">Use MediaMetadata instead together with MediaSession.</attr>
+  <attr api-since="28" path="/api/package[@name='android.content']/class[@name='AsyncTaskLoader']/method[@name='cancelLoad' and count(parameter)=0]" name="deprecated">Use the Support Library AsyncTaskLoader.</attr>
+  <attr api-since="29" path="/api/package[@name='android.preference']/class[@name='CheckBoxPreference']/method[@name='setSummaryOff' and count(parameter)=1 and parameter[1][@type='int']]" name="deprecated">Use the AndroidX Preference Library for consistent behavior across all devices.</attr>
+  <attr api-since="29" path="/api/package[@name='android.preference']/class[@name='CheckBoxPreference']/method[@name='setSummaryOn' and count(parameter)=1 and parameter[1][@type='int']]" name="deprecated">Use the AndroidX Preference Library for consistent behavior across all devices.</attr>
+  <attr api-since="29" path="/api/package[@name='android.preference']/class[@name='CheckBoxPreference']/method[@name='getSummaryOff' and count(parameter)=0]" name="deprecated">Use the AndroidX Preference Library for consistent behavior across all devices.</attr>
+  <attr api-since="29" path="/api/package[@name='android.preference']/class[@name='CheckBoxPreference']/method[@name='getSummaryOn' and count(parameter)=0]" name="deprecated">Use the AndroidX Preference Library for consistent behavior across all devices.</attr>
+  <attr api-since="29" path="/api/package[@name='android.preference']/class[@name='CheckBoxPreference']/method[@name='setSummaryOff' and count(parameter)=1 and parameter[1][@type='java.lang.CharSequence']]" name="deprecated">Use the AndroidX Preference Library for consistent behavior across all devices.</attr>
+  <attr api-since="29" path="/api/package[@name='android.preference']/class[@name='CheckBoxPreference']/method[@name='setSummaryOn' and count(parameter)=1 and parameter[1][@type='java.lang.CharSequence']]" name="deprecated">Use the AndroidX Preference Library for consistent behavior across all devices.</attr>
+  <attr api-since="29" path="/api/package[@name='android.preference']/class[@name='CheckBoxPreference']/method[@name='getDisableDependentsState' and count(parameter)=0]" name="deprecated">Use the AndroidX Preference Library for consistent behavior across all devices.</attr>
+  <attr api-since="29" path="/api/package[@name='android.preference']/class[@name='CheckBoxPreference']/method[@name='setDisableDependentsState' and count(parameter)=1 and parameter[1][@type='boolean']]" name="deprecated">Use the AndroidX Preference Library for consistent behavior across all devices.</attr>
+  <attr api-since="29" path="/api/package[@name='android.preference']/class[@name='CheckBoxPreference']/method[@name='isChecked' and count(parameter)=0]" name="deprecated">Use the AndroidX Preference Library for consistent behavior across all devices.</attr>
+  <attr api-since="29" path="/api/package[@name='android.preference']/class[@name='CheckBoxPreference']/method[@name='setChecked' and count(parameter)=1 and parameter[1][@type='boolean']]" name="deprecated">Use the AndroidX Preference Library for consistent behavior across all devices.</attr>
+  <attr api-since="29" path="/api/package[@name='android.preference']/class[@name='CheckBoxPreference']/method[@name='getDisableDependentsState' and count(parameter)=0]" name="deprecated">Use the AndroidX Preference Library for consistent behavior across all devices.</attr>
+  <attr api-since="29" path="/api/package[@name='android.preference']/class[@name='CheckBoxPreference']/method[@name='setDisableDependentsState' and count(parameter)=1 and parameter[1][@type='boolean']]" name="deprecated">Use the AndroidX Preference Library for consistent behavior across all devices.</attr>
 
 </metadata>

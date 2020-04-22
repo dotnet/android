@@ -1,0 +1,85 @@
+<!--
+***********************************************************************************************
+Xamarin.Android.Tooling.targets
+
+This file contains any calls to the <ResolveSdks/> or
+<ResolveJdkJvmPath/> MSBuild tasks. It is imported and used by
+"legacy" Xamarin.Android projects, binding projects, and .NET 5
+projects.
+
+***********************************************************************************************
+-->
+
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <UsingTask TaskName="Xamarin.Android.Tasks.ResolveSdks" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.ResolveJdkJvmPath" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+
+  <PropertyGroup>
+    <_SetLatestTargetFrameworkVersionDependsOnTargets Condition=" '$(_AndroidIsBindingProject)' == 'True'">
+      _ResolveSdks;
+      _ResolveAndroidTooling;
+    </_SetLatestTargetFrameworkVersionDependsOnTargets>
+    <_SetLatestTargetFrameworkVersionDependsOnTargets Condition=" '$(_AndroidIsBindingProject)' != 'True'">
+      _ResolveSdks;
+      _ResolveAndroidTooling;
+      _InjectAaptDependencies;
+      _InjectAapt2Dependencies;
+    </_SetLatestTargetFrameworkVersionDependsOnTargets>
+  </PropertyGroup>
+
+  <Target Name="_SetLatestTargetFrameworkVersion" DependsOnTargets="$(_SetLatestTargetFrameworkVersionDependsOnTargets)">
+    <PropertyGroup>
+      <TargetFrameworkMoniker Condition=" '$(TargetFrameworkProfile)' == '' ">$(TargetFrameworkIdentifier),Version=$(TargetFrameworkVersion)</TargetFrameworkMoniker>
+      <TargetFrameworkMoniker Condition=" '$(TargetFrameworkProfile)' != '' ">$(TargetFrameworkIdentifier),Version=$(TargetFrameworkVersion),Profile=$(TargetFrameworkProfile)</TargetFrameworkMoniker>
+      <NuGetTargetMoniker>$(TargetFrameworkMoniker)</NuGetTargetMoniker>
+      <TargetFrameworkMonikerAssemblyAttributesPath>$(IntermediateOutputPath)$(TargetFrameworkMoniker).AssemblyAttributes$(DefaultLanguageSourceExtension)</TargetFrameworkMonikerAssemblyAttributesPath>
+    </PropertyGroup>
+    <ItemGroup>
+      <FileWrites Include="$(TargetFrameworkMonikerAssemblyAttributesPath)" />
+      <!-- These references are implicitly defined in .NET 5 -->
+      <Reference Include="$(_JavaInteropReferences)" Condition=" '$(UsingAndroidNETSdk)' != 'True' " />
+    </ItemGroup>
+  </Target>
+
+  <PropertyGroup Condition=" '$(UsingAndroidNETSdk)' == 'True' ">
+    <_ResolveSdksDependsOnTargets>ResolveFrameworkReferences</_ResolveSdksDependsOnTargets>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(UsingAndroidNETSdk)' != 'True' ">
+    <_ResolveSdksDependsOnTargets>_GetReferenceAssemblyPaths</_ResolveSdksDependsOnTargets>
+  </PropertyGroup>
+
+  <Target Name="_ResolveSdks" DependsOnTargets="$(_ResolveSdksDependsOnTargets)">
+    <PropertyGroup>
+      <_AndroidAllowMissingSdkTooling Condition=" '$(_AndroidAllowMissingSdkTooling)' == '' ">False</_AndroidAllowMissingSdkTooling>
+      <!-- When using .NET 5, provide a list of paths to all framework reference directories, e.g.
+            `packages\xamarin.android.app.ref\10.3.99.160\ref\netcoreapp5.0\` and
+            `C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\5.0.0-preview.2.20160.6\ref\netcoreapp5.0\`
+      -->
+      <_XATargetFrameworkDirectories Condition=" '$(UsingAndroidNETSdk)' == 'True' ">@(ResolvedFrameworkReference->'%(TargetingPackPath)\ref\$(TargetFramework)')</_XATargetFrameworkDirectories>
+    </PropertyGroup>
+    <ResolveSdks
+        ContinueOnError="$(_AndroidAllowMissingSdkTooling)"
+        AndroidSdkPath="$(AndroidSdkDirectory)"
+        AndroidNdkPath="$(AndroidNdkDirectory)"
+        JavaSdkPath="$(JavaSdkDirectory)"
+        ReferenceAssemblyPaths="$(_XATargetFrameworkDirectories)">
+      <Output TaskParameter="AndroidNdkPath"            PropertyName="AndroidNdkDirectory" Condition=" '$(AndroidNdkDirectory)' == '' " />
+      <Output TaskParameter="AndroidSdkPath"            PropertyName="AndroidSdkDirectory" Condition=" '$(AndroidSdkDirectory)' == '' " />
+      <Output TaskParameter="JavaSdkPath"               PropertyName="JavaSdkDirectory"    Condition=" '$(JavaSdkDirectory)' == '' " />
+      <Output TaskParameter="AndroidNdkPath"            PropertyName="_AndroidNdkDirectory" />
+      <Output TaskParameter="AndroidSdkPath"            PropertyName="_AndroidSdkDirectory" />
+      <Output TaskParameter="JavaSdkPath"               PropertyName="_JavaSdkDirectory" />
+      <Output TaskParameter="MonoAndroidToolsPath"      PropertyName="MonoAndroidToolsDirectory" />
+      <Output TaskParameter="MonoAndroidBinPath"        PropertyName="MonoAndroidBinDirectory" />
+      <Output TaskParameter="MonoAndroidLibPath"        PropertyName="MonoAndroidLibDirectory" />
+      <Output TaskParameter="AndroidBinUtilsPath"       PropertyName="AndroidBinUtilsDirectory" Condition=" '$(AndroidBinUtilsDirectory)' == '' " />
+    </ResolveSdks>
+    <ResolveJdkJvmPath
+        JavaSdkPath="$(_JavaSdkDirectory)"
+        Condition=" '$(DesignTimeBuild)' != 'True' And '$(_AndroidIsBindingProject)' != 'True' And '$(AndroidGenerateJniMarshalMethods)' == 'True' And '$(JdkJvmPath)' == '' ">
+      <Output TaskParameter="JdkJvmPath"                PropertyName="JdkJvmPath" />
+    </ResolveJdkJvmPath>
+  </Target>
+
+</Project>

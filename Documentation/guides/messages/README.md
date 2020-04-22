@@ -26,7 +26,7 @@ ms.date: 01/24/2020
 ## APTxxxx: AAPT tooling
 
 + [APT0000](apt0000.md): Generic `aapt` error/warning.
-+ [APT0001](apt0001.md): unknown option -- `{option}` . This is the result of using `aapt` command line arguments with `aapt2`. The arguments are not compatible.
++ [APT0001](apt0001.md): Unknown option \`{option}\`. Please check \`$(AndroidAapt2CompileExtraArgs)\` and \`$(AndroidAapt2LinkExtraArgs)\` to see if they include any \`aapt\` command line arguments that are no longer valid for \`aapt2\` and ensure that all other arguments are valid for `aapt2`.
 + APT0002: Invalid file name: It must contain only \[^a-zA-Z0-9_.-\]+.
 + APT0003: Invalid file name: It must contain only \[^a-zA-Z0-9_.\]+.
 
@@ -55,19 +55,17 @@ ms.date: 01/24/2020
 + [XA0107](xa0107.md): `{Assmebly}` is a Reference Assembly.
 + [XA0108](xa0108.md): Could not get version from `lint`.
 + [XA0109](xa0109.md): Unsupported or invalid `$(TargetFrameworkVersion)` value of 'v4.5'.
-+ [XA0110](xa0110.md): Disabling $(AndroidExplicitCrunch) as it is not supported by `aapt2`. If you wish to use $(AndroidExplicitCrunch) please set $(AndroidUseAapt2) to false.
 + [XA0111](xa0111.md): Could not get the `aapt2` version. Please check it is installed correctly.
 + [XA0112](xa0112.md): `aapt2` is not installed. Disabling `aapt2` support. Please check it is installed correctly.
 + [XA0113](xa0113.md): Google Play requires that new applications and updates must use a TargetFrameworkVersion of v8.0 (API level 26) or above.
-+ [XA0114](xa0114.md): Google Play requires that application updates must use a `$(TargetFrameworkVersion)` of v8.0 (API level 26) or above.
 + [XA0115](xa0115.md): Invalid value 'armeabi' in $(AndroidSupportedAbis). This ABI is no longer supported. Please update your project properties to remove the old value. If the properties page does not show an 'armeabi' checkbox, un-check and re-check one of the other ABIs and save the changes.
 + [XA0116](xa0116.md): Unable to find `EmbeddedResource` named `{ResourceName}`.
 + [XA0117](xa0117.md): The TargetFrameworkVersion {TargetFrameworkVersion} is deprecated. Please update it to be v4.4 or higher.
 + [XA0118](xa0118.md): Could not parse '{TargetMoniker}'
 + [XA0119](xa0119.md): A non-ideal configuration was found in the project.
-+ [XA0120](xa0120.md): Failed to use SHA1 hash algorithm
 + [XA0121](xa0121.md): Assembly '{assembly}' is using '[assembly: Java.Interop.JavaLibraryReferenceAttribute]', which is no longer supported. Use a newer version of this NuGet package or notify the library author.
 + [XA0122](xa0122.md): Assembly '{assembly}' is using a deprecated attribute '[assembly: Java.Interop.DoNotPackageAttribute]'. Use a newer version of this NuGet package or notify the library author.
++ XA0123: Removing {issue} from {propertyName}. Lint {version} does not support this check.
 
 ## XA1xxx: Project related
 
@@ -82,6 +80,18 @@ ms.date: 01/24/2020
 + [XA1008](xa1008.md): The TargetFrameworkVersion (Android API level {compileSdk}) is lower than the targetSdkVersion ({targetSdk}).
 + [XA1009](xa1009.md): The {assembly} is Obsolete. Please upgrade to {assembly} {version}
 + [XA1010](xa1010.md): Invalid \`$(AndroidManifestPlaceholders)\` value for Android manifest placeholders. Please use \`key1=value1;key2=value2\` format. The specified value was: `{placeholders}`
++ [XA1011](xa1011.md): Using ProGuard with the D8 DEX compiler is no longer supported. Please update \`$(AndroidLinkTool)\` to \`r8\`.
++ XA1012: Included layout root element override ID '{id}' is not valid.
++ XA1013: Failed to parse ID of node '{name}' in the layout file '{file}'.
++ XA1014: JAR library references with identical file names but different contents were found: {libraries}. Please remove any conflicting libraries from EmbeddedJar, InputJar and AndroidJavaLibrary.
++ XA1015: More than one Android Wear project is specified as the paired project. It can be at most one.
++ XA1016: Target Wear application's project '{project}' does not specify required 'AndroidManifest' project property.
++ XA1017: Target Wear application's AndroidManifest.xml does not specify required 'package' attribute.
++ XA1018: Specified AndroidManifest file does not exist: {file}.
++ XA1019: \`LibraryProjectProperties\` file \`{file}\` is located in a parent directory of the bindings project's intermediate output directory. Please adjust the path to use the original \`project.properties\` file directly from the Android library project directory.
++ XA1020: At least one Java library is required for binding. Check that a Java library is included in the project and has the appropriate build action: 'LibraryProjectZip' (for AAR or ZIP), 'EmbeddedJar', 'InputJar' (for JAR), or 'LibraryProjectProperties' (project.properties).
++ XA1021: Specified source Java library not found: {file}
++ XA1022: Specified reference Java library not found: {file}
 
 ## XA2xxx: Linker
 
@@ -89,6 +99,8 @@ ms.date: 01/24/2020
 + [XA2001](xa2001.md): Source file '{filename}' could not be found.
 + [XA2002](xa2002.md): Can not resolve reference: \`{missing}\`, referenced by {assembly}. Perhaps it doesn't exist in the Mono for Android profile?
 + XA2006: Could not resolve reference to '{member}' (defined in assembly '{assembly}') with scope '{scope}'. When the scope is different from the defining assembly, it usually means that the type is forwarded.
++ XA2007: Exception while loading assemblies: {exception}
++ XA2008: In referenced assembly {assembly}, Java.Interop.DoNotPackageAttribute requires non-null file name.
 
 ## XA3xxx: Unmanaged code compilation
 
@@ -111,6 +123,17 @@ ms.date: 01/24/2020
 + [XA4216](xa4216.md): AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{min_sdk?.Value}' is less than API-{XABuildConfig.NDKMinimumApiAvailable}, this configuration is not supported.
 + XA4217: Cannot override Kotlin-generated method '{method}' because it is not a valid Java method name. This method can only be overridden from Kotlin.
 + [XA4218](xa4218.md): Unable to find //manifest/application/uses-library at path: {path}
++ XA4219: Cannot find binding generator for language {language} or {defaultLanguage}.
++ XA4220: Partial class item '{file}' does not have an associated binding for layout '{layout}'.
++ XA4221: No layout binding source files were generated.
++ XA4222: No widgets found for layout ({layoutFiles}).
++ XA4223: Malformed full class name '{name}'. Missing namespace.
++ XA4224: Malformed full class name '{name}'. Missing class name.
++ XA4225: Widget '{widget}' in layout '{layout}' has multiple instances with different types. The property type will be set to: {type}
++ XA4226: Resource item '{file}' does not have the required metadata item '{metadataName}'.
++ XA4228: Unable to find specified //activity-alias/@android:targetActivity: '{targetActivity}'
++ XA4229: Unrecognized \`TransformFile\` root element: {element}.
++ XA4230: Error parsing XML: {exception}
 + XA4300: Native library '{library}' will not be bundled because it has an unsupported ABI.
 + [XA4301](xa4301.md): Apk already contains the item `xxx`.
 + [XA4302](xa4302.md): Unhandled exception merging \`AndroidManifest.xml\`: {ex}
@@ -122,6 +145,7 @@ ms.date: 01/24/2020
 + [XA4308](xa4308.md): Failed to generate type maps
 + [XA4309](xa4309.md): 'MultiDexMainDexList' file '{file}' does not exist.
 + [XA4310](xa4310.md): \`$(AndroidSigningKeyStore)\` file \`{keystore}\` could not be found.
++ XA4311: The application won't contain the paired Wear package because the Wear application package APK is not created yet. If building on the command line, be sure to build the "SignAndroidPackage" target.
 
 ## XA5xxx: GCC and toolchain
 
@@ -293,3 +317,22 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 ## XA8xxx:	Reserved
 
 ## XA9xxx:	Licensing
+
+## Removed messages
+
+### Removed in Xamarin.Android 10.4
+
++ XA5215: Duplicate Resource found for {elementName}. Duplicates are in {filenames}
++ XA5216: Resource entry {elementName} is already defined in {filename}
+
+### Removed in Xamarin.Android 10.3
+
++ [XA0110](xa0110.md): Disabling $(AndroidExplicitCrunch) as it is not supported by `aapt2`. If you wish to use $(AndroidExplicitCrunch) please set $(AndroidUseAapt2) to false.
+
+### Removed in Xamarin.Android 10.2
+
++ [XA0120](xa0120.md): Failed to use SHA1 hash algorithm
+
+### Removed in Xamarin.Android 9.3
+
++ [XA0114](xa0114.md): Google Play requires that application updates must use a `$(TargetFrameworkVersion)` of v8.0 (API level 26) or above.

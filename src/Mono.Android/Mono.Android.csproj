@@ -9,17 +9,17 @@
     <RootNamespace>Android</RootNamespace>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
-    <NoWarn>0618;0809;0108;0114</NoWarn>
+    <NoWarn>0618;0809;0108;0114;0465</NoWarn>
     <LangVersion>latest</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DefineConstants>$(DefineConstants);JAVA_INTEROP</DefineConstants>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\$(TargetFramework)\android-$(AndroidPlatformId)\</IntermediateOutputPath>
     <ImplicitlyExpandDesignTimeFacades>false</ImplicitlyExpandDesignTimeFacades>
-    <JavaCallableWrapperAbsAssembly>$([System.IO.Path]::GetFullPath ('$(OutputPath)$(AssemblyName).dll'))</JavaCallableWrapperAbsAssembly>
     <JavaCallableWrapperAfterTargets>CoreBuild</JavaCallableWrapperAfterTargets>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <!-- @(Compile) ordering matters! See https://github.com/xamarin/java.interop/commit/d7dfa0bb7b03261d5eceb51ac22cd33aa15fa865 -->
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(TargetFramework)' == 'monoandroid10' ">
@@ -28,12 +28,14 @@
     <TargetFrameworkRootPath>$(XAInstallPrefix)xbuild-frameworks</TargetFrameworkRootPath>
     <DefineConstants>$(DefineConstants);NET_2_0</DefineConstants>
     <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)\</OutputPath>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
     <OutputPath>$(XAInstallPrefix)xbuild-frameworks\Xamarin.Android.App\$(TargetFramework)\</OutputPath>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <JavaCallableWrapperAbsAssembly>$([System.IO.Path]::GetFullPath ('$(OutputPath)$(AssemblyName).dll'))</JavaCallableWrapperAbsAssembly>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'monoandroid10' ">
@@ -89,6 +91,9 @@
     </Compile>
     <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64.cs">
       <Link>Crc64.cs</Link>
+    </Compile>
+    <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64.Table.cs">
+      <Link>Crc64.Table.cs</Link>
     </Compile>
     <Compile Include="Android.Runtime\DynamicMethodNameCounter.cs" />
     <Compile Include="Android.Runtime\IJavaObjectValueMarshaler.cs" />
@@ -184,6 +189,7 @@
     <Compile Include="Android.OS\Handler.cs" />
     <Compile Include="Android.OS\Message.cs" />
     <Compile Include="Android.OS\PowerManager.cs" />
+    <Compile Include="Android.OS\VibrationEffectEffectType.cs" />
     <Compile Include="Android.OS\Vibrator.cs" />
     <Compile Include="Android.OS.Storage\StorageManager.cs" />
     <Compile Include="Android.Opengl\GLSurfaceView.cs" />
@@ -338,14 +344,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\build-tools\api-merge\api-merge.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\build-tools\api-xml-adjuster\api-xml-adjuster.csproj" ReferenceOutputAssembly="false" />
-    <ProjectReference Include="..\..\build-tools\jnienv-gen\jnienv-gen.csproj" ReferenceOutputAssembly="false" />
     <!-- Explicitly pass the target framework of the project so we don't have conflicts with the multiple targets in this file. -->
+    <ProjectReference Include="..\..\build-tools\api-merge\api-merge.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="TargetFramework=net472" />
+    <ProjectReference Include="..\..\build-tools\jnienv-gen\jnienv-gen.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="TargetFramework=net472" />
     <ProjectReference Include="..\..\external\Java.Interop\tools\generator\generator.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="TargetFramework=net472"/>
     <ProjectReference Include="..\..\external\Java.Interop\tools\jcw-gen\jcw-gen.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="TargetFramework=net472" />
     <ProjectReference Include="..\..\src\java-runtime\java-runtime.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
+
+  <!--NOTE: a workaround for the test runner in VS Windows-->
+  <Target Name="GetTargetPath" />
 
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
   <!-- Only build the 'netcoreapp3.1' version of 'Mono.Android.dll' once for the latest stable Android version. -->

@@ -28,13 +28,10 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="Irony">
-      <HintPath>..\..\packages\Irony.1.1.0\lib\net40\Irony.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Xamarin.Android.Cecil">
       <HintPath>..\..\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\Xamarin.Android.Cecil.dll</HintPath>
     </Reference>
+    <PackageReference Include="Irony" Version="1.1.0" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -44,8 +41,5 @@
     <Compile Include="BindingDatabase.cs" />
     <Compile Include="CSharpCodeGenerator.cs" />
     <Compile Include="ConverterOptions.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
   </ItemGroup>
 </Project>

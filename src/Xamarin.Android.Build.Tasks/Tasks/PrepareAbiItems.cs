@@ -24,6 +24,12 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public bool TypeMapMode { get; set; }
 
+		[Required]
+		public bool Debug { get; set; }
+
+		[Required]
+		public bool InstantRunEnabled { get; set; }
+
 		[Output]
 		public ITaskItem[] AssemblySources { get; set; }
 
@@ -53,9 +59,11 @@ namespace Xamarin.Android.Tasks
 				if (!TypeMapMode)
 					continue;
 
-				item = new TaskItem (Path.Combine (NativeSourcesDir, $"{baseName}.{abi}-managed.inc"));
-				item.SetMetadata ("abi", abi);
-				includes.Add (item);
+				if (!InstantRunEnabled && !Debug) {
+					item = new TaskItem (Path.Combine (NativeSourcesDir, $"{baseName}.{abi}-managed.inc"));
+					item.SetMetadata ("abi", abi);
+					includes.Add (item);
+				}
 			}
 
 			if (haveArmV7SharedSource) {

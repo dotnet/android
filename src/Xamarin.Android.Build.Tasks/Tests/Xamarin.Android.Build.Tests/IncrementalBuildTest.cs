@@ -11,6 +11,7 @@ using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
+	[Category ("Node-3")]
 	[Parallelizable (ParallelScope.Children)]
 	public class IncrementalBuildTest : BaseTest
 	{
@@ -349,7 +350,7 @@ namespace Lib2
 			var targets = new List<string> {
 				"_GeneratePackageManagerJava",
 				"_ResolveLibraryProjectImports",
-				"_CleanIntermediateIfNuGetsChange",
+				"_CleanIntermediateIfNeeded",
 				"_CopyConfigFiles",
 			};
 			var proj = new XamarinFormsAndroidApplicationProject {
@@ -831,7 +832,6 @@ namespace Lib2
 		readonly string [] ExpectedAssemblyFiles = new [] {
 			Path.Combine ("android", "environment.armeabi-v7a.o"),
 			Path.Combine ("android", "environment.armeabi-v7a.s"),
-			Path.Combine ("android", "typemaps.armeabi-v7a-managed.inc"),
 			Path.Combine ("android", "typemaps.armeabi-v7a-shared.inc"),
 			Path.Combine ("android", "typemaps.armeabi-v7a.o"),
 			Path.Combine ("android", "typemaps.armeabi-v7a.s"),

@@ -49,12 +49,12 @@ macro(xa_common_prepare)
     fstrict-return
     Wa,-noexecstack
     fPIC
+    g
+    fomit-frame-pointer
+    O2
     )
 
-  if(CMAKE_BUILD_TYPE STREQUAL Debug)
-    set(XA_COMPILER_FLAGS ${XA_COMPILER_FLAGS} ggdb3 fno-omit-frame-pointer O0)
-  else()
-    set(XA_COMPILER_FLAGS ${XA_COMPILER_FLAGS} g fomit-frame-pointer O2)
+  if(CMAKE_BUILD_TYPE STREQUAL Release)
     add_definitions("-DRELEASE")
   endif()
 

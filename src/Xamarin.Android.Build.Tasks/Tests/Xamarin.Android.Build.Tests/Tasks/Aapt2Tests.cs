@@ -11,6 +11,7 @@ using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
+	[Category ("Node-2")]
 	public class Aapt2Tests : BaseTest
 	{
 		void CallAapt2Compile (IBuildEngine engine, string dir, string outputPath, string flatFilePath, List<ITaskItem> output = null, int maxInstances = 0, bool keepInDomain = false)

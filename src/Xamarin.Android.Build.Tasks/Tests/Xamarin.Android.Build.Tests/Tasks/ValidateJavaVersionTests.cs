@@ -1,13 +1,15 @@
-﻿using Microsoft.Build.Framework;
+using Microsoft.Build.Framework;
 using NUnit.Framework;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Xamarin.Android.Tasks;
+using ValidateJavaVersion = Xamarin.Android.Tasks.Legacy.ValidateJavaVersion;
 
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
+	[Category ("Node-2")]
 	public class ValidateJavaVersionTests : BaseTest
 	{
 		string path;

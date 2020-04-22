@@ -921,6 +921,7 @@ void
 MonodroidRuntime::init_android_runtime (MonoDomain *domain, JNIEnv *env, jclass runtimeClass, jobject loader)
 {
 	mono_add_internal_call ("Java.Interop.TypeManager::monodroid_typemap_java_to_managed", reinterpret_cast<const void*>(typemap_java_to_managed));
+	mono_add_internal_call ("Android.Runtime.JNIEnv::monodroid_typemap_managed_to_java", reinterpret_cast<const void*>(typemap_managed_to_java));
 
 	struct JnienvInitializeArgs init = {};
 	init.javaVm                 = osBridge.get_jvm ();
@@ -1411,6 +1412,12 @@ MonodroidRuntime::typemap_java_to_managed (MonoString *java_type_name)
 	return embeddedAssemblies.typemap_java_to_managed (java_type_name);
 }
 
+const char*
+MonodroidRuntime::typemap_managed_to_java (MonoReflectionType *type, const uint8_t *mvid)
+{
+	return embeddedAssemblies.typemap_managed_to_java (type, mvid);
+}
+
 inline void
 MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
                                                           jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader,
@@ -1779,7 +1786,7 @@ MonodroidRuntime::Java_mono_android_Runtime_destroyContexts (JNIEnv *env, jintAr
 #endif
 	}
 	osBridge.on_destroy_contexts ();
-
+#ifndef ANDROID
 	for (jsize i = 0; i < count; i++) {
 		int domain_id = contextIDs[i];
 		MonoDomain *domain = mono_domain_get_by_id (domain_id);
@@ -1789,7 +1796,7 @@ MonodroidRuntime::Java_mono_android_Runtime_destroyContexts (JNIEnv *env, jintAr
 		log_info (LOG_DEFAULT, "Unloading domain `%d'", contextIDs[i]);
 		mono_domain_unload (domain);
 	}
-
+#endif  // !defined(ANDROID)
 	env->ReleaseIntArrayElements (array, contextIDs, JNI_ABORT);
 
 	reinitialize_android_runtime_type_manager (env);

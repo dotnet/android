@@ -83,7 +83,7 @@
       UndeployTestApks;
       DeployTestApks;
       DeployTestAabs;
-      RecordApkSizes;
+      CheckAndRecordApkSizes;
       RunTestApks;
       ReleaseAndroidTarget;
       RenameApkTestCases;

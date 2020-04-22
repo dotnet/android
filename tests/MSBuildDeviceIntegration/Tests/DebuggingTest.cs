@@ -49,9 +49,6 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetDefaultTargetDevice ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				SetTargetFrameworkAndManifest (proj, b);
-				b.Save (proj, saveProject: true);
-				proj.NuGetRestore (Path.Combine (Root, b.ProjectDirectory), b.PackagesDirectory);
-				Assert.True (b.Build (proj), "Project should have built.");
 				Assert.True (b.Install (proj), "Project should have installed.");
 				ClearAdbLogcat ();
 				if (CommercialBuildAvailable)
@@ -208,9 +205,6 @@ namespace ${ROOT_NAMESPACE} {
 			});
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				SetTargetFrameworkAndManifest (proj, b);
-				b.Save (proj, saveProject: true);
-				proj.NuGetRestore (Path.Combine (Root, b.ProjectDirectory), b.PackagesDirectory);
-				Assert.True (b.Build (proj), "Project should have built.");
 				Assert.True (b.Install (proj), "Project should have installed.");
 
 				int breakcountHitCount = 0;
@@ -335,9 +329,6 @@ namespace ${ROOT_NAMESPACE} {
 			proj.SetDefaultTargetDevice ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				SetTargetFrameworkAndManifest (proj, b);
-				b.Save (proj, saveProject: true);
-				proj.NuGetRestore (Path.Combine (Root, b.ProjectDirectory), b.PackagesDirectory);
-				Assert.True (b.Build (proj), "Project should have built.");
 				Assert.True (b.Install (proj), "Project should have installed.");
 
 				int breakcountHitCount = 0;

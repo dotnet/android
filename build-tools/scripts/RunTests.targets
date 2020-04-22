@@ -72,6 +72,12 @@
   <Target Name="RunJavaInteropTests">
     <MSBuild
         Condition=" '$(HostOS)' == 'Windows' "
+        Projects="$(JavaInteropSourceDirectory)\Java.Interop.sln"
+        Properties="_IsRestoring=true"
+        Targets="Restore"
+    />
+    <MSBuild
+        Condition=" '$(HostOS)' == 'Windows' "
         ContinueOnError="ErrorAndContinue"
         Projects="$(JavaInteropSourceDirectory)\Java.Interop.sln"
     />

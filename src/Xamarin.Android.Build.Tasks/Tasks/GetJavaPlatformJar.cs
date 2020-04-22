@@ -37,7 +37,7 @@ namespace Xamarin.Android.Tasks
 			// Look for targetSdkVersion in the user's AndroidManifest.xml
 			if (!string.IsNullOrWhiteSpace (AndroidManifest)) {
 				if (!File.Exists (AndroidManifest)) {
-					Log.LogError ("Specified AndroidManifest.xml file does not exist: {0}.", AndroidManifest);
+					Log.LogCodedError ("XA1018", Properties.Resources.XA1018, AndroidManifest);
 					return false;
 				}
 
@@ -97,9 +97,22 @@ namespace Xamarin.Android.Tasks
 			string targetFrameworkVersion = MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (AndroidSdkPlatform);
 			string targetSdkVersion       = MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (target);
 
-			int frameworkSdk, targetSdk;
-			if (int.TryParse (targetFrameworkVersion, out frameworkSdk) &&
-					int.TryParse (targetSdkVersion, out targetSdk) &&
+			if (!int.TryParse (targetFrameworkVersion, out int frameworkSdk)) {
+				// AndroidSdkPlatform is likely a *preview* API level; use it.
+				Log.LogWarningForXmlNode (
+						code:             "XA4211",
+						file:             AndroidManifest,
+						node:             target_sdk,
+						message:          Properties.Resources.XA4211,
+						messageArgs:      new [] {
+							targetSdkVersion,
+							MonoAndroidHelper.SupportedVersions.GetIdFromFrameworkVersion (targetFrameworkVersion),
+							MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (targetFrameworkVersion),
+						}
+				);
+				return targetFrameworkVersion;
+			}
+			if (int.TryParse (targetSdkVersion, out int targetSdk) &&
 					targetSdk < frameworkSdk) {
 				Log.LogWarningForXmlNode (
 						code:             "XA4211",

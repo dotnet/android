@@ -27,11 +27,11 @@ namespace Xamarin.ProjectTools
 		public XASdkProject (string sdkVersion = "")
 		{
 			Sdk = string.IsNullOrEmpty (sdkVersion) ? "Xamarin.Android.Sdk" : $"Xamarin.Android.Sdk/{sdkVersion}";
-			TargetFramework = "MonoAndroid10.0";
+			TargetFramework = "netcoreapp5.0";
 
 			PackageName = PackageName ?? string.Format ("{0}.{0}", ProjectName);
 			JavaPackageName = JavaPackageName ?? PackageName.ToLowerInvariant ();
-			ExtraNuGetConfigSources = new List<string> { XABuildPaths.BuildOutputDirectory };
+			ExtraNuGetConfigSources = new List<string> { Path.Combine (XABuildPaths.BuildOutputDirectory, "nupkgs") };
 			GlobalPackagesFolder = Path.Combine (XABuildPaths.TopDirectory, "packages");
 
 			using (var sr = new StreamReader (typeof (XamarinAndroidApplicationProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.AndroidManifest.xml")))
@@ -68,6 +68,22 @@ namespace Xamarin.ProjectTools
 				.Replace ("${PROJECT_NAME}", ProjectName)
 				.Replace ("${PACKAGENAME}", PackageName)
 				.Replace ("${JAVA_PACKAGENAME}", JavaPackageName);
+		}
+
+		public void SetRuntimeIdentifier (string androidAbi)
+		{
+			if (androidAbi == "armeabi-v7a") {
+				SetProperty (KnownProperties.RuntimeIdentifier, "android.21-arm");
+			}
+			else if (androidAbi == "arm64-v8a") {
+				SetProperty (KnownProperties.RuntimeIdentifier, "android.21-arm64");
+			}
+			else if (androidAbi == "x86") {
+				SetProperty (KnownProperties.RuntimeIdentifier, "android.21-x86");
+			}
+			else if (androidAbi == "x86_64") {
+				SetProperty (KnownProperties.RuntimeIdentifier, "android.21-x64");
+			}
 		}
 
 	}

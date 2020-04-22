@@ -10,6 +10,7 @@ using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Build.Tests
 {
+	[Category ("Node-3")]
 	[Parallelizable (ParallelScope.Children)]
 	public class PackagingTest : BaseTest
 	{
@@ -101,12 +102,13 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void CheckClassesDexIsIncluded ()
+		public void CheckClassesDexIsIncluded ([Values ("dx", "d8", "invalid")] string dexTool)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
+				DexTool = dexTool,
 			};
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
+			using (var b = CreateApkBuilder ()) {
 				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj), "build failed");
@@ -318,6 +320,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 		}
 
 		[Test]
+		[NonParallelizable] // Commonly fails NuGet restore
 		public void CheckAapt2WarningsDoNotGenerateErrors ()
 		{
 			//https://github.com/xamarin/xamarin-android/issues/3083
@@ -599,10 +602,7 @@ namespace App1
 		[Test]
 		public void CheckTheCorrectRuntimeAssemblyIsUsedFromNuget ()
 		{
-			string monoandroidFramework;
-			using (var builder = new Builder ()) {
-				monoandroidFramework = builder.LatestMultiTargetFrameworkVersion ();
-			}
+			string monoandroidFramework = "monoandroid10.0";
 			string path = Path.Combine (Root, "temp", TestName);
 			var ns = new DotNetStandard () {
 				ProjectName = "Dummy",
@@ -677,6 +677,24 @@ namespace App1
 				Assert.IsTrue (xab.Build (xa, doNotCleanupOnUpdate: true), "Build of App Library should have succeeded.");
 				string expected = Path.Combine ("dummy.package.foo", "1.0.0", "lib", monoandroidFramework, "Dummy.dll");
 				Assert.IsTrue (xab.LastBuildOutput.ContainsText (expected), $"Build should be using {expected}");
+			}
+		}
+
+		[Test]
+		public void MissingDexFile ()
+		{
+			//NOTE: The trailing / was breaking <CompileToDalvik /> in 16.5
+			var parameters = new [] { "_AndroidIntermediateJavaClassDirectory=obj/Debug/android/bin/classes/" };
+			var proj = new XamarinAndroidApplicationProject {
+				DexTool = "dx"
+			};
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj, parameters: parameters), "Build should have succeeded.");
+				var apk = Path.Combine (Root, b.ProjectDirectory,
+					proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
+				using (var zip = ZipHelper.OpenZip (apk)) {
+					Assert.IsTrue (zip.ContainsEntry ("classes.dex"), "Apk should contain classes.dex");
+				}
 			}
 		}
 	}

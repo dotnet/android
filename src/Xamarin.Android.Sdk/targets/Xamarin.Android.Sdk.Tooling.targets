@@ -1,0 +1,57 @@
+<!--
+***********************************************************************************************
+Xamarin.Android.Sdk.Tooling.targets
+
+This file contains .NET 5-specific calls to the <ValidateJavaVersion/>
+and <ResolveAndroidTooling/> MSBuild tasks. These MSBuild tasks are
+called for "legacy" projects in Xamarin.Android.Legacy.targets.
+
+***********************************************************************************************
+-->
+
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <UsingTask TaskName="Xamarin.Android.Tasks.ValidateJavaVersion" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.ResolveAndroidTooling" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+
+  <Target Name="_ResolveAndroidTooling">
+    <ValidateJavaVersion
+        Condition=" '$(DesignTimeBuild)' != 'True' Or '$(AndroidUseManagedDesignTimeResourceGenerator)' != 'True' "
+        ContinueOnError="$(_AndroidAllowMissingSdkTooling)"
+        JavaSdkPath="$(_JavaSdkDirectory)"
+        JavaToolExe="$(JavaToolExe)"
+        JavacToolExe="$(JavacToolExe)"
+        LatestSupportedJavaVersion="$(LatestSupportedJavaVersion)"
+        MinimumSupportedJavaVersion="$(MinimumSupportedJavaVersion)">
+      <Output TaskParameter="JdkVersion"                PropertyName="_JdkVersion" />
+      <Output TaskParameter="MinimumRequiredJdkVersion" PropertyName="_DefaultJdkVersion" />
+    </ValidateJavaVersion>
+    <ResolveAndroidTooling
+        ContinueOnError="$(_AndroidAllowMissingSdkTooling)"
+        AndroidApiLevel="$(AndroidApiLevel)"
+        AndroidApplication="$(AndroidApplication)"
+        AndroidSdkPath="$(_AndroidSdkDirectory)"
+        AndroidSdkBuildToolsVersion="$(AndroidSdkBuildToolsVersion)"
+        AndroidUseAapt2="$(AndroidUseAapt2)"
+        AotAssemblies="$(AotAssemblies)"
+        Aapt2ToolPath="$(Aapt2ToolPath)"
+        SequencePointsMode="$(_AndroidSequencePointsMode)"
+        ProjectFilePath="$(MSBuildProjectFullPath)"			
+        LintToolPath="$(LintToolPath)"
+        ZipAlignPath="$(ZipAlignToolPath)">
+      <Output TaskParameter="AndroidApiLevel"             PropertyName="_AndroidApiLevel"            Condition="'$(_AndroidApiLevel)' == ''" />
+      <Output TaskParameter="AndroidApiLevelName"         PropertyName="_AndroidApiLevelName" />
+      <Output TaskParameter="AndroidSdkBuildToolsPath"    PropertyName="AndroidSdkBuildToolsPath"    Condition="'$(AndroidSdkBuildToolsPath)' == ''" />
+      <Output TaskParameter="AndroidSdkBuildToolsBinPath" PropertyName="AndroidSdkBuildToolsBinPath" Condition="'$(AndroidSdkBuildToolsBinPath)' == ''" />
+      <Output TaskParameter="ZipAlignPath"                PropertyName="ZipAlignToolPath"            Condition="'$(ZipAlignToolPath)' == ''" />
+      <Output TaskParameter="AndroidSequencePointsMode"   PropertyName="_SequencePointsMode"         Condition="'$(_SequencePointsMode)' == ''" />
+      <Output TaskParameter="LintToolPath"                PropertyName="LintToolPath"                Condition="'$(LintToolPath)' == ''" />
+      <Output TaskParameter="ApkSignerJar"                PropertyName="ApkSignerJar"                Condition="'$(ApkSignerJar)' == ''" />
+      <Output TaskParameter="AndroidUseApkSigner"         PropertyName="AndroidUseApkSigner"         Condition="'$(AndroidUseApkSigner)' == ''" />
+      <Output TaskParameter="AndroidUseAapt2"             PropertyName="_AndroidUseAapt2" />
+      <Output TaskParameter="Aapt2Version"                PropertyName="_Aapt2Version" />
+      <Output TaskParameter="Aapt2ToolPath"               PropertyName="Aapt2ToolPath"               Condition="'$(Aapt2ToolPath)' == ''" />
+    </ResolveAndroidTooling>
+  </Target>
+
+</Project>

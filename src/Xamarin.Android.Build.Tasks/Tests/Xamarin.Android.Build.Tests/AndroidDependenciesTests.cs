@@ -6,6 +6,7 @@ using Xamarin.ProjectTools;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
+	[Category ("Node-3")]
 	[NonParallelizable] // Do not run environment modifying tests in parallel.
 	public class AndroidDependenciesTests : BaseTest
 	{

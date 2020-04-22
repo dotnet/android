@@ -11,6 +11,7 @@ namespace Xamarin.Android.Tasks
 		public abstract string AbiName { get; }
 		public abstract uint MapModulesAlignBits { get; }
 		public abstract uint MapJavaAlignBits { get; }
+		public abstract uint DebugTypeMapAlignBits { get; }
 
 		public virtual string MapType <T> ()
 		{

@@ -10,11 +10,12 @@ namespace Xamarin.Android.Tasks
 {
 	class TypeMapGenerator
 	{
-		const string TypeMapMagicString = "XATM"; // Xamarin Android TypeMap
+		const string TypeMapMagicString = "XATS"; // Xamarin Android TypeMap
 		const string TypeMapIndexMagicString = "XATI"; // Xamarin Android Typemap Index
-		const uint TypeMapFormatVersion = 1; // Keep in sync with the value in src/monodroid/jni/xamarin-app.hh
+		const uint TypeMapFormatVersion = 2; // Keep in sync with the value in src/monodroid/jni/xamarin-app.hh
+		const string TypemapExtension = ".typemap";
 
-		internal sealed class ModuleUUIDArrayComparer : IComparer<ModuleData>
+		internal sealed class ModuleUUIDArrayComparer : IComparer<ModuleReleaseData>
 		{
 			int Compare (byte[] left, byte[] right)
 			{
@@ -29,21 +30,21 @@ namespace Xamarin.Android.Tasks
 				return 0;
 			}
 
-			public int Compare (ModuleData left, ModuleData right)
+			public int Compare (ModuleReleaseData left, ModuleReleaseData right)
 			{
 				return Compare (left.MvidBytes, right.MvidBytes);
 			}
 		}
 
-		internal sealed class TypeMapEntryArrayComparer : IComparer<TypeMapEntry>
+		internal sealed class TypeMapEntryArrayComparer : IComparer<TypeMapReleaseEntry>
 		{
-			public int Compare (TypeMapEntry left, TypeMapEntry right)
+			public int Compare (TypeMapReleaseEntry left, TypeMapReleaseEntry right)
 			{
 				return String.CompareOrdinal (left.JavaName, right.JavaName);
 			}
 		}
 
-		internal sealed class TypeMapEntry
+		internal sealed class TypeMapReleaseEntry
 		{
 			public string JavaName;
 			public int JavaNameLength;
@@ -53,18 +54,40 @@ namespace Xamarin.Android.Tasks
 			public int ModuleIndex = -1;
 		}
 
-		internal sealed class ModuleData
+		internal sealed class ModuleReleaseData
 		{
 			public Guid Mvid;
 			public byte[] MvidBytes;
 			public AssemblyDefinition Assembly;
-			public TypeMapEntry[] Types;
-			public Dictionary<uint, TypeMapEntry> DuplicateTypes;
+			public TypeMapReleaseEntry[] Types;
+			public Dictionary<uint, TypeMapReleaseEntry> DuplicateTypes;
 			public string AssemblyName;
 			public string AssemblyNameLabel;
 			public string OutputFilePath;
 
-			public Dictionary<string, TypeMapEntry> TypesScratch;
+			public Dictionary<string, TypeMapReleaseEntry> TypesScratch;
+		}
+
+		internal sealed class TypeMapDebugEntry
+		{
+			public string JavaName;
+			public string JavaLabel;
+			public string ManagedName;
+			public string ManagedLabel;
+			public int JavaIndex;
+			public int ManagedIndex;
+		}
+
+		// Widths include the terminating nul character but not the padding!
+		internal sealed class ModuleDebugData
+		{
+			public uint EntryCount;
+			public uint JavaNameWidth;
+			public uint ManagedNameWidth;
+			public List<TypeMapDebugEntry> JavaToManagedMap;
+			public List<TypeMapDebugEntry> ManagedToJavaMap;
+			public string OutputFilePath;
+			public byte[] ModuleNameBytes;
 		}
 
 		Action<string> logger;
@@ -102,7 +125,7 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		public bool Generate (bool skipJniAddNativeMethodRegistrationAttributeScan, List<TypeDefinition> javaTypes, string outputDirectory, bool generateNativeAssembly, out ApplicationConfigTaskState appConfState)
+		public bool Generate (bool debugBuild, bool skipJniAddNativeMethodRegistrationAttributeScan, List<TypeDefinition> javaTypes, string outputDirectory, bool generateNativeAssembly, out ApplicationConfigTaskState appConfState)
 		{
 			if (String.IsNullOrEmpty (outputDirectory))
 				throw new ArgumentException ("must not be null or empty", nameof (outputDirectory));
@@ -110,16 +133,165 @@ namespace Xamarin.Android.Tasks
 			if (!Directory.Exists (outputDirectory))
 				Directory.CreateDirectory (outputDirectory);
 
+			appConfState = new ApplicationConfigTaskState {
+				JniAddNativeMethodRegistrationAttributePresent = skipJniAddNativeMethodRegistrationAttributeScan
+			};
+
+			string typemapsOutputDirectory = Path.Combine (outputDirectory, "typemaps");
+
+			if (debugBuild) {
+				return GenerateDebug (skipJniAddNativeMethodRegistrationAttributeScan, javaTypes, typemapsOutputDirectory, generateNativeAssembly, appConfState);
+			}
+
+			return GenerateRelease (skipJniAddNativeMethodRegistrationAttributeScan, javaTypes, typemapsOutputDirectory, appConfState);
+		}
+
+		bool GenerateDebug (bool skipJniAddNativeMethodRegistrationAttributeScan, List<TypeDefinition> javaTypes, string outputDirectory, bool generateNativeAssembly, ApplicationConfigTaskState appConfState)
+		{
+			if (generateNativeAssembly)
+				return GenerateDebugNativeAssembly (skipJniAddNativeMethodRegistrationAttributeScan, javaTypes, outputDirectory, appConfState);
+			return GenerateDebugFiles (skipJniAddNativeMethodRegistrationAttributeScan, javaTypes, outputDirectory, appConfState);
+		}
+
+		bool GenerateDebugFiles (bool skipJniAddNativeMethodRegistrationAttributeScan, List<TypeDefinition> javaTypes, string outputDirectory, ApplicationConfigTaskState appConfState)
+		{
+			var modules = new Dictionary<string, ModuleDebugData> (StringComparer.Ordinal);
+			int maxModuleFileNameWidth = 0;
+			int maxModuleNameWidth = 0;
+
+			foreach (TypeDefinition td in javaTypes) {
+				UpdateApplicationConfig (td, appConfState);
+				string moduleName = td.Module.Assembly.Name.Name;
+				ModuleDebugData module;
+
+				if (!modules.TryGetValue (moduleName, out module)) {
+					string outputFileName = $"{moduleName}{TypemapExtension}";
+					module = new ModuleDebugData {
+						EntryCount = 0,
+						JavaNameWidth = 0,
+						ManagedNameWidth = 0,
+						JavaToManagedMap = new List<TypeMapDebugEntry> (),
+						ManagedToJavaMap = new List<TypeMapDebugEntry> (),
+						OutputFilePath = Path.Combine (outputDirectory, outputFileName),
+						ModuleNameBytes = outputEncoding.GetBytes (moduleName)
+					};
+
+					if (module.ModuleNameBytes.Length > maxModuleNameWidth)
+						maxModuleNameWidth = module.ModuleNameBytes.Length;
+
+					if (outputFileName.Length > maxModuleFileNameWidth)
+						maxModuleFileNameWidth = outputFileName.Length;
+
+					modules.Add (moduleName, module);
+				}
+
+				TypeMapDebugEntry entry = GetDebugEntry (td);
+				if (entry.JavaName.Length > module.JavaNameWidth)
+					module.JavaNameWidth = (uint)entry.JavaName.Length + 1;
+
+				if (entry.ManagedName.Length > module.ManagedNameWidth)
+					module.ManagedNameWidth = (uint)entry.ManagedName.Length + 1;
+
+				module.JavaToManagedMap.Add (entry);
+				module.ManagedToJavaMap.Add (entry);
+			}
+
+			foreach (ModuleDebugData module in modules.Values) {
+				PrepareDebugMaps (module);
+			}
+
+			string typeMapIndexPath = Path.Combine (outputDirectory, "typemap.index");
+			using (var indexWriter = MemoryStreamPool.Shared.CreateBinaryWriter ()) {
+				OutputModules (modules, indexWriter, maxModuleFileNameWidth + 1);
+				indexWriter.Flush ();
+				MonoAndroidHelper.CopyIfStreamChanged (indexWriter.BaseStream, typeMapIndexPath);
+			}
+			GeneratedBinaryTypeMaps.Add (typeMapIndexPath);
+
+			GenerateNativeAssembly (
+				(NativeAssemblerTargetProvider asmTargetProvider, bool sharedBitsWritten, bool sharedIncludeUsesAbiPrefix) => {
+					return new TypeMappingDebugNativeAssemblyGenerator (asmTargetProvider, new ModuleDebugData (), outputDirectory, sharedBitsWritten);
+				}
+			);
+
+			return true;
+		}
+
+		bool GenerateDebugNativeAssembly (bool skipJniAddNativeMethodRegistrationAttributeScan, List<TypeDefinition> javaTypes, string outputDirectory, ApplicationConfigTaskState appConfState)
+		{
+			var javaToManaged = new List<TypeMapDebugEntry> ();
+			var managedToJava = new List<TypeMapDebugEntry> ();
+
+			foreach (TypeDefinition td in javaTypes) {
+				UpdateApplicationConfig (td, appConfState);
+
+				TypeMapDebugEntry entry = GetDebugEntry (td);
+				javaToManaged.Add (entry);
+				managedToJava.Add (entry);
+			}
+
+			var data = new ModuleDebugData {
+				EntryCount = (uint)javaToManaged.Count,
+				JavaToManagedMap = javaToManaged,
+				ManagedToJavaMap = managedToJava,
+			};
+
+			PrepareDebugMaps (data);
+			GenerateNativeAssembly (
+				(NativeAssemblerTargetProvider asmTargetProvider, bool sharedBitsWritten, bool sharedIncludeUsesAbiPrefix) => {
+					return new TypeMappingDebugNativeAssemblyGenerator (asmTargetProvider, data, outputDirectory, sharedBitsWritten, sharedIncludeUsesAbiPrefix);
+				}
+			);
+
+			return true;
+		}
+
+		void PrepareDebugMaps (ModuleDebugData module)
+		{
+			module.JavaToManagedMap.Sort ((TypeMapDebugEntry a, TypeMapDebugEntry b) => String.Compare (a.JavaName, b.JavaName, StringComparison.Ordinal));
+			module.ManagedToJavaMap.Sort ((TypeMapDebugEntry a, TypeMapDebugEntry b) => String.Compare (a.ManagedName, b.ManagedName, StringComparison.Ordinal));
+
+			for (int i = 0; i < module.JavaToManagedMap.Count; i++) {
+				module.JavaToManagedMap[i].JavaIndex = i;
+			}
+
+			for (int i = 0; i < module.ManagedToJavaMap.Count; i++) {
+				module.ManagedToJavaMap[i].ManagedIndex = i;
+			}
+		}
+
+		TypeMapDebugEntry GetDebugEntry (TypeDefinition td)
+		{
+			// This is necessary because Mono runtime will return to us type name with a `.` for nested types (not a
+			// `/` or a `+`. So, for instance, a type named `DefaultRenderer` found in the
+			// `Xamarin.Forms.Platform.Android.Platform` class in the `Xamarin.Forms.Platform.Android` assembly will
+			// be seen here as
+			//
+			//   Xamarin.Forms.Platform.Android.Platform/DefaultRenderer
+			//
+			// The managed land name for the type will be rendered as
+			//
+			//   Xamarin.Forms.Platform.Android.Platform+DefaultRenderer
+			//
+			// And this is the form that we need in the map file
+			//
+			string managedTypeName = td.FullName.Replace ('/', '+');
+
+			return new TypeMapDebugEntry {
+				JavaName = Java.Interop.Tools.TypeNameMappings.JavaNativeTypeManager.ToJniName (td),
+				ManagedName = $"{managedTypeName}, {td.Module.Assembly.Name.Name}",
+			};
+		}
+
+		bool GenerateRelease (bool skipJniAddNativeMethodRegistrationAttributeScan, List<TypeDefinition> javaTypes, string outputDirectory, ApplicationConfigTaskState appConfState)
+		{
 			int assemblyId = 0;
 			int maxJavaNameLength = 0;
 			int maxModuleFileNameLength = 0;
 			var knownAssemblies = new Dictionary<string, int> (StringComparer.Ordinal);
-			var tempModules = new Dictionary<byte[], ModuleData> ();
+			var tempModules = new Dictionary<byte[], ModuleReleaseData> ();
 			Dictionary <AssemblyDefinition, int> moduleCounter = null;
 			var mvidCache = new Dictionary <Guid, byte[]> ();
-			appConfState = new ApplicationConfigTaskState {
-				JniAddNativeMethodRegistrationAttributePresent = skipJniAddNativeMethodRegistrationAttributeScan
-			};
 
 			foreach (TypeDefinition td in javaTypes) {
 				UpdateApplicationConfig (td, appConfState);
@@ -140,40 +312,24 @@ namespace Xamarin.Android.Tasks
 					mvidCache.Add (td.Module.Mvid, moduleUUID);
 				}
 
-				ModuleData moduleData;
+				ModuleReleaseData moduleData;
 				if (!tempModules.TryGetValue (moduleUUID, out moduleData)) {
 					if (moduleCounter == null)
 						moduleCounter = new Dictionary <AssemblyDefinition, int> ();
 
-					moduleData = new ModuleData {
+					moduleData = new ModuleReleaseData {
 						Mvid = td.Module.Mvid,
 						MvidBytes = moduleUUID,
 						Assembly = td.Module.Assembly,
 						AssemblyName = td.Module.Assembly.Name.Name,
-						TypesScratch = new Dictionary<string, TypeMapEntry> (StringComparer.Ordinal),
-						DuplicateTypes = new Dictionary<uint, TypeMapEntry> (),
+						TypesScratch = new Dictionary<string, TypeMapReleaseEntry> (StringComparer.Ordinal),
+						DuplicateTypes = new Dictionary<uint, TypeMapReleaseEntry> (),
 					};
 					tempModules.Add (moduleUUID, moduleData);
-
-					if (!generateNativeAssembly) {
-						int moduleNum;
-						if (!moduleCounter.TryGetValue (moduleData.Assembly, out moduleNum)) {
-							moduleNum = 0;
-							moduleCounter [moduleData.Assembly] = 0;
-						} else {
-							moduleNum++;
-							moduleCounter [moduleData.Assembly] = moduleNum;
-						}
-
-						string fileName = $"{moduleData.Assembly.Name.Name}.{moduleNum}.typemap";
-						moduleData.OutputFilePath = Path.Combine (outputDirectory, fileName);
-						if (maxModuleFileNameLength < fileName.Length)
-							maxModuleFileNameLength = fileName.Length;
-					}
 				}
 
 				string javaName = Java.Interop.Tools.TypeNameMappings.JavaNativeTypeManager.ToJniName (td);
-				var entry = new TypeMapEntry {
+				var entry = new TypeMapReleaseEntry {
 					JavaName = javaName,
 					JavaNameLength = outputEncoding.GetByteCount (javaName),
 					ManagedTypeName = td.FullName,
@@ -181,10 +337,8 @@ namespace Xamarin.Android.Tasks
 					AssemblyNameIndex = knownAssemblies [assemblyName]
 				};
 
-				if (generateNativeAssembly) {
-					if (entry.JavaNameLength > maxJavaNameLength)
-						maxJavaNameLength = entry.JavaNameLength;
-				}
+				if (entry.JavaNameLength > maxJavaNameLength)
+					maxJavaNameLength = entry.JavaNameLength;
 
 				if (moduleData.TypesScratch.ContainsKey (entry.JavaName)) {
 					// This is disabled because it costs a lot of time (around 150ms per standard XF Integration app
@@ -200,9 +354,9 @@ namespace Xamarin.Android.Tasks
 			Array.Sort (modules, new ModuleUUIDArrayComparer ());
 
 			var typeMapEntryComparer = new TypeMapEntryArrayComparer ();
-			foreach (ModuleData module in modules) {
+			foreach (ModuleReleaseData module in modules) {
 				if (module.TypesScratch.Count == 0) {
-					module.Types = new TypeMapEntry[0];
+					module.Types = new TypeMapReleaseEntry[0];
 					continue;
 				}
 
@@ -211,20 +365,19 @@ namespace Xamarin.Android.Tasks
 			}
 
 			NativeTypeMappingData data;
-			if (!generateNativeAssembly) {
-				string typeMapIndexPath = Path.Combine (outputDirectory, "typemap.index");
-				using (var indexWriter = MemoryStreamPool.Shared.CreateBinaryWriter ()) {
-					OutputModules (modules, indexWriter, maxModuleFileNameLength + 1);
-					indexWriter.Flush ();
-					MonoAndroidHelper.CopyIfStreamChanged (indexWriter.BaseStream, typeMapIndexPath);
+			data = new NativeTypeMappingData (logger, modules, maxJavaNameLength + 1);
+
+			GenerateNativeAssembly (
+				(NativeAssemblerTargetProvider asmTargetProvider, bool sharedBitsWritten, bool sharedIncludeUsesAbiPrefix) => {
+					return new TypeMappingReleaseNativeAssemblyGenerator (asmTargetProvider, data, outputDirectory, sharedBitsWritten, sharedIncludeUsesAbiPrefix);
 				}
-				GeneratedBinaryTypeMaps.Add (typeMapIndexPath);
+			);
 
-				data = new NativeTypeMappingData (logger, new ModuleData[0], 0);
-			} else {
-				data = new NativeTypeMappingData (logger, modules, maxJavaNameLength + 1);
-			}
+			return true;
+		}
 
+		void GenerateNativeAssembly (Func<NativeAssemblerTargetProvider, bool, bool, NativeAssemblyGenerator> getGenerator)
+		{
 			NativeAssemblerTargetProvider asmTargetProvider;
 			bool sharedBitsWritten = false;
 			bool sharedIncludeUsesAbiPrefix;
@@ -253,7 +406,7 @@ namespace Xamarin.Android.Tasks
 						throw new InvalidOperationException ($"Unknown ABI {abi}");
 				}
 
-				var generator = new TypeMappingNativeAssemblyGenerator (asmTargetProvider, data, Path.Combine (outputDirectory, "typemaps"), sharedBitsWritten, sharedIncludeUsesAbiPrefix);
+				NativeAssemblyGenerator generator = getGenerator (asmTargetProvider, sharedBitsWritten, sharedIncludeUsesAbiPrefix);
 
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter (outputEncoding)) {
 					generator.Write (sw);
@@ -263,7 +416,6 @@ namespace Xamarin.Android.Tasks
 						sharedBitsWritten = true;
 				}
 			}
-			return true;
 		}
 
 		// Binary index file format, all data is little-endian:
@@ -276,37 +428,35 @@ namespace Xamarin.Android.Tasks
 		//
 		// Index entry format:
 		//
-		//  [Module UUID][File name]<NUL>
+		//  [File name]<NUL>
 		//
 		// Where:
 		//
-		//   [Module UUID] is 16 bytes long
 		//   [File name] is right-padded with <NUL> characters to the [Module file name width] boundary.
 		//
-		void OutputModules (ModuleData[] modules, BinaryWriter indexWriter, int moduleFileNameWidth)
+		void OutputModules (Dictionary<string, ModuleDebugData> modules, BinaryWriter indexWriter, int moduleFileNameWidth)
 		{
 			indexWriter.Write (typemapIndexMagicString);
 			indexWriter.Write (TypeMapFormatVersion);
-			indexWriter.Write (modules.Length);
+			indexWriter.Write (modules.Count);
 			indexWriter.Write (moduleFileNameWidth);
 
-			foreach (ModuleData data in modules) {
-				OutputModule (data.MvidBytes, data);
-				indexWriter.Write (data.MvidBytes);
+			foreach (ModuleDebugData module in modules.Values) {
+				OutputModule (module);
 
-				string outputFilePath = Path.GetFileName (data.OutputFilePath);
+				string outputFilePath = Path.GetFileName (module.OutputFilePath);
 				indexWriter.Write (outputEncoding.GetBytes (outputFilePath));
 				PadField (indexWriter, outputFilePath.Length, moduleFileNameWidth);
 			}
 		}
 
-		void OutputModule (byte[] moduleUUID, ModuleData moduleData)
+		void OutputModule (ModuleDebugData moduleData)
 		{
-			if (moduleData.Types.Length == 0)
+			if (moduleData.JavaToManagedMap.Count == 0)
 				return;
 
 			using (var bw = MemoryStreamPool.Shared.CreateBinaryWriter ()) {
-				OutputModule (bw, moduleUUID, moduleData);
+				OutputModule (bw, moduleData);
 				bw.Flush ();
 				MonoAndroidHelper.CopyIfStreamChanged (bw.BaseStream, moduleData.OutputFilePath);
 			}
@@ -315,104 +465,50 @@ namespace Xamarin.Android.Tasks
 
 		// Binary file format, all data is little-endian:
 		//
-		//  [Magic string]                    # XATM
-		//  [Format version]                  # 32-bit integer, 4 bytes
-		//  [Module UUID]                     # 16 bytes
-		//  [Entry count]                     # unsigned 32-bit integer, 4 bytes
-		//  [Duplicate count]                 # unsigned 32-bit integer, 4 bytes (might be 0)
-		//  [Java type name width]            # unsigned 32-bit integer, 4 bytes
-		//  [Assembly name size]              # unsigned 32-bit integer, 4 bytes
+		//  [Magic string]                    # XATS
+		//  [Format version]                  # 32-bit unsigned integer, 4 bytes
+		//  [Entry count]                     # 32-bit unsigned integer, 4 bytes
+		//  [Java type name width]            # 32-bit unsigned integer, 4 bytes
+		//  [Managed type name width]         # 32-bit unsigned integer, 4 bytes
+		//  [Assembly name size]              # 32-bit unsigned integer, 4 bytes
 		//  [Assembly name]                   # Non-null terminated assembly name
 		//  [Java-to-managed map]             # Format described below, [Entry count] entries
 		//  [Managed-to-java map]             # Format described below, [Entry count] entries
-		//  [Managed-to-java duplicates map]  # Map of unique managed IDs which point to the same Java type name (might be empty)
 		//
 		// Java-to-managed map format:
 		//
-		//    [Java type name]<NUL>[Managed type token ID]
+		//    [Java type name]<NUL>[Managed type table index]
 		//
 		//  Each name is padded with <NUL> to the width specified in the [Java type name width] field above.
 		//  Names are written without the size prefix, instead they are always terminated with a nul character
 		//  to make it easier and faster to handle by the native runtime.
 		//
-		//  Each token ID is an unsigned 32-bit integer, 4 bytes
+		//  Each [Managed type table index] is an unsigned 32-bit integer, 4 bytes
 		//
 		//
-		// Managed-to-java map format:
+		// Managed-to-java map is identical to the [Java-to-managed] table above, with the exception of the index
+		// pointing to the Java name table.
 		//
-		//    [Managed type token ID][Java type name table index]
-		//
-		//  Both fields are unsigned 32-bit integers, to a total of 8 bytes per entry. Index points into the
-		//  [Java-to-managed map] table above.
-		//
-		// Managed-to-java duplicates map format:
-		//
-		//  Format is identical to [Managed-to-java] above.
-		//
-		void OutputModule (BinaryWriter bw, byte[] moduleUUID, ModuleData moduleData)
+		void OutputModule (BinaryWriter bw, ModuleDebugData moduleData)
 		{
 			bw.Write (moduleMagicString);
 			bw.Write (TypeMapFormatVersion);
-			bw.Write (moduleUUID);
+			bw.Write (moduleData.JavaToManagedMap.Count);
+			bw.Write (moduleData.JavaNameWidth);
+			bw.Write (moduleData.ManagedNameWidth);
+			bw.Write (moduleData.ModuleNameBytes.Length);
+			bw.Write (moduleData.ModuleNameBytes);
 
-			var javaNames = new Dictionary<string, uint> (StringComparer.Ordinal);
-			var managedTypes = new Dictionary<uint, uint> ();
-			int maxJavaNameLength = 0;
-
-			foreach (TypeMapEntry entry in moduleData.Types) {
-				javaNames.Add (entry.JavaName, entry.Token);
-				if (entry.JavaNameLength > maxJavaNameLength)
-					maxJavaNameLength = entry.JavaNameLength;
-
-				managedTypes.Add (entry.Token, 0);
+			foreach (TypeMapDebugEntry entry in moduleData.JavaToManagedMap) {
+				bw.Write (outputEncoding.GetBytes (entry.JavaName));
+				PadField (bw, entry.JavaName.Length, (int)moduleData.JavaNameWidth);
+				bw.Write (entry.ManagedIndex);
 			}
 
-			var javaNameList = javaNames.Keys.ToList ();
-			foreach (TypeMapEntry entry in moduleData.Types) {
-				var javaIndex = (uint)javaNameList.IndexOf (entry.JavaName);
-				managedTypes[entry.Token] = javaIndex;
-			}
-
-			bw.Write (javaNames.Count);
-			bw.Write (moduleData.DuplicateTypes.Count);
-			bw.Write (maxJavaNameLength + 1);
-
-			string assemblyName = moduleData.Assembly.Name.Name;
-			bw.Write (assemblyName.Length);
-			bw.Write (outputEncoding.GetBytes (assemblyName));
-
-			var sortedJavaNames = javaNames.Keys.ToArray ();
-			Array.Sort (sortedJavaNames, StringComparer.Ordinal);
-			foreach (string typeName in sortedJavaNames) {
-				byte[] bytes = outputEncoding.GetBytes (typeName);
-				bw.Write (bytes);
-				PadField (bw, bytes.Length, maxJavaNameLength + 1);
-				bw.Write (javaNames[typeName]);
-			}
-
-			WriteManagedTypes (managedTypes);
-			if (moduleData.DuplicateTypes.Count == 0)
-				return;
-
-			var managedDuplicates = new Dictionary<uint, uint> ();
-			foreach (var kvp in moduleData.DuplicateTypes) {
-				uint javaIndex = kvp.Key;
-				uint typeId = kvp.Value.Token;
-
-				managedDuplicates.Add (javaIndex, typeId);
-			}
-
-			WriteManagedTypes (managedDuplicates);
-
-			void WriteManagedTypes (IDictionary<uint, uint> types)
-			{
-				var sortedTokens = types.Keys.ToArray ();
-				Array.Sort (sortedTokens);
-
-				foreach (uint token in sortedTokens) {
-					bw.Write (token);
-					bw.Write (types[token]);
-				}
+			foreach (TypeMapDebugEntry entry in moduleData.ManagedToJavaMap) {
+				bw.Write (outputEncoding.GetBytes (entry.ManagedName));
+				PadField (bw, entry.ManagedName.Length, (int)moduleData.ManagedNameWidth);
+				bw.Write (entry.JavaIndex);
 			}
 		}
 

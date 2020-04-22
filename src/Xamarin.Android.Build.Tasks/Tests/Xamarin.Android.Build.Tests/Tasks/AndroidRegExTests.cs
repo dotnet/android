@@ -5,6 +5,7 @@ using NUnit.Framework;
 
 namespace Xamarin.Android.Build.Tests
 {
+	[Category ("Node-2")]
 	public class AndroidRegExTests
 	{
 

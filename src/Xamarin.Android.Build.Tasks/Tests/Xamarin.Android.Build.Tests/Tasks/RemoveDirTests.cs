@@ -10,6 +10,7 @@ using Xamarin.Android.Tools;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
+	[Category ("Node-2")]
 	public class RemoveDirTests : BaseTest
 	{
 		List<BuildMessageEventArgs> messages;
@@ -76,15 +77,11 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void LongPath ()
 		{
-			if (LongPathsSupported) {
-				Assert.Ignore ("This environment supports long paths");
-			}
 			var file = NewFile (fileName: "foo".PadRight (MaxFileName, 'N'));
 			var task = CreateTask ();
 			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
 			Assert.AreEqual (1, task.RemovedDirectories.Length, "Changes should have been made.");
 			DirectoryAssert.DoesNotExist (tempDirectory);
-			Assert.IsTrue (StringAssertEx.ContainsText (messages.Select (m => m.Message), $"Trying long path: {Files.LongPathPrefix}"), "A long path should be encountered.");
 		}
 	}
 }

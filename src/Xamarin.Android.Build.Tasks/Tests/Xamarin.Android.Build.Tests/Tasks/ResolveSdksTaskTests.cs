@@ -1,17 +1,18 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using NUnit.Framework;
-using Xamarin.ProjectTools;
 using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
-using System.Text;
 using Xamarin.Android.Tasks;
-using Microsoft.Build.Utilities;
+using Xamarin.ProjectTools;
+using ResolveAndroidTooling = Xamarin.Android.Tasks.Legacy.ResolveAndroidTooling;
+using ValidateJavaVersion = Xamarin.Android.Tasks.Legacy.ValidateJavaVersion;
 
 namespace Xamarin.Android.Build.Tests {
 
 	[TestFixture]
+	[Category ("Node-2")]
 	[Parallelizable (ParallelScope.Self)]
 	public class ResolveSdksTaskTests : BaseTest {
 #pragma warning disable 414
@@ -410,6 +411,19 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.AreEqual (androidApiLevelName, androidTooling.AndroidApiLevelName, $"AndroidApiLevelName should be {androidApiLevelName}");
 			Assert.AreEqual (targetFrameworkVersion, androidTooling.TargetFrameworkVersion, $"TargetFrameworkVersion should be {targetFrameworkVersion}");
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
+		}
+
+		[Test]
+		public void LatestTFV_OldTargetSdkVersion ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				UseLatestPlatformSdk = false,
+			};
+			proj.AndroidManifest = proj.AndroidManifest.Replace ("<uses-sdk />", "<uses-sdk android:targetSdkVersion=\"19\" />");
+			using (var b = CreateApkBuilder ()) {
+				proj.TargetFrameworkVersion = b.LatestTargetFrameworkVersion ();
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			}
 		}
 	}
 }

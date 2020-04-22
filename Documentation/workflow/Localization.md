@@ -22,6 +22,14 @@ so when adding a new message, follow these steps:
     Log.LogCodedError ("XA0000", Properties.Resources.XA0000);
     ```
 
+    Or, to log a message directly from an MSBuild target, pass the name of the
+    resource to the `ResourceName` parameter of the `<AndroidError/>` or
+    `<AndroidWarning/>` task instead:
+
+    ```xml
+    <AndroidError Code="XA0000" ResourceName="XA0000" />
+    ```
+
  3. After adding the new message, build `Xamarin.Android.Build.Tasks.csproj`
     locally.  This will run the targets from [dotnet/xliff-tasks][xliff-tasks]
     to update the `.xlf` [XLIFF][xliff] localization files with the latest

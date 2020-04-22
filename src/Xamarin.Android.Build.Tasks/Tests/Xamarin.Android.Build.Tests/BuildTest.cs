@@ -19,6 +19,7 @@ using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
+	[Category ("Node-1")]
 	[Parallelizable (ParallelScope.Children)]
 	public partial class BuildTest : BaseTest
 	{
@@ -328,9 +329,12 @@ class MemTest {
 
 		[Test]
 		[Category ("SmokeTests")]
-		public void BuildXamarinFormsMapsApplication ()
+		[NonParallelizable] // parallel NuGet restore causes failures
+		public void BuildXamarinFormsMapsApplication ([Values (true, false)] bool multidex)
 		{
 			var proj = new XamarinFormsMapsApplicationProject ();
+			if (multidex)
+				proj.SetProperty ("AndroidEnableMultiDex", "True");
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "first should have succeeded.");
 				b.BuildLogFile = "build2.log";
@@ -1095,6 +1099,16 @@ namespace UnamedProject
 				LinkTool = linkTool,
 			};
 			using (var b = CreateApkBuilder (Path.Combine ("temp", $"BuildProguard Enabled Project(1){isRelease}{dexTool}{linkTool}"))) {
+				if (dexTool == "d8" && linkTool == "proguard") {
+					b.ThrowOnBuildFailure = false;
+					Assert.IsFalse (b.Build (proj), "Build should have failed.");
+					string error = b.LastBuildOutput
+						.SkipWhile (x => !x.StartsWith ("Build FAILED."))
+						.FirstOrDefault (x => x.Contains ("error XA1011:"));
+					Assert.IsNotNull (error, "Build should have failed with XA1011.");
+					return;
+				}
+
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
 				if (isRelease && !string.IsNullOrEmpty (linkTool)) {
@@ -1311,6 +1325,8 @@ namespace UnnamedProject {
 			proj.EnableProguard =
 				proj.IsRelease = true;
 			proj.LinkTool = linkTool;
+			if (linkTool == "proguard")
+				proj.DexTool = "dx";
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
@@ -1318,6 +1334,56 @@ namespace UnnamedProject {
 				var dexFile = b.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
 				FileAssert.Exists (dexFile);
 				Assert.IsTrue (DexUtils.ContainsClassWithMethod (className, "<init>", "()V", dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
+			}
+		}
+
+		[Test]
+		public void MultiDexR8ConfigWithNoCodeShrinking ([Values (true, false)] bool useConfig)
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+				DexTool = "d8",
+			};
+			proj.SetProperty ("AndroidEnableMultiDex", "True");
+			/* The source for the library is a single class:
+			*
+			abstract class ExtendsClassValue extends ClassValue<Boolean> {}
+			*
+			* The reason `ClassValue` is used for this test is precisely that it
+			* does not exist in `android.jar`.  This means the library cannot be
+			* compiled using `@(AndroidJavaSource)`.  It was instead compiled
+			* using `javac ExtendsClassValue.java` and then manually archived
+			* using `jar cvf ExtendsClassValue.jar
+			* ExtendsClassValue.class`.
+			*/
+			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "ExtendsClassValue.jar") { BinaryContent = () => Convert.FromBase64String (@"
+UEsDBBQACAgIAChzjVAAAAAAAAAAAAAAAAAJAAQATUVUQS1JTkYv/soAAAMAUEsHCAAAAAACAAAAA
+AAAAFBLAwQUAAgICAAoc41QAAAAAAAAAAAAAAAAFAAAAE1FVEEtSU5GL01BTklGRVNULk1G803My
+0xLLS7RDUstKs7Mz7NSMNQz4OVyLkpNLElN0XWqBAlY6BnoGpkqaPhmJhflF+enlWjycvFyAQBQS
+wcIv1FGtTsAAAA7AAAAUEsDBBQACAgIABxzjVAAAAAAAAAAAAAAAAAXAAAARXh0ZW5kc0NsYXNzV
+mFsdWUuY2xhc3NtT7sKwkAQnNWYaHwExVaw9AHa2CkWilZi46M/9ZCT8wJ5iL9lJVj4AX6UuEmjh
+Qu7M8wwu+zr/XgCGMBzkUXJQdlBhWCPlFHRmJBttbcEa+ofJMFbKCOX8Xkng7XYaVYKK3U0IooD5
+t3FSVxEXwtz7E+1CMOt0LEc/agT39dSmOF4SHBXfhzs5Vwla2qbUH4jvSRRgoUcoTq7RtIcwq9Lq
+P+7YzWR4Q+SIm4OM9rMGoyJkuvcQbfUdnjaqUgcyjNmUICbYvEDUEsHCB4E1g/HAAAAEgEAAFBLA
+QIUABQACAgIAChzjVAAAAAAAgAAAAAAAAAJAAQAAAAAAAAAAAAAAAAAAABNRVRBLUlORi/+ygAAU
+EsBAhQAFAAICAgAKHONUL9RRrU7AAAAOwAAABQAAAAAAAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BT
+klGRVNULk1GUEsBAhQAFAAICAgAHHONUB4E1g/HAAAAEgEAABcAAAAAAAAAAAAAAAAAugAAAEV4d
+GVuZHNDbGFzc1ZhbHVlLmNsYXNzUEsFBgAAAAADAAMAwgAAAMYBAAAAAA==
+				") });
+			if (useConfig)
+				proj.OtherBuildItems.Add (new BuildItem ("ProguardConfiguration", "proguard.cfg") {
+					TextContent = () => "-dontwarn java.lang.ClassValue"
+				});
+			using (var builder = CreateApkBuilder ()) {
+				Assert.True (builder.Build (proj), "Build should have succeeded.");
+				string warning = builder.LastBuildOutput
+						.SkipWhile (x => !x.StartsWith ("Build succeeded."))
+						.FirstOrDefault (x => x.Contains ("R8 : warning : Missing class: java.lang.ClassValue"));
+				if (useConfig) {
+					Assert.IsNull (warning, "Build should have completed without an R8 warning for `java.lang.ClassValue`.");
+					return;
+				}
+				Assert.IsNotNull (warning, "Build should have completed with an R8 warning for `java.lang.ClassValue`.");
 			}
 		}
 
@@ -2339,7 +2405,8 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 		public void AarContentExtraction ([Values (false, true)] bool useAapt2)
 		{
 			var aar = new AndroidItem.AndroidAarLibrary ("Jars\\android-crop-1.0.1.aar") {
-				WebContent = "https://jcenter.bintray.com/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar"
+				// https://mvnrepository.com/artifact/com.soundcloud.android/android-crop/1.0.1
+				WebContent = "https://repo1.maven.org/maven2/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar"
 			};
 			var proj = new XamarinAndroidApplicationProject () {
 				OtherBuildItems = {
@@ -2593,6 +2660,15 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 ",
 			});
 			using (var b = CreateApkBuilder (Path.Combine ("temp", $"BuildReleaseAppWithA InItAndÜmläüts({enableMultiDex}{dexTool}{linkTool})"))) {
+				if (dexTool == "d8" && linkTool == "proguard") {
+					b.ThrowOnBuildFailure = false;
+					Assert.IsFalse (b.Build (proj), "Build should have failed.");
+					string error = b.LastBuildOutput
+						.SkipWhile (x => !x.StartsWith ("Build FAILED."))
+						.FirstOrDefault (x => x.Contains ("error XA1011:"));
+					Assert.IsNotNull (error, "Build should have failed with XA1011.");
+					return;
+				}
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsFalse (b.LastBuildOutput.ContainsText ("Duplicate zip entry"), "Should not get warning about [META-INF/MANIFEST.MF]");
 
@@ -2715,12 +2791,12 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				proj.MainActivity = proj.DefaultMainActivity.Replace ("clicks", "CLICKS");
 				proj.Touch ("MainActivity.cs");
 				Assert.IsTrue (b.Build (proj), "third build should have succeeded.");
-				Assert.IsTrue (b.Output.IsTargetSkipped ("_CleanIntermediateIfNuGetsChange"), "A build with no changes to NuGets should *not* trigger `_CleanIntermediateIfNuGetsChange`!");
+				Assert.IsTrue (b.Output.IsTargetSkipped ("_CleanIntermediateIfNeeded"), "A build with no changes to NuGets should *not* trigger `_CleanIntermediateIfNeeded`!");
 				FileAssert.Exists (build_props, "build.props should exist after third build.");
 			}
 		}
 
-		//This test validates the _CleanIntermediateIfNuGetsChange target
+		//This test validates the _CleanIntermediateIfNeeded target
 		[Test]
 		[NonParallelizable]
 		public void BuildAfterUpgradingNuget ()
@@ -2748,10 +2824,10 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				if (Directory.Exists (projectDir))
 					Directory.Delete (projectDir, true);
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
-				Assert.IsFalse (b.Output.IsTargetSkipped ("_CleanIntermediateIfNuGetsChange"), "`_CleanIntermediateIfNuGetsChange` should have run!");
+				Assert.IsFalse (b.Output.IsTargetSkipped ("_CleanIntermediateIfNeeded"), "`_CleanIntermediateIfNeeded` should have run!");
 
-				var nugetStamp = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "stamp", "_CleanIntermediateIfNuGetsChange.stamp");
-				FileAssert.Exists (nugetStamp, "`_CleanIntermediateIfNuGetsChange` did not create stamp file!");
+				var nugetStamp = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "stamp", "_CleanIntermediateIfNeeded.stamp");
+				FileAssert.Exists (nugetStamp, "`_CleanIntermediateIfNeeded` did not create stamp file!");
 				string build_props = b.Output.GetIntermediaryPath ("build.props");
 				FileAssert.Exists (build_props, "build.props should exist after first build.");
 
@@ -2760,15 +2836,15 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				proj.PackageReferences.Add (KnownPackages.XamarinForms_4_0_0_425677);
 				b.Save (proj, doNotCleanupOnUpdate: true);
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
-				Assert.IsFalse (b.Output.IsTargetSkipped ("_CleanIntermediateIfNuGetsChange"), "`_CleanIntermediateIfNuGetsChange` should have run!");
-				FileAssert.Exists (nugetStamp, "`_CleanIntermediateIfNuGetsChange` did not create stamp file!");
+				Assert.IsFalse (b.Output.IsTargetSkipped ("_CleanIntermediateIfNeeded"), "`_CleanIntermediateIfNeeded` should have run!");
+				FileAssert.Exists (nugetStamp, "`_CleanIntermediateIfNeeded` did not create stamp file!");
 				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "Refreshing Xamarin.Android.Support.v7.AppCompat.dll"), "`ResolveLibraryProjectImports` should not skip `Xamarin.Android.Support.v7.AppCompat.dll`!");
 				FileAssert.Exists (build_props, "build.props should exist after second build.");
 
 				proj.MainActivity = proj.MainActivity.Replace ("clicks", "CLICKS");
 				proj.Touch ("MainActivity.cs");
 				Assert.IsTrue (b.Build (proj), "third build should have succeeded.");
-				Assert.IsTrue (b.Output.IsTargetSkipped ("_CleanIntermediateIfNuGetsChange"), "A build with no changes to NuGets should *not* trigger `_CleanIntermediateIfNuGetsChange`!");
+				Assert.IsTrue (b.Output.IsTargetSkipped ("_CleanIntermediateIfNeeded"), "A build with no changes to NuGets should *not* trigger `_CleanIntermediateIfNeeded`!");
 				FileAssert.Exists (build_props, "build.props should exist after third build.");
 			}
 		}
@@ -3875,11 +3951,10 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var targets = new [] {
-					"_CleanupOldStaticResources",
+					"_CleanIntermediateIfNeeded",
 					"_GeneratePackageManagerJava",
 					"_CompileJava",
 				};
-				Assert.IsTrue (b.Output.IsTargetSkipped (targets [0]), $"`{targets [0]}` should be skipped.");
 				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 				var oldMonoPackageManager = Path.Combine (intermediate, "android", "src", "mono", "MonoPackageManager.java");
 				var seppuku = Path.Combine (intermediate, "android", "src", "mono", "android", "Seppuku.java");
@@ -3898,7 +3973,8 @@ public class ApplicationRegistration { }");
 				Directory.CreateDirectory (Path.GetDirectoryName (seppukuClass));
 				File.WriteAllText (oldMonoPackageManagerClass, "");
 				File.WriteAllText (seppukuClass, "");
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				// Change $(XamarinAndroidVersion) to trigger _CleanIntermediateIfNeeded
+				Assert.IsTrue (b.Build (proj, parameters: new [] { "XamarinAndroidVersion=99.99" }, doNotCleanupOnUpdate: true), "Build should have succeeded.");
 				foreach (var target in targets) {
 					Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped.");
 				}
@@ -4166,6 +4242,22 @@ namespace UnnamedProject
 						Assert.IsTrue (zip.ContainsEntry (expected, caseSensitive: true), $"{expected} should exist in {archive}");
 					}
 				}
+			}
+		}
+
+		[Test]
+		public void XA1018 ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetProperty ("AndroidManifest", "DoesNotExist");
+			using (var builder = CreateApkBuilder ()) {
+				builder.ThrowOnBuildFailure = false;
+				Assert.IsFalse (builder.Build (proj), "Build should have failed.");
+				string error = builder.LastBuildOutput
+						.SkipWhile (x => !x.StartsWith ("Build FAILED."))
+						.FirstOrDefault (x => x.Contains ("error XA1018:"));
+				Assert.IsNotNull (error, "Build should have failed with XA1018.");
+				StringAssert.Contains ("DoesNotExist", error, "Error should include the name of the nonexistent file");
 			}
 		}
 

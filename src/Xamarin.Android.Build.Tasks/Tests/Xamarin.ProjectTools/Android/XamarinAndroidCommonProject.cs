@@ -89,6 +89,7 @@ namespace Xamarin.ProjectTools
 				base.Language = value;
 				if (value == XamarinAndroidProjectLanguage.FSharp) {
 					// add the stuff needed for FSharp
+					References.Add (new BuildItem.Reference ("System.Numerics"));
 					PackageReferences.Add (KnownPackages.FSharp_Core_Latest);
 					PackageReferences.Add (KnownPackages.Xamarin_Android_FSharp_ResourceProvider_Runtime);
 					Sources.Remove (resourceDesigner);

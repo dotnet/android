@@ -41,10 +41,6 @@ namespace Android.Widget {
 		}
 #pragma warning restore 0169
 
-
-		static IntPtr id_setAdapter_Landroid_widget_Adapter_;
-#pragma warning restore 0169
-
 		public abstract override IListAdapter Adapter {
 			[Register ("getAdapter", "()Landroid/widget/ListAdapter;", "GetGetAdapterHandler")]
 			get;

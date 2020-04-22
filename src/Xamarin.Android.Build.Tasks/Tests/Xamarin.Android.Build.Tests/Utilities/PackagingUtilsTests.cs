@@ -4,6 +4,7 @@ using Xamarin.Android.Tasks;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
+	[Category ("Node-2")]
 	public class PackagingUtilsTests
 	{
 		void AssertIsValid (string path)

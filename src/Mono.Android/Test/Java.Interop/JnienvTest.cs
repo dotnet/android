@@ -85,12 +85,20 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		public void NewGenericTypeThrows ()
+		public void NewOpenGenericTypeThrows ()
 		{
 			try {
 				var lrefInstance = JNIEnv.StartCreateInstance (typeof (GenericHolder<>), "()V");
 				JNIEnv.FinishCreateInstance (lrefInstance, "()V");
+				Assert.Fail ("SHOULD NOT BE REACHED: creation of open generic types is not supported");
 			} catch (NotSupportedException) {
+			}
+		}
+
+		[Test]
+		public void NewClosedGenericTypeWorks ()
+		{
+			using (var holder = new GenericHolder<int>()) {
 			}
 		}
 
@@ -383,19 +391,16 @@ namespace Java.InteropTests
 			Assert.AreEqual (null, m);
 		}
 
-		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr monodroid_typemap_managed_to_java (byte[] mvid, int token);
-
 		[Test]
 		public void ManagedToJavaTypeMapping ()
 		{
 			Type type = typeof(Activity);
-			var m = monodroid_typemap_managed_to_java (type.Module.ModuleVersionId.ToByteArray (), type.MetadataToken);
-			Assert.AreNotEqual (IntPtr.Zero, m, "`Activity` subclasses Java.Lang.Object, it should be in the typemap!");
+			string m = JNIEnv.TypemapManagedToJava (type);
+			Assert.AreNotEqual (null, m, "`Activity` subclasses Java.Lang.Object, it should be in the typemap!");
 
 			type = typeof (JnienvTest);
-			m = monodroid_typemap_managed_to_java (type.Module.ModuleVersionId.ToByteArray (), type.MetadataToken);
-			Assert.AreEqual (IntPtr.Zero, m, "`JnienvTest` does *not* subclass Java.Lang.Object, it should *not* be in the typemap!");
+			m = JNIEnv.TypemapManagedToJava (type);
+			Assert.AreEqual (null, m, "`JnienvTest` does *not* subclass Java.Lang.Object, it should *not* be in the typemap!");
 		}
 
 		[Test]

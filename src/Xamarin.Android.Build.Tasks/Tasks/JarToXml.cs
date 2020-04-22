@@ -48,7 +48,7 @@ namespace Xamarin.Android.Tasks
 		public override bool RunTask ()
 		{
 			if (SourceJars == null || SourceJars.Count () == 0) {
-				Log.LogError ("At least one Java library is required for binding, this must be either 'EmbeddedJar', 'InputJar' (for jar), 'LibraryProjectZip' (for aar or zip) or 'LibraryProjectProperties' (project.properties) build action.");
+				Log.LogCodedError ("XA1020", Properties.Resources.XA1020);
 				return false;
 			}
 
@@ -60,12 +60,12 @@ namespace Xamarin.Android.Tasks
 			// Ensure that all requested jars exist
 			foreach (var jar in SourceJars)
 				if (!File.Exists (jar.ItemSpec))
-					Log.LogError ("Specified source jar not found: {0}", jar.ItemSpec);
+					Log.LogCodedError ("XA1021", Properties.Resources.XA1021, jar.ItemSpec);
 
 			if (ReferenceJars != null)
 				foreach (var jar in ReferenceJars)
 					if (!File.Exists (jar.ItemSpec))
-						Log.LogError ("Specified reference jar not found: {0}", jar.ItemSpec);
+						Log.LogCodedError ("XA1022", Properties.Resources.XA1022, jar.ItemSpec);
 
 			if (Log.HasLoggedErrors)
 				return false;

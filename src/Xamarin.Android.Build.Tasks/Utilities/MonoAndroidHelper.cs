@@ -256,6 +256,17 @@ namespace Xamarin.Android.Tasks
 			"x86_64",
 		};
 
+		static readonly Dictionary<string, string> RidAbiMap = new Dictionary<string, string> {
+			{ "android.21-arm64", "arm64-v8a" },
+			{ "android.21-arm", "armeabi-v7a" },
+			{ "android.21-x86", "x86" },
+			{ "android.21-x64", "x86_64" },
+			{ "android-arm64", "arm64-v8a" },
+			{ "android-arm", "armeabi-v7a" },
+			{ "android-x86", "x86" },
+			{ "android-x64", "x86_64" },
+		};
+
 		public static string GetNativeLibraryAbi (string lib)
 		{
 			// The topmost directory the .so file is contained within
@@ -280,6 +291,14 @@ namespace Xamarin.Android.Tasks
 			if (!string.IsNullOrWhiteSpace (link)) {
 				var linkdirs = link.ToLowerInvariant ().Split ('/', '\\');
 				lib_abi = ValidAbis.Where (p => linkdirs.Contains (p)).FirstOrDefault ();
+			}
+
+			// Check for a RuntimeIdentifier
+			var rid = lib.GetMetadata ("RuntimeIdentifier");
+			if (!string.IsNullOrWhiteSpace (rid)) {
+				if (RidAbiMap.ContainsKey (rid)) {
+					lib_abi = RidAbiMap [rid];
+				}
 			}
 			
 			if (!string.IsNullOrWhiteSpace (lib_abi))

@@ -27,6 +27,7 @@ namespace Xamarin.Android.Tasks
 
 		// proguard-like configuration settings
 		public bool EnableShrinking { get; set; } = true;
+		public bool IgnoreWarnings { get; set; }
 		public string AcwMapFile { get; set; }
 		public string ProguardGeneratedReferenceConfiguration { get; set; }
 		public string ProguardGeneratedApplicationConfiguration { get; set; }
@@ -95,24 +96,12 @@ namespace Xamarin.Android.Tasks
 						}
 					}
 				}
-				if (!string.IsNullOrWhiteSpace (ProguardCommonXamarinConfiguration))
-					using (var xamcfg = File.Create (ProguardCommonXamarinConfiguration))
-						GetType ().Assembly.GetManifestResourceStream ("proguard_xamarin.cfg").CopyTo (xamcfg);
-				if (!string.IsNullOrEmpty (ProguardConfigurationFiles)) {
-					var configs = ProguardConfigurationFiles
-						.Replace ("{sdk.dir}", AndroidSdkDirectory + Path.DirectorySeparatorChar)
-						.Replace ("{intermediate.common.xamarin}", ProguardCommonXamarinConfiguration)
-						.Replace ("{intermediate.references}", ProguardGeneratedReferenceConfiguration)
-						.Replace ("{intermediate.application}", ProguardGeneratedApplicationConfiguration)
-						.Replace ("{project}", string.Empty) // current directory anyways.
-						.Split (';')
-						.Select (s => s.Trim ())
-						.Where (s => !string.IsNullOrWhiteSpace (s));
-					foreach (var file in configs) {
-						if (File.Exists (file))
-							cmd.AppendSwitchIfNotNull ("--pg-conf ", file);
-						else
-							Log.LogCodedWarning ("XA4304", file, 0, Properties.Resources.XA4304, file);
+				if (!string.IsNullOrWhiteSpace (ProguardCommonXamarinConfiguration)) {
+					using (var xamcfg = File.CreateText (ProguardCommonXamarinConfiguration)) {
+						GetType ().Assembly.GetManifestResourceStream ("proguard_xamarin.cfg").CopyTo (xamcfg.BaseStream);
+						if (IgnoreWarnings) {
+							xamcfg.WriteLine ("-ignorewarnings");
+						}
 					}
 				}
 			} else {
@@ -121,13 +110,34 @@ namespace Xamarin.Android.Tasks
 				cmd.AppendSwitch ("--no-minification");
 				// Rules to turn off optimizations
 				var temp = Path.GetTempFileName ();
-				File.WriteAllLines (temp, new [] {
+				var lines = new List<string> {
 					"-dontoptimize",
 					"-dontpreverify",
 					"-keepattributes **"
-				});
+				};
+				if (IgnoreWarnings) {
+					lines.Add ("-ignorewarnings");
+				}
+				File.WriteAllLines (temp, lines);
 				tempFiles.Add (temp);
 				cmd.AppendSwitchIfNotNull ("--pg-conf ", temp);
+			}
+			if (!string.IsNullOrEmpty (ProguardConfigurationFiles)) {
+				var configs = ProguardConfigurationFiles
+					.Replace ("{sdk.dir}", AndroidSdkDirectory + Path.DirectorySeparatorChar)
+					.Replace ("{intermediate.common.xamarin}", ProguardCommonXamarinConfiguration)
+					.Replace ("{intermediate.references}", ProguardGeneratedReferenceConfiguration)
+					.Replace ("{intermediate.application}", ProguardGeneratedApplicationConfiguration)
+					.Replace ("{project}", string.Empty) // current directory anyways.
+					.Split (';')
+					.Select (s => s.Trim ())
+					.Where (s => !string.IsNullOrWhiteSpace (s));
+				foreach (var file in configs) {
+					if (File.Exists (file))
+						cmd.AppendSwitchIfNotNull ("--pg-conf ", file);
+					else
+						Log.LogCodedWarning ("XA4304", file, 0, Properties.Resources.XA4304, file);
+				}
 			}
 
 			return cmd;

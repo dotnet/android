@@ -142,6 +142,9 @@ namespace Xamarin.Android.Build
 			string programFiles       = Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86);
 			string prefix             = Path.Combine (XamarinAndroidBuildOutput, "lib", "xamarin.android");
 
+			string DOTNET_ROOT        = Environment.GetEnvironmentVariable ("DOTNET_ROOT");
+			string dotnetRootSdkDir   = DOTNET_ROOT == null ? null : Path.Combine (DOTNET_ROOT, "sdk");
+
 			if (IsWindows) {
 				var instance = MSBuildLocator.QueryLatest ();
 				VsInstallRoot = instance.VisualStudioRootPath;
@@ -149,7 +152,7 @@ namespace Xamarin.Android.Build
 				MSBuildPath              = Path.Combine (VsInstallRoot, "MSBuild");
 				MSBuildBin               = Path.GetDirectoryName (instance.MSBuildPath);
 				MSBuildConfig            = Path.Combine (MSBuildBin, "MSBuild.exe.config");
-				DotNetSdkPath            = FindLatestDotNetSdk (Path.Combine (Environment.GetEnvironmentVariable ("ProgramW6432"), "dotnet", "sdk"));
+				DotNetSdkPath            = FindLatestDotNetSdk (Path.Combine (Environment.GetEnvironmentVariable ("ProgramW6432"), "dotnet", "sdk"), dotnetRootSdkDir);
 				MSBuildSdksPath          = DotNetSdkPath ?? Path.Combine (MSBuildPath, "Sdks");
 				SystemFrameworks         = Path.Combine (programFiles, "Reference Assemblies", "Microsoft", "Framework");
 				string msbuildDir        = Path.GetDirectoryName (MSBuildBin);
@@ -184,7 +187,7 @@ namespace Xamarin.Android.Build
 					throw new InvalidOperationException ("Unable to locate MSBuild binaries directory");
 
 				MSBuildConfig            = Path.Combine (MSBuildBin, "MSBuild.dll.config");
-				DotNetSdkPath            = FindLatestDotNetSdk ("/usr/local/share/dotnet/sdk");
+				DotNetSdkPath            = FindLatestDotNetSdk ("/usr/local/share/dotnet/sdk", dotnetRootSdkDir);
 				MSBuildSdksPath          = DotNetSdkPath ?? Path.Combine (MSBuildBin, "Sdks");
 				SystemFrameworks         = Path.Combine (mono, "xbuild-frameworks");
 				MonoSystemFrameworkRoot  = mono;
@@ -291,11 +294,14 @@ namespace Xamarin.Android.Build
 			}
 		}
 
-		string FindLatestDotNetSdk (string dotNetPath)
+		string FindLatestDotNetSdk (params string[] dotNetPaths)
 		{
-			if (Directory.Exists (dotNetPath)) {
-				Version latest = new Version (0,0);
-				string Sdk = null;
+			Version latest  = new Version (0,0);
+			string Sdk      = null;
+
+			foreach (var dotNetPath in dotNetPaths) {
+				if (!Directory.Exists (dotNetPath))
+					continue;
 				foreach (var dir in Directory.EnumerateDirectories (dotNetPath)) {
 					var version = GetVersionFromDirectory (dir);
 					var sdksDir = Path.Combine (dir, "Sdks");
@@ -308,9 +314,8 @@ namespace Xamarin.Android.Build
 						}
 					}
 				}
-				return Sdk;
 			}
-			return null;
+			return Sdk;
 		}
 
 		static Version GetVersionFromDirectory(string dir)

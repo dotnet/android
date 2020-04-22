@@ -48,7 +48,9 @@ variables:
   InstallerArtifactName: installers
   TestAssembliesArtifactName: test-assemblies
   NUnitConsoleVersion: 3.9.0
-  DotNetCoreVersion: 3.1.100
+  DotNetCoreVersion: 3.x
+  # Version number from: https://dotnet.microsoft.com/download/dotnet-core/5.0
+  DotNetCorePreviewVersion: 5.0.100-preview.1.20155.7
   HostedMacMojave: Hosted Mac Internal Mojave
   HostedMac: Hosted Mac Internal
   HostedWinVS2019: Hosted Windows 2019 with VS2019
@@ -96,6 +98,11 @@ stages:
 
     - script: echo "##vso[task.setvariable variable=JAVA_HOME]$HOME/Library/Android/jdk"
       displayName: set JAVA_HOME
+
+    - task: UseDotNet@2
+      displayName: install .NET Core $(DotNetCorePreviewVersion)
+      inputs:
+        version: $(DotNetCorePreviewVersion)
 
     - task: UseDotNet@2
       displayName: install .NET Core $(DotNetCoreVersion)
@@ -178,24 +185,26 @@ stages:
         artifactName: $(InstallerArtifactName)
         targetPath: xamarin-android/bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
 
-    - task: DotNetCoreCLI@2
-      displayName: pack Xamarin.Android.Sdk
+    - task: MSBuild@1
+      displayName: pack runtime nupkgs
       inputs:
-        command: pack
-        packagesToPack: $(System.DefaultWorkingDirectory)/xamarin-android/src/Xamarin.Android.Sdk/Xamarin.Android.Sdk.Lite.proj
+        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/Xamarin.Android.App/Xamarin.Android.App.Runtime.proj
         configuration: $(XA.Build.Configuration)
-        packDirectory: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
+        msbuildArguments: /t:_PackAllRuntimePacks /restore /bl:$(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/create-runtime-packs.binlog
 
     - task: DotNetCoreCLI@2
-      displayName: pack Xamarin.Android.Sdk.Lite
+      displayName: pack sdk and ref nupkgs
       inputs:
         command: pack
-        packagesToPack: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/create-packs/Packager.csproj
+        packagesToPack: "\
+          $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/Xamarin.Android.App/Xamarin.Android.App.Ref.proj;
+          $(System.DefaultWorkingDirectory)/xamarin-android/src/Xamarin.Android.Sdk/Xamarin.Android.Sdk.proj;
+          $(System.DefaultWorkingDirectory)/xamarin-android/src/Xamarin.Android.Sdk/Xamarin.Android.Sdk.Lite.proj"
         configuration: $(XA.Build.Configuration)
         packDirectory: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
 
     - task: NuGetCommand@2
-      displayName: push Xamarin.Android.Sdk
+      displayName: push nupkgs
       inputs:
         command: push
         packagesToPush: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)/*.nupkg
@@ -238,6 +247,11 @@ stages:
     - template: yaml-templates\clean.yaml
 
     - task: UseDotNet@2
+      displayName: install .NET Core $(DotNetCorePreviewVersion)
+      inputs:
+        version: $(DotNetCorePreviewVersion)
+
+    - task: UseDotNet@2
       displayName: install .NET Core $(DotNetCoreVersion)
       inputs:
         version: $(DotNetCoreVersion)
@@ -274,11 +288,11 @@ stages:
         msbuildArguments: /t:Prepare /p:AutoProvision=true /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-prepare.binlog
 
     - task: MSBuild@1
-      displayName: msbuild Xamarin.Android /t:Build
+      displayName: msbuild Xamarin.Android
       inputs:
         solution: Xamarin.Android.sln
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:Build /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-build.binlog
+        msbuildArguments: /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-build.binlog
 
     - task: MSBuild@1
       displayName: msbuild create-vsix
@@ -287,13 +301,23 @@ stages:
         configuration: $(XA.Build.Configuration)
         msbuildArguments: /p:CreateVsixContainer=True /p:ZipPackageCompressionLevel=Normal /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-create-vsix.binlog
 
+    - task: MSBuild@1
+      displayName: pack runtime nupkgs
+      inputs:
+        solution: $(System.DefaultWorkingDirectory)\build-tools\Xamarin.Android.App\Xamarin.Android.App.Runtime.proj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: /t:_PackAllRuntimePacks /restore /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\create-runtime-packs.binlog
+
     - task: DotNetCoreCLI@2
-      displayName: pack Xamarin.Android.Sdk
+      displayName: pack sdk and ref nupkgs
       inputs:
         command: pack
-        packagesToPack: $(System.DefaultWorkingDirectory)\build-tools\create-packs\Packager.csproj
+        packagesToPack: "\
+          $(System.DefaultWorkingDirectory)\\build-tools\\Xamarin.Android.App\\Xamarin.Android.App.Ref.proj;
+          $(System.DefaultWorkingDirectory)\\src\\Xamarin.Android.Sdk\\Xamarin.Android.Sdk.proj;
+          $(System.DefaultWorkingDirectory)\\src\\Xamarin.Android.Sdk\\Xamarin.Android.Sdk.Lite.proj"
         configuration: $(XA.Build.Configuration)
-        packDirectory: $(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)
+        packDirectory: $(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\$(NuGetArtifactName)
 
     - task: CmdLine@1
       displayName: xabuild Xamarin.Android-Tests
@@ -307,6 +331,7 @@ stages:
         solution: Xamarin.Android.sln
         configuration: $(XA.Build.Configuration)
         msbuildArguments: >
+          /restore
           /t:RunJavaInteropTests
           /p:TestAssembly="bin\Test$(XA.Build.Configuration)\generator-Tests.dll;bin\Test$(XA.Build.Configuration)\Java.Interop.Tools.JavaCallableWrappers-Tests.dll;bin\Test$(XA.Build.Configuration)\logcat-parse-Tests.dll;bin\Test$(XA.Build.Configuration)\Xamarin.Android.Tools.ApiXmlAdjuster-Tests.dll;bin\Test$(XA.Build.Configuration)\Xamarin.Android.Tools.Bytecode-Tests.dll"
           /bl:$(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\msbuild-run-ji-tests.binlog
@@ -615,6 +640,7 @@ stages:
         configuration: $(ApkTestConfiguration)
         testName: Xamarin.Forms-Performance-Integration
         project: tests/Xamarin.Forms-Performance-Integration/Droid/Xamarin.Forms.Performance.Integration.Droid.csproj
+        testResultsFiles: TestResult-apkdiff-Xamarin.Forms_Performance_Integration-Signed-$(ApkTestConfiguration).xml
         artifactName: Xamarin.Forms_Performance_Integration-Signed.apk
         artifactFolder: Default
 
@@ -623,6 +649,7 @@ stages:
         configuration: $(ApkTestConfiguration)
         testName: Xamarin.Forms-Performance-Integration-Aot
         project: tests/Xamarin.Forms-Performance-Integration/Droid/Xamarin.Forms.Performance.Integration.Droid.csproj
+        testResultsFiles: TestResult-apkdiff-Xamarin.Forms_Performance_Integration-Signed-$(ApkTestConfiguration)-Aot.xml
         extraBuildArgs: /p:AotAssemblies=true
         artifactName: Xamarin.Forms_Performance_Integration-Signed.apk
         artifactFolder: Aot
@@ -632,6 +659,7 @@ stages:
         configuration: $(ApkTestConfiguration)
         testName: Xamarin.Forms-Performance-Integration-Profiled-Aot
         project: tests/Xamarin.Forms-Performance-Integration/Droid/Xamarin.Forms.Performance.Integration.Droid.csproj
+        testResultsFiles: TestResult-apkdiff-Xamarin.Forms_Performance_Integration-Signed-$(ApkTestConfiguration)-Profiled-Aot.xml
         extraBuildArgs: /p:AotAssemblies=True /p:AndroidEnableProfiledAot=true
         artifactName: Xamarin.Forms_Performance_Integration-Signed.apk
         artifactFolder: Profiled-Aot
@@ -641,6 +669,7 @@ stages:
         configuration: $(ApkTestConfiguration)
         testName: Xamarin.Forms-Performance-Integration-Bundle
         project: tests/Xamarin.Forms-Performance-Integration/Droid/Xamarin.Forms.Performance.Integration.Droid.csproj
+        testResultsFiles: TestResult-apkdiff-Xamarin.Forms_Performance_Integration-Signed-$(ApkTestConfiguration)-Bundle.xml
         extraBuildArgs: /p:BundleAssemblies=true
         artifactName: Xamarin.Forms_Performance_Integration-Signed.apk
         artifactFolder: Bundle
@@ -659,6 +688,76 @@ stages:
       parameters:
         configuration: $(ApkTestConfiguration)
         artifactName: Test Results - APK Instrumentation - macOS
+
+    # Plots: Utilize command-line utility built here to send plot information contained in CSV files to AppInsights
+    - task: MSBuild@1
+      displayName: build plots-to-appinsights
+      inputs:
+        solution: build-tools/plots-to-appinsights/ProcessPlotCSVFile.csproj
+        configuration: $(ApkTestConfiguration)
+        msbuildArguments: >
+          /restore
+          /t:Build
+          /v:normal
+          /bl:$(System.DefaultWorkingDirectory)/bin/Tools$(ApkTestConfiguration)plots-to-appinsights.binlog
+      continueOnError: true
+      condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
+
+    # Process Plot CSV files and send results to AppInsights
+    # XamarinAndroidMetrics: https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/64e11c84-c922-4ffd-bea9-67ab39354edd/resourceGroups/XamarinMetrics/providers/microsoft.insights/components/XamarinAndroidMetrics/overview
+    # UNDONE: Need plot definitions for the following files:
+    #  TestResult-Mono.Android_TestsAppBundle-times.csv
+    #  TestResult-Mono.Android_TestsMultiDex-times.csv
+    #  TestResult-Mono.Android_TestsMultiDex-values-$(ApkTestConfiguration).csv
+    #  TestResult-Xamarin.Android.EmbeddedDSO_Test-times.csv
+
+    - template: yaml-templates/plots-to-appinsights.yaml
+      parameters:
+        condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
+        configuration: $(ApkTestConfiguration)
+        plotGroup: Test times
+        plotTitle: Runtime merged
+        plotPathAndFilename: $(System.DefaultWorkingDirectory)/TestResult-Mono.Android_Tests-times.csv
+
+    - template: yaml-templates/plots-to-appinsights.yaml
+      parameters:
+        condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
+        configuration: $(ApkTestConfiguration)
+        plotGroup: Test size
+        plotTitle: Runtime test sizes
+        plotPathAndFilename: $(System.DefaultWorkingDirectory)/TestResult-Mono.Android_Tests-values-$(ApkTestConfiguration).csv
+
+    - template: yaml-templates/plots-to-appinsights.yaml
+      parameters:
+        condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
+        configuration: $(ApkTestConfiguration)
+        plotGroup: Test times
+        plotTitle: Jcw
+        plotPathAndFilename: $(System.DefaultWorkingDirectory)/TestResult-Xamarin.Android.JcwGen_Tests-times.csv
+
+    - template: yaml-templates/plots-to-appinsights.yaml
+      parameters:
+        condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
+        configuration: $(ApkTestConfiguration)
+        plotGroup: Test times
+        plotTitle: Locale
+        plotPathAndFilename: $(System.DefaultWorkingDirectory)/TestResult-Xamarin.Android.Locale_Tests-times.csv
+
+    - template: yaml-templates/plots-to-appinsights.yaml
+      parameters:
+        condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
+        configuration: $(ApkTestConfiguration)
+        plotGroup: Test times
+        plotTitle: Xamarin.Forms app startup
+        plotPathAndFilename: $(System.DefaultWorkingDirectory)/TestResult-Xamarin.Forms_Test-times.csv
+
+    - template: yaml-templates/plots-to-appinsights.yaml
+      parameters:
+        condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
+        configuration: $(ApkTestConfiguration)
+        plotGroup: Test times
+        plotTitle: Xamarin.Forms app
+        plotPathAndFilename: $(System.DefaultWorkingDirectory)/TestResult-Xamarin.Forms_Tests-values-$(ApkTestConfiguration).csv
 
     - template: yaml-templates/fail-on-issue.yaml
 
@@ -716,111 +815,31 @@ stages:
 
     - template: yaml-templates/fail-on-issue.yaml
 
-  # Check - "Xamarin.Android (Test MSBuild - macOS)"
-  - job: mac_msbuild_tests
-    displayName: MSBuild - macOS
-    pool: $(HostedMac)
-    timeoutInMinutes: 180
-    cancelTimeoutInMinutes: 5
-    workspace:
-      clean: all
-    steps:
-    - template: yaml-templates/setup-test-environment.yaml
+  # Xamarin.Android (Test MSBuild - macOS)
+  - template: yaml-templates\run-msbuild-mac-tests.yaml
+    parameters:
+      node_id: 1
 
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: $(TestAssembliesArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
+  - template: yaml-templates\run-msbuild-mac-tests.yaml
+    parameters:
+      node_id: 2
 
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: $(NuGetArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)
+  - template: yaml-templates\run-msbuild-mac-tests.yaml
+    parameters:
+      node_id: 3
 
-    - template: yaml-templates/run-nunit-tests.yaml
-      parameters:
-        testRunTitle: CodeBehindUnitTests - macOS
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/CodeBehind/CodeBehindUnitTests.dll
-        testResultsFile: TestResult-CodeBehindUnitTests-macOS-$(XA.Build.Configuration).xml
+  # Xamarin.Android (Test MSBuild - Windows)
+  - template: yaml-templates\run-msbuild-win-tests.yaml
+    parameters:
+      node_id: 1
 
-    - template: yaml-templates/run-nunit-tests.yaml
-      parameters:
-        testRunTitle: Xamarin.Android.MakeBundle-UnitTests - macOS
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/Xamarin.Android.MakeBundle-UnitTests.dll
-        testResultsFile: TestResult-MakeBundleUnitTests-macOS-$(XA.Build.Configuration).xml
+  - template: yaml-templates\run-msbuild-win-tests.yaml
+    parameters:
+      node_id: 2
 
-    - template: yaml-templates/run-nunit-tests.yaml
-      parameters:
-        testRunTitle: EmbeddedDSOUnitTests - macOS
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/EmbeddedDSOUnitTests.dll
-        testResultsFile: TestResult-EmbeddedDSOUnitTests-macOS-$(XA.Build.Configuration).xml
-
-    - template: yaml-templates/run-nunit-tests.yaml
-      parameters:
-        testRunTitle: Xamarin.Android.Build.Tests - macOS
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/Xamarin.Android.Build.Tests.dll
-        testResultsFile: TestResult-MSBuildTests-macOS-$(XA.Build.Configuration).xml
-
-    - template: yaml-templates/run-nunit-tests.yaml
-      parameters:
-        testRunTitle: Xamarin.Android.Build.Tests.Commercial - macOS
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/Xamarin.Android.Build.Tests.Commercial.dll
-        testResultsFile: TestResult-MSBuildTestsCommercial-macOS-$(XA.Build.Configuration).xml
-
-    - template: yaml-templates/upload-results.yaml
-      parameters:
-        artifactName: Test Results - MSBuild - macOS
-
-    - template: yaml-templates/fail-on-issue.yaml
-
-  # Check - "Xamarin.Android (Test MSBuild - Windows)"
-  - job: win_msbuild_tests
-    displayName: MSBuild - Windows
-    pool: $(VSEngWinVS2019)
-    timeoutInMinutes: 180
-    cancelTimeoutInMinutes: 5
-    variables:
-      VSINSTALLDIR: C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise
-    steps:
-
-    - template: yaml-templates\kill-processes.yaml
-
-    - template: yaml-templates\clean.yaml
-
-    - template: yaml-templates\setup-test-environment.yaml
-      parameters:
-        provisionExtraArgs: -vv PROVISIONATOR_VISUALSTUDIO_LOCATION="$(VSINSTALLDIR)" -f
-
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: $(TestAssembliesArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)
-
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: $(NuGetArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)
-
-    # Limit the amount of worker threads used to run these tests in parallel to half of what is currently available (8) on the Windows pool.
-    # Using all available cores seems to occasionally bog down our machines and cause parallel test execution to slow down dramatically.
-    - template: yaml-templates\run-nunit-tests.yaml
-      parameters:
-        testRunTitle: Xamarin.Android.Build.Tests - Windows
-        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\Xamarin.Android.Build.Tests.dll
-        testResultsFile: TestResult-MSBuildTests-Windows-$(XA.Build.Configuration).xml
-        nunitConsoleExtraArgs: --workers=4
-
-    - template: yaml-templates\run-nunit-tests.yaml
-      parameters:
-        testRunTitle: Xamarin.Android.Build.Tests.Commercial - Windows
-        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\Xamarin.Android.Build.Tests.Commercial.dll
-        testResultsFile: TestResult-MSBuildTestsCommercial-Windows-$(XA.Build.Configuration).xml
-
-    - template: yaml-templates\upload-results.yaml
-      parameters:
-        artifactName: Test Results - MSBuild - Windows
-
-    - template: yaml-templates\fail-on-issue.yaml
+  - template: yaml-templates\run-msbuild-win-tests.yaml
+    parameters:
+      node_id: 3
 
   # Check - "Xamarin.Android (Test MSBuild With Emulator - macOS)"
   - job: mac_msbuilddevice_tests
@@ -837,6 +856,11 @@ stages:
       inputs:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: $(NuGetArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
 
     - task: MSBuild@1
       displayName: start emulator
@@ -936,6 +960,7 @@ stages:
       inputs:
         artifactName: Test Results - Designer - macOS
         targetPath: $(Build.ArtifactStagingDirectory)/designer-binlogs
+      condition: always()
 
   # Check - "Xamarin.Android (Test Designer Windows)"
   - job: designer_integration_win
@@ -999,6 +1024,7 @@ stages:
       inputs:
         artifactName: Test Results - Designer - Windows
         targetPath: $(Build.ArtifactStagingDirectory)/designer-binlogs
+      condition: always()
 
 - stage: integrated_regression_test
   displayName: Regression Tests
