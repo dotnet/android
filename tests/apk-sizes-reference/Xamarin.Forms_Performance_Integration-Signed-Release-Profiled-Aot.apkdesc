@@ -2,25 +2,25 @@
   "Comment": null,
   "Entries": {
     "AndroidManifest.xml": {
-      "Size": 3664
+      "Size": 3684
     },
     "assemblies/FormsViewGroup.dll": {
-      "Size": 15872
+      "Size": 16384
     },
     "assemblies/Java.Interop.dll": {
       "Size": 164864
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 2271744
+      "Size": 2445312
     },
     "assemblies/Mono.Security.dll": {
       "Size": 121856
     },
     "assemblies/mscorlib.dll": {
-      "Size": 2090496
+      "Size": 2091008
     },
     "assemblies/Newtonsoft.Json.dll": {
-      "Size": 658432
+      "Size": 682496
     },
     "assemblies/Plugin.Connectivity.Abstractions.dll": {
       "Size": 7680
@@ -29,7 +29,7 @@
       "Size": 17920
     },
     "assemblies/System.Core.dll": {
-      "Size": 389632
+      "Size": 390144
     },
     "assemblies/System.Data.dll": {
       "Size": 747520
@@ -58,158 +58,161 @@
     "assemblies/System.Xml.Linq.dll": {
       "Size": 65024
     },
-    "assemblies/Xamarin.Android.Arch.Core.Common.dll": {
-      "Size": 5120
-    },
-    "assemblies/Xamarin.Android.Arch.Core.Runtime.dll": {
-      "Size": 5120
-    },
-    "assemblies/Xamarin.Android.Arch.Lifecycle.Common.dll": {
-      "Size": 17920
-    },
-    "assemblies/Xamarin.Android.Arch.Lifecycle.LiveData.Core.dll": {
-      "Size": 19968
-    },
-    "assemblies/Xamarin.Android.Arch.Lifecycle.LiveData.dll": {
-      "Size": 5632
-    },
-    "assemblies/Xamarin.Android.Arch.Lifecycle.Runtime.dll": {
-      "Size": 5120
-    },
-    "assemblies/Xamarin.Android.Arch.Lifecycle.ViewModel.dll": {
-      "Size": 10240
-    },
-    "assemblies/Xamarin.Android.Support.Animated.Vector.Drawable.dll": {
-      "Size": 6144
-    },
-    "assemblies/Xamarin.Android.Support.Annotations.dll": {
-      "Size": 5632
-    },
-    "assemblies/Xamarin.Android.Support.AsyncLayoutInflater.dll": {
-      "Size": 5120
-    },
-    "assemblies/Xamarin.Android.Support.Collections.dll": {
-      "Size": 5120
-    },
-    "assemblies/Xamarin.Android.Support.Compat.dll": {
-      "Size": 570368
-    },
-    "assemblies/Xamarin.Android.Support.CoordinaterLayout.dll": {
-      "Size": 30720
-    },
-    "assemblies/Xamarin.Android.Support.Core.UI.dll": {
-      "Size": 20480
-    },
-    "assemblies/Xamarin.Android.Support.Core.Utils.dll": {
-      "Size": 6144
-    },
-    "assemblies/Xamarin.Android.Support.CursorAdapter.dll": {
-      "Size": 5120
-    },
-    "assemblies/Xamarin.Android.Support.CustomTabs.dll": {
-      "Size": 10240
-    },
-    "assemblies/Xamarin.Android.Support.CustomView.dll": {
-      "Size": 5632
-    },
-    "assemblies/Xamarin.Android.Support.Design.dll": {
-      "Size": 219648
-    },
-    "assemblies/Xamarin.Android.Support.DocumentFile.dll": {
-      "Size": 5120
-    },
-    "assemblies/Xamarin.Android.Support.DrawerLayout.dll": {
-      "Size": 52736
-    },
-    "assemblies/Xamarin.Android.Support.Fragment.dll": {
-      "Size": 239616
-    },
-    "assemblies/Xamarin.Android.Support.Interpolator.dll": {
-      "Size": 5120
-    },
-    "assemblies/Xamarin.Android.Support.Loader.dll": {
-      "Size": 51200
-    },
-    "assemblies/Xamarin.Android.Support.LocalBroadcastManager.dll": {
-      "Size": 5120
-    },
-    "assemblies/Xamarin.Android.Support.Media.Compat.dll": {
-      "Size": 7168
-    },
-    "assemblies/Xamarin.Android.Support.Print.dll": {
-      "Size": 5120
-    },
-    "assemblies/Xamarin.Android.Support.SlidingPaneLayout.dll": {
-      "Size": 5632
-    },
-    "assemblies/Xamarin.Android.Support.SwipeRefreshLayout.dll": {
-      "Size": 34304
-    },
-    "assemblies/Xamarin.Android.Support.Transition.dll": {
-      "Size": 10752
-    },
-    "assemblies/Xamarin.Android.Support.v7.AppCompat.dll": {
-      "Size": 592384
-    },
-    "assemblies/Xamarin.Android.Support.v7.CardView.dll": {
+    "assemblies/Xamarin.AndroidX.Activity.dll": {
       "Size": 22528
     },
-    "assemblies/Xamarin.Android.Support.v7.MediaRouter.dll": {
-      "Size": 5632
+    "assemblies/Xamarin.AndroidX.Annotation.dll": {
+      "Size": 6144
     },
-    "assemblies/Xamarin.Android.Support.v7.Palette.dll": {
-      "Size": 5120
+    "assemblies/Xamarin.AndroidX.AppCompat.dll": {
+      "Size": 723968
     },
-    "assemblies/Xamarin.Android.Support.v7.RecyclerView.dll": {
-      "Size": 572928
+    "assemblies/Xamarin.AndroidX.AppCompat.Resources.dll": {
+      "Size": 23040
     },
-    "assemblies/Xamarin.Android.Support.Vector.Drawable.dll": {
-      "Size": 5632
-    },
-    "assemblies/Xamarin.Android.Support.VersionedParcelable.dll": {
+    "assemblies/Xamarin.AndroidX.Arch.Core.Common.dll": {
       "Size": 6656
     },
-    "assemblies/Xamarin.Android.Support.ViewPager.dll": {
-      "Size": 74240
+    "assemblies/Xamarin.AndroidX.Arch.Core.Runtime.dll": {
+      "Size": 6144
+    },
+    "assemblies/Xamarin.AndroidX.AsyncLayoutInflater.dll": {
+      "Size": 6144
+    },
+    "assemblies/Xamarin.AndroidX.Browser.dll": {
+      "Size": 10752
+    },
+    "assemblies/Xamarin.AndroidX.CardView.dll": {
+      "Size": 23040
+    },
+    "assemblies/Xamarin.AndroidX.Collection.dll": {
+      "Size": 6656
+    },
+    "assemblies/Xamarin.AndroidX.CoordinatorLayout.dll": {
+      "Size": 98304
+    },
+    "assemblies/Xamarin.AndroidX.Core.dll": {
+      "Size": 689152
+    },
+    "assemblies/Xamarin.AndroidX.CursorAdapter.dll": {
+      "Size": 6656
+    },
+    "assemblies/Xamarin.AndroidX.CustomView.dll": {
+      "Size": 6656
+    },
+    "assemblies/Xamarin.AndroidX.DocumentFile.dll": {
+      "Size": 6144
+    },
+    "assemblies/Xamarin.AndroidX.DrawerLayout.dll": {
+      "Size": 54784
+    },
+    "assemblies/Xamarin.AndroidX.Fragment.dll": {
+      "Size": 233472
+    },
+    "assemblies/Xamarin.AndroidX.Interpolator.dll": {
+      "Size": 6656
+    },
+    "assemblies/Xamarin.AndroidX.Legacy.Support.Core.UI.dll": {
+      "Size": 19456
+    },
+    "assemblies/Xamarin.AndroidX.Legacy.Support.Core.Utils.dll": {
+      "Size": 6144
+    },
+    "assemblies/Xamarin.AndroidX.Lifecycle.Common.dll": {
+      "Size": 19456
+    },
+    "assemblies/Xamarin.AndroidX.Lifecycle.LiveData.Core.dll": {
+      "Size": 20992
+    },
+    "assemblies/Xamarin.AndroidX.Lifecycle.LiveData.dll": {
+      "Size": 6144
+    },
+    "assemblies/Xamarin.AndroidX.Lifecycle.Runtime.dll": {
+      "Size": 6144
+    },
+    "assemblies/Xamarin.AndroidX.Lifecycle.ViewModel.dll": {
+      "Size": 11776
+    },
+    "assemblies/Xamarin.AndroidX.Loader.dll": {
+      "Size": 52224
+    },
+    "assemblies/Xamarin.AndroidX.LocalBroadcastManager.dll": {
+      "Size": 6144
+    },
+    "assemblies/Xamarin.AndroidX.Media.dll": {
+      "Size": 11776
+    },
+    "assemblies/Xamarin.AndroidX.Print.dll": {
+      "Size": 5632
+    },
+    "assemblies/Xamarin.AndroidX.RecyclerView.dll": {
+      "Size": 601088
+    },
+    "assemblies/Xamarin.AndroidX.SavedState.dll": {
+      "Size": 15360
+    },
+    "assemblies/Xamarin.AndroidX.SlidingPaneLayout.dll": {
+      "Size": 7168
+    },
+    "assemblies/Xamarin.AndroidX.SwipeRefreshLayout.dll": {
+      "Size": 35328
+    },
+    "assemblies/Xamarin.AndroidX.Transition.dll": {
+      "Size": 10240
+    },
+    "assemblies/Xamarin.AndroidX.VectorDrawable.Animated.dll": {
+      "Size": 7680
+    },
+    "assemblies/Xamarin.AndroidX.VectorDrawable.dll": {
+      "Size": 6656
+    },
+    "assemblies/Xamarin.AndroidX.VersionedParcelable.dll": {
+      "Size": 6656
+    },
+    "assemblies/Xamarin.AndroidX.ViewPager.dll": {
+      "Size": 77312
     },
     "assemblies/Xamarin.Forms.Core.dll": {
-      "Size": 871936
+      "Size": 1022464
     },
     "assemblies/Xamarin.Forms.Performance.Integration.dll": {
-      "Size": 41984
+      "Size": 43520
     },
     "assemblies/Xamarin.Forms.Performance.Integration.Droid.dll": {
-      "Size": 183808
+      "Size": 221696
     },
     "assemblies/Xamarin.Forms.Platform.Android.dll": {
-      "Size": 753664
+      "Size": 900096
     },
     "assemblies/Xamarin.Forms.Platform.dll": {
-      "Size": 17536
+      "Size": 131072
     },
     "assemblies/Xamarin.Forms.Xaml.dll": {
-      "Size": 92160
+      "Size": 100864
+    },
+    "assemblies/Xamarin.Google.Android.Material.dll": {
+      "Size": 248320
     },
     "classes.dex": {
-      "Size": 2200624
+      "Size": 2102188
     },
     "lib/armeabi-v7a/libaot-FormsViewGroup.dll.so": {
-      "Size": 16944
+      "Size": 16936
     },
     "lib/armeabi-v7a/libaot-Java.Interop.dll.so": {
       "Size": 300092
     },
     "lib/armeabi-v7a/libaot-Mono.Android.dll.so": {
-      "Size": 921636
+      "Size": 954396
     },
     "lib/armeabi-v7a/libaot-Mono.Security.dll.so": {
       "Size": 18744
     },
     "lib/armeabi-v7a/libaot-mscorlib.dll.so": {
-      "Size": 2243780
+      "Size": 2243600
     },
     "lib/armeabi-v7a/libaot-Newtonsoft.Json.dll.so": {
-      "Size": 439752
+      "Size": 437344
     },
     "lib/armeabi-v7a/libaot-Plugin.Connectivity.Abstractions.dll.so": {
       "Size": 6492
@@ -218,7 +221,7 @@
       "Size": 6468
     },
     "lib/armeabi-v7a/libaot-System.Core.dll.so": {
-      "Size": 795196
+      "Size": 796196
     },
     "lib/armeabi-v7a/libaot-System.Data.dll.so": {
       "Size": 176404
@@ -247,143 +250,146 @@
     "lib/armeabi-v7a/libaot-System.Xml.Linq.dll.so": {
       "Size": 31896
     },
-    "lib/armeabi-v7a/libaot-Xamarin.Android.Arch.Core.Common.dll.so": {
-      "Size": 6492
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Activity.dll.so": {
+      "Size": 10576
     },
-    "lib/armeabi-v7a/libaot-Xamarin.Android.Arch.Core.Runtime.dll.so": {
-      "Size": 6496
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Annotation.dll.so": {
+      "Size": 6484
     },
-    "lib/armeabi-v7a/libaot-Xamarin.Android.Arch.Lifecycle.Common.dll.so": {
-      "Size": 6504
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.AppCompat.dll.so": {
+      "Size": 88400
     },
-    "lib/armeabi-v7a/libaot-Xamarin.Android.Arch.Lifecycle.LiveData.Core.dll.so": {
-      "Size": 6516
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.Android.Arch.Lifecycle.LiveData.dll.so": {
-      "Size": 6508
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.Android.Arch.Lifecycle.Runtime.dll.so": {
-      "Size": 6504
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.Android.Arch.Lifecycle.ViewModel.dll.so": {
-      "Size": 6508
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.Animated.Vector.Drawable.dll.so": {
-      "Size": 6524
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.Annotations.dll.so": {
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.AppCompat.Resources.dll.so": {
       "Size": 6500
     },
-    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.AsyncLayoutInflater.dll.so": {
-      "Size": 6516
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Arch.Core.Common.dll.so": {
+      "Size": 6496
     },
-    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.Collections.dll.so": {
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Arch.Core.Runtime.dll.so": {
+      "Size": 6496
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.AsyncLayoutInflater.dll.so": {
       "Size": 6500
     },
-    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.Compat.dll.so": {
-      "Size": 66588
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Browser.dll.so": {
+      "Size": 6476
     },
-    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.CoordinaterLayout.dll.so": {
-      "Size": 10608
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.CardView.dll.so": {
+      "Size": 10576
     },
-    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.Core.UI.dll.so": {
-      "Size": 27576
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Collection.dll.so": {
+      "Size": 6484
     },
-    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.Core.Utils.dll.so": {
-      "Size": 6496
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.CursorAdapter.dll.so": {
-      "Size": 6504
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.CustomTabs.dll.so": {
-      "Size": 6496
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.CustomView.dll.so": {
-      "Size": 6496
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.Design.dll.so": {
-      "Size": 52184
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.DocumentFile.dll.so": {
-      "Size": 6500
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.DrawerLayout.dll.so": {
-      "Size": 10596
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.Fragment.dll.so": {
-      "Size": 50812
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.Interpolator.dll.so": {
-      "Size": 6500
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.Loader.dll.so": {
-      "Size": 10584
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.LocalBroadcastManager.dll.so": {
-      "Size": 6520
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.Media.Compat.dll.so": {
-      "Size": 6500
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.Print.dll.so": {
-      "Size": 6488
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.SlidingPaneLayout.dll.so": {
-      "Size": 6512
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.SwipeRefreshLayout.dll.so": {
-      "Size": 10608
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.Transition.dll.so": {
-      "Size": 6496
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.v7.AppCompat.dll.so": {
-      "Size": 99740
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.v7.CardView.dll.so": {
-      "Size": 10596
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.v7.MediaRouter.dll.so": {
-      "Size": 6504
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.v7.Palette.dll.so": {
-      "Size": 6496
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.v7.RecyclerView.dll.so": {
-      "Size": 63852
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.Vector.Drawable.dll.so": {
-      "Size": 6508
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.VersionedParcelable.dll.so": {
-      "Size": 6516
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.Android.Support.ViewPager.dll.so": {
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.CoordinatorLayout.dll.so": {
       "Size": 14688
     },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Core.dll.so": {
+      "Size": 76104
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.CursorAdapter.dll.so": {
+      "Size": 6488
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.CustomView.dll.so": {
+      "Size": 6484
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.DocumentFile.dll.so": {
+      "Size": 6488
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.DrawerLayout.dll.so": {
+      "Size": 14680
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Fragment.dll.so": {
+      "Size": 26960
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Interpolator.dll.so": {
+      "Size": 6488
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Legacy.Support.Core.UI.dll.so": {
+      "Size": 6508
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Legacy.Support.Core.Utils.dll.so": {
+      "Size": 6512
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Lifecycle.Common.dll.so": {
+      "Size": 6496
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Lifecycle.LiveData.Core.dll.so": {
+      "Size": 6508
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Lifecycle.LiveData.dll.so": {
+      "Size": 6500
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Lifecycle.Runtime.dll.so": {
+      "Size": 6496
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Lifecycle.ViewModel.dll.so": {
+      "Size": 6500
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Loader.dll.so": {
+      "Size": 10572
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.LocalBroadcastManager.dll.so": {
+      "Size": 6504
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Media.dll.so": {
+      "Size": 6472
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Print.dll.so": {
+      "Size": 6472
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.RecyclerView.dll.so": {
+      "Size": 63832
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.SavedState.dll.so": {
+      "Size": 6484
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.SlidingPaneLayout.dll.so": {
+      "Size": 6496
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.SwipeRefreshLayout.dll.so": {
+      "Size": 10596
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Transition.dll.so": {
+      "Size": 6484
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.VectorDrawable.Animated.dll.so": {
+      "Size": 6508
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.VectorDrawable.dll.so": {
+      "Size": 6492
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.VersionedParcelable.dll.so": {
+      "Size": 6500
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.ViewPager.dll.so": {
+      "Size": 14672
+    },
     "lib/armeabi-v7a/libaot-Xamarin.Forms.Core.dll.so": {
-      "Size": 1678424
+      "Size": 1743912
     },
     "lib/armeabi-v7a/libaot-Xamarin.Forms.Performance.Integration.dll.so": {
-      "Size": 135988
+      "Size": 141300
     },
     "lib/armeabi-v7a/libaot-Xamarin.Forms.Performance.Integration.Droid.dll.so": {
       "Size": 10612
     },
     "lib/armeabi-v7a/libaot-Xamarin.Forms.Platform.Android.dll.so": {
-      "Size": 976456
+      "Size": 1135372
     },
     "lib/armeabi-v7a/libaot-Xamarin.Forms.Platform.dll.so": {
-      "Size": 6472
+      "Size": 10568
     },
     "lib/armeabi-v7a/libaot-Xamarin.Forms.Xaml.dll.so": {
-      "Size": 78156
+      "Size": 75608
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Google.Android.Material.dll.so": {
+      "Size": 39260
     },
     "lib/armeabi-v7a/libmono-btls-shared.so": {
       "Size": 856580
     },
     "lib/armeabi-v7a/libmonodroid.so": {
-      "Size": 170776
+      "Size": 170808
     },
     "lib/armeabi-v7a/libmono-native.so": {
       "Size": 714476
@@ -392,7 +398,7 @@
       "Size": 3816228
     },
     "lib/armeabi-v7a/libxamarin-app.so": {
-      "Size": 98020
+      "Size": 127116
     },
     "lib/x86/libaot-FormsViewGroup.dll.so": {
       "Size": 16552
@@ -401,16 +407,16 @@
       "Size": 283880
     },
     "lib/x86/libaot-Mono.Android.dll.so": {
-      "Size": 750596
+      "Size": 771068
     },
     "lib/x86/libaot-Mono.Security.dll.so": {
       "Size": 14420
     },
     "lib/x86/libaot-mscorlib.dll.so": {
-      "Size": 2044576
+      "Size": 2044400
     },
     "lib/x86/libaot-Newtonsoft.Json.dll.so": {
-      "Size": 383696
+      "Size": 385356
     },
     "lib/x86/libaot-Plugin.Connectivity.Abstractions.dll.so": {
       "Size": 6264
@@ -419,7 +425,7 @@
       "Size": 6240
     },
     "lib/x86/libaot-System.Core.dll.so": {
-      "Size": 749532
+      "Size": 750508
     },
     "lib/x86/libaot-System.Data.dll.so": {
       "Size": 128840
@@ -448,137 +454,140 @@
     "lib/x86/libaot-System.Xml.Linq.dll.so": {
       "Size": 23828
     },
-    "lib/x86/libaot-Xamarin.Android.Arch.Core.Common.dll.so": {
-      "Size": 6264
+    "lib/x86/libaot-Xamarin.AndroidX.Activity.dll.so": {
+      "Size": 6252
     },
-    "lib/x86/libaot-Xamarin.Android.Arch.Core.Runtime.dll.so": {
-      "Size": 6268
+    "lib/x86/libaot-Xamarin.AndroidX.Annotation.dll.so": {
+      "Size": 6256
     },
-    "lib/x86/libaot-Xamarin.Android.Arch.Lifecycle.Common.dll.so": {
-      "Size": 6276
+    "lib/x86/libaot-Xamarin.AndroidX.AppCompat.dll.so": {
+      "Size": 51308
     },
-    "lib/x86/libaot-Xamarin.Android.Arch.Lifecycle.LiveData.Core.dll.so": {
-      "Size": 6288
-    },
-    "lib/x86/libaot-Xamarin.Android.Arch.Lifecycle.LiveData.dll.so": {
-      "Size": 6280
-    },
-    "lib/x86/libaot-Xamarin.Android.Arch.Lifecycle.Runtime.dll.so": {
-      "Size": 6276
-    },
-    "lib/x86/libaot-Xamarin.Android.Arch.Lifecycle.ViewModel.dll.so": {
-      "Size": 6280
-    },
-    "lib/x86/libaot-Xamarin.Android.Support.Animated.Vector.Drawable.dll.so": {
-      "Size": 6296
-    },
-    "lib/x86/libaot-Xamarin.Android.Support.Annotations.dll.so": {
+    "lib/x86/libaot-Xamarin.AndroidX.AppCompat.Resources.dll.so": {
       "Size": 6272
     },
-    "lib/x86/libaot-Xamarin.Android.Support.AsyncLayoutInflater.dll.so": {
-      "Size": 6288
-    },
-    "lib/x86/libaot-Xamarin.Android.Support.Collections.dll.so": {
-      "Size": 6272
-    },
-    "lib/x86/libaot-Xamarin.Android.Support.Compat.dll.so": {
-      "Size": 41696
-    },
-    "lib/x86/libaot-Xamarin.Android.Support.CoordinaterLayout.dll.so": {
-      "Size": 6284
-    },
-    "lib/x86/libaot-Xamarin.Android.Support.Core.UI.dll.so": {
-      "Size": 26968
-    },
-    "lib/x86/libaot-Xamarin.Android.Support.Core.Utils.dll.so": {
+    "lib/x86/libaot-Xamarin.AndroidX.Arch.Core.Common.dll.so": {
       "Size": 6268
     },
-    "lib/x86/libaot-Xamarin.Android.Support.CursorAdapter.dll.so": {
-      "Size": 6276
-    },
-    "lib/x86/libaot-Xamarin.Android.Support.CustomTabs.dll.so": {
+    "lib/x86/libaot-Xamarin.AndroidX.Arch.Core.Runtime.dll.so": {
       "Size": 6268
     },
-    "lib/x86/libaot-Xamarin.Android.Support.CustomView.dll.so": {
-      "Size": 6268
-    },
-    "lib/x86/libaot-Xamarin.Android.Support.Design.dll.so": {
-      "Size": 39392
-    },
-    "lib/x86/libaot-Xamarin.Android.Support.DocumentFile.dll.so": {
+    "lib/x86/libaot-Xamarin.AndroidX.AsyncLayoutInflater.dll.so": {
       "Size": 6272
     },
-    "lib/x86/libaot-Xamarin.Android.Support.DrawerLayout.dll.so": {
-      "Size": 10368
+    "lib/x86/libaot-Xamarin.AndroidX.Browser.dll.so": {
+      "Size": 6248
     },
-    "lib/x86/libaot-Xamarin.Android.Support.Fragment.dll.so": {
-      "Size": 38120
+    "lib/x86/libaot-Xamarin.AndroidX.CardView.dll.so": {
+      "Size": 6252
     },
-    "lib/x86/libaot-Xamarin.Android.Support.Interpolator.dll.so": {
-      "Size": 6272
+    "lib/x86/libaot-Xamarin.AndroidX.Collection.dll.so": {
+      "Size": 6256
     },
-    "lib/x86/libaot-Xamarin.Android.Support.Loader.dll.so": {
-      "Size": 10356
-    },
-    "lib/x86/libaot-Xamarin.Android.Support.LocalBroadcastManager.dll.so": {
-      "Size": 6292
-    },
-    "lib/x86/libaot-Xamarin.Android.Support.Media.Compat.dll.so": {
-      "Size": 6272
-    },
-    "lib/x86/libaot-Xamarin.Android.Support.Print.dll.so": {
-      "Size": 6260
-    },
-    "lib/x86/libaot-Xamarin.Android.Support.SlidingPaneLayout.dll.so": {
-      "Size": 6284
-    },
-    "lib/x86/libaot-Xamarin.Android.Support.SwipeRefreshLayout.dll.so": {
-      "Size": 10380
-    },
-    "lib/x86/libaot-Xamarin.Android.Support.Transition.dll.so": {
-      "Size": 6268
-    },
-    "lib/x86/libaot-Xamarin.Android.Support.v7.AppCompat.dll.so": {
-      "Size": 66340
-    },
-    "lib/x86/libaot-Xamarin.Android.Support.v7.CardView.dll.so": {
-      "Size": 6272
-    },
-    "lib/x86/libaot-Xamarin.Android.Support.v7.MediaRouter.dll.so": {
-      "Size": 6276
-    },
-    "lib/x86/libaot-Xamarin.Android.Support.v7.Palette.dll.so": {
-      "Size": 6268
-    },
-    "lib/x86/libaot-Xamarin.Android.Support.v7.RecyclerView.dll.so": {
-      "Size": 39048
-    },
-    "lib/x86/libaot-Xamarin.Android.Support.Vector.Drawable.dll.so": {
-      "Size": 6280
-    },
-    "lib/x86/libaot-Xamarin.Android.Support.VersionedParcelable.dll.so": {
-      "Size": 6288
-    },
-    "lib/x86/libaot-Xamarin.Android.Support.ViewPager.dll.so": {
+    "lib/x86/libaot-Xamarin.AndroidX.CoordinatorLayout.dll.so": {
       "Size": 10364
     },
-    "lib/x86/libaot-Xamarin.Forms.Core.dll.so": {
-      "Size": 1550920
+    "lib/x86/libaot-Xamarin.AndroidX.Core.dll.so": {
+      "Size": 43108
     },
-    "lib/x86/libaot-Xamarin.Forms.Performance.Integration.dll.so": {
-      "Size": 132240
+    "lib/x86/libaot-Xamarin.AndroidX.CursorAdapter.dll.so": {
+      "Size": 6260
     },
-    "lib/x86/libaot-Xamarin.Forms.Performance.Integration.Droid.dll.so": {
-      "Size": 6288
+    "lib/x86/libaot-Xamarin.AndroidX.CustomView.dll.so": {
+      "Size": 6256
     },
-    "lib/x86/libaot-Xamarin.Forms.Platform.Android.dll.so": {
-      "Size": 889472
+    "lib/x86/libaot-Xamarin.AndroidX.DocumentFile.dll.so": {
+      "Size": 6260
     },
-    "lib/x86/libaot-Xamarin.Forms.Platform.dll.so": {
+    "lib/x86/libaot-Xamarin.AndroidX.DrawerLayout.dll.so": {
+      "Size": 10356
+    },
+    "lib/x86/libaot-Xamarin.AndroidX.Fragment.dll.so": {
+      "Size": 18540
+    },
+    "lib/x86/libaot-Xamarin.AndroidX.Interpolator.dll.so": {
+      "Size": 6260
+    },
+    "lib/x86/libaot-Xamarin.AndroidX.Legacy.Support.Core.UI.dll.so": {
+      "Size": 6280
+    },
+    "lib/x86/libaot-Xamarin.AndroidX.Legacy.Support.Core.Utils.dll.so": {
+      "Size": 6284
+    },
+    "lib/x86/libaot-Xamarin.AndroidX.Lifecycle.Common.dll.so": {
+      "Size": 6268
+    },
+    "lib/x86/libaot-Xamarin.AndroidX.Lifecycle.LiveData.Core.dll.so": {
+      "Size": 6280
+    },
+    "lib/x86/libaot-Xamarin.AndroidX.Lifecycle.LiveData.dll.so": {
+      "Size": 6272
+    },
+    "lib/x86/libaot-Xamarin.AndroidX.Lifecycle.Runtime.dll.so": {
+      "Size": 6268
+    },
+    "lib/x86/libaot-Xamarin.AndroidX.Lifecycle.ViewModel.dll.so": {
+      "Size": 6272
+    },
+    "lib/x86/libaot-Xamarin.AndroidX.Loader.dll.so": {
+      "Size": 10344
+    },
+    "lib/x86/libaot-Xamarin.AndroidX.LocalBroadcastManager.dll.so": {
+      "Size": 6276
+    },
+    "lib/x86/libaot-Xamarin.AndroidX.Media.dll.so": {
       "Size": 6244
     },
+    "lib/x86/libaot-Xamarin.AndroidX.Print.dll.so": {
+      "Size": 6244
+    },
+    "lib/x86/libaot-Xamarin.AndroidX.RecyclerView.dll.so": {
+      "Size": 39028
+    },
+    "lib/x86/libaot-Xamarin.AndroidX.SavedState.dll.so": {
+      "Size": 6256
+    },
+    "lib/x86/libaot-Xamarin.AndroidX.SlidingPaneLayout.dll.so": {
+      "Size": 6268
+    },
+    "lib/x86/libaot-Xamarin.AndroidX.SwipeRefreshLayout.dll.so": {
+      "Size": 10368
+    },
+    "lib/x86/libaot-Xamarin.AndroidX.Transition.dll.so": {
+      "Size": 6256
+    },
+    "lib/x86/libaot-Xamarin.AndroidX.VectorDrawable.Animated.dll.so": {
+      "Size": 6280
+    },
+    "lib/x86/libaot-Xamarin.AndroidX.VectorDrawable.dll.so": {
+      "Size": 6264
+    },
+    "lib/x86/libaot-Xamarin.AndroidX.VersionedParcelable.dll.so": {
+      "Size": 6272
+    },
+    "lib/x86/libaot-Xamarin.AndroidX.ViewPager.dll.so": {
+      "Size": 10348
+    },
+    "lib/x86/libaot-Xamarin.Forms.Core.dll.so": {
+      "Size": 1599332
+    },
+    "lib/x86/libaot-Xamarin.Forms.Performance.Integration.dll.so": {
+      "Size": 137556
+    },
+    "lib/x86/libaot-Xamarin.Forms.Performance.Integration.Droid.dll.so": {
+      "Size": 10384
+    },
+    "lib/x86/libaot-Xamarin.Forms.Platform.Android.dll.so": {
+      "Size": 1039376
+    },
+    "lib/x86/libaot-Xamarin.Forms.Platform.dll.so": {
+      "Size": 10340
+    },
     "lib/x86/libaot-Xamarin.Forms.Xaml.dll.so": {
-      "Size": 69876
+      "Size": 63128
+    },
+    "lib/x86/libaot-Xamarin.Google.Android.Material.dll.so": {
+      "Size": 26744
     },
     "lib/x86/libmono-btls-shared.so": {
       "Size": 1311172
@@ -593,22 +602,7 @@
       "Size": 3799820
     },
     "lib/x86/libxamarin-app.so": {
-      "Size": 97764
-    },
-    "META-INF/android.arch.core_runtime.version": {
-      "Size": 6
-    },
-    "META-INF/android.arch.lifecycle_livedata.version": {
-      "Size": 6
-    },
-    "META-INF/android.arch.lifecycle_livedata-core.version": {
-      "Size": 6
-    },
-    "META-INF/android.arch.lifecycle_runtime.version": {
-      "Size": 6
-    },
-    "META-INF/android.arch.lifecycle_viewmodel.version": {
-      "Size": 6
+      "Size": 126860
     },
     "META-INF/android.support.design_material.version": {
       "Size": 12
@@ -617,9 +611,18 @@
       "Size": 1205
     },
     "META-INF/ANDROIDD.SF": {
-      "Size": 122581
+      "Size": 82771
+    },
+    "META-INF/androidx.activity_activity.version": {
+      "Size": 6
     },
     "META-INF/androidx.appcompat_appcompat.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.appcompat_appcompat-resources.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.arch.core_core-runtime.version": {
       "Size": 6
     },
     "META-INF/androidx.asynclayoutinflater_asynclayoutinflater.version": {
@@ -664,6 +667,18 @@
     "META-INF/androidx.legacy_legacy-support-v4.version": {
       "Size": 6
     },
+    "META-INF/androidx.lifecycle_lifecycle-livedata.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.lifecycle_lifecycle-livedata-core.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.lifecycle_lifecycle-runtime.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.lifecycle_lifecycle-viewmodel.version": {
+      "Size": 6
+    },
     "META-INF/androidx.loader_loader.version": {
       "Size": 6
     },
@@ -673,16 +688,13 @@
     "META-INF/androidx.media_media.version": {
       "Size": 6
     },
-    "META-INF/androidx.mediarouter_mediarouter.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.palette_palette.version": {
-      "Size": 6
-    },
     "META-INF/androidx.print_print.version": {
       "Size": 6
     },
     "META-INF/androidx.recyclerview_recyclerview.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.savedstate_savedstate.version": {
       "Size": 6
     },
     "META-INF/androidx.slidingpanelayout_slidingpanelayout.version": {
@@ -710,10 +722,10 @@
       "Size": 10
     },
     "META-INF/MANIFEST.MF": {
-      "Size": 122473
+      "Size": 82663
     },
     "META-INF/proguard/androidx-annotations.pro": {
-      "Size": 308
+      "Size": 339
     },
     "NOTICE": {
       "Size": 157
@@ -753,6 +765,42 @@
     },
     "res/anim/abc_tooltip_exit.xml": {
       "Size": 388
+    },
+    "res/anim/btn_checkbox_to_checked_box_inner_merged_animation.xml": {
+      "Size": 2124
+    },
+    "res/anim/btn_checkbox_to_checked_box_outer_merged_animation.xml": {
+      "Size": 2780
+    },
+    "res/anim/btn_checkbox_to_checked_icon_null_animation.xml": {
+      "Size": 1196
+    },
+    "res/anim/btn_checkbox_to_unchecked_box_inner_merged_animation.xml": {
+      "Size": 2360
+    },
+    "res/anim/btn_checkbox_to_unchecked_check_path_merged_animation.xml": {
+      "Size": 2520
+    },
+    "res/anim/btn_checkbox_to_unchecked_icon_null_animation.xml": {
+      "Size": 1196
+    },
+    "res/anim/btn_radio_to_off_mtrl_dot_group_animation.xml": {
+      "Size": 1656
+    },
+    "res/anim/btn_radio_to_off_mtrl_ring_outer_animation.xml": {
+      "Size": 1656
+    },
+    "res/anim/btn_radio_to_off_mtrl_ring_outer_path_animation.xml": {
+      "Size": 1028
+    },
+    "res/anim/btn_radio_to_on_mtrl_dot_group_animation.xml": {
+      "Size": 1656
+    },
+    "res/anim/btn_radio_to_on_mtrl_ring_outer_animation.xml": {
+      "Size": 1656
+    },
+    "res/anim/btn_radio_to_on_mtrl_ring_outer_path_animation.xml": {
+      "Size": 1028
     },
     "res/anim/design_bottom_sheet_slide_in.xml": {
       "Size": 616
@@ -979,6 +1027,9 @@
     "res/drawable/abc_btn_check_material.xml": {
       "Size": 464
     },
+    "res/drawable/abc_btn_check_material_anim.xml": {
+      "Size": 816
+    },
     "res/drawable/abc_btn_colored_material.xml": {
       "Size": 344
     },
@@ -987,6 +1038,9 @@
     },
     "res/drawable/abc_btn_radio_material.xml": {
       "Size": 464
+    },
+    "res/drawable/abc_btn_radio_material_anim.xml": {
+      "Size": 816
     },
     "res/drawable/abc_cab_background_internal_bg.xml": {
       "Size": 372
@@ -1078,6 +1132,30 @@
     "res/drawable/abc_vector_test.xml": {
       "Size": 612
     },
+    "res/drawable/btn_checkbox_checked_mtrl.xml": {
+      "Size": 2688
+    },
+    "res/drawable/btn_checkbox_checked_to_unchecked_mtrl_animation.xml": {
+      "Size": 688
+    },
+    "res/drawable/btn_checkbox_unchecked_mtrl.xml": {
+      "Size": 2660
+    },
+    "res/drawable/btn_checkbox_unchecked_to_checked_mtrl_animation.xml": {
+      "Size": 688
+    },
+    "res/drawable/btn_radio_off_mtrl.xml": {
+      "Size": 1728
+    },
+    "res/drawable/btn_radio_off_to_on_mtrl_animation.xml": {
+      "Size": 680
+    },
+    "res/drawable/btn_radio_on_mtrl.xml": {
+      "Size": 1656
+    },
+    "res/drawable/btn_radio_on_to_off_mtrl_animation.xml": {
+      "Size": 680
+    },
     "res/drawable/design_bottom_navigation_item_background.xml": {
       "Size": 784
     },
@@ -1101,66 +1179,6 @@
     },
     "res/drawable/icon.png": {
       "Size": 1358
-    },
-    "res/drawable/mr_button_connected_dark.xml": {
-      "Size": 3424
-    },
-    "res/drawable/mr_button_connected_light.xml": {
-      "Size": 3424
-    },
-    "res/drawable/mr_button_connecting_dark.xml": {
-      "Size": 3424
-    },
-    "res/drawable/mr_button_connecting_light.xml": {
-      "Size": 3424
-    },
-    "res/drawable/mr_button_dark.xml": {
-      "Size": 756
-    },
-    "res/drawable/mr_button_light.xml": {
-      "Size": 756
-    },
-    "res/drawable/mr_dialog_close_dark.xml": {
-      "Size": 340
-    },
-    "res/drawable/mr_dialog_close_light.xml": {
-      "Size": 444
-    },
-    "res/drawable/mr_dialog_material_background_dark.xml": {
-      "Size": 484
-    },
-    "res/drawable/mr_dialog_material_background_light.xml": {
-      "Size": 484
-    },
-    "res/drawable/mr_group_collapse.xml": {
-      "Size": 1924
-    },
-    "res/drawable/mr_group_expand.xml": {
-      "Size": 1924
-    },
-    "res/drawable/mr_media_pause_dark.xml": {
-      "Size": 340
-    },
-    "res/drawable/mr_media_pause_light.xml": {
-      "Size": 444
-    },
-    "res/drawable/mr_media_play_dark.xml": {
-      "Size": 340
-    },
-    "res/drawable/mr_media_play_light.xml": {
-      "Size": 444
-    },
-    "res/drawable/mr_media_stop_dark.xml": {
-      "Size": 340
-    },
-    "res/drawable/mr_media_stop_light.xml": {
-      "Size": 444
-    },
-    "res/drawable/mr_vol_type_audiotrack_dark.xml": {
-      "Size": 340
-    },
-    "res/drawable/mr_vol_type_audiotrack_light.xml": {
-      "Size": 444
     },
     "res/drawable/mtrl_snackbar_background.xml": {
       "Size": 484
@@ -1344,69 +1362,6 @@
     },
     "res/drawable-hdpi-v4/design_ic_visibility_off.png": {
       "Size": 507
-    },
-    "res/drawable-hdpi-v4/ic_audiotrack_dark.png": {
-      "Size": 205
-    },
-    "res/drawable-hdpi-v4/ic_audiotrack_light.png": {
-      "Size": 203
-    },
-    "res/drawable-hdpi-v4/ic_dialog_close_dark.png": {
-      "Size": 206
-    },
-    "res/drawable-hdpi-v4/ic_dialog_close_light.png": {
-      "Size": 207
-    },
-    "res/drawable-hdpi-v4/ic_media_pause_dark.png": {
-      "Size": 92
-    },
-    "res/drawable-hdpi-v4/ic_media_pause_light.png": {
-      "Size": 109
-    },
-    "res/drawable-hdpi-v4/ic_media_play_dark.png": {
-      "Size": 279
-    },
-    "res/drawable-hdpi-v4/ic_media_play_light.png": {
-      "Size": 265
-    },
-    "res/drawable-hdpi-v4/ic_media_stop_dark.png": {
-      "Size": 94
-    },
-    "res/drawable-hdpi-v4/ic_media_stop_light.png": {
-      "Size": 111
-    },
-    "res/drawable-hdpi-v4/ic_mr_button_disabled_dark.png": {
-      "Size": 495
-    },
-    "res/drawable-hdpi-v4/ic_mr_button_disabled_light.png": {
-      "Size": 461
-    },
-    "res/drawable-hdpi-v4/ic_mr_button_disconnected_dark.png": {
-      "Size": 559
-    },
-    "res/drawable-hdpi-v4/ic_mr_button_disconnected_light.png": {
-      "Size": 538
-    },
-    "res/drawable-hdpi-v4/ic_mr_button_grey.png": {
-      "Size": 395
-    },
-    "res/drawable-hdpi-v4/ic_vol_type_speaker_dark.png": {
-      "Size": 390
-    },
-    "res/drawable-hdpi-v4/ic_vol_type_speaker_group_dark.png": {
-      "Size": 402
-    },
-    "res/drawable-hdpi-v4/ic_vol_type_speaker_group_light.png": {
-      "Size": 408
-    },
-    "res/drawable-hdpi-v4/ic_vol_type_speaker_light.png": {
-      "Size": 396
-    },
-    "res/drawable-hdpi-v4/ic_vol_type_tv_dark.png": {
-      "Size": 183
-    },
-    "res/drawable-hdpi-v4/ic_vol_type_tv_light.png": {
-      "Size": 190
     },
     "res/drawable-hdpi-v4/icon.png": {
       "Size": 1358
@@ -1617,69 +1572,6 @@
     },
     "res/drawable-mdpi-v4/design_ic_visibility_off.png": {
       "Size": 351
-    },
-    "res/drawable-mdpi-v4/ic_audiotrack_dark.png": {
-      "Size": 146
-    },
-    "res/drawable-mdpi-v4/ic_audiotrack_light.png": {
-      "Size": 145
-    },
-    "res/drawable-mdpi-v4/ic_dialog_close_dark.png": {
-      "Size": 168
-    },
-    "res/drawable-mdpi-v4/ic_dialog_close_light.png": {
-      "Size": 164
-    },
-    "res/drawable-mdpi-v4/ic_media_pause_dark.png": {
-      "Size": 90
-    },
-    "res/drawable-mdpi-v4/ic_media_pause_light.png": {
-      "Size": 101
-    },
-    "res/drawable-mdpi-v4/ic_media_play_dark.png": {
-      "Size": 214
-    },
-    "res/drawable-mdpi-v4/ic_media_play_light.png": {
-      "Size": 208
-    },
-    "res/drawable-mdpi-v4/ic_media_stop_dark.png": {
-      "Size": 90
-    },
-    "res/drawable-mdpi-v4/ic_media_stop_light.png": {
-      "Size": 99
-    },
-    "res/drawable-mdpi-v4/ic_mr_button_disabled_dark.png": {
-      "Size": 324
-    },
-    "res/drawable-mdpi-v4/ic_mr_button_disabled_light.png": {
-      "Size": 301
-    },
-    "res/drawable-mdpi-v4/ic_mr_button_disconnected_dark.png": {
-      "Size": 406
-    },
-    "res/drawable-mdpi-v4/ic_mr_button_disconnected_light.png": {
-      "Size": 389
-    },
-    "res/drawable-mdpi-v4/ic_mr_button_grey.png": {
-      "Size": 268
-    },
-    "res/drawable-mdpi-v4/ic_vol_type_speaker_dark.png": {
-      "Size": 256
-    },
-    "res/drawable-mdpi-v4/ic_vol_type_speaker_group_dark.png": {
-      "Size": 250
-    },
-    "res/drawable-mdpi-v4/ic_vol_type_speaker_group_light.png": {
-      "Size": 256
-    },
-    "res/drawable-mdpi-v4/ic_vol_type_speaker_light.png": {
-      "Size": 255
-    },
-    "res/drawable-mdpi-v4/ic_vol_type_tv_dark.png": {
-      "Size": 128
-    },
-    "res/drawable-mdpi-v4/ic_vol_type_tv_light.png": {
-      "Size": 133
     },
     "res/drawable-mdpi-v4/notification_bg_low_normal.9.png": {
       "Size": 215
@@ -1906,441 +1798,6 @@
     "res/drawable-xhdpi-v4/design_ic_visibility_off.png": {
       "Size": 629
     },
-    "res/drawable-xhdpi-v4/ic_audiotrack_dark.png": {
-      "Size": 235
-    },
-    "res/drawable-xhdpi-v4/ic_audiotrack_light.png": {
-      "Size": 226
-    },
-    "res/drawable-xhdpi-v4/ic_dialog_close_dark.png": {
-      "Size": 235
-    },
-    "res/drawable-xhdpi-v4/ic_dialog_close_light.png": {
-      "Size": 231
-    },
-    "res/drawable-xhdpi-v4/ic_media_pause_dark.png": {
-      "Size": 94
-    },
-    "res/drawable-xhdpi-v4/ic_media_pause_light.png": {
-      "Size": 111
-    },
-    "res/drawable-xhdpi-v4/ic_media_play_dark.png": {
-      "Size": 343
-    },
-    "res/drawable-xhdpi-v4/ic_media_play_light.png": {
-      "Size": 320
-    },
-    "res/drawable-xhdpi-v4/ic_media_stop_dark.png": {
-      "Size": 95
-    },
-    "res/drawable-xhdpi-v4/ic_media_stop_light.png": {
-      "Size": 112
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_00_dark.png": {
-      "Size": 331
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_00_light.png": {
-      "Size": 331
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_01_dark.png": {
-      "Size": 335
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_01_light.png": {
-      "Size": 335
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_02_dark.png": {
-      "Size": 340
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_02_light.png": {
-      "Size": 340
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_03_dark.png": {
-      "Size": 337
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_03_light.png": {
-      "Size": 337
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_04_dark.png": {
-      "Size": 344
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_04_light.png": {
-      "Size": 344
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_05_dark.png": {
-      "Size": 348
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_05_light.png": {
-      "Size": 348
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_06_dark.png": {
-      "Size": 342
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_06_light.png": {
-      "Size": 342
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_07_dark.png": {
-      "Size": 325
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_07_light.png": {
-      "Size": 325
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_08_dark.png": {
-      "Size": 326
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_08_light.png": {
-      "Size": 326
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_09_dark.png": {
-      "Size": 332
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_09_light.png": {
-      "Size": 332
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_10_dark.png": {
-      "Size": 345
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_10_light.png": {
-      "Size": 345
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_11_dark.png": {
-      "Size": 342
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_11_light.png": {
-      "Size": 344
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_12_dark.png": {
-      "Size": 361
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_12_light.png": {
-      "Size": 361
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_13_dark.png": {
-      "Size": 363
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_13_light.png": {
-      "Size": 362
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_14_dark.png": {
-      "Size": 353
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_14_light.png": {
-      "Size": 345
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_15_dark.png": {
-      "Size": 357
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_15_light.png": {
-      "Size": 357
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_16_dark.png": {
-      "Size": 362
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_16_light.png": {
-      "Size": 362
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_17_dark.png": {
-      "Size": 354
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_17_light.png": {
-      "Size": 354
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_18_dark.png": {
-      "Size": 354
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_18_light.png": {
-      "Size": 354
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_19_dark.png": {
-      "Size": 365
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_19_light.png": {
-      "Size": 365
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_20_dark.png": {
-      "Size": 368
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_20_light.png": {
-      "Size": 368
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_21_dark.png": {
-      "Size": 373
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_21_light.png": {
-      "Size": 373
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_22_dark.png": {
-      "Size": 364
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_22_light.png": {
-      "Size": 385
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_23_dark.png": {
-      "Size": 363
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_23_light.png": {
-      "Size": 363
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_24_dark.png": {
-      "Size": 374
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_24_light.png": {
-      "Size": 374
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_25_dark.png": {
-      "Size": 372
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_25_light.png": {
-      "Size": 372
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_26_dark.png": {
-      "Size": 373
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_26_light.png": {
-      "Size": 373
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_27_dark.png": {
-      "Size": 379
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_27_light.png": {
-      "Size": 398
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_28_dark.png": {
-      "Size": 363
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_28_light.png": {
-      "Size": 363
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_29_dark.png": {
-      "Size": 364
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_29_light.png": {
-      "Size": 364
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_30_dark.png": {
-      "Size": 355
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connected_30_light.png": {
-      "Size": 355
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_00_dark.png": {
-      "Size": 331
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_00_light.png": {
-      "Size": 331
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_01_dark.png": {
-      "Size": 335
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_01_light.png": {
-      "Size": 335
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_02_dark.png": {
-      "Size": 340
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_02_light.png": {
-      "Size": 340
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_03_dark.png": {
-      "Size": 337
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_03_light.png": {
-      "Size": 337
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_04_dark.png": {
-      "Size": 344
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_04_light.png": {
-      "Size": 344
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_05_dark.png": {
-      "Size": 348
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_05_light.png": {
-      "Size": 348
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_06_dark.png": {
-      "Size": 342
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_06_light.png": {
-      "Size": 342
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_07_dark.png": {
-      "Size": 325
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_07_light.png": {
-      "Size": 325
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_08_dark.png": {
-      "Size": 326
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_08_light.png": {
-      "Size": 326
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_09_dark.png": {
-      "Size": 332
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_09_light.png": {
-      "Size": 332
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_10_dark.png": {
-      "Size": 345
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_10_light.png": {
-      "Size": 345
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_11_dark.png": {
-      "Size": 336
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_11_light.png": {
-      "Size": 336
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_12_dark.png": {
-      "Size": 345
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_12_light.png": {
-      "Size": 345
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_13_dark.png": {
-      "Size": 347
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_13_light.png": {
-      "Size": 345
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_14_dark.png": {
-      "Size": 321
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_14_light.png": {
-      "Size": 321
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_15_dark.png": {
-      "Size": 329
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_15_light.png": {
-      "Size": 334
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_16_dark.png": {
-      "Size": 326
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_16_light.png": {
-      "Size": 326
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_17_dark.png": {
-      "Size": 329
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_17_light.png": {
-      "Size": 327
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_18_dark.png": {
-      "Size": 339
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_18_light.png": {
-      "Size": 339
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_19_dark.png": {
-      "Size": 337
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_19_light.png": {
-      "Size": 337
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_20_dark.png": {
-      "Size": 339
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_20_light.png": {
-      "Size": 339
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_21_dark.png": {
-      "Size": 336
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_21_light.png": {
-      "Size": 336
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_22_dark.png": {
-      "Size": 344
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_22_light.png": {
-      "Size": 344
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_23_dark.png": {
-      "Size": 337
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_23_light.png": {
-      "Size": 337
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_24_dark.png": {
-      "Size": 340
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_24_light.png": {
-      "Size": 340
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_25_dark.png": {
-      "Size": 332
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_25_light.png": {
-      "Size": 332
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_26_dark.png": {
-      "Size": 335
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_26_light.png": {
-      "Size": 335
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_27_dark.png": {
-      "Size": 338
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_27_light.png": {
-      "Size": 342
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_28_dark.png": {
-      "Size": 333
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_28_light.png": {
-      "Size": 335
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_29_dark.png": {
-      "Size": 332
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_29_light.png": {
-      "Size": 332
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_30_dark.png": {
-      "Size": 331
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_connecting_30_light.png": {
-      "Size": 331
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_disabled_dark.png": {
-      "Size": 603
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_disabled_light.png": {
-      "Size": 609
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_disconnected_dark.png": {
-      "Size": 752
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_disconnected_light.png": {
-      "Size": 751
-    },
-    "res/drawable-xhdpi-v4/ic_mr_button_grey.png": {
-      "Size": 454
-    },
-    "res/drawable-xhdpi-v4/ic_vol_type_speaker_dark.png": {
-      "Size": 478
-    },
-    "res/drawable-xhdpi-v4/ic_vol_type_speaker_group_dark.png": {
-      "Size": 443
-    },
-    "res/drawable-xhdpi-v4/ic_vol_type_speaker_group_light.png": {
-      "Size": 451
-    },
-    "res/drawable-xhdpi-v4/ic_vol_type_speaker_light.png": {
-      "Size": 483
-    },
-    "res/drawable-xhdpi-v4/ic_vol_type_tv_dark.png": {
-      "Size": 185
-    },
-    "res/drawable-xhdpi-v4/ic_vol_type_tv_light.png": {
-      "Size": 199
-    },
     "res/drawable-xhdpi-v4/icon.png": {
       "Size": 1140
     },
@@ -2506,441 +1963,6 @@
     "res/drawable-xxhdpi-v4/design_ic_visibility_off.png": {
       "Size": 884
     },
-    "res/drawable-xxhdpi-v4/ic_audiotrack_dark.png": {
-      "Size": 306
-    },
-    "res/drawable-xxhdpi-v4/ic_audiotrack_light.png": {
-      "Size": 304
-    },
-    "res/drawable-xxhdpi-v4/ic_dialog_close_dark.png": {
-      "Size": 308
-    },
-    "res/drawable-xxhdpi-v4/ic_dialog_close_light.png": {
-      "Size": 309
-    },
-    "res/drawable-xxhdpi-v4/ic_media_pause_dark.png": {
-      "Size": 110
-    },
-    "res/drawable-xxhdpi-v4/ic_media_pause_light.png": {
-      "Size": 127
-    },
-    "res/drawable-xxhdpi-v4/ic_media_play_dark.png": {
-      "Size": 461
-    },
-    "res/drawable-xxhdpi-v4/ic_media_play_light.png": {
-      "Size": 392
-    },
-    "res/drawable-xxhdpi-v4/ic_media_stop_dark.png": {
-      "Size": 108
-    },
-    "res/drawable-xxhdpi-v4/ic_media_stop_light.png": {
-      "Size": 125
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_00_dark.png": {
-      "Size": 433
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_00_light.png": {
-      "Size": 433
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_01_dark.png": {
-      "Size": 435
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_01_light.png": {
-      "Size": 437
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_02_dark.png": {
-      "Size": 446
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_02_light.png": {
-      "Size": 446
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_03_dark.png": {
-      "Size": 445
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_03_light.png": {
-      "Size": 445
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_04_dark.png": {
-      "Size": 452
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_04_light.png": {
-      "Size": 449
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_05_dark.png": {
-      "Size": 448
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_05_light.png": {
-      "Size": 448
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_06_dark.png": {
-      "Size": 471
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_06_light.png": {
-      "Size": 462
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_07_dark.png": {
-      "Size": 406
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_07_light.png": {
-      "Size": 406
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_08_dark.png": {
-      "Size": 426
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_08_light.png": {
-      "Size": 426
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_09_dark.png": {
-      "Size": 434
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_09_light.png": {
-      "Size": 434
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_10_dark.png": {
-      "Size": 440
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_10_light.png": {
-      "Size": 440
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_11_dark.png": {
-      "Size": 443
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_11_light.png": {
-      "Size": 453
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_12_dark.png": {
-      "Size": 481
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_12_light.png": {
-      "Size": 481
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_13_dark.png": {
-      "Size": 493
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_13_light.png": {
-      "Size": 492
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_14_dark.png": {
-      "Size": 463
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_14_light.png": {
-      "Size": 463
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_15_dark.png": {
-      "Size": 467
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_15_light.png": {
-      "Size": 467
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_16_dark.png": {
-      "Size": 470
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_16_light.png": {
-      "Size": 470
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_17_dark.png": {
-      "Size": 480
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_17_light.png": {
-      "Size": 478
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_18_dark.png": {
-      "Size": 477
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_18_light.png": {
-      "Size": 477
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_19_dark.png": {
-      "Size": 483
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_19_light.png": {
-      "Size": 483
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_20_dark.png": {
-      "Size": 486
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_20_light.png": {
-      "Size": 486
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_21_dark.png": {
-      "Size": 487
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_21_light.png": {
-      "Size": 488
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_22_dark.png": {
-      "Size": 487
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_22_light.png": {
-      "Size": 487
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_23_dark.png": {
-      "Size": 498
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_23_light.png": {
-      "Size": 498
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_24_dark.png": {
-      "Size": 492
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_24_light.png": {
-      "Size": 493
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_25_dark.png": {
-      "Size": 494
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_25_light.png": {
-      "Size": 493
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_26_dark.png": {
-      "Size": 503
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_26_light.png": {
-      "Size": 503
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_27_dark.png": {
-      "Size": 479
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_27_light.png": {
-      "Size": 479
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_28_dark.png": {
-      "Size": 484
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_28_light.png": {
-      "Size": 484
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_29_dark.png": {
-      "Size": 481
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_29_light.png": {
-      "Size": 481
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_30_dark.png": {
-      "Size": 478
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connected_30_light.png": {
-      "Size": 478
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_00_dark.png": {
-      "Size": 433
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_00_light.png": {
-      "Size": 433
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_01_dark.png": {
-      "Size": 435
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_01_light.png": {
-      "Size": 437
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_02_dark.png": {
-      "Size": 446
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_02_light.png": {
-      "Size": 446
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_03_dark.png": {
-      "Size": 445
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_03_light.png": {
-      "Size": 445
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_04_dark.png": {
-      "Size": 452
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_04_light.png": {
-      "Size": 449
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_05_dark.png": {
-      "Size": 448
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_05_light.png": {
-      "Size": 448
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_06_dark.png": {
-      "Size": 471
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_06_light.png": {
-      "Size": 462
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_07_dark.png": {
-      "Size": 406
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_07_light.png": {
-      "Size": 406
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_08_dark.png": {
-      "Size": 426
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_08_light.png": {
-      "Size": 426
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_09_dark.png": {
-      "Size": 434
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_09_light.png": {
-      "Size": 434
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_10_dark.png": {
-      "Size": 440
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_10_light.png": {
-      "Size": 440
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_11_dark.png": {
-      "Size": 456
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_11_light.png": {
-      "Size": 456
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_12_dark.png": {
-      "Size": 452
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_12_light.png": {
-      "Size": 452
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_13_dark.png": {
-      "Size": 453
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_13_light.png": {
-      "Size": 453
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_14_dark.png": {
-      "Size": 426
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_14_light.png": {
-      "Size": 426
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_15_dark.png": {
-      "Size": 428
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_15_light.png": {
-      "Size": 436
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_16_dark.png": {
-      "Size": 432
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_16_light.png": {
-      "Size": 432
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_17_dark.png": {
-      "Size": 437
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_17_light.png": {
-      "Size": 437
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_18_dark.png": {
-      "Size": 429
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_18_light.png": {
-      "Size": 431
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_19_dark.png": {
-      "Size": 436
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_19_light.png": {
-      "Size": 436
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_20_dark.png": {
-      "Size": 441
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_20_light.png": {
-      "Size": 438
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_21_dark.png": {
-      "Size": 432
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_21_light.png": {
-      "Size": 432
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_22_dark.png": {
-      "Size": 440
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_22_light.png": {
-      "Size": 440
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_23_dark.png": {
-      "Size": 437
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_23_light.png": {
-      "Size": 437
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_24_dark.png": {
-      "Size": 440
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_24_light.png": {
-      "Size": 440
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_25_dark.png": {
-      "Size": 443
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_25_light.png": {
-      "Size": 443
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_26_dark.png": {
-      "Size": 445
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_26_light.png": {
-      "Size": 445
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_27_dark.png": {
-      "Size": 431
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_27_light.png": {
-      "Size": 431
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_28_dark.png": {
-      "Size": 440
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_28_light.png": {
-      "Size": 445
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_29_dark.png": {
-      "Size": 436
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_29_light.png": {
-      "Size": 436
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_30_dark.png": {
-      "Size": 433
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_connecting_30_light.png": {
-      "Size": 433
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_disabled_dark.png": {
-      "Size": 891
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_disabled_light.png": {
-      "Size": 889
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_disconnected_dark.png": {
-      "Size": 1091
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_disconnected_light.png": {
-      "Size": 1095
-    },
-    "res/drawable-xxhdpi-v4/ic_mr_button_grey.png": {
-      "Size": 657
-    },
-    "res/drawable-xxhdpi-v4/ic_vol_type_speaker_dark.png": {
-      "Size": 712
-    },
-    "res/drawable-xxhdpi-v4/ic_vol_type_speaker_group_dark.png": {
-      "Size": 678
-    },
-    "res/drawable-xxhdpi-v4/ic_vol_type_speaker_group_light.png": {
-      "Size": 686
-    },
-    "res/drawable-xxhdpi-v4/ic_vol_type_speaker_light.png": {
-      "Size": 724
-    },
-    "res/drawable-xxhdpi-v4/ic_vol_type_tv_dark.png": {
-      "Size": 260
-    },
-    "res/drawable-xxhdpi-v4/ic_vol_type_tv_light.png": {
-      "Size": 270
-    },
     "res/drawable-xxhdpi-v4/icon.png": {
       "Size": 1647
     },
@@ -3028,109 +2050,25 @@
     "res/drawable-xxxhdpi-v4/design_ic_visibility_off.png": {
       "Size": 1201
     },
-    "res/drawable-xxxhdpi-v4/ic_group_collapse_00.png": {
-      "Size": 253
+    "res/interpolator/btn_checkbox_checked_mtrl_animation_interpolator_0.xml": {
+      "Size": 316
     },
-    "res/drawable-xxxhdpi-v4/ic_group_collapse_01.png": {
-      "Size": 375
+    "res/interpolator/btn_checkbox_checked_mtrl_animation_interpolator_1.xml": {
+      "Size": 328
     },
-    "res/drawable-xxxhdpi-v4/ic_group_collapse_02.png": {
-      "Size": 365
+    "res/interpolator/btn_checkbox_unchecked_mtrl_animation_interpolator_0.xml": {
+      "Size": 316
     },
-    "res/drawable-xxxhdpi-v4/ic_group_collapse_03.png": {
-      "Size": 413
+    "res/interpolator/btn_checkbox_unchecked_mtrl_animation_interpolator_1.xml": {
+      "Size": 328
     },
-    "res/drawable-xxxhdpi-v4/ic_group_collapse_04.png": {
-      "Size": 431
+    "res/interpolator/btn_radio_to_off_mtrl_animation_interpolator_0.xml": {
+      "Size": 320
     },
-    "res/drawable-xxxhdpi-v4/ic_group_collapse_05.png": {
-      "Size": 465
+    "res/interpolator/btn_radio_to_on_mtrl_animation_interpolator_0.xml": {
+      "Size": 320
     },
-    "res/drawable-xxxhdpi-v4/ic_group_collapse_06.png": {
-      "Size": 469
-    },
-    "res/drawable-xxxhdpi-v4/ic_group_collapse_07.png": {
-      "Size": 480
-    },
-    "res/drawable-xxxhdpi-v4/ic_group_collapse_08.png": {
-      "Size": 467
-    },
-    "res/drawable-xxxhdpi-v4/ic_group_collapse_09.png": {
-      "Size": 460
-    },
-    "res/drawable-xxxhdpi-v4/ic_group_collapse_10.png": {
-      "Size": 428
-    },
-    "res/drawable-xxxhdpi-v4/ic_group_collapse_11.png": {
-      "Size": 318
-    },
-    "res/drawable-xxxhdpi-v4/ic_group_collapse_12.png": {
-      "Size": 267
-    },
-    "res/drawable-xxxhdpi-v4/ic_group_collapse_13.png": {
-      "Size": 260
-    },
-    "res/drawable-xxxhdpi-v4/ic_group_collapse_14.png": {
-      "Size": 265
-    },
-    "res/drawable-xxxhdpi-v4/ic_group_collapse_15.png": {
-      "Size": 253
-    },
-    "res/drawable-xxxhdpi-v4/ic_group_expand_00.png": {
-      "Size": 253
-    },
-    "res/drawable-xxxhdpi-v4/ic_group_expand_01.png": {
-      "Size": 373
-    },
-    "res/drawable-xxxhdpi-v4/ic_group_expand_02.png": {
-      "Size": 361
-    },
-    "res/drawable-xxxhdpi-v4/ic_group_expand_03.png": {
-      "Size": 414
-    },
-    "res/drawable-xxxhdpi-v4/ic_group_expand_04.png": {
-      "Size": 430
-    },
-    "res/drawable-xxxhdpi-v4/ic_group_expand_05.png": {
-      "Size": 462
-    },
-    "res/drawable-xxxhdpi-v4/ic_group_expand_06.png": {
-      "Size": 469
-    },
-    "res/drawable-xxxhdpi-v4/ic_group_expand_07.png": {
-      "Size": 479
-    },
-    "res/drawable-xxxhdpi-v4/ic_group_expand_08.png": {
-      "Size": 484
-    },
-    "res/drawable-xxxhdpi-v4/ic_group_expand_09.png": {
-      "Size": 451
-    },
-    "res/drawable-xxxhdpi-v4/ic_group_expand_10.png": {
-      "Size": 416
-    },
-    "res/drawable-xxxhdpi-v4/ic_group_expand_11.png": {
-      "Size": 307
-    },
-    "res/drawable-xxxhdpi-v4/ic_group_expand_12.png": {
-      "Size": 274
-    },
-    "res/drawable-xxxhdpi-v4/ic_group_expand_13.png": {
-      "Size": 260
-    },
-    "res/drawable-xxxhdpi-v4/ic_group_expand_14.png": {
-      "Size": 265
-    },
-    "res/drawable-xxxhdpi-v4/ic_group_expand_15.png": {
-      "Size": 253
-    },
-    "res/drawable-xxxhdpi-v4/ic_mr_button_grey.png": {
-      "Size": 879
-    },
-    "res/interpolator/mr_fast_out_slow_in.xml": {
-      "Size": 400
-    },
-    "res/interpolator/mr_linear_out_slow_in.xml": {
+    "res/interpolator/fast_out_slow_in.xml": {
       "Size": 400
     },
     "res/interpolator/mtrl_fast_out_linear_in.xml": {
@@ -3182,16 +2120,16 @@
       "Size": 1492
     },
     "res/layout/abc_alert_dialog_material.xml": {
-      "Size": 2480
+      "Size": 2476
     },
     "res/layout/abc_alert_dialog_title_material.xml": {
-      "Size": 1424
+      "Size": 1472
     },
     "res/layout/abc_cascading_menu_item_layout.xml": {
       "Size": 1868
     },
     "res/layout/abc_dialog_title_material.xml": {
-      "Size": 1028
+      "Size": 1072
     },
     "res/layout/abc_expanded_menu_layout.xml": {
       "Size": 388
@@ -3233,13 +2171,13 @@
       "Size": 3428
     },
     "res/layout/abc_select_dialog_material.xml": {
-      "Size": 932
+      "Size": 976
     },
     "res/layout/abc_tooltip.xml": {
       "Size": 972
     },
     "res/layout/bottomtablayout.xml": {
-      "Size": 816
+      "Size": 832
     },
     "res/layout/browser_actions_context_menu_page.xml": {
       "Size": 1576
@@ -3247,17 +2185,20 @@
     "res/layout/browser_actions_context_menu_row.xml": {
       "Size": 1032
     },
+    "res/layout/custom_dialog.xml": {
+      "Size": 612
+    },
     "res/layout/design_bottom_navigation_item.xml": {
-      "Size": 1488
+      "Size": 1492
     },
     "res/layout/design_bottom_sheet_dialog.xml": {
-      "Size": 1180
+      "Size": 1184
     },
     "res/layout/design_layout_snackbar.xml": {
-      "Size": 520
+      "Size": 528
     },
     "res/layout/design_layout_snackbar_include.xml": {
-      "Size": 1344
+      "Size": 1352
     },
     "res/layout/design_layout_tab_icon.xml": {
       "Size": 408
@@ -3269,7 +2210,7 @@
       "Size": 320
     },
     "res/layout/design_navigation_item.xml": {
-      "Size": 532
+      "Size": 536
     },
     "res/layout/design_navigation_item_header.xml": {
       "Size": 440
@@ -3281,64 +2222,28 @@
       "Size": 564
     },
     "res/layout/design_navigation_menu.xml": {
-      "Size": 524
+      "Size": 528
     },
     "res/layout/design_navigation_menu_item.xml": {
       "Size": 856
     },
     "res/layout/design_text_input_password_icon.xml": {
-      "Size": 560
+      "Size": 564
+    },
+    "res/layout/fallbacktabbardonotuse.xml": {
+      "Size": 692
+    },
+    "res/layout/fallbacktoolbardonotuse.xml": {
+      "Size": 452
     },
     "res/layout/flyoutcontent.xml": {
-      "Size": 932
-    },
-    "res/layout/mr_cast_dialog.xml": {
-      "Size": 648
-    },
-    "res/layout/mr_cast_group_item.xml": {
-      "Size": 860
-    },
-    "res/layout/mr_cast_group_volume_item.xml": {
-      "Size": 1292
-    },
-    "res/layout/mr_cast_media_metadata.xml": {
-      "Size": 2056
-    },
-    "res/layout/mr_cast_route_item.xml": {
-      "Size": 1720
-    },
-    "res/layout/mr_chooser_dialog.xml": {
-      "Size": 1656
-    },
-    "res/layout/mr_chooser_list_item.xml": {
-      "Size": 1336
-    },
-    "res/layout/mr_controller_material_dialog_b.xml": {
-      "Size": 3296
-    },
-    "res/layout/mr_controller_volume_item.xml": {
-      "Size": 1612
-    },
-    "res/layout/mr_dialog_header_item.xml": {
-      "Size": 472
-    },
-    "res/layout/mr_picker_dialog.xml": {
-      "Size": 960
-    },
-    "res/layout/mr_picker_route_item.xml": {
-      "Size": 848
-    },
-    "res/layout/mr_playback_control.xml": {
-      "Size": 1548
-    },
-    "res/layout/mr_volume_control.xml": {
-      "Size": 1420
+      "Size": 944
     },
     "res/layout/mtrl_layout_snackbar.xml": {
-      "Size": 520
+      "Size": 528
     },
     "res/layout/mtrl_layout_snackbar_include.xml": {
-      "Size": 1304
+      "Size": 1312
     },
     "res/layout/notification_action.xml": {
       "Size": 1092
@@ -3383,7 +2288,7 @@
       "Size": 440
     },
     "res/layout/rootlayout.xml": {
-      "Size": 1388
+      "Size": 1352
     },
     "res/layout/select_dialog_item_material.xml": {
       "Size": 640
@@ -3395,7 +2300,7 @@
       "Size": 780
     },
     "res/layout/shellcontent.xml": {
-      "Size": 1140
+      "Size": 888
     },
     "res/layout/support_simple_spinner_dropdown_item.xml": {
       "Size": 464
@@ -3407,10 +2312,10 @@
       "Size": 452
     },
     "res/layout-sw600dp-v13/design_layout_snackbar.xml": {
-      "Size": 520
+      "Size": 528
     },
     "res/layout-sw600dp-v13/mtrl_layout_snackbar.xml": {
-      "Size": 520
+      "Size": 528
     },
     "res/layout-v16/notification_template_custom_big.xml": {
       "Size": 3012
@@ -3422,10 +2327,10 @@
       "Size": 1536
     },
     "res/layout-v17/abc_alert_dialog_title_material.xml": {
-      "Size": 1516
+      "Size": 1560
     },
     "res/layout-v17/abc_dialog_title_material.xml": {
-      "Size": 1072
+      "Size": 1116
     },
     "res/layout-v17/abc_popup_menu_header_item_layout.xml": {
       "Size": 848
@@ -3434,7 +2339,7 @@
       "Size": 3472
     },
     "res/layout-v17/abc_select_dialog_material.xml": {
-      "Size": 976
+      "Size": 1020
     },
     "res/layout-v17/abc_tooltip.xml": {
       "Size": 1056
@@ -3446,31 +2351,10 @@
       "Size": 1164
     },
     "res/layout-v17/design_layout_snackbar_include.xml": {
-      "Size": 1436
-    },
-    "res/layout-v17/mr_cast_group_item.xml": {
-      "Size": 944
-    },
-    "res/layout-v17/mr_cast_group_volume_item.xml": {
-      "Size": 1416
-    },
-    "res/layout-v17/mr_cast_media_metadata.xml": {
-      "Size": 2140
-    },
-    "res/layout-v17/mr_cast_route_item.xml": {
-      "Size": 1804
-    },
-    "res/layout-v17/mr_dialog_header_item.xml": {
-      "Size": 556
-    },
-    "res/layout-v17/mr_picker_dialog.xml": {
-      "Size": 1000
-    },
-    "res/layout-v17/mr_picker_route_item.xml": {
-      "Size": 932
+      "Size": 1444
     },
     "res/layout-v17/mtrl_layout_snackbar_include.xml": {
-      "Size": 1396
+      "Size": 1404
     },
     "res/layout-v17/notification_action.xml": {
       "Size": 1156
@@ -3511,6 +2395,9 @@
     "res/layout-v21/abc_screen_toolbar.xml": {
       "Size": 1504
     },
+    "res/layout-v21/fallbacktoolbardonotuse.xml": {
+      "Size": 496
+    },
     "res/layout-v21/notification_action.xml": {
       "Size": 1052
     },
@@ -3539,8 +2426,8 @@
       "Size": 1352
     },
     "resources.arsc": {
-      "Size": 493672
+      "Size": 347268
     }
   },
-  "PackageSize": 25357859
+  "PackageSize": 26111198
 }
