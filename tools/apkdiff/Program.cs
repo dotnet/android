@@ -10,6 +10,7 @@ namespace apkdiff {
 
 		public static string Comment;
 		public static bool SaveDescriptions;
+		public static string SaveDescription1, SaveDescription2;
 		public static bool Verbose;
 
 		public static long AssemblyRegressionThreshold;
@@ -20,10 +21,10 @@ namespace apkdiff {
 		{
 			var (path1, path2) = ProcessArguments (args);
 
-			var desc1 = ApkDescription.Load (path1);
+			var desc1 = ApkDescription.Load (path1, SaveDescription1);
 
 			if (path2 != null) {
-				var desc2 = ApkDescription.Load (path2);
+				var desc2 = ApkDescription.Load (path2, SaveDescription2);
 
 				desc1.Compare (desc2);
 
@@ -64,8 +65,14 @@ namespace apkdiff {
 					"Check whether any assembly size increased more than {BYTES}",
 				  v => AssemblyRegressionThreshold = long.Parse (v) },
 				{ "s|save-descriptions",
-					"Save .[apk|aab]desc description files next to the package(s)",
+					"Save .[apk|aab]desc description files next to the package(s) or to the specified path",
 				  v => SaveDescriptions = true },
+				{ "save-description-1=",
+					"Save .[apk|aab]desc description for first package to {PATH}",
+				  v => SaveDescription1 = v },
+				{ "save-description-2=",
+					"Save .[apk|aab]desc description for second package to {PATH}",
+				  v => SaveDescription2 = v },
 				{ "v|verbose",
 					"Output information about progress during the run of the tool",
 				  v => Verbose = true },
