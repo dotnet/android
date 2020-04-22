@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using Java.Interop;
 
 using Android.Runtime;
+using System.ComponentModel;
+using System.Diagnostics;
 
 namespace Java.Lang {
 
@@ -171,27 +173,37 @@ namespace Java.Lang {
 		}
 
 #if JAVA_INTEROP
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		public int JniIdentityHashCode {
 			get {return (int) key_handle;}
 		}
 
+		[DebuggerBrowsable (DebuggerBrowsableState.Never)]
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		public JniObjectReference PeerReference {
 			get {
 				return new JniObjectReference (handle, (JniObjectReferenceType) handle_type);
 			}
 		}
 
+		[DebuggerBrowsable (DebuggerBrowsableState.Never)]
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		public virtual JniPeerMembers JniPeerMembers {
 			get { return _members; }
 		}
 #endif  // JAVA_INTEROP
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		public IntPtr Handle { get { return handle; } }
 
+		[DebuggerBrowsable (DebuggerBrowsableState.Never)]
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		protected virtual IntPtr ThresholdClass {
 			get { return class_ref; }
 		}
 
+		[DebuggerBrowsable (DebuggerBrowsableState.Never)]
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		protected virtual System.Type ThresholdType {
 			get { return typeof (Java.Lang.Throwable); }
 		}
@@ -226,6 +238,7 @@ namespace Java.Lang {
 			}
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		protected void SetHandle (IntPtr value, JniHandleOwnership transfer)
 		{
 			JNIEnv.AndroidValueManager.AddPeer (this, value, transfer, out handle);
