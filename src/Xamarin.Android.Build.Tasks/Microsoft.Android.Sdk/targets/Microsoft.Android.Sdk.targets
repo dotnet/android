@@ -1,7 +1,7 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup>
-    <XamarinAndroidSdkTargetsImported>true</XamarinAndroidSdkTargetsImported>
+    <MicrosoftAndroidSdkTargetsImported>true</MicrosoftAndroidSdkTargetsImported>
     <_XamarinAndroidBuildTasksAssembly>$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Build.Tasks.dll</_XamarinAndroidBuildTasksAssembly>
   </PropertyGroup>
 
@@ -9,9 +9,9 @@
 
   <Import Project="$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.DefaultOutputPaths.targets" Condition="'$(EnableDefaultOutputPaths)' == 'true'" />
   <Import Project="$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Common.targets" />
-  <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Sdk.AssemblyResolution.targets" />
-  <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Sdk.BuildOrder.targets" />
-  <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Sdk.Tooling.targets" />
+  <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.AssemblyResolution.targets" />
+  <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.BuildOrder.targets" />
+  <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.Tooling.targets" />
 
   <!-- Automatically supply project capabilities for IDE use -->
   <ItemGroup>

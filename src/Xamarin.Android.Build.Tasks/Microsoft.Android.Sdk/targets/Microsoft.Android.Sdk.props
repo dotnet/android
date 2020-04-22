@@ -46,13 +46,13 @@
     <AndroidManagedSymbols Condition=" '$(AndroidManagedSymbols)' == '' ">true</AndroidManagedSymbols>
   </PropertyGroup>
 
-  <Import Project="Xamarin.Android.Sdk.BundledVersions.props" Condition=" Exists('Xamarin.Android.Sdk.BundledVersions.props') " />
+  <Import Project="Microsoft.Android.Sdk.BundledVersions.props" Condition=" Exists('Microsoft.Android.Sdk.BundledVersions.props') " />
 
   <!-- Default item includes (globs and implicit references) -->
-  <Import Project="Xamarin.Android.Sdk.DefaultItems.props" />
+  <Import Project="Microsoft.Android.Sdk.DefaultItems.props" />
 
   <PropertyGroup>
-    <XamarinAndroidSdkPropsImported>true</XamarinAndroidSdkPropsImported>
+    <MicrosoftAndroidSdkPropsImported>true</MicrosoftAndroidSdkPropsImported>
   </PropertyGroup>
 
 </Project>
