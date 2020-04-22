@@ -1,0 +1,15 @@
+public MyFullDelegateName? MyName {
+	get {
+		java.code.IMyInterfaceImplementor? impl = ImplMyName;
+		return impl == null ? null : impl.MyMethodNameHandler;
+	}
+	set {
+		java.code.IMyInterfaceImplementor? impl = ImplMyName;
+		if (impl == null) {
+			impl = new java.code.IMyInterfaceImplementor (this);
+			ImplMyName = impl;
+		} else
+			impl.MyNameSpecHandler = value;
+	}
+}
+

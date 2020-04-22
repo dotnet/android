@@ -1,0 +1,178 @@
+static Delegate? cb_get_Count;
+#pragma warning disable 0169
+static Delegate Getget_CountHandler ()
+{
+	if (cb_get_Count == null)
+		cb_get_Count = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, int>) n_get_Count);
+	return cb_get_Count;
+}
+
+static int n_get_Count (IntPtr jnienv, IntPtr native__this)
+{
+	var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+	return __this.Count;
+}
+#pragma warning restore 0169
+
+static Delegate? cb_set_Count_I;
+#pragma warning disable 0169
+static Delegate Getset_Count_IHandler ()
+{
+	if (cb_set_Count_I == null)
+		cb_set_Count_I = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr, int>) n_set_Count_I);
+	return cb_set_Count_I;
+}
+
+static void n_set_Count_I (IntPtr jnienv, IntPtr native__this, int value)
+{
+	var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+	__this.Count = value;
+}
+#pragma warning restore 0169
+
+public virtual unsafe int Count {
+	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='get_Count' and count(parameter)=0]"
+	[Register ("get_Count", "()I", "Getget_CountHandler")]
+	get {
+		const string __id = "get_Count.()I";
+		try {
+			var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, null);
+			return __rm;
+		} finally {
+		}
+	}
+	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='set_Count' and count(parameter)=1 and parameter[1][@type='int']]"
+	[Register ("set_Count", "(I)V", "Getset_Count_IHandler")]
+	set {
+		const string __id = "set_Count.(I)V";
+		try {
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (value);
+			_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
+		} finally {
+		}
+	}
+}
+
+static Delegate? cb_get_Key;
+#pragma warning disable 0169
+static Delegate Getget_KeyHandler ()
+{
+	if (cb_get_Key == null)
+		cb_get_Key = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, IntPtr>) n_get_Key);
+	return cb_get_Key;
+}
+
+static IntPtr n_get_Key (IntPtr jnienv, IntPtr native__this)
+{
+	var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+	return JNIEnv.NewString (__this.Key);
+}
+#pragma warning restore 0169
+
+static Delegate? cb_set_Key_Ljava_lang_String_;
+#pragma warning disable 0169
+static Delegate Getset_Key_Ljava_lang_String_Handler ()
+{
+	if (cb_set_Key_Ljava_lang_String_ == null)
+		cb_set_Key_Ljava_lang_String_ = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr, IntPtr>) n_set_Key_Ljava_lang_String_);
+	return cb_set_Key_Ljava_lang_String_;
+}
+
+static void n_set_Key_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_value)
+{
+	var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+	var value = JNIEnv.GetString (native_value, JniHandleOwnership.DoNotTransfer);
+	__this.Key = value;
+}
+#pragma warning restore 0169
+
+public virtual unsafe string? Key {
+	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='get_Key' and count(parameter)=0]"
+	[Register ("get_Key", "()Ljava/lang/String;", "Getget_KeyHandler")]
+	get {
+		const string __id = "get_Key.()Ljava/lang/String;";
+		try {
+			var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
+			return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+		} finally {
+		}
+	}
+	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='set_Key' and count(parameter)=1 and parameter[1][@type='java.lang.String']]"
+	[Register ("set_Key", "(Ljava/lang/String;)V", "Getset_Key_Ljava_lang_String_Handler")]
+	set {
+		const string __id = "set_Key.(Ljava/lang/String;)V";
+		IntPtr native_value = JNIEnv.NewString (value);
+		try {
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (native_value);
+			_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
+		} finally {
+			JNIEnv.DeleteLocalRef (native_value);
+		}
+	}
+}
+
+public static unsafe int StaticCount {
+	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='get_StaticCount' and count(parameter)=0]"
+	[Register ("get_StaticCount", "()I", "")]
+	get {
+		const string __id = "get_StaticCount.()I";
+		try {
+			var __rm = _members.StaticMethods.InvokeInt32Method (__id, null);
+			return __rm;
+		} finally {
+		}
+	}
+	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='set_StaticCount' and count(parameter)=1 and parameter[1][@type='int']]"
+	[Register ("set_StaticCount", "(I)V", "")]
+	set {
+		const string __id = "set_StaticCount.(I)V";
+		try {
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (value);
+			_members.StaticMethods.InvokeVoidMethod (__id, __args);
+		} finally {
+		}
+	}
+}
+
+static Delegate? cb_get_AbstractCount;
+#pragma warning disable 0169
+static Delegate Getget_AbstractCountHandler ()
+{
+	if (cb_get_AbstractCount == null)
+		cb_get_AbstractCount = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, int>) n_get_AbstractCount);
+	return cb_get_AbstractCount;
+}
+
+static int n_get_AbstractCount (IntPtr jnienv, IntPtr native__this)
+{
+	var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+	return __this.AbstractCount;
+}
+#pragma warning restore 0169
+
+static Delegate? cb_set_AbstractCount_I;
+#pragma warning disable 0169
+static Delegate Getset_AbstractCount_IHandler ()
+{
+	if (cb_set_AbstractCount_I == null)
+		cb_set_AbstractCount_I = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr, int>) n_set_AbstractCount_I);
+	return cb_set_AbstractCount_I;
+}
+
+static void n_set_AbstractCount_I (IntPtr jnienv, IntPtr native__this, int value)
+{
+	var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+	__this.AbstractCount = value;
+}
+#pragma warning restore 0169
+
+public abstract int AbstractCount {
+	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='get_AbstractCount' and count(parameter)=0]"
+	[Register ("get_AbstractCount", "()I", "Getget_AbstractCountHandler")] get;
+	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='set_AbstractCount' and count(parameter)=1 and parameter[1][@type='int']]"
+	[Register ("set_AbstractCount", "(I)V", "Getset_AbstractCount_IHandler")] set;
+}
+

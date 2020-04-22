@@ -1,0 +1,93 @@
+static Delegate? cb_GetCountForKey_Ljava_lang_String_;
+#pragma warning disable 0169
+static Delegate GetGetCountForKey_Ljava_lang_String_Handler ()
+{
+	if (cb_GetCountForKey_Ljava_lang_String_ == null)
+		cb_GetCountForKey_Ljava_lang_String_ = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, IntPtr, int>) n_GetCountForKey_Ljava_lang_String_);
+	return cb_GetCountForKey_Ljava_lang_String_;
+}
+
+static int n_GetCountForKey_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_key)
+{
+	var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+	var key = JNIEnv.GetString (native_key, JniHandleOwnership.DoNotTransfer);
+	int __ret = __this.GetCountForKey (key);
+	return __ret;
+}
+#pragma warning restore 0169
+
+// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='GetCountForKey' and count(parameter)=1 and parameter[1][@type='java.lang.String']]"
+[Register ("GetCountForKey", "(Ljava/lang/String;)I", "GetGetCountForKey_Ljava_lang_String_Handler")]
+public virtual unsafe int GetCountForKey (string? key)
+{
+	const string __id = "GetCountForKey.(Ljava/lang/String;)I";
+	IntPtr native_key = JNIEnv.NewString (key);
+	try {
+		JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+		__args [0] = new JniArgumentValue (native_key);
+		var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, __args);
+		return __rm;
+	} finally {
+		JNIEnv.DeleteLocalRef (native_key);
+	}
+}
+
+static Delegate? cb_Key;
+#pragma warning disable 0169
+static Delegate GetKeyHandler ()
+{
+	if (cb_Key == null)
+		cb_Key = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, IntPtr>) n_Key);
+	return cb_Key;
+}
+
+static IntPtr n_Key (IntPtr jnienv, IntPtr native__this)
+{
+	var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+	return JNIEnv.NewString (__this.Key ());
+}
+#pragma warning restore 0169
+
+// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='Key' and count(parameter)=0]"
+[Register ("Key", "()Ljava/lang/String;", "GetKeyHandler")]
+public virtual unsafe string? Key ()
+{
+	const string __id = "Key.()Ljava/lang/String;";
+	try {
+		var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
+		return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+	} finally {
+	}
+}
+
+// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='StaticMethod' and count(parameter)=0]"
+[Register ("StaticMethod", "()V", "")]
+public static unsafe void StaticMethod ()
+{
+	const string __id = "StaticMethod.()V";
+	try {
+		_members.StaticMethods.InvokeVoidMethod (__id, null);
+	} finally {
+	}
+}
+
+static Delegate? cb_AbstractMethod;
+#pragma warning disable 0169
+static Delegate GetAbstractMethodHandler ()
+{
+	if (cb_AbstractMethod == null)
+		cb_AbstractMethod = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr>) n_AbstractMethod);
+	return cb_AbstractMethod;
+}
+
+static void n_AbstractMethod (IntPtr jnienv, IntPtr native__this)
+{
+	var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+	__this.AbstractMethod ();
+}
+#pragma warning restore 0169
+
+// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='AbstractMethod' and count(parameter)=0]"
+[Register ("AbstractMethod", "()V", "GetAbstractMethodHandler")]
+public abstract void AbstractMethod ();
+

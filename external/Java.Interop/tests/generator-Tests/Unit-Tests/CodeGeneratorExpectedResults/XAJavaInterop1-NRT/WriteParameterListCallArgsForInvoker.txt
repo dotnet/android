@@ -1,0 +1,4 @@
+JValue* __args = stackalloc JValue [3];
+__args [0] = new JValue (value);
+__args [1] = new JValue (native_str);
+__args [2] = new JValue (flag);

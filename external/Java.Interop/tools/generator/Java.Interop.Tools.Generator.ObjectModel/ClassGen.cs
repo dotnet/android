@@ -196,7 +196,7 @@ namespace MonoDroid.Generation
 					sw.WriteLine ("\t\t\t\t\t\t\"{0}\",", e.Key);
 				}
 				sw.WriteLine ("\t\t\t\t\t},");
-				sw.WriteLine ("\t\t\t\t\tnew Converter<string, Type>[]{");
+				sw.WriteLine ("\t\t\t\t\tnew Converter<string, Type{0}>[]{{", opt.NullableOperator);
 				foreach (KeyValuePair<string, List<KeyValuePair<string, string>>> e in mapping) {
 					sw.WriteLine ("\t\t\t\t\t\tlookup_{0}_package,", e.Key.Replace ('/', '_'));
 				}
@@ -207,7 +207,7 @@ namespace MonoDroid.Generation
 				sw.WriteLine ("#endif // def MONODROID_TIMING");
 				sw.WriteLine ("\t\t}");
 				sw.WriteLine ();
-				sw.WriteLine ("\t\tstatic Type Lookup (string[] mappings, string javaType)");
+				sw.WriteLine ("\t\tstatic Type{0} Lookup (string[] mappings, string javaType)", opt.NullableOperator);
 				sw.WriteLine ("\t\t{");
 				sw.WriteLine ("\t\t\tvar managedType = Java.Interop.TypeManager.LookupTypeMapping (mappings, javaType);");
 				sw.WriteLine ("\t\t\tif (managedType == null)");
@@ -217,8 +217,8 @@ namespace MonoDroid.Generation
 				foreach (KeyValuePair<string, List<KeyValuePair<string, string>>> map in mapping) {
 					sw.WriteLine ();
 					string package = map.Key.Replace ('/', '_');
-					sw.WriteLine ("\t\tstatic string[] package_{0}_mappings;", package);
-					sw.WriteLine ("\t\tstatic Type lookup_{0}_package (string klass)", package);
+					sw.WriteLine ("\t\tstatic string[]{1} package_{0}_mappings;", package, opt.NullableOperator);
+					sw.WriteLine ("\t\tstatic Type{1} lookup_{0}_package (string klass)", package, opt.NullableOperator);
 					sw.WriteLine ("\t\t{");
 					sw.WriteLine ("\t\t\tif (package_{0}_mappings == null) {{", package);
 					sw.WriteLine ("\t\t\t\tpackage_{0}_mappings = new string[]{{", package);

@@ -158,7 +158,7 @@ namespace Java.Interop
 				});
 			}
 
-			public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (IList<T> value, ParameterAttributes synchronize)
+			public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState ([MaybeNull]IList<T> value, ParameterAttributes synchronize)
 			{
 				return JavaArray<T>.CreateArgumentState (value, synchronize, (list, copy) => {
 					var a = copy
@@ -169,7 +169,7 @@ namespace Java.Interop
 				});
 			}
 
-			public override void DestroyGenericArgumentState (IList<T> value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+			public override void DestroyGenericArgumentState ([AllowNull]IList<T> value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
 			{
 				JavaArray<T>.DestroyArgumentState<JavaObjectArray<T>> (value, ref state, synchronize);
 			}

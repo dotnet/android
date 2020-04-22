@@ -103,6 +103,7 @@ namespace MonoDroid.Generation
 				IsFinal = elem.XGetAttribute ("final") == "true",
 				IsStatic = elem.XGetAttribute ("static") == "true",
 				JavaName = elem.XGetAttribute ("name"),
+				NotNull = elem.XGetAttribute ("not-null") == "true",
 				SetterParameter = CreateParameter (elem),
 				TypeName = elem.XGetAttribute ("type"),
 				Value = elem.XGetAttribute ("value"), // do not trim
@@ -247,6 +248,7 @@ namespace MonoDroid.Generation
 				ManagedReturn = elem.XGetAttribute ("managedReturn"),
 				PropertyNameOverride = elem.XGetAttribute ("propertyName"),
 				Return = elem.XGetAttribute ("return"),
+				ReturnNotNull = elem.XGetAttribute ("return-not-null") == "true",
 				SourceApiLevel = GetApiLevel (elem.XGetAttribute ("merge.SourceFile")),
 				Visibility = elem.Visibility ()
 			};
@@ -287,8 +289,9 @@ namespace MonoDroid.Generation
 			string java_type = elem.XGetAttribute ("type");
 			string enum_type = elem.Attribute ("enumType") != null ? elem.XGetAttribute ("enumType") : null;
 			string managed_type = elem.Attribute ("managedType") != null ? elem.XGetAttribute ("managedType") : null;
+			var not_null = elem.XGetAttribute ("not-null") == "true";
 			// FIXME: "enum_type ?? java_type" should be extraneous. Somewhere in generator uses it improperly.
-			var result = new Parameter (name, enum_type ?? java_type, enum_type ?? managed_type, enum_type != null, java_type);
+			var result = new Parameter (name, enum_type ?? java_type, enum_type ?? managed_type, enum_type != null, java_type, not_null);
 			if (elem.Attribute ("sender") != null)
 				result.IsSender = true;
 			return result;

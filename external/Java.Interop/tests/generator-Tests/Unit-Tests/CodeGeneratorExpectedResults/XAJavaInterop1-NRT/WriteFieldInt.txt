@@ -1,0 +1,19 @@
+
+// Metadata.xml XPath field reference: path="/api/package[@name='com.mypackage']/class[@name='foo']/field[@name='bar']"
+[Register ("bar")]
+public int bar {
+	get {
+		const string __id = "bar.I";
+
+		var __v = _members.InstanceFields.GetInt32Value (__id, this);
+		return __v;
+	}
+	set {
+		const string __id = "bar.I";
+
+		try {
+			_members.InstanceFields.SetValue (__id, this, value);
+		} finally {
+		}
+	}
+}

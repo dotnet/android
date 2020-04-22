@@ -1,0 +1,11 @@
+// Metadata.xml XPath method reference: path="/api/package[@name='com.mypackage']/class[@name='foo']/method[@name='bar' and count(parameter)=0]"
+[Register ("bar", "()V", "")]
+public static unsafe void bar ()
+{
+	const string __id = "bar.()V";
+	try {
+		_members.StaticMethods.InvokeVoidMethod (__id, null);
+	} finally {
+	}
+}
+

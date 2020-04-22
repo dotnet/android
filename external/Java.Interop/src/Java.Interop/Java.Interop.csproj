@@ -19,6 +19,7 @@
     <DefineConstants>DEBUG;$(DefineConstants)</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Condition=" '$(TargetFramework)' != 'netstandard2.0' " Remove="NullableAttributes.cs" />
     <Compile Remove="Java.Interop\JniLocationException.cs" />
   </ItemGroup>
   <PropertyGroup>

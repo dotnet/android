@@ -99,5 +99,14 @@ namespace generatortests
 
 			Assert.AreEqual ("_3", p.Name);
 		}
+
+		[Test]
+		public void CreateParameter_NotNull ()
+		{
+			var xml = XDocument.Parse ("<parameter name=\"sender\" not-null=\"true\" />");
+			var p = XmlApiImporter.CreateParameter (xml.Root);
+
+			Assert.True (p.NotNull);
+		}
 	}
 }

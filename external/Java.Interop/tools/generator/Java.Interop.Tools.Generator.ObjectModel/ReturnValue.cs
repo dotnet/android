@@ -15,11 +15,12 @@ namespace MonoDroid.Generation {
 		string raw_type;
 		bool is_enumified;
 
-		public ReturnValue (Method owner, string java_type, string managed_type, bool isEnumified)
+		public ReturnValue (Method owner, string java_type, string managed_type, bool isEnumified, bool notNull)
 		{
 			this.raw_type = this.java_type = java_type;
 			this.managed_type = managed_type;
 			this.is_enumified = isEnumified;
+			NotNull = notNull;
 		}
 
 		public string CallMethodPrefix => TypeNameUtilities.GetCallPrefix (sym);
@@ -78,11 +79,15 @@ namespace MonoDroid.Generation {
 			get { return sym.NativeType; }
 		}
 
+		public bool NotNull { get; set; }
+
 		public string RawJavaType {
 			get { return raw_type; }
 		}
 
 		public string ReturnCast => sym?.ReturnCast ?? string.Empty;
+
+		public ISymbol Symbol => sym;
 
 		public string FromNative (CodeGenerationOptions opt, string var_name, bool owned)
 		{
@@ -104,11 +109,12 @@ namespace MonoDroid.Generation {
 			if (string.IsNullOrEmpty (targetType))
 				return name;
 			if (targetType == "string")
-				return string.Format ("{0}.ToString ()", name);
+				return string.Format ("{0}?.ToString ()", name);
 			var rgm = opt.SymbolTable.Lookup (targetType) as IRequireGenericMarshal;
-			return string.Format ("global::Java.Interop.JavaObjectExtensions.JavaCast<{0}>({1})",
+			return string.Format ("global::Java.Interop.JavaObjectExtensions.JavaCast<{0}>({1}){2}",
 			                      rgm != null ? (rgm.GetGenericJavaObjectTypeOverride () ?? sym.FullName) : sym.FullName,
-			                      opt.GetSafeIdentifier (rgm != null ? rgm.ToInteroperableJavaObject (name) : name)); 
+			                      opt.GetSafeIdentifier (rgm != null ? rgm.ToInteroperableJavaObject (name) : name),
+			                      opt.NullForgivingOperator); 
 		}
 
 		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params, CodeGeneratorContext context)

@@ -10,13 +10,24 @@ namespace MonoDroid.Generation
 {
 	public class Property
 	{
+		private Method setter;
+
 		public Property (string name)
 		{
 			Name = name;
 		}
 
 		public Method Getter {get; set;}
-		public Method Setter {get; set;}
+
+		public Method Setter {
+			get => setter;
+			set {
+				setter = value;
+
+				if (Getter?.RetVal?.NotNull == true)
+					Setter.Parameters.First ().NotNull = true;
+			}
+		}
 
 		public bool IsGeneric => Getter.IsGeneric;
 

@@ -52,6 +52,7 @@ namespace MonoDroid.Generation
 		public bool SupportInterfaceConstants { get; set; }
 		public bool SupportDefaultInterfaceMethods { get; set; }
 		public bool SupportNestedInterfaceTypes { get; set; }
+		public bool SupportNullableReferenceTypes { get; set; }
 		public bool UseShallowReferencedTypes { get; set; }
 
 		bool? buildingCoreAssembly;
@@ -59,6 +60,100 @@ namespace MonoDroid.Generation
 			get {
 				return buildingCoreAssembly ?? (buildingCoreAssembly = (SymbolTable.Lookup ("java.lang.Object") is ClassGen gen && gen.FromXml)).Value;
 			}
+		}
+
+		public string NullableOperator => SupportNullableReferenceTypes ? "?" : string.Empty;
+
+		public string NullForgivingOperator => SupportNullableReferenceTypes ? "!" : string.Empty;
+
+		public string GetTypeReferenceName (Field field)
+		{
+			var name = GetOutputName (field.Symbol.FullName);
+
+			if (field.NotNull || field.Symbol.IsEnum)
+				return name;
+
+			return name + GetNullable (field.Symbol.FullName);
+		}
+
+		public string GetTypeReferenceName (Parameter symbol)
+		{
+			var name = GetOutputName (symbol.Type);
+
+			if (symbol.NotNull || symbol.Symbol.IsEnum)
+				return name;
+
+			return name + GetNullable (symbol.Type);
+		}
+
+		public string GetTypeReferenceName (ReturnValue symbol)
+		{
+			var name = GetOutputName (symbol.FullName);
+
+			if (symbol.NotNull || symbol.Symbol.IsEnum)
+				return name;
+
+			return name + GetNullable (symbol.FullName);
+		}
+
+		public string GetTypeReferenceName (Property symbol)
+		{
+			if (symbol.Getter != null)
+				return GetTypeReferenceName (symbol.Getter.RetVal);
+
+			return GetTypeReferenceName (symbol.Setter.Parameters [0]);
+		}
+
+
+		public string GetNullForgiveness (Field field)
+		{
+			if (field.NotNull || field.Symbol.IsEnum)
+				return NullForgivingOperator;
+
+			return string.Empty;
+		}
+
+		public string GetNullForgiveness (ReturnValue symbol)
+		{
+			if (symbol.NotNull || symbol.Symbol.IsEnum)
+				return NullForgivingOperator;
+
+			return string.Empty;
+		}
+
+		public string GetNullForgiveness (Parameter symbol)
+		{
+			if (symbol.NotNull || symbol.Symbol.IsEnum)
+				return NullForgivingOperator;
+
+			return string.Empty;
+		}
+
+		string GetNullable (string s)
+		{
+			switch (s) {
+				case "void":
+				case "int":
+				//case "int[]":
+				case "bool":
+				//case "bool[]":
+				case "float":
+				//case "float[]":
+				case "sbyte":
+				//case "sbyte[]":
+				case "long":
+				//case "long[]":
+				case "char":
+				//case "char[]":
+				case "double":
+				//case "double[]":
+				case "short":
+				//case "short[]":
+				case "Android.Graphics.Color":
+					return string.Empty;
+			}
+
+			return NullableOperator;
 		}
 
 		public string GetOutputName (string s)

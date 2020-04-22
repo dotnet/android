@@ -1,0 +1,56 @@
+static Delegate? cb_get_MyProperty;
+#pragma warning disable 0169
+static Delegate Getget_MyPropertyHandler ()
+{
+	if (cb_get_MyProperty == null)
+		cb_get_MyProperty = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, int>) n_get_MyProperty);
+	return cb_get_MyProperty;
+}
+
+static int n_get_MyProperty (IntPtr jnienv, IntPtr native__this)
+{
+	var __this = global::Java.Lang.Object.GetObject<com.mypackage.foo> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+	return __this.MyProperty;
+}
+#pragma warning restore 0169
+
+static Delegate? cb_set_MyProperty_I;
+#pragma warning disable 0169
+static Delegate Getset_MyProperty_IHandler ()
+{
+	if (cb_set_MyProperty_I == null)
+		cb_set_MyProperty_I = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr, int>) n_set_MyProperty_I);
+	return cb_set_MyProperty_I;
+}
+
+static void n_set_MyProperty_I (IntPtr jnienv, IntPtr native__this, int value)
+{
+	var __this = global::Java.Lang.Object.GetObject<com.mypackage.foo> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+	__this.MyProperty = value;
+}
+#pragma warning restore 0169
+
+public virtual unsafe int MyProperty {
+	// Metadata.xml XPath method reference: path="/api/package[@name='com.mypackage']/class[@name='foo']/method[@name='get_MyProperty' and count(parameter)=0]"
+	[Register ("get_MyProperty", "()I", "Getget_MyPropertyHandler")]
+	get {
+		const string __id = "get_MyProperty.()I";
+		try {
+			var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, null);
+			return __rm;
+		} finally {
+		}
+	}
+	// Metadata.xml XPath method reference: path="/api/package[@name='com.mypackage']/class[@name='foo']/method[@name='set_MyProperty' and count(parameter)=1 and parameter[1][@type='int']]"
+	[Register ("set_MyProperty", "(I)V", "Getset_MyProperty_IHandler")]
+	set {
+		const string __id = "set_MyProperty.(I)V";
+		try {
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (value);
+			_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
+		} finally {
+		}
+	}
+}
+

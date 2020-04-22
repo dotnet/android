@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -18,7 +19,7 @@ namespace Java.Interop {
 			return JniEnvironment.Strings.ToString (ref reference, options, targetType ?? typeof (string));
 		}
 
-		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (string? value, ParameterAttributes synchronize)
+		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState ([MaybeNull]string? value, ParameterAttributes synchronize)
 		{
 			var r   = JniEnvironment.Strings.NewString (value);
 			return new JniValueMarshalerState (r);

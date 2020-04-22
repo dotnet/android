@@ -1,0 +1,28 @@
+static Delegate? cb_bar;
+#pragma warning disable 0169
+static Delegate GetbarHandler ()
+{
+	if (cb_bar == null)
+		cb_bar = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, int>) n_bar);
+	return cb_bar;
+}
+
+static int n_bar (IntPtr jnienv, IntPtr native__this)
+{
+	var __this = global::Java.Lang.Object.GetObject<com.mypackage.foo> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+	return __this.bar ();
+}
+#pragma warning restore 0169
+
+// Metadata.xml XPath method reference: path="/api/package[@name='com.mypackage']/class[@name='foo']/method[@name='bar' and count(parameter)=0]"
+[Register ("bar", "()I", "GetbarHandler")]
+public virtual unsafe int bar ()
+{
+	const string __id = "bar.()I";
+	try {
+		var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, null);
+		return __rm;
+	} finally {
+	}
+}
+

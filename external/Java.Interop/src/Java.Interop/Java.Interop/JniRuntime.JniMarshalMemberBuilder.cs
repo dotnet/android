@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -203,7 +204,7 @@ namespace Java.Interop {
 			throw new NotSupportedException ();
 		}
 
-		public override JniValueMarshalerState CreateGenericArgumentState (IntPtr value, ParameterAttributes synchronize)
+		public override JniValueMarshalerState CreateGenericArgumentState ([MaybeNull]IntPtr value, ParameterAttributes synchronize)
 		{
 			throw new NotSupportedException ();
 		}
@@ -213,7 +214,7 @@ namespace Java.Interop {
 			throw new NotSupportedException ();
 		}
 
-		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (IntPtr value, ParameterAttributes synchronize)
+		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState ([MaybeNull]IntPtr value, ParameterAttributes synchronize)
 		{
 			throw new NotSupportedException ();
 		}

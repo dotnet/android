@@ -29,6 +29,7 @@ namespace MonoDroid.Generation
 		public string ManagedReturn { get; set; }
 		public string PropertyNameOverride { get; set; }
 		public string Return { get; set; }
+		public bool ReturnNotNull { get; set; }
 		public ReturnValue RetVal { get; set; }
 		public int SourceApiLevel { get; set; }
 
@@ -112,7 +113,7 @@ namespace MonoDroid.Generation
 
 		internal void FillReturnType ()
 		{
-			RetVal = new ReturnValue (this, Return, ManagedReturn, IsReturnEnumified);
+			RetVal = new ReturnValue (this, Return, ManagedReturn, IsReturnEnumified, ReturnNotNull);
 		}
 
 		internal string GetAdapterName (CodeGenerationOptions opt, string adapter)

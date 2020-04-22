@@ -68,7 +68,7 @@ namespace MonoDroid.Generation
 					sb.Append ("[global::Android.Runtime.GeneratedEnum] ");
 				if (p.Annotation != null)
 					sb.Append (p.Annotation);
-				sb.Append (opt.GetOutputName (p.Type));
+				sb.Append (opt.GetTypeReferenceName (p));
 				sb.Append (" ");
 				sb.Append (opt.GetSafeIdentifier (p.Name));
 			}

@@ -19,6 +19,7 @@ namespace MonoDroid.Generation
 		public ISymbol Symbol { get; private set; }
 		public string JavaName { get; set; }
 		public string Name { get; set; }
+		public bool NotNull { get; set; }
 		public Parameter SetterParameter { get; set; }
 		public string TypeName { get; set; }
 		public string Value { get; set; }

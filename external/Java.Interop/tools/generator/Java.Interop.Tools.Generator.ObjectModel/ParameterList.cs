@@ -43,7 +43,7 @@ namespace MonoDroid.Generation {
 			foreach (Parameter p in items) {
 				if (sb.Length > 0)
 					sb.Append (", ");
-				sb.Append (opt.GetSafeIdentifier (p.Name));
+				sb.Append (opt.GetSafeIdentifier (p.Name) + opt.GetNullForgiveness (p));
 			}
 			return sb.ToString ();
 		}
@@ -205,18 +205,17 @@ namespace MonoDroid.Generation {
 			}
 		}
 
-		public string JniNestedDerivedSignature {
-			get {
-				StringBuilder sb = new StringBuilder ();
-				foreach (Parameter p in items) {
-					if (p.Name == "__self") {
-						sb.Append ("L\" + global::Android.Runtime.JNIEnv.GetJniName (GetType ().DeclaringType) + \";");
-						continue;
-					}
-					sb.Append (p.JniType);
+		public string GetJniNestedDerivedSignature (CodeGenerationOptions opt)
+		{
+			StringBuilder sb = new StringBuilder ();
+			foreach (Parameter p in items) {
+				if (p.Name == "__self") {
+					sb.AppendFormat ("L\" + global::Android.Runtime.JNIEnv.GetJniName (GetType ().DeclaringType{0}) + \";", opt.NullForgivingOperator);
+					continue;
 				}
-				return sb.ToString ();
+				sb.Append (p.JniType);
 			}
+			return sb.ToString ();
 		}
 
 		public string SenderName {
@@ -236,7 +235,7 @@ namespace MonoDroid.Generation {
 					continue;
 				else if (sb.Length > 0)
 					sb.Append (", ");
-				sb.Append (opt.GetOutputName (p.Type));
+				sb.Append (opt.GetTypeReferenceName (p));
 				sb.Append (" ");
 				sb.Append (p.Name);
 			}

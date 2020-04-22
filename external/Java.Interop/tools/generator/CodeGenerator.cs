@@ -68,6 +68,7 @@ namespace Xamarin.Android.Binder
 				SupportInterfaceConstants = options.SupportInterfaceConstants,
 				SupportDefaultInterfaceMethods = options.SupportDefaultInterfaceMethods,
 				SupportNestedInterfaceTypes = options.SupportNestedInterfaceTypes,
+				SupportNullableReferenceTypes = options.SupportNullableReferenceTypes,
 			};
 			var resolverCache       = new TypeDefinitionCache ();
 

@@ -1,5 +1,8 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
@@ -33,7 +36,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 #endif
 	class JniTypeName
 	{
-		public string Type { get; internal set; }
+		public string? Type { get; internal set; }
 		public bool IsKeyword { get; internal set; }
 	}
 
@@ -45,7 +48,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 
 		public static PackageNamingPolicy PackageNamingPolicy { get; set; } = PackageNamingPolicy.LowercaseCrc64;
 
-		public static string ApplicationJavaClass { get; set; }
+		public static string? ApplicationJavaClass { get; set; }
 
 		public static JniTypeName Parse (string jniType)
 		{
@@ -72,9 +75,10 @@ namespace Java.Interop.Tools.TypeNameMappings
 		}
 
 		// as per: http://java.sun.com/j2se/1.5.0/docs/guide/jni/spec/types.html
-		static JniTypeName ExtractType (string signature, ref int index)
+		[return: NotNullIfNotNull ("signature")]
+		static JniTypeName? ExtractType (string? signature, ref int index)
 		{
-			if (index >= signature.Length)
+			if (signature is null || index >= signature.Length)
 				return null;
 			var i = index++;
 			switch (signature [i]) {
@@ -82,7 +86,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 					++i;
 					if (i >= signature.Length)
 						throw new InvalidOperationException ("Missing array type after '[' at index " + i + " in: " + signature);
-					JniTypeName r = ExtractType (signature, ref index);
+					var r = ExtractType (signature, ref index);
 					return new JniTypeName { Type = r.Type + "[]", IsKeyword = r.IsKeyword };
 				}
 				case 'B':
@@ -155,7 +159,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 				"java/lang/Object";
 		}
 
-		static string ToJniName (Type type, ExportParameterKind exportKind)
+		static string? ToJniName (Type type, ExportParameterKind exportKind)
 		{
 			if (type == null)
 				throw new ArgumentNullException ("type");
@@ -168,9 +172,9 @@ namespace Java.Interop.Tools.TypeNameMappings
 
 
 			if (!type.GetInterfaces ().Any (t => t.FullName == "Android.Runtime.IJavaObject"))
-				return GetSpecialExportJniType (type.FullName, exportKind);
+				return GetSpecialExportJniType (type.FullName!, exportKind);
 
-			return ToJniName (type, t => t.DeclaringType, t => t.Name, GetPackageName, t => {
+			return ToJniName (type, t => t.DeclaringType!, t => t.Name, GetPackageName, t => {
 				return ToJniNameFromAttributes (t);
 			}, _ => false);
 		}
@@ -194,10 +198,10 @@ namespace Java.Interop.Tools.TypeNameMappings
 		{
 			string assemblyName = GetAssemblyName (type.Assembly);
 			if (IsPackageNamePreservedForAssembly (assemblyName))
-				return type.Namespace.ToLowerInvariant ();
+				return type.Namespace!.ToLowerInvariant ();
 			switch (PackageNamingPolicy) {
 			case PackageNamingPolicy.Lowercase:
-				return type.Namespace.ToLowerInvariant ();
+				return type.Namespace!.ToLowerInvariant ();
 			case PackageNamingPolicy.LowercaseWithAssemblyName:
 				return "assembly_" + (assemblyName.Replace ('.', '_') + "." + type.Namespace).ToLowerInvariant ();
 			case PackageNamingPolicy.LowercaseCrc64:
@@ -213,7 +217,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 		/// </summary>
 		static string GetAssemblyName (Assembly assembly)
 		{
-			var name = assembly.FullName;
+			var name = assembly.FullName!;
 			int index = name.IndexOf (',');
 			if (index != -1) {
 				return name.Substring (0, index);
@@ -227,12 +231,12 @@ namespace Java.Interop.Tools.TypeNameMappings
 			int rank = 0;
 			while (type.IsArray) {
 				rank++;
-				elementType = type = type.GetElementType ();
+				elementType = type = type.GetElementType ()!;
 			}
 			return rank;
 		}
 
-		static string GetPrimitiveClass (Type type)
+		static string? GetPrimitiveClass (Type type)
 		{
 			if (type.IsEnum)
 				return GetPrimitiveClass (Enum.GetUnderlyingType (type));
@@ -261,7 +265,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 			return null;
 		}
 
-		static string GetSpecialExportJniType (string typeName, ExportParameterKind exportKind)
+		static string? GetSpecialExportJniType (string typeName, ExportParameterKind exportKind)
 		{
 			switch (exportKind) {
 			case ExportParameterKind.InputStream:
@@ -287,7 +291,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 		}
 
 		// Keep in sync with ToJniNameFromAttributes(TypeDefinition)
-		public static string ToJniNameFromAttributes (Type type)
+		public static string? ToJniNameFromAttributes (Type type)
 		{
 			var aa = (IJniNameProviderAttribute []) type.GetCustomAttributes (typeof (IJniNameProviderAttribute), inherit: false);
 			return aa.Length > 0 && !string.IsNullOrEmpty (aa [0].Name) ? aa [0].Name.Replace ('.', '/') : null;
@@ -305,11 +309,11 @@ namespace Java.Interop.Tools.TypeNameMappings
 		 * Callers of GetJniSignature() MUST check for `null` and behave
 		 * appropriately.
 		 */
-		static string GetJniSignature<T,P> (IEnumerable<P> parameters, Func<P,T> getParameterType, Func<P,ExportParameterKind> getExportKind, T returnType, ExportParameterKind returnExportKind, Func<T,ExportParameterKind,string> getJniTypeName, bool isConstructor)
+		static string? GetJniSignature<T,P> (IEnumerable<P> parameters, Func<P,T> getParameterType, Func<P,ExportParameterKind> getExportKind, T returnType, ExportParameterKind returnExportKind, Func<T,ExportParameterKind,string?> getJniTypeName, bool isConstructor)
 		{
 			StringBuilder sb = new StringBuilder ().Append ("(");
 			foreach (P p in parameters) {
-				string jniType = getJniTypeName (getParameterType (p), getExportKind (p));
+				var jniType = getJniTypeName (getParameterType (p), getExportKind (p));
 				if (jniType == null)
 					return null;
 				sb.Append (jniType);
@@ -318,7 +322,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 			if (isConstructor)
 				sb.Append ("V");
 			else {
-				string jniType = getJniTypeName (returnType, returnExportKind);
+				var jniType = getJniTypeName (returnType, returnExportKind);
 				if (jniType == null)
 					return null;
 				sb.Append (jniType);
@@ -326,7 +330,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 			return sb.ToString ();
 		}
 
-		static string GetJniTypeName<TR,TD> (TR typeRef, ExportParameterKind exportKind, Func<TR,TD> resolve, Func<TR,KeyValuePair<int,TR>> getArrayInfo, Func<TD,string> getFullName, Func<TD,ExportParameterKind,string> toJniName)
+		static string? GetJniTypeName<TR,TD> (TR typeRef, ExportParameterKind exportKind, Func<TR,TD> resolve, Func<TR,KeyValuePair<int,TR>> getArrayInfo, Func<TD,string> getFullName, Func<TD,ExportParameterKind,string?> toJniName)
 		{
 			TD ptype = resolve (typeRef);
 			var p = getArrayInfo (typeRef);
@@ -343,7 +347,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 				// Probably a (IntPtr, JniHandleOwnership) parameter; skip
 				return null;
 
-			string pJniName = toJniName (ptype, exportKind);
+			var pJniName = toJniName (ptype, exportKind);
 			if (pJniName == null) {
 				return null;
 			}
@@ -357,7 +361,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 			return ExportParameterKind.Unspecified;
 		}
 
-		public static string GetJniSignature (MethodInfo method)
+		public static string? GetJniSignature (MethodInfo method)
 		{
 			return GetJniSignature<Type,ParameterInfo> (method.GetParameters (),
 				p => p.ParameterType,
@@ -368,21 +372,21 @@ namespace Java.Interop.Tools.TypeNameMappings
 				method.IsConstructor);
 		}
 
-		public static string GetJniTypeName (Type typeRef)
+		public static string? GetJniTypeName (Type typeRef)
 		{
 			return GetJniTypeName (typeRef, ExportParameterKind.Unspecified);
 		}
 
-		internal static string GetJniTypeName (Type typeRef, ExportParameterKind exportKind)
+		internal static string? GetJniTypeName (Type typeRef, ExportParameterKind exportKind)
 		{
 			return GetJniTypeName<Type,Type> (typeRef, exportKind, t => t, t => {
 				Type etype;
 				int rank = GetArrayInfo (t, out etype);
 				return new KeyValuePair<int,Type> (rank, etype);
-			}, t => t.FullName, (t, k) => ToJniNameWhichShouldReplaceExistingToJniName (t, k));
+			}, t => t.FullName!, (t, k) => ToJniNameWhichShouldReplaceExistingToJniName (t, k));
 		}
 
-		static string ToJniNameWhichShouldReplaceExistingToJniName (Type type, ExportParameterKind exportKind)
+		static string? ToJniNameWhichShouldReplaceExistingToJniName (Type type, ExportParameterKind exportKind)
 		{
 			// we need some method that exactly does the same as ToJniName(TypeDefinition)
 			var ret = ToJniNameFromAttributes (type);
@@ -407,7 +411,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 		public static bool IsApplication (TypeDefinition type) =>
 			IsApplication (type, cache: null);
 
-		public static bool IsApplication (TypeDefinition type, TypeDefinitionCache cache)
+		public static bool IsApplication (TypeDefinition type, TypeDefinitionCache? cache)
 		{
 			return type.GetBaseTypes (cache).Any (b => b.FullName == "Android.App.Application");
 		}
@@ -416,17 +420,17 @@ namespace Java.Interop.Tools.TypeNameMappings
 		public static bool IsInstrumentation (TypeDefinition type) =>
 			IsInstrumentation (type, cache: null);
 
-		public static bool IsInstrumentation (TypeDefinition type, TypeDefinitionCache cache)
+		public static bool IsInstrumentation (TypeDefinition type, TypeDefinitionCache? cache)
 		{
 			return type.GetBaseTypes (cache).Any (b => b.FullName == "Android.App.Instrumentation");
 		}
 
 		// moved from JavaTypeInfo
 		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
-		public static string GetJniSignature (MethodDefinition method) =>
+		public static string? GetJniSignature (MethodDefinition method) =>
 			GetJniSignature (method, cache: null);
 
-		public static string GetJniSignature (MethodDefinition method, TypeDefinitionCache cache)
+		public static string? GetJniSignature (MethodDefinition method, TypeDefinitionCache? cache)
 		{
 			return GetJniSignature<TypeReference,ParameterDefinition> (
 				method.Parameters,
@@ -440,15 +444,15 @@ namespace Java.Interop.Tools.TypeNameMappings
 
 		// moved from JavaTypeInfo
 		[Obsolete ("Use the TypeDefinitionCache overload for better performance.")]
-		public static string GetJniTypeName (TypeReference typeRef) =>
+		public static string? GetJniTypeName (TypeReference typeRef) =>
 			GetJniTypeName (typeRef, cache: null);
 
-		public static string GetJniTypeName (TypeReference typeRef, TypeDefinitionCache cache)
+		public static string? GetJniTypeName (TypeReference typeRef, TypeDefinitionCache? cache)
 		{
 			return GetJniTypeName (typeRef, ExportParameterKind.Unspecified, cache);
 		}
 
-		internal static string GetJniTypeName (TypeReference typeRef, ExportParameterKind exportKind, TypeDefinitionCache cache)
+		internal static string? GetJniTypeName (TypeReference typeRef, ExportParameterKind exportKind, TypeDefinitionCache? cache)
 		{
 			return GetJniTypeName<TypeReference, TypeDefinition> (typeRef, exportKind, t => t.Resolve (), t => {
 				TypeReference etype;
@@ -461,7 +465,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 		public static string ToCompatJniName (TypeDefinition type) =>
 			ToCompatJniName (type, cache: null);
 
-		public static string ToCompatJniName (TypeDefinition type, TypeDefinitionCache cache)
+		public static string ToCompatJniName (TypeDefinition type, TypeDefinitionCache? cache)
 		{
 			return ToJniName (type, t => t.DeclaringType, t => t.Name, ToCompatPackageName, ToJniNameFromAttributes, t => IsNonStaticInnerClass (t as TypeDefinition, cache));
 		}
@@ -475,13 +479,13 @@ namespace Java.Interop.Tools.TypeNameMappings
 		public static string ToJniName (TypeDefinition type) =>
 			ToJniName (type, cache: null);
 
-		public static string ToJniName (TypeDefinition type, TypeDefinitionCache cache)
+		public static string ToJniName (TypeDefinition type, TypeDefinitionCache? cache)
 		{
 			return ToJniName (type, ExportParameterKind.Unspecified, cache) ??
 				"java/lang/Object";
 		}
 
-		static string ToJniName (TypeDefinition type, ExportParameterKind exportKind, TypeDefinitionCache cache)
+		static string? ToJniName (TypeDefinition type, ExportParameterKind exportKind, TypeDefinitionCache? cache)
 		{
 			if (type == null)
 				throw new ArgumentNullException ("type");
@@ -499,13 +503,13 @@ namespace Java.Interop.Tools.TypeNameMappings
 			return ToJniName (type, t => t.DeclaringType, t => t.Name, t => GetPackageName (t, cache), ToJniNameFromAttributes, t => IsNonStaticInnerClass (t as TypeDefinition, cache));
 		}
 
-		static string ToJniNameFromAttributes (TypeDefinition type)
+		static string? ToJniNameFromAttributes (TypeDefinition type)
 		{
 			#region CustomAttribute alternate name support
 			var attrs = type.CustomAttributes.Where (a => a.AttributeType.Resolve ().Interfaces.Any (it => it.InterfaceType.FullName == typeof (IJniNameProviderAttribute).FullName));
 			return attrs.Select (attr => {
 				var ap = attr.Properties.FirstOrDefault (p => p.Name == "Name");
-				string name = null;
+				string? name = null;
 				if (ap.Name == null) {
 					var ca = attr.ConstructorArguments.FirstOrDefault ();
 					if (ca.Type == null || ca.Type.FullName != "System.String")
@@ -533,7 +537,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 			return rank;
 		}
 
-		static string GetPrimitiveClass (Mono.Cecil.TypeDefinition type)
+		static string? GetPrimitiveClass (Mono.Cecil.TypeDefinition type)
 		{
 			if (type.IsEnum)
 				return GetPrimitiveClass (type.Fields.First (f => f.IsSpecialName).FieldType.Resolve ());
@@ -560,7 +564,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 		public static string GetPackageName (TypeDefinition type) =>
 			GetPackageName (type, cache: null);
 
-		public static string GetPackageName (TypeDefinition type, TypeDefinitionCache cache)
+		public static string GetPackageName (TypeDefinition type, TypeDefinitionCache? cache)
 		{
 			if (IsPackageNamePreservedForAssembly (type.GetPartialAssemblyName (cache)))
 				return type.Namespace.ToLowerInvariant ();
@@ -578,11 +582,11 @@ namespace Java.Interop.Tools.TypeNameMappings
 		}
 #endif
 
-		static string ToJniName<T> (T type, Func<T, T> decl, Func<T, string> name, Func<T, string> ns, Func<T, string> overrideName, Func<T,bool> shouldUpdateName)
+		static string ToJniName<T> (T type, Func<T, T> decl, Func<T, string> name, Func<T, string> ns, Func<T, string?> overrideName, Func<T,bool> shouldUpdateName)
 			where T : class
 		{
 			var nameParts   = new List<string> ();
-			var typeName    = (string) null;
+			var typeName    = (string?) null;
 			var nsType      = type;
 
 			for (var declType = type ; declType != null; declType = decl (declType)) {
@@ -617,7 +621,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 		}
 
 #if HAVE_CECIL
-		internal static bool IsNonStaticInnerClass (TypeDefinition type, TypeDefinitionCache cache)
+		internal static bool IsNonStaticInnerClass (TypeDefinition? type, TypeDefinitionCache? cache)
 		{
 			if (type == null)
 				return false;
@@ -631,7 +635,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 				.Any (ctor => ctor.Parameters.Any (p => p.Name == "__self"));
 		}
 
-		static IEnumerable<MethodDefinition> GetBaseConstructors (TypeDefinition type, TypeDefinitionCache cache)
+		static IEnumerable<MethodDefinition> GetBaseConstructors (TypeDefinition type, TypeDefinitionCache? cache)
 		{
 			var baseType = type.GetBaseTypes (cache).FirstOrDefault (t => t.GetCustomAttributes (typeof (RegisterAttribute)).Any ());
 			if (baseType != null)

@@ -155,7 +155,7 @@ namespace Java.Interop {
 			}
 
 			// `type` will NOT be an array type.
-			protected virtual string GetSimpleReference (Type type)
+			protected virtual string? GetSimpleReference (Type type)
 			{
 				return GetSimpleReferences (type).FirstOrDefault ();
 			}

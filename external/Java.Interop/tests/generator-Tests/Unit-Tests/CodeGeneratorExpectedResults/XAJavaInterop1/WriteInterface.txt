@@ -39,7 +39,7 @@ public partial interface IMyInterface : IJavaObject, IJavaPeerable {
 		[Register ("set_Count", "(I)V", "Getset_Count_IHandler:java.code.IMyInterfaceInvoker, ")] set;
 	}
 
-	java.lang.String Key {
+	string Key {
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='get_Key' and count(parameter)=0]"
 		[Register ("get_Key", "()Ljava/lang/String;", "Getget_KeyHandler:java.code.IMyInterfaceInvoker, ")] get;
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='set_Key' and count(parameter)=1 and parameter[1][@type='java.lang.String']]"

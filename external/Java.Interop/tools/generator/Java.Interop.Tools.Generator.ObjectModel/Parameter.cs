@@ -18,13 +18,14 @@ namespace MonoDroid.Generation {
 		ISymbol sym;
 		bool is_enumified;
 
-		internal Parameter (string name, string type, string managedType, bool isEnumified, string rawtype = null)
+		internal Parameter (string name, string type, string managedType, bool isEnumified, string rawtype = null, bool notNull = false)
 		{
 			this.name = name;
 			this.type = type;
 			this.rawtype = rawtype ?? type;
 			this.managed_type = managedType;
 			this.is_enumified = isEnumified;
+			NotNull = notNull;
 		}
 		
 		public string GetCall (CodeGenerationOptions opt)
@@ -96,6 +97,8 @@ namespace MonoDroid.Generation {
 			get { return name; }
 			set { name = value; }
 		}
+
+		public bool NotNull { get; set; }
 
 		public string PropertyName {
 			get {
@@ -247,9 +250,10 @@ namespace MonoDroid.Generation {
 				return string.Format ("{0}.ToArray<{1}> ()", name, targetType.Replace ("[]",""));
 			}
 			var rgm = opt.SymbolTable.Lookup (targetType) as IRequireGenericMarshal;
-			return string.Format ("global::Java.Interop.JavaObjectExtensions.JavaCast<{0}>({1})",
+			return string.Format ("global::Java.Interop.JavaObjectExtensions.JavaCast<{0}>({1}){2}",
 					opt.GetOutputName (rgm != null ? (rgm.GetGenericJavaObjectTypeOverride () ?? targetType) : targetType),
-					name); 
+					name,
+					opt.NullForgivingOperator); 
 		}
 
 		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params, CodeGeneratorContext context)
@@ -265,5 +269,7 @@ namespace MonoDroid.Generation {
 			}
 			return true;
 		}
+
+		public ISymbol Symbol => sym;
 	}
 }

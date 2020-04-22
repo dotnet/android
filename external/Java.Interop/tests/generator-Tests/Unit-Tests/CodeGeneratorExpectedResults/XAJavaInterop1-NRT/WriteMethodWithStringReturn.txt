@@ -1,0 +1,28 @@
+static Delegate? cb_bar;
+#pragma warning disable 0169
+static Delegate GetbarHandler ()
+{
+	if (cb_bar == null)
+		cb_bar = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, IntPtr>) n_bar);
+	return cb_bar;
+}
+
+static IntPtr n_bar (IntPtr jnienv, IntPtr native__this)
+{
+	var __this = global::Java.Lang.Object.GetObject<com.mypackage.foo> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+	return JNIEnv.NewString (__this.bar ());
+}
+#pragma warning restore 0169
+
+// Metadata.xml XPath method reference: path="/api/package[@name='com.mypackage']/class[@name='foo']/method[@name='bar' and count(parameter)=0]"
+[Register ("bar", "()Ljava/lang/String;", "GetbarHandler")]
+public virtual unsafe string? bar ()
+{
+	const string __id = "bar.()Ljava/lang/String;";
+	try {
+		var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
+		return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+	} finally {
+	}
+}
+
