@@ -14,6 +14,8 @@ namespace Xamarin.ProjectTools
 		public string AndroidSdkPath { get; set; } = AndroidSdkResolver.GetAndroidSdkPath ();
 		public string AndroidNdkPath { get; set; } = AndroidSdkResolver.GetAndroidNdkPath ();
 
+		public string ProjectDirectory { get; private set; }
+
 		const string Executable = "dotnet";
 		readonly XASdkProject project;
 		readonly string projectOrSolution;
@@ -22,6 +24,7 @@ namespace Xamarin.ProjectTools
 		{
 			this.project = project;
 			this.projectOrSolution = projectOrSolution;
+			ProjectDirectory = Path.GetDirectoryName (projectOrSolution);
 		}
 
 		/// <summary>
