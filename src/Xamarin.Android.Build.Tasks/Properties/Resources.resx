@@ -559,6 +559,16 @@ In this message, "root element" refers to the root element of an XML file.
     <value>Error parsing XML: {0}</value>
     <comment>{0} - The exception message and stack trace of the associated exception</comment>
   </data>
+  <data name="XA4231" xml:space="preserve">
+    <value>The Android class parser value '{0}' is deprecated and will be removed in a future version of Xamarin.Android. Update the project properties to use 'class-parse'.</value>
+    <comment>The following are literal names and should not be translated: class-parse
+{0} - The name of the current class parser value</comment>
+  </data>
+  <data name="XA4232" xml:space="preserve">
+    <value>The Android code generation target '{0}' is deprecated and will be removed in a future version of Xamarin.Android. Update the project properties to use 'XAJavaInterop1'.</value>
+    <comment>The following are literal names and should not be translated: XAJavaInterop1
+{0} - The name of the current code generation target</comment>
+  </data>
   <data name="XA4300" xml:space="preserve">
     <value>Native library '{0}' will not be bundled because it has an unsupported ABI.</value>
     <comment>The abbreviation "ABI" should not be translated.

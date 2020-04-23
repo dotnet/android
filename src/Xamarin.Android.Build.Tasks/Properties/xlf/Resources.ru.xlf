@@ -537,6 +537,18 @@ In this message, "root element" refers to the root element of an XML file.
         <target state="new">Error parsing XML: {0}</target>
         <note>{0} - The exception message and stack trace of the associated exception</note>
       </trans-unit>
+      <trans-unit id="XA4231">
+        <source>The Android class parser value '{0}' is deprecated and will be removed in a future version of Xamarin.Android. Update the project properties to use 'class-parse'.</source>
+        <target state="new">The Android class parser value '{0}' is deprecated and will be removed in a future version of Xamarin.Android. Update the project properties to use 'class-parse'.</target>
+        <note>The following are literal names and should not be translated: class-parse
+{0} - The name of the current class parser value</note>
+      </trans-unit>
+      <trans-unit id="XA4232">
+        <source>The Android code generation target '{0}' is deprecated and will be removed in a future version of Xamarin.Android. Update the project properties to use 'XAJavaInterop1'.</source>
+        <target state="new">The Android code generation target '{0}' is deprecated and will be removed in a future version of Xamarin.Android. Update the project properties to use 'XAJavaInterop1'.</target>
+        <note>The following are literal names and should not be translated: XAJavaInterop1
+{0} - The name of the current code generation target</note>
+      </trans-unit>
       <trans-unit id="XA4300">
         <source>Native library '{0}' will not be bundled because it has an unsupported ABI.</source>
         <target state="translated">Собственная библиотека "{0}" не будет добавлена в пакет, так как она содержит неподдерживаемый ABI.</target>
