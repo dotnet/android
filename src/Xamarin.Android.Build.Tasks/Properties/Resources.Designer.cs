@@ -862,7 +862,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The Android class parser value &apos;{0}&apos; is deprecated and will be removed in a future version of Xamarin.Android. Update Project Properties to use &apos;class-parse&apos;..
+        ///   Looks up a localized string similar to The Android class parser value &apos;{0}&apos; is deprecated and will be removed in a future version of Xamarin.Android. Update the project properties to use &apos;class-parse&apos;..
         /// </summary>
         internal static string XA4231 {
             get {
@@ -871,7 +871,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The Android code generator value &apos;{0}&apos; is deprecated and will be removed in a future version of Xamarin.Android. Update Project Properties to use &apos;XAJavaInterop1&apos;..
+        ///   Looks up a localized string similar to The Android code generation target &apos;{0}&apos; is deprecated and will be removed in a future version of Xamarin.Android. Update the project properties to use &apos;XAJavaInterop1&apos;..
         /// </summary>
         internal static string XA4232 {
             get {
