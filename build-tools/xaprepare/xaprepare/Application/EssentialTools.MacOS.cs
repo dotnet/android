@@ -4,20 +4,30 @@ namespace Xamarin.Android.Prepare
 {
 	partial class EssentialTools : AppObject
 	{
-		public string BrewPath    { get; set; }
-		public string PkgutilPath { get; set; }
+		string brewPath;
+		string pkgutilPath;
+
+		public string BrewPath {
+			get => GetRequiredValue (brewPath, "brew");
+			set => brewPath = value;
+		}
+
+		public string PkgutilPath {
+			get => GetRequiredValue (pkgutilPath, "pkgutil");
+			set => pkgutilPath = value;
+		}
 
 		partial void InitOS (Context context)
 		{
 			Log.StatusLine ($"  {context.Characters.Bullet} homebrew", ConsoleColor.White);
-			if (String.IsNullOrEmpty (BrewPath))
+			if (String.IsNullOrEmpty (brewPath))
 				BrewPath = context.OS.Which ("brew", required: true);
-			Log.StatusLine ("     Found: ", BrewPath, tailColor: Log.DestinationColor);
+			ReportToolPath (brewPath);
 
 			Log.StatusLine ($"  {context.Characters.Bullet} pkgutil", ConsoleColor.White);
-			if (String.IsNullOrEmpty (PkgutilPath))
+			if (String.IsNullOrEmpty (pkgutilPath))
 				PkgutilPath = context.OS.Which ("/usr/sbin/pkgutil", required: true);
-			Log.StatusLine ($"    Found: ", PkgutilPath, tailColor: Log.DestinationColor);
+			ReportToolPath (pkgutilPath);
 
 			InitSharedUnixOS (context);
 		}
