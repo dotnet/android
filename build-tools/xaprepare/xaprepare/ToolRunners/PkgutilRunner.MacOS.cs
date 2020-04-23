@@ -7,7 +7,7 @@ namespace Xamarin.Android.Prepare
 {
 	partial class PkgutilRunner : ToolRunner
 	{
-		protected override string DefaultToolExecutableName => Context.Instance?.Tools?.PkgutilPath ?? "pkgutil";
+		protected override string DefaultToolExecutableName => GetToolExecutableName ();
 		protected override string ToolName                  => "PkgUtil";
 
 		public PkgutilRunner (Context context, Log log = null, string toolPath = null)
@@ -79,6 +79,16 @@ namespace Xamarin.Android.Prepare
 			}
 
 			return runner;
+		}
+
+		string GetToolExecutableName ()
+		{
+			EssentialTools tools = Context.Instance?.Tools;
+
+			if (tools != null && tools.IsInitialized)
+				return tools.PkgutilPath;
+
+			return "pkgutil";
 		}
 	}
 }
