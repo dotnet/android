@@ -14,6 +14,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 ***********************************************************************************************
 -->
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <UsingTask TaskName="Xamarin.Android.Tasks.AndroidWarning" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.ApiXmlAnalyzer" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.BindingsGenerator" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GetApiLevelFromFramework" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -133,8 +134,25 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 	</GetReferenceAssemblyPaths>
 </Target>
 
+  <!-- Warn about deprecated configurations.
+       Do it here because we want them to appear on every build,
+       even if we aren't rerunning generator -->
+  <Target Name="_WarnAboutDeprecatedConfigurations">
+    <AndroidWarning Code="XA4231"
+      ResourceName="XA4231"
+      FormatArguments="$(AndroidClassParser)"
+      Condition=" '$(AndroidClassParser)' != 'class-parse' "
+    />
+
+    <AndroidWarning Code="XA4232"
+      ResourceName="XA4232"
+      FormatArguments="$(AndroidCodegenTarget)"
+      Condition=" '$(AndroidCodegenTarget)' != 'XAJavaInterop1' "
+    />
+  </Target>
+
   <!-- Find all the needed SDKs -->
-  <Target Name="_ResolveMonoAndroidSdks" DependsOnTargets="_ResolveMonoAndroidFramework">
+  <Target Name="_ResolveMonoAndroidSdks" DependsOnTargets="_ResolveMonoAndroidFramework;_WarnAboutDeprecatedConfigurations">
 
     <Error Text="Could not locate Android SDK." Condition="'$(_AndroidSdkDirectory)'==''" />
     <Error Text="Could not locate Java 6 or 7 SDK.  (Download from http://www.oracle.com/technetwork/java/javase/downloads.)" Condition="'$(_JavaSdkDirectory)'==''" />
