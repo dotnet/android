@@ -215,9 +215,9 @@ shutdown-compiler-server:
 	$(eval pid=$(shell sh -c "pgrep -lfi VBCSCompiler.exe 2>/dev/null" | awk '{ print $$1 }'))
 	@echo "VBCSCompiler process ID (if running): $(pid)" ;\
 	if [[ -n "$(pid)" ]]; then \
-		echo "VBCSCompiler.exe process '$(pid)' is running. Destroying process prior to updating mono"; \
-		pgrep -lfi VBCSCompiler.exe; \
-		kill -HUP $(pid); \
+		echo "VBCSCompiler.exe process '$(pid)' is running. Destroying process prior to updating mono" ;\
+		pgrep -lfi VBCSCompiler.exe ;\
+		kill -HUP $(pid) ;\
 	fi
 
 .PHONY: prepare-update-mono
