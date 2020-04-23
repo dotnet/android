@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -12,17 +13,17 @@ namespace Android.Runtime
 
 		internal    static  IJavaObjectValueMarshaler              Instance    = new IJavaObjectValueMarshaler ();
 
-		public override IJavaObject CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		public override IJavaObject CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
 		{
 			throw new NotImplementedException ();
 		}
 
-		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (IJavaObject value, ParameterAttributes synchronize)
+		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState ([MaybeNull]IJavaObject value, ParameterAttributes synchronize)
 		{
 			throw new NotImplementedException ();
 		}
 
-		public override void DestroyGenericArgumentState (IJavaObject value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+		public override void DestroyGenericArgumentState ([AllowNull]IJavaObject value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
 		{
 			throw new NotImplementedException ();
 		}
@@ -36,7 +37,7 @@ namespace Android.Runtime
 				sourceValue);
 		}
 
-		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type targetType)
+		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type? targetType)
 		{
 			var r   = Expression.Variable (targetType, sourceValue.Name + "_val");
 			context.LocalVariables.Add (r);

@@ -6,9 +6,9 @@ namespace Android.Hardware {
 
 	public partial class SensorManager {
 
-		public static SensorManager FromContext (Context context)
+		public static SensorManager? FromContext (Context context)
 		{
-			return context.GetSystemService (Context.SensorService) as SensorManager;
+			return context.GetSystemService (Context.SensorService!) as SensorManager;
 		}
 	}
 }

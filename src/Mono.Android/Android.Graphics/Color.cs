@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -404,7 +405,7 @@ namespace Android.Graphics
 			throw new NotImplementedException ();
 		}
 
-		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (Color value, ParameterAttributes synchronize)
+		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState ([MaybeNull]Color value, ParameterAttributes synchronize)
 		{
 			throw new NotImplementedException ();
 		}

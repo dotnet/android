@@ -8,9 +8,9 @@ namespace Android.Runtime {
 #endif  // !JCW_ONLY_TYPE_NAMES
 	sealed class RegisterAttribute : Attribute, Java.Interop.IJniNameProviderAttribute {
 
-		string connector;
+		string? connector;
 		string name;
-		string signature;
+		string? signature;
 
 		public RegisterAttribute (string name)
 		{
@@ -24,7 +24,7 @@ namespace Android.Runtime {
 			this.signature = signature;
 		}
 
-		public string Connector {
+		public string? Connector {
 			get { return connector; }
 			set { connector = value; }
 		}
@@ -34,7 +34,7 @@ namespace Android.Runtime {
 			set { name = value; }
 		}
 
-		public string Signature {
+		public string? Signature {
 			get { return signature; }
 			set { signature = value; }
 		}

@@ -9,7 +9,7 @@
     <RootNamespace>Android</RootNamespace>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
-    <NoWarn>0618;0809;0108;0114;0465</NoWarn>
+    <NoWarn>0618;0809;0108;0114;0465;8609;8610;8614;8617;8613;8764;8765;8766;8767</NoWarn>
     <LangVersion>latest</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DefineConstants>$(DefineConstants);JAVA_INTEROP</DefineConstants>
@@ -20,6 +20,7 @@
     <!-- @(Compile) ordering matters! See https://github.com/xamarin/java.interop/commit/d7dfa0bb7b03261d5eceb51ac22cd33aa15fa865 -->
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(TargetFramework)' == 'monoandroid10' ">

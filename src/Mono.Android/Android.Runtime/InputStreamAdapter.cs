@@ -42,7 +42,7 @@ namespace Android.Runtime {
 		}
 
 		[Preserve (Conditional=true)]
-		public static IntPtr ToLocalJniHandle (Stream value)
+		public static IntPtr ToLocalJniHandle (Stream? value)
 		{
 			if (value == null)
 				return IntPtr.Zero;

@@ -45,7 +45,7 @@ namespace Java.Lang {
 
 		public override string ToString ()
 		{
-			return JNIEnv.GetCharSequence (Handle, JniHandleOwnership.DoNotTransfer);
+			return JNIEnv.GetCharSequence (Handle, JniHandleOwnership.DoNotTransfer)!;
 		}
 	}
 }

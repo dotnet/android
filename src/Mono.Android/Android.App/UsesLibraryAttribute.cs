@@ -25,7 +25,7 @@ namespace Android.App {
 			Required = required;
 		}
 
-		public string                 Name                    {get; set;}
+		public string?                Name                    {get; set;}
 		public bool                   Required                {get; set;}
 	}
 }

@@ -6,7 +6,7 @@ namespace Android.App {
 
 	public partial class ActivityManager {
 
-		public static ActivityManager FromContext (Context context)
+		public static ActivityManager? FromContext (Context context)
 		{
 			return context.GetSystemService (Context.ActivityService) as ActivityManager;
 		}

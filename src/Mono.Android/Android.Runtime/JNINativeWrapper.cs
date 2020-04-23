@@ -7,9 +7,9 @@ using System.Threading;
 namespace Android.Runtime {
 	public static class JNINativeWrapper {
 
-		static MethodInfo mono_unhandled_exception_method;
-		static MethodInfo exception_handler_method;
-		static MethodInfo wait_for_bridge_processing_method;
+		static MethodInfo? mono_unhandled_exception_method;
+		static MethodInfo? exception_handler_method;
+		static MethodInfo? wait_for_bridge_processing_method;
 
 		static void get_runtime_types ()
 		{
@@ -52,11 +52,11 @@ namespace Android.Runtime {
 			var dynamic = new DynamicMethod (DynamicMethodNameCounter.GetUniqueName (), ret_type, param_types, typeof (DynamicMethodNameCounter), true);
 			var ig = dynamic.GetILGenerator ();
 
-			LocalBuilder retval = null;
+			LocalBuilder? retval = null;
 			if (ret_type != typeof (void))
 				retval = ig.DeclareLocal (ret_type);
 
-			ig.Emit (OpCodes.Call, wait_for_bridge_processing_method);
+			ig.Emit (OpCodes.Call, wait_for_bridge_processing_method!);
 
 			var label = ig.BeginExceptionBlock ();
 
@@ -73,15 +73,15 @@ namespace Android.Runtime {
 			if (filter) {
 				ig.BeginExceptFilterBlock ();
 
-				ig.Emit (OpCodes.Call, mono_unhandled_exception_method);
+				ig.Emit (OpCodes.Call, mono_unhandled_exception_method!);
 				ig.Emit (OpCodes.Ldc_I4_1);
-				ig.BeginCatchBlock (null);
+				ig.BeginCatchBlock (null!);
 			} else {
 				ig.BeginCatchBlock (typeof (Exception));
 			}
 
 			ig.Emit (OpCodes.Dup);
-			ig.Emit (OpCodes.Call, exception_handler_method);
+			ig.Emit (OpCodes.Call, exception_handler_method!);
 
 			if (filter)
 				ig.Emit (OpCodes.Throw);

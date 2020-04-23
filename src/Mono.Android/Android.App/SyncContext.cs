@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 
 using Android.OS;
@@ -13,10 +14,10 @@ namespace Android.App {
 			return new SyncContext ();
 		}
 
-		static bool EnsureLooper (Looper looper, SendOrPostCallback d)
+		static bool EnsureLooper ([NotNullWhen (true)]Looper? looper, SendOrPostCallback d)
 		{
 			if (looper == null) {
-				var message = $"No Android message loop is available. Skipping invocation of `{d.Method.DeclaringType.FullName}.{d.Method.Name}`!";
+				var message = $"No Android message loop is available. Skipping invocation of `{d.Method.DeclaringType?.FullName}.{d.Method.Name}`!";
 				if (JNIEnv.IsRunningOnDesktop)
 					message += " Using `await` when running on the Android Designer is not currently supported. Please use the `View.IsInEditMode` property.";
 				Logger.Log (LogLevel.Error, "monodroid-synccontext", message);

@@ -6,10 +6,10 @@ namespace Android.App {
 
 	partial class Activity {
 
-		public T FindViewById<T> (int id)
+		public T? FindViewById<T> (int id)
 			where T : Android.Views.View
 		{
-			return this.FindViewById (id).JavaCast<T> ();
+			return this.FindViewById (id)!.JavaCast<T> ();
 		}
 
 		public void StartActivityForResult (Type activityType, int requestCode)

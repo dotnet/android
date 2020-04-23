@@ -14,7 +14,7 @@ namespace Android.App {
 		}
 
 		public string   Name {get; private set;}
-		public string   Resource {get; set;}
-		public string   Value {get; set;}
+		public string?  Resource {get; set;}
+		public string?  Value {get; set;}
 	}
 }

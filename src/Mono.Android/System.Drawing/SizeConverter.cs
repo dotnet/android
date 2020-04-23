@@ -71,7 +71,7 @@ namespace System.Drawing {
 		{
 			if (culture == null)
 				culture = CultureInfo.CurrentCulture;
-			string s = value as string;
+			var s = value as string;
 			if (s == null)
 				return base.ConvertFrom (context, culture, value);
 
@@ -106,7 +106,7 @@ namespace System.Drawing {
 					return size.Width.ToString (culture) + culture.TextInfo.ListSeparator 
 						+ " " + size.Height.ToString (culture);
 				} else if (destinationType == typeof (InstanceDescriptor)) {
-					ConstructorInfo ctor = typeof(Size).GetConstructor (new Type[] {typeof(int), typeof(int)});
+					var ctor = typeof(Size).GetConstructor (new Type[] {typeof(int), typeof(int)});
 					return new InstanceDescriptor (ctor, new object[] { size.Width, size.Height });
 				}
 			}
@@ -117,8 +117,8 @@ namespace System.Drawing {
 		public override object CreateInstance (ITypeDescriptorContext context,
 						       IDictionary propertyValues)
 		{
-			object ow = propertyValues ["Width"];
-			object oh = propertyValues ["Height"];
+			var ow = propertyValues ["Width"];
+			var oh = propertyValues ["Height"];
 			if ((ow == null) || (oh == null))
 				throw new ArgumentException ("propertyValues");
 

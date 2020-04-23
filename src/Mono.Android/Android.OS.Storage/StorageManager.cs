@@ -8,9 +8,9 @@ namespace Android.OS.Storage {
 
 	public partial class StorageManager {
 
-		public static StorageManager FromContext (Context context)
+		public static StorageManager? FromContext (Context context)
 		{
-			return context.GetSystemService (Context.StorageService) as StorageManager;
+			return context.GetSystemService (Context.StorageService!) as StorageManager;
 		}
 	}
 }

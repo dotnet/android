@@ -19,7 +19,7 @@ namespace Android.Runtime {
 		{
 		}
 
-		protected override bool UsesVirtualDispatch (IJavaPeerable value, Type declaringType)
+		protected override bool UsesVirtualDispatch (IJavaPeerable value, Type? declaringType)
 		{
 			var peerType  = GetThresholdType (value);
 			if (peerType != null) {
@@ -38,8 +38,7 @@ namespace Android.Runtime {
 
 			var jniClass  = Java.Interop.TypeManager.GetClassName (GetThresholdClass (value));
 			lock (LegacyPeerMembers) {
-				JniPeerMembers members;
-				if (!LegacyPeerMembers.TryGetValue (jniClass, out members)) {
+				if (!LegacyPeerMembers.TryGetValue (jniClass, out var members)) {
 					members = new XAPeerMembers (jniClass, peerType);
 					LegacyPeerMembers.Add (jniClass, members);
 				}
@@ -47,7 +46,7 @@ namespace Android.Runtime {
 			}
 		}
 
-		static Type GetThresholdType (IJavaPeerable value)
+		static Type? GetThresholdType (IJavaPeerable value)
 		{
 			var o = value as Java.Lang.Object;
 			if (o != null) {
