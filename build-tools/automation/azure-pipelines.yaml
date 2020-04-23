@@ -87,10 +87,7 @@ stages:
   # Check - "Xamarin.Android (Mac Build)"
   - job: mac_build_create_installers
     displayName: Build
-    # UNDONE: Test if build workflow still works against a newly re-imaged agent (bot)
-    # pool: $(MacMojaveBuildPool)
-    # pool: VSEng-Xamarin-RedmondMac-Android-Untrusted
-    pool: VSEng-Xamarin-RedmondMacMojaveBuildPool-Test
+    pool: $(MacMojaveBuildPool)
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
     workspace:
