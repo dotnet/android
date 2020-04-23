@@ -215,9 +215,9 @@ namespace generatortests
 
 	static class SupportTypeBuilder
 	{
-		public static TestClass CreateClass (string className, CodeGenerationOptions options)
+		public static TestClass CreateClass (string className, CodeGenerationOptions options, string baseClass = "Object")
 		{
-			var @class = new TestClass ("Object", className);
+			var @class = new TestClass (baseClass, className);
 
 			var ctor_name = className.Contains ('.') ? className.Substring (className.LastIndexOf ('.')) : className;
 			@class.Ctors.Add (CreateConstructor (@class, ctor_name, options));

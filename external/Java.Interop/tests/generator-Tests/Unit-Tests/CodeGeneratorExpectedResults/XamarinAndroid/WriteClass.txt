@@ -2,8 +2,8 @@
 [global::Android.Runtime.Register ("java/code/MyClass", DoNotGenerateAcw=true)]
 public partial class MyClass  {
 
-	internal static new IntPtr java_class_handle;
-	internal static new IntPtr class_ref {
+	internal static IntPtr java_class_handle;
+	internal static IntPtr class_ref {
 		get {
 			return JNIEnv.FindClass ("java/code/MyClass", ref java_class_handle);
 		}

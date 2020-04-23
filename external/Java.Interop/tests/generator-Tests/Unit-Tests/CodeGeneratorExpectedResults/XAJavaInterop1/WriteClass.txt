@@ -3,7 +3,7 @@
 public partial class MyClass  {
 
 	static readonly JniPeerMembers _members = new XAPeerMembers ("java/code/MyClass", typeof (MyClass));
-	internal static new IntPtr class_ref {
+	internal static IntPtr class_ref {
 		get {
 			return _members.JniPeerType.PeerReference.Handle;
 		}

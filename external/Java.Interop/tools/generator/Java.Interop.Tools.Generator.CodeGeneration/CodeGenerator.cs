@@ -126,15 +126,12 @@ namespace MonoDroid.Generation
 				writer.WriteLine ();
 			}
 
-			bool requireNew = @class.InheritsObject;
-			if (!requireNew) {
-				for (var bg = @class.BaseGen; bg != null && bg is ClassGen classGen && classGen.FromXml; bg = bg.BaseGen) {
-					if (bg.InheritsObject) {
-						requireNew = true;
-						break;
-					}
-				}
-			}
+			// @class.InheritsObject is true unless @class refers to java.lang.Object or java.lang.Throwable. (see ClassGen constructor)
+			// If @class's base class is defined in the same api.xml file, then it requires the new keyword to overshadow the internal
+			// members of its baseclass since the two classes will be defined in the same assembly. If the base class is not from the
+			// same api.xml file, the new keyword is not needed because the internal access modifier already prevents it from being seen.
+			bool baseFromSameAssembly = @class?.BaseGen?.FromXml ?? false;
+			bool requireNew = @class.InheritsObject && baseFromSameAssembly;
 			WriteClassHandle (@class, indent, requireNew);
 
 			WriteClassConstructors (@class, indent + "\t");
