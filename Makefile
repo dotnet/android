@@ -210,9 +210,14 @@ prepare-help: prepare-build
 
 .PHONY: prepare-update-mono
 prepare-update-mono: prepare-build
-	pgrep -lfi VBCSCompiler.exe
+	# Ensure VBCSCompiler.exe process isn't running during the mono update
+	# pgrep -lfi VBCSCompiler.exe
+	$(eval pid=$(shell sh -c "pgrep VBCSCompiler.exe 2>/dev/null" | awk '{ print $$1 }'))
+ifeq ($(pid),)
+	@echo "VBCSCompiler.exe process '$(pid)' is running. Killing process prior to mono update ..."
+	kill -HUP $(pid)
+endif
 	mono --debug $(PREPARE_EXE) $(_PREPARE_ARGS) -s:UpdateMono
-	pgrep -lfi VBCSCompiler.exe
 
 prepare-external-git-dependencies: prepare-build
 	mono --debug $(PREPARE_EXE) $(_PREPARE_ARGS) -s:PrepareExternalGitDependencies
