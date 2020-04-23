@@ -212,12 +212,12 @@ prepare-help: prepare-build
 shutdown-compiler-server:
 	# Ensure the VBCSCompiler.exe process isn't running during the mono update
 	pgrep -lfi VBCSCompiler.exe 2>/dev/null || true
-	$(eval pid=$(shell sh -c "pgrep -lfi VBCSCompiler.exe 2>/dev/null" | awk '{ print $$1 }'))
-	@echo "VBCSCompiler process ID (if running): $(pid)" ;\
-	if [[ -n "$(pid)" ]]; then \
-		echo "Terminating the VBCSCompiler '$(pid)' server process prior to updating mono" ;\
+	@pid=`pgrep -lfi VBCSCompiler.exe 2>/dev/null | awk '{ print $$1 }'` ; \
+	echo "VBCSCompiler process ID (if running): $$pid" ;\
+	if [[ -n "$$pid" ]]; then \
+		echo "Terminating the VBCSCompiler '$$pid' server process prior to updating mono" ; \
 		exitCode=0 ;\
-		kill -HUP $(pid) 2>/dev/null || exitCode=$$? ;\
+		kill -HUP $$pid 2>/dev/null || exitCode=$$? ;\
 		if [[ $$exitCode -eq 0 ]]; then \
 			sleep 2 ;\
 			pgrep -lfi VBCSCompiler.exe 2>/dev/null&&echo "ERROR: VBCSCompiler server still exists" || echo "Verified that the VBCSCompiler server process no longer exists" ;\
