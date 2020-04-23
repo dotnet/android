@@ -216,8 +216,9 @@ shutdown-compiler-server:
 	@echo "VBCSCompiler process ID (if running): $(pid)" ;\
 	if [[ -n "$(pid)" ]]; then \
 		echo "Terminating the VBCSCompiler '$(pid)' server process prior to updating mono" ;\
-		pgrep -lfi VBCSCompiler.exe ;\
 		kill -HUP $(pid) 2>/dev/null ;\
+		echo "VBCSCompiler server process should no longer exist" ;\
+		pgrep -lfi VBCSCompiler.exe 2>/dev/null || true ;\
 	fi
 
 .PHONY: prepare-update-mono
