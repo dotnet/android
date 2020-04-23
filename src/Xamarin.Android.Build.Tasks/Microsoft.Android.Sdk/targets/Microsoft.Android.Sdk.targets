@@ -20,4 +20,7 @@
     <ProjectCapability Include="AndroidApplication" Condition="$(AndroidApplication)" />
   </ItemGroup>
 
+  <!-- NOTE: We have to replace the Run target after Microsoft.NET.Sdk.targets are imported -->
+  <Target Name="Run" DependsOnTargets="Publish;Install;StartAndroidActivity" />
+
 </Project>
