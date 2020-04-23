@@ -5,6 +5,7 @@
     <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />
@@ -27,6 +28,9 @@
     </Compile>
     <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64.Table.cs">
       <Link>Crc64.Table.cs</Link>
+    </Compile>
+    <Compile Include="..\..\external\Java.Interop\src\Java.Interop\NullableAttributes.cs">
+      <Link>NullableAttributes.cs</Link>
     </Compile>
   </ItemGroup>
 

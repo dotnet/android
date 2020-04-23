@@ -1,7 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-
+using System.Diagnostics.CodeAnalysis;
 using Android.Runtime;
 
 using Java.Interop;
@@ -9,6 +9,7 @@ using Java.Interop;
 namespace Android.Runtime {
 
 	[Register ("java/util/HashSet", DoNotGenerateAcw=true)]
+	// java.util.HashSet allows null values
 	public class JavaSet : Java.Lang.Object, ICollection {
 
 		internal static IntPtr set_class = JNIEnv.FindClass ("java/util/Set");
@@ -24,7 +25,7 @@ namespace Android.Runtime {
 				id_iterator = JNIEnv.GetMethodID (set_class, "iterator", "()Ljava/util/Iterator;");
 			return Java.Lang.Object.GetObject<Java.Util.IIterator> (
 					JNIEnv.CallObjectMethod (Handle, id_iterator),
-					JniHandleOwnership.TransferLocalRef);
+					JniHandleOwnership.TransferLocalRef)!;
 		}
 
 		internal static IntPtr id_ctor;
@@ -71,7 +72,7 @@ namespace Android.Runtime {
 				throw new ArgumentNullException ("items");
 			}
 
-			foreach (object item in items)
+			foreach (object? item in items)
 				Add (item);
 		}
 
@@ -106,7 +107,7 @@ namespace Android.Runtime {
 			get { return false; }
 		}
 
-		public object SyncRoot {
+		public object? SyncRoot {
 			get { return null; }
 		}
 
@@ -121,7 +122,7 @@ namespace Android.Runtime {
 		//
 		//     https://developer.android.com/reference/java/util/Set?hl=en#add(E)
 		//
-		public void Add (object item)
+		public void Add (object? item)
 		{
 			if (id_add == IntPtr.Zero)
 				id_add = JNIEnv.GetMethodID (set_class, "add", "(Ljava/lang/Object;)Z");
@@ -175,7 +176,7 @@ namespace Android.Runtime {
 		//
 		//     https://developer.android.com/reference/java/util/Set?hl=en#contains(java.lang.Object)
 		//
-		public bool Contains (object item)
+		public bool Contains (object? item)
 		{
 			if (id_contains == IntPtr.Zero)
 				id_contains = JNIEnv.GetMethodID (set_class, "contains", "(Ljava/lang/Object;)Z");
@@ -200,7 +201,7 @@ namespace Android.Runtime {
 				throw new ArgumentException ("array");
 
 			int i = 0;
-			foreach (object item in this)
+			foreach (object? item in this)
 				array.SetValue (item, array_index + i++);
 		}
 
@@ -220,7 +221,7 @@ namespace Android.Runtime {
 		//
 		//     https://developer.android.com/reference/java/util/Set?hl=en#remove(java.lang.Object)
 		//
-		public void Remove (object item)
+		public void Remove (object? item)
 		{
 			if (id_remove == IntPtr.Zero)
 				id_remove = JNIEnv.GetMethodID (set_class, "remove", "(Ljava/lang/Object;)Z");
@@ -238,12 +239,12 @@ namespace Android.Runtime {
 		}
 
 		[Preserve (Conditional=true)]
-		public static ICollection FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
+		public static ICollection? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
 
-			IJavaObject inst = (IJavaObject) Java.Lang.Object.PeekObject (handle);
+			var inst = (IJavaObject?) Java.Lang.Object.PeekObject (handle);
 			if (inst == null)
 				inst = new JavaSet (handle, transfer);
 			else
@@ -253,7 +254,7 @@ namespace Android.Runtime {
 		}
 		
 		[Preserve (Conditional=true)]
-		public static IntPtr ToLocalJniHandle (ICollection items)
+		public static IntPtr ToLocalJniHandle (ICollection? items)
 		{
 			if (items == null)
 				return IntPtr.Zero;
@@ -268,6 +269,7 @@ namespace Android.Runtime {
 	}
 
 	[Register ("java/util/HashSet", DoNotGenerateAcw=true)]
+	// java.util.HashSet allows null
 	public class JavaSet<T> : JavaSet, ICollection<T> {
 
 		//
@@ -387,9 +389,10 @@ namespace Android.Runtime {
 
 		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator ()
 		{
-			return GetEnumerator ();
+			return GetEnumerator ()!;
 		}
 
+		[return: MaybeNull]
 		public IEnumerator<T> GetEnumerator ()
 		{
 			return System.Linq.Extensions.ToEnumerator_Dispose<T> (Iterator ());
@@ -424,12 +427,12 @@ namespace Android.Runtime {
 		}
 
 		[Preserve (Conditional=true)]
-		public static ICollection<T> FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
+		public static ICollection<T>? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
 
-			IJavaObject inst = (IJavaObject) Java.Lang.Object.PeekObject (handle);
+			var inst = (IJavaObject?) Java.Lang.Object.PeekObject (handle);
 			if (inst == null)
 				inst = new JavaSet<T> (handle, transfer);
 			else
@@ -439,7 +442,7 @@ namespace Android.Runtime {
 		}
 
 		[Preserve (Conditional=true)]
-		public static IntPtr ToLocalJniHandle (ICollection<T> items)
+		public static IntPtr ToLocalJniHandle (ICollection<T>? items)
 		{
 			if (items == null)
 				return IntPtr.Zero;

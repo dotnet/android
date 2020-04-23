@@ -27,7 +27,7 @@ namespace Java.Lang {
 			if (!(typeof (IJavaObject).IsAssignableFrom (type)))
 				throw new ArgumentException ("type", "Type is not derived from a java type.");
 
-			return Java.Lang.Object.GetObject<Class> (JNIEnv.FindClass (type), JniHandleOwnership.TransferGlobalRef);
+			return Java.Lang.Object.GetObject<Class> (JNIEnv.FindClass (type), JniHandleOwnership.TransferGlobalRef)!;
 		}
 	}
 }

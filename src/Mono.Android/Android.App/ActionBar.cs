@@ -10,24 +10,24 @@ namespace Android.App {
 
 		public class TabEventArgs : EventArgs {
 
-			public TabEventArgs (FragmentTransaction fragmentTransaction)
+			public TabEventArgs (FragmentTransaction? fragmentTransaction)
 			{
 				FragmentTransaction = fragmentTransaction;
 			}
 
-			public FragmentTransaction FragmentTransaction {get; private set;}
+			public FragmentTransaction? FragmentTransaction {get; private set;}
 		}
 
 		partial class Tab {
 
-			WeakReference dispatcher;
+			WeakReference? dispatcher;
 			TabEventDispatcher Dispatcher {
 				get {
 					if (dispatcher == null || !dispatcher.IsAlive) {
 						dispatcher = new WeakReference (new TabEventDispatcher ());
-						SetTabListener ((TabEventDispatcher) dispatcher.Target);
+						SetTabListener ((TabEventDispatcher) dispatcher.Target!);
 					}
-					return (TabEventDispatcher) dispatcher.Target;
+					return (TabEventDispatcher) dispatcher.Target!;
 				}
 			}
 
@@ -71,25 +71,25 @@ namespace Android.App {
 			JNIEnv.FinishCreateInstance (Handle, "()V");
 		}
 
-		public EventHandler<ActionBar.TabEventArgs> TabReselected;
-		public EventHandler<ActionBar.TabEventArgs> TabSelected;
-		public EventHandler<ActionBar.TabEventArgs> TabUnselected;
+		public EventHandler<ActionBar.TabEventArgs>? TabReselected;
+		public EventHandler<ActionBar.TabEventArgs>? TabSelected;
+		public EventHandler<ActionBar.TabEventArgs>? TabUnselected;
 
-		public void OnTabReselected (ActionBar.Tab tab, FragmentTransaction ft)
+		public void OnTabReselected (ActionBar.Tab? tab, FragmentTransaction? ft)
 		{
 			var h = TabReselected;
 			if (h != null)
 				h (tab, new ActionBar.TabEventArgs (ft));
 		}
 
-		public void OnTabSelected (ActionBar.Tab tab, FragmentTransaction ft)
+		public void OnTabSelected (ActionBar.Tab? tab, FragmentTransaction? ft)
 		{
 			var h = TabSelected;
 			if (h != null)
 				h (tab, new ActionBar.TabEventArgs (ft));
 		}
 
-		public void OnTabUnselected (ActionBar.Tab tab, FragmentTransaction ft)
+		public void OnTabUnselected (ActionBar.Tab? tab, FragmentTransaction? ft)
 		{
 			var h = TabUnselected;
 			if (h != null)

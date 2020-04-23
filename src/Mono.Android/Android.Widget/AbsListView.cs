@@ -9,7 +9,7 @@ namespace Android.Widget {
 
 	partial class AbsListView {
 
-		static Delegate cb_getAdapter;
+		static Delegate? cb_getAdapter;
 #pragma warning disable 0169
 		static Delegate GetGetAdapterHandler ()
 		{
@@ -21,11 +21,11 @@ namespace Android.Widget {
 		static IntPtr id_getAdapter;
 		static IntPtr n_GetAdapter (IntPtr jnienv, IntPtr native__this)
 		{
-			var __this = global::Java.Lang.Object.GetObject<Android.Widget.AbsListView> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<Android.Widget.AbsListView> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
 			return JNIEnv.ToLocalJniHandle (__this.Adapter);
 		}
 
-		static Delegate cb_setAdapter_Landroid_widget_Adapter_;
+		static Delegate? cb_setAdapter_Landroid_widget_Adapter_;
 #pragma warning disable 0169
 		static Delegate GetSetAdapter_Landroid_widget_ListAdapter_Handler ()
 		{
@@ -36,12 +36,12 @@ namespace Android.Widget {
 
 		static void n_SetAdapter_Landroid_widget_ListAdapter_ (IntPtr jnienv, IntPtr native__this, IntPtr native_adapter)
 		{
-			AbsListView __this  = Java.Lang.Object.GetObject<Android.Widget.AbsListView> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var __this  = Java.Lang.Object.GetObject<Android.Widget.AbsListView> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
 			__this.Adapter      = Java.Interop.JavaConvert.FromJniHandle<IListAdapter> (native_adapter, JniHandleOwnership.DoNotTransfer);
 		}
 #pragma warning restore 0169
 
-		public abstract override IListAdapter Adapter {
+		public abstract override IListAdapter? Adapter {
 			[Register ("getAdapter", "()Landroid/widget/ListAdapter;", "GetGetAdapterHandler")]
 			get;
 			[Register ("setAdapter", "(Landroid/widget/ListAdapter;)V", "GetSetAdapter_Landroid_widget_ListAdapter_Handler")]
@@ -67,7 +67,7 @@ namespace Android.Widget {
 
 	internal partial class AbsListViewInvoker {
 
-		public unsafe override IListAdapter Adapter {
+		public unsafe override IListAdapter? Adapter {
 			get {
 				IntPtr value;
 #if JAVA_INTEROP

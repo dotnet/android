@@ -14,8 +14,8 @@ namespace Android.Content {
 		{
 		}
 
-		public string                 Path                    {get; set;}
-		public string                 PathPattern             {get; set;}
-		public string                 PathPrefix              {get; set;}
+		public string?                Path                    {get; set;}
+		public string?                PathPattern             {get; set;}
+		public string?                PathPrefix              {get; set;}
 	}
 }

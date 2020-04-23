@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using Android.Runtime;
 
 namespace Android.App {
@@ -8,6 +9,7 @@ namespace Android.App {
 		protected Dialog (Android.Content.Context context, bool cancelable, EventHandler cancelHandler) 
 			: this (context, cancelable, new Android.Content.IDialogInterfaceOnCancelListenerImplementor () { Handler = cancelHandler }) {}
 
+		[return: MaybeNull]
 		public T FindViewById<T> (int id)
 			where T : Android.Views.View
 		{

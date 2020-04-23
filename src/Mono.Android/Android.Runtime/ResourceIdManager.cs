@@ -30,7 +30,7 @@ namespace Android.Runtime
 			}
 		}
 
-		static Type GetResourceTypeFromAssembly (Assembly assembly)
+		static Type? GetResourceTypeFromAssembly (Assembly assembly)
 		{
 			foreach (var customAttribute in assembly.GetCustomAttributes (typeof (ResourceDesignerAttribute), true)) {
 				if (customAttribute is ResourceDesignerAttribute resourceDesignerAttribute && resourceDesignerAttribute.IsApplication) {

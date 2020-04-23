@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 
 namespace Android.Runtime
@@ -7,7 +7,7 @@ namespace Android.Runtime
 	{
 		public Java.IO.InputStream BaseInputStream {get; private set;}
 
-		protected Java.Nio.Channels.FileChannel BaseFileChannel {get; private set;}
+		protected Java.Nio.Channels.FileChannel? BaseFileChannel {get; private set;}
 
 		public InputStreamInvoker (Java.IO.InputStream stream)
 		{
@@ -16,7 +16,7 @@ namespace Android.Runtime
 
 			BaseInputStream = stream;
 
-			Java.IO.FileInputStream fileStream = stream as Java.IO.FileInputStream;
+			Java.IO.FileInputStream? fileStream = stream as Java.IO.FileInputStream;
 			if (fileStream != null)
 				BaseFileChannel = fileStream.Channel;
 		}
@@ -39,7 +39,6 @@ namespace Android.Runtime
 					BaseFileChannel = null;
 					BaseInputStream.Close ();
 					BaseInputStream.Dispose ();
-					BaseInputStream = null;
 				} catch (Java.IO.IOException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
 					throw new IOException (ex.Message, ex);
 				}
@@ -155,12 +154,12 @@ namespace Android.Runtime
 		}
 		
 		[Preserve (Conditional=true)]
-		public static Stream FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
+		public static Stream? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
 
-			IJavaObject inst = (IJavaObject) Java.Lang.Object.PeekObject (handle);
+			var inst = (IJavaObject?) Java.Lang.Object.PeekObject (handle);
 
 			if (inst == null)
 				inst = (IJavaObject) Java.Interop.TypeManager.CreateInstance (handle, transfer);

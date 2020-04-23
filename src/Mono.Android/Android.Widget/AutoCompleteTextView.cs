@@ -5,12 +5,13 @@ using Android.Runtime;
 namespace Android.Widget {
 	public partial class AutoCompleteTextView
 	{
-		List<EventHandler> selection_cleared;
+		List<EventHandler>? selection_cleared;
 		
-		void OnSelectionCleared (object o, Android.Widget.AdapterView.NothingSelectedEventArgs args)
+		void OnSelectionCleared (object? o, Android.Widget.AdapterView.NothingSelectedEventArgs args)
 		{
-			foreach (var h in selection_cleared)
-				h (o, EventArgs.Empty);
+			if (selection_cleared != null)
+				foreach (var h in selection_cleared)
+					h (o, EventArgs.Empty);
 		}
 		
 		[Obsolete ("Use NothingSelected event instead")]
@@ -23,7 +24,7 @@ namespace Android.Widget {
 				selection_cleared.Add (value);
 			}
 			remove {
-				selection_cleared.Remove (value);
+				selection_cleared?.Remove (value);
 			}
 		}
 	}

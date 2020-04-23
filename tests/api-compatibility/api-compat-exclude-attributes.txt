@@ -5,3 +5,6 @@ T:Java.Interop.JavaTypeParametersAttribute
 T:System.Runtime.CompilerServices.AsyncIteratorStateMachineAttribute
 T:System.Runtime.CompilerServices.AsyncStateMachineAttribute
 T:System.Runtime.CompilerServices.IteratorStateMachineAttribute
+
+T:System.Runtime.CompilerServices.NullableAttribute
+T:System.Runtime.CompilerServices.NullableContextAttribute

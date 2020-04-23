@@ -6,20 +6,20 @@ namespace Android.Text {
 
 	public class AfterTextChangedEventArgs : EventArgs {
 
-		public AfterTextChangedEventArgs (IEditable editable)
+		public AfterTextChangedEventArgs (IEditable? editable)
 		{
 			this.editable = editable;
 		}
 
-		IEditable editable;
-		public IEditable Editable {
+		IEditable? editable;
+		public IEditable? Editable {
 			get { return editable; }
 		}
 	}
 
 	public class TextChangedEventArgs : EventArgs {
 
-		public TextChangedEventArgs (IEnumerable<char> text, int start, int before, int after)
+		public TextChangedEventArgs (IEnumerable<char>? text, int start, int before, int after)
 		{
 			this.text = text;
 			this.start = start;
@@ -27,8 +27,8 @@ namespace Android.Text {
 			this.after = after;
 		}
 
-		IEnumerable<char> text;
-		public IEnumerable<char> Text {
+		IEnumerable<char>? text;
+		public IEnumerable<char>? Text {
 			get { return text; }
 		}
 
@@ -53,11 +53,11 @@ namespace Android.Text {
 	internal sealed class TextWatcherImplementor : Java.Lang.Object, ITextWatcher {
 
 		object inst;
-		public EventHandler<AfterTextChangedEventArgs> AfterTextChanged;
-		public EventHandler<TextChangedEventArgs> BeforeTextChanged;
-		public EventHandler<TextChangedEventArgs> TextChanged;
+		public EventHandler<AfterTextChangedEventArgs>? AfterTextChanged;
+		public EventHandler<TextChangedEventArgs>? BeforeTextChanged;
+		public EventHandler<TextChangedEventArgs>? TextChanged;
 
-		public TextWatcherImplementor (object inst, EventHandler<TextChangedEventArgs> changed_handler, EventHandler<TextChangedEventArgs> before_handler, EventHandler<AfterTextChangedEventArgs> after_handler)
+		public TextWatcherImplementor (object inst, EventHandler<TextChangedEventArgs>? changed_handler, EventHandler<TextChangedEventArgs>? before_handler, EventHandler<AfterTextChangedEventArgs>? after_handler)
 			: base (
 					JNIEnv.StartCreateInstance ("mono/android/text/TextWatcherImplementor", "()V"),
 					JniHandleOwnership.TransferLocalRef)
@@ -70,21 +70,21 @@ namespace Android.Text {
 			TextChanged = changed_handler;
 		}
 
-		void ITextWatcher.AfterTextChanged (Android.Text.IEditable s)
+		void ITextWatcher.AfterTextChanged (Android.Text.IEditable? s)
 		{
 			var h = AfterTextChanged;
 			if (h != null)
 				h (inst, new AfterTextChangedEventArgs (s));
 		}
 
-		void ITextWatcher.BeforeTextChanged (Java.Lang.ICharSequence s, int start, int before, int after)
+		void ITextWatcher.BeforeTextChanged (Java.Lang.ICharSequence? s, int start, int before, int after)
 		{
 			var h = BeforeTextChanged;
 			if (h != null)
 				h (inst, new TextChangedEventArgs (s, start, before, after));
 		}
 
-		void ITextWatcher.OnTextChanged (Java.Lang.ICharSequence s, int start, int before, int count)
+		void ITextWatcher.OnTextChanged (Java.Lang.ICharSequence? s, int start, int before, int count)
 		{
 			var h = TextChanged;
 			if (h != null)

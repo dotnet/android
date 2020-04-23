@@ -6,14 +6,14 @@ namespace Java.Interop {
 	public static class AndroidEventHelper {
 		
 		public static void AddEventHandler<TInterface, TImplementor> (
-				ref WeakReference implementor,
+				ref WeakReference? implementor,
 				Func<TImplementor> creator,
 				Action<TInterface> setListener,
 				Action<TImplementor> add)
-			where TImplementor : Java.Lang.Object, TInterface
+			where TImplementor : Java.Lang.Object, TInterface where TInterface : class
 		{
-			TImplementor impl = null;
-			if (implementor == null || (impl = (TImplementor) implementor.Target) == null) {
+			TImplementor? impl = null;
+			if (implementor == null || (impl = (TImplementor?) implementor.Target) == null) {
 				impl = creator ();
 				implementor = new WeakReference (impl, true);
 				setListener (impl);
@@ -22,14 +22,14 @@ namespace Java.Interop {
 		}
 
 		public static void RemoveEventHandler<TInterface, TImplementor> (
-				ref WeakReference implementor,
+				ref WeakReference? implementor,
 				Func<TImplementor, bool> empty,
-				Action<TInterface> setListener,
+				Action<TInterface?> setListener,
 				Action<TImplementor> remove)
-			where TImplementor : Java.Lang.Object, TInterface
+			where TImplementor : Java.Lang.Object, TInterface where TInterface : class
 		{
-			TImplementor impl = null;
-			if (implementor == null || (impl = (TImplementor) implementor.Target) == null)
+			TImplementor? impl = null;
+			if (implementor == null || (impl = (TImplementor?) implementor.Target) == null)
 				return;
 			remove (impl);
 			if (empty (impl)) {
