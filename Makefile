@@ -210,8 +210,7 @@ prepare-help: prepare-build
 
 .PHONY: prepare-update-mono
 prepare-update-mono: prepare-build
-	# Ensure VBCSCompiler.exe process isn't running during the mono update
-	# pgrep -lfi VBCSCompiler.exe
+	# Ensure the VBCSCompiler.exe process isn't running during the mono update
 	$(eval pid=$(shell sh -c "pgrep VBCSCompiler.exe 2>/dev/null" | awk '{ print $$1 }'))
 ifneq ($(pid),)
 	@echo "VBCSCompiler.exe process '$(pid)' is running. Killing process prior to mono update ..."
