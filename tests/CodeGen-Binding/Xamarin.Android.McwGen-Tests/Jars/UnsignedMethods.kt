@@ -52,12 +52,24 @@ open class UnsignedInterfaceImplementedMethods : UnsignedInterface {
 open class UnsignedAbstractImplementedMethods : UnsignedAbstractClass () {
     public override open fun unsignedAbstractMethod (value: UInt) : UInt { return value; }
 
+    public override open fun unsignedAbstractMethodUShort (value: UShort) : UShort { return value; }
+
+    public override open fun unsignedAbstractMethodULong (value: ULong) : ULong { return value; }
+
+    public override open fun unsignedAbstractMethodUByte (value: UByte) : UByte { return value; }
+
     override var unsignedAbstractClassProperty: UInt = 3u
 }
 
 @kotlin.ExperimentalUnsignedTypes
 abstract class UnsignedAbstractClass {
     abstract fun unsignedAbstractMethod (value: UInt) : UInt
+    
+    abstract fun unsignedAbstractMethodUShort (value: UShort) : UShort
+    
+    abstract fun unsignedAbstractMethodULong (value: ULong) : ULong
+    
+    abstract fun unsignedAbstractMethodUByte (value: UByte) : UByte
     
     abstract var unsignedAbstractClassProperty: UInt
 }
