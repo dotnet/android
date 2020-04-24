@@ -282,14 +282,24 @@ namespace Xamarin.Android.Net
 				if (ReadTimeout != TimeSpan.Zero)
 					java_connection!.ReadTimeout = checked ((int)ReadTimeout.TotalMilliseconds);
 
-				HttpURLConnection httpConnection = await SetupRequestInternal (request, java_connection!).ConfigureAwait (continueOnCapturedContext: false);;
-				var response = await ProcessRequest (request, java_url, httpConnection, cancellationToken, redirectState).ConfigureAwait (continueOnCapturedContext: false);;
-				if (response != null)
-					return response;
+				try {
+					HttpURLConnection httpConnection = await SetupRequestInternal (request, java_connection!).ConfigureAwait (continueOnCapturedContext: false);
+					HttpResponseMessage? response = await ProcessRequest (request, java_url, httpConnection, cancellationToken, redirectState).ConfigureAwait (continueOnCapturedContext: false);
+					if (response != null)
+						return response;
 
-				if (redirectState.NewUrl == null)
-					throw new InvalidOperationException ("Request redirected but no new URI specified");
-				request.Method = redirectState.Method;
+					if (redirectState.NewUrl == null)
+						throw new InvalidOperationException ("Request redirected but no new URI specified");
+					request.Method = redirectState.Method;
+				} catch (Java.Net.SocketTimeoutException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new WebException (ex.Message, ex, WebExceptionStatus.Timeout, null);
+				} catch (Java.Net.UnknownServiceException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new WebException (ex.Message, ex, WebExceptionStatus.ProtocolError, null);
+				} catch (Java.Lang.SecurityException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new WebException (ex.Message, ex, WebExceptionStatus.SecureChannelFailure, null);
+				} catch (Java.IO.IOException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+					throw new WebException (ex.Message, ex, WebExceptionStatus.UnknownError, null);
+				}
 			}
 		}
 
@@ -339,8 +349,11 @@ namespace Xamarin.Android.Net
 							if (t.Exception != null) Logger.Log(LogLevel.Info, LOG_APP, $"Disconnection exception: {t.Exception}");
 						}, TaskScheduler.Default)))
 						httpConnection?.Connect ();
-				} catch {
-					ct.ThrowIfCancellationRequested ();
+				} catch (Exception ex) {
+					if (ct.IsCancellationRequested) {
+						Logger.Log (LogLevel.Info, LOG_APP, $"Exception caught while cancelling connection: {ex}");
+						ct.ThrowIfCancellationRequested ();
+					}
 					throw;
 				}
 			}, ct);
@@ -449,8 +462,7 @@ namespace Xamarin.Android.Net
 				if (Logger.LogNet)
 					Logger.Log (LogLevel.Info, LOG_APP, $"Reading...");
 				ret.Content = GetContent (httpConnection, httpConnection.InputStream!);
-			}
-			else {
+			} else {
 				if (Logger.LogNet)
 					Logger.Log (LogLevel.Info, LOG_APP, $"Status code is {statusCode}, reading...");
 				// For 400 >= response code <= 599 the Java client throws the FileNotFound exception when attempting to read from the input stream.
@@ -818,7 +830,11 @@ namespace Xamarin.Android.Net
 			if (httpConnection == null)
 				throw new InvalidOperationException ($"Unsupported URL scheme {conn.URL?.Protocol}");
 
-			httpConnection.RequestMethod = request.Method.ToString ();
+			try {
+				httpConnection.RequestMethod = request.Method.ToString ();
+			} catch (Java.Net.ProtocolException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
+				throw new WebException (ex.Message, ex, WebExceptionStatus.ProtocolError, null);
+			}
 
 			// SSL context must be set up as soon as possible, before adding any content or
 			// headers. Otherwise Java won't use the socket factory
