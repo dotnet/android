@@ -73,7 +73,7 @@ stages:
         echo "make create-installers CONFIGURATION=$(XA.Build.Configuration) V=1 $(PREPARE_FLAGS) MSBUILD_ARGS='${msBuildArgs}'"
         make create-installers CONFIGURATION=$(XA.Build.Configuration) V=1 $(PREPARE_FLAGS) MSBUILD_ARGS='${msBuildArgs}'
       workingDirectory: $(Build.SourcesDirectory)
-      displayName: make all
+      displayName: create installers
 
       # make package-oss CONFIGURATION=${env.BuildFlavor} V=1
     - script: |
@@ -114,3 +114,4 @@ stages:
       # UNDONE: Publish error logs
 
       # UNDONE: Publish test results
+q
