@@ -67,8 +67,8 @@ stages:
       # make create-installers CONFIGURATION=${env.BuildFlavor} V=1 _MSBUILD_ARGS='${msbuildInstallerArgs}'
     - script: |
         msBuildArgs=''
-        if [[ "$(FULL_MONO_INTEGRATION_BUILD)" == "false" ]]; then
-          msbuildArgs='/p:IncludeMonoBundleComponents=False'
+        if [[ "$(FULL_MONO_INTEGRATION_BUILD)" != "true" ]]; then
+          msBuildArgs='/p:IncludeMonoBundleComponents=False'
         fi
         echo "make create-installers CONFIGURATION=$(XA.Build.Configuration) V=1 $(PREPARE_FLAGS) MSBUILD_ARGS='${msBuildArgs}'"
         make create-installers CONFIGURATION=$(XA.Build.Configuration) V=1 $(PREPARE_FLAGS) MSBUILD_ARGS='${msBuildArgs}'
