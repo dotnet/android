@@ -36,8 +36,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.CopyNuGetConfig (relativeProjDir);
 			var dotnet = new DotNetCLI (proj, Path.Combine (fullProjDir, proj.ProjectFilePath));
 
-			Assert.IsTrue (dotnet.Publish ("Install"), "`dotnet publish /t:Install` should succeed");
-			AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
+			Assert.IsTrue (dotnet.Run (), "`dotnet run` should succeed");
 			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
 				Path.Combine (fullProjDir, "logcat.log"), 30);
 			RunAdbCommand ($"uninstall {proj.PackageName}");

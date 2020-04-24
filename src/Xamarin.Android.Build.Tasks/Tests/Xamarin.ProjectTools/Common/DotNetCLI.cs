@@ -85,6 +85,13 @@ namespace Xamarin.ProjectTools
 			return Execute (arguments.ToArray ());
 		}
 
+		public bool Run ()
+		{
+			//TODO: this should eventually run `dotnet run --project foo.csproj`
+			var arguments = GetDefaultCommandLineArgs ("publish", "Run");
+			return Execute (arguments.ToArray ());
+		}
+
 		public IEnumerable<string> LastBuildOutput {
 			get {
 				if (!string.IsNullOrEmpty (BuildLogFile) && File.Exists (BuildLogFile)) {
