@@ -109,6 +109,7 @@ stages:
 
       # UNDONE: Publish packages
 
+      # Disabled
       # make run-performance-tests CONFIGURATION=${env.BuildFlavor} V=1
     - script: |
         exitCode=0
@@ -119,6 +120,7 @@ stages:
         fi
       workingDirectory: $(Build.SourcesDirectory)
       displayName: run performance tests
+      enabled: false
 
       # UNDONE: Publish error logs
 
