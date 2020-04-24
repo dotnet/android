@@ -6,6 +6,8 @@ variables:
   DotNetCoreVersion: 3.x
   # Version number from: https://dotnet.microsoft.com/download/dotnet-core/5.0
   DotNetCorePreviewVersion: 5.0.100-preview.1.20155.7
+  EXTRA_MSBUILD_ARGS: /p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False
+  PREPARE_FLAGS: PREPARE_CI=1 PREPARE_CI_PR=1
 
 pr:
   autoCancel: true
@@ -33,19 +35,22 @@ stages:
       submodules: recursive
 
     - task: UseDotNet@2
-      displayName: install .NET Core $(DotNetCorePreviewVersion)
-      inputs:
-        version: $(DotNetCorePreviewVersion)
-
-    - task: UseDotNet@2
       displayName: install .NET Core $(DotNetCoreVersion)
       inputs:
         version: $(DotNetCoreVersion)
 
-    - script: make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
+      # make prepare-update-mono CONFIGURATION=${env.BuildFlavor} V=1 ${prepareFlags} MSBUILD_ARGS='$EXTRA_MSBUILD_ARGS'
+    - script: make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'
       workingDirectory: $(Build.SourcesDirectory)
       displayName: make prepare-update-mono
 
-    - script: make jenkins V=1 PREPARE_CI_PR=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
+     # make prepare CONFIGURATION=${env.BuildFlavor} V=1 ${prepareFlags} MSBUILD_ARGS='$EXTRA_MSBUILD_ARGS'
+    - script: make prepare CONFIGURATION=$(XA.Build.Configuration) V=1 $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'
       workingDirectory: $(Build.SourcesDirectory)
-      displayName: make jenkins
+      displayName: make prepare
+
+      # UNDONE: Support for 'full-mono-integration-build' GitHub label? if set 'make jenkins'; otherwise, 'make all'
+      # make ${buildTarget} CONFIGURATION=${env.BuildFlavor} V=1 ${prepareFlags} MSBUILD_ARGS='$EXTRA_MSBUILD_ARGS'
+    - script: make all CONFIGURATION=$(XA.Build.Configuration) V=1 $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'
+      workingDirectory: $(Build.SourcesDirectory)
+      displayName: make all
