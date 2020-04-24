@@ -58,20 +58,27 @@ stages:
       # UNDONE: Support for 'full-mono-integration-build' GitHub label? if set 'make jenkins'; otherwise, 'make all'
       # make ${buildTarget} CONFIGURATION=${env.BuildFlavor} V=1 ${prepareFlags} MSBUILD_ARGS='$EXTRA_MSBUILD_ARGS'
     - script: |
-        echo "make all CONFIGURATION=$(XA.Build.Configuration) V=1 $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'"
-        make all CONFIGURATION=$(XA.Build.Configuration) V=1 $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'
+        # UNDONE: The commercial build does not include any logic to conditionally build 'all' or 'jenkins'. it always performs 'build jenkins'
+        # echo "make all CONFIGURATION=$(XA.Build.Configuration) V=1 $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'"
+        # make all CONFIGURATION=$(XA.Build.Configuration) V=1 $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'
+
+        echo "make jenkins V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1"
+        make jenkins V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
       workingDirectory: $(Build.SourcesDirectory)
       displayName: make all
 
       # def msbuildInstallerArgs = hasPrLabelFullMonoIntegrationBuild ? '' : '/p:IncludeMonoBundleComponents=False'
       # make create-installers CONFIGURATION=${env.BuildFlavor} V=1 _MSBUILD_ARGS='${msbuildInstallerArgs}'
     - script: |
-        msBuildArgs=''
-        if [[ "$(FULL_MONO_INTEGRATION_BUILD)" != "true" ]]; then
-          msBuildArgs='/p:IncludeMonoBundleComponents=False'
-        fi
-        echo "make create-installers CONFIGURATION=$(XA.Build.Configuration) V=1 $(PREPARE_FLAGS) MSBUILD_ARGS='${msBuildArgs}'"
-        make create-installers CONFIGURATION=$(XA.Build.Configuration) V=1 $(PREPARE_FLAGS) MSBUILD_ARGS='${msBuildArgs}'
+        # UNDONE: The commercial build always calls create-installers in the same way without condidtional logic for 'IncludeMonoBundleComponents'
+        # msBuildArgs=''
+        # if [[ "$(FULL_MONO_INTEGRATION_BUILD)" != "true" ]]; then
+        #  msBuildArgs='/p:IncludeMonoBundleComponents=False'
+        # fi
+        # echo "make create-installers CONFIGURATION=$(XA.Build.Configuration) V=1 $(PREPARE_FLAGS) MSBUILD_ARGS=${msBuildArgs}'
+        # make create-installers CONFIGURATION=$(XA.Build.Configuration) V=1 $(PREPARE_FLAGS) MSBUILD_ARGS=${msBuildArgs}
+        echo "make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)"
+        make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)
       workingDirectory: $(Build.SourcesDirectory)
       displayName: create installers
 
@@ -104,9 +111,11 @@ stages:
 
       # make run-performance-tests CONFIGURATION=${env.BuildFlavor} V=1
     - script: |
+        exitCode=0
         make run-performance-tests CONFIGURATION=$(XA.Build.Configuration) V=1 || exitCode=$?
         if [[ $exitCode -ne 0 ]]; then
           echo "ERROR: run-performance-tests FAILED, status: ${exitCode}"
+          exit $exitCode
         fi
       workingDirectory: $(Build.SourcesDirectory)
       displayName: package build status
