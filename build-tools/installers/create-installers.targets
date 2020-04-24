@@ -27,10 +27,10 @@
   </PropertyGroup>
   <ItemGroup>
     <_MsxDocAssembly Include="Mono.Android">
-      <SourceDir>$(_AndroidApiDocsPath)docs\%(Identity)\en\</SourceDir>
+      <SourceDir>$(_AndroidApiDocsPath)docs\%(Identity)\en</SourceDir>
     </_MsxDocAssembly>
     <_MonoDocAssembly Include="@(_MsxDocAssembly);OpenTK-1.0;Xamarin.Android.NUnitLite">
-      <SourceDir>$(_AndroidApiDocsPath)docs\%(Identity)\en\</SourceDir>
+      <SourceDir>$(_AndroidApiDocsPath)docs\%(Identity)\en</SourceDir>
     </_MonoDocAssembly>
     <_BclDocsAssembly Include="mscorlib;System.Core;System.ComponentModel.Composition;System.ComponentModel.DataAnnotations;System.Data;System" />
     <_BclDocsAssembly Include="System.EnterpriseServices;System.Json;System.Numerics;System.Runtime.Serialization;System.ServiceModel" />
@@ -45,15 +45,15 @@
   </Target>
   <Target Name="_FindDocSourceFiles">
     <ItemGroup>
-      <_MsxDocSourceFile Include="%(_MsxDocAssembly.SourceDir)**" />
-      <_MonoDocSourceFile Include="%(_MonoDocAssembly.SourceDir)**" />
+      <_MsxDocSourceFile Include="%(_MsxDocAssembly.SourceDir)\**" />
+      <_MonoDocSourceFile Include="%(_MonoDocAssembly.SourceDir)\**" />
     </ItemGroup>
   </Target>
   <Target Name="_GenerateMsxDocXmls"
       DependsOnTargets="_FindFrameworkDirs;_FindDocSourceFiles"
       Inputs="@(_MsxDocSourceFile)"
       Outputs="@(_MsxDocAssembly->'$(_LatestStableFrameworkDir)%(Identity).xml')">
-    <Exec Command="$(ManagedRuntime) &quot;$(MSBuildSrcDir)mdoc.exe&quot; --debug export-msxdoc -o &quot;$(_LatestStableFrameworkDir)%(_MsxDocAssembly.Identity).xml&quot; &quot;%(_MsxDocAssembly.SourceDir)\&quot;" />
+    <Exec Command="$(ManagedRuntime) &quot;$(MSBuildSrcDir)mdoc.exe&quot; --debug export-msxdoc -o &quot;$(_LatestStableFrameworkDir)%(_MsxDocAssembly.Identity).xml&quot; &quot;%(_MsxDocAssembly.SourceDir)&quot;" />
   </Target>
   <Target Name="_GenerateMsxDocXmlRedirects"
       DependsOnTargets="_FindFrameworkDirs"
@@ -69,7 +69,7 @@
       Inputs="@(_MonoDocSourceFile)"
       Outputs="$(_MonoDocOutputPath)MonoAndroid-lib.zip;$(_MonoDocOutputPath)MonoAndroid-lib.tree">
     <MakeDir Directories="$(_MonoDocOutputPath)"/>
-    <Exec Command="$(ManagedRuntime) &quot;$(MSBuildSrcDir)mdoc.exe&quot; --debug assemble -o &quot;$(_MonoDocOutputPath)MonoAndroid-lib&quot; @(_MonoDocAssembly->'&quot;%(SourceDir)\&quot;', ' ')" />
+    <Exec Command="$(ManagedRuntime) &quot;$(MSBuildSrcDir)mdoc.exe&quot; --debug assemble -o &quot;$(_MonoDocOutputPath)MonoAndroid-lib&quot; @(_MonoDocAssembly->'&quot;%(SourceDir)&quot;', ' ')" />
   </Target>
   <Target Name="_GenerateBclAssemblyDocXmlRedirects"
       Inputs="$(XamarinAndroidSourcePath)build-tools\scripts\redirect-BCL.xml.in"
