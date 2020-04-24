@@ -208,11 +208,27 @@ prepare: prepare-build
 prepare-help: prepare-build
 	mono --debug $(PREPARE_EXE) -h
 
+.PHONY: shutdown-compiler-server
+shutdown-compiler-server:
+	# Ensure the VBCSCompiler.exe process isn't running during the mono update
+	pgrep -lfi VBCSCompiler.exe 2>/dev/null || true
+	@pid=`pgrep -lfi VBCSCompiler.exe 2>/dev/null | awk '{ print $$1 }'` ; \
+	echo "VBCSCompiler process ID (if running): $$pid" ;\
+	if [[ -n "$$pid" ]]; then \
+		echo "Terminating the VBCSCompiler '$$pid' server process prior to updating mono" ; \
+		exitCode=0 ;\
+		kill -HUP $$pid 2>/dev/null || exitCode=$$? ;\
+		if [[ $$exitCode -eq 0 ]]; then \
+			sleep 2 ;\
+			pgrep -lfi VBCSCompiler.exe 2>/dev/null&&echo "ERROR: VBCSCompiler server still exists" || echo "Verified that the VBCSCompiler server process no longer exists" ;\
+		else \
+			echo "ERROR: Kill command failed with exit code $$exitCode" ;\
+		fi \
+	fi
+
 .PHONY: prepare-update-mono
-prepare-update-mono: prepare-build
-	pgrep -lfi VBCSCompiler.exe
+prepare-update-mono: prepare-build shutdown-compiler-server
 	mono --debug $(PREPARE_EXE) $(_PREPARE_ARGS) -s:UpdateMono
-	pgrep -lfi VBCSCompiler.exe
 
 prepare-external-git-dependencies: prepare-build
 	mono --debug $(PREPARE_EXE) $(_PREPARE_ARGS) -s:PrepareExternalGitDependencies
