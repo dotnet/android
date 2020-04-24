@@ -123,5 +123,8 @@ stages:
       enabled: false
 
       # UNDONE: Publish error logs
-
       # UNDONE: Publish test results
+
+    - template: yaml-templates/upload-results.yaml
+      parameters:
+        artifactName: Build Results - macOS
