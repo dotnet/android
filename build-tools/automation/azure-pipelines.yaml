@@ -50,7 +50,7 @@ variables:
   NUnitConsoleVersion: 3.9.0
   DotNetCoreVersion: 3.x
   # Version number from: https://dotnet.microsoft.com/download/dotnet-core/5.0
-  DotNetCorePreviewVersion: 5.0.100-preview.1.20155.7
+  DotNetCorePreviewVersion: 5.0.100-preview.3.20216.6
   HostedMacMojave: Hosted Mac Internal Mojave
   HostedMac: Hosted Mac Internal
   HostedWinVS2019: Hosted Windows 2019 with VS2019
