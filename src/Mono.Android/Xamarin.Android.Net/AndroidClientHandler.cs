@@ -292,13 +292,13 @@ namespace Xamarin.Android.Net
 						throw new InvalidOperationException ("Request redirected but no new URI specified");
 					request.Method = redirectState.Method;
 				} catch (Java.Net.SocketTimeoutException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-					throw new WebException (ex.Message, ex, WebExceptionStatus.Timeout, null);
+					throw new HttpRequestException (ex.Message, ex, WebExceptionStatus.Timeout, null);
 				} catch (Java.Net.UnknownServiceException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-					throw new WebException (ex.Message, ex, WebExceptionStatus.ProtocolError, null);
+					throw new HttpRequestException (ex.Message, ex, WebExceptionStatus.ProtocolError, null);
 				} catch (Java.Lang.SecurityException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-					throw new WebException (ex.Message, ex, WebExceptionStatus.SecureChannelFailure, null);
+					throw new HttpRequestException (ex.Message, ex, WebExceptionStatus.SecureChannelFailure, null);
 				} catch (Java.IO.IOException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-					throw new WebException (ex.Message, ex, WebExceptionStatus.UnknownError, null);
+					throw new HttpRequestException (ex.Message, ex, WebExceptionStatus.UnknownError, null);
 				}
 			}
 		}
@@ -833,7 +833,7 @@ namespace Xamarin.Android.Net
 			try {
 				httpConnection.RequestMethod = request.Method.ToString ();
 			} catch (Java.Net.ProtocolException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new WebException (ex.Message, ex, WebExceptionStatus.ProtocolError, null);
+				throw new HttpRequestException (ex.Message, ex, WebExceptionStatus.ProtocolError, null);
 			}
 
 			// SSL context must be set up as soon as possible, before adding any content or
