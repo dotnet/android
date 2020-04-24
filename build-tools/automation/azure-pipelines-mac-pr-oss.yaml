@@ -94,7 +94,7 @@ stages:
       displayName: make all-tests
 
       # make package-build-status CONFIGURATION=${env.BuildFlavor} V=1
-    -script: |
+    - script: |
         echo "make package-build-status CONFIGURATION=$(XA.Build.Configuration) V=1"
         make package-build-status CONFIGURATION=$(XA.Build.Configuration) V=1
       workingDirectory: $(Build.SourcesDirectory)
@@ -103,7 +103,7 @@ stages:
       # UNDONE: Publish packages
 
       # make run-performance-tests CONFIGURATION=${env.BuildFlavor} V=1
-    -script: |
+    - script: |
         make run-performance-tests CONFIGURATION=$(XA.Build.Configuration) V=1 || exitCode=$?
         if [[ $exitCode -ne 0 ]]; then
           echo "ERROR: run-performance-tests FAILED, status: ${exitCode}"
