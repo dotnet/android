@@ -1,9 +1,11 @@
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Mono.Cecil;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
+using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -27,6 +29,29 @@ namespace Xamarin.Android.Build.Tests
 			};
 			var dotnet = CreateDotNetBuilder (proj);
 			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
+		}
+
+		[Test]
+		[Category ("SmokeTests")]
+		public void DotNetBuildLibrary ([Values (false, true)] bool isRelease)
+		{
+			var proj = new XASdkProject (SdkVersion, outputType: "Library") {
+				IsRelease = isRelease
+			};
+			var dotnet = CreateDotNetBuilder (proj);
+			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
+
+			var assemblyPath = Path.Combine (Root, dotnet.ProjectDirectory, proj.OutputPath, "UnnamedProject.dll");
+			FileAssert.Exists (assemblyPath);
+			using (var assembly = AssemblyDefinition.ReadAssembly (assemblyPath)) {
+				var resourceName = "__AndroidLibraryProjects__.zip";
+				var resource = assembly.MainModule.Resources.OfType<EmbeddedResource> ().FirstOrDefault (r => r.Name == resourceName);
+				Assert.IsNotNull (resource, $"{assemblyPath} should contain a {resourceName} EmbeddedResource");
+				using (var zip = ZipArchive.Open (resource.GetResourceStream ())) {
+					var entry = "library_project_imports/res/values/strings.xml";
+					Assert.IsTrue (zip.ContainsEntry (entry), $"{resourceName} should contain {entry}");
+				}
+			}
 		}
 
 		static readonly object [] DotNetPublishSource = new object [] {

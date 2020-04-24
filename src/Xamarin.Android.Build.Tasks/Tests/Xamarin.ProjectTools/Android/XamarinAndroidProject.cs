@@ -21,7 +21,7 @@ namespace Xamarin.ProjectTools
 			SetProperty ("ProjectTypeGuids", () => "{" + Language.ProjectTypeGuid + "};{" + ProjectTypeGuid + "}");
 			SetProperty ("ProjectGuid", () => "{" + ProjectGuid + "}");
 
-			SetProperty ("OutputType", "Library");
+			SetProperty (KnownProperties.OutputType, "Library");
 			SetProperty ("MonoAndroidAssetsPrefix", "Assets");
 			SetProperty ("MonoAndroidResourcePrefix", "Resources");
 

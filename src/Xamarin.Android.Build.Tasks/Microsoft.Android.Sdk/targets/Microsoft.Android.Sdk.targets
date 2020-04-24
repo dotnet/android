@@ -5,6 +5,15 @@
     <_XamarinAndroidBuildTasksAssembly>$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Build.Tasks.dll</_XamarinAndroidBuildTasksAssembly>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <AndroidApplication Condition=" '$(AndroidApplication)' == '' And '$(OutputType)' == 'Exe' ">true</AndroidApplication>
+    <AndroidApplication Condition=" '$(AndroidApplication)' == '' ">false</AndroidApplication>
+    <SelfContained Condition=" '$(SelfContained)' == '' And '$(AndroidApplication)' == 'true' ">true</SelfContained>
+    <AndroidManifest Condition=" '$(AndroidManifest)' == '' And '$(AndroidApplication)' == 'true' ">Properties\AndroidManifest.xml</AndroidManifest>
+    <!-- We don't ever need a `static void Main` method, so switch to Library here-->
+    <OutputType Condition=" '$(OutputType)' == 'Exe' ">Library</OutputType>
+  </PropertyGroup>
+
   <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.targets" />
 
   <Import Project="$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.DefaultOutputPaths.targets" Condition="'$(EnableDefaultOutputPaths)' == 'true'" />
