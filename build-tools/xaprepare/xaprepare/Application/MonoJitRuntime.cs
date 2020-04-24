@@ -7,9 +7,14 @@ namespace Xamarin.Android.Prepare
 	{
 		public override string Flavor => "Android JIT";
 
-		public MonoJitRuntime (string abiName, Func<Context, bool> enabledCheck)
+		public MonoJitRuntime (string abiName, bool interpreter, Func<Context, bool> enabledCheck)
 			: base (abiName, enabledCheck)
-		{}
+		{
+			if (interpreter) {
+				MonoSdksPrefix = "interpreter-";
+				DisplayName = $"{abiName} (interpreter)";
+			}
+		}
 
 		public override void Init (Context context)
 		{

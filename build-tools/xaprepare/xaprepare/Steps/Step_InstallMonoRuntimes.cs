@@ -322,7 +322,7 @@ namespace Xamarin.Android.Prepare
 
 			StatusStep (context, "Installing runtimes");
 			foreach (Runtime runtime in enabledRuntimes) {
-				StatusSubStep (context, $"Installing {runtime.Flavor} runtime {runtime.Name}");
+				StatusSubStep (context, $"Installing {runtime.Flavor} runtime {runtime.DisplayName}");
 
 				string src, dst;
 				bool skipFile;
@@ -355,12 +355,12 @@ namespace Xamarin.Android.Prepare
 					return true;
 
 				if (String.IsNullOrEmpty (monoRuntime.Strip)) {
-					Log.WarningLine ($"Binary stripping impossible, runtime {monoRuntime.Name} doesn't define the strip command");
+					Log.WarningLine ($"Binary stripping impossible, runtime {monoRuntime.DisplayName} doesn't define the strip command");
 					return true;
 				}
 
 				if (context.OS.IsWindows && (context.IsWindowsCrossAotAbi (monoRuntime.Name) || context.IsMingwHostAbi (monoRuntime.Name))) {
-					Log.WarningLine ($"Unable to strip '{monoRuntime.Name}' on Windows.");
+					Log.WarningLine ($"Unable to strip '{monoRuntime.DisplayName}' on Windows.");
 					return true;
 				}
 

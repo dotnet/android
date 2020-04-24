@@ -1516,10 +1516,20 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	MonoAotMode mode = MonoAotMode::MONO_AOT_MODE_NONE;
 	if (androidSystem.is_mono_aot_enabled ()) {
 		mode = androidSystem.get_mono_aot_mode ();
-		if (mode == MonoAotMode::MONO_AOT_MODE_LAST)
-			mode = MonoAotMode::MONO_AOT_MODE_NONE;
-		if (mode != MonoAotMode::MONO_AOT_MODE_NONE)
-			log_info (LOG_DEFAULT, "Enabling AOT mode in Mono");
+		if (mode == MonoAotMode::MONO_AOT_MODE_LAST) {
+			// Hack. See comments in android-system.hh
+			if (!androidSystem.is_interpreter_enabled ()) {
+				mode = MonoAotMode::MONO_AOT_MODE_NONE;
+			}
+		}
+
+		if (mode != MonoAotMode::MONO_AOT_MODE_NONE) {
+			if (mode != MonoAotMode::MONO_AOT_MODE_LAST) {
+				log_info (LOG_DEFAULT, "Enabling AOT mode in Mono");
+			} else {
+				log_info (LOG_DEFAULT, "Enabling Mono Interpreter");
+			}
+		}
 	}
 	mono_jit_set_aot_mode (mode);
 
@@ -1588,7 +1598,6 @@ MonodroidRuntime::dump_counters (const char *format, ...)
 void
 MonodroidRuntime::dump_counters_v (const char *format, va_list args)
 {
-	log_warn (LOG_DEFAULT, "%s called (counters == %p)", __PRETTY_FUNCTION__, counters);
 	if (counters == nullptr)
 		return;
 
@@ -1596,7 +1605,7 @@ MonodroidRuntime::dump_counters_v (const char *format, va_list args)
 	vfprintf (counters, format, args);
 	fprintf (counters, "\n");
 
-	mono_counters_dump (static_cast<int>(MonodroidRuntime::XA_LOG_COUNTERS), counters);
+	mono_counters_dump (MonodroidRuntime::XA_LOG_COUNTERS, counters);
 }
 
 JNIEXPORT jint JNICALL

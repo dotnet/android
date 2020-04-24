@@ -86,6 +86,18 @@ namespace xamarin::android::internal
 			return aotMode;
 		}
 
+		bool is_interpreter_enabled () const
+		{
+			// HACK! See below
+			return get_mono_aot_mode () == MonoAotMode::MONO_AOT_MODE_LAST && is_aot_mode_last_really_interpreter_mode ();
+		}
+
+		// Hack, see comment for `aot_mode_last_is_interpreter` at the bottom of the class declaration
+		bool is_aot_mode_last_really_interpreter_mode () const
+		{
+			return aot_mode_last_is_interpreter;
+		}
+
 		void set_running_in_emulator (bool yesno)
 		{
 			running_in_emulator = yesno;
@@ -125,6 +137,17 @@ namespace xamarin::android::internal
 		long max_gref_count = 0;
 		MonoAotMode aotMode = MonoAotMode::MONO_AOT_MODE_NONE;
 		bool running_in_emulator = false;
+
+		// This is a hack because of the way Mono currently switches the full interpreter (no JIT) mode. In Mono
+		// **internal** headers there's an AOT mode macro, `MONO_EE_MODE_INTERP`, whose value is exactly the same as
+		// MonoAotMode::MONO_AOT_MODE_LAST.  However, we use `MonoAotMode::MONO_AOT_MODE_LAST` as a sentinel to indicate
+		// that we want to use the default Mono AOT/JIT mode and so we can't "overload" it to mean something else for
+		// the sake of using Mono's internal functionality.  Until Mono makes `MONO_EE_MODE_INTERP` part of the public
+		// `MonoAotMode` enum and its value is not in conflict with the sentinel, we will use this hack.
+		//
+		// See also: https://github.com/mono/mono/issues/18893
+		//
+		bool aot_mode_last_is_interpreter = false;
 	};
 }
 #endif // !__ANDROID_SYSTEM_H

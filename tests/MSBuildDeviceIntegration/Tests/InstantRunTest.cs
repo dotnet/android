@@ -306,9 +306,9 @@ namespace Xamarin.Android.Build.Tests
 				Assert.Ignore ("Test needs a device attached.");
 				return;
 			}
-			var nativeLib = new AndroidItem.AndroidNativeLibrary ("foo\\x86\\libtest.so") {
+			var nativeLib = new AndroidItem.AndroidNativeLibrary ("foo\\x86_64\\libtest.so") {
 				BinaryContent = () => new byte [10],
-				MetadataValues = "Link=libs\\x86\\libtest.so",
+				MetadataValues = "Link=libs\\x86_64\\libtest.so",
 			};
 			var proj = new XamarinAndroidApplicationProject () {
 				AndroidFastDeploymentType = "Assemblies:Dexes",

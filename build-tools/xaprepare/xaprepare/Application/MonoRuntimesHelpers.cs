@@ -40,7 +40,7 @@ namespace Xamarin.Android.Prepare
 			foreach (Runtime runtime in allRuntimes.Items.Where (r => r is MonoJitRuntime && r.Enabled)) {
 				enabledRuntimes.Add (runtime);
 				if (enableLogging)
-					Log.Instance.StatusLine ($"  {context.Characters.Bullet} {runtime.Name}");
+					Log.Instance.StatusLine ($"  {context.Characters.Bullet} {runtime.DisplayName}");
 			}
 
 			if (enableLogging) {
@@ -50,7 +50,7 @@ namespace Xamarin.Android.Prepare
 			foreach (Runtime runtime in allRuntimes.Items.Where (r => r is MonoHostRuntime && r.Enabled)) {
 				enabledRuntimes.Add (runtime);
 				if (enableLogging)
-					Log.Instance.StatusLine ($"  {context.Characters.Bullet} {runtime.Name}");
+					Log.Instance.StatusLine ($"  {context.Characters.Bullet} {runtime.DisplayName}");
 			}
 
 			bool anyCrossEnabled = false;
@@ -62,7 +62,7 @@ namespace Xamarin.Android.Prepare
 				anyCrossEnabled = true;
 				enabledRuntimes.Add (runtime);
 				if (enableLogging)
-					Log.Instance.StatusLine ($"  {context.Characters.Bullet} {runtime.Name}");
+					Log.Instance.StatusLine ($"  {context.Characters.Bullet} {runtime.DisplayName}");
 			}
 
 			if (enableLogging && !anyCrossEnabled)
@@ -77,7 +77,7 @@ namespace Xamarin.Android.Prepare
 				anyCrossEnabled = true;
 				enabledRuntimes.Add (runtime);
 				if (enableLogging)
-					Log.Instance.StatusLine ($"  {context.Characters.Bullet} {runtime.Name}");
+					Log.Instance.StatusLine ($"  {context.Characters.Bullet} {runtime.DisplayName}");
 			}
 			if (enableLogging && !anyCrossEnabled)
 				Log.Instance.StatusLine ($"  NONE", ConsoleColor.DarkCyan);
