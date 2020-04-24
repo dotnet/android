@@ -8,6 +8,7 @@ variables:
   DotNetCorePreviewVersion: 5.0.100-preview.1.20155.7
   EXTRA_MSBUILD_ARGS: /p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False
   PREPARE_FLAGS: PREPARE_CI=1 PREPARE_CI_PR=1
+  FULL_MONO_INTEGRATION_BUILD: false    # UNDONE: Set this based on presence of 'full-mono-integration-build' PR label
 
 pr:
   autoCancel: true
@@ -40,17 +41,35 @@ stages:
         version: $(DotNetCoreVersion)
 
       # make prepare-update-mono CONFIGURATION=${env.BuildFlavor} V=1 ${prepareFlags} MSBUILD_ARGS='$EXTRA_MSBUILD_ARGS'
-    - script: make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'
+    - script: |
+        echo "make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'"
+        make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'
       workingDirectory: $(Build.SourcesDirectory)
       displayName: make prepare-update-mono
 
      # make prepare CONFIGURATION=${env.BuildFlavor} V=1 ${prepareFlags} MSBUILD_ARGS='$EXTRA_MSBUILD_ARGS'
-    - script: make prepare CONFIGURATION=$(XA.Build.Configuration) V=1 $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'
+    - script: |
+        echo "make prepare CONFIGURATION=$(XA.Build.Configuration) V=1 $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'"
+        make prepare CONFIGURATION=$(XA.Build.Configuration) V=1 $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'
       workingDirectory: $(Build.SourcesDirectory)
       displayName: make prepare
 
       # UNDONE: Support for 'full-mono-integration-build' GitHub label? if set 'make jenkins'; otherwise, 'make all'
       # make ${buildTarget} CONFIGURATION=${env.BuildFlavor} V=1 ${prepareFlags} MSBUILD_ARGS='$EXTRA_MSBUILD_ARGS'
-    - script: make all CONFIGURATION=$(XA.Build.Configuration) V=1 $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'
+    - script: |
+        echo "make all CONFIGURATION=$(XA.Build.Configuration) V=1 $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'"
+        make all CONFIGURATION=$(XA.Build.Configuration) V=1 $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'
+      workingDirectory: $(Build.SourcesDirectory)
+      displayName: make all
+
+      # def msbuildInstallerArgs = hasPrLabelFullMonoIntegrationBuild ? '' : '/p:IncludeMonoBundleComponents=False'
+      # make create-installers CONFIGURATION=${env.BuildFlavor} V=1 _MSBUILD_ARGS='${msbuildInstallerArgs}'
+    - script: |
+        msBuildArgs=''
+        if [[ "$(FULL_MONO_INTEGRATION_BUILD)" == "false" ]]; then
+          msbuildArgs='/p:IncludeMonoBundleComponents=False'
+        fi
+        echo "make create-installers CONFIGURATION=$(XA.Build.Configuration) V=1 $(PREPARE_FLAGS) MSBUILD_ARGS='${msBuildArgs}'"
+        make create-installers CONFIGURATION=$(XA.Build.Configuration) V=1 $(PREPARE_FLAGS) MSBUILD_ARGS='${msBuildArgs}'
       workingDirectory: $(Build.SourcesDirectory)
       displayName: make all
