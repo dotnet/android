@@ -65,7 +65,7 @@ stages:
         echo "make jenkins V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1"
         make jenkins V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
       workingDirectory: $(Build.SourcesDirectory)
-      displayName: make all
+      displayName: make jenkins
 
       # def msbuildInstallerArgs = hasPrLabelFullMonoIntegrationBuild ? '' : '/p:IncludeMonoBundleComponents=False'
       # make create-installers CONFIGURATION=${env.BuildFlavor} V=1 _MSBUILD_ARGS='${msbuildInstallerArgs}'
