@@ -9,6 +9,7 @@ variables:
   EXTRA_MSBUILD_ARGS: /p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False
   PREPARE_FLAGS: PREPARE_CI=1 PREPARE_CI_PR=1
   FULL_MONO_INTEGRATION_BUILD: false    # UNDONE: Set this based on presence of 'full-mono-integration-build' PR label
+  SKIP_TESTS: false
 
 pr:
   autoCancel: true
@@ -22,13 +23,13 @@ stages:
   jobs:
   - job: mac_build
     displayName: Mac Build
-    pool: 
+    pool:
       name: $(XA.Build.MacOSSPool)
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:
       clean: all
-    
+
     steps:
     - checkout: self          # https://docs.microsoft.com/en-us/azure/devops/pipelines/yaml-schema?view=azure-devops&tabs=schema#checkout
       path: xamarin-android
@@ -73,3 +74,43 @@ stages:
         make create-installers CONFIGURATION=$(XA.Build.Configuration) V=1 $(PREPARE_FLAGS) MSBUILD_ARGS='${msBuildArgs}'
       workingDirectory: $(Build.SourcesDirectory)
       displayName: make all
+
+      # make package-oss CONFIGURATION=${env.BuildFlavor} V=1
+    - script: |
+        echo "make package-oss CONFIGURATION=$(XA.Build.Configuration) V=1"
+        make package-oss CONFIGURATION=$(XA.Build.Configuration) V=1
+      workingDirectory: $(Build.SourcesDirectory)
+      displayName: package oss
+
+      # make all-tests CONFIGURATION=${env.BuildFlavor} V=1
+    - script: |
+        if [[ "$(SKIP_TESTS)" != "true" ]]; then
+          echo "all-tests CONFIGURATION=$(XA.Build.Configuration) V=1"
+          make all-tests CONFIGURATION=$(XA.Build.Configuration) V=1
+        else
+          echo "Skipping 'build tests' stage. Set SKIP_TESTS to false build and run tests"
+        fi
+      workingDirectory: $(Build.SourcesDirectory)
+      displayName: make all-tests
+
+      # make package-build-status CONFIGURATION=${env.BuildFlavor} V=1
+    -script: |
+        echo "make package-build-status CONFIGURATION=$(XA.Build.Configuration) V=1"
+        make package-build-status CONFIGURATION=$(XA.Build.Configuration) V=1
+      workingDirectory: $(Build.SourcesDirectory)
+      displayName: package build status
+
+      # UNDONE: Publish packages
+
+      # make run-performance-tests CONFIGURATION=${env.BuildFlavor} V=1
+    -script: |
+        make run-performance-tests CONFIGURATION=$(XA.Build.Configuration) V=1 || exitCode=$?
+        if [[ $exitCode -ne 0 ]]; then
+          echo "ERROR: run-performance-tests FAILED, status: ${exitCode}"
+        fi
+      workingDirectory: $(Build.SourcesDirectory)
+      displayName: package build status
+
+      # UNDONE: Publish error logs
+
+      # UNDONE: Publish test results
