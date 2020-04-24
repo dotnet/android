@@ -118,7 +118,7 @@ stages:
           exit $exitCode
         fi
       workingDirectory: $(Build.SourcesDirectory)
-      displayName: package build status
+      displayName: run performance tests
 
       # UNDONE: Publish error logs
 
