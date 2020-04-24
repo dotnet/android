@@ -25,7 +25,7 @@ namespace apkdiff {
 		ZipArchive Archive;
 
 		[DataMember]
-		readonly Dictionary<string, FileProperties> Entries = new Dictionary<string, FileProperties> ();
+		readonly SortedDictionary<string, FileProperties> Entries = new SortedDictionary<string, FileProperties> ();
 
 		Dictionary<string, (long Difference, long OriginalTotal)> totalDifferences = new Dictionary<string, (long, long)> ();
 
