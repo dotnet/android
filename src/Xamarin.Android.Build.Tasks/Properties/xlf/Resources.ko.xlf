@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="APT0001">
         <source>Unknown option `{0}`. Please check `$(AndroidAapt2CompileExtraArgs)` and `$(AndroidAapt2LinkExtraArgs)` to see if they include any `aapt` command line arguments that are no longer valid for `aapt2` and ensure that all other arguments are valid for `aapt2`.</source>
-        <target state="new">Unknown option `{0}`. Please check `$(AndroidAapt2CompileExtraArgs)` and `$(AndroidAapt2LinkExtraArgs)` to see if they include any `aapt` command line arguments that are no longer valid for `aapt2` and ensure that all other arguments are valid for `aapt2`.</target>
+        <target state="translated">알 수 없는 옵션 `{0}`입니다. `$(AndroidAapt2CompileExtraArgs)` 및 `$(AndroidAapt2LinkExtraArgs)`를 확인하여 `aapt2`에 대해 이제 유효하지 않은 `aapt` 명령줄 인수가 포함되는지 확인하고 `aapt2`에 대해 모든 다른 인수가 유효한지 확인하세요.</target>
         <note>The following are literal names and should not be translated: `aapt`, `aapt2`,  `$(AndroidAapt2CompileExtraArgs)`, `$(AndroidAapt2LinkExtraArgs)`
 {0} - The invalid option name</note>
       </trans-unit>
@@ -240,53 +240,53 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
       </trans-unit>
       <trans-unit id="XA1011">
         <source>Using ProGuard with the D8 DEX compiler is no longer supported. Please update `$(AndroidLinkTool)` to `r8`.</source>
-        <target state="new">Using ProGuard with the D8 DEX compiler is no longer supported. Please update `$(AndroidLinkTool)` to `r8`.</target>
+        <target state="translated">D8 DEX 컴파일러와 함께 ProGuard 사용이 더 이상 지원되지 않습니다. `$(AndroidLinkTool)`을 `r8`로 업데이트하세요.</target>
         <note>The following are literal names and should not be translated: ProGuard, D8, DEX, `$(AndroidLinkTool)`, `r8`</note>
       </trans-unit>
       <trans-unit id="XA1012">
         <source>Included layout root element override ID '{0}' is not valid.</source>
-        <target state="new">Included layout root element override ID '{0}' is not valid.</target>
+        <target state="translated">포함된 레이아웃 루트 요소 재정의 ID '{0}'이(가) 잘못되었습니다.</target>
         <note>{0} - The Android resource ID name</note>
       </trans-unit>
       <trans-unit id="XA1013">
         <source>Failed to parse ID of node '{0}' in the layout file '{1}'.</source>
-        <target state="new">Failed to parse ID of node '{0}' in the layout file '{1}'.</target>
+        <target state="translated">'{1}' 레이아웃 파일에서 '{0}' 노드의 ID를 구문 분석하지 못했습니다.</target>
         <note>{0} - The Android resource XML element name
 {1} - The path of the layout file</note>
       </trans-unit>
       <trans-unit id="XA1014">
         <source>JAR library references with identical file names but different contents were found: {0}. Please remove any conflicting libraries from EmbeddedJar, InputJar and AndroidJavaLibrary.</source>
-        <target state="new">JAR library references with identical file names but different contents were found: {0}. Please remove any conflicting libraries from EmbeddedJar, InputJar and AndroidJavaLibrary.</target>
+        <target state="translated">파일 이름은 같지만 콘텐츠가 다른 JAR 라이브러리 참조를 찾았습니다. {0}. EmbeddedJar, InputJar 및 AndroidJavaLibrary에서 충돌하는 라이브러리를 제거하세요.</target>
         <note>The following are literal names and should not be translated: JAR, EmbeddedJar, InputJar and AndroidJavaLibrary
 {0} - Comma-separated list of the conflicting JAR library file names</note>
       </trans-unit>
       <trans-unit id="XA1015">
         <source>More than one Android Wear project is specified as the paired project. It can be at most one.</source>
-        <target state="new">More than one Android Wear project is specified as the paired project. It can be at most one.</target>
+        <target state="translated">두 개 이상의 Android Wear 프로젝트가 페어링된 프로젝트로 지정되었습니다. 최대 한 개를 사용할 수 있습니다.</target>
         <note>The following are literal names and should not be translated: Android Wear</note>
       </trans-unit>
       <trans-unit id="XA1016">
         <source>Target Wear application's project '{0}' does not specify required 'AndroidManifest' project property.</source>
-        <target state="new">Target Wear application's project '{0}' does not specify required 'AndroidManifest' project property.</target>
+        <target state="translated">대상 Wear 애플리케이션의 프로젝트 '{0}'이(가) 필요한 'AndroidManifest' 프로젝트 속성을 지정하지 않습니다.</target>
         <note>The following are literal names and should not be translated: Wear, AndroidManifest
 "Wear" is a short version of the full product name "Wear OS" and so should not be translated.
 {0} - The project file name</note>
       </trans-unit>
       <trans-unit id="XA1017">
         <source>Target Wear application's AndroidManifest.xml does not specify required 'package' attribute.</source>
-        <target state="new">Target Wear application's AndroidManifest.xml does not specify required 'package' attribute.</target>
+        <target state="translated">대상 Wear 애플리케이션의 AndroidManifest.xml이 필요한 'package' 특성을 지정하지 않습니다.</target>
         <note>The following are literal names and should not be translated: Wear, AndroidManifest.xml, 'package'
 "Wear" is a short version of the full product name "Wear OS" and so should not be translated.</note>
       </trans-unit>
       <trans-unit id="XA1018">
         <source>Specified AndroidManifest file does not exist: {0}.</source>
-        <target state="new">Specified AndroidManifest file does not exist: {0}.</target>
+        <target state="translated">지정한 AndroidManifest 파일이 없습니다. {0}</target>
         <note>The following are literal names and should not be translated: AndroidManifest
 {0} - The path of the specified AndroidManifest file</note>
       </trans-unit>
       <trans-unit id="XA2000">
         <source>Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 5 will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 5 is released.</source>
-        <target state="new">Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 5 will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 5 is released.</target>
+        <target state="translated">{0} 어셈블리에서 AppDomain.CreateDomain() 사용이 검색되었습니다. .NET 5는 단일 AppDomain만 지원하므로 .NET 5가 릴리스되면 이 API는 Xamarin.Android에서 더는 사용할 수 없습니다.</target>
         <note>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
 {0} - The name of the assembly</note>
       </trans-unit>
@@ -317,12 +317,12 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
       </trans-unit>
       <trans-unit id="XA2007">
         <source>Exception while loading assemblies: {0}</source>
-        <target state="new">Exception while loading assemblies: {0}</target>
+        <target state="translated">어셈블리 로드 중 예외 발생: {0}</target>
         <note>{0} - The exception message of the associated exception</note>
       </trans-unit>
       <trans-unit id="XA2008">
         <source>In referenced assembly {0}, Java.Interop.DoNotPackageAttribute requires non-null file name.</source>
-        <target state="new">In referenced assembly {0}, Java.Interop.DoNotPackageAttribute requires non-null file name.</target>
+        <target state="translated">참조된 어셈블리 {0}에서 Java.Interop.DoNotPackageAttribute에 null이 아닌 파일 이름이 필요합니다.</target>
         <note>The following are literal names and should not be translated: Java.Interop.DoNotPackageAttribute
 {0} - The assembly name</note>
       </trans-unit>
@@ -433,14 +433,14 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
       </trans-unit>
       <trans-unit id="XA4219">
         <source>Cannot find binding generator for language {0} or {1}.</source>
-        <target state="new">Cannot find binding generator for language {0} or {1}.</target>
+        <target state="translated">{0} 또는 {1} 언어에 대한 바인딩 생성기를 찾을 수 없습니다.</target>
         <note>In this message, the term "binding" means a piece of code that makes it easy to access a certain kind of data that is originally stored outside of the target programming language, which is usually C#.
 {0} - The target programming language name, which is usually C#
 {1} - The default programming language name, which is also usually C#</note>
       </trans-unit>
       <trans-unit id="XA4220">
         <source>Partial class item '{0}' does not have an associated binding for layout '{1}'.</source>
-        <target state="new">Partial class item '{0}' does not have an associated binding for layout '{1}'.</target>
+        <target state="translated">partial 클래스 항목 '{0}'에 레이아웃 '{1}'과(와) 연결된 바인딩이 없습니다.</target>
         <note>In this message, the term "partial class item" means a .NET partial class.
 In this message, the term "binding" means a piece of code that makes it easy to access a certain kind of data that is originally stored outside of the target programming language, which is usually C#.
 In this mesage, the term "layout" means an Android UI layout.
@@ -449,31 +449,31 @@ In this mesage, the term "layout" means an Android UI layout.
       </trans-unit>
       <trans-unit id="XA4221">
         <source>No layout binding source files were generated.</source>
-        <target state="new">No layout binding source files were generated.</target>
+        <target state="translated">레이아웃 바인딩 소스 파일이 생성되지 않았습니다.</target>
         <note>In this message, the term "binding" means a piece of code that makes it easy to access a certain kind of data that is originally stored outside of the target programming language, which is usually C#.
 In this mesage, the term "layout" means an Android UI layout.
 In this message, the term "source files" means files that can be compiled, usually containing C# source code.</note>
       </trans-unit>
       <trans-unit id="XA4222">
         <source>No widgets found for layout ({0}).</source>
-        <target state="new">No widgets found for layout ({0}).</target>
+        <target state="translated">레이아웃({0})에 대한 위젯을 찾을 수 없습니다.</target>
         <note>In this message, the term "widgets" means Android UI elements.
 In this mesage, the term "layout" means an Android UI layout.
 {0} - Semicolon-separated list of paths for the files that define the layout</note>
       </trans-unit>
       <trans-unit id="XA4223">
         <source>Malformed full class name '{0}'. Missing namespace.</source>
-        <target state="new">Malformed full class name '{0}'. Missing namespace.</target>
+        <target state="translated">전체 클래스 이름 '{0}'의 형식이 잘못되었습니다. 네임스페이스가 없습니다.</target>
         <note>{0} - The class name</note>
       </trans-unit>
       <trans-unit id="XA4224">
         <source>Malformed full class name '{0}'. Missing class name.</source>
-        <target state="new">Malformed full class name '{0}'. Missing class name.</target>
+        <target state="translated">전체 클래스 이름 '{0}'의 형식이 잘못되었습니다. 클래스 이름이 없습니다.</target>
         <note>{0} - The class name</note>
       </trans-unit>
       <trans-unit id="XA4225">
         <source>Widget '{0}' in layout '{1}' has multiple instances with different types. The property type will be set to: {2}</source>
-        <target state="new">Widget '{0}' in layout '{1}' has multiple instances with different types. The property type will be set to: {2}</target>
+        <target state="translated">'{1}' 레이아웃의 '{0}' 위젯에 형식이 다른 여러 인스턴스가 있습니다. 속성 형식이 다음으로 설정됩니다. {2}</target>
         <note>In this message, the term "widgets" means Android UI elements.
 In this mesage, the term "layout" means an Android UI layout.
 {0} - The name of the widget
@@ -482,13 +482,13 @@ In this mesage, the term "layout" means an Android UI layout.
       </trans-unit>
       <trans-unit id="XA4226">
         <source>Resource item '{0}' does not have the required metadata item '{1}'.</source>
-        <target state="new">Resource item '{0}' does not have the required metadata item '{1}'.</target>
+        <target state="translated">리소스 항목 '{0}'에 필수 메타데이터 항목 '{1}'이(가) 없습니다.</target>
         <note>{0} - The name of the Android layout resource file
 {1} - The name of the metadata item</note>
       </trans-unit>
       <trans-unit id="XA4228">
         <source>Unable to find specified //activity-alias/@android:targetActivity: '{0}'</source>
-        <target state="new">Unable to find specified //activity-alias/@android:targetActivity: '{0}'</target>
+        <target state="translated">지정한 //activity-alias/@android:targetActivity를 찾을 수 없음: '{0}'</target>
         <note>The following are literal names and should not be translated: //activity-alias/@android:targetActivity
 {0} - The specified targetActivity name</note>
       </trans-unit>
@@ -570,7 +570,7 @@ In this message, the term "bundled" is a short way of saying "included into the 
       </trans-unit>
       <trans-unit id="XA4311">
         <source>The application won't contain the paired Wear package because the Wear application package APK is not created yet. If building on the command line, be sure to build the "SignAndroidPackage" target.</source>
-        <target state="new">The application won't contain the paired Wear package because the Wear application package APK is not created yet. If building on the command line, be sure to build the "SignAndroidPackage" target.</target>
+        <target state="translated">Wear 애플리케이션 패키지 APK가 아직 만들어지지 않았기 때문에 애플리케이션에 페어링된 Wear 패키지가 포함되지 않습니다. 명령줄에서 빌드하는 경우 "SignAndroidPackage" 대상을 빌드해야 합니다.</target>
         <note>The following are literal names and should not be translated: Wear, APK, SignAndroidPackage
 "Wear" is a short version of the full product name "Wear OS" and so should not be translated.</note>
       </trans-unit>
