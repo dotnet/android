@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="APT0001">
         <source>Unknown option `{0}`. Please check `$(AndroidAapt2CompileExtraArgs)` and `$(AndroidAapt2LinkExtraArgs)` to see if they include any `aapt` command line arguments that are no longer valid for `aapt2` and ensure that all other arguments are valid for `aapt2`.</source>
-        <target state="new">Unknown option `{0}`. Please check `$(AndroidAapt2CompileExtraArgs)` and `$(AndroidAapt2LinkExtraArgs)` to see if they include any `aapt` command line arguments that are no longer valid for `aapt2` and ensure that all other arguments are valid for `aapt2`.</target>
+        <target state="translated">未知的選項 `{0}`。請檢查 `$(AndroidAapt2CompileExtraArgs)` 與 `$(AndroidAapt2LinkExtraArgs)`，確認其是否包含任何對 `aapt2` 不再有效的 `aapt` 命令列引數，並確定所有其他引數對 `aapt2` 皆有效。</target>
         <note>The following are literal names and should not be translated: `aapt`, `aapt2`,  `$(AndroidAapt2CompileExtraArgs)`, `$(AndroidAapt2LinkExtraArgs)`
 {0} - The invalid option name</note>
       </trans-unit>
@@ -240,17 +240,17 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
       </trans-unit>
       <trans-unit id="XA1011">
         <source>Using ProGuard with the D8 DEX compiler is no longer supported. Please update `$(AndroidLinkTool)` to `r8`.</source>
-        <target state="new">Using ProGuard with the D8 DEX compiler is no longer supported. Please update `$(AndroidLinkTool)` to `r8`.</target>
+        <target state="translated">已不再支援並用 ProGuard 與 D8 DEX 編譯器。請將 '$(AndroidLinkTool)' 更新為 'r8'。</target>
         <note>The following are literal names and should not be translated: ProGuard, D8, DEX, `$(AndroidLinkTool)`, `r8`</note>
       </trans-unit>
       <trans-unit id="XA1012">
         <source>Included layout root element override ID '{0}' is not valid.</source>
-        <target state="new">Included layout root element override ID '{0}' is not valid.</target>
+        <target state="translated">包含的版面配置根項目覆寫識別碼 '{0}' 無效。</target>
         <note>{0} - The Android resource ID name</note>
       </trans-unit>
       <trans-unit id="XA1013">
         <source>Failed to parse ID of node '{0}' in the layout file '{1}'.</source>
-        <target state="new">Failed to parse ID of node '{0}' in the layout file '{1}'.</target>
+        <target state="translated">無法剖析配置檔案 '{1}' 中節點 '{0}' 的識別碼。</target>
         <note>{0} - The Android resource XML element name
 {1} - The path of the layout file</note>
       </trans-unit>
@@ -262,19 +262,19 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
       </trans-unit>
       <trans-unit id="XA1015">
         <source>More than one Android Wear project is specified as the paired project. It can be at most one.</source>
-        <target state="new">More than one Android Wear project is specified as the paired project. It can be at most one.</target>
+        <target state="translated">已將一個以上的 Android Wear 專案指定為配對的專案。最多只能指定一個。</target>
         <note>The following are literal names and should not be translated: Android Wear</note>
       </trans-unit>
       <trans-unit id="XA1016">
         <source>Target Wear application's project '{0}' does not specify required 'AndroidManifest' project property.</source>
-        <target state="new">Target Wear application's project '{0}' does not specify required 'AndroidManifest' project property.</target>
+        <target state="translated">目標 Wear 應用程式的專案 '{0}' 未指定必要的 'AndroidManifest' 專案屬性。</target>
         <note>The following are literal names and should not be translated: Wear, AndroidManifest
 "Wear" is a short version of the full product name "Wear OS" and so should not be translated.
 {0} - The project file name</note>
       </trans-unit>
       <trans-unit id="XA1017">
         <source>Target Wear application's AndroidManifest.xml does not specify required 'package' attribute.</source>
-        <target state="new">Target Wear application's AndroidManifest.xml does not specify required 'package' attribute.</target>
+        <target state="translated">目標 Wear 應用程式的 AndroidManifest.xml 未指定必要的 'package' 屬性。</target>
         <note>The following are literal names and should not be translated: Wear, AndroidManifest.xml, 'package'
 "Wear" is a short version of the full product name "Wear OS" and so should not be translated.</note>
       </trans-unit>
@@ -286,7 +286,7 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
       </trans-unit>
       <trans-unit id="XA2000">
         <source>Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 5 will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 5 is released.</source>
-        <target state="new">Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 5 will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 5 is released.</target>
+        <target state="translated">在下列組件中偵測到使用 AppDomain.CreateDomain(): {0}。.NET 5 只支援單一 AppDomain，因此在 .NET 5 發行之後，此 API 就無法再於 Xamarin.Android 中使用。</target>
         <note>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
 {0} - The name of the assembly</note>
       </trans-unit>
@@ -297,7 +297,7 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
       </trans-unit>
       <trans-unit id="XA2002_Framework">
         <source>Can not resolve reference: `{0}`, referenced by {1}. Perhaps it doesn't exist in the Mono for Android profile?</source>
-        <target state="translated">無法解析參考: `{0}`，參考方為 {1}。或許該參考不存在於 Android 的 Mono 設定檔中?</target>
+        <target state="translated">無法解析參考: '{0}'，參考者: {1}。Mono for Android 設定檔中沒有該項參考嗎?</target>
         <note>{0} - The name of the missing assembly
 {1} - The chain of references that causes a reference to the missing assembly, with &gt; as the separator between items. Example: `System.Memory` &gt; `System.Buffers`</note>
       </trans-unit>
@@ -317,12 +317,12 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
       </trans-unit>
       <trans-unit id="XA2007">
         <source>Exception while loading assemblies: {0}</source>
-        <target state="new">Exception while loading assemblies: {0}</target>
+        <target state="translated">載入組件時發生例外狀況: {0}</target>
         <note>{0} - The exception message of the associated exception</note>
       </trans-unit>
       <trans-unit id="XA2008">
         <source>In referenced assembly {0}, Java.Interop.DoNotPackageAttribute requires non-null file name.</source>
-        <target state="new">In referenced assembly {0}, Java.Interop.DoNotPackageAttribute requires non-null file name.</target>
+        <target state="translated">在參考的組件 {0} 中，Java.Interop.DoNotPackageAttribute 需要非 Null 的檔案名稱。</target>
         <note>The following are literal names and should not be translated: Java.Interop.DoNotPackageAttribute
 {0} - The assembly name</note>
       </trans-unit>
@@ -433,14 +433,14 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
       </trans-unit>
       <trans-unit id="XA4219">
         <source>Cannot find binding generator for language {0} or {1}.</source>
-        <target state="new">Cannot find binding generator for language {0} or {1}.</target>
+        <target state="translated">找不到語言 {0} 或 {1} 的繫結產生器。</target>
         <note>In this message, the term "binding" means a piece of code that makes it easy to access a certain kind of data that is originally stored outside of the target programming language, which is usually C#.
 {0} - The target programming language name, which is usually C#
 {1} - The default programming language name, which is also usually C#</note>
       </trans-unit>
       <trans-unit id="XA4220">
         <source>Partial class item '{0}' does not have an associated binding for layout '{1}'.</source>
-        <target state="new">Partial class item '{0}' does not have an associated binding for layout '{1}'.</target>
+        <target state="translated">有部分類別項目 '{0}' 沒有版面配置 '{1}' 相關聯的繫結。</target>
         <note>In this message, the term "partial class item" means a .NET partial class.
 In this message, the term "binding" means a piece of code that makes it easy to access a certain kind of data that is originally stored outside of the target programming language, which is usually C#.
 In this mesage, the term "layout" means an Android UI layout.
@@ -449,31 +449,31 @@ In this mesage, the term "layout" means an Android UI layout.
       </trans-unit>
       <trans-unit id="XA4221">
         <source>No layout binding source files were generated.</source>
-        <target state="new">No layout binding source files were generated.</target>
+        <target state="translated">未產生任何版面配置繫結原始程式檔。</target>
         <note>In this message, the term "binding" means a piece of code that makes it easy to access a certain kind of data that is originally stored outside of the target programming language, which is usually C#.
 In this mesage, the term "layout" means an Android UI layout.
 In this message, the term "source files" means files that can be compiled, usually containing C# source code.</note>
       </trans-unit>
       <trans-unit id="XA4222">
         <source>No widgets found for layout ({0}).</source>
-        <target state="new">No widgets found for layout ({0}).</target>
+        <target state="translated">找不到版面配置 ({0}) 的小工具。</target>
         <note>In this message, the term "widgets" means Android UI elements.
 In this mesage, the term "layout" means an Android UI layout.
 {0} - Semicolon-separated list of paths for the files that define the layout</note>
       </trans-unit>
       <trans-unit id="XA4223">
         <source>Malformed full class name '{0}'. Missing namespace.</source>
-        <target state="new">Malformed full class name '{0}'. Missing namespace.</target>
+        <target state="translated">完整類別名稱 '{0}' 的格式不正確。缺少命名空間。</target>
         <note>{0} - The class name</note>
       </trans-unit>
       <trans-unit id="XA4224">
         <source>Malformed full class name '{0}'. Missing class name.</source>
-        <target state="new">Malformed full class name '{0}'. Missing class name.</target>
+        <target state="translated">完整類別名稱 '{0}' 的格式不正確。缺少類別名稱。</target>
         <note>{0} - The class name</note>
       </trans-unit>
       <trans-unit id="XA4225">
         <source>Widget '{0}' in layout '{1}' has multiple instances with different types. The property type will be set to: {2}</source>
-        <target state="new">Widget '{0}' in layout '{1}' has multiple instances with different types. The property type will be set to: {2}</target>
+        <target state="translated">版面配置 '{1}' 的小工具 '{0}' 具有多個不同類型的執行個體。此屬性類型將會設定為 {2}</target>
         <note>In this message, the term "widgets" means Android UI elements.
 In this mesage, the term "layout" means an Android UI layout.
 {0} - The name of the widget
@@ -482,7 +482,7 @@ In this mesage, the term "layout" means an Android UI layout.
       </trans-unit>
       <trans-unit id="XA4226">
         <source>Resource item '{0}' does not have the required metadata item '{1}'.</source>
-        <target state="new">Resource item '{0}' does not have the required metadata item '{1}'.</target>
+        <target state="translated">資源項目 '{0}' 不具所需的中繼資料項目 '{1}'。</target>
         <note>{0} - The name of the Android layout resource file
 {1} - The name of the metadata item</note>
       </trans-unit>
@@ -570,7 +570,7 @@ In this message, the term "bundled" is a short way of saying "included into the 
       </trans-unit>
       <trans-unit id="XA4311">
         <source>The application won't contain the paired Wear package because the Wear application package APK is not created yet. If building on the command line, be sure to build the "SignAndroidPackage" target.</source>
-        <target state="new">The application won't contain the paired Wear package because the Wear application package APK is not created yet. If building on the command line, be sure to build the "SignAndroidPackage" target.</target>
+        <target state="translated">因為尚未建立 Wear 應用程式套件 APK，所以該應用程式不會包含配對的 Wear 套件。如果從命令列進行建置，請務必建置 "SignAndroidPackage" 目標。</target>
         <note>The following are literal names and should not be translated: Wear, APK, SignAndroidPackage
 "Wear" is a short version of the full product name "Wear OS" and so should not be translated.</note>
       </trans-unit>
@@ -632,7 +632,7 @@ In this message, the term "bundled" is a short way of saying "included into the 
       </trans-unit>
       <trans-unit id="XA5205_Lint">
         <source>Cannot find `{0}` in the Android SDK. Please set its path via /p:LintToolPath.</source>
-        <target state="translated">在 Android SDK 中找不到 `{0}`。請透過 /p:LintToolPath 設定其路徑。</target>
+        <target state="translated">在 Android SDK 中找不到 '{0}'。請透過 /p:LintToolPath 設定其路徑。</target>
         <note>The following are literal names and should not be translated: /p:LintToolPath
 {0} - The missing tool name</note>
       </trans-unit>
@@ -681,12 +681,12 @@ In this message, the term "handheld app" means "app for handheld devices."
       </trans-unit>
       <trans-unit id="XA5300_Android_SDK">
         <source>The Android SDK directory could not be found. Please set via /p:AndroidSdkDirectory.</source>
-        <target state="translated">找不到 Android SDK 目錄。請透過 /p:AndroidSdkDirectory 來設定。</target>
+        <target state="translated">找不到 Android SDK 目錄。請透過 /p:AndroidSdkDirectory 進行設定。</target>
         <note>The following are literal names and should not be translated: /p:AndroidSdkDirectory</note>
       </trans-unit>
       <trans-unit id="XA5300_Java_SDK">
         <source>The Java SDK directory could not be found. Please set via /p:JavaSdkDirectory.</source>
-        <target state="translated">找不到 Java SDK 目錄。請透過 /p:JavaSdkDirectory 來設定。</target>
+        <target state="translated">找不到 Java SDK 目錄。請透過 /p:JavaSdkDirectory 進行設定。</target>
         <note>The following are literal names and should not be translated: /p:JavaSdkDirectory</note>
       </trans-unit>
       <trans-unit id="XA5301">
