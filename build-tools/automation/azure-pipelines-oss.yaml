@@ -2,6 +2,14 @@
 
 name: $(Build.SourceBranchName)-$(Build.SourceVersion)-$(Rev:r)
 
+# Predefined variables: https://docs.microsoft.com/en-us/azure/devops/pipelines/build/variables?view=azure-devops&tabs=yaml
+variables:
+  XA.Build.Configuration: Release
+  EXTRA_MSBUILD_ARGS: /p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False
+  PREPARE_FLAGS: PREPARE_CI=1 PREPARE_CI_PR=1
+  DotNetCoreVersion: 3.x
+  SKIP_TESTS: false
+
 trigger:
   - master
   - d16-*
@@ -14,54 +22,148 @@ pr:
 variables:
   OSSBuildConfiguration: Release
 
-jobs:
-- job: linux_build_package
-  displayName: Linux Build
-  pool:
-    vmImage: ubuntu-18.04
-  timeoutInMinutes: 180
-  cancelTimeoutInMinutes: 5
-  workspace:
-    clean: all
-  steps:
-  - checkout: self
-    submodules: recursive
+stages:
+- stage: mac_stage
+  displayName: Mac
+  jobs:
+  - job: mac_build
+    displayName: Mac Build
+    pool:
+      name: $(XA.Build.MacOSSPool)
+    timeoutInMinutes: 180
+    cancelTimeoutInMinutes: 5
+    workspace:
+      clean: all
 
-  - task: NuGetToolInstaller@1
-    displayName: 'Use NuGet 5.x'
-    inputs:
-      versionSpec: 5.x
+    steps:
+    - checkout: self          # https://docs.microsoft.com/en-us/azure/devops/pipelines/yaml-schema?view=azure-devops&tabs=schema#checkout
+      path: xamarin-android
+      clean: true             # Executes: git clean -ffdx && git reset --hard HEAD
+      submodules: recursive
 
-  - script: >
-      sudo apt-get install -y gnupg ca-certificates &&
-      sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF &&
-      (echo "deb https://download.mono-project.com/repo/ubuntu preview-bionic main" | sudo tee /etc/apt/sources.list.d/mono-official-preview.list) &&
-      sudo apt-get update &&
-      sudo apt-get install -y mono-devel &&
-      sudo apt-get install -y ca-certificates-mono
-    displayName: install mono preview
+    - task: UseDotNet@2
+      displayName: install .NET Core $(DotNetCoreVersion)
+      inputs:
+        version: $(DotNetCoreVersion)
 
-  - script: make jenkins V=1 PREPARE_CI_PR=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(OSSBuildConfiguration)
-    displayName: make jenkins
+    - script: |
+        echo "make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'"
+        make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'
+      workingDirectory: $(Build.SourcesDirectory)
+      displayName: make prepare-update-mono
 
-  - script: make package-deb V=1 CONFIGURATION=$(OSSBuildConfiguration)
-    displayName: make package-deb
+    - script: |
+        echo "make prepare CONFIGURATION=$(XA.Build.Configuration) V=1 $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'"
+        make prepare CONFIGURATION=$(XA.Build.Configuration) V=1 $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'
+      workingDirectory: $(Build.SourcesDirectory)
+      displayName: make prepare
 
-  - script: >
-      mkdir -p $(System.DefaultWorkingDirectory)/bin/Build$(OSSBuildConfiguration)/linux-artifacts &&
-      cp $(System.DefaultWorkingDirectory)/*xamarin.android*.tar.bz2 $(System.DefaultWorkingDirectory)/bin/Build$(OSSBuildConfiguration)/linux-artifacts &&
-      cp $(System.DefaultWorkingDirectory)/*.changes $(System.DefaultWorkingDirectory)/bin/Build$(OSSBuildConfiguration)/linux-artifacts &&
-      cp $(System.DefaultWorkingDirectory)/*.dsc $(System.DefaultWorkingDirectory)/bin/Build$(OSSBuildConfiguration)/linux-artifacts &&
-      cp $(System.DefaultWorkingDirectory)/*.deb $(System.DefaultWorkingDirectory)/bin/Build$(OSSBuildConfiguration)/linux-artifacts
-    displayName: copy linux artifacts
+    - script: |
+        echo "make jenkins V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1"
+        make jenkins V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
+      workingDirectory: $(Build.SourcesDirectory)
+      displayName: make jenkins
 
-  - task: PublishPipelineArtifact@1
-    displayName: publish linux artifacts
-    inputs:
-      artifactName: Linux Packages
-      targetPath: $(System.DefaultWorkingDirectory)/bin/Build$(OSSBuildConfiguration)/linux-artifacts
+    - script: |
+        echo "make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)"
+        make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)
+      workingDirectory: $(Build.SourcesDirectory)
+      displayName: create installers
 
-  - template: yaml-templates/upload-results.yaml
-    parameters:
-      configuration: $(OSSBuildConfiguration)
-      artifactName: OSS Build Results - Linux
+    - script: |
+        echo "make package-oss CONFIGURATION=$(XA.Build.Configuration) V=1"
+        make package-oss CONFIGURATION=$(XA.Build.Configuration) V=1
+      workingDirectory: $(Build.SourcesDirectory)
+      displayName: package oss
+
+    - script: |
+        if [[ "$(SKIP_TESTS)" != "true" ]]; then
+          echo "all-tests CONFIGURATION=$(XA.Build.Configuration) V=1"
+          make all-tests CONFIGURATION=$(XA.Build.Configuration) V=1
+        else
+          echo "Skipping 'build tests' stage. Set SKIP_TESTS to false build and run tests"
+        fi
+      workingDirectory: $(Build.SourcesDirectory)
+      displayName: make all-tests
+
+    - script: |
+        echo "make package-build-status CONFIGURATION=$(XA.Build.Configuration) V=1"
+        make package-build-status CONFIGURATION=$(XA.Build.Configuration) V=1
+      workingDirectory: $(Build.SourcesDirectory)
+      displayName: package build status
+
+      # UNDONE: Publish packages?
+
+      # UNDONE: Run performance tests?
+      # Disabled
+    - script: |
+        exitCode=0
+        make run-performance-tests CONFIGURATION=$(XA.Build.Configuration) V=1 || exitCode=$?
+        if [[ $exitCode -ne 0 ]]; then
+          echo "ERROR: run-performance-tests FAILED, status: ${exitCode}"
+          exit $exitCode
+        fi
+      workingDirectory: $(Build.SourcesDirectory)
+      displayName: run performance tests
+      enabled: false
+
+      # UNDONE: Publish test results?
+
+    - template: yaml-templates/upload-results.yaml
+      parameters:
+        artifactName: Build Results - macOS
+
+- stage: linux_stage
+  displayName: Linux
+  dependsOn: []                 # Run stage in parallel to preceding stages
+  jobs:
+  - job: linux_build_package
+    displayName: Linux Build
+    pool:
+      vmImage: ubuntu-18.04
+    timeoutInMinutes: 180
+    cancelTimeoutInMinutes: 5
+    workspace:
+      clean: all
+    steps:
+    - checkout: self
+      submodules: recursive
+
+    - task: NuGetToolInstaller@1
+      displayName: 'Use NuGet 5.x'
+      inputs:
+        versionSpec: 5.x
+
+    - script: >
+        sudo apt-get install -y gnupg ca-certificates &&
+        sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF &&
+        (echo "deb https://download.mono-project.com/repo/ubuntu preview-bionic main" | sudo tee /etc/apt/sources.list.d/mono-official-preview.list) &&
+        sudo apt-get update &&
+        sudo apt-get install -y mono-devel &&
+        sudo apt-get install -y ca-certificates-mono
+      displayName: install mono preview
+
+    - script: make jenkins V=1 PREPARE_CI_PR=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(OSSBuildConfiguration)
+      displayName: make jenkins
+
+    - script: make package-deb V=1 CONFIGURATION=$(OSSBuildConfiguration)
+      displayName: make package-deb
+
+    - script: >
+        mkdir -p $(System.DefaultWorkingDirectory)/bin/Build$(OSSBuildConfiguration)/linux-artifacts &&
+        cp $(System.DefaultWorkingDirectory)/*xamarin.android*.tar.bz2 $(System.DefaultWorkingDirectory)/bin/Build$(OSSBuildConfiguration)/linux-artifacts &&
+        cp $(System.DefaultWorkingDirectory)/*.changes $(System.DefaultWorkingDirectory)/bin/Build$(OSSBuildConfiguration)/linux-artifacts &&
+        cp $(System.DefaultWorkingDirectory)/*.dsc $(System.DefaultWorkingDirectory)/bin/Build$(OSSBuildConfiguration)/linux-artifacts &&
+        cp $(System.DefaultWorkingDirectory)/*.deb $(System.DefaultWorkingDirectory)/bin/Build$(OSSBuildConfiguration)/linux-artifacts
+      displayName: copy linux artifacts
+
+    - task: PublishPipelineArtifact@1
+      displayName: publish linux artifacts
+      inputs:
+        artifactName: Linux Packages
+        targetPath: $(System.DefaultWorkingDirectory)/bin/Build$(OSSBuildConfiguration)/linux-artifacts
+
+    - template: yaml-templates/upload-results.yaml
+      parameters:
+        configuration: $(OSSBuildConfiguration)
+        artifactName: OSS Build Results - Linux
