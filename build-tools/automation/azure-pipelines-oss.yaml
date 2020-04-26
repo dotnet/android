@@ -14,6 +14,7 @@ pr:
 # Predefined variables: https://docs.microsoft.com/en-us/azure/devops/pipelines/build/variables?view=azure-devops&tabs=yaml
 variables:
   OSSBuildConfiguration: Release
+  NuGetArtifactName: nupkgs
   EXTRA_MSBUILD_ARGS: /p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False
   PREPARE_FLAGS: PREPARE_CI=1 PREPARE_CI_PR=1
   DotNetCoreVersion: 3.x
@@ -89,7 +90,11 @@ stages:
       workingDirectory: $(Build.SourcesDirectory)
       displayName: package build status
 
-      # UNDONE: Publish packages?
+    - task: PublishPipelineArtifact@1
+      displayName: upload nupkgs
+      inputs:
+        artifactName: $(NuGetArtifactName)
+        targetPath: $(Build.SourcesDirectory)/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
 
       # UNDONE: Run performance tests?
       # Disabled
