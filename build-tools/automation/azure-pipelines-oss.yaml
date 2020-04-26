@@ -2,14 +2,6 @@
 
 name: $(Build.SourceBranchName)-$(Build.SourceVersion)-$(Rev:r)
 
-# Predefined variables: https://docs.microsoft.com/en-us/azure/devops/pipelines/build/variables?view=azure-devops&tabs=yaml
-variables:
-  XA.Build.Configuration: Release
-  EXTRA_MSBUILD_ARGS: /p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False
-  PREPARE_FLAGS: PREPARE_CI=1 PREPARE_CI_PR=1
-  DotNetCoreVersion: 3.x
-  SKIP_TESTS: false
-
 trigger:
   - master
   - d16-*
@@ -19,8 +11,14 @@ pr:
   - d16-*
 
 # Global variables
+# Predefined variables: https://docs.microsoft.com/en-us/azure/devops/pipelines/build/variables?view=azure-devops&tabs=yaml
 variables:
   OSSBuildConfiguration: Release
+  XA.Build.Configuration: Release
+  EXTRA_MSBUILD_ARGS: /p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False
+  PREPARE_FLAGS: PREPARE_CI=1 PREPARE_CI_PR=1
+  DotNetCoreVersion: 3.x
+  SKIP_TESTS: false
 
 stages:
 - stage: mac_stage
