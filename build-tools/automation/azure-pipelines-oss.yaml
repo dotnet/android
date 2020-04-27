@@ -13,7 +13,7 @@ pr:
 # Global variables
 # Predefined variables: https://docs.microsoft.com/en-us/azure/devops/pipelines/build/variables?view=azure-devops&tabs=yaml
 variables:
-  OSSBuildConfiguration: Release
+  XA.Build.Configuration: Release
   NuGetArtifactName: nupkgs
   EXTRA_MSBUILD_ARGS: /p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False
   PREPARE_FLAGS: PREPARE_CI=1 PREPARE_CI_PR=1
@@ -45,39 +45,39 @@ stages:
         version: $(DotNetCoreVersion)
 
     - script: |
-        echo "make prepare-update-mono V=1 CONFIGURATION=$(OSSBuildConfiguration) $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'"
-        make prepare-update-mono V=1 CONFIGURATION=$(OSSBuildConfiguration) $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'
+        echo "make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'"
+        make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'
       workingDirectory: $(Build.SourcesDirectory)
       displayName: make prepare-update-mono
 
     - script: |
-        echo "make prepare CONFIGURATION=$(OSSBuildConfiguration) V=1 $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'"
-        make prepare CONFIGURATION=$(OSSBuildConfiguration) V=1 $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'
+        echo "make prepare CONFIGURATION=$(XA.Build.Configuration) V=1 $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'"
+        make prepare CONFIGURATION=$(XA.Build.Configuration) V=1 $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'
       workingDirectory: $(Build.SourcesDirectory)
       displayName: make prepare
 
     - script: |
-        echo "make jenkins V=1 CONFIGURATION=$(OSSBuildConfiguration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1"
-        make jenkins V=1 CONFIGURATION=$(OSSBuildConfiguration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
+        echo "make jenkins V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1"
+        make jenkins V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
       workingDirectory: $(Build.SourcesDirectory)
       displayName: make jenkins
 
     - script: |
-        echo "make create-installers V=1 CONFIGURATION=$(OSSBuildConfiguration)"
-        make create-installers V=1 CONFIGURATION=$(OSSBuildConfiguration)
+        echo "make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)"
+        make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)
       workingDirectory: $(Build.SourcesDirectory)
       displayName: create installers
 
     - script: |
-        echo "make package-oss CONFIGURATION=$(OSSBuildConfiguration) V=1"
-        make package-oss CONFIGURATION=$(OSSBuildConfiguration) V=1
+        echo "make package-oss CONFIGURATION=$(XA.Build.Configuration) V=1"
+        make package-oss CONFIGURATION=$(XA.Build.Configuration) V=1
       workingDirectory: $(Build.SourcesDirectory)
       displayName: package oss
 
     - script: |
         if [[ "$(SKIP_TESTS)" != "true" ]]; then
-          echo "all-tests CONFIGURATION=$(OSSBuildConfiguration) V=1"
-          make all-tests CONFIGURATION=$(OSSBuildConfiguration) V=1
+          echo "all-tests CONFIGURATION=$(XA.Build.Configuration) V=1"
+          make all-tests CONFIGURATION=$(XA.Build.Configuration) V=1
         else
           echo "Skipping 'build tests' stage. Set SKIP_TESTS to false build and run tests"
         fi
@@ -85,8 +85,8 @@ stages:
       displayName: make all-tests
 
     - script: |
-        echo "make package-build-status CONFIGURATION=$(OSSBuildConfiguration) V=1"
-        make package-build-status CONFIGURATION=$(OSSBuildConfiguration) V=1
+        echo "make package-build-status CONFIGURATION=$(XA.Build.Configuration) V=1"
+        make package-build-status CONFIGURATION=$(XA.Build.Configuration) V=1
       workingDirectory: $(Build.SourcesDirectory)
       displayName: package build status
 
@@ -94,20 +94,20 @@ stages:
       displayName: pack all nupkgs
       inputs:
         solution: $(Build.SourcesDirectory)/build-tools/create-packs/Microsoft.Android.Sdk.proj
-        configuration: $(OSSBuildConfiguration)
-        msbuildArguments: /t:CreateAllPacks /restore /bl:$(Build.SourcesDirectory)/bin/Build$(OSSBuildConfiguration)/create-all-packs.binlog
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: /t:CreateAllPacks /restore /bl:$(Build.SourcesDirectory)/bin/Build$(XA.Build.Configuration)/create-all-packs.binlog
 
     - task: PublishPipelineArtifact@1
       displayName: upload nupkgs
       inputs:
         artifactName: $(NuGetArtifactName)
-        targetPath: $(Build.SourcesDirectory)/bin/Build$(OSSBuildConfiguration)/$(NuGetArtifactName)
+        targetPath: $(Build.SourcesDirectory)/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
 
       # UNDONE: Run performance tests?
       # Disabled
     - script: |
         exitCode=0
-        make run-performance-tests CONFIGURATION=$(OSSBuildConfiguration) V=1 || exitCode=$?
+        make run-performance-tests CONFIGURATION=$(XA.Build.Configuration) V=1 || exitCode=$?
         if [[ $exitCode -ne 0 ]]; then
           echo "ERROR: run-performance-tests FAILED, status: ${exitCode}"
           exit $exitCode
@@ -152,10 +152,10 @@ stages:
         sudo apt-get install -y ca-certificates-mono
       displayName: install mono preview
 
-    - script: make jenkins V=1 PREPARE_CI_PR=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(OSSBuildConfiguration)
+    - script: make jenkins V=1 PREPARE_CI_PR=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
       displayName: make jenkins
 
-    - script: make package-deb V=1 CONFIGURATION=$(OSSBuildConfiguration)
+    - script: make package-deb V=1 CONFIGURATION=$(XA.Build.Configuration)
       displayName: make package-deb
 
     - script: >
@@ -170,9 +170,9 @@ stages:
       displayName: publish linux artifacts
       inputs:
         artifactName: Linux Packages
-        targetPath: $(System.DefaultWorkingDirectory)/bin/Build$(OSSBuildConfiguration)/linux-artifacts
+        targetPath: $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/linux-artifacts
 
     - template: yaml-templates/upload-results.yaml
       parameters:
-        configuration: $(OSSBuildConfiguration)
+        configuration: $(XA.Build.Configuration)
         artifactName: OSS Build Results - Linux
