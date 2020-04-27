@@ -129,7 +129,7 @@ stages:
   - job: linux_build_package
     displayName: Linux Build
     pool:
-      vmImage: ubuntu-18.04
+      vmImage: ubuntu-18.04     # https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=azure-devops
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:
