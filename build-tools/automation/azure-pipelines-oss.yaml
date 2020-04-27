@@ -18,6 +18,9 @@ variables:
   EXTRA_MSBUILD_ARGS: /p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False
   PREPARE_FLAGS: PREPARE_CI=1 PREPARE_CI_PR=1
   DotNetCoreVersion: 3.x
+  # Version number from: https://dotnet.microsoft.com/download/dotnet-core/5.0
+  DotNetCorePreviewVersion: 5.0.100-preview.1.20155.7
+
   SKIP_TESTS: false
 
 stages:
@@ -38,6 +41,11 @@ stages:
       path: xamarin-android
       clean: true             # Executes: git clean -ffdx && git reset --hard HEAD
       submodules: recursive
+
+    - task: UseDotNet@2
+      displayName: install .NET Core $(DotNetCorePreviewVersion)
+      inputs:
+        version: $(DotNetCorePreviewVersion)
 
     - task: UseDotNet@2
       displayName: install .NET Core $(DotNetCoreVersion)
