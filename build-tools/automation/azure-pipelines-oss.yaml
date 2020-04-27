@@ -148,7 +148,6 @@ stages:
 
     - script: |
         # Report used vs. available disk space on each volume
-        df
         df -H
       displayName: report disk info
 
