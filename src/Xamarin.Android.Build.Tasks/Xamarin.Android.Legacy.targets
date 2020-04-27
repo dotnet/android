@@ -10,6 +10,10 @@ projects. .NET 5 projects will not import this file.
 
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
+  <PropertyGroup>
+    <AndroidBoundExceptionType Condition=" '$(AndroidBoundExceptionType)' == '' ">Java</AndroidBoundExceptionType>
+  </PropertyGroup>
+
   <PropertyGroup Condition=" '$(AndroidBuildApplicationPackage)' == 'True' And '$(AndroidApplication)' == 'True' ">
     <_PostBuildTargets>
       _CopyPackage;

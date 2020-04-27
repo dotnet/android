@@ -35,6 +35,13 @@ In .NET 5 the behavior of the following MSBuild tasks will change, but
 
 `$(AndroidUseIntermediateDesignerFile)` will be `True` by default.
 
+`$(AndroidBoundExceptionType)` will be `System` by default.  This will
+[alter the types of exceptions thrown from various methods][abet-sys] to
+better align with existing .NET 5 semantics, at the cost of compatibility with
+previous Xamarin.Android releases.
+
+[abet-sys]: https://github.com/xamarin/xamarin-android/issues/4127
+
 ## Default file inclusion
 
 Default Android related file globbing behavior is defined in `Microsoft.Android.Sdk.DefaultItems.props`.
