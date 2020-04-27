@@ -94,7 +94,7 @@ stages:
       displayName: upload nupkgs
       inputs:
         artifactName: $(NuGetArtifactName)
-        targetPath: $(Build.SourcesDirectory)/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
+        targetPath: $(Build.SourcesDirectory)/bin/Build$(OSSBuildConfiguration)/$(NuGetArtifactName)
 
       # UNDONE: Run performance tests?
       # Disabled
