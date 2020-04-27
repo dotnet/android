@@ -90,6 +90,13 @@ stages:
       workingDirectory: $(Build.SourcesDirectory)
       displayName: package build status
 
+    - task: MSBuild@1
+      displayName: pack all nupkgs
+      inputs:
+        solution: $(Build.SourcesDirectory)/build-tools/create-packs/Microsoft.Android.Sdk.proj
+        configuration: $(OSSBuildConfiguration)
+        msbuildArguments: /t:CreateAllPacks /restore /bl:$(Build.SourcesDirectory)/bin/Build$(OSSBuildConfiguration)/create-all-packs.binlog
+
     - task: PublishPipelineArtifact@1
       displayName: upload nupkgs
       inputs:
