@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="APT0001">
         <source>Unknown option `{0}`. Please check `$(AndroidAapt2CompileExtraArgs)` and `$(AndroidAapt2LinkExtraArgs)` to see if they include any `aapt` command line arguments that are no longer valid for `aapt2` and ensure that all other arguments are valid for `aapt2`.</source>
-        <target state="new">Unknown option `{0}`. Please check `$(AndroidAapt2CompileExtraArgs)` and `$(AndroidAapt2LinkExtraArgs)` to see if they include any `aapt` command line arguments that are no longer valid for `aapt2` and ensure that all other arguments are valid for `aapt2`.</target>
+        <target state="translated">Неизвестный параметр "{0}". Проверьте "$(AndroidAapt2CompileExtraArgs)" и "$(AndroidAapt2LinkExtraArgs)", чтобы проверить, содержат ли они аргументы командной строки "aapt", которые больше не являются допустимыми для "aapt2", и убедитесь, что все остальные аргументы являются допустимыми для "aapt2".</target>
         <note>The following are literal names and should not be translated: `aapt`, `aapt2`,  `$(AndroidAapt2CompileExtraArgs)`, `$(AndroidAapt2LinkExtraArgs)`
 {0} - The invalid option name</note>
       </trans-unit>
@@ -249,17 +249,17 @@ When it appears in the middle of a sentence, "lint" is not capitalized.
       </trans-unit>
       <trans-unit id="XA1011">
         <source>Using ProGuard with the D8 DEX compiler is no longer supported. Please update `$(AndroidLinkTool)` to `r8`.</source>
-        <target state="new">Using ProGuard with the D8 DEX compiler is no longer supported. Please update `$(AndroidLinkTool)` to `r8`.</target>
+        <target state="translated">Использование ProGuard с компилятором D8 DEX больше не поддерживается. Обновите "$(AndroidLinkTool)" до версии "r8".</target>
         <note>The following are literal names and should not be translated: ProGuard, D8, DEX, `$(AndroidLinkTool)`, `r8`</note>
       </trans-unit>
       <trans-unit id="XA1012">
         <source>Included layout root element override ID '{0}' is not valid.</source>
-        <target state="new">Included layout root element override ID '{0}' is not valid.</target>
+        <target state="translated">Включенный идентификатор переопределения корневого элемента макета "{0}" является недопустимым.</target>
         <note>{0} - The Android resource ID name</note>
       </trans-unit>
       <trans-unit id="XA1013">
         <source>Failed to parse ID of node '{0}' in the layout file '{1}'.</source>
-        <target state="new">Failed to parse ID of node '{0}' in the layout file '{1}'.</target>
+        <target state="translated">Не удалось проанализировать идентификатор узла "{0}" в файле макета "{1}".</target>
         <note>{0} - The Android resource XML element name
 {1} - The path of the layout file</note>
       </trans-unit>
@@ -271,19 +271,19 @@ When it appears in the middle of a sentence, "lint" is not capitalized.
       </trans-unit>
       <trans-unit id="XA1015">
         <source>More than one Android Wear project is specified as the paired project. It can be at most one.</source>
-        <target state="new">More than one Android Wear project is specified as the paired project. It can be at most one.</target>
+        <target state="translated">В качестве связанного проекта указано несколько проектов Android Wear. Такой проект может быть только один.</target>
         <note>The following are literal names and should not be translated: Android Wear</note>
       </trans-unit>
       <trans-unit id="XA1016">
         <source>Target Wear application's project '{0}' does not specify required 'AndroidManifest' project property.</source>
-        <target state="new">Target Wear application's project '{0}' does not specify required 'AndroidManifest' project property.</target>
+        <target state="translated">В проекте целевого приложения Wear "{0}" не указано обязательное свойство проекта "AndroidManifest".</target>
         <note>The following are literal names and should not be translated: Wear, AndroidManifest
 "Wear" is a short version of the full product name "Wear OS" and so should not be translated.
 {0} - The project file name</note>
       </trans-unit>
       <trans-unit id="XA1017">
         <source>Target Wear application's AndroidManifest.xml does not specify required 'package' attribute.</source>
-        <target state="new">Target Wear application's AndroidManifest.xml does not specify required 'package' attribute.</target>
+        <target state="translated">В файле AndroidManifest.xml целевого приложения Wear не указан обязательный атрибут "package".</target>
         <note>The following are literal names and should not be translated: Wear, AndroidManifest.xml, 'package'
 "Wear" is a short version of the full product name "Wear OS" and so should not be translated.</note>
       </trans-unit>
@@ -319,7 +319,7 @@ In this message, the term "binding" means a piece of generated code that makes i
       </trans-unit>
       <trans-unit id="XA2000">
         <source>Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 5 will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 5 is released.</source>
-        <target state="new">Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 5 will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 5 is released.</target>
+        <target state="translated">В сборке обнаружено использование AppDomain.CreateDomain(): {0}. .NET 5 поддерживает только один домен AppDomain, поэтому этот API не будет доступен в Xamarin.Android после выпуска .NET 5.</target>
         <note>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
 {0} - The name of the assembly</note>
       </trans-unit>
@@ -330,7 +330,7 @@ In this message, the term "binding" means a piece of generated code that makes i
       </trans-unit>
       <trans-unit id="XA2002_Framework">
         <source>Can not resolve reference: `{0}`, referenced by {1}. Perhaps it doesn't exist in the Mono for Android profile?</source>
-        <target state="translated">Не удается разрешить ссылку "{0}", на которую ссылается {1}. Возможно, он отсутствует в профиле Mono для Android.</target>
+        <target state="translated">Не удается разрешить ссылку "{0}", на которую ссылается {1}. Возможно, она отсутствует в профиле Mono для Android.</target>
         <note>{0} - The name of the missing assembly
 {1} - The chain of references that causes a reference to the missing assembly, with &gt; as the separator between items. Example: `System.Memory` &gt; `System.Buffers`</note>
       </trans-unit>
@@ -350,12 +350,12 @@ In this message, the term "binding" means a piece of generated code that makes i
       </trans-unit>
       <trans-unit id="XA2007">
         <source>Exception while loading assemblies: {0}</source>
-        <target state="new">Exception while loading assemblies: {0}</target>
+        <target state="translated">Исключение при загрузке сборок: {0}.</target>
         <note>{0} - The exception message of the associated exception</note>
       </trans-unit>
       <trans-unit id="XA2008">
         <source>In referenced assembly {0}, Java.Interop.DoNotPackageAttribute requires non-null file name.</source>
-        <target state="new">In referenced assembly {0}, Java.Interop.DoNotPackageAttribute requires non-null file name.</target>
+        <target state="translated">В сборке {0}, на которую указывает ссылка, для Java.Interop.DoNotPackageAttribute требуется имя файла, отличное от NULL.</target>
         <note>The following are literal names and should not be translated: Java.Interop.DoNotPackageAttribute
 {0} - The assembly name</note>
       </trans-unit>
@@ -466,14 +466,14 @@ In this message, the term "binding" means a piece of generated code that makes i
       </trans-unit>
       <trans-unit id="XA4219">
         <source>Cannot find binding generator for language {0} or {1}.</source>
-        <target state="new">Cannot find binding generator for language {0} or {1}.</target>
+        <target state="translated">Не удается найти генератор привязки для языка {0} или {1}.</target>
         <note>In this message, the term "binding" means a piece of code that makes it easy to access a certain kind of data that is originally stored outside of the target programming language, which is usually C#.
 {0} - The target programming language name, which is usually C#
 {1} - The default programming language name, which is also usually C#</note>
       </trans-unit>
       <trans-unit id="XA4220">
         <source>Partial class item '{0}' does not have an associated binding for layout '{1}'.</source>
-        <target state="new">Partial class item '{0}' does not have an associated binding for layout '{1}'.</target>
+        <target state="translated">С элементом разделяемого класса "{0}" не связана привязка для макета "{1}".</target>
         <note>In this message, the term "partial class item" means a .NET partial class.
 In this message, the term "binding" means a piece of code that makes it easy to access a certain kind of data that is originally stored outside of the target programming language, which is usually C#.
 In this mesage, the term "layout" means an Android UI layout.
@@ -482,31 +482,31 @@ In this mesage, the term "layout" means an Android UI layout.
       </trans-unit>
       <trans-unit id="XA4221">
         <source>No layout binding source files were generated.</source>
-        <target state="new">No layout binding source files were generated.</target>
+        <target state="translated">Не были созданы исходные файлы привязки макета.</target>
         <note>In this message, the term "binding" means a piece of code that makes it easy to access a certain kind of data that is originally stored outside of the target programming language, which is usually C#.
 In this mesage, the term "layout" means an Android UI layout.
 In this message, the term "source files" means files that can be compiled, usually containing C# source code.</note>
       </trans-unit>
       <trans-unit id="XA4222">
         <source>No widgets found for layout ({0}).</source>
-        <target state="new">No widgets found for layout ({0}).</target>
+        <target state="translated">Не найдены мини-приложения для макета ({0}).</target>
         <note>In this message, the term "widgets" means Android UI elements.
 In this mesage, the term "layout" means an Android UI layout.
 {0} - Semicolon-separated list of paths for the files that define the layout</note>
       </trans-unit>
       <trans-unit id="XA4223">
         <source>Malformed full class name '{0}'. Missing namespace.</source>
-        <target state="new">Malformed full class name '{0}'. Missing namespace.</target>
+        <target state="translated">Полное имя класса "{0}" сформировано неправильно. Отсутствует пространство имен.</target>
         <note>{0} - The class name</note>
       </trans-unit>
       <trans-unit id="XA4224">
         <source>Malformed full class name '{0}'. Missing class name.</source>
-        <target state="new">Malformed full class name '{0}'. Missing class name.</target>
+        <target state="translated">Полное имя класса "{0}" сформировано неправильно. Отсутствует имя класса.</target>
         <note>{0} - The class name</note>
       </trans-unit>
       <trans-unit id="XA4225">
         <source>Widget '{0}' in layout '{1}' has multiple instances with different types. The property type will be set to: {2}</source>
-        <target state="new">Widget '{0}' in layout '{1}' has multiple instances with different types. The property type will be set to: {2}</target>
+        <target state="translated">Мини-приложение "{0}" в макете "{1}" содержит несколько экземпляров с разными типами. Будет установлен тип свойства {2}</target>
         <note>In this message, the term "widgets" means Android UI elements.
 In this mesage, the term "layout" means an Android UI layout.
 {0} - The name of the widget
@@ -515,7 +515,7 @@ In this mesage, the term "layout" means an Android UI layout.
       </trans-unit>
       <trans-unit id="XA4226">
         <source>Resource item '{0}' does not have the required metadata item '{1}'.</source>
-        <target state="new">Resource item '{0}' does not have the required metadata item '{1}'.</target>
+        <target state="translated">Элемент ресурса "{0}" не включает необходимый элемент метаданных "{1}".</target>
         <note>{0} - The name of the Android layout resource file
 {1} - The name of the metadata item</note>
       </trans-unit>
@@ -627,7 +627,7 @@ In this message, the term "bundled" is a short way of saying "included into the 
       </trans-unit>
       <trans-unit id="XA4311">
         <source>The application won't contain the paired Wear package because the Wear application package APK is not created yet. If building on the command line, be sure to build the "SignAndroidPackage" target.</source>
-        <target state="new">The application won't contain the paired Wear package because the Wear application package APK is not created yet. If building on the command line, be sure to build the "SignAndroidPackage" target.</target>
+        <target state="translated">Приложение не будет содержать связанный пакет Wear, так как пакет APK приложения Wear еще не создан. При сборке в командной строке необходимо выполнить сборку целевого объекта "SignAndroidPackage".</target>
         <note>The following are literal names and should not be translated: Wear, APK, SignAndroidPackage
 "Wear" is a short version of the full product name "Wear OS" and so should not be translated.</note>
       </trans-unit>
@@ -689,7 +689,7 @@ In this message, the term "bundled" is a short way of saying "included into the 
       </trans-unit>
       <trans-unit id="XA5205_Lint">
         <source>Cannot find `{0}` in the Android SDK. Please set its path via /p:LintToolPath.</source>
-        <target state="translated">Не удается найти "{0}" в пакете SDK для Android. Укажите путь к нему, выполнив команду /p:LintToolPath.</target>
+        <target state="translated">Не удается найти "{0}" в пакете SDK для Android. Укажите путь к нему с помощью параметра /p:LintToolPath.</target>
         <note>The following are literal names and should not be translated: /p:LintToolPath
 {0} - The missing tool name</note>
       </trans-unit>
@@ -738,12 +738,12 @@ In this message, the term "handheld app" means "app for handheld devices."
       </trans-unit>
       <trans-unit id="XA5300_Android_SDK">
         <source>The Android SDK directory could not be found. Please set via /p:AndroidSdkDirectory.</source>
-        <target state="translated">Не удалось найти каталог пакета SDK для Android. Укажите путь к нему, выполнив команду /p:AndroidSdkDirectory.</target>
+        <target state="translated">Не удалось найти каталог пакета SDK для Android. Укажите путь к нему с помощью параметра /p:AndroidSdkDirectory.</target>
         <note>The following are literal names and should not be translated: /p:AndroidSdkDirectory</note>
       </trans-unit>
       <trans-unit id="XA5300_Java_SDK">
         <source>The Java SDK directory could not be found. Please set via /p:JavaSdkDirectory.</source>
-        <target state="translated">Не удалось найти каталог пакета SDK для Java. Укажите путь к нему, выполнив команду /p:JavaSdkDirectory.</target>
+        <target state="translated">Не удалось найти каталог пакета SDK для Java. Укажите путь к нему с помощью параметра /p:JavaSdkDirectory.</target>
         <note>The following are literal names and should not be translated: /p:JavaSdkDirectory</note>
       </trans-unit>
       <trans-unit id="XA5301">
