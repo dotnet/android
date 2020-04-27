@@ -11,6 +11,7 @@
     <DisableImplicitAndroidFrameworkReference Condition=" '$(DisableImplicitAndroidFrameworkReference)' == '' ">false</DisableImplicitAndroidFrameworkReference>
     <EnableDefaultAndroidResourceItems Condition=" '$(EnableDefaultAndroidResourceItems)' == '' ">true</EnableDefaultAndroidResourceItems>
     <EnableDefaultAndroidAssetItems Condition=" '$(EnableDefaultAndroidAssetItems)' == '' ">true</EnableDefaultAndroidAssetItems>
+    <AndroidBoundExceptionType Condition=" '$(AndroidBoundExceptionType)' == '' ">System</AndroidBoundExceptionType>
     <!-- Enable nuget package conflict resolution -->
     <ResolveAssemblyConflicts>true</ResolveAssemblyConflicts>
     <_AndroidResourceDesigner>Resource.designer.cs</_AndroidResourceDesigner>
