@@ -5,7 +5,9 @@ using Mono.Cecil;
 
 using Mono.Linker;
 
+#if !NET5_LINKER
 using Mono.Tuner;
+#endif
 
 using Java.Interop;
 using Java.Interop.Tools.Cecil;

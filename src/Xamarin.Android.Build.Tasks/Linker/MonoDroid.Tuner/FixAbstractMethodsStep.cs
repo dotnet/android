@@ -8,7 +8,10 @@ using Java.Interop.Tools.Cecil;
 
 using Mono.Linker;
 using Mono.Linker.Steps;
+
+#if !NET5_LINKER
 using Mono.Tuner;
+#endif
 
 namespace MonoDroid.Tuner
 {

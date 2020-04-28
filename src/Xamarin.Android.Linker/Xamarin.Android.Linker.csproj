@@ -11,6 +11,9 @@
 
     <!--Include *everything* to start with-->
     <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\*.cs" Link="MonoDroid.Tuner\%(FileName).cs" />
+    <Compile Remove="Mono.Tuner\**" />
+    <EmbeddedResource Remove="Mono.Tuner\**" />
+    <None Remove="Mono.Tuner\**" />
 
     <!--Files that probably do not apply at all to the new linker-->
     <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\AndroidLinkContext.cs" />
