@@ -115,20 +115,6 @@
   </ItemGroup>
   <ItemGroup>
     <_MSBuildFiles Include="$(MSBuildSrcDir)\android-support-multidex.jar" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\apkdiff.exe" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\apkdiff.exe.config" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\apkdiff.pdb" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\Mono.Options.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\libZipSharp.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\libZipSharp.dll.config" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\Newtonsoft.Json.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\Newtonsoft.Json-LICENSE.md" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\System.Buffers.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\System.Collections.Immutable.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\System.Memory.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\System.Numerics.Vectors.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\System.Reflection.Metadata.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\apkdiff\System.Runtime.CompilerServices.Unsafe.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\aprofutil.exe" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\aprofutil.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\cil-strip.exe" />
@@ -269,8 +255,6 @@
   <ItemGroup>
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\libzip.dll" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\lib64\libzip.dll" />
-    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\apkdiff\libzip.dll" />
-    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\apkdiff\lib64\libzip.dll" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\proguard\bin\proguard.bat" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\aapt2.exe" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\libwinpthread-1.dll" />
@@ -319,7 +303,6 @@
     <_MSBuildFilesUnixSwab Include="$(MSBuildSrcDir)\$(HostOS)\ndk\x86_64-linux-android-as" />
     <_MSBuildFilesUnixSwab Include="$(MSBuildSrcDir)\$(HostOS)\ndk\x86_64-linux-android-ld" />
     <_MSBuildFilesUnixSwab Include="$(MSBuildSrcDir)\$(HostOS)\ndk\x86_64-linux-android-strip" />
-    <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\apkdiff" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\illinkanalyzer" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\jit-times" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\aprofutil" />
@@ -336,7 +319,6 @@
     <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libmonosgen-2.0.$(LibExtension)"          Condition=" '$(PackageId)' != 'Xamarin.Android.Sdk' " />
     <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libxamarin-app.$(LibExtension)"           Condition=" '$(PackageId)' != 'Xamarin.Android.Sdk' " />
     <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\libzip.$(LibExtension)" />
-    <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\apkdiff\libzip.$(LibExtension)" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\proguard\bin\proguard.sh" />
   </ItemGroup>
   <!-- Allow us to exclude mono bundle files for PR builds -->
