@@ -75,7 +75,7 @@ namespace Android.Views {
 			static Delegate GetOnClick_Landroid_view_View_Handler ()
 			{
 				if (cb_onClick_Landroid_view_View_ == null)
-					cb_onClick_Landroid_view_View_ = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr, IntPtr>) n_OnClick_Landroid_view_View_);
+					cb_onClick_Landroid_view_View_ = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPL_V) n_OnClick_Landroid_view_View_);
 				return cb_onClick_Landroid_view_View_;
 			}
 
@@ -154,7 +154,7 @@ namespace Android.Views {
 		static Delegate GetSetOnClickListener_Landroid_view_View_OnClickListener_Handler ()
 		{
 			if (cb_setOnClickListener_Landroid_view_View_OnClickListener_ == null)
-				cb_setOnClickListener_Landroid_view_View_OnClickListener_ = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr, IntPtr>) n_SetOnClickListener_Landroid_view_View_OnClickListener_);
+				cb_setOnClickListener_Landroid_view_View_OnClickListener_ = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPL_V) n_SetOnClickListener_Landroid_view_View_OnClickListener_);
 			return cb_setOnClickListener_Landroid_view_View_OnClickListener_;
 		}
 
@@ -184,7 +184,7 @@ namespace Android.Views {
 		static Delegate GetSetOn123Listener_Landroid_view_View_OnClickListener_Handler ()
 		{
 			if (cb_setOn123Listener_Landroid_view_View_OnClickListener_ == null)
-				cb_setOn123Listener_Landroid_view_View_OnClickListener_ = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr, IntPtr>) n_SetOn123Listener_Landroid_view_View_OnClickListener_);
+				cb_setOn123Listener_Landroid_view_View_OnClickListener_ = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPL_V) n_SetOn123Listener_Landroid_view_View_OnClickListener_);
 			return cb_setOn123Listener_Landroid_view_View_OnClickListener_;
 		}
 
@@ -214,7 +214,7 @@ namespace Android.Views {
 		static Delegate GetAddTouchables_Ljava_util_ArrayList_Handler ()
 		{
 			if (cb_addTouchables_Ljava_util_ArrayList_ == null)
-				cb_addTouchables_Ljava_util_ArrayList_ = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr, IntPtr>) n_AddTouchables_Ljava_util_ArrayList_);
+				cb_addTouchables_Ljava_util_ArrayList_ = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPL_V) n_AddTouchables_Ljava_util_ArrayList_);
 			return cb_addTouchables_Ljava_util_ArrayList_;
 		}
 

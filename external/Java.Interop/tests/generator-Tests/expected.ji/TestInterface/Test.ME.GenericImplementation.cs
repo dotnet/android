@@ -53,7 +53,7 @@ namespace Test.ME {
 		static Delegate GetSetObject_arrayBHandler ()
 		{
 			if (cb_SetObject_arrayB == null)
-				cb_SetObject_arrayB = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr, IntPtr>) n_SetObject_arrayB);
+				cb_SetObject_arrayB = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPL_V) n_SetObject_arrayB);
 			return cb_SetObject_arrayB;
 		}
 

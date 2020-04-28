@@ -187,11 +187,11 @@ namespace Xamarin.Android.Binder
 			if (mapping_file != null)
 				GenerateMappingReportFile (gens, mapping_file);
 
-			new NamespaceMapping (gens).Generate (opt, gen_info);
-
 			foreach (IGeneratable gen in gens)
 				if (gen.IsGeneratable)
 					gen.Generate (opt, gen_info);
+
+			new NamespaceMapping (gens).Generate (opt, gen_info);
 
 
 			ClassGen.GenerateTypeRegistrations (opt, gen_info);

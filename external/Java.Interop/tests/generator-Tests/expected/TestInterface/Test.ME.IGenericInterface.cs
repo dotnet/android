@@ -63,7 +63,7 @@ namespace Test.ME {
 		static Delegate GetSetObject_Ljava_lang_Object_Handler ()
 		{
 			if (cb_SetObject_Ljava_lang_Object_ == null)
-				cb_SetObject_Ljava_lang_Object_ = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr, IntPtr>) n_SetObject_Ljava_lang_Object_);
+				cb_SetObject_Ljava_lang_Object_ = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPL_V) n_SetObject_Ljava_lang_Object_);
 			return cb_SetObject_Ljava_lang_Object_;
 		}
 

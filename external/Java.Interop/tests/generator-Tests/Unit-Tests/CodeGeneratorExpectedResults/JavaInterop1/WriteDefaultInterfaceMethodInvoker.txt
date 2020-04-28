@@ -54,7 +54,7 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 	static Delegate GetDoDeclarationHandler ()
 	{
 		if (cb_DoDeclaration == null)
-			cb_DoDeclaration = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr>) n_DoDeclaration);
+			cb_DoDeclaration = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_V) n_DoDeclaration);
 		return cb_DoDeclaration;
 	}
 

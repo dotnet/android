@@ -30,7 +30,7 @@ namespace Xamarin.Test {
 		static Delegate GetGetSomeObjectPropertyHandler ()
 		{
 			if (cb_getSomeObjectProperty == null)
-				cb_getSomeObjectProperty = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, int>) n_GetSomeObjectProperty);
+				cb_getSomeObjectProperty = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_I) n_GetSomeObjectProperty);
 			return cb_getSomeObjectProperty;
 		}
 
@@ -46,7 +46,7 @@ namespace Xamarin.Test {
 		static Delegate GetSetSomeObjectProperty_IHandler ()
 		{
 			if (cb_setSomeObjectProperty_I == null)
-				cb_setSomeObjectProperty_I = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr, int>) n_SetSomeObjectProperty_I);
+				cb_setSomeObjectProperty_I = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPI_V) n_SetSomeObjectProperty_I);
 			return cb_setSomeObjectProperty_I;
 		}
 

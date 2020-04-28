@@ -60,7 +60,7 @@ internal partial class IInterfaceWithoutNamespaceInvoker : global::Java.Lang.Obj
 	static Delegate GetFooHandler ()
 	{
 		if (cb_Foo == null)
-			cb_Foo = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr>) n_Foo);
+			cb_Foo = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_V) n_Foo);
 		return cb_Foo;
 	}
 

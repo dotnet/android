@@ -20,7 +20,7 @@ namespace Java.Lang {
 		static Delegate GetGetMessageHandler ()
 		{
 			if (cb_getMessage == null)
-				cb_getMessage = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, IntPtr>) n_GetMessage);
+				cb_getMessage = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_L) n_GetMessage);
 			return cb_getMessage;
 		}
 

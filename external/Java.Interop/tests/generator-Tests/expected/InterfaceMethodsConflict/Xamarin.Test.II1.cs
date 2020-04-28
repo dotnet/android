@@ -62,7 +62,7 @@ namespace Xamarin.Test {
 		static Delegate GetCloseHandler ()
 		{
 			if (cb_close == null)
-				cb_close = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr>) n_Close);
+				cb_close = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_V) n_Close);
 			return cb_close;
 		}
 

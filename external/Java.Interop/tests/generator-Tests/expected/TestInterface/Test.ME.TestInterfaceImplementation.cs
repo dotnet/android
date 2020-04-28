@@ -81,7 +81,7 @@ namespace Test.ME {
 		static Delegate GetGetSpanFlags_Ljava_lang_Object_Handler ()
 		{
 			if (cb_getSpanFlags_Ljava_lang_Object_ == null)
-				cb_getSpanFlags_Ljava_lang_Object_ = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, IntPtr, int>) n_GetSpanFlags_Ljava_lang_Object_);
+				cb_getSpanFlags_Ljava_lang_Object_ = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPL_I) n_GetSpanFlags_Ljava_lang_Object_);
 			return cb_getSpanFlags_Ljava_lang_Object_;
 		}
 
@@ -103,7 +103,7 @@ namespace Test.ME {
 		static Delegate GetAppend_Ljava_lang_CharSequence_Handler ()
 		{
 			if (cb_append_Ljava_lang_CharSequence_ == null)
-				cb_append_Ljava_lang_CharSequence_ = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr, IntPtr>) n_Append_Ljava_lang_CharSequence_);
+				cb_append_Ljava_lang_CharSequence_ = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPL_V) n_Append_Ljava_lang_CharSequence_);
 			return cb_append_Ljava_lang_CharSequence_;
 		}
 
@@ -131,7 +131,7 @@ namespace Test.ME {
 		static Delegate GetIdentity_Ljava_lang_CharSequence_Handler ()
 		{
 			if (cb_identity_Ljava_lang_CharSequence_ == null)
-				cb_identity_Ljava_lang_CharSequence_ = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, IntPtr, IntPtr>) n_Identity_Ljava_lang_CharSequence_);
+				cb_identity_Ljava_lang_CharSequence_ = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPL_L) n_Identity_Ljava_lang_CharSequence_);
 			return cb_identity_Ljava_lang_CharSequence_;
 		}
 

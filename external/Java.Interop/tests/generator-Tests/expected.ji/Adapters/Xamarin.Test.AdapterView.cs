@@ -36,7 +36,7 @@ namespace Xamarin.Test {
 		static Delegate GetGetAdapterHandler ()
 		{
 			if (cb_getAdapter == null)
-				cb_getAdapter = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, IntPtr>) n_GetAdapter);
+				cb_getAdapter = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_L) n_GetAdapter);
 			return cb_getAdapter;
 		}
 
@@ -52,7 +52,7 @@ namespace Xamarin.Test {
 		static Delegate GetSetAdapter_Lxamarin_test_Adapter_Handler ()
 		{
 			if (cb_setAdapter_Lxamarin_test_Adapter_ == null)
-				cb_setAdapter_Lxamarin_test_Adapter_ = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr, IntPtr>) n_SetAdapter_Lxamarin_test_Adapter_);
+				cb_setAdapter_Lxamarin_test_Adapter_ = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPL_V) n_SetAdapter_Lxamarin_test_Adapter_);
 			return cb_setAdapter_Lxamarin_test_Adapter_;
 		}
 

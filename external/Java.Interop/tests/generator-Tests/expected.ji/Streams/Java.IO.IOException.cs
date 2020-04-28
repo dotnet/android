@@ -35,7 +35,7 @@ namespace Java.IO {
 		static Delegate GetPrintStackTraceHandler ()
 		{
 			if (cb_printStackTrace == null)
-				cb_printStackTrace = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr>) n_PrintStackTrace);
+				cb_printStackTrace = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_V) n_PrintStackTrace);
 			return cb_printStackTrace;
 		}
 

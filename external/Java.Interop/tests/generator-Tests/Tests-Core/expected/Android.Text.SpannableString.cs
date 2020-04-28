@@ -92,7 +92,7 @@ namespace Android.Text {
 		static Delegate GetGetSpanFlags_Ljava_lang_Object_Handler ()
 		{
 			if (cb_getSpanFlags_Ljava_lang_Object_ == null)
-				cb_getSpanFlags_Ljava_lang_Object_ = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, IntPtr, int>) n_GetSpanFlags_Ljava_lang_Object_);
+				cb_getSpanFlags_Ljava_lang_Object_ = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPL_I) n_GetSpanFlags_Ljava_lang_Object_);
 			return cb_getSpanFlags_Ljava_lang_Object_;
 		}
 

@@ -115,10 +115,7 @@ namespace MonoDroid.Generation
 			var tpl = GenericParameterDefinitionList.Merge (type_params, GenericArguments);
 			if (!Parameters.Validate (opt, tpl, context))
 				return false;
-			if (Parameters.Count > 14) {
-				Report.Warning (0, Report.WarningMethodBase + 0, "More than 16 parameters were found, which goes beyond the maximum number of parameters. ({0})", context.ContextString);
-				return false;
-			}
+
 			return true;
 		}
 

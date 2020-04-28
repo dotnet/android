@@ -63,7 +63,7 @@ namespace Java.Lang {
 		static Delegate GetCompareTo_Ljava_lang_Object_Handler ()
 		{
 			if (cb_compareTo_Ljava_lang_Object_ == null)
-				cb_compareTo_Ljava_lang_Object_ = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, IntPtr, int>) n_CompareTo_Ljava_lang_Object_);
+				cb_compareTo_Ljava_lang_Object_ = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPL_I) n_CompareTo_Ljava_lang_Object_);
 			return cb_compareTo_Ljava_lang_Object_;
 		}
 

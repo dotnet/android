@@ -1090,7 +1090,7 @@ namespace MonoDroid.Generation
 		{
 			var is_private = method.IsInterfaceDefaultMethod ? "private " : string.Empty;
 
-			string delegate_type = method.GetDelegateType ();
+			string delegate_type = method.GetDelegateType (opt);
 			writer.WriteLine ("{0}{2}static Delegate{3} {1};", indent, method.EscapedCallbackName, is_private, opt.NullableOperator);
 			writer.WriteLine ("#pragma warning disable 0169");
 			if (method.Deprecated != null)

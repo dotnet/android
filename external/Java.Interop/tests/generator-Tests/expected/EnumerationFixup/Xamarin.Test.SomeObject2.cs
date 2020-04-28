@@ -30,7 +30,7 @@ namespace Xamarin.Test {
 		static Delegate GetGetSomeObjectPropertyHandler ()
 		{
 			if (cb_getSomeObjectProperty == null)
-				cb_getSomeObjectProperty = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, int>) n_GetSomeObjectProperty);
+				cb_getSomeObjectProperty = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_I) n_GetSomeObjectProperty);
 			return cb_getSomeObjectProperty;
 		}
 
@@ -46,7 +46,7 @@ namespace Xamarin.Test {
 		static Delegate GetSetSomeObjectProperty_IHandler ()
 		{
 			if (cb_setSomeObjectProperty_I == null)
-				cb_setSomeObjectProperty_I = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr, int>) n_SetSomeObjectProperty_I);
+				cb_setSomeObjectProperty_I = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPI_V) n_SetSomeObjectProperty_I);
 			return cb_setSomeObjectProperty_I;
 		}
 
@@ -98,7 +98,7 @@ namespace Xamarin.Test {
 		static Delegate GetGetSomeObjectPropertyArrayHandler ()
 		{
 			if (cb_getSomeObjectPropertyArray == null)
-				cb_getSomeObjectPropertyArray = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, IntPtr>) n_GetSomeObjectPropertyArray);
+				cb_getSomeObjectPropertyArray = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_L) n_GetSomeObjectPropertyArray);
 			return cb_getSomeObjectPropertyArray;
 		}
 
@@ -132,7 +132,7 @@ namespace Xamarin.Test {
 		static Delegate GetSetSomeObjectPropertyArray_arrayIHandler ()
 		{
 			if (cb_setSomeObjectPropertyArray_arrayI == null)
-				cb_setSomeObjectPropertyArray_arrayI = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr, IntPtr>) n_SetSomeObjectPropertyArray_arrayI);
+				cb_setSomeObjectPropertyArray_arrayI = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPL_V) n_SetSomeObjectPropertyArray_arrayI);
 			return cb_setSomeObjectPropertyArray_arrayI;
 		}
 

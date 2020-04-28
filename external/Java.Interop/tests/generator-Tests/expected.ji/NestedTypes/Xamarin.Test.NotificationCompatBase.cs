@@ -79,7 +79,7 @@ namespace Xamarin.Test {
 				static Delegate GetBuild_IHandler ()
 				{
 					if (cb_build_I == null)
-						cb_build_I = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, int, IntPtr>) n_Build_I);
+						cb_build_I = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPI_L) n_Build_I);
 					return cb_build_I;
 				}
 

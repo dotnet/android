@@ -35,7 +35,7 @@ namespace Xamarin.Test {
 		static Delegate GetGenericReturnHandler ()
 		{
 			if (cb_GenericReturn == null)
-				cb_GenericReturn = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, IntPtr>) n_GenericReturn);
+				cb_GenericReturn = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_L) n_GenericReturn);
 			return cb_GenericReturn;
 		}
 

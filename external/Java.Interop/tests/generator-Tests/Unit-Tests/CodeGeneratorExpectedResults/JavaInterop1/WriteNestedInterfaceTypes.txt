@@ -74,7 +74,7 @@ public partial interface IParent : IJavaObject, IJavaPeerable {
 		static Delegate GetGetBarHandler ()
 		{
 			if (cb_getBar == null)
-				cb_getBar = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, int>) n_GetBar);
+				cb_getBar = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_I) n_GetBar);
 			return cb_getBar;
 		}
 
@@ -155,7 +155,7 @@ internal partial class IParentInvoker : global::Java.Lang.Object, IParent {
 	static Delegate GetGetBarHandler ()
 	{
 		if (cb_getBar == null)
-			cb_getBar = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, int>) n_GetBar);
+			cb_getBar = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_I) n_GetBar);
 		return cb_getBar;
 	}
 

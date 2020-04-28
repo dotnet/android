@@ -11,6 +11,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="generator.slnf" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Include="..\..\src\utils\StringRocks.cs">
       <Link>utils\StringRocks.cs</Link>
     </Compile>

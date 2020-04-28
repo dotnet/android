@@ -3,7 +3,7 @@ static Delegate? cb_GetCountForKey_Ljava_lang_String_;
 static Delegate GetGetCountForKey_Ljava_lang_String_Handler ()
 {
 	if (cb_GetCountForKey_Ljava_lang_String_ == null)
-		cb_GetCountForKey_Ljava_lang_String_ = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, IntPtr, int>) n_GetCountForKey_Ljava_lang_String_);
+		cb_GetCountForKey_Ljava_lang_String_ = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPL_I) n_GetCountForKey_Ljava_lang_String_);
 	return cb_GetCountForKey_Ljava_lang_String_;
 }
 
@@ -37,7 +37,7 @@ static Delegate? cb_Key;
 static Delegate GetKeyHandler ()
 {
 	if (cb_Key == null)
-		cb_Key = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, IntPtr>) n_Key);
+		cb_Key = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_L) n_Key);
 	return cb_Key;
 }
 
@@ -76,7 +76,7 @@ static Delegate? cb_AbstractMethod;
 static Delegate GetAbstractMethodHandler ()
 {
 	if (cb_AbstractMethod == null)
-		cb_AbstractMethod = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr>) n_AbstractMethod);
+		cb_AbstractMethod = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_V) n_AbstractMethod);
 	return cb_AbstractMethod;
 }
 

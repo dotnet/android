@@ -62,7 +62,7 @@ namespace Java.IO {
 		static Delegate GetWrite_IHandler ()
 		{
 			if (cb_write_I == null)
-				cb_write_I = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr, int>) n_Write_I);
+				cb_write_I = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPI_V) n_Write_I);
 			return cb_write_I;
 		}
 

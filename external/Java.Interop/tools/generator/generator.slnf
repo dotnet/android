@@ -1,0 +1,15 @@
+{
+  "solution": {
+    "path": "C:\\code\\xamarin-android-backport\\external\\Java.Interop\\Java.Interop.sln",
+    "projects": [
+      "src\\Java.Interop.NamingCustomAttributes\\Java.Interop.NamingCustomAttributes.shproj",
+      "src\\Java.Interop.Tools.Cecil\\Java.Interop.Tools.Cecil.csproj",
+      "src\\Java.Interop.Tools.JavaCallableWrappers\\Java.Interop.Tools.JavaCallableWrappers.csproj",
+      "src\\Java.Interop.Tools.Diagnostics\\Java.Interop.Tools.Diagnostics.csproj",
+      "src\\Xamarin.Android.Tools.AnnotationSupport\\Xamarin.Android.Tools.AnnotationSupport.csproj",
+      "src\\Xamarin.Android.Tools.ApiXmlAdjuster\\Xamarin.Android.Tools.ApiXmlAdjuster.csproj",
+      "tests\\generator-Tests\\generator-Tests.csproj",
+      "tools\\generator\\generator.csproj",
+    ]
+  }
+}

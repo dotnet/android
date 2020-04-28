@@ -3,7 +3,7 @@ static Delegate? cb_bar;
 static Delegate GetbarHandler ()
 {
 	if (cb_bar == null)
-		cb_bar = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr>) n_bar);
+		cb_bar = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_V) n_bar);
 	return cb_bar;
 }
 

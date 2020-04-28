@@ -55,7 +55,7 @@ namespace Xamarin.Test {
 		static Delegate GetGetTypeHandler ()
 		{
 			if (cb_getType == null)
-				cb_getType = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, IntPtr>) n_GetType);
+				cb_getType = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_L) n_GetType);
 			return cb_getType;
 		}
 
@@ -83,7 +83,7 @@ namespace Xamarin.Test {
 		static Delegate GetHandle_Ljava_lang_Object_Ljava_lang_Throwable_Handler ()
 		{
 			if (cb_handle_Ljava_lang_Object_Ljava_lang_Throwable_ == null)
-				cb_handle_Ljava_lang_Object_Ljava_lang_Throwable_ = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, IntPtr, IntPtr, int>) n_Handle_Ljava_lang_Object_Ljava_lang_Throwable_);
+				cb_handle_Ljava_lang_Object_Ljava_lang_Throwable_ = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPLL_I) n_Handle_Ljava_lang_Object_Ljava_lang_Throwable_);
 			return cb_handle_Ljava_lang_Object_Ljava_lang_Throwable_;
 		}
 
@@ -117,7 +117,7 @@ namespace Xamarin.Test {
 		static Delegate GetIntegerMethodHandler ()
 		{
 			if (cb_IntegerMethod == null)
-				cb_IntegerMethod = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, int>) n_IntegerMethod);
+				cb_IntegerMethod = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_I) n_IntegerMethod);
 			return cb_IntegerMethod;
 		}
 
@@ -145,7 +145,7 @@ namespace Xamarin.Test {
 		static Delegate GetVoidMethodHandler ()
 		{
 			if (cb_VoidMethod == null)
-				cb_VoidMethod = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr>) n_VoidMethod);
+				cb_VoidMethod = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_V) n_VoidMethod);
 			return cb_VoidMethod;
 		}
 
@@ -172,7 +172,7 @@ namespace Xamarin.Test {
 		static Delegate GetStringMethodHandler ()
 		{
 			if (cb_StringMethod == null)
-				cb_StringMethod = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, IntPtr>) n_StringMethod);
+				cb_StringMethod = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_L) n_StringMethod);
 			return cb_StringMethod;
 		}
 
@@ -200,7 +200,7 @@ namespace Xamarin.Test {
 		static Delegate GetObjectMethodHandler ()
 		{
 			if (cb_ObjectMethod == null)
-				cb_ObjectMethod = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, IntPtr>) n_ObjectMethod);
+				cb_ObjectMethod = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_L) n_ObjectMethod);
 			return cb_ObjectMethod;
 		}
 
@@ -228,7 +228,7 @@ namespace Xamarin.Test {
 		static Delegate GetVoidMethodWithParams_Ljava_lang_String_ILjava_lang_Object_Handler ()
 		{
 			if (cb_VoidMethodWithParams_Ljava_lang_String_ILjava_lang_Object_ == null)
-				cb_VoidMethodWithParams_Ljava_lang_String_ILjava_lang_Object_ = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr, IntPtr, int, IntPtr>) n_VoidMethodWithParams_Ljava_lang_String_ILjava_lang_Object_);
+				cb_VoidMethodWithParams_Ljava_lang_String_ILjava_lang_Object_ = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPLIL_V) n_VoidMethodWithParams_Ljava_lang_String_ILjava_lang_Object_);
 			return cb_VoidMethodWithParams_Ljava_lang_String_ILjava_lang_Object_;
 		}
 
@@ -264,7 +264,7 @@ namespace Xamarin.Test {
 		static Delegate GetObsoleteMethodHandler ()
 		{
 			if (cb_ObsoleteMethod == null)
-				cb_ObsoleteMethod = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, int>) n_ObsoleteMethod);
+				cb_ObsoleteMethod = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_I) n_ObsoleteMethod);
 			return cb_ObsoleteMethod;
 		}
 
@@ -294,7 +294,7 @@ namespace Xamarin.Test {
 		static Delegate GetArrayListTest_Ljava_util_ArrayList_Handler ()
 		{
 			if (cb_ArrayListTest_Ljava_util_ArrayList_ == null)
-				cb_ArrayListTest_Ljava_util_ArrayList_ = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr, IntPtr>) n_ArrayListTest_Ljava_util_ArrayList_);
+				cb_ArrayListTest_Ljava_util_ArrayList_ = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPL_V) n_ArrayListTest_Ljava_util_ArrayList_);
 			return cb_ArrayListTest_Ljava_util_ArrayList_;
 		}
 

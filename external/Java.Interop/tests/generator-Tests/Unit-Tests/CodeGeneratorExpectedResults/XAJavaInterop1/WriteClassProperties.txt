@@ -3,7 +3,7 @@ static Delegate cb_get_Count;
 static Delegate Getget_CountHandler ()
 {
 	if (cb_get_Count == null)
-		cb_get_Count = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, int>) n_get_Count);
+		cb_get_Count = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_I) n_get_Count);
 	return cb_get_Count;
 }
 
@@ -19,7 +19,7 @@ static Delegate cb_set_Count_I;
 static Delegate Getset_Count_IHandler ()
 {
 	if (cb_set_Count_I == null)
-		cb_set_Count_I = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr, int>) n_set_Count_I);
+		cb_set_Count_I = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPI_V) n_set_Count_I);
 	return cb_set_Count_I;
 }
 
@@ -59,7 +59,7 @@ static Delegate cb_get_Key;
 static Delegate Getget_KeyHandler ()
 {
 	if (cb_get_Key == null)
-		cb_get_Key = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, IntPtr>) n_get_Key);
+		cb_get_Key = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_L) n_get_Key);
 	return cb_get_Key;
 }
 
@@ -75,7 +75,7 @@ static Delegate cb_set_Key_Ljava_lang_String_;
 static Delegate Getset_Key_Ljava_lang_String_Handler ()
 {
 	if (cb_set_Key_Ljava_lang_String_ == null)
-		cb_set_Key_Ljava_lang_String_ = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr, IntPtr>) n_set_Key_Ljava_lang_String_);
+		cb_set_Key_Ljava_lang_String_ = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPL_V) n_set_Key_Ljava_lang_String_);
 	return cb_set_Key_Ljava_lang_String_;
 }
 
@@ -142,7 +142,7 @@ static Delegate cb_get_AbstractCount;
 static Delegate Getget_AbstractCountHandler ()
 {
 	if (cb_get_AbstractCount == null)
-		cb_get_AbstractCount = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, int>) n_get_AbstractCount);
+		cb_get_AbstractCount = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_I) n_get_AbstractCount);
 	return cb_get_AbstractCount;
 }
 
@@ -158,7 +158,7 @@ static Delegate cb_set_AbstractCount_I;
 static Delegate Getset_AbstractCount_IHandler ()
 {
 	if (cb_set_AbstractCount_I == null)
-		cb_set_AbstractCount_I = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr, int>) n_set_AbstractCount_I);
+		cb_set_AbstractCount_I = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPI_V) n_set_AbstractCount_I);
 	return cb_set_AbstractCount_I;
 }
 

@@ -58,7 +58,7 @@ namespace Test.ME {
 		static Delegate GetGetObjectHandler ()
 		{
 			if (cb_getObject == null)
-				cb_getObject = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, IntPtr>) n_GetObject);
+				cb_getObject = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_L) n_GetObject);
 			return cb_getObject;
 		}
 
@@ -74,7 +74,7 @@ namespace Test.ME {
 		static Delegate GetSetObject_Ljava_lang_Object_Handler ()
 		{
 			if (cb_setObject_Ljava_lang_Object_ == null)
-				cb_setObject_Ljava_lang_Object_ = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr, IntPtr>) n_SetObject_Ljava_lang_Object_);
+				cb_setObject_Ljava_lang_Object_ = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPL_V) n_SetObject_Ljava_lang_Object_);
 			return cb_setObject_Ljava_lang_Object_;
 		}
 

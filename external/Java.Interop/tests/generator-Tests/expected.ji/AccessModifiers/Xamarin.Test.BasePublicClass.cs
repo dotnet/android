@@ -35,7 +35,7 @@ namespace Xamarin.Test {
 		static Delegate GetBaseMethodHandler ()
 		{
 			if (cb_baseMethod == null)
-				cb_baseMethod = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr>) n_BaseMethod);
+				cb_baseMethod = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_V) n_BaseMethod);
 			return cb_baseMethod;
 		}
 

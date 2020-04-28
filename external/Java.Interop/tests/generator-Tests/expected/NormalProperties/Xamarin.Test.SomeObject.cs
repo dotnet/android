@@ -30,7 +30,7 @@ namespace Xamarin.Test {
 		static Delegate GetGetSomeIntegerHandler ()
 		{
 			if (cb_getSomeInteger == null)
-				cb_getSomeInteger = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, int>) n_GetSomeInteger);
+				cb_getSomeInteger = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_I) n_GetSomeInteger);
 			return cb_getSomeInteger;
 		}
 
@@ -46,7 +46,7 @@ namespace Xamarin.Test {
 		static Delegate GetSetSomeInteger_IHandler ()
 		{
 			if (cb_setSomeInteger_I == null)
-				cb_setSomeInteger_I = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr, int>) n_SetSomeInteger_I);
+				cb_setSomeInteger_I = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPI_V) n_SetSomeInteger_I);
 			return cb_setSomeInteger_I;
 		}
 
@@ -69,7 +69,7 @@ namespace Xamarin.Test {
 		static Delegate GetGetSomeObjectPropertyHandler ()
 		{
 			if (cb_getSomeObjectProperty == null)
-				cb_getSomeObjectProperty = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, IntPtr>) n_GetSomeObjectProperty);
+				cb_getSomeObjectProperty = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_L) n_GetSomeObjectProperty);
 			return cb_getSomeObjectProperty;
 		}
 
@@ -85,7 +85,7 @@ namespace Xamarin.Test {
 		static Delegate GetSetSomeObjectProperty_Ljava_lang_Object_Handler ()
 		{
 			if (cb_setSomeObjectProperty_Ljava_lang_Object_ == null)
-				cb_setSomeObjectProperty_Ljava_lang_Object_ = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr, IntPtr>) n_SetSomeObjectProperty_Ljava_lang_Object_);
+				cb_setSomeObjectProperty_Ljava_lang_Object_ = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPL_V) n_SetSomeObjectProperty_Ljava_lang_Object_);
 			return cb_setSomeObjectProperty_Ljava_lang_Object_;
 		}
 
@@ -109,7 +109,7 @@ namespace Xamarin.Test {
 		static Delegate GetGetSomeStringHandler ()
 		{
 			if (cb_getSomeString == null)
-				cb_getSomeString = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, IntPtr>) n_GetSomeString);
+				cb_getSomeString = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_L) n_GetSomeString);
 			return cb_getSomeString;
 		}
 
@@ -125,7 +125,7 @@ namespace Xamarin.Test {
 		static Delegate GetSetSomeString_Ljava_lang_String_Handler ()
 		{
 			if (cb_setSomeString_Ljava_lang_String_ == null)
-				cb_setSomeString_Ljava_lang_String_ = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr, IntPtr>) n_SetSomeString_Ljava_lang_String_);
+				cb_setSomeString_Ljava_lang_String_ = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPL_V) n_SetSomeString_Ljava_lang_String_);
 			return cb_setSomeString_Ljava_lang_String_;
 		}
 

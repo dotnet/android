@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 using Java.Interop.Tools.JavaCallableWrappers;
 
@@ -43,6 +44,9 @@ namespace MonoDroid.Generation
 		}
 
 		public      SymbolTable             SymbolTable             { get; } = new SymbolTable ();
+
+		readonly SortedSet<string> jni_marshal_delegates = new SortedSet<string> ();
+		readonly object jni_marshal_delegates_lock = new object ();
 
 		public bool UseGlobal { get; set; }
 		public bool IgnoreNonPublicType { get; set; }
@@ -154,6 +158,57 @@ namespace MonoDroid.Generation
 			}
 
 			return NullableOperator;
+		}
+
+		// Encoding format:
+		// - Type name prefix: _JniMarshal_PP
+		// - Parameter types, using JNI encoding, e.g. Z is boolean, I is int, etc.
+		//   - Exception: Reference types, normally encoded as L…;, are instead just L.
+		//   - Lowercase JNI encoding indicates unsigned type, e.g. i is uint.
+		// - Another _.
+		// - Return type, encoded as with parameters. A void return type is V.
+		internal string GetJniMarshalDelegate (Method method)
+		{
+			var sb = new StringBuilder ("_JniMarshal_PP");
+
+			foreach (var p in method.Parameters)
+				sb.Append (GetJniTypeCode (p.Symbol));
+
+			sb.Append ("_");
+			sb.Append (GetJniTypeCode (method.RetVal.Symbol));
+
+			var result = sb.ToString ();
+
+			lock (jni_marshal_delegates_lock)
+				jni_marshal_delegates.Add (result);
+
+			return result;
+		}
+
+		string GetJniTypeCode (ISymbol symbol)
+		{
+			// The JniName for our Kotlin unsigned types is the same
+			// as the Java signed types, so check the original symbol
+			// name and encode lowercase for unsigned version.
+			switch (symbol.JavaName) {
+				case "ubyte": return "b";
+				case "uint": return "i";
+				case "ulong": return "j";
+				case "ushort": return "s";
+			}
+
+			var jni_name = symbol.JniName;
+
+			if (jni_name.StartsWith ("L") || jni_name.StartsWith ("["))
+				return "L";
+
+			return symbol.JniName;
+		}
+
+		internal IEnumerable<string> GetJniMarshalDelegates ()
+		{
+			lock (jni_marshal_delegates_lock)
+				return jni_marshal_delegates;
 		}
 
 		public string GetOutputName (string s)

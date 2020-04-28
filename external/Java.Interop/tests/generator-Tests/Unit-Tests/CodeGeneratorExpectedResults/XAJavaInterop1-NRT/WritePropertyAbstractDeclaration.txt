@@ -3,7 +3,7 @@ static Delegate? cb_get_MyProperty;
 static Delegate Getget_MyPropertyHandler ()
 {
 	if (cb_get_MyProperty == null)
-		cb_get_MyProperty = JNINativeWrapper.CreateDelegate ((Func<IntPtr, IntPtr, int>) n_get_MyProperty);
+		cb_get_MyProperty = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_I) n_get_MyProperty);
 	return cb_get_MyProperty;
 }
 
@@ -19,7 +19,7 @@ static Delegate? cb_set_MyProperty_I;
 static Delegate Getset_MyProperty_IHandler ()
 {
 	if (cb_set_MyProperty_I == null)
-		cb_set_MyProperty_I = JNINativeWrapper.CreateDelegate ((Action<IntPtr, IntPtr, int>) n_set_MyProperty_I);
+		cb_set_MyProperty_I = JNINativeWrapper.CreateDelegate ((_JniMarshal_PPI_V) n_set_MyProperty_I);
 	return cb_set_MyProperty_I;
 }
 
