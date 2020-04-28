@@ -477,6 +477,17 @@ stages:
         configuration: $(ApkTestConfiguration)
 
     - task: MSBuild@1
+      displayName: build apkdiff.csproj
+      inputs:
+        solution: tools/apkdiff/apkdiff.csproj
+        configuration: $(ApkTestConfiguration)
+        msbuildArguments: >
+          /restore
+          /t:Build
+          /bl:$(System.DefaultWorkingDirectory)/bin/Test$(ApkTestConfiguration)/build-apkdiff.binlog
+      continueOnError: true
+
+    - task: MSBuild@1
       displayName: build check-boot-times.csproj
       inputs:
         solution: build-tools/check-boot-times/check-boot-times.csproj
