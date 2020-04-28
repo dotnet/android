@@ -307,11 +307,15 @@ namespace MonoDroid.Tuner
 
 		protected virtual AssemblyDefinition GetMonoAndroidAssembly ()
 		{
+#if !NET5_LINKER
 			foreach (var assembly in Context.GetAssemblies ()) {
 				if (assembly.Name.Name == "Mono.Android")
 					return assembly;
 			}
 			return null;
+#else
+			return Context.GetLoadedAssembly ("Mono.Android");
+#endif
 		}
 	}
 }
