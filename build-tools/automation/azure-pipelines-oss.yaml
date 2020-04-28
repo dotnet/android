@@ -22,7 +22,7 @@ variables:
   DotNetCorePreviewVersion: 5.0.100-preview.1.20155.7
 
   BUILD_TESTS: true
-  RUN_TESTS: true
+  RUN_TESTS: false
 
 stages:
 - stage: mac_stage
