@@ -21,7 +21,8 @@ variables:
   # Version number from: https://dotnet.microsoft.com/download/dotnet-core/5.0
   DotNetCorePreviewVersion: 5.0.100-preview.1.20155.7
 
-  SKIP_TESTS: false
+  BUILD_TESTS: true
+  RUN_TESTS: true
 
 stages:
 - stage: mac_stage
@@ -83,14 +84,11 @@ stages:
       displayName: package oss
 
     - script: |
-        if [[ "$(SKIP_TESTS)" != "true" ]]; then
-          echo "all-tests CONFIGURATION=$(XA.Build.Configuration) V=1"
-          make all-tests CONFIGURATION=$(XA.Build.Configuration) V=1
-        else
-          echo "Skipping 'build tests' stage. Set SKIP_TESTS to false build and run tests"
-        fi
+        echo "all-tests CONFIGURATION=$(XA.Build.Configuration) V=1"
+        make all-tests CONFIGURATION=$(XA.Build.Configuration) V=1
       workingDirectory: $(Build.SourcesDirectory)
       displayName: make all-tests
+      condition: and(succeeded(), eq(variables['BUILD_TESTS'], 'true'))
 
     - script: |
         echo "make package-build-status CONFIGURATION=$(XA.Build.Configuration) V=1"
@@ -111,8 +109,6 @@ stages:
         artifactName: $(NuGetArtifactName)
         targetPath: $(Build.SourcesDirectory)/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
 
-      # UNDONE: Run performance tests?
-      # Disabled
     - script: |
         exitCode=0
         make run-performance-tests CONFIGURATION=$(XA.Build.Configuration) V=1 || exitCode=$?
@@ -122,9 +118,7 @@ stages:
         fi
       workingDirectory: $(Build.SourcesDirectory)
       displayName: run performance tests
-      enabled: false
-
-      # UNDONE: Publish test results?
+      condition: and(succeeded(), eq(variables['RUN_TESTS'], 'true'))
 
     - template: yaml-templates/upload-results.yaml
       parameters:
