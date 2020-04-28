@@ -10,21 +10,49 @@ namespace Xamarin.Android.Prepare
 		public readonly List<Runtime> Items = new List <Runtime> {
 			new MonoJitRuntime (
 				abiName: AbiNames.TargetJit.AndroidArmV7a,
+				interpreter: false,
+				enabledCheck: (Context ctx) => ctx.IsTargetJitAbiEnabled (AbiNames.TargetJit.AndroidArmV7a)
+			),
+
+			new MonoJitRuntime (
+				abiName: AbiNames.TargetJit.AndroidArmV7a,
+				interpreter: true,
 				enabledCheck: (Context ctx) => ctx.IsTargetJitAbiEnabled (AbiNames.TargetJit.AndroidArmV7a)
 			),
 
 			new MonoJitRuntime (
 				abiName: AbiNames.TargetJit.AndroidArmV8a,
+				interpreter: false,
+				enabledCheck: (Context ctx) => ctx.IsTargetJitAbiEnabled (AbiNames.TargetJit.AndroidArmV8a)
+			),
+
+			new MonoJitRuntime (
+				abiName: AbiNames.TargetJit.AndroidArmV8a,
+				interpreter: true,
 				enabledCheck: (Context ctx) => ctx.IsTargetJitAbiEnabled (AbiNames.TargetJit.AndroidArmV8a)
 			),
 
 			new MonoJitRuntime (
 				abiName: AbiNames.TargetJit.AndroidX86,
+				interpreter: false,
+				enabledCheck: (Context ctx) => ctx.IsTargetJitAbiEnabled (AbiNames.TargetJit.AndroidX86)
+			),
+
+			new MonoJitRuntime (
+				abiName: AbiNames.TargetJit.AndroidX86,
+				interpreter: true,
 				enabledCheck: (Context ctx) => ctx.IsTargetJitAbiEnabled (AbiNames.TargetJit.AndroidX86)
 			),
 
 			new MonoJitRuntime (
 				abiName: AbiNames.TargetJit.AndroidX86_64,
+				interpreter: false,
+				enabledCheck: (Context ctx) => ctx.IsTargetJitAbiEnabled (AbiNames.TargetJit.AndroidX86_64)
+			),
+
+			new MonoJitRuntime (
+				abiName: AbiNames.TargetJit.AndroidX86_64,
+				interpreter: true,
 				enabledCheck: (Context ctx) => ctx.IsTargetJitAbiEnabled (AbiNames.TargetJit.AndroidX86_64)
 			),
 

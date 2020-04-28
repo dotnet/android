@@ -22,6 +22,7 @@ namespace Xamarin.Android.Tasks
 		Normal    = 0x0001,
 		Hybrid    = 0x0002,
 		Full      = 0x0003,
+		Interp    = 0x0004,
 	}
 
 	public enum SequencePointsMode {
@@ -109,6 +110,10 @@ namespace Xamarin.Android.Tasks
 			case "full":
 				aotMode = AotMode.Full;
 				return true;
+			case "interpreter":
+				aotMode = AotMode.Interp;
+				return true; // We don't do anything here for this mode, this is just to set the flag for the XA
+							  // runtime to initialize Mono in the inrepreter "AOT" mode.
 			}
 
 			return false;
@@ -226,6 +231,11 @@ namespace Xamarin.Android.Tasks
 			bool hasValidAotMode = GetAndroidAotMode (AndroidAotMode, out AotMode);
 			if (!hasValidAotMode) {
 				LogCodedError ("XA3002", Properties.Resources.XA3002, AndroidAotMode);
+				return;
+			}
+
+			if (AotMode == AotMode.Interp) {
+				LogDebugMessage ("Interpreter AOT mode enabled");
 				return;
 			}
 

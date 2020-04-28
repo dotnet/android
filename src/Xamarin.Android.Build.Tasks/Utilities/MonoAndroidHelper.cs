@@ -260,6 +260,9 @@ namespace Xamarin.Android.Tasks
 		{
 			// The topmost directory the .so file is contained within
 			var dir = Path.GetFileName (Path.GetDirectoryName (lib)).ToLowerInvariant ();
+			if (dir.StartsWith ("interpreter-", StringComparison.Ordinal)) {
+				dir = dir.Substring (12);
+			}
 			if (ValidAbis.Contains (dir)) {
 				return dir;
 			}
