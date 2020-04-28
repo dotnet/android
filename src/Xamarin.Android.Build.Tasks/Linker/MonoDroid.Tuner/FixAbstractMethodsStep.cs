@@ -35,7 +35,9 @@ namespace MonoDroid.Tuner
 			if (IsProductOrSdkAssembly (assembly))
 				return;
 
+#if !NET5_LINKER
 			CheckAppDomainUsageUnconditional (assembly, (string msg) => Context.LogMessage (MessageImportance.High, msg));
+#endif
 
 			if (FixAbstractMethodsUnconditional (assembly)) {
 #if !NET5_LINKER
@@ -52,6 +54,7 @@ namespace MonoDroid.Tuner
 		}
 
 
+#if !NET5_LINKER
 		internal void CheckAppDomainUsage (AssemblyDefinition assembly, Action<string> warn)
 		{
 			if (IsProductOrSdkAssembly (assembly))
@@ -62,8 +65,6 @@ namespace MonoDroid.Tuner
 
 		void CheckAppDomainUsageUnconditional (AssemblyDefinition assembly, Action<string> warn)
 		{
-			//TODO: do we need to warn about AppDomain in .NET 5?
-#if !NET5_LINKER
 			if (!assembly.MainModule.HasTypeReference ("System.AppDomain"))
 				return;
 
@@ -73,8 +74,8 @@ namespace MonoDroid.Tuner
 					break;
 				}
 			}
-#endif
 		}
+#endif
 
 		internal bool FixAbstractMethods (AssemblyDefinition assembly)
 		{
