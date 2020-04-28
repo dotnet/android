@@ -5,13 +5,13 @@ VisualStudioVersion = 16.0.29424.173
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{C8F58966-94BF-407F-914A-8654F8B8AE3B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Tools.JniMarshalMethodGenerator", "tools\jnimarshalmethod-gen\Xamarin.Android.Tools.JniMarshalMethodGenerator.csproj", "{D1295A8F-4F42-461D-A046-564476C10002}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.Android.Tools.JniMarshalMethodGenerator", "tools\jnimarshalmethod-gen\Xamarin.Android.Tools.JniMarshalMethodGenerator.csproj", "{D1295A8F-4F42-461D-A046-564476C10002}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "logcat-parse", "tools\logcat-parse\logcat-parse.csproj", "{7387E151-48E3-4885-B2CA-A74434A34045}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "logcat-parse", "tools\logcat-parse\logcat-parse.csproj", "{7387E151-48E3-4885-B2CA-A74434A34045}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "class-parse", "tools\class-parse\class-parse.csproj", "{38C762AB-8FD1-44DE-9855-26AAE7129DC3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "class-parse", "tools\class-parse\class-parse.csproj", "{38C762AB-8FD1-44DE-9855-26AAE7129DC3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "generator", "tools\generator\generator.csproj", "{D14A1B5C-2060-4930-92BE-F7190256C735}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "generator", "tools\generator\generator.csproj", "{D14A1B5C-2060-4930-92BE-F7190256C735}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{4C173212-371D-45D8-BA83-9226194F48DC}"
 EndProject
@@ -59,11 +59,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "generator-Tests", "tests\ge
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{D5A93398-AEB1-49F3-89DC-3904A47DB0C7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hello", "samples\Hello\Hello.csproj", "{F3ECB73D-9263-4E42-A5B4-3FC0D1D829F9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hello", "samples\Hello\Hello.csproj", "{F3ECB73D-9263-4E42-A5B4-3FC0D1D829F9}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build-Tools", "Build-Tools", "{172B608B-E6F3-41CC-9949-203A76BA247C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "jnienv-gen", "build-tools\jnienv-gen\jnienv-gen.csproj", "{6410DA0F-5E14-4FC0-9AEE-F4C542C96C7A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "jnienv-gen", "build-tools\jnienv-gen\jnienv-gen.csproj", "{6410DA0F-5E14-4FC0-9AEE-F4C542C96C7A}"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Java.Interop.NamingCustomAttributes", "src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.shproj", "{FE789F04-5E95-42C5-AEF1-E33F8DF06B3F}"
 EndProject
@@ -73,7 +73,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Java.Interop.Tools.Cecil", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Java.Interop.Tools.Diagnostics", "src\Java.Interop.Tools.Diagnostics\Java.Interop.Tools.Diagnostics.csproj", "{64CC4E44-CE3A-4319-BF3F-6CF8BD513870}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "jcw-gen", "tools\jcw-gen\jcw-gen.csproj", "{52C7D9B6-E8C8-47D0-9471-652D278D7D77}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "jcw-gen", "tools\jcw-gen\jcw-gen.csproj", "{52C7D9B6-E8C8-47D0-9471-652D278D7D77}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Java.Interop.Tools.JavaCallableWrappers-Tests", "tests\Java.Interop.Tools.JavaCallableWrappers-Tests\Java.Interop.Tools.JavaCallableWrappers-Tests.csproj", "{58B564A1-570D-4DA2-B02D-25BDDB1A9F4F}"
 EndProject
@@ -89,8 +89,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "param-name-importer", "tool
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems*{58b564a1-570d-4da2-b02d-25bddb1a9f4f}*SharedItemsImports = 4
-		src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems*{d1295a8f-4f42-461d-a046-564476c10002}*SharedItemsImports = 4
+		src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems*{58b564a1-570d-4da2-b02d-25bddb1a9f4f}*SharedItemsImports = 5
+		src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems*{d1295a8f-4f42-461d-a046-564476c10002}*SharedItemsImports = 5
+		src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems*{d18fcf91-8876-48a0-a693-2dc1e7d3d80a}*SharedItemsImports = 5
 		src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems*{fe789f04-5e95-42c5-aef1-e33f8df06b3f}*SharedItemsImports = 13
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
