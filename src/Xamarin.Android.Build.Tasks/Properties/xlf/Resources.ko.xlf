@@ -192,6 +192,11 @@ When it appears in the middle of a sentence, "lint" is not capitalized.
 {1} - The literal name of the MSBuild property
 {2} - The lint version number</note>
       </trans-unit>
+      <trans-unit id="XA0124">
+        <source>Interpreter is not supported by the x86 ABI</source>
+        <target state="new">Interpreter is not supported by the x86 ABI</target>
+        <note />
+      </trans-unit>
       <trans-unit id="XA1000">
         <source>There was a problem parsing {0}. This is likely due to incomplete or invalid XML. Exception: {1}</source>
         <target state="translated">{0}을(를) 구문 분석하는 중 문제가 발생했습니다. XML이 불완전하거나 잘못된 것 같습니다. 예외: {1}</target>

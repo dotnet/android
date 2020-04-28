@@ -349,6 +349,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Interpreter is not supported by the x86 ABI
+        /// </summary>
+        internal static string XA0124 {
+            get {
+                return ResourceManager.GetString("XA0124", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to There was a problem parsing {0}. This is likely due to incomplete or invalid XML. Exception: {1}.
         /// </summary>
         internal static string XA1000 {

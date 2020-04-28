@@ -23,7 +23,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 		public                  string          TargetId        {get; set;}
 
-		public                  string          ImageName           {get; set;} = "XamarinAndroidTestRunner";
+		public                  string          ImageName           {get; set;} = "XamarinAndroidTestRunner64";
 
 		public                  string          DataPartitionSizeMB {get; set;} = "2048";
 		public                  string          RamSizeMB           {get; set;} = "2048";

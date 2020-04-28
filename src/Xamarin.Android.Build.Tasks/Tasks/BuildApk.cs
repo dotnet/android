@@ -82,6 +82,7 @@ namespace Xamarin.Android.Tasks
 
 		public string TlsProvider { get; set; }
 		public string UncompressedFileExtensions { get; set; }
+		public bool InterpreterEnabled { get; set; }
 
 		[Output]
 		public ITaskItem[] OutputFiles { get; set; }
@@ -111,6 +112,15 @@ namespace Xamarin.Android.Tasks
 
 		void ExecuteWithAbi (string [] supportedAbis, string apkInputPath, string apkOutputPath)
 		{
+			if (InterpreterEnabled) {
+				foreach (string abi in supportedAbis) {
+					if (String.Compare ("x86", abi, StringComparison.OrdinalIgnoreCase) == 0) {
+						Log.LogCodedError ("XA0124", Properties.Resources.XA0124);
+						return;
+					}
+				}
+			}
+
 			ArchiveFileList files = new ArchiveFileList ();
 			bool refresh = true;
 			if (apkInputPath != null && File.Exists (apkInputPath) && !File.Exists (apkOutputPath)) {

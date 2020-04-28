@@ -196,6 +196,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_XAMajorVersionNumber>1</_XAMajorVersionNumber>
 	<_XASupportsFastDev Condition=" Exists ('$(MSBuildThisFileDirectory)Xamarin.Android.Common.Debugging.targets') ">True</_XASupportsFastDev>
 	<_XASupportsFastDev Condition=" '$(_XASupportsFastDev)' == '' ">False</_XASupportsFastDev>
+	<_AndroidUseInterpreter Condition=" '$(_AndroidUseInterpreter)' == '' ">False</_AndroidUseInterpreter>
 	<AndroidApplication Condition="'$(AndroidApplication)' == ''">false</AndroidApplication>
 	<AndroidUseSharedRuntime Condition=" '$(AndroidUseSharedRuntime)' == '' Or '$(_XASupportsFastDev)' == 'False' ">False</AndroidUseSharedRuntime>
 	<AndroidNeedsInternetPermission Condition="'$(AndroidNeedsInternetPermission)' == '' And '$(AndroidEmbedProfilers)' == ''">False</AndroidNeedsInternetPermission>
@@ -220,6 +221,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 	<!-- Ahead-of-time compilation properties -->
 	<AotAssemblies Condition=" '$(AndroidEnableProfiledAot)' == 'True' ">True</AotAssemblies>
+	<AndroidAotMode Condition=" '$(_AndroidUseInterpreter)' != 'False' ">Interpreter</AndroidAotMode>
 	<AndroidAotMode Condition=" '$(AndroidAotMode)' == '' And '$(AotAssemblies)' == 'True' ">Normal</AndroidAotMode>
 	<AndroidAotMode Condition=" '$(AndroidAotMode)' == '' ">None</AndroidAotMode>
 	<AotAssemblies Condition=" '$(AndroidAotMode)' != '' And '$(AndroidAotMode)' != 'None' ">True</AotAssemblies>
@@ -2176,29 +2178,31 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_IncludeNativeSystemLibraries">
   <PropertyGroup>
     <_Assemblies>@(_ResolvedFrameworkAssemblies)</_Assemblies>
+	<_TargetInterpreterPrefix Condition=" '$(_AndroidUseInterpreter)' != 'False' ">interpreter-</_TargetInterpreterPrefix>
   </PropertyGroup>
   <ItemGroup>
     <_TargetArchitecture Include="$(_Android32bitArchitectures);$(_Android64bitArchitectures)" />
   </ItemGroup>
   <ItemGroup>
     <_TargetLibDir Include="$(MSBuildThisFileDirectory)lib\%(_TargetArchitecture.Identity)" Condition=" Exists('$(MSBuildThisFileDirectory)lib\%(_TargetArchitecture.Identity)') "/>
+	<_TargetLibInterpreterDir Include="$(MSBuildThisFileDirectory)lib\$(_TargetInterpreterPrefix)%(_TargetArchitecture.Identity)" Condition=" Exists('$(MSBuildThisFileDirectory)lib\$(_TargetInterpreterPrefix)%(_TargetArchitecture.Identity)') "/>
   </ItemGroup>
   <SplitProperty Value="$(AndroidEmbedProfilers)" Condition=" '$(AndroidEmbedProfilers)' != '' ">
     <Output TaskParameter="Output" ItemName="_EmbedProfilers" />
   </SplitProperty>
   <ItemGroup Condition=" '$(UsingAndroidNETSdk)' != 'True' ">
     <AndroidNativeLibrary Include="%(_TargetLibDir.Identity)\libsqlite3_xamarin.so" Condition="$(_Assemblies.Contains('Mono.Data.Sqlite.dll'))" />
-    <AndroidNativeLibrary Include="%(_TargetLibDir.Identity)\libMonoPosixHelper.so" Condition="$(_Assemblies.Contains('Mono.Posix.dll'))" />
-    <AndroidNativeLibrary Include="%(_TargetLibDir.Identity)\libmono-native.so"  />
+    <AndroidNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libMonoPosixHelper.so" Condition="$(_Assemblies.Contains('Mono.Posix.dll'))" />
+    <AndroidNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libmono-native.so"  />
     <AndroidNativeLibrary Include="%(_TargetLibDir.Identity)\libxamarin-debug-app-helper.so" Condition=" '$(AndroidUseDebugRuntime)' == 'True' "/>
-    <_AndroidNativeLibraryForFastDev Condition=" '$(_InstantRunEnabled)' == 'True' And '$(AndroidUseDebugRuntime)' == 'True' " Include="%(_TargetLibDir.Identity)\libmono-native.so" />
+    <_AndroidNativeLibraryForFastDev Condition=" '$(_InstantRunEnabled)' == 'True' And '$(AndroidUseDebugRuntime)' == 'True' " Include="%(_TargetLibInterpreterDir.Identity)\libmono-native.so" />
     <_AndroidNativeLibraryForFastDev Condition=" '$(_InstantRunEnabled)' == 'True' And '$(AndroidUseDebugRuntime)' == 'True' " Include="%(_TargetLibDir.Identity)\libxamarin-debug-app-helper.so" />
     <FrameworkNativeLibrary Include="%(_TargetLibDir.Identity)\libmono-android.debug.so" Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' " ArchiveFileName="libmonodroid.so" />
     <FrameworkNativeLibrary Include="%(_TargetLibDir.Identity)\libmono-android.release.so" Condition=" '$(AndroidIncludeDebugSymbols)' != 'True' " ArchiveFileName="libmonodroid.so" />
-    <FrameworkNativeLibrary Include="%(_TargetLibDir.Identity)\libmono-btls-shared.so"  />
-    <FrameworkNativeLibrary Include="%(_TargetLibDir.Identity)\libmono-profiler-aot.so" Condition=" @(_EmbedProfilers->Count()) > 0 and (@(_EmbedProfilers->AnyHaveMetadataValue('Identity', 'aot')) or @(_EmbedProfilers->AnyHaveMetadataValue('Identity', 'all'))) " />
-    <FrameworkNativeLibrary Include="%(_TargetLibDir.Identity)\libmono-profiler-log.so" Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' or (@(_EmbedProfilers->Count()) > 0 and (@(_EmbedProfilers->AnyHaveMetadataValue('Identity', 'log')) or @(_EmbedProfilers->AnyHaveMetadataValue('Identity', 'all')))) " />
-    <FrameworkNativeLibrary Include="%(_TargetLibDir.Identity)\libmonosgen-2.0.so" Condition=" '$(AndroidUseSharedRuntime)' != 'True' " />
+    <FrameworkNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libmono-btls-shared.so"  />
+    <FrameworkNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libmono-profiler-aot.so" Condition=" @(_EmbedProfilers->Count()) > 0 and (@(_EmbedProfilers->AnyHaveMetadataValue('Identity', 'aot')) or @(_EmbedProfilers->AnyHaveMetadataValue('Identity', 'all'))) " />
+    <FrameworkNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libmono-profiler-log.so" Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' or (@(_EmbedProfilers->Count()) > 0 and (@(_EmbedProfilers->AnyHaveMetadataValue('Identity', 'log')) or @(_EmbedProfilers->AnyHaveMetadataValue('Identity', 'all')))) " />
+    <FrameworkNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libmonosgen-2.0.so" Condition=" '$(AndroidUseSharedRuntime)' != 'True' " />
   </ItemGroup>
   <ItemGroup Condition=" '$(UsingAndroidNETSdk)' == 'True' ">
     <FrameworkNativeLibrary
@@ -2416,7 +2420,8 @@ because xbuild doesn't support framework reference assemblies.
     AndroidSequencePointsMode="$(_SequencePointsMode)"
     LibraryProjectJars="@(ExtractedJarImports)"
     TlsProvider="$(AndroidTlsProvider)"
-    UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)">
+    UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
+	InterpreterEnabled="$(_AndroidUseInterpreter)">
     <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
   </BuildApk>
   <BuildBaseAppBundle

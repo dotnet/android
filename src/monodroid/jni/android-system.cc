@@ -650,15 +650,25 @@ AndroidSystem::setup_environment ()
 				aotMode = MonoAotMode::MONO_AOT_MODE_FULL;
 				break;
 
+			case 'i':
+				aotMode = MonoAotMode::MONO_AOT_MODE_LAST;
+				aot_mode_last_is_interpreter = true;
+				break;
+
 			default:
 				aotMode = MonoAotMode::MONO_AOT_MODE_LAST;
 				break;
 		}
 
-		if (aotMode != MonoAotMode::MONO_AOT_MODE_LAST)
+		if (aotMode != MonoAotMode::MONO_AOT_MODE_LAST) {
 			log_info (LOG_DEFAULT, "Mono AOT mode: %s", mono_aot_mode_name);
-		else
-			log_warn (LOG_DEFAULT, "Unknown Mono AOT mode: %s", mono_aot_mode_name);
+		} else {
+			if (!is_interpreter_enabled ()) {
+				log_warn (LOG_DEFAULT, "Unknown Mono AOT mode: %s", mono_aot_mode_name);
+			} else {
+				log_warn (LOG_DEFAULT, "Mono AOT mode: interpreter");
+			}
+		}
 	}
 
 	if (application_config.environment_variable_count == 0)

@@ -4,6 +4,7 @@ namespace Xamarin.Android.Prepare
 {
 	abstract class Runtime : AppObject
 	{
+		string displayName;
 		Func<Context, bool> enabledCheck;
 
 		/// <summary>
@@ -23,6 +24,14 @@ namespace Xamarin.Android.Prepare
 		/// </summary>
 		public string InstallPath { get; protected set; }
 		public string Name        { get; protected set; }
+
+		/// <summary>
+		///   Name of the runtime for display purposes. If not set explicitly, it is the same as <see cref="Name"/>
+		/// </summary>
+		public string DisplayName {
+			get => String.IsNullOrEmpty (displayName) ? Name : displayName;
+			set => displayName = value;
+		}
 
 		/// <summary>
 		///   Purely cosmetic thing - the kind of runtime (LLVM, JIT etc), for progress reporting.
