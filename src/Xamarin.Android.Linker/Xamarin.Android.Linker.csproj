@@ -4,7 +4,7 @@
     <DefineConstants>NET5_LINKER</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.ILLink" Version="5.0.0-preview.3.20203.2" />
+    <PackageReference Include="Microsoft.NET.ILLink" Version="5.0.0-preview.3.20227.3" />
     <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Export\Java.Interop.Export.csproj" />
 
     <Compile Include="..\Xamarin.Android.Build.Tasks\obj\$(Configuration)\Profile.g.cs" Link="Profile.g.cs" />
