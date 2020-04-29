@@ -13,16 +13,16 @@ namespace Xamarin.Android.Prepare
 		public Version Version             => version;
 		public bool NoParallelJobs         { get; set; }
 
-		public MakeRunner (Context context, Log log = null, string makePath = null)
+		public MakeRunner (Context context, Log? log = null, string? makePath = null)
 			: base (context, log, makePath)
 		{
 			ProcessTimeout = TimeSpan.FromMinutes (60);
-			string vs = VersionString?.Trim ();
+			string vs = VersionString.Trim ();
 			if (String.IsNullOrEmpty (vs) || !Version.TryParse (vs, out version))
 				version = new Version (0, 0);
 		}
 
-		public async Task<bool> Run (string logTag, string workingDirectory = null, List<string> arguments = null)
+		public async Task<bool> Run (string logTag, string? workingDirectory = null, List<string>? arguments = null)
 		{
 			if (String.IsNullOrEmpty (logTag))
 				throw new ArgumentException ("must not be null or empty", nameof (logTag));
@@ -32,7 +32,7 @@ namespace Xamarin.Android.Prepare
 			ProcessRunner runner = CreateProcessRunner ();
 			if (arguments != null && arguments.Count > 0) {
 				foreach (string a in arguments) {
-					string arg = a?.Trim ();
+					string arg = a.Trim ();
 					if (String.IsNullOrEmpty (arg))
 						continue;
 					if (arg.StartsWith ("-C", StringComparison.Ordinal) || arg.StartsWith ("--directory", StringComparison.Ordinal))
@@ -64,7 +64,7 @@ namespace Xamarin.Android.Prepare
 			}
 		}
 
-		public void GetStandardArguments (ref List<string> arguments, string workingDirectory = null)
+		public void GetStandardArguments (ref List<string>? arguments, string? workingDirectory = null)
 		{
 			var args = new List<string> ();
 			SetStandardArguments (workingDirectory, false, false, arg => args.Add (arg));
@@ -78,16 +78,16 @@ namespace Xamarin.Android.Prepare
 				arguments.AddRange (args);
 		}
 
-		void SetStandardArguments (string workingDirectory, bool haveChangeDirArg, bool haveConcurrency, ProcessRunner runner)
+		void SetStandardArguments (string? workingDirectory, bool haveChangeDirArg, bool haveConcurrency, ProcessRunner runner)
 		{
 			SetStandardArguments (workingDirectory, haveChangeDirArg, haveConcurrency, arg => runner.AddArgument (arg));
 		}
 
-		void SetStandardArguments (string workingDirectory, bool haveChangeDirArg, bool haveConcurrency, Action<string> argumentSetter)
+		void SetStandardArguments (string? workingDirectory, bool haveChangeDirArg, bool haveConcurrency, Action<string> argumentSetter)
 		{
 			if (!haveChangeDirArg && !String.IsNullOrEmpty (workingDirectory)) {
 				argumentSetter ("-C");
-				argumentSetter (ProcessRunner.QuoteArgument (workingDirectory));
+				argumentSetter (ProcessRunner.QuoteArgument (workingDirectory!));
 			}
 
 			bool concurrencyUsed;
@@ -103,7 +103,7 @@ namespace Xamarin.Android.Prepare
 			}
 		}
 
-		protected override TextWriter CreateLogSink (string logFilePath)
+		protected override TextWriter CreateLogSink (string? logFilePath)
 		{
 			return new OutputSink (Log, logFilePath);
 		}

@@ -10,14 +10,14 @@ namespace Xamarin.Android.Prepare
 	{
 		const FilePermissions ExecutableBits = FilePermissions.S_IXUSR | FilePermissions.S_IXGRP | FilePermissions.S_IXOTH;
 
-		protected override List<string> ExecutableExtensions => null;
+		protected override List<string>? ExecutableExtensions => null;
 		public override bool IsWindows => false;
 		public override bool IsUnix => true;
 		public override string HomeDirectory => GetHomeDir ();
 
 		protected Unix (Context context) : base (context)
 		{
-			Architecture = Utilities.GetStringFromStdout ("uname", "-m")?.Trim ();
+			Architecture = Utilities.GetStringFromStdout ("uname", "-m").Trim ();
 		}
 
 		string GetCompiler (string fromEnv, string defaultName)
@@ -29,9 +29,9 @@ namespace Xamarin.Android.Prepare
 
 		protected override void DetectCompilers ()
 		{
-			string cc = Environment.GetEnvironmentVariable ("CC")?.Trim ();
-			string cxx = Environment.GetEnvironmentVariable ("CXX")?.Trim ();
-			string defaultCompiler = null;
+			string cc = Environment.GetEnvironmentVariable ("CC")?.Trim () ?? String.Empty;
+			string cxx = Environment.GetEnvironmentVariable ("CXX")?.Trim () ?? String.Empty;
+			string defaultCompiler = String.Empty;
 
 			if (!String.IsNullOrEmpty (cc)) {
 				Log.DebugLine ($"Unix C compiler read from environment variable CC: {cc}");
@@ -44,8 +44,11 @@ namespace Xamarin.Android.Prepare
 					defaultCompiler = cxx;
 			}
 
-			if (String.IsNullOrEmpty (defaultCompiler))
+			if (String.IsNullOrEmpty (defaultCompiler)) {
 				defaultCompiler = Configurables.Defaults.DefaultCompiler;
+				if (String.IsNullOrEmpty (defaultCompiler))
+					throw new InvalidOperationException ("Default compiler not specified");
+			}
 
 			string ccVersion = Utilities.GetStringFromStdout (defaultCompiler, "--version");
 			if (String.IsNullOrEmpty (ccVersion))
@@ -90,12 +93,12 @@ namespace Xamarin.Android.Prepare
 
 				Triple64 = Triple;
 			} else {
-				CC64 = null;
-				CXX64 = null;
+				CC64 = String.Empty;
+				CXX64 = String.Empty;
 				CC32 = CC;
 				CXX32 =CXX;
 				Triple32 = Triple;
-				Triple64 = null;
+				Triple64 = String.Empty;
 			}
 
 			LogCompilerDetails ();
@@ -110,12 +113,12 @@ namespace Xamarin.Android.Prepare
 		public override string GetManagedProgramRunner (string programPath)
 		{
 			if (String.IsNullOrEmpty (programPath))
-				return null;
+				return String.Empty;
 
 			if (programPath.EndsWith (".exe", StringComparison.OrdinalIgnoreCase) || programPath.EndsWith (".dll", StringComparison.OrdinalIgnoreCase))
 				return "mono"; // Caller will find the exact mono executable, we just provide a name
 
-			return null;
+			return String.Empty;
 		}
 
 		protected static bool IsExecutable (string fullPath, bool throwOnErrors = false)

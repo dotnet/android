@@ -24,7 +24,7 @@ namespace Xamarin.Android.Prepare
 
 		public Windows (Context context) : base (context)
 		{
-			string[] pathext = Environment.GetEnvironmentVariable ("PATHEXT")?.Split (new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+			string[]? pathext = Environment.GetEnvironmentVariable ("PATHEXT")?.Split (new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
 			if (pathext == null || pathext.Length == 0) {
 				executableExtensions = new List<string> {
 					".exe",
@@ -52,7 +52,7 @@ namespace Xamarin.Android.Prepare
 		public override string Which (string programPath, bool required = true)
 		{
 			if (String.Compare ("7za", programPath, StringComparison.OrdinalIgnoreCase) == 0) {
-				string homeDir = Context.Instance?.OS?.HomeDirectory;
+				string homeDir = Context.Instance.OS.HomeDirectory;
 				if (String.IsNullOrEmpty (homeDir)) {
 					Log.WarningLine ("User's home directory not known (yet?), cannot return path to 7za");
 					return base.Which (programPath, required);
@@ -90,7 +90,7 @@ namespace Xamarin.Android.Prepare
 
 		public override string GetManagedProgramRunner (string programPath)
 		{
-			return null;
+			return String.Empty;
 		}
 
 		protected override bool InitOS ()

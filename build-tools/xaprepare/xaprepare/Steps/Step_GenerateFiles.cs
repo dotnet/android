@@ -20,7 +20,7 @@ namespace Xamarin.Android.Prepare
 #pragma warning disable CS1998
 		protected override async Task<bool> Execute (Context context)
 		{
-			List<GeneratedFile> filesToGenerate = GetFilesToGenerate (context);
+			List<GeneratedFile>? filesToGenerate = GetFilesToGenerate (context);
 			if (filesToGenerate != null && filesToGenerate.Count > 0) {
 				foreach (GeneratedFile gf in filesToGenerate) {
 					if (gf == null)
@@ -41,7 +41,7 @@ namespace Xamarin.Android.Prepare
 		}
 #pragma warning restore CS1998
 
-		List<GeneratedFile> GetFilesToGenerate (Context context)
+		List<GeneratedFile>? GetFilesToGenerate (Context context)
 		{
 			if (atBuildStart) {
 				if (onlyRequired) {

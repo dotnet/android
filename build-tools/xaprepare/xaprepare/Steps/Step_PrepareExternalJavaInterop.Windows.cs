@@ -6,9 +6,11 @@ namespace Xamarin.Android.Prepare
 {
 	partial class Step_PrepareExternalJavaInterop
 	{
+#pragma warning disable CS1998
 		async Task<bool> ExecuteOSSpecific (Context context)
 		{
 			return true;
 		}
+#pragma warning restore CS1998
 	}
 }

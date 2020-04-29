@@ -6,7 +6,7 @@ namespace Xamarin.Android.Prepare
 	{
 		class OutputSink : ToolRunner.ToolOutputSink
 		{
-			public OutputSink (Log log, string logFilePath)
+			public OutputSink (Log log, string? logFilePath)
 				: base (log, logFilePath)
 			{}
 

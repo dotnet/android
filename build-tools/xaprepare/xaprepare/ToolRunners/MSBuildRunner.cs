@@ -12,7 +12,7 @@ namespace Xamarin.Android.Prepare
 
 		public List<string> StandardArguments { get; }
 
-		public MSBuildRunner (Context context, Log log = null, string msbuildPath = null)
+		public MSBuildRunner (Context context, Log? log = null, string? msbuildPath = null)
 			: base (context, log, msbuildPath)
 		{
 			ProcessTimeout = TimeSpan.FromMinutes (30);
@@ -22,7 +22,7 @@ namespace Xamarin.Android.Prepare
 			};
 		}
 
-		public async Task<bool> Run (string projectPath, string logTag, List<string> arguments = null, string binlogName = null, string workingDirectory = null)
+		public async Task<bool> Run (string projectPath, string logTag, List<string>? arguments = null, string? binlogName = null, string? workingDirectory = null)
 		{
 			if (String.IsNullOrEmpty (logTag))
 				throw new ArgumentException ("must not be null or empty", nameof (logTag));
@@ -33,12 +33,12 @@ namespace Xamarin.Android.Prepare
 			ProcessRunner runner = CreateProcessRunner ();
 			AddArguments (runner, StandardArguments);
 			if (!String.IsNullOrEmpty (binlogName)) {
-				string logPath = Utilities.GetRelativePath (workingDirectory, Path.Combine (Configurables.Paths.BuildBinDir, $"msbuild-{Context.BuildTimeStamp}-{binlogName}.binlog"));
+				string logPath = Utilities.GetRelativePath (workingDirectory!, Path.Combine (Configurables.Paths.BuildBinDir, $"msbuild-{Context.BuildTimeStamp}-{binlogName}.binlog"));
 				runner.AddArgument ("/v:normal");
 				runner.AddQuotedArgument ($"/bl:{logPath}");
 			}
 			AddArguments (runner, arguments);
-			runner.AddQuotedArgument (Utilities.GetRelativePath (workingDirectory, projectPath));
+			runner.AddQuotedArgument (Utilities.GetRelativePath (workingDirectory!, projectPath));
 
 			string message = GetLogMessage (runner);
 			Log.Info (message, CommandMessageColor);
@@ -59,7 +59,7 @@ namespace Xamarin.Android.Prepare
 			}
 		}
 
-		protected override TextWriter CreateLogSink (string logFilePath)
+		protected override TextWriter CreateLogSink (string? logFilePath)
 		{
 			return new OutputSink (Log, logFilePath);
 		}

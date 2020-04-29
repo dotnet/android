@@ -10,7 +10,7 @@ namespace Xamarin.Android.Prepare
 		protected override string ToolName                  => "CMake";
 		protected override string DefaultToolExecutableName => "cmake";
 
-		public CMakeRunner (Context context, Log log = null, string toolPath = null)
+		public CMakeRunner (Context context, Log? log = null, string? toolPath = null)
 			: base (context, log, toolPath)
 		{
 			ProcessTimeout = TimeSpan.FromMinutes (60);
@@ -45,7 +45,7 @@ namespace Xamarin.Android.Prepare
 			}
 		}
 
-		protected override TextWriter CreateLogSink (string logFilePath)
+		protected override TextWriter CreateLogSink (string? logFilePath)
 		{
 			return new OutputSink (Log, logFilePath);
 		}

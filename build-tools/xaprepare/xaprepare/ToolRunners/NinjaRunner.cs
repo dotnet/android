@@ -10,13 +10,13 @@ namespace Xamarin.Android.Prepare
 		protected override string ToolName                  => "Ninja";
 		protected override string DefaultToolExecutableName => "ninja";
 
-		public NinjaRunner (Context context, Log log = null, string toolPath = null)
+		public NinjaRunner (Context context, Log? log = null, string? toolPath = null)
 			: base (context, log, toolPath)
 		{
 			ProcessTimeout = TimeSpan.FromMinutes (60);
 		}
 
-		public async Task<bool> Run (string logTag, string workingDirectory, List<string> arguments = null)
+		public async Task<bool> Run (string logTag, string workingDirectory, List<string>? arguments = null)
 		{
 			if (String.IsNullOrEmpty (logTag))
 				throw new ArgumentException ("must not be null or empty", nameof (logTag));
@@ -62,7 +62,7 @@ namespace Xamarin.Android.Prepare
 			}
 		}
 
-		protected override TextWriter CreateLogSink (string logFilePath)
+		protected override TextWriter CreateLogSink (string? logFilePath)
 		{
 			return new OutputSink (Log, logFilePath);
 		}

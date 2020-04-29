@@ -8,7 +8,7 @@ namespace Xamarin.Android.Prepare
 		{
 			public override Encoding Encoding => Encoding.Default;
 
-			public OutputSink (Log log, string logFilePath)
+			public OutputSink (Log log, string? logFilePath)
 				: base (log, logFilePath)
 			{
 			}

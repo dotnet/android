@@ -8,19 +8,19 @@ namespace Xamarin.Android.Prepare
 	{
 		SortedDictionary <string, string> properties = new SortedDictionary <string, string> (StringComparer.Ordinal);
 
-		public event EventHandler<PropertiesChangedEventArgs> PropertiesChanged;
+		public event EventHandler<PropertiesChangedEventArgs>? PropertiesChanged;
 
 		public int Count => properties.Count;
 		public bool IsDefined (string propertyName) => properties.ContainsKey (EnsureName (propertyName));
 		public bool IsEmpty (string propertyName) => IsDefined (propertyName) && properties.TryGetValue (propertyName, out string v) && v != null;
-		public string this [string name] => GetValue (name);
+		public string? this [string name] => GetValue (name);
 
 		public Properties ()
 		{
 			InitDefaults ();
 		}
 
-		public string GetValue (string propertyName, string defaultValue = null)
+		public string? GetValue (string propertyName, string? defaultValue = null)
 		{
 			if (!properties.TryGetValue (EnsureName (propertyName), out string value))
 				return defaultValue;
@@ -30,7 +30,7 @@ namespace Xamarin.Android.Prepare
 
 		public string GetRequiredValue (string propertyName)
 		{
-			string value = GetValue (propertyName);
+			string? value = GetValue (propertyName);
 			if (value == null)
 				throw new InvalidOperationException ($"Required property '{propertyName}' has no defined value");
 			return value;
@@ -41,7 +41,7 @@ namespace Xamarin.Android.Prepare
 			if (String.IsNullOrEmpty (name))
 				throw new ArgumentException ("must not be null or empty", nameof (name));
 
-			if (!properties.TryGetValue (name, out string oldValue))
+			if (!properties.TryGetValue (name, out string? oldValue))
 				oldValue = null;
 
 			string newValue = value ?? String.Empty;
@@ -66,7 +66,7 @@ namespace Xamarin.Android.Prepare
 			return (properties as IEnumerable).GetEnumerator ();
 		}
 
-		void OnPropertiesChanged (string name, string newValue, string oldValue)
+		void OnPropertiesChanged (string name, string newValue, string? oldValue)
 		{
 			if (PropertiesChanged == null)
 				return;

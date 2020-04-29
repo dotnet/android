@@ -100,7 +100,7 @@ namespace Xamarin.Android.Prepare
 
 		bool CorrettoExistsAndIsValid (string installDir, out string installedVersion)
 		{
-			installedVersion = null;
+			installedVersion = String.Empty;
 			if (!Directory.Exists (installDir)) {
 				Log.DebugLine ($"Corretto directory {installDir} does not exist");
 				return false;

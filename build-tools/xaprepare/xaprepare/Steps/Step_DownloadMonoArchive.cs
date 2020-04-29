@@ -82,7 +82,7 @@ namespace Xamarin.Android.Prepare
 				result = await DownloadAndUpackIfNeeded (
 					context,
 					"Windows Mono",
-					customUrl: null,
+					customUrl: String.Empty,
 					localPath: Configurables.Paths.MonoArchiveWindowsLocalPath,
 					archiveFileName: Configurables.Paths.MonoArchiveWindowsFileName,
 					destinationDirectory: Configurables.Paths.BCLWindowsOutputDir

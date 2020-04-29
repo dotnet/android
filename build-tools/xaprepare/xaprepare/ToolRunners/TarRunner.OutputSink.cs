@@ -9,7 +9,7 @@ namespace Xamarin.Android.Prepare
 		{
 			public override Encoding Encoding => Encoding.Default;
 
-			public OutputSink (Log log, string logFilePath, string indent = null)
+			public OutputSink (Log log, string? logFilePath, string? indent = null)
 				: base (log, logFilePath)
 			{
 				Log.Todo ("Implement parsing, if necessary");

@@ -57,10 +57,10 @@ namespace Xamarin.Android.Prepare
 
 		static string GetRequiredProperty (string propertyName)
 		{
-			string value = Context.Instance.Properties [propertyName];
+			string? value = Context.Instance.Properties [propertyName];
 			if (String.IsNullOrEmpty (value))
 				throw new InvalidOperationException ($"Required property '{propertyName}' not defined");
-			return value;
+			return value!;
 		}
 	}
 }

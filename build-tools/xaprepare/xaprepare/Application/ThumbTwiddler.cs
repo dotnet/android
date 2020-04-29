@@ -42,9 +42,9 @@ namespace Xamarin.Android.Prepare
 		readonly bool showElapsedTime;
 
 		int twiddleIndex;
-		Timer twiddleTimer;
-		Stopwatch watch;
-		Random random;
+		Timer? twiddleTimer;
+		Stopwatch? watch;
+		Random? random;
 
 		public ThumbTwiddler (Context context, bool dullMode, bool showElapsedTime)
 		{
@@ -61,7 +61,7 @@ namespace Xamarin.Android.Prepare
 			}
 
 			if (!dullMode)
-				twiddleInterval = 1000 / twiddler.Length;
+				twiddleInterval = 1000 / twiddler!.Length;
 			else {
 				random = new Random ();
 				twiddleInterval = 10000;
@@ -102,7 +102,7 @@ namespace Xamarin.Android.Prepare
 		void Twiddle (object state)
 		{
 			if (dullMode) {
-				string wittyMessage = alternateTwiddlerMessages[random.Next (0, alternateTwiddlerMessages.Count - 1)];
+				string wittyMessage = alternateTwiddlerMessages[random!.Next (0, alternateTwiddlerMessages.Count - 1)];
 				Log.StatusLine ($"{wittyMessage}... {GetElapsedTime ()}", ConsoleColor.Gray, skipLogFile: true);
 				return;
 			}

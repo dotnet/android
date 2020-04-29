@@ -33,12 +33,12 @@ namespace Xamarin.Android.Prepare
 		}
 
 		string command;
-		List<string> arguments;
-		List<WriterGuard> stderrSinks;
-		List<WriterGuard> stdoutSinks;
-		Dictionary<TextWriter, WriterGuard> guardCache;
+		List<string>? arguments;
+		List<WriterGuard>? stderrSinks;
+		List<WriterGuard>? stdoutSinks;
+		Dictionary<TextWriter, WriterGuard>? guardCache;
 		bool defaultStdoutEchoWrapperAdded;
-		ProcessStandardStreamWrapper defaultStderrEchoWrapper;
+		ProcessStandardStreamWrapper? defaultStderrEchoWrapper;
 
 		public string Command => command;
 
@@ -67,21 +67,21 @@ namespace Xamarin.Android.Prepare
 		public ProcessStandardStreamWrapper.LogLevel EchoStandardOutputLevel { get; set; } = ProcessStandardStreamWrapper.LogLevel.Message;
 		public bool EchoStandardError                                        { get; set; }
 		public ProcessStandardStreamWrapper.LogLevel EchoStandardErrorLevel  { get; set; } = ProcessStandardStreamWrapper.LogLevel.Error;
-		public ProcessStandardStreamWrapper StandardOutputEchoWrapper        { get; set; }
-		public ProcessStandardStreamWrapper StandardErrorEchoWrapper         { get; set; }
+		public ProcessStandardStreamWrapper? StandardOutputEchoWrapper       { get; set; }
+		public ProcessStandardStreamWrapper? StandardErrorEchoWrapper        { get; set; }
 		public Encoding StandardOutputEncoding                               { get; set; } = Encoding.Default;
 		public Encoding StandardErrorEncoding                                { get; set; } = Encoding.Default;
 		public TimeSpan StandardOutputTimeout                                { get; set; } = DefaultOutputTimeout;
 		public TimeSpan StandardErrorTimeout                                 { get; set; } = DefaultOutputTimeout;
 		public TimeSpan ProcessTimeout                                       { get; set; } = DefaultProcessTimeout;
-		public string WorkingDirectory                                       { get; set; }
-		public Action<ProcessStartInfo> StartInfoCallback                    { get; set; }
+		public string? WorkingDirectory                                      { get; set; }
+		public Action<ProcessStartInfo>? StartInfoCallback                   { get; set; }
 
-		public ProcessRunner (string command, params string[] arguments)
+		public ProcessRunner (string command, params string?[] arguments)
 			: this (command, false, arguments)
 		{}
 
-		public ProcessRunner (string command, bool ignoreEmptyArguments, params string[] arguments)
+		public ProcessRunner (string command, bool ignoreEmptyArguments, params string?[] arguments)
 		{
 			if (String.IsNullOrEmpty (command))
 				throw new ArgumentException ("must not be null or empty", nameof (command));
@@ -90,31 +90,31 @@ namespace Xamarin.Android.Prepare
 			AddArgumentsInternal (ignoreEmptyArguments, arguments);
 		}
 
-		public ProcessRunner AddArguments (params string[] arguments)
+		public ProcessRunner AddArguments (params string?[] arguments)
 		{
 			return AddArguments (true, arguments);
 		}
 
-		public ProcessRunner AddArguments (bool ignoreEmptyArguments, params string[] arguments)
+		public ProcessRunner AddArguments (bool ignoreEmptyArguments, params string?[] arguments)
 		{
 			AddArgumentsInternal (ignoreEmptyArguments, arguments);
 			return this;
 		}
 
-		void AddArgumentsInternal (bool ignoreEmptyArguments, params string[] arguments)
+		void AddArgumentsInternal (bool ignoreEmptyArguments, params string?[] arguments)
 		{
 			if (arguments == null)
 				return;
 
 			for (int i = 0; i < arguments.Length; i++) {
-				string argument = arguments [i]?.Trim ();
+				string? argument = arguments [i]?.Trim ();
 				if (String.IsNullOrEmpty (argument)) {
 					if (ignoreEmptyArguments)
 						continue;
 					throw new InvalidOperationException ($"Argument {i} is null or empty");
 				}
 
-				AddQuotedArgument (argument);
+				AddQuotedArgument (argument!);
 			}
 		}
 
@@ -213,8 +213,8 @@ namespace Xamarin.Android.Prepare
 				}
 			}
 
-			ManualResetEventSlim stdout_done = null;
-			ManualResetEventSlim stderr_done = null;
+			ManualResetEventSlim? stdout_done = null;
+			ManualResetEventSlim? stderr_done = null;
 
 			if (stderrSinks != null && stderrSinks.Count > 0)
 				stderr_done = new ManualResetEventSlim (false);
@@ -266,9 +266,9 @@ namespace Xamarin.Android.Prepare
 			if (psi.RedirectStandardError) {
 				process.ErrorDataReceived += (object sender, DataReceivedEventArgs e) => {
 					if (e.Data != null)
-						WriteOutput (e.Data, stderrSinks);
+						WriteOutput (e.Data, stderrSinks!);
 					else
-						stderr_done.Set ();
+						stderr_done!.Set ();
 				};
 				process.BeginErrorReadLine ();
 			}
@@ -276,9 +276,9 @@ namespace Xamarin.Android.Prepare
 			if (psi.RedirectStandardOutput) {
 				process.OutputDataReceived += (object sender, DataReceivedEventArgs e) => {
 					if (e.Data != null)
-						WriteOutput (e.Data, stdoutSinks);
+						WriteOutput (e.Data, stdoutSinks!);
 					else
-						stdout_done.Set ();
+						stdout_done!.Set ();
 				};
 				process.BeginOutputReadLine ();
 			}
@@ -324,7 +324,7 @@ namespace Xamarin.Android.Prepare
 			}
 		}
 
-		void AddToList <T> (T item, ref List<T> list)
+		void AddToList <T> (T item, ref List<T>? list)
 		{
 			if (list == null)
 				list = new List <T> ();
