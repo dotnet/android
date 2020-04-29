@@ -106,7 +106,7 @@ The following instructions can be used for early preview testing.
     packages you want to use:
 
 ```xml
-<Project Sdk="Microsoft.Android.Sdk/10.4.99.24">
+<Project Sdk="Microsoft.Android.Sdk/10.0.100">
   <PropertyGroup>
     <TargetFramework>netcoreapp5.0</TargetFramework>
     <RuntimeIdentifier>android.21-arm64</RuntimeIdentifier>
@@ -120,4 +120,58 @@ The following instructions can be used for early preview testing.
 dotnet publish -t:Install *.csproj
 ```
 
-[0]:  https://github.com/dotnet/installer#installers-and-binaries
+## Package Versioning Scheme
+
+Our NuGet packages are versioned using [Semver 2.0.0][2].
+
+This is the scheme: `OS-Major.OS-Minor.InternalRelease[-prereleaseX]+sha.1b2c3d4`.
+
+* Major: The major OS version.
+* Minor: The minor OS version.
+* Patch: Our internal release version based on `100` as a starting point.
+    * Service releases will bump the last two digits of the patch version
+    * Feature releases will round the patch version up to the nearest 100
+      (this is the same as bumping the first digit of the patch version, and
+      resetting the last two digits to 0).
+    * This follows [how the dotnet SDK does it][1].
+* Pre-release: Optional (e.g.: Android previews, CI, etc.)
+    * For CI we use a `ci` prefix + the branch name (cleaned up to only be
+      alphanumeric) + the commit distance (number of commits since any of the
+      major.minor.patch versions changed).
+        * Example: `Android 10.0.100-ci.master.1234`
+        * Alphanumeric means `a-zA-Z0-9-`: any character not in this range
+          will be replaced with a `-`.
+    * Pull requests have `pr` prefix, followed by `gh`+ PR number + commit
+      distance.
+        * Example: `Android 10.1.200-ci.pr.gh3333.1234`
+    * If we have a particular feature we want people to subscribe to (such as
+      an Android preview release), we publish previews with a custom pre-release
+      identifier:
+        * Example: `Android 10.1.100-android_q.beta.1`
+        * This way people can sign up for only official previews, by
+          referencing `Android *-android_q.beta.*`
+        * It's still possible to sign up for all `android_q` builds, by
+          referencing `Android *-ci.android_q.*`
+* Build metadata: Required Hash
+    * This is `sha.` + the short commit hash.
+        * Use the short hash because the long hash is quite long and
+          cumbersome. This leaves the complete version open for duplication,
+          but this is extremely unlikely.
+    * Example: `Android 10.0.100+sha.1a2b3c`
+    * Example (CI build): `Android 10.0.100-ci.master.1234+sha.1a2b3c`
+    * Since the build metadata is required for all builds, we're able to
+      recognize incomplete version numbers and determine if a particular
+      version string refers to a stable version or not.
+        * Example: `Android 10.0.100`: incomplete version
+        * Example: `Android 10.0.100+sha.1a2b3c`: stable
+        * Example: `Android 10.0.100-ci.d17_0.1234+sha.1a2b3c`: CI build
+        * Example: `Android 10.0.100-android_q.beta.1+sha.1a2b3c`: official
+          preview
+            * Technically it's possible to remove the prerelease part, but
+              we’d still be able to figure out it’s not a stable version by
+              using the commit hash.
+
+
+[0]: https://github.com/dotnet/installer#installers-and-binaries
+[1]: https://github.com/dotnet/designs/blob/master/accepted/2018/sdk-version-scheme.md
+[2]: https://semver.org

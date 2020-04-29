@@ -39,10 +39,18 @@
       Condition="!Exists ('$(IntermediateOutputPath)AssemblyInfo.cs')"
       Inputs="Properties\AssemblyInfo.cs.in"
       Outputs="$(IntermediateOutputPath)AssemblyInfo.cs">
+    <PropertyGroup Condition=" '$(TargetFramework)' == 'monoandroid10' ">
+      <_PackageVersion>$(ProductVersion)</_PackageVersion>
+      <_PackageVersionBuild>$(XAVersionCommitCount)</_PackageVersionBuild>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
+      <_PackageVersion>$(AndroidPackVersion)</_PackageVersion>
+      <_PackageVersionBuild>$(PackVersionCommitCount)</_PackageVersionBuild>
+    </PropertyGroup>
     <ReplaceFileContents
         SourceFile="Properties\AssemblyInfo.cs.in"
         DestinationFile="$(IntermediateOutputPath)AssemblyInfo.cs"
-        Replacements="@PACKAGE_VERSION@=$(ProductVersion);@PACKAGE_VERSION_BUILD@=$(XAVersionCommitCount);@PACKAGE_HEAD_REV@=$(XAVersionHash);@PACKAGE_HEAD_BRANCH@=$(XAVersionBranch)">
+        Replacements="@PACKAGE_VERSION@=$(_PackageVersion);@PACKAGE_VERSION_BUILD@=$(_PackageVersionBuild);@PACKAGE_HEAD_REV@=$(XAVersionHash);@PACKAGE_HEAD_BRANCH@=$(XAVersionBranch)">
     </ReplaceFileContents>
   </Target>
   <Target Name="_BuildJNIEnv"

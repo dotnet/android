@@ -44,7 +44,7 @@
   <Target Name="_GetDefaultPackageVersion"
       DependsOnTargets="GetXAVersionInfo" >
     <PropertyGroup>
-      <PackageVersion>$(ProductVersion).$(XAVersionCommitCount)</PackageVersion>
+      <PackageVersion>$(AndroidPackVersionLong)</PackageVersion>
     </PropertyGroup>
   </Target>
 

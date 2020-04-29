@@ -6,6 +6,7 @@
       AfterTargets="Build">
     <PropertyGroup>
       <_XAPrefix>$(XAInstallPrefix)xbuild\Xamarin\Android</_XAPrefix>
+      <_PackVersionPathPrefix>$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\</_PackVersionPathPrefix>
       <_VersionFile>..\..\bin\$(Configuration)\Version</_VersionFile>
       <_VersionCommitFile>..\..\bin\$(Configuration)\Version.commit</_VersionCommitFile>
       <_VersionRevFile>..\..\bin\$(Configuration)\Version.rev</_VersionRevFile>
@@ -13,6 +14,9 @@
       <_XAVersionTxtFile>$(_XAPrefix)\Version.txt</_XAVersionTxtFile>
       <_XAVersionCommitFile>$(_XAPrefix)\Version.commit</_XAVersionCommitFile>
       <_XAVersionRevFile>$(_XAPrefix)\Version.rev</_XAVersionRevFile>
+      <_PackVersionTxtFile>$(_PackVersionPathPrefix)Version.txt</_PackVersionTxtFile>
+      <_PackVersionCommitFile>$(_PackVersionPathPrefix)Version.commit</_PackVersionCommitFile>
+      <_PackVersionRevFile>$(_PackVersionPathPrefix)Version.rev</_PackVersionRevFile>
     </PropertyGroup>
     <MakeDir Directories="$(_XAPrefix)" />
     <WriteLinesToFile
@@ -31,12 +35,22 @@
         Overwrite="True"
     />
     <WriteLinesToFile
+        File="$(_PackVersionTxtFile)"
+        Lines="$(AndroidPackVersion)"
+        Overwrite="True"
+    />
+    <WriteLinesToFile
         File="$(_VersionCommitFile)"
         Lines="$(XARepositoryName)/$(XAVersionBranch)/$(XAVersionHash)"
         Overwrite="True"
     />
     <WriteLinesToFile
         File="$(_XAVersionCommitFile)"
+        Lines="$(XARepositoryName)/$(XAVersionBranch)/$(XAVersionHash)"
+        Overwrite="True"
+    />
+    <WriteLinesToFile
+        File="$(_PackVersionCommitFile)"
         Lines="$(XARepositoryName)/$(XAVersionBranch)/$(XAVersionHash)"
         Overwrite="True"
     />
@@ -48,6 +62,11 @@
     <WriteLinesToFile
         File="$(_XAVersionRevFile)"
         Lines="$(XAVersionCommitCount)"
+        Overwrite="True"
+    />
+    <WriteLinesToFile
+        File="$(_PackVersionRevFile)"
+        Lines="$(PackVersionCommitCount)"
         Overwrite="True"
     />
   </Target>
