@@ -2,13 +2,15 @@
 
 name: $(Build.SourceBranchName)-$(Build.SourceVersion)-$(Rev:r)
 
-trigger:
-  - master
-  - d16-*
+# Triggers are enabled on the pipeine definition in place of being defined here
+#  https://dev.azure.com/xamarin/public/_apps/hub/ms.vss-ciworkflow.build-ci-hub?_a=edit-build-definition&id=48&view=Tab_Triggers
+# trigger:
+#  - master
+#  - d16-*
 
-pr:
-  - master
-  - d16-*
+# pr:
+#  - master
+#  - d16-*
 
 # Global variables
 # Predefined variables: https://docs.microsoft.com/en-us/azure/devops/pipelines/build/variables?view=azure-devops&tabs=yaml
@@ -27,6 +29,7 @@ variables:
 stages:
 - stage: mac_stage
   displayName: Mac
+  condition: eq(variables['EnableMacStage'], 'true')
   jobs:
   - job: mac_build
     displayName: Mac Build
@@ -126,12 +129,13 @@ stages:
 
 - stage: linux_stage
   displayName: Linux
-  dependsOn: []                 # Run stage in parallel to preceding stages
+  condition: eq(variables['EnableLinuxStage'], 'true')
+  dependsOn: []                 # Run stage in parallel
   jobs:
   - job: linux_build_package
     displayName: Linux Build
     pool:
-      vmImage: ubuntu-18.04     # https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=azure-devops
+      vmImage: $(XA.Build.LinuxOSSPoolVmImage)     # https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=azure-devops
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:
