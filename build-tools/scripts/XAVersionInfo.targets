@@ -83,11 +83,10 @@
     </GitBranch>
     <PropertyGroup>
       <XARepositoryName Condition=" '$(XARepositoryName)' == '' ">xamarin-android</XARepositoryName>
-      <_AndroidPackMetadata>sha.$(XAVersionHash)</_AndroidPackMetadata>
       <!-- See Azure Pipelines predefined variables. -->
       <_AndroidPackLabel Condition=" '$(SYSTEM_PULLREQUEST_PULLREQUESTNUMBER)' != '' ">ci.pr.gh$(SYSTEM_PULLREQUEST_PULLREQUESTNUMBER).$(PackVersionCommitCount)</_AndroidPackLabel>
       <_AndroidPackLabel Condition=" '$(_AndroidPackLabel)' == '' ">ci.$(XAVersionBranch).$(PackVersionCommitCount)</_AndroidPackLabel>
-      <AndroidPackVersionLong>$(AndroidPackVersion)-$(_AndroidPackLabel)+$(_AndroidPackMetadata)</AndroidPackVersionLong>
+      <AndroidPackVersionLong>$(AndroidPackVersion)-$(_AndroidPackLabel)</AndroidPackVersionLong>
     </PropertyGroup>
   </Target>
 </Project>
