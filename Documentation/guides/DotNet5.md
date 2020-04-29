@@ -122,9 +122,7 @@ dotnet publish -t:Install *.csproj
 
 ## Package Versioning Scheme
 
-Our NuGet packages are versioned using [Semver 2.0.0][2].
-
-This is the scheme: `OS-Major.OS-Minor.InternalRelease[-prereleaseX]+sha.1b2c3d4`.
+This is the package version scheme: `OS-Major.OS-Minor.InternalRelease[-prereleaseX]+sha.1b2c3d4`.
 
 * Major: The major OS version.
 * Minor: The minor OS version.
@@ -138,34 +136,34 @@ This is the scheme: `OS-Major.OS-Minor.InternalRelease[-prereleaseX]+sha.1b2c3d4
     * For CI we use a `ci` prefix + the branch name (cleaned up to only be
       alphanumeric) + the commit distance (number of commits since any of the
       major.minor.patch versions changed).
-        * Example: `Android 10.0.100-ci.master.1234`
+        * Example: `10.0.100-ci.master.1234`
         * Alphanumeric means `a-zA-Z0-9-`: any character not in this range
           will be replaced with a `-`.
     * Pull requests have `pr` prefix, followed by `gh`+ PR number + commit
       distance.
-        * Example: `Android 10.1.200-ci.pr.gh3333.1234`
+        * Example: `10.1.200-ci.pr.gh3333.1234`
     * If we have a particular feature we want people to subscribe to (such as
       an Android preview release), we publish previews with a custom pre-release
       identifier:
-        * Example: `Android 10.1.100-android_q.beta.1`
+        * Example: `10.1.100-android_r.beta.1`
         * This way people can sign up for only official previews, by
-          referencing `Android *-android_q.beta.*`
-        * It's still possible to sign up for all `android_q` builds, by
-          referencing `Android *-ci.android_q.*`
+          referencing `*-android_r.beta.*`
+        * It's still possible to sign up for all `android_r` builds, by
+          referencing `*-ci.android_r.*`
 * Build metadata: Required Hash
     * This is `sha.` + the short commit hash.
         * Use the short hash because the long hash is quite long and
           cumbersome. This leaves the complete version open for duplication,
           but this is extremely unlikely.
-    * Example: `Android 10.0.100+sha.1a2b3c`
-    * Example (CI build): `Android 10.0.100-ci.master.1234+sha.1a2b3c`
+    * Example: `10.0.100+sha.1a2b3c`
+    * Example (CI build): `10.0.100-ci.master.1234+sha.1a2b3c`
     * Since the build metadata is required for all builds, we're able to
       recognize incomplete version numbers and determine if a particular
       version string refers to a stable version or not.
-        * Example: `Android 10.0.100`: incomplete version
-        * Example: `Android 10.0.100+sha.1a2b3c`: stable
-        * Example: `Android 10.0.100-ci.d17_0.1234+sha.1a2b3c`: CI build
-        * Example: `Android 10.0.100-android_q.beta.1+sha.1a2b3c`: official
+        * Example: `10.0.100`: incomplete version
+        * Example: `10.0.100+sha.1a2b3c`: stable
+        * Example: `10.0.100-ci.d17_0.1234+sha.1a2b3c`: CI build
+        * Example: `10.0.100-android_r.beta.1+sha.1a2b3c`: official
           preview
             * Technically it's possible to remove the prerelease part, but
               we’d still be able to figure out it’s not a stable version by
@@ -174,4 +172,3 @@ This is the scheme: `OS-Major.OS-Minor.InternalRelease[-prereleaseX]+sha.1b2c3d4
 
 [0]: https://github.com/dotnet/installer#installers-and-binaries
 [1]: https://github.com/dotnet/designs/blob/master/accepted/2018/sdk-version-scheme.md
-[2]: https://semver.org
