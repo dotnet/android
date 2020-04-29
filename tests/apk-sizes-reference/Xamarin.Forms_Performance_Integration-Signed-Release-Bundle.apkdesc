@@ -2,7 +2,7 @@
   "Comment": null,
   "Entries": {
     "AndroidManifest.xml": {
-      "Size": 3664
+      "Size": 3684
     },
     "classes.dex": {
       "Size": 2200624
@@ -11,10 +11,10 @@
       "Size": 856580
     },
     "lib/armeabi-v7a/libmonodroid.so": {
-      "Size": 170776
+      "Size": 170808
     },
     "lib/armeabi-v7a/libmonodroid_bundle_app.so": {
-      "Size": 4599444
+      "Size": 4607636
     },
     "lib/armeabi-v7a/libmono-native.so": {
       "Size": 714476
@@ -32,7 +32,7 @@
       "Size": 203048
     },
     "lib/x86/libmonodroid_bundle_app.so": {
-      "Size": 4599080
+      "Size": 4607272
     },
     "lib/x86/libmono-native.so": {
       "Size": 788196
@@ -2990,5 +2990,5 @@
       "Size": 493672
     }
   },
-  "PackageSize": 16041868
+  "PackageSize": 16058252
 }
