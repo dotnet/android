@@ -46,7 +46,7 @@ namespace Xamarin.Android.Prepare
 		public bool IsHost    { get; private set; }
 		public bool IsLlvm    { get; private set; }
 		public bool IsWindows { get; private set; }
-		public string Name    { get; private set; }
+		public string Name    { get; private set; } = String.Empty;
 		public AbiType Type   { get; private set; }
 
 		public static HashSet<string> GetHostAbis (OS osType = OS.Any, Bitness bitness = Bitness.Any, bool includeAllHostOSes = true)

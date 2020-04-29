@@ -18,24 +18,24 @@ namespace Xamarin.Android.Prepare
 		///   Program/package name - this may be an actual program name or a system package name. What it is affects
 		///   version checking, <see cref="ExecutableName" />
 		/// </summary>
-		public string Name                      { get; set; }
+		public string Name                      { get; set; } = String.Empty;
 
 		/// <summary>
 		///   Name of an executable/binary inside a package (<see cref="Name"/>) which will be used to query the program
 		///   version. If <see cref="Name"/> refers to an executable name (e.g. it coincides with the package name),
 		///   this property may be left unset.
 		/// </summary>
-		public string ExecutableName            { get; set; }
+		public string? ExecutableName            { get; set; }
 
 		/// <summary>
 		///   Minimum supported version of the package/program
 		/// </summary>
-		public string MinimumVersion            { get; set; }
+		public string? MinimumVersion            { get; set; }
 
 		/// <summary>
 		///   Maximum supported version of the package/program
 		/// </summary>
-		public string MaximumVersion            { get; set; }
+		public string? MaximumVersion            { get; set; }
 
 		/// <summary>
 		///   Version of the currently installed package/program, if any. If the program isn't detected, this property
@@ -96,16 +96,16 @@ namespace Xamarin.Android.Prepare
 
 		bool IsValidVersion ()
 		{
-			if (!ParseVersion (CurrentVersion, out Version curVer)) {
+			if (!ParseVersion (CurrentVersion, out Version? curVer)) {
 				Log.DebugLine ($"Unable to parse {Name} version from the string: {CurrentVersion}");
 				Log.DebugLine ($"Version checks disabled for {Name}");
 				return true;
 			}
 
-			if (!ParseVersion (MinimumVersion, out Version minVer))
+			if (!ParseVersion (MinimumVersion, out Version? minVer))
 				minVer = null;
 
-			if (!ParseVersion (MaximumVersion, out Version maxVer))
+			if (!ParseVersion (MaximumVersion, out Version? maxVer))
 				maxVer = null;
 
 			if (minVer == null && maxVer == null)
@@ -134,7 +134,7 @@ namespace Xamarin.Android.Prepare
 			return false;
 		}
 
-		protected virtual bool ParseVersion (string version, out Version ver)
+		protected virtual bool ParseVersion (string? version, out Version? ver)
 		{
 			return Version.TryParse (version, out ver);
 		}
@@ -149,7 +149,7 @@ namespace Xamarin.Android.Prepare
 
 			bool success;
 			string version;
-			string programName = ExecutableName?.Trim ();
+			string programName = ExecutableName?.Trim () ?? String.Empty;
 			if (String.IsNullOrEmpty (programName))
 				programName = Name;
 

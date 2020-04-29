@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Xamarin.Android.Prepare
@@ -28,10 +27,10 @@ namespace Xamarin.Android.Prepare
 $
 ", RegexOptions.Compiled | RegexOptions.IgnorePatternWhitespace);
 
-		public string Branch { get; private set; }
-		public string Commit { get; private set; }
-		public string Name   { get; private set; }
-		public string Owner  { get; private set; }
+		public string Branch { get; private set; } = String.Empty;
+		public string Commit { get; private set; } = String.Empty;
+		public string Name   { get; private set; } = String.Empty;
+		public string Owner  { get; private set; } = String.Empty;
 
 		public static List<ExternalGitDependency> GetDependencies (Context context, string externalFilePath, bool quiet = false)
 		{

@@ -44,88 +44,88 @@ namespace Xamarin.Android.Prepare
 		/// <summary>
 		///   Path to <c>javac</c> (full or relative)
 		/// </summary>
-		public string JavaCPath      { get; set; }
+		public string JavaCPath      { get; set; } = String.Empty;
 
 		/// <summary>
 		///   Path to <c>jar</c> (full or relative)
 		/// </summary>
-		public string JarPath        { get; set; }
+		public string JarPath        { get; set; } = String.Empty;
 
 		/// <summary>
 		///   Path to <c>java</c> (full or relative)
 		/// </summary>
-		public string JavaPath       { get; set; }
+		public string JavaPath       { get; set; } = String.Empty;
 
 		/// <summary>
 		///   Full path to Java home, set via the <c>$(JavaSdkDirectory)</c> MSBuild property or defaults to
 		///   <c>$(AndroidToolchainDirectory)/jdk</c>.
 		/// </summary>
-		public string JavaHome       { get; set; }
+		public string JavaHome       { get; set; } = String.Empty;
 
 		/// <summary>
 		///   Name of the operating system (e.g. Ubuntu, Debian, Arch etc for Linux-based operating systems, Mac OS X, Windows)
 		/// </summary>
-		public string Name           { get; protected set; }
+		public string Name           { get; protected set; } = String.Empty;
 
 		/// <summary>
 		///   OS "flavor" name (i.e. a variation of the OS named <see cref="Name"/>), may be equal to <see cref="Name"/>
 		/// </summary>
-		public string Flavor         { get; protected set; }
+		public string Flavor         { get; protected set; } = String.Empty;
 
 		/// <summary>
 		///   Operating system release version/name
 		/// </summary>
-		public string Release        { get; protected set; }
+		public string Release        { get; protected set; } = String.Empty;
 
 		/// <summary>
 		///   Host system architecture (e.g. x86, x86_64)
 		/// </summary>
-		public string Architecture   { get; protected set; }
+		public string Architecture   { get; protected set; } = String.Empty;
 
 		/// <summary>
 		///   Path to the C compiler to build binaries with the native OS bitness
 		/// </summary>
-		public string CC             { get; set; }
+		public string CC             { get; set; } = String.Empty;
 
 		/// <summary>
 		///   Path to the C compiler to build binaries with 32-bit bitness
 		/// </summary>
-		public string CC32           { get; set; }
+		public string CC32           { get; set; } = String.Empty;
 
 		/// <summary>
 		///   Path to the C compiler to build binaries with 64-bit bitness
 		/// </summary>
-		public string CC64           { get; set; }
+		public string CC64           { get; set; } = String.Empty;
 
 		/// <summary>
 		///   Path to the C++ compiler to build binaries with the native OS bitness
 		/// </summary>
-		public string CXX            { get; set; }
+		public string CXX            { get; set; } = String.Empty;
 
 		/// <summary>
 		///   Path to the C+ compiler to build binaries with 32-bit bitness
 		/// </summary>
-		public string CXX32          { get; set; }
+		public string CXX32          { get; set; } = String.Empty;
 
 		/// <summary>
 		///   Path to the C compiler to build binaries with 64-bit bitness
 		/// </summary>
-		public string CXX64          { get; set; }
+		public string CXX64          { get; set; } = String.Empty;
 
 		/// <summary>
 		///   Default compiler target triple
 		/// </summary>
-		public string Triple         { get; set; }
+		public string Triple         { get; set; } = String.Empty;
 
 		/// <summary>
 		///   32-bit compiler target triple
 		/// </summary>
-		public string Triple32       { get; set; }
+		public string Triple32       { get; set; } = String.Empty;
 
 		/// <summary>
 		///   64-bit compiler target triple
 		/// </summary>
-		public string Triple64       { get; set; }
+		public string Triple64       { get; set; } = String.Empty;
 
 		/// <summary>
 		///   Prefix where Homebrew is installed (relevant only on macOS, but present in all operating system for
@@ -147,7 +147,7 @@ namespace Xamarin.Android.Prepare
 		///   Extensions of executable files as supported by the host OS or <c>null</c> if executable extensions aren't
 		///   used/needed
 		/// </summary>
-		protected abstract List<string> ExecutableExtensions     { get; }
+		protected abstract List<string>? ExecutableExtensions     { get; }
 
 		/// <summary>
 		///   Default string comparison for path comparison
@@ -181,7 +181,7 @@ namespace Xamarin.Android.Prepare
 		/// </summary>
 		protected virtual bool InitOS ()
 		{
-			JavaHome = Context.Instance.Properties.GetValue (KnownProperties.JavaSdkDirectory)?.Trim ();
+			JavaHome = Context.Instance.Properties.GetValue (KnownProperties.JavaSdkDirectory)?.Trim () ?? String.Empty;
 			if (String.IsNullOrEmpty (JavaHome)) {
 				var androidToolchainDirectory = Context.Instance.Properties.GetValue (KnownProperties.AndroidToolchainDirectory)?.Trim ();
 				JavaHome = Path.Combine (androidToolchainDirectory, "jdk");
@@ -213,8 +213,6 @@ namespace Xamarin.Android.Prepare
 
 		protected OS (Context context)
 		{
-			if (context == null)
-				throw new ArgumentNullException (nameof (context));
 			Context = context;
 			EnvironmentVariables = new Dictionary<string, string> (StringComparer.Ordinal);
 		}
@@ -359,7 +357,7 @@ namespace Xamarin.Android.Prepare
 			PopulateEnvironmentVariables ();
 
 			foreach (var kvp in EnvironmentVariables) {
-				string name = kvp.Key?.Trim ();
+				string name = kvp.Key.Trim ();
 				if (String.IsNullOrEmpty (name))
 					continue;
 
@@ -474,14 +472,14 @@ namespace Xamarin.Android.Prepare
 						string fp = $"{programPath}{ext}";
 						if (Utilities.FileExists (fp))
 							return fp;
-						return null;
+						return String.Empty;
 					}
 				);
 
-				if (match == null && Utilities.FileExists (programPath))
+				if (match.Length == 0 && Utilities.FileExists (programPath))
 					match = programPath;
 
-				if (match != null)
+				if (match.Length > 0)
 					return match;
 				else if (required) {
 					goto doneAndOut;
@@ -490,36 +488,35 @@ namespace Xamarin.Android.Prepare
 				return programPath;
 			}
 
-			List<string> extensions = ExecutableExtensions;
 			List<string> directories = GetPathDirectories ();
 			match = GetExecutableWithExtension (programPath, (string ext) => FindProgram ($"{programPath}{ext}", directories));
-			if (match != null)
+			if (match.Length > 0)
 				return AssertIsExecutable (match);
 
 			match = FindProgram ($"{programPath}", directories);
-			if (match != null)
+			if (match.Length > 0)
 				return AssertIsExecutable (match);
 
 		  doneAndOut:
 			if (required)
 				throw new InvalidOperationException ($"Required program '{programPath}' could not be found");
 
-			return null;
+			return String.Empty;
 		}
 
 		string GetExecutableWithExtension (string programPath, Func<string, string> finder)
 		{
-			List<string> extensions = ExecutableExtensions;
+			List<string>? extensions = ExecutableExtensions;
 			if (extensions == null || extensions.Count == 0)
-				return null;
+				return String.Empty;
 
 			foreach (string extension in extensions) {
 				string match = finder (extension);
-				if (match != null)
+				if (match.Length > 0)
 					return match;
 			}
 
-			return null;
+			return String.Empty;
 		}
 
 		protected static string FindProgram (string programName, List<string> directories)
@@ -530,13 +527,13 @@ namespace Xamarin.Android.Prepare
 					return path;
 			}
 
-			return null;
+			return String.Empty;
 		}
 
 		protected static List <string> GetPathDirectories ()
 		{
 			var ret = new List <string> ();
-			string path = Environment.GetEnvironmentVariable ("PATH")?.Trim ();
+			string path = Environment.GetEnvironmentVariable ("PATH")?.Trim () ?? String.Empty;
 			if (String.IsNullOrEmpty (path))
 				return ret;
 

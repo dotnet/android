@@ -20,7 +20,7 @@ namespace Xamarin.Android.Prepare
 
 	    public bool IndentOutput         { get; set; } = true;
 	    public LogLevel LoggingLevel     { get; set; } = LogLevel.Debug;
-	    public string CustomSeverityName { get; set; }
+	    public string CustomSeverityName { get; set; } = String.Empty;
 
 	    public string IndentString {
 		    get => indentString;

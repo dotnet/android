@@ -9,7 +9,7 @@ namespace Xamarin.Android.Prepare
 	{
 		static readonly Uri    url         = new Uri ("https://github.com/force-net/Crc32.NET");
 
-		public override string LicenseFile => null;
+		public override string LicenseFile => String.Empty;
 		public override string Name        => "force-net/crc32.net";
 		public override Uri    SourceUrl   => url;
 		public override string LicenseText => @"

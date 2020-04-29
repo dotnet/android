@@ -5,7 +5,7 @@ namespace Xamarin.Android.Prepare
 {
 	class OSVersionInfo
 	{
-		public string Name { get; private set; }
+		public string Name { get; private set; } = String.Empty;
 		public int Minor   { get; private set; }
 		public int Major   { get; private set; }
 		public int Build   { get; private set; }

@@ -45,14 +45,14 @@ namespace Xamarin.Android.Prepare
 		const string MessageSeverity = "Message: ";
 		const string DebugSeverity   = "  Debug: ";
 
-		static Context ctx;
+		static Context? ctx;
 		static LoggingVerbosity Verbosity => ctx != null ? ctx.LoggingVerbosity : Configurables.Defaults.LoggingVerbosity;
 
 		public static Log Instance => instance;
 
 		static bool UseColor => ctx?.UseColor ?? true;
 
-		TextWriter logFileWriter;
+		TextWriter? logFileWriter;
 		bool alreadyDisposed;
 		Stopwatch watch;
 
@@ -61,7 +61,7 @@ namespace Xamarin.Android.Prepare
 			instance = new Log ();
 		}
 
-		public Log (string logFilePath = null)
+		public Log (string? logFilePath = null)
 		{
 			InitOS ();
 			SetLogFile (logFilePath);
@@ -76,7 +76,7 @@ namespace Xamarin.Android.Prepare
 			ctx = context;
 		}
 
-		public void SetLogFile (string logFilePath)
+		public void SetLogFile (string? logFilePath)
 		{
 			CloseLogFile ();
 			if (String.IsNullOrEmpty (logFilePath))
@@ -128,7 +128,7 @@ namespace Xamarin.Android.Prepare
 			DoWrite (WriteToConsole, ErrorMinimumVerbosity, String.Empty, tail, tailColor, skipLogFile);
 		}
 
-		public void StatusLine (string line = null, ConsoleColor color = StatusColor, bool skipLogFile = false)
+		public void StatusLine (string? line = null, ConsoleColor color = StatusColor, bool skipLogFile = false)
 		{
 			DoWrite (WriteLineToConsole, ErrorMinimumVerbosity, String.Empty, line, color, skipLogFile);
 		}
@@ -139,95 +139,95 @@ namespace Xamarin.Android.Prepare
 			DoWrite (WriteLineToConsole, ErrorMinimumVerbosity, String.Empty, tail, tailColor, skipLogFile);
 		}
 
-		public void Error (string text, ConsoleColor color = ErrorColor, bool showSeverity = DefaultErrorShowSeverity, string customSeverityName = null)
+		public void Error (string text, ConsoleColor color = ErrorColor, bool showSeverity = DefaultErrorShowSeverity, string? customSeverityName = null)
 		{
 			string severity = showSeverity ? (customSeverityName ?? ErrorSeverity) : String.Empty;
 			DoWrite (WriteToConsole, ErrorMinimumVerbosity, severity, text, color);
 		}
 
-		public void Error (string lead, string tail, ConsoleColor leadColor = ErrorLeadColor, ConsoleColor tailColor = ErrorTailColor, bool showSeverity = DefaultErrorShowSeverity, string customSeverityName = null)
+		public void Error (string lead, string tail, ConsoleColor leadColor = ErrorLeadColor, ConsoleColor tailColor = ErrorTailColor, bool showSeverity = DefaultErrorShowSeverity, string? customSeverityName = null)
 		{
 			string severity = showSeverity ? (customSeverityName ?? ErrorSeverity) : String.Empty;
 			DoWrite (WriteToConsole, ErrorMinimumVerbosity, severity, lead, leadColor);
 			DoWrite (WriteToConsole, ErrorMinimumVerbosity, String.Empty, tail, tailColor);
 		}
 
-		public void ErrorLine (string line = null, ConsoleColor color = ErrorColor, bool showSeverity = DefaultErrorShowSeverity, string customSeverityName = null)
+		public void ErrorLine (string? line = null, ConsoleColor color = ErrorColor, bool showSeverity = DefaultErrorShowSeverity, string? customSeverityName = null)
 		{
 			string severity = showSeverity ? (customSeverityName ?? ErrorSeverity) : String.Empty;
 			DoWrite (WriteLineToConsole, ErrorMinimumVerbosity, severity, line, color);
 		}
 
-		public void ErrorLine (string lead, string tail, ConsoleColor leadColor = ErrorLeadColor, ConsoleColor tailColor = ErrorTailColor, bool showSeverity = DefaultErrorShowSeverity, string customSeverityName = null)
+		public void ErrorLine (string lead, string tail, ConsoleColor leadColor = ErrorLeadColor, ConsoleColor tailColor = ErrorTailColor, bool showSeverity = DefaultErrorShowSeverity, string? customSeverityName = null)
 		{
 			string severity = showSeverity ? (customSeverityName ?? ErrorSeverity) : String.Empty;
 			DoWrite (WriteToConsole, ErrorMinimumVerbosity, severity, lead, leadColor);
 			DoWrite (WriteLineToConsole, ErrorMinimumVerbosity, String.Empty, tail, tailColor);
 		}
 
-		public void Warning (string text, ConsoleColor color = WarningColor, bool showSeverity = DefaultWarningShowSeverity, string customSeverityName = null)
+		public void Warning (string text, ConsoleColor color = WarningColor, bool showSeverity = DefaultWarningShowSeverity, string? customSeverityName = null)
 		{
 			string severity = showSeverity ? (customSeverityName ?? WarningSeverity) : String.Empty;
 			DoWrite (WriteToConsole, WarningMinimumVerbosity, severity, text, color);
 		}
 
-		public void WarningLine (string line = null, ConsoleColor color = WarningColor, bool showSeverity = DefaultWarningShowSeverity, string customSeverityName = null)
+		public void WarningLine (string? line = null, ConsoleColor color = WarningColor, bool showSeverity = DefaultWarningShowSeverity, string? customSeverityName = null)
 		{
 			string severity = showSeverity ? (customSeverityName ?? WarningSeverity) : String.Empty;
 			DoWrite (WriteLineToConsole, WarningMinimumVerbosity, severity, line, color);
 		}
 
-		public void Info (string text, ConsoleColor color = InfoColor, bool showSeverity = DefaultInfoShowSeverity, string customSeverityName = null)
+		public void Info (string text, ConsoleColor color = InfoColor, bool showSeverity = DefaultInfoShowSeverity, string? customSeverityName = null)
 		{
 			string severity = showSeverity ? (customSeverityName ?? InfoSeverity) : String.Empty;
 			DoWrite (WriteToConsole, InfoMinimumVerbosity, severity, text, color);
 		}
 
-		public void Info (string lead, string tail, ConsoleColor leadColor = InfoLeadColor, ConsoleColor tailColor = InfoTailColor, bool showSeverity = DefaultInfoShowSeverity, string customSeverityName = null)
+		public void Info (string lead, string tail, ConsoleColor leadColor = InfoLeadColor, ConsoleColor tailColor = InfoTailColor, bool showSeverity = DefaultInfoShowSeverity, string? customSeverityName = null)
 		{
 			string severity = showSeverity ? (customSeverityName ?? InfoSeverity) : String.Empty;
 			DoWrite (WriteToConsole, InfoMinimumVerbosity, severity, lead, leadColor);
 			DoWrite (WriteToConsole, InfoMinimumVerbosity, String.Empty, tail, tailColor);
 		}
 
-		public void InfoLine (string line = null, ConsoleColor color = InfoColor, bool showSeverity = DefaultInfoShowSeverity, string customSeverityName = null)
+		public void InfoLine (string? line = null, ConsoleColor color = InfoColor, bool showSeverity = DefaultInfoShowSeverity, string? customSeverityName = null)
 		{
 			string severity = showSeverity ? (customSeverityName ?? InfoSeverity) : String.Empty;
 			DoWrite (WriteLineToConsole, InfoMinimumVerbosity, severity, line, color);
 		}
 
-		public void InfoLine (string lead, string tail, ConsoleColor leadColor = InfoLeadColor, ConsoleColor tailColor = InfoTailColor, bool showSeverity = DefaultInfoShowSeverity, string customSeverityName = null)
+		public void InfoLine (string lead, string tail, ConsoleColor leadColor = InfoLeadColor, ConsoleColor tailColor = InfoTailColor, bool showSeverity = DefaultInfoShowSeverity, string? customSeverityName = null)
 		{
 			string severity = showSeverity ? (customSeverityName ?? InfoSeverity) : String.Empty;
 			DoWrite (WriteToConsole, InfoMinimumVerbosity, severity, lead, leadColor);
 			DoWrite (WriteLineToConsole, InfoMinimumVerbosity, String.Empty, tail, tailColor);
 		}
 
-		public void Message (string text, ConsoleColor color = MessageColor, bool showSeverity = DefaultMessageShowSeverity, string customSeverityName = null)
+		public void Message (string text, ConsoleColor color = MessageColor, bool showSeverity = DefaultMessageShowSeverity, string? customSeverityName = null)
 		{
 			string severity = showSeverity ? (customSeverityName ?? MessageSeverity) : String.Empty;
 			DoWrite (WriteToConsole, MessageMinimumVerbosity, severity, text, color);
 		}
 
-		public void MessageLine (string line = null, ConsoleColor color = MessageColor, bool showSeverity = DefaultMessageShowSeverity, string customSeverityName = null)
+		public void MessageLine (string? line = null, ConsoleColor color = MessageColor, bool showSeverity = DefaultMessageShowSeverity, string? customSeverityName = null)
 		{
 			string severity = showSeverity ? (customSeverityName ?? MessageSeverity) : String.Empty;
 			DoWrite (WriteLineToConsole, MessageMinimumVerbosity, showSeverity ? MessageSeverity : String.Empty, line, color);
 		}
 
-		public void Debug (string text, ConsoleColor color = DebugColor, bool showSeverity = DefaultDebugShowSeverity, string customSeverityName = null)
+		public void Debug (string text, ConsoleColor color = DebugColor, bool showSeverity = DefaultDebugShowSeverity, string? customSeverityName = null)
 		{
 			string severity = showSeverity ? (customSeverityName ?? DebugSeverity) : String.Empty;
 			DoWrite (WriteToConsole, DebugMinimumVerbosity, severity, text, color);
 		}
 
-		public void DebugLine (string line = null, ConsoleColor color = DebugColor, bool showSeverity = DefaultDebugShowSeverity, string customSeverityName = null)
+		public void DebugLine (string? line = null, ConsoleColor color = DebugColor, bool showSeverity = DefaultDebugShowSeverity, string? customSeverityName = null)
 		{
 			string severity = showSeverity ? (customSeverityName ?? DebugSeverity) : String.Empty;
 			DoWrite (WriteLineToConsole, DebugMinimumVerbosity, severity, line, color);
 		}
 
-		void DoWrite (Action<LoggingVerbosity, string, ConsoleColor, bool> writer, LoggingVerbosity minimumVerbosity, string prefix, string message, ConsoleColor color, bool skipLogFile = false)
+		void DoWrite (Action<LoggingVerbosity, string, ConsoleColor, bool> writer, LoggingVerbosity minimumVerbosity, string prefix, string? message, ConsoleColor color, bool skipLogFile = false)
 		{
 			writer (minimumVerbosity, $"{prefix}{message}", color, skipLogFile);
 		}
@@ -251,7 +251,7 @@ namespace Xamarin.Android.Prepare
 			}
 		}
 
-		void WriteLineToConsole (LoggingVerbosity minimumVerbosity, string message = null, bool skipLogFile = false)
+		void WriteLineToConsole (LoggingVerbosity minimumVerbosity, string? message = null, bool skipLogFile = false)
 		{
 			lock (writeLock) {
 				if (Verbosity >= minimumVerbosity) {
@@ -283,7 +283,7 @@ namespace Xamarin.Android.Prepare
 			}
 		}
 
-		void WriteToConsole (LoggingVerbosity minimumVerbosity, string message = null, bool skipLogFile = false)
+		void WriteToConsole (LoggingVerbosity minimumVerbosity, string? message = null, bool skipLogFile = false)
 		{
 			if (message == null)
 				return;

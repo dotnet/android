@@ -14,7 +14,7 @@ namespace Xamarin.Android.Prepare
 
 		protected Context Context => Context.Instance;
 		public bool Enabled       => SupportedOnHostOS && enabledCheck (Context);
-		public string ExeSuffix   { get; protected set; }
+		public string ExeSuffix   { get; protected set; } = String.Empty;
 
 		/// <summary>
 		///   Path relative to <see cref="Configurables.Paths.InstallMSBuildDir"/> where the runtime will be placed or
@@ -22,7 +22,7 @@ namespace Xamarin.Android.Prepare
 		///   each case the runtime <see cref="Name"/> will be appended to create full path to the destination
 		///   directory.
 		/// </summary>
-		public string InstallPath { get; protected set; }
+		public string InstallPath { get; protected set; } = String.Empty;
 		public string Name        { get; protected set; }
 
 		/// <summary>
@@ -41,7 +41,7 @@ namespace Xamarin.Android.Prepare
 		/// <summary>
 		///   Prefix to <see cref="Name"/> used by MonoSDKs to construct the runtime output directory.
 		/// </summary>
-		protected string MonoSdksPrefix { get; set; }
+		protected string MonoSdksPrefix { get; set; } = String.Empty;
 
 		/// <summary>
 		///   Host runtimes need a prefix in order to match Mono SDKs output directory name for them. This property is

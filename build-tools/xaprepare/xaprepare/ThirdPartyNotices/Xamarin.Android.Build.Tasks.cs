@@ -9,7 +9,7 @@ namespace Xamarin.Android.Prepare
 	{
 		static readonly Uri    url         = new Uri ("https://android.googlesource.com/platform/tools/base/+/d41d662dbf89f9b60ca6256415a059c0107749b8/sdk-common/NOTICE");
 
-		public override string LicenseText => null;
+		public override string LicenseText => String.Empty;
 		public override string LicenseFile => CommonLicenses.Apache20Path;
 		public override string Name        => "android/platform/tools/base";
 		public override Uri    SourceUrl   => url;
@@ -27,7 +27,7 @@ namespace Xamarin.Android.Prepare
 	{
 		static readonly Uri    url         = new Uri ("https://github.com/bazelbuild/bazel/");
 
-		public override string LicenseText => null;
+		public override string LicenseText => String.Empty;
 		public override string LicenseFile => CommonLicenses.Apache20Path;
 		public override string Name        => "bazelbuild/bazel";
 		public override Uri    SourceUrl   => url;
@@ -51,7 +51,7 @@ namespace Xamarin.Android.Prepare
 	{
 		static readonly Uri    url         = new Uri ("https://github.com/fsharp/fsharp/");
 
-		public override string LicenseText => null;
+		public override string LicenseText => String.Empty;
 		public override string LicenseFile => CommonLicenses.Apache20Path;
 		public override string Name        => "fsharp/fsharp";
 		public override Uri    SourceUrl   => url;
@@ -61,7 +61,7 @@ namespace Xamarin.Android.Prepare
 	{
 		static readonly Uri    url         = new Uri ("https://github.com/IronyProject/Irony");
 
-		public override string LicenseFile => null;
+		public override string LicenseFile => String.Empty;
 		public override string Name        => "IronyProject/Irony";
 		public override Uri    SourceUrl   => url;
 
@@ -89,7 +89,7 @@ namespace Xamarin.Android.Prepare
 	{
 		static readonly Uri    url         = new Uri ("https://github.com/JamesNK/Newtonsoft.Json");
 
-		public override string LicenseFile => null;
+		public override string LicenseFile => String.Empty;
 		public override string Name        => "JamesNK/Newtonsoft.Json";
 		public override Uri    SourceUrl   => url;
 
@@ -119,7 +119,7 @@ namespace Xamarin.Android.Prepare
 	{
 		static readonly Uri    url         = new Uri ("https://github.com/NuGet/NuGet.Client");
 
-		public override string LicenseFile => null;
+		public override string LicenseFile => String.Empty;
 		public override string Name => "NuGet/NuGet.Client";
 		public override Uri    SourceUrl => url;
 
@@ -145,7 +145,7 @@ namespace Xamarin.Android.Prepare
 
 		static readonly Uri    url         = new Uri ("https://sourceware.org/git/gitweb.cgi?p=binutils-gdb.git;a=tree;f=gas");
 
-		public override string LicenseText => null;
+		public override string LicenseText => String.Empty;
 		public override string LicenseFile => CommonLicenses.GPLv3Path;
 		public override string Name        => "android/platform/ndk";
 		public override Uri    SourceUrl   => url;

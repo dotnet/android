@@ -8,9 +8,9 @@ namespace Xamarin.Android.Prepare
 		{
 			bool writeToStderr;
 
-			public ProcessRunner Runner { get; set; }
+			public ProcessRunner? Runner { get; set; }
 
-			public OutputSink (Log log, string logFilePath)
+			public OutputSink (Log log, string? logFilePath)
 				: base (log, logFilePath)
 			{}
 

@@ -9,7 +9,7 @@ namespace Xamarin.Android.Prepare
 
 		public string PackageName { get; }
 
-		public LinuxProgram (string packageName, string executableName)
+		public LinuxProgram (string packageName, string? executableName)
 		{
 			if (String.IsNullOrEmpty (packageName))
 				throw new ArgumentException ("must not be null or empty", nameof (packageName));

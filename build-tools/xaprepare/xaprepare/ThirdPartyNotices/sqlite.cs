@@ -12,7 +12,7 @@ namespace Xamarin.Android.Prepare
 		public override string LicenseFile => CommonLicenses.Apache20Path;
 		public override string Name        => "xamarin/sqlite";
 		public override Uri    SourceUrl   => url;
-		public override string LicenseText => null;
+		public override string LicenseText => String.Empty;
 
 		public override bool   Include (bool includeExternalDeps, bool includeBuildDeps) => includeExternalDeps;
 	}
@@ -26,7 +26,7 @@ namespace Xamarin.Android.Prepare
 		public override string LicenseFile => licenseFile;
 		public override string Name        => "sqlite/sqlite";
 		public override Uri    SourceUrl   => url;
-		public override string LicenseText => null;
+		public override string LicenseText => String.Empty;
 
 		public override bool   Include (bool includeExternalDeps, bool includeBuildDeps) => includeExternalDeps;
 	}

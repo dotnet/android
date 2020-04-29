@@ -15,17 +15,17 @@ namespace Xamarin.Android.Prepare
 		protected override string DefaultToolExecutableName => "7za";
 		protected override string ToolName                  => "7zip";
 
-		public SevenZipRunner (Context context, Log log = null, string toolPath = null)
+		public SevenZipRunner (Context context, Log? log = null, string? toolPath = null)
 			: base (context, log, toolPath ?? Context.Instance.Tools.SevenZipPath)
 		{
 			ProcessTimeout = TimeSpan.FromMinutes (DefaultTimeout);
 
-			string vs = VersionString?.Trim ();
+			string vs = VersionString.Trim ();
 			if (String.IsNullOrEmpty (vs) || !Version.TryParse (vs, out version))
 				version = new Version (0, 0);
 		}
 
-		public async Task<bool> Extract (string archivePath, string outputDirectory, List<string> extraArguments = null)
+		public async Task<bool> Extract (string archivePath, string outputDirectory, List<string>? extraArguments = null)
 		{
 			if (String.IsNullOrEmpty (archivePath))
 				throw new ArgumentException ("must not be null or empty", nameof (archivePath));
@@ -104,7 +104,7 @@ namespace Xamarin.Android.Prepare
 			}
 		}
 
-		protected override TextWriter CreateLogSink (string logFilePath)
+		protected override TextWriter CreateLogSink (string? logFilePath)
 		{
 			return new OutputSink (Log, logFilePath);
 		}

@@ -11,6 +11,27 @@ steps:
   parameters:
     provisionExtraArgs: ${{ parameters.provisionExtraArgs }}
 
+- task: UseDotNet@2
+  displayName: install .NET Core $(DotNetCorePreviewVersion)
+  inputs:
+    version: $(DotNetCorePreviewVersion)
+
+- task: UseDotNet@2
+  displayName: install .NET Core $(DotNetCoreVersion)
+  inputs:
+    version: $(DotNetCoreVersion)
+
+- script: |
+    dotnet tool install --global boots
+  displayName: install boots
+  condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
+
+- script: |
+    export PATH="$PATH:/Users/runner/.dotnet/tools"
+    boots https://download.mono-project.com/archive/6.8.0/macos-10-universal/MonoFramework-MDK-6.8.0.105.macos10.xamarin.universal.pkg
+  displayName: update Mono to version 6.x
+  condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
+
 - task: MSBuild@1
   displayName: build xaprepare
   inputs:
@@ -30,16 +51,6 @@ steps:
     $(System.DefaultWorkingDirectory)\build-tools\xaprepare\xaprepare\bin\${{ parameters.configuration }}\xaprepare.exe --s=AndroidToolchain --no-emoji --run-mode=CI
   displayName: install test dependencies
   condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
-
-- task: UseDotNet@2
-  displayName: install .NET Core $(DotNetCorePreviewVersion)
-  inputs:
-    version: $(DotNetCorePreviewVersion)
-
-- task: UseDotNet@2
-  displayName: install .NET Core $(DotNetCoreVersion)
-  inputs:
-    version: $(DotNetCoreVersion)
 
 # Restore solutions for Xamarin.Android.Tools.sln, Xamarin.Android.sln, and Xamarin.Android-Tests.sln
 - task: NuGetToolInstaller@0

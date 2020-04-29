@@ -22,7 +22,7 @@ namespace Xamarin.Android.Prepare
 			var inputData = new StringBuilder (File.ReadAllText (InputPath, Encoding.UTF8));
 
 			foreach (var kvp in replacements) {
-				string placeholder = kvp.Key?.Trim ();
+				string placeholder = kvp.Key.Trim ();
 				if (String.IsNullOrEmpty (placeholder))
 					continue;
 

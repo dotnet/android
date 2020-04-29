@@ -6,7 +6,7 @@ namespace Xamarin.Android.Prepare
 	partial class Scenario_AndroidToolchain : ScenarioNoStandardEndSteps
 	{
 		public Scenario_AndroidToolchain () 
-			: base ("AndroidToolchain", "Install Android SDK, NDK and Corretto JDK.", Context.Instance)
+			: base ("AndroidToolchain", "Install Android SDK, NDK and Corretto JDK.")
 		{}
 
 		protected override void AddSteps (Context context)

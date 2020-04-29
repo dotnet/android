@@ -10,7 +10,8 @@ namespace Xamarin.Android.Prepare
 {
 	class Step_Android_SDK_NDK : StepWithDownloadProgress
 	{
-		class AndroidPackage
+#nullable disable
+		sealed class AndroidPackage
 		{
 			public AndroidToolchainComponent Component;
 			public string PackageName;
@@ -18,6 +19,7 @@ namespace Xamarin.Android.Prepare
 			public string LocalPackagePath;
 			public string DestinationDir;
 		}
+#nullable enable
 
 		bool RefreshSdk = false;
 		bool RefreshNdk = false;
@@ -98,6 +100,8 @@ namespace Xamarin.Android.Prepare
 		bool AcceptLicenses (Context context, string sdkRoot)
 		{
 			string sdkManager = context.OS.Which (Path.Combine (sdkRoot, "tools", "bin", "sdkmanager"));
+			if (sdkManager.Length == 0)
+				throw new InvalidOperationException ("sdkmanager not found");
 			string jdkDir = context.OS.JavaHome;
 
 			Log.Todo ("Modify ProcessRunner to allow standard input writing and switch to it here");
@@ -278,12 +282,12 @@ namespace Xamarin.Android.Prepare
 				return false;
 			}
 
-			if (!ParseVersion (pkgRevision, out Version pkgVer)) {
+			if (!ParseVersion (pkgRevision, out Version? pkgVer) || pkgVer == null) {
 				Log.DebugLine ($"Failed to parse a valid version from Pkg.Revision ({pkgRevision}) for component '{component.Name}'. Component will be reinstalled.");
 				return false;
 			}
 
-			if (!ParseVersion (component.PkgRevision, out Version expectedPkgVer))
+			if (!ParseVersion (component.PkgRevision, out Version? expectedPkgVer) || expectedPkgVer == null)
 				throw new InvalidOperationException ($"Invalid expected package version for component '{component.Name}': {component.PkgRevision}");
 
 			bool equal = pkgVer == expectedPkgVer;
@@ -293,14 +297,14 @@ namespace Xamarin.Android.Prepare
 			return equal;
 		}
 
-		bool ParseVersion (string v, out Version version)
+		bool ParseVersion (string? v, out Version? version)
 		{
-			string ver = v?.Trim ();
+			string? ver = v?.Trim ();
 			version = null;
 			if (String.IsNullOrEmpty (ver))
 				return false;
 
-			if (ver.IndexOf ('.') < 0)
+			if (ver!.IndexOf ('.') < 0)
 				ver = $"{ver}.0";
 
 			if (Version.TryParse (ver, out version))
