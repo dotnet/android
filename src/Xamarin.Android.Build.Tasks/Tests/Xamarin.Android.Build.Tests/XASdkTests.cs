@@ -22,17 +22,6 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[Category ("SmokeTests")]
-		public void DotNetBuild ([Values (false, true)] bool isRelease)
-		{
-			var proj = new XASdkProject (SdkVersion) {
-				IsRelease = isRelease
-			};
-			var dotnet = CreateDotNetBuilder (proj);
-			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
-		}
-
-		[Test]
-		[Category ("SmokeTests")]
 		public void DotNetBuildLibrary ([Values (false, true)] bool isRelease)
 		{
 			var proj = new XASdkProject (SdkVersion, outputType: "Library") {
@@ -54,7 +43,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		static readonly object [] DotNetPublishSource = new object [] {
+		static readonly object [] DotNetBuildSource = new object [] {
 			new object [] {
 				/* runtimeIdentifier */  "android.21-arm",
 				/* isRelease */          false,
@@ -79,8 +68,8 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[Category ("SmokeTests")]
-		[TestCaseSource (nameof (DotNetPublishSource))]
-		public void DotNetPublish (string runtimeIdentifier, bool isRelease)
+		[TestCaseSource (nameof (DotNetBuildSource))]
+		public void DotNetBuild (string runtimeIdentifier, bool isRelease)
 		{
 			var abi = MonoAndroidHelper.RuntimeIdentifierToAbi (runtimeIdentifier);
 			//TODO: re-enable these when we have a public .NET 5 Preview 4 build
@@ -93,7 +82,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty (KnownProperties.RuntimeIdentifier, runtimeIdentifier);
 
 			var dotnet = CreateDotNetBuilder (proj);
-			Assert.IsTrue (dotnet.Publish (), "`dotnet publish` should succeed");
+			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
 			Assert.IsTrue (StringAssertEx.ContainsText (dotnet.LastBuildOutput, " 0 Warning(s)"), "Should have no MSBuild warnings.");
 
 			var apk = Path.Combine (Root, dotnet.ProjectDirectory, proj.OutputPath,
