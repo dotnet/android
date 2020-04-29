@@ -29,12 +29,12 @@ variables:
 stages:
 - stage: mac_stage
   displayName: Mac
-  condition: eq(variables['EnableMacStage'], 'true')
+  condition: eq(variables['EnableMacStage'], 'true')  # The variable is defined on the pipeline definition
   jobs:
   - job: mac_build
     displayName: Mac Build
     pool:
-      name: $(XA.Build.MacOSSPool)
+      name: $(XA.Build.MacOSSPool)  # The variable is defined on the pipeline definition
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:
@@ -129,13 +129,14 @@ stages:
 
 - stage: linux_stage
   displayName: Linux
-  condition: eq(variables['EnableLinuxStage'], 'true')
+  condition: eq(variables['EnableLinuxStage'], 'true')    # The variable is defined on the pipeline definition
   dependsOn: []                 # Run stage in parallel
   jobs:
   - job: linux_build_package
     displayName: Linux Build
     pool:
-      vmImage: $(XA.Build.LinuxOSSPoolVmImage)     # https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=azure-devops
+      # https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=azure-devops
+      vmImage: $(XA.Build.LinuxOSSPoolVmImage)            # The variable is defined on the pipeline definition
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:
