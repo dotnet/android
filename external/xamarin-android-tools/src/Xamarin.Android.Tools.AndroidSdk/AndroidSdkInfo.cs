@@ -52,11 +52,7 @@ namespace Xamarin.Android.Tools
 				foreach (var d in preview)
 					yield return d;
 
-				var sorted = from p in Directory.EnumerateDirectories (buildTools)
-					let version = TryParseVersion (Path.GetFileName (p))
-						where version != null
-					orderby version descending
-					select p;
+				var sorted = SortedSubdirectoriesByVersion (buildTools);
 
 				foreach (var d in sorted)
 					yield return d;
@@ -64,6 +60,15 @@ namespace Xamarin.Android.Tools
 			var ptPath  = Path.Combine (AndroidSdkPath, "platform-tools");
 			if (Directory.Exists (ptPath))
 				yield return ptPath;
+		}
+
+		static IEnumerable<string> SortedSubdirectoriesByVersion (string dir)
+		{
+			return from p in Directory.EnumerateDirectories (dir)
+					let version = TryParseVersion (Path.GetFileName (p))
+						where version != null
+					orderby version descending
+					select p;
 		}
 
 		static Version TryParseVersion (string v)
@@ -184,6 +189,41 @@ namespace Xamarin.Android.Tools
 
 			var sdk = CreateSdk (logger);
 			sdk.SetPreferredJavaSdkPath (latestJdk.HomePath);
+		}
+
+		public string TryGetCommandLineToolsPath ()
+		{
+			return GetCommandLineToolsPaths ("latest").FirstOrDefault ();
+		}
+
+		public IEnumerable<string> GetCommandLineToolsPaths (string preferredCommandLineToolsVersion)
+		{
+			if (!string.IsNullOrEmpty (preferredCommandLineToolsVersion)) {
+				var preferredDir = Path.Combine (AndroidSdkPath, "cmdline-tools", preferredCommandLineToolsVersion);
+				if (Directory.Exists (preferredDir))
+					return new[] { preferredDir }.Concat (GetCommandLineToolsPaths ().Where (p => p != preferredDir));
+			}
+			return GetCommandLineToolsPaths ();
+		}
+
+		public IEnumerable<string> GetCommandLineToolsPaths ()
+		{
+			var cmdlineToolsDir = Path.Combine (AndroidSdkPath, "cmdline-tools");
+			if (Directory.Exists (cmdlineToolsDir)) {
+				var latestDir = Path.Combine (cmdlineToolsDir, "latest");
+				if (Directory.Exists (latestDir))
+					yield return latestDir;
+				foreach (var d in SortedSubdirectoriesByVersion (cmdlineToolsDir)) {
+					var version = Path.GetFileName (d);
+					if (version == "latest")
+						continue;
+					yield return d;
+				}
+			}
+			var toolsDir = Path.Combine (AndroidSdkPath, "tools");
+			if (Directory.Exists (toolsDir)) {
+				yield return toolsDir;
+			}
 		}
 	}
 }

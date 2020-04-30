@@ -164,13 +164,74 @@ namespace Xamarin.Android.Tools.Tests
 			}
 		}
 
+		[Test]
+		public void Sdk_GetCommandLineToolsPaths ()
+		{
+			CreateSdks(out string root, out string jdk, out string ndk, out string sdk);
+
+			var cmdlineTools        = Path.Combine (sdk, "cmdline-tools");
+			var latestToolsVersion  = "latest";
+			var toolsVersion        = "2.1";
+			var higherToolsVersion  = "11.2";
+			
+			void recreateCmdlineToolsDirectory () {
+				Directory.Delete (cmdlineTools, recursive: true);
+				Directory.CreateDirectory (cmdlineTools);
+			}
+
+			try {
+				var info = new AndroidSdkInfo (androidSdkPath: sdk);
+
+				// Test cmdline-tools path
+				recreateCmdlineToolsDirectory();
+				CreateFauxAndroidSdkToolsDirectory (sdk, createToolsDir: true, toolsVersion: toolsVersion, createOldToolsDir: false);
+				var toolsPaths = info.GetCommandLineToolsPaths ();
+
+				Assert.AreEqual (toolsPaths.Count (), 1, "Incorrect number of elements");
+				Assert.AreEqual (toolsPaths.First (), Path.Combine (sdk, "cmdline-tools", toolsVersion), "Incorrect command line tools path");
+				
+				// Test that cmdline-tools is preferred over tools
+				recreateCmdlineToolsDirectory();
+				CreateFauxAndroidSdkToolsDirectory (sdk, createToolsDir: true, toolsVersion: latestToolsVersion, createOldToolsDir: true);
+				toolsPaths = info.GetCommandLineToolsPaths ();
+
+				Assert.AreEqual (toolsPaths.Count (), 2, "Incorrect number of elements");
+				Assert.AreEqual (toolsPaths.First (), Path.Combine (sdk, "cmdline-tools", latestToolsVersion), "Incorrect command line tools path");
+				Assert.AreEqual (toolsPaths.Last (), Path.Combine (sdk, "tools"), "Incorrect tools path");
+
+				// Test sorting
+				recreateCmdlineToolsDirectory ();
+				CreateFauxAndroidSdkToolsDirectory (sdk, createToolsDir: true,  toolsVersion: latestToolsVersion,   createOldToolsDir: false);
+				CreateFauxAndroidSdkToolsDirectory (sdk, createToolsDir: true,  toolsVersion: toolsVersion,         createOldToolsDir: false);
+				CreateFauxAndroidSdkToolsDirectory (sdk, createToolsDir: true,  toolsVersion: higherToolsVersion,   createOldToolsDir: true);
+				toolsPaths = info.GetCommandLineToolsPaths ();
+
+				var toolsPathsList = toolsPaths.ToList ();
+				Assert.AreEqual (toolsPaths.Count (), 4, "Incorrect number of elements");
+				bool isOrderCorrect = toolsPathsList [0].Equals (Path.Combine (sdk, "cmdline-tools", latestToolsVersion), StringComparison.Ordinal)
+					&& toolsPathsList [1].Equals (Path.Combine (sdk, "cmdline-tools", higherToolsVersion), StringComparison.Ordinal)
+					&& toolsPathsList [2].Equals (Path.Combine (sdk, "cmdline-tools", toolsVersion), StringComparison.Ordinal)
+					&& toolsPathsList [3].Equals (Path.Combine (sdk, "tools"), StringComparison.Ordinal);
+				
+				Assert.IsTrue (isOrderCorrect, "Tools order is not descending");
+			} finally {
+				Directory.Delete (root, recursive: true);
+			}
+		}
+
 		static  bool    IsWindows   => OS.IsWindows;
+
+		static string CreateRoot ()
+		{
+			var root = Path.GetTempFileName ();
+			File.Delete (root);
+			Directory.CreateDirectory (root);
+			return root;
+		}
 
 		static void CreateSdks (out string root, out string jdk, out string ndk, out string sdk)
 		{
-			root    = Path.GetTempFileName ();
-			File.Delete (root);
-			Directory.CreateDirectory (root);
+			root    = CreateRoot ();
 
 			ndk     = Path.Combine (root, "ndk");
 			sdk     = Path.Combine (root, "sdk");
@@ -185,17 +246,45 @@ namespace Xamarin.Android.Tools.Tests
 			CreateFauxJavaSdkDirectory (jdk, "1.8.0", out var _, out var _);
 		}
 
-		static void CreateFauxAndroidSdkDirectory (string androidSdkDirectory, string buildToolsVersion, ApiInfo [] apiLevels = null)
+		static void CreateFauxAndroidSdkToolsDirectory (string androidSdkDirectory, bool createToolsDir, string toolsVersion, bool createOldToolsDir)
 		{
-			var androidSdkToolsPath             = Path.Combine (androidSdkDirectory, "tools");
-			var androidSdkBinPath               = Path.Combine (androidSdkToolsPath, "bin");
+			if (createToolsDir) {
+				string androidSdkToolsPath    = Path.Combine (androidSdkDirectory, "cmdline-tools", toolsVersion ?? "1.0");
+				string androidSdkToolsBinPath = Path.Combine (androidSdkToolsPath, "bin");
+				
+				Directory.CreateDirectory (androidSdkToolsPath);
+				Directory.CreateDirectory (androidSdkToolsBinPath);
+				
+				File.WriteAllText (Path.Combine (androidSdkToolsBinPath, IsWindows ? "lint.bat" : "lint"), "");
+			}
+
+			if (createOldToolsDir) {
+				string androidSdkToolsPath    = Path.Combine (androidSdkDirectory, "tools");
+				string androidSdkToolsBinPath = Path.Combine (androidSdkToolsPath, "bin");
+
+				Directory.CreateDirectory (androidSdkToolsPath);
+				Directory.CreateDirectory (androidSdkToolsBinPath);
+			
+				File.WriteAllText (Path.Combine (androidSdkToolsBinPath, IsWindows ? "lint.bat" : "lint"), "");
+			}
+
+		}
+
+		static void CreateFauxAndroidSdkDirectory (
+				string  androidSdkDirectory,
+				string  buildToolsVersion,
+				bool    createToolsDir = true,
+				string  toolsVersion = null,
+				bool    createOldToolsDir = false,
+				ApiInfo[]   apiLevels = null)
+		{
+			CreateFauxAndroidSdkToolsDirectory (androidSdkDirectory, createToolsDir, toolsVersion, createOldToolsDir);
+			
 			var androidSdkPlatformToolsPath     = Path.Combine (androidSdkDirectory, "platform-tools");
 			var androidSdkPlatformsPath         = Path.Combine (androidSdkDirectory, "platforms");
 			var androidSdkBuildToolsPath        = Path.Combine (androidSdkDirectory, "build-tools", buildToolsVersion);
 
 			Directory.CreateDirectory (androidSdkDirectory);
-			Directory.CreateDirectory (androidSdkToolsPath);
-			Directory.CreateDirectory (androidSdkBinPath);
 			Directory.CreateDirectory (androidSdkPlatformToolsPath);
 			Directory.CreateDirectory (androidSdkPlatformsPath);
 			Directory.CreateDirectory (androidSdkBuildToolsPath);
@@ -203,7 +292,6 @@ namespace Xamarin.Android.Tools.Tests
 			File.WriteAllText (Path.Combine (androidSdkPlatformToolsPath,   IsWindows ? "adb.exe" : "adb"),             "");
 			File.WriteAllText (Path.Combine (androidSdkBuildToolsPath,      IsWindows ? "zipalign.exe" : "zipalign"),   "");
 			File.WriteAllText (Path.Combine (androidSdkBuildToolsPath,      IsWindows ? "aapt.exe" : "aapt"),           "");
-			File.WriteAllText (Path.Combine (androidSdkToolsPath,           IsWindows ? "lint.bat" : "lint"),           "");
 
 			List<ApiInfo> defaults = new List<ApiInfo> ();
 			for (int i = 10; i < 26; i++) {

@@ -37,15 +37,10 @@ namespace Xamarin.Android.Tools
 		public string AndroidNdkPath { get; private set; }
 		public string JavaSdkPath { get; private set; }
 		public string JavaBinPath { get; private set; }
-		public string AndroidToolsPath { get; private set; }
 		public string AndroidPlatformToolsPath { get; private set; }
-		public string AndroidToolsPathShort { get; private set; }
 		public string AndroidPlatformToolsPathShort { get; private set; }
 
 		public virtual string Adb { get; protected set; } = "adb";
-		public virtual string Android { get; protected set; } = "android";
-		public virtual string Emulator { get; protected set; } = "emulator";
-		public virtual string Monitor { get; protected set; } = "monitor";
 		public virtual string ZipAlign { get; protected set; } = "zipalign";
 		public virtual string JarSigner { get; protected set; } = "jarsigner";
 		public virtual string KeyTool { get; protected set; } = "keytool";
@@ -76,13 +71,9 @@ namespace Xamarin.Android.Tools
 			}
 
 			if (!string.IsNullOrEmpty (AndroidSdkPath)) {
-				AndroidToolsPath = Path.Combine (AndroidSdkPath, "tools");
-				AndroidToolsPathShort = GetShortFormPath (AndroidToolsPath);
 				AndroidPlatformToolsPath = Path.Combine (AndroidSdkPath, "platform-tools");
 				AndroidPlatformToolsPathShort = GetShortFormPath (AndroidPlatformToolsPath);
 			} else {
-				AndroidToolsPath = null;
-				AndroidToolsPathShort = null;
 				AndroidPlatformToolsPath = null;
 				AndroidPlatformToolsPathShort = null;
 			}
@@ -98,9 +89,6 @@ namespace Xamarin.Android.Tools
 			// we need to look for extensions other than the default .exe|.bat
 			// google have a habbit of changing them.
 			Adb = GetExecutablePath (AndroidPlatformToolsPath, Adb);
-			Android = GetExecutablePath (AndroidToolsPath, Android);
-			Emulator = GetExecutablePath (AndroidToolsPath, Emulator);
-			Monitor = GetExecutablePath (AndroidToolsPath, Monitor);
 			NdkStack = GetExecutablePath (AndroidNdkPath, NdkStack);
 		}
 
