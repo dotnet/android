@@ -199,7 +199,7 @@ stages:
         packagesToPush: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)/*.nupkg
         nuGetFeedType: external
         publishFeedCredentials: xamarin-impl public feed
-      condition: and(succeeded(), eq(variables['PushXAPackages'], 'true'))
+      condition: and(succeeded(), or(ne(variables['Build.Reason'], 'PullRequest'), eq(variables['PushXAPackages'], 'true')))
 
     - task: PublishPipelineArtifact@1
       displayName: upload nupkgs

@@ -35,13 +35,4 @@ temporary MSBuild project SDK that redirects to a Xamarin.Android installation o
     </BeforePack>
   </PropertyGroup>
 
-  <Import Project="$(XamarinAndroidSourcePath)build-tools\scripts\XAVersionInfo.targets" />
-
-  <Target Name="_GetDefaultPackageVersion"
-      DependsOnTargets="GetXAVersionInfo" >
-    <PropertyGroup>
-      <PackageVersion>$(ProductVersion).$(XAVersionCommitCount)</PackageVersion>
-    </PropertyGroup>
-  </Target>
-
 </Project>

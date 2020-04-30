@@ -923,7 +923,8 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="AndroidNdkPath=$(_AndroidNdkDirectory)" />
 		<_PropertyCacheItems Include="JavaSdkPath=$(_JavaSdkDirectory)" />
 		<_PropertyCacheItems Include="AndroidSequencePointsMode=$(_AndroidSequencePointsMode)" />
-		<_PropertyCacheItems Include="XamarinAndroidVersion=$(XamarinAndroidVersion)" />
+		<_PropertyCacheItems Include="XamarinAndroidVersion=$(XamarinAndroidVersion)" Condition=" '$(UsingAndroidNETSdk)' != 'true' " />
+		<_PropertyCacheItems Include="AndroidNETSdkVersion=$(AndroidNETSdkVersion)"   Condition=" '$(UsingAndroidNETSdk)' == 'true' " />
 		<_PropertyCacheItems Include="MonoSymbolArchive=$(MonoSymbolArchive)" />
 		<_PropertyCacheItems Include="AndroidUseLatestPlatformSdk=$(AndroidUseLatestPlatformSdk)" />
 		<_PropertyCacheItems Include="TargetFrameworkVersion=$(TargetFrameworkVersion)" />

@@ -35,7 +35,6 @@ the new entry point for short-form style Android projets in .NET 5.
   <Target Name="_GenerateXASdkContent"
       DependsOnTargets="ConstructInstallerItems;_GenerateBundledVersions" >
     <PropertyGroup>
-      <PackageVersion>$(_AndroidNETSdkVersion)</PackageVersion>
       <ToolsSourceDir>$(XamarinAndroidSourcePath)bin\Build$(Configuration)\packs\tools\</ToolsSourceDir>
     </PropertyGroup>
     <ItemGroup>
@@ -65,13 +64,9 @@ the new entry point for short-form style Android projets in .NET 5.
         SkipUnchangedFiles="True"
         Condition="$([MSBuild]::IsOSPlatform('osx'))"
     />
-    <Copy
-        SourceFiles="@(VersionFiles)"
-        DestinationFolder="$(ToolsSourceDir)"
-        SkipUnchangedFiles="True"
-    />
     <ItemGroup>
       <_PackageFiles Include="$(ToolsSourceDir)**" PackagePath="tools" />
+      <_PackageFiles Include="$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\Version*" PackagePath="tools" />
       <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\Sdk\**" PackagePath="Sdk" />
       <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\targets\**"
           Exclude="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\**\*.Lite.*"
@@ -83,10 +78,8 @@ the new entry point for short-form style Android projets in .NET 5.
        https://github.com/dotnet/installer/blob/d98f5f18bce44014aeacd2f99923b4779d89459d/src/redist/targets/GenerateBundledVersions.targets
        -->
   <Target Name="_GenerateBundledVersions"
-      DependsOnTargets="GetXAVersionInfo" >
+      DependsOnTargets="_GetDefaultPackageVersion" >
     <PropertyGroup>
-      <_AndroidNETSdkVersion>$(ProductVersion).$(XAVersionCommitCount)</_AndroidNETSdkVersion>
-      <_AndroidNETAppPackageVersion>$(ProductVersion).$(XAVersionCommitCount)</_AndroidNETAppPackageVersion>
       <_AndroidNETAppTargetFramework>netcoreapp5.0</_AndroidNETAppTargetFramework>
       <BundledVersionsPropsFileName>Microsoft.Android.Sdk.BundledVersions.props</BundledVersionsPropsFileName>
     </PropertyGroup>
@@ -108,16 +101,16 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
 -->
 <Project>
   <PropertyGroup>
-    <AndroidNETSdkVersion>$(_AndroidNETSdkVersion)</AndroidNETSdkVersion>
+    <AndroidNETSdkVersion>$(AndroidPackVersionLong)</AndroidNETSdkVersion>
   </PropertyGroup>
   <ItemGroup>
     <KnownFrameworkReference Include="Microsoft.Android"
                               TargetFramework="$(_AndroidNETAppTargetFramework)"
                               RuntimeFrameworkName="Microsoft.Android"
-                              DefaultRuntimeFrameworkVersion="$(_AndroidNETAppPackageVersion)"
-                              LatestRuntimeFrameworkVersion="$(_AndroidNETAppPackageVersion)"
+                              DefaultRuntimeFrameworkVersion="$(AndroidPackVersionLong)"
+                              LatestRuntimeFrameworkVersion="$(AndroidPackVersionLong)"
                               TargetingPackName="Microsoft.Android.Ref"
-                              TargetingPackVersion="$(_AndroidNETAppPackageVersion)"
+                              TargetingPackVersion="$(AndroidPackVersionLong)"
                               RuntimePackNamePatterns="Microsoft.Android.Runtime.**RID**"
                               RuntimePackRuntimeIdentifiers="@(_AndroidNETAppRuntimePackRids, '%3B')"
                               Profile="Android"

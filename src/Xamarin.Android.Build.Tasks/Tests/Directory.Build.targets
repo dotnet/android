@@ -17,7 +17,7 @@
       <Compile Remove="$(GeneratedSdkVersionFile)" />
       <_SdkVersionInfo Include="System.Reflection.AssemblyMetadata">
         <_Parameter1>SdkVersion</_Parameter1>
-        <_Parameter2>$(ProductVersion).$(XAVersionCommitCount)</_Parameter2>
+        <_Parameter2>$(AndroidPackVersionLong)</_Parameter2>
       </_SdkVersionInfo>
     </ItemGroup>
 
