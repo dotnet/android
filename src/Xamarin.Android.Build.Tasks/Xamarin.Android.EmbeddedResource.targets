@@ -38,17 +38,17 @@ This file is used by all project types, including binding projects.
       Inputs="$(ProjectAssetsFile);$(MSBuildProjectFullPath);@(_MonoAndroidReferencePath);@(_MonoAndroidReferenceDependencyPaths);@(AndroidAarLibrary);$(_AndroidBuildPropertiesCache)"
       Outputs="$(_AndroidStampDirectory)_ResolveLibraryProjectImports.stamp">
     <ResolveLibraryProjectImports
-      ContinueOnError="$(DesignTimeBuild)"
-      CacheFile="$(_AndroidLibraryProjectImportsCache)"
-      DesignTimeBuild="$(DesignTimeBuild)"
-      Assemblies="@(_MonoAndroidReferencePath);@(_MonoAndroidReferenceDependencyPaths)"
-      AarLibraries="@(AndroidAarLibrary)"
-      ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
-      NativeImportsDirectory="$(_NativeLibraryImportsDirectoryName)"
-      UseShortFileNames="$(UseShortFileNames)"
-      OutputDirectory="$(IntermediateOutputPath)"
-      AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
-      OutputImportDirectory="$(_AndroidLibrayProjectIntermediatePath)"
+        ContinueOnError="$(DesignTimeBuild)"
+        CacheFile="$(_AndroidLibraryProjectImportsCache)"
+        DesignTimeBuild="$(DesignTimeBuild)"
+        Assemblies="@(_MonoAndroidReferencePath);@(_MonoAndroidReferenceDependencyPaths)"
+        AarLibraries="@(AndroidAarLibrary)"
+        ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
+        NativeImportsDirectory="$(_NativeLibraryImportsDirectoryName)"
+        UseShortFileNames="$(UseShortFileNames)"
+        OutputDirectory="$(IntermediateOutputPath)"
+        AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
+        OutputImportDirectory="$(_AndroidLibrayProjectIntermediatePath)"
     />
     <Touch Files="$(_AndroidStampDirectory)_ResolveLibraryProjectImports.stamp" AlwaysCreate="true" />
   </Target>
@@ -119,15 +119,15 @@ This file is used by all project types, including binding projects.
       Inputs="@(_AndroidResourceDest);@(AndroidAsset);@(AndroidJavaLibrary);@(AndroidJavaSource);@(_AndroidResourceDestRemovedFiles)"
       Outputs="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip">
     <CreateManagedLibraryResourceArchive
-      OutputDirectory="$(IntermediateOutputPath)$(_LibraryProjectImportsDirectoryName)"
-      ResourceDirectory="$(MonoAndroidResDirIntermediate)"
-      AndroidAssets="@(AndroidAsset)"
-      MonoAndroidAssetsPrefix="$(MonoAndroidAssetsPrefix)"
-      AndroidJavaSources="@(AndroidJavaSource)"
-      AndroidJavaLibraries="@(AndroidJavaLibrary)"
-      AndroidResourcesInThisExactProject="@(_AndroidResourceDest)"
-      FlatArchivesDirectory="$(_AndroidLibraryFlatArchivesDirectory)"
-      RemovedAndroidResourceFiles="@(_AndroidResourceDestRemovedFiles)"
+        OutputDirectory="$(IntermediateOutputPath)$(_LibraryProjectImportsDirectoryName)"
+        ResourceDirectory="$(MonoAndroidResDirIntermediate)"
+        AndroidAssets="@(AndroidAsset)"
+        MonoAndroidAssetsPrefix="$(MonoAndroidAssetsPrefix)"
+        AndroidJavaSources="@(AndroidJavaSource)"
+        AndroidJavaLibraries="@(AndroidJavaLibrary)"
+        AndroidResourcesInThisExactProject="@(_AndroidResourceDest)"
+        FlatArchivesDirectory="$(_AndroidLibraryFlatArchivesDirectory)"
+        RemovedAndroidResourceFiles="@(_AndroidResourceDestRemovedFiles)"
     />
     <Touch Files="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip" />
     <ItemGroup>
@@ -143,11 +143,11 @@ This file is used by all project types, including binding projects.
       Inputs="@(LibraryProjectProperties);@(LibraryProjectZip)"
       Outputs="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip">
     <CreateLibraryResourceArchive
-      OutputDirectory="$(IntermediateOutputPath)$(_LibraryProjectImportsDirectoryName)"
-      OutputJarsDirectory="$(IntermediateOutputPath)library_project_jars"
-      OutputAnnotationsDirectory="$(IntermediateOutputPath)library_project_annotations"
-      LibraryProjectPropertiesFiles="@(LibraryProjectProperties)"
-      LibraryProjectZipFiles="@(LibraryProjectZip)"
+        OutputDirectory="$(IntermediateOutputPath)$(_LibraryProjectImportsDirectoryName)"
+        OutputJarsDirectory="$(IntermediateOutputPath)library_project_jars"
+        OutputAnnotationsDirectory="$(IntermediateOutputPath)library_project_annotations"
+        LibraryProjectPropertiesFiles="@(LibraryProjectProperties)"
+        LibraryProjectZipFiles="@(LibraryProjectZip)"
     />
     <ItemGroup Condition="Exists ('$(IntermediateOutputPath)__AndroidLibraryProjects__.zip')">
       <FileWrites Include="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip" />
