@@ -25,7 +25,7 @@ namespace Xamarin.Android.Prepare
 
 		public void Init (Context context)
 		{
-			bool require = context.CheckCondition (KnownConditions.AllowProgramInstallation);
+			bool require = !context.CheckCondition (KnownConditions.EnsureEssential) && context.CheckCondition (KnownConditions.AllowProgramInstallation);
 
 			Log.StatusLine ();
 			Log.StatusLine ("Locating essential tool binaries", ConsoleColor.DarkGreen);
