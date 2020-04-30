@@ -6,6 +6,7 @@ using System.IO;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
+using System.Linq;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -15,6 +16,7 @@ namespace Xamarin.Android.Build.Tests
 	{
 		List<BuildErrorEventArgs> errors;
 		List<BuildWarningEventArgs> warnings;
+		List<BuildMessageEventArgs> messages;
 		MockBuildEngine engine;
 		string temp;
 		string keyToolPath;
@@ -22,7 +24,7 @@ namespace Xamarin.Android.Build.Tests
 		[SetUp]
 		public void Setup()
 		{
-			engine = new MockBuildEngine (TestContext.Out, errors = new List<BuildErrorEventArgs> (), warnings = new List<BuildWarningEventArgs> ());
+			engine = new MockBuildEngine (TestContext.Out, errors = new List<BuildErrorEventArgs> (), warnings = new List<BuildWarningEventArgs> (), messages = new List<BuildMessageEventArgs> ());
 			temp = Path.GetTempFileName ();
 
 			var androidSdk = new AndroidSdkInfo ((level, message) => {
@@ -162,6 +164,49 @@ namespace Xamarin.Android.Build.Tests
 			};
 
 			Assert.IsTrue (keyToolTask.Execute (), "Task should have succeeded.");
+		}
+
+		[Test]
+		public void CreateDebugKeyStoreWithStrongPassword ()
+		{
+			string keyfile = Path.Combine (TestName, "debug.keystore");
+			string pass = "Cy(nBW~j.&@B-!R_aq7^/syzFR!S$4]7R%i6)R!";
+			if (File.Exists (keyfile))
+				File.Delete (keyfile);
+			var task = new AndroidCreateDebugKey {
+				BuildEngine = engine,
+				KeyStore = keyfile,
+				StorePass = pass,
+				KeyAlias = "teststringkey",
+				KeyPass = pass,
+				KeyAlgorithm="RSA",
+				Validity=10000,
+				StoreType="pkcs12",
+				Command="-genkeypair",
+				ToolPath = keyToolPath,
+			};
+			Assert.IsTrue (task.Execute (), "Task should have succeeded.");
+			Assert.AreEqual (0, errors.Count, "Task should have no errors.");
+			Assert.AreEqual (0, warnings.Count, "Task should have no warnings.");
+			Assert.AreEqual (0, task.ExitCode, "ExitCode should have been 0");
+
+			messages.Clear ();
+			var keyToolTask = new KeyTool {
+				BuildEngine = engine,
+				KeyStore = keyfile,
+				StorePass = pass,
+				KeyAlias = "teststringkey",
+				KeyPass = pass,
+				Command = "-list",
+				ToolPath = keyToolPath,
+			};
+
+			Assert.IsTrue (keyToolTask.Execute (), "Task should have succeeded.");
+			Assert.AreEqual (0, errors.Count, "Task should have no errors.");
+			Assert.AreEqual (0, warnings.Count, "Task should have no warnings.");
+			Assert.AreEqual (0, task.ExitCode, "ExitCode should have been 0");
+			string output = string.Join (" ", messages.Select (x => x.Message));
+			Assert.IsTrue (output.Contains ("Certificate fingerprint (SHA1):"), "Certificate SHA1 should have been printed.");
 		}
 	}
 }
