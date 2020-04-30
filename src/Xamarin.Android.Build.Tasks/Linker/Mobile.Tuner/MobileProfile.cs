@@ -3,7 +3,11 @@ using System.Collections.Generic;
 
 using Mono.Cecil;
 
+#if !NET5_LINKER
 using Mono.Tuner;
+#else
+using Xamarin.Android.Linker;
+#endif
 
 namespace Mobile.Tuner {
 

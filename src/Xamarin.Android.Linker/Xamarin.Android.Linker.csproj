@@ -11,6 +11,7 @@
 
     <!--Include *everything* to start with-->
     <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\*.cs" Link="MonoDroid.Tuner\%(FileName).cs" />
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\Mobile.Tuner\*.cs" Link="Mobile.Tuner\%(FileName).cs" />
     <Compile Remove="Mono.Tuner\**" />
     <EmbeddedResource Remove="Mono.Tuner\**" />
     <None Remove="Mono.Tuner\**" />
@@ -43,9 +44,6 @@
 
     <!--TODO: Subclasses MarkStep-->
     <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\MonoDroidMarkStep.cs" />
-
-    <!--TODO: Subclasses MonoDroid.Tuner.MobileProfile, then Mono.Tuner.Profile-->
-    <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\MonoDroidProfile.cs" />
 
     <!--Other Xamarin.Android / Java.Interop files-->
     <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil\CustomAttributeProviderRocks.cs" Link="Java.Interop\CustomAttributeProviderRocks.cs" />

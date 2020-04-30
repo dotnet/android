@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 
+#if !NET5_LINKER
 using Mono.Tuner;
+#endif
 using Mobile.Tuner;
 
 using Mono.Cecil;

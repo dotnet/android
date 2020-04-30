@@ -11,6 +11,8 @@ using Mono.Linker.Steps;
 
 #if !NET5_LINKER
 using Mono.Tuner;
+#else
+using Xamarin.Android.Linker;
 #endif
 
 namespace MonoDroid.Tuner
