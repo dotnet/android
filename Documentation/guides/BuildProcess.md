@@ -248,6 +248,14 @@ Install properties control the behavior of the `Install` and
   MSBuild /t:Install ProjectName.csproj /p:AdbTarget=-e
   ```
 
+- **AndroidAllowDeltaInstall** &ndash; Enable experimental APK delta install support,
+  which computes a diff between the currently install APK and new one and only sends the diffs, not
+  whole APK, to the device. If delta install isn't available (the app wasn't previously
+  installed or the device is older than API 24) or the delta install fails, it falls back
+  to a regular install. The default value is `false`.
+
+  **Experimental**. Added in Xamarin.Android 10.5.
+
 ### Packaging Properties
 
 Packaging properties control the creation of the Android package, and are
