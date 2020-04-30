@@ -27,6 +27,9 @@
     <ProjectCapability Include="Mobile" />
     <ProjectCapability Include="Android" />
     <ProjectCapability Include="AndroidApplication" Condition="$(AndroidApplication)" />
+    
+    <!-- Conflicts with our targets generator in VS+CPS: See https://work.azdo.io/1112733 -->
+    <ProjectCapability Remove="LaunchProfiles" />
   </ItemGroup>
 
   <!-- NOTE: We have to replace the Run target after Microsoft.NET.Sdk.targets are imported -->
