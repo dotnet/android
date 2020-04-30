@@ -21,8 +21,8 @@ This file is used by all project types, including binding projects.
 
   <Target Name="_CreateStampDirectory">
     <MakeDir
-      Condition=" '$(_AndroidStampDirectory)' != '' And !Exists('$(_AndroidStampDirectory)')"
-      Directories="$(_AndroidStampDirectory)"
+        Condition=" '$(_AndroidStampDirectory)' != '' And !Exists('$(_AndroidStampDirectory)') "
+        Directories="$(_AndroidStampDirectory)"
     />
   </Target>
 
