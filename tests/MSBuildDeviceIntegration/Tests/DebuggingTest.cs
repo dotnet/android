@@ -302,13 +302,24 @@ namespace ${ROOT_NAMESPACE} {
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies:Dexes",
 			},
+			new object[] {
+				/* useSharedRuntime */   true,
+				/* embedAssemblies */    false,
+				/* fastDevType */        "Assemblies:Dexes",
+			},
+			new object[] {
+				/* useSharedRuntime */   true,
+				/* embedAssemblies */    false,
+				/* fastDevType */        "Assemblies:Dexes",
+				/* allowDeltaInstall */  true,
+			},
 		};
 #pragma warning restore 414
 
 		[Test]
 		[TestCaseSource (nameof(DebuggerTestCases))]
 		[Retry (1)]
-		public void ApplicationRunsWithDebuggerAndBreaks (bool useSharedRuntime, bool embedAssemblies, string fastDevType)
+		public void ApplicationRunsWithDebuggerAndBreaks (bool useSharedRuntime, bool embedAssemblies, string fastDevType, bool allowDeltaInstall = false)
 		{
 			if (!CommercialBuildAvailable) {
 				Assert.Ignore ("Test does not run on the Open Source Builds.");
@@ -326,6 +337,8 @@ namespace ${ROOT_NAMESPACE} {
 			};
 			var abis = new string [] { "armeabi-v7a", "x86" };
 			proj.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
+			if (allowDeltaInstall)
+				proj.SetProperty (KnownProperties.AndroidAllowDeltaInstall, "true");
 			proj.SetDefaultTargetDevice ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				SetTargetFrameworkAndManifest (proj, b);
