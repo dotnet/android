@@ -54,14 +54,6 @@ namespace Xamarin.Android.Build.Tests
 				/* expectedResult */  true,
 			},
 		};
-		// useJackAndJill, useLatestSdk
-		static object [] JackFlagAndFxVersion () => new object [] {
-			new Object [] { false, "v7.1" },
-			// Disabled because Jack DOESN'T work
-			// re-enable once it does.
-			//new Object [] { true, false },
-			//new Object [] { true, true },
-		};
 
 		static object [] RuntimeChecks () => new object [] {
 			new object[] {
