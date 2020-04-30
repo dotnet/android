@@ -13,7 +13,7 @@ namespace Xamarin.Android.Build.Tests {
 
 	[TestFixture]
 	[Category ("Node-2")]
-	[Parallelizable (ParallelScope.Self)]
+	[NonParallelizable] // NOTE: This test was hanging without this
 	public class ResolveSdksTaskTests : BaseTest {
 #pragma warning disable 414
 
