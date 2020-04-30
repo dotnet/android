@@ -145,11 +145,11 @@ This is the package version scheme: `OS-Major.OS-Minor.InternalRelease[-prerelea
     * If we have a particular feature we want people to subscribe to (such as
       an Android preview release), we publish previews with a custom pre-release
       identifier:
-        * Example: `10.1.100-android_r.beta.1`
+        * Example: `10.1.100-android-r.beta.1`
         * This way people can sign up for only official previews, by
-          referencing `*-android_r.beta.*`
-        * It's still possible to sign up for all `android_r` builds, by
-          referencing `*-ci.android_r.*`
+          referencing `*-android-r.beta.*`
+        * It's still possible to sign up for all `android-r` builds, by
+          referencing `*-ci.android-r.*`
 * Build metadata: Required Hash
     * This is `sha.` + the short commit hash.
         * Use the short hash because the long hash is quite long and
@@ -162,8 +162,8 @@ This is the package version scheme: `OS-Major.OS-Minor.InternalRelease[-prerelea
       version string refers to a stable version or not.
         * Example: `10.0.100`: incomplete version
         * Example: `10.0.100+sha.1a2b3c`: stable
-        * Example: `10.0.100-ci.d17_0.1234+sha.1a2b3c`: CI build
-        * Example: `10.0.100-android_r.beta.1+sha.1a2b3c`: official
+        * Example: `10.0.100-ci.d17-0.1234+sha.1a2b3c`: CI build
+        * Example: `10.0.100-android-r.beta.1+sha.1a2b3c`: official
           preview
             * Technically it's possible to remove the prerelease part, but
               we’d still be able to figure out it’s not a stable version by
