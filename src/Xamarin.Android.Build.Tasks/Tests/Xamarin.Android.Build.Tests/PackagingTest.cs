@@ -7,6 +7,8 @@ using System.Text;
 using System.Collections.Generic;
 using System.Xml.Linq;
 using Xamarin.Tools.Zip;
+using Xamarin.Android.Tasks;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -278,6 +280,27 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 			if (useApkSigner && !foundApkSigner) {
 				Assert.Ignore ("Skipping test. Required build-tools verison which contains apksigner is not installed.");
 			}
+			string keyfile = Path.Combine (Root, "temp", TestName, "release.keystore");
+			if (File.Exists (keyfile))
+				File.Delete (keyfile);
+			var androidSdk = new AndroidSdkInfo ((level, message) => {
+			}, AndroidSdkPath, AndroidNdkPath);
+			string keyToolPath = Path.Combine (androidSdk.JavaSdkPath, "bin");
+			var engine = new MockBuildEngine (Console.Out);
+			string pass = "Cy(nBW~j.&@B-!R_aq7/syzFR!S$4]7R%i6)R!";
+			var task = new AndroidCreateDebugKey {
+				BuildEngine = engine,
+				KeyStore = keyfile,
+				StorePass = pass,
+				KeyAlias = "releasestore",
+				KeyPass = pass,
+				KeyAlgorithm="RSA",
+				Validity=30,
+				StoreType="pkcs12",
+				Command="-genkeypair",
+				ToolPath = keyToolPath,
+			};
+			Assert.IsTrue (task.Execute (), "Task should have succeeded.");
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
@@ -286,6 +309,11 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 			} else {
 				proj.RemoveProperty ("AndroidUseApkSigner");
 			}
+			proj.SetProperty (proj.ReleaseProperties, "AndroidKeyStore", "True");
+			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningKeyStore", keyfile);
+			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningKeyAlias", "releasestore");
+			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningKeyPass", pass);
+			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningStorePass", pass);
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, perAbiApk);
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidSupportedAbis, "armeabi-v7a;x86");
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
