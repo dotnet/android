@@ -141,8 +141,8 @@ stages:
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: make all-tests
 
-    - script: |
-        cp -r bin/$(XA.Build.Configuration)/bcl-tests bin/Test$(XA.Build.Configuration)/bcl-tests
+    - script: >
+        cp -r bin/$(XA.Build.Configuration)/bcl-tests bin/Test$(XA.Build.Configuration)/bcl-tests &&
         cp bin/Build$(XA.Build.Configuration)/ProfileAssemblies.projitems bin/Test$(XA.Build.Configuration)/bcl-tests/
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: copy bcl-tests assemblies
@@ -166,15 +166,15 @@ stages:
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: make create-installers
 
-    - script: |
-        mkdir -p bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
-        cp bin/Build$(XA.Build.Configuration)/*.vsix bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
+    - script: >
+        mkdir -p bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName) &&
+        cp bin/Build$(XA.Build.Configuration)/*.vsix bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName) &&
         cp bin/Build$(XA.Build.Configuration)/*.pkg bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: copy unsigned installers
 
-    - script: |
-        VERSION=`LANG=C; export LANG && git log --no-color --first-parent -n1 --pretty=format:%ct`
+    - script: >
+        VERSION=`LANG=C; export LANG && git log --no-color --first-parent -n1 --pretty=format:%ct` &&
         echo "d1ec039f-f3db-468b-a508-896d7c382999 $VERSION" > bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)/updateinfo
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: create updateinfo file
@@ -402,10 +402,10 @@ stages:
       parameters:
         UnsignedPkgPath: $(XA.Unsigned.Pkg)
 
-    - script: |
-        cd $(System.DefaultWorkingDirectory)/release-scripts
-        git checkout $(ReleaseScriptsBranch)
-        sudo xcode-select -s /Applications/$(NotarizationXcode)
+    - script: >
+        cd $(System.DefaultWorkingDirectory)/release-scripts &&
+        git checkout $(ReleaseScriptsBranch) &&
+        sudo xcode-select -s /Applications/$(NotarizationXcode) &&
         ruby notarize.rb $(XA.Unsigned.Pkg) $(XamarinIdentifier) $(XamarinUserId) $(XamarinPassword) $(TeamID)
       displayName: Notarize PKG
 
