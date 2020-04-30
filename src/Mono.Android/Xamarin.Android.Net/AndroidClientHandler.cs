@@ -436,7 +436,7 @@ namespace Xamarin.Android.Net
 				if (httpConnection.DoOutput)
 					await WriteRequestContentToOutput (request, httpConnection, cancellationToken);
 
-				statusCode = await Task.Run (() => (HttpStatusCode)httpConnection.ResponseCode).ConfigureAwait (false);
+				statusCode = await Task.Run (() => (HttpStatusCode)httpConnection.ResponseCode, cancellationToken).ConfigureAwait (false);
 				connectionUri = new Uri (httpConnection.URL?.ToString ()!);
 			} finally {
 				cancelRegistration.Dispose ();
