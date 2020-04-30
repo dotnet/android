@@ -28,8 +28,7 @@
     <ProjectCapability Include="Android" />
     <ProjectCapability Include="AndroidApplication" Condition="$(AndroidApplication)" />
     
-    // See https://work.azdo.io/1112733
-    <!-- Conflicts with our targets generator in VS+CPS -->
+    <!-- Conflicts with our targets generator in VS+CPS: See https://work.azdo.io/1112733 -->
     <ProjectCapability Remove="LaunchProfiles" />
   </ItemGroup>
 
