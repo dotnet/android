@@ -152,19 +152,25 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\jcw-gen.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\jit-times.exe" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\jit-times.pdb" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\jnimarshalmethod-gen.exe" Condition=" '$(PackageId)' != 'Xamarin.Android.Sdk' " />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\jnimarshalmethod-gen.pdb" Condition=" '$(PackageId)' != 'Xamarin.Android.Sdk' " />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\jnimarshalmethod-gen.exe" Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\jnimarshalmethod-gen.pdb" Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\LayoutBinding.cs" />
-    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libmono-android.debug.so')"       Condition=" '$(PackageId)' != 'Xamarin.Android.Sdk' " />
-    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libmono-android.release.so')"     Condition=" '$(PackageId)' != 'Xamarin.Android.Sdk' " />
-    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libmono-btls-shared.so')"         Condition=" '$(PackageId)' != 'Xamarin.Android.Sdk' " />
-    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libmono-profiler-aot.so')"        Condition=" '$(PackageId)' != 'Xamarin.Android.Sdk' " />
-    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libmono-profiler-log.so')"        Condition=" '$(PackageId)' != 'Xamarin.Android.Sdk' " />
-    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libmono-native.so')"              Condition=" '$(PackageId)' != 'Xamarin.Android.Sdk' " />
-    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libMonoPosixHelper.so')"          Condition=" '$(PackageId)' != 'Xamarin.Android.Sdk' "/>
-    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libmonosgen-2.0.so')"             Condition=" '$(PackageId)' != 'Xamarin.Android.Sdk' " />
-    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libsqlite3_xamarin.so')"          Condition=" '$(PackageId)' != 'Xamarin.Android.Sdk' " />
-    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libxamarin-debug-app-helper.so')" Condition=" '$(PackageId)' != 'Xamarin.Android.Sdk' " />
+    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libmono-android.debug.so')"       Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libmono-android.release.so')"     Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libmono-btls-shared.so')"         Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libmono-profiler-aot.so')"        Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libmono-profiler-log.so')"        Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libmono-native.so')"              Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libMonoPosixHelper.so')"          Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' "/>
+    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libmonosgen-2.0.so')"             Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libsqlite3_xamarin.so')"          Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libxamarin-debug-app-helper.so')" Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\interpreter-%(Identity)\libmono-btls-shared.so')"         Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\interpreter-%(Identity)\libmono-profiler-aot.so')"        Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\interpreter-%(Identity)\libmono-profiler-log.so')"        Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\interpreter-%(Identity)\libmono-native.so')"              Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\interpreter-%(Identity)\libMonoPosixHelper.so')"          Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' "/>
+    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\interpreter-%(Identity)\libmonosgen-2.0.so')"             Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\libZipSharp.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\libZipSharp.dll.config" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\libZipSharp.pdb" />
@@ -312,14 +318,14 @@
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\mono.config" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\mono-symbolicate" />
     <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\aapt2" />
-    <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libmono-android.debug.$(LibExtension)"    Condition=" '$(PackageId)' != 'Xamarin.Android.Sdk' " />
-    <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libmono-android.release.$(LibExtension)"  Condition=" '$(PackageId)' != 'Xamarin.Android.Sdk' " />
-    <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libmono-native.$(LibExtension)"           Condition=" '$(PackageId)' != 'Xamarin.Android.Sdk' " />
-    <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libmono-profiler-aot.$(LibExtension)"     Condition=" '$(PackageId)' != 'Xamarin.Android.Sdk' " />
-    <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libmono-profiler-log.$(LibExtension)"     Condition=" '$(PackageId)' != 'Xamarin.Android.Sdk' " />
-    <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libMonoPosixHelper.$(LibExtension)"       Condition=" '$(PackageId)' != 'Xamarin.Android.Sdk' " />
-    <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libmonosgen-2.0.$(LibExtension)"          Condition=" '$(PackageId)' != 'Xamarin.Android.Sdk' " />
-    <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libxamarin-app.$(LibExtension)"           Condition=" '$(PackageId)' != 'Xamarin.Android.Sdk' " />
+    <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libmono-android.debug.$(LibExtension)"    Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libmono-android.release.$(LibExtension)"  Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libmono-native.$(LibExtension)"           Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libmono-profiler-aot.$(LibExtension)"     Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libmono-profiler-log.$(LibExtension)"     Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libMonoPosixHelper.$(LibExtension)"       Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libmonosgen-2.0.$(LibExtension)"          Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libxamarin-app.$(LibExtension)"           Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
     <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\libzip.$(LibExtension)" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\proguard\bin\proguard.sh" />
   </ItemGroup>
@@ -366,12 +372,12 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\jar2xml.jar" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.AndroidTools.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.AndroidTools.pdb" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Android.DebugRuntime-arm64-v8a.apk"   Condition=" '$(PackageId)' != 'Xamarin.Android.Sdk' " />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Android.DebugRuntime-armeabi-v7a.apk" Condition=" '$(PackageId)' != 'Xamarin.Android.Sdk' " />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Android.DebugRuntime-debug.apk"       Condition=" '$(PackageId)' != 'Xamarin.Android.Sdk' " />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Android.DebugRuntime-debug.xml"       Condition=" '$(PackageId)' != 'Xamarin.Android.Sdk' " />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Android.DebugRuntime-x86.apk"         Condition=" '$(PackageId)' != 'Xamarin.Android.Sdk' " />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Android.DebugRuntime-x86_64.apk"      Condition=" '$(PackageId)' != 'Xamarin.Android.Sdk' " />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Android.DebugRuntime-arm64-v8a.apk"   Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Android.DebugRuntime-armeabi-v7a.apk" Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Android.DebugRuntime-debug.apk"       Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Android.DebugRuntime-debug.xml"       Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Android.DebugRuntime-x86.apk"         Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Android.DebugRuntime-x86_64.apk"      Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Analysis.Compatibility.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Analysis.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Analysis.Tasks.dll" />
