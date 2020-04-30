@@ -386,6 +386,12 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Build.Debugging.Tasks.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Common.Debugging.props" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Common.Debugging.targets" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\arm64-v8a\installer" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\armeabi-v7a\installer" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\x86\installer" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\x86_64\installer" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\protobuf-net.dll" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\System.Collections.Immutable.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.ResourceProcessors.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.AndroidTools.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.AndroidTools.pdb" />
