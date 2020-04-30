@@ -210,6 +210,14 @@ EmbeddedAssemblies::typemap_java_to_managed (const char *java_type_name)
 	const char *managed_type_name = entry->to;
 	log_debug (LOG_DEFAULT, "typemap: Java type '%s' corresponds to managed type '%s'", java_type_name, managed_type_name);
 
+	const char *ch = managed_type_name;
+	while (ch != nullptr && *ch != '\0') {
+		if (*ch++ == '`') {
+			log_debug (LOG_DEFAULT, "typemap: managed type '%s' is a generic one, will create Type instance in managed code", managed_type_name);
+			return nullptr;
+		}
+	}
+
 	MonoType *type = mono_reflection_type_from_name (const_cast<char*>(managed_type_name), nullptr);
 	if (XA_UNLIKELY (type == nullptr)) {
 		log_warn (LOG_ASSEMBLY, "typemap: managed type '%s' (mapped from Java type '%s') could not be loaded", managed_type_name, java_type_name);
