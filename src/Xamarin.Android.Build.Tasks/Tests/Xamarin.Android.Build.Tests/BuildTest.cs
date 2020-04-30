@@ -139,12 +139,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				if (multidex) {
-					// R8 currently gives: The rule `-keep public class * extends java.lang.annotation.Annotation { *; }` uses extends but actually matches implements.
-					Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 1 Warning(s)"), "Should have no more than 1 MSBuild warnings.");
-				} else {
-					Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 0 Warning(s)"), "Should have no MSBuild warnings.");
-				}
+				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 0 Warning(s)"), "Should have no MSBuild warnings.");
 				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, "Warning: end of file not at end of a line"),
 					"Should not get a warning from the <CompileNativeAssembly/> task.");
 				var lockFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, ".__lock");
@@ -1164,6 +1159,8 @@ namespace UnamedProject
 		[Category ("Minor")]
 		public void BuildApplicationRequiresMultiDex ([Values ("dx", "d8")] string dexTool)
 		{
+			if (dexTool == "d8")
+				Assert.Ignore ("The build currently *succeeds* with d8, when API 21 is our minimum.");
 			var proj = CreateMultiDexRequiredApplication ();
 			proj.DexTool = dexTool;
 			using (var b = CreateApkBuilder ()) {
@@ -1185,29 +1182,31 @@ namespace UnamedProject
 		}
 
 		[Test]
-		[TestCaseSource (nameof (JackFlagAndFxVersion))]
-		public void BuildMultiDexApplication (bool useJackAndJill, string fxVersion)
+		public void BuildMultiDexApplication ([Values ("dx", "d8")] string dexTool)
 		{
 			var proj = CreateMultiDexRequiredApplication ();
 			proj.UseLatestPlatformSdk = false;
+			proj.DexTool = dexTool;
 			proj.SetProperty ("AndroidEnableMultiDex", "True");
-			string intermediateDir = proj.IntermediateOutputPath;
 			if (IsWindows) {
 				proj.SetProperty ("AppendTargetFrameworkToIntermediateOutputPath", "True");
 			}
 
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName), false, false)) {
 				proj.TargetFrameworkVersion = b.LatestTargetFrameworkVersion ();
+
+				string intermediateDir;
 				if (IsWindows) {
-					intermediateDir = Path.Combine (intermediateDir, proj.TargetFrameworkAbbreviated);
+					intermediateDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, proj.TargetFrameworkAbbreviated);
+				} else {
+					intermediateDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 				}
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, intermediateDir,  "android/bin/classes.dex")),
-					"multidex-ed classes.zip exists");
+				FileAssert.Exists (Path.Combine (intermediateDir, "android", "bin", "classes.dex"));
 
 				if (proj.DexTool != "d8") {
-					var multidexKeepPath  = Path.Combine (Root, b.ProjectDirectory, intermediateDir, "multidex.keep");
-					Assert.IsTrue (File.Exists (multidexKeepPath), "multidex.keep exists");
+					var multidexKeepPath  = Path.Combine (intermediateDir, "multidex.keep");
+					FileAssert.Exists (multidexKeepPath);
 					Assert.IsTrue (File.ReadAllLines (multidexKeepPath).Length > 1, "multidex.keep must contain more than one line.");
 				}
 
