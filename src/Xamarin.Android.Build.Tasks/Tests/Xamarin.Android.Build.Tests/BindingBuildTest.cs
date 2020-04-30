@@ -28,7 +28,7 @@ namespace Xamarin.Android.Build.Tests
 				"_ExtractJavaDocJars",
 				"ExportJarToXml",
 				"GenerateBindings",
-				"ResolveLibraryProjects",
+				"_CreateBindingResourceArchive",
 				"BuildDocumentation",
 				"_ResolveLibraryProjectImports",
 				"CoreCompile",
