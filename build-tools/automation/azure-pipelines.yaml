@@ -48,9 +48,9 @@ variables:
   InstallerArtifactName: installers
   TestAssembliesArtifactName: test-assemblies
   NUnitConsoleVersion: 3.9.0
-  DotNetCoreVersion: 3.x
-  # Version number from: https://dotnet.microsoft.com/download/dotnet-core/5.0
-  DotNetCorePreviewVersion: 5.0.100-preview.1.20155.7
+  DotNetCoreVersion: 3.1.201
+  # Version number from: https://github.com/dotnet/installer#installers-and-binaries
+  DotNetCorePreviewVersion: 5.0.100-preview.4.20227.14
   HostedMacMojave: Hosted Mac Internal Mojave
   HostedMac: Hosted Mac Internal
   HostedWinVS2019: Hosted Windows 2019 with VS2019
@@ -99,14 +99,12 @@ stages:
     - script: echo "##vso[task.setvariable variable=JAVA_HOME]$HOME/Library/Android/jdk"
       displayName: set JAVA_HOME
 
-    - task: UseDotNet@2
-      displayName: install .NET Core $(DotNetCorePreviewVersion)
-      inputs:
+    - template: yaml-templates/use-dot-net.yaml
+      parameters:
         version: $(DotNetCorePreviewVersion)
 
-    - task: UseDotNet@2
-      displayName: install .NET Core $(DotNetCoreVersion)
-      inputs:
+    - template: yaml-templates/use-dot-net.yaml
+      parameters:
         version: $(DotNetCoreVersion)
 
     # Prepare and build everything
@@ -235,14 +233,12 @@ stages:
 
     - template: yaml-templates\clean.yaml
 
-    - task: UseDotNet@2
-      displayName: install .NET Core $(DotNetCorePreviewVersion)
-      inputs:
+    - template: yaml-templates\use-dot-net.yaml
+      parameters:
         version: $(DotNetCorePreviewVersion)
 
-    - task: UseDotNet@2
-      displayName: install .NET Core $(DotNetCoreVersion)
-      inputs:
+    - template: yaml-templates\use-dot-net.yaml
+      parameters:
         version: $(DotNetCoreVersion)
 
     # Downgrade the XA .vsix installed into the instance of VS that we are building with so that we don't restore/build against a test version.
