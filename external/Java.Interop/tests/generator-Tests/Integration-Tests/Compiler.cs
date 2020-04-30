@@ -1,44 +1,29 @@
 using System;
-using System.Reflection;
-using System.CodeDom.Compiler;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Collections.Generic;
+using System.Reflection;
+using System.Text;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using NUnit.Framework;
 
 namespace generatortests
 {
 	public static class Compiler
 	{
-		const string RoslynEnvironmentVariable = "ROSLYN_COMPILER_LOCATION";
-		private static string unitTestFrameworkAssemblyPath = typeof(Assert).Assembly.Location;
-		private static string supportFilePath = typeof(Compiler).Assembly.Location;
-
-		static CodeDomProvider GetCodeDomProvider ()
-		{
-			if (Environment.OSVersion.Platform == PlatformID.Win32NT) {
-				//NOTE: there is an issue where Roslyn's csc.exe isn't copied to output for non-ASP.NET projects
-				// Comments on this here: https://stackoverflow.com/a/40311406/132442
-				// They added an environment variable as a workaround: https://github.com/aspnet/RoslynCodeDomProvider/pull/12
-				if (string.IsNullOrEmpty (Environment.GetEnvironmentVariable (RoslynEnvironmentVariable, EnvironmentVariableTarget.Process))) {
-					string roslynPath = Path.GetFullPath (Path.Combine (unitTestFrameworkAssemblyPath, "..", "..", "..", "packages", "microsoft.codedom.providers.dotnetcompilerplatform", "2.0.1", "tools", "RoslynLatest"));
-					Environment.SetEnvironmentVariable (RoslynEnvironmentVariable, roslynPath, EnvironmentVariableTarget.Process);
-				}
-
-				return new Microsoft.CodeDom.Providers.DotNetCompilerPlatform.CSharpCodeProvider ();
-			} else {
-				return new Microsoft.CSharp.CSharpCodeProvider ();
-			}
-		}
+		private static string supportFilePath = typeof (Compiler).Assembly.Location;
+		private static string unitTestFrameworkAssemblyPath = typeof (Assert).Assembly.Location;
 
 		public static Assembly Compile (Xamarin.Android.Binder.CodeGeneratorOptions options,
 			string assemblyFileName, IEnumerable<string> AdditionalSourceDirectories,
 			out bool hasErrors, out string output, bool allowWarnings)
 		{
+			// Gather all the files we need to compile
 			var generatedCodePath = options.ManagedCallableWrapperSourceOutputDirectory;
 			var sourceFiles = Directory.EnumerateFiles (generatedCodePath, "*.cs",
 				SearchOption.AllDirectories).ToList ();
-			sourceFiles = sourceFiles.Select (x => Path.GetFullPath(x)).ToList ();
+			sourceFiles = sourceFiles.Select (x => Path.GetFullPath (x)).ToList ();
 
 			var supportFiles = Directory.EnumerateFiles (Path.Combine (Path.GetDirectoryName (supportFilePath), "SupportFiles"),
 				"*.cs", SearchOption.AllDirectories);
@@ -49,36 +34,51 @@ namespace generatortests
 				sourceFiles.AddRange (additonal);
 			}
 
-			CompilerParameters parameters = new CompilerParameters ();
-			parameters.GenerateExecutable = false;
-			parameters.GenerateInMemory = true;
-			parameters.CompilerOptions = "/unsafe";
-			parameters.OutputAssembly = assemblyFileName;
-			parameters.ReferencedAssemblies.Add (unitTestFrameworkAssemblyPath);
-			parameters.ReferencedAssemblies.Add (typeof (Enumerable).Assembly.Location);
+			// Parse the source files
+			var syntax_trees = sourceFiles.Distinct ().Select (s => CSharpSyntaxTree.ParseText (File.ReadAllText (s))).ToArray ();
 
-			var binDir  = Path.GetDirectoryName (typeof (BaseGeneratorTest).Assembly.Location);
-			var facDir  = GetFacadesPath ();
-			parameters.ReferencedAssemblies.Add (Path.Combine (binDir, "Java.Interop.dll"));
-			parameters.ReferencedAssemblies.Add (Path.Combine (facDir, "netstandard.dll"));
-#if DEBUG
-			parameters.IncludeDebugInformation = true;
-#else
-			parameters.IncludeDebugInformation = false;
-#endif
+			// Set up the assemblies we need to reference
+			var binDir = Path.GetDirectoryName (typeof (BaseGeneratorTest).Assembly.Location);
+			var facDir = GetFacadesPath ();
 
-			using (var codeProvider = GetCodeDomProvider ()) {
-				CompilerResults results = codeProvider.CompileAssemblyFromFile (parameters, sourceFiles.ToArray ());
+			var references = new [] {
+				MetadataReference.CreateFromFile (unitTestFrameworkAssemblyPath),
+				MetadataReference.CreateFromFile (typeof(object).Assembly.Location),
+				MetadataReference.CreateFromFile (typeof(Enumerable).Assembly.Location),
+				MetadataReference.CreateFromFile (Path.Combine (binDir, "Java.Interop.dll")),
+				MetadataReference.CreateFromFile (Path.Combine (facDir, "netstandard.dll"))
+			};
 
-				hasErrors = false;
+			// Compile!
+			var compilation = CSharpCompilation.Create (
+			    Path.GetFileName (assemblyFileName),
+			    syntaxTrees: syntax_trees,
+			    references: references,
+			    options: new CSharpCompilationOptions (OutputKind.DynamicallyLinkedLibrary, allowUnsafe: true));
 
-				foreach (CompilerError message in results.Errors) {
-					hasErrors |= !message.IsWarning || !allowWarnings;
+			// Save assembly to a memory stream and load it with reflection
+			using (var ms = new MemoryStream ()) {
+				var result = compilation.Emit (ms);
+				var success = result.Success && (allowWarnings || !result.Diagnostics.Any (d => d.Severity == DiagnosticSeverity.Warning));
+
+				if (!success) {
+					var failures = result.Diagnostics.Where (diagnostic =>
+					     diagnostic.Severity == DiagnosticSeverity.Warning ||
+					     diagnostic.Severity == DiagnosticSeverity.Error);
+
+					hasErrors = true;
+					output = OutputDiagnostics (failures);
+				} else {
+					ms.Seek (0, SeekOrigin.Begin);
+
+					hasErrors = false;
+					output = null;
+
+					return Assembly.Load (ms.ToArray ());
 				}
-				output = string.Join (Environment.NewLine, results.Output.Cast<string> ());
-
-				return results.CompiledAssembly;
 			}
+
+			return null;
 		}
 
 		static string GetFacadesPath ()
@@ -94,6 +94,15 @@ namespace generatortests
 
 			return dir;
 		}
+
+		static string OutputDiagnostics (IEnumerable<Diagnostic> diagnostics)
+		{
+			var sb = new StringBuilder ();
+
+			foreach (var d in diagnostics)
+				sb.AppendLine ($"{d.Id}: {d.GetMessage ()} ({d.Location})");
+
+			return sb.ToString ();
+		}
 	}
 }
-
