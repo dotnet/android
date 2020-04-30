@@ -33,6 +33,6 @@
   </ItemGroup>
 
   <!-- NOTE: We have to replace the Run target after Microsoft.NET.Sdk.targets are imported -->
-  <Target Name="Run" DependsOnTargets="Publish;Install;StartAndroidActivity" />
+  <Target Name="Run" DependsOnTargets="Install;StartAndroidActivity" />
 
 </Project>

@@ -88,7 +88,7 @@ namespace Xamarin.ProjectTools
 		public bool Run ()
 		{
 			//TODO: this should eventually run `dotnet run --project foo.csproj`
-			var arguments = GetDefaultCommandLineArgs ("publish", "Run");
+			var arguments = GetDefaultCommandLineArgs ("build", "Run");
 			return Execute (arguments.ToArray ());
 		}
 

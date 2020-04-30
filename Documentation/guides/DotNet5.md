@@ -53,13 +53,14 @@ Default Android related file globbing behavior is defined in `Microsoft.Android.
 
 ## dotnet cli
 
-There are currently two "verbs" we are aiming to get working in
+There are currently a few "verbs" we are aiming to get working in
 Xamarin.Android:
 
     dotnet build
     dotnet publish
+    dotnet run
 
-Currently in .NET Core (aka .NET 5), `dotnet publish` is where all the
+Currently in .NET 5 console apps, `dotnet publish` is where all the
 work to produce a self-contained "app" happens:
 
 * The linker via the `<IlLink/>` MSBuild task
@@ -67,21 +68,32 @@ work to produce a self-contained "app" happens:
 
 https://docs.microsoft.com/en-us/dotnet/core/whats-new/dotnet-core-3-0#readytorun-images
 
-This means Xamarin.Android would run the following during `dotnet
-build`:
+However, for Xamarin.Android, `dotnet build` should produce something
+that is runnable. This basically means we need to create an `.apk` or
+`.aab` file during `build`. We will need to reorder any MSBuild tasks
+from the dotnet SDK, so that they will run during `build`.
+
+This means Xamarin.Android would run:
 
 * Run `aapt` to generate `Resource.designer.cs` and potentially emit
   build errors for issues in `@(AndroidResource)` files.
 * Compile C# code
-
-Almost everything else happens during `donet publish`:
-
+* Run the new [ILLink][illink] MSBuild target for linking.
 * Generate java stubs, `AndroidManifest.xml`, etc. This must happen
   after the linker.
 * Compile java code via `javac`
 * Convert java code to `.dex` via d8/r8
 * Create an `.apk` or `.aab` and sign it
 
+`dotnet publish` will be reserved for publishing an app for Google
+Play. It could be able to sign the `.apk` or `.aab` with different
+keys. As a starting point, this would copy the output to a `publish`
+directory on disk.
+
+Down the road `dotnet run` would be used to launch applications on a
+device or emulator.
+
+[illink]: https://github.com/mono/linker/blob/master/src/linker/README.md
 
 ### Preview testing
 
@@ -110,14 +122,13 @@ The following instructions can be used for early preview testing.
   <PropertyGroup>
     <TargetFramework>netcoreapp5.0</TargetFramework>
     <RuntimeIdentifier>android.21-arm64</RuntimeIdentifier>
+    <OutputType>Exe</OutputType>
   </PropertyGroup>
 </Project>
 ```
 
-  4) Publish (and optionally install) the project:
+  4) Build (and optionally run) the project:
 
-```
-dotnet publish -t:Install *.csproj
-```
+    dotnet build *.csproj -t:Run
 
 [0]:  https://github.com/dotnet/installer#installers-and-binaries
