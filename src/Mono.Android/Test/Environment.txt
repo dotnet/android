@@ -1,0 +1,2 @@
+debug.mono.debug=1
+debug.mono.log=timing,default

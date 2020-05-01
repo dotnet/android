@@ -79,6 +79,9 @@
     <AndroidBoundLayout Include="Resources\layout\Main.axml" />
   </ItemGroup>
   <ItemGroup>
+    <AndroidEnvironment Include="Environment.txt" />
+  </ItemGroup>
+  <ItemGroup>
     <AndroidAsset Include="Assets\asset1.txt" />
     <AndroidAsset Include="Assets\subfolder\asset2.txt" />
   </ItemGroup>

@@ -331,6 +331,8 @@ EmbeddedAssemblies::typemap_java_to_managed (MonoString *java_type)
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
 		total_time.mark_end ();
 
+		simple_pointer_guard<char[], false> type_name (mono_type_get_name_full (mono_reflection_type_get_type (ret), MONO_TYPE_NAME_FORMAT_FULL_NAME));
+		log_info_nocheck (LOG_TIMING, "Typemap.java_to_managed: `%s` -> %s", java_type_name.get (), type_name.get ());
 		Timing::info (total_time, "Typemap.java_to_managed: end, total time");
 	}
 
@@ -513,6 +515,8 @@ EmbeddedAssemblies::typemap_managed_to_java (MonoReflectionType *reflection_type
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
 		total_time.mark_end ();
 
+		simple_pointer_guard<char[], false> type_name (mono_type_get_name_full (type, MONO_TYPE_NAME_FORMAT_FULL_NAME));
+		log_info_nocheck (LOG_TIMING, "Typemap.managed_to_java: `%s` -> %s", type_name.get (), ret);
 		Timing::info (total_time, "Typemap.managed_to_java: end, total time");
 	}
 
