@@ -149,8 +149,8 @@ EmbeddedAssemblies::binary_search (const Key *key, const Entry *base, size_t nme
 	}
 
 	constexpr size_t size = sizeof(Entry);
+	const Entry *ret = nullptr;
 	while (nmemb > 0) {
-		const Entry *ret;
 		if constexpr (use_extra_size) {
 			ret = reinterpret_cast<const Entry*>(reinterpret_cast<const uint8_t*>(base) + ((size + extra_size) * (nmemb / 2)));
 		} else {
@@ -168,11 +168,29 @@ EmbeddedAssemblies::binary_search (const Key *key, const Entry *base, size_t nme
 			}
 			nmemb -= nmemb / 2 + 1;
 		} else {
-			return ret;
+			break;
 		}
 	}
 
-	return nullptr;
+	if (ret == nullptr) {
+		return ret;
+	}
+
+	// `base` may contain duplicate keys.  Return the *first* entry for a given key.
+	while (ret > base) {
+		const Entry *prev_ret;
+		if constexpr (use_extra_size) {
+			prev_ret = reinterpret_cast<const Entry*>(reinterpret_cast<const uint8_t*>(ret) - (size + extra_size));
+		} else {
+			prev_ret = reinterpret_cast<const Entry*>(reinterpret_cast<const uint8_t*>(ret) - size);
+		}
+		int result = compare (key, prev_ret);
+		if (result != 0) {
+			break;
+		}
+		ret = prev_ret;
+	}
+	return ret;
 }
 
 #if defined (DEBUG) || !defined (ANDROID)
