@@ -305,12 +305,7 @@ namespace ${ROOT_NAMESPACE} {
 			new object[] {
 				/* useSharedRuntime */   true,
 				/* embedAssemblies */    false,
-				/* fastDevType */        "Assemblies:Dexes",
-			},
-			new object[] {
-				/* useSharedRuntime */   true,
-				/* embedAssemblies */    false,
-				/* fastDevType */        "Assemblies:Dexes",
+				/* fastDevType */        "Assemblies",
 				/* allowDeltaInstall */  true,
 			},
 		};
