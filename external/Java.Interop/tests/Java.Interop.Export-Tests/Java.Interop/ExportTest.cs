@@ -6,6 +6,28 @@ using System.Collections.Generic;
 using Java.Interop;
 using Java.Interop.Expressions;
 
+// For use by `jnimarshalmethod-gen.exe` & `make run-test-jnimarshal`
+delegate bool _JniMarshal_PPZBCSIJFDLLLLLDFJ_Z (
+		IntPtr              jnienv,
+		IntPtr              klass,
+		bool                a,
+		sbyte               b,
+		char                c,
+		short               d,
+		int                 e,
+		long                f,
+		float               g,
+		double              h,
+		IntPtr              i,  // java.lang.Object
+		IntPtr              j,  // java.lang.String
+		IntPtr              k,  // java.util.ArrayList<String>
+		IntPtr              l,  // java.lang.String
+		IntPtr              m,  // java.lang.Object
+		double              n,
+		float               o,
+		long                p
+);
+
 namespace Java.InteropTests
 {
 	[JniTypeSignature ("com/xamarin/interop/export/ExportType")]
@@ -82,6 +104,60 @@ namespace Java.InteropTests
 		[JavaCallable ("staticActionFloat", Signature="(F)V")]
 		public static void StaticActionFloat (float f)
 		{
+		}
+
+		[JavaCallable ("staticFuncThisMethodTakesLotsOfParameters", Signature="(ZBCSIJFDLjava/lang/Object;Ljava/lang/String;Ljava/util/ArrayList;Ljava/lang/String;Ljava/lang/Object;DFJ)Z")]
+		public static bool StaticFuncThisMethodTakesLotsOfParameters (
+				bool                a,
+				sbyte               b,
+				char                c,
+				short               d,
+				int                 e,
+				long                f,
+				float               g,
+				double              h,
+				IntPtr              i,  // java.lang.Object
+				IntPtr              j,  // java.lang.String
+				IntPtr              k,  // java.util.ArrayList<String>
+				IntPtr              l,  // java.lang.String
+				IntPtr              m,  // java.lang.Object
+				double              n,
+				float               o,
+				long                p)
+		{
+			if (a != false)
+				return false;
+			if (b != (byte) 0xb)
+				return false;
+			if (c != 'c')
+				return false;
+			if (d != (short) 0xd)
+				return false;
+			if (e != 0xe)
+				return false;
+			if (f != 0xf)
+				return false;
+			if (g != 1.0f)
+				return false;
+			if (h != 2.0)
+				return false;
+			if (i == IntPtr.Zero)
+				return false;
+			if (j == IntPtr.Zero)
+				return false;
+			if (k == IntPtr.Zero)
+				return false;
+			if (l == IntPtr.Zero)
+				return false;
+			if (m == IntPtr.Zero)
+				return false;
+			if (n != 3.0)
+				return false;
+			if (o != 4.0f)
+				return false;
+			if (p != 0x70)
+				return false;
+			return true;
 		}
 	}
 

@@ -13,6 +13,10 @@ using Mono.Options;
 using Mono.Collections.Generic;
 using Java.Interop.Tools.Cecil;
 
+#if _DUMP_REGISTER_NATIVE_MEMBERS
+using Mono.Linq.Expressions;
+#endif  // _DUMP_REGISTER_NATIVE_MEMBERS
+
 namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 
 	class App : MarshalByRefObject
@@ -393,6 +397,13 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 							continue;
 					}
 
+#if !_ALL_THE_ARGUMENTS
+					if (method.GetParameters ().Length > 14) {
+						Warning ($"Methods taking more than 14 parameters is not supported.");
+						continue;
+					}
+#endif	// !_ALL_THE_ARGUMENTS
+
 					if (dt == null)
 						dt = GetTypeBuilder (dm, type);
 
@@ -467,7 +478,20 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 
 		static Expression CreateRegistration (string method, string signature, LambdaExpression lambda, ParameterExpression targetType, string methodName)
 		{
-			var d = Expression.Call (Delegate_CreateDelegate, Expression.Constant (lambda.Type, typeof (Type)), targetType, Expression.Constant (methodName));
+			Expression registrationDelegateType = null;
+			if (lambda.Type.Assembly == typeof (object).Assembly ||
+					lambda.Type.Assembly == typeof (System.Linq.Enumerable).Assembly) {
+				registrationDelegateType = Expression.Constant (lambda.Type, typeof (Type));
+			}
+			else {
+				Func<string, bool, Type> getType = Type.GetType;
+				registrationDelegateType = Expression.Call (getType.GetMethodInfo (),
+						Expression.Constant (lambda.Type.FullName, typeof (string)),
+						Expression.Constant (true, typeof (bool)));
+				registrationDelegateType = Expression.Convert (registrationDelegateType, typeof (Type));
+			}
+
+			var d = Expression.Call (Delegate_CreateDelegate, registrationDelegateType, targetType, Expression.Constant (methodName));
 			return Expression.New (JniNativeMethodRegistration_ctor,
 					Expression.Constant (method),
 					Expression.Constant (signature),
@@ -488,6 +512,10 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 			var rb = dt.DefineMethod ("__RegisterNativeMembers",
 					System.Reflection.MethodAttributes.Public | System.Reflection.MethodAttributes.Static);
 			rb.SetCustomAttribute (new CustomAttributeBuilder (typeof (JniAddNativeMethodRegistrationAttribute).GetConstructor (Type.EmptyTypes), new object[0]));
+#if _DUMP_REGISTER_NATIVE_MEMBERS
+			Console.WriteLine ($"## Dumping contents of `{dt.FullName}::__RegisterNativeMembers`: ");
+			Console.WriteLine (lambda.ToCSharpCode ());
+#endif  // _DUMP_REGISTER_NATIVE_MEMBERS
 			lambda.CompileToMethod (rb);
 		}
 

@@ -229,15 +229,64 @@ namespace Java.Interop {
 			}
 			foreach (var p in marshalParameters)
 				funcTypeParams.Add (p.Type);
-			if (ret != null)
-				funcTypeParams.Add (ret.Type);
-			var marshalerType = ret == null
-				? Expression.GetActionType (funcTypeParams.ToArray ())
-				: Expression.GetFuncType (funcTypeParams.ToArray ());
+			var marshalerType = GetMarshalerType (ret?.Type, funcTypeParams, method.DeclaringType);
 
 			bodyParams.AddRange (marshalParameters);
 			var body = Expression.Block (envpVars, envpBody);
-			return Expression.Lambda (marshalerType, body, bodyParams);
+
+			return marshalerType == null
+				? Expression.Lambda (body, bodyParams)
+				: Expression.Lambda (marshalerType, body, bodyParams);
+		}
+
+		static Type GetMarshalerType (Type returnType, List<Type> funcTypeParams, Type declaringType)
+		{
+			// `mscorlib.dll` & `System.Core.dll` only provide Action<…>/Func<…> types for up to 16 parameters
+			if (funcTypeParams.Count <= 16) {
+				if (returnType != null)
+					funcTypeParams.Add (returnType);
+				return returnType == null
+					? Expression.GetActionType (funcTypeParams.ToArray ())
+					: Expression.GetFuncType (funcTypeParams.ToArray ());
+			}
+
+			// Too many parameters; does a `_JniMarshal_*` type exist in the type's declaring assembly?
+			funcTypeParams.RemoveRange (0, 2);
+			var marshalDelegateName = new StringBuilder ();
+			marshalDelegateName.Append ("_JniMarshal_PP");
+			foreach (var paramType in funcTypeParams) {
+				marshalDelegateName.Append (GetJniMarshalDelegateParameterIdentifier (paramType));
+			}
+			marshalDelegateName.Append ("_");
+			if (returnType == null) {
+				marshalDelegateName.Append ("V");
+			} else {
+				marshalDelegateName.Append (GetJniMarshalDelegateParameterIdentifier (returnType));
+			}
+
+			Type marshalDelegateType = declaringType.Assembly.GetType (marshalDelegateName.ToString (), throwOnError: false);
+
+			// Punt?; System.Linq.Expressions will automagically produce the needed delegate type.
+			// Unfortunately, this won't work with jnimarshalmethod-gen.exe.
+			return marshalDelegateType;
+		}
+
+		static char GetJniMarshalDelegateParameterIdentifier (Type type)
+		{
+			if (type == typeof (bool))      return 'Z';
+			if (type == typeof (byte))      return 'B';
+			if (type == typeof (sbyte))     return 'B';
+			if (type == typeof (char))      return 'C';
+			if (type == typeof (short))     return 'S';
+			if (type == typeof (ushort))	return 's';
+			if (type == typeof (int))       return 'I';
+			if (type == typeof (uint))      return 'i';
+			if (type == typeof (long))      return 'J';
+			if (type == typeof (ulong))     return 'j';
+			if (type == typeof (float))     return 'F';
+			if (type == typeof (double))    return 'D';
+			if (type == typeof (void))      return 'V';
+			return 'L';
 		}
 
 		void CheckMarshalTypesMatch (MethodInfo method, string signature, ParameterInfo[] methodParameters)
@@ -258,7 +307,7 @@ namespace Java.Interop {
 				var jni = vm.MarshalType;
 				if (mptypes [i] != jni)
 					throw new ArgumentException (
-							string.Format ("JNI parameter type mismatch. Type '{0}' != '{1}.", jni, mptypes [i]),
+							$"JNI parameter type mismatch. Type `{jni}` != `{mptypes [i]}` at index {i} in `{signature}`.",
 							"signature");
 			}
 

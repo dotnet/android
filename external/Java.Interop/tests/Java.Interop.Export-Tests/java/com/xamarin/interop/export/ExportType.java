@@ -30,21 +30,62 @@ public class ExportType
 	public static native void staticActionInt32String (int i, String s);
 	public static native int  staticFuncMyLegacyColorMyColor_MyColor (int color1, int color2);
 
+	public static native boolean staticFuncThisMethodTakesLotsOfParameters (
+			boolean             a,
+			byte                b,
+			char                c,
+			short               d,
+			int                 e,
+			long                f,
+			float               g,
+			double              h,
+			Object              i,
+			String              j,
+			ArrayList<String>   k,
+			String              l,
+			Object              m,
+			double              n,
+			float               o,
+			long                p);
+
 	public void testMethods () {
-	    action ();
+		action ();
 
-	    actionIJavaObject (this);
+		actionIJavaObject (this);
 
-	    long j = funcInt64 ();
-	    if (j != 42)
-	        throw new Error ("funcInt64() should return 42!");
+		long j = funcInt64 ();
+		if (j != 42)
+			throw new Error ("funcInt64() should return 42!");
 
-	    Object o = funcIJavaObject ();
-	    if (o != this)
-	        throw new Error ("funcIJavaObject() should return `this`!");
+		Object o = funcIJavaObject ();
+		if (o != this)
+			throw new Error ("funcIJavaObject() should return `this`!");
 
-	    staticActionInt (1);
-	    staticActionFloat (2.0f);
+		staticActionInt (1);
+		staticActionFloat (2.0f);
+
+		/*
+		boolean r = staticFuncThisMethodTakesLotsOfParameters (
+				false,
+				(byte) 0xb,
+				'c',
+				(short) 0xd,
+				0xe,
+				0xf,
+				1.0f,
+				2.0,
+				new Object (),
+				"j",
+				new ArrayList<String>(),
+				"l",
+				new Object (),
+				3.0,
+				4.0f,
+				0x70
+		);
+		if (r != true)
+			throw new Error ("staticFuncThisMethodTakesLotsOfParameters should return true!");
+		 */
 	}
 
 	public native void action ();
