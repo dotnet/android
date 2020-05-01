@@ -44,14 +44,14 @@ jobs:
     inputs:
       solution: Java.Interop.sln
       configuration: $(Build.Configuration)
-      msbuildArguments: /t:Prepare
+      msbuildArguments: /restore /t:Prepare
 
   - task: MSBuild@1
     displayName: MSBuild Java.Interop.sln
     inputs:
       solution: Java.Interop.sln
       configuration: $(Build.Configuration)
-      msbuildArguments: '/t:Restore,Build'
+      msbuildArguments: /restore
     
   - task: MSBuild@1
     displayName: MSBuild RunNUnitTests.targets
