@@ -97,7 +97,6 @@ projects. .NET 5 projects will not import this file.
       $(CoreResolveReferencesDependsOn);
       UpdateAndroidInterfaceProxies;
       UpdateAndroidResources;
-      $(ApplicationResolveReferencesDependsOn);
     </ResolveReferencesDependsOn>
     <DeferredBuildDependsOn>
       $(DeferredBuildDependsOn);
@@ -144,6 +143,16 @@ projects. .NET 5 projects will not import this file.
       CleanLibraryProjectIntermediaries;
       CleanNativeLibraryIntermediaries;
     </CleanDependsOn>
+
+    <ExportJarToXmlDependsOnTargets>
+      _ResolveMonoAndroidSdks;
+      _ExtractLibraryProjectImports;
+      _GetLibraryImports;
+      _ExtractJavaDocJars;
+      _GenerateJavaDocFromSourceJars;
+      _ExportJarToXml;
+    </ExportJarToXmlDependsOnTargets>
+
   </PropertyGroup>
 
   <UsingTask TaskName="Xamarin.Android.Tasks.CheckGoogleSdkRequirements"   AssemblyFile="Xamarin.Android.Build.Tasks.dll" />

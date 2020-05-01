@@ -26,6 +26,9 @@
     <AndroidEnableSGenConcurrent Condition=" '$(AndroidEnableSGenConcurrent)' == '' ">true</AndroidEnableSGenConcurrent>
     <AndroidHttpClientHandlerType Condition=" '$(AndroidHttpClientHandlerType)' == '' ">Xamarin.Android.Net.AndroidClientHandler</AndroidHttpClientHandlerType>
     <AndroidUseIntermediateDesignerFile Condition=" '$(AndroidUseIntermediateDesignerFile)' == '' ">true</AndroidUseIntermediateDesignerFile>
+    <!-- jar2xml is not supported -->
+    <AndroidClassParser>class-parse</AndroidClassParser>
+    <AndroidCodegenTarget Condition=" '$(AndroidCodegenTarget)' == '' ">XAJavaInterop1</AndroidCodegenTarget>
   </PropertyGroup>
 
   <!--  User-facing configuration-specific defaults -->

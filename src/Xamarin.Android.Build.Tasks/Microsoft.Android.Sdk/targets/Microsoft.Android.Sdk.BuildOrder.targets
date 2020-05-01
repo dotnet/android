@@ -50,6 +50,7 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
       _SetupDesignTimeBuildForCompile;
       _AddAndroidDefines;
       _IncludeLayoutBindingSources;
+      AddLibraryJarsToBind;
       $(CompileDependsOn);
     </CompileDependsOn>
     <CoreCompileDependsOn>
@@ -66,7 +67,9 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
       $(CoreResolveReferencesDependsOn);
       UpdateAndroidInterfaceProxies;
       UpdateAndroidResources;
-      $(ApplicationResolveReferencesDependsOn);
+      AddBindingsToCompile;
+      AddEmbeddedJarsAsResources;
+      AddEmbeddedReferenceJarsAsResources;
     </ResolveReferencesDependsOn>
     <DeferredBuildDependsOn>
       $(DeferredBuildDependsOn);
@@ -80,7 +83,16 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
       $(CleanDependsOn);
       _CleanMonoAndroidIntermediateDir;
       _CleanAndroidBuildPropertiesCache;
+      CleanBindingsOutput;
+      CleanLibraryProjectIntermediaries;
+      CleanNativeLibraryIntermediaries;
     </CleanDependsOn>
+    <ExportJarToXmlDependsOnTargets>
+      _ResolveMonoAndroidSdks;
+      _ExtractLibraryProjectImports;
+      _GetLibraryImports;
+      _ExportJarToXml;
+    </ExportJarToXmlDependsOnTargets>
   </PropertyGroup>
 
 </Project>

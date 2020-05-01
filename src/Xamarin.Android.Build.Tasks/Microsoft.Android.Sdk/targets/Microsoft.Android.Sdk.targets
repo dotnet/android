@@ -18,6 +18,8 @@
 
   <Import Project="$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.DefaultOutputPaths.targets" Condition="'$(EnableDefaultOutputPaths)' == 'true'" />
   <Import Project="$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Common.targets" />
+  <Import Project="$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Bindings.Core.targets" />
+  <Import Project="$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Bindings.ClassParse.targets" />
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.AssemblyResolution.targets" />
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.BuildOrder.targets" />
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.Tooling.targets" />

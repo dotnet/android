@@ -1,0 +1,96 @@
+<!--
+***********************************************************************************************
+Xamarin.Android.Bindings.Documentation.targets
+
+This file contains MSBuild targets related to documentation generation/extraction for bindings.
+
+This file is only used by binding projects. .NET 5 can eventually use it, once `mdoc.exe` is available.
+
+***********************************************************************************************
+-->
+
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <UsingTask TaskName="Xamarin.Android.Tasks.ImportJavaDoc" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.JavaDoc"       AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.MDoc"          AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.Unzip"         AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+
+  <Target Name="_ExtractJavaDocJars"
+      Inputs="@(JavaDocJar)"
+      Outputs="@(JavaDocJar->'$(IntermediateOutputPath)javadocs\%(FileName).stamp')">
+    <Unzip
+        Sources="@(JavaDocJar)"
+        DestinationDirectories="@(JavaDocJar->'$(IntermediateOutputPath)javadocs\%(FileName)')"
+    />
+    <Touch Files="@(JavaDocJar->'$(IntermediateOutputPath)javadocs\%(FileName).stamp')" />
+    <ItemGroup>
+      <JavaDocIndex Include="@(JavaDocJar->'$(IntermediateOutputPath)javadocs\%(FileName)\index.html')" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_GenerateJavaDocFromSourceJars"
+      Inputs="@(JavaSourceJar)"
+      Outputs="@(JavaSourceJar->'$(IntermediateOutputPath)javadocs\%(FileName).stamp')">
+    <Unzip
+        Sources="@(JavaSourceJar)"
+        DestinationDirectories="@(JavaSourceJar->'$(IntermediateOutputPath)javasources\%(FileName)')"
+    />
+    <JavaDoc
+        ContinueOnError="true"
+        ToolPath="$(JavaToolPath)"
+        SourceDirectories="@(JavaSourceJar->'$(IntermediateOutputPath)javasources\%(FileName)')"
+        DestinationDirectories="@(JavaSourceJar->'$(IntermediateOutputPath)javadocs\%(FileName)')"
+        ReferenceJars="@(EmbeddedReferenceJar);@(ReferenceJar)"
+        JavaPlatformJar="$(_AndroidSdkDirectory)\platforms\android-$(_AndroidApiLevel)\android.jar"
+    />
+    <Touch Files="@(JavaSourceJar->'$(IntermediateOutputPath)javasources\%(FileName).stamp')" AlwaysCreate="true" />
+    <ItemGroup>
+      <JavaDocIndex Include="@(JavaSourceJar->'$(IntermediateOutputPath)javadocs\%(FileName)\index.html')" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="BuildDocumentation"
+      Inputs="@(JavaDocIndex);@(IntermediateAssembly->'$(IntermediateOutputPath)%(filename).xml')"
+      Outputs="@(IntermediateAssembly->'$(OutputPath)%(filename).xml')"
+      Condition=" '@(JavaDocIndex)' != '' ">
+    <MDoc
+        References="@(ReferencePath);@(ReferenceDependencyPaths)"
+        TargetAssembly="@(IntermediateAssembly)"
+        OutputDocDirectory="$(IntermediateOutputPath)docs"
+        ToolPath="$(MonoAndroidToolsDirectory)"
+        ToolExe="$(MDocToolExe)"
+    />
+    <ImportJavaDoc
+        ContinueOnError="true"
+        ToolPath="$(MonoAndroidToolsDirectory)"
+        JavaDocs="@(JavaDocIndex)"
+        References="@(ReferencePath);@(ReferenceDependencyPaths)"
+        Transforms="@(TransformFile)"
+        TargetAssembly="@(IntermediateAssembly)"
+        OutputDocDirectory="$(IntermediateOutputPath)docs"
+    />
+    <!-- "extra" mdoc needed to "fix" formatting, reducing diff size due to XML formatting -->
+    <MDoc
+        References="@(ReferencePath);@(ReferenceDependencyPaths)"
+        TargetAssembly="@(IntermediateAssembly)"
+        OutputDocDirectory="$(IntermediateOutputPath)docs"
+        ToolPath="$(MonoAndroidToolsDirectory)"
+        ToolExe="$(MDocToolExe)"
+    />
+    <!-- Then export .NET doc xml -->
+    <MDoc
+        RunExport="true"
+        TargetAssembly="@(IntermediateAssembly)"
+        OutputDocDirectory="$(IntermediateOutputPath)docs"
+        ToolPath="$(MonoAndroidToolsDirectory)"
+        ToolExe="$(MDocToolExe)"
+    />
+    <Copy
+        SourceFiles="@(IntermediateAssembly->'$(IntermediateOutputPath)%(filename).xml')"
+        DestinationFiles="@(IntermediateAssembly->'$(OutputPath)%(filename).xml')"
+        SkipUnchangedFiles="true"
+    />
+  </Target>
+
+</Project>

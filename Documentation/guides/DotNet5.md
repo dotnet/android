@@ -22,6 +22,32 @@ See the [Target Framework Names in .NET 5][net5spec] spec for details.
 
 [net5spec]: https://github.com/dotnet/designs/blob/5e921a9dc8ecce33b3195dcdb6f10ef56ef8b9d7/accepted/2020/net5/net5.md
 
+## Consolidation of binding projects
+
+In .NET 5, there will no longer be a concept of a [binding
+project][binding] as a separate project type. Any of the MSBuild item
+groups or build actions that currently work in binding projects will
+be supported through a .NET 5 Android application or library.
+
+For example, a binding library could look like:
+
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net5.0-android</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <TransformFile Include="Transforms\Metadata.xml" />
+    <EmbeddedJar Include="Jars\foo.jar" />
+  </ItemGroup>
+</Project>
+```
+
+This will bind C# types for the Java types found in `foo.jar` using
+the metadata fixups from `Metadata.xml`.
+
+[binding]: https://docs.microsoft.com/xamarin/android/platform/binding-java-library/
+
 ## Changes to MSBuild tasks
 
 In .NET 5 the behavior of the following MSBuild tasks will change, but
@@ -44,6 +70,16 @@ In .NET 5 the behavior of the following MSBuild tasks will change, but
 [alter the types of exceptions thrown from various methods][abet-sys] to
 better align with existing .NET 5 semantics, at the cost of compatibility with
 previous Xamarin.Android releases.
+
+`$(AndroidClassParser)` will be `class-parse` by default. `jar2xml`
+will not be supported.
+
+`$(AndroidCodegenTarget)` will be `XAJavaInterop1` by default.
+`XamarinAndroid` will not be supported.
+
+If Java binding is enabled with `@(InputJar)`, `@(EmbeddedJar)`,
+`@(LibraryProjectZip)`, etc. then `$(AllowUnsafeBlocks)` must default
+to `True`.
 
 [abet-sys]: https://github.com/xamarin/xamarin-android/issues/4127
 
