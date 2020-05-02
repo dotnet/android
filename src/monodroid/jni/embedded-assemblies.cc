@@ -176,13 +176,16 @@ EmbeddedAssemblies::binary_search (const Key *key, const Entry *base, size_t nme
 		return ret;
 	}
 
+	const Entry *orig_ret = ret;
+	log_info (LOG_DEFAULT, "# jonp: binary_search: found ret=%p; trying previous entries!", orig_ret);
+
 	// `base` may contain duplicate keys.  Return the *first* entry for a given key.
 	while (ret > base) {
 		const Entry *prev_ret;
 		if constexpr (use_extra_size) {
 			prev_ret = reinterpret_cast<const Entry*>(reinterpret_cast<const uint8_t*>(ret) - (size + extra_size));
 		} else {
-			prev_ret = reinterpret_cast<const Entry*>(reinterpret_cast<const uint8_t*>(ret) - size);
+			prev_ret = ret - 1;
 		}
 		int result = compare (key, prev_ret);
 		if (result != 0) {
@@ -190,7 +193,36 @@ EmbeddedAssemblies::binary_search (const Key *key, const Entry *base, size_t nme
 		}
 		ret = prev_ret;
 	}
+	log_info (LOG_DEFAULT, "# jonp: binary_search: new ret=%p; distance=%ul", ret, ((unsigned long) (orig_ret - ret))/sizeof(Entry));
 	return ret;
+}
+
+template<typename Key, typename Entry, int (*compare)(const Key*, const Entry*), bool use_extra_size>
+const Entry*
+EmbeddedAssemblies::linear_search (const Key *key, const Entry *base, size_t nmemb, [[maybe_unused]] size_t extra_size)
+{
+	static_assert (compare != nullptr, "compare is a required template parameter");
+
+	// This comes from the user code, so let's be civil
+	if (key == nullptr) {
+		log_warn (LOG_ASSEMBLY, "Key passed to linear_search must not be nullptr");
+		return nullptr;
+	}
+
+	// This is a coding error on our part, crash!
+	if (base == nullptr) {
+		log_fatal (LOG_ASSEMBLY, "Map address not passed to linear_search");
+		exit (FATAL_EXIT_MISSING_ASSEMBLY);
+	}
+
+	constexpr size_t size = sizeof(Entry) + (use_extra_size ? extra_size : 0);
+	const Entry *ret = base;
+	for (size_t i = 0; i < nmemb; ++i, ret = reinterpret_cast<const Entry*>(reinterpret_cast<const uint8_t*>(ret) + size)) {
+		int result = compare (key, ret);
+		if (result == 0)
+			return ret;
+	}
+	return nullptr;
 }
 
 #if defined (DEBUG) || !defined (ANDROID)
@@ -207,17 +239,25 @@ MonoReflectionType*
 EmbeddedAssemblies::typemap_java_to_managed (const char *java_type_name)
 {
 	const TypeMapEntry *entry = nullptr;
+	const TypeMapEntry *entry2 = nullptr;
 
 	if (application_config.instant_run_enabled) {
 		TypeMap *module;
 		for (size_t i = 0; i < type_map_count; i++) {
 			module = &type_maps[i];
-			entry = binary_search<const char, TypeMapEntry, compare_type_name, false> (java_type_name, module->java_to_managed, module->entry_count);
-			if (entry != nullptr)
+			entry = linear_search<const char, TypeMapEntry, compare_type_name, false> (java_type_name, module->java_to_managed, module->entry_count);
+			if (entry != nullptr) {
+				entry2 = binary_search<const char, TypeMapEntry, compare_type_name, false>(java_type_name, module->java_to_managed, module->entry_count);
 				break;
+			}
 		}
 	} else {
-		entry = binary_search<const char, TypeMapEntry, compare_type_name, false> (java_type_name, type_map.java_to_managed, type_map.entry_count);
+		entry = linear_search<const char, TypeMapEntry, compare_type_name, false> (java_type_name, type_map.java_to_managed, type_map.entry_count);
+		entry2 = binary_search<const char, TypeMapEntry, compare_type_name, false>(java_type_name, type_map.java_to_managed, type_map.entry_count);
+	}
+
+	if (entry != entry2) {
+		log_warn (LOG_ASSEMBLY, "# jonp: typemap_java_to_managed: key mismatch for `%s`! binary_search=%p linear_search=%p", java_type_name, entry, entry2);
 	}
 
 	if (XA_UNLIKELY (entry == nullptr)) {
@@ -331,8 +371,13 @@ EmbeddedAssemblies::typemap_java_to_managed (MonoString *java_type)
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
 		total_time.mark_end ();
 
-		simple_pointer_guard<char[], false> type_name (mono_type_get_name_full (mono_reflection_type_get_type (ret), MONO_TYPE_NAME_FORMAT_FULL_NAME));
-		log_info_nocheck (LOG_TIMING, "Typemap.java_to_managed: `%s` -> %s", java_type_name.get (), type_name.get ());
+		if (ret == nullptr) {
+			log_info_nocheck (LOG_TIMING, "Typemap.java_to_managed: `%s` -> NULL", java_type_name.get ());
+		} else {
+			simple_pointer_guard<char[], false> type_name (mono_type_get_name_full (mono_reflection_type_get_type (ret), MONO_TYPE_NAME_FORMAT_FULL_NAME));
+			log_info_nocheck (LOG_TIMING, "Typemap.java_to_managed: `%s` -> %s", java_type_name.get (), type_name.get ());
+		}
+
 		Timing::info (total_time, "Typemap.java_to_managed: end, total time");
 	}
 
@@ -344,17 +389,25 @@ inline const TypeMapEntry*
 EmbeddedAssemblies::typemap_managed_to_java (const char *managed_type_name)
 {
 	const TypeMapEntry *entry = nullptr;
+	const TypeMapEntry *entry2 = nullptr;
 
 	if (application_config.instant_run_enabled) {
 		TypeMap *module;
 		for (size_t i = 0; i < type_map_count; i++) {
 			module = &type_maps[i];
-			entry = binary_search<const char, TypeMapEntry, compare_type_name, false> (managed_type_name, module->managed_to_java, module->entry_count);
-			if (entry != nullptr)
+			entry = linear_search<const char, TypeMapEntry, compare_type_name, false> (managed_type_name, module->managed_to_java, module->entry_count);
+			if (entry != nullptr) {
+				entry2 = binary_search<const char, TypeMapEntry, compare_type_name, false> (managed_type_name, module->managed_to_java, module->entry_count);
 				break;
+			}
 		}
 	} else {
-		entry = binary_search<const char, TypeMapEntry, compare_type_name, false> (managed_type_name, type_map.managed_to_java, type_map.entry_count);
+		entry = linear_search<const char, TypeMapEntry, compare_type_name, false> (managed_type_name, type_map.managed_to_java, type_map.entry_count);
+		entry2 = binary_search<const char, TypeMapEntry, compare_type_name, false> (managed_type_name, type_map.managed_to_java, type_map.entry_count);
+	}
+
+	if (entry != entry2) {
+		log_warn (LOG_ASSEMBLY, "# jonp: typemap_managed_to_java: key mismatch for `%s`! binary_search=%p linear_search=%p", managed_type_name, entry, entry2);
 	}
 
 	return entry;

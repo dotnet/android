@@ -108,6 +108,9 @@ namespace xamarin::android::internal {
 		template<typename Key, typename Entry, int (*compare)(const Key*, const Entry*), bool use_extra_size = false>
 		const Entry* binary_search (const Key *key, const Entry *base, size_t nmemb, size_t extra_size = 0);
 
+		template<typename Key, typename Entry, int (*compare)(const Key*, const Entry*), bool use_extra_size = false>
+		const Entry* linear_search (const Key *key, const Entry *base, size_t nmemb, size_t extra_size = 0);
+
 #if defined (DEBUG) || !defined (ANDROID)
 		static int compare_type_name (const char *type_name, const TypeMapEntry *entry);
 #else
