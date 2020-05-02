@@ -170,14 +170,12 @@ EmbeddedAssemblies::binary_search (const Key *key, const Entry *base, size_t nme
 		} else {
 			break;
 		}
+		ret = nullptr;
 	}
 
 	if (ret == nullptr) {
 		return ret;
 	}
-
-	const Entry *orig_ret = ret;
-	log_info (LOG_DEFAULT, "# jonp: binary_search: found ret=%p; trying previous entries!", orig_ret);
 
 	// `base` may contain duplicate keys.  Return the *first* entry for a given key.
 	while (ret > base) {
@@ -193,7 +191,6 @@ EmbeddedAssemblies::binary_search (const Key *key, const Entry *base, size_t nme
 		}
 		ret = prev_ret;
 	}
-	log_info (LOG_DEFAULT, "# jonp: binary_search: new ret=%p; distance=%ul", ret, ((unsigned long) (orig_ret - ret))/sizeof(Entry));
 	return ret;
 }
 
@@ -245,15 +242,15 @@ EmbeddedAssemblies::typemap_java_to_managed (const char *java_type_name)
 		TypeMap *module;
 		for (size_t i = 0; i < type_map_count; i++) {
 			module = &type_maps[i];
-			entry = linear_search<const char, TypeMapEntry, compare_type_name, false> (java_type_name, module->java_to_managed, module->entry_count);
+			entry = binary_search<const char, TypeMapEntry, compare_type_name, false> (java_type_name, module->java_to_managed, module->entry_count);
 			if (entry != nullptr) {
-				entry2 = binary_search<const char, TypeMapEntry, compare_type_name, false>(java_type_name, module->java_to_managed, module->entry_count);
+				entry2 = linear_search<const char, TypeMapEntry, compare_type_name, false>(java_type_name, module->java_to_managed, module->entry_count);
 				break;
 			}
 		}
 	} else {
-		entry = linear_search<const char, TypeMapEntry, compare_type_name, false> (java_type_name, type_map.java_to_managed, type_map.entry_count);
-		entry2 = binary_search<const char, TypeMapEntry, compare_type_name, false>(java_type_name, type_map.java_to_managed, type_map.entry_count);
+		entry = binary_search<const char, TypeMapEntry, compare_type_name, false> (java_type_name, type_map.java_to_managed, type_map.entry_count);
+		entry2 = linear_search<const char, TypeMapEntry, compare_type_name, false>(java_type_name, type_map.java_to_managed, type_map.entry_count);
 	}
 
 	if (entry != entry2) {
@@ -395,15 +392,15 @@ EmbeddedAssemblies::typemap_managed_to_java (const char *managed_type_name)
 		TypeMap *module;
 		for (size_t i = 0; i < type_map_count; i++) {
 			module = &type_maps[i];
-			entry = linear_search<const char, TypeMapEntry, compare_type_name, false> (managed_type_name, module->managed_to_java, module->entry_count);
+			entry = binary_search<const char, TypeMapEntry, compare_type_name, false> (managed_type_name, module->managed_to_java, module->entry_count);
 			if (entry != nullptr) {
-				entry2 = binary_search<const char, TypeMapEntry, compare_type_name, false> (managed_type_name, module->managed_to_java, module->entry_count);
+				entry2 = linear_search<const char, TypeMapEntry, compare_type_name, false> (managed_type_name, module->managed_to_java, module->entry_count);
 				break;
 			}
 		}
 	} else {
-		entry = linear_search<const char, TypeMapEntry, compare_type_name, false> (managed_type_name, type_map.managed_to_java, type_map.entry_count);
-		entry2 = binary_search<const char, TypeMapEntry, compare_type_name, false> (managed_type_name, type_map.managed_to_java, type_map.entry_count);
+		entry = binary_search<const char, TypeMapEntry, compare_type_name, false> (managed_type_name, type_map.managed_to_java, type_map.entry_count);
+		entry2 = linear_search<const char, TypeMapEntry, compare_type_name, false> (managed_type_name, type_map.managed_to_java, type_map.entry_count);
 	}
 
 	if (entry != entry2) {
