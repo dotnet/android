@@ -15,8 +15,8 @@ namespace Xamarin.Android.Prepare
 		protected override string DefaultToolExecutableName => "git";
 		protected override string ToolName                  => "Git";
 
-		public GitRunner (Context context, Log log = null, string gitPath = null)
-			: base (context, log, gitPath ?? context?.Tools?.GitPath)
+		public GitRunner (Context context, Log? log = null, string? gitPath = null)
+			: base (context, log, gitPath ?? context.Tools.GitPath)
 		{
 			ProcessTimeout = TimeSpan.FromMinutes (30);
 		}
@@ -75,7 +75,7 @@ namespace Xamarin.Android.Prepare
 			return await RunGit (runner, $"clone-{dirName}");
 		}
 
-		public async Task<bool> SubmoduleUpdate (string workingDirectory = null, bool init = true, bool recursive = true)
+		public async Task<bool> SubmoduleUpdate (string? workingDirectory = null, bool init = true, bool recursive = true)
 		{
 			string runnerWorkingDirectory = DetermineRunnerWorkingDirectory (workingDirectory);
 
@@ -90,7 +90,7 @@ namespace Xamarin.Android.Prepare
 			return await RunGit (runner, "submodule-update");
 		}
 
-		public string GetTopCommitHash (string workingDirectory = null, bool shortHash = true)
+		public string GetTopCommitHash (string? workingDirectory = null, bool shortHash = true)
 		{
 			string runnerWorkingDirectory = DetermineRunnerWorkingDirectory (workingDirectory);
 
@@ -100,16 +100,16 @@ namespace Xamarin.Android.Prepare
 
 			Log.StatusLine (GetLogMessage (runner), CommandMessageColor);
 
-			string hash = null;
+			string hash = String.Empty;
 			using (var outputSink = (OutputSink)SetupOutputSink (runner)) {
 				outputSink.LineCallback = (string line) => {
 					if (!String.IsNullOrEmpty (hash))
 						return;
-					hash = line?.Trim ();
+					hash = line.Trim ();
 				};
 
 				if (!runner.Run ())
-					return null;
+					return String.Empty;
 
 				if (shortHash)
 					return Utilities.ShortenGitHash (hash);
@@ -118,17 +118,17 @@ namespace Xamarin.Android.Prepare
 			}
 		}
 
-		public async Task<IList<BlamePorcelainEntry>> Blame (string filePath)
+		public async Task<IList<BlamePorcelainEntry>?> Blame (string filePath)
 		{
 			return await Blame (filePath, gitArguments: null, blameArguments: null, workingDirectory: null);
 		}
 
-		public async Task<IList<BlamePorcelainEntry>> Blame (string filePath, List <string> blameArguments)
+		public async Task<IList<BlamePorcelainEntry>?> Blame (string filePath, List <string> blameArguments)
 		{
 			return await Blame (filePath, gitArguments: null, blameArguments: blameArguments, workingDirectory: null);
 		}
 
-		public async Task<IList<BlamePorcelainEntry>> Blame (string filePath, List<string> gitArguments, List <string> blameArguments, string workingDirectory = null)
+		public async Task<IList<BlamePorcelainEntry>?> Blame (string filePath, List<string>? gitArguments, List <string>? blameArguments, string? workingDirectory = null)
 		{
 			if (String.IsNullOrEmpty(filePath))
 				throw new ArgumentException ("must not be null or empty", nameof (filePath));
@@ -138,10 +138,7 @@ namespace Xamarin.Android.Prepare
 			runner.AddArgument ("-p");
 			runner.AddQuotedArgument (filePath);
 
-			var parserState = new BlameParserState {
-				CurrentEntry = null,
-				Entries = new List<BlamePorcelainEntry> ()
-			};
+			var parserState = new BlameParserState ();
 
 			Log.StatusLine (GetLogMessage (runner), CommandMessageColor);
 			bool success = await RunTool (
@@ -190,7 +187,7 @@ namespace Xamarin.Android.Prepare
 			return containsHttps;
 		}
 
-		ProcessRunner CreateGitRunner (string workingDirectory, List<string> arguments = null)
+		ProcessRunner CreateGitRunner (string? workingDirectory, List<string>? arguments = null)
 		{
 			var runner = CreateProcessRunner ();
 			runner.WorkingDirectory = workingDirectory;
@@ -227,12 +224,12 @@ namespace Xamarin.Android.Prepare
 			state.CurrentEntry = null;
 		}
 
-		protected override TextWriter CreateLogSink (string logFilePath)
+		protected override TextWriter CreateLogSink (string? logFilePath)
 		{
 			return new OutputSink (Log, logFilePath);
 		}
 
-		void SetCommandArguments (ProcessRunner runner, string command, List<string> commandArguments)
+		void SetCommandArguments (ProcessRunner runner, string command, List<string>? commandArguments)
 		{
 			runner.AddArgument (command);
 			if (commandArguments == null || commandArguments.Count == 0)
@@ -240,15 +237,15 @@ namespace Xamarin.Android.Prepare
 			AddArguments (runner, commandArguments);
 		}
 
-		string DetermineRunnerWorkingDirectory (string workingDirectory)
+		string DetermineRunnerWorkingDirectory (string? workingDirectory)
 		{
 			if (!String.IsNullOrEmpty (workingDirectory))
-				return workingDirectory;
+				return workingDirectory!;
 
 			return BuildPaths.XamarinAndroidSourceRoot;
 		}
 
-		void SetGitArguments (ProcessRunner runner, string workingDirectory, List<string> gitArguments)
+		void SetGitArguments (ProcessRunner runner, string? workingDirectory, List<string>? gitArguments)
 		{
 			foreach (string arg in standardGlobalOptions) {
 				runner.AddArgument (arg);
@@ -256,7 +253,7 @@ namespace Xamarin.Android.Prepare
 
 			if (!String.IsNullOrEmpty (workingDirectory)) {
 				runner.AddArgument ("-C");
-				runner.AddQuotedArgument (workingDirectory);
+				runner.AddQuotedArgument (workingDirectory!);
 			}
 
 			AddArguments (runner, gitArguments);

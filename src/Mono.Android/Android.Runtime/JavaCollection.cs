@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 using Android.Runtime;
@@ -10,6 +11,7 @@ using Java.Interop;
 namespace Android.Runtime {
 
 	[Register ("java/util/Collection", DoNotGenerateAcw=true)]
+	// java.util.Collection allows null values
 	public class JavaCollection : Java.Lang.Object, System.Collections.ICollection {
 
 		internal static IntPtr collection_class = JNIEnv.FindClass ("java/util/Collection");
@@ -36,8 +38,8 @@ namespace Android.Runtime {
 				throw new ArgumentNullException ("items");
 			}
 
-			foreach (object item in items)
-				Add (item);
+			foreach (var item in items)
+				Add (item!);
 		}
 
 		//
@@ -89,7 +91,7 @@ namespace Android.Runtime {
 				id_iterator = JNIEnv.GetMethodID (collection_class, "iterator", "()Ljava/util/Iterator;");
 			return Java.Lang.Object.GetObject<Java.Util.IIterator> (
 					JNIEnv.CallObjectMethod (Handle, id_iterator),
-					JniHandleOwnership.TransferLocalRef);
+					JniHandleOwnership.TransferLocalRef)!;
 		}
 
 		//
@@ -113,7 +115,7 @@ namespace Android.Runtime {
 			get {return false;}
 		}
 
-		public object SyncRoot {
+		public object? SyncRoot {
 			get {return null;}
 		}
 
@@ -132,7 +134,7 @@ namespace Android.Runtime {
 				id_toArray = JNIEnv.GetMethodID (collection_class, "toArray", "()[Ljava/lang/Object;");
 			using (var o = new Java.Lang.Object (JNIEnv.CallObjectMethod (Handle, id_toArray),
 					JniHandleOwnership.TransferLocalRef | JniHandleOwnership.DoNotRegister))
-				return (Java.Lang.Object[]) o;
+				return ((Java.Lang.Object[]) o)!;
 		}
 
 		//
@@ -173,12 +175,12 @@ namespace Android.Runtime {
 		}
 
 		[Preserve (Conditional=true)]
-		public static ICollection FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
+		public static ICollection? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
 
-			IJavaObject inst = (IJavaObject) Java.Lang.Object.PeekObject (handle);
+			var inst = (IJavaObject?) Java.Lang.Object.PeekObject (handle);
 			if (inst == null)
 				inst = new JavaCollection (handle, transfer);
 			else
@@ -188,7 +190,7 @@ namespace Android.Runtime {
 		}
 
 		[Preserve (Conditional=true)]
-		public static IntPtr ToLocalJniHandle (ICollection items)
+		public static IntPtr ToLocalJniHandle (ICollection? items)
 		{
 			if (items == null)
 				return IntPtr.Zero;
@@ -349,7 +351,7 @@ namespace Android.Runtime {
 			for (int i = 0; i < Count; i++)
 				array [array_index + i] = JavaConvert.FromJniHandle<T>(
 						JNIEnv.GetObjectArrayElement (lrefArray, i),
-						JniHandleOwnership.TransferLocalRef);
+						JniHandleOwnership.TransferLocalRef)!;
 			JNIEnv.DeleteLocalRef (lrefArray);
 		}
 
@@ -383,21 +385,22 @@ namespace Android.Runtime {
 
 		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator ()
 		{
-			return GetEnumerator ();
+			return GetEnumerator ()!;
 		}
 
+		[return: MaybeNull]
 		public IEnumerator<T> GetEnumerator ()
 		{
 			return System.Linq.Extensions.ToEnumerator_Dispose<T> (Iterator());
 		}
 		
 		[Preserve (Conditional=true)]
-		public static ICollection<T> FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
+		public static ICollection<T>? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
 
-			IJavaObject inst = (IJavaObject) Java.Lang.Object.PeekObject (handle);
+			var inst = (IJavaObject?) Java.Lang.Object.PeekObject (handle);
 			if (inst == null)
 				inst = new JavaCollection<T> (handle, transfer);
 			else
@@ -407,7 +410,7 @@ namespace Android.Runtime {
 		}
 
 		[Preserve (Conditional=true)]
-		public static IntPtr ToLocalJniHandle (ICollection<T> items)
+		public static IntPtr ToLocalJniHandle (ICollection<T>? items)
 		{
 			if (items == null)
 				return IntPtr.Zero;

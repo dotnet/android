@@ -10,12 +10,12 @@ namespace Android.Accounts {
 
 	public partial class AccountManager {
 
-		public static AccountManager FromContext (Context context)
+		public static AccountManager? FromContext (Context context)
 		{
 			return context.GetSystemService (Context.AccountService) as AccountManager;
 		}
 
-		WeakReference weak_implementor_AccountsUpdated;
+		WeakReference? weak_implementor_AccountsUpdated;
 		public event EventHandler<AccountsUpdateEventArgs> AccountsUpdated {
 			add {
 				AndroidEventHelper.AddEventHandler<IOnAccountsUpdateListener, IOnAccountsUpdateListenerImplementor>(
@@ -33,7 +33,7 @@ namespace Android.Accounts {
 			}
 		}
 
-		void SetOnAccountsUpdatedListener (IOnAccountsUpdateListener value)
+		void SetOnAccountsUpdatedListener (IOnAccountsUpdateListener? value)
 		{
 			AddOnAccountsUpdatedListener (value, null, false);
 		}

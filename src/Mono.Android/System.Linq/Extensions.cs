@@ -1,6 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
-
+using System.Diagnostics.CodeAnalysis;
 using Android.Runtime;
 
 using Java.Interop;
@@ -40,6 +40,7 @@ namespace System.Linq {
 				}
 		}
 
+		[return: MaybeNull]
 		public static IEnumerable<T> ToEnumerable<T> (this Java.Lang.IIterable source)
 		{
 			if (source == null)
@@ -48,17 +49,18 @@ namespace System.Linq {
 				while (iterator.HasNext) {
 					yield return JavaConvert.FromJniHandle<T>(
 							JNIEnv.CallObjectMethod (iterator.Handle, id_next),
-							JniHandleOwnership.TransferLocalRef);
+							JniHandleOwnership.TransferLocalRef)!;
 				}
 		}
 
+		[return: MaybeNull]
 		internal static IEnumerator<T> ToEnumerator_Dispose<T> (this Java.Util.IIterator source)
 		{
 			using (source)
 				while (source.HasNext) {
 					yield return JavaConvert.FromJniHandle<T>(
 							JNIEnv.CallObjectMethod (source.Handle, id_next),
-							JniHandleOwnership.TransferLocalRef);
+							JniHandleOwnership.TransferLocalRef)!;
 				}
 		}
 	}

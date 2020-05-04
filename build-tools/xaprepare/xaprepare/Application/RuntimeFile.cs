@@ -18,7 +18,7 @@ namespace Xamarin.Android.Prepare
 		/// <summary>
 		///   An optional check on whether or not the file should be installed for the particular runtime.
 		/// </summary>
-		public Func<Runtime, bool>   ShouldSkip  { get; }
+		public Func<Runtime, bool>?  ShouldSkip  { get; }
 
 		/// <summary>
 		///   Whether or not to strip the binary of debugging symbols after installation.
@@ -38,13 +38,8 @@ namespace Xamarin.Android.Prepare
 
 		public bool AlreadyCopied                { get; set; }
 
-		public RuntimeFile (Func<Runtime, string> sourceCreator, Func<Runtime, string> destinationCreator, Func<Runtime, bool> shouldSkip = null, bool strip = true, RuntimeFileType type = RuntimeFileType.Other, bool shared = false)
+		public RuntimeFile (Func<Runtime, string> sourceCreator, Func<Runtime, string> destinationCreator, Func<Runtime, bool>? shouldSkip = null, bool strip = true, RuntimeFileType type = RuntimeFileType.Other, bool shared = false)
 		{
-			if (sourceCreator == null)
-				throw new ArgumentNullException (nameof (sourceCreator));
-			if (destinationCreator == null)
-				throw new ArgumentNullException (nameof (destinationCreator));
-
 			Source = sourceCreator;
 			Destination = destinationCreator;
 			ShouldSkip = shouldSkip;

@@ -6,7 +6,7 @@ namespace Xamarin.Android.Prepare
 	[Scenario (isDefault: false)]
 	class Scenario_Required : Scenario
 	{
-		public Scenario_Required () : base ("Required", "Just the basic steps to quickly install required tools and generate build files.", Context.Instance)
+		public Scenario_Required () : base ("Required", "Just the basic steps to quickly install required tools and generate build files.")
 		{
 			NeedsGitSubmodules = true;
 			NeedsCompilers = true;
@@ -17,6 +17,9 @@ namespace Xamarin.Android.Prepare
 		{
 			if (context == null)
 				throw new ArgumentNullException (nameof (context));
+
+			// Install essential tools, should they be missing
+			context.SetCondition (KnownConditions.EnsureEssential, true);
 
 			Steps.Add (new Step_GenerateFiles (atBuildStart: true, onlyRequired: true));
 			Steps.Add (new Step_PrepareExternalJavaInterop ());

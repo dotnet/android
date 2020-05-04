@@ -7,12 +7,12 @@ namespace Xamarin.Android.Prepare
 	{
 		public string Name                { get; }
 		public string DestDir             { get; }
-		public Uri RelativeUrl            { get; }
+		public Uri? RelativeUrl           { get; }
 		public bool IsMultiVersion        { get; }
 		public bool NoSubdirectory        { get; }
-		public string PkgRevision         { get; }
+		public string? PkgRevision        { get; }
 
-		public AndroidToolchainComponent (string name, string destDir, Uri relativeUrl = null, bool isMultiVersion = false, bool noSubdirectory = false, string pkgRevision = null)
+		public AndroidToolchainComponent (string name, string destDir, Uri? relativeUrl = null, bool isMultiVersion = false, bool noSubdirectory = false, string? pkgRevision = null)
 		{
 			if (String.IsNullOrEmpty (name))
 				throw new ArgumentException ("must not be null or empty", nameof (name));

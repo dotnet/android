@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace Xamarin.ProjectTools
@@ -14,6 +15,8 @@ namespace Xamarin.ProjectTools
 		public string AndroidSdkPath { get; set; } = AndroidSdkResolver.GetAndroidSdkPath ();
 		public string AndroidNdkPath { get; set; } = AndroidSdkResolver.GetAndroidNdkPath ();
 
+		public string ProjectDirectory { get; private set; }
+
 		const string Executable = "dotnet";
 		readonly XASdkProject project;
 		readonly string projectOrSolution;
@@ -22,6 +25,7 @@ namespace Xamarin.ProjectTools
 		{
 			this.project = project;
 			this.projectOrSolution = projectOrSolution;
+			ProjectDirectory = Path.GetDirectoryName (projectOrSolution);
 		}
 
 		/// <summary>
@@ -75,11 +79,26 @@ namespace Xamarin.ProjectTools
 			return Execute (arguments.ToArray ());
 		}
 
-		public bool Publish (bool restore = true)
+		public bool Publish (string target = null)
 		{
-			var arguments = GetDefaultCommandLineArgs ("publish");
-			arguments.Add ("/p:SelfContained=True");
+			var arguments = GetDefaultCommandLineArgs ("publish", target);
 			return Execute (arguments.ToArray ());
+		}
+
+		public bool Run ()
+		{
+			//TODO: this should eventually run `dotnet run --project foo.csproj`
+			var arguments = GetDefaultCommandLineArgs ("build", "Run");
+			return Execute (arguments.ToArray ());
+		}
+
+		public IEnumerable<string> LastBuildOutput {
+			get {
+				if (!string.IsNullOrEmpty (BuildLogFile) && File.Exists (BuildLogFile)) {
+					return File.ReadLines (BuildLogFile, Encoding.UTF8);
+				}
+				return Enumerable.Empty<string> ();
+			}
 		}
 
 		List<string> GetDefaultCommandLineArgs (string verb, string target = null)

@@ -28,26 +28,26 @@ namespace Xamarin.Android.Prepare
 			Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "Xamarin.Android-Tests.sln"),
 		};
 
-		string logDirectory;
+		string? logDirectory;
 		string mainLogFilePath;
-		string xaInstallPrefix;
-		string overridenLogDirectory;
-		string configuration;
+		string? xaInstallPrefix;
+		string? overridenLogDirectory;
+		string? configuration;
 		string productVersion;
 		string androidLatestStableFrameworkVersion;
-		string hashAlgorithm;
+		string? hashAlgorithm;
 		bool canOutputColor;
 		bool canConsoleUseUnicode;
-		Characters characters;
+		Characters? characters;
 		bool? useColor;
 		bool? dullMode;
-		Scenario defaultScenario;
-		HashSet<string> hostJitAbis;
-		HashSet<string> targetAotAbis;
-		HashSet<string> targetJitAbis;
-		List<RuleGenerator> ruleGenerators;
-		string debugFileExtension;
-		CompressionFormat compressionFormat;
+		Scenario? defaultScenario;
+		HashSet<string>? hostJitAbis;
+		HashSet<string>? targetAotAbis;
+		HashSet<string>? targetJitAbis;
+		List<RuleGenerator>? ruleGenerators;
+		string? debugFileExtension;
+		CompressionFormat? compressionFormat;
 		Dictionary<KnownConditions, bool> conditions  = new Dictionary<KnownConditions, bool> ();
 
 		/// <summary>
@@ -71,12 +71,12 @@ namespace Xamarin.Android.Prepare
 		/// <summary>
 		///   A shortcut to access a small set of essential tools used by the bootstrapper. See <see cref="EssentialTools" />
 		/// </summary>
-		public EssentialTools Tools                    { get; private set; }
+		public EssentialTools Tools                    { get; private set; } = new EssentialTools ();
 
 		/// <summary>
 		///   Information about the current build. <see cref="BuildInfo" />
 		/// </summary>
-		public BuildInfo BuildInfo                     { get; private set; }
+		public BuildInfo BuildInfo                     { get; private set; } = new BuildInfo ();
 
 		/// <summary>
 		///   All the scenarios known to the bootstrapper
@@ -86,12 +86,12 @@ namespace Xamarin.Android.Prepare
 		/// <summary>
 		///   Default scenario to execute if none was specified by the user on the command line
 		/// </summary>
-		public Scenario DefaultScenario                => defaultScenario;
+		public Scenario DefaultScenario                => defaultScenario ?? throw new InvalidOperationException ("Default scenario not specified (was .Init called?)");
 
 		/// <summary>
 		///   Scenario selected for the current session
 		/// </summary>
-		public Scenario SelectedScenario               { get; private set; }
+		public Scenario SelectedScenario               { get; private set; } = new ScenarioNoScenario ();
 
 		/// <summary>
 		///   Whether the current run of the bootstrapper can interact with the user or not
@@ -112,7 +112,7 @@ namespace Xamarin.Android.Prepare
 		/// <summary>
 		///   A collection of all the methods to obtain version numbers from programs. See <see cref="t:VersionFetchers" />
 		/// </summary>
-		public VersionFetchers VersionFetchers         { get; private set; }
+		public VersionFetchers VersionFetchers         { get; private set; } = new VersionFetchers ();
 
 
 		/// <summary>
@@ -193,7 +193,7 @@ namespace Xamarin.Android.Prepare
 		/// <summary>
 		///   A set of various special characters used in progress messages. See <see cref="t:Characters" />
 		/// </summary>
-		public Characters Characters                      => characters;
+		public Characters Characters                      => characters ?? throw new InvalidOperationException ("Context not initialized properly (was .Init called?)");
 
 		/// <summary>
 		///   Xamarin.Android version
@@ -243,7 +243,7 @@ namespace Xamarin.Android.Prepare
 		public string HashAlgorithm {
 			get => String.IsNullOrEmpty (hashAlgorithm) ? Configurables.Defaults.HashAlgorithm : HashAlgorithm;
 			set {
-				value = value?.Trim ();
+				value = value.Trim ();
 				if (String.IsNullOrEmpty (value))
 					throw new ArgumentException ("must not be null or empty", "value");
 				hashAlgorithm = value;
@@ -276,9 +276,12 @@ namespace Xamarin.Android.Prepare
 		/// </summary>
 		public string XAInstallPrefix {
 			get {
-				if (String.IsNullOrEmpty (xaInstallPrefix))
+				if (String.IsNullOrEmpty (xaInstallPrefix)) {
 					xaInstallPrefix = Properties.GetRequiredValue (KnownProperties.XAInstallPrefix);
-				return xaInstallPrefix;
+					if (String.IsNullOrEmpty (xaInstallPrefix))
+						throw new InvalidOperationException ("Xamarin.Android install prefix property has an empty value or is absent");
+				}
+				return xaInstallPrefix!;
 			}
 		}
 
@@ -314,7 +317,7 @@ namespace Xamarin.Android.Prepare
 		public string DebugFileExtension {
 			get => debugFileExtension ?? Configurables.Defaults.DebugFileExtension;
 			set {
-				value = value?.Trim ();
+				value = value.Trim ();
 				if (String.IsNullOrEmpty (value))
 					throw new ArgumentException ("must not be null or empty", nameof (value));
 				if (value [0] != '.')
@@ -332,7 +335,7 @@ namespace Xamarin.Android.Prepare
 		/// <summary>
 		/// Set by the --mono-archive-url flag
 		/// </summary>
-		public string MonoArchiveCustomUrl { get; set; }
+		public string MonoArchiveCustomUrl { get; set; } = String.Empty;
 
 		/// <summary>
 		///   Set by <see cref="Step_DownloadMonoArchive"/> if the archive has been downloaded and validated, so
@@ -368,6 +371,11 @@ namespace Xamarin.Android.Prepare
 			} catch (IOException) {
 				// Ignore
 			}
+
+			OS = new NoOS (this);
+			MonoOptions = new List<string> {
+				"--debug", // Doesn't hurt to have line numbers in stack traces...
+			};
 
 			// Standard Console class offers no way to detect if the terminal can use color, so we use this rather poor
 			// way to detect it
@@ -642,8 +650,11 @@ namespace Xamarin.Android.Prepare
 			return AbiNames.All64BitLlvmAbis.Contains (abiName);
 		}
 
-		bool IsAbiEnabled (string abiName, HashSet<string> collection)
+		bool IsAbiEnabled (string abiName, HashSet<string>? collection)
 		{
+			if (collection == null)
+				return false;
+
 			if (String.IsNullOrEmpty (abiName))
 				throw new ArgumentException ("must not be null or empty", nameof (abiName));
 
@@ -688,7 +699,7 @@ namespace Xamarin.Android.Prepare
 			return GetLogFilePath (tags, false);
 		}
 
-		string GetLogFilePath (string tags, bool mainLogFile)
+		string GetLogFilePath (string? tags, bool mainLogFile)
 		{
 			string logFileName;
 			if (String.IsNullOrEmpty (tags)) {
@@ -725,17 +736,13 @@ namespace Xamarin.Android.Prepare
 		/// <summary>
 		///   Initialize the execution context. Called only once from Main.
 		/// </summary>
-		public async Task<bool> Init (string scenarioName = null)
+		public async Task<bool> Init (string? scenarioName = null)
 		{
 			SetCondition (KnownConditions.AllowProgramInstallation, true);
 
 			characters = Characters.Create (this);
 
 			Log.StatusLine ("Main log file: ", MainLogFilePath, ConsoleColor.Gray, Log.DestinationColor);
-
-			MonoOptions = new List<string> {
-				"--debug", // Doesn't hurt to have line numbers in stack traces...
-			};
 
 			Banner ("Detecting operating system");
 			InitOS ();
@@ -754,8 +761,6 @@ namespace Xamarin.Android.Prepare
 				Properties.Set (KnownProperties.AndroidSupportedTargetAotAbis, Utilities.ToXamarinAndroidPropertyValue (AbiNames.AllAotAbis));
 			}
 
-			VersionFetchers = new VersionFetchers ();
-			Tools = new EssentialTools ();
 			DiscoverScenarios (scenarioName);
 
 			if (!await OS.Init ()) {
@@ -797,10 +802,10 @@ namespace Xamarin.Android.Prepare
 			Banner ($"Running scenario: {scenario.Description}");
 
 			string logFilePath = scenario.LogFilePath ?? mainLogFilePath;
-			Log scenarioLog = null;
+			Log? scenarioLog = null;
 
 			if (!String.IsNullOrEmpty (scenario.LogFilePath)) {
-				Log.StatusLine ("Log file: ", scenario.LogFilePath, ConsoleColor.Gray, Log.DestinationColor);
+				Log.StatusLine ("Log file: ", scenario.LogFilePath!, ConsoleColor.Gray, Log.DestinationColor);
 				scenarioLog = new Log (logFilePath);
 			} else {
 				Log.StatusLine ("Logging to main log file");
@@ -815,39 +820,45 @@ namespace Xamarin.Android.Prepare
 			return true;
 		}
 
-		void DiscoverScenarios (string scenarioName)
+		void DiscoverScenarios (string? scenarioName)
 		{
 			List<Type> types = Utilities.GetTypesWithCustomAttribute<ScenarioAttribute> ();
 
 			bool haveScenarioName = !String.IsNullOrEmpty (scenarioName);
-			SelectedScenario = null;
-			defaultScenario = null;
+			Scenario? selectedScenario = null;
+			Scenario? detectedDefaultScenario = null;
 			foreach (Type type in types) {
 				var scenario = Activator.CreateInstance (type) as Scenario;
+				if (scenario == null)
+					throw new InvalidOperationException ($"Scenario not derived from the Scenario type ({type})");
+
 				Scenarios.Add (scenario.Name, scenario);
 				if (IsDefaultScenario (type)) {
-					if (defaultScenario != null)
-						throw new InvalidOperationException ($"Only one default scenario is allowed. {defaultScenario} was previously declared as one, {type} is also marked as deafult");
-					defaultScenario = scenario;
+					if (detectedDefaultScenario != null)
+						throw new InvalidOperationException ($"Only one default scenario is allowed. {detectedDefaultScenario} was previously declared as one, {type} is also marked as deafult");
+					detectedDefaultScenario = scenario;
 				}
 
-				if (!haveScenarioName || SelectedScenario != null)
+				if (!haveScenarioName || selectedScenario != null)
 					continue;
 
 				if (String.Compare (scenarioName, scenario.Name, StringComparison.OrdinalIgnoreCase) != 0)
 					continue;
 
-				SelectedScenario = scenario;
+				selectedScenario = scenario;
 			}
 
-			if (haveScenarioName && SelectedScenario == null)
+			if (haveScenarioName && selectedScenario == null)
 				throw new InvalidOperationException ($"Unknown scenario '{scenarioName}'");
 
-			if (SelectedScenario == null)
-				SelectedScenario = defaultScenario;
+			if (selectedScenario == null)
+				selectedScenario = detectedDefaultScenario;
 
-			if (SelectedScenario == null)
+			if (selectedScenario == null)
 				throw new InvalidOperationException ("No specific scenario named and no default scenario found");
+
+			defaultScenario = detectedDefaultScenario!;
+			SelectedScenario = selectedScenario;
 
 			Log.DebugLine ($"Initializing scenario {SelectedScenario.Name}");
 			SelectedScenario.Init (this);
@@ -882,10 +893,10 @@ namespace Xamarin.Android.Prepare
 		string GetLogDirectory ()
 		{
 			if (!String.IsNullOrEmpty (overridenLogDirectory))
-				return overridenLogDirectory;
+				return overridenLogDirectory!;
 
 			if (!String.IsNullOrEmpty (logDirectory))
-				return logDirectory;
+				return logDirectory!;
 
 			logDirectory = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "bin", $"Build{Configuration}");
 			if (!Directory.Exists (logDirectory))

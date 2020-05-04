@@ -19,7 +19,7 @@ namespace Xamarin.Android.Prepare
 
 	    Regex rx;
 
-	    public RegexProgramVersionParser (string programName, string versionArguments, Regex regex, uint versionOutputLine = 0, Log log = null)
+	    public RegexProgramVersionParser (string programName, string versionArguments, Regex regex, uint versionOutputLine = 0, Log? log = null)
 		    : base (programName, versionArguments, versionOutputLine, log)
 	    {
 		    if (regex == null)
@@ -27,7 +27,7 @@ namespace Xamarin.Android.Prepare
 		    rx = regex;
 	    }
 
-	    public RegexProgramVersionParser (string programName, string versionArguments, string regex, uint versionOutputLine = 0, Log log = null)
+	    public RegexProgramVersionParser (string programName, string versionArguments, string regex, uint versionOutputLine = 0, Log? log = null)
 		    : base (programName, versionArguments, versionOutputLine, log)
 	    {
 		    if (String.IsNullOrEmpty (regex))
@@ -38,13 +38,13 @@ namespace Xamarin.Android.Prepare
 
         protected override string ParseVersion (string programOutput)
         {
-	        string output = programOutput?.Trim ();
+	        string output = programOutput.Trim ();
 	        if (String.IsNullOrEmpty (output)) {
 		        Log.WarningLine ($"Unable to parse version of {ProgramName} because version output was empty");
 		        return DefaultVersionString;
 	        }
 
-	        string ret = null;
+	        string ret = String.Empty;
 	        string[] lines = programOutput.Split (LineSeparator);
 	        if (VersionOutputLine > 0) {
 		        if (lines.Length < VersionOutputLine) {
@@ -52,7 +52,7 @@ namespace Xamarin.Android.Prepare
 			        return DefaultVersionString;
 		        }
 
-		        if (TryMatch (lines [VersionOutputLine - 1], out ret) && ret != null) {
+		        if (TryMatch (lines [VersionOutputLine - 1], out ret) && !String.IsNullOrEmpty (ret)) {
 			        return ret;
 		        }
 
@@ -69,7 +69,7 @@ namespace Xamarin.Android.Prepare
 
 	    bool TryMatch (string line, out string version)
 	    {
-		    version = null;
+		    version = String.Empty;
 
 		    Match match = rx.Match (line);
 		    if (!match.Success || match.Groups.Count <= 0) {

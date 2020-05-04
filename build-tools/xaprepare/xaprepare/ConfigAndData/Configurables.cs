@@ -369,58 +369,56 @@ namespace Xamarin.Android.Prepare
 				return androidToolchainBinDirectory;
 			}
 
-			static string GetCachedPath (ref string variable, Func<string> creator)
+			static string GetCachedPath (ref string? variable, Func<string> creator)
 			{
 				if (!String.IsNullOrEmpty (variable))
-					return variable;
+					return variable!;
 
 				variable = Path.GetFullPath (creator ());
 				return variable;
 			}
 
-			static string testBinDir;
-			static string buildBinDir;
-			static string mingwBinDir;
-			static string binDir;
-			static string netCoreBinDir;
-			static string monoSDKsOutputDir;
-			static string androidToolchainBinDirectory;
-			static string monoProfileDir;
-			static string monoProfileToolsDir;
-			static string bclTestsDestDir;
-			static string bclTestsArchivePath;
-			static string bclFacadeAssembliesSourceDir;
-			static string bclWindowsOutputDir;
-			static string bclWindowsAssembliesSourceDir;
-			static string bclWindowsFacadeAssembliesSourceDir;
-			static string installBCLFrameworkDir;
-			static string installBCLFrameworkFacadesDir;
-			static string installBCLFrameworkRedistListDir;
-			static string installMSBuildDir;
-			static string outputIncludeDir;
-			static string mingw32CmakePath;
-			static string mingw64CmakePath;
-			static string mingw32CmakeTemplatePath;
-			static string mingw64CmakeTemplatePath;
-			static string monoRuntimesEnabledAbisCachePath;
-			static string frameworkListInstallPath;
-			static string correttoCacheDir;
-			static string correttoInstallDir;
-			static string profileAssembliesProjitemsPath;
-			static string bclTestsSourceDir;
-			static string installHostBCLDir;
-			static string installHostBCLFacadesDir;
-			static string installWindowsBCLDir;
-			static string installWindowsBCLFacadesDir;
-			static string installBCLDesignerDir;
-			static string monoAndroidFrameworksRootDir;
-			static string externalJavaInteropDir;
-			static string monoSdksTpnPath;
-			static string monoSdksTpnExternalPath;
-			static string monoSDKSIncludeDestDir;
-			static string monoLlvmTpnPath;
-			static string openJDKInstallDir;
-			static string openJDKCacheDir;
+			static string? testBinDir;
+			static string? buildBinDir;
+			static string? mingwBinDir;
+			static string? binDir;
+			static string? netCoreBinDir;
+			static string? monoSDKsOutputDir;
+			static string? androidToolchainBinDirectory;
+			static string? monoProfileDir;
+			static string? monoProfileToolsDir;
+			static string? bclTestsDestDir;
+			static string? bclTestsArchivePath;
+			static string? bclFacadeAssembliesSourceDir;
+			static string? bclWindowsOutputDir;
+			static string? bclWindowsAssembliesSourceDir;
+			static string? bclWindowsFacadeAssembliesSourceDir;
+			static string? installBCLFrameworkDir;
+			static string? installBCLFrameworkFacadesDir;
+			static string? installBCLFrameworkRedistListDir;
+			static string? installMSBuildDir;
+			static string? outputIncludeDir;
+			static string? mingw32CmakePath;
+			static string? mingw64CmakePath;
+			static string? mingw32CmakeTemplatePath;
+			static string? mingw64CmakeTemplatePath;
+			static string? monoRuntimesEnabledAbisCachePath;
+			static string? frameworkListInstallPath;
+			static string? correttoCacheDir;
+			static string? correttoInstallDir;
+			static string? profileAssembliesProjitemsPath;
+			static string? bclTestsSourceDir;
+			static string? installHostBCLDir;
+			static string? installHostBCLFacadesDir;
+			static string? installWindowsBCLDir;
+			static string? installWindowsBCLFacadesDir;
+			static string? installBCLDesignerDir;
+			static string? monoAndroidFrameworksRootDir;
+			static string? externalJavaInteropDir;
+			static string? monoSdksTpnPath;
+			static string? monoSdksTpnExternalPath;
+			static string? monoSDKSIncludeDestDir;
+			static string? monoLlvmTpnPath;
 		}
 	}
 }

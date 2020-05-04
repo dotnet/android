@@ -7,7 +7,7 @@ namespace Xamarin.Android.Prepare
 	class Scenario_PrepareExternalGitDependencies : ScenarioNoStandardEndSteps
 	{
 		public Scenario_PrepareExternalGitDependencies ()
-			: base ("PrepareExternalGitDependencies", "Prepare external GIT dependencies", Context.Instance)
+			: base ("PrepareExternalGitDependencies", "Prepare external GIT dependencies")
 		{
 			LogFilePath = Context.Instance.GetLogFilePath ("external-git-deps");
 		}

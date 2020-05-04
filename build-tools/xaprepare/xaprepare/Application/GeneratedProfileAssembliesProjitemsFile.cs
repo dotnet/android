@@ -53,7 +53,7 @@ namespace Xamarin.Android.Prepare
 				throw new InvalidOperationException ("Profile assembly discrepancies found. Please examine 'build-tools/xaprepare/xaprepare/ConfigAndData/Runtimes.cs' to make sure all assemblies listed above are included");
 		}
 
-		bool FileSetsDiffer (IEnumerable<TestAssembly> assemblies, string directoryPath, string batchName, HashSet<string> ignoreFiles = null)
+		bool FileSetsDiffer (IEnumerable<TestAssembly> assemblies, string directoryPath, string batchName, HashSet<string>? ignoreFiles = null)
 		{
 			List<string> tests = FilesFromDir (directoryPath, ignoreFiles).ToList ();
 			tests.AddRange (
@@ -68,7 +68,7 @@ namespace Xamarin.Android.Prepare
 			return FileSetsDiffer (ToStringSet (assemblies), tests, batchName);
 		}
 
-		bool FileSetsDiffer (IEnumerable<BclFile> assemblies, string directoryPath, string batchName, HashSet<string> ignoreFiles = null)
+		bool FileSetsDiffer (IEnumerable<BclFile> assemblies, string directoryPath, string batchName, HashSet<string>? ignoreFiles = null)
 		{
 			return FileSetsDiffer (ToStringSet (assemblies), FilesFromDir (directoryPath, ignoreFiles), batchName);
 		}
@@ -88,7 +88,7 @@ namespace Xamarin.Android.Prepare
 			return true;
 		}
 
-		IEnumerable<string> FilesFromDir (string directoryPath, HashSet<string> ignoreFiles = null, string globPattern = "*.dll", bool stripPath = true, bool searchSubdirs = false)
+		IEnumerable<string> FilesFromDir (string directoryPath, HashSet<string>? ignoreFiles = null, string globPattern = "*.dll", bool stripPath = true, bool searchSubdirs = false)
 		{
 			IEnumerable<string> files = Directory.EnumerateFiles (
 				directoryPath,
@@ -141,7 +141,7 @@ namespace Xamarin.Android.Prepare
 			StartGroup (sw);
 			foreach (TestAssembly taf in files) {
 				string itemName = "MonoTestAssembly";
-				string testType = null;
+				string testType = String.Empty;
 
 				switch (taf.TestType) {
 					case TestAssemblyType.Satellite:

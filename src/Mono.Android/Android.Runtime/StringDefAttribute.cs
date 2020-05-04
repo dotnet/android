@@ -6,8 +6,8 @@ namespace Android.Runtime
 	[AttributeUsage (AttributeTargets.Parameter | AttributeTargets.Method | AttributeTargets.Constructor | AttributeTargets.Property, AllowMultiple = true)]
 	public class StringDefAttribute : Attribute
 	{
-		public string Type { get; set; }
-		public string [] Fields { get; set; }
+		public string? Type { get; set; }
+		public string []? Fields { get; set; }
 	}
 }
 

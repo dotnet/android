@@ -15,7 +15,7 @@ namespace Android.Content.Res
 		
 		string GetAttributeName (int pos);
 		string GetAttributeValue (int pos);
-		string GetAttributeValue (string ns, string name);
+		string? GetAttributeValue (string? ns, string? name);
 		#endregion
 	}
 }

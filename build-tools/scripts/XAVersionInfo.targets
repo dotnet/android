@@ -40,7 +40,7 @@
   <Target Name="GetXAVersionInfo"
       DependsOnTargets="_GetSubmodulesVersionInfo">
     <GitBlame
-        FileName="Configuration.props"
+        FileName="Directory.Build.props"
         LineFilter="&lt;ProductVersion&gt;"
         WorkingDirectory="$(XamarinAndroidSourcePath)"
         ToolPath="$(GitToolPath)"
@@ -53,6 +53,21 @@
         ToolPath="$(GitToolPath)"
         ToolExe="$(GitToolExe)">
       <Output TaskParameter="CommitCount"             PropertyName="XAVersionCommitCount"   Condition=" '$(XAVersionCommitCount)' == '' " />
+    </GitCommitsInRange>
+    <GitBlame
+        FileName="Directory.Build.props"
+        LineFilter="&lt;AndroidPackVersion&gt;"
+        WorkingDirectory="$(XamarinAndroidSourcePath)"
+        ToolPath="$(GitToolPath)"
+        ToolExe="$(GitToolExe)">
+      <Output TaskParameter="Commits"                 ItemName="_PackVersionCommit" />
+    </GitBlame>
+    <GitCommitsInRange
+        StartCommit="%(_PackVersionCommit.CommitHash)"
+        WorkingDirectory="$(XamarinAndroidSourcePath)"
+        ToolPath="$(GitToolPath)"
+        ToolExe="$(GitToolExe)">
+      <Output TaskParameter="CommitCount"             PropertyName="PackVersionCommitCount"   Condition=" '$(PackVersionCommitCount)' == '' " />
     </GitCommitsInRange>
     <GitCommitHash
         WorkingDirectory="$(XamarinAndroidSourcePath)"
@@ -68,6 +83,11 @@
     </GitBranch>
     <PropertyGroup>
       <XARepositoryName Condition=" '$(XARepositoryName)' == '' ">xamarin-android</XARepositoryName>
+      <!-- See Azure Pipelines predefined variables. -->
+      <_AndroidPackLabel Condition=" '$(SYSTEM_PULLREQUEST_PULLREQUESTNUMBER)' != '' ">ci.pr.gh$(SYSTEM_PULLREQUEST_PULLREQUESTNUMBER).$(PackVersionCommitCount)</_AndroidPackLabel>
+      <_AndroidPackBranch>$([System.Text.RegularExpressions.Regex]::Replace('$(XAVersionBranch)', '[^a-zA-Z0-9-]', '-'))</_AndroidPackBranch>
+      <_AndroidPackLabel Condition=" '$(_AndroidPackLabel)' == '' ">ci.$(_AndroidPackBranch).$(PackVersionCommitCount)</_AndroidPackLabel>
+      <AndroidPackVersionLong>$(AndroidPackVersion)-$(_AndroidPackLabel)</AndroidPackVersionLong>
     </PropertyGroup>
   </Target>
 </Project>

@@ -25,11 +25,11 @@ namespace apkdiff {
 		ZipArchive Archive;
 
 		[DataMember]
-		readonly Dictionary<string, FileProperties> Entries = new Dictionary<string, FileProperties> ();
+		readonly SortedDictionary<string, FileProperties> Entries = new SortedDictionary<string, FileProperties> ();
 
 		Dictionary<string, (long Difference, long OriginalTotal)> totalDifferences = new Dictionary<string, (long, long)> ();
 
-		public static ApkDescription Load (string path)
+		public static ApkDescription Load (string path, string saveDescriptionPath = null)
 		{
 			if (!File.Exists (path)) {
 				Program.Error ($"File '{path}' does not exist.");
@@ -42,7 +42,7 @@ namespace apkdiff {
 			case ".aab":
 				var nd = new ApkDescription ();
 
-				nd.LoadApk (path);
+				nd.LoadApk (path, saveDescriptionPath);
 
 				return nd;
 			case ".apkdesc":
@@ -56,7 +56,7 @@ namespace apkdiff {
 			}
 		}
 
-		void LoadApk (string path)
+		void LoadApk (string path, string saveDescriptionPath = null)
 		{
 			Archive = ZipArchive.Open (path, FileMode.Open);
 
@@ -81,7 +81,7 @@ namespace apkdiff {
 			}
 
 			if (Program.SaveDescriptions) {
-				var descPath = Path.ChangeExtension (path, Path.GetExtension (path) + "desc");
+				var descPath = saveDescriptionPath ?? Path.ChangeExtension (path, Path.GetExtension (path) + "desc");
 
 				Program.ColorWriteLine ($"Saving apk description to '{descPath}'", ConsoleColor.Yellow);
 				SaveDescription (descPath);
@@ -231,9 +231,10 @@ namespace apkdiff {
 		{
 			var tmpDir = Path.Combine (Path.GetTempPath (), Path.GetRandomFileName ());
 			var tmpDirOther = Path.Combine (Path.GetTempPath (), Path.GetRandomFileName ());
+			var padding = "  ";
 
 			if (Program.Verbose)
-				Program.ColorWriteLine ($"Extracting '{entry.Key}' to {tmpDir} and {tmpDirOther} temporary directories", ConsoleColor.Gray);
+				Program.ColorWriteLine ($"{padding}Extracting '{entry.Key}' to {tmpDir} and {tmpDirOther} temporary directories", ConsoleColor.Gray);
 
 			Directory.CreateDirectory (tmpDir);
 
@@ -243,7 +244,7 @@ namespace apkdiff {
 			var zipEntryOther = otherApk.Archive.ReadEntry (other.Key, true);
 			zipEntryOther.Extract (tmpDirOther, other.Key);
 
-			diff.Compare (Path.Combine (tmpDir, entry.Key), Path.Combine (tmpDirOther, other.Key), "  ");
+			diff.Compare (Path.Combine (tmpDir, entry.Key), Path.Combine (tmpDirOther, other.Key), padding);
 
 			Directory.Delete (tmpDir, true);
 			Directory.Delete (tmpDirOther, true);

@@ -32,7 +32,7 @@ namespace Xamarin.Android.Prepare
 		public override string LicenseFile => licenseFile;
 		public override string Name        => "mono/cecil";
 		public override Uri    SourceUrl   => url;
-		public override string LicenseText => null;
+		public override string LicenseText => String.Empty;
 	}
 
 	class mono_mono_mono_TPN : ThirdPartyNotice
@@ -43,7 +43,7 @@ namespace Xamarin.Android.Prepare
 		public override string LicenseFile => licenseFile;
 		public override string Name        => "mono/mono";
 		public override Uri    SourceUrl   => url;
-		public override string LicenseText => null;
+		public override string LicenseText => String.Empty;
 	}
 
 	class mono_mono_aspnetwebstack_TPN : ThirdPartyNotice
@@ -54,7 +54,7 @@ namespace Xamarin.Android.Prepare
 		public override string LicenseFile => licenseFile;
 		public override string Name        => "mono/aspnetwebstack";
 		public override Uri    SourceUrl   => url;
-		public override string LicenseText => null;
+		public override string LicenseText => String.Empty;
 
 		public override bool Include (bool includeExternalDeps, bool includeBuildDeps) => includeExternalDeps && includeBuildDeps;
 	}
@@ -67,7 +67,7 @@ namespace Xamarin.Android.Prepare
 		public override string LicenseFile => licenseFile;
 		public override string Name        => "mono/boringssl";
 		public override Uri    SourceUrl   => url;
-		public override string LicenseText => null;
+		public override string LicenseText => String.Empty;
 
 		public override bool Include (bool includeExternalDeps, bool includeBuildDeps) => includeExternalDeps;
 	}
@@ -76,7 +76,7 @@ namespace Xamarin.Android.Prepare
 	{
 		static readonly Uri    url         = new Uri ("https://github.com/mono/ikdasm");
 
-		public override string LicenseFile => null;
+		public override string LicenseFile => String.Empty;
 		public override string Name        => "mono/ikdasm";
 		public override Uri    SourceUrl   => url;
 		public override string LicenseText => @"
@@ -113,7 +113,7 @@ jeroen@frijters.net
 		public override string LicenseFile => licenseFile;
 		public override string Name        => "mono/ikvm-fork";
 		public override Uri    SourceUrl   => url;
-		public override string LicenseText => null;
+		public override string LicenseText => String.Empty;
 
 		public override bool Include (bool includeExternalDeps, bool includeBuildDeps) => includeExternalDeps && includeBuildDeps;
 	}
@@ -126,7 +126,7 @@ jeroen@frijters.net
 		public override string LicenseFile => licenseFile;
 		public override string Name        => "mono/linker";
 		public override Uri    SourceUrl   => url;
-		public override string LicenseText => null;
+		public override string LicenseText => String.Empty;
 	}
 
 	class mono_mono_NuGet_BuildTasks_TPN : ThirdPartyNotice
@@ -137,7 +137,7 @@ jeroen@frijters.net
 		public override string LicenseFile => licenseFile;
 		public override string Name        => "mono/NuGet.BuildTasks";
 		public override Uri    SourceUrl   => url;
-		public override string LicenseText => null;
+		public override string LicenseText => String.Empty;
 
 		public override bool Include (bool includeExternalDeps, bool includeBuildDeps) => includeExternalDeps && includeBuildDeps;
 	}
@@ -150,7 +150,7 @@ jeroen@frijters.net
 		public override string LicenseFile => licenseFile;
 		public override string Name        => "mono/NUnitLite";
 		public override Uri    SourceUrl   => url;
-		public override string LicenseText => null;
+		public override string LicenseText => String.Empty;
 
 		public override bool Include (bool includeExternalDeps, bool includeBuildDeps) => includeExternalDeps;
 	}
@@ -163,7 +163,7 @@ jeroen@frijters.net
 		public override string LicenseFile => licenseFile;
 		public override string Name        => "mono/rx.net";
 		public override Uri    SourceUrl   => url;
-		public override string LicenseText => null;
+		public override string LicenseText => String.Empty;
 
 		public override bool Include (bool includeExternalDeps, bool includeBuildDeps) => includeExternalDeps && includeBuildDeps;
 	}
@@ -176,7 +176,7 @@ jeroen@frijters.net
 		public override string LicenseFile => licenseFile;
 		public override string Name        => "mono/Ix.net";
 		public override Uri    SourceUrl   => url;
-		public override string LicenseText => null;
+		public override string LicenseText => String.Empty;
 
 		public override bool Include (bool includeExternalDeps, bool includeBuildDeps) => includeExternalDeps && includeBuildDeps;
 	}
@@ -203,7 +203,7 @@ jeroen@frijters.net
 		public override string LicenseFile => licenseFile;
 		public override string Name        => "mono/llvm";
 		public override Uri    SourceUrl   => url;
-		public override string LicenseText => null;
+		public override string LicenseText => String.Empty;
 	}
 
 	class mono_llvm_google_test_TPN : ThirdPartyNotice
@@ -214,7 +214,7 @@ jeroen@frijters.net
 		public override string LicenseFile => licenseFile;
 		public override string Name        => "mono/llvm Google Test";
 		public override Uri    SourceUrl   => url;
-		public override string LicenseText => null;
+		public override string LicenseText => String.Empty;
 	}
 
 	class mono_llvm_openbsd_regex_TPN : ThirdPartyNotice
@@ -225,7 +225,7 @@ jeroen@frijters.net
 		public override string LicenseFile => licenseFile;
 		public override string Name        => "mono/llvm OpenBSD Regex";
 		public override Uri    SourceUrl   => url;
-		public override string LicenseText => null;
+		public override string LicenseText => String.Empty;
 	}
 
 	class mono_llvm_pyyaml_tests_TPN : ThirdPartyNotice
@@ -236,7 +236,7 @@ jeroen@frijters.net
 		public override string LicenseFile => licenseFile;
 		public override string Name        => "mono/llvm pyyaml tests";
 		public override Uri    SourceUrl   => url;
-		public override string LicenseText => null;
+		public override string LicenseText => String.Empty;
 	}
 
 	class mono_llvm_arm_contributions_TPN : ThirdPartyNotice
@@ -247,14 +247,14 @@ jeroen@frijters.net
 		public override string LicenseFile => licenseFile;
 		public override string Name        => "mono/llvm ARM contributions";
 		public override Uri    SourceUrl   => url;
-		public override string LicenseText => null;
+		public override string LicenseText => String.Empty;
 	}
 
 	class mono_llvm_md5_contributions_TPN : ThirdPartyNotice
 	{
 		static readonly Uri    url         = new Uri ("https://github.com/mono/llvm/blob/master/lib/Support/MD5.cpp");
 
-		public override string LicenseFile => null;
+		public override string LicenseFile => String.Empty;
 		public override string Name        => "mono/llvm md5 contributions";
 		public override Uri    SourceUrl   => url;
 

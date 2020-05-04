@@ -40,7 +40,7 @@ namespace Xamarin.Android.Prepare
 			foreach (Runtime runtime in allRuntimes.Items.Where (r => r is MonoJitRuntime && r.Enabled)) {
 				enabledRuntimes.Add (runtime);
 				if (enableLogging)
-					Log.Instance.StatusLine ($"  {context.Characters.Bullet} {runtime.Name}");
+					Log.Instance.StatusLine ($"  {context.Characters.Bullet} {runtime.DisplayName}");
 			}
 
 			if (enableLogging) {
@@ -50,7 +50,7 @@ namespace Xamarin.Android.Prepare
 			foreach (Runtime runtime in allRuntimes.Items.Where (r => r is MonoHostRuntime && r.Enabled)) {
 				enabledRuntimes.Add (runtime);
 				if (enableLogging)
-					Log.Instance.StatusLine ($"  {context.Characters.Bullet} {runtime.Name}");
+					Log.Instance.StatusLine ($"  {context.Characters.Bullet} {runtime.DisplayName}");
 			}
 
 			bool anyCrossEnabled = false;
@@ -62,7 +62,7 @@ namespace Xamarin.Android.Prepare
 				anyCrossEnabled = true;
 				enabledRuntimes.Add (runtime);
 				if (enableLogging)
-					Log.Instance.StatusLine ($"  {context.Characters.Bullet} {runtime.Name}");
+					Log.Instance.StatusLine ($"  {context.Characters.Bullet} {runtime.DisplayName}");
 			}
 
 			if (enableLogging && !anyCrossEnabled)
@@ -77,7 +77,7 @@ namespace Xamarin.Android.Prepare
 				anyCrossEnabled = true;
 				enabledRuntimes.Add (runtime);
 				if (enableLogging)
-					Log.Instance.StatusLine ($"  {context.Characters.Bullet} {runtime.Name}");
+					Log.Instance.StatusLine ($"  {context.Characters.Bullet} {runtime.DisplayName}");
 			}
 			if (enableLogging && !anyCrossEnabled)
 				Log.Instance.StatusLine ($"  NONE", ConsoleColor.DarkCyan);
@@ -87,29 +87,23 @@ namespace Xamarin.Android.Prepare
 
 		public static (string executable, string debugSymbols) GetDestinationPaths (MonoUtilityFile muf)
 		{
-			if (muf == null)
-				throw new ArgumentNullException (nameof (muf));
-
 			string destDir = UtilitiesDestinationDir;
 			string targetFileName;
 
 			if (!String.IsNullOrEmpty (muf.TargetName))
-				targetFileName = muf.TargetName;
+				targetFileName = muf.TargetName!;
 			else
 				targetFileName = Path.GetFileName (muf.SourcePath);
 
 			string destFilePath = Path.Combine (destDir, targetFileName);
 			if (String.IsNullOrEmpty (muf.DebugSymbolsPath))
-				return (destFilePath, null);
+				return (destFilePath, String.Empty);
 
 			return (destFilePath, Path.Combine (destDir, Utilities.GetDebugSymbolsPath (targetFileName)));
 		}
 
 		public static (string assembly, string debugSymbols) GetDestinationPaths (BclFile bf)
 		{
-			if (bf == null)
-				throw new ArgumentNullException (nameof (bf));
-
 			string destDir;
 			switch (bf.Type) {
 				case BclFileType.ProfileAssembly:
@@ -126,7 +120,7 @@ namespace Xamarin.Android.Prepare
 
 			string destFile = Path.Combine (destDir, bf.Name);
 			if (bf.ExcludeDebugSymbols)
-				return (destFile, null);
+				return (destFile, String.Empty);
 
 			return (destFile, Path.Combine (destDir, Path.GetFileName (bf.DebugSymbolsPath)));
 		}
@@ -157,13 +151,13 @@ namespace Xamarin.Android.Prepare
 				destDir = BCLTestsDestinationDir;
 
 			string destFile = Path.Combine (destDir, Path.GetFileName (tasm.Name));
-			return (destFile, pdbRequired ? Utilities.GetDebugSymbolsPath (destFile) : null);
+			return (destFile, pdbRequired ? Utilities.GetDebugSymbolsPath (destFile) : String.Empty);
 		}
 
 		public static (bool skip, string src, string dst) GetRuntimeFilePaths (Runtime runtime, RuntimeFile rtf)
 		{
 			if (rtf.ShouldSkip != null && rtf.ShouldSkip (runtime))
-				return (true, null, null);
+				return (true, String.Empty, String.Empty);
 
 			return (
 				false,
@@ -235,7 +229,7 @@ namespace Xamarin.Android.Prepare
 				foreach (var runtimeFile in runtimes.RuntimeFilesToInstall) {
 					(bool skipFile, string src, string dst) = GetRuntimeFilePaths (runtime, runtimeFile);
 
-					if (!skipFile && !File.Exists (dst)) {
+					if (!skipFile && (dst.Length == 0 || !File.Exists (dst))) {
 						Log.Instance.WarningLine ($"File '{dst}' missing, skipping the rest of runtime item file scan");
 						return false;
 					}
@@ -249,7 +243,7 @@ namespace Xamarin.Android.Prepare
 				if (File.Exists (destFilePath) && shouldExcludeSymbols)
 					return true;
 
-				if (File.Exists (destFilePath) && !shouldExcludeSymbols && File.Exists (debugSymbolsDestPath))
+				if (File.Exists (destFilePath) && !shouldExcludeSymbols && !String.IsNullOrEmpty (debugSymbolsDestPath) && File.Exists (debugSymbolsDestPath))
 					return true;
 
 				Log.Instance.DebugLine ($"File '{destFilePath}' or symbols '{debugSymbolsDestPath}' missing, skipping the rest of runtime item file scan");

@@ -11,7 +11,7 @@ namespace Xamarin.Android.Prepare
 		protected override string DefaultToolExecutableName => "tar";
 		protected override string ToolName => "Tar";
 
-		public TarRunner (Context context, Log log = null, string toolPath = null)
+		public TarRunner (Context context, Log? log = null, string? toolPath = null)
 			: base (context, log, toolPath)
 		{}
 
@@ -43,7 +43,7 @@ namespace Xamarin.Android.Prepare
 			}
 		}
 
-		protected override TextWriter CreateLogSink (string logFilePath)
+		protected override TextWriter CreateLogSink (string? logFilePath)
 		{
 			return new OutputSink (Log, logFilePath);
 		}

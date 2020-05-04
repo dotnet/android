@@ -23,6 +23,14 @@
     <TargetFrameworkIdentifier Condition="'$(_ShortFrameworkIdentifier)' == 'monoandroid'">MonoAndroid</TargetFrameworkIdentifier>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <AndroidManifest Condition=" '$(AndroidManifest)' == '' ">Properties\AndroidManifest.xml</AndroidManifest>
+    <AndroidApplication Condition=" '$(AndroidApplication)' == '' And ('$(OutputType)' == 'Exe' or Exists('$(AndroidManifest)')) ">true</AndroidApplication>
+    <AndroidApplication Condition=" '$(AndroidApplication)' == '' ">false</AndroidApplication>
+    <!-- We don't ever need a `static void Main` method, so switch to Library here-->
+    <OutputType Condition=" '$(OutputType)' == 'Exe' ">Library</OutputType>
+  </PropertyGroup>
+
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.DefaultOutputPaths.targets" Condition="'$(EnableDefaultOutputPaths)' == 'true'" />
   <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.targets" />
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.Common.targets"/>

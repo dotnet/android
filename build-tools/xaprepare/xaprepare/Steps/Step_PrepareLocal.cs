@@ -10,14 +10,16 @@ namespace Xamarin.Android.Prepare
 			: base ("Preparing local components")
 		{}
 
-		async Task<bool> Restore (MSBuildRunner msbuild, string csprojPath, string logTag, string binLogName)
+		async Task<bool> Restore (MSBuildRunner msbuild, string csprojPath, string logTag, string binLogName, string additionalArgument = null)
 		{
+			var args = new List<string> { "/t:Restore" };
+			if (additionalArgument != null)
+				args.Add (additionalArgument);
+
 			return await msbuild.Run (
 				projectPath: csprojPath,
 				logTag: logTag,
-				arguments: new List<string> {
-					"/t:Restore"
-				},
+				arguments: args,
 				binlogName: binLogName
 			);
 		}
@@ -28,6 +30,9 @@ namespace Xamarin.Android.Prepare
 
 			string xfTestPath = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "tests", "Xamarin.Forms-Performance-Integration", "Xamarin.Forms.Performance.Integration.csproj");
 			if (!await Restore (msbuild, xfTestPath, "xfperf", "prepare-restore"))
+				return false;
+
+			if (!await Restore (msbuild, xfTestPath, "xfperf", "prepare-restore", "/p:BundleAssemblies=true"))
 				return false;
 
 			var apkDiffPath = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "tools", "apkdiff", "apkdiff.csproj");

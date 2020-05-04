@@ -84,11 +84,27 @@ namespace Xamarin.Android.Tasks
 								transform_files.Add (new Tuple<string, string> (fixup.ItemSpec, "enummethods"));
 								break;
 							default:
-								Log.LogError ("Unrecognized file", string.Empty, string.Empty, fixup.ItemSpec, 0, 0, 0, 0, "Unrecognized transform root element: {0}.", doc.Root.Name.LocalName);
+								Log.LogCodedError (
+									code: "XA4229",
+									file: fixup.ItemSpec,
+									lineNumber: 0,
+									message: Properties.Resources.XA4229,
+									messageArgs: new [] {
+										doc.Root.Name.LocalName
+									}
+								);
 								return false;
 						}
 					} catch (Exception ex) {
-						Log.LogError ("Invalid Xml", string.Empty, string.Empty, fixup.ItemSpec, 0, 0, 0, 0, "Error parsing xml.\n{0}", ex);
+						Log.LogCodedError (
+							code: "XA4230",
+							file: fixup.ItemSpec,
+							lineNumber: 0,
+							message: Properties.Resources.XA4230,
+							messageArgs: new [] {
+								ex
+							}
+						);
 						return false;
 					}
 				}

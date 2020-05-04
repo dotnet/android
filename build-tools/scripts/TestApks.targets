@@ -16,7 +16,7 @@
   <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.ProcessApkSizes" />
 
   <PropertyGroup>
-    <_TestImageName>XamarinAndroidTestRunner</_TestImageName>
+    <_TestImageName>XamarinAndroidTestRunner64</_TestImageName>
     <_AdbEmulatorPort>5570</_AdbEmulatorPort>
     <_ApkSizesReferenceDirectory>$(MSBuildThisFileDirectory)..\..\tests\apk-sizes-reference</_ApkSizesReferenceDirectory>
   </PropertyGroup>
@@ -44,7 +44,7 @@
     </Xamarin.Android.Tools.BootstrapTasks.CheckAdbTarget>
     <CreateAndroidEmulator
         Condition=" '$(_ValidAdbTarget)' != 'True' "
-        AndroidAbi="x86"
+        AndroidAbi="x86_64"
         AndroidSdkHome="$(AndroidSdkDirectory)"
         JavaSdkHome="$(JavaSdkDirectory)"
         SdkVersion="29"
@@ -323,13 +323,15 @@
   </Target>
   <Target Name="CheckAndRecordApkSizes">
     <PropertyGroup>
-      <ApkDiffExtension Condition=" '$(HostOS)' == 'Windows' ">.exe</ApkDiffExtension>
-      <ApkDiffPath Condition=" '$(HostOS)' == 'Windows' ">$(XAInstallPrefix)xbuild\Xamarin\Android\apkdiff\apkdiff$(ApkDiffExtension)</ApkDiffPath>
-      <ApkDiffPath Condition=" !Exists('$(ApkDiffPath)') ">$(XAInstallPrefix)xbuild\Xamarin\Android\$(HostOS)\apkdiff$(ApkDiffExtension)</ApkDiffPath>
-      <ApkDiffPath Condition=" !Exists('$(ApkDiffPath)') ">$(MonoAndroidBinDirectory)\apkdiff$(ApkDiffExtension)</ApkDiffPath>
+      <ApkDiffHostExtension Condition=" '$(HostOS)' == 'Windows' ">.exe</ApkDiffHostExtension>
+      <ApkDiffPath Condition=" '$(ApkDiffPath)' == '' ">$(XAInstallPrefix)xbuild\Xamarin\Android\apkdiff\apkdiff.exe</ApkDiffPath>
+      <ApkDiffPath Condition=" !Exists('$(ApkDiffPath)') ">$(XAInstallPrefix)xbuild\Xamarin\Android\$(HostOS)\apkdiff$(ApkDiffHostExtension)</ApkDiffPath>
+      <ApkDiffPath Condition=" !Exists('$(ApkDiffPath)') ">$(MonoAndroidBinDirectory)\apkdiff$(ApkDiffHostExtension)</ApkDiffPath>
     </PropertyGroup>
     <ApkDiffCheckRegression
         Condition="Exists('$(_ApkSizesReferenceDirectory)\$([System.IO.Path]::GetFileNameWithoutExtension(%(_AllArchives.Identity)))-$(Configuration)$(TestsFlavor)$([System.IO.Path]::GetExtension(%(_AllArchives.Identity)))desc')"
+        ApkDescDirectory="$(OutputPath)"
+        ApkDescSuffix="-$(Configuration)$(TestsFlavor)"
         ApkDiffTool="$(ApkDiffPath)"
         Package="%(_AllArchives.Identity)"
         ReferenceDescription="$(_ApkSizesReferenceDirectory)\$([System.IO.Path]::GetFileNameWithoutExtension(%(_AllArchives.Identity)))-$(Configuration)$(TestsFlavor)$([System.IO.Path]::GetExtension(%(_AllArchives.Identity)))desc"
@@ -340,6 +342,7 @@
   <Target Name="CheckBootTimes"
       DependsOnTargets="AcquireAndroidTarget;ReleaseAndroidTarget">
     <RunAndroidEmulatorCheckBootTimes
+		DeviceName="$(_TestImageName)"
         CheckBootTimesPath="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\check-boot-times.exe"
     />
   </Target>

@@ -24,5 +24,11 @@ namespace Xamarin.Android.Prepare
 		///   the top of the repository. Default: unset
 		/// </summary>
 		IncludeCommercial,
+
+		/// <summary>
+		///   If this condition is set, the current scenario will take care of missing essential (<see
+		///   cref="EssentialTools"/>) programs should they be missing.
+		/// </summary>
+		EnsureEssential,
 	}
 }

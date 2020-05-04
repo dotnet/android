@@ -41,37 +41,39 @@ namespace apkdiff {
 
 		public override void Compare (string file, string other, string padding)
 		{
-			var per1 = new PEReader (File.OpenRead (file));
-			var per2 = new PEReader (File.OpenRead (other));
+			using (var per1 = new PEReader (File.OpenRead (file))) {
+				using (var per2 = new PEReader (File.OpenRead (other))) {
 
-			reader1 = per1.GetMetadataReader ();
-			reader2 = per2.GetMetadataReader ();
+					reader1 = per1.GetMetadataReader ();
+					reader2 = per2.GetMetadataReader ();
 
-			var types1 = new Dictionary<string, TypeDefinition> (reader1.TypeDefinitions.Count);
-			var types2 = new Dictionary<string, TypeDefinition> (reader2.TypeDefinitions.Count);
+					var types1 = new Dictionary<string, TypeDefinition> (reader1.TypeDefinitions.Count);
+					var types2 = new Dictionary<string, TypeDefinition> (reader2.TypeDefinitions.Count);
 
-			string fullName;
+					string fullName;
 
-			foreach (var typeHandle in reader1.TypeDefinitions) {
-				var td = GetTypeDefinition (reader1, typeHandle, out fullName);
-				types1 [fullName] = td;
-			}
+					foreach (var typeHandle in reader1.TypeDefinitions) {
+						var td = GetTypeDefinition (reader1, typeHandle, out fullName);
+						types1 [fullName] = td;
+					}
 
-			foreach (var typeHandle in reader2.TypeDefinitions) {
-				var td = GetTypeDefinition (reader2, typeHandle, out fullName);
-				types2 [fullName] = td;
-			}
+					foreach (var typeHandle in reader2.TypeDefinitions) {
+						var td = GetTypeDefinition (reader2, typeHandle, out fullName);
+						types2 [fullName] = td;
+					}
 
-			foreach (var pair in types1) {
-				if (!types2.ContainsKey (pair.Key)) {
-					Console.WriteLine ($"{padding}  -             Type {pair.Key}");
-				} else
-					CompareTypes (types1 [pair.Key], types2 [pair.Key], padding + "  ");
-			}
+					foreach (var pair in types1) {
+						if (!types2.ContainsKey (pair.Key)) {
+							Console.WriteLine ($"{padding}  -             Type {pair.Key}");
+						} else
+							CompareTypes (types1 [pair.Key], types2 [pair.Key], padding + "  ");
+					}
 
-			foreach (var pair in types2) {
-				if (!types1.ContainsKey (pair.Key)) {
-					Console.WriteLine ($"{padding}  +             Type {pair.Key}");
+					foreach (var pair in types2) {
+						if (!types1.ContainsKey (pair.Key)) {
+							Console.WriteLine ($"{padding}  +             Type {pair.Key}");
+						}
+					}
 				}
 			}
 		}

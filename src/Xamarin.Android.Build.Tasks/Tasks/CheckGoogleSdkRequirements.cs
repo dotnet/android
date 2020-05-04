@@ -14,8 +14,15 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "CGS";
 
-		[Required]
+		/// <summary>
+		/// This will be blank for .NET 5 builds
+		/// </summary>
 		public string TargetFrameworkVersion { get; set; }
+
+		/// <summary>
+		/// This is used instead of TargetFrameworkVersion for .NET 5 builds
+		/// </summary>
+		public int ApiLevel { get; set; }
 
 		[Required]
 		public string ManifestFile { get; set; }
@@ -24,7 +31,9 @@ namespace Xamarin.Android.Tasks
 		{
 			ManifestDocument manifest = new ManifestDocument (ManifestFile);
 
-			var compileSdk = MonoAndroidHelper.SupportedVersions.GetApiLevelFromFrameworkVersion (TargetFrameworkVersion);
+			var compileSdk = string.IsNullOrEmpty (TargetFrameworkVersion) ?
+				ApiLevel :
+				MonoAndroidHelper.SupportedVersions.GetApiLevelFromFrameworkVersion (TargetFrameworkVersion);
 
 			if (!int.TryParse (manifest.GetMinimumSdk (), out int minSdk)) {
 				minSdk = 1;

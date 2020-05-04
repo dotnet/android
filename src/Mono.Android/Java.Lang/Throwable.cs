@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using Java.Interop;
 
 using Android.Runtime;
+using System.ComponentModel;
+using System.Diagnostics;
 
 namespace Java.Lang {
 
@@ -26,7 +28,7 @@ namespace Java.Lang {
 		bool             isProxy;
 		bool             needsActivation;
 
-		string nativeStack;
+		string? nativeStack;
 
 		public Throwable (IntPtr handle, JniHandleOwnership transfer)
 			: base (_GetMessage (handle), _GetInnerException (handle))
@@ -47,10 +49,10 @@ namespace Java.Lang {
 		}
 
 #if JAVA_INTEROP
-		static JniMethodInfo         Throwable_getMessage;
+		static JniMethodInfo?         Throwable_getMessage;
 #endif
 
-		static string _GetMessage (IntPtr handle)
+		static string? _GetMessage (IntPtr handle)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
@@ -72,10 +74,10 @@ namespace Java.Lang {
 		}
 
 #if JAVA_INTEROP
-		static JniMethodInfo         Throwable_getCause;
+		static JniMethodInfo?         Throwable_getCause;
 #endif
 
-		static global::System.Exception _GetInnerException (IntPtr handle)
+		static global::System.Exception? _GetInnerException (IntPtr handle)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
@@ -148,7 +150,7 @@ namespace Java.Lang {
 			}
 		}
 
-		string JavaStackTrace {
+		string? JavaStackTrace {
 			get {
 				if (!string.IsNullOrEmpty (nativeStack))
 					return nativeStack;
@@ -171,27 +173,37 @@ namespace Java.Lang {
 		}
 
 #if JAVA_INTEROP
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		public int JniIdentityHashCode {
 			get {return (int) key_handle;}
 		}
 
+		[DebuggerBrowsable (DebuggerBrowsableState.Never)]
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		public JniObjectReference PeerReference {
 			get {
 				return new JniObjectReference (handle, (JniObjectReferenceType) handle_type);
 			}
 		}
 
+		[DebuggerBrowsable (DebuggerBrowsableState.Never)]
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		public virtual JniPeerMembers JniPeerMembers {
 			get { return _members; }
 		}
 #endif  // JAVA_INTEROP
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		public IntPtr Handle { get { return handle; } }
 
+		[DebuggerBrowsable (DebuggerBrowsableState.Never)]
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		protected virtual IntPtr ThresholdClass {
 			get { return class_ref; }
 		}
 
+		[DebuggerBrowsable (DebuggerBrowsableState.Never)]
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		protected virtual System.Type ThresholdType {
 			get { return typeof (Java.Lang.Throwable); }
 		}
@@ -210,7 +222,7 @@ namespace Java.Lang {
 		static IntPtr id_getClass;
 #endif  // !JAVA_INTEROP
 
-		public unsafe Java.Lang.Class Class {
+		public unsafe Java.Lang.Class? Class {
 			[Register ("getClass", "()Ljava/lang/Class;", "GetGetClassHandler")]
 			get {
 				IntPtr value;
@@ -226,9 +238,10 @@ namespace Java.Lang {
 			}
 		}
 
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		protected void SetHandle (IntPtr value, JniHandleOwnership transfer)
 		{
-			JNIEnv.AndroidValueManager.AddPeer (this, value, transfer, out handle);
+			JNIEnv.AndroidValueManager?.AddPeer (this, value, transfer, out handle);
 			handle_type = JObjectRefType.Global;
 		}
 
@@ -283,7 +296,7 @@ namespace Java.Lang {
 
 		public void UnregisterFromRuntime ()
 		{
-			JNIEnv.AndroidValueManager.RemovePeer (this, key_handle);
+			JNIEnv.AndroidValueManager?.RemovePeer (this, key_handle);
 		}
 
 		void IJavaPeerable.Disposed ()
@@ -319,7 +332,7 @@ namespace Java.Lang {
 
 		public void Dispose ()
 		{
-			JNIEnv.AndroidValueManager.DisposePeer (this);
+			JNIEnv.AndroidValueManager?.DisposePeer (this);
 		}
 
 		protected virtual void Dispose (bool disposing)

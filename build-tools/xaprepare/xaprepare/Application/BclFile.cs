@@ -23,8 +23,8 @@ namespace Xamarin.Android.Prepare
 		public BclFileTarget Target     { get; }
 		public bool ExcludeDebugSymbols { get; }
 		public string SourcePath        { get; }
-		public string Version           { get; }
-		public string DebugSymbolsPath  {
+		public string? Version          { get; }
+		public string? DebugSymbolsPath  {
 			get {
 				if (ExcludeDebugSymbols)
 					return null;
@@ -33,9 +33,9 @@ namespace Xamarin.Android.Prepare
 			}
 		}
 
-		public BclFile (string name, BclFileType type, bool excludeDebugSymbols = false, string version = null, BclFileTarget target = BclFileTarget.Android)
+		public BclFile (string name, BclFileType type, bool excludeDebugSymbols = false, string? version = null, BclFileTarget target = BclFileTarget.Android)
 		{
-			name = name?.Trim ();
+			name = name.Trim ();
 			if (String.IsNullOrEmpty (name))
 				throw new ArgumentException ("must not be null or empty", nameof (name));
 

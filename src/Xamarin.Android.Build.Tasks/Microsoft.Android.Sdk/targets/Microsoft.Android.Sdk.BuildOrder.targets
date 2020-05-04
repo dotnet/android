@@ -1,6 +1,6 @@
 <!--
 ***********************************************************************************************
-Xamarin.Android.Sdk.BuildOrder.targets
+Microsoft.Android.Sdk.BuildOrder.targets
 
 This file contains the .NET 5-specific setup for any $(FooDependsOn)
 properties that determine build ordering. For "legacy" Xamarin.Android
@@ -22,6 +22,10 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
       _CheckForContent;
       _ValidateAndroidPackageProperties;
       $(BuildDependsOn);
+      _CompileDex;
+      $(_AfterCompileDex);
+      _CopyPackage;
+      _Sign;
     </BuildDependsOn>
   </PropertyGroup>
 
@@ -77,22 +81,6 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
       _CleanMonoAndroidIntermediateDir;
       _CleanAndroidBuildPropertiesCache;
     </CleanDependsOn>
-  </PropertyGroup>
-
-  <!--
-    TODO: currently using a private property for hooking into `dotnet publish`
-
-    Revise after this lands: https://github.com/dotnet/sdk/pull/11073
-  -->
-
-  <PropertyGroup>
-    <_CorePublishTargets>
-      $(_CorePublishTargets);
-      _CompileDex;
-      $(_AfterCompileDex);
-      Package;
-      _Sign;
-    </_CorePublishTargets>
   </PropertyGroup>
 
 </Project>

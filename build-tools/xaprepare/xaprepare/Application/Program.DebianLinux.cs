@@ -22,11 +22,11 @@ namespace Xamarin.Android.Prepare
 				// line to us... So in order to keep the display straight we need to reset the cursor position blindly
 				// here.
 				Console.CursorLeft = 1;
-				return message?.TrimEnd ();
+				return message.TrimEnd ();
 			}
 		}
 
-		public DebianLinuxProgram (string packageName, string executableName = null)
+		public DebianLinuxProgram (string packageName, string? executableName = null)
 			: base (packageName, executableName)
 		{}
 

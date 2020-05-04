@@ -8,12 +8,12 @@ namespace Xamarin.Android.Prepare
 {
 	abstract class Step : AppObject
 	{
-		List<Step> failureSteps;
+		List<Step>? failureSteps;
 
 		bool HasFailureSteps => failureSteps != null && failureSteps.Any (s => s != null);
 
 		public string Description { get; }
-		public Step FailedStep { get; private set; }
+		public Step? FailedStep { get; private set; }
 		public bool ExecutedFailureSteps { get; private set; }
 
 		protected Step (string description)
@@ -46,7 +46,7 @@ namespace Xamarin.Android.Prepare
 			if (!HasFailureSteps)
 				return false;
 
-			foreach (Step step in failureSteps) {
+			foreach (Step step in failureSteps!) {
 				ExecutedFailureSteps = true;
 				context.Banner (step.Description);
 				try {

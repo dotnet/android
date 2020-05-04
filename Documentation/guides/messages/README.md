@@ -65,6 +65,8 @@ ms.date: 01/24/2020
 + [XA0119](xa0119.md): A non-ideal configuration was found in the project.
 + [XA0121](xa0121.md): Assembly '{assembly}' is using '[assembly: Java.Interop.JavaLibraryReferenceAttribute]', which is no longer supported. Use a newer version of this NuGet package or notify the library author.
 + [XA0122](xa0122.md): Assembly '{assembly}' is using a deprecated attribute '[assembly: Java.Interop.DoNotPackageAttribute]'. Use a newer version of this NuGet package or notify the library author.
++ XA0123: Removing {issue} from {propertyName}. Lint {version} does not support this check.
++ [XA0124](xa0124.md): Interpreter is not supported by the x86 ABI
 
 ## XA1xxx: Project related
 
@@ -87,6 +89,10 @@ ms.date: 01/24/2020
 + XA1016: Target Wear application's project '{project}' does not specify required 'AndroidManifest' project property.
 + XA1017: Target Wear application's AndroidManifest.xml does not specify required 'package' attribute.
 + XA1018: Specified AndroidManifest file does not exist: {file}.
++ XA1019: \`LibraryProjectProperties\` file \`{file}\` is located in a parent directory of the bindings project's intermediate output directory. Please adjust the path to use the original \`project.properties\` file directly from the Android library project directory.
++ XA1020: At least one Java library is required for binding. Check that a Java library is included in the project and has the appropriate build action: 'LibraryProjectZip' (for AAR or ZIP), 'EmbeddedJar', 'InputJar' (for JAR), or 'LibraryProjectProperties' (project.properties).
++ XA1021: Specified source Java library not found: {file}
++ XA1022: Specified reference Java library not found: {file}
 
 ## XA2xxx: Linker
 
@@ -127,6 +133,10 @@ ms.date: 01/24/2020
 + XA4225: Widget '{widget}' in layout '{layout}' has multiple instances with different types. The property type will be set to: {type}
 + XA4226: Resource item '{file}' does not have the required metadata item '{metadataName}'.
 + XA4228: Unable to find specified //activity-alias/@android:targetActivity: '{targetActivity}'
++ XA4229: Unrecognized \`TransformFile\` root element: {element}.
++ XA4230: Error parsing XML: {exception}
++ [XA4231](xa4231.md): The Android class parser value 'jar2xml' is deprecated and will be removed in a future version of Xamarin.Android. Update the project properties to use 'class-parse'.
++ [XA4232](xa4232.md): The Android code generation target 'XamarinAndroid' is deprecated and will be removed in a future version of Xamarin.Android. Update the project properties to use 'XAJavaInterop1'.
 + XA4300: Native library '{library}' will not be bundled because it has an unsupported ABI.
 + [XA4301](xa4301.md): Apk already contains the item `xxx`.
 + [XA4302](xa4302.md): Unhandled exception merging \`AndroidManifest.xml\`: {ex}

@@ -8,7 +8,7 @@ namespace Xamarin.Android.Prepare
 	{
 		partial void AddOSSpecificSteps (Context context, List<GeneratedFile> steps)
 		{
-			string javaSdkDirectory = context.Properties.GetValue ("JavaSdkDirectory");
+			string? javaSdkDirectory = context.Properties.GetValue ("JavaSdkDirectory");
 			if (String.IsNullOrEmpty (javaSdkDirectory))
 				javaSdkDirectory = context.OS.JavaHome;
 

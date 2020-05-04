@@ -10,11 +10,11 @@ namespace Xamarin.Android.Prepare
 		protected override string DefaultToolExecutableName => "sn";
 		protected override string ToolName                  => "sn";
 
-		public SnRunner (Context context, Log log = null, string snPath = null)
+		public SnRunner (Context context, Log? log = null, string? snPath = null)
 			: base (context, log, snPath)
 		{}
 
-		public async Task<bool> ReSign (string snkPath, string assemblyPath, string logTag, string workingDirectory = null)
+		public async Task<bool> ReSign (string snkPath, string assemblyPath, string logTag, string? workingDirectory = null)
 		{
 			if (String.IsNullOrEmpty (snkPath))
 				throw new ArgumentException ("must not be null or empty", nameof (snkPath));
@@ -30,8 +30,8 @@ namespace Xamarin.Android.Prepare
 
 			ProcessRunner runner = CreateProcessRunner ();
 			runner.AddQuotedArgument ( "-R");
-			runner.AddQuotedArgument (Utilities.GetRelativePath (workingDirectory, assemblyPath));
-			runner.AddQuotedArgument (Utilities.GetRelativePath (workingDirectory, snkPath));
+			runner.AddQuotedArgument (Utilities.GetRelativePath (workingDirectory!, assemblyPath));
+			runner.AddQuotedArgument (Utilities.GetRelativePath (workingDirectory!, snkPath));
 
 			string message = GetLogMessage (runner);
 			Log.Info (message, CommandMessageColor);
@@ -47,7 +47,7 @@ namespace Xamarin.Android.Prepare
 			);
 		}
 
-		protected override TextWriter CreateLogSink (string logFilePath)
+		protected override TextWriter CreateLogSink (string? logFilePath)
 		{
 			return new OutputSink (Log, logFilePath);
 		}

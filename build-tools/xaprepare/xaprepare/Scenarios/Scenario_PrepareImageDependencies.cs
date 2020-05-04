@@ -6,7 +6,7 @@ namespace Xamarin.Android.Prepare
 	[Scenario (isDefault: false)]
 	class Scenario_PrepareImageDependencies : ScenarioNoStandardEndSteps
 	{
-		public Scenario_PrepareImageDependencies () : base ("PrepareImageDependencies", "Prepare provisioning dependencies", Context.Instance)
+		public Scenario_PrepareImageDependencies () : base ("PrepareImageDependencies", "Prepare provisioning dependencies")
 		{}
 
 		protected override void AddSteps (Context context)

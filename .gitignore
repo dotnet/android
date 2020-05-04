@@ -20,10 +20,12 @@ apk-sizes-*.txt
 *.rawproto
 *.binlog
 src/Xamarin.Android.Build.Tasks/Xamarin.Android.Common.props
-src/Xamarin.Android.Sdk/targets/Xamarin.Android.Sdk.BundledVersions.props
+src/Xamarin.Android.Build.Tasks/Microsoft.Android.Sdk/targets/Microsoft.Android.Sdk.BundledVersions.props
 *~
 external/monodroid/
 external/mono/
 tests/api-compatibility/reference/*.dll
 tests/api-compatibility/reference/*.cs
 Novell
+*.patch
+*.keystore

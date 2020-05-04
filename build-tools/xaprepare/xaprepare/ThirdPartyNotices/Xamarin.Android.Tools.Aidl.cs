@@ -11,7 +11,7 @@ namespace Xamarin.Android.Prepare
 	{
 		static readonly Uri    url         = new Uri ("https://github.com/IronyProject/Irony");
 
-		public override string LicenseFile => null;
+		public override string LicenseFile => String.Empty;
 		public override string Name        => "IronyProject/Irony";
 		public override Uri    SourceUrl   => url;
 

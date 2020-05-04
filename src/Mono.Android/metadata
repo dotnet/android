@@ -1618,4 +1618,14 @@
   <attr api-since="29" path="/api/package[@name='android.preference']/class[@name='CheckBoxPreference']/method[@name='getDisableDependentsState' and count(parameter)=0]" name="deprecated">Use the AndroidX Preference Library for consistent behavior across all devices.</attr>
   <attr api-since="29" path="/api/package[@name='android.preference']/class[@name='CheckBoxPreference']/method[@name='setDisableDependentsState' and count(parameter)=1 and parameter[1][@type='boolean']]" name="deprecated">Use the AndroidX Preference Library for consistent behavior across all devices.</attr>
 
+  <!-- Some things that have useful functions when given null, yet are marked not-nullable -->
+  <attr api-since="27" path="/api/package[@name='android.app']/class[@name='WallpaperManager']/method[@name='addOnColorsChangedListener' and count(parameter)=2 and parameter[1][@type='android.app.WallpaperManager.OnColorsChangedListener'] and parameter[2][@type='android.os.Handler']]/parameter[2]" name="not-null">false</attr>
+  <attr api-since="28" path="/api/package[@name='android.media']/class[@name='MediaPlayer']/method[@name='setOnMediaTimeDiscontinuityListener' and count(parameter)=1 and parameter[1][@type='android.media.MediaPlayer.OnMediaTimeDiscontinuityListener']]/parameter[1]" name="not-null">false</attr>
+  <attr api-since="28" path="/api/package[@name='android.media']/class[@name='MediaPlayer']/method[@name='setOnSubtitleDataListener' and count(parameter)=1 and parameter[1][@type='android.media.MediaPlayer.OnSubtitleDataListener']]/parameter[1]" name="not-null">false</attr>
+
+  <!-- Some things that are not annotated as not-null, but should never return null -->
+  <attr path="/api/package[@name='java.lang']/interface[@name='Comparable']/method[@name='compareTo' and count(parameter)=1 and parameter[1][@type='T']]/parameter" name="not-null">true</attr>
+  <attr api-since="9" path="/api/package[@name='java.sql']/class[@name='SQLException']/method[@name='iterator' and count(parameter)=0]" name="return-not-null">true</attr>
+  <attr path="/api/package[@name='android.database']/class[@name='CursorJoiner']/method[@name='iterator' and count(parameter)=0]" name="return-not-null">true</attr>
+  <attr api-since="24" path="/api/package[@name='android.icu.text']/class[@name='UnicodeSet']/method[@name='iterator' and count(parameter)=0]" name="return-not-null">true</attr>
 </metadata>

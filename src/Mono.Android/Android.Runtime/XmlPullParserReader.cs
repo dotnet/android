@@ -26,21 +26,21 @@ namespace Android.Runtime
 		}
 
 		[Preserve (Conditional=true)]
-		public static XmlResourceParserReader FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
+		public static XmlResourceParserReader? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			return FromNative (handle, transfer);
 		}
 		
-		static XmlResourceParserReader FromNative (IntPtr handle, JniHandleOwnership transfer)
+		static XmlResourceParserReader? FromNative (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
-			IJavaObject inst = (IJavaObject) Java.Lang.Object.PeekObject (handle);
+			var inst = (IJavaObject?) Java.Lang.Object.PeekObject (handle);
 			if (inst == null)
 				inst = (IJavaObject) Java.Interop.TypeManager.CreateInstance (handle, transfer);
 			else
 				JNIEnv.DeleteRef (handle, transfer);
-			return new XmlResourceParserReader (inst.JavaCast<Android.Content.Res.IXmlResourceParser> ());
+			return new XmlResourceParserReader (inst.JavaCast<Android.Content.Res.IXmlResourceParser> ()!);
 		}
 	}
 	
@@ -130,7 +130,7 @@ namespace Android.Runtime
 			get { return source.EventType == XmlPullParserNode.EndDocument; }
 		}
 
-		public override string GetAttribute (int i)
+		public override string? GetAttribute (int i)
 		{
 			if (i < source.AttributeCount)
 				return source.GetAttributeValue (i);
@@ -140,12 +140,12 @@ namespace Android.Runtime
 				throw new ArgumentOutOfRangeException ();
 		}
 
-		public override string GetAttribute (string localName, string namespaceName)
+		public override string? GetAttribute (string localName, string namespaceName)
 		{
 			return namespaceName == xmlns_uri ? source.GetNamespace (localName) : source.GetAttributeValue (namespaceName, localName);
 		}
 
-		public override string GetAttribute (string name)
+		public override string? GetAttribute (string name)
 		{
 			var qn = new QName (this, name);
 			return GetAttribute (qn.LocalName, qn.Namespace);
@@ -167,7 +167,7 @@ namespace Android.Runtime
 			get { return source.IsEmptyElementTag; }
 		}
 
-		public override string LocalName {
+		public override string? LocalName {
 			get {
 				if (attr_pos < 0)
 					return source.Name;
@@ -247,7 +247,7 @@ namespace Android.Runtime
 			return true;
 		}
 
-		public override string Name {
+		public override string? Name {
 			get { return String.IsNullOrEmpty (Prefix) ? LocalName : Prefix + ':' + LocalName; }
 		}
 
@@ -255,7 +255,7 @@ namespace Android.Runtime
 			get { return nsmgr.NameTable; }
 		}
 
-		public override string NamespaceURI {
+		public override string? NamespaceURI {
 			get {
 				if (attr_pos < 0)
 					return source.Namespace;
@@ -336,7 +336,7 @@ namespace Android.Runtime
 				else if (NamespaceURI == String.Empty && nsmgr.DefaultNamespace != String.Empty)
 					nsmgr.AddNamespace (String.Empty, String.Empty);
 				for (int i = 0; i < source.AttributeCount; i++) {
-					string ns = source.GetAttributeNamespace (i);
+					string? ns = source.GetAttributeNamespace (i);
 					if (ns != String.Empty && nsmgr.LookupPrefix (ns) == null)
 						nsmgr.AddNamespace ("p" + i, source.GetAttributeNamespace (i));
 				}
@@ -371,7 +371,7 @@ namespace Android.Runtime
 			throw new NotSupportedException ();
 		}
 
-		public override string Value {
+		public override string? Value {
 			get {
 				if (attr_pos < 0)
 					return source.Text;
@@ -383,21 +383,21 @@ namespace Android.Runtime
 		}
 
 		[Preserve (Conditional=true)]
-		public static XmlReader FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
+		public static XmlReader? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			return FromNative (handle, transfer);
 		}
 		
-		static XmlReader FromNative (IntPtr handle, JniHandleOwnership transfer)
+		static XmlReader? FromNative (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
-			IJavaObject inst = (IJavaObject) Java.Lang.Object.PeekObject (handle);
+			var inst = (IJavaObject?) Java.Lang.Object.PeekObject (handle);
 			if (inst == null)
 				inst = (IJavaObject) Java.Interop.TypeManager.CreateInstance (handle, transfer);
 			else
 				JNIEnv.DeleteRef (handle, transfer);
-			return new XmlPullParserReader (inst.JavaCast<IXmlPullParser> ());
+			return new XmlPullParserReader (inst.JavaCast<IXmlPullParser> ()!);
 		}
 	}
 }

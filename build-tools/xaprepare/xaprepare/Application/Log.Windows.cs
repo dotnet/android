@@ -10,26 +10,23 @@ namespace Xamarin.Android.Prepare
 		sealed class LogMessage
 		{
 			public bool IsLine;
-			public string Message;
+			public string Message = String.Empty;
 		}
 
 		BlockingCollection<LogMessage> lineQueue = new BlockingCollection<LogMessage> (new ConcurrentQueue<LogMessage> ());
-		Task loggerTask;
-		CancellationTokenSource cts;
-		CancellationToken token;
+		Task? loggerTask;
+		CancellationTokenSource cts = new CancellationTokenSource ();
 
 		void InitOS ()
 		{
-			cts = new CancellationTokenSource ();
-			token = cts.Token;
-			loggerTask = Task.Run (() => LogWorker (), token);
+			loggerTask = Task.Run (() => LogWorker (), cts.Token);
 		}
 
 		void ShutdownOS ()
 		{
 			try {
 				cts.Cancel ();
-				loggerTask.Wait (500);
+				loggerTask?.Wait (500);
 			} catch (AggregateException ex) {
 				if (ex.InnerException is TaskCanceledException)
 					return;
@@ -49,10 +46,8 @@ namespace Xamarin.Android.Prepare
 
 		void LogWorker ()
 		{
-			while (!token.IsCancellationRequested) {
+			while (!cts.Token.IsCancellationRequested) {
 				LogMessage message = lineQueue.Take ();
-				if (message == null)
-					continue;
 
 				if (message.IsLine) {
 					Console.WriteLine (message.Message);

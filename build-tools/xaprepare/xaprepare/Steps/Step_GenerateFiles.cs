@@ -20,7 +20,7 @@ namespace Xamarin.Android.Prepare
 #pragma warning disable CS1998
 		protected override async Task<bool> Execute (Context context)
 		{
-			List<GeneratedFile> filesToGenerate = GetFilesToGenerate (context);
+			List<GeneratedFile>? filesToGenerate = GetFilesToGenerate (context);
 			if (filesToGenerate != null && filesToGenerate.Count > 0) {
 				foreach (GeneratedFile gf in filesToGenerate) {
 					if (gf == null)
@@ -41,7 +41,7 @@ namespace Xamarin.Android.Prepare
 		}
 #pragma warning restore CS1998
 
-		List<GeneratedFile> GetFilesToGenerate (Context context)
+		List<GeneratedFile>? GetFilesToGenerate (Context context)
 		{
 			if (atBuildStart) {
 				if (onlyRequired) {
@@ -114,10 +114,17 @@ namespace Xamarin.Android.Prepare
 		{
 			const string OutputFileName = "XABuildConfig.cs";
 
+			uint minimumApiAvailable = UInt32.MaxValue;
+			foreach (uint api in BuildAndroidPlatforms.NdkMinimumAPI.Values) {
+				if (api > minimumApiAvailable)
+					continue;
+				minimumApiAvailable = api;
+			}
+
 			var replacements = new Dictionary<string, string> (StringComparer.Ordinal) {
 				{ "@NDK_REVISION@",              context.BuildInfo.NDKRevision },
 				{ "@NDK_RELEASE@",               BuildAndroidPlatforms.AndroidNdkVersion },
-				{ "@NDK_MINIMUM_API_AVAILABLE@", context.BuildInfo.NDKMinimumApiAvailable },
+				{ "@NDK_MINIMUM_API_AVAILABLE@", minimumApiAvailable.ToString () },
 				{ "@NDK_VERSION_MAJOR@",         context.BuildInfo.NDKVersionMajor },
 				{ "@NDK_VERSION_MINOR@",         context.BuildInfo.NDKVersionMinor },
 				{ "@NDK_VERSION_MICRO@",         context.BuildInfo.NDKVersionMicro },

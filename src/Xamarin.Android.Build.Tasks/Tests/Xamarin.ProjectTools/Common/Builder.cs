@@ -30,11 +30,9 @@ namespace Xamarin.ProjectTools
 		public IEnumerable<string> LastBuildOutput {
 			get {
 				if (!string.IsNullOrEmpty (buildLogFullPath) && File.Exists (buildLogFullPath)) {
-					foreach (var line in File.ReadLines (buildLogFullPath, Encoding.UTF8)) {
-						yield return line;
-					}
+					return File.ReadLines (buildLogFullPath, Encoding.UTF8);
 				}
-				yield return String.Empty;
+				return Enumerable.Empty<string> ();
 			}
 		}
 		public TimeSpan LastBuildTime { get; protected set; }

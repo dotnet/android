@@ -39,14 +39,17 @@ namespace Xamarin.Android.Prepare
 
 			var oldAbis = new HashSet<string> (StringComparer.Ordinal);
 			foreach (string l in File.ReadAllLines (cacheFile)) {
-				string line = l?.Trim ();
+				string line = l.Trim ();
 				if (String.IsNullOrEmpty (line) || oldAbis.Contains (line))
 					continue;
 				oldAbis.Add (line);
 			}
 
-			HashSet<string> currentAbis = null;
+			HashSet<string>? currentAbis = null;
 			FillCurrentAbis (context, ref currentAbis);
+
+			if (currentAbis == null)
+				return false;
 
 			if (oldAbis.Count != currentAbis.Count)
 				return true;
@@ -61,7 +64,7 @@ namespace Xamarin.Android.Prepare
 
 		public static void SaveAbiChoice (Context context)
 		{
-			HashSet<string> currentAbis = null;
+			HashSet<string>? currentAbis = null;
 			FillCurrentAbis (context, ref currentAbis);
 
 			string cacheFile = Configurables.Paths.MonoRuntimesEnabledAbisCachePath;
@@ -69,7 +72,7 @@ namespace Xamarin.Android.Prepare
 			File.WriteAllLines (cacheFile, currentAbis);
 		}
 
-		static void FillCurrentAbis (Context context, ref HashSet<string> currentAbis)
+		static void FillCurrentAbis (Context context, ref HashSet<string>? currentAbis)
 		{
 			Utilities.AddAbis (context.Properties.GetRequiredValue (KnownProperties.AndroidSupportedTargetJitAbis).Trim (), ref currentAbis);
 			Utilities.AddAbis (context.Properties.GetRequiredValue (KnownProperties.AndroidSupportedTargetAotAbis).Trim (), ref currentAbis);
@@ -148,7 +151,7 @@ namespace Xamarin.Android.Prepare
 			}
 		}
 
-		public static void AddAbis (string abis, ref HashSet <string> collection, bool warnAboutDuplicates = true)
+		public static void AddAbis (string abis, ref HashSet <string>? collection, bool warnAboutDuplicates = true)
 		{
 			if (collection == null)
 				collection = new HashSet <string> (StringComparer.OrdinalIgnoreCase);
@@ -241,7 +244,7 @@ namespace Xamarin.Android.Prepare
 					return (IsValidVersion (), version);
 			}
 
-			return (false, null);
+			return (false, String.Empty);
 
 			bool IsValidVersion ()
 			{
@@ -266,7 +269,7 @@ namespace Xamarin.Android.Prepare
 			}
 
 			Log.DebugLine ("Fetcher not found");
-			return (false, null);
+			return (false, String.Empty);
 		}
 
 		public static void DeleteDirectory (string directoryPath, bool ignoreErrors = false, bool recurse = true)
@@ -352,7 +355,7 @@ namespace Xamarin.Android.Prepare
 
 			CreateDirectory (destinationDirectory);
 			foreach (string src in sourceFiles) {
-				CopyFileInternal (src, destinationDirectory, destinationFileName: null, overwriteDestinationFile: overwriteDestinationFile);
+				CopyFileInternal (src, destinationDirectory, destinationFileName: String.Empty, overwriteDestinationFile: overwriteDestinationFile);
 			}
 		}
 
@@ -366,7 +369,7 @@ namespace Xamarin.Android.Prepare
 			CopyFileInternal (sourceFilePath, Path.GetDirectoryName (destinationFilePath), Path.GetFileName (destinationFilePath), overwriteDestinationFile);
 		}
 
-		public static void CopyFileToDir (string sourceFilePath, string destinationDirectory, string destinationFileName = null, bool overwriteDestinationFile = true)
+		public static void CopyFileToDir (string sourceFilePath, string destinationDirectory, string? destinationFileName = null, bool overwriteDestinationFile = true)
 		{
 			if (String.IsNullOrEmpty (sourceFilePath))
 				throw new ArgumentException ("must not be null or empty", nameof (sourceFilePath));
@@ -374,7 +377,7 @@ namespace Xamarin.Android.Prepare
 				throw new ArgumentException ("must not be null or empty", nameof (destinationDirectory));
 
 			CreateDirectory (destinationDirectory);
-			CopyFileInternal (sourceFilePath, destinationDirectory, destinationFileName, overwriteDestinationFile);
+			CopyFileInternal (sourceFilePath, destinationDirectory, destinationFileName ?? String.Empty, overwriteDestinationFile);
 		}
 
 		static void CopyFileInternal (string sourceFilePath, string destinationDirectory, string destinationFileName, bool overwriteDestinationFile)
@@ -563,7 +566,7 @@ namespace Xamarin.Android.Prepare
 
 			Log.DebugLine ($"Resetting timestamp of {filePath}");
 			TimeSpan delay = IOExceptionRetryInitialDelay;
-			Exception ex = null;
+			Exception? ex = null;
 
 			for (int i = 0; i < IOExceptionRetries; i++) {
 				try {
@@ -589,7 +592,7 @@ namespace Xamarin.Android.Prepare
 		public static void MoveFileWithRetry (string source, string destination, bool resetFileTimestamp = false)
 		{
 			TimeSpan delay = IOExceptionRetryInitialDelay;
-			Exception ex = null;
+			Exception? ex = null;
 
 			Log.DebugLine ($"Moving '{source}' to '{destination}'");
 			for (int i = 0; i < IOExceptionRetries; i++) {
@@ -625,7 +628,7 @@ namespace Xamarin.Android.Prepare
 		public static void DeleteDirectoryWithRetry (string directoryPath, bool recursive)
 		{
 			TimeSpan delay = IOExceptionRetryInitialDelay;
-			Exception ex = null;
+			Exception? ex = null;
 			bool tryResetFilePermissions = false;
 
 			for (int i = 0; i < IOExceptionRetries; i++) {
@@ -661,7 +664,7 @@ namespace Xamarin.Android.Prepare
 			delay = TimeSpan.FromMilliseconds (delay.TotalMilliseconds * 2);
 		}
 
-		public static List<Type> GetTypesWithCustomAttribute<T> (Assembly assembly = null) where T: System.Attribute
+		public static List<Type> GetTypesWithCustomAttribute<T> (Assembly? assembly = null) where T: System.Attribute
 		{
 			Assembly asm = assembly ?? typeof (Utilities).Assembly;
 
@@ -676,7 +679,7 @@ namespace Xamarin.Android.Prepare
 			return types;
 		}
 
-		public static StreamWriter OpenStreamWriter (string outputPath, bool append = false, Encoding encoding = null)
+		public static StreamWriter OpenStreamWriter (string outputPath, bool append = false, Encoding? encoding = null)
 		{
 			return new StreamWriter (OpenFileForWrite (outputPath, append), encoding ?? UTF8NoBOM);
 		}
@@ -710,7 +713,7 @@ namespace Xamarin.Android.Prepare
 			return RunCommand (command, workingDirectory, echoStderr: true, ignoreEmptyArguments: ignoreEmptyArguments, arguments: arguments);
 		}
 
-		public static bool RunCommand (string command, string workingDirectory, bool echoStderr, bool ignoreEmptyArguments, params string[] arguments)
+		public static bool RunCommand (string command, string? workingDirectory, bool echoStderr, bool ignoreEmptyArguments, params string[] arguments)
 		{
 			if (String.IsNullOrEmpty (command))
 				throw new ArgumentException ("must not be null or empty", nameof (command));
@@ -723,22 +726,22 @@ namespace Xamarin.Android.Prepare
 			return runner.Run ();
 		}
 
-		public static string GetStringFromStdout (string command, params string[] arguments)
+		public static string GetStringFromStdout (string command, params string?[] arguments)
 		{
 			return GetStringFromStdout (command, throwOnErrors: false, trimTrailingWhitespace: true, arguments: arguments);
 		}
 
-		public static string GetStringFromStdout (string command, bool throwOnErrors, params string[] arguments)
+		public static string GetStringFromStdout (string command, bool throwOnErrors, params string?[] arguments)
 		{
 			return GetStringFromStdout (command, throwOnErrors, trimTrailingWhitespace: true, arguments: arguments);
 		}
 
-		public static string GetStringFromStdout (string command, bool throwOnErrors, bool trimTrailingWhitespace, params string[] arguments)
+		public static string GetStringFromStdout (string command, bool throwOnErrors, bool trimTrailingWhitespace, params string?[] arguments)
 		{
 			return GetStringFromStdout (new ProcessRunner (command, arguments), throwOnErrors, trimTrailingWhitespace);
 		}
 
-		public static string GetStringFromStdout (string command, bool throwOnErrors, bool trimTrailingWhitespace, bool quietErrors, params string[] arguments)
+		public static string GetStringFromStdout (string command, bool throwOnErrors, bool trimTrailingWhitespace, bool quietErrors, params string?[] arguments)
 		{
 			return GetStringFromStdout (new ProcessRunner (command, arguments), throwOnErrors, trimTrailingWhitespace, quietErrors);
 		}
@@ -749,12 +752,12 @@ namespace Xamarin.Android.Prepare
 				runner.AddStandardOutputSink (sw);
 				if (!runner.Run ()) {
 					LogError ("did not exit cleanly");
-					return null;
+					return String.Empty;
 				}
 
 				if (runner.ExitCode != 0) {
 					LogError ($"failed with exit code {runner.ExitCode}");
-					return null;
+					return String.Empty;
 				}
 
 				string ret = sw.ToString ();

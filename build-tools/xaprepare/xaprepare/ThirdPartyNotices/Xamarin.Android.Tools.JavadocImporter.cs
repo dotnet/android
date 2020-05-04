@@ -14,7 +14,7 @@ namespace Xamarin.Android.Prepare
 		public override string LicenseFile => CommonLicenses.Apache20Path;
 		public override string Name        => "lovettchris/SgmlReader";
 		public override Uri    SourceUrl   => url;
-		public override string LicenseText => null;
+		public override string LicenseText => String.Empty;
 
 		public override bool   Include(bool includeExternalDeps, bool includeBuildDeps) => includeExternalDeps;
 	}

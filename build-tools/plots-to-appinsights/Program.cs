@@ -44,6 +44,7 @@ namespace Xamarin.Android.Tools.Plots
 					var appInsightsClientError = new AppInsights (settings.AppInsightsTelemetryKey);
 					var eventNameError = GetEventName (settings.Environment, Constants.TelemetryEventName_Error);
 					SendTelemetryError (appInsightsClientError, eventNameError, message, settings, Console.Out);
+					appInsightsClientError.Flush ();
 				}
 
 				if (result.Status.HasFlag (Status.ShowHelp) || result.Status != Status.OK) {

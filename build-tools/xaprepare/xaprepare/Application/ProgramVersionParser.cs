@@ -23,9 +23,9 @@ namespace Xamarin.Android.Prepare
 		///   Arguments to pass to <see cref="ProgramName"/> in order to obtain the version. Defaults to <c>null</c>
 		///   since some programs show the version when there are no arguments passed to them.
 		/// </summary>
-		public string VersionArguments { get; }
+		public string? VersionArguments { get; }
 
-		protected ProgramVersionParser (string programName, string versionArguments = null, uint versionOutputLine = 0, Log log = null)
+		protected ProgramVersionParser (string programName, string? versionArguments = null, uint versionOutputLine = 0, Log? log = null)
 			: base (log)
 		{
 			if (String.IsNullOrEmpty (programName))

@@ -13,7 +13,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 	public class RunAndroidEmulatorCheckBootTimes : Task
 	{
 		public string CheckBootTimesPath { get; set; }
-		public string DeviceName { get; set; } = "XamarinAndroidTestRunner";
+		public string DeviceName { get; set; } = "XamarinAndroidTestRunner64";
 
 		public override bool Execute ()
 		{

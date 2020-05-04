@@ -141,8 +141,8 @@ stages:
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: make all-tests
 
-    - script: |
-        cp -r bin/$(XA.Build.Configuration)/bcl-tests bin/Test$(XA.Build.Configuration)/bcl-tests
+    - script: >
+        cp -r bin/$(XA.Build.Configuration)/bcl-tests bin/Test$(XA.Build.Configuration)/bcl-tests &&
         cp bin/Build$(XA.Build.Configuration)/ProfileAssemblies.projitems bin/Test$(XA.Build.Configuration)/bcl-tests/
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: copy bcl-tests assemblies
@@ -166,15 +166,15 @@ stages:
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: make create-installers
 
-    - script: |
-        mkdir -p bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
-        cp bin/Build$(XA.Build.Configuration)/*.vsix bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
+    - script: >
+        mkdir -p bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName) &&
+        cp bin/Build$(XA.Build.Configuration)/*.vsix bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName) &&
         cp bin/Build$(XA.Build.Configuration)/*.pkg bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: copy unsigned installers
 
-    - script: |
-        VERSION=`LANG=C; export LANG && git log --no-color --first-parent -n1 --pretty=format:%ct`
+    - script: >
+        VERSION=`LANG=C; export LANG && git log --no-color --first-parent -n1 --pretty=format:%ct` &&
         echo "d1ec039f-f3db-468b-a508-896d7c382999 $VERSION" > bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)/updateinfo
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: create updateinfo file
@@ -186,22 +186,11 @@ stages:
         targetPath: xamarin-android/bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
 
     - task: MSBuild@1
-      displayName: pack runtime nupkgs
+      displayName: pack all nupkgs
       inputs:
-        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/Xamarin.Android.App/Xamarin.Android.App.Runtime.proj
+        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/create-packs/Microsoft.Android.Sdk.proj
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:_PackAllRuntimePacks /restore /bl:$(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/create-runtime-packs.binlog
-
-    - task: DotNetCoreCLI@2
-      displayName: pack sdk and ref nupkgs
-      inputs:
-        command: pack
-        packagesToPack: "\
-          $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/Xamarin.Android.App/Xamarin.Android.App.Ref.proj;
-          $(System.DefaultWorkingDirectory)/xamarin-android/src/Xamarin.Android.Sdk/Xamarin.Android.Sdk.proj;
-          $(System.DefaultWorkingDirectory)/xamarin-android/src/Xamarin.Android.Sdk/Xamarin.Android.Sdk.Lite.proj"
-        configuration: $(XA.Build.Configuration)
-        packDirectory: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
+        msbuildArguments: /t:CreateAllPacks /restore /bl:$(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/create-all-packs.binlog
 
     - task: NuGetCommand@2
       displayName: push nupkgs
@@ -210,7 +199,7 @@ stages:
         packagesToPush: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)/*.nupkg
         nuGetFeedType: external
         publishFeedCredentials: xamarin-impl public feed
-      condition: and(succeeded(), eq(variables['PushXAPackages'], 'true'))
+      condition: and(succeeded(), or(ne(variables['Build.Reason'], 'PullRequest'), eq(variables['PushXAPackages'], 'true')))
 
     - task: PublishPipelineArtifact@1
       displayName: upload nupkgs
@@ -302,22 +291,11 @@ stages:
         msbuildArguments: /p:CreateVsixContainer=True /p:ZipPackageCompressionLevel=Normal /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-create-vsix.binlog
 
     - task: MSBuild@1
-      displayName: pack runtime nupkgs
+      displayName: pack all nupkgs
       inputs:
-        solution: $(System.DefaultWorkingDirectory)\build-tools\Xamarin.Android.App\Xamarin.Android.App.Runtime.proj
+        solution: $(System.DefaultWorkingDirectory)\build-tools\create-packs\Microsoft.Android.Sdk.proj
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:_PackAllRuntimePacks /restore /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\create-runtime-packs.binlog
-
-    - task: DotNetCoreCLI@2
-      displayName: pack sdk and ref nupkgs
-      inputs:
-        command: pack
-        packagesToPack: "\
-          $(System.DefaultWorkingDirectory)\\build-tools\\Xamarin.Android.App\\Xamarin.Android.App.Ref.proj;
-          $(System.DefaultWorkingDirectory)\\src\\Xamarin.Android.Sdk\\Xamarin.Android.Sdk.proj;
-          $(System.DefaultWorkingDirectory)\\src\\Xamarin.Android.Sdk\\Xamarin.Android.Sdk.Lite.proj"
-        configuration: $(XA.Build.Configuration)
-        packDirectory: $(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\$(NuGetArtifactName)
+        msbuildArguments: /t:CreateAllPacks /restore /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\create-all-packs.binlog
 
     - task: CmdLine@1
       displayName: xabuild Xamarin.Android-Tests
@@ -424,10 +402,10 @@ stages:
       parameters:
         UnsignedPkgPath: $(XA.Unsigned.Pkg)
 
-    - script: |
-        cd $(System.DefaultWorkingDirectory)/release-scripts
-        git checkout $(ReleaseScriptsBranch)
-        sudo xcode-select -s /Applications/$(NotarizationXcode)
+    - script: >
+        cd $(System.DefaultWorkingDirectory)/release-scripts &&
+        git checkout $(ReleaseScriptsBranch) &&
+        sudo xcode-select -s /Applications/$(NotarizationXcode) &&
         ruby notarize.rb $(XA.Unsigned.Pkg) $(XamarinIdentifier) $(XamarinUserId) $(XamarinPassword) $(TeamID)
       displayName: Notarize PKG
 
@@ -497,6 +475,17 @@ stages:
     - template: yaml-templates/setup-test-environment.yaml
       parameters:
         configuration: $(ApkTestConfiguration)
+
+    - task: MSBuild@1
+      displayName: build apkdiff.csproj
+      inputs:
+        solution: tools/apkdiff/apkdiff.csproj
+        configuration: $(ApkTestConfiguration)
+        msbuildArguments: >
+          /restore
+          /t:Build
+          /bl:$(System.DefaultWorkingDirectory)/bin/Test$(ApkTestConfiguration)/build-apkdiff.binlog
+      continueOnError: true
 
     - task: MSBuild@1
       displayName: build check-boot-times.csproj
@@ -708,7 +697,6 @@ stages:
     # UNDONE: Need plot definitions for the following files:
     #  TestResult-Mono.Android_TestsAppBundle-times.csv
     #  TestResult-Mono.Android_TestsMultiDex-times.csv
-    #  TestResult-Mono.Android_TestsMultiDex-values-$(ApkTestConfiguration).csv
     #  TestResult-Xamarin.Android.EmbeddedDSO_Test-times.csv
 
     - template: yaml-templates/plots-to-appinsights.yaml
@@ -718,14 +706,6 @@ stages:
         plotGroup: Test times
         plotTitle: Runtime merged
         plotPathAndFilename: $(System.DefaultWorkingDirectory)/TestResult-Mono.Android_Tests-times.csv
-
-    - template: yaml-templates/plots-to-appinsights.yaml
-      parameters:
-        condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
-        configuration: $(ApkTestConfiguration)
-        plotGroup: Test size
-        plotTitle: Runtime test sizes
-        plotPathAndFilename: $(System.DefaultWorkingDirectory)/TestResult-Mono.Android_Tests-values-$(ApkTestConfiguration).csv
 
     - template: yaml-templates/plots-to-appinsights.yaml
       parameters:
@@ -756,8 +736,8 @@ stages:
         condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
         configuration: $(ApkTestConfiguration)
         plotGroup: Test times
-        plotTitle: Xamarin.Forms app
-        plotPathAndFilename: $(System.DefaultWorkingDirectory)/TestResult-Xamarin.Forms_Tests-values-$(ApkTestConfiguration).csv
+        plotTitle: Locale
+        plotPathAndFilename: $(System.DefaultWorkingDirectory)/TestResult-Xamarin.Android.Locale_Tests-times.csv
 
     - template: yaml-templates/fail-on-issue.yaml
 
@@ -856,6 +836,11 @@ stages:
       inputs:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: $(NuGetArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
 
     - task: MSBuild@1
       displayName: start emulator

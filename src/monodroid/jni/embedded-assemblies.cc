@@ -583,7 +583,7 @@ EmbeddedAssemblies::typemap_read_header ([[maybe_unused]] int dir_fd, const char
 	struct stat sbuf;
 	int res;
 
-#if __ANDROID_API__ < 21
+#if defined (WINDOWS)
 	simple_pointer_guard<char[]> full_file_path = utils.path_combine (dir_path, file_path);
 	res = stat (full_file_path, &sbuf);
 #else
@@ -600,7 +600,7 @@ EmbeddedAssemblies::typemap_read_header ([[maybe_unused]] int dir_fd, const char
 		return false;
 	}
 
-#if __ANDROID_API__ < 21
+#if defined (WINDOWS)
 	fd = open (full_file_path, O_RDONLY);
 #else
 	fd = openat (dir_fd, file_path, O_RDONLY);
@@ -800,7 +800,7 @@ EmbeddedAssemblies::try_load_typemaps_from_directory (const char *path)
 	}
 
 	int dir_fd;
-#if __ANDROID_API__ < 21
+#if WINDOWS
 	dir_fd = -1;
 #else
 	dir_fd = dirfd (dir);

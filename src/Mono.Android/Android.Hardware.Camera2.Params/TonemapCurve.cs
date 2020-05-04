@@ -8,7 +8,7 @@ namespace Android.Hardware.Camera2.Params {
 			CopyColorCurve (new Android.Graphics.Color (colorChannel), destination, offset);
 		}
 
-		public Android.Graphics.PointF GetPoint (int colorChannel, int index)
+		public Android.Graphics.PointF? GetPoint (int colorChannel, int index)
 		{
 			return GetPoint (new Android.Graphics.Color (colorChannel), index);
 		}

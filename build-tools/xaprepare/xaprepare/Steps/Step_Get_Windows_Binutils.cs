@@ -27,7 +27,7 @@ namespace Xamarin.Android.Prepare
 			public uint CDOffset; // offset of start of central     directory with respect to the starting disk number
 			public ushort CommentLength; // .ZIP file comment length
 		};
-
+#nullable disable
 		class CDHeader
 		{
 			public uint Signature; // 0x02014b50
@@ -68,6 +68,7 @@ namespace Xamarin.Android.Prepare
 			public string FileName;
 			public byte[] ExtraField;
 		};
+#nullable enable
 
 		public Step_Get_Windows_Binutils ()
 			: base ("Downloading NDK tools for Windows")
@@ -153,9 +154,9 @@ namespace Xamarin.Android.Prepare
 
 				Log.DebugLine ($"  File size: {size}");
 
-				EOCD eocd;
+				EOCD? eocd;
 				(success, eocd) = await GetEOCD (httpClient, url, size);
-				if (!success) {
+				if (!success || eocd == null) {
 					Log.ErrorLine ("Failed to find the End of Central Directory record");
 					return false;
 				}
@@ -167,9 +168,9 @@ namespace Xamarin.Android.Prepare
 				Log.DebugLine ($"  Central Directory size: {eocd.CDSize} (0x{eocd.CDSize})");
 				Log.DebugLine ($"  Total Entries: {eocd.TotalEntries}");
 
-				Stream cd;
+				Stream? cd;
 				(success, cd) = await ReadCD (httpClient, url, eocd.CDOffset, eocd.CDSize, size);
-				if (!success) {
+				if (!success || cd == null) {
 					Log.ErrorLine ("Failed to read the Central Directory");
 					return false;
 				}
@@ -191,9 +192,9 @@ namespace Xamarin.Android.Prepare
 				long nentries = 1;
 
 				while (nread < centralDirectory.Length && nentries <= eocd.TotalEntries) {
-					(bool success, CDHeader cdh) = ReadCDHeader (br, centralDirectory.Length, ref nread);
+					(bool success, CDHeader? cdh) = ReadCDHeader (br, centralDirectory.Length, ref nread);
 					nentries++;
-					if (!success) {
+					if (!success || cdh == null) {
 						Log.ErrorLine ($"Failed to read a Central Directory file header for entry {nentries}");
 						return false;
 					}
@@ -225,8 +226,8 @@ namespace Xamarin.Android.Prepare
 			Log.StatusLine ($" {Utilities.GetRelativePath (BuildPaths.XamarinAndroidSourceRoot, destFilePath)}");
 			Log.DebugLine ($" {cdh.FileName} (offset: {cdh.RelativeOffsetOfLocalHeader})");
 
-			(bool success, Stream contentStream) = await ReadFileData (httpClient, url, cdh);
-			if (!success) {
+			(bool success, Stream? contentStream) = await ReadFileData (httpClient, url, cdh);
+			if (!success || contentStream == null) {
 				Log.ErrorLine ("Failed to read file data");
 				return false;
 			}
@@ -252,8 +253,8 @@ namespace Xamarin.Android.Prepare
 		async Task<bool> DownloadAndExtract (BinaryReader fbr, Stream contentStream, BinaryWriter destFile, string destFileName)
 		{
 			long fread = 0;
-			(bool success, LFHeader lfh) = ReadLFHeader (fbr, contentStream.Length, ref fread);
-			if (!success) {
+			(bool success, LFHeader? lfh) = ReadLFHeader (fbr, contentStream.Length, ref fread);
+			if (!success || lfh == null) {
 				Log.ErrorLine ("Failed to read local file header");
 				return false;
 			}
@@ -319,7 +320,7 @@ namespace Xamarin.Android.Prepare
 				Log.ErrorLine ($"  Invalid CRC32: expected 0x{crc32FromHeader:x}, got 0x{fileCRC:x}");
 		}
 
-		async Task<(bool success, Stream data)> ReadFileData (HttpClient httpClient, Uri url, CDHeader cdh)
+		async Task<(bool success, Stream? data)> ReadFileData (HttpClient httpClient, Uri url, CDHeader cdh)
 		{
 			long fileOffset = cdh.RelativeOffsetOfLocalHeader;
 			long dataSize =
@@ -350,7 +351,7 @@ namespace Xamarin.Android.Prepare
 			return (true, s);
 		}
 
-		(bool success, LFHeader lfh) ReadLFHeader (BinaryReader cdr, long dataLength, ref long nread)
+		(bool success, LFHeader? lfh) ReadLFHeader (BinaryReader cdr, long dataLength, ref long nread)
 		{
 			var lfh = new LFHeader ();
 
@@ -411,8 +412,8 @@ namespace Xamarin.Android.Prepare
 				goto failed;
 			}
 
-			byte[] bytes = ReadBytes (cdr, lfh.FileNameLength, dataLength, ref nread, out worked);
-			if (!worked) {
+			byte[]? bytes = ReadBytes (cdr, lfh.FileNameLength, dataLength, ref nread, out worked);
+			if (!worked || bytes == null) {
 				goto failed;
 			}
 
@@ -434,7 +435,7 @@ namespace Xamarin.Android.Prepare
 			return (false, null);
 		}
 
-		(bool success, CDHeader cdh) ReadCDHeader (BinaryReader cdr, long dataLength, ref long nread)
+		(bool success, CDHeader? cdh) ReadCDHeader (BinaryReader cdr, long dataLength, ref long nread)
 		{
 			var cdh = new CDHeader ();
 
@@ -525,8 +526,8 @@ namespace Xamarin.Android.Prepare
 				goto failed;
 			}
 
-			byte[] bytes = ReadBytes (cdr, cdh.FileNameLength, dataLength, ref nread, out worked);
-			if (!worked) {
+			byte[]? bytes = ReadBytes (cdr, cdh.FileNameLength, dataLength, ref nread, out worked);
+			if (!worked || bytes == null) {
 				goto failed;
 			}
 
@@ -582,7 +583,7 @@ namespace Xamarin.Android.Prepare
 			return ret;
 		}
 
-		byte[] ReadBytes (BinaryReader br, int neededBytes, long dataLength, ref long nread, out bool success)
+		byte[]? ReadBytes (BinaryReader br, int neededBytes, long dataLength, ref long nread, out bool success)
 		{
 			success = false;
 			if (dataLength - nread < neededBytes)
@@ -595,7 +596,7 @@ namespace Xamarin.Android.Prepare
 			return ret;
 		}
 
-		async Task<(bool success, Stream cd)> ReadCD (HttpClient httpClient, Uri url, uint cdOffset, uint cdSize, long fileSize)
+		async Task<(bool success, Stream? cd)> ReadCD (HttpClient httpClient, Uri url, uint cdOffset, uint cdSize, long fileSize)
 		{
 			long fileOffset = cdOffset;
 			var req = new HttpRequestMessage (HttpMethod.Get, url);
@@ -618,7 +619,7 @@ namespace Xamarin.Android.Prepare
 			return (true, s);
 		}
 
-		async Task<(bool success, EOCD eocd)> GetEOCD (HttpClient httpClient, Uri url, long fileSize)
+		async Task<(bool success, EOCD? eocd)> GetEOCD (HttpClient httpClient, Uri url, long fileSize)
 		{
 			long fileOffset = fileSize - EndFileChunkSize;
 			var req = new HttpRequestMessage (HttpMethod.Get, url);

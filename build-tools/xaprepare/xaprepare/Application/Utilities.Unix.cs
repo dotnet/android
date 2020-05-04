@@ -39,7 +39,7 @@ namespace Xamarin.Android.Prepare
 		/// </summary>
 		public static bool FileExists (string path)
 		{
-			if (!File.Exists (path))
+			if (path.Length == 0 || !File.Exists (path))
 				return false;
 
 			if (FileIsDanglingSymlink (path)) {

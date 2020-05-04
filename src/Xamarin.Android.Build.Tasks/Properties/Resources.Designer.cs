@@ -169,7 +169,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Java SDK {0} or above is required when using $(TargetFrameworkVersion) {1}..
+        ///   Looks up a localized string similar to Java SDK {0} or above is required when using {1}..
         /// </summary>
         internal static string XA0031 {
             get {
@@ -340,6 +340,24 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Removing {0} from {1}. Lint {2} does not support this check..
+        /// </summary>
+        internal static string XA0123 {
+            get {
+                return ResourceManager.GetString("XA0123", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Interpreter is not supported by the x86 ABI
+        /// </summary>
+        internal static string XA0124 {
+            get {
+                return ResourceManager.GetString("XA0124", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to There was a problem parsing {0}. This is likely due to incomplete or invalid XML. Exception: {1}.
         /// </summary>
         internal static string XA1000 {
@@ -489,6 +507,42 @@ namespace Xamarin.Android.Tasks.Properties {
         internal static string XA1018 {
             get {
                 return ResourceManager.GetString("XA1018", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to `LibraryProjectProperties` file `{0}` is located in a parent directory of the bindings project&apos;s intermediate output directory. Please adjust the path to use the original `project.properties` file directly from the Android library project directory..
+        /// </summary>
+        internal static string XA1019 {
+            get {
+                return ResourceManager.GetString("XA1019", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to At least one Java library is required for binding. Check that a Java library is included in the project and has the appropriate build action: &apos;LibraryProjectZip&apos; (for AAR or ZIP), &apos;EmbeddedJar&apos;, &apos;InputJar&apos; (for JAR), or &apos;LibraryProjectProperties&apos; (project.properties)..
+        /// </summary>
+        internal static string XA1020 {
+            get {
+                return ResourceManager.GetString("XA1020", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specified source Java library not found: {0}.
+        /// </summary>
+        internal static string XA1021 {
+            get {
+                return ResourceManager.GetString("XA1021", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specified reference Java library not found: {0}.
+        /// </summary>
+        internal static string XA1022 {
+            get {
+                return ResourceManager.GetString("XA1022", resourceCulture);
             }
         }
         
@@ -795,6 +849,42 @@ namespace Xamarin.Android.Tasks.Properties {
         internal static string XA4228 {
             get {
                 return ResourceManager.GetString("XA4228", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unrecognized `TransformFile` root element: {0}..
+        /// </summary>
+        internal static string XA4229 {
+            get {
+                return ResourceManager.GetString("XA4229", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error parsing XML: {0}.
+        /// </summary>
+        internal static string XA4230 {
+            get {
+                return ResourceManager.GetString("XA4230", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The Android class parser value &apos;{0}&apos; is deprecated and will be removed in a future version of Xamarin.Android. Update the project properties to use &apos;class-parse&apos;..
+        /// </summary>
+        internal static string XA4231 {
+            get {
+                return ResourceManager.GetString("XA4231", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The Android code generation target &apos;{0}&apos; is deprecated and will be removed in a future version of Xamarin.Android. Update the project properties to use &apos;XAJavaInterop1&apos;..
+        /// </summary>
+        internal static string XA4232 {
+            get {
+                return ResourceManager.GetString("XA4232", resourceCulture);
             }
         }
         

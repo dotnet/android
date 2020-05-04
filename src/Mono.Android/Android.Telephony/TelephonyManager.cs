@@ -6,9 +6,9 @@ namespace Android.Telephony {
 
 	public partial class TelephonyManager {
 
-		public static TelephonyManager FromContext (Context context)
+		public static TelephonyManager? FromContext (Context context)
 		{
-			return context.GetSystemService (Context.TelephonyService) as TelephonyManager;
+			return context.GetSystemService (Context.TelephonyService!) as TelephonyManager;
 		}
 	}
 }

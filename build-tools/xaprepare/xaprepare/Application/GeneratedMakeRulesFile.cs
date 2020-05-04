@@ -185,12 +185,12 @@ namespace Xamarin.Android.Prepare
 				WriteRuleLine ($"\t/p:AndroidFrameworkVersion={firstFramework} || exit 1;");
 			}
 
-			string ToValue (ICollection<string> list, string separator = null)
+			string ToValue (ICollection<string> list, string? separator = null)
 			{
 				return String.Join (separator ?? " ", list);
 			}
 
-			void WriteRuleLine (string line = null)
+			void WriteRuleLine (string line)
 			{
 				sw.Write ('\t');
 				sw.WriteLine (line);
@@ -210,7 +210,7 @@ namespace Xamarin.Android.Prepare
 					sw.Write ($"{name} =");
 
 				foreach (string i in list) {
-					string item = i?.Trim ();
+					string item = i.Trim ();
 					if (String.IsNullOrEmpty (item))
 						continue;
 

@@ -8,7 +8,7 @@ namespace Xamarin.Android.Prepare
 		static readonly Uri url            = new Uri ("http://not.an/item");
 
 		public override string LicenseText => "not a license item";
-		public override string LicenseFile => null;
+		public override string LicenseFile => String.Empty;
 		public override string Name        => "license item group";
 		public override Uri    SourceUrl   => url;
 

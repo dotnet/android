@@ -6,9 +6,9 @@ namespace Android.Locations {
 
 	public partial class LocationManager {
 
-		public static LocationManager FromContext (Context context)
+		public static LocationManager? FromContext (Context context)
 		{
-			return context.GetSystemService (Context.LocationService) as LocationManager;
+			return context.GetSystemService (Context.LocationService!) as LocationManager;
 		}
 	}
 }

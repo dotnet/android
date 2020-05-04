@@ -36,7 +36,8 @@ namespace Java.Lang {
 					Handler ();
 				if (removable)
 					lock (instances)
-						instances.Remove (Handler);
+						if (Handler != null)
+							instances.Remove (Handler);
 				Dispose ();
 			}
 
@@ -46,7 +47,7 @@ namespace Java.Lang {
 			{
 				RunnableImplementor result;
 				lock (instances) {
-					instances.TryGetValue (handler, out result);
+					instances.TryGetValue (handler, out result!);
 					instances.Remove (handler);
 				}
 				return result;

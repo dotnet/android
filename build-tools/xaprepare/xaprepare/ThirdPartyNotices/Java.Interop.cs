@@ -28,14 +28,14 @@ namespace Xamarin.Android.Prepare
 		public override string LicenseFile => licenseFile;
 		public override string Name        => "xamarin/Java.Interop";
 		public override Uri    SourceUrl   => url;
-		public override string LicenseText => null;
+		public override string LicenseText => String.Empty;
 	}
 
 	class JavaInterop_gityf_crc_TPN : ThirdPartyNotice
 	{
 		static readonly Uri    url         = new Uri ("https://github.com/gityf/crc");
 
-		public override string LicenseFile => null;
+		public override string LicenseFile => String.Empty;
 		public override string Name        => "gityf/crc";
 		public override Uri    SourceUrl   => url;
 
@@ -74,7 +74,7 @@ POSSIBILITY OF SUCH DAMAGE.
 	{
 		static readonly Uri    url         = new Uri ("https://github.com/jbevain/mono.linq.expressions/");
 
-		public override string LicenseFile => null;
+		public override string LicenseFile => String.Empty;
 		public override string Name        => "jbevain/mono.linq.expressions";
 		public override Uri    SourceUrl   => url;
 
@@ -113,7 +113,7 @@ POSSIBILITY OF SUCH DAMAGE.
 		public override string Name        => "mono/csharp";
 		public override Uri    SourceUrl   => url;
 
-		public override string LicenseText => null;
+		public override string LicenseText => String.Empty;
 	}
 
 	class JavaInterop_mono_LineEditor_TPN : ThirdPartyNotice
@@ -123,7 +123,7 @@ POSSIBILITY OF SUCH DAMAGE.
 		public override string LicenseFile => CommonLicenses.MonoMITPath;
 		public override string Name        => "mono/LineEditor";
 		public override Uri    SourceUrl   => url;
-		public override string LicenseText => null;
+		public override string LicenseText => String.Empty;
 	}
 
 	class JavaInterop_mono_Options_TPN : ThirdPartyNotice
@@ -133,14 +133,14 @@ POSSIBILITY OF SUCH DAMAGE.
 		public override string LicenseFile => CommonLicenses.MonoMITPath;
 		public override string Name        => "mono/Options";
 		public override Uri    SourceUrl   => url;
-		public override string LicenseText => null;
+		public override string LicenseText => String.Empty;
 	}
 
 	class JavaInterop_zzzprojects_HtmlAgilityPack_TPN : ThirdPartyNotice
 	{
 		static readonly Uri    url         = new Uri ("https://github.com/zzzprojects/html-agility-pack");
 
-		public override string LicenseFile => null;
+		public override string LicenseFile => String.Empty;
 		public override string Name        => "zzzprojects/HtmlAgilityPack";
 		public override Uri    SourceUrl   => url;
 

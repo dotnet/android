@@ -5,13 +5,11 @@
   </PropertyGroup>
 
   <!-- This is the renamed-on-pack Xamarin.Android.Sdk.props from the full SDK -->
-  <Import Project="Xamarin.Android.Sdk.Default.props" />
+  <Import Project="Microsoft.Android.Sdk.Default.props" />
 
   <PropertyGroup>
     <!-- Ensure $(UsingAndroidNETSdk) is not set to retain legacy behavior -->
     <UsingAndroidNETSdk />
-    <!-- Reset, since we're overloading this prop as there is a VS-provided Xamarin.Android.Sdk.props already which we need to import  -->
-    <XamarinAndroidSdkPropsImported>false</XamarinAndroidSdkPropsImported>
   </PropertyGroup>
 
   <!-- Default References -->

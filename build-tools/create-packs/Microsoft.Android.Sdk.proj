@@ -1,8 +1,8 @@
 <!--
 ***********************************************************************************************
-Xamarin.Android.Sdk.proj
+Microsoft.Android.Sdk.proj
 
-This project file is used to create the Xamarin.Android.Sdk NuGet, which will serve as
+This project file is used to create the Microsoft.Android.Sdk NuGet, which will serve as
 the new entry point for short-form style Android projets in .NET 5.
 ***********************************************************************************************
 -->
@@ -10,11 +10,17 @@ the new entry point for short-form style Android projets in .NET 5.
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <PackageId>Xamarin.Android.Sdk</PackageId>
+    <PackageId>Microsoft.Android.Sdk</PackageId>
     <Authors>Microsoft</Authors>
     <Description>C# Tools and Bindings for the Android SDK</Description>
     <OutputPath>..\..\bin\Build$(Configuration)\nupkgs\</OutputPath>
+    <!-- Exclude mono bundle components declared in `create-installers.targets`. -->
+    <IncludeMonoBundleComponents>false</IncludeMonoBundleComponents>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Mono.Posix.NETStandard" Version="1.0.0" GeneratePathProperty="true" />
+  </ItemGroup>
 
   <Import Project="..\..\Configuration.props" />
   <Import Project="..\..\build-tools\installers\create-installers.targets" />
@@ -29,24 +35,21 @@ the new entry point for short-form style Android projets in .NET 5.
   <Target Name="_GenerateXASdkContent"
       DependsOnTargets="ConstructInstallerItems;_GenerateBundledVersions" >
     <PropertyGroup>
-      <PackageVersion>$(_AndroidNETSdkVersion)</PackageVersion>
       <ToolsSourceDir>$(XamarinAndroidSourcePath)bin\Build$(Configuration)\packs\tools\</ToolsSourceDir>
     </PropertyGroup>
     <ItemGroup>
-      <AndroidSdkBuildTools Include="@(_MSBuildFiles);@(_MSBuildFilesWin)"
-          Condition=" '%(Filename)' != 'jnimarshalmethod-gen' " >
+      <AndroidSdkBuildTools Include="@(_MSBuildFiles);@(_MSBuildFilesWin)" >
         <RelativePath>$([MSBuild]::MakeRelative($(MSBuildSrcDir), %(FullPath)))</RelativePath>
       </AndroidSdkBuildTools>
       <AndroidSdkBuildTools Include="@(_MSBuildTargetsSrcFiles)" >
         <RelativePath>$([MSBuild]::MakeRelative($(MSBuildTargetsSrcDir), %(FullPath)))</RelativePath>
       </AndroidSdkBuildTools>
       <!-- Exclude host-os specific native libraries, aside from libMonoPosixHelper.dylib which is required by LibZipSharp on macOS. -->
-      <AndroidSdkBuildToolsUnix Include="@(_MSBuildFilesUnix);@(_MSBuildFilesUnixSwab);@(_MSBuildFilesUnixSign);@(_MSBuildFilesUnixSignAndHarden)"
-          Condition=" !$([System.Text.RegularExpressions.Regex]::IsMatch(%(FullPath), '.*host-$(HostOS).*')) " >
+      <AndroidSdkBuildToolsUnix Include="@(_MSBuildFilesUnix);@(_MSBuildFilesUnixSwab);@(_MSBuildFilesUnixSign);@(_MSBuildFilesUnixSignAndHarden)" >
         <RelativePath>$([MSBuild]::MakeRelative($(MSBuildSrcDir), %(FullPath)))</RelativePath>
       </AndroidSdkBuildToolsUnix>
-      <AndroidSdkBuildToolsUnix Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libMonoPosixHelper.$(LibExtension)" >
-        <RelativePath>libMonoPosixHelper.$(LibExtension)</RelativePath>
+      <AndroidSdkBuildToolsUnix Include="$(PkgMono_Posix_NETStandard)\runtimes\osx\native\libMonoPosixHelper.dylib" >
+        <RelativePath>libMonoPosixHelper.dylib</RelativePath>
       </AndroidSdkBuildToolsUnix>
     </ItemGroup>
     <!-- Copy only the required tools to new folder. Skip Unix item copying on Windows. -->
@@ -61,16 +64,12 @@ the new entry point for short-form style Android projets in .NET 5.
         SkipUnchangedFiles="True"
         Condition="$([MSBuild]::IsOSPlatform('osx'))"
     />
-    <Copy
-        SourceFiles="@(VersionFiles)"
-        DestinationFolder="$(ToolsSourceDir)"
-        SkipUnchangedFiles="True"
-    />
     <ItemGroup>
       <_PackageFiles Include="$(ToolsSourceDir)**" PackagePath="tools" />
-      <_PackageFiles Include="$(XamarinAndroidSourcePath)\src\Xamarin.Android.Sdk\Sdk\**" PackagePath="Sdk" />
-      <_PackageFiles Include="$(XamarinAndroidSourcePath)\src\Xamarin.Android.Sdk\targets\**"
-          Exclude="$(XamarinAndroidSourcePath)\src\Xamarin.Android.Sdk\**\*.Lite.*"
+      <_PackageFiles Include="$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\Version*" PackagePath="tools" />
+      <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\Sdk\**" PackagePath="Sdk" />
+      <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\targets\**"
+          Exclude="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\**\*.Lite.*"
           PackagePath="targets" />
     </ItemGroup>
   </Target>
@@ -79,12 +78,10 @@ the new entry point for short-form style Android projets in .NET 5.
        https://github.com/dotnet/installer/blob/d98f5f18bce44014aeacd2f99923b4779d89459d/src/redist/targets/GenerateBundledVersions.targets
        -->
   <Target Name="_GenerateBundledVersions"
-      DependsOnTargets="GetXAVersionInfo" >
+      DependsOnTargets="_GetDefaultPackageVersion" >
     <PropertyGroup>
-      <_AndroidNETSdkVersion>$(ProductVersion).$(XAVersionCommitCount)</_AndroidNETSdkVersion>
-      <_AndroidNETAppPackageVersion>$(ProductVersion).$(XAVersionCommitCount)</_AndroidNETAppPackageVersion>
       <_AndroidNETAppTargetFramework>netcoreapp5.0</_AndroidNETAppTargetFramework>
-      <BundledVersionsPropsFileName>Xamarin.Android.Sdk.BundledVersions.props</BundledVersionsPropsFileName>
+      <BundledVersionsPropsFileName>Microsoft.Android.Sdk.BundledVersions.props</BundledVersionsPropsFileName>
     </PropertyGroup>
 
     <ItemGroup>
@@ -104,17 +101,17 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
 -->
 <Project>
   <PropertyGroup>
-    <AndroidNETSdkVersion>$(_AndroidNETSdkVersion)</AndroidNETSdkVersion>
+    <AndroidNETSdkVersion>$(AndroidPackVersionLong)</AndroidNETSdkVersion>
   </PropertyGroup>
   <ItemGroup>
-    <KnownFrameworkReference Include="Xamarin.Android.App"
+    <KnownFrameworkReference Include="Microsoft.Android"
                               TargetFramework="$(_AndroidNETAppTargetFramework)"
-                              RuntimeFrameworkName="Xamarin.Android.App"
-                              DefaultRuntimeFrameworkVersion="$(_AndroidNETAppPackageVersion)"
-                              LatestRuntimeFrameworkVersion="$(_AndroidNETAppPackageVersion)"
-                              TargetingPackName="Xamarin.Android.App.Ref"
-                              TargetingPackVersion="$(_AndroidNETAppPackageVersion)"
-                              RuntimePackNamePatterns="Xamarin.Android.App.Runtime.**RID**"
+                              RuntimeFrameworkName="Microsoft.Android"
+                              DefaultRuntimeFrameworkVersion="$(AndroidPackVersionLong)"
+                              LatestRuntimeFrameworkVersion="$(AndroidPackVersionLong)"
+                              TargetingPackName="Microsoft.Android.Ref"
+                              TargetingPackVersion="$(AndroidPackVersionLong)"
+                              RuntimePackNamePatterns="Microsoft.Android.Runtime.**RID**"
                               RuntimePackRuntimeIdentifiers="@(_AndroidNETAppRuntimePackRids, '%3B')"
                               Profile="Android"
                               />
@@ -124,7 +121,7 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
       </BundledVersionsPropsContent>
     </PropertyGroup>
 
-    <WriteLinesToFile File="$(MSBuildThisFileDirectory)targets\$(BundledVersionsPropsFileName)"
+    <WriteLinesToFile File="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\targets\$(BundledVersionsPropsFileName)"
                       Lines="$(BundledVersionsPropsContent)"
                       Overwrite="true" />
   </Target>

@@ -10,6 +10,10 @@ projects. .NET 5 projects will not import this file.
 
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
+  <PropertyGroup>
+    <AndroidBoundExceptionType Condition=" '$(AndroidBoundExceptionType)' == '' ">Java</AndroidBoundExceptionType>
+  </PropertyGroup>
+
   <PropertyGroup Condition=" '$(AndroidBuildApplicationPackage)' == 'True' And '$(AndroidApplication)' == 'True' ">
     <_PostBuildTargets>
       _CopyPackage;
@@ -131,8 +135,7 @@ projects. .NET 5 projects will not import this file.
       AddBindingsToCompile;
       AddEmbeddedJarsAsResources;
       AddEmbeddedReferenceJarsAsResources;
-      AddLibraryProjectsToCompile;
-      _AddNativeLibraryArchiveToCompile
+      _CreateNativeLibraryArchive;
     </ResolveReferencesDependsOn>
 
     <CleanDependsOn>
@@ -143,7 +146,8 @@ projects. .NET 5 projects will not import this file.
     </CleanDependsOn>
   </PropertyGroup>
 
-  <UsingTask TaskName="Xamarin.Android.Tasks.Legacy.ValidateJavaVersion" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.CheckGoogleSdkRequirements"   AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.Legacy.ValidateJavaVersion"   AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.Legacy.ResolveAndroidTooling" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 
   <Target Name="_GetReferenceAssemblyPaths">
@@ -243,6 +247,14 @@ projects. .NET 5 projects will not import this file.
     <ItemGroup>
       <FileWrites Include="$(_ResolvedUserAssembliesHashFile)" />
     </ItemGroup>
+  </Target>
+
+  <Target Name="_CheckGoogleSdkRequirements"
+      Condition="Exists('$(IntermediateOutputPath)android\AndroidManifest.xml') And '$(AndroidEnableGooglePlayStoreChecks)' == 'true' ">
+    <CheckGoogleSdkRequirements
+        TargetFrameworkVersion="$(TargetFrameworkVersion)"
+        ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
+    />
   </Target>
 
 </Project>

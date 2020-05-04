@@ -6,7 +6,7 @@ namespace Xamarin.Android.Prepare
 	partial class Scenario_PrepareExternal : ScenarioNoStandardEndSteps
 	{
 		public Scenario_PrepareExternal ()
-			: base ("PrepareExternal", "Prepare external submodules", Context.Instance)
+			: base ("PrepareExternal", "Prepare external submodules")
 		{
 			NeedsGitSubmodules = true;
 		}

@@ -11,6 +11,7 @@
     <DisableImplicitAndroidFrameworkReference Condition=" '$(DisableImplicitAndroidFrameworkReference)' == '' ">false</DisableImplicitAndroidFrameworkReference>
     <EnableDefaultAndroidResourceItems Condition=" '$(EnableDefaultAndroidResourceItems)' == '' ">true</EnableDefaultAndroidResourceItems>
     <EnableDefaultAndroidAssetItems Condition=" '$(EnableDefaultAndroidAssetItems)' == '' ">true</EnableDefaultAndroidAssetItems>
+    <AndroidBoundExceptionType Condition=" '$(AndroidBoundExceptionType)' == '' ">System</AndroidBoundExceptionType>
     <!-- Enable nuget package conflict resolution -->
     <ResolveAssemblyConflicts>true</ResolveAssemblyConflicts>
     <_AndroidResourceDesigner>Resource.designer.cs</_AndroidResourceDesigner>
@@ -22,9 +23,6 @@
     <MonoAndroidAssetsPrefix Condition=" '$(MonoAndroidAssetsPrefix)' == '' ">Assets</MonoAndroidAssetsPrefix>
     <AndroidResgenClass Condition=" '$(AndroidResgenClass)' == '' ">Resource</AndroidResgenClass>
     <AndroidResgenFile Condition=" '$(AndroidResgenFile)' == '' ">$(MonoAndroidResourcePrefix)\$(_AndroidResourceDesigner)</AndroidResgenFile>
-    <AndroidManifest Condition=" '$(AndroidManifest)' == '' ">Properties\AndroidManifest.xml</AndroidManifest>
-    <AndroidApplication Condition=" '$(AndroidApplication)' == '' And Exists('$(AndroidManifest)') ">true</AndroidApplication>
-    <AndroidApplication Condition=" '$(AndroidApplication)' == '' ">false</AndroidApplication>
     <AndroidEnableSGenConcurrent Condition=" '$(AndroidEnableSGenConcurrent)' == '' ">true</AndroidEnableSGenConcurrent>
     <AndroidHttpClientHandlerType Condition=" '$(AndroidHttpClientHandlerType)' == '' ">Xamarin.Android.Net.AndroidClientHandler</AndroidHttpClientHandlerType>
     <AndroidUseIntermediateDesignerFile Condition=" '$(AndroidUseIntermediateDesignerFile)' == '' ">true</AndroidUseIntermediateDesignerFile>
@@ -32,24 +30,26 @@
 
   <!--  User-facing configuration-specific defaults -->
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <AndroidUseSharedRuntime Condition=" '$(AndroidUseSharedRuntime)' == '' ">true</AndroidUseSharedRuntime>
-    <EmbedAssembliesIntoApk Condition=" '$(EmbedAssembliesIntoApk)' == '' ">false</EmbedAssembliesIntoApk>
+    <!--FIXME: Disable the shared runtime and fast deployment default -->
+    <AndroidUseSharedRuntime Condition=" '$(AndroidUseSharedRuntime)' == '' ">false</AndroidUseSharedRuntime>
+    <EmbedAssembliesIntoApk Condition=" '$(EmbedAssembliesIntoApk)' == '' ">true</EmbedAssembliesIntoApk>
     <AndroidLinkMode Condition=" '$(AndroidLinkMode)' == '' ">None</AndroidLinkMode>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <AndroidUseSharedRuntime Condition=" '$(AndroidUseSharedRuntime)' == '' ">false</AndroidUseSharedRuntime>
     <EmbedAssembliesIntoApk Condition=" '$(EmbedAssembliesIntoApk)' == '' ">true</EmbedAssembliesIntoApk>
-    <AndroidLinkMode Condition=" '$(AndroidLinkMode)' == '' ">SdkOnly</AndroidLinkMode>
+    <!--FIXME: Disable linking by default -->
+    <AndroidLinkMode Condition=" '$(AndroidLinkMode)' == '' ">None</AndroidLinkMode>
     <AndroidManagedSymbols Condition=" '$(AndroidManagedSymbols)' == '' ">true</AndroidManagedSymbols>
   </PropertyGroup>
 
-  <Import Project="Xamarin.Android.Sdk.BundledVersions.props" Condition=" Exists('Xamarin.Android.Sdk.BundledVersions.props') " />
+  <Import Project="Microsoft.Android.Sdk.BundledVersions.props" Condition=" Exists('Microsoft.Android.Sdk.BundledVersions.props') " />
 
   <!-- Default item includes (globs and implicit references) -->
-  <Import Project="Xamarin.Android.Sdk.DefaultItems.props" />
+  <Import Project="Microsoft.Android.Sdk.DefaultItems.props" />
 
   <PropertyGroup>
-    <XamarinAndroidSdkPropsImported>true</XamarinAndroidSdkPropsImported>
+    <MicrosoftAndroidSdkPropsImported>true</MicrosoftAndroidSdkPropsImported>
   </PropertyGroup>
 
 </Project>

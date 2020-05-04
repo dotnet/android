@@ -9,6 +9,7 @@ using System.Reflection;
 
 using Java.Interop;
 using Java.Interop.Tools.TypeNameMappings;
+using System.Diagnostics.CodeAnalysis;
 
 #if JAVA_INTEROP
 namespace Android.Runtime {
@@ -30,14 +31,14 @@ namespace Android.Runtime {
 		{
 		}
 
-		public override void FailFast (string message)
+		public override void FailFast (string? message)
 		{
 			AndroidEnvironment.FailFast (message);
 		}
 
 		public override string GetCurrentManagedThreadName ()
 		{
-			return Thread.CurrentThread.Name;
+			return Thread.CurrentThread.Name!;
 		}
 
 		public override string GetCurrentManagedThreadStackTrace (int skipFrames, bool fNeedFileInfo)
@@ -46,11 +47,11 @@ namespace Android.Runtime {
 				.ToString ();
 		}
 
-		public override Exception GetExceptionForThrowable (ref JniObjectReference reference, JniObjectReferenceOptions options)
+		public override Exception? GetExceptionForThrowable (ref JniObjectReference reference, JniObjectReferenceOptions options)
 		{
 			if (!reference.IsValid)
 				return null;
-			var peeked      = JNIEnv.AndroidValueManager.PeekPeer (reference);
+			var peeked      = JNIEnv.AndroidValueManager?.PeekPeer (reference);
 			var peekedExc   = peeked as Exception;
 			if (peekedExc == null) {
 				var throwable = Java.Lang.Object.GetObject<Java.Lang.Throwable> (reference.Handle, JniHandleOwnership.DoNotTransfer);
@@ -58,7 +59,7 @@ namespace Android.Runtime {
 				return throwable;
 			}
 			JniObjectReference.Dispose (ref reference, options);
-			var unwrapped = JNIEnv.AndroidValueManager.UnboxException (peeked);
+			var unwrapped = JNIEnv.AndroidValueManager?.UnboxException (peeked!);
 			if (unwrapped != null) {
 				return unwrapped;
 			}
@@ -158,7 +159,7 @@ namespace Android.Runtime {
 			return r;
 		}
 
-		public override void WriteGlobalReferenceLine (string format, params object[] args)
+		public override void WriteGlobalReferenceLine (string format, params object?[] args)
 		{
 			JNIEnv._monodroid_gref_log (string.Format (format, args));
 		}
@@ -250,9 +251,9 @@ namespace Android.Runtime {
 				.Concat (Enumerable.Repeat (t, 1));
 		}
 
-		protected override string GetSimpleReference (Type type)
+		protected override string? GetSimpleReference (Type type)
 		{
-			string j = JNIEnv.TypemapManagedToJava (type);
+			string? j = JNIEnv.TypemapManagedToJava (type);
 			if (j != null) {
 				return j;
 			}
@@ -264,7 +265,7 @@ namespace Android.Runtime {
 
 		protected override IEnumerable<string> GetSimpleReferences (Type type)
 		{
-			string j = JNIEnv.TypemapManagedToJava (type);
+			string? j = JNIEnv.TypemapManagedToJava (type);
 			if (j != null) {
 				yield return j;
 			}
@@ -275,7 +276,7 @@ namespace Android.Runtime {
 
 		delegate Delegate GetCallbackHandler ();
 
-		static MethodInfo dynamic_callback_gen;
+		static MethodInfo? dynamic_callback_gen;
 
 		static Delegate CreateDynamicCallback (MethodInfo method)
 		{
@@ -290,12 +291,12 @@ namespace Android.Runtime {
 				if (dynamic_callback_gen == null)
 					throw new InvalidOperationException ("The referenced Mono.Android.Export.dll does not match the expected version. The required method was not found.");
 			}
-			return (Delegate)dynamic_callback_gen.Invoke (null, new object [] { method });
+			return (Delegate)dynamic_callback_gen.Invoke (null, new object [] { method })!;
 		}
 
 		static List<JniNativeMethodRegistration> sharedRegistrations = new List<JniNativeMethodRegistration> ();
 
-		static bool FastRegisterNativeMembers (JniType nativeClass, Type type, string methods)
+		static bool FastRegisterNativeMembers (JniType nativeClass, Type type, string? methods)
 		{
 			if (!MagicRegistrationMap.Filled)
 				return false;
@@ -313,7 +314,7 @@ namespace Android.Runtime {
 					registrations = new List<JniNativeMethodRegistration> ();
 				}
 				JniNativeMethodRegistrationArguments arguments = new JniNativeMethodRegistrationArguments (registrations, methods);
-				rv = MagicRegistrationMap.CallRegisterMethod (arguments, type.FullName);
+				rv = MagicRegistrationMap.CallRegisterMethod (arguments, type.FullName!);
 
 				if (registrations.Count > 0)
 					nativeClass.RegisterNativeMethods (registrations.ToArray ());
@@ -329,7 +330,7 @@ namespace Android.Runtime {
 		class MagicRegistrationMap {
 #pragma warning disable CS0649 // Field is never assigned to;
 			// assigned to in generated IL: https://github.com/xamarin/xamarin-android/blob/cbfa7e20acebd37b52ec4de9d5c1a4a66ddda799/src/Xamarin.Android.Build.Tasks/Linker/MonoDroid.Tuner/MonoDroidMarkStep.cs#L204
-			static Dictionary<string, int> typesMap;
+			static Dictionary<string, int>? typesMap;
 #pragma warning restore CS0649
 
 			static void Prefill ()
@@ -350,22 +351,22 @@ namespace Android.Runtime {
 
 			internal static bool CallRegisterMethod (JniNativeMethodRegistrationArguments arguments, string typeName)
 			{
-				int idx;
+				int idx = 0;
 
-				if (typeName == null || !typesMap.TryGetValue (typeName, out idx))
+				if (typeName == null || !(typesMap?.TryGetValue (typeName, out idx) == true))
 					return false;
 
 				return CallRegisterMethodByIndex (arguments, idx);
 			}
 
-			static bool CallRegisterMethodByIndex (JniNativeMethodRegistrationArguments arguments, int typeIdx)
+			static bool CallRegisterMethodByIndex (JniNativeMethodRegistrationArguments arguments, int? typeIdx)
 			{
 				// updated by the linker to register known types
 				return false;
 			}
 		}
 
-		public override void RegisterNativeMembers (JniType nativeClass, Type type, string methods)
+		public override void RegisterNativeMembers (JniType nativeClass, Type type, string? methods)
 		{
 			if (FastRegisterNativeMembers (nativeClass, type, methods))
 				return;
@@ -376,7 +377,7 @@ namespace Android.Runtime {
 				return;
 			}
 
-			string[] members = methods.Split ('\n');
+			string[] members = methods!.Split ('\n');
 			if (members.Length < 2) {
 				if (jniAddNativeMethodRegistrationAttributePresent)
 					base.RegisterNativeMembers (nativeClass, type, methods);
@@ -399,10 +400,10 @@ namespace Android.Runtime {
 				} else {
 					Type callbackDeclaringType = type;
 					if (toks.Length == 4) {
-						callbackDeclaringType = Type.GetType (toks [3], throwOnError: true);
+						callbackDeclaringType = Type.GetType (toks [3], throwOnError: true)!;
 					}
 					while (callbackDeclaringType.ContainsGenericParameters) {
-						callbackDeclaringType = callbackDeclaringType.BaseType;
+						callbackDeclaringType = callbackDeclaringType.BaseType!;
 					}
 					GetCallbackHandler connector = (GetCallbackHandler) Delegate.CreateDelegate (typeof (GetCallbackHandler),
 						callbackDeclaringType, toks [2]);
@@ -424,7 +425,7 @@ namespace Android.Runtime {
 			JNIEnv.WaitForBridgeProcessing ();
 		}
 
-		public override IJavaPeerable CreatePeer (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		public override IJavaPeerable? CreatePeer (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
 		{
 			if (!reference.IsValid)
 				return null;
@@ -442,7 +443,7 @@ namespace Android.Runtime {
 				throw new ArgumentException ("Must have a valid JNI object reference!", nameof (value));
 
 			var reference       = value.PeerReference;
-			var hash            = JNIEnv.IdentityHash (reference.Handle);
+			var hash            = JNIEnv.IdentityHash! (reference.Handle);
 
 			AddPeer (value, reference, hash);
 		}
@@ -450,22 +451,21 @@ namespace Android.Runtime {
 		internal void AddPeer (IJavaPeerable value, JniObjectReference reference, IntPtr hash)
 		{
 			lock (instances) {
-				IdentityHashTargets targets;
-				if (!instances.TryGetValue (hash, out targets)) {
+				if (!instances.TryGetValue (hash, out var targets)) {
 					targets = new IdentityHashTargets (value);
 					instances.Add (hash, targets);
 					return;
 				}
 				bool found = false;
 				for (int i = 0; i < targets.Count; ++i) {
-					IJavaPeerable target;
+					IJavaPeerable? target;
 					var wref = targets [i];
-					if (ShouldReplaceMapping (wref, reference, out target)) {
+					if (ShouldReplaceMapping (wref!, reference, out target)) {
 						found = true;
 						targets [i] = IdentityHashTargets.CreateWeakReference (value);
 						break;
 					}
-					if (JniEnvironment.Types.IsSameObject (value.PeerReference, target.PeerReference)) {
+					if (JniEnvironment.Types.IsSameObject (value.PeerReference, target!.PeerReference)) {
 						found = true;
 						if (Logger.LogGlobalRef) {
 							Logger.Log (LogLevel.Info, "monodroid-gref",
@@ -506,7 +506,7 @@ namespace Android.Runtime {
 			if (handleField == IntPtr.Zero)
 				throw new InvalidOperationException ("Unable to allocate Global Reference for object '" + value.ToString () + "'!");
 
-			IntPtr hash = JNIEnv.IdentityHash (handleField);
+			IntPtr hash = JNIEnv.IdentityHash! (handleField);
 			value.SetJniIdentityHashCode ((int) hash);
 			if ((transfer & JniHandleOwnership.DoNotRegister) == 0) {
 				AddPeer (value, new JniObjectReference (handleField, JniObjectReferenceType.Global), hash);
@@ -520,7 +520,7 @@ namespace Android.Runtime {
 			}
 		}
 
-		bool ShouldReplaceMapping (WeakReference<IJavaPeerable> current, JniObjectReference reference, out IJavaPeerable target)
+		bool ShouldReplaceMapping (WeakReference<IJavaPeerable> current, JniObjectReference reference, out IJavaPeerable? target)
 		{
 			target      = null;
 
@@ -562,7 +562,7 @@ namespace Android.Runtime {
 				throw new ArgumentException ("Must have a valid JNI object reference!", nameof (value));
 
 			var reference       = value.PeerReference;
-			var hash            = JNIEnv.IdentityHash (reference.Handle);
+			var hash            = JNIEnv.IdentityHash! (reference.Handle);
 
 			RemovePeer (value, hash);
 		}
@@ -570,13 +570,12 @@ namespace Android.Runtime {
 		internal void RemovePeer (IJavaPeerable value, IntPtr hash)
 		{
 			lock (instances) {
-				IdentityHashTargets targets;
-				if (!instances.TryGetValue (hash, out targets)) {
+				if (!instances.TryGetValue (hash, out var targets)) {
 					return;
 				}
 				for (int i = targets.Count - 1; i >= 0; i--) {
 					var wref = targets [i];
-					if (!wref.TryGetTarget (out IJavaPeerable target)) {
+					if (!wref!.TryGetTarget (out var target)) {
 						// wref is invalidated; remove it.
 						targets.RemoveAt (i);
 						continue;
@@ -592,18 +591,17 @@ namespace Android.Runtime {
 			}
 		}
 
-		public override IJavaPeerable PeekPeer (JniObjectReference reference)
+		public override IJavaPeerable? PeekPeer (JniObjectReference reference)
 		{
 			if (!reference.IsValid)
 				return null;
 
-			var hash    = JNIEnv.IdentityHash (reference.Handle);
+			var hash    = JNIEnv.IdentityHash! (reference.Handle);
 			lock (instances) {
-				IdentityHashTargets targets;
-				if (instances.TryGetValue (hash, out targets)) {
+				if (instances.TryGetValue (hash, out var targets)) {
 					for (int i = targets.Count - 1; i >= 0; i--) {
 						var wref    = targets [i];
-						if (!wref.TryGetTarget (out var result) || !result.PeerReference.IsValid) {
+						if (!wref!.TryGetTarget (out var result) || !result.PeerReference.IsValid) {
 							targets.RemoveAt (i);
 							continue;
 						}
@@ -616,7 +614,7 @@ namespace Android.Runtime {
 			return null;
 		}
 
-		protected override bool TryUnboxPeerObject (IJavaPeerable value, out object result)
+		protected override bool TryUnboxPeerObject (IJavaPeerable value, [NotNullWhen (true)]out object? result)
 		{
 			var proxy = value as JavaProxyThrowable;
 			if (proxy != null) {
@@ -626,9 +624,9 @@ namespace Android.Runtime {
 			return base.TryUnboxPeerObject (value, out result);
 		}
 
-		internal Exception UnboxException (IJavaPeerable value)
+		internal Exception? UnboxException (IJavaPeerable value)
 		{
-			object r;
+			object? r;
 			if (TryUnboxPeerObject (value, out r) && r is Exception e) {
 				return e;
 			}
@@ -669,7 +667,7 @@ namespace Android.Runtime {
 				foreach (var e in instances) {
 					for (int i = 0; i < e.Value.Count; i++) {
 						var value = e.Value [i];
-						surfacedPeers.Add (new JniSurfacedPeerInfo (e.Key.ToInt32 (), value));
+						surfacedPeers.Add (new JniSurfacedPeerInfo (e.Key.ToInt32 (), value!));
 					}
 				}
 				return surfacedPeers;
@@ -692,8 +690,8 @@ namespace Android.Runtime {
 	}
 
 	class IdentityHashTargets {
-		WeakReference<IJavaPeerable>            first;
-		List<WeakReference<IJavaPeerable>>      rest;
+		WeakReference<IJavaPeerable>?            first;
+		List<WeakReference<IJavaPeerable>?>?     rest;
 
 		public static WeakReference<IJavaPeerable> CreateWeakReference (IJavaPeerable value)
 		{
@@ -707,7 +705,7 @@ namespace Android.Runtime {
 
 		public int Count => (first != null ? 1 : 0) + (rest != null ? rest.Count : 0);
 
-		public WeakReference<IJavaPeerable> this [int index] {
+		public WeakReference<IJavaPeerable>? this [int index] {
 			get {
 				if (index == 0)
 					return first;
@@ -722,7 +720,9 @@ namespace Android.Runtime {
 					return;
 				}
 				index -= 1;
-				rest [index] = value;
+
+				if (rest != null)
+					rest [index] = value;
 			}
 		}
 
@@ -733,7 +733,7 @@ namespace Android.Runtime {
 				return;
 			}
 			if (rest == null)
-				rest    = new List<WeakReference<IJavaPeerable>> ();
+				rest    = new List<WeakReference<IJavaPeerable>?> ();
 			rest.Add (CreateWeakReference (value));
 		}
 
@@ -748,7 +748,7 @@ namespace Android.Runtime {
 				return;
 			}
 			index -= 1;
-			rest.RemoveAt (index);
+			rest?.RemoveAt (index);
 		}
 	}
 }

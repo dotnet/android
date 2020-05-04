@@ -14,22 +14,16 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 ***********************************************************************************************
 -->
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <UsingTask TaskName="Xamarin.Android.Tasks.AndroidWarning" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.ApiXmlAnalyzer" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.BindingsGenerator" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GetApiLevelFromFramework" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.GetImportedLibraries" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.JarToXml" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.ClassParse" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.CollectLibraryInputJars" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.CreateLibraryResourceArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.CreateTemporaryDirectory" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.JavaDoc" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.RemoveDirFixed" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.ResolveAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.ResolveLibraryProjectImports" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.ReadLibraryProjectImportsCache" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.ReadImportedLibrariesCache" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.CreateNativeLibraryArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.ImportJavaDoc" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.MDoc" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.Unzip" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -83,8 +77,9 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 
-  <!-- Do not resolve from the GAC under any circumstances in Mobile -->
   <PropertyGroup>
+    <_AndroidStampDirectory>$(IntermediateOutputPath)stamp\</_AndroidStampDirectory>
+    <!-- Do not resolve from the GAC under any circumstances in Mobile -->
     <AssemblySearchPaths>$([System.String]::Copy('$(AssemblySearchPaths)').Replace('{GAC}',''))</AssemblySearchPaths>
     <AssemblySearchPaths Condition="'$(MSBuildRuntimeVersion)' != ''">$(AssemblySearchPaths.Split(';'))</AssemblySearchPaths>
   </PropertyGroup>
@@ -104,16 +99,6 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
     <ApiOutputFile Condition="'$(ApiOutputFile)' == ''">$(IntermediateOutputPath)api.xml</ApiOutputFile>
     <_GeneratorStampFile>$(IntermediateOutputPath)generator.stamp</_GeneratorStampFile>
     <AndroidSequencePointsMode Condition=" '$(AndroidSequencePointsMode)' == ''">None</AndroidSequencePointsMode>
-	<_LibraryProjectImportsDirectoryName Condition=" '$(_LibraryProjectImportsDirectoryName)'=='' And '$(UseShortFileNames)' == 'True' ">jl</_LibraryProjectImportsDirectoryName>
-	<_NativeLibraryImportsDirectoryName Condition=" '$(_NativeLibraryImportsDirectoryName)'=='' And '$(UseShortFileNames)' == 'True' ">nl</_NativeLibraryImportsDirectoryName>
-
-	<_LibraryProjectImportsDirectoryName Condition=" '$(_LibraryProjectImportsDirectoryName)'==''">library_project_imports</_LibraryProjectImportsDirectoryName>
-	<_NativeLibraryImportsDirectoryName Condition=" '$(_NativeLibraryImportsDirectoryName)'==''">native_library_imports</_NativeLibraryImportsDirectoryName>
-	<_AndroidLibraryImportsCache>$(IntermediateOutputPath)libraryimports.cache</_AndroidLibraryImportsCache>
-	<_AndroidLibraryProjectImportsCache>$(IntermediateOutputPath)libraryprojectimports.cache</_AndroidLibraryProjectImportsCache>
-	<_AndroidLibrayProjectIntermediatePath Condition=" '$(_AndroidLibrayProjectIntermediatePath)' == '' And '$(UseShortFileNames)' == 'True' ">$(IntermediateOutputPath)lp\</_AndroidLibrayProjectIntermediatePath>
-	<_AndroidLibrayProjectIntermediatePath Condition=" '$(_AndroidLibrayProjectIntermediatePath)' == '' ">$(IntermediateOutputPath)__library_projects__\</_AndroidLibrayProjectIntermediatePath>
-	<_AndroidLibrayProjectAssemblyMapFile>$(_AndroidLibrayProjectIntermediatePath)map.cache</_AndroidLibrayProjectAssemblyMapFile>
 		
 	<!-- Prevent warnings about assembly version conflicts -->
 	<AutoUnifyAssemblyReferences>True</AutoUnifyAssemblyReferences>
@@ -125,16 +110,25 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 	<GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
   </PropertyGroup>
 
-<Target Name="_GetReferenceAssemblyPaths">
-	<GetReferenceAssemblyPaths
-			TargetFrameworkMoniker="$(TargetFrameworkIdentifier),Version=v1.0"
-			RootPath="$(TargetFrameworkRootPath)">
-		<Output TaskParameter="ReferenceAssemblyPaths" PropertyName="_XATargetFrameworkDirectories" />
-	</GetReferenceAssemblyPaths>
-</Target>
+  <!-- Warn about deprecated configurations.
+       Do it here because we want them to appear on every build,
+       even if we aren't rerunning generator -->
+  <Target Name="_WarnAboutDeprecatedConfigurations">
+    <AndroidWarning Code="XA4231"
+      ResourceName="XA4231"
+      FormatArguments="$(AndroidClassParser)"
+      Condition=" '$(AndroidClassParser)' != 'class-parse' "
+    />
+
+    <AndroidWarning Code="XA4232"
+      ResourceName="XA4232"
+      FormatArguments="$(AndroidCodegenTarget)"
+      Condition=" '$(AndroidCodegenTarget)' != 'XAJavaInterop1' "
+    />
+  </Target>
 
   <!-- Find all the needed SDKs -->
-  <Target Name="_ResolveMonoAndroidSdks" DependsOnTargets="_ResolveMonoAndroidFramework">
+  <Target Name="_ResolveMonoAndroidSdks" DependsOnTargets="_ResolveMonoAndroidFramework;_WarnAboutDeprecatedConfigurations">
 
     <Error Text="Could not locate Android SDK." Condition="'$(_AndroidSdkDirectory)'==''" />
     <Error Text="Could not locate Java 6 or 7 SDK.  (Download from http://www.oracle.com/technetwork/java/javase/downloads.)" Condition="'$(_JavaSdkDirectory)'==''" />
@@ -178,63 +172,6 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
     </CreateProperty>
 
   </Target>
-
-  <Target Name="_SetupDesignTimeBuildForBuild">
-    <PropertyGroup>
-      <DesignTimeBuild Condition=" '$(DesignTimeBuild)' == '' ">false</DesignTimeBuild>
-    </PropertyGroup>
-  </Target>
-  
-  <Target Name="_SetupDesignTimeBuildForCompile">
-    <PropertyGroup>
-      <DesignTimeBuild Condition=" '$(DesignTimeBuild)' == '' ">true</DesignTimeBuild>
-    </PropertyGroup>
-  </Target>
-
-<Target Name="_ResolveLibraryProjectImports"
-		Inputs="$(MSBuildProjectFullPath);$(_AndroidBuildPropertiesCache)"
-		Outputs="$(_AndroidLibraryProjectImportsCache)">
-	<ResolveLibraryProjectImports
-		ContinueOnError="$(DesignTimeBuild)"
-		CacheFile="$(_AndroidLibraryProjectImportsCache)"
-		DesignTimeBuild="$(DesignTimeBuild)"
-		Assemblies="@(ReferencePath);@(ReferenceDependencyPaths)"
-		AarLibraries="@(AndroidAarLibrary)"
-		ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
-		NativeImportsDirectory="$(_NativeLibraryImportsDirectoryName)"
-		UseShortFileNames="$(UseShortFileNames)"
-		OutputDirectory="$(IntermediateOutputPath)"
-		AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
-		OutputImportDirectory="$(_AndroidLibrayProjectIntermediatePath)">
-	</ResolveLibraryProjectImports>
-</Target>
-
-
-<Target Name="_ExtractLibraryProjectImports" DependsOnTargets="_ResolveLibraryProjectImports">
-	<ReadLibraryProjectImportsCache
-			CacheFile="$(_AndroidLibraryProjectImportsCache)">
-		<Output TaskParameter="Jars" PropertyName="ZippedLibraryProjectJars" />
-	</ReadLibraryProjectImportsCache>
-</Target>
-
-<Target Name="_BuildLibraryImportsCache"
-		Inputs="$(MSBuildProjectFullPath)"
-		Outputs="$(_AndroidLibraryImportsCache)">
-	<GetImportedLibraries TargetDirectory="$(_AndroidLibrayProjectIntermediatePath)"
-			CacheFile="$(_AndroidLibraryImportsCache)">
-		<Output TaskParameter="Jars" ItemName="ExtractedJarImports" />
-	</GetImportedLibraries>
-  <ItemGroup>
-    <ReferenceJar Include="@(ZippedLibraryProjectJars);@(ExtractedJarImports)" />
-  </ItemGroup>
-</Target>
-
-<Target Name="_GetLibraryImports" DependsOnTargets="_BuildLibraryImportsCache">
-	<ReadImportedLibrariesCache
-			CacheFile="$(_AndroidLibraryImportsCache)">
-		<Output TaskParameter="Jars" ItemName="ExtractedJarImports" />
-	</ReadImportedLibrariesCache>
-</Target>
 
 <PropertyGroup>
 	<ExportJarToXmlDependsOnTargets>
@@ -397,24 +334,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
     </ItemGroup>
   </Target>
 
-  <Target Name="AddLibraryProjectsToCompile" DependsOnTargets="ResolveLibraryProjects">
-    <ItemGroup Condition="Exists ('$(IntermediateOutputPath)__AndroidLibraryProjects__.zip')">
-      <EmbeddedResource Include="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip">
-        <LogicalName>__AndroidLibraryProjects__.zip</LogicalName>
-      </EmbeddedResource>
-    </ItemGroup>
-  </Target>
-  
-  <Target Name="ResolveLibraryProjects"
-      Inputs="@(LibraryProjectProperties);@(LibraryProjectZip)"
-      Outputs="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip">
-    <CreateLibraryResourceArchive
-      OutputDirectory="$(IntermediateOutputPath)$(_LibraryProjectImportsDirectoryName)"
-      OutputJarsDirectory="$(IntermediateOutputPath)library_project_jars"
-      OutputAnnotationsDirectory="$(IntermediateOutputPath)library_project_annotations"
-      LibraryProjectPropertiesFiles="@(LibraryProjectProperties)"
-      LibraryProjectZipFiles="@(LibraryProjectZip)" />
-  </Target>
+  <Target Name="ResolveLibraryProjects" DependsOnTargets="_CreateBindingResourceArchive" />
 
   <Target Name="AddLibraryJarsToBind" DependsOnTargets="ResolveLibraryProjects">
     <ItemGroup>
@@ -472,6 +392,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
     <Delete Files="$(_GeneratorStampFile)" />
 
     <RemoveDirFixed Directories="$(GeneratedOutputPath)" Condition="Exists ('$(GeneratedOutputPath)')" />
+    <RemoveDirFixed Directories="$(_AndroidStampDirectory)" Condition="Exists ('$(_AndroidStampDirectory)')" />
 
     <Delete Files="@(IntermediateAssembly->'$(OutputPath)%(filename).xml')" />
     <Delete Files="@(IntermediateAssembly->'$(IntermediateOutputPath)%(filename).xml')" />
@@ -501,23 +422,8 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
     <RemoveDirFixed Directories="$(IntermediateOutputPath)$(_NativeLibraryImportsDirectoryName)" Condition="Exists ('$(IntermediateOutputPath)$(_NativeLibraryImportsDirectoryName)')" />
   </Target>
 
-  <Target Name="_CreateNativeLibraryArchive"
-          Condition="@(EmbeddedNativeLibrary) != ''" 
-          Inputs="@(EmbeddedNativeLibrary)"
-          Outputs="$(IntermediateOutputPath)__AndroidNativeLibraries__.zip">
-    <CreateNativeLibraryArchive
-      OutputDirectory="$(IntermediateOutputPath)$(_NativeLibraryImportsDirectoryName)"
-      EmbeddedNativeLibraries="@(EmbeddedNativeLibrary)" />
-  </Target>
-
-  <Target Name="_AddNativeLibraryArchiveToCompile" DependsOnTargets="_CreateNativeLibraryArchive">
-    <ItemGroup Condition="Exists('$(IntermediateOutputPath)__AndroidNativeLibraries__.zip')">
-      <EmbeddedResource Include="$(IntermediateOutputPath)__AndroidNativeLibraries__.zip">
-        <LogicalName>__AndroidNativeLibraries__.zip</LogicalName>
-      </EmbeddedResource>
-    </ItemGroup>
-  </Target>
-
+  <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.DesignTime.targets" />
+  <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.EmbeddedResource.targets" />
   <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.PCLSupport.targets" />
   <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Tooling.targets" />
   <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Legacy.targets" Condition=" '$(UsingAndroidNETSdk)' != 'True' " />
