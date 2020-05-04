@@ -19,4 +19,7 @@
     <AllRuntimeSource Include="java/mono/**/*.java" />
   </ItemGroup>
   <Import Project="java-runtime.targets" />
+  <ItemGroup>
+    <ProjectReference Include="..\r8\r8.csproj" />
+  </ItemGroup>
 </Project>
