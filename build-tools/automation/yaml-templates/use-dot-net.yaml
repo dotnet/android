@@ -2,7 +2,7 @@
 # We can eventually switch back to the UseDotNet task.
 
 parameters:
-  version: ''
+  version: $(DotNetCoreVersion)
 
 steps:
 
