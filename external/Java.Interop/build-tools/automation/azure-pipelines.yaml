@@ -10,13 +10,13 @@ pr:
 
 # Global variables
 variables:
-  DotNetCoreVersion: 3.1.100
+  DotNetCoreVersion: 3.1.201
   HostedMac: Hosted Mac Internal
   HostedWinVS2019: Hosted Windows 2019 with VS2019
 
 jobs:
 - job: windows_build
-  displayName: Windows Build and Test
+  displayName: Windows - .NET Framework
   pool: $(HostedWinVS2019)
   timeoutInMinutes: 20
   workspace:
@@ -68,8 +68,77 @@ jobs:
       testResultsFiles: TestResult-*.xml
     condition: succeededOrFailed()
 
+- job: windows_dotnet_build
+  displayName: Windows - .NET Core
+  pool: $(HostedWinVS2019)
+  timeoutInMinutes: 20
+  workspace:
+    clean: all
+  steps:
+  - checkout: self
+    submodules: recursive
+
+  - task: UseDotNet@2
+    displayName: Use .NET Core $(DotNetCoreVersion)
+    inputs:
+      version: $(DotNetCoreVersion)
+
+  - task: DotNetCoreCLI@2
+    displayName: Prepare Solution
+    inputs:
+      projects: Java.Interop.sln
+      arguments: '-c $(Build.Configuration) -target:Prepare'
+
+  - task: DotNetCoreCLI@2
+    displayName: Build Solution
+    inputs:
+      projects: Java.Interop.sln
+      arguments: '-c $(Build.Configuration)'
+
+  - task: DotNetCoreCLI@2
+    displayName: 'Tests: generator'
+    inputs:
+      command: test
+      arguments: bin\Test$(Build.Configuration)\generator-Tests.dll
+    continueOnError: true
+
+  - task: DotNetCoreCLI@2
+    displayName: 'Tests: JavaCallableWrappers'
+    inputs:
+      command: test
+      arguments: bin\Test$(Build.Configuration)\Java.Interop.Tools.JavaCallableWrappers-Tests.dll
+    continueOnError: true
+
+  - task: DotNetCoreCLI@2
+    displayName: 'Tests: logcat-parse'
+    inputs:
+      command: test
+      arguments: bin\Test$(Build.Configuration)\logcat-parse-Tests.dll
+    continueOnError: true
+
+  - task: DotNetCoreCLI@2
+    displayName: 'Tests: ApiXmlAdjuster'
+    inputs:
+      command: test
+      arguments: bin\Test$(Build.Configuration)\Xamarin.Android.Tools.ApiXmlAdjuster-Tests.dll
+    continueOnError: true
+
+  - task: DotNetCoreCLI@2
+    displayName: 'Tests: Bytecode'
+    inputs:
+      command: test
+      arguments: bin\Test$(Build.Configuration)\Xamarin.Android.Tools.Bytecode-Tests.dll
+    continueOnError: true
+
+  - powershell: |
+      Write-Host "Current job status is: $env:AGENT_JOBSTATUS"
+      if ($env:AGENT_JOBSTATUS -eq "SucceededWithIssues") {
+          Write-Host "##vso[task.complete result=Failed;]DONE"
+      }
+    displayName: Fail job if tests failed
+    
 - job: mac_build
-  displayName: Mac Build and Test
+  displayName: Mac - Mono
   pool: $(HostedMac)
   timeoutInMinutes: 20
   workspace:
