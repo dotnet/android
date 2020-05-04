@@ -1555,6 +1555,8 @@
   <remove-node api-since="30" path="/api/package[@name='android.animation']/interface[@name='Animator.AnimatorListener']/method[@name='onAnimationStart' and count(parameter)=2]" />
   <remove-node api-since="30" path="/api/package[@name='android.animation']/interface[@name='Animator.AnimatorListener']/method[@name='onAnimationEnd' and count(parameter)=2]" />
 
+  <attr path="/api/package[@name='android.widget.inline']/class[@name='InlineContentView']/method[@name='onLayout' and count(parameter)=5 and parameter[1][@type='boolean'] and parameter[2][@type='int'] and parameter[3][@type='int'] and parameter[4][@type='int'] and parameter[5][@type='int']]" name="visibility">protected</attr>
+  
   <!-- Starting with API added in API-30, we are going to allow interfaces to contain nested types.
        To preserve backwards compatibility, we need to "un-nest" anything added before API-30 -->
   
