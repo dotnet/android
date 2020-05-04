@@ -14,12 +14,14 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android</OutputPath>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\r8\r8.csproj">
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
   <ItemGroup>
     <AllRuntimeSource Include="java/mono/**/*.java" />
   </ItemGroup>
   <Import Project="java-runtime.targets" />
-  <ItemGroup>
-    <ProjectReference Include="..\r8\r8.csproj" />
-  </ItemGroup>
 </Project>
