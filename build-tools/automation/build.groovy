@@ -44,7 +44,9 @@ def getBuildTasksRedirect() {
 }
 
 timestamps {
-    node("${env.BotLabel}") {
+    node("${env.BotLabel}")
+    withEnv(["DOTNET_ROOT=/usr/local/share/dotnet/"])
+    withEnv(["PATH=$DOTNET_ROOT:${env.Path}"]) {
         def scmVars = null
 
         stage ("checkout") {
@@ -176,8 +178,6 @@ timestamps {
             }
             // Install .NET Core and prepend it to PATH
             sh '''
-                export DOTNET_ROOT="/usr/local/share/dotnet/" &&
-                export PATH="$DOTNET_ROOT:$PATH" &&
                 curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --version 3.1.100 --install-dir $DOTNET_ROOT --verbose &&
                 dotnet --list-sdks
             '''
