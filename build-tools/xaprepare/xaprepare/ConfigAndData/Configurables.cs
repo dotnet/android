@@ -406,6 +406,8 @@ namespace Xamarin.Android.Prepare
 			static string? frameworkListInstallPath;
 			static string? correttoCacheDir;
 			static string? correttoInstallDir;
+			static string? openJDKInstallDir;
+			static string? openJDKCacheDir;
 			static string? profileAssembliesProjitemsPath;
 			static string? bclTestsSourceDir;
 			static string? installHostBCLDir;
