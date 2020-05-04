@@ -174,8 +174,13 @@ timestamps {
                     }
                 }
             }
-            // Install .NET Core and temporarily append it to PATH
-            sh "curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin -version 3.1.100"
+            // Install .NET Core and prepend it to PATH
+            sh '''
+                export DOTNET_ROOT="/usr/local/share/dotnet/" &&
+                export PATH="$DOTNET_ROOT:$PATH" &&
+                curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --version 3.1.100 --install-dir $DOTNET_ROOT --verbose &&
+                dotnet --list-sdks
+            '''
         }
 
         utils.stageWithTimeout('build', 6, 'HOURS', XADir, true) {    // Typically takes less than one hour except a build on a new bot to populate local caches can take several hours
