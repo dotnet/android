@@ -768,8 +768,8 @@ because xbuild doesn't support framework reference assemblies.
 
 	<!-- Setup $(AndroidApplicationJavaClass) -->
 	<PropertyGroup>
-		<AndroidApplicationJavaClass Condition="'$(AndroidApplicationJavaClass)' == '' And $(AndroidEnableMultiDex)">android.support.multidex.MultiDexApplication</AndroidApplicationJavaClass>
-		<AndroidApplicationJavaClass Condition="'$(AndroidApplicationJavaClass)' == ''">android.app.Application</AndroidApplicationJavaClass>
+		<AndroidApplicationJavaClass Condition=" '$(AndroidApplicationJavaClass)' == '' And '$(AndroidEnableMultiDex)' == 'true' And '$(AndroidDexTool)' == 'dx' ">android.support.multidex.MultiDexApplication</AndroidApplicationJavaClass>
+		<AndroidApplicationJavaClass Condition=" '$(AndroidApplicationJavaClass)' == '' ">android.app.Application</AndroidApplicationJavaClass>
 	</PropertyGroup>
 	<Message Text="Application Java class: $(AndroidApplicationJavaClass)" />
 </Target>
@@ -1060,15 +1060,6 @@ because xbuild doesn't support framework reference assemblies.
 	<ItemGroup>
 		<FileWrites Include="$(_AndroidResFlagFile)" />
 	</ItemGroup>
-</Target>
-
-<Target Name="_AddMultiDexDependencyJars">
-  <ItemGroup Condition=" '$(AndroidEnableMultiDex)' == 'True' AND '$(AndroidMultiDexSupportJar)' != '' ">
-    <AndroidJavaLibrary Include="$(_AndroidSdkDirectory)\$(AndroidMultiDexSupportJar)" />
-  </ItemGroup>
-  <ItemGroup Condition=" '$(AndroidEnableMultiDex)' == 'True' AND '$(AndroidMultiDexSupportJar)' == '' ">
-    <AndroidJavaLibrary Include="$(MonoAndroidToolsDirectory)\android-support-multidex.jar" />
-  </ItemGroup>
 </Target>
 
 <Target Name="_AddAndroidEnvironmentToCompile">

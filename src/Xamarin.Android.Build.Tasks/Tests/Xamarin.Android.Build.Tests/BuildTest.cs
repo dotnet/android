@@ -1259,7 +1259,7 @@ namespace UnamedProject
 		}
 
 		[Test]
-		public void MultiDexCustomMainDexFileList ([Values ("dx", "d8")] string dexTool, [Values ("19", "21")] string minSdkVersion)
+		public void MultiDexCustomMainDexFileList ([Values ("dx", "d8")] string dexTool)
 		{
 			var expected = new [] {
 				"android/support/multidex/ZipUtil$CentralDirectory.class",
@@ -1273,8 +1273,8 @@ namespace UnamedProject
 			};
 			var proj = CreateMultiDexRequiredApplication ();
 			proj.DexTool = dexTool;
-			proj.AndroidManifest = proj.AndroidManifest.Replace ("<uses-sdk />", $"<uses-sdk android:minSdkVersion=\"{minSdkVersion}\" />");
-			proj.SetProperty ("AndroidEnableMultiDex", "True");
+			if (dexTool == "dx")
+				proj.SetProperty ("AndroidEnableMultiDex", "True");
 			proj.OtherBuildItems.Add (new BuildItem ("MultiDexMainDexList", "mymultidex.keep") { TextContent = () => "MyTest.class", Encoding = Encoding.ASCII });
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaSource", "MyTest.java") { TextContent = () => "public class MyTest {}", Encoding = Encoding.ASCII });
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
@@ -1283,11 +1283,10 @@ namespace UnamedProject
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				FileAssert.Exists (Path.Combine (androidBinDir, "classes.dex"));
 				FileAssert.Exists (Path.Combine (androidBinDir, "classes2.dex"));
-				if (dexTool == "d8" && minSdkVersion == "21") {
-					//NOTE: d8/r8 does not support custom dex list files in this case
+				if (dexTool == "d8") {
+					//NOTE: d8/r8 does not support custom dex list files
 					return;
 				}
-				//NOTE: d8 has the list in a different order, so we should do an unordered comparison
 				var actual = File.ReadAllLines (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "multidex.keep"));
 				foreach (var item in expected) {
 					Assert.IsTrue (actual.Contains (item), $"multidex.keep did not contain `{item}`");
@@ -1328,15 +1327,14 @@ namespace UnnamedProject {
 		}
 
 		[Test]
-		public void MultiDexAndCodeShrinker ([Values ("proguard", "r8")] string linkTool)
+		public void MultiDexAndCodeShrinker ()
 		{
 			var proj = CreateMultiDexRequiredApplication ();
 			proj.SetProperty ("AndroidEnableMultiDex", "True");
 			proj.EnableProguard =
 				proj.IsRelease = true;
-			proj.LinkTool = linkTool;
-			if (linkTool == "proguard")
-				proj.DexTool = "dx";
+			proj.DexTool = "dx";
+			proj.LinkTool = "proguard";
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
