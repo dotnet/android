@@ -1,0 +1,27 @@
+# This template enables installing master/nighly builds of .NET 5.
+# We can eventually switch back to the UseDotNet task.
+
+parameters:
+  version: $(DotNetCoreVersion)
+
+steps:
+
+  - powershell: |
+      $ErrorActionPreference = 'Stop'
+      $ProgressPreference = 'SilentlyContinue'
+      Invoke-WebRequest -Uri "https://dot.net/v1/dotnet-install.ps1" -OutFile dotnet-install.ps1
+      & .\dotnet-install.ps1 -Version ${{ parameters.version }} -InstallDir "$env:ProgramFiles\dotnet\" -Verbose
+      & dotnet --list-sdks
+    displayName: install .NET Core ${{ parameters.version }}
+    condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
+
+  - bash: >
+      DOTNET_ROOT=~/.dotnet/ &&
+      PATH="$DOTNET_ROOT:$PATH" &&
+      curl -L https://dot.net/v1/dotnet-install.sh > dotnet-install.sh &&
+      sh dotnet-install.sh --version ${{ parameters.version }} --install-dir $DOTNET_ROOT --verbose &&
+      dotnet --list-sdks &&
+      echo "##vso[task.setvariable variable=DOTNET_ROOT]$DOTNET_ROOT" &&
+      echo "##vso[task.setvariable variable=PATH]$PATH"
+    displayName: install .NET Core ${{ parameters.version }}
+    condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
