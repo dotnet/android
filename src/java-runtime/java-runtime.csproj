@@ -15,9 +15,7 @@
     <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android</OutputPath>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\r8\r8.csproj">
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-    </ProjectReference>
+    <ProjectReference Include="..\r8\r8.csproj" ReferenceOutputAssembly="False" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
   <ItemGroup>
