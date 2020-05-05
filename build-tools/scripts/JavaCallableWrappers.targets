@@ -57,7 +57,7 @@
       <R8JarPath>$(XAInstallPrefix)xbuild\Xamarin\Android\r8.jar</R8JarPath>
     </PropertyGroup>
     <Exec
-        Command="&quot;$(JavaPath)&quot; -classpath &quot;$(R8JarPath)&quot; com.android.tools.r8.D8 --release --no-desugaring --output &quot;$(IntermediateOutputPath)&quot; &quot;$(OutputPath)mono.android.jar&quot;"
+        Command="&quot;$(JavaPath)&quot; -classpath &quot;$(R8JarPath)&quot; com.android.tools.r8.D8 --release --no-desugaring --output &quot;$(IntermediateOutputPath.TrimEnd('\'))&quot; &quot;$(OutputPath)mono.android.jar&quot;"
         EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory)"
     />
     <Move
