@@ -1,6 +1,6 @@
 {
   "solution": {
-    "path": "C:\\code\\xamarin-android-backport\\external\\Java.Interop\\Java.Interop.sln",
+    "path": "..\\..\\Java.Interop.sln",
     "projects": [
       "src\\Java.Interop.NamingCustomAttributes\\Java.Interop.NamingCustomAttributes.shproj",
       "src\\Java.Interop.Tools.Cecil\\Java.Interop.Tools.Cecil.csproj",
