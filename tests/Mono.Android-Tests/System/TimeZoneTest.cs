@@ -12,6 +12,7 @@ namespace Xamarin.Android.RuntimeTests
 	public class TimeZoneTest
 	{
 		[Test]
+		[Category ("DotNetIgnore")] // https://github.com/dotnet/runtime/issues/44358
 		public void TestDaylightSavingsTime ()
 		{
 			using (var jtz = Java.Util.TimeZone.Default) {
