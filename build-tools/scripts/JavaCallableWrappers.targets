@@ -53,8 +53,11 @@
       AfterTargets="GenerateJavaCallableWrappers"
       Inputs="$(OutputPath)mono.android.jar"
       Outputs="$(OutputPath)mono.android.dex">
+    <PropertyGroup>
+      <R8JarPath>$(XAInstallPrefix)xbuild\Xamarin\Android\r8.jar</R8JarPath>
+    </PropertyGroup>
     <Exec
-        Command="&quot;$(AndroidSdkDirectory)\build-tools\$(XABuildToolsFolder)\dx&quot; --dex --no-strict --output=&quot;$(OutputPath)mono.android.dex&quot; &quot;$(OutputPath)mono.android.jar&quot;"
+        Command="&quot;$(JavaPath)&quot; -classpath &quot;$(R8JarPath)&quot; com.android.tools.r8.D8 --release --no-desugaring --output &quot;$(OutputPath)mono.android.dex&quot; &quot;$(OutputPath)mono.android.jar&quot;"
         EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory)"
     />
   </Target>
