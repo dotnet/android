@@ -8,6 +8,12 @@ using Java.Interop;
 
 namespace Com.Xamarin.Android {
 
+	// Provoke https://github.com/xamarin/xamarin-android/issues/4660
+	// We need this type to appear *before* `Timing` in `monodis --typedef` output
+	[Register ("com/xamarin/android/Timing", DoNotGenerateAcw = true)]
+	public partial class Timinf<T> : Timing {
+	}
+
 	public partial class Timing {
 
 		static IntPtr jonp_id_VirtualVoidMethod;

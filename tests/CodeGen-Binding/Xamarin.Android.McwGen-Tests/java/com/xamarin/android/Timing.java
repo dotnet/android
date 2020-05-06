@@ -4,6 +4,10 @@ import android.graphics.Canvas;
 
 public class Timing {
 
+	public static Timing createTiming () {
+		return new Timing ();
+	}
+
 	public static void StaticVoidMethod ()
 	{
 	}
