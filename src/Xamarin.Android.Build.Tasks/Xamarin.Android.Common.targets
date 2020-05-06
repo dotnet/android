@@ -1464,7 +1464,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 	
 <Target Name="_LinkAssembliesShrink"
-  Condition="'$(AndroidLinkMode)' != 'None'"
+  Condition="'$(AndroidLinkMode)' != 'None' and '$(UsingAndroidNETSdk)' != 'true' "
   Inputs="@(ResolvedUserAssemblies);$(_AndroidBuildPropertiesCache)"
   Outputs="$(_AndroidLinkFlag)">
 
@@ -1980,11 +1980,12 @@ because xbuild doesn't support framework reference assemblies.
 	</ItemGroup>
 </Target>
 
+<!-- TODO make it work with .NET5 -->
 <Target Name="_RemoveRegisterAttribute"
   DependsOnTargets="_PrepareAssemblies"
   Inputs="$(_AndroidLinkFlag)"
   Outputs="$(_RemoveRegisterFlag)"
-  Condition="'$(AndroidLinkMode)' != 'None' AND '$(AndroidUseSharedRuntime)' != 'true'">
+  Condition="'$(AndroidLinkMode)' != 'None' AND '$(AndroidUseSharedRuntime)' != 'true' and '$(UsingAndroidNETSdk)' != 'true'">
 
   <!-- Make a copy of every assembly into assets\shrunk -->
   <CopyIfChanged
