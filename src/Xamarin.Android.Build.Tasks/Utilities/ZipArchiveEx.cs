@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Xamarin.Tools.Zip;
@@ -113,10 +114,21 @@ namespace Xamarin.Android.Tasks
 		/// <summary>
 		/// HACK: aapt2 is creating zip entries on Windows such as `assets\subfolder/asset2.txt`
 		/// </summary>
-		public void FixupWindowsPathSeparators (Action<string, string> onRename)
+		public void FixupWindowsPathSeparators (HashSet<ulong> deletedEntries, Action<string, string> onRename)
 		{
 			bool modified = false;
-			foreach (var entry in zip) {
+
+			long entryCount = zip.EntryCount;
+			if (entryCount < 0)
+				return;
+
+			for (ulong i = 0; i < (ulong) entryCount; ++i) {
+				// If an entry index has been deleted then ReadEntry will throw a "Entry has been deleted" ZipException.
+				// So we skip deleted entries instead
+				if (deletedEntries.Contains (i))
+					continue;
+
+				var entry = zip.ReadEntry (i);
 				if (entry.FullName.Contains ('\\')) {
 					var name = entry.FullName.Replace ('\\', '/');
 					onRename?.Invoke (entry.FullName, name);
