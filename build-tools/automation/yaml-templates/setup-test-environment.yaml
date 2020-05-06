@@ -19,14 +19,12 @@ steps:
   displayName: set JAVA_HOME
   condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
 
-- task: UseDotNet@2
-  displayName: install .NET Core $(DotNetCorePreviewVersion)
-  inputs:
+- template: use-dot-net.yaml
+  parameters:
     version: $(DotNetCorePreviewVersion)
 
-- task: UseDotNet@2
-  displayName: install .NET Core $(DotNetCoreVersion)
-  inputs:
+- template: use-dot-net.yaml
+  parameters:
     version: $(DotNetCoreVersion)
 
 - script: |
