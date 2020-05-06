@@ -1,0 +1,39 @@
+<!--
+***********************************************************************************************
+Microsoft.Android.Sdk.AssemblyResolution.targets
+
+This file contains the .NET 5-specific targets to customize ILLink
+
+***********************************************************************************************
+-->
+
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <Target Name="_PrepareLinking" AfterTargets="ComputeResolvedFilesToPublishList">
+    <Message Text="rodo: prepare linking" Importance="high" />
+    <ItemGroup>
+      <ResolvedFileToPublish
+          Update="@(ResolvedFileToPublish)"
+          Condition="'%(ResolvedFileToPublish.Filename)%(ResolvedFileToPublish.Extension)' == 'Java.Interop.dll' or '%(ResolvedFileToPublish.Filename)%(ResolvedFileToPublish.Extension)' == 'Mono.Android.dll' or '%(ResolvedFileToPublish.Filename)%(ResolvedFileToPublish.Extension)' == 'Mono.Android.Export.dll'">
+        <!-- This makes it so that the platform assembly isn't treated as a root assembly -->
+      <IsTrimmable>true</IsTrimmable>
+    </ResolvedFileToPublish>
+    </ItemGroup>
+    <PropertyGroup>
+      <!-- make the output verbose to see what the linker is doing. FIXME: make dependent upon verbosity level -->
+      <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --verbose</_ExtraTrimmerArgs>
+
+      <!-- we don't want to ignore stuff we can't find -->
+      <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --skip-unresolved false</_ExtraTrimmerArgs>
+      <_AdditionalTaskAssemblyDirectory>$(XamarinSdkRootDirectory)tools/dotnet-linker/</_AdditionalTaskAssemblyDirectory>
+      <_AdditionalTaskAssembly>$(_AdditionalTaskAssemblyDirectory)dotnet-linker.dll</_AdditionalTaskAssembly>
+    </PropertyGroup>
+    <ItemGroup>
+      <!-- add our custom steps -->
+      <_TrimmerCustomSteps Include="$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Linker.dll">
+        <BeforeStep>LoadReferencesStep</BeforeStep>
+        <Type>Xamarin.Android.Linker.SetupStep</Type>
+      </_TrimmerCustomSteps>
+    </ItemGroup>
+  </Target>
+</Project>
