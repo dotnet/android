@@ -11,6 +11,14 @@ steps:
   parameters:
     provisionExtraArgs: ${{ parameters.provisionExtraArgs }}
 
+- script: echo "##vso[task.setvariable variable=JAVA_HOME]$HOME/Library/Android/jdk"
+  displayName: set JAVA_HOME
+  condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
+
+- script: echo "##vso[task.setvariable variable=JAVA_HOME]%USERPROFILE%\android-toolchain\jdk"
+  displayName: set JAVA_HOME
+  condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
+
 - task: UseDotNet@2
   displayName: install .NET Core $(DotNetCorePreviewVersion)
   inputs:
