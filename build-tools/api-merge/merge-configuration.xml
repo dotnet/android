@@ -2,13 +2,6 @@
 <Configuration>
   <!-- Both lists should be sorted in chronological order -->
   <Inputs>
-    <File Path="api-10.xml.in" Level="10" />
-    <File Path="api-15.xml.in" Level="15" />
-    <File Path="api-16.xml.in" Level="16" />
-    <File Path="api-17.xml.in" Level="17" />
-    <File Path="api-18.xml.in" Level="18" />
-    <File Path="api-19.xml.in" Level="19" />
-    <File Path="api-20.xml.in" Level="20" />
     <File Path="api-21.xml.in" Level="21" />
     <File Path="api-22.xml.in" Level="22" />
     <File Path="api-23.xml.in" Level="23" />
