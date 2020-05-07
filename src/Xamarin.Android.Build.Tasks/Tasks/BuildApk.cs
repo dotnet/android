@@ -125,6 +125,15 @@ namespace Xamarin.Android.Tasks
 
 			using (var notice = Assembly.GetExecutingAssembly ().GetManifestResourceStream ("NOTICE.txt"))
 			using (var apk = new ZipArchiveEx (apkOutputPath, File.Exists (apkOutputPath) ? FileMode.Open : FileMode.Create )) {
+				bool apkInputPathExists = apkInputPath != null && File.Exists (apkInputPath);
+
+				DateTime lastWriteOutput = DateTime.MinValue;
+				DateTime lastWriteInput = DateTime.MinValue;
+				if (apkInputPathExists) {
+					lastWriteOutput = File.Exists (apkOutputPath) ? File.GetLastWriteTimeUtc (apkOutputPath) : DateTime.MinValue;
+					lastWriteInput = File.GetLastWriteTimeUtc (apkInputPath);
+				}
+
 				for (long i = 0; i < apk.Archive.EntryCount; i++) {
 					ZipEntry e = apk.Archive.ReadEntry ((ulong) i);
 					Log.LogDebugMessage ($"Registering item {e.FullName}");
@@ -218,9 +227,7 @@ namespace Xamarin.Android.Tasks
 				}
 
 				HashSet<ulong> deletedEntries = new HashSet<ulong> ();
-				if (apkInputPath != null && File.Exists (apkInputPath)) {
-					var lastWriteOutput = File.Exists (apkOutputPath) ? File.GetLastWriteTimeUtc (apkOutputPath) : DateTime.MinValue;
-					var lastWriteInput = File.GetLastWriteTimeUtc (apkInputPath);
+				if (apkInputPathExists) {
 					using (var packaged = new ZipArchiveEx (apkInputPath, FileMode.Open)) {
 						foreach (var entry in packaged.Archive) {
 							Log.LogDebugMessage ($"Deregistering item {entry.FullName}");
