@@ -82,6 +82,11 @@ namespace Xamarin.ProjectTools
 				}
 				sb.AppendLine ("\t</ItemGroup>");
 			}
+			foreach (var import in Imports) {
+				var project = import.Project ();
+				if (project != "Directory.Build.props" && project != "Directory.Build.targets")
+					sb.AppendLine ($"\t<Import Project=\"{project}\" />");
+			}
 			return $"<Project Sdk=\"{Sdk}\">\r\n{sb.ToString ()}\r\n</Project>";
 		}
 

@@ -1,9 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Xamarin.ProjectTools
 {
@@ -16,10 +13,25 @@ namespace Xamarin.ProjectTools
 </resources>
 ";
 
-		readonly string default_layout_main;
-		readonly string default_main_activity_cs;
-		readonly string default_android_manifest;
-		readonly byte [] icon_binary_mdpi;
+		static readonly string default_layout_main;
+		static readonly string default_main_activity_cs;
+		static readonly string default_android_manifest;
+		static readonly byte [] icon_binary_mdpi;
+
+		static XASdkProject ()
+		{
+			var assembly = typeof (XASdkProject).Assembly;
+			using (var sr = new StreamReader (assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.AndroidManifest.xml")))
+				default_android_manifest = sr.ReadToEnd ();
+			using (var sr = new StreamReader (assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.MainActivity.cs")))
+				default_main_activity_cs = sr.ReadToEnd ();
+			using (var sr = new StreamReader (assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.LayoutMain.axml")))
+				default_layout_main = sr.ReadToEnd ();
+			using (var stream = assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.Icon.png")) {
+				icon_binary_mdpi = new byte [stream.Length];
+				stream.Read (icon_binary_mdpi, 0, (int) stream.Length);
+			}
+		}
 
 		public string PackageName { get; set; }
 		public string JavaPackageName { get; set; }
@@ -35,24 +47,13 @@ namespace Xamarin.ProjectTools
 			GlobalPackagesFolder = Path.Combine (XABuildPaths.TopDirectory, "packages");
 			SetProperty (KnownProperties.OutputType, outputType);
 
-			using (var sr = new StreamReader (typeof (XamarinAndroidApplicationProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.AndroidManifest.xml")))
-				default_android_manifest = sr.ReadToEnd ();
-			using (var sr = new StreamReader (typeof (XamarinAndroidApplicationProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.MainActivity.cs")))
-				default_main_activity_cs = sr.ReadToEnd ();
-			using (var sr = new StreamReader (typeof (XamarinAndroidApplicationProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.LayoutMain.axml")))
-				default_layout_main = sr.ReadToEnd ();
-			using (var stream = typeof (XamarinAndroidCommonProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.Icon.png")) {
-				icon_binary_mdpi = new byte [stream.Length];
-				stream.Read (icon_binary_mdpi, 0, (int) stream.Length);
-			}
-
 			// Add relevant Android content to our project without writing it to the .csproj file
 			if (outputType == "Exe") {
 				Sources.Add (new BuildItem.Source ("Properties\\AndroidManifest.xml") {
 					TextContent = () => default_android_manifest.Replace ("${PROJECT_NAME}", ProjectName).Replace ("${PACKAGENAME}", string.Format ("{0}.{0}", ProjectName))
 				});
 			}
-			Sources.Add (new BuildItem.Source ($"MainActivity{Language.DefaultExtension}") { TextContent = () => ProcessSourceTemplate (default_main_activity_cs) });
+			Sources.Add (new BuildItem.Source ($"MainActivity{Language.DefaultExtension}") { TextContent = () => ProcessSourceTemplate (MainActivity ?? DefaultMainActivity) });
 			Sources.Add (new BuildItem.Source ("Resources\\layout\\Main.axml") { TextContent = () => default_layout_main });
 			Sources.Add (new BuildItem.Source ("Resources\\values\\Strings.xml") { TextContent = () => default_strings_xml.Replace ("${PROJECT_NAME}", ProjectName) });
 			Sources.Add (new BuildItem.Source ("Resources\\drawable-mdpi\\Icon.png") { BinaryContent = () => icon_binary_mdpi });
@@ -64,6 +65,10 @@ namespace Xamarin.ProjectTools
 		public string OutputPath => Path.Combine ("bin", Configuration, TargetFramework.ToLowerInvariant ());
 
 		public string IntermediateOutputPath => Path.Combine ("obj", Configuration, TargetFramework.ToLowerInvariant ());
+
+		public string DefaultMainActivity => default_main_activity_cs;
+
+		public string MainActivity { get; set; }
 
 		public override string ProcessSourceTemplate (string source)
 		{

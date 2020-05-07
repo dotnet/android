@@ -9,6 +9,12 @@
   <Import Project="..\..\..\..\build-tools\scripts\MSBuildReferences.projitems" />
   <ItemGroup>
     <Compile Remove="Resources\**\*.cs" />
+    <EmbeddedResource Include="Resources\AndroidX\Tabbar.xml">
+      <LogicalName>Xamarin.ProjectTools.Resources.AndroidX.Tabbar.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\AndroidX\Toolbar.xml">
+      <LogicalName>Xamarin.ProjectTools.Resources.AndroidX.Toolbar.xml</LogicalName>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\Wear\LayoutMain.axml">
       <LogicalName>Xamarin.ProjectTools.Resources.Wear.LayoutMain.axml</LogicalName>
     </EmbeddedResource>

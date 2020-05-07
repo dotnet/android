@@ -102,6 +102,7 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
 <Project>
   <PropertyGroup>
     <AndroidNETSdkVersion>$(AndroidPackVersionLong)</AndroidNETSdkVersion>
+    <XamarinAndroidVersion>$(AndroidPackVersionLong)</XamarinAndroidVersion>
   </PropertyGroup>
   <ItemGroup>
     <KnownFrameworkReference Include="Microsoft.Android"
