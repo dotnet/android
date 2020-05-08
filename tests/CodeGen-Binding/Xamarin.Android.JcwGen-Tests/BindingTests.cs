@@ -13,6 +13,13 @@ namespace Xamarin.Android.JcwGenTests {
 	public class BindingTests {
 
 		[Test]
+		public void TestTimingCreateTimingIsCorrectType ()
+		{
+			var t = Com.Xamarin.Android.Timing.CreateTiming ();
+			Assert.IsTrue (t is Com.Xamarin.Android.Timing);
+		}
+
+		[Test]
 		public void TestResourceId ()
 		{
 			Assert.AreEqual (Resource.Id.action_settings, Com.Example.Javalib.MainActivity.ActionSettings);

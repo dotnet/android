@@ -11,6 +11,7 @@
 #include <libgen.h>
 #include <errno.h>
 #include <unistd.h>
+#include <climits>
 
 #include <mono/metadata/assembly.h>
 #include <mono/metadata/image.h>
@@ -208,6 +209,10 @@ EmbeddedAssemblies::typemap_java_to_managed (const char *java_type_name)
 	}
 
 	const char *managed_type_name = entry->to;
+	if (managed_type_name == nullptr) {
+		log_debug (LOG_ASSEMBLY, "typemap: Java type '%s' maps either to an open generic type or an interface type.");
+		return nullptr;
+	}
 	log_debug (LOG_DEFAULT, "typemap: Java type '%s' corresponds to managed type '%s'", java_type_name, managed_type_name);
 
 	MonoType *type = mono_reflection_type_from_name (const_cast<char*>(managed_type_name), nullptr);
@@ -731,12 +736,18 @@ EmbeddedAssemblies::typemap_load_file (BinaryTypeMapHeader &header, const char *
 	uint8_t *managed_pos = managed_start;
 	TypeMapEntry *cur;
 
+	constexpr uint32_t INVALID_TYPE_INDEX = UINT32_MAX;
 	for (size_t i = 0; i < module.entry_count; i++) {
 		cur = &module.java_to_managed[i];
 		cur->from = reinterpret_cast<char*>(java_pos);
 
 		uint32_t idx = *(reinterpret_cast<uint32_t*>(java_pos + header.java_name_width));
-		cur->to = reinterpret_cast<char*>(managed_start + (managed_entry_size * idx));
+		if (idx < INVALID_TYPE_INDEX) {
+			cur->to = reinterpret_cast<char*>(managed_start + (managed_entry_size * idx));
+		} else {
+			// Ignore the type mapping
+			cur->to = nullptr;
+		}
 		java_pos += java_entry_size;
 
 		cur = &module.managed_to_java[i];

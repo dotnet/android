@@ -219,7 +219,7 @@ namespace Xamarin.Android.Tasks
 			size += WriteData (output, entry.ModuleIndex);
 
 			WriteCommentLine (output, "type_token_id");
-			size += WriteData (output, entry.Token);
+			size += WriteData (output, entry.SkipInJavaToManaged ? 0 : entry.Token);
 
 			WriteCommentLine (output, "java_name");
 			size += WriteAsciiData (output, entry.JavaName, mappingData.JavaNameWidth);
