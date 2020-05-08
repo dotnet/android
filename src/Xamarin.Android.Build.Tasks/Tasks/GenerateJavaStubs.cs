@@ -174,7 +174,7 @@ namespace Xamarin.Android.Tasks
 
 			// Step 2 - Generate type maps
 			//   Type mappings need to use all the assemblies, always.
-			WriteTypeMappings (allJavaTypes);
+			WriteTypeMappings (allJavaTypes, cache);
 
 			var javaTypes = new List<TypeDefinition> ();
 			foreach (TypeDefinition td in allJavaTypes) {
@@ -399,10 +399,10 @@ namespace Xamarin.Android.Tasks
 			MonoAndroidHelper.CopyIfStringChanged (template, Path.Combine (destDir, filename));
 		}
 
-		void WriteTypeMappings (List<TypeDefinition> types)
+		void WriteTypeMappings (List<TypeDefinition> types, TypeDefinitionCache cache)
 		{
 			var tmg = new TypeMapGenerator ((string message) => Log.LogDebugMessage (message), SupportedAbis);
-			if (!tmg.Generate (Debug, SkipJniAddNativeMethodRegistrationAttributeScan, types, TypemapOutputDirectory, GenerateNativeAssembly, out ApplicationConfigTaskState appConfState))
+			if (!tmg.Generate (Debug, SkipJniAddNativeMethodRegistrationAttributeScan, types, cache, TypemapOutputDirectory, GenerateNativeAssembly, out ApplicationConfigTaskState appConfState))
 				throw new XamarinAndroidException (4308, Properties.Resources.XA4308);
 			GeneratedBinaryTypeMaps = tmg.GeneratedBinaryTypeMaps.ToArray ();
 			BuildEngine4.RegisterTaskObject (ApplicationConfigTaskState.RegisterTaskObjectKey, appConfState, RegisteredTaskObjectLifetime.Build, allowEarlyCollection: false);
