@@ -99,7 +99,17 @@ namespace Xamarin.Android.Prepare
 
 		bool AcceptLicenses (Context context, string sdkRoot)
 		{
-			string sdkManager = context.OS.Which (Path.Combine (sdkRoot, "tools", "bin", "sdkmanager"));
+			string[] sdkManagerPaths = new[]{
+				Path.Combine (sdkRoot, "cmdline-tools", context.Properties [KnownProperties.CommandLineToolsFolder], "bin", "sdkmanager"),
+				Path.Combine (sdkRoot, "cmdline-tools", "latest", "bin", "sdkmanager"),
+				Path.Combine (sdkRoot, "tools", "bin", "sdkmanager"),
+			};
+			string sdkManager = "";
+			foreach (var sdkManagerPath in sdkManagerPaths) {
+				sdkManager = context.OS.Which (sdkManagerPath, required: false);
+				if (!string.IsNullOrEmpty (sdkManager))
+					break;
+			}
 			if (sdkManager.Length == 0)
 				throw new InvalidOperationException ("sdkmanager not found");
 			string jdkDir = context.OS.JavaHome;
@@ -123,6 +133,19 @@ namespace Xamarin.Android.Prepare
 			var proc = Process.Start (psi);
 			for (int i = 0; i < 10; i++)
 				proc.StandardInput.WriteLine ('y');
+			proc.WaitForExit ();
+
+			// TODO/HACK?
+			// `emulator` package isn't usable with `cmdline-tools/1.0/bin/avdmanager` unless
+			// `sdkmanager` installs it; this creates an `emulator/packages.xml`, which is needed.
+			// Is there a workaround?
+			psi = new ProcessStartInfo (sdkManager, "emulator") {
+				UseShellExecute = false,
+			};
+			if (!String.IsNullOrEmpty (jdkDir) && !psi.EnvironmentVariables.ContainsKey ("JAVA_HOME"))
+				psi.EnvironmentVariables.Add ("JAVA_HOME", jdkDir);
+			Log.DebugLine ($"Starting {psi.FileName} {psi.Arguments}");
+			proc = Process.Start (psi);
 			proc.WaitForExit ();
 
 			return true;
