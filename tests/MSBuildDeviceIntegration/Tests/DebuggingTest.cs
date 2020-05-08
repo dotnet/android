@@ -276,31 +276,37 @@ namespace ${ROOT_NAMESPACE} {
 				/* useSharedRuntime */   false,
 				/* embedAssemblies */    true,
 				/* fastDevType */        "Assemblies",
+				/* allowDeltaInstall */  false,
 			},
 			new object[] {
 				/* useSharedRuntime */   false,
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies",
+				/* allowDeltaInstall */  false,
 			},
 			new object[] {
 				/* useSharedRuntime */   true,
 				/* embedAssemblies */    true,
 				/* fastDevType */        "Assemblies",
+				/* allowDeltaInstall */  false,
 			},
 			new object[] {
 				/* useSharedRuntime */   true,
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies",
+				/* allowDeltaInstall */  false,
 			},
 			new object[] {
 				/* useSharedRuntime */   true,
 				/* embedAssemblies */    true,
 				/* fastDevType */        "Assemblies:Dexes",
+				/* allowDeltaInstall */  false,
 			},
 			new object[] {
 				/* useSharedRuntime */   true,
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies:Dexes",
+				/* allowDeltaInstall */  false,
 			},
 			new object[] {
 				/* useSharedRuntime */   true,
@@ -314,7 +320,7 @@ namespace ${ROOT_NAMESPACE} {
 		[Test]
 		[TestCaseSource (nameof(DebuggerTestCases))]
 		[Retry (1)]
-		public void ApplicationRunsWithDebuggerAndBreaks (bool useSharedRuntime, bool embedAssemblies, string fastDevType, bool allowDeltaInstall = false)
+		public void ApplicationRunsWithDebuggerAndBreaks (bool useSharedRuntime, bool embedAssemblies, string fastDevType, bool allowDeltaInstall)
 		{
 			if (!CommercialBuildAvailable) {
 				Assert.Ignore ("Test does not run on the Open Source Builds.");
