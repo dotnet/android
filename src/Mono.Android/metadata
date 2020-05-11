@@ -1596,10 +1596,6 @@
   <attr api-since="30" path="/api/package/interface[contains(@merge.SourceFile,'api-29.xml.in')]" name="unnest">true</attr>
   <attr api-since="30" path="/api/package/class[contains(@merge.SourceFile,'api-29.xml.in')]" name="unnest">true</attr>
 
-  <!-- This keeps us from creating any Constants classes for interface constants in new DIM-enabled API -->
-  <attr api-since="30" path="/api/package/interface[contains(@merge.SourceFile,'api-30.xml.in')]" name="no-alternatives">true</attr>
-  <attr api-since="30" path="/api/package/interface[contains(@merge.SourceFile,'api-R.xml.in')]" name="no-alternatives">true</attr>
-
   <!-- These members are not explicitly marked as deprecated in Java code, but they are deprecated in Java docs.
        They override explicitly deprecated members, which causes a warning in C#. -->
   <attr api-since="15" path="/api/package[@name='android.location']/class[@name='SettingInjectorService']/method[@name='onStart' and count(parameter)=2 and parameter[1][@type='android.content.Intent'] and parameter[2][@type='int']]" name="deprecated">Implement onStartCommand(android.content.Intent, int, int) instead.</attr>
@@ -1628,4 +1624,30 @@
   <attr api-since="9" path="/api/package[@name='java.sql']/class[@name='SQLException']/method[@name='iterator' and count(parameter)=0]" name="return-not-null">true</attr>
   <attr path="/api/package[@name='android.database']/class[@name='CursorJoiner']/method[@name='iterator' and count(parameter)=0]" name="return-not-null">true</attr>
   <attr api-since="24" path="/api/package[@name='android.icu.text']/class[@name='UnicodeSet']/method[@name='iterator' and count(parameter)=0]" name="return-not-null">true</attr>
+
+  
+  <!--
+    ***********************************************************************
+    THE FOLLOWING LINES MUST BE CREATED FOR ANY NEW PLATFORM THAT IS ADDED.
+    
+    PLEASE ADD OTHER METADATA ABOVE THIS SECTION SO THAT WE WILL SEE
+    THIS WARNING WHEN WE ADD A NEW PLATFORM TO THIS FILE!
+    ***********************************************************************
+  -->
+  
+  <!-- This keeps us from creating any Constants classes for interface constants in new DIM-enabled API -->
+  <attr api-since="30" path="/api/package/interface[contains(@merge.SourceFile,'api-30.xml.in')]" name="no-alternatives">true</attr>
+  <attr api-since="30" path="/api/package/interface[contains(@merge.SourceFile,'api-R.xml.in')]" name="no-alternatives">true</attr>
+
+  <!-- Set ApiSince based on merge sourcefile. -->
+  <attr api-since="22" path="/api//*[contains(@merge.SourceFile,'api-22.xml.in')]" name="api-since">22</attr>
+  <attr api-since="23" path="/api//*[contains(@merge.SourceFile,'api-23.xml.in')]" name="api-since">23</attr>
+  <attr api-since="24" path="/api//*[contains(@merge.SourceFile,'api-24.xml.in')]" name="api-since">24</attr>
+  <attr api-since="25" path="/api//*[contains(@merge.SourceFile,'api-25.xml.in')]" name="api-since">25</attr>
+  <attr api-since="26" path="/api//*[contains(@merge.SourceFile,'api-26.xml.in')]" name="api-since">26</attr>
+  <attr api-since="27" path="/api//*[contains(@merge.SourceFile,'api-27.xml.in')]" name="api-since">27</attr>
+  <attr api-since="28" path="/api//*[contains(@merge.SourceFile,'api-28.xml.in')]" name="api-since">28</attr>
+  <attr api-since="29" path="/api//*[contains(@merge.SourceFile,'api-29.xml.in')]" name="api-since">29</attr>
+  <attr api-since="30" path="/api//*[contains(@merge.SourceFile,'api-30.xml.in')]" name="api-since">30</attr>
+  <attr api-since="30" path="/api//*[contains(@merge.SourceFile,'api-R.xml.in')]" name="api-since">30</attr>
 </metadata>
