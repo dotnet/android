@@ -210,7 +210,7 @@ EmbeddedAssemblies::typemap_java_to_managed (const char *java_type_name)
 
 	const char *managed_type_name = entry->to;
 	if (managed_type_name == nullptr) {
-		log_debug (LOG_ASSEMBLY, "typemap: Java type '%s' maps either to an open generic type or an interface type.");
+		log_debug (LOG_ASSEMBLY, "typemap: Java type '%s' maps either to an open generic type or an interface type.", java_type_name);
 		return nullptr;
 	}
 	log_debug (LOG_DEFAULT, "typemap: Java type '%s' corresponds to managed type '%s'", java_type_name, managed_type_name);
