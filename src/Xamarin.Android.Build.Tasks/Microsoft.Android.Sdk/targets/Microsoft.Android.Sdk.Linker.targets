@@ -10,7 +10,6 @@ This file contains the .NET 5-specific targets to customize ILLink
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <Target Name="_PrepareLinking" AfterTargets="ComputeResolvedFilesToPublishList">
-    <Message Text="rodo: prepare linking" Importance="high" />
     <ItemGroup>
       <ResolvedFileToPublish
           Update="@(ResolvedFileToPublish)"
