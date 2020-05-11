@@ -250,7 +250,7 @@ namespace Xamarin.Android.Tasks
 
 							if (entryIndexInOutput != -1) {
 								Log.LogDebugMessage ($"Refreshing {entry.FullName} from {apkInputPath}");
-								
+
 								// Force the modified resource to move to the end of the file, by deleting it first so that AddStream adds it
 								// back with a new index. Keeping modified resources toward the end optimizes the delta install for the typical
 								// dev scenario where the user is editing a few resources but most of the APK contents (e.g. the native libs)
@@ -258,8 +258,9 @@ namespace Xamarin.Android.Tasks
 								// contents that don't change and don't move.
 								apk.Archive.DeleteEntry ((ulong) entryIndexInOutput);
 								deletedEntries.Add ((ulong) entryIndexInOutput);
+							} else {
+								Log.LogDebugMessage ($"Adding {entry.FullName} from {apkInputPath}");
 							}
-							else Log.LogDebugMessage ($"Adding {entry.FullName} from {apkInputPath}");
 
 							apk.Archive.AddStream (ms, entry.FullName, compressionMethod: entry.CompressionMethod);
 						}
