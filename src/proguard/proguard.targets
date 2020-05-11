@@ -3,7 +3,7 @@
     <_OutputJar>$(OutputPath)lib\proguard.jar</_OutputJar>
     <_OutputBat>$(OutputPath)bin\proguard.bat</_OutputBat>
     <_OutputSh>$(OutputPath)bin\proguard.sh</_OutputSh>
-    <_OutputLicense>$(OutputPath)license.html</_OutputLicense>
+    <_OutputLicense>$(OutputPath)license.md</_OutputLicense>
   </PropertyGroup>
   <ItemGroup>
     <_Outputs Include="$(_OutputJar);$(_OutputBat);$(_OutputSh);$(_OutputLicense)" />
@@ -12,7 +12,7 @@
       Inputs="$(MSBuildThisFile);$(ProGuardSourceFullPath)\buildscripts\build.xml"
       Outputs="@(_Outputs)">
     <Exec
-        Command="&quot;$(GradleWPath)&quot; proguardJar $(GradleArgs)"
+        Command="&quot;$(GradleWPath)&quot; assembleProguardJar $(GradleArgs)"
         EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)"
         WorkingDirectory="$(ProGuardSourceFullPath)\buildscripts"
     />
@@ -30,7 +30,7 @@
         DestinationFiles="$(_OutputSh)"
     />
     <Copy
-        SourceFiles="..\..\external\proguard\docs\license.html"
+        SourceFiles="..\..\external\proguard\docs\license.md"
         DestinationFiles="$(_OutputLicense)"
     />
     <Touch Files="@(_Outputs)" />

@@ -196,7 +196,7 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\pdb2mdb.exe" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\pdb2mdb.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\proguard\lib\proguard.jar"/>
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\proguard\license.html" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\proguard\license.md" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\startup.aotprofile" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\startup-xf.aotprofile" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\r8.jar" />
