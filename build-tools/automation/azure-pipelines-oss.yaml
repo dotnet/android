@@ -134,10 +134,10 @@ stages:
       parameters:
         artifactName: Build Results - macOS
 
-      # Update GitHub status: Done
-    - template: report-status/v1.yml@templates
-      parameters:
-        GitHubDescription: $(Agent.JobStatus)
+    # Update GitHub status: Done
+    # - template: report-status/v1.yml@templates
+    #  parameters:
+    #    GitHubDescription: $(Agent.JobStatus)
 
 - stage: linux_stage
   displayName: Linux
