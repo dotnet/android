@@ -1980,12 +1980,11 @@ because xbuild doesn't support framework reference assemblies.
 	</ItemGroup>
 </Target>
 
-<!-- TODO make it work with .NET5 -->
 <Target Name="_RemoveRegisterAttribute"
   DependsOnTargets="_PrepareAssemblies"
   Inputs="$(_AndroidLinkFlag)"
   Outputs="$(_RemoveRegisterFlag)"
-  Condition="'$(AndroidLinkMode)' != 'None' AND '$(AndroidUseSharedRuntime)' != 'true' and '$(UsingAndroidNETSdk)' != 'true'">
+  Condition="'$(AndroidLinkMode)' != 'None' AND '$(AndroidUseSharedRuntime)' != 'true'">
 
   <!-- Make a copy of every assembly into assets\shrunk -->
   <CopyIfChanged

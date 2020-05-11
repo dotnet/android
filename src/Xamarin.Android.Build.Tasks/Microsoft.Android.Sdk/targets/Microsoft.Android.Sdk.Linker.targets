@@ -23,6 +23,8 @@ This file contains the .NET 5-specific targets to customize ILLink
       <!-- make the output verbose to see what the linker is doing. FIXME: make dependent upon verbosity level -->
       <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --verbose</_ExtraTrimmerArgs>
 
+      <IntermediateLinkDir>$(MonoAndroidIntermediateAssemblyDir)</IntermediateLinkDir>
+
       <!-- we don't want to ignore stuff we can't find -->
       <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --skip-unresolved false</_ExtraTrimmerArgs>
       <_AdditionalTaskAssemblyDirectory>$(XamarinSdkRootDirectory)tools/dotnet-linker/</_AdditionalTaskAssemblyDirectory>

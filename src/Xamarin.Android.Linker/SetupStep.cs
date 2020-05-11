@@ -4,6 +4,7 @@ using System.Reflection;
 using Java.Interop.Tools.Cecil;
 using Mono.Linker;
 using Mono.Linker.Steps;
+using Mono.Tuner;
 using MonoDroid.Tuner;
 
 namespace Xamarin.Android.Linker
@@ -26,8 +27,16 @@ namespace Xamarin.Android.Linker
 
 		protected override void Process ()
 		{
+			var subSteps = new SubStepDispatcher ();
+			subSteps.Add (new PreserveExportedTypes ());
+			subSteps.Add (new MarkJavaObjects ());
+			subSteps.Add (new PreserveJavaExceptions ());
+			subSteps.Add (new PreserveJavaTypeRegistrations ());
+			subSteps.Add (new PreserveApplications ());
+
 			var cache = new TypeDefinitionCache ();
 			InsertAfter (new FixAbstractMethodsStep (cache), "RemoveUnreachableBlocksStep");
+			InsertAfter (subSteps, "RemoveUnreachableBlocksStep");
 		}
 
 		void InsertAfter (IStep step, string stepName)
