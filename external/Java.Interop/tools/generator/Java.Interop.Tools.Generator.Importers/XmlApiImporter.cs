@@ -25,6 +25,8 @@ namespace MonoDroid.Generation
 					 !options.SupportNestedInterfaceTypes
 			};
 
+			FillApiSince (klass, pkg, elem);
+
 			foreach (var child in elem.Elements ()) {
 				switch (child.Name.LocalName) {
 					case "implements":
@@ -39,7 +41,7 @@ namespace MonoDroid.Generation
 						klass.Ctors.Add (CreateCtor (klass, child));
 						break;
 					case "field":
-						klass.AddField (CreateField (child));
+						klass.AddField (CreateField (klass, child));
 						break;
 					case "typeParameters":
 						break; // handled at GenBaseSupport
@@ -55,6 +57,7 @@ namespace MonoDroid.Generation
 		public static Ctor CreateCtor (GenBase declaringType, XElement elem)
 		{
 			var ctor = new Ctor (declaringType) {
+				ApiAvailableSince = declaringType.ApiAvailableSince,
 				CustomAttributes = elem.XGetAttribute ("customAttributes"),
 				Deprecated = elem.Deprecated (),
 				GenericArguments = elem.GenericArguments (),
@@ -90,12 +93,15 @@ namespace MonoDroid.Generation
 
 			ctor.Name = EnsureValidIdentifer (ctor.Name);
 
+			FillApiSince (ctor, elem);
+
 			return ctor;
 		}
 
-		public static Field CreateField (XElement elem)
+		public static Field CreateField (GenBase declaringType, XElement elem)
 		{
 			var field = new Field {
+				ApiAvailableSince = declaringType.ApiAvailableSince,
 				DeprecatedComment = elem.XGetAttribute ("deprecated"),
 				IsAcw = true,
 				IsDeprecated = elem.XGetAttribute ("deprecated") != "not deprecated",
@@ -123,6 +129,8 @@ namespace MonoDroid.Generation
 				field.Name = TypeNameUtilities.StudlyCase (char.IsLower (field.JavaName [0]) || field.JavaName.ToLowerInvariant ().ToUpperInvariant () != field.JavaName ? field.JavaName : field.JavaName.ToLowerInvariant ());
 				field.Name = EnsureValidIdentifer (field.Name);
 			}
+
+			FillApiSince (field, elem);
 
 			return field;
 		}
@@ -205,6 +213,8 @@ namespace MonoDroid.Generation
 					 !options.SupportNestedInterfaceTypes
 			};
 
+			FillApiSince (iface, pkg, elem);
+
 			foreach (var child in elem.Elements ()) {
 				switch (child.Name.LocalName) {
 					case "implements":
@@ -216,7 +226,7 @@ namespace MonoDroid.Generation
 						iface.AddMethod (CreateMethod (iface, child));
 						break;
 					case "field":
-						iface.AddField (CreateField (child));
+						iface.AddField (CreateField (iface, child));
 						break;
 					case "typeParameters":
 						break; // handled at GenBaseSupport
@@ -232,6 +242,7 @@ namespace MonoDroid.Generation
 		public static Method CreateMethod (GenBase declaringType, XElement elem)
 		{
 			var method = new Method (declaringType) {
+				ApiAvailableSince = declaringType.ApiAvailableSince,
 				ArgsType = elem.Attribute ("argsType")?.Value,
 				CustomAttributes = elem.XGetAttribute ("customAttributes"),
 				Deprecated = elem.Deprecated (),
@@ -278,6 +289,8 @@ namespace MonoDroid.Generation
 			method.Name = EnsureValidIdentifer (method.Name);
 
 			method.FillReturnType ();
+
+			FillApiSince (method, elem);
 
 			return method;
 		}
@@ -348,6 +361,20 @@ namespace MonoDroid.Generation
 			}
 
 			return e;
+		}
+
+		// The array here allows members to inherit defaults from their parent, but
+		// override them if they were added later.
+		// For example:
+		// - <package api-since="21">
+		//   - <class api-since="24">
+		//     - <method api-since="28">
+		// Elements need to be passed in the above order. (package, class, member)
+		static void FillApiSince (ApiVersionsSupport.IApiAvailability model, params XElement[] elems)
+		{
+			foreach (var elem in elems)
+				if (int.TryParse (elem.XGetAttribute ("api-since"), out var result))
+					model.ApiAvailableSince = result;
 		}
 
 		static bool IsObfuscatedName (int threshold, string name)

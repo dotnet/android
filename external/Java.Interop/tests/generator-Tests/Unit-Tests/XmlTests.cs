@@ -171,7 +171,7 @@ namespace generatortests
 		{
 			var element = package.Element ("class");
 			var @class = XmlApiImporter.CreateClass (package, element, options);
-			var field = XmlApiImporter.CreateField (element.Element ("field"));
+			var field = XmlApiImporter.CreateField (@class, element.Element ("field"));
 			Assert.IsTrue (field.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "field.Validate failed!");
 
 			Assert.AreEqual ("Value", field.Name);
