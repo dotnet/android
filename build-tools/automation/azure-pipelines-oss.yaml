@@ -134,10 +134,11 @@ stages:
       parameters:
         artifactName: Build Results - macOS
 
-    # Update GitHub status: Done
-    # - template: report-status/v1.yml@templates
-    #  parameters:
-    #    GitHubDescription: $(Agent.JobStatus)
+    # UNDONE: 'Report build status' option seems to work fine with PAT-based service connection
+    # UNDONE: The following is purely for testing updates to the template
+    - template: report-status/v1.yml@templates
+      parameters:
+        GitHubDescription: $(Agent.JobStatus)
 
 - stage: linux_stage
   displayName: Linux
