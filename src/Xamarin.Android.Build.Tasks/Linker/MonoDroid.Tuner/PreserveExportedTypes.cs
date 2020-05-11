@@ -2,11 +2,14 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-
 using Mono.Linker;
 using Mono.Linker.Steps;
 
 using Mono.Cecil;
+
+#if NET5_LINKER
+using Xamarin.Android.Linker;
+#endif
 
 namespace Mono.Tuner {
 

@@ -5,7 +5,9 @@ using System.Linq;
 using Mono.Linker;
 using Mono.Linker.Steps;
 
+#if !NET5_LINKER
 using Mono.Tuner;
+#endif
 using Mobile.Tuner;
 
 using Mono.Cecil;

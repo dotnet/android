@@ -32,13 +32,6 @@
     <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\PreserveTlsProvider.cs" />
     <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\PreserveTypeConverters.cs" />
 
-    <!--TODO: Steps that use ISubStep / BaseSubStep-->
-    <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\MarkJavaObjects.cs" />
-    <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\PreserveApplications.cs" />
-    <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\PreserveExportedTypes.cs" />
-    <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\PreserveJavaExceptions.cs" />
-    <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\PreserveJavaTypeRegistrations.cs" />
-
     <!--TODO: Subclasses RemoveAttributesBase-->
     <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\RemoveAttributes.cs" />
 
