@@ -16,10 +16,14 @@ pr:
 # Global variables
 # Predefined variables: https://docs.microsoft.com/en-us/azure/devops/pipelines/build/variables?view=azure-devops&tabs=yaml
 variables:
-  EnableLinuxStage: false
   EnableMacStage: true
+  EnableLinuxStage: false
+
+  XA.Build.MacOSSPool: VSEng-Xamarin-RedmondMacMojaveBuildPool-Android-OSS
+  XA.Build.LinuxOSSPool: Xamarin-Android-Ubuntu
 
   XA.Build.Configuration: Release
+
   NuGetArtifactName: nupkgs
   EXTRA_MSBUILD_ARGS: /p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False
   PREPARE_FLAGS: PREPARE_CI=1 PREPARE_CI_PR=1
