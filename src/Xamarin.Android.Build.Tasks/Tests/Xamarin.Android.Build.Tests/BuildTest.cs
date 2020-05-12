@@ -3273,6 +3273,26 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		}
 
 		[Test]
+		[TestCase ("AotAssemblies", false)]
+		[TestCase ("AndroidEnableProfiledAot", false)]
+		[TestCase ("EnableLLVM", true)]
+		[TestCase ("BundleAssemblies", true)]
+		public void GetDependencyNdkRequiredConditions (string property, bool ndkRequired)
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.AotAssemblies = true;
+			proj.SetProperty (property, "true");
+			using (var builder = CreateApkBuilder ()) {
+				builder.Target = "GetAndroidDependencies";
+				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+				if (ndkRequired)
+					StringAssertEx.Contains ("ndk-bundle", builder.LastBuildOutput, "ndk-bundle should be a dependency.");
+				else
+					StringAssertEx.DoesNotContain ("ndk-bundle", builder.LastBuildOutput, "ndk-bundle should not be a dependency.");
+			}
+		}
+
+		[Test]
 		public void GetDependencyWhenBuildToolsAreMissingTest ()
 		{
 			var apis = new ApiInfo [] {
