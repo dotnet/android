@@ -68,7 +68,9 @@ stages:
         version: $(DotNetCoreVersion)
 
     # Prepare and build everything
-    - script: make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
+    - script: |
+        echo "make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'"
+        make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'
       workingDirectory: $(Build.SourcesDirectory)
       displayName: make prepare-update-mono
 
