@@ -1,0 +1,15 @@
+{
+  "solution": {
+    "path": "..\\..\\Xamarin.Android.sln",
+    "projects": [
+      "build-tools\\api-merge\\api-merge.csproj",
+      "build-tools\\api-xml-adjuster\\api-xml-adjuster.csproj",
+      "build-tools\\jnienv-gen\\jnienv-gen.csproj",
+      "external\\Java.Interop\\src\\Java.Interop.NamingCustomAttributes\\Java.Interop.NamingCustomAttributes.shproj",
+      "external\\Java.Interop\\tools\\generator\\generator.csproj",
+      "external\\Java.Interop\\tools\\jcw-gen\\jcw-gen.csproj",
+      "src\\Mono.Android\\Mono.Android.csproj",
+      "src\\java-runtime\\java-runtime.csproj"
+    ]
+  }
+}
