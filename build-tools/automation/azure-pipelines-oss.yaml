@@ -59,14 +59,12 @@ stages:
         GitHubDescription: 'prereqs'
         GitHubState: 'pending'
 
-    - task: UseDotNet@2
-      displayName: install .NET Core $(DotNetCorePreviewVersion)
-      inputs:
+    - template: yaml-templates/use-dot-net.yaml
+      parameters:
         version: $(DotNetCorePreviewVersion)
 
-    - task: UseDotNet@2
-      displayName: install .NET Core $(DotNetCoreVersion)
-      inputs:
+    - template: yaml-templates/use-dot-net.yaml
+      parameters:
         version: $(DotNetCoreVersion)
 
     - script: |
