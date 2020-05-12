@@ -53,6 +53,12 @@ stages:
       clean: true             # Executes: git clean -ffdx && git reset --hard HEAD
       submodules: recursive
 
+    # Update GitHub status: Done
+    - template: report-status/v1.yml@templates
+      parameters:
+        GitHubDescription: 'prereqs'
+        GitHubState: 'pending'
+
     - task: UseDotNet@2
       displayName: install .NET Core $(DotNetCorePreviewVersion)
       inputs:
