@@ -150,11 +150,6 @@ stages:
     - checkout: self
       submodules: recursive
 
-    - script: |
-        # Report used vs. available disk space on each volume
-        df -H
-      displayName: report disk info
-
     - task: NuGetToolInstaller@1
       displayName: 'Use NuGet 5.x'
       inputs:
