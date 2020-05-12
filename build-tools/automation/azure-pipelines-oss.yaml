@@ -134,9 +134,7 @@ stages:
   jobs:
   - job: linux_build_package
     displayName: Linux Build
-    pool:
-      # https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=azure-devops
-      vmImage: $(XA.Build.LinuxOSSPoolVmImage)            # The variable is defined on the pipeline definition
+    pool: $(XA.Build.LinuxOSSPool)                        # The variable is defined on the pipeline definition
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:
