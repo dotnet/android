@@ -1132,8 +1132,6 @@ namespace Lib2
 
 				AndroidItem.AndroidResource layout2Resource = AddLayout2 (proj);
 				Assert.IsTrue (builder.Build (proj), "second build should succeed");
-				//TODO: This fails currently as at least _ResolveLibraryProjectImports is run again; bug?
-				//AssertNonResourceTargetsSkipped (builder);
 
 				// Added resources should go at the end of the zip
 				using (var zip = ZipArchive.Open (signedApkPath, FileMode.Open)) {
@@ -1160,8 +1158,6 @@ namespace Lib2
 
 				proj.AndroidResources.Remove (layout2Resource);
 				Assert.IsTrue (builder.Build (proj), "fourth build should succeed");
-				//TODO: This fails currently as at least _ResolveLibraryProjectImports is run again; bug?
-				//AssertNonResourceTargetsSkipped (builder);
 
 				// Removed resources should go away
 				using (var zip = ZipArchive.Open (signedApkPath, FileMode.Open)) {
