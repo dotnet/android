@@ -727,14 +727,6 @@ stages:
         plotTitle: Xamarin.Forms app startup
         plotPathAndFilename: $(System.DefaultWorkingDirectory)/TestResult-Xamarin.Forms_Test-times.csv
 
-    - template: yaml-templates/plots-to-appinsights.yaml
-      parameters:
-        condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
-        configuration: $(ApkTestConfiguration)
-        plotGroup: Test times
-        plotTitle: Locale
-        plotPathAndFilename: $(System.DefaultWorkingDirectory)/TestResult-Xamarin.Android.Locale_Tests-times.csv
-
     - template: yaml-templates/fail-on-issue.yaml
 
   # Check - "Xamarin.Android (Test BCL With Emulator - macOS)"
