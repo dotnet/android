@@ -917,23 +917,32 @@ namespace Lib2
 					Assert.Ignore ($"Cross compiler for {supportedAbis} was not available");
 				if (!b.GetSupportedRuntimes ().Any (x => supportedAbis == x.Abi))
 					Assert.Ignore ($"Runtime for {supportedAbis} was not available.");
+				b.BuildLogFile = "first.log";
+				b.CleanupAfterSuccessfulBuild = false;
+				b.CleanupOnDispose = false;
 				b.ThrowOnBuildFailure = false;
 				b.Verbosity = LoggerVerbosity.Diagnostic;
-				Assert.AreEqual (expectedResult, b.Build (proj), "Build should have {0}.", expectedResult ? "succeeded" : "failed");
+				Assert.AreEqual (expectedResult, b.Build (proj, doNotCleanupOnUpdate: true), "Build should have {0}.", expectedResult ? "succeeded" : "failed");
 				if (!expectedResult)
 					return;
 				foreach (var target in targets) {
 					Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped on first build!");
 				}
-				
-				Assert.IsTrue (b.Build (proj), "Second build should have succeeded.");
+
+				b.BuildLogFile = "second.log";
+				b.CleanupAfterSuccessfulBuild = false;
+				b.CleanupOnDispose = false;
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "Second build should have succeeded.");
 				foreach (var target in targets) {
 					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped on second build!");
 				}
 
 				proj.Touch ("MainActivity.cs");
 
-				Assert.IsTrue (b.Build (proj), "Third build should have succeeded.");
+				b.BuildLogFile = "third.log";
+				b.CleanupAfterSuccessfulBuild = false;
+				b.CleanupOnDispose = false;
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "Third build should have succeeded.");
 				foreach (var target in targets) {
 					Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped on third build!");
 				}

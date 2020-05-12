@@ -27,6 +27,8 @@ namespace Xamarin.Android.Tasks
 		{
 			if (typeof(T) == typeof(Int32) || typeof(T) == typeof(UInt32))
 				return Is64Bit ? ".word" : ".long";
+			if (typeof(T) == typeof(Int64) || typeof(T) == typeof(UInt64))
+				return Is64Bit ? ".xword" : ".long";
 			return base.MapType <T> ();
 		}
 

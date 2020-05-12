@@ -39,3 +39,7 @@
     path = external/xamarin-android-tools
     url = https://github.com/xamarin/xamarin-android-tools
     branch = master
+[submodule "lz4"]
+	path = external/lz4
+	url = https://github.com/lz4/lz4.git
+	branch = master

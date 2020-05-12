@@ -45,7 +45,37 @@ typedef struct dirent monodroid_dirent_t;
 #endif
 
 #define DEFAULT_DIRECTORY_MODE S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH
+
+#if defined (_MSC_VER)
+#define inline __inline
+#define force_inline __forceinline
+#elif defined (__GNUC__)
+#ifndef XA_LIKELY
+#define XA_LIKELY(expr) (__builtin_expect ((expr) != 0, 1))
+#endif
+
+#ifndef XA_UNLIKELY
 #define XA_UNLIKELY(expr) (__builtin_expect ((expr) != 0, 0))
+#endif
+
+#define force_inline inline __attribute__((always_inline))
+#endif
+
+#ifndef force_inline
+#define force_inline inline
+#endif
+
+#ifndef inline
+#define inline inline
+#endif
+
+#ifndef XA_LIKELY
+#define XA_LIKELY(expr) (expr)
+#endif
+
+#ifndef XA_UNLIKELY
+#define XA_UNLIKELY(expr) (expr)
+#endif
 
 namespace xamarin::android
 {

@@ -84,6 +84,10 @@ namespace Xamarin.Android.Tasks
 		public string UncompressedFileExtensions { get; set; }
 		public bool InterpreterEnabled { get; set; }
 
+		// Make it required after https://github.com/xamarin/monodroid/pull/1094 is merged
+		//[Required]
+		public bool EnableCompression { get; set; }
+
 		[Output]
 		public ITaskItem[] OutputFiles { get; set; }
 
@@ -289,7 +293,15 @@ namespace Xamarin.Android.Tasks
 		private void AddAssemblies (ZipArchiveEx apk)
 		{
 			bool debug = _Debug;
+			bool compress = !debug && EnableCompression;
 			bool use_shared_runtime = String.Equals (UseSharedRuntime, "true", StringComparison.OrdinalIgnoreCase);
+			string sourcePath;
+			AssemblyCompression.AssemblyData compressedAssembly = null;
+			IDictionary<string, CompressedAssemblyInfo> compressedAssembliesInfo = null;
+
+			if (compress) {
+				compressedAssembliesInfo = BuildEngine4.GetRegisteredTaskObject (CompressedAssemblyInfo.CompressedAssembliesInfoKey, RegisteredTaskObjectLifetime.Build) as IDictionary<string, CompressedAssemblyInfo>;
+			}
 
 			int count = 0;
 			foreach (ITaskItem assembly in ResolvedUserAssemblies) {
@@ -300,8 +312,11 @@ namespace Xamarin.Android.Tasks
 				if (MonoAndroidHelper.IsReferenceAssembly (assembly.ItemSpec)) {
 					Log.LogCodedWarning ("XA0107", assembly.ItemSpec, 0, Properties.Resources.XA0107, assembly.ItemSpec);
 				}
+
+				sourcePath = CompressAssembly (assembly);
+
 				// Add assembly
-				AddFileToArchiveIfNewer (apk, assembly.ItemSpec, GetTargetDirectory (assembly.ItemSpec) + "/"  + Path.GetFileName (assembly.ItemSpec), compressionMethod: UncompressedMethod);
+				AddFileToArchiveIfNewer (apk, sourcePath, GetTargetDirectory (assembly.ItemSpec) + "/"  + Path.GetFileName (assembly.ItemSpec), compressionMethod: UncompressedMethod);
 
 				// Try to add config if exists
 				var config = Path.ChangeExtension (assembly.ItemSpec, "dll.config");
@@ -336,10 +351,13 @@ namespace Xamarin.Android.Tasks
 					Log.LogDebugMessage ($"Skipping {assembly.ItemSpec} due to 'AndroidSkipAddToPackage' == 'true' ");
 					continue;
 				}
+
 				if (MonoAndroidHelper.IsReferenceAssembly (assembly.ItemSpec)) {
 					Log.LogCodedWarning ("XA0107", assembly.ItemSpec, 0, Properties.Resources.XA0107, assembly.ItemSpec);
 				}
-				AddFileToArchiveIfNewer (apk, assembly.ItemSpec, AssembliesPath + Path.GetFileName (assembly.ItemSpec), compressionMethod: UncompressedMethod);
+
+				sourcePath = CompressAssembly (assembly);
+				AddFileToArchiveIfNewer (apk, sourcePath, AssembliesPath + Path.GetFileName (assembly.ItemSpec), compressionMethod: UncompressedMethod);
 				var config = Path.ChangeExtension (assembly.ItemSpec, "dll.config");
 				AddAssemblyConfigEntry (apk, config);
 				// Try to add symbols if Debug
@@ -359,6 +377,50 @@ namespace Xamarin.Android.Tasks
 					apk.Flush();
 					count = 0;
 				}
+			}
+
+			void EnsureCompressedAssemblyData (string sourcePath, uint descriptorIndex)
+			{
+				if (compressedAssembly == null)
+					compressedAssembly = new AssemblyCompression.AssemblyData (sourcePath, descriptorIndex);
+				else
+					compressedAssembly.SetData (sourcePath, descriptorIndex);
+			}
+
+			string CompressAssembly (ITaskItem assembly)
+			{
+				if (!compress) {
+					return assembly.ItemSpec;
+				}
+
+				if (bool.TryParse (assembly.GetMetadata ("AndroidSkipCompression"), out bool value) && value) {
+					Log.LogDebugMessage ($"Skipping compression of {assembly.ItemSpec} due to 'AndroidSkipCompression' == 'true' ");
+					return assembly.ItemSpec;
+				}
+
+				if (compressedAssembliesInfo.TryGetValue (Path.GetFileName (assembly.ItemSpec), out CompressedAssemblyInfo info) && info != null) {
+					EnsureCompressedAssemblyData (assembly.ItemSpec, info.DescriptorIndex);
+					AssemblyCompression.CompressionResult result = AssemblyCompression.Compress (compressedAssembly);
+					if (result != AssemblyCompression.CompressionResult.Success) {
+						switch (result) {
+							case AssemblyCompression.CompressionResult.EncodingFailed:
+								Log.LogMessage ($"Failed to compress {assembly.ItemSpec}");
+								break;
+
+							case AssemblyCompression.CompressionResult.InputTooBig:
+								Log.LogMessage ($"Input assembly {assembly.ItemSpec} exceeds maximum input size");
+								break;
+
+							default:
+								Log.LogMessage ($"Unknown error compressing {assembly.ItemSpec}");
+								break;
+						}
+						return assembly.ItemSpec;
+					}
+					return compressedAssembly.DestinationPath;
+				}
+
+				return assembly.ItemSpec;
 			}
 		}
 

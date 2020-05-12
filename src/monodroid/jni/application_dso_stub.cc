@@ -27,6 +27,11 @@ const TypeMapModule map_modules[] = {};
 const TypeMapJava map_java[] = {};
 #endif
 
+CompressedAssemblies compressed_assemblies = {
+	/*.count = */ 0,
+	/*.descriptors = */ nullptr,
+};
+
 ApplicationConfig application_config = {
 	/*.uses_mono_llvm =*/ false,
 	/*.uses_mono_aot =*/ false,
