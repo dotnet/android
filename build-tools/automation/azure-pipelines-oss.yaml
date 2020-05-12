@@ -28,7 +28,7 @@ variables:
   PREPARE_FLAGS: PREPARE_CI=1 PREPARE_CI_PR=1
   DotNetCoreVersion: 3.x
   # Version number from: https://dotnet.microsoft.com/download/dotnet-core/5.0
-  DotNetCorePreviewVersion: 5.0.100-preview.1.20155.7
+  DotNetCorePreviewVersion: 5.0.100-preview.4.20227.14
 
   BUILD_TESTS: true
   RUN_TESTS: false
