@@ -90,6 +90,16 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Category ("SmokeTests")]
+		public void DotNetBuildXamarinForms ()
+		{
+			var proj = new XamarinFormsXASdkProject (SdkVersion);
+			var dotnet = CreateDotNetBuilder (proj);
+			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
+			Assert.IsTrue (StringAssertEx.ContainsText (dotnet.LastBuildOutput, " 0 Warning(s)"), "Should have no MSBuild warnings.");
+		}
+
+		[Test]
 		public void BuildWithLiteSdk ()
 		{
 			var proj = new XASdkProject () {
