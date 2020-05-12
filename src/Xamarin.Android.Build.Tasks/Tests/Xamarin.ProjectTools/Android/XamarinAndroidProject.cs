@@ -13,22 +13,22 @@ namespace Xamarin.ProjectTools
 			: base (debugConfigurationName, releaseConfigurationName)
 		{
 			Language = XamarinAndroidProjectLanguage.CSharp;
-			TargetFrameworkVersion = Versions.Android10;
-			UseLatestPlatformSdk = true;
-			AddReferences ("System.Core", "System.Xml", "Mono.Android");
-			ProjectGuid = Guid.NewGuid ().ToString ();
 
-			SetProperty ("ProjectTypeGuids", () => "{" + Language.ProjectTypeGuid + "};{" + ProjectTypeGuid + "}");
-			SetProperty ("ProjectGuid", () => "{" + ProjectGuid + "}");
+			if (!Builder.UseDotNet) {
+				TargetFrameworkVersion = Versions.Android10;
+				UseLatestPlatformSdk = true;
+				AddReferences ("System.Core", "System.Xml", "Mono.Android");
+				ProjectGuid = Guid.NewGuid ().ToString ();
+				SetProperty ("ProjectTypeGuids", () => "{" + Language.ProjectTypeGuid + "};{" + ProjectTypeGuid + "}");
+				SetProperty ("ProjectGuid", () => "{" + ProjectGuid + "}");
+				SetProperty ("MonoAndroidAssetsPrefix", "Assets");
+				SetProperty ("MonoAndroidResourcePrefix", "Resources");
+				SetProperty (KnownProperties.AndroidUseLatestPlatformSdk, () => UseLatestPlatformSdk ? "True" : "False");
+				SetProperty (KnownProperties.TargetFrameworkVersion, () => TargetFrameworkVersion);
+				SetProperty (ReleaseProperties, KnownProperties.AndroidUseSharedRuntime, "False");
+			}
 
 			SetProperty (KnownProperties.OutputType, "Library");
-			SetProperty ("MonoAndroidAssetsPrefix", "Assets");
-			SetProperty ("MonoAndroidResourcePrefix", "Resources");
-
-			SetProperty (KnownProperties.AndroidUseLatestPlatformSdk, () => UseLatestPlatformSdk ? "True" : "False");
-			SetProperty (KnownProperties.TargetFrameworkVersion, () => TargetFrameworkVersion);
-
-			SetProperty (ReleaseProperties, KnownProperties.AndroidUseSharedRuntime, "False");
 		}
 
 

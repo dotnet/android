@@ -15,17 +15,11 @@ namespace Xamarin.Android.Build.Tests
 	[Category ("Node-2")]
 	public class XASdkTests : BaseTest
 	{
-		static readonly string SdkVersion = Assembly.GetExecutingAssembly ()
-			.GetCustomAttributes<AssemblyMetadataAttribute> ()
-			.Where (attr => attr.Key == "SdkVersion")
-			.Select (attr => attr.Value)
-			.FirstOrDefault () ?? "0.0.1";
-
 		[Test]
 		[Category ("SmokeTests")]
 		public void DotNetBuildLibrary ([Values (false, true)] bool isRelease)
 		{
-			var proj = new XASdkProject (SdkVersion, outputType: "Library") {
+			var proj = new XASdkProject (outputType: "Library") {
 				IsRelease = isRelease
 			};
 			var dotnet = CreateDotNetBuilder (proj);
@@ -48,7 +42,7 @@ namespace Xamarin.Android.Build.Tests
 		[Category ("SmokeTests")]
 		public void DotNetBuildBinding ()
 		{
-			var proj = new XASdkProject (SdkVersion, outputType: "Library");
+			var proj = new XASdkProject (outputType: "Library");
 			proj.OtherBuildItems.Add (new AndroidItem.EmbeddedJar ("javaclasses.jar") {
 				BinaryContent = () => Convert.FromBase64String (InlineData.JavaClassesJarBase64)
 			});
@@ -97,7 +91,7 @@ namespace Xamarin.Android.Build.Tests
 		public void DotNetBuild (string runtimeIdentifier, bool isRelease)
 		{
 			var abi = MonoAndroidHelper.RuntimeIdentifierToAbi (runtimeIdentifier);
-			var proj = new XASdkProject (SdkVersion) {
+			var proj = new XASdkProject {
 				IsRelease = isRelease
 			};
 			proj.OtherBuildItems.Add (new AndroidItem.InputJar ("javaclasses.jar") {
@@ -134,7 +128,7 @@ namespace Xamarin.Android.Build.Tests
 		[Category ("SmokeTests")]
 		public void DotNetBuildXamarinForms ()
 		{
-			var proj = new XamarinFormsXASdkProject (SdkVersion);
+			var proj = new XamarinFormsXASdkProject ();
 			var dotnet = CreateDotNetBuilder (proj);
 			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
 			Assert.IsTrue (StringAssertEx.ContainsText (dotnet.LastBuildOutput, " 0 Warning(s)"), "Should have no MSBuild warnings.");
@@ -144,7 +138,7 @@ namespace Xamarin.Android.Build.Tests
 		public void BuildWithLiteSdk ()
 		{
 			var proj = new XASdkProject () {
-				Sdk = $"Xamarin.Android.Sdk.Lite/{SdkVersion}",
+				Sdk = $"Xamarin.Android.Sdk.Lite/{XASdkProject.SdkVersion}",
 				TargetFramework = "monoandroid10.0"
 			};
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
