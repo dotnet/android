@@ -1125,17 +1125,19 @@ namespace Lib2
 
 				// Initial resources should at the end of the zip
 				using (var zip = ZipArchive.Open (signedApkPath, FileMode.Open)) {
+					Assert.AreEqual (37, zip.EntryCount, "Zip entry count");
 					AssertZipEntryHasPosition (zip, "res/layout/main.xml", 32);
 					AssertZipEntryHasPosition (zip, "resources.arsc", 33);
 				}
 
-				AddLayout2 (proj);
+				AndroidItem.AndroidResource layout2Resource = AddLayout2 (proj);
 				Assert.IsTrue (builder.Build (proj), "second build should succeed");
 				//TODO: This fails currently as at least _ResolveLibraryProjectImports is run again; bug?
 				//AssertNonResourceTargetsSkipped (builder);
 
 				// Added resources should go at the end of the zip
 				using (var zip = ZipArchive.Open (signedApkPath, FileMode.Open)) {
+					Assert.AreEqual (38, zip.EntryCount, "Zip entry count");
 					AssertZipEntryHasPosition (zip, "res/layout/main.xml", 32);
 					AssertZipEntryHasPosition (zip, "res/layout/layout2.xml", 33);
 					AssertZipEntryHasPosition (zip, "resources.arsc", 34);
@@ -1149,14 +1151,28 @@ namespace Lib2
 
 				// Updated resources should go at the end of the zip
 				using (var zip = ZipArchive.Open (signedApkPath, FileMode.Open)) {
+
+					Assert.AreEqual (38, zip.EntryCount, "Zip entry count");
 					AssertZipEntryHasPosition (zip, "res/layout/layout2.xml", 32);
 					AssertZipEntryHasPosition (zip, "resources.arsc", 33);
 					AssertZipEntryHasPosition (zip, "res/layout/main.xml", 34);
 				}
+
+				proj.AndroidResources.Remove (layout2Resource);
+				Assert.IsTrue (builder.Build (proj), "fourth build should succeed");
+				//TODO: This fails currently as at least _ResolveLibraryProjectImports is run again; bug?
+				//AssertNonResourceTargetsSkipped (builder);
+
+				// Removed resources should go away
+				using (var zip = ZipArchive.Open (signedApkPath, FileMode.Open)) {
+					Assert.AreEqual (37, zip.EntryCount, "Zip entry count");
+					AssertZipEntryHasPosition (zip, "res/layout/main.xml", 32);
+					AssertZipEntryHasPosition (zip, "resources.arsc", 33);
+				}
 			}
 		}
 
-		void AddLayout2 (XamarinAndroidApplicationProject proj)
+		AndroidItem.AndroidResource AddLayout2 (XamarinAndroidApplicationProject proj)
 		{
 			const string layout2 = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <LinearLayout xmlns:android=""http://schemas.android.com/apk/res/android""
@@ -1173,7 +1189,10 @@ namespace Lib2
 </LinearLayout>
 ";
 
-			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\layout\\Layout2.axml") { TextContent = () => layout2 });
+			var androidResource = new AndroidItem.AndroidResource ("Resources\\layout\\Layout2.axml") { TextContent = () => layout2 };
+			proj.AndroidResources.Add (androidResource);
+
+			return androidResource;
 		}
 
 		void AssertZipEntryHasPosition (ZipArchive zipArchive, string name, int expectedPosition) {
