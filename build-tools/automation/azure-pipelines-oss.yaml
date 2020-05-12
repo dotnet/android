@@ -2,15 +2,16 @@
 
 name: $(Build.SourceBranchName)-$(Build.SourceVersion)-$(Rev:r)
 
-# Triggers are enabled on the pipeine definition in place of being defined here
-#  https://dev.azure.com/xamarin/public/_apps/hub/ms.vss-ciworkflow.build-ci-hub?_a=edit-build-definition&id=48&view=Tab_Triggers
-# trigger:
-#  - master
-#  - d16-*
+trigger:
+- master
+- d16-*
 
-# pr:
-#  - master
-#  - d16-*
+pr:
+  autoCancel: false
+  branches:
+    include:
+    - master
+    - d16-*
 
 # Global variables
 # Predefined variables: https://docs.microsoft.com/en-us/azure/devops/pipelines/build/variables?view=azure-devops&tabs=yaml
