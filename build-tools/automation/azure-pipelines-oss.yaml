@@ -16,6 +16,9 @@ pr:
 # Global variables
 # Predefined variables: https://docs.microsoft.com/en-us/azure/devops/pipelines/build/variables?view=azure-devops&tabs=yaml
 variables:
+  EnableLinuxStage: false
+  EnableMacStage: true
+
   XA.Build.Configuration: Release
   NuGetArtifactName: nupkgs
   EXTRA_MSBUILD_ARGS: /p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False
