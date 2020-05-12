@@ -69,7 +69,7 @@ stages:
 
     # Prepare and build everything
     - script: make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
-      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
+      workingDirectory: $(Build.SourcesDirectory)
       displayName: make prepare-update-mono
 
     - script: |
