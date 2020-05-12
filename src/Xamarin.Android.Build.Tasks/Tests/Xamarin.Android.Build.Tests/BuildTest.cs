@@ -3285,10 +3285,14 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 			using (var builder = CreateApkBuilder ()) {
 				builder.Target = "GetAndroidDependencies";
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+				IEnumerable<string> taskOutput = builder.LastBuildOutput
+					.SkipWhile (x => !x.StartsWith ("Task \"CalculateProjectDependencies\""))
+					.SkipWhile (x => !x.StartsWith ("  Output Item(s):"))
+					.TakeWhile (x => !x.StartsWith ("Done executing task \"CalculateProjectDependencies\""));
 				if (ndkRequired)
-					StringAssertEx.Contains ("ndk-bundle", builder.LastBuildOutput, "ndk-bundle should be a dependency.");
+					StringAssertEx.Contains ("ndk-bundle", taskOutput, "ndk-bundle should be a dependency.");
 				else
-					StringAssertEx.DoesNotContain ("ndk-bundle", builder.LastBuildOutput, "ndk-bundle should not be a dependency.");
+					StringAssertEx.DoesNotContain ("ndk-bundle", taskOutput, "ndk-bundle should not be a dependency.");
 			}
 		}
 
