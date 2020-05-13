@@ -63,45 +63,45 @@ stages:
         version: $(DotNetCoreVersion)
 
     # Prepare and build everything
-    - script: |
-        echo "make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'"
+    - script: >
+        echo "make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'" &&
         make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'
       workingDirectory: $(Build.SourcesDirectory)
       displayName: make prepare-update-mono
 
-    - script: |
-        echo "make prepare CONFIGURATION=$(XA.Build.Configuration) V=1 $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'"
+    - script: >
+        echo "make prepare CONFIGURATION=$(XA.Build.Configuration) V=1 $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'" &&
         make prepare CONFIGURATION=$(XA.Build.Configuration) V=1 $(PREPARE_FLAGS) MSBUILD_ARGS='$(EXTRA_MSBUILD_ARGS)'
       workingDirectory: $(Build.SourcesDirectory)
       displayName: make prepare
 
-    - script: |
-        echo "make jenkins V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1"
+    - script: >
+        echo "make jenkins V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1" &&
         make jenkins V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
       workingDirectory: $(Build.SourcesDirectory)
       displayName: make jenkins
 
-    - script: |
-        echo "make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)"
+    - script: >
+        echo "make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)" &&
         make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)
       workingDirectory: $(Build.SourcesDirectory)
       displayName: create installers
 
-    - script: |
-        echo "make package-oss CONFIGURATION=$(XA.Build.Configuration) V=1"
+    - script: >
+        echo "make package-oss CONFIGURATION=$(XA.Build.Configuration) V=1" &&
         make package-oss CONFIGURATION=$(XA.Build.Configuration) V=1
       workingDirectory: $(Build.SourcesDirectory)
       displayName: package oss
 
-    - script: |
-        echo "all-tests CONFIGURATION=$(XA.Build.Configuration) V=1"
+    - script: >
+        echo "all-tests CONFIGURATION=$(XA.Build.Configuration) V=1" &&
         make all-tests CONFIGURATION=$(XA.Build.Configuration) V=1
       workingDirectory: $(Build.SourcesDirectory)
       displayName: make all-tests
       condition: and(succeeded(), eq(variables['BUILD_TESTS'], 'true'))
 
-    - script: |
-        echo "make package-build-status CONFIGURATION=$(XA.Build.Configuration) V=1"
+    - script: >
+        echo "make package-build-status CONFIGURATION=$(XA.Build.Configuration) V=1" &&
         make package-build-status CONFIGURATION=$(XA.Build.Configuration) V=1
       workingDirectory: $(Build.SourcesDirectory)
       displayName: package build status
@@ -119,12 +119,12 @@ stages:
         artifactName: $(NuGetArtifactName)
         targetPath: $(Build.SourcesDirectory)/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
 
-    - script: |
-        exitCode=0
-        make run-performance-tests CONFIGURATION=$(XA.Build.Configuration) V=1 || exitCode=$?
-        if [[ $exitCode -ne 0 ]]; then
-          echo "ERROR: run-performance-tests FAILED, status: ${exitCode}"
-          exit $exitCode
+    - script: >
+        exitCode=0 &&
+        (make run-performance-tests CONFIGURATION=$(XA.Build.Configuration) V=1 || exitCode=$?) &&
+        if [[ $exitCode -ne 0 ]]; then &&
+          echo "ERROR: run-performance-tests FAILED, status: ${exitCode}" &&
+          exit $exitCode &&
         fi
       workingDirectory: $(Build.SourcesDirectory)
       displayName: run performance tests
