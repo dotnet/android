@@ -20,7 +20,7 @@ variables:
   EnableLinuxStage: false
 
   XA.Build.MacOSSPool: VSEng-Xamarin-RedmondMacMojaveBuildPool-Android-OSS
-  XA.Build.LinuxOSSPool: Xamarin-Android-Ubuntu
+  XA.Build.LinuxOSSPool: Xamarin-Android-Ubuntu-Public
 
   XA.Build.Configuration: Release
 
