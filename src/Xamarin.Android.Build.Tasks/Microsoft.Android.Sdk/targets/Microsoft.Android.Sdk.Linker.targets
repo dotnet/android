@@ -29,6 +29,10 @@ This file contains the .NET 5-specific targets to customize ILLink
       <_AdditionalTaskAssemblyDirectory>$(XamarinSdkRootDirectory)tools/dotnet-linker/</_AdditionalTaskAssemblyDirectory>
       <_AdditionalTaskAssembly>$(_AdditionalTaskAssemblyDirectory)dotnet-linker.dll</_AdditionalTaskAssembly>
     </PropertyGroup>
+    <PropertyGroup
+        Condition=" '$(AndroidLinkTool)' != '' ">
+      <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --custom-data ProguardConfiguration="$(IntermediateOutputPath)proguard\proguard_project_references.cfg"</_ExtraTrimmerArgs>
+    </PropertyGroup>
     <ItemGroup>
       <!-- add our custom steps -->
       <_TrimmerCustomSteps Include="$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Linker.dll">

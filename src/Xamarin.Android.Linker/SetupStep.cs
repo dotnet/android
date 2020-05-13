@@ -37,6 +37,10 @@ namespace Xamarin.Android.Linker
 			var cache = new TypeDefinitionCache ();
 			InsertAfter (new FixAbstractMethodsStep (cache), "RemoveUnreachableBlocksStep");
 			InsertAfter (subSteps, "RemoveUnreachableBlocksStep");
+
+			string proguardPath;
+			if (Context.TryGetCustomData ("ProguardConfiguration", out proguardPath))
+				InsertAfter (new GenerateProguardConfiguration (proguardPath),  "CleanStep");
 		}
 
 		void InsertAfter (IStep step, string stepName)
