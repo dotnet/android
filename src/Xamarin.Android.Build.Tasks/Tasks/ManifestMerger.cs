@@ -24,6 +24,7 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string OutputManifestFile { get; set; }
 
+		public string [] ManifestOverlayFiles { get; set; }
 		public string [] LibraryManifestFiles { get; set; }
 
 		public string [] ManifestPlaceholders { get; set; }
@@ -42,7 +43,7 @@ namespace Xamarin.Android.Tasks
 				var m = new ManifestDocument (tempFile);
 				var ms = MemoryStreamPool.Shared.Rent ();
 				try {
-					m.Save (Log, ms);
+					m.Save (Log, ms, removeNodes: true);
 					MonoAndroidHelper.CopyIfStreamChanged (ms, OutputManifestFile);
 					return result;
 				} finally {
@@ -76,6 +77,10 @@ namespace Xamarin.Android.Tasks
 			StringBuilder sb = new StringBuilder ();
 			sb.AppendLine ("--main");
 			sb.AppendLine (AndroidManifest);
+			if (ManifestOverlayFiles != null) {
+				sb.AppendLine ("--overlays");
+				sb.AppendLine ($"{string.Join ($"{Path.PathSeparator}", ManifestOverlayFiles)}");
+			}
 			if (LibraryManifestFiles != null) {
 				sb.AppendLine ("--libs");
 				sb.AppendLine ($"{string.Join ($"{Path.PathSeparator}", LibraryManifestFiles)}");
