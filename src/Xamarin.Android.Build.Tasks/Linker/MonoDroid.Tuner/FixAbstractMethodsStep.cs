@@ -300,11 +300,7 @@ namespace MonoDroid.Tuner
 
 		public virtual void LogMessage (string message)
 		{
-#if !NET5_LINKER
 			Context.LogMessage (message);
-#else
-			Context.LogMessage (MessageContainer.CreateInfoMessage (message));
-#endif
 		}
 
 		protected virtual AssemblyDefinition GetMonoAndroidAssembly ()

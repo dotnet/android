@@ -27,11 +27,7 @@ namespace MonoDroid.Tuner
 			foreach (var mod in assembly.Modules) {
 				foreach (var r in mod.Resources.ToArray ()) {
 					if (ShouldStripResource (r)) {
-#if !NET5_LINKER
 						Context.LogMessage ($"    Stripped {r.Name} from {fileName}");
-#else
-						Context.LogMessage (MessageContainer.CreateInfoMessage ($"    Stripped {r.Name} from {fileName}"));
-#endif
 						mod.Resources.Remove (r);
 						assembly_modified = true;
 					}
