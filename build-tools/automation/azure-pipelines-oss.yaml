@@ -120,12 +120,8 @@ stages:
         targetPath: $(Build.SourcesDirectory)/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
 
     - script: >
-        exitCode=0 &&
-        (make run-performance-tests CONFIGURATION=$(XA.Build.Configuration) V=1 || exitCode=$?) &&
-        if [[ $exitCode -ne 0 ]]; then &&
-          echo "ERROR: run-performance-tests FAILED, status: ${exitCode}" &&
-          exit $exitCode &&
-        fi
+        echo "make run-performance-tests CONFIGURATION=$(XA.Build.Configuration) V=1" &&
+        make run-performance-tests CONFIGURATION=$(XA.Build.Configuration) V=1
       workingDirectory: $(Build.SourcesDirectory)
       displayName: run performance tests
       condition: and(succeeded(), eq(variables['RUN_TESTS'], 'true'))
