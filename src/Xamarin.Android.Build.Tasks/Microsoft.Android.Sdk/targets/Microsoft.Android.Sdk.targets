@@ -9,6 +9,7 @@
     <AndroidApplication Condition=" '$(AndroidApplication)' == '' And '$(OutputType)' == 'Exe' ">true</AndroidApplication>
     <AndroidApplication Condition=" '$(AndroidApplication)' == '' ">false</AndroidApplication>
     <SelfContained Condition=" '$(SelfContained)' == '' And '$(AndroidApplication)' == 'true' ">true</SelfContained>
+    <RuntimeIdentifier Condition=" '$(RuntimeIdentifier)' == '' And '$(AndroidApplication)' == 'true' ">android.21-x86</RuntimeIdentifier>
     <AndroidManifest Condition=" '$(AndroidManifest)' == '' And '$(AndroidApplication)' == 'true' ">Properties\AndroidManifest.xml</AndroidManifest>
     <!-- We don't ever need a `static void Main` method, so switch to Library here-->
     <OutputType Condition=" '$(OutputType)' == 'Exe' ">Library</OutputType>
@@ -20,6 +21,7 @@
   <Import Project="$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Common.targets" />
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.AssemblyResolution.targets" />
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.BuildOrder.targets" />
+  <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.NuGet.targets" />
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.Tooling.targets" />
 
   <!-- Automatically supply project capabilities for IDE use -->

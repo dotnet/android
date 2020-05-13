@@ -17,14 +17,21 @@ namespace Xamarin.Android.Build.Tests
 			.FirstOrDefault () ?? "0.0.1";
 
 		[Test]
-		public void DotNetInstallAndRun ([Values (false, true)] bool isRelease)
+		public void DotNetInstallAndRun ([Values (false, true)] bool isRelease, [Values (false, true)] bool xamarinForms)
 		{
 			if (!HasDevices)
 				Assert.Ignore ("Skipping Test. No devices available.");
 
-			var proj = new XASdkProject (SdkVersion) {
-				IsRelease = isRelease
-			};
+			XASdkProject proj;
+			if (xamarinForms) {
+				proj = new XamarinFormsXASdkProject (SdkVersion) {
+					IsRelease = isRelease
+				};
+			} else {
+				proj = new XASdkProject (SdkVersion) {
+					IsRelease = isRelease
+				};
+			}
 			proj.SetProperty (KnownProperties.AndroidSupportedAbis, DeviceAbi);
 			proj.SetRuntimeIdentifier (DeviceAbi);
 

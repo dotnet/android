@@ -208,6 +208,11 @@ namespace Xamarin.ProjectTools
 				},
 			}
 		};
+		public static Package XamarinForms_4_5_0_617 = new Package {
+			Id = "Xamarin.Forms",
+			Version = "4.5.0.617",
+			TargetFramework = "MonoAndroid10.0",
+		};
 		public static Package XamarinFormsMaps_4_0_0_425677 = new Package {
 			Id = "Xamarin.Forms.Maps",
 			Version = "4.0.0.425677",
