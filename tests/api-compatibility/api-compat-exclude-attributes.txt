@@ -2,6 +2,8 @@
 
 T:Java.Interop.JavaTypeParametersAttribute
 
+T:System.Diagnostics.DebuggerStepThroughAttribute
+
 T:System.Runtime.CompilerServices.AsyncIteratorStateMachineAttribute
 T:System.Runtime.CompilerServices.AsyncStateMachineAttribute
 T:System.Runtime.CompilerServices.IteratorStateMachineAttribute

@@ -100,7 +100,6 @@
       <_Fixup>--fixup=metadata</_Fixup>
       <_Enums1>--preserve-enums --enumflags=enumflags --enumfields=map.csv --enummethods=methodmap.csv</_Enums1>
       <_Enums2>--enummetadata=$(IntermediateOutputPath)mcw\enummetadata</_Enums2>
-      <_Versions>@(_ApiVersion->'--apiversions="%(Identity)"', ' ')</_Versions>
       <_Annotations>--annotations="$(AndroidSdkDirectory)\platform-tools\api\annotations.zip"</_Annotations>
       <_Assembly>--assembly="Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"</_Assembly>
       <_TypeMap>--type-map-report=$(IntermediateOutputPath)mcw\type-mapping.txt</_TypeMap>
