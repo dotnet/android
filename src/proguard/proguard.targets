@@ -3,22 +3,22 @@
     <_OutputJar>$(OutputPath)lib\proguard.jar</_OutputJar>
     <_OutputBat>$(OutputPath)bin\proguard.bat</_OutputBat>
     <_OutputSh>$(OutputPath)bin\proguard.sh</_OutputSh>
-    <_OutputLicense>$(OutputPath)license.html</_OutputLicense>
+    <_OutputLicense>$(OutputPath)license.md</_OutputLicense>
   </PropertyGroup>
   <ItemGroup>
     <_Outputs Include="$(_OutputJar);$(_OutputBat);$(_OutputSh);$(_OutputLicense)" />
   </ItemGroup>
   <Target Name="_BuildProGuard"
-      Inputs="$(MSBuildThisFile);$(ProGuardSourceFullPath)\buildscripts\build.xml"
+      Inputs="$(MSBuildThisFile)"
       Outputs="@(_Outputs)">
     <Exec
-        Command="&quot;$(GradleWPath)&quot; proguardJar $(GradleArgs)"
+        Command="&quot;$(GradleWPath)&quot; jar $(GradleArgs)"
         EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)"
-        WorkingDirectory="$(ProGuardSourceFullPath)\buildscripts"
+        WorkingDirectory="$(ProGuardSourceFullPath)\core"
     />
     <MakeDir Directories="$(OutputPath)" />
     <Copy
-        SourceFiles="..\..\external\proguard\lib\proguard.jar"
+        SourceFiles="..\..\external\proguard\core\build\libs\core.jar"
         DestinationFiles="$(_OutputJar)"
     />
     <Copy
@@ -30,7 +30,7 @@
         DestinationFiles="$(_OutputSh)"
     />
     <Copy
-        SourceFiles="..\..\external\proguard\docs\license.html"
+        SourceFiles="..\..\external\proguard\docs\license.md"
         DestinationFiles="$(_OutputLicense)"
     />
     <Touch Files="@(_Outputs)" />
@@ -40,7 +40,7 @@
     <Exec
         Command="&quot;$(GradleWPath)&quot; clean $(GradleArgs)"
         EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)"
-        WorkingDirectory="$(ProGuardSourceFullPath)\buildscripts"
+        WorkingDirectory="$(ProGuardSourceFullPath)\core"
     />
   </Target>
   <Target Name="CoreCompile" />
