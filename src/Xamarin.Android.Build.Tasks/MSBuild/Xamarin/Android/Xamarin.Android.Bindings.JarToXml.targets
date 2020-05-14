@@ -1,0 +1,38 @@
+<!--
+***********************************************************************************************
+Xamarin.Android.Bindings.JarToXml.targets
+
+This file contains MSBuild targets used when $(AndroidClassParser) is 'jar2xml'.
+
+This file is only used by binding projects.
+
+***********************************************************************************************
+-->
+
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <UsingTask TaskName="Xamarin.Android.Tasks.JarToXml" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+
+  <Target Name="_ExportJarToXml"
+      Inputs="@(EmbeddedJar);@(EmbeddedReferenceJar);@(InputJar);@(ReferenceJar);$(MSBuildAllProjects)"
+      Outputs="$(ApiOutputFile)">
+    <JarToXml
+        JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
+        JavaOptions="$(JavaOptions)"
+        AndroidSdkDirectory="$(_AndroidSdkDirectory)"
+        MonoAndroidToolsDirectory="$(MonoAndroidToolsDirectory)"
+        JavaSdkDirectory="$(_JavaSdkDirectory)"
+        AndroidApiLevel="$(_AndroidApiLevel)"
+        OutputFile="$(ApiOutputFile)"
+        SourceJars="@(EmbeddedJar);@(InputJar)"
+        ReferenceJars="@(EmbeddedReferenceJar);@(ReferenceJar)"
+        DroidDocPaths="$(DroidDocPaths)"
+        JavaDocPaths="$(JavaDocPaths)"
+        Java7DocPaths="$(Java7DocPaths)"
+        Java8DocPaths="$(Java8DocPaths)"
+        JavaDocs="@(JavaDocIndex)"
+        LibraryProjectJars="$(_AndroidLibrayProjectIntermediatePath)\*.jar"
+    />
+  </Target>
+
+</Project>

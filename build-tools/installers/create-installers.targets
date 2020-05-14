@@ -115,25 +115,25 @@
   </ItemGroup>
   <ItemGroup>
     <_MSBuildFiles Include="$(MSBuildSrcDir)\android-support-multidex.jar" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\aprofutil.exe" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\aprofutil.pdb" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\cil-strip.exe" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\cil-strip.pdb" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\class-parse.exe" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\class-parse.pdb" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\aprofutil.exe"   Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\aprofutil.pdb"   Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\cil-strip.exe"   Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\cil-strip.pdb"   Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\class-parse.exe" Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\class-parse.pdb" Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\FSharp.Core.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\generator.exe" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\generator.pdb" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\generator.exe"   Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\generator.pdb"   Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\HtmlAgilityPack.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\HtmlAgilityPack.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\ICSharpCode.SharpZipLib.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\ICSharpCode.SharpZipLib.pdb" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\illinkanalyzer.exe" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\illinkanalyzer.pdb" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\illinkanalyzer.exe" Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\illinkanalyzer.pdb" Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Irony.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\java-interop.jar" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\javadoc-to-mdoc.exe" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\javadoc-to-mdoc.pdb" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\javadoc-to-mdoc.exe" Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\javadoc-to-mdoc.pdb" Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.dll.config" />
@@ -148,10 +148,10 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Runtime.Environment.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Runtime.Environment.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Runtime.Environment.dll.config" Condition=" '$(HostOS)' != 'Windows' " />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\jcw-gen.exe" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\jcw-gen.pdb" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\jit-times.exe" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\jit-times.pdb" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\jcw-gen.exe"   Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\jcw-gen.pdb"   Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\jit-times.exe" Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\jit-times.pdb" Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\jnimarshalmethod-gen.exe" Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\jnimarshalmethod-gen.pdb" Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\LayoutBinding.cs" />
@@ -176,15 +176,15 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\libZipSharp.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Profiler.Log.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Profiler.Log.pdb" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\logcat-parse.exe" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\logcat-parse.pdb" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\mdoc.exe" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\mdoc.pdb" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\mkbundle.exe" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\mkbundle.pdb" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\logcat-parse.exe" Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\logcat-parse.pdb" Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\mdoc.exe"         Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\mdoc.pdb"         Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\mkbundle.exe"     Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\mkbundle.pdb"     Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\mkbundle-api.h" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\mono-symbolicate.exe" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\mono-symbolicate.pdb" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\mono-symbolicate.exe" Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\mono-symbolicate.pdb" Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.CSharp.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.CompilerServices.SymbolWriter.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.CompilerServices.SymbolWriter.pdb" />
@@ -214,6 +214,10 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Analysis.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Application.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Bindings.targets" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Bindings.ClassParse.targets" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Bindings.Core.targets" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Bindings.Documentation.targets" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Bindings.JarToXml.targets" Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Build.Tasks.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Build.Tasks.pdb" />
     <_MSBuildFiles Include="@(_LocalizationLanguages->'$(MSBuildSrcDir)\%(Identity)\Xamarin.Android.Build.Tasks.resources.dll')" />
@@ -369,7 +373,7 @@
   <!-- monodroid -->
   <ItemGroup Condition=" '$(_HasCommercialFiles)' == 'True' ">
     <_MSBuildFiles Include="$(MSBuildSrcDir)\INIFileParser.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\jar2xml.jar" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\jar2xml.jar" Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.AndroidTools.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.AndroidTools.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Android.DebugRuntime-arm64-v8a.apk"   Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />

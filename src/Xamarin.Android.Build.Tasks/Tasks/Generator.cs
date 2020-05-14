@@ -1,18 +1,15 @@
-﻿// Copyright (C) 2012 Xamarin, Inc. All rights reserved.
+// Copyright (C) 2012 Xamarin, Inc. All rights reserved.
 
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Xml.Linq;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
-using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
-	public class BindingsGenerator : AndroidRunToolTask
+	public class BindingsGenerator : AndroidDotnetToolTask
 	{
 		public override string TaskPrefix => "BGN";
 
@@ -54,8 +51,6 @@ namespace Xamarin.Android.Tasks
 		public ITaskItem[] TransformFiles { get; set; }
 		public ITaskItem[] ReferencedManagedLibraries { get; set; }
 		public ITaskItem[] AnnotationsZipFiles { get; set; }
-
-		protected override string DefaultErrorCode => "BG0000";
 
 		private List<Tuple<string, string>> transform_files = new List<Tuple<string,string>> ();
 
@@ -114,8 +109,7 @@ namespace Xamarin.Android.Tasks
 
 		protected override string GenerateCommandLineCommands ()
 		{
-			var cmd = new CommandLineBuilder ();
-
+			var cmd = GetCommandLineBuilder ();
 			cmd.AppendFileNameIfNotNull (ApiXmlInput);
 
 			if (OnlyRunXmlAdjuster)
@@ -159,13 +153,16 @@ namespace Xamarin.Android.Tasks
 			return cmd.ToString ();
 		}
 
-		protected override string ToolName {
-			get { return "generator.exe"; }
-		}
+		protected override string BaseToolName => "generator";
 
-		protected override string GenerateFullPathToTool ()
+		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
 		{
-			return Path.Combine (ToolPath, ToolExe);
+			base.LogEventsFromTextOutput (singleLine, messageImportance);
+
+			if (messageImportance != StandardErrorLoggingImportance)
+				return;
+
+			Log.LogFromStandardError ("BG0000", singleLine);
 		}
 
 		bool SupportsCSharp8 {

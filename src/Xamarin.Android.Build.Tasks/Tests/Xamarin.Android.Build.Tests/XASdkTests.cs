@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -43,6 +44,30 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		[Test]
+		[Category ("SmokeTests")]
+		public void DotNetBuildBinding ()
+		{
+			var proj = new XASdkProject (SdkVersion, outputType: "Library");
+			proj.OtherBuildItems.Add (new AndroidItem.EmbeddedJar ("javaclasses.jar") {
+				BinaryContent = () => Convert.FromBase64String (InlineData.JavaClassesJarBase64)
+			});
+			// TODO: bring back when Xamarin.Android.Bindings.Documentation.targets is working
+			//proj.OtherBuildItems.Add (new BuildItem ("JavaSourceJar", "javasources.jar") {
+			//	BinaryContent = () => Convert.FromBase64String (InlineData.JavaSourcesJarBase64)
+			//});
+			var dotnet = CreateDotNetBuilder (proj);
+			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
+
+			var assemblyPath = Path.Combine (Root, dotnet.ProjectDirectory, proj.OutputPath, "UnnamedProject.dll");
+			FileAssert.Exists (assemblyPath);
+			using (var assembly = AssemblyDefinition.ReadAssembly (assemblyPath)) {
+				var typeName = "Com.Xamarin.Android.Test.Msbuildtest.JavaSourceJarTest";
+				var type = assembly.MainModule.GetType (typeName);
+				Assert.IsNotNull (type, $"{assemblyPath} should contain {typeName}");
+			}
+		}
+
 		static readonly object [] DotNetBuildSource = new object [] {
 			new object [] {
 				/* runtimeIdentifier */  "android.21-arm",
@@ -75,17 +100,33 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XASdkProject (SdkVersion) {
 				IsRelease = isRelease
 			};
+			proj.OtherBuildItems.Add (new AndroidItem.InputJar ("javaclasses.jar") {
+				BinaryContent = () => Convert.FromBase64String (InlineData.JavaClassesJarBase64)
+			});
+			// TODO: bring back when Xamarin.Android.Bindings.Documentation.targets is working
+			//proj.OtherBuildItems.Add (new BuildItem ("JavaSourceJar", "javasources.jar") {
+			//	BinaryContent = () => Convert.FromBase64String (InlineData.JavaSourcesJarBase64)
+			//});
 			proj.SetProperty (KnownProperties.RuntimeIdentifier, runtimeIdentifier);
 
 			var dotnet = CreateDotNetBuilder (proj);
 			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
 			Assert.IsTrue (StringAssertEx.ContainsText (dotnet.LastBuildOutput, " 0 Warning(s)"), "Should have no MSBuild warnings.");
 
-			var apk = Path.Combine (Root, dotnet.ProjectDirectory, proj.OutputPath,
-				runtimeIdentifier, "UnnamedProject.UnnamedProject.apk");
+			var outputPath = Path.Combine (Root, dotnet.ProjectDirectory, proj.OutputPath, runtimeIdentifier);
+			var assemblyPath = Path.Combine (outputPath, "UnnamedProject.dll");
+			FileAssert.Exists (assemblyPath);
+			using (var assembly = AssemblyDefinition.ReadAssembly (assemblyPath)) {
+				var typeName = "Com.Xamarin.Android.Test.Msbuildtest.JavaSourceJarTest";
+				var type = assembly.MainModule.GetType (typeName);
+				Assert.IsNotNull (type, $"{assemblyPath} should contain {typeName}");
+			}
+
+			var apk = Path.Combine (outputPath, "UnnamedProject.UnnamedProject.apk");
 			FileAssert.Exists (apk);
 			using (var zip = ZipHelper.OpenZip (apk)) {
 				Assert.IsTrue (zip.ContainsEntry ($"lib/{abi}/libmonodroid.so"), "libmonodroid.so should exist.");
+				Assert.IsTrue (zip.ContainsEntry ($"lib/{abi}/libmonosgen-2.0.so"), "libmonosgen-2.0.so should exist.");
 			}
 		}
 

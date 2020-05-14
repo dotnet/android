@@ -36,6 +36,7 @@ the new entry point for short-form style Android projets in .NET 5.
       DependsOnTargets="ConstructInstallerItems;_GenerateBundledVersions" >
     <PropertyGroup>
       <ToolsSourceDir>$(XamarinAndroidSourcePath)bin\Build$(Configuration)\packs\tools\</ToolsSourceDir>
+      <NetCoreAppToolsSourceDir>$(XamarinAndroidSourcePath)bin\$(Configuration)-netcoreapp3.1\</NetCoreAppToolsSourceDir>
     </PropertyGroup>
     <ItemGroup>
       <AndroidSdkBuildTools Include="@(_MSBuildFiles);@(_MSBuildFilesWin)" >
@@ -66,6 +67,10 @@ the new entry point for short-form style Android projets in .NET 5.
     />
     <ItemGroup>
       <_PackageFiles Include="$(ToolsSourceDir)**" PackagePath="tools" />
+      <_PackageFiles Include="$(NetCoreAppToolsSourceDir)generator.dll" PackagePath="tools" />
+      <_PackageFiles Include="$(NetCoreAppToolsSourceDir)generator.runtimeconfig.json" PackagePath="tools" />
+      <_PackageFiles Include="$(NetCoreAppToolsSourceDir)javadoc-to-mdoc.dll" PackagePath="tools" />
+      <_PackageFiles Include="$(NetCoreAppToolsSourceDir)javadoc-to-mdoc.runtimeconfig.json" PackagePath="tools" />
       <_PackageFiles Include="$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\Version*" PackagePath="tools" />
       <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\Sdk\**" PackagePath="Sdk" />
       <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\targets\**"
