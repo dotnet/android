@@ -118,14 +118,14 @@ namespace Xamarin.ProjectTools
 
 			var psi = new ProcessStartInfo {
 				FileName = Path.Combine (buildToolsPath, "dexdump"),
-				Arguments = $"\"{dexFile}\"",
+				Arguments = Path.GetFileName (dexFile),
 				CreateNoWindow = true,
 				WindowStyle = ProcessWindowStyle.Hidden,
 				UseShellExecute = false,
 				RedirectStandardError = true,
 				RedirectStandardOutput = true,
+				WorkingDirectory = Path.GetDirectoryName (dexFile),
 			};
-			var builder = new StringBuilder ();
 			using (var p = new Process { StartInfo = psi }) {
 				p.ErrorDataReceived += handler;
 				p.OutputDataReceived += handler;
@@ -134,6 +134,9 @@ namespace Xamarin.ProjectTools
 				p.BeginErrorReadLine ();
 				p.BeginOutputReadLine ();
 				p.WaitForExit ();
+
+				if (p.ExitCode != 0)
+					throw new Exception ($"'{psi.FileName} {psi.Arguments}' exited with code: {p.ExitCode}");
 			}
 		}
 	}
