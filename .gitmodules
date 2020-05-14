@@ -28,8 +28,9 @@
     branch = master
 [submodule "external/proguard"]
     path = external/proguard
-    url = https://github.com/xamarin/proguard.git
+    url = https://github.com/Guardsquare/proguard.git
     branch = master
+    ignore = dirty
 [submodule "external/sqlite"]
     path = external/sqlite
     url = https://github.com/xamarin/sqlite.git
