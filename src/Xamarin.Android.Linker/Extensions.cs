@@ -1,6 +1,4 @@
-using Mono.Linker;
-
-namespace Xamarin.Android.Linker
+namespace Mono.Linker
 {
 	public static class Extensions
 	{
