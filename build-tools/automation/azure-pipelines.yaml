@@ -190,7 +190,7 @@ stages:
       inputs:
         solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/create-packs/Microsoft.Android.Sdk.proj
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:CreateAllPacks /restore /bl:$(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/create-all-packs.binlog
+        msbuildArguments: /t:CreateAllPacks /restore /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/create-all-packs.binlog
 
     - task: NuGetCommand@2
       displayName: push nupkgs
@@ -730,14 +730,6 @@ stages:
         plotGroup: Test times
         plotTitle: Xamarin.Forms app startup
         plotPathAndFilename: $(System.DefaultWorkingDirectory)/TestResult-Xamarin.Forms_Test-times.csv
-
-    - template: yaml-templates/plots-to-appinsights.yaml
-      parameters:
-        condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
-        configuration: $(ApkTestConfiguration)
-        plotGroup: Test times
-        plotTitle: Locale
-        plotPathAndFilename: $(System.DefaultWorkingDirectory)/TestResult-Xamarin.Android.Locale_Tests-times.csv
 
     - template: yaml-templates/fail-on-issue.yaml
 
