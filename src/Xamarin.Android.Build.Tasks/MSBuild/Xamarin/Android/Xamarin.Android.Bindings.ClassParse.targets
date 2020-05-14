@@ -1,0 +1,45 @@
+<!--
+***********************************************************************************************
+Xamarin.Android.Bindings.ClassParse.targets
+
+This file contains MSBuild targets used when $(AndroidClassParser) is 'class-parse'.
+
+This file is only used by binding projects.
+
+***********************************************************************************************
+-->
+
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <UsingTask TaskName="Xamarin.Android.Tasks.ClassParse" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+
+  <Target Name="_ExportJarToXml"
+      Inputs="@(EmbeddedJar);@(EmbeddedReferenceJar);@(InputJar);@(ReferenceJar);$(MSBuildAllProjects)"
+      Outputs="$(ApiOutputFile)">
+    <ItemGroup>
+      <_AndroidDocumentationPath Include="@(JavaDocIndex->'%(RootDir)\%(Directory)')" />
+      <_AndroidDocumentationPath Include="$(JavaDocPaths)" />
+      <_AndroidDocumentationPath Include="$(Java7DocPaths)" />
+      <_AndroidDocumentationPath Include="$(Java8DocPaths)" />
+      <_AndroidDocumentationPath Include="$(DroidDocPaths)" />
+      <_AndroidDocumentationPath Include="@(JavaDocJar->'$(IntermediateOutputPath)javadocs\%(FileName)')" />
+    </ItemGroup>
+    <ClassParse
+        OutputFile="$(ApiOutputFile).class-parse"
+        SourceJars="@(EmbeddedJar);@(InputJar)"
+        DocumentationPaths="@(_AndroidDocumentationPath)"
+    />
+    <BindingsGenerator
+        OnlyRunXmlAdjuster="true"
+        XmlAdjusterOutput="$(ApiOutputFile)"
+        OutputDirectory="$(GeneratedOutputPath)src"
+        AndroidApiLevel="$(_AndroidApiLevel)"
+        ApiXmlInput="$(ApiOutputFile).class-parse"
+        ReferencedManagedLibraries="@(ReferencePath);@(ReferenceDependencyPaths)"
+        MonoAndroidFrameworkDirectories="$(_XATargetFrameworkDirectories)"
+        ToolPath="$(MonoAndroidToolsDirectory)"
+        ToolExe="$(BindingsGeneratorToolExe)"
+    />
+  </Target>
+
+</Project>

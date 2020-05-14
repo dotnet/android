@@ -8,7 +8,7 @@ using Xamarin.Android.Tools.Aidl;
 
 namespace Xamarin.Android.Tasks
 {
-	public class ImportJavaDoc : AndroidToolTask
+	public class ImportJavaDoc : AndroidDotnetToolTask
 	{
 		public override string TaskPrefix => "IJD";
 
@@ -24,23 +24,14 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string OutputDocDirectory { get; set; }
 
-		protected override string ToolName {
-			get { return "javadoc-to-mdoc.exe"; }
-		}
-
-		protected override string GenerateFullPathToTool ()
-		{
-			return Path.Combine (
-					Path.GetFullPath (Path.GetDirectoryName (GetType ().Assembly.Location)),
-					"javadoc-to-mdoc.exe");
-		}
+		protected override string BaseToolName => "javadoc-to-mdoc";
 
 		protected override string GenerateCommandLineCommands ()
 		{
 			if (!Directory.Exists (OutputDocDirectory))
 				Directory.CreateDirectory (OutputDocDirectory);
 
-			var cmd = new CommandLineBuilder ();
+			var cmd = base.GetCommandLineBuilder ();
 			cmd.AppendSwitch (Path.GetFullPath (TargetAssembly));
 			//foreach (var r in References)
 			//	cmd.AppendSwitch (r);

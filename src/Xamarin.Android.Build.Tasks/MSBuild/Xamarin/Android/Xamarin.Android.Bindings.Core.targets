@@ -1,0 +1,154 @@
+<!--
+***********************************************************************************************
+Xamarin.Android.Bindings.Core.targets
+
+This file contains the core MSBuild logic for Xamarin.Android bindings.
+
+It is shared between "legacy" binding projects and .NET 5 projects.
+
+***********************************************************************************************
+-->
+
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <UsingTask TaskName="Xamarin.Android.Tasks.BindingsGenerator" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.RemoveDirFixed"    AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+
+  <PropertyGroup>
+    <UseShortGeneratorFileNames Condition=" '$(UseShortGeneratorFileNames)' == '' ">false</UseShortGeneratorFileNames>
+    <GeneratedOutputPath        Condition=" '$(GeneratedOutputPath)' == '' ">$(IntermediateOutputPath)generated\</GeneratedOutputPath>
+    <ApiOutputFile              Condition=" '$(ApiOutputFile)' == '' ">$(IntermediateOutputPath)api.xml</ApiOutputFile>
+    <_GeneratorStampFile>$(IntermediateOutputPath)generator.stamp</_GeneratorStampFile>
+  </PropertyGroup>
+
+  <!-- Get our Build Actions to show up in VS -->
+  <ItemGroup>
+    <AvailableItemName Include="EmbeddedJar" />
+    <AvailableItemName Include="EmbeddedNativeLibrary" />
+    <AvailableItemName Include="EmbeddedReferenceJar" />
+    <AvailableItemName Include="InputJar" />
+    <AvailableItemName Include="ReferenceJar" />
+    <AvailableItemName Include="TransformFile" />
+    <AvailableItemName Include="LibraryProjectProperties" />
+    <AvailableItemName Include="LibraryProjectZip" />
+    <AvailableItemName Include="JavaDocIndex" />
+    <AvailableItemName Include="JavaDocJar" />
+    <AvailableItemName Include="JavaSourceJar" />
+  </ItemGroup>
+
+  <Target Name="ExportJarToXml"
+      DependsOnTargets="$(ExportJarToXmlDependsOnTargets)"
+      Condition=" '$(UsingAndroidNETSdk)' != 'true' Or '@(InputJar)' != '' Or '@(EmbeddedJar)' != '' ">
+    <PropertyGroup>
+      <AllowUnsafeBlocks Condition=" '$(AllowUnsafeBlocks)' != 'true' ">true</AllowUnsafeBlocks>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="AndroidPrepareForBuild" DependsOnTargets="GetReferenceAssemblyPaths" />
+
+  <Target Name="GenerateBindings"
+      Condition=" '$(UsingAndroidNETSdk)' != 'true' Or '@(InputJar)' != '' Or '@(EmbeddedJar)' != '' "
+      DependsOnTargets="ExportJarToXml;_ResolveMonoAndroidSdks"
+      Inputs="$(ApiOutputFile);@(TransformFile);@(ReferencePath);@(ReferenceDependencyPaths);$(MSBuildAllProjects)"
+      Outputs="$(_GeneratorStampFile)">
+
+    <!-- Delete previous generated files if they still exist -->
+    <RemoveDirFixed Directories="$(GeneratedOutputPath)" Condition="Exists ('$(GeneratedOutputPath)')" />
+
+    <ItemGroup>
+      <AnnotationsZip Include="$(IntermediateOutputPath)library_project_annotations\*.zip" />
+    </ItemGroup>
+
+    <!-- Create the .cs binding source files -->
+    <BindingsGenerator
+        OutputDirectory="$(GeneratedOutputPath)src"
+        EnumDirectory="$(GeneratedOutputPath)enums"
+        EnumMetadataDirectory="$(GeneratedOutputPath)metadata"
+        CodegenTarget="$(AndroidCodegenTarget)"
+        AndroidApiLevel="$(_AndroidApiLevel)"
+        ApiXmlInput="$(ApiOutputFile)"
+        AnnotationsZipFiles="@(AnnotationsZip)"
+        AssemblyName="$(AssemblyName)"
+        TransformFiles="@(TransformFile)"
+        ReferencedManagedLibraries="@(ReferencePath);@(ReferenceDependencyPaths)"
+        MonoAndroidFrameworkDirectories="$(_XATargetFrameworkDirectories)"
+        TypeMappingReportFile="$(GeneratedOutputPath)type-mapping.txt"
+        ToolPath="$(MonoAndroidToolsDirectory)"
+        ToolExe="$(BindingsGeneratorToolExe)"
+        UseShortFileNames="$(UseShortGeneratorFileNames)"
+        LangVersion="$(LangVersion)"
+        EnableInterfaceMembersPreview="$(_EnableInterfaceMembers)"
+    />
+
+    <!-- Write a flag so we won't redo this target if nothing changed -->
+    <Touch Files="$(_GeneratorStampFile)" AlwaysCreate="true" />
+
+  </Target>
+
+  <Target Name="AddBindingsToCompile" DependsOnTargets="GenerateBindings">
+    <!-- Add the files to list of things to be compiled -->
+    <ItemGroup>
+      <Compile Include="$(IntermediateOutputPath)generated\*\*.cs" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="AddEmbeddedJarsAsResources" DependsOnTargets="GenerateBindings">
+    <ItemGroup>
+      <EmbeddedResource Include="@(EmbeddedJar)">
+        <LogicalName>%(Filename)%(Extension)</LogicalName>
+      </EmbeddedResource>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="AddEmbeddedReferenceJarsAsResources" DependsOnTargets="GenerateBindings">
+    <ItemGroup>
+      <EmbeddedResource Include="@(EmbeddedReferenceJar)">
+        <LogicalName>__reference__%(Filename)%(Extension)</LogicalName>
+      </EmbeddedResource>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="ResolveLibraryProjects" DependsOnTargets="_CreateBindingResourceArchive" />
+
+  <Target Name="AddLibraryJarsToBind" DependsOnTargets="ResolveLibraryProjects">
+    <ItemGroup>
+      <InputJar Include="$(IntermediateOutputPath)library_project_jars\*.jar" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="CleanBindingsOutput">
+    <Delete Files="$(ApiOutputFile)" />
+    <Delete Files="$(ApiOutputFile).adjusted" />
+    <Delete Files="$(ApiOutputFile).class-parse" />
+    <Delete Files="$(ApiOutputFile).fixed" />
+    <Delete Files="$(ApiOutputFile).adjusted.fixed" />
+    <Delete Files="$(_GeneratorStampFile)" />
+    <Delete Files="@(IntermediateAssembly->'$(OutputPath)%(filename).xml')" />
+    <Delete Files="@(IntermediateAssembly->'$(IntermediateOutputPath)%(filename).xml')" />
+    <RemoveDirFixed Directories="$(GeneratedOutputPath)" />
+    <RemoveDirFixed Directories="$(_AndroidStampDirectory)" />
+    <RemoveDirFixed Directories="$(IntermediateOutputPath)docs" />
+    <RemoveDirFixed Directories="$(IntermediateOutputPath)javadocs" />
+    <RemoveDirFixed Directories="$(IntermediateOutputPath)javasources" />
+  </Target>
+  
+  <Target Name="CleanLibraryProjectIntermediaries">
+    <Delete Files="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip" />
+    <Delete Files="$(_AndroidLibraryImportsCache)" />
+    <Delete Files="$(_AndroidLibraryProjectImportsCache)" />
+    <Delete Files="$(_AndroidLibrayProjectAssemblyMapFile)" />
+    <RemoveDirFixed Directories="$(IntermediateOutputPath)library_project_jars" />
+    <RemoveDirFixed Directories="$(IntermediateOutputPath)library_project_annotations" />
+    <RemoveDirFixed Directories="$(IntermediateOutputPath)$(_LibraryProjectImportsDirectoryName)" />
+    <RemoveDirFixed Directories="$(IntermediateOutputPath)__library_projects__" />
+    <RemoveDirFixed Directories="$(_AndroidLibrayProjectIntermediatePath)" />
+  </Target>
+
+  <Target Name="CleanNativeLibraryIntermediaries">
+    <Delete Files="$(IntermediateOutputPath)__AndroidNativeLibraries__.zip" />
+    <RemoveDirFixed Directories="$(IntermediateOutputPath)native_library_imports" />
+    <RemoveDirFixed Directories="$(IntermediateOutputPath)libs" />
+    <RemoveDirFixed Directories="$(IntermediateOutputPath)$(_NativeLibraryImportsDirectoryName)" />
+  </Target>
+
+</Project>

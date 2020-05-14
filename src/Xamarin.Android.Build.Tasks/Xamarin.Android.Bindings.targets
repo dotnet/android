@@ -10,23 +10,15 @@ This file imports the version- and platform-specific targets for the project imp
 this file. This file also defines targets to produce an error if the specified targets
 file does not exist, but the project is built anyway (command-line or IDE build).
 
+This is the entry point for "legacy" binding projects.
+
+This file is not imported by .NET 5 projects.
+
 Copyright (C) 2012 Xamarin Inc. All rights reserved.
 ***********************************************************************************************
 -->
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <UsingTask TaskName="Xamarin.Android.Tasks.AndroidWarning" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.ApiXmlAnalyzer" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.BindingsGenerator" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.GetApiLevelFromFramework" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.JarToXml" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.ClassParse" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.CollectLibraryInputJars" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.CreateTemporaryDirectory" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.JavaDoc" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.RemoveDirFixed" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.ImportJavaDoc" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.MDoc" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.Unzip" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 
   <!--
   *******************************************
@@ -54,26 +46,10 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
     <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == '' And '$(AndroidUseLatestPlatformSdk)' == 'False'">v4.4</TargetFrameworkVersion>
     <MaxSupportedLangVersion Condition=" '$(MaxSupportedLangVersion)' == '' ">8.0</MaxSupportedLangVersion>
     <UseShortFileNames Condition="'$(UseShortFileNames)' == ''">True</UseShortFileNames>
-    <UseShortGeneratorFileNames Condition="'$(UseShortGeneratorFileNames)' == ''">False</UseShortGeneratorFileNames>
     <AndroidClassParser Condition=" '$(AndroidClassParser)' == '' ">jar2xml</AndroidClassParser>
     <AndroidCodegenTarget Condition=" '$(AndroidCodegenTarget)' == '' ">XAJavaInterop1</AndroidCodegenTarget>
     <_AndroidIsBindingProject>True</_AndroidIsBindingProject>
   </PropertyGroup>
-  
-  <!-- Get our Build Actions to show up in VS -->
-  <ItemGroup>
-    <AvailableItemName Include="EmbeddedJar" />
-    <AvailableItemName Include="EmbeddedNativeLibrary" />
-    <AvailableItemName Include="EmbeddedReferenceJar" />
-    <AvailableItemName Include="InputJar" />
-    <AvailableItemName Include="ReferenceJar" />
-    <AvailableItemName Include="TransformFile" />
-    <AvailableItemName Include="LibraryProjectProperties" />
-    <AvailableItemName Include="LibraryProjectZip" />
-    <AvailableItemName Include="JavaDocIndex" />
-    <AvailableItemName Include="JavaDocJar" />
-    <AvailableItemName Include="JavaSourceJar" />
-  </ItemGroup>
 
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 
@@ -87,17 +63,6 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
   <PropertyGroup>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <GetReferenceAssemblyPathsDependsOn>_SetLatestTargetFrameworkVersion</GetReferenceAssemblyPathsDependsOn>
-  </PropertyGroup>
-
-  <Target Name="_ResolveMonoAndroidFramework" DependsOnTargets="GetReferenceAssemblyPaths" >
-  </Target>
-
-  <Target Name="AndroidPrepareForBuild" DependsOnTargets="_ResolveMonoAndroidFramework" />
-
-  <PropertyGroup>
-    <GeneratedOutputPath Condition="'$(GeneratedOutputPath)' == ''">$(IntermediateOutputPath)generated\</GeneratedOutputPath>
-    <ApiOutputFile Condition="'$(ApiOutputFile)' == ''">$(IntermediateOutputPath)api.xml</ApiOutputFile>
-    <_GeneratorStampFile>$(IntermediateOutputPath)generator.stamp</_GeneratorStampFile>
     <AndroidSequencePointsMode Condition=" '$(AndroidSequencePointsMode)' == ''">None</AndroidSequencePointsMode>
 		
 	<!-- Prevent warnings about assembly version conflicts -->
@@ -128,7 +93,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
   </Target>
 
   <!-- Find all the needed SDKs -->
-  <Target Name="_ResolveMonoAndroidSdks" DependsOnTargets="_ResolveMonoAndroidFramework;_WarnAboutDeprecatedConfigurations">
+  <Target Name="_ResolveMonoAndroidSdks" DependsOnTargets="GetReferenceAssemblyPaths;_WarnAboutDeprecatedConfigurations">
 
     <Error Text="Could not locate Android SDK." Condition="'$(_AndroidSdkDirectory)'==''" />
     <Error Text="Could not locate Java 6 or 7 SDK.  (Download from http://www.oracle.com/technetwork/java/javase/downloads.)" Condition="'$(_JavaSdkDirectory)'==''" />
@@ -173,260 +138,15 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 
   </Target>
 
-<PropertyGroup>
-	<ExportJarToXmlDependsOnTargets>
-		_ResolveMonoAndroidSdks
-		;_ExtractLibraryProjectImports
-		;_GetLibraryImports
-		;_ExtractJavaDocJars
-		;_GenerateJavaDocFromSourceJars
-	</ExportJarToXmlDependsOnTargets>
-</PropertyGroup>
-
-  <Target Name="_ExtractJavaDocJars"
-		Inputs="@(JavaDocJar)"
-		Outputs="@(JavaDocJar->'$(IntermediateOutputPath)javadocs\%(FileName).stamp')">
-		
-    <Unzip Sources="@(JavaDocJar)" DestinationDirectories="@(JavaDocJar->'$(IntermediateOutputPath)javadocs\%(FileName)')" />
-		
-    <Touch Files="@(JavaDocJar->'$(IntermediateOutputPath)javadocs\%(FileName).stamp')" />
-		
-    <ItemGroup>
-      <JavaDocIndex Include="@(JavaDocJar->'$(IntermediateOutputPath)javadocs\%(FileName)\index.html')" />
-    </ItemGroup>
-  </Target>
-
-  <Target Name="_GenerateJavaDocFromSourceJars"
-		Inputs="@(JavaSourceJar)"
-		Outputs="@(JavaSourceJar->'$(IntermediateOutputPath)javadocs\%(FileName).stamp')"
-		>
-		
-    <Unzip Sources="@(JavaSourceJar)" DestinationDirectories="@(JavaSourceJar->'$(IntermediateOutputPath)javasources\%(FileName)')" />
-	
-    <JavaDoc
-        ContinueOnError="true"
-        ToolPath="$(JavaToolPath)"
-        SourceDirectories="@(JavaSourceJar->'$(IntermediateOutputPath)javasources\%(FileName)')"
-        DestinationDirectories="@(JavaSourceJar->'$(IntermediateOutputPath)javadocs\%(FileName)')"
-        ReferenceJars="@(EmbeddedReferenceJar);@(ReferenceJar)"
-        JavaPlatformJar="$(_AndroidSdkDirectory)\platforms\android-$(_AndroidApiLevel)\android.jar"
-        />
-	
-    <Touch Files="@(JavaSourceJar->'$(IntermediateOutputPath)javasources\%(FileName).stamp')" AlwaysCreate="True" />
-		
-    <ItemGroup>
-      <JavaDocIndex Include="@(JavaSourceJar->'$(IntermediateOutputPath)javadocs\%(FileName)\index.html')" />
-    </ItemGroup>
-		
-  </Target>
-
-  <Target Name="ExportJarToXml"
-          DependsOnTargets="$(ExportJarToXmlDependsOnTargets)"
-          Inputs="@(EmbeddedJar);@(EmbeddedReferenceJar);@(InputJar);@(ReferenceJar);$(MSBuildAllProjects)"
-          Outputs="$(ApiOutputFile)">
-
-    <ItemGroup>
-      <_AndroidDocumentationPath Include="@(JavaDocIndex->'%(RootDir)\%(Directory)')" />
-      <_AndroidDocumentationPath Include="$(JavaDocPaths)" />
-      <_AndroidDocumentationPath Include="$(Java7DocPaths)" />
-      <_AndroidDocumentationPath Include="$(Java8DocPaths)" />
-      <_AndroidDocumentationPath Include="$(DroidDocPaths)" />
-      <_AndroidDocumentationPath Include="@(JavaDocJar->'$(IntermediateOutputPath)javadocs\%(FileName)')" />
-    </ItemGroup>
-    
-    <!-- Extract the API from the .jar file and store as .xml, using either class-parse or jar2xml -->
-    <ClassParse Condition="'$(AndroidClassParser)' == 'class-parse'"
-      OutputFile="$(ApiOutputFile).class-parse"
-      SourceJars="@(EmbeddedJar);@(InputJar)"
-      DocumentationPaths="@(_AndroidDocumentationPath)"
-    />
-
-    <BindingsGenerator Condition="'$(AndroidClassParser)' == 'class-parse'"
-      OnlyRunXmlAdjuster="true"
-      XmlAdjusterOutput="$(ApiOutputFile)"
-      OutputDirectory="$(GeneratedOutputPath)src"
-      AndroidApiLevel="$(_AndroidApiLevel)"
-      ApiXmlInput="$(ApiOutputFile).class-parse"
-      ReferencedManagedLibraries="@(ReferencePath);@(ReferenceDependencyPaths)"
-      MonoAndroidFrameworkDirectories="$(_TargetFrameworkDirectories)"
-      ToolPath="$(MonoAndroidToolsDirectory)"
-      ToolExe="$(BindingsGeneratorToolExe)"
-    />
-
-    <JarToXml Condition="'$(AndroidClassParser)' == 'jar2xml'"
-      JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
-      JavaOptions="$(JavaOptions)"
-      AndroidSdkDirectory="$(_AndroidSdkDirectory)"
-      MonoAndroidToolsDirectory="$(MonoAndroidToolsDirectory)"
-      JavaSdkDirectory="$(_JavaSdkDirectory)"
-      AndroidApiLevel="$(_AndroidApiLevel)"
-      OutputFile="$(ApiOutputFile)"
-      SourceJars="@(EmbeddedJar);@(InputJar)"
-      ReferenceJars="@(EmbeddedReferenceJar);@(ReferenceJar)"
-      DroidDocPaths="$(DroidDocPaths)"
-      JavaDocPaths="$(JavaDocPaths)"
-      Java7DocPaths="$(Java7DocPaths)"
-      Java8DocPaths="$(Java8DocPaths)"
-      JavaDocs="@(JavaDocIndex)"
-      LibraryProjectJars="$(_AndroidLibrayProjectIntermediatePath)\*.jar"
-    />
-
-  </Target>
-
-  <Target Name="GenerateBindings"
-          DependsOnTargets="ExportJarToXml;_ResolveMonoAndroidSdks"
-          Inputs="$(ApiOutputFile);@(TransformFile);@(ReferencePath);@(ReferenceDependencyPaths);$(MSBuildAllProjects)"
-          Outputs="$(_GeneratorStampFile)">
-
-    <!-- Delete previous generated files if they still exist -->
-    <RemoveDirFixed Directories="$(GeneratedOutputPath)" Condition="Exists ('$(GeneratedOutputPath)')" />
-
-    <ItemGroup>
-      <AnnotationsZip Include="$(IntermediateOutputPath)library_project_annotations\*.zip" />
-    </ItemGroup>
-		
-	<!-- Create the .cs binding source files -->
-    <BindingsGenerator
-      OutputDirectory="$(GeneratedOutputPath)src"
-      EnumDirectory="$(GeneratedOutputPath)enums"
-      EnumMetadataDirectory="$(GeneratedOutputPath)metadata"
-      CodegenTarget="$(AndroidCodegenTarget)"
-      AndroidApiLevel="$(_AndroidApiLevel)"
-      ApiXmlInput="$(ApiOutputFile)"
-      AnnotationsZipFiles="@(AnnotationsZip)"
-      AssemblyName="$(AssemblyName)"
-      TransformFiles="@(TransformFile)"
-      ReferencedManagedLibraries="@(ReferencePath);@(ReferenceDependencyPaths)"
-      MonoAndroidFrameworkDirectories="$(_TargetFrameworkDirectories)"
-      TypeMappingReportFile="$(GeneratedOutputPath)type-mapping.txt"
-      ToolPath="$(MonoAndroidToolsDirectory)"
-      ToolExe="$(BindingsGeneratorToolExe)"
-      UseShortFileNames="$(UseShortGeneratorFileNames)"
-      LangVersion="$(LangVersion)"
-      EnableInterfaceMembersPreview="$(_EnableInterfaceMembers)"
-    />
-
-    <!-- Write a flag so we won't redo this target if nothing changed -->
-    <Touch Files="$(_GeneratorStampFile)" AlwaysCreate="true" />
-
-  </Target>
-
-  <Target Name="AddBindingsToCompile" DependsOnTargets="GenerateBindings">
-    <!-- Add the files to list of things to be compiled -->
-    <ItemGroup>
-      <Compile Include="$(IntermediateOutputPath)generated\*\*.cs" />
-    </ItemGroup>
-  </Target>
-
-  <Target Name="AddEmbeddedJarsAsResources" DependsOnTargets="GenerateBindings">
-    <ItemGroup>
-      <EmbeddedResource Include="@(EmbeddedJar)">
-        <LogicalName>%(Filename)%(Extension)</LogicalName>
-      </EmbeddedResource>
-    </ItemGroup>
-  </Target>
-
-  <Target Name="AddEmbeddedReferenceJarsAsResources" DependsOnTargets="GenerateBindings">
-    <ItemGroup>
-      <EmbeddedResource Include="@(EmbeddedReferenceJar)">
-        <LogicalName>__reference__%(Filename)%(Extension)</LogicalName>
-      </EmbeddedResource>
-    </ItemGroup>
-  </Target>
-
-  <Target Name="ResolveLibraryProjects" DependsOnTargets="_CreateBindingResourceArchive" />
-
-  <Target Name="AddLibraryJarsToBind" DependsOnTargets="ResolveLibraryProjects">
-    <ItemGroup>
-      <InputJar Include="$(IntermediateOutputPath)library_project_jars\*.jar" />
-    </ItemGroup>
-  </Target>
-
-  <Target Name="BuildDocumentation"
-	  	Inputs="@(JavaDocIndex);@(IntermediateAssembly->'$(IntermediateOutputPath)%(filename).xml')"
-	  	Outputs="@(IntermediateAssembly->'$(OutputPath)%(filename).xml')"
-	  	Condition="'@(JavaDocIndex)' != ''">
-    <MDoc
-    	References="@(ReferencePath);@(ReferenceDependencyPaths)"
-    	TargetAssembly="@(IntermediateAssembly)"
-    	OutputDocDirectory="$(IntermediateOutputPath)docs"
-    	ToolPath="$(MonoAndroidToolsDirectory)"
-		ToolExe="$(MDocToolExe)"
-    	 />
-    <ImportJavaDoc
-    	ContinueOnError="true"
-    	JavaDocs="@(JavaDocIndex)"
-    	References="@(ReferencePath);@(ReferenceDependencyPaths)"
-    	Transforms="@(TransformFile)"
-    	TargetAssembly="@(IntermediateAssembly)"
-    	OutputDocDirectory="$(IntermediateOutputPath)docs" />
-   	<!-- "extra" mdoc needed to "fix" formatting, reducing diff size due to XML formatting -->
-    <MDoc
-    	References="@(ReferencePath);@(ReferenceDependencyPaths)"
-    	TargetAssembly="@(IntermediateAssembly)"
-    	OutputDocDirectory="$(IntermediateOutputPath)docs"
-    	ToolPath="$(MonoAndroidToolsDirectory)"
-		ToolExe="$(MDocToolExe)"
-    	 />
-    <!-- Then export .NET doc xml -->
-    <MDoc
-    	RunExport="True"
-    	TargetAssembly="@(IntermediateAssembly)"
-    	OutputDocDirectory="$(IntermediateOutputPath)docs"
-    	ToolPath="$(MonoAndroidToolsDirectory)"
-		ToolExe="$(MDocToolExe)"
-    	 />
-    <Copy
-    	SourceFiles="@(IntermediateAssembly->'$(IntermediateOutputPath)%(filename).xml')"
-    	DestinationFiles="@(IntermediateAssembly->'$(OutputPath)%(filename).xml')"
-    	SkipUnchangedFiles="true" />
-  </Target>
-
-  <Target Name="CleanBindingsOutput">
-
-    <Delete Files="$(ApiOutputFile)" />
-    <Delete Files="$(ApiOutputFile).adjusted" />
-    <Delete Files="$(ApiOutputFile).class-parse" />
-    <Delete Files="$(ApiOutputFile).fixed" />
-    <Delete Files="$(ApiOutputFile).adjusted.fixed" />
-    <Delete Files="$(_GeneratorStampFile)" />
-
-    <RemoveDirFixed Directories="$(GeneratedOutputPath)" Condition="Exists ('$(GeneratedOutputPath)')" />
-    <RemoveDirFixed Directories="$(_AndroidStampDirectory)" Condition="Exists ('$(_AndroidStampDirectory)')" />
-
-    <Delete Files="@(IntermediateAssembly->'$(OutputPath)%(filename).xml')" />
-    <Delete Files="@(IntermediateAssembly->'$(IntermediateOutputPath)%(filename).xml')" />
-    <RemoveDirFixed Directories="$(IntermediateOutputPath)docs" Condition="Exists ('$(IntermediateOutputPath)docs')" />
-
-    <RemoveDirFixed Directories="$(IntermediateOutputPath)javadocs" Condition="Exists ('$(IntermediateOutputPath)javadocs')" />
-
-    <RemoveDirFixed Directories="$(IntermediateOutputPath)javasources" Condition="Exists ('$(IntermediateOutputPath)javasources')" />
-  </Target>
-  
-  <Target Name="CleanLibraryProjectIntermediaries">
-    <Delete Files="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip" />
-    <Delete Files="$(_AndroidLibraryImportsCache)" />
-    <Delete Files="$(_AndroidLibraryProjectImportsCache)" />
-    <Delete Files="$(_AndroidLibrayProjectAssemblyMapFile)" />
-    <RemoveDirFixed Directories="$(IntermediateOutputPath)library_project_jars" Condition="Exists ('$(IntermediateOutputPath)library_project_jars')" />
-    <RemoveDirFixed Directories="$(IntermediateOutputPath)library_project_annotations" Condition="Exists ('$(IntermediateOutputPath)library_project_annotations')" />
-    <RemoveDirFixed Directories="$(IntermediateOutputPath)$(_LibraryProjectImportsDirectoryName)" Condition="Exists ('$(IntermediateOutputPath)$(_LibraryProjectImportsDirectoryName)')" />
-    <RemoveDirFixed Directories="$(IntermediateOutputPath)__library_projects__" Condition="Exists ('$(IntermediateOutputPath)__library_projects__')"/>
-    <RemoveDirFixed Directories="$(_AndroidLibrayProjectIntermediatePath)" Condition="Exists ('$(_AndroidLibrayProjectIntermediatePath)')" />
-  </Target>
-
-  <Target Name="CleanNativeLibraryIntermediaries">
-    <Delete Files="$(IntermediateOutputPath)__AndroidNativeLibraries__.zip" />
-    <RemoveDirFixed Directories="$(IntermediateOutputPath)native_library_imports" Condition="Exists ('$(IntermediateOutputPath)native_library_imports')" />
-    <RemoveDirFixed Directories="$(IntermediateOutputPath)libs" Condition="Exists ('$(IntermediateOutputPath)libs')" />
-    <RemoveDirFixed Directories="$(IntermediateOutputPath)$(_NativeLibraryImportsDirectoryName)" Condition="Exists ('$(IntermediateOutputPath)$(_NativeLibraryImportsDirectoryName)')" />
-  </Target>
-
+  <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Bindings.Core.targets" />
+  <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Bindings.ClassParse.targets" Condition=" '$(AndroidClassParser)' == 'class-parse' " />
+  <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Bindings.JarToXml.targets"   Condition=" '$(AndroidClassParser)' == 'jar2xml' " />
   <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.DesignTime.targets" />
+  <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Bindings.Documentation.targets" />
   <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.EmbeddedResource.targets" />
   <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.PCLSupport.targets" />
   <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Tooling.targets" />
-  <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Legacy.targets" Condition=" '$(UsingAndroidNETSdk)' != 'True' " />
+  <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Legacy.targets" />
 
   <!--
   *******************************************
