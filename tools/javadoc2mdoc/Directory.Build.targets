@@ -8,9 +8,9 @@
       <_OutputFiles Include="$(OutputPath)SgmlReaderDll.dll" />
     </ItemGroup>
     <Copy
-      SourceFiles="@(_OutputFiles)"
-      DestinationFolder="$(XAInstallPrefix)xbuild\Xamarin\Android\"
-      SkipUnchangedFiles="True"
+        SourceFiles="@(_OutputFiles)"
+        DestinationFolder="$(XAInstallPrefix)xbuild\Xamarin\Android\"
+        SkipUnchangedFiles="True"
     />
   </Target>
 </Project>
