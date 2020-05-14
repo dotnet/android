@@ -27,6 +27,10 @@ namespace Xamarin.Android.Linker
 
 		protected override void Process ()
 		{
+			string tfmPaths;
+			if (Context.TryGetCustomData ("XATargetFrameworkDirectories", out tfmPaths))
+				Tasks.MonoAndroidHelper.TargetFrameworkDirectories = tfmPaths.Split (new char [] { ';' });
+
 			var subSteps = new SubStepDispatcher ();
 			subSteps.Add (new PreserveExportedTypes ());
 			subSteps.Add (new MarkJavaObjects ());

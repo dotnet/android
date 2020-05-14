@@ -9,7 +9,9 @@ This file contains the .NET 5-specific targets to customize ILLink
 
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <Target Name="_PrepareLinking" AfterTargets="ComputeResolvedFilesToPublishList">
+  <Target Name="_PrepareLinking"
+      AfterTargets="ComputeResolvedFilesToPublishList"
+      DependsOnTargets="GetReferenceAssemblyPaths">
     <ItemGroup>
       <ResolvedFileToPublish
           Update="@(ResolvedFileToPublish)"
@@ -20,7 +22,7 @@ This file contains the .NET 5-specific targets to customize ILLink
     </ItemGroup>
     <PropertyGroup>
       <!-- make the output verbose to see what the linker is doing. FIXME: make dependent upon verbosity level -->
-      <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --verbose</_ExtraTrimmerArgs>
+      <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --verbose --custom-data XATargetFrameworkDirectories="$(_XATargetFrameworkDirectories)"</_ExtraTrimmerArgs>
 
       <IntermediateLinkDir>$(MonoAndroidIntermediateAssemblyDir)</IntermediateLinkDir>
 

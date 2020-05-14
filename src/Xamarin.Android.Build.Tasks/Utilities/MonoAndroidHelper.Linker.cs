@@ -7,7 +7,6 @@ namespace Xamarin.Android.Tasks
 {
 	public partial class MonoAndroidHelper
 	{
-		//TODO: this is static state! probably should be removed for the linker
 		public static string [] TargetFrameworkDirectories;
 
 		internal static readonly string [] FrameworkEmbeddedJarLookupTargets = {
