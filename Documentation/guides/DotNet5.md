@@ -78,7 +78,7 @@ will not be supported.
 `XamarinAndroid` will not be supported.
 
 If Java binding is enabled with `@(InputJar)`, `@(EmbeddedJar)`,
-`@(LibraryProjectZip)`, etc. then `$(AllowUnsafeBlocks)` must default
+`@(LibraryProjectZip)`, etc. then `$(AllowUnsafeBlocks)` will default
 to `True`.
 
 [abet-sys]: https://github.com/xamarin/xamarin-android/issues/4127
