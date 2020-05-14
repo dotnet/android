@@ -16,9 +16,6 @@ pr:
 # Global variables
 # Predefined variables: https://docs.microsoft.com/en-us/azure/devops/pipelines/build/variables?view=azure-devops&tabs=yaml
 variables:
-  EnableMacStage: true
-  EnableLinuxStage: true
-
   XA.Build.MacOSSPool: VSEng-Xamarin-RedmondMacMojaveBuildPool-Android-OSS
   XA.Build.LinuxOSSPool: Xamarin-Android-Ubuntu-Public
 
@@ -31,9 +28,6 @@ variables:
   # Version number from: https://dotnet.microsoft.com/download/dotnet-core/5.0
   DotNetCorePreviewVersion: 5.0.100-preview.4.20227.14
 
-  BUILD_TESTS: true
-  RUN_TESTS: false
-
 stages:
 - stage: mac_stage
   displayName: Mac
@@ -42,7 +36,7 @@ stages:
   - job: mac_build
     displayName: Mac Build
     pool:
-      name: $(XA.Build.MacOSSPool)  # The variable is defined on the pipeline definition
+      name: $(XA.Build.MacOSSPool)
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:
@@ -98,7 +92,6 @@ stages:
         make all-tests CONFIGURATION=$(XA.Build.Configuration) V=1
       workingDirectory: $(Build.SourcesDirectory)
       displayName: make all-tests
-      condition: and(succeeded(), eq(variables['BUILD_TESTS'], 'true'))
 
     - script: >
         echo "make package-build-status CONFIGURATION=$(XA.Build.Configuration) V=1" &&
@@ -124,7 +117,7 @@ stages:
         make run-performance-tests CONFIGURATION=$(XA.Build.Configuration) V=1
       workingDirectory: $(Build.SourcesDirectory)
       displayName: run performance tests
-      condition: and(succeeded(), eq(variables['RUN_TESTS'], 'true'))
+      condition: and(succeeded(), eq(variables['EnableTestExecution'], 'true'))   # The variable is defined on the pipeline definition
 
     - template: yaml-templates/upload-results.yaml
       parameters:
@@ -137,7 +130,7 @@ stages:
   jobs:
   - job: linux_build_package
     displayName: Linux Build
-    pool: $(XA.Build.LinuxOSSPool)                        # The variable is defined on the pipeline definition
+    pool: $(XA.Build.LinuxOSSPool)
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:
