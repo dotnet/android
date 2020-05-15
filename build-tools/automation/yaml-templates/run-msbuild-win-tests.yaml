@@ -31,9 +31,6 @@ jobs:
         artifactName: $(NuGetArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\$(NuGetArtifactName)
 
-    - powershell: Move-Item "$env:ProgramFiles\Android\jdk\" "$env:ProgramFiles\Android\jdk_tmp\"
-      displayName: Move Microsoft OpenJDK
-
     # Limit the amount of worker threads used to run these tests in parallel to half of what is currently available (8) on the Windows pool.
     # Using all available cores seems to occasionally bog down our machines and cause parallel test execution to slow down dramatically.
     - template: run-nunit-tests.yaml
@@ -61,9 +58,5 @@ jobs:
     - template: upload-results.yaml
       parameters:
         artifactName: Test Results - MSBuild - Windows-${{ parameters.node_id }}
-
-    - powershell: Move-Item "$env:ProgramFiles\Android\jdk_tmp\" "$env:ProgramFiles\Android\jdk\"
-      displayName: Restore Microsoft OpenJDK
-      condition: always()
 
     - template: fail-on-issue.yaml
