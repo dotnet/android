@@ -104,6 +104,23 @@ namespace Xamarin.Android.Tasks
 						}
 					}
 				}
+				if (!string.IsNullOrEmpty (ProguardConfigurationFiles)) {
+					var configs = ProguardConfigurationFiles
+						.Replace ("{sdk.dir}", AndroidSdkDirectory + Path.DirectorySeparatorChar)
+						.Replace ("{intermediate.common.xamarin}", ProguardCommonXamarinConfiguration)
+						.Replace ("{intermediate.references}", ProguardGeneratedReferenceConfiguration)
+						.Replace ("{intermediate.application}", ProguardGeneratedApplicationConfiguration)
+						.Replace ("{project}", string.Empty) // current directory anyways.
+						.Split (';')
+						.Select (s => s.Trim ())
+						.Where (s => !string.IsNullOrWhiteSpace (s));
+					foreach (var file in configs) {
+						if (File.Exists (file))
+							cmd.AppendSwitchIfNotNull ("--pg-conf ", file);
+						else
+							Log.LogCodedWarning ("XA4304", file, 0, Properties.Resources.XA4304, file);
+					}
+				}
 			} else {
 				//NOTE: we may be calling r8 *only* for multi-dex, and all shrinking is disabled
 				cmd.AppendSwitch ("--no-tree-shaking");
@@ -121,23 +138,6 @@ namespace Xamarin.Android.Tasks
 				File.WriteAllLines (temp, lines);
 				tempFiles.Add (temp);
 				cmd.AppendSwitchIfNotNull ("--pg-conf ", temp);
-			}
-			if (!string.IsNullOrEmpty (ProguardConfigurationFiles)) {
-				var configs = ProguardConfigurationFiles
-					.Replace ("{sdk.dir}", AndroidSdkDirectory + Path.DirectorySeparatorChar)
-					.Replace ("{intermediate.common.xamarin}", ProguardCommonXamarinConfiguration)
-					.Replace ("{intermediate.references}", ProguardGeneratedReferenceConfiguration)
-					.Replace ("{intermediate.application}", ProguardGeneratedApplicationConfiguration)
-					.Replace ("{project}", string.Empty) // current directory anyways.
-					.Split (';')
-					.Select (s => s.Trim ())
-					.Where (s => !string.IsNullOrWhiteSpace (s));
-				foreach (var file in configs) {
-					if (File.Exists (file))
-						cmd.AppendSwitchIfNotNull ("--pg-conf ", file);
-					else
-						Log.LogCodedWarning ("XA4304", file, 0, Properties.Resources.XA4304, file);
-				}
 			}
 
 			return cmd;

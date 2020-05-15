@@ -299,18 +299,14 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<!-- Default Java heap size to 1GB (-Xmx1G) if not specified-->
 	<JavaMaximumHeapSize Condition=" '$(JavaMaximumHeapSize)' == '' ">1G</JavaMaximumHeapSize>
 
-	<ProguardConfigFiles Condition="'$(ProguardConfigFiles)' == '' And '$(AndroidLinkTool)' != ''">
+	<ProguardConfigFiles Condition="'$(ProguardConfigFiles)' == ''">
 		{sdk.dir}tools\proguard\proguard-android.txt;
 		{intermediate.common.xamarin};
 		{intermediate.references};
 		{intermediate.application};
 		@(ProguardConfiguration);
 	</ProguardConfigFiles>
-	<ProguardConfigFiles Condition="'$(ProguardConfigFiles)' == '' And '$(AndroidLinkTool)' == ''">
-		{sdk.dir}tools\proguard\proguard-android.txt;
-		@(ProguardConfiguration);
-	</ProguardConfigFiles>
-
+	
 	<_AndroidMainDexListFile>$(IntermediateOutputPath)multidex.keep</_AndroidMainDexListFile>
 	
 	<AndroidManifestPlaceholders Condition="'$(AndroidManifestPlaceholders)' == ''"></AndroidManifestPlaceholders>
