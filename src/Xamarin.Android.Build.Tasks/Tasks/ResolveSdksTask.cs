@@ -43,6 +43,11 @@ namespace Xamarin.Android.Tasks
 
 		public string [] ReferenceAssemblyPaths { get; set; }
 
+		public string CommandLineToolsVersion { get; set; }
+
+		[Output]
+		public string CommandLineToolsPath { get; set; }
+
 		[Output]
 		public string AndroidNdkPath { get; set; }
 
@@ -93,6 +98,10 @@ namespace Xamarin.Android.Tasks
 			AndroidNdkPath = MonoAndroidHelper.AndroidSdk.AndroidNdkPath;
 			AndroidSdkPath = MonoAndroidHelper.AndroidSdk.AndroidSdkPath;
 			JavaSdkPath    = MonoAndroidHelper.AndroidSdk.JavaSdkPath;
+
+			CommandLineToolsPath    = MonoAndroidHelper.AndroidSdk.GetCommandLineToolsPaths (CommandLineToolsVersion)
+				.FirstOrDefault () ??
+				Path.Combine (AndroidSdkPath, "tools");
 
 			if (string.IsNullOrEmpty (AndroidSdkPath)) {
 				Log.LogCodedError ("XA5300", Properties.Resources.XA5300_Android_SDK);

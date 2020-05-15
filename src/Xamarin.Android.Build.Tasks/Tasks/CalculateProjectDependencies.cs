@@ -13,6 +13,8 @@ namespace Xamarin.Android.Tasks
 
 		const int DefaultMinSDKVersion = 11;
 
+		public string CommandLineToolsVersion { get; set; }
+
 		[Required]
 		public string TargetFrameworkVersion { get; set; }
 
@@ -57,6 +59,9 @@ namespace Xamarin.Android.Tasks
 			dependencies.Add (CreateAndroidDependency ($"build-tools/{BuildToolsVersion}", BuildToolsVersion));
 			if (!string.IsNullOrEmpty (PlatformToolsVersion)) {
 				dependencies.Add (CreateAndroidDependency ("platform-tools", PlatformToolsVersion));
+			}
+			if (!string.IsNullOrEmpty (CommandLineToolsVersion)) {
+				dependencies.Add (CreateAndroidDependency ($"cmdline-tools/{CommandLineToolsVersion}", CommandLineToolsVersion));
 			}
 			if (!string.IsNullOrEmpty (ToolsVersion)) {
 				dependencies.Add (CreateAndroidDependency ("tools", ToolsVersion));

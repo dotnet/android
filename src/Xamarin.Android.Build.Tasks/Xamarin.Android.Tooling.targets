@@ -60,10 +60,12 @@ projects.
     </PropertyGroup>
     <ResolveSdks
         ContinueOnError="$(_AndroidAllowMissingSdkTooling)"
+        CommandLineToolsVersion="$(AndroidCommandLineToolsVersion)"
         AndroidSdkPath="$(AndroidSdkDirectory)"
         AndroidNdkPath="$(AndroidNdkDirectory)"
         JavaSdkPath="$(JavaSdkDirectory)"
         ReferenceAssemblyPaths="$(_XATargetFrameworkDirectories)">
+      <Output TaskParameter="CommandLineToolsPath"      PropertyName="_AndroidToolsDirectory" />
       <Output TaskParameter="AndroidNdkPath"            PropertyName="AndroidNdkDirectory" Condition=" '$(AndroidNdkDirectory)' == '' " />
       <Output TaskParameter="AndroidSdkPath"            PropertyName="AndroidSdkDirectory" Condition=" '$(AndroidSdkDirectory)' == '' " />
       <Output TaskParameter="JavaSdkPath"               PropertyName="JavaSdkDirectory"    Condition=" '$(JavaSdkDirectory)' == '' " />

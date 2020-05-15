@@ -9,6 +9,7 @@
 		<YieldDuringToolExecution Condition="'$(YieldDuringToolExecution)' == ''">true</YieldDuringToolExecution>
 		<LatestSupportedJavaVersion Condition="'$(LatestSupportedJavaVersion)' == ''">11.0.4</LatestSupportedJavaVersion>
 		<MinimumSupportedJavaVersion Condition="'$(MinimumSupportedJavaVersion)' == ''">1.6.0</MinimumSupportedJavaVersion>
+		<AndroidCommandLineToolsVersion Condition=" '$(AndroidCommandLineToolsVersion)' == '' ">1.0</AndroidCommandLineToolsVersion>
 		<AndroidVersionCodePattern Condition=" '$(AndroidUseLegacyVersionCode)' != 'True' And '$(AndroidVersionCodePattern)' == '' ">{abi}{versionCode:D5}</AndroidVersionCodePattern>
 		<AndroidResourceGeneratorTargetName>UpdateGeneratedFiles</AndroidResourceGeneratorTargetName>
 		<AndroidUseAapt2 Condition=" '$(AndroidUseAapt2)' == '' ">True</AndroidUseAapt2>
