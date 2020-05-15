@@ -291,8 +291,15 @@ if(UNIX)
 endif()
 
 set(XAMARIN_APP_STUB_SOURCES ${SOURCES_DIR}/application_dso_stub.cc)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${XA_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_BUILD_TYPE})
 add_library(xamarin-app SHARED ${XAMARIN_APP_STUB_SOURCES})
+if (ENABLE_NDK)
+  # Only Android builds need to go in separate directories, desktop builds have the same ABI
+  set_target_properties(
+    xamarin-app
+    PROPERTIES
+    LIBRARY_OUTPUT_DIRECTORY "${XA_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_BUILD_TYPE}"
+    )
+endif()
 
 if(NOT WIN32 AND NOT MINGW AND CMAKE_BUILD_TYPE STREQUAL Debug)
   set(XAMARIN_DEBUG_APP_HELPER_SOURCES
