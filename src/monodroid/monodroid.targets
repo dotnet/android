@@ -40,7 +40,7 @@
       <_ConfigureRuntimeCommands
           Include="@(AndroidSupportedTargetJitAbi)">
         <Command>$(CmakePath)</Command>
-        <Arguments>$(_CmakeAndroidFlags) -DCONFIGURATION=Release -DCMAKE_BUILD_TYPE=Debug -DANDROID_NATIVE_API_LEVEL=%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_PLATFORM=android-%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_ABI=%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) $(MSBuildThisFileDirectory)</Arguments>
+        <Arguments>--debug-output $(_CmakeAndroidFlags) -DCONFIGURATION=Release -DCMAKE_BUILD_TYPE=Debug -DANDROID_NATIVE_API_LEVEL=%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_PLATFORM=android-%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_ABI=%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) $(MSBuildThisFileDirectory)</Arguments>
         <WorkingDirectory>$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-Debug</WorkingDirectory>
       </_ConfigureRuntimeCommands>
     </ItemGroup>
@@ -50,7 +50,7 @@
       <_ConfigureRuntimeCommands
           Include="@(AndroidSupportedTargetJitAbi)">
         <Command>$(CmakePath)</Command>
-        <Arguments>$(_CmakeAndroidFlags) -DSTRIP_DEBUG=ON -DCONFIGURATION=Debug -DCMAKE_BUILD_TYPE=Release -DANDROID_NATIVE_API_LEVEL=%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_PLATFORM=android-%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_ABI=%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) $(MSBuildThisFileDirectory)</Arguments>
+        <Arguments>--debug-output $(_CmakeAndroidFlags) -DSTRIP_DEBUG=ON -DCONFIGURATION=Debug -DCMAKE_BUILD_TYPE=Release -DANDROID_NATIVE_API_LEVEL=%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_PLATFORM=android-%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_ABI=%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) $(MSBuildThisFileDirectory)</Arguments>
         <WorkingDirectory>$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-Release</WorkingDirectory>
       </_ConfigureRuntimeCommands>
     </ItemGroup>
@@ -62,7 +62,7 @@
       <_ConfigureRuntimeCommands
           Include="@(_HostRuntime)">
         <Command>$(CmakePath)</Command>
-        <Arguments>%(_HostRuntime.CmakeFlags) -DCONFIGURATION=Release -DCMAKE_BUILD_TYPE=Debug -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=$(OutputPath)/%(_HostRuntime.OutputDirectory) -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$(OutputPath)/%(_HostRuntime.OutputDirectory) -DCMAKE_RUNTIME_OUTPUT_DIRECTORY=$(OutputPath)/%(_HostRuntime.OutputDirectory) $(MSBuildThisFileDirectory)</Arguments>
+        <Arguments>--debug-output %(_HostRuntime.CmakeFlags) -DCONFIGURATION=Release -DCMAKE_BUILD_TYPE=Debug -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=$(OutputPath)/%(_HostRuntime.OutputDirectory) -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$(OutputPath)/%(_HostRuntime.OutputDirectory) -DCMAKE_RUNTIME_OUTPUT_DIRECTORY=$(OutputPath)/%(_HostRuntime.OutputDirectory) $(MSBuildThisFileDirectory)</Arguments>
         <WorkingDirectory>$(IntermediateOutputPath)%(_HostRuntime.OutputDirectory)-Debug</WorkingDirectory>
       </_ConfigureRuntimeCommands>
     </ItemGroup>
@@ -72,7 +72,7 @@
       <_ConfigureRuntimeCommands
           Include="@(_HostRuntime)">
         <Command>$(CmakePath)</Command>
-        <Arguments>%(_HostRuntime.CmakeFlags) -DSTRIP_DEBUG=ON -DCONFIGURATION=Debug -DCMAKE_BUILD_TYPE=Release -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=$(OutputPath)/%(_HostRuntime.OutputDirectory) -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$(OutputPath)/%(_HostRuntime.OutputDirectory) -DCMAKE_RUNTIME_OUTPUT_DIRECTORY=$(OutputPath)/%(_HostRuntime.OutputDirectory) $(MSBuildThisFileDirectory)</Arguments>
+        <Arguments>--debug-output %(_HostRuntime.CmakeFlags) -DSTRIP_DEBUG=ON -DCONFIGURATION=Debug -DCMAKE_BUILD_TYPE=Release -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=$(OutputPath)/%(_HostRuntime.OutputDirectory) -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$(OutputPath)/%(_HostRuntime.OutputDirectory) -DCMAKE_RUNTIME_OUTPUT_DIRECTORY=$(OutputPath)/%(_HostRuntime.OutputDirectory) $(MSBuildThisFileDirectory)</Arguments>
         <WorkingDirectory>$(IntermediateOutputPath)%(_HostRuntime.OutputDirectory)-Release</WorkingDirectory>
       </_ConfigureRuntimeCommands>
     </ItemGroup>
