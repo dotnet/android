@@ -63,9 +63,6 @@ namespace Xamarin.Android.Tasks
 
 		public bool CreatePackagePerAbi { get; set; }
 
-		[Required]
-		public string UseSharedRuntime { get; set; }
-
 		public bool EmbedAssemblies { get; set; }
 
 		public bool BundleAssemblies { get; set; }
@@ -315,7 +312,6 @@ namespace Xamarin.Android.Tasks
 
 		void AddAssemblies (ZipArchiveEx apk, bool debug, bool compress, IDictionary<string, CompressedAssemblyInfo> compressedAssembliesInfo)
 		{
-			bool use_shared_runtime = String.Equals (UseSharedRuntime, "true", StringComparison.OrdinalIgnoreCase);
 			string sourcePath;
 			AssemblyCompression.AssemblyData compressedAssembly = null;
 			string compressedOutputDir = Path.GetFullPath (Path.Combine (Path.GetDirectoryName (ApkOutputPath), "..", "lz4"));
@@ -358,9 +354,6 @@ namespace Xamarin.Android.Tasks
 					count = 0;
 				}
 			}
-
-			if (use_shared_runtime)
-				return;
 
 			count = 0;
 			// Add framework assemblies

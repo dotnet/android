@@ -418,6 +418,8 @@ compiler.
 
 Added in Xamarin.Android 10.2.
 
+<a name="AndroidFastDeploymentType"></a>
+
 ## AndroidFastDeploymentType
 
 A `:` (colon)-separated list
@@ -433,11 +435,15 @@ faster.) Valid values include:
 
 - `Assemblies`: Deploy application assemblies.
 
-- `Dexes`: Deploy `.dex` files, Android Resources, and Android
-  Assets. **This value can *only* be used on devices running
+- `Dexes`: Deploy `.dex` files, native libraries and typemaps.
+  **This value can *only* be used on devices running
   Android 4.4 or later (API-19).**
 
 The default value is `Assemblies`.
+
+Support for Fast Deploying resources and assets via that system was
+removed in commit [f0d565fe](https://github.com/xamarin/xamarin-android/commit/f0d565fe4833f16df31378c77bbb492ffd2904b9). This was becuase it required the use of
+deprecated API's to work.
 
 **Experimental**. Added in Xamarin.Android 6.1.
 
@@ -1002,18 +1008,6 @@ will switch over the design time builds to use the managed resource parser rathe
 than `aapt`.
 
 Added in Xamarin.Android 8.1.
-
-## AndroidUseSharedRuntime
-
-A boolean property that
-determines whether the *shared runtime packages* are required in
-order to run the Application on the target device. Relying on the
-shared runtime packages allows the Application package to be
-smaller, speeding up the package creation and deployment process,
-resulting in a faster build/deploy/debug turnaround cycle.
-
-This property should be `True` for Debug builds, and `False` for
-Release projects.
 
 ## AndroidVersionCodePattern
 

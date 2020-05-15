@@ -122,11 +122,6 @@ namespace Xamarin.ProjectTools
 			set { SetProperty (KnownProperties.Deterministic, value.ToString ()); }
 		}
 
-		public bool AndroidUseSharedRuntime {
-			get { return string.Equals (GetProperty (KnownProperties.AndroidUseSharedRuntime), "True", StringComparison.OrdinalIgnoreCase); }
-			set { SetProperty (KnownProperties.AndroidUseSharedRuntime, value.ToString ()); }
-		}
-
 		public bool EmbedAssembliesIntoApk {
 			get { return string.Equals (GetProperty (KnownProperties.EmbedAssembliesIntoApk), "True", StringComparison.OrdinalIgnoreCase); }
 			set { SetProperty (KnownProperties.EmbedAssembliesIntoApk, value.ToString ()); }

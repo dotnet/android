@@ -44,11 +44,7 @@ namespace xamarin::android::internal
 		static constexpr char SYSTEM_LIB_PATH[] = "";
 #endif
 
-#ifdef RELEASE
 		static constexpr size_t MAX_OVERRIDES = 1;
-#else
-		static constexpr size_t MAX_OVERRIDES = 3;
-#endif
 		static char* override_dirs [MAX_OVERRIDES];
 		static const char **app_lib_directories;
 		static size_t app_lib_directories_size;

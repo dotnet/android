@@ -152,6 +152,9 @@ namespace Xamarin.Android.Build.Tests
 
 			var apk = Path.Combine (outputPath, "UnnamedProject.UnnamedProject.apk");
 			FileAssert.Exists (apk);
+
+			bool expectEmbededAssembies = !(CommercialBuildAvailable && !isRelease);
+
 			using (var zip = ZipHelper.OpenZip (apk)) {
 				var rids = runtimeIdentifiers.Split (';');
 				foreach (var abi in rids.Select (MonoAndroidHelper.RuntimeIdentifierToAbi)) {
@@ -159,10 +162,10 @@ namespace Xamarin.Android.Build.Tests
 					Assert.IsTrue (zip.ContainsEntry ($"lib/{abi}/libmonosgen-2.0.so"), "libmonosgen-2.0.so should exist.");
 					if (rids.Length > 1) {
 						var entry = $"assemblies/{abi}/System.Private.CoreLib.dll";
-						Assert.IsTrue (zip.ContainsEntry (entry), $"{entry} should exist.");
+						Assert.AreEqual (expectEmbededAssembies, zip.ContainsEntry (entry), $"{entry} should {(expectEmbededAssembies ? "" : "not")} exist.");
 					} else {
 						var entry = "assemblies/System.Private.CoreLib.dll";
-						Assert.IsTrue (zip.ContainsEntry (entry), $"{entry} should exist.");
+						Assert.AreEqual (expectEmbededAssembies, zip.ContainsEntry (entry), $"{entry} should {(expectEmbededAssembies ? "" : "not")} exist.");
 					}
 				}
 			}
@@ -195,11 +198,11 @@ namespace Xamarin.Android.Build.Tests
 			FileAssert.Exists (apk);
 			FileAssert.Exists (apkSigned);
 
-			Assert.IsTrue (dotnet.Publish (parameters: new [] { "AndroidPackageFormat=aab" }), "second `dotnet publish` should succeed");
-			FileAssert.DoesNotExist (apk);
-			FileAssert.DoesNotExist (apkSigned);
+			Assert.IsTrue (dotnet.Publish (parameters: new [] { "AndroidPackageFormat=aab" }), $"second `dotnet publish` should succeed");
 			var aab = Path.Combine (publishDirectory, $"{proj.PackageName}.aab");
 			var aabSigned = Path.Combine (publishDirectory, $"{proj.PackageName}-Signed.aab");
+			FileAssert.DoesNotExist (apk);
+			FileAssert.DoesNotExist (apkSigned);
 			FileAssert.Exists (aab);
 			FileAssert.Exists (aabSigned);
 		}

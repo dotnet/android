@@ -15,7 +15,7 @@ public class Runtime {
 	}
 
 	public static native void init (String lang, String[] runtimeApks, String runtimeDataDir, String[] appDirs, ClassLoader loader, String[] externalStorageDirs, String[] assemblies, String packageName, int apiLevel, String[] environmentVariables);
-	public static native void initInternal (String lang, String[] runtimeApks, String runtimeDataDir, String[] appDirs, ClassLoader loader, String[] externalStorageDirs, String[] assemblies, int apiLevel, boolean isEmulator);
+	public static native void initInternal (String lang, String[] runtimeApks, String runtimeDataDir, String[] appDirs, ClassLoader loader, String[] assemblies, int apiLevel, boolean isEmulator);
 	public static native void register (String managedType, java.lang.Class nativeClass, String methods);
 	public static native void notifyTimeZoneChanged ();
 	public static native int createNewContext (String[] runtimeApks, String[] assemblies, ClassLoader loader);

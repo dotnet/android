@@ -377,7 +377,9 @@ namespace Xamarin.Android.Build.Tests
 			AssertCommercialBuild (); // This test will fail without Fast Deployment
 			AssertHasDevices ();
 
-			var proj = new XamarinAndroidApplicationProject ();
+			var proj = new XamarinAndroidApplicationProject () {
+				PackageName = "com.xamarin.install_csharp_change"
+			};
 			proj.MainActivity = proj.DefaultMainActivity;
 			using (var builder = CreateBuilderWithoutLogFile ()) {
 				builder.Install (proj);

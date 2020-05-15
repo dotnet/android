@@ -14,7 +14,6 @@
     <AssemblyName>OpenTK-1.0</AssemblyName>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
-    <AndroidUseSharedRuntime>False</AndroidUseSharedRuntime>
     <DefineConstants>MONODROID;MINIMAL;MOBILE;OPENTK_1;OPENTK_1_0</DefineConstants>
     <NoWarn>3001,3002,3003,3005,3006,3021,3014,0618,1591,0414,0169,0419,1570,1572,1573,1635</NoWarn>
     <NoStdLib>true</NoStdLib>
