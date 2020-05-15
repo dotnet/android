@@ -36,34 +36,20 @@ In broad terms, there are two types of Android application packages
 Not coincidentally, these match the MSBuild `Configuration` which
 produces the package.
 
-## Shared Runtime
-
-The *shared runtime* is a pair of additional Android packages which
-provide the Base Class Library (`mscorlib.dll`, etc.) and the
-Android binding library (`Mono.Android.dll`, etc.). Debug builds
-rely upon the shared runtime in lieu of including the Base Class Library and
-Binding assemblies within the Android application package, allowing the
-Debug package to be smaller.
-
-The shared runtime may be disabled in Debug builds by setting the
-[`$(AndroidUseSharedRuntime)`](~/android/deploy-test/building-apps/build-properties.md#androidusesharedruntime)
-property to `False`.
-
 <a name="Fast_Deployment"></a>
 
 ## Fast Deployment
 
-*Fast deployment* works in concert with the shared runtime to further
-shrink the Android application package size. This is done by not
-bundling the app's assemblies within the package. Instead, they are
-copied onto the target via `adb push`. This process speeds up the
+*Fast deployment* works by further shrinking Android application
+package size. This is done by not bundling the app's assemblies
+within the package. Instead, the are deployed directly to the
+application internal `files` directory. This process speeds up the
 build/deploy/debug cycle because if *only* assemblies are changed,
 the package is not reinstalled. Instead, only the updated assemblies are
 re-synchronized to the target device.
 
-Fast deployment is known to fail on devices which block `adb` from
-synchronizing to the directory
-`/data/data/@PACKAGE_NAME@/files/.__override__`.
+Fast deployment is known to fail on devices which block `run-as`. This
+is usually devices of API 20 and lower.
 
 Fast deployment is enabled by default, and may be disabled in Debug builds
 by setting the `$(EmbedAssembliesIntoApk)` property to `True`.

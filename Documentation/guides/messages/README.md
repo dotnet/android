@@ -69,6 +69,10 @@ ms.date: 01/24/2020
 + [XA0122](xa0122.md): Assembly '{assembly}' is using a deprecated attribute '[assembly: Java.Interop.DoNotPackageAttribute]'. Use a newer version of this NuGet package or notify the library author.
 + XA0123: Removing {issue} from {propertyName}. Lint {version} does not support this check.
 + [XA0124](xa0124.md): Interpreter is not supported by the x86 ABI
++ [XA0125](xa0125.md): Sorry. This device does not support Fast Deployment. Please rebuild your app using `EmbedAssembliesIntoApk = True`.
++ [XA0126](xa0126.md): Error installing FastDev Tools. This device does not support Fast Deployment. Please rebuild your app using `EmbedAssembliesIntoApk = True`.
++ [XA0127](xa0127.md): There was an issue deploying {destination} using {FastDevTool}. We encountered the following error {output}. Please rebuild your app using `EmbedAssembliesIntoApk = True`.
++ [XA0128](xa0128.md): Stdio Redirection is enabled. Please disable it to use Fast Deployment.
 
 ## XA1xxx: Project related
 
@@ -233,6 +237,7 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `DES` - `Desugar`
 * `DJL` - `DetermineJavaLibrariesToCompile`
 * `DX8` - `D8`
+* `FD`  - `FastDeploy`
 * `FLB` - `FindLayoutsToBind`
 * `FLT` - `FilterAssemblies`
 * `GAD` - `GetAndroidDefineConstants`

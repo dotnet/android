@@ -23,7 +23,7 @@
     <LibExtension Condition=" '$(HostOS)' == 'Windows' ">dll</LibExtension>
     <IncludeMonoBundleComponents Condition="'$(IncludeMonoBundleComponents)' == ''">True</IncludeMonoBundleComponents>
     <UseCommercialInstallerName Condition="'$(UseCommercialInstallerName)' == ''">False</UseCommercialInstallerName>
-    <_HasCommercialFiles Condition="Exists('$(MSBuildSrcDir)\Mono.Android.DebugRuntime-debug.apk')">True</_HasCommercialFiles>
+    <_HasCommercialFiles Condition="Exists('$(MSBuildSrcDir)\Xamarin.Android.Common.Debugging.targets')">True</_HasCommercialFiles>
   </PropertyGroup>
   <ItemGroup>
     <_MsxDocAssembly Include="Mono.Android">
@@ -391,12 +391,6 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\jar2xml.jar" Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.AndroidTools.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.AndroidTools.pdb" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Android.DebugRuntime-arm64-v8a.apk"   Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Android.DebugRuntime-armeabi-v7a.apk" Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Android.DebugRuntime-debug.apk"       Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Android.DebugRuntime-debug.xml"       Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Android.DebugRuntime-x86.apk"         Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Android.DebugRuntime-x86_64.apk"      Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Analysis.Compatibility.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Analysis.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Analysis.Tasks.dll" />
@@ -421,6 +415,10 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Installer.Common.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Installer.Common.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Installer.Common.targets" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\K4os.Compression.LZ4.dll" />
+    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\xamarin.sync')" />
+    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\xamarin.find')" />
+    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\xamarin.stat')" />
     <LegacyTargetsFiles Include="$(RootBuildDir)\lib\xamarin.android\xbuild\Novell\Xamarin.Android.Bindings.targets" />
     <LegacyTargetsFiles Include="$(RootBuildDir)\lib\xamarin.android\xbuild\Novell\Xamarin.Android.VisualBasic.targets" />
   </ItemGroup>

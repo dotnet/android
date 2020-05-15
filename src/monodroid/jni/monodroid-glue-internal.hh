@@ -76,8 +76,7 @@ namespace xamarin::android::internal
 		void Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType, jclass nativeClass, jstring methods);
 		void Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
 		                                             jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader,
-		                                             jobjectArray externalStorageDirs, jobjectArray assembliesJava,
-		                                             jint apiLevel, jboolean isEmulator);
+		                                             jobjectArray assembliesJava, jint apiLevel, jboolean isEmulator);
 		jint Java_mono_android_Runtime_createNewContextWithData (JNIEnv *env, jclass klass, jobjectArray runtimeApksJava, jobjectArray assembliesJava,
 		                                                         jobjectArray assembliesBytes, jobjectArray assembliesPaths, jobject loader, jboolean force_preload_assemblies);
 		void Java_mono_android_Runtime_switchToContext (JNIEnv *env, jint contextID);

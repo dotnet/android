@@ -1002,18 +1002,6 @@ than `aapt`.
 
 Added in Xamarin.Android 8.1.
 
-## AndroidUseSharedRuntime
-
-A boolean property that
-determines whether the *shared runtime packages* are required in
-order to run the Application on the target device. Relying on the
-shared runtime packages allows the Application package to be
-smaller, speeding up the package creation and deployment process,
-resulting in a faster build/deploy/debug turnaround cycle.
-
-This property should be `True` for Debug builds, and `False` for
-Release projects.
-
 ## AndroidVersionCodePattern
 
 A string property which allows

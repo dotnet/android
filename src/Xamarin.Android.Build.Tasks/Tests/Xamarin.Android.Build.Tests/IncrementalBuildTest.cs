@@ -125,7 +125,7 @@ namespace Xamarin.Android.Build.Tests
 		public void CheckResourceDirectoryDoesNotGetHosed ()
 		{
 			// do a release build
-			// change one of the properties (say AotAssemblies) 
+			// change one of the properties (say AotAssemblies)
 			// do another build. it should NOT hose the resource directory.
 			var path = Path.Combine ("temp", TestName);
 			var proj = new XamarinAndroidApplicationProject () {
@@ -276,7 +276,7 @@ public class TestMe {
 				Assert.IsFalse (
 					b.Output.IsTargetSkipped ("_BuildApkEmbed"),
 					"the _BuildApkEmbed target should not be skipped");
-				var expectedOutput = Path.Combine (Root, b.ProjectDirectory, app.IntermediateOutputPath, "android", "bin", "classes", 
+				var expectedOutput = Path.Combine (Root, b.ProjectDirectory, app.IntermediateOutputPath, "android", "bin", "classes",
 					"com", "android", "test", "TestMe.class");
 				Assert.IsTrue (File.Exists (expectedOutput), string.Format ("{0} should exist.", expectedOutput));
 				Assert.IsTrue (b.Build (app), "Second build should have succeeded");
@@ -525,7 +525,6 @@ namespace Lib2
 				ProjectName = "MyApp",
 				//NOTE: so _BuildApkEmbed runs in commercial tests
 				EmbedAssembliesIntoApk = true,
-				AndroidUseSharedRuntime = false,
 				Sources = {
 					new BuildItem.Source ("Foo.cs") {
 						TextContent = () => "public class Foo : Bar { }"
@@ -660,13 +659,12 @@ namespace Lib2
 				ProjectName = "MyApp",
 				//NOTE: so _BuildApkEmbed runs in commercial tests
 				EmbedAssembliesIntoApk = true,
-				AndroidUseSharedRuntime = false,
 				Sources = {
 					new BuildItem.Source ("Foo.cs") {
 						TextContent = () => "public class Foo : Bar { }"
 					},
 					new BuildItem.Source ("CustomTextView.cs") {
-						TextContent = () => 
+						TextContent = () =>
 							@"using Android.Widget;
 							using Android.Content;
 							using Android.Util;
@@ -1060,7 +1058,6 @@ namespace Lib2
 				Deterministic = deterministic,
 				//NOTE: so _BuildApkEmbed runs in commercial tests
 				EmbedAssembliesIntoApk = true,
-				AndroidUseSharedRuntime = false,
 			};
 			// NOTE: Deterministic is only supported for DebugType=portable
 			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugType", "portable");

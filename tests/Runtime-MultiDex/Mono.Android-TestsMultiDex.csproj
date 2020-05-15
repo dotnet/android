@@ -17,7 +17,6 @@
     <AssemblyName>Mono.Android-TestsMultiDex</AssemblyName>
     <AndroidManifest>Properties\AndroidManifest.xml</AndroidManifest>
     <AndroidSupportedAbis>armeabi-v7a;x86</AndroidSupportedAbis>
-    <AndroidUseSharedRuntime>False</AndroidUseSharedRuntime>
     <MandroidI18n>All</MandroidI18n>
     <AndroidEnableMultiDex>true</AndroidEnableMultiDex>
     <AndroidDexTool Condition=" '$(AndroidDexTool)' == '' ">d8</AndroidDexTool>
@@ -116,5 +115,5 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Properties\AndroidManifest.xml" />
-  </ItemGroup>	
+  </ItemGroup>
 </Project>

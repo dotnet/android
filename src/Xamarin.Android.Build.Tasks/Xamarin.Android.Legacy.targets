@@ -198,7 +198,7 @@ projects. .NET 5 projects will not import this file.
   <UsingTask TaskName="Xamarin.Android.Tasks.LinkAssemblies"               AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 
   <Target Name="_CheckTargetFramework">
-    <Warning Code="XA0109" Text="Unsupported or invalid %24(TargetFrameworkVersion) value of 'v4.5'. Please update your Project Options." Condition=" '$(TargetFrameworkVersion)' == 'v4.5' "/> 
+    <Warning Code="XA0109" Text="Unsupported or invalid %24(TargetFrameworkVersion) value of 'v4.5'. Please update your Project Options." Condition=" '$(TargetFrameworkVersion)' == 'v4.5' "/>
   </Target>
 
   <Target Name="_GetReferenceAssemblyPaths">
@@ -236,7 +236,7 @@ projects. .NET 5 projects will not import this file.
         AotAssemblies="$(AotAssemblies)"
         Aapt2ToolPath="$(Aapt2ToolPath)"
         SequencePointsMode="$(_AndroidSequencePointsMode)"
-        ProjectFilePath="$(MSBuildProjectFullPath)"			
+        ProjectFilePath="$(MSBuildProjectFullPath)"
         LintToolPath="$(LintToolPath)"
         ZipAlignPath="$(ZipAlignToolPath)">
       <Output TaskParameter="TargetFrameworkVersion"      PropertyName="TargetFrameworkVersion" />
@@ -376,14 +376,14 @@ projects. .NET 5 projects will not import this file.
       <_ResolvedAssemblies          Include="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')" />
       <_ResolvedSymbols             Include="@(ResolvedSymbols->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')" />
       <_ResolvedUserAssemblies      Include="@(ResolvedUserAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')" />
-      <_ResolvedFrameworkAssemblies Include="@(ResolvedFrameworkAssemblies)" />
+      <_ResolvedFrameworkAssemblies Include="@(ResolvedFrameworkAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')" />
     </ItemGroup>
-    <ItemGroup Condition=" ('$(AndroidLinkMode)' == 'None' Or '$(AndroidUseSharedRuntime)' == 'true') ">
+    <ItemGroup Condition=" ('$(AndroidLinkMode)' == 'None' Or '$(AndroidIncludeDebugSymbols)' == 'true') ">
       <_ShrunkAssemblies          Include="@(_ResolvedAssemblies)" />
       <_ShrunkUserAssemblies      Include="@(_ResolvedUserAssemblies)" />
       <_ShrunkFrameworkAssemblies Include="@(_ResolvedFrameworkAssemblies)" />
     </ItemGroup>
-    <ItemGroup Condition=" '$(AndroidLinkMode)' != 'None' And '$(AndroidUseSharedRuntime)' != 'true' ">
+    <ItemGroup Condition=" '$(AndroidLinkMode)' != 'None' And '$(AndroidIncludeDebugSymbols)' != 'true' ">
       <_ShrunkAssemblies          Include="@(_ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)shrunk\%(Filename)%(Extension)')" />
       <_ShrunkUserAssemblies      Include="@(_ResolvedUserAssemblies->'$(MonoAndroidIntermediateAssemblyDir)shrunk\%(Filename)%(Extension)')" />
       <_ShrunkFrameworkAssemblies Include="@(_ResolvedFrameworkAssemblies->'$(MonoAndroidIntermediateAssemblyDir)shrunk\%(Filename)%(Extension)')" />
@@ -429,7 +429,6 @@ projects. .NET 5 projects will not import this file.
     <MakeDir Condition=" '$(AndroidLinkTool)' != '' " Directories="$(IntermediateOutputPath)proguard" />
 
     <LinkAssemblies
-        UseSharedRuntime="$(AndroidUseSharedRuntime)"
         MainAssembly="$(_MainAssembly)"
         OutputDirectory="$(MonoAndroidIntermediateAssemblyDir)"
         I18nAssemblies="$(MandroidI18n)"

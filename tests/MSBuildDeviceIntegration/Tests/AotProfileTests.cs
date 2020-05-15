@@ -30,6 +30,7 @@ namespace Xamarin.Android.Build.Tests
 			var projDirectory = Path.Combine ("temp", TestName);
 			using (var b = CreateApkBuilder (projDirectory)) {
 				Assert.IsTrue (b.RunTarget (proj, "BuildAndStartAotProfiling"), "Run of BuildAndStartAotProfiling should have succeeded.");
+				WaitForAppBuiltForOlderAndroidWarning (proj.PackageName, Path.Combine (Root, b.ProjectDirectory, "oldsdk-logcat.log"));
 				System.Threading.Thread.Sleep (5000);
 				b.BuildLogFile = "build2.log";
 				Assert.IsTrue (b.RunTarget (proj, "FinishAotProfiling", doNotCleanupOnUpdate: true), "Run of FinishAotProfiling should have succeeded.");

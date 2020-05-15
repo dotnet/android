@@ -227,10 +227,10 @@ namespace Xamarin.Android.Build.Tests
 				ClearAdbLogcat ();
 				AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
 				Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity",
-					Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log")), "Activity should have started");
+					Path.Combine (Root, builder.ProjectDirectory, $"startup-logcat-{timeZone.Replace ("/", "-")}.log")), "Activity should have started");
 				Assert.IsTrue (MonitorAdbLogcat ((l) => {
 					return l.Contains ($"TimeZoneInfo={timeZone}");
-				}, Path.Combine (Root, builder.ProjectDirectory, "timezone-logcat.log")), $"TimeZone should have been {timeZone}");
+				}, Path.Combine (Root, builder.ProjectDirectory, $"timezone-logcat-{timeZone.Replace ("/", "-")}.log")), $"TimeZone should have been {timeZone}");
 			} finally {
 				if (!string.IsNullOrEmpty (currentTimeZone))
 					RunAdbCommand ($"shell su root setprop persist.sys.timezone \"{currentTimeZone}\"");

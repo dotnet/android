@@ -79,12 +79,7 @@ public class MultiDexLoader extends ContentProvider {
 	@Override
 	public void attachInfo (android.content.Context context, android.content.pm.ProviderInfo info)
 	{
-		String incrementalDeploymentDir = new File (
- 			android.os.Environment.getExternalStorageDirectory (),
- 			"Android/data/" + context.getPackageName ()).getAbsolutePath ();
- 		incrementalDeploymentDir = new File (incrementalDeploymentDir).exists ()
- 			? incrementalDeploymentDir + "/files/"
- 			: context.getFilesDir () + "/";
+ 		String incrementalDeploymentDir = context.getFilesDir () + "/";
 
 		File codeCacheDir = context.getCacheDir ();
 		String nativeLibDir = context.getApplicationInfo ().nativeLibraryDir;
