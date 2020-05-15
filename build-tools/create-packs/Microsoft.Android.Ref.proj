@@ -15,7 +15,7 @@ by projects that use the Microsoft.Android framework in .NET 5.
     <Authors>Microsoft</Authors>
     <Description>Microsoft.Android reference assemblies. Please do not reference directly.</Description>
     <OutputPath>..\..\bin\Build$(Configuration)\nupkgs\</OutputPath>
-    <_AndroidRefPackAssemblyPath>ref\netcoreapp5.0</_AndroidRefPackAssemblyPath>
+    <_AndroidRefPackAssemblyPath>ref\net5.0</_AndroidRefPackAssemblyPath>
   </PropertyGroup>
 
   <PropertyGroup>

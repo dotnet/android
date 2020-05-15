@@ -156,7 +156,7 @@ The following instructions can be used for early preview testing.
 ```xml
 <Project Sdk="Microsoft.Android.Sdk/10.0.100">
   <PropertyGroup>
-    <TargetFramework>netcoreapp5.0</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
     <RuntimeIdentifier>android.21-arm64</RuntimeIdentifier>
     <OutputType>Exe</OutputType>
   </PropertyGroup>

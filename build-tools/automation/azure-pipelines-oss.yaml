@@ -27,7 +27,7 @@ variables:
   PREPARE_FLAGS: PREPARE_CI=1 PREPARE_CI_PR=1
   DotNetCoreVersion: 3.1.201
   # Version number from: https://dotnet.microsoft.com/download/dotnet-core/5.0
-  DotNetCorePreviewVersion: 5.0.100-preview.4.20227.14
+  DotNetCorePreviewVersion: 5.0.100-preview.6.20265.2
 
 stages:
 - stage: mac_stage

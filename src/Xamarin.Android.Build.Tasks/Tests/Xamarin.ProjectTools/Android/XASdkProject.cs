@@ -39,11 +39,14 @@ namespace Xamarin.ProjectTools
 		public XASdkProject (string sdkVersion = "", string outputType = "Exe")
 		{
 			Sdk = string.IsNullOrEmpty (sdkVersion) ? "Microsoft.Android.Sdk" : $"Microsoft.Android.Sdk/{sdkVersion}";
-			TargetFramework = "netcoreapp5.0";
+			TargetFramework = "net5.0";
 
 			PackageName = PackageName ?? string.Format ("{0}.{0}", ProjectName);
 			JavaPackageName = JavaPackageName ?? PackageName.ToLowerInvariant ();
-			ExtraNuGetConfigSources = new List<string> { Path.Combine (XABuildPaths.BuildOutputDirectory, "nupkgs") };
+			ExtraNuGetConfigSources = new List<string> {
+				Path.Combine (XABuildPaths.BuildOutputDirectory, "nupkgs"),
+				"https://dnceng.pkgs.visualstudio.com/public/_packaging/dotnet5/nuget/v3/index.json",
+			};
 			GlobalPackagesFolder = Path.Combine (XABuildPaths.TopDirectory, "packages");
 			SetProperty (KnownProperties.OutputType, outputType);
 
