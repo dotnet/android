@@ -16,6 +16,13 @@
     <AndroidUseLatestPlatformSdk>True</AndroidUseLatestPlatformSdk>
     <DebugType>portable</DebugType>
   </PropertyGroup>
+  <Import
+      Condition="Exists('..\..\..\Configuration.props')"
+      Project="..\..\..\Configuration.props"
+  />
+  <PropertyGroup Condition="Exists('..\..\Configuration.props')">
+    <TargetFrameworkVersion>$(AndroidFrameworkVersion)</TargetFrameworkVersion>
+  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <Optimize>false</Optimize>
