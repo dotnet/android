@@ -41,5 +41,14 @@ namespace Xamarin.ProjectTools
 			return ndkPath;
 		}
 
+		public static string GetJavaSdkPath ()
+		{
+			var jdkPath = Environment.GetEnvironmentVariable ("JAVA_HOME");
+			if (String.IsNullOrEmpty (jdkPath))
+				jdkPath = GetPathFromRegistry ("JavaSdkDirectory");
+			if (String.IsNullOrEmpty (jdkPath))
+				jdkPath = Path.GetFullPath (Path.Combine (ToolchainPath, "jdk"));
+			return jdkPath;
+		}
 	}
 }
