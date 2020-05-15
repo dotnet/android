@@ -3290,13 +3290,14 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				$"TargetFrameworkRootPath={referencesPath}",
 				$"AndroidSdkDirectory={androidSdkPath}",
 			};
+			string buildToolsVersion = GetExpectedBuildToolsVersion ();
 			using (var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName), cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
 				builder.ThrowOnBuildFailure = false;
 				builder.Target = "GetAndroidDependencies";
 				Assert.True (builder.Build (proj, parameters: parameters),
 					string.Format ("First Build should have succeeded"));
 				StringAssertEx.Contains ("platforms/android-26", builder.LastBuildOutput, "platforms/android-26 should be a dependency.");
-				StringAssertEx.Contains ("build-tools/29.0.2", builder.LastBuildOutput, "build-tools/29.0.2 should be a dependency.");
+				StringAssertEx.Contains ($"build-tools/{buildToolsVersion}", builder.LastBuildOutput, $"build-tools/{buildToolsVersion} should be a dependency.");
 				StringAssertEx.Contains ("platform-tools", builder.LastBuildOutput, "platform-tools should be a dependency.");
 			}
 		}
@@ -3323,15 +3324,28 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				$"AndroidSdkDirectory={androidSdkPath}",
 			};
 
+			string buildToolsVersion = GetExpectedBuildToolsVersion ();
 			using (var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName), cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
 				builder.ThrowOnBuildFailure = false;
 				builder.Target = "GetAndroidDependencies";
 				Assert.True (builder.Build (proj, parameters: parameters),
 					string.Format ("First Build should have succeeded"));
 				StringAssertEx.Contains ("platforms/android-26", builder.LastBuildOutput, "platforms/android-26 should be a dependency.");
-				StringAssertEx.Contains ("build-tools/29.0.2", builder.LastBuildOutput, "build-tools/29.0.2 should be a dependency.");
+				StringAssertEx.Contains ($"build-tools/{buildToolsVersion}", builder.LastBuildOutput, $"build-tools/{buildToolsVersion} should be a dependency.");
 				StringAssertEx.Contains ("platform-tools", builder.LastBuildOutput, "platform-tools should be a dependency.");
 			}
+		}
+
+		static readonly XNamespace MSBuildXmlns = "http://schemas.microsoft.com/developer/msbuild/2003";
+
+		static string GetExpectedBuildToolsVersion ()
+		{
+			var propsPath = Path.Combine (XABuildPaths.TopDirectory, "src", "Xamarin.Android.Build.Tasks", "Xamarin.Android.Common.props.in");
+			var props = XElement.Load (propsPath);
+			var AndroidSdkBuildToolsVersion = props.Elements (MSBuildXmlns+"PropertyGroup")
+				.Elements (MSBuildXmlns+"AndroidSdkBuildToolsVersion")
+				.FirstOrDefault ();
+			return AndroidSdkBuildToolsVersion?.Value?.Trim ();
 		}
 
 		[Test]
