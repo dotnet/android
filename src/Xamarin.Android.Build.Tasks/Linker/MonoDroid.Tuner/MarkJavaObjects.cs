@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Mono.Cecil;
 using Mono.Linker.Steps;
-#if !NET5_LINKER
 using Mono.Tuner;
-#endif
 using Xamarin.Android.Tasks;
 
 namespace MonoDroid.Tuner {
