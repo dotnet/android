@@ -32,8 +32,16 @@ namespace Xamarin.Android.Build.Tests
 				RunAdbCommand ($"pull {remote} \"{local}\"");
 				RunAdbCommand ($"shell rm {remote}");
 				RunAdbCommand ($"logcat -d > {deviceLog}");
-				TestContext.AddTestAttachment (local);
-				TestContext.AddTestAttachment (deviceLog);
+				if (File.Exists (local)) {
+					TestContext.AddTestAttachment (local);
+				} else {
+					TestContext.WriteLine ($"{local} did not exist!");
+				}
+				if (File.Exists (deviceLog)) {
+					TestContext.AddTestAttachment (deviceLog);
+				} else {
+					TestContext.WriteLine ($"{deviceLog} did not exist!");
+				}
 			}
 
 			base.CleanupTest ();
