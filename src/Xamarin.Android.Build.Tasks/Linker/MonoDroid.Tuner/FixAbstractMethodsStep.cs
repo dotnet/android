@@ -9,6 +9,7 @@ using Java.Interop.Tools.Cecil;
 using Mono.Linker;
 using Mono.Linker.Steps;
 
+using Mono.Tuner;
 #if NET5_LINKER
 using Xamarin.Android.Linker;
 #endif
