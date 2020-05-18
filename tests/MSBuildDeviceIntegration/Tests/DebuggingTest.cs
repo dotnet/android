@@ -339,7 +339,7 @@ namespace ${ROOT_NAMESPACE} {
 			var abis = new string [] { "armeabi-v7a", "x86" };
 			proj.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
 			if (allowDeltaInstall)
-				proj.SetProperty (KnownProperties.AndroidAllowDeltaInstall, "true");
+				proj.SetProperty (KnownProperties._AndroidAllowDeltaInstall, "true");
 			proj.SetDefaultTargetDevice ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				SetTargetFrameworkAndManifest (proj, b);
