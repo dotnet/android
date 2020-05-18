@@ -139,9 +139,9 @@ In this message, the phrase "should not be reached" means that this error messag
         <note>The following are literal names and should not be translated: `aapt2`</note>
       </trans-unit>
       <trans-unit id="XA0113">
-        <source>Google Play requires that new applications and updates must use a TargetFrameworkVersion of v8.0 (API level 26) or above. You are currently targeting {0} (API level {1}).</source>
-        <target state="translated">Sklep Google Play wymaga, aby nowe aplikacje i aktualizacje używały elementu TargetFrameworkVersion o wartości v8.0 (poziom 26 lub nowszy interfejsu API). Obecna wersja docelowa to {0} (poziom interfejsu API {1}).</target>
-        <note>The following are literal names and should not be translated: TargetFrameworkVersion, v8.0
+        <source>Google Play requires that new applications and updates must use a TargetFrameworkVersion of v9.0 (API level 28) or above. You are currently targeting {0} (API level {1}).</source>
+        <target state="needs-review-translation">Sklep Google Play wymaga, aby nowe aplikacje i aktualizacje używały elementu TargetFrameworkVersion o wartości v8.0 (poziom 26 lub nowszy interfejsu API). Obecna wersja docelowa to {0} (poziom interfejsu API {1}).</target>
+        <note>The following are literal names and should not be translated: TargetFrameworkVersion, v9.0
 {0} - The current value of TargetFrameworkVersion
 {1} - The corresponding API level number</note>
       </trans-unit>
@@ -152,9 +152,9 @@ In this message, the phrase "should not be reached" means that this error messag
 {0} - The name of the missing resource</note>
       </trans-unit>
       <trans-unit id="XA0117">
-        <source>The TargetFrameworkVersion {0} is deprecated. Please update it to be v4.4 or higher.</source>
-        <target state="translated">Wartość {0} dla elementu TargetFrameworkVersion jest przestarzała. Zaktualizuj ją na wartość v4.4 lub wyższą.</target>
-        <note>The following are literal names and should not be translated: TargetFrameworkVersion, v4.4
+        <source>The TargetFrameworkVersion {0} is deprecated. Please update it to be v5.0 or higher.</source>
+        <target state="needs-review-translation">Wartość {0} dla elementu TargetFrameworkVersion jest przestarzała. Zaktualizuj ją na wartość v4.4 lub wyższą.</target>
+        <note>The following are literal names and should not be translated: TargetFrameworkVersion, v5.0
 {0} - The current value of TargetFrameworkVersion</note>
       </trans-unit>
       <trans-unit id="XA0118_Parse">
