@@ -24,6 +24,21 @@ namespace Xamarin.Android.Tools.BytecodeTests
 		}
 
 		[Test]
+		public void MakeInternalInterfacePackagePrivate ()
+		{
+			var klass = LoadClassFile ("InternalInterface.class");
+
+			Assert.True (klass.AccessFlags.HasFlag (ClassAccessFlags.Public));
+
+			KotlinFixups.Fixup (new [] { klass });
+
+			// "package-private" is denoted as no visibility flags
+			Assert.False (klass.AccessFlags.HasFlag (ClassAccessFlags.Public));
+			Assert.False (klass.AccessFlags.HasFlag (ClassAccessFlags.Protected));
+			Assert.False (klass.AccessFlags.HasFlag (ClassAccessFlags.Private));
+		}
+
+		[Test]
 		public void HideInternalConstructor ()
 		{
 			var klass = LoadClassFile ("InternalConstructor.class");

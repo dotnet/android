@@ -66,6 +66,16 @@ namespace Xamarin.Android.Tools.Bytecode
 		{
 			// Hide class if it isn't Public/Protected
 			if (klass.AccessFlags.IsPubliclyVisible () && !metadata.Visibility.IsPubliclyVisible ()) {
+
+				// Interfaces should be set to "package-private", which is "no visibility flags"
+				if (klass.AccessFlags.HasFlag (ClassAccessFlags.Interface)) {
+					Log.Debug ($"Kotlin: Setting interface {klass.ThisClass.Name.Value} to package-private");
+					klass.AccessFlags = (klass.AccessFlags ^ ClassAccessFlags.Public) & klass.AccessFlags;
+					klass.AccessFlags = (klass.AccessFlags ^ ClassAccessFlags.Protected) & klass.AccessFlags;
+					klass.AccessFlags = (klass.AccessFlags ^ ClassAccessFlags.Private) & klass.AccessFlags;
+					return;
+				}
+
 				Log.Debug ($"Kotlin: Hiding internal class {klass.ThisClass.Name.Value}");
 				klass.AccessFlags = ClassAccessFlags.Private;
 				return;
