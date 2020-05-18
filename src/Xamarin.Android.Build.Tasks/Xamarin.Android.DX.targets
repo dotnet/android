@@ -14,6 +14,15 @@ Copyright (C) 2018 Xamarin. All rights reserved.
 
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
+  <Target Name="_AddMultiDexDependencyJars">
+    <ItemGroup Condition=" '$(AndroidEnableMultiDex)' == 'true' And '$(AndroidMultiDexSupportJar)' != '' ">
+      <AndroidJavaLibrary Include="$(_AndroidSdkDirectory)\$(AndroidMultiDexSupportJar)" />
+    </ItemGroup>
+    <ItemGroup Condition=" '$(AndroidEnableMultiDex)' == 'true' And '$(AndroidMultiDexSupportJar)' == '' ">
+      <AndroidJavaLibrary Include="$(MonoAndroidToolsDirectory)\android-support-multidex.jar" />
+    </ItemGroup>
+  </Target>
+
   <Target Name="_CompileToDalvik"
       DependsOnTargets="$(_BeforeCompileToDalvik);$(_CompileToDalvikDependsOnTargets)"
       Inputs="$(_CompileToDalvikInputs)"

@@ -22,11 +22,8 @@ Copyright (C) 2018 Xamarin. All rights reserved.
     <!-- Target-level properties to simplify conditions-->
     <PropertyGroup>
       <!--Flag indicating if using d8 or r8-->
-      <_UseR8 Condition=" ('$(AndroidLinkTool)' == 'r8' And '$(_ProguardProjectConfiguration)' != '') Or '$(AndroidEnableMultiDex)' == 'True' ">True</_UseR8>
+      <_UseR8 Condition=" '$(AndroidLinkTool)' == 'r8' And '$(_ProguardProjectConfiguration)' != '' ">True</_UseR8>
       <_UseR8 Condition=" '$(_UseR8)' == '' ">False</_UseR8>
-      <!--Flag indicating if r8 should have EnableShrinking-->
-      <_R8EnableShrinking Condition=" '$(AndroidLinkTool)' == 'r8' ">True</_R8EnableShrinking>
-      <_R8EnableShrinking Condition=" '$(_R8EnableShrinking)' == '' ">False</_R8EnableShrinking>
     </PropertyGroup>
 
     <Error
@@ -66,10 +63,6 @@ Copyright (C) 2018 Xamarin. All rights reserved.
         ProguardGeneratedReferenceConfiguration="$(_ProguardProjectConfiguration)"
         ProguardGeneratedApplicationConfiguration="$(IntermediateOutputPath)proguard\proguard_project_primary.cfg"
         ProguardConfigurationFiles="$(ProguardConfigFiles)"
-        EnableShrinking="$(_R8EnableShrinking)"
-        EnableMultiDex="$(AndroidEnableMultiDex)"
-        MultiDexMainDexListFile="$(_AndroidMainDexListFile)"
-        CustomMainDexListFiles="@(MultiDexMainDexList)"
         IgnoreWarnings="$(AndroidR8IgnoreWarnings)"
         ExtraArguments="$(AndroidR8ExtraArguments)"
     />
