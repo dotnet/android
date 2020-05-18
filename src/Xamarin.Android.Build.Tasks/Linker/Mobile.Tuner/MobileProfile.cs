@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 using Mono.Cecil;
 
+using Mono.Tuner;
 #if NET5_LINKER
 using Xamarin.Android.Linker;
 #endif
