@@ -322,6 +322,11 @@ In this message, the term "binding" means a piece of generated code that makes i
         <note>In this message, the term "reference Java library" refers to a library that is included as a reference so that types from the library can be resolved during the build process.
 {0} - The file name of the library</note>
       </trans-unit>
+      <trans-unit id="XA1023">
+        <source>Using the DX DEX Compiler is deprecated. Please update `$(AndroidDexTool)` to `d8`.</source>
+        <target state="new">Using the DX DEX Compiler is deprecated. Please update `$(AndroidDexTool)` to `d8`.</target>
+        <note>The following are literal names and should not be translated: D8, DEX, `$(AndroidDexTool)`, `d8`</note>
+      </trans-unit>
       <trans-unit id="XA2000">
         <source>Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 5 will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 5 is released.</source>
         <target state="translated">È stato rilevato l'uso di AppDomain.CreateDomain() nell'assembly: {0}. .NET 5 supporterà solo un'unica istanza di AppDomain, di conseguenza questa API non sarà più disponibile in Xamarin.Android dopo il rilascio di .NET 5.</target>

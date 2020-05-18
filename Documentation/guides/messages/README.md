@@ -93,6 +93,7 @@ ms.date: 01/24/2020
 + XA1020: At least one Java library is required for binding. Check that a Java library is included in the project and has the appropriate build action: 'LibraryProjectZip' (for AAR or ZIP), 'EmbeddedJar', 'InputJar' (for JAR), or 'LibraryProjectProperties' (project.properties).
 + XA1021: Specified source Java library not found: {file}
 + XA1022: Specified reference Java library not found: {file}
++ [XA1023](xa1023.md): Using the DX DEX Compiler is deprecated.
 
 ## XA2xxx: Linker
 
