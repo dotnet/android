@@ -44,9 +44,9 @@ namespace Xamarin.Android.Tasks.Legacy
 
 			int apiLevel;
 			if (AndroidApplication && int.TryParse (AndroidApiLevel, out apiLevel)) {
-				if (apiLevel < 26)
+				if (apiLevel < 28)
 					Log.LogCodedWarning ("XA0113", Properties.Resources.XA0113, TargetFrameworkVersion, AndroidApiLevel);
-				if (apiLevel < 19)
+				if (apiLevel < 21)
 					Log.LogCodedWarning ("XA0117", Properties.Resources.XA0117, TargetFrameworkVersion);
 			}
 
