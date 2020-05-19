@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -8,6 +9,8 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
+using Java.Interop.Tools.Generator;
+using Java.Interop.Tools.Generator.Enumification;
 using Mono.Options;
 
 using Xamarin.Android.Tools;
@@ -43,68 +46,36 @@ namespace MonoDroid.Generation {
 		internal Dictionary<string, EnumDescription> ParseFieldMappings (TextReader source, string [] enumFlags, int filter_version, IList<KeyValuePair<string, string>> remove_nodes)
 		{
 			var enums = new Dictionary<string, EnumDescription> ();
+
 			if (source == null)
 				return enums;
-			bool transient = false;
 
-			string s;
-			string last_enum = null;
-			EnumDescription enumDescription = null;
+			var constants = ConstantsParser.FromEnumMapCsv (source);
 
-			while ((s = source.ReadLine ()) != null) {
-				try {
-					if (string.IsNullOrEmpty (s) || s.StartsWith ("//"))
-						continue;
-					if (s == "- ENTER TRANSIENT MODE -") {
-						transient = true;
-						continue;
-					}
+			// Discard ignored constants
+			constants = constants.Where (c =>
+				c.Action.In (ConstantAction.Enumify, ConstantAction.Add, ConstantAction.Remove) &&
+				(c.ApiLevel == 0 || c.ApiLevel <= filter_version)).ToList ();
 
-					string[] pieces   = s.Split (',');
+			// Find the constant fields we need remove
+			foreach (var constant in constants.Where (c => c.Action.In (ConstantAction.Enumify, ConstantAction.Remove)))
+				remove_nodes.Add (new KeyValuePair<string, string> (constant.JavaSignature, constant.FieldAction == FieldAction.Remove && constant.EnumFullType.HasValue () ? constant.EnumFullType : null));
 
-					string verstr     = pieces[0].Trim ();
-					string enu        = pieces[1].Trim ();
-					string member     = pieces[2].Trim ();
-					string java_name  = pieces[3].Trim ();
-					string value      = pieces[4].Trim ();
+			// Find the enumerations that we need to create
+			foreach (var group in constants.Where (c => c.Action.In (ConstantAction.Enumify, ConstantAction.Add)).GroupBy (c => c.EnumFullType)) {
 
-					if (filter_version > 0 && filter_version < int.Parse (verstr))
-						continue;
+				var desc = new EnumDescription {
+					FieldsRemoved = group.Any (c => c.FieldAction != FieldAction.Remove),
+					BitField = group.Any (c => c.IsFlags) || enumFlags?.Contains (group.Key) == true
+				};
 
-					if (!string.IsNullOrEmpty (java_name.Trim ()))
-						remove_nodes.Add (new KeyValuePair<string, string> (java_name.Trim (), transient ? enu : null));
-
-					// This is a line that only deletes a const, not maps it to an enum
-					if (string.IsNullOrEmpty (enu))
-						continue;
-
-					// If this is a new enum, add the old one and reset things
-					if (last_enum != enu) {
-						if (last_enum != null)
-							enums.Add (last_enum, enumDescription);
-
-						last_enum = enu;
-						enumDescription = new EnumDescription () { FieldsRemoved = !transient };
-					}
-
-					if (pieces.Length > 5)
-						enumDescription.BitField = pieces [5].Trim () == "Flags";
-					
-					if (enumFlags != null && enumFlags.Contains (enu))
-						enumDescription.BitField = true;
-
-					// Add this member to the enum
-					enumDescription.Members.Add (member, value);
-					enumDescription.JniNames.Add (member, java_name);
-				} catch (Exception ex) {
-					Report.Error (Report.ErrorEnumMapping + 0, "ERROR at parsing enum " + s, ex);
-					throw;
+				foreach (var c in group) {
+					desc.Members.Add (c.EnumMember, c.Value);
+					desc.JniNames.Add (c.EnumMember, c.JavaSignature);
 				}
-			}
 
-			// Make sure the last enum gets added to the list
-			if (last_enum != null)
-				enums.Add (last_enum, enumDescription);
+				enums.Add (group.Key, desc);
+			}
 
 			return enums;
 		}

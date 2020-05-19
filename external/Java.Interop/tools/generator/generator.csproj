@@ -4,6 +4,7 @@
     <TargetFrameworks>net472;netcoreapp3.1</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <DefineConstants>$(DefineConstants);GENERATOR;HAVE_CECIL;JCW_ONLY_TYPE_NAMES</DefineConstants>
+    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -39,6 +40,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Java.Interop.Tools.Generator\Java.Interop.Tools.Generator.csproj" />
     <ProjectReference Include="..\..\src\Xamarin.Android.Tools.AnnotationSupport\Xamarin.Android.Tools.AnnotationSupport.csproj" />
     <ProjectReference Include="..\..\src\Xamarin.Android.Tools.ApiXmlAdjuster\Xamarin.Android.Tools.ApiXmlAdjuster.csproj" />
     <ProjectReference Include="..\..\src\Java.Interop.Tools.Diagnostics\Java.Interop.Tools.Diagnostics.csproj" />
