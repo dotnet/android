@@ -17,7 +17,7 @@ projects that use the Microsoft.Android framework in .NET 5.
     <Authors>Microsoft</Authors>
     <Description>Microsoft.Android runtime components. Please do not reference directly.</Description>
     <OutputPath>..\..\bin\Build$(Configuration)\nupkgs\</OutputPath>
-    <_AndroidRuntimePackAssemblyPath>runtimes\$(AndroidRID)\lib\netcoreapp5.0</_AndroidRuntimePackAssemblyPath>
+    <_AndroidRuntimePackAssemblyPath>runtimes\$(AndroidRID)\lib\net5.0</_AndroidRuntimePackAssemblyPath>
     <_AndroidRuntimePackNativePath>runtimes\$(AndroidRID)\native</_AndroidRuntimePackNativePath>
   </PropertyGroup>
 

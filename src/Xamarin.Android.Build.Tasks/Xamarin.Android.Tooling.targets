@@ -43,20 +43,24 @@ projects.
   </Target>
 
   <PropertyGroup Condition=" '$(UsingAndroidNETSdk)' == 'True' ">
-    <_ResolveSdksDependsOnTargets>ResolveFrameworkReferences</_ResolveSdksDependsOnTargets>
+    <_ResolveSdksDependsOnTargets>ResolveTargetingPackAssets</_ResolveSdksDependsOnTargets>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(UsingAndroidNETSdk)' != 'True' ">
     <_ResolveSdksDependsOnTargets>_GetReferenceAssemblyPaths</_ResolveSdksDependsOnTargets>
   </PropertyGroup>
 
   <Target Name="_ResolveSdks" DependsOnTargets="$(_ResolveSdksDependsOnTargets)">
+    <!-- When using .NET 5, provide a list of paths to the Android and NETCore targeting pack directories, e.g.
+          `packages\microsoft.android.ref\10.0.100-ci.master.22\ref\net5.0\` and
+          `C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\5.0.0-preview.6.20264.1\ref\net5.0\`
+         See https://github.com/dotnet/sdk/blob/9eeb58e24af894597a534326156d09173d9f0f91/src/Tasks/Microsoft.NET.Build.Tasks/ResolveTargetingPackAssets.cs#L56
+    -->
+    <ItemGroup Condition=" '$(UsingAndroidNETSdk)' == 'True' ">
+      <_ResolveSdksFrameworkRefAssemblyPaths Include="@(ResolvedTargetingPack->'%(Path)\ref\%(TargetFramework)')" Condition=" '@(ResolvedTargetingPack)' == '@(FrameworkReference)' and '%(Identity)' != '' " />
+    </ItemGroup>
     <PropertyGroup>
       <_AndroidAllowMissingSdkTooling Condition=" '$(_AndroidAllowMissingSdkTooling)' == '' ">False</_AndroidAllowMissingSdkTooling>
-      <!-- When using .NET 5, provide a list of paths to all framework reference directories, e.g.
-            `packages\xamarin.android.app.ref\10.3.99.160\ref\netcoreapp5.0\` and
-            `C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\5.0.0-preview.2.20160.6\ref\netcoreapp5.0\`
-      -->
-      <_XATargetFrameworkDirectories Condition=" '$(UsingAndroidNETSdk)' == 'True' ">@(ResolvedFrameworkReference->'%(TargetingPackPath)\ref\$(TargetFramework)')</_XATargetFrameworkDirectories>
+      <_XATargetFrameworkDirectories Condition=" '$(UsingAndroidNETSdk)' == 'True' ">@(_ResolveSdksFrameworkRefAssemblyPaths)</_XATargetFrameworkDirectories>
     </PropertyGroup>
     <ResolveSdks
         ContinueOnError="$(_AndroidAllowMissingSdkTooling)"

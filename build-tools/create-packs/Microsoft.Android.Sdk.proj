@@ -85,7 +85,7 @@ the new entry point for short-form style Android projets in .NET 5.
   <Target Name="_GenerateBundledVersions"
       DependsOnTargets="_GetDefaultPackageVersion" >
     <PropertyGroup>
-      <_AndroidNETAppTargetFramework>netcoreapp5.0</_AndroidNETAppTargetFramework>
+      <_AndroidNETAppTargetFramework>net5.0</_AndroidNETAppTargetFramework>
       <BundledVersionsPropsFileName>Microsoft.Android.Sdk.BundledVersions.props</BundledVersionsPropsFileName>
     </PropertyGroup>
 
