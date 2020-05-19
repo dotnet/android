@@ -299,18 +299,14 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<!-- Default Java heap size to 1GB (-Xmx1G) if not specified-->
 	<JavaMaximumHeapSize Condition=" '$(JavaMaximumHeapSize)' == '' ">1G</JavaMaximumHeapSize>
 
-	<ProguardConfigFiles Condition="'$(ProguardConfigFiles)' == '' And '$(AndroidLinkTool)' != ''">
+	<ProguardConfigFiles Condition="'$(ProguardConfigFiles)' == ''">
 		{sdk.dir}tools\proguard\proguard-android.txt;
 		{intermediate.common.xamarin};
 		{intermediate.references};
 		{intermediate.application};
 		@(ProguardConfiguration);
 	</ProguardConfigFiles>
-	<ProguardConfigFiles Condition="'$(ProguardConfigFiles)' == '' And '$(AndroidLinkTool)' == ''">
-		{sdk.dir}tools\proguard\proguard-android.txt;
-		@(ProguardConfiguration);
-	</ProguardConfigFiles>
-
+	
 	<_AndroidMainDexListFile>$(IntermediateOutputPath)multidex.keep</_AndroidMainDexListFile>
 	
 	<AndroidManifestPlaceholders Condition="'$(AndroidManifestPlaceholders)' == ''"></AndroidManifestPlaceholders>
@@ -768,8 +764,8 @@ because xbuild doesn't support framework reference assemblies.
 
 	<!-- Setup $(AndroidApplicationJavaClass) -->
 	<PropertyGroup>
-		<AndroidApplicationJavaClass Condition="'$(AndroidApplicationJavaClass)' == '' And $(AndroidEnableMultiDex)">android.support.multidex.MultiDexApplication</AndroidApplicationJavaClass>
-		<AndroidApplicationJavaClass Condition="'$(AndroidApplicationJavaClass)' == ''">android.app.Application</AndroidApplicationJavaClass>
+		<AndroidApplicationJavaClass Condition=" '$(AndroidApplicationJavaClass)' == '' And '$(AndroidEnableMultiDex)' == 'true' And '$(AndroidDexTool)' == 'dx' ">android.support.multidex.MultiDexApplication</AndroidApplicationJavaClass>
+		<AndroidApplicationJavaClass Condition=" '$(AndroidApplicationJavaClass)' == '' ">android.app.Application</AndroidApplicationJavaClass>
 	</PropertyGroup>
 	<Message Text="Application Java class: $(AndroidApplicationJavaClass)" />
 </Target>
@@ -1060,15 +1056,6 @@ because xbuild doesn't support framework reference assemblies.
 	<ItemGroup>
 		<FileWrites Include="$(_AndroidResFlagFile)" />
 	</ItemGroup>
-</Target>
-
-<Target Name="_AddMultiDexDependencyJars">
-  <ItemGroup Condition=" '$(AndroidEnableMultiDex)' == 'True' AND '$(AndroidMultiDexSupportJar)' != '' ">
-    <AndroidJavaLibrary Include="$(_AndroidSdkDirectory)\$(AndroidMultiDexSupportJar)" />
-  </ItemGroup>
-  <ItemGroup Condition=" '$(AndroidEnableMultiDex)' == 'True' AND '$(AndroidMultiDexSupportJar)' == '' ">
-    <AndroidJavaLibrary Include="$(MonoAndroidToolsDirectory)\android-support-multidex.jar" />
-  </ItemGroup>
 </Target>
 
 <Target Name="_AddAndroidEnvironmentToCompile">
@@ -2805,7 +2792,7 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="GetAndroidDependencies" DependsOnTargets="_BeforeGetAndroidDependencies;_SetLatestTargetFrameworkVersion;$(GetAndroidDependenciesDependsOn)" Returns="@(AndroidDependency)">
   <PropertyGroup>
     <_ProjectAndroidManifest>$(ProjectDir)$(AndroidManifest)</_ProjectAndroidManifest>
-    <_NdkRequired Condition="'$(BundleAssemblies)' == 'True' Or '$(AotAssemblies)' == 'True'">true</_NdkRequired>
+    <_NdkRequired Condition="'$(BundleAssemblies)' == 'True' Or '$(EnableLLVM)' == 'True'">true</_NdkRequired>
     <_NdkRequired Condition="'$(_NdkRequired)' == ''">false</_NdkRequired>
   </PropertyGroup>
   <Error Text="AndroidManifest file does not exist" Condition="'$(_ProjectAndroidManifest)'!='' And !Exists ('$(_ProjectAndroidManifest)')"/>

@@ -98,8 +98,12 @@
         Command="ln -fs &quot;../../../Xamarin.Android.framework/Libraries/monodoc/MonoAndroid-lib.zip&quot; ."
     />
   </Target>
+  <!-- See pipeline variable settings
+        https://dev.azure.com/devdiv/DevDiv/_apps/hub/ms.vss-ciworkflow.build-ci-hub?_a=edit-build-definition&id=12278&view=Tab_Variables
+        https://dev.azure.com/xamarin/public/_apps/hub/ms.vss-ciworkflow.build-ci-hub?_a=edit-build-definition&id=48&view=Tab_Variables
+  -->
   <Target Name="_PrepareForNotarization"
-      Condition=" '$(HostOS)' == 'Darwin' And '$(RunningOnCI)' == 'true' "
+      Condition=" '$(HostOS)' == 'Darwin' And '$(RunningOnCI)' == 'true' And '$(XAOSSBuild)' != 'true' "
       DependsOnTargets="_CreateSymbolicLinks" >
     <Exec Command="dd if=&quot;%(CopiedMSBuildItemsUnix.Identity)&quot; of=&quot;%(CopiedMSBuildItemsUnix.Identity).swab&quot; conv=swab"
         Condition=" '%(CopiedMSBuildItemsUnix.SwabFile)' == 'True' " />

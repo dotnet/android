@@ -1259,7 +1259,7 @@ namespace UnamedProject
 		}
 
 		[Test]
-		public void MultiDexCustomMainDexFileList ([Values ("dx", "d8")] string dexTool, [Values ("19", "21")] string minSdkVersion)
+		public void MultiDexCustomMainDexFileList ([Values ("dx", "d8")] string dexTool)
 		{
 			var expected = new [] {
 				"android/support/multidex/ZipUtil$CentralDirectory.class",
@@ -1273,8 +1273,8 @@ namespace UnamedProject
 			};
 			var proj = CreateMultiDexRequiredApplication ();
 			proj.DexTool = dexTool;
-			proj.AndroidManifest = proj.AndroidManifest.Replace ("<uses-sdk />", $"<uses-sdk android:minSdkVersion=\"{minSdkVersion}\" />");
-			proj.SetProperty ("AndroidEnableMultiDex", "True");
+			if (dexTool == "dx")
+				proj.SetProperty ("AndroidEnableMultiDex", "True");
 			proj.OtherBuildItems.Add (new BuildItem ("MultiDexMainDexList", "mymultidex.keep") { TextContent = () => "MyTest.class", Encoding = Encoding.ASCII });
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaSource", "MyTest.java") { TextContent = () => "public class MyTest {}", Encoding = Encoding.ASCII });
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
@@ -1283,11 +1283,10 @@ namespace UnamedProject
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				FileAssert.Exists (Path.Combine (androidBinDir, "classes.dex"));
 				FileAssert.Exists (Path.Combine (androidBinDir, "classes2.dex"));
-				if (dexTool == "d8" && minSdkVersion == "21") {
-					//NOTE: d8/r8 does not support custom dex list files in this case
+				if (dexTool == "d8") {
+					//NOTE: d8/r8 does not support custom dex list files
 					return;
 				}
-				//NOTE: d8 has the list in a different order, so we should do an unordered comparison
 				var actual = File.ReadAllLines (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "multidex.keep"));
 				foreach (var item in expected) {
 					Assert.IsTrue (actual.Contains (item), $"multidex.keep did not contain `{item}`");
@@ -1328,15 +1327,14 @@ namespace UnnamedProject {
 		}
 
 		[Test]
-		public void MultiDexAndCodeShrinker ([Values ("proguard", "r8")] string linkTool)
+		public void MultiDexAndCodeShrinker ()
 		{
 			var proj = CreateMultiDexRequiredApplication ();
 			proj.SetProperty ("AndroidEnableMultiDex", "True");
 			proj.EnableProguard =
 				proj.IsRelease = true;
-			proj.LinkTool = linkTool;
-			if (linkTool == "proguard")
-				proj.DexTool = "dx";
+			proj.DexTool = "dx";
+			proj.LinkTool = "proguard";
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
@@ -1344,56 +1342,6 @@ namespace UnnamedProject {
 				var dexFile = b.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
 				FileAssert.Exists (dexFile);
 				Assert.IsTrue (DexUtils.ContainsClassWithMethod (className, "<init>", "()V", dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
-			}
-		}
-
-		[Test]
-		public void MultiDexR8ConfigWithNoCodeShrinking ([Values (true, false)] bool useConfig)
-		{
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
-				DexTool = "d8",
-			};
-			proj.SetProperty ("AndroidEnableMultiDex", "True");
-			/* The source for the library is a single class:
-			*
-			abstract class ExtendsClassValue extends ClassValue<Boolean> {}
-			*
-			* The reason `ClassValue` is used for this test is precisely that it
-			* does not exist in `android.jar`.  This means the library cannot be
-			* compiled using `@(AndroidJavaSource)`.  It was instead compiled
-			* using `javac ExtendsClassValue.java` and then manually archived
-			* using `jar cvf ExtendsClassValue.jar
-			* ExtendsClassValue.class`.
-			*/
-			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "ExtendsClassValue.jar") { BinaryContent = () => Convert.FromBase64String (@"
-UEsDBBQACAgIAChzjVAAAAAAAAAAAAAAAAAJAAQATUVUQS1JTkYv/soAAAMAUEsHCAAAAAACAAAAA
-AAAAFBLAwQUAAgICAAoc41QAAAAAAAAAAAAAAAAFAAAAE1FVEEtSU5GL01BTklGRVNULk1G803My
-0xLLS7RDUstKs7Mz7NSMNQz4OVyLkpNLElN0XWqBAlY6BnoGpkqaPhmJhflF+enlWjycvFyAQBQS
-wcIv1FGtTsAAAA7AAAAUEsDBBQACAgIABxzjVAAAAAAAAAAAAAAAAAXAAAARXh0ZW5kc0NsYXNzV
-mFsdWUuY2xhc3NtT7sKwkAQnNWYaHwExVaw9AHa2CkWilZi46M/9ZCT8wJ5iL9lJVj4AX6UuEmjh
-Qu7M8wwu+zr/XgCGMBzkUXJQdlBhWCPlFHRmJBttbcEa+ofJMFbKCOX8Xkng7XYaVYKK3U0IooD5
-t3FSVxEXwtz7E+1CMOt0LEc/agT39dSmOF4SHBXfhzs5Vwla2qbUH4jvSRRgoUcoTq7RtIcwq9Lq
-P+7YzWR4Q+SIm4OM9rMGoyJkuvcQbfUdnjaqUgcyjNmUICbYvEDUEsHCB4E1g/HAAAAEgEAAFBLA
-QIUABQACAgIAChzjVAAAAAAAgAAAAAAAAAJAAQAAAAAAAAAAAAAAAAAAABNRVRBLUlORi/+ygAAU
-EsBAhQAFAAICAgAKHONUL9RRrU7AAAAOwAAABQAAAAAAAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BT
-klGRVNULk1GUEsBAhQAFAAICAgAHHONUB4E1g/HAAAAEgEAABcAAAAAAAAAAAAAAAAAugAAAEV4d
-GVuZHNDbGFzc1ZhbHVlLmNsYXNzUEsFBgAAAAADAAMAwgAAAMYBAAAAAA==
-				") });
-			if (useConfig)
-				proj.OtherBuildItems.Add (new BuildItem ("ProguardConfiguration", "proguard.cfg") {
-					TextContent = () => "-dontwarn java.lang.ClassValue"
-				});
-			using (var builder = CreateApkBuilder ()) {
-				Assert.True (builder.Build (proj), "Build should have succeeded.");
-				string warning = builder.LastBuildOutput
-						.SkipWhile (x => !x.StartsWith ("Build succeeded."))
-						.FirstOrDefault (x => x.Contains ("R8 : warning : Missing class: java.lang.ClassValue"));
-				if (useConfig) {
-					Assert.IsNull (warning, "Build should have completed without an R8 warning for `java.lang.ClassValue`.");
-					return;
-				}
-				Assert.IsNotNull (warning, "Build should have completed with an R8 warning for `java.lang.ClassValue`.");
 			}
 		}
 
@@ -3270,6 +3218,30 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				Assert.IsTrue (builder.LastBuildOutput.ContainsText ("Could not find android.jar for API level 27"), "XA5207 should have had a good error message.");
 			}
 			Directory.Delete (AndroidSdkDirectory, recursive: true);
+		}
+
+		[Test]
+		[TestCase ("AotAssemblies", false)]
+		[TestCase ("AndroidEnableProfiledAot", false)]
+		[TestCase ("EnableLLVM", true)]
+		[TestCase ("BundleAssemblies", true)]
+		public void GetDependencyNdkRequiredConditions (string property, bool ndkRequired)
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.AotAssemblies = true;
+			proj.SetProperty (property, "true");
+			using (var builder = CreateApkBuilder ()) {
+				builder.Target = "GetAndroidDependencies";
+				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+				IEnumerable<string> taskOutput = builder.LastBuildOutput
+					.SkipWhile (x => !x.StartsWith ("Task \"CalculateProjectDependencies\""))
+					.SkipWhile (x => !x.StartsWith ("  Output Item(s):"))
+					.TakeWhile (x => !x.StartsWith ("Done executing task \"CalculateProjectDependencies\""));
+				if (ndkRequired)
+					StringAssertEx.Contains ("ndk-bundle", taskOutput, "ndk-bundle should be a dependency.");
+				else
+					StringAssertEx.DoesNotContain ("ndk-bundle", taskOutput, "ndk-bundle should not be a dependency.");
+			}
 		}
 
 		[Test]

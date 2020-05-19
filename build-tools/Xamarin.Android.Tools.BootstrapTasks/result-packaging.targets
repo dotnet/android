@@ -25,6 +25,7 @@
     <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)**\config.status" />
     <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)**\config.h" />
     <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)**\CMakeCache.txt" />
+    <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)**\CMakeFiles\*.log" />
     <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)**\.ninja_log" />
     <_BuildStatusFiles Include="$(XamarinAndroidSourcePath)**\android-*.config.cache" />
   </ItemGroup>
