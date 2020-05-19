@@ -13,7 +13,6 @@
     <AssemblyName>HelloLibrary</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <AndroidApplication>false</AndroidApplication>
-    <AndroidUseLatestPlatformSdk>True</AndroidUseLatestPlatformSdk>
     <DebugType>portable</DebugType>
   </PropertyGroup>
   <Import
