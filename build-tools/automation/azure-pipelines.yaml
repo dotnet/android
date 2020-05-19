@@ -245,6 +245,9 @@ stages:
       parameters:
         version: $(DotNetCoreVersion)
 
+    - script: echo %JAVA_HOME%
+      displayName: echo JAVA_HOME
+
     # Downgrade the XA .vsix installed into the instance of VS that we are building with so that we don't restore/build against a test version.
     # The VS installer will attempt to resume any failed or partial installation before trying to downgrade Xamarin.Android.
     # VSIXInstaller.exe will exit non-zero when the downgrade attempt is a no-op, so we will allow this step to fail silently.
@@ -269,12 +272,18 @@ stages:
       displayName: downgrade XA to stable
       ignoreLASTEXITCODE: true
 
+    - script: echo %JAVA_HOME%
+      displayName: echo JAVA_HOME
+
     - task: MSBuild@1
       displayName: msbuild Xamarin.Android /t:Prepare
       inputs:
         solution: Xamarin.Android.sln
         configuration: $(XA.Build.Configuration)
         msbuildArguments: /t:Prepare /p:AutoProvision=true /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-prepare.binlog
+
+    - script: echo %JAVA_HOME%
+      displayName: echo JAVA_HOME
 
     - task: MSBuild@1
       displayName: msbuild Xamarin.Android
