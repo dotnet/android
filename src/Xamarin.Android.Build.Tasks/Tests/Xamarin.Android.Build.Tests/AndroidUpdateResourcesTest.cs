@@ -18,25 +18,39 @@ namespace Xamarin.Android.Build.Tests
 	public class AndroidUpdateResourcesTest : BaseTest
 	{
 		[Test]
-		public void CheckProjectReferenceAlias ()
+		public void CheckMultipleLibraryProjectReferenceAlias ([Values (true, false)] bool withGlobal)
 		{
 			var path = Path.Combine (Root, "temp", TestName);
-			var library = new XamarinAndroidLibraryProject () {
+			var library1 = new XamarinAndroidLibraryProject () {
 				ProjectName = "Library1",
+			};
+			var library2 = new XamarinAndroidLibraryProject () {
+				ProjectName = "Library2",
+				RootNamespace = "Library1"
 			};
 			var proj = new XamarinAndroidApplicationProject () {
 				References = {
-					new BuildItem.ProjectReference (Path.Combine("..", library.ProjectName, Path.GetFileName (library.ProjectFilePath)), "Library1") {
-						Metadata = { { "Aliases", "Lib1, LibA1,LibB1" } },
+					new BuildItem.ProjectReference (Path.Combine("..", library1.ProjectName, Path.GetFileName (library1.ProjectFilePath)), "Library1") {
+						Metadata = { { "Aliases", withGlobal ? "global,Lib1A,Lib1B" : "Lib1A,Lib1B" } },
+					},
+					new BuildItem.ProjectReference (Path.Combine("..", library2.ProjectName, Path.GetFileName (library2.ProjectFilePath)), "Library2") {
+						Metadata = { { "Aliases", withGlobal ? "global,Lib2A,Lib2B" : "Lib2A,Lib2B" } },
 					},
 				},
 			};
-			using (var builder = CreateDllBuilder (Path.Combine (path, library.ProjectName), cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
-				builder.ThrowOnBuildFailure = false;
-				Assert.IsTrue (builder.Build (library), "Library should have built.");
-				using (var b = CreateApkBuilder (Path.Combine (path, proj.ProjectName), cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
-					b.ThrowOnBuildFailure = false;
-					Assert.IsTrue (b.Build (proj), "Project should have built.");
+			using (var builder1 = CreateDllBuilder (Path.Combine (path, library1.ProjectName), cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
+				builder1.ThrowOnBuildFailure = false;
+				Assert.IsTrue (builder1.Build (library1), "Library should have built.");
+				using (var builder2 = CreateDllBuilder (Path.Combine (path, library2.ProjectName), cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
+					builder2.ThrowOnBuildFailure = false;
+					Assert.IsTrue (builder2.Build (library2), "Library should have built.");
+					using (var b = CreateApkBuilder (Path.Combine (path, proj.ProjectName), cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
+						b.ThrowOnBuildFailure = false;
+						Assert.IsTrue (b.Build (proj), "Project should have built.");
+						string[] text = File.ReadAllLines (Path.Combine (Root, path, proj.ProjectName, "Resources", "Resource.designer.cs"));
+						Assert.IsTrue (text.Count (x => x.Contains ("Library1.Resource.String.library_name")) == 2, "library_name resource should be present exactly once for each library");
+						Assert.IsTrue (text.Count (x => x == "extern alias Lib1A;" || x == "extern alias Lib1B;") <= 1, "No more than one extern alias should be present for each library.");
+					}
 				}
 			}
 		}
@@ -88,7 +102,7 @@ namespace Xamarin.Android.Build.Tests
 		[Category ("SmokeTests")]
 		public void DesignTimeBuild ([Values(false, true)] bool isRelease, [Values (false, true)] bool useManagedParser, [Values (false, true)] bool useAapt2)
 		{
-			var regEx = new Regex (@"(?<type>([a-zA-Z_0-9])+)\slibrary_name=(?<value>([0-9A-Za-z])+);", RegexOptions.Compiled | RegexOptions.Multiline ); 
+			var regEx = new Regex (@"(?<type>([a-zA-Z_0-9])+)\slibrary_name=(?<value>([0-9A-Za-z])+);", RegexOptions.Compiled | RegexOptions.Multiline );
 
 			var path = Path.Combine (Root, "temp", $"DesignTimeBuild_{isRelease}_{useManagedParser}_{useAapt2}");
 			var lib = new XamarinAndroidLibraryProject () {
@@ -174,7 +188,7 @@ namespace Xamarin.Android.Build.Tests
 				var image_data = new byte [stream.Length];
 				stream.Read (image_data, 0, (int)stream.Length);
 				image = new AndroidItem.AndroidResource ("Resources\\drawable\\Image.png") { BinaryContent = () => image_data };
-				proj.AndroidResources.Add (image); 
+				proj.AndroidResources.Add (image);
 			}
 			using (var b = CreateApkBuilder ("temp/MoveResource")) {
 				Assert.IsTrue (b.Build (proj), "First build should have succeeded.");
@@ -232,9 +246,9 @@ namespace Xamarin.Android.Build.Tests
 					var image_data = new byte [stream.Length];
 					stream.Read (image_data, 0, (int)stream.Length);
 					image1 = new AndroidItem.AndroidResource ("Resources\\drawable\\Image1.png") { BinaryContent = () => image_data };
-					proj.AndroidResources.Add (image1); 
+					proj.AndroidResources.Add (image1);
 					image2 = new AndroidItem.AndroidResource ("Resources\\drawable\\Image2.png") { BinaryContent = () => image_data };
-					proj.AndroidResources.Add (image2); 
+					proj.AndroidResources.Add (image2);
 				}
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj), "First build was supposed to build without errors");
@@ -295,7 +309,7 @@ namespace Xamarin.Android.Build.Tests
 				var image_data = new byte [stream.Length];
 				stream.Read (image_data, 0, (int)stream.Length);
 				var image2 = new AndroidItem.AndroidResource ("Resources\\drawable\\Image2.9.png") { BinaryContent = () => image_data };
-				libproj.AndroidResources.Add (image2); 
+				libproj.AndroidResources.Add (image2);
 			}
 			using (var libb = CreateDllBuilder (Path.Combine (projectPath, "Library1"))) {
 				libb.Build (libproj);
@@ -304,7 +318,7 @@ namespace Xamarin.Android.Build.Tests
 					var image_data = new byte [stream.Length];
 					stream.Read (image_data, 0, (int)stream.Length);
 					var image1 = new AndroidItem.AndroidResource ("Resources\\drawable\\Image1.9.png") { BinaryContent = () => image_data };
-					proj.AndroidResources.Add (image1); 
+					proj.AndroidResources.Add (image1);
 				}
 				proj.References.Add (new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj"));
 				proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
@@ -408,7 +422,7 @@ namespace ClassLibrary1
 		android:inputType=""textUri|textNoSuggestions""/>
 	<UnnamedProject.CustomPreference
 		android:key=""pref_b""
-	/> 
+	/>
 </PreferenceScreen>"
 			});
 
@@ -441,13 +455,13 @@ using Android.Util;
 namespace UnnamedProject
 {
 	public class CustomPreference : Preference
-	{		
+	{
 		public CustomPreference(Context context, IAttributeSet attrs) : base(context, attrs)
 		{
 			SetTitle(Resource.String.title_custompreference);
 		}
 		protected override void OnClick()
-		{ 			
+		{
 		}
 	}
 }"
@@ -465,14 +479,14 @@ namespace UnnamedProject
 					CheckCustomView (zip, intermediate, "lp", "0", "jl", "res", "layout", "custom_text_lib.xml");
 					CheckCustomView (zip, intermediate, "res", "layout", "custom_text_app.xml");
 				}
-				
+
 				var preferencesPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "res","xml","preferences.xml");
 				Assert.IsTrue (File.Exists (preferencesPath), "Preferences.xml should have been renamed to preferences.xml");
 				var doc = XDocument.Load (preferencesPath);
 				Assert.IsNotNull (doc.Element ("PreferenceScreen"), "PreferenceScreen should be present in preferences.xml");
 				Assert.IsNull (doc.Element ("PreferenceScreen").Element ("UnnamedProject.CustomPreference"),
 					"UnamedProject.CustomPreference should have been replaced with an $(Hash).CustomPreference");
-				var style = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "res", "values", "styles.xml"); 
+				var style = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "res", "values", "styles.xml");
 				Assert.IsTrue (File.Exists (style));
 				doc = XDocument.Load (style);
 				var item = doc.Element ("resources").Elements ("style")
@@ -607,10 +621,10 @@ namespace UnnamedProject
 	android:layout_width=""fill_parent""
 	android:layout_height=""fill_parent""
 	>
-<Button  
+<Button
 	android:id=""@+id/myButton""
-	android:layout_width=""fill_parent"" 
-	android:layout_height=""wrap_content"" 
+	android:layout_width=""fill_parent""
+	android:layout_height=""wrap_content""
 	android:text=""Hello""
 	/>
 <TextView
@@ -696,10 +710,10 @@ namespace UnnamedProject
 	android:layout_width=""fill_parent""
 	android:layout_height=""fill_parent""
 	>
-<Button  
+<Button
 	android:id=""@id/myButton""
-	android:layout_width=""fill_parent"" 
-	android:layout_height=""wrap_content"" 
+	android:layout_width=""fill_parent""
+	android:layout_height=""wrap_content""
 	android:text=""@string/foo""
 	/>
 </LinearLayout>";
@@ -859,7 +873,7 @@ namespace Lib1 {
 				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
 <resources>
 	<color name=""theme_devicedefault_background"">#ffffffff</color>
-</resources>", 
+</resources>",
 			};
 			var raw = new AndroidItem.AndroidResource ("Resources\\raw\\test.txt") {
 				TextContent = () => @"Test Build 1",
