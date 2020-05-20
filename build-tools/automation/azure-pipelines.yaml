@@ -292,6 +292,9 @@ stages:
         configuration: $(XA.Build.Configuration)
         msbuildArguments: /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-build.binlog
 
+    - script: echo %JAVA_HOME%
+      displayName: echo JAVA_HOME
+
     - task: MSBuild@1
       displayName: msbuild create-vsix
       inputs:
@@ -305,6 +308,9 @@ stages:
         solution: $(System.DefaultWorkingDirectory)\build-tools\create-packs\Microsoft.Android.Sdk.proj
         configuration: $(XA.Build.Configuration)
         msbuildArguments: /t:CreateAllPacks /restore /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\create-all-packs.binlog
+
+    - script: echo %JAVA_HOME%
+      displayName: echo JAVA_HOME
 
     - task: CmdLine@1
       displayName: xabuild Xamarin.Android-Tests
@@ -348,6 +354,9 @@ stages:
         testRunTitle: EmbeddedDSOUnitTests - Windows Build Tree
         testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\EmbeddedDSOUnitTests.dll
         testResultsFile: TestResult-EmbeddedDSOUnitTests-WinBuildTree-$(XA.Build.Configuration).xml
+
+    - script: echo %JAVA_HOME%
+      displayName: echo JAVA_HOME
 
     # Limit the amount of worker threads used to run these tests in parallel to half of what is currently available (8) on the Windows pool.
     # Using all available cores seems to occasionally bog down our machines and cause parallel test execution to slow down dramatically.
