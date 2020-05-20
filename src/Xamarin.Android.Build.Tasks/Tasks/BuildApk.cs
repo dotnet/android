@@ -226,44 +226,8 @@ namespace Xamarin.Android.Tasks
 					}
 				}
 
-				if (apkInputPathExists) {
-					using (var packaged = new ZipArchiveEx (apkInputPath, FileMode.Open)) {
-						foreach (var entry in packaged.Archive) {
-							Log.LogDebugMessage ($"Deregistering item {entry.FullName}");
-							existingEntries.Remove (entry.FullName);
-							if (lastWriteInput <= lastWriteOutput)
-								continue;
-
-							long entryIndexInOutput = -1;
-							if (apk.Archive.ContainsEntry (entry.FullName, out entryIndexInOutput)) {
-								ZipEntry e = apk.Archive.ReadEntry (entry.FullName);
-								// check the CRC values as the ModifiedDate is always 01/01/1980 in the aapt generated file.
-								if (entry.CRC == e.CRC) {
-									Log.LogDebugMessage ($"Skipping {entry.FullName} from {apkInputPath} as its up to date.");
-									continue;
-								}
-							}
-
-							var ms = new MemoryStream ();
-							entry.Extract (ms);
-
-							if (entryIndexInOutput != -1) {
-								Log.LogDebugMessage ($"Refreshing {entry.FullName} from {apkInputPath}");
-
-								// Force the modified resource to move to the end of the file, by deleting it first so that AddStream adds it
-								// back with a new index. Keeping modified resources toward the end optimizes the delta install for the typical
-								// dev scenario where the user is editing a few resources but most of the APK contents (e.g. the native libs)
-								// don't change and we want to keep their byte offset in the APK fixed. Delta install need not update APK
-								// contents that don't change and don't move.
-								apk.Archive.DeleteEntry ((ulong) entryIndexInOutput);
-							} else {
-								Log.LogDebugMessage ($"Adding {entry.FullName} from {apkInputPath}");
-							}
-
-							apk.Archive.AddStream (ms, entry.FullName, compressionMethod: entry.CompressionMethod);
-						}
-					}
-				}
+				if (apkInputPathExists)
+					UpdateEntriesFromInputApk (apkInputPath, apk, lastWriteOutput, lastWriteInput);
 				apk.FixupWindowsPathSeparators ((a, b) => Log.LogDebugMessage ($"Fixing up malformed entry `{a}` -> `{b}`"));
 
 				// Clean up Removed files. 
@@ -273,6 +237,48 @@ namespace Xamarin.Android.Tasks
 				}
 				apk.Flush ();
 				FixupArchive (apk);
+			}
+		}
+
+		private void UpdateEntriesFromInputApk (string apkInputPath, ZipArchiveEx apk, DateTime lastWriteOutput, DateTime lastWriteInput)
+		{
+			using (var packaged = new ZipArchiveEx (apkInputPath, FileMode.Open)) {
+				foreach (var entry in packaged.Archive) {
+					Log.LogDebugMessage ($"Deregistering item {entry.FullName}");
+					existingEntries.Remove (entry.FullName);
+					if (lastWriteInput <= lastWriteOutput)
+						continue;
+
+					long entryIndexInOutput;
+					if (apk.Archive.ContainsEntry (entry.FullName, out entryIndexInOutput)) {
+						ZipEntry e = apk.Archive.ReadEntry (entry.FullName);
+						// check the CRC values as the ModifiedDate is always 01/01/1980 in the aapt generated file.
+						if (entry.CRC == e.CRC) {
+							Log.LogDebugMessage ($"Skipping {entry.FullName} from {apkInputPath} as its up to date.");
+							continue;
+						}
+					} else {
+						entryIndexInOutput = -1;
+					}
+
+					var ms = new MemoryStream ();
+					entry.Extract (ms);
+
+					if (entryIndexInOutput != -1) {
+						Log.LogDebugMessage ($"Refreshing {entry.FullName} from {apkInputPath}");
+
+						// Force the modified resource to move to the end of the file, by deleting it first so that AddStream adds it
+						// back with a new index. Keeping modified resources toward the end optimizes the delta install for the typical
+						// dev scenario where the user is editing a few resources but most of the APK contents (e.g. the native libs)
+						// don't change and we want to keep their byte offset in the APK fixed. Delta install need not update APK
+						// contents that don't change and don't move.
+						apk.Archive.DeleteEntry ((ulong) entryIndexInOutput);
+					} else {
+						Log.LogDebugMessage ($"Adding {entry.FullName} from {apkInputPath}");
+					}
+
+					apk.Archive.AddStream (ms, entry.FullName, compressionMethod: entry.CompressionMethod);
+				}
 			}
 		}
 
