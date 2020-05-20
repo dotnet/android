@@ -110,7 +110,7 @@
     <_TestsProfiledAotName Condition=" '$(AndroidEnableProfiledAot)' == 'true' ">-Profiled</_TestsProfiledAotName>
     <_TestsBundleName Condition=" '$(BundleAssemblies)' == 'true' ">-Bundle</_TestsBundleName>
     <TestsFlavor>$(_TestsProfiledAotName)$(_TestsAotName)$(_TestsBundleName)</TestsFlavor>
-    <LibZipSharpVersion>1.0.12</LibZipSharpVersion>
+    <LibZipSharpVersion>1.0.13</LibZipSharpVersion>
     <NuGetApiPackageVersion>5.4.0</NuGetApiPackageVersion>
   </PropertyGroup>
   <PropertyGroup>
