@@ -304,7 +304,7 @@ namespace Xamarin.ProjectTools
 			}
 		};
 		public static Package CocosSharp_PCL_Shared_1_5_0_0 = new Package {
-			Id = "CocosSharp.PCL.Shared", 
+			Id = "CocosSharp.PCL.Shared",
 			Version = "1.5.0.0",
 			TargetFramework ="MonoAndroid10",
 			References =  {
@@ -320,7 +320,7 @@ namespace Xamarin.ProjectTools
 			}
 		};
 		public static Package MonoGame_Framework_Android_3_4_0_459 = new Package {
-			Id = "MonoGame.Framework.Android", 
+			Id = "MonoGame.Framework.Android",
 			Version = "3.4.0.459",
 			TargetFramework = "MonoAndroid10",
 			References = {
@@ -330,7 +330,7 @@ namespace Xamarin.ProjectTools
 			}
 		};
 		public static Package Xamarin_Android_Support_v8_RenderScript_28_0_0_3 = new Package {
-			Id = "Xamarin.Android.Support.v8.RenderScript", 
+			Id = "Xamarin.Android.Support.v8.RenderScript",
 			Version = "28.0.0.3",
 			TargetFramework = "MonoAndroid90",
 			References = {
@@ -559,6 +559,12 @@ namespace Xamarin.ProjectTools
 			Id = "akavache",
 			Version = "6.0.30",
 			TargetFramework = "netstandard2.0",
+		};
+
+		public static Package ZXing_Net_Mobile = new Package {
+			Id = "ZXing.Net.Mobile",
+			Version = "2.4.1",
+			TargetFramework = "MonoAndroid10",
 		};
 	}
 }
