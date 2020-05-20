@@ -606,8 +606,6 @@ namespace App1
 			var path = Path.Combine ("temp", TestContext.CurrentContext.Test.Name);
 			using (var builder = CreateDllBuilder (Path.Combine (path, netStandardProject.ProjectName), cleanupOnDispose: false)) {
 				using (var ab = CreateApkBuilder (Path.Combine (path, app.ProjectName), cleanupOnDispose: false)) {
-					builder.RequiresMSBuild =
-						ab.RequiresMSBuild = true;
 					Assert.IsTrue (builder.Build (netStandardProject), "XamFormsSample should have built.");
 					Assert.IsTrue (ab.Build (app), "App should have built.");
 					var apk = Path.Combine (Root, ab.ProjectDirectory,

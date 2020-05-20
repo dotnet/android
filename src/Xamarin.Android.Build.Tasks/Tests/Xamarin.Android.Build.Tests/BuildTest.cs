@@ -2351,7 +2351,6 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 			proj.PackageReferences.Add (KnownPackages.Xamarin_Android_Fabric_1_4_3);
 			proj.PackageReferences.Add (KnownPackages.Xamarin_Build_Download_0_4_11);
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName))) {
-				builder.RequiresMSBuild = true;
 				builder.Target = "Restore";
 				Assert.IsTrue (builder.Build (proj), "Restore should have succeeded.");
 				builder.Target = "Build";
@@ -3010,7 +3009,6 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				},
 			};
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
-				b.RequiresMSBuild = true;
 				b.Target = "Restore";
 				Assert.IsTrue (b.Build (proj), "Restore should have succeeded.");
 				b.Target = "Build";
@@ -3042,7 +3040,6 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				},
 			};
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
-				b.RequiresMSBuild = true;
 				b.Target = "Restore";
 				Assert.IsTrue (b.Build (proj), "Restore should have succeeded.");
 				b.Target = "Build";
@@ -3519,7 +3516,7 @@ namespace UnnamedProject {
 		[Test]
 		public void RunXABuildInParallel ()
 		{
-			var xabuild = new ProjectBuilder ("temp/RunXABuildInParallel").XABuildExe;
+			var xabuild = new ProjectBuilder ("temp/RunXABuildInParallel").BuildTool;
 			var psi     = new ProcessStartInfo (xabuild, "/version") {
 				CreateNoWindow         = true,
 				RedirectStandardOutput = true,
