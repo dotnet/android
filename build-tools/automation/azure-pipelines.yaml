@@ -368,6 +368,9 @@ stages:
         testResultsFile: TestResult-SmokeMSBuildTests-WinBuildTree-$(XA.Build.Configuration).xml
         nunitConsoleExtraArgs: --where "cat == SmokeTests" --workers=4
 
+    - script: echo %JAVA_HOME%
+      displayName: echo JAVA_HOME
+
     - template: yaml-templates\upload-results.yaml
       parameters:
         artifactName: Build Results - Windows
