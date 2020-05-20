@@ -39,7 +39,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 					GetExtendsGenericAware (),
 					new XAttribute ("final",                    (classFile.AccessFlags & ClassAccessFlags.Final) != 0),
 					new XAttribute ("name",                     GetThisClassName ()),
-					new XAttribute ("jni-signature",            "L" + classFile.ThisClass.Name.Value + ";"),
+					new XAttribute ("jni-signature",            classFile.FullJniName),
 					GetSourceFile (),
 					new XAttribute ("static",                   classFile.IsStatic),
 					new XAttribute ("visibility",               GetVisibility (classFile.Visibility)),

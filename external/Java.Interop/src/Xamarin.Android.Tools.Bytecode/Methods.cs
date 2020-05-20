@@ -90,17 +90,21 @@ namespace Xamarin.Android.Tools.Bytecode {
 			if (locals != null) {
 				var names = locals.LocalVariables.Where (p => p.StartPC == 0).ToList ();
 				int start = 0;
-				if ((AccessFlags & MethodAccessFlags.Static) == 0)
+				if (names.Count != parameters.Length &&
+						!AccessFlags.HasFlag (MethodAccessFlags.Static) &&
+						names.Count > start &&
+						names [start].Descriptor == DeclaringType.FullJniName) {
 					start++;    // skip `this` parameter
+				}
 				if (!DeclaringType.IsStatic &&
 						names.Count > start &&
 						(parameters.Length == 0 || parameters [0].Type.BinaryName != names [start].Descriptor)) {
 					start++;    // JDK 8?
 				}
-				if (((AccessFlags & MethodAccessFlags.Synthetic) != MethodAccessFlags.Synthetic) &&
+				if (!AccessFlags.HasFlag (MethodAccessFlags.Synthetic) &&
 						((names.Count - start) != parameters.Length) &&
 						!enumCtor) {
-					Log.Warning (1,"class-parse: warning: method {0}.{1}{2}: " +
+					Log.Debug ("class-parse: method {0}.{1}{2}: " +
 							"Local variables array has {3} entries ('{4}'); descriptor has {5} entries!",
 							DeclaringType.ThisClass.Name.Value, Name, Descriptor,
 							names.Count - start,
@@ -111,7 +115,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 				for (int i = 0; i < max; ++i) {
 					parameters [i].Name = names [start+i].Name;
 					if (parameters [i].Type.BinaryName != names [start + i].Descriptor) {
-						Log.Warning (1, "class-parse: warning: method {0}.{1}{2}: " +
+						Log.Debug ("class-parse: method {0}.{1}{2}: " +
 								"Local variable type descriptor mismatch! Got '{3}'; expected '{4}'.",
 								DeclaringType.ThisClass.Name.Value, Name, Descriptor,
 								parameters [i].Type.BinaryName,
@@ -122,7 +126,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 			var sig = GetSignature ();
 			if (sig != null) {
 				if ((sig.Parameters.Count != parameters.Length) && !enumCtor) {
-					Log.Warning (1,"class-parse: warning: method {0}.{1}{2}: " +
+					Log.Debug ("class-parse: method {0}.{1}{2}: " +
 							"Signature ('{3}') has {4} entries; Descriptor '{5}' has {6} entries!",
 							DeclaringType.ThisClass.Name.Value, Name, Descriptor,
 							Attributes.Get<SignatureAttribute>(),

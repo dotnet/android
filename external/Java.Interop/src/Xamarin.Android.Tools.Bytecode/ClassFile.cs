@@ -98,6 +98,8 @@ namespace Xamarin.Android.Tools.Bytecode {
 			}
 		}
 
+		public string FullJniName => "L" + ThisClass.Name.Value + ";";
+
 		public string SourceFileName {
 			get {
 				var sourceFile  = Attributes.Get<SourceFileAttribute> ();

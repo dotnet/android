@@ -429,7 +429,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		public override string ToString ()
 		{
-			return string.Format ("LocalVariableTableEntry(Name='{0}', Descriptor='{1}')", Name, Descriptor);
+			return $"LocalVariableTableEntry(Name='{Name}', Descriptor='{Descriptor}', StartPC={StartPC}, Index={Index})";
 		}
 	}
 

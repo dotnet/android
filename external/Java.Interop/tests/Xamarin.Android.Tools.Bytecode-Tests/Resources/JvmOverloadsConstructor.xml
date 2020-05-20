@@ -1,0 +1,162 @@
+<api
+  api-source="class-parse">
+  <package
+    name=""
+    jni-name="">
+    <class
+      abstract="false"
+      deprecated="not deprecated"
+      jni-extends="Ljava/lang/Object;"
+      extends="java.lang.Object"
+      extends-generic-aware="java.lang.Object"
+      final="true"
+      name="JvmOverloadsConstructor"
+      jni-signature="LJvmOverloadsConstructor;"
+      source-file-name="JvmOverloadsConstructor.kt"
+      static="false"
+      visibility="public">
+      <constructor
+        deprecated="not deprecated"
+        final="false"
+        name="JvmOverloadsConstructor"
+        static="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="(LJvmOverloadsConstructor;IILjava/lang/String;)V">
+        <parameter
+          name="something"
+          type="JvmOverloadsConstructor"
+          jni-type="LJvmOverloadsConstructor;"
+          not-null="true" />
+        <parameter
+          name="id"
+          type="int"
+          jni-type="I" />
+        <parameter
+          name="imageId"
+          type="int"
+          jni-type="I" />
+        <parameter
+          name="title"
+          type="java.lang.String"
+          jni-type="Ljava/lang/String;"
+          not-null="true" />
+      </constructor>
+      <constructor
+        deprecated="not deprecated"
+        final="false"
+        name="JvmOverloadsConstructor"
+        static="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="(LJvmOverloadsConstructor;IILjava/lang/String;Z)V">
+        <parameter
+          name="something"
+          type="JvmOverloadsConstructor"
+          jni-type="LJvmOverloadsConstructor;"
+          not-null="true" />
+        <parameter
+          name="id"
+          type="int"
+          jni-type="I" />
+        <parameter
+          name="imageId"
+          type="int"
+          jni-type="I" />
+        <parameter
+          name="title"
+          type="java.lang.String"
+          jni-type="Ljava/lang/String;"
+          not-null="true" />
+        <parameter
+          name="useDivider"
+          type="boolean"
+          jni-type="Z" />
+      </constructor>
+      <constructor
+        deprecated="not deprecated"
+        final="false"
+        name="JvmOverloadsConstructor"
+        static="false"
+        visibility="public"
+        bridge="false"
+        synthetic="true"
+        jni-signature="(LJvmOverloadsConstructor;IILjava/lang/String;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V">
+        <parameter
+          name="p0"
+          type="JvmOverloadsConstructor"
+          jni-type="LJvmOverloadsConstructor;" />
+        <parameter
+          name="p1"
+          type="int"
+          jni-type="I" />
+        <parameter
+          name="p2"
+          type="int"
+          jni-type="I" />
+        <parameter
+          name="p3"
+          type="java.lang.String"
+          jni-type="Ljava/lang/String;" />
+        <parameter
+          name="p4"
+          type="boolean"
+          jni-type="Z" />
+        <parameter
+          name="p5"
+          type="int"
+          jni-type="I" />
+        <parameter
+          name="p6"
+          type="kotlin.jvm.internal.DefaultConstructorMarker"
+          jni-type="Lkotlin/jvm/internal/DefaultConstructorMarker;" />
+      </constructor>
+      <constructor
+        deprecated="not deprecated"
+        final="false"
+        name="JvmOverloadsConstructor"
+        static="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="(LJvmOverloadsConstructor;ILjava/lang/String;)V">
+        <parameter
+          name="something"
+          type="JvmOverloadsConstructor"
+          jni-type="LJvmOverloadsConstructor;"
+          not-null="true" />
+        <parameter
+          name="id"
+          type="int"
+          jni-type="I" />
+        <parameter
+          name="title"
+          type="java.lang.String"
+          jni-type="Ljava/lang/String;"
+          not-null="true" />
+      </constructor>
+      <constructor
+        deprecated="not deprecated"
+        final="false"
+        name="JvmOverloadsConstructor"
+        static="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="(LJvmOverloadsConstructor;Ljava/lang/String;)V">
+        <parameter
+          name="something"
+          type="JvmOverloadsConstructor"
+          jni-type="LJvmOverloadsConstructor;"
+          not-null="true" />
+        <parameter
+          name="title"
+          type="java.lang.String"
+          jni-type="Ljava/lang/String;"
+          not-null="true" />
+      </constructor>
+    </class>
+  </package>
+</api>
