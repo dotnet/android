@@ -226,9 +226,14 @@ namespace Xamarin.Android.Tasks
 					}
 				}
 
+				// For now, we keep track of deleted entry indices & skip them ourselves when iterating zip contents in FixupWindowsPathSeparators.
+				// For this to work, no one shoud call Flush on the zip before calling FixupWindowsPathSeparators, since Flush changes all the indices
+				// (and gets rid of the deleted stuff). Later when we move to a newer LibZipSharp, with the fix to skip deleted entries itself,
+				// we can remove this workaround. See FixupWindowsPathSeparators for more info.
+				HashSet<ulong> deletedEntries = new HashSet<ulong> ();
 				if (apkInputPathExists)
-					UpdateEntriesFromInputApk (apkInputPath, apk, lastWriteOutput, lastWriteInput);
-				apk.FixupWindowsPathSeparators ((a, b) => Log.LogDebugMessage ($"Fixing up malformed entry `{a}` -> `{b}`"));
+					UpdateEntriesFromInputApk (apkInputPath, apk, lastWriteOutput, lastWriteInput, deletedEntries);
+				apk.FixupWindowsPathSeparators (deletedEntries, (a, b) => Log.LogDebugMessage ($"Fixing up malformed entry `{a}` -> `{b}`"));
 
 				// Clean up Removed files. 
 				foreach (var entry in existingEntries) {
@@ -240,7 +245,7 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		private void UpdateEntriesFromInputApk (string apkInputPath, ZipArchiveEx apk, DateTime lastWriteOutput, DateTime lastWriteInput)
+		private void UpdateEntriesFromInputApk (string apkInputPath, ZipArchiveEx apk, DateTime lastWriteOutput, DateTime lastWriteInput, HashSet<ulong> deletedEntries)
 		{
 			using (var packaged = new ZipArchiveEx (apkInputPath, FileMode.Open)) {
 				foreach (var entry in packaged.Archive) {
@@ -273,6 +278,7 @@ namespace Xamarin.Android.Tasks
 						// don't change and we want to keep their byte offset in the APK fixed. Delta install need not update APK
 						// contents that don't change and don't move.
 						apk.Archive.DeleteEntry ((ulong) entryIndexInOutput);
+						deletedEntries.Add ((ulong) entryIndexInOutput);
 					} else {
 						Log.LogDebugMessage ($"Adding {entry.FullName} from {apkInputPath}");
 					}
