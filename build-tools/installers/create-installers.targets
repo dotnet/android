@@ -143,6 +143,8 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Tools.Cecil.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Tools.Diagnostics.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Tools.Diagnostics.pdb" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Tools.Generator.dll"   Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Tools.Generator.pdb"   Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Tools.JavaCallableWrappers.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Tools.JavaCallableWrappers.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Runtime.Environment.dll" />

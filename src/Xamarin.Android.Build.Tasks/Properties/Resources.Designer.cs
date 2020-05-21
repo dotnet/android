@@ -277,7 +277,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Google Play requires that new applications and updates must use a TargetFrameworkVersion of v8.0 (API level 26) or above. You are currently targeting {0} (API level {1})..
+        ///   Looks up a localized string similar to Google Play requires that new applications and updates must use a TargetFrameworkVersion of v9.0 (API level 28) or above. You are currently targeting {0} (API level {1})..
         /// </summary>
         internal static string XA0113 {
             get {
@@ -295,7 +295,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The TargetFrameworkVersion {0} is deprecated. Please update it to be v4.4 or higher..
+        ///   Looks up a localized string similar to The TargetFrameworkVersion {0} is deprecated. Please update it to be v5.0 or higher..
         /// </summary>
         internal static string XA0117 {
             get {
@@ -349,7 +349,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Interpreter is not supported by the x86 ABI
+        ///   Looks up a localized string similar to Interpreter is not supported by the x86 ABI.
         /// </summary>
         internal static string XA0124 {
             get {
