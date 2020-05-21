@@ -32,7 +32,7 @@ namespace Xamarin.Android.Tasks
 				var decl = type as CodeTypeDeclaration;
 				if (decl == null)
 					continue;
-				foreach (CodeTypeMember field in decl.Members) 
+				foreach (CodeTypeMember field in decl.Members)
 					resourceFields.Add (CreateIdentifier (type.Name, field.Name));
 			}
 		}
@@ -48,8 +48,8 @@ namespace Xamarin.Android.Tasks
 					if (string.IsNullOrEmpty (resourceDesignerName)) {
 						continue;
 					}
-					string alias = assemblyPath.GetMetadata ("Aliases");
-					bool hasAlias = !string.IsNullOrEmpty (alias);
+					string aliasMetaData = assemblyPath.GetMetadata ("Aliases");
+					bool hasAlias = !string.IsNullOrEmpty (aliasMetaData);
 					foreach (var handle in reader.TypeDefinitions) {
 						var typeDefinition = reader.GetTypeDefinition (handle);
 						if (!typeDefinition.IsNested) {
@@ -59,8 +59,14 @@ namespace Xamarin.Android.Tasks
 						var declaringTypeName = $"{reader.GetString (declaringType.Namespace)}.{reader.GetString (declaringType.Name)}";
 						if (declaringTypeName == resourceDesignerName) {
 							if (hasAlias) {
-								string [] aliases = alias.Split (new [] {','}, StringSplitOptions.RemoveEmptyEntries);
-								declaringTypeName = $"{aliases[0].Trim ()}::{declaringTypeName}";
+								string [] aliases = aliasMetaData.Split (new [] {','}, StringSplitOptions.RemoveEmptyEntries);
+								foreach (var alias in aliases) {
+									string aliasName = alias.Trim ();
+									if (string.Compare ("global", aliasName, StringComparison.Ordinal) == 0)
+										continue;
+									declaringTypeName = $"{aliasName}::{declaringTypeName}";
+									break;
+								}
 							}
 							CreateImportFor (declaringTypeName, typeDefinition, method, reader, hasAlias);
 						}

@@ -29,10 +29,12 @@ namespace Xamarin.Android.Tasks {
 	internal class ManifestDocument
 	{
 		public static XNamespace AndroidXmlNamespace = "http://schemas.android.com/apk/res/android";
+		public static XNamespace AndroidXmlToolsNamespace = "http://schemas.android.com/tools";
 
 		const int maxVersionCode = 2100000000;
 
 		static XNamespace androidNs = AndroidXmlNamespace;
+		static XNamespace androidToolsNs = AndroidXmlToolsNamespace;
 
 		XDocument doc;
 		
@@ -480,6 +482,18 @@ namespace Xamarin.Android.Tasks {
 			
 		}
 
+		void RemoveNodes ()
+		{
+			var allNodes = doc.Descendants ().ToList ();
+			foreach (var node in allNodes) {
+				if (!node.HasAttributes)
+					continue;
+				if (node.Attribute (androidToolsNs + "node")?.Value == "remove") {
+					node.Remove ();
+				}
+			}
+		}
+
 		IEnumerable<XNode> FixupNameElements(string packageName, IEnumerable<XNode> nodes)
 		{
 			foreach (var element in nodes.Select ( x => x as XElement).Where (x => x != null && ManifestAttributeFixups.ContainsKey (x.Name.LocalName))) {
@@ -901,18 +915,20 @@ namespace Xamarin.Android.Tasks {
 				Save (logCodedWarning, file);
 		}
 
-		public void Save (TaskLoggingHelper log, Stream stream) =>
-			Save ((c, m) => log.LogCodedWarning (c, m), stream);
+		public void Save (TaskLoggingHelper log, Stream stream, bool removeNodes = false) =>
+			Save ((c, m) => log.LogCodedWarning (c, m), stream, removeNodes: removeNodes);
 
-		public void Save (Action<string, string> logCodedWarning, Stream stream)
+		public void Save (Action<string, string> logCodedWarning, Stream stream, bool removeNodes = false)
 		{
 			using (var file = new StreamWriter (stream, MonoAndroidHelper.UTF8withoutBOM, bufferSize: 1024, leaveOpen: true))
-				Save (logCodedWarning, file);
+				Save (logCodedWarning, file, removeNodes: removeNodes);
 		}
 
-		public void Save (Action<string, string> logCodedWarning, TextWriter stream)
+		public void Save (Action<string, string> logCodedWarning, TextWriter stream, bool removeNodes = false)
 		{
 			RemoveDuplicateElements ();
+			if (removeNodes)
+				RemoveNodes ();
 			string s;
 			var ms = MemoryStreamPool.Shared.Rent ();
 			try {
