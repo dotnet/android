@@ -1,15 +1,16 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <MSBuildReferenceVersion>15.1.0.0</MSBuildReferenceVersion>
+    <MSBuildPackageReferenceVersion>16.5</MSBuildPackageReferenceVersion>
   </PropertyGroup>
   <!--Import this file in projects needing to reference Microsoft.Build.*.dll -->
   <ItemGroup>
     <!-- Compile against Microsoft.Build* NuGet refs, but do not copy to OutputDir. -->
     <!-- Only use these on Windows as it causes problems with running unit tests in the IDE's on MacOS -->
-    <PackageReference Include="Microsoft.Build" Version="15.9.20" IncludeAssets="compile" Condition=" '$(OS)' == 'Windows_NT' " />
-    <PackageReference Include="Microsoft.Build.Framework" Version="15.9.20" IncludeAssets="compile" Condition=" '$(OS)' == 'Windows_NT' " />
-    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="15.9.20" IncludeAssets="compile" Condition=" '$(OS)' == 'Windows_NT' " />
-    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="15.9.20" IncludeAssets="compile" Condition=" '$(OS)' == 'Windows_NT' " />
+    <PackageReference Include="Microsoft.Build"                Version="$(MSBuildPackageReferenceVersion)" IncludeAssets="compile" Condition=" '$(OS)' == 'Windows_NT' " />
+    <PackageReference Include="Microsoft.Build.Framework"      Version="$(MSBuildPackageReferenceVersion)" IncludeAssets="compile" Condition=" '$(OS)' == 'Windows_NT' " />
+    <PackageReference Include="Microsoft.Build.Tasks.Core"     Version="$(MSBuildPackageReferenceVersion)" IncludeAssets="compile" Condition=" '$(OS)' == 'Windows_NT' " />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MSBuildPackageReferenceVersion)" IncludeAssets="compile" Condition=" '$(OS)' == 'Windows_NT' " />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Build, Version=$(MSBuildReferenceVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" Condition=" '$(OS)' != 'Windows_NT' ">
