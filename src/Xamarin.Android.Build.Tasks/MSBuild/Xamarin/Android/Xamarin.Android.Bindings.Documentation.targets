@@ -16,7 +16,12 @@ This file is only used by binding projects. .NET 5 can eventually use it, once `
   <UsingTask TaskName="Xamarin.Android.Tasks.MDoc"          AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.Unzip"         AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 
+  <PropertyGroup>
+    <_JavadocSupported Condition=" $(_JdkVersion.StartsWith ('1.8')) ">True</_JavadocSupported>
+  </PropertyGroup>
+
   <Target Name="_ExtractJavaDocJars"
+      Condition=" '$(_JavadocSupported)' == 'True' "
       Inputs="@(JavaDocJar)"
       Outputs="@(JavaDocJar->'$(IntermediateOutputPath)javadocs\%(FileName).stamp')">
     <Unzip
@@ -30,6 +35,7 @@ This file is only used by binding projects. .NET 5 can eventually use it, once `
   </Target>
 
   <Target Name="_GenerateJavaDocFromSourceJars"
+      Condition=" '$(_JavadocSupported)' == 'True' "
       Inputs="@(JavaSourceJar)"
       Outputs="@(JavaSourceJar->'$(IntermediateOutputPath)javadocs\%(FileName).stamp')">
     <Unzip
@@ -51,9 +57,9 @@ This file is only used by binding projects. .NET 5 can eventually use it, once `
   </Target>
 
   <Target Name="BuildDocumentation"
+      Condition=" '@(JavaDocIndex)' != '' And '$(_JavadocSupported)' == 'True' "
       Inputs="@(JavaDocIndex);@(IntermediateAssembly->'$(IntermediateOutputPath)%(filename).xml')"
-      Outputs="@(IntermediateAssembly->'$(OutputPath)%(filename).xml')"
-      Condition=" '@(JavaDocIndex)' != '' ">
+      Outputs="@(IntermediateAssembly->'$(OutputPath)%(filename).xml')">
     <MDoc
         References="@(ReferencePath);@(ReferenceDependencyPaths)"
         TargetAssembly="@(IntermediateAssembly)"
