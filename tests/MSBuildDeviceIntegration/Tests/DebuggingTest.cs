@@ -276,31 +276,43 @@ namespace ${ROOT_NAMESPACE} {
 				/* useSharedRuntime */   false,
 				/* embedAssemblies */    true,
 				/* fastDevType */        "Assemblies",
+				/* allowDeltaInstall */  false,
 			},
 			new object[] {
 				/* useSharedRuntime */   false,
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies",
+				/* allowDeltaInstall */  false,
 			},
 			new object[] {
 				/* useSharedRuntime */   true,
 				/* embedAssemblies */    true,
 				/* fastDevType */        "Assemblies",
+				/* allowDeltaInstall */  false,
 			},
 			new object[] {
 				/* useSharedRuntime */   true,
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies",
+				/* allowDeltaInstall */  false,
 			},
 			new object[] {
 				/* useSharedRuntime */   true,
 				/* embedAssemblies */    true,
 				/* fastDevType */        "Assemblies:Dexes",
+				/* allowDeltaInstall */  false,
 			},
 			new object[] {
 				/* useSharedRuntime */   true,
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies:Dexes",
+				/* allowDeltaInstall */  false,
+			},
+			new object[] {
+				/* useSharedRuntime */   true,
+				/* embedAssemblies */    false,
+				/* fastDevType */        "Assemblies",
+				/* allowDeltaInstall */  true,
 			},
 		};
 #pragma warning restore 414
@@ -308,7 +320,7 @@ namespace ${ROOT_NAMESPACE} {
 		[Test]
 		[TestCaseSource (nameof(DebuggerTestCases))]
 		[Retry (1)]
-		public void ApplicationRunsWithDebuggerAndBreaks (bool useSharedRuntime, bool embedAssemblies, string fastDevType)
+		public void ApplicationRunsWithDebuggerAndBreaks (bool useSharedRuntime, bool embedAssemblies, string fastDevType, bool allowDeltaInstall)
 		{
 			if (!CommercialBuildAvailable) {
 				Assert.Ignore ("Test does not run on the Open Source Builds.");
@@ -326,6 +338,8 @@ namespace ${ROOT_NAMESPACE} {
 			};
 			var abis = new string [] { "armeabi-v7a", "x86" };
 			proj.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
+			if (allowDeltaInstall)
+				proj.SetProperty (KnownProperties._AndroidAllowDeltaInstall, "true");
 			proj.SetDefaultTargetDevice ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				SetTargetFrameworkAndManifest (proj, b);
