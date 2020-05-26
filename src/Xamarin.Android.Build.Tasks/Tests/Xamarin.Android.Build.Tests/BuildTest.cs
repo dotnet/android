@@ -2583,11 +2583,17 @@ public class Test
 		[Category ("SmokeTests")]
 		public void BuildApplicationWithSpacesInPath ([Values (true, false)] bool enableMultiDex, [Values ("dx", "d8")] string dexTool, [Values ("", "proguard", "r8")] string linkTool)
 		{
+			var folderName = $"BuildReleaseApp AndÜmläüts({enableMultiDex}{dexTool}{linkTool})";
+			var lib = new XamarinAndroidLibraryProject {
+				IsRelease = true,
+				ProjectName = "Library1"
+			};
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 				AotAssemblies = true,
 				DexTool = dexTool,
 				LinkTool = linkTool,
+				References = { new BuildItem ("ProjectReference", $"..\\{folderName}Library1\\Library1.csproj") }
 			};
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "Hello (World).jar") { BinaryContent = () => Convert.FromBase64String (@"
 UEsDBBQACAgIAMl8lUsAAAAAAAAAAAAAAAAJAAQATUVUQS1JTkYv/soAAAMAUEsHCAAAAAACAAAAA
@@ -2617,7 +2623,9 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 </Project>
 ",
 			});
-			using (var b = CreateApkBuilder (Path.Combine ("temp", $"BuildReleaseAppWithA InItAndÜmläüts({enableMultiDex}{dexTool}{linkTool})"))) {
+			using (var libb = CreateDllBuilder (Path.Combine ("temp", $"{folderName}Library1")))
+			using (var b = CreateApkBuilder (Path.Combine ("temp", folderName))) {
+				libb.Build (lib);
 				if (dexTool == "d8" && linkTool == "proguard") {
 					b.ThrowOnBuildFailure = false;
 					Assert.IsFalse (b.Build (proj), "Build should have failed.");
