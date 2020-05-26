@@ -205,6 +205,24 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to determine the Android ABI from the value &apos;{0}&apos;. Edit the project file in a text editor and set the &apos;RuntimeIdentifiers&apos; MSBuild property to contain only valid identifiers for the Android platform..
+        /// </summary>
+        internal static string XA0035 {
+            get {
+                return ResourceManager.GetString("XA0035", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The &apos;AndroidSupportedAbis&apos; MSBuild property is no longer supported. Edit the project file in a text editor and use the &apos;RuntimeIdentifiers&apos; MSBuild property instead..
+        /// </summary>
+        internal static string XA0036 {
+            get {
+                return ResourceManager.GetString("XA0036", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to EmbeddedNativeLibrary &apos;{0}&apos; is invalid in Android Application projects. Please use AndroidNativeLibrary instead..
         /// </summary>
         internal static string XA0100 {

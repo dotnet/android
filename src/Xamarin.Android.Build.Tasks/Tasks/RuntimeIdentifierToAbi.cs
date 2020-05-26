@@ -1,4 +1,4 @@
-using System;
+using System.Linq;
 using Microsoft.Build.Framework;
 
 namespace Xamarin.Android.Tasks
@@ -14,17 +14,29 @@ namespace Xamarin.Android.Tasks
 
 		public string RuntimeIdentifier { get; set; }
 
+		public string [] RuntimeIdentifiers { get; set; }
+
 		[Output]
 		public string SupportedAbis { get; set; }
 
 		public override bool RunTask ()
 		{
-			if (!string.IsNullOrEmpty (RuntimeIdentifier)) {
-				SupportedAbis = MonoAndroidHelper.RuntimeIdentifierToAbi (RuntimeIdentifier);
+			if (!string.IsNullOrEmpty (SupportedAbis)) {
+				Log.LogCodedWarning ("XA0036", Properties.Resources.XA0036);
 			}
-			if (string.IsNullOrEmpty (SupportedAbis)) {
-				// Default to a single, default ABI if blank
-				SupportedAbis = "arm64-v8a";
+			if (RuntimeIdentifiers != null && RuntimeIdentifiers.Length > 0) {
+				SupportedAbis = string.Join (";", RuntimeIdentifiers.Select (rid => {
+					var abi = MonoAndroidHelper.RuntimeIdentifierToAbi (rid);
+					if (string.IsNullOrEmpty (abi))
+						Log.LogCodedError ("XA0035", Properties.Resources.XA0035, rid);
+					return abi;
+				}));
+			} else if (!string.IsNullOrEmpty (RuntimeIdentifier)) {
+				SupportedAbis = MonoAndroidHelper.RuntimeIdentifierToAbi (RuntimeIdentifier);
+				if (string.IsNullOrEmpty (SupportedAbis))
+					Log.LogCodedError ("XA0035", Properties.Resources.XA0035, RuntimeIdentifier);
+			} else if (string.IsNullOrEmpty (SupportedAbis)) {
+				Log.LogCodedError ("XA0035", Properties.Resources.XA0035, "");
 			}
 			return !Log.HasLoggedErrors;
 		}

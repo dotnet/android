@@ -64,23 +64,31 @@ namespace Xamarin.Android.Build.Tests
 
 		static readonly object [] DotNetBuildSource = new object [] {
 			new object [] {
-				/* runtimeIdentifier */  "android.21-arm",
+				/* runtimeIdentifiers */ "android.21-arm",
 				/* isRelease */          false,
 			},
 			new object [] {
-				/* runtimeIdentifier */  "android.21-arm64",
+				/* runtimeIdentifiers */ "android.21-arm64",
 				/* isRelease */          false,
 			},
 			new object [] {
-				/* runtimeIdentifier */  "android.21-x86",
+				/* runtimeIdentifiers */ "android.21-x86",
 				/* isRelease */          false,
 			},
 			new object [] {
-				/* runtimeIdentifier */  "android.21-x64",
+				/* runtimeIdentifiers */ "android.21-x64",
 				/* isRelease */          false,
 			},
 			new object [] {
-				/* runtimeIdentifier */  "android.21-arm",
+				/* runtimeIdentifiers */ "android.21-arm",
+				/* isRelease */          true,
+			},
+			new object [] {
+				/* runtimeIdentifiers */ "android.21-arm;android.21-arm64;android.21-x86;android.21-x64",
+				/* isRelease */          false,
+			},
+			new object [] {
+				/* runtimeIdentifiers */ "android.21-arm;android.21-arm64;android.21-x86;android.21-x64",
 				/* isRelease */          true,
 			},
 		};
@@ -88,9 +96,8 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		[Category ("SmokeTests")]
 		[TestCaseSource (nameof (DotNetBuildSource))]
-		public void DotNetBuild (string runtimeIdentifier, bool isRelease)
+		public void DotNetBuild (string runtimeIdentifiers, bool isRelease)
 		{
-			var abi = MonoAndroidHelper.RuntimeIdentifierToAbi (runtimeIdentifier);
 			var proj = new XASdkProject {
 				IsRelease = isRelease
 			};
@@ -101,7 +108,11 @@ namespace Xamarin.Android.Build.Tests
 			//proj.OtherBuildItems.Add (new BuildItem ("JavaSourceJar", "javasources.jar") {
 			//	BinaryContent = () => Convert.FromBase64String (InlineData.JavaSourcesJarBase64)
 			//});
-			proj.SetProperty (KnownProperties.RuntimeIdentifier, runtimeIdentifier);
+			if (!runtimeIdentifiers.Contains (";")) {
+				proj.SetProperty (KnownProperties.RuntimeIdentifier, runtimeIdentifiers);
+			} else {
+				proj.SetProperty (KnownProperties.RuntimeIdentifiers, runtimeIdentifiers);
+			}
 
 			var dotnet = CreateDotNetBuilder (proj);
 			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
@@ -111,7 +122,10 @@ namespace Xamarin.Android.Build.Tests
 			if (!isRelease)
 				Assert.IsTrue (StringAssertEx.ContainsText (dotnet.LastBuildOutput, " 0 Warning(s)"), "Should have no MSBuild warnings.");
 
-			var outputPath = Path.Combine (Root, dotnet.ProjectDirectory, proj.OutputPath, runtimeIdentifier);
+			var outputPath = Path.Combine (Root, dotnet.ProjectDirectory, proj.OutputPath);
+			if (!runtimeIdentifiers.Contains (";")) {
+				outputPath = Path.Combine (outputPath, runtimeIdentifiers);
+			}
 			var assemblyPath = Path.Combine (outputPath, "UnnamedProject.dll");
 			FileAssert.Exists (assemblyPath);
 			using (var assembly = AssemblyDefinition.ReadAssembly (assemblyPath)) {
@@ -123,8 +137,16 @@ namespace Xamarin.Android.Build.Tests
 			var apk = Path.Combine (outputPath, "UnnamedProject.UnnamedProject.apk");
 			FileAssert.Exists (apk);
 			using (var zip = ZipHelper.OpenZip (apk)) {
-				Assert.IsTrue (zip.ContainsEntry ($"lib/{abi}/libmonodroid.so"), "libmonodroid.so should exist.");
-				Assert.IsTrue (zip.ContainsEntry ($"lib/{abi}/libmonosgen-2.0.so"), "libmonosgen-2.0.so should exist.");
+				var rids = runtimeIdentifiers.Split (';');
+				foreach (var abi in rids.Select (MonoAndroidHelper.RuntimeIdentifierToAbi)) {
+					Assert.IsTrue (zip.ContainsEntry ($"lib/{abi}/libmonodroid.so"), "libmonodroid.so should exist.");
+					Assert.IsTrue (zip.ContainsEntry ($"lib/{abi}/libmonosgen-2.0.so"), "libmonosgen-2.0.so should exist.");
+					if (rids.Length > 1) {
+						Assert.IsTrue (zip.ContainsEntry ($"assemblies/{abi}/System.Private.CoreLib.dll"), "System.Private.CoreLib.dll should exist.");
+					} else {
+						Assert.IsTrue (zip.ContainsEntry ("assemblies/System.Private.CoreLib.dll"), "System.Private.CoreLib.dll should exist.");
+					}
+				}
 			}
 		}
 

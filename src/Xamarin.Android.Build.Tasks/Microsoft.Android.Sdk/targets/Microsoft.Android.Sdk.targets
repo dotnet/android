@@ -9,7 +9,9 @@
     <AndroidApplication Condition=" '$(AndroidApplication)' == '' And '$(OutputType)' == 'Exe' ">true</AndroidApplication>
     <AndroidApplication Condition=" '$(AndroidApplication)' == '' ">false</AndroidApplication>
     <SelfContained Condition=" '$(SelfContained)' == '' And '$(AndroidApplication)' == 'true' ">true</SelfContained>
-    <RuntimeIdentifier Condition=" '$(RuntimeIdentifier)' == '' And '$(AndroidApplication)' == 'true' ">android.21-x86</RuntimeIdentifier>
+    <!-- Prefer $(RuntimeIdentifiers) plural -->
+    <RuntimeIdentifiers Condition=" '$(RuntimeIdentifier)' == '' And '$(RuntimeIdentifiers)' == '' And '$(AndroidApplication)' == 'true' ">android.21-arm64;android.21-x86</RuntimeIdentifiers>
+    <RuntimeIdentifier  Condition=" '$(RuntimeIdentifiers)' != '' And '$(RuntimeIdentifier)' != '' " />
     <AndroidManifest Condition=" '$(AndroidManifest)' == '' And '$(AndroidApplication)' == 'true' ">Properties\AndroidManifest.xml</AndroidManifest>
     <!-- We don't ever need a `static void Main` method, so switch to Library here-->
     <OutputType Condition=" '$(OutputType)' == 'Exe' ">Library</OutputType>

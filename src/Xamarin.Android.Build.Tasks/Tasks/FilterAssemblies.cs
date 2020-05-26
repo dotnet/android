@@ -20,7 +20,6 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "FLT";
 
 		const string TargetFrameworkIdentifier = "MonoAndroid";
-		const string MonoAndroidReference = "Mono.Android";
 
 		public bool DesignTimeBuild { get; set; }
 
@@ -53,8 +52,8 @@ namespace Xamarin.Android.Tasks
 					Log.LogDebugMessage ($"{nameof (TargetFrameworkIdentifier)} did not match: {assemblyItem.ItemSpec}");
 
 					// Fallback to looking for a Mono.Android reference
-					if (HasReference (reader)) {
-						Log.LogDebugMessage ($"{MonoAndroidReference} reference found: {assemblyItem.ItemSpec}");
+					if (MonoAndroidHelper.HasMonoAndroidReference (reader)) {
+						Log.LogDebugMessage ($"Mono.Android reference found: {assemblyItem.ItemSpec}");
 						output.Add (assemblyItem);
 						continue;
 					}
@@ -102,18 +101,6 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 			return targetFrameworkIdentifier;
-		}
-
-		bool HasReference (MetadataReader reader)
-		{
-			foreach (var handle in reader.AssemblyReferences) {
-				var reference = reader.GetAssemblyReference (handle);
-				var name = reader.GetString (reference.Name);
-				if (MonoAndroidReference == name) {
-					return true;
-				}
-			}
-			return false;
 		}
 
 		bool HasEmbeddedResource (MetadataReader reader)

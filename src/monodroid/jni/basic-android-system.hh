@@ -25,6 +25,7 @@ namespace xamarin::android::internal
 			[CPU_KIND_X86_64]   = "x86_64",
 		};
 		static constexpr size_t ANDROID_ABI_NAMES_SIZE = sizeof(android_abi_names) / sizeof (android_abi_names[0]);
+		static const char* built_for_abi_name;
 
 	public:
 #ifdef ANDROID64
@@ -51,6 +52,7 @@ namespace xamarin::android::internal
 		static char* override_dirs [MAX_OVERRIDES];
 		static const char **app_lib_directories;
 		static size_t app_lib_directories_size;
+		static const char* get_built_for_abi_name ();
 
 	public:
 		void setup_app_library_directories (jstring_array_wrapper& runtimeApks, jstring_array_wrapper& appDirs, int androidApiLevel);

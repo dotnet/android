@@ -46,6 +46,8 @@ ms.date: 01/24/2020
 + [XA0032](xa0032.md): Java SDK {requiredJavaForBuildTools} or above is required when using Android SDK Build-Tools {buildToolsVersion}.
 + [XA0033](xa0033.md): Failed to get the Java SDK version because the returned value does not appear to contain a valid version number.
 + [XA0034](xa0034.md): Failed to get the Java SDK version.
++ [XA0035](xa0035.md): Failed to determine the Android ABI for the project.
++ [XA0036](xa0036.md): $(AndroidSupportedAbis) is not supported in .NET 5 and higher.
 + XA0100: EmbeddedNativeLibrary is invalid in Android Application projects. Please use AndroidNativeLibrary instead.
 + [XA0101](xa0101.md): warning XA0101: @(Content) build action is not supported.
 + [XA0102](xa0102.md): Generic `lint` Warning.
