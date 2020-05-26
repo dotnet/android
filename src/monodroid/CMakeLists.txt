@@ -21,6 +21,13 @@ include(CheckCXXCompilerFlag)
 include("../../build-tools/cmake/xa_macros.cmake")
 
 set(JAVA_INTEROP_SRC_PATH "../../external/Java.Interop/src/java-interop")
+
+set(LZ4_SRC_DIR "../../external/lz4/lib")
+set(LZ4_INCLUDE_DIR ${LZ4_SRC_DIR})
+set(LZ4_SOURCES
+  "${LZ4_SRC_DIR}/lz4.c"
+  )
+
 string(REPLACE "\\" "/" TOP_DIR ${CMAKE_SOURCE_DIR})
 set(SOURCES_DIR ${TOP_DIR}/jni)
 
@@ -129,6 +136,8 @@ if(STRIP_DEBUG)
 endif()
 
 if(ENABLE_NDK)
+  include_directories(${LZ4_INCLUDE_DIR})
+  add_definitions("-DHAVE_LZ4")
   add_definitions("-DPLATFORM_ANDROID")
   add_definitions("-DANDROID")
   add_definitions("-DLINUX -Dlinux -D__linux__")
@@ -281,6 +290,13 @@ set(MONODROID_SOURCES
   ${JAVA_INTEROP_SRC_PATH}/java-interop-mono.cc
   ${JAVA_INTEROP_SRC_PATH}/java-interop-util.cc
   )
+
+if(ENABLE_NDK)
+  set(MONODROID_SOURCES
+	${MONODROID_SOURCES}
+	${LZ4_SOURCES}
+	)
+endif()
 
 if(UNIX)
   set(MONODROID_SOURCES

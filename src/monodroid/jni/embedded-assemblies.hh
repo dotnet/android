@@ -88,6 +88,7 @@ namespace xamarin::android::internal {
 
 		static MonoAssembly* open_from_bundles_full (MonoAssemblyName *aname, char **assemblies_path, void *user_data);
 		static MonoAssembly* open_from_bundles_refonly (MonoAssemblyName *aname, char **assemblies_path, void *user_data);
+		static void get_assembly_data (const MonoBundledAssembly *e, char*& assembly_data, uint32_t& assembly_data_size);
 
 		void zip_load_entries (int fd, const char *apk_name, monodroid_should_register should_register);
 		bool zip_read_cd_info (int fd, uint32_t& cd_offset, uint32_t& cd_size, uint16_t& cd_entries);

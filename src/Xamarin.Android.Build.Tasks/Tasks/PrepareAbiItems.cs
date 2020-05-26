@@ -12,6 +12,7 @@ namespace Xamarin.Android.Tasks
 		const string ArmV7a = "armeabi-v7a";
 		const string TypeMapBase = "typemaps";
 		const string EnvBase = "environment";
+		const string CompressedAssembliesBase = "compressed_assemblies";
 
 		public override string TaskPrefix => "PAI";
 
@@ -22,7 +23,7 @@ namespace Xamarin.Android.Tasks
 		public string NativeSourcesDir { get; set; }
 
 		[Required]
-		public bool TypeMapMode { get; set; }
+		public string Mode { get; set; }
 
 		[Required]
 		public bool Debug { get; set; }
@@ -42,10 +43,24 @@ namespace Xamarin.Android.Tasks
 			var includes = new List<ITaskItem> ();
 			bool haveSharedSource = false;
 			bool haveArmV7SharedSource = false;
-			string baseName = TypeMapMode ? TypeMapBase : EnvBase;
+			bool typeMapMode = false;
+			string baseName;
+
+			if (String.Compare ("typemap", Mode, StringComparison.OrdinalIgnoreCase) == 0) {
+				baseName = TypeMapBase;
+				typeMapMode = true;
+			} else if (String.Compare ("environment", Mode, StringComparison.OrdinalIgnoreCase) == 0) {
+				baseName = EnvBase;
+			} else if (String.Compare ("compressed", Mode, StringComparison.OrdinalIgnoreCase) == 0) {
+				baseName = CompressedAssembliesBase;
+			} else {
+				Log.LogError ($"Unknown mode: {Mode}");
+				return false;
+			}
+
 			TaskItem item;
 			foreach (string abi in BuildTargetAbis) {
-				if (TypeMapMode) {
+				if (typeMapMode) {
 					if (String.Compare (ArmV7a, abi, StringComparison.Ordinal) == 0)
 						haveArmV7SharedSource = true;
 					else
@@ -56,7 +71,7 @@ namespace Xamarin.Android.Tasks
 				item.SetMetadata ("abi", abi);
 				sources.Add (item);
 
-				if (!TypeMapMode)
+				if (!typeMapMode)
 					continue;
 
 				if (!InstantRunEnabled && !Debug) {
