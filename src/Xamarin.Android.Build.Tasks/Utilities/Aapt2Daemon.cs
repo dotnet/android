@@ -57,6 +57,7 @@ namespace Xamarin.Android.Tasks
 		long jobsRunning = 0;
 		long jobId = 0;
 		int maxInstances = 0;
+		Queue<string> daemonStartupWarnings = new Queue<string> ();
 
 		public CancellationToken Token => tcs.Token;
 
@@ -76,6 +77,8 @@ namespace Xamarin.Android.Tasks
 		public int MaxInstances => maxInstances;
 
 		public int CurrentInstances => daemons.Count;
+
+		public Queue<string> StartupWarnings => daemonStartupWarnings;
 
 		public Aapt2Daemon (string aapt2, int maxNumberOfInstances, int initalNumberOfDaemons)
 		{
@@ -162,21 +165,34 @@ namespace Xamarin.Android.Tasks
 				// and we are using netstandard 2.0
 				//StandardInputEncoding = Encoding.UTF8,
 			};
-			// We need to FORCE the StandardInput to be UTF8 so we can use 
+			// We need to FORCE the StandardInput to be UTF8 so we can use
 			// accented characters. Also DONT INCLUDE A BOM!!
 			// otherwise aapt2 will try to interpret the BOM as an argument.
-			Process aapt2;
+			Process aapt2 = null;
 			lock (lockObject) {
-				Encoding current = Console.InputEncoding;
 				try {
-					Console.InputEncoding = new UTF8Encoding (false);
-					aapt2 = new Process ();
-					aapt2.StartInfo = info;
-					aapt2.Start ();
-				} finally {
-					Console.InputEncoding = current;
+					Encoding current = Console.InputEncoding;
+					try {
+						try {
+							Console.InputEncoding = new UTF8Encoding (false);
+						} catch (IOException ioEx) {
+							// For some reason we can not set the InputEncoding. If this happens we don't
+							// want to crash Visual Studio with an Unhandled Exception.
+							// The downside of ignoring this is paths with accented characters will cause problems.
+							daemonStartupWarnings.Enqueue (ioEx.ToString ());
+						}
+						aapt2 = new Process ();
+						aapt2.StartInfo = info;
+						aapt2.Start ();
+					} finally {
+						Console.InputEncoding = current;
+					}
+				} catch (Exception ex) {
+					daemonStartupWarnings.Enqueue (ex.ToString ());
 				}
 			}
+			if (aapt2 == null)
+				return;
 			try {
 				foreach (var job in pendingJobs.GetConsumingEnumerable (tcs.Token)) {
 					Interlocked.Add (ref jobsRunning, 1);
@@ -191,7 +207,7 @@ namespace Xamarin.Android.Tasks
 						writer.WriteLine ();
 						writer.Flush ();
 						string line;
-						
+
 						Queue<string> stdError = new Queue<string> ();
 						while ((line = aapt2.StandardError.ReadLine ()) != null) {
 							if (string.Compare (line, "Done", StringComparison.OrdinalIgnoreCase) == 0) {
@@ -201,8 +217,8 @@ namespace Xamarin.Android.Tasks
 								errored = true;
 								continue;
 							}
-							// we have to queue the output because the "Done"/"Error" lines are 
-							//written after all the messages. So to process the warnings/errors 
+							// we have to queue the output because the "Done"/"Error" lines are
+							//written after all the messages. So to process the warnings/errors
 							// correctly we need to do this after we know if worked or failed.
 							stdError.Enqueue (line);
 						}

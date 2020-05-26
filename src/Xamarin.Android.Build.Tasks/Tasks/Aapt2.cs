@@ -18,7 +18,7 @@ using ThreadingTasks = System.Threading.Tasks;
 using Xamarin.Build;
 
 namespace Xamarin.Android.Tasks {
-	
+
 	public abstract class Aapt2 : AndroidAsyncTask {
 
 		private static readonly int DefaultMaxAapt2Daemons = 6;
@@ -57,7 +57,7 @@ namespace Xamarin.Android.Tasks {
 		protected virtual int GetRequiredDaemonInstances ()
 		{
 			return 1;
-		} 
+		}
 
 		Aapt2Daemon daemon;
 
@@ -65,7 +65,7 @@ namespace Xamarin.Android.Tasks {
 		public override bool Execute ()
 		{
 			// Must register on the UI thread!
-			// We don't want to use up ALL the available cores especially when 
+			// We don't want to use up ALL the available cores especially when
 			// running in the IDE. So lets cap it at DefaultMaxAapt2Daemons (6).
 			int maxInstances = Math.Min (Environment.ProcessorCount-1, DefaultMaxAapt2Daemons);
 			if (DaemonMaxInstanceCount == 0)
@@ -74,6 +74,9 @@ namespace Xamarin.Android.Tasks {
 				DaemonMaxInstanceCount = Math.Min (DaemonMaxInstanceCount, maxInstances);
 			daemon  = Aapt2Daemon.GetInstance (BuildEngine4, GenerateFullPathToTool (),
 				DaemonMaxInstanceCount, GetRequiredDaemonInstances (), registerInDomain: DaemonKeepInDomain);
+			while (daemon.StartupWarnings.Count > 0) {
+				LogCodedWarning ("APT2000", daemon.StartupWarnings.Dequeue ());
+			}
 			return base.Execute ();
 		}
 
@@ -97,7 +100,7 @@ namespace Xamarin.Android.Tasks {
 					}
 				}
 			}
-		} 
+		}
 
 		protected bool LogAapt2EventsFromOutput (string singleLine, MessageImportance messageImportance, bool apptResult)
 		{
@@ -122,7 +125,7 @@ namespace Xamarin.Android.Tasks {
 					return true;
 				}
 				if (message.StartsWith ("unknown option", StringComparison.OrdinalIgnoreCase)) {
-					// we need to filter out the remailing help lines somehow. 
+					// we need to filter out the remailing help lines somehow.
 					LogCodedError ("APT0001", Properties.Resources.APT0001, message.Substring ("unknown option '".Length).TrimEnd ('.', '\''));
 					return false;
 				}
