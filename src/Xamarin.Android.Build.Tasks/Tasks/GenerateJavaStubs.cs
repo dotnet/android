@@ -197,7 +197,7 @@ namespace Xamarin.Android.Tasks
 			var managedConflicts = new Dictionary<string, List<string>> (0, StringComparer.Ordinal);
 			var javaConflicts    = new Dictionary<string, List<string>> (0, StringComparer.Ordinal);
 
-			using (var acw_map = MemoryStreamPool.Shared.CreateStreamWriter (Encoding.Default)) {
+			using (var acw_map = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 				foreach (TypeDefinition type in javaTypes) {
 					string managedKey = type.FullName.Replace ('/', '.');
 					string javaKey = JavaNativeTypeManager.ToJniName (type).Replace ('/', '.');

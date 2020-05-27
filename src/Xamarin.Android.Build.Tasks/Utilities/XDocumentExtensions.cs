@@ -59,7 +59,7 @@ namespace Xamarin.Android.Tasks
 
 		public static bool SaveIfChanged (this XDocument document, string fileName)
 		{
-			using (var sw = MemoryStreamPool.Shared.CreateStreamWriter (Encoding.Default))
+			using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ())
 			using (var xw = new Monodroid.LinePreservedXmlWriter (sw)) {
 				xw.WriteNode (document.CreateNavigator (), false);
 				xw.Flush ();
