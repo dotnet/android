@@ -386,7 +386,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 		}
 
 		[Test]
-		[Category ("SmokeTests")]
+		[Category ("SmokeTests"), Category ("dotnet")]
 		public void CheckAppBundle ([Values (true, false)] bool isRelease)
 		{
 			var proj = new XamarinAndroidApplicationProject () {

@@ -31,7 +31,10 @@ namespace Xamarin.ProjectTools
 		public IList<BuildItem> References { get; private set; }
 		public IList<Package> PackageReferences { get; private set; }
 		public string GlobalPackagesFolder { get; set; } = Path.Combine (XABuildPaths.TopDirectory, "packages");
-		public IList<string> ExtraNuGetConfigSources { get; set; }
+		public IList<string> ExtraNuGetConfigSources { get; set; } = new List<string> {
+			Path.Combine (XABuildPaths.BuildOutputDirectory, "nupkgs"),
+			"https://dnceng.pkgs.visualstudio.com/public/_packaging/dotnet5/nuget/v3/index.json",
+		};
 
 		public virtual bool ShouldRestorePackageReferences => PackageReferences?.Count > 0;
 		/// <summary>
@@ -58,9 +61,14 @@ namespace Xamarin.ProjectTools
 			CommonProperties = new List<Property> ();
 			common = new PropertyGroup (null, CommonProperties);
 			DebugProperties = new List<Property> ();
-			debug = new PropertyGroup ($"'$(Configuration)|$(Platform)' == '{debugConfigurationName}|AnyCPU'", DebugProperties);
 			ReleaseProperties = new List<Property> ();
-			release = new PropertyGroup ($"'$(Configuration)|$(Platform)' == '{releaseConfigurationName}|AnyCPU'", ReleaseProperties);
+			if (Builder.UseDotNet) {
+				debug = new PropertyGroup ($"'$(Configuration)' == '{debugConfigurationName}'", DebugProperties);
+				release = new PropertyGroup ($"'$(Configuration)' == '{releaseConfigurationName}'", ReleaseProperties);
+			} else {
+				debug = new PropertyGroup ($"'$(Configuration)|$(Platform)' == '{debugConfigurationName}|AnyCPU'", DebugProperties);
+				release = new PropertyGroup ($"'$(Configuration)|$(Platform)' == '{releaseConfigurationName}|AnyCPU'", ReleaseProperties);
+			}
 
 			PropertyGroups.Add (common);
 			PropertyGroups.Add (debug);

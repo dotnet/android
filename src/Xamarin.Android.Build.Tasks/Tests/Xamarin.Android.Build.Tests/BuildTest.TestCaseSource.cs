@@ -57,7 +57,7 @@ namespace Xamarin.Android.Build.Tests
 
 		static object [] RuntimeChecks () => new object [] {
 			new object[] {
-				/* supportedAbi */     new string[] { "armeabi-v7a"},
+				/* supportedAbi */     "armeabi-v7a",
 				/* debugSymbols */     true ,
 				/* debugType */        "Full",
 				/* optimize */         true ,
@@ -65,7 +65,7 @@ namespace Xamarin.Android.Build.Tests
 				/* expectedResult */   "release",
 			},
 			new object[] {
-				/* supportedAbi */     new string[] { "armeabi-v7a"},
+				/* supportedAbi */     "armeabi-v7a",
 				/* debugSymbols */     true ,
 				/* debugType */        "Full",
 				/* optimize */         true ,
@@ -73,7 +73,7 @@ namespace Xamarin.Android.Build.Tests
 				/* expectedResult */   CommercialBuildAvailable ? "debug" : "release",
 			},
 			new object[] {
-				/* supportedAbi */     new string[] { "armeabi-v7a"},
+				/* supportedAbi */     "armeabi-v7a",
 				/* debugSymbols */     true ,
 				/* debugType */        "Full",
 				/* optimize */         false ,
@@ -81,7 +81,7 @@ namespace Xamarin.Android.Build.Tests
 				/* expectedResult */   "debug",
 			},
 			new object[] {
-				/* supportedAbi */     new string[] { "armeabi-v7a"},
+				/* supportedAbi */     "armeabi-v7a",
 				/* debugSymbols */     true ,
 				/* debugType */        "Full",
 				/* optimize */         false ,
@@ -89,7 +89,7 @@ namespace Xamarin.Android.Build.Tests
 				/* expectedResult */   "debug",
 			},
 			new object[] {
-				/* supportedAbi */     new string[] { "armeabi-v7a"},
+				/* supportedAbi */     "armeabi-v7a",
 				/* debugSymbols */     true ,
 				/* debugType */        "",
 				/* optimize */         true ,
@@ -97,7 +97,7 @@ namespace Xamarin.Android.Build.Tests
 				/* expectedResult */   "release",
 			},
 			new object[] {
-				/* supportedAbi */     new string[] { "armeabi-v7a"},
+				/* supportedAbi */     "armeabi-v7a",
 				/* debugSymbols */     true ,
 				/* debugType */        "",
 				/* optimize */         true ,
@@ -105,7 +105,7 @@ namespace Xamarin.Android.Build.Tests
 				/* expectedResult */   CommercialBuildAvailable ? "debug" : "release",
 			},
 			new object[] {
-				/* supportedAbi */     new string[] { "armeabi-v7a"},
+				/* supportedAbi */     "armeabi-v7a",
 				/* debugSymbols */     true ,
 				/* debugType */        "",
 				/* optimize */         false ,
@@ -113,7 +113,7 @@ namespace Xamarin.Android.Build.Tests
 				/* expectedResult */   "debug",
 			},
 			new object[] {
-				/* supportedAbi */     new string[] { "armeabi-v7a"},
+				/* supportedAbi */     "armeabi-v7a",
 				/* debugSymbols */     true ,
 				/* debugType */        "",
 				/* optimize */         false ,
@@ -121,7 +121,7 @@ namespace Xamarin.Android.Build.Tests
 				/* expectedResult */   "debug",
 			},
 			new object[] {
-				/* supportedAbi */     new string[] { "armeabi-v7a"},
+				/* supportedAbi */     "armeabi-v7a",
 				/* debugSymbols */     false ,
 				/* debugType */        "",
 				/* optimize */         null ,

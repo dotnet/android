@@ -9,7 +9,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Xml.XPath;
 using System.Xml.Linq;
-using Xamarin.Android.Tools.VSWhere;
 
 namespace Xamarin.ProjectTools
 {
@@ -17,6 +16,11 @@ namespace Xamarin.ProjectTools
 	{
 		const string SigSegvError = "Got a SIGSEGV while executing native code";
 		const string ConsoleLoggerError = "[ERROR] FATAL UNHANDLED EXCEPTION: System.ArgumentException: is negative";
+
+		/// <summary>
+		/// If true, use `dotnet build` and IShortFormProject throughout the tests
+		/// </summary>
+		public static bool UseDotNet { get; set; }
 
 		string root;
 		string buildLogFullPath;
@@ -282,11 +286,13 @@ namespace Xamarin.ProjectTools
 
 			var start = DateTime.UtcNow;
 			var args  = new StringBuilder ();
-			var psi   = new ProcessStartInfo (XABuildExe);
+			var psi   = new ProcessStartInfo (UseDotNet ? "dotnet" : XABuildExe);
 			var responseFile = Path.Combine (XABuildPaths.TestOutputDirectory, Path.GetDirectoryName (projectOrSolution), "project.rsp");
+			if (UseDotNet)
+				args.Append ("build ");
 			args.AppendFormat ("{0} /t:{1} {2}",
 					QuoteFileName (Path.Combine (XABuildPaths.TestOutputDirectory, projectOrSolution)), target, logger);
-			if (AutomaticNuGetRestore && restore) {
+			if (AutomaticNuGetRestore && restore && !UseDotNet) {
 				args.Append (" /restore");
 			}
 			args.Append ($" @\"{responseFile}\"");

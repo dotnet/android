@@ -24,19 +24,13 @@ namespace Xamarin.Android.Build.Tests
 	public partial class BuildTest : BaseTest
 	{
 		[Test]
-		public void BuildBasicApplication ()
+		[Category ("dotnet")]
+		public void BuildBasicApplication ([Values (true, false)] bool isRelease)
 		{
-			var proj = new XamarinAndroidApplicationProject ();
-			using (var b = CreateApkBuilder ("temp/BuildBasicApplication")) {
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-			}
-		}
-
-		[Test]
-		public void BuildBasicApplicationRelease ()
-		{
-			var proj = new XamarinAndroidApplicationProject () { IsRelease = true };
-			using (var b = CreateApkBuilder ("temp/BuildBasicApplicationRelease")) {
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
 		}
@@ -836,6 +830,7 @@ namespace UnamedProject
 		}
 
 		[Test]
+		[Category ("dotnet")]
 		public void BuildIncrementingClassName ()
 		{
 			int count = 0;
@@ -1373,7 +1368,7 @@ namespace UnnamedProject {
 		}
 
 		[Test]
-		[Category ("SmokeTests")]
+		[Category ("SmokeTests"), Category ("dotnet")]
 		public void BasicApplicationRepetitiveReleaseBuild ()
 		{
 			var proj = new XamarinAndroidApplicationProject () { IsRelease = true };
@@ -1444,6 +1439,7 @@ namespace UnnamedProject {
 		}
 
 		[Test]
+		[Category ("dotnet")]
 		public void BuildAppCheckDebugSymbols ()
 		{
 			var path = Path.Combine ("temp", TestContext.CurrentContext.Test.Name);
@@ -1949,6 +1945,7 @@ namespace App1
 #pragma warning restore 414
 
 		[Test]
+		[Category ("dotnet")]
 		[TestCaseSource (nameof (BuildApplicationWithJavaSourceChecks))]
 		public void BuildApplicationWithJavaSource (bool isRelease, bool expectedResult)
 		{
@@ -1980,17 +1977,21 @@ namespace App1
 		}
 
 		[Test]
+		[Category ("dotnet")]
 		[TestCaseSource (nameof (RuntimeChecks))]
-		public void CheckWhichRuntimeIsIncluded (string[] supportedAbi, bool debugSymbols, string debugType, bool? optimize, bool? embedassebmlies, string expectedRuntime) {
+		public void CheckWhichRuntimeIsIncluded (string supportedAbi, bool debugSymbols, string debugType, bool? optimize, bool? embedAssemblies, string expectedRuntime) {
 			var proj = new XamarinAndroidApplicationProject ();
+			if (Builder.UseDotNet) {
+				proj.SetRuntimeIdentifier (supportedAbi);
+			}
 			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugSymbols", debugSymbols);
 			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugType", debugType);
 			if (optimize.HasValue)
 				proj.SetProperty (proj.ActiveConfigurationProperties, "Optimize", optimize.Value);
 			else
 				proj.RemoveProperty (proj.ActiveConfigurationProperties, "Optimize");
-			if (embedassebmlies.HasValue)
-				proj.SetProperty (proj.ActiveConfigurationProperties, KnownProperties.EmbedAssembliesIntoApk, embedassebmlies.Value);
+			if (embedAssemblies.HasValue)
+				proj.SetProperty (proj.ActiveConfigurationProperties, KnownProperties.EmbedAssembliesIntoApk, embedAssemblies.Value);
 			else
 				proj.RemoveProperty (proj.ActiveConfigurationProperties, KnownProperties.EmbedAssembliesIntoApk);
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
@@ -1999,14 +2000,16 @@ namespace App1
 				var apkPath = Path.Combine (Root, b.ProjectDirectory,
 					proj.IntermediateOutputPath,"android", "bin", "UnnamedProject.UnnamedProject.apk");
 				using (var apk = ZipHelper.OpenZip (apkPath)) {
-					foreach (var abi in supportedAbi) {
-						var runtime = runtimeInfo.FirstOrDefault (x => x.Abi == abi && x.Runtime == expectedRuntime);
-						Assert.IsNotNull (runtime, "Could not find the expected runtime.");
-						var inApk = ZipHelper.ReadFileFromZip (apk, String.Format ("lib/{0}/{1}", abi, runtime.Name));
-						var inApkRuntime = runtimeInfo.FirstOrDefault (x => x.Abi == abi && x.Size == inApk.Length);
-						Assert.IsNotNull (inApkRuntime, "Could not find the actual runtime used.");
+					var runtime = runtimeInfo.FirstOrDefault (x => x.Abi == supportedAbi && x.Runtime == expectedRuntime);
+					Assert.IsNotNull (runtime, "Could not find the expected runtime.");
+					var inApk = ZipHelper.ReadFileFromZip (apk, $"lib/{supportedAbi}/{runtime.Name}");
+					var inApkRuntime = runtimeInfo.FirstOrDefault (x => x.Abi == supportedAbi && x.Size == inApk.Length);
+					Assert.IsNotNull (inApkRuntime, "Could not find the actual runtime used.");
+					// TODO: file sizes will not match for .NET 5
+					// TODO: libmono-profiler-log.so is not available in .NET 5 yet
+					if (!Builder.UseDotNet) {
 						Assert.AreEqual (runtime.Size, inApkRuntime.Size, "expected {0} got {1}", expectedRuntime, inApkRuntime.Runtime);
-						inApk = ZipHelper.ReadFileFromZip (apk, string.Format ("lib/{0}/libmono-profiler-log.so", abi));
+						inApk = ZipHelper.ReadFileFromZip (apk, $"lib/{supportedAbi}/libmono-profiler-log.so");
 						if (string.Compare (expectedRuntime, "debug", StringComparison.OrdinalIgnoreCase) == 0) {
 							if (inApk == null)
 								Assert.Fail ("libmono-profiler-log.so should exist in the apk.");
@@ -2208,7 +2211,7 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 		}
 
 		[Test]
-		[Category ("SmokeTests")]
+		[Category ("SmokeTests"), Category ("dotnet")]
 		public void BuildWithExternalJavaLibrary ()
 		{
 			var path = Path.Combine ("temp", "BuildWithExternalJavaLibrary");
@@ -2638,6 +2641,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		}
 
 		[Test]
+		[Category ("dotnet")]
 		public void BuildReleaseApplicationWithNugetPackages ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -2844,7 +2848,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		}
 
 		[Test]
-		[Category ("SmokeTests")]
+		[Category ("SmokeTests"), Category ("dotnet")]
 		public void BuildBasicApplicationCheckPdb ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
@@ -3558,7 +3562,7 @@ namespace UnnamedProject {
 		}
 
 		[Test]
-		[Category ("SmokeTests")]
+		[Category ("SmokeTests"), Category ("dotnet")]
 		public void Desugar ([Values (true, false)] bool isRelease, [Values ("dx", "d8")] string dexTool, [Values ("", "proguard", "r8")] string linkTool)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -3787,6 +3791,7 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 		}
 
 		[Test]
+		[Category ("dotnet")]
 		public void DuplicateJCWNames ()
 		{
 			var source = @"[Android.Runtime.Register (""examplelib.EmptyClass"")] public class EmptyClass : Java.Lang.Object { }";
@@ -3831,6 +3836,7 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 		}
 
 		[Test]
+		[Category ("dotnet")]
 		public void DuplicateManagedNames ()
 		{
 			var source = @"public class EmptyClass : Java.Lang.Object { }";

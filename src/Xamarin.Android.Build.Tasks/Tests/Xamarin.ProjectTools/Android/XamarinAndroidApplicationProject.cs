@@ -36,15 +36,29 @@ namespace Xamarin.ProjectTools
 		public XamarinAndroidApplicationProject (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release")
 			: base (debugConfigurationName, releaseConfigurationName)
 		{
-			SetProperty ("AndroidApplication", "True");
+			if (Builder.UseDotNet) {
+				SetProperty (KnownProperties.OutputType, "Exe");
+				SetProperty ("XamarinAndroidSupportSkipVerifyVersions", "True");
 
-			SetProperty ("AndroidResgenClass", "Resource");
-			SetProperty ("AndroidResgenFile", () => "Resources\\Resource.designer" + Language.DefaultDesignerExtension);
-			SetProperty ("AndroidManifest", "Properties\\AndroidManifest.xml");
-			SetProperty (DebugProperties, "AndroidLinkMode", "None");
-			SetProperty (ReleaseProperties, "AndroidLinkMode", "SdkOnly");
-			SetProperty (DebugProperties, KnownProperties.EmbedAssembliesIntoApk, "False", "'$(EmbedAssembliesIntoApk)' == ''");
-			SetProperty (ReleaseProperties, KnownProperties.EmbedAssembliesIntoApk, "True", "'$(EmbedAssembliesIntoApk)' == ''");
+				// Workaround for AndroidX, see: https://github.com/xamarin/AndroidSupportComponents/pull/239
+				Imports.Add (new Import (() => "Directory.Build.targets") {
+					TextContent = () =>
+						@"<Project>
+							<PropertyGroup>
+								<VectorDrawableCheckBuildToolsVersionTaskBeforeTargets />
+							</PropertyGroup>
+						</Project>"
+				});
+			} else {
+				SetProperty ("AndroidApplication", "True");
+				SetProperty ("AndroidResgenClass", "Resource");
+				SetProperty ("AndroidResgenFile", () => "Resources\\Resource.designer" + Language.DefaultDesignerExtension);
+				SetProperty ("AndroidManifest", "Properties\\AndroidManifest.xml");
+				SetProperty (DebugProperties, "AndroidLinkMode", "None");
+				SetProperty (ReleaseProperties, "AndroidLinkMode", "SdkOnly");
+				SetProperty (DebugProperties, KnownProperties.EmbedAssembliesIntoApk, "False", "'$(EmbedAssembliesIntoApk)' == ''");
+				SetProperty (ReleaseProperties, KnownProperties.EmbedAssembliesIntoApk, "True", "'$(EmbedAssembliesIntoApk)' == ''");
+			}
 
 			AndroidManifest = default_android_manifest;
 			LayoutMain = default_layout_main;

@@ -1,9 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Xml;
-using Microsoft.Build.Construction;
 
 namespace Xamarin.ProjectTools
 {
@@ -18,8 +14,10 @@ namespace Xamarin.ProjectTools
 		public XamarinAndroidLibraryProject (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release")
 			: base (debugConfigurationName, releaseConfigurationName)
 		{
-			SetProperty ("AndroidApplication", "False");
-			SetProperty ("AndroidResgenFile", Path.Combine ("Resources", "Resource.designer.cs"));
+			if (!Builder.UseDotNet) {
+				SetProperty ("AndroidApplication", "False");
+				SetProperty ("AndroidResgenFile", Path.Combine ("Resources", "Resource.designer.cs"));
+			}
 
 			AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\Strings.xml") { TextContent = () => StringsXml.Replace ("${PROJECT_NAME}", ProjectName) });
 			StringsXml = default_strings_xml;
