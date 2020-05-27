@@ -2592,6 +2592,7 @@ because xbuild doesn't support framework reference assemblies.
   </SignAndroidPackageDependsOn>
   <!-- When inside an IDE, Build has just been run. This is a minimal list of targets for SignAndroidPackage. -->
   <SignAndroidPackageDependsOn Condition=" '$(BuildingInsideVisualStudio)' == 'True' ">
+    BuildOnlySettings;
     _CreatePropertiesCache;
     ResolveReferences;
     _CopyPackage;
