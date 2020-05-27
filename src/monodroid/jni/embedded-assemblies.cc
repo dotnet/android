@@ -282,7 +282,7 @@ EmbeddedAssemblies::typemap_java_to_managed (const char *java_type_name)
 	}
 
 	if (XA_UNLIKELY (entry == nullptr)) {
-		log_warn (LOG_ASSEMBLY, "typemap: unable to find mapping to a managed type from Java type '%s'", java_type_name);
+		log_info (LOG_ASSEMBLY, "typemap: unable to find mapping to a managed type from Java type '%s'", java_type_name);
 		return nullptr;
 	}
 
@@ -314,7 +314,7 @@ EmbeddedAssemblies::typemap_java_to_managed (const char *java_type_name)
 	TypeMapModule *module;
 	const TypeMapJava *java_entry = binary_search<const char, TypeMapJava, compare_java_name, true> (java_type_name, map_java, java_type_count, java_name_width);
 	if (java_entry == nullptr) {
-		log_warn (LOG_ASSEMBLY, "typemap: unable to find mapping to a managed type from Java type '%s'", java_type_name);
+		log_info (LOG_ASSEMBLY, "typemap: unable to find mapping to a managed type from Java type '%s'", java_type_name);
 		return nullptr;
 	}
 
@@ -326,7 +326,7 @@ EmbeddedAssemblies::typemap_java_to_managed (const char *java_type_name)
 	module = const_cast<TypeMapModule*>(&map_modules[java_entry->module_index]);
 	const TypeMapModuleEntry *entry = binary_search <uint32_t, TypeMapModuleEntry, compare_type_token> (&java_entry->type_token_id, module->map, module->entry_count);
 	if (entry == nullptr) {
-		log_warn (LOG_ASSEMBLY, "typemap: unable to find mapping from Java type '%s' to managed type with token ID %u in module [%s]", java_type_name, java_entry->type_token_id, MonoGuidString (module->module_uuid).get ());
+		log_info (LOG_ASSEMBLY, "typemap: unable to find mapping from Java type '%s' to managed type with token ID %u in module [%s]", java_type_name, java_entry->type_token_id, MonoGuidString (module->module_uuid).get ());
 		return nullptr;
 	}
 	uint32_t type_token_id = java_entry->type_token_id;
@@ -451,13 +451,13 @@ EmbeddedAssemblies::typemap_managed_to_java ([[maybe_unused]] MonoType *type, Mo
 		entry = typemap_managed_to_java (full_name);
 
 		if (XA_UNLIKELY (entry == nullptr)) {
-			log_warn (LOG_ASSEMBLY, error_message, full_name);
+			log_info (LOG_ASSEMBLY, error_message, full_name);
 		}
 	} else {
 		simple_pointer_guard<char> full_name = utils.string_concat (type_name.get (), ", ", image_name);
 		entry = typemap_managed_to_java (full_name.get ());
 		if (XA_UNLIKELY (entry == nullptr)) {
-			log_warn (LOG_ASSEMBLY, error_message, full_name.get ());
+			log_info (LOG_ASSEMBLY, error_message, full_name.get ());
 		}
 	}
 
@@ -524,7 +524,7 @@ EmbeddedAssemblies::typemap_managed_to_java ([[maybe_unused]] MonoType *type, Mo
 		}
 
 		if (entry == nullptr) {
-			log_warn (LOG_ASSEMBLY, "typemap: type with token %d (0x%x) in module {%s} (%s) not found.", token, token, MonoGuidString (mvid).get (), match->assembly_name);
+			log_info (LOG_ASSEMBLY, "typemap: type with token %d (0x%x) in module {%s} (%s) not found.", token, token, MonoGuidString (mvid).get (), match->assembly_name);
 			return nullptr;
 		}
 	}
@@ -569,7 +569,7 @@ EmbeddedAssemblies::typemap_managed_to_java (MonoReflectionType *reflection_type
 
 	MonoType *type = mono_reflection_type_get_type (reflection_type);
 	if (type == nullptr) {
-		log_warn (LOG_DEFAULT, "Failed to map reflection type to MonoType");
+		log_warn (LOG_ASSEMBLY, "Failed to map reflection type to MonoType");
 		return nullptr;
 	}
 
@@ -884,7 +884,7 @@ EmbeddedAssemblies::try_load_typemaps_from_directory (const char *path)
 	simple_pointer_guard<char[]> dir_path (utils.path_combine (path, "typemaps"));
 	monodroid_dir_t *dir;
 	if ((dir = utils.monodroid_opendir (dir_path)) == nullptr) {
-		log_warn (LOG_DEFAULT, "typemap: could not open directory: `%s`", dir_path.get ());
+		log_warn (LOG_ASSEMBLY, "typemap: could not open directory: `%s`", dir_path.get ());
 		return;
 	}
 
