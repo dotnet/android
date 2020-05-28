@@ -1,10 +1,13 @@
 using System;
+using System.IO;
 using System.Collections.Generic;
 
 namespace Xamarin.Android.Prepare
 {
 	class LinuxDebian : LinuxDebianCommon
 	{
+		const string DebianVersionPath = "/etc/debian_version";
+
 		static readonly List<DebianLinuxProgram> packages = new List<DebianLinuxProgram> {
 			new DebianLinuxProgram ("libtool-bin", "libtool"),
 		};
@@ -15,7 +18,7 @@ namespace Xamarin.Android.Prepare
 
 		// zulu-8 does NOT exist as official Debian package! We need it for our bots, but we have to figure out what to
 		// do with Debian 10+ in general, as it does not contain OpenJDK 8 anymore and we require it to work.
-		static readonly List<DebianLinuxProgram> packages10AndNewer = new List<DebianLinuxProgram> {
+		static readonly List<DebianLinuxProgram> packages10AndNewerBuildBots = new List<DebianLinuxProgram> {
 			new DebianLinuxProgram ("zulu-8"),
 		};
 
@@ -32,10 +35,25 @@ namespace Xamarin.Android.Prepare
 		{
 			base.InitializeDependencies ();
 
-			if (DebianRelease.Major >= 10 || (IsTesting && String.Compare ("buster", CodeName, StringComparison.OrdinalIgnoreCase) == 0))
-				Dependencies.AddRange (packages10AndNewer);
-			else
+			if (DebianRelease.Major >= 10 || (IsTesting && String.Compare ("buster", CodeName, StringComparison.OrdinalIgnoreCase) == 0)) {
+				if (Context.IsRunningOnHostedAzureAgent)
+					Dependencies.AddRange (packages10AndNewerBuildBots);
+			} else
 				Dependencies.AddRange (packagesPre10);
+		}
+
+		static bool IsDebian10OrNewer (string[] lines)
+		{
+			if (lines == null || lines.Length < 1)
+				return false;
+
+			string version = lines[0].Trim ();
+			if (String.IsNullOrEmpty (version))
+				return false;
+
+			return
+				version.IndexOf ("bullseye", StringComparison.OrdinalIgnoreCase) >= 0 ||
+				version.IndexOf ("sid", StringComparison.OrdinalIgnoreCase) >= 0;
 		}
 
 		protected override bool InitOS ()
@@ -54,8 +72,12 @@ namespace Xamarin.Android.Prepare
 					}
 
 					IsTesting = true;
-					return true;
 				}
+			}
+
+			if (debianRelease.Major < 10 && DerivativeDistro && File.Exists (DebianVersionPath)) {
+				if (IsDebian10OrNewer (File.ReadAllLines (DebianVersionPath)))
+				    debianRelease = new Version (10, 0); // faking it, but it's ok
 			}
 
 			DebianRelease = debianRelease;
