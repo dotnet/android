@@ -69,16 +69,7 @@ namespace Xamarin.ProjectTools
 			Packages = new List<Package> ();
 			Imports = new List<Import> ();
 
-			// Feeds only needed for .NET 5+
-			if (SetExtraNuGetConfigSources) {
-				ExtraNuGetConfigSources = new List<string> {
-					Path.Combine (XABuildPaths.BuildOutputDirectory, "nupkgs"),
-					"https://dnceng.pkgs.visualstudio.com/public/_packaging/dotnet5/nuget/v3/index.json",
-				};
-			}
 		}
-
-		protected virtual bool SetExtraNuGetConfigSources => Builder.UseDotNet;
 
 		public string GetProperty (string name)
 		{
