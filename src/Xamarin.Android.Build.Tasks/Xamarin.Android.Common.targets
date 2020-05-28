@@ -563,6 +563,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		ResourceName="XA1011"
 		Condition=" '$(AndroidLinkTool)' == 'proguard' And '$(AndroidDexTool)' == 'd8' "
 	/>
+	<AndroidWarning Code="XA1023"
+		ResourceName="XA1023"
+		Condition=" '$(AndroidDexTool)' == 'dx' "
+	/>
 </Target>
 
 <Target Name="UpdateGeneratedFiles"
