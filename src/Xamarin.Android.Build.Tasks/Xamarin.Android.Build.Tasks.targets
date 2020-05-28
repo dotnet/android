@@ -277,7 +277,7 @@
       <FileWrites Include="$(_GeneratedProfileClass)" />
     </ItemGroup>
   </Target>
-  
+
   <Target Name="_CopyExtractedMultiDexJar"
     Inputs="$(_AndroidSdkLocation)\$(_MultiDexAarInAndroidSdk);$(_SupportLicense)"
     Outputs="$(OutputPath)android-support-multidex.jar;$(OutputPath)MULTIDEX_JAR_LICENSE">
@@ -376,10 +376,10 @@
 
   <!-- Copy package ref symbols for our installers. '$(Pkg*)' props are set during NuGet restore when GeneratePathProperty="true" -->
   <Target Name="_CopyExtraPackageContent"
-      Inputs="$(PkgXamarin_LibZipSharp)\lib\$(TargetFrameworkNETStandard)\libZipSharp.pdb;$(PkgXamarin_Build_AsyncTask)\lib\$(TargetFrameworkNETStandard)\Xamarin.Build.AsyncTask.pdb"
+      Inputs="$(PkgXamarin_LibZipSharp)\lib\$(TargetFrameworkNETStandard)\libZipSharp.pdb;$(PkgXamarin_Build_AsyncTask)\lib\$(TargetFrameworkNETStandard)\Xamarin.Build.AsyncTask.pdb;$(PkgMono_Posix_NETStandard)\ref\$(TargetFrameworkNETStandard)\Mono.Posix.NETStandard.dll"
       Outputs="$(OutputPath)\libZipSharp.pdb;$(OutputPath)\Xamarin.Build.AsyncTask.pdb" >
     <Copy
-        SourceFiles="$(PkgXamarin_LibZipSharp)\lib\$(TargetFrameworkNETStandard)\libZipSharp.pdb;$(PkgXamarin_Build_AsyncTask)\lib\$(TargetFrameworkNETStandard)\Xamarin.Build.AsyncTask.pdb"
+        SourceFiles="$(PkgXamarin_LibZipSharp)\lib\$(TargetFrameworkNETStandard)\libZipSharp.pdb;$(PkgXamarin_Build_AsyncTask)\lib\$(TargetFrameworkNETStandard)\Xamarin.Build.AsyncTask.pdb;$(PkgMono_Posix_NETStandard)\ref\$(TargetFrameworkNETStandard)\Mono.Posix.NETStandard.dll"
         DestinationFolder="$(OutputPath)"
     />
   </Target>
