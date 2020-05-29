@@ -166,6 +166,13 @@ stages:
     - script: make package-deb V=1 CONFIGURATION=$(XA.Build.Configuration)
       displayName: make package-deb
 
+    - task: MSBuild@1
+      displayName: pack all nupkgs
+      inputs:
+        solution: $(System.DefaultWorkingDirectory)/build-tools/create-packs/Microsoft.Android.Sdk.proj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: /t:CreateAllPacks /restore /bl:$(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/create-all-packs.binlog
+
     - script: >
         mkdir -p $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/linux-artifacts &&
         cp $(System.DefaultWorkingDirectory)/*xamarin.android*.tar.bz2 $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/linux-artifacts &&
@@ -179,6 +186,12 @@ stages:
       inputs:
         artifactName: Linux Packages
         targetPath: $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/linux-artifacts
+
+    - task: PublishPipelineArtifact@1
+      displayName: upload nupkgs
+      inputs:
+        artifactName: Linux $(NuGetArtifactName)
+        targetPath: $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
 
     - template: yaml-templates/upload-results.yaml
       parameters:

@@ -192,7 +192,7 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.CompilerServices.SymbolWriter.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.CompilerServices.SymbolWriter.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Options.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Terminal.dll" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Terminal.dll" Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\monodoc.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\monodoc.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\MULTIDEX_JAR_LICENSE" />
@@ -253,8 +253,8 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.ApiXmlAdjuster.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.Bytecode.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.Bytecode.pdb" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.JavaDocImporter.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.JavaDocImporter.pdb" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.JavadocImporter.dll" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.JavadocImporter.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.VisualBasic.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Build.AsyncTask.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Build.AsyncTask.pdb" />
