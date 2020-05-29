@@ -49,8 +49,11 @@ the new entry point for short-form style Android projets in .NET 5.
       <AndroidSdkBuildToolsUnix Include="@(_MSBuildFilesUnix);@(_MSBuildFilesUnixSwab);@(_MSBuildFilesUnixSign);@(_MSBuildFilesUnixSignAndHarden)" >
         <RelativePath>$([MSBuild]::MakeRelative($(MSBuildSrcDir), %(FullPath)))</RelativePath>
       </AndroidSdkBuildToolsUnix>
-      <AndroidSdkBuildToolsUnix Include="$(PkgMono_Posix_NETStandard)\runtimes\osx\native\libMonoPosixHelper.dylib" >
+      <AndroidSdkBuildToolsUnix Include="$(PkgMono_Posix_NETStandard)\runtimes\osx\native\libMonoPosixHelper.dylib" Condition="$([MSBuild]::IsOSPlatform('osx'))">
         <RelativePath>libMonoPosixHelper.dylib</RelativePath>
+      </AndroidSdkBuildToolsUnix>
+      <AndroidSdkBuildToolsUnix Include="$(PkgMono_Posix_NETStandard)\runtimes\linux-x64\native\libMonoPosixHelper.so" Condition="$([MSBuild]::IsOSPlatform('linux'))" >
+        <RelativePath>libMonoPosixHelper.so</RelativePath>
       </AndroidSdkBuildToolsUnix>
     </ItemGroup>
     <!-- Copy only the required tools to new folder. Skip Unix item copying on Windows. -->
@@ -63,7 +66,7 @@ the new entry point for short-form style Android projets in .NET 5.
         SourceFiles="@(AndroidSdkBuildToolsUnix)"
         DestinationFiles="@(AndroidSdkBuildToolsUnix->'$(ToolsSourceDir)%(RelativePath)')"
         SkipUnchangedFiles="True"
-        Condition="$([MSBuild]::IsOSPlatform('osx'))"
+        Condition="$([MSBuild]::IsOSPlatform('osx')) or $([MSBuild]::IsOSPlatform('linux'))"
     />
     <Copy
         SourceFiles="@(VersionFiles)"
