@@ -25,7 +25,6 @@ namespace Xamarin.ProjectTools
 		string root;
 		string buildLogFullPath;
 		public bool IsUnix { get; set; }
-		public bool RunningMSBuild { get; set; }
 		/// <summary>
 		/// This passes /p:BuildingInsideVisualStudio=True, command-line to MSBuild
 		/// </summary>
@@ -42,29 +41,25 @@ namespace Xamarin.ProjectTools
 		public TimeSpan LastBuildTime { get; protected set; }
 		public string BuildLogFile { get; set; }
 		public bool ThrowOnBuildFailure { get; set; }
-		public bool RequiresMSBuild { get; set; }
 		/// <summary>
 		/// True if NuGet restore occurs automatically (default)
 		/// </summary>
 		public bool AutomaticNuGetRestore { get; set; } = true;
 
-		public string XABuildExe {
+		public string BuildTool {
 			get {
-				RunningMSBuild = true;
+				if (UseDotNet)
+					return "dotnet";
+
 				string xabuild;
 				if (IsUnix) {
-					var useMSBuild = Environment.GetEnvironmentVariable ("USE_MSBUILD");
-					if (!string.IsNullOrEmpty (useMSBuild) && useMSBuild == "0" && !RequiresMSBuild) {
-						RunningMSBuild = false;
-					}
-
 					xabuild = XABuildPaths.XABuildScript;
 					if (File.Exists (xabuild))
 						return xabuild;
 					xabuild = Path.GetFullPath (Path.Combine (Root, "..", "..", "..", "..", "..", "..", "..", "out", "bin", "xabuild"));
 					if (File.Exists (xabuild))
 						return xabuild;
-					return RunningMSBuild ? "msbuild" : "xbuild";
+					return "msbuild";
 				}
 
 				xabuild = XABuildPaths.XABuildExe;
@@ -251,8 +246,6 @@ namespace Xamarin.ProjectTools
 		{
 			IsUnix = Environment.OSVersion.Platform != PlatformID.Win32NT;
 			BuildLogFile = "build.log";
-			Console.WriteLine ($"Using {XABuildExe}");
-			Console.WriteLine ($"Using {(RunningMSBuild ? "msbuild" : "xbuild")}");
 		}
 
 		public void Dispose ()
@@ -286,7 +279,7 @@ namespace Xamarin.ProjectTools
 
 			var start = DateTime.UtcNow;
 			var args  = new StringBuilder ();
-			var psi   = new ProcessStartInfo (UseDotNet ? "dotnet" : XABuildExe);
+			var psi   = new ProcessStartInfo (BuildTool);
 			var responseFile = Path.Combine (XABuildPaths.TestOutputDirectory, Path.GetDirectoryName (projectOrSolution), "project.rsp");
 			if (UseDotNet)
 				args.Append ("build ");
@@ -298,7 +291,7 @@ namespace Xamarin.ProjectTools
 			args.Append ($" @\"{responseFile}\"");
 			using (var sw = new StreamWriter (responseFile, append: false, encoding: Encoding.UTF8)) {
 				sw.WriteLine ($" /p:BuildingInsideVisualStudio={BuildingInsideVisualStudio}");
-				if (BuildingInsideVisualStudio && RunningMSBuild) {
+				if (BuildingInsideVisualStudio) {
 					sw.WriteLine (" /p:BuildingOutOfProcess=true");
 				}
 				string sdkPath = AndroidSdkResolver.GetAndroidSdkPath ();
@@ -318,10 +311,10 @@ namespace Xamarin.ProjectTools
 				if (!string.IsNullOrEmpty (msbuildArgs)) {
 					sw.WriteLine (msbuildArgs);
 				}
-				if (RunningMSBuild) {
-					psi.EnvironmentVariables ["MSBUILD"] = "msbuild";
-					sw.WriteLine ($" /bl:\"{Path.GetFullPath (Path.Combine (XABuildPaths.TestOutputDirectory, Path.GetDirectoryName (projectOrSolution), "msbuild.binlog"))}\"");
-				}
+
+				psi.EnvironmentVariables ["MSBUILD"] = "msbuild";
+				sw.WriteLine ($" /bl:\"{Path.GetFullPath (Path.Combine (XABuildPaths.TestOutputDirectory, Path.GetDirectoryName (projectOrSolution), "msbuild.binlog"))}\"");
+
 				if (environmentVariables != null) {
 					foreach (var kvp in environmentVariables) {
 						psi.EnvironmentVariables [kvp.Key] = kvp.Value;
@@ -383,6 +376,7 @@ namespace Xamarin.ProjectTools
 							stdout.Set ();
 					};
 					p.StartInfo = psi;
+					Console.WriteLine ($"{psi.FileName} {psi.Arguments}");
 					p.Start ();
 					p.BeginOutputReadLine ();
 					p.BeginErrorReadLine ();

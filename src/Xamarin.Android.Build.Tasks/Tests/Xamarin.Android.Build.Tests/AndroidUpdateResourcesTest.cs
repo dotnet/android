@@ -1130,7 +1130,7 @@ namespace Lib1 {
 				if (useAapt2) {
 					StringAssertEx.DoesNotContain ("APT0000", builder.LastBuildOutput, "Build output should not contain an APT0000 warning");
 				} else {
-					var expected = builder.RunningMSBuild ? "warning APT1146: max res 26, skipping values-v27" : "warning APT1146: warning : max res 26, skipping values-v27";
+					var expected = "warning APT1146: max res 26, skipping values-v27";
 					StringAssertEx.Contains (expected, builder.LastBuildOutput, "Build output should contain an APT1146 warning about 'max res 26, skipping values-v27'");
 				}
 			}
