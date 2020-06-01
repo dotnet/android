@@ -302,23 +302,20 @@
       <HardenRuntime>True</HardenRuntime>
       <EntitlementsPath>$(DefaultRuntimeEntitlementsPath)</EntitlementsPath>
     </_MSBuildFilesUnixSignAndHarden>
-    <_MSBuildFilesUnixSwab>
-      <SwabFile>True</SwabFile>
-    </_MSBuildFilesUnixSwab>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <_MSBuildFilesUnixSwab Include="$(MSBuildSrcDir)\$(HostOS)\ndk\aarch64-linux-android-as" />
-    <_MSBuildFilesUnixSwab Include="$(MSBuildSrcDir)\$(HostOS)\ndk\aarch64-linux-android-ld" />
-    <_MSBuildFilesUnixSwab Include="$(MSBuildSrcDir)\$(HostOS)\ndk\aarch64-linux-android-strip" />
-    <_MSBuildFilesUnixSwab Include="$(MSBuildSrcDir)\$(HostOS)\ndk\arm-linux-androideabi-as" />
-    <_MSBuildFilesUnixSwab Include="$(MSBuildSrcDir)\$(HostOS)\ndk\arm-linux-androideabi-ld" />
-    <_MSBuildFilesUnixSwab Include="$(MSBuildSrcDir)\$(HostOS)\ndk\arm-linux-androideabi-strip" />
-    <_MSBuildFilesUnixSwab Include="$(MSBuildSrcDir)\$(HostOS)\ndk\i686-linux-android-as" />
-    <_MSBuildFilesUnixSwab Include="$(MSBuildSrcDir)\$(HostOS)\ndk\i686-linux-android-ld" />
-    <_MSBuildFilesUnixSwab Include="$(MSBuildSrcDir)\$(HostOS)\ndk\i686-linux-android-strip" />
-    <_MSBuildFilesUnixSwab Include="$(MSBuildSrcDir)\$(HostOS)\ndk\x86_64-linux-android-as" />
-    <_MSBuildFilesUnixSwab Include="$(MSBuildSrcDir)\$(HostOS)\ndk\x86_64-linux-android-ld" />
-    <_MSBuildFilesUnixSwab Include="$(MSBuildSrcDir)\$(HostOS)\ndk\x86_64-linux-android-strip" />
+    <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\ndk\aarch64-linux-android-as" />
+    <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\ndk\aarch64-linux-android-ld" />
+    <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\ndk\aarch64-linux-android-strip" />
+    <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\ndk\arm-linux-androideabi-as" />
+    <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\ndk\arm-linux-androideabi-ld" />
+    <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\ndk\arm-linux-androideabi-strip" />
+    <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\ndk\i686-linux-android-as" />
+    <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\ndk\i686-linux-android-ld" />
+    <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\ndk\i686-linux-android-strip" />
+    <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\ndk\x86_64-linux-android-as" />
+    <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\ndk\x86_64-linux-android-ld" />
+    <_MSBuildFilesUnixSignAndHarden Include="$(MSBuildSrcDir)\$(HostOS)\ndk\x86_64-linux-android-strip" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\illinkanalyzer" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\jit-times" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\$(HostOS)\aprofutil" />
@@ -442,7 +439,7 @@
       <MSBuildItemsWin Include="@(_DesignerFilesWin)">
         <RelativePath>bcl\%(RecursiveDir)\%(Filename)%(Extension)</RelativePath>
       </MSBuildItemsWin>
-      <MSBuildItemsUnix Include="@(_MSBuildFiles);@(_MSBuildFilesUnix);@(_MSBuildFilesUnixSwab);@(_MSBuildFilesUnixSign);@(_MSBuildFilesUnixSignAndHarden)">
+      <MSBuildItemsUnix Include="@(_MSBuildFiles);@(_MSBuildFilesUnix);@(_MSBuildFilesUnixSign);@(_MSBuildFilesUnixSignAndHarden)">
         <RelativePath>$([MSBuild]::MakeRelative($(MSBuildSrcDir), %(FullPath)))</RelativePath>
       </MSBuildItemsUnix>
       <MSBuildItemsUnix Include="@(_MSBuildTargetsSrcFiles)">

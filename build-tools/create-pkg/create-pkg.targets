@@ -105,9 +105,6 @@
   <Target Name="_PrepareForNotarization"
       Condition=" '$(HostOS)' == 'Darwin' And '$(RunningOnCI)' == 'true' And '$(XAOSSBuild)' != 'true' "
       DependsOnTargets="_CreateSymbolicLinks" >
-    <Exec Command="dd if=&quot;%(CopiedMSBuildItemsUnix.Identity)&quot; of=&quot;%(CopiedMSBuildItemsUnix.Identity).swab&quot; conv=swab"
-        Condition=" '%(CopiedMSBuildItemsUnix.SwabFile)' == 'True' " />
-    <Delete Files="%(CopiedMSBuildItemsUnix.Identity)" Condition=" '%(CopiedMSBuildItemsUnix.SwabFile)' == 'True' " />
     <Exec Command="codesign $(CodesignArgs) &quot;%(CopiedMSBuildItemsUnix.Identity)&quot;"
         Condition=" '%(CopiedMSBuildItemsUnix.CodeSign)' == 'True' And '%(CopiedMSBuildItemsUnix.HardenRuntime)' != 'True' " />
     <Exec Command="codesign $(CodesignArgs) -o runtime --entitlements &quot;%(CopiedMSBuildItemsUnix.EntitlementsPath)&quot; &quot;%(CopiedMSBuildItemsUnix.Identity)&quot;"
