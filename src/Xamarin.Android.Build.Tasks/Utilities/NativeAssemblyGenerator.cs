@@ -239,6 +239,27 @@ namespace Xamarin.Android.Tasks
 			return $"{value}";
 		}
 
+		protected void WriteCommSymbol (StreamWriter output, string symbolName, ulong size, uint alignment)
+		{
+			output.Write (Indent);
+			output.Write (".type");
+			output.Write (Indent);
+			output.Write (symbolName);
+			output.Write (", ");
+			output.Write (TargetProvider.TypePrefix);
+			output.WriteLine ("object");
+
+			output.Write (Indent);
+			output.Write (".local");
+			output.Write (Indent);
+			output.WriteLine (symbolName);
+
+			output.Write (Indent);
+			output.Write (".comm");
+			output.Write (Indent);
+			output.WriteLine ($"{symbolName},{size},{alignment}");
+		}
+
 		protected uint WritePointer (StreamWriter output, string targetName = null, string label = null, bool isGlobal = false)
 		{
 			uint fieldSize = UpdateSize (output, targetName ?? String.Empty);

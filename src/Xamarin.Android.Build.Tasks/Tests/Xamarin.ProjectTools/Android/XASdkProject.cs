@@ -1,11 +1,19 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 
 namespace Xamarin.ProjectTools
 {
 	public class XASdkProject : DotNetStandard
 	{
+		public static readonly string SdkVersion = typeof (XASdkProject).Assembly
+			.GetCustomAttributes<AssemblyMetadataAttribute> ()
+			.Where (attr => attr.Key == "SdkVersion")
+			.Select (attr => attr.Value)
+			.FirstOrDefault () ?? "0.0.1";
+
 		const string default_strings_xml = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <resources>
 	<string name=""hello"">Hello World, Click Me!</string>
@@ -36,17 +44,13 @@ namespace Xamarin.ProjectTools
 		public string PackageName { get; set; }
 		public string JavaPackageName { get; set; }
 
-		public XASdkProject (string sdkVersion = "", string outputType = "Exe")
+		public XASdkProject (string outputType = "Exe")
 		{
-			Sdk = string.IsNullOrEmpty (sdkVersion) ? "Microsoft.Android.Sdk" : $"Microsoft.Android.Sdk/{sdkVersion}";
+			Sdk = $"Microsoft.Android.Sdk/{SdkVersion}";
 			TargetFramework = "net5.0";
 
 			PackageName = PackageName ?? string.Format ("{0}.{0}", ProjectName);
 			JavaPackageName = JavaPackageName ?? PackageName.ToLowerInvariant ();
-			ExtraNuGetConfigSources = new List<string> {
-				Path.Combine (XABuildPaths.BuildOutputDirectory, "nupkgs"),
-				"https://dnceng.pkgs.visualstudio.com/public/_packaging/dotnet5/nuget/v3/index.json",
-			};
 			GlobalPackagesFolder = Path.Combine (XABuildPaths.TopDirectory, "packages");
 			SetProperty (KnownProperties.OutputType, outputType);
 
@@ -62,6 +66,8 @@ namespace Xamarin.ProjectTools
 			Sources.Add (new BuildItem.Source ("Resources\\drawable-mdpi\\Icon.png") { BinaryContent = () => icon_binary_mdpi });
 			Sources.Add (new BuildItem.Source ($"Resources\\Resource.designer{Language.DefaultExtension}") { TextContent = () => string.Empty });
 		}
+
+		protected override bool SetExtraNuGetConfigSources => true;
 
 		public string Configuration => IsRelease ? "Release" : "Debug";
 
@@ -80,22 +86,5 @@ namespace Xamarin.ProjectTools
 				.Replace ("${PACKAGENAME}", PackageName)
 				.Replace ("${JAVA_PACKAGENAME}", JavaPackageName);
 		}
-
-		public void SetRuntimeIdentifier (string androidAbi)
-		{
-			if (androidAbi == "armeabi-v7a") {
-				SetProperty (KnownProperties.RuntimeIdentifier, "android.21-arm");
-			}
-			else if (androidAbi == "arm64-v8a") {
-				SetProperty (KnownProperties.RuntimeIdentifier, "android.21-arm64");
-			}
-			else if (androidAbi == "x86") {
-				SetProperty (KnownProperties.RuntimeIdentifier, "android.21-x86");
-			}
-			else if (androidAbi == "x86_64") {
-				SetProperty (KnownProperties.RuntimeIdentifier, "android.21-x64");
-			}
-		}
-
 	}
 }

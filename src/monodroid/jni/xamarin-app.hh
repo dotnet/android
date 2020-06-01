@@ -8,6 +8,7 @@
 
 #include "monodroid.h"
 
+static constexpr uint32_t COMPRESSED_DATA_MAGIC = 0x5A4C4158; // 'XALZ', little-endian
 static constexpr uint32_t MODULE_MAGIC_NAMES = 0x53544158; // 'XATS', little-endian
 static constexpr uint32_t MODULE_INDEX_MAGIC = 0x49544158; // 'XATI', little-endian
 static constexpr uint8_t  MODULE_FORMAT_VERSION = 2;       // Keep in sync with the value in src/Xamarin.Android.Build.Tasks/Utilities/TypeMapGenerator.cs
@@ -74,6 +75,26 @@ struct TypeMapJava
 };
 #endif
 
+struct CompressedAssemblyHeader
+{
+	uint32_t magic; // COMPRESSED_DATA_MAGIC
+	uint32_t descriptor_index;
+	uint32_t uncompressed_length;
+};
+
+struct CompressedAssemblyDescriptor
+{
+	uint32_t   uncompressed_file_size;
+	bool       loaded;
+	uint8_t   *data;
+};
+
+struct CompressedAssemblies
+{
+	uint32_t                      count;
+	CompressedAssemblyDescriptor *descriptors;
+};
+
 struct ApplicationConfig
 {
 	bool uses_mono_llvm;
@@ -100,6 +121,7 @@ MONO_API const TypeMapModule map_modules[];
 MONO_API const TypeMapJava map_java[];
 #endif
 
+MONO_API CompressedAssemblies compressed_assemblies;
 MONO_API ApplicationConfig application_config;
 MONO_API const char* app_environment_variables[];
 MONO_API const char* app_system_properties[];

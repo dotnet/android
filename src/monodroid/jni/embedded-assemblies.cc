@@ -13,6 +13,10 @@
 #include <unistd.h>
 #include <climits>
 
+#if defined (HAVE_LZ4)
+#include <lz4.h>
+#endif
+
 #include <mono/metadata/assembly.h>
 #include <mono/metadata/image.h>
 #include <mono/metadata/mono-config.h>
@@ -61,6 +65,73 @@ void EmbeddedAssemblies::set_assemblies_prefix (const char *prefix)
 	assemblies_prefix_override = prefix != nullptr ? utils.strdup_new (prefix) : nullptr;
 }
 
+force_inline void
+EmbeddedAssemblies::get_assembly_data (const MonoBundledAssembly *e, char*& assembly_data, uint32_t& assembly_data_size)
+{
+#if defined (ANDROID) && defined (HAVE_LZ4) && defined (RELEASE)
+	auto header = reinterpret_cast<const CompressedAssemblyHeader*>(e->data);
+	if (header->magic == COMPRESSED_DATA_MAGIC) {
+		if (XA_UNLIKELY (compressed_assemblies.descriptors == nullptr)) {
+			log_fatal (LOG_ASSEMBLY, "Compressed assembly found but no descriptor defined");
+			exit (FATAL_EXIT_MISSING_ASSEMBLY);
+		}
+		if (XA_UNLIKELY (header->descriptor_index >= compressed_assemblies.count)) {
+			log_fatal (LOG_ASSEMBLY, "Invalid compressed assembly descriptor index %u", header->descriptor_index);
+			exit (FATAL_EXIT_MISSING_ASSEMBLY);
+		}
+
+		CompressedAssemblyDescriptor &cad = compressed_assemblies.descriptors[header->descriptor_index];
+		assembly_data_size = e->size - sizeof(CompressedAssemblyHeader);
+		if (!cad.loaded) {
+			if (XA_UNLIKELY (cad.data == nullptr)) {
+				log_fatal (LOG_ASSEMBLY, "Invalid compressed assembly descriptor at %u: no data", header->descriptor_index);
+				exit (FATAL_EXIT_MISSING_ASSEMBLY);
+			}
+
+			timing_period decompress_time;
+			if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
+				decompress_time.mark_start ();
+			}
+
+			if (header->uncompressed_length != cad.uncompressed_file_size) {
+				if (header->uncompressed_length > cad.uncompressed_file_size) {
+					log_fatal (LOG_ASSEMBLY, "Compressed assembly '%s' is larger than when the application was built (expected at most %u, got %u). Assemblies don't grow just like that!", e->name, cad.uncompressed_file_size, header->uncompressed_length);
+					exit (FATAL_EXIT_MISSING_ASSEMBLY);
+				} else {
+					log_debug (LOG_ASSEMBLY, "Compressed assembly '%s' is smaller than when the application was built. Adjusting accordingly.", e->name);
+				}
+				cad.uncompressed_file_size = header->uncompressed_length;
+			}
+
+			const char *data_start = reinterpret_cast<const char*>(e->data + sizeof(CompressedAssemblyHeader));
+			int ret = LZ4_decompress_safe (data_start, reinterpret_cast<char*>(cad.data), static_cast<int>(assembly_data_size), static_cast<int>(cad.uncompressed_file_size));
+
+			if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
+				decompress_time.mark_end ();
+				TIMING_LOG_INFO (decompress_time, "%s LZ4 decompression time", e->name);
+			}
+
+			if (ret < 0) {
+				log_fatal (LOG_ASSEMBLY, "Decompression of assembly %s failed with code %d", e->name, ret);
+				exit (FATAL_EXIT_MISSING_ASSEMBLY);
+			}
+
+			if (static_cast<uint64_t>(ret) != cad.uncompressed_file_size) {
+				log_debug (LOG_ASSEMBLY, "Decompression of assembly %s yielded a different size (expected %lu, got %u)", e->name, cad.uncompressed_file_size, static_cast<uint32_t>(ret));
+				exit (FATAL_EXIT_MISSING_ASSEMBLY);
+			}
+			cad.loaded = true;
+		}
+		assembly_data = reinterpret_cast<char*>(cad.data);
+		assembly_data_size = cad.uncompressed_file_size;
+	} else
+#endif
+	{
+		assembly_data = reinterpret_cast<char*>(const_cast<unsigned char*>(e->data));
+		assembly_data_size = e->size;
+	}
+}
+
 MonoAssembly*
 EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, bool ref_only)
 {
@@ -96,10 +167,17 @@ EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, bool ref_only)
 		MonoImage *image = nullptr;
 		MonoImageOpenStatus status;
 		const MonoBundledAssembly *e = *p;
+		char *assembly_data = nullptr;
+		uint32_t assembly_data_size;
 
-		if (strcmp (e->name, name) == 0 &&
-				(image  = mono_image_open_from_data_with_name ((char*) e->data, e->size, 0, nullptr, ref_only, name)) != nullptr &&
-				(a      = mono_assembly_load_from_full (image, name, &status, ref_only)) != nullptr) {
+		if (strcmp (e->name, name) != 0) {
+			continue;
+		}
+
+		get_assembly_data (e, assembly_data, assembly_data_size);
+
+		if ((image  = mono_image_open_from_data_with_name (assembly_data, assembly_data_size, 0, nullptr, ref_only, name)) != nullptr &&
+		    (a      = mono_assembly_load_from_full (image, name, &status, ref_only)) != nullptr) {
 			mono_config_for_assembly (image);
 			break;
 		}
@@ -204,7 +282,7 @@ EmbeddedAssemblies::typemap_java_to_managed (const char *java_type_name)
 	}
 
 	if (XA_UNLIKELY (entry == nullptr)) {
-		log_warn (LOG_ASSEMBLY, "typemap: unable to find mapping to a managed type from Java type '%s'", java_type_name);
+		log_info (LOG_ASSEMBLY, "typemap: unable to find mapping to a managed type from Java type '%s'", java_type_name);
 		return nullptr;
 	}
 
@@ -236,7 +314,7 @@ EmbeddedAssemblies::typemap_java_to_managed (const char *java_type_name)
 	TypeMapModule *module;
 	const TypeMapJava *java_entry = binary_search<const char, TypeMapJava, compare_java_name, true> (java_type_name, map_java, java_type_count, java_name_width);
 	if (java_entry == nullptr) {
-		log_warn (LOG_ASSEMBLY, "typemap: unable to find mapping to a managed type from Java type '%s'", java_type_name);
+		log_info (LOG_ASSEMBLY, "typemap: unable to find mapping to a managed type from Java type '%s'", java_type_name);
 		return nullptr;
 	}
 
@@ -248,7 +326,7 @@ EmbeddedAssemblies::typemap_java_to_managed (const char *java_type_name)
 	module = const_cast<TypeMapModule*>(&map_modules[java_entry->module_index]);
 	const TypeMapModuleEntry *entry = binary_search <uint32_t, TypeMapModuleEntry, compare_type_token> (&java_entry->type_token_id, module->map, module->entry_count);
 	if (entry == nullptr) {
-		log_warn (LOG_ASSEMBLY, "typemap: unable to find mapping from Java type '%s' to managed type with token ID %u in module [%s]", java_type_name, java_entry->type_token_id, MonoGuidString (module->module_uuid).get ());
+		log_info (LOG_ASSEMBLY, "typemap: unable to find mapping from Java type '%s' to managed type with token ID %u in module [%s]", java_type_name, java_entry->type_token_id, MonoGuidString (module->module_uuid).get ());
 		return nullptr;
 	}
 	uint32_t type_token_id = java_entry->type_token_id;
@@ -373,13 +451,13 @@ EmbeddedAssemblies::typemap_managed_to_java ([[maybe_unused]] MonoType *type, Mo
 		entry = typemap_managed_to_java (full_name);
 
 		if (XA_UNLIKELY (entry == nullptr)) {
-			log_warn (LOG_ASSEMBLY, error_message, full_name);
+			log_info (LOG_ASSEMBLY, error_message, full_name);
 		}
 	} else {
 		simple_pointer_guard<char> full_name = utils.string_concat (type_name.get (), ", ", image_name);
 		entry = typemap_managed_to_java (full_name.get ());
 		if (XA_UNLIKELY (entry == nullptr)) {
-			log_warn (LOG_ASSEMBLY, error_message, full_name.get ());
+			log_info (LOG_ASSEMBLY, error_message, full_name.get ());
 		}
 	}
 
@@ -446,7 +524,7 @@ EmbeddedAssemblies::typemap_managed_to_java ([[maybe_unused]] MonoType *type, Mo
 		}
 
 		if (entry == nullptr) {
-			log_warn (LOG_ASSEMBLY, "typemap: type with token %d (0x%x) in module {%s} (%s) not found.", token, token, MonoGuidString (mvid).get (), match->assembly_name);
+			log_info (LOG_ASSEMBLY, "typemap: type with token %d (0x%x) in module {%s} (%s) not found.", token, token, MonoGuidString (mvid).get (), match->assembly_name);
 			return nullptr;
 		}
 	}
@@ -491,7 +569,7 @@ EmbeddedAssemblies::typemap_managed_to_java (MonoReflectionType *reflection_type
 
 	MonoType *type = mono_reflection_type_get_type (reflection_type);
 	if (type == nullptr) {
-		log_warn (LOG_DEFAULT, "Failed to map reflection type to MonoType");
+		log_warn (LOG_ASSEMBLY, "Failed to map reflection type to MonoType");
 		return nullptr;
 	}
 
@@ -806,7 +884,7 @@ EmbeddedAssemblies::try_load_typemaps_from_directory (const char *path)
 	simple_pointer_guard<char[]> dir_path (utils.path_combine (path, "typemaps"));
 	monodroid_dir_t *dir;
 	if ((dir = utils.monodroid_opendir (dir_path)) == nullptr) {
-		log_warn (LOG_DEFAULT, "typemap: could not open directory: `%s`", dir_path.get ());
+		log_warn (LOG_ASSEMBLY, "typemap: could not open directory: `%s`", dir_path.get ());
 		return;
 	}
 

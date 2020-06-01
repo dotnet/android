@@ -77,6 +77,9 @@ will not be supported.
 `$(AndroidCodegenTarget)` will be `XAJavaInterop1` by default.
 `XamarinAndroid` will not be supported.
 
+`$(MonoSymbolArchive)` will be `False`, since `mono-symbolicate` is
+not yet supported.
+
 If Java binding is enabled with `@(InputJar)`, `@(EmbeddedJar)`,
 `@(LibraryProjectZip)`, etc. then `$(AllowUnsafeBlocks)` will default
 to `True`.

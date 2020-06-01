@@ -25,6 +25,8 @@ namespace Xamarin.Android.Tasks
 		{
 			if (typeof(T) == typeof(Int32) || typeof(T) == typeof(UInt32))
 				return ".long";
+			if (typeof(T) == typeof(Int64) || typeof(T) == typeof(UInt64))
+				return ".quad";
 			return base.MapType <T> ();
 		}
 	}

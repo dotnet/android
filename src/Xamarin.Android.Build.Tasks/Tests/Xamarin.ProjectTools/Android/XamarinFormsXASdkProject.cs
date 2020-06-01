@@ -40,9 +40,8 @@ namespace Xamarin.ProjectTools
 				App_xaml_cs = sr.ReadToEnd ();
 		}
 
-
-		public XamarinFormsXASdkProject (string sdkVersion = "", string outputType = "Exe")
-			: base (sdkVersion, outputType)
+		public XamarinFormsXASdkProject (string outputType = "Exe")
+			: base (outputType)
 		{
 			PackageReferences.Add (KnownPackages.XamarinForms_4_5_0_617);
 

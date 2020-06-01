@@ -158,3 +158,7 @@ Overridable MSBuild properties include:
     Xamarin.Android install to the local build output. This enables proprietary
     features such as debugging and fast deployment. Since a "normal" OSS build would
     not include proprietary files, this flag also emits a warning when enabled.
+
+  * `$(AndroidEnableAssemblyCompression)`: Defaults to `True`. When enabled, all the 
+     assemblies placed in the APK will be compressed in `Release` builds. `Debug`
+     builds are not affected.

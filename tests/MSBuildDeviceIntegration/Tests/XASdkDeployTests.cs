@@ -10,12 +10,6 @@ namespace Xamarin.Android.Build.Tests
 	[NonParallelizable]
 	public class XASdkDeployTests : DeviceTest
 	{
-		static readonly string SdkVersion = Assembly.GetAssembly (typeof(XASdkProject))
-			.GetCustomAttributes<AssemblyMetadataAttribute> ()
-			.Where (attr => attr.Key == "SdkVersion")
-			.Select (attr => attr.Value)
-			.FirstOrDefault () ?? "0.0.1";
-
 		[Test]
 		public void DotNetInstallAndRun ([Values (false, true)] bool isRelease, [Values (false, true)] bool xamarinForms)
 		{
@@ -24,11 +18,11 @@ namespace Xamarin.Android.Build.Tests
 
 			XASdkProject proj;
 			if (xamarinForms) {
-				proj = new XamarinFormsXASdkProject (SdkVersion) {
+				proj = new XamarinFormsXASdkProject {
 					IsRelease = isRelease
 				};
 			} else {
-				proj = new XASdkProject (SdkVersion) {
+				proj = new XASdkProject {
 					IsRelease = isRelease
 				};
 			}

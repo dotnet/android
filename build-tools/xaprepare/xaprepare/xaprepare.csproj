@@ -158,6 +158,8 @@
     <Compile Include="ThirdPartyNotices\aapt2.cs" />
     <Compile Include="ThirdPartyNotices\bundletool.cs" />
     <Compile Include="ThirdPartyNotices\Java.Interop.cs" />
+    <Compile Include="ThirdPartyNotices\K4os.Compression.LZ4.cs" />
+    <Compile Include="ThirdPartyNotices\lz4.cs" />
     <Compile Include="ThirdPartyNotices\mono.cs" />
     <Compile Include="ThirdPartyNotices\opentk.cs" />
     <Compile Include="ThirdPartyNotices\proguard.cs" />
@@ -217,11 +219,13 @@
     <Compile Include="Application\Program.Linux.cs" />
     <Compile Include="Application\Program.DebianLinux.cs" />
     <Compile Include="Application\Program.ArchLinux.cs" />
+    <Compile Include="Application\Program.FedoraLinux.cs" />
     <Compile Include="ConfigAndData\Configurables.Linux.cs" />
     <Compile Include="ConfigAndData\Dependencies\AndroidToolchain.Linux.cs" />
     <Compile Include="ConfigAndData\Dependencies\Linux.Arch.cs" />
     <Compile Include="ConfigAndData\Dependencies\Linux.Debian.cs" />
     <Compile Include="ConfigAndData\Dependencies\Linux.DebianCommon.cs" />
+    <Compile Include="ConfigAndData\Dependencies\Linux.Fedora.cs" />
     <Compile Include="ConfigAndData\Dependencies\Linux.Mint.cs" />
     <Compile Include="ConfigAndData\Dependencies\Linux.Ubuntu.cs" />
     <Compile Include="ConfigAndData\Dependencies\Linux.UbuntuCommon.cs" />

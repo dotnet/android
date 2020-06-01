@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Xamarin.ProjectTools
 {
-	public class DotNetStandard : XamarinProject
+	public class DotNetStandard : XamarinProject, IShortFormProject
 	{
 		public override string ProjectTypeGuid {
 			get {
@@ -39,55 +39,11 @@ namespace Xamarin.ProjectTools
 		public IList<BuildItem> OtherBuildItems { get; private set; }
 		public IList<BuildItem> Sources { get; private set; }
 
+		public bool EnableDefaultItems => true;
+
 		public override string SaveProject ()
 		{
-			var sb = new StringBuilder ();
-			sb.AppendLine ("\t<PropertyGroup>");
-			foreach (var pg in PropertyGroups) {
-				if (!pg.Properties.Any ())
-					continue;
-				foreach (var p in pg.Properties) {
-					var conditon = string.IsNullOrEmpty (p.Condition) ? "" : $" Conditon=\"{p.Condition}\"";
-					sb.AppendLine ($"\t\t<{p.Name}{conditon}>{p.Value ()}</{p.Name}>");
-				}
-			}
-			sb.AppendLine ("\t</PropertyGroup>");
-			if (PackageReferences.Count > 0) {
-				sb.AppendLine ("\t<ItemGroup>");
-				foreach (var pr in PackageReferences) {
-					sb.AppendLine ($"\t\t<PackageReference Include=\"{pr.Id}\" Version=\"{pr.Version}\"/>");
-				}
-				sb.AppendLine ("\t</ItemGroup>");
-			}
-			if (OtherBuildItems.Count > 0) {
-				sb.AppendLine ("\t<ItemGroup>");
-				foreach (var bi in OtherBuildItems) {
-					sb.Append ($"\t\t<{bi.BuildAction} ");
-					if (bi.Include != null) sb.Append ($"Include=\"{bi.Include ()}\" ");
-					if (bi.Update != null) sb.Append ($"Update=\"{bi.Update ()}\" ");
-					if (bi.Remove != null) sb.Append ($"Remove=\"{bi.Remove ()}\" ");
-					if (bi.Generator != null) sb.Append ($"Generator=\"{bi.Generator ()}\" ");
-					if (bi.DependentUpon != null) sb.Append ($"DependentUpon=\"{bi.DependentUpon ()}\" ");
-					if (bi.Version != null) sb.Append ($"Version=\"{bi.Version ()}\" ");
-					if (bi.SubType != null) sb.Append ($"SubType=\"{bi.SubType ()}\" ");
-					if (!bi.Metadata.Any ()) {
-						sb.AppendLine ($"\t\t/>");
-					} else {
-						sb.AppendLine ($">");
-						foreach (var kvp in bi.Metadata) {
-							sb.AppendLine ($"\t\t\t<{kvp.Key}>{kvp.Value}</{kvp.Key}>");
-						}
-						sb.AppendLine ($"\t\t</{bi.BuildAction}>");
-					}
-				}
-				sb.AppendLine ("\t</ItemGroup>");
-			}
-			foreach (var import in Imports) {
-				var project = import.Project ();
-				if (project != "Directory.Build.props" && project != "Directory.Build.targets")
-					sb.AppendLine ($"\t<Import Project=\"{project}\" />");
-			}
-			return $"<Project Sdk=\"{Sdk}\">\r\n{sb.ToString ()}\r\n</Project>";
+			return XmlUtils.ToXml (this);
 		}
 
 		public override void NuGetRestore (string directory, string packagesDirectory = null)

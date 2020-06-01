@@ -1541,6 +1541,9 @@
   <!-- Namespace android.view.inline should be renamed to Android.Views.Inline -->
   <attr api-since="30" path="/api/package[@name='android.view.inline']" name="managedName">Android.Views.Inline</attr>
 
+  <!-- Correct namespace capitalizations -->
+  <attr api-since="30" path="/api/package[@name='android.service.quickaccesswallet']" name="managedName">Android.Service.QuickAccessWallet</attr>
+
   <!-- Google has added getCellIdentity and getCellSignalStrength as abstract method on the base class.  Bind manually for API-compatibility. -->
   <remove-node api-since="30" path="/api/package[@name='android.telephony']/class[@name='CellInfo']/method[@name='getCellIdentity' and count(parameter)=0]" />
   <remove-node api-since="30" path="/api/package[@name='android.telephony']/class[@name='CellInfo']/method[@name='getCellSignalStrength' and count(parameter)=0]" />

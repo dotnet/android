@@ -58,9 +58,14 @@ namespace Xamarin.ProjectTools
 			CommonProperties = new List<Property> ();
 			common = new PropertyGroup (null, CommonProperties);
 			DebugProperties = new List<Property> ();
-			debug = new PropertyGroup ($"'$(Configuration)|$(Platform)' == '{debugConfigurationName}|AnyCPU'", DebugProperties);
 			ReleaseProperties = new List<Property> ();
-			release = new PropertyGroup ($"'$(Configuration)|$(Platform)' == '{releaseConfigurationName}|AnyCPU'", ReleaseProperties);
+			if (Builder.UseDotNet) {
+				debug = new PropertyGroup ($"'$(Configuration)' == '{debugConfigurationName}'", DebugProperties);
+				release = new PropertyGroup ($"'$(Configuration)' == '{releaseConfigurationName}'", ReleaseProperties);
+			} else {
+				debug = new PropertyGroup ($"'$(Configuration)|$(Platform)' == '{debugConfigurationName}|AnyCPU'", DebugProperties);
+				release = new PropertyGroup ($"'$(Configuration)|$(Platform)' == '{releaseConfigurationName}|AnyCPU'", ReleaseProperties);
+			}
 
 			PropertyGroups.Add (common);
 			PropertyGroups.Add (debug);
@@ -69,7 +74,16 @@ namespace Xamarin.ProjectTools
 			Packages = new List<Package> ();
 			Imports = new List<Import> ();
 
+			// Feeds only needed for .NET 5+
+			if (SetExtraNuGetConfigSources) {
+				ExtraNuGetConfigSources = new List<string> {
+					Path.Combine (XABuildPaths.BuildOutputDirectory, "nupkgs"),
+					"https://dnceng.pkgs.visualstudio.com/public/_packaging/dotnet5/nuget/v3/index.json",
+				};
+			}
 		}
+
+		protected virtual bool SetExtraNuGetConfigSources => Builder.UseDotNet;
 
 		public string GetProperty (string name)
 		{

@@ -55,6 +55,13 @@ jobs:
           nunitConsoleExtraArgs: --workers=4 --where "cat != Node-1 && cat != Node-2 && cat != Node-3"
           testResultsFile: TestResult-MSBuildTests-Windows-Node${{ parameters.node_id }}-$(XA.Build.Configuration).xml
 
+      - template: run-nunit-tests.yaml
+        parameters:
+          testRunTitle: Xamarin.Android.Build.Tests - Windows - One .NET
+          testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\Xamarin.Android.Build.Tests.dll
+          nunitConsoleExtraArgs: --workers=4 --where "cat == dotnet" --params dotnet=true
+          testResultsFile: TestResult-MSBuildTests-Windows-dotnet-$(XA.Build.Configuration).xml
+
     - template: upload-results.yaml
       parameters:
         artifactName: Test Results - MSBuild - Windows-${{ parameters.node_id }}

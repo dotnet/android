@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -19,22 +19,6 @@ namespace Xamarin.Android.Build.Tests
 		string intermediate;
 		string bin;
 
-		const string Resx = @"<?xml version=""1.0"" encoding=""utf-8""?>
-<root>
-	<resheader name=""resmimetype"">
-		<value>text/microsoft-resx</value>
-	</resheader>
-	<resheader name=""version"">
-		<value>2.0</value>
-	</resheader>
-	<resheader name=""reader"">
-		<value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-	</resheader>
-	<resheader name=""writer"">
-		<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-	</resheader>
-	<!--contents-->
-</root>";
 		// Disable split by language
 		const string BuildConfig = @"{
 	""optimizations"": {
@@ -58,10 +42,10 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = true,
 				OtherBuildItems = {
 					new BuildItem ("EmbeddedResource", "Foo.resx") {
-						TextContent = () => ResxWithContents ("<data name=\"CancelButton\"><value>Cancel</value></data>")
+						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancel</value></data>")
 					},
 					new BuildItem ("EmbeddedResource", "Foo.es.resx") {
-						TextContent = () => ResxWithContents ("<data name=\"CancelButton\"><value>Cancelar</value></data>")
+						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancelar</value></data>")
 					}
 				}
 			};
@@ -97,11 +81,6 @@ namespace Xamarin.Android.Build.Tests
 			var projectDir = Path.Combine (Root, appBuilder.ProjectDirectory);
 			intermediate = Path.Combine (projectDir, app.IntermediateOutputPath);
 			bin = Path.Combine (projectDir, app.OutputPath);
-		}
-
-		string ResxWithContents (string contents)
-		{
-			return Resx.Replace ("<!--contents-->", contents);
 		}
 
 		[TearDown]

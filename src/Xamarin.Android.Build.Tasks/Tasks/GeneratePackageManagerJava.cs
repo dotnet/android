@@ -140,6 +140,26 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
+		static internal NativeAssemblerTargetProvider GetAssemblyTargetProvider (string abi)
+		{
+			switch (abi.Trim ()) {
+				case "armeabi-v7a":
+					return new ARMNativeAssemblerTargetProvider (false);
+
+				case "arm64-v8a":
+					return new ARMNativeAssemblerTargetProvider (true);
+
+				case "x86":
+					return new X86NativeAssemblerTargetProvider (false);
+
+				case "x86_64":
+					return new X86NativeAssemblerTargetProvider (true);
+
+				default:
+					throw new InvalidOperationException ($"Unknown ABI {abi}");
+			}
+		}
+
 		static readonly string[] defaultLogLevel = {"MONO_LOG_LEVEL", "info"};
 		static readonly string[] defaultMonoDebug = {"MONO_DEBUG", "gen-compact-seq-points"};
 		static readonly string[] defaultHttpMessageHandler = {"XA_HTTP_CLIENT_HANDLER_TYPE", "System.Net.Http.HttpClientHandler, System.Net.Http"};
@@ -251,29 +271,9 @@ namespace Xamarin.Android.Tasks
 
 			var appConfState = BuildEngine4.GetRegisteredTaskObject (ApplicationConfigTaskState.RegisterTaskObjectKey, RegisteredTaskObjectLifetime.Build) as ApplicationConfigTaskState;
 			foreach (string abi in SupportedAbis) {
-				NativeAssemblerTargetProvider asmTargetProvider;
+				NativeAssemblerTargetProvider asmTargetProvider = GetAssemblyTargetProvider (abi);
 				string baseAsmFilePath = Path.Combine (EnvironmentOutputDirectory, $"environment.{abi.ToLowerInvariant ()}");
 				string asmFilePath = $"{baseAsmFilePath}.s";
-				switch (abi.Trim ()) {
-					case "armeabi-v7a":
-						asmTargetProvider = new ARMNativeAssemblerTargetProvider (false);
-						break;
-
-					case "arm64-v8a":
-						asmTargetProvider = new ARMNativeAssemblerTargetProvider (true);
-						break;
-
-					case "x86":
-						asmTargetProvider = new X86NativeAssemblerTargetProvider (false);
-						break;
-
-					case "x86_64":
-						asmTargetProvider = new X86NativeAssemblerTargetProvider (true);
-						break;
-
-					default:
-						throw new InvalidOperationException ($"Unknown ABI {abi}");
-				}
 
 				var asmgen = new ApplicationConfigNativeAssemblyGenerator (asmTargetProvider, baseAsmFilePath, environmentVariables, systemProperties) {
 					IsBundledApp = IsBundledApplication,
