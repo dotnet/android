@@ -162,7 +162,7 @@ namespace Java.Interop
 			}
 		}
 
-		public override bool Equals (object obj)
+		public override bool Equals (object? obj)
 		{
 			JniPeerMembers.AssertSelf (this);
 

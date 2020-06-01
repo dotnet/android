@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 
 using System;
 using System.Diagnostics.CodeAnalysis;
@@ -51,7 +51,7 @@ namespace Java.Interop {
 
 		public bool Equals (JavaProxyObject? other) => object.Equals (Value, other?.Value);
 
-		public override string ToString ()
+		public override string? ToString ()
 		{
 			return Value.ToString ();
 		}
@@ -63,8 +63,7 @@ namespace Java.Interop {
 				return null;
 
 			lock (CachedValues) {
-				JavaProxyObject proxy;
-				if (CachedValues.TryGetValue (value, out proxy))
+				if (CachedValues.TryGetValue (value, out var proxy))
 					return proxy;
 				proxy = new JavaProxyObject (value);
 				CachedValues.Add (value, proxy);

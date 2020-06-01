@@ -25,8 +25,7 @@ namespace Java.Interop
 		public JniMethodInfo GetMethodInfo (string encodedMember)
 		{
 			lock (StaticMethods) {
-				JniMethodInfo m;
-				if (!StaticMethods.TryGetValue (encodedMember, out m)) {
+				if (!StaticMethods.TryGetValue (encodedMember, out var m)) {
 					string method, signature;
 					JniPeerMembers.GetNameAndSignature (encodedMember, out method, out signature);
 					m = Members.JniPeerType.GetStaticMethod (method, signature);

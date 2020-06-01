@@ -48,7 +48,7 @@ namespace Java.Interop {
 			var t   = jie.GetType ("Java.Interop.MarshalMemberBuilder");
 			if (t == null)
 				throw new InvalidOperationException ("Could not find Java.Interop.MarshalMemberBuilder from Java.Interop.Export.dll!");
-			var b   = (JniMarshalMemberBuilder) Activator.CreateInstance (t);
+			var b   = (JniMarshalMemberBuilder) Activator.CreateInstance (t)!;
 			marshalMemberBuilder    = SetRuntime (b);
 		}
 
@@ -155,7 +155,7 @@ namespace Java.Interop {
 					attr = null;
 				}
 				if (attr != null) {
-					return (JniValueMarshaler) Activator.CreateInstance (attr.MarshalerType);
+					return (JniValueMarshaler) Activator.CreateInstance (attr.MarshalerType)!;
 				}
 				return Runtime.ValueManager.GetValueMarshaler (parameter.ParameterType);
 			}

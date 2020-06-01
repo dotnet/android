@@ -7,6 +7,7 @@ using System.Reflection;
 
 using Java.Interop.Expressions;
 using System.Linq.Expressions;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Java.Interop {
 
@@ -246,7 +247,7 @@ namespace Java.Interop {
 						(ref JniObjectReference h, JniObjectReferenceOptions o) => new JavaBooleanArray (ref h, o));
 			}
 
-			public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (IList<Boolean> value, ParameterAttributes synchronize)
+			public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState ([MaybeNull] IList<Boolean> value, ParameterAttributes synchronize)
 			{
 				return JavaArray<Boolean>.CreateArgumentState (value, synchronize, (list, copy) => {
 					var a = copy
@@ -257,7 +258,7 @@ namespace Java.Interop {
 				});
 			}
 
-			public override void DestroyGenericArgumentState (IList<Boolean> value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+			public override void DestroyGenericArgumentState ([AllowNull] IList<Boolean> value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
 			{
 				JavaArray<Boolean>.DestroyArgumentState<JavaBooleanArray> (value, ref state, synchronize);
 			}
@@ -422,7 +423,7 @@ namespace Java.Interop {
 						(ref JniObjectReference h, JniObjectReferenceOptions o) => new JavaSByteArray (ref h, o));
 			}
 
-			public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (IList<SByte> value, ParameterAttributes synchronize)
+			public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState ([MaybeNull] IList<SByte> value, ParameterAttributes synchronize)
 			{
 				return JavaArray<SByte>.CreateArgumentState (value, synchronize, (list, copy) => {
 					var a = copy
@@ -433,7 +434,7 @@ namespace Java.Interop {
 				});
 			}
 
-			public override void DestroyGenericArgumentState (IList<SByte> value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+			public override void DestroyGenericArgumentState ([AllowNull] IList<SByte> value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
 			{
 				JavaArray<SByte>.DestroyArgumentState<JavaSByteArray> (value, ref state, synchronize);
 			}
@@ -598,7 +599,7 @@ namespace Java.Interop {
 						(ref JniObjectReference h, JniObjectReferenceOptions o) => new JavaCharArray (ref h, o));
 			}
 
-			public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (IList<Char> value, ParameterAttributes synchronize)
+			public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState ([MaybeNull] IList<Char> value, ParameterAttributes synchronize)
 			{
 				return JavaArray<Char>.CreateArgumentState (value, synchronize, (list, copy) => {
 					var a = copy
@@ -609,7 +610,7 @@ namespace Java.Interop {
 				});
 			}
 
-			public override void DestroyGenericArgumentState (IList<Char> value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+			public override void DestroyGenericArgumentState ([AllowNull] IList<Char> value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
 			{
 				JavaArray<Char>.DestroyArgumentState<JavaCharArray> (value, ref state, synchronize);
 			}
@@ -774,7 +775,7 @@ namespace Java.Interop {
 						(ref JniObjectReference h, JniObjectReferenceOptions o) => new JavaInt16Array (ref h, o));
 			}
 
-			public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (IList<Int16> value, ParameterAttributes synchronize)
+			public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState ([MaybeNull] IList<Int16> value, ParameterAttributes synchronize)
 			{
 				return JavaArray<Int16>.CreateArgumentState (value, synchronize, (list, copy) => {
 					var a = copy
@@ -785,7 +786,7 @@ namespace Java.Interop {
 				});
 			}
 
-			public override void DestroyGenericArgumentState (IList<Int16> value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+			public override void DestroyGenericArgumentState ([AllowNull] IList<Int16> value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
 			{
 				JavaArray<Int16>.DestroyArgumentState<JavaInt16Array> (value, ref state, synchronize);
 			}
@@ -950,7 +951,7 @@ namespace Java.Interop {
 						(ref JniObjectReference h, JniObjectReferenceOptions o) => new JavaInt32Array (ref h, o));
 			}
 
-			public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (IList<Int32> value, ParameterAttributes synchronize)
+			public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState ([MaybeNull] IList<Int32> value, ParameterAttributes synchronize)
 			{
 				return JavaArray<Int32>.CreateArgumentState (value, synchronize, (list, copy) => {
 					var a = copy
@@ -961,7 +962,7 @@ namespace Java.Interop {
 				});
 			}
 
-			public override void DestroyGenericArgumentState (IList<Int32> value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+			public override void DestroyGenericArgumentState ([AllowNull] IList<Int32> value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
 			{
 				JavaArray<Int32>.DestroyArgumentState<JavaInt32Array> (value, ref state, synchronize);
 			}
@@ -1126,7 +1127,7 @@ namespace Java.Interop {
 						(ref JniObjectReference h, JniObjectReferenceOptions o) => new JavaInt64Array (ref h, o));
 			}
 
-			public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (IList<Int64> value, ParameterAttributes synchronize)
+			public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState ([MaybeNull] IList<Int64> value, ParameterAttributes synchronize)
 			{
 				return JavaArray<Int64>.CreateArgumentState (value, synchronize, (list, copy) => {
 					var a = copy
@@ -1137,7 +1138,7 @@ namespace Java.Interop {
 				});
 			}
 
-			public override void DestroyGenericArgumentState (IList<Int64> value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+			public override void DestroyGenericArgumentState ([AllowNull] IList<Int64> value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
 			{
 				JavaArray<Int64>.DestroyArgumentState<JavaInt64Array> (value, ref state, synchronize);
 			}
@@ -1302,7 +1303,7 @@ namespace Java.Interop {
 						(ref JniObjectReference h, JniObjectReferenceOptions o) => new JavaSingleArray (ref h, o));
 			}
 
-			public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (IList<Single> value, ParameterAttributes synchronize)
+			public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState ([MaybeNull] IList<Single> value, ParameterAttributes synchronize)
 			{
 				return JavaArray<Single>.CreateArgumentState (value, synchronize, (list, copy) => {
 					var a = copy
@@ -1313,7 +1314,7 @@ namespace Java.Interop {
 				});
 			}
 
-			public override void DestroyGenericArgumentState (IList<Single> value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+			public override void DestroyGenericArgumentState ([AllowNull] IList<Single> value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
 			{
 				JavaArray<Single>.DestroyArgumentState<JavaSingleArray> (value, ref state, synchronize);
 			}
@@ -1478,7 +1479,7 @@ namespace Java.Interop {
 						(ref JniObjectReference h, JniObjectReferenceOptions o) => new JavaDoubleArray (ref h, o));
 			}
 
-			public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (IList<Double> value, ParameterAttributes synchronize)
+			public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState ([MaybeNull] IList<Double> value, ParameterAttributes synchronize)
 			{
 				return JavaArray<Double>.CreateArgumentState (value, synchronize, (list, copy) => {
 					var a = copy
@@ -1489,7 +1490,7 @@ namespace Java.Interop {
 				});
 			}
 
-			public override void DestroyGenericArgumentState (IList<Double> value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+			public override void DestroyGenericArgumentState ([AllowNull] IList<Double> value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
 			{
 				JavaArray<Double>.DestroyArgumentState<JavaDoubleArray> (value, ref state, synchronize);
 			}

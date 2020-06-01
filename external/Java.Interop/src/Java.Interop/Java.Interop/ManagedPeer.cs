@@ -84,7 +84,7 @@ namespace Java.Interop {
 					return;
 				}
 
-				var type    = Type.GetType (JniEnvironment.Strings.ToString (n_assemblyQualifiedName), throwOnError: true);
+				var type    = Type.GetType (JniEnvironment.Strings.ToString (n_assemblyQualifiedName)!, throwOnError: true)!;
 				if (type.IsGenericTypeDefinition) {
 					throw new NotSupportedException (
 							"Constructing instances of generic types from Java is not supported, as the type parameters cannot be determined.",
@@ -157,7 +157,7 @@ namespace Java.Interop {
 			var typeNames   = signature!.Split (':');
 			var ptypes      = new Type [typeNames.Length];
 			for (int i = 0; i < typeNames.Length; i++)
-				ptypes [i] = Type.GetType (typeNames [i], throwOnError:true);
+				ptypes [i] = Type.GetType (typeNames [i], throwOnError:true)!;
 			return ptypes;
 		}
 
@@ -196,7 +196,7 @@ namespace Java.Interop {
 				var assemblyQualifiedName   = JniEnvironment.Strings.ToString (new JniObjectReference (n_assemblyQualifiedName));
 				var methods                 = JniEnvironment.Strings.ToString (new JniObjectReference (n_methods));
 
-				var type    = Type.GetType (assemblyQualifiedName, throwOnError: true);
+				var type    = Type.GetType (assemblyQualifiedName!, throwOnError: true)!;
 
 				JniEnvironment.Runtime.TypeManager.RegisterNativeMembers (nativeClass, type, methods);
 			}

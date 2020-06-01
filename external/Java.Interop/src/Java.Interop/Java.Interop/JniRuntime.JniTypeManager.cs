@@ -145,7 +145,7 @@ namespace Java.Interop {
 					if (type.IsArray && type.GetArrayRank () > 1)
 						throw new ArgumentException ("Multidimensional array '" + originalType.FullName + "' is not supported.", nameof (type));
 					rank++;
-					type = type.GetElementType ();
+					type = type.GetElementType ()!;
 				}
 
 				if (type.IsEnum)
@@ -232,7 +232,7 @@ namespace Java.Interop {
 
 				if (jniSimpleReference == null)
 					throw new ArgumentNullException (nameof (jniSimpleReference));
-				if (jniSimpleReference != null && jniSimpleReference.Contains ("."))
+				if (jniSimpleReference != null && jniSimpleReference.IndexOf (".", StringComparison.Ordinal) >= 0)
 					throw new ArgumentException ("JNI type names do not contain '.', they use '/'. Are you sure you're using a JNI type name?", nameof (jniSimpleReference));
 				if (jniSimpleReference != null && jniSimpleReference.StartsWith ("[", StringComparison.Ordinal))
 					throw new ArgumentException ("Only simplified type references are supported.", nameof (jniSimpleReference));
@@ -245,7 +245,7 @@ namespace Java.Interop {
 
 			IEnumerable<Type> CreateGetTypesForSimpleReferenceEnumerator (string jniSimpleReference)
 			{
-				if (JniBuiltinSimpleReferenceToType.Value.TryGetValue (jniSimpleReference, out Type ret)) {
+				if (JniBuiltinSimpleReferenceToType.Value.TryGetValue (jniSimpleReference, out var ret)) {
 					yield return ret;
 				}
 				yield break;

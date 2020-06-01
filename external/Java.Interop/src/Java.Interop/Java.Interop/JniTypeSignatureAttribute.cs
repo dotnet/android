@@ -13,7 +13,7 @@ namespace Java.Interop
 		{
 			if (simpleReference == null)
 				throw new ArgumentNullException (nameof (simpleReference));
-			if (simpleReference.Contains ("."))
+			if (simpleReference.IndexOf (".", StringComparison.Ordinal) >= 0)
 				throw new ArgumentException ("JNI type names do not contain '.', they use '/'. Are you sure you're using a JNI type name?", nameof (simpleReference));
 			if (simpleReference.StartsWith ("[", StringComparison.Ordinal))
 				throw new ArgumentException ("Arrays cannot be present in simple type references.", nameof (simpleReference));

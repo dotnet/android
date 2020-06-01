@@ -25,8 +25,7 @@ namespace Java.Interop
 		public JniFieldInfo GetFieldInfo (string encodedMember)
 		{
 			lock (InstanceFields) {
-				JniFieldInfo f;
-				if (!InstanceFields.TryGetValue (encodedMember, out f)) {
+				if (!InstanceFields.TryGetValue (encodedMember, out var f)) {
 					string field, signature;
 					JniPeerMembers.GetNameAndSignature (encodedMember, out field, out signature);
 					f = Members.JniPeerType.GetInstanceField (field, signature);

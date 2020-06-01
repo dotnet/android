@@ -174,7 +174,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 			foreach (var r in references) {
 				try {
 					Assembly.LoadFile (Path.GetFullPath (r));
-				} catch (Exception e) {
+				} catch (Exception) {
 					Error ($"Unable to preload reference '{r}'.");
 					Environment.Exit (1);
 				}

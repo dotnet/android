@@ -17,7 +17,7 @@ namespace Java.Interop {
 		internal    static  JniEnvironmentInfo      CurrentInfo {
 			[MethodImpl (MethodImplOptions.AggressiveInlining)]
 			get {
-				var e = Info.Value;
+				var e = Info.Value!;
 				if (!e.IsValid)
 					throw new NotSupportedException ("JNI Environment Information has been invalidated on this thread.");
 				return e;
@@ -243,7 +243,7 @@ namespace Java.Interop {
 
 		internal unsafe JniObjectReference ToJavaName (string jniTypeName)
 		{
-			int index = jniTypeName.IndexOf ('/');
+			int index = jniTypeName.IndexOf ("/", StringComparison.Ordinal);
 
 			if (index == -1)
 				return JniEnvironment.Strings.NewString (jniTypeName);

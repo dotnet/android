@@ -110,7 +110,7 @@ namespace Java.Interop {
 			return string.Format ("JniValueMarshalerState({0}, ReferenceValue={1}, PeerableValue=0x{2}, Extra={3})",
 					JniArgumentValue.ToString (),
 					ReferenceValue.ToString (),
-					RuntimeHelpers.GetHashCode (PeerableValue).ToString ("x"),
+					RuntimeHelpers.GetHashCode (PeerableValue!).ToString ("x"),
 					Extra);
 		}
 	}

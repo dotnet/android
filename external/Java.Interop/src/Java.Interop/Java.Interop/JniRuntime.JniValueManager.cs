@@ -496,8 +496,7 @@ namespace Java.Interop
 				if (r != null)
 					return r;
 				lock (Marshalers) {
-					JniValueMarshaler d;
-					if (!Marshalers.TryGetValue (typeof (T), out d))
+					if (!Marshalers.TryGetValue (typeof (T), out var d))
 						Marshalers.Add (typeof (T), d = new DelegatingValueMarshaler<T> (m));
 					return (JniValueMarshaler<T>) d;
 				}
@@ -515,7 +514,7 @@ namespace Java.Interop
 
 				var marshalerAttr   = type.GetCustomAttribute<JniValueMarshalerAttribute> ();
 				if (marshalerAttr != null)
-					return (JniValueMarshaler) Activator.CreateInstance (marshalerAttr.MarshalerType);
+					return (JniValueMarshaler) Activator.CreateInstance (marshalerAttr.MarshalerType)!;
 
 				if (typeof (IJavaPeerable) == type)
 					return JavaPeerableValueMarshaler.Instance;
@@ -561,7 +560,7 @@ namespace Java.Interop
 					}
 				}
 				if (ifaceAttribute != null)
-					return (JniValueMarshaler) Activator.CreateInstance (ifaceAttribute.MarshalerType);
+					return (JniValueMarshaler) Activator.CreateInstance (ifaceAttribute.MarshalerType)!;
 
 				return GetValueMarshalerCore (type);
 			}

@@ -8,6 +8,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 
 using Java.Interop.Expressions;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Java.Interop {
 
@@ -233,12 +234,12 @@ namespace Java.Interop {
 			return JniBoolean.GetValueFromJni (ref reference, options, targetType);
 		}
 
-		public override JniValueMarshalerState CreateGenericArgumentState (Boolean value, ParameterAttributes synchronize = ParameterAttributes.In)
+		public override JniValueMarshalerState CreateGenericArgumentState ([MaybeNull] Boolean value, ParameterAttributes synchronize = ParameterAttributes.In)
 		{
 			return new JniValueMarshalerState (new JniArgumentValue (value));
 		}
 
-		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (Boolean value, ParameterAttributes synchronize)
+		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState ([MaybeNull] Boolean value, ParameterAttributes synchronize)
 		{
 			var r = JniBoolean.CreateLocalRef (value);
 			return new JniValueMarshalerState (r);
@@ -286,7 +287,7 @@ namespace Java.Interop {
 			return JniBoolean.GetValueFromJni (ref reference, options, targetType: null);
 		}
 
-		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (Boolean? value, ParameterAttributes synchronize)
+		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState ([MaybeNull] Boolean? value, ParameterAttributes synchronize)
 		{
 		    if (!value.HasValue)
 		        return new JniValueMarshalerState ();
@@ -360,12 +361,12 @@ namespace Java.Interop {
 			return JniByte.GetValueFromJni (ref reference, options, targetType);
 		}
 
-		public override JniValueMarshalerState CreateGenericArgumentState (SByte value, ParameterAttributes synchronize = ParameterAttributes.In)
+		public override JniValueMarshalerState CreateGenericArgumentState ([MaybeNull] SByte value, ParameterAttributes synchronize = ParameterAttributes.In)
 		{
 			return new JniValueMarshalerState (new JniArgumentValue (value));
 		}
 
-		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (SByte value, ParameterAttributes synchronize)
+		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState ([MaybeNull] SByte value, ParameterAttributes synchronize)
 		{
 			var r = JniByte.CreateLocalRef (value);
 			return new JniValueMarshalerState (r);
@@ -413,7 +414,7 @@ namespace Java.Interop {
 			return JniByte.GetValueFromJni (ref reference, options, targetType: null);
 		}
 
-		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (SByte? value, ParameterAttributes synchronize)
+		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState ([MaybeNull] SByte? value, ParameterAttributes synchronize)
 		{
 		    if (!value.HasValue)
 		        return new JniValueMarshalerState ();
@@ -487,12 +488,12 @@ namespace Java.Interop {
 			return JniCharacter.GetValueFromJni (ref reference, options, targetType);
 		}
 
-		public override JniValueMarshalerState CreateGenericArgumentState (Char value, ParameterAttributes synchronize = ParameterAttributes.In)
+		public override JniValueMarshalerState CreateGenericArgumentState ([MaybeNull] Char value, ParameterAttributes synchronize = ParameterAttributes.In)
 		{
 			return new JniValueMarshalerState (new JniArgumentValue (value));
 		}
 
-		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (Char value, ParameterAttributes synchronize)
+		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState ([MaybeNull] Char value, ParameterAttributes synchronize)
 		{
 			var r = JniCharacter.CreateLocalRef (value);
 			return new JniValueMarshalerState (r);
@@ -540,7 +541,7 @@ namespace Java.Interop {
 			return JniCharacter.GetValueFromJni (ref reference, options, targetType: null);
 		}
 
-		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (Char? value, ParameterAttributes synchronize)
+		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState ([MaybeNull] Char? value, ParameterAttributes synchronize)
 		{
 		    if (!value.HasValue)
 		        return new JniValueMarshalerState ();
@@ -614,12 +615,12 @@ namespace Java.Interop {
 			return JniShort.GetValueFromJni (ref reference, options, targetType);
 		}
 
-		public override JniValueMarshalerState CreateGenericArgumentState (Int16 value, ParameterAttributes synchronize = ParameterAttributes.In)
+		public override JniValueMarshalerState CreateGenericArgumentState ([MaybeNull] Int16 value, ParameterAttributes synchronize = ParameterAttributes.In)
 		{
 			return new JniValueMarshalerState (new JniArgumentValue (value));
 		}
 
-		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (Int16 value, ParameterAttributes synchronize)
+		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState ([MaybeNull] Int16 value, ParameterAttributes synchronize)
 		{
 			var r = JniShort.CreateLocalRef (value);
 			return new JniValueMarshalerState (r);
@@ -667,7 +668,7 @@ namespace Java.Interop {
 			return JniShort.GetValueFromJni (ref reference, options, targetType: null);
 		}
 
-		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (Int16? value, ParameterAttributes synchronize)
+		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState ([MaybeNull] Int16? value, ParameterAttributes synchronize)
 		{
 		    if (!value.HasValue)
 		        return new JniValueMarshalerState ();
@@ -741,12 +742,12 @@ namespace Java.Interop {
 			return JniInteger.GetValueFromJni (ref reference, options, targetType);
 		}
 
-		public override JniValueMarshalerState CreateGenericArgumentState (Int32 value, ParameterAttributes synchronize = ParameterAttributes.In)
+		public override JniValueMarshalerState CreateGenericArgumentState ([MaybeNull] Int32 value, ParameterAttributes synchronize = ParameterAttributes.In)
 		{
 			return new JniValueMarshalerState (new JniArgumentValue (value));
 		}
 
-		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (Int32 value, ParameterAttributes synchronize)
+		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState ([MaybeNull] Int32 value, ParameterAttributes synchronize)
 		{
 			var r = JniInteger.CreateLocalRef (value);
 			return new JniValueMarshalerState (r);
@@ -794,7 +795,7 @@ namespace Java.Interop {
 			return JniInteger.GetValueFromJni (ref reference, options, targetType: null);
 		}
 
-		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (Int32? value, ParameterAttributes synchronize)
+		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState ([MaybeNull] Int32? value, ParameterAttributes synchronize)
 		{
 		    if (!value.HasValue)
 		        return new JniValueMarshalerState ();
@@ -868,12 +869,12 @@ namespace Java.Interop {
 			return JniLong.GetValueFromJni (ref reference, options, targetType);
 		}
 
-		public override JniValueMarshalerState CreateGenericArgumentState (Int64 value, ParameterAttributes synchronize = ParameterAttributes.In)
+		public override JniValueMarshalerState CreateGenericArgumentState ([MaybeNull] Int64 value, ParameterAttributes synchronize = ParameterAttributes.In)
 		{
 			return new JniValueMarshalerState (new JniArgumentValue (value));
 		}
 
-		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (Int64 value, ParameterAttributes synchronize)
+		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState ([MaybeNull] Int64 value, ParameterAttributes synchronize)
 		{
 			var r = JniLong.CreateLocalRef (value);
 			return new JniValueMarshalerState (r);
@@ -921,7 +922,7 @@ namespace Java.Interop {
 			return JniLong.GetValueFromJni (ref reference, options, targetType: null);
 		}
 
-		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (Int64? value, ParameterAttributes synchronize)
+		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState ([MaybeNull] Int64? value, ParameterAttributes synchronize)
 		{
 		    if (!value.HasValue)
 		        return new JniValueMarshalerState ();
@@ -995,12 +996,12 @@ namespace Java.Interop {
 			return JniFloat.GetValueFromJni (ref reference, options, targetType);
 		}
 
-		public override JniValueMarshalerState CreateGenericArgumentState (Single value, ParameterAttributes synchronize = ParameterAttributes.In)
+		public override JniValueMarshalerState CreateGenericArgumentState ([MaybeNull] Single value, ParameterAttributes synchronize = ParameterAttributes.In)
 		{
 			return new JniValueMarshalerState (new JniArgumentValue (value));
 		}
 
-		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (Single value, ParameterAttributes synchronize)
+		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState ([MaybeNull] Single value, ParameterAttributes synchronize)
 		{
 			var r = JniFloat.CreateLocalRef (value);
 			return new JniValueMarshalerState (r);
@@ -1048,7 +1049,7 @@ namespace Java.Interop {
 			return JniFloat.GetValueFromJni (ref reference, options, targetType: null);
 		}
 
-		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (Single? value, ParameterAttributes synchronize)
+		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState ([MaybeNull] Single? value, ParameterAttributes synchronize)
 		{
 		    if (!value.HasValue)
 		        return new JniValueMarshalerState ();
@@ -1122,12 +1123,12 @@ namespace Java.Interop {
 			return JniDouble.GetValueFromJni (ref reference, options, targetType);
 		}
 
-		public override JniValueMarshalerState CreateGenericArgumentState (Double value, ParameterAttributes synchronize = ParameterAttributes.In)
+		public override JniValueMarshalerState CreateGenericArgumentState ([MaybeNull] Double value, ParameterAttributes synchronize = ParameterAttributes.In)
 		{
 			return new JniValueMarshalerState (new JniArgumentValue (value));
 		}
 
-		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (Double value, ParameterAttributes synchronize)
+		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState ([MaybeNull] Double value, ParameterAttributes synchronize)
 		{
 			var r = JniDouble.CreateLocalRef (value);
 			return new JniValueMarshalerState (r);
@@ -1175,7 +1176,7 @@ namespace Java.Interop {
 			return JniDouble.GetValueFromJni (ref reference, options, targetType: null);
 		}
 
-		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (Double? value, ParameterAttributes synchronize)
+		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState ([MaybeNull] Double? value, ParameterAttributes synchronize)
 		{
 		    if (!value.HasValue)
 		        return new JniValueMarshalerState ();

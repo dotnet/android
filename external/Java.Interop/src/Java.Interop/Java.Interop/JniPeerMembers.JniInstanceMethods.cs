@@ -59,8 +59,7 @@ namespace Java.Interop
 			if (signature == null)
 				throw new ArgumentNullException (nameof (signature));
 			lock (InstanceMethods) {
-				JniMethodInfo m;
-				if (!InstanceMethods.TryGetValue (signature, out m)) {
+				if (!InstanceMethods.TryGetValue (signature, out var m)) {
 					m = JniPeerType.GetConstructor (signature);
 					InstanceMethods.Add (signature, m);
 				}
@@ -73,21 +72,19 @@ namespace Java.Interop
 			if (declaringType == DeclaringType)
 				return this;
 
-			JniInstanceMethods methods;
 			lock (SubclassConstructors) {
-				if (!SubclassConstructors.TryGetValue (declaringType, out methods)) {
+				if (!SubclassConstructors.TryGetValue (declaringType, out var methods)) {
 					methods = new JniInstanceMethods (declaringType);
 					SubclassConstructors.Add (declaringType, methods);
 				}
+				return methods;
 			}
-			return methods;
 		}
 
 		public JniMethodInfo GetMethodInfo (string encodedMember)
 		{
 			lock (InstanceMethods) {
-				JniMethodInfo m;
-				if (!InstanceMethods.TryGetValue (encodedMember, out m)) {
+				if (!InstanceMethods.TryGetValue (encodedMember, out var m)) {
 					string method, signature;
 					JniPeerMembers.GetNameAndSignature (encodedMember, out method, out signature);
 					m = JniPeerType.GetInstanceMethod (method, signature);

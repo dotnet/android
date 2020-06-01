@@ -258,31 +258,31 @@ namespace Java.Interop
 			throw new NotSupportedException ();
 		}
 
-		bool IList.Contains (object value)
+		bool IList.Contains (object? value)
 		{
 			if (value is T)
 				return Contains ((T) value);
 			return false;
 		}
 
-		int IList.IndexOf (object value)
+		int IList.IndexOf (object? value)
 		{
 			if (value is T)
 				return IndexOf ((T) value);
 			return -1;
 		}
 
-		int IList.Add (object value)
+		int IList.Add (object? value)
 		{
 			throw new NotSupportedException ();
 		}
 
-		void IList.Insert (int index, object value)
+		void IList.Insert (int index, object? value)
 		{
 			throw new NotSupportedException ();
 		}
 
-		void IList.Remove (object value)
+		void IList.Remove (object? value)
 		{
 			throw new NotSupportedException ();
 		}

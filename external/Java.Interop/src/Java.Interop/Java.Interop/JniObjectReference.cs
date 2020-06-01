@@ -106,7 +106,7 @@ namespace Java.Interop
 			return Handle.GetHashCode ();
 		}
 
-		public override bool Equals (object obj)
+		public override bool Equals (object? obj)
 		{
 			var o = obj as JniObjectReference?;
 			if (o.HasValue)

@@ -101,9 +101,8 @@ namespace Java.Interop
 
 		public static JniRuntime? GetRegisteredRuntime (IntPtr invocationPointer)
 		{
-			JniRuntime vm;
 			lock (Runtimes) {
-				return Runtimes.TryGetValue (invocationPointer, out vm)
+				return Runtimes.TryGetValue (invocationPointer, out var vm)
 					? vm
 					: null;
 			}
@@ -270,7 +269,7 @@ namespace Java.Interop
 		static unsafe JavaVMInterface CreateInvoker (IntPtr handle)
 		{
 			IntPtr p = Marshal.ReadIntPtr (handle);
-			return (JavaVMInterface) Marshal.PtrToStructure (p, typeof (JavaVMInterface));
+			return (JavaVMInterface) Marshal.PtrToStructure (p, typeof (JavaVMInterface))!;
 		}
 
 		~JniRuntime ()
@@ -291,7 +290,11 @@ namespace Java.Interop
 		public virtual void FailFast (string? message)
 		{
 			var m = typeof (Environment).GetMethod ("FailFast");
-			m.Invoke (null, new object?[]{ message });
+
+			if (m is null)
+				Environment.Exit (1);
+
+			m!.Invoke (null, new object?[]{ message });
 		}
 
 		public override string ToString ()
@@ -411,15 +414,13 @@ namespace Java.Interop
 
 		internal void UnTrack (IntPtr key)
 		{
-			IDisposable _;
-			TrackedInstances.TryRemove (key, out _);
+			TrackedInstances.TryRemove (key, out var _);
 		}
 
 		void ClearTrackedReferences ()
 		{
 			foreach (var k in TrackedInstances.Keys.ToList ()) {
-				IDisposable d;
-				if (TrackedInstances.TryRemove (k, out d))
+				if (TrackedInstances.TryRemove (k, out var d))
 					d.Dispose ();
 			}
 			TrackedInstances.Clear ();

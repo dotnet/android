@@ -172,7 +172,7 @@ namespace Java.Interop {
 		{
 			if (encodedMember == null)
 				throw new ArgumentNullException (nameof (encodedMember));
-			int n = encodedMember.IndexOf ('.');
+			int n = encodedMember.IndexOf (".", StringComparison.Ordinal);
 			if (n < 0)
 				throw new ArgumentException (
 						"Invalid encoding; 'encodedMember' should be encoded as \"<NAME>.<SIGNATURE>\".",

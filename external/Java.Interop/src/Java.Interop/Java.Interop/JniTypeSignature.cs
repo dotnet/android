@@ -43,7 +43,7 @@ namespace Java.Interop
 		public JniTypeSignature (string? simpleReference, int arrayRank = 0, bool keyword = false)
 		{
 			if (simpleReference != null) {
-				if (simpleReference.Contains ("."))
+				if (simpleReference.IndexOf (".", StringComparison.Ordinal) >= 0)
 					throw new ArgumentException ("JNI type names do not contain '.', they use '/'. Are you sure you're using a JNI type name?", nameof (simpleReference));
 				if (simpleReference.StartsWith ("[", StringComparison.Ordinal))
 					throw new ArgumentException ("To specify an array, use the ArrayRank property.", nameof (simpleReference));
@@ -172,10 +172,14 @@ namespace Java.Interop
 
 		public override int GetHashCode ()
 		{
+#if NETCOREAPP
+			return QualifiedReference.GetHashCode (StringComparison.Ordinal);
+#else
 			return QualifiedReference.GetHashCode ();
+#endif
 		}
 
-		public override bool Equals (object obj)
+		public override bool Equals (object? obj)
 		{
 			var v = obj as JniTypeSignature?;
 			if (v.HasValue)
