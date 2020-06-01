@@ -35,6 +35,7 @@ and re-enable it after building with the following command:
 			{"Ubuntu",    (ctx) => new LinuxUbuntu (ctx)},
 			{"LinuxMint", (ctx) => new LinuxMint   (ctx)},
 			{"Arch",      (ctx) => new LinuxArch   (ctx)},
+			{"Fedora",    (ctx) => new LinuxFedora (ctx)},
 		};
 
 		static readonly Dictionary<string, string> distroIdMap = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase) {
@@ -42,6 +43,7 @@ and re-enable it after building with the following command:
 			{"ubuntu",    "Ubuntu"},
 			{"arch",      "Arch"},
 			{"linuxmint", "LinuxMint"},
+			{"fedora",    "Fedora"}
 		};
 
 		bool warnBinFmt;
