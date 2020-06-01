@@ -17,6 +17,7 @@
     <AndroidGenerateLayoutBindings>True</AndroidGenerateLayoutBindings>
     <DebugType>portable</DebugType>
     <_ApkDebugKeyStore>debug.keystore</_ApkDebugKeyStore>
+    <AppendTargetFrameworkToIntermediateOutputPath>false</AppendTargetFrameworkToIntermediateOutputPath>
   </PropertyGroup>
   <Import
       Condition="Exists('..\..\..\Configuration.props')"

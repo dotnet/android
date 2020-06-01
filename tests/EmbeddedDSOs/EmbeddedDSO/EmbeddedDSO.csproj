@@ -15,6 +15,7 @@
     <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
     <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
     <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
+    <AppendTargetFrameworkToIntermediateOutputPath>false</AppendTargetFrameworkToIntermediateOutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(UnitTestsMode)' == 'true' ">
