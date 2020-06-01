@@ -298,7 +298,7 @@ namespace CodeBehindUnitTests
 
 		void SuccessfulBuild_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder)
 		{
-			string[] parameters = GetBuildProperties (many, dtb);
+			string[] parameters = GetBuildProperties (builder, many, dtb);
 			bool success = builder.Build (testInfo.SlnPath, GetBuildTarget (dtb), parameters);
 
 			CopyLogs (testInfo, true);
@@ -337,7 +337,7 @@ namespace CodeBehindUnitTests
 
 		void FailedBuild_ConflictingFragment_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder)
 		{
-			string[] parameters = GetBuildProperties (many, dtb, "NOT_CONFLICTING_FRAGMENT");
+			string[] parameters = GetBuildProperties (builder, many, dtb, "NOT_CONFLICTING_FRAGMENT");
 			bool success = builder.Build (testInfo.SlnPath, GetBuildTarget (dtb), parameters);
 
 			CopyLogs (testInfo, true);
@@ -365,7 +365,7 @@ namespace CodeBehindUnitTests
 
 		void FailedBuild_ConflictingTextView_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder)
 		{
-			string[] parameters = GetBuildProperties (many, dtb, "NOT_CONFLICTING_TEXTVIEW");
+			string[] parameters = GetBuildProperties (builder, many, dtb, "NOT_CONFLICTING_TEXTVIEW");
 			bool success = builder.Build (testInfo.SlnPath, GetBuildTarget (dtb), parameters);
 
 			CopyLogs (testInfo, true);
@@ -393,7 +393,7 @@ namespace CodeBehindUnitTests
 
 		void FailedBuild_ConflictingButton_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder)
 		{
-			string[] parameters = GetBuildProperties (many, dtb, "NOT_CONFLICTING_BUTTON");
+			string[] parameters = GetBuildProperties (builder, many, dtb, "NOT_CONFLICTING_BUTTON");
 			bool success = builder.Build (testInfo.SlnPath, GetBuildTarget (dtb), parameters);
 
 			CopyLogs (testInfo, true);
@@ -421,7 +421,7 @@ namespace CodeBehindUnitTests
 
 		void FailedBuild_ConflictingLinearLayout_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder)
 		{
-			string[] parameters = GetBuildProperties (many, dtb, "NOT_CONFLICTING_LINEARLAYOUT");
+			string[] parameters = GetBuildProperties (builder, many, dtb, "NOT_CONFLICTING_LINEARLAYOUT");
 			bool success = builder.Build (testInfo.SlnPath, GetBuildTarget (dtb), parameters);
 
 			CopyLogs (testInfo, true);
@@ -449,7 +449,7 @@ namespace CodeBehindUnitTests
 
 		void FailedBuild_ConflictingRelativeLayout_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder)
 		{
-			string[] parameters = GetBuildProperties (many, dtb, "NOT_CONFLICTING_RELATIVELAYOUT");
+			string[] parameters = GetBuildProperties (builder, many, dtb, "NOT_CONFLICTING_RELATIVELAYOUT");
 			bool success = builder.Build (testInfo.SlnPath, GetBuildTarget (dtb), parameters);
 
 			CopyLogs (testInfo, true);
@@ -468,9 +468,10 @@ namespace CodeBehindUnitTests
 			return isDTB ? "Compile" : "SignAndroidPackage";
 		}
 
-		string[] GetBuildProperties (bool manyBuild, bool dtbBuild, params string[] extraConstants)
+		string[] GetBuildProperties (LocalBuilder builder, bool manyBuild, bool dtbBuild, params string[] extraConstants)
 		{
 			var ret = new List <string> {
+				"TargetFrameworkVersion=" + builder.LatestTargetFrameworkVersion (),
 				"AndroidGenerateLayoutBindings=true"
 			};
 			if (manyBuild)
