@@ -5,8 +5,10 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading;
+using System.Reflection;
 using Microsoft.Build.Framework;
 using TPL = System.Threading.Tasks;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
@@ -144,6 +146,33 @@ namespace Xamarin.Android.Tasks
 			pendingJobs.CompleteAdding ();
 		}
 
+		private bool SetConsoleInputEncoding (Encoding encoding)
+		{
+			try {
+				if (Console.InputEncoding != encoding) {
+					Console.InputEncoding = encoding;
+					return true;
+				}
+			} catch (IOException) {
+				//In a DesignTime Build on VS Windows sometimes this exception is raised.
+				//We should catch it, but there is nothing we can do about it.
+			}
+			return false;
+		}
+
+		private bool SetProcessInputEncoding (ProcessStartInfo info, Encoding encoding)
+		{
+			Type type = info.GetType ();
+			PropertyInfo prop = type.GetRuntimeProperty ("StandardInputEncoding");
+			if (prop == null)
+				prop = type.GetProperty ("StandardInputEncoding", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+			if(prop?.CanWrite ?? false) {
+				prop.SetValue (info, encoding, null);
+				return true;
+			}
+			return false;
+		}
+
 		private void Aapt2DaemonStart ()
 		{
 			ProcessStartInfo info = new ProcessStartInfo (Aapt2)
@@ -158,23 +187,24 @@ namespace Xamarin.Android.Tasks
 				WorkingDirectory = Path.GetTempPath (),
 				StandardErrorEncoding = Encoding.UTF8,
 				StandardOutputEncoding = Encoding.UTF8,
+				// We need to FORCE the StandardInput to be UTF8 so we can use
+				// accented characters. Also DONT INCLUDE A BOM!!
+				// otherwise aapt2 will try to interpret the BOM as an argument.
 				// Cant use this cos its netstandard 2.1 only
 				// and we are using netstandard 2.0
-				//StandardInputEncoding = Encoding.UTF8,
+				//StandardInputEncoding = MonoAndroidHelper.UTF8withoutBOM,
 			};
-			// We need to FORCE the StandardInput to be UTF8 so we can use 
-			// accented characters. Also DONT INCLUDE A BOM!!
-			// otherwise aapt2 will try to interpret the BOM as an argument.
 			Process aapt2;
-			lock (lockObject) {
-				Encoding current = Console.InputEncoding;
+			Encoding currentEncoding = Console.InputEncoding;
+ 			lock (lockObject) {
 				try {
-					Console.InputEncoding = new UTF8Encoding (false);
+					if (!SetProcessInputEncoding (info, MonoAndroidHelper.UTF8withoutBOM))
+						SetConsoleInputEncoding (MonoAndroidHelper.UTF8withoutBOM);
 					aapt2 = new Process ();
 					aapt2.StartInfo = info;
 					aapt2.Start ();
 				} finally {
-					Console.InputEncoding = current;
+					SetConsoleInputEncoding (currentEncoding);
 				}
 			}
 			try {
@@ -183,15 +213,15 @@ namespace Xamarin.Android.Tasks
 					bool errored = false;
 					try {
 						// try to write Unicode UTF8 to aapt2
-						StreamWriter writer = aapt2.StandardInput;
-						foreach (var arg in job.Commands)
-						{
-							writer.WriteLine (arg);
+						using (StreamWriter writer = new StreamWriter (aapt2.StandardInput.BaseStream, MonoAndroidHelper.UTF8withoutBOM, bufferSize: 1024, leaveOpen: true)) {
+							foreach (var arg in job.Commands) {
+								writer.WriteLine (arg);
+							}
+							writer.WriteLine ();
+							writer.Flush ();
 						}
-						writer.WriteLine ();
-						writer.Flush ();
 						string line;
-						
+
 						Queue<string> stdError = new Queue<string> ();
 						while ((line = aapt2.StandardError.ReadLine ()) != null) {
 							if (string.Compare (line, "Done", StringComparison.OrdinalIgnoreCase) == 0) {
@@ -201,8 +231,8 @@ namespace Xamarin.Android.Tasks
 								errored = true;
 								continue;
 							}
-							// we have to queue the output because the "Done"/"Error" lines are 
-							//written after all the messages. So to process the warnings/errors 
+							// we have to queue the output because the "Done"/"Error" lines are
+							//written after all the messages. So to process the warnings/errors
 							// correctly we need to do this after we know if worked or failed.
 							stdError.Enqueue (line);
 						}
