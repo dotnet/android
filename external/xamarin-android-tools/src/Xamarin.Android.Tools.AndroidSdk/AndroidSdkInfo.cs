@@ -10,7 +10,7 @@ namespace Xamarin.Android.Tools
 	{
 		AndroidSdkBase sdk;
 
-		public AndroidSdkInfo (Action<TraceLevel, string> logger = null, string androidSdkPath = null, string androidNdkPath = null, string javaSdkPath = null)
+		public AndroidSdkInfo (Action<TraceLevel, string>? logger = null, string? androidSdkPath = null, string? androidNdkPath = null, string? javaSdkPath = null)
 		{
 			logger  = logger ?? DefaultConsoleLogger;
 
@@ -71,10 +71,9 @@ namespace Xamarin.Android.Tools
 					select p;
 		}
 
-		static Version TryParseVersion (string v)
+		static Version? TryParseVersion (string v)
 		{
-			Version version;
-			if (Version.TryParse (v, out version))
+			if (Version.TryParse (v, out var version))
 				return version;
 			return null;
 		}
@@ -97,10 +96,13 @@ namespace Xamarin.Android.Tools
 			return Path.Combine (AndroidSdkPath, "platforms", "android-" + id);
 		}
 
-		public string TryGetPlatformDirectoryFromApiLevel (string idOrApiLevel, AndroidVersions versions)
+		public string? TryGetPlatformDirectoryFromApiLevel (string idOrApiLevel, AndroidVersions versions)
 		{
 			var id  = versions.GetIdFromApiLevel (idOrApiLevel);
-			var dir = GetPlatformDirectoryFromId (id);
+			if (id == null)
+				return null;
+
+			string? dir = GetPlatformDirectoryFromId (id);
 
 			if (Directory.Exists (dir))
 				return dir;
@@ -118,12 +120,12 @@ namespace Xamarin.Android.Tools
 			return apiLevel != 0 && Directory.Exists (GetPlatformDirectory (apiLevel));
 		}
 
-		public string AndroidNdkPath {
+		public string? AndroidNdkPath {
 			get { return sdk.AndroidNdkPath; }
 		}
 
 		public string AndroidSdkPath {
-			get { return sdk.AndroidSdkPath; }
+			get { return sdk.AndroidSdkPath!; }
 		}
 
 		public string [] AllAndroidSdkPaths {
@@ -133,14 +135,14 @@ namespace Xamarin.Android.Tools
 		}
 
 		public string JavaSdkPath {
-			get { return sdk.JavaSdkPath; }
+			get { return sdk.JavaSdkPath!; }
 		}
 
 		public string AndroidNdkHostPlatform {
 			get { return sdk.NdkHostPlatform; }
 		}
 
-		public static void SetPreferredAndroidNdkPath (string path, Action<TraceLevel, string> logger = null)
+		public static void SetPreferredAndroidNdkPath (string path, Action<TraceLevel, string>? logger = null)
 		{
 			logger  = logger ?? DefaultConsoleLogger;
 
@@ -160,7 +162,7 @@ namespace Xamarin.Android.Tools
 			}
 		}
 
-		public static void SetPreferredAndroidSdkPath (string path, Action<TraceLevel, string> logger = null)
+		public static void SetPreferredAndroidSdkPath (string path, Action<TraceLevel, string>? logger = null)
 		{
 			logger  = logger ?? DefaultConsoleLogger;
 
@@ -168,7 +170,7 @@ namespace Xamarin.Android.Tools
 			sdk.SetPreferredAndroidSdkPath (path);
 		}
 
-		public static void SetPreferredJavaSdkPath (string path, Action<TraceLevel, string> logger = null)
+		public static void SetPreferredJavaSdkPath (string path, Action<TraceLevel, string>? logger = null)
 		{
 			logger  = logger ?? DefaultConsoleLogger;
 
@@ -176,7 +178,7 @@ namespace Xamarin.Android.Tools
 			sdk.SetPreferredJavaSdkPath (path);
 		}
 
-		public static void DetectAndSetPreferredJavaSdkPathToLatest (Action<TraceLevel, string> logger = null)
+		public static void DetectAndSetPreferredJavaSdkPathToLatest (Action<TraceLevel, string>? logger = null)
 		{
 			if (OS.IsWindows)
 				throw new NotImplementedException ("Windows is not supported at this time.");

@@ -13,8 +13,8 @@ namespace Xamarin.Android.Tools
 		List<AndroidVersion>                installedVersions = new List<AndroidVersion> ();
 
 		public  IReadOnlyList<string>       FrameworkDirectories            { get; }
-		public  AndroidVersion              MaxStableVersion                { get; private set; }
-		public  AndroidVersion              MinStableVersion                { get; private set; }
+		public  AndroidVersion?             MaxStableVersion                { get; private set; }
+		public  AndroidVersion?             MinStableVersion                { get; private set; }
 
 		public  IReadOnlyList<AndroidVersion>       InstalledBindingVersions    { get; private set; }
 
@@ -33,7 +33,7 @@ namespace Xamarin.Android.Tools
 				var dn  = Path.GetFileName (dp);
 				// In "normal" use, `dp` will contain e.g. `...\MonoAndroid\v1.0`.
 				// We want the `MonoAndroid` dir, not the versioned dir.
-				var p   = dn.StartsWith ("v", StringComparison.Ordinal) ? Path.GetDirectoryName (dp) : dp;
+				var p   = dn.StartsWith ("v", StringComparison.Ordinal) ? (Path.GetDirectoryName (dp) ?? "") : dp;
 				dirs.Add (Path.GetFullPath (p));
 			}
 
@@ -46,6 +46,8 @@ namespace Xamarin.Android.Tools
 				.Select (file => AndroidVersion.Load (file));
 
 			LoadVersions (versions);
+
+			InstalledBindingVersions    = new ReadOnlyCollection<AndroidVersion> (installedVersions);
 		}
 
 		public AndroidVersions (IEnumerable<AndroidVersion> versions)
@@ -56,6 +58,8 @@ namespace Xamarin.Android.Tools
 			FrameworkDirectories    = new ReadOnlyCollection<string> (new string [0]);
 
 			LoadVersions (versions);
+
+			InstalledBindingVersions    = new ReadOnlyCollection<AndroidVersion> (installedVersions);
 		}
 
 		void LoadVersions (IEnumerable<AndroidVersion> versions)
@@ -71,8 +75,6 @@ namespace Xamarin.Android.Tools
 					MinStableVersion = version;
 				}
 			}
-
-			InstalledBindingVersions    = new ReadOnlyCollection<AndroidVersion>(installedVersions);
 		}
 
 		public int? GetApiLevelFromFrameworkVersion (string frameworkVersion)
@@ -100,7 +102,7 @@ namespace Xamarin.Android.Tools
 				(version.ApiLevel.ToString () == id);
 		}
 
-		public string GetIdFromApiLevel (int apiLevel)
+		public string? GetIdFromApiLevel (int apiLevel)
 		{
 			return installedVersions.FirstOrDefault (v => v.ApiLevel == apiLevel)?.Id ??
 				KnownVersions.FirstOrDefault (v => v.ApiLevel == apiLevel)?.Id;
@@ -108,7 +110,7 @@ namespace Xamarin.Android.Tools
 
 		// Sometimes, e.g. when new API levels are introduced, the "API level" is a letter, not a number,
 		// e.g. 'API-H' for API-11, 'API-O' for API-26, etc.
-		public string GetIdFromApiLevel (string apiLevel)
+		public string? GetIdFromApiLevel (string apiLevel)
 		{
 			if (int.TryParse (apiLevel, out var platform))
 				return GetIdFromApiLevel (platform);
@@ -116,19 +118,19 @@ namespace Xamarin.Android.Tools
 				KnownVersions.FirstOrDefault (v => MatchesId (v, apiLevel))?.Id;
 		}
 
-		public string GetIdFromFrameworkVersion (string frameworkVersion)
+		public string? GetIdFromFrameworkVersion (string frameworkVersion)
 		{
 			return installedVersions.FirstOrDefault (v => MatchesFrameworkVersion (v, frameworkVersion))?.Id ??
 				KnownVersions.FirstOrDefault (v => MatchesFrameworkVersion (v, frameworkVersion))?.Id;
 		}
 
-		public string GetFrameworkVersionFromApiLevel (int apiLevel)
+		public string? GetFrameworkVersionFromApiLevel (int apiLevel)
 		{
 			return installedVersions.FirstOrDefault (v => v.ApiLevel == apiLevel)?.FrameworkVersion ??
 				KnownVersions.FirstOrDefault (v => v.ApiLevel == apiLevel)?.FrameworkVersion;
 		}
 
-		public string GetFrameworkVersionFromId (string id)
+		public string? GetFrameworkVersionFromId (string id)
 		{
 			return installedVersions.FirstOrDefault (v => MatchesId (v, id))?.FrameworkVersion ??
 				KnownVersions.FirstOrDefault (v => MatchesId (v, id))?.FrameworkVersion;
@@ -179,10 +181,10 @@ namespace Xamarin.Android.Tools
 		Func<T, T, bool>    equals;
 		Func<T, int>        getHashCode;
 
-		public EqualityComparer (Func<T, T, bool> equals, Func<T, int> getHashCode = null)
+		public EqualityComparer (Func<T, T, bool> equals, Func<T, int>? getHashCode = null)
 		{
 			this.equals         = equals;
-			this.getHashCode    = getHashCode ?? (v => v.GetHashCode ());
+			this.getHashCode    = getHashCode ?? (v => v?.GetHashCode () ?? 0);
 		}
 
 		public bool Equals (T x, T y)

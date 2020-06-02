@@ -130,42 +130,42 @@ namespace Xamarin.Android.Tools
 			}
 		}
 
-		static string NullIfEmpty (string value)
+		static string? NullIfEmpty (string? value)
 		{
 			return string.IsNullOrEmpty (value) ? null : value;
 		}
 
-		public string PackageName {
+		public string? PackageName {
 			get { return (string) manifest.Attribute ("package");  }
 			set { manifest.SetAttributeValue ("package", NullIfEmpty (value)); }
 		}
 
-		public string ApplicationLabel {
+		public string? ApplicationLabel {
 			get { return (string) application.Attribute (aNS + "label");  }
 			set { application.SetAttributeValue (aNS + "label", NullIfEmpty (value)); }
 		}
 
-		public string ApplicationIcon {
+		public string? ApplicationIcon {
 			get { return (string) application.Attribute (aNS + "icon");  }
 			set { application.SetAttributeValue (aNS + "icon", NullIfEmpty (value)); }
 		}
 
-		public string ApplicationTheme {
+		public string? ApplicationTheme {
 			get { return (string) application.Attribute (aNS + "theme"); }
 			set { application.SetAttributeValue (aNS + "theme", NullIfEmpty (value)); }
 		}
 
-		public string VersionName {
+		public string? VersionName {
 			get { return (string) manifest.Attribute (aNS + "versionName");  }
 			set { manifest.SetAttributeValue (aNS + "versionName", NullIfEmpty (value)); }
 		}
 
-		public string VersionCode {
+		public string? VersionCode {
 			get { return (string) manifest.Attribute (aNS + "versionCode");  }
 			set { manifest.SetAttributeValue (aNS + "versionCode", NullIfEmpty (value)); }
 		}
 
-		public string InstallLocation {
+		public string? InstallLocation {
 			get { return (string) manifest.Attribute (aNS + "installLocation"); }
 			set { manifest.SetAttributeValue (aNS + "installLocation", NullIfEmpty (value)); }
 		}
@@ -190,7 +190,7 @@ namespace Xamarin.Android.Tools
 				int? apiLevel = versions.GetApiLevelFromId (version);
 				if (apiLevel.HasValue)
 					return apiLevel.Value;
-				return versions.MaxStableVersion.ApiLevel;
+				return versions.MaxStableVersion?.ApiLevel;
 			}
 			return vn;
 		}
@@ -273,16 +273,16 @@ namespace Xamarin.Android.Tools
 		}
 
 		[Obsolete ("Use GetLaunchableFastdevActivityName or GetLaunchableUserActivityName")]
-		public string GetLaunchableActivityName ()
+		public string? GetLaunchableActivityName ()
 		{
 			return GetLaunchableFastDevActivityName ();
 		}
 
 		/// <summary>Gets an activity that can be used to initialize the override directory for fastdev.</summary>
 		[Obsolete ("This should not be needed anymore; Activity execution is not part of installation.")]
-		public string GetLaunchableFastDevActivityName ()
+		public string? GetLaunchableFastDevActivityName ()
 		{
-			string first = null;
+			string? first = null;
 			foreach (var a in GetLaunchableActivities ()) {
 				var name = (string) a.Attribute (aName);
 				//prefer the fastdev launcher, it's quicker
@@ -300,7 +300,7 @@ namespace Xamarin.Android.Tools
 
 		// We add a fake launchable activity for FastDev, but we don't want
 		// to launch that one when the user does Run or Debug
-		public string GetLaunchableUserActivityName ()
+		public string? GetLaunchableUserActivityName ()
 		{
 			return GetLaunchableActivities ()
 				.Select (a => (string) a.Attribute (aName))

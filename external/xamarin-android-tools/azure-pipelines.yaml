@@ -1,14 +1,32 @@
 name: Xamarin.Android.Tools $(Rev:r)
 
+trigger:
+  - master
+  - d16-*
+
+pr:
+  - master
+  - d16-*
+
+# Global variables
+variables:
+  DotNetCoreVersion: 3.1.100
+  HostedMac: Hosted Mac Internal
+  HostedWinVS2019: Hosted Windows 2019 with VS2019
+
 jobs:
 - job: windows
   displayName: windows
-  pool: Hosted VS2017
+  pool: $(HostedWinVS2019)
   steps:
-  - task: NuGetToolInstaller@1
+  - task: UseDotNet@2
+    displayName: Use .NET Core $(DotNetCoreVersion)
+    inputs:
+      version: $(DotNetCoreVersion)
+  - task: NuGetToolInstaller@0
     displayName: 'Install NuGet'
     inputs:
-      versionSpec: '5.4.x'
+      versionSpec: 5.x
   - task: NuGetCommand@2
     displayName: 'NuGet Restore'
     inputs:
@@ -38,25 +56,27 @@ jobs:
       pathtoPublish: $(Build.ArtifactStagingDirectory)
 - job: mac
   displayName: mac
-  pool: Hosted macOS
+  pool: $(HostedMac)
   steps:
-  - task: NuGetToolInstaller@1
-    displayName: 'Install NuGet'
+  - task: UseDotNet@2
+    displayName: Use .NET Core $(DotNetCoreVersion)
     inputs:
-      versionSpec: '5.4.x'
-  - task: NuGetCommand@2
-    displayName: 'NuGet Restore'
-    inputs:
-      restoreSolution: Xamarin.Android.Tools.sln
-      restoreDirectory: 'packages'
-  - task: MSBuild@1
-    displayName: 'Build solution Xamarin.Android.Tools.sln'
-    inputs:
-      solution: Xamarin.Android.Tools.sln
-  - script: mono packages/nunit.consolerunner/3.9.0/tools/nunit3-console.exe bin/TestDebug/Xamarin.Android.Tools.AndroidSdk-Tests.dll
-    displayName: Run Tests
+      version: $(DotNetCoreVersion)
+  - script: |
+      dotnet tool install --global boots
+      boots https://download.mono-project.com/archive/6.4.0/macos-10-universal/MonoFramework-MDK-6.4.0.198.macos10.xamarin.universal.pkg
+    displayName: Install Mono 6.4
+  - script: make prepare CONFIGURATION=$(Build.Configuration)
+    displayName: make prepare
+
+  - script: make all CONFIGURATION=$(Build.Configuration)
+    displayName: make all
+
+  - script: make run-all-tests CONFIGURATION=$(Build.Configuration)
+    displayName: make run-all-tests
+
   - task: PublishTestResults@2
     condition: always()
     inputs:
       testResultsFormat: NUnit
-      testResultsFiles: TestResult.xml
+      testResultsFiles: TestResult*.xml

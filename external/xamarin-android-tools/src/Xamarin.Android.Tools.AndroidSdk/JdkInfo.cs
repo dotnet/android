@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -20,7 +21,7 @@ namespace Xamarin.Android.Tools
 
 		public      string                              HomePath                    {get;}
 
-		public      string                              Locator                     {get;}
+		public      string?                             Locator                     {get;}
 
 		public      string                              JarPath                     {get;}
 		public      string                              JavaPath                    {get;}
@@ -28,10 +29,10 @@ namespace Xamarin.Android.Tools
 		public      string                              JdkJvmPath                  {get;}
 		public      ReadOnlyCollection<string>          IncludePath                 {get;}
 
-		public      Version                             Version                     => javaVersion.Value;
-		public      string                              Vendor                      {
+		public      Version?                            Version                     => javaVersion.Value;
+		public      string?                             Vendor                      {
 			get {
-				if (GetJavaSettingsPropertyValue ("java.vendor", out string vendor))
+				if (GetJavaSettingsPropertyValue ("java.vendor", out string? vendor))
 					return vendor;
 				return null;
 			}
@@ -41,7 +42,7 @@ namespace Xamarin.Android.Tools
 		public      IEnumerable<string>                 JavaSettingsPropertyKeys    => javaProperties.Value.Keys;
 
 		Lazy<Dictionary<string, List<string>>>      javaProperties;
-		Lazy<Version>                               javaVersion;
+		Lazy<Version?>                              javaVersion;
 
 		public JdkInfo (string homePath)
 		{
@@ -57,7 +58,7 @@ namespace Xamarin.Android.Tools
 			JavaPath            = ProcessUtils.FindExecutablesInDirectory (binPath, "java").FirstOrDefault ();
 			JavacPath           = ProcessUtils.FindExecutablesInDirectory (binPath, "javac").FirstOrDefault ();
 
-			string topDir = null;
+			string? topDir = null;
 			foreach (string dir in JdkLibraryTopDirs) {
 				topDir = Path.Combine (HomePath, dir);
 				if (!Directory.Exists (topDir)) {
@@ -71,8 +72,8 @@ namespace Xamarin.Android.Tools
 				topDir = Path.Combine (HomePath, JdkLibraryTopDirs [0]);
 
 			JdkJvmPath = OS.IsMac
-				? FindLibrariesInDirectory (topDir, "jli").FirstOrDefault ()
-				: FindLibrariesInDirectory (topDir, "jvm").FirstOrDefault ();
+				? FindLibrariesInDirectory (topDir!, "jli").FirstOrDefault ()
+				: FindLibrariesInDirectory (topDir!, "jvm").FirstOrDefault ();
 
 			ValidateFile ("jar",    JarPath);
 			ValidateFile ("java",   JavaPath);
@@ -93,7 +94,7 @@ namespace Xamarin.Android.Tools
 			IncludePath         = new ReadOnlyCollection<string> (includes);
 
 			javaProperties      = new Lazy<Dictionary<string, List<string>>> (GetJavaProperties, LazyThreadSafetyMode.ExecutionAndPublication);
-			javaVersion         = new Lazy<Version> (GetJavaVersion, LazyThreadSafetyMode.ExecutionAndPublication);
+			javaVersion         = new Lazy<Version?> (GetJavaVersion, LazyThreadSafetyMode.ExecutionAndPublication);
 		}
 
 		public JdkInfo (string homePath, string locator)
@@ -107,7 +108,7 @@ namespace Xamarin.Android.Tools
 			return $"JdkInfo(Version={Version}, Vendor=\"{Vendor}\", HomePath=\"{HomePath}\", Locator=\"{Locator}\")";
 		}
 
-		public bool GetJavaSettingsPropertyValues (string key, out IEnumerable<string> value)
+		public bool GetJavaSettingsPropertyValues (string key, [NotNullWhen (true)] out IEnumerable<string>? value)
 		{
 			value       = null;
 			var props   = javaProperties.Value;
@@ -118,7 +119,7 @@ namespace Xamarin.Android.Tools
 			return false;
 		}
 
-		public bool GetJavaSettingsPropertyValue (string key, out string value)
+		public bool GetJavaSettingsPropertyValue (string key, [NotNullWhen (true)] out string? value)
 		{
 			value       = null;
 			var props   = javaProperties.Value;
@@ -147,9 +148,9 @@ namespace Xamarin.Android.Tools
 
 		static  Regex   NonDigitMatcher     = new Regex (@"[^\d]", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
-		Version GetJavaVersion ()
+		Version? GetJavaVersion ()
 		{
-			string version = null;
+			string? version = null;
 			if (ReleaseProperties.TryGetValue ("JAVA_VERSION", out version) && !string.IsNullOrEmpty (version)) {
 				version = GetParsableVersion (version);
 				if (ReleaseProperties.TryGetValue ("BUILD_NUMBER", out var build) && !string.IsNullOrEmpty (build))
@@ -193,7 +194,7 @@ namespace Xamarin.Android.Tools
 				return new ReadOnlyDictionary<string, string>(props);
 
 			using (var release = File.OpenText (releasePath)) {
-				string line;
+				string? line;
 				while ((line = release.ReadLine ()) != null) {
 					line            = line.Trim ();
 					const string PropertyDelim  = "=";
@@ -243,7 +244,7 @@ namespace Xamarin.Android.Tools
 			};
 
 			var     props   = new Dictionary<string, List<string>> ();
-			string  curKey  = null;
+			string? curKey  = null;
 
 			if (!AnySystemJavasInstalled () && (java == "/usr/bin/java" || java == "java"))
 				return props;
@@ -266,8 +267,8 @@ namespace Xamarin.Android.Tools
 							return;
 						curKey      = e.Data.Substring (NewValuePrefix.Length, delim - NewValuePrefix.Length);
 						var value   = e.Data.Substring (delim + NameValueDelim.Length);
-						List<string> values;
-						if (!props.TryGetValue (curKey, out values))
+						List<string>? values;
+						if (!props.TryGetValue (curKey!, out values))
 							props.Add (curKey, values = new List<string> ());
 						values.Add (value);
 					}
@@ -276,7 +277,7 @@ namespace Xamarin.Android.Tools
 			return props;
 		}
 
-		public static IEnumerable<JdkInfo> GetKnownSystemJdkInfos (Action<TraceLevel, string> logger = null)
+		public static IEnumerable<JdkInfo> GetKnownSystemJdkInfos (Action<TraceLevel, string>? logger = null)
 		{
 			logger  = logger ?? AndroidSdkInfo.DefaultConsoleLogger;
 
@@ -295,6 +296,7 @@ namespace Xamarin.Android.Tools
 			return GetConfiguredJdkPaths (logger)
 				.Select (p => TryGetJdkInfo (p, logger, "monodroid-config.xml"))
 				.Where (jdk => jdk != null)
+				.Select (jdk => jdk!)
 				.OrderByDescending (jdk => jdk, JdkInfoVersionComparer.Default);
 		}
 
@@ -312,6 +314,7 @@ namespace Xamarin.Android.Tools
 			return GetMacOSMicrosoftJdkPaths ()
 				.Select (p => TryGetJdkInfo (p, logger, "$HOME/Library/Developer/Xamarin/jdk"))
 				.Where (jdk => jdk != null)
+				.Select (jdk => jdk!)
 				.OrderByDescending (jdk => jdk, JdkInfoVersionComparer.Default);
 		}
 
@@ -329,9 +332,9 @@ namespace Xamarin.Android.Tools
 			return Directory.EnumerateDirectories (jdks);
 		}
 
-		static JdkInfo TryGetJdkInfo (string path, Action<TraceLevel, string> logger, string locator)
+		static JdkInfo? TryGetJdkInfo (string path, Action<TraceLevel, string> logger, string locator)
 		{
-			JdkInfo jdk = null;
+			JdkInfo? jdk = null;
 			try {
 				jdk = new JdkInfo (path, locator);
 			}
@@ -366,6 +369,7 @@ namespace Xamarin.Android.Tools
 				.Distinct ()
 				.Select (p => TryGetJdkInfo (p, logger, "`/usr/libexec/java_home -X`"))
 				.Where (jdk => jdk != null)
+				.Select (jdk => jdk!)
 				.OrderByDescending (jdk => jdk, JdkInfoVersionComparer.Default);
 		}
 
@@ -404,7 +408,8 @@ namespace Xamarin.Android.Tools
 			return GetJavaAlternativesJdkPaths ()
 				.Distinct ()
 				.Select (p => TryGetJdkInfo (p, logger, "`/usr/sbin/update-java-alternatives -l`"))
-				.Where (jdk => jdk != null);
+				.Where (jdk => jdk != null)
+				.Select (jdk => jdk!);
 		}
 
 		static IEnumerable<string> GetJavaAlternativesJdkPaths ()
@@ -438,6 +443,7 @@ namespace Xamarin.Android.Tools
 				.Distinct ()
 				.Select (p => TryGetJdkInfo (p, logger, "`ls /usr/lib/jvm/*`"))
 				.Where (jdk => jdk != null)
+				.Select (jdk => jdk!)
 				.OrderByDescending (jdk => jdk, JdkInfoVersionComparer.Default);
 		}
 
@@ -459,7 +465,8 @@ namespace Xamarin.Android.Tools
 		{
 			return GetPathEnvironmentJdkPaths ()
 				.Select (p => TryGetJdkInfo (p, logger, "$PATH"))
-				.Where (jdk => jdk != null);
+				.Where (jdk => jdk != null)
+				.Select (jdk => jdk!);
 		}
 
 		static IEnumerable<string> GetPathEnvironmentJdkPaths ()
@@ -471,7 +478,7 @@ namespace Xamarin.Android.Tools
 					// `java -XshowSettings:properties -version 2>&1 | grep java.home` ends with `/jre` on macOS.
 					// We need the parent dir so we can properly lookup the `include` directories
 					if (java_home.EndsWith ("jre", StringComparison.OrdinalIgnoreCase)) {
-						java_home = Path.GetDirectoryName (java_home);
+						java_home = Path.GetDirectoryName (java_home) ?? "";
 					}
 					yield return java_home;
 				}

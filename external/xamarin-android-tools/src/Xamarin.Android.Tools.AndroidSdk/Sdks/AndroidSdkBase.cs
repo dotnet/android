@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.IO;
 using System.Collections.Generic;
@@ -8,8 +9,8 @@ namespace Xamarin.Android.Tools
 {
 	abstract class AndroidSdkBase
 	{
-		string[] allAndroidSdks = null;
-		string[] allAndroidNdks = null;
+		string[]? allAndroidSdks;
+		string[]? allAndroidNdks;
 
 		public string[] AllAndroidSdks {
 			get {
@@ -33,12 +34,12 @@ namespace Xamarin.Android.Tools
 			Logger  = logger;
 		}
 
-		public string AndroidSdkPath { get; private set; }
-		public string AndroidNdkPath { get; private set; }
-		public string JavaSdkPath { get; private set; }
-		public string JavaBinPath { get; private set; }
-		public string AndroidPlatformToolsPath { get; private set; }
-		public string AndroidPlatformToolsPathShort { get; private set; }
+		public  string?     AndroidSdkPath                  { get; private set; }
+		public  string?     AndroidNdkPath                  { get; private set; }
+		public  string?     JavaSdkPath                     { get; private set; }
+		public  string?     JavaBinPath                     { get; private set; }
+		public  string?     AndroidPlatformToolsPath        { get; private set; }
+		public  string?	    AndroidPlatformToolsPathShort   { get; private set; }
 
 		public virtual string Adb { get; protected set; } = "adb";
 		public virtual string ZipAlign { get; protected set; } = "zipalign";
@@ -50,11 +51,11 @@ namespace Xamarin.Android.Tools
 		public abstract string NdkHostPlatform64Bit { get; }
 		public virtual string Javac { get; protected set; } = "javac";
 
-		public abstract string PreferedAndroidSdkPath { get; }
-		public abstract string PreferedAndroidNdkPath { get; }
-		public abstract string PreferedJavaSdkPath { get; }
+		public  abstract    string?     PreferedAndroidSdkPath      { get; }
+		public  abstract    string?     PreferedAndroidNdkPath      { get; }
+		public  abstract    string?     PreferedJavaSdkPath         { get; }
 
-		public virtual void Initialize (string androidSdkPath = null, string androidNdkPath = null, string javaSdkPath = null)
+		public virtual void Initialize (string? androidSdkPath = null, string? androidNdkPath = null, string? javaSdkPath = null)
 		{
 			androidSdkPath  = androidSdkPath ?? PreferedAndroidSdkPath;
 			androidNdkPath  = androidNdkPath ?? PreferedAndroidNdkPath;
@@ -94,12 +95,12 @@ namespace Xamarin.Android.Tools
 
 		protected abstract IEnumerable<string> GetAllAvailableAndroidSdks ();
 		protected abstract IEnumerable<string> GetAllAvailableAndroidNdks ();
-		protected abstract string GetJavaSdkPath ();
+		protected abstract string? GetJavaSdkPath ();
 		protected abstract string GetShortFormPath (string path);
 
-		public abstract void SetPreferredAndroidSdkPath (string path);
-		public abstract void SetPreferredJavaSdkPath (string path);
-		public abstract void SetPreferredAndroidNdkPath (string path);
+		public abstract void SetPreferredAndroidSdkPath (string? path);
+		public abstract void SetPreferredJavaSdkPath (string? path);
+		public abstract void SetPreferredAndroidNdkPath (string? path);
 
 		public bool IsNdk64Bit { get; private set; }
 
@@ -110,7 +111,7 @@ namespace Xamarin.Android.Tools
 		/// <summary>
 		/// Checks that a value is the location of an Android SDK.
 		/// </summary>
-		public bool ValidateAndroidSdkLocation (string loc)
+		public bool ValidateAndroidSdkLocation ([NotNullWhen (true)] string? loc)
 		{
 			bool result = !string.IsNullOrEmpty (loc) && ProcessUtils.FindExecutablesInDirectory (Path.Combine (loc, "platform-tools"), Adb).Any ();
 			Logger (TraceLevel.Verbose, $"{nameof (ValidateAndroidSdkLocation)}: `{loc}`, result={result}");
@@ -120,7 +121,7 @@ namespace Xamarin.Android.Tools
 		/// <summary>
 		/// Checks that a value is the location of a Java SDK.
 		/// </summary>
-		public virtual bool ValidateJavaSdkLocation (string loc)
+		public virtual bool ValidateJavaSdkLocation ([NotNullWhen (true)] string? loc)
 		{
 			bool result = !string.IsNullOrEmpty (loc) && ProcessUtils.FindExecutablesInDirectory (Path.Combine (loc, "bin"), JarSigner).Any ();
 			Logger (TraceLevel.Verbose, $"{nameof (ValidateJavaSdkLocation)}: `{loc}`, result={result}");
@@ -130,14 +131,15 @@ namespace Xamarin.Android.Tools
 		/// <summary>
 		/// Checks that a value is the location of an Android SDK.
 		/// </summary>
-		public bool ValidateAndroidNdkLocation (string loc)
+		public bool ValidateAndroidNdkLocation ([NotNullWhen (true)] string? loc)
 		{
-			bool result = !string.IsNullOrEmpty (loc) && ProcessUtils.FindExecutablesInDirectory (loc, NdkStack).Any ();
+			bool result = !string.IsNullOrEmpty (loc) &&
+				ProcessUtils.FindExecutablesInDirectory (loc!, NdkStack).Any ();
 			Logger (TraceLevel.Verbose, $"{nameof (ValidateAndroidNdkLocation)}: `{loc}`, result={result}");
 			return result;
 		}
 
-		protected static string NullIfEmpty (string s)
+		protected static string? NullIfEmpty (string? s)
 		{
 			if (s == null || s.Length != 0)
 				return s;
@@ -145,7 +147,7 @@ namespace Xamarin.Android.Tools
 			return null;
 		}
 
-		static string GetExecutablePath (string dir, string exe)
+		static string GetExecutablePath (string? dir, string exe)
 		{
 			if (string.IsNullOrEmpty (dir))
 				return exe;

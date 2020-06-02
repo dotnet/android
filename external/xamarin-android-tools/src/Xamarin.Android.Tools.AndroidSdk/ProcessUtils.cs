@@ -19,7 +19,7 @@ namespace Xamarin.Android.Tools
 			ExecutableFileExtensions    = pathExts;
 		}
 
-		public static async Task<int> StartProcess (ProcessStartInfo psi, TextWriter stdout, TextWriter stderr, CancellationToken cancellationToken, Action<Process> onStarted = null)
+		public static async Task<int> StartProcess (ProcessStartInfo psi, TextWriter? stdout, TextWriter? stderr, CancellationToken cancellationToken, Action<Process>? onStarted = null)
 		{
 			cancellationToken.ThrowIfCancellationRequested ();
 			psi.UseShellExecute = false;
@@ -47,10 +47,10 @@ namespace Xamarin.Android.Tools
 				// end up writing to the same buffer, or they are the same object.
 				using (cancellationToken.Register (() => KillProcess (process))) {
 					if (psi.RedirectStandardOutput)
-						output = ReadStreamAsync (process.StandardOutput, TextWriter.Synchronized (stdout));
+						output = ReadStreamAsync (process.StandardOutput, TextWriter.Synchronized (stdout!));
 
 					if (psi.RedirectStandardError)
-						error = ReadStreamAsync (process.StandardError, TextWriter.Synchronized (stderr));
+						error = ReadStreamAsync (process.StandardError, TextWriter.Synchronized (stderr!));
 
 					await Task.WhenAll (new [] { output, error, exit }).ConfigureAwait (false);
 				}
@@ -89,7 +89,7 @@ namespace Xamarin.Android.Tools
 		/// <summary>
 		/// Executes an Android Sdk tool and returns a result. The result is based on a function of the command output.
 		/// </summary>
-		public static Task<TResult> ExecuteToolAsync<TResult> (string exe, Func<string, TResult> result, CancellationToken token, Action<Process> onStarted = null)
+		public static Task<TResult> ExecuteToolAsync<TResult> (string exe, Func<string, TResult> result, CancellationToken token, Action<Process>? onStarted = null)
 		{
 			var tcs = new TaskCompletionSource<TResult> ();
 
@@ -115,12 +115,12 @@ namespace Xamarin.Android.Tools
 				}
 
 				if (t.IsFaulted) {
-					tcs.TrySetException (t.Exception.Flatten ().InnerException);
+					tcs.TrySetException (t.Exception?.Flatten ()?.InnerException ?? t.Exception!);
 					return;
 				}
 
 				if (t.Result == 0) {
-					tcs.TrySetResult (result != null ? result (output) : default (TResult));
+					tcs.TrySetResult (result != null ? result (output) : default (TResult)!);
 				} else {
 					var errorMessage = !string.IsNullOrEmpty (errorOutput) ? errorOutput : output;
 
@@ -158,7 +158,7 @@ namespace Xamarin.Android.Tools
 
 		internal static IEnumerable<string> FindExecutablesInPath (string executable)
 		{
-			var path        = Environment.GetEnvironmentVariable ("PATH");
+			var path        = Environment.GetEnvironmentVariable ("PATH") ?? "";
 			var pathDirs    = path.Split (new char[] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries);
 
 			foreach (var dir in pathDirs) {

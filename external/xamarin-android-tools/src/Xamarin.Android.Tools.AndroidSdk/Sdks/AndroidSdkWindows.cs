@@ -32,7 +32,7 @@ namespace Xamarin.Android.Tools
 		public override string NdkHostPlatform64Bit { get { return "windows-x86_64"; } }
 		public override string Javac { get; protected set; } = "javac.exe";
 
-		public override string PreferedAndroidSdkPath {
+		public override string? PreferedAndroidSdkPath {
 			get {
 				var wow = RegistryEx.Wow64.Key32;
 				var regKey = GetMDRegistryKey ();
@@ -41,7 +41,7 @@ namespace Xamarin.Android.Tools
 				return null;
 			}
 		}
-		public override string PreferedAndroidNdkPath {
+		public override string? PreferedAndroidNdkPath {
 			get {
 				var wow = RegistryEx.Wow64.Key32;
 				var regKey = GetMDRegistryKey ();
@@ -50,7 +50,7 @@ namespace Xamarin.Android.Tools
 				return null;
 			}
 		}
-		public override string PreferedJavaSdkPath {
+		public override string? PreferedJavaSdkPath {
 			get {
 				var wow = RegistryEx.Wow64.Key32;
 				var regKey = GetMDRegistryKey ();
@@ -77,16 +77,16 @@ namespace Xamarin.Android.Tools
 			// Check for the key the user gave us in the VS/addin options
 			foreach (var root in roots)
 				if (CheckRegistryKeyForExecutable (root, regKey, MDREG_ANDROID_SDK, wow, "platform-tools", Adb))
-					yield return RegistryEx.GetValueString (root, regKey, MDREG_ANDROID_SDK, wow);
+					yield return RegistryEx.GetValueString (root, regKey, MDREG_ANDROID_SDK, wow) ?? "";
 
 			// Check for the key written by the Xamarin installer
 			if (CheckRegistryKeyForExecutable (RegistryEx.CurrentUser, XAMARIN_ANDROID_INSTALLER_PATH, XAMARIN_ANDROID_INSTALLER_KEY, wow, "platform-tools", Adb))
-				yield return RegistryEx.GetValueString (RegistryEx.CurrentUser, XAMARIN_ANDROID_INSTALLER_PATH, XAMARIN_ANDROID_INSTALLER_KEY, wow);
+				yield return RegistryEx.GetValueString (RegistryEx.CurrentUser, XAMARIN_ANDROID_INSTALLER_PATH, XAMARIN_ANDROID_INSTALLER_KEY, wow) ?? "";
 
 			// Check for the key written by the Android SDK installer
 			foreach (var root in roots)
 				if (CheckRegistryKeyForExecutable (root, ANDROID_INSTALLER_PATH, ANDROID_INSTALLER_KEY, wow, "platform-tools", Adb))
-					yield return RegistryEx.GetValueString (root, ANDROID_INSTALLER_PATH, ANDROID_INSTALLER_KEY, wow);
+					yield return RegistryEx.GetValueString (root, ANDROID_INSTALLER_PATH, ANDROID_INSTALLER_KEY, wow) ?? "";
 
 			// Check some hardcoded paths for good measure
 			var paths = new string [] {
@@ -94,7 +94,7 @@ namespace Xamarin.Android.Tools
 				Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86), "Android", "android-sdk"),
 				Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86), "Android", "android-sdk-windows"),
 				!string.IsNullOrEmpty (Environment.GetEnvironmentVariable ("ProgramW6432"))
-					? Path.Combine (Environment.GetEnvironmentVariable ("ProgramW6432"), "Android", "android-sdk")
+					? Path.Combine (Environment.GetEnvironmentVariable ("ProgramW6432") ?? "", "Android", "android-sdk")
 					: Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.ProgramFiles), "Android", "android-sdk"),
 				Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.LocalApplicationData), "Android", "android-sdk"),
 				Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.CommonApplicationData), "Android", "android-sdk"),
@@ -106,7 +106,7 @@ namespace Xamarin.Android.Tools
 						yield return basePath;
 		}
 
-		protected override string GetJavaSdkPath ()
+		protected override string? GetJavaSdkPath ()
 		{
 			var jdk = GetJdkInfos (Logger).FirstOrDefault ();
 			return jdk?.HomePath;
@@ -114,9 +114,9 @@ namespace Xamarin.Android.Tools
 
 		internal static IEnumerable<JdkInfo> GetJdkInfos (Action<TraceLevel, string> logger)
 		{
-			JdkInfo TryGetJdkInfo (string path, string locator)
+			JdkInfo? TryGetJdkInfo (string path, string locator)
 			{
-				JdkInfo jdk = null;
+				JdkInfo? jdk = null;
 				try {
 					jdk = new JdkInfo (path, locator);
 				}
@@ -131,6 +131,7 @@ namespace Xamarin.Android.Tools
 			{
 				return paths.Select (p => TryGetJdkInfo (p, locator))
 					.Where (jdk => jdk != null)
+					.Select(jdk => jdk!)
 					.OrderByDescending (jdk => jdk, JdkInfoVersionComparer.Default);
 			}
 
@@ -161,7 +162,7 @@ namespace Xamarin.Android.Tools
 
 			foreach (var root in roots) {
 				if (CheckRegistryKeyForExecutable (root, regKey, MDREG_JAVA_SDK, wow, "bin", _JarSigner))
-					yield return RegistryEx.GetValueString (root, regKey, MDREG_JAVA_SDK, wow);
+					yield return RegistryEx.GetValueString (root, regKey, MDREG_JAVA_SDK, wow) ?? "";
 			}
 		}
 
@@ -174,7 +175,7 @@ namespace Xamarin.Android.Tools
 
 			foreach (var wow in wows) {
 				if (CheckRegistryKeyForExecutable (root, subKey, valueName, wow, "bin", _JarSigner))
-					yield return RegistryEx.GetValueString (root, subKey, valueName, wow);
+					yield return RegistryEx.GetValueString (root, subKey, valueName, wow) ?? "";
 			}
 		}
 
@@ -196,7 +197,7 @@ namespace Xamarin.Android.Tools
 				if (Directory.Exists (rootPath))  {
 					foreach (var directoryName in Directory.EnumerateDirectories (rootPath, $"{JdkFolderNamePattern}*").ToList ()) {
 						var versionString = directoryName.Replace ($"{rootPath}\\{JdkFolderNamePattern}", string.Empty);
-						if (Version.TryParse (versionString, out Version ver)) {
+						if (Version.TryParse (versionString, out Version? ver)) {
 							paths.Add (new Tuple<string, Version>(directoryName, ver));
 						}
 					}
@@ -220,13 +221,13 @@ namespace Xamarin.Android.Tools
 
 					// No matter what the CurrentVersion is, look for 1.6 or 1.7 or 1.8
 					if (CheckRegistryKeyForExecutable (RegistryEx.LocalMachine, subkey + "\\" + "1.8", "JavaHome", wow64, "bin", _JarSigner))
-						yield return RegistryEx.GetValueString (RegistryEx.LocalMachine, subkey + "\\" + "1.8", "JavaHome", wow64);
+						yield return RegistryEx.GetValueString (RegistryEx.LocalMachine, subkey + "\\" + "1.8", "JavaHome", wow64) ?? "";
 
 					if (CheckRegistryKeyForExecutable (RegistryEx.LocalMachine, subkey + "\\" + "1.7", "JavaHome", wow64, "bin", _JarSigner))
-						yield return RegistryEx.GetValueString (RegistryEx.LocalMachine, subkey + "\\" + "1.7", "JavaHome", wow64);
+						yield return RegistryEx.GetValueString (RegistryEx.LocalMachine, subkey + "\\" + "1.7", "JavaHome", wow64) ?? "";
 
 					if (CheckRegistryKeyForExecutable (RegistryEx.LocalMachine, subkey + "\\" + "1.6", "JavaHome", wow64, "bin", _JarSigner))
-						yield return RegistryEx.GetValueString (RegistryEx.LocalMachine, subkey + "\\" + "1.6", "JavaHome", wow64);
+						yield return RegistryEx.GetValueString (RegistryEx.LocalMachine, subkey + "\\" + "1.6", "JavaHome", wow64) ?? "";
 				}
 			}
 		}
@@ -244,7 +245,7 @@ namespace Xamarin.Android.Tools
 
 			var sdks = GetAllAvailableAndroidSdks().ToList();
 			if (!string.IsNullOrEmpty(AndroidSdkPath))
-				sdks.Add(AndroidSdkPath);
+				sdks.Add (AndroidSdkPath!);
 	
 			foreach(var sdk in sdks.Distinct())
 				if (Directory.Exists(ndk = Path.Combine(sdk, "ndk-bundle")))
@@ -254,7 +255,7 @@ namespace Xamarin.Android.Tools
 			// Check for the key the user gave us in the VS/addin options
 			foreach (var root in roots)
 				if (CheckRegistryKeyForExecutable (root, regKey, MDREG_ANDROID_NDK, wow, ".", NdkStack))
-					yield return RegistryEx.GetValueString (root, regKey, MDREG_ANDROID_NDK, wow);
+					yield return RegistryEx.GetValueString (root, regKey, MDREG_ANDROID_NDK, wow) ?? "";
 
 			/*
 			// Check for the key written by the Xamarin installer
@@ -267,7 +268,7 @@ namespace Xamarin.Android.Tools
 			var vs_default = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.CommonApplicationData), "Microsoft", "AndroidNDK");
 			var vs_default32bit = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.CommonApplicationData), "Microsoft", "AndroidNDK32");
 			var vs_2017_default = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.CommonApplicationData), "Microsoft", "AndroidNDK64");
-			var android_default = Path.Combine (OS.ProgramFilesX86, "Android");
+			var android_default = Path.Combine (OS.ProgramFilesX86 ?? "", "Android");
 			var cdrive_default = @"C:\";
 
 			foreach (var basePath in new string [] {xamarin_private, android_default, vs_default, vs_default32bit, vs_2017_default, cdrive_default})
@@ -282,19 +283,19 @@ namespace Xamarin.Android.Tools
 			return KernelEx.GetShortPathName (path);
 		}
 
-		public override void SetPreferredAndroidSdkPath (string path)
+		public override void SetPreferredAndroidSdkPath (string? path)
 		{
 			var regKey = GetMDRegistryKey ();
 			RegistryEx.SetValueString (RegistryEx.CurrentUser, regKey, MDREG_ANDROID_SDK, path ?? "", RegistryEx.Wow64.Key32);
 		}
 
-		public override void SetPreferredJavaSdkPath (string path)
+		public override void SetPreferredJavaSdkPath (string? path)
 		{
 			var regKey = GetMDRegistryKey ();
 			RegistryEx.SetValueString (RegistryEx.CurrentUser, regKey, MDREG_JAVA_SDK, path ?? "", RegistryEx.Wow64.Key32);
 		}
 
-		public override void SetPreferredAndroidNdkPath (string path)
+		public override void SetPreferredAndroidNdkPath (string? path)
 		{
 			var regKey = GetMDRegistryKey ();
 			RegistryEx.SetValueString (RegistryEx.CurrentUser, regKey, MDREG_ANDROID_NDK, path ?? "", RegistryEx.Wow64.Key32);
@@ -323,7 +324,7 @@ namespace Xamarin.Android.Tools
 		}
 		#endregion
 
-		public override void Initialize (string androidSdkPath = null, string androidNdkPath = null, string javaSdkPath = null)
+		public override void Initialize (string? androidSdkPath = null, string? androidNdkPath = null, string? javaSdkPath = null)
 		{
 			base.Initialize (androidSdkPath, androidNdkPath, javaSdkPath);
 
@@ -335,7 +336,7 @@ namespace Xamarin.Android.Tools
 
 				var javaBinPath = this.JavaBinPath;
 				if (!string.IsNullOrEmpty (javaBinPath)) {
-					var environmentPath = Environment.GetEnvironmentVariable ("PATH");
+					var environmentPath = Environment.GetEnvironmentVariable ("PATH") ?? "";
 					if (!environmentPath.Contains (javaBinPath)) {
 						var processPath = string.Concat (javaBinPath, Path.PathSeparator, environmentPath);
 						Environment.SetEnvironmentVariable ("PATH", processPath);

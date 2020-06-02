@@ -13,8 +13,8 @@ namespace Xamarin.Android.Tools
 	class AndroidSdkUnix : AndroidSdkBase
 	{
 		// See comments above UnixConfigPath for explanation on why these are needed
-		static readonly string sudo_user;
-		static readonly string user;
+		static readonly string? sudo_user;
+		static readonly string? user;
 		static readonly bool need_chown;
 
 		static AndroidSdkUnix ()
@@ -41,7 +41,7 @@ namespace Xamarin.Android.Tools
 			get { return OS.IsMac ? "darwin-x86_64" : "linux-x86_64"; }
 		}
 
-		public override string PreferedAndroidSdkPath { 
+		public override string? PreferedAndroidSdkPath {
 			get {
 				var config_file = GetUnixConfigFile (Logger);
 				var androidEl = config_file.Root.Element ("android-sdk");
@@ -56,7 +56,7 @@ namespace Xamarin.Android.Tools
 			}
 		}
 
-		public override string PreferedAndroidNdkPath { 
+		public override string? PreferedAndroidNdkPath {
 			get {
 				var config_file = GetUnixConfigFile (Logger);
 				var androidEl = config_file.Root.Element ("android-ndk");
@@ -71,7 +71,7 @@ namespace Xamarin.Android.Tools
 			}
 		}
 
-		public override string PreferedJavaSdkPath { 
+		public override string? PreferedJavaSdkPath {
 			get {
 				var config_file = GetUnixConfigFile (Logger);
 				var javaEl = config_file.Root.Element ("java-sdk");
@@ -90,7 +90,7 @@ namespace Xamarin.Android.Tools
 		{
 			var preferedSdkPath = PreferedAndroidSdkPath;
 			if (!string.IsNullOrEmpty (preferedSdkPath))
-				yield return preferedSdkPath;
+				yield return preferedSdkPath!;
 
 			// Look in PATH
 			foreach (var adb in ProcessUtils.FindExecutablesInPath (Adb)) {
@@ -108,7 +108,7 @@ namespace Xamarin.Android.Tools
 				yield return macSdkPath;
 		}
 
-		protected override string GetJavaSdkPath ()
+		protected override string? GetJavaSdkPath ()
 		{
 			return JdkInfo.GetKnownSystemJdkInfos (Logger).FirstOrDefault ()?.HomePath;
 		}
@@ -117,7 +117,7 @@ namespace Xamarin.Android.Tools
 		{
 			var preferedNdkPath = PreferedAndroidNdkPath;
 			if (!string.IsNullOrEmpty (preferedNdkPath))
-				yield return preferedNdkPath;
+				yield return preferedNdkPath!;
 
 			// Look in PATH
 			foreach (var ndkStack in ProcessUtils.FindExecutablesInPath (NdkStack)) {
@@ -133,7 +133,7 @@ namespace Xamarin.Android.Tools
 			return path;
 		}
 
-		public override void SetPreferredAndroidSdkPath (string path)
+		public override void SetPreferredAndroidSdkPath (string? path)
 		{
 			path = NullIfEmpty (path);
 
@@ -149,7 +149,7 @@ namespace Xamarin.Android.Tools
 			SaveConfig (doc);
 		}
 
-		public override void SetPreferredJavaSdkPath (string path)
+		public override void SetPreferredJavaSdkPath (string? path)
 		{
 			path = NullIfEmpty (path);
 
@@ -165,7 +165,7 @@ namespace Xamarin.Android.Tools
 			SaveConfig (doc);
 		}
 
-		public override void SetPreferredAndroidNdkPath (string path)
+		public override void SetPreferredAndroidNdkPath (string? path)
 		{
 			path = NullIfEmpty (path);
 
@@ -184,11 +184,11 @@ namespace Xamarin.Android.Tools
 		void SaveConfig (XDocument doc)
 		{
 			string cfg = UnixConfigPath;
-			List <string> created = null;
+			List <string>? created = null;
 
 			if (!File.Exists (cfg)) {
-				string dir = Path.GetDirectoryName (cfg);
-				if (!Directory.Exists (dir)) {
+				string? dir = Path.GetDirectoryName (cfg);
+				if (dir != null && !Directory.Exists (dir)) {
 					Directory.CreateDirectory (dir);
 					AddToList (dir);
 				}
@@ -245,7 +245,7 @@ namespace Xamarin.Android.Tools
 		internal static XDocument GetUnixConfigFile (Action<TraceLevel, string> logger)
 		{
 			var file = UnixConfigPath;
-			XDocument doc = null;
+			XDocument? doc = null;
 			if (File.Exists (file)) {
 				try {
 					doc = XDocument.Load (file);
@@ -270,7 +270,7 @@ namespace Xamarin.Android.Tools
 			return doc;
 		}
 
-		void FixOwnership (List<string> paths)
+		void FixOwnership (List<string>? paths)
 		{
 			if (!need_chown || paths == null || paths.Count == 0)
 				return;
@@ -278,7 +278,7 @@ namespace Xamarin.Android.Tools
 			var stdout = new StringWriter ();
 			var stderr = new StringWriter ();
 			var args = new List <string> {
-				QuoteString (sudo_user)
+				QuoteString (sudo_user!)
 			};
 
 			foreach (string p in paths)

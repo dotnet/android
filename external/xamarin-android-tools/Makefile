@@ -7,7 +7,7 @@ V               ?= 0
 include build-tools/scripts/msbuild.mk
 
 all:
-	$(MSBUILD) $(MSBUILD_FLAGS) Xamarin.Android.Tools.sln
+	$(MSBUILD) /restore $(MSBUILD_FLAGS) Xamarin.Android.Tools.sln
 
 clean:
 	-$(MSBUILD) $(MSBUILD_FLAGS) /t:Clean Xamarin.Android.Tools.sln

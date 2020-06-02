@@ -13,7 +13,7 @@ namespace Xamarin.Android.Tools
 		public  string          Id                      { get; private set; }
 
 		// Name of an Android release, e.g. "Oreo"
-		public  string          CodeName                { get; private set; }
+		public  string?         CodeName                { get; private set; }
 
 		// Android version number, e.g. 8.0
 		public string           OSVersion               { get; private set; }
@@ -28,9 +28,9 @@ namespace Xamarin.Android.Tools
 		public bool             Stable                  { get; private set; }
 
 		// Alternate Ids for a given API level. Allows for historical mapping, e.g. API-11 has alternate ID 'H'.
-		internal    string[]    AlternateIds            { get; set; }
+		internal    string[]?   AlternateIds            { get; set; }
 
-		public AndroidVersion (int apiLevel, string osVersion, string codeName = null, string id = null, bool stable = true)
+		public AndroidVersion (int apiLevel, string osVersion, string? codeName = null, string? id = null, bool stable = true)
 		{
 			if (osVersion == null)
 				throw new ArgumentNullException (nameof (osVersion));

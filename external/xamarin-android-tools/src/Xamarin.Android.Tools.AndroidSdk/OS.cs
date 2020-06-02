@@ -10,9 +10,9 @@ namespace Xamarin.Android.Tools
 		public readonly static bool IsWindows;
 		public readonly static bool IsMac;
 
-		internal readonly static string ProgramFilesX86;
+		internal readonly static string? ProgramFilesX86;
 
-		internal readonly static string NativeLibraryFormat;
+		internal readonly static string NativeLibraryFormat = "{0}";
 
 		static OS ()
 		{
@@ -39,7 +39,7 @@ namespace Xamarin.Android.Tools
 				buf = Marshal.AllocHGlobal (8192);
 				// This is a hacktastic way of getting sysname from uname ()
 				if (uname (buf) == 0) {
-					string os = System.Runtime.InteropServices.Marshal.PtrToStringAnsi (buf);
+					string? os = System.Runtime.InteropServices.Marshal.PtrToStringAnsi (buf);
 					if (os == "Darwin")
 						return true;
 				}
@@ -136,13 +136,13 @@ namespace Xamarin.Android.Tools
 			uint dwType, IntPtr data, uint cbData);
 
 		[DllImport (ADVAPI, CharSet = CharSet.Unicode, SetLastError = true)]
-		static extern int RegCreateKeyEx (UIntPtr hKey, string subKey, uint reserved, string @class, uint options,
+		static extern int RegCreateKeyEx (UIntPtr hKey, string subKey, uint reserved, string? @class, uint options,
 			uint samDesired, IntPtr lpSecurityAttributes, out UIntPtr phkResult, out Disposition lpdwDisposition);
 
 		[DllImport ("advapi32.dll", SetLastError = true)]
 		static extern int RegCloseKey (UIntPtr hKey);
 
-		public static string GetValueString (UIntPtr key, string subkey, string valueName, Wow64 wow64)
+		public static string? GetValueString (UIntPtr key, string subkey, string valueName, Wow64 wow64)
 		{
 			UIntPtr regKeyHandle;
 			uint sam = (uint)Rights.QueryValue + (uint)wow64;
@@ -168,8 +168,8 @@ namespace Xamarin.Android.Tools
 			uint sam = (uint)(Rights.CreateSubKey | Rights.SetValue) + (uint)wow64;
 			uint options = (uint) Options.NonVolatile;
 			Disposition disposition;
-			if (RegCreateKeyEx (key, subkey, 0, null, options, sam, IntPtr.Zero, out regKeyHandle, out disposition) != 0) {
-				throw new Exception ("Could not open or craete key");
+			if (RegCreateKeyEx (key, subkey, 0, "", options, sam, IntPtr.Zero, out regKeyHandle, out disposition) != 0) {
+				throw new Exception ("Could not open or create key");
 			}
 
 			try {

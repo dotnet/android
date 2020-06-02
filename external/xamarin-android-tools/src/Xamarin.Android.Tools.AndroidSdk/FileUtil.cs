@@ -16,7 +16,7 @@ namespace Xamarin.Android.Tools
 		{
 			//FIXME: use the atomic System.IO.File.Replace on NTFS
 			if (OS.IsWindows) {
-				string wtmp = null;
+				string? wtmp = null;
 				if (File.Exists (destFile)) {
 					do {
 						wtmp = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ());

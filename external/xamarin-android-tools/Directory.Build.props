@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- Note: MUST be imported *after* $(Configuration) is set! -->
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+  </PropertyGroup>
+  <PropertyGroup>
+    <BaseIntermediateOutputPath Condition=" '$(BaseIntermediateOutputPath)' == '' ">obj\</BaseIntermediateOutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' != '' And $(TargetFramework.StartsWith ('netcoreapp')) ">
+    <XATBuildingForNetCoreApp>True</XATBuildingForNetCoreApp>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(XATBuildingForNetCoreApp)' == 'True' ">
+    <IntermediateOutputPath>$(BaseIntermediateOutputPath)\$(Configuration)-$(TargetFramework.ToLowerInvariant())</IntermediateOutputPath>
+    <BuildToolOutputFullPath>$(MSBuildThisFileDirectory)bin\Build$(Configuration)\$(TargetFramework.ToLowerInvariant())\</BuildToolOutputFullPath>
+    <ToolOutputFullPath>$(MSBuildThisFileDirectory)bin\$(Configuration)\$(TargetFramework.ToLowerInvariant())\</ToolOutputFullPath>
+    <TestOutputFullPath>$(MSBuildThisFileDirectory)bin\Test$(Configuration)-$(TargetFramework.ToLowerInvariant())\</TestOutputFullPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(XATBuildingForNetCoreApp)' != 'True' ">
+    <IntermediateOutputPath>$(BaseIntermediateOutputPath)\$(Configuration)</IntermediateOutputPath>
+    <BuildToolOutputFullPath>$(MSBuildThisFileDirectory)bin\Build$(Configuration)\</BuildToolOutputFullPath>
+    <ToolOutputFullPath>$(MSBuildThisFileDirectory)bin\$(Configuration)\</ToolOutputFullPath>
+    <TestOutputFullPath>$(MSBuildThisFileDirectory)bin\Test$(Configuration)\</TestOutputFullPath>
+  </PropertyGroup>
+</Project>

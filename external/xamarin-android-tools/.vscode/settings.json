@@ -1,0 +1,6 @@
+{
+    "nxunitExplorer.nunit": "packages/NUnit.ConsoleRunner.3.9.0/tools/nunit3-console.exe",
+    "nxunitExplorer.modules": [
+        "bin/TestDebug/Xamarin.Android.Tools.AndroidSdk-Tests.dll"
+    ]
+}
