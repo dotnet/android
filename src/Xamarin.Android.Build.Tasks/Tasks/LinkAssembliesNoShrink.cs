@@ -57,7 +57,8 @@ namespace Xamarin.Android.Tasks
 					var destination = DestinationFiles [i];
 					AssemblyDefinition assemblyDefinition = null;
 
-					if (!MTProfile.IsSdkAssembly (source.ItemSpec) && !MTProfile.IsProductAssembly (source.ItemSpec)) {
+					var assemblyName = Path.GetFileNameWithoutExtension (source.ItemSpec);
+					if (!MTProfile.IsSdkAssembly (assemblyName) && !MTProfile.IsProductAssembly (assemblyName)) {
 						assemblyDefinition = resolver.GetAssembly (source.ItemSpec);
 						step.CheckAppDomainUsage (assemblyDefinition, (string msg) => Log.LogMessageFromText (msg, MessageImportance.High));
 					}
