@@ -162,12 +162,12 @@ namespace Xamarin.Android.Tasks
 
 		private bool SetProcessInputEncoding (ProcessStartInfo info, Encoding encoding)
 		{
-			Type type = info.GetType();
-			PropertyInfo prop = type.GetRuntimeProperty("StandardInputEncoding");
+			Type type = info.GetType ();
+			PropertyInfo prop = type.GetRuntimeProperty ("StandardInputEncoding");
 			if (prop == null)
-				prop = type.GetProperty("StandardInputEncoding", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+				prop = type.GetProperty ("StandardInputEncoding", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 			if(prop?.CanWrite ?? false) {
-				prop.SetValue(info, encoding, null);
+				prop.SetValue (info, encoding, null);
 				return true;
 			}
 			return false;
