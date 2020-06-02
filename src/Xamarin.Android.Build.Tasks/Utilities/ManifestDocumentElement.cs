@@ -368,17 +368,31 @@ namespace Xamarin.Android.Manifest {
 
 		static string ToString (ForegroundService value)
 		{
-			switch (value) {
-				case ForegroundService.TypeConnectedDevice:	return "connectedDevice";
-				case ForegroundService.TypeDataSync:		return "dataSync";
-				case ForegroundService.TypeLocation:		return "location";
-				case ForegroundService.TypeMediaPlayback:	return "mediaPlayback";
-				case ForegroundService.TypeMediaProjection:	return "mediaProjection";
-				case ForegroundService.TypePhoneCall:		return "phoneCall";
-				default:
-					throw new ArgumentException ($"Unsupported ForegroundServiceType value '{value}'.", nameof (value));
-			}
+			// This attribute allows multiple values
+			var values = new List<string> ();
+
+			if (value.HasFlag (ForegroundService.TypeConnectedDevice))
+				values.Add ("connectedDevice");
+			if (value.HasFlag (ForegroundService.TypeDataSync))
+				values.Add ("dataSync");
+			if (value.HasFlag (ForegroundService.TypeLocation))
+				values.Add ("location");
+			if (value.HasFlag (ForegroundService.TypeMediaPlayback))
+				values.Add ("mediaPlayback");
+			if (value.HasFlag (ForegroundService.TypeMediaProjection))
+				values.Add ("mediaProjection");
+			if (value.HasFlag (ForegroundService.TypePhoneCall))
+				values.Add ("phoneCall");
+
+			// These can be changed to enum members when API-R is the stable binding.
+			if (value.HasFlag ((ForegroundService)64))
+				values.Add ("camera");
+			if (value.HasFlag ((ForegroundService)128))
+				values.Add ("microphone");
+
+			return string.Join ("|", values.ToArray ());
 		}
+
 		IEnumerator<string> IEnumerable<string>.GetEnumerator ()
 		{
 			return Mappings.Keys.GetEnumerator ();
