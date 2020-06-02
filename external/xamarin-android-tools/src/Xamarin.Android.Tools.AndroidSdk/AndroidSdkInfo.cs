@@ -45,16 +45,16 @@ namespace Xamarin.Android.Tools
 		{
 			var buildTools  = Path.Combine (AndroidSdkPath, "build-tools");
 			if (Directory.Exists (buildTools)) {
+				var sorted = SortedSubdirectoriesByVersion (buildTools);
+
+				foreach (var d in sorted)
+					yield return d;
+
 				var preview = Directory.EnumerateDirectories (buildTools)
 					.Where(x => TryParseVersion (Path.GetFileName (x)) == null)
 					.Select(x => x);
 
 				foreach (var d in preview)
-					yield return d;
-
-				var sorted = SortedSubdirectoriesByVersion (buildTools);
-
-				foreach (var d in sorted)
 					yield return d;
 			}
 			var ptPath  = Path.Combine (AndroidSdkPath, "platform-tools");

@@ -1,5 +1,5 @@
 CONFIGURATION   := Debug
-NUNIT_CONSOLE   := packages/NUnit.ConsoleRunner.3.9.0/tools/nunit3-console.exe
+NUNIT_CONSOLE   := packages/nunit.consolerunner/3.9.0/tools/nunit3-console.exe
 OS              := $(shell uname)
 RUNTIME         := mono --debug=casts
 V               ?= 0
@@ -23,7 +23,7 @@ define RUN_NUNIT_TEST
 	$(RUNTIME) \
 		$(NUNIT_CONSOLE) $(NUNIT_EXTRA) $(1) \
 		$(if $(RUN),-run:$(RUN)) \
-		--result="TestResult-$(basename $(notdir $(1))).xml;format=nunit2" \
+		--result="TestResult-$(basename $(notdir $(1))).xml" \
 		-output=bin/Test$(CONFIGURATION)/TestOutput-$(basename $(notdir $(1))).txt \
 	|| true ; \
 	if [ -f "bin/Test$(CONFIGURATION)/TestOutput-$(basename $(notdir $(1))).txt" ] ; then \

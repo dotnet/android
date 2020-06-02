@@ -448,5 +448,30 @@ namespace Xamarin.Android.Tools.Tests
 				return Path.Combine (UnixConfigDirOverridePath, "monodroid-config.xml");
 			}
 		}
+
+		[Test]
+		public void GetBuildToolsPaths_StableVersionsFirst ()
+		{
+			CreateSdks (out string root, out string jdk, out string ndk, out string sdk);
+			CreateFauxAndroidSdkDirectory (sdk, "27.0.0-rc4");
+
+			var logs    = new StringWriter ();
+			Action<TraceLevel, string> logger = (level, message) => {
+				logs.WriteLine ($"[{level}] {message}");
+			};
+
+			try {
+				var info    = new AndroidSdkInfo (logger, androidSdkPath: sdk, androidNdkPath: ndk, javaSdkPath: jdk);
+
+				var buildToolsPaths = info.GetBuildToolsPaths ().ToList ();
+				Assert.AreEqual (3, buildToolsPaths.Count);
+				Assert.AreEqual (Path.Combine (sdk, "build-tools", "26.0.0"),       buildToolsPaths [0]);
+				Assert.AreEqual (Path.Combine (sdk, "build-tools", "27.0.0-rc4"),   buildToolsPaths [1]);
+				Assert.AreEqual (Path.Combine (sdk, "platform-tools"),              buildToolsPaths [2]);
+			}
+			finally {
+				Directory.Delete (root, recursive: true);
+			}
+		}
 	}
 }
