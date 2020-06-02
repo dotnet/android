@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Runtime.CompilerServices;
+using Microsoft.Build.Framework;
+using Microsoft.Build.Logging;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
 
@@ -61,11 +64,47 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			action (builder);
-			var actual = builder.LastBuildTime.TotalMilliseconds;
+			var actual = GetDurationFromBinLog (builder);
 			TestContext.Out.WriteLine($"expected: {expected}ms, actual: {actual}ms");
 			if (actual > expected) {
 				Assert.Fail ($"Exceeded expected time of {expected}ms, actual {actual}ms");
 			}
+		}
+
+		double GetDurationFromBinLog (ProjectBuilder builder)
+		{
+			var duration = TimeSpan.Zero;
+			var binlog = Path.Combine (Root, builder.ProjectDirectory, "msbuild.binlog");
+			FileAssert.Exists (binlog);
+
+			using (var fileStream = File.OpenRead (binlog))
+			using (var gzip = new GZipStream (fileStream, CompressionMode.Decompress))
+			using (var binaryReader = new BinaryReader (gzip)) {
+				int fileFormatVersion = binaryReader.ReadInt32 ();
+				var buildReader = new BuildEventArgsReader (binaryReader, fileFormatVersion);
+				BuildEventArgs args;
+				var started = new Stack<DateTime> ();
+				while ((args = buildReader.Read ()) != null) {
+					if (args is ProjectStartedEventArgs projectStarted) {
+						started.Push (projectStarted.Timestamp);
+					} else if (args is ProjectFinishedEventArgs projectFinished) {
+						duration += projectFinished.Timestamp - started.Pop ();
+					}
+				}
+			}
+
+			if (duration == TimeSpan.Zero)
+				throw new InvalidDataException ($"No project build duration found in {binlog}");
+
+			return duration.TotalMilliseconds;
+		}
+
+		ProjectBuilder CreateBuilderWithoutLogFile (string directory = null)
+		{
+			var builder = CreateApkBuilder (directory);
+			builder.BuildLogFile = null;
+			builder.Verbosity = LoggerVerbosity.Quiet;
+			return builder;
 		}
 
 		[Test]
@@ -73,7 +112,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.MainActivity = proj.DefaultMainActivity;
-			using (var builder = CreateApkBuilder ()) {
+			using (var builder = CreateBuilderWithoutLogFile ()) {
 				builder.Target = "Build";
 				builder.Restore (proj);
 				Profile (builder, b => b.Build (proj));
@@ -85,7 +124,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.MainActivity = proj.DefaultMainActivity;
-			using (var builder = CreateApkBuilder ()) {
+			using (var builder = CreateBuilderWithoutLogFile ()) {
 				builder.Target = "Build";
 				builder.Build (proj);
 
@@ -107,7 +146,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.MainActivity = proj.DefaultMainActivity;
-			using (var builder = CreateApkBuilder ()) {
+			using (var builder = CreateBuilderWithoutLogFile ()) {
 				builder.Target = "Build";
 				builder.Build (proj);
 
@@ -122,7 +161,7 @@ namespace Xamarin.Android.Build.Tests
 		public void Build_AndroidResource_Change ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
-			using (var builder = CreateApkBuilder ()) {
+			using (var builder = CreateBuilderWithoutLogFile ()) {
 				builder.Target = "Build";
 				builder.Build (proj);
 
@@ -138,7 +177,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.MainActivity = proj.DefaultMainActivity;
-			using (var builder = CreateApkBuilder ()) {
+			using (var builder = CreateBuilderWithoutLogFile ()) {
 				builder.Target = "Build";
 				builder.Build (proj);
 
@@ -161,7 +200,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.Sources.Add (new BuildItem.Source ("Foo.cs") {
 				TextContent = () => $"class {className} : Java.Lang.Object {{}}"
 			});
-			using (var builder = CreateApkBuilder ()) {
+			using (var builder = CreateBuilderWithoutLogFile ()) {
 				builder.Target = "Build";
 				builder.Build (proj);
 
@@ -176,7 +215,7 @@ namespace Xamarin.Android.Build.Tests
 		public void Build_AndroidManifest_Change ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
-			using (var builder = CreateApkBuilder ()) {
+			using (var builder = CreateBuilderWithoutLogFile ()) {
 				builder.Target = "Build";
 				builder.Build (proj);
 
@@ -191,7 +230,7 @@ namespace Xamarin.Android.Build.Tests
 		public void Build_CSProj_Change ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
-			using (var builder = CreateApkBuilder ()) {
+			using (var builder = CreateBuilderWithoutLogFile ()) {
 				builder.Target = "Build";
 				builder.Build (proj);
 
@@ -272,7 +311,7 @@ namespace Xamarin.Android.Build.Tests
 			app.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
 
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
-			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+			using (var appBuilder = CreateBuilderWithoutLogFile (Path.Combine (path, app.ProjectName))) {
 				libBuilder.Build (lib);
 				appBuilder.Target = "Build";
 				if (install) {
@@ -304,7 +343,7 @@ namespace Xamarin.Android.Build.Tests
 
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.MainActivity = proj.DefaultMainActivity;
-			using (var builder = CreateApkBuilder ()) {
+			using (var builder = CreateBuilderWithoutLogFile ()) {
 				builder.Install (proj);
 
 				// Profile C# change

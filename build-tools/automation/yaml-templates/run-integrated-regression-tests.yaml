@@ -40,6 +40,11 @@ steps:
   clean: true
   fetchDepth: 10
 
+  # Clear out VS installer content before provisioning VS to avoid using unstable tools from pre-release installers.
+- powershell: Remove-Item "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer" -Recurse -Force -ErrorAction Ignore
+  displayName: Delete VS Installer
+  condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
+
 - task: xamops.azdevex.provisionator-task.provisionator@2
   displayName: Provision Android Dependencies
   inputs:
