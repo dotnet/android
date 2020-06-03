@@ -58,8 +58,14 @@ namespace Xamarin.Android.Tasks.Legacy
 
 		Version GetJavaVersionForBuildTools ()
 		{
+			string buildToolsVersionString = AndroidSdkBuildToolsVersion;
+			if (buildToolsVersionString != null) {
+				int index = buildToolsVersionString.IndexOf ('-');
+				if (index != -1)
+					buildToolsVersionString = buildToolsVersionString.Substring (0, index);
+			}
 			Version buildTools;
-			if (!Version.TryParse (AndroidSdkBuildToolsVersion, out buildTools)) {
+			if (!Version.TryParse (buildToolsVersionString, out buildTools)) {
 				return Version.Parse (LatestSupportedJavaVersion);
 			}
 			if (buildTools >= new Version (24, 0, 1))
