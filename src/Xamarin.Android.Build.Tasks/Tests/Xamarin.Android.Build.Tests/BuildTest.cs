@@ -189,20 +189,14 @@ class MemTest {
 
 		[Test]
 		[Category ("Minor")]
-		public void BuildBasicApplicationFSharp ()
+		[NonParallelizable] // parallel NuGet restore causes failures
+		public void BuildBasicApplicationFSharp ([Values (true, false)] bool isRelease)
 		{
-			var proj = new XamarinAndroidApplicationProject () { Language = XamarinAndroidProjectLanguage.FSharp };
-			using (var b = CreateApkBuilder ("temp/BuildBasicApplicationFSharp")) {
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-			}
-		}
-
-		[Test]
-		[Category ("Minor")]
-		public void BuildBasicApplicationReleaseFSharp ()
-		{
-			var proj = new XamarinAndroidApplicationProject () { Language = XamarinAndroidProjectLanguage.FSharp, IsRelease = true };
-			using (var b = CreateApkBuilder ("temp/BuildBasicApplicationReleaseFSharp")) {
+			var proj = new XamarinAndroidApplicationProject {
+				Language = XamarinAndroidProjectLanguage.FSharp,
+				IsRelease = isRelease,
+			};
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
 		}
@@ -481,6 +475,7 @@ class MemTest {
 		}
 
 		[Test]
+		[NonParallelizable] // parallel NuGet restore causes failures
 		public void FSharpAppHasAndroidDefine ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
