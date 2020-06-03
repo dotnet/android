@@ -1151,27 +1151,92 @@ MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err, [[m
 {
 	unsigned int dl_flags = monodroidRuntime.convert_dl_flags (flags);
 	bool libmonodroid_fallback = false;
-
+	bool name_is_full_path = false;
+	bool name_needs_free = false;
 	/* name is nullptr when we're P/Invoking __Internal, so remap to libxa-internal-api */
-	if (name == nullptr) {
+	if (name == nullptr || strstr (name, "xa-internal-api") != nullptr) {
+#if defined (WINDOWS)
+		char *tmp_name = nullptr;
+
+		auto probe_dll_at = [&](const char *the_path) -> bool {
+			if (the_path == nullptr) {
+				return false;
+			}
+
+			const char *last_sep = strrchr (the_path, MONODROID_PATH_SEPARATOR_CHAR);
+			if (last_sep != nullptr) {
+				char *dir = utils.strdup_new (the_path, last_sep - the_path);
+				tmp_name = utils.string_concat (dir, MONODROID_PATH_SEPARATOR, API_DSO_NAME);
+				delete[] dir;
+				if (!utils.file_exists (tmp_name)) {
+					delete[] tmp_name;
+					tmp_name = nullptr;
+					return false;
+				}
+
+				return true;
+			}
+
+			return false;
+		};
+
+		//
+		// First try to see if it exist at the path pointed to by `name`. With p/invokes, currently (Sep 2020), we can't
+		// really trust the path since it consists of *some* directory path + p/invoke library name and it does not
+		// point to the location where the native library is. However, we still need to check the location first, should
+		// it point to the right place in the future.
+		//
+		// Context: https://github.com/mono/mono/issues/20295#issuecomment-679271621
+		//
+		bool found = probe_dll_at (name);
+		if (!found) {
+			// Next lets try the location of the XA runtime DLL, libxa-internal-api.dll should be next to it.
+			const char *path = get_my_location (false);
+			found = probe_dll_at (path);
+			if (path != nullptr) {
+				free (reinterpret_cast<void*>(const_cast<char*>(path)));
+			}
+
+			if (!found) {
+				log_warn (LOG_DEFAULT, "Failed to locate %s, using file name without the path", API_DSO_NAME);
+				name = API_DSO_NAME;
+			} else {
+				name = tmp_name;
+				name_is_full_path = true;
+				name_needs_free = true;
+			}
+		}
+#else // ndef WINDOWS
 		name = API_DSO_NAME;
+#endif // WINDOWS
 		libmonodroid_fallback = true;
 	}
 
-	void *h = androidSystem.load_dso_from_any_directories (name, dl_flags);
+	void *h = nullptr;
+	if (!name_is_full_path)
+		h = androidSystem.load_dso_from_any_directories (name, dl_flags);
 
 	if (h != nullptr) {
-		return monodroid_dlopen_log_and_return (h, err, name, false, libmonodroid_fallback);
+		return monodroid_dlopen_log_and_return (h, err, name, name_needs_free, libmonodroid_fallback);
 	}
 
 	if (libmonodroid_fallback) {
-		char *full_name = utils.path_combine (AndroidSystem::SYSTEM_LIB_PATH, API_DSO_NAME);
+		const char *full_name;
+		if (name_is_full_path) {
+			full_name = name;
+		} else {
+			if (name_needs_free) {
+				delete[] name;
+			}
+			full_name = utils.path_combine (AndroidSystem::SYSTEM_LIB_PATH, API_DSO_NAME);
+			name_needs_free = true;
+		}
 		h = androidSystem.load_dso (full_name, dl_flags, false);
-		return monodroid_dlopen_log_and_return (h, err, full_name, true, true);
+		return monodroid_dlopen_log_and_return (h, err, full_name, name_needs_free, true);
 	}
 
 	if (!utils.ends_with (name, ".dll.so") && !utils.ends_with (name, ".exe.so")) {
-		return monodroid_dlopen_log_and_return (h, err, name, false);
+		return monodroid_dlopen_log_and_return (h, err, name, name_needs_free);
 	}
 
 	char *basename_part = const_cast<char*> (strrchr (name, '/'));
@@ -1185,6 +1250,10 @@ MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err, [[m
 
 	if (h != nullptr && XA_UNLIKELY (utils.should_log (LOG_ASSEMBLY)))
 		log_info_nocheck (LOG_ASSEMBLY, "Loaded AOT image '%s'", static_cast<const char*>(basename));
+
+	if (name_needs_free) {
+		delete[] name;
+	}
 
 	return h;
 }
@@ -1489,7 +1558,7 @@ MonodroidRuntime::typemap_managed_to_java (MonoReflectionType *type, const uint8
 
 #if defined (WINDOWS)
 const char*
-MonodroidRuntime::get_my_location ()
+MonodroidRuntime::get_my_location (bool remove_file_name)
 {
 	HMODULE hm = NULL;
 
@@ -1507,13 +1576,14 @@ MonodroidRuntime::get_my_location ()
 		return nullptr;
 	}
 
-	PathRemoveFileSpecW (path);
+	if (remove_file_name)
+		PathRemoveFileSpecW (path);
 
 	return utils.utf16_to_utf8 (path);
 }
 #elif defined (APPLE_OS_X)
 const char*
-MonodroidRuntime::get_my_location ()
+MonodroidRuntime::get_my_location (bool remove_file_name)
 {
 	Dl_info info;
 	if (dladdr (reinterpret_cast<const void*>(&MonodroidRuntime::get_my_location), &info) == 0) {
@@ -1521,7 +1591,9 @@ MonodroidRuntime::get_my_location ()
 		return nullptr;
 	}
 
-	return utils.strdup_new (dirname (const_cast<char*>(info.dli_fname)));
+	if (remove_file_name)
+		return utils.strdup_new (dirname (const_cast<char*>(info.dli_fname)));
+	return utils.strdup_new (info.dli_fname);
 }
 #endif  // defined(WINDOWS)
 

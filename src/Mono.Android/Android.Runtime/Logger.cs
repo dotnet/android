@@ -60,7 +60,7 @@ namespace Android.Runtime {
 			}
 		}
 
-		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		extern static uint monodroid_get_log_categories ();
 
 		static Logger ()
