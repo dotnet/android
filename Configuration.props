@@ -135,8 +135,8 @@
     <AndroidToolPath Condition=" '$(AndroidToolPath)' == '' ">$(AndroidSdkFullPath)\tools</AndroidToolPath>
     <AndroidToolsBinPath Condition=" '$(AndroidToolsBinPath)' == '' ">$(AndroidToolPath)\bin</AndroidToolsBinPath>
     <AndroidToolExe Condition=" '$(AndroidToolExe)' == '' ">android</AndroidToolExe>
-    <EmulatorVersion Condition=" '$(EmulatorVersion)' == '' ">6306047</EmulatorVersion>
-    <EmulatorPkgRevision Condition=" '$(EmulatorPkgRevision)' == '' ">30.0.5</EmulatorPkgRevision>
+    <EmulatorVersion Condition=" '$(EmulatorVersion)' == '' ">6466327</EmulatorVersion>
+    <EmulatorPkgRevision Condition=" '$(EmulatorPkgRevision)' == '' ">30.0.12</EmulatorPkgRevision>
     <EmulatorToolPath Condition=" '$(EmulatorToolPath)' == '' ">$(AndroidSdkFullPath)\emulator</EmulatorToolPath>
     <EmulatorToolExe Condition=" '$(EmulatorToolExe)' == '' ">emulator</EmulatorToolExe>
     <NdkBuildPath Condition=" '$(NdkBuildPath)' == '' And '$(HostOS)' != 'Windows' ">$(AndroidNdkDirectory)\ndk-build</NdkBuildPath>
