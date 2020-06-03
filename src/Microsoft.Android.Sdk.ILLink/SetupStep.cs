@@ -7,7 +7,7 @@ using Mono.Linker.Steps;
 using Mono.Tuner;
 using MonoDroid.Tuner;
 
-namespace Xamarin.Android.Linker
+namespace Microsoft.Android.Sdk.ILLink
 {
 	class SetupStep : BaseStep
 	{
@@ -29,7 +29,7 @@ namespace Xamarin.Android.Linker
 		{
 			string tfmPaths;
 			if (Context.TryGetCustomData ("XATargetFrameworkDirectories", out tfmPaths))
-				Tasks.MonoAndroidHelper.TargetFrameworkDirectories = tfmPaths.Split (new char [] { ';' });
+				Xamarin.Android.Tasks.MonoAndroidHelper.TargetFrameworkDirectories = tfmPaths.Split (new char [] { ';' });
 
 			var subSteps = new SubStepDispatcher ();
 			subSteps.Add (new PreserveExportedTypes ());

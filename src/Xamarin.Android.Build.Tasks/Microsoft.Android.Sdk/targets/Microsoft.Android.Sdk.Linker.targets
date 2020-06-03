@@ -37,9 +37,9 @@ This file contains the .NET 5-specific targets to customize ILLink
     </PropertyGroup>
     <ItemGroup>
       <!-- add our custom steps -->
-      <_TrimmerCustomSteps Include="$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Linker.dll">
+      <_TrimmerCustomSteps Include="$(MSBuildThisFileDirectory)..\tools\Microsoft.Android.Sdk.ILLink.dll">
         <BeforeStep>LoadReferencesStep</BeforeStep>
-        <Type>Xamarin.Android.Linker.SetupStep</Type>
+        <Type>Microsoft.Android.Sdk.ILLink.SetupStep</Type>
       </_TrimmerCustomSteps>
     </ItemGroup>
   </Target>

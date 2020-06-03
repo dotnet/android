@@ -1,7 +1,7 @@
 using Mono.Cecil;
 using MonoDroid.Tuner;
 
-namespace Xamarin.Android.Linker
+namespace Microsoft.Android.Sdk.ILLink
 {
 	public abstract class Profile
 	{

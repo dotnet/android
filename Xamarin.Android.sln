@@ -136,7 +136,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "check-boot-times", "build-t
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "apkdiff", "tools\apkdiff\apkdiff.csproj", "{4E0D89AC-1C8A-45A8-94F0-A54D1B68BE9C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.Linker", "src\Xamarin.Android.Linker\Xamarin.Android.Linker.csproj", "{071D9096-65BB-4359-822E-09788439F210}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Android.Sdk.ILLink", "src\Microsoft.Android.Sdk.ILLink\Microsoft.Android.Sdk.ILLink.csproj", "{071D9096-65BB-4359-822E-09788439F210}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Java.Interop.Tools.Generator", "external\Java.Interop\src\Java.Interop.Tools.Generator\Java.Interop.Tools.Generator.csproj", "{2CE4CD4B-B7B7-4EAE-A9BE-2699824D6096}"
 EndProject

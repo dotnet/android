@@ -5,7 +5,7 @@ using Mono.Cecil;
 
 using Mono.Tuner;
 #if NET5_LINKER
-using Xamarin.Android.Linker;
+using Microsoft.Android.Sdk.ILLink;
 #endif
 
 namespace Mobile.Tuner {

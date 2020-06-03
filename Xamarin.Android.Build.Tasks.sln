@@ -27,7 +27,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "vswhere", "tools\vswhere\vs
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.Android.Tools.AndroidSdk", "external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj", "{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.Android.Linker", "src\Xamarin.Android.Linker\Xamarin.Android.Linker.csproj", "{2A237E71-1FA3-409B-B13E-F6294932A5A9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Android.Sdk.ILLink", "src\Microsoft.Android.Sdk.ILLink\Microsoft.Android.Sdk.ILLink.csproj", "{2A237E71-1FA3-409B-B13E-F6294932A5A9}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
