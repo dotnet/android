@@ -12,6 +12,11 @@
     <UsingAndroidNETSdk />
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- Remove Microsoft.Android FrameworkReference in favor of default references below. -->
+    <FrameworkReference Remove="Microsoft.Android" />
+  </ItemGroup>
+
   <!-- Default References -->
   <ItemGroup Condition=" '$(DisableImplicitFrameworkReferences)' != 'true' ">
     <Reference Include="Mono.Android" />
