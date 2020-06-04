@@ -911,9 +911,9 @@ stages:
         provisioning_script: $(System.DefaultWorkingDirectory)/designer/bot-provisioning/dependencies.csx
         provisioning_extra_args: -remove Xamarin.Android -vv DEVDIV_PKGS_NUGET_TOKEN=$(DevDiv.NuGet.Token) SECTOOLS_PKGS_NUGET_TOKEN=$(SecTools.NuGet.Token)
 
-    - template: yaml-templates/run-installer.yaml
-
     - template: yaml-templates/setup-test-environment.yaml
+      parameters:
+        xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
 
     - script: echo "##vso[task.setvariable variable=JavaSdkDirectory]$HOME/android-toolchain/jdk"
       displayName: set JavaSdkDirectory
@@ -984,7 +984,9 @@ stages:
         provisioning_script: $(System.DefaultWorkingDirectory)\designer\bot-provisioning\dependencies.csx
         provisioning_extra_args: -vv DEVDIV_PKGS_NUGET_TOKEN=$(DevDiv.NuGet.Token) SECTOOLS_PKGS_NUGET_TOKEN=$(SecTools.NuGet.Token)
 
-    - template: yaml-templates\run-installer.yaml
+    - template: yaml-templates\setup-test-environment.yaml
+      parameters:
+        xaSourcePath: $(System.DefaultWorkingDirectory)\xamarin-android
 
     - template: designer\android-designer-build-win.yaml@yaml
       parameters:

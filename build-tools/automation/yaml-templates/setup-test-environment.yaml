@@ -1,6 +1,7 @@
 parameters:
   configuration: $(XA.Build.Configuration)
   provisionExtraArgs: -vv -f
+  xaSourcePath: $(System.DefaultWorkingDirectory)
 
 steps:
 - checkout: self
@@ -42,20 +43,20 @@ steps:
 - task: MSBuild@1
   displayName: build xaprepare
   inputs:
-    solution: build-tools/xaprepare/xaprepare.sln
+    solution: ${{ parameters.xaSourcePath }}/build-tools/xaprepare/xaprepare.sln
     configuration: ${{ parameters.configuration }}
     msbuildArguments: /restore
 
 - script: >
-    mono build-tools/xaprepare/xaprepare/bin/${{ parameters.configuration }}/xaprepare.exe --s=UpdateMono --auto-provision=yes --auto-provision-uses-sudo=yes --no-emoji --run-mode=CI &&
-    mono build-tools/xaprepare/xaprepare/bin/${{ parameters.configuration }}/xaprepare.exe --s=Required --auto-provision=yes --auto-provision-uses-sudo=yes --no-emoji --run-mode=CI &&
-    mono build-tools/xaprepare/xaprepare/bin/${{ parameters.configuration }}/xaprepare.exe --s=AndroidToolchain --no-emoji --run-mode=CI
+    mono ${{ parameters.xaSourcePath }}/build-tools/xaprepare/xaprepare/bin/${{ parameters.configuration }}/xaprepare.exe --s=UpdateMono --auto-provision=yes --auto-provision-uses-sudo=yes --no-emoji --run-mode=CI &&
+    mono ${{ parameters.xaSourcePath }}/build-tools/xaprepare/xaprepare/bin/${{ parameters.configuration }}/xaprepare.exe --s=Required --auto-provision=yes --auto-provision-uses-sudo=yes --no-emoji --run-mode=CI &&
+    mono ${{ parameters.xaSourcePath }}/build-tools/xaprepare/xaprepare/bin/${{ parameters.configuration }}/xaprepare.exe --s=AndroidToolchain --no-emoji --run-mode=CI
   displayName: install test dependencies
   condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
 
 - script: >
-    $(System.DefaultWorkingDirectory)\build-tools\xaprepare\xaprepare\bin\${{ parameters.configuration }}\xaprepare.exe --s=Required --auto-provision=yes --no-emoji --run-mode=CI &&
-    $(System.DefaultWorkingDirectory)\build-tools\xaprepare\xaprepare\bin\${{ parameters.configuration }}\xaprepare.exe --s=AndroidToolchain --no-emoji --run-mode=CI
+    ${{ parameters.xaSourcePath }}\build-tools\xaprepare\xaprepare\bin\${{ parameters.configuration }}\xaprepare.exe --s=Required --auto-provision=yes --no-emoji --run-mode=CI &&
+    ${{ parameters.xaSourcePath }}\build-tools\xaprepare\xaprepare\bin\${{ parameters.configuration }}\xaprepare.exe --s=AndroidToolchain --no-emoji --run-mode=CI
   displayName: install test dependencies
   condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
 
@@ -68,17 +69,17 @@ steps:
   displayName: nuget restore Xamarin.Android.Build.Tasks.sln
   inputs:
     command: custom
-    arguments: restore Xamarin.Android.Build.Tasks.sln -ConfigFile NuGet.config
+    arguments: restore ${{ parameters.xaSourcePath }}/Xamarin.Android.Build.Tasks.sln -ConfigFile NuGet.config
 
 - task: NuGetCommand@2
   displayName: nuget restore Xamarin.Android-Tests.sln
   inputs:
     command: custom
-    arguments: restore Xamarin.Android-Tests.sln -ConfigFile NuGet.config
+    arguments: restore ${{ parameters.xaSourcePath }}/Xamarin.Android-Tests.sln -ConfigFile NuGet.config
 
 - task: MSBuild@1
   displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj
   inputs:
-    solution: build-tools/xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
+    solution: ${{ parameters.xaSourcePath }}/build-tools/xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
     configuration: ${{ parameters.configuration }}
-    msbuildArguments: /restore /bl:$(System.DefaultWorkingDirectory)/bin/Test${{ parameters.configuration }}/BootstrapTasks.binlog
+    msbuildArguments: /restore /bl: ${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/BootstrapTasks.binlog
