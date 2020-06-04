@@ -69,13 +69,13 @@ steps:
   displayName: nuget restore Xamarin.Android.Build.Tasks.sln
   inputs:
     command: custom
-    arguments: restore ${{ parameters.xaSourcePath }}/Xamarin.Android.Build.Tasks.sln -ConfigFile NuGet.config
+    arguments: restore ${{ parameters.xaSourcePath }}/Xamarin.Android.Build.Tasks.sln -ConfigFile ${{ parameters.xaSourcePath }}/NuGet.config
 
 - task: NuGetCommand@2
   displayName: nuget restore Xamarin.Android-Tests.sln
   inputs:
     command: custom
-    arguments: restore ${{ parameters.xaSourcePath }}/Xamarin.Android-Tests.sln -ConfigFile NuGet.config
+    arguments: restore ${{ parameters.xaSourcePath }}/Xamarin.Android-Tests.sln -ConfigFile ${{ parameters.xaSourcePath }}/NuGet.config
 
 - task: MSBuild@1
   displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj
