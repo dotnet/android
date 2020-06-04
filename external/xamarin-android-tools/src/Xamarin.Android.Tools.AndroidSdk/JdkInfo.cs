@@ -340,7 +340,7 @@ namespace Xamarin.Android.Tools
 				jdk = new JdkInfo (path, locator);
 			}
 			catch (Exception e) {
-				logger (TraceLevel.Warning, $"Not a valid JDK directory: `{path}`; via locator: {locator}");
+				logger (TraceLevel.Warning, $"The directory `{path}`, via locator `{locator}`, is not a valid JDK directory: {e.Message}");
 				logger (TraceLevel.Verbose, e.ToString ());
 			}
 			return jdk;
