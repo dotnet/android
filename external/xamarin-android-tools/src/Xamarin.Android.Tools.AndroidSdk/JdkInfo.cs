@@ -281,10 +281,11 @@ namespace Xamarin.Android.Tools
 		{
 			logger  = logger ?? AndroidSdkInfo.DefaultConsoleLogger;
 
-			return GetWindowsJdks (logger)
+			return GetEnvironmentVariableJdks ("JI_JAVA_HOME", logger)
+				.Concat (GetWindowsJdks (logger))
 				.Concat (GetConfiguredJdks (logger))
 				.Concat (GetMacOSMicrosoftJdks (logger))
-				.Concat (GetJavaHomeEnvironmentJdks (logger))
+				.Concat (GetEnvironmentVariableJdks ("JAVA_HOME", logger))
 				.Concat (GetPathEnvironmentJdks (logger))
 				.Concat (GetLibexecJdks (logger))
 				.Concat (GetJavaAlternativesJdks (logger))
@@ -352,12 +353,12 @@ namespace Xamarin.Android.Tools
 			return AndroidSdkWindows.GetJdkInfos (logger);
 		}
 
-		static IEnumerable<JdkInfo> GetJavaHomeEnvironmentJdks (Action<TraceLevel, string> logger)
+		static IEnumerable<JdkInfo> GetEnvironmentVariableJdks (string envVar, Action<TraceLevel, string> logger)
 		{
-			var java_home = Environment.GetEnvironmentVariable ("JAVA_HOME");
+			var java_home = Environment.GetEnvironmentVariable (envVar);
 			if (string.IsNullOrEmpty (java_home))
 				yield break;
-			var jdk = TryGetJdkInfo (java_home, logger, "$JAVA_HOME");
+			var jdk = TryGetJdkInfo (java_home, logger, $"${envVar}");
 			if (jdk != null)
 				yield return jdk;
 		}

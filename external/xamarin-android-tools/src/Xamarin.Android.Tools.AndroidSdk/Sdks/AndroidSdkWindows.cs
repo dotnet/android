@@ -108,7 +108,7 @@ namespace Xamarin.Android.Tools
 
 		protected override string? GetJavaSdkPath ()
 		{
-			var jdk = GetJdkInfos (Logger).FirstOrDefault ();
+			var jdk = JdkInfo.GetKnownSystemJdkInfos (Logger).FirstOrDefault ();
 			return jdk?.HomePath;
 		}
 
@@ -139,18 +139,7 @@ namespace Xamarin.Android.Tools
 				.Concat (ToJdkInfos (GetOpenJdkPaths (), "OpenJDK"))
 				.Concat (ToJdkInfos (GetKnownOpenJdkPaths (), "Well-known OpenJDK paths"))
 				.Concat (ToJdkInfos (GetOracleJdkPaths (), "Oracle JDK"))
-				.Concat (ToJdkInfos (GetEnvironmentJdkPaths (), "Environment Variables"));
-		}
-
-		private static IEnumerable<string> GetEnvironmentJdkPaths ()
-		{
-			var environment = new [] { "JAVA_HOME" };
-			foreach (var key in environment) {
-				var value = Environment.GetEnvironmentVariable (key);
-				if (!string.IsNullOrEmpty (value)) {
-					yield return value;
-				}
-			}
+				;
 		}
 
 		private static IEnumerable<string> GetPreferredJdkPaths ()

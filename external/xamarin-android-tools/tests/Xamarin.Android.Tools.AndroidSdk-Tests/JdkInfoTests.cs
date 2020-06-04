@@ -12,6 +12,23 @@ namespace Xamarin.Android.Tools.Tests
 	public class JdkInfoTests
 	{
 		[Test]
+		public void GetKnownSystemJdkInfos_PrefersJiJavaHome ()
+		{
+			var previous = Environment.GetEnvironmentVariable ("JI_JAVA_HOME", EnvironmentVariableTarget.Process);
+			try {
+				Environment.SetEnvironmentVariable ("JI_JAVA_HOME", FauxJdkDir, EnvironmentVariableTarget.Process);
+
+				var defaultJdkDir = JdkInfo.GetKnownSystemJdkInfos ()
+					.FirstOrDefault ();
+				Assert.IsNotNull (defaultJdkDir);
+				Assert.AreEqual (FauxJdkDir, defaultJdkDir.HomePath);
+			}
+			finally {
+				Environment.SetEnvironmentVariable ("JI_JAVA_HOME", previous, EnvironmentVariableTarget.Process);
+			}
+		}
+
+		[Test]
 		public void Constructor_NullPath ()
 		{
 			Assert.Throws<ArgumentNullException>(() => new JdkInfo (null));
