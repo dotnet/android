@@ -899,7 +899,7 @@ stages:
         if (("$branchName" -ne "master") -and ("$branchName" -notlike "d16*")) {
             $branchName = "master"
         }
-        Set-Location -Path $(System.DefaultWorkingDirectory)
+        Set-Location -Path $(System.DefaultWorkingDirectory)/designer
         git checkout $branchName
         git submodule update -q --init --recursive
       displayName: Clone and update designer
@@ -908,17 +908,23 @@ stages:
       displayName: provision designer dependencies
       inputs:
         github_token: $(GitHub.Token)
-        provisioning_script: $(System.DefaultWorkingDirectory)/bot-provisioning/dependencies.csx
+        provisioning_script: $(System.DefaultWorkingDirectory)/designer/bot-provisioning/dependencies.csx
         provisioning_extra_args: -remove Xamarin.Android -vv DEVDIV_PKGS_NUGET_TOKEN=$(DevDiv.NuGet.Token) SECTOOLS_PKGS_NUGET_TOKEN=$(SecTools.NuGet.Token)
 
     - template: yaml-templates/run-installer.yaml
+
+    - template: yaml-templates/setup-test-environment.yaml
 
     - script: echo "##vso[task.setvariable variable=JavaSdkDirectory]$HOME/android-toolchain/jdk"
       displayName: set JavaSdkDirectory
 
     - template: designer/android-designer-build-mac.yaml@yaml
+      parameters:
+        designerSourcePath: $(System.DefaultWorkingDirectory)/designer
 
     - template: designer/android-designer-tests.yaml@yaml
+      parameters:
+        designerSourcePath: $(System.DefaultWorkingDirectory)/designer
 
     - task: CopyFiles@2
       displayName: 'Copy binlogs'
@@ -966,7 +972,7 @@ stages:
         if (("$branchName" -ne "master") -and ("$branchName" -notlike "d16*")) {
             $branchName = "master"
         }
-        Set-Location -Path $(System.DefaultWorkingDirectory)
+        Set-Location -Path $(System.DefaultWorkingDirectory)\designer
         git checkout $branchName
         git submodule update -q --init --recursive
       displayName: Clone and update designer
@@ -975,14 +981,18 @@ stages:
       displayName: provision designer dependencies
       inputs:
         github_token: $(GitHub.Token)
-        provisioning_script: $(System.DefaultWorkingDirectory)\bot-provisioning\dependencies.csx
+        provisioning_script: $(System.DefaultWorkingDirectory)\designer\bot-provisioning\dependencies.csx
         provisioning_extra_args: -vv DEVDIV_PKGS_NUGET_TOKEN=$(DevDiv.NuGet.Token) SECTOOLS_PKGS_NUGET_TOKEN=$(SecTools.NuGet.Token)
 
     - template: yaml-templates\run-installer.yaml
 
     - template: designer\android-designer-build-win.yaml@yaml
+      parameters:
+        designerSourcePath: $(System.DefaultWorkingDirectory)\designer
 
     - template: designer\android-designer-tests.yaml@yaml
+      parameters:
+        designerSourcePath: $(System.DefaultWorkingDirectory)\designer
 
     - task: CopyFiles@2
       displayName: 'Copy binlogs'
