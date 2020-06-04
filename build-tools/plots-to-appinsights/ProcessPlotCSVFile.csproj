@@ -1,4 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\Configuration.props" />
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -9,7 +10,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.ApplicationInsights" Version="2.13.1" />
-    <PackageReference Include="Mono.Options" Version="6.6.0.161" />
+    <PackageReference Include="Mono.Options" Version="$(MonoOptionsVersion)" />
   </ItemGroup>
 
 </Project>

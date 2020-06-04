@@ -146,7 +146,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "apksigner", "src\apksigner\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "java-source-utils", "external\Java.Interop\tools\java-source-utils\java-source-utils.csproj", "{37FCD325-1077-4603-98E7-4509CAD648D6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "decompress-assemblies", "tools\decompress-assemblies\decompress-assemblies.csproj", "{88B746FF-8D6E-464D-9D66-FF2ECCF148E0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "decompress-assemblies", "tools\decompress-assemblies\decompress-assemblies.csproj", "{88B746FF-8D6E-464D-9D66-FF2ECCF148E0}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "tmt", "tools\tmt\tmt.csproj", "{1A273ED2-AE84-48E9-9C23-E978C2D0CB34}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -408,6 +410,10 @@ Global
 		{88B746FF-8D6E-464D-9D66-FF2ECCF148E0}.Debug|AnyCPU.Build.0 = Debug|Any CPU
 		{88B746FF-8D6E-464D-9D66-FF2ECCF148E0}.Release|AnyCPU.ActiveCfg = Release|Any CPU
 		{88B746FF-8D6E-464D-9D66-FF2ECCF148E0}.Release|AnyCPU.Build.0 = Release|Any CPU
+		{1A273ED2-AE84-48E9-9C23-E978C2D0CB34}.Debug|AnyCPU.ActiveCfg = Debug|anycpu
+		{1A273ED2-AE84-48E9-9C23-E978C2D0CB34}.Debug|AnyCPU.Build.0 = Debug|anycpu
+		{1A273ED2-AE84-48E9-9C23-E978C2D0CB34}.Release|AnyCPU.ActiveCfg = Release|anycpu
+		{1A273ED2-AE84-48E9-9C23-E978C2D0CB34}.Release|AnyCPU.Build.0 = Release|anycpu
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -476,6 +482,7 @@ Global
 		{9A9EF774-6EA6-414F-9D2F-DCD66C56B92A} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
 		{37FCD325-1077-4603-98E7-4509CAD648D6} = {864062D3-A415-4A6F-9324-5820237BA058}
 		{88B746FF-8D6E-464D-9D66-FF2ECCF148E0} = {864062D3-A415-4A6F-9324-5820237BA058}
+		{1A273ED2-AE84-48E9-9C23-E978C2D0CB34} = {864062D3-A415-4A6F-9324-5820237BA058}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {53A1F287-EFB2-4D97-A4BB-4A5E145613F6}

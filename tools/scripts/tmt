@@ -1,0 +1,10 @@
+#!/bin/bash
+truepath=$(readlink "$0" || echo "$0")
+mydir=$(dirname ${truepath})
+binariesdir="${mydir}/typemap-tool"
+
+if [ -x "${binariesdir}/tmt" ]; then
+	exec "${binariesdir}/tmt" "$@"
+else
+	exec dotnet "${binariesdir}/tmt.dll"
+fi
