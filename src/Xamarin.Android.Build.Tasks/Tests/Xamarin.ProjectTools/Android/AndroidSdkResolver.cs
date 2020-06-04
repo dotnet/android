@@ -50,6 +50,8 @@ namespace Xamarin.ProjectTools
 			if (string.IsNullOrEmpty (JavaSdkPath))
 				JavaSdkPath = RunPathsTargets ("GetJavaSdkDirectory");
 			if (string.IsNullOrEmpty (JavaSdkPath))
+				JavaSdkPath = Environment.GetEnvironmentVariable ("JI_JAVA_HOME");
+			if (string.IsNullOrEmpty (JavaSdkPath))
 				JavaSdkPath = Environment.GetEnvironmentVariable ("JAVA_HOME");
 			if (string.IsNullOrEmpty (JavaSdkPath))
 				JavaSdkPath = GetPathFromRegistry ("JavaSdkDirectory");
