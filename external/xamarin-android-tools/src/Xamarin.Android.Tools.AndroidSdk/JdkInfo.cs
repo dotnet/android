@@ -14,10 +14,6 @@ using System.Xml.Linq;
 namespace Xamarin.Android.Tools
 {
 	public class JdkInfo {
-		static readonly string[] JdkLibraryTopDirs = {
-			"jre",
-			"lib",
-		};
 
 		public      string                              HomePath                    {get;}
 
@@ -58,27 +54,14 @@ namespace Xamarin.Android.Tools
 			JavaPath            = ProcessUtils.FindExecutablesInDirectory (binPath, "java").FirstOrDefault ();
 			JavacPath           = ProcessUtils.FindExecutablesInDirectory (binPath, "javac").FirstOrDefault ();
 
-			string? topDir = null;
-			foreach (string dir in JdkLibraryTopDirs) {
-				topDir = Path.Combine (HomePath, dir);
-				if (!Directory.Exists (topDir)) {
-					topDir = null;
-					continue;
-				}
-				break;
-			}
-
-			if (String.IsNullOrEmpty (topDir))
-				topDir = Path.Combine (HomePath, JdkLibraryTopDirs [0]);
-
-			JdkJvmPath = OS.IsMac
-				? FindLibrariesInDirectory (topDir!, "jli").FirstOrDefault ()
-				: FindLibrariesInDirectory (topDir!, "jvm").FirstOrDefault ();
+			string? jdkJvmPath  = GetJdkJvmPath ();
 
 			ValidateFile ("jar",    JarPath);
 			ValidateFile ("java",   JavaPath);
 			ValidateFile ("javac",  JavacPath);
-			ValidateFile ("jvm",    JdkJvmPath);
+			ValidateFile ("jvm",    jdkJvmPath);
+
+			JdkJvmPath          = jdkJvmPath!;
 
 			var includes        = new List<string> ();
 			var jdkInclude      = Path.Combine (HomePath, "include");
@@ -132,6 +115,24 @@ namespace Xamarin.Android.Tools
 			return false;
 		}
 
+		string? GetJdkJvmPath ()
+		{
+			string  jreDir  = Path.Combine (HomePath, "jre");
+			string  libDir  = Path.Combine (HomePath, "lib");
+
+			if (OS.IsMac) {
+				return FindLibrariesInDirectory (jreDir, "jli").FirstOrDefault () ??
+					FindLibrariesInDirectory (libDir, "jli").FirstOrDefault ();
+			}
+			if (OS.IsWindows) {
+				string  binServerDir    = Path.Combine (HomePath, "bin", "server");
+				return FindLibrariesInDirectory (jreDir, "jvm").FirstOrDefault () ??
+					FindLibrariesInDirectory (binServerDir, "jvm").FirstOrDefault ();
+			}
+			return FindLibrariesInDirectory (jreDir, "jvm").FirstOrDefault () ??
+				FindLibrariesInDirectory (libDir, "jvm").FirstOrDefault ();
+		}
+
 		static IEnumerable<string> FindLibrariesInDirectory (string dir, string libraryName)
 		{
 			if (!Directory.Exists (dir))
@@ -140,7 +141,7 @@ namespace Xamarin.Android.Tools
 			return Directory.EnumerateFiles (dir, library, SearchOption.AllDirectories);
 		}
 
-		void ValidateFile (string name, string path)
+		void ValidateFile (string name, string? path)
 		{
 			if (path == null || !File.Exists (path))
 				throw new ArgumentException ($"Could not find required file `{name}` within `{HomePath}`; is this a valid JDK?", "homePath");
