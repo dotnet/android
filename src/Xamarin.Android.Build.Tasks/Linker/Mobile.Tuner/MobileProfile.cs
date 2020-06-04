@@ -4,6 +4,9 @@ using System.Collections.Generic;
 using Mono.Cecil;
 
 using Mono.Tuner;
+#if NET5_LINKER
+using Microsoft.Android.Sdk.ILLink;
+#endif
 
 namespace Mobile.Tuner {
 
