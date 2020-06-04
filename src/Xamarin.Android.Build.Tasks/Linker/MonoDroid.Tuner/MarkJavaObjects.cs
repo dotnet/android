@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Mono.Cecil;
+using Mono.Linker.Steps;
 using Mono.Tuner;
 using Xamarin.Android.Tasks;
 
@@ -165,7 +166,7 @@ namespace MonoDroid.Tuner {
 
 		void PreserveInterfaceMethods (TypeDefinition type, TypeDefinition invoker)
 		{
-			foreach (var m in type.GetMethods ()) {
+			foreach (var m in type.Methods.Where (m => !m.IsConstructor)) {
 				string methodAndType;
 				if (!m.TryGetRegisterMember (out methodAndType))
 					continue;
@@ -177,7 +178,7 @@ namespace MonoDroid.Tuner {
 				if (!CheckInvokerType (invoker, values [1]))
 					continue;
 
-				foreach (var invokerMethod in invoker.GetMethods ()) {
+				foreach (var invokerMethod in invoker.Methods.Where (m => !m.IsConstructor)) {
 					if (invokerMethod.Name == values [0]) {
 						PreserveMethod (invoker, invokerMethod);
 						break;

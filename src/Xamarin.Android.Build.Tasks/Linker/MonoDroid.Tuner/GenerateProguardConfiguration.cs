@@ -26,6 +26,10 @@ namespace Mono.Linker.Steps {
 
 		protected override void Process ()
 		{
+			var dir = Path.GetDirectoryName (filename);
+			if (!Directory.Exists (dir))
+				Directory.CreateDirectory (dir);
+
 			writer = File.CreateText (filename);
 		}
 

@@ -1469,7 +1469,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 	
 <Target Name="_LinkAssembliesShrink"
-  Condition="'$(AndroidLinkMode)' != 'None'"
+  Condition="'$(AndroidLinkMode)' != 'None' and '$(UsingAndroidNETSdk)' != 'true' "
   Inputs="@(ResolvedUserAssemblies);$(_AndroidBuildPropertiesCache)"
   Outputs="$(_AndroidLinkFlag)">
 

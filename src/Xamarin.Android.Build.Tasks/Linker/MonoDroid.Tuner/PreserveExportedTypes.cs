@@ -8,6 +8,10 @@ using Mono.Linker.Steps;
 
 using Mono.Cecil;
 
+#if NET5_LINKER
+using Microsoft.Android.Sdk.ILLink;
+#endif
+
 namespace Mono.Tuner {
 
 	public class PreserveExportedTypes : BaseSubStep {

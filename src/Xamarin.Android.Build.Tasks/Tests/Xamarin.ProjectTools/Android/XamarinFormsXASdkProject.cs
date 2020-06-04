@@ -44,6 +44,14 @@ namespace Xamarin.ProjectTools
 			: base (outputType)
 		{
 			PackageReferences.Add (KnownPackages.XamarinForms_4_5_0_617);
+			// additional deps for XForms on NET5
+			// to workaround the issue similar to https://github.com/mono/linker/issues/1139
+			PackageReferences.Add (KnownPackages.SystemCodeDom_5_0_0_preview_3_20214_6);
+			PackageReferences.Add (KnownPackages.SystemDiagnosticsEventLog_5_0_0_preview_3_20214_6);
+			PackageReferences.Add (KnownPackages.SystemDiagnosticsPerformanceCounter_5_0_0_preview_3_20214_6);
+			PackageReferences.Add (KnownPackages.SystemIOPorts_5_0_0_preview_3_20214_6);
+			PackageReferences.Add (KnownPackages.SystemSecurityPermissions_5_0_0_preview_3_20214_6);
+			PackageReferences.Add (KnownPackages.SystemThreadingAccessControl_5_0_0_preview_3_20214_6);
 
 			// Workaround for AndroidX, see: https://github.com/xamarin/AndroidSupportComponents/pull/239
 			Imports.Add (new Import (() => "Directory.Build.targets") {

@@ -8,7 +8,11 @@ using Java.Interop.Tools.Cecil;
 
 using Mono.Linker;
 using Mono.Linker.Steps;
+
 using Mono.Tuner;
+#if NET5_LINKER
+using Microsoft.Android.Sdk.ILLink;
+#endif
 
 namespace MonoDroid.Tuner
 {
@@ -32,10 +36,14 @@ namespace MonoDroid.Tuner
 			if (IsProductOrSdkAssembly (assembly))
 				return;
 
+#if !NET5_LINKER
 			CheckAppDomainUsageUnconditional (assembly, (string msg) => Context.LogMessage (MessageImportance.High, msg));
+#endif
 
 			if (FixAbstractMethodsUnconditional (assembly)) {
+#if !NET5_LINKER
 				Context.SafeReadSymbols (assembly);
+#endif
 				AssemblyAction action = Annotations.HasAction (assembly) ? Annotations.GetAction (assembly) : AssemblyAction.Skip;
 				if (action == AssemblyAction.Skip || action == AssemblyAction.Copy || action == AssemblyAction.Delete)
 					Annotations.SetAction (assembly, AssemblyAction.Save);
@@ -47,6 +55,7 @@ namespace MonoDroid.Tuner
 		}
 
 
+#if !NET5_LINKER
 		internal void CheckAppDomainUsage (AssemblyDefinition assembly, Action<string> warn)
 		{
 			if (IsProductOrSdkAssembly (assembly))
@@ -67,6 +76,7 @@ namespace MonoDroid.Tuner
 				}
 			}
 		}
+#endif
 
 		internal bool FixAbstractMethods (AssemblyDefinition assembly)
 		{
@@ -294,11 +304,15 @@ namespace MonoDroid.Tuner
 
 		protected virtual AssemblyDefinition GetMonoAndroidAssembly ()
 		{
+#if !NET5_LINKER
 			foreach (var assembly in Context.GetAssemblies ()) {
 				if (assembly.Name.Name == "Mono.Android")
 					return assembly;
 			}
 			return null;
+#else
+			return Context.GetLoadedAssembly ("Mono.Android");
+#endif
 		}
 	}
 }
