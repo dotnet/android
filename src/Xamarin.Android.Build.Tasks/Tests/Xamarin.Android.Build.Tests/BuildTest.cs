@@ -992,7 +992,7 @@ namespace UnamedProject
 					// LLVM passes a direct path to libc.so, and we need to use the libc.so
 					// which corresponds to the *minimum* SDK version specified in AndroidManifest.xml
 					// Since we overrode minSdkVersion=16, that means we should use libc.so from android-16.
-					StringAssertEx.ContainsRegex (@"\s*\[aot-compiler stdout].*android-21.arch-.*.usr.lib.libc\.so", b.LastBuildOutput, "AOT+LLVM should use libc.so from minSdkVersion!");
+					StringAssertEx.ContainsRegex (@"\s*\[aot-compiler stdout].*android-16.arch-.*.usr.lib.libc\.so", b.LastBuildOutput, "AOT+LLVM should use libc.so from minSdkVersion!");
 				}
 				foreach (var abi in supportedAbis.Split (new char [] { ';' })) {
 					var libapp = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
@@ -1122,32 +1122,25 @@ namespace UnamedProject
 
 		XamarinAndroidApplicationProject CreateMultiDexRequiredApplication (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release")
 		{
-			const int NumberOfMethods = (32 * 1024) - 1;
 			var proj = new XamarinAndroidApplicationProject (debugConfigurationName, releaseConfigurationName);
 			proj.OtherBuildItems.Add (new BuildItem (AndroidBuildActions.AndroidJavaSource, "ManyMethods.java") {
 				TextContent = () => "public class ManyMethods { \n"
-					+ string.Join (Environment.NewLine, Enumerable.Range (0, NumberOfMethods).Select (i => "public void method" + i + "() {}"))
+					+ string.Join (Environment.NewLine, Enumerable.Range (0, 32768).Select (i => "public void method" + i + "() {}"))
 					+ "}",
 				Encoding = Encoding.ASCII
 			});
 			proj.OtherBuildItems.Add (new BuildItem (AndroidBuildActions.AndroidJavaSource, "ManyMethods2.java") {
 				TextContent = () => "public class ManyMethods2 { \n"
-					+ string.Join (Environment.NewLine, Enumerable.Range (0, NumberOfMethods).Select (i => "public void method" + i + "() {}"))
+					+ string.Join (Environment.NewLine, Enumerable.Range (0, 32768).Select (i => "public void method" + i + "() {}"))
 					+ "}",
 				Encoding = Encoding.ASCII
-			});
-			proj.OtherBuildItems.Add (new BuildItem (AndroidBuildActions.AndroidJavaSource, "ManyMethods3.java") {
-					TextContent = () => "public class ManyMethods3 { \n"
-					+ string.Join (Environment.NewLine, Enumerable.Range (0, NumberOfMethods).Select (i => "public void method" + i + "() {}"))
-					+ "}",
-					Encoding = Encoding.ASCII
 			});
 			return proj;
 		}
 
 		[Test]
 		[Category ("Minor")]
-		public void BuildApplicationRequiresMultiDex ([Values ("dx", "d8")] string dexTool)
+		public void BuildApplicationOver65536Methods ([Values ("dx", "d8")] string dexTool)
 		{
 			if (dexTool == "d8")
 				Assert.Ignore ("The build currently *succeeds* with d8, when API 21 is our minimum.");
@@ -1192,14 +1185,11 @@ namespace UnamedProject
 					intermediateDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 				}
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				FileAssert.Exists (Path.Combine (intermediateDir, "android", "bin", "classes.dex"));
-
-				if (proj.DexTool != "d8") {
-					var multidexKeepPath  = Path.Combine (intermediateDir, "multidex.keep");
-					FileAssert.Exists (multidexKeepPath);
-					Assert.IsTrue (File.ReadAllLines (multidexKeepPath).Length > 1, "multidex.keep must contain more than one line.");
-				}
-
+				Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, intermediateDir,  "android/bin/classes.dex")),
+					"multidex-ed classes.zip exists");
+				var multidexKeepPath  = Path.Combine (Root, b.ProjectDirectory, intermediateDir, "multidex.keep");
+				Assert.IsTrue (File.Exists (multidexKeepPath), "multidex.keep exists");
+				Assert.IsTrue (File.ReadAllLines (multidexKeepPath).Length > 1, "multidex.keep must contain more than one line.");
 				Assert.IsTrue (b.LastBuildOutput.ContainsText (Path.Combine (proj.TargetFrameworkVersion, "mono.android.jar")), proj.TargetFrameworkVersion + "/mono.android.jar should be used.");
 				Assert.IsFalse (b.LastBuildOutput.ContainsText ("Duplicate zip entry"), "Should not get warning about [META-INF/MANIFEST.MF]");
 			}
