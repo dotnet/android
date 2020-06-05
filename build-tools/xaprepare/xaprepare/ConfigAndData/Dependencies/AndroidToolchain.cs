@@ -17,6 +17,8 @@ namespace Xamarin.Android.Prepare
 			string AndroidNdkDirectory     = GetRequiredProperty (KnownProperties.AndroidNdkDirectory);
 			string AndroidCmakeVersion     = GetRequiredProperty (KnownProperties.AndroidCmakeVersion);
 			string AndroidCmakeVersionPath = GetRequiredProperty (KnownProperties.AndroidCmakeVersionPath);
+			string CommandLineToolsVersion = GetRequiredProperty (KnownProperties.CommandLineToolsVersion);
+			string CommandLineToolsFolder  = GetRequiredProperty (KnownProperties.CommandLineToolsFolder);
 			string EmulatorVersion         = GetRequiredProperty (KnownProperties.EmulatorVersion);
 			string EmulatorPkgRevision     = GetRequiredProperty (KnownProperties.EmulatorPkgRevision);
 			string XABuildToolsFolder      = GetRequiredProperty (KnownProperties.XABuildToolsFolder);
@@ -51,6 +53,8 @@ namespace Xamarin.Android.Prepare
 				new AndroidToolchainComponent ($"x86-29_r07-{osTag}",                               destDir: Path.Combine ("system-images", "android-29", "default", "x86"), relativeUrl: new Uri ("sys-img/android/", UriKind.Relative), pkgRevision: "7"),
 				new AndroidToolchainComponent ($"android-ndk-r{AndroidNdkVersion}-{osTag}-x86_64",  destDir: AndroidNdkDirectory, pkgRevision: AndroidPkgRevision),
 				new AndroidToolchainComponent ($"build-tools_r{XABuildToolsVersion}-{altOsTag}",    destDir: Path.Combine ("build-tools", XABuildToolsFolder), isMultiVersion: true),
+				new AndroidToolchainComponent ($"commandlinetools-{cltOsTag}-{CommandLineToolsVersion}",
+					destDir: Path.Combine ("cmdline-tools", CommandLineToolsFolder), isMultiVersion: true),
 				new AndroidToolchainComponent ($"platform-tools_r{XAPlatformToolsVersion}-{osTag}", destDir: "platform-tools", pkgRevision: XAPlatformToolsVersion),
 				new AndroidToolchainComponent ($"sdk-tools-{osTag}-4333796",                        destDir: "tools", pkgRevision: "26.1.1"),
 				new AndroidToolchainComponent ($"emulator-{osTag}-{EmulatorVersion}",               destDir: "emulator", pkgRevision: EmulatorPkgRevision),
