@@ -8,6 +8,15 @@ namespace Xamarin.Android.Prepare
 	{
 		async Task<bool> Unpack (string fullArchivePath, string destinationDirectory, bool cleanDestinationBeforeUnpacking = false)
 		{
+			// https://bintray.com/jetbrains/intellij-jdk/download_file?file_path=jbrsdk-8u202-windows-x64-b1483.37.tar.gz
+			// doesn't contain a single root directory!  This causes the
+			// "JetBrains root directory not found after unpacking" check to fail on Windows.
+			// "Fix" things by setting destinationDirectory to contain RootDirName, allowing
+			// the check to succeed.
+			if (JdkVersion == Configurables.Defaults.JetBrainsOpenJDK8Version) {
+				destinationDirectory = Path.Combine (destinationDirectory, RootDirName);
+			}
+
 			// On Windows we don't have Tar available and the Windows package is a .tar.gz
 			// 7zip can unpack tar.gz but it's a two-stage process - first it decompresses the package, then it can be
 			// invoked again to extract the actual tar contents.
