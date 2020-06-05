@@ -14,6 +14,7 @@ namespace Xamarin.ProjectTools
 		public string Verbosity { get; set; } = "diag";
 		public string AndroidSdkPath { get; set; } = AndroidSdkResolver.GetAndroidSdkPath ();
 		public string AndroidNdkPath { get; set; } = AndroidSdkResolver.GetAndroidNdkPath ();
+		public string JavaSdkPath { get; set; } = AndroidSdkResolver.GetJavaSdkPath ();
 
 		public string ProjectDirectory { get; private set; }
 
@@ -119,6 +120,9 @@ namespace Xamarin.ProjectTools
 			}
 			if (Directory.Exists (AndroidNdkPath)) {
 				arguments.Add ($"/p:AndroidNdkDirectory=\"{AndroidNdkPath}\"");
+			}
+			if (Directory.Exists (JavaSdkPath)) {
+				arguments.Add ($"/p:JavaSdkDirectory=\"{JavaSdkPath}\"");
 			}
 			return arguments;
 		}

@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 
 namespace Xamarin.ProjectTools
@@ -41,5 +42,40 @@ namespace Xamarin.ProjectTools
 			return ndkPath;
 		}
 
+		// Cache the result, so we don't run MSBuild on every call
+		static string JavaSdkPath;
+
+		public static string GetJavaSdkPath ()
+		{
+			if (string.IsNullOrEmpty (JavaSdkPath))
+				JavaSdkPath = RunPathsTargets ("GetJavaSdkDirectory");
+			if (string.IsNullOrEmpty (JavaSdkPath))
+				JavaSdkPath = Environment.GetEnvironmentVariable ("JI_JAVA_HOME");
+			if (string.IsNullOrEmpty (JavaSdkPath))
+				JavaSdkPath = Environment.GetEnvironmentVariable ("JAVA_HOME");
+			if (string.IsNullOrEmpty (JavaSdkPath))
+				JavaSdkPath = GetPathFromRegistry ("JavaSdkDirectory");
+			if (string.IsNullOrEmpty (JavaSdkPath))
+				JavaSdkPath = Path.GetFullPath (Path.Combine (ToolchainPath, "jdk"));
+			return JavaSdkPath;
+		}
+
+		static string RunPathsTargets (string target)
+		{
+			var targets = Path.Combine (XABuildPaths.TopDirectory, "build-tools", "scripts", "Paths.targets");
+			var msbuild = TestEnvironment.IsWindows ? TestEnvironment.GetVisualStudioInstance ().MSBuildPath : "msbuild";
+			var args = $"/nologo /v:minimal /t:{target} \"{targets}\"";
+			var psi = new ProcessStartInfo (msbuild, args) {
+				CreateNoWindow = true,
+				RedirectStandardOutput = true,
+				WindowStyle = ProcessWindowStyle.Hidden,
+				UseShellExecute = false,
+			};
+			using (var p = Process.Start (psi)) {
+				p.WaitForExit ();
+				string path = p.StandardOutput.ReadToEnd ().Trim ();
+				return Directory.Exists (path) ? path : null;
+			}
+		}
 	}
 }

@@ -303,6 +303,10 @@ namespace Xamarin.ProjectTools
 				if (Directory.Exists (ndkPath)) {
 					sw.WriteLine (" /p:AndroidNdkDirectory=\"{0}\" ", ndkPath);
 				}
+				string jdkPath = AndroidSdkResolver.GetJavaSdkPath ();
+				if (Directory.Exists (jdkPath)) {
+					sw.WriteLine (" /p:JavaSdkDirectory=\"{0}\" ", jdkPath);
+				}
 				if (parameters != null) {
 					foreach (var param in parameters) {
 						sw.WriteLine (" /p:{0}", param);
