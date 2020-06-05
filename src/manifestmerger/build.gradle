@@ -2,6 +2,14 @@ plugins {
     id 'java-library'
 }
 
+java {
+    ext.javaSourceVer = project.hasProperty('javaSourceVer') ? JavaVersion.toVersion(project.getProperty('javaSourceVer')) : JavaVersion.VERSION_1_8
+    ext.javaTargetVer = project.hasProperty('javaTargetVer') ? JavaVersion.toVersion(project.getProperty('javaTargetVer')) : JavaVersion.VERSION_1_8
+
+    sourceCompatibility = ext.javaSourceVer
+    targetCompatibility = ext.javaTargetVer
+}
+
 repositories {
     maven { url 'https://maven.google.com' }
     mavenCentral()

@@ -118,6 +118,10 @@
     <MingwCommandPrefix64>x86_64-w64-mingw32</MingwCommandPrefix64>
   </PropertyGroup>
   <PropertyGroup>
+    <JavacSourceVersion>1.8</JavacSourceVersion>
+    <JavacTargetVersion>1.8</JavacTargetVersion>
+  </PropertyGroup>
+  <PropertyGroup>
     <AndroidMxeFullPath Condition=" '$(AndroidMxeInstallPrefix)' != '' ">$([System.IO.Path]::GetFullPath ('$(AndroidMxeInstallPrefix)'))</AndroidMxeFullPath>
     <AndroidNdkFullPath>$([System.IO.Path]::GetFullPath ('$(AndroidNdkDirectory)'))</AndroidNdkFullPath>
     <AndroidSdkFullPath>$([System.IO.Path]::GetFullPath ('$(AndroidSdkDirectory)'))</AndroidSdkFullPath>
