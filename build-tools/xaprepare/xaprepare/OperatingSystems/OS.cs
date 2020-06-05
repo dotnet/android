@@ -184,7 +184,7 @@ namespace Xamarin.Android.Prepare
 			JavaHome = Context.Instance.Properties.GetValue (KnownProperties.JavaSdkDirectory)?.Trim () ?? String.Empty;
 			if (String.IsNullOrEmpty (JavaHome)) {
 				var androidToolchainDirectory = Context.Instance.Properties.GetValue (KnownProperties.AndroidToolchainDirectory)?.Trim ();
-				JavaHome = Path.Combine (androidToolchainDirectory, "jdk");
+				JavaHome = Path.Combine (androidToolchainDirectory, Configurables.Defaults.JdkFolder);
 			}
 
 			string extension = IsWindows ? ".exe" : string.Empty;

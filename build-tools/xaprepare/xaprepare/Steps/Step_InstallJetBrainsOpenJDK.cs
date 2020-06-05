@@ -9,10 +9,9 @@ using System.Xml.Linq;
 
 namespace Xamarin.Android.Prepare
 {
-	partial class Step_InstallJetBrainsOpenJDK : StepWithDownloadProgress
+	abstract partial class Step_InstallJetBrainsOpenJDK : StepWithDownloadProgress
 	{
 		const string ProductName = "JetBrains OpenJDK";
-		const string RootDirName = "jbrsdk";
 		const string XAVersionInfoFile = "xa_jdk_version.txt";
 		const string URLQueryFilePathField = "file_path";
 
@@ -26,13 +25,20 @@ namespace Xamarin.Android.Prepare
 			Path.Combine ("include", "jni.h"),
 		};
 
-		public Step_InstallJetBrainsOpenJDK ()
-			: base ($"Installing {ProductName} 11")
+		public Step_InstallJetBrainsOpenJDK (string description)
+			: base (description)
 		{}
+
+		protected   abstract    string  JdkInstallDir	{get;}
+		protected   abstract    Version JdkVersion      {get;}
+		protected   abstract    Version JdkRelease      {get;}
+		protected   abstract    Uri     JdkUrl          {get;}
+		protected   abstract    string  JdkCacheDir     {get;}
+		protected   abstract    string  RootDirName     {get;}
 
 		protected override async Task<bool> Execute (Context context)
 		{
-			string jdkInstallDir = Configurables.Paths.OpenJDKInstallDir;
+			string jdkInstallDir = JdkInstallDir;
 			if (OpenJDKExistsAndIsValid (jdkInstallDir, out string installedVersion)) {
 				Log.Status ($"{ProductName} version ");
 				Log.Status (installedVersion, ConsoleColor.Yellow);
@@ -40,8 +46,8 @@ namespace Xamarin.Android.Prepare
 				return true;
 			}
 
-			Log.StatusLine ($"JetBrains JDK {Configurables.Defaults.JetBrainsOpenJDKVersion} r{Configurables.Defaults.JetBrainsOpenJDKRelease} will be installed");
-			Uri jdkURL = Configurables.Urls.JetBrainsOpenJDK;
+			Log.StatusLine ($"JetBrains JDK {JdkVersion} r{JdkRelease} will be installed");
+			Uri jdkURL = JdkUrl;
 			if (jdkURL == null)
 				throw new InvalidOperationException ($"{ProductName} URL must not be null");
 
@@ -51,7 +57,7 @@ namespace Xamarin.Android.Prepare
 				return false;
 			}
 
-			string packageName = null;
+			string? packageName = null;
 			foreach (string p in queryParams) {
 				if (!p.StartsWith (URLQueryFilePathField, StringComparison.Ordinal)) {
 					continue;
@@ -71,7 +77,7 @@ namespace Xamarin.Android.Prepare
 				return false;
 			}
 
-			string localPackagePath = Path.Combine (Configurables.Paths.OpenJDKCacheDir, packageName);
+			string localPackagePath = Path.Combine (JdkCacheDir, packageName);
 			if (!await DownloadOpenJDK (context, localPackagePath, jdkURL))
 				return false;
 
@@ -89,7 +95,7 @@ namespace Xamarin.Android.Prepare
 				}
 
 				MoveContents (rootDir, jdkInstallDir);
-				File.WriteAllText (Path.Combine (jdkInstallDir, XAVersionInfoFile), $"{Configurables.Defaults.JetBrainsOpenJDKRelease}{Environment.NewLine}");
+				File.WriteAllText (Path.Combine (jdkInstallDir, XAVersionInfoFile), $"{JdkRelease}{Environment.NewLine}");
 			} finally {
 				Utilities.DeleteDirectorySilent (tempDir);
 				// Clean up zip after extraction if running on a hosted azure pipelines agent.
@@ -197,8 +203,8 @@ namespace Xamarin.Android.Prepare
 				return false;
 			}
 
-			if (cversion != Configurables.Defaults.JetBrainsOpenJDKVersion) {
-				Log.DebugLine ($"Invalid {ProductName} version. Need {Configurables.Defaults.JetBrainsOpenJDKVersion}, found {cversion}");
+			if (cversion != JdkVersion) {
+				Log.DebugLine ($"Invalid {ProductName} version. Need {JdkVersion}, found {cversion}");
 				return false;
 			}
 
@@ -207,8 +213,8 @@ namespace Xamarin.Android.Prepare
 				return false;
 			}
 
-			if (cversion != Configurables.Defaults.JetBrainsOpenJDKRelease) {
-				Log.DebugLine ($"Invalid {ProductName} version. Need {Configurables.Defaults.JetBrainsOpenJDKRelease}, found {cversion}");
+			if (cversion != JdkRelease) {
+				Log.DebugLine ($"Invalid {ProductName} version. Need {JdkRelease}, found {cversion}");
 				return false;
 			}
 
@@ -233,5 +239,35 @@ namespace Xamarin.Android.Prepare
 
 			return true;
 		}
+	}
+
+	class Step_InstallJetBrainsOpenJDK8 : Step_InstallJetBrainsOpenJDK {
+
+		public Step_InstallJetBrainsOpenJDK8 ()
+			: base ("Installing {ProductName} 1.8")
+		{
+		}
+
+		protected   override    string  JdkInstallDir    => Configurables.Paths.OpenJDK8InstallDir;
+		protected   override    Version JdkVersion       => Configurables.Defaults.JetBrainsOpenJDK8Version;
+		protected   override    Version JdkRelease       => Configurables.Defaults.JetBrainsOpenJDK8Release;
+		protected   override    Uri     JdkUrl           => Configurables.Urls.JetBrainsOpenJDK8;
+		protected   override    string  JdkCacheDir      => Configurables.Paths.OpenJDK8CacheDir;
+		protected   override    string  RootDirName      => "jdk";
+	}
+
+	class Step_InstallJetBrainsOpenJDK11 : Step_InstallJetBrainsOpenJDK {
+
+		public Step_InstallJetBrainsOpenJDK11 ()
+			: base ("Installing {ProductName} 11")
+		{
+		}
+
+		protected   override    string  JdkInstallDir    => Configurables.Paths.OpenJDK11InstallDir;
+		protected   override    Version JdkVersion       => Configurables.Defaults.JetBrainsOpenJDK11Version;
+		protected   override    Version JdkRelease       => Configurables.Defaults.JetBrainsOpenJDK11Release;
+		protected   override    Uri     JdkUrl           => Configurables.Urls.JetBrainsOpenJDK11;
+		protected   override    string  JdkCacheDir      => Configurables.Paths.OpenJDK11CacheDir;
+		protected   override    string  RootDirName      => "jbrsdk";
 	}
 }

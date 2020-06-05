@@ -12,12 +12,12 @@ steps:
   parameters:
     provisionExtraArgs: ${{ parameters.provisionExtraArgs }}
 
-- script: echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/Library/Android/jdk"
+- script: echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/Library/Android/$(XA.Jdk11.Folder)"
   displayName: set JI_JAVA_HOME
   condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
 
 - script: |
-    echo ##vso[task.setvariable variable=JI_JAVA_HOME]%USERPROFILE%\android-toolchain\jdk
+    echo ##vso[task.setvariable variable=JI_JAVA_HOME]%USERPROFILE%\android-toolchain\$(XA.Jdk11.Folder)
   displayName: set JI_JAVA_HOME
   condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
 
