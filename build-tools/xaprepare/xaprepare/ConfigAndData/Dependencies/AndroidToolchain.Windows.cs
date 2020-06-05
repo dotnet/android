@@ -4,5 +4,6 @@ namespace Xamarin.Android.Prepare
 	{
 		static readonly string osTag = "windows";
 		static readonly string altOsTag = osTag;
+		static readonly string cltOsTag = "win";
 	}
 }

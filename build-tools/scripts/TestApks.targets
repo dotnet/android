@@ -50,7 +50,7 @@
         SdkVersion="29"
         ImageName="$(_TestImageName)"
         ToolExe="$(AvdManagerToolExe)"
-        ToolPath="$(AndroidToolsBinPath)"
+        ToolPath="$(CommandLineToolsBinPath)"
         RamSizeMB="3072"
         DataPartitionSizeMB="4096"
     />
