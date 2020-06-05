@@ -88,7 +88,8 @@ stages:
   # Check - "Xamarin.Android (Mac Build)"
   - job: mac_build_create_installers
     displayName: Build
-    pool: $(MacMojaveBuildPool)
+    pool:
+      name: $(MacMojaveBuildPool)
       demands:
       - Agent.Name -equals XAMBOT-1080
     timeoutInMinutes: 240
