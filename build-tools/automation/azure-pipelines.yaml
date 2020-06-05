@@ -89,6 +89,8 @@ stages:
   - job: mac_build_create_installers
     displayName: Build
     pool: $(MacMojaveBuildPool)
+      demands:
+      - Agent.Name -equals XAMBOT-1080
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
     workspace:
