@@ -18,7 +18,6 @@ namespace Xamarin.Android.Prepare
 			var toolchainDirs = new List<string> {
 				Path.GetFileName (context.Properties.GetRequiredValue (KnownProperties.AndroidSdkDirectory)),
 				Path.GetFileName (context.Properties.GetRequiredValue (KnownProperties.AndroidNdkDirectory)),
-				Path.GetFileName (Configurables.Paths.CorrettoInstallDir),
 			};
 
 			var androidToolchain = new AndroidToolchain ();
