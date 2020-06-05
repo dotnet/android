@@ -44,6 +44,7 @@ resources:
 
 # Global variables
 variables:
+  XA.Jdk.Folder: jdk-1.8
   NuGetArtifactName: nupkgs
   InstallerArtifactName: installers
   TestAssembliesArtifactName: test-assemblies
@@ -96,7 +97,7 @@ stages:
     - checkout: self
       submodules: recursive
 
-    - script: echo "##vso[task.setvariable variable=JAVA_HOME]$HOME/Library/Android/jdk"
+    - script: echo "##vso[task.setvariable variable=JAVA_HOME]$HOME/Library/Android/$(XA.Jdk.Folder)"
       displayName: set JAVA_HOME
 
     - task: UseDotNet@2

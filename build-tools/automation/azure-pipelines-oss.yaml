@@ -17,6 +17,7 @@ pr:
 # Predefined variables: https://docs.microsoft.com/en-us/azure/devops/pipelines/build/variables?view=azure-devops&tabs=yaml
 # https://dev.azure.com/xamarin/public/_apps/hub/ms.vss-ciworkflow.build-ci-hub?_a=edit-build-definition&id=48&view=Tab_Variables
 variables:
+  XA.Jdk.Folder: jdk-1.8
   XA.Build.MacOSSPool: VSEng-Xamarin-RedmondMacMojaveBuildPool-Android-OSS
   XA.Build.LinuxOSSPool: Xamarin-Android-Ubuntu-Public
 
@@ -157,7 +158,7 @@ stages:
     - script: echo "##vso[task.setvariable variable=HOME]$(Agent.HomeDirectory)"
       displayName: set HOME to agent directory
 
-    - script: echo "##vso[task.setvariable variable=PATH]$PATH:$(Agent.HomeDirectory)/android-toolchain/jdk/bin"
+    - script: echo "##vso[task.setvariable variable=PATH]$PATH:$(Agent.HomeDirectory)/android-toolchain/$(XA.Jdk.Folder)/bin"
       displayName: append jdk tools to PATH
 
     - script: make jenkins V=1 PREPARE_CI_PR=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
