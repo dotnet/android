@@ -33,7 +33,7 @@
       Overwrite="True"
   />
   <PropertyGroup>
-    <_Target Condition="'$(JavacSourceVersion)' != ''">-source $(JavacSourceVersion) -target $(JavacSourceVersion)</_Target>
+    <_Target Condition="'$(JavacSourceVersion)' != ''">-source $(JavacSourceVersion) -target $(JavacTargetVersion)</_Target>
     <_AndroidJar>"$(AndroidToolchainDirectory)\sdk\platforms\android-$(AndroidFirstPlatformId)\android.jar"</_AndroidJar>
   </PropertyGroup>
   <Exec

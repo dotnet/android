@@ -1,6 +1,14 @@
 apply plugin: 'java'
 apply plugin: 'idea'
 
+java {
+    ext.javaSourceVer = project.hasProperty('javaSourceVer') ? JavaVersion.toVersion(project.getProperty('javaSourceVer')) : JavaVersion.VERSION_1_8
+    ext.javaTargetVer = project.hasProperty('javaTargetVer') ? JavaVersion.toVersion(project.getProperty('javaTargetVer')) : JavaVersion.VERSION_1_8
+
+    sourceCompatibility = ext.javaSourceVer
+    targetCompatibility = ext.javaTargetVer
+}
+
 // See: https://r8.googlesource.com/r8/+/refs/tags/1.6.82/build.gradle#55
 repositories {
     maven {

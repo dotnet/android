@@ -17,7 +17,7 @@
       Inputs="$(MSBuildThisFile);build.gradle"
       Outputs="$(_Destination)">
     <Exec
-        Command="&quot;$(GradleWPath)&quot; build $(GradleArgs)"
+        Command="&quot;$(GradleWPath)&quot; build $(GradleArgs) -PjavaSourceVer=$(JavacSourceVersion) -PjavaTargetVer=$(JavacTargetVersion)"
         EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)"
         WorkingDirectory="$(MSBuildThisFileDirectory)"
     />
