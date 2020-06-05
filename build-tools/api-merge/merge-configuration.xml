@@ -21,6 +21,8 @@
     <File Path="api-R.xml.in" Level="R" />
   </Inputs>
   <Outputs>
+    <File Path="android-19\mcw\api.xml" LastLevel="19" />
+    <File Path="android-20\mcw\api.xml" LastLevel="20" />
     <File Path="android-21\mcw\api.xml" LastLevel="21" />
     <File Path="android-22\mcw\api.xml" LastLevel="22" />
     <File Path="android-23\mcw\api.xml" LastLevel="23" />

@@ -27,8 +27,8 @@ namespace Xamarin.Android.Prepare
 			new AndroidPlatform (apiName: "Jelly Bean",             apiLevel: 16, platformID: "16",  include: "v4.1"),
 			new AndroidPlatform (apiName: "Jelly Bean",             apiLevel: 17, platformID: "17",  include: "v4.2"),
 			new AndroidPlatform (apiName: "Jelly Bean",             apiLevel: 18, platformID: "18",  include: "v4.3"),
-			new AndroidPlatform (apiName: "Kit Kat",                apiLevel: 19, platformID: "19",  include: "v4.4"),
-			new AndroidPlatform (apiName: "Kit Kat + Wear support", apiLevel: 20, platformID: "20",  include: "v4.4.87"),
+			new AndroidPlatform (apiName: "Kit Kat",                apiLevel: 19, platformID: "19",  include: "v4.4",    framework: "v4.4"),
+			new AndroidPlatform (apiName: "Kit Kat + Wear support", apiLevel: 20, platformID: "20",  include: "v4.4.87", framework: "v4.4.87"),
 			new AndroidPlatform (apiName: "Lollipop",               apiLevel: 21, platformID: "21",  include: "v5.0",    framework: "v5.0"),
 			new AndroidPlatform (apiName: "Lollipop",               apiLevel: 22, platformID: "22",  include: "v5.1",    framework: "v5.1"),
 			new AndroidPlatform (apiName: "Marshmallow",            apiLevel: 23, platformID: "23",  include: "v6.0",    framework: "v6.0"),
@@ -42,9 +42,9 @@ namespace Xamarin.Android.Prepare
 		};
 
 		public static readonly Dictionary<string, uint> NdkMinimumAPI = new Dictionary<string, uint> {
-			{ AbiNames.TargetJit.AndroidArmV7a, 21 },
+			{ AbiNames.TargetJit.AndroidArmV7a, 16 },
 			{ AbiNames.TargetJit.AndroidArmV8a, 21 },
-			{ AbiNames.TargetJit.AndroidX86,    21 },
+			{ AbiNames.TargetJit.AndroidX86,    16 },
 			{ AbiNames.TargetJit.AndroidX86_64, 21 },
 		};
 	}
