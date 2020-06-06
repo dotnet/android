@@ -195,17 +195,19 @@ namespace Xamarin.Android.Tasks
 				return false;
 			}
 
+			bool fromCmdlineTools   = ToolPath.IndexOf ("cmdline-tools", StringComparison.OrdinalIgnoreCase) >= 0;
+
 			Version lintToolVersion = GetLintVersion (GenerateFullPathToTool ());
 			Log.LogDebugMessage ("  LintVersion: {0}", lintToolVersion);
 			foreach (var issue in DisabledIssuesByVersion) {
-				if (lintToolVersion >= issue.Value) {
+				if (fromCmdlineTools || lintToolVersion >= issue.Value) {
 					if (string.IsNullOrEmpty (DisabledIssues) || !DisabledIssues.Contains (issue.Key))
 						DisabledIssues = issue.Key + (!string.IsNullOrEmpty (DisabledIssues) ? "," + DisabledIssues : "");
 				}
 			}
 
 			foreach (var issue in DisabledIssuesByVersion) {
-				if (lintToolVersion < issue.Value) {
+				if (!fromCmdlineTools || (lintToolVersion < issue.Value)) {
 					DisabledIssues = CleanIssues (issue.Key, lintToolVersion, DisabledIssues, nameof (DisabledIssues));
 					EnabledIssues = CleanIssues (issue.Key, lintToolVersion, EnabledIssues, nameof (EnabledIssues) );
 				}

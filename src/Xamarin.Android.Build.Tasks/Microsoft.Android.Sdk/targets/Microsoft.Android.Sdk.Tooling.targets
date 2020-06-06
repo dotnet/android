@@ -37,6 +37,7 @@ called for "legacy" projects in Xamarin.Android.Legacy.targets.
         AndroidUseAapt2="$(AndroidUseAapt2)"
         AotAssemblies="$(AotAssemblies)"
         Aapt2ToolPath="$(Aapt2ToolPath)"
+        CommandLineToolsVersion="$(AndroidCommandLineToolsVersion)"
         SequencePointsMode="$(_AndroidSequencePointsMode)"
         ProjectFilePath="$(MSBuildProjectFullPath)"			
         LintToolPath="$(LintToolPath)"
