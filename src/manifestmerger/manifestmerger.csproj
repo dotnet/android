@@ -9,6 +9,11 @@
   <PropertyGroup Condition="'$(Configuration)'=='Debug'" />
   <PropertyGroup Condition="'$(Configuration)'=='Release'" />
   <Import Project="..\..\Configuration.props" />
+  <ItemGroup>
+    <ProjectReference Include="..\r8\r8.csproj">
+      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
   <Import Project="manifestmerger.targets" />
 </Project>
