@@ -99,7 +99,7 @@ stages:
       submodules: recursive
 
     - script: echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/Library/Android/$(XA.Jdk11.Folder)"
-      displayName: set JAVA_HOME
+      displayName: set JI_JAVA_HOME
 
     - template: yaml-templates/use-dot-net.yaml
       parameters:
@@ -917,7 +917,7 @@ stages:
       parameters:
         xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
 
-    - script: echo "##vso[task.setvariable variable=JavaSdkDirectory]$HOME/android-toolchain/$($(XA.Jdk8.Folder)"
+    - script: echo "##vso[task.setvariable variable=JavaSdkDirectory]$HOME/android-toolchain/$($(XA.Jdk11.Folder)"
       displayName: set JavaSdkDirectory
 
     - template: designer/android-designer-build-mac.yaml@yaml
