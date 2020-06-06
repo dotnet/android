@@ -54,7 +54,7 @@ namespace Xamarin.Android.Prepare
 		{
 			public static readonly char[] PropertyListSeparator            = new [] { ':' };
 
-			public static readonly string JdkFolder                        = "jdk-1.8";
+			public static readonly string JdkFolder                        = "jdk-11";
 
 			public static readonly Version JetBrainsOpenJDK11Version = new Version (Configurables.JetBrainsOpenJDK11Version);
 			public static readonly Version JetBrainsOpenJDK11Release = new Version (Configurables.JetBrainsOpenJDK11Release);
