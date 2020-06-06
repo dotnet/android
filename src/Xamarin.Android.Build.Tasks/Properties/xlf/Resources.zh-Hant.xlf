@@ -253,9 +253,9 @@ When it appears in the middle of a sentence, "lint" is not capitalized.
         <note>The following are literal names and should not be translated: `$(AndroidManifestPlaceholders)`</note>
       </trans-unit>
       <trans-unit id="XA1011">
-        <source>Using ProGuard with the D8 DEX compiler is no longer supported. Please update `$(AndroidLinkTool)` to `r8`.</source>
-        <target state="translated">已不再支援並用 ProGuard 與 D8 DEX 編譯器。請將 '$(AndroidLinkTool)' 更新為 'r8'。</target>
-        <note>The following are literal names and should not be translated: ProGuard, D8, DEX, `$(AndroidLinkTool)`, `r8`</note>
+        <source>Using ProGuard with the D8 DEX compiler is no longer supported. Please set the code shrinker to `r8` in the Visual Studio project property pages or edit the project file in a text editor and set the `AndroidLinkTool` MSBuild property to `r8`.</source>
+        <target state="needs-review-translation">已不再支援並用 ProGuard 與 D8 DEX 編譯器。請將 '$(AndroidLinkTool)' 更新為 'r8'。</target>
+        <note>The following are literal names and should not be translated: ProGuard, D8, DEX, `r8`, `AndroidLinkTool`</note>
       </trans-unit>
       <trans-unit id="XA1012">
         <source>Included layout root element override ID '{0}' is not valid.</source>

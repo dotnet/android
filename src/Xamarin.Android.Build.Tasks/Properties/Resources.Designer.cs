@@ -439,7 +439,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Using ProGuard with the D8 DEX compiler is no longer supported. Please update `$(AndroidLinkTool)` to `r8`..
+        ///   Looks up a localized string similar to Using ProGuard with the D8 DEX compiler is no longer supported. Please set the code shrinker to `r8` in the Visual Studio project property pages or edit the project file in a text editor and set the `AndroidLinkTool` MSBuild property to `r8`..
         /// </summary>
         internal static string XA1011 {
             get {
@@ -547,7 +547,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Using the DX Dex Compiler is deprecated. Please update `$(AndroidDexTool)` to `d8`..
+        ///   Looks up a localized string similar to Using the DX DEX Compiler is deprecated. Please update `$(AndroidDexTool)` to `d8`..
         /// </summary>
         internal static string XA1023 {
             get {
