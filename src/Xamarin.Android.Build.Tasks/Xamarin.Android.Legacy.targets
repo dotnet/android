@@ -180,6 +180,7 @@ projects. .NET 5 projects will not import this file.
         AndroidApplication="$(AndroidApplication)"
         AndroidSdkPath="$(_AndroidSdkDirectory)"
         AndroidSdkBuildToolsVersion="$(AndroidSdkBuildToolsVersion)"
+        CommandLineToolsVersion="$(AndroidCommandLineToolsVersion)"
         UseLatestAndroidPlatformSdk="$(AndroidUseLatestPlatformSdk)"
         AndroidUseAapt2="$(AndroidUseAapt2)"
         AotAssemblies="$(AotAssemblies)"
