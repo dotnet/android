@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
+<PropertyGroup>
+  <BuildDependsOn>
+    ResolveReferences;
+    _BuildJavaRuntimeJar;
+  </BuildDependsOn>
+  <CleanDependsOn>
+    _CleanJavaRuntimeJar;
+  </CleanDependsOn>
+</PropertyGroup>
+
 <ItemGroup>
   <_RuntimeOutput Include="$(OutputPath)java_runtime.jar">
     <OutputJar>$(OutputPath)java_runtime.jar</OutputJar>
@@ -17,7 +27,11 @@
     <RemoveItems>java\mono\android\release\MultiDexLoader.java;java\mono\android\release\BuildConfig.java</RemoveItems>
   </_RuntimeOutput>
 </ItemGroup>
-<Target Name="Build"
+
+<Target Name="Build" DependsOnTargets="$(BuildDependsOn)" />
+<Target Name="Clean" DependsOnTargets="$(CleanDependsOn)" />
+
+<Target Name="_BuildJavaRuntimeJar"
       Inputs="@(AllRuntimeSource)"
       Outputs="%(_RuntimeOutput.OutputJar)"
 >
@@ -57,8 +71,17 @@
     Inputs="@(_RuntimeOutput->'%(Identity)')"
     Outputs="@(_RuntimeOutput->'%(OutputDex)')">
   <Exec
-      Command="&quot;$(AndroidSdkDirectory)\build-tools\$(XABuildToolsFolder)\dx&quot; --dex --no-strict --output=&quot;%(_RuntimeOutput.OutputDex)&quot; &quot;%(_RuntimeOutput.OutputJar)&quot;"
+      Command="&quot;$(JavaPath)&quot; -classpath &quot;$(OutputPath)\r8.jar&quot; com.android.tools.r8.D8 --release --no-desugaring --output &quot;%(_RuntimeOutput.IntermediateRuntimeOutputPath)&quot; &quot;%(_RuntimeOutput.OutputJar)&quot;"
       EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory)"
   />
+  <Move
+      SourceFiles="@(_RuntimeOutput->'%(IntermediateRuntimeOutputPath)\classes.dex')"
+      DestinationFiles="%(_RuntimeOutput.OutputDex)"
+  />
 </Target>
+
+<Target Name="_CleanJavaRuntimeJar">
+  <Delete Files="%(_RuntimeOutput.OutputJar)" />
+</Target>
+
 </Project>
