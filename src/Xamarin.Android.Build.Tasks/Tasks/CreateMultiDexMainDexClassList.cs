@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
+using System.Text;
 
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
@@ -97,7 +98,7 @@ namespace Xamarin.Android.Tasks
 			var enclosingDoubleQuote = OS.IsWindows ? "\"" : string.Empty;
 			var enclosingQuote = OS.IsWindows ? string.Empty : "'";
 			var jars = JavaLibraries.Select (i => i.ItemSpec).Concat (new string [] { Path.Combine (ClassesOutputDirectory, "..", "classes.zip") });
-			cmd.AppendSwitchIfNotNull ("-Djava.ext.dirs=", Path.Combine (AndroidSdkBuildToolsPath, "lib"));
+			cmd.AppendSwitchUnquotedIfNotNull ("-classpath ", "\"" + GetMainDexListBuilderClasspath () + "\"");
 			cmd.AppendSwitch ("com.android.multidex.MainDexListBuilder");
 			if (!string.IsNullOrWhiteSpace (ExtraArgs))
 				cmd.AppendSwitch (ExtraArgs);
@@ -106,6 +107,12 @@ namespace Xamarin.Android.Tasks
 				string.Join ($"{enclosingQuote}{Path.PathSeparator}{enclosingQuote}", jars) + 
 				$"{enclosingQuote}{enclosingDoubleQuote}");
 			writeOutputToKeepFile = true;
+		}
+
+		string GetMainDexListBuilderClasspath ()
+		{
+			var libdir      = Path.Combine (AndroidSdkBuildToolsPath, "lib");
+			return string.Join (Path.PathSeparator.ToString (), Directory.EnumerateFiles (libdir, "*.jar"));
 		}
 
 		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
