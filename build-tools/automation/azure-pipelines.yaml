@@ -91,7 +91,7 @@ stages:
     pool:
       name: $(MacMojaveBuildPool)
       demands:
-      - Agent.Name -equals XAMBOT-1077
+      - Agent.Name -equals XAMBOT-1076
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
     workspace:
