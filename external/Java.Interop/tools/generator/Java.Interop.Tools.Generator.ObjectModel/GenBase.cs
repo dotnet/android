@@ -677,11 +677,11 @@ namespace MonoDroid.Generation
 			}
 			Fields = valid_fields;
 
-			// If we can't validate a default interface method it's ok to ignore it and still bind the interface
-			var method_cnt = Methods.Where (m => !m.IsInterfaceDefaultMethod).Count ();
+			// If we can't validate a static or default interface method it's ok to ignore it and still bind the interface
+			var method_cnt = Methods.Where (m => !m.IsInterfaceDefaultMethod && !m.IsStatic).Count ();
 
 			Methods = Methods.Where (m => ValidateMethod (opt, m, context)).ToList ();
-			MethodValidationFailed = method_cnt != Methods.Where (m => !m.IsInterfaceDefaultMethod).Count ();
+			MethodValidationFailed = method_cnt != Methods.Where (m => !m.IsInterfaceDefaultMethod && !m.IsStatic).Count ();
 
 			foreach (Method m in Methods) {
 				if (m.IsVirtual)

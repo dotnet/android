@@ -396,5 +396,40 @@ namespace generatortests
 			Assert.False (writer.ToString ().Contains ("class ParentConsts"));
 			Assert.False (writer.ToString ().Contains ("class Parent"));
 		}
+
+		[Test]
+		public void DontInvalidateInterfaceDueToStaticOrDefaultMethods ()
+		{
+			// This interface contains a static and a default interface method that cannot
+			// be bound due to an unknown return type. However the user doesn't have to
+			// provide an implementation for these methods, so it's ok to bind the interface.
+
+			var xml = @"<api>
+			  <package name='com.xamarin.android' jni-name='com/xamarin/android'>
+			    <interface abstract='true' deprecated='not deprecated' final='false' name='Parent' static='false' visibility='public' jni-signature='Lcom/xamarin/android/Parent;'>
+			      <method abstract='true' deprecated='not deprecated' name='normalMethod' jni-signature='()I' return='int' static='false' transient='false' visibility='public' volatile='false'></method>
+			      <method abstract='false' deprecated='not deprecated' name='staticMethod' jni-signature='()Lfoo/bar/baz;' return='Lfoo/bar/baz;' static='true' transient='false' visibility='public' volatile='false'></method>
+			      <method abstract='false' deprecated='not deprecated' name='defaultMethod' jni-signature='()Lfoo/bar/baz;' return='Lfoo/bar/baz;' static='false' transient='false' visibility='public' volatile='false'></method>
+			    </interface>
+			  </package>
+			</api>";
+
+			var gens = ParseApiDefinition (xml);
+			var iface = gens.OfType<InterfaceGen> ().Single ();
+
+			var result = iface.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ());
+
+			// Inteface should pass validation despite invalid static/default methods
+			Assert.True (result);
+
+			generator.WriteInterface (iface, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
+
+			var generated = writer.ToString ();
+
+			Assert.True (generated.Contains ("interface IParent"));
+			Assert.True (generated.Contains ("NormalMethod"));
+			Assert.False (generated.Contains ("StaticMethod"));
+			Assert.False (generated.Contains ("DefaultMethod"));
+		}
 	}
 }
