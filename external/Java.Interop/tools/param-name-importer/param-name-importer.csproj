@@ -9,10 +9,16 @@
   <ItemGroup>
     <!-- Not sure why needed, but only System.IO.Compression.FileSystem.dll is
       included by default, and ZipArchive is type forwarded to System.IO.Compression -->
-    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression" Condition="$(TargetFramework.StartsWith('net4'))" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Xml.SgmlReader" Version="1.8.14" />
+    <!-- This package erroneously contains /netcoreapp3.1/SgmlReader.exe and /netcoreapp3.1/SgmlReaderDll.dll.
+         We are going to use a package reference to download the nuget, and a regular reference to actually
+         reference the correct assembly. -->
+    <PackageReference Include="Microsoft.Xml.SgmlReader" Version="1.8.16" ExcludeAssets="Compile" GeneratePathProperty="true" />
+    <Reference Include="SgmlReader">
+      <HintPath>$(PkgMicrosoft_Xml_SgmlReader)\lib\netstandard2.0\SgmlReaderDll.dll</HintPath>
+    </Reference>
     <PackageReference Include="Mono.Options" Version="5.3.0.1" />
   </ItemGroup>
   <ItemGroup>
