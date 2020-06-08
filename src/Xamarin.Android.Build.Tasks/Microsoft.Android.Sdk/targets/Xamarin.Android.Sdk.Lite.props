@@ -1,7 +1,7 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup>
-    <DisableImplicitAndroidFrameworkReference>true</DisableImplicitAndroidFrameworkReference>
+    <EnableDefaultAndroidItems Condition=" '$(EnableDefaultAndroidItems)' == '' ">true</EnableDefaultAndroidItems>
   </PropertyGroup>
 
   <!-- This is the renamed-on-pack Xamarin.Android.Sdk.props from the full SDK -->
@@ -11,11 +11,6 @@
     <!-- Ensure $(UsingAndroidNETSdk) is not set to retain legacy behavior -->
     <UsingAndroidNETSdk />
   </PropertyGroup>
-
-  <ItemGroup>
-    <!-- Remove Microsoft.Android FrameworkReference in favor of default references below. -->
-    <FrameworkReference Remove="Microsoft.Android" />
-  </ItemGroup>
 
   <!-- Default References -->
   <ItemGroup Condition=" '$(DisableImplicitFrameworkReferences)' != 'true' ">
