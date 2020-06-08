@@ -14,6 +14,10 @@ Copyright (C) 2018 Xamarin. All rights reserved.
 
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
+  <UsingTask TaskName="Xamarin.Android.Tasks.CompileToDalvik"                AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.CreateMultiDexMainDexClassList" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.Proguard"                       AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+
   <Target Name="_CompileToDalvik"
       DependsOnTargets="$(_BeforeCompileToDalvik);$(_CompileToDalvikDependsOnTargets)"
       Inputs="$(_CompileToDalvikInputs)"
