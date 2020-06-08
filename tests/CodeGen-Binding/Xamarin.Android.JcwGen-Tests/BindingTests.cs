@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 using NUnit.Framework;
 
@@ -207,6 +208,138 @@ namespace Xamarin.Android.JcwGenTests {
 			var e = new Com.Xamarin.Android.Bxc37706Throwable ();
 			var m = e.Message;
 			Assert.IsTrue (e.GetMessageInvoked);
+		}
+
+		[Test]
+		public void GenericBoolListMarshaling ()
+		{
+			var list = new List<bool[]> {
+				new[] { true, false },
+				new[] { true }
+			};
+
+			var retval = Com.Xamarin.Android.Gxa4098.GenericBoolListMarshaling (list);
+			Assert.AreEqual (list, retval);
+		}
+
+		[Test]
+		public void GenericByteListMarshaling ()
+		{
+			var list = new List<byte[]> {
+				new byte[] { 1, 6 },
+				new byte[] { 3 }
+			};
+
+			var retval = Com.Xamarin.Android.Gxa4098.GenericByteListMarshaling (list);
+			Assert.AreEqual (list, retval);
+		}
+
+		[Test]
+		public void GenericCharListMarshaling ()
+		{
+			var list = new List<char[]> {
+				new[] { '1', '6' },
+				new[] { '3' }
+			};
+
+			var retval = Com.Xamarin.Android.Gxa4098.GenericCharListMarshaling (list);
+			Assert.AreEqual (list, retval);
+		}
+
+		[Test]
+		public void GenericShortListMarshaling ()
+		{
+			var list = new List<short[]> {
+				new short[] { 1, 6 },
+				new short[] { 3 }
+			};
+
+			var retval = Com.Xamarin.Android.Gxa4098.GenericShortListMarshaling (list);
+			Assert.AreEqual (list, retval);
+		}
+
+		[Test]
+		public void GenericIntListMarshaling ()
+		{
+			var list = new List<int[]> {
+				new[] { 1, 60000 },
+				new[] { 3 }
+			};
+
+			var retval = Com.Xamarin.Android.Gxa4098.GenericIntListMarshaling (list);
+			Assert.AreEqual (list, retval);
+		}
+
+		[Test]
+		public void GenericLongListMarshaling ()
+		{
+			var list = new List<long[]> {
+				new[] { 1L, 6000000000000L },
+				new[] { 3L }
+			};
+
+			var retval = Com.Xamarin.Android.Gxa4098.GenericLongListMarshaling (list);
+			Assert.AreEqual (list, retval);
+		}
+
+		[Test]
+		public void GenericFloatListMarshaling ()
+		{
+			var list = new List<float[]> {
+				new[] { 1F, 6.557F },
+				new[] { 3F }
+			};
+
+			var retval = Com.Xamarin.Android.Gxa4098.GenericFloatListMarshaling (list);
+			Assert.AreEqual (list, retval);
+		}
+
+		[Test]
+		public void GenericDoubleListMarshaling ()
+		{
+			var list = new List<double[]> {
+				new[] { 1D, 6.557D },
+				new[] { 3D }
+			};
+
+			var retval = Com.Xamarin.Android.Gxa4098.GenericDoubleListMarshaling (list);
+			Assert.AreEqual (list, retval);
+		}
+
+		[Test]
+		public void GenericStringListMarshaling()
+		{
+			var list = new List<string[]> {
+				new[] { "cat", "dog" },
+				new[] { "mouse" }
+			};
+
+			var retval = Com.Xamarin.Android.Gxa4098.GenericStringListMarshaling (list);
+			Assert.AreEqual(list, retval);
+		}
+
+		[Test]
+		public void GenericObjectListMarshaling ()
+		{
+			var list = new List<EmptyOverrideClass []> {
+				new[] { new EmptyOverrideClass (), new EmptyOverrideClass () },
+				new[] { new EmptyOverrideClass () }
+			};
+
+			var retval = Com.Xamarin.Android.Gxa4098.GenericObjectListMarshaling (list);
+			Assert.AreEqual (list, retval);
+		}
+
+		[Test]
+		public void HigherOrderArrayMarshaling ()
+		{
+			var list = new List<int[][]> {
+				new[] { new[] { 1, 2 } },
+				new[] { new[] { 6 } }
+			};
+
+			var retval = Com.Xamarin.Android.Gxa4098.GenericIntIntListMarshaling (list);
+			Assert.AreEqual (list, retval);
 		}
 	}
 
