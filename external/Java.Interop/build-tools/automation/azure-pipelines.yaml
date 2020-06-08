@@ -161,8 +161,8 @@ jobs:
     
   - script: |
       dotnet tool install --global boots  
-      boots https://download.mono-project.com/archive/6.4.0/macos-10-universal/MonoFramework-MDK-6.4.0.198.macos10.xamarin.universal.pkg
-    displayName: Install Mono 6.4
+      boots --stable Mono
+    displayName: Install Mono-Stable
     
   - script: make prepare CONFIGURATION=$(Build.Configuration)
     displayName: make prepare

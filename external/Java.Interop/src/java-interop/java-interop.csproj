@@ -1,47 +1,39 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.Build.NoTargets/1.0.110">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ItemType>GenericProject</ItemType>
-    <ProductVersion>8.0.30703</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{BB0AB9F7-0979-41A7-B7A9-877260655F94}</ProjectGuid>
-  </PropertyGroup>
-  <Import Project="..\..\Directory.Build.props" />
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
+    <TargetFramework>net472</TargetFramework>
     <OutputPath>$(ToolOutputFullPath)</OutputPath>
     <JNIEnvGenPath>$(BuildToolOutputFullPath)</JNIEnvGenPath>
     <OutputName>java-interop</OutputName>
-    <CompileTarget>SharedLibrary</CompileTarget>
-    <DefineSymbols>DEBUG JI_DLL_EXPORT MONODEVELOP MONO_DLL_EXPORT</DefineSymbols>
-    <SourceDirectory>.</SourceDirectory>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <OutputPath>$(ToolOutputFullPath)</OutputPath>
-    <OutputName>java-interop</OutputName>
-    <JNIEnvGenPath>$(BuildToolOutputFullPath)</JNIEnvGenPath>
-    <CompileTarget>SharedLibrary</CompileTarget>
-    <OptimizationLevel>3</OptimizationLevel>
     <DefineSymbols>JI_DLL_EXPORT MONODEVELOP MONO_DLL_EXPORT</DefineSymbols>
     <SourceDirectory>.</SourceDirectory>
   </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DefineConstants>DEBUG $(DefineConstants)</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OptimizationLevel>3</OptimizationLevel>
+  </PropertyGroup>
+
   <ItemGroup>
     <ClInclude Include="java-interop.h" />
     <ClInclude Include="java-interop-gc-bridge.h" />
     <ClInclude Include="java-interop-mono.h" />
   </ItemGroup>
+
   <PropertyGroup>
     <_MonoIncludePath>@(MonoIncludePath->'%(FullPath)')</_MonoIncludePath>
     <_JdkIncludePath>@(JdkIncludePath->'%(FullPath)')</_JdkIncludePath>
   </PropertyGroup>
+
   <ItemDefinitionGroup>
     <ClCompile>
       <PreprocessorDefinitions>$([MSBuild]::Unescape($(DefineSymbols.Replace(' ', ';'))))</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$([MSBuild]::Unescape($(_MonoIncludePath)));$([MSBuild]::Unescape($(_JdkIncludePath)))</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
+
   <ItemGroup>
     <ClCompile Include="jni.c" />
     <ClCompile Include="java-interop.cc" />
@@ -50,20 +42,10 @@
     <ClCompile Include="java-interop-mono.cc" />
     <ClCompile Include="java-interop-gc-bridge-mono.cc" />
   </ItemGroup>
-  <PropertyGroup>
-    <BuildDependsOn>
-      BuildJni_c;
-      BuildMac;
-      BuildUnixLibraries;
-      $(BuildDependsOn)
-    </BuildDependsOn>
-  </PropertyGroup>
+
   <Import Project="java-interop.targets" />
+  
   <ItemGroup>
-    <ProjectReference Include="..\..\build-tools\jnienv-gen\jnienv-gen.csproj">
-      <Project>{6410DA0F-5E14-4FC0-9AEE-F4C542C96C7A}</Project>
-      <Name>jnienv-gen</Name>
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-    </ProjectReference>
-  </ItemGroup>
+    <ProjectReference Include="..\..\build-tools\jnienv-gen\jnienv-gen.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>  
 </Project>
