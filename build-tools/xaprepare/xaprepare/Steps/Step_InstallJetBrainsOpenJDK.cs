@@ -11,7 +11,7 @@ namespace Xamarin.Android.Prepare
 {
 	abstract partial class Step_InstallJetBrainsOpenJDK : StepWithDownloadProgress
 	{
-		const string ProductName = "JetBrains OpenJDK";
+		protected const string ProductName = "JetBrains OpenJDK";
 		const string XAVersionInfoFile = "xa_jdk_version.txt";
 		const string URLQueryFilePathField = "file_path";
 
@@ -244,7 +244,7 @@ namespace Xamarin.Android.Prepare
 	class Step_InstallJetBrainsOpenJDK8 : Step_InstallJetBrainsOpenJDK {
 
 		public Step_InstallJetBrainsOpenJDK8 ()
-			: base ("Installing {ProductName} 1.8")
+			: base ($"Installing {ProductName} 1.8")
 		{
 		}
 
@@ -259,7 +259,7 @@ namespace Xamarin.Android.Prepare
 	class Step_InstallJetBrainsOpenJDK11 : Step_InstallJetBrainsOpenJDK {
 
 		public Step_InstallJetBrainsOpenJDK11 ()
-			: base ("Installing {ProductName} 11")
+			: base ($"Installing {ProductName} 11")
 		{
 		}
 
