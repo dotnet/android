@@ -934,7 +934,7 @@ stages:
     - task: CopyFiles@2
       displayName: 'Copy binlogs'
       inputs:
-        sourceFolder: Xamarin.Designer.Android
+        sourceFolder: $(System.DefaultWorkingDirectory)/designer/Xamarin.Designer.Android
         contents: '**/*.binlog'
         targetFolder: $(Build.ArtifactStagingDirectory)/designer-binlogs
         overWrite: true
@@ -1013,7 +1013,7 @@ stages:
     - task: CopyFiles@2
       displayName: 'Copy binlogs'
       inputs:
-        sourceFolder: Xamarin.Designer.Android
+        sourceFolder: $(System.DefaultWorkingDirectory)/designer/Xamarin.Designer.Android
         contents: '**/*.binlog'
         targetFolder: $(Build.ArtifactStagingDirectory)/designer-binlogs
         overWrite: true
