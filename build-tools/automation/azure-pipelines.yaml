@@ -917,8 +917,17 @@ stages:
       parameters:
         xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
 
-    - script: echo "##vso[task.setvariable variable=JavaSdkDirectory]$HOME/android-toolchain/$($(XA.Jdk11.Folder)"
+    - script: echo "##vso[task.setvariable variable=JavaSdkDirectory]$HOME/android-toolchain/$(XA.Jdk8.Folder)"
       displayName: set JavaSdkDirectory
+
+    - script: echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/Library/Android/$(XA.Jdk8.Folder)"
+      displayName: reset JI_JAVA_HOME for Designer
+      condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
+
+    - script: |
+        echo ##vso[task.setvariable variable=JI_JAVA_HOME]%USERPROFILE%\android-toolchain\$(XA.Jdk8.Folder)
+      displayName: reset JI_JAVA_HOME for Designer
+      condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
 
     - template: designer/android-designer-build-mac.yaml@yaml
       parameters:
@@ -989,6 +998,15 @@ stages:
     - template: yaml-templates\setup-test-environment.yaml
       parameters:
         xaSourcePath: $(System.DefaultWorkingDirectory)\xamarin-android
+
+    - script: echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/Library/Android/$(XA.Jdk8.Folder)"
+      displayName: reset JI_JAVA_HOME for Designer
+      condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
+
+    - script: |
+        echo ##vso[task.setvariable variable=JI_JAVA_HOME]%USERPROFILE%\android-toolchain\$(XA.Jdk8.Folder)
+      displayName: reset JI_JAVA_HOME for Designer
+      condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
 
     - template: designer\android-designer-build-win.yaml@yaml
       parameters:
