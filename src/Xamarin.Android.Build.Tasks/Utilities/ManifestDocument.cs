@@ -1031,8 +1031,9 @@ namespace Xamarin.Android.Tasks {
 					throw new ArgumentOutOfRangeException ("VersionCode", $"VersionCode {VersionCode} is invalid. It must be an integer value.");
 				}
 			}
-			if (!kvp.ContainsKey ("minSDK")) {
-				kvp.Add ("minSDK", int.Parse (GetMinimumSdk ()));
+			if (!kvp.ContainsKey ("minSDK") &&
+					int.TryParse (GetMinimumSdk (), out var minSdk)) {
+				kvp.Add ("minSDK", minSdk);
 			}
 			var versionCode = String.Empty;
 			foreach (Match match in regex.Matches (versionCodePattern)) {
