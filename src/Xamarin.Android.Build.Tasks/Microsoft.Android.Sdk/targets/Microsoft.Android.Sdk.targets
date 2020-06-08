@@ -17,7 +17,9 @@
 
   <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.targets" />
 
-  <Import Project="$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.DefaultOutputPaths.targets" Condition="'$(EnableDefaultOutputPaths)' == 'true'" />
+  <!-- Default item includes (globs and implicit references) -->
+  <Import Project="Microsoft.Android.Sdk.DefaultItems.targets" />
+
   <Import Project="$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Common.targets" />
   <Import Project="$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Bindings.Core.targets" />
   <Import Project="$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Bindings.ClassParse.targets" />
