@@ -1120,6 +1120,37 @@ namespace Lib2
 		}
 
 		[Test]
+		public void AndroidAssetMissing ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				OtherBuildItems = {
+					new AndroidItem.AndroidAsset ("Assets\\foo\\bar.txt") {
+						TextContent = () => "bar",
+					},
+				}
+			};
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "first build should succeed");
+
+				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, "UnnamedProject.UnnamedProject.apk");
+				FileAssert.Exists (apk);
+				using (var zip = ZipHelper.OpenZip (apk)) {
+					Assert.IsTrue (zip.ContainsEntry ("assets/foo/bar.txt"), "bar.txt should exist in apk!");
+				}
+
+				// Touch $(MSBuildProjectFile)
+				var projectFile = Path.Combine (Root, b.ProjectDirectory, proj.ProjectFilePath);
+				File.SetLastWriteTimeUtc (projectFile, DateTime.UtcNow.AddMinutes (1));
+
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build should succeed");
+				FileAssert.Exists (apk);
+				using (var zip = ZipHelper.OpenZip (apk)) {
+					Assert.IsTrue (zip.ContainsEntry ("assets/foo/bar.txt"), "bar.txt should exist in apk!");
+				}
+			}
+		}
+
+		[Test]
 		[NonParallelizable]
 		public void AndroidXMigrationBug ()
 		{
