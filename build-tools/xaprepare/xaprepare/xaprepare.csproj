@@ -203,7 +203,6 @@
     <Compile Include="Scenarios\Scenario_UpdateMono.Unix.cs" />
     <Compile Include="Steps\Step_BuildMonoRuntimes.Unix.cs" />
     <Compile Include="Steps\Step_GenerateFiles.Unix.cs" />
-    <Compile Include="Steps\Step_InstallJetBrainsOpenJDK.Unix.cs" />
     <Compile Include="Steps\Step_PrepareExternal.Unix.cs" />
     <Compile Include="Steps\Step_PrepareExternalJavaInterop.Unix.cs" />
     <Compile Include="Steps\Step_PrepareImageDependencies.Unix.cs" />
