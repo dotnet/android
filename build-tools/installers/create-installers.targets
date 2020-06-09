@@ -273,7 +273,6 @@
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\lib64\libzip.dll" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\proguard\bin\proguard.bat" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\aapt2.exe" />
-    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\libwinpthread-1.dll" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\aarch64-linux-android-as.exe" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\aarch64-linux-android-ld.exe" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\aarch64-linux-android-strip.exe" />
