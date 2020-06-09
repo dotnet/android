@@ -117,7 +117,7 @@ namespace Xamarin.Android.Tasks
 		{
 			bool modified = false;
 			foreach (var entry in zip) {
-				if (entry.FullName.Contains ('\\')) {
+				if (entry.FullName.Contains ("\\")) {
 					var name = entry.FullName.Replace ('\\', '/');
 					onRename?.Invoke (entry.FullName, name);
 					entry.Rename (name);
