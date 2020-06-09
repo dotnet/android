@@ -9,7 +9,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <OutputPath>bin\Test$(Configuration)</OutputPath>
+    <OutputPath>..\..\bin\Test$(Configuration)</OutputPath>
     <_OverrideProps>TargetFrameworkVersion=$(TargetFrameworkVersion);OutputPath=$(OutputPath)</_OverrideProps>
     <_OriginalProject>VSAndroidApp/VSAndroidApp.csproj</_OriginalProject>
   </PropertyGroup>
