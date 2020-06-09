@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import
+      Condition="Exists('..\Configuration.props')"
+      Project="..\Configuration.props"
+  />
+  <PropertyGroup Condition="Exists('..\Configuration.props')">
+    <TargetFrameworkVersion>$(AndroidFrameworkVersion)</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <OutputPath>bin\Test$(Configuration)</OutputPath>
+    <_OverrideProps>TargetFrameworkVersion=$(TargetFrameworkVersion);OutputPath=$(OutputPath)</_OverrideProps>
+    <_OriginalProject>VSAndroidApp/VSAndroidApp.csproj</_OriginalProject>
+  </PropertyGroup>
+  <Target Name="Build">
+    <MSBuild Projects="$(_OriginalProject)" Targets="Build" Properties="$(_OverrideProps)" />
+  </Target>
+  <Target Name="Restore">
+    <MSBuild Projects="$(_OriginalProject)" Targets="Restore" Properties="$(_OverrideProps)" />
+  </Target>
+  <Target Name="Clean">
+    <MSBuild Projects="$(_OriginalProject)" Targets="Clean" Properties="$(_OverrideProps)" />
+  </Target>
+  <Target Name="SignAndroidPackage">
+    <MSBuild Projects="$(_OriginalProject)" Targets="SignAndroidPackage" Properties="$(_OverrideProps)" />
+  </Target>
+</Project>
