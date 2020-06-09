@@ -1,8 +1,12 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
+  <PropertyGroup>
+    <EnableDefaultAndroidItems Condition=" '$(EnableDefaultAndroidItems)' == '' ">$(EnableDefaultItems)</EnableDefaultAndroidItems>
+  </PropertyGroup>
+
   <!-- Default Resource file inclusion -->
   <!-- https://developer.android.com/guide/topics/resources/providing-resources -->
-  <ItemGroup Condition=" '$(EnableDefaultItems)' == 'true' And '$(EnableDefaultAndroidResourceItems)' == 'true' ">
+  <ItemGroup Condition=" '$(EnableDefaultAndroidItems)' == 'true' ">
     <AndroidResource Include="$(MonoAndroidResourcePrefix)\**\*.xml" />
     <AndroidResource Include="$(MonoAndroidResourcePrefix)\**\*.axml" />
     <AndroidResource Include="$(MonoAndroidResourcePrefix)\**\*.png" />
@@ -15,12 +19,12 @@
   </ItemGroup>
 
   <!-- Default Asset file inclusion -->
-  <ItemGroup Condition=" '$(EnableDefaultItems)' == 'true' And '$(EnableDefaultAndroidAssetItems)' == 'true' ">
+  <ItemGroup Condition=" '$(EnableDefaultAndroidItems)' == 'true' ">
     <AndroidAsset Include="$(MonoAndroidAssetsPrefix)\**\*" />
   </ItemGroup>
 
   <!-- Default References -->
-  <ItemGroup Condition=" '$(DisableImplicitFrameworkReferences)' != 'true' And '$(DisableImplicitAndroidFrameworkReference)' != 'true' ">
+  <ItemGroup Condition=" '$(DisableImplicitFrameworkReferences)' != 'true' ">
     <FrameworkReference
         Include="Microsoft.Android"
         IsImplicitlyDefined="true"

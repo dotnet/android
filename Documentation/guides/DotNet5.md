@@ -88,7 +88,9 @@ to `True`.
 
 ## Default file inclusion
 
-Default Android related file globbing behavior is defined in `Microsoft.Android.Sdk.DefaultItems.props`.
+Default Android related file globbing behavior is defined in `Microsoft.Android.Sdk.DefaultItems.targets`.
+This behavior can be disabled for Android items by setting `$(EnableDefaultAndroidItems)` to `false`, or
+all default item inclusion behavior can be disabled by setting `$(EnableDefaultItems)` to `false`.
 
 ## dotnet cli
 
