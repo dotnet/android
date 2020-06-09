@@ -485,9 +485,36 @@ AAAA==";
 					BinaryContent = () => Convert.FromBase64String (sourcesJarBase64)
 				});
 				Assert.IsTrue (bindingBuilder.Build (binding), "binding build should have succeeded");
+				var jdkVersion = GetJdkVersion ();
+				if (jdkVersion > new Version (9, 0)) {
+					Assert.Ignore ("JDK 11 and @(JavaSourceJar) don't currently mix.");
+					return;
+				}
 				string xml = bindingBuilder.Output.GetIntermediaryAsText ("docs/Com.Xamarin.Android.Test.Msbuildtest/JavaSourceJarTest.xml");
 				Assert.IsTrue (xml.Contains ("<param name=\"name\"> - name to display.</param>"), "missing doc");
 			}
+		}
+
+		static Version GetJdkVersion ()
+		{
+			var jdkPath     = AndroidSdkResolver.GetJavaSdkPath ();
+			var releasePath = Path.Combine (jdkPath, "release");
+			if (!File.Exists (releasePath))
+				return null;
+			foreach (var line in File.ReadLines (releasePath)) {
+				const string JavaVersionStart = "JAVA_VERSION=\"";
+				if (!line.StartsWith (JavaVersionStart, StringComparison.OrdinalIgnoreCase))
+					continue;
+				var value   = line.Substring (JavaVersionStart.Length, line.Length - JavaVersionStart.Length - 1);
+				int last    = 0;
+				for (last = 0; last < value.Length; ++last) {
+					if (char.IsDigit (value, last) || value [last] == '.')
+						continue;
+					break;
+				}
+				return Version.Parse (last == value.Length ? value : value.Substring (0, last));
+			}
+			return null;
 		}
 
 		[Test]

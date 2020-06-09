@@ -265,6 +265,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 </PropertyGroup>
 
   <Target Name="_ExtractJavaDocJars"
+		Condition=" $(_JdkVersion.StartsWith ('1.8')) "
 		Inputs="@(JavaDocJar)"
 		Outputs="@(JavaDocJar->'$(IntermediateOutputPath)javadocs\%(FileName).stamp')">
 		
@@ -278,6 +279,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
   </Target>
 
   <Target Name="_GenerateJavaDocFromSourceJars"
+		Condition=" $(_JdkVersion.StartsWith ('1.8')) "
 		Inputs="@(JavaSourceJar)"
 		Outputs="@(JavaSourceJar->'$(IntermediateOutputPath)javadocs\%(FileName).stamp')"
 		>
@@ -441,9 +443,9 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
   </Target>
 
   <Target Name="BuildDocumentation"
+	  	Condition=" '@(JavaDocIndex)' != '' And $(_JdkVersion.StartsWith ('1.8')) "
 	  	Inputs="@(JavaDocIndex);@(IntermediateAssembly->'$(IntermediateOutputPath)%(filename).xml')"
-	  	Outputs="@(IntermediateAssembly->'$(OutputPath)%(filename).xml')"
-	  	Condition="'@(JavaDocIndex)' != ''">
+	  	Outputs="@(IntermediateAssembly->'$(OutputPath)%(filename).xml')">
     <MDoc
     	References="@(ReferencePath);@(ReferenceDependencyPaths)"
     	TargetAssembly="@(IntermediateAssembly)"

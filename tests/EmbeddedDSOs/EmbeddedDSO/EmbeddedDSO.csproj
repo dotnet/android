@@ -8,15 +8,14 @@
     <OutputType>Library</OutputType>
     <RootNamespace>EmbeddedDSO</RootNamespace>
     <AssemblyName>Xamarin.Android.EmbeddedDSO_Test</AssemblyName>
-    <TargetFrameworkVersion>v8.1</TargetFrameworkVersion>
     <AndroidApplication>True</AndroidApplication>
     <AndroidResgenFile>Resources\Resource.designer.cs</AndroidResgenFile>
     <AndroidResgenClass>Resource</AndroidResgenClass>
     <AndroidManifest>Properties\AndroidManifest.xml</AndroidManifest>
     <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
     <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
-    <AndroidUseLatestPlatformSdk>true</AndroidUseLatestPlatformSdk>
     <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
+    <AppendTargetFrameworkToIntermediateOutputPath>false</AppendTargetFrameworkToIntermediateOutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(UnitTestsMode)' == 'true' ">
@@ -28,6 +27,9 @@
   </PropertyGroup>
 
   <Import Project="$(RelativeRootPath)\Configuration.props" />
+  <PropertyGroup>
+    <TargetFrameworkVersion>$(AndroidFrameworkVersion)</TargetFrameworkVersion>
+  </PropertyGroup>
 
   <PropertyGroup>
     <!-- We have to limit the supported abis to the currently enabled set, since the PR builders don't build all architectures but,
