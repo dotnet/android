@@ -23,25 +23,33 @@ namespace MonoDroid.Generation {
 			if (file == null)
 				return null;
 
+			return FieldXmlToCsv (XDocument.Load (file, LoadOptions.SetBaseUri | LoadOptions.SetLineInfo));
+		}
+
+		internal static TextReader FieldXmlToCsv (XDocument doc)
+		{
 			var sw = new StringWriter ();
-			var doc = XDocument.Load (file, LoadOptions.SetBaseUri | LoadOptions.SetLineInfo);
 
 			foreach (var e in doc.XPathSelectElements ("/enum-field-mappings/mapping")) {
-				string enu = GetMandatoryAttribute (e, "clr-enum-type");
-				string jni_type = e.Attribute ("jni-class") != null
-					? e.XGetAttribute ("jni-class")
-					: e.Attribute ("jni-interface") != null
-						? "I:" + e.XGetAttribute ("jni-interface")
-						: GetMandatoryAttribute (e, "jni-class or jni-interface");
-				bool bitfield = e.Attribute ("bitfield") != null && e.XGetAttribute ("bitfield") == "true";
+
+				var enu = GetMandatoryAttribute (e, "clr-enum-type");
+				var jni_type = e.XGetAttribute ("jni-class") ?? "I:" + e.XGetAttribute ("jni-interface");
+
+				// If neither jni was specified leave it blank
+				if (jni_type == "I:")
+					jni_type = string.Empty;
+
+				var bitfield = e.XGetAttribute ("bitfield") == "true";
+
 				foreach (var m in e.XPathSelectElements ("field")) {
-					string verstr = m.Attribute ("api-level") != null
-						? m.XGetAttribute ("api-level")
-						: "0";
-					string member   = GetMandatoryAttribute (m, "clr-name");
-					string jni_name = GetMandatoryAttribute (m, "jni-name");
-					string value    = GetMandatoryAttribute (m, "value");
-					sw.WriteLine ("{0}, {1}, {2}, {3}, {4}{5}", verstr, enu, member, jni_type + '.' + jni_name, value, bitfield ? ", Flags" : null);
+					var verstr   = m.XGetAttribute ("api-level") ?? "0";
+					var member   = GetMandatoryAttribute (m, "clr-name");
+					var jni_name = m.XGetAttribute ("jni-name");
+					var value    = GetMandatoryAttribute (m, "value");
+
+					var jni_member = string.IsNullOrWhiteSpace (jni_name) ? string.Empty : jni_type + '.' + jni_name;
+
+					sw.WriteLine ("{0}, {1}, {2}, {3}, {4}{5}", verstr, enu, member, jni_member, value, bitfield ? ", Flags" : null);
 				}
 			}
 

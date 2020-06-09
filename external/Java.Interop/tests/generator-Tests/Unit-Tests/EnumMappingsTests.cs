@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using MonoDroid.Generation;
 using NUnit.Framework;
 
@@ -283,6 +284,102 @@ namespace generatortests
 			Assert.AreEqual (false, enums.Single ().Value.FieldsRemoved);
 			Assert.AreEqual ("[Cdsect, I:org/xmlpull/v1/XmlPullParser.CDSECT]", enums.First ().Value.JniNames.Single ().ToString ());
 			Assert.AreEqual ("[Cdsect, 5]", enums.First ().Value.Members.Single ().ToString ());
+		}
+
+		[Test]
+		public void XmlEnumMapWithJNI ()
+		{
+			var xml = @"<enum-field-mappings>
+			  <mapping jni-class='android/support/v4/app/FragmentActivity$FragmentTag' clr-enum-type='Android.Support.V4.App.FragmentTagType'>
+			    <field jni-name='Fragment_name' clr-name='Name' value='0' />
+			    <field jni-name='Fragment_id' clr-name='Id' value='1' />
+			    <field jni-name='Fragment_tag' clr-name='Tag' value='2' />
+			  </mapping>
+			</enum-field-mappings>";
+
+			var doc = XDocument.Parse (xml, LoadOptions.SetBaseUri | LoadOptions.SetLineInfo);
+			var sr = EnumMappings.FieldXmlToCsv (doc);
+
+			var lines = sr.ReadToEnd ().Split (new [] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+			var expected = new [] {
+				"0, Android.Support.V4.App.FragmentTagType, Name, android/support/v4/app/FragmentActivity$FragmentTag.Fragment_name, 0",
+				"0, Android.Support.V4.App.FragmentTagType, Id, android/support/v4/app/FragmentActivity$FragmentTag.Fragment_id, 1",
+				"0, Android.Support.V4.App.FragmentTagType, Tag, android/support/v4/app/FragmentActivity$FragmentTag.Fragment_tag, 2"
+			};
+
+			Assert.AreEqual (expected, lines);
+		}
+
+		[Test]
+		public void XmlEnumMapWithInterfaceJNI ()
+		{
+			var xml = @"<enum-field-mappings>
+			  <mapping jni-interface='android/support/v4/app/FragmentActivity$FragmentTag' clr-enum-type='Android.Support.V4.App.FragmentTagType' bitfield='true'>
+			    <field jni-name='Fragment_name' clr-name='Name' value='0' />
+			    <field jni-name='Fragment_id' clr-name='Id' value='1' />
+			    <field jni-name='Fragment_tag' clr-name='Tag' value='2' />
+			  </mapping>
+			</enum-field-mappings>";
+
+			var doc = XDocument.Parse (xml, LoadOptions.SetBaseUri | LoadOptions.SetLineInfo);
+			var sr = EnumMappings.FieldXmlToCsv (doc);
+
+			var lines = sr.ReadToEnd ().Split (new [] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+			var expected = new [] {
+				"0, Android.Support.V4.App.FragmentTagType, Name, I:android/support/v4/app/FragmentActivity$FragmentTag.Fragment_name, 0, Flags",
+				"0, Android.Support.V4.App.FragmentTagType, Id, I:android/support/v4/app/FragmentActivity$FragmentTag.Fragment_id, 1, Flags",
+				"0, Android.Support.V4.App.FragmentTagType, Tag, I:android/support/v4/app/FragmentActivity$FragmentTag.Fragment_tag, 2, Flags"
+			};
+
+			Assert.AreEqual (expected, lines);
+		}
+
+		[Test]
+		public void XmlEnumMapWithoutJNI ()
+		{
+			var xml = @"<enum-field-mappings>
+			  <mapping clr-enum-type='Android.Support.V4.App.FragmentTagType' bitfield='true'>
+			    <field clr-name='Name' value='0' />
+			    <field clr-name='Id' value='1' />
+			    <field clr-name='Tag' value='2' />
+			  </mapping>
+			</enum-field-mappings>";
+
+			var doc = XDocument.Parse (xml, LoadOptions.SetBaseUri | LoadOptions.SetLineInfo);
+			var sr = EnumMappings.FieldXmlToCsv (doc);
+
+			var lines = sr.ReadToEnd ().Split (new [] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+			var expected = new [] {
+				"0, Android.Support.V4.App.FragmentTagType, Name, , 0, Flags",
+				"0, Android.Support.V4.App.FragmentTagType, Id, , 1, Flags",
+				"0, Android.Support.V4.App.FragmentTagType, Tag, , 2, Flags"
+			};
+
+			Assert.AreEqual (expected, lines);
+		}
+
+		[Test]
+		public void XmlEnumMapWithMixedJNI ()
+		{
+			var xml = @"<enum-field-mappings>
+			  <mapping jni-class='android/support/v4/app/FragmentActivity$FragmentTag' clr-enum-type='Android.Support.V4.App.FragmentTagType' bitfield='true'>
+			    <field clr-name='Name' value='0' />
+			    <field jni-name='Fragment_id' clr-name='Id' value='1' />
+			    <field clr-name='Tag' value='2' />
+			  </mapping>
+			</enum-field-mappings>";
+
+			var doc = XDocument.Parse (xml, LoadOptions.SetBaseUri | LoadOptions.SetLineInfo);
+			var sr = EnumMappings.FieldXmlToCsv (doc);
+
+			var lines = sr.ReadToEnd ().Split (new [] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+			var expected = new [] {
+				"0, Android.Support.V4.App.FragmentTagType, Name, , 0, Flags",
+				"0, Android.Support.V4.App.FragmentTagType, Id, android/support/v4/app/FragmentActivity$FragmentTag.Fragment_id, 1, Flags",
+				"0, Android.Support.V4.App.FragmentTagType, Tag, , 2, Flags"
+			};
+
+			Assert.AreEqual (expected, lines);
 		}
 	}
 }
