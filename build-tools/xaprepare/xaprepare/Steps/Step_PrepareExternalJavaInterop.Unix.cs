@@ -20,6 +20,7 @@ namespace Xamarin.Android.Prepare
 					"prepare",
 					"V=1",
 					$"CONFIGURATION={context.Configuration}",
+					$"JI_JAVA_HOME={context.OS.JavaHome}",
 					$"JAVA_HOME={context.OS.JavaHome}",
 					$"JI_MAX_JDK={Configurables.Defaults.MaxJDKVersion}",
 				}

@@ -2734,6 +2734,7 @@ because xbuild doesn't support framework reference assemblies.
     <FileWrites Include="$(_AndroidResgenFlagFile)" />
     <FileWrites Include="$(IntermediateOutputPath)R.txt" />
     <FileWrites Include="$(ApkFileSigned)" />
+    <FileWrites Include="$(ApkFileSigned).idsig" />
     <FileWrites Include="$(_UploadFlagFile)" />
     <FileWrites Include="@(_ModifiedResources)" />
   </ItemGroup>
