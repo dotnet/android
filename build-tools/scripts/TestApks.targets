@@ -322,17 +322,11 @@
     />
   </Target>
   <Target Name="CheckAndRecordApkSizes">
-    <PropertyGroup>
-      <ApkDiffHostExtension Condition=" '$(HostOS)' == 'Windows' ">.exe</ApkDiffHostExtension>
-      <ApkDiffPath Condition=" '$(ApkDiffPath)' == '' ">$(XAInstallPrefix)xbuild\Xamarin\Android\apkdiff\apkdiff.exe</ApkDiffPath>
-      <ApkDiffPath Condition=" !Exists('$(ApkDiffPath)') ">$(XAInstallPrefix)xbuild\Xamarin\Android\$(HostOS)\apkdiff$(ApkDiffHostExtension)</ApkDiffPath>
-      <ApkDiffPath Condition=" !Exists('$(ApkDiffPath)') ">$(MonoAndroidBinDirectory)\apkdiff$(ApkDiffHostExtension)</ApkDiffPath>
-    </PropertyGroup>
     <ApkDiffCheckRegression
         Condition="Exists('$(_ApkSizesReferenceDirectory)\$([System.IO.Path]::GetFileNameWithoutExtension(%(_AllArchives.Identity)))-$(Configuration)$(TestsFlavor)$([System.IO.Path]::GetExtension(%(_AllArchives.Identity)))desc')"
         ApkDescDirectory="$(OutputPath)"
         ApkDescSuffix="-$(Configuration)$(TestsFlavor)"
-        ApkDiffTool="$(ApkDiffPath)"
+        ApkDiffTool="apkdiff"
         Package="%(_AllArchives.Identity)"
         ReferenceDescription="$(_ApkSizesReferenceDirectory)\$([System.IO.Path]::GetFileNameWithoutExtension(%(_AllArchives.Identity)))-$(Configuration)$(TestsFlavor)$([System.IO.Path]::GetExtension(%(_AllArchives.Identity)))desc"
         TestResultDirectory="$(MSBuildThisFileDirectory)..\.."
