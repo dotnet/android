@@ -19,7 +19,7 @@ the new entry point for short-form style Android projets in .NET 5.
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Mono.Posix.NETStandard" Version="1.0.0" GeneratePathProperty="true" />
+    <PackageReference Include="Mono.Posix.NETStandard" Version="5.20.1-preview" GeneratePathProperty="true" />
   </ItemGroup>
 
   <Import Project="..\..\Configuration.props" />
