@@ -213,7 +213,8 @@ namespace Xamarin.Android.Tasks
 		}
 
 		//  Android Asset Packaging Tool (aapt) 2:19
-		static readonly Regex Aapt2VersionRegex = new Regex (@"(?<version>[\d\:]+)(\d+)?");
+		//  Android Asset Packaging Tool (aapt) 2.19-6051327
+		static readonly Regex Aapt2VersionRegex = new Regex (@"(?<version>[\d\:|\.]+)(\d+)?");
 
 		bool GetAapt2Version ()
 		{
