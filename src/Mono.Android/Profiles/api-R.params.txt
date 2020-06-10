@@ -28,7 +28,7 @@ package android.accessibilityservice
     setGestureDetectionPassthroughRegion(int displayId, android.graphics.Region region)
     setServiceInfo(android.accessibilityservice.AccessibilityServiceInfo info)
     setTouchExplorationPassthroughRegion(int displayId, android.graphics.Region region)
-    takeScreenshot(int displayId, java.util.concurrent.Executor executor, java.util.function.Consumer<android.accessibilityservice.AccessibilityService.ScreenshotResult> callback)
+    takeScreenshot(int displayId, java.util.concurrent.Executor executor, android.accessibilityservice.AccessibilityService.TakeScreenshotCallback callback)
   class AccessibilityService.GestureResultCallback
     onCancelled(android.accessibilityservice.GestureDescription gestureDescription)
     onCompleted(android.accessibilityservice.GestureDescription gestureDescription)
@@ -49,14 +49,15 @@ package android.accessibilityservice
     switchToInputMethod(java.lang.String imeId)
   interface AccessibilityService.SoftKeyboardController.OnShowModeChangedListener
     onShowModeChanged(android.accessibilityservice.AccessibilityService.SoftKeyboardController controller, int showMode)
+  interface AccessibilityService.TakeScreenshotCallback
+    onFailure(int errorCode)
+    onSuccess(android.accessibilityservice.AccessibilityService.ScreenshotResult screenshot)
   class AccessibilityServiceInfo
     capabilityToString(int capability)
     equals(java.lang.Object obj)
     feedbackTypeToString(int feedbackType)
     flagToString(int flag)
-    loadAnimatedImage(android.content.Context context)
     loadDescription(android.content.pm.PackageManager packageManager)
-    loadHtmlDescription(android.content.pm.PackageManager packageManager)
     loadSummary(android.content.pm.PackageManager packageManager)
     setInteractiveUiTimeoutMillis(int timeout)
     setNonInteractiveUiTimeoutMillis(int timeout)
@@ -653,6 +654,7 @@ package android.app
     moveTaskToFront(int taskId, int flags)
     moveTaskToFront(int taskId, int flags, android.os.Bundle options)
     restartPackage(java.lang.String packageName)
+    setProcessStateSummary(byte[] state)
     setVrThread(int tid)
     setWatchHeapLimit(long pssSize)
   class ActivityManager.AppTask
@@ -684,6 +686,7 @@ package android.app
     #ctor(java.lang.String label, android.graphics.Bitmap icon, int colorPrimary)
     #ctor(java.lang.String label, int iconRes)
     #ctor(java.lang.String label, int iconRes, int colorPrimary)
+    equals(java.lang.Object obj)
     readFromParcel(android.os.Parcel source)
     writeToParcel(android.os.Parcel dest, int flags)
   class ActivityOptions
@@ -851,23 +854,23 @@ package android.app
     checkOpNoThrow(java.lang.String op, int uid, java.lang.String packageName)
     checkPackage(int uid, java.lang.String packageName)
     finishOp(java.lang.String op, int uid, java.lang.String packageName)
-    finishOp(java.lang.String op, int uid, java.lang.String packageName, java.lang.String featureId)
+    finishOp(java.lang.String op, int uid, java.lang.String packageName, java.lang.String attributionTag)
     isOpActive(java.lang.String op, int uid, java.lang.String packageName)
     noteOp(java.lang.String op, int uid, java.lang.String packageName)
-    noteOp(java.lang.String op, int uid, java.lang.String packageName, java.lang.String featureId, java.lang.String message)
+    noteOp(java.lang.String op, int uid, java.lang.String packageName, java.lang.String attributionTag, java.lang.String message)
     noteOpNoThrow(java.lang.String op, int uid, java.lang.String packageName)
-    noteOpNoThrow(java.lang.String op, int uid, java.lang.String packageName, java.lang.String featureId, java.lang.String message)
+    noteOpNoThrow(java.lang.String op, int uid, java.lang.String packageName, java.lang.String attributionTag, java.lang.String message)
     noteProxyOp(java.lang.String op, java.lang.String proxiedPackageName)
-    noteProxyOp(java.lang.String op, java.lang.String proxiedPackageName, int proxiedUid, java.lang.String proxiedFeatureId, java.lang.String message)
+    noteProxyOp(java.lang.String op, java.lang.String proxiedPackageName, int proxiedUid, java.lang.String proxiedAttributionTag, java.lang.String message)
     noteProxyOpNoThrow(java.lang.String op, java.lang.String proxiedPackageName)
     noteProxyOpNoThrow(java.lang.String op, java.lang.String proxiedPackageName, int proxiedUid)
-    noteProxyOpNoThrow(java.lang.String op, java.lang.String proxiedPackageName, int proxiedUid, java.lang.String proxiedFeatureId, java.lang.String message)
+    noteProxyOpNoThrow(java.lang.String op, java.lang.String proxiedPackageName, int proxiedUid, java.lang.String proxiedAttributionTag, java.lang.String message)
     permissionToOp(java.lang.String permission)
-    setNotedAppOpsCollector(android.app.AppOpsManager.AppOpsCollector collector)
+    setOnOpNotedCallback(java.util.concurrent.Executor asyncExecutor, android.app.AppOpsManager.OnOpNotedCallback callback)
     startOp(java.lang.String op, int uid, java.lang.String packageName)
-    startOp(java.lang.String op, int uid, java.lang.String packageName, java.lang.String featureId, java.lang.String message)
+    startOp(java.lang.String op, int uid, java.lang.String packageName, java.lang.String attributionTag, java.lang.String message)
     startOpNoThrow(java.lang.String op, int uid, java.lang.String packageName)
-    startOpNoThrow(java.lang.String op, int uid, java.lang.String packageName, java.lang.String featureId, java.lang.String message)
+    startOpNoThrow(java.lang.String op, int uid, java.lang.String packageName, java.lang.String attributionTag, java.lang.String message)
     startWatchingActive(java.lang.String[] ops, java.util.concurrent.Executor executor, android.app.AppOpsManager.OnOpActiveChangedListener callback)
     startWatchingMode(java.lang.String op, java.lang.String packageName, android.app.AppOpsManager.OnOpChangedListener callback)
     startWatchingMode(java.lang.String op, java.lang.String packageName, int flags, android.app.AppOpsManager.OnOpChangedListener callback)
@@ -877,14 +880,14 @@ package android.app
     unsafeCheckOpNoThrow(java.lang.String op, int uid, java.lang.String packageName)
     unsafeCheckOpRaw(java.lang.String op, int uid, java.lang.String packageName)
     unsafeCheckOpRawNoThrow(java.lang.String op, int uid, java.lang.String packageName)
-  class AppOpsManager.AppOpsCollector
-    onAsyncNoted(android.app.AsyncNotedAppOp asyncOp)
-    onNoted(android.app.SyncNotedAppOp op)
-    onSelfNoted(android.app.SyncNotedAppOp op)
   interface AppOpsManager.OnOpActiveChangedListener
     onOpActiveChanged(java.lang.String op, int uid, java.lang.String packageName, boolean active)
   interface AppOpsManager.OnOpChangedListener
     onOpChanged(java.lang.String op, java.lang.String packageName)
+  class AppOpsManager.OnOpNotedCallback
+    onAsyncNoted(android.app.AsyncNotedAppOp asyncOp)
+    onNoted(android.app.SyncNotedAppOp op)
+    onSelfNoted(android.app.SyncNotedAppOp op)
   class AsyncNotedAppOp
     equals(java.lang.Object o)
     writeToParcel(android.os.Parcel dest, int flags)
@@ -1399,8 +1402,8 @@ package android.app
   class Notification.BubbleMetadata
     writeToParcel(android.os.Parcel out, int flags)
   class Notification.BubbleMetadata.Builder
-    createIntentBubble(android.app.PendingIntent intent, android.graphics.drawable.Icon icon)
-    createShortcutBubble(java.lang.String shortcutId)
+    #ctor(android.app.PendingIntent intent, android.graphics.drawable.Icon icon)
+    #ctor(java.lang.String shortcutId)
     setAutoExpandBubble(boolean shouldExpand)
     setDeleteIntent(android.app.PendingIntent deleteIntent)
     setDesiredHeight(int height)
@@ -1698,6 +1701,7 @@ package android.app
     startSearch(java.lang.String initialQuery, boolean selectInitialQuery, android.content.ComponentName launchActivity, android.os.Bundle appSearchData, boolean globalSearch)
     triggerSearch(java.lang.String query, android.content.ComponentName launchActivity, android.os.Bundle appSearchData)
   class Service
+    attachBaseContext(android.content.Context newBase)
     dump(java.io.FileDescriptor fd, java.io.PrintWriter writer, java.lang.String[] args)
     onBind(android.content.Intent intent)
     onConfigurationChanged(android.content.res.Configuration newConfig)
@@ -1723,7 +1727,7 @@ package android.app
     onSharedElementStart(java.util.List<java.lang.String> sharedElementNames, java.util.List<android.view.View> sharedElements, java.util.List<android.view.View> sharedElementSnapshots)
   class SyncNotedAppOp
     equals(java.lang.Object o)
-    #ctor(int opCode, java.lang.String featureId)
+    #ctor(int opCode, java.lang.String attributionTag)
     writeToParcel(android.os.Parcel dest, int flags)
   class TabActivity
     onChildTitleChanged(android.app.Activity childActivity, java.lang.CharSequence title)
@@ -1917,9 +1921,6 @@ package android.app.admin
     onUserSwitched(android.content.Context context, android.content.Intent intent, android.os.UserHandle switchedUser)
   class DeviceAdminService
     onBind(android.content.Intent intent)
-  class DevicePolicyKeyguardService
-    onBind(android.content.Intent intent)
-    onSurfaceReady(android.os.IBinder hostInputToken)
   class DevicePolicyManager
     addCrossProfileIntentFilter(android.content.ComponentName admin, android.content.IntentFilter filter, int flags)
     addCrossProfileWidgetProvider(android.content.ComponentName admin, java.lang.String packageName)
@@ -1944,8 +1945,8 @@ package android.app.admin
     getAlwaysOnVpnPackage(android.content.ComponentName admin)
     getApplicationRestrictions(android.content.ComponentName admin, java.lang.String packageName)
     getApplicationRestrictionsManagingPackage(android.content.ComponentName admin)
-    getAutoTime(android.content.ComponentName admin)
-    getAutoTimeZone(android.content.ComponentName admin)
+    getAutoTimeEnabled(android.content.ComponentName admin)
+    getAutoTimeZoneEnabled(android.content.ComponentName admin)
     getBindDeviceAdminTargetUsers(android.content.ComponentName admin)
     getBluetoothContactSharingDisabled(android.content.ComponentName admin)
     getCameraDisabled(android.content.ComponentName admin)
@@ -1994,7 +1995,6 @@ package android.app.admin
     getPermittedCrossProfileNotificationListeners(android.content.ComponentName admin)
     getPermittedInputMethods(android.content.ComponentName admin)
     getPersonalAppsSuspendedReasons(android.content.ComponentName admin)
-    getProtectedPackages(android.content.ComponentName admin)
     getRequiredStrongAuthTimeout(android.content.ComponentName admin)
     getScreenCaptureDisabled(android.content.ComponentName admin)
     getSecondaryUsers(android.content.ComponentName admin)
@@ -2002,6 +2002,7 @@ package android.app.admin
     getStartUserSessionMessage(android.content.ComponentName admin)
     getStorageEncryption(android.content.ComponentName admin)
     getTrustAgentConfiguration(android.content.ComponentName admin, android.content.ComponentName agent)
+    getUserControlDisabledPackages(android.content.ComponentName admin)
     getUserRestrictions(android.content.ComponentName admin)
     getWifiMacAddress(android.content.ComponentName admin)
     grantKeyPairToApp(android.content.ComponentName admin, java.lang.String alias, java.lang.String packageName)
@@ -2055,9 +2056,9 @@ package android.app.admin
     setApplicationHidden(android.content.ComponentName admin, java.lang.String packageName, boolean hidden)
     setApplicationRestrictions(android.content.ComponentName admin, java.lang.String packageName, android.os.Bundle settings)
     setApplicationRestrictionsManagingPackage(android.content.ComponentName admin, java.lang.String packageName)
-    setAutoTime(android.content.ComponentName admin, boolean enabled)
+    setAutoTimeEnabled(android.content.ComponentName admin, boolean enabled)
     setAutoTimeRequired(android.content.ComponentName admin, boolean required)
-    setAutoTimeZone(android.content.ComponentName admin, boolean enabled)
+    setAutoTimeZoneEnabled(android.content.ComponentName admin, boolean enabled)
     setBackupServiceEnabled(android.content.ComponentName admin, boolean enabled)
     setBluetoothContactSharingDisabled(android.content.ComponentName admin, boolean disabled)
     setCameraDisabled(android.content.ComponentName admin, boolean disabled)
@@ -2085,7 +2086,7 @@ package android.app.admin
     setLockTaskPackages(android.content.ComponentName admin, java.lang.String[] packages)
     setLogoutEnabled(android.content.ComponentName admin, boolean enabled)
     setLongSupportMessage(android.content.ComponentName admin, java.lang.CharSequence message)
-    setManagedProfileMaximumTimeOff(android.content.ComponentName admin, long timeoutMs)
+    setManagedProfileMaximumTimeOff(android.content.ComponentName admin, long timeoutMillis)
     setMasterVolumeMuted(android.content.ComponentName admin, boolean on)
     setMaximumFailedPasswordsForWipe(android.content.ComponentName admin, int num)
     setMaximumTimeToLock(android.content.ComponentName admin, long timeMs)
@@ -2113,13 +2114,11 @@ package android.app.admin
     setPersonalAppsSuspended(android.content.ComponentName admin, boolean suspended)
     setProfileEnabled(android.content.ComponentName admin)
     setProfileName(android.content.ComponentName admin, java.lang.String profileName)
-    setProtectedPackages(android.content.ComponentName admin, java.util.List<java.lang.String> packages)
     setRecommendedGlobalProxy(android.content.ComponentName admin, android.net.ProxyInfo proxyInfo)
     setRequiredStrongAuthTimeout(android.content.ComponentName admin, long timeoutMs)
     setResetPasswordToken(android.content.ComponentName admin, byte[] token)
     setRestrictionsProvider(android.content.ComponentName admin, android.content.ComponentName provider)
     setScreenCaptureDisabled(android.content.ComponentName admin, boolean disabled)
-    setSecondaryLockscreenEnabled(android.content.ComponentName admin, boolean enabled)
     setSecureSetting(android.content.ComponentName admin, java.lang.String setting, java.lang.String value)
     setSecurityLoggingEnabled(android.content.ComponentName admin, boolean enabled)
     setShortSupportMessage(android.content.ComponentName admin, java.lang.CharSequence message)
@@ -2132,6 +2131,7 @@ package android.app.admin
     setTimeZone(android.content.ComponentName admin, java.lang.String timeZone)
     setTrustAgentConfiguration(android.content.ComponentName admin, android.content.ComponentName target, android.os.PersistableBundle configuration)
     setUninstallBlocked(android.content.ComponentName admin, java.lang.String packageName, boolean uninstallBlocked)
+    setUserControlDisabledPackages(android.content.ComponentName admin, java.util.List<java.lang.String> packages)
     setUserIcon(android.content.ComponentName admin, android.graphics.Bitmap icon)
     startUserInBackground(android.content.ComponentName admin, android.os.UserHandle userHandle)
     stopUser(android.content.ComponentName admin, android.os.UserHandle userHandle)
@@ -2237,12 +2237,12 @@ package android.app.blob
     equals(java.lang.Object obj)
     writeToParcel(android.os.Parcel dest, int flags)
   class BlobStoreManager
+    abandonSession(long sessionId)
     acquireLease(android.app.blob.BlobHandle blobHandle, int descriptionResId)
     acquireLease(android.app.blob.BlobHandle blobHandle, int descriptionResId, long leaseExpiryTimeMillis)
     acquireLease(android.app.blob.BlobHandle blobHandle, java.lang.CharSequence description)
     acquireLease(android.app.blob.BlobHandle blobHandle, java.lang.CharSequence description, long leaseExpiryTimeMillis)
     createSession(android.app.blob.BlobHandle blobHandle)
-    deleteSession(long sessionId)
     openBlob(android.app.blob.BlobHandle blobHandle)
     openSession(long sessionId)
     releaseLease(android.app.blob.BlobHandle blobHandle)
@@ -3040,7 +3040,7 @@ package android.content
     notifyChange(android.net.Uri uri, android.database.ContentObserver observer)
     notifyChange(android.net.Uri uri, android.database.ContentObserver observer, boolean syncToNetwork)
     notifyChange(android.net.Uri uri, android.database.ContentObserver observer, int flags)
-    notifyChange(java.lang.Iterable<android.net.Uri> uris, android.database.ContentObserver observer, int flags)
+    notifyChange(java.util.Collection<android.net.Uri> uris, android.database.ContentObserver observer, int flags)
     openAssetFile(android.net.Uri uri, java.lang.String mode, android.os.CancellationSignal signal)
     openAssetFileDescriptor(android.net.Uri uri, java.lang.String mode)
     openAssetFileDescriptor(android.net.Uri uri, java.lang.String mode, android.os.CancellationSignal cancellationSignal)
@@ -3121,10 +3121,10 @@ package android.content
     checkSelfPermission(java.lang.String permission)
     checkUriPermission(android.net.Uri uri, int pid, int uid, int modeFlags)
     checkUriPermission(android.net.Uri uri, java.lang.String readPermission, java.lang.String writePermission, int pid, int uid, int modeFlags)
+    createAttributionContext(java.lang.String attributionTag)
     createConfigurationContext(android.content.res.Configuration overrideConfiguration)
     createContextForSplit(java.lang.String splitName)
     createDisplayContext(android.view.Display display)
-    createFeatureContext(java.lang.String featureId)
     createPackageContext(java.lang.String packageName, int flags)
     createWindowContext(int type, android.os.Bundle options)
     deleteDatabase(java.lang.String name)
@@ -3180,7 +3180,6 @@ package android.content
     sendOrderedBroadcast(android.content.Intent intent, java.lang.String receiverPermission)
     sendOrderedBroadcast(android.content.Intent intent, java.lang.String receiverPermission, android.content.BroadcastReceiver resultReceiver, android.os.Handler scheduler, int initialCode, java.lang.String initialData, android.os.Bundle initialExtras)
     sendOrderedBroadcast(android.content.Intent intent, java.lang.String receiverPermission, java.lang.String receiverAppOp, android.content.BroadcastReceiver resultReceiver, android.os.Handler scheduler, int initialCode, java.lang.String initialData, android.os.Bundle initialExtras)
-    sendOrderedBroadcast(android.content.Intent intent, java.lang.String receiverPermission, java.lang.String receiverAppOp, android.os.Bundle options, android.content.BroadcastReceiver resultReceiver, android.os.Handler scheduler, int initialCode, java.lang.String initialData, android.os.Bundle initialExtras)
     sendOrderedBroadcastAsUser(android.content.Intent intent, android.os.UserHandle user, java.lang.String receiverPermission, android.content.BroadcastReceiver resultReceiver, android.os.Handler scheduler, int initialCode, java.lang.String initialData, android.os.Bundle initialExtras)
     sendStickyBroadcast(android.content.Intent intent)
     sendStickyBroadcastAsUser(android.content.Intent intent, android.os.UserHandle user)
@@ -3218,10 +3217,10 @@ package android.content
     checkUriPermission(android.net.Uri uri, int pid, int uid, int modeFlags)
     checkUriPermission(android.net.Uri uri, java.lang.String readPermission, java.lang.String writePermission, int pid, int uid, int modeFlags)
     #ctor(android.content.Context base)
+    createAttributionContext(java.lang.String attributionTag)
     createConfigurationContext(android.content.res.Configuration overrideConfiguration)
     createContextForSplit(java.lang.String splitName)
     createDisplayContext(android.view.Display display)
-    createFeatureContext(java.lang.String featureId)
     createPackageContext(java.lang.String packageName, int flags)
     createWindowContext(int type, android.os.Bundle options)
     deleteDatabase(java.lang.String name)
@@ -3261,10 +3260,10 @@ package android.content
     sendBroadcast(android.content.Intent intent, java.lang.String receiverPermission)
     sendBroadcastAsUser(android.content.Intent intent, android.os.UserHandle user)
     sendBroadcastAsUser(android.content.Intent intent, android.os.UserHandle user, java.lang.String receiverPermission)
+    sendOrderedBroadcast(android.content.Intent intent, int initialCode, java.lang.String receiverPermission, java.lang.String receiverAppOp, android.content.BroadcastReceiver resultReceiver, android.os.Handler scheduler, java.lang.String initialData, android.os.Bundle initialExtras, android.os.Bundle options)
     sendOrderedBroadcast(android.content.Intent intent, java.lang.String receiverPermission)
     sendOrderedBroadcast(android.content.Intent intent, java.lang.String receiverPermission, android.content.BroadcastReceiver resultReceiver, android.os.Handler scheduler, int initialCode, java.lang.String initialData, android.os.Bundle initialExtras)
     sendOrderedBroadcast(android.content.Intent intent, java.lang.String receiverPermission, java.lang.String receiverAppOp, android.content.BroadcastReceiver resultReceiver, android.os.Handler scheduler, int initialCode, java.lang.String initialData, android.os.Bundle initialExtras)
-    sendOrderedBroadcast(android.content.Intent intent, java.lang.String receiverPermission, java.lang.String receiverAppOp, android.os.Bundle options, android.content.BroadcastReceiver resultReceiver, android.os.Handler scheduler, int initialCode, java.lang.String initialData, android.os.Bundle initialExtras)
     sendOrderedBroadcastAsUser(android.content.Intent intent, android.os.UserHandle user, java.lang.String receiverPermission, android.content.BroadcastReceiver resultReceiver, android.os.Handler scheduler, int initialCode, java.lang.String initialData, android.os.Bundle initialExtras)
     sendStickyBroadcast(android.content.Intent intent)
     sendStickyBroadcastAsUser(android.content.Intent intent, android.os.UserHandle user)
@@ -3650,6 +3649,7 @@ package android.content.pm
     getProfileSwitchingIconDrawable(android.os.UserHandle userHandle)
     getProfileSwitchingLabel(android.os.UserHandle userHandle)
     startActivity(android.content.Intent intent, android.os.UserHandle targetUser, android.app.Activity callingActivity)
+    startActivity(android.content.Intent intent, android.os.UserHandle targetUser, android.app.Activity callingActivity, android.os.Bundle options)
     startMainActivity(android.content.ComponentName component, android.os.UserHandle targetUser)
   class FeatureGroupInfo
     #ctor(android.content.pm.FeatureGroupInfo other)
@@ -3716,6 +3716,7 @@ package android.content.pm
   class LauncherApps.ShortcutQuery
     setActivity(android.content.ComponentName activity)
     setChangedSince(long changedSince)
+    setLocusIds(java.util.List<android.content.LocusId> locusIds)
     setPackage(java.lang.String packageName)
     setQueryFlags(int queryFlags)
     setShortcutIds(java.util.List<java.lang.String> shortcutIds)
@@ -3761,6 +3762,7 @@ package android.content.pm
     setAppIcon(android.graphics.Bitmap appIcon)
     setAppLabel(java.lang.CharSequence appLabel)
     setAppPackageName(java.lang.String appPackageName)
+    setAutoRevokePermissionsMode(boolean shouldAutoRevoke)
     setInstallLocation(int installLocation)
     setInstallReason(int installReason)
     setOriginatingUid(int originatingUid)
@@ -3794,7 +3796,6 @@ package android.content.pm
     checkPermission(java.lang.String permName, java.lang.String packageName)
     checkSignatures(int uid1, int uid2)
     checkSignatures(java.lang.String packageName1, java.lang.String packageName2)
-    clearMimeGroup(java.lang.String mimeGroup)
     clearPackagePreferredActivities(java.lang.String packageName)
     currentToCanonicalPackageNames(java.lang.String[] packageNames)
     extendVerificationTimeout(int id, int verificationCodeAtTimeout, long millisecondsToDelay)
@@ -3859,6 +3860,7 @@ package android.content.pm
     hasSigningCertificate(java.lang.String packageName, byte[] certificate, int type)
     hasSystemFeature(java.lang.String featureName)
     hasSystemFeature(java.lang.String featureName, int version)
+    isAutoRevokeWhitelisted(java.lang.String packageName)
     isDefaultApplicationIcon(android.graphics.drawable.Drawable drawable)
     isInstantApp(java.lang.String packageName)
     isPackageSuspended(java.lang.String packageName)
@@ -3879,6 +3881,7 @@ package android.content.pm
     resolveService(android.content.Intent intent, int flags)
     setApplicationCategoryHint(java.lang.String packageName, int categoryHint)
     setApplicationEnabledSetting(java.lang.String packageName, int newState, int flags)
+    setAutoRevokeWhitelisted(java.lang.String packageName, boolean whitelisted)
     setComponentEnabledSetting(android.content.ComponentName componentName, int newState, int flags)
     setInstallerPackageName(java.lang.String targetPackage, java.lang.String installerPackageName)
     setMimeGroup(java.lang.String mimeGroup, java.util.Set<java.lang.String> mimeTypes)
@@ -4126,13 +4129,7 @@ package android.content.res
 package android.content.res.loader
 ;---------------------------------------
   interface AssetsProvider
-    loadAsset(java.lang.String path, int accessMode)
-    loadAssetParcelFd(java.lang.String path)
-  class DirectoryAssetsProvider
-    #ctor(java.io.File directory)
-    findFile(java.lang.String path)
-    loadAsset(java.lang.String path, int accessMode)
-    loadAssetParcelFd(java.lang.String path)
+    loadAssetFd(java.lang.String path, int accessMode)
   class ResourcesLoader
     addProvider(android.content.res.loader.ResourcesProvider resourcesProvider)
     removeProvider(android.content.res.loader.ResourcesProvider resourcesProvider)
@@ -4141,11 +4138,9 @@ package android.content.res.loader
     empty(android.content.res.loader.AssetsProvider assetsProvider)
     loadFromApk(android.os.ParcelFileDescriptor fileDescriptor)
     loadFromApk(android.os.ParcelFileDescriptor fileDescriptor, android.content.res.loader.AssetsProvider assetsProvider)
-    loadFromApk(android.os.SharedMemory sharedMemory)
-    loadFromApk(android.os.SharedMemory sharedMemory, android.content.res.loader.AssetsProvider assetsProvider)
+    loadFromDirectory(java.lang.String path, android.content.res.loader.AssetsProvider assetsProvider)
     loadFromSplit(android.content.Context context, java.lang.String splitName)
     loadFromTable(android.os.ParcelFileDescriptor fileDescriptor, android.content.res.loader.AssetsProvider assetsProvider)
-    loadFromTable(android.os.SharedMemory sharedMemory, android.content.res.loader.AssetsProvider assetsProvider)
 
 package android.database
 ;---------------------------------------
@@ -4209,8 +4204,12 @@ package android.database
     #ctor(android.os.Handler handler)
     dispatchChange(boolean selfChange)
     dispatchChange(boolean selfChange, android.net.Uri uri)
+    dispatchChange(boolean selfChange, android.net.Uri uri, int flags)
+    dispatchChange(boolean selfChange, java.util.Collection<android.net.Uri> uris, int flags)
     onChange(boolean selfChange)
     onChange(boolean selfChange, android.net.Uri uri)
+    onChange(boolean selfChange, android.net.Uri uri, int flags)
+    onChange(boolean selfChange, java.util.Collection<android.net.Uri> uris, int flags)
   interface CrossProcessCursor
     fillWindow(int position, android.database.CursorWindow window)
     onMove(int oldPosition, int newPosition)
@@ -4440,6 +4439,7 @@ package android.database.sqlite
     createInMemory(android.database.sqlite.SQLiteDatabase.OpenParams openParams)
     delete(java.lang.String table, java.lang.String whereClause, java.lang.String[] whereArgs)
     deleteDatabase(java.io.File file)
+    execPerConnectionSQL(java.lang.String sql, java.lang.Object[] bindArgs)
     execSQL(java.lang.String sql)
     execSQL(java.lang.String sql, java.lang.Object[] bindArgs)
     findEditTable(java.lang.String tables)
@@ -6549,7 +6549,6 @@ package android.hardware.fingerprint
     onAuthenticationHelp(int helpCode, java.lang.CharSequence helpString)
     onAuthenticationSucceeded(android.hardware.fingerprint.FingerprintManager.AuthenticationResult result)
   class FingerprintManager.CryptoObject
-    #ctor(android.security.identity.IdentityCredential credential)
     #ctor(java.security.Signature signature)
     #ctor(javax.crypto.Cipher cipher)
     #ctor(javax.crypto.Mac mac)
@@ -8572,10 +8571,10 @@ package android.media
     onRecordingConfigChanged(java.util.List<android.media.AudioRecordingConfiguration> configs)
   interface AudioManager.OnAudioFocusChangeListener
     onAudioFocusChange(int focusChange)
-  interface AudioMetadata.Map
+  interface AudioMetadataMap
     <T> remove(android.media.AudioMetadata.Key<T> key)
     <T> set(android.media.AudioMetadata.Key<T> key, T value)
-  interface AudioMetadata.ReadMap
+  interface AudioMetadataReadMap
     <T> containsKey(android.media.AudioMetadata.Key<T> key)
     <T> get(android.media.AudioMetadata.Key<T> key)
   class AudioPlaybackCaptureConfiguration.Builder
@@ -8699,9 +8698,8 @@ package android.media
     setPerformanceMode(int performanceMode)
     setSessionId(int sessionId)
     setTransferMode(int mode)
-    setTunerConfiguration(android.media.AudioTrack.TunerConfiguration tunerConfiguration)
   interface AudioTrack.OnCodecFormatChangedListener
-    onCodecFormatChanged(android.media.AudioTrack audioTrack, android.media.AudioMetadata.ReadMap info)
+    onCodecFormatChanged(android.media.AudioTrack audioTrack, android.media.AudioMetadataReadMap info)
   interface AudioTrack.OnPlaybackPositionUpdateListener
     onMarkerReached(android.media.AudioTrack track)
     onPeriodicNotification(android.media.AudioTrack track)
@@ -8712,9 +8710,6 @@ package android.media
     onDataRequest(android.media.AudioTrack track, int sizeInFrames)
     onPresentationEnded(android.media.AudioTrack track)
     onTearDown(android.media.AudioTrack track)
-  class AudioTrack.TunerConfiguration.Builder
-    setContentId(int contentId)
-    setSyncId(int syncId)
   class CamcorderProfile
     get(int quality)
     get(int cameraId, int quality)
@@ -8825,6 +8820,7 @@ package android.media
     getOutputFrame(int index)
     getOutputImage(int index)
     getQueueRequest(int index)
+    mapHardwareBuffer(android.hardware.HardwareBuffer hardwareBuffer)
     queueInputBuffer(int index, int offset, int size, long presentationTimeUs, int flags)
     queueSecureInputBuffer(int index, int offset, android.media.MediaCodec.CryptoInfo info, long presentationTimeUs, int flags)
     releaseOutputBuffer(int index, boolean render)
@@ -8852,23 +8848,19 @@ package android.media
   class MediaCodec.CryptoInfo.Pattern
     #ctor(int blocksToEncrypt, int blocksToSkip)
     set(int blocksToEncrypt, int blocksToSkip)
-  class MediaCodec.GraphicBlock
-    isCodecCopyFreeCompatible(java.lang.String[] codecNames)
-    obtain(int width, int height, int format, long usage, java.lang.String[] codecNames)
   class MediaCodec.LinearBlock
     isCodecCopyFreeCompatible(java.lang.String[] codecNames)
     obtain(int capacity, java.lang.String[] codecNames)
   interface MediaCodec.OnFrameRenderedListener
     onFrameRendered(android.media.MediaCodec codec, long presentationTimeUs, long nanoTime)
-  class MediaCodec.OutputFrame
-    retrieveChangedKeys(java.util.Set<java.lang.String> keys)
   class MediaCodec.QueueRequest
     setByteBufferParameter(java.lang.String key, java.nio.ByteBuffer value)
+    setEncryptedLinearBlock(android.media.MediaCodec.LinearBlock block, int offset, int size, android.media.MediaCodec.CryptoInfo cryptoInfo)
     setFlags(int flags)
     setFloatParameter(java.lang.String key, float value)
-    setGraphicBlock(android.media.MediaCodec.GraphicBlock block)
+    setHardwareBuffer(android.hardware.HardwareBuffer buffer)
     setIntegerParameter(java.lang.String key, int value)
-    setLinearBlock(android.media.MediaCodec.LinearBlock block, int offset, int size, android.media.MediaCodec.CryptoInfo cryptoInfo)
+    setLinearBlock(android.media.MediaCodec.LinearBlock block, int offset, int size)
     setLongParameter(java.lang.String key, long value)
     setPresentationTimeUs(long presentationTimeUs)
     setStringParameter(java.lang.String key, java.lang.String value)
@@ -9105,15 +9097,15 @@ package android.media
   interface MediaParser.InputReader
     read(byte[] buffer, int offset, int readLength)
   interface MediaParser.OutputConsumer
-    onSampleCompleted(int trackIndex, long timeUs, int flags, int size, int offset, android.media.MediaCodec.CryptoInfo cryptoData)
-    onSampleData(int trackIndex, android.media.MediaParser.InputReader inputReader)
-    onSeekMap(android.media.MediaParser.SeekMap seekMap)
-    onTrackData(int trackIndex, android.media.MediaParser.TrackData trackData)
-    onTracksFound(int numberOfTracks)
+    onSampleCompleted(int trackIndex, long timeMicros, int flags, int size, int offset, android.media.MediaCodec.CryptoInfo cryptoInfo)
+    onSampleDataFound(int trackIndex, android.media.MediaParser.InputReader inputReader)
+    onSeekMapFound(android.media.MediaParser.SeekMap seekMap)
+    onTrackCountFound(int numberOfTracks)
+    onTrackDataFound(int trackIndex, android.media.MediaParser.TrackData trackData)
   interface MediaParser.SeekableInputReader
     seekToPosition(long position)
   class MediaParser.SeekMap
-    getSeekPoints(long timeUs)
+    getSeekPoints(long timeMicros)
   class MediaParser.SeekPoint
     equals(java.lang.Object obj)
   class MediaPlayer
@@ -9270,7 +9262,6 @@ package android.media
     setClientPackageName(java.lang.String packageName)
     setConnectionState(int connectionState)
     setDescription(java.lang.CharSequence description)
-    setDeviceType(int type)
     setExtras(android.os.Bundle extras)
     setIconUri(android.net.Uri iconUri)
     setVolume(int volume)
@@ -9280,8 +9271,7 @@ package android.media
     getSessionInfo(java.lang.String sessionId)
     notifyRequestFailed(long requestId, int reason)
     notifyRoutes(java.util.Collection<android.media.MediaRoute2Info> routes)
-    notifySessionCreated(android.media.RoutingSessionInfo sessionInfo, long requestId)
-    notifySessionCreationFailed(long requestId)
+    notifySessionCreated(long requestId, android.media.RoutingSessionInfo sessionInfo)
     notifySessionReleased(java.lang.String sessionId)
     notifySessionUpdated(android.media.RoutingSessionInfo sessionInfo)
     onBind(android.content.Intent intent)
@@ -9385,8 +9375,9 @@ package android.media
     selectRoute(android.media.MediaRoute2Info route)
     setVolume(int volume)
   class MediaRouter2.TransferCallback
-    onTransferFailed(android.media.MediaRoute2Info requestedRoute)
-    onTransferred(android.media.MediaRouter2.RoutingController oldController, android.media.MediaRouter2.RoutingController newController)
+    onStop(android.media.MediaRouter2.RoutingController controller)
+    onTransfer(android.media.MediaRouter2.RoutingController oldController, android.media.MediaRouter2.RoutingController newController)
+    onTransferFailure(android.media.MediaRoute2Info requestedRoute)
   class MediaScannerConnection
     #ctor(android.content.Context context, android.media.MediaScannerConnection.MediaScannerConnectionClient client)
     onServiceConnected(android.content.ComponentName className, android.os.IBinder service)
@@ -9541,6 +9532,7 @@ package android.media
     #ctor(android.media.RoutingSessionInfo sessionInfo)
     #ctor(java.lang.String id, java.lang.String clientPackageName)
     setControlHints(android.os.Bundle controlHints)
+    setName(java.lang.CharSequence name)
     setVolume(int volume)
     setVolumeHandling(int volumeHandling)
     setVolumeMax(int volumeMax)
@@ -10308,7 +10300,7 @@ package android.net
     registerConnectivityDiagnosticsCallback(android.net.NetworkRequest request, java.util.concurrent.Executor e, android.net.ConnectivityDiagnosticsManager.ConnectivityDiagnosticsCallback callback)
     unregisterConnectivityDiagnosticsCallback(android.net.ConnectivityDiagnosticsManager.ConnectivityDiagnosticsCallback callback)
   class ConnectivityDiagnosticsManager.ConnectivityDiagnosticsCallback
-    onConnectivityReport(android.net.ConnectivityDiagnosticsManager.ConnectivityReport report)
+    onConnectivityReportAvailable(android.net.ConnectivityDiagnosticsManager.ConnectivityReport report)
     onDataStallSuspected(android.net.ConnectivityDiagnosticsManager.DataStallReport report)
     onNetworkConnectivityReported(android.net.Network network, boolean hasConnectivity)
   class ConnectivityDiagnosticsManager.ConnectivityReport
@@ -10461,25 +10453,17 @@ package android.net
     openConnection(java.net.URL url, java.net.Proxy proxy)
     writeToParcel(android.os.Parcel dest, int flags)
   class NetworkCapabilities
-    addCapability(int capability)
-    addTransportType(int transportType)
     equals(java.lang.Object obj)
     hasCapability(int capability)
     hasTransport(int transportType)
     #ctor(android.net.NetworkCapabilities nc)
-    removeCapability(int capability)
-    setCapability(int capability, boolean value)
-    setLinkDownstreamBandwidthKbps(int downKbps)
-    setLinkUpstreamBandwidthKbps(int upKbps)
-    setNetworkSpecifier(android.net.NetworkSpecifier networkSpecifier)
-    setOwnerUid(int uid)
-    setSignalStrength(int signalStrength)
     writeToParcel(android.os.Parcel dest, int flags)
   class NetworkInfo
     #ctor(int type, int subtype, java.lang.String typeName, java.lang.String subtypeName)
     setDetailedState(android.net.NetworkInfo.DetailedState detailedState, java.lang.String reason, java.lang.String extraInfo)
     writeToParcel(android.os.Parcel dest, int flags)
   class NetworkRequest
+    canBeSatisfiedBy(android.net.NetworkCapabilities nc)
     equals(java.lang.Object obj)
     hasCapability(int capability)
     hasTransport(int transportType)
@@ -10858,6 +10842,11 @@ package android.net.wifi
   class WifiInfo
     getDetailedStateOf(android.net.wifi.SupplicantState suppState)
     writeToParcel(android.os.Parcel dest, int flags)
+  class WifiInfo.Builder
+    setBssid(java.lang.String bssid)
+    setNetworkId(int networkId)
+    setRssi(int rssi)
+    setSsid(byte[] ssid)
   class WifiManager
     addNetwork(android.net.wifi.WifiConfiguration config)
     addNetworkSuggestions(java.util.List<android.net.wifi.WifiNetworkSuggestion> networkSuggestions)
@@ -12530,6 +12519,7 @@ package android.os
     getStorageState(java.io.File path)
     isExternalStorageEmulated(java.io.File path)
     isExternalStorageLegacy(java.io.File path)
+    isExternalStorageManager(java.io.File path)
     isExternalStorageRemovable(java.io.File path)
   class FileObserver
     #ctor(java.io.File file)
@@ -12599,6 +12589,8 @@ package android.os
     queryLocalInterface(java.lang.String descriptor)
     transact(int code, android.os.Parcel data, android.os.Parcel reply, int flags)
     unlinkToDeath(android.os.IBinder.DeathRecipient recipient, int flags)
+  class LimitExceededException
+    #ctor(java.lang.String message)
   class LocaleList
     equals(java.lang.Object other)
     forLanguageTags(java.lang.String list)
@@ -12748,6 +12740,7 @@ package android.os
     open(java.io.File file, int mode, android.os.Handler handler, android.os.ParcelFileDescriptor.OnCloseListener listener)
     #ctor(android.os.ParcelFileDescriptor wrapped)
     parseMode(java.lang.String mode)
+    wrap(android.os.ParcelFileDescriptor pfd, android.os.Handler handler, android.os.ParcelFileDescriptor.OnCloseListener listener)
     writeToParcel(android.os.Parcel out, int flags)
   class ParcelFileDescriptor.AutoCloseInputStream
     #ctor(android.os.ParcelFileDescriptor pfd)
@@ -12935,9 +12928,6 @@ package android.os
     set(android.os.WorkSource other)
     #ctor(android.os.WorkSource orig)
     writeToParcel(android.os.Parcel dest, int flags)
-
-package android.os.ext.test
-;---------------------------------------
 
 package android.os.health
 ;---------------------------------------
@@ -14518,7 +14508,7 @@ package android.security.identity
     #ctor(java.lang.String message, java.lang.Throwable cause)
   class PersonalizationData.Builder
     addAccessControlProfile(android.security.identity.AccessControlProfile profile)
-    setEntry(java.lang.String namespace, java.lang.String name, java.util.Collection<android.security.identity.AccessControlProfileId> accessControlProfileIds, byte[] value)
+    putEntry(java.lang.String namespace, java.lang.String name, java.util.Collection<android.security.identity.AccessControlProfileId> accessControlProfileIds, byte[] value)
   class ResultData
     getEntry(java.lang.String namespaceName, java.lang.String name)
     getEntryNames(java.lang.String namespaceName)
@@ -14635,9 +14625,9 @@ package android.service.autofill
     writeToParcel(android.os.Parcel parcel, int flags)
   class Dataset.Builder
     #ctor(android.widget.RemoteViews presentation)
-    #ctor(android.widget.RemoteViews presentation, android.service.autofill.InlinePresentation inlinePresentation)
     setAuthentication(android.content.IntentSender authentication)
     setId(java.lang.String id)
+    setInlinePresentation(android.service.autofill.InlinePresentation inlinePresentation)
     setValue(android.view.autofill.AutofillId id, android.view.autofill.AutofillValue value)
     setValue(android.view.autofill.AutofillId id, android.view.autofill.AutofillValue value, android.widget.RemoteViews presentation)
     setValue(android.view.autofill.AutofillId id, android.view.autofill.AutofillValue value, android.widget.RemoteViews presentation, android.service.autofill.InlinePresentation inlinePresentation)
@@ -14663,7 +14653,6 @@ package android.service.autofill
     writeToParcel(android.os.Parcel parcel, int flags)
   class FillResponse.Builder
     addDataset(android.service.autofill.Dataset dataset)
-    addInlineAction(android.service.autofill.InlinePresentation inlineAction)
     disableAutofill(long duration)
     setAuthentication(android.view.autofill.AutofillId[] ids, android.content.IntentSender authentication, android.widget.RemoteViews presentation)
     setAuthentication(android.view.autofill.AutofillId[] ids, android.content.IntentSender authentication, android.widget.RemoteViews presentation, android.service.autofill.InlinePresentation inlinePresentation)
@@ -14685,7 +14674,7 @@ package android.service.autofill
     #ctor(android.view.autofill.AutofillId id, java.util.regex.Pattern regex, int resId, java.lang.CharSequence contentDescription)
   class InlinePresentation
     equals(java.lang.Object o)
-    #ctor(android.app.slice.Slice slice, android.view.inline.InlinePresentationSpec inlinePresentationSpec, boolean pinned)
+    #ctor(android.app.slice.Slice slice, android.widget.inline.InlinePresentationSpec inlinePresentationSpec, boolean pinned)
     writeToParcel(android.os.Parcel dest, int flags)
   class LuhnChecksumValidator
     #ctor(android.view.autofill.AutofillId... ids)
@@ -14812,11 +14801,10 @@ package android.service.controls
     setTitle(java.lang.CharSequence title)
     setZone(java.lang.CharSequence zone)
   class ControlsProviderService
-    loadAvailableControls(java.util.function.Consumer<java.util.List<android.service.controls.Control>> consumer)
+    createPublisherFor(java.util.List<java.lang.String> controlIds)
     onBind(android.content.Intent intent)
     onUnbind(android.content.Intent intent)
     performControlAction(java.lang.String controlId, android.service.controls.actions.ControlAction action, java.util.function.Consumer<java.lang.Integer> consumer)
-    publisherFor(java.util.List<java.lang.String> controlIds)
     requestAddControl(android.content.Context context, android.content.ComponentName componentName, android.service.controls.Control control)
   class DeviceTypes
     validDeviceType(int deviceType)
@@ -14837,9 +14825,6 @@ package android.service.controls.actions
   class ModeAction
     #ctor(java.lang.String templateId, int newMode)
     #ctor(java.lang.String templateId, int newMode, java.lang.String challengeValue)
-  class MultiFloatAction
-    #ctor(java.lang.String templateId, float[] newValues)
-    #ctor(java.lang.String templateId, float[] newValues, java.lang.String challengeValue)
 
 package android.service.controls.templates
 ;---------------------------------------
@@ -14852,8 +14837,6 @@ package android.service.controls.templates
     #ctor(java.lang.String templateId)
   class TemperatureControlTemplate
     #ctor(java.lang.String templateId, android.service.controls.templates.ControlTemplate controlTemplate, int currentMode, int currentActiveMode, int modesFlag)
-  class ThumbnailTemplate
-    #ctor(java.lang.String templateId, android.graphics.drawable.Icon thumbnail, java.lang.CharSequence contentDescription)
   class ToggleRangeTemplate
     #ctor(java.lang.String templateId, android.service.controls.templates.ControlButton button, android.service.controls.templates.RangeTemplate range)
     #ctor(java.lang.String templateId, boolean checked, java.lang.CharSequence actionDescription, android.service.controls.templates.RangeTemplate range)
@@ -15559,13 +15542,9 @@ package android.telecom
     createRemoteOutgoingConnection(android.telecom.PhoneAccountHandle connectionManagerPhoneAccount, android.telecom.ConnectionRequest request)
     onBind(android.content.Intent intent)
     onConference(android.telecom.Connection connection1, android.telecom.Connection connection2)
-    onCreateIncomingConference(android.telecom.PhoneAccountHandle connectionManagerPhoneAccount, android.telecom.ConnectionRequest request)
-    onCreateIncomingConferenceFailed(android.telecom.PhoneAccountHandle connectionManagerPhoneAccount, android.telecom.ConnectionRequest request)
     onCreateIncomingConnection(android.telecom.PhoneAccountHandle connectionManagerPhoneAccount, android.telecom.ConnectionRequest request)
     onCreateIncomingConnectionFailed(android.telecom.PhoneAccountHandle connectionManagerPhoneAccount, android.telecom.ConnectionRequest request)
     onCreateIncomingHandoverConnection(android.telecom.PhoneAccountHandle fromPhoneAccountHandle, android.telecom.ConnectionRequest request)
-    onCreateOutgoingConference(android.telecom.PhoneAccountHandle connectionManagerPhoneAccount, android.telecom.ConnectionRequest request)
-    onCreateOutgoingConferenceFailed(android.telecom.PhoneAccountHandle connectionManagerPhoneAccount, android.telecom.ConnectionRequest request)
     onCreateOutgoingConnection(android.telecom.PhoneAccountHandle connectionManagerPhoneAccount, android.telecom.ConnectionRequest request)
     onCreateOutgoingConnectionFailed(android.telecom.PhoneAccountHandle connectionManagerPhoneAccount, android.telecom.ConnectionRequest request)
     onCreateOutgoingHandoverConnection(android.telecom.PhoneAccountHandle fromPhoneAccountHandle, android.telecom.ConnectionRequest request)
@@ -15783,7 +15762,7 @@ package android.telephony
     equals(java.lang.Object other)
     writeToParcel(android.os.Parcel dest, int flags)
   class CellInfo
-    equals(java.lang.Object other)
+    equals(java.lang.Object o)
     writeToParcel(android.os.Parcel dest, int flags)
   class CellInfoCdma
     equals(java.lang.Object other)
@@ -15826,9 +15805,6 @@ package android.telephony
   class ClosedSubscriberGroupInfo
     equals(java.lang.Object other)
     writeToParcel(android.os.Parcel dest, int type)
-  class DisplayInfo
-    equals(java.lang.Object o)
-    writeToParcel(android.os.Parcel dest, int flags)
   class IccOpenLogicalChannelResponse
     writeToParcel(android.os.Parcel out, int flags)
   class MbmsDownloadSession
@@ -15853,9 +15829,6 @@ package android.telephony
     create(android.content.Context context, java.util.concurrent.Executor executor, int subscriptionId, android.telephony.mbms.MbmsStreamingSessionCallback callback)
     requestUpdateStreamingServices(java.util.List<java.lang.String> serviceClassList)
     startStreaming(android.telephony.mbms.StreamingServiceInfo serviceInfo, java.util.concurrent.Executor executor, android.telephony.mbms.StreamingServiceCallback callback)
-  class MmsManager
-    downloadMultimediaMessage(int subId, java.lang.String locationUrl, android.net.Uri contentUri, android.os.Bundle configOverrides, android.app.PendingIntent downloadedIntent, long messageId)
-    sendMultimediaMessage(int subId, android.net.Uri contentUri, java.lang.String locationUrl, android.os.Bundle configOverrides, android.app.PendingIntent sentIntent, long messageId)
   class NeighboringCellInfo
     #ctor(android.os.Parcel in)
     #ctor(int rssi, int cid)
@@ -15869,9 +15842,6 @@ package android.telephony
   class NetworkScanRequest
     equals(java.lang.Object o)
     #ctor(int scanType, android.telephony.RadioAccessSpecifier[] specifiers, int searchPeriodicity, int maxSearchTime, boolean incrementalResults, int incrementalResultsPeriodicity, java.util.ArrayList<java.lang.String> mccMncs)
-    writeToParcel(android.os.Parcel dest, int flags)
-  class PhoneCapability
-    equals(java.lang.Object o)
     writeToParcel(android.os.Parcel dest, int flags)
   class PhoneNumberFormattingTextWatcher
     afterTextChanged(android.text.Editable s)
@@ -15934,7 +15904,7 @@ package android.telephony
     onDataActivity(int direction)
     onDataConnectionStateChanged(int state)
     onDataConnectionStateChanged(int state, int networkType)
-    onDisplayInfoChanged(android.telephony.DisplayInfo displayInfo)
+    onDisplayInfoChanged(android.telephony.TelephonyDisplayInfo telephonyDisplayInfo)
     onImsCallDisconnectCauseChanged(android.telephony.ims.ImsReasonInfo imsReasonInfo)
     onMessageWaitingIndicatorChanged(boolean mwi)
     onPreciseDataConnectionStateChanged(android.telephony.PreciseDataConnectionState dataConnectionState)
@@ -15976,6 +15946,7 @@ package android.telephony
     sendDataMessage(java.lang.String destinationAddress, java.lang.String scAddress, short destinationPort, byte[] data, android.app.PendingIntent sentIntent, android.app.PendingIntent deliveryIntent)
     sendMultimediaMessage(android.content.Context context, android.net.Uri contentUri, java.lang.String locationUrl, android.os.Bundle configOverrides, android.app.PendingIntent sentIntent)
     sendMultipartTextMessage(java.lang.String destinationAddress, java.lang.String scAddress, java.util.ArrayList<java.lang.String> parts, java.util.ArrayList<android.app.PendingIntent> sentIntents, java.util.ArrayList<android.app.PendingIntent> deliveryIntents)
+    sendMultipartTextMessage(java.lang.String destinationAddress, java.lang.String scAddress, java.util.List<java.lang.String> parts, java.util.List<android.app.PendingIntent> sentIntents, java.util.List<android.app.PendingIntent> deliveryIntents, java.lang.String packageName, java.lang.String attributionTag)
     sendMultipartTextMessage(java.lang.String destinationAddress, java.lang.String scAddress, java.util.List<java.lang.String> parts, java.util.List<android.app.PendingIntent> sentIntents, java.util.List<android.app.PendingIntent> deliveryIntents, long messageId)
     sendTextMessage(java.lang.String destinationAddress, java.lang.String scAddress, java.lang.String text, android.app.PendingIntent sentIntent, android.app.PendingIntent deliveryIntent)
     sendTextMessage(java.lang.String destinationAddress, java.lang.String scAddress, java.lang.String text, android.app.PendingIntent sentIntent, android.app.PendingIntent deliveryIntent, long messageId)
@@ -16032,6 +16003,9 @@ package android.telephony
     setNetworkTypes(int[] networkTypes)
     setSummary(java.lang.CharSequence summary)
     setTitle(java.lang.CharSequence title)
+  class TelephonyDisplayInfo
+    equals(java.lang.Object o)
+    writeToParcel(android.os.Parcel dest, int flags)
   class TelephonyManager
     createForPhoneAccountHandle(android.telecom.PhoneAccountHandle phoneAccountHandle)
     createForSubscriptionId(int subId)
@@ -16053,6 +16027,7 @@ package android.telephony
     iccTransmitApduBasicChannel(int cla, int instruction, int p1, int p2, int p3, java.lang.String data)
     iccTransmitApduLogicalChannel(int channel, int cla, int instruction, int p1, int p2, int p3, java.lang.String data)
     isEmergencyNumber(java.lang.String number)
+    isModemEnabledForSlot(int slotIndex)
     isVoicemailVibrationEnabled(android.telecom.PhoneAccountHandle accountHandle)
     listen(android.telephony.PhoneStateListener listener, int events)
     requestCellInfoUpdate(java.util.concurrent.Executor executor, android.telephony.TelephonyManager.CellInfoCallback callback)
@@ -16065,6 +16040,7 @@ package android.telephony
     setForbiddenPlmns(java.util.List<java.lang.String> fplmns)
     setLine1NumberForDisplay(java.lang.String alphaTag, java.lang.String number)
     setNetworkSelectionModeManual(java.lang.String operatorNumeric, boolean persistSelection)
+    setNetworkSelectionModeManual(java.lang.String operatorNumeric, boolean persistSelection, int ran)
     setOperatorBrandOverride(java.lang.String brand)
     setPreferredOpportunisticDataSubscription(int subId, boolean needValidation, java.util.concurrent.Executor executor, java.util.function.Consumer<java.lang.Integer> callback)
     setVisualVoicemailSmsFilterSettings(android.telephony.VisualVoicemailSmsFilterSettings settings)
@@ -16188,6 +16164,7 @@ package android.telephony.ims
 ;---------------------------------------
   class ImsManager
     getImsMmTelManager(int subscriptionId)
+    getImsRcsManager(int subscriptionId)
   class ImsMmTelManager
     getRegistrationState(java.util.concurrent.Executor executor, java.util.function.Consumer<java.lang.Integer> stateCallback)
     getRegistrationTransportType(java.util.concurrent.Executor executor, java.util.function.Consumer<java.lang.Integer> transportTypeCallback)
@@ -18242,8 +18219,8 @@ package android.view
     setVisibility(android.view.SurfaceControl sc, boolean visible)
     writeToParcel(android.os.Parcel dest, int flags)
   class SurfaceControlViewHost
-    addView(android.view.View view, int width, int height)
     relayout(int width, int height)
+    setView(android.view.View view, int width, int height)
     #ctor(android.content.Context context, android.view.Display display, android.os.IBinder hostToken)
   class SurfaceControlViewHost.SurfacePackage
     writeToParcel(android.os.Parcel out, int flags)
@@ -19223,6 +19200,7 @@ package android.view
     equals(java.lang.Object o)
     getInsets(int typeMask)
     getInsetsIgnoringVisibility(int typeMask)
+    inset(android.graphics.Insets insets)
     inset(int left, int top, int right, int bottom)
     isVisible(int typeMask)
     replaceSystemWindowInsets(android.graphics.Rect systemWindowInsets)
@@ -19256,13 +19234,19 @@ package android.view
     finish(boolean shown)
     setInsetsAndAlpha(android.graphics.Insets insets, float alpha, float fraction)
   interface WindowInsetsAnimationControlListener
+    onCancelled(android.view.WindowInsetsAnimationController controller)
+    onFinished(android.view.WindowInsetsAnimationController controller)
     onReady(android.view.WindowInsetsAnimationController controller, int types)
   interface WindowInsetsController
-    controlWindowInsetsAnimation(int types, long durationMillis, android.view.animation.Interpolator interpolator, android.view.WindowInsetsAnimationControlListener listener)
+    addOnControllableInsetsChangedListener(android.view.WindowInsetsController.OnControllableInsetsChangedListener listener)
+    controlWindowInsetsAnimation(int types, long durationMillis, android.view.animation.Interpolator interpolator, android.os.CancellationSignal cancellationSignal, android.view.WindowInsetsAnimationControlListener listener)
     hide(int types)
+    removeOnControllableInsetsChangedListener(android.view.WindowInsetsController.OnControllableInsetsChangedListener listener)
     setSystemBarsAppearance(int appearance, int mask)
     setSystemBarsBehavior(int behavior)
     show(int types)
+  interface WindowInsetsController.OnControllableInsetsChangedListener
+    onControllableInsetsChanged(android.view.WindowInsetsController controller, int typeMask)
   interface WindowManager
     removeViewImmediate(android.view.View view)
   class WindowManager.BadTokenException
@@ -19286,7 +19270,7 @@ package android.view
     #ctor(int w, int h, int xpos, int ypos, int _type, int _flags, int _format)
     writeToParcel(android.os.Parcel out, int parcelableFlags)
   class WindowMetrics
-    #ctor(android.util.Size size, android.view.WindowInsets windowInsets)
+    #ctor(android.graphics.Rect bounds, android.view.WindowInsets windowInsets)
 
 package android.view.accessibility
 ;---------------------------------------
@@ -19681,6 +19665,7 @@ package android.view.contentcapture
     newVirtualViewStructure(android.view.autofill.AutofillId parentId, long virtualId)
     notifyViewAppeared(android.view.ViewStructure node)
     notifyViewDisappeared(android.view.autofill.AutofillId id)
+    notifyViewInsetsChanged(android.graphics.Insets viewInsets)
     notifyViewsDisappeared(android.view.autofill.AutofillId hostId, long[] virtualIds)
     notifyViewTextChanged(android.view.autofill.AutofillId id, java.lang.CharSequence text)
     setContentCaptureContext(android.view.contentcapture.ContentCaptureContext context)
@@ -19698,15 +19683,6 @@ package android.view.contentcapture
   interface DataShareWriteAdapter
     onError(int errorCode)
     onWrite(android.os.ParcelFileDescriptor destination)
-
-package android.view.inline
-;---------------------------------------
-  class InlinePresentationSpec
-    equals(java.lang.Object o)
-    writeToParcel(android.os.Parcel dest, int flags)
-  class InlinePresentationSpec.Builder
-    #ctor(android.util.Size minSize, android.util.Size maxSize)
-    setStyle(android.os.Bundle value)
 
 package android.view.inputmethod
 ;---------------------------------------
@@ -19771,7 +19747,7 @@ package android.view.inputmethod
     writeToParcel(android.os.Parcel dest, int flags)
   class InlineSuggestion
     equals(java.lang.Object o)
-    inflate(android.content.Context context, android.util.Size size, java.util.concurrent.Executor callbackExecutor, java.util.function.Consumer<android.view.View> callback)
+    inflate(android.content.Context context, android.util.Size size, java.util.concurrent.Executor callbackExecutor, java.util.function.Consumer<android.widget.inline.InlineContentView> callback)
     writeToParcel(android.os.Parcel dest, int flags)
   class InlineSuggestionInfo
     equals(java.lang.Object o)
@@ -19780,9 +19756,10 @@ package android.view.inputmethod
     equals(java.lang.Object o)
     writeToParcel(android.os.Parcel dest, int flags)
   class InlineSuggestionsRequest.Builder
-    addPresentationSpecs(android.view.inline.InlinePresentationSpec value)
-    #ctor(java.util.List<android.view.inline.InlinePresentationSpec> presentationSpecs)
+    addInlinePresentationSpecs(android.widget.inline.InlinePresentationSpec value)
+    #ctor(java.util.List<android.widget.inline.InlinePresentationSpec> inlinePresentationSpecs)
     setExtras(android.os.Bundle value)
+    setInlinePresentationSpecs(java.util.List<android.widget.inline.InlinePresentationSpec> value)
     setMaxSuggestionCount(int value)
     setSupportedLocales(android.os.LocaleList value)
   class InlineSuggestionsResponse
@@ -22544,6 +22521,22 @@ package android.widget
     setZoomSpeed(long speed)
     #ctor(android.content.Context context)
     #ctor(android.content.Context context, android.util.AttributeSet attrs)
+
+package android.widget.inline
+;---------------------------------------
+  class InlineContentView
+    onLayout(boolean changed, int l, int t, int r, int b)
+    setSurfaceControlCallback(android.widget.inline.InlineContentView.SurfaceControlCallback callback)
+    setZOrderedOnTop(boolean onTop)
+  interface InlineContentView.SurfaceControlCallback
+    onCreated(android.view.SurfaceControl surfaceControl)
+    onDestroyed(android.view.SurfaceControl surfaceControl)
+  class InlinePresentationSpec
+    equals(java.lang.Object o)
+    writeToParcel(android.os.Parcel dest, int flags)
+  class InlinePresentationSpec.Builder
+    #ctor(android.util.Size minSize, android.util.Size maxSize)
+    setStyle(android.os.Bundle value)
 
 package dalvik.annotation
 ;---------------------------------------
