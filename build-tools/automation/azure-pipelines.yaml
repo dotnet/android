@@ -472,15 +472,10 @@ stages:
       parameters:
         configuration: $(ApkTestConfiguration)
 
-    - task: MSBuild@1
-      displayName: build apkdiff.csproj
+    - task: CmdLine@2
+      displayName: install apkdiff dotnet tool
       inputs:
-        solution: tools/apkdiff/apkdiff.csproj
-        configuration: $(ApkTestConfiguration)
-        msbuildArguments: >
-          /restore
-          /t:Build
-          /bl:$(System.DefaultWorkingDirectory)/bin/Test$(ApkTestConfiguration)/build-apkdiff.binlog
+        script: 'dotnet tool update apkdiff -g'
       continueOnError: true
 
     - task: MSBuild@1
