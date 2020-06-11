@@ -967,6 +967,7 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="AndroidPackageNamingPolicy=$(AndroidPackageNamingPolicy)" />
 		<_PropertyCacheItems Include="_NuGetAssetsTimestamp=$(_NuGetAssetsTimestamp)" />
 		<_PropertyCacheItems Include="TypeMapKind=$(_TypeMapKind)" />
+		<_PropertyCacheItems Include="AndroidSupportedAbis=$(AndroidSupportedAbis)" />
 	</ItemGroup>
 	<MakeDir Directories="$(_AndroidStampDirectory)" Condition="!Exists('$(_AndroidStampDirectory)')" />
 	<WriteLinesToFile

@@ -1181,5 +1181,18 @@ namespace Lib2
 				}
 			}
 		}
+
+		[Test]
+		public void ChangeSupportedAbis ()
+		{
+			var proj = new XamarinFormsAndroidApplicationProject ();
+			proj.SetProperty (KnownProperties.AndroidSupportedAbis, "armeabi-v7a");
+			using (var b = CreateApkBuilder ()) {
+				b.Build (proj);
+
+				var parameters = new [] { $"{KnownProperties.AndroidSupportedAbis}=x86" };
+				b.Build (proj, parameters: parameters, doNotCleanupOnUpdate: true);
+			}
+		}
 	}
 }
