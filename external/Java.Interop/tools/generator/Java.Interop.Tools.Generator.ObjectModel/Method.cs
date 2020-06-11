@@ -126,7 +126,7 @@ namespace MonoDroid.Generation
 		}
 
 		// Connectors for DIM are defined on the interface, not the implementing type
-		public string GetConnectorNameFull (CodeGenerationOptions opt) => ConnectorName + (opt.SupportDefaultInterfaceMethods && IsInterfaceDefaultMethod ? $":{DeclaringType.FullName}, " + (AssemblyName ?? opt.AssemblyName) : string.Empty);
+		public string GetConnectorNameFull (CodeGenerationOptions opt) => ConnectorName + (opt.SupportDefaultInterfaceMethods && IsInterfaceDefaultMethod ? $":{DeclaringType.AssemblyQualifiedName}, " + (AssemblyName ?? opt.AssemblyName) : string.Empty);
 
 		internal string GetDelegateType (CodeGenerationOptions opt) => opt.GetJniMarshalDelegate (this);
 

@@ -431,5 +431,36 @@ namespace generatortests
 			Assert.False (generated.Contains ("StaticMethod"));
 			Assert.False (generated.Contains ("DefaultMethod"));
 		}
+
+		[Test]
+		public void GenerateProperNestedInterfaceSignatures ()
+		{
+			// https://github.com/xamarin/java.interop/issues/661
+			// Ensure that when we write the invoker type for a nested default interface method
+			// we use `/` to denote nested as needed by Type.GetType ()
+			var xml = @"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/EmptyOverrideClass;' />
+			  </package>
+			  <package name='com.xamarin.android' jni-name='com/xamarin/android'>
+			    <class extends='java.lang.Object' abstract='true' deprecated='not deprecated' final='false' name='Application' static='true' visibility='public' jni-signature='Landroid/app/Application$ActivityLifecycleCallbacks;' />
+			    <interface abstract='true' deprecated='not deprecated' final='false' name='Application.ActivityLifecycleInterface' static='true' visibility='public' jni-signature='Landroid/app/Application$ActivityLifecycleCallbacks;'>
+			      <method abstract='false' deprecated='not deprecated' final='false' name='onActivityDestroyed' jni-signature='(Landroid/app/Activity;)V' bridge='false' native='false' return='void' jni-return='V' static='false' synchronized='false' synthetic='false' visibility='public'>
+			        <parameter name='activity' type='int' jni-type='I' not-null='true'></parameter>
+			      </method>
+			    </interface>
+			  </package>
+			</api>";
+
+			var gens = ParseApiDefinition (xml);
+			var iface = gens[1].NestedTypes.OfType<InterfaceGen> ().Single ();
+
+			generator.WriteInterface (iface, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
+
+			var generated = writer.ToString ();
+
+			Assert.True (generated.Contains ("GetOnActivityDestroyed_IHandler:Com.Xamarin.Android.Application/IActivityLifecycleInterface, MyAssembly"));
+			Assert.False (generated.Contains ("GetOnActivityDestroyed_IHandler:Com.Xamarin.Android.Application.IActivityLifecycleInterface, MyAssembly"));
+		}
 	}
 }
