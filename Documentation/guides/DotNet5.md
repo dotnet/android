@@ -131,8 +131,10 @@ Play. It could be able to sign the `.apk` or `.aab` with different
 keys. As a starting point, this would copy the output to a `publish`
 directory on disk.
 
-Down the road `dotnet run` would be used to launch applications on a
-device or emulator.
+`dotnet run` can be used to launch applications on a
+device or emulator via the `--project` switch:
+
+    dotnet run --project HelloAndroid.csproj
 
 [illink]: https://github.com/mono/linker/blob/master/src/linker/README.md
 
