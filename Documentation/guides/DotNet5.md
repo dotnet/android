@@ -127,9 +127,9 @@ This means Xamarin.Android would run:
 * Create an `.apk` or `.aab` and sign it
 
 `dotnet publish` will be reserved for publishing an app for Google
-Play. It could be able to sign the `.apk` or `.aab` with different
-keys. As a starting point, this would copy the output to a `publish`
-directory on disk.
+Play, ad-hoc distribution, etc. It could be able to sign the `.apk` or
+`.aab` with different keys. As a starting point, this will currently
+copy the output to a `publish` directory on disk.
 
 Down the road `dotnet run` would be used to launch applications on a
 device or emulator.

@@ -139,6 +139,32 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void DotNetPublish ([Values (false, true)] bool isRelease)
+		{
+			const string runtimeIdentifier = "android.21-arm";
+			var proj = new XASdkProject {
+				IsRelease = isRelease
+			};
+			proj.SetProperty (KnownProperties.RuntimeIdentifier, runtimeIdentifier);
+			var dotnet = CreateDotNetBuilder (proj);
+			Assert.IsTrue (dotnet.Publish (), "first `dotnet publish` should succeed");
+
+			var publishDirectory = Path.Combine (Root, dotnet.ProjectDirectory, proj.OutputPath, runtimeIdentifier, "publish");
+			var apk = Path.Combine (publishDirectory, $"{proj.PackageName}.apk");
+			var apkSigned = Path.Combine (publishDirectory, $"{proj.PackageName}-Signed.apk");
+			FileAssert.Exists (apk);
+			FileAssert.Exists (apkSigned);
+
+			Assert.IsTrue (dotnet.Publish (parameters: new [] { "AndroidPackageFormat=aab" }), "second `dotnet publish` should succeed");
+			FileAssert.DoesNotExist (apk);
+			FileAssert.DoesNotExist (apkSigned);
+			var aab = Path.Combine (publishDirectory, $"{proj.PackageName}.aab");
+			var aabSigned = Path.Combine (publishDirectory, $"{proj.PackageName}-Signed.aab");
+			FileAssert.Exists (aab);
+			FileAssert.Exists (aabSigned);
+		}
+
+		[Test]
 		public void BuildWithLiteSdk ()
 		{
 			var proj = new XASdkProject () {
