@@ -7,6 +7,8 @@
   <PropertyGroup Condition="Exists('..\Configuration.props')">
     <TargetFrameworkVersion>$(AndroidFrameworkVersion)</TargetFrameworkVersion>
   </PropertyGroup>
+  <Import Project="VSAndroidAppProxy.targets" />
+  <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <OutputPath>..\..\bin\Test$(Configuration)</OutputPath>
@@ -25,6 +27,4 @@
   <Target Name="SignAndroidPackage">
     <MSBuild Projects="$(_OriginalProject)" Targets="Restore;SignAndroidPackage" Properties="$(_OverrideProps)" />
   </Target>
-  <Import Project="VSAndroidAppProxy.targets" />
-  <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
 </Project>
