@@ -27,6 +27,7 @@
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.BuildOrder.targets" />
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.Linker.targets" />
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.NuGet.targets" />
+  <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.Publish.targets" />
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.Tooling.targets" />
 
   <!-- Automatically supply project capabilities for IDE use -->

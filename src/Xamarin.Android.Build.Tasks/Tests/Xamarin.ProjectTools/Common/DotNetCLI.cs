@@ -74,15 +74,15 @@ namespace Xamarin.ProjectTools
 			return succeeded;
 		}
 
-		public bool Build (string target = null)
+		public bool Build (string target = null, string [] parameters = null)
 		{
-			var arguments = GetDefaultCommandLineArgs ("build", target);
+			var arguments = GetDefaultCommandLineArgs ("build", target, parameters);
 			return Execute (arguments.ToArray ());
 		}
 
-		public bool Publish (string target = null)
+		public bool Publish (string target = null, string [] parameters = null)
 		{
-			var arguments = GetDefaultCommandLineArgs ("publish", target);
+			var arguments = GetDefaultCommandLineArgs ("publish", target, parameters);
 			return Execute (arguments.ToArray ());
 		}
 
@@ -102,7 +102,7 @@ namespace Xamarin.ProjectTools
 			}
 		}
 
-		List<string> GetDefaultCommandLineArgs (string verb, string target = null)
+		List<string> GetDefaultCommandLineArgs (string verb, string target = null, string [] parameters = null)
 		{
 			string testDir = Path.GetDirectoryName (projectOrSolution);
 			if (string.IsNullOrEmpty (ProcessLogFile))
@@ -130,6 +130,11 @@ namespace Xamarin.ProjectTools
 			}
 			if (Directory.Exists (JavaSdkPath)) {
 				arguments.Add ($"/p:JavaSdkDirectory=\"{JavaSdkPath}\"");
+			}
+			if (parameters != null) {
+				foreach (var parameter in parameters) {
+					arguments.Add ($"/p:{parameter}");
+				}
 			}
 			return arguments;
 		}

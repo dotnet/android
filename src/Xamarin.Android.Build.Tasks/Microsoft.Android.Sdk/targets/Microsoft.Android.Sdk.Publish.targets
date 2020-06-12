@@ -1,0 +1,30 @@
+<!--
+***********************************************************************************************
+Microsoft.Android.Sdk.Publish.targets
+
+This file contains the implementation for 'dotnet publish'.
+
+***********************************************************************************************
+-->
+<Project>
+
+  <PropertyGroup>
+    <_PublishDependsOn>
+      Build;
+      PrepareForPublish;
+      _CalculateAndroidFilesToPublish;
+      CopyFilesToPublishDirectory;
+    </_PublishDependsOn>
+  </PropertyGroup>
+
+  <Target Name="Publish" DependsOnTargets="$(_PublishDependsOn)" />
+
+  <Target Name="_CalculateAndroidFilesToPublish">
+    <ItemGroup>
+      <_AndroidFilesToPublish Include="$(OutputPath)*.$(AndroidPackageFormat)" />
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" />
+      <ResolvedFileToPublish Include="@(_AndroidFilesToPublish)" RelativePath="%(FileName)%(Extension)" />
+    </ItemGroup>
+  </Target>
+
+</Project>
