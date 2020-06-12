@@ -397,7 +397,6 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\lib\x86_64\installer" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\protobuf-net.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\System.Collections.Immutable.dll" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.ResourceProcessors.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.AndroidTools.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.AndroidTools.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Installer.AndroidSDK.dll" />

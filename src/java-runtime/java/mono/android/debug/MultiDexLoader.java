@@ -69,7 +69,7 @@ import android.view.ContextThemeWrapper;
 public class MultiDexLoader extends ContentProvider {
 
 	static final int KITKAT = 19;
-	
+
 	@Override
 	public boolean onCreate ()
 	{
@@ -79,7 +79,12 @@ public class MultiDexLoader extends ContentProvider {
 	@Override
 	public void attachInfo (android.content.Context context, android.content.pm.ProviderInfo info)
 	{
-		String incrementalDeploymentDir = MonkeyPatcher.getIncrementalDeploymentDir (context);
+		String incrementalDeploymentDir = new File (
+ 			android.os.Environment.getExternalStorageDirectory (),
+ 			"Android/data/" + context.getPackageName ()).getAbsolutePath ();
+ 		incrementalDeploymentDir = new File (incrementalDeploymentDir).exists () ?
+ 			incrementalDeploymentDir + "/files/" :
+ 			context.getFilesDir () + "/";
 
 		File codeCacheDir = context.getCacheDir ();
 		String nativeLibDir = context.getApplicationInfo ().nativeLibraryDir;
@@ -96,13 +101,14 @@ public class MultiDexLoader extends ContentProvider {
 				dexes);
 		}
 		super.attachInfo (context, info);
-		
+
 	}
 
 	private List<String> getDexList (String packageName, String incrementalDeploymentDir)
 	{
 		List<String> result = new ArrayList<String> ();
 		String dexDirectory = incrementalDeploymentDir + ".__override__/dexes";
+		Log.v("MultiDexLoader", dexDirectory);
 		File[] dexes = new File (dexDirectory).listFiles ();
 		// It is not illegal state when it was launched to start Seppuku
 		if (dexes == null) {
@@ -119,7 +125,7 @@ public class MultiDexLoader extends ContentProvider {
 
 		return result;
 	}
-	
+
 	// ---
 	@Override
 	public android.database.Cursor query (android.net.Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder)
@@ -149,5 +155,5 @@ public class MultiDexLoader extends ContentProvider {
 	public int update (android.net.Uri uri, android.content.ContentValues values, String where, String[] whereArgs)
 	{
 		throw new RuntimeException ("This operation is not supported.");
-	} 
+	}
 }
