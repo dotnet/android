@@ -16,7 +16,7 @@
     <_OriginalProject>VSAndroidApp/VSAndroidApp.csproj</_OriginalProject>
   </PropertyGroup>
   <Target Name="Build">
-    <MSBuild Projects="$(_OriginalProject)" Targets="Restore;Build" Properties="$(_OverrideProps)" />
+    <MSBuild Projects="$(_OriginalProject)" Targets="Build" Properties="$(_OverrideProps)" />
   </Target>
   <Target Name="Restore">
     <MSBuild Projects="$(_OriginalProject)" Targets="Restore" Properties="$(_OverrideProps)" />
@@ -25,6 +25,6 @@
     <MSBuild Projects="$(_OriginalProject)" Targets="Clean" Properties="$(_OverrideProps)" />
   </Target>
   <Target Name="SignAndroidPackage">
-    <MSBuild Projects="$(_OriginalProject)" Targets="Restore;SignAndroidPackage" Properties="$(_OverrideProps)" />
+    <MSBuild Projects="$(_OriginalProject)" Targets="SignAndroidPackage" Properties="$(_OverrideProps)" />
   </Target>
 </Project>
