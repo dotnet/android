@@ -177,6 +177,7 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\libZipSharp.dll.config" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\libZipSharp.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Posix.NETStandard.dll" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Posix.NETStandard.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Profiler.Log.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Profiler.Log.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\logcat-parse.exe" Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
