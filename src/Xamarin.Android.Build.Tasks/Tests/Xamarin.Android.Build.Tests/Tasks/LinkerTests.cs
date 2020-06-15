@@ -202,5 +202,54 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "warning XA2000: Use of AppDomain.CreateDomain()"), "Should warn XA2000 about creating AppDomain.");
 			}
 		}
+
+		[Test]
+		public void LinkDescription ()
+		{
+			string linker_xml = "<linker/>";
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				OtherBuildItems = {
+					new BuildItem ("LinkDescription", "linker.xml") {
+						TextContent = () => linker_xml
+					}
+				}
+			};
+			// So we can use Mono.Cecil to open assemblies directly
+			proj.SetProperty ("AndroidEnableAssemblyCompression", "False");
+
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
+
+				linker_xml =
+@"<linker>
+	<assembly fullname=""mscorlib"">
+		<type fullname=""System.Console"">
+			<method name=""Beep"" />
+		</type>
+	</assembly>
+</linker>";
+				proj.Touch ("linker.xml");
+
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build should have succeeded.");
+
+				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}.apk");
+				FileAssert.Exists (apk);
+				using (var zip = ZipHelper.OpenZip (apk)) {
+					var entry = zip.ReadEntry ("assemblies/mscorlib.dll");
+					Assert.IsNotNull (entry, "mscorlib.dll should exist in apk!");
+					using (var stream = new MemoryStream ()) {
+						entry.Extract (stream);
+						stream.Position = 0;
+						using (var assembly = AssemblyDefinition.ReadAssembly (stream)) {
+							var type = assembly.MainModule.GetType ("System.Console");
+							var method = type.Methods.FirstOrDefault (p => p.Name == "Beep");
+							Assert.IsNotNull (method, "System.Console.Beep should exist!");
+						}
+					}
+				}
+			}
+		}
 	}
 }
