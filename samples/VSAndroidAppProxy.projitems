@@ -6,7 +6,7 @@
   <ItemGroup>
     <TestApk Include="$(OutputPath)\$(_Package)-Signed.apk">
       <Package>$(_Package)</Package>
-      <Activity>crc642ec1a13c712a06e8.MainActivity</Activity>
+      <Activity>$(_Package)/crc642ec1a13c712a06e8.MainActivity</Activity>
       <ResultsPath></ResultsPath>
     </TestApk>
   </ItemGroup>
