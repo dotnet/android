@@ -111,6 +111,7 @@ namespace Xamarin.Android.Build.Tests
 		};
 
 		[Test]
+		[Category ("dotnet")]
 		[TestCaseSource (nameof (BuildHasNoWarningsSource))]
 		public void BuildHasNoWarnings (bool isRelease, bool xamarinForms, bool multidex, string packageFormat)
 		{
@@ -128,7 +129,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 			proj.SetProperty ("XamarinAndroidSupportSkipVerifyVersions", "True"); // Disables API 29 warning in Xamarin.Build.Download
 			proj.SetProperty ("AndroidPackageFormat", packageFormat);
-			if (proj.IsRelease = isRelease) {
+			if (proj.IsRelease = isRelease && !Builder.UseDotNet) {
 				proj.SetProperty ("MonoSymbolArchive", "True");
 			}
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {

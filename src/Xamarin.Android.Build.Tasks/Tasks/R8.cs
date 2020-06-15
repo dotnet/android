@@ -2,7 +2,6 @@
 using Microsoft.Build.Utilities;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 namespace Xamarin.Android.Tasks
 {
@@ -17,8 +16,6 @@ namespace Xamarin.Android.Tasks
 
 		[Required]
 		public string AndroidSdkBuildToolsPath { get; set; }
-		[Required]
-		public string AndroidSdkDirectory { get; set; }
 
 		// multidex
 		public bool EnableMultiDex { get; set; }
@@ -32,7 +29,7 @@ namespace Xamarin.Android.Tasks
 		public string ProguardGeneratedReferenceConfiguration { get; set; }
 		public string ProguardGeneratedApplicationConfiguration { get; set; }
 		public string ProguardCommonXamarinConfiguration { get; set; }
-		public string ProguardConfigurationFiles { get; set; }
+		public string [] ProguardConfigurationFiles { get; set; }
 
 		protected override string MainClass => "com.android.tools.r8.R8";
 
@@ -122,17 +119,8 @@ namespace Xamarin.Android.Tasks
 				tempFiles.Add (temp);
 				cmd.AppendSwitchIfNotNull ("--pg-conf ", temp);
 			}
-			if (!string.IsNullOrEmpty (ProguardConfigurationFiles)) {
-				var configs = ProguardConfigurationFiles
-					.Replace ("{sdk.dir}", AndroidSdkDirectory + Path.DirectorySeparatorChar)
-					.Replace ("{intermediate.common.xamarin}", ProguardCommonXamarinConfiguration)
-					.Replace ("{intermediate.references}", ProguardGeneratedReferenceConfiguration)
-					.Replace ("{intermediate.application}", ProguardGeneratedApplicationConfiguration)
-					.Replace ("{project}", string.Empty) // current directory anyways.
-					.Split (';')
-					.Select (s => s.Trim ())
-					.Where (s => !string.IsNullOrWhiteSpace (s));
-				foreach (var file in configs) {
+			if (ProguardConfigurationFiles != null) {
+				foreach (var file in ProguardConfigurationFiles) {
 					if (File.Exists (file))
 						cmd.AppendSwitchIfNotNull ("--pg-conf ", file);
 					else

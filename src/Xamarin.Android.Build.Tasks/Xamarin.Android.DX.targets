@@ -32,7 +32,6 @@ Copyright (C) 2018 Xamarin. All rights reserved.
     <Proguard
         Condition=" '$(AndroidLinkTool)' == 'proguard' And '$(_ProguardProjectConfiguration)' != '' "
         ProguardJarPath="$(ProguardJarPath)"
-        AndroidSdkDirectory="$(_AndroidSdkDirectory)"
         JavaToolPath="$(JavaToolPath)"
         ProguardToolPath="$(ProguardToolPath)"
         ToolExe="$(ProguardToolExe)"
@@ -43,7 +42,7 @@ Copyright (C) 2018 Xamarin. All rights reserved.
         ProguardCommonXamarinConfiguration="$(IntermediateOutputPath)proguard\proguard_xamarin.cfg"
         ProguardGeneratedReferenceConfiguration="$(_ProguardProjectConfiguration)"
         ProguardGeneratedApplicationConfiguration="$(IntermediateOutputPath)proguard\proguard_project_primary.cfg"
-        ProguardConfigurationFiles="$(ProguardConfigFiles)"
+        ProguardConfigurationFiles="@(_ProguardConfiguration)"
         JavaLibrariesToEmbed="@(_JarsToProguard);@(_InstantRunJavaReference)"
         JavaLibrariesToReference="@(AndroidExternalJavaLibrary)"
         ProguardJarOutput="$(IntermediateOutputPath)proguard\__proguard_output__.jar"
