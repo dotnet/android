@@ -99,7 +99,11 @@
     <AllSupportedTargetAndroidAbis>$(AllSupported32BitTargetAndroidAbis);$(AllSupported64BitTargetAndroidAbis)</AllSupportedTargetAndroidAbis>
     <XABuildToolsVersion>29.0.2</XABuildToolsVersion>
     <XABuildToolsFolder Condition="'$(XABuildToolsFolder)' == ''">29.0.2</XABuildToolsFolder>
-    <XAPlatformToolsVersion>29.0.5</XAPlatformToolsVersion>
+
+    <!-- For some reason, the URL for the *macOS* version of platform-tools 30.0.2 is prefixed with what appears to be a GIT commit hash or some other checksum...
+         Linux and Windows packages don't have any prefix, but the macOS thing forces us to have *some* mechanism to handle this... -->
+    <XAPlatformToolsPackagePrefix Condition=" '$(HostOS)' == 'Darwin' ">b2be9c80582174e645d3736daa0d44d8610b38a8.</XAPlatformToolsPackagePrefix>
+    <XAPlatformToolsVersion>30.0.2</XAPlatformToolsVersion>
     <XAIncludeProprietaryBits Condition="'$(XAIncludeProprietaryBits)' == ''">False</XAIncludeProprietaryBits>
     <XABundleToolVersion Condition="'$(XABundleToolVersion)' == ''">0.14.0</XABundleToolVersion>
     <XAManifestMergerToolVersion Condition="'$(XAManifestMergerToolVersion)' == ''">26.5.0</XAManifestMergerToolVersion>
