@@ -727,7 +727,7 @@ namespace App1
 		}
 
 		[Test]
-		public void MissingSatelliteAssembly ()
+		public void MissingSatelliteAssemblyInLibrary ()
 		{
 			var path = Path.Combine ("temp", TestName);
 			var lib = new XamarinAndroidLibraryProject {
@@ -742,7 +742,7 @@ namespace App1
 				}
 			};
 
-			var app = new XamarinFormsMapsApplicationProject {
+			var app = new XamarinAndroidApplicationProject {
 				IsRelease = true,
 			};
 			app.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
@@ -756,9 +756,38 @@ namespace App1
 				Assert.IsTrue (appBuilder.Build (app), "App SignAndroidPackage should have succeeded.");
 
 				var apk = Path.Combine (Root, appBuilder.ProjectDirectory,
-					app.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
+					app.IntermediateOutputPath, "android", "bin", $"{app.PackageName}.apk");
 				using (var zip = ZipHelper.OpenZip (apk)) {
-					Assert.IsTrue (zip.ContainsEntry ("assemblies/es/Localization.resources.dll"), "Apk should contain satellite assemblies!");
+					Assert.IsTrue (zip.ContainsEntry ($"assemblies/es/{lib.ProjectName}.resources.dll"), "Apk should contain satellite assemblies!");
+				}
+			}
+		}
+
+		[Test]
+		public void MissingSatelliteAssemblyInApp ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				OtherBuildItems = {
+					new BuildItem ("EmbeddedResource", "Foo.resx") {
+						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancel</value></data>")
+					},
+					new BuildItem ("EmbeddedResource", "Foo.es.resx") {
+						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancelar</value></data>")
+					}
+				}
+			};
+
+			using (var b = CreateApkBuilder ()) {
+				b.Target = "Build";
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				b.Target = "SignAndroidPackage";
+				Assert.IsTrue (b.Build (proj), "SignAndroidPackage should have succeeded.");
+
+				var apk = Path.Combine (Root, b.ProjectDirectory,
+					proj.IntermediateOutputPath, "android", "bin", $"{proj.PackageName}.apk");
+				using (var zip = ZipHelper.OpenZip (apk)) {
+					Assert.IsTrue (zip.ContainsEntry ($"assemblies/es/{proj.ProjectName}.resources.dll"), "Apk should contain satellite assemblies!");
 				}
 			}
 		}

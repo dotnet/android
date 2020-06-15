@@ -2745,6 +2745,8 @@ because xbuild doesn't support framework reference assemblies.
     BuildOnlySettings;
     _CreatePropertiesCache;
     ResolveReferences;
+    PrepareResources;
+    CreateSatelliteAssemblies;
     _CopyPackage;
     _Sign;
   </SignAndroidPackageDependsOn>
