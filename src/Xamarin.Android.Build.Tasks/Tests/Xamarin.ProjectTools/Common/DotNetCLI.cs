@@ -88,8 +88,12 @@ namespace Xamarin.ProjectTools
 
 		public bool Run ()
 		{
-			//TODO: this should eventually run `dotnet run --project foo.csproj`
-			var arguments = GetDefaultCommandLineArgs ("build", "Run");
+			string binlog = Path.Combine (Path.GetDirectoryName (projectOrSolution), "msbuild.binlog");
+			var arguments = new List<string> {
+				"run",
+				"--project", $"\"{projectOrSolution}\"",
+				$"/bl:\"{binlog}\""
+			};
 			return Execute (arguments.ToArray ());
 		}
 

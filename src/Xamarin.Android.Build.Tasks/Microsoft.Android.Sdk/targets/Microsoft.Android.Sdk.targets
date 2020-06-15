@@ -41,6 +41,6 @@
   </ItemGroup>
 
   <!-- NOTE: We have to replace the Run target after Microsoft.NET.Sdk.targets are imported -->
-  <Target Name="Run" DependsOnTargets="Install;StartAndroidActivity" />
+  <Import Project="Microsoft.Android.Sdk.Application.targets" Condition=" '$(AndroidApplication)' == 'true' " />
 
 </Project>

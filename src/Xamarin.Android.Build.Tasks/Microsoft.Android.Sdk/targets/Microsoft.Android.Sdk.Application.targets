@@ -1,0 +1,18 @@
+<!--
+***********************************************************************************************
+Microsoft.Android.Sdk.Application.targets
+
+This file contains targets specific for Android application projects.
+
+***********************************************************************************************
+-->
+<Project>
+
+  <PropertyGroup>
+    <RunCommand>dotnet</RunCommand>
+    <RunArguments>build &quot;$(MSBuildProjectFullPath)&quot; -target:Run</RunArguments>
+  </PropertyGroup>
+
+  <Target Name="Run" DependsOnTargets="Install;StartAndroidActivity" />
+
+</Project>
