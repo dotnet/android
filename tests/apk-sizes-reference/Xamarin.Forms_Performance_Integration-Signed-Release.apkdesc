@@ -349,9 +349,6 @@
     "META-INF/proguard/androidx-annotations.pro": {
       "Size": 339
     },
-    "NOTICE": {
-      "Size": 157
-    },
     "res/anim/abc_fade_in.xml": {
       "Size": 388
     },

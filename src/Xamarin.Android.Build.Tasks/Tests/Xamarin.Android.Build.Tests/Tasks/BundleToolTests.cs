@@ -153,7 +153,6 @@ namespace Xamarin.Android.Build.Tests
 				"root/assemblies/Localization.dll",
 				"root/assemblies/es/Localization.resources.dll",
 				"root/assemblies/UnnamedProject.dll",
-				"root/NOTICE",
 				//These are random files from Google Play Services .jar/.aar files
 				"root/build-data.properties",
 				"root/com/google/api/client/repackaged/org/apache/commons/codec/language/dmrules.txt",
@@ -206,7 +205,6 @@ namespace Xamarin.Android.Build.Tests
 				"base/root/assemblies/Localization.dll",
 				"base/root/assemblies/es/Localization.resources.dll",
 				"base/root/assemblies/UnnamedProject.dll",
-				"base/root/NOTICE",
 				"BundleConfig.pb",
 				//These are random files from Google Play Services .jar/.aar files
 				"base/root/build-data.properties",
