@@ -2,14 +2,14 @@
 # First non-comment row is human description of columns
 Test Name,Time in ms (int)
 # Data
-Build_From_Clean_DontIncludeRestore,10500
-Build_No_Changes,2000
+Build_From_Clean_DontIncludeRestore,11000
+Build_No_Changes,2250
 Build_CSharp_Change,3350
-Build_AndroidResource_Change,3000
+Build_AndroidResource_Change,3250
 Build_AndroidManifest_Change,3500
 Build_Designer_Change,2650
-Build_JLO_Change,9600
-Build_CSProj_Change,10200
+Build_JLO_Change,10000
+Build_CSProj_Change,10750
 Build_XAML_Change,7250
 Build_XAML_Change_RefAssembly,4000
 Install_CSharp_Change,4000
