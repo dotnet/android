@@ -10,7 +10,7 @@ pr:
 
 # Global variables
 variables:
-  DotNetCoreVersion: 3.1.201
+  DotNetCoreVersion: 3.1.300
   HostedMac: Hosted Mac Internal
   HostedWinVS2019: Hosted Windows 2019 with VS2019
 
@@ -25,10 +25,7 @@ jobs:
   - checkout: self
     submodules: recursive
 
-  - task: UseDotNet@2
-    displayName: Use .NET Core $(DotNetCoreVersion)
-    inputs:
-      version: $(DotNetCoreVersion)
+  - template: templates\install-dependencies.yaml
 
   - task: NuGetToolInstaller@0
     inputs:
@@ -78,71 +75,13 @@ jobs:
   - checkout: self
     submodules: recursive
 
-  - task: UseDotNet@2
-    displayName: Use .NET Core $(DotNetCoreVersion)
-    inputs:
-      version: $(DotNetCoreVersion)
+  - template: templates\install-dependencies.yaml
 
-  - task: DotNetCoreCLI@2
-    displayName: Prepare Solution
-    inputs:
-      projects: Java.Interop.sln
-      arguments: '-c $(Build.Configuration) -target:Prepare'
+  - template: templates\core-build.yaml
 
-  - task: DotNetCoreCLI@2
-    displayName: Build Solution
-    inputs:
-      projects: Java.Interop.sln
-      arguments: '-c $(Build.Configuration)'
+  - template: templates\core-tests.yaml
 
-  - task: DotNetCoreCLI@2
-    displayName: 'Tests: Java.Interop.Tools.Generator'
-    inputs:
-      command: test
-      arguments: bin\Test$(Build.Configuration)\Java.Interop.Tools.Generator-Tests.dll
-    continueOnError: true
-
-  - task: DotNetCoreCLI@2
-    displayName: 'Tests: generator'
-    inputs:
-      command: test
-      arguments: bin\Test$(Build.Configuration)\generator-Tests.dll
-    continueOnError: true
-
-  - task: DotNetCoreCLI@2
-    displayName: 'Tests: JavaCallableWrappers'
-    inputs:
-      command: test
-      arguments: bin\Test$(Build.Configuration)\Java.Interop.Tools.JavaCallableWrappers-Tests.dll
-    continueOnError: true
-
-  - task: DotNetCoreCLI@2
-    displayName: 'Tests: logcat-parse'
-    inputs:
-      command: test
-      arguments: bin\Test$(Build.Configuration)\logcat-parse-Tests.dll
-    continueOnError: true
-
-  - task: DotNetCoreCLI@2
-    displayName: 'Tests: ApiXmlAdjuster'
-    inputs:
-      command: test
-      arguments: bin\Test$(Build.Configuration)\Xamarin.Android.Tools.ApiXmlAdjuster-Tests.dll
-    continueOnError: true
-
-  - task: DotNetCoreCLI@2
-    displayName: 'Tests: Bytecode'
-    inputs:
-      command: test
-      arguments: bin\Test$(Build.Configuration)\Xamarin.Android.Tools.Bytecode-Tests.dll
-    continueOnError: true
-
-  - powershell: |
-      Write-Host "Current job status is: $env:AGENT_JOBSTATUS"
-      if ($env:AGENT_JOBSTATUS -eq "SucceededWithIssues") {
-          Write-Host "##vso[task.complete result=Failed;]DONE"
-      }
-    displayName: Fail job if tests failed
+  - template: templates\fail-on-issue.yaml
     
 - job: mac_build
   displayName: Mac - Mono
@@ -154,15 +93,7 @@ jobs:
   - checkout: self
     submodules: recursive
 
-  - task: UseDotNet@2
-    displayName: Use .NET Core $(DotNetCoreVersion)
-    inputs:
-      version: $(DotNetCoreVersion)
-    
-  - script: |
-      dotnet tool install --global boots  
-      boots --stable Mono
-    displayName: Install Mono-Stable
+  - template: templates\install-dependencies.yaml
     
   - script: make prepare CONFIGURATION=$(Build.Configuration)
     displayName: make prepare
@@ -200,3 +131,24 @@ jobs:
     inputs:
       ArtifactName: debug
     condition: succeededOrFailed()
+    
+- job: mac_dotnet_build
+  displayName: Mac - .NET Core
+  pool: $(HostedMac)
+  timeoutInMinutes: 20
+  workspace:
+    clean: all
+  steps:
+  - checkout: self
+    submodules: recursive
+
+  - template: templates\install-dependencies.yaml
+    
+  - script: make prepare-core CONFIGURATION=$(Build.Configuration)
+    displayName: make prepare-core
+      
+  - template: templates\core-build.yaml
+      
+  - template: templates\core-tests.yaml
+
+  - template: templates\fail-on-issue.yaml

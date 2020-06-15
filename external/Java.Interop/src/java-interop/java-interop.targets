@@ -1,17 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
-  <PropertyGroup>
-    <Runtime Condition="'$(OS)' != 'Windows_NT'">mono</Runtime>
-  </PropertyGroup>
   <Target Name="BuildJni_c"
-      Inputs="$(JNIEnvGenPath)\jnienv-gen.exe"
+      Inputs="$(_JNIEnvGenPath)"
       Outputs="jni.c">
     <MakeDir Directories="$(OutputPath)" />
-    <Exec Command="$(Runtime) &quot;$(JNIEnvGenPath)\jnienv-gen.exe&quot; jni.g.cs jni.c" />
+    <Exec Command="$(_RunJNIEnvGen) jni.g.cs jni.c" />
   </Target>
 
   <PropertyGroup>
-    <_MacLib>$(OutputPath)\lib$(OutputName).dylib</_MacLib>
+    <_MacLib>$(OutputPath)/lib$(OutputName).dylib</_MacLib>
   </PropertyGroup>
 
   <Target Name="_CompileObjectFiles"
@@ -32,7 +29,7 @@
       <_Inc>@(_Includes->'-I "%(Identity)"', ' ')</_Inc>
     </PropertyGroup>
     <Exec
-        Command="$(_Cc) -c -g $(_Arch) -o &quot;obj\$(Configuration)\%(ClCompile.Filename).o&quot; $(_Def) $(_Inc) &quot;%(Identity)&quot;"
+        Command="$(_Cc) -c -g $(_Arch) -o &quot;obj/$(Configuration)/%(ClCompile.Filename).o&quot; $(_Def) $(_Inc) &quot;%(Identity)&quot;"
     />
   </Target>
 
@@ -47,7 +44,8 @@
       <_Libs>$(MonoLibs)</_Libs>
       <_Files>@(ClCompile->'obj\$(Configuration)\%(Filename).o', ' ')</_Files>
     </PropertyGroup>
-    <Exec Command="gcc -g -shared -m64 -std=c99 -fPIC -o &quot;$(_MacLib)&quot; $(_LinkFlags) $(_Libs) $(_Files)" />
+    <!-- Use 'IgnoreStandardErrorWarningFormat' to ignore 'ld: warning: text-based stub file X and and library file Y are out of sync' warnings. -->
+    <Exec Command="gcc -g -shared -m64 -std=c99 -fPIC -o &quot;$(_MacLib)&quot; $(_LinkFlags) $(_Libs) $(_Files)" IgnoreStandardErrorWarningFormat="true" />
     <!-- Mono 4.4.0 (mono-4.4.0-branch/a3fabf1) has an incorrect shared library name. Fix it -->
     <Exec Command="install_name_tool -change /private/tmp/source-mono-4.4.0/bockbuild-mono-4.4.0-branch/profiles/mono-mac-xamarin/package-root/lib/libmonosgen-2.0.1.dylib /Library/Frameworks/Mono.framework/Libraries/libmonosgen-2.0.1.dylib &quot;$(_MacLib)&quot;" />
   </Target>
@@ -69,7 +67,7 @@
       <_Libs>$(MonoLibs)</_Libs>
       <_Files>@(ClCompile->'obj\$(Configuration)\%(Filename).o', ' ')</_Files>
     </PropertyGroup>
-    <Exec Command="g++ -g -shared -o &quot;$(OutputPath)\lib$(OutputName).so&quot; $(_LinkFlags) $(_Libs) $(_Files)" />
+    <Exec Command="g++ -g -shared -o &quot;$(OutputPath)/lib$(OutputName).so&quot; $(_LinkFlags) $(_Libs) $(_Files)" />
   </Target>
 
   <Target Name="Clean">

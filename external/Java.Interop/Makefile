@@ -67,6 +67,8 @@ prepare-external $(PREPARE_EXTERNAL_FILES):
 	(cd external/xamarin-android-tools && $(MAKE) prepare)
 	nuget restore
 
+prepare-core: bin/Build$(CONFIGURATION)/MonoInfo.props src/Java.Runtime.Environment/Java.Runtime.Environment.dll.config
+
 clean:
 	-$(MSBUILD) $(MSBUILD_FLAGS) /t:Clean
 	-rm -Rf bin/$(CONFIGURATION) bin/Build$(CONFIGURATION) bin/Test$(CONFIGURATION)

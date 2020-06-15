@@ -20,6 +20,7 @@
     <PackageReference Include="NUnit.ConsoleRunner" Version="3.9.0" GeneratePathProperty="true" />
     <PackageReference Include="NUnit3TestAdapter" Version="3.13.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.2.0" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" Version="1.0.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -42,7 +43,7 @@
 
   <Target Name="BuildInteropTestJar" BeforeTargets="BeforeBuild" Inputs="@(JavaInteropTestJar)" Outputs="$(OutputPath)interop-test.jar">
     <MakeDir Directories="$(IntermediateOutputPath)it-classes" />
-    <Exec Command="&quot;$(JavaCPath)&quot; $(_JavacSourceOptions) -d &quot;$(IntermediateOutputPath)it-classes&quot; -classpath &quot;$(OutputPath)..\$(Configuration)\java-interop.jar&quot; @(JavaInteropTestJar->'%(Identity)', ' ')" />
+    <Exec Command="&quot;$(JavaCPath)&quot; $(_JavacSourceOptions) -d &quot;$(IntermediateOutputPath)it-classes&quot; -classpath &quot;$(OutputPath)../$(Configuration)/java-interop.jar&quot; @(JavaInteropTestJar->'%(Identity)', ' ')" />
     <Exec Command="&quot;$(JarPath)&quot; cf &quot;$(OutputPath)interop-test.jar&quot; -C &quot;$(IntermediateOutputPath)it-classes&quot; ." />
   </Target>
 

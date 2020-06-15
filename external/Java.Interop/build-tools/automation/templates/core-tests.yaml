@@ -1,0 +1,74 @@
+parameters:
+  condition: succeeded()
+
+steps:
+- task: DotNetCoreCLI@2
+  displayName: 'Tests: generator'
+  inputs:
+    command: test
+    arguments: bin/Test$(Build.Configuration)/generator-Tests.dll
+  continueOnError: true
+  
+- task: DotNetCoreCLI@2
+  displayName: 'Tests: JavaCallableWrappers'
+  inputs:
+    command: test
+    arguments: bin/Test$(Build.Configuration)/Java.Interop.Tools.JavaCallableWrappers-Tests.dll
+  continueOnError: true
+   
+- task: DotNetCoreCLI@2
+  displayName: 'Tests: logcat-parse'
+  inputs:
+    command: test
+    arguments: bin/Test$(Build.Configuration)/logcat-parse-Tests.dll
+  continueOnError: true
+  
+- task: DotNetCoreCLI@2
+  displayName: 'Tests: ApiXmlAdjuster'
+  inputs:
+    command: test
+    arguments: bin/Test$(Build.Configuration)/Xamarin.Android.Tools.ApiXmlAdjuster-Tests.dll
+  continueOnError: true
+  
+- task: DotNetCoreCLI@2
+  displayName: 'Tests: Bytecode'
+  inputs:
+    command: test
+    arguments: bin/Test$(Build.Configuration)/Xamarin.Android.Tools.Bytecode-Tests.dll
+  continueOnError: true
+
+- task: DotNetCoreCLI@2
+  displayName: 'Tests: Java.Interop.Tools.Generator'
+  inputs:
+    command: test
+    arguments: bin/Test$(Build.Configuration)/Java.Interop.Tools.Generator-Tests.dll
+  continueOnError: true
+
+- task: DotNetCoreCLI@2
+  displayName: 'Tests: Java.Interop.Tools.JavaSource'
+  inputs:
+    command: test
+    arguments: bin/Test$(Build.Configuration)/Java.Interop.Tools.JavaSource-Tests.dll
+  continueOnError: true
+
+# Running native Java.Interop tests are not yet supported on .NET Core
+#- task: DotNetCoreCLI@2
+#  displayName: 'Tests: Java.Interop'
+#  inputs:
+#    command: test
+#    arguments: bin/Test$(Build.Configuration)/Java.Interop-Tests.dll
+#  continueOnError: true
+
+#- task: DotNetCoreCLI@2
+#  displayName: 'Tests: Java.Interop.Dynamic'
+#  inputs:
+#    command: test
+#    arguments: bin/Test$(Build.Configuration)/Java.Interop.Dynamic-Tests.dll
+#  continueOnError: true
+
+#- task: DotNetCoreCLI@2
+#  displayName: 'Tests: Java.Interop.Export'
+#  inputs:
+#    command: test
+#    arguments: bin/Test$(Build.Configuration)/Java.Interop.Export-Tests.dll
+#  continueOnError: true

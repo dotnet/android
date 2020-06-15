@@ -52,4 +52,11 @@
     <_XamarinAndroidCecilPath Condition=" '$(CecilSourceDirectory)' != '' And Exists('$(UtilityOutputFullPath)Xamarin.Android.Cecil.dll') ">$(UtilityOutputFullPath)Xamarin.Android.Cecil.dll</_XamarinAndroidCecilPath>
     <XamarinAndroidToolsFullPath>$([System.IO.Path]::GetFullPath ('$(XamarinAndroidToolsDirectory)'))</XamarinAndroidToolsFullPath>
   </PropertyGroup>
+  <PropertyGroup>
+    <Runtime Condition="'$(OS)' != 'Windows_NT'">mono</Runtime>
+    <_JNIEnvGenPath Condition=" '$(JIBuildingForNetCoreApp)' == 'True' ">$(BuildToolOutputFullPath)jnienv-gen.dll</_JNIEnvGenPath>
+    <_JNIEnvGenPath Condition=" '$(JIBuildingForNetCoreApp)' != 'True' ">$(BuildToolOutputFullPath)jnienv-gen.exe</_JNIEnvGenPath>
+    <_RunJNIEnvGen Condition=" '$(JIBuildingForNetCoreApp)' == 'True' ">dotnet "$(_JNIEnvGenPath)"</_RunJNIEnvGen>
+    <_RunJNIEnvGen Condition=" '$(JIBuildingForNetCoreApp)' != 'True' ">$(Runtime) "$(_JNIEnvGenPath)"</_RunJNIEnvGen>
+  </PropertyGroup>
 </Project>

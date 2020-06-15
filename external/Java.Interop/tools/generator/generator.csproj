@@ -37,6 +37,7 @@
     <Reference Include="HtmlAgilityPack">
         <HintPath>$(PkgHtmlAgilityPack)\lib\netstandard2.0\HtmlAgilityPack.dll</HintPath>
     </Reference>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" Version="1.0.0" />
   </ItemGroup>
 
   <ItemGroup>
