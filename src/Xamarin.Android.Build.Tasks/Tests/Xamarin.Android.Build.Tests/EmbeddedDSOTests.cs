@@ -18,6 +18,7 @@ using Xamarin.Tools.Zip;
 namespace Xamarin.Android.Build.Tests
 {
 	[Category ("Node-2")]
+	[Category ("StaticProject")] // TODO: enable for .NET 5
 	[Parallelizable (ParallelScope.Children)]
 	public class EmbeddedDSOTests : BaseTest
 	{

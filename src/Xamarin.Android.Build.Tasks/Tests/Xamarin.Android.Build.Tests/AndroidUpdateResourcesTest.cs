@@ -17,17 +17,6 @@ namespace Xamarin.Android.Build.Tests
 	[Parallelizable (ParallelScope.Children)]
 	public class AndroidUpdateResourcesTest : BaseTest
 	{
-		string GetResourceDesignerPath (ProjectBuilder builder, XamarinAndroidProject project)
-		{
-			string path;
-			if (Builder.UseDotNet) {
-				path = Path.Combine (Root, builder.ProjectDirectory, project.IntermediateOutputPath);
-			} else {
-				path = Path.Combine (Root, builder.ProjectDirectory, "Resources");
-			}
-			return Path.Combine (path, "Resource.designer" + project.Language.DefaultDesignerExtension);
-		}
-
 		[Test]
 		[Category ("dotnet")]
 		public void CheckMultipleLibraryProjectReferenceAlias ([Values (true, false)] bool withGlobal)
@@ -183,9 +172,11 @@ namespace Xamarin.Android.Build.Tests
 					KnownPackages.AndroidSupportV4_27_0_2_1,
 					KnownPackages.SupportV7AppCompat_27_0_2_1,
 				},
-				TargetFrameworkVersion = "v7.1",
 			};
-			using (var b = CreateApkBuilder ("temp/CheckEmbeddedSupportLibraryResources")) {
+			if (Builder.UseDotNet) {
+				proj.AddDotNetCompatPackages ();
+			}
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "First build should have succeeded.");
 				var Rdrawable = b.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes", "android", "support", "v7", "appcompat", "R$drawable.class"));
 				Assert.IsTrue (File.Exists (Rdrawable), $"{Rdrawable} should exist");
@@ -292,6 +283,7 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[NonParallelizable]
+		[Category ("DotNetIgnore")] // <ProcessGoogleServicesJson/> task is built for net45
 		public void Check9PatchFilesAreProcessed ()
 		{
 			var projectPath = Path.Combine ("temp", "Check9PatchFilesAreProcessed");
@@ -561,6 +553,9 @@ namespace UnnamedProject
 			if (IsWindows && isFSharp) {
 				Assert.Ignore ("Skipping this F# test on Windows.");
 			}
+			if (Builder.UseDotNet && isFSharp) {
+				Assert.Ignore ("Skipping this F# test under 'dotnet'.");
+			}
 
 			var proj = new XamarinAndroidApplicationProject () {
 				Language = language,
@@ -589,8 +584,12 @@ namespace UnnamedProject
 		{
 			//Due to the MSBuild project automatically sorting <ItemGroup />, we can't possibly get the F# projects to build here on Windows
 			//  This API is sorting them: https://github.com/xamarin/xamarin-android/blob/c588bfe07aab224c97996a264579f4d4f18a151c/src/Xamarin.Android.Build.Tasks/Tests/Xamarin.ProjectTools/Common/DotNetXamarinProject.cs#L117
-			if (IsWindows && language == XamarinAndroidProjectLanguage.FSharp) {
+			bool isFSharp = language == XamarinAndroidProjectLanguage.FSharp;
+			if (IsWindows && isFSharp) {
 				Assert.Ignore ("Skipping this F# test on Windows.");
+			}
+			if (Builder.UseDotNet && isFSharp) {
+				Assert.Ignore ("Skipping this F# test under 'dotnet'.");
 			}
 
 			var proj = new XamarinAndroidApplicationProject () {
@@ -599,7 +598,7 @@ namespace UnnamedProject
 			};
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				var designerPath = Path.Combine (Root, b.ProjectDirectory, "Resources", "Resource.designer" + proj.Language.DefaultDesignerExtension);
+				var designerPath = GetResourceDesignerPath (b, proj);
 				var attr = File.GetAttributes (designerPath);
 				File.SetAttributes (designerPath, FileAttributes.ReadOnly);
 				Assert.IsTrue ((File.GetAttributes (designerPath) & FileAttributes.ReadOnly) == FileAttributes.ReadOnly,
@@ -629,13 +628,9 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		[TestCaseSource(nameof (ReleaseLanguage))]
-		public void CheckOldResourceDesignerIsNotUsed (bool isRelease, ProjectLanguage language)
+		public void CheckOldResourceDesignerIsNotUsed ([Values (true, false)] bool isRelease)
 		{
-			if (language == XamarinAndroidProjectLanguage.FSharp)
-				Assert.Ignore ("Skipping CheckOldResourceDesignerIsNotUsed for FSharp until Xamarin.Android.FSharp.ResourceProvider supports it.");
 			var proj = new XamarinAndroidApplicationProject () {
-				Language = language,
 				IsRelease = isRelease,
 			};
 			proj.SetProperty ("AndroidUseIntermediateDesignerFile", "True");
@@ -660,13 +655,9 @@ namespace UnnamedProject
 
 		// ref https://bugzilla.xamarin.com/show_bug.cgi?id=30089
 		[Test]
-		[TestCaseSource(nameof (ReleaseLanguage))]
-		public void CheckOldResourceDesignerWithWrongCasingIsRemoved (bool isRelease, ProjectLanguage language)
+		public void CheckOldResourceDesignerWithWrongCasingIsRemoved ([Values (true, false)] bool isRelease)
 		{
-			if (language == XamarinAndroidProjectLanguage.FSharp)
-				Assert.Ignore ("Skipping CheckOldResourceDesignerIsNotUsed for FSharp until Xamarin.Android.FSharp.ResourceProvider supports it.");
 			var proj = new XamarinAndroidApplicationProject () {
-				Language = language,
 				IsRelease = isRelease,
 			};
 			proj.SetProperty ("AndroidUseIntermediateDesignerFile", "True");
@@ -1100,6 +1091,7 @@ namespace Lib1 {
 		}
 
 		[Test]
+		[Category ("DotNetIgnore")] // n/a in .NET 5, not possible to use $(TFV) of v8.0
 		public void CheckMaxResWarningIsEmittedAsAWarning([Values (false, true)] bool useAapt2)
 		{
 			var path = Path.Combine ("temp", TestName);
@@ -1301,6 +1293,7 @@ namespace UnnamedProject
 		// https://github.com/xamarin/xamarin-android/issues/2205
 		[Test]
 		[NonParallelizable]
+		[Category ("DotNetIgnore")] // <ProcessGoogleServicesJson/> task is built for net45
 		public void Issue2205 ([Values (false, true)] bool useAapt2)
 		{
 			var proj = new XamarinAndroidApplicationProject ();

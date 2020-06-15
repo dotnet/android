@@ -27,6 +27,7 @@ namespace Xamarin.Android.Build.Tests
 #pragma warning restore 414
 
 		[Test]
+		[Category ("MonoSymbolicate")]
 		[TestCaseSource (nameof(ManagedSymbolsArchiveSource))]
 		public void CheckManagedSymbolsArchive (bool isRelease, bool monoSymbolArchive, string packageFormat)
 		{
@@ -51,42 +52,61 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void CheckIncludedAssemblies ()
 		{
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
-				PackageReferences = {
-					new Package () {
-						Id = "System.Runtime.InteropServices.WindowsRuntime",
-						Version = "4.0.1",
-						TargetFramework = "monoandroid71",
-					},
-				},
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true
 			};
-			proj.References.Add (new BuildItem.Reference ("Mono.Data.Sqlite.dll"));
-			var expectedFiles = new string [] {
-				"Java.Interop.dll",
-				"Mono.Android.dll",
-				"mscorlib.dll",
-				"System.Collections.Concurrent.dll",
-				"System.Collections.dll",
-				"System.Core.dll",
-				"System.Diagnostics.Debug.dll",
-				"System.dll",
-				"System.Linq.dll",
-				"System.Reflection.dll",
-				"System.Reflection.Extensions.dll",
-				"System.Runtime.dll",
-				"System.Runtime.Extensions.dll",
-				"System.Runtime.InteropServices.dll",
-				"System.Runtime.Serialization.dll",
-				"System.Threading.dll",
-				"UnnamedProject.dll",
-				"Mono.Data.Sqlite.dll",
-				"Mono.Data.Sqlite.dll.config",
-			};
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
-				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
-				b.ThrowOnBuildFailure = false;
-				Assert.IsTrue (b.Build (proj), "build failed");
+			proj.SetAndroidSupportedAbis ("armeabi-v7a");
+			if (!Builder.UseDotNet) {
+				proj.PackageReferences.Add (new Package {
+					Id = "System.Runtime.InteropServices.WindowsRuntime",
+					Version = "4.0.1",
+					TargetFramework = "monoandroid71",
+				});
+				proj.References.Add (new BuildItem.Reference ("Mono.Data.Sqlite.dll"));
+			}
+			var expectedFiles = Builder.UseDotNet ?
+				new [] {
+					"Java.Interop.dll",
+					"Mono.Android.dll",
+					"System.ComponentModel.Primitives.dll",
+					"System.Console.dll",
+					"System.Linq.Expressions.dll",
+					"System.ObjectModel.dll",
+					"System.Private.Xml.dll",
+					"System.Runtime.CompilerServices.Unsafe.dll",
+					"System.Runtime.Serialization.Formatters.dll",
+					"System.Runtime.Serialization.Primitives.dll",
+					"System.Security.Cryptography.Algorithms.dll",
+					"System.Security.Cryptography.Primitives.dll",
+					"System.Private.CoreLib.dll",
+					"System.Collections.Concurrent.dll",
+					"System.Collections.dll",
+					"System.Linq.dll",
+					"UnnamedProject.dll",
+				} :
+				new [] {
+					"Java.Interop.dll",
+					"Mono.Android.dll",
+					"mscorlib.dll",
+					"System.Collections.Concurrent.dll",
+					"System.Collections.dll",
+					"System.Core.dll",
+					"System.Diagnostics.Debug.dll",
+					"System.dll",
+					"System.Linq.dll",
+					"System.Reflection.dll",
+					"System.Reflection.Extensions.dll",
+					"System.Runtime.dll",
+					"System.Runtime.Extensions.dll",
+					"System.Runtime.InteropServices.dll",
+					"System.Runtime.Serialization.dll",
+					"System.Threading.dll",
+					"UnnamedProject.dll",
+					"Mono.Data.Sqlite.dll",
+					"Mono.Data.Sqlite.dll.config",
+				};
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
 						proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
 				using (var zip = ZipHelper.OpenZip (apk)) {
@@ -319,16 +339,19 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 			proj.SetProperty (proj.ReleaseProperties, "AndroidKeyStore", "True");
 			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningKeyStore", keyfile);
 			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningKeyAlias", "releasestore");
-			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningKeyPass", pass);
-			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningStorePass", pass);
+			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningKeyPass", Uri.EscapeDataString (pass));
+			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningStorePass", Uri.EscapeDataString (pass));
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, perAbiApk);
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				var bin = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
 				Assert.IsTrue (b.Build (proj), "First build failed");
-				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 0 Warning(s)"),
-						"First build should not contain warnings!  Contains\n" +
-						string.Join ("\n", b.LastBuildOutput.Where (line => line.Contains ("warning"))));
+				if (!Builder.UseDotNet) {
+					// In .NET 5+, there are ILLink warnings
+					Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 0 Warning(s)"),
+							"First build should not contain warnings!  Contains\n" +
+							string.Join ("\n", b.LastBuildOutput.Where (line => line.Contains ("warning"))));
+				}
 
 				//Make sure the APKs are signed
 				foreach (var apk in Directory.GetFiles (bin, "*-Signed.apk")) {
@@ -341,9 +364,12 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 				item.TextContent = () => proj.StringsXml.Replace ("${PROJECT_NAME}", "Foo");
 				item.Timestamp = null;
 				Assert.IsTrue (b.Build (proj), "Second build failed");
-				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 0 Warning(s)"),
+				if (!Builder.UseDotNet) {
+					// In .NET 5+, there are ILLink warnings
+					Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 0 Warning(s)"),
 						"Second build should not contain warnings!  Contains\n" +
 						string.Join ("\n", b.LastBuildOutput.Where (line => line.Contains ("warning"))));
+				}
 
 				//Make sure the APKs are signed
 				foreach (var apk in Directory.GetFiles (bin, "*-Signed.apk")) {
@@ -355,6 +381,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 		}
 
 		[Test]
+		[Category ("DotNetIgnore")] // Xamarin.Forms version is too old, uses net45 MSBuild tasks
 		[NonParallelizable] // Commonly fails NuGet restore
 		public void CheckAapt2WarningsDoNotGenerateErrors ()
 		{
@@ -422,7 +449,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 		}
 
 		[Test]
-		[Category ("SmokeTests")]
+		[Category ("SmokeTests"), Category ("DotNetIgnore")] // Xamarin.Forms version is too old, uses net45 MSBuild tasks
 		public void NetStandardReferenceTest ()
 		{
 			var netStandardProject = new DotNetStandard () {
@@ -635,6 +662,7 @@ namespace App1
 		}
 
 		[Test]
+		[Category ("DotNetIgnore")] // Uses MSBuild.Sdk.Extras
 		public void CheckTheCorrectRuntimeAssemblyIsUsedFromNuget ()
 		{
 			string monoandroidFramework = "monoandroid10.0";
@@ -723,6 +751,7 @@ namespace App1
 			var proj = new XamarinAndroidApplicationProject {
 				DexTool = "dx"
 			};
+			AssertDexToolSupported (proj.DexTool);
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj, parameters: parameters), "Build should have succeeded.");
 				var apk = Path.Combine (Root, b.ProjectDirectory,

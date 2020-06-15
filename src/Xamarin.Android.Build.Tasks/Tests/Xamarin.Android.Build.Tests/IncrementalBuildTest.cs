@@ -179,11 +179,13 @@ namespace Lib
 
 			var app1 = new XamarinAndroidApplicationProject () {
 				ProjectName = "App1",
+				PackageName = "com.companyname.App1",
 				OutputPath = Path.Combine("..","bin","Debug"),
 			};
 			sb.Projects.Add (app1);
 			var app2 = new XamarinAndroidApplicationProject () {
 				ProjectName = "App2",
+				PackageName = "com.companyname.App2",
 				OutputPath = Path.Combine("..","bin","Debug"),
 			};
 			sb.Projects.Add (app2);
@@ -886,6 +888,7 @@ namespace Lib2
 #pragma warning restore 414
 
 		[Test]
+		[Category ("AOT")]
 		[TestCaseSource (nameof (AotChecks))]
 		public void BuildIncrementalAot (string supportedAbis, string androidAotMode, bool aotAssemblies, bool expectedResult)
 		{
