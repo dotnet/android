@@ -32,11 +32,7 @@ namespace Xamarin.Android.Prepare
 			if (!await Restore (msbuild, xfTestPath, "xfperf", "prepare-restore"))
 				return false;
 
-			if (!await Restore (msbuild, xfTestPath, "xfperf", "prepare-restore", "/p:BundleAssemblies=true"))
-				return false;
-
-			var apkDiffPath = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "tools", "apkdiff", "apkdiff.csproj");
-			return await Restore (msbuild, apkDiffPath, "apkdiff", "prepare-restore-apkdiff");
+			return await Restore (msbuild, xfTestPath, "xfperf", "prepare-restore", "/p:BundleAssemblies=true");
 		}
 	}
 }
