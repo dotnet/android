@@ -349,13 +349,25 @@
     </ItemGroup>
   </Target>
 
+  <ItemGroup>
+    <_ExtraPackageSource Include="$(PkgXamarin_LibZipSharp)\lib\$(TargetFrameworkNETStandard)\libZipSharp.pdb" />
+    <_ExtraPackageTarget Include="$(OutputPath)\libZipSharp.pdb" />
+    <_ExtraPackageSource Include="$(PkgXamarin_Build_AsyncTask)\lib\$(TargetFrameworkNETStandard)\Xamarin.Build.AsyncTask.pdb" />
+    <_ExtraPackageTarget Include="$(OutputPath)\Xamarin.Build.AsyncTask.pdb" />
+    <_ExtraPackageSource Include="$(PkgMono_Posix_NETStandard)\ref\$(TargetFrameworkNETStandard)\Mono.Posix.NETStandard.pdb" />
+    <_ExtraPackageTarget Include="$(OutputPath)\Mono.Posix.NETStandard.pdb" />
+    <_ExtraPackageSource Include="$(PkgMono_Posix_NETStandard)\ref\$(TargetFrameworkNETStandard)\Mono.Posix.NETStandard.dll" />
+    <_ExtraPackageTarget Include="$(OutputPath)\Mono.Posix.NETStandard.dll" />
+  </ItemGroup>
+
   <!-- Copy package ref symbols for our installers. '$(Pkg*)' props are set during NuGet restore when GeneratePathProperty="true" -->
   <Target Name="_CopyExtraPackageContent"
-      Inputs="$(PkgXamarin_LibZipSharp)\lib\$(TargetFrameworkNETStandard)\libZipSharp.pdb;$(PkgXamarin_Build_AsyncTask)\lib\$(TargetFrameworkNETStandard)\Xamarin.Build.AsyncTask.pdb;$(PkgMono_Posix_NETStandard)\ref\$(TargetFrameworkNETStandard)\Mono.Posix.NETStandard.dll"
-      Outputs="$(OutputPath)\libZipSharp.pdb;$(OutputPath)\Xamarin.Build.AsyncTask.pdb" >
+      Inputs="@(_ExtraPackageSource)"
+      Outputs="@(_ExtraPackageTarget)" >
     <Copy
-        SourceFiles="$(PkgXamarin_LibZipSharp)\lib\$(TargetFrameworkNETStandard)\libZipSharp.pdb;$(PkgXamarin_Build_AsyncTask)\lib\$(TargetFrameworkNETStandard)\Xamarin.Build.AsyncTask.pdb;$(PkgMono_Posix_NETStandard)\ref\$(TargetFrameworkNETStandard)\Mono.Posix.NETStandard.dll"
+        SourceFiles="@(_ExtraPackageSource)"
         DestinationFolder="$(OutputPath)"
+        SkipUnchangedFiles="True"
     />
   </Target>
 
