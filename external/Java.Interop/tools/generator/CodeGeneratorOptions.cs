@@ -54,7 +54,7 @@ namespace Xamarin.Android.Binder
 			bool show_help = false;
 
 			var parser = new OptionSet {
-				"Usage: generator.exe OPTIONS+ API_DESCRIPTION",
+				"Usage: generator.exe OPTIONS+ API_DESCRIPTION [@RESPONSE-FILES]",
 				"",
 				"Generates C# source files to bind Java code described by API_DESCRIPTION.",
 				"",
@@ -147,6 +147,7 @@ namespace Xamarin.Android.Binder
 				{ "annotations=",
 					"For internal use.",
 					v => opts.AnnotationsZipFiles.Add (v) },
+				new ResponseFileSource (),
 			};
 
 			var apis = parser.Parse (args);

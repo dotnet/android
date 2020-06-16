@@ -32,6 +32,7 @@ namespace Xamarin.Android.ApiTools
 				{"output-xml=", v => ret.OutputXmlFile = v },
 				{"verbose", v => ret.DiagnosticWriter = Console.Error },
 				{"framework-only", v => ret.FrameworkOnly = true },
+				new ResponseFileSource (),
 			};
 			options.Parse (args);
 			return ret;

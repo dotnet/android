@@ -75,7 +75,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 		{
 			var help = false;
 			var options = new OptionSet {
-				$"Usage: {Name}.exe OPTIONS* ASSEMBLY+",
+				$"Usage: {Name}.exe OPTIONS* ASSEMBLY+ [@RESPONSE-FILES]",
 				"",
 				"Generates helper marshaling methods for specified assemblies.",
 				"",

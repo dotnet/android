@@ -24,7 +24,7 @@ namespace Xamarin.Android.Tools {
 			string platform = null;
 			var  docsPaths  = new List<string> ();
 			var p = new OptionSet () {
-				"usage: class-dump [-dump] FILES",
+				"usage: class-dump [-dump] FILES [@RESPONSE-FILES]",
 				"",
 				"View the metadata contents of a Java .class or .jar file.",
 				"",
@@ -56,6 +56,7 @@ namespace Xamarin.Android.Tools {
 				{ "h|?|help",
 				  "Show this message and exit.",
 				  v => help = v != null },
+				new ResponseFileSource (),
 			};
 			var files = p.Parse (args);
 			if (help) {

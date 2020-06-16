@@ -23,7 +23,7 @@ namespace Java.Interop.Tools
 			int     verbosity   = 0;
 
 			var options = new OptionSet {
-				"Usage: jcw-gen.exe OPTIONS* ASSEMBLY+",
+				"Usage: jcw-gen.exe OPTIONS* ASSEMBLY+ [@RESPONSE-FILES]",
 				"",
 				"Generates Java Callable Wrappers from specified assemblies.",
 				"",
@@ -42,6 +42,7 @@ namespace Java.Interop.Tools
 				{ "h|help|?",
 				  "Show this message and exit",
 				  v => help = v != null },
+				new ResponseFileSource (),
 			};
 			var cache = new TypeDefinitionCache ();
 			var scanner = new JavaTypeScanner (Diagnostic.CreateConsoleLogger (), cache);

@@ -14,7 +14,7 @@ namespace Xamarin.Android.Tools.LogcatParse {
 			var options = new OptionSet () {
 				"logcat-parse: Parse `adb logcat` output to analyze GREF information.",
 				"",
-				"usage: logcat-parse [-p PID] FILE",
+				"usage: logcat-parse [-p PID] FILE [@RESPONSE-FILES]",
 				{ "p|pid=",
 				  "The {PID} to filter GREF output.",
 				  v => pid = int.Parse (v, CultureInfo.InvariantCulture)
@@ -22,6 +22,7 @@ namespace Xamarin.Android.Tools.LogcatParse {
 				{ "h|?|help",
 				  "Show this message and exit.",
 				  v => help = v != null },
+				new ResponseFileSource (),
 			};
 			var files = options.Parse (args);
 			if (help) {
