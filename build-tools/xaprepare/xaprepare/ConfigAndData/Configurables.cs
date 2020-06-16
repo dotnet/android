@@ -338,6 +338,7 @@ namespace Xamarin.Android.Prepare
 			public static string Mingw64CmakePath                    => GetCachedPath (ref mingw64CmakePath, ()                    => Path.Combine (BuildBinDir, "mingw-64.cmake"));
 
 			// JetBrains OpenJDK
+			public static string OldOpenJDKInstallDir                => GetCachedPath (ref oldOpenJDKInstallDir, ()                => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainDirectory), "jdk"));
 			public static string OpenJDK8InstallDir                  => GetCachedPath (ref openJDK8InstallDir, ()                   => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainDirectory), "jdk-1.8"));
 			public static string OpenJDK8CacheDir                    => GetCachedPath (ref openJDK8CacheDir, ()                     => ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory));
 
@@ -430,6 +431,7 @@ namespace Xamarin.Android.Prepare
 			static string? monoLlvmTpnPath;
 			static string? openJDK8InstallDir,  openJDK11InstallDir;
 			static string? openJDK8CacheDir,    openJDK11CacheDir;
+			static string? oldOpenJDKInstallDir;
 		}
 	}
 }
