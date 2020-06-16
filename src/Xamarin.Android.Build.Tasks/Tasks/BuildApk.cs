@@ -132,7 +132,6 @@ namespace Xamarin.Android.Tasks
 				File.Copy (apkInputPath, apkOutputPath, overwrite: true);
 				refresh = false;
 			}
-			using (var notice = Assembly.GetExecutingAssembly ().GetManifestResourceStream ("NOTICE.txt"))
 			using (var apk = new ZipArchiveEx (apkOutputPath, File.Exists (apkOutputPath) ? FileMode.Open : FileMode.Create )) {
 				if (refresh) {
 					for (long i = 0; i < apk.Archive.EntryCount; i++) {
@@ -172,10 +171,6 @@ namespace Xamarin.Android.Tasks
 					}
 				}
 				apk.FixupWindowsPathSeparators ((a, b) => Log.LogDebugMessage ($"Fixing up malformed entry `{a}` -> `{b}`"));
-				string noticeName = RootPath + "NOTICE";
-				existingEntries.Remove (noticeName);
-				if (!apk.Archive.ContainsEntry (noticeName))
-					apk.Archive.AddEntry (noticeName, notice);
 
 				// Add classes.dx
 				foreach (var dex in DalvikClasses) {
