@@ -16,6 +16,8 @@ namespace Xamarin.Android.Prepare
 		public const string AutoProvision                       = "AutoProvision";
 		public const string AutoProvisionUsesSudo               = "AutoProvisionUsesSudo";
 		public const string Configuration                       = "Configuration";
+		public const string CommandLineToolsVersion             = nameof (CommandLineToolsVersion);
+		public const string CommandLineToolsFolder              = nameof (CommandLineToolsFolder);
 		public const string EmulatorVersion                     = "EmulatorVersion";
 		public const string EmulatorPkgRevision                 = "EmulatorPkgRevision";
 		public const string IgnoreMaxMonoVersion                = "IgnoreMaxMonoVersion";

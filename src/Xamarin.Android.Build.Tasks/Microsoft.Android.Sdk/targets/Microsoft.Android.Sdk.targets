@@ -17,7 +17,9 @@
 
   <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.targets" />
 
-  <Import Project="$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.DefaultOutputPaths.targets" Condition="'$(EnableDefaultOutputPaths)' == 'true'" />
+  <!-- Default item includes (globs and implicit references) -->
+  <Import Project="Microsoft.Android.Sdk.DefaultItems.targets" />
+
   <Import Project="$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Common.targets" />
   <Import Project="$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Bindings.Core.targets" />
   <Import Project="$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Bindings.ClassParse.targets" />
@@ -25,6 +27,7 @@
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.BuildOrder.targets" />
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.Linker.targets" />
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.NuGet.targets" />
+  <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.Publish.targets" />
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.Tooling.targets" />
 
   <!-- Automatically supply project capabilities for IDE use -->
@@ -38,6 +41,6 @@
   </ItemGroup>
 
   <!-- NOTE: We have to replace the Run target after Microsoft.NET.Sdk.targets are imported -->
-  <Target Name="Run" DependsOnTargets="Install;StartAndroidActivity" />
+  <Import Project="Microsoft.Android.Sdk.Application.targets" Condition=" '$(AndroidApplication)' == 'true' " />
 
 </Project>

@@ -88,7 +88,9 @@ to `True`.
 
 ## Default file inclusion
 
-Default Android related file globbing behavior is defined in `Microsoft.Android.Sdk.DefaultItems.props`.
+Default Android related file globbing behavior is defined in `Microsoft.Android.Sdk.DefaultItems.targets`.
+This behavior can be disabled for Android items by setting `$(EnableDefaultAndroidItems)` to `false`, or
+all default item inclusion behavior can be disabled by setting `$(EnableDefaultItems)` to `false`.
 
 ## dotnet cli
 
@@ -125,12 +127,14 @@ This means Xamarin.Android would run:
 * Create an `.apk` or `.aab` and sign it
 
 `dotnet publish` will be reserved for publishing an app for Google
-Play. It could be able to sign the `.apk` or `.aab` with different
-keys. As a starting point, this would copy the output to a `publish`
-directory on disk.
+Play, ad-hoc distribution, etc. It could be able to sign the `.apk` or
+`.aab` with different keys. As a starting point, this will currently
+copy the output to a `publish` directory on disk.
 
-Down the road `dotnet run` would be used to launch applications on a
-device or emulator.
+`dotnet run` can be used to launch applications on a
+device or emulator via the `--project` switch:
+
+    dotnet run --project HelloAndroid.csproj
 
 [illink]: https://github.com/mono/linker/blob/master/src/linker/README.md
 

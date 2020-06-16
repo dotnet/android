@@ -132,7 +132,6 @@ namespace Xamarin.Android.Tasks
 				File.Copy (apkInputPath, apkOutputPath, overwrite: true);
 				refresh = false;
 			}
-			using (var notice = Assembly.GetExecutingAssembly ().GetManifestResourceStream ("NOTICE.txt"))
 			using (var apk = new ZipArchiveEx (apkOutputPath, File.Exists (apkOutputPath) ? FileMode.Open : FileMode.Create )) {
 				if (refresh) {
 					for (long i = 0; i < apk.Archive.EntryCount; i++) {
@@ -146,30 +145,32 @@ namespace Xamarin.Android.Tasks
 					var lastWriteInput = File.GetLastWriteTimeUtc (apkInputPath);
 					using (var packaged = new ZipArchiveEx (apkInputPath, FileMode.Open)) {
 						foreach (var entry in packaged.Archive) {
-							Log.LogDebugMessage ($"Deregistering item {entry.FullName}");
-							existingEntries.Remove (entry.FullName);
+							// NOTE: aapt2 is creating zip entries on Windows such as `assets\subfolder/asset2.txt`
+							var entryName = entry.FullName;
+							if (entryName.Contains ("\\")) {
+								entryName = entryName.Replace ('\\', '/');
+								Log.LogDebugMessage ($"Fixing up malformed entry `{entry.FullName}` -> `{entryName}`");
+							}
+							Log.LogDebugMessage ($"Deregistering item {entryName}");
+							existingEntries.Remove (entryName);
 							if (lastWriteInput <= lastWriteOutput)
 								continue;
-							if (apk.Archive.ContainsEntry (entry.FullName)) {
-								ZipEntry e = apk.Archive.ReadEntry (entry.FullName);
+							if (apk.Archive.ContainsEntry (entryName)) {
+								ZipEntry e = apk.Archive.ReadEntry (entryName);
 								// check the CRC values as the ModifiedDate is always 01/01/1980 in the aapt generated file.
 								if (entry.CRC == e.CRC) {
-									Log.LogDebugMessage ($"Skipping {entry.FullName} from {apkInputPath} as its up to date.");
+									Log.LogDebugMessage ($"Skipping {entryName} from {apkInputPath} as its up to date.");
 									continue;
 								}
 							}
 							var ms = new MemoryStream ();
 							entry.Extract (ms);
-							Log.LogDebugMessage ($"Refreshing {entry.FullName} from {apkInputPath}");
-							apk.Archive.AddStream (ms, entry.FullName, compressionMethod: entry.CompressionMethod);
+							Log.LogDebugMessage ($"Refreshing {entryName} from {apkInputPath}");
+							apk.Archive.AddStream (ms, entryName, compressionMethod: entry.CompressionMethod);
 						}
 					}
 				}
 				apk.FixupWindowsPathSeparators ((a, b) => Log.LogDebugMessage ($"Fixing up malformed entry `{a}` -> `{b}`"));
-				string noticeName = RootPath + "NOTICE";
-				existingEntries.Remove (noticeName);
-				if (!apk.Archive.ContainsEntry (noticeName))
-					apk.Archive.AddEntry (noticeName, notice);
 
 				// Add classes.dx
 				foreach (var dex in DalvikClasses) {

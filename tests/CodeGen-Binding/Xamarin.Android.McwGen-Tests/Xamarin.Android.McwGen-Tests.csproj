@@ -97,6 +97,9 @@
     <TestJarEntry Include="java\com\xamarin\android\DataListener.java">
       <OutputFile>Jars/xamarin-test.jar</OutputFile>
     </TestJarEntry>
+    <TestJarEntry Include="java\com\xamarin\android\Gxa4098.java">
+      <OutputFile>Jars/xamarin-test.jar</OutputFile>
+    </TestJarEntry>
     <TestJarEntry Include="java\com\xamarin\android\Logger.java">
       <OutputFile>Jars/xamarin-test.jar</OutputFile>
     </TestJarEntry>

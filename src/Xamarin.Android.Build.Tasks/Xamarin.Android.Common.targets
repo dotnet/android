@@ -42,7 +42,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.CalculateProjectDependencies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckForRemovedItems" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckForInvalidResourceFileNames" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.CompileToDalvik" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectPdbFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectNonEmptyDirectories" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ComputeHash" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -70,9 +69,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.GetJavaPlatformJar" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetMonoPlatformJar" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Javac" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.Dx" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.D8" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.R8" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.KeyTool" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.LinkAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.LinkAssembliesNoShrink" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -96,9 +92,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectLibraryAssets" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ParseAndroidWearProjectAndManifest" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.PrepareWearApplicationFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.Proguard" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.DetermineJavaLibrariesToCompile" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.CreateMultiDexMainDexClassList" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CompileNativeAssembly" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.LinkApplicationSharedLibraries" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.PrepareAbiItems" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -300,14 +294,18 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<!-- Default Java heap size to 1GB (-Xmx1G) if not specified-->
 	<JavaMaximumHeapSize Condition=" '$(JavaMaximumHeapSize)' == '' ">1G</JavaMaximumHeapSize>
 
-	<ProguardConfigFiles Condition="'$(ProguardConfigFiles)' == ''">
+	<ProguardConfigFiles Condition="'$(ProguardConfigFiles)' == '' And '$(AndroidLinkTool)' != ''">
 		{sdk.dir}tools\proguard\proguard-android.txt;
 		{intermediate.common.xamarin};
 		{intermediate.references};
 		{intermediate.application};
 		@(ProguardConfiguration);
 	</ProguardConfigFiles>
-	
+	<ProguardConfigFiles Condition="'$(ProguardConfigFiles)' == '' And '$(AndroidLinkTool)' == ''">
+		{sdk.dir}tools\proguard\proguard-android.txt;
+		@(ProguardConfiguration);
+	</ProguardConfigFiles>
+
 	<_AndroidMainDexListFile>$(IntermediateOutputPath)multidex.keep</_AndroidMainDexListFile>
 	
 	<AndroidManifestPlaceholders Condition="'$(AndroidManifestPlaceholders)' == ''"></AndroidManifestPlaceholders>
@@ -653,10 +651,6 @@ because xbuild doesn't support framework reference assemblies.
 	
 	<!-- Misc paths -->
 
-	<CreateProperty Value="$(_AndroidSdkDirectory)tools\">
-		<Output TaskParameter="Value" PropertyName="_AndroidToolsDirectory"/>
-	</CreateProperty>
-
 	<CreateProperty Value="$(_AndroidSdkDirectory)platform-tools\">
 		<Output TaskParameter="Value" PropertyName="_AndroidPlatformToolsDirectory"/>
 	</CreateProperty>
@@ -773,8 +767,8 @@ because xbuild doesn't support framework reference assemblies.
 
 	<!-- Setup $(AndroidApplicationJavaClass) -->
 	<PropertyGroup>
-		<AndroidApplicationJavaClass Condition=" '$(AndroidApplicationJavaClass)' == '' And '$(AndroidEnableMultiDex)' == 'true' And '$(AndroidDexTool)' == 'dx' ">android.support.multidex.MultiDexApplication</AndroidApplicationJavaClass>
-		<AndroidApplicationJavaClass Condition=" '$(AndroidApplicationJavaClass)' == '' ">android.app.Application</AndroidApplicationJavaClass>
+		<AndroidApplicationJavaClass Condition="'$(AndroidApplicationJavaClass)' == '' And $(AndroidEnableMultiDex)">android.support.multidex.MultiDexApplication</AndroidApplicationJavaClass>
+		<AndroidApplicationJavaClass Condition="'$(AndroidApplicationJavaClass)' == ''">android.app.Application</AndroidApplicationJavaClass>
 	</PropertyGroup>
 	<Message Text="Application Java class: $(AndroidApplicationJavaClass)" />
 </Target>
@@ -936,6 +930,7 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="AndroidPackageNamingPolicy=$(AndroidPackageNamingPolicy)" />
 		<_PropertyCacheItems Include="_NuGetAssetsTimestamp=$(_NuGetAssetsTimestamp)" />
 		<_PropertyCacheItems Include="TypeMapKind=$(_TypeMapKind)" />
+		<_PropertyCacheItems Include="AndroidSupportedAbis=$(AndroidSupportedAbis)" />
 	</ItemGroup>
 	<WriteLinesToFile
 			File="$(_AndroidBuildPropertiesCache)"
@@ -1065,6 +1060,15 @@ because xbuild doesn't support framework reference assemblies.
 	<ItemGroup>
 		<FileWrites Include="$(_AndroidResFlagFile)" />
 	</ItemGroup>
+</Target>
+
+<Target Name="_AddMultiDexDependencyJars">
+  <ItemGroup Condition=" '$(AndroidEnableMultiDex)' == 'True' AND '$(AndroidMultiDexSupportJar)' != '' ">
+    <AndroidJavaLibrary Include="$(_AndroidSdkDirectory)\$(AndroidMultiDexSupportJar)" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(AndroidEnableMultiDex)' == 'True' AND '$(AndroidMultiDexSupportJar)' == '' ">
+    <AndroidJavaLibrary Include="$(MonoAndroidToolsDirectory)\android-support-multidex.jar" />
+  </ItemGroup>
 </Target>
 
 <Target Name="_AddAndroidEnvironmentToCompile">
@@ -1470,7 +1474,7 @@ because xbuild doesn't support framework reference assemblies.
 	
 <Target Name="_LinkAssembliesShrink"
   Condition="'$(AndroidLinkMode)' != 'None' and '$(UsingAndroidNETSdk)' != 'true' "
-  Inputs="@(ResolvedUserAssemblies);$(_AndroidBuildPropertiesCache)"
+  Inputs="@(ResolvedUserAssemblies);@(LinkDescription);$(_AndroidBuildPropertiesCache)"
   Outputs="$(_AndroidLinkFlag)">
 
     <PropertyGroup>
@@ -2599,6 +2603,8 @@ because xbuild doesn't support framework reference assemblies.
     BuildOnlySettings;
     _CreatePropertiesCache;
     ResolveReferences;
+    PrepareResources;
+    CreateSatelliteAssemblies;
     _CopyPackage;
     _Sign;
   </SignAndroidPackageDependsOn>
@@ -2731,6 +2737,7 @@ because xbuild doesn't support framework reference assemblies.
     <FileWrites Include="$(_AndroidResgenFlagFile)" />
     <FileWrites Include="$(IntermediateOutputPath)R.txt" />
     <FileWrites Include="$(ApkFileSigned)" />
+    <FileWrites Include="$(ApkFileSigned).idsig" />
     <FileWrites Include="$(_UploadFlagFile)" />
     <FileWrites Include="@(_ModifiedResources)" />
   </ItemGroup>
@@ -2836,6 +2843,7 @@ because xbuild doesn't support framework reference assemblies.
   <Error Text="AndroidManifest file does not exist" Condition="'$(_ProjectAndroidManifest)'!='' And !Exists ('$(_ProjectAndroidManifest)')"/>
   <CalculateProjectDependencies
     TargetFrameworkVersion="$(TargetFrameworkVersion)"
+    CommandLineToolsVersion="$(AndroidCommandLineToolsVersion)"
     ManifestFile="$(_ProjectAndroidManifest)"
     BuildToolsVersion="$(AndroidSdkBuildToolsVersion)"
     PlatformToolsVersion="$(AndroidSdkPlatformToolsVersion)"

@@ -206,7 +206,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (0, warnings.Count, "Task should have no warnings.");
 			Assert.AreEqual (0, task.ExitCode, "ExitCode should have been 0");
 			string output = string.Join (" ", messages.Select (x => x.Message));
-			Assert.IsTrue (output.Contains ("Certificate fingerprint (SHA1):"), "Certificate SHA1 should have been printed.");
+			Assert.IsTrue (output.Contains ("Certificate fingerprint (SHA"), "Certificate SHA1 or SHA-256 should have been printed.");
 		}
 	}
 }

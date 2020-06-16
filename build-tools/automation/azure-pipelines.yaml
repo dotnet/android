@@ -44,13 +44,15 @@ resources:
 
 # Global variables
 variables:
+  XA.Jdk8.Folder: jdk-1.8
+  XA.Jdk11.Folder: jdk-11
   NuGetArtifactName: nupkgs
   InstallerArtifactName: installers
   TestAssembliesArtifactName: test-assemblies
   NUnitConsoleVersion: 3.9.0
   DotNetCoreVersion: 3.1.201
   # Version number from: https://github.com/dotnet/installer#installers-and-binaries
-  DotNetCorePreviewVersion: 5.0.100-preview.6.20265.2
+  DotNetCorePreviewVersion: 5.0.100-preview.7.20307.3
   HostedMacMojave: Hosted Mac Internal Mojave
   HostedMac: Hosted Mac Internal
   HostedWinVS2019: Hosted Windows 2019 with VS2019
@@ -96,8 +98,8 @@ stages:
     - checkout: self
       submodules: recursive
 
-    - script: echo "##vso[task.setvariable variable=JAVA_HOME]$HOME/Library/Android/jdk"
-      displayName: set JAVA_HOME
+    - script: echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/Library/Android/$(XA.Jdk11.Folder)"
+      displayName: set JI_JAVA_HOME
 
     - template: yaml-templates/use-dot-net.yaml
       parameters:
@@ -232,6 +234,10 @@ stages:
     - template: yaml-templates\kill-processes.yaml
 
     - template: yaml-templates\clean.yaml
+
+    - script: |
+        echo ##vso[task.setvariable variable=JI_JAVA_HOME]%USERPROFILE%\android-toolchain\$(XA.Jdk11.Folder)
+      displayName: set JI_JAVA_HOME
 
     - template: yaml-templates\use-dot-net.yaml
       parameters:
@@ -472,15 +478,10 @@ stages:
       parameters:
         configuration: $(ApkTestConfiguration)
 
-    - task: MSBuild@1
-      displayName: build apkdiff.csproj
+    - task: CmdLine@2
+      displayName: install apkdiff dotnet tool
       inputs:
-        solution: tools/apkdiff/apkdiff.csproj
-        configuration: $(ApkTestConfiguration)
-        msbuildArguments: >
-          /restore
-          /t:Build
-          /bl:$(System.DefaultWorkingDirectory)/bin/Test$(ApkTestConfiguration)/build-apkdiff.binlog
+        script: 'dotnet tool update apkdiff -g'
       continueOnError: true
 
     - task: MSBuild@1
@@ -895,7 +896,7 @@ stages:
         if (("$branchName" -ne "master") -and ("$branchName" -notlike "d16*")) {
             $branchName = "master"
         }
-        Set-Location -Path $(System.DefaultWorkingDirectory)
+        Set-Location -Path $(System.DefaultWorkingDirectory)/designer
         git checkout $branchName
         git submodule update -q --init --recursive
       displayName: Clone and update designer
@@ -904,19 +905,31 @@ stages:
       displayName: provision designer dependencies
       inputs:
         github_token: $(GitHub.Token)
-        provisioning_script: $(System.DefaultWorkingDirectory)/bot-provisioning/dependencies.csx
+        provisioning_script: $(System.DefaultWorkingDirectory)/designer/bot-provisioning/dependencies.csx
         provisioning_extra_args: -remove Xamarin.Android -vv DEVDIV_PKGS_NUGET_TOKEN=$(DevDiv.NuGet.Token) SECTOOLS_PKGS_NUGET_TOKEN=$(SecTools.NuGet.Token)
 
-    - template: yaml-templates/run-installer.yaml
+    - template: yaml-templates/setup-test-environment.yaml
+      parameters:
+        xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
+
+    - script: echo "##vso[task.setvariable variable=JavaSdkDirectory]$HOME/Library/Android/$(XA.Jdk8.Folder)"
+      displayName: set JavaSdkDirectory
+
+    - script: echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/Library/Android/$(XA.Jdk8.Folder)"
+      displayName: reset JI_JAVA_HOME for Designer
 
     - template: designer/android-designer-build-mac.yaml@yaml
+      parameters:
+        designerSourcePath: $(System.DefaultWorkingDirectory)/designer
 
     - template: designer/android-designer-tests.yaml@yaml
+      parameters:
+        designerSourcePath: $(System.DefaultWorkingDirectory)/designer
 
     - task: CopyFiles@2
       displayName: 'Copy binlogs'
       inputs:
-        sourceFolder: Xamarin.Designer.Android
+        sourceFolder: $(System.DefaultWorkingDirectory)/designer/Xamarin.Designer.Android
         contents: '**/*.binlog'
         targetFolder: $(Build.ArtifactStagingDirectory)/designer-binlogs
         overWrite: true
@@ -959,7 +972,7 @@ stages:
         if (("$branchName" -ne "master") -and ("$branchName" -notlike "d16*")) {
             $branchName = "master"
         }
-        Set-Location -Path $(System.DefaultWorkingDirectory)
+        Set-Location -Path $(System.DefaultWorkingDirectory)\designer
         git checkout $branchName
         git submodule update -q --init --recursive
       displayName: Clone and update designer
@@ -968,19 +981,34 @@ stages:
       displayName: provision designer dependencies
       inputs:
         github_token: $(GitHub.Token)
-        provisioning_script: $(System.DefaultWorkingDirectory)\bot-provisioning\dependencies.csx
+        provisioning_script: $(System.DefaultWorkingDirectory)\designer\bot-provisioning\dependencies.csx
         provisioning_extra_args: -vv DEVDIV_PKGS_NUGET_TOKEN=$(DevDiv.NuGet.Token) SECTOOLS_PKGS_NUGET_TOKEN=$(SecTools.NuGet.Token)
 
-    - template: yaml-templates\run-installer.yaml
+    - template: yaml-templates\setup-test-environment.yaml
+      parameters:
+        xaSourcePath: $(System.DefaultWorkingDirectory)\xamarin-android
+
+    - script: echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/Library/Android/$(XA.Jdk8.Folder)"
+      displayName: reset JI_JAVA_HOME for Designer
+      condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
+
+    - script: |
+        echo ##vso[task.setvariable variable=JI_JAVA_HOME]%USERPROFILE%\android-toolchain\$(XA.Jdk8.Folder)
+      displayName: reset JI_JAVA_HOME for Designer
+      condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
 
     - template: designer\android-designer-build-win.yaml@yaml
+      parameters:
+        designerSourcePath: $(System.DefaultWorkingDirectory)\designer
 
     - template: designer\android-designer-tests.yaml@yaml
+      parameters:
+        designerSourcePath: $(System.DefaultWorkingDirectory)\designer
 
     - task: CopyFiles@2
       displayName: 'Copy binlogs'
       inputs:
-        sourceFolder: Xamarin.Designer.Android
+        sourceFolder: $(System.DefaultWorkingDirectory)/designer/Xamarin.Designer.Android
         contents: '**/*.binlog'
         targetFolder: $(Build.ArtifactStagingDirectory)/designer-binlogs
         overWrite: true

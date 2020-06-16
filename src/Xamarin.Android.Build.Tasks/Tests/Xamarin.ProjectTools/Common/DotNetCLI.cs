@@ -14,6 +14,7 @@ namespace Xamarin.ProjectTools
 		public string Verbosity { get; set; } = "diag";
 		public string AndroidSdkPath { get; set; } = AndroidSdkResolver.GetAndroidSdkPath ();
 		public string AndroidNdkPath { get; set; } = AndroidSdkResolver.GetAndroidNdkPath ();
+		public string JavaSdkPath { get; set; } = AndroidSdkResolver.GetJavaSdkPath ();
 
 		public string ProjectDirectory { get; private set; }
 
@@ -73,22 +74,26 @@ namespace Xamarin.ProjectTools
 			return succeeded;
 		}
 
-		public bool Build (string target = null)
+		public bool Build (string target = null, string [] parameters = null)
 		{
-			var arguments = GetDefaultCommandLineArgs ("build", target);
+			var arguments = GetDefaultCommandLineArgs ("build", target, parameters);
 			return Execute (arguments.ToArray ());
 		}
 
-		public bool Publish (string target = null)
+		public bool Publish (string target = null, string [] parameters = null)
 		{
-			var arguments = GetDefaultCommandLineArgs ("publish", target);
+			var arguments = GetDefaultCommandLineArgs ("publish", target, parameters);
 			return Execute (arguments.ToArray ());
 		}
 
 		public bool Run ()
 		{
-			//TODO: this should eventually run `dotnet run --project foo.csproj`
-			var arguments = GetDefaultCommandLineArgs ("build", "Run");
+			string binlog = Path.Combine (Path.GetDirectoryName (projectOrSolution), "msbuild.binlog");
+			var arguments = new List<string> {
+				"run",
+				"--project", $"\"{projectOrSolution}\"",
+				$"/bl:\"{binlog}\""
+			};
 			return Execute (arguments.ToArray ());
 		}
 
@@ -101,7 +106,7 @@ namespace Xamarin.ProjectTools
 			}
 		}
 
-		List<string> GetDefaultCommandLineArgs (string verb, string target = null)
+		List<string> GetDefaultCommandLineArgs (string verb, string target = null, string [] parameters = null)
 		{
 			string testDir = Path.GetDirectoryName (projectOrSolution);
 			if (string.IsNullOrEmpty (ProcessLogFile))
@@ -126,6 +131,14 @@ namespace Xamarin.ProjectTools
 			}
 			if (Directory.Exists (AndroidNdkPath)) {
 				arguments.Add ($"/p:AndroidNdkDirectory=\"{AndroidNdkPath}\"");
+			}
+			if (Directory.Exists (JavaSdkPath)) {
+				arguments.Add ($"/p:JavaSdkDirectory=\"{JavaSdkPath}\"");
+			}
+			if (parameters != null) {
+				foreach (var parameter in parameters) {
+					arguments.Add ($"/p:{parameter}");
+				}
 			}
 			return arguments;
 		}

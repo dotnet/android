@@ -7,8 +7,9 @@
 		<ImplicitlyExpandNETStandardFacades>false</ImplicitlyExpandNETStandardFacades>
 		<CopyNuGetImplementations Condition=" '$(CopyNuGetImplementations)' == ''">true</CopyNuGetImplementations>
 		<YieldDuringToolExecution Condition="'$(YieldDuringToolExecution)' == ''">true</YieldDuringToolExecution>
-		<LatestSupportedJavaVersion Condition="'$(LatestSupportedJavaVersion)' == ''">1.8.0</LatestSupportedJavaVersion>
+		<LatestSupportedJavaVersion Condition="'$(LatestSupportedJavaVersion)' == ''">11.0.4</LatestSupportedJavaVersion>
 		<MinimumSupportedJavaVersion Condition="'$(MinimumSupportedJavaVersion)' == ''">1.6.0</MinimumSupportedJavaVersion>
+		<AndroidCommandLineToolsVersion Condition=" '$(AndroidCommandLineToolsVersion)' == '' ">1.0</AndroidCommandLineToolsVersion>
 		<AndroidVersionCodePattern Condition=" '$(AndroidUseLegacyVersionCode)' != 'True' And '$(AndroidVersionCodePattern)' == '' ">{abi}{versionCode:D5}</AndroidVersionCodePattern>
 		<AndroidResourceGeneratorTargetName>UpdateGeneratedFiles</AndroidResourceGeneratorTargetName>
 		<AndroidUseAapt2 Condition=" '$(AndroidUseAapt2)' == '' ">True</AndroidUseAapt2>
@@ -20,6 +21,9 @@
 		<AndroidNdkVersion Condition="'$(AndroidNdkVersion)' == ''">16.1</AndroidNdkVersion>
 		<BundleToolVersion Condition="'$(BundleToolVersion)' == ''">@BUNDLETOOL_VERSION@</BundleToolVersion>
 		<_XamarinAndroidMSBuildDirectory>$(MSBuildThisFileDirectory)</_XamarinAndroidMSBuildDirectory>
+
+		<JavacSourceVersion Condition=" '$(JavacSourceVersion)' == '' ">1.8</JavacSourceVersion>
+		<JavacTargetVersion Condition=" '$(JavacTargetVersion)' == '' ">1.8</JavacTargetVersion>
 
 		<!-- Enable nuget package conflict resolution -->
 		<ResolveAssemblyConflicts>true</ResolveAssemblyConflicts>

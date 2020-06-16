@@ -352,6 +352,9 @@ namespace Java.Interop {
 				using (var v = new Java.Lang.String (value.ToString ()!))
 					return JNIEnv.ToLocalJniHandle (v);
 			} },
+			{ typeof (Array), value => {
+				return JNIEnv.NewArray ((Array) value);
+			} },
 			{ typeof (Android.Runtime.JavaObject), value => {
 				return value == null ? IntPtr.Zero : JNIEnv.ToLocalJniHandle (new Android.Runtime.JavaObject (value));
 			} },
@@ -364,6 +367,8 @@ namespace Java.Interop {
 				return converter;
 			if (value != null && LocalJniHandleConverters.TryGetValue (value.GetType (), out converter))
 				return converter;
+			if (sourceType.IsArray)
+				return LocalJniHandleConverters [typeof (Array)];
 			return LocalJniHandleConverters [typeof (Android.Runtime.JavaObject)];
 		}
 

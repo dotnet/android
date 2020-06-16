@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using Kajabity.Tools.Java;
 
 namespace Xamarin.Android.Prepare
@@ -50,6 +51,7 @@ namespace Xamarin.Android.Prepare
 					Log.ErrorLine ("Failed to accept Android SDK licenses");
 					return false;
 				}
+				WritePackageXmls (sdkRoot);
 				return GatherNDKInfo (context, ndkRoot);
 			}
 
@@ -94,12 +96,24 @@ namespace Xamarin.Android.Prepare
 				return false;
 			}
 
+			WritePackageXmls (sdkRoot);
+
 			return GatherNDKInfo (context, ndkRoot);
 		}
 
 		bool AcceptLicenses (Context context, string sdkRoot)
 		{
-			string sdkManager = context.OS.Which (Path.Combine (sdkRoot, "tools", "bin", "sdkmanager"));
+			string[] sdkManagerPaths = new[]{
+				Path.Combine (sdkRoot, "cmdline-tools", context.Properties [KnownProperties.CommandLineToolsFolder], "bin", "sdkmanager"),
+				Path.Combine (sdkRoot, "cmdline-tools", "latest", "bin", "sdkmanager"),
+				Path.Combine (sdkRoot, "tools", "bin", "sdkmanager"),
+			};
+			string sdkManager = "";
+			foreach (var sdkManagerPath in sdkManagerPaths) {
+				sdkManager = context.OS.Which (sdkManagerPath, required: false);
+				if (!string.IsNullOrEmpty (sdkManager))
+					break;
+			}
 			if (sdkManager.Length == 0)
 				throw new InvalidOperationException ("sdkmanager not found");
 			string jdkDir = context.OS.JavaHome;
@@ -316,6 +330,61 @@ namespace Xamarin.Android.Prepare
 		bool IsNdk (AndroidToolchainComponent component)
 		{
 			return component.Name.StartsWith ("android-ndk", StringComparison.OrdinalIgnoreCase);
+		}
+
+		static  readonly    XNamespace  AndroidRepositoryCommon     = "http://schemas.android.com/repository/android/common/01";
+		static  readonly    XNamespace  AndroidRepositoryGeneric    = "http://schemas.android.com/repository/android/generic/01";
+
+		void WritePackageXmls (string sdkRoot)
+		{
+			string[] packageXmlDirs = new[]{
+				Path.Combine (sdkRoot, "emulator"),
+			};
+			foreach (var path in packageXmlDirs) {
+				var properties = ReadSourceProperties (path);
+				if (properties == null)
+					continue;
+				string packageXml = Path.Combine (path, "package.xml");
+				Log.DebugLine ($"Writing '{packageXml}'");
+				var doc = new XDocument(
+						new XElement (AndroidRepositoryCommon + "repository",
+							new XAttribute (XNamespace.Xmlns + "ns2", AndroidRepositoryCommon.NamespaceName),
+							new XAttribute (XNamespace.Xmlns + "ns3", AndroidRepositoryGeneric.NamespaceName),
+							new XElement ("localPackage",
+								new XAttribute ("path", properties ["Pkg.Path"]),
+								new XAttribute ("obsolete", "false"),
+								new XElement ("revision", GetRevision (properties ["Pkg.Revision"])),
+								new XElement ("display-name", properties ["Pkg.Desc"]))));
+				doc.Save (packageXml, SaveOptions.None);
+			}
+		}
+
+		Dictionary<string, string>? ReadSourceProperties (string dir)
+		{
+			var path = Path.Combine (dir, "source.properties");
+			if (!File.Exists (path))
+				return null;
+			var dict = new Dictionary<string, string> ();
+			foreach (var line in File.ReadLines (path)) {
+				if (line.Length == 0)
+					continue;
+				var entry = line.Split (new[]{'='}, 2, StringSplitOptions.None);
+				if (entry.Length != 2)
+					continue;
+				dict.Add (entry [0], entry [1]);
+			}
+			return dict;
+		}
+
+		IEnumerable<XElement> GetRevision (string revision)
+		{
+			var parts = revision.Split ('.');
+			if (parts.Length > 0)
+				yield return new XElement ("major", parts [0]);
+			if (parts.Length > 1)
+				yield return new XElement ("minor", parts [1]);
+			if (parts.Length > 2)
+				yield return new XElement ("micro", parts [2]);
 		}
 	}
 }

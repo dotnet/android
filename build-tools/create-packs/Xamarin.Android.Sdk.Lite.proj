@@ -19,7 +19,7 @@ temporary MSBuild project SDK that redirects to a Xamarin.Android installation o
   <Import Project="..\..\Configuration.props" />
 
   <ItemGroup>
-    <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\targets\Microsoft.Android.Sdk.DefaultItems.props" PackagePath="targets\Microsoft.Android.Sdk.DefaultItems.props" />
+    <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\targets\Microsoft.Android.Sdk.DefaultItems.targets" PackagePath="targets\Microsoft.Android.Sdk.DefaultItems.targets" />
     <!-- The Lite SDK replaces the full Sdk.props/Sdk.targets -->
     <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\targets\Xamarin.Android.Sdk.Lite.props" PackagePath="targets\Microsoft.Android.Sdk.props" />
     <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\targets\Xamarin.Android.Sdk.Lite.targets" PackagePath="targets\Microsoft.Android.Sdk.targets" />

@@ -15,6 +15,14 @@ namespace Xamarin.Android.Prepare
 	//
 	partial class Configurables
 	{
+		const string JetBrainsOpenJDK11Version = "11.0.4";
+		const string JetBrainsOpenJDK11Release = "546.1";
+		static readonly string JetBrainsOpenJDK11DownloadVersion = JetBrainsOpenJDK11Version.Replace ('.', '_');
+
+		const string JetBrainsOpenJDK8Version = "8.202";
+		const string JetBrainsOpenJDK8Release = "1483.37";
+		static readonly string JetBrainsOpenJDK8DownloadVersion = JetBrainsOpenJDK8Version.Replace ('.', 'u');
+
 		const string CorrettoDistVersion = "8.242.08.1";
 		const string CorrettoUrlPathVersion = CorrettoDistVersion;
 
@@ -22,8 +30,15 @@ namespace Xamarin.Android.Prepare
 
 		public static partial class Urls
 		{
-			// Keep the trailing slash here - OS-specific code assumes it's there.
-			public const string Corretto_BaseUri = "https://corretto.aws/downloads/resources/";
+			// https://bintray.com/jetbrains/intellij-jdk/download_file?file_path=jbrsdk-8u202-linux-x64-b1483.37.tar.gz
+			// https://bintray.com/jetbrains/intellij-jdk/download_file?file_path=jbrsdk-8u202-osx-x64-b1483.37.tar.gz
+			// https://bintray.com/jetbrains/intellij-jdk/download_file?file_path=jbrsdk-8u202-windows-x64-b1483.37.tar.gz
+			public static readonly Uri JetBrainsOpenJDK8 = new Uri ($"https://bintray.com/jetbrains/intellij-jdk/download_file?file_path=jbrsdk-{JetBrainsOpenJDK8DownloadVersion}-{JetBrainsOpenJDKOperatingSystem}-b{JetBrainsOpenJDK8Release}.tar.gz");
+
+			// https://bintray.com/jetbrains/intellij-jdk/download_file?file_path=jbrsdk-11_0_4-linux-x64-b546.1.tar.gz
+			// https://bintray.com/jetbrains/intellij-jdk/download_file?file_path=jbrsdk-11_0_4-osx-x64-b546.1.tar.gz
+			// https://bintray.com/jetbrains/intellij-jdk/download_file?file_path=jbrsdk-11_0_4-windows-x64-b546.1.tar.gz
+			public static readonly Uri JetBrainsOpenJDK11 = new Uri ($"https://bintray.com/jetbrains/intellij-jdk/download_file?file_path=jbrsdk-{JetBrainsOpenJDK11DownloadVersion}-{JetBrainsOpenJDKOperatingSystem}-b{JetBrainsOpenJDK11Release}.tar.gz");
 
 			/// <summary>
 			///   Base URL for all Android SDK and NDK downloads. Used in <see cref="AndroidToolchain"/>
@@ -38,6 +53,14 @@ namespace Xamarin.Android.Prepare
 		public static partial class Defaults
 		{
 			public static readonly char[] PropertyListSeparator            = new [] { ':' };
+
+			public static readonly string JdkFolder                        = "jdk-11";
+
+			public static readonly Version JetBrainsOpenJDK11Version = new Version (Configurables.JetBrainsOpenJDK11Version);
+			public static readonly Version JetBrainsOpenJDK11Release = new Version (Configurables.JetBrainsOpenJDK11Release);
+
+			public static readonly Version JetBrainsOpenJDK8Version = new Version (Configurables.JetBrainsOpenJDK8Version);
+			public static readonly Version JetBrainsOpenJDK8Release = new Version (Configurables.JetBrainsOpenJDK8Release);
 
 			// Mono runtimes
 			public const string DebugFileExtension                         = ".pdb";
@@ -104,9 +127,9 @@ namespace Xamarin.Android.Prepare
 			public const int DefaultMaximumParallelTasks = 5;
 
 			/// <summary>
-			///   The maximum JDK version we support. Note: this will probably go away with Corretto
+			///   The maximum JDK version we support.
 			/// </summary>
-			public const int MaxJDKVersion = 8;
+			public static readonly Version MaxJDKVersion = new Version (11, 99, 0);
 
 			/// <summary>
 			///   Prefix for all the log files created by the bootstrapper.
@@ -314,10 +337,13 @@ namespace Xamarin.Android.Prepare
 			public static string Mingw32CmakePath                    => GetCachedPath (ref mingw32CmakePath, ()                    => Path.Combine (BuildBinDir, "mingw-32.cmake"));
 			public static string Mingw64CmakePath                    => GetCachedPath (ref mingw64CmakePath, ()                    => Path.Combine (BuildBinDir, "mingw-64.cmake"));
 
-			// Corretto OpenJDK
-			public static string CorrettoCacheDir                    => GetCachedPath (ref correttoCacheDir, ()                    => ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory));
-			public static string CorrettoInstallDir                  => GetCachedPath (ref correttoInstallDir, ()                  => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainDirectory), "jdk"));
+			// JetBrains OpenJDK
+			public static string OldOpenJDKInstallDir                => GetCachedPath (ref oldOpenJDKInstallDir, ()                => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainDirectory), "jdk"));
+			public static string OpenJDK8InstallDir                  => GetCachedPath (ref openJDK8InstallDir, ()                   => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainDirectory), "jdk-1.8"));
+			public static string OpenJDK8CacheDir                    => GetCachedPath (ref openJDK8CacheDir, ()                     => ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory));
 
+			public static string OpenJDK11InstallDir                 => GetCachedPath (ref openJDK11InstallDir, ()                   => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainDirectory), "jdk-11"));
+			public static string OpenJDK11CacheDir                   => GetCachedPath (ref openJDK11CacheDir, ()                     => ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory));
 			// bundle
 			public static string BCLTestsArchiveName                 = "bcl-tests.zip";
 
@@ -403,6 +429,9 @@ namespace Xamarin.Android.Prepare
 			static string? monoSdksTpnExternalPath;
 			static string? monoSDKSIncludeDestDir;
 			static string? monoLlvmTpnPath;
+			static string? openJDK8InstallDir,  openJDK11InstallDir;
+			static string? openJDK8CacheDir,    openJDK11CacheDir;
+			static string? oldOpenJDKInstallDir;
 		}
 	}
 }

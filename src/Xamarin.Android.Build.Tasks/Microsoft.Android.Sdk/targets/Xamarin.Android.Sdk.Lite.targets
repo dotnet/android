@@ -31,6 +31,12 @@
     <OutputType Condition=" '$(OutputType)' == 'Exe' ">Library</OutputType>
   </PropertyGroup>
 
+  <Import Project="Microsoft.Android.Sdk.DefaultItems.targets" />
+  <ItemGroup>
+    <!-- Remove Microsoft.Android FrameworkReference as it is incompatible with the Lite SDK. -->
+    <FrameworkReference Remove="Microsoft.Android" />
+  </ItemGroup>
+
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.DefaultOutputPaths.targets" Condition="'$(EnableDefaultOutputPaths)' == 'true'" />
   <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.targets" />
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.Common.targets"/>

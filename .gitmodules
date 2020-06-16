@@ -14,6 +14,10 @@
     path = external/Java.Interop
     url = https://github.com/xamarin/java.interop.git
     branch = master
+[submodule "external/lz4"]
+    path = external/lz4
+    url = https://github.com/lz4/lz4.git
+    branch = master
 [submodule "external/mman-win32"]
     path = external/mman-win32
     url = https://github.com/witwall/mman-win32.git
@@ -39,7 +43,3 @@
     path = external/xamarin-android-tools
     url = https://github.com/xamarin/xamarin-android-tools
     branch = master
-[submodule "lz4"]
-	path = external/lz4
-	url = https://github.com/lz4/lz4.git
-	branch = master
