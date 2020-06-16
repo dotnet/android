@@ -38,6 +38,11 @@ namespace Xamarin.Android.Prepare
 
 		protected override async Task<bool> Execute (Context context)
 		{
+			if (Directory.Exists (Configurables.Paths.OldOpenJDKInstallDir)) {
+				Log.DebugLine ($"Found old OpenJDK directory at {Configurables.Paths.OldOpenJDKInstallDir}, removing");
+				Utilities.DeleteDirectorySilent (Configurables.Paths.OldOpenJDKInstallDir);
+			}
+
 			string jdkInstallDir = JdkInstallDir;
 			if (OpenJDKExistsAndIsValid (jdkInstallDir, out string installedVersion)) {
 				Log.Status ($"{ProductName} version ");
