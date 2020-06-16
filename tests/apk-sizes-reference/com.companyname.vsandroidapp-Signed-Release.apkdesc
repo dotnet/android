@@ -1457,13 +1457,13 @@
       "Size": 320016
     },
     "NOTICE": {
-      "Size": 161
+      "Size": 157
     },
     "classes.dex": {
-      "Size": 2901048
+      "Size": 2904124
     },
     "assemblies/VSAndroidApp.dll": {
-      "Size": 60908
+      "Size": 60901
     },
     "assemblies/Xamarin.Android.Arch.Core.Common.dll": {
       "Size": 2643
@@ -1571,34 +1571,34 @@
       "Size": 2644
     },
     "assemblies/Xamarin.Essentials.dll": {
-      "Size": 14123
+      "Size": 14120
     },
     "assemblies/Java.Interop.dll": {
-      "Size": 76147
+      "Size": 68449
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 320624
+      "Size": 300870
     },
     "assemblies/mscorlib.dll": {
-      "Size": 852222
+      "Size": 851756
     },
     "assemblies/System.Core.dll": {
       "Size": 151923
     },
     "assemblies/System.dll": {
-      "Size": 211577
+      "Size": 208915
     },
     "assemblies/System.Numerics.dll": {
-      "Size": 15674
+      "Size": 15672
     },
     "assemblies/System.Net.Http.dll": {
-      "Size": 110910
+      "Size": 110908
     },
     "assemblies/System.Runtime.Serialization.dll": {
-      "Size": 2538
+      "Size": 2534
     },
     "assemblies/Mono.Security.dll": {
-      "Size": 61483
+      "Size": 61479
     },
     "lib/armeabi-v7a/libxamarin-app.so": {
       "Size": 42772
@@ -1607,28 +1607,31 @@
       "Size": 42452
     },
     "lib/armeabi-v7a/libmonodroid.so": {
-      "Size": 203844
+      "Size": 203396
     },
     "lib/x86/libmonodroid.so": {
-      "Size": 271320
+      "Size": 278808
     },
     "lib/armeabi-v7a/libmono-btls-shared.so": {
-      "Size": 1104452
+      "Size": 856580
     },
     "lib/x86/libmono-btls-shared.so": {
-      "Size": 1886724
+      "Size": 1311172
     },
     "lib/armeabi-v7a/libmonosgen-2.0.so": {
-      "Size": 5571808
+      "Size": 3816228
     },
     "lib/x86/libmonosgen-2.0.so": {
-      "Size": 6227304
+      "Size": 3799820
     },
     "lib/armeabi-v7a/libmono-native.so": {
-      "Size": 1068020
+      "Size": 714476
     },
     "lib/x86/libmono-native.so": {
-      "Size": 1272816
+      "Size": 788196
+    },
+    "META-INF/proguard/androidx-annotations.pro": {
+      "Size": 308
     },
     "META-INF/android.arch.core_runtime.version": {
       "Size": 6
@@ -1723,9 +1726,6 @@
     "META-INF/androidx.vectordrawable_vectordrawable-animated.version": {
       "Size": 6
     },
-    "META-INF/proguard/androidx-annotations.pro": {
-      "Size": 308
-    },
     "META-INF/androidx.asynclayoutinflater_asynclayoutinflater.version": {
       "Size": 6
     },
@@ -1739,5 +1739,5 @@
       "Size": 70095
     }
   },
-  "PackageSize": 10041240
+  "PackageSize": 9119640
 }
