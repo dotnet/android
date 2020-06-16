@@ -9,7 +9,14 @@ namespace Xamarin.Android.Tools.LogcatParse {
 
 	public class Grefs {
 
-		const string Prefix               = @"^(\[monodroid-gref\] |(\d\d-\d\d \d\d:\d\d:[^:]+: )?I/monodroid-gref\(\s*(?<pid>{0})\): )?";
+		const string FilePrefix           = @"\[monodroid-gref\] ";
+		const string AndroidPrefix        = @"(\d\d-\d\d \d\d:\d\d:[^:]+: )?I/monodroid-gref\(\s*(?<pid>{0})\): ";
+		const string Android10Prefix      = @"(\d\d-\d\d \d\d:\d\d:[^ ]+ (?<pid>{0}) \d+ )?I monodroid-gref: ";
+
+		const string Prefix               = "^(" + FilePrefix +
+		                                    "|" + AndroidPrefix +
+		                                    "|" + Android10Prefix +
+		                                    ")?";
 		const string ThreadAndStack       = @"(thread (?<thread>'[^']+'\([^)]+\)))?(?<stack>.*)$";
 		const string AddGrefFormat        = Prefix + @"\+g\+ grefc (?<gcount>\d+) gwrefc (?<wgcount>\d+) obj-handle (?<handle>0x[0-9A-Fa-f]+)/(?<handle_type>.) -> new-handle (?<ghandle>0x[0-9A-Fa-f]+)/(?<ghandle_type>.) from " + ThreadAndStack;
 		const string AddWgrefFormat       = Prefix + @"\+w\+ grefc (?<gcount>\d+) gwrefc (?<wgcount>\d+) obj-handle (?<handle>0x[0-9A-Fa-f]+)/(?<handle_type>.) -> new-handle (?<whandle>0x[0-9A-Fa-f]+)/(?<whandle_type>.) from " + ThreadAndStack;

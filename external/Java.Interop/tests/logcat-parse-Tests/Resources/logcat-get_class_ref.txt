@@ -1,9 +1,9 @@
 ﻿# If get_class_ref() is in the callstack, this is a "burned" GREF which references
 # a jclass for the specified type; it can never be collected.
-I/monodroid-gref(11718): +g+ grefc 1 gwrefc 0 obj-handle 0x7830001d/L -> new-handle 0x10046a/G from thread '(null)'(1)
-I/monodroid-gref(11718):    at Android.Runtime.JNIEnv.NewGlobalRef(IntPtr jobject)
-I/monodroid-gref(11718):    at Android.Runtime.JNIEnv.FindClass(System.String classname)
-I/monodroid-gref(11718):    at Android.Runtime.JNIEnv.FindClass(System.String className, IntPtr ByRef cachedJniClassHandle)
-I/monodroid-gref(11718):    at Android.Widget.Button.get_class_ref()
-I/monodroid-gref(11718):    at Android.Widget.Button.get_ThresholdClass()
-I/monodroid-gref(11718):    at Android.Views.View.SetLayerType(LayerType layerType, Android.Graphics.Paint paint)
+06-15 14:29:12.360 11718 11718 I monodroid-gref: +g+ grefc 1 gwrefc 0 obj-handle 0x7830001d/L -> new-handle 0x10046a/G from thread '(null)'(1)
+06-15 14:29:12.360 11718 11718 I monodroid-gref:    at Android.Runtime.JNIEnv.NewGlobalRef(IntPtr jobject)
+06-15 14:29:12.360 11718 11718 I monodroid-gref:    at Android.Runtime.JNIEnv.FindClass(System.String classname)
+06-15 14:29:12.360 11718 11718 I monodroid-gref:    at Android.Runtime.JNIEnv.FindClass(System.String className, IntPtr ByRef cachedJniClassHandle)
+06-15 14:29:12.360 11718 11718 I monodroid-gref:    at Android.Widget.Button.get_class_ref()
+06-15 14:29:12.360 11718 11718 I monodroid-gref:    at Android.Widget.Button.get_ThresholdClass()
+06-15 14:29:12.360 11718 11718 I monodroid-gref:    at Android.Views.View.SetLayerType(LayerType layerType, Android.Graphics.Paint paint)
