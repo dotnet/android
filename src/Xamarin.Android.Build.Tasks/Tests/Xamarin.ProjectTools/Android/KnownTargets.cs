@@ -6,6 +6,7 @@ namespace Xamarin.ProjectTools
 	{
 		public const string LinkAssembliesNoShrink = "_LinkAssembliesNoShrink";
 
-		public static string LinkAssembliesShrink => Builder.UseDotNet ? "ILLink" : "_LinkAssembliesShrink";
+		// _RunILLink is found at: https://github.com/dotnet/sdk/blob/1ed51bc8f9cb06760c5b2f26798ee0278bd75f54/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.ILLink.targets#L69-L72
+		public static string LinkAssembliesShrink => Builder.UseDotNet ? "_RunILLink" : "_LinkAssembliesShrink";
 	}
 }

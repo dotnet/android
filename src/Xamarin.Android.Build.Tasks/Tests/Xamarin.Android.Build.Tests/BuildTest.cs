@@ -684,9 +684,14 @@ namespace UnamedProject
 				var intermediate = Path.Combine (projectDir, proj.IntermediateOutputPath);
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
 
-				//Absolutely non of these files should be *older* than the starting time of this test!
+				// None of these files should be *older* than the starting time of this test!
 				var files = Directory.EnumerateFiles (intermediate, "*", SearchOption.AllDirectories).ToList ();
+				var linkerOutput = Path.Combine (intermediate, "linked") + Path.DirectorySeparatorChar;
 				foreach (var file in files) {
+					//NOTE: ILLink in .NET 5+ currently copies assemblies with older timestamps
+					if (Builder.UseDotNet && file.StartsWith (linkerOutput)) {
+						continue;
+					}
 					var info = new FileInfo (file);
 					Assert.IsTrue (info.LastWriteTimeUtc > start, $"`{file}` is older than `{start}`, with a timestamp of `{info.LastWriteTimeUtc}`!");
 				}
@@ -709,15 +714,10 @@ namespace UnamedProject
 
 				//One last build with no changes
 				Assert.IsTrue (b.Build (proj), "third build should have succeeded.");
-				var targetsToBeSkipped = new [] {
-					isRelease ? KnownTargets.LinkAssembliesShrink : KnownTargets.LinkAssembliesNoShrink,
-					"_UpdateAndroidResgen",
-					"_BuildLibraryImportsCache",
-					"_CompileJava",
-				};
-				foreach (var targetName in targetsToBeSkipped) {
-					Assert.IsTrue (b.Output.IsTargetSkipped (targetName), $"`{targetName}` should be skipped!");
-				}
+				b.Output.AssertTargetIsSkipped (isRelease ? KnownTargets.LinkAssembliesShrink : KnownTargets.LinkAssembliesNoShrink);
+				b.Output.AssertTargetIsSkipped ("_UpdateAndroidResgen");
+				b.Output.AssertTargetIsSkipped ("_BuildLibraryImportsCache");
+				b.Output.AssertTargetIsSkipped ("_CompileJava");
 			}
 		}
 
@@ -2247,6 +2247,7 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 
 		// Context https://bugzilla.xamarin.com/show_bug.cgi?id=29706
 		[Test]
+		[Category ("dotnet")]
 		public void CheckLogicalNamePathSeperators ([Values (false, true)] bool isRelease)
 		{
 			var illegalSeperator = IsWindows ? "/" : @"\";
@@ -2273,14 +2274,20 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 					new BuildItem ("ProjectReference","..\\Library1\\Library1.csproj"),
 				},
 			};
-			var path = Path.Combine ("temp", string.Format ("CheckLogicalNamePathSeperators_{0}", isRelease));
+			var path = Path.Combine ("temp", TestName);
 			using (var b = CreateDllBuilder (Path.Combine (path, dll.ProjectName))) {
-				b.Verbosity = LoggerVerbosity.Diagnostic;
 				Assert.IsTrue (b.Build (dll), "Build should have succeeded.");
 				using (var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName), isRelease)) {
 					Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
-					StringAssert.Contains ("public const int foo = ", File.ReadAllText (Path.Combine (Root, builder.ProjectDirectory, "Resources", "Resource.designer.cs")));
-					StringAssert.Contains ("public const int foo2 = ", File.ReadAllText (Path.Combine (Root, builder.ProjectDirectory, "Resources", "Resource.designer.cs")));
+					string resource_designer_cs;
+					if (Builder.UseDotNet) {
+						resource_designer_cs = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "Resource.designer.cs");
+					} else {
+						resource_designer_cs = Path.Combine (Root, builder.ProjectDirectory, "Resources", "Resource.designer.cs");
+					}
+					var contents = File.ReadAllText (resource_designer_cs);
+					StringAssert.Contains ("public const int foo = ", contents);
+					StringAssert.Contains ("public const int foo2 = ", contents);
 				}
 			}
 		}
@@ -2627,7 +2634,9 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 					KnownPackages.AndroidSupportV4_27_0_2_1,
 				},
 			};
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
+			if (Builder.UseDotNet)
+				proj.AddDotNetCompatPackages ();
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var assets = b.Output.GetIntermediaryAsText (Path.Combine ("..", "project.assets.json"));
 				StringAssert.Contains ("Xamarin.Android.Support.v4", assets,

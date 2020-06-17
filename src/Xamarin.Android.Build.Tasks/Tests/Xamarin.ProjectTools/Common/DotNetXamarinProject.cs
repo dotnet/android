@@ -22,7 +22,6 @@ namespace Xamarin.ProjectTools
 			ItemGroupList.Add (OtherBuildItems);
 			ItemGroupList.Add (Sources);
 
-			SetProperty (KnownProperties.Configuration, debugConfigurationName, "'$(Configuration)' == ''");
 			SetProperty ("RootNamespace", () => RootNamespace ?? ProjectName);
 			SetProperty ("AssemblyName", () => AssemblyName ?? ProjectName);
 

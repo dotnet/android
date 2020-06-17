@@ -51,7 +51,7 @@ namespace Xamarin.ProjectTools
 			foreach (var import in Imports) {
 				var projectName = import.Project ();
 				if (projectName != "Directory.Build.props" && projectName != "Directory.Build.targets")
-					root.AddImport (import.Project ());
+					root.AddImport (projectName);
 			}
 			return root;
 		}
