@@ -1,8 +1,10 @@
+using System;
+
 namespace Xamarin.Android.Tasks
 {
 	class CompressedAssemblyInfo
 	{
-		public const string CompressedAssembliesInfoKey = "__CompressedAssembliesInfo";
+		const string CompressedAssembliesInfoKey = "__CompressedAssembliesInfo";
 
 		public uint FileSize { get; }
 		public uint DescriptorIndex { get; set; }
@@ -11,6 +13,14 @@ namespace Xamarin.Android.Tasks
 		{
 			FileSize = fileSize;
 			DescriptorIndex = 0;
+		}
+
+		public static string GetKey (string projectFullPath)
+		{
+			if (String.IsNullOrEmpty (projectFullPath))
+				throw new ArgumentException ("must be a non-empty string", nameof (projectFullPath));
+
+			return $"{CompressedAssembliesInfoKey}:{projectFullPath}";
 		}
 	}
 }

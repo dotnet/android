@@ -2255,6 +2255,7 @@ because xbuild doesn't support framework reference assemblies.
       SupportedAbis="@(_BuildTargetAbis)"
       Debug="$(AndroidIncludeDebugSymbols)"
       EnableCompression="$(AndroidEnableAssemblyCompression)"
+      ProjectFullPath="$(MSBuildProjectFullPath)"
   />
   <ItemGroup>
     <FileWrites Include="@(_CompressedAssembliesAssemblySource)" />
@@ -2445,7 +2446,8 @@ because xbuild doesn't support framework reference assemblies.
     LibraryProjectJars="@(ExtractedJarImports)"
     TlsProvider="$(AndroidTlsProvider)"
     UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
-	InterpreterEnabled="$(_AndroidUseInterpreter)">
+    InterpreterEnabled="$(_AndroidUseInterpreter)"
+    ProjectFullPath="$(MSBuildProjectFullPath)">
     <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
   </BuildApk>
   <BuildBaseAppBundle
@@ -2474,7 +2476,8 @@ because xbuild doesn't support framework reference assemblies.
       AndroidSequencePointsMode="$(_SequencePointsMode)"
       LibraryProjectJars="@(ExtractedJarImports)"
       TlsProvider="$(AndroidTlsProvider)"
-      UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)">
+      UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
+      ProjectFullPath="$(MSBuildProjectFullPath)">
     <Output TaskParameter="OutputFiles" ItemName="BaseZipFile" />
   </BuildBaseAppBundle>
   <BuildAppBundle
