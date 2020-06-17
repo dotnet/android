@@ -88,6 +88,9 @@ namespace Xamarin.Android.Tasks
 		//[Required]
 		public bool EnableCompression { get; set; }
 
+		[Required]
+		public string ProjectFullPath { get; set; }
+
 		[Output]
 		public ITaskItem[] OutputFiles { get; set; }
 
@@ -114,7 +117,7 @@ namespace Xamarin.Android.Tasks
 
 		List<string> existingEntries = new List<string> ();
 
-		void ExecuteWithAbi (string [] supportedAbis, string apkInputPath, string apkOutputPath)
+		void ExecuteWithAbi (string [] supportedAbis, string apkInputPath, string apkOutputPath, bool debug, bool compress, IDictionary<string, CompressedAssemblyInfo> compressedAssembliesInfo)
 		{
 			if (InterpreterEnabled) {
 				foreach (string abi in supportedAbis) {
@@ -180,7 +183,7 @@ namespace Xamarin.Android.Tasks
 				}
 
 				if (EmbedAssemblies && !BundleAssemblies)
-					AddAssemblies (apk);
+					AddAssemblies (apk, debug, compress, compressedAssembliesInfo);
 
 				AddRuntimeLibraries (apk, supportedAbis);
 				apk.Flush();
@@ -271,15 +274,29 @@ namespace Xamarin.Android.Tasks
 			uncompressedFileExtensions = UncompressedFileExtensions?.Split (new char [] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries) ?? new string [0];
 
 			existingEntries.Clear ();
-			ExecuteWithAbi (SupportedAbis, ApkInputPath, ApkOutputPath);
+
+			bool debug = _Debug;
+			bool compress = !debug && EnableCompression;
+			IDictionary<string, CompressedAssemblyInfo> compressedAssembliesInfo = null;
+
+			if (compress) {
+				string key = CompressedAssemblyInfo.GetKey (ProjectFullPath);
+				Log.LogDebugMessage ($"Retrieving assembly compression info with key '{key}'");
+				compressedAssembliesInfo = BuildEngine4.UnregisterTaskObject (key, RegisteredTaskObjectLifetime.Build) as IDictionary<string, CompressedAssemblyInfo>;
+				if (compressedAssembliesInfo == null)
+					throw new InvalidOperationException ($"Assembly compression info not found for key '{key}'. Compression will not be performed.");
+			}
+
+			ExecuteWithAbi (SupportedAbis, ApkInputPath, ApkOutputPath, debug, compress, compressedAssembliesInfo);
 			outputFiles.Add (ApkOutputPath);
 			if (CreatePackagePerAbi && SupportedAbis.Length > 1) {
 				foreach (var abi in SupportedAbis) {
 					existingEntries.Clear ();
 					var path = Path.GetDirectoryName (ApkOutputPath);
 					var apk = Path.GetFileNameWithoutExtension (ApkOutputPath);
-					ExecuteWithAbi (new [] { abi }, String.Format ("{0}-{1}", ApkInputPath, abi), 
-						Path.Combine (path, String.Format ("{0}-{1}.apk", apk, abi)));
+					ExecuteWithAbi (new [] { abi }, String.Format ("{0}-{1}", ApkInputPath, abi),
+						Path.Combine (path, String.Format ("{0}-{1}.apk", apk, abi)),
+					    debug, compress, compressedAssembliesInfo);
 					outputFiles.Add (Path.Combine (path, String.Format ("{0}-{1}.apk", apk, abi)));
 				}
 			}
@@ -291,18 +308,11 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
-		private void AddAssemblies (ZipArchiveEx apk)
+		void AddAssemblies (ZipArchiveEx apk, bool debug, bool compress, IDictionary<string, CompressedAssemblyInfo> compressedAssembliesInfo)
 		{
-			bool debug = _Debug;
-			bool compress = !debug && EnableCompression;
 			bool use_shared_runtime = String.Equals (UseSharedRuntime, "true", StringComparison.OrdinalIgnoreCase);
 			string sourcePath;
 			AssemblyCompression.AssemblyData compressedAssembly = null;
-			IDictionary<string, CompressedAssemblyInfo> compressedAssembliesInfo = null;
-
-			if (compress) {
-				compressedAssembliesInfo = BuildEngine4.GetRegisteredTaskObject (CompressedAssemblyInfo.CompressedAssembliesInfoKey, RegisteredTaskObjectLifetime.Build) as IDictionary<string, CompressedAssemblyInfo>;
-			}
 
 			int count = 0;
 			foreach (ITaskItem assembly in ResolvedUserAssemblies) {

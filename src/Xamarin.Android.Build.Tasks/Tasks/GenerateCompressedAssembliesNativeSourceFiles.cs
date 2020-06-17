@@ -24,6 +24,9 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public bool EnableCompression { get; set; }
 
+		[Required]
+		public string ProjectFullPath { get; set; }
+
 		public override bool RunTask ()
 		{
 			GenerateCompressedAssemblySources ();
@@ -61,7 +64,9 @@ namespace Xamarin.Android.Tasks
 				kvp.Value.DescriptorIndex = index++;
 			}
 
-			BuildEngine4.RegisterTaskObject (CompressedAssemblyInfo.CompressedAssembliesInfoKey, assemblies, RegisteredTaskObjectLifetime.Build, false);
+			string key = CompressedAssemblyInfo.GetKey (ProjectFullPath);
+			Log.LogDebugMessage ($"Storing compression assemblies info with key '{key}'");
+			BuildEngine4.RegisterTaskObject (key, assemblies, RegisteredTaskObjectLifetime.Build, false);
 			Generate (assemblies);
 
 			void Generate (IDictionary<string, CompressedAssemblyInfo> dict)
