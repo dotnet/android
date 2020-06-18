@@ -271,7 +271,7 @@ stages:
       displayName: downgrade XA to stable
       ignoreLASTEXITCODE: true
 
-    - template: environment/win/vs-msbuild.v1.yml@yaml   # VS installations with associated MSBuild locations
+    - template: environment/win/vs-msbuild.v1.yml@yaml   # Display (in log) VS installation(s) including installation status with associated MSBuild location(s)
 
     - task: MSBuild@1
       displayName: msbuild Xamarin.Android /t:Prepare
