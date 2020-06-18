@@ -32,7 +32,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		public override bool Execute ()
 		{
 			if (string.IsNullOrEmpty (TargetId) && !string.IsNullOrEmpty (SdkVersion)) {
-				TargetId    = "system-images;android-" + SdkVersion + ";google_apis;" + AndroidAbi;
+				TargetId    = "system-images;android-" + SdkVersion + ";default;" + AndroidAbi;
 			}
 			Log.LogMessage (MessageImportance.Low, $"Task {nameof (CreateAndroidEmulator)}");
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (AndroidAbi)}: {AndroidAbi}");
