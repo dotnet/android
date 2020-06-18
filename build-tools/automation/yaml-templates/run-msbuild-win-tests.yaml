@@ -17,6 +17,8 @@ jobs:
 
     - template: clean.yaml
 
+    - template: environment/win/vs-msbuild.v1.yml@yaml   # Display (in log) VS installation(s) including installation status with associated MSBuild location(s)
+
     - template: setup-test-environment.yaml
       parameters:
         provisionExtraArgs: -vv PROVISIONATOR_VISUALSTUDIO_LOCATION="$(VSINSTALLDIR)" -f
