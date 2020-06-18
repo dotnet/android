@@ -295,7 +295,7 @@ EmbeddedAssemblies::typemap_java_to_managed (const char *java_type_name)
 
 	MonoType *type = mono_reflection_type_from_name (const_cast<char*>(managed_type_name), nullptr);
 	if (XA_UNLIKELY (type == nullptr)) {
-		log_warn (LOG_ASSEMBLY, "typemap: managed type '%s' (mapped from Java type '%s') could not be loaded", managed_type_name, java_type_name);
+		log_info (LOG_ASSEMBLY, "typemap: managed type '%s' (mapped from Java type '%s') could not be loaded", managed_type_name, java_type_name);
 		return nullptr;
 	}
 
@@ -505,7 +505,7 @@ EmbeddedAssemblies::typemap_managed_to_java ([[maybe_unused]] MonoType *type, Mo
 
 	const TypeMapModule *match = binary_search<uint8_t, TypeMapModule, compare_mvid> (mvid, map, map_entry_count);
 	if (match == nullptr) {
-		log_warn (LOG_ASSEMBLY, "typemap: module matching MVID [%s] not found.", MonoGuidString (mvid).get ());
+		log_info (LOG_ASSEMBLY, "typemap: module matching MVID [%s] not found.", MonoGuidString (mvid).get ());
 		return nullptr;
 	}
 
