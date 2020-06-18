@@ -15,7 +15,7 @@ namespace Xamarin.ProjectTools
 			Language = XamarinAndroidProjectLanguage.CSharp;
 
 			if (!Builder.UseDotNet) {
-				TargetFrameworkVersion = Versions.Android10;
+				TargetFrameworkVersion = Versions.Android11;
 				UseLatestPlatformSdk = true;
 				AddReferences ("System.Core", "System.Xml", "Mono.Android");
 				ProjectGuid = Guid.NewGuid ().ToString ();
