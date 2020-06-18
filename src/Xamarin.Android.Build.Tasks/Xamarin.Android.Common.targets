@@ -294,18 +294,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<!-- Default Java heap size to 1GB (-Xmx1G) if not specified-->
 	<JavaMaximumHeapSize Condition=" '$(JavaMaximumHeapSize)' == '' ">1G</JavaMaximumHeapSize>
 
-	<ProguardConfigFiles Condition="'$(ProguardConfigFiles)' == '' And '$(AndroidLinkTool)' != ''">
-		{sdk.dir}tools\proguard\proguard-android.txt;
-		{intermediate.common.xamarin};
-		{intermediate.references};
-		{intermediate.application};
-		@(ProguardConfiguration);
-	</ProguardConfigFiles>
-	<ProguardConfigFiles Condition="'$(ProguardConfigFiles)' == '' And '$(AndroidLinkTool)' == ''">
-		{sdk.dir}tools\proguard\proguard-android.txt;
-		@(ProguardConfiguration);
-	</ProguardConfigFiles>
-
 	<_AndroidMainDexListFile>$(IntermediateOutputPath)multidex.keep</_AndroidMainDexListFile>
 	
 	<AndroidManifestPlaceholders Condition="'$(AndroidManifestPlaceholders)' == ''"></AndroidManifestPlaceholders>
@@ -1971,7 +1959,8 @@ because xbuild doesn't support framework reference assemblies.
 		_CompileJava;
 		_CreateApplicationSharedLibraries;
 		_GetMonoPlatformJarPath;
-		_GetLibraryImports
+		_GetLibraryImports;
+		_CalculateProguardConfigurationFiles;
 	</_CompileToDalvikDependsOnTargets>
 	<_CompileToDalvikInputs>
 		$(MSBuildAllProjects)
@@ -1989,6 +1978,21 @@ because xbuild doesn't support framework reference assemblies.
 		_CompileToDalvik;
 	</_CompileDexDependsOn>
 </PropertyGroup>
+
+<Target Name="_CalculateProguardConfigurationFiles">
+  <!-- Support the $(ProguardConfigFiles) property to keep backwards compatibility -->
+  <ItemGroup Condition=" '$(ProguardConfigFiles)' != '' ">
+    <_ProguardConfiguration Include="$(ProguardConfigFiles)" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(ProguardConfigFiles)' == '' ">
+    <_ProguardConfiguration Include="$(_AndroidSdkDirectory)tools\proguard\proguard-android.txt" />
+    <_ProguardConfiguration Include="$(IntermediateOutputPath)proguard\proguard_xamarin.cfg"         Condition=" '$(AndroidLinkTool)' != '' " />
+    <_ProguardConfiguration Include="$(_ProguardProjectConfiguration)"                               Condition=" '$(AndroidLinkTool)' != '' " />
+    <_ProguardConfiguration Include="$(IntermediateOutputPath)proguard\proguard_project_primary.cfg" Condition=" '$(AndroidLinkTool)' != '' " />
+    <!-- @(ProguardConfiguration) should be listed last -->
+    <_ProguardConfiguration Include="@(ProguardConfiguration)" />
+  </ItemGroup>
+</Target>
 
 <Target Name="_CompileDex"
 		DependsOnTargets="$(_BeforeCompileDex);$(_CompileDexDependsOn)">

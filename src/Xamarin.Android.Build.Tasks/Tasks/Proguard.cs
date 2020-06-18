@@ -37,9 +37,6 @@ namespace Xamarin.Android.Tasks
 		public string JavaPlatformJarPath { get; set; }
 
 		[Required]
-		public string AndroidSdkDirectory { get; set; }
-
-		[Required]
 		public string ClassesOutputDirectory { get; set; }
 
 		[Required]
@@ -53,7 +50,7 @@ namespace Xamarin.Android.Tasks
 		public string ProguardCommonXamarinConfiguration { get; set; }
 
 		[Required]
-		public string ProguardConfigurationFiles { get; set; }
+		public string [] ProguardConfigurationFiles { get; set; }
 
 		public ITaskItem[] JavaLibrariesToEmbed { get; set; }
 		
@@ -124,19 +121,9 @@ namespace Xamarin.Android.Tasks
 				using (var xamcfg = File.Create (ProguardCommonXamarinConfiguration))
 					GetType ().Assembly.GetManifestResourceStream ("proguard_xamarin.cfg").CopyTo (xamcfg);
 			
-			var configs = ProguardConfigurationFiles
-				.Replace ("{sdk.dir}", AndroidSdkDirectory + Path.DirectorySeparatorChar)
-				.Replace ("{intermediate.common.xamarin}", ProguardCommonXamarinConfiguration)
-				.Replace ("{intermediate.references}", ProguardGeneratedReferenceConfiguration)
-				.Replace ("{intermediate.application}", ProguardGeneratedApplicationConfiguration)
-				.Replace ("{project}", string.Empty) // current directory anyways.
-				.Split (';')
-				.Select (s => s.Trim ())
-				.Where (s => !string.IsNullOrWhiteSpace (s));
-
 			var enclosingChar = OS.IsWindows ? "\"" : string.Empty;
 
-			foreach (var file in configs) {
+			foreach (var file in ProguardConfigurationFiles) {
 				if (File.Exists (file))
 					cmd.AppendSwitchUnquotedIfNotNull ("-include ", $"{enclosingChar}'{file}'{enclosingChar}");
 				else
