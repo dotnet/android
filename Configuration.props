@@ -133,7 +133,7 @@
     <ProGuardSourceFullPath>$([System.IO.Path]::GetFullPath ('$(ProGuardSourceDirectory)'))</ProGuardSourceFullPath>
   </PropertyGroup>
   <PropertyGroup>
-    <AdbToolPath Condition=" '$(AdbToolPath)' == '' ">$(AndroidSdkFullPath)\platform-tools</AdbToolPath>
+    <AdbToolPath Condition=" '$(AdbToolPath)' == '' ">$(AndroidSdkFullPath)\platform-tools\</AdbToolPath>
     <AdbToolExe Condition=" '$(AdbToolExe)' == '' ">adb</AdbToolExe>
     <AvdManagerToolExe Condition=" '$(AvdManagerToolExe)' == '' ">avdmanager</AvdManagerToolExe>
     <AndroidToolPath Condition=" '$(AndroidToolPath)' == '' ">$(AndroidSdkFullPath)\tools</AndroidToolPath>
