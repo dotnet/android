@@ -8,10 +8,7 @@
 
   <Import Project="..\..\..\Configuration.props" />
   <Import Project="..\..\..\build-tools\scripts\MSBuildReferences.projitems" />
-
-  <ItemGroup>
-    <PackageReference Include="NUnit" Version="3.11.0" />
-  </ItemGroup>
+  <Import Project="..\..\..\build-tools\scripts\NUnitReferences.projitems" />
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Xamarin.ProjectTools.csproj" />
