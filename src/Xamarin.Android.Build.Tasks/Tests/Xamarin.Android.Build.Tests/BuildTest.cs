@@ -3825,6 +3825,23 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 		}
 
 		[Test]
+		public void XA0119AAB ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetProperty ("_XASupportsFastDev", "True");
+			proj.SetProperty (KnownProperties.AndroidUseSharedRuntime, "True");
+			proj.SetProperty ("AndroidPackageFormat", "aab");
+			using (var builder = CreateApkBuilder ()) {
+				builder.ThrowOnBuildFailure = false;
+				Assert.IsFalse (builder.Build (proj), "Build should have failed.");
+				string error = builder.LastBuildOutput
+						.SkipWhile (x => !x.StartsWith ("Build FAILED."))
+						.FirstOrDefault (x => x.Contains ("error XA0119:"));
+				Assert.IsNotNull (error, "Build should have failed with XA0119.");
+			}
+		}
+
+		[Test]
 		public void FastDeploymentDoesNotAddContentProvider ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
