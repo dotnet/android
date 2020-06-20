@@ -529,7 +529,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Using ProGuard with the D8 DEX compiler is no longer supported. Please set the code shrinker to `r8` in the Visual Studio project property pages or edit the project file in a text editor and set the `AndroidLinkTool` MSBuild property to `r8`..
+        ///   Looks up a localized string similar to Using ProGuard with the D8 DEX compiler is no longer supported. Please set the code shrinker to &apos;r8&apos; in the Visual Studio project property pages or edit the project file in a text editor and set the &apos;AndroidLinkTool&apos; MSBuild property to &apos;r8&apos;..
         /// </summary>
         internal static string XA1011 {
             get {
@@ -678,6 +678,24 @@ namespace Xamarin.Android.Tasks.Properties {
         internal static string XA1026_dotnet {
             get {
                 return ResourceManager.GetString("XA1026_dotnet", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The &apos;EnableProguard&apos; MSBuild property is set to &apos;true&apos; and the &apos;AndroidLinkTool&apos; MSBuild property is empty, so &apos;AndroidLinkTool&apos; will default to &apos;proguard&apos;..
+        /// </summary>
+        internal static string XA1027 {
+            get {
+                return ResourceManager.GetString("XA1027", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The &apos;AndroidEnableProguard&apos; MSBuild property is set to &apos;true&apos; and the &apos;AndroidLinkTool&apos; MSBuild property is empty, so &apos;AndroidLinkTool&apos; will default to &apos;proguard&apos;..
+        /// </summary>
+        internal static string XA1028 {
+            get {
+                return ResourceManager.GetString("XA1028", resourceCulture);
             }
         }
         

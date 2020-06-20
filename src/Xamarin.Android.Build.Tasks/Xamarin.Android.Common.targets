@@ -261,11 +261,13 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
         <_AndroidApplicationSharedLibraryPath>$(IntermediateOutputPath)app_shared_libraries\</_AndroidApplicationSharedLibraryPath>
 	<_ResolvedUserAssembliesHashFile>$(IntermediateOutputPath)resolvedassemblies.hash</_ResolvedUserAssembliesHashFile>
 
+	<AndroidDexTool   Condition=" '$(AndroidDexTool)' != 'dx' ">d8</AndroidDexTool>
+	<_AndroidXA1027 Condition=" '$(EnableProguard)' == 'true' And '$(AndroidEnableProguard)' == '' And '$(AndroidDexTool)' == 'd8' And $(AndroidLinkTool) == '' ">true</_AndroidXA1027>
+	<_AndroidXA1028 Condition=" '$(AndroidEnableProguard)' == 'true' And '$(AndroidDexTool)' == 'd8' And $(AndroidLinkTool) == '' ">true</_AndroidXA1028>
 	<!-- $(EnableProguard) is an obsolete property that should be removed at some stage. -->
 	<AndroidEnableProguard Condition=" '$(AndroidEnableProguard)' == '' ">$(EnableProguard)</AndroidEnableProguard>
 	<AndroidEnableProguard Condition=" '$(AndroidLinkTool)' == 'proguard' ">True</AndroidEnableProguard>
 	<AndroidEnableMultiDex Condition=" '$(AndroidEnableMultiDex)' == '' ">False</AndroidEnableMultiDex>
-	<AndroidDexTool   Condition=" '$(AndroidDexTool)' != 'dx' ">d8</AndroidDexTool>
 	<AndroidDexTool   Condition=" '$(AndroidLinkTool)' == 'r8' ">d8</AndroidDexTool>
 	<AndroidDexTool   Condition=" '$(AndroidEnableDesugar)' == 'True' And '$(AndroidDexTool)' == 'dx' ">d8</AndroidDexTool>
 	<!-- NOTE: $(AndroidLinkTool) would be blank if code shrinking is not used at all -->
@@ -450,6 +452,14 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <AndroidError Code="XA0119"
       ResourceName="XA0119_AAB"
       Condition=" '$(AndroidUseSharedRuntime)' == 'True' And '$(AndroidPackageFormat)' == 'aab' "
+  />
+  <AndroidWarning Code="XA1027"
+      ResourceName="XA1027"
+      Condition=" $(_AndroidXA1027) == 'true' "
+  />
+  <AndroidWarning Code="XA1028"
+      ResourceName="XA1028"
+      Condition=" $(_AndroidXA1028) == 'true' "
   />
   <AndroidError Code="XA1011"
       ResourceName="XA1011"

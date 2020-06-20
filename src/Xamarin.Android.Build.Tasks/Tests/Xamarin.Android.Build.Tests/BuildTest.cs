@@ -3886,6 +3886,68 @@ namespace UnnamedProject
 			}
 		}
 
+		static readonly object [] XA1027XA1028Source = new object [] {
+			new object [] {
+				/* linkTool */                   "r8",
+				/* enableProguard */             null,
+				/* androidEnableProguard */      "true",
+				/* expectedBuildResult */        true,
+				/* expectedWarning */            "0 Warning(s)",
+			},
+			new object [] {
+				/* linkTool */                   "proguard",
+				/* enableProguard */             null,
+				/* androidEnableProguard */      "true",
+				/* expectedBuildResult */        false,
+				/* expectedWarning */            "0 Warning(s)",
+			},
+			new object [] {
+				/* linkTool */                   null,
+				/* enableProguard */             null,
+				/* androidEnableProguard */      null,
+				/* expectedBuildResult */        true,
+				/* expectedWarning */            "0 Warning(s)",
+			},
+			new object [] {
+				/* linkTool */                   null,
+				/* enableProguard */             "true",
+				/* androidEnableProguard */      null,
+				/* expectedBuildResult */        false,
+				/* expectedWarning */            "warning XA1027:",
+			},
+			new object [] {
+				/* linkTool */                   null,
+				/* enableProguard */             null,
+				/* androidEnableProguard */      "true",
+				/* expectedBuildResult */        false,
+				/* expectedWarning */            "warning XA1028:",
+			}
+		};
+
+		[Test]
+		[TestCaseSource (nameof (XA1027XA1028Source))]
+		public void XA1027XA1028 (string linkTool, string enableProguard, string androidEnableProguard, bool expectedBuildResult, string expectedWarning)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				// Make sure the test covers the scenario where `$(AndroidDexTool)` is not explicitly configured
+				DexTool = null,
+				LinkTool = linkTool,
+				IsRelease = true
+			};
+			proj.SetProperty ("EnableProguard", enableProguard);
+			proj.SetProperty ("AndroidEnableProguard", androidEnableProguard);
+			using (var builder = CreateApkBuilder ()) {
+				builder.Target = "_CheckNonIdealConfigurations";
+				builder.ThrowOnBuildFailure = expectedBuildResult;
+				builder.Build (proj);
+				Assert.IsNotNull(
+					builder.LastBuildOutput
+						.SkipWhile (x => !x.StartsWith (expectedBuildResult ? "Build succeeded." : "Build FAILED."))
+						.FirstOrDefault (x => x.Contains (expectedWarning)),
+					$"Build output should contain '{expectedWarning}'.");
+			}
+		}
+
 		[Test]
 		public void XA4310 ([Values ("apk", "aab")] string packageFormat)
 		{
