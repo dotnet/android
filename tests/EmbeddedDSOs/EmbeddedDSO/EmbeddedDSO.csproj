@@ -107,7 +107,7 @@
   <Import Project="$(RelativeRootPath)\build-tools\scripts\TestApks.targets" />
 
   <Target Name="_GrantPermissions">
-    <Exec Command="&quot;$(AdbToolPath)\adb&quot; $(AdbTarget) shell pm grant %(TestApkPermission.Package) android.permission.%(TestApkPermission.Identity)" />
+    <Exec Command="&quot;$(AdbToolPath)adb&quot; $(AdbTarget) shell pm grant %(TestApkPermission.Package) android.permission.%(TestApkPermission.Identity)" />
   </Target>
 
   <PropertyGroup>

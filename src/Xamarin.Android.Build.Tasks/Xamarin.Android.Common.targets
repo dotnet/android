@@ -2771,7 +2771,7 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_DeployApk"
     Condition=" '$(AndroidPackageFormat)' != 'aab' ">
   <PropertyGroup>
-    <_DeployCommand>&quot;$(AdbToolPath)\adb&quot; $(AdbTarget) install -r &quot;$(ApkFileSigned)&quot;</_DeployCommand>
+    <_DeployCommand>&quot;$(AdbToolPath)adb&quot; $(AdbTarget) install -r &quot;$(ApkFileSigned)&quot;</_DeployCommand>
   </PropertyGroup>
   <Exec
       ContinueOnError="True"
@@ -2825,7 +2825,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_Uninstall">
-  <Exec Command="&quot;$(AdbToolPath)\adb&quot; $(AdbTarget) uninstall $(_AndroidPackage)" />
+  <Exec Command="&quot;$(AdbToolPath)adb&quot; $(AdbTarget) uninstall $(_AndroidPackage)" />
 </Target>
 
 <Target Name="Uninstall"
