@@ -94,6 +94,17 @@ In this message, the phrase "should not be reached" means that this error messag
         <target state="translated">未能获取 Java SDK 版本。请确保安装了 Java {0} 或更高版本。</target>
         <note>{0} - The Java version number</note>
       </trans-unit>
+      <trans-unit id="XA0035">
+        <source>Unable to determine the Android ABI from the value '{0}'. Edit the project file in a text editor and set the 'RuntimeIdentifiers' MSBuild property to contain only valid identifiers for the Android platform.</source>
+        <target state="new">Unable to determine the Android ABI from the value '{0}'. Edit the project file in a text editor and set the 'RuntimeIdentifiers' MSBuild property to contain only valid identifiers for the Android platform.</target>
+        <note>The following are literal names and should not be translated: Android, ABI, RuntimeIdentifiers, MSBuild
+{0} - The $(RuntimeIdentifier) supplied by the user.</note>
+      </trans-unit>
+      <trans-unit id="XA0036">
+        <source>The 'AndroidSupportedAbis' MSBuild property is no longer supported. Edit the project file in a text editor, remove any uses of 'AndroidSupportedAbis', and use the 'RuntimeIdentifiers' MSBuild property instead.</source>
+        <target state="new">The 'AndroidSupportedAbis' MSBuild property is no longer supported. Edit the project file in a text editor, remove any uses of 'AndroidSupportedAbis', and use the 'RuntimeIdentifiers' MSBuild property instead.</target>
+        <note>The following are literal names and should not be translated: AndroidSupportedAbis, MSBuild, RuntimeIdentifiers</note>
+      </trans-unit>
       <trans-unit id="XA0100">
         <source>EmbeddedNativeLibrary '{0}' is invalid in Android Application projects. Please use AndroidNativeLibrary instead.</source>
         <target state="translated">EmbeddedNativeLibrary“{0}”在 Android 应用程序项目中无效。请改用 AndroidNativeLibrary。</target>

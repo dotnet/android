@@ -327,23 +327,24 @@ namespace Xamarin.Android.Tasks
 				sourcePath = CompressAssembly (assembly);
 
 				// Add assembly
-				AddFileToArchiveIfNewer (apk, sourcePath, GetTargetDirectory (assembly.ItemSpec) + "/"  + Path.GetFileName (assembly.ItemSpec), compressionMethod: UncompressedMethod);
+				var assemblyPath = GetAssemblyPath (assembly, frameworkAssembly: false);
+				AddFileToArchiveIfNewer (apk, sourcePath, assemblyPath + Path.GetFileName (assembly.ItemSpec), compressionMethod: UncompressedMethod);
 
 				// Try to add config if exists
 				var config = Path.ChangeExtension (assembly.ItemSpec, "dll.config");
-				AddAssemblyConfigEntry (apk, config);
+				AddAssemblyConfigEntry (apk, assemblyPath, config);
 
 				// Try to add symbols if Debug
 				if (debug) {
 					var symbols = Path.ChangeExtension (assembly.ItemSpec, "dll.mdb");
 
 					if (File.Exists (symbols))
-						AddFileToArchiveIfNewer (apk, symbols, AssembliesPath + Path.GetFileName (symbols), compressionMethod: UncompressedMethod);
+						AddFileToArchiveIfNewer (apk, symbols, assemblyPath + Path.GetFileName (symbols), compressionMethod: UncompressedMethod);
 
 					symbols = Path.ChangeExtension (assembly.ItemSpec, "pdb");
 
 					if (File.Exists (symbols))
-						AddFileToArchiveIfNewer (apk, symbols, AssembliesPath + Path.GetFileName (symbols), compressionMethod: UncompressedMethod);
+						AddFileToArchiveIfNewer (apk, symbols, assemblyPath + Path.GetFileName (symbols), compressionMethod: UncompressedMethod);
 				}
 				count++;
 				if (count == ZipArchiveEx.ZipFlushLimit) {
@@ -368,20 +369,21 @@ namespace Xamarin.Android.Tasks
 				}
 
 				sourcePath = CompressAssembly (assembly);
-				AddFileToArchiveIfNewer (apk, sourcePath, AssembliesPath + Path.GetFileName (assembly.ItemSpec), compressionMethod: UncompressedMethod);
+				var assemblyPath = GetAssemblyPath (assembly, frameworkAssembly: true);
+				AddFileToArchiveIfNewer (apk, sourcePath, assemblyPath + Path.GetFileName (assembly.ItemSpec), compressionMethod: UncompressedMethod);
 				var config = Path.ChangeExtension (assembly.ItemSpec, "dll.config");
-				AddAssemblyConfigEntry (apk, config);
+				AddAssemblyConfigEntry (apk, assemblyPath, config);
 				// Try to add symbols if Debug
 				if (debug) {
 					var symbols = Path.ChangeExtension (assembly.ItemSpec, "dll.mdb");
 
 					if (File.Exists (symbols))
-						AddFileToArchiveIfNewer (apk, symbols, AssembliesPath + Path.GetFileName (symbols), compressionMethod: UncompressedMethod);
+						AddFileToArchiveIfNewer (apk, symbols, assemblyPath + Path.GetFileName (symbols), compressionMethod: UncompressedMethod);
 
 					symbols = Path.ChangeExtension (assembly.ItemSpec, "pdb");
 
 					if (File.Exists (symbols))
-						AddFileToArchiveIfNewer (apk, symbols, AssembliesPath + Path.GetFileName (symbols), compressionMethod: UncompressedMethod);
+						AddFileToArchiveIfNewer (apk, symbols, assemblyPath + Path.GetFileName (symbols), compressionMethod: UncompressedMethod);
 				}
 				count++;
 				if (count == ZipArchiveEx.ZipFlushLimit) {
@@ -409,7 +411,8 @@ namespace Xamarin.Android.Tasks
 					return assembly.ItemSpec;
 				}
 
-				if (compressedAssembliesInfo.TryGetValue (Path.GetFileName (assembly.ItemSpec), out CompressedAssemblyInfo info) && info != null) {
+				var key = CompressedAssemblyInfo.GetDictionaryKey (assembly);
+				if (compressedAssembliesInfo.TryGetValue (key, out CompressedAssemblyInfo info) && info != null) {
 					EnsureCompressedAssemblyData (assembly.ItemSpec, info.DescriptorIndex);
 					AssemblyCompression.CompressionResult result = AssemblyCompression.Compress (compressedAssembly);
 					if (result != AssemblyCompression.CompressionResult.Success) {
@@ -429,6 +432,8 @@ namespace Xamarin.Android.Tasks
 						return assembly.ItemSpec;
 					}
 					return compressedAssembly.DestinationPath;
+				} else {
+					Log.LogDebugMessage ($"Assembly missing from {nameof (CompressedAssemblyInfo)}: {key}");
 				}
 
 				return assembly.ItemSpec;
@@ -447,9 +452,9 @@ namespace Xamarin.Android.Tasks
 			return true;
 		}
 
-		void AddAssemblyConfigEntry (ZipArchiveEx apk, string configFile)
+		void AddAssemblyConfigEntry (ZipArchiveEx apk, string assemblyPath, string configFile)
 		{
-			string inArchivePath = AssembliesPath + Path.GetFileName (configFile);
+			string inArchivePath = assemblyPath + Path.GetFileName (configFile);
 			existingEntries.Remove (inArchivePath);
 
 			if (!File.Exists (configFile))
@@ -470,13 +475,20 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		string GetTargetDirectory (string path)
+		/// <summary>
+		/// Returns the in-archive path for an assembly
+		/// </summary>
+		string GetAssemblyPath (ITaskItem assembly, bool frameworkAssembly)
 		{
-			string culture, file;
-			if (SatelliteAssembly.TryGetSatelliteCultureAndFileName (path, out culture, out file)) {
-				return AssembliesPath + culture;
+			var assembliesPath = AssembliesPath;
+			var abiDirectory = assembly.GetMetadata ("AbiDirectory");
+			if (!string.IsNullOrEmpty (abiDirectory)) {
+				assembliesPath += abiDirectory + "/";
 			}
-			return AssembliesPath.TrimEnd ('/');
+			if (!frameworkAssembly && SatelliteAssembly.TryGetSatelliteCultureAndFileName (assembly.ItemSpec, out var culture, out _)) {
+				assembliesPath += culture + "/";
+			}
+			return assembliesPath;
 		}
 
 		class LibInfo

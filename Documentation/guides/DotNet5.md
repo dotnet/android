@@ -64,6 +64,24 @@ In .NET 5 the behavior of the following MSBuild tasks will change, but
 
 ## Changes to MSBuild properties
 
+`$(AndroidSupportedAbis)` should not be used. Instead of:
+
+```xml
+<PropertyGroup>
+  <!-- Used in legacy Xamarin.Android projects -->
+  <AndroidSupportedAbis>armeabi-v7a;arm64-v8a;x86;x86_64</AndroidSupportedAbis>
+</PropertyGroup>
+```
+
+Instead use .NET's concept of [runtime identifiers][rids]:
+
+```xml
+<PropertyGroup>
+  <!-- Used going forward in .NET -->
+  <RuntimeIdentifiers>android.21-arm;android.21-arm64;android.21-x86;android.21-x64</RuntimeIdentifiers>
+</PropertyGroup>
+```
+
 `$(AndroidUseIntermediateDesignerFile)` will be `True` by default.
 
 `$(AndroidBoundExceptionType)` will be `System` by default.  This will
@@ -84,6 +102,7 @@ If Java binding is enabled with `@(InputJar)`, `@(EmbeddedJar)`,
 `@(LibraryProjectZip)`, etc. then `$(AllowUnsafeBlocks)` will default
 to `True`.
 
+[rids]: https://docs.microsoft.com/dotnet/core/rid-catalog
 [abet-sys]: https://github.com/xamarin/xamarin-android/issues/4127
 
 ## Default file inclusion

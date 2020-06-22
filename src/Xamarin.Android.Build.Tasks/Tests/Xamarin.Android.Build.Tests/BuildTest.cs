@@ -1431,9 +1431,13 @@ GVuZHNDbGFzc1ZhbHVlLmNsYXNzUEsFBgAAAAADAAMAwgAAAMYBAAAAAA==
 				Assert.IsTrue (
 					b.Output.IsTargetSkipped ("_Sign"),
 					"the _Sign target should not run");
-				Assert.IsTrue (
-					b.Output.IsTargetSkipped ("_LinkAssembliesShrink"),
-					"the _LinkAssembliesShrink target should not run");
+				if (Builder.UseDotNet) {
+					Assert.IsTrue (b.Output.IsTargetSkipped ("ILLink"),
+						"the ILLink target should not run");
+				} else {
+					Assert.IsTrue (b.Output.IsTargetSkipped ("_LinkAssembliesShrink"),
+						"the _LinkAssembliesShrink target should not run");
+				}
 				foo.Timestamp = DateTimeOffset.UtcNow;
 				Assert.IsTrue (b.Build (proj), "third build failed");
 				Assert.IsFalse (b.Output.IsTargetSkipped ("CoreCompile"),

@@ -193,6 +193,15 @@ In this message, the phrase "should not be reached" means that this error messag
     <value>Failed to get the Java SDK version. Please ensure you have Java {0} or above installed.</value>
     <comment>{0} - The Java version number</comment>
   </data>
+  <data name="XA0035" xml:space="preserve">
+    <value>Unable to determine the Android ABI from the value '{0}'. Edit the project file in a text editor and set the 'RuntimeIdentifiers' MSBuild property to contain only valid identifiers for the Android platform.</value>
+    <comment>The following are literal names and should not be translated: Android, ABI, RuntimeIdentifiers, MSBuild
+{0} - The $(RuntimeIdentifier) supplied by the user.</comment>
+  </data>
+  <data name="XA0036" xml:space="preserve">
+    <value>The 'AndroidSupportedAbis' MSBuild property is no longer supported. Edit the project file in a text editor, remove any uses of 'AndroidSupportedAbis', and use the 'RuntimeIdentifiers' MSBuild property instead.</value>
+    <comment>The following are literal names and should not be translated: AndroidSupportedAbis, MSBuild, RuntimeIdentifiers</comment>
+  </data>
   <data name="XA0100" xml:space="preserve">
     <value>EmbeddedNativeLibrary '{0}' is invalid in Android Application projects. Please use AndroidNativeLibrary instead.</value>
     <comment>The following are literal names and should not be translated: EmbeddedNativeLibrary, AndroidNativeLibrary

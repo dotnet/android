@@ -9,6 +9,7 @@ using namespace xamarin::android::internal;
 char* BasicAndroidSystem::override_dirs [MAX_OVERRIDES];
 const char **BasicAndroidSystem::app_lib_directories;
 size_t BasicAndroidSystem::app_lib_directories_size = 0;
+const char* BasicAndroidSystem::built_for_abi_name = nullptr;
 
 void
 BasicAndroidSystem::setup_app_library_directories (jstring_array_wrapper& runtimeApks, jstring_array_wrapper& appDirs, int androidApiLevel)
@@ -60,4 +61,16 @@ char*
 BasicAndroidSystem::determine_primary_override_dir (jstring_wrapper &home)
 {
 	return utils.path_combine (home.get_cstr (), ".__override__");
+}
+
+const char*
+BasicAndroidSystem::get_built_for_abi_name ()
+{
+	if (built_for_abi_name == nullptr) {
+		unsigned short built_for_cpu = 0, running_on_cpu = 0;
+		unsigned char is64bit = 0;
+		_monodroid_detect_cpu_and_architecture (&built_for_cpu, &running_on_cpu, &is64bit);
+		built_for_abi_name = android_abi_names [built_for_cpu];
+	}
+	return built_for_abi_name;
 }

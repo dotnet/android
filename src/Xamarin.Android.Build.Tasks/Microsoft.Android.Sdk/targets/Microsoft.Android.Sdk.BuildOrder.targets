@@ -45,18 +45,8 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
     </BuildDependsOn>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <CompileDependsOn>
-      _SetupDesignTimeBuildForCompile;
-      _AddAndroidDefines;
-      _IncludeLayoutBindingSources;
-      AddLibraryJarsToBind;
-      $(CompileDependsOn);
-    </CompileDependsOn>
-    <CoreCompileDependsOn>
-      UpdateGeneratedFiles;
-      $(CoreCompileDependsOn)
-    </CoreCompileDependsOn>
+  <!-- Targets that run unless we are running _ComputeFilesToPublishForRuntimeIdentifiers -->
+  <PropertyGroup Condition=" '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' ">
     <CoreResolveReferencesDependsOn>
       _SeparateAppExtensionReferences;
       _PrepareWearApplication;
@@ -71,6 +61,20 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
       AddEmbeddedJarsAsResources;
       AddEmbeddedReferenceJarsAsResources;
     </ResolveReferencesDependsOn>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <CompileDependsOn>
+      _SetupDesignTimeBuildForCompile;
+      _AddAndroidDefines;
+      _IncludeLayoutBindingSources;
+      AddLibraryJarsToBind;
+      $(CompileDependsOn);
+    </CompileDependsOn>
+    <CoreCompileDependsOn>
+      UpdateGeneratedFiles;
+      $(CoreCompileDependsOn)
+    </CoreCompileDependsOn>
     <DeferredBuildDependsOn>
       $(DeferredBuildDependsOn);
       UpdateAndroidResources;

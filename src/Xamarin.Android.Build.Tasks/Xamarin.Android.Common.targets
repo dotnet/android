@@ -70,7 +70,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.GetMonoPlatformJar" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Javac" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.KeyTool" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.LinkAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.LinkAssembliesNoShrink" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Lint" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.LogErrorsForFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -1410,9 +1409,6 @@ because xbuild doesn't support framework reference assemblies.
 	</ItemGroup>
 </Target>
 
-<Target Name="_LinkAssemblies"
-  DependsOnTargets="_ResolveAssemblies;_CreatePackageWorkspace;$(_BeforeLinkAssemblies);_GenerateJniMarshalMethods;_LinkAssembliesNoShrink;_LinkAssembliesShrink" />
-
 <Target Name="_GenerateJniMarshalMethods"
     Condition="'$(AndroidGenerateJniMarshalMethods)' == 'True' And '$(AndroidLinkMode)' != 'None' And '$(OS)' != 'Windows_NT'"
     DependsOnTargets="_GetReferenceAssemblyPaths;_SetLatestTargetFrameworkVersion"
@@ -1448,69 +1444,16 @@ because xbuild doesn't support framework reference assemblies.
     DependsOnTargets="_LinkAssembliesNoShrinkInputs"
     Condition="'$(AndroidLinkMode)' == 'None'"
     Inputs="@(ResolvedAssemblies);$(_AndroidBuildPropertiesCache)"
-    Outputs="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')">
+    Outputs="@(ResolvedAssemblies->'%(IntermediateLinkerOutput)')">
   <LinkAssembliesNoShrink
       ResolvedAssemblies="@(_AllResolvedAssemblies)"
       SourceFiles="@(ResolvedAssemblies)"
-      DestinationFiles="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')"
+      DestinationFiles="@(ResolvedAssemblies->'%(IntermediateLinkerOutput)')"
       Deterministic="$(Deterministic)"
   />
   <ItemGroup>
-    <FileWrites Include="$(MonoAndroidIntermediateAssemblyDir)*" />
+    <FileWrites Include="$(MonoAndroidIntermediateAssemblyDir)**" />
   </ItemGroup>
-</Target>
-	
-<Target Name="_LinkAssembliesShrink"
-  Condition="'$(AndroidLinkMode)' != 'None' and '$(UsingAndroidNETSdk)' != 'true' "
-  Inputs="@(ResolvedUserAssemblies);@(LinkDescription);$(_AndroidBuildPropertiesCache)"
-  Outputs="$(_AndroidLinkFlag)">
-
-    <PropertyGroup>
-      <_MainAssembly Condition=" '$(AndroidGenerateJniMarshalMethods)' != 'True' ">$(TargetPath)</_MainAssembly>
-      <_MainAssembly Condition=" '$(AndroidGenerateJniMarshalMethods)' == 'True' ">$(_JniMarshalMethodsOutputDir)$(TargetFileName)</_MainAssembly>
-    </PropertyGroup>
-    <ItemGroup Condition=" '$(AndroidGenerateJniMarshalMethods)' != 'True' ">
-      <_AssembliesToLink Include="@(ResolvedAssemblies)" />
-    </ItemGroup>
-    <ItemGroup Condition=" '$(AndroidGenerateJniMarshalMethods)' == 'True' ">
-      <_PossibleAssembliesToLink Include="@(ResolvedAssemblies)">
-        <JniAssembly>$(_JniMarshalMethodsOutputDir)%(Filename)%(Extension)</JniAssembly>
-      </_PossibleAssembliesToLink>
-      <_AssembliesToLink Condition="Exists(%(_PossibleAssembliesToLink.JniAssembly))" Include="%(_PossibleAssembliesToLink.JniAssembly)" />
-      <_AssembliesToLink Condition="!Exists(%(_PossibleAssembliesToLink.JniAssembly))" Include="%(_PossibleAssembliesToLink.Identity)" />
-    </ItemGroup>
-
-    <CreateProperty
-    	Condition=" '$(AndroidLinkTool)' != '' "
-    	Value="$(IntermediateOutputPath)proguard\proguard_project_references.cfg">
-    	<Output TaskParameter="Value" PropertyName="_ProguardProjectConfiguration" />
-    </CreateProperty>
-
-    <MakeDir Condition=" '$(AndroidLinkTool)' != '' " Directories="$(IntermediateOutputPath)proguard" />
-
-    <LinkAssemblies
-      UseSharedRuntime="$(AndroidUseSharedRuntime)"
-      MainAssembly="$(_MainAssembly)"
-      OutputDirectory="$(MonoAndroidIntermediateAssemblyDir)"
-      I18nAssemblies="$(MandroidI18n)"
-      LinkMode="$(AndroidLinkMode)"
-      LinkSkip="$(AndroidLinkSkip)"
-      LinkDescriptions="@(LinkDescription)"
-      ProguardConfiguration="$(_ProguardProjectConfiguration)"
-      PreserveJniMarshalMethods="$(AndroidGenerateJniMarshalMethods)"
-      EnableProguard="$(AndroidEnableProguard)"
-      Deterministic="$(Deterministic)"
-      DumpDependencies="$(LinkerDumpDependencies)"
-      ResolvedAssemblies="@(_AssembliesToLink)"
-      HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
-      TlsProvider="$(AndroidTlsProvider)" />
-
-    <!-- We have to use a flag instead of normal outputs because linking can delete unused assemblies -->
-    <Touch Files="$(_AndroidLinkFlag)" AlwaysCreate="true" />
-    <ItemGroup>
-      <FileWrites Include="$(_AndroidLinkFlag)" />
-      <FileWrites Include="$(MonoAndroidIntermediateAssemblyDir)*" />
-    </ItemGroup>
 </Target>
 
 <PropertyGroup>
@@ -1524,58 +1467,8 @@ because xbuild doesn't support framework reference assemblies.
 		;_LinkAssemblies
 	</_PrepareAssembliesDependsOnTargets>
 </PropertyGroup>
-  
-<Target Name="_PrepareAssemblies"
-    DependsOnTargets="$(_PrepareAssembliesDependsOnTargets)">
-  <!-- Update our assembly lists to the copies for linking.  We also need to verify
-       they still exist cause linking will delete them if they aren't used -->
-  <GetFilesThatExist
-    Condition="'$(AndroidLinkMode)' != 'None'"
-    Files="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')">
-    <Output TaskParameter="FilesThatExist" ItemName="_ResolvedAssemblies" />
-  </GetFilesThatExist>
 
-  <GetFilesThatExist
-    Condition="'$(AndroidLinkMode)' != 'None'"
-    Files="@(ResolvedSymbols->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')">
-    <Output TaskParameter="FilesThatExist" ItemName="_ResolvedSymbols" />
-  </GetFilesThatExist>
-
-  <GetFilesThatExist
-    Condition="'$(AndroidLinkMode)' != 'None'"
-    Files="@(ResolvedUserAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')">
-    <Output TaskParameter="FilesThatExist" ItemName="_ResolvedUserAssemblies" />
-  </GetFilesThatExist>
-
-  <GetFilesThatExist
-    Condition="'$(AndroidLinkMode)' != 'None'"
-    Files="@(ResolvedFrameworkAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')">
-    <Output TaskParameter="FilesThatExist" ItemName="_ResolvedFrameworkAssemblies" />
-  </GetFilesThatExist>
-
-  <ItemGroup Condition=" '$(AndroidLinkMode)' == 'None' ">
-    <_ResolvedAssemblies          Include="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')" />
-    <_ResolvedSymbols             Include="@(ResolvedSymbols->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')" />
-    <_ResolvedUserAssemblies      Include="@(ResolvedUserAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')" />
-    <_ResolvedFrameworkAssemblies Include="@(ResolvedFrameworkAssemblies)" />
-  </ItemGroup>
-  <ItemGroup Condition=" '$(AndroidLinkMode)' == 'None' Or '$(AndroidUseSharedRuntime)' == 'True' ">
-    <_ShrunkAssemblies          Include="@(_ResolvedAssemblies)" />
-    <_ShrunkUserAssemblies      Include="@(_ResolvedUserAssemblies)" />
-    <_ShrunkFrameworkAssemblies Include="@(_ResolvedFrameworkAssemblies)" />
-  </ItemGroup>
-  <ItemGroup Condition=" '$(AndroidLinkMode)' != 'None' And '$(AndroidUseSharedRuntime)' != 'True' ">
-    <_ShrunkAssemblies          Include="@(_ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)shrunk\%(Filename)%(Extension)')" />
-    <_ShrunkUserAssemblies      Include="@(_ResolvedUserAssemblies->'$(MonoAndroidIntermediateAssemblyDir)shrunk\%(Filename)%(Extension)')" />
-    <_ShrunkFrameworkAssemblies Include="@(_ResolvedFrameworkAssemblies->'$(MonoAndroidIntermediateAssemblyDir)shrunk\%(Filename)%(Extension)')" />
-  </ItemGroup>
-  <ItemGroup>
-    <_ResolvedUserMonoAndroidAssemblies
-        Include="@(_ResolvedUserAssemblies)"
-        Condition=" '%(_ResolvedUserAssemblies.TargetFrameworkIdentifier)' == 'MonoAndroid' Or '%(_ResolvedUserAssemblies.HasMonoAndroidReference)' == 'True' "
-    />
-  </ItemGroup>
-</Target>
+<!-- _PrepareAssemblies lives in Xamarin.Android.Legacy.targets and Microsoft.Android.Sdk.AssemblyResolution.targets -->
 
 <Target Name="_PrepareNativeAssemblySources">
   <PrepareAbiItems

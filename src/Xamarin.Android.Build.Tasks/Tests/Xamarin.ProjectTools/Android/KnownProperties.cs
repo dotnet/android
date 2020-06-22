@@ -15,6 +15,7 @@ namespace Xamarin.ProjectTools
 
 		public const string AndroidSupportedAbis = "AndroidSupportedAbis";
 		public const string RuntimeIdentifier = "RuntimeIdentifier";
+		public const string RuntimeIdentifiers = "RuntimeIdentifiers";
 
 		public const string Deterministic = "Deterministic";
 		public const string BundleAssemblies = "BundleAssemblies";

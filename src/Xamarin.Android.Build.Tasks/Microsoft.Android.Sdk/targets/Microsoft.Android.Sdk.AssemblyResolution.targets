@@ -10,42 +10,54 @@ _ResolveAssemblies MSBuild target.
 
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <Target Name="_ResolveAssemblies" DependsOnTargets="ComputeFilesToPublish">
+  <UsingTask TaskName="Xamarin.Android.Tasks.ProcessAssemblies" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
-    <!--
-        TODO: not yet complete.
+  <Target Name="_ComputeFilesToPublishForRuntimeIdentifiers"
+      DependsOnTargets="_FixupIntermediateAssembly;ResolveReferences;ComputeFilesToPublish"
+      Returns="@(ResolvedFileToPublish)">
+  </Target>
 
-        Two things here are placeholders for later:
+  <Target Name="_FixupIntermediateAssembly" Condition=" '$(_OuterIntermediateAssembly)' != '' ">
+    <ItemGroup>
+      <IntermediateAssembly Remove="@(IntermediateAssembly)" />
+      <IntermediateAssembly Include="$(_OuterIntermediateAssembly)" />
+    </ItemGroup>
+  </Target>
 
-        * %(HasMonoAndroidReference) is always True to disable
-          performance improvements around $(TargetFrameworkVersion)
-          detection.
-
-        * Is there better metadata to use other than %(NuGetPackageId)
-          to determine which runtime components are coming from our
-          known @(FrameworkReference)s?
-    -->
-
+  <Target Name="_ResolveAssemblies">
+    <ItemGroup>
+      <_RIDs Include="$(RuntimeIdentifier)"  Condition=" '$(RuntimeIdentifiers)' == '' " />
+      <_RIDs Include="$(RuntimeIdentifiers)" Condition=" '$(RuntimeIdentifiers)' != '' " />
+    </ItemGroup>
+    <PropertyGroup>
+      <_AdditionalProperties>_ComputeFilesToPublishForRuntimeIdentifiers=true;_OuterIntermediateAssembly=@(IntermediateAssembly)</_AdditionalProperties>
+    </PropertyGroup>
+    <MSBuild
+        Projects="$(MSBuildProjectFile)"
+        Targets="_ComputeFilesToPublishForRuntimeIdentifiers"
+        Properties="RuntimeIdentifier=%(_RIDs.Identity);$(_AdditionalProperties)">
+      <Output TaskParameter="TargetOutputs" ItemName="ResolvedFileToPublish" />
+    </MSBuild>
+    <ItemGroup>
+      <_ResolvedAssemblyFiles Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.Extension)' == '.dll' " />
+    </ItemGroup>
+    <ProcessAssemblies
+        InputAssemblies="@(_ResolvedAssemblyFiles)"
+        IntermediateAssemblyDirectory="$(MonoAndroidIntermediateAssemblyDir)"
+        LinkMode="$(AndroidLinkMode)">
+      <Output TaskParameter="OutputAssemblies" ItemName="ResolvedAssemblies" />
+      <Output TaskParameter="ShrunkAssemblies" ItemName="_ShrunkAssemblies" />
+    </ProcessAssemblies>
     <ItemGroup>
       <ResolvedFrameworkAssemblies
-          Include="@(ResolvedFileToPublish)"
-          Condition=" '%(ResolvedFileToPublish.Extension)' == '.dll' and '%(ResolvedFileToPublish.NuGetPackageId)' == 'Microsoft.Android.Runtime.$(RuntimeIdentifier)' "
-          HasMonoAndroidReference="True"
-      />
-      <ResolvedFrameworkAssemblies
-          Include="@(ResolvedFileToPublish)"
-          Condition=" '%(ResolvedFileToPublish.Extension)' == '.dll' and '%(ResolvedFileToPublish.NuGetPackageId)' == 'Microsoft.NETCore.App.Runtime.$(RuntimeIdentifier)' "
-          HasMonoAndroidReference="True"
+          Include="@(ResolvedAssemblies)"
+          Condition=" '%(ResolvedAssemblies.FrameworkAssembly)' == 'true' "
       />
       <ResolvedUserAssemblies
-          Include="@(ResolvedFileToPublish)"
-          Exclude="@(ResolvedFrameworkAssemblies)"
-          Condition=" '%(ResolvedFileToPublish.Extension)' == '.dll' "
-          HasMonoAndroidReference="True"
+          Include="@(ResolvedAssemblies)"
+          Condition=" '%(ResolvedAssemblies.FrameworkAssembly)' != 'true' "
       />
-      <ResolvedAssemblies Include="@(ResolvedFrameworkAssemblies);@(ResolvedUserAssemblies)" />
     </ItemGroup>
-
     <Hash ItemsToHash="@(ResolvedAssemblies)">
       <Output TaskParameter="HashResult" PropertyName="_ResolvedUserAssembliesHash" />
     </Hash>
@@ -57,6 +69,37 @@ _ResolveAssemblies MSBuild target.
     />
     <ItemGroup>
       <FileWrites Include="$(_ResolvedUserAssembliesHashFile)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_PrepareAssemblies"
+      DependsOnTargets="$(_PrepareAssembliesDependsOnTargets)">
+    <ItemGroup Condition=" '$(AndroidLinkMode)' == 'None' ">
+      <_ResolvedAssemblies          Include="@(ResolvedAssemblies->'%(IntermediateLinkerOutput)')" />
+      <_ResolvedUserAssemblies      Include="@(ResolvedUserAssemblies->'%(IntermediateLinkerOutput)')" />
+      <_ResolvedFrameworkAssemblies Include="@(ResolvedFrameworkAssemblies->'%(IntermediateLinkerOutput)')" />
+      <_ShrunkAssemblies            Include="@(_ResolvedAssemblies)" />
+      <_ShrunkUserAssemblies        Include="@(_ResolvedUserAssemblies)" />
+      <_ShrunkFrameworkAssemblies   Include="@(_ResolvedFrameworkAssemblies)" />
+    </ItemGroup>
+    <ItemGroup Condition=" '$(AndroidLinkMode)' != 'None' ">
+      <_ResolvedAssemblies          Include="@(ResolvedAssemblies)" />
+      <_ResolvedUserAssemblies      Include="@(ResolvedUserAssemblies)" />
+      <_ResolvedFrameworkAssemblies Include="@(ResolvedFrameworkAssemblies)" />
+      <_ShrunkFrameworkAssemblies
+          Include="@(_ShrunkAssemblies)"
+          Condition=" '%(_ShrunkAssemblies.FrameworkAssembly)' == 'true' "
+      />
+      <_ShrunkUserAssemblies
+          Include="@(_ShrunkAssemblies)"
+          Condition=" '%(_ShrunkAssemblies.FrameworkAssembly)' != 'true' "
+      />
+    </ItemGroup>
+    <ItemGroup>
+      <_ResolvedUserMonoAndroidAssemblies
+          Include="@(_ResolvedUserAssemblies)"
+          Condition=" '%(_ResolvedUserAssemblies.TargetFrameworkIdentifier)' == 'MonoAndroid' Or '%(_ResolvedUserAssemblies.HasMonoAndroidReference)' == 'True' "
+      />
     </ItemGroup>
   </Target>
 

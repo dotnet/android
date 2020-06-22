@@ -56,7 +56,8 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 
-				assemblies.Add (Path.GetFileName (assembly.ItemSpec), new CompressedAssemblyInfo (checked((uint)fi.Length)));
+				assemblies.Add (CompressedAssemblyInfo.GetDictionaryKey (assembly),
+					new CompressedAssemblyInfo (checked((uint)fi.Length)));
 			}
 
 			uint index = 0;

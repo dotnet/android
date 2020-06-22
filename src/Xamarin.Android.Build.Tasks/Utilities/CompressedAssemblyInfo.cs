@@ -1,4 +1,6 @@
 using System;
+using System.IO;
+using Microsoft.Build.Framework;
 
 namespace Xamarin.Android.Tasks
 {
@@ -21,6 +23,16 @@ namespace Xamarin.Android.Tasks
 				throw new ArgumentException ("must be a non-empty string", nameof (projectFullPath));
 
 			return $"{CompressedAssembliesInfoKey}:{projectFullPath}";
+		}
+
+		public static string GetDictionaryKey (ITaskItem assembly)
+		{
+			var key = Path.GetFileName (assembly.ItemSpec);
+			var abiDirectory = assembly.GetMetadata ("AbiDirectory");
+			if (!string.IsNullOrEmpty (abiDirectory)) {
+				key = abiDirectory + "/" + key;
+			}
+			return key;
 		}
 	}
 }
