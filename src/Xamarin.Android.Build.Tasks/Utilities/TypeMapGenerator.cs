@@ -271,6 +271,7 @@ namespace Xamarin.Android.Tasks
 				for (int i = 1; i < duplicates.Count; i++) {
 					duplicates[i].TypeDefinition = template.TypeDefinition;
 					duplicates[i].ManagedName = template.ManagedName;
+					duplicates[i].SkipInJavaToManaged = template.SkipInJavaToManaged;
 				}
 			}
 		}
