@@ -874,7 +874,7 @@ stages:
   # Check - "Xamarin.Android (Test Designer - macOS)"
   - job: designer_integration_mac
     displayName: Designer - macOS
-    pool: $(HostedMac)
+    pool: $(HostedMacMojave)
     timeoutInMinutes: 120
     cancelTimeoutInMinutes: 5
     workspace:
