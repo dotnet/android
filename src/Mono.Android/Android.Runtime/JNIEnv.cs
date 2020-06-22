@@ -284,6 +284,9 @@ namespace Android.Runtime {
 				Exception? innerException = jltp?.InnerException;
 				var args  = new UnhandledExceptionEventArgs (innerException ?? javaException, isTerminating: true);
 
+				Logger.Log (LogLevel.Info, "MonoDroid", "UNHANDLED EXCEPTION:");
+				Logger.Log (LogLevel.Info, "MonoDroid", javaException.ToString ());
+
 				// Disabled until Linker error surfaced in https://github.com/xamarin/xamarin-android/pull/4302#issuecomment-596400025 is resolved
 				//AppDomain.CurrentDomain.DoUnhandledException (args);
 				AppDomain_DoUnhandledException (AppDomain.CurrentDomain, args);

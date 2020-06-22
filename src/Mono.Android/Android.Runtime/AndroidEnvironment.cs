@@ -114,9 +114,6 @@ namespace Android.Runtime {
 
 		internal static void UnhandledException (Exception e)
 		{
-			Logger.Log (LogLevel.Info, "MonoDroid", "UNHANDLED EXCEPTION:");
-			Logger.Log (LogLevel.Info, "MonoDroid", e.ToString ());
-
 			var info = new RaiseThrowableEventArgs (e);
 			bool handled = false;
 			foreach (EventHandler<RaiseThrowableEventArgs> handler in GetUnhandledExceptionRaiserInvocationList ()) {
