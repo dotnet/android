@@ -929,11 +929,6 @@ namespace Lib2
 					Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped on first build!");
 				}
 
-				if (androidAotMode == "Hybrid") {
-					// FIXME: with Hybrid AOT, <CilStrip/> modifies assemblies in-place
-					Assert.Ignore ("Ignoring, Hybrid AOT triggers _BuildApkEmbed.");
-				}
-
 				b.BuildLogFile = "second.log";
 				b.CleanupAfterSuccessfulBuild = false;
 				b.CleanupOnDispose = false;

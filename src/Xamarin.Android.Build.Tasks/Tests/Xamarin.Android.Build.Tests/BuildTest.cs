@@ -4331,5 +4331,37 @@ namespace UnnamedProject
 
 			}
 		}
+
+		[Test]
+		public void HybridAOT ()
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+				AotAssemblies = true,
+			};
+			proj.SetProperty ("AndroidAotMode", "Hybrid");
+			// So we can use Mono.Cecil to open assemblies directly
+			proj.SetProperty ("AndroidEnableAssemblyCompression", "False");
+
+			using (var b = CreateApkBuilder ()) {
+				b.Build (proj);
+
+				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}.apk");
+				FileAssert.Exists (apk);
+				using (var zip = ZipHelper.OpenZip (apk)) {
+					var entry = zip.ReadEntry ($"assemblies/{proj.ProjectName}.dll");
+					Assert.IsNotNull (entry, $"{proj.ProjectName}.dll should exist in apk!");
+					using (var stream = new MemoryStream ()) {
+						entry.Extract (stream);
+						stream.Position = 0;
+						using (var assembly = AssemblyDefinition.ReadAssembly (stream)) {
+							var type = assembly.MainModule.GetType ($"{proj.ProjectName}.MainActivity");
+							var method = type.Methods.First (m => m.Name == "OnCreate");
+							Assert.LessOrEqual (method.Body.Instructions.Count, 1, "OnCreate should have stripped method bodies!");
+						}
+					}
+				}
+			}
+		}
 	}
 }

@@ -2151,13 +2151,17 @@ because xbuild doesn't support framework reference assemblies.
 	   <Output TaskParameter="NativeLibrariesReferences" ItemName="_AdditionalNativeLibraryReferences" />
   </Aot>
 
+  <ItemGroup Condition=" '$(AndroidAotMode)' == 'Hybrid' And '$(AotAssemblies)' == 'True' ">
+    <_CilStripAssemblies Include="@(_ShrunkAssemblies)" Condition=" '%(FileName)' != 'Mono.Android' " />
+  </ItemGroup>
+
   <!-- Strip the IL code of the resolved managed assemblies -->
    <CilStrip
 	Condition=" '$(AndroidAotMode)' == 'Hybrid' And '$(AotAssemblies)' == 'True' "
 	AndroidAotMode="$(AndroidAotMode)"
 	ToolPath="$(_MonoAndroidToolsDirectory)"
 	ApkOutputPath="$(_BuildApkEmbedOutputs)"
-	ResolvedAssemblies="@(_ResolvedAssemblies)">
+	ResolvedAssemblies="@(_CilStripAssemblies)">
   </CilStrip> 
 
   <!-- Bundle the assemblies into native libraries in the apk -->
