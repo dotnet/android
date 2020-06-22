@@ -19,4 +19,10 @@ device or emulator, the following `<queries/>` entries must be present in
 These will be generated if `$(AndroidUseSharedRuntime)` is `true` and
 `android:targetSdkVersion` is 30 or higher.
 
+### manifestmerger.jar version update to 27.0.0
+
+The version of the [manifest merger][1] included in Xamarin.Android
+has been updated from 26.5.0 to 27.0.0.
+
 [0]: https://developer.android.com/preview/privacy/package-visibility#package-name
+[1]: https://developer.android.com/studio/build/manifest-merge.html
