@@ -21,6 +21,9 @@ namespace Java.Interop.Tools.Generator.Transformation
 
 				foreach (var p in c.Fields.Where (f => f.Visibility == "protected"))
 					p.Visibility = "private";
+
+				foreach (var p in c.NestedTypes.Where (t => t.Visibility == "protected"))
+					p.Visibility = "private";
 			}
 		}
 	}

@@ -867,6 +867,9 @@ namespace MonoDroid.Generation
 		bool ValidateMethod (CodeGenerationOptions opt, Method m, CodeGeneratorContext context) =>
 			m.Validate (opt, TypeParameters, context);
 
-		public string Visibility => string.IsNullOrEmpty (support.Visibility) ? "public" : support.Visibility;
+		public string Visibility {
+			get => string.IsNullOrEmpty (support.Visibility) ? "public" : support.Visibility;
+			set => support.Visibility = value;
+		}
 	}
 }

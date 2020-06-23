@@ -68,6 +68,21 @@ namespace generatortests
 			Assert.AreEqual ("private", field.Visibility);
 		}
 
+		[Test]
+		public void FixProtectedType ()
+		{
+			var klass = CreateSealedClass ();
+
+			var type = SupportTypeBuilder.CreateClass ("my.example.class.inner", options);
+			type.Visibility = "protected";
+
+			klass.NestedTypes.Add (type);
+
+			SealedProtectedFixups.Fixup (new [] { (GenBase) klass }.ToList ());
+
+			Assert.AreEqual ("private", type.Visibility);
+		}
+
 		private ClassGen CreateSealedClass ()
 		{
 			var klass = SupportTypeBuilder.CreateClass ("my.example.class", options);
