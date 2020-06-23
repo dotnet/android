@@ -12,8 +12,8 @@
     branch = v1.1.1
 [submodule "external/Java.Interop"]
     path = external/Java.Interop
-    url = https://github.com/xamarin/java.interop.git
-    branch = master
+    url = https://github.com/radekdoulik/java.interop.git
+    branch = pr-jnimarshalmethod-gen-support-methods-with-14plus-arguments
 [submodule "external/lz4"]
     path = external/lz4
     url = https://github.com/lz4/lz4.git
