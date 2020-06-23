@@ -363,7 +363,6 @@
       Command="&quot;$(ILRepack)&quot; $(_ILRepackArgs)"
       WorkingDirectory="$(OutputPath)"
     />
-    <Delete Files="@(_InputAssembliesThatExist)" />
     <Touch
       Files="$(IntermediateOutputPath)ILRepacker.stamp"
       AlwaysCreate="True"
