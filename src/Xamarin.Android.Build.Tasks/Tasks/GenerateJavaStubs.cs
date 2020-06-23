@@ -267,6 +267,7 @@ namespace Xamarin.Android.Tasks
 			manifest.MultiDex = MultiDex;
 			manifest.NeedsInternet = NeedsInternet;
 			manifest.InstantRunEnabled = InstantRunEnabled;
+			manifest.UseSharedRuntime = UseSharedRuntime;
 
 			var additionalProviders = manifest.Merge (Log, cache, allJavaTypes, ApplicationJavaClass, EmbedAssemblies, BundledWearApplicationName, MergedManifestDocuments);
 
