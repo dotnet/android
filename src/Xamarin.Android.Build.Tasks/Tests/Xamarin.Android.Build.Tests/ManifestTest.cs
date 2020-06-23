@@ -835,5 +835,34 @@ class TestActivity : Activity { }"
  				Assert.AreEqual (expectedOutput, string.Join (" ", e.Attributes ()));
  			}
  		}
+
+		[Test]
+		public void Queries_API30 ([Values (true, false)] bool useAapt2)
+		{
+			if (!CommercialBuildAvailable) {
+				Assert.Ignore ("$(AndroidUseSharedRuntime) is required for this test.");
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				AndroidUseSharedRuntime = true,
+				EmbedAssembliesIntoApk = false,
+			};
+			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			proj.AndroidManifest = proj.AndroidManifest.Replace ("<uses-sdk />", "<uses-sdk android:targetSdkVersion=\"30\" />");
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded");
+
+				string manifest = b.Output.GetIntermediaryAsText (Path.Combine ("android", "AndroidManifest.xml"));
+				var doc = XDocument.Parse (manifest);
+				var ns = XNamespace.Get ("http://schemas.android.com/apk/res/android");
+				var names = doc.Element ("manifest")?
+					.Element ("queries")?
+					.Elements ("package")?
+					.Select (e => e.Attribute (ns + "name")?.Value);
+				StringAssertEx.Contains ("Mono.Android.DebugRuntime", names);
+				StringAssertEx.Contains ("Mono.Android.Platform.ApiLevel_30", names);
+			}
+		}
 	}
 }
