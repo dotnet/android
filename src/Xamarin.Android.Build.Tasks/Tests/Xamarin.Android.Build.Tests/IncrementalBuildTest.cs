@@ -461,7 +461,7 @@ namespace Lib2
 		}
 
 		[Test]
-		[Category ("SmokeTests")]
+		[Category ("SmokeTests"), Category ("dotnet")]
 		public void ProduceReferenceAssembly ()
 		{
 			var path = Path.Combine ("temp", TestName);
@@ -501,35 +501,21 @@ namespace Lib2
 				Assert.IsTrue (libBuilder.Build (lib, doNotCleanupOnUpdate: true, saveProject: false), "second library build should have succeeded.");
 				Assert.IsTrue (appBuilder.Build (app, doNotCleanupOnUpdate: true, saveProject: false), "second app build should have succeeded.");
 
-				var targetsShouldSkip = new [] {
-					"CoreCompile",
-					"_BuildLibraryImportsCache",
-					"_ResolveLibraryProjectImports",
-					"_GenerateJavaStubs",
-				};
-				foreach (var target in targetsShouldSkip) {
-					Assert.IsTrue (appBuilder.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
-				}
+				appBuilder.Output.AssertTargetIsSkipped ("CoreCompile");
+				appBuilder.Output.AssertTargetIsSkipped ("_BuildLibraryImportsCache");
+				appBuilder.Output.AssertTargetIsSkipped ("_ResolveLibraryProjectImports");
+				appBuilder.Output.AssertTargetIsSkipped ("_GenerateJavaStubs");
 
-				var targetsShouldPartiallyRun = new [] {
-					"_LinkAssembliesNoShrink",
-				};
-				foreach (var target in targetsShouldPartiallyRun) {
-					Assert.IsTrue (appBuilder.Output.IsTargetPartiallyBuilt (target), $"`{target}` should *partially* run!");
-				}
+				appBuilder.Output.AssertTargetIsPartiallyBuilt (KnownTargets.LinkAssembliesNoShrink);
 
-				var targetsShouldRun = new [] {
-					"_BuildApkEmbed",
-					"_CopyPackage",
-					"_Sign",
-				};
-				foreach (var target in targetsShouldRun) {
-					Assert.IsFalse (appBuilder.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped!");
-				}
+				appBuilder.Output.AssertTargetIsNotSkipped ("_BuildApkEmbed");
+				appBuilder.Output.AssertTargetIsNotSkipped ("_CopyPackage");
+				appBuilder.Output.AssertTargetIsNotSkipped ("_Sign");
 			}
 		}
 
 		[Test]
+		[Category ("dotnet")]
 		public void LinkAssembliesNoShrink ()
 		{
 			var proj = new XamarinFormsAndroidApplicationProject ();
@@ -540,11 +526,11 @@ namespace Lib2
 				var formsViewGroup = b.Output.GetIntermediaryPath (Path.Combine ("android", "assets", "FormsViewGroup.dll"));
 				File.SetLastWriteTimeUtc (formsViewGroup, new DateTime (1970, 1, 1));
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "build should have succeeded.");
-				Assert.IsFalse (b.Output.IsTargetSkipped ("_LinkAssembliesNoShrink"), "_LinkAssembliesNoShrink should *not* be skipped.");
+				b.Output.AssertTargetIsNotSkipped (KnownTargets.LinkAssembliesNoShrink);
 
 				// No changes
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "build should have succeeded.");
-				Assert.IsTrue (b.Output.IsTargetSkipped ("_LinkAssembliesNoShrink"), "_LinkAssembliesNoShrink should be skipped.");
+				b.Output.AssertTargetIsSkipped (KnownTargets.LinkAssembliesNoShrink);
 			}
 		}
 

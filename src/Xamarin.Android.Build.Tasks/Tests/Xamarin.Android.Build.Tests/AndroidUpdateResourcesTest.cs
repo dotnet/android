@@ -235,12 +235,12 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Category ("dotnet")]
 		public void RepetiviteBuildUpdateSingleResource ([Values (false, true)] bool useAapt2)
 		{
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
-			using (var b = CreateApkBuilder ($"temp/{TestName}", false, false)) {
-				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
+			using (var b = CreateApkBuilder ()) {
 				BuildItem image1, image2;
 				using (var stream = typeof (XamarinAndroidCommonProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.Icon.png")) {
 					var image_data = new byte [stream.Length];
@@ -253,48 +253,26 @@ namespace Xamarin.Android.Build.Tests
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj), "First build was supposed to build without errors");
 				var firstBuildTime = b.LastBuildTime;
-				Assert.IsTrue (b.Build (proj), "Second build was supposed to build without errors");
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "Second build was supposed to build without errors");
 				Assert.IsTrue (firstBuildTime > b.LastBuildTime, "Second build was supposed to be quicker than the first");
-				Assert.IsTrue (
-					b.Output.IsTargetSkipped ("_UpdateAndroidResgen"),
-					"The Target _UpdateAndroidResgen should have been skipped");
-				Assert.IsTrue (
-					b.Output.IsTargetSkipped ("_GenerateAndroidResourceDir"),
-					"The Target _GenerateAndroidResourceDir should have been skipped");
-				Assert.IsTrue (
-					b.Output.IsTargetSkipped ("_CompileJava"),
-					"The Target _CompileJava should have been skipped");
-				Assert.IsTrue (
-					b.Output.IsTargetSkipped ("_LinkAssembliesNoShrink"),
-					"The Target _LinkAssembliesNoShrink should have been skipped");
+				b.Output.AssertTargetIsSkipped ("_UpdateAndroidResgen");
+				b.Output.AssertTargetIsSkipped ("_GenerateAndroidResourceDir");
+				b.Output.AssertTargetIsSkipped ("_CompileJava");
+				b.Output.AssertTargetIsSkipped (KnownTargets.LinkAssembliesNoShrink);
 				if (useAapt2) {
-					Assert.IsTrue (
-						b.Output.IsTargetSkipped ("_CompileResources"),
-						"The target _CompileResources should have been skipped");
+					b.Output.AssertTargetIsSkipped ("_CompileResources");
 				}
 				image1.Timestamp = DateTimeOffset.UtcNow;
 				var layout = proj.AndroidResources.First (x => x.Include() == "Resources\\layout\\Main.axml");
 				layout.Timestamp = DateTimeOffset.UtcNow;
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate:true, saveProject: false), "Third build was supposed to build without errors");
-				Assert.IsFalse (
-					b.Output.IsTargetSkipped ("_UpdateAndroidResgen"),
-					"The Target _UpdateAndroidResgen should not have been skipped");
-				Assert.IsFalse (
-					b.Output.IsTargetSkipped ("_GenerateAndroidResourceDir"),
-					"The Target _GenerateAndroidResourceDir should not have been skipped");
-				Assert.IsTrue (
-					b.Output.IsTargetSkipped ("_CompileJava"),
-					"The Target _CompileJava (2) should have been skipped");
-				Assert.IsTrue (
-					b.Output.IsTargetSkipped ("_LinkAssembliesNoShrink"),
-					"The Target _LinkAssembliesNoShrink should have been skipped");
-				Assert.IsFalse (
-					b.Output.IsTargetSkipped ("_CreateBaseApk"),
-					"The Target _CreateBaseApk should not have been skipped");
+				b.Output.AssertTargetIsNotSkipped ("_UpdateAndroidResgen",           occurrence: 2);
+				b.Output.AssertTargetIsNotSkipped ("_GenerateAndroidResourceDir",    occurrence: 2);
+				b.Output.AssertTargetIsSkipped ("_CompileJava",                      occurrence: 2);
+				b.Output.AssertTargetIsSkipped (KnownTargets.LinkAssembliesNoShrink, occurrence: 2);
+				b.Output.AssertTargetIsNotSkipped ("_CreateBaseApk",                 occurrence: 2);
 				if (useAapt2) {
-					Assert.IsTrue (
-						b.Output.IsTargetPartiallyBuilt ("_CompileResources"),
-						"The target _CompileResources should have been partially built");
+					b.Output.AssertTargetIsPartiallyBuilt ("_CompileResources");
 				}
 			}
 		}
