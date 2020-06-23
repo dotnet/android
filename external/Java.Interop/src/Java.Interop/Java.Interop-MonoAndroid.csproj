@@ -55,6 +55,7 @@
     <Compile Remove="obj\**\*.cs" />
     <Compile Remove="Tests\**\*.cs" />
     <Compile Remove="Java.Interop\JniLocationException.cs" />
+    <Compile Remove="NullableAttributes.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup Condition=" '$(XAInstallPrefix)' == '' ">
