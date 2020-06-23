@@ -51,7 +51,7 @@ public class MonoPackageManager {
 				String externalLegacyDir = new java.io.File (
 							external0,
 							"../legacy/Android/data/" + context.getPackageName () + "/files/.__override__").getAbsolutePath ();
-				boolean embeddedDSOsEnabled = (runtimePackage.flags & FLAG_EXTRACT_NATIVE_LIBS) == 0;
+				boolean embeddedDSOsEnabled = android.os.Build.VERSION.SDK_INT >= 23 && (runtimePackage.flags & FLAG_EXTRACT_NATIVE_LIBS) == 0;
 				String runtimeDir = getNativeLibraryPath (runtimePackage);
 				String[] appDirs = new String[] {filesDir, cacheDir, dataDir};
 				String[] externalStorageDirs = new String[] {externalDir, externalLegacyDir};
@@ -62,6 +62,19 @@ public class MonoPackageManager {
 				// needed in the latest Android versions but is required in at least
 				// API 16 and since there's no inherent negative effect of doing it,
 				// we can do it unconditionally.
+				//
+				// Additionally, we need to load all the DSOs which depend on libmonosgen-2.0. The reason is that on
+				// some 64-bit devices running Android 5.{0,1} the dynamic linker fails to find `libmonosgen-2.0.so`
+				// even though it is in the same directory as the DSO depending on it *and* libmonosgen-2.0 is already
+				// in memory. This was seen on some devices (Huawei P8) and the x86_64 Android emulator. See the
+				// following issues:
+				//
+				//   https://github.com/xamarin/xamarin-android/issues/4772
+				//   https://github.com/xamarin/xamarin-android/issues/4852
+				//
+				// We could limit the preloading to only 64-bit 5.x Android versions but it appears to be more effort
+				// than necessary as preloading won't hurt performance (much - some libraries might not be needed
+				// immediately during startup) and there might be other Android builds out there with similar problems.
 				//
 				// We need to use our own `BuildConfig` class to detect debug builds here because,
 				// it seems, ApplicationInfo.flags information is not reliable - in the debug builds
@@ -77,8 +90,17 @@ public class MonoPackageManager {
 					System.loadLibrary("monosgen-2.0");
 				}
 				System.loadLibrary("xamarin-app");
-				System.loadLibrary("monodroid");
 
+				// .net5+ APKs don't contain `libmono-native.so` but we can't just perform a file existence check
+				// because we might be running with embedded DSOs enabled in which case the check would fail and we
+				// would have to catch the exception anyway in this case.
+				try {
+					System.loadLibrary("mono-native");
+				} catch (java.lang.UnsatisfiedLinkError ex) {
+					Log.i ("monodroid", "Failed to preload libmono-native.so (may not exist), ignoring", ex);
+				}
+
+				System.loadLibrary("monodroid");
 
 				Runtime.initInternal (
 						language,
