@@ -64,7 +64,6 @@ public class ExportType
 		staticActionInt (1);
 		staticActionFloat (2.0f);
 
-		/*
 		boolean r = staticFuncThisMethodTakesLotsOfParameters (
 				false,
 				(byte) 0xb,
@@ -85,7 +84,6 @@ public class ExportType
 		);
 		if (r != true)
 			throw new Error ("staticFuncThisMethodTakesLotsOfParameters should return true!");
-		 */
 	}
 
 	public native void action ();

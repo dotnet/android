@@ -397,13 +397,6 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 							continue;
 					}
 
-#if !_ALL_THE_ARGUMENTS
-					if (method.GetParameters ().Length > 14) {
-						Warning ($"Methods taking more than 14 parameters is not supported.");
-						continue;
-					}
-#endif	// !_ALL_THE_ARGUMENTS
-
 					if (dt == null)
 						dt = GetTypeBuilder (dm, type);
 

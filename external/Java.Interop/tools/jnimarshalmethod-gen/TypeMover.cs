@@ -385,17 +385,36 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator
 				if (il.OpCode != OpCodes.Ldstr)
 					return false;
 
+				MethodReference constructor;
+				TypeReference delegateType;
+				var customDelegate = false;
 				il = instructions [idx++];
-				if (il.OpCode != OpCodes.Ldtoken || !(il.Operand is TypeReference))
+				if (il.OpCode == OpCodes.Ldstr && il.Operand is string delegateTypeName) {
+					il = instructions [idx++];
+					if (!il.OpCode.ToString ().StartsWith ("ldc.i4", StringComparison.InvariantCulture))
+						return false;
+
+					il = instructions [idx++];
+					if (il.OpCode != OpCodes.Call || !(il.Operand is MethodReference opMR2) || opMR2.Name != "GetType")
+						return false;
+
+					delegateType = module.GetType (delegateTypeName);
+
+					skipCount = 11;
+					customDelegate = true;
+				} else if (il.OpCode == OpCodes.Ldtoken && il.Operand is TypeReference) {
+					delegateType = GetUpdatedType (il.Operand as TypeReference, module);
+
+					il = instructions [idx++];
+					if (il.OpCode != OpCodes.Call || !(il.Operand is MethodReference opMR2) || opMR2.Name != "GetTypeFromHandle")
+						return false;
+
+					skipCount = 10;
+				} else
 					return false;
 
-				var delegateType = GetUpdatedType (il.Operand as TypeReference, module);
-				var constructor = GetActionConstructor (delegateType, module);
+				constructor = GetActionConstructor (delegateType, module);
 				if (constructor == null)
-					return false;
-
-				il = instructions [idx++];
-				if (il.OpCode != OpCodes.Call || !(il.Operand is MethodReference opMR2) || opMR2.Name != "GetTypeFromHandle")
 					return false;
 
 				il = instructions [idx++];
@@ -430,11 +449,10 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator
 				newInstructions.Add (Instruction.Create (OpCodes.Ldftn, newHelperMethods?[methodName]));
 				newInstructions.Add (Instruction.Create (OpCodes.Newobj, constructor));
 
-				idx += 5;
+				idx += customDelegate ? 6 : 5;
 				for (int i = 0; i < 2; i++)
 					newInstructions.Add (GetUpdatedInstruction (instructions [idx++], module));
 
-				skipCount = 10;
 				return true;
 			}
 
@@ -462,24 +480,28 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator
 			var isRegisterMethod = src.Name == "__RegisterNativeMembers";
 			int skipCount;
 			int improvements = 0;
-
-			if (src.Body.HasVariables)
-				foreach (var v in src.Body.Variables)
-					if (!isRegisterMethod || v.VariableType.FullName != "System.Type")
-						md.Body.Variables.Add (new VariableDefinition (GetUpdatedType (v.VariableType, module)));
+			bool failed = false;
 
 			for (int i = 0; i < count; i++) {
 				var il = instructions [i];
+				bool result = false;
 
-				if (isRegisterMethod && AnalyzeAndImprove (instructions, newInstructions, i, typeName, out skipCount, module)) {
+				if (isRegisterMethod && (result = AnalyzeAndImprove (instructions, newInstructions, i, typeName, out skipCount, module))) {
 					i += skipCount;
 					improvements++;
 				} else {
+					failed |= !result;
 					Instruction newInstruction = GetUpdatedInstruction (il, module);
 					newInstructions.Add (newInstruction);
 					instructionMap [il] = newInstruction;
 				}
 			}
+
+			if (src.Body.HasVariables)
+				foreach (var v in src.Body.Variables)
+					if (!isRegisterMethod || failed || v.VariableType.FullName != "System.Type")
+						md.Body.Variables.Add (new VariableDefinition (GetUpdatedType (v.VariableType, module)));
+
 
 			if (isRegisterMethod && improvements < 2)
 				App.Warning ($"Method {md} was not improved. There should have been at least 2 improvements in this registration method.");
