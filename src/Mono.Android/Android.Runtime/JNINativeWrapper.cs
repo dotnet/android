@@ -13,7 +13,7 @@ namespace Android.Runtime {
 
 		static void get_runtime_types ()
 		{
-			if (mono_unhandled_exception_method != null)
+			if (exception_handler_method != null)
 				return;
 #if MONOANDROID1_0
 			mono_unhandled_exception_method = typeof (System.Diagnostics.Debugger).GetMethod (
@@ -70,10 +70,10 @@ namespace Android.Runtime {
 			ig.Emit (OpCodes.Leave, label);
 
 			bool  filter = Debugger.IsAttached || !JNIEnv.PropagateExceptions;
-			if (filter) {
+			if (filter && mono_unhandled_exception_method != null) {
 				ig.BeginExceptFilterBlock ();
 
-				ig.Emit (OpCodes.Call, mono_unhandled_exception_method!);
+				ig.Emit (OpCodes.Call, mono_unhandled_exception_method);
 				ig.Emit (OpCodes.Ldc_I4_1);
 				ig.BeginCatchBlock (null!);
 			} else {
