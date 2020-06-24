@@ -1709,66 +1709,6 @@ namespace App1
 		[Test]
 		/// <summary>
 		/// Based on issue raised in
-		/// https://bugzilla.xamarin.com/show_bug.cgi?id=28224
-		/// </summary>
-		public void XA5213IsRaisedWhenOutOfMemoryErrorIsThrown ()
-		{
-			var proj = new XamarinAndroidApplicationProject ();
-			proj.OtherBuildItems.Add (new BuildItem (AndroidBuildActions.AndroidJavaSource, "ManyMethods.java") {
-				TextContent = () => "public class ManyMethods { \n"
-					+ string.Join (Environment.NewLine, Enumerable.Range (0, 32768).Select (i => "public void method" + i + "() {}"))
-					+ "}",
-				Encoding = Encoding.ASCII
-			});
-			proj.OtherBuildItems.Add (new BuildItem (AndroidBuildActions.AndroidJavaSource, "ManyMethods2.java") {
-				TextContent = () => "public class ManyMethods2 { \n"
-					+ string.Join (Environment.NewLine, Enumerable.Range (0, 32768).Select (i => "public void method" + i + "() {}"))
-					+ "\n}",
-				Encoding = Encoding.ASCII
-			});
-			proj.OtherBuildItems.Add (new BuildItem (AndroidBuildActions.AndroidJavaSource, "ManyMethods3.java") {
-				TextContent = () => "public class ManyMethods3 { \n"
-					+ string.Join (Environment.NewLine, Enumerable.Range (0, 32768).Select (i => "public void method" + i + "() {}"))
-					+ "\n}",
-				Encoding = Encoding.ASCII
-			});
-			proj.OtherBuildItems.Add (new BuildItem (AndroidBuildActions.AndroidJavaSource, "ManyMethods4.java") {
-				TextContent = () => "public class ManyMethods4 { \n"
-					+ string.Join (Environment.NewLine, Enumerable.Range (0, 32768).Select (i => "public void method" + i + "() {}"))
-					+ "\n}",
-				Encoding = Encoding.ASCII
-			});
-			proj.OtherBuildItems.Add (new BuildItem (AndroidBuildActions.AndroidJavaSource, "ManyMethods5.java") {
-				TextContent = () => "public class ManyMethods5 { \n"
-					+ string.Join (Environment.NewLine, Enumerable.Range (0, 32768).Select (i => "public void method" + i + "() {}"))
-					+ "\n}",
-				Encoding = Encoding.ASCII
-			});
-			proj.OtherBuildItems.Add (new BuildItem (AndroidBuildActions.AndroidJavaSource, "ManyMethods6.java") {
-				TextContent = () => "public class ManyMethods6 { \n"
-					+ string.Join (Environment.NewLine, Enumerable.Range (0, 32768).Select (i => "public void method" + i + "() {}"))
-					+ "\n}",
-				Encoding = Encoding.ASCII
-			});
-			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportV7MediaRouter_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.GooglePlayServicesMaps_42_1021_1);
-			proj.SetProperty ("TargetFrameworkVersion", "v5.0");
-			proj.SetProperty ("AndroidEnableMultiDex", "True");
-			proj.SetProperty (proj.DebugProperties, "JavaMaximumHeapSize", "64m");
-			proj.SetProperty (proj.ReleaseProperties, "JavaMaximumHeapSize", "64m");
-			using (var b = CreateApkBuilder ("temp/XA5213IsRaisedWhenOutOfMemoryErrorIsThrown")) {
-				b.ThrowOnBuildFailure = false;
-				Assert.IsFalse (b.Build (proj), "Build should have failed.");
-				StringAssertEx.Contains ("XA5213", b.LastBuildOutput);
-				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
-			}
-		}
-
-		[Test]
-		/// <summary>
-		/// Based on issue raised in
 		/// https://bugzilla.xamarin.com/show_bug.cgi?id=28721
 		/// </summary>
 		public void DuplicateValuesInResourceCaseMap ()
