@@ -24,7 +24,24 @@ namespace Xamarin.Android.Prepare
 			string XABuildToolsFolder      = GetRequiredProperty (KnownProperties.XABuildToolsFolder);
 			string XABuildToolsVersion     = GetRequiredProperty (KnownProperties.XABuildToolsVersion);
 			string XAPlatformToolsVersion  = GetRequiredProperty (KnownProperties.XAPlatformToolsVersion);
+			string XAPlatformToolsPackagePrefix = Context.Instance.Properties [KnownProperties.XAPlatformToolsPackagePrefix] ?? String.Empty;
 
+			// Upstream manifests with version information:
+			//
+			//  https://dl-ssl.google.com/android/repository/repository2-1.xml
+			//    * platform APIs
+			//    * build-tools
+			//    * command-line tools
+			//    * sdk-tools
+			//    * platform-tools
+			//
+			//  https://dl-ssl.google.com/android/repository/addon2-1.xml
+			//    * android_m2repository_r47
+			//
+			//  https://dl-ssl.google.com/android/repository/sys-img/android/sys-img2-1.xml
+			//  https://dl-ssl.google.com/android/repository/sys-img/google_apis/sys-img2-1.xml
+			//    * system images
+			//
 			Components = new List<AndroidToolchainComponent> {
 				new AndroidPlatformComponent ("android-2.3.3_r02", apiLevel: "10", pkgRevision: "2"),
 				new AndroidPlatformComponent ("android-15_r05",    apiLevel: "15", pkgRevision: "5"),
@@ -46,13 +63,13 @@ namespace Xamarin.Android.Prepare
 
 				new AndroidToolchainComponent ("docs-24_r01",                                       destDir: "docs", pkgRevision: "1"),
 				new AndroidToolchainComponent ("android_m2repository_r47",                          destDir: Path.Combine ("extras", "android", "m2repository"), pkgRevision: "47.0.0"),
-				new AndroidToolchainComponent ("x86-29_r06",                                        destDir: Path.Combine ("system-images", "android-29", "default", "x86"), relativeUrl: new Uri ("sys-img/android/", UriKind.Relative), pkgRevision: "6"),
+				new AndroidToolchainComponent ($"x86-29_r07-{osTag}",                               destDir: Path.Combine ("system-images", "android-29", "default", "x86"), relativeUrl: new Uri ("sys-img/android/", UriKind.Relative), pkgRevision: "7"),
 				new AndroidToolchainComponent ($"x86_64-29_r07-{osTag}",                            destDir: Path.Combine ("system-images", "android-29", "default", "x86_64"), relativeUrl: new Uri ("sys-img/android/", UriKind.Relative), pkgRevision: "7"),
 				new AndroidToolchainComponent ($"android-ndk-r{AndroidNdkVersion}-{osTag}-x86_64",  destDir: AndroidNdkDirectory, pkgRevision: AndroidPkgRevision),
 				new AndroidToolchainComponent ($"build-tools_r{XABuildToolsVersion}-{altOsTag}",    destDir: Path.Combine ("build-tools", XABuildToolsFolder), isMultiVersion: true),
 				new AndroidToolchainComponent ($"commandlinetools-{cltOsTag}-{CommandLineToolsVersion}",
 					destDir: Path.Combine ("cmdline-tools", CommandLineToolsFolder), isMultiVersion: true),
-				new AndroidToolchainComponent ($"platform-tools_r{XAPlatformToolsVersion}-{osTag}", destDir: "platform-tools", pkgRevision: XAPlatformToolsVersion),
+				new AndroidToolchainComponent ($"{XAPlatformToolsPackagePrefix}platform-tools_r{XAPlatformToolsVersion}-{osTag}", destDir: "platform-tools", pkgRevision: XAPlatformToolsVersion),
 				new AndroidToolchainComponent ($"sdk-tools-{osTag}-4333796",                        destDir: "tools", pkgRevision: "26.1.1"),
 				new AndroidToolchainComponent ($"emulator-{osTag}-{EmulatorVersion}",               destDir: "emulator", pkgRevision: EmulatorPkgRevision),
 				new AndroidToolchainComponent ($"cmake-{AndroidCmakeVersion}-{osTag}-x86_64",       destDir: Path.Combine ("cmake", AndroidCmakeVersionPath), isMultiVersion: true, noSubdirectory: true, pkgRevision: "3.10.2"),
