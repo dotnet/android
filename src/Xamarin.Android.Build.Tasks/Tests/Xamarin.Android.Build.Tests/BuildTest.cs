@@ -665,6 +665,7 @@ namespace UnamedProject
 		}
 
 		[Test]
+		[Category ("dotnet")]
 		[NonParallelizable]
 		public void CheckTimestamps ([Values (true, false)] bool isRelease)
 		{
@@ -709,7 +710,7 @@ namespace UnamedProject
 				//One last build with no changes
 				Assert.IsTrue (b.Build (proj), "third build should have succeeded.");
 				var targetsToBeSkipped = new [] {
-					isRelease ? "_LinkAssembliesShrink" : "_LinkAssembliesNoShrink",
+					isRelease ? KnownTargets.LinkAssembliesShrink : KnownTargets.LinkAssembliesNoShrink,
 					"_UpdateAndroidResgen",
 					"_BuildLibraryImportsCache",
 					"_CompileJava",
@@ -1410,7 +1411,7 @@ GVuZHNDbGFzc1ZhbHVlLmNsYXNzUEsFBgAAAAADAAMAwgAAAMYBAAAAAA==
 		public void BasicApplicationRepetitiveReleaseBuild ()
 		{
 			var proj = new XamarinAndroidApplicationProject () { IsRelease = true };
-			using (var b = CreateApkBuilder ("temp/BasicApplicationRepetitiveReleaseBuild", cleanupAfterSuccessfulBuild: false)) {
+			using (var b = CreateApkBuilder ()) {
 				var foo = new BuildItem.Source ("Foo.cs") {
 					TextContent = () => @"using System;
 	namespace UnnamedProject {
@@ -1419,32 +1420,19 @@ GVuZHNDbGFzc1ZhbHVlLmNsYXNzUEsFBgAAAAADAAMAwgAAAMYBAAAAAA==
 	}"
 				};
 				proj.Sources.Add (foo);
-				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
-				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj), "first build failed");
 				var firstBuildTime = b.LastBuildTime;
-				Assert.IsTrue (b.Build (proj), "second build failed");
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build failed");
 				Assert.IsTrue (
 					firstBuildTime > b.LastBuildTime, "Second build ({0}) should have been faster than the first ({1})",
 					b.LastBuildTime, firstBuildTime
 				);
-				Assert.IsTrue (
-					b.Output.IsTargetSkipped ("_Sign"),
-					"the _Sign target should not run");
-				if (Builder.UseDotNet) {
-					Assert.IsTrue (b.Output.IsTargetSkipped ("ILLink"),
-						"the ILLink target should not run");
-				} else {
-					Assert.IsTrue (b.Output.IsTargetSkipped ("_LinkAssembliesShrink"),
-						"the _LinkAssembliesShrink target should not run");
-				}
-				foo.Timestamp = DateTimeOffset.UtcNow;
-				Assert.IsTrue (b.Build (proj), "third build failed");
-				Assert.IsFalse (b.Output.IsTargetSkipped ("CoreCompile"),
-					"the Core Compile target should run");
-				Assert.IsFalse (
-					b.Output.IsTargetSkipped ("_Sign"),
-					"the _Sign target should run");
+				b.Output.AssertTargetIsSkipped ("_Sign");
+				b.Output.AssertTargetIsSkipped (KnownTargets.LinkAssembliesShrink);
+				proj.Touch ("Foo.cs");
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "third build failed");
+				b.Output.AssertTargetIsNotSkipped ("CoreCompile");
+				b.Output.AssertTargetIsNotSkipped ("_Sign");
 			}
 		}
 
