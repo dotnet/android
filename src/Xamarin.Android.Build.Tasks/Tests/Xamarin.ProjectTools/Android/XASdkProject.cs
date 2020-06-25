@@ -69,8 +69,6 @@ namespace Xamarin.ProjectTools
 
 		protected override bool SetExtraNuGetConfigSources => true;
 
-		public string Configuration => IsRelease ? "Release" : "Debug";
-
 		public string OutputPath => Path.Combine ("bin", Configuration, TargetFramework.ToLowerInvariant ());
 
 		public string IntermediateOutputPath => Path.Combine ("obj", Configuration, TargetFramework.ToLowerInvariant ());

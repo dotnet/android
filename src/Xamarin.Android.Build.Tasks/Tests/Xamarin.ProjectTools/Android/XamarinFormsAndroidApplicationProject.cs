@@ -40,8 +40,12 @@ namespace Xamarin.ProjectTools
 		public XamarinFormsAndroidApplicationProject (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release")
 			: base (debugConfigurationName, releaseConfigurationName)
 		{
-			//NOTE: we can get all the other dependencies transitively, yay!
-			PackageReferences.Add (KnownPackages.XamarinForms_4_0_0_425677);
+			if (Builder.UseDotNet) {
+				PackageReferences.Add (KnownPackages.XamarinForms_4_5_0_617);
+				this.AddDotNetCompatPackages ();
+			} else {
+				PackageReferences.Add (KnownPackages.XamarinForms_4_0_0_425677);
+			}
 
 			AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\colors.xml") {
 				TextContent = () => colors_xml,

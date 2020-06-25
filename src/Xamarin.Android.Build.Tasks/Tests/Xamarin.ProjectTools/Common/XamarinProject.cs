@@ -41,10 +41,14 @@ namespace Xamarin.ProjectTools
 		public IList<Import> Imports { get; private set; }
 		PropertyGroup common, debug, release;
 
-		public bool IsRelease {
-			get { return GetProperty (KnownProperties.Configuration) == releaseConfigurationName; }
-			set { SetProperty ("Configuration", value ? releaseConfigurationName : debugConfigurationName); }
-		}
+		/// <summary>
+		/// Configures projects with Configuration=Debug or Release
+		/// * Directly in the `.csproj` file for legacy projects
+		/// * Uses `Directory.Build.props` for .NET 5+ projects
+		/// </summary>
+		public bool IsRelease { get; set; }
+
+		public string Configuration => IsRelease ? releaseConfigurationName : debugConfigurationName;
 
 		public XamarinProject (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release")
 		{
@@ -73,6 +77,20 @@ namespace Xamarin.ProjectTools
 
 			Packages = new List<Package> ();
 			Imports = new List<Import> ();
+
+			//NOTE: for SDK-style projects, we need $(Configuration) set before Microsoft.NET.Sdk.targets
+			if (Builder.UseDotNet) {
+				Imports.Add (new Import ("Directory.Build.props") {
+					TextContent = () =>
+$@"<Project>
+	<PropertyGroup>
+		<Configuration>{Configuration}</Configuration>
+	</PropertyGroup>
+</Project>"
+				});
+			} else {
+				SetProperty (KnownProperties.Configuration, () => Configuration);
+			}
 
 			// Feeds only needed for .NET 5+
 			if (SetExtraNuGetConfigSources) {
@@ -330,7 +348,7 @@ namespace Xamarin.ProjectTools
 					var subname = fi.FullName.Substring (dirFullPath.Length).Replace ('\\', '/');
 					if (subname.StartsWith ("bin", StringComparison.OrdinalIgnoreCase) || subname.StartsWith ("obj", StringComparison.OrdinalIgnoreCase))
 						continue;
-					if (!projectFiles.Any (p => p.Path.Replace ('\\', '/').Equals (subname))) {
+					if (!projectFiles.Any (p => p.Path != null && p.Path.Replace ('\\', '/').Equals (subname))) {
 						fi.Delete ();
 					}
 				}
