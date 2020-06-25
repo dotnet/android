@@ -43,6 +43,7 @@ namespace Xamarin.ProjectTools
 
 		public string PackageName { get; set; }
 		public string JavaPackageName { get; set; }
+		public string AndroidManifest { get; set; }
 
 		public XASdkProject (string outputType = "Exe")
 		{
@@ -51,13 +52,14 @@ namespace Xamarin.ProjectTools
 
 			PackageName = PackageName ?? string.Format ("{0}.{0}", ProjectName);
 			JavaPackageName = JavaPackageName ?? PackageName.ToLowerInvariant ();
+			AndroidManifest = default_android_manifest;
 			GlobalPackagesFolder = Path.Combine (XABuildPaths.TopDirectory, "packages");
 			SetProperty (KnownProperties.OutputType, outputType);
 
 			// Add relevant Android content to our project without writing it to the .csproj file
 			if (outputType == "Exe") {
 				Sources.Add (new BuildItem.Source ("Properties\\AndroidManifest.xml") {
-					TextContent = () => default_android_manifest.Replace ("${PROJECT_NAME}", ProjectName).Replace ("${PACKAGENAME}", string.Format ("{0}.{0}", ProjectName))
+					TextContent = () => AndroidManifest.Replace ("${PROJECT_NAME}", ProjectName).Replace ("${PACKAGENAME}", string.Format ("{0}.{0}", ProjectName))
 				});
 			}
 			Sources.Add (new BuildItem.Source ($"MainActivity{Language.DefaultExtension}") { TextContent = () => ProcessSourceTemplate (MainActivity ?? DefaultMainActivity) });

@@ -187,6 +187,15 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void TargetSdkVersion29 ()
+		{
+			var proj = new XASdkProject ();
+			proj.AndroidManifest = proj.AndroidManifest.Replace ("<uses-sdk />", "<uses-sdk android:targetSdkVersion=\"29\" />");
+			var dotnet = CreateDotNetBuilder (proj);
+			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
+		}
+
+		[Test]
 		public void BuildWithLiteSdk ()
 		{
 			var proj = new XASdkProject () {
