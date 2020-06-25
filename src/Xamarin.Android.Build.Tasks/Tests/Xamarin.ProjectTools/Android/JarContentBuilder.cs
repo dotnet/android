@@ -16,6 +16,8 @@ namespace Xamarin.ProjectTools
 		public string JavaSourceFileName { get; set; }
 		public string JavaSourceText { get; set; }
 
+		public string AdditionalFileExtensions { get; set; }
+
 		public JarContentBuilder ()
 		{
 			Action<TraceLevel, string> logger = (level, value) => {
@@ -57,6 +59,10 @@ namespace Xamarin.ProjectTools
 				File.Delete (jarfile);
 			var args = new string [] { "cvf", JarFileName };
 			var classes = Directory.GetFiles (Path.GetDirectoryName (src), "*.class", SearchOption.AllDirectories);
+			if (!string.IsNullOrEmpty (AdditionalFileExtensions)) {
+				var additionalFiles = Directory.GetFiles (Path.GetDirectoryName (BaseDirectory), AdditionalFileExtensions, SearchOption.AllDirectories);
+				classes = classes.Concat (additionalFiles).ToArray ();
+			}
 			var jarPsi = new ProcessStartInfo () {
 				FileName = JarFullPath,
 				Arguments = string.Join (" ", args.Concat (classes.Select (c => c.Substring (BaseDirectory.Length + 1)).ToArray ())),

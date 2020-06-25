@@ -28,7 +28,7 @@ namespace Xamarin.Android.Tasks
 
 		[Required]
 		public string ApkInputPath { get; set; }
-		
+
 		[Required]
 		public string ApkOutputPath { get; set; }
 
@@ -101,7 +101,7 @@ namespace Xamarin.Android.Tasks
 		}
 
 		SequencePointsMode sequencePointsMode = SequencePointsMode.None;
-		
+
 		public ITaskItem[] LibraryProjectJars { get; set; }
 		string [] uncompressedFileExtensions;
 
@@ -241,6 +241,10 @@ namespace Xamarin.Android.Tasks
 								Log.LogDebugMessage ($"Skipping {path} as the archive file is up to date.");
 								continue;
 							}
+							if (apk.Archive.Any (e => e.FullName == path)) {
+								Log.LogDebugMessage ("Failed to add jar entry {0} from {1}: the same file already exists in the apk", name, Path.GetFileName (jarFile));
+								continue;
+							}
 							byte [] data;
 							using (var d = new MemoryStream ()) {
 								jarItem.Extract (d);
@@ -256,7 +260,7 @@ namespace Xamarin.Android.Tasks
 						count = 0;
 					}
 				}
-				// Clean up Removed files. 
+				// Clean up Removed files.
 				foreach (var entry in existingEntries) {
 					Log.LogDebugMessage ($"Removing {entry} as it is not longer required.");
 					apk.Archive.DeleteEntry (entry);
@@ -296,7 +300,7 @@ namespace Xamarin.Android.Tasks
 					var apk = Path.GetFileNameWithoutExtension (ApkOutputPath);
 					ExecuteWithAbi (new [] { abi }, String.Format ("{0}-{1}", ApkInputPath, abi),
 						Path.Combine (path, String.Format ("{0}-{1}.apk", apk, abi)),
-					    debug, compress, compressedAssembliesInfo);
+						debug, compress, compressedAssembliesInfo);
 					outputFiles.Add (Path.Combine (path, String.Format ("{0}-{1}.apk", apk, abi)));
 				}
 			}
@@ -548,7 +552,7 @@ namespace Xamarin.Android.Tasks
 		{
 			// If Abi is explicitly specified, simply return it.
 			var lib_abi = MonoAndroidHelper.GetNativeLibraryAbi (lib);
-			
+
 			if (string.IsNullOrWhiteSpace (lib_abi)) {
 				Log.LogCodedError ("XA4301", lib.ItemSpec, 0, Properties.Resources.XA4301_ABI, lib.ItemSpec);
 				return null;
