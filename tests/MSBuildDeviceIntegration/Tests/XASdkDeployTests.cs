@@ -51,6 +51,8 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void DotNetDebug ()
 		{
+			if (!CommercialBuildAvailable)
+				Assert.Ignore ("Skipping Test. Commercial build required.");
 			if (!HasDevices)
 				Assert.Ignore ("Skipping Test. No devices available.");
 
@@ -94,7 +96,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			options.EvaluationOptions.UseExternalTypeResolver = true;
 			ClearAdbLogcat ();
-			Assert.True (dotnet.Build ("_Run", new string [] {
+			Assert.True (dotnet.Build ("Run", new string [] {
 				$"AndroidSdbTargetPort={port}",
 				$"AndroidSdbHostPort={port}",
 				"AndroidAttachDebugger=True",

@@ -11,8 +11,18 @@ This file contains targets specific for Android application projects.
   <PropertyGroup>
     <RunCommand>dotnet</RunCommand>
     <RunArguments>build &quot;$(MSBuildProjectFullPath)&quot; -target:Run</RunArguments>
+
+    <!-- If Xamarin.Android.Common.Debugging.targets exists, we can rely on _Run for debugging. -->
+    <_RunDependsOn Condition=" '$(_XASupportsFastDev)' == 'true' ">
+      Install;
+      _Run;
+    </_RunDependsOn>
+    <_RunDependsOn Condition=" '$(_XASupportsFastDev)' != 'true' ">
+      Install;
+      StartAndroidActivity;
+    </_RunDependsOn>
   </PropertyGroup>
 
-  <Target Name="Run" DependsOnTargets="Install;StartAndroidActivity" />
+  <Target Name="Run" DependsOnTargets="$(_RunDependsOn)" />
 
 </Project>
