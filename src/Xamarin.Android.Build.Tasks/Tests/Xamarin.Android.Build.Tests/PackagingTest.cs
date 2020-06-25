@@ -674,7 +674,7 @@ namespace App1
 			ns.SetProperty ("Description", "Test");
 			ns.SetProperty ("PackageOutputPath", path);
 
-			
+
 			var xa = new XamarinAndroidApplicationProject () {
 				ProjectName = "App",
 				PackageReferences = {
@@ -788,6 +788,54 @@ namespace App1
 					proj.IntermediateOutputPath, "android", "bin", $"{proj.PackageName}.apk");
 				using (var zip = ZipHelper.OpenZip (apk)) {
 					Assert.IsTrue (zip.ContainsEntry ($"assemblies/es/{proj.ProjectName}.resources.dll"), "Apk should contain satellite assemblies!");
+				}
+			}
+		}
+
+		[Test]
+		public void IgnoreManifestFromJar ()
+		{
+			string java = @"
+package com.xamarin.testing;
+
+public class Test
+{
+}
+";
+			var path = Path.Combine (Root, "temp", TestName);
+			var javaDir = Path.Combine (path, "java", "com", "xamarin", "testing");
+			if (Directory.Exists (javaDir))
+				Directory.Delete (javaDir, true);
+			Directory.CreateDirectory (javaDir);
+			File.WriteAllText (Path.Combine (javaDir, "..", "..", "..", "AndroidManifest.xml"), @"<?xml version='1.0' ?><maniest />");
+			var lib = new XamarinAndroidBindingProject () {
+				AndroidClassParser = "class-parse",
+				ProjectName = "Binding1",
+			};
+			lib.MetadataXml = "<metadata></metadata>";
+			lib.Jars.Add (new AndroidItem.EmbeddedJar (Path.Combine ("java", "test.jar")) {
+				BinaryContent = new JarContentBuilder () {
+					BaseDirectory = Path.Combine (path, "java"),
+					JarFileName = "test.jar",
+					JavaSourceFileName = Path.Combine ("com", "xamarin", "testing", "Test.java"),
+					JavaSourceText = java,
+					AdditionalFileExtensions = "*.xml",
+				}.Build
+			});
+			var app = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			app.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
+
+			using (var builder = CreateDllBuilder (Path.Combine (path, lib.ProjectName))) {
+				Assert.IsTrue (builder.Build (lib), "Build of jar should have succeeded.");
+				using (var zip = ZipHelper.OpenZip (Path.Combine (path, "java", "test.jar"))) {
+					Assert.IsTrue (zip.ContainsEntry ($"AndroidManifest.xml"), "Jar should contain AndroidManifest.xml");
+				}
+				using (var b = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+					Assert.IsTrue (b.Build (app), "Build of jar should have succeeded.");
+					string expected = "Failed to add jar entry AndroidManifest.xml from test.jar: the same file already exists in the apk";
+					Assert.IsTrue (b.LastBuildOutput.ContainsText (expected), $"AndroidManifest.xml for test.jar should have been ignored.");
 				}
 			}
 		}
