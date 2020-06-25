@@ -170,7 +170,7 @@ namespace System.NetTests
 
 				default:
 					// Android considers 'lo' to be always up
-					return inf.NetworkInterfaceType == NetworkInterfaceType.Loopback;
+					return IsLoopbackInterface (inf);
 			}
 		}
 
@@ -188,9 +188,10 @@ namespace System.NetTests
 			var ret = new List <InterfaceInfo> ();
 
 			foreach (MNetworkInterface inf in interfaces) {
+				Console.WriteLine ($"inf: {inf} (name: {inf.Name}; type: {inf.NetworkInterfaceType})");
 				ret.Add (new InterfaceInfo {
 					Name = inf.Name,
-					IsLoopback = inf.NetworkInterfaceType == NetworkInterfaceType.Loopback,
+					IsLoopback = IsLoopbackInterface (inf),
 					IsUp = IsInterfaceUp (inf),
 					HardwareAddress = GetHardwareAddress (inf),
 					Addresses = CollectAddresses (inf)
@@ -219,6 +220,13 @@ namespace System.NetTests
 			}
 
 			return ret;
+		}
+
+		static bool IsLoopbackInterface (MNetworkInterface inf)
+		{
+			// Android 30 will not tell us the interface type if the app targets API 30, we need to look at the
+			// name then.
+			return inf.NetworkInterfaceType == NetworkInterfaceType.Loopback || String.Compare ("lo", inf.Name, StringComparison.OrdinalIgnoreCase) == 0;
 		}
 	}
 }
