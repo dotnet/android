@@ -537,8 +537,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       Text="Using Fast Deployment and a Code Shrinker at the same time is not recommended. Use Fast Deployment for Debug configurations and a Code Shrinker for Release configurations."
       Condition=" '$(AndroidUseSharedRuntime)' == 'True' And '$(AndroidLinkTool)' != '' "
   />
-  <Warning Code="XA0119"
-      Text="Using Fast Deployment and Android App Bundles at the same time is not recommended. Use Fast Deployment for Debug configurations and Android App Bundles for Release configurations."
+  <AndroidError Code="XA0119"
+      ResourceName="XA0119_AAB"
       Condition=" '$(AndroidUseSharedRuntime)' == 'True' And '$(AndroidPackageFormat)' == 'aab' "
   />
 </Target>

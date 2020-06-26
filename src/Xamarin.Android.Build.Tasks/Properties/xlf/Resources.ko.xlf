@@ -171,6 +171,11 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
 
 {0} - A NuGet target framework moniker string</note>
       </trans-unit>
+      <trans-unit id="XA0119_AAB">
+        <source>Using the shared runtime and Android App Bundles at the same time is not currently supported. Use the shared runtime for Debug configurations and Android App Bundles for Release configurations.</source>
+        <target state="new">Using the shared runtime and Android App Bundles at the same time is not currently supported. Use the shared runtime for Debug configurations and Android App Bundles for Release configurations.</target>
+        <note>The following are literal names and should not be translated: Android App Bundles</note>
+      </trans-unit>
       <trans-unit id="XA0121">
         <source>Assembly '{0}' is using '[assembly: {1}]', which is no longer supported. Use a newer version of this NuGet package or notify the library author.</source>
         <target state="translated">'{0}' 어셈블리가 더 이상 지원되지 않는 '[assembly: {1}]'을(를) 사용하고 있습니다. 이 NuGet 패키지의 최신 버전을 사용하거나 라이브러리 작성자에게 알리세요.</target>
