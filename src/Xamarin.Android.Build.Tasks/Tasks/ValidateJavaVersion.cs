@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;
@@ -75,9 +76,7 @@ namespace Xamarin.Android.Tasks
 					if (versionNumber < required) {
 						Log.LogCodedError ("XA0031", Properties.Resources.XA0031, required, "`<Project Sdk=\"Xamarin.Android.Sdk\">`");
 					}
-					if (versionNumber > Version.Parse (LatestSupportedJavaVersion)) {
-						Log.LogCodedError ("XA0030", Properties.Resources.XA0030, versionNumber, LatestSupportedJavaVersion);
-					}
+					CheckJavaGreaterThanLatestSupported (versionNumber);
 				}
 			} catch (Exception ex) {
 				Log.LogWarningFromException (ex);
@@ -86,6 +85,17 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return !Log.HasLoggedErrors;
+		}
+
+		protected void CheckJavaGreaterThanLatestSupported (Version javaVersion)
+		{
+			string latestSupported  = LatestSupportedJavaVersion;
+			if (latestSupported.Count (c => c == '.') == 1)
+				latestSupported += ".99";
+			Version latestSupportedVersion = Version.Parse (latestSupported);
+			if (javaVersion > latestSupportedVersion) {
+				Log.LogCodedError ("XA0030", Properties.Resources.XA0030, javaVersion, LatestSupportedJavaVersion);
+			}
 		}
 
 		protected Version GetVersionFromTool (string javaExe, Regex versionRegex)
