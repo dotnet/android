@@ -729,6 +729,9 @@ namespace UnamedProject
 				IsRelease = isRelease,
 			};
 			proj.SetProperty ("AndroidPackageFormat", packageFormat);
+			if (packageFormat == "aab")
+				// Disable the shared runtime for aabs because it is not currently compatible and so gives an XA0119 build error.
+				proj.AndroidUseSharedRuntime = false;
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
@@ -3766,6 +3769,23 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 		}
 
 		[Test]
+		public void XA0119AAB ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetProperty ("_XASupportsFastDev", "True");
+			proj.SetProperty (KnownProperties.AndroidUseSharedRuntime, "True");
+			proj.SetProperty ("AndroidPackageFormat", "aab");
+			using (var builder = CreateApkBuilder ()) {
+				builder.ThrowOnBuildFailure = false;
+				Assert.IsFalse (builder.Build (proj), "Build should have failed.");
+				string error = builder.LastBuildOutput
+						.SkipWhile (x => !x.StartsWith ("Build FAILED."))
+						.FirstOrDefault (x => x.Contains ("error XA0119:"));
+				Assert.IsNotNull (error, "Build should have failed with XA0119.");
+			}
+		}
+
+		[Test]
 		public void FastDeploymentDoesNotAddContentProvider ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
@@ -4205,6 +4225,9 @@ namespace UnnamedProject
 		{
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty ("AndroidPackageFormat", packageFormat);
+			if (packageFormat == "aab")
+				// Disable the shared runtime for aabs because it is not currently compatible and so gives an XA0119 build error.
+				proj.AndroidUseSharedRuntime = false;
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "kotlinx-coroutines-android-1.3.2.jar") {
 				WebContent = "https://repo1.maven.org/maven2/org/jetbrains/kotlinx/kotlinx-coroutines-android/1.3.2/kotlinx-coroutines-android-1.3.2.jar"
 			});

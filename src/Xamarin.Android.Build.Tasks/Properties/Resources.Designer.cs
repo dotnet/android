@@ -340,6 +340,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Using the shared runtime and Android App Bundles at the same time is not currently supported. Use the shared runtime for Debug configurations and Android App Bundles for Release configurations..
+        /// </summary>
+        internal static string XA0119_AAB {
+            get {
+                return ResourceManager.GetString("XA0119_AAB", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Assembly &apos;{0}&apos; is using &apos;[assembly: {1}]&apos;, which is no longer supported. Use a newer version of this NuGet package or notify the library author..
         /// </summary>
         internal static string XA0121 {
