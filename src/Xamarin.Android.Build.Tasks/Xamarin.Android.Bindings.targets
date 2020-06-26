@@ -75,6 +75,8 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 	<GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
   </PropertyGroup>
 
+  <Target Name="AndroidPrepareForBuild" DependsOnTargets="GetReferenceAssemblyPaths" />
+
   <!-- Warn about deprecated configurations.
        Do it here because we want them to appear on every build,
        even if we aren't rerunning generator -->

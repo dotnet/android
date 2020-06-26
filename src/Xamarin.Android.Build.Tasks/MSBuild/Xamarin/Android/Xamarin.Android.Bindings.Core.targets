@@ -44,8 +44,6 @@ It is shared between "legacy" binding projects and .NET 5 projects.
     </PropertyGroup>
   </Target>
 
-  <Target Name="AndroidPrepareForBuild" DependsOnTargets="GetReferenceAssemblyPaths" />
-
   <Target Name="GenerateBindings"
       Condition=" '$(UsingAndroidNETSdk)' != 'true' Or '@(InputJar)' != '' Or '@(EmbeddedJar)' != '' "
       DependsOnTargets="ExportJarToXml;_ResolveMonoAndroidSdks"
