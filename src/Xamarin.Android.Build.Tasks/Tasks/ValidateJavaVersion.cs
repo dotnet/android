@@ -75,8 +75,9 @@ namespace Xamarin.Android.Tasks
 					if (versionNumber < required) {
 						Log.LogCodedError ("XA0031", Properties.Resources.XA0031, required, "`<Project Sdk=\"Xamarin.Android.Sdk\">`");
 					}
-					if (versionNumber > Version.Parse (LatestSupportedJavaVersion)) {
-						Log.LogCodedError ("XA0030", Properties.Resources.XA0030, versionNumber, LatestSupportedJavaVersion);
+					var latest = Version.Parse (LatestSupportedJavaVersion);
+					if (versionNumber > latest) {
+						Log.LogCodedError ("XA0030", Properties.Resources.XA0030, versionNumber, latest.ToString (fieldCount: 2));
 					}
 				}
 			} catch (Exception ex) {
