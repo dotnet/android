@@ -64,7 +64,7 @@ namespace Xamarin.Android.Prepare
 
 				new AndroidToolchainComponent ("docs-24_r01",                                       destDir: "docs", pkgRevision: "1", dependencyType: AndroidToolchainComponentType.BuildDependency),
 				new AndroidToolchainComponent ("android_m2repository_r47",                          destDir: Path.Combine ("extras", "android", "m2repository"), pkgRevision: "47.0.0", dependencyType: AndroidToolchainComponentType.BuildDependency),
-				new AndroidToolchainComponent ($"x86_64-29_r07-{osTag}",                            destDir: Path.Combine ("system-images", "android-29", "default", "x86_64"), relativeUrl: new Uri ("sys-img/android/", UriKind.Relative), pkgRevision: "7", dependencyType: AndroidToolchainComponentType.EmulatorDependency),
+				new AndroidToolchainComponent ($"x86_64-30_r05",                                    destDir: Path.Combine ("system-images", "android-30", "google_apis", "x86_64"), relativeUrl: new Uri ("sys-img/google_apis/", UriKind.Relative), pkgRevision: "5", dependencyType: AndroidToolchainComponentType.EmulatorDependency),
 				new AndroidToolchainComponent ($"android-ndk-r{AndroidNdkVersion}-{osTag}-x86_64",  destDir: AndroidNdkDirectory, pkgRevision: AndroidPkgRevision),
 				new AndroidToolchainComponent ($"{XABuildToolsPackagePrefix}build-tools_r{XABuildToolsVersion}-{altOsTag}",    destDir: Path.Combine ("build-tools", XABuildToolsFolder), isMultiVersion: true),
 				new AndroidToolchainComponent ($"commandlinetools-{cltOsTag}-{CommandLineToolsVersion}",
