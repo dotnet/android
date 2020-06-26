@@ -728,6 +728,9 @@ namespace UnamedProject
 				IsRelease = isRelease,
 			};
 			proj.SetProperty ("AndroidPackageFormat", packageFormat);
+			if (packageFormat == "aab")
+				// Disable the shared runtime for aabs because it is not currently compatible and so gives an XA0119 build error.
+				proj.AndroidUseSharedRuntime = false;
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
@@ -4281,6 +4284,9 @@ namespace UnnamedProject
 		{
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty ("AndroidPackageFormat", packageFormat);
+			if (packageFormat == "aab")
+				// Disable the shared runtime for aabs because it is not currently compatible and so gives an XA0119 build error.
+				proj.AndroidUseSharedRuntime = false;
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "kotlinx-coroutines-android-1.3.2.jar") {
 				WebContent = "https://repo1.maven.org/maven2/org/jetbrains/kotlinx/kotlinx-coroutines-android/1.3.2/kotlinx-coroutines-android-1.3.2.jar"
 			});
