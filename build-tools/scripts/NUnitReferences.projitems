@@ -1,0 +1,8 @@
+<Project>
+  <!-- This file assumes Configuration.props has been imported -->
+  <ItemGroup>
+    <PackageReference Include="NUnit"               Version="3.12.0" />
+    <PackageReference Include="NUnit.ConsoleRunner" Version="$(NUnitConsoleVersion)" />
+    <PackageReference Include="NUnit3TestAdapter"   Version="3.16.1" />
+  </ItemGroup>
+</Project>

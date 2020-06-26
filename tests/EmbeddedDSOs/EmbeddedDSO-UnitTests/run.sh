@@ -5,4 +5,4 @@ export MSBUILD=msbuild
 CONFIGURATION=${1:-Debug}
 msbuild /p:Configuration=${CONFIGURATION} EmbeddedDSO-UnitTests.csproj
 cd ../../../
-exec mono --debug packages/nunit.consolerunner/3.9.0/tools/nunit3-console.exe bin/Test${CONFIGURATION}/EmbeddedDSOUnitTests.dll
+exec mono --debug packages/nunit.consolerunner/3.11.1/tools/nunit3-console.exe bin/Test${CONFIGURATION}/EmbeddedDSOUnitTests.dll
