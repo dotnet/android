@@ -34,9 +34,17 @@ namespace Xamarin.Android.Build.Tests
 			if (TestContext.CurrentContext.Result.Outcome.Status != NUnit.Framework.Interfaces.TestStatus.Passed) {
 				return;
 			}
-			Directory.Delete (TestPath, recursive: true);
-			File.Delete (Zip);
-			paths.TryRemove (TestContext.CurrentContext.Test.Name, out string value);
+			try {
+				Directory.Delete (TestPath, recursive: true);
+			} catch (Exception ex) {
+				TestContext.WriteLine ($"Error deleting '{TestPath}': {ex}");
+			}
+			try {
+				File.Delete (Zip);
+			} catch (Exception ex) {
+				TestContext.WriteLine ($"Error deleting '{Zip}': {ex}");
+			}
+			paths.TryRemove (TestContext.CurrentContext.Test.Name, out _);
 		}
 
 		public string TestPath {
