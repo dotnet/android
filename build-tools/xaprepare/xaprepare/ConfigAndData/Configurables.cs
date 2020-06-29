@@ -15,8 +15,8 @@ namespace Xamarin.Android.Prepare
 	//
 	partial class Configurables
 	{
-		const string JetBrainsOpenJDK11Version = "11.0.4";
-		const string JetBrainsOpenJDK11Release = "546.1";
+		const string JetBrainsOpenJDK11Version = "11.0.7";
+		const string JetBrainsOpenJDK11Release = "944.14";
 		static readonly string JetBrainsOpenJDK11DownloadVersion = JetBrainsOpenJDK11Version.Replace ('.', '_');
 
 		const string JetBrainsOpenJDK8Version = "8.202";
@@ -35,10 +35,10 @@ namespace Xamarin.Android.Prepare
 			// https://bintray.com/jetbrains/intellij-jdk/download_file?file_path=jbrsdk-8u202-windows-x64-b1483.37.tar.gz
 			public static readonly Uri JetBrainsOpenJDK8 = new Uri ($"https://bintray.com/jetbrains/intellij-jdk/download_file?file_path=jbrsdk-{JetBrainsOpenJDK8DownloadVersion}-{JetBrainsOpenJDKOperatingSystem}-b{JetBrainsOpenJDK8Release}.tar.gz");
 
-			// https://bintray.com/jetbrains/intellij-jdk/download_file?file_path=jbrsdk-11_0_4-linux-x64-b546.1.tar.gz
-			// https://bintray.com/jetbrains/intellij-jdk/download_file?file_path=jbrsdk-11_0_4-osx-x64-b546.1.tar.gz
-			// https://bintray.com/jetbrains/intellij-jdk/download_file?file_path=jbrsdk-11_0_4-windows-x64-b546.1.tar.gz
-			public static readonly Uri JetBrainsOpenJDK11 = new Uri ($"https://bintray.com/jetbrains/intellij-jdk/download_file?file_path=jbrsdk-{JetBrainsOpenJDK11DownloadVersion}-{JetBrainsOpenJDKOperatingSystem}-b{JetBrainsOpenJDK11Release}.tar.gz");
+			// https://bintray.com/jetbrains/intellij-jbr/download_file?file_path=jbrsdk-11_0_7-linux-x64-b944.14.tar.gz
+			// https://bintray.com/jetbrains/intellij-jbr/download_file?file_path=jbrsdk-11_0_7-osx-x64-b944.14.tar.gz
+			// https://bintray.com/jetbrains/intellij-jbr/download_file?file_path=jbrsdk-11_0_7-windows-x64-b944.14.tar.gz
+			public static readonly Uri JetBrainsOpenJDK11 = new Uri ($"https://bintray.com/jetbrains/intellij-jbr/download_file?file_path=jbrsdk-{JetBrainsOpenJDK11DownloadVersion}-{JetBrainsOpenJDKOperatingSystem}-b{JetBrainsOpenJDK11Release}.tar.gz");
 
 			/// <summary>
 			///   Base URL for all Android SDK and NDK downloads. Used in <see cref="AndroidToolchain"/>

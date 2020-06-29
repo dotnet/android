@@ -32,8 +32,9 @@ namespace Xamarin.Android.Tasks.Legacy
 					if (versionNumber < requiredJavaForBuildTools) {
 						Log.LogCodedError ("XA0032", Properties.Resources.XA0032, requiredJavaForBuildTools, AndroidSdkBuildToolsVersion);
 					}
-					if (versionNumber > Version.Parse (LatestSupportedJavaVersion)) {
-						Log.LogCodedError ("XA0030", Properties.Resources.XA0030, versionNumber, LatestSupportedJavaVersion);
+					var latest = Version.Parse (LatestSupportedJavaVersion);
+					if (versionNumber > latest) {
+						Log.LogCodedError ("XA0030", Properties.Resources.XA0030, versionNumber, latest.ToString (fieldCount: 2));
 					}
 				}
 			} catch (Exception ex) {
