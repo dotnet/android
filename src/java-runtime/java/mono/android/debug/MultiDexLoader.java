@@ -82,9 +82,9 @@ public class MultiDexLoader extends ContentProvider {
 		String incrementalDeploymentDir = new File (
  			android.os.Environment.getExternalStorageDirectory (),
  			"Android/data/" + context.getPackageName ()).getAbsolutePath ();
- 		incrementalDeploymentDir = new File (incrementalDeploymentDir).exists () ?
- 			incrementalDeploymentDir + "/files/" :
- 			context.getFilesDir () + "/";
+ 		incrementalDeploymentDir = new File (incrementalDeploymentDir).exists ()
+ 			? incrementalDeploymentDir + "/files/"
+ 			: context.getFilesDir () + "/";
 
 		File codeCacheDir = context.getCacheDir ();
 		String nativeLibDir = context.getApplicationInfo ().nativeLibraryDir;
@@ -108,7 +108,7 @@ public class MultiDexLoader extends ContentProvider {
 	{
 		List<String> result = new ArrayList<String> ();
 		String dexDirectory = incrementalDeploymentDir + ".__override__/dexes";
-		Log.v("MultiDexLoader", dexDirectory);
+		Log.v ("MultiDexLoader", dexDirectory);
 		File[] dexes = new File (dexDirectory).listFiles ();
 		// It is not illegal state when it was launched to start Seppuku
 		if (dexes == null) {
