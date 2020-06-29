@@ -5,7 +5,7 @@
   <PropertyGroup>
     <UsingAndroidNETSdk>true</UsingAndroidNETSdk>
     <AndroidCommandLineToolsVersion Condition=" '$(AndroidCommandLineToolsVersion)' == '' ">1.0</AndroidCommandLineToolsVersion>
-    <LatestSupportedJavaVersion  Condition=" '$(LatestSupportedJavaVersion)' == '' ">11.0.4</LatestSupportedJavaVersion>
+    <LatestSupportedJavaVersion  Condition=" '$(LatestSupportedJavaVersion)' == '' ">11.0.99</LatestSupportedJavaVersion>
     <MinimumSupportedJavaVersion Condition=" '$(MinimumSupportedJavaVersion)' == '' ">1.8.0</MinimumSupportedJavaVersion>
     <EnableDefaultOutputPaths Condition=" '$(EnableDefaultOutputPaths)' == '' And '$(OS)' != 'Windows_NT' ">false</EnableDefaultOutputPaths>
     <EnableDefaultOutputPaths Condition=" '$(EnableDefaultOutputPaths)' == '' ">true</EnableDefaultOutputPaths>
