@@ -1,20 +1,27 @@
 using System;
 using System.Collections.Generic;
-using NUnit.Framework;
-using Xamarin.ProjectTools;
 using System.IO;
-using System.Linq;
 using Microsoft.Build.Framework;
-using System.Text;
-using Xamarin.Android.Tasks;
 using Microsoft.Build.Utilities;
+using NUnit.Framework;
+using Xamarin.Android.Tasks;
 
-namespace Xamarin.Android.Build.Tests {
-
+namespace Xamarin.Android.Build.Tests
+{
 	[TestFixture]
 	[Category ("Node-2")]
 	[Parallelizable (ParallelScope.Self)]
-	public class ConvertResourcesCasesTests  : BaseTest {
+	public class ConvertResourcesCasesTests  : BaseTest
+	{
+		void DeleteDirectory (string path)
+		{
+			try {
+				Directory.Delete (path, recursive: true);
+			} catch (Exception ex) {
+				TestContext.WriteLine ($"Error deleting '{path}': {ex}");
+			}
+		}
+
 		[Test]
 		public void CheckAdaptiveIconIsConverted ()
 		{
@@ -42,8 +49,9 @@ namespace Xamarin.Android.Build.Tests {
 			var output = File.ReadAllText (Path.Combine (resPath, "mipmap-anydpi-v26", "adaptiveicon.xml"));
 			StringAssert.DoesNotContain ("AdaptiveIcon_background", output, "AdaptiveIcon_background should have been replaced with adaptiveicon_background");
 			StringAssert.DoesNotContain ("AdaptiveIcon_foreground", output, "AdaptiveIcon_foreground should have been replaced with adaptiveicon_foreground");
-			Directory.Delete (path, recursive: true);
+			DeleteDirectory (path);
 		}
+
 		[Test]
 		public void CheckClassIsReplacedWithMd5 ()
 		{
@@ -90,7 +98,7 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsTrue (custom.Execute (), "Task should have executed successfully");
 			var secondOutput = File.ReadAllText (Path.Combine(resPath, "layout", "main.xml"));
 			StringAssert.AreEqualIgnoringCase (output, secondOutput, "Files should not have changed.");
-			Directory.Delete (path, recursive: true);
+			DeleteDirectory (path);
 		}
 
 		[Test]
@@ -147,7 +155,7 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsFalse (custom.Execute (), "Task should have executed successfully");
 			var secondOutput = File.ReadAllText (Path.Combine (resPath, "layout", "main.xml"));
 			StringAssert.AreEqualIgnoringCase (output, secondOutput, "Files should not have changed.");
-			Directory.Delete (path, recursive: true);
+			DeleteDirectory (path);
 		}
 	}
 }
