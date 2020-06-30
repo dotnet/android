@@ -20,7 +20,7 @@
          * Bump last two digits of the patch version for service releases.
          * Bump first digit of the patch version for feature releases (and reset the first two digits to 0)
     -->
-    <AndroidPackVersion>11.0.100</AndroidPackVersion>
+    <AndroidPackVersion>11.1.0</AndroidPackVersion>
   </PropertyGroup>
 
 </Project>
