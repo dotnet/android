@@ -31,8 +31,8 @@ This file contains the .NET 5-specific targets to customize ILLink
       <_AdditionalTaskAssembly>$(_AdditionalTaskAssemblyDirectory)dotnet-linker.dll</_AdditionalTaskAssembly>
     </PropertyGroup>
     <PropertyGroup
-        Condition=" '$(AndroidLinkTool)' != '' ">
-      <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --custom-data ProguardConfiguration="$(IntermediateOutputPath)proguard\proguard_project_references.cfg"</_ExtraTrimmerArgs>
+        Condition=" '$(_ProguardProjectConfiguration)' != '' ">
+      <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --custom-data ProguardConfiguration="$(_ProguardProjectConfiguration)"</_ExtraTrimmerArgs>
     </PropertyGroup>
     <ItemGroup>
       <!-- add our custom steps -->

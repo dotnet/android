@@ -30,7 +30,12 @@ _ResolveAssemblies MSBuild target.
       <_RIDs Include="$(RuntimeIdentifiers)" Condition=" '$(RuntimeIdentifiers)' != '' " />
     </ItemGroup>
     <PropertyGroup>
-      <_AdditionalProperties>_ComputeFilesToPublishForRuntimeIdentifiers=true;_OuterIntermediateAssembly=@(IntermediateAssembly)</_AdditionalProperties>
+      <_ProguardProjectConfiguration Condition=" '$(AndroidLinkTool)' != '' ">$(IntermediateOutputPath)proguard\proguard_project_references.cfg</_ProguardProjectConfiguration>
+      <_AdditionalProperties>
+        _ComputeFilesToPublishForRuntimeIdentifiers=true;
+        _OuterIntermediateAssembly=@(IntermediateAssembly);
+        _ProguardProjectConfiguration=$(_ProguardProjectConfiguration);
+      </_AdditionalProperties>
     </PropertyGroup>
     <MSBuild
         Projects="$(MSBuildProjectFile)"
