@@ -48,7 +48,7 @@ namespace Xamarin.Android.Build.Tests
 					File.Delete (dexFile);
 				}
 			}
-			
+
 			b.Dispose ();
 		}
 
@@ -182,7 +182,6 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (b.LastBuildOutput.Any (l => l.Contains ("UnnamedProject.dll") && l.Contains ("NotifySync CopyFile")), "app dll not uploaded");
 			Assert.IsTrue (b.LastBuildOutput.Any (l => l.Contains ("Xamarin.Android.Support.v4.dll") && l.Contains ("NotifySync SkipCopyFile")), "v4 should be skipped, but no relevant log line");
 			Assert.IsTrue (b.LastBuildOutput.Any (l => l.Contains ("Xamarin.Android.Support.v7.AppCompat.dll") && l.Contains ("NotifySync SkipCopyFile")), "v7 should be skipped, but no relevant log line");
-			Assert.IsTrue (b.LastBuildOutput.Any (l => l.Contains ("packaged_resources") && l.Contains ("NotifySync SkipCopyFile")), "packaged_resources should be skipped, but no relevant log line");
 
 			Assert.IsTrue (b.Uninstall (proj), "uninstall should have succeeded.");
 			b.Dispose ();
@@ -218,8 +217,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.LayoutMain = proj.LayoutMain.Replace ("LinearLayout", "RelativeLayout");
 			proj.Touch ("Resources\\Layout\\Main.axml");
 			Assert.IsTrue (b.Install (proj, doNotCleanupOnUpdate: true, saveProject: false), "install should have succeeded.");
-			Assert.IsFalse (b.Output.IsApkInstalled, "app apk was installed");
-			Assert.IsTrue (b.LastBuildOutput.Any (l => l.Contains ("packaged_resources") && l.Contains ("NotifySync CopyFile")), "packaged_resources not uploaded");
+			Assert.IsTrue (b.Output.IsApkInstalled, "app apk was installed");
 
 			var axml = System.Text.Encoding.UTF8.GetString (ZipHelper.ReadFileFromZip (b.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "packaged_resources")), "res/layout/main.xml"));
 			Assert.IsTrue (axml.Contains ("RelativeLayout"), "The packaged resources seem to be out of sync.");
@@ -251,17 +249,18 @@ namespace Xamarin.Android.Build.Tests
 					l.Contains ("Target _BuildApkFastDev needs to be built")),
 					"Apk should have been built");
 				Assert.IsTrue (logLines.Any (l => l.Contains ("Building target \"_Upload\" completely")), "_Upload target should have run");
-				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync CopyFile") && l.Contains ("packaged_resources")), "packaged_resources should have been uploaded");
+				Assert.IsTrue (b.Output.IsApkInstalled, "app apk was installed");
 
-				var layout = proj.AndroidResources.First (x => x.Include () == "Resources\\layout\\Main.axml");
-				layout.Timestamp = DateTime.UtcNow;
+
+				proj.LayoutMain = proj.LayoutMain.Replace ("LinearLayout", "RelativeLayout");
+				proj.Touch ("Resources\\Layout\\Main.axml");
 				Assert.IsTrue (b.Install (proj, doNotCleanupOnUpdate: true, saveProject: false), "install should have succeeded. 1");
 				logLines = b.LastBuildOutput;
-				Assert.IsFalse (logLines.Any (l => l.Contains ("Building target \"_BuildApkFastDev\" completely.") ||
+				Assert.IsTrue (logLines.Any (l => l.Contains ("Building target \"_BuildApkFastDev\" completely.") ||
 					l.Contains ("Target _BuildApkFastDev needs to be built")),
 					"Apk should not have been built");
 				Assert.IsTrue (logLines.Any (l => l.Contains ("Building target \"_Upload\" completely")), "_Upload target should have run");
-				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync CopyFile") && l.Contains ("packaged_resources")), "packaged_resources should have been uploaded");
+				Assert.IsTrue (b.Output.IsApkInstalled, "app apk was installed");
 			}
 		}
 
@@ -306,9 +305,9 @@ namespace Xamarin.Android.Build.Tests
 				Assert.Ignore ("Test needs a device attached.");
 				return;
 			}
-			var nativeLib = new AndroidItem.AndroidNativeLibrary ("foo\\x86_64\\libtest.so") {
+			var nativeLib = new AndroidItem.AndroidNativeLibrary ($"foo\\{DeviceAbi}\\libtest.so") {
 				BinaryContent = () => new byte [10],
-				MetadataValues = "Link=libs\\x86_64\\libtest.so",
+				MetadataValues = $"Link=libs\\{DeviceAbi}\\libtest.so",
 			};
 			var proj = new XamarinAndroidApplicationProject () {
 				AndroidFastDeploymentType = "Assemblies:Dexes",
@@ -338,57 +337,6 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (logLines.Any (l => l.Contains ("Building target \"_Upload\" completely")), "_Upload target should have run");
 				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync CopyFile") && l.Contains ("libtest.so")), "libtest.so should have been uploaded");
 			}
-		}
-
-		[Test]
-		public void DisableInstantRunWhenAndroidManifestHasChanged ([Values ("dx", "d8")] string dexTool)
-		{
-			if (!CommercialBuildAvailable)
-				Assert.Ignore ("Not required on Open Source Builds");
-
-			if (!HasDevices) {
-				Assert.Ignore ("Test needs a device attached.");
-				return;
-			}
-
-			var proj = new XamarinAndroidApplicationProject {
-				AndroidFastDeploymentType = "Assemblies:Dexes",
-				UseLatestPlatformSdk = true,
-				DexTool = dexTool,
-			};
-			proj.SetDefaultTargetDevice ();
-			var b = CreateApkBuilder (Path.Combine ("temp", TestName));
-			Assert.IsTrue (b.Build (proj), "packaging should have succeeded. 0");
-
-			// modify AndroidManifest.xml.
-			// (Cannot simple rename from "UnnamedProject" because it is a template. Also cannot simply set ProjectName once we built it...)
-			proj.AndroidManifest = proj.AndroidManifest.Replace ("${PROJECT_NAME}", "RenamedProject");
-			proj.Touch ("Properties\\AndroidManifest.xml");
-			// make sure that the fastdev log tells that it actually disabled fastdev.
-			Assert.IsTrue (b.Build (proj, true, null, false), "packaging should have succeeded. 1");
-			Assert.IsTrue (b.Output.AreTargetsAllBuilt ("_ExamineAndroidManifestFileUpdates"),
-				"AndroidManifest update check did not run. 1");
-			Assert.IsTrue (b.LastBuildOutput.Any (l => l.Contains ("Triggered force apk reinstallation")), "failed to detect AndroidManifest updates. 1");
-
-			// modify AndroidManifest.xml *to reference @app_name*.
-			proj.AndroidManifest = proj.AndroidManifest.Replace ("android:label=\"RenamedProject\"", "android:label=\"@string/app_name\"");
-			proj.Touch ("Properties\\AndroidManifest.xml");
-			// make sure that the fastdev log tells that it actually disabled fastdev.
-			Assert.IsTrue (b.Build (proj, true, null, false), "packaging should have succeeded. 2");
-			Assert.IsTrue (b.Output.AreTargetsAllBuilt ("_ExamineAndroidManifestFileUpdates"),
-				$"AndroidManifest update check did not run. 2. {string.Join (Environment.NewLine, b.LastBuildOutput )}");
-			Assert.IsTrue (b.LastBuildOutput.Any (l => l.Contains ("Triggered force apk reinstallation")), "failed to detect AndroidManifest updates. 2");
-
-			// Change app_name in Resources/values/Strings.xml that should trigger AndroidManifest.xml updates.
-			Assert.IsTrue (proj.StringsXml.Contains ("<string name=\"app_name\">${PROJECT_NAME}</string>"), "premise not met: StringsXml: " + proj.StringsXml);
-			proj.StringsXml = proj.StringsXml.Replace ("<string name=\"app_name\">${PROJECT_NAME}</string>", "<string name=\"app_name\">UnnamedProjectChanged</string>");
-			proj.Touch ("Resources\\values\\Strings.xml");
-			// make sure that the fastdev log tells that it actually disabled fastdev.
-			Assert.IsTrue (b.Build (proj, true, null, false), "install should have succeeded. 3");
-			Assert.IsTrue (b.Output.AreTargetsAllSkipped ("_ExamineAndroidManifestFileUpdates"),
-				"AndroidManifest file update check resulted in failure. 3");
-			Assert.IsTrue (b.LastBuildOutput.Any (l => l.Contains ("Triggered force apk reinstallation")), "failed to detect AndroidManifest updates. 3");
-			Assert.IsTrue (b.LastBuildOutput.Any (l => l.Contains ("ShouldTriggerForceUpdates: True")), "failed to disable Instant Run. 3");
 		}
 	}
 }

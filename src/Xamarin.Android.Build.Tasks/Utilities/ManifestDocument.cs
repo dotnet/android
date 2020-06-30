@@ -37,7 +37,7 @@ namespace Xamarin.Android.Tasks {
 		static XNamespace androidToolsNs = AndroidXmlToolsNamespace;
 
 		XDocument doc;
-		
+
 		XName attName;
 
 		XElement app;
@@ -76,7 +76,7 @@ namespace Xamarin.Android.Tasks {
 			{ "action",   "android.intent.action.MAIN" },
 			{ "category", "android.intent.category.LAUNCHER" },
 		};
-		
+
 		public string PackageName { get; set; }
 		public string ApplicationName { get; set; }
 		public string [] Placeholders { get; set; }
@@ -223,7 +223,7 @@ namespace Xamarin.Android.Tasks {
 				}
 			}
 		}
-		
+
 		public IList<string> Merge (TaskLoggingHelper log, TypeDefinitionCache cache, List<TypeDefinition> subclasses, string applicationClass, bool embed, string bundledWearApplicationName, IEnumerable<string> mergedManifestDocuments)
 		{
 			string applicationName  = ApplicationName;
@@ -232,26 +232,26 @@ namespace Xamarin.Android.Tasks {
 
 			if (manifest == null || manifest.Name != "manifest")
 				throw new Exception ("Root element must be 'manifest'");
-			
+
 			var manifest_package = (string) manifest.Attribute ("package");
 
 			if (!string.IsNullOrWhiteSpace (manifest_package))
 				PackageName = manifest_package;
-			
+
 			manifest.SetAttributeValue (XNamespace.Xmlns + "android", "http://schemas.android.com/apk/res/android");
 			if (manifest.Attribute (androidNs + "versionCode") == null)
 				manifest.SetAttributeValue (androidNs + "versionCode", "1");
 			if (manifest.Attribute (androidNs + "versionName") == null)
 				manifest.SetAttributeValue (androidNs + "versionName", "1.0");
-			
+
 			app = CreateApplicationElement (manifest, applicationClass, subclasses, cache);
-			
+
 			if (app.Attribute (androidNs + "label") == null && applicationName != null)
 				app.SetAttributeValue (androidNs + "label", applicationName);
 
 			var existingTypes = new HashSet<string> (
 				app.Descendants ().Select (a => (string) a.Attribute (attName)).Where (v => v != null));
-			
+
 			if (!string.IsNullOrEmpty (bundledWearApplicationName)) {
 				if (!app.Elements ("meta-data").Any (e => e.Attributes (androidNs + "name").Any (a => a.Value == bundledWearApplicationName)))
 					app.Add (new XElement ("meta-data", new XAttribute (androidNs + "name", "com.google.android.wearable.beta.app"), new XAttribute (androidNs + "resource", "@xml/wearable_app_desc")));
@@ -359,7 +359,7 @@ namespace Xamarin.Android.Tasks {
 
 			if (!PackageName.Contains ('.'))
 				throw new InvalidOperationException ("/manifest/@package attribute MUST contain a period ('.').");
-			
+
 			manifest.SetAttributeValue ("package", PackageName);
 
 			if (MultiDex)
@@ -367,10 +367,6 @@ namespace Xamarin.Android.Tasks {
 
 			var providerNames = AddMonoRuntimeProviders (app);
 
-			if (Debug && !embed && InstantRunEnabled) {
-				if (int.TryParse (SdkVersion, out int apiLevel) && apiLevel >= 19)
-					app.Add (CreateMonoRuntimeProvider ("mono.android.ResourcePatcher", null, initOrder: --AppInitOrder));
-			}
 			if (Debug) {
 				app.Add (new XComment ("suppress ExportedReceiver"));
 				app.Add (new XElement ("receiver",
@@ -482,7 +478,7 @@ namespace Xamarin.Android.Tasks {
 			var duplicates = ResolveDuplicates (doc.Elements ());
 			foreach (var duplicate in duplicates)
 				duplicate.Remove ();
-			
+
 		}
 
 		void RemoveNodes ()
@@ -526,15 +522,15 @@ namespace Xamarin.Android.Tasks {
 		{
 			var application = manifest.Descendants ("application").FirstOrDefault ();
 
-			List<ApplicationAttribute> assemblyAttr = 
+			List<ApplicationAttribute> assemblyAttr =
 				Assemblies.Select (path => ApplicationAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)))
 				.Where (attr => attr != null)
 				.ToList ();
-			List<MetaDataAttribute> metadata = 
+			List<MetaDataAttribute> metadata =
 				Assemblies.SelectMany (path => MetaDataAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)))
 					.Where (attr => attr != null)
 					.ToList ();
-			var usesLibraryAttr = 
+			var usesLibraryAttr =
 				Assemblies.SelectMany (path => UsesLibraryAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)))
 				.Where (attr => attr != null);
 			var usesConfigurationAttr =
@@ -556,7 +552,7 @@ namespace Xamarin.Android.Tasks {
 
 				typeAttr.Add (aa);
 				metadata.AddRange (MetaDataAttribute.FromCustomAttributeProvider (t));
-				
+
 				typeUsesLibraryAttr.AddRange (UsesLibraryAttribute.FromCustomAttributeProvider (t));
 			}
 
@@ -596,13 +592,13 @@ namespace Xamarin.Android.Tasks {
 
 			if (needManifestAdd)
 				manifest.Add (application);
-			
+
 			AddUsesLibraries (application, usesLibraryAttrs);
 			AddUsesConfigurations (application, usesConfigurationattrs);
 
 			if (applicationClass != null && application.Attribute (androidNs + "name") == null)
 				application.Add (new XAttribute (androidNs + "name", applicationClass));
-				
+
 			if (application.Attribute (androidNs + "allowBackup") == null)
 				application.Add (new XAttribute (androidNs + "allowBackup", "true"));
 
@@ -661,7 +657,7 @@ namespace Xamarin.Android.Tasks {
 
 		bool IsMainLauncher (XElement intentFilter)
 		{
-			return LauncherIntentElements.All (entry => 
+			return LauncherIntentElements.All (entry =>
 					intentFilter.Elements (entry.Key).Any (e => ((string) e.Attribute (attName) == entry.Value)));
 		}
 
@@ -690,9 +686,9 @@ namespace Xamarin.Android.Tasks {
 			if (name.StartsWith ("_"))
 				throw new InvalidActivityNameException (string.Format ("Activity name '{0}' is invalid, because activity namespaces may not begin with an underscore.", type.FullName));
 
-			return ToElement (type, name, 
-					ActivityAttribute.FromTypeDefinition, 
-					aa => aa.ToElement (Resolver, PackageName, targetSdkVersion), 
+			return ToElement (type, name,
+					ActivityAttribute.FromTypeDefinition,
+					aa => aa.ToElement (Resolver, PackageName, targetSdkVersion),
 					(aa, element) => {
 						if (aa.MainLauncher)
 							AddLauncherIntentElements (element);
@@ -704,7 +700,7 @@ namespace Xamarin.Android.Tasks {
 
 		XElement InstrumentationFromTypeDefinition (TypeDefinition type, string name, int targetSdkVersion)
 		{
-			return ToElement (type, name, 
+			return ToElement (type, name,
 					t => InstrumentationAttribute.FromCustomAttributeProvider (t).FirstOrDefault (),
 					ia => {
 						if (ia.TargetPackage == null)
@@ -788,7 +784,7 @@ namespace Xamarin.Android.Tasks {
 
 		void AddPermissions (XElement application)
 		{
-			var assemblyAttrs = 
+			var assemblyAttrs =
 				Assemblies.SelectMany (path => PermissionAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)));
 			// Add unique permissions to the manifest
 			foreach (var pa in assemblyAttrs.Distinct (new PermissionAttribute.PermissionAttributeComparer ()))
@@ -798,7 +794,7 @@ namespace Xamarin.Android.Tasks {
 
 		void AddPermissionGroups (XElement application)
 		{
-			var assemblyAttrs = 
+			var assemblyAttrs =
 				Assemblies.SelectMany (path => PermissionGroupAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)));
 
 			// Add unique permissionGroups to the manifest
@@ -871,7 +867,7 @@ namespace Xamarin.Android.Tasks {
 						application.AddBeforeSelf (feature.ToElement (PackageName));
 					}
 				}
-				
+
 			}
 		}
 
@@ -890,7 +886,7 @@ namespace Xamarin.Android.Tasks {
 
 		void AddInstrumentations (XElement manifest, IList<TypeDefinition> subclasses, int targetSdkVersion, TypeDefinitionCache cache)
 		{
-			var assemblyAttrs = 
+			var assemblyAttrs =
 				Assemblies.SelectMany (path => InstrumentationAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)));
 
 			// Add instrumentation to the manifest
@@ -900,7 +896,7 @@ namespace Xamarin.Android.Tasks {
 				if (!manifest.Descendants ("instrumentation").Any (x => (string) x.Attribute (attName) == ia.Name))
 					manifest.Add (ia.ToElement (PackageName));
 			}
-			
+
 			foreach (var type in subclasses)
 				if (type.IsSubclassOf ("Android.App.Instrumentation", cache)) {
 					var xe = InstrumentationFromTypeDefinition (type, JavaNativeTypeManager.ToJniName (type).Replace ('/', '.'), targetSdkVersion);
