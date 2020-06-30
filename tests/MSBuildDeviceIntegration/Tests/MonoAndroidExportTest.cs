@@ -135,10 +135,8 @@ namespace UnnamedProject
 </manifest>";
 				Assert.True (b.Install (proj), "Project should have installed.");
 				ClearAdbLogcat ();
-				if (CommercialBuildAvailable)
-					Assert.True (b.RunTarget (proj, "_Run"), "Project should have run.");
-				else
-					AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
+				b.BuildLogFile = "run.log";
+				Assert.True (b.RunTarget (proj, "StartAndroidActivity", doNotCleanupOnUpdate: true), "Project should have run.");
 
 				Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
 					Path.Combine (Root, b.ProjectDirectory, "logcat.log"), 30), "Activity should have started.");
