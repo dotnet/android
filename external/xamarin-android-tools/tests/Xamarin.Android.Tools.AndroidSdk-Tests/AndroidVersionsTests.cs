@@ -202,9 +202,9 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.AreEqual ("II",  versions.GetIdFromApiLevel ("14"));
 			Assert.AreEqual ("II",  versions.GetIdFromApiLevel ("II"));
 
-			Assert.AreEqual (null,  versions.GetIdFromApiLevel (-1));
-			Assert.AreEqual (null,  versions.GetIdFromApiLevel ("-1"));
-			Assert.AreEqual (null,  versions.GetIdFromApiLevel ("D"));
+			Assert.AreEqual ("-1",  versions.GetIdFromApiLevel (-1));
+			Assert.AreEqual ("-1",  versions.GetIdFromApiLevel ("-1"));
+			Assert.AreEqual ("D",  versions.GetIdFromApiLevel ("D"));
 
 			// via KnownVersions
 			Assert.AreEqual ("11",  versions.GetIdFromApiLevel (11));

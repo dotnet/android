@@ -92,7 +92,8 @@ namespace Xamarin.Android.Tools
 		public int? GetApiLevelFromId (string id)
 		{
 			return installedVersions.FirstOrDefault (v => MatchesId (v, id))?.ApiLevel ??
-				KnownVersions.FirstOrDefault (v => MatchesId (v, id))?.ApiLevel;
+				KnownVersions.FirstOrDefault (v => MatchesId (v, id))?.ApiLevel ??
+				(int.TryParse (id, out int apiLevel) ? apiLevel : default (int?));
 		}
 
 		static bool MatchesId (AndroidVersion version, string id)
@@ -105,7 +106,8 @@ namespace Xamarin.Android.Tools
 		public string? GetIdFromApiLevel (int apiLevel)
 		{
 			return installedVersions.FirstOrDefault (v => v.ApiLevel == apiLevel)?.Id ??
-				KnownVersions.FirstOrDefault (v => v.ApiLevel == apiLevel)?.Id;
+				KnownVersions.FirstOrDefault (v => v.ApiLevel == apiLevel)?.Id ??
+				apiLevel.ToString ();
 		}
 
 		// Sometimes, e.g. when new API levels are introduced, the "API level" is a letter, not a number,
@@ -115,7 +117,8 @@ namespace Xamarin.Android.Tools
 			if (int.TryParse (apiLevel, out var platform))
 				return GetIdFromApiLevel (platform);
 			return installedVersions.FirstOrDefault (v => MatchesId (v, apiLevel))?.Id ??
-				KnownVersions.FirstOrDefault (v => MatchesId (v, apiLevel))?.Id;
+				KnownVersions.FirstOrDefault (v => MatchesId (v, apiLevel))?.Id ??
+				apiLevel;
 		}
 
 		public string? GetIdFromFrameworkVersion (string frameworkVersion)
