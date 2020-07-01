@@ -69,18 +69,43 @@ stages:
 - stage: code_analysis
   displayName: Code Analysis
   jobs:
-  # Check - "Xamarin.Android (Code Analysis CredScan)"
+  # Check - "Xamarin.Android (Code Analysis CredScan and PoliCheck)"
   - job: run_static_analysis
-    displayName: CredScan
+    displayName: CredScan and PoliCheck
     pool: $(HostedWinVS2019)
     timeoutInMinutes: 60
     cancelTimeoutInMinutes: 5
     steps:
     - checkout: self
       submodules: recursive
-    - template: security\xa-static-analysis\v2.yml@yaml
+
+    - template: security\credscan\v2.yml@yaml
       parameters:
-        credScanSuppressionsFile: $(System.DefaultWorkingDirectory)\build-tools\automation\CredScanSuppressions.json
+        suppressionsFile: $(System.DefaultWorkingDirectory)\build-tools\automation\CredScanSuppressions.json
+
+    - template: security\policheck\v1.yml@yaml
+      parameters:
+        exclusionFile: $(System.DefaultWorkingDirectory)\build-tools\automation\PoliCheckExclusions.xml
+
+    - task: securedevelopmentteam.vss-secure-development-tools.build-task-report.SdtReport@1
+      displayName: Create Security Analysis Report
+      inputs:
+        CredScan: true
+        PoliCheck: true
+      condition: succeededOrFailed()
+
+    - task: securedevelopmentteam.vss-secure-development-tools.build-task-publishsecurityanalysislogs.PublishSecurityAnalysisLogs@2
+      displayName: Publish Security Analysis Logs
+      inputs:
+        ArtifactName: CodeAnalysisLogs
+      condition: succeededOrFailed()
+
+    - task: securedevelopmentteam.vss-secure-development-tools.build-task-postanalysis.PostAnalysis@1
+      displayName: Fail Job if Security Issues are Detected
+      inputs:
+        CredScan: true
+        PoliCheck: true
+      condition: succeededOrFailed()
 
 - stage: mac_build
   displayName: Mac
