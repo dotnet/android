@@ -55,6 +55,9 @@ namespace Xamarin.Android.Build.Tests
 					var adbTarget = Environment.GetEnvironmentVariable ("ADB_TARGET");
 					int sdkVersion = -1;
 					var result = RunAdbCommand ($"{adbTarget} shell getprop ro.build.version.sdk");
+					Console.Error.WriteLine (">>>> RESULT <<<<");
+					Console.Error.WriteLine (result);
+					Console.Error.WriteLine (">>>> END <<<<");
 					if (result.Contains ("*")) {
 						//NOTE: We may get a result of:
 						//
