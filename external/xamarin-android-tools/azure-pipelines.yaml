@@ -39,6 +39,7 @@ jobs:
     displayName: 'Run Tests'
     inputs:
       testAssemblyVer2: 'bin\TestDebug\*-Tests.dll'
+      testRunTitle: windows-tests
   - powershell: |
       $hashOfLastVersionChange = & "git" "log" "--follow" "-1" "--pretty=%H" "nuget.version"
       $commitsSinceVersionChange = & "git" "rev-list" "--count" "$hashOfLastVersionChange..HEAD"
@@ -80,3 +81,5 @@ jobs:
     inputs:
       testResultsFormat: NUnit
       testResultsFiles: TestResult*.xml
+      testRunTitle: mac-tests
+      failTaskOnFailedTests: true
