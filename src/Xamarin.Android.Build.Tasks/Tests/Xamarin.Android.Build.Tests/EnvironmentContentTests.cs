@@ -15,7 +15,7 @@ namespace Xamarin.Android.Build.Tests
 	public class EnvironmentContentTests : BaseTest
 	{
 		[Test]
-		[Category ("SmokeTests")]
+		[Category ("SmokeTests"), Category ("dotnet")]
 		public void BuildApplicationWithMonoEnvironment ([Values ("", "Normal", "Offline")] string sequencePointsMode)
 		{
 			const string supportedAbis = "armeabi-v7a;x86";
@@ -36,10 +36,14 @@ namespace Xamarin.Android.Build.Tests
 				},
 			};
 			//LinkSkip one assembly that contains __AndroidLibraryProjects__.zip
-			string linkSkip = KnownPackages.SupportV7AppCompat_27_0_2_1.Id;
+			string linkSkip = "FormsViewGroup";
 			app.SetProperty ("AndroidLinkSkip", linkSkip);
 			app.SetProperty ("_AndroidSequencePointsMode", sequencePointsMode);
-			app.SetProperty (app.ReleaseProperties, KnownProperties.AndroidSupportedAbis, supportedAbis);
+			if (Builder.UseDotNet) {
+				app.SetRuntimeIdentifiers (supportedAbis.Split (';'));
+			} else {
+				app.SetProperty (app.ReleaseProperties, KnownProperties.AndroidSupportedAbis, supportedAbis);
+			}
 			using (var libb = CreateDllBuilder (Path.Combine ("temp", TestName, lib.ProjectName)))
 			using (var appb = CreateApkBuilder (Path.Combine ("temp", TestName, app.ProjectName))) {
 				Assert.IsTrue (libb.Build (lib), "Library build should have succeeded.");

@@ -42,9 +42,6 @@
     <AndroidLinkMode Condition=" '$(AndroidLinkMode)' == '' ">SdkOnly</AndroidLinkMode>
     <AndroidManagedSymbols Condition=" '$(AndroidManagedSymbols)' == '' ">true</AndroidManagedSymbols>
   </PropertyGroup>
-  <PropertyGroup>
-    <PublishTrimmed Condition=" '$(AndroidLinkMode)' == 'SdkOnly' or '$(AndroidLinkMode)' == 'Full' ">true</PublishTrimmed>
-  </PropertyGroup>
 
   <Import Project="Microsoft.Android.Sdk.BundledVersions.props" Condition=" Exists('Microsoft.Android.Sdk.BundledVersions.props') " />
 
