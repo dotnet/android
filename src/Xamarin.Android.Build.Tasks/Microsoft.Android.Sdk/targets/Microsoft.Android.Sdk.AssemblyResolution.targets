@@ -45,7 +45,14 @@ _ResolveAssemblies MSBuild target.
     </MSBuild>
     <ItemGroup>
       <_ResolvedAssemblyFiles Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.Extension)' == '.dll' " />
+      <_UnusedConfigFiles     Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.Extension)' == '.config' " />
     </ItemGroup>
+    <AndroidWarning
+        Code="XA1024"
+        ResourceName="XA1024"
+        FormatArguments="%(_UnusedConfigFiles.Identity)"
+        Condition=" '%(Identity)' != '' "
+    />
     <ProcessAssemblies
         InputAssemblies="@(_ResolvedAssemblyFiles)"
         IntermediateAssemblyDirectory="$(MonoAndroidIntermediateAssemblyDir)"
@@ -77,6 +84,17 @@ _ResolveAssemblies MSBuild target.
       <FileWrites Include="$(_ResolvedUserAssembliesHashFile)" />
     </ItemGroup>
   </Target>
+
+  <PropertyGroup>
+    <_PrepareAssembliesDependsOnTargets>
+      _ResolveAssemblies;
+      _CheckForObsoleteAssemblies;
+      _ResolveSatellitePaths;
+      _CreatePackageWorkspace;
+      _ConvertPdbFiles;
+      _LinkAssemblies;
+    </_PrepareAssembliesDependsOnTargets>
+  </PropertyGroup>
 
   <Target Name="_PrepareAssemblies"
       DependsOnTargets="$(_PrepareAssembliesDependsOnTargets)">

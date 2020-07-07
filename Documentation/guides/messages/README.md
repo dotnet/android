@@ -96,6 +96,7 @@ ms.date: 01/24/2020
 + XA1021: Specified source Java library not found: {file}
 + XA1022: Specified reference Java library not found: {file}
 + [XA1023](xa1023.md): Using the DX DEX Compiler is deprecated.
++ [XA1024](xa1024.md): Ignoring configuration file 'Foo.dll.config'. .NET configuration files are not supported in Xamarin.Android projects that target .NET 5 or higher.
 
 ## XA2xxx: Linker
 

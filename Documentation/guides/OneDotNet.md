@@ -1,15 +1,15 @@
-# .NET 5 and Xamarin.Android
+# .NET 6 and Xamarin.Android
 
 _NOTE: this document is very likely to change, as the requirements for
-.NET 5 are better understood._
+.NET 6 are better understood._
 
-A .NET 5 project for a Xamarin.Android application will look something
+A .NET 6 project for a Xamarin.Android application will look something
 like:
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net5.0-android</TargetFramework>
+    <TargetFramework>net6.0-android</TargetFramework>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
 </Project>
@@ -24,10 +24,10 @@ See the [Target Framework Names in .NET 5][net5spec] spec for details.
 
 ## Consolidation of binding projects
 
-In .NET 5, there will no longer be a concept of a [binding
+In .NET 6, there will no longer be a concept of a [binding
 project][binding] as a separate project type. Any of the MSBuild item
 groups or build actions that currently work in binding projects will
-be supported through a .NET 5 Android application or library.
+be supported through a .NET 6 Android application or library.
 
 For example, a binding library could look like:
 
@@ -48,18 +48,30 @@ the metadata fixups from `Metadata.xml`.
 
 [binding]: https://docs.microsoft.com/xamarin/android/platform/binding-java-library/
 
+## .NET Configuration Files
+
+No support for [configuration files][config] such as `Foo.dll.config`
+or `Foo.exe.config` is available in Xamarin.Android projects targeting
+.NET 6. [`<dllmap>`][dllmap] configuration elements are not supported
+in .NET Core at all, and other element types for compatibility
+packages like [System.Configuration.ConfigurationManager][nuget] have
+never been supported in Xamarin.Android projects.
+
+[config]: https://docs.microsoft.com/dotnet/framework/configure-apps/
+[nuget]: https://www.nuget.org/packages/System.Configuration.ConfigurationManager/
+
 ## Changes to MSBuild tasks
 
-In .NET 5 the behavior of the following MSBuild tasks will change, but
+In .NET 6 the behavior of the following MSBuild tasks will change, but
 "legacy" projects will stay the same:
 
 * `<ValidateJavaVersion/>` - used to require Java 1.6, 1.7, or 1.8
   based on the version of the Android Build Tools or
-  `$(TargetFrameworkVersion)`. .NET 5 will require Java 1.8.
+  `$(TargetFrameworkVersion)`. .NET 6 will require Java 1.8.
 
 * `<ResolveAndroidTooling/>` - used to support the
   `$(AndroidUseLatestPlatformSdk)` setting or multiple
-  `$(TargetFrameworkVersion)`. .NET 5 will always target the latest
+  `$(TargetFrameworkVersion)`. .NET 6 will always target the latest
   Android APIs for `Mono.Android.dll`.
 
 ## Changes to MSBuild properties
@@ -86,7 +98,7 @@ Instead use .NET's concept of [runtime identifiers][rids]:
 
 `$(AndroidBoundExceptionType)` will be `System` by default.  This will
 [alter the types of exceptions thrown from various methods][abet-sys] to
-better align with existing .NET 5 semantics, at the cost of compatibility with
+better align with existing .NET 6 semantics, at the cost of compatibility with
 previous Xamarin.Android releases.
 
 `$(AndroidClassParser)` will be `class-parse` by default. `jar2xml`

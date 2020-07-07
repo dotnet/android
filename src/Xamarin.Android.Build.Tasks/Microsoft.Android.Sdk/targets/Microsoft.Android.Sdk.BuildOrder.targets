@@ -37,6 +37,33 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
       Build;
       _CopyPackage;
     </_PackageForAndroidDependsOn>
+    <_PrepareBuildApkDependsOnTargets>
+      _SetLatestTargetFrameworkVersion;
+      _GetLibraryImports;
+      _RemoveRegisterAttribute;
+      _ResolveAssemblies;
+      _ResolveSatellitePaths;
+      _CreatePackageWorkspace;
+      _ConvertPdbFiles;
+      _LinkAssemblies;
+      _GenerateJavaStubs;
+      _ManifestMerger;
+      _ConvertCustomView;
+      $(_AfterConvertCustomView);
+      $(AfterGenerateAndroidManifest);
+      _GenerateEnvironmentFiles;
+      _CompileJava;
+      _CreateApplicationSharedLibraries;
+      _CompileDex;
+      $(_AfterCompileDex);
+      _CreateBaseApk;
+      _PrepareAssemblies;
+      _ResolveSatellitePaths;
+      _CheckApkPerAbiFlag;
+      _LintChecks;
+      _IncludeNativeSystemLibraries;
+      _CheckGoogleSdkRequirements;
+    </_PrepareBuildApkDependsOnTargets>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(AndroidApplication)' != 'True' ">
