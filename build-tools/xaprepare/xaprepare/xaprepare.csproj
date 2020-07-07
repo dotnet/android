@@ -273,6 +273,9 @@
     <Compile Include="Steps\Step_PrepareExternalJavaInterop.Windows.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\..\..\src-ThirdParty\crc32.net\SafeProxy.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <None Include="App.config" />
     <None Include="app.manifest">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
