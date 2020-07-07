@@ -33,6 +33,10 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
       $(_AfterCompileDex);
       _AddFilesToFileWrites;
     </_BeforeIncrementalClean>
+    <_PackageForAndroidDependsOn>
+      Build;
+      _CopyPackage;
+    </_PackageForAndroidDependsOn>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(AndroidApplication)' != 'True' ">
@@ -56,14 +60,10 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
 
   <!-- Targets that run unless we are running _ComputeFilesToPublishForRuntimeIdentifiers -->
   <PropertyGroup Condition=" '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' ">
-    <CoreResolveReferencesDependsOn>
+    <ResolveReferencesDependsOn>
       _SeparateAppExtensionReferences;
-      _PrepareWearApplication;
       $(ResolveReferencesDependsOn);
       _AddAndroidCustomMetaData;
-    </CoreResolveReferencesDependsOn>
-    <ResolveReferencesDependsOn>
-      $(CoreResolveReferencesDependsOn);
       UpdateAndroidInterfaceProxies;
       UpdateAndroidResources;
       AddBindingsToCompile;

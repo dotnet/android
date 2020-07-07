@@ -258,6 +258,7 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.JavadocImporter.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.Versions.props" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.VisualBasic.targets" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Wear.targets" Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Build.AsyncTask.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Build.AsyncTask.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\K4os.Compression.LZ4.dll" />

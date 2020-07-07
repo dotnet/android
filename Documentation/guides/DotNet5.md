@@ -102,6 +102,15 @@ If Java binding is enabled with `@(InputJar)`, `@(EmbeddedJar)`,
 `@(LibraryProjectZip)`, etc. then `$(AllowUnsafeBlocks)` will default
 to `True`.
 
+Referencing an Android Wear project from an Android application will
+not be supported:
+
+```xml
+<ProjectReference Include="..\Foo.Wear\Foo.Wear.csproj">
+  <IsAppExtension>True</IsAppExtension>
+</ProjectReference>
+```
+
 [rids]: https://docs.microsoft.com/dotnet/core/rid-catalog
 [abet-sys]: https://github.com/xamarin/xamarin-android/issues/4127
 

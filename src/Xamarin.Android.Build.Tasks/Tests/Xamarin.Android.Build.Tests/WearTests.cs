@@ -5,9 +5,30 @@ using Xamarin.ProjectTools;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[Category ("Node-2")]
+	[Category ("Node-2"), Category ("dotnet")]
 	public class WearTests : BaseTest
 	{
+		[Test]
+		public void ResolveLibraryImportsWithReadonlyFiles ()
+		{
+			//NOTE: doesn't need to be a full Android Wear app
+			var proj = new XamarinAndroidApplicationProject {
+				PackageReferences = {
+					KnownPackages.AndroidWear_2_2_0,
+					KnownPackages.Android_Arch_Core_Common_26_1_0,
+					KnownPackages.Android_Arch_Lifecycle_Common_26_1_0,
+					KnownPackages.Android_Arch_Lifecycle_Runtime_26_1_0,
+					KnownPackages.SupportCompat_27_0_2_1,
+					KnownPackages.SupportCoreUI_27_0_2_1,
+					KnownPackages.SupportPercent_27_0_2_1,
+					KnownPackages.SupportV7RecyclerView_27_0_2_1,
+				},
+			};
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			}
+		}
+
 		[Test]
 		public void BasicProject ([Values (true, false)] bool isRelease)
 		{
@@ -41,7 +62,15 @@ namespace Xamarin.Android.Build.Tests
 			using (var wearBuilder = CreateDllBuilder (Path.Combine (path, wear.ProjectName)))
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
 				Assert.IsTrue (wearBuilder.Build (wear), "first wear build should have succeeded.");
+				// In .NET 5+, just check for a build error
+				if (Builder.UseDotNet) {
+					appBuilder.ThrowOnBuildFailure = false;
+					Assert.IsFalse (appBuilder.Build (app), "'dotnet' app build should have failed.");
+					StringAssertEx.Contains ($"error XA4312", appBuilder.LastBuildOutput, "Error should be XA4312");
+					return;
+				}
 				Assert.IsTrue (appBuilder.Build (app), "first app build should have succeeded.");
+				StringAssertEx.Contains ($"warning XA4312", appBuilder.LastBuildOutput, "Warning should be XA4312");
 				// Build with no changes
 				Assert.IsTrue (wearBuilder.Build (wear, doNotCleanupOnUpdate: true), "second wear build should have succeeded.");
 				Assert.IsTrue (wearBuilder.Output.IsTargetSkipped (target), $"`{target}` in wear build should be skipped!");

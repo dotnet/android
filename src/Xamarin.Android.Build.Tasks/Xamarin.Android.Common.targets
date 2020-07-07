@@ -89,8 +89,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckProjectItems" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CheckDuplicateJavaLibraries" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectLibraryAssets" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.ParseAndroidWearProjectAndManifest" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.PrepareWearApplicationFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.DetermineJavaLibrariesToCompile" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CompileNativeAssembly" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.LinkApplicationSharedLibraries" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -375,6 +373,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.SkipCases.projitems" />
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Tooling.targets" />
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Legacy.targets" Condition=" '$(UsingAndroidNETSdk)' != 'True' " />
+<Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Wear.targets"   Condition=" '$(UsingAndroidNETSdk)' != 'True' " />
 
 <Target Name="_WriteLockFile" Condition=" '$(_AndroidDetectParallelBuilds)' == 'True' ">
   <WriteLockFile LockFile="$(IntermediateOutputPath).__lock" />
@@ -385,49 +384,17 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     <_AppExtensionReference Condition=" '%(ProjectReference.IsAppExtension)' == 'True' " Include="@(ProjectReference)" />
     <ProjectReference Remove="@(_AppExtensionReference)" />
   </ItemGroup>
-</Target>
-
-<PropertyGroup>
-	<WearAppTarget>SignAndroidPackage</WearAppTarget>
-</PropertyGroup>
-
-<Target Name="_PrepareWearApplication" DependsOnTargets="_ValidateAndroidPackageProperties"
-	Condition="$(AndroidApplication) And '@(_AppExtensionReference)' != ''">
-	<ParseAndroidWearProjectAndManifest ProjectFiles="@(_AppExtensionReference)">
-		<Output TaskParameter="ApplicationManifestFile" PropertyName="BundledWearApplicationManifestFile" />
-		<Output TaskParameter="ApplicationPackageName" PropertyName="BundledWearApplicationPackageName" />
-	</ParseAndroidWearProjectAndManifest>
-	<CreateProperty
-		Condition="$(WearAppTarget) == 'SignAndroidPackage' And '$(AndroidKeyStore)'=='True'"
-		Value="AndroidKeyStore=True;AndroidSigningKeyStore=$([System.IO.Path]::GetFullPath ('$(AndroidSigningKeyStore)'));AndroidSigningStorePass=$(AndroidSigningStorePass);AndroidSigningKeyAlias=$(AndroidSigningKeyAlias);AndroidSigningKeyPass=$(AndroidSigningKeyPass)">
-		<Output TaskParameter="Value" PropertyName="_AdditionaEmbeddedWearAppProperties" />
-	</CreateProperty>
-	<MSBuild Projects="@(_AppExtensionReference)" Properties="Configuration=$(Configuration);AndroidUseSharedRuntime=False;EmbedAssembliesIntoApk=True;$(_AdditionaEmbeddedWearAppProperties)" Targets="Build;SignAndroidPackage"/>
-	<CreateProperty
-		Condition="$(BundledWearApplicationApkPath) == '' And ($(WearAppTarget) == 'SignAndroidPackage' Or !Exists('%(_AppExtensionReference.RootDir)%(_AppExtensionReference.Directory)$(_AndroidDebugKeyStoreFlag)'))"
-		Value="%(_AppExtensionReference.RootDir)%(_AppExtensionReference.Directory)bin\$(Configuration)\$(BundledWearApplicationPackageName)-Signed.apk">
-		<Output TaskParameter="Value" PropertyName="BundledWearApplicationApkPath" />
-	</CreateProperty>
-	<CreateProperty
-		Condition="$(BundledWearApplicationApkPath) == '' And $(WearAppTarget) == 'PackageForAndroid' And Exists('%(_AppExtensionReference.RootDir)%(_AppExtensionReference.Directory)$(_AndroidDebugKeyStoreFlag)')"
-		Value="%(_AppExtensionReference.RootDir)%(_AppExtensionReference.Directory)bin\$(Configuration)\$(BundledWearApplicationPackageName).apk">
-		<Output TaskParameter="Value" PropertyName="BundledWearApplicationApkPath" />
-	</CreateProperty>
-	<PrepareWearApplicationFiles
-		PackageName="$(_AndroidPackage)"
-		IntermediateOutputPath="$(IntermediateOutputPath)"
-		AndroidLibraryFlatFilesDirectory="$(_AndroidLibraryFlatFilesDirectory)"
-		WearAndroidManifestFile="$(BundledWearApplicationManifestFile)"
-		WearApplicationApkPath="$(BundledWearApplicationApkPath)">
-		<Output TaskParameter="WearableApplicationDescriptionFile" ItemName="_WearableApplicationDescriptionFile" />
-		<Output TaskParameter="BundledWearApplicationApkResourceFile" ItemName="_BundledWearApplicationApkResourceFile" />
-		<Output TaskParameter="ModifiedFiles" ItemName="_ModifiedResources" />
-	</PrepareWearApplicationFiles>
-	<!-- in case there is no actual wear apk to be bundled, we don't generate wear_app_desc.xml and we shouldn't modify AndroidManifest.xml as if it had the apk -->
-	<CreateProperty Value=""
-		Condition="'@(_WearableApplicationDescriptionFile)' == ''">
-		<Output TaskParameter="Value" PropertyName="BundledWearApplicationPackageName" />
-	</CreateProperty>
+  <PropertyGroup>
+    <_AppExtensionContinueOnError Condition=" '$(UsingAndroidNETSdk)' == 'true' ">ErrorAndStop</_AppExtensionContinueOnError>
+    <_AppExtensionContinueOnError Condition=" '$(UsingAndroidNETSdk)' != 'true' ">WarnAndContinue</_AppExtensionContinueOnError>
+  </PropertyGroup>
+  <AndroidError
+      Code="XA4312"
+      ResourceName="XA4312"
+      FormatArguments="%(_AppExtensionReference.FullPath)"
+      ContinueOnError="$(_AppExtensionContinueOnError)"
+      Condition=" '%(FullPath)' != '' "
+  />
 </Target>
 
 <!-- When looking for related files to copy, look for Mono debugging files as well -->
@@ -1272,16 +1239,9 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 </Target>
 
-
-<Target Name="SetWearAppTargetToPackageForAndroid">
-	<CreateProperty Value="PackageForAndroid">
-		<Output TaskParameter="Value" PropertyName="WearAppTarget" />
-	</CreateProperty>
-</Target>
-
 <!-- Package Build -->
 <Target Name="PackageForAndroid"
-	DependsOnTargets="SetWearAppTargetToPackageForAndroid;Build;_CopyPackage" />
+	DependsOnTargets="$(_PackageForAndroidDependsOn)" />
 	
 <Target Name="_CheckForObsoleteAssemblies">
 	<PropertyGroup>
