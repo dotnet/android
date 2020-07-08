@@ -341,6 +341,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\..\src-ThirdParty\android-platform-tools-base\PackagingUtils.cs">
+      <Link>Utilities\%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Include="..\..\src-ThirdParty\android-platform-tools-base\SymbolWriter.cs">
+      <Link>Utilities\%(Filename)%(Extension)</Link>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="Resources\LayoutBinding.cs">
       <Link>LayoutBinding.cs</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

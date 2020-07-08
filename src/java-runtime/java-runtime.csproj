@@ -20,6 +20,7 @@
   <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
   <ItemGroup>
     <AllRuntimeSource Include="java/mono/**/*.java" />
+    <AllRuntimeSource Include="..\..\src-ThirdParty\bazel\java\mono\**\*.java" />
   </ItemGroup>
   <Import Project="java-runtime.targets" />
 </Project>
