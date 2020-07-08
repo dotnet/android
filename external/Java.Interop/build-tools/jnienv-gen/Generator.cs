@@ -33,7 +33,7 @@ namespace Xamarin.Java.Interop
 					string content = w.ToString ();
 					if (jnienv_g_cs == "-")
 						Console.WriteLine (content);
-					else if (!File.Exists (jnienv_g_cs) || !string.Equals (content, File.ReadAllText (jnienv_g_cs)))
+					else
 						File.WriteAllText (jnienv_g_cs, content);
 				}
 				using (TextWriter w = new StringWriter ()) {
@@ -42,7 +42,7 @@ namespace Xamarin.Java.Interop
 					string content = w.ToString ();
 					if (jnienv_g_c == "-" || jnienv_g_cs == "-")
 						Console.WriteLine (content);
-					else if (!File.Exists (jnienv_g_c) || !string.Equals (content, File.ReadAllText (jnienv_g_c)))
+					else
 						File.WriteAllText (jnienv_g_c, content);
 				}
 				return 0;
