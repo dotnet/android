@@ -54,7 +54,7 @@ variables:
   HostedMacMojave: Hosted Mac Internal Mojave
   HostedMac: Hosted Mac Internal
   HostedWinVS2019: Hosted Windows 2019 with VS2019
-  VSEngWinVS2019: VSEng-Xamarin-Android
+  VSEngWinVS2019: Xamarin-Android-Win2019
   # Run all tests if:
   # - User who queued the job requested it (They set XA.RunAllTests to true)
   # - This is the master integration branch (Pipeline defaults XA.RunAllTests to true)
@@ -432,7 +432,7 @@ stages:
   - job: queue_vsix_signing
     displayName: Queue Vsix Signing
     dependsOn: notarize_pkg_upload_storage
-    pool: $(VSEngWinVS2019)
+    pool: VSEng-MicroBuildVS2019
     timeoutInMinutes: 90
     cancelTimeoutInMinutes: 1
     workspace:

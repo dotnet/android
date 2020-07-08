@@ -12,7 +12,6 @@ jobs:
     variables:
       VSINSTALLDIR: C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise
     steps:
-
     - template: kill-processes.yaml
 
     - template: clean.yaml
