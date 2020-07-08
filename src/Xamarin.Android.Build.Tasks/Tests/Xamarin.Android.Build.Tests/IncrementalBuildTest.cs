@@ -1077,6 +1077,7 @@ namespace Lib2
 		}
 
 		[Test]
+		[Category ("dotnet")]
 		public void AndroidResourceChange ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -1088,15 +1089,10 @@ namespace Lib2
 				proj.Touch ("Resources\\layout\\Main.axml");
 				Assert.IsTrue (builder.Build (proj), "second build should succeed");
 
-				var targets = new [] {
-					"_ResolveLibraryProjectImports",
-					"_GenerateJavaStubs",
-					"_CompileJava",
-					"_CompileToDalvik",
-				};
-				foreach (var target in targets) {
-					Assert.IsTrue (builder.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
-				}
+				builder.Output.AssertTargetIsSkipped ("_ResolveLibraryProjectImports");
+				builder.Output.AssertTargetIsSkipped ("_GenerateJavaStubs");
+				builder.Output.AssertTargetIsSkipped ("_CompileJava");
+				builder.Output.AssertTargetIsSkipped ("_CompileToDalvik");
 			}
 		}
 

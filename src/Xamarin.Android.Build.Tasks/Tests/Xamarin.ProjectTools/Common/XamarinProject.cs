@@ -348,6 +348,10 @@ $@"<Project>
 					var subname = fi.FullName.Substring (dirFullPath.Length).Replace ('\\', '/');
 					if (subname.StartsWith ("bin", StringComparison.OrdinalIgnoreCase) || subname.StartsWith ("obj", StringComparison.OrdinalIgnoreCase))
 						continue;
+					if (subname.Equals ("NuGet.config", StringComparison.OrdinalIgnoreCase))
+						continue;
+					if (subname.EndsWith (".log", StringComparison.OrdinalIgnoreCase) || subname.EndsWith (".binlog", StringComparison.OrdinalIgnoreCase))
+						continue;
 					if (!projectFiles.Any (p => p.Path != null && p.Path.Replace ('\\', '/').Equals (subname))) {
 						fi.Delete ();
 					}
