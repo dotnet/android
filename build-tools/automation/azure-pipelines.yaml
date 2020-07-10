@@ -91,6 +91,7 @@ stages:
       displayName: Run AntiMalware (Defender) Scan
       inputs:
         FileDirPath: $(System.DefaultWorkingDirectory)
+        EnableServices: true
       condition: succeededOrFailed()
 
     - task: securedevelopmentteam.vss-secure-development-tools.build-task-report.SdtReport@1
