@@ -311,3 +311,15 @@ Util::get_class_from_runtime_field (JNIEnv *env, jclass runtime, const char *nam
 
 	return reinterpret_cast<jclass> (make_gref ? osBridge.lref_to_gref (env, field) : field);
 }
+
+int
+Util::monodroid_getpagesize (void)
+{
+#ifndef WINDOWS
+	return getpagesize ();
+#else
+	SYSTEM_INFO info;
+	GetSystemInfo (&info);
+	return info.dwPageSize;
+#endif
+}

@@ -40,6 +40,10 @@
 #include <sys/syscall.h>
 #endif
 
+#if defined (APPLE_OS_X)
+#include <libgen.h>
+#endif
+
 #ifndef WINDOWS
 #include <sys/mman.h>
 #include <sys/utsname.h>
@@ -70,6 +74,7 @@
 #include "globals.hh"
 #include "xamarin-app.hh"
 #include "timing.hh"
+#include "xa-internal-api-impl.hh"
 
 #ifndef WINDOWS
 #include "xamarin_getifaddrs.h"
@@ -86,6 +91,9 @@ using namespace xamarin::android::internal;
 
 #include "config.include"
 #include "machine.config.include"
+
+std::mutex MonodroidRuntime::api_init_lock;
+void *MonodroidRuntime::api_dso_handle = nullptr;
 
 #ifdef WINDOWS
 static const char* get_xamarin_android_msbuild_path (void);
@@ -1056,7 +1064,7 @@ setup_gc_logging (void)
 }
 #endif
 
-inline int
+force_inline int
 MonodroidRuntime::convert_dl_flags (int flags)
 {
 	int lflags = flags & static_cast<int> (MONO_DL_LOCAL) ? 0: RTLD_GLOBAL;
@@ -1068,8 +1076,56 @@ MonodroidRuntime::convert_dl_flags (int flags)
 	return lflags;
 }
 
-inline void*
-MonodroidRuntime::monodroid_dlopen_log_and_return (void *handle, char **err, const char *full_name, bool free_memory)
+force_inline void
+MonodroidRuntime::init_internal_api_dso (void *handle)
+{
+	if (handle == nullptr) {
+		log_fatal (LOG_DEFAULT, "Internal API library is required");
+		exit (FATAL_EXIT_MONO_MISSING_SYMBOLS);
+	}
+
+	// There's a very, very small chance of a race condition here, but it should be acceptable and we can save some time
+	// by not acquiring the lock on Android systems which don't have the dlopen bug we worked around in
+	// https://github.com/xamarin/xamarin-android/pull/4914
+	//
+	// The race condition will exist only on systems with the above dynamic loader bug and would become a problem only
+	// if an application were loading managed assemblies with p/invokes very quickly from different threads. All in all,
+	// not a very likely scenario.
+	//
+	if (handle == api_dso_handle) {
+		log_debug (LOG_DEFAULT, "Internal API library already loaded, initialization not necessary");
+		return;
+	}
+
+	std::lock_guard<std::mutex> lock (api_init_lock);
+	if (api_dso_handle != nullptr) {
+		auto api_shutdown = reinterpret_cast<external_api_shutdown_fn> (dlsym (api_dso_handle, MonoAndroidInternalCalls::SHUTDOWN_FUNCTION_NAME));
+		if (api_shutdown == nullptr) {
+			// We COULD ignore this situation, but if the function is missing it means we messed something up and thus
+			// it *is* a fatal error.
+			log_fatal (LOG_DEFAULT, "Unable to properly close Internal API library, shutdown function '%s' not found in the module", MonoAndroidInternalCalls::SHUTDOWN_FUNCTION_NAME);
+			exit (FATAL_EXIT_MONO_MISSING_SYMBOLS);
+		}
+		api_shutdown ();
+	}
+
+	api_dso_handle = handle;
+	auto api = new MonoAndroidInternalCalls_Impl ();
+	auto api_init = reinterpret_cast<external_api_init_fn>(dlsym (handle, MonoAndroidInternalCalls::INIT_FUNCTION_NAME));
+	if (api_init == nullptr) {
+		log_fatal (LOG_DEFAULT, "Unable to initialize Internal API library, init function '%s' not found in the module", MonoAndroidInternalCalls::INIT_FUNCTION_NAME);
+		exit (FATAL_EXIT_MONO_MISSING_SYMBOLS);
+	}
+
+	log_debug (LOG_DEFAULT, "Initializing Internal API library %p", handle);
+	if (!api_init (api)) {
+		log_fatal (LOG_DEFAULT, "Failed to initialize Internal API library");
+		exit (FATAL_EXIT_MONO_MISSING_SYMBOLS);
+	}
+}
+
+force_inline void*
+MonodroidRuntime::monodroid_dlopen_log_and_return (void *handle, char **err, const char *full_name, bool free_memory, bool need_api_init)
 {
 	if (handle == nullptr && err != nullptr) {
 		*err = utils.monodroid_strdup_printf ("Could not load library: Library '%s' not found.", full_name);
@@ -1078,6 +1134,11 @@ MonodroidRuntime::monodroid_dlopen_log_and_return (void *handle, char **err, con
 	if (free_memory) {
 		delete[] full_name;
 	}
+
+	if (!need_api_init)
+		return handle;
+
+	init_internal_api_dso (handle);
 
 	return handle;
 }
@@ -1088,21 +1149,22 @@ MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err, [[m
 	int dl_flags = monodroidRuntime.convert_dl_flags (flags);
 	bool libmonodroid_fallback = false;
 
-	/* name is nullptr when we're P/Invoking __Internal, so remap to libmonodroid */
+	/* name is nullptr when we're P/Invoking __Internal, so remap to libxa-internal-api */
 	if (name == nullptr) {
-		name = "libmonodroid.so";
-		libmonodroid_fallback = TRUE;
+		name = API_DSO_NAME;
+		libmonodroid_fallback = true;
 	}
 
 	void *h = androidSystem.load_dso_from_any_directories (name, dl_flags);
+
 	if (h != nullptr) {
-		return monodroid_dlopen_log_and_return (h, err, name, false);
+		return monodroid_dlopen_log_and_return (h, err, name, false, libmonodroid_fallback);
 	}
 
 	if (libmonodroid_fallback) {
-		char *full_name = utils.path_combine (AndroidSystem::SYSTEM_LIB_PATH, "libmonodroid.so");
+		char *full_name = utils.path_combine (AndroidSystem::SYSTEM_LIB_PATH, API_DSO_NAME);
 		h = androidSystem.load_dso (full_name, dl_flags, false);
-		return monodroid_dlopen_log_and_return (h, err, full_name, true);
+		return monodroid_dlopen_log_and_return (h, err, full_name, true, true);
 	}
 
 	if (!utils.ends_with (name, ".dll.so") && !utils.ends_with (name, ".exe.so")) {
@@ -1418,6 +1480,44 @@ MonodroidRuntime::typemap_managed_to_java (MonoReflectionType *type, const uint8
 	return embeddedAssemblies.typemap_managed_to_java (type, mvid);
 }
 
+#if defined (WINDOWS)
+const char*
+MonodroidRuntime::get_my_location ()
+{
+	HMODULE hm = NULL;
+
+	DWORD handle_flags = GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT;
+	if (GetModuleHandleExW (handle_flags, (LPCWSTR) &get_xamarin_android_msbuild_path, &hm) == 0) {
+		int ret = GetLastError ();
+		log_warn (LOG_DEFAULT, "Unable to get HANDLE to `libmono-android.debug.dll`; GetModuleHandleExW returned %d\n", ret);
+		return nullptr;
+	}
+
+	WCHAR path[MAX_PATH * 2];
+	if (GetModuleFileNameW (hm, path, sizeof(path)) == 0) {
+		int ret = GetLastError ();
+		log_warn (LOG_DEFAULT, "Unable to get filename to `libmono-android.debug.dll`; GetModuleFileNameW returned %d\n", ret);
+		return nullptr;
+	}
+
+	PathRemoveFileSpecW (path);
+
+	return utils.utf16_to_utf8 (path);
+}
+#elif defined (APPLE_OS_X)
+const char*
+MonodroidRuntime::get_my_location ()
+{
+	Dl_info info;
+	if (dladdr (reinterpret_cast<const void*>(&MonodroidRuntime::get_my_location), &info) == 0) {
+		log_warn (LOG_DEFAULT, "Could not lookup library containing `MonodroidRuntime::get_my_location()`; dladdr failed: %s", dlerror ());
+		return nullptr;
+	}
+
+	return utils.strdup_new (dirname (const_cast<char*>(info.dli_fname)));
+}
+#endif
+
 inline void
 MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
                                                           jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader,
@@ -1497,6 +1597,29 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 		counters = utils.monodroid_fopen (counters_path, "a");
 		utils.set_world_accessable (counters_path);
 	}
+
+	void *api_dso_handle = nullptr;
+#if defined (WINDOWS) || defined (APPLE_OS_X)
+	const char *my_location = get_my_location ();
+	if (my_location != nullptr) {
+		simple_pointer_guard<char, false> dso_path (utils.path_combine (my_location, API_DSO_NAME));
+		log_info (LOG_DEFAULT, "Attempting to load %s", dso_path.get ());
+		api_dso_handle = dlopen (dso_path.get (), RTLD_NOW);
+#if defined (APPLE_OS_X)
+		delete[] my_location;
+#else
+		free (static_cast<void*>(const_cast<char*>(my_location))); // JI allocates with `calloc`
+#endif
+	}
+
+	if (api_dso_handle == nullptr) {
+		log_info (LOG_DEFAULT, "Attempting to load %s with \"bare\" dlopen", API_DSO_NAME);
+		api_dso_handle = dlopen (API_DSO_NAME, RTLD_NOW);
+	}
+#endif
+	if (api_dso_handle == nullptr)
+		api_dso_handle = androidSystem.load_dso_from_any_directories (API_DSO_NAME, RTLD_NOW);
+	init_internal_api_dso (api_dso_handle);
 
 	mono_dl_fallback_register (monodroid_dlopen, monodroid_dlsym, nullptr, nullptr);
 

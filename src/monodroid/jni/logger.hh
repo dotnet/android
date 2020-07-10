@@ -32,4 +32,17 @@ extern unsigned int log_timing_categories;
 extern int gc_spew_enabled;
 #endif
 
+// Keep in sync with LogLevel defined in JNIEnv.cs
+enum class LogLevel : unsigned int
+{
+	Unknown = 0x00,
+	Default = 0x01,
+	Verbose = 0x02,
+	Debug   = 0x03,
+	Info    = 0x04,
+	Warn    = 0x05,
+	Error   = 0x06,
+	Fatal   = 0x07,
+	Silent  = 0x08
+};
 #endif

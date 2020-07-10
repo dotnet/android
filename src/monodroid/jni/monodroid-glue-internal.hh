@@ -61,7 +61,14 @@ namespace xamarin::android::internal
 #else
 		true;
 #endif
-
+#define MAKE_API_DSO_NAME(_ext_) "libxa-internal-api." # _ext_
+#if defined (WINDOWS)
+		static constexpr char API_DSO_NAME[] = MAKE_API_DSO_NAME (dll);
+#elif defined (APPLE_OS_X)
+		static constexpr char API_DSO_NAME[] = MAKE_API_DSO_NAME (dylib);
+#else
+		static constexpr char API_DSO_NAME[] = MAKE_API_DSO_NAME (so);
+#endif
 	public:
 		static constexpr int XA_LOG_COUNTERS = MONO_COUNTER_JIT | MONO_COUNTER_METADATA | MONO_COUNTER_GC | MONO_COUNTER_GENERICS | MONO_COUNTER_INTERP;
 
@@ -131,9 +138,13 @@ namespace xamarin::android::internal
 
 	private:
 		int convert_dl_flags (int flags);
+#if defined (WINDOWS) || defined (APPLE_OS_X)
+		static const char* get_my_location ();
+#endif
 		static void* monodroid_dlopen (const char *name, int flags, char **err, void *user_data);
 		static void* monodroid_dlsym (void *handle, const char *name, char **err, void *user_data);
-		static void* monodroid_dlopen_log_and_return (void *handle, char **err, const char *full_name, bool free_memory);
+		static void* monodroid_dlopen_log_and_return (void *handle, char **err, const char *full_name, bool free_memory, bool need_api_init = false);
+		static void  init_internal_api_dso (void *handle);
 		int LocalRefsAreIndirect (JNIEnv *env, jclass runtimeClass, int version);
 		void create_xdg_directory (jstring_wrapper& home, const char *relativePath, const char *environmentVariableName);
 		void create_xdg_directories_and_environment (jstring_wrapper &homeDir);
@@ -218,6 +229,9 @@ namespace xamarin::android::internal
 		 * able to switch our different contexts from different threads.
 		 */
 		int                 current_context_id = -1;
+
+		static std::mutex   api_init_lock;
+		static void        *api_dso_handle;
 	};
 }
 #endif
