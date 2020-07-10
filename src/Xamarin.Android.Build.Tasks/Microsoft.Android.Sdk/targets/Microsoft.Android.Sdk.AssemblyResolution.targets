@@ -49,6 +49,7 @@ _ResolveAssemblies MSBuild target.
     <ProcessAssemblies
         InputAssemblies="@(_ResolvedAssemblyFiles)"
         IntermediateAssemblyDirectory="$(MonoAndroidIntermediateAssemblyDir)"
+        UseSharedRuntime="$(AndroidUseSharedRuntime)"
         LinkMode="$(AndroidLinkMode)">
       <Output TaskParameter="OutputAssemblies" ItemName="ResolvedAssemblies" />
       <Output TaskParameter="ShrunkAssemblies" ItemName="_ShrunkAssemblies" />
