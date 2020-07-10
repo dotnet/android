@@ -39,11 +39,7 @@ namespace Xamarin.Android.Build.Tests
 			string linkSkip = "FormsViewGroup";
 			app.SetProperty ("AndroidLinkSkip", linkSkip);
 			app.SetProperty ("_AndroidSequencePointsMode", sequencePointsMode);
-			if (Builder.UseDotNet) {
-				app.SetRuntimeIdentifiers (supportedAbis.Split (';'));
-			} else {
-				app.SetProperty (app.ReleaseProperties, KnownProperties.AndroidSupportedAbis, supportedAbis);
-			}
+			app.SetAndroidSupportedAbis (supportedAbis);
 			using (var libb = CreateDllBuilder (Path.Combine ("temp", TestName, lib.ProjectName)))
 			using (var appb = CreateApkBuilder (Path.Combine ("temp", TestName, app.ProjectName))) {
 				Assert.IsTrue (libb.Build (lib), "Library build should have succeeded.");

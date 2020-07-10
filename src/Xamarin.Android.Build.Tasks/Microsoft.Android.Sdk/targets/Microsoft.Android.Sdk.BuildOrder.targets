@@ -27,6 +27,12 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
       _CopyPackage;
       _Sign;
     </BuildDependsOn>
+    <_BeforeIncrementalClean>
+      _PrepareAssemblies;
+      _CompileDex;
+      $(_AfterCompileDex);
+      _AddFilesToFileWrites;
+    </_BeforeIncrementalClean>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(AndroidApplication)' != 'True' ">
@@ -43,6 +49,9 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
       _ValidateAndroidPackageProperties;
       $(BuildDependsOn);
     </BuildDependsOn>
+    <_BeforeIncrementalClean>
+      _AddFilesToFileWrites;
+    </_BeforeIncrementalClean>
   </PropertyGroup>
 
   <!-- Targets that run unless we are running _ComputeFilesToPublishForRuntimeIdentifiers -->
@@ -64,6 +73,9 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
   </PropertyGroup>
 
   <PropertyGroup>
+    <CoreBuildDependsOn>
+      $([MSBuild]::Unescape($(CoreBuildDependsOn.Replace('IncrementalClean;', '$(_BeforeIncrementalClean);IncrementalClean;'))))
+    </CoreBuildDependsOn>
     <CompileDependsOn>
       _SetupDesignTimeBuildForCompile;
       _AddAndroidDefines;
