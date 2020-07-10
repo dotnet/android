@@ -4,6 +4,31 @@ namespace Xamarin.ProjectTools
 {
 	public static class ProjectExtensions
 	{
+		/// <summary>
+		/// Sets $(AndroidSupportedAbis) or $(RuntimeIdentifiers) depending if running under dotnet
+		/// </summary>
+		public static void SetAndroidSupportedAbis (this IShortFormProject project, params string [] abis)
+		{
+			if (Builder.UseDotNet || project is XASdkProject) {
+				project.SetRuntimeIdentifiers (abis);
+			} else {
+				project.SetAndroidSupportedAbis (string.Join (";", abis));
+			}
+		}
+
+		/// <summary>
+		/// Sets $(AndroidSupportedAbis) or $(RuntimeIdentifiers) depending if running under dotnet
+		/// </summary>
+		/// <param name="abis">A semi-colon-delimited list of ABIs</param>
+		public static void SetAndroidSupportedAbis (this IShortFormProject project, string abis)
+		{
+			if (Builder.UseDotNet || project is XASdkProject) {
+				project.SetRuntimeIdentifiers (abis.Split (';'));
+			} else {
+				project.SetProperty (KnownProperties.AndroidSupportedAbis, abis);
+			}
+		}
+
 		public static void SetRuntimeIdentifier (this IShortFormProject project, string androidAbi)
 		{
 			if (androidAbi == "armeabi-v7a") {

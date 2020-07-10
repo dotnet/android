@@ -774,6 +774,7 @@ namespace Lib2
 		}
 
 		[Test]
+		[Category ("dotnet")]
 		public void GenerateJavaStubsAndAssembly ([Values (true, false)] bool isRelease)
 		{
 			var targets = new [] {
@@ -785,6 +786,7 @@ namespace Lib2
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
+			proj.SetAndroidSupportedAbis ("armeabi-v7a");
 			proj.OtherBuildItems.Add (new AndroidItem.AndroidEnvironment ("Foo.txt") {
 				TextContent = () => "Foo=Bar",
 			});
