@@ -1,12 +1,16 @@
 steps:
 - powershell: |
-    $ErrorActionPreference = 'Continue'
+    $ErrorActionPreference = 'SilentlyContinue'
     Get-Process
-    Stop-Process -Name nunit3-console
-    Stop-Process -Name xabuild
-    Stop-Process -Name MSBuild
-    Stop-Process -Name adb
-    $LastExitCode=0
+    Write-Host "Attempting to kill stray processes..."
+    Stop-Process -Name nunit3-console -ErrorVariable nunitError -PassThru
+    if ($nunitError) { Write-Host "A process named 'nunit3-console' could not be found or stopped."}
+    Stop-Process -Name xabuild -ErrorVariable xabuildError -PassThru
+    if ($xabuildError) { Write-Host "A process named 'xabuild' could not be found or stopped." }
+    Stop-Process -Name MSBuild -ErrorVariable msbuildError -PassThru
+    if ($msbuildError) { Write-Host "A process named 'MSBuild' could not be found or stopped." }
+    Stop-Process -Name adb -ErrorVariable adbError -PassThru
+    if ($adbError) { Write-Host "A process named 'adb' could not be found or stopped." }
   displayName: kill leftover processes
-  failOnStderr: false
+  ignoreLASTEXITCODE: true
   condition: and(always(), eq(variables['agent.os'], 'Windows_NT'))
