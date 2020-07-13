@@ -21,3 +21,4 @@ using System.Runtime.InteropServices;
 
 [assembly: InternalsVisibleTo ("AndroidMSBuildTests")]
 [assembly: InternalsVisibleTo ("Xamarin.Android.Build.Tests")]
+[assembly: InternalsVisibleTo ("MSBuildDeviceIntegration")]

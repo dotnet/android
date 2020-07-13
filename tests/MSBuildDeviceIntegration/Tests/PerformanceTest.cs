@@ -43,20 +43,6 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		void DeviceRequired ()
-		{
-			if (!HasDevices) {
-				Assert.Ignore ("Test requires a device attached.");
-			}
-		}
-
-		void CommercialRequired ()
-		{
-			if (!CommercialBuildAvailable) {
-				Assert.Ignore ("Test requires a commercial build.");
-			}
-		}
-
 		void Profile (ProjectBuilder builder, Action<ProjectBuilder> action, [CallerMemberName] string caller = null)
 		{
 			if (!csv_values.TryGetValue (caller, out int expected)) {
@@ -259,11 +245,12 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[TestCaseSource (nameof (XAML_Change))]
+		[Category ("UsesDevice")]
 		public void Build_XAML_Change (bool produceReferenceAssembly, bool install)
 		{
 			if (install) {
-				DeviceRequired ();
-				CommercialRequired (); // This test will fail without Fast Deployment
+				AssertCommercialBuild (); // This test will fail without Fast Deployment
+				AssertHasDevices ();
 			}
 
 			var path = Path.Combine ("temp", TestName);
@@ -336,10 +323,11 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Category ("UsesDevice")]
 		public void Install_CSharp_Change ()
 		{
-			DeviceRequired ();
-			CommercialRequired (); // This test will fail without Fast Deployment
+			AssertCommercialBuild (); // This test will fail without Fast Deployment
+			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.MainActivity = proj.DefaultMainActivity;
