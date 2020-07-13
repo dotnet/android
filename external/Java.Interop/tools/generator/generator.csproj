@@ -33,7 +33,7 @@
     <PackageReference Include="Mono.Options" Version="5.3.0.1" />
     <!-- Since we are sharing an OutputDirectory, and HtmlAgilityPack is also referenced by a different netstandard2.0 libary,
           we can explicitly reference the netstandard2.0 version here. This will also ensure symbol files are copied to the output directory. -->
-    <PackageReference Include="HtmlAgilityPack" Version="1.8.14" ExcludeAssets="Compile" GeneratePathProperty="true" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.24" ExcludeAssets="Compile" GeneratePathProperty="true" />
     <Reference Include="HtmlAgilityPack">
         <HintPath>$(PkgHtmlAgilityPack)\lib\netstandard2.0\HtmlAgilityPack.dll</HintPath>
     </Reference>

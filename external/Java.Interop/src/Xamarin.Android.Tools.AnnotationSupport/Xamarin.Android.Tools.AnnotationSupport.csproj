@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="HtmlAgilityPack" Version="1.8.14" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.24" />
   </ItemGroup>
 
 </Project>
