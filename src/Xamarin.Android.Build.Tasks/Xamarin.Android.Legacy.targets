@@ -46,6 +46,11 @@ projects. .NET 5 projects will not import this file.
       $(_AfterCompileDex);
       _AddFilesToFileWrites;
     </_BeforeIncrementalClean>
+    <_PackageForAndroidDependsOn>
+      SetWearAppTargetToPackageForAndroid;
+      Build;
+      _CopyPackage;
+    </_PackageForAndroidDependsOn>
   </PropertyGroup>
 
   <!-- Class library projects -->

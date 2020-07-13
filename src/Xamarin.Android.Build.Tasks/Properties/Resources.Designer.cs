@@ -1060,6 +1060,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Referencing the Android Wear application project &apos;{0}&apos; from an Android application project is deprecated and will no longer be supported in a future version of Xamarin.Android. Remove the Android Wear application project reference from the Android application project and distribute the Wear application as a standalone application instead..
+        /// </summary>
+        internal static string XA4312 {
+            get {
+                return ResourceManager.GetString("XA4312", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Missing Android NDK toolchains directory &apos;{0}&apos;. Please install the Android NDK..
         /// </summary>
         internal static string XA5101 {
