@@ -30,6 +30,9 @@ namespace Xamarin.ProjectTools
 			TargetFrameworkVersion = Versions.KitkatWatch;
 			UseLatestPlatformSdk = true;
 			PackageReferences.Add (KnownPackages.AndroidWear_2_2_0);
+			if (Builder.UseDotNet) {
+				this.AddDotNetCompatPackages ();
+			}
 
 			MainActivity = default_main_activity;
 			StringsXml = default_strings_xml;

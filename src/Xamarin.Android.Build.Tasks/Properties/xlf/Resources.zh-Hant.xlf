@@ -657,6 +657,12 @@ In this message, the term "bundled" is a short way of saying "included into the 
         <note>The following are literal names and should not be translated: Wear, APK, SignAndroidPackage
 "Wear" is a short version of the full product name "Wear OS" and so should not be translated.</note>
       </trans-unit>
+      <trans-unit id="XA4312">
+        <source>Referencing the Android Wear application project '{0}' from an Android application project is deprecated and will no longer be supported in a future version of Xamarin.Android. Remove the Android Wear application project reference from the Android application project and distribute the Wear application as a standalone application instead.</source>
+        <target state="new">Referencing the Android Wear application project '{0}' from an Android application project is deprecated and will no longer be supported in a future version of Xamarin.Android. Remove the Android Wear application project reference from the Android application project and distribute the Wear application as a standalone application instead.</target>
+        <note>The following are literal names and should not be translated: Android Wear, Android, Wear.
+{0} - The referenced Android Wear project.</note>
+      </trans-unit>
       <trans-unit id="XA5101">
         <source>Missing Android NDK toolchains directory '{0}'. Please install the Android NDK.</source>
         <target state="translated">缺少 Android NDK 工具鏈目錄 '{0}'。請安裝 Android NDK。</target>
