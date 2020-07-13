@@ -21,6 +21,8 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "PRAS";
 
+		public bool UseSharedRuntime { get; set; }
+
 		public string LinkMode { get; set; }
 		
 		[Required]
@@ -74,7 +76,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			// Set ShrunkAssemblies for _RemoveRegisterAttribute and <BuildApk/>
-			if (!string.IsNullOrEmpty (LinkMode) && !string.Equals (LinkMode, "None", StringComparison.OrdinalIgnoreCase)) {
+			if (!string.IsNullOrEmpty (LinkMode) && !string.Equals (LinkMode, "None", StringComparison.OrdinalIgnoreCase) && !UseSharedRuntime) {
 				ShrunkAssemblies = OutputAssemblies.Select (a => {
 					var dir = Path.GetDirectoryName (a.ItemSpec);
 					var file = Path.GetFileName (a.ItemSpec);
