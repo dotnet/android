@@ -3755,6 +3755,7 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 		}
 
 		[Test]
+		[Category ("dotnet")]
 		public void XA0119 ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -3769,6 +3770,7 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 		}
 
 		[Test]
+		[Category ("dotnet")]
 		public void XA0119AAB ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
