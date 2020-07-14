@@ -1,8 +1,10 @@
 steps:
 - powershell: |
     $ErrorActionPreference = 'Continue'
-    git clean -xffd
-    git submodule foreach --recursive git clean -xffd
+    Start-Process -NoNewWindow -FilePath git -ArgumentList "clean -xffd" -Wait -RedirectStandardError "$(Build.BinariesDirectory)\clean.txt"
+    Get-Content "$(Build.BinariesDirectory)\clean.txt" | Write-Host
+    Start-Process -NoNewWindow -FilePath git -ArgumentList "submodule foreach --recursive git clean -xffd" -Wait -RedirectStandardError "$(Build.BinariesDirectory)\submodule-clean.txt"
+    Get-Content "$(Build.BinariesDirectory)\submodule-clean.txt" | Write-Host
     Remove-Item -Recurse $(Build.BinariesDirectory) -ErrorAction Ignore
     $LastExitCode = 0
   displayName: manual clean

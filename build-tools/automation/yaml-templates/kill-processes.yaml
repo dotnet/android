@@ -1,12 +1,12 @@
 steps:
 - powershell: |
-    $ErrorActionPreference = 'Continue'
+    $ErrorActionPreference = 'SilentlyContinue'
     Get-Process
-    Stop-Process -Name nunit3-console
-    Stop-Process -Name xabuild
-    Stop-Process -Name MSBuild
-    Stop-Process -Name adb
-    $LastExitCode=0
+    $procsToKill = @("nunit3-console", "xabuild", "MSBuild", "adb")
+    Write-Host "Attempting to kill stray processes: $procsToKill ..."
+    Stop-Process -Name $procsToKill -PassThru
+    Write-Host "Running processes that should have been killed:"
+    Get-Process -Name $procsToKill
   displayName: kill leftover processes
-  failOnStderr: false
+  ignoreLASTEXITCODE: true
   condition: and(always(), eq(variables['agent.os'], 'Windows_NT'))
