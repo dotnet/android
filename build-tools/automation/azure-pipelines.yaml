@@ -69,9 +69,9 @@ stages:
 - stage: code_analysis
   displayName: Code Analysis
   jobs:
-  # Check - "Xamarin.Android (Code Analysis CredScan and PoliCheck)"
+  # Check - "Xamarin.Android (Code Analysis Security and Compliance)"
   - job: run_static_analysis
-    displayName: CredScan and PoliCheck
+    displayName: Security and Compliance
     pool: $(HostedWinVS2019)
     timeoutInMinutes: 60
     cancelTimeoutInMinutes: 5
@@ -86,6 +86,13 @@ stages:
     - template: security\policheck\v1.yml@yaml
       parameters:
         exclusionFile: $(System.DefaultWorkingDirectory)\build-tools\automation\PoliCheckExclusions.xml
+
+    - task: securedevelopmentteam.vss-secure-development-tools.build-task-antimalware.AntiMalware@3
+      displayName: Run AntiMalware (Defender) Scan
+      inputs:
+        FileDirPath: $(System.DefaultWorkingDirectory)
+        EnableServices: true
+      condition: succeededOrFailed()
 
     - task: securedevelopmentteam.vss-secure-development-tools.build-task-report.SdtReport@1
       displayName: Create Security Analysis Report
