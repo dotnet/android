@@ -77,6 +77,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Category ("dotnet")]
 		public void CheckMonoDebugIsAddedToEnvironment ([Values ("", "Normal", "Offline")] string sequencePointsMode)
 		{
 			const string supportedAbis = "armeabi-v7a;x86";
@@ -85,9 +86,8 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = true,
 			};
 			proj.SetProperty ("_AndroidSequencePointsMode", sequencePointsMode);
-			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidSupportedAbis, supportedAbis);
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
-				b.Verbosity = LoggerVerbosity.Diagnostic;
+			proj.SetAndroidSupportedAbis (supportedAbis);
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
 				string intermediateOutputDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
@@ -109,6 +109,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Category ("dotnet")]
 		public void CheckConcurrentGC ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -118,9 +119,10 @@ namespace Xamarin.Android.Build.Tests
 			var expectedDefaultValue = "major=marksweep";
 			var expectedUpdatedValue = "major=marksweep-conc";
 			var supportedAbis = "armeabi-v7a;arm64-v8a";
-			proj.SetProperty (KnownProperties.AndroidSupportedAbis, supportedAbis);
+			proj.SetAndroidSupportedAbis (supportedAbis);
 
-			using (var b = CreateDllBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
+				proj.SetProperty ("AndroidEnableSGenConcurrent", "False");
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var intermediateOutputDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 				// AndroidEnableSGenConcurrent=False by default
@@ -151,8 +153,8 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty (proj.ReleaseProperties, "DebugSymbols", "true");
 			proj.SetProperty (proj.ReleaseProperties, "DebugType", "PdbOnly");
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, "true");
-			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidSupportedAbis, supportedAbis);
 			proj.SetProperty (proj.ReleaseProperties, "AndroidPackageFormat", packageFormat);
+			proj.SetAndroidSupportedAbis (supportedAbis);
 			using (var b = CreateApkBuilder ()) {
 				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
 				b.ThrowOnBuildFailure = false;
@@ -191,6 +193,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Category ("dotnet")]
 		public void CheckHttpClientHandlerType ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -200,9 +203,10 @@ namespace Xamarin.Android.Build.Tests
 			var expectedDefaultValue = "System.Net.Http.HttpClientHandler, System.Net.Http";
 			var expectedUpdatedValue = "Xamarin.Android.Net.AndroidClientHandler";
 			var supportedAbis = "armeabi-v7a;arm64-v8a";
-			proj.SetProperty (KnownProperties.AndroidSupportedAbis, supportedAbis);
+			proj.SetAndroidSupportedAbis (supportedAbis);
 
-			using (var b = CreateDllBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
+				proj.SetProperty ("AndroidHttpClientHandlerType", expectedDefaultValue);
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var intermediateOutputDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 				List<string> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true);
