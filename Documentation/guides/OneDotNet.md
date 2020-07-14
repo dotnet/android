@@ -104,6 +104,9 @@ previous Xamarin.Android releases.
 `$(AndroidClassParser)` will be `class-parse` by default. `jar2xml`
 will not be supported.
 
+`$(AndroidDexTool)` will be `d8` by default. `dx` will not be
+supported.
+
 `$(AndroidCodegenTarget)` will be `XAJavaInterop1` by default.
 `XamarinAndroid` will not be supported.
 

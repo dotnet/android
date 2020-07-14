@@ -365,7 +365,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 -->
 <!-- As we split up/refactor this file, put new imports here -->
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.D8.targets" Condition=" '$(AndroidDexTool)' == 'd8' " />
-<Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.DX.targets" Condition=" '$(AndroidDexTool)' == 'dx' " />
+<Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.DX.targets" Condition=" '$(AndroidDexTool)' == 'dx' and '$(UsingAndroidNETSdk)' != 'true' " />
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Aapt.targets" />
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Aapt2.targets" />
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.DesignTime.targets" />
@@ -460,6 +460,18 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       ResourceName="XA0119_AAB"
       Condition=" '$(AndroidUseSharedRuntime)' == 'True' And '$(AndroidPackageFormat)' == 'aab' "
   />
+  <AndroidError Code="XA1011"
+      ResourceName="XA1011"
+      Condition=" '$(AndroidLinkTool)' == 'proguard' And '$(AndroidDexTool)' == 'd8' "
+  />
+  <AndroidWarning Code="XA1023"
+      ResourceName="XA1023"
+      Condition=" '$(AndroidDexTool)' == 'dx' and '$(UsingAndroidNETSdk)' != 'true' "
+  />
+  <AndroidError Code="XA1023"
+      ResourceName="XA1023_dotnet"
+      Condition="  '$(AndroidDexTool)' == 'dx' and '$(UsingAndroidNETSdk)' == 'true' "
+  />
 </Target>
 
 <!--
@@ -472,14 +484,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<CreateProperty Value="None" Condition="'$(AndroidLinkMode)' == 'SdkOnly' And '$(AndroidUseSharedRuntime)' == 'true'">
 		<Output TaskParameter="Value" PropertyName="AndroidLinkMode" />
 	</CreateProperty>
-	<AndroidError Code="XA1011"
-		ResourceName="XA1011"
-		Condition=" '$(AndroidLinkTool)' == 'proguard' And '$(AndroidDexTool)' == 'd8' "
-	/>
-	<AndroidWarning Code="XA1023"
-		ResourceName="XA1023"
-		Condition=" '$(AndroidDexTool)' == 'dx' "
-	/>
 </Target>
 
 <Target Name="UpdateGeneratedFiles"
