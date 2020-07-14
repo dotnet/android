@@ -583,6 +583,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ignoring configuration file &apos;{0}&apos;. .NET configuration files are not supported in Xamarin.Android projects that target .NET 5 or higher..
+        /// </summary>
+        internal static string XA1024 {
+            get {
+                return ResourceManager.GetString("XA1024", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 5 will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 5 is released..
         /// </summary>
         internal static string XA2000 {

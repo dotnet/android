@@ -1319,24 +1319,6 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 </Target>
 
-<Target Name="_CollectConfigFiles">
-	<GetFilesThatExist
-			Files="@(ResolvedAssemblies->'%(identity).config')">
-		<Output TaskParameter="FilesThatExist" ItemName="_ResolvedConfigFiles" />
-	</GetFilesThatExist>
-</Target>
-
-<Target Name="_CopyConfigFiles"
-		Inputs="@(_ResolvedConfigFiles)"
-		Outputs="$(_AndroidStampDirectory)_CopyConfigFiles.stamp"
-		DependsOnTargets="_CollectConfigFiles">
-	<CopyIfChanged
-			SourceFiles="@(_ResolvedConfigFiles)"
-			DestinationFiles="@(_ResolvedConfigFiles->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')"
-	/>
-	<Touch Files="$(_AndroidStampDirectory)_CopyConfigFiles.stamp" AlwaysCreate="True" />
-</Target>
-
 <Target Name="_CollectMdbFiles"
 		DependsOnTargets="_CollectPdbFiles">
 	<GetFilesThatExist
@@ -1415,18 +1397,6 @@ because xbuild doesn't support framework reference assemblies.
     <FileWrites Include="$(MonoAndroidIntermediateAssemblyDir)**" />
   </ItemGroup>
 </Target>
-
-<PropertyGroup>
-	<_PrepareAssembliesDependsOnTargets>
-		_ResolveAssemblies
-		;_CheckForObsoleteAssemblies
-		;_ResolveSatellitePaths
-		;_CreatePackageWorkspace
-		;_CopyConfigFiles
-		;_ConvertPdbFiles
-		;_LinkAssemblies
-	</_PrepareAssembliesDependsOnTargets>
-</PropertyGroup>
 
 <!-- _PrepareAssemblies lives in Xamarin.Android.Legacy.targets and Microsoft.Android.Sdk.AssemblyResolution.targets -->
 
@@ -2014,37 +1984,6 @@ because xbuild doesn't support framework reference assemblies.
     <FileWrites Include="@(_ApplicationSharedLibrary)" />
   </ItemGroup>
 </Target>
-
-<PropertyGroup>
-	<_PrepareBuildApkDependsOnTargets>
-		_SetLatestTargetFrameworkVersion;
-		_GetLibraryImports;
-		_RemoveRegisterAttribute;
-		_ResolveAssemblies;
-		_ResolveSatellitePaths;
-		_CreatePackageWorkspace;
-		_CopyConfigFiles;
-		_ConvertPdbFiles;
-		_LinkAssemblies;
-		_GenerateJavaStubs;
-		_ManifestMerger;
-		_ConvertCustomView;
-		$(_AfterConvertCustomView);
-		$(AfterGenerateAndroidManifest);
-		_GenerateEnvironmentFiles;
-		_CompileJava;
-		_CreateApplicationSharedLibraries;
-		_CompileDex;
-		$(_AfterCompileDex);
-		_CreateBaseApk;
-		_PrepareAssemblies;
-		_ResolveSatellitePaths;
-		_CheckApkPerAbiFlag;
-		;_LintChecks
-		;_IncludeNativeSystemLibraries
-		;_CheckGoogleSdkRequirements
-	</_PrepareBuildApkDependsOnTargets>
-</PropertyGroup>
 
 <Target Name="_PrepareBuildApk"
     DependsOnTargets="$(_PrepareBuildApkDependsOnTargets)">

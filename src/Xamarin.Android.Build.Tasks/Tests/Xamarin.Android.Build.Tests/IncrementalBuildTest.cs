@@ -344,15 +344,17 @@ namespace Lib2
 
 		//https://github.com/xamarin/xamarin-android/issues/2247
 		[Test]
-		[Category ("SmokeTests")]
+		[Category ("SmokeTests"), Category ("dotnet")]
 		public void AppProjectTargetsDoNotBreak ()
 		{
 			var targets = new List<string> {
 				"_GeneratePackageManagerJava",
 				"_ResolveLibraryProjectImports",
 				"_CleanIntermediateIfNeeded",
-				"_CopyConfigFiles",
 			};
+			if (!Builder.UseDotNet) {
+				targets.Add ("_CopyConfigFiles");
+			}
 			var proj = new XamarinFormsAndroidApplicationProject {
 				OtherBuildItems = {
 					new BuildItem.NoActionResource ("UnnamedProject.dll.config") {
@@ -363,7 +365,7 @@ namespace Lib2
 					}
 				}
 			};
-			if (IsWindows) {
+			if (IsWindows && !Builder.UseDotNet) {
 				//NOTE: pdb2mdb will run on Windows on the current project's symbols if DebugType=Full
 				proj.SetProperty (proj.DebugProperties, "DebugType", "Full");
 				targets.Add ("_ConvertPdbFiles");
@@ -392,13 +394,13 @@ namespace Lib2
 				//NOTE: second build, targets will run because inputs changed
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second build should succeed");
 				foreach (var target in targets) {
-					Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped on second build!");
+					b.Output.AssertTargetIsNotSkipped (target);
 				}
 
 				//NOTE: third build, targets should certainly *not* run! there are no changes
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "third build should succeed");
 				foreach (var target in targets) {
-					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped on third build!");
+					b.Output.AssertTargetIsSkipped (target);
 				}
 			}
 		}

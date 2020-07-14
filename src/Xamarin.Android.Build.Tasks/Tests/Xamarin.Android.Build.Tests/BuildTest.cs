@@ -1608,11 +1608,11 @@ namespace App1
 		}
 
 		[Test]
+		[Category ("dotnet")]
 		public void BuildBasicApplicationCheckConfigFiles ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
-			using (var b = CreateApkBuilder ("temp/BuildBasicApplicationCheckConfigFiles", false)) {
-				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
+			using (var b = CreateApkBuilder ()) {
 				var config = new BuildItem.NoActionResource ("UnnamedProject.dll.config") {
 					TextContent = () => {
 						return "<?xml version='1.0' ?><configuration/>";
@@ -1621,15 +1621,15 @@ namespace App1
 						{ "CopyToOutputDirectory", "PreserveNewest"},
 					}
 				};
-				proj.References.Add (config);
+				proj.OtherBuildItems.Add (config);
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				Assert.IsTrue (
-					File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/assets/UnnamedProject.dll.config")),
-					"UnnamedProject.dll.config was must be copied to Intermediate directory");
-				Assert.IsTrue (b.Build (proj), "second build failed");
-				Assert.IsTrue (
-					b.Output.IsTargetSkipped ("_CopyConfigFiles"),
-					"the _CopyConfigFiles target should be skipped");
+				if (Builder.UseDotNet) {
+					StringAssertEx.Contains ("XA1024", b.LastBuildOutput, "Output should contain XA1024 warnings");
+				} else {
+					FileAssert.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/assets/UnnamedProject.dll.config"));
+					Assert.IsTrue (b.Build (proj), "second build failed");
+					b.Output.AssertTargetIsSkipped ("_CopyConfigFiles");
+				}
 			}
 		}
 

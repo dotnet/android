@@ -116,6 +116,34 @@ projects. .NET 5 projects will not import this file.
       _CleanMonoAndroidIntermediateDir;
       _CleanAndroidBuildPropertiesCache;
     </CleanDependsOn>
+    <_PrepareBuildApkDependsOnTargets>
+      _SetLatestTargetFrameworkVersion;
+      _GetLibraryImports;
+      _RemoveRegisterAttribute;
+      _ResolveAssemblies;
+      _ResolveSatellitePaths;
+      _CreatePackageWorkspace;
+      _CopyConfigFiles;
+      _ConvertPdbFiles;
+      _LinkAssemblies;
+      _GenerateJavaStubs;
+      _ManifestMerger;
+      _ConvertCustomView;
+      $(_AfterConvertCustomView);
+      $(AfterGenerateAndroidManifest);
+      _GenerateEnvironmentFiles;
+      _CompileJava;
+      _CreateApplicationSharedLibraries;
+      _CompileDex;
+      $(_AfterCompileDex);
+      _CreateBaseApk;
+      _PrepareAssemblies;
+      _ResolveSatellitePaths;
+      _CheckApkPerAbiFlag;
+      _LintChecks;
+      _IncludeNativeSystemLibraries;
+      _CheckGoogleSdkRequirements;
+    </_PrepareBuildApkDependsOnTargets>
   </PropertyGroup>
 
   <!-- Binding projects -->
@@ -273,6 +301,36 @@ projects. .NET 5 projects will not import this file.
         ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
     />
   </Target>
+
+  <Target Name="_CollectConfigFiles">
+    <GetFilesThatExist
+        Files="@(ResolvedAssemblies->'%(identity).config')">
+      <Output TaskParameter="FilesThatExist" ItemName="_ResolvedConfigFiles" />
+    </GetFilesThatExist>
+  </Target>
+
+  <Target Name="_CopyConfigFiles"
+      Inputs="@(_ResolvedConfigFiles)"
+      Outputs="$(_AndroidStampDirectory)_CopyConfigFiles.stamp"
+      DependsOnTargets="_CollectConfigFiles">
+    <CopyIfChanged
+        SourceFiles="@(_ResolvedConfigFiles)"
+        DestinationFiles="@(_ResolvedConfigFiles->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')"
+    />
+    <Touch Files="$(_AndroidStampDirectory)_CopyConfigFiles.stamp" AlwaysCreate="True" />
+  </Target>
+
+  <PropertyGroup>
+    <_PrepareAssembliesDependsOnTargets>
+      _ResolveAssemblies;
+      _CheckForObsoleteAssemblies;
+      _ResolveSatellitePaths;
+      _CreatePackageWorkspace;
+      _CopyConfigFiles;
+      _ConvertPdbFiles;
+      _LinkAssemblies;
+    </_PrepareAssembliesDependsOnTargets>
+  </PropertyGroup>
 
   <Target Name="_PrepareAssemblies"
       DependsOnTargets="$(_PrepareAssembliesDependsOnTargets)">
