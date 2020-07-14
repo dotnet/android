@@ -98,33 +98,15 @@ namespace Xamarin.Android.Tools
 				// Strip off "platform-tools"
 				var dir = Path.GetDirectoryName (path);
 
-				if (ValidateAndroidSdkLocation (dir))
-					yield return dir;
+				if (dir == null)
+					continue;
+
+				yield return dir;
 			}
 
 			// Check some hardcoded paths for good measure
 			var macSdkPath = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.Personal), "Library", "Android", "sdk");
-			if (ValidateAndroidSdkLocation (macSdkPath))
-				yield return macSdkPath;
-		}
-
-		protected override string? GetJavaSdkPath ()
-		{
-			return JdkInfo.GetKnownSystemJdkInfos (Logger).FirstOrDefault ()?.HomePath;
-		}
-
-		protected override IEnumerable<string> GetAllAvailableAndroidNdks ()
-		{
-			var preferedNdkPath = PreferedAndroidNdkPath;
-			if (!string.IsNullOrEmpty (preferedNdkPath))
-				yield return preferedNdkPath!;
-
-			// Look in PATH
-			foreach (var ndkStack in ProcessUtils.FindExecutablesInPath (NdkStack)) {
-				var ndkDir  = Path.GetDirectoryName (ndkStack);
-				if (ValidateAndroidNdkLocation (ndkDir))
-					yield return ndkDir;
-			}
+			yield return macSdkPath;
 		}
 
 		protected override string GetShortFormPath (string path)

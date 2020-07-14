@@ -102,14 +102,7 @@ namespace Xamarin.Android.Tools
 			};
 			foreach (var basePath in paths)
 				if (Directory.Exists (basePath))
-					if (ValidateAndroidSdkLocation (basePath))
-						yield return basePath;
-		}
-
-		protected override string? GetJavaSdkPath ()
-		{
-			var jdk = JdkInfo.GetKnownSystemJdkInfos (Logger).FirstOrDefault ();
-			return jdk?.HomePath;
+					yield return basePath;
 		}
 
 		internal static IEnumerable<JdkInfo> GetJdkInfos (Action<TraceLevel, string> logger)
@@ -223,23 +216,12 @@ namespace Xamarin.Android.Tools
 
 		protected override IEnumerable<string> GetAllAvailableAndroidNdks ()
 		{
+
 			var roots = new[] { RegistryEx.CurrentUser, RegistryEx.LocalMachine };
 			var wow = RegistryEx.Wow64.Key32;
 			var regKey = GetMDRegistryKey ();
 
 			Logger (TraceLevel.Info, "Looking for Android NDK...");
-
-			// Check for the "ndk-bundle" directory inside the SDK directories
-			string ndk;
-
-			var sdks = GetAllAvailableAndroidSdks().ToList();
-			if (!string.IsNullOrEmpty(AndroidSdkPath))
-				sdks.Add (AndroidSdkPath!);
-	
-			foreach(var sdk in sdks.Distinct())
-				if (Directory.Exists(ndk = Path.Combine(sdk, "ndk-bundle")))
-					if (ValidateAndroidNdkLocation(ndk))
-						yield return ndk;
 
 			// Check for the key the user gave us in the VS/addin options
 			foreach (var root in roots)
@@ -265,6 +247,10 @@ namespace Xamarin.Android.Tools
 					foreach (var dir in Directory.GetDirectories (basePath, "android-ndk-r*"))
 						if (ValidateAndroidNdkLocation (dir))
 							yield return dir;
+
+			foreach (var dir in base.GetAllAvailableAndroidNdks ()) {
+				yield return dir;
+			}
 		}
 
 		protected override string GetShortFormPath (string path)

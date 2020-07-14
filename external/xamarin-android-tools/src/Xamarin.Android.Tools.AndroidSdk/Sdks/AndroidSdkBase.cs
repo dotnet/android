@@ -10,20 +10,19 @@ namespace Xamarin.Android.Tools
 	abstract class AndroidSdkBase
 	{
 		string[]? allAndroidSdks;
-		string[]? allAndroidNdks;
 
 		public string[] AllAndroidSdks {
 			get {
-				if (allAndroidSdks == null)
-					allAndroidSdks = GetAllAvailableAndroidSdks ().Distinct ().ToArray ();
+				if (allAndroidSdks == null) {
+					var dirs = new List<string?> ();
+					dirs.Add (AndroidSdkPath);
+					dirs.AddRange (GetAllAvailableAndroidSdks ());
+					allAndroidSdks = dirs.Where (d => ValidateAndroidSdkLocation (d))
+						.Select (d => d!)
+						.Distinct ()
+						.ToArray ();
+				}
 				return allAndroidSdks;
-			}
-		}
-		public string[] AllAndroidNdks {
-			get {
-				if (allAndroidNdks == null)
-					allAndroidNdks = GetAllAvailableAndroidNdks ().Distinct ().ToArray ();
-				return allAndroidNdks;
 			}
 		}
 
@@ -57,13 +56,10 @@ namespace Xamarin.Android.Tools
 
 		public virtual void Initialize (string? androidSdkPath = null, string? androidNdkPath = null, string? javaSdkPath = null)
 		{
-			androidSdkPath  = androidSdkPath ?? PreferedAndroidSdkPath;
-			androidNdkPath  = androidNdkPath ?? PreferedAndroidNdkPath;
-			javaSdkPath     = javaSdkPath ?? PreferedJavaSdkPath;
+			AndroidSdkPath = GetValidPath (ValidateAndroidSdkLocation,  androidSdkPath, () => PreferedAndroidSdkPath,   () => GetAllAvailableAndroidSdks ());
+			JavaSdkPath    = GetValidPath (ValidateJavaSdkLocation,     javaSdkPath,    () => PreferedJavaSdkPath,      () => GetJavaSdkPaths ());
 
-			AndroidSdkPath  = ValidateAndroidSdkLocation (androidSdkPath) ? androidSdkPath : AllAndroidSdks.FirstOrDefault ();
-			AndroidNdkPath  = ValidateAndroidNdkLocation (androidNdkPath) ? androidNdkPath : AllAndroidNdks.FirstOrDefault ();
-			JavaSdkPath     = ValidateJavaSdkLocation (javaSdkPath) ? javaSdkPath : GetJavaSdkPath ();
+			AndroidNdkPath = GetValidNdkPath (androidNdkPath);
 
 			if (!string.IsNullOrEmpty (JavaSdkPath)) {
 				JavaBinPath = Path.Combine (JavaSdkPath, "bin");
@@ -93,10 +89,59 @@ namespace Xamarin.Android.Tools
 			NdkStack = GetExecutablePath (AndroidNdkPath, NdkStack);
 		}
 
+		static string? GetValidPath (Func<string?, bool> pathValidator, string? ctorParam, Func<string?> getPreferredPath, Func<IEnumerable<string>> getAllPaths)
+		{
+			if (pathValidator (ctorParam))
+				return ctorParam;
+			ctorParam = getPreferredPath ();
+			if (pathValidator (ctorParam))
+				return ctorParam;
+			foreach (var path in getAllPaths ()) {
+				if (pathValidator (path))
+					return path;
+			}
+			return null;
+		}
+
+		string? GetValidNdkPath (string? ctorParam)
+		{
+			if (ValidateAndroidNdkLocation (ctorParam))
+				return ctorParam;
+			if (AndroidSdkPath != null) {
+				string bundle = Path.Combine (AndroidSdkPath, "ndk-bundle");
+				if (Directory.Exists (bundle) && ValidateAndroidNdkLocation (bundle))
+					return bundle;
+			}
+			ctorParam = PreferedAndroidNdkPath;
+			if (ValidateAndroidNdkLocation (ctorParam))
+				return ctorParam;
+			foreach (var path in GetAllAvailableAndroidNdks ()) {
+				if (ValidateAndroidNdkLocation (path))
+					return path;
+			}
+			return null;
+		}
+
 		protected abstract IEnumerable<string> GetAllAvailableAndroidSdks ();
-		protected abstract IEnumerable<string> GetAllAvailableAndroidNdks ();
-		protected abstract string? GetJavaSdkPath ();
 		protected abstract string GetShortFormPath (string path);
+
+		protected virtual IEnumerable<string> GetAllAvailableAndroidNdks ()
+		{
+			// Look in PATH
+			foreach (var ndkStack in ProcessUtils.FindExecutablesInPath (NdkStack)) {
+				var ndkDir  = Path.GetDirectoryName (ndkStack);
+				if (ndkDir == null)
+					continue;
+				yield return ndkDir;
+			}
+
+			// Check for the "ndk-bundle" directory inside other SDK directories
+			foreach (var sdk in GetAllAvailableAndroidSdks ()) {
+				if (sdk == AndroidSdkPath)
+					continue;
+				yield return Path.Combine (sdk, "ndk-bundle");
+			}
+		}
 
 		public abstract void SetPreferredAndroidSdkPath (string? path);
 		public abstract void SetPreferredJavaSdkPath (string? path);
@@ -106,6 +151,12 @@ namespace Xamarin.Android.Tools
 
 		public string NdkHostPlatform {
 			get { return IsNdk64Bit ? NdkHostPlatform64Bit : NdkHostPlatform32Bit; }
+		}
+
+		IEnumerable<string> GetJavaSdkPaths ()
+		{
+			return JdkInfo.GetKnownSystemJdkInfos (Logger)
+				.Select (jdk => jdk.HomePath);
 		}
 
 		/// <summary>
