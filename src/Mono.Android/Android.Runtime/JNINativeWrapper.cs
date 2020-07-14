@@ -69,22 +69,10 @@ namespace Android.Runtime {
 
 			ig.Emit (OpCodes.Leave, label);
 
-			bool  filter = Debugger.IsAttached || !JNIEnv.PropagateExceptions;
-			if (filter) {
-				ig.BeginExceptFilterBlock ();
-
-				ig.Emit (OpCodes.Call, mono_unhandled_exception_method!);
-				ig.Emit (OpCodes.Ldc_I4_1);
-				ig.BeginCatchBlock (null!);
-			} else {
-				ig.BeginCatchBlock (typeof (Exception));
-			}
-
+			ig.BeginCatchBlock (typeof (Exception));
+			
 			ig.Emit (OpCodes.Dup);
 			ig.Emit (OpCodes.Call, exception_handler_method!);
-
-			if (filter)
-				ig.Emit (OpCodes.Throw);
 
 			ig.EndExceptionBlock ();
 

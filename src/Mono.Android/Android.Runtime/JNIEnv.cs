@@ -277,7 +277,7 @@ namespace Android.Runtime {
 
 			// Disabled until Linker error surfaced in https://github.com/xamarin/xamarin-android/pull/4302#issuecomment-596400025 is resolved
 			//System.Diagnostics.Debugger.Mono_UnhandledException (javaException);
-			mono_unhandled_exception (javaException);
+			//mono_unhandled_exception (javaException);
 
 			try {
 				var jltp = javaException as JavaProxyThrowable;
