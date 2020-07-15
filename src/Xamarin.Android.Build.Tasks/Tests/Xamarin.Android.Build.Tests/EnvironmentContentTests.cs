@@ -15,6 +15,7 @@ namespace Xamarin.Android.Build.Tests
 	public class EnvironmentContentTests : BaseTest
 	{
 		[Test]
+		[NonParallelizable]
 		[Category ("SmokeTests"), Category ("dotnet")]
 		public void BuildApplicationWithMonoEnvironment ([Values ("", "Normal", "Offline")] string sequencePointsMode)
 		{
