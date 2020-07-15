@@ -49,10 +49,15 @@ namespace Xamarin.Android.Tasks
 
 		static readonly ArrayPool<byte> bytePool = ArrayPool<byte>.Shared;
 
-		public static CompressionResult Compress (AssemblyData data)
+		public static CompressionResult Compress (AssemblyData data, string outputDirectory)
 		{
 			if (data == null)
 				throw new ArgumentNullException (nameof (data));
+
+			if (String.IsNullOrEmpty (outputDirectory))
+				throw new ArgumentException ("must not be null or empty", nameof (outputDirectory));
+
+			Directory.CreateDirectory (outputDirectory);
 
 			var fi = new FileInfo (data.SourcePath);
 			if (!fi.Exists)
@@ -61,7 +66,7 @@ namespace Xamarin.Android.Tasks
 			// 	return CompressionResult.InputTooBig;
 			// }
 
-			data.DestinationPath = $"{data.SourcePath}.lz4";
+			data.DestinationPath = Path.Combine (outputDirectory, $"{Path.GetFileName (data.SourcePath)}.lz4");
 			data.SourceSize = (uint)fi.Length;
 
 			byte[] sourceBytes = null;
