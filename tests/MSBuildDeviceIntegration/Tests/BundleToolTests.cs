@@ -229,8 +229,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test, Category ("UsesDevice")]
 		public void ApkSet ()
 		{
-			if (!HasDevices)
-				Assert.Ignore ("Skipping Installation. No devices available.");
+			AssertHasDevices ();
 
 			Assert.IsTrue (appBuilder.RunTarget (app, "Install"), "App should have installed.");
 

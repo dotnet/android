@@ -11,6 +11,7 @@ using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
+	[Category ("UsesDevices")]
 	public class DebuggingTest : DeviceTest {
 		[TearDown]
 		public void ClearDebugProperties ()
@@ -34,10 +35,7 @@ namespace Xamarin.Android.Build.Tests
 		[Retry (1)]
 		public void ApplicationRunsWithoutDebugger ([Values (false, true)] bool isRelease)
 		{
-			if (!HasDevices) {
-				Assert.Ignore ("Test needs a device attached.");
-				return;
-			}
+			AssertHasDevices ();
 
 			var proj = new XamarinFormsAndroidApplicationProject () {
 				IsRelease = isRelease,
@@ -65,10 +63,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void ClassLibraryMainLauncherRuns ()
 		{
-			if (!HasDevices) {
-				Assert.Ignore ("Test needs a device attached.");
-				return;
-			}
+			AssertHasDevices ();
 
 			var path = Path.Combine ("temp", TestName);
 
@@ -163,14 +158,8 @@ namespace Xamarin.Android.Build.Tests
 		[Retry (1)]
 		public void CustomApplicationRunsWithDebuggerAndBreaks (bool useSharedRuntime, bool embedAssemblies, string fastDevType, bool activityStarts)
 		{
-			if (!CommercialBuildAvailable) {
-				Assert.Ignore ("Test does not run on the Open Source Builds.");
-				return;
-			}
-			if (!HasDevices) {
-				Assert.Ignore ("Test needs a device attached.");
-				return;
-			}
+			AssertCommercialBuild ();
+			AssertHasDevices ();
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = false,
 				AndroidFastDeploymentType = fastDevType,
@@ -217,7 +206,7 @@ namespace ${ROOT_NAMESPACE} {
 					{ Path.Combine (Root, b.ProjectDirectory, "MyApplication.cs"),  17 },
 				};
 				session.TargetHitBreakpoint += (sender, e) => {
-					Console.WriteLine ($"BREAK {e.Type}");
+					TestContext.WriteLine ($"BREAK {e.Type}, {e.Backtrace.GetFrame (0)}");
 					breakcountHitCount++;
 					session.Continue ();
 				};
@@ -322,14 +311,8 @@ namespace ${ROOT_NAMESPACE} {
 		[Retry (1)]
 		public void ApplicationRunsWithDebuggerAndBreaks (bool useSharedRuntime, bool embedAssemblies, string fastDevType, bool allowDeltaInstall)
 		{
-			if (!CommercialBuildAvailable) {
-				Assert.Ignore ("Test does not run on the Open Source Builds.");
-				return;
-			}
-			if (!HasDevices) {
-				Assert.Ignore ("Test needs a device attached.");
-				return;
-			}
+			AssertCommercialBuild ();
+			AssertHasDevices ();
 			var proj = new XamarinFormsAndroidApplicationProject () {
 				IsRelease = false,
 				AndroidUseSharedRuntime = useSharedRuntime,
@@ -351,13 +334,13 @@ namespace ${ROOT_NAMESPACE} {
 				// setup the debugger
 				var session = new SoftDebuggerSession ();
 				session.Breakpoints = new BreakpointStore {
-					{ Path.Combine (Root, b.ProjectDirectory, "MainActivity.cs"),  19 },
+					{ Path.Combine (Root, b.ProjectDirectory, "MainActivity.cs"),  20 },
 					{ Path.Combine (Root, b.ProjectDirectory, "MainPage.xaml.cs"), 14 },
 					{ Path.Combine (Root, b.ProjectDirectory, "MainPage.xaml.cs"), 19 },
 					{ Path.Combine (Root, b.ProjectDirectory, "App.xaml.cs"), 12 },
 				};
 				session.TargetHitBreakpoint += (sender, e) => {
-					Console.WriteLine ($"BREAK {e.Type}");
+					TestContext.WriteLine ($"BREAK {e.Type}, {e.Backtrace.GetFrame (0)}");
 					breakcountHitCount++;
 					session.Continue ();
 				};

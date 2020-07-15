@@ -20,7 +20,7 @@ using System.Xml.XPath;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[SingleThreaded]
+	[SingleThreaded, Category ("UsesDevice")]
 	public class DeploymentTest : DeviceTest {
 
 		static ProjectBuilder builder;
@@ -29,8 +29,8 @@ namespace Xamarin.Android.Build.Tests
 		[OneTimeSetUp]
 		public void BeforeDeploymentTests ()
 		{
-			if (!HasDevices)
-				Assert.Ignore ("Skipping Test. No devices available.");
+			AssertHasDevices ();
+
 			string debuggable = RunAdbCommand ("shell getprop ro.debuggable");
 			if (debuggable != "1") {
 				Assert.Ignore ("TimeZone tests need to use `su root` and this device does not support that feature. Try using an emulator.");
@@ -70,8 +70,8 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void CheckResouceIsOverridden ([Values (true, false)] bool useAapt2)
 		{
-			if (!HasDevices)
-				Assert.Ignore ("Skipping Test. No devices available.");
+			AssertHasDevices ();
+
 			var library = new XamarinAndroidLibraryProject () {
 				ProjectName = "Library1",
 				AndroidResources = {
@@ -170,8 +170,8 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void CheckXamarinFormsAppDeploysAndAButtonWorks ()
 		{
-			if (!HasDevices)
-				Assert.Ignore ("Skipping Test. No devices available.");
+			AssertHasDevices ();
+
 			AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
 			WaitForActivityToStart (proj.PackageName, "MainActivity",
 				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 15);
@@ -222,8 +222,7 @@ namespace Xamarin.Android.Build.Tests
 
 		public void CheckTimeZoneInfoIsCorrect (string timeZone)
 		{
-			if (!HasDevices)
-				Assert.Ignore ("Skipping Test. No devices available.");
+			AssertHasDevices ();
 
 			string currentTimeZone = RunAdbCommand ("shell getprop persist.sys.timezone")?.Trim ();
 			try {

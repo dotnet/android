@@ -8,19 +8,14 @@ namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
 	[NonParallelizable] //These tests deploy to devices
-	[Category ("Commercial")]
+	[Category ("Commercial"), Category ("UsesDevices")]
 	public class InstantRunTest : BaseTest
 	{
 		[Test]
 		public void InstantRunSimpleBuild ([Values ("dx", "d8")] string dexTool)
 		{
-			if (!CommercialBuildAvailable)
-				Assert.Ignore ("Not required on Open Source Builds");
-
-			if (!HasDevices) {
-				Assert.Ignore ("Test needs a device attached.");
-				return;
-			}
+			AssertCommercialBuild ();
+			AssertHasDevices ();
 
 			var proj = new XamarinFormsAndroidApplicationProject {
 				AndroidFastDeploymentType = "Assemblies:Dexes",
@@ -55,13 +50,8 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void TargetsSkipped ([Values(false, true)] bool useManagedResourceGenerator)
 		{
-			if (!CommercialBuildAvailable)
-				Assert.Ignore ("Not required on Open Source Builds");
-
-			if (!HasDevices) {
-				Assert.Ignore ("Test needs a device attached.");
-				return;
-			}
+			AssertCommercialBuild ();
+			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject () { AndroidFastDeploymentType = "Assemblies:Dexes", UseLatestPlatformSdk = true };
 			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", useManagedResourceGenerator.ToString ());
@@ -133,11 +123,8 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void SimpleInstallAndUninstall ([Values ("dx", "d8")] string dexTool)
 		{
-			if (!CommercialBuildAvailable)
-				Assert.Ignore ("Not required on Open Source Builds");
-
-			if (!HasDevices)
-				return;
+			AssertCommercialBuild ();
+			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject {
 				AndroidFastDeploymentType = "Assemblies:Dexes",
@@ -154,11 +141,8 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void SkipFastDevAlreadyInstalledFile ([Values ("dx", "d8")] string dexTool)
 		{
-			if (!CommercialBuildAvailable)
-				Assert.Ignore ("Not required on Open Source Builds");
-
-			if (!HasDevices)
-				return;
+			AssertCommercialBuild ();
+			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject {
 				AndroidFastDeploymentType = "Assemblies:Dexes",
@@ -198,11 +182,8 @@ namespace Xamarin.Android.Build.Tests
 		[TestCaseSource ("SkipFastDevAlreadyInstalledResourcesSource")] // test for both cases that there is external resources or there are some.
 		public void SkipFastDevAlreadyInstalledResources (Package [] packages, string baseActivityClass)
 		{
-			if (!CommercialBuildAvailable)
-				Assert.Ignore ("Not required on Open Source Builds");
-
-			if (!HasDevices)
-				return;
+			AssertCommercialBuild ();
+			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject () { AndroidFastDeploymentType = "Assemblies:Dexes", UseLatestPlatformSdk = true };
 			proj.SetDefaultTargetDevice ();
@@ -229,13 +210,9 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void InstantRunResourceChange ([Values ("dx", "d8")] string dexTool)
 		{
-			if (!CommercialBuildAvailable)
-				Assert.Ignore ("Not required on Open Source Builds");
+			AssertCommercialBuild ();
+			AssertHasDevices ();
 
-			if (!HasDevices) {
-				Assert.Ignore ("Test needs a device attached.");
-				return;
-			}
 			var proj = new XamarinAndroidApplicationProject () {
 				AndroidFastDeploymentType = "Assemblies:Dexes",
 				UseLatestPlatformSdk = true,
@@ -267,13 +244,9 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void InstantRunFastDevTypemaps ([Values ("dx", "d8")] string dexTool)
 		{
-			if (!CommercialBuildAvailable)
-				Assert.Ignore ("Not required on Open Source Builds");
+			AssertCommercialBuild ();
+			AssertHasDevices ();
 
-			if (!HasDevices) {
-				Assert.Ignore ("Test needs a device attached.");
-				return;
-			}
 			var proj = new XamarinAndroidApplicationProject () {
 				AndroidFastDeploymentType = "Assemblies:Dexes",
 				UseLatestPlatformSdk = true,
@@ -298,13 +271,9 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void InstantRunNativeLibrary ([Values ("dx", "d8")] string dexTool)
 		{
-			if (!CommercialBuildAvailable)
-				Assert.Ignore ("Not required on Open Source Builds");
+			AssertCommercialBuild ();
+			AssertHasDevices ();
 
-			if (!HasDevices) {
-				Assert.Ignore ("Test needs a device attached.");
-				return;
-			}
 			var nativeLib = new AndroidItem.AndroidNativeLibrary ($"foo\\{DeviceAbi}\\libtest.so") {
 				BinaryContent = () => new byte [10],
 				MetadataValues = $"Link=libs\\{DeviceAbi}\\libtest.so",

@@ -11,6 +11,8 @@ using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
+	[NonParallelizable]
+	[Category ("UsesDevice")]
 	public class MonoAndroidExportTest : DeviceTest {
 #pragma warning disable 414
 		static object [] MonoAndroidExportTestCases = new object [] {
@@ -58,14 +60,8 @@ namespace Xamarin.Android.Build.Tests
 		[Retry (1)]
 		public void MonoAndroidExportReferencedAppStarts (bool useSharedRuntime, bool embedAssemblies, string fastDevType, bool activityStarts)
 		{
-			if (!CommercialBuildAvailable) {
-				Assert.Ignore ("Test does not run on the Open Source Builds.");
-				return;
-			}
-			if (!HasDevices) {
-				Assert.Ignore ("Test needs a device attached.");
-				return;
-			}
+			AssertCommercialBuild ();
+			AssertHasDevices ();
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = false,
 				AndroidFastDeploymentType = fastDevType,

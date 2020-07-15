@@ -13,14 +13,8 @@
   <Import Project="..\..\build-tools\scripts\NUnitReferences.projitems" />
 
   <ItemGroup>
-    <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Utilities\DeviceTest.cs">
-      <Link>Utilities\DeviceTest.cs</Link>
-    </Compile>
-    <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Utilities\BuildHelper.cs">
-      <Link>Utilities\BuildHelper.cs</Link>
-    </Compile>
-    <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Utilities\BaseTest.cs">
-      <Link>Utilities\BaseTest.cs</Link>
+    <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Utilities\*.cs">
+      <Link>Utilities\%(FileName).cs</Link>
     </Compile>
   </ItemGroup>
 
