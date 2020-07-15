@@ -52,18 +52,8 @@ namespace Xamarin.Android.Build.Tests
 			public void BeforeAllTests ()
 			{
 				try {
-					var adbTarget = Environment.GetEnvironmentVariable ("ADB_TARGET");
-					int sdkVersion = -1;
-					var result = RunAdbCommand ($"{adbTarget} shell getprop ro.build.version.sdk");
-					if (result.Contains ("*")) {
-						//NOTE: We may get a result of:
-						//
-						//27* daemon not running; starting now at tcp:5037
-						//* daemon started successfully
-						result = result.Split ('*').First ().Trim ();
-					}
-					HasDevices = int.TryParse (result, out sdkVersion) && sdkVersion != -1;
-					if (HasDevices) {
+					int sdkVersion = GetSdkVersion ();
+					if (HasDevices = sdkVersion != -1) {
 						if (sdkVersion >= 21)
 							DeviceAbi = RunAdbCommand ("shell getprop ro.product.cpu.abilist64").Trim ();
 
@@ -73,6 +63,25 @@ namespace Xamarin.Android.Build.Tests
 				} catch (Exception ex) {
 					Console.Error.WriteLine ("Failed to determine whether there is Android target emulator or not: " + ex);
 				}
+			}
+
+			int GetSdkVersion ()
+			{
+				var adbTarget = Environment.GetEnvironmentVariable ("ADB_TARGET");
+				var command = $"{adbTarget} shell getprop ro.build.version.sdk";
+				var result = RunAdbCommand (command);
+				if (result.Contains ("*")) {
+					// Run the command again, we likely got:
+					// * daemon not running; starting now at tcp:5037
+					// * daemon started successfully
+					// adb.exe: device offline
+					TestContext.WriteLine ($"Retrying:\n{command}\n{result}");
+					result = RunAdbCommand (command);
+				}
+				if (!int.TryParse (result, out var sdkVersion)) {
+					sdkVersion = -1;
+				}
+				return sdkVersion;
 			}
 
 			[OneTimeTearDown]
@@ -100,6 +109,22 @@ namespace Xamarin.Android.Build.Tests
 
 		protected bool HasDevices => SetUp.HasDevices;
 
+		/// <summary>
+		/// Checks if there is a device available
+		/// * Defaults to Assert.Fail ()
+		/// </summary>
+		public void AssertHasDevices (bool fail = true)
+		{
+			if (!HasDevices) {
+				var message = "This test requires an attached device or emulator.";
+				if (fail) {
+					Assert.Fail (message);
+				} else {
+					Assert.Ignore (message);
+				}
+			}
+		}
+
 		protected string DeviceAbi => SetUp.DeviceAbi;
 
 		protected bool IsWindows => TestEnvironment.IsWindows;
@@ -119,6 +144,22 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		public static bool CommercialBuildAvailable => SetUp.CommercialBuildAvailable;
+
+		/// <summary>
+		/// Checks if a commercial Xamarin.Android is available
+		/// * Defaults to Assert.Ignore ()
+		/// </summary>
+		public void AssertCommercialBuild (bool fail = false)
+		{
+			if (!CommercialBuildAvailable) {
+				var message = "This test requires a commercial build of Xamarin.Android.";
+				if (fail) {
+					Assert.Fail (message);
+				} else {
+					Assert.Ignore (message);
+				}
+			}
+		}
 
 		public static string AndroidMSBuildDirectory => SetUp.AndroidMSBuildDirectory;
 

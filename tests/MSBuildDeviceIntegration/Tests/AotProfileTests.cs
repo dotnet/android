@@ -5,6 +5,7 @@ using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
+	[Category ("UsesDevice")]
 	public class AotProfileTests : DeviceTest
 	{
 
@@ -19,8 +20,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void BuildBasicApplicationAndAotProfileIt ()
 		{
-			if (!HasDevices)
-				Assert.Ignore ("Skipping test. No devices available.");
+			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject () { IsRelease = true };
 			proj.SetProperty (KnownProperties.AndroidSupportedAbis, "armeabi-v7a;x86");

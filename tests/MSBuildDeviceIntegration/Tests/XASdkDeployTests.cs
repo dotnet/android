@@ -13,13 +13,13 @@ using Xamarin.ProjectTools;
 namespace Xamarin.Android.Build.Tests
 {
 	[NonParallelizable]
+	[Category ("UsesDevices")]
 	public class XASdkDeployTests : DeviceTest
 	{
 		[Test]
 		public void DotNetInstallAndRun ([Values (false, true)] bool isRelease, [Values (false, true)] bool xamarinForms)
 		{
-			if (!HasDevices)
-				Assert.Ignore ("Skipping Test. No devices available.");
+			AssertHasDevices ();
 
 			XASdkProject proj;
 			if (xamarinForms) {
@@ -51,10 +51,8 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void DotNetDebug ()
 		{
-			if (!CommercialBuildAvailable)
-				Assert.Ignore ("Skipping Test. Commercial build required.");
-			if (!HasDevices)
-				Assert.Ignore ("Skipping Test. No devices available.");
+			AssertCommercialBuild ();
+			AssertHasDevices ();
 
 			XASdkProject proj;
 			proj = new XASdkProject ();

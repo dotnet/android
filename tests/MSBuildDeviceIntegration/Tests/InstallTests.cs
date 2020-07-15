@@ -12,7 +12,7 @@ namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
 	[NonParallelizable] //These tests deploy to devices
-	[Category ("Commercial")]
+	[Category ("Commercial"), Category ("UsesDevice")]
 	public class InstallTests : DeviceTest
 	{
 		static byte [] GetKeystore ()
@@ -28,12 +28,8 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void ReInstallIfUserUninstalled ([Values (false, true)] bool isRelease)
 		{
-			if (!CommercialBuildAvailable)
-				Assert.Ignore ("Not required on Open Source Builds");
-
-			if (!HasDevices) {
-				Assert.Ignore ("Test Skipped no devices or emulators found.");
-			}
+			AssertCommercialBuild ();
+			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
@@ -62,13 +58,9 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void InstallAndUnInstall ([Values (false, true)] bool isRelease)
 		{
-			if (!CommercialBuildAvailable)
-				Assert.Ignore ("Not required on Open Source Builds");
+			AssertCommercialBuild ();
+			AssertHasDevices ();
 
-			if (!HasDevices) {
-				Assert.Ignore ("Test Skipped no devices or emulators found.");
-			}
-			
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 			};
@@ -110,12 +102,8 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void ChangeKeystoreRedeploy ()
 		{
-			if (!CommercialBuildAvailable)
-				Assert.Ignore ("Not required on Open Source Builds");
-
-			if (!HasDevices) {
-				Assert.Ignore ("Test Skipped no devices or emulators found.");
-			}
+			AssertCommercialBuild ();
+			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject ();
 			var abis = new string [] { "armeabi-v7a", "x86" };
@@ -142,12 +130,8 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void SwitchConfigurationsShouldRedeploy ()
 		{
-			if (!CommercialBuildAvailable)
-				Assert.Ignore ("Not required on Open Source Builds");
-
-			if (!HasDevices) {
-				Assert.Ignore ("Test Skipped no devices or emulators found.");
-			}
+			AssertCommercialBuild ();
+			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = false,
@@ -210,12 +194,8 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void InstallWithoutSharedRuntime ()
 		{
-			if (!CommercialBuildAvailable)
-				Assert.Ignore ("Not required on Open Source Builds");
-
-			if (!HasDevices) {
-				Assert.Ignore ("Test Skipped no devices or emulators found.");
-			}
+			AssertCommercialBuild ();
+			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
@@ -269,12 +249,8 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void InstallErrorCode ()
 		{
-			if (!CommercialBuildAvailable)
-				Assert.Ignore ("Not required on Open Source Builds");
-
-			if (!HasDevices) {
-				Assert.Ignore ("Test Skipped no devices or emulators found.");
-			}
+			AssertCommercialBuild ();
+			AssertHasDevices ();
 
 			//Setup a situation where we get INSTALL_FAILED_NO_MATCHING_ABIS
 			var abi = "armeabi-v7a";
@@ -297,12 +273,8 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void ToggleFastDev ()
 		{
-			if (!CommercialBuildAvailable)
-				Assert.Ignore ("Not required on Open Source Builds");
-
-			if (!HasDevices) {
-				Assert.Ignore ("Test Skipped no devices or emulators found.");
-			}
+			AssertCommercialBuild ();
+			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject {
 				AndroidUseSharedRuntime = true,
@@ -351,12 +323,8 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void BlankAdbTarget ()
 		{
-			if (!CommercialBuildAvailable) {
-				Assert.Ignore ("Not required on Open Source Builds");
-			}
-			if (!HasDevices) {
-				Assert.Ignore ("Test Skipped no devices or emulators found.");
-			}
+			AssertCommercialBuild ();
+			AssertHasDevices ();
 
 			var serial = GetAttachedDeviceSerial ();
 			var proj = new XamarinAndroidApplicationProject ();
@@ -406,9 +374,7 @@ namespace Xamarin.Android.Build.Tests
 		[TestCaseSource (nameof (AndroidStoreKeyTests))]
 		public void TestAndroidStoreKey (bool useApkSigner, bool isRelease, string packageFormat, string androidKeyStore, string password, string expected, bool shouldInstall)
 		{
-			if (!HasDevices) {
-				Assert.Ignore ("Test Skipped no devices or emulators found.");
-			}
+			AssertHasDevices ();
 
 			string path = Path.Combine ("temp", TestName.Replace (expected, expected.Replace ("-", "_")));
 			string storepassfile = Path.Combine (Root, path, "storepass.txt");

@@ -10,6 +10,7 @@ using Xamarin.ProjectTools;
 namespace Xamarin.Android.Build.Tests
 {
 	[SingleThreaded]
+	[Category ("UsesDevices")]
 	public class BugzillaTests : DeviceTest
 	{
 		static ProjectBuilder builder;
@@ -29,8 +30,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void GlobalLayoutEvent_ShouldRegisterAndFire_OnActivityLaunch ([Values (false, true)] bool isRelease)
 		{
-			if (!HasDevices)
-				Assert.Ignore ("Skipping Test. No devices available.");
+			AssertHasDevices ();
 
 			string expectedLogcatOutput = "Bug 29730: GlobalLayout event handler called!";
 

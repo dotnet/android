@@ -844,13 +844,6 @@ stages:
 
     - template: yaml-templates/run-nunit-tests.yaml
       parameters:
-        testRunTitle: Xamarin.Android.Build.Tests On Device - macOS
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/Xamarin.Android.Build.Tests.dll
-        nunitConsoleExtraArgs: --where "cat == UsesDevice"
-        testResultsFile: TestResult-MSBuildDeviceTests-$(XA.Build.Configuration).xml
-
-    - template: yaml-templates/run-nunit-tests.yaml
-      parameters:
         testRunTitle: MSBuildDeviceIntegration On Device - macOS
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/MSBuildDeviceIntegration.dll
         nunitConsoleExtraArgs: --where "cat != TimeZoneInfo"
