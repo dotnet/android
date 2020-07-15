@@ -99,7 +99,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[Category ("SmokeTests")]
+		[Category ("SmokeTests"), Category ("dotnet")]
 		public void DesignTimeBuild ([Values(false, true)] bool isRelease, [Values (false, true)] bool useManagedParser, [Values (false, true)] bool useAapt2)
 		{
 			var regEx = new Regex (@"(?<type>([a-zA-Z_0-9])+)\slibrary_name=(?<value>([0-9A-Za-z])+);", RegexOptions.Compiled | RegexOptions.Multiline );
@@ -939,6 +939,7 @@ namespace Lib1 {
 		}
 
 		[Test]
+		[Category ("dotnet")]
 		public void BuildAppWithManagedResourceParser()
 		{
 			var path = Path.Combine ("temp", "BuildAppWithManagedResourceParser");
@@ -978,6 +979,7 @@ namespace Lib1 {
 
 		[Test]
 		[NonParallelizable]
+		[Category ("dotnet")]
 		public void BuildAppWithManagedResourceParserAndLibraries ()
 		{
 			int maxBuildTimeMs = 10000;
@@ -1021,6 +1023,9 @@ namespace Lib1 {
 				},
 			};
 			appProj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");
+			if (Builder.UseDotNet) {
+				appProj.AddDotNetCompatPackages ();
+			}
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, libProj.ProjectName), false, false)) {
 				libBuilder.AutomaticNuGetRestore = false;
 				Assert.IsTrue (libBuilder.RunTarget (libProj, "Restore"), "Library project should have restored.");
