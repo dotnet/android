@@ -524,10 +524,7 @@ stages:
       inputs:
         solution: build-tools/check-boot-times/check-boot-times.csproj
         configuration: $(ApkTestConfiguration)
-        msbuildArguments: >
-          /restore
-          /t:Build
-          /bl:$(System.DefaultWorkingDirectory)/bin/Test$(ApkTestConfiguration)/build-check-boot-times.binlog
+        msbuildArguments: /restore /bl:$(System.DefaultWorkingDirectory)/bin/Test$(ApkTestConfiguration)/build-check-boot-times.binlog
       continueOnError: true
 
     - task: MSBuild@1
@@ -535,9 +532,7 @@ stages:
       inputs:
         solution: src/Mono.Android/Test/Mono.Android-Tests.csproj
         configuration: $(ApkTestConfiguration)
-        msbuildArguments: >
-          /t:CheckBootTimes
-          /bl:$(System.DefaultWorkingDirectory)/bin/Test$(ApkTestConfiguration)/run-check-boot-times.binlog
+        msbuildArguments: /t:CheckBootTimes /bl:$(System.DefaultWorkingDirectory)/bin/Test$(ApkTestConfiguration)/run-check-boot-times.binlog
       continueOnError: true
 
     - template: yaml-templates/apk-instrumentation.yaml
@@ -700,7 +695,7 @@ stages:
       inputs:
         solution: src/Mono.Android/Test/Mono.Android-Tests.csproj
         configuration: $(ApkTestConfiguration)
-        msbuildArguments: >
+        msbuildArguments: >-
           /t:AcquireAndroidTarget,ReleaseAndroidTarget
           /bl:$(System.DefaultWorkingDirectory)/bin/Test$(ApkTestConfiguration)/shutdown-emulator.binlog
       condition: always()
@@ -716,7 +711,7 @@ stages:
       inputs:
         solution: build-tools/plots-to-appinsights/ProcessPlotCSVFile.csproj
         configuration: $(ApkTestConfiguration)
-        msbuildArguments: >
+        msbuildArguments: >-
           /restore
           /t:Build
           /v:normal
@@ -808,7 +803,7 @@ stages:
       inputs:
         solution: tests/BCL-Tests/Xamarin.Android.Bcl-Tests/Xamarin.Android.Bcl-Tests.csproj
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: >
+        msbuildArguments: >-
           /t:AcquireAndroidTarget,ReleaseAndroidTarget
           /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/shutdown-emulator.binlog
       condition: always()
@@ -871,8 +866,7 @@ stages:
       inputs:
         solution: src/Mono.Android/Test/Mono.Android-Tests.csproj
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: >
-          /t:AcquireAndroidTarget /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/start-emulator.binlog
+        msbuildArguments: /t:AcquireAndroidTarget /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/start-emulator.binlog
 
     - template: yaml-templates/run-nunit-tests.yaml
       parameters:
@@ -893,7 +887,7 @@ stages:
       inputs:
         solution: src/Mono.Android/Test/Mono.Android-Tests.csproj
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: >
+        msbuildArguments: >-
           /t:AcquireAndroidTarget,ReleaseAndroidTarget
           /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/shutdown-emulator.binlog
       condition: always()
