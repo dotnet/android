@@ -7,7 +7,6 @@ using System.Threading;
 namespace Android.Runtime {
 	public static class JNINativeWrapper {
 
-		static MethodInfo? mono_unhandled_exception_method;
 		static MethodInfo? exception_handler_method;
 		static MethodInfo? wait_for_bridge_processing_method;
 
@@ -15,12 +14,6 @@ namespace Android.Runtime {
 		{
 			if (exception_handler_method != null)
 				return;
-#if MONOANDROID1_0
-			mono_unhandled_exception_method = typeof (System.Diagnostics.Debugger).GetMethod (
-				"Mono_UnhandledException", BindingFlags.NonPublic | BindingFlags.Static);
-			if (mono_unhandled_exception_method == null)
-				AndroidEnvironment.FailFast ("Cannot find System.Diagnostics.Debugger.Mono_UnhandledException");
-#endif
 			exception_handler_method = typeof (AndroidEnvironment).GetMethod (
 				"UnhandledException", BindingFlags.NonPublic | BindingFlags.Static);
 			if (exception_handler_method == null)
@@ -70,15 +63,8 @@ namespace Android.Runtime {
 			ig.Emit (OpCodes.Leave, label);
 
 			bool  filter = Debugger.IsAttached || !JNIEnv.PropagateExceptions;
-			if (filter && mono_unhandled_exception_method != null) {
-				ig.BeginExceptFilterBlock ();
 
-				ig.Emit (OpCodes.Call, mono_unhandled_exception_method);
-				ig.Emit (OpCodes.Ldc_I4_1);
-				ig.BeginCatchBlock (null!);
-			} else {
-				ig.BeginCatchBlock (typeof (Exception));
-			}
+			ig.BeginCatchBlock (typeof (Exception));
 
 			ig.Emit (OpCodes.Dup);
 			ig.Emit (OpCodes.Call, exception_handler_method!);
