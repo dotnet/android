@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.6.0)
 
+#
+# MUST be included before project()!
+#
+include("../../build-tools/cmake/xa_common.cmake")
+
 project(libsqlite-xamarin C)
 
 include(CheckIncludeFiles)

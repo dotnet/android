@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.6.0)
 
+#
+# MUST be included before project()!
+#
+include("../../build-tools/cmake/xa_common.cmake")
+
 project(libmonodroid C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -87,6 +92,8 @@ if(MINGW)
 endif()
 
 xa_common_prepare()
+xa_macos_prepare_arm64()
+
 # Don't put the leading '-' in options
 set(TEST_COMPILER_ARGS_CPP ${XA_COMPILER_FLAGS}
   fno-rtti
@@ -315,6 +322,12 @@ if (ENABLE_NDK)
     PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY "${XA_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_BUILD_TYPE}"
     )
+elseif(APPLE)
+  set_target_properties(
+    xamarin-app
+    PROPERTIES
+    OSX_ARCHITECTURES "${XA_OSX_ARCHITECTURES}"
+  )
 endif()
 
 if(NOT WIN32 AND NOT MINGW AND CMAKE_BUILD_TYPE STREQUAL Debug)
@@ -331,12 +344,24 @@ if(NOT WIN32 AND NOT MINGW AND CMAKE_BUILD_TYPE STREQUAL Debug)
     xamarin-debug-app-helper
     PUBLIC -DDEBUG_APP_HELPER
     )
+  if(APPLE)
+    set_target_properties(
+      xamarin-debug-app-helper
+      PROPERTIES
+      OSX_ARCHITECTURES "${XA_OSX_ARCHITECTURES}"
+    )
+  endif()
 endif()
 
 string(TOLOWER ${CMAKE_BUILD_TYPE} MONO_ANDROID_SUFFIX)
 set(MONO_ANDROID_LIB "mono-android.${MONO_ANDROID_SUFFIX}")
 add_library(${MONO_ANDROID_LIB} SHARED ${MONODROID_SOURCES})
 if(APPLE)
+  set_target_properties(
+    ${MONO_ANDROID_LIB}
+    PROPERTIES
+    OSX_ARCHITECTURES "${XA_OSX_ARCHITECTURES}"
+  )
   add_custom_command(
     TARGET ${MONO_ANDROID_LIB}
     POST_BUILD
