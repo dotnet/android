@@ -64,6 +64,7 @@ stages:
       inputs:
         github_token: $(github-pat)
         provisioning_script: $(Build.SourcesDirectory)/build-tools/provisioning/xcode.csx
+        provisioning_extra_args: '-v -v -v -v'
 
     # Prepare and build everything
     - script: >

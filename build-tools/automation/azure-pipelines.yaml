@@ -146,6 +146,7 @@ stages:
       inputs:
         github_token: $(github-pat)
         provisioning_script: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/provisioning/xcode.csx
+        provisioning_extra_args: '-v -v -v -v'
 
     # Prepare and build everything
     - script: make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
