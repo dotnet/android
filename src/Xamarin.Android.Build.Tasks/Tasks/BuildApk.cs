@@ -419,7 +419,13 @@ namespace Xamarin.Android.Tasks
 				var key = CompressedAssemblyInfo.GetDictionaryKey (assembly);
 				if (compressedAssembliesInfo.TryGetValue (key, out CompressedAssemblyInfo info) && info != null) {
 					EnsureCompressedAssemblyData (assembly.ItemSpec, info.DescriptorIndex);
-					AssemblyCompression.CompressionResult result = AssemblyCompression.Compress (compressedAssembly, compressedOutputDir);
+					string assemblyOutputDir;
+					string abiDirectory = assembly.GetMetadata ("AbiDirectory");
+					if (!String.IsNullOrEmpty (abiDirectory))
+						assemblyOutputDir = Path.Combine (compressedOutputDir, abiDirectory);
+					else
+						assemblyOutputDir = compressedOutputDir;
+					AssemblyCompression.CompressionResult result = AssemblyCompression.Compress (compressedAssembly, assemblyOutputDir);
 					if (result != AssemblyCompression.CompressionResult.Success) {
 						switch (result) {
 							case AssemblyCompression.CompressionResult.EncodingFailed:
