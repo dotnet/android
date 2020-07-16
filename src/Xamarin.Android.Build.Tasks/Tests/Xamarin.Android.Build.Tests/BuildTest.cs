@@ -1095,6 +1095,7 @@ namespace UnamedProject
 		[Category ("SmokeTests"), Category ("dotnet")]
 		public void BuildProguardEnabledProject ([Values (true, false)] bool isRelease, [Values ("dx", "d8")] string dexTool, [Values ("", "proguard", "r8")] string linkTool)
 		{
+			AssertDexToolSupported (dexTool);
 			var proj = new XamarinFormsAndroidApplicationProject {
 				IsRelease = isRelease,
 				DexTool = dexTool,
@@ -1156,11 +1157,10 @@ namespace UnamedProject
 		}
 
 		[Test]
-		[Category ("Minor")]
+		[Category ("Minor"), Category ("dotnet")]
 		public void BuildApplicationOver65536Methods ([Values ("dx", "d8")] string dexTool)
 		{
-			if (dexTool == "d8")
-				Assert.Ignore ("The build currently *succeeds* with d8, when API 21 is our minimum.");
+			AssertDexToolSupported (dexTool);
 			var proj = CreateMultiDexRequiredApplication ();
 			proj.DexTool = dexTool;
 			using (var b = CreateApkBuilder ()) {
@@ -1170,8 +1170,10 @@ namespace UnamedProject
 		}
 
 		[Test]
+		[Category ("dotnet")]
 		public void CreateMultiDexWithSpacesInConfig ([Values ("dx", "d8")] string dexTool)
 		{
+			AssertDexToolSupported (dexTool);
 			var proj = CreateMultiDexRequiredApplication (releaseConfigurationName: "Test Config");
 			proj.DexTool = dexTool;
 			proj.IsRelease = true;
@@ -1182,13 +1184,15 @@ namespace UnamedProject
 		}
 
 		[Test]
+		[Category ("dotnet")]
 		public void BuildMultiDexApplication ([Values ("dx", "d8")] string dexTool)
 		{
+			AssertDexToolSupported (dexTool);
 			var proj = CreateMultiDexRequiredApplication ();
 			proj.UseLatestPlatformSdk = false;
 			proj.DexTool = dexTool;
 			proj.SetProperty ("AndroidEnableMultiDex", "True");
-			if (IsWindows) {
+			if (IsWindows && !Builder.UseDotNet) {
 				proj.SetProperty ("AppendTargetFrameworkToIntermediateOutputPath", "True");
 			}
 
@@ -1196,7 +1200,7 @@ namespace UnamedProject
 				proj.TargetFrameworkVersion = b.LatestTargetFrameworkVersion ();
 
 				string intermediateDir;
-				if (IsWindows) {
+				if (IsWindows && !Builder.UseDotNet) {
 					intermediateDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, proj.TargetFrameworkAbbreviated);
 				} else {
 					intermediateDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
@@ -1207,14 +1211,17 @@ namespace UnamedProject
 				var multidexKeepPath  = Path.Combine (Root, b.ProjectDirectory, intermediateDir, "multidex.keep");
 				Assert.IsTrue (File.Exists (multidexKeepPath), "multidex.keep exists");
 				Assert.IsTrue (File.ReadAllLines (multidexKeepPath).Length > 1, "multidex.keep must contain more than one line.");
-				Assert.IsTrue (b.LastBuildOutput.ContainsText (Path.Combine (proj.TargetFrameworkVersion, "mono.android.jar")), proj.TargetFrameworkVersion + "/mono.android.jar should be used.");
+				if (!Builder.UseDotNet)
+					Assert.IsTrue (b.LastBuildOutput.ContainsText (Path.Combine (proj.TargetFrameworkVersion, "mono.android.jar")), proj.TargetFrameworkVersion + "/mono.android.jar should be used.");
 				Assert.IsFalse (b.LastBuildOutput.ContainsText ("Duplicate zip entry"), "Should not get warning about [META-INF/MANIFEST.MF]");
 			}
 		}
 
 		[Test]
+		[Category ("dotnet")]
 		public void BuildAfterMultiDexIsNotRequired ([Values ("dx", "d8")] string dexTool)
 		{
+			AssertDexToolSupported (dexTool);
 			var proj = CreateMultiDexRequiredApplication ();
 			proj.DexTool = dexTool;
 			proj.SetProperty ("AndroidEnableMultiDex", "True");
@@ -1256,8 +1263,10 @@ namespace UnamedProject
 		}
 
 		[Test]
+		[Category ("dotnet")]
 		public void MultiDexCustomMainDexFileList ([Values ("dx", "d8")] string dexTool, [Values ("19", "21")] string minSdkVersion)
 		{
+			AssertDexToolSupported (dexTool);
 			var expected = new [] {
 				"android/support/multidex/ZipUtil$CentralDirectory.class",
 				"android/support/multidex/MultiDexApplication.class",
@@ -2572,9 +2581,10 @@ public class Test
 		}
 
 		[Test]
-		[Category ("SmokeTests")]
+		[Category ("SmokeTests"), Category ("dotnet")]
 		public void BuildApplicationWithSpacesInPath ([Values (true, false)] bool enableMultiDex, [Values ("dx", "d8")] string dexTool, [Values ("", "proguard", "r8")] string linkTool)
 		{
+			AssertDexToolSupported (dexTool);
 			var folderName = $"BuildReleaseApp AndÜmläüts({enableMultiDex}{dexTool}{linkTool})";
 			var lib = new XamarinAndroidLibraryProject {
 				IsRelease = true,
@@ -3531,6 +3541,7 @@ namespace UnnamedProject {
 				DexTool = "dx",
 				LinkTool = "proguard",
 			};
+			AssertDexToolSupported (proj.DexTool);
 			var rules = new List<string> {
 				"-dontwarn com.google.devtools.build.android.desugar.**",
 				"-dontwarn javax.annotation.**",
@@ -3552,6 +3563,7 @@ namespace UnnamedProject {
 		[Category ("SmokeTests"), Category ("dotnet")]
 		public void Desugar ([Values (true, false)] bool isRelease, [Values ("dx", "d8")] string dexTool, [Values ("", "proguard", "r8")] string linkTool)
 		{
+			AssertDexToolSupported (dexTool);
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 				EnableDesugar = true, //It is certain this test would fail without desugar
@@ -3661,8 +3673,10 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 
 		//See: https://developer.android.com/about/versions/marshmallow/android-6.0-changes#behavior-apache-http-client
 		[Test]
+		[Category ("dotnet")]
 		public void MissingOrgApacheHttpClient ([Values ("dx", "d8")] string dexTool)
 		{
+			AssertDexToolSupported (dexTool);
 			var proj = new XamarinAndroidApplicationProject {
 				DexTool = dexTool,
 			};

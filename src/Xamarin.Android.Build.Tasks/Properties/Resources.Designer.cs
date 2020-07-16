@@ -574,11 +574,20 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Using the DX DEX Compiler is deprecated. Please update `$(AndroidDexTool)` to `d8`..
+        ///   Looks up a localized string similar to Using the DX DEX Compiler is deprecated. Please set the DEX compiler to &apos;d8&apos; in the Visual Studio project property pages or edit the project file in a text editor and set the &apos;AndroidDexTool&apos; MSBuild property to &apos;d8&apos;..
         /// </summary>
         internal static string XA1023 {
             get {
                 return ResourceManager.GetString("XA1023", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Using the DX DEX Compiler is not supported in Xamarin.Android projects that target .NET 5 or higher. Please set the DEX compiler to &apos;d8&apos; in the Visual Studio project property pages or edit the project file in a text editor and set the &apos;AndroidDexTool&apos; MSBuild property to &apos;d8&apos;..
+        /// </summary>
+        internal static string XA1023_dotnet {
+            get {
+                return ResourceManager.GetString("XA1023_dotnet", resourceCulture);
             }
         }
         

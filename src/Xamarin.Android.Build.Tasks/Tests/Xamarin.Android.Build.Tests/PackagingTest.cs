@@ -104,6 +104,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Category ("dotnet")]
 		public void CheckClassesDexIsIncluded ([Values ("dx", "d8", "invalid")] string dexTool)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -111,8 +112,13 @@ namespace Xamarin.Android.Build.Tests
 				DexTool = dexTool,
 			};
 			using (var b = CreateApkBuilder ()) {
-				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
 				b.ThrowOnBuildFailure = false;
+				if (Builder.UseDotNet && dexTool == "dx") {
+					Assert.IsFalse (b.Build (proj), "build failed");
+					StringAssertEx.Contains ("XA1023", b.LastBuildOutput, "Output should contain XA1023 errors");
+					return;
+				}
+
 				Assert.IsTrue (b.Build (proj), "build failed");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
 						proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
