@@ -42,6 +42,18 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void CompressedWithoutLinker ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true
+			};
+			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidLinkMode, AndroidLinkMode.None.ToString ());
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			}
+		}
+
+		[Test]
 		[Category ("SmokeTests")]
 		public void BuildBasicApplicationReleaseProfiledAot ()
 		{
