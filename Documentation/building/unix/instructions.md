@@ -72,6 +72,37 @@ and Windows (.vsix) installer files can be built with:
 Commercial installers will be created by this command if the
 `make prepare-external-git-dependencies` command was ran before building.
 
+# Creating .NET 6 NuGet packages
+
+Once `make all` or `make jenkins` have completed, you can build the .NET 6
+packages with:
+
+    make pack-dotnet
+
+Several `.nupkg` files will be output in `./bin/BuildDebug/nupkgs/`, you
+can use these with a `nuget.config` such as:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <packageSources>
+    <add key="dotnet5" value="https://dnceng.pkgs.visualstudio.com/public/_packaging/dotnet5/nuget/v3/index.json" />
+    <add key="local-xa" value="/full/path/to/bin/BuildDebug/nupkgs" />
+  </packageSources>
+</configuration>
+```
+
+Then use a `global.json` for the locally built version of the packages:
+
+```json
+{
+    "msbuild-sdks": {
+            "Microsoft.Android.Sdk": "11.0.100-ci.master.11"
+    }
+}
+```
+
+See the [One .NET Documentation](../../guides/OneDotNet.md) for further details.
 
 # Building Unit Tests
 

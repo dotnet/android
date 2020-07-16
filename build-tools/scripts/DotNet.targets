@@ -1,0 +1,16 @@
+<Project>
+  <Target Name="PackDotNet">
+    <PropertyGroup>
+      <_TopDir>$(MSBuildThisFileDirectory)..\..\</_TopDir>
+    </PropertyGroup>
+    <MSBuild Projects="$(_TopDir)build-tools\xa-prep-tasks\xa-prep-tasks.csproj" />
+    <MSBuild Projects="$(_TopDir)Xamarin.Android.sln" Properties="DisableApiCompatibilityCheck=true" />
+    <MSBuild Projects="$(_TopDir)build-tools\create-packs\Microsoft.Android.Sdk.proj" Targets="CreateAllPacks" />
+    <!-- Clean up old, previously restored packages -->
+    <ItemGroup>
+      <_OldPackages Include="$(_TopDir)packages\microsoft.android.*\**\*.nupkg" />
+      <_DirectoriesToRemove Include="%(_OldPackages.RootDir)%(_OldPackages.Directory)" />
+    </ItemGroup>
+    <RemoveDir Directories="@(_DirectoriesToRemove)" />
+  </Target>
+</Project>
