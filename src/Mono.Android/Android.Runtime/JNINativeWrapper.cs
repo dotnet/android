@@ -62,8 +62,6 @@ namespace Android.Runtime {
 
 			ig.Emit (OpCodes.Leave, label);
 
-			bool  filter = Debugger.IsAttached || !JNIEnv.PropagateExceptions;
-
 			ig.BeginCatchBlock (typeof (Exception));
 
 			ig.Emit (OpCodes.Dup);
