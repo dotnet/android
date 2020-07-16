@@ -24,7 +24,7 @@ jobs:
       inputs:
         solution: src/Mono.Android/Test/Mono.Android-Tests.csproj
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: >
+        msbuildArguments: >-
           /t:AcquireAndroidTarget /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/start-emulator.binlog
 
     - template: run-nunit-tests.yaml
@@ -39,7 +39,7 @@ jobs:
       inputs:
         solution: src/Mono.Android/Test/Mono.Android-Tests.csproj
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: >
+        msbuildArguments: >-
           /t:AcquireAndroidTarget,ReleaseAndroidTarget
           /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/shutdown-emulator.binlog
       condition: always()

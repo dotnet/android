@@ -16,7 +16,7 @@ steps:
   inputs:
     solution: ${{ parameters.project }}
     configuration: ${{ parameters.configuration }}
-    msbuildArguments: >
+    msbuildArguments: >-
       /restore
       /t:AcquireAndroidTarget,SignAndroidPackage,DeployTest${{ parameters.packageType }}s,CheckAndRecordApkSizes,RunTestApks,UndeployTestApks,RenameApkTestCases,ReportComponentFailures
       /bl:$(System.DefaultWorkingDirectory)/bin/Test${{ parameters.configuration }}/run${{ parameters.testName }}.binlog
