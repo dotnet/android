@@ -29,7 +29,7 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true
 			};
-			proj.SetProperty (KnownProperties.AndroidLinkMode, AndroidLinkMode.None.ToString ());
+			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidLinkMode, AndroidLinkMode.None.ToString ());
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
