@@ -1138,6 +1138,7 @@ namespace Lib2
 			var proj = new XamarinFormsAndroidApplicationProject ();
 			proj.PackageReferences.Add (KnownPackages.AndroidXMigration);
 			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
+			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompatResources);
 			proj.PackageReferences.Add (KnownPackages.AndroidXBrowser);
 			proj.PackageReferences.Add (KnownPackages.AndroidXMediaRouter);
 			proj.PackageReferences.Add (KnownPackages.AndroidXLegacySupportV4);

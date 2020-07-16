@@ -232,6 +232,7 @@ class MemTest {
 		}
 
 		[Test]
+		[Category ("dotnet")]
 		[NonParallelizable]
 		public void AndroidXMigration ([Values (true, false)] bool isRelease)
 		{
@@ -240,13 +241,14 @@ class MemTest {
 			};
 			proj.PackageReferences.Add (KnownPackages.AndroidXMigration);
 			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
+			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompatResources);
 			proj.PackageReferences.Add (KnownPackages.AndroidXBrowser);
 			proj.PackageReferences.Add (KnownPackages.AndroidXMediaRouter);
 			proj.PackageReferences.Add (KnownPackages.AndroidXLegacySupportV4);
 			proj.PackageReferences.Add (KnownPackages.AndroidXLifecycleLiveData);
 			proj.PackageReferences.Add (KnownPackages.XamarinGoogleAndroidMaterial);
 
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var dexFile = b.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
 				FileAssert.Exists (dexFile);
@@ -256,7 +258,9 @@ class MemTest {
 				className = "Landroid/appcompat/app/AppCompatActivity;";
 				Assert.IsFalse (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should *not* include `{className}`!");
 				// FormsAppCompatActivity should inherit the AndroidX C# type
-				var forms = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "assets", "Xamarin.Forms.Platform.Android.dll");
+				var forms = Builder.UseDotNet && isRelease ?
+					b.Output.GetIntermediaryPath (Path.Combine ("linked", "Xamarin.Forms.Platform.Android.dll")) :
+					b.Output.GetIntermediaryPath (Path.Combine ("android", "assets", "Xamarin.Forms.Platform.Android.dll"));
 				using (var assembly = AssemblyDefinition.ReadAssembly (forms)) {
 					var activity = assembly.MainModule.GetType ("Xamarin.Forms.Platform.Android.FormsAppCompatActivity");
 					Assert.AreEqual ("AndroidX.AppCompat.App.AppCompatActivity", activity.BaseType.FullName);
