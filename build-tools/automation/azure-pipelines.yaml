@@ -141,6 +141,12 @@ stages:
       parameters:
         version: $(DotNetCoreVersion)
 
+    - task: provisionator@2
+      displayName: Install Xcode
+      inputs:
+        github_token: $(github-pat)
+        provisioning_script: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/provisioning/xcode.csx
+
     # Prepare and build everything
     - script: make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
