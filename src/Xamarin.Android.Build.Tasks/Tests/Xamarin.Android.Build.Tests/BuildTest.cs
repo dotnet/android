@@ -24,6 +24,18 @@ namespace Xamarin.Android.Build.Tests
 	public partial class BuildTest : BaseTest
 	{
 		[Test]
+		public void CompressedWithoutLinker ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true
+			};
+			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidLinkMode, AndroidLinkMode.None.ToString ());
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			}
+		}
+
+		[Test]
 		[Category ("dotnet")]
 		public void BuildBasicApplication ([Values (true, false)] bool isRelease)
 		{

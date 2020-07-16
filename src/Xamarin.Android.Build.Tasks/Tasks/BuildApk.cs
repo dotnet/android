@@ -317,6 +317,7 @@ namespace Xamarin.Android.Tasks
 			bool use_shared_runtime = String.Equals (UseSharedRuntime, "true", StringComparison.OrdinalIgnoreCase);
 			string sourcePath;
 			AssemblyCompression.AssemblyData compressedAssembly = null;
+			string compressedOutputDir = Path.GetFullPath (Path.Combine (Path.GetDirectoryName (ApkOutputPath), "..", "lz4"));
 
 			int count = 0;
 			foreach (ITaskItem assembly in ResolvedUserAssemblies) {
@@ -418,7 +419,13 @@ namespace Xamarin.Android.Tasks
 				var key = CompressedAssemblyInfo.GetDictionaryKey (assembly);
 				if (compressedAssembliesInfo.TryGetValue (key, out CompressedAssemblyInfo info) && info != null) {
 					EnsureCompressedAssemblyData (assembly.ItemSpec, info.DescriptorIndex);
-					AssemblyCompression.CompressionResult result = AssemblyCompression.Compress (compressedAssembly);
+					string assemblyOutputDir;
+					string abiDirectory = assembly.GetMetadata ("AbiDirectory");
+					if (!String.IsNullOrEmpty (abiDirectory))
+						assemblyOutputDir = Path.Combine (compressedOutputDir, abiDirectory);
+					else
+						assemblyOutputDir = compressedOutputDir;
+					AssemblyCompression.CompressionResult result = AssemblyCompression.Compress (compressedAssembly, assemblyOutputDir);
 					if (result != AssemblyCompression.CompressionResult.Success) {
 						switch (result) {
 							case AssemblyCompression.CompressionResult.EncodingFailed:
