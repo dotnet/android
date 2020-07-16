@@ -77,3 +77,51 @@ macro(xa_common_prepare)
       )
   endif()
 endmacro()
+
+macro(xa_macos_prepare_arm64)
+  if(APPLE)
+    set(SDK_SUPPORTS_ARM64 False)
+    set(SDK_SUPPORTS_X86_64 False)
+    execute_process(
+      COMMAND xcode-select -p
+      RESULT_VARIABLE XCODE_SELECT_RESULT
+      OUTPUT_VARIABLE XCODE_DEVELOPER_PATH
+      )
+    if(NOT ${XCODE_SELECT_RESULT} EQUAL "0")
+      message(WARNING "xcode-select failed with result ${XCODE_SELECT_RESULT}")
+    else()
+      string(STRIP "${XCODE_DEVELOPER_PATH}" XCODE_DEVELOPER_PATH)
+      set(SDKSETTINGS_PATH "${XCODE_DEVELOPER_PATH}/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/SDKSettings.plist")
+
+      # CAUTION: do NOT ever remove the '-o -' parameter, without '-o' plutil will overwrite the .plist file
+      execute_process(
+		COMMAND plutil -extract SupportedTargets.macosx.Archs json -o - "${SDKSETTINGS_PATH}"
+        RESULT_VARIABLE PLUTIL_RESULT
+        OUTPUT_VARIABLE SDK_ARCHITECTURES
+		)
+      if(NOT ${PLUTIL_RESULT} EQUAL 0)
+        message(WARNING "plutil failed to read ${SDKSETTINGS_PATH}, returned with result ${PLUTIL_RESULT}")
+      else()
+        string(FIND "${SDK_ARCHITECTURES}" "\"arm64\"" ARCH_POS)
+        if(${ARCH_POS} GREATER_EQUAL 0)
+          set(SDK_SUPPORTS_ARM64 True)
+        endif()
+
+        string(FIND "${SDK_ARCHITECTURES}" "\"x86_64\"" ARCH_POS)
+        if(${ARCH_POS} GREATER_EQUAL 0)
+          set(SDK_SUPPORTS_X86_64 True)
+        endif()
+      endif()
+    endif()
+
+    unset(XA_OSX_ARCHITECTURES)
+    if(SDK_SUPPORTS_ARM64)
+      message(STATUS "SDK at ${XCODE_DEVELOPER_PATH} supports creation of ARM64 binaries")
+      list(APPEND XA_OSX_ARCHITECTURES "arm64")
+    endif()
+    if(SDK_SUPPORTS_X86_64)
+      message(STATUS "SDK at ${XCODE_DEVELOPER_PATH} supports creation of X86_64 binaries")
+      list(APPEND XA_OSX_ARCHITECTURES "x86_64")
+    endif()
+  endif()
+endmacro()
