@@ -142,6 +142,14 @@ stages:
         version: $(DotNetCoreVersion)
 
     - script: security list-keychains && echo default `security default-keychain` && echo login `security login-keychain`
+    - template: install-certificates.yml@yaml
+      parameters:
+        DeveloperIdApplication: $(developer-id-application)
+        DeveloperIdInstaller: $(developer-id-installer)
+        IphoneDeveloper: $(iphone-developer)
+        MacDeveloper: $(mac-developer)
+        HostedMacKeychainPassword: $(AzDO-OnPrem-KeychainPass)
+    - script: security list-keychains && echo default `security default-keychain` && echo login `security login-keychain`
 
     - task: provisionator@2
       displayName: Install Xcode
@@ -195,14 +203,6 @@ stages:
         targetPath: xamarin-android/bin/Test$(XA.Build.Configuration)
 
     # Create installers
-    - template: install-certificates.yml@yaml
-      parameters:
-        DeveloperIdApplication: $(developer-id-application)
-        DeveloperIdInstaller: $(developer-id-installer)
-        IphoneDeveloper: $(iphone-developer)
-        MacDeveloper: $(mac-developer)
-        HostedMacKeychainPassword: $(AzDO-OnPrem-KeychainPass)
-
     - script: make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: make create-installers
