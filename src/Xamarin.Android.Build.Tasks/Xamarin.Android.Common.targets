@@ -491,7 +491,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	>
 </Target>
 
-<Target Name="_RemoveLegacyDesigner" Condition="'$(AndroidUseIntermediateDesignerFile)' == 'True'">
+<Target Name="_RemoveLegacyDesigner"
+		Condition=" '$(AndroidUseIntermediateDesignerFile)' == 'true' and '$(ManagedDesignTimeBuild)' != 'true' ">
 	<ItemGroup>
 		<CorrectCasedItem Include="%(Compile.Identity)" Condition="'%(Compile.Identity)' == '$(AndroidResgenFile)'"/>
 		<Compile Remove="@(CorrectCasedItem)" Condition=" '$(AndroidResgenFile)' != '' "/>
@@ -567,6 +568,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	</_OnResolveMonoAndroidSdks>
 	<_ResolveMonoAndroidSdksDependsOn>
 		GetReferenceAssemblyPaths;
+		_ResolveSdks;
+		_ResolveAndroidTooling;
 		$(_ResolveMonoAndroidSdksDependsOn);
 	</_ResolveMonoAndroidSdksDependsOn>
 </PropertyGroup>
