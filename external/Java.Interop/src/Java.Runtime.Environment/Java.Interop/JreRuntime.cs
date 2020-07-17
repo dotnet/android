@@ -86,9 +86,12 @@ namespace Java.Interop {
 				return builder;
 
 			if (!string.IsNullOrEmpty (builder.JvmLibraryPath)) {
-				int r = NativeMethods.java_interop_jvm_load (builder.JvmLibraryPath);
+				IntPtr errorPtr = IntPtr.Zero;
+				int r = NativeMethods.java_interop_jvm_load_with_error_message (builder.JvmLibraryPath, out errorPtr);
 				if (r != 0) {
-					throw new Exception ($"Could not load JVM path `{builder.JvmLibraryPath}` ({r})!");
+					string error = Marshal.PtrToStringAnsi (errorPtr);
+					NativeMethods.java_interop_free (errorPtr);
+					throw new Exception ($"Could not load JVM path `{builder.JvmLibraryPath}`: {error} ({r})!");
 				}
 			}
 
@@ -154,7 +157,10 @@ namespace Java.Interop {
 
 	partial class NativeMethods {
 		[DllImport (JavaInteropLib, CharSet=CharSet.Ansi, CallingConvention=CallingConvention.Cdecl)]
-		internal static extern int java_interop_jvm_load (string path);
+		internal static extern void java_interop_free (IntPtr p);
+
+		[DllImport (JavaInteropLib, CharSet=CharSet.Ansi, CallingConvention=CallingConvention.Cdecl)]
+		internal static extern int java_interop_jvm_load_with_error_message (string path, out IntPtr message);
 
 		[DllImport (JavaInteropLib, CharSet=CharSet.Ansi, CallingConvention=CallingConvention.Cdecl)]
 		internal static extern int java_interop_jvm_create (out IntPtr javavm, out IntPtr jnienv, ref JavaVMInitArgs args);

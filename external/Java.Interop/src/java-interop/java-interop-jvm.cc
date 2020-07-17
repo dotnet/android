@@ -18,8 +18,12 @@ struct DylibJVM {
 static struct DylibJVM *jvm;
 
 int
-java_interop_jvm_load (const char *path)
+java_interop_jvm_load_with_error_message (const char *path, char **error_message)
 {
+	if (error_message) {
+		*error_message  = NULL;
+	}
+
 	if (jvm != NULL) {
 		return JAVA_INTEROP_JVM_FAILED_ALREADY_LOADED;
 	}
@@ -31,6 +35,9 @@ java_interop_jvm_load (const char *path)
 
 	jvm->dl_handle = dlopen (path, RTLD_LAZY);
 	if (!jvm->dl_handle) {
+		if (error_message) {
+			*error_message = java_interop_strdup (dlerror ());
+		}
 		free (jvm);
 		jvm = NULL;
 		return JAVA_INTEROP_JVM_FAILED_NOT_LOADED;
@@ -54,12 +61,19 @@ java_interop_jvm_load (const char *path)
 #undef LOAD_SYMBOL
 
 	if (symbols_missing) {
+		dlclose (jvm->dl_handle);
 		free (jvm);
 		jvm = NULL;
 		return JAVA_INTEROP_JVM_FAILED_SYMBOL_MISSING;
 	}
 
 	return 0;
+}
+
+int
+java_interop_jvm_load (const char *path)
+{
+	return java_interop_jvm_load_with_error_message (path, NULL);
 }
 
 #define ji_return_val_if_fail(expr, val) do { if (!(expr)) return (val); } while (0)
