@@ -144,6 +144,11 @@ projects. .NET 5 projects will not import this file.
       _IncludeNativeSystemLibraries;
       _CheckGoogleSdkRequirements;
     </_PrepareBuildApkDependsOnTargets>
+    <GetAndroidDependenciesDependsOn>
+      _BeforeGetAndroidDependencies;
+      _SetLatestTargetFrameworkVersion;
+      $(GetAndroidDependenciesDependsOn);
+    </GetAndroidDependenciesDependsOn>
   </PropertyGroup>
 
   <!-- Binding projects -->

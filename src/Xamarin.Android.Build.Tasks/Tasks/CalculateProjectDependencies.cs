@@ -15,6 +15,8 @@ namespace Xamarin.Android.Tasks
 
 		public string CommandLineToolsVersion { get; set; }
 
+		public string AndroidApiLevel { get; set; }
+
 		[Required]
 		public string TargetFrameworkVersion { get; set; }
 
@@ -48,7 +50,9 @@ namespace Xamarin.Android.Tasks
 		public override bool RunTask ()
 		{
 			var dependencies = new List<ITaskItem> ();
-			var targetApiLevel = MonoAndroidHelper.SupportedVersions.GetApiLevelFromFrameworkVersion (TargetFrameworkVersion);
+			var targetApiLevel = string.IsNullOrEmpty (AndroidApiLevel) ?
+				MonoAndroidHelper.SupportedVersions.GetApiLevelFromFrameworkVersion (TargetFrameworkVersion) :
+				MonoAndroidHelper.SupportedVersions.GetApiLevelFromId (AndroidApiLevel);
 			var manifestApiLevel = DefaultMinSDKVersion;
 			if (File.Exists (ManifestFile.ItemSpec)) {
 				var manifest = AndroidAppManifest.Load (ManifestFile.ItemSpec, MonoAndroidHelper.SupportedVersions);
