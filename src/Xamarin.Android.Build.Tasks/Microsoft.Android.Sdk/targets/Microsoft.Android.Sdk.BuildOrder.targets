@@ -77,6 +77,7 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
       _CreateNativeLibraryArchive;
       _AddAndroidEnvironmentToCompile;
       _CheckForContent;
+      _RemoveLegacyDesigner;
       _ValidateAndroidPackageProperties;
       $(BuildDependsOn);
     </BuildDependsOn>
@@ -87,10 +88,13 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
 
   <!-- Targets that run unless we are running _ComputeFilesToPublishForRuntimeIdentifiers -->
   <PropertyGroup Condition=" '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' ">
-    <ResolveReferencesDependsOn>
+    <CoreResolveReferencesDependsOn>
       _SeparateAppExtensionReferences;
       $(ResolveReferencesDependsOn);
       _AddAndroidCustomMetaData;
+    </CoreResolveReferencesDependsOn>
+    <ResolveReferencesDependsOn>
+      $(CoreResolveReferencesDependsOn);
       UpdateAndroidInterfaceProxies;
       UpdateAndroidResources;
       AddBindingsToCompile;

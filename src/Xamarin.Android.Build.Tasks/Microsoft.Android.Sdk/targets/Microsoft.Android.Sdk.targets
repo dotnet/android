@@ -22,12 +22,13 @@
 
   <!-- Default item includes (globs and implicit references) -->
   <Import Project="Microsoft.Android.Sdk.DefaultItems.targets" />
+  <!-- Build ordering, should be imported before Xamarin.Android.Common.targets -->
+  <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.BuildOrder.targets" />
 
   <Import Project="$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Common.targets" />
   <Import Project="$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Bindings.Core.targets" />
   <Import Project="$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Bindings.ClassParse.targets" />
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.AssemblyResolution.targets" />
-  <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.BuildOrder.targets" />
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.Linker.targets" />
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.NuGet.targets" />
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.Publish.targets" />
