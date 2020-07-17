@@ -141,6 +141,8 @@ stages:
       parameters:
         version: $(DotNetCoreVersion)
 
+    - script: security list-keychains && echo default `security default-keychain` && echo login `security login-keychain`
+
     - task: provisionator@2
       displayName: Install Xcode
       inputs:
