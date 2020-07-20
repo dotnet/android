@@ -136,6 +136,13 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
       _GetLibraryImports;
       _ExportJarToXml;
     </ExportJarToXmlDependsOnTargets>
+    <GetAndroidDependenciesDependsOn>
+      _BeforeGetAndroidDependencies;
+      _SetLatestTargetFrameworkVersion;
+      _ResolveSdks;
+      _ResolveAndroidTooling;
+      $(GetAndroidDependenciesDependsOn);
+    </GetAndroidDependenciesDependsOn>
   </PropertyGroup>
 
 </Project>
