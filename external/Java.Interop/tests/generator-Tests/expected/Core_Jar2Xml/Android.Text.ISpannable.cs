@@ -1,35 +1,26 @@
 using System;
 using System.Collections.Generic;
 using Android.Runtime;
-using Java.Interop;
 
 namespace Android.Text {
 
 	// Metadata.xml XPath interface reference: path="/api/package[@name='android.text']/interface[@name='Spannable']"
 	[Register ("android/text/Spannable", "", "Android.Text.ISpannableInvoker")]
-	public partial interface ISpannable : Android.Text.ISpanned {
+	public partial interface ISpannable : global::Android.Text.ISpanned {
 
 	}
 
 	[global::Android.Runtime.Register ("android/text/Spannable", DoNotGenerateAcw=true)]
 	internal partial class ISpannableInvoker : global::Java.Lang.Object, ISpannable {
 
-		static readonly JniPeerMembers _members = new JniPeerMembers ("android/text/Spannable", typeof (ISpannableInvoker));
-
-		static IntPtr java_class_ref {
-			get { return _members.JniPeerType.PeerReference.Handle; }
-		}
-
-		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
-			get { return _members; }
-		}
+		static IntPtr java_class_ref = JNIEnv.FindClass ("android/text/Spannable");
 
 		protected override IntPtr ThresholdClass {
 			get { return class_ref; }
 		}
 
 		protected override global::System.Type ThresholdType {
-			get { return _members.ManagedPeerType; }
+			get { return typeof (ISpannableInvoker); }
 		}
 
 		new IntPtr class_ref;
@@ -73,21 +64,21 @@ namespace Android.Text {
 
 		static int n_GetSpanFlags_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_tag)
 		{
-			var __this = global::Java.Lang.Object.GetObject<Android.Text.ISpannable> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			var tag = global::Java.Lang.Object.GetObject<Java.Lang.Object> (native_tag, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Android.Text.ISpannable> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var tag = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_tag, JniHandleOwnership.DoNotTransfer);
 			int __ret = (int) __this.GetSpanFlags (tag);
 			return __ret;
 		}
 #pragma warning restore 0169
 
 		IntPtr id_getSpanFlags_Ljava_lang_Object_;
-		public unsafe Android.Text.SpanTypes GetSpanFlags (Java.Lang.Object tag)
+		public unsafe global::Android.Text.SpanTypes GetSpanFlags (global::Java.Lang.Object tag)
 		{
 			if (id_getSpanFlags_Ljava_lang_Object_ == IntPtr.Zero)
 				id_getSpanFlags_Ljava_lang_Object_ = JNIEnv.GetMethodID (class_ref, "getSpanFlags", "(Ljava/lang/Object;)I");
 			JValue* __args = stackalloc JValue [1];
-			__args [0] = new JValue ((tag == null) ? IntPtr.Zero : ((global::Java.Lang.Object) tag).Handle);
-			var __ret = (Android.Text.SpanTypes) JNIEnv.CallIntMethod (((global::Java.Lang.Object) this).Handle, id_getSpanFlags_Ljava_lang_Object_, __args);
+			__args [0] = new JValue (tag);
+			var __ret = (global::Android.Text.SpanTypes) JNIEnv.CallIntMethod (((global::Java.Lang.Object) this).Handle, id_getSpanFlags_Ljava_lang_Object_, __args);
 			return __ret;
 		}
 

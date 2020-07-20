@@ -119,10 +119,10 @@ namespace generatortests
 			}
 		}
 
-		protected void RunAllTargets (string outputRelativePath, string apiDescriptionFile, string expectedRelativePath, string[] additionalSupportPaths = null)
+		protected void RunAllTargets (string outputRelativePath, string apiDescriptionFile, string expectedRelativePath, string[] additionalSupportPaths = null, string enumFieldsMapFile = null, string enumMethodMapFile = null)
 		{
-			Run (CodeGenerationTarget.XamarinAndroid,   Path.Combine ("out", outputRelativePath),       apiDescriptionFile,     Path.Combine ("expected", expectedRelativePath),        additionalSupportPaths);
-			Run (CodeGenerationTarget.JavaInterop1,     Path.Combine ("out.ji", outputRelativePath),    apiDescriptionFile,     Path.Combine ("expected.ji", expectedRelativePath),     additionalSupportPaths);
+			Run (CodeGenerationTarget.XamarinAndroid,   Path.Combine ("out", outputRelativePath),       apiDescriptionFile,     Path.Combine ("expected", expectedRelativePath),        additionalSupportPaths, enumFieldsMapFile, enumMethodMapFile);
+			Run (CodeGenerationTarget.JavaInterop1,     Path.Combine ("out.ji", outputRelativePath),    apiDescriptionFile,     Path.Combine ("expected.ji", expectedRelativePath),     additionalSupportPaths, enumFieldsMapFile, enumMethodMapFile);
 		}
 
 		protected string FullPath (string path)
@@ -131,7 +131,7 @@ namespace generatortests
 			return Path.Combine (dir, path.Replace ('/', Path.DirectorySeparatorChar));
 		}
 
-		protected void Run (CodeGenerationTarget target, string outputPath, string apiDescriptionFile, string expectedPath, string[] additionalSupportPaths = null)
+		protected void Run (CodeGenerationTarget target, string outputPath, string apiDescriptionFile, string expectedPath, string[] additionalSupportPaths = null, string enumFieldsMapFile = null, string enumMethodMapFile = null)
 		{
 			Cleanup (outputPath);
 
@@ -139,11 +139,28 @@ namespace generatortests
 			Options.ApiDescriptionFile                          = FullPath (apiDescriptionFile);
 			Options.ManagedCallableWrapperSourceOutputDirectory = FullPath (outputPath);
 
+			if (!string.IsNullOrWhiteSpace (enumFieldsMapFile))
+				Options.EnumFieldsMapFile = FullPath (enumFieldsMapFile);
+
+			if (!string.IsNullOrWhiteSpace (enumMethodMapFile))
+				Options.EnumMethodsMapFile = FullPath (enumMethodMapFile);
+
+			var adjuster_output = Path.Combine (Path.GetTempPath (), "generator-tests");
+			Directory.CreateDirectory (adjuster_output);
+
+			// Put this in a temp folder so it doesn't end up in "expected", which breaks the compare.
+			Options.ApiXmlAdjusterOutput			    = Path.Combine (adjuster_output, Path.GetFileName (apiDescriptionFile) + ".adjusted");
+
 			if (additionalSupportPaths != null) {
 				AdditionalSourceDirectories.AddRange (additionalSupportPaths.Select (p => FullPath (p)));
 			}
 
 			Execute ();
+
+			// Try to clean up after ourselves.
+			try {
+				Directory.Delete (adjuster_output, true);
+			} catch { }
 
 			CompareOutputs (expectedPath, outputPath);
 		}

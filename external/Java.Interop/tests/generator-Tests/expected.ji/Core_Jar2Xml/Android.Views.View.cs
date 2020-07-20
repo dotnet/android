@@ -1,34 +1,43 @@
 using System;
 using System.Collections.Generic;
 using Android.Runtime;
+using Java.Interop;
 
 namespace Android.Views {
 
 	// Metadata.xml XPath class reference: path="/api/package[@name='android.view']/class[@name='View']"
 	[global::Android.Runtime.Register ("android/view/View", DoNotGenerateAcw=true)]
-	public partial class View : Java.Lang.Object {
+	public partial class View : global::Java.Lang.Object {
 
 		// Metadata.xml XPath interface reference: path="/api/package[@name='android.view']/interface[@name='View.OnClickListener']"
 		[Register ("android/view/View$OnClickListener", "", "Android.Views.View/IOnClickListenerInvoker")]
-		public partial interface IOnClickListener : IJavaObject {
+		public partial interface IOnClickListener : IJavaObject, IJavaPeerable {
 
 			// Metadata.xml XPath method reference: path="/api/package[@name='android.view']/interface[@name='View.OnClickListener']/method[@name='onClick' and count(parameter)=1 and parameter[1][@type='android.view.View']]"
-			[Register ("onClick", "(Landroid/view/View;)V", "GetOnClick_Landroid_view_View_Handler:Android.Views.View/IOnClickListenerInvoker, ")]
-			void OnClick (Android.Views.View v);
+			[Register ("onClick", "(Landroid/view/View;)V", "GetOnClick_Landroid_view_View_Handler:Android.Views.View/IOnClickListenerInvoker, Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null")]
+			void OnClick (global::Android.Views.View v);
 
 		}
 
 		[global::Android.Runtime.Register ("android/view/View$OnClickListener", DoNotGenerateAcw=true)]
 		internal partial class IOnClickListenerInvoker : global::Java.Lang.Object, IOnClickListener {
 
-			static IntPtr java_class_ref = JNIEnv.FindClass ("android/view/View$OnClickListener");
+			static readonly JniPeerMembers _members = new JniPeerMembers ("android/view/View$OnClickListener", typeof (IOnClickListenerInvoker));
+
+			static IntPtr java_class_ref {
+				get { return _members.JniPeerType.PeerReference.Handle; }
+			}
+
+			public override global::Java.Interop.JniPeerMembers JniPeerMembers {
+				get { return _members; }
+			}
 
 			protected override IntPtr ThresholdClass {
 				get { return class_ref; }
 			}
 
 			protected override global::System.Type ThresholdType {
-				get { return typeof (IOnClickListenerInvoker); }
+				get { return _members.ManagedPeerType; }
 			}
 
 			new IntPtr class_ref;
@@ -72,19 +81,19 @@ namespace Android.Views {
 
 			static void n_OnClick_Landroid_view_View_ (IntPtr jnienv, IntPtr native__this, IntPtr native_v)
 			{
-				var __this = global::Java.Lang.Object.GetObject<Android.Views.View.IOnClickListener> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-				var v = global::Java.Lang.Object.GetObject<Android.Views.View> (native_v, JniHandleOwnership.DoNotTransfer);
+				var __this = global::Java.Lang.Object.GetObject<global::Android.Views.View.IOnClickListener> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				var v = global::Java.Lang.Object.GetObject<global::Android.Views.View> (native_v, JniHandleOwnership.DoNotTransfer);
 				__this.OnClick (v);
 			}
 #pragma warning restore 0169
 
 			IntPtr id_onClick_Landroid_view_View_;
-			public unsafe void OnClick (Android.Views.View v)
+			public unsafe void OnClick (global::Android.Views.View v)
 			{
 				if (id_onClick_Landroid_view_View_ == IntPtr.Zero)
 					id_onClick_Landroid_view_View_ = JNIEnv.GetMethodID (class_ref, "onClick", "(Landroid/view/View;)V");
 				JValue* __args = stackalloc JValue [1];
-				__args [0] = new JValue (v);
+				__args [0] = new JValue ((v == null) ? IntPtr.Zero : ((global::Java.Lang.Object) v).Handle);
 				JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_onClick_Landroid_view_View_, __args);
 			}
 
@@ -105,7 +114,7 @@ namespace Android.Views {
 			public EventHandler Handler;
 #pragma warning restore 0649
 
-			public void OnClick (Android.Views.View v)
+			public void OnClick (global::Android.Views.View v)
 			{
 				var __h = Handler;
 				if (__h != null)
@@ -119,19 +128,23 @@ namespace Android.Views {
 		}
 
 
-		internal static new IntPtr java_class_handle;
+		static readonly JniPeerMembers _members = new JniPeerMembers ("android/view/View", typeof (View));
 		internal static new IntPtr class_ref {
 			get {
-				return JNIEnv.FindClass ("android/view/View", ref java_class_handle);
+				return _members.JniPeerType.PeerReference.Handle;
 			}
 		}
 
+		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
+			get { return _members; }
+		}
+
 		protected override IntPtr ThresholdClass {
-			get { return class_ref; }
+			get { return _members.JniPeerType.PeerReference.Handle; }
 		}
 
 		protected override global::System.Type ThresholdType {
-			get { return typeof (View); }
+			get { return _members.ManagedPeerType; }
 		}
 
 		protected View (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer) {}
@@ -147,27 +160,21 @@ namespace Android.Views {
 
 		static void n_SetOnClickListener_Landroid_view_View_OnClickListener_ (IntPtr jnienv, IntPtr native__this, IntPtr native_l)
 		{
-			var __this = global::Java.Lang.Object.GetObject<Android.Views.View> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			var l = (Android.Views.View.IOnClickListener)global::Java.Lang.Object.GetObject<Android.Views.View.IOnClickListener> (native_l, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Android.Views.View> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var l = (global::Android.Views.View.IOnClickListener)global::Java.Lang.Object.GetObject<global::Android.Views.View.IOnClickListener> (native_l, JniHandleOwnership.DoNotTransfer);
 			__this.SetOnClickListener (l);
 		}
 #pragma warning restore 0169
 
-		static IntPtr id_setOnClickListener_Landroid_view_View_OnClickListener_;
 		// Metadata.xml XPath method reference: path="/api/package[@name='android.view']/class[@name='View']/method[@name='setOnClickListener' and count(parameter)=1 and parameter[1][@type='android.view.View.OnClickListener']]"
 		[Register ("setOnClickListener", "(Landroid/view/View$OnClickListener;)V", "GetSetOnClickListener_Landroid_view_View_OnClickListener_Handler")]
-		public virtual unsafe void SetOnClickListener (Android.Views.View.IOnClickListener l)
+		public virtual unsafe void SetOnClickListener (global::Android.Views.View.IOnClickListener l)
 		{
-			if (id_setOnClickListener_Landroid_view_View_OnClickListener_ == IntPtr.Zero)
-				id_setOnClickListener_Landroid_view_View_OnClickListener_ = JNIEnv.GetMethodID (class_ref, "setOnClickListener", "(Landroid/view/View$OnClickListener;)V");
+			const string __id = "setOnClickListener.(Landroid/view/View$OnClickListener;)V";
 			try {
-				JValue* __args = stackalloc JValue [1];
-				__args [0] = new JValue (l);
-
-				if (((object) this).GetType () == ThresholdType)
-					JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_setOnClickListener_Landroid_view_View_OnClickListener_, __args);
-				else
-					JNIEnv.CallNonvirtualVoidMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "setOnClickListener", "(Landroid/view/View$OnClickListener;)V"), __args);
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue ((l == null) ? IntPtr.Zero : ((global::Java.Lang.Object) l).Handle);
+				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
 			} finally {
 			}
 		}
@@ -183,27 +190,21 @@ namespace Android.Views {
 
 		static void n_SetOn123Listener_Landroid_view_View_OnClickListener_ (IntPtr jnienv, IntPtr native__this, IntPtr native_l)
 		{
-			var __this = global::Java.Lang.Object.GetObject<Android.Views.View> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			var l = (Android.Views.View.IOnClickListener)global::Java.Lang.Object.GetObject<Android.Views.View.IOnClickListener> (native_l, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Android.Views.View> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var l = (global::Android.Views.View.IOnClickListener)global::Java.Lang.Object.GetObject<global::Android.Views.View.IOnClickListener> (native_l, JniHandleOwnership.DoNotTransfer);
 			__this.SetOn123Listener (l);
 		}
 #pragma warning restore 0169
 
-		static IntPtr id_setOn123Listener_Landroid_view_View_OnClickListener_;
 		// Metadata.xml XPath method reference: path="/api/package[@name='android.view']/class[@name='View']/method[@name='setOn123Listener' and count(parameter)=1 and parameter[1][@type='android.view.View.OnClickListener']]"
 		[Register ("setOn123Listener", "(Landroid/view/View$OnClickListener;)V", "GetSetOn123Listener_Landroid_view_View_OnClickListener_Handler")]
-		public virtual unsafe void SetOn123Listener (Android.Views.View.IOnClickListener l)
+		public virtual unsafe void SetOn123Listener (global::Android.Views.View.IOnClickListener l)
 		{
-			if (id_setOn123Listener_Landroid_view_View_OnClickListener_ == IntPtr.Zero)
-				id_setOn123Listener_Landroid_view_View_OnClickListener_ = JNIEnv.GetMethodID (class_ref, "setOn123Listener", "(Landroid/view/View$OnClickListener;)V");
+			const string __id = "setOn123Listener.(Landroid/view/View$OnClickListener;)V";
 			try {
-				JValue* __args = stackalloc JValue [1];
-				__args [0] = new JValue (l);
-
-				if (((object) this).GetType () == ThresholdType)
-					JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_setOn123Listener_Landroid_view_View_OnClickListener_, __args);
-				else
-					JNIEnv.CallNonvirtualVoidMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "setOn123Listener", "(Landroid/view/View$OnClickListener;)V"), __args);
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue ((l == null) ? IntPtr.Zero : ((global::Java.Lang.Object) l).Handle);
+				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
 			} finally {
 			}
 		}
@@ -219,28 +220,22 @@ namespace Android.Views {
 
 		static void n_AddTouchables_Ljava_util_ArrayList_ (IntPtr jnienv, IntPtr native__this, IntPtr native_views)
 		{
-			var __this = global::Java.Lang.Object.GetObject<Android.Views.View> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			var views = Android.Runtime.JavaList<Android.Views.View>.FromJniHandle (native_views, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<global::Android.Views.View> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var views = global::Android.Runtime.JavaList<global::Android.Views.View>.FromJniHandle (native_views, JniHandleOwnership.DoNotTransfer);
 			__this.AddTouchables (views);
 		}
 #pragma warning restore 0169
 
-		static IntPtr id_addTouchables_Ljava_util_ArrayList_;
 		// Metadata.xml XPath method reference: path="/api/package[@name='android.view']/class[@name='View']/method[@name='addTouchables' and count(parameter)=1 and parameter[1][@type='java.util.ArrayList&lt;android.view.View&gt;']]"
 		[Register ("addTouchables", "(Ljava/util/ArrayList;)V", "GetAddTouchables_Ljava_util_ArrayList_Handler")]
-		public virtual unsafe void AddTouchables (System.Collections.Generic.IList<Android.Views.View> views)
+		public virtual unsafe void AddTouchables (global::System.Collections.Generic.IList<global::Android.Views.View> views)
 		{
-			if (id_addTouchables_Ljava_util_ArrayList_ == IntPtr.Zero)
-				id_addTouchables_Ljava_util_ArrayList_ = JNIEnv.GetMethodID (class_ref, "addTouchables", "(Ljava/util/ArrayList;)V");
-			IntPtr native_views = Android.Runtime.JavaList<Android.Views.View>.ToLocalJniHandle (views);
+			const string __id = "addTouchables.(Ljava/util/ArrayList;)V";
+			IntPtr native_views = global::Android.Runtime.JavaList<global::Android.Views.View>.ToLocalJniHandle (views);
 			try {
-				JValue* __args = stackalloc JValue [1];
-				__args [0] = new JValue (native_views);
-
-				if (((object) this).GetType () == ThresholdType)
-					JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_addTouchables_Ljava_util_ArrayList_, __args);
-				else
-					JNIEnv.CallNonvirtualVoidMethod (((global::Java.Lang.Object) this).Handle, ThresholdClass, JNIEnv.GetMethodID (ThresholdClass, "addTouchables", "(Ljava/util/ArrayList;)V"), __args);
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (native_views);
+				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
 			} finally {
 				JNIEnv.DeleteLocalRef (native_views);
 			}
@@ -249,16 +244,16 @@ namespace Android.Views {
 #region "Event implementation for Android.Views.View.IOnClickListener"
 		public event EventHandler Click {
 			add {
-				global::Java.Interop.EventHelper.AddEventHandler<Android.Views.View.IOnClickListener, Android.Views.View.IOnClickListenerImplementor>(
+				global::Java.Interop.EventHelper.AddEventHandler<global::Android.Views.View.IOnClickListener, global::Android.Views.View.IOnClickListenerImplementor>(
 						ref weak_implementor_SetOnClickListener,
 						__CreateIOnClickListenerImplementor,
 						SetOnClickListener,
 						__h => __h.Handler += value);
 			}
 			remove {
-				global::Java.Interop.EventHelper.RemoveEventHandler<Android.Views.View.IOnClickListener, Android.Views.View.IOnClickListenerImplementor>(
+				global::Java.Interop.EventHelper.RemoveEventHandler<global::Android.Views.View.IOnClickListener, global::Android.Views.View.IOnClickListenerImplementor>(
 						ref weak_implementor_SetOnClickListener,
-						Android.Views.View.IOnClickListenerImplementor.__IsEmpty,
+						global::Android.Views.View.IOnClickListenerImplementor.__IsEmpty,
 						__v => SetOnClickListener (null),
 						__h => __h.Handler -= value);
 			}
@@ -266,9 +261,9 @@ namespace Android.Views {
 
 		WeakReference weak_implementor_SetOnClickListener;
 
-		Android.Views.View.IOnClickListenerImplementor __CreateIOnClickListenerImplementor ()
+		global::Android.Views.View.IOnClickListenerImplementor __CreateIOnClickListenerImplementor ()
 		{
-			return new Android.Views.View.IOnClickListenerImplementor ();
+			return new global::Android.Views.View.IOnClickListenerImplementor ();
 		}
 #endregion
 	}

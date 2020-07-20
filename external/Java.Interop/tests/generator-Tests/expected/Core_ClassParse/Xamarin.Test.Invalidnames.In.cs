@@ -6,7 +6,7 @@ namespace Xamarin.Test.Invalidnames {
 
 	// Metadata.xml XPath class reference: path="/api/package[@name='xamarin.test.invalidnames']/class[@name='in']"
 	[global::Android.Runtime.Register ("xamarin/test/invalidnames/in", DoNotGenerateAcw=true)]
-	public partial class In : Java.Lang.Object {
+	public partial class In : global::Java.Lang.Object {
 
 		internal static new IntPtr java_class_handle;
 		internal static new IntPtr class_ref {
