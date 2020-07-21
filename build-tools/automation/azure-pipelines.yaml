@@ -239,6 +239,8 @@ stages:
         artifactName: $(NuGetArtifactName)
         targetPath: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
 
+    - task: ComponentGovernanceComponentDetection@0
+
     - template: yaml-templates/upload-results.yaml
       parameters:
         solution: xamarin-android/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
