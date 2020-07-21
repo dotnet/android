@@ -35,8 +35,8 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetProperty (proj.ReleaseProperties, "MonoSymbolArchive", monoSymbolArchive);
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, "true");
-			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidSupportedAbis, "armeabi-v7a;x86");
 			proj.SetProperty (proj.ReleaseProperties, "AndroidPackageFormat", packageFormat);
+			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			using (var b = CreateApkBuilder ()) {
 				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
 				b.ThrowOnBuildFailure = false;
@@ -137,7 +137,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.PackageReferences.Add(KnownPackages.SQLitePCLRaw_Core);
 			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
-			proj.SetProperty(proj.ReleaseProperties, KnownProperties.AndroidSupportedAbis, "x86");
+			proj.SetAndroidSupportedAbis ("x86");
 			proj.SetProperty (proj.ReleaseProperties, "AndroidStoreUncompressedFileExtensions", compressNativeLibraries ? "" : "so");
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
@@ -321,7 +321,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningKeyPass", pass);
 			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningStorePass", pass);
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, perAbiApk);
-			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidSupportedAbis, "armeabi-v7a;x86");
+			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				var bin = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
 				Assert.IsTrue (b.Build (proj), "First build failed");
@@ -375,7 +375,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 			proj.PackageReferences.Add (KnownPackages.SupportV7CardView_27_0_2_1);
 			proj.PackageReferences.Add (KnownPackages.SupportV7MediaRouter_27_0_2_1);
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, true);
-			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidSupportedAbis, "armeabi-v7a;x86");
+			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				if (!b.TargetFrameworkExists (proj.TargetFrameworkVersion))
 					Assert.Ignore ($"Skipped as {proj.TargetFrameworkVersion} not available.");
@@ -565,7 +565,7 @@ namespace App1
 			}
 		}
 	}";
-			app.SetProperty (KnownProperties.AndroidSupportedAbis, "x86;armeabi-v7a");
+			app.SetAndroidSupportedAbis ("x86", "armeabi-v7a");
 			var expectedFiles = new string [] {
 				"Java.Interop.dll",
 				"Mono.Android.dll",

@@ -115,8 +115,7 @@ namespace UnnamedProject
 			}
 		}
 	}";
-			var abis = new string [] { "armeabi-v7a", "x86" };
-			proj.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
+			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			proj.SetProperty (KnownProperties.AndroidUseSharedRuntime, useSharedRuntime.ToString ());
 			proj.SetProperty ("EmbedAssembliesIntoApk", embedAssemblies.ToString ());
 			proj.SetDefaultTargetDevice ();

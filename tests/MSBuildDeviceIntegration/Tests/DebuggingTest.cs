@@ -41,8 +41,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease,
 			};
 			if (isRelease || !CommercialBuildAvailable) {
-				var abis = new string [] { "armeabi-v7a", "x86" };
-				proj.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
+				proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			}
 			proj.SetDefaultTargetDevice ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
@@ -71,8 +70,7 @@ namespace Xamarin.Android.Build.Tests
 				ProjectName = "MyApp",
 			};
 			if (!CommercialBuildAvailable) {
-				var abis = new string [] { "armeabi-v7a", "x86" };
-				app.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
+				app.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			}
 			app.SetDefaultTargetDevice ();
 
@@ -164,8 +162,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = false,
 				AndroidFastDeploymentType = fastDevType,
 			};
-			var abis = new string [] { "armeabi-v7a", "x86" };
-			proj.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
+			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			proj.SetProperty (KnownProperties.AndroidUseSharedRuntime, useSharedRuntime.ToString ());
 			proj.SetProperty ("EmbedAssembliesIntoApk", embedAssemblies.ToString ());
 			proj.SetDefaultTargetDevice ();
@@ -319,8 +316,7 @@ namespace ${ROOT_NAMESPACE} {
 				EmbedAssembliesIntoApk = embedAssemblies,
 				AndroidFastDeploymentType = fastDevType
 			};
-			var abis = new string [] { "armeabi-v7a", "x86" };
-			proj.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
+			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			if (allowDeltaInstall)
 				proj.SetProperty (KnownProperties._AndroidAllowDeltaInstall, "true");
 			proj.SetDefaultTargetDevice ();

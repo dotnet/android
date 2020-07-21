@@ -35,8 +35,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease,
 			};
 			if (isRelease) {
-				var abis = new string [] { "armeabi-v7a", "x86" };
-				proj.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
+				proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			}
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				builder.Verbosity = LoggerVerbosity.Diagnostic;
@@ -65,8 +64,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease,
 			};
 			if (isRelease) {
-				var abis = new string [] { "armeabi-v7a", "x86" };
-				proj.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
+				proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			}
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				builder.Verbosity = LoggerVerbosity.Diagnostic;
@@ -106,8 +104,7 @@ namespace Xamarin.Android.Build.Tests
 			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject ();
-			var abis = new string [] { "armeabi-v7a", "x86" };
-			proj.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
+			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			using (var builder = CreateApkBuilder ()) {
 				// Use the default debug.keystore XA generates
 				Assert.IsTrue (builder.Install (proj), "first install should succeed.");
@@ -136,8 +133,7 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = false,
 			};
-			var abis = new string [] { "armeabi-v7a", "x86" };
-			proj.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
+			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				builder.Verbosity = LoggerVerbosity.Diagnostic;
 				Assert.IsTrue (builder.Build (proj));
@@ -204,8 +200,8 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty (proj.ReleaseProperties, "DebugType", "none");
 			proj.SetProperty (proj.ReleaseProperties, "AndroidUseSharedRuntime", false);
 			proj.RemoveProperty (proj.ReleaseProperties, "EmbedAssembliesIntoApk");
-			var abis = new string [] { "armeabi-v7a", "x86" };
-			proj.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
+			var abis = new [] { "armeabi-v7a", "x86" };
+			proj.SetAndroidSupportedAbis (abis);
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name), false, false)) {
 				builder.Verbosity = LoggerVerbosity.Diagnostic;
 				if (RunAdbCommand ("shell pm list packages Mono.Android.DebugRuntime").Trim ().Length != 0)
@@ -258,7 +254,7 @@ namespace Xamarin.Android.Build.Tests
 				AndroidUseSharedRuntime = false,
 				EmbedAssembliesIntoApk = true,
 			};
-			proj.SetProperty (proj.DebugProperties, KnownProperties.AndroidSupportedAbis, abi);
+			proj.SetAndroidSupportedAbis (abi);
 
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				builder.ThrowOnBuildFailure = false;
@@ -301,8 +297,7 @@ namespace Xamarin.Android.Build.Tests
 				//Now toggle FastDev to OFF
 				proj.AndroidUseSharedRuntime = false;
 				proj.EmbedAssembliesIntoApk = true;
-				var abis = new string [] { "armeabi-v7a", "x86" };
-				proj.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
+				proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 
 				Assert.IsTrue (builder.Install (proj), "Second install should have succeeded.");
 
@@ -395,8 +390,7 @@ namespace Xamarin.Android.Build.Tests
 				proj.SetProperty ("AndroidSigningStorePass", password);
 				proj.SetProperty ("AndroidSigningKeyPass", password);
 			}
-			var abis = new string [] { "armeabi-v7a", "x86" };
-			proj.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
+			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			proj.SetProperty ("AndroidKeyStore", androidKeyStore);
 			proj.SetProperty ("AndroidSigningKeyStore", "test.keystore");
 			proj.SetProperty ("AndroidSigningKeyAlias", "mykey");

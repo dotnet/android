@@ -234,6 +234,7 @@ public class TestMe {
 		}
 
 		[Test]
+		[Category ("dotnet")]
 		public void ResolveNativeLibrariesInManagedReferences ([Values(true, false)] bool useShortFileNames)
 		{
 			var lib = new XamarinAndroidLibraryProject () {
@@ -310,6 +311,7 @@ namespace Lib2
 							new BuildItem.ProjectReference (@"..\Lib2\Lib2.csproj", "Lib2", lib2.ProjectGuid),
 						}
 					};
+					app.SetAndroidSupportedAbis ("armeabi-v7a");
 					app.SetProperty (app.ActiveConfigurationProperties, "UseShortFileNames", useShortFileNames);
 					using (var builder = CreateApkBuilder (Path.Combine (path, "App"))) {
 						builder.Verbosity = LoggerVerbosity.Diagnostic;
@@ -1165,14 +1167,17 @@ namespace Lib2
 		}
 
 		[Test]
+		[Category ("dotnet")]
 		public void ChangeSupportedAbis ()
 		{
 			var proj = new XamarinFormsAndroidApplicationProject ();
-			proj.SetProperty (KnownProperties.AndroidSupportedAbis, "armeabi-v7a");
+			proj.SetAndroidSupportedAbis ("armeabi-v7a");
 			using (var b = CreateApkBuilder ()) {
 				b.Build (proj);
 
-				var parameters = new [] { $"{KnownProperties.AndroidSupportedAbis}=x86" };
+				var parameters = Builder.UseDotNet ?
+					new [] { $"{KnownProperties.RuntimeIdentifier}=android.21-x86" } :
+					new [] { $"{KnownProperties.AndroidSupportedAbis}=x86" };
 				b.Build (proj, parameters: parameters, doNotCleanupOnUpdate: true);
 			}
 		}

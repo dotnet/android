@@ -950,7 +950,7 @@ namespace UnamedProject
 		public void BuildMkBundleApplicationReleaseAllAbi ()
 		{
 			var proj = new XamarinAndroidApplicationProject () { IsRelease = true, BundleAssemblies = true };
-			proj.SetProperty (KnownProperties.AndroidSupportedAbis, "armeabi-v7a;x86");
+			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			using (var b = CreateApkBuilder ("temp/BuildMkBundleApplicationReleaseAllAbi", false)) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				foreach (var abi in new string [] { "armeabi-v7a", "x86" }) {
@@ -986,7 +986,7 @@ namespace UnamedProject
 				AotAssemblies = true,
 			};
 			proj.SetProperty (KnownProperties.TargetFrameworkVersion, "v5.1");
-			proj.SetProperty (KnownProperties.AndroidSupportedAbis, supportedAbis);
+			proj.SetAndroidSupportedAbis (supportedAbis);
 			proj.SetProperty ("EnableLLVM", enableLLVM.ToString ());
 			bool checkMinLlvmPath = enableLLVM && (supportedAbis == "armeabi-v7a" || supportedAbis == "x86");
 			if (checkMinLlvmPath) {
@@ -1055,7 +1055,7 @@ namespace UnamedProject
 				AotAssemblies = true,
 			};
 			proj.SetProperty (KnownProperties.TargetFrameworkVersion, "v5.1");
-			proj.SetProperty (KnownProperties.AndroidSupportedAbis, supportedAbis);
+			proj.SetAndroidSupportedAbis (supportedAbis);
 			proj.SetProperty ("EnableLLVM", enableLLVM.ToString ());
 			using (var b = CreateApkBuilder (path)) {
 				if (!b.CrossCompilerAvailable (supportedAbis))
@@ -2027,8 +2027,8 @@ namespace App1
 				IsRelease = isRelease,
 				AotAssemblies = aotAssemblies
 			};
-			var abis = new string [] { "armeabi-v7a", "x86" };
-			proj.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
+			var abis = new [] { "armeabi-v7a", "x86" };
+			proj.SetAndroidSupportedAbis (abis);
 			proj.SetProperty (proj.ActiveConfigurationProperties, "MonoSymbolArchive", monoSymbolArchive);
 			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugSymbols", debugSymbols);
 			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugType", debugType);
@@ -2138,7 +2138,7 @@ namespace App1
 				}
 			};
 			proj.SetProperty ("TargetFrameworkVersion", "v7.1");
-			proj.SetProperty (KnownProperties.AndroidSupportedAbis, "armeabi-v7a;x86");
+			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("int count = 1;", @"int count = 1;
 Mono.Data.Sqlite.SqliteConnection connection = null;
 Mono.Unix.UnixFileInfo fileInfo = null;");
@@ -2196,7 +2196,7 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 					},
 				}
 			};
-			proj.SetProperty (KnownProperties.AndroidSupportedAbis, "armeabi-v7a;x86");
+			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				builder.ThrowOnBuildFailure = false;
@@ -4219,7 +4219,7 @@ namespace UnnamedProject
 		{
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty ("AndroidPackageNamingPolicy", packageNamingPolicy);
-			proj.SetProperty (KnownProperties.AndroidSupportedAbis, "armeabi-v7a;x86");
+			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 				var environment = b.Output.GetIntermediaryPath (Path.Combine ("__environment__.txt"));
