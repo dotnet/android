@@ -13,7 +13,6 @@
     <AssemblyName>Xamarin.Android.BindingResolveImportLib3</AssemblyName>
     <AndroidManifest>Properties\AndroidManifest.xml</AndroidManifest>
     <AndroidApplication>True</AndroidApplication>
-    <UseShortFileNames>True</UseShortFileNames>
     <AndroidClassParser>class-parse</AndroidClassParser>
   </PropertyGroup>
   <Import Project="..\..\..\Configuration.props" />

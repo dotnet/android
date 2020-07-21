@@ -73,7 +73,6 @@ namespace Xamarin.Android.Tasks
 
 		public string ImportsDirectory { get; set; }
 		public string OutputImportDirectory { get; set; }
-		public bool UseShortFileNames { get; set; }
 		public string AssemblyIdentityMapFile { get; set; }
 
 		public string ResourceNameCaseMap { get; set; }
@@ -365,7 +364,7 @@ namespace Xamarin.Android.Tasks
 					return s.Substring (0, st + 1) + ExpandString (s.Substring (st + 1));
 				int ast = st + "${library.imports:".Length;
 				string aname = s.Substring (ast, ed - ast);
-				return s.Substring (0, st) + Path.Combine (OutputImportDirectory, UseShortFileNames ? assemblyMap.GetLibraryImportDirectoryNameForAssembly (aname) : aname, ImportsDirectory) + Path.DirectorySeparatorChar + ExpandString (s.Substring (ed + 1));
+				return s.Substring (0, st) + Path.Combine (OutputImportDirectory, assemblyMap.GetLibraryImportDirectoryNameForAssembly (aname), ImportsDirectory) + Path.DirectorySeparatorChar + ExpandString (s.Substring (ed + 1));
 			}
 			else
 				return s;

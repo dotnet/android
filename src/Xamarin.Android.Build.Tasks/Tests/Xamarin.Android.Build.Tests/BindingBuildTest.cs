@@ -298,7 +298,7 @@ namespace Com.Ipaulpro.Afilechooser {
 		}
 
 		[Test]
-		public void BindingCheckHiddenFiles ([Values (true, false)] bool useShortFileNames)
+		public void BindingCheckHiddenFiles ()
 		{
 			var binding = new XamarinAndroidBindingProject () {
 				UseLatestPlatformSdk = true,
@@ -312,13 +312,11 @@ namespace Com.Ipaulpro.Afilechooser {
 				WebContentFileNameFromAzure = "javaBindingIssue.jar"
 			});
 			var path = Path.Combine ("temp", TestContext.CurrentContext.Test.Name);
-			binding.SetProperty (binding.ActiveConfigurationProperties, "UseShortFileNames", useShortFileNames);
 			using (var bindingBuilder = CreateDllBuilder (Path.Combine (path, "Binding"))) {
 				bindingBuilder.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
 				Assert.IsTrue (bindingBuilder.Build (binding), "binding build should have succeeded");
 				var proj = new XamarinAndroidApplicationProject ();
 				proj.OtherBuildItems.Add (new BuildItem ("ProjectReference", "..\\Binding\\UnnamedProject.csproj"));
-				proj.SetProperty (proj.ActiveConfigurationProperties, "UseShortFileNames", useShortFileNames);
 				proj.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"" xmlns:tools=""http://schemas.android.com/tools"" android:versionCode=""1"" android:versionName=""1.0"" package=""{proj.PackageName}"">
 	<uses-sdk />
@@ -328,21 +326,13 @@ namespace Com.Ipaulpro.Afilechooser {
 				using (var b = CreateApkBuilder (Path.Combine (path, "App"))) {
 					Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 					var assemblyMap = b.Output.GetIntermediaryPath (Path.Combine ("lp", "map.cache"));
-					if (useShortFileNames)
-						Assert.IsTrue (File.Exists (assemblyMap), $"{assemblyMap} should exist.");
-					else
-						Assert.IsFalse (File.Exists (assemblyMap), $"{assemblyMap} should not exist.");
+					Assert.IsTrue (File.Exists (assemblyMap), $"{assemblyMap} should exist.");
 					var assemblyIdentityMap = new List<string> ();
-					if (useShortFileNames) {
-						foreach (var s in File.ReadLines (assemblyMap)) {
-							assemblyIdentityMap.Add (s);
-						}
+					foreach (var s in File.ReadLines (assemblyMap)) {
+						assemblyIdentityMap.Add (s);
 					}
-					var assmeblyIdentity = useShortFileNames ? assemblyIdentityMap.IndexOf ("UnnamedProject").ToString () : "UnnamedProject";
-					var libaryImportsFolder = useShortFileNames ? "lp" : "__library_projects__";
-					var jlibs = useShortFileNames ? "jl" : "library_project_imports";
-					var dsStorePath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, libaryImportsFolder,
-						assmeblyIdentity, jlibs);
+					var assemblyIdentity = assemblyIdentityMap.IndexOf ("UnnamedProject").ToString ();
+					var dsStorePath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "lp", assemblyIdentity, "jl");
 					Assert.IsTrue (Directory.Exists (dsStorePath), "{0} should exist.", dsStorePath);
 					Assert.IsFalse (File.Exists (Path.Combine (dsStorePath, ".DS_Store")), "{0} should NOT exist.",
 						Path.Combine (dsStorePath, ".DS_Store"));

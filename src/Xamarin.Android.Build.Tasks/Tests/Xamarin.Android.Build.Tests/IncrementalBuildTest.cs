@@ -235,7 +235,7 @@ public class TestMe {
 
 		[Test]
 		[Category ("dotnet")]
-		public void ResolveNativeLibrariesInManagedReferences ([Values(true, false)] bool useShortFileNames)
+		public void ResolveNativeLibrariesInManagedReferences ()
 		{
 			var lib = new XamarinAndroidLibraryProject () {
 				ProjectName = "Lib",
@@ -263,7 +263,6 @@ namespace Lib
 					},
 				},
 			};
-			lib.SetProperty (lib.ActiveConfigurationProperties, "UseShortFileNames", useShortFileNames);
 			var so = lib.OtherBuildItems.First (x => x.Include () == "libs/armeabi-v7a/libfoo.so");
 
 			var lib2 = new XamarinAndroidLibraryProject () {
@@ -295,8 +294,7 @@ namespace Lib2
 					},
 				},
 			};
-			lib2.SetProperty (lib.ActiveConfigurationProperties, "UseShortFileNames", useShortFileNames);
-			var path = Path.Combine (Root, "temp", $"ResolveNativeLibrariesInManagedReferences_{useShortFileNames}");
+			var path = Path.Combine (Root, "temp", TestName);
 			using (var libbuilder = CreateDllBuilder (Path.Combine(path, "Lib"))) {
 
 				Assert.IsTrue (libbuilder.Build (lib), "lib 1st. build failed");
@@ -312,7 +310,6 @@ namespace Lib2
 						}
 					};
 					app.SetAndroidSupportedAbis ("armeabi-v7a");
-					app.SetProperty (app.ActiveConfigurationProperties, "UseShortFileNames", useShortFileNames);
 					using (var builder = CreateApkBuilder (Path.Combine (path, "App"))) {
 						builder.Verbosity = LoggerVerbosity.Diagnostic;
 						Assert.IsTrue (builder.Build (app), "app 1st. build failed");
@@ -330,7 +327,7 @@ namespace Lib2
 						Assert.IsNotNull (libfoo, "libfoo.so should exist in the .apk");
 
 						Assert.AreEqual (so.TextContent ().Length, new FileInfo (Path.Combine (Root, libbuilder.ProjectDirectory, lib.IntermediateOutputPath,
-							useShortFileNames ? "nl" : "native_library_imports", "armeabi-v7a", "libfoo.so")).Length,
+							"nl", "armeabi-v7a", "libfoo.so")).Length,
 							"intermediate size mismatch");
 						libfoo = ZipHelper.ReadFileFromZip (Path.Combine (Root, builder.ProjectDirectory, app.OutputPath, app.PackageName + "-Signed.apk"),
 							"lib/armeabi-v7a/libfoo.so");
