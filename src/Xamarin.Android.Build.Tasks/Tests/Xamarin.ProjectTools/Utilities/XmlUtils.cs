@@ -59,6 +59,8 @@ namespace Xamarin.ProjectTools
 
 		static void AppendBuildItem (StringBuilder sb, BuildItem bi)
 		{
+			if (bi.Deleted)
+				return;
 			sb.Append ($"\t\t<{bi.BuildAction} ");
 			if (bi.Include != null) sb.Append ($"Include=\"{bi.Include ()}\" ");
 			if (bi.Update != null) sb.Append ($"Update=\"{bi.Update ()}\" ");

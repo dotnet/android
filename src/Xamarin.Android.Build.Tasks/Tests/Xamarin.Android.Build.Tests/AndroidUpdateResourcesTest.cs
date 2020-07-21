@@ -17,7 +17,19 @@ namespace Xamarin.Android.Build.Tests
 	[Parallelizable (ParallelScope.Children)]
 	public class AndroidUpdateResourcesTest : BaseTest
 	{
+		string GetResourceDesignerPath (ProjectBuilder builder, XamarinAndroidProject project)
+		{
+			string path;
+			if (Builder.UseDotNet) {
+				path = Path.Combine (Root, builder.ProjectDirectory, project.IntermediateOutputPath);
+			} else {
+				path = Path.Combine (Root, builder.ProjectDirectory, "Resources");
+			}
+			return Path.Combine (path, "Resource.designer" + project.Language.DefaultDesignerExtension);
+		}
+
 		[Test]
+		[Category ("dotnet")]
 		public void CheckMultipleLibraryProjectReferenceAlias ([Values (true, false)] bool withGlobal)
 		{
 			var path = Path.Combine (Root, "temp", TestName);
@@ -47,7 +59,8 @@ namespace Xamarin.Android.Build.Tests
 					using (var b = CreateApkBuilder (Path.Combine (path, proj.ProjectName), cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
 						b.ThrowOnBuildFailure = false;
 						Assert.IsTrue (b.Build (proj), "Project should have built.");
-						string[] text = File.ReadAllLines (Path.Combine (Root, path, proj.ProjectName, "Resources", "Resource.designer.cs"));
+						string resource_designer_cs = GetResourceDesignerPath (b, proj);
+						string [] text = File.ReadAllLines (resource_designer_cs);
 						Assert.IsTrue (text.Count (x => x.Contains ("Library1.Resource.String.library_name")) == 2, "library_name resource should be present exactly once for each library");
 						Assert.IsTrue (text.Count (x => x == "extern alias Lib1A;" || x == "extern alias Lib1B;") <= 1, "No more than one extern alias should be present for each library.");
 					}
@@ -799,6 +812,7 @@ namespace UnnamedProject
 		}
 
 		[Test]
+		[Category ("dotnet")]
 		public void CheckFilesAreRemoved () {
 
 			var proj = new XamarinAndroidApplicationProject () {
@@ -818,9 +832,9 @@ namespace UnnamedProject
 					KnownPackages.AndroidSupportV4_27_0_2_1,
 				},
 			};
-			proj.SetProperty (KnownProperties.TargetFrameworkVersion, "v5.1");
-			using (var builder = CreateApkBuilder ("temp/CheckFilesAreRemoved", false, false)) {
-				builder.Verbosity = LoggerVerbosity.Diagnostic;
+			if (!Builder.UseDotNet)
+				proj.SetProperty (KnownProperties.TargetFrameworkVersion, "v5.1");
+			using (var builder = CreateApkBuilder ()) {
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
 
 				var theme = proj.AndroidResources.First (x => x.Include () == "Resources\\values\\Theme.xml");
@@ -834,9 +848,10 @@ namespace UnnamedProject
 		}
 
 		[Test]
+		[Category ("dotnet")]
 		public void CheckDontUpdateResourceIfNotNeeded ()
 		{
-			var path = Path.Combine ("temp", "CheckDontUpdateResourceIfNotNeeded");
+			var path = Path.Combine ("temp", TestName);
 			var foo = new BuildItem.Source ("Foo.cs") {
 				TextContent = () => @"using System;
 namespace Lib1 {
@@ -879,10 +894,8 @@ namespace Lib1 {
 				},
 			};
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, libProj.ProjectName), false, false)) {
-				libBuilder.Verbosity = LoggerVerbosity.Diagnostic;
 				Assert.IsTrue (libBuilder.Build (libProj), "Library project should have built");
 				using (var appBuilder = CreateApkBuilder (Path.Combine (path, appProj.ProjectName), false, false)) {
-					appBuilder.Verbosity = LoggerVerbosity.Diagnostic;
 					Assert.IsTrue (appBuilder.Build (appProj), "Application Build should have succeeded.");
 					Assert.IsFalse (appBuilder.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "_UpdateAndroidResgen target not should be skipped.");
 					foo.Timestamp = DateTimeOffset.UtcNow;
@@ -912,8 +925,9 @@ namespace Lib1 {
 					Assert.IsFalse (libBuilder.Output.IsTargetSkipped ("_CreateManagedLibraryResourceArchive"), "_CreateManagedLibraryResourceArchive should not be skipped.");
 					appBuilder.BuildLogFile = "build2.log";
 					Assert.IsTrue (appBuilder.Build (appProj, doNotCleanupOnUpdate: true, saveProject: false), "Application Build should have succeeded.");
-					string text = File.ReadAllText (Path.Combine (Root, path, appProj.ProjectName, "Resources", "Resource.designer.cs"));
-					Assert.IsTrue (text.Contains ("theme_devicedefault_background2"), "Resource.designer.cs was not updated.");
+					string resource_designer_cs = GetResourceDesignerPath (appBuilder, appProj);
+					string text = File.ReadAllText (resource_designer_cs);
+					StringAssert.Contains ("theme_devicedefault_background2", text, "Resource.designer.cs was not updated.");
 					Assert.IsFalse (appBuilder.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "_UpdateAndroidResgen target should NOT be skipped.");
 					Assert.IsFalse (appBuilder.Output.IsTargetSkipped ("_CreateBaseApk"), "_CreateBaseApk target should NOT be skipped.");
 					Assert.IsFalse (appBuilder.Output.IsTargetSkipped ("_BuildApkEmbed"), "_BuildApkEmbed target should NOT be skipped.");
@@ -926,7 +940,7 @@ namespace Lib1 {
 					rawToDelete.Timestamp = DateTimeOffset.UtcNow;
 					theme.Deleted = true;
 					theme.Timestamp = DateTimeOffset.UtcNow;
-					Assert.IsTrue (libBuilder.Build (libProj, saveProject: true), "Library project should have built");
+					Assert.IsTrue (libBuilder.Build (libProj, doNotCleanupOnUpdate: true, saveProject: true), "Library project should have built");
 					var themeFile = Path.Combine (Root, path, libProj.ProjectName, libProj.IntermediateOutputPath, "res", "values", "theme.xml");
 					Assert.IsTrue (!File.Exists (themeFile), $"{themeFile} should have been deleted.");
 					var archive = Path.Combine (Root, path, libProj.ProjectName, libProj.IntermediateOutputPath, "__AndroidLibraryProjects__.zip");

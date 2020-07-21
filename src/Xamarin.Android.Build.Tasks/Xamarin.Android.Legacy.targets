@@ -198,6 +198,10 @@ projects. .NET 5 projects will not import this file.
   <UsingTask TaskName="Xamarin.Android.Tasks.Legacy.ResolveAndroidTooling" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.LinkAssemblies"               AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 
+  <Target Name="_CheckTargetFramework">
+    <Warning Code="XA0109" Text="Unsupported or invalid %24(TargetFrameworkVersion) value of 'v4.5'. Please update your Project Options." Condition=" '$(TargetFrameworkVersion)' == 'v4.5' "/> 
+  </Target>
+
   <Target Name="_GetReferenceAssemblyPaths">
     <GetReferenceAssemblyPaths
         TargetFrameworkMoniker="$(TargetFrameworkIdentifier),Version=v1.0"
