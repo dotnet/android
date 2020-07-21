@@ -222,9 +222,14 @@ namespace Xamarin.ProjectTools
 				},
 			}
 		};
-		public static Package XamarinForms_4_5_0_617 = new Package {
+		public static Package XamarinForms_4_7_0_1142 = new Package {
 			Id = "Xamarin.Forms",
-			Version = "4.5.0.617",
+			Version = "4.7.0.1142",
+			TargetFramework = "MonoAndroid10.0",
+		};
+		public static Package XamarinFormsMaps_4_7_0_1142 = new Package {
+			Id = "Xamarin.Forms.Maps",
+			Version = "4.7.0.1142",
 			TargetFramework = "MonoAndroid10.0",
 		};
 		/* additional packages for XForms 4.5 on NET5 */
@@ -301,12 +306,12 @@ namespace Xamarin.ProjectTools
 		};
 		public static Package AndroidXAppCompat = new Package {
 			Id = "Xamarin.AndroidX.AppCompat",
-			Version = "1.1.0",
+			Version = "1.1.0.1",
 			TargetFramework = "MonoAndroid10",
 		};
 		public static Package AndroidXBrowser = new Package {
 			Id = "Xamarin.AndroidX.Browser",
-			Version = "1.0.0",
+			Version = "1.2.0.1",
 			TargetFramework = "MonoAndroid90",
 			References =  {
 				new BuildItem.Reference ("Xamarin.AndroidX.Browser") {
@@ -316,7 +321,7 @@ namespace Xamarin.ProjectTools
 		};
 		public static Package AndroidXMediaRouter = new Package {
 			Id = "Xamarin.AndroidX.MediaRouter",
-			Version = "1.1.0",
+			Version = "1.1.0.1",
 			TargetFramework = "MonoAndroid90",
 			References =  {
 				new BuildItem.Reference ("Xamarin.AndroidX.MediaRouter") {
@@ -326,7 +331,7 @@ namespace Xamarin.ProjectTools
 		};
 		public static Package AndroidXLegacySupportV4 = new Package {
 			Id = "Xamarin.AndroidX.Legacy.Support.V4",
-			Version = "1.0.0",
+			Version = "1.0.0.1",
 			TargetFramework = "MonoAndroid90",
 			References =  {
 				new BuildItem.Reference ("Xamarin.AndroidX.Legacy.Support.V4") {
@@ -336,7 +341,7 @@ namespace Xamarin.ProjectTools
 		};
 		public static Package AndroidXLifecycleLiveData = new Package {
 			Id = "Xamarin.AndroidX.Lifecycle.LiveData",
-			Version = "2.1.0",
+			Version = "2.2.0.1",
 			TargetFramework = "MonoAndroid90",
 			References =  {
 				new BuildItem.Reference ("Xamarin.AndroidX.Lifecycle.LiveData") {
@@ -354,9 +359,19 @@ namespace Xamarin.ProjectTools
 				},
 			}
 		};
+		public static Package AndroidXWorkRuntime = new Package {
+			Id = "Xamarin.AndroidX.Work.Runtime",
+			Version = "2.3.4.3",
+			TargetFramework = "MonoAndroid90",
+			References = {
+				new BuildItem.Reference("Xamarin.AndroidX.Work.Runtime") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.AndroidX.Work.Runtime.2.3.4.3\\lib\\MonoAndroid90\\Xamarin.AndroidX.Work.Runtime.dll"
+				}
+			}
+		};
 		public static Package XamarinGoogleAndroidMaterial = new Package {
 			Id = "Xamarin.Google.Android.Material",
-			Version = "1.0.0",
+			Version = "1.0.0.1",
 			TargetFramework = "MonoAndroid90",
 			References =  {
 				new BuildItem.Reference ("Xamarin.Google.Android.Material") {

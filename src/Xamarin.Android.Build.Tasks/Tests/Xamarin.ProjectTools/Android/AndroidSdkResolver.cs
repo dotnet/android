@@ -77,5 +77,25 @@ namespace Xamarin.ProjectTools
 				return Directory.Exists (path) ? path : null;
 			}
 		}
+
+		static int? maxInstalled;
+
+		public static int GetMaxInstalledPlatform ()
+		{
+			if (maxInstalled != null)
+				return maxInstalled.Value;
+
+			string sdkPath = GetAndroidSdkPath ();
+			foreach (var dir in Directory.EnumerateDirectories (Path.Combine (sdkPath, "platforms"))) {
+				int version;
+				string v = Path.GetFileName (dir).Replace ("android-", "");
+				if (!int.TryParse (v, out version))
+					continue;
+				if (version < maxInstalled)
+					continue;
+				maxInstalled = version;
+			}
+			return maxInstalled ?? 0;
+		}
 	}
 }

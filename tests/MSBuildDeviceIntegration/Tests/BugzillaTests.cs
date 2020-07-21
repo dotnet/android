@@ -40,7 +40,8 @@ namespace Xamarin.Android.Build.Tests
 			if (isRelease || !CommercialBuildAvailable) {
 				proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86");
 			} else {
-				proj.AndroidManifest = proj.AndroidManifest.Replace ("<uses-sdk />", "<uses-sdk android:minSdkVersion=\"23\" />");
+				proj.MinSdkVersion = "23";
+				proj.TargetSdkVersion = null;
 			}
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
 $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;

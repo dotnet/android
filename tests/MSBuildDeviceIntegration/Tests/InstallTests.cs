@@ -288,7 +288,7 @@ namespace Xamarin.Android.Build.Tests
 				};
 				var directorylist = string.Empty;
 				foreach (var dir in overrideDirs) {
-					var listing = RunAdbCommand ($"shell ls {dir}");
+					var listing = RunAdbCommand ($"shell run-as {proj.PackageName} ls {dir}");
 					if (!listing.Contains ("No such file or directory"))
 						directorylist += listing;
 				}
@@ -303,7 +303,7 @@ namespace Xamarin.Android.Build.Tests
 
 				directorylist = string.Empty;
 				foreach (var dir in overrideDirs) {
-					var listing = RunAdbCommand ($"shell ls {dir}");
+					var listing = RunAdbCommand ($"shell run-as {proj.PackageName} ls {dir}");
 					if (!listing.Contains ("No such file or directory"))
 						directorylist += listing;
 				}

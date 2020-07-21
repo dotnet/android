@@ -486,10 +486,7 @@ int xml myxml 0x7f140000
 			};
 			
 			Assert.IsTrue (aapt2Compile.Execute (), $"Aapt2 Compile should have succeeded. {string.Join (" ", errors.Select (x => x.Message))}");
-			int platform = 0;
-			using (var b = new Builder ()) {
-				platform = b.GetMaxInstalledPlatform ();
-			}
+			int platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
 			string resPath = Path.Combine (Root, path, "res");
 			string rTxt = Path.Combine (Root, path, "R.txt");
 			var aapt2Link = new Aapt2Link {
@@ -556,10 +553,7 @@ int xml myxml 0x7f140000
 			File.WriteAllText (Path.Combine (Root, path, "foo.map"), @"a\nb");
 			Directory.CreateDirectory (Path.Combine (Root, path, "java"));
 			string resPath = Path.Combine (Root, path, "res");
-			int platform = 0;
-			using (var b = new Builder ()) {
-				platform = b.GetMaxInstalledPlatform ();
-			}
+			int platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
 			IBuildEngine engine = new MockBuildEngine (TestContext.Out);
 			var aapt = new Aapt () {
 				BuildEngine = engine,
@@ -644,10 +638,7 @@ int xml myxml 0x7f140000
 			IBuildEngine engine = new MockBuildEngine (TestContext.Out);
 			TaskLoggingHelper loggingHelper = new TaskLoggingHelper (engine, nameof (ManagedResourceParser));
 			string resPath = Path.Combine (Root, path, "res");
-			int platform = 0;
-			using (var b = new Builder ()) {
-				platform = b.GetMaxInstalledPlatform ();
-			}
+			int platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
 			var flagFile = Path.Combine (Root, path, "AndroidResgen.flag");
 			var lp = new string [] { Path.Combine (Root, path, "lp", "res") };
 			Stopwatch sw = new Stopwatch ();

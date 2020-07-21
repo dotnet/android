@@ -200,22 +200,6 @@ namespace Xamarin.ProjectTools
 			}
 		}
 
-		public int GetMaxInstalledPlatform ()
-		{
-			string sdkPath = AndroidSdkResolver.GetAndroidSdkPath ();
-			int result = 0;
-			foreach (var dir in Directory.EnumerateDirectories (Path.Combine (sdkPath, "platforms"))) {
-				int version;
-				string v = Path.GetFileName (dir).Replace ("android-", "");
-				if (!int.TryParse (v, out version))
-					continue;
-				if (version < result)
-					continue;
-				result = version;
-			}
-			return result;
-		}
-
 		static string GetApiLevelFromInfoPath (string androidApiInfo)
 		{
 			if (!File.Exists (androidApiInfo))

@@ -18,6 +18,8 @@ namespace Xamarin.Android.Build.Tests
 		public void InstallAndroidDependenciesTest ()
 		{
 			AssertCommercialBuild ();
+			// We need to grab the latest API level *before* changing env vars
+			var apiLevel = AndroidSdkResolver.GetMaxInstalledPlatform ();
 			var old = Environment.GetEnvironmentVariable ("ANDROID_SDK_PATH");
 			try {
 				string sdkPath = Path.Combine (Root, "temp", TestName, "android-sdk");
@@ -25,7 +27,9 @@ namespace Xamarin.Android.Build.Tests
 				if (Directory.Exists (sdkPath))
 					Directory.Delete (sdkPath, true);
 				Directory.CreateDirectory (sdkPath);
-				var proj = new XamarinAndroidApplicationProject ();
+				var proj = new XamarinAndroidApplicationProject {
+					TargetSdkVersion = apiLevel.ToString (),
+				};
 				using (var b = CreateApkBuilder ()) {
 					b.CleanupAfterSuccessfulBuild = false;
 					string defaultTarget = b.Target;
@@ -78,6 +82,7 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 				TargetFrameworkVersion = "v8.0",
+				TargetSdkVersion = "26",
 				UseLatestPlatformSdk = false,
 			};
 			var parameters = new string [] {
@@ -90,7 +95,7 @@ namespace Xamarin.Android.Build.Tests
 				builder.Target = "GetAndroidDependencies";
 				Assert.True (builder.Build (proj, parameters: parameters),
 					string.Format ("First Build should have succeeded"));
-				int apiLevel = Builder.UseDotNet ? builder.GetMaxInstalledPlatform () : 26;
+				int apiLevel = Builder.UseDotNet ? AndroidSdkResolver.GetMaxInstalledPlatform () : 26;
 				StringAssertEx.Contains ($"platforms/android-{apiLevel}", builder.LastBuildOutput, $"platforms/android-{apiLevel} should be a dependency.");
 				StringAssertEx.Contains ($"build-tools/{buildToolsVersion}", builder.LastBuildOutput, $"build-tools/{buildToolsVersion} should be a dependency.");
 				StringAssertEx.Contains ("platform-tools", builder.LastBuildOutput, "platform-tools should be a dependency.");
@@ -112,6 +117,7 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 				TargetFrameworkVersion = "v8.0",
+				TargetSdkVersion = "26",
 				UseLatestPlatformSdk = false,
 			};
 			var parameters = new string [] {
@@ -125,7 +131,7 @@ namespace Xamarin.Android.Build.Tests
 				builder.Target = "GetAndroidDependencies";
 				Assert.True (builder.Build (proj, parameters: parameters),
 					string.Format ("First Build should have succeeded"));
-				int apiLevel = Builder.UseDotNet ? builder.GetMaxInstalledPlatform () : 26;
+				int apiLevel = Builder.UseDotNet ? AndroidSdkResolver.GetMaxInstalledPlatform () : 26;
 				StringAssertEx.Contains ($"platforms/android-{apiLevel}", builder.LastBuildOutput, $"platforms/android-{apiLevel} should be a dependency.");
 				StringAssertEx.Contains ($"build-tools/{buildToolsVersion}", builder.LastBuildOutput, $"build-tools/{buildToolsVersion} should be a dependency.");
 				StringAssertEx.Contains ("platform-tools", builder.LastBuildOutput, "platform-tools should be a dependency.");
