@@ -87,6 +87,38 @@ So for example:
 [windows_path]: https://www.java.com/en/download/help/path.xml
 [set_alias]: https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/set-alias?view=powershell-6
 
+# Creating .NET 6 NuGet packages
+
+Once `Xamarin.Android.sln` is built, you can build the .NET 6 packages
+with:
+
+    msbuild Xamarin.Android.sln /t:PackDotNet
+
+Several `.nupkg` files will be output in `.\bin\BuildDebug\nupkgs\`, you
+can use these with a `nuget.config` such as:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <packageSources>
+    <add key="dotnet5" value="https://dnceng.pkgs.visualstudio.com/public/_packaging/dotnet5/nuget/v3/index.json" />
+    <add key="local-xa" value="C:\full\path\to\bin\BuildDebug\nupkgs" />
+  </packageSources>
+</configuration>
+```
+
+Then use a `global.json` for the locally built version of the packages:
+
+```json
+{
+    "msbuild-sdks": {
+            "Microsoft.Android.Sdk": "11.0.100-ci.master.11"
+    }
+}
+```
+
+See the [One .NET Documentation](../../guides/OneDotNet.md) for further details.
+
 # Building Unit Tests
 
 Once `msbuild Xamarin.Android.sln` has completed, the unit tests may

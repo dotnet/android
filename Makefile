@@ -104,6 +104,9 @@ endif
 all-tests::
 	MSBUILD="$(MSBUILD)" $(call MSBUILD_BINLOG,all-tests,tools/scripts/xabuild) /restore $(MSBUILD_FLAGS) Xamarin.Android-Tests.sln
 
+pack-dotnet::
+	$(call MSBUILD_BINLOG,pack-dotnet,$(_SLN_BUILD)) $(MSBUILD_FLAGS) Xamarin.Android.sln /t:PackDotNet
+
 install::
 	@if [ ! -d "bin/$(CONFIGURATION)" ]; then \
 		echo "run 'make all' before you execute 'make install'!"; \
