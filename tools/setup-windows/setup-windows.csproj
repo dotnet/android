@@ -17,6 +17,4 @@
   <Import Project="..\..\Configuration.props" />
 
   <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.targets" />
-  <Target Name="Pack" />
-
 </Project>
