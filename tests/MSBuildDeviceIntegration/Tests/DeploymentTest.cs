@@ -37,7 +37,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			proj = new XamarinFormsAndroidApplicationProject ();
-			proj.SetProperty (KnownProperties.AndroidSupportedAbis, "armeabi-v7a;x86");
+			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			var mainPage = proj.Sources.First (x => x.Include () == "MainPage.xaml.cs");
 			var source = mainPage.TextContent ().Replace ("InitializeComponent ();", @"InitializeComponent ();
 			Console.WriteLine ($""TimeZoneInfo={TimeZoneInfo.Local.DisplayName}"");

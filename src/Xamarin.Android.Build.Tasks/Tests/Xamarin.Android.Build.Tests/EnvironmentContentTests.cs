@@ -241,7 +241,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease,
 			};
 			var supportedAbis = new string [] { "armeabi-v7a", "arm64-v8a" };
-			proj.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", supportedAbis));
+			proj.SetAndroidSupportedAbis (supportedAbis);
 
 			using (var b = CreateApkBuilder (Path.Combine ("temp", $"BuildWithTlsProvider_{androidTlsProvider}_{isRelease}_{expected}"))) {
 				proj.SetProperty ("AndroidTlsProvider", androidTlsProvider);
