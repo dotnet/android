@@ -141,6 +141,7 @@
     <Compile Include="Steps\Step_BuildMingwDependencies.cs" />
     <Compile Include="Steps\Step_DownloadMonoArchive.cs" />
     <Compile Include="Steps\Step_DownloadNuGet.cs" />
+    <Compile Include="Steps\Step_GenerateCGManifest.cs" />
     <Compile Include="Steps\Step_GenerateFiles.cs" />
     <Compile Include="Steps\Step_Get_Windows_Binutils.cs" />
     <Compile Include="Steps\Step_InstallJetBrainsOpenJDK.cs" />
