@@ -3,13 +3,10 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net472</TargetFrameworks>
+    <TargetFrameworks>net472;netcoreapp3.1</TargetFrameworks>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <RootNamespace>Xamarin.Android.Tools</RootNamespace>
     <AssemblyName>api-xml-adjuster</AssemblyName>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <ExternalConsole>true</ExternalConsole>
     <OutputPath>..\..\bin\Build$(Configuration)</OutputPath>
     <IntermediateOutputPath>obj\Build$(Configuration)</IntermediateOutputPath>
   </PropertyGroup>
@@ -24,9 +21,6 @@
     <Optimize>true</Optimize>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Reference Include="System.Xml" />
-  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\external\Java.Interop\src\Xamarin.Android.Tools.ApiXmlAdjuster\Xamarin.Android.Tools.ApiXmlAdjuster.csproj">
       <Project>{1268EADF-8344-431C-81F6-FCB7CBC99F49}</Project>

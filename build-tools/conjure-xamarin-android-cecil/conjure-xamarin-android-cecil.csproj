@@ -6,9 +6,6 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>Xamarin.Android.Prepare</RootNamespace>
     <AssemblyName>conjure-xamarin-android-cecil</AssemblyName>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <ExternalConsole>true</ExternalConsole>
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />

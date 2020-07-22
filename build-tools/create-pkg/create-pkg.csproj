@@ -7,9 +7,6 @@
     <AssemblyName>create-pkg</AssemblyName>
     <OutputPath>..\..\bin\Build$(Configuration)</OutputPath>
     <DefaultItemExcludes>$(DefaultItemExcludes);**\.DS_Store</DefaultItemExcludes>
-    <ConsolePause>false</ConsolePause>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
