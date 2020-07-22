@@ -38,7 +38,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease,
 			};
 			if (isRelease || !CommercialBuildAvailable) {
-				proj.SetProperty (KnownProperties.AndroidSupportedAbis, "armeabi-v7a;arm64-v8a;x86");
+				proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86");
 			} else {
 				proj.AndroidManifest = proj.AndroidManifest.Replace ("<uses-sdk />", "<uses-sdk android:minSdkVersion=\"23\" />");
 			}

@@ -431,7 +431,7 @@ namespace Bug12935
 			proj.SetProperty ("Foo", "1");
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, seperateApk);
 			if (!string.IsNullOrEmpty (abis))
-				proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidSupportedAbis, abis);
+				proj.SetAndroidSupportedAbis (abis);
 			if (!string.IsNullOrEmpty (versionCodePattern))
 				proj.SetProperty (proj.ReleaseProperties, "AndroidVersionCodePattern", versionCodePattern);
 			else
