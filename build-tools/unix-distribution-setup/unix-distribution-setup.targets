@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk" DefaultTargets="Build">
+<Project>
 
   <Target Name="Build">
     <PropertyGroup>
@@ -32,4 +32,3 @@
       DependsOnTargets="CoreCompile">
   </Target>
 </Project>
-
