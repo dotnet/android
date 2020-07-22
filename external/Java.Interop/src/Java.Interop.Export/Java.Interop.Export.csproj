@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0;netcoreapp3.1</TargetFrameworks>
     <LangVersion>8.0</LangVersion>
     <ProjectGuid>{B501D075-6183-4E1D-92C9-F7B5002475B1}</ProjectGuid>
     <SignAssembly>true</SignAssembly>
