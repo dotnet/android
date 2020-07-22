@@ -31,6 +31,7 @@ namespace Xamarin.Android.Prepare
 			AddRequiredOSSpecificSteps (true);
 			Steps.Add (new Step_InstallMonoRuntimes ());
 			Steps.Add (new Step_Get_Windows_Binutils ());
+			Steps.Add (new Step_GenerateCGManifest ());
 
 			AddRequiredOSSpecificSteps (false);
 		}
