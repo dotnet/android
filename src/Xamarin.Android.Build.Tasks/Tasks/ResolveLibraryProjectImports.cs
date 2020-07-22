@@ -36,9 +36,6 @@ namespace Xamarin.Android.Tasks
 		public ITaskItem [] AarLibraries { get; set; }
 
 		[Required]
-		public bool UseShortFileNames { get; set; }
-
-		[Required]
 		public string AssemblyIdentityMapFile { get; set; }
 
 		public string CacheFile { get; set; }
@@ -174,10 +171,7 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 				string assemblyFileName = Path.GetFileNameWithoutExtension (assemblyPath);
-				string assemblyIdentName = assemblyFileName;
-				if (UseShortFileNames) {
-					assemblyIdentName = assemblyMap.GetLibraryImportDirectoryNameForAssembly (assemblyFileName);
-				}
+				string assemblyIdentName = assemblyMap.GetLibraryImportDirectoryNameForAssembly (assemblyFileName);
 				string outDirForDll = Path.Combine (OutputImportDirectory, assemblyIdentName);
 				string importsDir = Path.Combine (outDirForDll, ImportsDirectory);
 				string nativeimportsDir = Path.Combine (outDirForDll, NativeImportsDirectory);
@@ -336,9 +330,7 @@ namespace Xamarin.Android.Tasks
 				if (!File.Exists (aarFile.ItemSpec))
 					continue;
 				string aarIdentityName = Path.GetFileNameWithoutExtension (aarFile.ItemSpec);
-				if (UseShortFileNames) {
-					aarIdentityName = assemblyMap.GetLibraryImportDirectoryNameForAssembly (aarIdentityName);
-				}
+				aarIdentityName = assemblyMap.GetLibraryImportDirectoryNameForAssembly (aarIdentityName);
 				string outDirForDll = Path.Combine (OutputImportDirectory, aarIdentityName);
 				string importsDir = Path.Combine (outDirForDll, ImportsDirectory);
 				string resDir = Path.Combine (importsDir, "res");

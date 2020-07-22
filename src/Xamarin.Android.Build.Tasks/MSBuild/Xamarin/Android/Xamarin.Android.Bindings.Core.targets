@@ -73,7 +73,6 @@ It is shared between "legacy" binding projects and .NET 5 projects.
         TypeMappingReportFile="$(GeneratedOutputPath)type-mapping.txt"
         ToolPath="$(MonoAndroidToolsDirectory)"
         ToolExe="$(BindingsGeneratorToolExe)"
-        UseShortFileNames="$(UseShortGeneratorFileNames)"
         LangVersion="$(LangVersion)"
         EnableInterfaceMembersPreview="$(_EnableInterfaceMembers)"
     />

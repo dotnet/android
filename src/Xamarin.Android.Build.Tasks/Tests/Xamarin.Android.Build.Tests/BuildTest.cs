@@ -2962,7 +2962,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		}
 
 		[Test]
-		public void CheckLibraryImportsUpgrade ([Values(false, true)] bool useShortFileNames)
+		public void CheckLibraryImportsUpgrade ()
 		{
 			var path = Path.Combine ("temp", TestContext.CurrentContext.Test.Name);
 			var libproj = new XamarinAndroidLibraryProject () {
@@ -2975,7 +2975,6 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 			};
 			proj.References.Add (new BuildItem ("ProjectReference", $"..\\Library1\\Library1.csproj"));
 			proj.SetProperty ("_AndroidLibrayProjectIntermediatePath", Path.Combine (proj.IntermediateOutputPath, "__library_projects__"));
-			proj.SetProperty (proj.ActiveConfigurationProperties, "UseShortFileNames", useShortFileNames);
 			using (var libb = CreateDllBuilder (Path.Combine (path, libproj.ProjectName), false, false)) {
 				Assert.IsTrue (libb.Build (libproj), "Build should have succeeded.");
 				using (var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName), false, false)) {
@@ -2985,13 +2984,8 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 						"The __library_projects__ directory should exist.");
 					proj.RemoveProperty ("_AndroidLibrayProjectIntermediatePath");
 					Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-					if (useShortFileNames) {
-						Assert.IsFalse (Directory.Exists (Path.Combine (Root, path, proj.ProjectName, proj.IntermediateOutputPath, "__library_projects__")),
-							"The __library_projects__ directory should not exist, due to IncrementalClean.");
-					} else {
-						Assert.IsTrue (Directory.Exists (Path.Combine (Root, path, proj.ProjectName, proj.IntermediateOutputPath, "__library_projects__")),
-							"The __library_projects__ directory should exist.");
-					}
+					Assert.IsFalse (Directory.Exists (Path.Combine (Root, path, proj.ProjectName, proj.IntermediateOutputPath, "__library_projects__")),
+						"The __library_projects__ directory should not exist, due to IncrementalClean.");
 					Assert.IsTrue (libb.Clean (libproj), "Clean should have succeeded.");
 					Assert.IsTrue (libb.Build (libproj), "Build should have succeeded.");
 					Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
@@ -3000,15 +2994,10 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 					using (var zip = ZipHelper.OpenZip (zipFile)) {
 						Assert.IsTrue (zip.ContainsEntry ("library_project_imports/__res_name_case_map.txt"), $"{zipFile} should contain a library_project_imports/__res_name_case_map.txt entry");
 					}
-					if (!useShortFileNames) {
-						Assert.IsTrue (Directory.Exists (Path.Combine (Root, path, proj.ProjectName, proj.IntermediateOutputPath, "__library_projects__")),
-							"The __library_projects__ directory should exist.");
-					} else {
-						Assert.IsFalse (Directory.Exists (Path.Combine (Root, path, proj.ProjectName, proj.IntermediateOutputPath, "__library_projects__")),
-							"The __library_projects__ directory should not exist.");
-						Assert.IsTrue (Directory.Exists (Path.Combine (Root, path, proj.ProjectName, proj.IntermediateOutputPath, "lp")),
-							"The lp directory should exist.");
-					}
+					Assert.IsFalse (Directory.Exists (Path.Combine (Root, path, proj.ProjectName, proj.IntermediateOutputPath, "__library_projects__")),
+						"The __library_projects__ directory should not exist.");
+					Assert.IsTrue (Directory.Exists (Path.Combine (Root, path, proj.ProjectName, proj.IntermediateOutputPath, "lp")),
+						"The lp directory should exist.");
 
 				}
 			}
