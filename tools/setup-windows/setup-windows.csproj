@@ -4,7 +4,6 @@
     <TargetFrameworks>net472;netcoreapp3.1</TargetFrameworks>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputType>Exe</OutputType>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <RootNamespace>setupwindows</RootNamespace>
     <AssemblyName>setup-windows</AssemblyName>
     <OutputPath>$(XamarinAndroidSourcePath)bin\$(Configuration)-$(TargetFramework)\</OutputPath>
