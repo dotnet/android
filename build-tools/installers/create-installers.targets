@@ -262,6 +262,8 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Wear.targets" Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Build.AsyncTask.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Build.AsyncTask.pdb" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.SourceWriter.dll" Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.SourceWriter.pdb" Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\K4os.Compression.LZ4.dll" />
   </ItemGroup>
   <ItemGroup>
