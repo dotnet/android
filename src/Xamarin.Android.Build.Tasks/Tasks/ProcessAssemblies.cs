@@ -36,9 +36,19 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public ITaskItem [] ShrunkAssemblies { get; set; }
 
+		[Output]
+		public ITaskItem [] ResolvedSymbols { get; set; }
+
 		public override bool RunTask ()
 		{
 			var output = new Dictionary<Guid, ITaskItem> ();
+			var symbols = new Dictionary<string, ITaskItem> ();
+
+			if (ResolvedSymbols != null) {
+				foreach (var symbol in ResolvedSymbols) {
+					symbols [symbol.ItemSpec] = symbol;
+				}
+			}
 
 			foreach (var assembly in InputAssemblies) {
 				using (var pe = new PEReader (File.OpenRead (assembly.ItemSpec))) {
@@ -56,22 +66,33 @@ namespace Xamarin.Android.Tasks
 						assembly.SetMetadata ("HasMonoAndroidReference", MonoAndroidHelper.HasMonoAndroidReference (reader).ToString ());
 					} else {
 						Log.LogDebugMessage ($"Removing duplicate: {assembly.ItemSpec}");
+
+						var symbolPath = Path.ChangeExtension (assembly.ItemSpec, ".pdb");
+						if (symbols.Remove (symbolPath)) {
+							Log.LogDebugMessage ($"Removing duplicate: {symbolPath}");
+						}
 					}
 				}
 			}
 
 			OutputAssemblies = output.Values.ToArray ();
+			ResolvedSymbols = symbols.Values.ToArray ();
 
 			// Set %(AbiDirectory) for architecture-specific assemblies
 			var fileNames = new Dictionary<string, ITaskItem> (StringComparer.OrdinalIgnoreCase);
 			foreach (var assembly in OutputAssemblies) {
 				var fileName = Path.GetFileName (assembly.ItemSpec);
+				symbols.TryGetValue (Path.ChangeExtension (assembly.ItemSpec, ".pdb"), out var symbol);
 				if (fileNames.TryGetValue (fileName, out ITaskItem other)) {
-					SetAbiDirectory (assembly, fileName);
-					SetAbiDirectory (other, fileName);
+					SetAbiDirectory (assembly, fileName, symbol);
+					symbols.TryGetValue (Path.ChangeExtension (other.ItemSpec, ".pdb"), out symbol);
+					SetAbiDirectory (other, fileName, symbol);
 				} else {
 					fileNames.Add (fileName, assembly);
 					assembly.SetMetadata ("IntermediateLinkerOutput", Path.Combine (IntermediateAssemblyDirectory, fileName));
+					if (symbol != null) {
+						symbol.SetMetadata ("IntermediateLinkerOutput", Path.Combine (IntermediateAssemblyDirectory, Path.GetFileName (symbol.ItemSpec)));
+					}
 				}
 			}
 
@@ -92,16 +113,23 @@ namespace Xamarin.Android.Tasks
 		/// <summary>
 		/// Sets %(AbiDirectory) based on %(RuntimeIdentifier)
 		/// </summary>
-		void SetAbiDirectory (ITaskItem assembly, string fileName)
+		void SetAbiDirectory (ITaskItem assembly, string fileName, ITaskItem symbol)
 		{
 			var rid = assembly.GetMetadata ("RuntimeIdentifier");
 			var abi = MonoAndroidHelper.RuntimeIdentifierToAbi (rid);
 			if (!string.IsNullOrEmpty (abi)) {
 				assembly.SetMetadata ("AbiDirectory", abi);
 				assembly.SetMetadata ("IntermediateLinkerOutput", Path.Combine (IntermediateAssemblyDirectory, abi, fileName));
+				if (symbol != null) {
+					symbol.SetMetadata ("AbiDirectory", abi);
+					symbol.SetMetadata ("IntermediateLinkerOutput", Path.Combine (IntermediateAssemblyDirectory, abi, Path.GetFileName (symbol.ItemSpec)));
+				}
 			} else {
 				Log.LogDebugMessage ($"Android ABI not found for: {assembly.ItemSpec}");
 				assembly.SetMetadata ("IntermediateLinkerOutput", Path.Combine (IntermediateAssemblyDirectory, fileName));
+				if (symbol != null) {
+					symbol.SetMetadata ("IntermediateLinkerOutput", Path.Combine (IntermediateAssemblyDirectory, Path.GetFileName (symbol.ItemSpec)));
+				}
 			}
 		}
 	}
