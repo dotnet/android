@@ -212,6 +212,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Category ("dotnet")]
 		public void CheckMetadataSkipItemsAreProcessedCorrectly ()
 		{
 			var packages = new List<Package> () {
