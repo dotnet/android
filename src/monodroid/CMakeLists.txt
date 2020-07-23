@@ -143,6 +143,7 @@ if(STRIP_DEBUG)
 endif()
 
 if(ENABLE_NDK)
+  include_directories(${CMAKE_SYSROOT}/usr/include/c++/v1/)
   include_directories(${LZ4_INCLUDE_DIR})
   add_definitions("-DHAVE_LZ4")
   add_definitions("-DPLATFORM_ANDROID")

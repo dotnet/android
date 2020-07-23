@@ -14,14 +14,17 @@
 #define HAVE_WORKING_MUTEX 1
 #endif
 
+// We can't use <mutex> on Android because it requires linking libc++ into the rutime, see below.
 #if !defined (ANDROID)
 #include <type_traits>
 #include <mutex> // Also declares `lock_guard` even if it doesn't declare `mutex`
 #endif
 
-// Since Android doesn't currently have any standard C++ library
-// and we don't want to use any implementation of it shipped in
-// source form with the NDK (for space reasons), this header will
+// Android NDK currently provides a build of libc++ which we cannot link into Xamarin.Android runtime because it would
+// expose libc++ symbols which would conflict with a version of libc++ potentially included in a mixed
+// native/Xamarin.Android application.
+//
+// Until we can figure out a way to take full advantage of the STL, this header will
 // contain implementations of certain C++ standard functions, classes
 // etc we want to use despite lack of the STL.
 //
@@ -30,15 +33,6 @@
 namespace std
 {
 #if defined (ANDROID)
-	template <typename T> struct remove_reference      { using type = T; };
-	template <typename T> struct remove_reference<T&>  { using type = T; };
-	template <typename T> struct remove_reference<T&&> { using type = T; };
-
-	template<typename T> typename remove_reference<T>::type&& move (T&& arg) noexcept
-	{
-		return static_cast<typename remove_reference<decltype(arg)>::type&&>(arg);
-	}
-
 	template<typename TMutex>
 	class lock_guard
 	{
