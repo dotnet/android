@@ -79,6 +79,8 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
+			AndroidApiLevel = GetMaxStableApiLevel ().ToString ();
+
 			string toolsZipAlignPath = Path.Combine (AndroidSdkPath, "tools", ZipAlign);
 			bool findZipAlign = (string.IsNullOrEmpty (ZipAlignPath) || !Directory.Exists (ZipAlignPath)) && !File.Exists (toolsZipAlignPath);
 
@@ -190,11 +192,7 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
-		protected virtual bool Validate ()
-		{
-			AndroidApiLevel = GetMaxStableApiLevel ().ToString ();
-			return true;
-		}
+		protected virtual bool Validate () => !string.IsNullOrEmpty (AndroidApiLevel);
 
 		protected virtual void LogOutputs ()
 		{
