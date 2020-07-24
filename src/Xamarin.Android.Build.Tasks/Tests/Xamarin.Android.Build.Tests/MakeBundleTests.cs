@@ -14,24 +14,25 @@ using NUnit.Framework;
 using Xamarin.ProjectTools;
 using Xamarin.Tools.Zip;
 
-namespace Xamarin.Android.MakeBundle.UnitTests
+namespace Xamarin.Android.Build.Tests
 {
-	sealed class LocalBuilder : Builder
-	{
-		public LocalBuilder ()
-		{
-			BuildingInsideVisualStudio = false;
-		}
-
-		public bool Build (string projectOrSolution, string target, string[] parameters = null, Dictionary<string, string> environmentVariables = null)
-		{
-			return BuildInternal (projectOrSolution, target, parameters, environmentVariables);
-		}
-	}
-
+	[Category ("Node-2")]
 	[Parallelizable (ParallelScope.Children)]
-	public class BuildTests_EmbeddedDSOBuildTests
+	public class MakeBundleTests
 	{
+		sealed class LocalBuilder : Builder
+		{
+			public LocalBuilder ()
+			{
+				BuildingInsideVisualStudio = false;
+			}
+
+			public bool Build (string projectOrSolution, string target, string[] parameters = null, Dictionary<string, string> environmentVariables = null)
+			{
+				return BuildInternal (projectOrSolution, target, parameters, environmentVariables);
+			}
+		}
+
 		const string ProjectName = "Xamarin.Android.MakeBundle-Tests";
 		const string ProjectAssemblyName = "Xamarin.Android.MakeBundle-Tests";
 		const string ProjectPackageName = "Xamarin.Android.MakeBundle_Tests";
@@ -66,7 +67,7 @@ namespace Xamarin.Android.MakeBundle.UnitTests
 		string testProjectPath;
 		string apk;
 
-		static BuildTests_EmbeddedDSOBuildTests ()
+		static MakeBundleTests ()
 		{
 			TestProjectRootDirectory = Path.GetFullPath (Path.Combine (XABuildPaths.TopDirectory, "tests", "CodeGen-MkBundle", "Xamarin.Android.MakeBundle-Tests"));
 			TestOutputDir = Path.Combine (XABuildPaths.TestOutputDirectory, "temp", "CodeGen-MkBundle");
