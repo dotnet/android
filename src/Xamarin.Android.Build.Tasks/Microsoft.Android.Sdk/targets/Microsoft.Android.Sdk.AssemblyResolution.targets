@@ -60,10 +60,20 @@ _ResolveAssemblies MSBuild target.
         IntermediateAssemblyDirectory="$(MonoAndroidIntermediateAssemblyDir)"
         UseSharedRuntime="$(AndroidUseSharedRuntime)"
         LinkMode="$(AndroidLinkMode)">
-      <Output TaskParameter="OutputAssemblies" ItemName="ResolvedAssemblies" />
+      <Output TaskParameter="OutputAssemblies" ItemName="_ProcessedAssemblies" />
       <Output TaskParameter="ResolvedSymbols"  ItemName="ResolvedSymbols" />
-      <Output TaskParameter="ShrunkAssemblies" ItemName="_ShrunkAssemblies" />
+      <Output TaskParameter="ShrunkAssemblies" ItemName="_ProcessedShrunkAssemblies" />
     </ProcessAssemblies>
+    <AppendCustomMetadataToItemGroup
+        Inputs="@(_ProcessedAssemblies)"
+        MetaDataItems="@(AndroidCustomMetaDataForReferences)">
+      <Output TaskParameter="Output" ItemName="ResolvedAssemblies" />
+    </AppendCustomMetadataToItemGroup>
+    <AppendCustomMetadataToItemGroup
+        Inputs="@(_ProcessedShrunkAssemblies)"
+        MetaDataItems="@(AndroidCustomMetaDataForReferences)">
+      <Output TaskParameter="Output" ItemName="_ShrunkAssemblies" />
+    </AppendCustomMetadataToItemGroup>
     <ItemGroup>
       <ResolvedFrameworkAssemblies
           Include="@(ResolvedAssemblies)"
