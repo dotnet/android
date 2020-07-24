@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Linq;
 using System.Xml.Linq;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
@@ -10,7 +9,7 @@ using Xamarin.ProjectTools;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[Category ("Node-3")]
+	[Category ("Node-3"), Category ("dotnet")]
 	public class DesignerTests : BaseTest
 	{
 		static readonly string [] DesignerParameters = new [] { "DesignTimeBuild=True", "AndroidUseManagedDesignTimeResourceGenerator=False" };
@@ -149,7 +148,8 @@ namespace UnnamedProject
 				var resourcepathscache = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "designtime", "libraryprojectimports.cache");
 				FileAssert.Exists (resourcepathscache);
 				var doc = XDocument.Load (resourcepathscache);
-				Assert.AreEqual (40, doc.Root.Element ("Jars").Elements ("Jar").Count (), "libraryprojectimports.cache did not contain expected jar files");
+				var expected = Builder.UseDotNet ? 37 : 40;
+				Assert.AreEqual (expected, doc.Root.Element ("Jars").Elements ("Jar").Count (), "libraryprojectimports.cache did not contain expected jar files");
 			}
 		}
 
@@ -322,7 +322,9 @@ namespace UnnamedProject
 
 				var packageManagerPath = Path.Combine (Root, appb.ProjectDirectory, proj.IntermediateOutputPath, "android", "src", "mono", "MonoPackageManager_Resources.java");
 				var before = GetAssembliesFromPackageManager (packageManagerPath);
-				Assert.AreEqual ("", before, $"After first `{appb.Target}`, assemblies list would be empty.");
+				if (!Builder.UseDotNet) {
+					Assert.AreEqual ("", before, $"After first `{appb.Target}`, assemblies list would be empty.");
+				}
 
 				// NuGet restore, either with /t:Restore in a separate MSBuild call or /restore in a single call
 				if (restoreInSingleCall) {
@@ -335,7 +337,9 @@ namespace UnnamedProject
 				Assert.IsTrue (appb.Build (proj, parameters: DesignerParameters), "second build should have succeeded");
 
 				var after = GetAssembliesFromPackageManager (packageManagerPath);
-				Assert.AreNotEqual (before, after, $"After second `{appb.Target}`, assemblies list should *not* be empty.");
+				if (!Builder.UseDotNet) {
+					Assert.AreNotEqual (before, after, $"After second `{appb.Target}`, assemblies list should *not* be empty.");
+				}
 				foreach (var assembly in new [] { "Xamarin.Forms.Core.dll", "Xamarin.Forms.Platform.Android.dll" }) {
 					StringAssert.Contains (assembly, after);
 				}

@@ -51,6 +51,10 @@ namespace Xamarin.Android.Tasks
 			}
 
 			foreach (var assembly in InputAssemblies) {
+				if (!File.Exists (assembly.ItemSpec)) {
+					Log.LogDebugMessage ($"Skipping non-existent dependency '{assembly.ItemSpec}'.");
+					continue;
+				}
 				using (var pe = new PEReader (File.OpenRead (assembly.ItemSpec))) {
 					var reader = pe.GetMetadataReader ();
 					var module = reader.GetModuleDefinition ();
