@@ -31,7 +31,7 @@ namespace Xamarin.Android.Tasks
 		public string ApiXmlInput { get; set; }
 
 		public string AssemblyName { get; set; }
-		
+
 		public string CodegenTarget { get; set; }
 
 		public bool NoStdlib { get; set; }
@@ -107,49 +107,69 @@ namespace Xamarin.Android.Tasks
 			return base.RunTask ();
 		}
 
+		void WriteLine (StreamWriter sw, string line)
+		{
+			sw.WriteLine (line);
+			Log.LogDebugMessage (line);
+		}
+
 		protected override string GenerateCommandLineCommands ()
 		{
 			var cmd = GetCommandLineBuilder ();
-			cmd.AppendFileNameIfNotNull (ApiXmlInput);
 
-			if (OnlyRunXmlAdjuster)
-				cmd.AppendSwitch ("--only-xml-adjuster");
-			cmd.AppendSwitchIfNotNull ("--xml-adjuster-output=", XmlAdjusterOutput);
+			string responseFile = Path.Combine (OutputDirectory, "generator.rsp");
+			Log.LogDebugMessage ("[Generator] response file: {0}", responseFile);
+			using (var sw = new StreamWriter (responseFile, append: false, encoding: MonoAndroidHelper.UTF8withoutBOM)) {
 
-			cmd.AppendSwitchIfNotNull ("--codegen-target=", CodegenTarget);
-			cmd.AppendSwitchIfNotNull ("--csdir=", OutputDirectory);
-			cmd.AppendSwitchIfNotNull ("--enumdir=", EnumDirectory);
-			cmd.AppendSwitchIfNotNull ("--enummetadata=", EnumMetadataDirectory);
-			cmd.AppendSwitchIfNotNull ("--assembly=", AssemblyName);
+				if (OnlyRunXmlAdjuster)
+					WriteLine (sw, "--only-xml-adjuster");
+				if (!string.IsNullOrEmpty (XmlAdjusterOutput))
+					WriteLine (sw, $"--xml-adjuster-output=\"{XmlAdjusterOutput}\"");
 
-			if (!NoStdlib) {
-				string fxpath = MonoAndroidFrameworkDirectories.Split (';').First (p => new DirectoryInfo (p).GetFiles ("mscorlib.dll").Any ());
-				cmd.AppendSwitchIfNotNull ("--ref=", Path.Combine (Path.GetFullPath (fxpath), "mscorlib.dll"));
+				if (!string.IsNullOrEmpty (CodegenTarget))
+					WriteLine (sw, $"--codegen-target={CodegenTarget}");
+				if (!string.IsNullOrEmpty (OutputDirectory))
+					WriteLine (sw, $"--csdir=\"{OutputDirectory}\"");
+				if (!string.IsNullOrEmpty (EnumDirectory))
+					WriteLine (sw, $"--enumdir=\"{EnumDirectory}\"");
+				if (!string.IsNullOrEmpty (EnumMetadataDirectory))
+					WriteLine (sw, $"--enummetadata=\"{EnumMetadataDirectory}\"");
+				if (!string.IsNullOrEmpty (AssemblyName))
+					WriteLine (sw, $"--assembly={AssemblyName}");
+
+				if (!NoStdlib) {
+					string fxpath = MonoAndroidFrameworkDirectories.Split (';').First (p => new DirectoryInfo (p).GetFiles ("mscorlib.dll").Any ());
+					WriteLine (sw, $"--ref=\"{Path.Combine (Path.GetFullPath (fxpath), "mscorlib.dll")}\"");
+				}
+
+				if (ReferencedManagedLibraries != null)
+					foreach (var lib in ReferencedManagedLibraries)
+						WriteLine (sw, $"--ref=\"{Path.GetFullPath (lib.ItemSpec)}\"");
+				if (AnnotationsZipFiles != null)
+					foreach (var zip in AnnotationsZipFiles)
+						WriteLine (sw, $"--annotations=\"{Path.GetFullPath (zip.ItemSpec)}\"");
+
+				foreach (var tf in transform_files)
+					WriteLine (sw, $"\"--{tf.Item2}={tf.Item1}\"");
+
+				if (!string.IsNullOrEmpty (AndroidApiLevel))
+					WriteLine (sw, $"--api-level={AndroidApiLevel}");
+
+				if (!string.IsNullOrEmpty (TypeMappingReportFile))
+					WriteLine (sw, $"--type-map-report=\"{TypeMappingReportFile}\"");
+
+				WriteLine (sw, "--global");
+				WriteLine (sw, "--public");
+
+				if (UseShortFileNames)
+					WriteLine (sw, "--use-short-file-names");
+
+				if (EnableInterfaceMembersPreview && SupportsCSharp8)
+					WriteLine (sw, "--lang-features=interface-constants,default-interface-methods");
 			}
-			
-			if (ReferencedManagedLibraries != null)
-				foreach (var lib in ReferencedManagedLibraries)
-					cmd.AppendSwitchIfNotNull ("--ref=", Path.GetFullPath (lib.ItemSpec));
-			if (AnnotationsZipFiles != null)
-				foreach (var zip in AnnotationsZipFiles)
-					cmd.AppendSwitchIfNotNull ("--annotations=", Path.GetFullPath (zip.ItemSpec));
 
-			foreach (var tf in transform_files)
-				cmd.AppendSwitchIfNotNull (string.Format ("--{0}=", tf.Item2), tf.Item1);
-
-			cmd.AppendSwitchIfNotNull ("--api-level=", AndroidApiLevel);
-
-			cmd.AppendSwitchIfNotNull ("--type-map-report=", TypeMappingReportFile);
-
-			cmd.AppendSwitch ("--global");
-			cmd.AppendSwitch ("--public");
-
-			if (UseShortFileNames)
-				cmd.AppendSwitch ("--use-short-file-names");
-
-			if (EnableInterfaceMembersPreview && SupportsCSharp8)
-				cmd.AppendSwitch ("--lang-features=interface-constants,default-interface-methods");
-
+			cmd.AppendSwitch (ApiXmlInput);
+			cmd.AppendSwitch ($"@{responseFile}");
 			return cmd.ToString ();
 		}
 
