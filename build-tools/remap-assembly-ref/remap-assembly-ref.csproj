@@ -1,23 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net472;netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks>net472</TargetFrameworks>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputType>Exe</OutputType>
     <RootNamespace>remapassemblyref</RootNamespace>
     <AssemblyName>remap-assembly-ref</AssemblyName>
-    <ExternalConsole>true</ExternalConsole>
+    <OutputPath>..\..\bin\Build$(Configuration)</OutputPath>
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <OutputPath>..\..\bin\BuildDebug</OutputPath>
     <DefineConstants>DEBUG;</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
-    <OutputPath>..\..\bin\BuildRelease</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>

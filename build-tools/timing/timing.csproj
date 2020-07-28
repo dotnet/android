@@ -4,17 +4,12 @@
  <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <OutputPath>..\..\bin\Test$(Configuration)</OutputPath>
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />
   <Import Project="timing.targets" />
 
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <OutputPath>..\..\bin\TestDebug</OutputPath>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <OutputPath>..\..\bin\TestRelease</OutputPath>
-  </PropertyGroup>
   <PropertyGroup>
     <BuildDependsOn>
       ResolveReferences;

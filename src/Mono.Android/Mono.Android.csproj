@@ -345,12 +345,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!--
-      20200722 moljac
-      error : Project '../../build-tools/api-xml-adjuster/api-xml-adjuster.csproj' targets 'net472;netcoreapp3.1'. 
-      It cannot be referenced by a project that targets 'MonoAndroid,Version=v1.0'.
     <ProjectReference Include="..\..\build-tools\api-xml-adjuster\api-xml-adjuster.csproj" ReferenceOutputAssembly="false" />
-    -->
     <!-- Explicitly pass the target framework of the project so we don't have conflicts with the multiple targets in this file. -->
     <ProjectReference Include="..\..\build-tools\api-merge\api-merge.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="TargetFramework=net472" />
     <ProjectReference Include="..\..\build-tools\jnienv-gen\jnienv-gen.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="TargetFramework=net472" />
