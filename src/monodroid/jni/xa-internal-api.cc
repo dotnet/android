@@ -5,7 +5,7 @@
 #include <objbase.h>
 #include <knownfolders.h>
 #include <shlwapi.h>
-#endif
+#endif  // defined(WINDOWS)
 
 #include "globals.hh"
 #include "xa-internal-api-impl.hh"
