@@ -66,9 +66,9 @@ namespace xamarin::android::internal
 		static constexpr char API_DSO_NAME[] = MAKE_API_DSO_NAME (dll);
 #elif defined (APPLE_OS_X)
 		static constexpr char API_DSO_NAME[] = MAKE_API_DSO_NAME (dylib);
-#else
+#else   // !defined(WINDOWS) && !defined(APPLE_OS_X)
 		static constexpr char API_DSO_NAME[] = MAKE_API_DSO_NAME (so);
-#endif
+#endif  // defined(WINDOWS)
 	public:
 		static constexpr int XA_LOG_COUNTERS = MONO_COUNTER_JIT | MONO_COUNTER_METADATA | MONO_COUNTER_GC | MONO_COUNTER_GENERICS | MONO_COUNTER_INTERP;
 
@@ -140,7 +140,7 @@ namespace xamarin::android::internal
 		int convert_dl_flags (int flags);
 #if defined (WINDOWS) || defined (APPLE_OS_X)
 		static const char* get_my_location ();
-#endif
+#endif  // defined(WINDOWS) || defined(APPLE_OS_X)
 		static void* monodroid_dlopen (const char *name, int flags, char **err, void *user_data);
 		static void* monodroid_dlsym (void *handle, const char *name, char **err, void *user_data);
 		static void* monodroid_dlopen_log_and_return (void *handle, char **err, const char *full_name, bool free_memory, bool need_api_init = false);
