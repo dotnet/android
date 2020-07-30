@@ -25,9 +25,9 @@ MonoAndroidInternalCalls_Impl::monodroid_get_network_interface_up_state (const c
 {
 #ifdef WINDOWS
 	return FALSE;
-#else
+#else  // !defined(WINDOWS)
 	return ::_monodroid_get_network_interface_up_state (ifname, is_up);
-#endif
+#endif // defined(WINDOWS)
 }
 
 mono_bool
@@ -35,9 +35,9 @@ MonoAndroidInternalCalls_Impl::monodroid_get_network_interface_supports_multicas
 {
 #ifdef WINDOWS
 	return FALSE;
-#else
+#else  // !defined(WINDOWS)
 	return ::_monodroid_get_network_interface_supports_multicast (ifname, supports_multicast);
-#endif
+#endif // defined(WINDOWS)
 }
 
 int
@@ -45,9 +45,9 @@ MonoAndroidInternalCalls_Impl::monodroid_get_dns_servers (void **dns_servers_arr
 {
 #ifdef WINDOWS
 	return FALSE;
-#else
+#else  // !defined(WINDOWS)
 	return ::_monodroid_get_dns_servers (dns_servers_array);
-#endif
+#endif // defined(WINDOWS)
 }
 
 int
@@ -55,9 +55,9 @@ MonoAndroidInternalCalls_Impl::monodroid_getifaddrs (struct _monodroid_ifaddrs *
 {
 #ifdef WINDOWS
 	return -1;
-#else
+#else  // !defined(WINDOWS)
 	return ::_monodroid_getifaddrs (ifap);
-#endif
+#endif // defined(WINDOWS)
 }
 
 void
@@ -65,7 +65,7 @@ MonoAndroidInternalCalls_Impl::monodroid_freeifaddrs (struct _monodroid_ifaddrs 
 {
 #ifndef WINDOWS
 	::_monodroid_freeifaddrs (ifa);
-#endif
+#endif // defined(WINDOWS)
 }
 
 void
