@@ -317,9 +317,9 @@ Util::monodroid_getpagesize (void)
 {
 #ifndef WINDOWS
 	return getpagesize ();
-#else
+#else   // defined(WINDOWS)
 	SYSTEM_INFO info;
 	GetSystemInfo (&info);
 	return info.dwPageSize;
-#endif
+#endif  // defined(WINDOWS)
 }
