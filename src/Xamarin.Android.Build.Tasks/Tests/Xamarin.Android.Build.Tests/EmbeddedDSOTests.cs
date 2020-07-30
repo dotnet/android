@@ -15,24 +15,25 @@ using Xamarin.Android.Build.Tests;
 using Xamarin.ProjectTools;
 using Xamarin.Tools.Zip;
 
-namespace EmbeddedDSOUnitTests
+namespace Xamarin.Android.Build.Tests
 {
-	sealed class LocalBuilder : ProjectBuilder
-	{
-		public LocalBuilder (string projectDir) : base (projectDir)
-		{
-			BuildingInsideVisualStudio = false;
-		}
-
-		public bool Build (string projectOrSolution, string target, string[] parameters = null, Dictionary<string, string> environmentVariables = null)
-		{
-			return BuildInternal (projectOrSolution, target, parameters, environmentVariables);
-		}
-	}
-
+	[Category ("Node-2")]
 	[Parallelizable (ParallelScope.Children)]
-	public class BuildTests_EmbeddedDSOBuildTests
+	public class EmbeddedDSOTests : BaseTest
 	{
+		sealed class LocalBuilder : ProjectBuilder
+		{
+			public LocalBuilder (string projectDir) : base (projectDir)
+			{
+				BuildingInsideVisualStudio = false;
+			}
+
+			public bool Build (string projectOrSolution, string target, string [] parameters = null, Dictionary<string, string> environmentVariables = null)
+			{
+				return BuildInternal (projectOrSolution, target, parameters, environmentVariables);
+			}
+		}
+
 		const string ProjectName = "EmbeddedDSO";
 		const string ProjectAssemblyName = "Xamarin.Android.EmbeddedDSO_Test";
 
@@ -53,7 +54,7 @@ namespace EmbeddedDSOUnitTests
 		string testProjectPath;
 		string androidSdkDir;
 
-		static BuildTests_EmbeddedDSOBuildTests ()
+		static EmbeddedDSOTests ()
 		{
 			TestProjectRootDirectory = Path.GetFullPath (Path.Combine (XABuildPaths.TopDirectory, "tests", "EmbeddedDSOs", "EmbeddedDSO"));
 			TestOutputDir = Path.Combine (XABuildPaths.TestOutputDirectory, "temp", "EmbeddedDSO");
@@ -105,11 +106,12 @@ namespace EmbeddedDSOUnitTests
 		[Test]
 		public void DSOPageAlignment ()
 		{
-			Assert.That (new FileInfo (Config.ZipAlignPath), Does.Exist, $"ZipAlign not found at ${Config.ZipAlignPath}");
+			var zipAlignPath = Path.Combine (GetPathToZipAlign (), IsWindows ? "zipalign.exe" : "zipalign");
+			Assert.That (new FileInfo (zipAlignPath), Does.Exist, $"ZipAlign not found at {zipAlignPath}");
 
 			string apk = Path.Combine (testProjectPath, "bin", XABuildPaths.Configuration, $"{ProjectAssemblyName}-Signed.apk");
 			Assert.That (new FileInfo (apk), Does.Exist, $"File {apk} should exist");
-			Assert.That (RunCommand (Config.ZipAlignPath, $"-c -v -p 4 {apk}"), Is.True, $"{ProjectAssemblyName}-Signed.apk does not contain page-aligned .so files");
+			Assert.That (RunCommand (zipAlignPath, $"-c -v -p 4 {apk}"), Is.True, $"{ProjectAssemblyName}-Signed.apk does not contain page-aligned .so files");
 		}
 
 		[Test]

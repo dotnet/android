@@ -327,24 +327,6 @@ stages:
         testResultsFiles: TestResult-*.xml
         testRunTitle: Java Interop Tests - Windows Build Tree
 
-    - template: yaml-templates\run-nunit-tests.yaml
-      parameters:
-        testRunTitle: CodeBehindUnitTests - Windows Build Tree
-        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\CodeBehind\CodeBehindUnitTests.dll
-        testResultsFile: TestResult-CodeBehindUnitTests-WinBuildTree-$(XA.Build.Configuration).xml
-
-    - template: yaml-templates\run-nunit-tests.yaml
-      parameters:
-        testRunTitle: Xamarin.Android.MakeBundle-UnitTests - Windows Build Tree
-        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\Xamarin.Android.MakeBundle-UnitTests.dll
-        testResultsFile: TestResult-MakeBundleUnitTests-WinBuildTree-$(XA.Build.Configuration).xml
-
-    - template: yaml-templates\run-nunit-tests.yaml
-      parameters:
-        testRunTitle: EmbeddedDSOUnitTests - Windows Build Tree
-        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\EmbeddedDSOUnitTests.dll
-        testResultsFile: TestResult-EmbeddedDSOUnitTests-WinBuildTree-$(XA.Build.Configuration).xml
-
     # Limit the amount of worker threads used to run these tests in parallel to half of what is currently available (8) on the Windows pool.
     # Using all available cores seems to occasionally bog down our machines and cause parallel test execution to slow down dramatically.
     # Only run a subset of the Xamarin.Android.Build.Tests against the local Windows build tree.

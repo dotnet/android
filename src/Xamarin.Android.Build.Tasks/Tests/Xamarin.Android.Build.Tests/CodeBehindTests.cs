@@ -10,128 +10,129 @@ using NUnit.Framework;
 
 using Xamarin.ProjectTools;
 
-namespace CodeBehindUnitTests
+namespace Xamarin.Android.Build.Tests
 {
-	sealed class LocalBuilder : Builder
-	{
-		public LocalBuilder ()
-		{
-			BuildingInsideVisualStudio = false;
-		}
-		
-		public bool Build (string projectOrSolution, string target, string[] parameters = null, Dictionary<string, string> environmentVariables = null)
-		{
-			return BuildInternal (projectOrSolution, target, parameters, environmentVariables);
-		}
-	}
-
-	sealed class SourceFileMember
-	{
-		public string Visibility { get; }
-		public string Type { get; }
-		public string Name { get; }
-		public string Arguments { get; }
-		public bool IsExpressionBody { get; }
-		public bool IsMethod { get; }
-
-		public SourceFileMember (string visibility, string type, string name, bool isExpressionBody)
-		{
-			if (String.IsNullOrEmpty (visibility))
-				throw new ArgumentException (nameof (visibility));
-			if (String.IsNullOrEmpty (type))
-				throw new ArgumentException (nameof (type));
-			if (String.IsNullOrEmpty (name))
-				throw new ArgumentException (nameof (name));
-			Visibility = visibility;
-			Type = type;
-			Name = name;
-			IsExpressionBody = isExpressionBody;
-			IsMethod = false;
-		}
-
-		public SourceFileMember (string visibility, string type, string name, string arguments)
-		{
-			if (String.IsNullOrEmpty (visibility))
-				throw new ArgumentException (nameof (visibility));
-			if (String.IsNullOrEmpty (type))
-				throw new ArgumentException (nameof (type));
-			if (String.IsNullOrEmpty (name))
-				throw new ArgumentException (nameof (name));
-			Visibility = visibility;
-			Type = type;
-			Name = name;
-			Arguments = arguments ?? String.Empty;
-			IsExpressionBody = false;
-			IsMethod = true;
-		}
-	}
-
-	sealed class SourceFile : IEnumerable<SourceFileMember>
-	{
-		readonly List<SourceFileMember> properties;
-
-		public string Path { get; }
-		public bool ForMany { get; }
-
-		public SourceFile (string path, bool forMany = false)
-		{
-			if (String.IsNullOrEmpty (path))
-				throw new ArgumentException (nameof (path));
-			Path = path;
-			ForMany = forMany;
-			properties = new List <SourceFileMember> ();
-		}
-
-		public void Add (string visibility, string type, string name, bool isExpressionBody = true)
-		{
-			properties.Add (new SourceFileMember (visibility, type, name, isExpressionBody));
-		}
-
-		public void Add (string visibility, string type, string name, string arguments)
-		{
-			properties.Add (new SourceFileMember (visibility, type, name, arguments));
-		}
-
-		public IEnumerator<SourceFileMember> GetEnumerator()
-		{
-			return ((IEnumerable<SourceFileMember>)properties).GetEnumerator ();
-		}
-
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return ((IEnumerable<SourceFileMember>)properties).GetEnumerator ();
-		}
-	}
-
-	sealed class TestProjectInfo
-	{
-		public string RootDirectory { get; }
-		public string OutputDirectory { get; }
-		public string ObjPath { get; }
-		public string BinPath { get; }
-		public string GeneratedPath { get; }
-		public string SlnPath { get; }
-		public string ProjectName { get; }
-		public string TestName { get; }
-
-		public TestProjectInfo (string projectName, string testName, string rootDirectory, string outputRootDir)
-		{
-			TestName = testName;
-			RootDirectory = rootDirectory;
-			ProjectName = projectName;
-
-			ObjPath = Path.Combine (rootDirectory, "obj");
-			GeneratedPath = Path.Combine (ObjPath, XABuildPaths.Configuration, "generated");
-			BinPath = Path.Combine (rootDirectory, "bin", XABuildPaths.Configuration);
-			SlnPath = Path.Combine (rootDirectory, $"{projectName}.sln");
-
-			OutputDirectory = Path.Combine (outputRootDir, testName, XABuildPaths.Configuration);
-		}
-	}
-
+	[Category ("Node-2")]
 	[Parallelizable (ParallelScope.Children)]
-	public class BuildTests_CodeBehindBuildTests
+	public class CodeBehindTests
 	{
+		sealed class LocalBuilder : Builder
+		{
+			public LocalBuilder ()
+			{
+				BuildingInsideVisualStudio = false;
+			}
+
+			public bool Build (string projectOrSolution, string target, string [] parameters = null, Dictionary<string, string> environmentVariables = null)
+			{
+				return BuildInternal (projectOrSolution, target, parameters, environmentVariables);
+			}
+		}
+
+		sealed class SourceFileMember
+		{
+			public string Visibility { get; }
+			public string Type { get; }
+			public string Name { get; }
+			public string Arguments { get; }
+			public bool IsExpressionBody { get; }
+			public bool IsMethod { get; }
+
+			public SourceFileMember (string visibility, string type, string name, bool isExpressionBody)
+			{
+				if (String.IsNullOrEmpty (visibility))
+					throw new ArgumentException (nameof (visibility));
+				if (String.IsNullOrEmpty (type))
+					throw new ArgumentException (nameof (type));
+				if (String.IsNullOrEmpty (name))
+					throw new ArgumentException (nameof (name));
+				Visibility = visibility;
+				Type = type;
+				Name = name;
+				IsExpressionBody = isExpressionBody;
+				IsMethod = false;
+			}
+
+			public SourceFileMember (string visibility, string type, string name, string arguments)
+			{
+				if (String.IsNullOrEmpty (visibility))
+					throw new ArgumentException (nameof (visibility));
+				if (String.IsNullOrEmpty (type))
+					throw new ArgumentException (nameof (type));
+				if (String.IsNullOrEmpty (name))
+					throw new ArgumentException (nameof (name));
+				Visibility = visibility;
+				Type = type;
+				Name = name;
+				Arguments = arguments ?? String.Empty;
+				IsExpressionBody = false;
+				IsMethod = true;
+			}
+		}
+
+		sealed class SourceFile : IEnumerable<SourceFileMember>
+		{
+			readonly List<SourceFileMember> properties;
+
+			public string Path { get; }
+			public bool ForMany { get; }
+
+			public SourceFile (string path, bool forMany = false)
+			{
+				if (String.IsNullOrEmpty (path))
+					throw new ArgumentException (nameof (path));
+				Path = path;
+				ForMany = forMany;
+				properties = new List<SourceFileMember> ();
+			}
+
+			public void Add (string visibility, string type, string name, bool isExpressionBody = true)
+			{
+				properties.Add (new SourceFileMember (visibility, type, name, isExpressionBody));
+			}
+
+			public void Add (string visibility, string type, string name, string arguments)
+			{
+				properties.Add (new SourceFileMember (visibility, type, name, arguments));
+			}
+
+			public IEnumerator<SourceFileMember> GetEnumerator ()
+			{
+				return ((IEnumerable<SourceFileMember>) properties).GetEnumerator ();
+			}
+
+			IEnumerator IEnumerable.GetEnumerator ()
+			{
+				return ((IEnumerable<SourceFileMember>) properties).GetEnumerator ();
+			}
+		}
+
+		sealed class TestProjectInfo
+		{
+			public string RootDirectory { get; }
+			public string OutputDirectory { get; }
+			public string ObjPath { get; }
+			public string BinPath { get; }
+			public string GeneratedPath { get; }
+			public string SlnPath { get; }
+			public string ProjectName { get; }
+			public string TestName { get; }
+
+			public TestProjectInfo (string projectName, string testName, string rootDirectory, string outputRootDir)
+			{
+				TestName = testName;
+				RootDirectory = rootDirectory;
+				ProjectName = projectName;
+
+				ObjPath = Path.Combine (rootDirectory, "obj");
+				GeneratedPath = Path.Combine (ObjPath, XABuildPaths.Configuration, "generated");
+				BinPath = Path.Combine (rootDirectory, "bin", XABuildPaths.Configuration);
+				SlnPath = Path.Combine (rootDirectory, $"{projectName}.sln");
+
+				OutputDirectory = Path.Combine (outputRootDir, testName, XABuildPaths.Configuration);
+			}
+		}
+
 		const string ProjectName = "CodeBehindBuildTests";
 		const string CommonSampleLibraryName = "CommonSampleLibrary";
 
@@ -147,7 +148,7 @@ namespace CodeBehindUnitTests
 			"msbuild.binlog",
 		};
 
-		static BuildTests_CodeBehindBuildTests ()
+		static CodeBehindTests ()
 		{
 			TestProjectRootDirectory = Path.GetFullPath (Path.Combine (XABuildPaths.TopDirectory, "tests", "CodeBehind", "BuildTests"));
 			CommonSampleLibraryRootDirectory = Path.GetFullPath (Path.Combine (XABuildPaths.TopDirectory, "tests", "CodeBehind", CommonSampleLibraryName));

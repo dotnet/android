@@ -35,24 +35,6 @@ jobs:
     - ${{ if eq(parameters.node_id, 2) }}:
       - template: run-nunit-tests.yaml
         parameters:
-          testRunTitle: CodeBehindUnitTests - macOS
-          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/CodeBehind/CodeBehindUnitTests.dll
-          testResultsFile: TestResult-CodeBehindUnitTests-macOS-$(XA.Build.Configuration).xml
-
-      - template: run-nunit-tests.yaml
-        parameters:
-          testRunTitle: Xamarin.Android.MakeBundle-UnitTests - macOS
-          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/Xamarin.Android.MakeBundle-UnitTests.dll
-          testResultsFile: TestResult-MakeBundleUnitTests-macOS-$(XA.Build.Configuration).xml
-
-      - template: run-nunit-tests.yaml
-        parameters:
-          testRunTitle: EmbeddedDSOUnitTests - macOS
-          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/EmbeddedDSOUnitTests.dll
-          testResultsFile: TestResult-EmbeddedDSOUnitTests-macOS-$(XA.Build.Configuration).xml
-
-      - template: run-nunit-tests.yaml
-        parameters:
           testRunTitle: Xamarin.Android.Build.Tests.Commercial - macOS
           testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/Xamarin.Android.Build.Tests.Commercial.dll
           testResultsFile: TestResult-MSBuildTestsCommercial-macOS-$(XA.Build.Configuration).xml

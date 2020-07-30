@@ -439,6 +439,12 @@ namespace Xamarin.Android.Build.Tests
 			return Path.Combine (path, "25.0.2");
 		}
 
+		protected string GetPathToZipAlign()
+		{
+			var exe = IsWindows ? "zipalign.exe" : "zipalign";
+			return GetPathToLatestBuildTools (exe);
+		}
+
 		protected string GetPathToAapt2 ()
 		{
 			var exe = IsWindows ? "aapt2.exe" : "aapt2";
