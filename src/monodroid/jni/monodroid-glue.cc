@@ -42,7 +42,7 @@
 
 #if defined (APPLE_OS_X)
 #include <libgen.h>
-#endif
+#endif  // defined(APPLE_OS_X)
 
 #ifndef WINDOWS
 #include <sys/mman.h>
@@ -1516,7 +1516,7 @@ MonodroidRuntime::get_my_location ()
 
 	return utils.strdup_new (dirname (const_cast<char*>(info.dli_fname)));
 }
-#endif
+#endif  // defined(WINDOWS)
 
 inline void
 MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
@@ -1607,16 +1607,16 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 		api_dso_handle = dlopen (dso_path.get (), RTLD_NOW);
 #if defined (APPLE_OS_X)
 		delete[] my_location;
-#else
+#else   // !defined(APPLE_OS_X)
 		free (static_cast<void*>(const_cast<char*>(my_location))); // JI allocates with `calloc`
-#endif
+#endif  // defined(APPLE_OS_X)
 	}
 
 	if (api_dso_handle == nullptr) {
 		log_info (LOG_DEFAULT, "Attempting to load %s with \"bare\" dlopen", API_DSO_NAME);
 		api_dso_handle = dlopen (API_DSO_NAME, RTLD_NOW);
 	}
-#endif
+#endif  // defined(WINDOWS) || defined(APPLE_OS_X)
 	if (api_dso_handle == nullptr)
 		api_dso_handle = androidSystem.load_dso_from_any_directories (API_DSO_NAME, RTLD_NOW);
 	init_internal_api_dso (api_dso_handle);
