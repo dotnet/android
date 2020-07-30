@@ -7,7 +7,6 @@
     <RootNamespace>setupwindows</RootNamespace>
     <AssemblyName>setup-windows</AssemblyName>
     <OutputPath>$(XamarinAndroidSourcePath)bin\$(Configuration)\bin\</OutputPath>
-    <DefaultItemExcludes>$(DefaultItemExcludes);**\.DS_Store</DefaultItemExcludes>
   </PropertyGroup>
  
   <Import Project="..\..\Configuration.props" />
