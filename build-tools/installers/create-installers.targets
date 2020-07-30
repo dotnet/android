@@ -159,6 +159,7 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\LayoutBinding.cs" />
     <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libmono-android.debug.so')"       Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
     <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libmono-android.release.so')"     Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libxa-internal-api.so')"          Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
     <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libmono-btls-shared.so')"         Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
     <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libmono-profiler-aot.so')"        Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
     <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\libmono-profiler-log.so')"        Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
@@ -294,6 +295,7 @@
     <_MSBuildLibHostFilesWin Include="$(MSBuildSrcDir)\lib\host-mxe-Win64\libMonoPosixHelper.dll" />
     <_MSBuildLibHostFilesWin Include="$(MSBuildSrcDir)\lib\host-mxe-Win64\libmonosgen-2.0.dll" />
     <_MSBuildLibHostFilesWin Include="$(MSBuildSrcDir)\lib\host-mxe-Win64\libxamarin-app.dll" Condition=" '$(HostOS)' != 'Windows' " />
+    <_MSBuildLibHostFilesWin Include="$(MSBuildSrcDir)\lib\host-mxe-Win64\libxa-internal-api.dll" Condition=" '$(HostOS)' != 'Windows' " />
   </ItemGroup>
   <ItemDefinitionGroup>
     <_MSBuildFilesUnixSign>
@@ -333,6 +335,7 @@
     <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libMonoPosixHelper.$(LibExtension)"       Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
     <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libmonosgen-2.0.$(LibExtension)"          Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
     <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libxamarin-app.$(LibExtension)"           Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\lib\host-$(HostOS)\libxa-internal-api.$(LibExtension)"       Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
     <_MSBuildFilesUnixSign Include="$(MSBuildSrcDir)\libzip.$(LibExtension)" />
     <_MSBuildFilesUnix Include="$(MSBuildSrcDir)\proguard\bin\proguard.sh" />
   </ItemGroup>

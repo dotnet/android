@@ -1,4 +1,5 @@
 #ifndef __XAMARIN_GETIFADDRS_H
+#define __XAMARIN_GETIFADDRS_H
 
 #include "monodroid.h"
 
