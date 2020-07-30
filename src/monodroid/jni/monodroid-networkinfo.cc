@@ -126,22 +126,19 @@ _monodroid_get_network_interface_state (const char *ifname, mono_bool *is_up, mo
 	return ret;
 }
 
-/* !DO NOT REMOVE! Used by Mono BCL (System.Net.NetworkInformation.NetworkInterface) */
-MONO_API mono_bool
+mono_bool
 _monodroid_get_network_interface_up_state (const char *ifname, mono_bool *is_up)
 {
 	return _monodroid_get_network_interface_state (ifname, is_up, nullptr);
 }
 
-/* !DO NOT REMOVE! Used by Mono BCL (System.Net.NetworkInformation.NetworkInterface) */
-MONO_API mono_bool
+mono_bool
 _monodroid_get_network_interface_supports_multicast (const char *ifname, mono_bool *supports_multicast)
 {
 	return _monodroid_get_network_interface_state (ifname, nullptr, supports_multicast);
 }
 
-/* !DO NOT REMOVE! Used by Mono BCL (System.Net.NetworkInformation.UnixIPInterfaceProperties) */
-MONO_API int
+int
 _monodroid_get_dns_servers (void **dns_servers_array)
 {
 	if (!dns_servers_array) {
@@ -157,7 +154,7 @@ _monodroid_get_dns_servers (void **dns_servers_array)
 	char    prop_name[] = "net.dnsX";
 	for (int i = 0; i < 8; i++) {
 		prop_name [7] = (char)(i + 0x31);
-		len = static_cast<size_t>(monodroid_get_system_property (prop_name, &dns));
+		len = static_cast<size_t>(androidSystem.monodroid_get_system_property (prop_name, &dns));
 		if (len == 0) {
 			dns_servers [i] = nullptr;
 			continue;

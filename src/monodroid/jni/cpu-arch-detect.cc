@@ -225,7 +225,7 @@ get_running_on_cpu (unsigned short *running_on_cpu)
 	*running_on_cpu = CPU_KIND_UNKNOWN;
 }
 
-MONO_API void
+void
 _monodroid_detect_cpu_and_architecture (unsigned short *built_for_cpu, unsigned short *running_on_cpu, unsigned char *is64bit)
 {
 	assert (built_for_cpu);

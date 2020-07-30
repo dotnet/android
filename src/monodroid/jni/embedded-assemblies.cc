@@ -597,7 +597,7 @@ EmbeddedAssemblies::md_mmap_apk_file (int fd, uint32_t offset, uint32_t size, co
 	md_mmap_info file_info;
 	md_mmap_info mmap_info;
 
-	size_t pageSize       = static_cast<size_t>(monodroid_getpagesize());
+	size_t pageSize       = static_cast<size_t>(utils.monodroid_getpagesize ());
 	uint32_t offsetFromPage  = static_cast<uint32_t>(offset % pageSize);
 	uint32_t offsetPage      = offset - offsetFromPage;
 	uint32_t offsetSize      = size + offsetFromPage;

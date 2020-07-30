@@ -228,6 +228,8 @@ else()
   endif()
 endif()
 
+string(STRIP "${EXTRA_LINKER_FLAGS}" EXTRA_LINKER_FLAGS)
+
 if (ENABLE_TIMING)
   add_definitions("-DMONODROID_TIMING=1")
 endif()
@@ -285,17 +287,22 @@ set(MONODROID_SOURCES
   ${SOURCES_DIR}/debug-constants.cc
   ${SOURCES_DIR}/embedded-assemblies.cc
   ${SOURCES_DIR}/embedded-assemblies-zip.cc
-  ${SOURCES_DIR}/external-api.cc
   ${SOURCES_DIR}/globals.cc
-  ${SOURCES_DIR}/jni.c
   ${SOURCES_DIR}/logger.cc
   ${SOURCES_DIR}/monodroid-glue.cc
+  ${SOURCES_DIR}/xa-internal-api.cc
   ${SOURCES_DIR}/osbridge.cc
   ${SOURCES_DIR}/shared-constants.cc
   ${SOURCES_DIR}/timezones.cc
   ${SOURCES_DIR}/util.cc
   ${JAVA_INTEROP_SRC_PATH}/java-interop.cc
   ${JAVA_INTEROP_SRC_PATH}/java-interop-mono.cc
+  ${JAVA_INTEROP_SRC_PATH}/java-interop-util.cc
+  )
+
+set(XA_INTERNAL_API_SOURCES
+  ${SOURCES_DIR}/jni.c
+  ${SOURCES_DIR}/internal-pinvoke-api.cc
   ${JAVA_INTEROP_SRC_PATH}/java-interop-util.cc
   )
 
@@ -313,6 +320,15 @@ if(UNIX)
     ${SOURCES_DIR}/xamarin_getifaddrs.cc
     )
 endif()
+
+add_library(xa-internal-api SHARED ${XA_INTERNAL_API_SOURCES})
+target_link_libraries(xa-internal-api ${EXTRA_LINKER_FLAGS})
+set_target_properties(
+  xa-internal-api
+  PROPERTIES
+  COMPILE_FLAGS -fvisibility=default
+  LINK_FLAGS -fvisibility=default
+  )
 
 set(XAMARIN_APP_STUB_SOURCES ${SOURCES_DIR}/application_dso_stub.cc)
 add_library(xamarin-app SHARED ${XAMARIN_APP_STUB_SOURCES})
