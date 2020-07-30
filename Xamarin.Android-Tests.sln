@@ -38,8 +38,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CodeGen-MkBundle", "CodeGen
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.MakeBundle-Tests", "tests\CodeGen-MkBundle\Xamarin.Android.MakeBundle-Tests\Xamarin.Android.MakeBundle-Tests.csproj", "{A0B2692E-9FBE-4157-9526-7145F07F2C5A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.MakeBundle-UnitTests", "tests\CodeGen-MkBundle\Xamarin.Android.MakeBundle-UnitTests\Xamarin.Android.MakeBundle-UnitTests.csproj", "{FA8EEC88-CA3C-4D69-B206-54B392570DC6}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ResolveImports", "ResolveImports", "{E49089E4-4CE0-475E-BE9C-0AB4E4D56EE9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.BindingResolveImportLib1", "tests\ResolveImports\Xamarin.Android.BindingResolveImportLib1\Xamarin.Android.BindingResolveImportLib1.csproj", "{2A0519DF-0DDA-45F7-AC3C-E2992748D364}"
@@ -72,8 +70,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonSampleLibrary", "test
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CodeBehind", "CodeBehind", "{9B63992C-2201-4BB0-BD00-D637B481A995}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeBehindUnitTests", "tests\CodeBehind\UnitTests\CodeBehindUnitTests.csproj", "{F4DAFD78-BE76-46C9-A1AD-85D8C91CD77B}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.ProjectTools", "src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Xamarin.ProjectTools.csproj", "{2DD1EE75-6D8D-4653-A800-0A24367F7F38}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Performance-Tests", "Performance-Tests", "{68B8E272-5B12-47AA-8923-550B9CE535C7}"
@@ -81,8 +77,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "timing", "build-tools\timing\timing.csproj", "{37CAA28C-40BE-4253-BA68-CC5D7316A617}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EmbeddedDSO", "tests\EmbeddedDSOs\EmbeddedDSO\EmbeddedDSO.csproj", "{056ED976-618F-4A3E-910E-AA25230C2296}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EmbeddedDSO-UnitTests", "tests\EmbeddedDSOs\EmbeddedDSO-UnitTests\EmbeddedDSO-UnitTests.csproj", "{8B5E63B7-8C18-4BA7-BAAB-A1955B257F5E}"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Mono.Android-Test.Shared", "src\Mono.Android\Test\Mono.Android-Test.Shared.shproj", "{0AB4956E-6FB9-4DA0-9D49-AB65A3FF403A}"
 EndProject
@@ -157,10 +151,6 @@ Global
 		{A0B2692E-9FBE-4157-9526-7145F07F2C5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A0B2692E-9FBE-4157-9526-7145F07F2C5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A0B2692E-9FBE-4157-9526-7145F07F2C5A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FA8EEC88-CA3C-4D69-B206-54B392570DC6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FA8EEC88-CA3C-4D69-B206-54B392570DC6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FA8EEC88-CA3C-4D69-B206-54B392570DC6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FA8EEC88-CA3C-4D69-B206-54B392570DC6}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2A0519DF-0DDA-45F7-AC3C-E2992748D364}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2A0519DF-0DDA-45F7-AC3C-E2992748D364}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2A0519DF-0DDA-45F7-AC3C-E2992748D364}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -217,10 +207,6 @@ Global
 		{7A5FB23C-6B26-461A-8BBD-02392DCE3C11}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7A5FB23C-6B26-461A-8BBD-02392DCE3C11}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7A5FB23C-6B26-461A-8BBD-02392DCE3C11}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F4DAFD78-BE76-46C9-A1AD-85D8C91CD77B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F4DAFD78-BE76-46C9-A1AD-85D8C91CD77B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F4DAFD78-BE76-46C9-A1AD-85D8C91CD77B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F4DAFD78-BE76-46C9-A1AD-85D8C91CD77B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2DD1EE75-6D8D-4653-A800-0A24367F7F38}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2DD1EE75-6D8D-4653-A800-0A24367F7F38}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2DD1EE75-6D8D-4653-A800-0A24367F7F38}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -233,10 +219,6 @@ Global
 		{056ED976-618F-4A3E-910E-AA25230C2296}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{056ED976-618F-4A3E-910E-AA25230C2296}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{056ED976-618F-4A3E-910E-AA25230C2296}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8B5E63B7-8C18-4BA7-BAAB-A1955B257F5E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8B5E63B7-8C18-4BA7-BAAB-A1955B257F5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8B5E63B7-8C18-4BA7-BAAB-A1955B257F5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8B5E63B7-8C18-4BA7-BAAB-A1955B257F5E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{8CB5FF58-FF95-43B9-9064-9ACE9525866F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8CB5FF58-FF95-43B9-9064-9ACE9525866F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8CB5FF58-FF95-43B9-9064-9ACE9525866F}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -288,7 +270,6 @@ Global
 		{910DCD88-D50A-4AAD-BA7A-CD51AB8532BF} = {6C86878D-9EBF-45B3-9368-C0EA4026F706}
 		{95012FA9-ED51-4004-8F36-91DB361C892B} = {9B63992C-2201-4BB0-BD00-D637B481A995}
 		{7A5FB23C-6B26-461A-8BBD-02392DCE3C11} = {9B63992C-2201-4BB0-BD00-D637B481A995}
-		{F4DAFD78-BE76-46C9-A1AD-85D8C91CD77B} = {9B63992C-2201-4BB0-BD00-D637B481A995}
 		{2DD1EE75-6D8D-4653-A800-0A24367F7F38} = {9B63992C-2201-4BB0-BD00-D637B481A995}
 		{37CAA28C-40BE-4253-BA68-CC5D7316A617} = {68B8E272-5B12-47AA-8923-550B9CE535C7}
 		{0AB4956E-6FB9-4DA0-9D49-AB65A3FF403A} = {EFBC4DC0-DBFF-4DAA-B0B8-6D0CB02A25F5}
