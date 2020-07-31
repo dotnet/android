@@ -97,9 +97,9 @@ to clarify expected behavior in our community. For more information, see the
   - [Vote for popular feature requests](https://github.com/xamarin/xamarin-android/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+label%3Aenhancement+sort%3Areactions-%2B1-desc).
   - File an issue in [GitHub Issues](https://github.com/xamarin/xamarin-android/issues/new).
   - [Tweet](https://twitter.com/xamarinhq) us with other feedback.
-  - Discuss development and design on [Gitter](https://gitter.im/xamarin/xamarin-android) or email [android-devel@lists.xamarin.com](android-devel@lists.xamarin.com) 
+  - Discuss development and design on [Discord](https://aka.ms/dotnet-discord) or email [android-devel@lists.xamarin.com](android-devel@lists.xamarin.com) 
 
-[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/xamarin/xamarin-android?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Discord](https://img.shields.io/badge/chat-on%20discord-brightgreen)](https://aka.ms/dotnet-discord)
 
 # License
 
