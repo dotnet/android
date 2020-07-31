@@ -1,16 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectTypeGuids>{EFBA0AD7-5A72-4C68-AF49-83D382785DCF};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <ProjectGuid>{5EB9E888-E357-417E-9F39-DDEC195CE47F}</ProjectGuid>
     <OutputType>Library</OutputType>
+    <TargetFrameworks>monoandroid11</TargetFrameworks>
     <RootNamespace>OpenTK</RootNamespace>
-    <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
-    <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
-    <AndroidResgenClass>Resource</AndroidResgenClass>
-    <AndroidResgenFile>Resources\Resource.designer.cs</AndroidResgenFile>
     <AssemblyName>OpenTK-1.0</AssemblyName>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
@@ -18,31 +12,32 @@
     <DefineConstants>MONODROID;MINIMAL;MOBILE;OPENTK_1;OPENTK_1_0</DefineConstants>
     <NoWarn>3001,3002,3003,3005,3006,3021,3014,0618,1591,0414,0169,0419,1570,1572,1573,1635</NoWarn>
     <NoStdLib>true</NoStdLib>
+
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AndroidApplication>false</AndroidApplication>
     <AndroidUseLatestPlatformSdk>false</AndroidUseLatestPlatformSdk>
     <AppendTargetFrameworkToIntermediateOutputPath>False</AppendTargetFrameworkToIntermediateOutputPath>
+    <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
+    <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
+    <AndroidResgenClass>Resource</AndroidResgenClass>
+    <AndroidResgenFile>Resources\Resource.designer.cs</AndroidResgenFile>
   </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'monoandroid10' ">
+    <TargetFrameworkIdentifier>MonoAndroid</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion>v1.0</TargetFrameworkVersion>
+  </PropertyGroup>
+  
   <Import Project="..\..\Configuration.props" />
   <Import Project="..\..\build-tools\scripts\MonoAndroidFramework.props" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <Optimize>false</Optimize>
     <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)</OutputPath>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
     <DocumentationFile>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)\OpenTK-1.0.xml</DocumentationFile>
     <AndroidLinkMode>None</AndroidLinkMode>
-    <ConsolePause>false</ConsolePause>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <Optimize>true</Optimize>
     <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)</OutputPath>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
     <DocumentationFile>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)\OpenTK-1.0.xml</DocumentationFile>
-    <ConsolePause>false</ConsolePause>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="mscorlib">
@@ -67,7 +62,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-        <Compile Include="GlobalAssemblyInfo.cs" />
         <Compile Include="$(OpenTKSourceDirectory)\Source\OpenTK\Audio\AudioCapture.cs">
             <Link>Audio\AudioCapture.cs</Link>
         </Compile>
@@ -604,13 +598,9 @@
   <Import Project="..\..\build-tools\scripts\JavaCallableWrappers.targets" />
   <ItemGroup>
     <ProjectReference Include="..\Mono.Android\Mono.Android.csproj">
-      <Project>{66CF299A-CE95-4131-BCD8-DB66E30C4BF7}</Project>
-      <Name>Mono.Android</Name>
       <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj">
-      <Project>{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}</Project>
-      <Name>Xamarin.Android.Build.Tasks</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
       <Private>False</Private>
     </ProjectReference>

@@ -1,12 +1,12 @@
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition="'$(Configuration)'==''">Debug</Configuration>
-    <ProjectGuid>1bafa0cc-0377-46ce-ab7b-7bb2e7b62f63</ProjectGuid>
+    <TargetFrameworks>monoandroid11;net472;net40</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <OutputPath Condition="'$(OutputPath)'==''">bin\$(Configuration)</OutputPath>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)'=='Debug'" />
-  <PropertyGroup Condition="'$(Configuration)'=='Release'" />
+
   <Import Project="r8.props" />
   <Import Project="..\..\Configuration.props" />
   <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
