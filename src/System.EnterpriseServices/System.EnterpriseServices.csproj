@@ -12,17 +12,11 @@
     <AndroidApplication>false</AndroidApplication>
     <AndroidUseLatestPlatformSdk>false</AndroidUseLatestPlatformSdk>
     <NoStdLib>true</NoStdLib>
+    <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\v1.0\</OutputPath>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <Import Project="..\..\build-tools\scripts\MonoAndroidFramework.props" />
 
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\v1.0\</OutputPath>
-    <DefineConstants>DEBUG;</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\v1.0\</OutputPath>
-  </PropertyGroup>
   <ItemGroup>
     <Reference Include="mscorlib">
     <HintPath>$(OutputPath)..\v1.0\mscorlib.dll</HintPath>
