@@ -15,7 +15,6 @@
 
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AndroidApplication>false</AndroidApplication>
-    <AndroidUseLatestPlatformSdk>false</AndroidUseLatestPlatformSdk>
     <AppendTargetFrameworkToIntermediateOutputPath>False</AppendTargetFrameworkToIntermediateOutputPath>
     <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
     <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
@@ -604,6 +603,8 @@
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
       <Private>False</Private>
     </ProjectReference>
-    <ProjectReference Include="..\r8\r8.csproj" ReferenceOutputAssembly="False" />
+    <ProjectReference Include="..\r8\r8.csproj" ReferenceOutputAssembly="False"><Project>{1BAFA0CC-0377-46CE-AB7B-7BB2E7B62F63}</Project>
+<Name>r8</Name>
+</ProjectReference>
   </ItemGroup>
 </Project>

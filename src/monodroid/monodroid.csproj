@@ -1,18 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.Build.NoTargets/2.0.1">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{53EE4C57-1C03-405A-8243-8DA539546C88}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android\lib\</OutputPath>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android\lib\</OutputPath>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android\lib\</OutputPath>
-  </PropertyGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
+
   <PropertyGroup>
     <BuildDependsOn>
       ResolveReferences;
@@ -32,7 +27,7 @@
       -->
     <ProjectReference Include="..\..\external\Java.Interop\tools\jnimarshalmethod-gen\Xamarin.Android.Tools.JniMarshalMethodGenerator.csproj">
       <Project>{D1295A8F-4F42-461D-A046-564476C10002}</Project>
-      <Name>jnimarshalmethod-gen</Name>
+      <Name>Xamarin.Android.Tools.JniMarshalMethodGenerator</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>
