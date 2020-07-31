@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.Build.NoTargets/1.0.110">
+
+  <PropertyGroup>
+    <TargetFrameworks>net472</TargetFrameworks>
+    <OutputPath>$(UtilityOutputFullPath)</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" Version="1.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <CompileJava Include="src\main\**\*.java" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <CompileTestJava Include="src\test\java\**\*.java" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <CompileTestJavaResources Include="src\test\resources\com\microsoft\**\*.java" />
+  </ItemGroup>
+
+</Project>

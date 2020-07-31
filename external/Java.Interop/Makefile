@@ -45,6 +45,7 @@ run-all-tests:
 	$(MAKE) run-tests                 || r=1 ; \
 	$(MAKE) run-test-jnimarshal       || r=1 ; \
 	$(MAKE) run-ptests                || r=1 ; \
+	$(MAKE) run-java-source-utils-tests     || r=1 ; \
 	exit $$r;
 
 include build-tools/scripts/msbuild.mk
@@ -143,6 +144,9 @@ run-ptests: $(PTESTS) bin/Test$(CONFIGURATION)/$(JAVA_INTEROP_LIB)
 	r=0; \
 	$(foreach t,$(PTESTS), $(call RUN_TEST,$(t))) \
 	exit $$r;
+
+run-java-source-utils-tests:
+	$(MSBUILD) $(MSBUILD_FLAGS) tools/java-source-utils/java-source-utils.csproj /t:RunTests
 
 bin/Test$(CONFIGURATION)/$(JAVA_INTEROP_LIB): bin/$(CONFIGURATION)/$(JAVA_INTEROP_LIB)
 	cp $< $@

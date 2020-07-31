@@ -1,4 +1,5 @@
 {
+    "java.configuration.updateBuildConfiguration": "automatic",
     "nxunitExplorer.nunit": "packages/NUnit.ConsoleRunner.3.9.0/tools/nunit3-console.exe",
     "nxunitExplorer.modules": [
         "bin/TestDebug/generator-Tests.dll",

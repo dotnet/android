@@ -1,0 +1,26 @@
+{
+    "Registrations": [
+        {
+            "Component": {
+                "Type": "maven",
+                "Maven": {
+                    "GroupId": "com.github.javaparser",
+                    "ArtifactId": "javaparser-core",
+                    "Version": "3.16.1"
+                }
+            },
+            "DevelopmentDependency":false
+        },
+        {
+            "Component": {
+                "Type": "maven",
+                "Maven": {
+                    "GroupId": "com.github.javaparser",
+                    "ArtifactId": "javaparser-symbol-solver-core",
+                    "Version": "3.16.1"
+                }
+            },
+            "DevelopmentDependency":false
+        }
+    ]
+}

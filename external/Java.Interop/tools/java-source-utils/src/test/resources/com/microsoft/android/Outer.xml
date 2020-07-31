@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<api api-source="java-source-utils">
+  <package jni-name="example" name="example">
+    <class jni-signature="Lexample/Outer;" name="Outer">
+      <javadoc><![CDATA[Yay, Javadoc!
+
+JNI sig: Lexample/Outer;]]></javadoc>
+      <constructor jni-signature="(Ljava/lang/Object;)V">
+        <parameter jni-type="Ljava/lang/Object;" name="value" type="T"/>
+        <javadoc><![CDATA[<init>(java.lang.Object value)
+
+JNI sig: (Ljava/lang/Object;)V]]></javadoc>
+      </constructor>
+      <method jni-return="Ljava/lang/Error;" jni-signature="(Ljava/util/List;)Ljava/lang/Error;" name="isU" return="U">
+        <parameter jni-type="Ljava/util/List;" name="list" type="java.util.List&lt;? super U&gt;"/>
+        <javadoc><![CDATA[isU(java.util.List<? super U> list)
+
+<p>This is a paragraph.  Yay?</p>
+
+JNI sig: (Ljava/util/List;)Ljava/lang/Error;
+
+@param list just some random items
+@return some value]]></javadoc>
+      </method>
+      <method jni-return="V" jni-signature="([Ljava/lang/String;)V" name="main" return="void">
+        <parameter jni-type="[Ljava/lang/String;" name="args" type="java.lang.String[]"/>
+        <javadoc><![CDATA[main(java.lang.String[] args)
+
+JNI sig: ([Ljava/lang/String;)V]]></javadoc>
+      </method>
+      <method jni-return="Ljava/lang/Appendable;" jni-signature="(Ljava/lang/CharSequence;[S[Ljava/lang/Appendable;)Ljava/lang/Appendable;" name="method" return="T">
+        <parameter jni-type="Ljava/lang/CharSequence;" name="a" type="java.lang.CharSequence"/>
+        <parameter jni-type="[S" name="b" type="short[]"/>
+        <parameter jni-type="[Ljava/lang/Appendable;" name="values" type="T[]"/>
+        <javadoc><![CDATA[method(java.lang.CharSequence a, short[] b, T[] values)
+
+JNI sig: (Ljava/lang/CharSequence;[S[Ljava/lang/Appendable;)Ljava/lang/Appendable;]]></javadoc>
+      </method>
+    </class>
+    <interface jni-signature="Lexample/Outer$Inner;" name="Outer.Inner">
+      <javadoc><![CDATA[JNI sig: Lexample/Outer$Inner;]]></javadoc>
+      <field jni-signature="J" name="COUNT">
+        <javadoc><![CDATA[JNI sig: J]]></javadoc>
+      </field>
+      <method jni-return="V" jni-signature="([[Ljava/lang/Readable;)V" name="m" return="void">
+        <parameter jni-type="[[Ljava/lang/Readable;" name="values" type="V[][]"/>
+        <javadoc><![CDATA[m(U value)
+
+JNI sig: ([[Ljava/lang/Readable;)V
+
+@throws Throwable never, just because]]></javadoc>
+      </method>
+    </interface>
+    <class jni-signature="Lexample/Outer$Inner$NestedInner;" name="Outer.Inner.NestedInner">
+      <javadoc><![CDATA[JNI sig: Lexample/Outer$Inner$NestedInner;]]></javadoc>
+      <field jni-signature="S" name="S">
+        <javadoc><![CDATA[JNI sig: S]]></javadoc>
+      </field>
+      <method jni-return="V" jni-signature="(Ljava/util/Map;)V" name="map" return="void">
+        <parameter jni-type="Ljava/util/Map;" name="m" type="java.util.Map&lt;T, java.lang.String&gt;"/>
+        <javadoc><![CDATA[map(java.util.Map<T, String> map)
+
+JNI sig: map(Ljava/util/Map;)V
+
+@param map]]></javadoc>
+      </method>
+    </class>
+    <interface jni-signature="Lexample/Outer$MyAnnotation;" name="Outer.MyAnnotation">
+      <javadoc><![CDATA[Just an example annotation, for use later…
+
+JNI sig: Lexample/Outer$MyAnnotation;]]></javadoc>
+      <method jni-return="[Ljava/lang/String;" jni-signature="()[Ljava/lang/String;" name="keys" return="java.lang.String[]">
+        <javadoc><![CDATA[JNI sig: ()[Ljava/lang/String;
+
+@return some random keys]]></javadoc>
+      </method>
+    </interface>
+  </package>
+</api>

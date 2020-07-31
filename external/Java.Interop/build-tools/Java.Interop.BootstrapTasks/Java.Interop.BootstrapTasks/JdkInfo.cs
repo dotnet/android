@@ -56,8 +56,8 @@ namespace Java.Interop.BootstrapTasks
 			Directory.CreateDirectory (Path.GetDirectoryName (PropertyFile.ItemSpec));
 			Directory.CreateDirectory (Path.GetDirectoryName (MakeFragmentFile.ItemSpec));
 
-			WritePropertyFile (jdk.JarPath, jdk.JavacPath, jdk.JdkJvmPath, rtJarPath, jdk.IncludePath);
-			WriteMakeFragmentFile (jdk.JarPath, jdk.JavacPath, jdk.JdkJvmPath, rtJarPath, jdk.IncludePath);
+			WritePropertyFile (jdk.JavaPath, jdk.JarPath, jdk.JavacPath, jdk.JdkJvmPath, rtJarPath, jdk.IncludePath);
+			WriteMakeFragmentFile (jdk.JavaPath, jdk.JarPath, jdk.JavacPath, jdk.JdkJvmPath, rtJarPath, jdk.IncludePath);
 
 			return !Log.HasLoggedErrors;
 		}
@@ -93,7 +93,7 @@ namespace Java.Interop.BootstrapTasks
 			return logger;
 		}
 
-		void WritePropertyFile (string jarPath, string javacPath, string jdkJvmPath, string rtJarPath, IEnumerable<string> includes)
+		void WritePropertyFile (string javaPath, string jarPath, string javacPath, string jdkJvmPath, string rtJarPath, IEnumerable<string> includes)
 		{
 			var msbuild = XNamespace.Get ("http://schemas.microsoft.com/developer/msbuild/2003");
 			var project = new XElement (msbuild + "Project",
@@ -104,6 +104,10 @@ namespace Java.Interop.BootstrapTasks
 						new XElement (msbuild + "ItemGroup",
 							includes.Select (i => new XElement (msbuild + "JdkIncludePath", new XAttribute ("Include", i)))))),
 				new XElement (msbuild + "PropertyGroup",
+					new XElement (msbuild + "JavaSdkDirectory", new XAttribute ("Condition", " '$(JavaSdkDirectory)' == '' "),
+						JavaHomePath),
+					new XElement (msbuild + "JavaPath", new XAttribute ("Condition", " '$(JavaPath)' == '' "),
+						javaPath),
 					new XElement (msbuild + "JavaCPath", new XAttribute ("Condition", " '$(JavaCPath)' == '' "),
 						javacPath),
 					new XElement (msbuild + "JarPath", new XAttribute ("Condition", " '$(JarPath)' == '' "),
@@ -121,10 +125,11 @@ namespace Java.Interop.BootstrapTasks
 					rtJarPath);
 		}
 
-		void WriteMakeFragmentFile (string jarPath, string javacPath, string jdkJvmPath, string rtJarPath, IEnumerable<string> includes)
+		void WriteMakeFragmentFile (string javaPath, string jarPath, string javacPath, string jdkJvmPath, string rtJarPath, IEnumerable<string> includes)
 		{
 			using (var o = new StreamWriter (MakeFragmentFile.ItemSpec)) {
 				o.WriteLine ($"export  JI_JAR_PATH          := {jarPath}");
+				o.WriteLine ($"export  JI_JAVA_PATH         := {javaPath}");
 				o.WriteLine ($"export  JI_JAVAC_PATH        := {javacPath}");
 				o.WriteLine ($"export  JI_JDK_INCLUDE_PATHS := {string.Join (" ", includes)}");
 				o.WriteLine ($"export  JI_JVM_PATH          := {jdkJvmPath}");

@@ -1,0 +1,21 @@
+package com.xamarin
+;---------------------------------------
+  class JavaEnum
+  class JavaType<E>
+    #ctor(java.lang.String value)
+    action(java.lang.Object value)
+    compareTo(com.xamarin.JavaType<E> value)
+    finalize(int value)
+    func(java.lang.StringBuilder value)
+    func(java.lang.String[] values)
+    <T> instanceActionWithGenerics(T value1, E value2)
+    <T, TExtendsNumber, TThrowable> staticActionWithGenerics(T value1, TExtendsNumber value2, java.util.List<?> unboundedList, java.util.List<? extends java.lang.Number> extendsList, java.util.List<? super java.lang.Throwable> superList)
+    sum(int first, int remaining)
+  class JavaType.ASC<E>
+  class JavaType.PSC<E>
+  class JavaType.RNC<E,E2>
+    #ctor(E value1, E2 value2)
+    fromE(E value)
+  class JavaType.RNC.RPNC<E,E2,E3>
+    #ctor(E value1, E2 value2, E3 value3)
+    fromE2(E2 value)

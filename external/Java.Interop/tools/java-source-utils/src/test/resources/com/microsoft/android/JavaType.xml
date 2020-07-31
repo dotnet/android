@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<api api-source="java-source-utils">
+  <package jni-name="com/xamarin" name="com.xamarin">
+    <class jni-signature="Lcom/xamarin/JavaEnum;" name="JavaEnum">
+      <javadoc><![CDATA[JNI sig: Lcom/xamarin/JavaEnum;]]></javadoc>
+      <method jni-return="I" jni-signature="()I" name="switchValue" return="int">
+        <javadoc><![CDATA[summary
+
+<p>Paragraphs of text?
+
+@return some value]]></javadoc>
+      </method>
+    </class>
+    <class jni-signature="Lcom/xamarin/JavaType;" name="JavaType">
+      <javadoc><![CDATA[JNI sig: Lcom/xamarin/JavaType;
+
+@param <E>]]></javadoc>
+      <constructor jni-signature="()V">
+        <javadoc><![CDATA[JNI sig: ()V]]></javadoc>
+      </constructor>
+      <constructor jni-signature="(Ljava/lang/String;)V">
+        <parameter jni-type="Ljava/lang/String;" name="value" type="java.lang.String"/>
+        <javadoc><![CDATA[JNI sig: (Ljava/lang/String;)V]]></javadoc>
+      </constructor>
+      <field jni-signature="Ljava/lang/Object;" name="INSTANCE_FINAL_E">
+        <javadoc><![CDATA[JNI sig: INSTANCE_FINAL_E.Ljava/lang/Object;]]></javadoc>
+      </field>
+      <field jni-signature="Ljava/lang/Object;" name="INSTANCE_FINAL_OBJECT">
+        <javadoc><![CDATA[JNI sig: INSTANCE_FINAL_OBJECT.Ljava/lang/Object;]]></javadoc>
+      </field>
+      <field jni-signature="D" name="NEGATIVE_INFINITY">
+        <javadoc><![CDATA[JNI sig: NEGATIVE_INFINITY.D]]></javadoc>
+      </field>
+      <field jni-signature="D" name="NaN">
+        <javadoc><![CDATA[JNI sig: NaN.D]]></javadoc>
+      </field>
+      <field jni-signature="D" name="POSITIVE_INFINITY">
+        <javadoc><![CDATA[JNI sig: POSITIVE_INFINITY.D]]></javadoc>
+      </field>
+      <field jni-signature="Z" name="STATIC_FINAL_BOOL_FALSE">
+        <javadoc><![CDATA[JNI sig: STATIC_FINAL_BOOL_FALSE.Z]]></javadoc>
+      </field>
+      <field jni-signature="Z" name="STATIC_FINAL_BOOL_TRUE">
+        <javadoc><![CDATA[JNI sig: STATIC_FINAL_BOOL_TRUE.Z]]></javadoc>
+      </field>
+      <field jni-signature="C" name="STATIC_FINAL_CHAR_MAX">
+        <javadoc><![CDATA[JNI sig: STATIC_FINAL_CHAR_MAX.C]]></javadoc>
+      </field>
+      <field jni-signature="C" name="STATIC_FINAL_CHAR_MIN">
+        <javadoc><![CDATA[JNI sig: STATIC_FINAL_CHAR_MIN.C]]></javadoc>
+      </field>
+      <field jni-signature="D" name="STATIC_FINAL_DOUBLE_MAX">
+        <javadoc><![CDATA[JNI sig: STATIC_FINAL_DOUBLE_MAX.D]]></javadoc>
+      </field>
+      <field jni-signature="D" name="STATIC_FINAL_DOUBLE_MIN">
+        <javadoc><![CDATA[JNI sig: STATIC_FINAL_DOUBLE_MIN.D]]></javadoc>
+      </field>
+      <field jni-signature="I" name="STATIC_FINAL_INT32">
+        <javadoc><![CDATA[JNI sig: STATIC_FINAL_INT32.I]]></javadoc>
+      </field>
+      <field jni-signature="I" name="STATIC_FINAL_INT32_MAX">
+        <javadoc><![CDATA[JNI sig: STATIC_FINAL_INT32_MAX.I]]></javadoc>
+      </field>
+      <field jni-signature="I" name="STATIC_FINAL_INT32_MIN">
+        <javadoc><![CDATA[JNI sig: STATIC_FINAL_INT32_MIN.I]]></javadoc>
+      </field>
+      <field jni-signature="J" name="STATIC_FINAL_INT64_MAX">
+        <javadoc><![CDATA[JNI sig: STATIC_FINAL_INT64_MAX.J]]></javadoc>
+      </field>
+      <field jni-signature="J" name="STATIC_FINAL_INT64_MIN">
+        <javadoc><![CDATA[JNI sig: STATIC_FINAL_INT64_MIN.J]]></javadoc>
+      </field>
+      <field jni-signature="Ljava/lang/Object;" name="STATIC_FINAL_OBJECT">
+        <javadoc><![CDATA[JNI sig: STATIC_FINAL_OBJECT.L/java/lang/Object;]]></javadoc>
+      </field>
+      <field jni-signature="F" name="STATIC_FINAL_SINGLE_MAX">
+        <javadoc><![CDATA[JNI sig: STATIC_FINAL_SINGLE_MAX.F]]></javadoc>
+      </field>
+      <field jni-signature="F" name="STATIC_FINAL_SINGLE_MIN">
+        <javadoc><![CDATA[JNI sig: STATIC_FINAL_SINGLE_MIN.F]]></javadoc>
+      </field>
+      <field jni-signature="Ljava/lang/String;" name="STATIC_FINAL_STRING">
+        <javadoc><![CDATA[JNI sig: STATIC_FINAL_STRING.Ljava/lang/String;]]></javadoc>
+      </field>
+      <method jni-return="V" jni-signature="(Ljava/lang/Object;)V" name="action" return="void">
+        <parameter jni-type="Ljava/lang/Object;" name="value" type="java.lang.Object"/>
+        <javadoc><![CDATA[JNI sig: action.(Ljava/lang/Object;)V]]></javadoc>
+      </method>
+      <method jni-return="I" jni-signature="(Lcom/xamarin/JavaType;)I" name="compareTo" return="int">
+        <parameter jni-type="Lcom/xamarin/JavaType;" name="value" type="com.xamarin.JavaType&lt;E&gt;"/>
+        <javadoc><![CDATA[JNI sig: compareTo.(Lcom/xamarin/JavaType;)I]]></javadoc>
+      </method>
+      <method jni-return="V" jni-signature="()V" name="finalize" return="void">
+        <javadoc><![CDATA[JNI sig: finalize.()V]]></javadoc>
+      </method>
+      <method jni-return="I" jni-signature="(I)I" name="finalize" return="int">
+        <parameter jni-type="I" name="value" type="int"/>
+        <javadoc><![CDATA[JNI sig: finalize.(I)I]]></javadoc>
+      </method>
+      <method jni-return="Ljava/util/List;" jni-signature="(Ljava/lang/StringBuilder;)Ljava/util/List;" name="func" return="java.util.List&lt;java.lang.String&gt;">
+        <parameter jni-type="Ljava/lang/StringBuilder;" name="value" type="java.lang.StringBuilder"/>
+        <javadoc><![CDATA[JNI sig: func.(Ljava/lang/StringBuilder;)Ljava/util/List;]]></javadoc>
+      </method>
+      <method jni-return="Ljava/lang/Integer;" jni-signature="([Ljava/lang/String;)Ljava/lang/Integer;" name="func" return="java.lang.Integer">
+        <parameter jni-type="[Ljava/lang/String;" name="values" type="java.lang.String[]"/>
+        <javadoc><![CDATA[JNI sig: func.([Ljava/lang/String;)Ljava/lang/Integer;]]></javadoc>
+      </method>
+      <method jni-return="V" jni-signature="(Ljava/lang/Object;Ljava/lang/Object;)V" name="instanceActionWithGenerics" return="void">
+        <parameter jni-type="Ljava/lang/Object;" name="value1" type="T"/>
+        <parameter jni-type="Ljava/lang/Object;" name="value2" type="E"/>
+        <javadoc><![CDATA[JNI sig: instanceActionWithGenerics.(Ljava/lang/Object;java/lang/Object;)V]]></javadoc>
+      </method>
+      <field jni-signature="[Ljava/lang/Object;" name="packageInstanceEArray">
+        <javadoc><![CDATA[JNI sig: packageInstanceEArray.[Ljava/lang/Object;]]></javadoc>
+      </field>
+      <field jni-signature="Ljava/util/List;" name="protectedInstanceEList">
+        <javadoc><![CDATA[JNI sig: protectedInstanceEList.Ljava/util/List;]]></javadoc>
+      </field>
+      <method jni-return="V" jni-signature="()V" name="run" return="void">
+        <javadoc><![CDATA[JNI sig: run.()V]]></javadoc>
+      </method>
+      <method jni-return="V" jni-signature="(Ljava/lang/Object;Ljava/lang/Number;Ljava/util/List;Ljava/util/List;Ljava/util/List;)V" name="staticActionWithGenerics" return="void">
+        <parameter jni-type="Ljava/lang/Object;" name="value1" type="T"/>
+        <parameter jni-type="Ljava/lang/Number;" name="value2" type="TExtendsNumber"/>
+        <parameter jni-type="Ljava/util/List;" name="unboundedList" type="java.util.List&lt;?&gt;"/>
+        <parameter jni-type="Ljava/util/List;" name="extendsList" type="java.util.List&lt;? extends java.lang.Number&gt;"/>
+        <parameter jni-type="Ljava/util/List;" name="superList" type="java.util.List&lt;? super java.lang.Throwable&gt;"/>
+        <javadoc><![CDATA[JNI sig: staticActionWithGenerics.(Ljava/lang/Object;Ljava/lang/Number;Ljava/util/List;Ljava/util/List;Ljava/util/List;)V]]></javadoc>
+      </method>
+      <method jni-return="I" jni-signature="(II)I" name="sum" return="int">
+        <parameter jni-type="I" name="first" type="int"/>
+        <parameter jni-type="I" name="remaining" type="int"/>
+        <javadoc><![CDATA[JNI sig: sum.(I[I)I]]></javadoc>
+      </method>
+    </class>
+    <class jni-signature="Lcom/xamarin/JavaType$ASC;" name="JavaType.ASC">
+      <javadoc><![CDATA[JNI sig: Lcom/xamarin/JavaType$ASC;]]></javadoc>
+    </class>
+    <class jni-signature="Lcom/xamarin/JavaType$PSC;" name="JavaType.PSC">
+      <javadoc><![CDATA[JNI sig: Lcom/xamarin/JavaType$PSC;]]></javadoc>
+    </class>
+    <class jni-signature="Lcom/xamarin/JavaType$RNC;" name="JavaType.RNC">
+      <javadoc><![CDATA[JNI sig: Lcom/xamarin/JavaType$RNC;]]></javadoc>
+      <constructor jni-signature="()V">
+        <javadoc><![CDATA[JNI sig: ()V]]></javadoc>
+      </constructor>
+      <constructor jni-signature="(Ljava/lang/Object;Ljava/lang/Object;)V">
+        <parameter jni-type="Ljava/lang/Object;" name="value1" type="E"/>
+        <parameter jni-type="Ljava/lang/Object;" name="value2" type="E2"/>
+        <javadoc><![CDATA[JNI sig: (Ljava/lang/Object;Ljava/lang/Object;)V]]></javadoc>
+      </constructor>
+      <method jni-return="Ljava/lang/Object;" jni-signature="(Ljava/lang/Object;)Ljava/lang/Object;" name="fromE" return="E2">
+        <parameter jni-type="Ljava/lang/Object;" name="value" type="E"/>
+        <javadoc><![CDATA[JNI sig: (Ljava/lang/Object;)Ljava/lang/Object;]]></javadoc>
+      </method>
+    </class>
+    <class jni-signature="Lcom/xamarin/JavaType$RNC$RPNC;" name="JavaType.RNC.RPNC">
+      <javadoc><![CDATA[JNI sig: Lcom/xamarin/JavaType$RNC$RPNC;]]></javadoc>
+      <constructor jni-signature="()V">
+        <javadoc><![CDATA[JNI sig: ()V]]></javadoc>
+      </constructor>
+      <constructor jni-signature="(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V">
+        <parameter jni-type="Ljava/lang/Object;" name="value1" type="E"/>
+        <parameter jni-type="Ljava/lang/Object;" name="value2" type="E2"/>
+        <parameter jni-type="Ljava/lang/Object;" name="value3" type="E3"/>
+        <javadoc><![CDATA[JNI sig: (Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V]]></javadoc>
+      </constructor>
+      <method jni-return="Ljava/lang/Object;" jni-signature="(Ljava/lang/Object;)Ljava/lang/Object;" name="fromE2" return="E3">
+        <parameter jni-type="Ljava/lang/Object;" name="value" type="E2"/>
+        <javadoc><![CDATA[JNI sig: fromE2.(Ljava/lang/Object;)Ljava/lang/Object;]]></javadoc>
+      </method>
+    </class>
+  </package>
+</api>

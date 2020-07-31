@@ -1,0 +1,100 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <Target Name="CoreCompile" DependsOnTargets="_BuildJava" />
+
+  <Target Name="_BuildJava"
+      AfterTargets="Build"
+      DependsOnTargets="_CompileTestResources"
+      Inputs="$(MSBuildThisFile);build.gradle;@(CompileJava);@(CompileTestJava);@(CompileTestJavaResources)"
+      Outputs="$(OutputPath)\java-source-utils.jar">
+    <Exec
+        Command="&quot;$(GradleWPath)&quot; -d $(GradleArgs) -PjavaSourceVer=$(JavacSourceVersion) -PjavaTargetVer=$(JavacTargetVersion) jar"
+        EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)"
+        WorkingDirectory="$(MSBuildThisFileDirectory)"
+    />
+    <Copy
+        SourceFiles="build\libs\java-source-utils.jar"
+        DestinationFolder="$(OutputPath)"
+    />
+  </Target>
+
+  <ItemGroup>
+    <_XATBJavaSourceFile Include="JavaType.java" />
+    <_XATBJavaSource Include="@(_XATBJavaSourceFile->'$(MSBuildThisFileDirectory)../../tests/Xamarin.Android.Tools.Bytecode-Tests/java/com/xamarin/%(Identity)')" />
+    <_XATBJavaDest Include="@(_XATBJavaSourceFile->'$(MSBuildThisFileDirectory)src/test/resources/com/xamarin/%(Identity)')" />
+  </ItemGroup>
+
+  <Target Name="_CopyJavaType_java"
+      Inputs="@(_XATBJavaSource)"
+      Outputs="@(_XATBJavaDest">
+    <ItemGroup>
+      <_Dirs Include="@(_XATBJavaDest->'%(RelativeDir)')" />
+    </ItemGroup>
+    <MakeDir Directories="@(_Dirs)" />
+    <Copy
+        SourceFiles="@(_XATBJavaSource)"
+        DestinationFiles="@(_XATBJavaDest)"
+    />
+  </Target>
+
+  <Target Name="RunTests"
+      DependsOnTargets="_BuildJava;_CopyJavaType_java">
+    <Exec
+        Command="&quot;$(GradleWPath)&quot; $(GradleArgs) test"
+        EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)"
+        WorkingDirectory="$(MSBuildThisFileDirectory)"
+    />
+  </Target>
+
+  <Target Name="_CompileTestResources"
+      Inputs="@(CompileTestJavaResources)"
+      Outputs="@(CompileTestJavaResources->'%(RelativeDir)%(Filename).class')">
+    <Exec
+        Command="&quot;$(JavaCPath)&quot; @(CompileTestJavaResources->'%(Identity)', ' ')"
+        WorkingDirectory="$(MSBuildThisFileDirectory)"
+    />
+  </Target>
+
+  <Target Name="BuildJavaTestResources"
+      DependsOnTargets="_BuildJava">
+    <Exec
+        Command="&quot;$(GradleWPath)&quot; $(GradleArgs) test"
+        EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)"
+        WorkingDirectory="$(MSBuildThisFileDirectory)"
+    />
+  </Target>
+
+  <Target Name="_Run"
+      DependsOnTargets="_BuildJava">
+    <Exec
+        Command="&quot;$(JavaPath)&quot; -jar &quot;$(ToolOutputFullPath)$(TargetFileName)&quot; $(Args)"
+        EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory)"
+    />
+  </Target>
+
+  <Target Name="_CleanJava" DependsOnTargets="Clean">
+    <Delete Files="$(OutputPath)java-source-utils.jar" />
+    <Exec
+        Command="&quot;$(GradleWPath)&quot; clean $(GradleArgs)"
+        EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)"
+        WorkingDirectory="$(MSBuildThisFileDirectory)"
+    />
+  </Target>
+
+  <Target Name="_UpdateTestOutputs"
+      DependsOnTargets="_CopyJavaType_java">
+    <ItemGroup>
+      <_JavaSource Include="src/test/resources/com/microsoft/android/Outer.java" />
+      <_JavaSource Include="src/test/resources/com/xamarin/JavaType.java" />
+    </ItemGroup>
+    <Exec
+        Command="&quot;$(JavaPath)&quot; -jar &quot;$(ToolOutputFullPath)$(TargetFileName)&quot; @(_JavaSource) --output-params src/test/resources/com/microsoft/android/%(Filename).params.txt --output-javadoc src/test/resources/com/microsoft/android/%(Filename).xml"
+        EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory)"
+    />
+  </Target>
+
+  <!-- Required by various targets… -->
+  <Target Name="CreateManifestResourceNames">
+  </Target>
+
+</Project>

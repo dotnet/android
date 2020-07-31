@@ -30,7 +30,7 @@ indent_style = space
 indent_size = 4
 
 # Code files
-[*.{cs,csx,vb,vbx}]
+[*.{cs,csx,java,vb,vbx}]
 insert_final_newline = true
 indent_style = tab
 tab_width = 8

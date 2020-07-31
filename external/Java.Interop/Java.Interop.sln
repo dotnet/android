@@ -91,6 +91,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Java.Interop.Tools.Generato
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop.Tools.Generator-Tests", "tests\Java.Interop.Tools.Generator-Tests\Java.Interop.Tools.Generator-Tests.csproj", "{7F4828AB-3908-458C-B09F-33C74A1368F9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "java-source-utils", "tools\java-source-utils\java-source-utils.csproj", "{F46EDFA5-C52A-4F0C-B5A2-5BB67E0D8C74}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems*{58b564a1-570d-4da2-b02d-25bddb1a9f4f}*SharedItemsImports = 5
@@ -251,6 +253,10 @@ Global
 		{7F4828AB-3908-458C-B09F-33C74A1368F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7F4828AB-3908-458C-B09F-33C74A1368F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7F4828AB-3908-458C-B09F-33C74A1368F9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F46EDFA5-C52A-4F0C-B5A2-5BB67E0D8C74}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F46EDFA5-C52A-4F0C-B5A2-5BB67E0D8C74}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F46EDFA5-C52A-4F0C-B5A2-5BB67E0D8C74}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F46EDFA5-C52A-4F0C-B5A2-5BB67E0D8C74}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -294,6 +300,7 @@ Global
 		{0E3AF6C1-7638-464D-9174-485D494499DC} = {C8F58966-94BF-407F-914A-8654F8B8AE3B}
 		{C2FD2F12-DE3B-4FB9-A0D3-FA3EF597DD04} = {0998E45F-8BCE-4791-A944-962CD54E2D80}
 		{7F4828AB-3908-458C-B09F-33C74A1368F9} = {271C9F30-F679-4793-942B-0D9527CB3E2F}
+		{F46EDFA5-C52A-4F0C-B5A2-5BB67E0D8C74} = {C8F58966-94BF-407F-914A-8654F8B8AE3B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {29204E0C-382A-49A0-A814-AD7FBF9774A5}
