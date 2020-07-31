@@ -1,15 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project Sdk="Microsoft.NET.Sdk">
-
+<Project Sdk="Microsoft.Build.NoTargets/2.0.1">
   <PropertyGroup>
     <TargetFrameworks>monoandroid11;net472;net40</TargetFrameworks>
+
+  <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <TargetFrameworks>net472</TargetFrameworks>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <Configuration Condition="'$(Configuration)'==''">Debug</Configuration>
     <OutputPath Condition="'$(OutputPath)'==''">bin\$(Configuration)</OutputPath>
   </PropertyGroup>
-
+  
   <Import Project="r8.props" />
   <Import Project="..\..\Configuration.props" />
-  <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
   <Import Project="r8.targets" />
 </Project>
 
