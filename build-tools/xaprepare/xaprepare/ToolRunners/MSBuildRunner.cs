@@ -32,6 +32,7 @@ namespace Xamarin.Android.Prepare
 
 			ProcessRunner runner = CreateProcessRunner ();
 			AddArguments (runner, StandardArguments);
+			runner.AddQuotedArgument ("/restore");
 			if (!String.IsNullOrEmpty (binlogName)) {
 				string logPath = Utilities.GetRelativePath (workingDirectory!, Path.Combine (Configurables.Paths.BuildBinDir, $"msbuild-{Context.BuildTimeStamp}-{binlogName}.binlog"));
 				runner.AddArgument ("/v:normal");
