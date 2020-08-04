@@ -20,8 +20,8 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "FLT";
 
 		const string TargetFrameworkIdentifier = "MonoAndroid";
-
-		public bool DesignTimeBuild { get; set; }
+		const RegisteredTaskObjectLifetime Lifetime = RegisteredTaskObjectLifetime.AppDomain;
+		const bool AllowEarlyCollection = false;
 
 		public ITaskItem [] InputAssemblies { get; set; }
 
@@ -41,28 +41,41 @@ namespace Xamarin.Android.Tasks
 				}
 				using (var pe = new PEReader (File.OpenRead (assemblyItem.ItemSpec))) {
 					var reader = pe.GetMetadataReader ();
+					// Check in-memory cache
+					var module = reader.GetModuleDefinition ();
+					var key = (nameof (FilterAssemblies), reader.GetGuid (module.Mvid));
+					var value = BuildEngine4.GetRegisteredTaskObject (key, Lifetime);
+					if (value is bool isMonoAndroidAssembly) {
+						if (isMonoAndroidAssembly) {
+							Log.LogDebugMessage ($"Cached: {assemblyItem.ItemSpec}");
+							output.Add (assemblyItem);
+						}
+						continue;
+					}
+					// Check assembly definition
 					var assemblyDefinition = reader.GetAssemblyDefinition ();
 					var targetFrameworkIdentifier = GetTargetFrameworkIdentifier (assemblyDefinition, reader);
 					if (string.Compare (targetFrameworkIdentifier, TargetFrameworkIdentifier, StringComparison.OrdinalIgnoreCase) == 0) {
 						output.Add (assemblyItem);
+						BuildEngine4.RegisterTaskObject (key, true, Lifetime, AllowEarlyCollection);
 						continue;
 					}
-
-					// In the rare case, [assembly: TargetFramework("MonoAndroid,Version=v9.0")] may not match
-					Log.LogDebugMessage ($"{nameof (TargetFrameworkIdentifier)} did not match: {assemblyItem.ItemSpec}");
-
 					// Fallback to looking for a Mono.Android reference
 					if (MonoAndroidHelper.HasMonoAndroidReference (reader)) {
 						Log.LogDebugMessage ($"Mono.Android reference found: {assemblyItem.ItemSpec}");
 						output.Add (assemblyItem);
+						BuildEngine4.RegisterTaskObject (key, true, Lifetime, AllowEarlyCollection);
 						continue;
 					}
 					// Fallback to looking for *.jar or __Android EmbeddedResource files
 					if (HasEmbeddedResource (reader)) {
 						Log.LogDebugMessage ($"EmbeddedResource found: {assemblyItem.ItemSpec}");
 						output.Add (assemblyItem);
+						BuildEngine4.RegisterTaskObject (key, true, Lifetime, AllowEarlyCollection);
 						continue;
 					}
+					// Not a MonoAndroid assembly, store false
+					BuildEngine4.RegisterTaskObject (key, false, Lifetime, AllowEarlyCollection);
 				}
 			}
 			OutputAssemblies = output.ToArray ();
