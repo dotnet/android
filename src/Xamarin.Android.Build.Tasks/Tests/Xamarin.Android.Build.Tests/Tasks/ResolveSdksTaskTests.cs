@@ -419,7 +419,7 @@ namespace Xamarin.Android.Build.Tests {
 			var proj = new XamarinAndroidApplicationProject {
 				UseLatestPlatformSdk = false,
 			};
-			proj.AndroidManifest = proj.AndroidManifest.Replace ("<uses-sdk />", "<uses-sdk android:targetSdkVersion=\"19\" />");
+			proj.TargetSdkVersion = "19";
 			using (var b = CreateApkBuilder ()) {
 				proj.TargetFrameworkVersion = b.LatestTargetFrameworkVersion ();
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");

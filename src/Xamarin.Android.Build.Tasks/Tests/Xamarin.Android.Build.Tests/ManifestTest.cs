@@ -1,4 +1,4 @@
-﻿﻿﻿﻿using System;
+﻿﻿﻿using System;
 using System.Linq;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
@@ -427,6 +427,7 @@ namespace Bug12935
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
+				MinSdkVersion = null,
 			};
 			proj.SetProperty ("Foo", "1");
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, seperateApk);
@@ -847,9 +848,9 @@ class TestActivity : Activity { }"
 			var proj = new XamarinAndroidApplicationProject {
 				AndroidUseSharedRuntime = true,
 				EmbedAssembliesIntoApk = false,
+				TargetSdkVersion = "30",
 			};
 			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
-			proj.AndroidManifest = proj.AndroidManifest.Replace ("<uses-sdk />", "<uses-sdk android:targetSdkVersion=\"30\" />");
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded");
 

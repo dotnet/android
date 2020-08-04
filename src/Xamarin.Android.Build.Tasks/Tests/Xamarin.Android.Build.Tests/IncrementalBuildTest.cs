@@ -1131,6 +1131,7 @@ namespace Lib2
 		}
 
 		[Test]
+		[Category ("dotnet")]
 		[NonParallelizable]
 		public void AndroidXMigrationBug ()
 		{

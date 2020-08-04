@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 
 namespace Xamarin.ProjectTools
 {
@@ -49,6 +50,7 @@ namespace Xamarin.ProjectTools
 			Sdk = $"Microsoft.Android.Sdk/{SdkVersion}";
 			TargetFramework = "net5.0";
 
+			TargetSdkVersion = AndroidSdkResolver.GetMaxInstalledPlatform ().ToString ();
 			PackageName = PackageName ?? string.Format ("{0}.{0}", ProjectName);
 			JavaPackageName = JavaPackageName ?? PackageName.ToLowerInvariant ();
 			GlobalPackagesFolder = Path.Combine (XABuildPaths.TopDirectory, "packages");
@@ -57,7 +59,7 @@ namespace Xamarin.ProjectTools
 			// Add relevant Android content to our project without writing it to the .csproj file
 			if (outputType == "Exe") {
 				Sources.Add (new BuildItem.Source ("Properties\\AndroidManifest.xml") {
-					TextContent = () => default_android_manifest.Replace ("${PROJECT_NAME}", ProjectName).Replace ("${PACKAGENAME}", string.Format ("{0}.{0}", ProjectName))
+					TextContent = ProcessManifestTemplate
 				});
 			}
 			Sources.Add (new BuildItem.Source ($"MainActivity{Language.DefaultExtension}") { TextContent = () => ProcessSourceTemplate (MainActivity ?? DefaultMainActivity) });
@@ -76,6 +78,39 @@ namespace Xamarin.ProjectTools
 		public string DefaultMainActivity => default_main_activity_cs;
 
 		public string MainActivity { get; set; }
+
+		public string AndroidManifest { get; set; } = default_android_manifest;
+
+		/// <summary>
+		/// Defaults to AndroidSdkResolver.GetMaxInstalledPlatform ()
+		/// </summary>
+		public string TargetSdkVersion { get; set; }
+
+		/// <summary>
+		/// Defaults to API 19
+		/// </summary>
+		public string MinSdkVersion { get; set; } = "19";
+
+		public virtual string ProcessManifestTemplate ()
+		{
+			var uses_sdk = new StringBuilder ("<uses-sdk ");
+			if (!string.IsNullOrEmpty (MinSdkVersion)) {
+				uses_sdk.Append ("android:minSdkVersion=\"");
+				uses_sdk.Append (MinSdkVersion);
+				uses_sdk.Append ("\" ");
+			}
+			if (!string.IsNullOrEmpty (TargetSdkVersion)) {
+				uses_sdk.Append ("android:targetSdkVersion=\"");
+				uses_sdk.Append (TargetSdkVersion);
+				uses_sdk.Append ("\" ");
+			}
+			uses_sdk.Append ("/>");
+
+			return AndroidManifest
+				.Replace ("${PROJECT_NAME}", ProjectName)
+				.Replace ("${PACKAGENAME}", PackageName)
+				.Replace ("${USES_SDK}", uses_sdk.ToString ());
+		}
 
 		public override string ProcessSourceTemplate (string source)
 		{

@@ -5,7 +5,7 @@
     android:versionName="1.0"
     package="${PACKAGENAME}"
   >
-  <uses-sdk />
+  ${USES_SDK}
   <application android:label="${PROJECT_NAME}">
   </application>
 </manifest>

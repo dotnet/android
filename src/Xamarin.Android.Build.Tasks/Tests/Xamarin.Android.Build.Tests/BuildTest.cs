@@ -1283,7 +1283,8 @@ namespace UnamedProject
 			};
 			var proj = CreateMultiDexRequiredApplication ();
 			proj.DexTool = dexTool;
-			proj.AndroidManifest = proj.AndroidManifest.Replace ("<uses-sdk />", $"<uses-sdk android:minSdkVersion=\"{minSdkVersion}\" />");
+			proj.MinSdkVersion = minSdkVersion;
+			proj.TargetSdkVersion = null;
 			proj.SetProperty ("AndroidEnableMultiDex", "True");
 			proj.OtherBuildItems.Add (new BuildItem ("MultiDexMainDexList", "mymultidex.keep") { TextContent = () => "MyTest.class", Encoding = Encoding.ASCII });
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaSource", "MyTest.java") { TextContent = () => "public class MyTest {}", Encoding = Encoding.ASCII });
@@ -1851,18 +1852,14 @@ namespace App1
 				}
 			});
 			using (var b = CreateApkBuilder ("temp/CheckLintErrorsAndWarnings", cleanupOnDispose: false)) {
-				int maxApiLevel = b.GetMaxInstalledPlatform ();
+				int maxApiLevel = AndroidSdkResolver.GetMaxInstalledPlatform ();
 				string apiLevel;
 				proj.TargetFrameworkVersion = b.LatestTargetFrameworkVersion (out apiLevel);
 				if (int.TryParse (apiLevel, out int a) && a < maxApiLevel)
 					disabledIssues += ",OldTargetApi";
 				proj.SetProperty ("AndroidLintDisabledIssues", disabledIssues);
-				proj.AndroidManifest = @"<?xml version=""1.0"" encoding=""utf-8""?>
-<manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""UnamedProject.UnamedProject"">
-	<uses-sdk android:minSdkVersion=""24"" android:targetSdkVersion=""{APILEVEL}"" />
-	<application android:label=""${PROJECT_NAME}"">
-	</application >
-</manifest> ".Replace ("{APILEVEL}", apiLevel);
+				proj.MinSdkVersion = "24";
+				proj.TargetSdkVersion = apiLevel;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				StringAssertEx.DoesNotContain ("XA0102", b.LastBuildOutput, "Output should not contain any XA0102 warnings");
 				StringAssertEx.DoesNotContain ("XA0103", b.LastBuildOutput, "Output should not contain any XA0103 errors");
@@ -1908,14 +1905,14 @@ namespace App1
 		}
 
 		[Test]
+		[Category ("dotnet")]
 		/// <summary>
 		/// Reference https://bugzilla.xamarin.com/show_bug.cgi?id=29568
 		/// </summary>
 		public void BuildLibraryWhichUsesResources ([Values (false, true)] bool isRelease)
 		{
-			var proj = new XamarinAndroidLibraryProject () { IsRelease = isRelease };
-			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
+			var proj = new XamarinAndroidLibraryProject { IsRelease = isRelease };
+			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\Styles.xml") {
 				TextContent = () => @"<?xml version=""1.0"" encoding=""UTF-8"" ?>
 <resources>
@@ -3181,6 +3178,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 				TargetFrameworkVersion = "v8.1",
+				TargetSdkVersion = "27",
 				UseLatestPlatformSdk = false,
 			};
 			using (var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName), false, false)) {
@@ -3830,8 +3828,10 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 		{
 			int minSdkVersion = XABuildConfig.NDKMinimumApiAvailable;
 			int tooLowSdkVersion = minSdkVersion - 1;
-			var proj = new XamarinAndroidApplicationProject ();
-			proj.AndroidManifest = proj.AndroidManifest.Replace ("<uses-sdk />", $"<uses-sdk android:minSdkVersion=\"{tooLowSdkVersion}\" />");
+			var proj = new XamarinAndroidApplicationProject {
+				MinSdkVersion = tooLowSdkVersion.ToString (),
+				TargetSdkVersion = null,
+			};
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (
@@ -4010,6 +4010,7 @@ public class ApplicationRegistration { }");
 		}
 
 		[Test]
+		[Category ("dotnet")]
 		public void WorkManager ()
 		{
 			var proj = new XamarinFormsAndroidApplicationProject ();
@@ -4027,7 +4028,8 @@ public class MyWorker : Worker
 }
 "
 			});
-			proj.PackageReferences.Add (KnownPackages.Android_Arch_Work_Runtime);
+			proj.PackageReferences.Add (
+				Builder.UseDotNet ? KnownPackages.AndroidXWorkRuntime : KnownPackages.Android_Arch_Work_Runtime);
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}

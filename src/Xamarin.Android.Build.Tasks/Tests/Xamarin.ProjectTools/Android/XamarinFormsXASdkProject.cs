@@ -43,7 +43,7 @@ namespace Xamarin.ProjectTools
 		public XamarinFormsXASdkProject (string outputType = "Exe")
 			: base (outputType)
 		{
-			PackageReferences.Add (KnownPackages.XamarinForms_4_5_0_617);
+			PackageReferences.Add (KnownPackages.XamarinForms_4_7_0_1142);
 			this.AddDotNetCompatPackages ();
 
 			// Workaround for AndroidX, see: https://github.com/xamarin/AndroidSupportComponents/pull/239

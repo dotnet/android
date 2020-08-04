@@ -1105,6 +1105,8 @@ namespace Lib1 {
 			var path = Path.Combine ("temp", TestName);
 			var proj = new XamarinAndroidApplicationProject () {
 				TargetFrameworkVersion = "v8.0",
+				TargetSdkVersion = "26",
+				MinSdkVersion = null,
 				UseLatestPlatformSdk = false,
 				IsRelease = true,
 				OtherBuildItems = {
