@@ -431,14 +431,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     <_ReferenceDependencyPaths Include="@(ReferenceDependencyPaths)"
         Condition="'$(AndroidApplication)' == '' Or !$(AndroidApplication)"/>
   </ItemGroup>
-  <FilterAssemblies
-      DesignTimeBuild="$(DesignTimeBuild)"
-      InputAssemblies="@(_ReferencePath)">
+  <FilterAssemblies InputAssemblies="@(_ReferencePath)">
     <Output TaskParameter="OutputAssemblies" ItemName="_MonoAndroidReferencePath" />
   </FilterAssemblies>
-  <FilterAssemblies
-      DesignTimeBuild="$(DesignTimeBuild)"
-      InputAssemblies="@(_ReferenceDependencyPaths)">
+  <FilterAssemblies InputAssemblies="@(_ReferenceDependencyPaths)">
     <Output TaskParameter="OutputAssemblies" ItemName="_MonoAndroidReferenceDependencyPaths" />
   </FilterAssemblies>
 </Target>
