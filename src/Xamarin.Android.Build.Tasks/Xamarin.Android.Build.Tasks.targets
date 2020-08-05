@@ -270,9 +270,6 @@
       BeforeTargets="CoreCompile"
       Inputs="@(_SharedRuntimeAssemblies)"
       Outputs="$(_GeneratedProfileClass)">
-    <ItemGroup>
-      <_SharedRuntimeAssemblies Remove="$(_SharedRuntimeBuildPath)v1.0\FSharp.Core.dll" />
-    </ItemGroup>
     <GenerateProfile Files="@(_SharedRuntimeAssemblies)" OutputFile="$(_GeneratedProfileClass)" />
     <WriteLinesToFile
         File="$(IntermediateOutputPath)$(CleanFile)"
@@ -343,7 +340,6 @@
     <InputAssemblies Include="$(OutputPath)NuGet.ProjectModel.dll" />
     <InputAssemblies Include="$(OutputPath)NuGet.Protocol.dll" />
     <InputAssemblies Include="$(OutputPath)NuGet.Versioning.dll" />
-    <InputAssemblies Include="$(OutputPath)System.CodeDom.dll" />
     <InputAssemblies Include="$(OutputPath)System.Collections.Immutable.dll" />
     <InputAssemblies Include="$(OutputPath)System.Reflection.Metadata.dll" />
   </ItemGroup>

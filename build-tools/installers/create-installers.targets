@@ -121,7 +121,6 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\cil-strip.pdb"   Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\class-parse.exe" Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\class-parse.pdb" Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\FSharp.Core.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\generator.exe"   Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\generator.pdb"   Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\HtmlAgilityPack.dll" />
@@ -401,6 +400,7 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\lib\x86\installer" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\lib\x86_64\installer" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\protobuf-net.dll" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\System.CodeDom.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\System.Collections.Immutable.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.AndroidTools.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.AndroidTools.pdb" />

@@ -40,7 +40,11 @@ namespace Xamarin.Android.Build.Tests
 
 			static SetUp ()
 			{
-				Builder.UseDotNet = string.Equals (TestContext.Parameters ["dotnet"], bool.TrueString, StringComparison.OrdinalIgnoreCase);
+#if NETCOREAPP3_1
+				Builder.UseDotNet = true;
+#else
+				Builder.UseDotNet = false;
+#endif
 
 				using (var builder = new Builder ()) {
 					CommercialBuildAvailable = File.Exists (Path.Combine (builder.AndroidMSBuildDirectory, "Xamarin.Android.Common.Debugging.targets"));
