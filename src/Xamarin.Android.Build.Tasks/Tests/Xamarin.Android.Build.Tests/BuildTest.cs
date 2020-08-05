@@ -1905,6 +1905,7 @@ namespace App1
 		}
 
 		[Test]
+		[NonParallelizable] // fails on NuGet restore
 		[Category ("dotnet")]
 		/// <summary>
 		/// Reference https://bugzilla.xamarin.com/show_bug.cgi?id=29568
