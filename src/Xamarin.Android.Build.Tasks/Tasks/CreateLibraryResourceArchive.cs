@@ -69,10 +69,13 @@ namespace Xamarin.Android.Tasks
 					string tmpname = Path.Combine (Path.GetTempPath (), "monodroid_import_" + Guid.NewGuid ().ToString ());
 					try {
 						Directory.CreateDirectory (tmpname);
-						var archive = ZipArchive.Open (p, FileMode.Open);
-						archive.ExtractAll (tmpname);
+						bool isAar = p.EndsWith (".aar", StringComparison.OrdinalIgnoreCase);
+						using (var archive = ZipArchive.Open (p, FileMode.Open)) {
+							var skipCallback = isAar ? Files.ShouldSkipEntryInAar : default (Func<string, bool>);
+							Files.ExtractAll (archive, tmpname, skipCallback: skipCallback);
+						}
 
-						if (!CopyLibraryContent (tmpname, p.EndsWith (".aar", StringComparison.OrdinalIgnoreCase)))
+						if (!CopyLibraryContent (tmpname, isAar))
 							return false;
 					} finally {
 						Directory.Delete (tmpname, true);
