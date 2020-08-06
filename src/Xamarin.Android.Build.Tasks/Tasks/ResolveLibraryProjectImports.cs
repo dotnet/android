@@ -382,18 +382,7 @@ namespace Xamarin.Android.Tasks
 							return entryFullName;
 						}, deleteCallback: (fileToDelete) => {
 							return !jars.ContainsKey (fileToDelete);
-						}, skipCallback: (entryFullName) => {
-							// AAR files may contain other jars not needed for compilation
-							// See: https://developer.android.com/studio/projects/android-library.html#aar-contents
-							if (!entryFullName.EndsWith (".jar", StringComparison.OrdinalIgnoreCase))
-								return false;
-							if (entryFullName == "classes.jar" ||
-									entryFullName.StartsWith ("libs/", StringComparison.OrdinalIgnoreCase) ||
-									entryFullName.StartsWith ("libs\\", StringComparison.OrdinalIgnoreCase))
-								return false;
-							// This could be `lint.jar` or `api.jar`, etc.
-							return true;
-						});
+						}, skipCallback: Files.ShouldSkipEntryInAar);
 
 						if (Directory.Exists (importsDir) && aarHash != stampHash) {
 							Log.LogDebugMessage ($"Saving hash to {stamp}, changes: {updated}");
