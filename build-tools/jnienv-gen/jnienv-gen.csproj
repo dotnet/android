@@ -4,6 +4,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <OutputType>Exe</OutputType>
     <TargetFrameworks>net472;netstandard2.0</TargetFrameworks>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>..\..\bin\Build$(Configuration)</OutputPath>
   </PropertyGroup>
 
