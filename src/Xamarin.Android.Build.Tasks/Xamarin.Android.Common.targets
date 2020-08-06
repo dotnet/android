@@ -754,7 +754,7 @@ because xbuild doesn't support framework reference assemblies.
 		Files="@(Content)"
 		Code="XA0101"
 		Text="%40(Content) build action is not supported"
-		Condition=" '@(Content)' != '' "
+		Condition=" '@(Content->Count())' != '0' "
 	/>
 </Target>
 
@@ -1008,7 +1008,7 @@ because xbuild doesn't support framework reference assemblies.
 	<RemoveUnknownFiles Files="@(_AndroidResourceDest)" Directory="$(MonoAndroidResDirIntermediate)" RemoveDirectories="true">
 		<Output ItemName="_AndroidResourceDestRemovedFiles" TaskParameter="RemovedFiles" />
 	</RemoveUnknownFiles>
-	<Touch Files="$(_AndroidResFlagFile)" AlwaysCreate="True" Condition=" !Exists ('$(_AndroidResFlagFile)') Or  '@(_ModifiedResources)' != '' Or '@(_AndroidResourceDestRemovedFiles)' != '' " />
+	<Touch Files="$(_AndroidResFlagFile)" AlwaysCreate="True" Condition=" !Exists ('$(_AndroidResFlagFile)') Or  '@(_ModifiedResources->Count())' != '0' Or '@(_AndroidResourceDestRemovedFiles->Count())' != '0' " />
 	<ItemGroup>
 		<FileWrites Include="$(_AndroidResFlagFile)" />
 	</ItemGroup>
@@ -1032,7 +1032,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_FindLayoutsForBinding"
-    Condition=" '$(Language)' == 'C#' And ('$(AndroidGenerateLayoutBindings)' == 'True' Or '@(AndroidBoundLayout)' != '') ">
+    Condition=" '$(Language)' == 'C#' And ('$(AndroidGenerateLayoutBindings)' == 'True' Or '@(AndroidBoundLayout->Count())' != '0') ">
   <FindLayoutsToBind
       GenerateLayoutBindings="$(AndroidGenerateLayoutBindings)"
       BoundLayouts="@(AndroidBoundLayout)"
@@ -1068,18 +1068,18 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_IncludeLayoutBindingSources" DependsOnTargets="_GenerateLayoutBindings" Condition=" '$(Language)' == 'C#' ">
-	<ItemGroup Condition=" '@(_LayoutForBinding)' != '' ">
+	<ItemGroup Condition=" '@(_LayoutForBinding->Count())' != '0' ">
 		<Compile Include="$(MSBuildThisFileDirectory)\LayoutBinding$(DefaultLanguageSourceExtension)" />
 	</ItemGroup>
 
-	<ItemGroup Condition=" '@(_LayoutForBinding)' != '' ">
+	<ItemGroup Condition=" '@(_LayoutForBinding->Count())' != '0' ">
 		<Compile Include="$(MonoAndroidCodeBehindDir)\%(_LayoutForBinding.LayoutBindingFileName)"
 			Condition="Exists ('$(MonoAndroidCodeBehindDir)\%(_LayoutForBinding.LayoutBindingFileName)')"/>
 		<FileWrites Include="$(MonoAndroidCodeBehindDir)\%(_LayoutForBinding.LayoutBindingFileName)"
 			    Condition="Exists ('$(MonoAndroidCodeBehindDir)\%(_LayoutForBinding.LayoutBindingFileName)')"/>
 	</ItemGroup>
 
-	<ItemGroup Condition=" '@(_LayoutPartialClass)' != '' ">
+	<ItemGroup Condition=" '@(_LayoutPartialClass->Count())' != '0' ">
 	        <Compile Include="$(MonoAndroidCodeBehindDir)\%(_LayoutPartialClass.LayoutPartialClassFileName)"
 			Condition="Exists ('$(MonoAndroidCodeBehindDir)\%(_LayoutPartialClass.LayoutPartialClassFileName)')"/>
 		<FileWrites Include="$(MonoAndroidCodeBehindDir)\%(_LayoutPartialClass.LayoutPartialClassFileName)"
@@ -1218,7 +1218,7 @@ because xbuild doesn't support framework reference assemblies.
 </PropertyGroup>
 
 <Target Name="UpdateAndroidInterfaceProxies"
-	Condition="@(AndroidInterfaceDescription) != ''"
+	Condition=" '@(AndroidInterfaceDescription->Count())' != '0' "
 	DependsOnTargets="$(CoreResolveReferencesDependsOn);_RunManagedAidlTool;_AddManagedAidlOutputsToCompile" />
 
 <Target Name="_RunManagedAidlTool">

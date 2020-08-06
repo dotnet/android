@@ -18,7 +18,7 @@ This file is only used by "legacy" Xamarin.Android projects.
   </PropertyGroup>
 
   <Target Name="_PrepareWearApplication"
-      Condition=" $(AndroidApplication) And '@(_AppExtensionReference)' != '' "
+      Condition=" $(AndroidApplication) And '@(_AppExtensionReference->Count())' != '0' "
       DependsOnTargets="_ValidateAndroidPackageProperties">
     <ParseAndroidWearProjectAndManifest ProjectFiles="@(_AppExtensionReference)">
       <Output TaskParameter="ApplicationManifestFile" PropertyName="BundledWearApplicationManifestFile" />

@@ -57,7 +57,7 @@ This file is only used by binding projects. .NET 5 can eventually use it, once `
   </Target>
 
   <Target Name="BuildDocumentation"
-      Condition=" '@(JavaDocIndex)' != '' And '$(_JavadocSupported)' == 'True' "
+      Condition=" '@(JavaDocIndex->Count())' != '0' And '$(_JavadocSupported)' == 'True' "
       Inputs="@(JavaDocIndex);@(IntermediateAssembly->'$(IntermediateOutputPath)%(filename).xml')"
       Outputs="@(IntermediateAssembly->'$(OutputPath)%(filename).xml')">
     <MDoc
