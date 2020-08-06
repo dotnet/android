@@ -3,7 +3,6 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <DefaultItemExcludes>$(DefaultItemExcludes);**\.DS_Store</DefaultItemExcludes>
     <CopyBuildOutputToOutputDirectory>False</CopyBuildOutputToOutputDirectory>
     <OutputPath>..\..\bin\$(Configuration)</OutputPath>
   </PropertyGroup>

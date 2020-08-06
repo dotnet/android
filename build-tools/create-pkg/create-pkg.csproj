@@ -6,7 +6,6 @@
     <RootNamespace>createpkg</RootNamespace>
     <AssemblyName>create-pkg</AssemblyName>
     <OutputPath>..\..\bin\Build$(Configuration)</OutputPath>
-    <DefaultItemExcludes>$(DefaultItemExcludes);**\.DS_Store</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>
