@@ -366,6 +366,23 @@ namespace Xamarin.Android.Tools
 			return updated;
 		}
 
+		/// <summary>
+		/// Callback that can be used in combination with ExtractAll for extracting .aar files
+		/// </summary>
+		public static bool ShouldSkipEntryInAar (string entryFullName)
+		{
+			// AAR files may contain other jars not needed for compilation
+			// See: https://developer.android.com/studio/projects/android-library.html#aar-contents
+			if (!entryFullName.EndsWith (".jar", StringComparison.OrdinalIgnoreCase))
+				return false;
+			if (entryFullName == "classes.jar" ||
+					entryFullName.StartsWith ("libs/", StringComparison.OrdinalIgnoreCase) ||
+					entryFullName.StartsWith ("libs\\", StringComparison.OrdinalIgnoreCase))
+				return false;
+			// This could be `lint.jar` or `api.jar`, etc.
+			return true;
+		}
+
 		public static string HashString (string s)
 		{
 			var bytes = Encoding.UTF8.GetBytes (s);
