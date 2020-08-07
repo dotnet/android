@@ -518,6 +518,68 @@ namespace Lib2
 		}
 
 		[Test]
+		public void TransitiveDependencyProduceReferenceAssembly ()
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			var app = new XamarinAndroidApplicationProject {
+				ProjectName = "App",
+				Sources = {
+					new BuildItem.Source ("Class1.cs") {
+						TextContent = () => "public class Class1 : Library1.Class1 { }"
+					},
+				}
+			};
+			var lib1 = new DotNetStandard {
+				ProjectName = "Library1",
+				Sdk = "Microsoft.NET.Sdk",
+				TargetFramework = "netstandard2.0",
+				Sources = {
+					new BuildItem.Source ("Class1.cs") {
+						TextContent = () => "namespace Library1 { public class Class1 { } }"
+					},
+					new BuildItem.Source ("Class2.cs") {
+						TextContent = () => "namespace Library1 { public class Class2 : Library2.Class1 { } }"
+					}
+				}
+			};
+			lib1.SetProperty ("ProduceReferenceAssembly", "True");
+			var lib2 = new DotNetStandard {
+				ProjectName = "Library2",
+				Sdk = "Microsoft.NET.Sdk",
+				TargetFramework = "netstandard2.0",
+				Sources = {
+					new BuildItem.Source ("Class1.cs") {
+						TextContent = () => "namespace Library2 { public class Class1 { } }"
+					},
+				}
+			};
+			lib2.SetProperty ("ProduceReferenceAssembly", "True");
+			lib1.OtherBuildItems.Add (new BuildItem.ProjectReference ($"..\\{lib2.ProjectName}\\{lib2.ProjectName}.csproj", lib2.ProjectName, lib2.ProjectGuid));
+			app.References.Add (new BuildItem.ProjectReference ($"..\\{lib1.ProjectName}\\{lib1.ProjectName}.csproj", lib1.ProjectName, lib1.ProjectGuid));
+
+			using (var lib2Builder = CreateDllBuilder (Path.Combine (path, lib2.ProjectName), cleanupAfterSuccessfulBuild: false))
+			using (var lib1Builder = CreateDllBuilder (Path.Combine (path, lib1.ProjectName), cleanupAfterSuccessfulBuild: false))
+			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+				Assert.IsTrue (lib2Builder.Build (lib2), "first Library2 build should have succeeded.");
+				Assert.IsTrue (lib1Builder.Build (lib1), "first Library1 build should have succeeded.");
+				Assert.IsTrue (appBuilder.Build (app), "first app build should have succeeded.");
+
+				lib2.Sources.Add (new BuildItem.Source ("Class2.cs") {
+					TextContent = () => "namespace Library2 { public class Class2 { } }"
+				});
+
+				Assert.IsTrue (lib2Builder.Build (lib2, doNotCleanupOnUpdate: true), "second Library2 build should have succeeded.");
+				Assert.IsTrue (lib1Builder.Build (lib1, doNotCleanupOnUpdate: true, saveProject: false), "second Library1 build should have succeeded.");
+				appBuilder.Target = "SignAndroidPackage";
+				Assert.IsTrue (appBuilder.Build (app, doNotCleanupOnUpdate: true, saveProject: false), "app SignAndroidPackage build should have succeeded.");
+
+				var lib2Output = Path.Combine (path, lib2.ProjectName, "bin", "Debug", "netstandard2.0", $"{lib2.ProjectName}.dll");
+				var lib2InAppOutput = Path.Combine (path, app.ProjectName, app.IntermediateOutputPath, "android", "assets", $"{lib2.ProjectName}.dll");
+				FileAssert.AreEqual (lib2Output, lib2InAppOutput, "new Library2 should have been copied to app output directory");
+			}
+		}
+
+		[Test]
 		[Category ("dotnet")]
 		public void LinkAssembliesNoShrink ()
 		{
