@@ -231,13 +231,17 @@ projects. .NET 5 projects will not import this file.
           Condition="'%(ReferenceCopyLocalPaths.ResolvedFrom)' != 'ImplicitlyExpandDesignTimeFacades' And '%(ReferenceCopyLocalPaths.Extension)' == '.dll' And '%(ReferenceCopyLocalPaths.RelativeDir)' == '' And Exists('%(ReferenceCopyLocalPaths.Identity)') "
       />
       <FilteredAssemblies
+          Include="@(_ReferenceDependencyPaths)"
+          Condition="'%(_ReferenceDependencyPaths.ResolvedFrom)' != 'ImplicitlyExpandDesignTimeFacades' And Exists('%(_ReferenceDependencyPaths.Identity)') "
+      />
+      <FilteredAssemblies
           Include="@(_ReferencePath)"
           Condition="'%(ReferencePath.ResolvedFrom)' != 'ImplicitlyExpandDesignTimeFacades' And Exists('%(_ReferencePath.Identity)') "
       />
     </ItemGroup>
     <!-- Find all the assemblies this app requires -->
     <ResolveAssemblies
-        Assemblies="@(FilteredAssemblies)"
+        Assemblies="@(FilteredAssemblies->Distinct())"
         I18nAssemblies="$(MandroidI18n)"
         LinkMode="$(AndroidLinkMode)"
         ProjectFile="$(MSBuildProjectFullPath)"

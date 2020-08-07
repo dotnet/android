@@ -2708,7 +2708,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 					Assert.IsTrue (appBuilder.LastBuildOutput.ContainsText ($"{error} `Microsoft.Azure.EventHubs`, referenced by `MyLibrary`. Please add a NuGet package or assembly reference for `Microsoft.Azure.EventHubs`, or remove the reference to `MyLibrary`."),
 						$"Should recieve '{error}' regarding `Microsoft.Azure.EventHubs`!");
 				} else {
-					Assert.IsTrue (appBuilder.LastBuildOutput.ContainsText ($"{error} `Microsoft.Azure.Amqp`, referenced by `MyLibrary` > `Microsoft.Azure.EventHubs`. Please add a NuGet package or assembly reference for `Microsoft.Azure.Amqp`, or remove the reference to `MyLibrary`."),
+					Assert.IsTrue (appBuilder.LastBuildOutput.ContainsText ($"{error} `Microsoft.Azure.Amqp`, referenced by `Microsoft.Azure.EventHubs`. Please add a NuGet package or assembly reference for `Microsoft.Azure.Amqp`, or remove the reference to `Microsoft.Azure.EventHubs`"),
 						$"Should recieve '{error}' regarding `Microsoft.Azure.Amqp`!");
 				}
 				//Now add the PackageReference to the app to see a different error message
