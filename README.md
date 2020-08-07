@@ -27,11 +27,11 @@ Xamarin.Android provides open-source bindings of the Android SDK for use with
 
 | Platform        | Link   |
 |-----------------|--------|
-| **Commercial Xamarin.Android 10.4 (d16-7) Preview** for Windows+Visual Studio 2019 Preview  | [Download][commercial-d16-7-Windows-x86_64] |
-| **Commercial Xamarin.Android 10.4 (d16-7) Preview** for macOS                               | [Download][commercial-d16-7-macOS-x86_64]   |
-| **Commercial Xamarin.Android 10.3 (d16-6)** for Windows+Visual Studio 2019                  | [Download][commercial-d16-6-Windows-x86_64] |
-| **Commercial Xamarin.Android 10.3 (d16-6)** for macOS                                       | [Download][commercial-d16-6-macOS-x86_64]   |
-| **OSS Xamarin.Android 10.3.99 (master)** for macOS &amp; Windows+Visual Studio 2019\*       | [![Open Source Xamarin.Android 10.3.99, macOS+VS2019][oss-master-macOS-x86_64-icon]][oss-master-macOS-x86_64-artifacts] |
+| **Commercial Xamarin.Android 11.1 (d16-8) Preview** for Windows+Visual Studio 2019 Preview  | [Download][commercial-d16-8-Windows-x86_64] |
+| **Commercial Xamarin.Android 11.1 (d16-8) Preview** for macOS                               | [Download][commercial-d16-8-macOS-x86_64]   |
+| **Commercial Xamarin.Android 11.0 (d16-7)** for Windows+Visual Studio 2019                  | [Download][commercial-d16-7-Windows-x86_64] |
+| **Commercial Xamarin.Android 11.0 (d16-7)** for macOS                                       | [Download][commercial-d16-7-macOS-x86_64]   |
+| **OSS Xamarin.Android 11.1.99 (master)** for Ubuntu\*                                       | [![OSS Linux/Ubuntu x86_64][oss-ubuntu-x86_64-icon]][oss-ubuntu-x86_64-status] |
 
 *\* Please note that the OSS installer packages are not digitally signed.*
 
@@ -39,6 +39,8 @@ Xamarin.Android provides open-source bindings of the Android SDK for use with
 
 | Platform        | Link   |
 |-----------------|--------|
+| **Commercial Xamarin.Android 10.3 (d16-6)** for Windows+Visual Studio 2019                  | [Download][commercial-d16-6-Windows-x86_64] |
+| **Commercial Xamarin.Android 10.3 (d16-6)** for macOS                                       | [Download][commercial-d16-6-macOS-x86_64]   |
 | **Commercial Xamarin.Android 10.2 (d16-5)** for Windows+Visual Studio 2019                  | [Download][commercial-d16-5-Windows-x86_64] |
 | **Commercial Xamarin.Android 10.2 (d16-5)** for macOS                                       | [Download][commercial-d16-5-macOS-x86_64]   |
 | **Commercial Xamarin.Android 10.1 (d16-4)** for Windows+Visual Studio 2019                  | [Download][commercial-d16-4-Windows-x86_64] |
@@ -74,8 +76,8 @@ Xamarin.Android provides open-source bindings of the Android SDK for use with
 [commercial-d16-6-macOS-x86_64]:          https://aka.ms/xamarin-android-commercial-d16-6-macos
 [commercial-d16-7-Windows-x86_64]:        https://aka.ms/xamarin-android-commercial-d16-7-windows
 [commercial-d16-7-macOS-x86_64]:          https://aka.ms/xamarin-android-commercial-d16-7-macos
-[oss-master-macOS-x86_64-icon]:           https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android/lastSuccessfulBuild/badge/icon
-[oss-master-macOS-x86_64-artifacts]:      https://jenkins.mono-project.com/view/Xamarin.Android/job/xamarin-android/lastSuccessfulBuild/Azure
+[commercial-d16-8-Windows-x86_64]:        https://aka.ms/xamarin-android-commercial-d16-8-windows
+[commercial-d16-8-macOS-x86_64]:          https://aka.ms/xamarin-android-commercial-d16-8-macos
 
 # Contributing
 
