@@ -2,10 +2,15 @@
 
 parameters:
   node_id: 0
+  job_name: ''
+  job_suffix: ''
+  nunit_categories: ''
+  nunit_extra: ''
+  run_extra_tests: false
 
 jobs:
-  - job: mac_msbuild_tests${{ parameters.node_id }}
-    displayName: MSBuild - Mac-${{ parameters.node_id }}
+  - job: ${{ parameters.job_name }}
+    displayName: MSBuild - Mac-${{ parameters.node_id }} - ${{ parameters.job_suffix }}
     pool: $(HostedMac)
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
@@ -26,13 +31,13 @@ jobs:
 
     - template: run-nunit-tests.yaml
       parameters:
-        testRunTitle: Xamarin.Android.Build.Tests - macOS-${{ parameters.node_id }}
+        testRunTitle: Xamarin.Android.Build.Tests - macOS-${{ parameters.node_id }} - ${{ parameters.job_suffix }}
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/Xamarin.Android.Build.Tests.dll
-        nunitConsoleExtraArgs: --where "cat == Node-${{ parameters.node_id }}"
-        testResultsFile: TestResult-MSBuildTests-macOS-Node${{ parameters.node_id }}-$(XA.Build.Configuration).xml
+        nunitConsoleExtraArgs: --where "cat == Node-${{ parameters.node_id }} ${{ parameters.nunit_categories }}" ${{ parameters.nunit_extra }}
+        testResultsFile: TestResult-MSBuildTests-${{ parameters.job_name }}-$(XA.Build.Configuration).xml
 
     # Only run these tests on node 2
-    - ${{ if eq(parameters.node_id, 2) }}:
+    - ${{ if eq(parameters.run_extra_tests, true) }}:
       - template: run-nunit-tests.yaml
         parameters:
           testRunTitle: Xamarin.Android.Build.Tests.Commercial - macOS
@@ -46,15 +51,8 @@ jobs:
           nunitConsoleExtraArgs: --where "cat != Node-1 && cat != Node-2 && cat != Node-3"
           testResultsFile: TestResult-MSBuildTests-macOS-NoNode-$(XA.Build.Configuration).xml
 
-      - template: run-nunit-tests.yaml
-        parameters:
-          testRunTitle: Xamarin.Android.Build.Tests - macOS - One .NET
-          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/Xamarin.Android.Build.Tests.dll
-          nunitConsoleExtraArgs: --where "cat == dotnet" --params dotnet=true
-          testResultsFile: TestResult-MSBuildTests-macOS-dotnet-$(XA.Build.Configuration).xml
-
     - template: upload-results.yaml
       parameters:
-        artifactName: Test Results - MSBuild - Mac-${{ parameters.node_id }}
+        artifactName: Test Results - MSBuild - Mac-${{ parameters.node_id }} - ${{ parameters.job_suffix }}
 
     - template: fail-on-issue.yaml

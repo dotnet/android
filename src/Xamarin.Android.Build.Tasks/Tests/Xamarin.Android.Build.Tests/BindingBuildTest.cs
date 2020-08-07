@@ -25,14 +25,17 @@ namespace Xamarin.Android.Build.Tests
 		public void BuildBasicBindingLibrary (string classParser)
 		{
 			var targets = new List<string> {
-				"_ExtractJavaDocJars",
 				"_ExportJarToXml",
 				"GenerateBindings",
 				"_CreateBindingResourceArchive",
-				"BuildDocumentation",
 				"_ResolveLibraryProjectImports",
 				"CoreCompile",
 			};
+			if (!Builder.UseDotNet) {
+				//TODO: .NET 5+ cannot support javadoc yet, due to missing mdoc
+				targets.Add ("_ExtractJavaDocJars");
+				targets.Add ("BuildDocumentation");
+			}
 
 			var proj = new XamarinAndroidBindingProject () {
 				IsRelease = true,
@@ -82,7 +85,9 @@ namespace Xamarin.Android.Build.Tests
 				};
 				var files = Directory.GetFiles (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath), "*", SearchOption.AllDirectories)
 					.Where (x => !ignoreFiles.Any (i => !Path.GetFileName (x).Contains (i)));
-				Assert.AreEqual (0, Directory.GetDirectories (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath), "*", SearchOption.AllDirectories).Length,
+				var directories = Directory.GetDirectories (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath), "*", SearchOption.AllDirectories)
+					.Where (x => Path.GetFileName (x) != "designtime");
+				Assert.AreEqual (0, directories.Count (),
 					"All directories in {0} should have been removed", proj.IntermediateOutputPath);
 				Assert.AreEqual (0, files.Count (), "{0} should be empty. Found {1}",
 					proj.IntermediateOutputPath, string.Join (Environment.NewLine, files));
@@ -91,6 +96,7 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[TestCaseSource (nameof (ClassParseOptions))]
+		[Category ("LibraryProjectZip")]
 		public void BuildAarBindigLibraryStandalone (string classParser)
 		{
 			var proj = new XamarinAndroidBindingProject () {
@@ -109,6 +115,7 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[TestCaseSource (nameof (ClassParseOptions))]
+		[Category ("LibraryProjectZip")]
 		public void BuildAarBindigLibraryWithNuGetPackageOfJar (string classParser)
 		{
 			var proj = new XamarinAndroidBindingProject () {
@@ -135,7 +142,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		[TestCaseSource (nameof (ClassParseOptions))]
 		[NonParallelizable]
-		[Category ("SmokeTests")]
+		[Category ("SmokeTests"), Category ("LibraryProjectZip")]
 		public void BuildLibraryZipBindigLibraryWithAarOfJar (string classParser)
 		{
 			var proj = new XamarinAndroidBindingProject () {
@@ -209,6 +216,7 @@ namespace Com.Ipaulpro.Afilechooser {
 		}
 
 		[Test]
+		[Category ("LibraryProjectZip")]
 		public void MergeAndroidManifest ()
 		{
 			var binding = new XamarinAndroidBindingProject () {
@@ -239,6 +247,7 @@ namespace Com.Ipaulpro.Afilechooser {
 		}
 
 		[Test]
+		[Category ("LibraryProjectZip")]
 		public void AnnotationSupport ()
 		{
 			// https://trello.com/c/a36dDVS6/37-support-for-annotations-zip
@@ -261,6 +270,7 @@ namespace Com.Ipaulpro.Afilechooser {
 		{
 			var binding = new XamarinAndroidBindingProject () {
 				IsRelease = true,
+				ProjectName = "Binding",
 			};
 			binding.AndroidClassParser = "class-parse";
 
@@ -269,7 +279,7 @@ namespace Com.Ipaulpro.Afilechooser {
 				binding.Jars.Add (new AndroidItem.EmbeddedJar (() => multidexJar));
 				bindingBuilder.Build (binding);
 				var proj = new XamarinAndroidApplicationProject ();
-				proj.OtherBuildItems.Add (new BuildItem ("ProjectReference", "..\\MultiDexBinding\\UnnamedProject.csproj"));
+				proj.OtherBuildItems.Add (new BuildItem ("ProjectReference", $"..\\MultiDexBinding\\{binding.ProjectName}.csproj"));
 				using (var b = CreateApkBuilder ("temp/BindingCustomJavaApplicationClass/App")) {
 					b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
 					Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
@@ -278,6 +288,7 @@ namespace Com.Ipaulpro.Afilechooser {
 		}
 
 		[Test]
+		[Category ("LibraryProjectZip")]
 		public void BindngFilterUnsupportedNativeAbiLibraries ()
 		{
 			var binding = new XamarinAndroidBindingProject () {
@@ -298,6 +309,7 @@ namespace Com.Ipaulpro.Afilechooser {
 		}
 
 		[Test]
+		[Category ("LibraryProjectZip")]
 		public void BindingCheckHiddenFiles ()
 		{
 			var binding = new XamarinAndroidBindingProject () {
@@ -395,6 +407,7 @@ namespace Foo {
 		}
 
 		[Test]
+		[Category ("LibraryProjectZip")]
 		public void RemoveEventHandlerResolution ()
 		{
 			var binding = new XamarinAndroidBindingProject () {
@@ -469,6 +482,7 @@ namespace Foo {
 
 		[Test]
 		[TestCaseSource (nameof (ClassParseOptions))]
+		[Category ("LibraryProjectZip")]
 		public void DesignTimeBuild (string classParser)
 		{
 			var proj = new XamarinAndroidBindingProject {
@@ -556,6 +570,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 		}
 
 		[Test]
+		[Category ("LibraryProjectZip")]
 		public void BugzillaBug11964 ()
 		{
 			var proj = new XamarinAndroidBindingProject ();

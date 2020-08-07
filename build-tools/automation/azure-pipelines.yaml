@@ -63,6 +63,7 @@ variables:
   # - This is a non-fork branch with name containing "mono-" (for Mono bumps)
   IsMonoBranch: $[and(eq(variables['XA.Commercial.Build'], 'true'), ne(variables['System.PullRequest.IsFork'], 'True'), or(contains(variables['Build.SourceBranchName'], 'mono-'), contains(variables['System.PullRequest.SourceBranch'], 'mono-')))]
   RunAllTests: $[or(eq(variables['XA.RunAllTests'], true), eq(variables['IsMonoBranch'], true))]
+  DotNetNUnitCategories: '&& cat != DotNetIgnore && cat != AOT && cat != FSharp && cat != LibraryProjectZip && cat != MkBundle && cat != MonoSymbolicate && cat != PackagesConfig && cat != StaticProject'
 
 # Stage and Job "display names" are shortened because they are combined to form the name of the corresponding GitHub check.
 stages:
@@ -796,31 +797,45 @@ stages:
 
     - template: yaml-templates/fail-on-issue.yaml
 
-  # Xamarin.Android (Test MSBuild - macOS)
+  # Xamarin.Android (Test MSBuild - macOS - Legacy)
   - template: yaml-templates\run-msbuild-mac-tests.yaml
     parameters:
       node_id: 1
+      job_name: mac_msbuild_tests_1
+      job_suffix: Legacy
 
   - template: yaml-templates\run-msbuild-mac-tests.yaml
     parameters:
       node_id: 2
+      job_name: mac_msbuild_tests_2
+      job_suffix: Legacy
+      run_extra_tests: true
 
   - template: yaml-templates\run-msbuild-mac-tests.yaml
     parameters:
       node_id: 3
+      job_name: mac_msbuild_tests_3
+      job_suffix: Legacy
 
-  # Xamarin.Android (Test MSBuild - Windows)
+  # Xamarin.Android (Test MSBuild - Windows - Legacy)
   - template: yaml-templates\run-msbuild-win-tests.yaml
     parameters:
       node_id: 1
+      job_name: win_msbuild_tests_1
+      job_suffix: Legacy
 
   - template: yaml-templates\run-msbuild-win-tests.yaml
     parameters:
       node_id: 2
+      job_name: win_msbuild_tests_2
+      job_suffix: Legacy
+      run_extra_tests: true
 
   - template: yaml-templates\run-msbuild-win-tests.yaml
     parameters:
       node_id: 3
+      job_name: win_msbuild_tests_3
+      job_suffix: Legacy
 
   # Check - "Xamarin.Android (Test MSBuild With Emulator - macOS)"
   - job: mac_msbuilddevice_tests
@@ -1025,6 +1040,62 @@ stages:
         artifactName: Test Results - Designer - Windows
         targetPath: $(Build.ArtifactStagingDirectory)/designer-binlogs
       condition: always()
+
+- stage: dotnet_tests
+  displayName: One .NET Tests
+  dependsOn: mac_build
+  condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(variables['RunAllTests'], true))
+  jobs:
+
+  # Xamarin.Android (Test MSBuild - macOS - One .NET)
+  - template: yaml-templates\run-msbuild-mac-tests.yaml
+    parameters:
+      node_id: 1
+      job_name: mac_dotnet_tests_1
+      job_suffix: One .NET
+      nunit_categories: $(DotNetNUnitCategories)
+      nunit_extra: --testparam dotnet=true
+
+  - template: yaml-templates\run-msbuild-mac-tests.yaml
+    parameters:
+      node_id: 2
+      job_name: mac_dotnet_tests_2
+      job_suffix: One .NET
+      nunit_categories: $(DotNetNUnitCategories)
+      nunit_extra: --testparam dotnet=true
+
+  - template: yaml-templates\run-msbuild-mac-tests.yaml
+    parameters:
+      node_id: 3
+      job_name: mac_dotnet_tests_3
+      job_suffix: One .NET
+      nunit_categories: $(DotNetNUnitCategories)
+      nunit_extra: --testparam dotnet=true
+
+  # Xamarin.Android (Test MSBuild - Windows - One .NET)
+  - template: yaml-templates\run-msbuild-win-tests.yaml
+    parameters:
+      node_id: 1
+      job_name: win_dotnet_tests_1
+      job_suffix: One .NET
+      nunit_categories: $(DotNetNUnitCategories)
+      nunit_extra: --testparam dotnet=true
+
+  - template: yaml-templates\run-msbuild-win-tests.yaml
+    parameters:
+      node_id: 2
+      job_name: win_dotnet_tests_2
+      job_suffix: One .NET
+      nunit_categories: $(DotNetNUnitCategories)
+      nunit_extra: --testparam dotnet=true
+
+  - template: yaml-templates\run-msbuild-win-tests.yaml
+    parameters:
+      node_id: 3
+      job_name: win_dotnet_tests_3
+      job_suffix: One .NET
+      nunit_categories: $(DotNetNUnitCategories)
+      nunit_extra: --testparam dotnet=true
 
 - stage: integrated_regression_test
   displayName: Regression Tests

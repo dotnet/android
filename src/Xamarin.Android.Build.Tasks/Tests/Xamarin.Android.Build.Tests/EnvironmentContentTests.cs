@@ -142,6 +142,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Category ("MonoSymbolicate")]
 		public void CheckBuildIdIsUnique ([Values ("apk", "aab")] string packageFormat)
 		{
 			const string supportedAbis = "armeabi-v7a;x86";
@@ -234,6 +235,7 @@ namespace Xamarin.Android.Build.Tests
 		};
 
 		[Test]
+		[Category ("DotNetIgnore")] // .NET 5+ does not use these native libraries
 		[TestCaseSource (nameof (TlsProviderTestCases))]
 		public void BuildWithTlsProvider (string androidTlsProvider, bool isRelease, bool expected)
 		{

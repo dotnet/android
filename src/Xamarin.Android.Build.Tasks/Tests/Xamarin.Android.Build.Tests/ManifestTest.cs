@@ -585,6 +585,7 @@ namespace Bug12935
 		}
 
 		[Test]
+		[Category ("LibraryProjectZip")]
 		public void MergeLibraryManifest ()
 		{
 			byte [] classesJar;

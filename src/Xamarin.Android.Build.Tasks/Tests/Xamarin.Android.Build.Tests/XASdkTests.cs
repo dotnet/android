@@ -12,7 +12,7 @@ namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
 	[NonParallelizable] // On MacOS, parallel /restore causes issues
-	[Category ("Node-2")]
+	[Category ("Node-2"), Category ("DotNetIgnore")] // These don't need to run under `--params dotnet=true`
 	public class XASdkTests : BaseTest
 	{
 		[Test]

@@ -467,6 +467,17 @@ namespace Xamarin.Android.Build.Tests
 			return GetPathToLatestBuildTools (exe);
 		}
 
+		protected string GetResourceDesignerPath (ProjectBuilder builder, XamarinAndroidProject project)
+		{
+			string path;
+			if (Builder.UseDotNet) {
+				path = Path.Combine (Root, builder.ProjectDirectory, project.IntermediateOutputPath);
+			} else {
+				path = Path.Combine (Root, builder.ProjectDirectory, "Resources");
+			}
+			return Path.Combine (path, "Resource.designer" + project.Language.DefaultDesignerExtension);
+		}
+
 		[SetUp]
 		public void TestSetup ()
 		{
