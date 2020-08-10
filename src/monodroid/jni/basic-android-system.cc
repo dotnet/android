@@ -1,6 +1,7 @@
 #include <cerrno>
 
 #include "basic-android-system.hh"
+#include "cpp-util.hh"
 #include "globals.hh"
 
 using namespace xamarin::android;
@@ -11,13 +12,29 @@ const char **BasicAndroidSystem::app_lib_directories;
 size_t BasicAndroidSystem::app_lib_directories_size = 0;
 
 void
-BasicAndroidSystem::setup_app_library_directories (jstring_array_wrapper& runtimeApks, jstring_array_wrapper& appDirs, int androidApiLevel)
+BasicAndroidSystem::detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcept
 {
-	if (androidApiLevel < 23 || !is_embedded_dso_mode_enabled ()) {
+	// appDirs[2] points to the native library directory
+	simple_pointer_guard<char[]> libmonodroid_path = utils.path_combine (appDirs[2].get_cstr (), "libmonodroid.so");
+	log_debug (LOG_ASSEMBLY, "Checking if libmonodroid was unpacked to %s", libmonodroid_path.get ());
+	if (!utils.file_exists (libmonodroid_path)) {
+		log_debug (LOG_ASSEMBLY, "%s not found, assuming application/android:extractNativeLibs == false", libmonodroid_path.get ());
+		set_embedded_dso_mode_enabled (true);
+	} else {
+		log_debug (LOG_ASSEMBLY, "Native libs extracted to %s, assuming application/android:extractNativeLibs == true", appDirs[2].get_cstr ());
+		set_embedded_dso_mode_enabled (false);
+	}
+}
+
+void
+BasicAndroidSystem::setup_app_library_directories (jstring_array_wrapper& runtimeApks, jstring_array_wrapper& appDirs)
+{
+	if (!is_embedded_dso_mode_enabled ()) {
 		log_info (LOG_DEFAULT, "Setting up for DSO lookup in app data directories");
 		BasicAndroidSystem::app_lib_directories_size = 1;
 		BasicAndroidSystem::app_lib_directories = new const char*[app_lib_directories_size]();
 		BasicAndroidSystem::app_lib_directories [0] = utils.strdup_new (appDirs[2].get_cstr ());
+		log_debug (LOG_ASSEMBLY, "Added filesystem DSO lookup location: %s", appDirs[2].get_cstr ());
 	} else {
 		log_info (LOG_DEFAULT, "Setting up for DSO lookup directly in the APK");
 		BasicAndroidSystem::app_lib_directories_size = runtimeApks.get_length ();
@@ -47,6 +64,7 @@ BasicAndroidSystem::add_apk_libdir (const char *apk, size_t index, [[maybe_unuse
 	assert (user_data != nullptr);
 	assert (index < app_lib_directories_size);
 	app_lib_directories [index] = utils.string_concat (apk, "!/lib/", static_cast<const char*>(user_data));
+	log_debug (LOG_ASSEMBLY, "Added APK DSO lookup location: %s", app_lib_directories[index]);
 }
 
 void

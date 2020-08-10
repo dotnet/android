@@ -43,6 +43,7 @@ bool maybe_load_library (const char *path);
 #define ANDROID_LOG_WARN  2
 #define ANDROID_LOG_ERROR 3
 #define ANDROID_LOG_FATAL 4
+#define ANDROID_LOG_DEBUG 5
 
 static void
 __android_log_vprint (int prio, const char* tag, const char* fmt, va_list ap)
@@ -56,7 +57,7 @@ __android_log_vprint (int prio, const char* tag, const char* fmt, va_list ap)
 
 static constexpr char TAG[] = "debug-app-helper";
 
-unsigned int log_categories = LOG_DEFAULT;
+unsigned int log_categories = LOG_DEFAULT | LOG_ASSEMBLY;
 BasicUtilities utils;
 BasicAndroidSystem androidSystem;
 
@@ -69,17 +70,15 @@ JNI_OnLoad ([[maybe_unused]] JavaVM *vm, [[maybe_unused]] void *reserved)
 JNIEXPORT void JNICALL
 Java_mono_android_DebugRuntime_init (JNIEnv *env, [[maybe_unused]] jclass klass, jobjectArray runtimeApksJava,
                                      jstring runtimeNativeLibDir, jobjectArray appDirs,
-                                     jobjectArray externalStorageDirs, jint androidApiLevel,
-                                     jboolean embeddedDSOsEnabled)
+                                     jobjectArray externalStorageDirs)
 {
-	androidSystem.set_embedded_dso_mode_enabled ((bool) embeddedDSOsEnabled);
-
 	jstring_array_wrapper applicationDirs (env, appDirs);
 	jstring_array_wrapper runtimeApks (env, runtimeApksJava);
 
+	androidSystem.detect_embedded_dso_mode (applicationDirs);
 	androidSystem.set_primary_override_dir (applicationDirs [0]);
 	androidSystem.set_override_dir (0, androidSystem.get_primary_override_dir ());
-	androidSystem.setup_app_library_directories (runtimeApks, applicationDirs, androidApiLevel);
+	androidSystem.setup_app_library_directories (runtimeApks, applicationDirs);
 
 	jstring_wrapper jstr (env);
 	jstr = env->GetObjectArrayElement (externalStorageDirs, 0);
@@ -296,6 +295,17 @@ get_libmonosgen_path ()
 	exit (FATAL_EXIT_CANNOT_FIND_LIBMONOSGEN);
 
 	return libmonoso;
+}
+
+void
+log_debug_nocheck ([[maybe_unused]] LogCategories category, const char *format, ...)
+{
+	va_list args;
+
+	if ((log_categories & category) == 0)
+		return;
+
+	DO_LOG (ANDROID_LOG_DEBUG, TAG, format, args);
 }
 
 void
