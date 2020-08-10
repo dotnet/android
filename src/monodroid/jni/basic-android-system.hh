@@ -55,7 +55,7 @@ namespace xamarin::android::internal
 		static const char* get_built_for_abi_name ();
 
 	public:
-		void setup_app_library_directories (jstring_array_wrapper& runtimeApks, jstring_array_wrapper& appDirs, int androidApiLevel);
+		void setup_app_library_directories (jstring_array_wrapper& runtimeApks, jstring_array_wrapper& appDirs);
 		void setup_apk_directories (unsigned short running_on_cpu, jstring_array_wrapper &runtimeApks);
 
 		const char* get_override_dir (size_t index) const
@@ -79,10 +79,7 @@ namespace xamarin::android::internal
 			return embedded_dso_mode_enabled;
 		}
 
-		void set_embedded_dso_mode_enabled (bool yesno)
-		{
-			embedded_dso_mode_enabled = yesno;
-		}
+		void detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcept;
 
 		char *get_runtime_libdir () const
 		{
@@ -110,6 +107,11 @@ namespace xamarin::android::internal
 
 	private:
 		char* determine_primary_override_dir (jstring_wrapper &home);
+
+		void set_embedded_dso_mode_enabled (bool yesno) noexcept
+		{
+			embedded_dso_mode_enabled = yesno;
+		}
 
 	private:
 		bool  embedded_dso_mode_enabled = false;
