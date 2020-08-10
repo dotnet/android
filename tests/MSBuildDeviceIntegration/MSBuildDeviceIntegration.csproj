@@ -16,6 +16,7 @@
     <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Utilities\*.cs">
       <Link>Utilities\%(FileName).cs</Link>
     </Compile>
+    <None Include="..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\App.config" Link="App.config" />
   </ItemGroup>
 
   <ItemGroup>
