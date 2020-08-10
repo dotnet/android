@@ -195,12 +195,12 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 </Target>
 
 <Target Name="_FixupCustomViewsForAapt2"
-    Condition=" '$(_AndroidUseAapt2)' == 'True' And '@(_ProcessedCustomViews)' != '' ">
+    Condition=" '$(_AndroidUseAapt2)' == 'True' And '@(_ProcessedCustomViews->Count())' != '0' ">
   <ItemGroup>
     <_ItemsToFixup Include="@(_CompileResourcesInputs)" Condition=" '@(_ProcessedCustomViews->'%(Identity)')' == '%(Identity)' "/>
   </ItemGroup>
   <Aapt2Compile
-      Condition=" '$(AndroidUseAapt2)' == 'True' And '@(_ItemsToFixup)' != '' "
+      Condition=" '$(AndroidUseAapt2)' == 'True' And '@(_ItemsToFixup->Count())' != '0' "
       ContinueOnError="$(DesignTimeBuild)"
       DaemonMaxInstanceCount="$(Aapt2DaemonMaxInstanceCount)"
       DaemonKeepInDomain="$(_Aapt2DaemonKeepInDomain)"
@@ -213,7 +213,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       ToolExe="$(Aapt2ToolExe)">
     <Output TaskParameter="CompiledResourceFlatFiles" ItemName="_UpdatedFlatFiles" />
   </Aapt2Compile>
-  <Touch Files="$(_AndroidResgenFlagFile)" AlwaysCreate="True" Condition=" '@(_UpdatedFlatFiles)' != '' " />
+  <Touch Files="$(_AndroidResgenFlagFile)" AlwaysCreate="True" Condition=" '@(_UpdatedFlatFiles->Count())' != '0' " />
 </Target>
 
 <Target Name="_CreateBaseApkWithAapt2"
