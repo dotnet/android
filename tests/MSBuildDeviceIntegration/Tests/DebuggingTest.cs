@@ -33,7 +33,7 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[Retry (1)]
-		public void ApplicationRunsWithoutDebugger ([Values (false, true)] bool isRelease)
+		public void ApplicationRunsWithoutDebugger ([Values (false, true)] bool isRelease, [Values (false, true)] bool extractNativeLibs)
 		{
 			AssertHasDevices ();
 
@@ -46,6 +46,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetDefaultTargetDevice ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				SetTargetFrameworkAndManifest (proj, b);
+				proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", $"<application android:extractNativeLibs=\"{extractNativeLibs}\" ");
 				Assert.True (b.Install (proj), "Project should have installed.");
 				ClearAdbLogcat ();
 				if (CommercialBuildAvailable)

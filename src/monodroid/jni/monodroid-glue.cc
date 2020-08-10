@@ -1522,7 +1522,7 @@ inline void
 MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
                                                           jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader,
                                                           [[maybe_unused]] jobjectArray externalStorageDirs, jobjectArray assembliesJava,
-                                                          jint apiLevel, jboolean embeddedDSOsEnabled, jboolean isEmulator)
+                                                          jint apiLevel, jboolean isEmulator)
 {
 	init_logging_categories ();
 
@@ -1532,8 +1532,10 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 		total_time.mark_start ();
 	}
 
+	jstring_array_wrapper applicationDirs (env, appDirs);
+
 	android_api_level = apiLevel;
-	androidSystem.set_embedded_dso_mode_enabled ((bool) embeddedDSOsEnabled);
+	androidSystem.detect_embedded_dso_mode (applicationDirs);
 	androidSystem.set_running_in_emulator (isEmulator);
 
 	java_TimeZone = utils.get_class_from_runtime_field (env, klass, "java_util_TimeZone", true);
@@ -1545,7 +1547,6 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 
 	androidSystem.setup_environment ();
 
-	jstring_array_wrapper applicationDirs (env, appDirs);
 	jstring_wrapper &home = applicationDirs[0];
 	set_environment_variable_for_directory ("TMPDIR", applicationDirs[1]);
 	set_environment_variable_for_directory ("HOME", home);
@@ -1555,7 +1556,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	disable_external_signal_handlers ();
 
 	jstring_array_wrapper runtimeApks (env, runtimeApksJava);
-	androidSystem.setup_app_library_directories (runtimeApks, applicationDirs, apiLevel);
+	androidSystem.setup_app_library_directories (runtimeApks, applicationDirs);
 
 	init_reference_logging (androidSystem.get_primary_override_dir ());
 	androidSystem.create_update_dir (androidSystem.get_primary_override_dir ());
@@ -1755,7 +1756,6 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 		externalStorageDirs,
 		assembliesJava,
 		apiLevel,
-		/* embeddedDSOsEnabled */ JNI_FALSE,
 		/* isEmulator */ JNI_FALSE
 	);
 }
@@ -1764,7 +1764,7 @@ JNIEXPORT void JNICALL
 Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
                                 jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader,
                                 jobjectArray externalStorageDirs, jobjectArray assembliesJava,
-                                jint apiLevel, jboolean embeddedDSOsEnabled, jboolean isEmulator)
+                                jint apiLevel, jboolean isEmulator)
 {
 	monodroidRuntime.Java_mono_android_Runtime_initInternal (
 		env,
@@ -1777,7 +1777,6 @@ Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang,
 		externalStorageDirs,
 		assembliesJava,
 		apiLevel,
-		embeddedDSOsEnabled,
 		isEmulator
 	);
 }
