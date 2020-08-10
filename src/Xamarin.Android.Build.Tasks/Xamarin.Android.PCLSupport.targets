@@ -39,7 +39,7 @@
 			If $(_HasReferenceToSystemRuntime) is true, then the facades are going to be expanded anyway, so don't run this.
 		-->
 		<GetDependsOnNETStandard
-				Condition="'$(_HasReferenceToSystemRuntime)' != 'true' and '$(_IsXBuild)' != 'true' and '$(DependsOnNETStandard)' == '' and '@(_XACandidateNETStandardReferences)' != ''"
+				Condition="'$(_HasReferenceToSystemRuntime)' != 'true' and '$(_IsXBuild)' != 'true' and '$(DependsOnNETStandard)' == '' and '@(_XACandidateNETStandardReferences->Count())' != '0'"
 				References="@(_XACandidateNETStandardReferences)">
 			<Output TaskParameter="DependsOnNETStandard" PropertyName="_XADependsOnNETStandard" />
 		</GetDependsOnNETStandard>
