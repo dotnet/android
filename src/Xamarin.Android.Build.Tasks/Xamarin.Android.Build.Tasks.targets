@@ -399,4 +399,7 @@
     />
   </Target>
 
+  <Target Name="_Remove32BitLinux" Condition="Exists ('$(OutputPath)lib32\libzip.so')" AfterTargets="CopyFilesToOutputDirectory">
+    <Delete Files="$(OutputPath)lib32\libzip.so" />
+  </Target>
 </Project>
