@@ -374,6 +374,18 @@ stages:
       parameters:
         artifactName: Build Results - Windows
 
+    - task: RoslynAnalyzers@3
+      inputs:
+        userProvideBuildInfo: 'msBuildInfo'
+        msBuildVersion: '16.0'
+        msBuildArchitecture: 'amd64'
+
+    - task: securedevelopmentteam.vss-secure-development-tools.build-task-publishsecurityanalysislogs.PublishSecurityAnalysisLogs@2
+      displayName: Publish Security Analysis Logs
+      inputs:
+        ArtifactName: Static Analysis Logs
+      condition: succeededOrFailed()
+
     - template: yaml-templates\fail-on-issue.yaml
 
 - stage: finalize_installers
