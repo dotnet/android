@@ -23,6 +23,7 @@ namespace Xamarin.Android.Prepare
 				{ "@javac@",                context.OS.JavaCPath },
 				{ "@java@",                 context.OS.JavaPath },
 				{ "@jar@",                  context.OS.JarPath },
+				{ "@javahome@",             context.OS.JavaHome },
 			};
 
 			var step = new GeneratedPlaceholdersFile (
