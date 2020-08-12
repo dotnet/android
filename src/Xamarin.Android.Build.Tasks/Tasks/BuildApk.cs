@@ -161,7 +161,7 @@ namespace Xamarin.Android.Tasks
 							if (apk.Archive.ContainsEntry (entryName)) {
 								ZipEntry e = apk.Archive.ReadEntry (entryName);
 								// check the CRC values as the ModifiedDate is always 01/01/1980 in the aapt generated file.
-								if (entry.CRC == e.CRC) {
+								if (entry.CRC == e.CRC && entry.CompressedSize == e.CompressedSize) {
 									Log.LogDebugMessage ($"Skipping {entryName} from {apkInputPath} as its up to date.");
 									continue;
 								}
@@ -200,12 +200,13 @@ namespace Xamarin.Android.Tasks
 				foreach (var file in files) {
 					var item = Path.Combine (file.archivePath.Replace (Path.DirectorySeparatorChar, '/'));
 					existingEntries.Remove (item);
-					if (apk.SkipExistingFile (file.filePath, item)) {
+					CompressionMethod compressionMethod = GetCompressionMethod (file.filePath);
+					if (apk.SkipExistingFile (file.filePath, item, compressionMethod)) {
 						Log.LogDebugMessage ($"Skipping {file.filePath} as the archive file is up to date.");
 						continue;
 					}
 					Log.LogDebugMessage ("\tAdding {0}", file.filePath);
-					apk.Archive.AddFile (file.filePath, item, compressionMethod: GetCompressionMethod (file.filePath));
+					apk.Archive.AddFile (file.filePath, item, compressionMethod: compressionMethod);
 					count++;
 					if (count == ZipArchiveEx.ZipFlushLimit) {
 						apk.Flush();
@@ -454,7 +455,7 @@ namespace Xamarin.Android.Tasks
 		bool AddFileToArchiveIfNewer (ZipArchiveEx apk, string file, string inArchivePath, CompressionMethod compressionMethod = CompressionMethod.Default)
 		{
 			existingEntries.Remove (inArchivePath);
-			if (apk.SkipExistingFile (file, inArchivePath)) {
+			if (apk.SkipExistingFile (file, inArchivePath, compressionMethod)) {
 				Log.LogDebugMessage ($"Skipping {file} as the archive file is up to date.");
 				return false;
 			}
@@ -471,7 +472,8 @@ namespace Xamarin.Android.Tasks
 			if (!File.Exists (configFile))
 				return;
 
-			if (apk.SkipExistingFile (configFile, inArchivePath)) {
+			CompressionMethod compressionMethod = UncompressedMethod;
+			if (apk.SkipExistingFile (configFile, inArchivePath, compressionMethod)) {
 				Log.LogDebugMessage ($"Skipping {configFile} as the archive file is up to date.");
 				return;
 			}
@@ -482,7 +484,7 @@ namespace Xamarin.Android.Tasks
 				source.CopyTo (dest);
 				dest.WriteByte (0);
 				dest.Position = 0;
-				apk.Archive.AddEntry (inArchivePath, dest, compressionMethod: UncompressedMethod);
+				apk.Archive.AddEntry (inArchivePath, dest, compressionMethod);
 			}
 		}
 
@@ -520,12 +522,13 @@ namespace Xamarin.Android.Tasks
 		{
 			string archivePath = $"lib/{abi}/{inArchiveFileName}";
 			existingEntries.Remove (archivePath);
-			if (apk.SkipExistingFile (filesystemPath, archivePath)) {
+			CompressionMethod compressionMethod = GetCompressionMethod (archivePath);
+			if (apk.SkipExistingFile (filesystemPath, archivePath, compressionMethod)) {
 				Log.LogDebugMessage ($"Skipping {filesystemPath} (APK path: {archivePath}) as it is up to date.");
 				return;
 			}
 			Log.LogDebugMessage ($"Adding native library: {filesystemPath} (APK path: {archivePath})");
-			apk.Archive.AddEntry (archivePath, File.OpenRead (filesystemPath), compressionMethod: GetCompressionMethod (archivePath));
+			apk.Archive.AddEntry (archivePath, File.OpenRead (filesystemPath), compressionMethod);
 		}
 
 		void AddRuntimeLibraries (ZipArchiveEx apk, string [] supportedAbis)
