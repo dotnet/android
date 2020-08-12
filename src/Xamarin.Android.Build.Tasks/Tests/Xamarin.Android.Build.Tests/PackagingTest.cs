@@ -191,6 +191,9 @@ namespace Xamarin.Android.Build.Tests
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded");
 
+				var manifest = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
+				AssertExtractNativeLibs (manifest, extractNativeLibs: false);
+
 				var apk = Path.Combine (Root, b.ProjectDirectory,
 						proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
 				AssertEmbeddedDSOs (apk);
@@ -926,6 +929,34 @@ public class Test
 					Assert.IsTrue (b.Build (app), "Build of jar should have succeeded.");
 					string expected = "Failed to add jar entry AndroidManifest.xml from test.jar: the same file already exists in the apk";
 					Assert.IsTrue (b.LastBuildOutput.ContainsText (expected), $"AndroidManifest.xml for test.jar should have been ignored.");
+				}
+			}
+		}
+
+		[Test]
+		public void ExtractNativeLibsTrue ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				// This combination produces android:extractNativeLibs="false" by default
+				MinSdkVersion = "23",
+				ManifestMerger = "manifestmerger.jar",
+			};
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+				// We should find extractNativeLibs="true"
+				var manifest = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
+				AssertExtractNativeLibs (manifest, extractNativeLibs: true);
+
+				// All .so files should be compressed
+				var apk = Path.Combine (Root, b.ProjectDirectory,
+					proj.IntermediateOutputPath, "android", "bin", $"{proj.PackageName}.apk");
+				using (var zip = ZipHelper.OpenZip (apk)) {
+					foreach (var entry in zip) {
+						if (entry.FullName.EndsWith (".so")) {
+							AssertCompression (entry, compressed: true);
+						}
+					}
 				}
 			}
 		}
