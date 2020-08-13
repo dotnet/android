@@ -93,7 +93,7 @@ namespace Xamarin.Android.Build.Tests
 			files.Add (CreateTaskItemForResourceFile (resPath, "values", "strings.xml"));
 			for (int i = 0; i < numLayouts; i++)
 				files.Add (CreateTaskItemForResourceFile (resPath, "layout", $"main{i}.xml"));
-			var task = new Aapt2Compile {
+			var task = new Aapt2CompileWithProcessorCount (processorCount: 8) {
 				BuildEngine = engine,
 				ToolPath = GetPathToAapt2 (),
 				ResourcesToCompile = files.ToArray (),
@@ -109,6 +109,13 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (expectedMax, daemon.MaxInstances, $"Expected {expectedMax} but was {daemon.MaxInstances}");
 			Assert.AreEqual (expectedInstances, daemon.CurrentInstances, $"Expected {expectedInstances} but was {daemon.CurrentInstances}");
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
+		}
+
+		class Aapt2CompileWithProcessorCount : Aapt2Compile
+		{
+			protected override int ProcessorCount { get; }
+
+			public Aapt2CompileWithProcessorCount (int processorCount) => ProcessorCount = processorCount;
 		}
 
 		[Test]
