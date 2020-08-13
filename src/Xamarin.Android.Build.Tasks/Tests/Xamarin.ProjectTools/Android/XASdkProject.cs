@@ -73,7 +73,7 @@ $@"{{
 		public XASdkProject (string outputType = "Exe")
 		{
 			Sdk = $"Microsoft.Android.Sdk/{SdkVersion}";
-			TargetFramework = "net5.0";
+			TargetFramework = "net5.0-android";
 
 			TargetSdkVersion = AndroidSdkResolver.GetMaxInstalledPlatform ().ToString ();
 			PackageName = PackageName ?? string.Format ("{0}.{0}", ProjectName);

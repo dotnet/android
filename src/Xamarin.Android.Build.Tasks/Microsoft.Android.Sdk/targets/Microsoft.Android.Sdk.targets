@@ -19,9 +19,13 @@
   </PropertyGroup>
 
   <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.targets" />
+  <PropertyGroup>
+    <TargetPlatformSupported Condition=" '$(TargetPlatformIdentifier)' == 'Android' ">true</TargetPlatformSupported>
+  </PropertyGroup>
 
   <!-- Default item includes (globs and implicit references) -->
   <Import Project="Microsoft.Android.Sdk.DefaultItems.targets" />
+  <Import Project="Microsoft.Android.Sdk.SupportedPlatforms.props" />
   <!-- Build ordering, should be imported before Xamarin.Android.Common.targets -->
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.BuildOrder.targets" />
 
