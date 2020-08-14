@@ -209,7 +209,61 @@ namespace Xamarin.Android.Build.Tests
 			using (var zip = ZipHelper.OpenZip (apk)) {
 				foreach (var entry in zip) {
 					if (entry.FullName.EndsWith (".so")) {
-						Assert.AreEqual (entry.Size, entry.CompressedSize, $"`{entry.FullName}` should be uncompressed!");
+						AssertCompression (entry, compressed: false);
+					}
+				}
+			}
+		}
+
+		void AssertCompression (ZipEntry entry, bool compressed)
+		{
+			if (compressed) {
+				Assert.AreNotEqual (entry.CompressionMethod, CompressionMethod.Store, $"`{entry.FullName}` should be compressed!");
+				Assert.AreNotEqual (entry.Size, entry.CompressedSize, $"`{entry.FullName}` should be compressed!");
+			} else {
+				Assert.AreEqual (entry.CompressionMethod, CompressionMethod.Store, $"`{entry.FullName}` should be uncompressed!");
+				Assert.AreEqual (entry.Size, entry.CompressedSize, $"`{entry.FullName}` should be uncompressed!");
+			}
+		}
+
+		[Test]
+		public void IncrementalCompression ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.OtherBuildItems.Add (new AndroidItem.AndroidAsset ("foo.bar") {
+				BinaryContent = () => new byte [1024],
+			});
+
+			var manifest_template = proj.AndroidManifest;
+			proj.AndroidManifest = manifest_template.Replace ("<application ", "<application android:extractNativeLibs=\"true\" ");
+
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "first build should have succeeded");
+
+				var apk = Path.Combine (Root, b.ProjectDirectory,
+						proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
+				FileAssert.Exists (apk);
+				using (var zip = ZipHelper.OpenZip (apk)) {
+					foreach (var entry in zip) {
+						if (entry.FullName.EndsWith (".so") || entry.FullName.EndsWith (".bar")) {
+							AssertCompression (entry, compressed: true);
+						}
+					}
+				}
+
+				// Change manifest & compressed extensions
+				proj.AndroidManifest = manifest_template.Replace ("<application ", "<application android:extractNativeLibs=\"false\" ");
+				proj.Touch ("Properties\\AndroidManifest.xml");
+				proj.SetProperty ("AndroidStoreUncompressedFileExtensions", ".bar");
+
+				Assert.IsTrue (b.Build (proj), "second build should have succeeded");
+
+				FileAssert.Exists (apk);
+				using (var zip = ZipHelper.OpenZip (apk)) {
+					foreach (var entry in zip) {
+						if (entry.FullName.EndsWith (".so") || entry.FullName.EndsWith (".bar")) {
+							AssertCompression (entry, compressed: false);
+						}
 					}
 				}
 			}

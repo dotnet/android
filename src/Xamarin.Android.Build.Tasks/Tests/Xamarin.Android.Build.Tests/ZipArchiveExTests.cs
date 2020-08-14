@@ -5,6 +5,7 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using Xamarin.Android.Tasks;
+using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -87,16 +88,19 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (expected.Trim ().Replace("\r\n", "\n"), builder.ToString ().Trim ().Replace("\r\n", "\n"));
 		}
 
-		void AssertSkipExisting (string file, string fileInArchive, bool expected)
+		void AssertSkipExisting (string file, string fileInArchive, bool expected, CompressionMethod method = CompressionMethod.Deflate)
 		{
 			DateTime lastWrite =  File.GetLastWriteTimeUtc (file);
 			string path = Path.GetFullPath (file);
 			using (var archive = new ZipArchiveEx (Zip, FileMode.Open)) {
 				var entry = archive.Archive.ContainsEntry (fileInArchive) ? archive.Archive.ReadEntry (fileInArchive) : null;
 				var modTime = entry?.ModificationTime ?? DateTime.MinValue;
-				bool result = archive.SkipExistingFile (file, fileInArchive);
+				var entryMethod = entry?.CompressionMethod;
+				bool result = archive.SkipExistingFile (file, fileInArchive, method);
 				Assert.AreEqual (expected, result,
-					$"SkipExistingFile returned unexpected value for {Zip} {path} {fileInArchive}\n {WithoutMilliseconds(lastWrite)} (disk {lastWrite.ToString ("MM/dd/yyyy HH:mm:ss:fff")}) <= {WithoutMilliseconds (modTime)} (zip {modTime.ToString ("MM/dd/yyyy HH:mm:ss:fff")}) = {result}");
+					$"SkipExistingFile returned unexpected value for {Zip} {path} {fileInArchive}\n" +
+					$"{method} != {entryMethod} or\n" +
+					$"{WithoutMilliseconds(lastWrite)} (disk {lastWrite:MM/dd/yyyy HH:mm:ss:fff}) <= {WithoutMilliseconds (modTime)} (zip {modTime:MM/dd/yyyy HH:mm:ss:fff}) = {result}");
 			}
 		}
 
@@ -106,7 +110,7 @@ namespace Xamarin.Android.Build.Tests
 			CreateDirectories ("A.txt", Path.Combine ("B", "B.txt"));
 
 			using (var archive = new ZipArchiveEx (Zip, FileMode.Create)) {
-				archive.AddDirectory (TestPath, "temp");
+				archive.AddDirectory (TestPath, "temp", CompressionMethod.Deflate);
 			}
 
 			AssertZip (
@@ -121,7 +125,7 @@ temp/B/B.txt");
 			CreateDirectories ("A.txt", Path.Combine ("B", "B.txt"));
 
 			using (var archive = new ZipArchiveEx (Zip, FileMode.Create)) {
-				archive.AddDirectory (TestPath + $@"\../{nameof (AddDirectoryOddPaths)}/", "temp");
+				archive.AddDirectory (TestPath + $@"\../{nameof (AddDirectoryOddPaths)}/", "temp", CompressionMethod.Deflate);
 			}
 
 			AssertZip (
@@ -140,7 +144,7 @@ temp/B/B.txt");
 				Directory.SetCurrentDirectory (TestPath);
 
 				using (var archive = new ZipArchiveEx (Zip, FileMode.Create)) {
-					archive.AddDirectory (".", "temp");
+					archive.AddDirectory (".", "temp", CompressionMethod.Deflate);
 				}
 
 				AssertZip (
@@ -158,9 +162,8 @@ temp/B/B.txt");
 		{
 			CreateDirectories ("A.txt", Path.Combine ("B", "B.txt"));
 
-			DateTime lastWrite =  File.GetLastWriteTimeUtc (Path.Combine (TestPath, "A.txt"));
 			using (var archive = new ZipArchiveEx (Zip, FileMode.Create)) {
-				archive.AddDirectory (TestPath, folderInArchive: "");
+				archive.AddDirectory (TestPath, folderInArchive: "", CompressionMethod.Deflate);
 			}
 
 			AssertZip (
@@ -180,7 +183,7 @@ B/B.txt");
 			CreateDirectories ("A.txt", Path.Combine ("B", "B.txt"));
 
 			using (var archive = new ZipArchiveEx (Zip, FileMode.Create)) {
-				archive.AddDirectory (TestPath, folderInArchive: "");
+				archive.AddDirectory (TestPath, folderInArchive: "", CompressionMethod.Deflate);
 			}
 
 			AssertZip (
@@ -191,6 +194,32 @@ B/B.txt");
 			File.SetLastWriteTimeUtc (file, DateTime.UtcNow.AddSeconds (1));
 			AssertSkipExisting (file, "A.txt", expected: false);
 			AssertSkipExisting (Path.Combine (TestPath, "B", "B.txt"), "B/B.txt", expected: true);
+		}
+
+		[Test]
+		[Repeat (100)]
+		public void SkipExistingFile_Compression ()
+		{
+			var fileName = "A.txt";
+			var filePath = Path.Combine (TestPath, fileName);
+			CreateDirectories (fileName);
+
+			using (var archive = new ZipArchiveEx (Zip, FileMode.Create)) {
+				archive.AddDirectory (TestPath, folderInArchive: "", CompressionMethod.Deflate);
+			}
+
+			AssertSkipExisting (filePath, fileName, expected: true, method: CompressionMethod.Deflate);
+			AssertSkipExisting (filePath, fileName, expected: true, method: CompressionMethod.Default);
+			AssertSkipExisting (filePath, fileName, expected: false, method: CompressionMethod.Store);
+
+			File.Delete (Zip);
+			using (var archive = new ZipArchiveEx (Zip, FileMode.Create)) {
+				archive.AddDirectory (TestPath, folderInArchive: "", method: CompressionMethod.Store);
+			}
+
+			AssertSkipExisting (filePath, fileName, expected: true, method: CompressionMethod.Store);
+			AssertSkipExisting (filePath, fileName, expected: false, method: CompressionMethod.Deflate);
+			AssertSkipExisting (filePath, fileName, expected: false, method: CompressionMethod.Default);
 		}
 	}
 }
