@@ -219,7 +219,7 @@ namespace generatortests
 		{
 			var @class = new TestClass (baseClass, className);
 
-			var ctor_name = className.Contains ('.') ? className.Substring (className.LastIndexOf ('.')) : className;
+			var ctor_name = className.Contains ('.') ? className.Substring (className.LastIndexOf ('.') + 1) : className;
 			@class.Ctors.Add (CreateConstructor (@class, ctor_name, options));
 			@class.Ctors.Add (CreateConstructor (@class, ctor_name, options, new Parameter ("p0", "java.lang.String", "string", false)));
 

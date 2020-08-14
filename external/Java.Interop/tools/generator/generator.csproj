@@ -47,6 +47,7 @@
     <ProjectReference Include="..\..\src\Java.Interop.Tools.Diagnostics\Java.Interop.Tools.Diagnostics.csproj" />
     <ProjectReference Include="..\..\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil.csproj" />
     <ProjectReference Include="..\..\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers.csproj" />
+    <ProjectReference Include="..\..\src\Xamarin.SourceWriter\Xamarin.SourceWriter.csproj" />
   </ItemGroup>
 
 </Project>

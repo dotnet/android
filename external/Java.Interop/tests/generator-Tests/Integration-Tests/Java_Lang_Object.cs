@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using NUnit.Framework;
 using MonoDroid.Generation;
@@ -13,9 +13,9 @@ namespace generatortests
 		public void Generated_OK ()
 		{
 			Run (target: Xamarin.Android.Binder.CodeGenerationTarget.XamarinAndroid,
-					outputPath:         "out/java.lang.Object",
+					outputPath: "out/java.lang.Object",
 					apiDescriptionFile: "expected/java.lang.Object/java.lang.Object.xml",
-					expectedPath:       "expected/java.lang.Object");
+					expectedPath: "expected/java.lang.Object");
 
 			var javaLangObject = BuiltAssembly.GetType ("Java.Lang.Object");
 

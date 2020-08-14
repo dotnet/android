@@ -8,8 +8,6 @@ namespace MonoDroid.Generation
 		public XAJavaInteropCodeGenerator (TextWriter writer, CodeGenerationOptions options) : base (writer, options)
 		{
 		}
-
-		protected override string GetPeerMembersType () => "XAPeerMembers";
 	}
 }
 

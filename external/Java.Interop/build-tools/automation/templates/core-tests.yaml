@@ -51,6 +51,13 @@ steps:
     arguments: bin/Test$(Build.Configuration)/Java.Interop.Tools.JavaSource-Tests.dll
   continueOnError: true
 
+- task: DotNetCoreCLI@2
+  displayName: 'Tests: Xamarin.SourceWriter'
+  inputs:
+    command: test
+    arguments: bin/Test$(Build.Configuration)/Xamarin.SourceWriter-Tests.dll
+  continueOnError: true
+
 # Running native Java.Interop tests are not yet supported on .NET Core
 #- task: DotNetCoreCLI@2
 #  displayName: 'Tests: Java.Interop'

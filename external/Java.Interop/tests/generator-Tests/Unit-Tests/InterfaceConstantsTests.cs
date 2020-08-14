@@ -14,24 +14,12 @@ namespace generatortests
 	class XamarinAndroidInterfaceConstantsTests : InterfaceConstantsTests
 	{
 		protected override Xamarin.Android.Binder.CodeGenerationTarget Target => Xamarin.Android.Binder.CodeGenerationTarget.XamarinAndroid;
-	}
-
-	abstract class InterfaceConstantsTests : CodeGeneratorTestBase
-	{
-		protected override CodeGenerationOptions CreateOptions ()
-		{
-			var options = base.CreateOptions ();
-
-			options.SupportInterfaceConstants = true;
-
-			return options;
-		}
 
 		[Test]
 		public void WriteInterfaceFields ()
 		{
 			// This is an interface that has both fields and method declarations
-			var iface = SupportTypeBuilder.CreateEmptyInterface("java.code.IMyInterface");
+			var iface = SupportTypeBuilder.CreateEmptyInterface ("java.code.IMyInterface");
 
 			iface.Fields.Add (new TestField ("int", "MyConstantField").SetConstant ().SetValue ("7"));
 			iface.Methods.Add (new TestMethod (iface, "DoSomething").SetAbstract ());
@@ -43,6 +31,18 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteInterfaceFields)), writer.ToString ().NormalizeLineEndings ());
+		}
+	}
+
+	abstract class InterfaceConstantsTests : CodeGeneratorTestBase
+	{
+		protected override CodeGenerationOptions CreateOptions ()
+		{
+			var options = base.CreateOptions ();
+
+			options.SupportInterfaceConstants = true;
+
+			return options;
 		}
 
 		[Test]

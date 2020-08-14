@@ -12,7 +12,7 @@ namespace generatortests
 		{
 			// Normalize all line endings to \n so that our tests pass on
 			// both Mac and Windows
-			return str?.Replace ("\r\n", "\n");
+			return str?.Replace ("\r\n", "\n").Replace ("\n", "").Replace ("\t", "").Replace (" ", "");
 		}
 	}
 }

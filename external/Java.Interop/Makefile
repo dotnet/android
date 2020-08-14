@@ -28,7 +28,8 @@ TESTS = \
 	bin/Test$(CONFIGURATION)/generator-Tests.dll \
 	bin/Test$(CONFIGURATION)/Xamarin.Android.Tools.ApiXmlAdjuster-Tests.dll \
 	bin/Test$(CONFIGURATION)/Xamarin.Android.Tools.Bytecode-Tests.dll \
-	bin/Test$(CONFIGURATION)/Java.Interop.Tools.Generator-Tests.dll
+	bin/Test$(CONFIGURATION)/Java.Interop.Tools.Generator-Tests.dll \
+	bin/Test$(CONFIGURATION)/Xamarin.SourceWriter-Tests.dll
 
 PTESTS = \
 	bin/Test$(CONFIGURATION)/Java.Interop-PerformanceTests.dll

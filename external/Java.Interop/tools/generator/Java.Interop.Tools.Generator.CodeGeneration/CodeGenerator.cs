@@ -1752,8 +1752,9 @@ namespace MonoDroid.Generation
 			writer.WriteLine ();
 		}
 
-		public void WriteType (GenBase gen, string indent, GenerationInfo gen_info)
+		public virtual void WriteType (GenBase gen, string indent, GenerationInfo gen_info)
 		{
+			// Only used for XamarinAndroid code target
 			if (gen is InterfaceGen iface)
 				WriteInterface (iface, indent, gen_info);
 			else if (gen is ClassGen @class)

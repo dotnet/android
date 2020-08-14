@@ -92,7 +92,7 @@ namespace MonoDroid.Generation
 				}
 
 				var generator = opt.CreateCodeGenerator (sw);
-				generator.WriteInterface (this, hasNamespace ? "\t" : string.Empty, gen_info);
+				generator.WriteType (this, hasNamespace ? "\t" : string.Empty, gen_info);
 
 				if (hasNamespace) {
 					sw.WriteLine ("}");

@@ -2,15 +2,15 @@
 [Register ("java/code/IMyInterface", "", "java.code.IMyInterfaceInvoker")]
 public partial interface IMyInterface : IJavaObject, IJavaPeerable {
 	private static readonly JniPeerMembers _members = new JniPeerMembers ("java/code/IMyInterface", typeof (IMyInterface), isInterface: true);
-
-	 static unsafe int Value {
+	
+	static unsafe int Value {
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='get_Value' and count(parameter)=0]"
 		[Register ("get_Value", "()I", "")]
 		get {
 			const string __id = "get_Value.()I";
 			try {
-				var __rm = _members.StaticMethods.InvokeInt32Method (__id, null);
-				return __rm;
+			var __rm = _members.StaticMethods.InvokeInt32Method (__id, null);
+			return __rm;
 			} finally {
 			}
 		}
@@ -19,13 +19,62 @@ public partial interface IMyInterface : IJavaObject, IJavaPeerable {
 		set {
 			const string __id = "set_Value.(I)V";
 			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (value);
-				_members.StaticMethods.InvokeVoidMethod (__id, __args);
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (value);
+			_members.StaticMethods.InvokeVoidMethod (__id, __args);
 			} finally {
 			}
 		}
 	}
-
+	
 }
-
+[global::Android.Runtime.Register ("java/code/IMyInterface", DoNotGenerateAcw=true)]
+internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterface {
+	static readonly JniPeerMembers _members = new JniPeerMembers ("java/code/IMyInterface", typeof (IMyInterfaceInvoker));
+	
+	static IntPtr java_class_ref {
+		get { return _members.JniPeerType.PeerReference.Handle; }
+	}
+	
+	public override global::Java.Interop.JniPeerMembers JniPeerMembers {
+		get { return _members; }
+	}
+	
+	protected override IntPtr ThresholdClass {
+		get { return class_ref; }
+	}
+	
+	protected override global::System.Type ThresholdType {
+		get { return _members.ManagedPeerType; }
+	}
+	
+	IntPtr class_ref;
+	
+	public static IMyInterface GetObject (IntPtr handle, JniHandleOwnership transfer)
+	{
+		return global::Java.Lang.Object.GetObject<IMyInterface> (handle, transfer);
+	}
+	
+	static IntPtr Validate (IntPtr handle)
+	{
+		if (!JNIEnv.IsInstanceOf (handle, java_class_ref))
+			throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.", JNIEnv.GetClassNameFromInstance (handle), "java.code.IMyInterface"));
+		return handle;
+	}
+	
+	protected override void Dispose (bool disposing)
+	{
+		if (this.class_ref != IntPtr.Zero)
+			JNIEnv.DeleteGlobalRef (this.class_ref);
+		this.class_ref = IntPtr.Zero;
+		base.Dispose (disposing);
+	}
+	
+	public IMyInterfaceInvoker (IntPtr handle, JniHandleOwnership transfer) : base (Validate (handle), transfer)
+	{
+		IntPtr local_ref = JNIEnv.GetObjectClass (((global::Java.Lang.Object) this).Handle);
+		this.class_ref = JNIEnv.NewGlobalRef (local_ref);
+		JNIEnv.DeleteLocalRef (local_ref);
+	}
+	
+}

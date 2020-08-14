@@ -34,13 +34,13 @@ namespace generatortests
 		public void WriteInterfaceDefaultMethod ()
 		{
 			// Create an interface with a default method
-			var iface = SupportTypeBuilder.CreateEmptyInterface("java.code.IMyInterface");
+			var iface = SupportTypeBuilder.CreateEmptyInterface ("java.code.IMyInterface");
 
 			iface.Methods.Add (new TestMethod (iface, "DoSomething").SetDefaultInterfaceMethod ());
 
 			iface.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ());
 
-			generator.WriteInterfaceDeclaration (iface, string.Empty, new GenerationInfo (null, null, null));
+			generator.WriteType (iface, string.Empty, new GenerationInfo (null, null, null));
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteInterfaceDefaultMethod)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -61,10 +61,10 @@ namespace generatortests
 			iface.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ());
 			iface2.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ());
 
-			generator.WriteInterfaceDeclaration (iface2, string.Empty, new GenerationInfo (null, null, null));
+			generator.WriteType (iface2, string.Empty, new GenerationInfo (null, null, null));
 
 			// IMyInterface2 should generate the method as abstract, not a default method
-			Assert.AreEqual (GetExpected (nameof (WriteInterfaceRedeclaredDefaultMethod)), writer.ToString ().NormalizeLineEndings ());
+			Assert.AreEqual (GetTargetedExpected (nameof (WriteInterfaceRedeclaredDefaultMethod)), writer.ToString ().NormalizeLineEndings ());
 		}
 
 		[Test]
@@ -81,7 +81,7 @@ namespace generatortests
 
 			iface.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ());
 
-			generator.WriteInterfaceDeclaration (iface, string.Empty, new GenerationInfo (null, null, null));
+			generator.WriteType (iface, string.Empty, new GenerationInfo (null, null, null));
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteInterfaceDefaultProperty)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -100,7 +100,7 @@ namespace generatortests
 
 			iface.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ());
 
-			generator.WriteInterfaceDeclaration (iface, string.Empty, new GenerationInfo (null, null, null));
+			generator.WriteType (iface, string.Empty, new GenerationInfo (null, null, null));
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteInterfaceDefaultPropertyGetterOnly)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -118,7 +118,7 @@ namespace generatortests
 			iface.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ());
 
 			generator.Context.ContextTypes.Push (iface);
-			generator.WriteInterfaceInvoker (iface, string.Empty);
+			generator.WriteType (iface, string.Empty, new GenerationInfo (null, null, null));
 			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteDefaultInterfaceMethodInvoker)), writer.ToString ().NormalizeLineEndings ());
@@ -143,7 +143,7 @@ namespace generatortests
 			klass.FixupMethodOverrides (options);
 
 			generator.Context.ContextTypes.Push (klass);
-			generator.WriteClass (klass, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
+			generator.WriteType (klass, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
 			generator.Context.ContextTypes.Pop ();
 
 			// The method should not be marked as 'virtual sealed'
@@ -186,7 +186,7 @@ namespace generatortests
 			var klass = (ClassGen)gens.First (g => g.Name == "ImplementedChainOverrideClass");
 
 			generator.Context.ContextTypes.Push (klass);
-			generator.WriteClass (klass, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
+			generator.WriteType (klass, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
 			generator.Context.ContextTypes.Pop ();
 
 			Assert.True (writer.ToString ().Contains ("public virtual unsafe int Bar"));
@@ -201,7 +201,7 @@ namespace generatortests
 
 			iface.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ());
 
-			generator.WriteInterface (iface, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
+			generator.WriteType (iface, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteStaticInterfaceMethod)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -222,7 +222,7 @@ namespace generatortests
 
 			iface.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ());
 
-			generator.WriteInterfaceDeclaration (iface, string.Empty, new GenerationInfo (null, null, null));
+			generator.WriteType (iface, string.Empty, new GenerationInfo (null, null, null));
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteStaticInterfaceProperty)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -263,7 +263,7 @@ namespace generatortests
 
 			parent_iface.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ());
 
-			generator.WriteInterface (parent_iface, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
+			generator.WriteType (parent_iface, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteUnnestedInterfaceTypes)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -281,7 +281,7 @@ namespace generatortests
 
 			parent_iface.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ());
 
-			generator.WriteInterface (parent_iface, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
+			generator.WriteType (parent_iface, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteNestedInterfaceTypes)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -299,7 +299,7 @@ namespace generatortests
 
 			parent_iface.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ());
 
-			generator.WriteInterface (parent_iface, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
+			generator.WriteType (parent_iface, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteNestedInterfaceClass)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -327,7 +327,7 @@ namespace generatortests
 
 			iface.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ());
 
-			generator.WriteInterface (iface, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
+			generator.WriteType (iface, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
 
 			Assert.False (writer.ToString ().Contains ("class ParentConsts"));
 		}
@@ -359,7 +359,7 @@ namespace generatortests
 
 			iface.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ());
 
-			generator.WriteInterface (iface, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
+			generator.WriteType (iface, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
 
 			Assert.AreEqual (GetTargetedExpected (nameof (ObsoleteInterfaceAlternativeClass)), writer.ToString ().NormalizeLineEndings ());
 		}
@@ -391,7 +391,7 @@ namespace generatortests
 
 			iface.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ());
 
-			generator.WriteInterface (iface, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
+			generator.WriteType (iface, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
 
 			Assert.False (writer.ToString ().Contains ("class ParentConsts"));
 			Assert.False (writer.ToString ().Contains ("class Parent"));
@@ -422,7 +422,7 @@ namespace generatortests
 			// Inteface should pass validation despite invalid static/default methods
 			Assert.True (result);
 
-			generator.WriteInterface (iface, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
+			generator.WriteType (iface, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
 
 			var generated = writer.ToString ();
 
@@ -455,7 +455,7 @@ namespace generatortests
 			var gens = ParseApiDefinition (xml);
 			var iface = gens[1].NestedTypes.OfType<InterfaceGen> ().Single ();
 
-			generator.WriteInterface (iface, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
+			generator.WriteType (iface, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
 
 			var generated = writer.ToString ();
 

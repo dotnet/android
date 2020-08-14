@@ -27,7 +27,7 @@ namespace generatortests
 				m.IsVirtual = false;
 
 			generator.Context.ContextTypes.Push (@class);
-			generator.WriteClass (@class, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.WriteType (@class, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
 			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteKotlinUnsignedTypeMethodsClass)), writer.ToString ().NormalizeLineEndings ());
@@ -50,7 +50,7 @@ namespace generatortests
 			}
 
 			generator.Context.ContextTypes.Push (@class);
-			generator.WriteClass (@class, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.WriteType (@class, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
 			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteKotlinUnsignedTypePropertiesClass)), writer.ToString ().NormalizeLineEndings ());
@@ -71,7 +71,7 @@ namespace generatortests
 				m.IsVirtual = false;
 
 			generator.Context.ContextTypes.Push (@class);
-			generator.WriteClass (@class, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.WriteType (@class, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
 			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteKotlinUnsignedArrayTypeMethodsClass)), writer.ToString ().NormalizeLineEndings ());
@@ -94,7 +94,7 @@ namespace generatortests
 			}
 
 			generator.Context.ContextTypes.Push (@class);
-			generator.WriteClass (@class, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.WriteType (@class, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
 			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteKotlinUnsignedArrayTypePropertiesClass)), writer.ToString ().NormalizeLineEndings ());
@@ -111,41 +111,6 @@ namespace generatortests
 	class XamarinAndroidCodeGeneratorTests : CodeGeneratorTests
 	{
 		protected override CodeGenerationTarget Target => CodeGenerationTarget.XamarinAndroid;
-	}
-
-	abstract class CodeGeneratorTests : CodeGeneratorTestBase
-	{
-		[Test]
-		public void WriteCharSequenceEnumerator ()
-		{
-			generator.WriteCharSequenceEnumerator (string.Empty);
-
-			Assert.AreEqual (GetExpected (nameof (WriteCharSequenceEnumerator)), writer.ToString ().NormalizeLineEndings ());
-		}
-
-		[Test]
-		public void WriteClass ()
-		{
-			var @class = SupportTypeBuilder.CreateClass ("java.code.MyClass", options);
-
-			generator.Context.ContextTypes.Push (@class);
-			generator.WriteClass (@class, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
-			generator.Context.ContextTypes.Pop ();
-
-			Assert.AreEqual (GetTargetedExpected (nameof (WriteClass)), writer.ToString ().NormalizeLineEndings ());
-		}
-
-		[Test]
-		public void WriteClassAbstractMembers ()
-		{
-			var @class = SupportTypeBuilder.CreateClass ("java.code.MyClass", options);
-
-			generator.Context.ContextTypes.Push (@class);
-			generator.WriteClassAbstractMembers (@class, string.Empty);
-			generator.Context.ContextTypes.Pop ();
-
-			Assert.AreEqual (GetExpected (nameof (WriteClassAbstractMembers)), writer.ToString ().NormalizeLineEndings ());
-		}
 
 		[Test]
 		public void WriteClassConstructors ()
@@ -493,106 +458,6 @@ namespace generatortests
 		}
 
 		[Test]
-		public void WriteInterface ()
-		{
-			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
-			var gen_info = new GenerationInfo (null, null, null);
-
-			generator.Context.ContextTypes.Push (iface);
-			generator.WriteInterface (iface, string.Empty, gen_info);
-			generator.Context.ContextTypes.Pop ();
-
-			Assert.AreEqual (GetTargetedExpected (nameof (WriteInterface)), writer.ToString ().NormalizeLineEndings ());
-		}
-
-		[Test]
-		public void WriteInterfaceDeclaration ()
-		{
-			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
-
-			generator.Context.ContextTypes.Push (iface);
-			generator.WriteInterfaceDeclaration (iface, string.Empty, new GenerationInfo (null, null, null));
-			generator.Context.ContextTypes.Pop ();
-
-			Assert.AreEqual (GetTargetedExpected (nameof (WriteInterfaceDeclaration)), writer.ToString ().NormalizeLineEndings ());
-		}
-
-		[Test]
-		public void WriteInterfaceExtensionMethods ()
-		{
-			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
-
-			generator.Context.ContextTypes.Push (iface);
-			generator.WriteInterfaceExtensionMethods (iface, string.Empty);
-			generator.Context.ContextTypes.Pop ();
-
-			Assert.AreEqual (GetExpected (nameof (WriteInterfaceExtensionMethods)), writer.ToString ().NormalizeLineEndings ());
-		}
-
-		[Test]
-		public void WriteInterfaceEventArgs ()
-		{
-			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
-
-			generator.Context.ContextTypes.Push (iface);
-			generator.WriteInterfaceEventArgs (iface, iface.Methods [0], string.Empty);
-			generator.Context.ContextTypes.Pop ();
-
-			Assert.AreEqual (GetExpected (nameof (WriteInterfaceEventArgs)), writer.ToString ().NormalizeLineEndings ());
-		}
-
-		[Test]
-		public void WriteInterfaceEventHandler ()
-		{
-			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
-
-			generator.Context.ContextTypes.Push (iface);
-			generator.WriteInterfaceEventHandler (iface, string.Empty);
-			generator.Context.ContextTypes.Pop ();
-
-			Assert.AreEqual (GetExpected (nameof (WriteInterfaceEventHandler)), writer.ToString ().NormalizeLineEndings ());
-		}
-
-		[Test]
-		public void WriteInterfaceEventHandlerImpl ()
-		{
-			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
-
-			generator.Context.ContextTypes.Push (iface);
-			generator.WriteInterfaceEventHandlerImpl (iface, string.Empty);
-			generator.Context.ContextTypes.Pop ();
-
-			Assert.AreEqual (GetExpected (nameof (WriteInterfaceEventHandlerImpl)), writer.ToString ().NormalizeLineEndings ());
-		}
-
-		[Test]
-		public void WriteInterfaceEventHandlerImplContent ()
-		{
-			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
-			var handlers = new List<string> ();
-
-			generator.Context.ContextTypes.Push (iface);
-			generator.WriteInterfaceEventHandlerImplContent (iface, iface.Methods [0], string.Empty, true, string.Empty, handlers);
-			generator.Context.ContextTypes.Pop ();
-
-			Assert.AreEqual (1, handlers.Count);
-			Assert.AreEqual ("GetCountForKey", handlers [0]);
-			Assert.AreEqual (GetExpected (nameof (WriteInterfaceEventHandlerImplContent)), writer.ToString ().NormalizeLineEndings ());
-		}
-
-		[Test]
-		public void WriteInterfaceExtensionsDeclaration ()
-		{
-			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
-
-			generator.Context.ContextTypes.Push (iface);
-			generator.WriteInterfaceExtensionsDeclaration (iface, string.Empty, "java.code.DeclaringType");
-			generator.Context.ContextTypes.Pop ();
-
-			Assert.AreEqual (GetExpected (nameof (WriteInterfaceExtensionsDeclaration)), writer.ToString ().NormalizeLineEndings ());
-		}
-
-		[Test]
 		public void WriteInterfaceInvoker ()
 		{
 			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
@@ -852,6 +717,186 @@ namespace generatortests
 		}
 
 		[Test]
+		public void WriteMethodWithInvalidJavaName ()
+		{
+			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
+			var method = new TestMethod (@class, "has-hyp$hen");
+
+			method.Name = "nohyphen";
+
+			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "method.Validate failed!");
+			generator.WriteMethod (method, string.Empty, @class, true);
+
+			var result = writer.ToString ().NormalizeLineEndings ();
+
+			// Ensure we escape hyphens/dollar signs in callback names
+			Assert.False (result.Contains ("cb_has-hyp$hen"));
+			Assert.True (result.Contains ("cb_has_x45_hyp_x36_hen"));
+		}
+
+		[Test]
+		public void WriteMethodWithInvalidParameterName ()
+		{
+			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
+			var method = new TestMethod (@class, "DoStuff");
+
+			method.Parameters.Add (new Parameter ("$this", "byte[]", "byte[]", false));
+
+			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "method.Validate failed!");
+			generator.WriteMethod (method, string.Empty, @class, true);
+
+			var result = writer.ToString ().NormalizeLineEndings ();
+
+			// Ensure we escape dollar signs
+			Assert.False (result.Contains ("$this"));
+		}
+
+		[Test]
+		public void WriteInterfaceExtensionsDeclaration ()
+		{
+			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
+
+			generator.Context.ContextTypes.Push (iface);
+			generator.WriteInterfaceExtensionsDeclaration (iface, string.Empty, "java.code.DeclaringType");
+			generator.Context.ContextTypes.Pop ();
+
+			Assert.AreEqual (GetExpected (nameof (WriteInterfaceExtensionsDeclaration)), writer.ToString ().NormalizeLineEndings ());
+		}
+
+		[Test]
+		public void WriteInterfaceDeclaration ()
+		{
+			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
+
+			generator.Context.ContextTypes.Push (iface);
+			generator.WriteInterfaceDeclaration (iface, string.Empty, new GenerationInfo (null, null, null));
+			generator.Context.ContextTypes.Pop ();
+
+			Assert.AreEqual (GetTargetedExpected (nameof (WriteInterfaceDeclaration)), writer.ToString ().NormalizeLineEndings ());
+		}
+
+		[Test]
+		public void WriteProperty ()
+		{
+			var @class = SupportTypeBuilder.CreateClassWithProperty ("java.lang.Object", "com.mypackage.foo", "MyProperty", "int", options);
+
+			generator.WriteProperty (@class.Properties.First (), @class, string.Empty);
+
+			Assert.AreEqual (GetTargetedExpected (nameof (WriteProperty)), writer.ToString ().NormalizeLineEndings ());
+		}
+	}
+
+	abstract class CodeGeneratorTests : CodeGeneratorTestBase
+	{
+		[Test]
+		public void WriteCharSequenceEnumerator ()
+		{
+			generator.WriteCharSequenceEnumerator (string.Empty);
+
+			Assert.AreEqual (GetExpected (nameof (WriteCharSequenceEnumerator)), writer.ToString ().NormalizeLineEndings ());
+		}
+
+		[Test]
+		public void WriteClass ()
+		{
+			var @class = SupportTypeBuilder.CreateClass ("java.code.MyClass", options);
+
+			generator.Context.ContextTypes.Push (@class);
+			generator.WriteType (@class, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			Assert.AreEqual (GetTargetedExpected (nameof (WriteClass)), writer.ToString ().NormalizeLineEndings ());
+		}
+
+		[Test]
+		public void WriteClassAbstractMembers ()
+		{
+			var @class = SupportTypeBuilder.CreateClass ("java.code.MyClass", options);
+
+			generator.Context.ContextTypes.Push (@class);
+			generator.WriteClassAbstractMembers (@class, string.Empty);
+			generator.Context.ContextTypes.Pop ();
+
+			Assert.AreEqual (GetExpected (nameof (WriteClassAbstractMembers)), writer.ToString ().NormalizeLineEndings ());
+		}
+
+		[Test]
+		public void WriteInterface ()
+		{
+			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
+			var gen_info = new GenerationInfo (null, null, null);
+
+			generator.Context.ContextTypes.Push (iface);
+			generator.WriteType (iface, string.Empty, gen_info);
+			generator.Context.ContextTypes.Pop ();
+
+			Assert.AreEqual (GetTargetedExpected (nameof (WriteInterface)), writer.ToString ().NormalizeLineEndings ());
+		}
+
+		[Test]
+		public void WriteInterfaceExtensionMethods ()
+		{
+			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
+
+			generator.Context.ContextTypes.Push (iface);
+			generator.WriteInterfaceExtensionMethods (iface, string.Empty);
+			generator.Context.ContextTypes.Pop ();
+
+			Assert.AreEqual (GetExpected (nameof (WriteInterfaceExtensionMethods)), writer.ToString ().NormalizeLineEndings ());
+		}
+
+		[Test]
+		public void WriteInterfaceEventArgs ()
+		{
+			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
+
+			generator.Context.ContextTypes.Push (iface);
+			generator.WriteInterfaceEventArgs (iface, iface.Methods [0], string.Empty);
+			generator.Context.ContextTypes.Pop ();
+
+			Assert.AreEqual (GetExpected (nameof (WriteInterfaceEventArgs)), writer.ToString ().NormalizeLineEndings ());
+		}
+
+		[Test]
+		public void WriteInterfaceEventHandler ()
+		{
+			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
+
+			generator.Context.ContextTypes.Push (iface);
+			generator.WriteInterfaceEventHandler (iface, string.Empty);
+			generator.Context.ContextTypes.Pop ();
+
+			Assert.AreEqual (GetExpected (nameof (WriteInterfaceEventHandler)), writer.ToString ().NormalizeLineEndings ());
+		}
+
+		[Test]
+		public void WriteInterfaceEventHandlerImpl ()
+		{
+			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
+
+			generator.Context.ContextTypes.Push (iface);
+			generator.WriteInterfaceEventHandlerImpl (iface, string.Empty);
+			generator.Context.ContextTypes.Pop ();
+
+			Assert.AreEqual (GetExpected (nameof (WriteInterfaceEventHandlerImpl)), writer.ToString ().NormalizeLineEndings ());
+		}
+
+		[Test]
+		public void WriteInterfaceEventHandlerImplContent ()
+		{
+			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
+			var handlers = new List<string> ();
+
+			generator.Context.ContextTypes.Push (iface);
+			generator.WriteInterfaceEventHandlerImplContent (iface, iface.Methods [0], string.Empty, true, string.Empty, handlers);
+			generator.Context.ContextTypes.Pop ();
+
+			Assert.AreEqual (1, handlers.Count);
+			Assert.AreEqual ("GetCountForKey", handlers [0]);
+			Assert.AreEqual (GetExpected (nameof (WriteInterfaceEventHandlerImplContent)), writer.ToString ().NormalizeLineEndings ());
+		}
+
+		[Test]
 		public void WriteParameterListCallArgs ()
 		{
 			var list = SupportTypeBuilder.CreateParameterList (options);
@@ -869,16 +914,6 @@ namespace generatortests
 			generator.WriteParameterListCallArgs (list, string.Empty, true);
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteParameterListCallArgsForInvoker)), writer.ToString ().NormalizeLineEndings ());
-		}
-
-		[Test]
-		public void WriteProperty ()
-		{
-			var @class = SupportTypeBuilder.CreateClassWithProperty ("java.lang.Object", "com.mypackage.foo", "MyProperty", "int", options);
-
-			generator.WriteProperty (@class.Properties.First (), @class, string.Empty);
-
-			Assert.AreEqual (GetTargetedExpected (nameof (WriteProperty)), writer.ToString ().NormalizeLineEndings ());
 		}
 
 		[Test]
@@ -934,41 +969,6 @@ namespace generatortests
 		}
 
 		[Test]
-		public void WriteMethodWithInvalidJavaName ()
-		{
-			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
-			var method = new TestMethod (@class, "has-hyp$hen");
-
-			method.Name = "nohyphen";
-
-			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "method.Validate failed!");
-			generator.WriteMethod (method, string.Empty, @class, true);
-
-			var result = writer.ToString ().NormalizeLineEndings ();
-
-			// Ensure we escape hyphens/dollar signs in callback names
-			Assert.False (result.Contains ("cb_has-hyp$hen"));
-			Assert.True (result.Contains ("cb_has_x45_hyp_x36_hen"));
-		}
-
-		[Test]
-		public void WriteMethodWithInvalidParameterName ()
-		{
-			var @class = new TestClass ("java.lang.Object", "com.mypackage.foo");
-			var method = new TestMethod (@class, "DoStuff");
-
-			method.Parameters.Add (new Parameter ("$this", "byte[]", "byte[]", false));
-
-			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "method.Validate failed!");
-			generator.WriteMethod (method, string.Empty, @class, true);
-
-			var result = writer.ToString ().NormalizeLineEndings ();
-
-			// Ensure we escape dollar signs
-			Assert.False (result.Contains ("$this"));
-		}
-
-		[Test]
 		public void WritePropertyExplicitInterfaceParameterName ()
 		{
 			// Fix a case where we were not overriding a property setter's parameter name ("p0")
@@ -1010,7 +1010,7 @@ namespace generatortests
 			var @class = gens.OfType<ClassGen> ().First (c => c.Name == "SingleDateSelector");
 
 			generator.Context.ContextTypes.Push (@class);
-			generator.WriteClass (@class, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.WriteType (@class, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
 			generator.Context.ContextTypes.Pop ();
 
 			var result = writer.ToString ().NormalizeLineEndings ();
@@ -1030,12 +1030,12 @@ namespace generatortests
 			@class.Validate (options, new GenericParameterDefinitionList (), generator.Context);
 
 			generator.Context.ContextTypes.Push (@class);
-			generator.WriteClass (@class, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.WriteType (@class, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
 			generator.Context.ContextTypes.Pop ();
 
 			var result = writer.ToString ().NormalizeLineEndings ();
-			Assert.True (result.Contains ("internal static IntPtr class_ref"));
-			Assert.False (result.Contains ("internal static new IntPtr class_ref"));
+			Assert.True (result.Contains ("internal static IntPtr class_ref".NormalizeLineEndings ()));
+			Assert.False (result.Contains ("internal static new IntPtr class_ref".NormalizeLineEndings ()));
 		}
 
 		[Test]
@@ -1055,12 +1055,12 @@ namespace generatortests
 			@class.BaseGen.FromXml = true;  
 
 			generator.Context.ContextTypes.Push (@class);
-			generator.WriteClass (@class, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.WriteType (@class, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
 			generator.Context.ContextTypes.Pop ();
 
 			var result = writer.ToString ().NormalizeLineEndings ();
-			Assert.True (result.Contains ("internal static new IntPtr class_ref"));
-			Assert.False (result.Contains ("internal static IntPtr class_ref"));
+			Assert.True (result.Contains ("internal static new IntPtr class_ref".NormalizeLineEndings ()));
+			Assert.False (result.Contains ("internal static IntPtr class_ref".NormalizeLineEndings ()));
 		}
 	}
 }

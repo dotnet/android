@@ -110,7 +110,7 @@ namespace generatortests
  					int readByte;
  					while ((readByte = file.ReadByte()) != -1) {
  						byte b = (byte)readByte;
- 						if (b != '\r' && b != '\n') {
+ 						if (b != '\r' && b != '\n' && b != ' ' && b != '\t') {
  							memoryStream.WriteByte (b);
  						}
  					}
