@@ -336,7 +336,6 @@ projects. .NET 5 projects will not import this file.
   <PropertyGroup>
     <_PrepareAssembliesDependsOnTargets>
       _ResolveAssemblies;
-      _CheckForObsoleteAssemblies;
       _ResolveSatellitePaths;
       _CreatePackageWorkspace;
       _CopyConfigFiles;

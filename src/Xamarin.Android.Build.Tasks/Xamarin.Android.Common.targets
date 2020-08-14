@@ -1240,14 +1240,6 @@ because xbuild doesn't support framework reference assemblies.
 <!-- Package Build -->
 <Target Name="PackageForAndroid"
 	DependsOnTargets="$(_PackageForAndroidDependsOn)" />
-	
-<Target Name="_CheckForObsoleteAssemblies">
-	<PropertyGroup>
-		<_ObsoleteAssemblies>@(ResolvedFrameworkAssemblies)</_ObsoleteAssemblies>
-	</PropertyGroup>
-	<Warning Code="XA1009" Text="OpenTK 0.9.3 is Obsolete. Please upgrade to OpenTK 1.0"
-			Condition="$(_ObsoleteAssemblies.Contains('OpenTK.dll'))" />
-</Target>
 
 <Target Name="_CreatePackageWorkspace">
   <!-- Create our intermediate directory -->
