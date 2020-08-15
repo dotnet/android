@@ -143,6 +143,13 @@ namespace Java.Interop
 				if (value == null)
 					throw new ArgumentNullException (nameof (value));
 
+				if (!value.PeerReference.IsValid)
+					return;
+
+				RemovePeer (value);
+
+				value.Disposed ();
+
 				var h = value.PeerReference;
 				if (!h.IsValid)
 					return;
@@ -155,8 +162,6 @@ namespace Java.Interop
 				if (disposed)
 					throw new ObjectDisposedException (GetType ().Name);
 
-				value.Disposed ();
-				RemovePeer (value);
 				var o = Runtime.ObjectReferenceManager;
 				if (o.LogGlobalReferenceMessages) {
 					o.WriteGlobalReferenceLine ("Disposing PeerReference={0} IdentityHashCode=0x{1} Instance=0x{2} Instance.Type={3} Java.Type={4}",

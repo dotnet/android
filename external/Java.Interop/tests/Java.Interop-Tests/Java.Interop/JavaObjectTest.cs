@@ -185,6 +185,14 @@ namespace Java.InteropTests
 			o.ToString ();
 			o.Dispose ();
 		}
+
+		[Test]
+		public void NestedDisposeInvocations ()
+		{
+			var value = new MyDisposableObject ();
+			value.Dispose ();
+			value.Dispose ();
+		}
 	}
 
 	class JavaObjectWithNoJavaPeer : JavaObject {
@@ -213,6 +221,26 @@ namespace Java.InteropTests
 				OnDisposed ();
 			else
 				OnFinalized ();
+		}
+	}
+
+	[JniTypeSignature ("java/lang/Object")]
+	class MyDisposableObject : JavaObject {
+		bool _isDisposed;
+
+		public MyDisposableObject ()
+		{
+		}
+
+		protected override void Dispose (bool disposing)
+		{
+			if (_isDisposed) {
+				return;
+			}
+			_isDisposed = true;
+			if (this.PeerReference.IsValid)
+				this.Dispose ();
+			base.Dispose (disposing);
 		}
 	}
 }
