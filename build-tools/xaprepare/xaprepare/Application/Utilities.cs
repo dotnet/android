@@ -453,17 +453,32 @@ namespace Xamarin.Android.Prepare
 			if (status == null)
 				throw new ArgumentNullException (nameof (status));
 
-			using (var httpClient = new HttpClient ()) {
-				httpClient.Timeout = WebRequestTimeout;
-				HttpResponseMessage resp;
+			bool succeeded = false;
+			const int retries = 5;
+			for (int i = 0; i < retries; i++) {
 				try {
-					Log.DebugLine ("Calling GetAsync");
-					resp = await httpClient.GetAsync (url, HttpCompletionOption.ResponseHeadersRead);
-					Log.DebugLine ("GetAsync finished");
+					await DoDownload (url, targetFile, status);
+					succeeded = true;
+					break;
 				} catch (Exception ex) {
 					Log.DebugLine ($"Exception: {ex}");
-					throw;
+					if (i < retries - 1) {
+						Log.StatusLine ($"'{ex.Message}'. Retrying...", ConsoleColor.Yellow);
+						await Task.Delay (1000);
+					}
 				}
+			}
+
+			return succeeded;
+		}
+
+		static async Task DoDownload (Uri url, string targetFile, DownloadStatus status)
+		{
+			using (var httpClient = new HttpClient ()) {
+				httpClient.Timeout = WebRequestTimeout;
+				Log.DebugLine ("Calling GetAsync");
+				HttpResponseMessage resp = await httpClient.GetAsync (url, HttpCompletionOption.ResponseHeadersRead);
+				Log.DebugLine ("GetAsync finished");
 
 				resp.EnsureSuccessStatusCode ();
 				string dir = Path.GetDirectoryName (targetFile);
@@ -471,16 +486,13 @@ namespace Xamarin.Android.Prepare
 				using (var fs = File.Open (targetFile, FileMode.Create, FileAccess.Write)) {
 					using (var webStream = await resp.Content.ReadAsStreamAsync ()) {
 						status.Start ();
-						await DoDownload (fs, webStream, status);
+						WriteWithProgress (fs, webStream, status);
 					}
 				}
 			}
-
-			return true;
 		}
 
-#pragma warning disable CS1998
-		static async Task DoDownload (FileStream fs, Stream webStream, DownloadStatus status)
+		static void WriteWithProgress (FileStream fs, Stream webStream, DownloadStatus status)
 		{
 			var buf = new byte [16384];
 			int nread;
@@ -493,7 +505,6 @@ namespace Xamarin.Android.Prepare
 
 			fs.Flush ();
 		}
-#pragma warning restore CS1998
 
 		public static void MoveDirectoryContentsRecursively (string sourceDir, string destinationDir, bool cleanDestinationDir = true, bool resetFileTimestamp = false, bool ignoreDeletionErrors = false)
 		{
