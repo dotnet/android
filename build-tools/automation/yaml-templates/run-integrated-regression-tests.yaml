@@ -94,13 +94,6 @@ steps:
     parameters:
       nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
       testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
-      testRunTitle: Smoke Tests
-      nunitConsoleExtraArgs: --where "cat == RegressionTests"
-
-  - template: run-nunit-tests.yaml
-    parameters:
-      nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
-      testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
       testRunTitle: Installer Tests
       nunitConsoleExtraArgs: --where "cat == InstallationTests"
 
