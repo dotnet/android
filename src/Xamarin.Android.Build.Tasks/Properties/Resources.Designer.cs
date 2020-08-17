@@ -349,6 +349,33 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Using fast deployment and AOT at the same time is not recommended. Use fast deployment for Debug configurations and AOT for Release configurations..
+        /// </summary>
+        internal static string XA0119_AOT {
+            get {
+                return ResourceManager.GetString("XA0119_AOT", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Using fast deployment and the linker at the same time is not recommended. Use fast deployment for Debug configurations and the linker for Release configurations..
+        /// </summary>
+        internal static string XA0119_LinkMode {
+            get {
+                return ResourceManager.GetString("XA0119_LinkMode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Using fast deployment and a code shrinker at the same time is not recommended. Use fast deployment for Debug configurations and a code shrinker for Release configurations..
+        /// </summary>
+        internal static string XA0119_LinkTool {
+            get {
+                return ResourceManager.GetString("XA0119_LinkTool", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Assembly &apos;{0}&apos; is using &apos;[assembly: {1}]&apos;, which is no longer supported. Use a newer version of this NuGet package or notify the library author..
         /// </summary>
         internal static string XA0121 {
