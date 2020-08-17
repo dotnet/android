@@ -440,16 +440,16 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 </Target>
 
 <Target Name="_CheckNonIdealConfigurations">
-  <Warning Code="XA0119"
-      Text="Using Fast Deployment and AOT at the same time is not recommended. Use Fast Deployment for Debug configurations and AOT for Release configurations."
+  <AndroidWarning Code="XA0119"
+      ResourceName="XA0119_AOT"
       Condition=" '$(AndroidUseSharedRuntime)' == 'True' And '$(AotAssemblies)' == 'True' "
   />
-  <Warning Code="XA0119"
-      Text="Using Fast Deployment and the Linker at the same time is not recommended. Use Fast Deployment for Debug configurations and the Linker for Release configurations."
+  <AndroidWarning Code="XA0119"
+      ResourceName="XA0119_LinkMode"
       Condition=" '$(AndroidUseSharedRuntime)' == 'True' And '$(AndroidLinkMode)' != 'None' "
   />
-  <Warning Code="XA0119"
-      Text="Using Fast Deployment and a Code Shrinker at the same time is not recommended. Use Fast Deployment for Debug configurations and a Code Shrinker for Release configurations."
+  <AndroidWarning Code="XA0119"
+      ResourceName="XA0119_LinkTool"
       Condition=" '$(AndroidUseSharedRuntime)' == 'True' And '$(AndroidLinkTool)' != '' "
   />
   <AndroidError Code="XA0119"
