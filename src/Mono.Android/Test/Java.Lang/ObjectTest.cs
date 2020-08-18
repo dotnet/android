@@ -67,6 +67,14 @@ namespace Java.LangTests
 				Assert.AreSame (adapter, registered);
 			}
 		}
+
+		[Test]
+		public void NestedDisposeInvocations ()
+		{
+			var value = new MyDisposableObject ();
+			value.Dispose ();
+			value.Dispose ();
+		}
 	}
 
 	/*
@@ -155,6 +163,25 @@ namespace Java.LangTests
 		public override void SetSelection (int position)
 		{
 			throw new NotImplementedException();
+		}
+	}
+
+	public class MyDisposableObject : Java.Lang.Object
+	{
+		bool _isDisposed;
+		public MyDisposableObject ()
+		{
+		}
+
+		protected override void Dispose (bool disposing)
+		{
+			if (_isDisposed) {
+				return;
+			}
+			_isDisposed = true;
+			if (this.Handle != IntPtr.Zero)
+				this.Dispose ();
+			base.Dispose (disposing);
 		}
 	}
 }
