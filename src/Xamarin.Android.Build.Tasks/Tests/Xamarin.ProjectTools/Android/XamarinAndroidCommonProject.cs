@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using Microsoft.Build.Construction;
-using System.Drawing;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats;
+using SixLabors.ImageSharp.Processing;
 
 namespace Xamarin.ProjectTools
 {
@@ -19,22 +20,13 @@ namespace Xamarin.ProjectTools
 
 		BuildItem.Source resourceDesigner;
 
-		static byte[] ScaleIcon (Image image, int width, int height)
+		static byte [] ScaleIcon (Image image, IImageFormat format, int width, int height)
 		{
 			float scale = Math.Min (width / image.Width, height / image.Height);
-			using (var bmp = new Bitmap ((int)width, (int)height)) {
-				using (var graphics = Graphics.FromImage (bmp)) {
-					var scaleWidth = (int)(image.Width * scale);
-					var scaleHeight = (int)(image.Height * scale);
-					using (var brush = new SolidBrush (Color.Transparent)) {
-						graphics.FillRectangle (brush, new RectangleF (0, 0, width, height));
-						graphics.DrawImage (image, new Rectangle (((int)width - scaleWidth) / 2, ((int)height - scaleHeight) / 2, scaleWidth, scaleHeight));
-						using (var ms = new MemoryStream ()) {
-							bmp.Save (ms, System.Drawing.Imaging.ImageFormat.Png);
-							return ms.ToArray ();
-						}
-					}
-				}
+			using (var ms = new MemoryStream ()) {
+				var clone = image.Clone (i => i.Resize (width, height));
+				clone.Save (ms, format);
+				return ms.ToArray ();
 			}
 		}
 
@@ -45,11 +37,11 @@ namespace Xamarin.ProjectTools
 			stream.Read (icon_binary_mdpi, 0, (int) stream.Length);
 
 			stream.Position = 0;
-			using (var icon = Bitmap.FromStream (stream)) {
-				icon_binary_hdpi = ScaleIcon (icon, 72, 72);
-				icon_binary_xhdpi = ScaleIcon (icon, 96, 96);
-				icon_binary_xxhdpi = ScaleIcon (icon, 144, 144);
-				icon_binary_xxxhdpi = ScaleIcon (icon, 192, 192);
+			using (var icon = Image.Load (stream, out var format)) {
+				icon_binary_hdpi = ScaleIcon (icon, format, 72, 72);
+				icon_binary_xhdpi = ScaleIcon (icon, format, 96, 96);
+				icon_binary_xxhdpi = ScaleIcon (icon, format, 144, 144);
+				icon_binary_xxxhdpi = ScaleIcon (icon, format, 192, 192);
 			}
 		}
 

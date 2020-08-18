@@ -631,6 +631,7 @@ int xml myxml 0x7f140000
 		}
 
 		[Test]
+		[NonParallelizable] // Test measures performance
 		public void CheckPerformanceOfManagedParser ()
 		{
 			var path = Path.Combine ("temp", TestName);

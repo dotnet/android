@@ -256,7 +256,7 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.NotNull (resolveSdks.ReferenceAssemblyPaths, "ReferenceAssemblyPaths should not be null.");
 			Assert.AreEqual (resolveSdks.ReferenceAssemblyPaths.Length, 1, "ReferenceAssemblyPaths should have 1 entry.");
 			Assert.AreEqual (resolveSdks.ReferenceAssemblyPaths[0], Path.Combine (referencePath, "MonoAndroid"), $"ReferenceAssemblyPaths should be {Path.Combine (referencePath, "MonoAndroid")}.");
-			var expected = Path.Combine (Root);
+			var expected = Path.GetDirectoryName (GetType ().Assembly.Location);
 			Assert.AreEqual (resolveSdks.MonoAndroidToolsPath, expected, $"MonoAndroidToolsPath should be {expected}");
 			expected += Path.DirectorySeparatorChar;
 			if (resolveSdks.MonoAndroidBinPath != expected) {

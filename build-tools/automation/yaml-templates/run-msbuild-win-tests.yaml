@@ -5,7 +5,7 @@ parameters:
   job_name: ''
   job_suffix: ''
   nunit_categories: ''
-  nunit_extra: ''
+  target_framework: 'net472'
   run_extra_tests: false
 
 jobs:
@@ -16,6 +16,7 @@ jobs:
     cancelTimeoutInMinutes: 5
     variables:
       VSINSTALLDIR: C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise
+      UseDotNet: ${{ eq(parameters.target_framework, 'netcoreapp3.1') }}
     steps:
 
     - template: kill-processes.yaml
@@ -42,24 +43,29 @@ jobs:
     # Using all available cores seems to occasionally bog down our machines and cause parallel test execution to slow down dramatically.
     - template: run-nunit-tests.yaml
       parameters:
+        useDotNet: $(UseDotNet)
         testRunTitle: Xamarin.Android.Build.Tests - Windows-${{ parameters.node_id }} - ${{ parameters.job_suffix }}
-        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\Xamarin.Android.Build.Tests.dll
-        nunitConsoleExtraArgs: --workers=4 --where "cat == Node-${{ parameters.node_id }} ${{ parameters.nunit_categories }}" ${{ parameters.nunit_extra }}
+        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\${{ parameters.target_framework }}\Xamarin.Android.Build.Tests.dll
+        nunitConsoleExtraArgs: --workers=4 --where "cat == Node-${{ parameters.node_id }} ${{ parameters.nunit_categories }}"
+        dotNetTestExtraArgs: --filter "TestCategory = Node-${{ parameters.node_id }} ${{ parameters.nunit_categories }}"
         testResultsFile: TestResult-MSBuildTests-${{ parameters.job_name }}-$(XA.Build.Configuration).xml
 
     # Only run these tests on node 2
     - ${{ if eq(parameters.run_extra_tests, true) }}:
       - template: run-nunit-tests.yaml
         parameters:
+          useDotNet: $(UseDotNet)
           testRunTitle: Xamarin.Android.Build.Tests.Commercial - Windows
           testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\Xamarin.Android.Build.Tests.Commercial.dll
           testResultsFile: TestResult-MSBuildTestsCommercial-Windows-$(XA.Build.Configuration).xml
           
       - template: run-nunit-tests.yaml
         parameters:
+          useDotNet: $(UseDotNet)
           testRunTitle: Xamarin.Android.Build.Tests - Windows - No Node
-          testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\Xamarin.Android.Build.Tests.dll
+          testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\${{ parameters.target_framework }}\Xamarin.Android.Build.Tests.dll
           nunitConsoleExtraArgs: --workers=4 --where "cat != Node-1 && cat != Node-2 && cat != Node-3"
+          dotNetTestExtraArgs: --filter "TestCategory != Node-1 & TestCategory != Node-2 & TestCategory != Node-3"
           testResultsFile: TestResult-MSBuildTests-Windows-NoNode-$(XA.Build.Configuration).xml
 
     - template: upload-results.yaml
