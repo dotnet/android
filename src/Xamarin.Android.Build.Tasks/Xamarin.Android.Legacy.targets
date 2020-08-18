@@ -58,7 +58,6 @@ projects. .NET 5 projects will not import this file.
   <PropertyGroup Condition=" '$(AndroidApplication)' != 'True' And '$(_AndroidIsBindingProject)' != 'True' ">
     <BuildDependsOn>
       _ValidateLinkMode;
-      _CheckNonIdealConfigurations;
       _SetupDesignTimeBuildForBuild;
       _CreatePropertiesCache;
       _CleanIntermediateIfNeeded;
