@@ -1,10 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.IO;
-using System.Text;
 using System.Text.RegularExpressions;
-
+using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using NUnit.Framework;
 
@@ -13,9 +13,8 @@ using Xamarin.ProjectTools;
 namespace Xamarin.Android.Build.Tests
 {
 	[Category ("Node-2")]
-	[Category ("StaticProject")] // TODO: enable for .NET 5
 	[Parallelizable (ParallelScope.Children)]
-	public class CodeBehindTests
+	public class CodeBehindTests : BaseTest
 	{
 		sealed class LocalBuilder : Builder
 		{
@@ -115,7 +114,7 @@ namespace Xamarin.Android.Build.Tests
 			public string ObjPath { get; }
 			public string BinPath { get; }
 			public string GeneratedPath { get; }
-			public string SlnPath { get; }
+			public string ProjectPath { get; }
 			public string ProjectName { get; }
 			public string TestName { get; }
 
@@ -128,13 +127,14 @@ namespace Xamarin.Android.Build.Tests
 				ObjPath = Path.Combine (rootDirectory, "obj");
 				GeneratedPath = Path.Combine (ObjPath, XABuildPaths.Configuration, "generated");
 				BinPath = Path.Combine (rootDirectory, "bin", XABuildPaths.Configuration);
-				SlnPath = Path.Combine (rootDirectory, $"{projectName}.sln");
+				ProjectPath = Path.Combine (rootDirectory, $"{projectName}.csproj");
 
 				OutputDirectory = Path.Combine (outputRootDir, testName, XABuildPaths.Configuration);
 			}
 		}
 
-		const string ProjectName = "CodeBehindBuildTests";
+		static readonly string PackageName = "com.xamarin.CodeBehindBuildTests";
+		static readonly string ProjectName = "CodeBehindBuildTests";
 		const string CommonSampleLibraryName = "CommonSampleLibrary";
 
 		static readonly string TestProjectRootDirectory;
@@ -154,6 +154,9 @@ namespace Xamarin.Android.Build.Tests
 			TestProjectRootDirectory = Path.GetFullPath (Path.Combine (XABuildPaths.TopDirectory, "tests", "CodeBehind", "BuildTests"));
 			CommonSampleLibraryRootDirectory = Path.GetFullPath (Path.Combine (XABuildPaths.TopDirectory, "tests", "CodeBehind", CommonSampleLibraryName));
 			TestOutputDir = Path.Combine (XABuildPaths.TestOutputDirectory, "temp", "CodeBehind");
+			if (Builder.UseDotNet) {
+				ProjectName += "DotNet";
+			}
 
 			generated_sources = new List <SourceFile> {
 				new SourceFile ("Binding.Main.g.cs") {
@@ -269,8 +272,8 @@ namespace Xamarin.Android.Build.Tests
 			produced_binaries = new List <string> {
 				$"{ProjectName}.dll",
 				"CommonSampleLibrary.dll",
-				$"com.xamarin.{ProjectName}-Signed.apk",
-				$"com.xamarin.{ProjectName}.apk",
+				$"{PackageName}-Signed.apk",
+				$"{PackageName}.apk",
 			};
 		}
 
@@ -301,7 +304,7 @@ namespace Xamarin.Android.Build.Tests
 		void SuccessfulBuild_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder)
 		{
 			string[] parameters = GetBuildProperties (builder, many, dtb);
-			bool success = builder.Build (testInfo.SlnPath, GetBuildTarget (dtb), parameters);
+			bool success = builder.Build (testInfo.ProjectPath, GetBuildTarget (dtb), parameters);
 
 			CopyLogs (testInfo, true);
 			Assert.That (success, Is.True, "Build should have succeeded");
@@ -340,7 +343,7 @@ namespace Xamarin.Android.Build.Tests
 		void FailedBuild_ConflictingFragment_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder)
 		{
 			string[] parameters = GetBuildProperties (builder, many, dtb, "NOT_CONFLICTING_FRAGMENT");
-			bool success = builder.Build (testInfo.SlnPath, GetBuildTarget (dtb), parameters);
+			bool success = builder.Build (testInfo.ProjectPath, GetBuildTarget (dtb), parameters);
 
 			CopyLogs (testInfo, true);
 			Assert.That (success, Is.False, "Build should have failed");
@@ -368,7 +371,7 @@ namespace Xamarin.Android.Build.Tests
 		void FailedBuild_ConflictingTextView_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder)
 		{
 			string[] parameters = GetBuildProperties (builder, many, dtb, "NOT_CONFLICTING_TEXTVIEW");
-			bool success = builder.Build (testInfo.SlnPath, GetBuildTarget (dtb), parameters);
+			bool success = builder.Build (testInfo.ProjectPath, GetBuildTarget (dtb), parameters);
 
 			CopyLogs (testInfo, true);
 			Assert.That (success, Is.False, "Build should have failed");
@@ -396,7 +399,7 @@ namespace Xamarin.Android.Build.Tests
 		void FailedBuild_ConflictingButton_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder)
 		{
 			string[] parameters = GetBuildProperties (builder, many, dtb, "NOT_CONFLICTING_BUTTON");
-			bool success = builder.Build (testInfo.SlnPath, GetBuildTarget (dtb), parameters);
+			bool success = builder.Build (testInfo.ProjectPath, GetBuildTarget (dtb), parameters);
 
 			CopyLogs (testInfo, true);
 			Assert.That (success, Is.False, "Build should have failed");
@@ -424,7 +427,7 @@ namespace Xamarin.Android.Build.Tests
 		void FailedBuild_ConflictingLinearLayout_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder)
 		{
 			string[] parameters = GetBuildProperties (builder, many, dtb, "NOT_CONFLICTING_LINEARLAYOUT");
-			bool success = builder.Build (testInfo.SlnPath, GetBuildTarget (dtb), parameters);
+			bool success = builder.Build (testInfo.ProjectPath, GetBuildTarget (dtb), parameters);
 
 			CopyLogs (testInfo, true);
 			Assert.That (success, Is.False, "Build should have failed");
@@ -452,7 +455,7 @@ namespace Xamarin.Android.Build.Tests
 		void FailedBuild_ConflictingRelativeLayout_RunTest (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder)
 		{
 			string[] parameters = GetBuildProperties (builder, many, dtb, "NOT_CONFLICTING_RELATIVELAYOUT");
-			bool success = builder.Build (testInfo.SlnPath, GetBuildTarget (dtb), parameters);
+			bool success = builder.Build (testInfo.ProjectPath, GetBuildTarget (dtb), parameters);
 
 			CopyLogs (testInfo, true);
 			Assert.That (success, Is.False, "Build should have failed");
@@ -473,9 +476,10 @@ namespace Xamarin.Android.Build.Tests
 		string[] GetBuildProperties (LocalBuilder builder, bool manyBuild, bool dtbBuild, params string[] extraConstants)
 		{
 			var ret = new List <string> {
-				"TargetFrameworkVersion=" + builder.LatestTargetFrameworkVersion (),
 				"AndroidGenerateLayoutBindings=true"
 			};
+			if (!Builder.UseDotNet)
+				ret.Add ("TargetFrameworkVersion=" + builder.LatestTargetFrameworkVersion ());
 			if (manyBuild)
 				ret.Add ("ForceParallelBuild=true");
 
@@ -581,7 +585,7 @@ namespace Xamarin.Android.Build.Tests
 
 		bool HaveCompilerError_CS0266 (string logFile, string sourceFile, int line, string typeFrom, string typeTo)
 		{
-			var regex = new Regex ($"^{Regexify(sourceFile)}\\({line},\\d+\\): [^\\s]+ CS0266:[^']+'{Regexify(typeFrom)}'[^']+'{Regexify(typeTo)}'.*$", RegexOptions.Compiled);
+			var regex = new Regex ($"{Regexify(sourceFile)}\\({line},\\d+\\): [^\\s]+ CS0266:[^']+'{Regexify(typeFrom)}'[^']+'{Regexify(typeTo)}'.*$", RegexOptions.Compiled);
 			return FileMatches (regex, logFile);
 		}
 
@@ -649,6 +653,10 @@ namespace Xamarin.Android.Build.Tests
 
 			CopyRecursively (TestProjectRootDirectory, temporaryProjectPath, ignore);
 			CopyRecursively (CommonSampleLibraryRootDirectory, Path.Combine (tempRoot, CommonSampleLibraryName), ignore);
+			if (Builder.UseDotNet) {
+				XASdkProject.SaveNuGetConfig (tempRoot);
+				XASdkProject.SaveGlobalJson (tempRoot);
+			}
 			return temporaryProjectPath;
 		}
 

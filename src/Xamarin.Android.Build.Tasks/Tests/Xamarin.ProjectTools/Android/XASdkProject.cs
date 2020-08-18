@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Xml.Linq;
 
 namespace Xamarin.ProjectTools
 {
@@ -40,6 +41,30 @@ namespace Xamarin.ProjectTools
 				icon_binary_mdpi = new byte [stream.Length];
 				stream.Read (icon_binary_mdpi, 0, (int) stream.Length);
 			}
+		}
+
+		/// <summary>
+		/// Save a NuGet.config file to a directory, with sources to support a local build of Microsoft.Android.Sdk
+		/// </summary>
+		public static void SaveNuGetConfig (string directory)
+		{
+			var doc = XDocument.Load (Path.Combine (XABuildPaths.TopDirectory, "NuGet.config"));
+			var project = new XASdkProject ();
+			project.AddNuGetConfigSources (doc);
+			doc.Save (Path.Combine (directory, "NuGet.config"));
+		}
+
+		/// <summary>
+		/// Save a global.json to a directory, with version number to support a local build of  Microsoft.Android.Sdk
+		/// </summary>
+		public static void SaveGlobalJson (string directory)
+		{
+			File.WriteAllText (Path.Combine (directory, "global.json"),
+$@"{{
+    ""msbuild-sdks"": {{
+            ""Microsoft.Android.Sdk"": ""{SdkVersion}""
+    }}
+}}");
 		}
 
 		public string PackageName { get; set; }
