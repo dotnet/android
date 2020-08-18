@@ -90,13 +90,6 @@ steps:
       testRunTitle: Smoke Tests on Device
       nunitConsoleExtraArgs: --where "cat == RegressionDeviceTests"
 
-  - template: run-nunit-tests.yaml
-    parameters:
-      nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
-      testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
-      testRunTitle: Fast Deploy Tests
-      nunitConsoleExtraArgs: --where "cat == FastDevTests"
-      condition: and(succeeded(), eq(variables['XA.Commercial.Build'], 'true'))
 
   - template: run-nunit-tests.yaml
     parameters:

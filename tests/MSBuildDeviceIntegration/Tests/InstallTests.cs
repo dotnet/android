@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
 using System.IO;
@@ -23,6 +23,28 @@ namespace Xamarin.Android.Build.Tests
 				stream.Read (data, 0, (int) stream.Length);
 				return data;
 			}
+		}
+
+		string GetContentFromAllOverrideDirectories (string packageName, bool useRunAsCommand = false)
+		{
+			var overrideDirs = new string [] {
+				$"/data/data/{packageName}/files/.__override__",
+				$"/storage/emulated/0/Android/data/{packageName}/files/.__override__",
+				$"/mnt/shell/emulated/0/Android/data/{packageName}/files/.__override__",
+				$"/storage/sdcard/Android/data/{packageName}/files/.__override__",
+			};
+
+			var adbShellArgs = "shell ls";
+			if (useRunAsCommand)
+				adbShellArgs = $"shell run-as {packageName} ls";
+
+			var directorylist = string.Empty;
+			foreach (var dir in overrideDirs) {
+				var listing = RunAdbCommand ($"{adbShellArgs} {dir}");
+				if (!listing.Contains ("No such file or directory"))
+					directorylist += $"\n{listing}";
+			}
+			return directorylist;
 		}
 
 		[Test]
@@ -73,17 +95,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.AreEqual ($"package:{proj.PackageName}", RunAdbCommand ($"shell pm list packages {proj.PackageName}").Trim (),
 					$"{proj.PackageName} is not installed on the device.");
 
-				var overrideDirs = new string [] {
-					$"/storage/emulated/0/Android/data/{proj.PackageName}/files/.__override__",
-					$"/mnt/shell/emulated/0/Android/data/{proj.PackageName}/files/.__override__",
-					$"/storage/sdcard/Android/data/{proj.PackageName}/files/.__override__",
-				};
-				var directorylist = string.Empty;
-				foreach (var dir in overrideDirs) {
-					var listing = RunAdbCommand ($"shell ls {dir}");
-					if (!listing.Contains ("No such file or directory"))
-						directorylist += listing;
-				}
+				var directorylist = GetContentFromAllOverrideDirectories (proj.PackageName);
 				if (!isRelease) {
 					StringAssert.Contains ($"{proj.AssemblyName}", directorylist, $"{proj.AssemblyName} not found in fastdev directory.");
 				}
@@ -141,17 +153,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.AreEqual ($"package:{proj.PackageName}", RunAdbCommand ($"shell pm list packages {proj.PackageName}").Trim (),
 					$"{proj.PackageName} is not installed on the device.");
 
-				var overrideDirs = new string [] {
-					$"/storage/emulated/0/Android/data/{proj.PackageName}/files/.__override__",
-					$"/mnt/shell/emulated/0/Android/data/{proj.PackageName}/files/.__override__",
-					$"/storage/sdcard/Android/data/{proj.PackageName}/files/.__override__",
-				};
-				var directorylist = string.Empty;
-				foreach (var dir in overrideDirs) {
-					var listing = RunAdbCommand ($"shell ls {dir}");
-					if (!listing.Contains ("No such file or directory"))
-						directorylist += listing;
-				}
+				var directorylist = GetContentFromAllOverrideDirectories (proj.PackageName);
 				StringAssert.Contains ($"{proj.AssemblyName}", directorylist, $"{proj.AssemblyName} not found in fastdev directory.");
 
 				proj.IsRelease = true;
@@ -159,13 +161,8 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (builder.Install (proj));
 				Assert.AreEqual ($"package:{proj.PackageName}", RunAdbCommand ($"shell pm list packages {proj.PackageName}").Trim (),
 					$"{proj.PackageName} is not installed on the device.");
-			
-				directorylist = string.Empty;
-				foreach (var dir in overrideDirs) {
-					var listing = RunAdbCommand ($"shell ls {dir}");
-					if (!listing.Contains ("No such file or directory"))
-						directorylist += listing;
-				}
+
+				directorylist = GetContentFromAllOverrideDirectories (proj.PackageName);
 				StringAssert.IsMatch ("", directorylist.Trim (), "fastdev directory should NOT exist for Release builds.");
 
 				proj.IsRelease = false;
@@ -173,12 +170,8 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (builder.Install (proj));
 				Assert.AreEqual ($"package:{proj.PackageName}", RunAdbCommand ($"shell pm list packages {proj.PackageName}").Trim (),
 					$"{proj.PackageName} is not installed on the device.");
-				directorylist = string.Empty;
-				foreach (var dir in overrideDirs) {
-					var listing = RunAdbCommand ($"shell ls {dir}");
-					if (!listing.Contains ("No such file or directory"))
-						directorylist += listing;
-				}
+
+				directorylist = GetContentFromAllOverrideDirectories (proj.PackageName);
 				StringAssert.Contains ($"{proj.AssemblyName}", directorylist, $"{proj.AssemblyName} not found in fastdev directory.");
 			
 				Assert.IsTrue (builder.Uninstall (proj));
@@ -223,18 +216,7 @@ namespace Xamarin.Android.Build.Tests
 				//FIXME: https://github.com/xamarin/androidtools/issues/141
 				//Assert.AreEqual (0, RunAdbCommand ("shell pm list packages Mono.Android.DebugRuntime").Trim ().Length,
 				//	"The Shared Runtime should not have been installed.");
-				var overrideDirs = new string [] {
-					$"/data/data/{proj.PackageName}/files/.__override__",
-					$"/storage/emulated/0/Android/data/{proj.PackageName}/files/.__override__",
-					$"/mnt/shell/emulated/0/Android/data/{proj.PackageName}/files/.__override__",
-					$"/storage/sdcard/Android/data/{proj.PackageName}/files/.__override__",
-				};
-				var directorylist = string.Empty;
-				foreach (var dir in overrideDirs) {
-					var listing = RunAdbCommand ($"shell ls {dir}");
-					if (!listing.Contains ("No such file or directory"))
-						directorylist += listing;
-				}
+				var directorylist = GetContentFromAllOverrideDirectories (proj.PackageName);
 				StringAssert.Contains ($"{proj.ProjectName}.dll", directorylist, $"{proj.ProjectName}.dll should exist in the .__override__ directory.");
 				StringAssert.Contains ($"System.dll", directorylist, $"System.dll should exist in the .__override__ directory.");
 				StringAssert.Contains ($"Mono.Android.dll", directorylist, $"Mono.Android.dll should exist in the .__override__ directory.");
@@ -279,19 +261,7 @@ namespace Xamarin.Android.Build.Tests
 
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
-
-				var overrideDirs = new string [] {
-					$"/data/data/{proj.PackageName}/files/.__override__",
-					$"/storage/emulated/0/Android/data/{proj.PackageName}/files/.__override__",
-					$"/mnt/shell/emulated/0/Android/data/{proj.PackageName}/files/.__override__",
-					$"/storage/sdcard/Android/data/{proj.PackageName}/files/.__override__",
-				};
-				var directorylist = string.Empty;
-				foreach (var dir in overrideDirs) {
-					var listing = RunAdbCommand ($"shell run-as {proj.PackageName} ls {dir}");
-					if (!listing.Contains ("No such file or directory"))
-						directorylist += listing;
-				}
+				var directorylist = GetContentFromAllOverrideDirectories (proj.PackageName, true);
 				StringAssert.Contains ($"{proj.ProjectName}.dll", directorylist, $"{proj.ProjectName}.dll should exist in the .__override__ directory.");
 
 				//Now toggle FastDev to OFF
@@ -301,17 +271,31 @@ namespace Xamarin.Android.Build.Tests
 
 				Assert.IsTrue (builder.Install (proj), "Second install should have succeeded.");
 
-				directorylist = string.Empty;
-				foreach (var dir in overrideDirs) {
-					var listing = RunAdbCommand ($"shell run-as {proj.PackageName} ls {dir}");
-					if (!listing.Contains ("No such file or directory"))
-						directorylist += listing;
-				}
-
+				directorylist = GetContentFromAllOverrideDirectories (proj.PackageName, true);
 				Assert.AreEqual ("", directorylist, "There should be no files in Fast Dev directories! Instead found: " + directorylist);
 
 				//Deploy one last time to verify install still works without the .__override__ directory existing
 				Assert.IsTrue (builder.Install (proj), "Third install should have succeeded.");
+			}
+		}
+
+		[Test]
+		public void LoggingPropsShouldCreateOverrideDirForRelease ()
+		{
+			AssertCommercialBuild ();
+			AssertHasDevices ();
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
+
+			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
+				RunAdbCommand ("shell setprop debug.mono.log timing");
+				Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
+				RunAdbCommand ("shell setprop debug.mono.log \"\"");
+				var directorylist = GetContentFromAllOverrideDirectories (proj.PackageName);
+				StringAssert.Contains ("counters.txt", directorylist, $"counters.txt did not exist in the .__override__ directory.\nFound:{directorylist}");
 			}
 		}
 
@@ -425,6 +409,41 @@ namespace Xamarin.Android.Build.Tests
 					return;
 				b.BuildLogFile = "uninstall.log";
 				Assert.IsTrue (b.Uninstall (proj, doNotCleanupOnUpdate: true), "Uninstall should have succeeded.");
+			}
+		}
+
+		// https://xamarin.github.io/bugzilla-archives/31/31705/bug.html
+		[Test]
+		public void LocalizedAssemblies_ShouldBeFastDeployed ()
+		{
+			AssertCommercialBuild ();
+			AssertHasDevices ();
+
+			var proj = new XamarinAndroidApplicationProject {
+				AndroidUseSharedRuntime = true,
+				EmbedAssembliesIntoApk = false,
+				OtherBuildItems = {
+					new BuildItem ("EmbeddedResource", "Foo.resx") {
+						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancel</value></data>")
+					},
+					new BuildItem ("EmbeddedResource", "Foo.es.resx") {
+						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancelar</value></data>")
+					}
+				}
+			};
+
+			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
+				Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
+				var resourceFilesFromDisk = Directory.EnumerateFiles (proj.OutputPath, "*.resources.dll")
+					.Select (r => r = r.Replace (proj.OutputPath, string.Empty).Replace ("\\", "/"));
+
+				Assert.IsTrue (resourceFilesFromDisk.Any (), $"Unable to find any localized assemblies in {resourceFilesFromDisk}");
+				var directorylist = GetContentFromAllOverrideDirectories (proj.PackageName);
+
+				foreach (var res in resourceFilesFromDisk) {
+					StringAssert.Contains (res, directorylist, $"{res} did not exist in the .__override__ directory.\nFound:{directorylist}");
+				}
+
 			}
 		}
 	}
