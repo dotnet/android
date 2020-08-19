@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Xml.Linq;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
@@ -480,6 +481,23 @@ namespace Xamarin.Android.Build.Tests
 				path = Path.Combine (Root, builder.ProjectDirectory, "Resources");
 			}
 			return Path.Combine (path, "Resource.designer" + project.Language.DefaultDesignerExtension);
+		}
+
+		/// <summary>
+		/// Asserts that a AndroidManifest.xml file contains the expected //application/@android:extractNativeLibs value.
+		/// </summary>
+		protected void AssertExtractNativeLibs (string manifest, bool extractNativeLibs)
+		{
+			FileAssert.Exists (manifest);
+			using (var stream = File.OpenRead (manifest)) {
+				var doc = XDocument.Load (stream);
+				var element = doc.Root.Element ("application");
+				Assert.IsNotNull (element, $"application element not found in {manifest}");
+				var ns = (XNamespace) "http://schemas.android.com/apk/res/android";
+				var attribute = element.Attribute (ns + "extractNativeLibs");
+				Assert.IsNotNull (attribute, $"android:extractNativeLibs attribute not found in {manifest}");
+				Assert.AreEqual (extractNativeLibs ? "true" : "false", attribute.Value, $"Unexpected android:extractNativeLibs value found in {manifest}");
+			}
 		}
 
 		[SetUp]
