@@ -248,6 +248,8 @@ namespace Xamarin.Android.Tasks {
 
 			if (app.Attribute (androidNs + "label") == null && applicationName != null)
 				app.SetAttributeValue (androidNs + "label", applicationName);
+			if (app.Attribute (androidNs + "extractNativeLibs") == null)
+				app.SetAttributeValue (androidNs + "extractNativeLibs", "true");
 
 			var existingTypes = new HashSet<string> (
 				app.Descendants ().Select (a => (string) a.Attribute (attName)).Where (v => v != null));
