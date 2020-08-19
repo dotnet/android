@@ -94,14 +94,6 @@ steps:
     parameters:
       nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
       testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
-      testRunTitle: Wearable Tests
-      nunitConsoleExtraArgs: --where "cat == Wearable"
-
-- ${{ if eq(parameters.node_id, 2) }}:
-  - template: run-nunit-tests.yaml
-    parameters:
-      nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
-      testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
       testRunTitle: Incremental Build Tests
       nunitConsoleExtraArgs: --where "cat == BuildPerformance"
 
@@ -112,7 +104,7 @@ steps:
       testRunTitle: AOT Tests
       nunitConsoleExtraArgs: --where "cat == AotSupport"
 
-- ${{ if eq(parameters.node_id, 3) }}:
+- ${{ if eq(parameters.node_id, 2) }}:
   - template: run-nunit-tests.yaml
     parameters:
       nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
