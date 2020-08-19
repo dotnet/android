@@ -157,7 +157,6 @@
     <Compile Include="Steps\Step_ThirdPartyNotices.cs" />
     <Compile Include="ThirdPartyNotices\aapt2.cs" />
     <Compile Include="ThirdPartyNotices\bundletool.cs" />
-    <Compile Include="ThirdPartyNotices\dlfcn.cs" />
     <Compile Include="ThirdPartyNotices\Java.Interop.cs" />
     <Compile Include="ThirdPartyNotices\K4os.Compression.LZ4.cs" />
     <Compile Include="ThirdPartyNotices\lz4.cs" />

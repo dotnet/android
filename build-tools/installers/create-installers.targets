@@ -135,6 +135,8 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\javadoc-to-mdoc.pdb" Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.pdb" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Localization.dll" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Localization.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.dll.config" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Export.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Export.pdb" />
@@ -228,6 +230,7 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Bindings.JarToXml.targets" Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Build.Tasks.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Build.Tasks.pdb" />
+    <_MSBuildFiles Include="@(_LocalizationLanguages->'$(MSBuildSrcDir)\%(Identity)\Java.Interop.Localization.resources.dll')" />
     <_MSBuildFiles Include="@(_LocalizationLanguages->'$(MSBuildSrcDir)\%(Identity)\Xamarin.Android.Build.Tasks.resources.dll')" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.BuildInfo.txt" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Cecil.dll" />

@@ -137,7 +137,7 @@ namespace xamarin::android::internal
 		char*	get_java_class_name_for_TypeManager (jclass klass);
 
 	private:
-		int convert_dl_flags (int flags);
+		unsigned int convert_dl_flags (int flags);
 #if defined (WINDOWS) || defined (APPLE_OS_X)
 		static const char* get_my_location ();
 #endif  // defined(WINDOWS) || defined(APPLE_OS_X)

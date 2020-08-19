@@ -8,7 +8,6 @@ namespace Xamarin.Android.Prepare
 	class Step_BuildMingwDependencies : Step
 	{
 		static readonly SortedDictionary <string, (string description, string libraryName)> dependencies = new SortedDictionary <string, (string description, string libraryName)> (StringComparer.Ordinal) {
-			{ "dlfcn-win32", (description: "libdl for Windows", libraryName: "libdl.a") },
 			{ "mman-win32",  (description: "mmap for Windows", libraryName: "libmman.a") },
 		};
 

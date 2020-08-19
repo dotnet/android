@@ -48,8 +48,8 @@ namespace xamarin::android::internal
 		char* get_bundled_app (JNIEnv *env, jstring dir);
 		int   count_override_assemblies ();
 		long  get_gref_gc_threshold ();
-		void* load_dso (const char *path, int dl_flags, bool skip_exists_check);
-		void* load_dso_from_any_directories (const char *name, int dl_flags);
+		void* load_dso (const char *path, unsigned int dl_flags, bool skip_exists_check);
+		void* load_dso_from_any_directories (const char *name, unsigned int dl_flags);
 		char* get_full_dso_path_on_disk (const char *dso_name, bool &needs_free);
 		monodroid_dirent_t* readdir (monodroid_dir_t *dir);
 
@@ -118,9 +118,9 @@ namespace xamarin::android::internal
 		size_t  _monodroid_get_system_property_from_file (const char *path, char **value);
 #endif
 		char* get_full_dso_path (const char *base_dir, const char *dso_path, bool &needs_free);
-		void* load_dso_from_specified_dirs (const char **directories, size_t num_entries, const char *dso_name, int dl_flags);
-		void* load_dso_from_app_lib_dirs (const char *name, int dl_flags);
-		void* load_dso_from_override_dirs (const char *name, int dl_flags);
+		void* load_dso_from_specified_dirs (const char **directories, size_t num_entries, const char *dso_name, unsigned int dl_flags);
+		void* load_dso_from_app_lib_dirs (const char *name, unsigned int dl_flags);
+		void* load_dso_from_override_dirs (const char *name, unsigned int dl_flags);
 		char* get_existing_dso_path_on_disk (const char *base_dir, const char *dso_name, bool &needs_free);
 
 #if defined (WINDOWS)
