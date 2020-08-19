@@ -553,7 +553,12 @@ namespace Xamarin.Android.Tasks
 			AddNativeLibraries (files, supportedAbis, frameworkLibs);
 
 			var libs = NativeLibraries.Concat (BundleNativeLibraries ?? Enumerable.Empty<ITaskItem> ())
-				.Select (v => new LibInfo { Path = v.ItemSpec, Abi = GetNativeLibraryAbi (v) });
+				.Select (v => new LibInfo {
+						Path = v.ItemSpec,
+						Abi = GetNativeLibraryAbi (v),
+						ArchiveFileName = v.GetMetadata ("ArchiveFileName")
+					}
+				);
 
 			AddNativeLibraries (files, supportedAbis, libs);
 		}

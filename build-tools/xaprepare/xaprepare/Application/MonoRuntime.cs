@@ -22,7 +22,7 @@ namespace Xamarin.Android.Prepare
 		public string OutputProfilerFilename        { get; set; } = String.Empty;
 		public string OutputRuntimeFilename         { get; set; } = Configurables.Defaults.MonoRuntimeOutputFileName;
 		public string Strip                         { get; set; } = String.Empty;
-		public string StripFlags                    { get; set; } = String.Empty;
+		public string StripFlags                    { get; set; } = "--strip-debug";
 
 		protected MonoRuntime (string name, Func<Context, bool> enabledCheck)
 			: base (name, enabledCheck)
