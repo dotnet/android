@@ -404,15 +404,8 @@ $@"<Project>
 				File.Copy (repoNuGetConfig, projNugetConfig, overwrite: true);
 				// Write additional sources to NuGet.config if needed
 				if (ExtraNuGetConfigSources != null) {
-					int sourceIndex = 0;
 					var doc = XDocument.Load (projNugetConfig);
-					XElement pkgSourcesElement = doc.Descendants ().FirstOrDefault (d => d.Name.LocalName.ToLowerInvariant () == "packagesources");
-					foreach (var source in ExtraNuGetConfigSources) {
-						var sourceElement = new XElement ("add");
-						sourceElement.SetAttributeValue ("key", $"testsource{++sourceIndex}");
-						sourceElement.SetAttributeValue ("value", source);
-						pkgSourcesElement.Add (sourceElement);
-					}
+					AddNuGetConfigSources (doc);
 					doc.Save (projNugetConfig);
 				}
 				// Set a local PackageReference installation folder if specified
@@ -437,6 +430,21 @@ $@"<Project>
 					}
 					doc.Save (projNugetConfig);
 				}
+			}
+		}
+
+		/// <summary>
+		/// Updates a NuGet.config based on sources in ExtraNuGetConfigSources
+		/// </summary>
+		protected void AddNuGetConfigSources (XDocument doc)
+		{
+			int sourceIndex = 0;
+			XElement pkgSourcesElement = doc.Descendants ().FirstOrDefault (d => d.Name.LocalName.ToLowerInvariant () == "packagesources");
+			foreach (var source in ExtraNuGetConfigSources) {
+				var sourceElement = new XElement ("add");
+				sourceElement.SetAttributeValue ("key", $"testsource{++sourceIndex}");
+				sourceElement.SetAttributeValue ("value", source);
+				pkgSourcesElement.Add (sourceElement);
 			}
 		}
 	}
