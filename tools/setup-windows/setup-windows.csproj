@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\Configuration.props" />
+
   <PropertyGroup>
     <TargetFrameworks>net472</TargetFrameworks>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
@@ -8,6 +10,4 @@
     <AssemblyName>setup-windows</AssemblyName>
     <OutputPath>$(XamarinAndroidSourcePath)bin\$(Configuration)\bin\</OutputPath>
   </PropertyGroup>
- 
-  <Import Project="..\..\Configuration.props" />
 </Project>
