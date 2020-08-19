@@ -155,6 +155,19 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void ClassLibraryHasNoWarnings ()
+		{
+			var proj = new XamarinAndroidLibraryProject ();
+			//NOTE: these properties should not affect class libraries at all
+			proj.SetProperty ("AndroidPackageFormat", "aab");
+			proj.SetProperty ("AotAssemblies", "true");
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 0 Warning(s)"), "Should have no MSBuild warnings.");
+			}
+		}
+
+		[Test]
 		public void BuildBasicApplicationWithNuGetPackageConflicts ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
