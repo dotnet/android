@@ -241,5 +241,52 @@ $@"<linker>
 				}
 			}
 		}
+
+		[Test]
+		public void LinkWithNullAttribute ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				OtherBuildItems = {
+					new BuildItem ("Compile", "NullAttribute.cs") { TextContent = () => @"
+using System;
+using Android.Content;
+using Android.Widget;
+namespace UnnamedProject {
+	public class MyAttribute : Attribute
+	{
+		Type[] types;
+
+		public Type[] Types {
+			get { return types; }
+		}
+
+		public MyAttribute (Type[] ta)
+		{
+			types = ta;
+		}
+	}
+
+	[MyAttribute (null)]
+	public class AttributedButtonStub : Button
+	{
+		public AttributedButtonStub (Context context) : base (context)
+		{
+		}
+	}
+}"
+					},
+				}
+			};
+
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
+$@"			var myButton = new AttributedButtonStub (this);
+			myButton.Text = ""Bug #35710"";
+");
+
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Building a project with a null attribute value should have succeded.");
+			}
+		}
 	}
 }
