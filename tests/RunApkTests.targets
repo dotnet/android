@@ -32,7 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <_DeviceTestAssembly Include="$(_TopDir)\bin\Test$(Configuration)\MSBuildDeviceIntegration\MSBuildDeviceIntegration.dll" />
+    <_DeviceTestAssembly Include="$(_TopDir)\bin\Test$(Configuration)\MSBuildDeviceIntegration\net472\MSBuildDeviceIntegration.dll" />
   </ItemGroup>
 
   <PropertyGroup>

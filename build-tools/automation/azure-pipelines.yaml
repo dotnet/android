@@ -62,7 +62,7 @@ variables:
   # - This is a non-fork branch with name containing "mono-" (for Mono bumps)
   IsMonoBranch: $[and(eq(variables['XA.Commercial.Build'], 'true'), ne(variables['System.PullRequest.IsFork'], 'True'), or(contains(variables['Build.SourceBranchName'], 'mono-'), contains(variables['System.PullRequest.SourceBranch'], 'mono-')))]
   RunAllTests: $[or(eq(variables['XA.RunAllTests'], true), eq(variables['IsMonoBranch'], true))]
-  DotNetNUnitCategories: '& TestCategory != DotNetIgnore & TestCategory != AOT & TestCategory != MkBundle & TestCategory != MonoSymbolicate & TestCategory != PackagesConfig & TestCategory != StaticProject'
+  DotNetNUnitCategories: '& TestCategory != DotNetIgnore & TestCategory != AOT & TestCategory != MkBundle & TestCategory != MonoSymbolicate & TestCategory != PackagesConfig & TestCategory != StaticProject & TestCategory != Debugger'
   NUnit.NumberOfTestWorkers: 4
   GitHub.Token: $(github--pat--vs-mobiletools-engineering-service2)
 
@@ -704,7 +704,7 @@ stages:
     - template: yaml-templates/run-nunit-tests.yaml
       parameters:
         testRunTitle: MSBuildDeviceIntegration Smoke - macOS
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/MSBuildDeviceIntegration.dll
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/net472/MSBuildDeviceIntegration.dll
         nunitConsoleExtraArgs: --where "cat == SmokeTests"
         testResultsFile: TestResult-MSBuildDeviceIntegrationSmoke-$(XA.Build.Configuration).xml
 
@@ -835,70 +835,19 @@ stages:
   dependsOn: mac_build
   condition: and(succeeded(), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'MSBuildDevice')))
   jobs:
-  # Check - "Xamarin.Android (MSBuild Emulator Tests macOS)"
-  - job: mac_msbuilddevice_tests
-    displayName: macOS
-    pool: $(HostedMac)
-    timeoutInMinutes: 150
-    cancelTimeoutInMinutes: 5
-    workspace:
-      clean: all
-    steps:
-    - template: yaml-templates/setup-test-environment.yaml
+  # Check - "Xamarin.Android (MSBuild Emulator Tests macOS - Legacy)"
+  - template: yaml-templates/run-msbuild-device-tests.yaml
+    parameters:
+      job_name: mac_msbuilddevice_tests
+      job_suffix: Legacy
 
-    - script: mono $(System.DefaultWorkingDirectory)/build-tools/xaprepare/xaprepare/bin/$(XA.Build.Configuration)/xaprepare.exe --s=EmulatorTestDependencies --no-emoji --run-mode=CI
-      displayName: install emulator
-
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: $(TestAssembliesArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
-
-    - task: MSBuild@1
-      displayName: build check-boot-times.csproj
-      inputs:
-        solution: build-tools/check-boot-times/check-boot-times.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /restore /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/build-check-boot-times.binlog
-      continueOnError: true
-
-    - task: MSBuild@1
-      displayName: Run check-boot-times
-      inputs:
-        solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:CheckBootTimes /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/run-check-boot-times.binlog
-      continueOnError: true
-
-    - task: MSBuild@1
-      displayName: start emulator
-      inputs:
-        solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:AcquireAndroidTarget /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/start-emulator.binlog
-
-    - template: yaml-templates/run-nunit-tests.yaml
-      parameters:
-        testRunTitle: MSBuildDeviceIntegration On Device - macOS
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/MSBuildDeviceIntegration.dll
-        nunitConsoleExtraArgs: --where "cat != TimeZoneInfo && cat != SmokeTests"
-        testResultsFile: TestResult-MSBuildDeviceIntegration-$(XA.Build.Configuration).xml
-
-    - task: MSBuild@1
-      displayName: shut down emulator
-      inputs:
-        solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: >-
-          /t:AcquireAndroidTarget,ReleaseAndroidTarget
-          /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/shutdown-emulator.binlog
-      condition: always()
-
-    - template: yaml-templates/upload-results.yaml
-      parameters:
-        artifactName: Test Results - MSBuild With Emulator - macOS
-
-    - template: yaml-templates/fail-on-issue.yaml
+  # Check - "Xamarin.Android (MSBuild Emulator Tests macOS - One .NET)"
+  - template: yaml-templates/run-msbuild-device-tests.yaml
+    parameters:
+      job_name: mac_dotnetdevice_tests
+      job_suffix: One .NET
+      nunit_categories: $(DotNetNUnitCategories)
+      target_framework: 'netcoreapp3.1'
 
 - stage: designer_tests
   displayName: Designer Tests
