@@ -6,7 +6,7 @@ namespace Android.Runtime {
 
 	public static class Extensions {
 
-		[return: NotNullIfNotNull("instance")]
+		[return: NotNullIfNotNull ("instance")]
 		public static TResult? JavaCast<TResult> (this IJavaObject? instance)
 			where TResult : class, IJavaObject
 		{
