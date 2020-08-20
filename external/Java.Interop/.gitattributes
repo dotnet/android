@@ -19,6 +19,8 @@
 *.Designer.cs	eol=crlf
 
 *.cs	text
+*.resx	text
+*.xlf	text
 *.xml	text
 *.md	text
 Makefile	eol=lf

@@ -2,6 +2,7 @@
   "solution": {
     "path": "..\\..\\Java.Interop.sln",
     "projects": [
+      "src\\Java.Interop.Localization\\Java.Interop.Localization.csproj",
       "src\\Java.Interop.NamingCustomAttributes\\Java.Interop.NamingCustomAttributes.shproj",
       "src\\Java.Interop.Tools.Cecil\\Java.Interop.Tools.Cecil.csproj",
       "src\\Java.Interop.Tools.JavaCallableWrappers\\Java.Interop.Tools.JavaCallableWrappers.csproj",

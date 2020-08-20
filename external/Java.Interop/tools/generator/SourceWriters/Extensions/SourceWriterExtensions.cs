@@ -24,12 +24,12 @@ namespace generator.SourceWriters
 
 			foreach (var f in fields) {
 				if (gen.ContainsName (f.Name)) {
-					Report.Warning (0, Report.WarningFieldNameCollision, "Skipping {0}.{1}, due to a duplicate field, method or nested type name. {2} (Java type: {3})", gen.FullName, f.Name, gen.HasNestedType (f.Name) ? "(Nested type)" : gen.ContainsProperty (f.Name, false) ? "(Property)" : "(Method)", gen.JavaName);
+					Report.LogCodedWarning (0, GetFieldCollisionMessage (gen, f), gen.FullName, f.Name, gen.JavaName);
 					continue;
 				}
 
 				if (seen != null && seen.Contains (f.Name)) {
-					Report.Warning (0, Report.WarningDuplicateField, "Skipping {0}.{1}, due to a duplicate field. (Field) (Java type: {2})", gen.FullName, f.Name, gen.JavaName);
+					Report.LogCodedWarning (0, Report.WarningDuplicateField, gen.FullName, f.Name, gen.JavaName);
 					continue;
 				}
 
@@ -45,6 +45,16 @@ namespace generator.SourceWriters
 			return needsProperty;
 		}
 
+		public static Report.LocalizedMessage GetFieldCollisionMessage (GenBase gen, Field f)
+		{
+			if (gen.HasNestedType (f.Name))
+				return Report.WarningFieldNameCollision_NestedType;
+			if (gen.ContainsProperty (f.Name, false))
+				return Report.WarningFieldNameCollision_Property;
+
+			return Report.WarningFieldNameCollision_Method;
+		}
+
 		public static void AddInterfaceListenerEventsAndProperties (TypeWriter tw, InterfaceGen iface, ClassGen target, CodeGenerationOptions opt)
 		{
 			var methods = target.Methods.Concat (target.Properties.Where (p => p.Setter != null).Select (p => p.Setter));
@@ -56,12 +66,12 @@ namespace generator.SourceWriters
 				var name = method.CalculateEventName (target.ContainsName);
 
 				if (string.IsNullOrEmpty (name)) {
-					Report.Warning (0, Report.WarningInterfaceGen + 1, "empty event name in {0}.{1}.", iface.FullName, method.Name);
+					Report.LogCodedWarning (0, Report.WarningEmptyEventName, iface.FullName, method.Name);
 					continue;
 				}
 
 				if (opt.GetSafeIdentifier (name) != name) {
-					Report.Warning (0, Report.WarningInterfaceGen + 4, "event name for {0}.{1} is invalid. `eventName' or `argsType` can be used to assign a valid member name.", iface.FullName, method.Name);
+					Report.LogCodedWarning (0, Report.WarningInvalidEventName, iface.FullName, method.Name);
 					continue;
 				}
 
@@ -140,7 +150,7 @@ namespace generator.SourceWriters
 
 			if (method.RetVal.IsVoid || method.IsEventHandlerWithHandledProperty) {
 				if (opt.GetSafeIdentifier (name) != name) {
-					Report.Warning (0, Report.WarningInterfaceGen + 5, "event name for {0}.{1} is invalid. `eventName' or `argsType` can be used to assign a valid member name.", iface.FullName, name);
+					Report.LogCodedWarning (0, Report.WarningInvalidEventName2, iface.FullName, name);
 					return;
 				} else {
 					var mt = target.Methods.Where (method => string.Compare (method.Name, connector_fmt, StringComparison.OrdinalIgnoreCase) == 0 && method.IsListenerConnector).FirstOrDefault ();
@@ -150,7 +160,7 @@ namespace generator.SourceWriters
 				}
 			} else {
 				if (opt.GetSafeIdentifier (name) != name) {
-					Report.Warning (0, Report.WarningInterfaceGen + 6, "event property name for {0}.{1} is invalid. `eventName' or `argsType` can be used to assign a valid member name.", iface.FullName, name);
+					Report.LogCodedWarning (0, Report.WarningInvalidEventPropertyName, iface.FullName, name);
 					return;
 				}
 

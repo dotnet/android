@@ -38,7 +38,7 @@ namespace MonoDroid.Generation
 			Symbol = opt.SymbolTable.Lookup (TypeName, type_params);
 
 			if (Symbol == null || !Symbol.Validate (opt, type_params, context)) {
-				Report.Warning (0, Report.WarningField + 0, "unexpected field type {0} {1}.", TypeName, context.ContextString);
+				Report.LogCodedWarning (0, Report.WarningUnexpectedFieldType, TypeName, context.ContextString);
 				return false;
 			}
 

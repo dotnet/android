@@ -294,13 +294,13 @@ namespace MonoDroid.Generation
 
 			base_symbol = IsAnnotation ? opt.SymbolTable.Lookup ("java.lang.Object") : BaseType != null ? opt.SymbolTable.Lookup (BaseType) : null;
 			if (base_symbol == null && FullName != "Java.Lang.Object" && FullName != "System.Object") {
-				Report.Warning (0, Report.WarningClassGen + 2, "Class {0} has unknown base type {1}.", FullName, BaseType);
+				Report.LogCodedWarning (0, Report.WarningUnknownBaseType, FullName, BaseType);
 				IsValid = false;
 				return false;
 			}
 
 			if ((base_symbol != null && !base_symbol.Validate (opt, TypeParameters, context)) || !base.OnValidate (opt, type_params, context)) {
-				Report.Warning (0, Report.WarningClassGen + 3, "Class {0} has invalid base type {1}.", FullName, BaseType);
+				Report.LogCodedWarning (0, Report.WarningInvalidBaseType, FullName, BaseType);
 				IsValid = false;
 				return false;
 			}

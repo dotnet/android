@@ -101,12 +101,12 @@ namespace generator.SourceWriters
 
 			foreach (var f in fields) {
 				if (iface.ContainsName (f.Name)) {
-					Report.Warning (0, Report.WarningFieldNameCollision, "Skipping {0}.{1}, due to a duplicate field, method or nested type name. {2} (Java type: {3})", iface.FullName, f.Name, iface.HasNestedType (f.Name) ? "(Nested type)" : iface.ContainsProperty (f.Name, false) ? "(Property)" : "(Method)", iface.JavaName);
+					Report.LogCodedWarning (0, SourceWriterExtensions.GetFieldCollisionMessage (iface, f), iface.FullName, f.Name, iface.JavaName);
 					continue;
 				}
 
 				if (seen.Contains (f.Name)) {
-					Report.Warning (0, Report.WarningDuplicateField, "Skipping {0}.{1}, due to a duplicate field. (Field) (Java type: {2})", iface.FullName, f.Name, iface.JavaName);
+					Report.LogCodedWarning (0, Report.WarningDuplicateField, iface.FullName, f.Name, iface.JavaName);
 					continue;
 				}
 

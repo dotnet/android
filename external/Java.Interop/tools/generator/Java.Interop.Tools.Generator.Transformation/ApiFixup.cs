@@ -87,10 +87,10 @@ namespace MonoDroid.Generation
 								node.Remove ();
 						else
 							// BG8A00
-							Report.Warning (0, Report.WarningApiFixup + 0, null, metaitem, "<remove-node path=\"{0}\"/> matched no nodes.", path);
+							Report.LogCodedWarning (0, Report.WarningRemoveNodeMatchedNoNodes, null, metaitem, $"<remove-node path=\"{path}\" />");
 					} catch (XPathException e) {
-						// BG4A01
-						Report.Error (Report.ErrorApiFixup + 1, e, metaitem, "Invalid XPath specification: {0}", path);
+						// BG4301
+						Report.LogCodedError (Report.ErrorRemoveNodeInvalidXPath, e, metaitem, path);
 					}
 					break;
 				case "add-node":
@@ -98,16 +98,16 @@ namespace MonoDroid.Generation
 						var nodes = api_doc.XPathSelectElements (path);
 						if (!nodes.Any ())
 							// BG8A01
-							Report.Warning (0, Report.WarningApiFixup + 1, null, metaitem, "<add-node path=\"{0}\"/> matched no nodes.", path);
+							Report.LogCodedWarning (0, Report.WarningAddNodeMatchedNoNodes, null, metaitem, $"<add-node path=\"{path}\" />");
 						else {
 							foreach (var node in nodes)
 								node.Add (metaitem.Nodes ());
 						}
 					} catch (XPathException e) {
-						// BG4A02
-						Report.Error (Report.ErrorApiFixup + 2, e, metaitem, "Invalid XPath specification: {0}", path);
+						// BG4302
+						Report.LogCodedError (Report.ErrorAddNodeInvalidXPath, e, metaitem, path);
 					}
-					break;
+						break;
 				case "change-node":
 					try {
 						var nodes = api_doc.XPathSelectElements (path);
@@ -122,18 +122,18 @@ namespace MonoDroid.Generation
 						
 						if (!matched)
 							// BG8A03
-							Report.Warning (0, Report.WarningApiFixup + 3, null, metaitem, "<change-node-type path=\"{0}\"/> matched no nodes.", path);
+							Report.LogCodedWarning (0, Report.WarningChangeNodeTypeMatchedNoNodes, null, metaitem, $"<change-node-type path=\"{path}\" />");
 					} catch (XPathException e) {
-						// BG4A03
-						Report.Error (Report.ErrorApiFixup + 3, e, metaitem, "Invalid XPath specification: {0}", path);
+						// BG4303
+						Report.LogCodedError (Report.ErrorChangeNodeInvalidXPath, e, metaitem, path);
 					}
 					break;
 				case "attr":
 					try {
 						string attr_name = metaitem.XGetAttribute ("name");
 						if (string.IsNullOrEmpty (attr_name))
-							// BG4A07
-							Report.Error (Report.ErrorApiFixup + 7, null, metaitem, "Target attribute name is not specified for path: {0}", path);
+							// BG4307
+							Report.LogCodedError (Report.ErrorMissingAttrName, null, metaitem, path);
 						var nodes = attr_last_cache != null ? new XElement [] { attr_last_cache } : api_doc.XPathSelectElements (path);
 						int attr_matched = 0;
 						foreach (var n in nodes) {
@@ -142,12 +142,12 @@ namespace MonoDroid.Generation
 						}
 						if (attr_matched == 0)
 							// BG8A04
-							Report.Warning (0, Report.WarningApiFixup + 4, null, metaitem, "<attr path=\"{0}\"/> matched no nodes.", path);
+							Report.LogCodedWarning (0, Report.WarningAttrMatchedNoNodes, null, metaitem, $"<attr path=\"{path}\" />");
 						if (attr_matched != 1)
 							attr_last_cache = null;
 					} catch (XPathException e) {
-						// BG4A04
-						Report.Error (Report.ErrorApiFixup + 4, e, metaitem, "Invalid XPath specification: {0}", path);
+						// BG4304
+						Report.LogCodedError (Report.ErrorAttrInvalidXPath, e, metaitem, path);
 					}
 					break;
 				case "move-node":
@@ -164,10 +164,10 @@ namespace MonoDroid.Generation
 						}
 						if (!matched)
 							// BG8A05
-							Report.Warning (0, Report.WarningApiFixup + 5, null, metaitem, "<move-node path=\"{0}\"/> matched no nodes.", path);
+							Report.LogCodedWarning (0, Report.WarningMoveNodeMatchedNoNodes, null, metaitem, $"<move-node path=\"{path}\" />");
 					} catch (XPathException e) {
-						// BG4A05
-						Report.Error (Report.ErrorApiFixup + 5, e, metaitem, "Invalid XPath specification: {0}", path);
+						// BG4305
+						Report.LogCodedError (Report.ErrorMoveNodeInvalidXPath, e, metaitem, path);
 					}
 					break;
 				case "remove-attr":
@@ -183,10 +183,10 @@ namespace MonoDroid.Generation
 						
 						if (!matched)
 							// BG8A06
-							Report.Warning (0, Report.WarningApiFixup + 6, null, metaitem, "<remove-attr path=\"{0}\"/> matched no nodes.", path);
+							Report.LogCodedWarning (0, Report.WarningRemoveAttrMatchedNoNodes, null, metaitem, $"<remove-attr path=\"{path}\" />");
 					} catch (XPathException e) {
-						// BG4A06
-						Report.Error (Report.ErrorApiFixup + 6, e, metaitem, "Invalid XPath specification: {0}", path);
+						// BG4306
+						Report.LogCodedError (Report.ErrorRemoveAttrInvalidXPath, e, metaitem, path);
 					}
 					break;
 				}

@@ -65,7 +65,7 @@ namespace MonoDroid.Generation
 					sw.WriteLine ("  <remove-node path=\"/api/package[@name='{0}']/{3}[@name='{1}']/field[@name='{2}']\" />",
 							package, type, member, enu.StartsWith ("I:") ? "interface" : "class");
 				} catch (Exception ex) {
-					Report.Error (Report.ErrorEnumMap + 0, "ERROR: failed to remove old comments: " + enu, ex);
+					Report.LogCodedError (Report.ErrorFailedToRemoveConstants, ex, enu);
 					throw;
 				}
 			}
@@ -91,8 +91,8 @@ namespace MonoDroid.Generation
 				try {
 					sw.WriteLine ("  <remove-node path=\"/api/package[@name='{0}']/{3}[@name='{1}']/field[@name='{2}']\" />",
 						      package, type, member, enu.StartsWith ("I:") ? "interface" : "class");
-				} catch (Exception) {
-					Console.Error.WriteLine ("ERROR: failed to remove old comments: " + enu);
+				} catch (Exception ex) {
+					Report.LogCodedError (Report.ErrorFailedToRemoveConstants, ex, enu);
 					throw;
 				}
 			}

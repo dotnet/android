@@ -113,7 +113,7 @@ namespace Xamarin.Android.Binder
 							ProcessReferencedType (td, opt);
 						}
 				} catch (Exception ex) {
-					Report.Warning (0, Report.WarningCodeGenerator + 0, ex, "failed to parse assembly {0}: {1}", reference, ex.Message);
+					Report.LogCodedWarning (0, Report.WarningAssemblyParseFailure, ex, reference, ex.Message);
 				}
 			}
 

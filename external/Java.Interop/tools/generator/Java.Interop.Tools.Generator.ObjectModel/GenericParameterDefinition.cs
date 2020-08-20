@@ -38,7 +38,7 @@ namespace MonoDroid.Generation
 			foreach (var c in ConstraintExpressions) {
 				var sym = opt.SymbolTable.Lookup (c, type_params);
 				if (sym == null) {
-					Report.Warning (0, Report.WarningGenericParameterDefinition + 0, "Unknown generic argument constraint type {0} {1}.", c, context.ContextString);
+					Report.LogCodedWarning (0, Report.WarningUnknownGenericConstraint, c, context.ContextString);
 					validated = true;
 					return false;
 				}

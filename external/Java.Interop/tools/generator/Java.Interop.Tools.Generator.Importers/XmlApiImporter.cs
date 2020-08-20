@@ -46,7 +46,7 @@ namespace MonoDroid.Generation
 					case "typeParameters":
 						break; // handled at GenBaseSupport
 					default:
-						Report.Warning (0, Report.WarningClassGen + 1, "unexpected class child {0}.", child.Name);
+						Report.LogCodedWarning (0, Report.WarningUnexpectedChild, child.Name.ToString ());
 						break;
 				}
 			}
@@ -81,7 +81,7 @@ namespace MonoDroid.Generation
 
 				if (enclosingType == null) {
 					ctor.MissingEnclosingClass = true;
-					Report.Warning (0, Report.WarningCtor + 0, "For {0}, could not find enclosing type '{1}'.", ctor.Name, expectedEnclosingName);
+					Report.LogCodedWarning (0, Report.WarningMissingClassForConstructor, ctor.Name, expectedEnclosingName);
 				} else
 					ctor.Parameters.AddFirst (CreateParameterFromClassElement (enclosingType));
 			}
@@ -231,7 +231,7 @@ namespace MonoDroid.Generation
 					case "typeParameters":
 						break; // handled at GenBaseSupport
 					default:
-						Report.Warning (0, Report.WarningInterfaceGen + 0, "unexpected interface child {0}.", child);
+						Report.LogCodedWarning (0, Report.WarningUnexpectedInterfaceChild, child.ToString ());
 						break;
 				}
 			}

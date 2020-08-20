@@ -1,97 +1,115 @@
 using System;
-using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
-using System.Xml.XPath;
 
 namespace MonoDroid.Generation
 {
 	public class Report
 	{
-		public const int ErrorEnumMap = 0x4000;
-		public const int ErrorEnumMapping = 0x4100;
-		public const int ErrorParser = 0x4200;
-		public const int ErrorApiFixup = 0x4300;
-		public const int ErrorCodeGenerator = 0x4400;
-		public const int ErrorInvalidArgument = 0x4500;
-		public const int WarningClassGen = 0x8100;
-		public const int WarningCodeGenerator = 0x8200;
-		public const int WarningCtor = 0x8300;
-		public const int WarningField = 0x8400;
-		public const int WarningFieldNameCollision = 0x8401;
-		public const int WarningDuplicateField = 0x8402;
-		public const int WarningInterfaceGen = 0x8500;
-		public const int WarningParser = 0x8600;
-		public const int WarningReturnValue = 0x8700;
-		public const int WarningParameter = 0x8800;
-		public const int WarningGenBaseSupport = 0x8900;
-		public const int WarningApiFixup = 0x8A00;
-		public const int WarningGenericParameterDefinition = 0x8B00;
-		public const int WarningGenBase = 0x8C00;
-		public const int WarningMethodBase = 0x8D00;
-		public const int WarningAnnotationsProvider = 0x8E00;
-
 		public static int? Verbosity { get; set; }
 
-		public static void Error (int errorCode, string format, params object[] args)
+		public class LocalizedMessage
 		{
-			Error (errorCode, null, null, -1, -1, format, args);
+			public int Code { get; set; }
+			public string Value { get; set; }
+
+			public LocalizedMessage (int code, string value)
+			{
+				Code = code;
+				Value = value;
+			}
 		}
 
-		public static void Error (int errorCode, string sourceFile, int line, int column, string format, params object [] args)
+		public static LocalizedMessage ErrorFailedToRemoveConstants => new LocalizedMessage (4000, Java.Interop.Localization.Resources.Generator_BG4000);
+		public static LocalizedMessage ErrorFailedToProcessEnumMap => new LocalizedMessage (4100, Java.Interop.Localization.Resources.Generator_BG4100);
+		public static LocalizedMessage ErrorFailedToProcessMetadata => new LocalizedMessage (4200, Java.Interop.Localization.Resources.Generator_BG4200);
+		public static LocalizedMessage ErrorRemoveNodeInvalidXPath => new LocalizedMessage (4301, Java.Interop.Localization.Resources.Generator_BG4300);
+		public static LocalizedMessage ErrorAddNodeInvalidXPath => new LocalizedMessage (4302, Java.Interop.Localization.Resources.Generator_BG4300);
+		public static LocalizedMessage ErrorChangeNodeInvalidXPath => new LocalizedMessage (4303, Java.Interop.Localization.Resources.Generator_BG4300);
+		public static LocalizedMessage ErrorAttrInvalidXPath => new LocalizedMessage (4304, Java.Interop.Localization.Resources.Generator_BG4300);
+		public static LocalizedMessage ErrorMoveNodeInvalidXPath => new LocalizedMessage (4305, Java.Interop.Localization.Resources.Generator_BG4300);
+		public static LocalizedMessage ErrorRemoveAttrInvalidXPath => new LocalizedMessage (4306, Java.Interop.Localization.Resources.Generator_BG4300);
+		public static LocalizedMessage ErrorMissingAttrName => new LocalizedMessage (4307, Java.Interop.Localization.Resources.Generator_BG4307);
+		public static LocalizedMessage ErrorUnexpectedGlobal => new LocalizedMessage (4400, Java.Interop.Localization.Resources.Generator_BG4400);
+		public static LocalizedMessage ErrorInvalidDIMArgument => new LocalizedMessage (4500, Java.Interop.Localization.Resources.Generator_BG4500);
+
+		public static LocalizedMessage WarningUnexpectedChild => new LocalizedMessage (8101, Java.Interop.Localization.Resources.Generator_BG8101);
+		public static LocalizedMessage WarningUnknownBaseType => new LocalizedMessage (8102, Java.Interop.Localization.Resources.Generator_BG8102);
+		public static LocalizedMessage WarningInvalidBaseType => new LocalizedMessage (8103, Java.Interop.Localization.Resources.Generator_BG8103);
+		public static LocalizedMessage WarningAssemblyParseFailure => new LocalizedMessage (8200, Java.Interop.Localization.Resources.Generator_BG8200);
+		public static LocalizedMessage WarningMissingClassForConstructor => new LocalizedMessage (8300, Java.Interop.Localization.Resources.Generator_BG8300);
+		public static LocalizedMessage WarningUnexpectedFieldType => new LocalizedMessage (8400, Java.Interop.Localization.Resources.Generator_BG8400);
+		public static LocalizedMessage WarningFieldNameCollision_Property => new LocalizedMessage (8401, Java.Interop.Localization.Resources.Generator_BG8401_Property);
+		public static LocalizedMessage WarningFieldNameCollision_Method => new LocalizedMessage (8401, Java.Interop.Localization.Resources.Generator_BG8401_Method);
+		public static LocalizedMessage WarningFieldNameCollision_NestedType => new LocalizedMessage (8401, Java.Interop.Localization.Resources.Generator_BG8401_NestedType);
+		public static LocalizedMessage WarningDuplicateField => new LocalizedMessage (8402, Java.Interop.Localization.Resources.Generator_BG8402);
+		public static LocalizedMessage WarningUnexpectedInterfaceChild => new LocalizedMessage (8500, Java.Interop.Localization.Resources.Generator_BG8500);
+		public static LocalizedMessage WarningEmptyEventName => new LocalizedMessage (8501, Java.Interop.Localization.Resources.Generator_BG8501);
+		public static LocalizedMessage WarningInvalidDueToInterfaces => new LocalizedMessage (8502, Java.Interop.Localization.Resources.Generator_BG8502);
+		public static LocalizedMessage WarningInvalidDueToMethods => new LocalizedMessage (8503, Java.Interop.Localization.Resources.Generator_BG8503);
+		public static LocalizedMessage WarningInvalidEventName => new LocalizedMessage (8504, Java.Interop.Localization.Resources.Generator_BG8504);
+		public static LocalizedMessage WarningInvalidEventName2 => new LocalizedMessage (8505, Java.Interop.Localization.Resources.Generator_BG8504);
+		public static LocalizedMessage WarningInvalidEventPropertyName => new LocalizedMessage (8506, Java.Interop.Localization.Resources.Generator_BG8506);
+		public static LocalizedMessage WarningInvalidXmlFile => new LocalizedMessage (8600, Java.Interop.Localization.Resources.Generator_BG8600);
+		public static LocalizedMessage WarningNoPackageElements => new LocalizedMessage (8601, Java.Interop.Localization.Resources.Generator_BG8601);
+		public static LocalizedMessage WarningUnexpectedRootChildNode => new LocalizedMessage (8602, Java.Interop.Localization.Resources.Generator_BG8602);
+		public static LocalizedMessage WarningUnexpectedPackageChildNode => new LocalizedMessage (8603, Java.Interop.Localization.Resources.Generator_BG8603);
+		public static LocalizedMessage WarningNestedTypeAncestorNotFound => new LocalizedMessage (8604, Java.Interop.Localization.Resources.Generator_BG8604);
+		public static LocalizedMessage WarningUnknownReturnType => new LocalizedMessage (8700, Java.Interop.Localization.Resources.Generator_BG8700);
+		public static LocalizedMessage WarningInvalidReturnType => new LocalizedMessage (8701, Java.Interop.Localization.Resources.Generator_BG8701);
+		public static LocalizedMessage WarningUnknownParameterType => new LocalizedMessage (8800, Java.Interop.Localization.Resources.Generator_BG8800);
+		public static LocalizedMessage WarningInvalidParameterType => new LocalizedMessage (8801, Java.Interop.Localization.Resources.Generator_BG8801);
+		public static LocalizedMessage WarningRemoveNodeMatchedNoNodes => new LocalizedMessage (0x8A00, Java.Interop.Localization.Resources.Generator_BG8A00);
+		public static LocalizedMessage WarningAddNodeMatchedNoNodes => new LocalizedMessage (0x8A01, Java.Interop.Localization.Resources.Generator_BG8A00);
+		public static LocalizedMessage WarningChangeNodeTypeMatchedNoNodes => new LocalizedMessage (0x8A03, Java.Interop.Localization.Resources.Generator_BG8A00);
+		public static LocalizedMessage WarningAttrMatchedNoNodes => new LocalizedMessage (0x8A04, Java.Interop.Localization.Resources.Generator_BG8A00);
+		public static LocalizedMessage WarningMoveNodeMatchedNoNodes => new LocalizedMessage (0x8A05, Java.Interop.Localization.Resources.Generator_BG8A00);
+		public static LocalizedMessage WarningRemoveAttrMatchedNoNodes => new LocalizedMessage (0x8A06, Java.Interop.Localization.Resources.Generator_BG8A00);
+		public static LocalizedMessage WarningUnknownGenericConstraint => new LocalizedMessage (0x8B00, Java.Interop.Localization.Resources.Generator_BG8B00);
+		public static LocalizedMessage WarningBaseInterfaceNotFound => new LocalizedMessage (0x8C00, Java.Interop.Localization.Resources.Generator_BG8C00);
+		public static LocalizedMessage WarningBaseInterfaceInvalid => new LocalizedMessage (0x8C01, Java.Interop.Localization.Resources.Generator_BG8C01);
+
+		public static void LogCodedError (LocalizedMessage message, params string [] args)
+			=> LogCodedError (message, null, null, -1, -1, args);
+
+		public static void LogCodedError (LocalizedMessage message, Exception innerException, params string [] args)
+			=> LogCodedError (message, innerException, null, -1, -1, args);
+
+		public static void LogCodedError (LocalizedMessage message, Exception innerException, XNode node, params string [] args)
 		{
-			Error (errorCode, null, sourceFile, line, column, format, args);
+			var file = Uri.TryCreate (node.BaseUri, UriKind.Absolute, out var uri) ? uri.LocalPath : null;
+			var line_info = (node as IXmlLineInfo)?.HasLineInfo () == true ? node as IXmlLineInfo : null;
+
+			LogCodedError (message, innerException, file, line_info?.LineNumber ?? -1, line_info?.LinePosition ?? -1, args);
 		}
 
-		public static void Error (int errorCode, Exception innerException, string format, params object [] args)
+		public static void LogCodedError (LocalizedMessage message, Exception innerException, string sourceFile, int line, int column, params string [] args)
 		{
-			Error (errorCode, innerException, null, -1, -1, format, args);
+			throw new BindingGeneratorException (message.Code, sourceFile, line, column, string.Format (message.Value, args), innerException);
 		}
 
-		public static void Error (int errorCode, Exception innerException, XNode node, string format, params object [] args)
+		public static void LogCodedWarning (int verbosity, LocalizedMessage message, params string [] args)
+			=> LogCodedWarning (verbosity, message, null, null, -1, -1, args);
+
+		public static void LogCodedWarning (int verbosity, LocalizedMessage message, Exception innerException, params string [] args)
+			=> LogCodedWarning (verbosity, message, innerException, null, -1, -1, args);
+
+		public static void LogCodedWarning (int verbosity, LocalizedMessage message, Exception innerException, XNode node, params string [] args)
 		{
-			Uri uri;
-			string file = Uri.TryCreate (node.BaseUri, UriKind.Absolute, out uri) ? uri.LocalPath : null;
-			IXmlLineInfo li = node as IXmlLineInfo;
-			li = li != null && li.HasLineInfo () ? li : null;
-			Error (errorCode, innerException, file, li != null ? li.LineNumber : -1, li != null ? li.LinePosition : -1, format, args);
+			var file = Uri.TryCreate (node.BaseUri, UriKind.Absolute, out var uri) ? uri.LocalPath : null;
+			var line_info = (node as IXmlLineInfo)?.HasLineInfo () == true ? node as IXmlLineInfo : null;
+
+			LogCodedWarning (verbosity, message, innerException, file, line_info?.LineNumber ?? -1, line_info?.LinePosition ?? -1, args);
 		}
 
-		public static void Error (int errorCode, Exception innerException, string sourceFile, int line, int column, string format, params object[] args)
-		{
-			throw new BindingGeneratorException (errorCode, sourceFile, line, column, string.Format (format, args), innerException);
-		}
-		
-		public static void Warning (int verbosity, int errorCode, string format, params object[] args)
-		{
-			Warning (verbosity, errorCode, null, format, args);
-		}
-
-		public static void Warning (int verbosity, int errorCode, Exception innerException, XNode node, string format, params object [] args)
-		{
-			Uri uri;
-			string file = Uri.TryCreate (node.BaseUri, UriKind.Absolute, out uri) ? uri.LocalPath : null;
-			IXmlLineInfo li = node as IXmlLineInfo;
-			li = li != null && li.HasLineInfo () ? li : null;
-			Warning (verbosity, errorCode, innerException, file, li != null ? li.LineNumber : -1, li != null ? li.LinePosition : -1, format, args);
-		}
-
-		public static void Warning (int verbosity, int errorCode, string sourceFile, int line, int column, string format, params object[] args)
-		{
-			Warning (verbosity, errorCode, null, sourceFile, line, column, format, args);
-		}
-
-		public static void Warning (int verbosity, int errorCode, Exception innerException, string format, params object [] args)
-		{
-			Warning (verbosity, errorCode, innerException, null, -1, -1, format, args);
-		}
-		
-		public static void Warning (int verbosity, int errorCode, Exception innerException, string sourceFile, int line, int column, string format, params object[] args)
+		public static void LogCodedWarning (int verbosity, LocalizedMessage message, Exception innerException, string sourceFile, int line, int column, params string [] args)
 		{
 			if (verbosity > (Verbosity ?? 0))
 				return;
-			string supp = innerException != null ? "  For details, see verbose output." : null;
-			Console.Error.WriteLine (Format (false, errorCode, sourceFile, line, column, format, args) + supp);
+
+			var supp = innerException != null ? "  For details, see verbose output." : null;
+			Console.Error.WriteLine (Format (false, message.Code, sourceFile, line, column, message.Value, args) + supp);
+
 			if (innerException != null)
 				Console.Error.WriteLine (innerException);
 		}
@@ -103,10 +121,8 @@ namespace MonoDroid.Generation
 			Console.Error.WriteLine (format, args);
 		}
 
-		public static string Format (bool error, int errorCode, string format, params object [] args)
-		{
-			return Format (error, errorCode, null, -1, -1, format, args); 
-		}
+		public static string FormatCodedMessage (bool error, LocalizedMessage message, params object [] args)
+			=> Format (error, message.Code, null, -1, -1, message.Value, args);
 		
 		public static string Format (bool error, int errorCode, string sourceFile, int line, int column, string format, params object[] args)
 		{

@@ -218,7 +218,7 @@ namespace MonoDroid.Generation
 			if (s.StartsWith ("params "))
 				return "params " + GetOutputName (s.Substring ("params ".Length));
 			if (s.StartsWith ("global::"))
-				Report.Error (Report.ErrorCodeGenerator + 0, null,  "Unexpected \"global::\" specification. This error happens if it is specified in the Metadata API fixup for example.");
+				Report.LogCodedError (Report.ErrorUnexpectedGlobal);
 			if (!UseGlobal)
 				return s;
 			int idx = s.IndexOf ('<');

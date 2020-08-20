@@ -5,6 +5,7 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Text;
+using generator.SourceWriters;
 using Xamarin.Android.Binder;
 
 namespace MonoDroid.Generation
@@ -392,11 +393,11 @@ namespace MonoDroid.Generation
 			bool needsProperty = false;
 			foreach (Field f in fields) {
 				if (gen.ContainsName (f.Name)) {
-					Report.Warning (0, Report.WarningFieldNameCollision, "Skipping {0}.{1}, due to a duplicate field, method or nested type name. {2} (Java type: {3})", gen.FullName, f.Name, gen.HasNestedType (f.Name) ? "(Nested type)" : gen.ContainsProperty (f.Name, false) ? "(Property)" : "(Method)", gen.JavaName);
+					Report.LogCodedWarning (0, SourceWriterExtensions.GetFieldCollisionMessage (gen, f), gen.FullName, f.Name, gen.JavaName);
 					continue;
 				}
 				if (seen != null && seen.Contains (f.Name)) {
-					Report.Warning (0, Report.WarningDuplicateField, "Skipping {0}.{1}, due to a duplicate field. (Field) (Java type: {2})", gen.FullName, f.Name, gen.JavaName);
+					Report.LogCodedWarning (0, Report.WarningDuplicateField, gen.FullName, f.Name, gen.JavaName);
 					continue;
 				}
 				if (f.Validate (opt, gen.TypeParameters, Context)) {
@@ -934,11 +935,11 @@ namespace MonoDroid.Generation
 			foreach (var method in eventMethods) {
 				string name = method.CalculateEventName (target.ContainsName);
 				if (String.IsNullOrEmpty (name)) {
-					Report.Warning (0, Report.WarningInterfaceGen + 1, "empty event name in {0}.{1}.", @interface.FullName, method.Name);
+					Report.LogCodedWarning (0, Report.WarningEmptyEventName, @interface.FullName, method.Name);
 					continue;
 				}
 				if (opt.GetSafeIdentifier (name) != name) {
-					Report.Warning (0, Report.WarningInterfaceGen + 4, "event name for {0}.{1} is invalid. `eventName' or `argsType` can be used to assign a valid member name.", @interface.FullName, method.Name);
+					Report.LogCodedWarning (0, Report.WarningInvalidEventName, @interface.FullName, method.Name);
 					continue;
 				}
 				var prop = target.Properties.FirstOrDefault (p => p.Setter == method);
@@ -995,7 +996,7 @@ namespace MonoDroid.Generation
 				full_delegate_name += "Handler";
 			if (m.RetVal.IsVoid || m.IsEventHandlerWithHandledProperty) {
 				if (opt.GetSafeIdentifier (name) != name) {
-					Report.Warning (0, Report.WarningInterfaceGen + 5, "event name for {0}.{1} is invalid. `eventName' or `argsType` can be used to assign a valid member name.", @interface.FullName, name);
+					Report.LogCodedWarning (0, Report.WarningInvalidEventName2, @interface.FullName, name);
 					return;
 				} else {
 					var mt = target.Methods.Where (method => string.Compare (method.Name, connector_fmt, StringComparison.OrdinalIgnoreCase) == 0 && method.IsListenerConnector).FirstOrDefault ();
@@ -1004,7 +1005,7 @@ namespace MonoDroid.Generation
 				}
 			} else {
 				if (opt.GetSafeIdentifier (name) != name) {
-					Report.Warning (0, Report.WarningInterfaceGen + 6, "event property name for {0}.{1} is invalid. `eventName' or `argsType` can be used to assign a valid member name.", @interface.FullName, name);
+					Report.LogCodedWarning (0, Report.WarningInvalidEventPropertyName, @interface.FullName, name);
 					return;
 				}
 				writer.WriteLine ("{0}WeakReference{2} weak_implementor_{1};", indent, name, opt.NullableOperator);

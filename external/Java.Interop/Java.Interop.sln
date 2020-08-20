@@ -97,6 +97,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.SourceWriter", "src
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.SourceWriter-Tests", "tests\Xamarin.SourceWriter-Tests\Xamarin.SourceWriter-Tests.csproj", "{6CF94627-BA74-4336-88CD-7EDA20C8F292}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop.Localization", "src\Java.Interop.Localization\Java.Interop.Localization.csproj", "{998D178B-F4C7-48B5-BDEE-44E2F869BB22}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems*{58b564a1-570d-4da2-b02d-25bddb1a9f4f}*SharedItemsImports = 5
@@ -269,6 +271,10 @@ Global
 		{6CF94627-BA74-4336-88CD-7EDA20C8F292}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6CF94627-BA74-4336-88CD-7EDA20C8F292}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6CF94627-BA74-4336-88CD-7EDA20C8F292}.Release|Any CPU.Build.0 = Release|Any CPU
+		{998D178B-F4C7-48B5-BDEE-44E2F869BB22}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{998D178B-F4C7-48B5-BDEE-44E2F869BB22}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{998D178B-F4C7-48B5-BDEE-44E2F869BB22}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{998D178B-F4C7-48B5-BDEE-44E2F869BB22}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -315,6 +321,7 @@ Global
 		{F46EDFA5-C52A-4F0C-B5A2-5BB67E0D8C74} = {C8F58966-94BF-407F-914A-8654F8B8AE3B}
 		{C5B732C8-7AF3-41D3-B903-AEDFC392E5BA} = {0998E45F-8BCE-4791-A944-962CD54E2D80}
 		{6CF94627-BA74-4336-88CD-7EDA20C8F292} = {271C9F30-F679-4793-942B-0D9527CB3E2F}
+		{998D178B-F4C7-48B5-BDEE-44E2F869BB22} = {0998E45F-8BCE-4791-A944-962CD54E2D80}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {29204E0C-382A-49A0-A814-AD7FBF9774A5}

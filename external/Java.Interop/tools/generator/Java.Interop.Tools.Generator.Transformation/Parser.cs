@@ -27,7 +27,7 @@ namespace MonoDroid.Generation
 				doc = XDocument.Load (filename, LoadOptions.SetBaseUri | LoadOptions.SetLineInfo);
 			} catch (XmlException e) {
 				Report.Verbose (0, "Exception: {0}", e);
-				Report.Warning (0, Report.WarningParser + 0, e, "Invalid XML file '{0}': {1}", filename, e.Message);
+				Report.LogCodedWarning (0, Report.WarningInvalidXmlFile, e, filename, e.Message);
 			}
 
 			return doc;
@@ -55,14 +55,14 @@ namespace MonoDroid.Generation
 				ApiSource = apiFixup.ApiSource;
 			} catch (XmlException ex) {
 				// BG4200
-				Report.Error (Report.ErrorParser + 0, ex, "Error during processing metadata fixup: {0}", ex.Message);
+				Report.LogCodedError (Report.ErrorFailedToProcessMetadata, ex.Message);
 				return null;
 			}
 
 			var root = doc.Root;
 
 			if ((root == null) || !root.HasElements) {
-				Report.Warning (0, Report.WarningParser + 1, "No packages found.");
+				Report.LogCodedWarning (0, Report.WarningNoPackageElements);
 				return null;
 			}
 
@@ -78,7 +78,7 @@ namespace MonoDroid.Generation
 					opt.SymbolTable.AddType (elem.XGetAttribute ("name"), sym);
 					continue;
 				default:
-					Report.Warning (0, Report.WarningParser + 2, "Unexpected child node: {0}.", elem.Name);
+					Report.LogCodedWarning (0, Report.WarningUnexpectedRootChildNode, elem.Name.ToString ());
 					break;
 				}
 			}
@@ -113,7 +113,7 @@ namespace MonoDroid.Generation
 					gen = XmlApiImporter.CreateInterface (ns, elem, opt);
 					break;
 				default:
-					Report.Warning (0, Report.WarningParser + 3, "Unexpected node in package element: {0}.", elem.Name);
+					Report.LogCodedWarning (0, Report.WarningUnexpectedPackageChildNode, elem.Name.ToString ());
 					break;
 				}
 
@@ -134,7 +134,7 @@ namespace MonoDroid.Generation
 				if (by_name.ContainsKey (top_ancestor))
 					by_name [top_ancestor].AddNestedType (nested [name]);
 				else {
-					Report.Warning (0, Report.WarningParser + 4, "top ancestor {0} not found for nested type {1}.", top_ancestor, nested [name].FullName);
+					Report.LogCodedWarning (0, Report.WarningNestedTypeAncestorNotFound, top_ancestor, nested [name].FullName);
 					nested [name].Invalidate ();
 				}
 			}

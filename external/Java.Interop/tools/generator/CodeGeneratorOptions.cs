@@ -170,7 +170,7 @@ namespace Xamarin.Android.Binder
 			opts.ApiDescriptionFile = apis [0];
 
 			if (opts.SupportDefaultInterfaceMethods && opts.CodeGenerationTarget == CodeGenerationTarget.XamarinAndroid) {
-				Console.Error.WriteLine (Report.Format (true, Report.ErrorInvalidArgument, "lang-features=default-interface-methods is not compatible with codegen-target=xamarinandroid."));
+				Console.Error.WriteLine (Report.FormatCodedMessage (true, Report.ErrorInvalidDIMArgument));
 				return null;
 			}
 

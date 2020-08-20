@@ -204,9 +204,9 @@ namespace MonoDroid.Generation
 
 			if (!base.OnValidate (opt, type_params, context) || iface_validation_failed || MethodValidationFailed) {
 				if (iface_validation_failed)
-					Report.Warning (0, Report.WarningInterfaceGen + 2, "Invalidating {0} and all nested types because some of its interfaces were invalid.", FullName);
+					Report.LogCodedWarning (0, Report.WarningInvalidDueToInterfaces, FullName);
 				else if (MethodValidationFailed)
-					Report.Warning (0, Report.WarningInterfaceGen + 3, "Invalidating {0} and all nested types because some of its methods were invalid.", FullName);
+					Report.LogCodedWarning (0, Report.WarningInvalidDueToMethods, FullName);
 				foreach (GenBase nest in NestedTypes)
 					nest.Invalidate ();
 				IsValid = false;

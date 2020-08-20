@@ -1,0 +1,213 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="de" original="../Resources.resx">
+    <body>
+      <trans-unit id="Generator_BG4000">
+        <source>Failed to remove old constants: {0}.</source>
+        <target state="new">Failed to remove old constants: {0}.</target>
+        <note>{0} - The list of constants that could not be removed.
+In this message, the term "constants" refers to class or interface members that have constant values.</note>
+      </trans-unit>
+      <trans-unit id="Generator_BG4100">
+        <source>Failed to process enum mapping. Text line: {0}.</source>
+        <target state="new">Failed to process enum mapping. Text line: {0}.</target>
+        <note>{0} - The line that could not be processed.</note>
+      </trans-unit>
+      <trans-unit id="Generator_BG4200">
+        <source>Error during processing metadata fixup: {0}.</source>
+        <target state="new">Error during processing metadata fixup: {0}.</target>
+        <note>{0} - The error encountered.</note>
+      </trans-unit>
+      <trans-unit id="Generator_BG4300">
+        <source>Invalid XPath specification: {0}.</source>
+        <target state="new">Invalid XPath specification: {0}.</target>
+        <note>{0} - The invalid XPath line.</note>
+      </trans-unit>
+      <trans-unit id="Generator_BG4307">
+        <source>Target attribute name is not specified for path: {0}.</source>
+        <target state="new">Target attribute name is not specified for path: {0}.</target>
+        <note>{0} - The invalid XPath line.</note>
+      </trans-unit>
+      <trans-unit id="Generator_BG4400">
+        <source>Unexpected 'global::' specification. This error happens if 'global::' is specified in the Metadata.xml transform file, for example.</source>
+        <target state="new">Unexpected 'global::' specification. This error happens if 'global::' is specified in the Metadata.xml transform file, for example.</target>
+        <note>The following are literal names and should not be translated: global::, Metadata.xml.</note>
+      </trans-unit>
+      <trans-unit id="Generator_BG4500">
+        <source>'lang-features=default-interface-methods' is not compatible with 'codegen-target=xamarinandroid'.</source>
+        <target state="new">'lang-features=default-interface-methods' is not compatible with 'codegen-target=xamarinandroid'.</target>
+        <note>The following are literal command line arguments and should not be translated: 'lang-features=default-interface-methods', 'codegen-target=xamarinandroid'.</note>
+      </trans-unit>
+      <trans-unit id="Generator_BG8101">
+        <source>Unexpected class child {0}.</source>
+        <target state="new">Unexpected class child {0}.</target>
+        <note>{0} - The unexpected child class.</note>
+      </trans-unit>
+      <trans-unit id="Generator_BG8102">
+        <source>Class '{0}' has unknown base type '{1}'.</source>
+        <target state="new">Class '{0}' has unknown base type '{1}'.</target>
+        <note>{0}, {1} - .NET types.</note>
+      </trans-unit>
+      <trans-unit id="Generator_BG8103">
+        <source>Class '{0}' has invalid base type '{1}'.</source>
+        <target state="new">Class '{0}' has invalid base type '{1}'.</target>
+        <note>{0}, {1} - .NET types.</note>
+      </trans-unit>
+      <trans-unit id="Generator_BG8200">
+        <source>Failed to parse assembly '{0}': {1}.</source>
+        <target state="new">Failed to parse assembly '{0}': {1}.</target>
+        <note>{0} - Error .NET assembly.
+{1} - The error encountered.</note>
+      </trans-unit>
+      <trans-unit id="Generator_BG8300">
+        <source>For constructor '{0}', could not find enclosing type '{1}'.</source>
+        <target state="new">For constructor '{0}', could not find enclosing type '{1}'.</target>
+        <note>{0} - .NET constructor method.
+{1} - .NET type.</note>
+      </trans-unit>
+      <trans-unit id="Generator_BG8400">
+        <source>Unexpected field type `{0}` ({1}).</source>
+        <target state="new">Unexpected field type `{0}` ({1}).</target>
+        <note>{0} - .NET type.
+{1} - .NET field signature.</note>
+      </trans-unit>
+      <trans-unit id="Generator_BG8401_Method">
+        <source>Skipping '{0}.{1}' due to a duplicate method name. (Java type: '{2}')</source>
+        <target state="new">Skipping '{0}.{1}' due to a duplicate method name. (Java type: '{2}')</target>
+        <note>{0} - .NET type.
+{1} - .NET field name.
+{2} - Java type.</note>
+      </trans-unit>
+      <trans-unit id="Generator_BG8401_NestedType">
+        <source>Skipping '{0}.{1}' due to a duplicate nested type name. (Java type: '{2}')</source>
+        <target state="new">Skipping '{0}.{1}' due to a duplicate nested type name. (Java type: '{2}')</target>
+        <note>{0} - .NET type.
+{1} - .NET field name.
+{2} - Java type.</note>
+      </trans-unit>
+      <trans-unit id="Generator_BG8401_Property">
+        <source>Skipping '{0}.{1}' due to a duplicate field or property name. (Java type: '{2}')</source>
+        <target state="new">Skipping '{0}.{1}' due to a duplicate field or property name. (Java type: '{2}')</target>
+        <note>{0} - .NET type.
+{1} - .NET field name.
+{2} - Java type.</note>
+      </trans-unit>
+      <trans-unit id="Generator_BG8402">
+        <source>Skipping '{0}.{1}' due to a duplicate field. (Java type: '{2}')</source>
+        <target state="new">Skipping '{0}.{1}' due to a duplicate field. (Java type: '{2}')</target>
+        <note>{0} - .NET type.
+{1} - .NET field name.
+{2} - Java type.</note>
+      </trans-unit>
+      <trans-unit id="Generator_BG8500">
+        <source>Unexpected child element of '&lt;interface&gt;': '{0}'.</source>
+        <target state="new">Unexpected child element of '&lt;interface&gt;': '{0}'.</target>
+        <note>{0} - XML element name.
+&lt;interface&gt; should not be translated.</note>
+      </trans-unit>
+      <trans-unit id="Generator_BG8501">
+        <source>No event name provided in '{0}.{1}'.</source>
+        <target state="new">No event name provided in '{0}.{1}'.</target>
+        <note>{0} - .NET type name
+{1} - .NET member.</note>
+      </trans-unit>
+      <trans-unit id="Generator_BG8502">
+        <source>Invalidating '{0}' and all its nested types because some of its interfaces were invalid.</source>
+        <target state="new">Invalidating '{0}' and all its nested types because some of its interfaces were invalid.</target>
+        <note>{0} - .NET type name.</note>
+      </trans-unit>
+      <trans-unit id="Generator_BG8503">
+        <source>Invalidating '{0}' and all its nested types because some of its methods were invalid.</source>
+        <target state="new">Invalidating '{0}' and all its nested types because some of its methods were invalid.</target>
+        <note>{0} - .NET type name.</note>
+      </trans-unit>
+      <trans-unit id="Generator_BG8504">
+        <source>Event name for '{0}.{1}' is invalid. A valid 'eventName' or 'argsType' can be assigned by adding a rule to the Metadata.xml transforms file.</source>
+        <target state="new">Event name for '{0}.{1}' is invalid. A valid 'eventName' or 'argsType' can be assigned by adding a rule to the Metadata.xml transforms file.</target>
+        <note>{0} - .NET type name
+{1} - .NET member.
+The following terms should not be translated: eventName, argsType, Metadata.xml.</note>
+      </trans-unit>
+      <trans-unit id="Generator_BG8506">
+        <source>Event property name for '{0}.{1}' is invalid. A valid 'eventName' or 'argsType' can be assigned by adding a rule to the Metadata.xml transforms file.</source>
+        <target state="new">Event property name for '{0}.{1}' is invalid. A valid 'eventName' or 'argsType' can be assigned by adding a rule to the Metadata.xml transforms file.</target>
+        <note>{0} - .NET type name
+{1} - .NET member.
+The following terms should not be translated: eventName, argsType, Metadata.xml.</note>
+      </trans-unit>
+      <trans-unit id="Generator_BG8600">
+        <source>Invalid XML file '{0}': {1}.</source>
+        <target state="new">Invalid XML file '{0}': {1}.</target>
+        <note>{0} - File name
+{1} - The error encountered.</note>
+      </trans-unit>
+      <trans-unit id="Generator_BG8601">
+        <source>No '&lt;package&gt;' elements found.</source>
+        <target state="new">No '&lt;package&gt;' elements found.</target>
+        <note>The following terms should not be translated: &lt;package&gt;.</note>
+      </trans-unit>
+      <trans-unit id="Generator_BG8602">
+        <source>Unexpected root child node: '&lt;{0}&gt;'.</source>
+        <target state="new">Unexpected root child node: '&lt;{0}&gt;'.</target>
+        <note>{0} - XML element name.</note>
+      </trans-unit>
+      <trans-unit id="Generator_BG8603">
+        <source>Unexpected '&lt;package&gt;' child node: '&lt;{0}&gt;'.</source>
+        <target state="new">Unexpected '&lt;package&gt;' child node: '&lt;{0}&gt;'.</target>
+        <note>{0} - XML element name.
+The following terms should not be translated: &lt;package&gt;.</note>
+      </trans-unit>
+      <trans-unit id="Generator_BG8604">
+        <source>Could not find top ancestor type '{0}' for nested type '{1}'.</source>
+        <target state="new">Could not find top ancestor type '{0}' for nested type '{1}'.</target>
+        <note>{0}, {1} - .NET types.</note>
+      </trans-unit>
+      <trans-unit id="Generator_BG8700">
+        <source>Unknown return type '{0}' for member '{1}'.</source>
+        <target state="new">Unknown return type '{0}' for member '{1}'.</target>
+        <note>{0} - Java type.
+{1} - .NET member.</note>
+      </trans-unit>
+      <trans-unit id="Generator_BG8701">
+        <source>Invalid return type '{0}' for member '{1}'.</source>
+        <target state="new">Invalid return type '{0}' for member '{1}'.</target>
+        <note>{0} - Java type.
+{1} - .NET member.</note>
+      </trans-unit>
+      <trans-unit id="Generator_BG8800">
+        <source>Unknown parameter type '{0}' for member '{1}'.</source>
+        <target state="new">Unknown parameter type '{0}' for member '{1}'.</target>
+        <note>{0} - Java type.
+{1} - .NET member.</note>
+      </trans-unit>
+      <trans-unit id="Generator_BG8801">
+        <source>Invalid parameter type '{0}' for member '{1}'.</source>
+        <target state="new">Invalid parameter type '{0}' for member '{1}'.</target>
+        <note>{0} - Java type.
+{1} - .NET member.</note>
+      </trans-unit>
+      <trans-unit id="Generator_BG8A00">
+        <source>Metadata.xml element '{0}' matched no nodes.</source>
+        <target state="new">Metadata.xml element '{0}' matched no nodes.</target>
+        <note>{0} - XML transform. (example: '&lt;remove-node path="/api/package[@name='javax.sql']"')
+The following terms should not be translated: Metadata.xml.</note>
+      </trans-unit>
+      <trans-unit id="Generator_BG8B00">
+        <source>Unknown generic argument constraint type '{0}' for member '{1}'.</source>
+        <target state="new">Unknown generic argument constraint type '{0}' for member '{1}'.</target>
+        <note>{0} - .NET type name
+{1} - .NET member.</note>
+      </trans-unit>
+      <trans-unit id="Generator_BG8C00">
+        <source>Could not find base interface '{1}' for type '{0}'.</source>
+        <target state="new">Could not find base interface '{1}' for type '{0}'.</target>
+        <note>{0}, {1} - .NET types.</note>
+      </trans-unit>
+      <trans-unit id="Generator_BG8C01">
+        <source>For type '{0}', base interface '{1}' is invalid.</source>
+        <target state="new">For type '{0}', base interface '{1}' is invalid.</target>
+        <note>{0}, {1} - .NET types.</note>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

@@ -222,7 +222,7 @@ namespace MonoDroid.Generation {
 				try {
 					list.Add (new ApiTransform (preserveTypeMode, items));
 				} catch (Exception ex) {
-					Report.Error (Report.ErrorEnumMapping + 0, "Failed to process enum mapping. Text line: " + s, ex);
+					Report.LogCodedError (Report.ErrorFailedToProcessEnumMap, ex, s);
 					throw;
 				}
 			}

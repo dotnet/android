@@ -121,11 +121,11 @@ namespace MonoDroid.Generation {
 		{
 			sym = (IsEnumified ? opt.SymbolTable.Lookup (managed_type, type_params) : null) ?? opt.SymbolTable.Lookup (java_type, type_params);
 			if (sym == null) {
-				Report.Warning (0, Report.WarningReturnValue + 0, "Unknown return type {0} {1}.", java_type, context.ContextString);
+				Report.LogCodedWarning (0, Report.WarningUnknownReturnType, java_type, context.ContextString);
 				return false;
 			}
 			if (!sym.Validate (opt, type_params, context)) {
-				Report.Warning (0, Report.WarningReturnValue + 1, "Invalid return type {0} {1}.", java_type, context.ContextString);
+				Report.LogCodedWarning (0, Report.WarningInvalidReturnType, java_type, context.ContextString);
 				return false;
 			}
 			return true;

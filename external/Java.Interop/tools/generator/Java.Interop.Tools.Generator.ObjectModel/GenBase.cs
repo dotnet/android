@@ -662,9 +662,9 @@ namespace MonoDroid.Generation
 					Interfaces.Add (isym);
 				else {
 					if (isym == null)
-						Report.Warning (0, Report.WarningGenBase + 0, "For type {0}, base interface {1} does not exist.", FullName, iface_name);
+						Report.LogCodedWarning (0, Report.WarningBaseInterfaceNotFound, FullName, iface_name);
 					else
-						Report.Warning (0, Report.WarningGenBase + 0, "For type {0}, base interface {1} is invalid.", FullName, iface_name);
+						Report.LogCodedWarning (0, Report.WarningBaseInterfaceInvalid, FullName, iface_name);
 					iface_validation_failed = true;
 				}
 			}
