@@ -45,8 +45,8 @@ namespace Java.Interop {
 			return instance is JavaDictionary<K,V> ? (JavaDictionary<K,V>) instance : new JavaDictionary<K,V> (instance);
 		}
 
-		[return: MaybeNull]
-		public static TResult JavaCast<TResult> (this IJavaObject? instance)
+		[return: NotNullIfNotNull ("instance")]
+		public static TResult? JavaCast<TResult> (this IJavaObject? instance)
 			where TResult : class, IJavaObject
 		{
 			return _JavaCast<TResult> (instance);
@@ -60,6 +60,9 @@ namespace Java.Interop {
 
 			if (instance is TResult)
 				return (TResult) instance;
+
+			if (instance.Handle == IntPtr.Zero)
+				throw new ObjectDisposedException (instance.GetType ().FullName);
 
 			Type resultType = typeof (TResult);
 			if (resultType.IsClass) {
