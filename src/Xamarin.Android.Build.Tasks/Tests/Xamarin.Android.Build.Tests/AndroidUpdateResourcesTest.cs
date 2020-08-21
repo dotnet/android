@@ -547,22 +547,18 @@ namespace UnnamedProject
 		[TestCaseSource (nameof (ReleaseLanguage))]
 		public void CheckResourceDesignerIsCreated (bool isRelease, ProjectLanguage language)
 		{
-			//Due to the MSBuild project automatically sorting <ItemGroup />, we can't possibly get the F# projects to build here on Windows
-			//  This API is sorting them: https://github.com/xamarin/xamarin-android/blob/c588bfe07aab224c97996a264579f4d4f18a151c/src/Xamarin.Android.Build.Tasks/Tests/Xamarin.ProjectTools/Common/DotNetXamarinProject.cs#L117
 			bool isFSharp = language == XamarinAndroidProjectLanguage.FSharp;
-			if (IsWindows && isFSharp) {
-				Assert.Ignore ("Skipping this F# test on Windows.");
-			}
-			if (Builder.UseDotNet && isFSharp) {
-				Assert.Ignore ("Skipping this F# test under 'dotnet'.");
-			}
 
 			var proj = new XamarinAndroidApplicationProject () {
 				Language = language,
 				IsRelease = isRelease,
 			};
+			if (Builder.UseDotNet && isFSharp && isRelease) {
+				//TODO: temporary until this is fixed: https://github.com/mono/linker/issues/1448
+				proj.AndroidLinkModeRelease = AndroidLinkMode.None;
+			}
 			proj.SetProperty ("AndroidUseIntermediateDesignerFile", "True");
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				// Intermediate designer file support is not compatible with F# projects using Xamarin.Android.FSharp.ResourceProvider.
 				var outputFile = isFSharp ? Path.Combine (Root, b.ProjectDirectory, "Resources", "Resource.designer" + proj.Language.DefaultDesignerExtension)
@@ -582,21 +578,16 @@ namespace UnnamedProject
 		[TestCaseSource(nameof (ReleaseLanguage))]
 		public void CheckResourceDesignerIsUpdatedWhenReadOnly (bool isRelease, ProjectLanguage language)
 		{
-			//Due to the MSBuild project automatically sorting <ItemGroup />, we can't possibly get the F# projects to build here on Windows
-			//  This API is sorting them: https://github.com/xamarin/xamarin-android/blob/c588bfe07aab224c97996a264579f4d4f18a151c/src/Xamarin.Android.Build.Tasks/Tests/Xamarin.ProjectTools/Common/DotNetXamarinProject.cs#L117
 			bool isFSharp = language == XamarinAndroidProjectLanguage.FSharp;
-			if (IsWindows && isFSharp) {
-				Assert.Ignore ("Skipping this F# test on Windows.");
-			}
-			if (Builder.UseDotNet && isFSharp) {
-				Assert.Ignore ("Skipping this F# test under 'dotnet'.");
-			}
-
 			var proj = new XamarinAndroidApplicationProject () {
 				Language = language,
 				IsRelease = isRelease,
 			};
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			if (Builder.UseDotNet && isFSharp && isRelease) {
+				//TODO: temporary until this is fixed: https://github.com/mono/linker/issues/1448
+				proj.AndroidLinkModeRelease = AndroidLinkMode.None;
+			}
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var designerPath = GetResourceDesignerPath (b, proj);
 				var attr = File.GetAttributes (designerPath);

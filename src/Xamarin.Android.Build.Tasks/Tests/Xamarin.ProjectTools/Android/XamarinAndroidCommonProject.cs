@@ -86,9 +86,16 @@ namespace Xamarin.ProjectTools
 					// add the stuff needed for FSharp
 					References.Add (new BuildItem.Reference ("System.Numerics"));
 					PackageReferences.Add (KnownPackages.FSharp_Core_Latest);
-					PackageReferences.Add (KnownPackages.Xamarin_Android_FSharp_ResourceProvider_Runtime);
+					PackageReferences.Add (KnownPackages.Xamarin_Android_FSharp_ResourceProvider);
 					Sources.Remove (resourceDesigner);
 					OtherBuildItems.Add (new BuildItem.NoActionResource (() => "Resources\\Resource.designer" + Language.DefaultDesignerExtension) { TextContent = () => string.Empty });
+
+					if (Builder.UseDotNet) {
+						this.AddDotNetCompatPackages ();
+
+						// NOTE: workaround for https://github.com/dotnet/sdk/issues/12954
+						SetProperty ("ProduceReferenceAssembly", "false");
+					}
 				}
 			}
 		}

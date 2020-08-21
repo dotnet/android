@@ -426,13 +426,13 @@ namespace Xamarin.ProjectTools
 				},
 			}
 		};
-		public static Package Xamarin_Android_FSharp_ResourceProvider_Runtime = new Package {
+		public static Package Xamarin_Android_FSharp_ResourceProvider = new Package {
 			Id = "Xamarin.Android.FSharp.ResourceProvider",
-			Version = "1.0.0.28",
-			TargetFramework = "monoandroid71",
+			Version = "1.0.1",
+			TargetFramework = "monoandroid81",
 			References = {
 				new BuildItem.Reference ("Xamarin.Android.FSharp.ResourceProvider.Runtime") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.FSharp.ResourceProvider.1.0.0.28\\lib\\Xamarin.Android.FSharp.ResourceProvider.Runtime.dll"
+					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.FSharp.ResourceProvider.1.0.1\\lib\\monoandroid81\\Xamarin.Android.FSharp.ResourceProvider.Runtime.dll"
 				},
 			}
 		};

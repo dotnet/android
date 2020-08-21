@@ -216,6 +216,10 @@ class MemTest {
 				Language = XamarinAndroidProjectLanguage.FSharp,
 				IsRelease = isRelease,
 			};
+			if (Builder.UseDotNet && isRelease) {
+				//TODO: temporary until this is fixed: https://github.com/mono/linker/issues/1448
+				proj.AndroidLinkModeRelease = AndroidLinkMode.None;
+			}
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
