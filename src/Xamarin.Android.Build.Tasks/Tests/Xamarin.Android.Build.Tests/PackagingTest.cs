@@ -399,7 +399,11 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningKeyPass", Uri.EscapeDataString (pass));
 			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningStorePass", Uri.EscapeDataString (pass));
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, perAbiApk);
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
+			if (perAbiApk) {
+				proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "arm64-v8a", "x86_64");
+			} else {
+				proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
+			}
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				var bin = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
 				Assert.IsTrue (b.Build (proj), "First build failed");
@@ -415,6 +419,17 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 					using (var zip = ZipHelper.OpenZip (apk)) {
 						Assert.IsTrue (zip.Any (e => e.FullName == "META-INF/MANIFEST.MF"), $"APK file `{apk}` is not signed! It is missing `META-INF/MANIFEST.MF`.");
 					}
+				}
+
+				// Make sure the APKs have unique version codes
+				if (perAbiApk) {
+					int armManifestCode = GetVersionCodeFromIntermediateManifest (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "armeabi-v7a", "AndroidManifest.xml"));
+					int x86ManifestCode = GetVersionCodeFromIntermediateManifest (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "x86", "AndroidManifest.xml"));
+					int arm64ManifestCode = GetVersionCodeFromIntermediateManifest (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "arm64-v8a", "AndroidManifest.xml"));
+					int x86_64ManifestCode = GetVersionCodeFromIntermediateManifest (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "x86_64", "AndroidManifest.xml"));
+					var versionList = new List<int> { armManifestCode, x86ManifestCode, arm64ManifestCode, x86_64ManifestCode };
+					Assert.True (versionList.Distinct ().Count () == versionList.Count,
+						$"APK version codes were not unique - armeabi-v7a: {armManifestCode}, x86: {x86ManifestCode}, arm64-v8a: {arm64ManifestCode}, x86_64: {x86_64ManifestCode}");
 				}
 
 				var item = proj.AndroidResources.First (x => x.Include () == "Resources\\values\\Strings.xml");
@@ -434,6 +449,18 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 						Assert.IsTrue (zip.Any (e => e.FullName == "META-INF/MANIFEST.MF"), $"APK file `{apk}` is not signed! It is missing `META-INF/MANIFEST.MF`.");
 					}
 				}
+			}
+
+			int GetVersionCodeFromIntermediateManifest (string manifestFilePath)
+			{
+				var doc = XDocument.Load (manifestFilePath);
+				var versionCode = doc.Descendants ()
+					.Where (e => e.Name == "manifest")
+					.Select (m => m.Attribute ("{http://schemas.android.com/apk/res/android}versionCode")).FirstOrDefault ();
+
+				if (!int.TryParse (versionCode?.Value, out int parsedCode))
+					Assert.Fail ($"Unable to parse 'versionCode' value from manifest content: {File.ReadAllText (manifestFilePath)}.");
+				return parsedCode;
 			}
 		}
 

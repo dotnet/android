@@ -29,18 +29,13 @@ namespace Xamarin.Android.Build.Tests
 				string deviceLog = Path.Combine (outputDir, "logcat-failed.log");
 				string remote = "/data/local/tmp/screenshot.png";
 				RunAdbCommand ($"shell screencap {remote}");
+				RunAdbCommand ($"logcat -d > \"{deviceLog}\"");
 				RunAdbCommand ($"pull {remote} \"{local}\"");
 				RunAdbCommand ($"shell rm {remote}");
-				RunAdbCommand ($"logcat -d > {deviceLog}");
 				if (File.Exists (local)) {
 					TestContext.AddTestAttachment (local);
 				} else {
 					TestContext.WriteLine ($"{local} did not exist!");
-				}
-				if (File.Exists (deviceLog)) {
-					TestContext.AddTestAttachment (deviceLog);
-				} else {
-					TestContext.WriteLine ($"{deviceLog} did not exist!");
 				}
 			}
 
