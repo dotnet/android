@@ -248,8 +248,6 @@ namespace Xamarin.Android.Tasks {
 
 			if (app.Attribute (androidNs + "label") == null && applicationName != null)
 				app.SetAttributeValue (androidNs + "label", applicationName);
-			if (app.Attribute (androidNs + "extractNativeLibs") == null)
-				app.SetAttributeValue (androidNs + "extractNativeLibs", "true");
 
 			var existingTypes = new HashSet<string> (
 				app.Descendants ().Select (a => (string) a.Attribute (attName)).Where (v => v != null));
@@ -405,6 +403,10 @@ namespace Xamarin.Android.Tasks {
 			AddSupportsGLTextures (app);
 			if (UseSharedRuntime && targetSdkVersionValue >= 30)
 				AddQueries (app, targetSdkVersionValue);
+			if (targetSdkVersionValue >= 23) {
+				if (app.Attribute (androidNs + "extractNativeLibs") == null)
+					app.SetAttributeValue (androidNs + "extractNativeLibs", "true");
+			}
 
 			ReorderActivityAliases (log, app);
 			ReorderElements (app);

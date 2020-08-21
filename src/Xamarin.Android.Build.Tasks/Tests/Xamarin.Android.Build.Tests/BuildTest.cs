@@ -2465,9 +2465,11 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
+				TargetSdkVersion = null,
+				MinSdkVersion = null,
 			};
 			proj.SetProperty ("AndroidUseLatestPlatformSdk", "False");
-			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
+			using (var builder = CreateApkBuilder ()) {
 				builder.GetTargetFrameworkVersionRange (out var _, out string firstFrameworkVersion, out var _, out string lastFrameworkVersion);
 				proj.SetProperty ("TargetFrameworkVersion", firstFrameworkVersion);
 				if (!Directory.Exists (Path.Combine (builder.FrameworkLibDirectory, firstFrameworkVersion)))
