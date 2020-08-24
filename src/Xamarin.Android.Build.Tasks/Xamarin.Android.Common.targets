@@ -1382,11 +1382,11 @@ because xbuild doesn't support framework reference assemblies.
     DependsOnTargets="_LinkAssembliesNoShrinkInputs"
     Condition="'$(AndroidLinkMode)' == 'None'"
     Inputs="@(ResolvedAssemblies);$(_AndroidBuildPropertiesCache)"
-    Outputs="@(ResolvedAssemblies->'%(IntermediateLinkerOutput)')">
+    Outputs="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')">
   <LinkAssembliesNoShrink
       ResolvedAssemblies="@(_AllResolvedAssemblies)"
       SourceFiles="@(ResolvedAssemblies)"
-      DestinationFiles="@(ResolvedAssemblies->'%(IntermediateLinkerOutput)')"
+      DestinationFiles="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')"
       Deterministic="$(Deterministic)"
   />
   <ItemGroup>

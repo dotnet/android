@@ -27,12 +27,14 @@ namespace Xamarin.Android.Tasks
 
 		public static string GetDictionaryKey (ITaskItem assembly)
 		{
-			var key = Path.GetFileName (assembly.ItemSpec);
-			var abiDirectory = assembly.GetMetadata ("AbiDirectory");
-			if (!string.IsNullOrEmpty (abiDirectory)) {
-				key = abiDirectory + "/" + key;
+			// Prefer %(DestinationSubPath) if set
+			var path = assembly.GetMetadata ("DestinationSubPath");
+			if (!string.IsNullOrEmpty (path)) {
+				return path;
 			}
-			return key;
+			// MSBuild sometimes only sets %(DestinationSubDirectory)
+			var subDirectory = assembly.GetMetadata ("DestinationSubDirectory");
+			return Path.Combine (subDirectory, Path.GetFileName (assembly.ItemSpec));
 		}
 	}
 }

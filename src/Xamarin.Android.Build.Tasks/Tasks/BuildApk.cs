@@ -421,9 +421,9 @@ namespace Xamarin.Android.Tasks
 				if (compressedAssembliesInfo.TryGetValue (key, out CompressedAssemblyInfo info) && info != null) {
 					EnsureCompressedAssemblyData (assembly.ItemSpec, info.DescriptorIndex);
 					string assemblyOutputDir;
-					string abiDirectory = assembly.GetMetadata ("AbiDirectory");
-					if (!String.IsNullOrEmpty (abiDirectory))
-						assemblyOutputDir = Path.Combine (compressedOutputDir, abiDirectory);
+					string subDirectory = assembly.GetMetadata ("DestinationSubDirectory");
+					if (!String.IsNullOrEmpty (subDirectory))
+						assemblyOutputDir = Path.Combine (compressedOutputDir, subDirectory);
 					else
 						assemblyOutputDir = compressedOutputDir;
 					AssemblyCompression.CompressionResult result = AssemblyCompression.Compress (compressedAssembly, assemblyOutputDir);
@@ -494,11 +494,13 @@ namespace Xamarin.Android.Tasks
 		string GetAssemblyPath (ITaskItem assembly, bool frameworkAssembly)
 		{
 			var assembliesPath = AssembliesPath;
-			var abiDirectory = assembly.GetMetadata ("AbiDirectory");
-			if (!string.IsNullOrEmpty (abiDirectory)) {
-				assembliesPath += abiDirectory + "/";
-			}
-			if (!frameworkAssembly && SatelliteAssembly.TryGetSatelliteCultureAndFileName (assembly.ItemSpec, out var culture, out _)) {
+			var subDirectory = assembly.GetMetadata ("DestinationSubDirectory");
+			if (!string.IsNullOrEmpty (subDirectory)) {
+				assembliesPath += subDirectory.Replace ('\\', '/');
+				if (!assembliesPath.EndsWith ("/", StringComparison.Ordinal)) {
+					assembliesPath += "/";
+				}
+			} else if (!frameworkAssembly && SatelliteAssembly.TryGetSatelliteCultureAndFileName (assembly.ItemSpec, out var culture, out _)) {
 				assembliesPath += culture + "/";
 			}
 			return assembliesPath;

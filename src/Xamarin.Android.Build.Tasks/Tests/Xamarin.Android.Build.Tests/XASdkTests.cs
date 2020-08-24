@@ -142,9 +142,11 @@ namespace Xamarin.Android.Build.Tests
 					Assert.IsTrue (zip.ContainsEntry ($"lib/{abi}/libmonodroid.so"), "libmonodroid.so should exist.");
 					Assert.IsTrue (zip.ContainsEntry ($"lib/{abi}/libmonosgen-2.0.so"), "libmonosgen-2.0.so should exist.");
 					if (rids.Length > 1) {
-						Assert.IsTrue (zip.ContainsEntry ($"assemblies/{abi}/System.Private.CoreLib.dll"), "System.Private.CoreLib.dll should exist.");
+						var entry = $"assemblies/{abi}/System.Private.CoreLib.dll";
+						Assert.IsTrue (zip.ContainsEntry (entry), $"{entry} should exist.");
 					} else {
-						Assert.IsTrue (zip.ContainsEntry ("assemblies/System.Private.CoreLib.dll"), "System.Private.CoreLib.dll should exist.");
+						var entry = "assemblies/System.Private.CoreLib.dll";
+						Assert.IsTrue (zip.ContainsEntry (entry), $"{entry} should exist.");
 					}
 				}
 			}
