@@ -161,7 +161,7 @@ namespace Xamarin.Android.Build.Tests
 			//NOTE: these properties should not affect class libraries at all
 			proj.SetProperty ("AndroidPackageFormat", "aab");
 			proj.SetProperty ("AotAssemblies", "true");
-			using (var b = CreateApkBuilder ()) {
+			using (var b = CreateDllBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 0 Warning(s)"), "Should have no MSBuild warnings.");
 			}
