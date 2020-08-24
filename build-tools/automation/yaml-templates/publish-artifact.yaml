@@ -1,0 +1,20 @@
+parameters:
+  displayName: upload artifacts
+  artifactName: artifact
+  targetPath: $(Build.ArtifactStagingDirectory)
+  condition: always()
+
+steps:
+# Add the "(Attempt X)" for retries, but leave the initial run blank
+- powershell: |
+    $UploadAttemptSuffix = If ($(System.JobAttempt) -gt 1) {"(Attempt $(System.JobAttempt))"} Else {""}
+    Write-Host "##vso[task.setvariable variable=UploadAttemptSuffix;]$UploadAttemptSuffix"
+  displayName: Set upload artifact name
+  condition: ${{ parameters.condition }}
+
+- task: PublishPipelineArtifact@1
+  displayName: ${{ parameters.displayName }}
+  inputs:
+    artifactName: ${{ parameters.artifactName }} $(UploadAttemptSuffix)
+    targetPath: ${{ parameters.targetPath }}
+  condition: ${{ parameters.condition }}

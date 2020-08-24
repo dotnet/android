@@ -955,12 +955,11 @@ stages:
         flattenFolders: true
       condition: always()
 
-    - task: PublishPipelineArtifact@1
-      displayName: upload designer binlogs
-      inputs:
+    - template: yaml-templates/publish-artifact.yaml
+      parameters:
+        displayName: upload designer binlogs
         artifactName: Test Results - Designer - macOS
         targetPath: $(Build.ArtifactStagingDirectory)/designer-binlogs
-      condition: always()
 
   # Check - "Xamarin.Android (Test Designer Windows)"
   - job: designer_integration_win
@@ -1034,12 +1033,11 @@ stages:
         flattenFolders: true
       condition: always()
 
-    - task: PublishPipelineArtifact@1
-      displayName: upload designer binlogs
-      inputs:
+    - template: yaml-templates/publish-artifact.yaml
+      parameters:
+        displayName: upload designer binlogs
         artifactName: Test Results - Designer - Windows
         targetPath: $(Build.ArtifactStagingDirectory)/designer-binlogs
-      condition: always()
 
 - stage: dotnet_tests
   displayName: One .NET Tests
