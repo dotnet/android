@@ -156,18 +156,43 @@ namespace Xamarin.SourceWriter
 
 		protected virtual void WriteAutomaticPropertyBody (CodeWriter writer)
 		{
-			writer.Write ("{ ");
+			var need_unindent = false;
+
+			writer.Write ("{");
 
 			if (HasGet) {
+				if (GetterComments.Count > 0 || GetterAttributes.Count > 0) {
+					writer.WriteLine ();
+					writer.Indent ();
+					need_unindent = true;
+				}
+
 				WriteGetterComments (writer);
 				WriteGetterAttributes (writer);
 				writer.Write ("get; ");
+
+				if (need_unindent) {
+					writer.WriteLine ();
+					writer.Unindent ();
+					need_unindent = false;
+				}
 			}
 
 			if (HasSet) {
+				if (SetterComments.Count > 0 || SetterAttributes.Count > 0) {
+					writer.WriteLine ();
+					writer.Indent ();
+					need_unindent = true;
+				}
+
 				WriteSetterComments (writer);
 				WriteSetterAttributes (writer);
 				writer.Write ("set; ");
+
+				if (need_unindent) {
+					writer.WriteLine ();
+					writer.Unindent ();
+				}
 			}
 
 			writer.WriteLine ("}");

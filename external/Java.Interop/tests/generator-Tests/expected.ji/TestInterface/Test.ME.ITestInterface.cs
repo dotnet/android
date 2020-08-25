@@ -7,7 +7,6 @@ namespace Test.ME {
 
 	[Register ("test/me/TestInterface", DoNotGenerateAcw=true)]
 	public abstract class TestInterface : Java.Lang.Object {
-
 		internal TestInterface ()
 		{
 		}
@@ -29,21 +28,21 @@ namespace Test.ME {
 		}
 
 		static readonly JniPeerMembers _members = new JniPeerMembers ("test/me/TestInterface", typeof (TestInterface));
+
 	}
 
 	[Register ("test/me/TestInterface", DoNotGenerateAcw=true)]
 	[global::System.Obsolete ("Use the 'TestInterface' type. This type will be removed in a future release.", error: true)]
 	public abstract class TestInterfaceConsts : TestInterface {
-
 		private TestInterfaceConsts ()
 		{
 		}
+
 	}
 
 	// Metadata.xml XPath interface reference: path="/api/package[@name='test.me']/interface[@name='TestInterface']"
 	[Register ("test/me/TestInterface", "", "Test.ME.ITestInterfaceInvoker")]
 	public partial interface ITestInterface : IJavaObject, IJavaPeerable {
-
 		// Metadata.xml XPath method reference: path="/api/package[@name='test.me']/interface[@name='TestInterface']/method[@name='getSpanFlags' and count(parameter)=1 and parameter[1][@type='java.lang.Object']]"
 		[Register ("getSpanFlags", "(Ljava/lang/Object;)I", "GetGetSpanFlags_Ljava_lang_Object_Handler:Test.ME.ITestInterfaceInvoker, Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null")]
 		int GetSpanFlags (global::Java.Lang.Object tag);
@@ -59,7 +58,6 @@ namespace Test.ME {
 	}
 
 	public static partial class ITestInterfaceExtensions {
-
 		public static void Append (this Test.ME.ITestInterface self, string value)
 		{
 			var jls_value = value == null ? null : new global::Java.Lang.String (value);
@@ -75,11 +73,11 @@ namespace Test.ME {
 			jls_value?.Dispose ();
 			return __rsval;
 		}
+
 	}
 
 	[global::Android.Runtime.Register ("test/me/TestInterface", DoNotGenerateAcw=true)]
 	internal partial class ITestInterfaceInvoker : global::Java.Lang.Object, ITestInterface {
-
 		static readonly JniPeerMembers _members = new JniPeerMembers ("test/me/TestInterface", typeof (ITestInterfaceInvoker));
 
 		static IntPtr java_class_ref {
@@ -108,8 +106,7 @@ namespace Test.ME {
 		static IntPtr Validate (IntPtr handle)
 		{
 			if (!JNIEnv.IsInstanceOf (handle, java_class_ref))
-				throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.",
-							JNIEnv.GetClassNameFromInstance (handle), "test.me.TestInterface"));
+				throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.", JNIEnv.GetClassNameFromInstance (handle), "test.me.TestInterface"));
 			return handle;
 		}
 
@@ -218,5 +215,4 @@ namespace Test.ME {
 		}
 
 	}
-
 }

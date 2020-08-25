@@ -9,7 +9,6 @@ namespace Java.Lang {
 	[Register ("java/lang/Comparable", "", "Java.Lang.IComparableInvoker")]
 	[global::Java.Interop.JavaTypeParameters (new string [] {"T"})]
 	public partial interface IComparable : IJavaObject, IJavaPeerable {
-
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.lang']/interface[@name='Comparable']/method[@name='compareTo' and count(parameter)=1 and parameter[1][@type='T']]"
 		[Register ("compareTo", "(Ljava/lang/Object;)I", "GetCompareTo_Ljava_lang_Object_Handler:Java.Lang.IComparableInvoker, Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null")]
 		int CompareTo (global::Java.Lang.Object another);
@@ -18,7 +17,6 @@ namespace Java.Lang {
 
 	[global::Android.Runtime.Register ("java/lang/Comparable", DoNotGenerateAcw=true)]
 	internal partial class IComparableInvoker : global::Java.Lang.Object, IComparable {
-
 		static readonly JniPeerMembers _members = new JniPeerMembers ("java/lang/Comparable", typeof (IComparableInvoker));
 
 		static IntPtr java_class_ref {
@@ -47,8 +45,7 @@ namespace Java.Lang {
 		static IntPtr Validate (IntPtr handle)
 		{
 			if (!JNIEnv.IsInstanceOf (handle, java_class_ref))
-				throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.",
-							JNIEnv.GetClassNameFromInstance (handle), "java.lang.Comparable"));
+				throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.", JNIEnv.GetClassNameFromInstance (handle), "java.lang.Comparable"));
 			return handle;
 		}
 
@@ -99,5 +96,4 @@ namespace Java.Lang {
 		}
 
 	}
-
 }

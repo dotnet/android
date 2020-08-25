@@ -1,20 +1,19 @@
 // Metadata.xml XPath class reference: path="/api/package[@name='java.code']/class[@name='MyClass']"
 [global::Android.Runtime.Register ("java/code/MyClass", DoNotGenerateAcw=true)]
-public partial class MyClass  {
-
+public partial class MyClass {
 	static readonly JniPeerMembers _members = new JniPeerMembers ("java/code/MyClass", typeof (MyClass));
+
 	internal static IntPtr class_ref {
-		get {
-			return _members.JniPeerType.PeerReference.Handle;
-		}
+		get { return _members.JniPeerType.PeerReference.Handle; }
 	}
 
-	protected MyClass (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer) {}
+	protected MyClass (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
+	{
+	}
 
 	// Metadata.xml XPath constructor reference: path="/api/package[@name='java.code']/class[@name='MyClass']/constructor[@name='MyClass' and count(parameter)=0]"
 	[Register (".ctor", "()V", "")]
-	 unsafe MyClass ()
-		: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+	unsafe MyClass () : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 	{
 		const string __id = "()V";
 
@@ -31,8 +30,7 @@ public partial class MyClass  {
 
 	// Metadata.xml XPath constructor reference: path="/api/package[@name='java.code']/class[@name='MyClass']/constructor[@name='MyClass' and count(parameter)=1 and parameter[1][@type='java.lang.String']]"
 	[Register (".ctor", "(Ljava/lang/String;)V", "")]
-	 unsafe MyClass (string p0)
-		: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+	unsafe MyClass (string p0) : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 	{
 		const string __id = "(Ljava/lang/String;)V";
 
@@ -224,9 +222,12 @@ public partial class MyClass  {
 
 	public abstract int AbstractCount {
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='get_AbstractCount' and count(parameter)=0]"
-		[Register ("get_AbstractCount", "()I", "Getget_AbstractCountHandler")] get;
+		[Register ("get_AbstractCount", "()I", "Getget_AbstractCountHandler")]
+		get; 
+
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='set_AbstractCount' and count(parameter)=1 and parameter[1][@type='int']]"
-		[Register ("set_AbstractCount", "(I)V", "Getset_AbstractCount_IHandler")] set;
+		[Register ("set_AbstractCount", "(I)V", "Getset_AbstractCount_IHandler")]
+		set; 
 	}
 
 	static Delegate cb_GetCountForKey_Ljava_lang_String_;

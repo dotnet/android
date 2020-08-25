@@ -8,12 +8,10 @@ namespace Xamarin.Test {
 	// Metadata.xml XPath class reference: path="/api/package[@name='xamarin.test']/class[@name='AbsSpinner']"
 	[global::Android.Runtime.Register ("xamarin/test/AbsSpinner", DoNotGenerateAcw=true)]
 	public abstract partial class AbsSpinner : Xamarin.Test.AdapterView<Xamarin.Test.ISpinnerAdapter> {
-
 		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/AbsSpinner", typeof (AbsSpinner));
+
 		internal static new IntPtr class_ref {
-			get {
-				return _members.JniPeerType.PeerReference.Handle;
-			}
+			get { return _members.JniPeerType.PeerReference.Handle; }
 		}
 
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -28,7 +26,9 @@ namespace Xamarin.Test {
 			get { return _members.ManagedPeerType; }
 		}
 
-		protected AbsSpinner (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer) {}
+		protected AbsSpinner (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
+		{
+		}
 
 		static Delegate cb_getAdapter;
 #pragma warning disable 0169
@@ -91,8 +91,9 @@ namespace Xamarin.Test {
 
 	[global::Android.Runtime.Register ("xamarin/test/AbsSpinner", DoNotGenerateAcw=true)]
 	internal partial class AbsSpinnerInvoker : AbsSpinner {
-
-		public AbsSpinnerInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) {}
+		public AbsSpinnerInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
+		{
+		}
 
 		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/AbsSpinner", typeof (AbsSpinnerInvoker));
 
@@ -131,5 +132,4 @@ namespace Xamarin.Test {
 		}
 
 	}
-
 }

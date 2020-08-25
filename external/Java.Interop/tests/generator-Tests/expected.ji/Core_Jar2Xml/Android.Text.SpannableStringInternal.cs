@@ -8,12 +8,10 @@ namespace Android.Text {
 	// Metadata.xml XPath class reference: path="/api/package[@name='android.text']/class[@name='SpannableStringInternal']"
 	[global::Android.Runtime.Register ("android/text/SpannableStringInternal", DoNotGenerateAcw=true)]
 	public abstract partial class SpannableStringInternal : global::Java.Lang.Object {
-
 		static readonly JniPeerMembers _members = new JniPeerMembers ("android/text/SpannableStringInternal", typeof (SpannableStringInternal));
+
 		internal static new IntPtr class_ref {
-			get {
-				return _members.JniPeerType.PeerReference.Handle;
-			}
+			get { return _members.JniPeerType.PeerReference.Handle; }
 		}
 
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -28,7 +26,9 @@ namespace Android.Text {
 			get { return _members.ManagedPeerType; }
 		}
 
-		protected SpannableStringInternal (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer) {}
+		protected SpannableStringInternal (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
+		{
+		}
 
 		static Delegate cb_getSpanFlags_Ljava_lang_Object_;
 #pragma warning disable 0169
@@ -67,8 +67,9 @@ namespace Android.Text {
 
 	[global::Android.Runtime.Register ("android/text/SpannableStringInternal", DoNotGenerateAcw=true)]
 	internal partial class SpannableStringInternalInvoker : SpannableStringInternal {
-
-		public SpannableStringInternalInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) {}
+		public SpannableStringInternalInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
+		{
+		}
 
 		static readonly JniPeerMembers _members = new JniPeerMembers ("android/text/SpannableStringInternal", typeof (SpannableStringInternalInvoker));
 
@@ -81,5 +82,4 @@ namespace Android.Text {
 		}
 
 	}
-
 }

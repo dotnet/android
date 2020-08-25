@@ -9,12 +9,10 @@ namespace Xamarin.Test {
 	[global::Android.Runtime.Register ("xamarin/test/A", DoNotGenerateAcw=true)]
 	[global::Java.Interop.JavaTypeParameters (new string [] {"T extends java.lang.Object"})]
 	public partial class A : global::Java.Lang.Object {
-
 		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/A", typeof (A));
+
 		internal static new IntPtr class_ref {
-			get {
-				return _members.JniPeerType.PeerReference.Handle;
-			}
+			get { return _members.JniPeerType.PeerReference.Handle; }
 		}
 
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -29,7 +27,9 @@ namespace Xamarin.Test {
 			get { return _members.ManagedPeerType; }
 		}
 
-		protected A (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer) {}
+		protected A (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
+		{
+		}
 
 		static Delegate cb_setA_Ljava_lang_Object_;
 #pragma warning disable 0169

@@ -158,7 +158,7 @@ namespace generator.SourceWriters
 		void AddProperties (InterfaceGen iface, CodeGenerationOptions opt)
 		{
 			foreach (var prop in iface.Properties.Where (p => !p.Getter.IsStatic && !p.Getter.IsInterfaceDefaultMethod))
-				Properties.Add (new BoundInterfacePropertyDeclaration(iface, prop, iface.AssemblyQualifiedName + "Invoker", opt));
+				Properties.Add (new BoundInterfacePropertyDeclaration (iface, prop, iface.AssemblyQualifiedName + "Invoker", opt));
 
 			if (!opt.SupportDefaultInterfaceMethods)
 				return;
@@ -197,7 +197,7 @@ namespace generator.SourceWriters
 				if (m.Name == iface.Name || iface.ContainsProperty (m.Name, true))
 					m.Name = "Invoke" + m.Name;
 
-				Methods.Add (new BoundInterfaceMethodDeclaration(m, iface.AssemblyQualifiedName + "Invoker", opt));
+				Methods.Add (new BoundInterfaceMethodDeclaration (m, iface.AssemblyQualifiedName + "Invoker", opt));
 			}
 
 			if (!opt.SupportDefaultInterfaceMethods)
@@ -207,7 +207,7 @@ namespace generator.SourceWriters
 				if (!method.IsValid)
 					continue;
 
-				Methods.Add (new BoundMethod(iface, method, opt, true));
+				Methods.Add (new BoundMethod (iface, method, opt, true));
 
 				var name_and_jnisig = method.JavaName + method.JniSignature.Replace ("java/lang/CharSequence", "java/lang/String");
 				var gen_string_overload = !method.IsOverride && method.Parameters.HasCharSequence && !iface.ContainsMethod (name_and_jnisig);
@@ -241,14 +241,18 @@ namespace generator.SourceWriters
 
 		public void WritePreSiblingClasses (CodeWriter writer)
 		{
-			foreach (var sibling in pre_sibling_types)
+			foreach (var sibling in pre_sibling_types) {
 				sibling.Write (writer);
+				writer.WriteLine ();
+			}
 		}
 
 		public void WritePostSiblingClasses (CodeWriter writer)
 		{
-			foreach (var sibling in post_sibling_types)
+			foreach (var sibling in post_sibling_types) {
+				writer.WriteLine ();
 				sibling.Write (writer);
+			}
 		}
 	}
 }

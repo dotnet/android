@@ -1,26 +1,25 @@
 // Metadata.xml XPath interface reference: path="/api/package[@name='com.xamarin.android']/interface[@name='Parent']"
 [Register ("com/xamarin/android/Parent", "", "Com.Xamarin.Android.IParentInvoker")]
 public partial interface IParent : IJavaObject, IJavaPeerable {
-
 	int Bar {
 		// Metadata.xml XPath method reference: path="/api/package[@name='com.xamarin.android']/interface[@name='Parent']/method[@name='getBar' and count(parameter)=0]"
-		[Register ("getBar", "()I", "GetGetBarHandler:Com.Xamarin.Android.IParentInvoker, MyAssembly")] get;
+		[Register ("getBar", "()I", "GetGetBarHandler:Com.Xamarin.Android.IParentInvoker, MyAssembly")]
+		get; 
 	}
 
 	// Metadata.xml XPath interface reference: path="/api/package[@name='com.xamarin.android']/interface[@name='Parent.Child']"
 	[Register ("com/xamarin/android/Parent$Child", "", "Com.Xamarin.Android.IParent/IChildInvoker")]
 	public partial interface IChild : IJavaObject, IJavaPeerable {
-
 		int Bar {
 			// Metadata.xml XPath method reference: path="/api/package[@name='com.xamarin.android']/interface[@name='Parent.Child']/method[@name='getBar' and count(parameter)=0]"
-			[Register ("getBar", "()I", "GetGetBarHandler:Com.Xamarin.Android.IParent/IChildInvoker, MyAssembly")] get;
+			[Register ("getBar", "()I", "GetGetBarHandler:Com.Xamarin.Android.IParent/IChildInvoker, MyAssembly")]
+			get; 
 		}
 
 	}
 
 	[global::Android.Runtime.Register ("com/xamarin/android/Parent$Child", DoNotGenerateAcw=true)]
 	internal partial class IChildInvoker : global::Java.Lang.Object, IChild {
-
 		static readonly JniPeerMembers _members = new XAPeerMembers ("com/xamarin/android/Parent$Child", typeof (IChildInvoker));
 
 		static IntPtr java_class_ref {
@@ -49,8 +48,7 @@ public partial interface IParent : IJavaObject, IJavaPeerable {
 		static IntPtr Validate (IntPtr handle)
 		{
 			if (!JNIEnv.IsInstanceOf (handle, java_class_ref))
-				throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.",
-							JNIEnv.GetClassNameFromInstance (handle), "com.xamarin.android.Parent.Child"));
+				throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.", JNIEnv.GetClassNameFromInstance (handle), "com.xamarin.android.Parent.Child"));
 			return handle;
 		}
 
@@ -96,12 +94,10 @@ public partial interface IParent : IJavaObject, IJavaPeerable {
 
 	}
 
-
 }
 
 [global::Android.Runtime.Register ("com/xamarin/android/Parent", DoNotGenerateAcw=true)]
 internal partial class IParentInvoker : global::Java.Lang.Object, IParent {
-
 	static readonly JniPeerMembers _members = new XAPeerMembers ("com/xamarin/android/Parent", typeof (IParentInvoker));
 
 	static IntPtr java_class_ref {
@@ -130,8 +126,7 @@ internal partial class IParentInvoker : global::Java.Lang.Object, IParent {
 	static IntPtr Validate (IntPtr handle)
 	{
 		if (!JNIEnv.IsInstanceOf (handle, java_class_ref))
-			throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.",
-						JNIEnv.GetClassNameFromInstance (handle), "com.xamarin.android.Parent"));
+			throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.", JNIEnv.GetClassNameFromInstance (handle), "com.xamarin.android.Parent"));
 		return handle;
 	}
 
@@ -176,4 +171,3 @@ internal partial class IParentInvoker : global::Java.Lang.Object, IParent {
 	}
 
 }
-

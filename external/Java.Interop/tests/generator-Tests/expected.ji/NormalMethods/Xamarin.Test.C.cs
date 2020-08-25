@@ -9,12 +9,10 @@ namespace Xamarin.Test {
 	[global::Android.Runtime.Register ("xamarin/test/C", DoNotGenerateAcw=true)]
 	[global::Java.Interop.JavaTypeParameters (new string [] {"T extends xamarin.test.C"})]
 	public partial class C : global::Java.Lang.Object {
-
 		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/C", typeof (C));
+
 		internal static new IntPtr class_ref {
-			get {
-				return _members.JniPeerType.PeerReference.Handle;
-			}
+			get { return _members.JniPeerType.PeerReference.Handle; }
 		}
 
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -29,7 +27,9 @@ namespace Xamarin.Test {
 			get { return _members.ManagedPeerType; }
 		}
 
-		protected C (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer) {}
+		protected C (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
+		{
+		}
 
 		static Delegate cb_setCustomDimension_I;
 #pragma warning disable 0169

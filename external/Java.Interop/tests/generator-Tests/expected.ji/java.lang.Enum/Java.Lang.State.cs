@@ -9,8 +9,6 @@ namespace Java.Lang {
 	[global::Android.Runtime.Register ("java/lang/State", DoNotGenerateAcw=true)]
 	public sealed partial class State : global::Java.Lang.Enum {
 
-
-
 		// Metadata.xml XPath field reference: path="/api/package[@name='java.lang']/class[@name='State']/field[@name='BLOCKED']"
 		[Register ("BLOCKED")]
 		public static global::Java.Lang.State Blocked {
@@ -81,11 +79,11 @@ namespace Java.Lang {
 				return global::Java.Lang.Object.GetObject<global::Java.Lang.State> (__v.Handle, JniHandleOwnership.TransferLocalRef);
 			}
 		}
+
 		static readonly JniPeerMembers _members = new JniPeerMembers ("java/lang/State", typeof (State));
+
 		internal static new IntPtr class_ref {
-			get {
-				return _members.JniPeerType.PeerReference.Handle;
-			}
+			get { return _members.JniPeerType.PeerReference.Handle; }
 		}
 
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -100,7 +98,9 @@ namespace Java.Lang {
 			get { return _members.ManagedPeerType; }
 		}
 
-		internal State (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer) {}
+		internal State (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
+		{
+		}
 
 	}
 }

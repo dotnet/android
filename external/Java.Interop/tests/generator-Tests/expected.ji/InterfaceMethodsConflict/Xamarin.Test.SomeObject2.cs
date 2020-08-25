@@ -8,12 +8,10 @@ namespace Xamarin.Test {
 	// Metadata.xml XPath class reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject2']"
 	[global::Android.Runtime.Register ("xamarin/test/SomeObject2", DoNotGenerateAcw=true)]
 	public abstract partial class SomeObject2 : global::Java.Lang.Object, global::Xamarin.Test.II1, global::Xamarin.Test.II2 {
-
 		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/SomeObject2", typeof (SomeObject2));
+
 		internal static new IntPtr class_ref {
-			get {
-				return _members.JniPeerType.PeerReference.Handle;
-			}
+			get { return _members.JniPeerType.PeerReference.Handle; }
 		}
 
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -28,7 +26,9 @@ namespace Xamarin.Test {
 			get { return _members.ManagedPeerType; }
 		}
 
-		protected SomeObject2 (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer) {}
+		protected SomeObject2 (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
+		{
+		}
 
 		static Delegate cb_irrelevant;
 #pragma warning disable 0169
@@ -81,8 +81,9 @@ namespace Xamarin.Test {
 
 	[global::Android.Runtime.Register ("xamarin/test/SomeObject2", DoNotGenerateAcw=true)]
 	internal partial class SomeObject2Invoker : SomeObject2 {
-
-		public SomeObject2Invoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) {}
+		public SomeObject2Invoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
+		{
+		}
 
 		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/SomeObject2", typeof (SomeObject2Invoker));
 
@@ -106,5 +107,4 @@ namespace Xamarin.Test {
 		}
 
 	}
-
 }

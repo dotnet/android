@@ -8,17 +8,14 @@ namespace Xamarin.Test {
 	// Metadata.xml XPath class reference: path="/api/package[@name='xamarin.test']/class[@name='A']"
 	[global::Android.Runtime.Register ("xamarin/test/A", DoNotGenerateAcw=true)]
 	public partial class A : global::Java.Lang.Object {
-
 		// Metadata.xml XPath class reference: path="/api/package[@name='xamarin.test']/class[@name='A.B']"
 		[global::Android.Runtime.Register ("xamarin/test/A$B", DoNotGenerateAcw=true)]
 		[global::Java.Interop.JavaTypeParameters (new string [] {"T extends xamarin.test.A.B"})]
 		public partial class B : global::Java.Lang.Object {
-
 			static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/A$B", typeof (B));
+
 			internal static new IntPtr class_ref {
-				get {
-					return _members.JniPeerType.PeerReference.Handle;
-				}
+				get { return _members.JniPeerType.PeerReference.Handle; }
 			}
 
 			public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -33,7 +30,9 @@ namespace Xamarin.Test {
 				get { return _members.ManagedPeerType; }
 			}
 
-			protected B (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer) {}
+			protected B (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
+			{
+			}
 
 			static Delegate cb_setCustomDimension_I;
 #pragma warning disable 0169
@@ -68,10 +67,9 @@ namespace Xamarin.Test {
 		}
 
 		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/A", typeof (A));
+
 		internal static new IntPtr class_ref {
-			get {
-				return _members.JniPeerType.PeerReference.Handle;
-			}
+			get { return _members.JniPeerType.PeerReference.Handle; }
 		}
 
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -86,7 +84,9 @@ namespace Xamarin.Test {
 			get { return _members.ManagedPeerType; }
 		}
 
-		protected A (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer) {}
+		protected A (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
+		{
+		}
 
 		static Delegate cb_getHandle;
 #pragma warning disable 0169

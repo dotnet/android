@@ -8,12 +8,10 @@ namespace Xamarin.Test {
 	// Metadata.xml XPath interface reference: path="/api/package[@name='xamarin.test']/interface[@name='Adapter']"
 	[Register ("xamarin/test/Adapter", "", "Xamarin.Test.IAdapterInvoker")]
 	public partial interface IAdapter : IJavaObject, IJavaPeerable {
-
 	}
 
 	[global::Android.Runtime.Register ("xamarin/test/Adapter", DoNotGenerateAcw=true)]
 	internal partial class IAdapterInvoker : global::Java.Lang.Object, IAdapter {
-
 		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/Adapter", typeof (IAdapterInvoker));
 
 		static IntPtr java_class_ref {
@@ -42,8 +40,7 @@ namespace Xamarin.Test {
 		static IntPtr Validate (IntPtr handle)
 		{
 			if (!JNIEnv.IsInstanceOf (handle, java_class_ref))
-				throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.",
-							JNIEnv.GetClassNameFromInstance (handle), "xamarin.test.Adapter"));
+				throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.", JNIEnv.GetClassNameFromInstance (handle), "xamarin.test.Adapter"));
 			return handle;
 		}
 
@@ -63,5 +60,4 @@ namespace Xamarin.Test {
 		}
 
 	}
-
 }

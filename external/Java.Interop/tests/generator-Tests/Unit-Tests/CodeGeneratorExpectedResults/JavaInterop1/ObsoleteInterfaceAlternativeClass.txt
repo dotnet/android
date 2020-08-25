@@ -1,7 +1,6 @@
 [Register ("com/xamarin/android/Parent", DoNotGenerateAcw=true)]
 [global::System.Obsolete ("Use the 'Com.Xamarin.Android.IParent' type. This class will be removed in a future release.")]
 public abstract class Parent : Java.Lang.Object {
-
 	internal Parent ()
 	{
 	}
@@ -28,6 +27,7 @@ public abstract class Parent : Java.Lang.Object {
 			return JNIEnv.GetString (__v.Handle, JniHandleOwnership.TransferLocalRef);
 		}
 	}
+
 	// Metadata.xml XPath method reference: path="/api/package[@name='com.xamarin.android']/interface[@name='Parent']/method[@name='comparing' and count(parameter)=0]"
 	[Obsolete (@"Use 'Com.Xamarin.Android.IParent.Comparing'. This class will be removed in a future release.")]
 	[Register ("comparing", "()I", "")]
@@ -54,8 +54,8 @@ public abstract class Parent : Java.Lang.Object {
 		}
 	}
 
-
 	static readonly JniPeerMembers _members = new JniPeerMembers ("com/xamarin/android/Parent", typeof (Parent));
+
 }
 
 // Metadata.xml XPath interface reference: path="/api/package[@name='com.xamarin.android']/interface[@name='Parent']"
@@ -101,7 +101,6 @@ public partial interface IParent : IJavaObject, IJavaPeerable {
 
 [global::Android.Runtime.Register ("com/xamarin/android/Parent", DoNotGenerateAcw=true)]
 internal partial class IParentInvoker : global::Java.Lang.Object, IParent {
-
 	static readonly JniPeerMembers _members = new JniPeerMembers ("com/xamarin/android/Parent", typeof (IParentInvoker));
 
 	static IntPtr java_class_ref {
@@ -130,8 +129,7 @@ internal partial class IParentInvoker : global::Java.Lang.Object, IParent {
 	static IntPtr Validate (IntPtr handle)
 	{
 		if (!JNIEnv.IsInstanceOf (handle, java_class_ref))
-			throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.",
-						JNIEnv.GetClassNameFromInstance (handle), "com.xamarin.android.Parent"));
+			throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.", JNIEnv.GetClassNameFromInstance (handle), "com.xamarin.android.Parent"));
 		return handle;
 	}
 
@@ -151,4 +149,3 @@ internal partial class IParentInvoker : global::Java.Lang.Object, IParent {
 	}
 
 }
-

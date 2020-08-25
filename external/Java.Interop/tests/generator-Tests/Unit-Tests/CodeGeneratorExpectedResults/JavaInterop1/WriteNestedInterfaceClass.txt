@@ -1,21 +1,19 @@
 // Metadata.xml XPath interface reference: path="/api/package[@name='com.xamarin.android']/interface[@name='Parent']"
 [Register ("com/xamarin/android/Parent", "", "Com.Xamarin.Android.IParentInvoker")]
 public partial interface IParent : IJavaObject, IJavaPeerable {
-
 	int Bar {
 		// Metadata.xml XPath method reference: path="/api/package[@name='com.xamarin.android']/interface[@name='Parent']/method[@name='getBar' and count(parameter)=0]"
-		[Register ("getBar", "()I", "GetGetBarHandler:Com.Xamarin.Android.IParentInvoker, MyAssembly")] get;
+		[Register ("getBar", "()I", "GetGetBarHandler:Com.Xamarin.Android.IParentInvoker, MyAssembly")]
+		get; 
 	}
 
 	// Metadata.xml XPath class reference: path="/api/package[@name='com.xamarin.android']/class[@name='Parent.Child']"
 	[global::Android.Runtime.Register ("com/xamarin/android/Parent$Child", DoNotGenerateAcw=true)]
 	public partial class Child : Java.Lang.Object {
-
 		static readonly JniPeerMembers _members = new JniPeerMembers ("com/xamarin/android/Parent$Child", typeof (Child));
+
 		internal static new IntPtr class_ref {
-			get {
-				return _members.JniPeerType.PeerReference.Handle;
-			}
+			get { return _members.JniPeerType.PeerReference.Handle; }
 		}
 
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -30,7 +28,9 @@ public partial interface IParent : IJavaObject, IJavaPeerable {
 			get { return _members.ManagedPeerType; }
 		}
 
-		protected Child (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer) {}
+		protected Child (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
+		{
+		}
 
 	}
 
@@ -38,7 +38,6 @@ public partial interface IParent : IJavaObject, IJavaPeerable {
 
 [global::Android.Runtime.Register ("com/xamarin/android/Parent", DoNotGenerateAcw=true)]
 internal partial class IParentInvoker : global::Java.Lang.Object, IParent {
-
 	static readonly JniPeerMembers _members = new JniPeerMembers ("com/xamarin/android/Parent", typeof (IParentInvoker));
 
 	static IntPtr java_class_ref {
@@ -67,8 +66,7 @@ internal partial class IParentInvoker : global::Java.Lang.Object, IParent {
 	static IntPtr Validate (IntPtr handle)
 	{
 		if (!JNIEnv.IsInstanceOf (handle, java_class_ref))
-			throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.",
-						JNIEnv.GetClassNameFromInstance (handle), "com.xamarin.android.Parent"));
+			throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.", JNIEnv.GetClassNameFromInstance (handle), "com.xamarin.android.Parent"));
 		return handle;
 	}
 
@@ -113,4 +111,3 @@ internal partial class IParentInvoker : global::Java.Lang.Object, IParent {
 	}
 
 }
-

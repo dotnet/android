@@ -9,7 +9,6 @@ namespace Test.ME {
 	[Register ("test/me/GenericInterface", "", "Test.ME.IGenericInterfaceInvoker")]
 	[global::Java.Interop.JavaTypeParameters (new string [] {"T"})]
 	public partial interface IGenericInterface : IJavaObject, IJavaPeerable {
-
 		// Metadata.xml XPath method reference: path="/api/package[@name='test.me']/interface[@name='GenericInterface']/method[@name='SetObject' and count(parameter)=1 and parameter[1][@type='T']]"
 		[Register ("SetObject", "(Ljava/lang/Object;)V", "GetSetObject_Ljava_lang_Object_Handler:Test.ME.IGenericInterfaceInvoker, Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null")]
 		void SetObject (global::Java.Lang.Object value);
@@ -18,7 +17,6 @@ namespace Test.ME {
 
 	[global::Android.Runtime.Register ("test/me/GenericInterface", DoNotGenerateAcw=true)]
 	internal partial class IGenericInterfaceInvoker : global::Java.Lang.Object, IGenericInterface {
-
 		static readonly JniPeerMembers _members = new JniPeerMembers ("test/me/GenericInterface", typeof (IGenericInterfaceInvoker));
 
 		static IntPtr java_class_ref {
@@ -47,8 +45,7 @@ namespace Test.ME {
 		static IntPtr Validate (IntPtr handle)
 		{
 			if (!JNIEnv.IsInstanceOf (handle, java_class_ref))
-				throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.",
-							JNIEnv.GetClassNameFromInstance (handle), "test.me.GenericInterface"));
+				throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.", JNIEnv.GetClassNameFromInstance (handle), "test.me.GenericInterface"));
 			return handle;
 		}
 
@@ -97,5 +94,4 @@ namespace Test.ME {
 		}
 
 	}
-
 }

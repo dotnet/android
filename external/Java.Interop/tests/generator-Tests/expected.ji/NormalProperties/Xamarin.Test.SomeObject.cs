@@ -8,12 +8,10 @@ namespace Xamarin.Test {
 	// Metadata.xml XPath class reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']"
 	[global::Android.Runtime.Register ("xamarin/test/SomeObject", DoNotGenerateAcw=true)]
 	public abstract partial class SomeObject : global::Java.Lang.Object {
-
 		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/SomeObject", typeof (SomeObject));
+
 		internal static new IntPtr class_ref {
-			get {
-				return _members.JniPeerType.PeerReference.Handle;
-			}
+			get { return _members.JniPeerType.PeerReference.Handle; }
 		}
 
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -28,7 +26,9 @@ namespace Xamarin.Test {
 			get { return _members.ManagedPeerType; }
 		}
 
-		protected SomeObject (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer) {}
+		protected SomeObject (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
+		{
+		}
 
 		static Delegate cb_getSomeInteger;
 #pragma warning disable 0169
@@ -64,9 +64,12 @@ namespace Xamarin.Test {
 
 		public abstract int SomeInteger {
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='getSomeInteger' and count(parameter)=0]"
-			[Register ("getSomeInteger", "()I", "GetGetSomeIntegerHandler")] get;
+			[Register ("getSomeInteger", "()I", "GetGetSomeIntegerHandler")]
+			get; 
+
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='setSomeInteger' and count(parameter)=1 and parameter[1][@type='int']]"
-			[Register ("setSomeInteger", "(I)V", "GetSetSomeInteger_IHandler")] set;
+			[Register ("setSomeInteger", "(I)V", "GetSetSomeInteger_IHandler")]
+			set; 
 		}
 
 		static Delegate cb_getSomeObjectProperty;
@@ -104,9 +107,12 @@ namespace Xamarin.Test {
 
 		public abstract global::Java.Lang.Object SomeObjectProperty {
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='getSomeObjectProperty' and count(parameter)=0]"
-			[Register ("getSomeObjectProperty", "()Ljava/lang/Object;", "GetGetSomeObjectPropertyHandler")] get;
+			[Register ("getSomeObjectProperty", "()Ljava/lang/Object;", "GetGetSomeObjectPropertyHandler")]
+			get; 
+
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='setSomeObjectProperty' and count(parameter)=1 and parameter[1][@type='java.lang.Object']]"
-			[Register ("setSomeObjectProperty", "(Ljava/lang/Object;)V", "GetSetSomeObjectProperty_Ljava_lang_Object_Handler")] set;
+			[Register ("setSomeObjectProperty", "(Ljava/lang/Object;)V", "GetSetSomeObjectProperty_Ljava_lang_Object_Handler")]
+			set; 
 		}
 
 		static Delegate cb_getSomeString;
@@ -144,17 +150,21 @@ namespace Xamarin.Test {
 
 		public abstract string SomeString {
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='getSomeString' and count(parameter)=0]"
-			[Register ("getSomeString", "()Ljava/lang/String;", "GetGetSomeStringHandler")] get;
+			[Register ("getSomeString", "()Ljava/lang/String;", "GetGetSomeStringHandler")]
+			get; 
+
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='setSomeString' and count(parameter)=1 and parameter[1][@type='java.lang.String']]"
-			[Register ("setSomeString", "(Ljava/lang/String;)V", "GetSetSomeString_Ljava_lang_String_Handler")] set;
+			[Register ("setSomeString", "(Ljava/lang/String;)V", "GetSetSomeString_Ljava_lang_String_Handler")]
+			set; 
 		}
 
 	}
 
 	[global::Android.Runtime.Register ("xamarin/test/SomeObject", DoNotGenerateAcw=true)]
 	internal partial class SomeObjectInvoker : SomeObject {
-
-		public SomeObjectInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) {}
+		public SomeObjectInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
+		{
+		}
 
 		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/SomeObject", typeof (SomeObjectInvoker));
 
@@ -241,5 +251,4 @@ namespace Xamarin.Test {
 		}
 
 	}
-
 }

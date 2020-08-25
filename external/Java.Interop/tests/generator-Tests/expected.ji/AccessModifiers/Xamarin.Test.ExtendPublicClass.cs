@@ -8,12 +8,10 @@ namespace Xamarin.Test {
 	// Metadata.xml XPath class reference: path="/api/package[@name='xamarin.test']/class[@name='ExtendPublicClass']"
 	[global::Android.Runtime.Register ("xamarin/test/ExtendPublicClass", DoNotGenerateAcw=true)]
 	public partial class ExtendPublicClass : global::Java.Lang.Object {
-
 		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/ExtendPublicClass", typeof (ExtendPublicClass));
+
 		internal static new IntPtr class_ref {
-			get {
-				return _members.JniPeerType.PeerReference.Handle;
-			}
+			get { return _members.JniPeerType.PeerReference.Handle; }
 		}
 
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -28,12 +26,13 @@ namespace Xamarin.Test {
 			get { return _members.ManagedPeerType; }
 		}
 
-		protected ExtendPublicClass (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer) {}
+		protected ExtendPublicClass (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
+		{
+		}
 
 		// Metadata.xml XPath constructor reference: path="/api/package[@name='xamarin.test']/class[@name='ExtendPublicClass']/constructor[@name='ExtendPublicClass' and count(parameter)=0]"
 		[Register (".ctor", "()V", "")]
-		public unsafe ExtendPublicClass ()
-			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+		public unsafe ExtendPublicClass () : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
 			const string __id = "()V";
 

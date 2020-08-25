@@ -9,12 +9,10 @@ namespace Xamarin.Test {
 	[global::Android.Runtime.Register ("xamarin/test/AdapterView", DoNotGenerateAcw=true)]
 	[global::Java.Interop.JavaTypeParameters (new string [] {"T extends xamarin.test.Adapter"})]
 	public abstract partial class AdapterView : global::Java.Lang.Object {
-
 		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/AdapterView", typeof (AdapterView));
+
 		internal static new IntPtr class_ref {
-			get {
-				return _members.JniPeerType.PeerReference.Handle;
-			}
+			get { return _members.JniPeerType.PeerReference.Handle; }
 		}
 
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -29,7 +27,9 @@ namespace Xamarin.Test {
 			get { return _members.ManagedPeerType; }
 		}
 
-		protected AdapterView (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer) {}
+		protected AdapterView (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
+		{
+		}
 
 		static Delegate cb_getAdapter;
 #pragma warning disable 0169
@@ -66,17 +66,21 @@ namespace Xamarin.Test {
 
 		protected abstract global::Java.Lang.Object RawAdapter {
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='AdapterView']/method[@name='getAdapter' and count(parameter)=0]"
-			[Register ("getAdapter", "()Lxamarin/test/Adapter;", "GetGetAdapterHandler")] get;
+			[Register ("getAdapter", "()Lxamarin/test/Adapter;", "GetGetAdapterHandler")]
+			get; 
+
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='AdapterView']/method[@name='setAdapter' and count(parameter)=1 and parameter[1][@type='T']]"
-			[Register ("setAdapter", "(Lxamarin/test/Adapter;)V", "GetSetAdapter_Lxamarin_test_Adapter_Handler")] set;
+			[Register ("setAdapter", "(Lxamarin/test/Adapter;)V", "GetSetAdapter_Lxamarin_test_Adapter_Handler")]
+			set; 
 		}
 
 	}
 
 	[global::Android.Runtime.Register ("xamarin/test/AdapterView", DoNotGenerateAcw=true)]
 	internal partial class AdapterViewInvoker : AdapterView {
-
-		public AdapterViewInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) {}
+		public AdapterViewInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
+		{
+		}
 
 		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/AdapterView", typeof (AdapterViewInvoker));
 
@@ -115,5 +119,4 @@ namespace Xamarin.Test {
 		}
 
 	}
-
 }

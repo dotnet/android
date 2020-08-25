@@ -8,12 +8,10 @@ namespace Java.IO {
 	// Metadata.xml XPath class reference: path="/api/package[@name='java.io']/class[@name='IOException']"
 	[global::Android.Runtime.Register ("java/io/IOException", DoNotGenerateAcw=true)]
 	public abstract partial class IOException : global::Java.Lang.Throwable {
-
 		static readonly JniPeerMembers _members = new JniPeerMembers ("java/io/IOException", typeof (IOException));
+
 		internal static new IntPtr class_ref {
-			get {
-				return _members.JniPeerType.PeerReference.Handle;
-			}
+			get { return _members.JniPeerType.PeerReference.Handle; }
 		}
 
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -28,7 +26,9 @@ namespace Java.IO {
 			get { return _members.ManagedPeerType; }
 		}
 
-		protected IOException (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer) {}
+		protected IOException (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
+		{
+		}
 
 		static Delegate cb_printStackTrace;
 #pragma warning disable 0169
@@ -61,8 +61,9 @@ namespace Java.IO {
 
 	[global::Android.Runtime.Register ("java/io/IOException", DoNotGenerateAcw=true)]
 	internal partial class IOExceptionInvoker : IOException {
-
-		public IOExceptionInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) {}
+		public IOExceptionInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
+		{
+		}
 
 		static readonly JniPeerMembers _members = new JniPeerMembers ("java/io/IOException", typeof (IOExceptionInvoker));
 
@@ -75,5 +76,4 @@ namespace Java.IO {
 		}
 
 	}
-
 }

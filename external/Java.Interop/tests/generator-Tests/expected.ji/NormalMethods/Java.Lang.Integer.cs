@@ -8,12 +8,10 @@ namespace Java.Lang {
 	// Metadata.xml XPath class reference: path="/api/package[@name='java.lang']/class[@name='Integer']"
 	[global::Android.Runtime.Register ("java/lang/Integer", DoNotGenerateAcw=true)]
 	public partial class Integer : global::Java.Lang.Object {
-
 		static readonly JniPeerMembers _members = new JniPeerMembers ("java/lang/Integer", typeof (Integer));
+
 		internal static new IntPtr class_ref {
-			get {
-				return _members.JniPeerType.PeerReference.Handle;
-			}
+			get { return _members.JniPeerType.PeerReference.Handle; }
 		}
 
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -28,7 +26,9 @@ namespace Java.Lang {
 			get { return _members.ManagedPeerType; }
 		}
 
-		protected Integer (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer) {}
+		protected Integer (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
+		{
+		}
 
 	}
 }

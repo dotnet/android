@@ -8,12 +8,10 @@ namespace Android.Text {
 	// Metadata.xml XPath class reference: path="/api/package[@name='android.text']/class[@name='SpannableString']"
 	[global::Android.Runtime.Register ("android/text/SpannableString", DoNotGenerateAcw=true)]
 	public partial class SpannableString : global::Android.Text.SpannableStringInternal, global::Android.Text.ISpannable {
-
 		static readonly JniPeerMembers _members = new JniPeerMembers ("android/text/SpannableString", typeof (SpannableString));
+
 		internal static new IntPtr class_ref {
-			get {
-				return _members.JniPeerType.PeerReference.Handle;
-			}
+			get { return _members.JniPeerType.PeerReference.Handle; }
 		}
 
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -28,12 +26,13 @@ namespace Android.Text {
 			get { return _members.ManagedPeerType; }
 		}
 
-		protected SpannableString (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer) {}
+		protected SpannableString (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
+		{
+		}
 
 		// Metadata.xml XPath constructor reference: path="/api/package[@name='android.text']/class[@name='SpannableString']/constructor[@name='SpannableString' and count(parameter)=1 and parameter[1][@type='java.lang.CharSequence']]"
 		[Register (".ctor", "(Ljava/lang/CharSequence;)V", "")]
-		public unsafe SpannableString (global::Java.Lang.ICharSequence source)
-			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+		public unsafe SpannableString (global::Java.Lang.ICharSequence source) : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
 			const string __id = "(Ljava/lang/CharSequence;)V";
 
@@ -53,8 +52,7 @@ namespace Android.Text {
 		}
 
 		[Register (".ctor", "(Ljava/lang/CharSequence;)V", "")]
-		public unsafe SpannableString (string source)
-			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+		public unsafe SpannableString (string source) : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
 			const string __id = "(Ljava/lang/CharSequence;)V";
 

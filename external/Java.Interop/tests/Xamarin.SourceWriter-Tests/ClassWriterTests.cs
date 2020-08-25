@@ -34,13 +34,13 @@ namespace Xamarin.SourceWriter.Tests
 			var expected =
 @"public partial class MyClass : System.Object {
 	public bool my_field;
-	
+
 	// Test comment
-	
+
 	public void MyMethod (bool test)
 	{
 	}
-	
+
 }
 ";
 

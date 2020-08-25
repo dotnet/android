@@ -31,7 +31,7 @@ namespace Xamarin.SourceWriter.Tests
 			var expected =
 @"public partial interface IMyInterface : IDisposable {
 	void MyMethod (bool test);
-	
+
 }
 ";
 

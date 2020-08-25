@@ -9,12 +9,10 @@ namespace Java.Lang {
 	[global::Android.Runtime.Register ("java/lang/Class", DoNotGenerateAcw=true)]
 	[global::Java.Interop.JavaTypeParameters (new string [] {"T"})]
 	public partial class Class : global::Java.Lang.Object {
-
 		static readonly JniPeerMembers _members = new JniPeerMembers ("java/lang/Class", typeof (Class));
+
 		internal static new IntPtr class_ref {
-			get {
-				return _members.JniPeerType.PeerReference.Handle;
-			}
+			get { return _members.JniPeerType.PeerReference.Handle; }
 		}
 
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -29,7 +27,9 @@ namespace Java.Lang {
 			get { return _members.ManagedPeerType; }
 		}
 
-		protected Class (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer) {}
+		protected Class (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
+		{
+		}
 
 	}
 }

@@ -8,12 +8,10 @@ namespace Java.IO {
 	// Metadata.xml XPath class reference: path="/api/package[@name='java.io']/class[@name='OutputStream']"
 	[global::Android.Runtime.Register ("java/io/OutputStream", DoNotGenerateAcw=true)]
 	public abstract partial class OutputStream : global::Java.Lang.Object {
-
 		static readonly JniPeerMembers _members = new JniPeerMembers ("java/io/OutputStream", typeof (OutputStream));
+
 		internal static new IntPtr class_ref {
-			get {
-				return _members.JniPeerType.PeerReference.Handle;
-			}
+			get { return _members.JniPeerType.PeerReference.Handle; }
 		}
 
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -28,12 +26,13 @@ namespace Java.IO {
 			get { return _members.ManagedPeerType; }
 		}
 
-		protected OutputStream (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer) {}
+		protected OutputStream (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
+		{
+		}
 
 		// Metadata.xml XPath constructor reference: path="/api/package[@name='java.io']/class[@name='OutputStream']/constructor[@name='OutputStream' and count(parameter)=0]"
 		[Register (".ctor", "()V", "")]
-		public unsafe OutputStream ()
-			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+		public unsafe OutputStream () : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
 			const string __id = "()V";
 
@@ -202,8 +201,9 @@ namespace Java.IO {
 
 	[global::Android.Runtime.Register ("java/io/OutputStream", DoNotGenerateAcw=true)]
 	internal partial class OutputStreamInvoker : OutputStream {
-
-		public OutputStreamInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) {}
+		public OutputStreamInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
+		{
+		}
 
 		static readonly JniPeerMembers _members = new JniPeerMembers ("java/io/OutputStream", typeof (OutputStreamInvoker));
 
@@ -229,5 +229,4 @@ namespace Java.IO {
 		}
 
 	}
-
 }

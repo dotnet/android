@@ -8,12 +8,10 @@ namespace Android.Text {
 	// Metadata.xml XPath interface reference: path="/api/package[@name='android.text']/interface[@name='Spannable']"
 	[Register ("android/text/Spannable", "", "Android.Text.ISpannableInvoker")]
 	public partial interface ISpannable : global::Android.Text.ISpanned {
-
 	}
 
 	[global::Android.Runtime.Register ("android/text/Spannable", DoNotGenerateAcw=true)]
 	internal partial class ISpannableInvoker : global::Java.Lang.Object, ISpannable {
-
 		static readonly JniPeerMembers _members = new JniPeerMembers ("android/text/Spannable", typeof (ISpannableInvoker));
 
 		static IntPtr java_class_ref {
@@ -42,8 +40,7 @@ namespace Android.Text {
 		static IntPtr Validate (IntPtr handle)
 		{
 			if (!JNIEnv.IsInstanceOf (handle, java_class_ref))
-				throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.",
-							JNIEnv.GetClassNameFromInstance (handle), "android.text.Spannable"));
+				throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.", JNIEnv.GetClassNameFromInstance (handle), "android.text.Spannable"));
 			return handle;
 		}
 
@@ -92,5 +89,4 @@ namespace Android.Text {
 		}
 
 	}
-
 }

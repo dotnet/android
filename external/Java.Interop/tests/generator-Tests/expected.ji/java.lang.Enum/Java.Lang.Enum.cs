@@ -9,12 +9,10 @@ namespace Java.Lang {
 	[global::Android.Runtime.Register ("java/lang/Enum", DoNotGenerateAcw=true)]
 	[global::Java.Interop.JavaTypeParameters (new string [] {"E extends java.lang.Enum<E>"})]
 	public abstract partial class Enum : global::Java.Lang.Object, global::Java.Lang.IComparable {
-
 		static readonly JniPeerMembers _members = new JniPeerMembers ("java/lang/Enum", typeof (Enum));
+
 		internal static new IntPtr class_ref {
-			get {
-				return _members.JniPeerType.PeerReference.Handle;
-			}
+			get { return _members.JniPeerType.PeerReference.Handle; }
 		}
 
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -29,7 +27,9 @@ namespace Java.Lang {
 			get { return _members.ManagedPeerType; }
 		}
 
-		protected Enum (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer) {}
+		protected Enum (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
+		{
+		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.lang']/class[@name='Enum']/method[@name='compareTo' and count(parameter)=1 and parameter[1][@type='E']]"
 		[Register ("compareTo", "(Ljava/lang/Enum;)I", "")]
@@ -51,8 +51,9 @@ namespace Java.Lang {
 
 	[global::Android.Runtime.Register ("java/lang/Enum", DoNotGenerateAcw=true)]
 	internal partial class EnumInvoker : Enum, global::Java.Lang.IComparable {
-
-		public EnumInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) {}
+		public EnumInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
+		{
+		}
 
 		static readonly JniPeerMembers _members = new JniPeerMembers ("java/lang/Enum", typeof (EnumInvoker));
 
@@ -65,5 +66,4 @@ namespace Java.Lang {
 		}
 
 	}
-
 }

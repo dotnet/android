@@ -158,13 +158,9 @@ namespace Xamarin.SourceWriter
 
 			WriteConstructors (writer);
 
-			writer.WriteLine ();
 			WriteEvents (writer);
-			writer.WriteLine ();
 			WriteDelegates (writer);
-			writer.WriteLine ();
 			WriteProperties (writer);
-			writer.WriteLine ();
 			WriteMethods (writer);
 		}
 

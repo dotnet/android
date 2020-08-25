@@ -8,12 +8,10 @@ namespace Test.ME {
 	// Metadata.xml XPath class reference: path="/api/package[@name='test.me']/class[@name='GenericStringImplementation']"
 	[global::Android.Runtime.Register ("test/me/GenericStringImplementation", DoNotGenerateAcw=true)]
 	public partial class GenericStringImplementation : global::Java.Lang.Object, global::Test.ME.IGenericInterface {
-
 		static readonly JniPeerMembers _members = new JniPeerMembers ("test/me/GenericStringImplementation", typeof (GenericStringImplementation));
+
 		internal static new IntPtr class_ref {
-			get {
-				return _members.JniPeerType.PeerReference.Handle;
-			}
+			get { return _members.JniPeerType.PeerReference.Handle; }
 		}
 
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -28,12 +26,13 @@ namespace Test.ME {
 			get { return _members.ManagedPeerType; }
 		}
 
-		protected GenericStringImplementation (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer) {}
+		protected GenericStringImplementation (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
+		{
+		}
 
 		// Metadata.xml XPath constructor reference: path="/api/package[@name='test.me']/class[@name='GenericStringImplementation']/constructor[@name='GenericStringImplementation' and count(parameter)=0]"
 		[Register (".ctor", "()V", "")]
-		public unsafe GenericStringImplementation ()
-			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+		public unsafe GenericStringImplementation () : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
 			const string __id = "()V";
 

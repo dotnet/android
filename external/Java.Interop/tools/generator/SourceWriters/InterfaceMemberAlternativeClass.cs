@@ -159,8 +159,10 @@ namespace generator.SourceWriters
 
 		public void WriteSiblingClasses (CodeWriter writer)
 		{
-			foreach (var sibling in sibling_classes)
+			foreach (var sibling in sibling_classes) {
+				writer.WriteLine ();
 				sibling.Write (writer);
+			}
 		}
 	}
 

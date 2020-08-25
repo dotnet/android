@@ -8,10 +8,7 @@ namespace Test.ME {
 	// Metadata.xml XPath class reference: path="/api/package[@name='test.me']/class[@name='TestInterfaceImplementation']"
 	[global::Android.Runtime.Register ("test/me/TestInterfaceImplementation", DoNotGenerateAcw=true)]
 	public abstract partial class TestInterfaceImplementation : global::Java.Lang.Object, global::Test.ME.ITestInterface {
-
-
 		public static class InterfaceConsts {
-
 			// The following are fields from: test.me.TestInterface
 
 			// Metadata.xml XPath field reference: path="/api/package[@name='test.me']/interface[@name='TestInterface']/field[@name='SPAN_COMPOSING']"
@@ -29,13 +26,13 @@ namespace Test.ME {
 					return global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (__v.Handle, JniHandleOwnership.TransferLocalRef);
 				}
 			}
+
 		}
 
 		static readonly JniPeerMembers _members = new JniPeerMembers ("test/me/TestInterfaceImplementation", typeof (TestInterfaceImplementation));
+
 		internal static new IntPtr class_ref {
-			get {
-				return _members.JniPeerType.PeerReference.Handle;
-			}
+			get { return _members.JniPeerType.PeerReference.Handle; }
 		}
 
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -50,12 +47,13 @@ namespace Test.ME {
 			get { return _members.ManagedPeerType; }
 		}
 
-		protected TestInterfaceImplementation (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer) {}
+		protected TestInterfaceImplementation (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
+		{
+		}
 
 		// Metadata.xml XPath constructor reference: path="/api/package[@name='test.me']/class[@name='TestInterfaceImplementation']/constructor[@name='TestInterfaceImplementation' and count(parameter)=0]"
 		[Register (".ctor", "()V", "")]
-		public unsafe TestInterfaceImplementation ()
-			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+		public unsafe TestInterfaceImplementation () : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
 			const string __id = "()V";
 
@@ -155,8 +153,9 @@ namespace Test.ME {
 
 	[global::Android.Runtime.Register ("test/me/TestInterfaceImplementation", DoNotGenerateAcw=true)]
 	internal partial class TestInterfaceImplementationInvoker : TestInterfaceImplementation {
-
-		public TestInterfaceImplementationInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) {}
+		public TestInterfaceImplementationInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
+		{
+		}
 
 		static readonly JniPeerMembers _members = new JniPeerMembers ("test/me/TestInterfaceImplementation", typeof (TestInterfaceImplementationInvoker));
 
@@ -214,5 +213,4 @@ namespace Test.ME {
 		}
 
 	}
-
 }

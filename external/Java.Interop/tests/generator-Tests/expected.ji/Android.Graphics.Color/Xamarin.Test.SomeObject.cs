@@ -9,8 +9,6 @@ namespace Xamarin.Test {
 	[global::Android.Runtime.Register ("xamarin/test/SomeObject", DoNotGenerateAcw=true)]
 	public abstract partial class SomeObject : global::Java.Lang.Object {
 
-
-
 		// Metadata.xml XPath field reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/field[@name='backColor']"
 		[Register ("backColor")]
 		public global::Android.Graphics.Color BackColor {
@@ -29,11 +27,11 @@ namespace Xamarin.Test {
 				}
 			}
 		}
+
 		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/SomeObject", typeof (SomeObject));
+
 		internal static new IntPtr class_ref {
-			get {
-				return _members.JniPeerType.PeerReference.Handle;
-			}
+			get { return _members.JniPeerType.PeerReference.Handle; }
 		}
 
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -48,7 +46,9 @@ namespace Xamarin.Test {
 			get { return _members.ManagedPeerType; }
 		}
 
-		protected SomeObject (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer) {}
+		protected SomeObject (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
+		{
+		}
 
 		static Delegate cb_getSomeColor;
 #pragma warning disable 0169
@@ -85,17 +85,21 @@ namespace Xamarin.Test {
 
 		public abstract global::Android.Graphics.Color SomeColor {
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='getSomeColor' and count(parameter)=0]"
-			[Register ("getSomeColor", "()I", "GetGetSomeColorHandler")] get;
+			[Register ("getSomeColor", "()I", "GetGetSomeColorHandler")]
+			get; 
+
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='setSomeColor' and count(parameter)=1 and parameter[1][@type='Android.Graphics.Color']]"
-			[Register ("setSomeColor", "(I)V", "GetSetSomeColor_IHandler")] set;
+			[Register ("setSomeColor", "(I)V", "GetSetSomeColor_IHandler")]
+			set; 
 		}
 
 	}
 
 	[global::Android.Runtime.Register ("xamarin/test/SomeObject", DoNotGenerateAcw=true)]
 	internal partial class SomeObjectInvoker : SomeObject {
-
-		public SomeObjectInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) {}
+		public SomeObjectInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
+		{
+		}
 
 		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/SomeObject", typeof (SomeObjectInvoker));
 
@@ -132,5 +136,4 @@ namespace Xamarin.Test {
 		}
 
 	}
-
 }

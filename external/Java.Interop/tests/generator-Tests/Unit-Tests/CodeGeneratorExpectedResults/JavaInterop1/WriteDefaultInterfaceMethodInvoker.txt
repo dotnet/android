@@ -2,37 +2,40 @@
 [Register ("java/code/IMyInterface", "", "java.code.IMyInterfaceInvoker")]
 public partial interface IMyInterface : IJavaObject, IJavaPeerable {
 	private static readonly JniPeerMembers _members = new JniPeerMembers ("java/code/IMyInterface", typeof (IMyInterface), isInterface: true);
-	
+
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='DoDeclaration' and count(parameter)=0]"
 	[Register ("DoDeclaration", "()V", "GetDoDeclarationHandler:java.code.IMyInterfaceInvoker, MyAssembly")]
 	void DoDeclaration ();
-	
+
 	private static Delegate cb_DoDefault;
-	#pragma warning disable 0169
+#pragma warning disable 0169
 	private static Delegate GetDoDefaultHandler ()
 	{
 		if (cb_DoDefault == null)
 			cb_DoDefault = JNINativeWrapper.CreateDelegate ((_JniMarshal_PP_V) n_DoDefault);
 		return cb_DoDefault;
 	}
+
 	private static void n_DoDefault (IntPtr jnienv, IntPtr native__this)
 	{
 		var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
 		__this.DoDefault ();
 	}
-	#pragma warning restore 0169
+#pragma warning restore 0169
+
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='DoDefault' and count(parameter)=0]"
 	[Register ("DoDefault", "()V", "GetDoDefaultHandler:java.code.IMyInterface, MyAssembly")]
 	virtual unsafe void DoDefault ()
 	{
 		const string __id = "DoDefault.()V";
 		try {
-		_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
+			_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
 		} finally {
 		}
 	}
-	
+
 }
+
 [global::Android.Runtime.Register ("java/code/IMyInterface", DoNotGenerateAcw=true)]
 internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterface {
 	static readonly JniPeerMembers _members = new JniPeerMembers ("java/code/IMyInterface", typeof (IMyInterfaceInvoker));
@@ -63,8 +66,7 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 	static IntPtr Validate (IntPtr handle)
 	{
 		if (!JNIEnv.IsInstanceOf (handle, java_class_ref))
-			throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.",
-						JNIEnv.GetClassNameFromInstance (handle), "java.code.IMyInterface"));
+			throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.", JNIEnv.GetClassNameFromInstance (handle), "java.code.IMyInterface"));
 		return handle;
 	}
 
@@ -108,4 +110,3 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 	}
 
 }
-

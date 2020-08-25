@@ -8,12 +8,10 @@ namespace Xamarin.Test {
 	// Metadata.xml XPath interface reference: path="/api/package[@name='xamarin.test']/interface[@name='SpinnerAdapter']"
 	[Register ("xamarin/test/SpinnerAdapter", "", "Xamarin.Test.ISpinnerAdapterInvoker")]
 	public partial interface ISpinnerAdapter : global::Xamarin.Test.IAdapter {
-
 	}
 
 	[global::Android.Runtime.Register ("xamarin/test/SpinnerAdapter", DoNotGenerateAcw=true)]
 	internal partial class ISpinnerAdapterInvoker : global::Java.Lang.Object, ISpinnerAdapter {
-
 		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/SpinnerAdapter", typeof (ISpinnerAdapterInvoker));
 
 		static IntPtr java_class_ref {
@@ -42,8 +40,7 @@ namespace Xamarin.Test {
 		static IntPtr Validate (IntPtr handle)
 		{
 			if (!JNIEnv.IsInstanceOf (handle, java_class_ref))
-				throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.",
-							JNIEnv.GetClassNameFromInstance (handle), "xamarin.test.SpinnerAdapter"));
+				throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.", JNIEnv.GetClassNameFromInstance (handle), "xamarin.test.SpinnerAdapter"));
 			return handle;
 		}
 
@@ -63,5 +60,4 @@ namespace Xamarin.Test {
 		}
 
 	}
-
 }

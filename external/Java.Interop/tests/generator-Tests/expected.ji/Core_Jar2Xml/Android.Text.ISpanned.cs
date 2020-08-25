@@ -8,7 +8,6 @@ namespace Android.Text {
 	// Metadata.xml XPath interface reference: path="/api/package[@name='android.text']/interface[@name='Spanned']"
 	[Register ("android/text/Spanned", "", "Android.Text.ISpannedInvoker")]
 	public partial interface ISpanned : IJavaObject, IJavaPeerable {
-
 		// Metadata.xml XPath method reference: path="/api/package[@name='android.text']/interface[@name='Spanned']/method[@name='getSpanFlags' and count(parameter)=1 and parameter[1][@type='java.lang.Object']]"
 		[return:global::Android.Runtime.GeneratedEnum]
 		[Register ("getSpanFlags", "(Ljava/lang/Object;)I", "GetGetSpanFlags_Ljava_lang_Object_Handler:Android.Text.ISpannedInvoker, Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null")]
@@ -18,7 +17,6 @@ namespace Android.Text {
 
 	[global::Android.Runtime.Register ("android/text/Spanned", DoNotGenerateAcw=true)]
 	internal partial class ISpannedInvoker : global::Java.Lang.Object, ISpanned {
-
 		static readonly JniPeerMembers _members = new JniPeerMembers ("android/text/Spanned", typeof (ISpannedInvoker));
 
 		static IntPtr java_class_ref {
@@ -47,8 +45,7 @@ namespace Android.Text {
 		static IntPtr Validate (IntPtr handle)
 		{
 			if (!JNIEnv.IsInstanceOf (handle, java_class_ref))
-				throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.",
-							JNIEnv.GetClassNameFromInstance (handle), "android.text.Spanned"));
+				throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.", JNIEnv.GetClassNameFromInstance (handle), "android.text.Spanned"));
 			return handle;
 		}
 
@@ -97,5 +94,4 @@ namespace Android.Text {
 		}
 
 	}
-
 }

@@ -9,7 +9,6 @@ namespace Com.Google.Android.Exoplayer.Drm {
 	[Register ("com/google/android/exoplayer/drm/ExoMediaDrm$OnEventListener", "", "Com.Google.Android.Exoplayer.Drm.IExoMediaDrmOnEventListenerInvoker")]
 	[global::Java.Interop.JavaTypeParameters (new string [] {"T extends com.google.android.exoplayer.drm.ExoMediaCrypto"})]
 	public partial interface IExoMediaDrmOnEventListener : IJavaObject, IJavaPeerable {
-
 		// Metadata.xml XPath method reference: path="/api/package[@name='com.google.android.exoplayer.drm']/interface[@name='ExoMediaDrm.OnEventListener']/method[@name='onEvent' and count(parameter)=5 and parameter[1][@type='com.google.android.exoplayer.drm.ExoMediaDrm&lt;T&gt;'] and parameter[2][@type='byte[]'] and parameter[3][@type='int'] and parameter[4][@type='int'] and parameter[5][@type='byte[]']]"
 		[Register ("onEvent", "(Lcom/google/android/exoplayer/drm/ExoMediaDrm;[BII[B)V", "GetOnEvent_Lcom_google_android_exoplayer_drm_ExoMediaDrm_arrayBIIarrayBHandler:Com.Google.Android.Exoplayer.Drm.IExoMediaDrmOnEventListenerInvoker, Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null")]
 		void OnEvent (global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrm p0, byte[] p1, int p2, int p3, byte[] p4);
@@ -18,7 +17,6 @@ namespace Com.Google.Android.Exoplayer.Drm {
 
 	[global::Android.Runtime.Register ("com/google/android/exoplayer/drm/ExoMediaDrm$OnEventListener", DoNotGenerateAcw=true)]
 	internal partial class IExoMediaDrmOnEventListenerInvoker : global::Java.Lang.Object, IExoMediaDrmOnEventListener {
-
 		static readonly JniPeerMembers _members = new JniPeerMembers ("com/google/android/exoplayer/drm/ExoMediaDrm$OnEventListener", typeof (IExoMediaDrmOnEventListenerInvoker));
 
 		static IntPtr java_class_ref {
@@ -47,8 +45,7 @@ namespace Com.Google.Android.Exoplayer.Drm {
 		static IntPtr Validate (IntPtr handle)
 		{
 			if (!JNIEnv.IsInstanceOf (handle, java_class_ref))
-				throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.",
-							JNIEnv.GetClassNameFromInstance (handle), "com.google.android.exoplayer.drm.ExoMediaDrm.OnEventListener"));
+				throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.", JNIEnv.GetClassNameFromInstance (handle), "com.google.android.exoplayer.drm.ExoMediaDrm.OnEventListener"));
 			return handle;
 		}
 
@@ -118,7 +115,6 @@ namespace Com.Google.Android.Exoplayer.Drm {
 
 	// event args for com.google.android.exoplayer.drm.ExoMediaDrm.OnEventListener.onEvent
 	public partial class ExoMediaDrmOnEventEventArgs : global::System.EventArgs {
-
 		public ExoMediaDrmOnEventEventArgs (global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrm p0, byte[] p1, int p2, int p3, byte[] p4)
 		{
 			this.p0 = p0;
@@ -129,29 +125,35 @@ namespace Com.Google.Android.Exoplayer.Drm {
 		}
 
 		global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrm p0;
+
 		public global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrm P0 {
 			get { return p0; }
 		}
 
 		byte[] p1;
+
 		public byte[] P1 {
 			get { return p1; }
 		}
 
 		int p2;
+
 		public int P2 {
 			get { return p2; }
 		}
 
 		int p3;
+
 		public int P3 {
 			get { return p3; }
 		}
 
 		byte[] p4;
+
 		public byte[] P4 {
 			get { return p4; }
 		}
+
 	}
 
 	[global::Android.Runtime.Register ("mono/com/google/android/exoplayer/drm/ExoMediaDrm_OnEventListenerImplementor")]
@@ -159,18 +161,15 @@ namespace Com.Google.Android.Exoplayer.Drm {
 
 		object sender;
 
-		public IExoMediaDrmOnEventListenerImplementor (object sender)
-			: base (
-				global::Android.Runtime.JNIEnv.StartCreateInstance ("mono/com/google/android/exoplayer/drm/ExoMediaDrm_OnEventListenerImplementor", "()V"),
-				JniHandleOwnership.TransferLocalRef)
+		public IExoMediaDrmOnEventListenerImplementor (object sender) : base (global::Android.Runtime.JNIEnv.StartCreateInstance ("mono/com/google/android/exoplayer/drm/ExoMediaDrm_OnEventListenerImplementor", "()V"), JniHandleOwnership.TransferLocalRef)
 		{
 			global::Android.Runtime.JNIEnv.FinishCreateInstance (((global::Java.Lang.Object) this).Handle, "()V");
 			this.sender = sender;
 		}
 
-#pragma warning disable 0649
+		#pragma warning disable 0649
 		public EventHandler<ExoMediaDrmOnEventEventArgs> Handler;
-#pragma warning restore 0649
+		#pragma warning restore 0649
 
 		public void OnEvent (global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrm p0, byte[] p1, int p2, int p3, byte[] p4)
 		{
@@ -183,14 +182,13 @@ namespace Com.Google.Android.Exoplayer.Drm {
 		{
 			return value.Handler == null;
 		}
-	}
 
+	}
 
 	// Metadata.xml XPath interface reference: path="/api/package[@name='com.google.android.exoplayer.drm']/interface[@name='ExoMediaDrm']"
 	[Register ("com/google/android/exoplayer/drm/ExoMediaDrm", "", "Com.Google.Android.Exoplayer.Drm.IExoMediaDrmInvoker")]
 	[global::Java.Interop.JavaTypeParameters (new string [] {"T extends com.google.android.exoplayer.drm.ExoMediaCrypto"})]
 	public partial interface IExoMediaDrm : IJavaObject, IJavaPeerable {
-
 		// Metadata.xml XPath method reference: path="/api/package[@name='com.google.android.exoplayer.drm']/interface[@name='ExoMediaDrm']/method[@name='setOnEventListener' and count(parameter)=1 and parameter[1][@type='com.google.android.exoplayer.drm.ExoMediaDrm.OnEventListener&lt;T&gt;']]"
 		[Register ("setOnEventListener", "(Lcom/google/android/exoplayer/drm/ExoMediaDrm$OnEventListener;)V", "GetSetOnEventListener_Lcom_google_android_exoplayer_drm_ExoMediaDrm_OnEventListener_Handler:Com.Google.Android.Exoplayer.Drm.IExoMediaDrmInvoker, Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null")]
 		void SetOnEventListener (global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrmOnEventListener p0);
@@ -199,7 +197,6 @@ namespace Com.Google.Android.Exoplayer.Drm {
 
 	[global::Android.Runtime.Register ("com/google/android/exoplayer/drm/ExoMediaDrm", DoNotGenerateAcw=true)]
 	internal partial class IExoMediaDrmInvoker : global::Java.Lang.Object, IExoMediaDrm {
-
 		static readonly JniPeerMembers _members = new JniPeerMembers ("com/google/android/exoplayer/drm/ExoMediaDrm", typeof (IExoMediaDrmInvoker));
 
 		static IntPtr java_class_ref {
@@ -228,8 +225,7 @@ namespace Com.Google.Android.Exoplayer.Drm {
 		static IntPtr Validate (IntPtr handle)
 		{
 			if (!JNIEnv.IsInstanceOf (handle, java_class_ref))
-				throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.",
-							JNIEnv.GetClassNameFromInstance (handle), "com.google.android.exoplayer.drm.ExoMediaDrm"));
+				throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.", JNIEnv.GetClassNameFromInstance (handle), "com.google.android.exoplayer.drm.ExoMediaDrm"));
 			return handle;
 		}
 
@@ -276,5 +272,4 @@ namespace Com.Google.Android.Exoplayer.Drm {
 		}
 
 	}
-
 }

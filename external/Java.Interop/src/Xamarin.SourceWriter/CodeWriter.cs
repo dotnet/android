@@ -33,22 +33,31 @@ namespace Xamarin.SourceWriter
 
 		public void WriteLine ()
 		{
-			WriteIndent ();
 			stream.WriteLine ();
 			need_indent = true;
 		}
 
 		public void WriteLine (string value)
 		{
-			WriteIndent ();
+			if (value?.Length > 0)
+				WriteIndent ();
+
 			stream.WriteLine (value);
 			need_indent = true;
 		}
 
 		public void WriteLine (string format, params object[] args)
 		{
-			WriteIndent ();
+			if (format?.Length > 0)
+				WriteIndent ();
+
 			stream.WriteLine (format, args);
+			need_indent = true;
+		}
+
+		public void WriteLineNoIndent (string value)
+		{
+			stream.WriteLine (value);
 			need_indent = true;
 		}
 

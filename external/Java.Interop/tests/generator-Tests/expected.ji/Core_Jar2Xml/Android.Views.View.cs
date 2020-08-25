@@ -8,11 +8,9 @@ namespace Android.Views {
 	// Metadata.xml XPath class reference: path="/api/package[@name='android.view']/class[@name='View']"
 	[global::Android.Runtime.Register ("android/view/View", DoNotGenerateAcw=true)]
 	public partial class View : global::Java.Lang.Object {
-
 		// Metadata.xml XPath interface reference: path="/api/package[@name='android.view']/interface[@name='View.OnClickListener']"
 		[Register ("android/view/View$OnClickListener", "", "Android.Views.View/IOnClickListenerInvoker")]
 		public partial interface IOnClickListener : IJavaObject, IJavaPeerable {
-
 			// Metadata.xml XPath method reference: path="/api/package[@name='android.view']/interface[@name='View.OnClickListener']/method[@name='onClick' and count(parameter)=1 and parameter[1][@type='android.view.View']]"
 			[Register ("onClick", "(Landroid/view/View;)V", "GetOnClick_Landroid_view_View_Handler:Android.Views.View/IOnClickListenerInvoker, Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null")]
 			void OnClick (global::Android.Views.View v);
@@ -21,7 +19,6 @@ namespace Android.Views {
 
 		[global::Android.Runtime.Register ("android/view/View$OnClickListener", DoNotGenerateAcw=true)]
 		internal partial class IOnClickListenerInvoker : global::Java.Lang.Object, IOnClickListener {
-
 			static readonly JniPeerMembers _members = new JniPeerMembers ("android/view/View$OnClickListener", typeof (IOnClickListenerInvoker));
 
 			static IntPtr java_class_ref {
@@ -50,8 +47,7 @@ namespace Android.Views {
 			static IntPtr Validate (IntPtr handle)
 			{
 				if (!JNIEnv.IsInstanceOf (handle, java_class_ref))
-					throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.",
-								JNIEnv.GetClassNameFromInstance (handle), "android.view.View.OnClickListener"));
+					throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.", JNIEnv.GetClassNameFromInstance (handle), "android.view.View.OnClickListener"));
 				return handle;
 			}
 
@@ -101,18 +97,14 @@ namespace Android.Views {
 
 		[global::Android.Runtime.Register ("mono/android/view/View_OnClickListenerImplementor")]
 		internal sealed partial class IOnClickListenerImplementor : global::Java.Lang.Object, IOnClickListener {
-
-			public IOnClickListenerImplementor ()
-				: base (
-					global::Android.Runtime.JNIEnv.StartCreateInstance ("mono/android/view/View_OnClickListenerImplementor", "()V"),
-					JniHandleOwnership.TransferLocalRef)
+			public IOnClickListenerImplementor () : base (global::Android.Runtime.JNIEnv.StartCreateInstance ("mono/android/view/View_OnClickListenerImplementor", "()V"), JniHandleOwnership.TransferLocalRef)
 			{
 				global::Android.Runtime.JNIEnv.FinishCreateInstance (((global::Java.Lang.Object) this).Handle, "()V");
 			}
 
-#pragma warning disable 0649
+			#pragma warning disable 0649
 			public EventHandler Handler;
-#pragma warning restore 0649
+			#pragma warning restore 0649
 
 			public void OnClick (global::Android.Views.View v)
 			{
@@ -125,14 +117,13 @@ namespace Android.Views {
 			{
 				return value.Handler == null;
 			}
+
 		}
 
-
 		static readonly JniPeerMembers _members = new JniPeerMembers ("android/view/View", typeof (View));
+
 		internal static new IntPtr class_ref {
-			get {
-				return _members.JniPeerType.PeerReference.Handle;
-			}
+			get { return _members.JniPeerType.PeerReference.Handle; }
 		}
 
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -147,7 +138,9 @@ namespace Android.Views {
 			get { return _members.ManagedPeerType; }
 		}
 
-		protected View (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer) {}
+		protected View (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
+		{
+		}
 
 		static Delegate cb_setOnClickListener_Landroid_view_View_OnClickListener_;
 #pragma warning disable 0169
@@ -241,21 +234,22 @@ namespace Android.Views {
 			}
 		}
 
-#region "Event implementation for Android.Views.View.IOnClickListener"
+		#region "Event implementation for Android.Views.View.IOnClickListener"
+
 		public event EventHandler Click {
 			add {
 				global::Java.Interop.EventHelper.AddEventHandler<global::Android.Views.View.IOnClickListener, global::Android.Views.View.IOnClickListenerImplementor>(
-						ref weak_implementor_SetOnClickListener,
-						__CreateIOnClickListenerImplementor,
-						SetOnClickListener,
-						__h => __h.Handler += value);
+				ref weak_implementor_SetOnClickListener,
+				__CreateIOnClickListenerImplementor,
+				SetOnClickListener,
+				__h => __h.Handler += value);
 			}
 			remove {
 				global::Java.Interop.EventHelper.RemoveEventHandler<global::Android.Views.View.IOnClickListener, global::Android.Views.View.IOnClickListenerImplementor>(
-						ref weak_implementor_SetOnClickListener,
-						global::Android.Views.View.IOnClickListenerImplementor.__IsEmpty,
-						__v => SetOnClickListener (null),
-						__h => __h.Handler -= value);
+				ref weak_implementor_SetOnClickListener,
+				global::Android.Views.View.IOnClickListenerImplementor.__IsEmpty,
+				__v => SetOnClickListener (null),
+				__h => __h.Handler -= value);
 			}
 		}
 
@@ -265,6 +259,8 @@ namespace Android.Views {
 		{
 			return new global::Android.Views.View.IOnClickListenerImplementor ();
 		}
-#endregion
+
+		#endregion
+
 	}
 }

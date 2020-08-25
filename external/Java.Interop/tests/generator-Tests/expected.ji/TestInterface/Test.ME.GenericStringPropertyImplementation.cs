@@ -8,12 +8,10 @@ namespace Test.ME {
 	// Metadata.xml XPath class reference: path="/api/package[@name='test.me']/class[@name='GenericStringPropertyImplementation']"
 	[global::Android.Runtime.Register ("test/me/GenericStringPropertyImplementation", DoNotGenerateAcw=true)]
 	public partial class GenericStringPropertyImplementation : global::Java.Lang.Object, global::Test.ME.IGenericPropertyInterface {
-
 		static readonly JniPeerMembers _members = new JniPeerMembers ("test/me/GenericStringPropertyImplementation", typeof (GenericStringPropertyImplementation));
+
 		internal static new IntPtr class_ref {
-			get {
-				return _members.JniPeerType.PeerReference.Handle;
-			}
+			get { return _members.JniPeerType.PeerReference.Handle; }
 		}
 
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -28,12 +26,13 @@ namespace Test.ME {
 			get { return _members.ManagedPeerType; }
 		}
 
-		protected GenericStringPropertyImplementation (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer) {}
+		protected GenericStringPropertyImplementation (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
+		{
+		}
 
 		// Metadata.xml XPath constructor reference: path="/api/package[@name='test.me']/class[@name='GenericStringPropertyImplementation']/constructor[@name='GenericStringPropertyImplementation' and count(parameter)=0]"
 		[Register (".ctor", "()V", "")]
-		public unsafe GenericStringPropertyImplementation ()
-			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+		public unsafe GenericStringPropertyImplementation () : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
 			const string __id = "()V";
 
@@ -110,13 +109,11 @@ namespace Test.ME {
 		// This method is explicitly implemented as a member of an instantiated Test.ME.IGenericPropertyInterface
 		global::Java.Lang.Object global::Test.ME.IGenericPropertyInterface.Object {
 			// Metadata.xml XPath method reference: path="/api/package[@name='test.me']/interface[@name='GenericPropertyInterface']/method[@name='getObject' and count(parameter)=0]"
-			[Register ("getObject", "()Ljava/lang/Object;", "GetGetObjectHandler:Test.ME.IGenericPropertyInterfaceInvoker, Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null")] get {
-				return Object;
-			}
+			[Register ("getObject", "()Ljava/lang/Object;", "GetGetObjectHandler:Test.ME.IGenericPropertyInterfaceInvoker, Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null")]
+			get { return Object; }
 			// Metadata.xml XPath method reference: path="/api/package[@name='test.me']/interface[@name='GenericPropertyInterface']/method[@name='setObject' and count(parameter)=1 and parameter[1][@type='T']]"
-			[Register ("setObject", "(Ljava/lang/Object;)V", "GetSetObject_Ljava_lang_Object_Handler:Test.ME.IGenericPropertyInterfaceInvoker, Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null")] set {
-				Object = value.ToString ();
-			}
+			[Register ("setObject", "(Ljava/lang/Object;)V", "GetSetObject_Ljava_lang_Object_Handler:Test.ME.IGenericPropertyInterfaceInvoker, Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null")]
+			set { Object = value.ToString (); }
 		}
 
 	}

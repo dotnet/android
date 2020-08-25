@@ -1,9 +1,9 @@
 [Register ("java/code/IMyInterface", DoNotGenerateAcw=true)]
 public abstract class MyInterface : Java.Lang.Object {
-
 	internal MyInterface ()
 	{
 	}
+
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='StaticMethod' and count(parameter)=0]"
 	[Register ("StaticMethod", "()V", "")]
 	public static unsafe void StaticMethod ()
@@ -15,42 +15,50 @@ public abstract class MyInterface : Java.Lang.Object {
 		}
 	}
 
-
 	static readonly JniPeerMembers _members = new XAPeerMembers ("java/code/IMyInterface", typeof (MyInterface));
+
 }
 
 [Register ("java/code/IMyInterface", DoNotGenerateAcw=true)]
 [global::System.Obsolete ("Use the 'MyInterface' type. This type will be removed in a future release.", error: true)]
 public abstract class MyInterfaceConsts : MyInterface {
-
 	private MyInterfaceConsts ()
 	{
 	}
+
 }
 
 // Metadata.xml XPath interface reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']"
 [Register ("java/code/IMyInterface", "", "java.code.IMyInterfaceInvoker")]
 public partial interface IMyInterface : IJavaObject, IJavaPeerable {
-
 	int Count {
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='get_Count' and count(parameter)=0]"
-		[Register ("get_Count", "()I", "Getget_CountHandler:java.code.IMyInterfaceInvoker, ")] get;
+		[Register ("get_Count", "()I", "Getget_CountHandler:java.code.IMyInterfaceInvoker, ")]
+		get; 
+
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='set_Count' and count(parameter)=1 and parameter[1][@type='int']]"
-		[Register ("set_Count", "(I)V", "Getset_Count_IHandler:java.code.IMyInterfaceInvoker, ")] set;
+		[Register ("set_Count", "(I)V", "Getset_Count_IHandler:java.code.IMyInterfaceInvoker, ")]
+		set; 
 	}
 
 	string Key {
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='get_Key' and count(parameter)=0]"
-		[Register ("get_Key", "()Ljava/lang/String;", "Getget_KeyHandler:java.code.IMyInterfaceInvoker, ")] get;
+		[Register ("get_Key", "()Ljava/lang/String;", "Getget_KeyHandler:java.code.IMyInterfaceInvoker, ")]
+		get; 
+
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='set_Key' and count(parameter)=1 and parameter[1][@type='java.lang.String']]"
-		[Register ("set_Key", "(Ljava/lang/String;)V", "Getset_Key_Ljava_lang_String_Handler:java.code.IMyInterfaceInvoker, ")] set;
+		[Register ("set_Key", "(Ljava/lang/String;)V", "Getset_Key_Ljava_lang_String_Handler:java.code.IMyInterfaceInvoker, ")]
+		set; 
 	}
 
 	int AbstractCount {
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='get_AbstractCount' and count(parameter)=0]"
-		[Register ("get_AbstractCount", "()I", "Getget_AbstractCountHandler:java.code.IMyInterfaceInvoker, ")] get;
+		[Register ("get_AbstractCount", "()I", "Getget_AbstractCountHandler:java.code.IMyInterfaceInvoker, ")]
+		get; 
+
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='set_AbstractCount' and count(parameter)=1 and parameter[1][@type='int']]"
-		[Register ("set_AbstractCount", "(I)V", "Getset_AbstractCount_IHandler:java.code.IMyInterfaceInvoker, ")] set;
+		[Register ("set_AbstractCount", "(I)V", "Getset_AbstractCount_IHandler:java.code.IMyInterfaceInvoker, ")]
+		set; 
 	}
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='GetCountForKey' and count(parameter)=1 and parameter[1][@type='java.lang.String']]"
@@ -69,7 +77,6 @@ public partial interface IMyInterface : IJavaObject, IJavaPeerable {
 
 [global::Android.Runtime.Register ("java/code/IMyInterface", DoNotGenerateAcw=true)]
 internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterface {
-
 	static readonly JniPeerMembers _members = new XAPeerMembers ("java/code/IMyInterface", typeof (IMyInterfaceInvoker));
 
 	static IntPtr java_class_ref {
@@ -98,8 +105,7 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 	static IntPtr Validate (IntPtr handle)
 	{
 		if (!JNIEnv.IsInstanceOf (handle, java_class_ref))
-			throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.",
-						JNIEnv.GetClassNameFromInstance (handle), "java.code.IMyInterface"));
+			throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.", JNIEnv.GetClassNameFromInstance (handle), "java.code.IMyInterface"));
 		return handle;
 	}
 
@@ -348,4 +354,3 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 	}
 
 }
-

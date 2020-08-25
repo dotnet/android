@@ -8,7 +8,6 @@ namespace Xamarin.Test {
 	// Metadata.xml XPath interface reference: path="/api/package[@name='xamarin.test']/interface[@name='I2']"
 	[Register ("xamarin/test/I2", "", "Xamarin.Test.II2Invoker")]
 	public partial interface II2 : IJavaObject, IJavaPeerable {
-
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/interface[@name='I2']/method[@name='close' and count(parameter)=0]"
 		[Register ("close", "()V", "GetCloseHandler:Xamarin.Test.II2Invoker, Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null")]
 		void Close ();
@@ -17,7 +16,6 @@ namespace Xamarin.Test {
 
 	[global::Android.Runtime.Register ("xamarin/test/I2", DoNotGenerateAcw=true)]
 	internal partial class II2Invoker : global::Java.Lang.Object, II2 {
-
 		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/I2", typeof (II2Invoker));
 
 		static IntPtr java_class_ref {
@@ -46,8 +44,7 @@ namespace Xamarin.Test {
 		static IntPtr Validate (IntPtr handle)
 		{
 			if (!JNIEnv.IsInstanceOf (handle, java_class_ref))
-				throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.",
-							JNIEnv.GetClassNameFromInstance (handle), "xamarin.test.I2"));
+				throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.", JNIEnv.GetClassNameFromInstance (handle), "xamarin.test.I2"));
 			return handle;
 		}
 
@@ -91,5 +88,4 @@ namespace Xamarin.Test {
 		}
 
 	}
-
 }

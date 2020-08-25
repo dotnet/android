@@ -8,11 +8,9 @@ namespace Xamarin.Test {
 	// Metadata.xml XPath class reference: path="/api/package[@name='xamarin.test']/class[@name='PublicClass']"
 	[global::Android.Runtime.Register ("xamarin/test/PublicClass", DoNotGenerateAcw=true)]
 	public partial class PublicClass : global::Java.Lang.Object {
-
 		// Metadata.xml XPath interface reference: path="/api/package[@name='xamarin.test']/interface[@name='PublicClass.ProtectedInterface']"
 		[Register ("xamarin/test/PublicClass$ProtectedInterface", "", "Xamarin.Test.PublicClass/IProtectedInterfaceInvoker")]
 		protected internal partial interface IProtectedInterface : IJavaObject, IJavaPeerable {
-
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/interface[@name='PublicClass.ProtectedInterface']/method[@name='foo' and count(parameter)=0]"
 			[Register ("foo", "()V", "GetFooHandler:Xamarin.Test.PublicClass/IProtectedInterfaceInvoker, Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null")]
 			void Foo ();
@@ -21,7 +19,6 @@ namespace Xamarin.Test {
 
 		[global::Android.Runtime.Register ("xamarin/test/PublicClass$ProtectedInterface", DoNotGenerateAcw=true)]
 		internal partial class IProtectedInterfaceInvoker : global::Java.Lang.Object, IProtectedInterface {
-
 			static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/PublicClass$ProtectedInterface", typeof (IProtectedInterfaceInvoker));
 
 			static IntPtr java_class_ref {
@@ -50,8 +47,7 @@ namespace Xamarin.Test {
 			static IntPtr Validate (IntPtr handle)
 			{
 				if (!JNIEnv.IsInstanceOf (handle, java_class_ref))
-					throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.",
-								JNIEnv.GetClassNameFromInstance (handle), "xamarin.test.PublicClass.ProtectedInterface"));
+					throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.", JNIEnv.GetClassNameFromInstance (handle), "xamarin.test.PublicClass.ProtectedInterface"));
 				return handle;
 			}
 
@@ -96,12 +92,10 @@ namespace Xamarin.Test {
 
 		}
 
-
 		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/PublicClass", typeof (PublicClass));
+
 		internal static new IntPtr class_ref {
-			get {
-				return _members.JniPeerType.PeerReference.Handle;
-			}
+			get { return _members.JniPeerType.PeerReference.Handle; }
 		}
 
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -116,12 +110,13 @@ namespace Xamarin.Test {
 			get { return _members.ManagedPeerType; }
 		}
 
-		protected PublicClass (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer) {}
+		protected PublicClass (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
+		{
+		}
 
 		// Metadata.xml XPath constructor reference: path="/api/package[@name='xamarin.test']/class[@name='PublicClass']/constructor[@name='PublicClass' and count(parameter)=0]"
 		[Register (".ctor", "()V", "")]
-		public unsafe PublicClass ()
-			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+		public unsafe PublicClass () : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
 			const string __id = "()V";
 

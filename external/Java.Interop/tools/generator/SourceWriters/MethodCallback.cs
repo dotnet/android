@@ -83,12 +83,16 @@ namespace generator.SourceWriters
 		public override void Write (CodeWriter writer)
 		{
 			delegate_field.Write (writer);
-			writer.WriteLine ("#pragma warning disable 0169");
+
+			writer.WriteLineNoIndent ("#pragma warning disable 0169");
 
 			delegate_getter.Write (writer);
+			writer.WriteLine ();
+
 			base.Write (writer);
 
-			writer.WriteLine ("#pragma warning restore 0169");
+			writer.WriteLineNoIndent ("#pragma warning restore 0169");
+			writer.WriteLine ();
 		}
 	}
 

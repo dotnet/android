@@ -8,12 +8,10 @@ namespace Xamarin.Test {
 	// Metadata.xml XPath class reference: path="/api/package[@name='xamarin.test']/class[@name='CSharpKeywords']"
 	[global::Android.Runtime.Register ("xamarin/test/CSharpKeywords", DoNotGenerateAcw=true)]
 	public partial class CSharpKeywords : global::Java.Lang.Object {
-
 		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/CSharpKeywords", typeof (CSharpKeywords));
+
 		internal static new IntPtr class_ref {
-			get {
-				return _members.JniPeerType.PeerReference.Handle;
-			}
+			get { return _members.JniPeerType.PeerReference.Handle; }
 		}
 
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -28,7 +26,9 @@ namespace Xamarin.Test {
 			get { return _members.ManagedPeerType; }
 		}
 
-		protected CSharpKeywords (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer) {}
+		protected CSharpKeywords (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
+		{
+		}
 
 		static Delegate cb_usePartial_I;
 #pragma warning disable 0169

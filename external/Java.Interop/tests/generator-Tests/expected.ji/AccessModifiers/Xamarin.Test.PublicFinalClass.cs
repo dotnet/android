@@ -8,12 +8,10 @@ namespace Xamarin.Test {
 	// Metadata.xml XPath class reference: path="/api/package[@name='xamarin.test']/class[@name='PublicFinalClass']"
 	[global::Android.Runtime.Register ("xamarin/test/PublicFinalClass", DoNotGenerateAcw=true)]
 	public sealed partial class PublicFinalClass : global::Xamarin.Test.BasePublicClass {
-
 		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/PublicFinalClass", typeof (PublicFinalClass));
+
 		internal static new IntPtr class_ref {
-			get {
-				return _members.JniPeerType.PeerReference.Handle;
-			}
+			get { return _members.JniPeerType.PeerReference.Handle; }
 		}
 
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
@@ -28,7 +26,9 @@ namespace Xamarin.Test {
 			get { return _members.ManagedPeerType; }
 		}
 
-		internal PublicFinalClass (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer) {}
+		internal PublicFinalClass (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
+		{
+		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='PublicFinalClass']/method[@name='publicMethod' and count(parameter)=0]"
 		[Register ("publicMethod", "()V", "")]
