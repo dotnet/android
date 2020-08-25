@@ -83,6 +83,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     <Output TaskParameter="LibraryResourceFiles" ItemName="_LibraryResourceFiles" />
     <Output TaskParameter="LibraryResourceFiles" ItemName="_CompileResourcesInputs" />
   </CollectNonEmptyDirectories>
+  <ItemGroup>
+    <FileWrites Include="@(_LibraryResourceDirectories->'%(FilesCache)')" />
+  </ItemGroup>
 </Target>
 
 <Target Name="_ConvertResourcesCases"
