@@ -24,8 +24,6 @@
 	#include "logger.h"
 #endif  /* !defined (ANDROID) */
 
-#include <dlfcn.h>
-
 #if defined (ANDROID) || defined (XAMARIN_ANDROID_DYLIB_MONO)
 using namespace xamarin::android;
 #endif
@@ -75,23 +73,6 @@ struct JavaInteropGCBridge {
 	int                                 gref_log_level, lref_log_level;
 	int                                 gref_cleanup,   lref_cleanup;
 };
-
-typedef char* (*MonoThreadGetNameUtf8)(MonoThread*);
-typedef int32_t (*MonoThreadGetManagedId)(MonoThread*);
-
-static MonoThreadGetManagedId    _mono_thread_get_managed_id;
-static MonoThreadGetNameUtf8     _mono_thread_get_name_utf8;
-
-static void
-lookup_optional_mono_thread_functions (void)
-{
-	void *h = dlopen (NULL, RTLD_LAZY);
-	if (!h)
-		return;
-
-	_mono_thread_get_managed_id     = reinterpret_cast<MonoThreadGetManagedId>(dlsym (h, "mono_thread_get_managed_id"));
-	_mono_thread_get_name_utf8      = reinterpret_cast<MonoThreadGetNameUtf8>(dlsym (h, "mono_thread_get_name_utf8"));
-}
 
 static jobject
 lref_to_gref (JNIEnv *env, jobject lref)
@@ -274,8 +255,6 @@ java_interop_gc_bridge_new (JavaVM *jvm)
 		exit (FATAL_EXIT_CANNOT_FIND_MONO);
 	}
 #endif  /* defined (XAMARIN_ANDROID_DYLIB_MONO) */
-
-	lookup_optional_mono_thread_functions ();
 
 	JavaInteropGCBridge bridge = {0};
 
@@ -1237,26 +1216,15 @@ gc_is_bridge_object (MonoObject *object)
 static char *
 get_thread_name (void)
 {
-	if (_mono_thread_get_name_utf8) {
-		MonoThread *thread = mono_thread_current ();
-		return _mono_thread_get_name_utf8 (thread);
-	}
-	return strdup ("finalizer");
+	MonoThread *thread = mono_thread_current ();
+	return mono_thread_get_name_utf8 (thread);
 }
 
 static int64_t
 get_thread_id (void)
 {
-	if (_mono_thread_get_managed_id) {
-		MonoThread *thread = mono_thread_current ();
-		return _mono_thread_get_managed_id (thread);
-	}
-#if __linux__
-	int64_t tid = (int64_t)((pid_t)syscall(SYS_gettid));
-#else
-	int64_t tid = (int64_t) pthread_self ();
-#endif
-	return tid;
+	MonoThread *thread = mono_thread_current ();
+	return mono_thread_get_managed_id (thread);
 }
 
 static void

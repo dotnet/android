@@ -1,6 +1,8 @@
 #ifndef __JAVA_INTEROP_UTIL_H__
 #define __JAVA_INTEROP_UTIL_H__
 
+#include <cstdlib>
+
 #ifdef WINDOWS
 /* Those two conversion functions are only properly implemented on Windows
  * because that's the only place where they should be useful.
@@ -44,7 +46,7 @@ _assert_valid_pointer (void *p, size_t size)
 		}
 
 		log_fatal (LOG_DEFAULT, "Out of memory!");
-		exit (FATAL_EXIT_OUT_OF_MEMORY);
+		std::exit (FATAL_EXIT_OUT_OF_MEMORY);
 	}
 
 	return p;

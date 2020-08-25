@@ -4,7 +4,7 @@
     <OutputPath>$(ToolOutputFullPath)</OutputPath>
     <JNIEnvGenPath>$(BuildToolOutputFullPath)</JNIEnvGenPath>
     <OutputName>java-interop</OutputName>
-    <DefineSymbols>JI_DLL_EXPORT MONODEVELOP MONO_DLL_EXPORT</DefineSymbols>
+    <DefineSymbols>JI_DLL_EXPORT MONODEVELOP JAVA_INTEROP_DLL_EXPORT</DefineSymbols>
     <SourceDirectory>.</SourceDirectory>
   </PropertyGroup>
 
@@ -18,8 +18,12 @@
 
   <ItemGroup>
     <ClInclude Include="java-interop.h" />
+    <ClInclude Include="java-interop-dlfcn.h" />
     <ClInclude Include="java-interop-gc-bridge.h" />
+    <ClInclude Include="java-interop-jvm.h" />
+    <ClInclude Include="java-interop-logger.h" />
     <ClInclude Include="java-interop-mono.h" />
+    <ClInclude Include="java-interop-util.h" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -37,6 +41,7 @@
   <ItemGroup>
     <ClCompile Include="jni.c" />
     <ClCompile Include="java-interop.cc" />
+    <ClCompile Include="java-interop-dlfcn.cc" />
     <ClCompile Include="java-interop-jvm.cc" />
     <ClCompile Include="java-interop-logger.cc" />
     <ClCompile Include="java-interop-mono.cc" />

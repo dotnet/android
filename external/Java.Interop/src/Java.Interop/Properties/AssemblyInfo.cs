@@ -1,5 +1,8 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+
+[assembly: DefaultDllImportSearchPathsAttribute (DllImportSearchPath.SafeDirectories | DllImportSearchPath.AssemblyDirectory)]
 
 [assembly: AssemblyTitle ("Java.Interop")]
 [assembly: AssemblyDescription ("")]

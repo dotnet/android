@@ -9,43 +9,60 @@
 
   <PropertyGroup>
     <_MacLib>$(OutputPath)/lib$(OutputName).dylib</_MacLib>
+    <_UnixLib>$(OutputPath)/lib$(OutputName).so</_UnixLib>
   </PropertyGroup>
 
-  <Target Name="_CompileObjectFiles"
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PreprocessorDefinitions>$([MSBuild]::Unescape($(DefineSymbols.Replace(' ', ';'))))</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$([MSBuild]::Unescape($(_MonoIncludePath)));$([MSBuild]::Unescape($(_JdkIncludePath)))</AdditionalIncludeDirectories>
+      <Obj Condition=" '$(OS)' != 'Windows_NT' ">obj/$(Configuration)/%(Filename).o</Obj>
+    </ClCompile>
+  </ItemDefinitionGroup>
+
+  <Target Name="_CompileUnixObjectFiles"
       Condition=" '$(OS)' != 'Windows_NT' "
       DependsOnTargets="BuildJni_c"
-      Inputs="@(ClCompile)"
-      Outputs="obj\$(Configuration)\%(Filename).o">
+      Inputs="@(ClCompile);@(ClInclude)"
+      Outputs="%(ClCompile.Obj)">
     <MakeDir Directories="obj\$(Configuration)" />
     <ItemGroup>
+      <_Cl Include="@(ClCompile)">
+        <Compiler Condition=" '%(Extension)' == '.c' ">gcc -std=c99 -fPIC</Compiler>
+        <Compiler Condition=" '%(Extension)' == '.cc' ">g++ -std=c++17 -fPIC</Compiler>
+      </_Cl>
       <_Defines Include="%(ClCompile.PreprocessorDefinitions)" />
       <_Includes Include="%(ClCompile.AdditionalIncludeDirectories)" />
     </ItemGroup>
     <PropertyGroup>
       <_Arch Condition=" Exists ('/Library/Frameworks/') ">-m64</_Arch>
-      <_Cc Condition=" '%(ClCompile.Extension)' == '.c' ">gcc -std=c99 -fPIC</_Cc>
-      <_Cc Condition=" '%(ClCompile.Extension)' == '.cc' ">g++ -std=c++11 -fPIC</_Cc>
       <_Def>@(_Defines->'-D%(Identity)', ' ')</_Def>
       <_Inc>@(_Includes->'-I "%(Identity)"', ' ')</_Inc>
     </PropertyGroup>
     <Exec
-        Command="$(_Cc) -c -g $(_Arch) -o &quot;obj/$(Configuration)/%(ClCompile.Filename).o&quot; $(_Def) $(_Inc) &quot;%(Identity)&quot;"
+        Command="%(_Cl.Compiler) -c -g $(_Arch) -o &quot;%(_Cl.Obj)&quot; $(_Def) $(_Inc) &quot;%(_Cl.Identity)&quot;"
     />
   </Target>
 
   <Target Name="BuildMac"
       AfterTargets="Build"
       Condition=" '$(OS)' != 'Windows_NT' And Exists ('/Library/Frameworks/')"
-      DependsOnTargets="_CompileObjectFiles"
-      Inputs="@(ClCompile)"
+      DependsOnTargets="_CompileUnixObjectFiles"
+      Inputs="@(ClCompile->'%(Obj)')"
       Outputs="$(_MacLib)">
+    <ItemGroup>
+      <_Objs Include="%(ClCompile.Obj)" />
+    </ItemGroup>
     <PropertyGroup>
       <_LinkFlags>-fvisibility=hidden -Wl,-undefined -Wl,suppress -Wl,-flat_namespace</_LinkFlags>
       <_Libs>$(MonoLibs)</_Libs>
-      <_Files>@(ClCompile->'obj\$(Configuration)\%(Filename).o', ' ')</_Files>
+      <_Files>@(_Objs->'%(Identity)', ' ')</_Files>
     </PropertyGroup>
     <!-- Use 'IgnoreStandardErrorWarningFormat' to ignore 'ld: warning: text-based stub file X and and library file Y are out of sync' warnings. -->
-    <Exec Command="gcc -g -shared -m64 -std=c99 -fPIC -o &quot;$(_MacLib)&quot; $(_LinkFlags) $(_Libs) $(_Files)" IgnoreStandardErrorWarningFormat="true" />
+    <Exec
+        Command="gcc -g -shared -m64 -std=c99 -fPIC -o &quot;$(_MacLib)&quot; $(_LinkFlags) $(_Libs) $(_Files)"
+        IgnoreStandardErrorWarningFormat="true"
+    />
     <!-- Mono 4.4.0 (mono-4.4.0-branch/a3fabf1) has an incorrect shared library name. Fix it -->
     <Exec Command="install_name_tool -change /private/tmp/source-mono-4.4.0/bockbuild-mono-4.4.0-branch/profiles/mono-mac-xamarin/package-root/lib/libmonosgen-2.0.1.dylib /Library/Frameworks/Mono.framework/Libraries/libmonosgen-2.0.1.dylib &quot;$(_MacLib)&quot;" />
   </Target>
@@ -53,28 +70,25 @@
   <Target Name="BuildUnixLibraries"
       AfterTargets="Build"
       Condition=" '$(OS)' != 'Windows_NT' And !Exists ('/Library/Frameworks/')"
-      DependsOnTargets="_CompileObjectFiles"
-      Inputs="@(ClCompile)"
-      Outputs="$(OutputPath)\lib$(OutputName).so">
-    <PropertyGroup>
-      <_FixedDefines>$(DefineSymbols.Split(' '))</_FixedDefines>
-    </PropertyGroup>
+      DependsOnTargets="_CompileUnixObjectFiles"
+      Inputs="@(ClCompile->'%(Obj)')"
+      Outputs="$(_UnixLib)">
     <ItemGroup>
-      <_Defines Include="$(_FixedDefines)" />
+      <_Objs Include="%(ClCompile.Obj)" />
     </ItemGroup>
     <PropertyGroup>
       <_LinkFlags>-fvisibility=hidden -Wl,-undefined -Wl,suppress -Wl,-flat_namespace -fPIC</_LinkFlags>
       <_Libs>$(MonoLibs)</_Libs>
-      <_Files>@(ClCompile->'obj\$(Configuration)\%(Filename).o', ' ')</_Files>
+      <_Files>@(_Objs->'%(Identity)', ' ')</_Files>
     </PropertyGroup>
-    <Exec Command="g++ -g -shared -o &quot;$(OutputPath)/lib$(OutputName).so&quot; $(_LinkFlags) $(_Libs) $(_Files)" />
+    <Exec Command="g++ -g -shared -o &quot;$(_UnixLib)&quot; $(_LinkFlags) $(_Libs) $(_Files)" />
   </Target>
 
   <Target Name="Clean">
     <RemoveDir Directories="obj" />
     <Delete Files="jni.c" />
     <Delete
-        Files="$(OutputPath)\lib$(OutputName).dylib"
+        Files="$(_MacLib);$(_UnixLib)"
         Condition=" '$(OS)' != 'Windows_NT' "
     />
   </Target>
