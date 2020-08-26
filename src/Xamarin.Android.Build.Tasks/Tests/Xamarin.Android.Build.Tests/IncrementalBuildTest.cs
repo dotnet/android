@@ -1165,6 +1165,43 @@ namespace Lib2
 		}
 
 		[Test]
+		public void AndroidAssetChange ()
+		{
+			var text = "Foo";
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.OtherBuildItems.Add (new AndroidItem.AndroidAsset ("Assets\\Foo.txt") {
+				TextContent = () => text
+			});
+			using (var b = CreateApkBuilder ()) {
+				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, "UnnamedProject.UnnamedProject.apk");
+				Assert.IsTrue (b.Build (proj), "first build should succeed");
+				AssertAssetContents (apk);
+
+				// AndroidAsset change
+				text = "Bar";
+				proj.Touch ("Assets\\Foo.txt");
+				Assert.IsTrue (b.Build (proj), "second build should succeed");
+
+				AssertAssetContents (apk);
+			}
+
+			void AssertAssetContents (string apk)
+			{
+				FileAssert.Exists (apk);
+				using (var zip = ZipHelper.OpenZip (apk)) {
+					var entry = zip.ReadEntry ("assets/Foo.txt");
+					Assert.IsNotNull (entry, "Foo.txt should exist in apk!");
+					using (var stream = new MemoryStream ())
+					using (var reader = new StreamReader (stream)) {
+						entry.Extract (stream);
+						stream.Position = 0;
+						Assert.AreEqual (text, reader.ReadToEnd ());
+					}
+				}
+			}
+		}
+
+		[Test]
 		public void AndroidAssetMissing ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
