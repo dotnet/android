@@ -31,6 +31,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Java.Interop.Localization\Java.Interop.Localization.csproj" />
     <ProjectReference Include="..\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil.csproj" />
     <ProjectReference Include="..\Java.Interop.Tools.Diagnostics\Java.Interop.Tools.Diagnostics.csproj" />
   </ItemGroup>

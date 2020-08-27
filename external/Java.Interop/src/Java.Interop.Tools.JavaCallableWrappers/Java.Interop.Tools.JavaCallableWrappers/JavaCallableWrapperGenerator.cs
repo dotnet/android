@@ -110,11 +110,11 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			this.cache = cache ?? new TypeDefinitionCache ();
 
 			if (type.IsEnum || type.IsInterface || type.IsValueType)
-				Diagnostic.Error (4200, LookupSource (type), "Can only generate Java wrappers for 'class' types, not type '{0}'.", type.FullName);
+				Diagnostic.Error (4200, LookupSource (type), Localization.Resources.JavaCallableWrappers_XA4200, type.FullName);
 
 			string jniName = JavaNativeTypeManager.ToJniName (type);
 			if (jniName == null)
-				Diagnostic.Error (4201, LookupSource (type), "Unable to determine Java name for type {0}", type.FullName);
+				Diagnostic.Error (4201, LookupSource (type), Localization.Resources.JavaCallableWrappers_XA4201, type.FullName);
 			if (!string.IsNullOrEmpty (outerType)) {
 				string p;
 				jniName = jniName.Substring (outerType.Length + 1);
@@ -127,7 +127,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 					 type.IsSubclassOf ("Android.App.Service", cache) ||
 					 type.IsSubclassOf ("Android.Content.BroadcastReceiver", cache) ||
 					 type.IsSubclassOf ("Android.Content.ContentProvider", cache)))
-				Diagnostic.Error (4203, LookupSource (type), "The Name property must be a fully qualified 'package.TypeName' value, and no package was found for '{0}'.", jniName);
+				Diagnostic.Error (4203, LookupSource (type), Localization.Resources.JavaCallableWrappers_XA4203, jniName);
 
 			foreach (MethodDefinition minfo in type.Methods.Where (m => !m.IsConstructor)) {
 				var baseRegisteredMethod = GetBaseRegisteredMethod (minfo);
@@ -148,7 +148,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 						if (d == null)
 							Diagnostic.Error (4204,
 									LookupSource (type),
-									"Unable to resolve interface type '{0}'. Are you missing an assembly reference?",
+									Localization.Resources.JavaCallableWrappers_XA4204,
 									r.FullName);
 						return d;
 					})
@@ -372,7 +372,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				foreach (RegisterAttribute attr in GetRegisterAttributes (registeredMethod)) {
 					// Check for Kotlin-mangled methods that cannot be overridden
 					if (attr.Name.Contains ("-impl") || (attr.Name.Length > 7 && attr.Name[attr.Name.Length - 8] == '-'))
-						Diagnostic.Error (4217, LookupSource (implementedMethod), $"Cannot override Kotlin-generated method '{attr.Name}' because it is not a valid Java method name. This method can only be overridden from Kotlin.");
+						Diagnostic.Error (4217, LookupSource (implementedMethod), Localization.Resources.JavaCallableWrappers_XA4217, attr.Name);
 
 					var msig = new Signature (implementedMethod, attr);
 					if (!registeredMethod.IsConstructor && !methods.Any (m => m.Name == msig.Name && m.Params == msig.Params))
@@ -380,7 +380,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				}
 			foreach (ExportAttribute attr in GetExportAttributes (implementedMethod)) {
 				if (type.HasGenericParameters)
-					Diagnostic.Error (4206, LookupSource (implementedMethod), "[Export] cannot be used on a generic type.");
+					Diagnostic.Error (4206, LookupSource (implementedMethod), Localization.Resources.JavaCallableWrappers_XA4206);
 
 				var msig = new Signature (implementedMethod, attr, cache);
 				if (!string.IsNullOrEmpty (attr.SuperArgumentsString)) {
@@ -391,7 +391,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			}
 			foreach (ExportFieldAttribute attr in GetExportFieldAttributes (implementedMethod)) {
 				if (type.HasGenericParameters)
-					Diagnostic.Error (4207, LookupSource (implementedMethod), "[ExportField] cannot be used on a generic type.");
+					Diagnostic.Error (4207, LookupSource (implementedMethod), Localization.Resources.JavaCallableWrappers_XA4207);
 
 				var msig = new Signature (implementedMethod, attr, cache);
 				if (!implementedMethod.IsConstructor && !methods.Any (m => m.Name == msig.Name && m.Params == msig.Params)) {
@@ -635,7 +635,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			TypeDefinition d = r.Resolve ();
 			string jniName = JavaNativeTypeManager.ToJniName (d);
 			if (jniName == null)
-				Diagnostic.Error (4201, "Unable to determine JNI name for type {0}.", r.FullName);
+				Diagnostic.Error (4201, Localization.Resources.JavaCallableWrappers_XA4201, r.FullName);
 			return jniName.Replace ('/', '.').Replace ('$', '.');
 		}
 
@@ -669,9 +669,9 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				: this (method.Name, GetJniSignature (method, cache), "__export__", null, null, null)
 			{
 				if (method.HasParameters)
-					Diagnostic.Error (4205, JavaCallableWrapperGenerator.LookupSource (method), "[ExportField] can only be used on methods with 0 parameters.");
+					Diagnostic.Error (4205, JavaCallableWrapperGenerator.LookupSource (method), Localization.Resources.JavaCallableWrappers_XA4205);
 				if (method.ReturnType.MetadataType == MetadataType.Void)
-					Diagnostic.Error (4208, JavaCallableWrapperGenerator.LookupSource (method), "[ExportField] cannot be used on a method returning void.");
+					Diagnostic.Error (4208, JavaCallableWrapperGenerator.LookupSource (method), Localization.Resources.JavaCallableWrappers_XA4208);
 				IsExport = true;
 				IsStatic = method.IsStatic;
 				JavaAccess = JavaCallableWrapperGenerator.GetJavaAccess (method.Attributes & MethodAttributes.MemberAccessMask);

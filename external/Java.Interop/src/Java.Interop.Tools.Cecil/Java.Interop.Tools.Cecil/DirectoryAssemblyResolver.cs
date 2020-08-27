@@ -135,7 +135,7 @@ namespace Java.Interop.Tools.Cecil {
 			try {
 				assembly  = ReadAssembly (fileName);
 			} catch (Exception e) {
-				Diagnostic.Error (9, e, "Error while loading assembly: {0}", fileName);
+				Diagnostic.Error (9, e, Localization.Resources.CecilResolver_XA0009, fileName);
 			}
 			cache [name] = assembly;
 			return assembly;

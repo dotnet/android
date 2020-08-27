@@ -117,6 +117,10 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="CecilResolver_XA0009" xml:space="preserve">
+    <value>Error while loading assembly: '{0}'.</value>
+    <comment>{0} - File name</comment>
+  </data>
   <data name="Generator_BG4000" xml:space="preserve">
     <value>Failed to remove old constants: {0}.</value>
     <comment>{0} - The list of constants that could not be removed.
@@ -286,5 +290,46 @@ The following terms should not be translated: Metadata.xml.</comment>
   <data name="Generator_BG8C01" xml:space="preserve">
     <value>For type '{0}', base interface '{1}' is invalid.</value>
     <comment>{0}, {1} - .NET types.</comment>
+  </data>
+  <data name="JavaCallableWrappers_XA4200" xml:space="preserve">
+    <value>Cannot generate Java wrapper for type '{0}'. Only 'class' types are supported.</value>
+    <comment>{0} - Java type.
+The following terms should not be translated:
+class.</comment>
+  </data>
+  <data name="JavaCallableWrappers_XA4201" xml:space="preserve">
+    <value>Cannot determine JNI name for type '{0}'.</value>
+    <comment>{0} - Java type.
+The following terms should not be translated: JNI.</comment>
+  </data>
+  <data name="JavaCallableWrappers_XA4203" xml:space="preserve">
+    <value>The 'Name' property must be a fully qualified type like 'com.example.MyClass' and no package was found for '{0}'.</value>
+    <comment>{0} - Java type.
+The following terms should not be translated:
+Name, com.example.MyClass.</comment>
+  </data>
+  <data name="JavaCallableWrappers_XA4204" xml:space="preserve">
+    <value>Unable to resolve interface type '{0}'. Are you missing an assembly reference?</value>
+    <comment>{0} - Java interface.</comment>
+  </data>
+  <data name="JavaCallableWrappers_XA4205" xml:space="preserve">
+    <value>[ExportField] can only be used on methods with 0 parameters.</value>
+    <comment>The following terms should not be translated: [ExportField].</comment>
+  </data>
+  <data name="JavaCallableWrappers_XA4206" xml:space="preserve">
+    <value>[Export] cannot be used on a generic type.</value>
+    <comment>The following terms should not be translated: [Export].</comment>
+  </data>
+  <data name="JavaCallableWrappers_XA4207" xml:space="preserve">
+    <value>[ExportField] cannot be used on a generic type.</value>
+    <comment>The following terms should not be translated: [ExportField].</comment>
+  </data>
+  <data name="JavaCallableWrappers_XA4208" xml:space="preserve">
+    <value>[ExportField] cannot be used on a method returning 'void'.</value>
+    <comment>The following terms should not be translated: [ExportField], void.</comment>
+  </data>
+  <data name="JavaCallableWrappers_XA4217" xml:space="preserve">
+    <value>Cannot override Kotlin-generated method '{0}' because it is not a valid Java method name. This method can only be overridden from Kotlin.</value>
+    <comment>{0} - Kotlin method name.</comment>
   </data>
 </root>

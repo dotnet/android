@@ -61,6 +61,15 @@ namespace Java.Interop.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error while loading assembly: &apos;{0}&apos;..
+        /// </summary>
+        public static string CecilResolver_XA0009 {
+            get {
+                return ResourceManager.GetString("CecilResolver_XA0009", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to remove old constants: {0}..
         /// </summary>
         public static string Generator_BG4000 {
@@ -381,6 +390,87 @@ namespace Java.Interop.Localization {
         public static string Generator_BG8C01 {
             get {
                 return ResourceManager.GetString("Generator_BG8C01", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot generate Java wrapper for type &apos;{0}&apos;. Only &apos;class&apos; types are supported..
+        /// </summary>
+        public static string JavaCallableWrappers_XA4200 {
+            get {
+                return ResourceManager.GetString("JavaCallableWrappers_XA4200", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot determine JNI name for type &apos;{0}&apos;..
+        /// </summary>
+        public static string JavaCallableWrappers_XA4201 {
+            get {
+                return ResourceManager.GetString("JavaCallableWrappers_XA4201", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The &apos;Name&apos; property must be a fully qualified type like &apos;com.example.MyClass&apos; and no package was found for &apos;{0}&apos;..
+        /// </summary>
+        public static string JavaCallableWrappers_XA4203 {
+            get {
+                return ResourceManager.GetString("JavaCallableWrappers_XA4203", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to resolve interface type &apos;{0}&apos;. Are you missing an assembly reference?.
+        /// </summary>
+        public static string JavaCallableWrappers_XA4204 {
+            get {
+                return ResourceManager.GetString("JavaCallableWrappers_XA4204", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to [ExportField] can only be used on methods with 0 parameters..
+        /// </summary>
+        public static string JavaCallableWrappers_XA4205 {
+            get {
+                return ResourceManager.GetString("JavaCallableWrappers_XA4205", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to [Export] cannot be used on a generic type..
+        /// </summary>
+        public static string JavaCallableWrappers_XA4206 {
+            get {
+                return ResourceManager.GetString("JavaCallableWrappers_XA4206", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to [ExportField] cannot be used on a generic type..
+        /// </summary>
+        public static string JavaCallableWrappers_XA4207 {
+            get {
+                return ResourceManager.GetString("JavaCallableWrappers_XA4207", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to [ExportField] cannot be used on a method returning &apos;void&apos;..
+        /// </summary>
+        public static string JavaCallableWrappers_XA4208 {
+            get {
+                return ResourceManager.GetString("JavaCallableWrappers_XA4208", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot override Kotlin-generated method &apos;{0}&apos; because it is not a valid Java method name. This method can only be overridden from Kotlin..
+        /// </summary>
+        public static string JavaCallableWrappers_XA4217 {
+            get {
+                return ResourceManager.GetString("JavaCallableWrappers_XA4217", resourceCulture);
             }
         }
     }

@@ -2,6 +2,11 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="ko" original="../Resources.resx">
     <body>
+      <trans-unit id="CecilResolver_XA0009">
+        <source>Error while loading assembly: '{0}'.</source>
+        <target state="new">Error while loading assembly: '{0}'.</target>
+        <note>{0} - File name</note>
+      </trans-unit>
       <trans-unit id="Generator_BG4000">
         <source>Failed to remove old constants: {0}.</source>
         <target state="new">Failed to remove old constants: {0}.</target>
@@ -207,6 +212,56 @@ The following terms should not be translated: Metadata.xml.</note>
         <source>For type '{0}', base interface '{1}' is invalid.</source>
         <target state="new">For type '{0}', base interface '{1}' is invalid.</target>
         <note>{0}, {1} - .NET types.</note>
+      </trans-unit>
+      <trans-unit id="JavaCallableWrappers_XA4200">
+        <source>Cannot generate Java wrapper for type '{0}'. Only 'class' types are supported.</source>
+        <target state="new">Cannot generate Java wrapper for type '{0}'. Only 'class' types are supported.</target>
+        <note>{0} - Java type.
+The following terms should not be translated:
+class.</note>
+      </trans-unit>
+      <trans-unit id="JavaCallableWrappers_XA4201">
+        <source>Cannot determine JNI name for type '{0}'.</source>
+        <target state="new">Cannot determine JNI name for type '{0}'.</target>
+        <note>{0} - Java type.
+The following terms should not be translated: JNI.</note>
+      </trans-unit>
+      <trans-unit id="JavaCallableWrappers_XA4203">
+        <source>The 'Name' property must be a fully qualified type like 'com.example.MyClass' and no package was found for '{0}'.</source>
+        <target state="new">The 'Name' property must be a fully qualified type like 'com.example.MyClass' and no package was found for '{0}'.</target>
+        <note>{0} - Java type.
+The following terms should not be translated:
+Name, com.example.MyClass.</note>
+      </trans-unit>
+      <trans-unit id="JavaCallableWrappers_XA4204">
+        <source>Unable to resolve interface type '{0}'. Are you missing an assembly reference?</source>
+        <target state="new">Unable to resolve interface type '{0}'. Are you missing an assembly reference?</target>
+        <note>{0} - Java interface.</note>
+      </trans-unit>
+      <trans-unit id="JavaCallableWrappers_XA4205">
+        <source>[ExportField] can only be used on methods with 0 parameters.</source>
+        <target state="new">[ExportField] can only be used on methods with 0 parameters.</target>
+        <note>The following terms should not be translated: [ExportField].</note>
+      </trans-unit>
+      <trans-unit id="JavaCallableWrappers_XA4206">
+        <source>[Export] cannot be used on a generic type.</source>
+        <target state="new">[Export] cannot be used on a generic type.</target>
+        <note>The following terms should not be translated: [Export].</note>
+      </trans-unit>
+      <trans-unit id="JavaCallableWrappers_XA4207">
+        <source>[ExportField] cannot be used on a generic type.</source>
+        <target state="new">[ExportField] cannot be used on a generic type.</target>
+        <note>The following terms should not be translated: [ExportField].</note>
+      </trans-unit>
+      <trans-unit id="JavaCallableWrappers_XA4208">
+        <source>[ExportField] cannot be used on a method returning 'void'.</source>
+        <target state="new">[ExportField] cannot be used on a method returning 'void'.</target>
+        <note>The following terms should not be translated: [ExportField], void.</note>
+      </trans-unit>
+      <trans-unit id="JavaCallableWrappers_XA4217">
+        <source>Cannot override Kotlin-generated method '{0}' because it is not a valid Java method name. This method can only be overridden from Kotlin.</source>
+        <target state="new">Cannot override Kotlin-generated method '{0}' because it is not a valid Java method name. This method can only be overridden from Kotlin.</target>
+        <note>{0} - Kotlin method name.</note>
       </trans-unit>
     </body>
   </file>
