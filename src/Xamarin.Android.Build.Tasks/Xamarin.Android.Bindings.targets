@@ -44,7 +44,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
     <TargetFrameworkIdentifier>MonoAndroid</TargetFrameworkIdentifier>
     <MonoAndroidVersion>v5.0</MonoAndroidVersion>
     <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == '' And '$(AndroidUseLatestPlatformSdk)' == 'False'">v5.0</TargetFrameworkVersion>
-    <MaxSupportedLangVersion Condition=" '$(MaxSupportedLangVersion)' == '' ">8.0</MaxSupportedLangVersion>
+    <LangVersion Condition=" '$(LangVersion)' == '' ">8.0</LangVersion>
     <AndroidClassParser Condition=" '$(AndroidClassParser)' == '' ">jar2xml</AndroidClassParser>
     <AndroidCodegenTarget Condition=" '$(AndroidCodegenTarget)' == '' ">XAJavaInterop1</AndroidCodegenTarget>
     <_AndroidIsBindingProject>True</_AndroidIsBindingProject>
