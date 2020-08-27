@@ -51,26 +51,34 @@ namespace Android.Runtime {
 
 			ig.Emit (OpCodes.Call, wait_for_bridge_processing_method!);
 
-			var label = ig.BeginExceptionBlock ();
+			bool  filter = Debugger.IsAttached || !JNIEnv.PropagateExceptions;
+			if (!filter) {
+				var label = ig.BeginExceptionBlock ();
 
-			for (int i = 0; i < param_types.Length; i++)
-				ig.Emit (OpCodes.Ldarg, i);
-			ig.Emit (OpCodes.Call, dlg.Method);
+				for (int i = 0; i < param_types.Length; i++)
+					ig.Emit (OpCodes.Ldarg, i);
+				ig.Emit (OpCodes.Call, dlg.Method);
 
-			if (retval != null)
-				ig.Emit (OpCodes.Stloc, retval);
+				if (retval != null)
+					ig.Emit (OpCodes.Stloc, retval);
 
-			ig.Emit (OpCodes.Leave, label);
+				ig.Emit (OpCodes.Leave, label);
 
-			ig.BeginCatchBlock (typeof (Exception));
+				ig.BeginCatchBlock (typeof (Exception));
 
-			ig.Emit (OpCodes.Dup);
-			ig.Emit (OpCodes.Call, exception_handler_method!);
+				ig.Emit (OpCodes.Dup);
+				ig.Emit (OpCodes.Call, exception_handler_method!);
 
-			if (filter)
-				ig.Emit (OpCodes.Throw);
+				ig.EndExceptionBlock ();
+			}
+			else { //let the debugger handle the exception
+				for (int i = 0; i < param_types.Length; i++)
+					ig.Emit (OpCodes.Ldarg, i);
+				ig.Emit (OpCodes.Call, dlg.Method);
 
-			ig.EndExceptionBlock ();
+				if (retval != null)
+					ig.Emit (OpCodes.Stloc, retval);
+			}
 
 			if (retval != null)
 				ig.Emit (OpCodes.Ldloc, retval);
