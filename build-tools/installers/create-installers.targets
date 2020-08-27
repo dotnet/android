@@ -115,6 +115,7 @@
   </ItemGroup>
   <ItemGroup>
     <_MSBuildFiles Include="$(MSBuildSrcDir)\android-support-multidex.jar" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\apksigner.jar" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\aprofutil.exe"   Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\aprofutil.pdb"   Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\cil-strip.exe"   Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />

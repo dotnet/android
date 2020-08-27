@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.Build.NoTargets/1.0.88">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <Import Project="..\..\Configuration.props" />
+
+  <PropertyGroup>
+    <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android\</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="**" />
+    <None Include="build.gradle" />
+    <None Include="build\libs\apksigner.jar" CopyToOutputDirectory="PreserveNewest" Link="apksigner.jar" />
+  </ItemGroup>
+
+  <Target Name="_BuildGradle"
+      BeforeTargets="GetCopyToOutputDirectoryItems"
+      Inputs="$(MSBuildThisFile);build.gradle"
+      Outputs="build\libs\apksigner.jar">
+    <Exec
+        Command="&quot;$(GradleWPath)&quot; jar $(GradleArgs) -PjavaSourceVer=$(JavacSourceVersion) -PjavaTargetVer=$(JavacTargetVersion)"
+        EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)"
+        WorkingDirectory="$(MSBuildThisFileDirectory)"
+    />
+  </Target>
+
+  <Target Name="_CleanGradle" BeforeTargets="Clean">
+    <Exec
+        Command="&quot;$(GradleWPath)&quot; clean $(GradleArgs)"
+        EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)"
+        WorkingDirectory="$(MSBuildThisFileDirectory)"
+    />
+  </Target>
+</Project>

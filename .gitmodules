@@ -2,6 +2,10 @@
     path = external/android-api-docs
     url = https://github.com/xamarin/android-api-docs
     branch = master
+[submodule "external/apksig"]
+    path = external/apksig
+    url = https://android.googlesource.com/platform/tools/apksig
+    branch = platform-tools-30.0.3
 [submodule "external/debugger-libs"]
     path = external/debugger-libs
     url = https://github.com/mono/debugger-libs
