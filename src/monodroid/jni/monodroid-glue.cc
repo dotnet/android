@@ -10,7 +10,10 @@
 #include <errno.h>
 #include <limits.h>
 
+#if defined (APPLE_OS_X)
 #include <dlfcn.h>
+#endif  // def APPLE_OX_X
+
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdint.h>
@@ -82,6 +85,9 @@
 
 #include "cpp-util.hh"
 
+#include "java-interop-dlfcn.h"
+
+using namespace microsoft::java_interop;
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
 
@@ -151,7 +157,7 @@ MonodroidRuntime::setup_bundled_app (const char *dso_name)
 	if (!application_config.is_a_bundled_app)
 		return;
 
-	static int dlopen_flags = RTLD_LAZY;
+	static unsigned int dlopen_flags = JAVA_INTEROP_LIB_LOAD_LOCALLY;
 	void *libapp = nullptr;
 
 	if (androidSystem.is_embedded_dso_mode_enabled ()) {
@@ -181,11 +187,11 @@ MonodroidRuntime::setup_bundled_app (const char *dso_name)
 		}
 	}
 
-	mono_mkbundle_initialize_mono_api = reinterpret_cast<mono_mkbundle_initialize_mono_api_ptr> (dlsym (libapp, "initialize_mono_api"));
+	mono_mkbundle_initialize_mono_api = reinterpret_cast<mono_mkbundle_initialize_mono_api_ptr> (java_interop_lib_symbol (libapp, "initialize_mono_api", nullptr));
 	if (!mono_mkbundle_initialize_mono_api)
 		log_error (LOG_BUNDLE, "Missing initialize_mono_api in the application");
 
-	mono_mkbundle_init = reinterpret_cast<mono_mkbundle_init_ptr> (dlsym (libapp, "mono_mkbundle_init"));
+	mono_mkbundle_init = reinterpret_cast<mono_mkbundle_init_ptr> (java_interop_lib_symbol (libapp, "mono_mkbundle_init", nullptr));
 	if (!mono_mkbundle_init)
 		log_error (LOG_BUNDLE, "Missing mono_mkbundle_init in the application");
 	log_info (LOG_BUNDLE, "Bundled app loaded: %s", dso_name);
@@ -1064,15 +1070,12 @@ setup_gc_logging (void)
 }
 #endif
 
-force_inline int
+force_inline unsigned int
 MonodroidRuntime::convert_dl_flags (int flags)
 {
-	int lflags = flags & static_cast<int> (MONO_DL_LOCAL) ? 0: RTLD_GLOBAL;
-
-	if (flags & static_cast<int> (MONO_DL_LAZY))
-		lflags |= RTLD_LAZY;
-	else
-		lflags |= RTLD_NOW;
+	unsigned int lflags = (flags & static_cast<int> (MONO_DL_LOCAL))
+		? JAVA_INTEROP_LIB_LOAD_LOCALLY
+		: JAVA_INTEROP_LIB_LOAD_GLOBALLY;
 	return lflags;
 }
 
@@ -1099,7 +1102,7 @@ MonodroidRuntime::init_internal_api_dso (void *handle)
 
 	std::lock_guard<std::mutex> lock (api_init_lock);
 	if (api_dso_handle != nullptr) {
-		auto api_shutdown = reinterpret_cast<external_api_shutdown_fn> (dlsym (api_dso_handle, MonoAndroidInternalCalls::SHUTDOWN_FUNCTION_NAME));
+		auto api_shutdown = reinterpret_cast<external_api_shutdown_fn> (java_interop_lib_symbol (api_dso_handle, MonoAndroidInternalCalls::SHUTDOWN_FUNCTION_NAME, nullptr));
 		if (api_shutdown == nullptr) {
 			// We COULD ignore this situation, but if the function is missing it means we messed something up and thus
 			// it *is* a fatal error.
@@ -1111,7 +1114,7 @@ MonodroidRuntime::init_internal_api_dso (void *handle)
 
 	api_dso_handle = handle;
 	auto api = new MonoAndroidInternalCalls_Impl ();
-	auto api_init = reinterpret_cast<external_api_init_fn>(dlsym (handle, MonoAndroidInternalCalls::INIT_FUNCTION_NAME));
+	auto api_init = reinterpret_cast<external_api_init_fn>(java_interop_lib_symbol (handle, MonoAndroidInternalCalls::INIT_FUNCTION_NAME, nullptr));
 	if (api_init == nullptr) {
 		log_fatal (LOG_DEFAULT, "Unable to initialize Internal API library, init function '%s' not found in the module", MonoAndroidInternalCalls::INIT_FUNCTION_NAME);
 		exit (FATAL_EXIT_MONO_MISSING_SYMBOLS);
@@ -1146,7 +1149,7 @@ MonodroidRuntime::monodroid_dlopen_log_and_return (void *handle, char **err, con
 void*
 MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err, [[maybe_unused]] void *user_data)
 {
-	int dl_flags = monodroidRuntime.convert_dl_flags (flags);
+	unsigned int dl_flags = monodroidRuntime.convert_dl_flags (flags);
 	bool libmonodroid_fallback = false;
 
 	/* name is nullptr when we're P/Invoking __Internal, so remap to libxa-internal-api */
@@ -1190,11 +1193,15 @@ void*
 MonodroidRuntime::monodroid_dlsym (void *handle, const char *name, char **err, [[maybe_unused]] void *user_data)
 {
 	void *s;
+	char *e = nullptr;
 
-	s = dlsym (handle, name);
+	s = java_interop_lib_symbol (handle, name, &e);
 
 	if (!s && err) {
-		*err = utils.monodroid_strdup_printf ("Could not find symbol '%s'.", name);
+		*err = utils.monodroid_strdup_printf ("Could not find symbol '%s': %s", name, e);
+	}
+	if (e) {
+		java_interop_free (e);
 	}
 
 	return s;
@@ -1370,9 +1377,9 @@ MonodroidRuntime::disable_external_signal_handlers (void)
 	if (!androidSystem.is_mono_llvm_enabled ())
 		return;
 
-	void *llvm  = androidSystem.load_dso ("libLLVM.so", RTLD_LAZY, TRUE);
+	void *llvm  = androidSystem.load_dso ("libLLVM.so", JAVA_INTEROP_LIB_LOAD_GLOBALLY, TRUE);
 	if (llvm) {
-		bool *disable_signals = reinterpret_cast<bool*> (dlsym (llvm, "_ZN4llvm23DisablePrettyStackTraceE"));
+		bool *disable_signals = reinterpret_cast<bool*> (java_interop_lib_symbol (llvm, "_ZN4llvm23DisablePrettyStackTraceE", nullptr));
 		if (disable_signals) {
 			*disable_signals = true;
 			log_info (LOG_DEFAULT, "Disabled LLVM signal trapping");
@@ -1605,7 +1612,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	if (my_location != nullptr) {
 		simple_pointer_guard<char, false> dso_path (utils.path_combine (my_location, API_DSO_NAME));
 		log_info (LOG_DEFAULT, "Attempting to load %s", dso_path.get ());
-		api_dso_handle = dlopen (dso_path.get (), RTLD_NOW);
+		api_dso_handle = java_interop_lib_load (dso_path.get (), JAVA_INTEROP_LIB_LOAD_GLOBALLY, nullptr);
 #if defined (APPLE_OS_X)
 		delete[] my_location;
 #else   // !defined(APPLE_OS_X)
@@ -1615,11 +1622,11 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 
 	if (api_dso_handle == nullptr) {
 		log_info (LOG_DEFAULT, "Attempting to load %s with \"bare\" dlopen", API_DSO_NAME);
-		api_dso_handle = dlopen (API_DSO_NAME, RTLD_NOW);
+		api_dso_handle = java_interop_lib_load (API_DSO_NAME, JAVA_INTEROP_LIB_LOAD_GLOBALLY, nullptr);
 	}
 #endif  // defined(WINDOWS) || defined(APPLE_OS_X)
 	if (api_dso_handle == nullptr)
-		api_dso_handle = androidSystem.load_dso_from_any_directories (API_DSO_NAME, RTLD_NOW);
+		api_dso_handle = androidSystem.load_dso_from_any_directories (API_DSO_NAME, JAVA_INTEROP_LIB_LOAD_GLOBALLY);
 	init_internal_api_dso (api_dso_handle);
 
 	mono_dl_fallback_register (monodroid_dlopen, monodroid_dlsym, nullptr, nullptr);

@@ -196,7 +196,7 @@ else()
   if(WIN32 OR MINGW)
     message(STATUS "Win32 or MinGW")
     set(EXTRA_COMPILER_FLAGS "${EXTRA_COMPILER_FLAGS} -DWINDOWS -DNTDDI_VERSION=NTDDI_VISTA -D_WIN32_WINNT=_WIN32_WINNT_VISTA -fomit-frame-pointer")
-    set(EXTRA_LINKER_FLAGS "${EXTRA_LINKER_FLAGS} -ldl -lmman -static -pthread -dynamic -lmincore -lmswsock -lwsock32 -lshlwapi -lpsapi -lwinmm")
+    set(EXTRA_LINKER_FLAGS "${EXTRA_LINKER_FLAGS} -lmman -static -pthread -dynamic -lmincore -lmswsock -lwsock32 -lshlwapi -lpsapi -lwinmm")
 
     if (MINGW_TARGET_32)
       set(ANDROID_ABI "host-mxe-Win32")
@@ -298,6 +298,7 @@ set(MONODROID_SOURCES
   ${JAVA_INTEROP_SRC_PATH}/java-interop.cc
   ${JAVA_INTEROP_SRC_PATH}/java-interop-mono.cc
   ${JAVA_INTEROP_SRC_PATH}/java-interop-util.cc
+  ${JAVA_INTEROP_SRC_PATH}/java-interop-dlfcn.cc
   )
 
 set(XA_INTERNAL_API_SOURCES
@@ -392,11 +393,13 @@ else()
   set(LINK_LIBS "-lmonosgen-2.0 -lz ${EXTRA_LINKER_FLAGS}")
 endif()
 
-set(DEBUG_HELPER_LINK_LIBS "-ldl")
+if(NOT MINGW AND NOT WIN32)
+  set(DEBUG_HELPER_LINK_LIBS "-ldl")
+endif()
 if(ENABLE_NDK)
   set(LINK_LIBS "${LINK_LIBS} -llog")
   set(DEBUG_HELPER_LINK_LIBS "${DEBUG_HELPER_LINK_LIBS} -llog")
-elseif(NOT ANDROID)
+elseif(NOT ANDROID AND NOT MINGW AND NOT WIN32)
   set(LINK_LIBS "-pthread ${LINK_LIBS} -ldl")
 endif()
 

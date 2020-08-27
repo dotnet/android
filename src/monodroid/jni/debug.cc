@@ -27,12 +27,15 @@
 #include <ctype.h>
 #include <assert.h>
 #include <limits.h>
-#include <dlfcn.h>
 #include <mono/metadata/mono-debug.h>
 
 #ifdef ANDROID
 #include <android/log.h>
 #endif
+
+#if defined (APPLE_OS_X)
+#include <dlfcn.h>
+#endif  // def APPLE_OX_X
 
 #include "java-interop-util.h"
 
@@ -42,6 +45,9 @@
 #include "globals.hh"
 #include "cpp-util.hh"
 
+#include "java-interop-dlfcn.h"
+
+using namespace microsoft::java_interop;
 using namespace xamarin::android;
 
 //
@@ -79,7 +85,7 @@ Debug::monodroid_profiler_load (const char *libmono_path, const char *desc, cons
 	}
 	simple_pointer_guard<char[]> mname (mname_ptr);
 
-	int dlopen_flags = RTLD_LAZY;
+	unsigned int dlopen_flags = JAVA_INTEROP_LIB_LOAD_LOCALLY;
 	simple_pointer_guard<char[]> libname (utils.string_concat ("libmono-profiler-", mname.get (), ".so"));
 	bool found = false;
 	void *handle = androidSystem.load_dso_from_any_directories (libname, dlopen_flags);
@@ -108,7 +114,7 @@ typedef void (*ProfilerInitializer) (const char*);
 bool
 Debug::load_profiler (void *handle, const char *desc, const char *symbol)
 {
-	ProfilerInitializer func = reinterpret_cast<ProfilerInitializer> (dlsym (handle, symbol));
+	ProfilerInitializer func = reinterpret_cast<ProfilerInitializer> (java_interop_lib_symbol (handle, symbol, nullptr));
 	log_warn (LOG_DEFAULT, "Looking for profiler init symbol '%s'? %p", symbol, func);
 
 	if (func != nullptr) {
@@ -129,7 +135,7 @@ Debug::load_profiler_from_handle (void *dso_handle, const char *desc, const char
 
 	if (result)
 		return true;
-	dlclose (dso_handle);
+	java_interop_lib_close (dso_handle, nullptr);
 	return false;
 }
 

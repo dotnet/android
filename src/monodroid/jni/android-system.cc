@@ -4,7 +4,6 @@
 #include <errno.h>
 #include <assert.h>
 #include <ctype.h>
-#include <dlfcn.h>
 #include <fcntl.h>
 
 #ifdef ANDROID
@@ -27,6 +26,8 @@
 #include "jni-wrappers.hh"
 #include "xamarin-app.hh"
 #include "cpp-util.hh"
+#include "java-interop-dlfcn.h"
+#include "java-interop.h"
 
 #if defined (DEBUG) || !defined (ANDROID)
 namespace xamarin::android::internal {
@@ -39,6 +40,7 @@ namespace xamarin::android::internal {
 }
 #endif // DEBUG || !ANDROID
 
+using namespace microsoft::java_interop;
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
 
@@ -347,7 +349,7 @@ AndroidSystem::get_full_dso_path (const char *base_dir, const char *dso_path, bo
 }
 
 void*
-AndroidSystem::load_dso (const char *path, int dl_flags, bool skip_exists_check)
+AndroidSystem::load_dso (const char *path, unsigned int dl_flags, bool skip_exists_check)
 {
 	if (path == nullptr || *path == '\0')
 		return nullptr;
@@ -358,14 +360,16 @@ AndroidSystem::load_dso (const char *path, int dl_flags, bool skip_exists_check)
 		return nullptr;
 	}
 
-	void *handle = dlopen (path, dl_flags);
+	char *error = nullptr;
+	void *handle = java_interop_lib_load (path, dl_flags, &error);
 	if (handle == nullptr && utils.should_log (LOG_ASSEMBLY))
-		log_info_nocheck (LOG_ASSEMBLY, "Failed to load shared library '%s'. %s", path, dlerror ());
+		log_info_nocheck (LOG_ASSEMBLY, "Failed to load shared library '%s'. %s", path, error);
+	java_interop_free (error);
 	return handle;
 }
 
 void*
-AndroidSystem::load_dso_from_specified_dirs (const char **directories, size_t num_entries, const char *dso_name, int dl_flags)
+AndroidSystem::load_dso_from_specified_dirs (const char **directories, size_t num_entries, const char *dso_name, unsigned int dl_flags)
 {
 	assert (directories != nullptr);
 	if (dso_name == nullptr)
@@ -386,13 +390,13 @@ AndroidSystem::load_dso_from_specified_dirs (const char **directories, size_t nu
 }
 
 void*
-AndroidSystem::load_dso_from_app_lib_dirs (const char *name, int dl_flags)
+AndroidSystem::load_dso_from_app_lib_dirs (const char *name, unsigned int dl_flags)
 {
 	return load_dso_from_specified_dirs (static_cast<const char**> (app_lib_directories), app_lib_directories_size, name, dl_flags);
 }
 
 void*
-AndroidSystem::load_dso_from_override_dirs ([[maybe_unused]] const char *name, [[maybe_unused]] int dl_flags)
+AndroidSystem::load_dso_from_override_dirs ([[maybe_unused]] const char *name, [[maybe_unused]] unsigned int dl_flags)
 {
 #ifdef RELEASE
 	return nullptr;
@@ -402,7 +406,7 @@ AndroidSystem::load_dso_from_override_dirs ([[maybe_unused]] const char *name, [
 }
 
 void*
-AndroidSystem::load_dso_from_any_directories (const char *name, int dl_flags)
+AndroidSystem::load_dso_from_any_directories (const char *name, unsigned int dl_flags)
 {
 	void *handle = load_dso_from_override_dirs (name, dl_flags);
 	if (handle == nullptr)
