@@ -93,6 +93,12 @@ namespace Xamarin.Android.Tools.Bytecode
 				method.AccessFlags = MethodAccessFlags.Private;
 			}
 
+			// Hide constructor if it's the synthetic DefaultConstructorMarker one
+			foreach (var method in methods.Where (method => method.IsDefaultConstructorMarker ())) {
+				Log.Debug ($"Kotlin: Hiding synthetic default constructor in class '{method.DeclaringType?.ThisClass.Name.Value}' with signature '{method.Descriptor}'");
+				method.AccessFlags = ((method.AccessFlags ^ MethodAccessFlags.Public) & method.AccessFlags) | MethodAccessFlags.Private;
+			}
+
 			// Better parameter names in extension methods
 			foreach (var method in methods.Where (m => m.IsPubliclyVisible && m.AccessFlags.HasFlag (MethodAccessFlags.Static)))
 				FixupExtensionMethod (method);

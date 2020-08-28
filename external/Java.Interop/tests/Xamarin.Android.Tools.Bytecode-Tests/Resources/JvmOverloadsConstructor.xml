@@ -82,44 +82,6 @@
         static="false"
         visibility="public"
         bridge="false"
-        synthetic="true"
-        jni-signature="(LJvmOverloadsConstructor;IILjava/lang/String;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V">
-        <parameter
-          name="p0"
-          type="JvmOverloadsConstructor"
-          jni-type="LJvmOverloadsConstructor;" />
-        <parameter
-          name="p1"
-          type="int"
-          jni-type="I" />
-        <parameter
-          name="p2"
-          type="int"
-          jni-type="I" />
-        <parameter
-          name="p3"
-          type="java.lang.String"
-          jni-type="Ljava/lang/String;" />
-        <parameter
-          name="p4"
-          type="boolean"
-          jni-type="Z" />
-        <parameter
-          name="p5"
-          type="int"
-          jni-type="I" />
-        <parameter
-          name="p6"
-          type="kotlin.jvm.internal.DefaultConstructorMarker"
-          jni-type="Lkotlin/jvm/internal/DefaultConstructorMarker;" />
-      </constructor>
-      <constructor
-        deprecated="not deprecated"
-        final="false"
-        name="JvmOverloadsConstructor"
-        static="false"
-        visibility="public"
-        bridge="false"
         synthetic="false"
         jni-signature="(LJvmOverloadsConstructor;ILjava/lang/String;)V">
         <parameter

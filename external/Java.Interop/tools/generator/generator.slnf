@@ -9,8 +9,10 @@
       "src\\Java.Interop.Tools.Diagnostics\\Java.Interop.Tools.Diagnostics.csproj",
       "src\\Xamarin.Android.Tools.AnnotationSupport\\Xamarin.Android.Tools.AnnotationSupport.csproj",
       "src\\Xamarin.Android.Tools.ApiXmlAdjuster\\Xamarin.Android.Tools.ApiXmlAdjuster.csproj",
+      "src\\Xamarin.Android.Tools.Bytecode\\Xamarin.Android.Tools.Bytecode.csproj",
       "src\\Xamarin.SourceWriter\\Xamarin.SourceWriter.csproj",
       "tests\\generator-Tests\\generator-Tests.csproj",
+      "tests\\Xamarin.Android.Tools.Bytecode-Tests\\Xamarin.Android.Tools.Bytecode-Tests.csproj",
       "tests\\Xamarin.SourceWriter-Tests\\Xamarin.SourceWriter-Tests.csproj",
       "tools\\generator\\generator.csproj",
     ]

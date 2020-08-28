@@ -52,6 +52,32 @@ namespace Xamarin.Android.Tools.BytecodeTests
 		}
 
 		[Test]
+		public void HideDefaultConstructorMarker ()
+		{
+			var klass = LoadClassFile ("DefaultConstructor.class");
+
+			// init ()
+			var ctor_0p = klass.Methods.Single (m => m.Name == "<init>" && m.GetParameters ().Length == 0);
+
+			// init (string name)
+			var ctor_1p = klass.Methods.Single (m => m.Name == "<init>" && m.GetParameters ().Length == 1);
+
+			// init (string p0, int p1, DefaultConstructorMarker p2)
+			var ctor_3p = klass.Methods.Single (m => m.Name == "<init>" && m.GetParameters ().Length == 3);
+
+			Assert.True (ctor_3p.AccessFlags.HasFlag (MethodAccessFlags.Public));
+
+			KotlinFixups.Fixup (new [] { klass });
+
+			// Assert that the normal constructors are still public
+			Assert.True (ctor_0p.AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.True (ctor_1p.AccessFlags.HasFlag (MethodAccessFlags.Public));
+
+			// Assert that the synthetic "DefaultConstructorMarker" constructor has been marked private
+			Assert.False (ctor_3p.AccessFlags.HasFlag (MethodAccessFlags.Public));
+		}
+
+		[Test]
 		public void HideImplementationMethod ()
 		{
 			var klass = LoadClassFile ("MethodImplementation.class");

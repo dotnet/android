@@ -72,6 +72,26 @@ namespace Xamarin.Android.Tools.Bytecode
 			return index >= 0 ? method.Name.Substring (0, index) : method.Name;
 		}
 
+		public static bool IsDefaultConstructorMarker (this MethodInfo method)
+		{
+			// A default constructor is synthetic and always has an int and a
+			// DefaultConstructorMarker as its final 2 parameters.
+			if (method.Name != "<init>")
+				return false;
+
+			if (!method.AccessFlags.HasFlag (MethodAccessFlags.Synthetic))
+				return false;
+
+			var parameters = method.GetParameters ();
+
+			if (parameters.Length < 2)
+				return false;
+
+			// Parameter list ends with `int, DefaultConstructorMarker`.
+			return parameters [parameters.Length - 2].Type.TypeSignature == "I" &&
+				parameters [parameters.Length - 1].Type.TypeSignature == "Lkotlin/jvm/internal/DefaultConstructorMarker;";
+		}
+
 		public static bool IsPubliclyVisible (this ClassAccessFlags flags) => flags.HasFlag (ClassAccessFlags.Public) || flags.HasFlag (ClassAccessFlags.Protected);
 
 		public static bool IsPubliclyVisible (this KotlinClassVisibility flags) => flags == KotlinClassVisibility.Public || flags == KotlinClassVisibility.Protected;
