@@ -45,6 +45,7 @@ namespace generatortests
 				MetadataReference.CreateFromFile (unitTestFrameworkAssemblyPath),
 				MetadataReference.CreateFromFile (typeof(object).Assembly.Location),
 				MetadataReference.CreateFromFile (typeof(Enumerable).Assembly.Location),
+				MetadataReference.CreateFromFile (typeof(Uri).Assembly.Location),
 				MetadataReference.CreateFromFile (Path.Combine (binDir, "Java.Interop.dll")),
 				MetadataReference.CreateFromFile (Path.Combine (facDir, "netstandard.dll"))
 			};

@@ -45,6 +45,8 @@ namespace generator.SourceWriters
 
 	public class JniPeerMembersGetter : PropertyWriter
 	{
+		// [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+		// [EditorBrowsable (EditorBrowsableState.Never)]
 		// public override global::Java.Interop.JniPeerMembers JniPeerMembers {
 		//   get { return _members; }
 		// }
@@ -56,6 +58,9 @@ namespace generator.SourceWriters
 			IsPublic = true;
 			IsOverride = true;
 
+			Attributes.Add (new DebuggerBrowsableAttr ());
+			Attributes.Add (new EditorBrowsableAttr ());
+
 			HasGet = true;
 			GetBody.Add ("return _members;");
 		}		
@@ -63,6 +68,8 @@ namespace generator.SourceWriters
 
 	public class ClassThresholdClassGetter : PropertyWriter
 	{
+		// [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+		// [EditorBrowsable (EditorBrowsableState.Never)]
 		// protected override IntPtr ThresholdClass {
 		// 	get { return _members.JniPeerType.PeerReference.Handle; }
 		// }
@@ -74,6 +81,9 @@ namespace generator.SourceWriters
 			IsProtected = true;
 			IsOverride = true;
 
+			Attributes.Add (new DebuggerBrowsableAttr ());
+			Attributes.Add (new EditorBrowsableAttr ());
+
 			HasGet = true;
 			GetBody.Add ("return _members.JniPeerType.PeerReference.Handle;");
 		}
@@ -81,6 +91,8 @@ namespace generator.SourceWriters
 
 	public class InterfaceThresholdClassGetter : PropertyWriter
 	{
+		// [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+		// [EditorBrowsable (EditorBrowsableState.Never)]
 		// protected override IntPtr ThresholdClass {
 		// 	get { return class_ref; }
 		// }
@@ -92,6 +104,9 @@ namespace generator.SourceWriters
 			IsProtected = true;
 			IsOverride = true;
 
+			Attributes.Add (new DebuggerBrowsableAttr ());
+			Attributes.Add (new EditorBrowsableAttr ());
+
 			HasGet = true;
 			GetBody.Add ("return class_ref;");
 		}
@@ -99,6 +114,8 @@ namespace generator.SourceWriters
 
 	public class ThresholdTypeGetter : PropertyWriter
 	{
+		// [DebuggerBrowsable (DebuggerBrowsableState.Never)]
+		// [EditorBrowsable (EditorBrowsableState.Never)]
 		// protected override global::System.Type ThresholdType {
 		// 	get { return _members.ManagedPeerType; }
 		// }
@@ -109,6 +126,9 @@ namespace generator.SourceWriters
 
 			IsProtected = true;
 			IsOverride = true;
+
+			Attributes.Add (new DebuggerBrowsableAttr ());
+			Attributes.Add (new EditorBrowsableAttr ());
 
 			HasGet = true;
 			GetBody.Add ("return _members.ManagedPeerType;");
