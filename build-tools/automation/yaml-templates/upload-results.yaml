@@ -15,4 +15,4 @@ steps:
 - template: publish-artifact.yaml
   parameters:
     displayName: upload build and test results
-    artifactName: ${{ parameters.artifactName }} $(UploadAttemptSuffix)
+    artifactName: ${{ parameters.artifactName }}
