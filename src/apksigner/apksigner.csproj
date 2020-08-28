@@ -25,6 +25,7 @@
         EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)"
         WorkingDirectory="$(MSBuildThisFileDirectory)"
     />
+    <Touch Files="build\libs\apksigner.jar" />
   </Target>
 
   <Target Name="_CleanGradle" BeforeTargets="Clean">
