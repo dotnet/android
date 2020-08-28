@@ -1097,10 +1097,6 @@ because xbuild doesn't support framework reference assemblies.
       $(_UpdateAndroidResgenInputs);
       @(_ModifiedResources);
     </_UpdateAndroidResgenInputs>
-    <_CreateBaseApkInputs>
-      $(_CreateBaseApkInputs);
-      @(_ModifiedResources);
-    </_CreateBaseApkInputs>
   </PropertyGroup>
 </Target>
 
@@ -1640,10 +1636,30 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 </Target>
 
+<Target Name="_CreateBaseApkInputs">
+  <PropertyGroup>
+    <_CreateBaseApkInputs>
+      $(_CreateBaseApkInputs);
+      $(MSBuildAllProjects);
+      $(IntermediateOutputPath)android\AndroidManifest.xml;
+      @(_ModifiedResources);
+      @(_AndroidAssetsDest);
+      $(_AcwMapFile);
+      $(_AndroidBuildPropertiesCache);
+    </_CreateBaseApkInputs>
+  </PropertyGroup>
+</Target>
+
 <Target Name="_PrepareCreateBaseApk"
+    DependsOnTargets="_CreateBaseApkInputs"
     Inputs="$(_CreateBaseApkInputs)"
     Outputs="$(_PackagedResources)"
   >
+  <!--
+    NOTE: these steps need to be in a separate target, so variables
+    pass through to <CallTarget/> in _CreateBaseApk. (MSBuild bug)
+  -->
+
   <!-- Create a temporary directory to work in, or else R.java will always get updated -->
   <CreateTemporaryDirectory>
     <Output TaskParameter="TemporaryDirectory" PropertyName="AaptTemporaryDirectory" />
@@ -1672,14 +1688,6 @@ because xbuild doesn't support framework reference assemblies.
 		UpdateAndroidAssets;
 		$(_AfterCreateBaseApkDependsOnTargets);
 	</_CreateBaseApkDependsOnTargets>
-	<_CreateBaseApkInputs>
-		$(MSBuildAllProjects)
-		;$(IntermediateOutputPath)android\AndroidManifest.xml
-		;@(_AndroidResourceDest)
-		;@(_AndroidAssetsDest)
-		;$(_AcwMapFile)
-		;$(_AndroidBuildPropertiesCache)
-	</_CreateBaseApkInputs>
 </PropertyGroup>
 
 <Target Name="_CreateBaseApk"
