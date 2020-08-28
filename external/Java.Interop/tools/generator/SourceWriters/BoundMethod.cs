@@ -44,6 +44,15 @@ namespace generator.SourceWriters
 			if ((IsVirtual || !IsOverride) && type.RequiresNew (method.AdjustedName, method))
 				IsShadow = true;
 
+			// Allow user to override our virtual/override logic
+			if (method.ManagedOverride?.ToLowerInvariant () == "virtual") {
+				IsVirtual = true;
+				IsOverride = false;
+			} else if (method.ManagedOverride?.ToLowerInvariant () == "override") {
+				IsVirtual = false;
+				IsOverride = true;
+			}
+
 			ReturnType = new TypeReferenceWriter (opt.GetTypeReferenceName (method.RetVal));
 
 			if (method.DeclaringType.IsGeneratable)

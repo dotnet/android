@@ -256,6 +256,7 @@ namespace MonoDroid.Generation
 				IsReturnEnumified = elem.Attribute ("enumReturn") != null,
 				IsStatic = elem.XGetAttribute ("static") == "true",
 				JavaName = elem.XGetAttribute ("name"),
+				ManagedOverride = elem.XGetAttribute ("managedOverride"),
 				ManagedReturn = elem.XGetAttribute ("managedReturn"),
 				PropertyNameOverride = elem.XGetAttribute ("propertyName"),
 				Return = elem.XGetAttribute ("return"),

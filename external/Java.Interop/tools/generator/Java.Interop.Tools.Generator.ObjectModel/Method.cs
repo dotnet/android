@@ -26,6 +26,7 @@ namespace MonoDroid.Generation
 		public bool IsStatic { get; set; }
 		public bool IsVirtual { get; set; }
 		public string JavaName { get; set; }
+		public string ManagedOverride { get; set; }
 		public string ManagedReturn { get; set; }
 		public string PropertyNameOverride { get; set; }
 		public string Return { get; set; }

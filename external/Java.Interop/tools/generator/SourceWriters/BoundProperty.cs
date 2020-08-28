@@ -55,6 +55,15 @@ namespace generator.SourceWriters
 				}
 			}
 
+			// Allow user to override our virtual/override logic
+			if (!forceOverride && (property.Getter ?? property.Setter).ManagedOverride?.ToLowerInvariant () == "virtual") {
+				IsVirtual = true;
+				IsOverride = false;
+			} else if (!forceOverride && (property.Getter ?? property.Setter).ManagedOverride?.ToLowerInvariant () == "override") {
+				IsVirtual = false;
+				IsOverride = true;
+			}
+
 			// Unlike [Register], [Obsolete] cannot be put on property accessors, so we can apply them only under limited condition...
 			if (property.Getter.Deprecated != null && (property.Setter == null || property.Setter.Deprecated != null))
 				Attributes.Add (new ObsoleteAttr (property.Getter.Deprecated.Replace ("\"", "\"\"").Trim () + (property.Setter != null && property.Setter.Deprecated != property.Getter.Deprecated ? " " + property.Setter.Deprecated.Replace ("\"", "\"\"").Trim () : null)));
