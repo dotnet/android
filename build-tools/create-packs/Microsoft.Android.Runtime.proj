@@ -39,7 +39,6 @@ projects that use the Microsoft.Android framework in .NET 5.
       <_AndroidRuntimePackAssets Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\lib\$(AndroidABI)\libmono-android.debug.so" />
       <_AndroidRuntimePackAssets Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\lib\$(AndroidABI)\libmono-android.release.so" />
       <_AndroidRuntimePackAssets Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\lib\$(AndroidABI)\libxa-internal-api.so" />
-      <_AndroidRuntimePackAssets Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\lib\$(AndroidABI)\libsqlite3_xamarin.so" />
       <_AndroidRuntimePackAssets Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\lib\$(AndroidABI)\libxamarin-debug-app-helper.so" />
       <FrameworkListFileClass Include="@(_AndroidRuntimePackAssets->'%(Filename)%(Extension)')" Profile="Android" />
     </ItemGroup>
