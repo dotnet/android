@@ -38,7 +38,7 @@ namespace MonoDroid.Generation
 			foreach (var c in ConstraintExpressions) {
 				var sym = opt.SymbolTable.Lookup (c, type_params);
 				if (sym == null) {
-					Report.LogCodedWarning (0, Report.WarningUnknownGenericConstraint, c, context.ContextString);
+					Report.LogCodedWarning (0, Report.WarningUnknownGenericConstraint, c, context.GetContextTypeMember ());
 					validated = true;
 					return false;
 				}
