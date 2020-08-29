@@ -96,13 +96,13 @@ In this message, the phrase "should not be reached" means that this error messag
       </trans-unit>
       <trans-unit id="XA0035">
         <source>Unable to determine the Android ABI from the value '{0}'. Edit the project file in a text editor and set the 'RuntimeIdentifiers' MSBuild property to contain only valid identifiers for the Android platform.</source>
-        <target state="new">Unable to determine the Android ABI from the value '{0}'. Edit the project file in a text editor and set the 'RuntimeIdentifiers' MSBuild property to contain only valid identifiers for the Android platform.</target>
+        <target state="translated">Die Android-ABI kann aus dem Wert "{0}" nicht ermittelt werden. Bearbeiten Sie die Projektdatei in einem Text-Editor, und legen Sie die MSBuild-Eigenschaft "RuntimeIdentifiers" so fest, dass nur gültige Bezeichner für die Android-Plattform enthalten sind.</target>
         <note>The following are literal names and should not be translated: Android, ABI, RuntimeIdentifiers, MSBuild
 {0} - The $(RuntimeIdentifier) supplied by the user.</note>
       </trans-unit>
       <trans-unit id="XA0036">
         <source>The 'AndroidSupportedAbis' MSBuild property is no longer supported. Edit the project file in a text editor, remove any uses of 'AndroidSupportedAbis', and use the 'RuntimeIdentifiers' MSBuild property instead.</source>
-        <target state="new">The 'AndroidSupportedAbis' MSBuild property is no longer supported. Edit the project file in a text editor, remove any uses of 'AndroidSupportedAbis', and use the 'RuntimeIdentifiers' MSBuild property instead.</target>
+        <target state="translated">Die MSBuild-Eigenschaft "AndroidSupportedAbis" wird nicht mehr unterstützt. Bearbeiten Sie die Projektdatei in einem Text-Editor, entfernen Sie alle Vorkommen von "AndroidSupportedAbis", und verwenden Sie stattdessen die MSBuild-Eigenschaft "RuntimeIdentifiers".</target>
         <note>The following are literal names and should not be translated: AndroidSupportedAbis, MSBuild, RuntimeIdentifiers</note>
       </trans-unit>
       <trans-unit id="XA0100">
@@ -151,7 +151,7 @@ In this message, the phrase "should not be reached" means that this error messag
       </trans-unit>
       <trans-unit id="XA0113">
         <source>Google Play requires that new applications and updates must use a TargetFrameworkVersion of v9.0 (API level 28) or above. You are currently targeting {0} (API level {1}).</source>
-        <target state="needs-review-translation">Google Play erfordert, dass neue Anwendungen und Updates die TargetFrameworkVersion v8.0 (API-Ebene 26) oder höher verwenden müssen. Sie verwenden als Ziel aktuell Version {0} (API-Ebene {1}).</target>
+        <target state="translated">Google Play erfordert, dass neue Anwendungen und Updates die TargetFrameworkVersion v9.0 (API-Ebene 28) oder höher verwenden müssen. Sie verwenden als Ziel aktuell Version {0} (API-Ebene {1}).</target>
         <note>The following are literal names and should not be translated: TargetFrameworkVersion, v9.0
 {0} - The current value of TargetFrameworkVersion
 {1} - The corresponding API level number</note>
@@ -164,7 +164,7 @@ In this message, the phrase "should not be reached" means that this error messag
       </trans-unit>
       <trans-unit id="XA0117">
         <source>The TargetFrameworkVersion {0} is deprecated. Please update it to be v5.0 or higher.</source>
-        <target state="needs-review-translation">Die TargetFrameworkVersion {0} ist veraltet. Führen Sie eine Aktualisierung auf Version 4.4 oder höher durch.</target>
+        <target state="translated">Die TargetFrameworkVersion {0} ist veraltet. Führen Sie eine Aktualisierung auf Version 5.0 oder höher durch.</target>
         <note>The following are literal names and should not be translated: TargetFrameworkVersion, v5.0
 {0} - The current value of TargetFrameworkVersion</note>
       </trans-unit>
@@ -184,22 +184,22 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
       </trans-unit>
       <trans-unit id="XA0119_AAB">
         <source>Using the shared runtime and Android App Bundles at the same time is not currently supported. Use the shared runtime for Debug configurations and Android App Bundles for Release configurations.</source>
-        <target state="new">Using the shared runtime and Android App Bundles at the same time is not currently supported. Use the shared runtime for Debug configurations and Android App Bundles for Release configurations.</target>
+        <target state="translated">Das gleichzeitige Verwenden von Shared Runtime und Android App Bundles wird derzeit nicht unterstützt. Verwenden Sie die Shared Runtime für Debuggingkonfigurationen und Android App Bundles für Releasekonfigurationen.</target>
         <note>The following are literal names and should not be translated: Android App Bundles</note>
       </trans-unit>
       <trans-unit id="XA0119_AOT">
         <source>Using fast deployment and AOT at the same time is not recommended. Use fast deployment for Debug configurations and AOT for Release configurations.</source>
-        <target state="new">Using fast deployment and AOT at the same time is not recommended. Use fast deployment for Debug configurations and AOT for Release configurations.</target>
+        <target state="translated">Von der gleichzeitigen Verwendung der schnellen Bereitstellung und der AOT wird abgeraten. Verwenden Sie die schnelle Bereitstellung für Debugkonfigurationen und die AOT für Releasekonfigurationen.</target>
         <note>The following are literal names and should not be translated: AOT, Debug, Release.</note>
       </trans-unit>
       <trans-unit id="XA0119_LinkMode">
         <source>Using fast deployment and the linker at the same time is not recommended. Use fast deployment for Debug configurations and the linker for Release configurations.</source>
-        <target state="new">Using fast deployment and the linker at the same time is not recommended. Use fast deployment for Debug configurations and the linker for Release configurations.</target>
+        <target state="translated">Von der gleichzeitigen Verwendung der schnellen Bereitstellung und des Linkers wird abgeraten. Verwenden Sie die schnelle Bereitstellung für Debugkonfigurationen und den Linker für Releasekonfigurationen.</target>
         <note>The following are literal names and should not be translated: Debug, Release.</note>
       </trans-unit>
       <trans-unit id="XA0119_LinkTool">
         <source>Using fast deployment and a code shrinker at the same time is not recommended. Use fast deployment for Debug configurations and a code shrinker for Release configurations.</source>
-        <target state="new">Using fast deployment and a code shrinker at the same time is not recommended. Use fast deployment for Debug configurations and a code shrinker for Release configurations.</target>
+        <target state="translated">Von der gleichzeitigen Verwendung der schnellen Bereitstellung und des Codeshrinkers wird abgeraten. Verwenden Sie die schnelle Bereitstellung für Debugkonfigurationen und den Codeshrinker für Releasekonfigurationen.</target>
         <note>The following are literal names and should not be translated: Debug, Release.</note>
       </trans-unit>
       <trans-unit id="XA0121">
@@ -216,7 +216,7 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
       </trans-unit>
       <trans-unit id="XA0123">
         <source>Removing {0} from {1}. Lint {2} does not support this check.</source>
-        <target state="new">Removing {0} from {1}. Lint {2} does not support this check.</target>
+        <target state="translated">"{0}" wird aus "{1}" entfernt. Diese Überprüfung wird von Lint "{2}" nicht unterstützt.</target>
         <note>The following are literal names and should not be translated: Lint
 When it appears in the middle of a sentence, "lint" is not capitalized.
 {0} - The literal name of a lint check, such as HardcodedDebugMode
@@ -225,7 +225,7 @@ When it appears in the middle of a sentence, "lint" is not capitalized.
       </trans-unit>
       <trans-unit id="XA0124">
         <source>Interpreter is not supported by the x86 ABI</source>
-        <target state="new">Interpreter is not supported by the x86 ABI</target>
+        <target state="translated">Der Interpreter wird von der x86-ABI nicht unterstützt.</target>
         <note />
       </trans-unit>
       <trans-unit id="XA1000">
@@ -285,7 +285,7 @@ When it appears in the middle of a sentence, "lint" is not capitalized.
       </trans-unit>
       <trans-unit id="XA1011">
         <source>Using ProGuard with the D8 DEX compiler is no longer supported. Please set the code shrinker to `r8` in the Visual Studio project property pages or edit the project file in a text editor and set the `AndroidLinkTool` MSBuild property to `r8`.</source>
-        <target state="needs-review-translation">Die Verwendung von ProGuard mit dem D8 DEX-Compiler wird nicht mehr unterstützt. Aktualisieren Sie "$(AndroidLinkTool)" auf "r8".</target>
+        <target state="translated">Die Verwendung von ProGuard mit dem D8 DEX-Compiler wird nicht mehr unterstützt. Legen Sie den Codeshrinker in den Visual Studio-Projekteigenschaftenseiten auf "R8" fest, oder bearbeiten Sie die Projektdatei in einem Text-Editor, und legen Sie die MSBuild-Eigenschaft "AndroidLinkTool" auf "R8" fest.</target>
         <note>The following are literal names and should not be translated: ProGuard, D8, DEX, `r8`, `AndroidLinkTool`</note>
       </trans-unit>
       <trans-unit id="XA1012">
@@ -301,7 +301,7 @@ When it appears in the middle of a sentence, "lint" is not capitalized.
       </trans-unit>
       <trans-unit id="XA1014">
         <source>JAR library references with identical file names but different contents were found: {0}. Please remove any conflicting libraries from EmbeddedJar, InputJar and AndroidJavaLibrary.</source>
-        <target state="new">JAR library references with identical file names but different contents were found: {0}. Please remove any conflicting libraries from EmbeddedJar, InputJar and AndroidJavaLibrary.</target>
+        <target state="translated">Es wurden JAR-Bibliotheksverweise mit identischen Dateinamen, aber unterschiedlichen Inhalten gefunden: {0}. Entfernen Sie alle widersprüchlichen Bibliotheken aus EmbeddedJar, InputJar und AndroidJavaLibrary.</target>
         <note>The following are literal names and should not be translated: JAR, EmbeddedJar, InputJar and AndroidJavaLibrary
 {0} - Comma-separated list of the conflicting JAR library file names</note>
       </trans-unit>
@@ -325,47 +325,47 @@ When it appears in the middle of a sentence, "lint" is not capitalized.
       </trans-unit>
       <trans-unit id="XA1018">
         <source>Specified AndroidManifest file does not exist: {0}.</source>
-        <target state="new">Specified AndroidManifest file does not exist: {0}.</target>
+        <target state="translated">Die angegebene AndroidManifest-Datei ist nicht vorhanden: {0}</target>
         <note>The following are literal names and should not be translated: AndroidManifest
 {0} - The path of the specified AndroidManifest file</note>
       </trans-unit>
       <trans-unit id="XA1019">
         <source>`LibraryProjectProperties` file `{0}` is located in a parent directory of the bindings project's intermediate output directory. Please adjust the path to use the original `project.properties` file directly from the Android library project directory.</source>
-        <target state="new">`LibraryProjectProperties` file `{0}` is located in a parent directory of the bindings project's intermediate output directory. Please adjust the path to use the original `project.properties` file directly from the Android library project directory.</target>
+        <target state="translated">Die LibraryProjectProperties-Datei "{0}" befindet sich in einem übergeordneten Verzeichnis des Zwischenausgabeverzeichnisses für das Bindungsprojekt. Passen Sie den Pfad so an, dass die ursprüngliche Datei "project.properties" direkt aus dem Android-Bibliotheksprojektverzeichnis verwendet wird.</target>
         <note>The following are literal names and should not be translated: LibraryProjectProperties, project.properties, Android
 In this message, the term "binding" means a piece of generated code that makes it easy to access an Android API written in Java from a Xamarin.Android project written in C# or F#.
 {0} - The path of the LibraryProjectProperties file</note>
       </trans-unit>
       <trans-unit id="XA1020">
         <source>At least one Java library is required for binding. Check that a Java library is included in the project and has the appropriate build action: 'LibraryProjectZip' (for AAR or ZIP), 'EmbeddedJar', 'InputJar' (for JAR), or 'LibraryProjectProperties' (project.properties).</source>
-        <target state="new">At least one Java library is required for binding. Check that a Java library is included in the project and has the appropriate build action: 'LibraryProjectZip' (for AAR or ZIP), 'EmbeddedJar', 'InputJar' (for JAR), or 'LibraryProjectProperties' (project.properties).</target>
+        <target state="translated">Für die Bindung ist mindestens eine Java-Bibliothek erforderlich. Stellen Sie sicher, dass eine Java-Bibliothek im Projekt enthalten ist und über die entsprechende Buildaktion verfügt: "LibraryProjectZip" (für AAR oder ZIP), "EmbeddedJar", "InputJar" (für JAR) oder "LibraryProjectProperties" (project.Properties).</target>
         <note>The following are literal names and should not be translated: LibraryProjectZip, EmbeddedJar, InputJar, LibraryProjectProperties, project.properties</note>
       </trans-unit>
       <trans-unit id="XA1021">
         <source>Specified source Java library not found: {0}</source>
-        <target state="new">Specified source Java library not found: {0}</target>
+        <target state="translated">Die angegebene Java-Quellbibliothek wurde nicht gefunden: {0}</target>
         <note>In this message, the term "source Java library" refers to the library that will be processed. In this case, the term "source" does not refer to "source code."
 {0} - The file name of the library</note>
       </trans-unit>
       <trans-unit id="XA1022">
         <source>Specified reference Java library not found: {0}</source>
-        <target state="new">Specified reference Java library not found: {0}</target>
+        <target state="translated">Die angegebene Java-Referenzbibliothek wurde nicht gefunden: {0}</target>
         <note>In this message, the term "reference Java library" refers to a library that is included as a reference so that types from the library can be resolved during the build process.
 {0} - The file name of the library</note>
       </trans-unit>
       <trans-unit id="XA1023">
         <source>Using the DX DEX Compiler is deprecated. Please set the DEX compiler to 'd8' in the Visual Studio project property pages or edit the project file in a text editor and set the 'AndroidDexTool' MSBuild property to 'd8'.</source>
-        <target state="new">Using the DX DEX Compiler is deprecated. Please set the DEX compiler to 'd8' in the Visual Studio project property pages or edit the project file in a text editor and set the 'AndroidDexTool' MSBuild property to 'd8'.</target>
+        <target state="translated">Die Verwendung des DX DEX-Compiler ist veraltet. Legen Sie den DEX-Compiler in den Visual Studio-Projekteigenschaftenseiten auf "d8" fest, oder bearbeiten Sie die Projektdatei in einem Text-Editor, und legen Sie die MSBuild-Eigenschaft "AndroidDexTool" auf "d8" fest.</target>
         <note>The following are literal names and should not be translated: DX, DEX, d8, AndroidDexTool.</note>
       </trans-unit>
       <trans-unit id="XA1023_dotnet">
         <source>Using the DX DEX Compiler is not supported in Xamarin.Android projects that target .NET 5 or higher. Please set the DEX compiler to 'd8' in the Visual Studio project property pages or edit the project file in a text editor and set the 'AndroidDexTool' MSBuild property to 'd8'.</source>
-        <target state="new">Using the DX DEX Compiler is not supported in Xamarin.Android projects that target .NET 5 or higher. Please set the DEX compiler to 'd8' in the Visual Studio project property pages or edit the project file in a text editor and set the 'AndroidDexTool' MSBuild property to 'd8'.</target>
+        <target state="translated">Die Verwendung des DX DEX-Compilers wird in Xamarin.Android-Projekten für .NET 5 oder höher nicht unterstützt. Legen Sie den DEX-Compiler in den Visual Studio-Projekteigenschaftenseiten auf "d8" fest, oder bearbeiten Sie die Projektdatei in einem Text-Editor, und legen Sie die MSBuild-Eigenschaft "AndroidDexTool" auf "d8" fest.</target>
         <note>The following are literal names and should not be translated: DX, DEX, Xamarin.Android, .NET 5, d8, AndroidDexTool.</note>
       </trans-unit>
       <trans-unit id="XA1024">
         <source>Ignoring configuration file '{0}'. .NET configuration files are not supported in Xamarin.Android projects that target .NET 5 or higher.</source>
-        <target state="new">Ignoring configuration file '{0}'. .NET configuration files are not supported in Xamarin.Android projects that target .NET 5 or higher.</target>
+        <target state="translated">Die Konfigurationsdatei "{0}" wird ignoriert. .NET-Konfigurationsdateien werden in Xamarin.Android-Projekten für .NET 5 oder höher nicht unterstützt.</target>
         <note>The following are literal names and should not be translated: .NET, Xamarin.Android.
 {0} - The file name such as 'Foo.dll.config'</note>
       </trans-unit>
@@ -573,31 +573,31 @@ In this mesage, the term "layout" means an Android UI layout.
       </trans-unit>
       <trans-unit id="XA4228">
         <source>Unable to find specified //activity-alias/@android:targetActivity: '{0}'</source>
-        <target state="new">Unable to find specified //activity-alias/@android:targetActivity: '{0}'</target>
+        <target state="translated">Die angegebene //activity-alias/@android:targetActivity wurde nicht gefunden: "{0}"</target>
         <note>The following are literal names and should not be translated: //activity-alias/@android:targetActivity
 {0} - The specified targetActivity name</note>
       </trans-unit>
       <trans-unit id="XA4229">
         <source>Unrecognized `TransformFile` root element: {0}.</source>
-        <target state="new">Unrecognized `TransformFile` root element: {0}.</target>
+        <target state="translated">Unbekanntes TransformFile-Stammelement: {0}.</target>
         <note>The following are literal names and should not be translated: TransformFile
 In this message, "root element" refers to the root element of an XML file.
 {0} - The name of the root element</note>
       </trans-unit>
       <trans-unit id="XA4230">
         <source>Error parsing XML: {0}</source>
-        <target state="new">Error parsing XML: {0}</target>
+        <target state="translated">Fehler beim Analysieren von XML: {0}</target>
         <note>{0} - The exception message and stack trace of the associated exception</note>
       </trans-unit>
       <trans-unit id="XA4231">
         <source>The Android class parser value '{0}' is deprecated and will be removed in a future version of Xamarin.Android. Update the project properties to use 'class-parse'.</source>
-        <target state="new">The Android class parser value '{0}' is deprecated and will be removed in a future version of Xamarin.Android. Update the project properties to use 'class-parse'.</target>
+        <target state="translated">Der Wert "{0}" des Android-Klassenparsers ist veraltet und wird in einer zukünftigen Version von Xamarin.Android entfernt. Aktualisieren Sie die Projekteigenschaften auf die Verwendung von "class-parse".</target>
         <note>The following are literal names and should not be translated: class-parse
 {0} - The name of the current class parser value</note>
       </trans-unit>
       <trans-unit id="XA4232">
         <source>The Android code generation target '{0}' is deprecated and will be removed in a future version of Xamarin.Android. Update the project properties to use 'XAJavaInterop1'.</source>
-        <target state="new">The Android code generation target '{0}' is deprecated and will be removed in a future version of Xamarin.Android. Update the project properties to use 'XAJavaInterop1'.</target>
+        <target state="translated">Das Ziel "{0}" für die Android-Codegenerierung ist veraltet und wird in einer zukünftigen Version von Xamarin.Android entfernt. Aktualisieren Sie die Projekteigenschaften auf die Verwendung von "XAJavaInterop1".</target>
         <note>The following are literal names and should not be translated: XAJavaInterop1
 {0} - The name of the current code generation target</note>
       </trans-unit>
@@ -685,7 +685,7 @@ In this message, the term "bundled" is a short way of saying "included into the 
       </trans-unit>
       <trans-unit id="XA4312">
         <source>Referencing the Android Wear application project '{0}' from an Android application project is deprecated and will no longer be supported in a future version of Xamarin.Android. Remove the Android Wear application project reference from the Android application project and distribute the Wear application as a standalone application instead.</source>
-        <target state="new">Referencing the Android Wear application project '{0}' from an Android application project is deprecated and will no longer be supported in a future version of Xamarin.Android. Remove the Android Wear application project reference from the Android application project and distribute the Wear application as a standalone application instead.</target>
+        <target state="translated">Verweise von einem Android-Anwendungsprojekt auf das Android Wear-Anwendungsprojekt "{0}" ist veraltet und wird in zukünftigen Versionen von Xamarin.Android nicht mehr unterstützt. Entfernen Sie den Verweis auf das Android Wear-Anwendungsprojekt aus dem Android-Anwendungsprojekt, und verteilen Sie die Wear-Anwendung stattdessen als eigenständige Anwendung.</target>
         <note>The following are literal names and should not be translated: Android Wear, Android, Wear.
 {0} - The referenced Android Wear project.</note>
       </trans-unit>
