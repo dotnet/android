@@ -19,11 +19,9 @@ pr:
 variables:
   XA.Jdk8.Folder: jdk-1.8
   XA.Jdk11.Folder: jdk-11
-  XA.Build.MacOSSPool: VSEng-Xamarin-RedmondMacMojaveBuildPool-Android-OSS
+  XA.Build.MacOSSPool: macOS-10.15
   XA.Build.LinuxOSSPool: Xamarin-Android-Ubuntu-Public
-
   XA.Build.Configuration: Release
-
   NuGetArtifactName: nupkgs
   EXTRA_MSBUILD_ARGS: /p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False
   PREPARE_FLAGS: PREPARE_CI=1 PREPARE_CI_PR=1
@@ -39,7 +37,7 @@ stages:
   - job: mac_build
     displayName: Mac Build
     pool:
-      name: $(XA.Build.MacOSSPool)
+      vmImage: $(XA.Build.MacOSSPool)
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:
