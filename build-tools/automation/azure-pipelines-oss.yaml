@@ -19,7 +19,7 @@ pr:
 variables:
   XA.Jdk8.Folder: jdk-1.8
   XA.Jdk11.Folder: jdk-11
-  XA.Build.MacOSSPool: macOS-10.15
+  XA.Build.MacOSSPool: VSEng-Xamarin-RedmondMacMojaveBuildPool-Android-OSS
   XA.Build.LinuxOSSPool: Xamarin-Android-Ubuntu-Public
   XA.Build.Configuration: Release
   NuGetArtifactName: nupkgs
@@ -37,7 +37,7 @@ stages:
   - job: mac_build
     displayName: Mac Build
     pool:
-      vmImage: $(XA.Build.MacOSSPool)
+      name: $(XA.Build.MacOSSPool)
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:
@@ -56,6 +56,9 @@ stages:
     - template: yaml-templates/use-dot-net.yaml
       parameters:
         version: $(DotNetCoreVersion)
+
+    - script: security unlock-keychain -p $(login-xambot-azure-devops-agent-password)
+      displayName: unlock keychain
 
     - task: provisionator@2
       displayName: Install Xcode

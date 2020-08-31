@@ -141,7 +141,6 @@ stages:
       parameters:
         version: $(DotNetCoreVersion)
 
-    - script: security list-keychains && echo default `security default-keychain` && echo login `security login-keychain`
     - template: install-certificates.yml@yaml
       parameters:
         DeveloperIdApplication: $(developer-id-application)
@@ -149,7 +148,6 @@ stages:
         IphoneDeveloper: $(iphone-developer)
         MacDeveloper: $(mac-developer)
         HostedMacKeychainPassword: $(AzDO-OnPrem-KeychainPass)
-    - script: security list-keychains && echo default `security default-keychain` && echo login `security login-keychain`
 
     - task: provisionator@2
       displayName: Install Xcode
