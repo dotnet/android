@@ -124,6 +124,8 @@
   <PropertyGroup>
     <JavacSourceVersion>1.8</JavacSourceVersion>
     <JavacTargetVersion>1.8</JavacTargetVersion>
+    <Java8SdkDirectory Condition=" '$(Java8SdkDirectory)' == '' and Exists('$(JavaSdkDirectory)\..\jdk-1.8') ">$([System.IO.Path]::GetFullPath ('$(JavaSdkDirectory)\..\jdk-1.8'))</Java8SdkDirectory>
+    <Java8SdkDirectory Condition=" '$(Java8SdkDirectory)' == '' ">$(JavaSdkDirectory)</Java8SdkDirectory>
   </PropertyGroup>
   <PropertyGroup>
     <AndroidMxeFullPath Condition=" '$(AndroidMxeInstallPrefix)' != '' ">$([System.IO.Path]::GetFullPath ('$(AndroidMxeInstallPrefix)'))</AndroidMxeFullPath>
