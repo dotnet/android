@@ -57,8 +57,11 @@ stages:
       parameters:
         version: $(DotNetCoreVersion)
 
-    - script: security unlock-keychain -p $(login-xambot-azure-devops-agent-password)
-      displayName: unlock keychain
+    - bash: |
+        security create-keychain -p $(login-xambot-azure-devops-agent-password) builder.keychain
+        security default-keychain -s builder.keychain
+        security set-keychain-settings -lut 7200
+      displayName: swap default keychain
 
     - task: provisionator@2
       displayName: Install Xcode
