@@ -45,7 +45,7 @@ namespace Xamarin.Android.Tasks
 			}
 			Process p = new Process ();
 			p.StartInfo = psi;
-			
+
 			p.OutputDataReceived += onOutput;
 			p.ErrorDataReceived += onError;
 			p.Start ();
@@ -213,7 +213,7 @@ namespace Xamarin.Android.Tasks
 		{
 			return filePaths.Select (p => new FileInfo (p)).ToArray ().Distinct (new MonoAndroidHelper.SizeAndContentFileComparer ()).Select (f => f.FullName).ToArray ();
 		}
-		
+
 		public static IEnumerable<string> GetDuplicateFileNames (IEnumerable<string> fullPaths, string [] excluded)
 		{
 			var files = fullPaths.Select (full => Path.GetFileName (full)).Where (f => excluded == null || !excluded.Contains (f, StringComparer.OrdinalIgnoreCase)).ToArray ();
@@ -222,7 +222,7 @@ namespace Xamarin.Android.Tasks
 					if (String.Compare (files [i], files [j], StringComparison.OrdinalIgnoreCase) == 0)
 						yield return files [i];
 		}
-		
+
 		public static bool IsEmbeddedReferenceJar (string jar)
 		{
 			return jar.StartsWith ("__reference__");
@@ -289,7 +289,7 @@ namespace Xamarin.Android.Tasks
 			if (!string.IsNullOrWhiteSpace (rid)) {
 				lib_abi = RuntimeIdentifierToAbi (rid);
 			}
-			
+
 			if (!string.IsNullOrWhiteSpace (lib_abi))
 				return lib_abi;
 
@@ -334,6 +334,12 @@ namespace Xamarin.Android.Tasks
 				}
 				return false;
 			}
+		}
+
+		public static bool IsHiddenFile (string file)
+		{
+			FileAttributes fa = File.GetAttributes (file);
+			return (fa & FileAttributes.Hidden) == FileAttributes.Hidden;
 		}
 
 		public static bool IsForceRetainedAssembly (string assembly)
@@ -512,7 +518,7 @@ namespace Xamarin.Android.Tasks
 		}
 
 #if MSBUILD
-		internal static IEnumerable<ITaskItem> GetFrameworkAssembliesToTreatAsUserAssemblies (ITaskItem[] resolvedAssemblies) 
+		internal static IEnumerable<ITaskItem> GetFrameworkAssembliesToTreatAsUserAssemblies (ITaskItem[] resolvedAssemblies)
 		{
 			var ret = new List<ITaskItem> ();
 			foreach (ITaskItem item in resolvedAssemblies) {
@@ -645,7 +651,7 @@ namespace Xamarin.Android.Tasks
 
 		/// <summary>
 		/// Converts .NET 5 RIDs to Android ABIs or an empty string if no match.
-		/// 
+		///
 		/// Known RIDs:
 		/// "android.21-arm64" -> "arm64-v8a"
 		/// "android.21-arm"   -> "armeabi-v7a"
