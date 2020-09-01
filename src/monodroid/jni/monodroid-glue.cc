@@ -1606,13 +1606,13 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 		utils.set_world_accessable (counters_path);
 	}
 
-	void *api_dso_handle = nullptr;
+	void *dso_handle = nullptr;
 #if defined (WINDOWS) || defined (APPLE_OS_X)
 	const char *my_location = get_my_location ();
 	if (my_location != nullptr) {
 		simple_pointer_guard<char, false> dso_path (utils.path_combine (my_location, API_DSO_NAME));
 		log_info (LOG_DEFAULT, "Attempting to load %s", dso_path.get ());
-		api_dso_handle = java_interop_lib_load (dso_path.get (), JAVA_INTEROP_LIB_LOAD_GLOBALLY, nullptr);
+		dso_handle = java_interop_lib_load (dso_path.get (), JAVA_INTEROP_LIB_LOAD_GLOBALLY, nullptr);
 #if defined (APPLE_OS_X)
 		delete[] my_location;
 #else   // !defined(APPLE_OS_X)
@@ -1620,14 +1620,14 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 #endif  // defined(APPLE_OS_X)
 	}
 
-	if (api_dso_handle == nullptr) {
+	if (dso_handle == nullptr) {
 		log_info (LOG_DEFAULT, "Attempting to load %s with \"bare\" dlopen", API_DSO_NAME);
-		api_dso_handle = java_interop_lib_load (API_DSO_NAME, JAVA_INTEROP_LIB_LOAD_GLOBALLY, nullptr);
+		dso_handle = java_interop_lib_load (API_DSO_NAME, JAVA_INTEROP_LIB_LOAD_GLOBALLY, nullptr);
 	}
 #endif  // defined(WINDOWS) || defined(APPLE_OS_X)
-	if (api_dso_handle == nullptr)
-		api_dso_handle = androidSystem.load_dso_from_any_directories (API_DSO_NAME, JAVA_INTEROP_LIB_LOAD_GLOBALLY);
-	init_internal_api_dso (api_dso_handle);
+	if (dso_handle == nullptr)
+		dso_handle = androidSystem.load_dso_from_any_directories (API_DSO_NAME, JAVA_INTEROP_LIB_LOAD_GLOBALLY);
+	init_internal_api_dso (dso_handle);
 
 	mono_dl_fallback_register (monodroid_dlopen, monodroid_dlsym, nullptr, nullptr);
 

@@ -10,6 +10,12 @@
 #include "globals.hh"
 #include "xa-internal-api-impl.hh"
 
+#if defined (WINDOWS)
+#define WINDOWS_UNUSED_ARG UNUSED_ARG
+#else
+#define WINDOWS_UNUSED_ARG
+#endif
+
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
 
@@ -21,7 +27,7 @@ int  _monodroid_getifaddrs (struct _monodroid_ifaddrs **ifap);
 void _monodroid_freeifaddrs (struct _monodroid_ifaddrs *ifa);
 
 mono_bool
-MonoAndroidInternalCalls_Impl::monodroid_get_network_interface_up_state (const char *ifname, mono_bool *is_up)
+MonoAndroidInternalCalls_Impl::monodroid_get_network_interface_up_state (WINDOWS_UNUSED_ARG const char *ifname, WINDOWS_UNUSED_ARG mono_bool *is_up)
 {
 #ifdef WINDOWS
 	return FALSE;
@@ -31,7 +37,7 @@ MonoAndroidInternalCalls_Impl::monodroid_get_network_interface_up_state (const c
 }
 
 mono_bool
-MonoAndroidInternalCalls_Impl::monodroid_get_network_interface_supports_multicast (const char *ifname, mono_bool *supports_multicast)
+MonoAndroidInternalCalls_Impl::monodroid_get_network_interface_supports_multicast (WINDOWS_UNUSED_ARG const char *ifname, WINDOWS_UNUSED_ARG mono_bool *supports_multicast)
 {
 #ifdef WINDOWS
 	return FALSE;
@@ -41,7 +47,7 @@ MonoAndroidInternalCalls_Impl::monodroid_get_network_interface_supports_multicas
 }
 
 int
-MonoAndroidInternalCalls_Impl::monodroid_get_dns_servers (void **dns_servers_array)
+MonoAndroidInternalCalls_Impl::monodroid_get_dns_servers (WINDOWS_UNUSED_ARG void **dns_servers_array)
 {
 #ifdef WINDOWS
 	return FALSE;
@@ -51,7 +57,7 @@ MonoAndroidInternalCalls_Impl::monodroid_get_dns_servers (void **dns_servers_arr
 }
 
 int
-MonoAndroidInternalCalls_Impl::monodroid_getifaddrs (struct _monodroid_ifaddrs **ifap)
+MonoAndroidInternalCalls_Impl::monodroid_getifaddrs (WINDOWS_UNUSED_ARG struct _monodroid_ifaddrs **ifap)
 {
 #ifdef WINDOWS
 	return -1;
@@ -61,7 +67,7 @@ MonoAndroidInternalCalls_Impl::monodroid_getifaddrs (struct _monodroid_ifaddrs *
 }
 
 void
-MonoAndroidInternalCalls_Impl::monodroid_freeifaddrs (struct _monodroid_ifaddrs *ifa)
+MonoAndroidInternalCalls_Impl::monodroid_freeifaddrs (WINDOWS_UNUSED_ARG struct _monodroid_ifaddrs *ifa)
 {
 #ifndef WINDOWS
 	::_monodroid_freeifaddrs (ifa);
