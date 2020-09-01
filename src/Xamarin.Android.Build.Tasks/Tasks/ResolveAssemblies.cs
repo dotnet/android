@@ -34,9 +34,6 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string ProjectFile { get; set; }
 
-		[Required]
-		public string IntermediateAssemblyDirectory { get; set; }
-
 		public string ProjectAssetFile { get; set; }
 
 		public string TargetMoniker { get; set; }
@@ -141,7 +138,7 @@ namespace Xamarin.Android.Tasks
 				} else {
 					resolvedUserAssemblies.Add (assembly);
 				}
-				assembly.SetMetadata ("IntermediateLinkerOutput", Path.Combine (IntermediateAssemblyDirectory, Path.GetFileName (assembly.ItemSpec)));
+				assembly.SetDestinationSubPath ();
 			}
 			ResolvedAssemblies = resolvedAssemblies.ToArray ();
 			ResolvedSymbols = resolvedSymbols.ToArray ();

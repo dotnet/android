@@ -282,7 +282,6 @@ projects. .NET 5 projects will not import this file.
         TargetFrameworkVersion="$(TargetFrameworkVersion)"
         ProjectAssetFile="$(ProjectLockFile)"
         TargetMoniker="$(NuGetTargetMoniker)"
-        IntermediateAssemblyDirectory="$(MonoAndroidIntermediateAssemblyDir)"
         ReferenceAssembliesDirectory="$(TargetFrameworkDirectory)">
       <Output TaskParameter="ResolvedAssemblies" ItemName="ResolvedAssemblies" />
       <Output TaskParameter="ResolvedUserAssemblies" ItemName="ResolvedUserAssemblies" />
