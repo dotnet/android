@@ -4,7 +4,7 @@ if (IsMac) {
 	if (OSVersion < new Version (MinMacOSVersion))
 		throw new Exception ($"macOS {MinMacOSVersion} or newer is required for Xcode 11.");
 	if (OSVersion >= new Version (MinMacOSVersionForLatestXcode))
-		Item (XreItem.Xcode_11_6_0).XcodeSelect ();
+		Xcode ("11.6.0").XcodeSelect ();
 	else
-		Item (XreItem.Xcode_11_3_1).XcodeSelect ();
+		Xcode ("11.3.1").XcodeSelect ();
 }
