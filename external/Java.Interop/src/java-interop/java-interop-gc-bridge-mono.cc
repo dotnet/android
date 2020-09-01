@@ -256,7 +256,8 @@ java_interop_gc_bridge_new (JavaVM *jvm)
 	}
 #endif  /* defined (XAMARIN_ANDROID_DYLIB_MONO) */
 
-	JavaInteropGCBridge bridge = {0};
+	JavaInteropGCBridge bridge;
+	memset (&bridge, 0, sizeof (bridge));
 
 	bridge.jvm  = jvm;
 
@@ -896,7 +897,7 @@ take_weak_global_ref_jni (JavaInteropGCBridge *bridge, JNIEnv *env, MonoObject *
 }
 
 static jmethodID
-get_add_reference_method (JavaInteropGCBridge *bridge, JNIEnv *env, jobject obj, MonoClass *mclass)
+get_add_reference_method (JavaInteropGCBridge *bridge, JNIEnv *env, jobject obj, [[maybe_unused]] MonoClass *mclass)
 {
 	if (!obj)
 		return NULL;
@@ -1280,7 +1281,8 @@ java_interop_gc_bridge_register_hooks (JavaInteropGCBridge *bridge, int weak_ref
 
 	const char *message = NULL;
 
-	MonoGCBridgeCallbacks   bridge_cbs = {0};
+	MonoGCBridgeCallbacks   bridge_cbs;
+	memset (&bridge_cbs, 0, sizeof (bridge_cbs));
 
 	switch (weak_ref_kind) {
 	case JAVA_INTEROP_GC_BRIDGE_USE_WEAK_REFERENCE_KIND_JAVA:

@@ -10,6 +10,8 @@ utf16_to_utf8 (const wchar_t *widestr)
 	char *mbstr = static_cast<char*> (calloc (required_size, sizeof (char)));
 	int converted_size = WideCharToMultiByte (CP_UTF8, 0, widestr, -1, mbstr, required_size, NULL, NULL);
 
+	// Hush a compiler warning about unused variable in RELEASE
+	(void)converted_size;
 	assert (converted_size == required_size);
 
 	return mbstr;
@@ -22,6 +24,8 @@ utf8_to_utf16 (const char *mbstr)
 	wchar_t *widestr = static_cast<wchar_t*> (calloc (required_chars, sizeof (wchar_t)));
 	int converted_chars = MultiByteToWideChar (CP_UTF8, 0, mbstr, -1, widestr, required_chars);
 
+	// Hush a compiler warning about unused variable in RELEASE
+	(void)converted_chars;
 	assert (converted_chars == required_chars);
 
 	return widestr;
