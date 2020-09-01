@@ -58,9 +58,15 @@ stages:
         version: $(DotNetCoreVersion)
 
     - bash: |
-        security create-keychain -p $(login-xambot-azure-devops-agent-password) builder.keychain
-        security default-keychain -s builder.keychain
-        security set-keychain-settings -lut 7200
+        keychains=`security list-keychains`
+        if [[ "$keychains" =~ "\"/Users/${USER}/Library/Keychains/builder.keychain-db\"" ]]; then
+            security unlock-keychain -p $(login-xambot-azure-devops-agent-password) builder.keychain
+        else
+            security create-keychain -p $(login-xambot-azure-devops-agent-password) builder.keychain
+        fi
+        security -v list-keychains -s builder.keychain
+        security -v default-keychain -s builder.keychain
+        security -v set-keychain-settings -lut 7200
       displayName: swap default keychain
 
     - task: provisionator@2
@@ -69,6 +75,16 @@ stages:
         github_token: $(github-pat)
         provisioning_script: $(Build.SourcesDirectory)/build-tools/provisioning/xcode.csx
         provisioning_extra_args: '-v -v -v -v'
+
+    - bash: |
+        keychains=`security list-keychains`
+        if [[ "$keychains" =~ "\"/Users/${USER}/Library/Keychains/builder.keychain-db\"" ]]; then
+            security unlock-keychain -p $(login-xambot-azure-devops-agent-password) builder.keychain
+            security -v delete-keychain builder.keychain
+            security -v default-keychain -s login.keychain
+            security -v list-keychains -s login.keychain
+        fi
+      displayName: restore default keychain
 
     # Prepare and build everything
     - script: >
