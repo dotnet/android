@@ -21,9 +21,7 @@ variables:
   XA.Jdk11.Folder: jdk-11
   XA.Build.MacOSSPool: VSEng-Xamarin-RedmondMacMojaveBuildPool-Android-OSS
   XA.Build.LinuxOSSPool: Xamarin-Android-Ubuntu-Public
-
   XA.Build.Configuration: Release
-
   NuGetArtifactName: nupkgs
   EXTRA_MSBUILD_ARGS: /p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False
   PREPARE_FLAGS: PREPARE_CI=1 PREPARE_CI_PR=1
@@ -58,6 +56,35 @@ stages:
     - template: yaml-templates/use-dot-net.yaml
       parameters:
         version: $(DotNetCoreVersion)
+
+    - bash: |
+        keychains=`security list-keychains`
+        if [[ "$keychains" =~ "\"/Users/${USER}/Library/Keychains/builder.keychain-db\"" ]]; then
+            security unlock-keychain -p $(login-xambot-azure-devops-agent-password) builder.keychain
+        else
+            security create-keychain -p $(login-xambot-azure-devops-agent-password) builder.keychain
+        fi
+        security -v list-keychains -s builder.keychain
+        security -v default-keychain -s builder.keychain
+        security -v set-keychain-settings -lut 7200
+      displayName: swap default keychain
+
+    - task: provisionator@2
+      displayName: Install Xcode
+      inputs:
+        github_token: $(github-pat)
+        provisioning_script: $(Build.SourcesDirectory)/build-tools/provisioning/xcode.csx
+        provisioning_extra_args: '-v -v -v -v'
+
+    - bash: |
+        keychains=`security list-keychains`
+        if [[ "$keychains" =~ "\"/Users/${USER}/Library/Keychains/builder.keychain-db\"" ]]; then
+            security unlock-keychain -p $(login-xambot-azure-devops-agent-password) builder.keychain
+            security -v delete-keychain builder.keychain
+            security -v default-keychain -s login.keychain
+            security -v list-keychains -s login.keychain
+        fi
+      displayName: restore default keychain
 
     # Prepare and build everything
     - script: >
