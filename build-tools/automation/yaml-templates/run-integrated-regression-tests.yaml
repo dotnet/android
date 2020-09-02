@@ -116,13 +116,6 @@ steps:
     parameters:
       nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
       testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
-      testRunTitle: Resource Cache Tests
-      nunitConsoleExtraArgs: --where "cat == ResourceCacheTests"
-
-  - template: run-nunit-tests.yaml
-    parameters:
-      nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
-      testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
       testRunTitle: Property Cache Tests
       nunitConsoleExtraArgs: --where "cat == PropertyCacheTests"
 
