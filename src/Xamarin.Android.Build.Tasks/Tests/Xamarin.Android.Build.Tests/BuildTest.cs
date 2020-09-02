@@ -1362,6 +1362,9 @@ namespace UnnamedProject {
 			using (var b = CreateApkBuilder ("temp/CustomApplicationClassAndMultiDex")) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsFalse (b.LastBuildOutput.ContainsText ("Duplicate zip entry"), "Should not get warning about [META-INF/MANIFEST.MF]");
+				var customAppContent = File.ReadAllText (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "src", "com", "foxsports", "test", "CustomApp.java"));
+				Assert.IsTrue (customAppContent.Contains ("extends android.support.multidex.MultiDexApplication"),
+					"Custom App class should have inherited from android.support.multidex.MultiDexApplication.");
 			}
 		}
 

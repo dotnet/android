@@ -109,27 +109,6 @@ steps:
     parameters:
       nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
       testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
-      testRunTitle: Proguard Tests
-      nunitConsoleExtraArgs: --where "cat == Proguard"
-
-  - template: run-nunit-tests.yaml
-    parameters:
-      nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
-      testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
-      testRunTitle: Multidex Tests
-      nunitConsoleExtraArgs: --where "cat == Multidex"
-
-  - template: run-nunit-tests.yaml
-    parameters:
-      nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
-      testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
-      testRunTitle: ExplicitCrunch Tests
-      nunitConsoleExtraArgs: --where "cat == ExplicitCrunch"
-
-  - template: run-nunit-tests.yaml
-    parameters:
-      nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
-      testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
       testRunTitle: TargetFrameworkVersion Tests
       nunitConsoleExtraArgs: --where "cat == TargetFrameworkTests"
 
@@ -168,11 +147,11 @@ steps:
       testRunTitle: AndroidApiInfo Tests
       nunitConsoleExtraArgs: --where "cat == AndroidApiInfoTests"
 
-  - template: run-nunit-tests.yaml
-    parameters:
-      nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
-      testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
-      testRunTitle: Test Environment Cleanup
-      nunitConsoleExtraArgs: --where "cat == XATestCleanUp"
+- template: run-nunit-tests.yaml
+  parameters:
+    nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
+    testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
+    testRunTitle: Test Environment Cleanup
+    nunitConsoleExtraArgs: --where "cat == XATestCleanUp"
 
 - template: fail-on-issue.yaml
