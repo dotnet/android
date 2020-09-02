@@ -660,7 +660,15 @@ ssize_t EmbeddedAssemblies::do_read (int fd, void *buf, size_t count)
 {
 	ssize_t ret;
 	do {
-		ret = ::read (fd, buf, count);
+		ret = ::read (
+			fd,
+			buf,
+#if defined (WINDOWS)
+			static_cast<unsigned int>(count)
+#else
+			count
+#endif
+		);
 	} while (ret < 0 && errno == EINTR);
 
 	return ret;
