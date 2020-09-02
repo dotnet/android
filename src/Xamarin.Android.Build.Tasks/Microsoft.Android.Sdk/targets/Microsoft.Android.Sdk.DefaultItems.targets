@@ -7,20 +7,20 @@
   <!-- Default Resource file inclusion -->
   <!-- https://developer.android.com/guide/topics/resources/providing-resources -->
   <ItemGroup Condition=" '$(EnableDefaultAndroidItems)' == 'true' ">
-    <AndroidResource Include="$(MonoAndroidResourcePrefix)\**\*.xml" />
-    <AndroidResource Include="$(MonoAndroidResourcePrefix)\**\*.axml" />
-    <AndroidResource Include="$(MonoAndroidResourcePrefix)\**\*.png" />
-    <AndroidResource Include="$(MonoAndroidResourcePrefix)\**\*.jpg" />
-    <AndroidResource Include="$(MonoAndroidResourcePrefix)\**\*.gif" />
-    <AndroidResource Include="$(MonoAndroidResourcePrefix)\font\**\*.ttf" />
-    <AndroidResource Include="$(MonoAndroidResourcePrefix)\font\**\*.otf" />
-    <AndroidResource Include="$(MonoAndroidResourcePrefix)\font\**\*.ttc" />
-    <AndroidResource Include="$(MonoAndroidResourcePrefix)\raw\**\*" />
+    <AndroidResource Include="$(MonoAndroidResourcePrefix)\*\*.xml" />
+    <AndroidResource Include="$(MonoAndroidResourcePrefix)\*\*.axml" />
+    <AndroidResource Include="$(MonoAndroidResourcePrefix)\*\*.png" />
+    <AndroidResource Include="$(MonoAndroidResourcePrefix)\*\*.jpg" />
+    <AndroidResource Include="$(MonoAndroidResourcePrefix)\*\*.gif" />
+    <AndroidResource Include="$(MonoAndroidResourcePrefix)\font\*.ttf" />
+    <AndroidResource Include="$(MonoAndroidResourcePrefix)\font\*.otf" />
+    <AndroidResource Include="$(MonoAndroidResourcePrefix)\font\*.ttc" />
+    <AndroidResource Include="$(MonoAndroidResourcePrefix)\raw\*" Exclude="$(MonoAndroidResourcePrefix)\raw\.*" />
   </ItemGroup>
 
   <!-- Default Asset file inclusion -->
   <ItemGroup Condition=" '$(EnableDefaultAndroidItems)' == 'true' ">
-    <AndroidAsset Include="$(MonoAndroidAssetsPrefix)\**\*" />
+    <AndroidAsset Include="$(MonoAndroidAssetsPrefix)\**\*" Exclude="$(MonoAndroidAssetsPrefix)\**\.*\**" />
   </ItemGroup>
 
   <!-- Default References -->
