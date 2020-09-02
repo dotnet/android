@@ -101,7 +101,7 @@ namespace Xamarin.Android.Prepare
 			List<ExternalGitDependency> externalDependencies = ExternalGitDependency.GetDependencies (context, Configurables.Paths.ExternalGitDepsFilePath, quiet: true);
 			ExternalGitDependency? mono = externalDependencies.Where (
 				eg => eg != null &&
-				      String.Compare ("naricc", eg.Owner, StringComparison.Ordinal) == 0 &&
+				      String.Compare ("mono", eg.Owner, StringComparison.Ordinal) == 0 &&
 				      String.Compare ("mono", eg.Name, StringComparison.Ordinal) == 0).FirstOrDefault ();
 
 			FullMonoHash = (mono?.Commit ?? String.Empty).Trim ();
