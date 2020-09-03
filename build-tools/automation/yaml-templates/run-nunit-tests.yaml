@@ -6,19 +6,20 @@ parameters:
   nunitConsoleExtraArgs: ''
   dotNetTestExtraArgs: ''
   useDotNet: false
+  workers: $(NUnit.NumberOfTestWorkers)
   condition: succeeded()
 
 steps:
 - powershell: |
     if ("${{ parameters.useDotNet }}" -eq $true) {
         Write-Host '##vso[task.setvariable variable=TestResultsFormat]VSTest'
-        dotnet test ${{ parameters.testAssembly }} --results-directory . --logger "trx;LogFileName=${{ parameters.testResultsFile }}" ${{ parameters.dotNetTestExtraArgs }}
+        dotnet test ${{ parameters.testAssembly }} --results-directory . --logger "trx;LogFileName=${{ parameters.testResultsFile }}" ${{ parameters.dotNetTestExtraArgs }} -- NUnit.NumberOfTestWorkers=${{ parameters.workers }}
     } elseif ([Environment]::OSVersion.Platform -eq "Unix") {
         Write-Host '##vso[task.setvariable variable=TestResultsFormat]NUnit'
-        mono ${{ parameters.nunitConsole }} ${{ parameters.testAssembly }} --result ${{ parameters.testResultsFile }} ${{ parameters.nunitConsoleExtraArgs }}
+        mono ${{ parameters.nunitConsole }} ${{ parameters.testAssembly }} --result ${{ parameters.testResultsFile }} --workers=${{ parameters.workers }} ${{ parameters.nunitConsoleExtraArgs }}
     } else {
         Write-Host '##vso[task.setvariable variable=TestResultsFormat]NUnit'
-        ${{ parameters.nunitConsole }} ${{ parameters.testAssembly }} --result ${{ parameters.testResultsFile }}  ${{ parameters.nunitConsoleExtraArgs }}
+        ${{ parameters.nunitConsole }} ${{ parameters.testAssembly }} --result ${{ parameters.testResultsFile }} --workers=${{ parameters.workers }} ${{ parameters.nunitConsoleExtraArgs }}
     }
     if ($LASTEXITCODE -ne 0) {
         Write-Host "##vso[task.logissue type=error]Test suite had $LASTEXITCODE failure(s)."
