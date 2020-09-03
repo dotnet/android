@@ -18,7 +18,7 @@ using ThreadingTasks = System.Threading.Tasks;
 using Xamarin.Build;
 
 namespace Xamarin.Android.Tasks {
-	
+
 	public abstract class Aapt2 : AndroidAsyncTask {
 
 		private static readonly int DefaultMaxAapt2Daemons = 6;
@@ -31,6 +31,8 @@ namespace Xamarin.Android.Tasks {
 		public bool DaemonKeepInDomain { get; set; }
 
 		public ITaskItem [] ResourceDirectories { get; set; }
+
+		public ITaskItem AndroidManifestFile { get; set;}
 
 		public string ResourceNameCaseMap { get; set; }
 
@@ -60,7 +62,7 @@ namespace Xamarin.Android.Tasks {
 		protected virtual int GetRequiredDaemonInstances ()
 		{
 			return 1;
-		} 
+		}
 
 		Aapt2Daemon daemon;
 
@@ -68,7 +70,7 @@ namespace Xamarin.Android.Tasks {
 		public override bool Execute ()
 		{
 			// Must register on the UI thread!
-			// We don't want to use up ALL the available cores especially when 
+			// We don't want to use up ALL the available cores especially when
 			// running in the IDE. So lets cap it at DefaultMaxAapt2Daemons (6).
 			int maxInstances = Math.Min (ProcessorCount - 1, DefaultMaxAapt2Daemons);
 			if (DaemonMaxInstanceCount == 0)
@@ -100,7 +102,7 @@ namespace Xamarin.Android.Tasks {
 					}
 				}
 			}
-		} 
+		}
 
 		protected bool LogAapt2EventsFromOutput (string singleLine, MessageImportance messageImportance, bool apptResult)
 		{
@@ -125,7 +127,7 @@ namespace Xamarin.Android.Tasks {
 					return true;
 				}
 				if (message.StartsWith ("unknown option", StringComparison.OrdinalIgnoreCase)) {
-					// we need to filter out the remailing help lines somehow. 
+					// we need to filter out the remailing help lines somehow.
 					LogCodedError ("APT0001", Properties.Resources.APT0001, message.Substring ("unknown option '".Length).TrimEnd ('.', '\''));
 					return false;
 				}
@@ -169,12 +171,20 @@ namespace Xamarin.Android.Tasks {
 					}
 				}
 
+				bool manifestError = false;
+				if (AndroidManifestFile != null && string.Compare (Path.GetFileName (file), Path.GetFileName (AndroidManifestFile.ItemSpec), StringComparison.OrdinalIgnoreCase) == 0) {
+					manifestError = true;
+				}
+
 				// Strip any "Error:" text from aapt's output
 				if (message.StartsWith ("error: ", StringComparison.InvariantCultureIgnoreCase))
 					message = message.Substring ("error: ".Length);
 
 				if (level.Contains ("error") || (line != 0 && !string.IsNullOrEmpty (file))) {
-					LogCodedError (GetErrorCode (message), message, file, line);
+					if (manifestError)
+						LogCodedError (GetErrorCode (message), string.Format (Xamarin.Android.Tasks.Properties.Resources.AAPTManifestError, message.TrimEnd('.')), AndroidManifestFile.ItemSpec, 0);
+					else
+						LogCodedError (GetErrorCode (message), message, file, line);
 					return true;
 				}
 			}
