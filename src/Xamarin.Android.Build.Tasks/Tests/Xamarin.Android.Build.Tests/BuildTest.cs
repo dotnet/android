@@ -35,14 +35,27 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		public static string [] SupportedTargetFrameworks ()
+		{
+			using (var b = new Builder ()) {
+				if (Builder.UseDotNet)
+					return new string [] { b.LatestTargetFrameworkVersion () };
+				else
+					return b.GetAllSupportedTargetFrameworkVersions ();
+			}
+		}
+
 		[Test]
 		[Category ("dotnet")]
-		public void BuildBasicApplication ([Values (true, false)] bool isRelease)
+		public void BuildBasicApplication ([ValueSource (nameof (SupportedTargetFrameworks))] string tfv, [Values (true, false)] bool isRelease)
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
+				TargetFrameworkVersion = tfv,
 			};
 			using (var b = CreateApkBuilder ()) {
+				var tfvs = b.GetAllSupportedTargetFrameworkVersions ();
+				Console.WriteLine ("TFVS count: " + tfvs.Length);
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
 		}
@@ -1690,6 +1703,7 @@ namespace App1
 			}
 		}
 
+		[Test]
 		public void BuildApplicationCheckItEmitsAWarningWithContentItems ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -2473,7 +2487,7 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 			};
 			proj.SetProperty ("AndroidUseLatestPlatformSdk", "False");
 			using (var builder = CreateApkBuilder ()) {
-				builder.GetTargetFrameworkVersionRange (out var _, out string firstFrameworkVersion, out var _, out string lastFrameworkVersion);
+				builder.GetTargetFrameworkVersionRange (out var _, out string firstFrameworkVersion, out var _, out string lastFrameworkVersion, out string[] _);
 				proj.SetProperty ("TargetFrameworkVersion", firstFrameworkVersion);
 				if (!Directory.Exists (Path.Combine (builder.FrameworkLibDirectory, firstFrameworkVersion)))
 					Assert.Ignore ("This is a Pull Request Build. Ignoring test.");
@@ -3999,6 +4013,34 @@ public class ApplicationRegistration { }");
 			using (var b = CreateDllBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
+			}
+		}
+
+		[Test]
+		[Category ("Commercial")]
+		public void LibraryReferenceWithHigherTFVShouldDisplayWarning ([Values (true, false)] bool isRelease)
+		{
+			if (!CommercialBuildAvailable || Builder.UseDotNet)
+				Assert.Ignore ("Not applicable to One .NET or single framework OSS builds.");
+
+			var libproj = new XamarinAndroidLibraryProject () {
+				IsRelease = isRelease,
+				ProjectName = "Library1",
+			};
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
+				ProjectName = "App1",
+				UseLatestPlatformSdk = false,
+				TargetFrameworkVersion = "v9.0",
+				References = {
+					new BuildItem ("ProjectReference", $"..\\{libproj.ProjectName}\\{Path.GetFileName (libproj.ProjectFilePath)}")
+				},
+			};
+			using (var libBuilder = CreateDllBuilder (Path.Combine ("temp", TestName, libproj.ProjectName)))
+			using (var appBuilder = CreateApkBuilder (Path.Combine ("temp", TestName, proj.ProjectName))) {
+				Assert.IsTrue (libBuilder.Build (libproj), "Library build should have succeeded.");
+				Assert.IsTrue (appBuilder.Build (proj), "App build should have succeeded.");
+				StringAssertEx.Contains ("warning XA0105", appBuilder.LastBuildOutput, "Build should have produced warning XA0105.");
 			}
 		}
 
