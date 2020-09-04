@@ -15,6 +15,11 @@ namespace Xamarin.Android.Build.Tests
 	[Category ("Node-2"), Category ("DotNetIgnore")] // These don't need to run under `--params dotnet=true`
 	public class XASdkTests : BaseTest
 	{
+		/// <summary>
+		/// The full path to the project directory
+		/// </summary>
+		public string FullProjectDirectory { get; set; }
+
 		[Test]
 		[Category ("SmokeTests")]
 		public void DotNetBuildLibrary ([Values (false, true)] bool isRelease)
@@ -189,6 +194,42 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void DefaultItems ()
+		{
+			void CreateEmptyFile (params string [] paths)
+			{
+				var path = Path.Combine (FullProjectDirectory, Path.Combine (paths));
+				Directory.CreateDirectory (Path.GetDirectoryName (path));
+				File.WriteAllText (path, contents: "");
+			}
+
+			var proj = new XASdkProject ();
+			var dotnet = CreateDotNetBuilder (proj);
+
+			// Build error -> no nested sub-directories in Resources
+			CreateEmptyFile ("Resources", "drawable", "foo", "bar.png");
+			CreateEmptyFile ("Resources", "raw", "foo", "bar.png");
+
+			// Build error -> no files/directories that start with .
+			CreateEmptyFile ("Resources", "raw", ".DS_Store");
+			CreateEmptyFile ("Assets", ".DS_Store");
+			CreateEmptyFile ("Assets", ".svn", "foo.txt");
+
+			// Files that should work
+			CreateEmptyFile ("Resources", "raw", "foo.txt");
+			CreateEmptyFile ("Assets", "foo", "bar.txt");
+
+			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
+
+			var apk = Path.Combine (Root, dotnet.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}.apk");
+			FileAssert.Exists (apk);
+			using (var zip = ZipHelper.OpenZip (apk)) {
+				Assert.IsTrue (zip.ContainsEntry ("res/raw/foo.txt"), "res/raw/foo.txt should exist!");
+				Assert.IsTrue (zip.ContainsEntry ("assets/foo/bar.txt"), "assets/foo/bar.txt should exist!");
+			}
+		}
+
+		[Test]
 		public void BuildWithLiteSdk ()
 		{
 			var proj = new XASdkProject () {
@@ -203,12 +244,12 @@ namespace Xamarin.Android.Build.Tests
 		DotNetCLI CreateDotNetBuilder (XASdkProject project)
 		{
 			var relativeProjDir = Path.Combine ("temp", TestName);
-			var fullProjDir = Path.Combine (Root, relativeProjDir);
-			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = fullProjDir;
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] =
+				FullProjectDirectory = Path.Combine (Root, relativeProjDir);
 			var files = project.Save ();
 			project.Populate (relativeProjDir, files);
 			project.CopyNuGetConfig (relativeProjDir);
-			return new DotNetCLI (project, Path.Combine (fullProjDir, project.ProjectFilePath));
+			return new DotNetCLI (project, Path.Combine (FullProjectDirectory, project.ProjectFilePath));
 		}
 	}
 }
