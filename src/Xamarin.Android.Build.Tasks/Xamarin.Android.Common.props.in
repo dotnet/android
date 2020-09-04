@@ -31,6 +31,10 @@
 			<SubType>Designer</SubType>
 			<Generator>MSBuild:UpdateGeneratedFiles</Generator>
 		</AndroidResource>
+		<!-- NOTE: .aar items should skip %(AndroidSkipResourceProcessing) by default -->
+		<AndroidAarLibrary>
+			<AndroidSkipResourceProcessing>true</AndroidSkipResourceProcessing>
+		</AndroidAarLibrary>
 	</ItemDefinitionGroup>
         <ItemGroup>
           <AndroidMinimumSupportedApiLevel Include="armeabi-v7a">

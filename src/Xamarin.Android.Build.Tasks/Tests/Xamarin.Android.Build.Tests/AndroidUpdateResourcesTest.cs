@@ -436,8 +436,11 @@ namespace UnnamedProject
 				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 				var packaged_resources = Path.Combine (intermediate, "android", "bin", "packaged_resources");
 				FileAssert.Exists (packaged_resources);
+				var assemblyIdentityMap = b.Output.GetAssemblyMapCache ();
+				var extension = Builder.UseDotNet ? ".aar" : ".dll";
+				var assemblyIndex = assemblyIdentityMap.IndexOf ($"{lib.ProjectName}{extension}").ToString ();
 				using (var zip = ZipHelper.OpenZip (packaged_resources)) {
-					CheckCustomView (zip, intermediate, "lp", "0", "jl", "res", "layout", "custom_text_lib.xml");
+					CheckCustomView (zip, intermediate, "lp", assemblyIndex, "jl", "res", "layout", "custom_text_lib.xml");
 					CheckCustomView (zip, intermediate, "res", "layout", "custom_text_app.xml");
 				}
 
@@ -473,7 +476,7 @@ namespace UnnamedProject
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second app build should have succeeded.");
 
 				using (var zip = ZipHelper.OpenZip (packaged_resources)) {
-					CheckCustomView (zip, intermediate, "lp", "0", "jl", "res", "layout", "custom_text_lib.xml");
+					CheckCustomView (zip, intermediate, "lp", assemblyIndex, "jl", "res", "layout", "custom_text_lib.xml");
 					CheckCustomView (zip, intermediate, "res", "layout", "custom_text_app.xml");
 				}
 
@@ -803,6 +806,7 @@ namespace UnnamedProject
 		public void CheckDontUpdateResourceIfNotNeeded ()
 		{
 			var path = Path.Combine ("temp", TestName);
+			var target = Builder.UseDotNet ? "_CreateAar" : "_CreateManagedLibraryResourceArchive";
 			var foo = new BuildItem.Source ("Foo.cs") {
 				TextContent = () => @"using System;
 namespace Lib1 {
@@ -848,13 +852,13 @@ namespace Lib1 {
 				Assert.IsTrue (libBuilder.Build (libProj), "Library project should have built");
 				using (var appBuilder = CreateApkBuilder (Path.Combine (path, appProj.ProjectName), false, false)) {
 					Assert.IsTrue (appBuilder.Build (appProj), "Application Build should have succeeded.");
-					Assert.IsFalse (appBuilder.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "_UpdateAndroidResgen target not should be skipped.");
+					appBuilder.Output.AssertTargetIsNotSkipped ("_UpdateAndroidResgen");
 					foo.Timestamp = DateTimeOffset.UtcNow;
 					Assert.IsTrue (libBuilder.Build (libProj, doNotCleanupOnUpdate: true, saveProject: false), "Library project should have built");
-					Assert.IsTrue (libBuilder.Output.IsTargetSkipped ("_CreateManagedLibraryResourceArchive"), "_CreateManagedLibraryResourceArchive should be skipped.");
+					libBuilder.Output.AssertTargetIsSkipped (target);
 					appBuilder.BuildLogFile = "build1.log";
 					Assert.IsTrue (appBuilder.Build (appProj, doNotCleanupOnUpdate: true, saveProject: false), "Application Build should have succeeded.");
-					Assert.IsTrue (appBuilder.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "_UpdateAndroidResgen target should be skipped.");
+					appBuilder.Output.AssertTargetIsSkipped ("_UpdateAndroidResgen");
 					// Check Contents of the file in the apk are correct.
 					string apk = Path.Combine (Root, appBuilder.ProjectDirectory, appProj.OutputPath, appProj.PackageName + "-Signed.apk");
 					byte[] rawContentBuildOne = ZipHelper.ReadFileFromZip (apk,
@@ -873,15 +877,15 @@ namespace Lib1 {
 					raw.TextContent = () => @"Test Build 2 Now";
 					raw.Timestamp = DateTimeOffset.UtcNow;
 					Assert.IsTrue (libBuilder.Build (libProj, doNotCleanupOnUpdate: true, saveProject: false), "Library project should have built");
-					Assert.IsFalse (libBuilder.Output.IsTargetSkipped ("_CreateManagedLibraryResourceArchive"), "_CreateManagedLibraryResourceArchive should not be skipped.");
+					libBuilder.Output.AssertTargetIsNotSkipped (target);
 					appBuilder.BuildLogFile = "build2.log";
 					Assert.IsTrue (appBuilder.Build (appProj, doNotCleanupOnUpdate: true, saveProject: false), "Application Build should have succeeded.");
 					string resource_designer_cs = GetResourceDesignerPath (appBuilder, appProj);
 					string text = File.ReadAllText (resource_designer_cs);
 					StringAssert.Contains ("theme_devicedefault_background2", text, "Resource.designer.cs was not updated.");
-					Assert.IsFalse (appBuilder.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "_UpdateAndroidResgen target should NOT be skipped.");
-					Assert.IsFalse (appBuilder.Output.IsTargetSkipped ("_CreateBaseApk"), "_CreateBaseApk target should NOT be skipped.");
-					Assert.IsFalse (appBuilder.Output.IsTargetSkipped ("_BuildApkEmbed"), "_BuildApkEmbed target should NOT be skipped.");
+					appBuilder.Output.AssertTargetIsNotSkipped ("_UpdateAndroidResgen");
+					appBuilder.Output.AssertTargetIsNotSkipped ("_CreateBaseApk");
+					appBuilder.Output.AssertTargetIsNotSkipped ("_BuildApkEmbed");
 					byte[] rawContentBuildTwo = ZipHelper.ReadFileFromZip (apk,
 						"res/raw/test.txt");
 					Assert.IsNotNull (rawContentBuildTwo, "res/raw/test.txt should have been in the apk ");
@@ -894,7 +898,12 @@ namespace Lib1 {
 					Assert.IsTrue (libBuilder.Build (libProj, doNotCleanupOnUpdate: true, saveProject: true), "Library project should have built");
 					var themeFile = Path.Combine (Root, path, libProj.ProjectName, libProj.IntermediateOutputPath, "res", "values", "theme.xml");
 					Assert.IsTrue (!File.Exists (themeFile), $"{themeFile} should have been deleted.");
-					var archive = Path.Combine (Root, path, libProj.ProjectName, libProj.IntermediateOutputPath, "__AndroidLibraryProjects__.zip");
+					string archive;
+					if (Builder.UseDotNet) {
+						archive = Path.Combine (Root, path, libProj.ProjectName, libProj.OutputPath, $"{libProj.ProjectName}.aar");
+					} else {
+						archive = Path.Combine (Root, path, libProj.ProjectName, libProj.IntermediateOutputPath, "__AndroidLibraryProjects__.zip");
+					}
 					Assert.IsNull (ZipHelper.ReadFileFromZip (archive, "res/values/theme.xml"), "res/values/theme.xml should have been removed from __AndroidLibraryProjects__.zip");
 					appBuilder.BuildLogFile = "build3.log";
 					Assert.IsTrue (appBuilder.Build (appProj, doNotCleanupOnUpdate: true, saveProject: false), "Application Build should have succeeded.");

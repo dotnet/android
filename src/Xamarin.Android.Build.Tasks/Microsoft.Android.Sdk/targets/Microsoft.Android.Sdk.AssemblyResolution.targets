@@ -16,6 +16,11 @@ _ResolveAssemblies MSBuild target.
     <OutputPath Condition=" '$(_OuterOutputPath)' != '' ">$(_OuterOutputPath)</OutputPath>
     <OutDir     Condition=" '$(_OuterOutputPath)' != '' ">$(_OuterOutputPath)</OutDir>
     <PublishDir>$(OutputPath)</PublishDir>
+    <BuildDependsOn>_RemoveLegacyDesigner;$(BuildDependsOn)</BuildDependsOn>
+    <!-- We don't want IncrementalClean to run here, or files get deleted -->
+    <CoreBuildDependsOn>
+      $([MSBuild]::Unescape($(CoreBuildDependsOn.Replace('IncrementalClean;', ''))))
+    </CoreBuildDependsOn>
   </PropertyGroup>
 
   <Target Name="_ComputeFilesToPublishForRuntimeIdentifiers"

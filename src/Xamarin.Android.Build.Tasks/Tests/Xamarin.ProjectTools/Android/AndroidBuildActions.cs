@@ -16,6 +16,10 @@ namespace Xamarin.ProjectTools
 		public const string AndroidInterfaceDescription = "AndroidInterfaceDescription";
 		public const string AndroidJavaSource = "AndroidJavaSource";
 		public const string AndroidJavaLibrary = "AndroidJavaLibrary";
+		/// <summary>
+		/// Only supported in .NET 5+
+		/// </summary>
+		public const string AndroidLibrary = "AndroidLibrary";
 		public const string AndroidLintConfig = "AndroidLintConfig";
 		public const string AndroidNativeLibrary = "AndroidNativeLibrary";
 		public const string ProguardConfiguration = "ProguardConfiguration";

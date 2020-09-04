@@ -1,4 +1,4 @@
-# [proposal] Embedded Resources and `.nupkg` Files
+# One .NET: Embedded Resources and `.nupkg` Files
 
 Traditionally, a Xamarin.Android class library can contain many types
 of Android-specific files:

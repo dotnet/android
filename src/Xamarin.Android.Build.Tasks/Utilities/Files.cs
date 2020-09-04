@@ -329,6 +329,7 @@ namespace Xamarin.Android.Tools
 						continue;
 					if (entry.FullName.Contains ("/__MACOSX/") ||
 							entry.FullName.EndsWith ("/__MACOSX", StringComparison.OrdinalIgnoreCase) ||
+							string.Equals (entry.FullName, ".DS_Store", StringComparison.OrdinalIgnoreCase) ||
 							entry.FullName.EndsWith ("/.DS_Store", StringComparison.OrdinalIgnoreCase))
 						continue;
 					if (skipCallback != null && skipCallback (entry.FullName))

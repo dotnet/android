@@ -973,9 +973,10 @@ because xbuild doesn't support framework reference assemblies.
 
 <!-- Resource Build -->
 
-<Target Name="_UpdateAndroidResources" Condition=" '$(ManagedDesignTimeBuild)' == 'False' "
-	DependsOnTargets="$(CoreResolveReferencesDependsOn);_CreatePropertiesCache;_CheckForDeletedResourceFile;_ComputeAndroidResourcePaths;_UpdateAndroidResgen;_CreateManagedLibraryResourceArchive">
-</Target>
+<Target Name="_UpdateAndroidResources"
+    Condition=" '$(ManagedDesignTimeBuild)' == 'False' "
+    DependsOnTargets="$(_UpdateAndroidResourcesDependsOn)"
+/>
 
 <Target Name="UpdateAndroidResources"
     Condition=" '$(DesignTimeBuild)' != 'True' Or '$(DeferredBuildSupported)' != 'True' Or '$(DeferredBuild)' == 'True' "
@@ -1036,14 +1037,6 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
   <ItemGroup Condition=" '$(AndroidEnableMultiDex)' == 'True' AND '$(AndroidMultiDexSupportJar)' == '' ">
     <AndroidJavaLibrary Include="$(MonoAndroidToolsDirectory)\android-support-multidex.jar" />
-  </ItemGroup>
-</Target>
-
-<Target Name="_AddAndroidEnvironmentToCompile">
-  <ItemGroup>
-    <EmbeddedResource Include="@(AndroidEnvironment)">
-      <LogicalName>__AndroidEnvironment__%(Filename)%(Extension)</LogicalName>
-    </EmbeddedResource>
   </ItemGroup>
 </Target>
 

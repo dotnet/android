@@ -79,6 +79,12 @@ namespace Xamarin.ProjectTools
 			return Execute (arguments.ToArray ());
 		}
 
+		public bool Pack (string target = null, string [] parameters = null)
+		{
+			var arguments = GetDefaultCommandLineArgs ("pack", target, parameters);
+			return Execute (arguments.ToArray ());
+		}
+
 		public bool Publish (string target = null, string [] parameters = null)
 		{
 			var arguments = GetDefaultCommandLineArgs ("publish", target, parameters);

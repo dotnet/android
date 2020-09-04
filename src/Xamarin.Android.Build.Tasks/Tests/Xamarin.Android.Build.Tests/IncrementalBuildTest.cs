@@ -188,39 +188,35 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void LibraryIncrementalBuild () {
-
-			var testPath = Path.Combine ("temp", TestName);
-			var class1Source = new BuildItem.Source ("Class1.cs") {
-				TextContent = () => @"
-using System;
-namespace Lib
-{
-	public class Class1
-	{
-		public Class1 ()
+		public void LibraryIncrementalBuild ()
 		{
-		}
-	}
-}"
-			};
-			var lib = new XamarinAndroidLibraryProject () {
+			var lib = new XamarinAndroidLibraryProject {
 				ProjectName = "Lib",
-				ProjectGuid = Guid.NewGuid ().ToString (),
 				Sources = {
-					class1Source,
+					new BuildItem.Source ("Class1.cs") {
+						TextContent = () => "public class Class1 { }",
+					}
 				},
 			};
-			using (var b = CreateDllBuilder (Path.Combine (testPath, "Lib"))) {
-				Assert.IsTrue (b.Build (lib), "Build should have succeeded.");
-				Assert.IsTrue (b.LastBuildOutput.ContainsText ("LogicalName=__AndroidLibraryProjects__.zip") ||
+			using (var b = CreateDllBuilder ()) {
+				Assert.IsTrue (b.Build (lib), "first build should have succeeded.");
+				var aarPath = Path.Combine (Root, b.ProjectDirectory, lib.OutputPath, $"{lib.ProjectName}.aar");
+				if (Builder.UseDotNet) {
+					FileAssert.Exists (aarPath);
+				} else {
+					Assert.IsTrue (b.LastBuildOutput.ContainsText ("LogicalName=__AndroidLibraryProjects__.zip") ||
 						b.LastBuildOutput.ContainsText ("Lib.obj.Debug.__AndroidLibraryProjects__.zip,__AndroidLibraryProjects__.zip"),
 						"The LogicalName for __AndroidLibraryProjects__.zip should be set.");
-				class1Source.Timestamp = DateTimeOffset.UtcNow.Add (TimeSpan.FromMinutes (1));
-				Assert.IsTrue (b.Build (lib), "Build should have succeeded.");
-				Assert.IsTrue (b.LastBuildOutput.ContainsText ("LogicalName=__AndroidLibraryProjects__.zip") ||
+				}
+				lib.Touch ("Class1.cs");
+				Assert.IsTrue (b.Build (lib), "second build should have succeeded.");
+				if (Builder.UseDotNet) {
+					FileAssert.Exists (aarPath);
+				} else {
+					Assert.IsTrue (b.LastBuildOutput.ContainsText ("LogicalName=__AndroidLibraryProjects__.zip") ||
 						b.LastBuildOutput.ContainsText ("Lib.obj.Debug.__AndroidLibraryProjects__.zip,__AndroidLibraryProjects__.zip"),
 						"The LogicalName for __AndroidLibraryProjects__.zip should be set.");
+				}
 			}
 		}
 
@@ -381,9 +377,11 @@ namespace Lib2
 
 						Assert.IsNotNull (libfoo, "libfoo.so should exist in the .apk");
 
-						Assert.AreEqual (so.TextContent ().Length, new FileInfo (Path.Combine (Root, libbuilder.ProjectDirectory, lib.IntermediateOutputPath,
-							"nl", "armeabi-v7a", "libfoo.so")).Length,
-							"intermediate size mismatch");
+						if (!Builder.UseDotNet) {
+							Assert.AreEqual (so.TextContent ().Length, new FileInfo (Path.Combine (Root, libbuilder.ProjectDirectory, lib.IntermediateOutputPath,
+								"nl", "armeabi-v7a", "libfoo.so")).Length,
+								"intermediate size mismatch");
+						}
 						libfoo = ZipHelper.ReadFileFromZip (Path.Combine (Root, builder.ProjectDirectory, app.OutputPath, app.PackageName + "-Signed.apk"),
 							"lib/armeabi-v7a/libfoo.so");
 						Assert.AreEqual (so.TextContent ().Length, libfoo.Length, "compressed size mismatch");
@@ -468,10 +466,14 @@ namespace Lib2
 		[Test]
 		public void LibraryProjectTargetsDoNotBreak ()
 		{
-			var targets = new [] {
-				"_CreateNativeLibraryArchive",
-				"_CreateManagedLibraryResourceArchive",
-			};
+			var targets = Builder.UseDotNet ?
+				new [] {
+					"_CreateAar"
+				} :
+				new [] {
+					"_CreateNativeLibraryArchive",
+					"_CreateManagedLibraryResourceArchive",
+				};
 			var proj = new XamarinAndroidLibraryProject {
 				Sources = {
 					new BuildItem.Source ("Class1.cs") {

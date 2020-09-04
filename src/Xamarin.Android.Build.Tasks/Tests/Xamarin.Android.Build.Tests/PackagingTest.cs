@@ -963,7 +963,8 @@ public class Test
 				}
 				using (var b = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
 					Assert.IsTrue (b.Build (app), "Build of jar should have succeeded.");
-					string expected = "Failed to add jar entry AndroidManifest.xml from test.jar: the same file already exists in the apk";
+					var jar = Builder.UseDotNet ? "2965D0C9A2D5DB1E.jar" : "test.jar";
+					string expected = $"Failed to add jar entry AndroidManifest.xml from {jar}: the same file already exists in the apk";
 					Assert.IsTrue (b.LastBuildOutput.ContainsText (expected), $"AndroidManifest.xml for test.jar should have been ignored.");
 				}
 			}
