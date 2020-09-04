@@ -54,8 +54,6 @@ namespace Xamarin.Android.Build.Tests
 				TargetFrameworkVersion = tfv,
 			};
 			using (var b = CreateApkBuilder ()) {
-				var tfvs = b.GetAllSupportedTargetFrameworkVersions ();
-				Console.WriteLine ("TFVS count: " + tfvs.Length);
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
 		}
@@ -1726,12 +1724,10 @@ namespace App1
 					TextContent = () => "Test Content 1"
 				});
 				Assert.IsTrue (b.Build (proj), "Build should have built successfully");
-				Assert.IsTrue (
-					b.LastBuildOutput.Contains ("TestContent.txt:  warning XA0101: @(Content) build action is not supported"),
-					"Build Output did not contain the correct error message");
-				Assert.IsTrue (
-					b.LastBuildOutput.Contains ("TestContent1.txt:  warning XA0101: @(Content) build action is not supported"),
-					"Build Output did not contain the correct error message");
+				StringAssertEx.Contains ("TestContent.txt : warning XA0101: @(Content) build action is not supported", b.LastBuildOutput,
+					"Build Output did not contain 'TestContent.txt : warning XA0101'.");
+				StringAssertEx.Contains ("TestContent1.txt : warning XA0101: @(Content) build action is not supported", b.LastBuildOutput,
+					"Build Output did not contain 'TestContent1.txt : warning XA0101'.");
 			}
 		}
 
