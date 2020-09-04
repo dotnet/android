@@ -821,14 +821,14 @@ In this message, the term "handheld app" means "app for handheld devices."
 {3} - The installer program name</note>
       </trans-unit>
       <trans-unit id="XA5300_Android_SDK">
-        <source>The Android SDK directory could not be found. Please set via /p:AndroidSdkDirectory.</source>
-        <target state="translated">Nie udało się znaleźć katalogu zestawu Android SDK. Określ go za pomocą opcji /p:AndroidSdkDirectory.</target>
-        <note>The following are literal names and should not be translated: /p:AndroidSdkDirectory</note>
+        <source>The Android SDK directory could not be found. Check that the Android SDK Manager in Visual Studio shows a valid installation. To use a custom SDK path for a command line build, set the 'AndroidSdkDirectory' MSBuild property to the custom path.</source>
+        <target state="needs-review-translation">Nie udało się znaleźć katalogu zestawu Android SDK. Określ go za pomocą opcji /p:AndroidSdkDirectory.</target>
+        <note>The following terms should not be translated: AndroidSdkDirectory</note>
       </trans-unit>
       <trans-unit id="XA5300_Java_SDK">
-        <source>The Java SDK directory could not be found. Please set via /p:JavaSdkDirectory.</source>
-        <target state="translated">Nie udało się znaleźć katalogu zestawu Java SDK. Określ go za pomocą opcji /p:JavaSdkDirectory.</target>
-        <note>The following are literal names and should not be translated: /p:JavaSdkDirectory</note>
+        <source>The Java SDK directory could not be found. Ensure that the Android section of the Visual Studio options has a valid Java SDK directory configured. To use a custom SDK path for a command line build, set the 'JavaSdkDirectory' MSBuild property to the custom path.</source>
+        <target state="needs-review-translation">Nie udało się znaleźć katalogu zestawu Java SDK. Określ go za pomocą opcji /p:JavaSdkDirectory.</target>
+        <note>The following terms should not be translated: JavaSdkDirectory</note>
       </trans-unit>
       <trans-unit id="XA5301">
         <source>Failed to generate Java type for class: {0} due to MAX_PATH: {1}</source>

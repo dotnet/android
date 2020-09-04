@@ -1281,7 +1281,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The Android SDK directory could not be found. Please set via /p:AndroidSdkDirectory..
+        ///   Looks up a localized string similar to The Android SDK directory could not be found. Check that the Android SDK Manager in Visual Studio shows a valid installation. To use a custom SDK path for a command line build, set the &apos;AndroidSdkDirectory&apos; MSBuild property to the custom path..
         /// </summary>
         internal static string XA5300_Android_SDK {
             get {
@@ -1290,7 +1290,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The Java SDK directory could not be found. Please set via /p:JavaSdkDirectory..
+        ///   Looks up a localized string similar to The Java SDK directory could not be found. Ensure that the Android section of the Visual Studio options has a valid Java SDK directory configured. To use a custom SDK path for a command line build, set the &apos;JavaSdkDirectory&apos; MSBuild property to the custom path..
         /// </summary>
         internal static string XA5300_Java_SDK {
             get {
