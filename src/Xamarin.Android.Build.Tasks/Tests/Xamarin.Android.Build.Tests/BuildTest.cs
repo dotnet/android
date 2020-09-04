@@ -664,10 +664,20 @@ namespace UnamedProject
 			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
-				//Invalidate build.props with newer timestamp, you could also modify anything in @(_PropertyCacheItems)
-				var props = b.Output.GetIntermediaryPath("build.props");
-				File.SetLastWriteTimeUtc(props, DateTime.UtcNow);
-				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
+				var assemblyPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, "UnnamedProject.dll");
+				var apkPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, "UnnamedProject.UnnamedProject-Signed.apk");
+				var firstAssemblyWrite = new FileInfo (assemblyPath).LastWriteTime;
+				var firstApkWrite = new FileInfo (apkPath).LastWriteTime;
+
+				// Invalidate build.props with newer timestamp, by updating a @(_PropertyCacheItems) property
+				proj.SetProperty ("AndroidLinkMode", "SdkOnly");
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build should have succeeded.");
+				var secondAssemblyWrite = new FileInfo (assemblyPath).LastWriteTime;
+				var secondApkWrite = new FileInfo (apkPath).LastWriteTime;
+				Assert.IsTrue (secondAssemblyWrite > firstAssemblyWrite,
+					$"Assembly write time was not updated on partially incremental build. Before: {firstAssemblyWrite}. After: {secondAssemblyWrite}.");
+				Assert.IsTrue (secondApkWrite > firstApkWrite,
+					$"Apk write time was not updated on partially incremental build. Before: {firstApkWrite}. After: {secondApkWrite}.");
 			}
 		}
 

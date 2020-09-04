@@ -1273,12 +1273,12 @@ namespace Lib2
 			var proj = new XamarinFormsAndroidApplicationProject ();
 			proj.SetAndroidSupportedAbis ("armeabi-v7a");
 			using (var b = CreateApkBuilder ()) {
-				b.Build (proj);
+				Assert.IsTrue (b.Build (proj), "First build should have succeeded.");
 
 				var parameters = Builder.UseDotNet ?
 					new [] { $"{KnownProperties.RuntimeIdentifier}=android.21-x86" } :
 					new [] { $"{KnownProperties.AndroidSupportedAbis}=x86" };
-				b.Build (proj, parameters: parameters, doNotCleanupOnUpdate: true);
+				Assert.IsTrue (b.Build (proj, parameters: parameters, doNotCleanupOnUpdate: true), "Second build should have succeeded.");
 			}
 		}
 	}
