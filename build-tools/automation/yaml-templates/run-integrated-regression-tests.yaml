@@ -1,5 +1,4 @@
 parameters:
-  node_id: 0
 
 steps:
 - task: xamops.azdevex.lingering-process-task.lingering-process-task@1
@@ -67,64 +66,41 @@ steps:
     }
   displayName: Test Environment Setup
 
-- ${{ if eq(parameters.node_id, 1) }}:
-  - template: run-nunit-tests.yaml
-    parameters:
-      nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
-      testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
-      testRunTitle: Mono.Android-Tests Debug on Device
-      nunitConsoleExtraArgs: --where "cat == RuntimeTests"
+- template: run-nunit-tests.yaml
+  parameters:
+    nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
+    testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
+    testRunTitle: Mono.Android-Tests Debug on Device
+    nunitConsoleExtraArgs: --where "cat == RuntimeTests"
 
-  - template: run-nunit-tests.yaml
-    parameters:
-      nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
-      testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
-      testRunTitle: Hello Tests on Device
-      nunitConsoleExtraArgs: --where "cat == Hello"
-      condition: and(succeeded(), eq(variables['XA.Commercial.Build'], 'true'))
+- template: run-nunit-tests.yaml
+  parameters:
+    nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
+    testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
+    testRunTitle: Hello Tests on Device
+    nunitConsoleExtraArgs: --where "cat == Hello"
+    condition: and(succeeded(), eq(variables['XA.Commercial.Build'], 'true'))
 
-  - template: run-nunit-tests.yaml
-    parameters:
-      nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
-      testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
-      testRunTitle: Smoke Tests on Device
-      nunitConsoleExtraArgs: --where "cat == RegressionDeviceTests"
+- template: run-nunit-tests.yaml
+  parameters:
+    nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
+    testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
+    testRunTitle: Smoke Tests on Device
+    nunitConsoleExtraArgs: --where "cat == RegressionDeviceTests"
 
-  - template: run-nunit-tests.yaml
-    parameters:
-      nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
-      testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
-      testRunTitle: Incremental Build Tests
-      nunitConsoleExtraArgs: --where "cat == BuildPerformance"
+- template: run-nunit-tests.yaml
+  parameters:
+    nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
+    testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
+    testRunTitle: Incremental Build Tests
+    nunitConsoleExtraArgs: --where "cat == BuildPerformance"
 
-  - template: run-nunit-tests.yaml
-    parameters:
-      nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
-      testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
-      testRunTitle: AOT Tests
-      nunitConsoleExtraArgs: --where "cat == AotSupport"
-
-- ${{ if eq(parameters.node_id, 2) }}:
-  - template: run-nunit-tests.yaml
-    parameters:
-      nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
-      testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
-      testRunTitle: Code Analysis Tests
-      nunitConsoleExtraArgs: --where "cat == CodeAnalysisTests"
-
-  - template: run-nunit-tests.yaml
-    parameters:
-      nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
-      testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
-      testRunTitle: Networking Options Tests
-      nunitConsoleExtraArgs: --where "cat == HttpClientAndTlsProviderPackageTests"
-
-  - template: run-nunit-tests.yaml
-    parameters:
-      nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
-      testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
-      testRunTitle: AndroidApiInfo Tests
-      nunitConsoleExtraArgs: --where "cat == AndroidApiInfoTests"
+- template: run-nunit-tests.yaml
+  parameters:
+    nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
+    testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
+    testRunTitle: AOT Tests
+    nunitConsoleExtraArgs: --where "cat == AotSupport"
 
 - template: run-nunit-tests.yaml
   parameters:
