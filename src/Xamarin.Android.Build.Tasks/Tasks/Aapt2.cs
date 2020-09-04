@@ -87,7 +87,7 @@ namespace Xamarin.Android.Tasks {
 		protected long RunAapt (string [] args, string outputFile)
 		{
 			LogDebugMessage ($"Executing {string.Join (" ", args)}");
-			long jobid = daemon.QueueCommand (args, outputFile);
+			long jobid = daemon.QueueCommand (args, outputFile, CancellationToken);
 			jobs.Add (jobid);
 			return jobid;
 		}

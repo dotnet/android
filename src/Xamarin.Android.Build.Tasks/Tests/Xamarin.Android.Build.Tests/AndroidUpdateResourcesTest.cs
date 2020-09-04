@@ -1376,5 +1376,25 @@ namespace UnnamedProject
 				Assert.Fail ($"aapt log message was not found: {aaptCommand}");
 			}
 		}
+
+		[Test]
+		public void InvalidFilenames ()
+		{
+			BuildItem CreateItem (string include) =>
+				new AndroidItem.AndroidResource (include) {
+					TextContent = () => "",
+				};
+
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.AndroidResources.Add (CreateItem ("Resources\\raw\\.foo"));
+			proj.AndroidResources.Add (CreateItem ("Resources\\raw\\.git"));
+			proj.AndroidResources.Add (CreateItem ("Resources\\raw\\.svn"));
+			proj.AndroidResources.Add (CreateItem ("Resources\\raw\\.DS_Store"));
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
+				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
+				b.Output.AssertTargetIsSkipped ("_CompileResources");
+			}
+		}
 	}
 }
