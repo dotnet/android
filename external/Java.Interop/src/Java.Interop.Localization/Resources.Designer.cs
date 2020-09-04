@@ -473,5 +473,113 @@ namespace Java.Interop.Localization {
                 return ResourceManager.GetString("JavaCallableWrappers_XA4217", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to preload reference &apos;{0}&apos;..
+        /// </summary>
+        public static string JniMarshalMethodGen_JM4001 {
+            get {
+                return ResourceManager.GetString("JniMarshalMethodGen_JM4001", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please specify at least one ASSEMBLY to process..
+        /// </summary>
+        public static string JniMarshalMethodGen_JM4002 {
+            get {
+                return ResourceManager.GetString("JniMarshalMethodGen_JM4002", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to create Java VM{0}{1}.
+        /// </summary>
+        public static string JniMarshalMethodGen_JM4003 {
+            get {
+                return ResourceManager.GetString("JniMarshalMethodGen_JM4003", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to read profile file &apos;{0}&apos;.{1}{2}.
+        /// </summary>
+        public static string JniMarshalMethodGen_JM4004 {
+            get {
+                return ResourceManager.GetString("JniMarshalMethodGen_JM4004", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Path &apos;{0}&apos; does not exist..
+        /// </summary>
+        public static string JniMarshalMethodGen_JM4005 {
+            get {
+                return ResourceManager.GetString("JniMarshalMethodGen_JM4005", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to process assembly &apos;{0}&apos;{1}{2}{1}{3}.
+        /// </summary>
+        public static string JniMarshalMethodGen_JM4006 {
+            get {
+                return ResourceManager.GetString("JniMarshalMethodGen_JM4006", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Couln&apos;t find interface {0}.
+        /// </summary>
+        public static string JniMarshalMethodGen_JM8001 {
+            get {
+                return ResourceManager.GetString("JniMarshalMethodGen_JM8001", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Caught an exception while loading types. The types that cannot be loaded will not be processed. Make sure that any additional assembly references required for those types are provided using the -r option. Exception:{0}{1}.
+        /// </summary>
+        public static string JniMarshalMethodGen_JM8003 {
+            get {
+                return ResourceManager.GetString("JniMarshalMethodGen_JM8003", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to find type &apos;{0}&apos;. The type will not be processed. Make sure the directories for all referenced assemblies are provided with the -L option..
+        /// </summary>
+        public static string JniMarshalMethodGen_JM8004 {
+            get {
+                return ResourceManager.GetString("JniMarshalMethodGen_JM8004", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Marshal methods type &apos;{0}&apos; already exists. Skipped generation of marshal methods in assembly &apos;{1}&apos;. Use -f to force regeneration when desired..
+        /// </summary>
+        public static string JniMarshalMethodGen_JM8005 {
+            get {
+                return ResourceManager.GetString("JniMarshalMethodGen_JM8005", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to find definition of method &apos;{0}&apos; in assembly metadata. It will not be processed. Make sure the directories for all referenced assemblies are provided with the -L option..
+        /// </summary>
+        public static string JniMarshalMethodGen_JM8006 {
+            get {
+                return ResourceManager.GetString("JniMarshalMethodGen_JM8006", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to find the System.Console.WriteLine() method. Disabling debug injection. To enable debug injection, ensure the directory containing mscorlib is provided with the -L option..
+        /// </summary>
+        public static string JniMarshalMethodGen_JM8007 {
+            get {
+                return ResourceManager.GetString("JniMarshalMethodGen_JM8007", resourceCulture);
+            }
+        }
     }
 }

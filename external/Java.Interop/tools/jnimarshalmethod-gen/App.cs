@@ -128,10 +128,8 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 				Environment.Exit (0);
 			}
 
-			if (assemblies.Count < 1) {
-				Error ("Please specify at least one ASSEMBLY to process.");
-				Environment.Exit (2);
-			}
+			if (assemblies.Count < 1)
+				ErrorAndExit (Message.ErrorAtLeastOneAssembly);
 
 			return assemblies;
 		}
@@ -149,8 +147,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 					typeNameRegexes.Add (new Regex (line));
 				}
 			} catch (Exception e) {
-				Error ($"Unable to read profile '{typesPath}'.{Environment.NewLine}{e}");
-				Environment.Exit (4);
+				ErrorAndExit (Message.ErrorUnableToReadProfile, typesPath, Environment.NewLine, e);
 			}
 		}
 
@@ -175,16 +172,14 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 				try {
 					Assembly.LoadFile (Path.GetFullPath (r));
 				} catch (Exception) {
-					Error ($"Unable to preload reference '{r}'.");
-					Environment.Exit (1);
+					ErrorAndExit (Message.ErrorUnableToPreloadReference, r);
 				}
 				resolver.SearchDirectories.Add (Path.GetDirectoryName (r));
 			}
 
 			foreach (var assembly in assemblies) {
 				if (!File.Exists (assembly)) {
-					Error ($"Path '{assembly}' does not exist.");
-					Environment.Exit (1);
+					ErrorAndExit (Message.ErrorPathDoesNotExist, assembly);
 				}
 
 				resolver.SearchDirectories.Add (Path.GetDirectoryName (assembly));
@@ -194,7 +189,8 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 					resolver.AddToCache (ad);
 				} catch (Exception) {
 					if (Verbose)
-						Warning ($"Unable to read assembly '{assembly}' with symbols. Retrying to load it without them.");
+						Information ($"Unable to read assembly '{assembly}' with symbols. Retrying to load it without them.");
+
 					ad = AssemblyDefinition.ReadAssembly (assembly, readerParametersNoSymbols);
 					resolver.AddToCache (ad);
 				}
@@ -207,8 +203,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 					CreateMarshalMethodAssembly (assembly);
 					definedTypes.Clear ();
 				} catch (Exception e) {
-					Error ($"Unable to process assembly '{assembly}'{Environment.NewLine}{e.Message}{Environment.NewLine}{e}");
-					Environment.Exit (1);
+					ErrorAndExit (Message.ErrorUnableToProcessAssembly, assembly, Environment.NewLine, e.Message, e);
 				}
 			}
 		}
@@ -222,8 +217,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 			try {
 				builder.CreateJreVM ();
 			} catch (Exception e) {
-				Error ($"Unable to create Java VM{Environment.NewLine}{e}");
-				Environment.Exit (3);
+				ErrorAndExit (Message.ErrorUnableToCreateJavaVM, Environment.NewLine, e);
 			}
 		}
 
@@ -317,7 +311,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 			} catch (ReflectionTypeLoadException e) {
 				types = e.Types;
 				foreach (var le in e.LoaderExceptions)
-					Warning ($"Type Load exception{Environment.NewLine}{le}");
+					Warning (Message.WarningTypeLoadException, Environment.NewLine, le);
 			}
 
 			foreach (var systemType in types) {
@@ -343,7 +337,8 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 
 				if (td == null) {
 					if (Verbose)
-						Warning ($"Unable to find cecil's TypeDefinition of type {type}");
+						Warning (Message.WarningUnableToFindTypeDefinition, type);
+
 					continue;
 				}
 				if (!td.ImplementsInterface ("Java.Interop.IJavaPeerable", cache))
@@ -351,7 +346,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 
 				var existingMarshalMethodsType = td.GetNestedType (TypeMover.NestedName);
 				if (existingMarshalMethodsType != null && !forceRegeneration) {
-					Warning ($"Marshal methods type '{existingMarshalMethodsType.GetAssemblyQualifiedName (cache)}' already exists. Skipped generation of marshal methods in assembly '{assemblyName}'. Use -f to force regeneration when desired.");
+					Warning (Message.WarningMarshalMethodsTypeAlreadyExists, existingMarshalMethodsType.GetAssemblyQualifiedName (cache), assemblyName);
 
 					return;
 				}
@@ -389,7 +384,8 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 
 						if (md == null) {
 							if (Verbose)
-								Warning ($"Unable to find cecil's MethodDefinition of method {method}");
+								Warning (Message.WarningUnableToFindMethodDefinition, method);
+
 							continue;
 						}
 
@@ -526,9 +522,14 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 
 		public static void ColorWrite (string message, ConsoleColor color) => ColorMessage (message, color, Console.Out, false);
 
-		public static void Error (string message) => ColorMessage ($"Error: {Name}: {message}", ConsoleColor.Red, Console.Error);
+		public static void ErrorAndExit (Message message, params object[] args) {
+			ColorMessage ($"error JM{message.Code:X04}: {Name}: {string.Format (message.Localized, args)}", ConsoleColor.Red, Console.Error);
+			Environment.Exit (message.Code - 0x4000);
+		}
 
-		public static void Warning (string message) => ColorMessage ($"Warning: {Name}: {message}", ConsoleColor.Yellow, Console.Error);
+		public static void Warning (Message message, params object[] args) => ColorMessage ($"warning JM{message.Code:X04}: {Name}: {string.Format (message.Localized, args)}", ConsoleColor.Yellow, Console.Error);
+
+		public static void Information (string message) => ColorMessage (message, ConsoleColor.Yellow, Console.Out);
 
 		static void AddToTypeMap (TypeDefinition type)
 		{
@@ -684,7 +685,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 				var id = ad.MainModule.GetType (iface.GetCecilName ());
 
 				if (id == null) {
-					App.Warning ($"Couln't find iterface {iface.FullName}");
+					App.Warning (Message.WarningCouldntFindInterface, iface.FullName);
 					continue;
 				}
 

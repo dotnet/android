@@ -28,6 +28,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Java.Interop.Export\Java.Interop.Export.csproj" />
+    <ProjectReference Include="..\..\src\Java.Interop.Localization\Java.Interop.Localization.csproj" />
     <ProjectReference Include="..\..\src\Java.Interop\Java.Interop.csproj" />
     <ProjectReference Include="..\..\src\Java.Runtime.Environment\Java.Runtime.Environment.csproj" />
     <ProjectReference Include="..\..\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil.csproj" />

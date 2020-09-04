@@ -332,4 +332,54 @@ Name, com.example.MyClass.</comment>
     <value>Cannot override Kotlin-generated method '{0}' because it is not a valid Java method name. This method can only be overridden from Kotlin.</value>
     <comment>{0} - Kotlin method name.</comment>
   </data>
+  <data name="JniMarshalMethodGen_JM4001" xml:space="preserve">
+    <value>Unable to preload reference '{0}'.</value>
+    <comment>{0} - assembly path</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM4002" xml:space="preserve">
+    <value>Please specify at least one ASSEMBLY to process.</value>
+    <comment>The following terms should not be translated or have any capitalization changes: ASSEMBLY. This is a special case for this particular message. In most messages, "assembly" would be translated.</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM4003" xml:space="preserve">
+    <value>Unable to create Java VM{0}{1}</value>
+    <comment>{0} - newline, {1} - exception</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM4004" xml:space="preserve">
+    <value>Unable to read profile file '{0}'.{1}{2}</value>
+    <comment>{0} - path, {1} - newline, {2} - exception. In this message, the term "profile" refers to a customized list of types to process.</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM4005" xml:space="preserve">
+    <value>Path '{0}' does not exist.</value>
+    <comment>{0} - path</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM4006" xml:space="preserve">
+    <value>Unable to process assembly '{0}'{1}{2}{1}{3}</value>
+    <comment>{0} - assembly, {1} - newline, {2} - exception message, {3} exception</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM8001" xml:space="preserve">
+    <value>Couln't find interface {0}</value>
+    <comment>{0} - interface name</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM8003" xml:space="preserve">
+    <value>Caught an exception while loading types. The types that cannot be loaded will not be processed. Make sure that any additional assembly references required for those types are provided using the -r option. Exception:{0}{1}</value>
+    <comment>{0} - newline, {1} - exception. The following terms should not be translated: -r</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM8004" xml:space="preserve">
+    <value>Unable to find type '{0}'. The type will not be processed. Make sure the directories for all referenced assemblies are provided with the -L option.</value>
+    <comment>{0} - type
+The following terms should not be translated: -L</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM8005" xml:space="preserve">
+    <value>Marshal methods type '{0}' already exists. Skipped generation of marshal methods in assembly '{1}'. Use -f to force regeneration when desired.</value>
+    <comment>{0} - type, {1} - assembly name. The following terms should not be translated: -f. In this message, the term "marshal methods" refers to methods that allow interaction between the managed methods and Java methods, similar to the methods of the .NET System.Runtime.InteropServices.Marshal class.</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM8006" xml:space="preserve">
+    <value>Unable to find definition of method '{0}' in assembly metadata. It will not be processed. Make sure the directories for all referenced assemblies are provided with the -L option.</value>
+    <comment>{0} - method
+The following terms should not be translated: -L</comment>
+  </data>
+  <data name="JniMarshalMethodGen_JM8007" xml:space="preserve">
+    <value>Unable to find the System.Console.WriteLine() method. Disabling debug injection. To enable debug injection, ensure the directory containing mscorlib is provided with the -L option.</value>
+    <comment>The following terms should not be translated: -L</comment>
+  </data>
 </root>

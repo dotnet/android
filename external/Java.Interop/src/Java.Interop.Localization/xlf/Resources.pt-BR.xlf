@@ -263,6 +263,68 @@ Name, com.example.MyClass.</note>
         <target state="new">Cannot override Kotlin-generated method '{0}' because it is not a valid Java method name. This method can only be overridden from Kotlin.</target>
         <note>{0} - Kotlin method name.</note>
       </trans-unit>
+      <trans-unit id="JniMarshalMethodGen_JM4001">
+        <source>Unable to preload reference '{0}'.</source>
+        <target state="new">Unable to preload reference '{0}'.</target>
+        <note>{0} - assembly path</note>
+      </trans-unit>
+      <trans-unit id="JniMarshalMethodGen_JM4002">
+        <source>Please specify at least one ASSEMBLY to process.</source>
+        <target state="new">Please specify at least one ASSEMBLY to process.</target>
+        <note>The following terms should not be translated or have any capitalization changes: ASSEMBLY. This is a special case for this particular message. In most messages, "assembly" would be translated.</note>
+      </trans-unit>
+      <trans-unit id="JniMarshalMethodGen_JM4003">
+        <source>Unable to create Java VM{0}{1}</source>
+        <target state="new">Unable to create Java VM{0}{1}</target>
+        <note>{0} - newline, {1} - exception</note>
+      </trans-unit>
+      <trans-unit id="JniMarshalMethodGen_JM4004">
+        <source>Unable to read profile file '{0}'.{1}{2}</source>
+        <target state="new">Unable to read profile file '{0}'.{1}{2}</target>
+        <note>{0} - path, {1} - newline, {2} - exception. In this message, the term "profile" refers to a customized list of types to process.</note>
+      </trans-unit>
+      <trans-unit id="JniMarshalMethodGen_JM4005">
+        <source>Path '{0}' does not exist.</source>
+        <target state="new">Path '{0}' does not exist.</target>
+        <note>{0} - path</note>
+      </trans-unit>
+      <trans-unit id="JniMarshalMethodGen_JM4006">
+        <source>Unable to process assembly '{0}'{1}{2}{1}{3}</source>
+        <target state="new">Unable to process assembly '{0}'{1}{2}{1}{3}</target>
+        <note>{0} - assembly, {1} - newline, {2} - exception message, {3} exception</note>
+      </trans-unit>
+      <trans-unit id="JniMarshalMethodGen_JM8001">
+        <source>Couln't find interface {0}</source>
+        <target state="new">Couln't find interface {0}</target>
+        <note>{0} - interface name</note>
+      </trans-unit>
+      <trans-unit id="JniMarshalMethodGen_JM8003">
+        <source>Caught an exception while loading types. The types that cannot be loaded will not be processed. Make sure that any additional assembly references required for those types are provided using the -r option. Exception:{0}{1}</source>
+        <target state="new">Caught an exception while loading types. The types that cannot be loaded will not be processed. Make sure that any additional assembly references required for those types are provided using the -r option. Exception:{0}{1}</target>
+        <note>{0} - newline, {1} - exception. The following terms should not be translated: -r</note>
+      </trans-unit>
+      <trans-unit id="JniMarshalMethodGen_JM8004">
+        <source>Unable to find type '{0}'. The type will not be processed. Make sure the directories for all referenced assemblies are provided with the -L option.</source>
+        <target state="new">Unable to find type '{0}'. The type will not be processed. Make sure the directories for all referenced assemblies are provided with the -L option.</target>
+        <note>{0} - type
+The following terms should not be translated: -L</note>
+      </trans-unit>
+      <trans-unit id="JniMarshalMethodGen_JM8005">
+        <source>Marshal methods type '{0}' already exists. Skipped generation of marshal methods in assembly '{1}'. Use -f to force regeneration when desired.</source>
+        <target state="new">Marshal methods type '{0}' already exists. Skipped generation of marshal methods in assembly '{1}'. Use -f to force regeneration when desired.</target>
+        <note>{0} - type, {1} - assembly name. The following terms should not be translated: -f. In this message, the term "marshal methods" refers to methods that allow interaction between the managed methods and Java methods, similar to the methods of the .NET System.Runtime.InteropServices.Marshal class.</note>
+      </trans-unit>
+      <trans-unit id="JniMarshalMethodGen_JM8006">
+        <source>Unable to find definition of method '{0}' in assembly metadata. It will not be processed. Make sure the directories for all referenced assemblies are provided with the -L option.</source>
+        <target state="new">Unable to find definition of method '{0}' in assembly metadata. It will not be processed. Make sure the directories for all referenced assemblies are provided with the -L option.</target>
+        <note>{0} - method
+The following terms should not be translated: -L</note>
+      </trans-unit>
+      <trans-unit id="JniMarshalMethodGen_JM8007">
+        <source>Unable to find the System.Console.WriteLine() method. Disabling debug injection. To enable debug injection, ensure the directory containing mscorlib is provided with the -L option.</source>
+        <target state="new">Unable to find the System.Console.WriteLine() method. Disabling debug injection. To enable debug injection, ensure the directory containing mscorlib is provided with the -L option.</target>
+        <note>The following terms should not be translated: -L</note>
+      </trans-unit>
     </body>
   </file>
 </xliff>
