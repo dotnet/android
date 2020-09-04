@@ -1,5 +1,3 @@
-parameters:
-
 steps:
 - task: xamops.azdevex.lingering-process-task.lingering-process-task@1
 
