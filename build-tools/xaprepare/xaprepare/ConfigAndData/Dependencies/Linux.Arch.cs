@@ -53,8 +53,7 @@ namespace Xamarin.Android.Prepare
 			if (!base.InitOS ())
 				return false;
 
-			Log.Todo ("Implement");
-			return false;
+			return true;
 		}
 	};
 }
