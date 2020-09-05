@@ -40,6 +40,7 @@
     <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\CallNonvirtualDerived2.java" />
     <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\CallVirtualFromConstructorBase.java" />
     <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\CallVirtualFromConstructorDerived.java" />
+    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\GetThis.java" />
     <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\SelfRegistration.java" />
     <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\TestType.java" />
   </ItemGroup>

@@ -193,6 +193,14 @@ namespace Java.InteropTests
 			value.Dispose ();
 			value.Dispose ();
 		}
+
+		[Test]
+		public void DisposeAccessesThis ()
+		{
+			var value = new GetThis ();
+			value.Dispose ();
+			value.Dispose ();
+		}
 	}
 
 	class JavaObjectWithNoJavaPeer : JavaObject {

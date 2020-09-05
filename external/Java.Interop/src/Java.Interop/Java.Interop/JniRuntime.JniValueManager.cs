@@ -146,9 +146,8 @@ namespace Java.Interop
 				if (!value.PeerReference.IsValid)
 					return;
 
-				RemovePeer (value);
-
 				value.Disposed ();
+				RemovePeer (value);
 
 				var h = value.PeerReference;
 				if (!h.IsValid)
