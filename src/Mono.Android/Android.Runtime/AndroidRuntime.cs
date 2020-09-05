@@ -558,10 +558,12 @@ namespace Android.Runtime {
 		{
 			if (value == null)
 				throw new ArgumentNullException (nameof (value));
-			if (!value.PeerReference.IsValid)
-				throw new ArgumentException ("Must have a valid JNI object reference!", nameof (value));
 
 			var reference       = value.PeerReference;
+			if (!reference.IsValid) {
+				// Likely an idempotent DIspose(); ignore.
+				return;
+			}
 			var hash            = JNIEnv.IdentityHash! (reference.Handle);
 
 			RemovePeer (value, hash);
