@@ -101,6 +101,7 @@ namespace Xamarin.Android.Prepare
 				{ "@javac@",                context.OS.JavaCPath },
 				{ "@java@",                 context.OS.JavaPath },
 				{ "@jar@",                  context.OS.JarPath },
+				{ "@NDK_LLVM_TAG@",         $"{context.OS.Type.ToLowerInvariant ()}-x86_64" },
 			};
 
 			return new GeneratedPlaceholdersFile (

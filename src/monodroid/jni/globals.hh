@@ -2,11 +2,7 @@
 #ifndef __GLOBALS_H
 #define __GLOBALS_H
 
-#if !defined (DEBUG_APP_HELPER)
 #include "util.hh"
-#else
-#include "basic-utilities.hh"
-#endif
 #include "timing.hh"
 
 #include "debug.hh"
@@ -16,11 +12,7 @@
 #include "cppcompat.hh"
 
 extern xamarin::android::Debug debug;
-#if !defined (DEBUG_APP_HELPER)
 extern xamarin::android::Util utils;
-#else
-extern xamarin::android::BasicUtilities utils;
-#endif
 extern xamarin::android::internal::AndroidSystem androidSystem;
 extern xamarin::android::internal::OSBridge osBridge;
 extern xamarin::android::internal::EmbeddedAssemblies embeddedAssemblies;

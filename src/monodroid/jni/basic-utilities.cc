@@ -28,9 +28,9 @@ BasicUtilities::path_combine (const char *path1, const char *path2)
 	char *ret = new char [len];
 	*ret = '\0';
 
-	strcat (ret, path1);
-	strcat (ret, MONODROID_PATH_SEPARATOR);
-	strcat (ret, path2);
+	strncat (ret, path1, len - 1);
+	strncat (ret, MONODROID_PATH_SEPARATOR, len - 1);
+	strncat (ret, path2, len - 1);
 
 	return ret;
 }

@@ -51,6 +51,15 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, monodroid_sh
 	}
 
 	dynamic_local_string<SENSIBLE_PATH_MAX> entry_name;
+
+	// clang-tidy claims we have a leak in the loop:
+	//
+	//   Potential leak of memory pointed to by 'assembly_name'
+	//
+	// This is because we allocate `assembly_name` for a `.config` file, pass it to Mono and we don't free the value.
+	// However, clang-tidy can't know that the value is owned by Mono and we must not free it, thus the suppression.
+	//
+	// NOLINTNEXTLINE(clang-analyzer-unix.Malloc)
 	for (size_t i = 0; i < cd_entries; i++) {
 		entry_name.clear ();
 
@@ -58,9 +67,9 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, monodroid_sh
 		file_name = entry_name.get ();
 
 #ifdef DEBUG
-		log_warn (LOG_ASSEMBLY, "%s entry: %s", apk_name, file_name);
+		log_warn (LOG_ASSEMBLY, "%s entry: %s", apk_name, file_name == nullptr ? "unknown" : file_name);
 #endif
-		if (!result) {
+		if (!result || file_name == nullptr) {
 			log_fatal (LOG_ASSEMBLY, "Failed to read Central Directory info for entry %u in APK file %s", i, apk_name);
 			exit (FATAL_EXIT_NO_ASSEMBLIES);
 		}
@@ -371,6 +380,7 @@ EmbeddedAssemblies::zip_read_entry_info (uint8_t* buf, size_t buf_len, size_t& b
 	static constexpr size_t CD_LOCAL_HEADER_POS_OFFSET   = 42;
 	static constexpr size_t CD_COMMENT_LENGTH_OFFSET     = 32;
 
+	file_name = nullptr;
 	size_t index = buf_offset;
 	zip_ensure_valid_params (buf, buf_len, index, ZIP_CENTRAL_LEN);
 
