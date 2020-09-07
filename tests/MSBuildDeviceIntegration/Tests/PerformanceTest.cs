@@ -164,6 +164,44 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[Retry (2)]
+		public void Build_AndroidAsset_Change ()
+		{
+			var bytes = new byte [1024*1024*10];
+			var rnd = new Random ();
+			rnd.NextBytes (bytes);
+			var lib = new XamarinAndroidLibraryProject () {
+				ProjectName = "Library1",
+			};
+			lib.OtherBuildItems.Add (new AndroidItem.AndroidAsset ("Assets\\foo.bar") {
+				BinaryContent = () => bytes,
+			});
+			var proj = new XamarinAndroidApplicationProject () {
+				ProjectName = "App1",
+				References = {
+					new BuildItem.ProjectReference ("..\\Library1\\Library1.csproj"),
+				},
+			};
+			rnd.NextBytes (bytes);
+			proj.OtherBuildItems.Add (new AndroidItem.AndroidAsset ("Assets\\foo.bar") {
+				BinaryContent = () => bytes,
+			});
+			using (var libBuilder = CreateBuilderWithoutLogFile (Path.Combine ("temp", TestName, lib.ProjectName)))
+			using (var builder = CreateBuilderWithoutLogFile (Path.Combine ("temp", TestName, proj.ProjectName))) {
+				builder.Target = "Build";
+				libBuilder.Build (lib);
+				builder.Build (proj);
+
+				rnd.NextBytes (bytes);
+				lib.Touch ("Assets\\foo.bar");
+				libBuilder.Build (lib);
+				builder.Target = "SignAndroidPackage";
+				// Profile AndroidAsset change
+				Profile (builder, b => b.Build (proj));
+			}
+		}
+
+		[Test]
+		[Retry (2)]
 		public void Build_Designer_Change ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
