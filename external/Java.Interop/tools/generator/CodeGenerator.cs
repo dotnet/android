@@ -85,7 +85,7 @@ namespace Xamarin.Android.Binder
 			string apiXmlFile = filename;
 			string apiSourceAttr = null;
 
-			using (var xr = XmlReader.Create (filename)) {
+			using (var xr = XmlReader.Create (filename, new XmlReaderSettings { XmlResolver = null })) {
 				xr.MoveToContent ();
 				apiSourceAttr = xr.GetAttribute ("api-source");
 			}

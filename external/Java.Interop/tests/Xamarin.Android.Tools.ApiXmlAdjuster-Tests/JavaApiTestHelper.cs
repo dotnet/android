@@ -20,7 +20,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster.Tests
 		public static JavaApi GetLoadedApi ()
 		{
 			var api = new JavaApi ();
-			using (var xr = XmlReader.Create (ApiPath))
+			using (var xr = XmlReader.Create (ApiPath, new XmlReaderSettings { XmlResolver = null }))
 				api.Load (xr, false);
 			return api;
 		}

@@ -9,7 +9,7 @@ namespace Xamarin.AndroidTools.AnnotationSupport
 	{
 		public void Parse (string apiVersionsFilePath)
 		{
-			using (var reader = XmlReader.Create (apiVersionsFilePath))
+			using (var reader = XmlReader.Create (apiVersionsFilePath, new XmlReaderSettings { XmlResolver = null }))
 				Parse (reader);
 		}
 

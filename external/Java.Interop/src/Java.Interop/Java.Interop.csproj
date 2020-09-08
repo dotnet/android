@@ -19,7 +19,7 @@
     <DefineConstants>DEBUG;$(DefineConstants)</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Condition=" '$(TargetFramework)' != 'netstandard2.0' " Remove="NullableAttributes.cs" />
+    <Compile Condition=" '$(TargetFramework)' == 'netstandard2.0' " Include="..\utils\NullableAttributes.cs" />
     <Compile Remove="Java.Interop\JniLocationException.cs" />
   </ItemGroup>
   <PropertyGroup>
@@ -49,10 +49,6 @@
     <None Include="Documentation\Java.Interop\IJavaPeerable.xml" />
     <None Include="Documentation\Java.Interop\JniManagedPeerStates.xml" />
     <None Include="Documentation\Java.Interop\JniEnvironment.References.xml" />
-    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.7">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
     <ProjectReference Include="..\..\build-tools\jnienv-gen\jnienv-gen.csproj"
         ReferenceOutputAssembly="false"
     />

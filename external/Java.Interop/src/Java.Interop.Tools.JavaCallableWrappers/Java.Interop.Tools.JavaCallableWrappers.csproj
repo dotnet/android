@@ -25,7 +25,7 @@
     <Compile Include="..\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings\JavaNativeTypeManager.cs">
       <Link>JavaNativeTypeManager.cs</Link>
     </Compile>
-    <Compile Include="..\Java.Interop\NullableAttributes.cs">
+    <Compile Include="..\utils\NullableAttributes.cs">
       <Link>NullableAttributes.cs</Link>
     </Compile>
   </ItemGroup>

@@ -68,4 +68,13 @@
     <_RunJNIEnvGen Condition=" '$(JIBuildingForNetCoreApp)' == 'True' ">dotnet "$(_JNIEnvGenPath)"</_RunJNIEnvGen>
     <_RunJNIEnvGen Condition=" '$(JIBuildingForNetCoreApp)' != 'True' ">$(Runtime) "$(_JNIEnvGenPath)"</_RunJNIEnvGen>
   </PropertyGroup>
+  
+  <!-- Add Roslyn analyzers NuGet to all projects -->
+  <ItemGroup Condition=" '$(DisableRoslynAnalyzers)' != 'True' ">
+    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.3.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
 </Project>
