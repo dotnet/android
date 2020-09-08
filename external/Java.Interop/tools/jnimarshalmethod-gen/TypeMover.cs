@@ -15,6 +15,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator
 		AssemblyDefinition Destination { get; }
 		string DestinationPath { get; }
 		Dictionary<string, System.Reflection.Emit.TypeBuilder> Types { get; }
+		DirectoryAssemblyResolver Resolver { get; }
 
 		MethodReference consoleWriteLine;
 		TypeDefinitionCache cache;
@@ -25,10 +26,11 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator
 			Destination = destination;
 			DestinationPath = destinationPath;
 			Types = types;
+			Resolver = resolver;
 			this.cache = cache;
 
 			if (App.Debug) {
-				consoleWriteLine = GetSingleParameterMethod (resolver, Destination.MainModule, "mscorlib", "System.Console", "WriteLine", "System.String");
+				consoleWriteLine = GetSingleParameterMethod (Destination.MainModule, "mscorlib", "System.Console", "WriteLine", "System.String");
 				if (consoleWriteLine == null) {
 					App.Warning (Message.WarningUnableToFindSCWriteLine);
 					App.Debug = false;
@@ -400,6 +402,15 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator
 						return false;
 
 					delegateType = module.GetType (delegateTypeName);
+					if (delegateType == null) {
+						var t = Type.GetType (delegateTypeName);
+						if (t == null)
+							return false;
+
+						delegateType = GetType (t.Assembly.GetName ().ToString (), delegateTypeName);
+						if (delegateType == null)
+							return false;
+					}
 
 					skipCount = 11;
 					customDelegate = true;
@@ -516,16 +527,18 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator
 			return md;
 		}
 
-		MethodReference GetSingleParameterMethod (DirectoryAssemblyResolver resolver, ModuleDefinition module, string assemblyName, string typeName, string methodName, string parameterTypeName)
+		TypeDefinition GetType (string assemblyName, string typeName)
 		{
-			var assembly = resolver.Resolve (assemblyName);
+			var assembly = Resolver.Resolve (assemblyName);
 			if (assembly == null)
 				return null;
 
-			var typeTD = assembly.MainModule.GetType (typeName);
-			if (typeTD == null)
-				return null;
+			return assembly.MainModule.GetType (typeName);
+		}
 
+		MethodReference GetSingleParameterMethod (ModuleDefinition module, string assemblyName, string typeName, string methodName, string parameterTypeName)
+		{
+			var typeTD = GetType (assemblyName, typeName);
 			foreach (var md in typeTD.Methods)
 				if (md.Name == methodName && md.HasParameters && md.Parameters.Count == 1 && md.Parameters [0].ParameterType.FullName == parameterTypeName)
 					return GetUpdatedMethod (md, module);
