@@ -11,6 +11,7 @@
         Command="&quot;$(GradleWPath)&quot; -d $(GradleArgs) -PjavaSourceVer=$(JavacSourceVersion) -PjavaTargetVer=$(JavacTargetVersion) jar"
         EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)"
         WorkingDirectory="$(MSBuildThisFileDirectory)"
+        IgnoreStandardErrorWarningFormat="true"
     />
     <Copy
         SourceFiles="build\libs\java-source-utils.jar"
@@ -72,7 +73,7 @@
     />
   </Target>
 
-  <Target Name="_CleanJava" DependsOnTargets="Clean">
+  <Target Name="_CleanJava" BeforeTargets="Clean">
     <Delete Files="$(OutputPath)java-source-utils.jar" />
     <Exec
         Command="&quot;$(GradleWPath)&quot; clean $(GradleArgs)"
