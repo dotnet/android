@@ -645,41 +645,6 @@ namespace UnamedProject
 		}
 
 		[Test]
-		public void BuildPropsBreaksConvertResourcesCases ([Values (true, false)] bool useAapt2)
-		{
-			var proj = new XamarinAndroidApplicationProject () {
-				AndroidResources = {
-					new AndroidItem.AndroidResource (() => "Resources\\drawable\\IMALLCAPS.png") {
-						BinaryContent = () => XamarinAndroidApplicationProject.icon_binary_mdpi,
-					},
-					new AndroidItem.AndroidResource ("Resources\\layout\\test.axml") {
-						TextContent = () => {
-							return "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<ImageView xmlns:android=\"http://schemas.android.com/apk/res/android\" android:src=\"@drawable/IMALLCAPS\" />";
-						}
-					}
-				}
-			};
-			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
-				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
-				var assemblyPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, "UnnamedProject.dll");
-				var apkPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, "UnnamedProject.UnnamedProject-Signed.apk");
-				var firstAssemblyWrite = new FileInfo (assemblyPath).LastWriteTime;
-				var firstApkWrite = new FileInfo (apkPath).LastWriteTime;
-
-				// Invalidate build.props with newer timestamp, by updating a @(_PropertyCacheItems) property
-				proj.SetProperty ("AndroidLinkMode", "SdkOnly");
-				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build should have succeeded.");
-				var secondAssemblyWrite = new FileInfo (assemblyPath).LastWriteTime;
-				var secondApkWrite = new FileInfo (apkPath).LastWriteTime;
-				Assert.IsTrue (secondAssemblyWrite > firstAssemblyWrite,
-					$"Assembly write time was not updated on partially incremental build. Before: {firstAssemblyWrite}. After: {secondAssemblyWrite}.");
-				Assert.IsTrue (secondApkWrite > firstApkWrite,
-					$"Apk write time was not updated on partially incremental build. Before: {firstApkWrite}. After: {secondApkWrite}.");
-			}
-		}
-
-		[Test]
 		public void AndroidResourceNotExist ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
