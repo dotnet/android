@@ -9,6 +9,7 @@
     <_Outputs Include="$(_OutputJar);$(_OutputBat);$(_OutputSh);$(_OutputLicense)" />
   </ItemGroup>
   <Target Name="_BuildProGuard"
+      BeforeTargets="Build"
       Inputs="$(MSBuildThisFile)"
       Outputs="@(_Outputs)">
     <Exec
@@ -35,7 +36,7 @@
     />
     <Touch Files="@(_Outputs)" />
   </Target>
-  <Target Name="Clean">
+  <Target Name="_CleanProGuard" BeforeTargets="Clean">
     <Delete Files="@(_Outputs)" />
     <Exec
         Command="&quot;$(GradleWPath)&quot; clean $(GradleArgs)"

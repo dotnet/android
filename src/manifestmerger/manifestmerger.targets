@@ -1,19 +1,10 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <BuildDependsOn>
-      ResolveReferences;
-      _BuildManifestMerger;
-    </BuildDependsOn>
-    <CleanDependsOn>
-      _CleanManifestMerger;
-    </CleanDependsOn>
     <_Destination>$(XAInstallPrefix)xbuild\Xamarin\Android\manifestmerger.jar</_Destination>
   </PropertyGroup>
 
-  <Target Name="Build" DependsOnTargets="$(BuildDependsOn)" />
-  <Target Name="Clean" DependsOnTargets="$(CleanDependsOn)" />
-
   <Target Name="_BuildManifestMerger"
+      BeforeTargets="Build"
       Inputs="$(MSBuildThisFile);build.gradle"
       Outputs="$(_Destination)">
     <Exec
@@ -33,7 +24,7 @@
     <Touch Files="$(_Destination)" />
   </Target>
 
-  <Target Name="_CleanManifestMerger">
+  <Target Name="_CleanManifestMerger" BeforeTargets="Clean">
     <Delete Files="$(_Destination)" />
     <Exec
         Command="&quot;$(GradleWPath)&quot; clean $(GradleArgs)"

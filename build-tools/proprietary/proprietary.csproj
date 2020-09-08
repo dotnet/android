@@ -1,24 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.Build.NoTargets" >
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{D93CAC27-3893-42A3-99F1-2BCA72E186F4}</ProjectGuid>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AppendTargetFrameworkToOutputPath>False</AppendTargetFrameworkToOutputPath>
     <CopyBuildOutputToOutputDirectory>False</CopyBuildOutputToOutputDirectory>
+    <OutputPath>..\..\bin\$(Configuration)</OutputPath>
   </PropertyGroup>
+
   <Import Project="..\..\Configuration.props" />
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <OutputPath>..\..\bin\Debug</OutputPath>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <OutputPath>..\..\bin\Release</OutputPath>
-  </PropertyGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
-  <PropertyGroup>
-    <BuildDependsOn>
-      ResolveReferences;
-      PrepareForRun;
-    </BuildDependsOn>
-  </PropertyGroup>
   <Import Project="proprietary.targets" />
 </Project>

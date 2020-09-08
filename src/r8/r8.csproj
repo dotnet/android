@@ -1,15 +1,13 @@
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.Build.NoTargets">
+ 
   <PropertyGroup>
-    <Configuration Condition="'$(Configuration)'==''">Debug</Configuration>
-    <ProjectGuid>1bafa0cc-0377-46ce-ab7b-7bb2e7b62f63</ProjectGuid>
     <OutputType>Exe</OutputType>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <Configuration Condition="'$(Configuration)'==''">Debug</Configuration>
     <OutputPath Condition="'$(OutputPath)'==''">bin\$(Configuration)</OutputPath>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)'=='Debug'" />
-  <PropertyGroup Condition="'$(Configuration)'=='Release'" />
-  <Import Project="r8.props" />
+  
   <Import Project="..\..\Configuration.props" />
-  <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
   <Import Project="r8.targets" />
 </Project>
-

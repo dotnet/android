@@ -13,7 +13,7 @@
     <_EmbeddedBlobSource Include="machine.config.xml" />
     <_EmbeddedBlobDestination Include="jni\machine.config.include" />
   </ItemGroup>
-  <Target Name="_BuildRuntimes"
+  <Target Name="_BuildRuntimes" BeforeTargets="Build"
       DependsOnTargets="_GenerateIncludeFiles;_ConfigureRuntimes;_BuildAndroidRuntimes;_BuildHostRuntimes">
   </Target>
   <Target Name="_GenerateIncludeFiles"
