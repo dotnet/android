@@ -64,6 +64,7 @@ variables:
   IsMonoBranch: $[and(eq(variables['XA.Commercial.Build'], 'true'), ne(variables['System.PullRequest.IsFork'], 'True'), or(contains(variables['Build.SourceBranchName'], 'mono-'), contains(variables['System.PullRequest.SourceBranch'], 'mono-')))]
   RunAllTests: $[or(eq(variables['XA.RunAllTests'], true), eq(variables['IsMonoBranch'], true))]
   DotNetNUnitCategories: '& TestCategory != DotNetIgnore & TestCategory != AOT & TestCategory != LibraryProjectZip & TestCategory != MkBundle & TestCategory != MonoSymbolicate & TestCategory != PackagesConfig & TestCategory != StaticProject'
+  NUnit.NumberOfTestWorkers: 4
 
 # Stage and Job "display names" are shortened because they are combined to form the name of the corresponding GitHub check.
 stages:
@@ -375,7 +376,7 @@ stages:
         testRunTitle: Smoke MSBuild Tests - Windows Build Tree
         testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\net472\Xamarin.Android.Build.Tests.dll
         testResultsFile: TestResult-SmokeMSBuildTests-WinBuildTree-$(XA.Build.Configuration).xml
-        nunitConsoleExtraArgs: --where "cat == SmokeTests" --workers=4
+        nunitConsoleExtraArgs: --where "cat == SmokeTests" --workers=$(NUnit.NumberOfTestWorkers)
 
     - template: yaml-templates\upload-results.yaml
       parameters:

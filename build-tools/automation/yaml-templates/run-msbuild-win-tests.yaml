@@ -46,7 +46,7 @@ jobs:
         useDotNet: $(UseDotNet)
         testRunTitle: Xamarin.Android.Build.Tests - Windows-${{ parameters.node_id }} - ${{ parameters.job_suffix }}
         testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\${{ parameters.target_framework }}\Xamarin.Android.Build.Tests.dll
-        nunitConsoleExtraArgs: --workers=4 --where "cat == Node-${{ parameters.node_id }} ${{ parameters.nunit_categories }}"
+        nunitConsoleExtraArgs: --where "cat == Node-${{ parameters.node_id }} ${{ parameters.nunit_categories }}"
         dotNetTestExtraArgs: --filter "TestCategory = Node-${{ parameters.node_id }} ${{ parameters.nunit_categories }}"
         testResultsFile: TestResult-MSBuildTests-${{ parameters.job_name }}-$(XA.Build.Configuration).xml
 
@@ -64,7 +64,7 @@ jobs:
           useDotNet: $(UseDotNet)
           testRunTitle: Xamarin.Android.Build.Tests - Windows - No Node
           testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\${{ parameters.target_framework }}\Xamarin.Android.Build.Tests.dll
-          nunitConsoleExtraArgs: --workers=4 --where "cat != Node-1 && cat != Node-2 && cat != Node-3"
+          nunitConsoleExtraArgs: --where "cat != Node-1 && cat != Node-2 && cat != Node-3"
           dotNetTestExtraArgs: --filter "TestCategory != Node-1 & TestCategory != Node-2 & TestCategory != Node-3"
           testResultsFile: TestResult-MSBuildTests-Windows-NoNode-$(XA.Build.Configuration).xml
 
