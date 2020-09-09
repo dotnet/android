@@ -1429,62 +1429,6 @@ GVuZHNDbGFzc1ZhbHVlLmNsYXNzUEsFBgAAAAADAAMAwgAAAMYBAAAAAA==
 			}
 		}
 
-		[Test]
-		public void BasicApplicationRepetitiveBuild ()
-		{
-			var proj = new XamarinAndroidApplicationProject ();
-			using (var b = CreateApkBuilder ("temp/BasicApplicationRepetitiveBuild", cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
-				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
-				b.ThrowOnBuildFailure = false;
-				Assert.IsTrue (b.Build (proj), "first build failed");
-				var firstBuildTime = b.LastBuildTime;
-				Assert.IsTrue (b.Build (proj), "second build failed");
-				Assert.IsTrue (
-					firstBuildTime > b.LastBuildTime, "Second build ({0}) should have been faster than the first ({1})",
-					b.LastBuildTime, firstBuildTime
-				);
-				Assert.IsTrue (
-					b.Output.IsTargetSkipped ("_Sign"),
-					"the _Sign target should not run");
-				var item = proj.AndroidResources.First (x => x.Include () == "Resources\\values\\Strings.xml");
-				item.TextContent = () => proj.StringsXml.Replace ("${PROJECT_NAME}", "Foo");
-				item.Timestamp = null;
-				Assert.IsTrue (b.Build (proj), "third build failed");
-				Assert.IsFalse (
-					b.Output.IsTargetSkipped ("_Sign"),
-					"the _Sign target should run");
-			}
-		}
-
-		[Test]
-		[Category ("SmokeTests"), Category ("dotnet")]
-		public void BasicApplicationRepetitiveReleaseBuild ()
-		{
-			var proj = new XamarinAndroidApplicationProject () { IsRelease = true };
-			using (var b = CreateApkBuilder ()) {
-				var foo = new BuildItem.Source ("Foo.cs") {
-					TextContent = () => @"using System;
-	namespace UnnamedProject {
-		public class Foo {
-		}
-	}"
-				};
-				proj.Sources.Add (foo);
-				Assert.IsTrue (b.Build (proj), "first build failed");
-				var firstBuildTime = b.LastBuildTime;
-				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build failed");
-				Assert.IsTrue (
-					firstBuildTime > b.LastBuildTime, "Second build ({0}) should have been faster than the first ({1})",
-					b.LastBuildTime, firstBuildTime
-				);
-				b.Output.AssertTargetIsSkipped ("_Sign");
-				b.Output.AssertTargetIsSkipped (KnownTargets.LinkAssembliesShrink);
-				proj.Touch ("Foo.cs");
-				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "third build failed");
-				b.Output.AssertTargetIsNotSkipped ("CoreCompile");
-				b.Output.AssertTargetIsNotSkipped ("_Sign");
-			}
-		}
 
 		[Test]
 		public void BuildBasicApplicationCheckMdb ()
