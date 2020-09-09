@@ -85,6 +85,8 @@ namespace Xamarin.Android.Tasks
 		//[Required]
 		public bool EnableCompression { get; set; }
 
+		public bool IncludeWrapSh { get; set; }
+
 		[Required]
 		public string ProjectFullPath { get; set; }
 
@@ -537,6 +539,14 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
+		bool IncludeNativeLibrary (ITaskItem item)
+		{
+			if (IncludeWrapSh)
+				return true;
+
+			return String.Compare (Path.GetFileName (item.ItemSpec), "wrap.sh", StringComparison.Ordinal) != 0;
+		}
+
 		private void AddNativeLibraries (ArchiveFileList files, string [] supportedAbis)
 		{
 			var frameworkLibs = FrameworkNativeLibraries.Select (v => new LibInfo {
@@ -548,6 +558,7 @@ namespace Xamarin.Android.Tasks
 			AddNativeLibraries (files, supportedAbis, frameworkLibs);
 
 			var libs = NativeLibraries.Concat (BundleNativeLibraries ?? Enumerable.Empty<ITaskItem> ())
+				.Where (v => IncludeNativeLibrary (v))
 				.Select (v => new LibInfo {
 						Path = v.ItemSpec,
 						Abi = GetNativeLibraryAbi (v),
