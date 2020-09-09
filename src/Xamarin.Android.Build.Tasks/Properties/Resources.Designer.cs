@@ -61,7 +61,9 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0}. This error is likely caused by an issue with the AndroidManifest.xml file or an Android manifest generation attribute in a source code file..
+        ///   Looks up a localized string similar to {0}.
+        ///
+        ///This error is likely caused by an issue with the AndroidManifest.xml file or an Android manifest generation attribute in a source code file..
         /// </summary>
         internal static string AAPTManifestError {
             get {
@@ -237,7 +239,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The &apos;AndroidSupportedAbis&apos; MSBuild property is no longer supported. Edit the project file in a text editor and use the &apos;RuntimeIdentifiers&apos; MSBuild property instead..
+        ///   Looks up a localized string similar to The &apos;AndroidSupportedAbis&apos; MSBuild property is no longer supported. Edit the project file in a text editor, remove any uses of &apos;AndroidSupportedAbis&apos;, and use the &apos;RuntimeIdentifiers&apos; MSBuild property instead..
         /// </summary>
         internal static string XA0036 {
             get {
