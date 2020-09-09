@@ -46,7 +46,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void BuildBasicApplication ([ValueSource (nameof (SupportedTargetFrameworks))] string tfv, [Values (true, false)] bool isRelease)
 		{
 			var proj = new XamarinAndroidApplicationProject {
@@ -134,7 +133,6 @@ namespace Xamarin.Android.Build.Tests
 		};
 
 		[Test]
-		[Category ("dotnet")]
 		[TestCaseSource (nameof (BuildHasNoWarningsSource))]
 		public void BuildHasNoWarnings (bool isRelease, bool xamarinForms, bool multidex, string packageFormat)
 		{
@@ -264,7 +262,6 @@ class MemTest {
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		[NonParallelizable]
 		public void AndroidXMigration ([Values (true, false)] bool isRelease)
 		{
@@ -694,7 +691,6 @@ namespace UnamedProject
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		[NonParallelizable]
 		public void CheckTimestamps ([Values (true, false)] bool isRelease)
 		{
@@ -863,7 +859,6 @@ namespace UnamedProject
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void BuildIncrementingClassName ()
 		{
 			int count = 0;
@@ -1113,7 +1108,7 @@ namespace UnamedProject
 
 		[Test]
 		[NonParallelizable] // On MacOS, parallel /restore causes issues
-		[Category ("SmokeTests"), Category ("dotnet")]
+		[Category ("SmokeTests")]
 		public void BuildProguardEnabledProject ([Values (true, false)] bool isRelease, [Values ("dx", "d8")] string dexTool, [Values ("", "proguard", "r8")] string linkTool)
 		{
 			AssertDexToolSupported (dexTool);
@@ -1178,7 +1173,7 @@ namespace UnamedProject
 		}
 
 		[Test]
-		[Category ("Minor"), Category ("dotnet")]
+		[Category ("Minor")]
 		public void BuildApplicationOver65536Methods ([Values ("dx", "d8")] string dexTool)
 		{
 			AssertDexToolSupported (dexTool);
@@ -1191,7 +1186,6 @@ namespace UnamedProject
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void CreateMultiDexWithSpacesInConfig ([Values ("dx", "d8")] string dexTool)
 		{
 			AssertDexToolSupported (dexTool);
@@ -1205,7 +1199,6 @@ namespace UnamedProject
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void BuildMultiDexApplication ([Values ("dx", "d8")] string dexTool)
 		{
 			AssertDexToolSupported (dexTool);
@@ -1239,7 +1232,6 @@ namespace UnamedProject
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void BuildAfterMultiDexIsNotRequired ([Values ("dx", "d8")] string dexTool)
 		{
 			AssertDexToolSupported (dexTool);
@@ -1284,7 +1276,6 @@ namespace UnamedProject
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void MultiDexCustomMainDexFileList ([Values ("dx", "d8")] string dexTool, [Values ("19", "21")] string minSdkVersion)
 		{
 			AssertDexToolSupported (dexTool);
@@ -1463,7 +1454,6 @@ GVuZHNDbGFzc1ZhbHVlLmNsYXNzUEsFBgAAAAADAAMAwgAAAMYBAAAAAA==
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void BuildAppCheckDebugSymbols ()
 		{
 			var path = Path.Combine ("temp", TestContext.CurrentContext.Test.Name);
@@ -1599,7 +1589,6 @@ namespace App1
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void BuildBasicApplicationCheckConfigFiles ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -1870,7 +1859,6 @@ namespace App1
 
 		[Test]
 		[NonParallelizable] // fails on NuGet restore
-		[Category ("dotnet")]
 		/// <summary>
 		/// Reference https://bugzilla.xamarin.com/show_bug.cgi?id=29568
 		/// </summary>
@@ -1905,7 +1893,6 @@ namespace App1
 #pragma warning restore 414
 
 		[Test]
-		[Category ("dotnet")]
 		[TestCaseSource (nameof (BuildApplicationWithJavaSourceChecks))]
 		public void BuildApplicationWithJavaSource (bool isRelease, bool expectedResult)
 		{
@@ -1937,7 +1924,6 @@ namespace App1
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		[TestCaseSource (nameof (RuntimeChecks))]
 		public void CheckWhichRuntimeIsIncluded (string supportedAbi, bool debugSymbols, string debugType, bool? optimize, bool? embedAssemblies, string expectedRuntime) {
 			var proj = new XamarinAndroidApplicationProject ();
@@ -2178,7 +2164,7 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 		}
 
 		[Test]
-		[Category ("SmokeTests"), Category ("dotnet")]
+		[Category ("SmokeTests")]
 		public void BuildWithExternalJavaLibrary ()
 		{
 			var path = Path.Combine ("temp", "BuildWithExternalJavaLibrary");
@@ -2244,7 +2230,6 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 
 		// Context https://bugzilla.xamarin.com/show_bug.cgi?id=29706
 		[Test]
-		[Category ("dotnet")]
 		public void CheckLogicalNamePathSeperators ([Values (false, true)] bool isRelease)
 		{
 			var illegalSeperator = IsWindows ? "/" : @"\";
@@ -2627,7 +2612,6 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void BuildReleaseApplicationWithNugetPackages ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -2837,7 +2821,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		}
 
 		[Test]
-		[Category ("SmokeTests"), Category ("dotnet")]
+		[Category ("SmokeTests")]
 		public void BuildBasicApplicationCheckPdb ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
@@ -3432,7 +3416,7 @@ namespace UnnamedProject {
 		}
 
 		[Test]
-		[Category ("SmokeTests"), Category ("dotnet")]
+		[Category ("SmokeTests")]
 		public void Desugar ([Values (true, false)] bool isRelease, [Values ("dx", "d8")] string dexTool, [Values ("", "proguard", "r8")] string linkTool)
 		{
 			AssertDexToolSupported (dexTool);
@@ -3545,7 +3529,6 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 
 		//See: https://developer.android.com/about/versions/marshmallow/android-6.0-changes#behavior-apache-http-client
 		[Test]
-		[Category ("dotnet")]
 		public void MissingOrgApacheHttpClient ([Values ("dx", "d8")] string dexTool)
 		{
 			AssertDexToolSupported (dexTool);
@@ -3629,7 +3612,6 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void XA0119 ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -3644,7 +3626,6 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void XA0119AAB ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -3685,7 +3666,6 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void DuplicateJCWNames ()
 		{
 			var source = @"[Android.Runtime.Register (""examplelib.EmptyClass"")] public class EmptyClass : Java.Lang.Object { }";
@@ -3730,7 +3710,6 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void DuplicateManagedNames ()
 		{
 			var source = @"public class EmptyClass : Java.Lang.Object { }";
@@ -4032,7 +4011,6 @@ public class ApplicationRegistration { }");
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void WorkManager ()
 		{
 			var proj = new XamarinFormsAndroidApplicationProject ();
