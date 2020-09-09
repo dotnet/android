@@ -68,21 +68,6 @@ steps:
   parameters:
     nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
     testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
-    testRunTitle: Mono.Android-Tests Debug on Device
-    nunitConsoleExtraArgs: --where "cat == RuntimeTests"
-
-- template: run-nunit-tests.yaml
-  parameters:
-    nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
-    testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
-    testRunTitle: Hello Tests on Device
-    nunitConsoleExtraArgs: --where "cat == Hello"
-    condition: and(succeeded(), eq(variables['XA.Commercial.Build'], 'true'))
-
-- template: run-nunit-tests.yaml
-  parameters:
-    nunitConsole: $(System.DefaultWorkingDirectory)/NUnit.ConsoleRunner/tools/nunit3-console.exe
-    testAssembly: $(System.DefaultWorkingDirectory)/XQA.Android/XQA.Android.dll
     testRunTitle: Smoke Tests on Device
     nunitConsoleExtraArgs: --where "cat == RegressionDeviceTests"
 
