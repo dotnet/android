@@ -1,5 +1,10 @@
 {
+    "sdk": {
+        "version": "3.1.201",
+        "rollForward": "latestFeature"
+    },
     "msbuild-sdks": {
-            "Microsoft.Build.NoTargets": "2.0.1"
+        "Microsoft.Build.NoTargets": "2.0.1",
+        "Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk": "5.0.0-beta.20120.1"
     }
 }

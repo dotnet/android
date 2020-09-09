@@ -7,7 +7,7 @@ runtime packs that contain the assets required for a self-contained publish of
 projects that use the Microsoft.Android framework in .NET 5.
 ***********************************************************************************************
 -->
-<Project Sdk="Microsoft.Build.NoTargets/1.0.88">
+<Project Sdk="Microsoft.Build.NoTargets">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>

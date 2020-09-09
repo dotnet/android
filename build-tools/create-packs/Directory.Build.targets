@@ -48,6 +48,11 @@
     </PropertyGroup>
   </Target>
 
+  <Target Name="DotNetVersion">
+    <!-- For debugging, print the version of dotnet -->
+    <Exec Command="dotnet --version" />
+  </Target>
+
   <Target Name="CreateAllRuntimePacks" >
     <Exec Command="dotnet pack -p:Configuration=$(Configuration) -p:AndroidRID=android.21-arm -p:AndroidABI=armeabi-v7a &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
     <Exec Command="dotnet pack -p:Configuration=$(Configuration) -p:AndroidRID=android.21-arm64 -p:AndroidABI=arm64-v8a &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
@@ -56,7 +61,7 @@
   </Target>
 
   <Target Name="CreateAllPacks"
-      DependsOnTargets="CreateAllRuntimePacks" >
+      DependsOnTargets="DotNetVersion;CreateAllRuntimePacks" >
     <Exec Command="dotnet pack -p:Configuration=$(Configuration) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Ref.proj&quot;" />
     <Exec Command="dotnet pack -p:Configuration=$(Configuration) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.proj&quot;" />
     <Exec Command="dotnet pack -p:Configuration=$(Configuration) &quot;$(MSBuildThisFileDirectory)Xamarin.Android.Sdk.Lite.proj&quot;" />
