@@ -35,12 +35,23 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		public static string [] SupportedTargetFrameworks ()
+		{
+			using (var b = new Builder ()) {
+				if (Builder.UseDotNet)
+					return new string [] { b.LatestTargetFrameworkVersion () };
+				else
+					return b.GetAllSupportedTargetFrameworkVersions ();
+			}
+		}
+
 		[Test]
 		[Category ("dotnet")]
-		public void BuildBasicApplication ([Values (true, false)] bool isRelease)
+		public void BuildBasicApplication ([ValueSource (nameof (SupportedTargetFrameworks))] string tfv, [Values (true, false)] bool isRelease)
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
+				TargetFrameworkVersion = tfv,
 			};
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
@@ -634,31 +645,6 @@ namespace UnamedProject
 
 				FileAssert.DoesNotExist (build_props, "build.props should *not* exist after `Clean`.");
 				FileAssert.Exists (designtime_build_props, "designtime/build.props should exist after `Clean`.");
-			}
-		}
-
-		[Test]
-		public void BuildPropsBreaksConvertResourcesCases ([Values (true, false)] bool useAapt2)
-		{
-			var proj = new XamarinAndroidApplicationProject () {
-				AndroidResources = {
-					new AndroidItem.AndroidResource (() => "Resources\\drawable\\IMALLCAPS.png") {
-						BinaryContent = () => XamarinAndroidApplicationProject.icon_binary_mdpi,
-					},
-					new AndroidItem.AndroidResource ("Resources\\layout\\test.axml") {
-						TextContent = () => {
-							return "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<ImageView xmlns:android=\"http://schemas.android.com/apk/res/android\" android:src=\"@drawable/IMALLCAPS\" />";
-						}
-					}
-				}
-			};
-			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
-				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
-				//Invalidate build.props with newer timestamp, you could also modify anything in @(_PropertyCacheItems)
-				var props = b.Output.GetIntermediaryPath("build.props");
-				File.SetLastWriteTimeUtc(props, DateTime.UtcNow);
-				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
 			}
 		}
 
@@ -1366,6 +1352,9 @@ namespace UnnamedProject {
 			using (var b = CreateApkBuilder ("temp/CustomApplicationClassAndMultiDex")) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsFalse (b.LastBuildOutput.ContainsText ("Duplicate zip entry"), "Should not get warning about [META-INF/MANIFEST.MF]");
+				var customAppContent = File.ReadAllText (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "src", "com", "foxsports", "test", "CustomApp.java"));
+				Assert.IsTrue (customAppContent.Contains ("extends android.support.multidex.MultiDexApplication"),
+					"Custom App class should have inherited from android.support.multidex.MultiDexApplication.");
 			}
 		}
 
@@ -1691,6 +1680,7 @@ namespace App1
 			}
 		}
 
+		[Test]
 		public void BuildApplicationCheckItEmitsAWarningWithContentItems ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -1703,12 +1693,10 @@ namespace App1
 					TextContent = () => "Test Content 1"
 				});
 				Assert.IsTrue (b.Build (proj), "Build should have built successfully");
-				Assert.IsTrue (
-					b.LastBuildOutput.Contains ("TestContent.txt:  warning XA0101: @(Content) build action is not supported"),
-					"Build Output did not contain the correct error message");
-				Assert.IsTrue (
-					b.LastBuildOutput.Contains ("TestContent1.txt:  warning XA0101: @(Content) build action is not supported"),
-					"Build Output did not contain the correct error message");
+				StringAssertEx.Contains ("TestContent.txt : warning XA0101: @(Content) build action is not supported", b.LastBuildOutput,
+					"Build Output did not contain 'TestContent.txt : warning XA0101'.");
+				StringAssertEx.Contains ("TestContent1.txt : warning XA0101: @(Content) build action is not supported", b.LastBuildOutput,
+					"Build Output did not contain 'TestContent1.txt : warning XA0101'.");
 			}
 		}
 
@@ -2474,7 +2462,7 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 			};
 			proj.SetProperty ("AndroidUseLatestPlatformSdk", "False");
 			using (var builder = CreateApkBuilder ()) {
-				builder.GetTargetFrameworkVersionRange (out var _, out string firstFrameworkVersion, out var _, out string lastFrameworkVersion);
+				builder.GetTargetFrameworkVersionRange (out var _, out string firstFrameworkVersion, out var _, out string lastFrameworkVersion, out string[] _);
 				proj.SetProperty ("TargetFrameworkVersion", firstFrameworkVersion);
 				if (!Directory.Exists (Path.Combine (builder.FrameworkLibDirectory, firstFrameworkVersion)))
 					Assert.Ignore ("This is a Pull Request Build. Ignoring test.");
@@ -4000,6 +3988,34 @@ public class ApplicationRegistration { }");
 			using (var b = CreateDllBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
+			}
+		}
+
+		[Test]
+		[Category ("Commercial")]
+		public void LibraryReferenceWithHigherTFVShouldDisplayWarning ([Values (true, false)] bool isRelease)
+		{
+			if (!CommercialBuildAvailable || Builder.UseDotNet)
+				Assert.Ignore ("Not applicable to One .NET or single framework OSS builds.");
+
+			var libproj = new XamarinAndroidLibraryProject () {
+				IsRelease = isRelease,
+				ProjectName = "Library1",
+			};
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
+				ProjectName = "App1",
+				UseLatestPlatformSdk = false,
+				TargetFrameworkVersion = "v9.0",
+				References = {
+					new BuildItem ("ProjectReference", $"..\\{libproj.ProjectName}\\{Path.GetFileName (libproj.ProjectFilePath)}")
+				},
+			};
+			using (var libBuilder = CreateDllBuilder (Path.Combine ("temp", TestName, libproj.ProjectName)))
+			using (var appBuilder = CreateApkBuilder (Path.Combine ("temp", TestName, proj.ProjectName))) {
+				Assert.IsTrue (libBuilder.Build (libproj), "Library build should have succeeded.");
+				Assert.IsTrue (appBuilder.Build (proj), "App build should have succeeded.");
+				StringAssertEx.Contains ("warning XA0105", appBuilder.LastBuildOutput, "Build should have produced warning XA0105.");
 			}
 		}
 

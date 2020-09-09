@@ -149,32 +149,39 @@ namespace Xamarin.ProjectTools
 
 		public string FirstTargetFrameworkVersion ()
 		{
-			GetTargetFrameworkVersionRange (out string _, out string firstFrameworkVersion, out string _, out string _);
+			GetTargetFrameworkVersionRange (out string _, out string firstFrameworkVersion, out string _, out string _, out string[] _);
 			return firstFrameworkVersion;
 		}
 
 		public string FirstTargetFrameworkVersion (out string apiLevel)
 		{
-			GetTargetFrameworkVersionRange (out apiLevel, out string firstFrameworkVersion, out string _, out string _);
+			GetTargetFrameworkVersionRange (out apiLevel, out string firstFrameworkVersion, out string _, out string _, out string [] _);
 			return firstFrameworkVersion;
 		}
 
 		public string LatestTargetFrameworkVersion () {
-			GetTargetFrameworkVersionRange (out string _, out string _, out string _, out string lastFrameworkVersion);
+			GetTargetFrameworkVersionRange (out string _, out string _, out string _, out string lastFrameworkVersion, out string [] _);
 			return lastFrameworkVersion;
 		}
 
 		public string LatestTargetFrameworkVersion (out string apiLevel) {
-			GetTargetFrameworkVersionRange (out string _, out string _, out apiLevel, out string lastFrameworkVersion);
+			GetTargetFrameworkVersionRange (out string _, out string _, out apiLevel, out string lastFrameworkVersion, out string [] _);
 			return lastFrameworkVersion;
 		}
 
-		public void GetTargetFrameworkVersionRange (out string firstApiLevel, out string firstFrameworkVersion, out string lastApiLevel, out string lastFrameworkVersion)
+		public string[] GetAllSupportedTargetFrameworkVersions ()
+		{
+			GetTargetFrameworkVersionRange (out string _, out string _, out string _, out string _, out string [] allFrameworkVersions);
+			return allFrameworkVersions;
+		}
+
+		public void GetTargetFrameworkVersionRange (out string firstApiLevel, out string firstFrameworkVersion, out string lastApiLevel, out string lastFrameworkVersion, out string[] allFrameworkVersions)
 		{
 			firstApiLevel = firstFrameworkVersion = lastApiLevel = lastFrameworkVersion = null;
 
 			Version firstVersion    = null;
 			Version lastVersion     = null;
+			List<string> allTFVs    = new List<string> ();
 
 			foreach (var dir in Directory.EnumerateDirectories (FrameworkLibDirectory, "v*", SearchOption.TopDirectoryOnly)) {
 				// No binding assemblies in `v1.0`; don't process.
@@ -197,7 +204,9 @@ namespace Xamarin.ProjectTools
 					lastFrameworkVersion    = frameworkVersion;
 					lastApiLevel            = apiLevel;
 				}
+				allTFVs.Add (frameworkVersion);
 			}
+			allFrameworkVersions = allTFVs.ToArray ();
 		}
 
 		static string GetApiLevelFromInfoPath (string androidApiInfo)
