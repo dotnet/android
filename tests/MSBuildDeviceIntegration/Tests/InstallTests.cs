@@ -515,13 +515,13 @@ namespace Xamarin.Android.Build.Tests
 			var rootPath = Path.Combine (Root, "temp", TestName);
 			using (var lb1 = CreateDllBuilder (Path.Combine (rootPath, lib1.ProjectName)))
 				Assert.IsTrue (lb1.Build (lib1), "First library build should have succeeded.");
-			using (var lb2 = CreateDllBuilder (Path.Combine (rootPath, lib2.ProjectFilePath)))
+			using (var lb2 = CreateDllBuilder (Path.Combine (rootPath, lib2.ProjectName)))
 				Assert.IsTrue (lb2.Build (lib2), "Second library build should have succeeded.");
 
-			using (var builder = CreateApkBuilder ()) {
+			using (var builder = CreateApkBuilder (Path.Combine (rootPath, app.ProjectName))) {
 				builder.ThrowOnBuildFailure = false;
 				Assert.IsTrue (builder.Install (app), "First install should have succeeded.");
-				var firstInstallTime = b.LastBuildTime;
+				var firstInstallTime = builder.LastBuildTime;
 				Assert.IsTrue (builder.Install (app, doNotCleanupOnUpdate: true, saveProject: false), "Second install should have succeeded.");
 				var secondInstallTime = builder.LastBuildTime;
 
