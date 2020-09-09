@@ -180,7 +180,7 @@ namespace Xamarin.Android.Build.Tests
 
 				directorylist = GetContentFromAllOverrideDirectories (proj.PackageName);
 				StringAssert.Contains ($"{proj.AssemblyName}", directorylist, $"{proj.AssemblyName} not found in fastdev directory.");
-
+			
 				Assert.IsTrue (builder.Uninstall (proj));
 				Assert.AreNotEqual ($"package:{proj.PackageName}", RunAdbCommand ($"shell pm list packages {proj.PackageName}").Trim (),
 					$"{proj.PackageName} is installed on the device.");
@@ -265,10 +265,10 @@ namespace Xamarin.Android.Build.Tests
 				AndroidUseSharedRuntime = true,
 				EmbedAssembliesIntoApk = false,
 				OtherBuildItems = {
-					new BuildItem.NoActionResource ($"UnnamedProject.dll.config") {
+					new BuildItem.NoActionResource ("UnnamedProject.dll.config") {
 						TextContent = () => "<?xml version='1.0' ?><configuration/>",
 						Metadata = {
-							{ "CopyToOutputDirectory", "PreserveNewest"},
+							{ "CopyToOutputDirectory", "PreserveNewest" },
 						}
 					}
 				}
