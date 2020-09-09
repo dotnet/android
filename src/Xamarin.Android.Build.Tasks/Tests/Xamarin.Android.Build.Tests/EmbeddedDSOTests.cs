@@ -161,7 +161,8 @@ namespace Xamarin.Android.Build.Tests
 			string manifest = Path.Combine (testProjectPath, "obj", XABuildPaths.Configuration, "android", "manifest", "AndroidManifest.xml");
 			Assert.That (new FileInfo (manifest), Does.Exist, $"File {manifest} should exist");
 
-			var doc = new XPathDocument (manifest);
+			var reader = XmlReader.Create (manifest, new XmlReaderSettings { XmlResolver = null });
+			var doc = new XPathDocument (reader);
 			XPathNavigator nav = doc.CreateNavigator ();
 
 			var manager = new XmlNamespaceManager (nav.NameTable);

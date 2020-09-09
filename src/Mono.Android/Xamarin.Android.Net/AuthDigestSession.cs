@@ -72,6 +72,7 @@ namespace Xamarin.Android.Net
 			get { return lastUse; }
 		}
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage ("Security", "CA5351:Do Not Use Broken Cryptographic Algorithms", Justification = "Only supported algorithm by RFC2617.")]
 		public bool Parse (string challenge) 
 		{
 			parser = new AuthDigestHeaderParser (challenge);

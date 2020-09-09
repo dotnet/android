@@ -113,8 +113,9 @@ namespace Xamarin.Android.Build
 
 		static void CreateConfig (XABuildPaths paths)
 		{
-			var xml = new XmlDocument ();
-			xml.Load (paths.MSBuildConfig);
+			var xml = new XmlDocument { XmlResolver = null };
+			var reader = XmlReader.Create (paths.MSBuildConfig, new XmlReaderSettings { XmlResolver = null });
+			xml.Load (reader);
 
 			var toolsets = xml.SelectSingleNode ("configuration/msbuildToolsets/toolset");
 			SetProperty (toolsets, "VsInstallRoot", paths.VsInstallRoot);
