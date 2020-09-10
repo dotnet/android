@@ -204,19 +204,16 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[TestCaseSource (nameof (GetTimeZoneTestCases), new object [] { 0 })]
-		[Retry (1)]
 		[Category ("TimeZoneInfo")]
 		public void CheckTimeZoneInfoIsCorrectNode1 (string timeZone) => CheckTimeZoneInfoIsCorrect (timeZone);
 
 		[Test]
 		[TestCaseSource (nameof (GetTimeZoneTestCases), new object [] { 1 })]
-		[Retry (1)]
 		[Category ("TimeZoneInfo")]
 		public void CheckTimeZoneInfoIsCorrectNode2 (string timeZone) => CheckTimeZoneInfoIsCorrect (timeZone);
 
 		[Test]
 		[TestCaseSource (nameof (GetTimeZoneTestCases), new object [] { 2 })]
-		[Retry (1)]
 		[Category ("TimeZoneInfo")]
 		public void CheckTimeZoneInfoIsCorrectNode3 (string timeZone) => CheckTimeZoneInfoIsCorrect (timeZone);
 

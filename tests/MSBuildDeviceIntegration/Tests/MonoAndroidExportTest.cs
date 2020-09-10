@@ -57,7 +57,6 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[TestCaseSource (nameof (MonoAndroidExportTestCases))]
-		[Retry (1)]
 		public void MonoAndroidExportReferencedAppStarts (bool useSharedRuntime, bool embedAssemblies, string fastDevType, bool activityStarts)
 		{
 			AssertCommercialBuild ();
