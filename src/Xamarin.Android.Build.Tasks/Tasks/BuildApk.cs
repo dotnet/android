@@ -573,7 +573,7 @@ namespace Xamarin.Android.Tasks
 			if (String.IsNullOrWhiteSpace (CheckedBuild))
 				return;
 
-			string mode = CheckedBuild.Trim ().ToLowerInvariant ();
+			string mode = CheckedBuild;
 			string sanitizerName;
 			if (String.Compare ("asan", mode, StringComparison.Ordinal) == 0) {
 				sanitizerName = "asan";
