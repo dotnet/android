@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -12,7 +12,7 @@ namespace Xamarin.Android.Build.Tests
 	public partial class BuildTest : BaseTest
 	{
 #pragma warning disable 414
-		static object [] AotChecks () => new object [] {
+		public static object [] AotChecks () => new object [] {
 			new object[] {
 				/* supportedAbis */   "armeabi-v7a",
 				/* enableLLVM */      false,
