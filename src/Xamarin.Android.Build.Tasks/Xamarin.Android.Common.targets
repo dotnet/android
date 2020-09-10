@@ -194,7 +194,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidGenerateLayoutBindings Condition=" '$(AndroidGenerateLayoutBindings)' == '' ">False</AndroidGenerateLayoutBindings>
 	<AndroidFragmentType Condition=" '$(AndroidFragmentType)' == '' ">Android.App.Fragment</AndroidFragmentType>
 	<AndroidEnableAssemblyCompression Condition=" '$(AndroidEnableAssemblyCompression)' == '' ">True</AndroidEnableAssemblyCompression>
-    <AndroidIncludeWrapSh Condition=" '$(AndroidIncludeWrapSh)' == '' ">False</AndroidIncludeWrapSh>
+	<AndroidIncludeWrapSh Condition=" '$(AndroidIncludeWrapSh)' == '' ">False</AndroidIncludeWrapSh>
+	<AndroidCheckedBuild Condition=" '$(AndroidCheckedBuild)' == '' "></AndroidCheckedBuild>
 
 	<!-- Currently only C# is supported -->
 	<AndroidGenerateLayoutBindings Condition=" '$(Language)' != 'C#' ">False</AndroidGenerateLayoutBindings>
@@ -1409,7 +1410,8 @@ because xbuild doesn't support framework reference assemblies.
       FrameworkDirectories="$(_XATargetFrameworkDirectories);$(_XATargetFrameworkDirectories)Facades"
       AcwMapFile="$(_AcwMapFile)"
       SupportedAbis="@(_BuildTargetAbis)"
-      SkipJniAddNativeMethodRegistrationAttributeScan="$(_SkipJniAddNativeMethodRegistrationAttributeScan)">
+      SkipJniAddNativeMethodRegistrationAttributeScan="$(_SkipJniAddNativeMethodRegistrationAttributeScan)"
+      CheckedBuild="$(AndroidCheckedBuild)">
     <Output TaskParameter="GeneratedBinaryTypeMaps" ItemName="_AndroidTypeMapping" Condition=" '$(_InstantRunEnabled)' == 'True' " />
   </GenerateJavaStubs>
 
@@ -2075,7 +2077,8 @@ because xbuild doesn't support framework reference assemblies.
     UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
     InterpreterEnabled="$(_AndroidUseInterpreter)"
     ProjectFullPath="$(MSBuildProjectFullPath)"
-    IncludeWrapSh="$(AndroidIncludeWrapSh)">
+    IncludeWrapSh="$(AndroidIncludeWrapSh)"
+    CheckedBuild="$(AndroidCheckedBuild)">
     <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
   </BuildApk>
   <BuildBaseAppBundle
@@ -2104,7 +2107,9 @@ because xbuild doesn't support framework reference assemblies.
       LibraryProjectJars="@(ExtractedJarImports)"
       TlsProvider="$(AndroidTlsProvider)"
       UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
-      ProjectFullPath="$(MSBuildProjectFullPath)">
+      ProjectFullPath="$(MSBuildProjectFullPath)"
+      IncludeWrapSh="$(AndroidIncludeWrapSh)"
+      CheckedBuild="$(AndroidCheckedBuild)">
     <Output TaskParameter="OutputFiles" ItemName="BaseZipFile" />
   </BuildBaseAppBundle>
   <BuildAppBundle

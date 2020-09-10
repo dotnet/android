@@ -118,12 +118,44 @@ namespace Xamarin.Android.Tasks
 			return $"{targetPrefix}{apiLevel} {otherParams} -fno-addrsig {stdlib}";
 		}
 
+		static string GetToolchainDir (string androidNdkPath)
+		{
+			return Path.Combine (androidNdkPath, "toolchains", "llvm", "prebuilt", MonoAndroidHelper.AndroidSdk.AndroidNdkHostPlatform);
+		}
+
+		public static string GetClangDeviceLibraryPath (string androidNdkPath)
+		{
+			if (!UsingClangNDK)
+				throw new InvalidOperationException ("NDK version with the clang compiler must be used");
+
+			string toolchainDir = GetToolchainDir (androidNdkPath);
+			string clangBaseDir = Path.Combine (toolchainDir, "lib64", "clang");
+
+			if (!Directory.Exists (clangBaseDir)) {
+				return null;
+			}
+
+			// There should be just one subdir - clang version - but it's better to be safe than sorry...
+			foreach (string dir in Directory.EnumerateDirectories (clangBaseDir)) {
+				if (dir[0] == '.') {
+					continue;
+				}
+
+				string libDir = Path.Combine (dir, "lib", "linux");
+				if (Directory.Exists (libDir)) {
+					return libDir;
+				}
+			}
+			
+			return null;
+		}
+
 		public static string GetNdkTool (string androidNdkPath, AndroidTargetArch arch, string tool, int apiLevel)
 		{
 			if (!UsingClangNDK)
 				return NdkUtilOld.GetNdkTool (androidNdkPath, arch, tool);
 
-			string toolchainDir = Path.Combine (androidNdkPath, "toolchains", "llvm", "prebuilt", MonoAndroidHelper.AndroidSdk.AndroidNdkHostPlatform);
+			string toolchainDir = GetToolchainDir (androidNdkPath);
 			string toolName;
 			bool forCompiler = false;
 

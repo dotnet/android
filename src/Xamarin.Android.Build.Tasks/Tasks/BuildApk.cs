@@ -87,6 +87,8 @@ namespace Xamarin.Android.Tasks
 
 		public bool IncludeWrapSh { get; set; }
 
+		public string CheckedBuild { get; set; }
+		
 		[Required]
 		public string ProjectFullPath { get; set; }
 
@@ -567,6 +569,56 @@ namespace Xamarin.Android.Tasks
 				);
 
 			AddNativeLibraries (files, supportedAbis, libs);
+
+			if (String.IsNullOrWhiteSpace (CheckedBuild))
+				return;
+
+			string mode = CheckedBuild.Trim ().ToLowerInvariant ();
+			string sanitizerName;
+			if (String.Compare ("asan", mode, StringComparison.Ordinal) == 0) {
+				sanitizerName = "asan";
+			} else if (String.Compare ("ubsan", mode, StringComparison.Ordinal) == 0) {
+				sanitizerName = "ubsan_standalone";
+				throw new NotImplementedException ();
+			} else {
+				Log.LogWarning ($"Unknown checked build mode '{CheckedBuild}'");
+				return;
+			}
+
+			if (!IncludeWrapSh) {
+				Log.LogError ("Checked builds require the wrapper script to be packaged. Please set the `$(AndroidIncludeWrapSh) MSBuild property to `true` in your project");
+				return;
+			}
+
+			if (!libs.Any (info => String.Compare (Path.GetFileName (info.Path), "wrap.sh", StringComparison.Ordinal) == 0)) {
+				// TODO: consider including various wrapper scripts with XA and adding them here
+				Log.LogError ($"Checked builds require the wrapper script to be packaged. Please add `wrap.sh` appropriate for the {CheckedBuild} checker to your project");
+				return;
+			}
+
+			NdkUtil.Init (AndroidNdkDirectory);
+			string clangDir = NdkUtil.GetClangDeviceLibraryPath (AndroidNdkDirectory);
+			if (String.IsNullOrEmpty (clangDir)) {
+				Log.LogError ($"Unable to find the clang compiler directory. Is NDK installed?");
+				return;
+			}
+
+			foreach (string abi in supportedAbis) {
+				string clangAbi = MonoAndroidHelper.MapAndroidAbiToClang (abi);
+				if (String.IsNullOrEmpty (clangAbi)) {
+					Log.LogError ($"Unable to map Android ABI {abi} to clang ABI");
+					return;
+				}
+
+				string sanitizerLib = $"libclang_rt.{sanitizerName}-{clangAbi}-android.so";
+				string sanitizerLibPath = Path.Combine (clangDir, sanitizerLib);
+				if (!File.Exists (sanitizerLibPath)) {
+					Log.LogError ($"Unable to find sanitizer runtime for the {CheckedBuild} checker at {sanitizerLibPath}");
+					return;
+				}
+
+				AddNativeLibrary (files, sanitizerLibPath, abi, sanitizerLib);
+			}
 		}
 
 		string GetNativeLibraryAbi (ITaskItem lib)

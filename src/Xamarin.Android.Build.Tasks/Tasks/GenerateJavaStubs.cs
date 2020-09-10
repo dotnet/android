@@ -77,6 +77,8 @@ namespace Xamarin.Android.Tasks
 
 		public bool SkipJniAddNativeMethodRegistrationAttributeScan { get; set; }
 
+		public string CheckedBuild { get; set; }
+
 		[Output]
 		public string [] GeneratedBinaryTypeMaps { get; set; }
 
@@ -265,6 +267,13 @@ namespace Xamarin.Android.Tasks
 			manifest.MultiDex = MultiDex;
 			manifest.NeedsInternet = NeedsInternet;
 			manifest.InstantRunEnabled = InstantRunEnabled;
+
+			if (!String.IsNullOrWhiteSpace (CheckedBuild)) {
+				// We don't validate CheckedBuild value here, this will be done in BuildApk. We just know that if it's
+				// on then we need android:debuggable=true and android:extractNativeLibs=true
+				manifest.ForceDebuggable = true;
+				manifest.ForceExtractNativeLibs = true;
+			}
 
 			var additionalProviders = manifest.Merge (Log, cache, allJavaTypes, ApplicationJavaClass, EmbedAssemblies, BundledWearApplicationName, MergedManifestDocuments);
 

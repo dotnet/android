@@ -255,6 +255,21 @@ namespace Xamarin.Android.Tasks
 			"x86_64",
 		};
 
+		static readonly Dictionary<string, string> ClangAbiMap = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase) {
+			{"arm64-v8a",   "aarch64"},
+			{"armeabi-v7a", "arm"},
+			{"x86",         "i686"},
+			{"x86_64",      "x86_64"}
+		};
+
+		public static string MapAndroidAbiToClang (string androidAbi)
+		{
+			if (ClangAbiMap.TryGetValue (androidAbi, out string clangAbi)) {
+				return clangAbi;
+			}
+			return null;
+		}
+
 		public static string GetNativeLibraryAbi (string lib)
 		{
 			// The topmost directory the .so file is contained within

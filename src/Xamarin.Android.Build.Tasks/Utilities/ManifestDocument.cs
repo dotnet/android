@@ -88,6 +88,8 @@ namespace Xamarin.Android.Tasks {
 		public bool MultiDex { get; set; }
 		public bool NeedsInternet { get; set; }
 		public bool InstantRunEnabled { get; set; }
+		public bool ForceExtractNativeLibs { get; set; }
+		public bool ForceDebuggable { get; set; }
 		public string VersionCode {
 			get {
 				XAttribute attr = doc.Root.Attribute (androidNs + "versionCode");
@@ -375,6 +377,7 @@ namespace Xamarin.Android.Tasks {
 
 			var providerNames = AddMonoRuntimeProviders (app);
 
+			bool needDebuggable = false;
 			if (Debug) {
 				app.Add (new XComment ("suppress ExportedReceiver"));
 				app.Add (new XElement ("receiver",
@@ -385,8 +388,13 @@ namespace Xamarin.Android.Tasks {
 							new XElement ("category",
 								new XAttribute (androidNs + "name", "mono.android.intent.category.SEPPUKU." + PackageName)))));
 				if (app.Attribute (androidNs + "debuggable") == null)
-					app.Add (new XAttribute (androidNs + "debuggable", "true"));
+					needDebuggable = true;
 			}
+
+			if (ForceDebuggable || needDebuggable) {
+				app.Add (new XAttribute (androidNs + "debuggable", "true"));
+			}
+
 			if (Debug || NeedsInternet)
 				AddInternetPermissionForDebugger ();
 
@@ -411,7 +419,7 @@ namespace Xamarin.Android.Tasks {
 			AddSupportsGLTextures (app);
 
 			if (targetSdkVersionValue >= 23) {
-				if (app.Attribute (androidNs + "extractNativeLibs") == null)
+				if (ForceExtractNativeLibs || app.Attribute (androidNs + "extractNativeLibs") == null)
 					app.SetAttributeValue (androidNs + "extractNativeLibs", "true");
 			}
 
