@@ -52,6 +52,7 @@ stages:
     - template: yaml-templates/use-dot-net.yaml
       parameters:
         version: $(DotNetCorePreviewVersion)
+        remove_dotnet: true
 
     - template: yaml-templates/use-dot-net.yaml
       parameters:
