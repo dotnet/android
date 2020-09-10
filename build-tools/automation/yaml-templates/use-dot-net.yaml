@@ -3,7 +3,7 @@
 
 parameters:
   version: $(DotNetCoreVersion)
-  remove_preview_versions: false
+  remove_dotnet: false
 
 steps:
 
@@ -11,8 +11,8 @@ steps:
       $ErrorActionPreference = 'Stop'
       $ProgressPreference = 'SilentlyContinue'
       $DotNetRoot = "$env:ProgramFiles\dotnet"
-      if ("${{ parameters.remove_preview_versions }}" -eq $true) {
-        Remove-Item -Recurse "$DotNetRoot\5.0.*\" -Verbose
+      if ("${{ parameters.remove_dotnet }}" -eq $true) {
+        Remove-Item -Recurse $DotNetRoot -Verbose
       }
       Invoke-WebRequest -Uri "https://dot.net/v1/dotnet-install.ps1" -OutFile dotnet-install.ps1
       & .\dotnet-install.ps1 -Version ${{ parameters.version }} -InstallDir $DotNetRoot -Verbose
@@ -22,7 +22,7 @@ steps:
 
   - bash: >
       DOTNET_ROOT=~/.dotnet &&
-      (if [[ "${{ parameters.remove_preview_versions }}" == "true" ]] ; then rm -rfv $DOTNET_ROOT/5.0.*/; fi) &&
+      (if [[ "${{ parameters.remove_dotnet }}" == "true" ]] ; then rm -rfv $DOTNET_ROOT; fi) &&
       PATH="$DOTNET_ROOT:$PATH" &&
       curl -L https://dot.net/v1/dotnet-install.sh > dotnet-install.sh &&
       sh dotnet-install.sh --version ${{ parameters.version }} --install-dir $DOTNET_ROOT --verbose &&
