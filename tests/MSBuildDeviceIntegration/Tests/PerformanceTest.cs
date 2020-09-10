@@ -94,6 +94,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Retry (2)]
 		public void Build_From_Clean_DontIncludeRestore ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -106,6 +107,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Retry (2)]
 		public void Build_No_Changes ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -128,6 +130,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Retry (2)]
 		public void Build_CSharp_Change ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -144,6 +147,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Retry (2)]
 		public void Build_AndroidResource_Change ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -159,6 +163,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Retry (2)]
 		public void Build_Designer_Change ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -179,6 +184,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Retry (2)]
 		public void Build_JLO_Change ()
 		{
 			var className = "Foo";
@@ -198,6 +204,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Retry (2)]
 		public void Build_AndroidManifest_Change ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -213,6 +220,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Retry (2)]
 		public void Build_CSProj_Change ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -246,6 +254,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		[TestCaseSource (nameof (XAML_Change))]
 		[Category ("UsesDevice")]
+		[Retry (2)]
 		public void Build_XAML_Change (bool produceReferenceAssembly, bool install)
 		{
 			if (install) {
@@ -324,6 +333,7 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[Category ("UsesDevice")]
+		[Retry (2)]
 		public void Install_CSharp_Change ()
 		{
 			AssertCommercialBuild (); // This test will fail without Fast Deployment
