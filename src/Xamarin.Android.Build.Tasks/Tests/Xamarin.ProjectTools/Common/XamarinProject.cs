@@ -273,7 +273,7 @@ $@"<Project>
 			}
 		}
 
-		public void Populate (string directory, IEnumerable<ProjectResource> projectFiles)
+		public virtual void Populate (string directory, IEnumerable<ProjectResource> projectFiles)
 		{
 			directory = directory.Replace ('\\', '/').Replace ('/', Path.DirectorySeparatorChar);
 
@@ -283,6 +283,7 @@ $@"<Project>
 			Directory.CreateDirectory (Path.Combine (Root, directory));
 
 			UpdateProjectFiles (directory, projectFiles);
+			CopyNuGetConfig (directory);
 		}
 
 		public virtual void UpdateProjectFiles (string directory, IEnumerable<ProjectResource> projectFiles, bool doNotCleanup = false)

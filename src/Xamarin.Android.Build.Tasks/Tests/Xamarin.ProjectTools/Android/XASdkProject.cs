@@ -61,8 +61,12 @@ namespace Xamarin.ProjectTools
 		{
 			File.WriteAllText (Path.Combine (directory, "global.json"),
 $@"{{
+    ""sdk"": {{
+        ""version"": ""5.0"",
+        ""rollForward"": ""latestMajor""
+    }},
     ""msbuild-sdks"": {{
-            ""Microsoft.Android.Sdk"": ""{SdkVersion}""
+        ""Microsoft.Android.Sdk"": ""{SdkVersion}""
     }}
 }}");
 		}
@@ -115,6 +119,13 @@ $@"{{
 		/// Defaults to API 19
 		/// </summary>
 		public string MinSdkVersion { get; set; } = "19";
+
+		public override void Populate (string directory, IEnumerable<ProjectResource> projectFiles)
+		{
+			base.Populate (directory, projectFiles);
+
+			SaveGlobalJson (Path.Combine (Root, directory));
+		}
 
 		public virtual string ProcessManifestTemplate ()
 		{
