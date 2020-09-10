@@ -1109,40 +1109,6 @@ stages:
   condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(variables['RunAllTests'], true))
   jobs:
 
-  # Check - "Xamarin.Android (Regression Tests Mac)"
-  - job: integrated_regression_mac
-    displayName: Mac
-    pool:
-      name: VSEng-Xamarin-Mac-Devices
-      demands:
-      - android
-    timeoutInMinutes: 240
-    cancelTimeoutInMinutes: 5
-    workspace:
-      clean: all
-    steps:
-    - template: yaml-templates/run-integrated-regression-tests.yaml
-
-  # Check - "Xamarin.Android (Regression Tests Windows)"
-  - job: integrated_regression_win
-    displayName: Windows
-    pool:
-      name: VSEng-Xamarin-Win-XMA
-      demands:
-      - android
-    timeoutInMinutes: 240
-    cancelTimeoutInMinutes: 5
-    workspace:
-      clean: all
-    variables:
-      XQA_VISUALSTUDIO_LOCATION: '%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Enterprise'
-    steps:
-    - template: remove-visualstudio.yml@yaml
-
-    - template: yaml-templates\run-integrated-regression-tests.yaml
-
-    - template: remove-visualstudio.yml@yaml
-
   # TimeZoneInfo tests
   - template: yaml-templates\run-timezoneinfo-tests.yaml
     parameters:
