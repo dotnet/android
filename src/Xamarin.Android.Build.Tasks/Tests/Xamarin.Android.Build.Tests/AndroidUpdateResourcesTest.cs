@@ -1396,5 +1396,64 @@ namespace UnnamedProject
 				b.Output.AssertTargetIsSkipped ("_CompileResources");
 			}
 		}
+
+		[Test]
+		public void SolutionBuildSeveralProjects ()
+		{
+			const int libraryCount = 10;
+			var path = Path.Combine ("temp", TestName);
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = Path.Combine (Root, path);
+			using (var sb = new SolutionBuilder ($"{TestName}.sln") {
+				SolutionPath = Path.Combine (Root, path),
+				MaxCpuCount = 4,
+				BuildingInsideVisualStudio = false, // allow projects dependencies to build
+			}) {
+				var apps = new List<XamarinAndroidApplicationProject> ();
+				var app1 = new XamarinAndroidApplicationProject {
+					ProjectName = "App1"
+				};
+				apps.Add (app1);
+				sb.Projects.Add (app1);
+
+				var app2 = new XamarinAndroidApplicationProject {
+					ProjectName = "App2"
+				};
+				apps.Add (app2);
+				sb.Projects.Add (app2);
+
+				for (var i = 0; i < libraryCount; i++) {
+					var index = i;
+					var lib = new XamarinAndroidLibraryProject {
+						ProjectName = $"Lib{i}",
+						AndroidResources = {
+							new AndroidItem.AndroidResource ($"Resources\\values\\library_name{index}.xml") {
+								TextContent = () =>
+$@"<?xml version=""1.0"" encoding=""utf-8""?>
+<resources>
+	<string name=""library_name{index}"">Lib{index}</string>
+</resources>"
+							}
+						}
+					};
+					foreach (var app in apps) {
+						app.AddReference (lib);
+					}
+					sb.Projects.Add (lib);
+				}
+
+				// Add usage of Lib0.Resource.String.library_name0
+				var builder = new StringBuilder ();
+				for (int i = 0; i < libraryCount; i++) {
+					builder.AppendLine ($"int library_name{i} = Lib{i}.Resource.String.library_name{i};");
+				}
+				foreach (var app in apps) {
+					app.Sources.Add (new BuildItem.Source ("Foo.cs") {
+						TextContent = () => $"class Foo {{ void Bar () {{ {builder} }} }}",
+					});
+				}
+
+				Assert.IsTrue (sb.Build (), "Solution should have built.");
+			}
+		}
 	}
 }
