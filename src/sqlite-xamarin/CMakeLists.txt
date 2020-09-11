@@ -9,6 +9,7 @@ project(libsqlite-xamarin C)
 
 include(CheckIncludeFiles)
 include(CheckCCompilerFlag)
+include(CheckCXXCompilerFlag)
 include("../../build-tools/cmake/xa_macros.cmake")
 
 if(NOT DEFINED SQLITE_LIBRARY_NAME)

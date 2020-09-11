@@ -88,7 +88,7 @@ namespace Xamarin.Android.Tasks
 		public bool IncludeWrapSh { get; set; }
 
 		public string CheckedBuild { get; set; }
-		
+
 		[Required]
 		public string ProjectFullPath { get; set; }
 
@@ -579,7 +579,6 @@ namespace Xamarin.Android.Tasks
 				sanitizerName = "asan";
 			} else if (String.Compare ("ubsan", mode, StringComparison.Ordinal) == 0) {
 				sanitizerName = "ubsan_standalone";
-				throw new NotImplementedException ();
 			} else {
 				Log.LogWarning ($"Unknown checked build mode '{CheckedBuild}'");
 				return;

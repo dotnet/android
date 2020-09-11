@@ -19,8 +19,9 @@ option(STRIP_DEBUG "Strip debugging information when linking" OFF)
 option(ENABLE_TIMING "Build with timing support" OFF)
 option(DISABLE_DEBUG "Disable the built-in debugging code" OFF)
 option(ENABLE_CLANG_ASAN "Enable the clang AddressSanitizer support" OFF)
+option(ENABLE_CLANG_UBSAN "Enable the clang UndefinedBehaviorSanitizer support" OFF)
 
-include(CheckIncludeFiles)
+include(CheckIncludeFileCXX)
 include(CheckCXXSymbolExists)
 include(CheckCCompilerFlag)
 include(CheckCXXCompilerFlag)
@@ -118,15 +119,29 @@ set(TEST_COMPILER_ARGS_CPP ${XA_COMPILER_FLAGS}
   )
 
 if(ENABLE_NDK)
-  if (ENABLE_CLANG_ASAN)
+  if (ENABLE_CLANG_ASAN OR ENABLE_CLANG_UBSAN)
 	set(TEST_COMPILER_ARGS_CPP
 	  ${TEST_COMPILER_ARGS_CPP}
 	  fno-omit-frame-pointer
 	  fno-optimize-sibling-calls
 	  )
-	set(CHECKED_COMPILER_FLAGS -fsanitize=address)
-	set(CHECKED_LINKER_FLAGS -fsanitize=address)
+  endif()
+
+  unset(SANITIZER_FLAGS)
+  if (ENABLE_CLANG_ASAN)
+	set(SANITIZER_FLAGS "-fsanitize=address")
 	set(CHECKED_BUILD_INFIX "-asan")
+  elseif(ENABLE_CLANG_UBSAN)
+	set(SANITIZER_FLAGS "-fsanitize=undefined")
+	set(CHECKED_BUILD_INFIX "-ubsan")
+  endif()
+
+  if(SANITIZER_FLAGS)
+	set(CHECKED_COMPILER_FLAGS "${CHECKED_COMPILER_FLAGS} ${SANITIZER_FLAGS}")
+	set(CHECKED_LINKER_FLAGS "${CHECKED_LINKER_FLAGS} ${SANITIZER_FLAGS}")
+
+	string(STRIP "${CHECKED_COMPILER_FLAGS}" CHECKED_COMPILER_FLAGS)
+	string(STRIP "${CHECKED_LINKER_FLAGS}" CHECKED_LINKER_FLAGS)
   endif()
 endif()
 
@@ -286,9 +301,19 @@ include_directories("${MONO_PATH}/mono/eglib")
 include_directories("jni/zip")
 include_directories("${JAVA_INTEROP_SRC_PATH}")
 
-check_include_files("linux/netlink.h" HAVE_LINUX_NETLINK_H)
-check_include_files("linux/rtnetlink.h" HAVE_LINUX_RTNETLINK_H)
-check_include_files("linux/if_arp.h" HAVE_LINUX_IF_ARP_H)
+if(ENABLE_NDK AND (ENABLE_CLANG_UBSAN OR ENABLE_CLANG_ASAN))
+  set(OLD_CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS}")
+  set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -llog")
+  string(STRIP "${CMAKE_REQUIRED_FLAGS}" CMAKE_REQUIRED_FLAGS)
+endif()
+
+check_include_file_cxx("linux/netlink.h" HAVE_LINUX_NETLINK_H)
+check_include_file_cxx("linux/rtnetlink.h" HAVE_LINUX_RTNETLINK_H)
+check_include_file_cxx("linux/if_arp.h" HAVE_LINUX_IF_ARP_H)
+
+if(ENABLE_NDK AND (ENABLE_CLANG_UBSAN OR ENABLE_CLANG_ASAN))
+  set(CMAKE_REQUIRED_FLAGS "${OLD_CMAKE_REQUIRED_FLAGS}")
+endif()
 
 configure_file(jni/host-config.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/host-config.h)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/include/ ${CMAKE_SOURCE_DIR}/include)

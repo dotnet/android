@@ -146,7 +146,7 @@ namespace Xamarin.Android.Tasks
 					return libDir;
 				}
 			}
-			
+
 			return null;
 		}
 
