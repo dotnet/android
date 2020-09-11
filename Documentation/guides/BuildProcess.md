@@ -5,7 +5,7 @@ ms.assetid: 3BE5EE1E-3FF6-4E95-7C9F-7B443EE3E94C
 ms.technology: xamarin-android
 author: davidortinau
 ms.author: daortin
-ms.date: 03/22/2019
+ms.date: 09/11/2020
 ---
 
 # Build Process
@@ -46,7 +46,7 @@ Debug package to be smaller.
 The shared runtime may be disabled in Debug builds by setting the
 `$(AndroidUseSharedRuntime)` property to `False`.
 
-<a name="Fast_Deployment" />
+<a name="Fast_Deployment"></a>
 
 ### Fast Deployment
 
@@ -79,7 +79,7 @@ This page documents only the Xamarin.Android-specific features and
 customizations &ndash; many more things are possible with the normal
 MSBuild items, properties and targets.
 
-<a name="Build_Targets" />
+<a name="Build_Targets"></a>
 
 ## Build Targets
 
@@ -330,14 +330,14 @@ when packaging Release applications.
     This is the default value in Xamarin.Android 10.2.
 
   - `System`: The original Java exception type is caught and wrapped in an
-     appropriate .NET exception type.
+    appropriate .NET exception type.
 
-     This means that, for example, `InputStreamInvoker` properly implements
-     `System.IO.Stream`, and `Stream.Read()` will *not* throw `Java.IO.IOException`
-     instances.  (It may instead throw a `System.IO.IOException` which has a
-     `Java.IO.IOException` as the `Exception.InnerException` value.)
+    This means that, for example, `InputStreamInvoker` properly implements
+    `System.IO.Stream`, and `Stream.Read()` will *not* throw `Java.IO.IOException`
+    instances.  (It may instead throw a `System.IO.IOException` which has a
+    `Java.IO.IOException` as the `Exception.InnerException` value.)
 
-     This will become the default value in Xamarin.Android 11.0.
+    This will become the default value in Xamarin.Android 11.0.
 
   Added in Xamarin.Android 10.2.
 
@@ -361,7 +361,7 @@ when packaging Release applications.
   This property is only relevant if `$(AndroidPackageFormat)` is set
   to `aab`.
 
-  Added in Xamarin.Android 10.2.
+  Added in Xamarin.Android 10.3.
 
   [bundle-config-format]: https://developer.android.com/studio/build/building-cmdline#bundleconfig
 
@@ -1119,7 +1119,7 @@ The following MSBuild properties are used with
 
 - **AndroidCodegenTarget** &ndash; A string property which controls the code generation target ABI. Possible values include:
 
-  - **XamarinAndroid**: Uses the JNI binding API present in since
+  - **XamarinAndroid**: Uses the JNI binding API present since
     Mono for Android 1.0. Binding assemblies built with
     Xamarin.Android 5.0 or later can only run on Xamarin.Android 5.0
     or later (API/ABI additions), but the *source* is compatible with
@@ -1162,11 +1162,7 @@ resources.
   Added in Xamarin.Android 9.1.
 
 - **AndroidExplicitCrunch** &ndash; No longer supported in
-  Xamarin.Android 10.4.
-
-- **AndroidResgenExtraArgs** &ndash; Specifies additional
-  command-line options to pass to the **aapt** command when
-  processing Android assets and resources.
+  Xamarin.Android 11.0.
 
 - **AndroidR8IgnoreWarnings** &ndash; Automatically specifies
   the `-ignorewarnings` proguard rule for `r8`. This allows `r8`
@@ -1175,7 +1171,11 @@ resources.
   enforce more strict behavior. See the [ProGuard manual](https://www.guardsquare.com/products/proguard/manual/usage)
   for details.
 
-  Added in Xamarin.Android 10.4.
+  Added in Xamarin.Android 10.3.
+
+- **AndroidResgenExtraArgs** &ndash; Specifies additional
+  command-line options to pass to the **aapt** command when
+  processing Android assets and resources.
 
 - **AndroidResgenFile** &ndash; Specifies the name of the Resource
   file to generate. The default template sets this to
@@ -1208,7 +1208,7 @@ resources.
   The default value is `Resources`. Change this to `res` for the
   Java project structure.
 
-<a name="Signing_Properties" />
+<a name="Signing_Properties"></a>
 
 ### Signing Properties
 
@@ -1374,7 +1374,7 @@ To use the keystore generated above, use the property group:
 </PropertyGroup>
 ```
 
-<a name="Build_Actions" />
+<a name="Build_Actions"></a>
 
 ## Build Actions
 
@@ -1405,7 +1405,7 @@ with layout files:
 <AndroidBoundLayout Include="Resources\layout\Main.axml" />
 ```
 
-<a name="AndroidEnvironment" />
+<a name="AndroidEnvironment"></a>
 
 ### AndroidEnvironment
 
@@ -1461,19 +1461,6 @@ With path sniffing, the parent directory name of the native library is
 used to specify the ABI that the library targets. Thus, if you add
 `lib/armeabi-v7a/libfoo.so` to the build, then the ABI will be "sniffed" as
 `armeabi-v7a`.
-
-### AndroidResourceAnalysisConfig
-
-The Build action `AndroidResourceAnalysisConfig` marks a file as a
-severity level configuration file for the Xamarin Android Designer
-layout diagnostics tool. This is currently only used in the layout
-editor and not for build messages.
-
-See the [Android Resource Analysis
-documentation](https://aka.ms/androidresourceanalysis) for more
-details.
-
-Added in Xamarin.Android 10.2.
 
 #### Item Attribute Name
 
@@ -1532,6 +1519,19 @@ distinct resource names.
 </ItemGroup>
 ```
 
+### AndroidResourceAnalysisConfig
+
+The Build action `AndroidResourceAnalysisConfig` marks a file as a
+severity level configuration file for the Xamarin Android Designer
+layout diagnostics tool. This is currently only used in the layout
+editor and not for build messages.
+
+See the [Android Resource Analysis
+documentation](https://aka.ms/androidresourceanalysis) for more
+details.
+
+Added in Xamarin.Android 10.2.
+
 ### Content
 
 The normal `Content` Build action is not supported (as we
@@ -1546,7 +1546,7 @@ Build action will result in a `XA0101` warning.
 Files with a *LinkDescription* build action are used to
 [control linker behavior](~/cross-platform/deploy-test/linker.md).
 
-<a name="ProguardConfiguration" />
+<a name="ProguardConfiguration"></a>
 
 ### ProguardConfiguration
 
