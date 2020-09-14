@@ -100,6 +100,8 @@ namespace Xamarin.Android.Build.Tests {
   <declare-styleable name=""CustomFonts"">
     <attr name=""android:scrollX"" />
     <attr name=""customFont"" />
+    <attr name=""customFont"" />
+    <attr name=""customFont1"" />
   </declare-styleable>
   <declare-styleable name=""MultiSelectListPreference"">
     <attr name=""entries"">value</attr>
@@ -108,6 +110,9 @@ namespace Xamarin.Android.Build.Tests {
     <attr name=""android:entryValues""/>
   </declare-styleable>
   <attr name=""customFont"" format=""enum"">
+        <enum name=""regular"" value=""0""/>
+  </attr>
+  <attr name=""customFont1"" format=""enum"">
         <enum name=""regular"" value=""0""/>
   </attr>
   <attr name=""entries"" format=""enum"">
@@ -179,7 +184,7 @@ namespace Xamarin.Android.Build.Tests {
 		/// Run the GenerateDesignerFileFromRtxt test and let it fail.
 		/// You can then go to the appropriate resource directory
 		/// and run the following commands.
-		/// 
+		///
 		/// aapt2 compile -o compile.flata --dir res/
 		/// aapt2 compile -o lp.flata --dir lp/res/
 		/// aapt2 link -o foo.apk --manifest AndroidManifest.xml -R lp.flata -R compile.flata --auto-add-overlay --output-text-symbols R.txt -I ~/android-toolchain-xa/sdk/platforms/android-Q/android.jar
@@ -196,8 +201,9 @@ int array array_of_colors 0x7f030001
 int array int_array 0x7f030002
 int array widths_array 0x7f030003
 int attr customFont 0x7f040000
-int attr entries 0x7f040001
-int attr entryValues 0x7f040002
+int attr customFont1 0x7f040001
+int attr entries 0x7f040002
+int attr entryValues 0x7f040003
 int bool a_bool 0x7f050000
 int color a_color 0x7f060000
 int color selector1 0x7f060001
@@ -224,10 +230,12 @@ int string fixed 0x7f110001
 int string foo 0x7f110002
 int string hello 0x7f110003
 int string menu_settings 0x7f110004
-int[] styleable CustomFonts { 0x010100d2, 0x7f040000 }
+int[] styleable CustomFonts { 0x10100D2, 0x7F040000, 0x7F040000, 0x7F040001 }
 int styleable CustomFonts_android_scrollX 0
 int styleable CustomFonts_customFont 1
-int[] styleable MultiSelectListPreference { 0x010100b2, 0x010101f8, 0x7f040001, 0x7f040002 }
+int styleable CustomFonts_customFont 2
+int styleable CustomFonts_customFont1 3
+int[] styleable MultiSelectListPreference { 0x010100b2, 0x010101f8, 0x7f040002, 0x7f040003 }
 int styleable MultiSelectListPreference_android_entries 0
 int styleable MultiSelectListPreference_android_entryValues 1
 int styleable MultiSelectListPreference_entries 2
@@ -388,6 +396,7 @@ int xml myxml 0x7f140000
 			task.UseManagedResourceGenerator = true;
 			task.DesignTimeBuild = true;
 			task.Namespace = "Foo.Foo";
+			task.RTxtFile = Path.Combine (Root, path, "R.txt");
 			task.NetResgenOutputFile = Path.Combine (Root, path, "Resource.designer.cs");
 			task.ProjectDir = Path.Combine (Root, path);
 			task.ResourceDirectory = Path.Combine (Root, path, "res") + Path.DirectorySeparatorChar;
@@ -469,7 +478,8 @@ int xml myxml 0x7f140000
 			File.WriteAllText (Path.Combine (Root, path, "foo.map"), @"a\nb");
 			Directory.CreateDirectory (Path.Combine (Root, path, "java"));
 			List<BuildErrorEventArgs> errors = new List<BuildErrorEventArgs> ();
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors: errors);
+			List<BuildMessageEventArgs> messages = new List<BuildMessageEventArgs> ();
+			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors: errors, messages: messages);
 			var aapt2Compile = new Aapt2Compile {
 				BuildEngine = engine,
 				ToolPath = GetPathToAapt2 (),
@@ -484,7 +494,7 @@ int xml myxml 0x7f140000
 				FlatArchivesDirectory = Path.Combine (Root, path),
 				FlatFilesDirectory = Path.Combine (Root, path),
 			};
-			
+
 			Assert.IsTrue (aapt2Compile.Execute (), $"Aapt2 Compile should have succeeded. {string.Join (" ", errors.Select (x => x.Message))}");
 			int platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
 			string resPath = Path.Combine (Root, path, "res");
@@ -501,10 +511,10 @@ int xml myxml 0x7f140000
 				JavaPlatformJarPath = Path.Combine (AndroidSdkDirectory, "platforms", $"android-{platform}", "android.jar"),
 				JavaDesignerOutputDirectory = Path.Combine (Root, path, "java"),
 				ResourceSymbolsTextFile = rTxt,
-			
+
 			};
 			Assert.IsTrue (aapt2Link.Execute (), "Aapt2 Link should have succeeded.");
-			
+
 			FileAssert.Exists (rTxt, $"{rTxt} should have been created.");
 
 			var task = new GenerateResourceDesigner {
@@ -652,7 +662,7 @@ int xml myxml 0x7f140000
 					ResourceFlagFile =  flagFile,
 				};
 				sw.Start ();
-				var codeDom = parser.Parse (resPath, lp, isApp: true, resourceMap: new Dictionary<string, string> ());
+				var codeDom = parser.Parse (resPath, "R.txt", lp, isApp: true, resourceMap: new Dictionary<string, string> ());
 				sw.Stop ();
 				TestContext.Out.WriteLine ($"Pass {i} took {sw.ElapsedMilliseconds} ms");
 				totalMS += sw.ElapsedMilliseconds;
