@@ -462,7 +462,7 @@ namespace Lib2
 				foreach (var target in targets) {
 					b.Output.AssertTargetIsSkipped (target);
 				}
-				Assert.IsTrue (secondBuildTime < firstBuildTime, $"Second incremental build: '{secondBuildTime}' should be faster than clean build: '{firstBuildTime}'.");
+				Assert.IsTrue (thirdBuildTime < firstBuildTime, $"Third unchanged build: '{thirdBuildTime}' should be faster than clean build: '{firstBuildTime}'.");
 				Assert.IsTrue (thirdBuildTime < secondBuildTime, $"Third unchanged build: '{thirdBuildTime}' should be faster than partially incremental second build: '{secondBuildTime}'.");
 			}
 		}

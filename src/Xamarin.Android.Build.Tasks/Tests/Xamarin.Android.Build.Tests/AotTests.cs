@@ -10,7 +10,7 @@ using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[Category ("Node-1"), Category ("AOT")]
+	[Category ("Node-2"), Category ("AOT")]
 	[Parallelizable (ParallelScope.Children)]
 	public class AotTests : BaseTest
 	{
@@ -43,9 +43,51 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		static object [] AotChecks () => new object [] {
+			new object[] {
+				/* supportedAbis */   "armeabi-v7a",
+				/* enableLLVM */      false,
+				/* expectedResult */  true,
+			},
+			new object[] {
+				/* supportedAbis */   "armeabi-v7a",
+				/* enableLLVM */      true,
+				/* expectedResult */  true,
+			},
+			new object[] {
+				/* supportedAbis */   "arm64-v8a",
+				/* enableLLVM */      false,
+				/* expectedResult */  true,
+			},
+			new object[] {
+				/* supportedAbis */   "arm64-v8a",
+				/* enableLLVM */      true,
+				/* expectedResult */  true,
+			},
+			new object[] {
+				/* supportedAbis */   "x86",
+				/* enableLLVM */      false,
+				/* expectedResult */  true,
+			},
+			new object[] {
+				/* supportedAbis */   "x86",
+				/* enableLLVM */      true,
+				/* expectedResult */  true,
+			},
+			new object[] {
+				/* supportedAbis */   "x86_64",
+				/* enableLLVM */      false,
+				/* expectedResult */  true,
+			},
+			new object[] {
+				/* supportedAbis */   "x86_64",
+				/* enableLLVM */      true,
+				/* expectedResult */  true,
+			},
+		};
 
 		[Test]
-		[TestCaseSource (nameof (BuildTest.AotChecks))]
+		[TestCaseSource (nameof (AotChecks))]
 		[Category ("SmokeTests")]
 		public void BuildAotApplicationAndÜmläüts (string supportedAbis, bool enableLLVM, bool expectedResult)
 		{
@@ -114,7 +156,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[TestCaseSource (nameof (BuildTest.AotChecks))]
+		[TestCaseSource (nameof (AotChecks))]
 		[Category ("Minor"), Category ("MkBundle")]
 		public void BuildAotApplicationAndBundleAndÜmläüts (string supportedAbis, bool enableLLVM, bool expectedResult)
 		{
@@ -163,7 +205,6 @@ namespace Xamarin.Android.Build.Tests
 					"the _BuildApkEmbed target should be skipped");
 			}
 		}
-
 
 		[Test]
 		[NonParallelizable]
