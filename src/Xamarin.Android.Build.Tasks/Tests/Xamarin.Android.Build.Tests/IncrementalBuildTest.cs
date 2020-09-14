@@ -402,6 +402,7 @@ namespace Lib2
 		//https://github.com/xamarin/xamarin-android/issues/2247
 		[Test]
 		[Category ("SmokeTests")]
+		[NonParallelizable] // Do not run timing sensitive tests in parallel
 		public void AppProjectTargetsDoNotBreak ()
 		{
 			var targets = new List<string> {
@@ -496,7 +497,6 @@ namespace Lib2
 			};
 			using (var b = CreateDllBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "first build should succeed");
-				var firstBuildTime = b.LastBuildTime;
 				foreach (var target in targets) {
 					Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped!");
 				}
@@ -513,19 +513,15 @@ namespace Lib2
 
 				//NOTE: second build, targets will run because inputs changed
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second build should succeed");
-				var secondBuildTime = b.LastBuildTime;
 				foreach (var target in targets) {
 					Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped on second build!");
 				}
 
 				//NOTE: third build, targets should certainly *not* run! there are no changes
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "third build should succeed");
-				var thirdBuildTime = b.LastBuildTime;
 				foreach (var target in targets) {
 					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped on third build!");
 				}
-				Assert.IsTrue (secondBuildTime < firstBuildTime, $"Second incremental build: '{secondBuildTime}' should be faster than clean build: '{firstBuildTime}'.");
-				Assert.IsTrue (thirdBuildTime < secondBuildTime, $"Third unchanged build: '{thirdBuildTime}' should be faster than partially incremental second build: '{secondBuildTime}'.");
 			}
 		}
 
