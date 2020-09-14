@@ -6,7 +6,7 @@ This project file is used to create the Xamarin.Android.Sdk.Lite NuGet, which is
 temporary MSBuild project SDK that redirects to a Xamarin.Android installation on disk.
 ***********************************************************************************************
 -->
-<Project Sdk="Microsoft.Build.NoTargets/1.0.88">
+<Project Sdk="Microsoft.Build.NoTargets">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>

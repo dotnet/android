@@ -32,7 +32,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[Retry (1)]
 		public void ApplicationRunsWithoutDebugger ([Values (false, true)] bool isRelease, [Values (false, true)] bool extractNativeLibs)
 		{
 			AssertHasDevices ();
@@ -156,7 +155,6 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[TestCaseSource (nameof (DebuggerCustomAppTestCases))]
-		[Retry (1)]
 		public void CustomApplicationRunsWithDebuggerAndBreaks (bool useSharedRuntime, bool embedAssemblies, string fastDevType, bool activityStarts)
 		{
 			AssertCommercialBuild ();
@@ -308,7 +306,6 @@ namespace ${ROOT_NAMESPACE} {
 
 		[Test]
 		[TestCaseSource (nameof(DebuggerTestCases))]
-		[Retry (1)]
 		public void ApplicationRunsWithDebuggerAndBreaks (bool useSharedRuntime, bool embedAssemblies, string fastDevType, bool allowDeltaInstall)
 		{
 			AssertCommercialBuild ();

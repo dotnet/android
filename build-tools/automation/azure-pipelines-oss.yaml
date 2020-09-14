@@ -27,7 +27,7 @@ variables:
   PREPARE_FLAGS: PREPARE_CI=1 PREPARE_CI_PR=1
   DotNetCoreVersion: 3.1.201
   # Version number from: https://github.com/dotnet/installer#installers-and-binaries
-  DotNetCorePreviewVersion: 5.0.100-preview.7.20307.3
+  DotNetCorePreviewVersion: 5.0.100-rc.2.20459.1
 
 stages:
 - stage: mac_stage
@@ -52,6 +52,7 @@ stages:
     - template: yaml-templates/use-dot-net.yaml
       parameters:
         version: $(DotNetCorePreviewVersion)
+        remove_dotnet: true
 
     - template: yaml-templates/use-dot-net.yaml
       parameters:

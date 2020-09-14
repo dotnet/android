@@ -6,7 +6,7 @@ This project file is used to create the Microsoft.Android.Sdk NuGet, which will 
 the new entry point for short-form style Android projets in .NET 5.
 ***********************************************************************************************
 -->
-<Project Sdk="Microsoft.Build.NoTargets/1.0.88">
+<Project Sdk="Microsoft.Build.NoTargets">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>

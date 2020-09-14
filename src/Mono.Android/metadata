@@ -1548,11 +1548,6 @@
   <remove-node api-since="30" path="/api/package[@name='android.telephony']/class[@name='CellInfo']/method[@name='getCellIdentity' and count(parameter)=0]" />
   <remove-node api-since="30" path="/api/package[@name='android.telephony']/class[@name='CellInfo']/method[@name='getCellSignalStrength' and count(parameter)=0]" />
 
-  <!-- We don't support methods that require Actions/Functions with more than 16 arguments -->
-  <remove-node api-since="30" path="/api/package[@name='java.util']/interface[@jni-signature='Ljava/util/Map;']/method[@name='of' and count(parameter)=16]" />
-  <remove-node api-since="30" path="/api/package[@name='java.util']/interface[@jni-signature='Ljava/util/Map;']/method[@name='of' and count(parameter)=18]" />
-  <remove-node api-since="30" path="/api/package[@name='java.util']/interface[@jni-signature='Ljava/util/Map;']/method[@name='of' and count(parameter)=20]" />
-
   <!-- Work around a generator bug where having multiple Listener methods with the same name cause multiple conflicting EventArgs classes to be created. -->
   <!-- These are "default" method versions, so it's ok to remove them from an interface. -->
   <remove-node api-since="30" path="/api/package[@name='android.animation']/interface[@name='Animator.AnimatorListener']/method[@name='onAnimationStart' and count(parameter)=2]" />

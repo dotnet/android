@@ -19,8 +19,7 @@ logcat-*.txt
 apk-sizes-*.txt
 *.rawproto
 *.binlog
-src/Xamarin.Android.Build.Tasks/Xamarin.Android.Common.props
-src/Xamarin.Android.Build.Tasks/Microsoft.Android.Sdk/targets/Microsoft.Android.Sdk.BundledVersions.props
+*.ProjectImports.zip
 *~
 external/monodroid/
 external/mono/
