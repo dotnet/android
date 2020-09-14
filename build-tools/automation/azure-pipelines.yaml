@@ -63,7 +63,7 @@ variables:
   # - This is a non-fork branch with name containing "mono-" (for Mono bumps)
   IsMonoBranch: $[and(eq(variables['XA.Commercial.Build'], 'true'), ne(variables['System.PullRequest.IsFork'], 'True'), or(contains(variables['Build.SourceBranchName'], 'mono-'), contains(variables['System.PullRequest.SourceBranch'], 'mono-')))]
   RunAllTests: $[or(eq(variables['XA.RunAllTests'], true), eq(variables['IsMonoBranch'], true))]
-  DotNetNUnitCategories: '& TestCategory != DotNetIgnore & TestCategory != AOT & TestCategory != LibraryProjectZip & TestCategory != MkBundle & TestCategory != MonoSymbolicate & TestCategory != PackagesConfig & TestCategory != StaticProject'
+  DotNetNUnitCategories: '& TestCategory != SmokeTests & TestCategory != DotNetIgnore & TestCategory != AOT & TestCategory != LibraryProjectZip & TestCategory != MkBundle & TestCategory != MonoSymbolicate & TestCategory != PackagesConfig & TestCategory != StaticProject'
   NUnit.NumberOfTestWorkers: 4
 
 # Stage and Job "display names" are shortened because they are combined to form the name of the corresponding GitHub check.
@@ -753,6 +753,127 @@ stages:
 
     - template: yaml-templates/fail-on-issue.yaml
 
+  # Xamarin.Android (Test MSBuild Smoke - macOS - Legacy)
+  - template: yaml-templates\run-msbuild-mac-tests.yaml
+    parameters:
+      job_name: mac_msbuild_tests_0
+      job_suffix: Legacy
+      nunit_categories: '|| cat == SmokeTests'
+
+  # Xamarin.Android (Test MSBuild Smoke - Windows - Legacy)
+  - template: yaml-templates\run-msbuild-win-tests.yaml
+    parameters:
+      job_name: win_msbuild_tests_0
+      job_suffix: Legacy
+      nunit_categories: '|| cat == SmokeTests'
+
+  # Xamarin.Android (Test MSBuild Smoke - macOS - One .NET)
+  - template: yaml-templates\run-msbuild-mac-tests.yaml
+    parameters:
+      job_name: mac_dotnet_tests_0
+      job_suffix: One .NET
+      nunit_categories: '| TestCategory == SmokeTests'
+      target_framework: netcoreapp3.1
+
+  # Xamarin.Android (Test MSBuild Smoke - Windows - One .NET)
+  - template: yaml-templates\run-msbuild-win-tests.yaml
+    parameters:
+      job_name: win_dotnet_tests_0
+      job_suffix: One .NET
+      nunit_categories: '| TestCategory == SmokeTests'
+      target_framework: netcoreapp3.1
+
+  # Check - "Xamarin.Android (Test MSBuild Emulator Smoke - macOS)"
+  - job: mac_msbuilddevice_tests
+    displayName: MSBuild Emulator Smoke - macOS
+    pool: $(HostedMac)
+    timeoutInMinutes: 90
+    cancelTimeoutInMinutes: 5
+    workspace:
+      clean: all
+    steps:
+    - template: yaml-templates/setup-test-environment.yaml
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: $(TestAssembliesArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: $(NuGetArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
+
+    - task: MSBuild@1
+      displayName: start emulator
+      inputs:
+        solution: src/Mono.Android/Test/Mono.Android-Tests.csproj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: /t:AcquireAndroidTarget /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/start-emulator.binlog
+
+    - template: yaml-templates/run-nunit-tests.yaml
+      parameters:
+        testRunTitle: MSBuildDeviceIntegration Smoke - macOS
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/MSBuildDeviceIntegration.dll
+        nunitConsoleExtraArgs: --where "cat == SmokeTests" --workers=$(NUnit.NumberOfTestWorkers)
+        testResultsFile: TestResult-MSBuildDeviceIntegrationSmoke-$(XA.Build.Configuration).xml
+
+    - task: MSBuild@1
+      displayName: shut down emulator
+      inputs:
+        solution: src/Mono.Android/Test/Mono.Android-Tests.csproj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: >-
+          /t:AcquireAndroidTarget,ReleaseAndroidTarget
+          /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/shutdown-emulator.binlog
+      condition: always()
+
+    - template: yaml-templates/upload-results.yaml
+      parameters:
+        artifactName: Test Results - MSBuild With Emulator - macOS
+
+    - template: yaml-templates/fail-on-issue.yaml
+
+- stage: regression_tests
+  displayName: Regression Tests
+  dependsOn: mac_build
+  condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(variables['RunAllTests'], true))
+  jobs:
+
+  # Check - "Xamarin.Android (Regression Tests Mac)"
+  - job: integrated_regression_mac
+    displayName: Mac
+    pool:
+      name: VSEng-Xamarin-Mac-Devices
+      demands:
+      - android
+    timeoutInMinutes: 240
+    cancelTimeoutInMinutes: 5
+    workspace:
+      clean: all
+    steps:
+    - template: yaml-templates/run-integrated-regression-tests.yaml
+
+  # Check - "Xamarin.Android (Regression Tests Windows)"
+  - job: integrated_regression_win
+    displayName: Windows
+    pool:
+      name: VSEng-Xamarin-Win-XMA
+      demands:
+      - android
+    timeoutInMinutes: 240
+    cancelTimeoutInMinutes: 5
+    workspace:
+      clean: all
+    variables:
+      XQA_VISUALSTUDIO_LOCATION: '%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Enterprise'
+    steps:
+    - template: remove-visualstudio.yml@yaml
+
+    - template: yaml-templates\run-integrated-regression-tests.yaml
+
+    - template: remove-visualstudio.yml@yaml
+
   # Check - "Xamarin.Android (Test BCL With Emulator - macOS)"
   - job: mac_bcl_tests
     displayName: BCL With Emulator - macOS
@@ -813,12 +934,14 @@ stages:
       node_id: 1
       job_name: mac_msbuild_tests_1
       job_suffix: Legacy
+      nunit_categories: '&& cat != SmokeTests'
 
   - template: yaml-templates\run-msbuild-mac-tests.yaml
     parameters:
       node_id: 2
       job_name: mac_msbuild_tests_2
       job_suffix: Legacy
+      nunit_categories: '&& cat != SmokeTests'
       run_extra_tests: true
 
   - template: yaml-templates\run-msbuild-mac-tests.yaml
@@ -826,6 +949,7 @@ stages:
       node_id: 3
       job_name: mac_msbuild_tests_3
       job_suffix: Legacy
+      nunit_categories: '&& cat != SmokeTests'
 
   # Xamarin.Android (Test MSBuild - Windows - Legacy)
   - template: yaml-templates\run-msbuild-win-tests.yaml
@@ -833,12 +957,14 @@ stages:
       node_id: 1
       job_name: win_msbuild_tests_1
       job_suffix: Legacy
+      nunit_categories: '&& cat != SmokeTests'
 
   - template: yaml-templates\run-msbuild-win-tests.yaml
     parameters:
       node_id: 2
       job_name: win_msbuild_tests_2
       job_suffix: Legacy
+      nunit_categories: '&& cat != SmokeTests'
       run_extra_tests: true
 
   - template: yaml-templates\run-msbuild-win-tests.yaml
@@ -846,12 +972,63 @@ stages:
       node_id: 3
       job_name: win_msbuild_tests_3
       job_suffix: Legacy
+      nunit_categories: '&& cat != SmokeTests'
+
+  # Xamarin.Android (Test MSBuild - macOS - One .NET)
+  - template: yaml-templates\run-msbuild-mac-tests.yaml
+    parameters:
+      node_id: 1
+      job_name: mac_dotnet_tests_1
+      job_suffix: One .NET
+      nunit_categories: $(DotNetNUnitCategories)
+      target_framework: 'netcoreapp3.1'
+
+  - template: yaml-templates\run-msbuild-mac-tests.yaml
+    parameters:
+      node_id: 2
+      job_name: mac_dotnet_tests_2
+      job_suffix: One .NET
+      nunit_categories: $(DotNetNUnitCategories)
+      target_framework: 'netcoreapp3.1'
+
+  - template: yaml-templates\run-msbuild-mac-tests.yaml
+    parameters:
+      node_id: 3
+      job_name: mac_dotnet_tests_3
+      job_suffix: One .NET
+      nunit_categories: $(DotNetNUnitCategories)
+      target_framework: 'netcoreapp3.1'
+
+  # Xamarin.Android (Test MSBuild - Windows - One .NET)
+  - template: yaml-templates\run-msbuild-win-tests.yaml
+    parameters:
+      node_id: 1
+      job_name: win_dotnet_tests_1
+      job_suffix: One .NET
+      nunit_categories: $(DotNetNUnitCategories)
+      target_framework: 'netcoreapp3.1'
+
+  - template: yaml-templates\run-msbuild-win-tests.yaml
+    parameters:
+      node_id: 2
+      job_name: win_dotnet_tests_2
+      job_suffix: One .NET
+      nunit_categories: $(DotNetNUnitCategories)
+      target_framework: 'netcoreapp3.1'
+
+  - template: yaml-templates\run-msbuild-win-tests.yaml
+    parameters:
+      node_id: 3
+      job_name: win_dotnet_tests_3
+      job_suffix: One .NET
+      nunit_categories: $(DotNetNUnitCategories)
+      target_framework: 'netcoreapp3.1'
 
   # Check - "Xamarin.Android (Test MSBuild With Emulator - macOS)"
   - job: mac_msbuilddevice_tests
     displayName: MSBuild With Emulator - macOS
     pool: $(HostedMac)
-    timeoutInMinutes: 120
+    timeoutInMinutes: 150
     cancelTimeoutInMinutes: 5
     workspace:
       clean: all
@@ -879,7 +1056,7 @@ stages:
       parameters:
         testRunTitle: MSBuildDeviceIntegration On Device - macOS
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/MSBuildDeviceIntegration.dll
-        nunitConsoleExtraArgs: --where "cat != TimeZoneInfo"
+        nunitConsoleExtraArgs: --where "cat != TimeZoneInfo && cat != SmokeTests" --workers=$(NUnit.NumberOfTestWorkers)
         testResultsFile: TestResult-MSBuildDeviceIntegration-$(XA.Build.Configuration).xml
 
     - task: MSBuild@1
@@ -898,7 +1075,20 @@ stages:
 
     - template: yaml-templates/fail-on-issue.yaml
 
-  # Check - "Xamarin.Android (Test Designer - macOS)"
+  # TimeZoneInfo tests
+  - template: yaml-templates\run-timezoneinfo-tests.yaml
+    parameters:
+      node_id: 1
+
+  - template: yaml-templates\run-timezoneinfo-tests.yaml
+    parameters:
+      node_id: 2
+
+  - template: yaml-templates\run-timezoneinfo-tests.yaml
+    parameters:
+      node_id: 3
+
+ # Check - "Xamarin.Android (Test Designer - macOS)"
   - job: designer_integration_mac
     displayName: Designer - macOS
     pool: $(HostedMacMojave)
@@ -1048,112 +1238,3 @@ stages:
         displayName: upload designer binlogs
         artifactName: Test Results - Designer - Windows
         targetPath: $(Build.ArtifactStagingDirectory)/designer-binlogs
-
-- stage: dotnet_tests
-  displayName: One .NET Tests
-  dependsOn: mac_build
-  condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(variables['RunAllTests'], true))
-  jobs:
-
-  # Xamarin.Android (Test MSBuild - macOS - One .NET)
-  - template: yaml-templates\run-msbuild-mac-tests.yaml
-    parameters:
-      node_id: 1
-      job_name: mac_dotnet_tests_1
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories)
-      target_framework: 'netcoreapp3.1'
-
-  - template: yaml-templates\run-msbuild-mac-tests.yaml
-    parameters:
-      node_id: 2
-      job_name: mac_dotnet_tests_2
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories)
-      target_framework: 'netcoreapp3.1'
-
-  - template: yaml-templates\run-msbuild-mac-tests.yaml
-    parameters:
-      node_id: 3
-      job_name: mac_dotnet_tests_3
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories)
-      target_framework: 'netcoreapp3.1'
-
-  # Xamarin.Android (Test MSBuild - Windows - One .NET)
-  - template: yaml-templates\run-msbuild-win-tests.yaml
-    parameters:
-      node_id: 1
-      job_name: win_dotnet_tests_1
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories)
-      target_framework: 'netcoreapp3.1'
-
-  - template: yaml-templates\run-msbuild-win-tests.yaml
-    parameters:
-      node_id: 2
-      job_name: win_dotnet_tests_2
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories)
-      target_framework: 'netcoreapp3.1'
-
-  - template: yaml-templates\run-msbuild-win-tests.yaml
-    parameters:
-      node_id: 3
-      job_name: win_dotnet_tests_3
-      job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories)
-      target_framework: 'netcoreapp3.1'
-
-- stage: integrated_regression_test
-  displayName: Regression Tests
-  dependsOn: mac_build
-  condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(variables['RunAllTests'], true))
-  jobs:
-
-  # Check - "Xamarin.Android (Regression Tests Mac)"
-  - job: integrated_regression_mac
-    displayName: Mac
-    pool:
-      name: VSEng-Xamarin-Mac-Devices
-      demands:
-      - android
-    timeoutInMinutes: 240
-    cancelTimeoutInMinutes: 5
-    workspace:
-      clean: all
-    steps:
-    - template: yaml-templates/run-integrated-regression-tests.yaml
-
-  # Check - "Xamarin.Android (Regression Tests Windows)"
-  - job: integrated_regression_win
-    displayName: Windows
-    pool:
-      name: VSEng-Xamarin-Win-XMA
-      demands:
-      - android
-    timeoutInMinutes: 240
-    cancelTimeoutInMinutes: 5
-    workspace:
-      clean: all
-    variables:
-      XQA_VISUALSTUDIO_LOCATION: '%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Enterprise'
-    steps:
-    - template: remove-visualstudio.yml@yaml
-
-    - template: yaml-templates\run-integrated-regression-tests.yaml
-
-    - template: remove-visualstudio.yml@yaml
-
-  # TimeZoneInfo tests
-  - template: yaml-templates\run-timezoneinfo-tests.yaml
-    parameters:
-      node_id: 1
-
-  - template: yaml-templates\run-timezoneinfo-tests.yaml
-    parameters:
-      node_id: 2
-
-  - template: yaml-templates\run-timezoneinfo-tests.yaml
-    parameters:
-      node_id: 3
