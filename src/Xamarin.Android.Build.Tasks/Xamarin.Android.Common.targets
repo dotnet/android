@@ -1644,7 +1644,13 @@ because xbuild doesn't support framework reference assemblies.
     <Output TaskParameter="ExtraPackages" PropertyName="AaptExtraPackages" />
   </GetExtraPackages>
   
+
+  <!--
+  For aapt copy the assets into one folder.
+  For aapt2 we will consule the library assets in place.
+  -->
   <CollectLibraryAssets
+      Condition=" '$(_AndroidUseAapt2)' != 'True' "
       AdditionalAssetDirectories="@(LibraryAssetDirectories)"
       AssetDirectory="$(MonoAndroidAssetsDirIntermediate)" />
 </Target>

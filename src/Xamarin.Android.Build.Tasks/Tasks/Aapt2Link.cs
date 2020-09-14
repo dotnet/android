@@ -14,7 +14,7 @@ using System.Collections.Generic;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks {
-	
+
 	//aapt2 link -o resources.apk.bk --manifest Foo.xml --java . --custom-package com.infinitespace_studios.blankforms -R foo2 -v --auto-add-overlay
 	public class Aapt2Link : Aapt2 {
 		static Regex exraArgSplitRegEx = new Regex (@"[\""].+?[\""]|[\''].+?[\'']|[^ ]+", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Multiline);
@@ -44,6 +44,8 @@ namespace Xamarin.Android.Tasks {
 		public string AndroidComponentResgenFlagFile { get; set; }
 
 		public string AssetsDirectory { get; set; }
+
+		public ITaskItem [] AdditionalAndroidAssetPaths { get; set; }
 
 		public string ExtraPackages { get; set; }
 
@@ -175,7 +177,7 @@ namespace Xamarin.Android.Tasks {
 				cmd.Add ("--custom-package");
 				cmd.Add (PackageName.ToLowerInvariant ());
 			}
-			
+
 			if (AdditionalResourceArchives != null) {
 				for (int i = AdditionalResourceArchives.Length - 1; i >= 0; i--) {
 					var flata = Path.Combine (WorkingDirectory, AdditionalResourceArchives [i].ItemSpec);
@@ -226,7 +228,7 @@ namespace Xamarin.Android.Tasks {
 					}
 				}
 			}
-			
+
 			cmd.Add ("--auto-add-overlay");
 
 			if (!string.IsNullOrWhiteSpace (UncompressedFileExtensions))
@@ -263,6 +265,8 @@ namespace Xamarin.Android.Tasks {
 				}
 			}
 
+			// When adding Assets the first item found takes precedence.
+			// So we need to add the applicaiton Assets first.
 			if (!string.IsNullOrWhiteSpace (AssetsDirectory)) {
 				var assetDir = AssetsDirectory.TrimEnd ('\\');
 				if (!Path.IsPathRooted (assetDir))
@@ -272,6 +276,21 @@ namespace Xamarin.Android.Tasks {
 					cmd.Add (GetFullPath (assetDir));
 				}
 			}
+
+			if (AdditionalAndroidAssetPaths != null) {
+				for (int i = 0; i < AdditionalAndroidAssetPaths.Length; i++) {
+					var assetDir = GetFullPath (AdditionalAndroidAssetPaths [i].ItemSpec.TrimEnd ('\\'));
+					if (!string.IsNullOrWhiteSpace (assetDir)) {
+						if (Directory.Exists (assetDir)) {
+							cmd.Add ("-A");
+							cmd.Add (GetFullPath (assetDir));
+						} else {
+							LogDebugMessage ($"asset directory did not exist: {assetDir}");
+						}
+					}
+				}
+			}
+
 			if (!string.IsNullOrEmpty (ProguardRuleOutput)) {
 				cmd.Add ("--proguard");
 				cmd.Add (GetFullPath (proguardRuleOutputTemp));
