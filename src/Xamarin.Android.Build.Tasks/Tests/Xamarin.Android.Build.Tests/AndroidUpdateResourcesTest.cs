@@ -1386,6 +1386,10 @@ namespace UnnamedProject
 				};
 
 			var proj = new XamarinAndroidApplicationProject ();
+			// Package requires packages.config
+			if (!Builder.UseDotNet) {
+				proj.Packages.Add (KnownPackages.Xamarin_PdfView_Android);
+			}
 			proj.AndroidResources.Add (CreateItem ("Resources\\raw\\.foo"));
 			proj.AndroidResources.Add (CreateItem ("Resources\\raw\\.git"));
 			proj.AndroidResources.Add (CreateItem ("Resources\\raw\\.svn"));

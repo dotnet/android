@@ -117,8 +117,8 @@ namespace Xamarin.Android.Tasks
 				}
 
 				string baseFileName = LowercaseFilenames ? rel.ToLowerInvariant () : rel;
-				if (Path.GetFileName (baseFileName).StartsWith (".", StringComparison.Ordinal)) {
-					Log.LogDebugMessage ($"Skipping ignored file: {baseFileName}");
+				if (Aapt2.IsInvalidFilename (baseFileName)) {
+					Log.LogDebugMessage ($"Invalid filename, ignoring: {baseFileName}");
 					continue;
 				}
 				if (Path.GetExtension (baseFileName) == ".axml")
