@@ -738,6 +738,11 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 	set_debug_options ();
 #endif
 
+	// TESTING ASAN: use-after-free
+	// char *x = new char[10]{};
+	// delete[] x;
+	// log_warn (LOG_DEFAULT, "x == %s", x);
+
 	bool log_methods = utils.should_log (LOG_TIMING) && !(log_timing_categories & LOG_TIMING_BARE);
 	if (XA_UNLIKELY (log_methods)) {
 		simple_pointer_guard<char[]> jit_log_path = utils.path_combine (androidSystem.get_override_dir (0), "methods.txt");
