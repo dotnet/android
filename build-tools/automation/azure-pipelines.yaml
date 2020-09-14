@@ -486,12 +486,12 @@ stages:
           GITHUB_CONTEXT=$(GitHub.Artifacts.Context)
           ENABLE_JAR_SIGNING=true
 
-- stage: test
-  displayName: Test
+- stage: smoke_tests
+  displayName: Smoke Test
   dependsOn: mac_build
   jobs:
 
-  # Check - "Xamarin.Android (Test APK Instrumentation - macOS)"
+  # Check - "Xamarin.Android (Smoke Test APK Instrumentation - macOS)"
   - job: mac_apk_tests
     displayName: APK Instrumentation - macOS
     pool: $(HostedMac)
@@ -753,39 +753,39 @@ stages:
 
     - template: yaml-templates/fail-on-issue.yaml
 
-  # Xamarin.Android (Test MSBuild Smoke - macOS - Legacy)
+  # Xamarin.Android (Smoke Test MSBuild Legacy - macOS)
   - template: yaml-templates\run-msbuild-mac-tests.yaml
     parameters:
       job_name: mac_msbuild_tests_0
       job_suffix: Legacy
       nunit_categories: '|| cat == SmokeTests'
 
-  # Xamarin.Android (Test MSBuild Smoke - Windows - Legacy)
+  # Xamarin.Android (Smoke Test MSBuild Legacy - Windows)
   - template: yaml-templates\run-msbuild-win-tests.yaml
     parameters:
       job_name: win_msbuild_tests_0
       job_suffix: Legacy
       nunit_categories: '|| cat == SmokeTests'
 
-  # Xamarin.Android (Test MSBuild Smoke - macOS - One .NET)
+  # Xamarin.Android (Smoke Test MSBuild One .NET - macOS)
   - template: yaml-templates\run-msbuild-mac-tests.yaml
     parameters:
       job_name: mac_dotnet_tests_0
       job_suffix: One .NET
-      nunit_categories: '| TestCategory == SmokeTests'
+      nunit_categories: '| TestCategory = SmokeTests'
       target_framework: netcoreapp3.1
 
-  # Xamarin.Android (Test MSBuild Smoke - Windows - One .NET)
+  # Xamarin.Android (Smoke Test MSBuild One .NET - Windows)
   - template: yaml-templates\run-msbuild-win-tests.yaml
     parameters:
       job_name: win_dotnet_tests_0
       job_suffix: One .NET
-      nunit_categories: '| TestCategory == SmokeTests'
+      nunit_categories: '| TestCategory = SmokeTests'
       target_framework: netcoreapp3.1
 
-  # Check - "Xamarin.Android (Test MSBuild Emulator Smoke - macOS)"
+  # Check - "Xamarin.Android (Smoke Test MSBuild Emulator - macOS)"
   - job: mac_msbuilddevice_tests
-    displayName: MSBuild Emulator Smoke - macOS
+    displayName: MSBuild Emulator - macOS
     pool: $(HostedMac)
     timeoutInMinutes: 90
     cancelTimeoutInMinutes: 5
@@ -835,7 +835,7 @@ stages:
     - template: yaml-templates/fail-on-issue.yaml
 
 - stage: regression_tests
-  displayName: Regression Tests
+  displayName: Test
   dependsOn: mac_build
   condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(variables['RunAllTests'], true))
   jobs:
@@ -928,7 +928,7 @@ stages:
 
     - template: yaml-templates/fail-on-issue.yaml
 
-  # Xamarin.Android (Test MSBuild - macOS - Legacy)
+  # Xamarin.Android (Test MSBuild Legacy - macOS)
   - template: yaml-templates\run-msbuild-mac-tests.yaml
     parameters:
       node_id: 1
@@ -951,7 +951,7 @@ stages:
       job_suffix: Legacy
       nunit_categories: '&& cat != SmokeTests'
 
-  # Xamarin.Android (Test MSBuild - Windows - Legacy)
+  # Xamarin.Android (Test MSBuild Legacy - Windows)
   - template: yaml-templates\run-msbuild-win-tests.yaml
     parameters:
       node_id: 1
@@ -974,7 +974,7 @@ stages:
       job_suffix: Legacy
       nunit_categories: '&& cat != SmokeTests'
 
-  # Xamarin.Android (Test MSBuild - macOS - One .NET)
+  # Xamarin.Android (Test MSBuild One .NET - macOS)
   - template: yaml-templates\run-msbuild-mac-tests.yaml
     parameters:
       node_id: 1
@@ -999,7 +999,7 @@ stages:
       nunit_categories: $(DotNetNUnitCategories)
       target_framework: 'netcoreapp3.1'
 
-  # Xamarin.Android (Test MSBuild - Windows - One .NET)
+  # Xamarin.Android (Test MSBuild One .NET - Windows)
   - template: yaml-templates\run-msbuild-win-tests.yaml
     parameters:
       node_id: 1
