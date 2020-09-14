@@ -513,23 +513,27 @@ printf ""%d"" x
 		}
 
 		[Test]
-		public void DesignTimeBuildHasAndrodDefine ()
+		public void DesignTimeBuildHasAndroidDefines ()
 		{
-			var proj = new XamarinAndroidApplicationProject () {
-
-			};
+			var proj = new XamarinAndroidApplicationProject ();
+			var didParse = int.TryParse (proj.TargetSdkVersion, out int apiLevel);
+			Assert.IsTrue (didParse, $"Unable to parse {proj.TargetSdkVersion} as an int.");
+			var androidDefines = new List<string> ();
+			for (int i = 1; i <= apiLevel; ++i) {
+				androidDefines.Add ($"!__ANDROID_{i}__");
+			}
 			proj.Sources.Add (new BuildItem ("Compile", "IsAndroidDefined.cs") {
-				TextContent = () => @"
+				TextContent = () => $@"
 namespace Xamarin.Android.Tests
-{
-	public class Foo {
-		public void FooMethod () {
-#if !__ANDROID__ || !__MOBILE__
+{{
+	public class Foo {{
+		public void FooMethod () {{
+#if !__ANDROID__ || !__MOBILE__ || {string.Join (" || ", androidDefines)}
 			Compile Error please :)
 #endif
-		}
-	}
-}
+		}}
+	}}
+}}
 ",
 			});
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName ))) {
