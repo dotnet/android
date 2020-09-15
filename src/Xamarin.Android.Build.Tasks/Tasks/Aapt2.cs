@@ -44,6 +44,12 @@ namespace Xamarin.Android.Tasks {
 
 		public string ToolExe { get; set; }
 
+		/// <summary>
+		/// Returns true if a filename starts with a . character.
+		/// </summary>
+		public static bool IsInvalidFilename (string path) =>
+			Path.GetFileName (path).StartsWith (".", StringComparison.Ordinal);
+
 		protected string ResourceDirectoryFullPath (string resourceDirectory)
 		{
 			return (Path.IsPathRooted (resourceDirectory) ? resourceDirectory : Path.Combine (WorkingDirectory, resourceDirectory)).TrimEnd ('\\');

@@ -16,7 +16,7 @@ namespace Xamarin.Android.Build.Tests
 	{
 		[Test]
 		[NonParallelizable]
-		[Category ("SmokeTests"), Category ("dotnet")]
+		[Category ("SmokeTests")]
 		public void BuildApplicationWithMonoEnvironment ([Values ("", "Normal", "Offline")] string sequencePointsMode)
 		{
 			const string supportedAbis = "armeabi-v7a;x86";
@@ -78,7 +78,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void CheckMonoDebugIsAddedToEnvironment ([Values ("", "Normal", "Offline")] string sequencePointsMode)
 		{
 			const string supportedAbis = "armeabi-v7a;x86";
@@ -110,7 +109,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void CheckConcurrentGC ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -195,7 +193,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void CheckHttpClientHandlerType ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {

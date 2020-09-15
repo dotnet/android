@@ -124,7 +124,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void CheckClassesDexIsIncluded ([Values ("dx", "d8", "invalid")] string dexTool)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -289,7 +288,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void CheckMetadataSkipItemsAreProcessedCorrectly ()
 		{
 			var packages = new List<Package> () {
@@ -504,7 +502,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 		}
 
 		[Test]
-		[Category ("SmokeTests"), Category ("dotnet")]
+		[Category ("SmokeTests")]
 		public void CheckAppBundle ([Values (true, false)] bool isRelease)
 		{
 			var proj = new XamarinAndroidApplicationProject () {

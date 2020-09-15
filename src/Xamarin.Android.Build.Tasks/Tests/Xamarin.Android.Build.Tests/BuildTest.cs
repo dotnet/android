@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
@@ -46,7 +45,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void BuildBasicApplication ([ValueSource (nameof (SupportedTargetFrameworks))] string tfv, [Values (true, false)] bool isRelease)
 		{
 			var proj = new XamarinAndroidApplicationProject {
@@ -55,36 +53,6 @@ namespace Xamarin.Android.Build.Tests
 			};
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-			}
-		}
-
-		[Test]
-		[Category ("SmokeTests"), Category ("AOT")]
-		public void BuildBasicApplicationReleaseProfiledAot ()
-		{
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
-				AndroidEnableProfiledAot = true,
-			};
-			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidExtraAotOptions", "--verbose");
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				StringAssertEx.ContainsRegex (@"\[aot-compiler stdout\] Using profile data file.*build.Xamarin.Android.startup\.aotprofile", b.LastBuildOutput, "Should use default AOT profile", RegexOptions.IgnoreCase);
-				StringAssertEx.ContainsRegex (@"\[aot-compiler stdout\] Method.*emitted at", b.LastBuildOutput, "Should contain verbose AOT compiler output", RegexOptions.IgnoreCase);
-			}
-		}
-
-		[Test, Category ("AOT")]
-		public void BuildBasicApplicationReleaseProfiledAotWithoutDefaultProfile ()
-		{
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
-				AndroidEnableProfiledAot = true,
-			};
-			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidUseDefaultAotProfile", "false");
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				StringAssertEx.DoesNotContainRegex (@"\[aot-compiler stdout\] Using profile data file.*build.Xamarin.Android.startup.*\.aotprofile", b.LastBuildOutput, "Should not use default AOT profile", RegexOptions.IgnoreCase);
 			}
 		}
 
@@ -134,7 +102,6 @@ namespace Xamarin.Android.Build.Tests
 		};
 
 		[Test]
-		[Category ("dotnet")]
 		[TestCaseSource (nameof (BuildHasNoWarningsSource))]
 		public void BuildHasNoWarnings (bool isRelease, bool xamarinForms, bool multidex, string packageFormat)
 		{
@@ -264,7 +231,6 @@ class MemTest {
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		[NonParallelizable]
 		public void AndroidXMigration ([Values (true, false)] bool isRelease)
 		{
@@ -547,23 +513,27 @@ printf ""%d"" x
 		}
 
 		[Test]
-		public void DesignTimeBuildHasAndrodDefine ()
+		public void DesignTimeBuildHasAndroidDefines ()
 		{
-			var proj = new XamarinAndroidApplicationProject () {
-
-			};
+			var proj = new XamarinAndroidApplicationProject ();
+			var didParse = int.TryParse (proj.TargetSdkVersion, out int apiLevel);
+			Assert.IsTrue (didParse, $"Unable to parse {proj.TargetSdkVersion} as an int.");
+			var androidDefines = new List<string> ();
+			for (int i = 1; i <= apiLevel; ++i) {
+				androidDefines.Add ($"!__ANDROID_{i}__");
+			}
 			proj.Sources.Add (new BuildItem ("Compile", "IsAndroidDefined.cs") {
-				TextContent = () => @"
+				TextContent = () => $@"
 namespace Xamarin.Android.Tests
-{
-	public class Foo {
-		public void FooMethod () {
-#if !__ANDROID__ || !__MOBILE__
+{{
+	public class Foo {{
+		public void FooMethod () {{
+#if !__ANDROID__ || !__MOBILE__ || {string.Join (" || ", androidDefines)}
 			Compile Error please :)
 #endif
-		}
-	}
-}
+		}}
+	}}
+}}
 ",
 			});
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName ))) {
@@ -694,7 +664,6 @@ namespace UnamedProject
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		[NonParallelizable]
 		public void CheckTimestamps ([Values (true, false)] bool isRelease)
 		{
@@ -863,7 +832,6 @@ namespace UnamedProject
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void BuildIncrementingClassName ()
 		{
 			int count = 0;
@@ -992,128 +960,7 @@ namespace UnamedProject
 		}
 
 		[Test]
-		[TestCaseSource (nameof (AotChecks))]
-		[Category ("AOT")]
-		public void BuildAotApplicationAndÜmläüts (string supportedAbis, bool enableLLVM, bool expectedResult)
-		{
-			var path = Path.Combine ("temp", string.Format ("BuildAotApplication AndÜmläüts_{0}_{1}_{2}", supportedAbis, enableLLVM, expectedResult));
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
-				BundleAssemblies = false,
-				AotAssemblies = true,
-			};
-			proj.SetProperty (KnownProperties.TargetFrameworkVersion, "v5.1");
-			proj.SetAndroidSupportedAbis (supportedAbis);
-			proj.SetProperty ("EnableLLVM", enableLLVM.ToString ());
-			bool checkMinLlvmPath = enableLLVM && (supportedAbis == "armeabi-v7a" || supportedAbis == "x86");
-			if (checkMinLlvmPath) {
-				// Set //uses-sdk/@android:minSdkVersion so that LLVM uses the right libc.so
-				proj.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
-<manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""{proj.PackageName}"">
-	<uses-sdk android:minSdkVersion=""{Xamarin.Android.Tools.XABuildConfig.NDKMinimumApiAvailable}"" />
-	<application android:label=""{proj.ProjectName}"">
-	</application>
-</manifest>";
-			}
-			using (var b = CreateApkBuilder (path)) {
-				if (!b.CrossCompilerAvailable (supportedAbis))
-					Assert.Ignore ($"Cross compiler for {supportedAbis} was not available");
-				if (!b.GetSupportedRuntimes ().Any (x => supportedAbis == x.Abi))
-					Assert.Ignore ($"Runtime for {supportedAbis} was not available.");
-				b.ThrowOnBuildFailure = false;
-				b.Verbosity = LoggerVerbosity.Diagnostic;
-				Assert.AreEqual (expectedResult, b.Build (proj), "Build should have {0}.", expectedResult ? "succeeded" : "failed");
-				if (!expectedResult)
-					return;
-				//NOTE: Windows has shortened paths such as: C:\Users\myuser\ANDROI~3\ndk\PLATFO~1\AN3971~1\arch-x86\usr\lib\libc.so
-				if (checkMinLlvmPath && !IsWindows) {
-					// LLVM passes a direct path to libc.so, and we need to use the libc.so
-					// which corresponds to the *minimum* SDK version specified in AndroidManifest.xml
-					// Since we overrode minSdkVersion=16, that means we should use libc.so from android-16.
-					StringAssertEx.ContainsRegex (@"\s*\[aot-compiler stdout].*android-16.arch-.*.usr.lib.libc\.so", b.LastBuildOutput, "AOT+LLVM should use libc.so from minSdkVersion!");
-				}
-				foreach (var abi in supportedAbis.Split (new char [] { ';' })) {
-					var libapp = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
-						"bundles", abi, "libmonodroid_bundle_app.so");
-					Assert.IsFalse (File.Exists (libapp), abi + " libmonodroid_bundle_app.so should not exist");
-					var assemblies = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
-						"aot", abi, "libaot-UnnamedProject.dll.so");
-					Assert.IsTrue (File.Exists (assemblies), "{0} libaot-UnnamedProject.dll.so does not exist", abi);
-					var apk = Path.Combine (Root, b.ProjectDirectory,
-						proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
-					using (var zipFile = ZipHelper.OpenZip (apk)) {
-						Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
-							string.Format ("lib/{0}/libaot-UnnamedProject.dll.so", abi)),
-							"lib/{0}/libaot-UnnamedProject.dll.so should be in the UnnamedProject.UnnamedProject.apk", abi);
-						Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
-							"assemblies/UnnamedProject.dll"),
-							"UnnamedProject.dll should be in the UnnamedProject.UnnamedProject.apk");
-					}
-				}
-				Assert.AreEqual (expectedResult, b.Build (proj), "Second Build should have {0}.", expectedResult ? "succeeded" : "failed");
-				Assert.IsTrue (
-					b.Output.IsTargetSkipped ("_CompileJava"),
-					"the _CompileJava target should be skipped");
-				Assert.IsTrue (
-					b.Output.IsTargetSkipped ("_BuildApkEmbed"),
-					"the _BuildApkEmbed target should be skipped");
-			}
-		}
-
-		[Test]
-		[TestCaseSource (nameof (AotChecks))]
-		[Category ("Minor"), Category ("MkBundle"), Category ("AOT")]
-		public void BuildAotApplicationAndBundleAndÜmläüts (string supportedAbis, bool enableLLVM, bool expectedResult)
-		{
-			var path = Path.Combine ("temp", string.Format ("BuildAotApplicationAndBundle AndÜmläüts_{0}_{1}_{2}", supportedAbis, enableLLVM, expectedResult));
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
-				BundleAssemblies = true,
-				AotAssemblies = true,
-			};
-			proj.SetProperty (KnownProperties.TargetFrameworkVersion, "v5.1");
-			proj.SetAndroidSupportedAbis (supportedAbis);
-			proj.SetProperty ("EnableLLVM", enableLLVM.ToString ());
-			using (var b = CreateApkBuilder (path)) {
-				if (!b.CrossCompilerAvailable (supportedAbis))
-					Assert.Ignore ("Cross compiler was not available");
-				if (!b.GetSupportedRuntimes ().Any (x => supportedAbis == x.Abi))
-					Assert.Ignore ($"Runtime for {supportedAbis} was not available.");
-				b.ThrowOnBuildFailure = false;
-				Assert.AreEqual (expectedResult, b.Build (proj), "Build should have {0}.", expectedResult ? "succeeded" : "failed");
-				if (!expectedResult)
-					return;
-				foreach (var abi in supportedAbis.Split (new char [] { ';' })) {
-					var libapp = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
-						"bundles", abi, "libmonodroid_bundle_app.so");
-					Assert.IsTrue (File.Exists (libapp), abi + " libmonodroid_bundle_app.so does not exist");
-					var assemblies = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
-						"aot", abi, "libaot-UnnamedProject.dll.so");
-					Assert.IsTrue (File.Exists (assemblies), "{0} libaot-UnnamedProject.dll.so does not exist", abi);
-					var apk = Path.Combine (Root, b.ProjectDirectory,
-						proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
-					using (var zipFile = ZipHelper.OpenZip (apk)) {
-						Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
-							string.Format ("lib/{0}/libaot-UnnamedProject.dll.so", abi)),
-							"lib/{0}/libaot-UnnamedProject.dll.so should be in the UnnamedProject.UnnamedProject.apk", abi);
-						Assert.IsNull (ZipHelper.ReadFileFromZip (zipFile,
-							"assemblies/UnnamedProject.dll"),
-							"UnnamedProject.dll should not be in the UnnamedProject.UnnamedProject.apk");
-					}
-				}
-				Assert.AreEqual (expectedResult, b.Build (proj), "Second Build should have {0}.", expectedResult ? "succeeded" : "failed");
-				Assert.IsTrue (
-					b.Output.IsTargetSkipped ("_CompileJava"),
-					"the _CompileJava target should be skipped");
-				Assert.IsTrue (
-					b.Output.IsTargetSkipped ("_BuildApkEmbed"),
-					"the _BuildApkEmbed target should be skipped");
-			}
-		}
-
-		[Test]
 		[NonParallelizable] // On MacOS, parallel /restore causes issues
-		[Category ("dotnet")]
 		public void BuildProguardEnabledProject ([Values (true, false)] bool isRelease, [Values ("dx", "d8")] string dexTool, [Values ("", "proguard", "r8")] string linkTool)
 		{
 			AssertDexToolSupported (dexTool);
@@ -1178,7 +1025,7 @@ namespace UnamedProject
 		}
 
 		[Test]
-		[Category ("Minor"), Category ("dotnet")]
+		[Category ("Minor")]
 		public void BuildApplicationOver65536Methods ([Values ("dx", "d8")] string dexTool)
 		{
 			AssertDexToolSupported (dexTool);
@@ -1191,7 +1038,6 @@ namespace UnamedProject
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void CreateMultiDexWithSpacesInConfig ([Values ("dx", "d8")] string dexTool)
 		{
 			AssertDexToolSupported (dexTool);
@@ -1205,7 +1051,6 @@ namespace UnamedProject
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void BuildMultiDexApplication ([Values ("dx", "d8")] string dexTool)
 		{
 			AssertDexToolSupported (dexTool);
@@ -1239,7 +1084,6 @@ namespace UnamedProject
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void BuildAfterMultiDexIsNotRequired ([Values ("dx", "d8")] string dexTool)
 		{
 			AssertDexToolSupported (dexTool);
@@ -1284,7 +1128,6 @@ namespace UnamedProject
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void MultiDexCustomMainDexFileList ([Values ("dx", "d8")] string dexTool, [Values ("19", "21")] string minSdkVersion)
 		{
 			AssertDexToolSupported (dexTool);
@@ -1429,62 +1272,6 @@ GVuZHNDbGFzc1ZhbHVlLmNsYXNzUEsFBgAAAAADAAMAwgAAAMYBAAAAAA==
 			}
 		}
 
-		[Test]
-		public void BasicApplicationRepetitiveBuild ()
-		{
-			var proj = new XamarinAndroidApplicationProject ();
-			using (var b = CreateApkBuilder ("temp/BasicApplicationRepetitiveBuild", cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
-				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
-				b.ThrowOnBuildFailure = false;
-				Assert.IsTrue (b.Build (proj), "first build failed");
-				var firstBuildTime = b.LastBuildTime;
-				Assert.IsTrue (b.Build (proj), "second build failed");
-				Assert.IsTrue (
-					firstBuildTime > b.LastBuildTime, "Second build ({0}) should have been faster than the first ({1})",
-					b.LastBuildTime, firstBuildTime
-				);
-				Assert.IsTrue (
-					b.Output.IsTargetSkipped ("_Sign"),
-					"the _Sign target should not run");
-				var item = proj.AndroidResources.First (x => x.Include () == "Resources\\values\\Strings.xml");
-				item.TextContent = () => proj.StringsXml.Replace ("${PROJECT_NAME}", "Foo");
-				item.Timestamp = null;
-				Assert.IsTrue (b.Build (proj), "third build failed");
-				Assert.IsFalse (
-					b.Output.IsTargetSkipped ("_Sign"),
-					"the _Sign target should run");
-			}
-		}
-
-		[Test]
-		[Category ("SmokeTests"), Category ("dotnet")]
-		public void BasicApplicationRepetitiveReleaseBuild ()
-		{
-			var proj = new XamarinAndroidApplicationProject () { IsRelease = true };
-			using (var b = CreateApkBuilder ()) {
-				var foo = new BuildItem.Source ("Foo.cs") {
-					TextContent = () => @"using System;
-	namespace UnnamedProject {
-		public class Foo {
-		}
-	}"
-				};
-				proj.Sources.Add (foo);
-				Assert.IsTrue (b.Build (proj), "first build failed");
-				var firstBuildTime = b.LastBuildTime;
-				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build failed");
-				Assert.IsTrue (
-					firstBuildTime > b.LastBuildTime, "Second build ({0}) should have been faster than the first ({1})",
-					b.LastBuildTime, firstBuildTime
-				);
-				b.Output.AssertTargetIsSkipped ("_Sign");
-				b.Output.AssertTargetIsSkipped (KnownTargets.LinkAssembliesShrink);
-				proj.Touch ("Foo.cs");
-				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "third build failed");
-				b.Output.AssertTargetIsNotSkipped ("CoreCompile");
-				b.Output.AssertTargetIsNotSkipped ("_Sign");
-			}
-		}
 
 		[Test]
 		public void BuildBasicApplicationCheckMdb ()
@@ -1519,7 +1306,6 @@ GVuZHNDbGFzc1ZhbHVlLmNsYXNzUEsFBgAAAAADAAMAwgAAAMYBAAAAAA==
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void BuildAppCheckDebugSymbols ()
 		{
 			var path = Path.Combine ("temp", TestContext.CurrentContext.Test.Name);
@@ -1655,7 +1441,6 @@ namespace App1
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void BuildBasicApplicationCheckConfigFiles ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -1926,7 +1711,6 @@ namespace App1
 
 		[Test]
 		[NonParallelizable] // fails on NuGet restore
-		[Category ("dotnet")]
 		/// <summary>
 		/// Reference https://bugzilla.xamarin.com/show_bug.cgi?id=29568
 		/// </summary>
@@ -1961,7 +1745,6 @@ namespace App1
 #pragma warning restore 414
 
 		[Test]
-		[Category ("dotnet")]
 		[TestCaseSource (nameof (BuildApplicationWithJavaSourceChecks))]
 		public void BuildApplicationWithJavaSource (bool isRelease, bool expectedResult)
 		{
@@ -1993,7 +1776,6 @@ namespace App1
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		[TestCaseSource (nameof (RuntimeChecks))]
 		public void CheckWhichRuntimeIsIncluded (string supportedAbi, bool debugSymbols, string debugType, bool? optimize, bool? embedAssemblies, string expectedRuntime) {
 			var proj = new XamarinAndroidApplicationProject ();
@@ -2234,7 +2016,7 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 		}
 
 		[Test]
-		[Category ("SmokeTests"), Category ("dotnet")]
+		[Category ("SmokeTests")]
 		public void BuildWithExternalJavaLibrary ()
 		{
 			var path = Path.Combine ("temp", "BuildWithExternalJavaLibrary");
@@ -2300,7 +2082,6 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 
 		// Context https://bugzilla.xamarin.com/show_bug.cgi?id=29706
 		[Test]
-		[Category ("dotnet")]
 		public void CheckLogicalNamePathSeperators ([Values (false, true)] bool isRelease)
 		{
 			var illegalSeperator = IsWindows ? "/" : @"\";
@@ -2605,17 +2386,6 @@ public class Test
 		}
 
 		[Test]
-		public void BuildReleaseApplication ()
-		{
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
-			};
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-			}
-		}
-
-		[Test]
 		[Category ("SmokeTests"), Category ("AOT")]
 		public void BuildApplicationWithSpacesInPath ([Values (true, false)] bool enableMultiDex, [Values ("dx", "d8")] string dexTool, [Values ("", "proguard", "r8")] string linkTool)
 		{
@@ -2683,7 +2453,6 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void BuildReleaseApplicationWithNugetPackages ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -2893,7 +2662,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		}
 
 		[Test]
-		[Category ("SmokeTests"), Category ("dotnet")]
+		[Category ("SmokeTests")]
 		public void BuildBasicApplicationCheckPdb ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
@@ -3305,112 +3074,6 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		}
 
 		[Test]
-		[NonParallelizable]
-		[Category ("SmokeTests"), Category ("AOT")]
-		public void BuildAMassiveApp()
-		{
-			var testPath = Path.Combine("temp", "BuildAMassiveApp");
-			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = Path.Combine (Root, testPath);
-			var sb = new SolutionBuilder("BuildAMassiveApp.sln") {
-				SolutionPath = Path.Combine(Root, testPath),
-				Verbosity = LoggerVerbosity.Diagnostic,
-			};
-			var app1 = new XamarinAndroidApplicationProject() {
-				TargetFrameworkVersion = sb.LatestTargetFrameworkVersion (),
-				ProjectName = "App1",
-				AotAssemblies = true,
-				IsRelease = true,
-				PackageReferences = {
-					KnownPackages.SupportDesign_27_0_2_1,
-					KnownPackages.SupportCompat_27_0_2_1,
-					KnownPackages.SupportCoreUI_27_0_2_1,
-					KnownPackages.SupportCoreUtils_27_0_2_1,
-					KnownPackages.SupportFragment_27_0_2_1,
-					KnownPackages.SupportMediaCompat_27_0_2_1,
-					KnownPackages.GooglePlayServicesMaps_42_1021_1,
-					KnownPackages.Xamarin_Build_Download_0_4_11,
-				},
-			};
-			//NOTE: BuildingInsideVisualStudio prevents the projects from being built as dependencies
-			sb.BuildingInsideVisualStudio = false;
-			app1.Imports.Add (new Import ("foo.targets") {
-				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-16""?>
-<Project ToolsVersion=""4.0"" xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">
-<Target Name=""_CheckAbis"" BeforeTargets=""_DefineBuildTargetAbis"">
-	<PropertyGroup>
-		<AndroidSupportedAbis>armeabi-v7a;x86</AndroidSupportedAbis>
-		<AndroidSupportedAbis Condition=""Exists('$(MSBuildThisFileDirectory)..\..\..\..\Debug\lib\xamarin.android\xbuild\Xamarin\Android\lib\arm64-v8a\libmono-android.release.so')"">$(AndroidSupportedAbis);arm64-v8a</AndroidSupportedAbis>
-		<AndroidSupportedAbis Condition=""Exists('$(MSBuildThisFileDirectory)..\..\..\..\Debug\lib\xamarin.android\xbuild\Xamarin\Android\lib\x86_64\libmono-android.release.so')"">$(AndroidSupportedAbis);x86_64</AndroidSupportedAbis>
-	</PropertyGroup>
-	<Message Text=""$(AndroidSupportedAbis)"" />
-</Target>
-<Target Name=""_Foo"" AfterTargets=""_SetLatestTargetFrameworkVersion"">
-	<PropertyGroup>
-		<AotAssemblies Condition=""!Exists('$(MonoAndroidBinDirectory)"+ Path.DirectorySeparatorChar + @"cross-arm')"">False</AotAssemblies>
-	</PropertyGroup>
-	<Message Text=""$(AotAssemblies)"" />
-</Target>
-</Project>
-",
-			});
-			app1.SetProperty(KnownProperties.AndroidUseSharedRuntime, "False");
-			sb.Projects.Add(app1);
-			var code = new StringBuilder();
-			code.AppendLine("using System;");
-			code.AppendLine("namespace App1 {");
-			code.AppendLine("\tpublic class AppCode {");
-			code.AppendLine("\t\tpublic void Foo () {");
-			for (int i = 0; i < 128; i++) {
-				var libName = $"Lib{i}";
-				var lib = new XamarinAndroidLibraryProject() {
-					TargetFrameworkVersion = sb.LatestTargetFrameworkVersion (),
-					ProjectName = libName,
-					IsRelease = true,
-					OtherBuildItems = {
-						new AndroidItem.AndroidAsset ($"Assets\\{libName}.txt") {
-							TextContent = () => "Asset1",
-							Encoding = Encoding.ASCII,
-						},
-						new AndroidItem.AndroidAsset ($"Assets\\subfolder\\{libName}.txt") {
-							TextContent = () => "Asset2",
-							Encoding = Encoding.ASCII,
-						},
-					},
-					Sources = {
-						new BuildItem.Source ($"{libName}.cs") {
-							TextContent = () => @"using System;
-
-namespace "+ libName + @" {
-
-	public class " + libName + @" {
-		public static void Foo () {
-		}
-	}
-}"
-						},
-					}
-				};
-				var strings = lib.AndroidResources.First(x => x.Include() == "Resources\\values\\Strings.xml");
-				strings.TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
-<resources>
-	<string name=""" + libName + @"_name"">" + libName + @"</string>
-</resources>";
-				sb.Projects.Add(lib);
-				app1.References.Add(new BuildItem.ProjectReference($"..\\{libName}\\{libName}.csproj", libName, lib.ProjectGuid));
-				code.AppendLine($"\t\t\t{libName}.{libName}.Foo ();");
-			}
-			code.AppendLine("\t\t}");
-			code.AppendLine("\t}");
-			code.AppendLine("}");
-			app1.Sources.Add(new BuildItem.Source("Code.cs") {
-				TextContent = ()=> code.ToString (),
-			});
-			Assert.IsTrue(sb.Build(new string[] { "Configuration=Release" }), "Solution should have built.");
-			Assert.IsTrue(sb.BuildProject(app1, "SignAndroidPackage"), "Build of project should have succeeded");
-			sb.Dispose();
-		}
-
-		[Test]
 		public void XA4212 ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -3488,7 +3151,6 @@ namespace UnnamedProject {
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void Desugar ([Values (true, false)] bool isRelease, [Values ("dx", "d8")] string dexTool, [Values ("", "proguard", "r8")] string linkTool)
 		{
 			AssertDexToolSupported (dexTool);
@@ -3601,7 +3263,6 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 
 		//See: https://developer.android.com/about/versions/marshmallow/android-6.0-changes#behavior-apache-http-client
 		[Test]
-		[Category ("dotnet")]
 		public void MissingOrgApacheHttpClient ([Values ("dx", "d8")] string dexTool)
 		{
 			AssertDexToolSupported (dexTool);
@@ -3685,7 +3346,6 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void XA0119 ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -3700,7 +3360,6 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void XA0119AAB ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -3741,7 +3400,6 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void DuplicateJCWNames ()
 		{
 			var source = @"[Android.Runtime.Register (""examplelib.EmptyClass"")] public class EmptyClass : Java.Lang.Object { }";
@@ -3786,7 +3444,6 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void DuplicateManagedNames ()
 		{
 			var source = @"public class EmptyClass : Java.Lang.Object { }";
@@ -4088,7 +3745,6 @@ public class ApplicationRegistration { }");
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void WorkManager ()
 		{
 			var proj = new XamarinFormsAndroidApplicationProject ();
@@ -4270,37 +3926,5 @@ namespace UnnamedProject
 			}
 		}
 
-		[Test]
-		[Category ("AOT")]
-		public void HybridAOT ()
-		{
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
-				AotAssemblies = true,
-			};
-			proj.SetProperty ("AndroidAotMode", "Hybrid");
-			// So we can use Mono.Cecil to open assemblies directly
-			proj.SetProperty ("AndroidEnableAssemblyCompression", "False");
-
-			using (var b = CreateApkBuilder ()) {
-				b.Build (proj);
-
-				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}.apk");
-				FileAssert.Exists (apk);
-				using (var zip = ZipHelper.OpenZip (apk)) {
-					var entry = zip.ReadEntry ($"assemblies/{proj.ProjectName}.dll");
-					Assert.IsNotNull (entry, $"{proj.ProjectName}.dll should exist in apk!");
-					using (var stream = new MemoryStream ()) {
-						entry.Extract (stream);
-						stream.Position = 0;
-						using (var assembly = AssemblyDefinition.ReadAssembly (stream)) {
-							var type = assembly.MainModule.GetType ($"{proj.ProjectName}.MainActivity");
-							var method = type.Methods.First (m => m.Name == "OnCreate");
-							Assert.LessOrEqual (method.Body.Instructions.Count, 1, "OnCreate should have stripped method bodies!");
-						}
-					}
-				}
-			}
-		}
 	}
 }

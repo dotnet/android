@@ -264,12 +264,24 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject {
 				AndroidUseSharedRuntime = true,
 				EmbedAssembliesIntoApk = false,
+				OtherBuildItems = {
+					new BuildItem.NoActionResource ("UnnamedProject.dll.config") {
+						TextContent = () => "<?xml version='1.0' ?><configuration/>",
+						Metadata = {
+							{ "CopyToOutputDirectory", "PreserveNewest" },
+						}
+					}
+				}
 			};
 
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 				var directorylist = GetContentFromAllOverrideDirectories (proj.PackageName);
 				StringAssert.Contains ($"{proj.ProjectName}.dll", directorylist, $"{proj.ProjectName}.dll should exist in the .__override__ directory.");
+				// Configuration files are not supported in One .NET, we don't need to make sure that they're fast deployed.
+				if (!Builder.UseDotNet) {
+					StringAssert.Contains ($"{proj.ProjectName}.dll.config", directorylist, $"{proj.ProjectName}.dll.config should exist in the .__override__ directory.");
+				}
 
 				//Now toggle FastDev to OFF
 				proj.AndroidUseSharedRuntime = false;
@@ -463,5 +475,78 @@ namespace Xamarin.Android.Build.Tests
 
 			}
 		}
+
+		[Test]
+		public void IncrementalFastDeployment ()
+		{
+			AssertCommercialBuild ();
+			AssertHasDevices ();
+
+			var lib1 = new XamarinAndroidLibraryProject () {
+				ProjectName = "Library1",
+				Sources = {
+					new BuildItem.Source ("Class1.cs") {
+						TextContent = () => "namespace Library1 { public class Class1 { } }"
+					},
+				}
+			};
+
+			var lib2 = new DotNetStandard {
+				ProjectName = "Library2",
+				Sdk = "Microsoft.NET.Sdk",
+				TargetFramework = "netstandard2.0",
+				Sources = {
+					new BuildItem.Source ("Class2.cs") {
+						TextContent = () => "namespace Library2 { public class Class2 { } }"
+					},
+				}
+			};
+
+			var app = new XamarinFormsAndroidApplicationProject () {
+				AndroidUseSharedRuntime = true,
+				EmbedAssembliesIntoApk = false,
+				References = {
+					new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj"),
+					new BuildItem ("ProjectReference", "..\\Library2\\Library2.csproj"),
+				},
+			};
+
+			// Set up library projects
+			var rootPath = Path.Combine (Root, "temp", TestName);
+			using (var lb1 = CreateDllBuilder (Path.Combine (rootPath, lib1.ProjectName)))
+				Assert.IsTrue (lb1.Build (lib1), "First library build should have succeeded.");
+			using (var lb2 = CreateDllBuilder (Path.Combine (rootPath, lib2.ProjectName)))
+				Assert.IsTrue (lb2.Build (lib2), "Second library build should have succeeded.");
+
+			using (var builder = CreateApkBuilder (Path.Combine (rootPath, app.ProjectName))) {
+				builder.ThrowOnBuildFailure = false;
+				Assert.IsTrue (builder.Install (app), "First install should have succeeded.");
+				var firstInstallTime = builder.LastBuildTime;
+				Assert.IsTrue (builder.Install (app, doNotCleanupOnUpdate: true, saveProject: false), "Second install should have succeeded.");
+				var secondInstallTime = builder.LastBuildTime;
+
+				var filesToTouch = new [] {
+					Path.Combine (rootPath, lib1.ProjectName, "Class1.cs"),
+					Path.Combine (rootPath, lib2.ProjectName, "Class2.cs"),
+					Path.Combine (rootPath, app.ProjectName, "MainPage.xaml"),
+				};
+				foreach (var file in filesToTouch) {
+					FileAssert.Exists (file);
+					File.SetLastWriteTimeUtc (file, DateTime.UtcNow);
+				}
+
+				Assert.IsTrue (builder.Install (app, doNotCleanupOnUpdate: true, saveProject: false), "Third install should have succeeded.");
+				var thirdInstallTime = builder.LastBuildTime;
+				Assert.IsTrue (builder.Install (app, doNotCleanupOnUpdate: true, saveProject: false), "Fourth install should have succeeded.");
+				var fourthInstalTime = builder.LastBuildTime;
+
+				Assert.IsTrue (thirdInstallTime < firstInstallTime, $"Third incremental install: '{thirdInstallTime}' should be faster than clean install: '{firstInstallTime}'.");
+				Assert.IsTrue (secondInstallTime < firstInstallTime && secondInstallTime < thirdInstallTime,
+					$"Second unchanged install: '{secondInstallTime}' should be faster than clean install: '{firstInstallTime}' and incremental install: '{thirdInstallTime}'.");
+				Assert.IsTrue (fourthInstalTime < firstInstallTime && fourthInstalTime < thirdInstallTime,
+					$"Fourth unchanged install: '{fourthInstalTime}' should be faster than clean install: '{firstInstallTime}' and incremental install: '{thirdInstallTime}'.");
+			}
+		}
+
 	}
 }

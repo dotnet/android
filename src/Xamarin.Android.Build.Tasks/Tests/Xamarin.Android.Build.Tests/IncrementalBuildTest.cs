@@ -16,6 +16,63 @@ namespace Xamarin.Android.Build.Tests
 	public class IncrementalBuildTest : BaseTest
 	{
 		[Test]
+		public void BasicApplicationRepetitiveBuild ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			using (var b = CreateApkBuilder ("temp/BasicApplicationRepetitiveBuild", cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
+				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
+				b.ThrowOnBuildFailure = false;
+				Assert.IsTrue (b.Build (proj), "first build failed");
+				var firstBuildTime = b.LastBuildTime;
+				Assert.IsTrue (b.Build (proj), "second build failed");
+				Assert.IsTrue (
+					firstBuildTime > b.LastBuildTime, "Second build ({0}) should have been faster than the first ({1})",
+					b.LastBuildTime, firstBuildTime
+				);
+				Assert.IsTrue (
+					b.Output.IsTargetSkipped ("_Sign"),
+					"the _Sign target should not run");
+				var item = proj.AndroidResources.First (x => x.Include () == "Resources\\values\\Strings.xml");
+				item.TextContent = () => proj.StringsXml.Replace ("${PROJECT_NAME}", "Foo");
+				item.Timestamp = null;
+				Assert.IsTrue (b.Build (proj), "third build failed");
+				Assert.IsFalse (
+					b.Output.IsTargetSkipped ("_Sign"),
+					"the _Sign target should run");
+			}
+		}
+
+		[Test]
+		[Category ("SmokeTests")]
+		public void BasicApplicationRepetitiveReleaseBuild ()
+		{
+			var proj = new XamarinAndroidApplicationProject () { IsRelease = true };
+			using (var b = CreateApkBuilder ()) {
+				var foo = new BuildItem.Source ("Foo.cs") {
+					TextContent = () => @"using System;
+	namespace UnnamedProject {
+		public class Foo {
+		}
+	}"
+				};
+				proj.Sources.Add (foo);
+				Assert.IsTrue (b.Build (proj), "first build failed");
+				var firstBuildTime = b.LastBuildTime;
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build failed");
+				Assert.IsTrue (
+					firstBuildTime > b.LastBuildTime, "Second build ({0}) should have been faster than the first ({1})",
+					b.LastBuildTime, firstBuildTime
+				);
+				b.Output.AssertTargetIsSkipped ("_Sign");
+				b.Output.AssertTargetIsSkipped (KnownTargets.LinkAssembliesShrink);
+				proj.Touch ("Foo.cs");
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "third build failed");
+				b.Output.AssertTargetIsNotSkipped ("CoreCompile");
+				b.Output.AssertTargetIsNotSkipped ("_Sign");
+			}
+		}
+
+		[Test]
 		public void CheckNothingIsDeletedByIncrementalClean ([Values (true, false)] bool enableMultiDex, [Values (true, false)] bool useAapt2)
 		{
 			var path = Path.Combine ("temp", TestName);
@@ -236,7 +293,6 @@ public class TestMe {
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void ResolveNativeLibrariesInManagedReferences ()
 		{
 			var lib = new XamarinAndroidLibraryProject () {
@@ -345,7 +401,8 @@ namespace Lib2
 
 		//https://github.com/xamarin/xamarin-android/issues/2247
 		[Test]
-		[Category ("SmokeTests"), Category ("dotnet")]
+		[Category ("SmokeTests")]
+		[NonParallelizable] // Do not run timing sensitive tests in parallel
 		public void AppProjectTargetsDoNotBreak ()
 		{
 			var targets = new List<string> {
@@ -373,6 +430,7 @@ namespace Lib2
 			}
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "first build should succeed");
+				var firstBuildTime = b.LastBuildTime;
 				foreach (var target in targets) {
 					Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped!");
 				}
@@ -394,15 +452,19 @@ namespace Lib2
 
 				//NOTE: second build, targets will run because inputs changed
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second build should succeed");
+				var secondBuildTime = b.LastBuildTime;
 				foreach (var target in targets) {
 					b.Output.AssertTargetIsNotSkipped (target);
 				}
 
 				//NOTE: third build, targets should certainly *not* run! there are no changes
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "third build should succeed");
+				var thirdBuildTime = b.LastBuildTime;
 				foreach (var target in targets) {
 					b.Output.AssertTargetIsSkipped (target);
 				}
+				Assert.IsTrue (thirdBuildTime < firstBuildTime, $"Third unchanged build: '{thirdBuildTime}' should be faster than clean build: '{firstBuildTime}'.");
+				Assert.IsTrue (thirdBuildTime < secondBuildTime, $"Third unchanged build: '{thirdBuildTime}' should be faster than partially incremental second build: '{secondBuildTime}'.");
 			}
 		}
 
@@ -464,7 +526,7 @@ namespace Lib2
 		}
 
 		[Test]
-		[Category ("SmokeTests"), Category ("dotnet")]
+		[Category ("SmokeTests")]
 		public void ProduceReferenceAssembly ()
 		{
 			var path = Path.Combine ("temp", TestName);
@@ -580,7 +642,6 @@ namespace Lib2
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void LinkAssembliesNoShrink ()
 		{
 			var proj = new XamarinFormsAndroidApplicationProject ();
@@ -839,7 +900,6 @@ namespace Lib2
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void GenerateJavaStubsAndAssembly ([Values (true, false)] bool isRelease)
 		{
 			var targets = new [] {
@@ -1145,7 +1205,6 @@ namespace Lib2
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void AndroidResourceChange ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -1233,7 +1292,6 @@ namespace Lib2
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		[NonParallelizable]
 		public void AndroidXMigrationBug ()
 		{
@@ -1267,7 +1325,6 @@ namespace Lib2
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void ChangeSupportedAbis ()
 		{
 			var proj = new XamarinFormsAndroidApplicationProject ();
