@@ -636,7 +636,19 @@ namespace Xamarin.ProjectTools
 			Version = "6.0.30",
 			TargetFramework = "netstandard2.0",
 		};
-
+		/// <summary>
+		/// A NuGet package that has an EmbeddedResource in PdfViewBinding.dll:
+		/// __AndroidLibraryProjects__.zip\library_project_imports\res\.gitignore
+		/// </summary>
+		public static Package Xamarin_PdfView_Android = new Package {
+			Id = "Xamarin.PdfView.Android",
+			Version = "1.0.4",
+			References = {
+				new BuildItem.Reference ("Xamarin.PdfView.Android") {
+					MetadataValues = "HintPath=..\\packages\\Xamarin.PdfView.Android.1.0.4\\lib\\PdfViewBinding.dll"
+				}
+			},
+		};
 		public static Package ZXing_Net_Mobile = new Package {
 			Id = "ZXing.Net.Mobile",
 			Version = "2.4.1",
