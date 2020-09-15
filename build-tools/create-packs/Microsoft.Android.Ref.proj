@@ -33,7 +33,7 @@ by projects that use the Microsoft.Android framework in .NET 5.
     </PropertyGroup>
 
     <ItemGroup>
-      <_PackageFiles Include="@(_AndroidAppPackAssemblies)" PackagePath="$(_AndroidRefPackAssemblyPath)" TargetPath="$(_AndroidRefPackAssemblyPath)" />
+      <_PackageFiles Include="@(_AndroidAppRefAssemblies)" PackagePath="$(_AndroidRefPackAssemblyPath)" TargetPath="$(_AndroidRefPackAssemblyPath)" />
       <_PackageFiles Include="$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\netcoreapp3.1\mono.android.jar" PackagePath="$(_AndroidRefPackAssemblyPath)" />
       <_PackageFiles Include="$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\netcoreapp3.1\mono.android.dex" PackagePath="$(_AndroidRefPackAssemblyPath)" />
       <_PackageFiles Include="$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\netcoreapp3.1\AndroidApiInfo.xml" PackagePath="$(_AndroidRefPackAssemblyPath)" />
