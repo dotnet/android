@@ -85,6 +85,10 @@ namespace Xamarin.Android.Tasks {
 				outputArchive = Path.Combine (outputArchive, filename);
 				expectedOutputFile = outputArchive;
 			} else {
+				if (IsInvalidFilename (fileOrDirectory)) {
+					LogDebugMessage ($"Invalid filename, ignoring: {fileOrDirectory}");
+					return;
+				}
 				expectedOutputFile = Path.Combine (outputArchive, flatFile);
 			}
 			RunAapt (GenerateCommandLineCommands (fileOrDirectory, isDirectory, outputArchive), expectedOutputFile);

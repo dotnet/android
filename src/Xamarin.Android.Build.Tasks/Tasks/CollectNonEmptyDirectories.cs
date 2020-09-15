@@ -100,6 +100,10 @@ namespace Xamarin.Android.Tasks {
 					}
 					output.Add (taskItem);
 					foreach (var file in files) {
+						if (Aapt2.IsInvalidFilename (file)) {
+							Log.LogDebugMessage ($"Invalid filename, ignoring: {file}");
+							continue;
+						}
 						var fileTaskItem = new TaskItem (file, new Dictionary<string, string> () {
 							{ "ResourceDirectory", directory.ItemSpec },
 							{ "StampFile", generateArchive ? stampFile : file },
