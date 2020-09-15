@@ -101,6 +101,17 @@ $@"<Project>
 			}
 		}
 
+		/// <summary>
+		/// Adds a reference to another project. The optional include path uses a relative path and ProjectName if omitted.
+		/// </summary>
+		public void AddReference (XamarinProject other, string include = null)
+		{
+			if (string.IsNullOrEmpty (include)) {
+				include = $"..\\{other.ProjectName}\\{other.ProjectName}.csproj";
+			}
+			References.Add (new BuildItem.ProjectReference (include, other.ProjectName, other.ProjectGuid));
+		}
+
 		protected virtual bool SetExtraNuGetConfigSources => Builder.UseDotNet;
 
 		public string GetProperty (string name)
