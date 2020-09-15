@@ -214,7 +214,7 @@ potentially any other library that depends on AndroidX.
 
 ### Next Phase
 
-Things that could happen by .NET 6 RTM:
+Things that could happen sometime after .NET 6 Preview 1:
 
 * Support for referencing Android Studio projects in order to build
   them and consume the resulting `.aar` file.
