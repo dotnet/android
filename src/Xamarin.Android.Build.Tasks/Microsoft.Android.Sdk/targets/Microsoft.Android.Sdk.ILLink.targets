@@ -1,6 +1,6 @@
 <!--
 ***********************************************************************************************
-Microsoft.Android.Sdk.AssemblyResolution.targets
+Microsoft.Android.Sdk.ILLink.targets
 
 This file contains the .NET 5-specific targets to customize ILLink
 
@@ -13,14 +13,6 @@ This file contains the .NET 5-specific targets to customize ILLink
       Condition=" '$(PublishTrimmed)' == 'true' "
       AfterTargets="ComputeResolvedFilesToPublishList"
       DependsOnTargets="GetReferenceAssemblyPaths">
-    <ItemGroup>
-      <ResolvedFileToPublish
-          Update="@(ResolvedFileToPublish)"
-          Condition="'%(ResolvedFileToPublish.Filename)%(ResolvedFileToPublish.Extension)' == 'Java.Interop.dll' or '%(ResolvedFileToPublish.Filename)%(ResolvedFileToPublish.Extension)' == 'Mono.Android.dll' or '%(ResolvedFileToPublish.Filename)%(ResolvedFileToPublish.Extension)' == 'Mono.Android.Export.dll'">
-        <!-- This makes it so that the platform assembly isn't treated as a root assembly -->
-      <IsTrimmable>true</IsTrimmable>
-    </ResolvedFileToPublish>
-    </ItemGroup>
     <PropertyGroup>
       <!-- make the output verbose to see what the linker is doing. FIXME: make dependent upon verbosity level -->
       <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --verbose --deterministic --custom-data XATargetFrameworkDirectories="$(_XATargetFrameworkDirectories)"</_ExtraTrimmerArgs>
