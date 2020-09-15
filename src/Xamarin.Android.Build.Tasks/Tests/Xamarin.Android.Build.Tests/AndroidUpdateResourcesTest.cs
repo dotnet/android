@@ -18,7 +18,6 @@ namespace Xamarin.Android.Build.Tests
 	public class AndroidUpdateResourcesTest : BaseTest
 	{
 		[Test]
-		[Category ("dotnet")]
 		public void CheckMultipleLibraryProjectReferenceAlias ([Values (true, false)] bool withGlobal)
 		{
 			var path = Path.Combine (Root, "temp", TestName);
@@ -81,27 +80,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void RepetitiveBuild ()
-		{
-			if (Directory.Exists ("temp/RepetitiveBuild"))
-				Directory.Delete ("temp/RepetitiveBuild", true);
-			var proj = new XamarinAndroidApplicationProject ();
-			using (var b = CreateApkBuilder ("temp/RepetitiveBuild", cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
-				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
-				b.ThrowOnBuildFailure = false;
-				Assert.IsTrue (b.Build (proj), "first build failed");
-				Assert.IsTrue (b.Build (proj), "second build failed");
-				Assert.IsTrue (b.Output.IsTargetSkipped ("_Sign"), "failed to skip some build");
-				var item = proj.AndroidResources.First (x => x.Include () == "Resources\\values\\Strings.xml");
-				item.TextContent = () => proj.StringsXml.Replace ("${PROJECT_NAME}", "Foo");
-				item.Timestamp = null;
-				Assert.IsTrue (b.Build (proj), "third build failed");
-				Assert.IsFalse (b.Output.IsTargetSkipped ("_Sign"), "incorrectly skipped some build");
-			}
-		}
-
-		[Test]
-		[Category ("SmokeTests"), Category ("dotnet")]
+		[Category ("SmokeTests")]
 		public void DesignTimeBuild ([Values(false, true)] bool isRelease, [Values (false, true)] bool useManagedParser, [Values (false, true)] bool useAapt2)
 		{
 			var regEx = new Regex (@"(?<type>([a-zA-Z_0-9])+)\slibrary_name=(?<value>([0-9A-Za-z])+);", RegexOptions.Compiled | RegexOptions.Multiline );
@@ -239,7 +218,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void RepetiviteBuildUpdateSingleResource ([Values (false, true)] bool useAapt2)
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -794,7 +772,6 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void CheckFilesAreRemoved () {
 
 			var proj = new XamarinAndroidApplicationProject () {
@@ -830,7 +807,6 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void CheckDontUpdateResourceIfNotNeeded ()
 		{
 			var path = Path.Combine ("temp", TestName);
@@ -935,7 +911,6 @@ namespace Lib1 {
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void BuildAppWithManagedResourceParser()
 		{
 			var path = Path.Combine ("temp", "BuildAppWithManagedResourceParser");
@@ -975,7 +950,6 @@ namespace Lib1 {
 
 		[Test]
 		[NonParallelizable]
-		[Category ("dotnet")]
 		public void BuildAppWithManagedResourceParserAndLibraries ()
 		{
 			int maxBuildTimeMs = 10000;
