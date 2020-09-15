@@ -779,7 +779,7 @@ stages:
         testRunTitle: Xamarin.Android.Build.Tests Legacy Smoke Tests - macOS
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/net472/Xamarin.Android.Build.Tests.dll
         nunitConsoleExtraArgs: --where "cat == SmokeTests"
-        testResultsFile: TestResult-MSBuildTests-SmokeMac-$(XA.Build.Configuration).xml
+        testResultsFile: TestResult-MSBuildTests-LegacySmokeMac-$(XA.Build.Configuration).xml
 
     - template: run-nunit-tests.yaml
       parameters:
@@ -787,7 +787,7 @@ stages:
         testRunTitle: Xamarin.Android.Build.Tests One .NET Smoke Tests - macOS
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/netcoreapp3.1/Xamarin.Android.Build.Tests.dll
         dotNetTestExtraArgs: --filter "TestCategory = SmokeTests $(DotNetNUnitCategories)"
-        testResultsFile: TestResult-MSBuildTests-SmokeMac-$(XA.Build.Configuration).xml
+        testResultsFile: TestResult-MSBuildTests-NETSmokeMac-$(XA.Build.Configuration).xml
 
     - template: upload-results.yaml
       parameters:
@@ -829,7 +829,7 @@ stages:
         testRunTitle: Xamarin.Android.Build.Tests Legacy Smoke Tests - Windows
         testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\net472\Xamarin.Android.Build.Tests.dll
         nunitConsoleExtraArgs: --where "cat == SmokeTests"
-        testResultsFile: TestResult-MSBuildTests-SmokeWindows-$(XA.Build.Configuration).xml
+        testResultsFile: TestResult-MSBuildTests-LegacySmokeWindows-$(XA.Build.Configuration).xml
 
     - template: run-nunit-tests.yaml
       parameters:
@@ -837,7 +837,7 @@ stages:
         testRunTitle: Xamarin.Android.Build.Tests One .NET Smoke Tests - Windows
         testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\netcoreapp3.1\Xamarin.Android.Build.Tests.dll
         dotNetTestExtraArgs: --filter "TestCategory = SmokeTests $(DotNetNUnitCategories)"
-        testResultsFile: TestResult-MSBuildTests-SmokeWindows-$(XA.Build.Configuration).xml
+        testResultsFile: TestResult-MSBuildTests-NETSmokeWindows-$(XA.Build.Configuration).xml
 
     - template: upload-results.yaml
       parameters:
