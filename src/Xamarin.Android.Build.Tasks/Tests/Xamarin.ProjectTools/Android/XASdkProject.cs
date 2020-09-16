@@ -94,7 +94,7 @@ $@"{{
 			Sources.Add (new BuildItem.Source ($"Resources\\Resource.designer{Language.DefaultExtension}") { TextContent = () => string.Empty });
 		}
 
-		protected override bool SetExtraNuGetConfigSources => true;
+		protected override bool UseDotNet => true;
 
 		public string OutputPath => Path.Combine ("bin", Configuration, TargetFramework.ToLowerInvariant ());
 

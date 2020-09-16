@@ -6,6 +6,7 @@
 
   <!-- This is the renamed-on-pack Xamarin.Android.Sdk.props from the full SDK -->
   <Import Project="Microsoft.Android.Sdk.Default.props" />
+  <Import Project="Microsoft.Android.Sdk.DefaultProperties.props" />
 
   <PropertyGroup>
     <!-- Ensure $(UsingAndroidNETSdk) is not set to retain legacy behavior -->
