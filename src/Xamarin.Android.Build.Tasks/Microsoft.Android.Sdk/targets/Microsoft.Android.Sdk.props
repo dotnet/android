@@ -4,43 +4,9 @@
 
   <PropertyGroup>
     <UsingAndroidNETSdk>true</UsingAndroidNETSdk>
-    <AndroidCommandLineToolsVersion Condition=" '$(AndroidCommandLineToolsVersion)' == '' ">1.0</AndroidCommandLineToolsVersion>
-    <LatestSupportedJavaVersion  Condition=" '$(LatestSupportedJavaVersion)' == '' ">11.0.99</LatestSupportedJavaVersion>
-    <MinimumSupportedJavaVersion Condition=" '$(MinimumSupportedJavaVersion)' == '' ">1.8.0</MinimumSupportedJavaVersion>
-    <AndroidBoundExceptionType Condition=" '$(AndroidBoundExceptionType)' == '' ">System</AndroidBoundExceptionType>
     <!-- Enable nuget package conflict resolution -->
     <ResolveAssemblyConflicts>true</ResolveAssemblyConflicts>
     <_AndroidResourceDesigner>Resource.designer.cs</_AndroidResourceDesigner>
-  </PropertyGroup>
-
-  <!-- User-facing configuration-agnostic defaults -->
-  <PropertyGroup>
-    <MonoAndroidResourcePrefix Condition=" '$(MonoAndroidResourcePrefix)' == '' ">Resources</MonoAndroidResourcePrefix>
-    <MonoAndroidAssetsPrefix Condition=" '$(MonoAndroidAssetsPrefix)' == '' ">Assets</MonoAndroidAssetsPrefix>
-    <AndroidResgenClass Condition=" '$(AndroidResgenClass)' == '' ">Resource</AndroidResgenClass>
-    <AndroidResgenFile Condition=" '$(AndroidResgenFile)' == '' ">$(MonoAndroidResourcePrefix)\$(_AndroidResourceDesigner)</AndroidResgenFile>
-    <AndroidEnableSGenConcurrent Condition=" '$(AndroidEnableSGenConcurrent)' == '' ">true</AndroidEnableSGenConcurrent>
-    <AndroidHttpClientHandlerType Condition=" '$(AndroidHttpClientHandlerType)' == '' ">Xamarin.Android.Net.AndroidClientHandler</AndroidHttpClientHandlerType>
-    <AndroidUseIntermediateDesignerFile Condition=" '$(AndroidUseIntermediateDesignerFile)' == '' ">true</AndroidUseIntermediateDesignerFile>
-    <!-- jar2xml is not supported -->
-    <AndroidClassParser>class-parse</AndroidClassParser>
-    <!-- mono-symbolicate is not supported -->
-    <MonoSymbolArchive>false</MonoSymbolArchive>
-    <AndroidCodegenTarget Condition=" '$(AndroidCodegenTarget)' == '' ">XAJavaInterop1</AndroidCodegenTarget>
-  </PropertyGroup>
-
-  <!--  User-facing configuration-specific defaults -->
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <!--FIXME: Disable the shared runtime and fast deployment default -->
-    <AndroidUseSharedRuntime Condition=" '$(AndroidUseSharedRuntime)' == '' ">false</AndroidUseSharedRuntime>
-    <EmbedAssembliesIntoApk Condition=" '$(EmbedAssembliesIntoApk)' == '' ">true</EmbedAssembliesIntoApk>
-    <AndroidLinkMode Condition=" '$(AndroidLinkMode)' == '' ">None</AndroidLinkMode>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <AndroidUseSharedRuntime Condition=" '$(AndroidUseSharedRuntime)' == '' ">false</AndroidUseSharedRuntime>
-    <EmbedAssembliesIntoApk Condition=" '$(EmbedAssembliesIntoApk)' == '' ">true</EmbedAssembliesIntoApk>
-    <AndroidLinkMode Condition=" '$(AndroidLinkMode)' == '' ">SdkOnly</AndroidLinkMode>
-    <AndroidManagedSymbols Condition=" '$(AndroidManagedSymbols)' == '' ">true</AndroidManagedSymbols>
   </PropertyGroup>
 
   <Import Project="Microsoft.Android.Sdk.BundledVersions.props" Condition=" Exists('Microsoft.Android.Sdk.BundledVersions.props') " />
