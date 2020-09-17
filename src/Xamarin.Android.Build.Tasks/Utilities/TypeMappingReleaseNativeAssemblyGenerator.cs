@@ -27,9 +27,6 @@ namespace Xamarin.Android.Tasks
 			output.WriteLine ();
 			WriteHeaderField (output, "java_type_count", mappingData.JavaTypeCount);
 
-			output.WriteLine ();
-			WriteHeaderField (output, "java_name_width", mappingData.JavaNameWidth);
-
 			bool haveAssemblyNames = mappingData.AssemblyNames.Count > 0;
 			bool haveModules = mappingData.Modules.Length > 0;
 
@@ -75,7 +72,12 @@ namespace Xamarin.Android.Tasks
 				WriteMapModules (output, null, "map_modules");
 			}
 
-			WriteJavaMap (output, "map_java");
+			// The extra padding is used to make each entry aligned to 4 bytes, we need to take that into account for
+			// correct native code map offset calculations. The padding effectively becomes part of the java_name
+			// member, so we just add it there.
+			uint extra_padding = WriteJavaMap (output, "map_java");
+			output.WriteLine ();
+			WriteHeaderField (output, "java_name_width", mappingData.JavaNameWidth + extra_padding);
 		}
 
 		void WriteAssemblyNames (StreamWriter output)
@@ -104,7 +106,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			WriteSection (output, $".rodata.{moduleSymbolName}", hasStrings: false, writable: false);
-			WriteStructureSymbol (output, moduleSymbolName, alignBits: 0, isGlobal: false);
+			WriteStructureSymbol (output, moduleSymbolName, alignBits: 2, isGlobal: false);
 
 			uint size = 0;
 			var sortedTokens = tokens.Keys.ToArray ();
@@ -193,7 +195,7 @@ namespace Xamarin.Android.Tasks
 			return size;
 		}
 
-		void WriteJavaMap (StreamWriter output, string symbolName)
+		uint WriteJavaMap (StreamWriter output, string symbolName)
 		{
 			WriteCommentLine (output, "Java to managed map: START", indent: false);
 			WriteSection (output, $".rodata.{symbolName}", hasStrings: false, writable: false);
@@ -201,16 +203,19 @@ namespace Xamarin.Android.Tasks
 
 			uint size = 0;
 			int entryCount = 0;
+			uint extra_padding = 0;
 			foreach (TypeMapGenerator.TypeMapReleaseEntry entry in mappingData.JavaTypes) {
-				size += WriteJavaMapEntry (output, entry, entryCount++);
+				size += WriteJavaMapEntry (output, entry, entryCount++, ref extra_padding);
 			}
 
 			WriteStructureSize (output, symbolName, size);
 			WriteCommentLine (output, "Java to managed map: END", indent: false);
 			output.WriteLine ();
+
+			return extra_padding;
 		}
 
-		uint WriteJavaMapEntry (StreamWriter output, TypeMapGenerator.TypeMapReleaseEntry entry, int entryIndex)
+		uint WriteJavaMapEntry (StreamWriter output, TypeMapGenerator.TypeMapReleaseEntry entry, int entryIndex, ref uint extra_padding)
 		{
 			uint size = 0;
 
@@ -223,6 +228,11 @@ namespace Xamarin.Android.Tasks
 
 			WriteCommentLine (output, "java_name");
 			size += WriteAsciiData (output, entry.JavaName, mappingData.JavaNameWidth);
+
+			if (extra_padding == 0)
+				extra_padding = size % (1U << (int)TargetProvider.MapJavaAlignBits);
+
+			size += WriteDataPadding (output, extra_padding);
 
 			output.WriteLine ();
 

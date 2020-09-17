@@ -743,6 +743,9 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 	// delete[] x;
 	// log_warn (LOG_DEFAULT, "x == %s", x);
 
+	// TESTING UBSAN: integer overflow
+	//log_warn (LOG_DEFAULT, "Let us have an overflow: %d", INT_MAX + 1);
+
 	bool log_methods = utils.should_log (LOG_TIMING) && !(log_timing_categories & LOG_TIMING_BARE);
 	if (XA_UNLIKELY (log_methods)) {
 		simple_pointer_guard<char[]> jit_log_path = utils.path_combine (androidSystem.get_override_dir (0), "methods.txt");

@@ -503,9 +503,10 @@ namespace Xamarin.Android.Tasks
 			return assembliesPath;
 		}
 
-		class LibInfo
+		sealed class LibInfo
 		{
 			public string Path;
+			public string Link;
 			public string Abi;
 			public string ArchiveFileName;
 		}
@@ -541,20 +542,55 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
+		bool IsWrapperScript (string path, string link)
+		{
+			if (Path.DirectorySeparatorChar == '/') {
+				path = path.Replace ('\\', '/');
+			}
+
+			if (String.Compare (Path.GetFileName (path), "wrap.sh", StringComparison.Ordinal) == 0) {
+				return true;
+			}
+
+			if (String.IsNullOrEmpty (link)) {
+				return false;
+			}
+
+			if (Path.DirectorySeparatorChar == '/') {
+				link = link.Replace ('\\', '/');
+			}
+
+			return String.Compare (Path.GetFileName (link), "wrap.sh", StringComparison.Ordinal) == 0;
+		}
+
 		bool IncludeNativeLibrary (ITaskItem item)
 		{
 			if (IncludeWrapSh)
 				return true;
 
-			return String.Compare (Path.GetFileName (item.ItemSpec), "wrap.sh", StringComparison.Ordinal) != 0;
+			return !IsWrapperScript (item.ItemSpec, item.GetMetadata ("Link"));
+		}
+
+		string GetArchiveFileName (ITaskItem item)
+		{
+			string archiveFileName = item.GetMetadata ("ArchiveFileName");
+			if (!String.IsNullOrEmpty (archiveFileName))
+				return archiveFileName;
+
+			if (!IsWrapperScript (item.ItemSpec, item.GetMetadata ("Link"))) {
+				return null;
+			}
+
+			return "wrap.sh";
 		}
 
 		private void AddNativeLibraries (ArchiveFileList files, string [] supportedAbis)
 		{
 			var frameworkLibs = FrameworkNativeLibraries.Select (v => new LibInfo {
 				Path = v.ItemSpec,
+				Link = v.GetMetadata ("Link"),
 				Abi = GetNativeLibraryAbi (v),
-				ArchiveFileName = v.GetMetadata ("ArchiveFileName")
+				ArchiveFileName = GetArchiveFileName (v)
 			});
 
 			AddNativeLibraries (files, supportedAbis, frameworkLibs);
@@ -563,8 +599,9 @@ namespace Xamarin.Android.Tasks
 				.Where (v => IncludeNativeLibrary (v))
 				.Select (v => new LibInfo {
 						Path = v.ItemSpec,
+						Link = v.GetMetadata ("Link"),
 						Abi = GetNativeLibraryAbi (v),
-						ArchiveFileName = v.GetMetadata ("ArchiveFileName")
+						ArchiveFileName = GetArchiveFileName (v)
 					}
 				);
 
@@ -589,7 +626,7 @@ namespace Xamarin.Android.Tasks
 				return;
 			}
 
-			if (!libs.Any (info => String.Compare (Path.GetFileName (info.Path), "wrap.sh", StringComparison.Ordinal) == 0)) {
+			if (!libs.Any (info => IsWrapperScript (info.Path, info.Link))) {
 				// TODO: consider including various wrapper scripts with XA and adding them here
 				Log.LogError ($"Checked builds require the wrapper script to be packaged. Please add `wrap.sh` appropriate for the {CheckedBuild} checker to your project");
 				return;
