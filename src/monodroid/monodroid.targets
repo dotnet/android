@@ -127,7 +127,7 @@
 
   <Target Name="_BuildAndroidRuntimes"
       Inputs="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Debug\CMakeCache.txt');@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Release\CMakeCache.txt');jni\*.cc;jni\*.h;jni\*.hh;jni\**\*.c;;..\..\build-tools\scripts\Ndk.targets"
-      Outputs="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.debug.so');@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android-asan.debug.so');@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android-ubsan.debug.so');@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.release.so');@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android-asan.release.so');@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android-ubsan.release.so');@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Debug\libxamarin-app.so');@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Release\libxamarin-app.so')">
+      Outputs="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.debug.so');@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android-checked+asan.debug.so');@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android-checked+ubsan.debug.so');@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.release.so');@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android-checked+asan.release.so');@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android-checked+ubsan.release.so');@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Debug\libxamarin-app.so');@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Release\libxamarin-app.so')">
     <Exec
         Command="$(NinjaPath) -v"
         WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-Debug"
@@ -249,8 +249,9 @@
     </PropertyGroup>
 
     <Exec
-      Command="$(ClangTidy) -p $(MSBuildThisFileDirectory)%(_CompileCommandsDir.Identity) *.cc > ..\..\..\bin\Build$(Configuration)\clang-tidy.%(_CompileCommandsDir.LogTag).log"
-      WorkingDirectory="$(MSBuildThisFileDirectory)\jni"
-      ContinueOnError="ErrorAndContinue" />
+        ContinueOnError="ErrorAndContinue"
+        Command="$(ClangTidy) -p $(MSBuildThisFileDirectory)%(_CompileCommandsDir.Identity) *.cc > ..\..\..\bin\Build$(Configuration)\clang-tidy.%(_CompileCommandsDir.LogTag).log"
+        WorkingDirectory="$(MSBuildThisFileDirectory)\jni"
+    />
   </Target>
 </Project>

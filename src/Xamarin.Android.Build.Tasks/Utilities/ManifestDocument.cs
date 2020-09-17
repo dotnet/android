@@ -392,7 +392,11 @@ namespace Xamarin.Android.Tasks {
 			}
 
 			if (ForceDebuggable || needDebuggable) {
-				app.Add (new XAttribute (androidNs + "debuggable", "true"));
+				XAttribute debuggable = app.Attribute (androidNs + "debuggable");
+				if (debuggable == null)
+					app.Add (new XAttribute (androidNs + "debuggable", "true"));
+				else
+					debuggable.Value = "true";
 			}
 
 			if (Debug || NeedsInternet)

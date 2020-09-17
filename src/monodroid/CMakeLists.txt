@@ -120,28 +120,28 @@ set(TEST_COMPILER_ARGS_CPP ${XA_COMPILER_FLAGS}
 
 if(ENABLE_NDK)
   if (ENABLE_CLANG_ASAN OR ENABLE_CLANG_UBSAN)
-	set(TEST_COMPILER_ARGS_CPP
-	  ${TEST_COMPILER_ARGS_CPP}
-	  fno-omit-frame-pointer
-	  fno-optimize-sibling-calls
-	  )
+    set(TEST_COMPILER_ARGS_CPP
+      ${TEST_COMPILER_ARGS_CPP}
+      fno-omit-frame-pointer
+      fno-optimize-sibling-calls
+      )
   endif()
 
   unset(SANITIZER_FLAGS)
   if (ENABLE_CLANG_ASAN)
-	set(SANITIZER_FLAGS "-fsanitize=address")
-	set(CHECKED_BUILD_INFIX "-asan")
+    set(SANITIZER_FLAGS "-fsanitize=address")
+    set(CHECKED_BUILD_INFIX "-checked+asan")
   elseif(ENABLE_CLANG_UBSAN)
-	set(SANITIZER_FLAGS "-fsanitize=undefined")
-	set(CHECKED_BUILD_INFIX "-ubsan")
+    set(SANITIZER_FLAGS "-fsanitize=undefined")
+    set(CHECKED_BUILD_INFIX "-checked+ubsan")
   endif()
 
   if(SANITIZER_FLAGS)
-	set(CHECKED_COMPILER_FLAGS "${CHECKED_COMPILER_FLAGS} ${SANITIZER_FLAGS}")
-	set(CHECKED_LINKER_FLAGS "${CHECKED_LINKER_FLAGS} ${SANITIZER_FLAGS}")
+    set(CHECKED_COMPILER_FLAGS "${CHECKED_COMPILER_FLAGS} ${SANITIZER_FLAGS}")
+    set(CHECKED_LINKER_FLAGS "${CHECKED_LINKER_FLAGS} ${SANITIZER_FLAGS}")
 
-	string(STRIP "${CHECKED_COMPILER_FLAGS}" CHECKED_COMPILER_FLAGS)
-	string(STRIP "${CHECKED_LINKER_FLAGS}" CHECKED_LINKER_FLAGS)
+    string(STRIP "${CHECKED_COMPILER_FLAGS}" CHECKED_COMPILER_FLAGS)
+    string(STRIP "${CHECKED_LINKER_FLAGS}" CHECKED_LINKER_FLAGS)
   endif()
 endif()
 
@@ -351,9 +351,9 @@ set(XA_INTERNAL_API_SOURCES
 
 if(ENABLE_NDK)
   set(MONODROID_SOURCES
-	${MONODROID_SOURCES}
-	${LZ4_SOURCES}
-	)
+    ${MONODROID_SOURCES}
+    ${LZ4_SOURCES}
+    )
 endif()
 
 if(UNIX)
@@ -411,12 +411,12 @@ if(NOT WIN32 AND NOT MINGW AND CMAKE_BUILD_TYPE STREQUAL Debug)
       ${XAMARIN_DEBUG_APP_HELPER}
       PROPERTIES
       OSX_ARCHITECTURES "${XA_OSX_ARCHITECTURES}"
-	  )
+    )
   endif()
   target_compile_options(
-	${XAMARIN_DEBUG_APP_HELPER}
-	PRIVATE ${CHECKED_COMPILER_FLAGS}
-	)
+    ${XAMARIN_DEBUG_APP_HELPER}
+    PRIVATE ${CHECKED_COMPILER_FLAGS}
+  )
 endif()
 
 string(TOLOWER ${CMAKE_BUILD_TYPE} MONO_ANDROID_SUFFIX)
@@ -455,7 +455,7 @@ endif()
 target_compile_options(
   ${MONO_ANDROID_LIB}
   PRIVATE ${CHECKED_COMPILER_FLAGS}
-  )
+)
 
 target_link_libraries(${MONO_ANDROID_LIB} ${LINK_LIBS} xamarin-app)
 

@@ -195,7 +195,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidFragmentType Condition=" '$(AndroidFragmentType)' == '' ">Android.App.Fragment</AndroidFragmentType>
 	<AndroidEnableAssemblyCompression Condition=" '$(AndroidEnableAssemblyCompression)' == '' ">True</AndroidEnableAssemblyCompression>
 	<AndroidIncludeWrapSh Condition=" '$(AndroidIncludeWrapSh)' == '' ">False</AndroidIncludeWrapSh>
-	<AndroidCheckedBuild Condition=" '$(AndroidCheckedBuild)' == '' "></AndroidCheckedBuild>
+	<_AndroidCheckedBuild Condition=" '$(_AndroidCheckedBuild)' == '' "></_AndroidCheckedBuild>
 
 	<!-- Currently only C# is supported -->
 	<AndroidGenerateLayoutBindings Condition=" '$(Language)' != 'C#' ">False</AndroidGenerateLayoutBindings>
@@ -1411,7 +1411,7 @@ because xbuild doesn't support framework reference assemblies.
       AcwMapFile="$(_AcwMapFile)"
       SupportedAbis="@(_BuildTargetAbis)"
       SkipJniAddNativeMethodRegistrationAttributeScan="$(_SkipJniAddNativeMethodRegistrationAttributeScan)"
-      CheckedBuild="$(AndroidCheckedBuild)">
+      CheckedBuild="$(_AndroidCheckedBuild)">
     <Output TaskParameter="GeneratedBinaryTypeMaps" ItemName="_AndroidTypeMapping" Condition=" '$(_InstantRunEnabled)' == 'True' " />
   </GenerateJavaStubs>
 
@@ -1852,17 +1852,17 @@ because xbuild doesn't support framework reference assemblies.
     <AndroidNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libMonoPosixHelper.d.so" Condition="$(_Assemblies.Contains('Mono.Posix.dll')) and '$(_AndroidDebugNativeLibraries)' == 'True' " ArchiveFileName="libMonoPosixHelper.so" />
     <AndroidNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libmono-native.so" Condition=" '$(_AndroidDebugNativeLibraries)' != 'True' " />
     <AndroidNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libmono-native.d.so" Condition=" '$(_AndroidDebugNativeLibraries)' == 'True' " ArchiveFileName="libmono-native.so" />
-    <AndroidNativeLibrary Include="%(_TargetLibDir.Identity)\libxamarin-debug-app-helper.so" Condition=" '$(AndroidUseDebugRuntime)' == 'True' And '$(AndroidCheckedBuild)' == '' "/>
-    <AndroidNativeLibrary Include="%(_TargetLibDir.Identity)\libxamarin-debug-app-helper-$(AndroidCheckedBuild).so" Condition=" '$(AndroidUseDebugRuntime)' == 'True' And '$(AndroidCheckedBuild)' != '' " ArchiveFileName="libxamarin-debug-app-helper.so" />
+    <AndroidNativeLibrary Include="%(_TargetLibDir.Identity)\libxamarin-debug-app-helper.so" Condition=" '$(AndroidUseDebugRuntime)' == 'True' And '$(_AndroidCheckedBuild)' == '' "/>
+    <AndroidNativeLibrary Include="%(_TargetLibDir.Identity)\libxamarin-debug-app-helper-checked+$(_AndroidCheckedBuild).so" Condition=" '$(AndroidUseDebugRuntime)' == 'True' And '$(_AndroidCheckedBuild)' != '' " ArchiveFileName="libxamarin-debug-app-helper.so" />
     <_AndroidNativeLibraryForFastDev Condition=" '$(_InstantRunEnabled)' == 'True' And '$(AndroidUseDebugRuntime)' == 'True' " Include="%(_TargetLibInterpreterDir.Identity)\libmono-native.so" />
-    <_AndroidNativeLibraryForFastDev Condition=" '$(_InstantRunEnabled)' == 'True' And '$(AndroidUseDebugRuntime)' == 'True' And '$(AndroidCheckedBuild)' == '' " Include="%(_TargetLibDir.Identity)\libxamarin-debug-app-helper.so" />
-    <_AndroidNativeLibraryForFastDev Condition=" '$(_InstantRunEnabled)' == 'True' And '$(AndroidUseDebugRuntime)' == 'True' And '$(AndroidCheckedBuild)' != '' " Include="%(_TargetLibDir.Identity)\libxamarin-debug-app-helper-$(AndroidCheckedBuild).so" ArchiveFileName="libxamarin-debug-app-helper.so" />
-    <FrameworkNativeLibrary Include="%(_TargetLibDir.Identity)\libmono-android.debug.so" Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' And '$(AndroidCheckedBuild)' == '' " ArchiveFileName="libmonodroid.so" />
-    <FrameworkNativeLibrary Include="%(_TargetLibDir.Identity)\libmono-android-$(AndroidCheckedBuild).debug.so" Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' And '$(AndroidCheckedBuild)' != '' " ArchiveFileName="libmonodroid.so" />
-    <FrameworkNativeLibrary Include="%(_TargetLibDir.Identity)\libmono-android.release.so" Condition=" '$(AndroidIncludeDebugSymbols)' != 'True'  And '$(AndroidCheckedBuild)' == '' " ArchiveFileName="libmonodroid.so" />
-    <FrameworkNativeLibrary Include="%(_TargetLibDir.Identity)\libmono-android-$(AndroidCheckedBuild).release.so" Condition=" '$(AndroidIncludeDebugSymbols)' != 'True' And '$(AndroidCheckedBuild)' != '' " ArchiveFileName="libmonodroid.so" />
-    <FrameworkNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libxa-internal-api.so" Condition=" '$(AndroidCheckedBuild)' == ''" />
-    <FrameworkNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libxa-internal-api-$(AndroidCheckedBuild).so" Condition=" '$(AndroidCheckedBuild)' != '' " ArchiveFileName="libxa-internal-api.so" />
+    <_AndroidNativeLibraryForFastDev Condition=" '$(_InstantRunEnabled)' == 'True' And '$(AndroidUseDebugRuntime)' == 'True' And '$(_AndroidCheckedBuild)' == '' " Include="%(_TargetLibDir.Identity)\libxamarin-debug-app-helper.so" />
+    <_AndroidNativeLibraryForFastDev Condition=" '$(_InstantRunEnabled)' == 'True' And '$(AndroidUseDebugRuntime)' == 'True' And '$(_AndroidCheckedBuild)' != '' " Include="%(_TargetLibDir.Identity)\libxamarin-debug-app-helper-checked+$(_AndroidCheckedBuild).so" ArchiveFileName="libxamarin-debug-app-helper.so" />
+    <FrameworkNativeLibrary Include="%(_TargetLibDir.Identity)\libmono-android.debug.so" Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' And '$(_AndroidCheckedBuild)' == '' " ArchiveFileName="libmonodroid.so" />
+    <FrameworkNativeLibrary Include="%(_TargetLibDir.Identity)\libmono-android-checked+$(_AndroidCheckedBuild).debug.so" Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' And '$(_AndroidCheckedBuild)' != '' " ArchiveFileName="libmonodroid.so" />
+    <FrameworkNativeLibrary Include="%(_TargetLibDir.Identity)\libmono-android.release.so" Condition=" '$(AndroidIncludeDebugSymbols)' != 'True'  And '$(_AndroidCheckedBuild)' == '' " ArchiveFileName="libmonodroid.so" />
+    <FrameworkNativeLibrary Include="%(_TargetLibDir.Identity)\libmono-android-checked+$(_AndroidCheckedBuild).release.so" Condition=" '$(AndroidIncludeDebugSymbols)' != 'True' And '$(_AndroidCheckedBuild)' != '' " ArchiveFileName="libmonodroid.so" />
+    <FrameworkNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libxa-internal-api.so" Condition=" '$(_AndroidCheckedBuild)' == ''" />
+    <FrameworkNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libxa-internal-api-checked+$(_AndroidCheckedBuild).so" Condition=" '$(_AndroidCheckedBuild)' != '' " ArchiveFileName="libxa-internal-api.so" />
     <FrameworkNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libmono-btls-shared.so" Condition=" '$(_AndroidDebugNativeLibraries)' != 'True' " />
     <FrameworkNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libmono-btls-shared.d.so" Condition=" '$(_AndroidDebugNativeLibraries)' == 'True' " ArchiveFileName="libmono-btls-shared.so" />
     <FrameworkNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libmono-profiler-aot.so" Condition=" @(_EmbedProfilers->Count()) > 0 and (@(_EmbedProfilers->AnyHaveMetadataValue('Identity', 'aot')) or @(_EmbedProfilers->AnyHaveMetadataValue('Identity', 'all'))) " />
@@ -2083,7 +2083,7 @@ because xbuild doesn't support framework reference assemblies.
     InterpreterEnabled="$(_AndroidUseInterpreter)"
     ProjectFullPath="$(MSBuildProjectFullPath)"
     IncludeWrapSh="$(AndroidIncludeWrapSh)"
-    CheckedBuild="$(AndroidCheckedBuild)">
+    CheckedBuild="$(_AndroidCheckedBuild)">
     <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
   </BuildApk>
   <BuildBaseAppBundle
@@ -2114,7 +2114,7 @@ because xbuild doesn't support framework reference assemblies.
       UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
       ProjectFullPath="$(MSBuildProjectFullPath)"
       IncludeWrapSh="$(AndroidIncludeWrapSh)"
-      CheckedBuild="$(AndroidCheckedBuild)">
+      CheckedBuild="$(_AndroidCheckedBuild)">
     <Output TaskParameter="OutputFiles" ItemName="BaseZipFile" />
   </BuildBaseAppBundle>
   <BuildAppBundle

@@ -495,7 +495,7 @@ AndroidSystem::get_max_gref_count_from_system (void)
 	}
 
 	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> override;
-	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_MAX_GREFC, &override) > 0) {
+	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_MAX_GREFC, override) > 0) {
 		char *e;
 		max       = strtol (override.get (), &e, 10);
 		switch (*e) {
@@ -515,7 +515,6 @@ AndroidSystem::get_max_gref_count_from_system (void)
 		}
 		log_warn (LOG_GC, "Overriding max JNI Global Reference count to %i", max);
 	}
-
 	return max;
 }
 

@@ -617,39 +617,38 @@ namespace Xamarin.Android.Tasks
 			} else if (String.Compare ("ubsan", mode, StringComparison.Ordinal) == 0) {
 				sanitizerName = "ubsan_standalone";
 			} else {
-				Log.LogWarning ($"Unknown checked build mode '{CheckedBuild}'");
+				LogSanitizerWarning ($"Unknown checked build mode '{CheckedBuild}'");
 				return;
 			}
 
 			if (!IncludeWrapSh) {
-				Log.LogError ("Checked builds require the wrapper script to be packaged. Please set the `$(AndroidIncludeWrapSh) MSBuild property to `true` in your project");
+				LogSanitizerError ("Checked builds require the wrapper script to be packaged. Please set the `$(AndroidIncludeWrapSh)` MSBuild property to `true` in your project.");
 				return;
 			}
 
 			if (!libs.Any (info => IsWrapperScript (info.Path, info.Link))) {
-				// TODO: consider including various wrapper scripts with XA and adding them here
-				Log.LogError ($"Checked builds require the wrapper script to be packaged. Please add `wrap.sh` appropriate for the {CheckedBuild} checker to your project");
+				LogSanitizerError ($"Checked builds require the wrapper script to be packaged. Please add `wrap.sh` appropriate for the {CheckedBuild} checker to your project.");
 				return;
 			}
 
 			NdkUtil.Init (AndroidNdkDirectory);
 			string clangDir = NdkUtil.GetClangDeviceLibraryPath (AndroidNdkDirectory);
 			if (String.IsNullOrEmpty (clangDir)) {
-				Log.LogError ($"Unable to find the clang compiler directory. Is NDK installed?");
+				LogSanitizerError ($"Unable to find the clang compiler directory. Is NDK installed?");
 				return;
 			}
 
 			foreach (string abi in supportedAbis) {
 				string clangAbi = MonoAndroidHelper.MapAndroidAbiToClang (abi);
 				if (String.IsNullOrEmpty (clangAbi)) {
-					Log.LogError ($"Unable to map Android ABI {abi} to clang ABI");
+					LogSanitizerError ($"Unable to map Android ABI {abi} to clang ABI");
 					return;
 				}
 
 				string sanitizerLib = $"libclang_rt.{sanitizerName}-{clangAbi}-android.so";
 				string sanitizerLibPath = Path.Combine (clangDir, sanitizerLib);
 				if (!File.Exists (sanitizerLibPath)) {
-					Log.LogError ($"Unable to find sanitizer runtime for the {CheckedBuild} checker at {sanitizerLibPath}");
+					LogSanitizerError ($"Unable to find sanitizer runtime for the {CheckedBuild} checker at {sanitizerLibPath}");
 					return;
 				}
 
@@ -703,6 +702,18 @@ namespace Xamarin.Android.Tasks
 				return;
 			}
 			files.Add (item);
+		}
+
+		// This method is used only for internal warnings which will never be shown to the end user, therefore there's
+		// no need to use coded warnings.
+		void LogSanitizerWarning (string message)
+		{
+			Log.LogWarning (message);
+		}
+
+		void LogSanitizerError (string message)
+		{
+			Log.LogError (message);
 		}
 	}
 }

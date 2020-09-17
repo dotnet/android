@@ -643,7 +643,7 @@ void
 MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& runtime_args)
 {
 #if defined (DEBUG) && !defined (WINDOWS)
-	RuntimeOptions options;
+	RuntimeOptions options{};
 	int64_t cur_time;
 
 	cur_time = time (nullptr);
@@ -652,7 +652,6 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 		log_error (LOG_DEFAULT, "Failed to parse runtime args: '%s'", runtime_args.get ());
 	} else if (options.debug && cur_time > options.timeout_time) {
 		log_warn (LOG_DEBUGGER, "Not starting the debugger as the timeout value has been reached; current-time: %lli  timeout: %lli", cur_time, options.timeout_time);
-		delete[] options.host;
 	} else if (options.debug && cur_time <= options.timeout_time) {
 		embeddedAssemblies.set_register_debug_symbols (true);
 
@@ -734,6 +733,8 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 	} else {
 		set_debug_options ();
 	}
+
+	delete[] options.host;
 #else
 	set_debug_options ();
 #endif

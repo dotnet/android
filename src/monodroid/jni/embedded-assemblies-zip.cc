@@ -380,7 +380,6 @@ EmbeddedAssemblies::zip_read_entry_info (uint8_t* buf, size_t buf_len, size_t& b
 	static constexpr size_t CD_LOCAL_HEADER_POS_OFFSET   = 42;
 	static constexpr size_t CD_COMMENT_LENGTH_OFFSET     = 32;
 
-	file_name = nullptr;
 	size_t index = buf_offset;
 	zip_ensure_valid_params (buf, buf_len, index, ZIP_CENTRAL_LEN);
 
