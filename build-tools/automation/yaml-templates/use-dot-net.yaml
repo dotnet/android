@@ -11,7 +11,7 @@ steps:
       $ErrorActionPreference = 'Stop'
       $ProgressPreference = 'SilentlyContinue'
       $DotNetRoot = "$env:ProgramFiles\dotnet\"
-      if ("${{ parameters.remove_dotnet }}" -eq $true) {
+      if ("${{ parameters.remove_dotnet }}" -eq $true -And (Test-Path $DotNetRoot)) {
         Remove-Item -Recurse $DotNetRoot -Verbose
       }
       Invoke-WebRequest -Uri "https://dot.net/v1/dotnet-install.ps1" -OutFile dotnet-install.ps1
