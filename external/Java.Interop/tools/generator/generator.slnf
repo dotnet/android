@@ -7,6 +7,7 @@
       "src\\Java.Interop.Tools.Cecil\\Java.Interop.Tools.Cecil.csproj",
       "src\\Java.Interop.Tools.JavaCallableWrappers\\Java.Interop.Tools.JavaCallableWrappers.csproj",
       "src\\Java.Interop.Tools.Diagnostics\\Java.Interop.Tools.Diagnostics.csproj",
+      "src\\Java.Interop.Tools.Generator\\Java.Interop.Tools.Generator.csproj",
       "src\\Xamarin.Android.Tools.AnnotationSupport\\Xamarin.Android.Tools.AnnotationSupport.csproj",
       "src\\Xamarin.Android.Tools.ApiXmlAdjuster\\Xamarin.Android.Tools.ApiXmlAdjuster.csproj",
       "src\\Xamarin.Android.Tools.Bytecode\\Xamarin.Android.Tools.Bytecode.csproj",

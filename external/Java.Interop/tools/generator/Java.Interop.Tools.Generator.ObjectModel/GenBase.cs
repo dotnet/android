@@ -6,7 +6,7 @@ using MonoDroid.Generation.Utilities;
 
 namespace MonoDroid.Generation
 {
-	public abstract class GenBase : IGeneratable, ApiVersionsSupport.IApiAvailability
+	public abstract class GenBase : IGeneratable, ApiVersionsSupport.IApiAvailability, ISourceLineInfo
 	{
 		bool enum_updated;
 		bool property_filled;
@@ -32,6 +32,10 @@ namespace MonoDroid.Generation
 		public List<Property> Properties { get; } = new List<Property> ();
 		public string DefaultValue { get; set; }
 		public bool HasVirtualMethods { get; set; }
+
+		public int LineNumber { get; set; } = -1;
+		public int LinePosition { get; set; } = -1;
+		public string SourceFile { get; set; }
 
 		public string ReturnCast => string.Empty;
 
@@ -662,9 +666,9 @@ namespace MonoDroid.Generation
 					Interfaces.Add (isym);
 				else {
 					if (isym == null)
-						Report.LogCodedWarning (0, Report.WarningBaseInterfaceNotFound, FullName, iface_name);
+						Report.LogCodedWarning (0, Report.WarningBaseInterfaceNotFound, this, FullName, iface_name);
 					else
-						Report.LogCodedWarning (0, Report.WarningBaseInterfaceInvalid, FullName, iface_name);
+						Report.LogCodedWarning (0, Report.WarningBaseInterfaceInvalid, this, FullName, iface_name);
 					iface_validation_failed = true;
 				}
 			}

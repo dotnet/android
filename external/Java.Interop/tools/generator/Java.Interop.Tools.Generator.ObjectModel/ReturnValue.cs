@@ -14,12 +14,14 @@ namespace MonoDroid.Generation {
 		string managed_type;
 		string raw_type;
 		bool is_enumified;
+		Method owner;
 
 		public ReturnValue (Method owner, string java_type, string managed_type, bool isEnumified, bool notNull)
 		{
 			this.raw_type = this.java_type = java_type;
 			this.managed_type = managed_type;
 			this.is_enumified = isEnumified;
+			this.owner = owner;
 			NotNull = notNull;
 		}
 
@@ -121,11 +123,11 @@ namespace MonoDroid.Generation {
 		{
 			sym = (IsEnumified ? opt.SymbolTable.Lookup (managed_type, type_params) : null) ?? opt.SymbolTable.Lookup (java_type, type_params);
 			if (sym == null) {
-				Report.LogCodedWarning (0, Report.WarningUnknownReturnType, java_type, context.GetContextTypeMember ());
+				Report.LogCodedWarning (0, Report.WarningUnknownReturnType, owner, java_type, context.GetContextTypeMember ());
 				return false;
 			}
 			if (!sym.Validate (opt, type_params, context)) {
-				Report.LogCodedWarning (0, Report.WarningInvalidReturnType, java_type, context.GetContextTypeMember ());
+				Report.LogCodedWarning (0, Report.WarningInvalidReturnType, owner, java_type, context.GetContextTypeMember ());
 				return false;
 			}
 			return true;

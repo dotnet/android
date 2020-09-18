@@ -5,7 +5,7 @@ using MonoDroid.Generation.Utilities;
 
 namespace MonoDroid.Generation
 {
-	public abstract class MethodBase : ApiVersionsSupport.IApiAvailability
+	public abstract class MethodBase : ApiVersionsSupport.IApiAvailability, ISourceLineInfo
 	{
 		protected MethodBase (GenBase declaringType)
 		{
@@ -23,6 +23,10 @@ namespace MonoDroid.Generation
 		public string Name { get; set; }
 		public ParameterList Parameters { get; } = new ParameterList ();
 		public string Visibility { get; set; }
+
+		public int LineNumber { get; set; } = -1;
+		public int LinePosition { get; set; } = -1;
+		public string SourceFile { get; set; }
 
 		public string [] AutoDetectEnumifiedOverrideParameters (AncestorDescendantCache cache)
 		{

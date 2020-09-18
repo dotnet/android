@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Xml;
 using System.Xml.Linq;
 using Java.Interop.Tools.JavaCallableWrappers;
 using MonoDroid.Utils;
@@ -26,6 +27,7 @@ namespace MonoDroid.Generation
 			};
 
 			FillApiSince (klass, pkg, elem);
+			SetLineInfo (klass, elem, options);
 
 			foreach (var child in elem.Elements ()) {
 				switch (child.Name.LocalName) {
@@ -35,18 +37,18 @@ namespace MonoDroid.Generation
 						klass.AddImplementedInterface (iname);
 						break;
 					case "method":
-						klass.AddMethod (CreateMethod (klass, child));
+						klass.AddMethod (CreateMethod (klass, child, options));
 						break;
 					case "constructor":
-						klass.Ctors.Add (CreateCtor (klass, child));
+						klass.Ctors.Add (CreateCtor (klass, child, options));
 						break;
 					case "field":
-						klass.AddField (CreateField (klass, child));
+						klass.AddField (CreateField (klass, child, options));
 						break;
 					case "typeParameters":
 						break; // handled at GenBaseSupport
 					default:
-						Report.LogCodedWarning (0, Report.WarningUnexpectedChild, child.Name.ToString ());
+						Report.LogCodedWarning (0, Report.WarningUnexpectedChild, klass, child.Name.ToString ());
 						break;
 				}
 			}
@@ -54,7 +56,7 @@ namespace MonoDroid.Generation
 			return klass;
 		}
 
-		public static Ctor CreateCtor (GenBase declaringType, XElement elem)
+		public static Ctor CreateCtor (GenBase declaringType, XElement elem, CodeGenerationOptions options = null)
 		{
 			var ctor = new Ctor (declaringType) {
 				ApiAvailableSince = declaringType.ApiAvailableSince,
@@ -64,6 +66,8 @@ namespace MonoDroid.Generation
 				Name = elem.XGetAttribute ("name"),
 				Visibility = elem.Visibility ()
 			};
+
+			SetLineInfo (ctor, elem, options);
 
 			var idx = ctor.Name.LastIndexOf ('.');
 
@@ -81,14 +85,14 @@ namespace MonoDroid.Generation
 
 				if (enclosingType == null) {
 					ctor.MissingEnclosingClass = true;
-					Report.LogCodedWarning (0, Report.WarningMissingClassForConstructor, ctor.Name, expectedEnclosingName);
+					Report.LogCodedWarning (0, Report.WarningMissingClassForConstructor, ctor, ctor.Name, expectedEnclosingName);
 				} else
-					ctor.Parameters.AddFirst (CreateParameterFromClassElement (enclosingType));
+					ctor.Parameters.AddFirst (CreateParameterFromClassElement (enclosingType, options));
 			}
 
 			foreach (var child in elem.Elements ()) {
 				if (child.Name == "parameter")
-					ctor.Parameters.Add (CreateParameter (child));
+					ctor.Parameters.Add (CreateParameter (child, options));
 			}
 
 			ctor.Name = EnsureValidIdentifer (ctor.Name);
@@ -98,7 +102,7 @@ namespace MonoDroid.Generation
 			return ctor;
 		}
 
-		public static Field CreateField (GenBase declaringType, XElement elem)
+		public static Field CreateField (GenBase declaringType, XElement elem, CodeGenerationOptions options = null)
 		{
 			var field = new Field {
 				ApiAvailableSince = declaringType.ApiAvailableSince,
@@ -110,7 +114,7 @@ namespace MonoDroid.Generation
 				IsStatic = elem.XGetAttribute ("static") == "true",
 				JavaName = elem.XGetAttribute ("name"),
 				NotNull = elem.XGetAttribute ("not-null") == "true",
-				SetterParameter = CreateParameter (elem),
+				SetterParameter = CreateParameter (elem, options),
 				TypeName = elem.XGetAttribute ("type"),
 				Value = elem.XGetAttribute ("value"), // do not trim
 				Visibility = elem.XGetAttribute ("visibility")
@@ -131,6 +135,7 @@ namespace MonoDroid.Generation
 			}
 
 			FillApiSince (field, elem);
+			SetLineInfo (field, elem, options);
 
 			return field;
 		}
@@ -214,6 +219,7 @@ namespace MonoDroid.Generation
 			};
 
 			FillApiSince (iface, pkg, elem);
+			SetLineInfo (iface, elem, options);
 
 			foreach (var child in elem.Elements ()) {
 				switch (child.Name.LocalName) {
@@ -223,15 +229,15 @@ namespace MonoDroid.Generation
 						iface.AddImplementedInterface (iname);
 						break;
 					case "method":
-						iface.AddMethod (CreateMethod (iface, child));
+						iface.AddMethod (CreateMethod (iface, child, options));
 						break;
 					case "field":
-						iface.AddField (CreateField (iface, child));
+						iface.AddField (CreateField (iface, child, options));
 						break;
 					case "typeParameters":
 						break; // handled at GenBaseSupport
 					default:
-						Report.LogCodedWarning (0, Report.WarningUnexpectedInterfaceChild, child.ToString ());
+						Report.LogCodedWarning (0, Report.WarningUnexpectedInterfaceChild, iface, child.ToString ());
 						break;
 				}
 			}
@@ -239,7 +245,7 @@ namespace MonoDroid.Generation
 			return iface;
 		}
 
-		public static Method CreateMethod (GenBase declaringType, XElement elem)
+		public static Method CreateMethod (GenBase declaringType, XElement elem, CodeGenerationOptions options = null)
 		{
 			var method = new Method (declaringType) {
 				ApiAvailableSince = declaringType.ApiAvailableSince,
@@ -284,7 +290,7 @@ namespace MonoDroid.Generation
 
 			foreach (var child in elem.Elements ()) {
 				if (child.Name == "parameter")
-					method.Parameters.Add (CreateParameter (child));
+					method.Parameters.Add (CreateParameter (child, options));
 			}
 
 			method.Name = EnsureValidIdentifer (method.Name);
@@ -292,11 +298,12 @@ namespace MonoDroid.Generation
 			method.FillReturnType ();
 
 			FillApiSince (method, elem);
+			SetLineInfo (method, elem, options);
 
 			return method;
 		}
 
-		public static Parameter CreateParameter (XElement elem)
+		public static Parameter CreateParameter (XElement elem, CodeGenerationOptions options = null)
 		{
 			string managedName = elem.XGetAttribute ("managedName");
 			string name = !string.IsNullOrEmpty (managedName) ? managedName : TypeNameUtilities.MangleName (EnsureValidIdentifer (elem.XGetAttribute ("name")));
@@ -308,15 +315,19 @@ namespace MonoDroid.Generation
 			var result = new Parameter (name, enum_type ?? java_type, enum_type ?? managed_type, enum_type != null, java_type, not_null);
 			if (elem.Attribute ("sender") != null)
 				result.IsSender = true;
+			SetLineInfo (result, elem, options);
 			return result;
 		}
 
-		public static Parameter CreateParameterFromClassElement (XElement elem)
+		public static Parameter CreateParameterFromClassElement (XElement elem, CodeGenerationOptions options)
 		{
 			string name = "__self";
 			string java_type = elem.XGetAttribute ("name");
 			string java_package = elem.Parent.XGetAttribute ("name");
-			return new Parameter (name, java_package + "." + java_type, null, false);
+			var p = new Parameter (name, java_package + "." + java_type, null, false);
+
+			SetLineInfo (p, elem, options);
+			return p;
 		}
 
 		static string EnsureValidIdentifer (string name)
@@ -402,6 +413,16 @@ namespace MonoDroid.Generation
 		{
 			// IBlahBlah is not prefixed with 'I'
 			return name.Length <= 2 || name [0] != 'I' || !char.IsUpper (name [1]);
+		}
+
+		static void SetLineInfo (ISourceLineInfo model, XNode node, CodeGenerationOptions options)
+		{
+			model.SourceFile = options?.ApiXmlFile;
+
+			if (node is IXmlLineInfo info && info.HasLineInfo ()) {
+				model.LineNumber = info.LineNumber;
+				model.LinePosition = info.LinePosition;
+			}
 		}
 	}
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Xml.Linq;
 using MonoDroid.Generation;
 using NUnit.Framework;
@@ -225,6 +226,23 @@ namespace generatortests
 			var p = XmlApiImporter.CreateParameter (xml.Root);
 
 			Assert.True (p.NotNull);
+		}
+
+		[Test]
+		public void PreserveSourceLineInfo ()
+		{
+			var xml = XDocument.Parse ("<package name=\"com.example.test\" jni-name=\"com/example/test\">\n<class name=\"test\">\n<method name=\"add-h-_1V8i\" final=\"false\" />\n</class>\n</package>", LoadOptions.SetBaseUri | LoadOptions.SetLineInfo);
+			var klass = XmlApiImporter.CreateClass (xml.Root, xml.Root.Element ("class"), new CodeGenerationOptions { ApiXmlFile = "obj/Debug/api.xml" });
+
+			Assert.AreEqual (2, klass.LineNumber);
+			Assert.AreEqual (2, klass.LinePosition);
+			Assert.AreEqual ("obj/Debug/api.xml", klass.SourceFile);
+
+			var method = klass.Methods.Single ();
+
+			Assert.AreEqual (3, method.LineNumber);
+			Assert.AreEqual (2, method.LinePosition);
+			Assert.AreEqual ("obj/Debug/api.xml", method.SourceFile);
 		}
 	}
 }

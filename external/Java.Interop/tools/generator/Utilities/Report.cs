@@ -91,6 +91,9 @@ namespace MonoDroid.Generation
 		public static void LogCodedWarning (int verbosity, LocalizedMessage message, params string [] args)
 			=> LogCodedWarning (verbosity, message, null, null, -1, -1, args);
 
+		public static void LogCodedWarning (int verbosity, LocalizedMessage message, ISourceLineInfo sourceInfo, params string [] args)
+			=> LogCodedWarning (verbosity, message, null, sourceInfo.SourceFile, sourceInfo.LineNumber, sourceInfo.LinePosition, args);
+
 		public static void LogCodedWarning (int verbosity, LocalizedMessage message, Exception innerException, params string [] args)
 			=> LogCodedWarning (verbosity, message, innerException, null, -1, -1, args);
 

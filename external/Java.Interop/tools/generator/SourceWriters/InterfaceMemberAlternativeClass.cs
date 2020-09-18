@@ -101,12 +101,12 @@ namespace generator.SourceWriters
 
 			foreach (var f in fields) {
 				if (iface.ContainsName (f.Name)) {
-					Report.LogCodedWarning (0, SourceWriterExtensions.GetFieldCollisionMessage (iface, f), iface.FullName, f.Name, iface.JavaName);
+					Report.LogCodedWarning (0, SourceWriterExtensions.GetFieldCollisionMessage (iface, f), f, iface.FullName, f.Name, iface.JavaName);
 					continue;
 				}
 
 				if (seen.Contains (f.Name)) {
-					Report.LogCodedWarning (0, Report.WarningDuplicateField, iface.FullName, f.Name, iface.JavaName);
+					Report.LogCodedWarning (0, Report.WarningDuplicateField, f, iface.FullName, f.Name, iface.JavaName);
 					continue;
 				}
 

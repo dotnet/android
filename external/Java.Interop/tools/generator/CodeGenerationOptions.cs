@@ -48,6 +48,7 @@ namespace MonoDroid.Generation
 		readonly SortedSet<string> jni_marshal_delegates = new SortedSet<string> ();
 		readonly object jni_marshal_delegates_lock = new object ();
 
+		public string ApiXmlFile { get; set; }
 		public bool UseGlobal { get; set; }
 		public bool IgnoreNonPublicType { get; set; }
 		public string AssemblyName { get; set; }

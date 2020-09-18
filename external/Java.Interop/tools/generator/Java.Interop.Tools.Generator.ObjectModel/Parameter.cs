@@ -10,13 +10,17 @@ using Xamarin.Android.Tools;
 
 namespace MonoDroid.Generation {
 
-	public class Parameter {
-
+	public class Parameter : ISourceLineInfo
+	{
 		bool is_sender;
 		string name;
 		string type, managed_type, rawtype;
 		ISymbol sym;
 		bool is_enumified;
+
+		public int LineNumber { get; set; } = -1;
+		public int LinePosition { get; set; } = -1;
+		public string SourceFile { get; set; }
 
 		internal Parameter (string name, string type, string managedType, bool isEnumified, string rawtype = null, bool notNull = false)
 		{
@@ -262,11 +266,11 @@ namespace MonoDroid.Generation {
 		{
 			sym = opt.SymbolTable.Lookup (type, type_params);
 			if (sym == null) {
-				Report.LogCodedWarning (0, Report.WarningUnknownParameterType, type, context.GetContextTypeMember ());
+				Report.LogCodedWarning (0, Report.WarningUnknownParameterType, this, type, context.GetContextTypeMember ());
 				return false;
 			}
 			if (!sym.Validate (opt, type_params, context)) {
-				Report.LogCodedWarning (0, Report.WarningInvalidParameterType, type, context.GetContextTypeMember ());
+				Report.LogCodedWarning (0, Report.WarningInvalidParameterType, this, type, context.GetContextTypeMember ());
 				return false;
 			}
 			return true;

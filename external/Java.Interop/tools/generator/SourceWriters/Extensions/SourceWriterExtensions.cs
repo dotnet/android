@@ -24,12 +24,12 @@ namespace generator.SourceWriters
 
 			foreach (var f in fields) {
 				if (gen.ContainsName (f.Name)) {
-					Report.LogCodedWarning (0, GetFieldCollisionMessage (gen, f), gen.FullName, f.Name, gen.JavaName);
+					Report.LogCodedWarning (0, GetFieldCollisionMessage (gen, f), f, gen.FullName, f.Name, gen.JavaName);
 					continue;
 				}
 
 				if (seen != null && seen.Contains (f.Name)) {
-					Report.LogCodedWarning (0, Report.WarningDuplicateField, gen.FullName, f.Name, gen.JavaName);
+					Report.LogCodedWarning (0, Report.WarningDuplicateField, f, gen.FullName, f.Name, gen.JavaName);
 					continue;
 				}
 
@@ -66,12 +66,12 @@ namespace generator.SourceWriters
 				var name = method.CalculateEventName (target.ContainsName);
 
 				if (string.IsNullOrEmpty (name)) {
-					Report.LogCodedWarning (0, Report.WarningEmptyEventName, iface.FullName, method.Name);
+					Report.LogCodedWarning (0, Report.WarningEmptyEventName, method, iface.FullName, method.Name);
 					continue;
 				}
 
 				if (opt.GetSafeIdentifier (name) != name) {
-					Report.LogCodedWarning (0, Report.WarningInvalidEventName, iface.FullName, method.Name);
+					Report.LogCodedWarning (0, Report.WarningInvalidEventName, method, iface.FullName, method.Name);
 					continue;
 				}
 
@@ -150,7 +150,7 @@ namespace generator.SourceWriters
 
 			if (method.RetVal.IsVoid || method.IsEventHandlerWithHandledProperty) {
 				if (opt.GetSafeIdentifier (name) != name) {
-					Report.LogCodedWarning (0, Report.WarningInvalidEventName2, iface.FullName, name);
+					Report.LogCodedWarning (0, Report.WarningInvalidEventName2, method, iface.FullName, name);
 					return;
 				} else {
 					var mt = target.Methods.Where (method => string.Compare (method.Name, connector_fmt, StringComparison.OrdinalIgnoreCase) == 0 && method.IsListenerConnector).FirstOrDefault ();
@@ -160,7 +160,7 @@ namespace generator.SourceWriters
 				}
 			} else {
 				if (opt.GetSafeIdentifier (name) != name) {
-					Report.LogCodedWarning (0, Report.WarningInvalidEventPropertyName, iface.FullName, name);
+					Report.LogCodedWarning (0, Report.WarningInvalidEventPropertyName, method, iface.FullName, name);
 					return;
 				}
 

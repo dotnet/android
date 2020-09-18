@@ -4,7 +4,7 @@ using MonoDroid.Utils;
 
 namespace MonoDroid.Generation
 {
-	public class Field : ApiVersionsSupport.IApiAvailability
+	public class Field : ApiVersionsSupport.IApiAvailability, ISourceLineInfo
 	{
 		public string Annotation { get; set; }
 		public int ApiAvailableSince { get; set; }
@@ -25,6 +25,10 @@ namespace MonoDroid.Generation
 		public string Value { get; set; }
 		public string Visibility { get; set; }
 
+		public int LineNumber { get; set; } = -1;
+		public int LinePosition { get; set; } = -1;
+		public string SourceFile { get; set; }
+
 		internal string GetMethodPrefix => TypeNameUtilities.GetCallPrefix (Symbol);
 
 		internal string ID => JavaName + "_jfieldId";
@@ -38,7 +42,7 @@ namespace MonoDroid.Generation
 			Symbol = opt.SymbolTable.Lookup (TypeName, type_params);
 
 			if (Symbol == null || !Symbol.Validate (opt, type_params, context)) {
-				Report.LogCodedWarning (0, Report.WarningUnexpectedFieldType, TypeName, context.GetContextTypeMember ());
+				Report.LogCodedWarning (0, Report.WarningUnexpectedFieldType, this, TypeName, context.GetContextTypeMember ());
 				return false;
 			}
 

@@ -60,6 +60,7 @@ namespace Xamarin.Android.Binder
 			string api_xml_adjuster_output = options.ApiXmlAdjusterOutput;
 			var apiSource           = "";
 			var opt                 = new CodeGenerationOptions () {
+				ApiXmlFile            = options.ApiDescriptionFile,
 				CodeGenerationTarget  = options.CodeGenerationTarget,
 				UseGlobal             = options.GlobalTypeNames,
 				IgnoreNonPublicType   = true,
