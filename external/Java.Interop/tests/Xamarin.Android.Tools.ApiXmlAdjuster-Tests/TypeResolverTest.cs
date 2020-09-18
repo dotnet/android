@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Xml;
 using NUnit.Framework;
 
 namespace Xamarin.Android.Tools.ApiXmlAdjuster.Tests
@@ -64,6 +67,35 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster.Tests
 			Assert.AreEqual ("java.util.function.Function<java.util.Map.Entry<K, V>, ? extends U>",
 			                 para.ResolvedType.ToString (),
 			                 "referenced type is not correctly resolved");
+		}
+
+		[Test]
+		public void IntentServiceHack ()
+		{
+			// https://github.com/xamarin/java.interop/issues/717
+			var api = JavaApiTestHelper.GetLoadedApi ();
+
+			// Create "mono.android.app" package
+			var mono_android_app = new JavaPackage (api) { Name = "mono.android.app", JniName = "mono/android/app", Types = new List<JavaType> () };
+			api.Packages.Add (mono_android_app);
+
+			// Remove "android.app.IntentService" type
+			var android_app = api.Packages.Single (p => p.Name == "android.app");
+			var intent_service = android_app.Types.Single (t => t.Name == "IntentService");
+			android_app.Types.Remove (intent_service);
+
+			// Create new "mono.android.app.IntentService" type
+			var new_intent_service = new JavaClass (mono_android_app) {
+				Name = intent_service.Name,
+			};
+
+			mono_android_app.Types.Add (new_intent_service);
+
+			api.Resolve ();
+
+			// Ensure we can resolve the type by either name
+			Assert.AreSame (new_intent_service, api.FindNonGenericType ("android.app.IntentService"));
+			Assert.AreSame (new_intent_service, api.FindNonGenericType ("mono.android.app.IntentService"));
 		}
 	}
 }

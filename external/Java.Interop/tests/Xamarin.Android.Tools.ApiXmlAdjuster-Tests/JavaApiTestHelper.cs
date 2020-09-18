@@ -11,7 +11,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster.Tests
 				"..",
 				"..");
 
-		static  readonly    string  ApiPath = Path.Combine (
+		public static readonly string ApiPath = Path.Combine (
 				TopDir,
 				"tests",
 				"Xamarin.Android.Tools.ApiXmlAdjuster-Tests",

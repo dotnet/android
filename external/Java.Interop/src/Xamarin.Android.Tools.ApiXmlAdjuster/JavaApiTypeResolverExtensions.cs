@@ -44,8 +44,15 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 				ret = ManagedType.DummyManagedPackages
 				                 .SelectMany (p => p.Types)
 				                 .FirstOrDefault (t => t.FullName == name);
-			if (ret == null)
+			if (ret == null) {
+				// We moved this type to "mono.android.app.IntentService" which makes this
+				// type resolution fail if a user tries to reference it in Java.
+				if (name == "android.app.IntentService")
+					return FindNonGenericType (api, "mono.android.app.IntentService");
+
 				throw new JavaTypeResolutionException (string.Format ("Type '{0}' was not found.", name));
+			}
+
 			return ret;
 		}
 
