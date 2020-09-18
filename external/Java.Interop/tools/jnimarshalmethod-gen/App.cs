@@ -39,16 +39,12 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 
 		public static int Main (string [] args)
 		{
-			var domain = AppDomain.CreateDomain ("workspace");
-			var app = (App)domain.CreateInstanceAndUnwrap (typeof (App).Assembly.FullName, typeof (App).FullName);
-
+			var app = new App ();
 			app.AddMonoPathToResolverSearchDirectories ();
 
 			var assemblies = app.ProcessArguments (args);
 			app.ProcessAssemblies (assemblies);
 			var filesToDelete = app.FilesToDelete;
-
-			AppDomain.Unload (domain);
 
 			foreach (var path in filesToDelete)
 				File.Delete (path);
@@ -282,8 +278,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 
 		void CreateMarshalMethodAssembly (string path)
 		{
-			var assembly        = Assembly.LoadFile (Path.GetFullPath (path));
-
+			var assembly        = Assembly.Load (File.ReadAllBytes (Path.GetFullPath (path)));
 			var baseName        = Path.GetFileNameWithoutExtension (path);
 			var assemblyName    = new AssemblyName (baseName + "-JniMarshalMethods");
 			var fileName        = assemblyName.Name + ".dll";
