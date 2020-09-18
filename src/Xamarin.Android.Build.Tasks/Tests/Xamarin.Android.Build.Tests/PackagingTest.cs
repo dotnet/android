@@ -68,16 +68,20 @@ namespace Xamarin.Android.Build.Tests
 				new [] {
 					"Java.Interop.dll",
 					"Mono.Android.dll",
+					"System.Collections.NonGeneric.dll",
 					"System.ComponentModel.Primitives.dll",
 					"System.Console.dll",
 					"System.Linq.Expressions.dll",
 					"System.ObjectModel.dll",
+					"System.Private.Uri.dll",
 					"System.Private.Xml.dll",
+					"System.Private.Xml.Linq.dll",
 					"System.Runtime.CompilerServices.Unsafe.dll",
 					"System.Runtime.Serialization.Formatters.dll",
 					"System.Runtime.Serialization.Primitives.dll",
 					"System.Security.Cryptography.Algorithms.dll",
 					"System.Security.Cryptography.Primitives.dll",
+					"System.Text.RegularExpressions.dll",
 					"System.Private.CoreLib.dll",
 					"System.Collections.Concurrent.dll",
 					"System.Collections.dll",
@@ -111,7 +115,7 @@ namespace Xamarin.Android.Build.Tests
 						proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
 				using (var zip = ZipHelper.OpenZip (apk)) {
 					var existingFiles = zip.Where (a => a.FullName.StartsWith ("assemblies/", StringComparison.InvariantCultureIgnoreCase));
-					var missingFiles = expectedFiles.Where (x => !zip.ContainsEntry ("assmelbies/" + Path.GetFileName (x)));
+					var missingFiles = expectedFiles.Where (x => !zip.ContainsEntry ("assemblies/" + Path.GetFileName (x)));
 					Assert.IsTrue (missingFiles.Any (),
 					string.Format ("The following Expected files are missing. {0}",
 						string.Join (Environment.NewLine, missingFiles)));
