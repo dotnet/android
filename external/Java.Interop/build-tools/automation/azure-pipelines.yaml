@@ -5,8 +5,14 @@ trigger:
   - d16-*
 
 pr:
-  - master
-  - d16-*
+  branches:
+    include:
+    - master
+    - d16-*
+  paths:
+    exclude:
+    - README.md
+    - Documentation/*
 
 # Global variables
 variables:
