@@ -753,97 +753,17 @@ stages:
 
     - template: yaml-templates/fail-on-issue.yaml
 
-  # Xamarin.Android (Smoke Test MSBuild - macOS)
-  - job: msbuild_smoke_mac
-    displayName: MSBuild - macOS
-    pool: $(HostedMac)
-    timeoutInMinutes: 180
-    cancelTimeoutInMinutes: 5
-    workspace:
-      clean: all
-    steps:
-    - template: yaml-templates/setup-test-environment.yaml
+  # Xamarin.Android (Smoke Test MSBuild - Mac-0)
+  - template: yaml-templates/run-msbuild-mac-tests.yaml
+    parameters:
+      job_name: mac_msbuild_tests_0
+      nunit_categories: '|| cat == SmokeTests'
 
-    - task: DownloadPipelineArtifact@1
-      inputs:
-        artifactName: $(TestAssembliesArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
-
-    - task: DownloadPipelineArtifact@1
-      inputs:
-        artifactName: $(NuGetArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
-
-    - template: yaml-templates/run-nunit-tests.yaml
-      parameters:
-        testRunTitle: Xamarin.Android.Build.Tests Legacy Smoke Tests - macOS
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/net472/Xamarin.Android.Build.Tests.dll
-        nunitConsoleExtraArgs: --where "cat == SmokeTests"
-        testResultsFile: TestResult-MSBuildTests-LegacySmokeMac-$(XA.Build.Configuration).xml
-
-    - template: yaml-templates/run-nunit-tests.yaml
-      parameters:
-        useDotNet: true
-        testRunTitle: Xamarin.Android.Build.Tests One .NET Smoke Tests - macOS
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/netcoreapp3.1/Xamarin.Android.Build.Tests.dll
-        dotNetTestExtraArgs: --filter "TestCategory = SmokeTests $(DotNetNUnitCategories)"
-        testResultsFile: TestResult-MSBuildTests-NETSmokeMac-$(XA.Build.Configuration).xml
-
-    - template: yaml-templates/upload-results.yaml
-      parameters:
-        artifactName: Test Results - MSBuild Smoke - macOS
-
-    - template: yaml-templates/fail-on-issue.yaml
-
-  # Xamarin.Android (Smoke Test MSBuild - Windows)
-  - job: msbuild_smoke_win
-    displayName: MSBuild - Windows
-    pool: $(VSEngWinVS2019)
-    timeoutInMinutes: 180
-    cancelTimeoutInMinutes: 5
-    variables:
-      VSINSTALLDIR: C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise
-    steps:
-    - template: yaml-templates\kill-processes.yaml
-
-    - template: yaml-templates\clean.yaml
-
-    - template: environment/win/vs-msbuild.v1.yml@yaml
-
-    - template: yaml-templates\setup-test-environment.yaml
-      parameters:
-        provisionExtraArgs: -vv PROVISIONATOR_VISUALSTUDIO_LOCATION="$(VSINSTALLDIR)" -f
-
-    - task: DownloadPipelineArtifact@1
-      inputs:
-        artifactName: $(TestAssembliesArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)
-
-    - task: DownloadPipelineArtifact@1
-      inputs:
-        artifactName: $(NuGetArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\$(NuGetArtifactName)
-
-    - template: yaml-templates\run-nunit-tests.yaml
-      parameters:
-        testRunTitle: Xamarin.Android.Build.Tests Legacy Smoke Tests - Windows
-        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\net472\Xamarin.Android.Build.Tests.dll
-        nunitConsoleExtraArgs: --where "cat == SmokeTests"
-        testResultsFile: TestResult-MSBuildTests-LegacySmokeWindows-$(XA.Build.Configuration).xml
-
-    - template: yaml-templates\run-nunit-tests.yaml
-      parameters:
-        useDotNet: true
-        testRunTitle: Xamarin.Android.Build.Tests One .NET Smoke Tests - Windows
-        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\netcoreapp3.1\Xamarin.Android.Build.Tests.dll
-        dotNetTestExtraArgs: --filter "TestCategory = SmokeTests $(DotNetNUnitCategories)"
-        testResultsFile: TestResult-MSBuildTests-NETSmokeWindows-$(XA.Build.Configuration).xml
-
-    - template: yaml-templates\upload-results.yaml
-      parameters:
-        artifactName: Test Results - MSBuild Smoke - Windows
-
-    - template: yaml-templates\fail-on-issue.yaml
+  # Xamarin.Android (Smoke Test MSBuild - Win-0)
+  - template: yaml-templates\run-msbuild-win-tests.yaml
+    parameters:
+      job_name: win_msbuild_tests_0
+      nunit_categories: '|| cat == SmokeTests'
 
   # Check - "Xamarin.Android (Smoke Test MSBuild Emulator - macOS)"
   - job: mac_msbuilddevice_tests
@@ -1008,7 +928,7 @@ stages:
       node_id: 1
       job_name: mac_dotnet_tests_1
       job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
+      nunit_categories: $(DotNetNUnitCategories)
       target_framework: 'netcoreapp3.1'
 
   - template: yaml-templates\run-msbuild-mac-tests.yaml
@@ -1016,7 +936,7 @@ stages:
       node_id: 2
       job_name: mac_dotnet_tests_2
       job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
+      nunit_categories: $(DotNetNUnitCategories)
       target_framework: 'netcoreapp3.1'
 
   - template: yaml-templates\run-msbuild-mac-tests.yaml
@@ -1024,7 +944,7 @@ stages:
       node_id: 3
       job_name: mac_dotnet_tests_3
       job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
+      nunit_categories: $(DotNetNUnitCategories)
       target_framework: 'netcoreapp3.1'
 
   # Xamarin.Android (Test MSBuild One .NET - Windows)
@@ -1033,7 +953,7 @@ stages:
       node_id: 1
       job_name: win_dotnet_tests_1
       job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
+      nunit_categories: $(DotNetNUnitCategories)
       target_framework: 'netcoreapp3.1'
 
   - template: yaml-templates\run-msbuild-win-tests.yaml
@@ -1041,7 +961,7 @@ stages:
       node_id: 2
       job_name: win_dotnet_tests_2
       job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
+      nunit_categories: $(DotNetNUnitCategories)
       target_framework: 'netcoreapp3.1'
 
   - template: yaml-templates\run-msbuild-win-tests.yaml
@@ -1049,7 +969,7 @@ stages:
       node_id: 3
       job_name: win_dotnet_tests_3
       job_suffix: One .NET
-      nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
+      nunit_categories: $(DotNetNUnitCategories)
       target_framework: 'netcoreapp3.1'
 
   # Check - "Xamarin.Android (Test MSBuild With Emulator - macOS)"
