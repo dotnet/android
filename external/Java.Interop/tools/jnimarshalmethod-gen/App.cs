@@ -484,8 +484,12 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 
 		static void AddRegisterNativeMembers (TypeBuilder dt, ParameterExpression targetType, List<Expression> registrationElements)
 		{
-			var args    = Expression.Parameter (typeof (JniNativeMethodRegistrationArguments),   "args");
+			if (Verbose) {
+				Console.Write ("Adding registration method for ");
+				ColorWriteLine ($"{dt.FullName}", ConsoleColor.Green);
+			}
 
+			var args    = Expression.Parameter (typeof (JniNativeMethodRegistrationArguments),   "args");
 			var body = Expression.Block (
 					new[]{targetType},
 					Expression.Assign (targetType, Expression.Call (Type_GetType, Expression.Constant (dt.FullName))),
@@ -495,6 +499,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 
 			var rb = dt.DefineMethod ("__RegisterNativeMembers",
 					System.Reflection.MethodAttributes.Public | System.Reflection.MethodAttributes.Static);
+			rb.SetParameters (typeof (JniNativeMethodRegistrationArguments));
 			rb.SetCustomAttribute (new CustomAttributeBuilder (typeof (JniAddNativeMethodRegistrationAttribute).GetConstructor (Type.EmptyTypes), new object[0]));
 #if _DUMP_REGISTER_NATIVE_MEMBERS
 			Console.WriteLine ($"## Dumping contents of `{dt.FullName}::__RegisterNativeMembers`: ");
