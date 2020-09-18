@@ -14,6 +14,7 @@
     <JNIEnvGenPath>$(BuildToolOutputFullPath)</JNIEnvGenPath>
     <LangVersion>8.0</LangVersion>
     <Nullable>enable</Nullable>
+    <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DefineConstants>DEBUG;$(DefineConstants)</DefineConstants>
