@@ -67,19 +67,39 @@ namespace Xamarin.Android.Tools.Bytecode
 			// Hide class if it isn't Public/Protected
 			if (klass.AccessFlags.IsPubliclyVisible () && !metadata.Visibility.IsPubliclyVisible ()) {
 
-				// Interfaces should be set to "package-private", which is "no visibility flags"
+				// Interfaces should be set to "package-private"
 				if (klass.AccessFlags.HasFlag (ClassAccessFlags.Interface)) {
-					Log.Debug ($"Kotlin: Setting interface {klass.ThisClass.Name.Value} to package-private");
-					klass.AccessFlags = (klass.AccessFlags ^ ClassAccessFlags.Public) & klass.AccessFlags;
-					klass.AccessFlags = (klass.AccessFlags ^ ClassAccessFlags.Protected) & klass.AccessFlags;
-					klass.AccessFlags = (klass.AccessFlags ^ ClassAccessFlags.Private) & klass.AccessFlags;
+					Log.Debug ($"Kotlin: Setting internal interface {klass.ThisClass.Name.Value} to package-private");
+					klass.AccessFlags = SetPackagePrivate (klass.AccessFlags);
+
+					foreach (var ic in klass.InnerClasses) {
+						Log.Debug ($"Kotlin: Setting nested type {ic.InnerClass.Name.Value} in an internal interface to package-private");
+						ic.InnerClassAccessFlags = SetPackagePrivate (ic.InnerClassAccessFlags);
+					}
+
 					return;
 				}
 
 				Log.Debug ($"Kotlin: Hiding internal class {klass.ThisClass.Name.Value}");
 				klass.AccessFlags = ClassAccessFlags.Private;
+
+				foreach (var ic in klass.InnerClasses) {
+					Log.Debug ($"Kotlin: Hiding nested internal type {ic.InnerClass.Name.Value}");
+					ic.InnerClassAccessFlags = ClassAccessFlags.Private;
+				}
+
 				return;
 			}
+		}
+
+		static ClassAccessFlags SetPackagePrivate (ClassAccessFlags flags)
+		{
+			// Package-private is stored as "no visibility flags"
+			flags = (flags ^ ClassAccessFlags.Public) & flags;
+			flags = (flags ^ ClassAccessFlags.Protected) & flags;
+			flags = (flags ^ ClassAccessFlags.Private) & flags;
+
+			return flags;
 		}
 
 		static void FixupJavaMethods (Methods methods)

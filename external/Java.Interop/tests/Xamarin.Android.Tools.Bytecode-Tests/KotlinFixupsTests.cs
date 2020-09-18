@@ -15,20 +15,25 @@ namespace Xamarin.Android.Tools.BytecodeTests
 		public void HideInternalClass ()
 		{
 			var klass = LoadClassFile ("InternalClass.class");
+			var inner_class = klass.InnerClasses.First ();
 
 			Assert.True (klass.AccessFlags.HasFlag (ClassAccessFlags.Public));
+			Assert.True (inner_class.InnerClassAccessFlags.HasFlag (ClassAccessFlags.Public));
 
 			KotlinFixups.Fixup (new [] { klass });
 
 			Assert.False (klass.AccessFlags.HasFlag (ClassAccessFlags.Public));
+			Assert.False (inner_class.InnerClassAccessFlags.HasFlag (ClassAccessFlags.Public));
 		}
 
 		[Test]
 		public void MakeInternalInterfacePackagePrivate ()
 		{
 			var klass = LoadClassFile ("InternalInterface.class");
+			var inner_class = klass.InnerClasses.First ();
 
 			Assert.True (klass.AccessFlags.HasFlag (ClassAccessFlags.Public));
+			Assert.True (inner_class.InnerClassAccessFlags.HasFlag (ClassAccessFlags.Public));
 
 			KotlinFixups.Fixup (new [] { klass });
 
@@ -36,6 +41,10 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.False (klass.AccessFlags.HasFlag (ClassAccessFlags.Public));
 			Assert.False (klass.AccessFlags.HasFlag (ClassAccessFlags.Protected));
 			Assert.False (klass.AccessFlags.HasFlag (ClassAccessFlags.Private));
+
+			Assert.False (inner_class.InnerClassAccessFlags.HasFlag (ClassAccessFlags.Public));
+			Assert.False (inner_class.InnerClassAccessFlags.HasFlag (ClassAccessFlags.Protected));
+			Assert.False (inner_class.InnerClassAccessFlags.HasFlag (ClassAccessFlags.Private));
 		}
 
 		[Test]
