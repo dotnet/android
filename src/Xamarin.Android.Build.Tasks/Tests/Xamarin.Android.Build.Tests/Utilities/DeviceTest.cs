@@ -29,7 +29,8 @@ namespace Xamarin.Android.Build.Tests
 				string deviceLog = Path.Combine (outputDir, "logcat-failed.log");
 				string remote = "/data/local/tmp/screenshot.png";
 				RunAdbCommand ($"shell screencap {remote}");
-				RunAdbCommand ($"logcat -d > \"{deviceLog}\"");
+				var output = RunAdbCommand ($"logcat -d");
+				File.WriteAllText (deviceLog, output);
 				RunAdbCommand ($"pull {remote} \"{local}\"");
 				RunAdbCommand ($"shell rm {remote}");
 				if (File.Exists (local)) {
