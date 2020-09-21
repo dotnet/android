@@ -180,7 +180,7 @@ namespace Xamarin.Android.Tasks {
 			
 			if (AdditionalResourceArchives != null) {
 				for (int i = AdditionalResourceArchives.Length - 1; i >= 0; i--) {
-					var flata = Path.Combine (WorkingDirectory, AdditionalResourceArchives [i].ItemSpec);
+					var flata = GetFullPath (AdditionalResourceArchives [i].ItemSpec);
 					if (Directory.Exists (flata)) {
 						foreach (var line in Directory.EnumerateFiles (flata, "*.flat", SearchOption.TopDirectoryOnly)) {
 							cmd.Add ("-R");
@@ -188,44 +188,45 @@ namespace Xamarin.Android.Tasks {
 						}
 					} else if (File.Exists (flata)) {
 						cmd.Add ("-R");
-						cmd.Add (GetFullPath (flata));
+						cmd.Add (flata);
 					} else {
-						LogDebugMessage ("Archive does not exist: " + flata);
+						LogDebugMessage ($"Archive does not exist: {flata}");
 					}
 				}
 			}
 
 			if (CompiledResourceFlatArchive != null) {
-				var flata = Path.Combine (WorkingDirectory, CompiledResourceFlatArchive.ItemSpec);
+				var flata = GetFullPath (CompiledResourceFlatArchive.ItemSpec);
 				if (Directory.Exists (flata)) {
 					foreach (var line in Directory.EnumerateFiles (flata, "*.flat", SearchOption.TopDirectoryOnly)) {
 						cmd.Add ("-R");
 						cmd.Add (GetFullPath (line));
 					}
 				} else if (File.Exists (flata)) {
-						cmd.Add ("-R");
-						cmd.Add (GetFullPath (flata));
+					cmd.Add ("-R");
+					cmd.Add (flata);
 				} else {
-					LogDebugMessage ("Archive does not exist: " + flata);
+					LogDebugMessage ($"Archive does not exist: {flata}");
 				}
 			}
 
 			if (CompiledResourceFlatFiles != null) {
-				List<ITaskItem> appFiles = new List<ITaskItem> ();
+				var appFiles = new List<string> ();
 				for (int i = CompiledResourceFlatFiles.Length - 1; i >= 0; i--) {
 					var file = CompiledResourceFlatFiles [i];
-					if (!string.IsNullOrEmpty (file.GetMetadata ("ResourceDirectory")) && File.Exists (file.ItemSpec)) {
+					var fullPath = GetFullPath (file.ItemSpec);
+					if (!File.Exists (fullPath)) {
+						LogDebugMessage ($"File does not exist: {fullPath}");
+					} else if (!string.IsNullOrEmpty (file.GetMetadata ("ResourceDirectory"))) {
 						cmd.Add ("-R");
-						cmd.Add (GetFullPath (file.ItemSpec));
+						cmd.Add (fullPath);
 					} else {
-						appFiles.Add(file);
+						appFiles.Add (fullPath);
 					}
 				}
-				foreach (var file in appFiles) {
-					if (File.Exists (file.ItemSpec)) {
-						cmd.Add ("-R");
-						cmd.Add (GetFullPath (file.ItemSpec));
-					}
+				foreach (var fullPath in appFiles) {
+					cmd.Add ("-R");
+					cmd.Add (fullPath);
 				}
 			}
 			
@@ -265,13 +266,13 @@ namespace Xamarin.Android.Tasks {
 				}
 			}
 
-			if (!string.IsNullOrWhiteSpace (AssetsDirectory)) {
-				var assetDir = AssetsDirectory.TrimEnd ('\\');
-				if (!Path.IsPathRooted (assetDir))
-					assetDir = Path.Combine (WorkingDirectory, assetDir);
-				if (!string.IsNullOrWhiteSpace (assetDir) && Directory.Exists (assetDir)) {
+			if (!string.IsNullOrEmpty (AssetsDirectory)) {
+				var assetDir = GetFullPath (AssetsDirectory.TrimEnd ('\\'));
+				if (Directory.Exists (assetDir)) {
 					cmd.Add ("-A");
-					cmd.Add (GetFullPath (assetDir));
+					cmd.Add (assetDir);
+				} else {
+					LogDebugMessage ($"asset directory did not exist: {assetDir}");
 				}
 			}
 			if (!string.IsNullOrEmpty (ProguardRuleOutput)) {
