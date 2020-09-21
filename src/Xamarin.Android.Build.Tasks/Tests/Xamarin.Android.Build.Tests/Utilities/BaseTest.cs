@@ -238,7 +238,7 @@ namespace Xamarin.Android.Build.Tests
 				});
 				proc.ErrorDataReceived += new DataReceivedEventHandler ((sender, e) => {
 					if (!string.IsNullOrEmpty (e.Data))
-						errorOutput.Append (Environment.NewLine + e.Data);
+						errorOutput.AppendLine (e.Data);
 				});
 
 				proc.Start ();
