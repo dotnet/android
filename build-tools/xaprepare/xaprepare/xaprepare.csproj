@@ -130,6 +130,7 @@
     <Compile Include="OperatingSystems\NoOS.cs" />
     <Compile Include="OperatingSystems\OS.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Scenarios\Scenario_DetermineApplicableTests.cs" />
     <Compile Include="Scenarios\Scenario_AndroidToolchain.cs" />
     <Compile Include="Scenarios\Scenario_PrepareExternal.cs" />
     <Compile Include="Scenarios\Scenario_PrepareExternalGitDependencies.cs" />
@@ -147,6 +148,7 @@
     <Compile Include="Steps\Step_InstallJetBrainsOpenJDK.cs" />
     <Compile Include="Steps\Step_InstallMonoRuntimes.cs" />
     <Compile Include="Steps\Step_PrepareExternal.cs" />
+    <Compile Include="Steps\Step_DetermineAzurePipelinesTestJobs.cs" />
     <Compile Include="Steps\Step_PrepareExternalGitDependencies.cs" />
     <Compile Include="Steps\Step_PrepareExternalJavaInterop.cs" />
     <Compile Include="Steps\Step_PrepareImageDependencies.cs" />
