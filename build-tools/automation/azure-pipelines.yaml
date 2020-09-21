@@ -386,106 +386,6 @@ stages:
 
     - template: yaml-templates\fail-on-issue.yaml
 
-- stage: finalize_installers
-  displayName: Finalize Installers
-  dependsOn: mac_build
-  condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(variables['XA.Commercial.Build'], 'true'), ne(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.DefinitionName'], 'Xamarin.Android'))
-  jobs:
-  # Check - "Xamarin.Android (Finalize Installers Notarize and Upload to Storage)"
-  - job: notarize_pkg_upload_storage
-    displayName: Notarize and Upload to Storage
-    pool: $(MacMojaveBuildPool)
-    timeoutInMinutes: 90
-    cancelTimeoutInMinutes: 1
-    workspace:
-      clean: all
-    variables:
-    - group: Xamarin Notarization
-    steps:
-    - checkout: self
-
-    - checkout: release_scripts
-      clean: true
-      persistCredentials: true
-
-    - template: install-certificates.yml@yaml
-      parameters:
-        DeveloperIdApplication: $(developer-id-application)
-        DeveloperIdInstaller: $(developer-id-installer)
-        IphoneDeveloper: $(iphone-developer)
-        MacDeveloper: $(mac-developer)
-
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: $(InstallerArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)/storage-artifacts
-
-    - powershell: |
-        $pkg = Get-ChildItem -Path "$(System.DefaultWorkingDirectory)/storage-artifacts/*" -Include *.pkg -File
-        if (![System.IO.File]::Exists($pkg)) {
-            throw [System.IO.FileNotFoundException] "Pkg File not found in $(System.DefaultWorkingDirectory)/storage-artifacts"
-        }
-        Write-Host "##vso[task.setvariable variable=XA.Unsigned.Pkg]$pkg"
-      displayName: set variable to pkg path
-
-    - template: productsign-pkg.yml@yaml
-      parameters:
-        UnsignedPkgPath: $(XA.Unsigned.Pkg)
-
-    - script: >
-        cd $(System.DefaultWorkingDirectory)/release-scripts &&
-        git checkout $(ReleaseScriptsBranch) &&
-        sudo xcode-select -s /Applications/$(NotarizationXcode) &&
-        ruby notarize.rb $(XA.Unsigned.Pkg) $(XamarinIdentifier) $(XamarinUserId) $(XamarinPassword) $(TeamID)
-      displayName: Notarize PKG
-
-    - script: xcrun stapler validate $(XA.Unsigned.Pkg)
-      displayName: validate notarized pkg
-
-    - template: upload-to-storage.yml@yaml
-      parameters:
-        BuildPackages: $(System.DefaultWorkingDirectory)/storage-artifacts
-        AzureContainerName: $(Azure.Container.Name)
-        AzureUploadLocation: $(Build.DefinitionName)/$(Build.BuildId)/$(Build.SourceBranchName)/$(Build.SourceVersion)
-        SourceDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
-
-    - script: cp $(System.DefaultWorkingDirectory)/storage-artifacts/*.pkg $(Build.ArtifactStagingDirectory)
-      displayName: copy notarized pkg
-
-    - task: PublishPipelineArtifact@1
-      displayName: upload notarized pkg
-      inputs:
-        artifactName: notarized-pkg
-        targetPath: $(Build.ArtifactStagingDirectory)
-
-    - template: uninstall-certificates/v1.yml@yaml
-      parameters:
-        HostedMacKeychainPassword: $(AzDO-OnPrem-KeychainPass)
-
-  # Check - "Xamarin.Android (Finalize Installers Queue Vsix Signing)"
-  - job: queue_vsix_signing
-    displayName: Queue Vsix Signing
-    dependsOn: notarize_pkg_upload_storage
-    pool: VSEng-MicroBuildVS2019
-    timeoutInMinutes: 90
-    cancelTimeoutInMinutes: 1
-    workspace:
-      clean: all
-    steps:
-
-    - task: JenkinsQueueJob@2
-      displayName: xamarin vsix codesign - run jenkins job
-      inputs:
-        serverEndpoint: $(Signing.Endpoint)
-        jobName: $(Signing.Job)
-        isParameterizedJob: true
-        jobParameters: |
-          REPO=$(Build.Repository.Name)
-          COMMIT=$(Build.SourceVersion)
-          SIGN_TYPE=Real
-          GITHUB_CONTEXT=$(GitHub.Artifacts.Context)
-          ENABLE_JAR_SIGNING=true
-
 - stage: smoke_tests
   displayName: Smoke Test
   dependsOn: mac_build
@@ -1186,3 +1086,103 @@ stages:
         displayName: upload designer binlogs
         artifactName: Test Results - Designer - Windows
         targetPath: $(Build.ArtifactStagingDirectory)/designer-binlogs
+
+- stage: finalize_installers
+  displayName: Finalize Installers
+  dependsOn: mac_build
+  condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(variables['XA.Commercial.Build'], 'true'), ne(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.DefinitionName'], 'Xamarin.Android'))
+  jobs:
+  # Check - "Xamarin.Android (Finalize Installers Notarize and Upload to Storage)"
+  - job: notarize_pkg_upload_storage
+    displayName: Notarize and Upload to Storage
+    pool: $(MacMojaveBuildPool)
+    timeoutInMinutes: 90
+    cancelTimeoutInMinutes: 1
+    workspace:
+      clean: all
+    variables:
+    - group: Xamarin Notarization
+    steps:
+    - checkout: self
+
+    - checkout: release_scripts
+      clean: true
+      persistCredentials: true
+
+    - template: install-certificates.yml@yaml
+      parameters:
+        DeveloperIdApplication: $(developer-id-application)
+        DeveloperIdInstaller: $(developer-id-installer)
+        IphoneDeveloper: $(iphone-developer)
+        MacDeveloper: $(mac-developer)
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: $(InstallerArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)/storage-artifacts
+
+    - powershell: |
+        $pkg = Get-ChildItem -Path "$(System.DefaultWorkingDirectory)/storage-artifacts/*" -Include *.pkg -File
+        if (![System.IO.File]::Exists($pkg)) {
+            throw [System.IO.FileNotFoundException] "Pkg File not found in $(System.DefaultWorkingDirectory)/storage-artifacts"
+        }
+        Write-Host "##vso[task.setvariable variable=XA.Unsigned.Pkg]$pkg"
+      displayName: set variable to pkg path
+
+    - template: productsign-pkg.yml@yaml
+      parameters:
+        UnsignedPkgPath: $(XA.Unsigned.Pkg)
+
+    - script: >
+        cd $(System.DefaultWorkingDirectory)/release-scripts &&
+        git checkout $(ReleaseScriptsBranch) &&
+        sudo xcode-select -s /Applications/$(NotarizationXcode) &&
+        ruby notarize.rb $(XA.Unsigned.Pkg) $(XamarinIdentifier) $(XamarinUserId) $(XamarinPassword) $(TeamID)
+      displayName: Notarize PKG
+
+    - script: xcrun stapler validate $(XA.Unsigned.Pkg)
+      displayName: validate notarized pkg
+
+    - template: upload-to-storage.yml@yaml
+      parameters:
+        BuildPackages: $(System.DefaultWorkingDirectory)/storage-artifacts
+        AzureContainerName: $(Azure.Container.Name)
+        AzureUploadLocation: $(Build.DefinitionName)/$(Build.BuildId)/$(Build.SourceBranchName)/$(Build.SourceVersion)
+        SourceDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
+
+    - script: cp $(System.DefaultWorkingDirectory)/storage-artifacts/*.pkg $(Build.ArtifactStagingDirectory)
+      displayName: copy notarized pkg
+
+    - task: PublishPipelineArtifact@1
+      displayName: upload notarized pkg
+      inputs:
+        artifactName: notarized-pkg
+        targetPath: $(Build.ArtifactStagingDirectory)
+
+    - template: uninstall-certificates/v1.yml@yaml
+      parameters:
+        HostedMacKeychainPassword: $(AzDO-OnPrem-KeychainPass)
+
+  # Check - "Xamarin.Android (Finalize Installers Queue Vsix Signing)"
+  - job: queue_vsix_signing
+    displayName: Queue Vsix Signing
+    dependsOn: notarize_pkg_upload_storage
+    pool: VSEng-MicroBuildVS2019
+    timeoutInMinutes: 90
+    cancelTimeoutInMinutes: 1
+    workspace:
+      clean: all
+    steps:
+
+    - task: JenkinsQueueJob@2
+      displayName: xamarin vsix codesign - run jenkins job
+      inputs:
+        serverEndpoint: $(Signing.Endpoint)
+        jobName: $(Signing.Job)
+        isParameterizedJob: true
+        jobParameters: |
+          REPO=$(Build.Repository.Name)
+          COMMIT=$(Build.SourceVersion)
+          SIGN_TYPE=Real
+          GITHUB_CONTEXT=$(GitHub.Artifacts.Context)
+          ENABLE_JAR_SIGNING=true
