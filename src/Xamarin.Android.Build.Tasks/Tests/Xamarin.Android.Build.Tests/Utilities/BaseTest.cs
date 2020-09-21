@@ -234,7 +234,7 @@ namespace Xamarin.Android.Build.Tests
 				proc.StartInfo = info;
 				proc.OutputDataReceived += new DataReceivedEventHandler ((sender, e) => {
 					if (!string.IsNullOrEmpty (e.Data))
-						standardOutput.Append (Environment.NewLine + e.Data);
+						standardOutput.AppendLine (e.Data);
 				});
 				proc.ErrorDataReceived += new DataReceivedEventHandler ((sender, e) => {
 					if (!string.IsNullOrEmpty (e.Data))
@@ -560,4 +560,3 @@ namespace Xamarin.Android.Build.Tests
 		}
 	}
 }
-
