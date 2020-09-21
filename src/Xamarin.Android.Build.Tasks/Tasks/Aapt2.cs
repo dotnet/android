@@ -76,7 +76,7 @@ namespace Xamarin.Android.Tasks {
 			// Must register on the UI thread!
 			// We don't want to use up ALL the available cores especially when 
 			// running in the IDE. So lets cap it at DefaultMaxAapt2Daemons (6).
-			int maxInstances = Math.Min (ProcessorCount - 1, DefaultMaxAapt2Daemons);
+			int maxInstances = Math.Min (Math.Max (1, ProcessorCount - 1), DefaultMaxAapt2Daemons);
 			if (DaemonMaxInstanceCount == 0)
 				DaemonMaxInstanceCount = maxInstances;
 			else
