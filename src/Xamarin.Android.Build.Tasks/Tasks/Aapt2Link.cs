@@ -254,12 +254,8 @@ namespace Xamarin.Android.Tasks {
 			if (ProtobufFormat)
 				cmd.Add ("--proto-format");
 
-			var extraArgsExpanded = ExpandString (ExtraArgs);
-			if (extraArgsExpanded != ExtraArgs)
-				LogDebugMessage ("  ExtraArgs expanded: {0}", extraArgsExpanded);
-
-			if (!string.IsNullOrWhiteSpace (extraArgsExpanded)) {
-				foreach (Match match in exraArgSplitRegEx.Matches (extraArgsExpanded)) {
+			if (!string.IsNullOrWhiteSpace (ExtraArgs)) {
+				foreach (Match match in exraArgSplitRegEx.Matches (ExtraArgs)) {
 					string value = match.Value.Trim (' ', '"', '\'');
 					if (!string.IsNullOrEmpty (value))
 						cmd.Add (value);
@@ -300,24 +296,6 @@ namespace Xamarin.Android.Tasks {
 			cmd.Add (GetFullPath (currentResourceOutputFile));
 
 			return cmd.ToArray ();
-		}
-
-		string ExpandString (string s)
-		{
-			if (s == null)
-				return null;
-			int start = 0;
-			int st = s.IndexOf ("${library.imports:", start, StringComparison.Ordinal);
-			if (st >= 0) {
-				int ed = s.IndexOf ('}', st);
-				if (ed < 0)
-					return s.Substring (0, st + 1) + ExpandString (s.Substring (st + 1));
-				int ast = st + "${library.imports:".Length;
-				string aname = s.Substring (ast, ed - ast);
-				return s.Substring (0, st) + Path.Combine (OutputImportDirectory, assemblyMap.GetLibraryImportDirectoryNameForAssembly (aname), ImportsDirectory) + Path.DirectorySeparatorChar + ExpandString (s.Substring (ed + 1));
-			}
-			else
-				return s;
 		}
 
 		bool ExecuteForAbi (string [] cmd, string currentResourceOutputFile)
