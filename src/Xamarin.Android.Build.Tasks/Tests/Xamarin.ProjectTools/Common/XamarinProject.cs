@@ -78,8 +78,8 @@ namespace Xamarin.ProjectTools
 			Packages = new List<Package> ();
 			Imports = new List<Import> ();
 
-			//NOTE: for SDK-style projects, we need $(Configuration) set before Microsoft.NET.Sdk.targets
-			if (Builder.UseDotNet) {
+			if (UseDotNet) {
+				//NOTE: for SDK-style projects, we need $(Configuration) set before Microsoft.NET.Sdk.targets
 				Imports.Add (new Import ("Directory.Build.props") {
 					TextContent = () =>
 $@"<Project>
@@ -88,20 +88,29 @@ $@"<Project>
 	</PropertyGroup>
 </Project>"
 				});
-			} else {
-				SetProperty (KnownProperties.Configuration, () => Configuration);
-			}
 
-			// Feeds only needed for .NET 5+
-			if (SetExtraNuGetConfigSources) {
+				// Feeds only needed for .NET 5+
 				ExtraNuGetConfigSources = new List<string> {
 					Path.Combine (XABuildPaths.BuildOutputDirectory, "nupkgs"),
 					"https://dnceng.pkgs.visualstudio.com/public/_packaging/dotnet5/nuget/v3/index.json",
 				};
+			} else {
+				SetProperty (KnownProperties.Configuration, () => Configuration);
 			}
 		}
 
-		protected virtual bool SetExtraNuGetConfigSources => Builder.UseDotNet;
+		/// <summary>
+		/// Adds a reference to another project. The optional include path uses a relative path and ProjectName if omitted.
+		/// </summary>
+		public void AddReference (XamarinProject other, string include = null)
+		{
+			if (string.IsNullOrEmpty (include)) {
+				include = $"..\\{other.ProjectName}\\{other.ProjectName}.csproj";
+			}
+			References.Add (new BuildItem.ProjectReference (include, other.ProjectName, other.ProjectGuid));
+		}
+
+		protected virtual bool UseDotNet => Builder.UseDotNet;
 
 		public string GetProperty (string name)
 		{

@@ -29,6 +29,10 @@ namespace Xamarin.ProjectTools
 		/// This passes /p:BuildingInsideVisualStudio=True, command-line to MSBuild
 		/// </summary>
 		public bool BuildingInsideVisualStudio { get; set; } = true;
+		/// <summary>
+		/// Passes /m:N to MSBuild, defaults to null to omit the /m parameter completely.
+		/// </summary>
+		public int? MaxCpuCount { get; set; }
 		public LoggerVerbosity Verbosity { get; set; }
 		public IEnumerable<string> LastBuildOutput {
 			get {
@@ -280,6 +284,14 @@ namespace Xamarin.ProjectTools
 					QuoteFileName (Path.Combine (XABuildPaths.TestOutputDirectory, projectOrSolution)), target, logger);
 			if (AutomaticNuGetRestore && restore && !UseDotNet) {
 				args.Append (" /restore");
+			}
+			if (MaxCpuCount != null) {
+				if (!string.Equals (Path.GetFileNameWithoutExtension (psi.FileName), "xabuild", StringComparison.OrdinalIgnoreCase)) {
+					args.Append ($" /maxCpuCount:{MaxCpuCount}");
+					args.Append (" /nodeReuse:false"); // Disable the MSBuild daemon
+				} else {
+					Console.WriteLine ($"Ignoring MaxCpuCount={MaxCpuCount}, running with xabuild.");
+				}
 			}
 			args.Append ($" @\"{responseFile}\"");
 			using (var sw = new StreamWriter (responseFile, append: false, encoding: Encoding.UTF8)) {

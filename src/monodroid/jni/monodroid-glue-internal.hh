@@ -139,7 +139,7 @@ namespace xamarin::android::internal
 	private:
 		unsigned int convert_dl_flags (int flags);
 #if defined (WINDOWS) || defined (APPLE_OS_X)
-		static const char* get_my_location ();
+		static const char* get_my_location (bool remove_file_name = true);
 #endif  // defined(WINDOWS) || defined(APPLE_OS_X)
 		static void* monodroid_dlopen (const char *name, int flags, char **err, void *user_data);
 		static void* monodroid_dlsym (void *handle, const char *name, char **err, void *user_data);

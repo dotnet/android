@@ -280,7 +280,7 @@ namespace Android.Runtime {
 			}
 		}
 
-		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr _monodroid_timezone_get_default_id ();
 
 		// This is invoked by
@@ -301,7 +301,7 @@ namespace Android.Runtime {
 		// These are invoked by
 		// System.dll!System.AndroidPlatform.getifaddrs
 		// DO NOT REMOVE
-		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		static extern int _monodroid_getifaddrs (out IntPtr ifap);
 
 		static int GetInterfaceAddresses (out IntPtr ifap)
@@ -312,7 +312,7 @@ namespace Android.Runtime {
 		// These are invoked by
 		// System.dll!System.AndroidPlatform.freeifaddrs
 		// DO NOT REMOVE
-		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
                 static extern void _monodroid_freeifaddrs (IntPtr ifap);
 
 		static void FreeInterfaceAddresses (IntPtr ifap)
@@ -320,7 +320,7 @@ namespace Android.Runtime {
 			_monodroid_freeifaddrs (ifap);
 		}
 
-		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		static extern void _monodroid_detect_cpu_and_architecture (ref ushort built_for_cpu, ref ushort running_on_cpu, ref byte is64bit);
 
 		static void DetectCPUAndArchitecture (out ushort builtForCPU, out ushort runningOnCPU, out bool is64bit)

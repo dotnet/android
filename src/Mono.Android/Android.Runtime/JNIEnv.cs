@@ -66,16 +66,16 @@ namespace Android.Runtime {
 
 		internal    static      AndroidValueManager? AndroidValueManager;
 
-		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		extern static void monodroid_log (LogLevel level, LogCategories category, string message);
 
-		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		internal extern static IntPtr monodroid_timing_start (string? message);
 
-		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		internal extern static void monodroid_timing_stop (IntPtr sequence, string? message);
 
-		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		internal extern static void monodroid_free (IntPtr ptr);
 
 		public static IntPtr Handle {
@@ -296,7 +296,7 @@ namespace Android.Runtime {
 			}
 		}
 
-		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		extern static void _monodroid_gc_wait_for_bridge_processing ();
 
 #pragma warning disable CS0649 // Field is never assigned to.  This field is assigned from monodroid-glue.cc.
@@ -310,7 +310,7 @@ namespace Android.Runtime {
 			_monodroid_gc_wait_for_bridge_processing ();
 		}
 
-		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		extern static IntPtr _monodroid_get_identity_hash_code (IntPtr env, IntPtr value);
 
 		internal static Func<IntPtr, IntPtr>? IdentityHash;
@@ -597,25 +597,25 @@ namespace Android.Runtime {
 			}
 		}
 
-		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int _monodroid_gref_log (string message);
 
-		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int _monodroid_gref_log_new (IntPtr curHandle, byte curType, IntPtr newHandle, byte newType, string? threadName, int threadId, [In] StringBuilder? from, int from_writable);
 
-		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void _monodroid_gref_log_delete (IntPtr handle, byte type, string? threadName, int threadId, [In] StringBuilder? from, int from_writable);
 
-		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void _monodroid_weak_gref_new (IntPtr curHandle, byte curType, IntPtr newHandle, byte newType, string? threadName, int threadId, [In] StringBuilder? from, int from_writable);
 
-		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void _monodroid_weak_gref_delete (IntPtr handle, byte type, string? threadName, int threadId, [In] StringBuilder? from, int from_writable);
 
-		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int _monodroid_lref_log_new (int lrefc, IntPtr handle, byte type, string? threadName, int threadId, [In] StringBuilder from, int from_writable);
 
-		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void _monodroid_lref_log_delete (int lrefc, IntPtr handle, byte type, string? threadName, int threadId, [In] StringBuilder from, int from_writable);
 
 		public static IntPtr NewGlobalRef (IntPtr jobject)

@@ -55,11 +55,7 @@ namespace Xamarin.Android.Build.Tests
 			AssertHasDevices ();
 
 			XASdkProject proj;
-			proj = new XASdkProject {
-				//TODO: targetSdkVersion="30" causes a crash on startup in .NET 5
-				MinSdkVersion = null,
-				TargetSdkVersion = null,
-			};
+			proj = new XASdkProject ();
 			proj.SetRuntimeIdentifier (DeviceAbi);
 
 			var relativeProjDir = Path.Combine ("temp", TestName);

@@ -33,4 +33,14 @@
     />
   </ItemGroup>
 
+  <!-- Automatically supply project capabilities for IDE use -->
+  <ItemGroup>
+    <ProjectCapability Include="Mobile" />
+    <ProjectCapability Include="Android" />
+    <ProjectCapability Include="AndroidApplication" Condition="$(AndroidApplication)" />
+    
+    <!-- Conflicts with our targets generator in VS+CPS: See https://work.azdo.io/1112733 -->
+    <ProjectCapability Remove="LaunchProfiles" />
+  </ItemGroup>
+
 </Project>

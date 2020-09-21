@@ -2,53 +2,29 @@
 
   <PropertyGroup>
     <MicrosoftAndroidSdkTargetsImported>true</MicrosoftAndroidSdkTargetsImported>
-    <_XamarinAndroidBuildTasksAssembly>$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Build.Tasks.dll</_XamarinAndroidBuildTasksAssembly>
+    <_XamarinAndroidBuildTasksAssembly>..\tools\Xamarin.Android.Build.Tasks.dll</_XamarinAndroidBuildTasksAssembly>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <AndroidApplication Condition=" '$(AndroidApplication)' == '' And '$(OutputType)' == 'Exe' ">true</AndroidApplication>
-    <AndroidApplication Condition=" '$(AndroidApplication)' == '' ">false</AndroidApplication>
-    <SelfContained Condition=" '$(SelfContained)' == '' And '$(AndroidApplication)' == 'true' ">true</SelfContained>
-    <PublishTrimmed Condition=" '$(AndroidLinkMode)' == 'SdkOnly' or '$(AndroidLinkMode)' == 'Full' ">true</PublishTrimmed>
-    <!-- Prefer $(RuntimeIdentifiers) plural -->
-    <RuntimeIdentifiers Condition=" '$(RuntimeIdentifier)' == '' And '$(RuntimeIdentifiers)' == '' And '$(AndroidApplication)' == 'true' ">android.21-arm64;android.21-x86</RuntimeIdentifiers>
-    <RuntimeIdentifier  Condition=" '$(RuntimeIdentifiers)' != '' And '$(RuntimeIdentifier)' != '' " />
-    <AndroidManifest Condition=" '$(AndroidManifest)' == '' And '$(AndroidApplication)' == 'true' ">Properties\AndroidManifest.xml</AndroidManifest>
-    <!-- We don't ever need a `static void Main` method, so switch to Library here-->
-    <OutputType Condition=" '$(OutputType)' == 'Exe' ">Library</OutputType>
-  </PropertyGroup>
-
+  <!-- Default property settings, imported before Microsoft.NET.Sdk -->
+  <Import Project="Microsoft.Android.Sdk.DefaultProperties.props" />
   <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.targets" />
   <PropertyGroup>
     <TargetPlatformSupported Condition=" '$(TargetPlatformIdentifier)' == 'Android' ">true</TargetPlatformSupported>
   </PropertyGroup>
 
-  <!-- Default item includes (globs and implicit references) -->
-  <Import Project="Microsoft.Android.Sdk.DefaultItems.targets" />
-  <Import Project="Microsoft.Android.Sdk.SupportedPlatforms.props" />
   <!-- Build ordering, should be imported before Xamarin.Android.Common.targets -->
-  <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.BuildOrder.targets" />
+  <Import Project="Microsoft.Android.Sdk.BuildOrder.targets" />
 
-  <Import Project="$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Common.targets" />
-  <Import Project="$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Bindings.Core.targets" />
-  <Import Project="$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Bindings.ClassParse.targets" />
-  <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.AssemblyResolution.targets" />
-  <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.Linker.targets" />
-  <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.NuGet.targets" />
-  <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.Publish.targets" />
-  <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.Tooling.targets" />
-
-  <!-- Automatically supply project capabilities for IDE use -->
-  <ItemGroup>
-    <ProjectCapability Include="Mobile" />
-    <ProjectCapability Include="Android" />
-    <ProjectCapability Include="AndroidApplication" Condition="$(AndroidApplication)" />
-    
-    <!-- Conflicts with our targets generator in VS+CPS: See https://work.azdo.io/1112733 -->
-    <ProjectCapability Remove="LaunchProfiles" />
-  </ItemGroup>
-
-  <!-- NOTE: We have to replace the Run target after Microsoft.NET.Sdk.targets are imported -->
+  <Import Project="..\tools\Xamarin.Android.Common.targets" />
+  <Import Project="..\tools\Xamarin.Android.Bindings.Core.targets" />
+  <Import Project="..\tools\Xamarin.Android.Bindings.ClassParse.targets" />
   <Import Project="Microsoft.Android.Sdk.Application.targets" Condition=" '$(AndroidApplication)' == 'true' " />
+  <Import Project="Microsoft.Android.Sdk.AssemblyResolution.targets" />
+  <Import Project="Microsoft.Android.Sdk.DefaultItems.targets" />
+  <Import Project="Microsoft.Android.Sdk.ILLink.targets" />
+  <Import Project="Microsoft.Android.Sdk.NuGet.targets" />
+  <Import Project="Microsoft.Android.Sdk.Publish.targets" />
+  <Import Project="Microsoft.Android.Sdk.SupportedPlatforms.props" />
+  <Import Project="Microsoft.Android.Sdk.Tooling.targets" />
 
 </Project>
