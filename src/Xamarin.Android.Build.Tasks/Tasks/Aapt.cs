@@ -341,35 +341,13 @@ namespace Xamarin.Android.Tasks
 			if (!string.IsNullOrEmpty (ResourceSymbolsTextFileDirectory))
 				cmd.AppendSwitchIfNotNull ("--output-text-symbols ", ResourceSymbolsTextFileDirectory);
 
-			var extraArgsExpanded = ExpandString (ExtraArgs);
-			if (extraArgsExpanded != ExtraArgs)
-				LogDebugMessage ("  ExtraArgs expanded: {0}", extraArgsExpanded);
-
-			if (!string.IsNullOrWhiteSpace (extraArgsExpanded))
-				cmd.AppendSwitch (extraArgsExpanded);
+			if (!string.IsNullOrWhiteSpace (ExtraArgs))
+				cmd.AppendSwitch (ExtraArgs);
 
 			if (!AndroidUseLatestPlatformSdk)
 				cmd.AppendSwitchIfNotNull ("--max-res-version ", ApiLevel);
 
 			return cmd.ToString ();
-		}
-
-		string ExpandString (string s)
-		{
-			if (s == null)
-				return null;
-			int start = 0;
-			int st = s.IndexOf ("${library.imports:", start, StringComparison.Ordinal);
-			if (st >= 0) {
-				int ed = s.IndexOf ('}', st);
-				if (ed < 0)
-					return s.Substring (0, st + 1) + ExpandString (s.Substring (st + 1));
-				int ast = st + "${library.imports:".Length;
-				string aname = s.Substring (ast, ed - ast);
-				return s.Substring (0, st) + Path.Combine (OutputImportDirectory, assemblyMap.GetLibraryImportDirectoryNameForAssembly (aname), ImportsDirectory) + Path.DirectorySeparatorChar + ExpandString (s.Substring (ed + 1));
-			}
-			else
-				return s;
 		}
 
 		protected string GenerateFullPathToTool ()
