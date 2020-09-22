@@ -54,9 +54,9 @@ namespace Xamarin.Android.Prepare
 				}
 			}
 
-			foreach (var testArea in testAreas.Distinct ()) {
-				Log.MessageLine ($"##vso[task.setvariable variable={testArea};isOutput=true]True");
-			}
+			//foreach (var testArea in testAreas.Distinct ()) {
+			//	Log.MessageLine ($"##vso[task.setvariable variable={testArea};isOutput=true]True");
+			//}
 
 			return true;
 		}
