@@ -41,6 +41,7 @@ namespace Xamarin.Android.Prepare
 
 			var testAreas = new List<string> ();
 			foreach (string file in filesChanged) {
+				Log.InfoLine ($"Detected change in file: '{file}'.");
 				// Compare files changed against common areas requiring additional test scope.
 				// MSBuild: Runs all legacy and One .NET Xamarin.Android.Build.Task tests, as well as designer tests.
 				// Mono: Runs all BCL and timezone unit tests, as well as designer tests.
@@ -51,6 +52,8 @@ namespace Xamarin.Android.Prepare
 					testAreas.Add ("MSBuild");
 				} else if (file.Contains ("Xamarin.Android.Build.Tasks")) {
 					testAreas.Add ("MSBuild");
+				} else if (file.Contains ("monodroid")) {
+					testAreas.Add ("Mono");
 				}
 			}
 

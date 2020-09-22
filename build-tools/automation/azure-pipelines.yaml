@@ -166,6 +166,7 @@ stages:
 
     - script: mono $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/xaprepare/xaprepare/bin/$(XA.Build.Configuration)/xaprepare.exe --s=DetermineApplicableTests --no-emoji --run-mode=CI
       name: TestConditions
+      condition: and(succeeded(), eq(variables['Build.DefinitionName'], 'Xamarin.Android-PR'))
 
     # Clone monodroid wth submodules, but disregard the unused xamarin-android submodule.
     - checkout: monodroid
