@@ -12,6 +12,12 @@ _ResolveAssemblies MSBuild target.
 
   <UsingTask TaskName="Xamarin.Android.Tasks.ProcessAssemblies" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
+  <PropertyGroup Condition=" '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true' ">
+    <OutputPath Condition=" '$(_OuterOutputPath)' != '' ">$(_OuterOutputPath)</OutputPath>
+    <OutDir     Condition=" '$(_OuterOutputPath)' != '' ">$(_OuterOutputPath)</OutDir>
+    <PublishDir>$(OutputPath)</PublishDir>
+  </PropertyGroup>
+
   <Target Name="_ComputeFilesToPublishForRuntimeIdentifiers"
       DependsOnTargets="_FixupIntermediateAssembly;ResolveReferences;ComputeFilesToPublish"
       Returns="@(ResolvedFileToPublish)">
@@ -34,6 +40,7 @@ _ResolveAssemblies MSBuild target.
       <_AdditionalProperties>
         _ComputeFilesToPublishForRuntimeIdentifiers=true;
         _OuterIntermediateAssembly=@(IntermediateAssembly);
+        _OuterOutputPath=$(OutputPath);
         _ProguardProjectConfiguration=$(_ProguardProjectConfiguration);
       </_AdditionalProperties>
     </PropertyGroup>

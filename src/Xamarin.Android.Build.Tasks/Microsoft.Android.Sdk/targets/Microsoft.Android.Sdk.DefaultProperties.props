@@ -13,6 +13,7 @@
     <AndroidEnableSGenConcurrent Condition=" '$(AndroidEnableSGenConcurrent)' == '' ">true</AndroidEnableSGenConcurrent>
     <AndroidHttpClientHandlerType Condition=" '$(AndroidHttpClientHandlerType)' == '' ">Xamarin.Android.Net.AndroidClientHandler</AndroidHttpClientHandlerType>
     <AndroidUseIntermediateDesignerFile Condition=" '$(AndroidUseIntermediateDesignerFile)' == '' ">true</AndroidUseIntermediateDesignerFile>
+    <GenerateDependencyFile Condition=" '$(GenerateDependencyFile)' == '' ">false</GenerateDependencyFile>
     <!-- jar2xml is not supported -->
     <AndroidClassParser>class-parse</AndroidClassParser>
     <!-- mono-symbolicate is not supported -->
@@ -42,6 +43,7 @@
     <OutputType Condition=" '$(OutputType)' == 'Exe' ">Library</OutputType>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(AndroidApplication)' == 'true' ">
+    <ProduceReferenceAssembly Condition=" '$(ProduceReferenceAssembly)' == '' ">false</ProduceReferenceAssembly>
     <SelfContained Condition=" '$(SelfContained)' == '' ">true</SelfContained>
     <PublishTrimmed Condition=" '$(AndroidLinkMode)' == 'SdkOnly' or '$(AndroidLinkMode)' == 'Full' ">true</PublishTrimmed>
     <!-- Prefer $(RuntimeIdentifiers) plural -->
