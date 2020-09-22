@@ -43,23 +43,53 @@ namespace Xamarin.Android.Prepare
 			foreach (string file in filesChanged) {
 				Log.InfoLine ($"Detected change in file: '{file}'.");
 				// Compare files changed against common areas requiring additional test scope.
-				// MSBuild: Runs all legacy and One .NET Xamarin.Android.Build.Task tests, as well as designer tests.
-				// Mono: Runs all BCL and timezone unit tests, as well as designer tests.
+				// MSBuild: Runs all legacy and One .NET Xamarin.Android.Build.Task tests
+				// MSBuildDevice: Runs all MSBuildDeviceIntegration tests
+				// BCL: Runs BCL tests on emulator
+				// TimeZone: Runs timezone unit tests on emulator
+				// Designer: Runs designer integration tests
 				if (file == ".external") {
-					testAreas.Add ("Mono");
 					testAreas.Add ("MSBuild");
-				} else if (file.Contains ("external/Java.Interop")) {
-					testAreas.Add ("MSBuild");
-				} else if (file.Contains ("Xamarin.Android.Build.Tasks")) {
-					testAreas.Add ("MSBuild");
-				} else if (file.Contains ("monodroid")) {
-					testAreas.Add ("Mono");
+					testAreas.Add ("MSBuildDevice");
+					testAreas.Add ("BCL");
+					testAreas.Add ("TimeZone");
+					testAreas.Add ("Designer");
 				}
+
+				if (file.Contains ("external/Java.Interop")) {
+					testAreas.Add ("MSBuild");
+					testAreas.Add ("MSBuildDevice");
+					testAreas.Add ("Designer");
+				}
+
+				if (file.Contains ("src/Xamarin.Android.Build.Tasks")) {
+					testAreas.Add ("MSBuild");
+					testAreas.Add ("MSBuildDevice");
+					testAreas.Add ("Designer");
+				}
+
+				if (file.Contains ("src/monodroid")) {
+					testAreas.Add ("Designer");
+				}
+
+				if (file.Contains ("src/Xamarin.Android.Build.Tasks")) {
+					testAreas.Add ("MSBuild");
+					testAreas.Add ("MSBuildDevice");
+					testAreas.Add ("Designer");
+				}
+
+				if (file.Contains ("tests/BCL-Tests")) {
+					testAreas.Add ("BCL");
+				}
+
+				if (file.Contains ("tests/MSBuildDeviceIntegration")) {
+					testAreas.Add ("MSBuildDevice");
+					testAreas.Add ("TimeZone");
+				}
+
 			}
 
-			foreach (var testArea in testAreas.Distinct ()) {
-				Log.MessageLine ($"##vso[task.setvariable variable={testArea};isOutput=true]True");
-			}
+			Log.MessageLine ($"##vso[task.setvariable variable=TestAreas;isOutput=true]{string.Join (",", testAreas.Distinct ())}");
 
 			return true;
 		}

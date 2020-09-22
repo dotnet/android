@@ -731,7 +731,7 @@ stages:
       job_name: mac_msbuild_tests_1
       job_suffix: Legacy
       nunit_categories: '&& cat != SmokeTests'
-      condition: or(eq(variables['RunAllTests'], true), eq(stageDependencies.mac_build.mac_build_create_installers.outputs['TestConditions.MSBuild'], 'True'))
+      condition: or(eq(variables['RunAllTests'], true), in(stageDependencies.mac_build.mac_build_create_installers.outputs['TestConditions.TestAreas'], 'MSBuild'))
 
   - template: yaml-templates\run-msbuild-mac-tests.yaml
     parameters:
@@ -740,7 +740,7 @@ stages:
       job_suffix: Legacy
       nunit_categories: '&& cat != SmokeTests'
       run_extra_tests: true
-      condition: or(eq(variables['RunAllTests'], true), eq(stageDependencies.mac_build.mac_build_create_installers.outputs['TestConditions.MSBuild'], 'True'))
+      condition: or(eq(variables['RunAllTests'], true), in(stageDependencies.mac_build.mac_build_create_installers.outputs['TestConditions.TestAreas'], 'MSBuild'))
 
   - template: yaml-templates\run-msbuild-mac-tests.yaml
     parameters:
@@ -748,7 +748,7 @@ stages:
       job_name: mac_msbuild_tests_3
       job_suffix: Legacy
       nunit_categories: '&& cat != SmokeTests'
-      condition: or(eq(variables['RunAllTests'], true), eq(stageDependencies.mac_build.mac_build_create_installers.outputs['TestConditions.MSBuild'], 'True'))
+      condition: or(eq(variables['RunAllTests'], true), in(stageDependencies.mac_build.mac_build_create_installers.outputs['TestConditions.TestAreas'], 'MSBuild'))
 
   # Xamarin.Android (Test MSBuild Legacy - Windows)
   - template: yaml-templates\run-msbuild-win-tests.yaml
@@ -757,7 +757,7 @@ stages:
       job_name: win_msbuild_tests_1
       job_suffix: Legacy
       nunit_categories: '&& cat != SmokeTests'
-      condition: or(eq(variables['RunAllTests'], true), eq(stageDependencies.mac_build.mac_build_create_installers.outputs['TestConditions.MSBuild'], 'True'))
+      condition: or(eq(variables['RunAllTests'], true), in(stageDependencies.mac_build.mac_build_create_installers.outputs['TestConditions.TestAreas'], 'MSBuild'))
 
   - template: yaml-templates\run-msbuild-win-tests.yaml
     parameters:
@@ -766,7 +766,7 @@ stages:
       job_suffix: Legacy
       nunit_categories: '&& cat != SmokeTests'
       run_extra_tests: true
-      condition: or(eq(variables['RunAllTests'], true), eq(stageDependencies.mac_build.mac_build_create_installers.outputs['TestConditions.MSBuild'], 'True'))
+      condition: or(eq(variables['RunAllTests'], true), in(stageDependencies.mac_build.mac_build_create_installers.outputs['TestConditions.TestAreas'], 'MSBuild'))
 
   - template: yaml-templates\run-msbuild-win-tests.yaml
     parameters:
@@ -774,13 +774,13 @@ stages:
       job_name: win_msbuild_tests_3
       job_suffix: Legacy
       nunit_categories: '&& cat != SmokeTests'
-      condition: or(eq(variables['RunAllTests'], true), eq(stageDependencies.mac_build.mac_build_create_installers.outputs['TestConditions.MSBuild'], 'True'))
+      condition: or(eq(variables['RunAllTests'], true), in(stageDependencies.mac_build.mac_build_create_installers.outputs['TestConditions.TestAreas'], 'MSBuild'))
 
   # Check - "Xamarin.Android (Test MSBuild With Emulator - macOS)"
   - job: mac_msbuilddevice_tests
     displayName: MSBuild With Emulator - macOS
     pool: $(HostedMac)
-    condition: or(eq(variables['RunAllTests'], true), eq(stageDependencies.mac_build.mac_build_create_installers.outputs['TestConditions.MSBuild'], 'True'))
+    condition: or(eq(variables['RunAllTests'], true), in(stageDependencies.mac_build.mac_build_create_installers.outputs['TestConditions.TestAreas'], 'MSBuildDevice'))
     timeoutInMinutes: 150
     cancelTimeoutInMinutes: 5
     workspace:
@@ -840,7 +840,7 @@ stages:
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories)
       target_framework: 'netcoreapp3.1'
-      condition: or(eq(variables['RunAllTests'], true), eq(stageDependencies.mac_build.mac_build_create_installers.outputs['TestConditions.MSBuild'], 'True'))
+      condition: or(eq(variables['RunAllTests'], true), in(stageDependencies.mac_build.mac_build_create_installers.outputs['TestConditions.TestAreas'], 'MSBuild'))
 
   - template: yaml-templates\run-msbuild-mac-tests.yaml
     parameters:
@@ -849,7 +849,7 @@ stages:
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories)
       target_framework: 'netcoreapp3.1'
-      condition: or(eq(variables['RunAllTests'], true), eq(stageDependencies.mac_build.mac_build_create_installers.outputs['TestConditions.MSBuild'], 'True'))
+      condition: or(eq(variables['RunAllTests'], true), in(stageDependencies.mac_build.mac_build_create_installers.outputs['TestConditions.TestAreas'], 'MSBuild'))
 
   - template: yaml-templates\run-msbuild-mac-tests.yaml
     parameters:
@@ -858,7 +858,7 @@ stages:
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories)
       target_framework: 'netcoreapp3.1'
-      condition: or(eq(variables['RunAllTests'], true), eq(stageDependencies.mac_build.mac_build_create_installers.outputs['TestConditions.MSBuild'], 'True'))
+      condition: or(eq(variables['RunAllTests'], true), in(stageDependencies.mac_build.mac_build_create_installers.outputs['TestConditions.TestAreas'], 'MSBuild'))
 
   # Xamarin.Android (Test MSBuild One .NET - Windows)
   - template: yaml-templates\run-msbuild-win-tests.yaml
@@ -868,7 +868,7 @@ stages:
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories)
       target_framework: 'netcoreapp3.1'
-      condition: or(eq(variables['RunAllTests'], true), eq(stageDependencies.mac_build.mac_build_create_installers.outputs['TestConditions.MSBuild'], 'True'))
+      condition: or(eq(variables['RunAllTests'], true), in(stageDependencies.mac_build.mac_build_create_installers.outputs['TestConditions.TestAreas'], 'MSBuild'))
 
   - template: yaml-templates\run-msbuild-win-tests.yaml
     parameters:
@@ -877,7 +877,7 @@ stages:
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories)
       target_framework: 'netcoreapp3.1'
-      condition: or(eq(variables['RunAllTests'], true), eq(stageDependencies.mac_build.mac_build_create_installers.outputs['TestConditions.MSBuild'], 'True'))
+      condition: or(eq(variables['RunAllTests'], true), in(stageDependencies.mac_build.mac_build_create_installers.outputs['TestConditions.TestAreas'], 'MSBuild'))
 
   - template: yaml-templates\run-msbuild-win-tests.yaml
     parameters:
@@ -886,7 +886,7 @@ stages:
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories)
       target_framework: 'netcoreapp3.1'
-      condition: or(eq(variables['RunAllTests'], true), eq(stageDependencies.mac_build.mac_build_create_installers.outputs['TestConditions.MSBuild'], 'True'))
+      condition: or(eq(variables['RunAllTests'], true), in(stageDependencies.mac_build.mac_build_create_installers.outputs['TestConditions.TestAreas'], 'MSBuild'))
 
 - stage: regression_tests
   displayName: Regression Tests
@@ -897,7 +897,7 @@ stages:
   - job: mac_bcl_tests
     displayName: BCL With Emulator - macOS
     pool: $(HostedMac)
-    condition: or(eq(variables['RunAllTests'], true), eq(stageDependencies.mac_build.mac_build_create_installers.outputs['TestConditions.Mono'], 'True'))
+    condition: or(eq(variables['RunAllTests'], true), in(stageDependencies.mac_build.mac_build_create_installers.outputs['TestConditions.TestAreas'], 'BCL'))
     timeoutInMinutes: 180
     workspace:
       clean: all
@@ -965,7 +965,7 @@ stages:
   - job: designer_integration_mac
     displayName: Designer - macOS
     pool: $(HostedMacMojave)
-    condition: or(eq(variables['RunAllTests'], true), eq(stageDependencies.mac_build.mac_build_create_installers.outputs['TestConditions.MSBuild'], 'True'), eq(stageDependencies.mac_build.mac_build_create_installers.outputs['TestConditions.Mono'], 'True'))
+    condition: or(eq(variables['RunAllTests'], true), in(stageDependencies.mac_build.mac_build_create_installers.outputs['TestConditions.TestAreas'], 'Designer'))
     timeoutInMinutes: 120
     cancelTimeoutInMinutes: 5
     workspace:
@@ -1039,7 +1039,7 @@ stages:
   - job: designer_integration_win
     displayName: Designer - Windows
     pool: $(HostedWinVS2019)
-    condition: or(eq(variables['RunAllTests'], true), eq(stageDependencies.mac_build.mac_build_create_installers.outputs['TestConditions.MSBuild'], 'True'), eq(stageDependencies.mac_build.mac_build_create_installers.outputs['TestConditions.Mono'], 'True'))
+    condition: or(eq(variables['RunAllTests'], true), in(stageDependencies.mac_build.mac_build_create_installers.outputs['TestConditions.TestAreas'], 'Designer'))
     timeoutInMinutes: 120
     cancelTimeoutInMinutes: 5
     workspace:
