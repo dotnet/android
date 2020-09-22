@@ -11,7 +11,7 @@ parameters:
 
 jobs:
   - job: ${{ parameters.job_name }}
-    displayName: MSBuild ${{ parameters.job_suffix }} - Win-${{ parameters.node_id }}
+    displayName: MSBuild ${{ parameters.job_suffix }} - Windows-${{ parameters.node_id }}
     pool: $(VSEngWinVS2019)
     condition: ${{ parameters.condition }}
     timeoutInMinutes: 180
@@ -72,6 +72,6 @@ jobs:
 
     - template: upload-results.yaml
       parameters:
-        artifactName: Test Results - MSBuild - Windows-${{ parameters.node_id }} - ${{ parameters.job_suffix }}
+        artifactName: Test Results - MSBuild ${{ parameters.job_suffix }} - Windows-${{ parameters.node_id }}
 
     - template: fail-on-issue.yaml

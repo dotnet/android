@@ -715,7 +715,7 @@ stages:
 
     - template: yaml-templates/upload-results.yaml
       parameters:
-        artifactName: Test Results - MSBuild With Emulator - macOS
+        artifactName: Test Results - MSBuild Smoke With Emulator - macOS
 
     - template: yaml-templates/fail-on-issue.yaml
 
