@@ -30,7 +30,6 @@
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <AndroidUseSharedRuntime Condition=" '$(AndroidUseSharedRuntime)' == '' ">false</AndroidUseSharedRuntime>
     <EmbedAssembliesIntoApk Condition=" '$(EmbedAssembliesIntoApk)' == '' ">true</EmbedAssembliesIntoApk>
-    <AndroidLinkMode Condition=" '$(AndroidLinkMode)' == '' ">SdkOnly</AndroidLinkMode>
     <AndroidManagedSymbols Condition=" '$(AndroidManagedSymbols)' == '' ">true</AndroidManagedSymbols>
   </PropertyGroup>
 
@@ -43,7 +42,10 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(AndroidApplication)' == 'true' ">
     <SelfContained Condition=" '$(SelfContained)' == '' ">true</SelfContained>
-    <PublishTrimmed Condition=" '$(AndroidLinkMode)' == 'SdkOnly' or '$(AndroidLinkMode)' == 'Full' ">true</PublishTrimmed>
+    <PublishTrimmed Condition=" '$(PublishTrimmed)' == '' and ('$(AndroidLinkMode)' == 'SdkOnly' or '$(AndroidLinkMode)' == 'Full') ">true</PublishTrimmed>
+    <PublishTrimmed Condition=" '$(PublishTrimmed)' == '' and '$(Configuration)' == 'Release' and '$(AndroidLinkMode)' != 'None' ">true</PublishTrimmed>
+    <TrimMode Condition=" '$(PublishTrimmed)' == 'true' and '$(TrimMode)' == '' ">link</TrimMode>
+    <AndroidLinkMode Condition=" '$(AndroidLinkMode)' == '' and '$(PublishTrimmed)' == 'true' ">SdkOnly</AndroidLinkMode>
     <!-- Prefer $(RuntimeIdentifiers) plural -->
     <RuntimeIdentifiers Condition=" '$(RuntimeIdentifier)' == '' And '$(RuntimeIdentifiers)' == '' ">android.21-arm64;android.21-x86</RuntimeIdentifiers>
     <RuntimeIdentifier  Condition=" '$(RuntimeIdentifiers)' != '' And '$(RuntimeIdentifier)' != '' " />
