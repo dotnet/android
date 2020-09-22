@@ -229,14 +229,31 @@ namespace Xamarin.Android.Build.Tests
 				CreateNoWindow = true,
 				WindowStyle = ProcessWindowStyle.Hidden,
 			};
-			using (var proc = Process.Start (info)) {
+			using (var proc = new Process ()) {
+				StringBuilder standardOutput = new StringBuilder (), errorOutput = new StringBuilder ();
+				proc.StartInfo = info;
+				proc.OutputDataReceived += new DataReceivedEventHandler ((sender, e) => {
+					if (!string.IsNullOrEmpty (e.Data))
+						standardOutput.AppendLine (e.Data);
+				});
+				proc.ErrorDataReceived += new DataReceivedEventHandler ((sender, e) => {
+					if (!string.IsNullOrEmpty (e.Data))
+						errorOutput.AppendLine (e.Data);
+				});
+
+				proc.Start ();
+				proc.BeginOutputReadLine ();
+				proc.BeginErrorReadLine ();
+
 				if (!proc.WaitForExit ((int)TimeSpan.FromSeconds (30).TotalMilliseconds)) {
 					proc.Kill ();
 					TestContext.Out.WriteLine ($"{nameof (RunProcess)} timed out: {exe} {args}");
 					return null; //Don't try to read stdout/stderr
 				}
-				var result = proc.StandardOutput.ReadToEnd ().Trim () + proc.StandardError.ReadToEnd ().Trim ();
-				return result;
+
+				proc.WaitForExit ();
+
+				return standardOutput.ToString ().Trim () + errorOutput.ToString ().Trim ();
 			}
 		}
 
@@ -543,4 +560,3 @@ namespace Xamarin.Android.Build.Tests
 		}
 	}
 }
-
