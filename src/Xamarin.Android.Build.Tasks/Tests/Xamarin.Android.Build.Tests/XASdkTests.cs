@@ -131,7 +131,18 @@ namespace Xamarin.Android.Build.Tests
 			if (!runtimeIdentifiers.Contains (";")) {
 				outputPath = Path.Combine (outputPath, runtimeIdentifiers);
 			}
-			var assemblyPath = Path.Combine (outputPath, "UnnamedProject.dll");
+
+			var files = Directory.EnumerateFileSystemEntries (outputPath)
+				.Select (Path.GetFileName)
+				.OrderBy (f => f);
+			CollectionAssert.AreEqual (new [] {
+				$"{proj.ProjectName}.dll",
+				$"{proj.ProjectName}.pdb",
+				$"{proj.PackageName}.apk",
+				$"{proj.PackageName}-Signed.apk",
+			}, files);
+
+			var assemblyPath = Path.Combine (outputPath, $"{proj.ProjectName}.dll");
 			FileAssert.Exists (assemblyPath);
 			using (var assembly = AssemblyDefinition.ReadAssembly (assemblyPath)) {
 				var typeName = "Com.Xamarin.Android.Test.Msbuildtest.JavaSourceJarTest";
