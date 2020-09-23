@@ -39,7 +39,7 @@ namespace Xamarin.Android.Prepare
 				return false;
 			}
 
-			var testAreas = new List<string> ();
+			var testAreas = new HashSet<string> ();
 			foreach (string file in filesChanged) {
 				Log.InfoLine ($"Detected change in file: '{file}'.");
 				// Compare files changed against common areas requiring additional test scope.
@@ -62,20 +62,73 @@ namespace Xamarin.Android.Prepare
 					testAreas.Add ("Designer");
 				}
 
-				if (file.Contains ("src/Xamarin.Android.Build.Tasks")) {
+				if (file.Contains ("src/aapt2")) {
+					testAreas.Add ("MSBuild");
+				}
+
+				if (file.Contains ("src/apksigner")) {
 					testAreas.Add ("MSBuild");
 					testAreas.Add ("MSBuildDevice");
+				}
+
+				if (file.Contains ("src/bundletool")) {
+					testAreas.Add ("MSBuild");
+					testAreas.Add ("MSBuildDevice");
+				}
+
+				if (file.Contains ("src/java-runtime")) {
+					testAreas.Add ("MSBuildDevice");
+				}
+
+				if (file.Contains ("src/manifestmerger")) {
+					testAreas.Add ("MSBuild");
+					testAreas.Add ("MSBuildDevice");
+				}
+
+				if (file.Contains ("src/Microsoft.Android.Sdk.ILLink")) {
+					testAreas.Add ("MSBuild");
+				}
+
+				if (file.Contains ("src/Mono.Android")) {
 					testAreas.Add ("Designer");
 				}
 
 				if (file.Contains ("src/monodroid")) {
+					testAreas.Add ("MSBuildDevice");
 					testAreas.Add ("Designer");
+				}
+
+				if (file.Contains ("src/proguard")) {
+					testAreas.Add ("MSBuild");
+					testAreas.Add ("MSBuildDevice");
+				}
+
+				if (file.Contains ("src/r8")) {
+					testAreas.Add ("MSBuild");
+					testAreas.Add ("MSBuildDevice");
 				}
 
 				if (file.Contains ("src/Xamarin.Android.Build.Tasks")) {
 					testAreas.Add ("MSBuild");
 					testAreas.Add ("MSBuildDevice");
 					testAreas.Add ("Designer");
+				}
+
+				if (file.Contains ("src/Xamarin.Android.Tools.Aidl")) {
+					testAreas.Add ("MSBuild");
+				}
+
+				if (file.Contains ("src/Xamarin.Android.Tools.JavadocImporter")) {
+					testAreas.Add ("MSBuild");
+				}
+
+				if (file.Contains ("src-ThirdParty/android-platform-tools-base")) {
+					testAreas.Add ("MSBuild");
+					testAreas.Add ("MSBuildDevice");
+				}
+
+				if (file.Contains ("src-ThirdParty/bazel")) {
+					testAreas.Add ("MSBuildDevice");
 				}
 
 				if (file.Contains ("tests/BCL-Tests")) {
@@ -87,10 +140,13 @@ namespace Xamarin.Android.Prepare
 					testAreas.Add ("TimeZone");
 				}
 
+				if (file.Contains ("tests/msbuild-times-reference")) {
+					testAreas.Add ("MSBuildDevice");
+				}
+
 			}
 
-			Log.MessageLine ($"##vso[task.setvariable variable=TestAreas;isOutput=true]{string.Join (",", testAreas.Distinct ())}");
-
+			Log.MessageLine ($"##vso[task.setvariable variable=TestAreas;isOutput=true]{string.Join (",", testAreas)}");
 			return true;
 		}
 
