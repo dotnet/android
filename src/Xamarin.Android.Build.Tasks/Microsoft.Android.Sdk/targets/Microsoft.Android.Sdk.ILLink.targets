@@ -34,7 +34,10 @@ This file contains the .NET 5-specific targets to customize ILLink
       </_TrimmerCustomSteps>
     </ItemGroup>
     <ItemGroup>
-      <TrimmerRootDescriptor Include="$(MSBuildThisFileDirectory)..\PreserveLists\*.xml" />
+      <_PreserveLists Include="$(MSBuildThisFileDirectory)..\PreserveLists\*.xml" />
+      <TrimmerRootDescriptor
+          Condition=" '@(ResolvedFileToPublish)' != '' and '%(Filename)' != '' "
+          Include="@(_PreserveLists)" />
     </ItemGroup>
   </Target>
 
