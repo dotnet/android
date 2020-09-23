@@ -4,7 +4,7 @@
 
 #include <assert.h>
 #include <jni.h>
-#include <stddef.h>
+#include <stdlib.h>
 
 #ifdef __cplusplus
 

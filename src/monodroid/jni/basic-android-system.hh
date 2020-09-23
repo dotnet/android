@@ -17,7 +17,7 @@ namespace xamarin::android::internal
 	private:
 		// Values correspond to the CPU_KIND_* macros
 		static constexpr const char* android_abi_names[CPU_KIND_X86_64+1] = {
-			"unknown",
+			[0]                 = "unknown",
 			[CPU_KIND_ARM]      = "armeabi-v7a",
 			[CPU_KIND_ARM64]    = "arm64-v8a",
 			[CPU_KIND_MIPS]     = "mips",

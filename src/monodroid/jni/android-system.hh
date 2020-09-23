@@ -3,17 +3,29 @@
 #define __ANDROID_SYSTEM_H
 
 #include <stdint.h>
-#include <stddef.h>
+#include <stdlib.h>
 #include <pthread.h>
 #include <jni.h>
+
+#ifdef ANDROID
+#include <sys/system_properties.h>
+#endif
 
 #include "util.hh"
 #include "cppcompat.hh"
 #include "xamarin-app.hh"
 #include "shared-constants.hh"
 #include "basic-android-system.hh"
+#include "strings.hh"
 
 #include <mono/jit/jit.h>
+
+#if !defined (ANDROID)
+constexpr uint32_t PROP_NAME_MAX = 32;
+constexpr uint32_t PROP_VALUE_MAX = 92;
+#endif
+
+constexpr size_t PROPERTY_VALUE_BUFFER_LEN = PROP_VALUE_MAX + 1;
 
 namespace xamarin::android {
 	class jstring_wrapper;
@@ -44,13 +56,14 @@ namespace xamarin::android::internal
 		void  setup_process_args (jstring_array_wrapper &runtimeApks);
 		void  create_update_dir (char *override_dir);
 		int   monodroid_get_system_property (const char *name, char **value);
+		int   monodroid_get_system_property (const char *name, dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& value);
 		size_t monodroid_get_system_property_from_overrides (const char *name, char ** value);
 		char* get_bundled_app (JNIEnv *env, jstring dir);
 		int   count_override_assemblies ();
 		long  get_gref_gc_threshold ();
 		void* load_dso (const char *path, unsigned int dl_flags, bool skip_exists_check);
 		void* load_dso_from_any_directories (const char *name, unsigned int dl_flags);
-		char* get_full_dso_path_on_disk (const char *dso_name, bool &needs_free);
+		bool get_full_dso_path_on_disk (const char *dso_name, dynamic_local_string<SENSIBLE_PATH_MAX>& path);
 		monodroid_dirent_t* readdir (monodroid_dir_t *dir);
 
 		long get_max_gref_count () const
@@ -117,11 +130,11 @@ namespace xamarin::android::internal
 #if defined (DEBUG) || !defined (ANDROID)
 		size_t  _monodroid_get_system_property_from_file (const char *path, char **value);
 #endif
-		char* get_full_dso_path (const char *base_dir, const char *dso_path, bool &needs_free);
+		bool get_full_dso_path (const char *base_dir, const char *dso_path, dynamic_local_string<SENSIBLE_PATH_MAX>& path);
 		void* load_dso_from_specified_dirs (const char **directories, size_t num_entries, const char *dso_name, unsigned int dl_flags);
 		void* load_dso_from_app_lib_dirs (const char *name, unsigned int dl_flags);
 		void* load_dso_from_override_dirs (const char *name, unsigned int dl_flags);
-		char* get_existing_dso_path_on_disk (const char *base_dir, const char *dso_name, bool &needs_free);
+		bool get_existing_dso_path_on_disk (const char *base_dir, const char *dso_name, dynamic_local_string<SENSIBLE_PATH_MAX>& path);
 
 #if defined (WINDOWS)
 		struct _wdirent* readdir_windows (_WDIR *dirp);

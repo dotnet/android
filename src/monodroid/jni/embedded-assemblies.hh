@@ -6,6 +6,7 @@
 #include <mono/metadata/object.h>
 #include <mono/metadata/assembly.h>
 
+#include "strings.hh"
 #include "xamarin-app.hh"
 
 struct TypeMapHeader;
@@ -98,8 +99,8 @@ namespace xamarin::android::internal {
 		bool zip_read_field (uint8_t* buf, size_t buf_len, size_t index, uint16_t& u);
 		bool zip_read_field (uint8_t* buf, size_t buf_len, size_t index, uint32_t& u);
 		bool zip_read_field (uint8_t* buf, size_t buf_len, size_t index, uint8_t (&sig)[4]);
-		bool zip_read_field (uint8_t* buf, size_t buf_len, size_t index, size_t count, char*& characters);
-		bool zip_read_entry_info (uint8_t* buf, size_t buf_len, size_t& buf_offset, uint16_t& compression_method, uint32_t& local_header_offset, uint32_t& file_size, char*& file_name);
+		bool zip_read_field (uint8_t* buf, size_t buf_len, size_t index, size_t count, dynamic_local_string<SENSIBLE_PATH_MAX>& characters);
+		bool zip_read_entry_info (uint8_t* buf, size_t buf_len, size_t& buf_offset, uint16_t& compression_method, uint32_t& local_header_offset, uint32_t& file_size, dynamic_local_string<SENSIBLE_PATH_MAX>& file_name);
 
 		const char* get_assemblies_prefix () const
 		{

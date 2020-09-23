@@ -138,32 +138,26 @@ EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, bool ref_only)
 	const char *culture = mono_assembly_name_get_culture (aname);
 	const char *asmname = mono_assembly_name_get_name (aname);
 
-	size_t name_len = culture == nullptr ? 0 : strlen (culture) + 1;
-	name_len += sizeof (".dll");
-	name_len += strlen (asmname);
-
-	size_t alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, name_len, 1);
-	char *name = new char [alloc_size];
-	name [0] = '\0';
-
+	dynamic_local_string<SENSIBLE_PATH_MAX> name;
 	if (culture != nullptr && *culture != '\0') {
-		strcat (name, culture);
-		strcat (name, "/");
+		name.append (culture);
+		name.append ("/");
 	}
-	strcat (name, asmname);
-	char *ename = name + strlen (name);
+	name.append (asmname);
+	if (!utils.ends_with (name.get (), ".dll")) {
+		name.append (".dll");
+	}
 
 	MonoAssembly *a = nullptr;
 	MonoBundledAssembly **p;
 
-	*ename = '\0';
-	if (!utils.ends_with (name, ".dll")) {
-		strcat (name, ".dll");
-	}
+	log_info (LOG_ASSEMBLY, "open_from_bundles: looking for bundled name: '%s'", name.get ());
 
-	log_info (LOG_ASSEMBLY, "open_from_bundles: looking for bundled name: '%s'", name);
-
-	char *abi_name = utils.string_concat (BasicAndroidSystem::get_built_for_abi_name (), "/", name);
+	dynamic_local_string<SENSIBLE_PATH_MAX> abi_name;
+	abi_name
+		.assign (BasicAndroidSystem::get_built_for_abi_name ())
+		.append ("/")
+		.append (name.get ());
 
 	for (p = bundled_assemblies; p != nullptr && *p; ++p) {
 		MonoImage *image = nullptr;
@@ -172,24 +166,22 @@ EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, bool ref_only)
 		char *assembly_data = nullptr;
 		uint32_t assembly_data_size;
 
-		if (strcmp (e->name, name) != 0) {
-			if (strcmp (e->name, abi_name) != 0) {
+		if (strcmp (e->name, name.get ()) != 0) {
+			if (strcmp (e->name, abi_name.get ()) != 0) {
 				continue;
 			} else {
-				log_info (LOG_ASSEMBLY, "open_from_bundles: found architecture-specific: '%s'", abi_name);
+				log_info (LOG_ASSEMBLY, "open_from_bundles: found architecture-specific: '%s'", abi_name.get ());
 			}
 		}
 
 		get_assembly_data (e, assembly_data, assembly_data_size);
 
-		if ((image  = mono_image_open_from_data_with_name (assembly_data, assembly_data_size, 0, nullptr, ref_only, name)) != nullptr &&
-		    (a      = mono_assembly_load_from_full (image, name, &status, ref_only)) != nullptr) {
+		if ((image  = mono_image_open_from_data_with_name (assembly_data, assembly_data_size, 0, nullptr, ref_only, name.get ())) != nullptr &&
+		    (a      = mono_assembly_load_from_full (image, name.get (), &status, ref_only)) != nullptr) {
 			mono_config_for_assembly (image);
 			break;
 		}
 	}
-	delete[] name;
-	delete[] abi_name;
 
 	if (a && utils.should_log (LOG_ASSEMBLY)) {
 		log_info_nocheck (LOG_ASSEMBLY, "open_from_bundles: loaded assembly: %p\n", a);
@@ -433,42 +425,21 @@ EmbeddedAssemblies::typemap_managed_to_java (const char *managed_type_name)
 inline const char*
 EmbeddedAssemblies::typemap_managed_to_java ([[maybe_unused]] MonoType *type, MonoClass *klass, [[maybe_unused]] const uint8_t *mvid)
 {
-	constexpr char error_message[] = "typemap: unable to find mapping to a Java type from managed type '%s'";
-
 	simple_pointer_guard<char[], false> type_name (mono_type_get_name_full (type, MONO_TYPE_NAME_FORMAT_FULL_NAME));
 	MonoImage *image = mono_class_get_image (klass);
 	const char *image_name = mono_image_get_name (image);
 	size_t type_name_len = strlen (type_name.get ());
 	size_t image_name_len = strlen (image_name);
-	size_t full_name_size = type_name_len + image_name_len + 3;
-	const TypeMapEntry *entry = nullptr;
 
-	if (full_name_size > 512) { // Arbitrary, we should be below this limit in most cases
-		char full_name[full_name_size];
+	dynamic_local_string<SENSIBLE_PATH_MAX> full_name;
+	full_name
+		.append (type_name.get (), type_name_len)
+		.append (", ")
+		.append (image_name, image_name_len);
 
-		char *p = full_name;
-		memmove (p, type_name.get (), type_name_len);
-		p += type_name_len;
-		*p++ = ',';
-		*p++ = ' ';
-		memmove (p, image_name, image_name_len);
-		p += image_name_len;
-		*p = '\0';
-
-		entry = typemap_managed_to_java (full_name);
-
-		if (XA_UNLIKELY (entry == nullptr)) {
-			log_info (LOG_ASSEMBLY, error_message, full_name);
-		}
-	} else {
-		simple_pointer_guard<char> full_name = utils.string_concat (type_name.get (), ", ", image_name);
-		entry = typemap_managed_to_java (full_name.get ());
-		if (XA_UNLIKELY (entry == nullptr)) {
-			log_info (LOG_ASSEMBLY, error_message, full_name.get ());
-		}
-	}
-
+	const TypeMapEntry *entry = typemap_managed_to_java (full_name.get ());
 	if (XA_UNLIKELY (entry == nullptr)) {
+		log_info (LOG_ASSEMBLY, "typemap: unable to find mapping to a Java type from managed type '%s'", full_name.get ());
 		return nullptr;
 	}
 
