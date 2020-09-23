@@ -7,7 +7,7 @@ jobs:
   - job: mac_timezoneinfo_tests_${{ parameters.node_id }}
     displayName: TimeZone - Mac-${{ parameters.node_id }}
     pool: $(HostedMac)
-    condition: or(eq(variables['RunAllTests'], true), in(stageDependencies.mac_build.mac_build_create_installers.outputs['TestConditions.TestAreas'], 'TimeZone'))
+    condition: or(eq(variables['RunAllTests'], true), contains(stageDependencies.mac_build.mac_build_create_installers.outputs['TestConditions.TestAreas'], 'TimeZone'))
     timeoutInMinutes: 90
     cancelTimeoutInMinutes: 5
     workspace:
