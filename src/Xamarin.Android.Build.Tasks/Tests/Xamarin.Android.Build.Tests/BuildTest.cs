@@ -1291,8 +1291,7 @@ GVuZHNDbGFzc1ZhbHVlLmNsYXNzUEsFBgAAAAADAAMAwgAAAMYBAAAAAA==
 		public void BuildBasicApplicationCheckMdbRepeatBuild ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
-			using (var b = CreateApkBuilder ("temp/BuildBasicApplicationCheckMdbRepeatBuild", false)) {
-				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (
 					File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/assets/UnnamedProject.dll.mdb")) ||
@@ -1392,8 +1391,7 @@ namespace App1
 		public void BuildBasicApplicationCheckMdbAndPortablePdb ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
-			using (var b = CreateApkBuilder ("temp/BuildBasicApplicationCheckMdbAndPortablePdb")) {
-				b.Verbosity = LoggerVerbosity.Diagnostic;
+			using (var b = CreateApkBuilder ()) {
 				var reference = new BuildItem.Reference ("PdbTestLibrary.dll") {
 					WebContentFileNameFromAzure = "PdbTestLibrary.dll"
 				};
@@ -1490,8 +1488,7 @@ namespace App1
 		public void BuildApplicationCheckThatAddStaticResourcesTargetDoesNotRerun ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
-			using (var b = CreateApkBuilder ("temp/BuildApplicationCheckThatAddStaticResourcesTargetDoesNotRerun", false)) {
-				b.Verbosity = LoggerVerbosity.Diagnostic;
+			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj), "Build should not have failed");
 				Assert.IsFalse (
@@ -1549,8 +1546,7 @@ namespace App1
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\layout\\test.axml") {
 				MetadataValues = "Link=Resources\\layout-xhdpi\\Test.axml"
 			});
-			using (var b = CreateApkBuilder ("temp/DuplicateValuesInResourceCaseMap")) {
-				b.Verbosity = LoggerVerbosity.Diagnostic;
+			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
@@ -1749,30 +1745,24 @@ namespace App1
 		[TestCaseSource (nameof (BuildApplicationWithJavaSourceChecks))]
 		public void BuildApplicationWithJavaSource (bool isRelease, bool expectedResult)
 		{
-			var path = String.Format ("temp/BuildApplicationWithJavaSource_{0}_{1}",
-				isRelease, expectedResult);
-			try {
-				var proj = new XamarinAndroidApplicationProject () {
-					IsRelease = isRelease,
-					OtherBuildItems = {
-						new BuildItem (AndroidBuildActions.AndroidJavaSource, "TestMe.java") {
-							TextContent = () => "public class TestMe { }",
-							Encoding = Encoding.ASCII
-						},
-					}
-				};
-				proj.SetProperty ("TargetFrameworkVersion", "v5.0");
-				using (var b = CreateApkBuilder (path)) {
-					b.Verbosity = LoggerVerbosity.Diagnostic;
-					b.ThrowOnBuildFailure = false;
-					Assert.AreEqual (expectedResult, b.Build (proj), "Build should have {0}", expectedResult ? "succeeded" : "failed");
-					if (expectedResult)
-						StringAssertEx.DoesNotContain ("XA9002", b.LastBuildOutput, "XA9002 should not have been raised");
-					else
-						StringAssertEx.Contains ("XA9002", b.LastBuildOutput, "XA9002 should have been raised");
-					Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
+				OtherBuildItems = {
+					new BuildItem (AndroidBuildActions.AndroidJavaSource, "TestMe.java") {
+						TextContent = () => "public class TestMe { }",
+						Encoding = Encoding.ASCII
+					},
 				}
-			} finally {
+			};
+			proj.SetProperty ("TargetFrameworkVersion", "v5.0");
+			using (var b = CreateApkBuilder ()) {
+				b.ThrowOnBuildFailure = false;
+				Assert.AreEqual (expectedResult, b.Build (proj), "Build should have {0}", expectedResult ? "succeeded" : "failed");
+				if (expectedResult)
+					StringAssertEx.DoesNotContain ("XA9002", b.LastBuildOutput, "XA9002 should not have been raised");
+				else
+					StringAssertEx.Contains ("XA9002", b.LastBuildOutput, "XA9002 should have been raised");
+				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 			}
 		}
 
@@ -1834,10 +1824,9 @@ namespace App1
 			proj.SetProperty (proj.ActiveConfigurationProperties, "MonoSymbolArchive", monoSymbolArchive);
 			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugSymbols", debugSymbols);
 			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugType", debugType);
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName), false, false)) {
+			using (var b = CreateApkBuilder ()) {
 				if (aotAssemblies && !b.CrossCompilerAvailable (string.Join (";", abis)))
 					Assert.Ignore ("Cross compiler was not available");
-				b.Verbosity = LoggerVerbosity.Diagnostic;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
 					proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
@@ -2671,8 +2660,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				AndroidUseSharedRuntime = false,
 			};
 			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugType", "portable");
-			using (var b = CreateApkBuilder ("temp/BuildBasicApplicationCheckPdb", false, false)) {
-				b.Verbosity = LoggerVerbosity.Diagnostic;
+			using (var b = CreateApkBuilder ()) {
 				var reference = new BuildItem.Reference ("PdbTestLibrary.dll") {
 					WebContentFileNameFromAzure = "PdbTestLibrary.dll"
 				};
@@ -2737,20 +2725,19 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		[Test]
 		public void BuildInDesignTimeMode ([Values(false, true)] bool useManagedParser)
 		{
-			var path = Path.Combine ("temp", TestContext.CurrentContext.Test.Name);
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
 			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", useManagedParser.ToString ());
-			using (var builder = CreateApkBuilder (path, false ,false)) {
-				builder.Verbosity = LoggerVerbosity.Diagnostic;
+			using (var builder = CreateApkBuilder ()) {
 				builder.Target = "UpdateAndroidResources";
 				builder.Build (proj, parameters: new string[] { "DesignTimeBuild=true" });
 				Assert.IsFalse (builder.Output.IsTargetSkipped ("_CreatePropertiesCache"), "target \"_CreatePropertiesCache\" should have been run.");
 				Assert.IsFalse (builder.Output.IsTargetSkipped ("_ResolveLibraryProjectImports"), "target \"_ResolveLibraryProjectImports\' should have been run.");
-				var librarycache = Path.Combine (Root, path, proj.IntermediateOutputPath, "designtime", "libraryprojectimports.cache");
+				var intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
+				var librarycache = Path.Combine (intermediate, "designtime", "libraryprojectimports.cache");
 				Assert.IsTrue (File.Exists (librarycache), $"'{librarycache}' should exist.");
-				librarycache = Path.Combine (Root, path, proj.IntermediateOutputPath, "libraryprojectimports.cache");
+				librarycache = Path.Combine (intermediate, "libraryprojectimports.cache");
 				Assert.IsFalse (File.Exists (librarycache), $"'{librarycache}' should not exist.");
 				builder.Build (proj, parameters: new string[] { "DesignTimeBuild=true" });
 				Assert.IsFalse (builder.Output.IsTargetSkipped ("_CreatePropertiesCache"), "target \"_CreatePropertiesCache\" should have been run.");
@@ -2758,7 +2745,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				Assert.IsTrue (builder.Clean (proj), "Clean Should have succeeded");
 				builder.Target = "_CleanDesignTimeIntermediateDir";
 				Assert.IsTrue (builder.Build (proj), "_CleanDesignTimeIntermediateDir should have succeeded");
-				librarycache = Path.Combine (Root, path, proj.IntermediateOutputPath, "designtime", "libraryprojectimports.cache");
+				librarycache = Path.Combine (intermediate, "designtime", "libraryprojectimports.cache");
 				Assert.IsFalse (File.Exists (librarycache), $"'{librarycache}' should not exist.");
 			}
 		}
@@ -2780,7 +2767,6 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 			using (var libb = CreateDllBuilder (Path.Combine (path, libproj.ProjectName), false, false)) {
 				Assert.IsTrue (libb.Build (libproj), "Build should have succeeded.");
 				using (var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName), false, false)) {
-					builder.Verbosity = LoggerVerbosity.Diagnostic;
 					Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 					Assert.IsTrue (Directory.Exists (Path.Combine (Root, path, proj.ProjectName, proj.IntermediateOutputPath, "__library_projects__")),
 						"The __library_projects__ directory should exist.");
@@ -2990,7 +2976,6 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				if (!Directory.Exists (Path.Combine (builder.FrameworkLibDirectory, "v8.1")))
 					Assert.Ignore ("This is a Pull Request Build. Ignoring test.");
 				builder.ThrowOnBuildFailure = false;
-				builder.Verbosity = LoggerVerbosity.Diagnostic;
 				builder.Target = "AndroidPrepareForBuild";
 				Assert.IsFalse (builder.Build (proj, parameters: new string [] {
 					$"AndroidSdkBuildToolsVersion=24.0.1",

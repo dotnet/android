@@ -25,7 +25,6 @@ namespace Xamarin.Android.Build.Tests
 			return new ProjectBuilder (directory) {
 				CleanupAfterSuccessfulBuild = cleanupAfterSuccessfulBuild,
 				CleanupOnDispose = cleanupOnDispose,
-				Verbosity = LoggerVerbosity.Diagnostic,
 				Root = XABuildPaths.TestOutputDirectory,
 			};
 		}
