@@ -723,7 +723,7 @@ stages:
 - stage: msbuild_legacy
   displayName: Legacy Tests
   dependsOn: mac_build
-  condition: or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'MSBuild'))
+  condition: and(eq(dependencies.mac_build.result, 'Succeeded'), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'MSBuild')))
   jobs:
   # Xamarin.Android (Test MSBuild Legacy - macOS)
   - template: yaml-templates\run-msbuild-mac-tests.yaml
@@ -774,7 +774,7 @@ stages:
 - stage: msbuild_dotnet
   displayName: One .NET Tests
   dependsOn: mac_build
-  condition: or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'MSBuild'))
+  condition: and(eq(dependencies.mac_build.result, 'Succeeded'), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'MSBuild')))
   jobs:
   # Xamarin.Android (Test MSBuild One .NET - macOS)
   - template: yaml-templates\run-msbuild-mac-tests.yaml
@@ -829,7 +829,7 @@ stages:
 - stage: msbuilddevice_tests
   displayName: MSBuild Emulator Tests
   dependsOn: mac_build
-  condition: or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'MSBuildDevice'))
+  condition: and(eq(dependencies.mac_build.result, 'Succeeded'), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'MSBuildDevice')))
   jobs:
   # Check - "Xamarin.Android (MSBuild Emulator Tests macOS)"
   - job: mac_msbuilddevice_tests
@@ -885,7 +885,7 @@ stages:
 - stage: designer_tests
   displayName: Designer Tests
   dependsOn: mac_build
-  condition: or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'Designer'))
+  condition: and(eq(dependencies.mac_build.result, 'Succeeded'), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'Designer')))
   jobs:
  # Check - "Xamarin.Android (Designer Tests macOS)"
   - job: designer_integration_mac
@@ -1039,13 +1039,13 @@ stages:
         targetPath: $(Build.ArtifactStagingDirectory)/designer-binlogs
 
 - stage: bcl_tests
-  displayName: BCL Tests
+  displayName: BCL Emulator Tests
   dependsOn: mac_build
-  condition: or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'BCL'))
+  condition: and(eq(dependencies.mac_build.result, 'Succeeded'), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'BCL')))
   jobs:
-  # Check - "Xamarin.Android (BCL Tests Emulator - macOS)"
+  # Check - "Xamarin.Android (BCL Emulator Tests macOS)"
   - job: mac_bcl_tests
-    displayName: Emulator - macOS
+    displayName: macOS
     pool: $(HostedMac)
     timeoutInMinutes: 180
     workspace:
@@ -1098,9 +1098,9 @@ stages:
     - template: yaml-templates/fail-on-issue.yaml
 
 - stage: tz_tests
-  displayName: TimeZone Tests
+  displayName: TimeZoneInfo Emulator Tests
   dependsOn: mac_build
-  condition: or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'TimeZone'))
+  condition: and(eq(dependencies.mac_build.result, 'Succeeded'), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'TimeZone')))
   jobs:
   # TimeZoneInfo tests
   - template: yaml-templates\run-timezoneinfo-tests.yaml
