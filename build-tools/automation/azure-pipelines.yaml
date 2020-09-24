@@ -1038,6 +1038,24 @@ stages:
         artifactName: Test Results - Designer - Windows
         targetPath: $(Build.ArtifactStagingDirectory)/designer-binlogs
 
+- stage: tz_tests
+  displayName: TimeZoneInfo Emulator Tests
+  dependsOn: mac_build
+  condition: and(eq(dependencies.mac_build.result, 'Succeeded'), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'TimeZone')))
+  jobs:
+  # TimeZoneInfo tests
+  - template: yaml-templates\run-timezoneinfo-tests.yaml
+    parameters:
+      node_id: 1
+
+  - template: yaml-templates\run-timezoneinfo-tests.yaml
+    parameters:
+      node_id: 2
+
+  - template: yaml-templates\run-timezoneinfo-tests.yaml
+    parameters:
+      node_id: 3
+
 - stage: bcl_tests
   displayName: BCL Emulator Tests
   dependsOn: mac_build
@@ -1096,24 +1114,6 @@ stages:
         artifactName: Test Results - BCL With Emulator - macOS
 
     - template: yaml-templates/fail-on-issue.yaml
-
-- stage: tz_tests
-  displayName: TimeZoneInfo Emulator Tests
-  dependsOn: mac_build
-  condition: and(eq(dependencies.mac_build.result, 'Succeeded'), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'TimeZone')))
-  jobs:
-  # TimeZoneInfo tests
-  - template: yaml-templates\run-timezoneinfo-tests.yaml
-    parameters:
-      node_id: 1
-
-  - template: yaml-templates\run-timezoneinfo-tests.yaml
-    parameters:
-      node_id: 2
-
-  - template: yaml-templates\run-timezoneinfo-tests.yaml
-    parameters:
-      node_id: 3
 
 - stage: finalize_installers
   displayName: Finalize Installers
