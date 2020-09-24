@@ -202,6 +202,7 @@ namespace Xamarin.Test {
 					SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
 					_members.InstanceMethods.FinishCreateInstance (__id, this, __args);
 				} finally {
+					global::System.GC.KeepAlive (__self);
 				}
 			}
 

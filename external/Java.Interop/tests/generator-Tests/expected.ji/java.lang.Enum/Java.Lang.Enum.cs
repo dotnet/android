@@ -50,6 +50,7 @@ namespace Java.Lang {
 				return __rm;
 			} finally {
 				JNIEnv.DeleteLocalRef (native_o);
+				global::System.GC.KeepAlive (o);
 			}
 		}
 

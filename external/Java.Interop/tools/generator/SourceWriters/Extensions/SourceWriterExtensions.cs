@@ -264,6 +264,9 @@ namespace generator.SourceWriters
 			foreach (string cleanup in method.Parameters.GetCallCleanup (opt))
 				body.Add ("\t" + cleanup);
 
+			foreach (var p in method.Parameters.Where (para => para.ShouldGenerateKeepAlive ()))
+				body.Add ($"\tglobal::System.GC.KeepAlive ({opt.GetSafeIdentifier (p.Name)});");
+
 			body.Add ("}");
 		}
 

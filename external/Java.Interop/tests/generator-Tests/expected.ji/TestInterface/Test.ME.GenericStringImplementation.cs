@@ -87,6 +87,7 @@ namespace Test.ME {
 					JNIEnv.CopyArray (native_value, value);
 					JNIEnv.DeleteLocalRef (native_value);
 				}
+				global::System.GC.KeepAlive (value);
 			}
 		}
 

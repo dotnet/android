@@ -276,6 +276,32 @@ namespace MonoDroid.Generation {
 			return true;
 		}
 
+		public bool ShouldGenerateKeepAlive ()
+		{
+			if (Symbol.IsEnum)
+				return false;
+
+			return Type switch {
+				"bool" => false,
+				"sbyte" => false,
+				"char" => false,
+				"double" => false,
+				"float" => false,
+				"int" => false,
+				"long" => false,
+				"short" => false,
+				"uint" => false,
+				"ushort" => false,
+				"ulong" => false,
+				"byte" => false,
+				"ubyte" => false,       // Not a C# type, but we will see it from Kotlin unsigned types support
+				"string" => false,
+				"java.lang.String" => false,
+				"Android.Graphics.Color" => false,
+				_ => true
+			};
+		}
+
 		public ISymbol Symbol => sym;
 	}
 }

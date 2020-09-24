@@ -54,6 +54,7 @@ namespace Java.IO {
 				_members.InstanceMethods.FinishCreateInstance (__id, this, __args);
 			} finally {
 				JNIEnv.DeleteLocalRef (native__out);
+				global::System.GC.KeepAlive (@out);
 			}
 		}
 

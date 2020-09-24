@@ -76,6 +76,10 @@ namespace generator.SourceWriters
 			var call_cleanup = constructor.Parameters.GetCallCleanup (opt);
 			foreach (string cleanup in call_cleanup)
 				writer.WriteLine (cleanup);
+
+			foreach (var p in constructor.Parameters.Where (para => para.ShouldGenerateKeepAlive ()))
+				writer.WriteLine ($"global::System.GC.KeepAlive ({opt.GetSafeIdentifier (p.Name)});");
+
 			writer.Unindent ();
 
 			writer.WriteLine ("}");

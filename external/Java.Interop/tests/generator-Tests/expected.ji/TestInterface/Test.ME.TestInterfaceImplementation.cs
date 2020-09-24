@@ -188,6 +188,7 @@ namespace Test.ME {
 				var __rm = _members.InstanceMethods.InvokeAbstractInt32Method (__id, this, __args);
 				return __rm;
 			} finally {
+				global::System.GC.KeepAlive (tag);
 			}
 		}
 
@@ -203,6 +204,7 @@ namespace Test.ME {
 				_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
 			} finally {
 				JNIEnv.DeleteLocalRef (native_value);
+				global::System.GC.KeepAlive (value);
 			}
 		}
 
@@ -219,6 +221,7 @@ namespace Test.ME {
 				return global::Java.Lang.Object.GetObject<Java.Lang.ICharSequence> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
 			} finally {
 				JNIEnv.DeleteLocalRef (native_value);
+				global::System.GC.KeepAlive (value);
 			}
 		}
 

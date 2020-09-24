@@ -181,6 +181,7 @@ namespace Android.Views {
 				__args [0] = new JniArgumentValue ((l == null) ? IntPtr.Zero : ((global::Java.Lang.Object) l).Handle);
 				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
 			} finally {
+				global::System.GC.KeepAlive (l);
 			}
 		}
 
@@ -211,6 +212,7 @@ namespace Android.Views {
 				__args [0] = new JniArgumentValue ((l == null) ? IntPtr.Zero : ((global::Java.Lang.Object) l).Handle);
 				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
 			} finally {
+				global::System.GC.KeepAlive (l);
 			}
 		}
 
@@ -243,6 +245,7 @@ namespace Android.Views {
 				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
 			} finally {
 				JNIEnv.DeleteLocalRef (native_views);
+				global::System.GC.KeepAlive (views);
 			}
 		}
 
