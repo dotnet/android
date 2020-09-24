@@ -25,16 +25,6 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		string[] GetOverrideDirectoryPaths (string packageName)
-		{
-			return new string [] {
-				$"/data/data/{packageName}/files/.__override__",
-				$"/storage/emulated/0/Android/data/{packageName}/files/.__override__",
-				$"/mnt/shell/emulated/0/Android/data/{packageName}/files/.__override__",
-				$"/storage/sdcard/Android/data/{packageName}/files/.__override__",
-			};
-		}
-
 		string GetContentFromAllOverrideDirectories (string packageName, bool useRunAsCommand = true)
 		{
 			var adbShellArgs = $"shell ls";

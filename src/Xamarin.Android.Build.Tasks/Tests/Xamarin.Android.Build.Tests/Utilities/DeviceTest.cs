@@ -237,5 +237,15 @@ namespace Xamarin.Android.Build.Tests
 			}
 			return serial.Trim ();
 		}
+
+		protected static string [] GetOverrideDirectoryPaths (string packageName)
+		{
+			return new string [] {
+				$"/data/data/{packageName}/files/.__override__",
+				$"/storage/emulated/0/Android/data/{packageName}/files/.__override__",
+				$"/mnt/shell/emulated/0/Android/data/{packageName}/files/.__override__",
+				$"/storage/sdcard/Android/data/{packageName}/files/.__override__",
+			};
+		}
 	}
 }
