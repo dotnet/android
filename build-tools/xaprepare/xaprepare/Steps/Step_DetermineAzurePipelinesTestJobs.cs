@@ -146,7 +146,7 @@ namespace Xamarin.Android.Prepare
 
 			}
 
-			Log.MessageLine ($"##vso[task.setvariable variable=TestAreas;isOutput=true]{string.Join (",", testAreas)}");
+			//Log.MessageLine ($"##vso[task.setvariable variable=TestAreas;isOutput=true]{string.Join (",", testAreas)}");
 			return true;
 		}
 
