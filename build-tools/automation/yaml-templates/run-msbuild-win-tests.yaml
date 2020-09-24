@@ -7,13 +7,11 @@ parameters:
   nunit_categories: ''
   target_framework: 'net472'
   run_extra_tests: false
-  condition: succeededOrFailed()
 
 jobs:
   - job: ${{ parameters.job_name }}
     displayName: MSBuild ${{ parameters.job_suffix }} - Windows-${{ parameters.node_id }}
     pool: $(VSEngWinVS2019)
-    condition: ${{ parameters.condition }}
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     variables:
