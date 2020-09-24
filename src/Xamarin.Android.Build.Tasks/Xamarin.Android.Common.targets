@@ -1337,7 +1337,7 @@ because xbuild doesn't support framework reference assemblies.
 		Outputs="@(_ConvertedMdbFiles)"
 		DependsOnTargets="_CollectPdbFiles">
 	<ConvertDebuggingFiles Files="@(_ResolvedPdbFiles)" />
-	<Touch Files="@(_ConvertedMdbFiles)" />
+	<Touch Files="@(_ConvertedMdbFiles)" ContinueOnError="true" />
 	<ItemGroup>
 		<FileWrites Include="@(_ConvertedMdbFiles)" />
 	</ItemGroup>
