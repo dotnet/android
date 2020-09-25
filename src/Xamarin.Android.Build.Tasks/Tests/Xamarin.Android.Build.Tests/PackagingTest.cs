@@ -39,7 +39,6 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty (proj.ReleaseProperties, "AndroidPackageFormat", packageFormat);
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			using (var b = CreateApkBuilder ()) {
-				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj), "first build failed");
 				var outputPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
@@ -162,8 +161,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
 			proj.SetAndroidSupportedAbis ("x86");
 			proj.SetProperty (proj.ReleaseProperties, "AndroidStoreUncompressedFileExtensions", compressNativeLibraries ? "" : "so");
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
-				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
+			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj), "build failed");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
@@ -283,8 +281,7 @@ namespace Xamarin.Android.Build.Tests
 				TextContent = () => "namespace Foo { class Bar : Java.Lang.Object { } }"
 			});
 			proj.SetProperty (proj.DebugProperties, "AndroidPackageNamingPolicy", "Lowercase");
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
-				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build failed");
 				var text = b.Output.GetIntermediaryAsText (b.Output.IntermediateOutputPath, Path.Combine ("android", "src", "foo", "Bar.java"));
 				Assert.IsTrue (text.Contains ("package foo;"), "expected package not found in the source.");
@@ -335,9 +332,8 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 			proj.SetProperty (proj.DebugProperties, "AndroidPackageNamingPolicy", "Lowercase");
 			foreach (var package in packages)
 				proj.PackageReferences.Add (package);
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
-				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
 				Assert.IsTrue (b.Build (proj), "build failed");
 				var bin = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
 				var obj = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);

@@ -696,7 +696,6 @@ namespace Xamarin.Android.Build.Tests
 		LocalBuilder GetBuilder (string baseLogFileName)
 		{
 			return new LocalBuilder {
-				Verbosity = LoggerVerbosity.Diagnostic,
 				BuildLogFile = $"{baseLogFileName}.log"
 			};
 		}

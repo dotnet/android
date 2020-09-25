@@ -284,7 +284,6 @@ namespace Xamarin.Android.Build.Tests
 		LocalBuilder GetBuilder (string baseLogFileName, string projectDir)
 		{
 			return new LocalBuilder (projectDir) {
-				Verbosity = LoggerVerbosity.Diagnostic,
 				BuildLogFile = $"{baseLogFileName}.log"
 			};
 		}
