@@ -195,6 +195,26 @@ namespace generatortests
 
 			Assert.True (writer.ToString ().Contains ("public override unsafe int Name {"));
 		}
+
+		[Test]
+		public void WriteDuplicateInterfaceEventArgs ()
+		{
+			// If we have 2 methods that would each create the same EventArgs class,
+			// make sure we combine them into 1 class with both members instead.
+			var iface = SupportTypeBuilder.CreateEmptyInterface ("java.code.AnimatorListener");
+
+			var method1 = SupportTypeBuilder.CreateMethod (iface, "OnAnimationEnd", options, "boolean", false, true, new Parameter ("param1", "int", "int", false));
+			var method2 = SupportTypeBuilder.CreateMethod (iface, "OnAnimationEnd", options, "boolean", false, true, new Parameter ("param1", "int", "int", false), new Parameter ("param2", "int", "int", false));
+
+			iface.Methods.Add (method1);
+			iface.Methods.Add (method2);
+
+			generator.Context.ContextTypes.Push (iface);
+			generator.WriteType (iface, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			Assert.AreEqual (GetExpected (nameof (WriteDuplicateInterfaceEventArgs)), writer.ToString ().NormalizeLineEndings ());
+		}
 	}
 
 	[TestFixture]

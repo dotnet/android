@@ -12,8 +12,12 @@ namespace generator.SourceWriters
 	{
 		readonly MethodCallback callback;
 
+		public Method JavaMethod { get; }
+
 		public BoundMethod (GenBase type, Method method, CodeGenerationOptions opt, bool generateCallbacks)
 		{
+			JavaMethod = method;
+
 			if (generateCallbacks && method.IsVirtual)
 				callback = new MethodCallback (type, method, opt, null, method.IsReturnCharSequence);
 

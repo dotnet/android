@@ -35,6 +35,7 @@ namespace Xamarin.SourceWriter
 		public List<AttributeWriter> SetterAttributes { get; } = new List<AttributeWriter> ();
 		public int Priority { get; set; }
 		public string ExplicitInterfaceImplementation { get; set; }
+		public Visibility AutoSetterVisibility { get; set; }
 
 		public void SetVisibility (string visibility)
 		{
@@ -165,6 +166,8 @@ namespace Xamarin.SourceWriter
 					writer.WriteLine ();
 					writer.Indent ();
 					need_unindent = true;
+				} else {
+					writer.Write (" ");
 				}
 
 				WriteGetterComments (writer);
@@ -187,6 +190,14 @@ namespace Xamarin.SourceWriter
 
 				WriteSetterComments (writer);
 				WriteSetterAttributes (writer);
+
+				if (AutoSetterVisibility == Visibility.Private && !IsPrivate)
+					writer.Write ("private ");
+				else if (AutoSetterVisibility == Visibility.Protected && !IsProtected)
+					writer.Write ("protected ");
+				if (AutoSetterVisibility == Visibility.Internal && !IsInternal)
+					writer.Write ("internal ");
+
 				writer.Write ("set; ");
 
 				if (need_unindent) {

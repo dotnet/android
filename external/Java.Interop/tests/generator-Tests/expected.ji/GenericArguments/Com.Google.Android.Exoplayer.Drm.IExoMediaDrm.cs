@@ -123,42 +123,22 @@ namespace Com.Google.Android.Exoplayer.Drm {
 	public partial class ExoMediaDrmOnEventEventArgs : global::System.EventArgs {
 		public ExoMediaDrmOnEventEventArgs (global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrm p0, byte[] p1, int p2, int p3, byte[] p4)
 		{
-			this.p0 = p0;
-			this.p1 = p1;
-			this.p2 = p2;
-			this.p3 = p3;
-			this.p4 = p4;
+			this.P0 = p0;
+			this.P1 = p1;
+			this.P2 = p2;
+			this.P3 = p3;
+			this.P4 = p4;
 		}
 
-		global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrm p0;
+		public global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrm P0 { get; private set; }
 
-		public global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrm P0 {
-			get { return p0; }
-		}
+		public byte[] P1 { get; private set; }
 
-		byte[] p1;
+		public int P2 { get; private set; }
 
-		public byte[] P1 {
-			get { return p1; }
-		}
+		public int P3 { get; private set; }
 
-		int p2;
-
-		public int P2 {
-			get { return p2; }
-		}
-
-		int p3;
-
-		public int P3 {
-			get { return p3; }
-		}
-
-		byte[] p4;
-
-		public byte[] P4 {
-			get { return p4; }
-		}
+		public byte[] P4 { get; private set; }
 
 	}
 

@@ -104,8 +104,17 @@ namespace generator.SourceWriters
 
 			foreach (var method in iface.Methods.Where (m => m.EventName != string.Empty)) {
 				if (method.RetVal.IsVoid || method.IsEventHandlerWithHandledProperty) {
-					if (!method.IsSimpleEventHandler || method.IsEventHandlerWithHandledProperty)
-						post_sibling_types.Add (new InterfaceEventArgsClass (iface, method, opt, context));
+					if (!method.IsSimpleEventHandler || method.IsEventHandlerWithHandledProperty) {
+						var event_args_class = post_sibling_types.OfType<InterfaceEventArgsClass> ().SingleOrDefault (c => c.Name == iface.GetArgsName (method));
+
+						// Check if there's an existing EventArgs class to add to
+						if (event_args_class is null) {
+							event_args_class = new InterfaceEventArgsClass (iface, method);
+							post_sibling_types.Add (event_args_class);
+						}
+
+						event_args_class.AddMembersFromMethod (iface, method, opt);
+					}
 				} else {
 					var del = new DelegateWriter {
 						Name = iface.GetEventDelegateName (method),
