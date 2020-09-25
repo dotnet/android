@@ -184,26 +184,4 @@ namespace Xamarin.Android.Tools
 			},
 		};
 	}
-
-	class EqualityComparer<T> : IEqualityComparer<T>
-	{
-		Func<T, T, bool>    equals;
-		Func<T, int>        getHashCode;
-
-		public EqualityComparer (Func<T, T, bool> equals, Func<T, int>? getHashCode = null)
-		{
-			this.equals         = equals;
-			this.getHashCode    = getHashCode ?? (v => v?.GetHashCode () ?? 0);
-		}
-
-		public bool Equals (T x, T y)
-		{
-			return equals (x, y);
-		}
-
-		public int GetHashCode (T obj)
-		{
-			return getHashCode (obj);
-		}
-	}
 }

@@ -492,9 +492,9 @@ namespace Xamarin.Android.Tools
 	{
 		public  static  readonly    IComparer<JdkInfo> Default = new JdkInfoVersionComparer ();
 
-		public int Compare (JdkInfo x, JdkInfo y)
+		public int Compare ([AllowNull]JdkInfo x, [AllowNull]JdkInfo y)
 		{
-			if (x.Version != null && y.Version != null)
+			if (x?.Version != null && y?.Version != null)
 				return x.Version.CompareTo (y.Version);
 			return 0;
 		}
