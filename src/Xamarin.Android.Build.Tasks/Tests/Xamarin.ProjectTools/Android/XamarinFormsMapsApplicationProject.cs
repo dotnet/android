@@ -62,7 +62,7 @@ namespace Xamarin.ProjectTools
       ],
       ""api_key"": [
         {
-          ""current_key"": ""AIzaSyCfJp9rrUEaA07vdoGvGQgJqm0Fa9cJGiw""
+          ""current_key"": ""NOT_A_REAL_KEY""
         }
       ],
       ""services"": {
