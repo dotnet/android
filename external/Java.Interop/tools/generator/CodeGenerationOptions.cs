@@ -212,42 +212,20 @@ namespace MonoDroid.Generation
 				return jni_marshal_delegates;
 		}
 
-		public string GetOutputName (string s)
+		public string GetOutputName (string type)
 		{
-			if (s == "System.Void")
+			// Handle a few special cases
+			if (type == "System.Void")
 				return "void";
-			if (s.StartsWith ("params "))
-				return "params " + GetOutputName (s.Substring ("params ".Length));
-			if (s.StartsWith ("global::"))
+			if (type.StartsWith ("params "))
+				return "params " + GetOutputName (type.Substring ("params ".Length));
+			if (type.StartsWith ("global::"))
 				Report.LogCodedError (Report.ErrorUnexpectedGlobal);
 			if (!UseGlobal)
-				return s;
-			int idx = s.IndexOf ('<');
-			if (idx < 0) {
-				if (s.IndexOf ('.') < 0)
-					return s; // hack, to prevent things like global::int
-				return "global::" + s;
-			}
-			int idx2 = s.LastIndexOf ('>');
-			string sub = s.Substring (idx + 1, idx2 - idx - 1);
-			var typeParams = new List<string> ();
-			while (true) {
-				int idx3 = sub.IndexOf ('<');
-				int idx4 = sub.IndexOf (',');
-				if (idx4 < 0) {
-					typeParams.Add (GetOutputName (sub));
-					break;
-				} else if (idx3 < 0 || idx4 < idx3) { // more than one type params.
-					typeParams.Add (GetOutputName (sub.Substring (0, idx4)));
-					if (idx4 + 1 == sub.Length)
-						break;
-					sub = sub.Substring (idx4 + 1).Trim ();
-				} else {
-					typeParams.Add (GetOutputName (sub));
-					break;
-				}
-			}
-			return GetOutputName (s.Substring (0, idx)) + '<' + String.Join (", ", typeParams.ToArray ()) + '>';
+				return type;
+
+			// Add "global::" in front of types
+			return ParsedType.Parse (type).ToString (UseGlobal);
 		}
 
 		public string GetSafeIdentifier (string name)
