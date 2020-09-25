@@ -39,7 +39,7 @@ namespace Xamarin.Android.Tools.Plots
 					var message = $"CSV file '{settings.CsvPathAndFilename}' does not exist";
 					Console.WriteLine ($"ERROR: {message}");
 					Console.WriteLine ();
-					result.Status = Status.CsvFileDoesNotExist;
+					result.Status |= Status.CsvFileDoesNotExist;
 
 					var appInsightsClientError = new AppInsights (settings.AppInsightsTelemetryKey);
 					var eventNameError = GetEventName (settings.Environment, Constants.TelemetryEventName_Error);
