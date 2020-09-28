@@ -317,6 +317,14 @@ When it appears in the middle of a sentence, "lint" is not capitalized.
   <data name="XA0124" xml:space="preserve">
     <value>Interpreter is not supported by the x86 ABI</value>
   </data>
+  <data name="XA0125" xml:space="preserve">
+    <value>'{0}' is using a deprecated debug information level.
+Set the debugging information to Portable in the Visual Studio project property pages or edit the project file in a text editor and set the 'DebugType' MSBuild property to 'portable' to use the newer, cross-platform debug information level.
+If this file comes from a NuGet package, update to a newer version of the NuGet package or notify the library author.</value>
+    <comment>The following are literal names and should not be translated: 'DebugType', 'portable'
+The capitalized word "Portable" that appears earlier in the message is plain text and should be translated, but the lowercase word "portable" later in the message is a literal value and should not be translated.
+{0} - The file name of a deprecated symbol file</comment>
+  </data>
   <data name="XA1000" xml:space="preserve">
     <value>There was a problem parsing {0}. This is likely due to incomplete or invalid XML. Exception: {1}</value>
     <comment>{0} - The file name

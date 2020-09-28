@@ -44,7 +44,6 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
       _ResolveAssemblies;
       _ResolveSatellitePaths;
       _CreatePackageWorkspace;
-      _ConvertPdbFiles;
       _LinkAssemblies;
       _GenerateJavaStubs;
       _ManifestMerger;

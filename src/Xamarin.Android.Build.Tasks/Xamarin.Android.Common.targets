@@ -45,7 +45,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectPdbFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectNonEmptyDirectories" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ComputeHash" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.ConvertDebuggingFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ConvertResourcesCases" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ConvertCustomView" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CopyIfChanged" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -1311,38 +1310,6 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 </Target>
 
-<Target Name="_CollectMdbFiles"
-		DependsOnTargets="_CollectPdbFiles">
-	<GetFilesThatExist
-			Files="@(ResolvedAssemblies->'%(RootDir)%(Directory)%(Filename)%(Extension).mdb')"
-			IgnoreFiles="@(_ResolvedPortablePdbFiles->'%(RootDir)%(Directory)%(Filename).dll.mdb')"
-	>
-		<Output TaskParameter="FilesThatExist" ItemName="_ResolvedMdbFiles" />
-	</GetFilesThatExist>
-</Target>
-
-<Target Name="_CollectPdbFiles">
-	<CollectPdbFiles
-			ResolvedAssemblies="@(ResolvedAssemblies->'%(RootDir)%(Directory)%(Filename).pdb')">
-		<Output TaskParameter="PdbFiles" ItemName="_ResolvedPdbFiles" />
-		<Output TaskParameter="PortablePdbFiles" ItemName="_ResolvedPortablePdbFiles" />
-	</CollectPdbFiles>
-	<ItemGroup>
-		<_ConvertedMdbFiles Include="@(_ResolvedPdbFiles->'%(RootDir)%(Directory)%(Filename).dll.mdb')" />
-	</ItemGroup>
-</Target>
-
-<Target Name="_ConvertPdbFiles"
-		Inputs="@(_ResolvedPdbFiles)"
-		Outputs="@(_ConvertedMdbFiles)"
-		DependsOnTargets="_CollectPdbFiles">
-	<ConvertDebuggingFiles Files="@(_ResolvedPdbFiles)" />
-	<Touch Files="@(_ConvertedMdbFiles)" ContinueOnError="true" />
-	<ItemGroup>
-		<FileWrites Include="@(_ConvertedMdbFiles)" />
-	</ItemGroup>
-</Target>
-
 <Target Name="_GenerateJniMarshalMethods"
     Condition="'$(AndroidGenerateJniMarshalMethods)' == 'True' And '$(AndroidLinkMode)' != 'None' And '$(OS)' != 'Windows_NT'"
     DependsOnTargets="_GetReferenceAssemblyPaths;_SetLatestTargetFrameworkVersion"
@@ -2434,23 +2401,6 @@ because xbuild doesn't support framework reference assemblies.
 <PropertyGroup>
 	<_IntermediatePdbFile>$(IntermediateOutputPath)$(TargetName).pdb</_IntermediatePdbFile>
 </PropertyGroup>
-
-<Target Name="ConvertDebuggingFiles"
-	Condition=" '$(AndroidIncludeDebugSymbols)' == 'true' And Exists ('$(_IntermediatePdbFile)') And '$(OS)' == 'Windows_NT'"
-	DependsOnTargets="_ConvertDebuggingFiles">
-</Target>
-
-<Target Name="_ConvertDebuggingFiles"
-	Inputs="$(OutDir)$(TargetFileName);$(_IntermediatePdbFile)"
-	Outputs="$(OutDir)$(TargetFileName).mdb" 
-	DependsOnTargets="_ValidateAndroidPackageProperties">
-	<ConvertDebuggingFiles Files="$(OutDir)$(TargetFileName)" />
-	<Touch Files="$(OutDir)$(TargetFileName).mdb" />
-	<ItemGroup>
-		<FileWrites Include="$(OutDir)$(TargetFileName).mdb" />
-	</ItemGroup>
-</Target>
-
 
 <!-- Callable targets -->
 <PropertyGroup>

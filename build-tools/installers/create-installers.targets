@@ -204,8 +204,8 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\monodoc.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\monodoc.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\MULTIDEX_JAR_LICENSE" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\pdb2mdb.exe" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\pdb2mdb.pdb" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\pdb2mdb.exe" Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\pdb2mdb.pdb" Condition=" '$(PackageId)' != 'Microsoft.Android.Sdk' " />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\proguard\lib\proguard.jar"/>
     <_MSBuildFiles Include="$(MSBuildSrcDir)\proguard\license.md" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\startup.aotprofile" />
