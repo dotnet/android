@@ -68,18 +68,18 @@ namespace Xamarin.Android.Tools.Plots
 			var result = new Result ();
 
 			if (args == null || args.Length == 0) {
-				result.Status |= Status.MissingArgument;
+				result.Status = Status.MissingArgument;
 				result.Message = "Input arguments required";
 			} else {
 				try {
 					Options.Parse (args);
 				} catch (OptionException e) {
-					result.Status |= Status.Error;
+					result.Status = Status.Error;
 					result.Message = $"EXCEPTION: Processing input arguments: {e.Message}";
 				}
 
 				if (ShowHelp) {
-					result.Status |= Status.ShowHelp;
+					result.Status = Status.ShowHelp;
 				} else if (result.Status == Status.OK) {
 					result = Validate ();
 				}
