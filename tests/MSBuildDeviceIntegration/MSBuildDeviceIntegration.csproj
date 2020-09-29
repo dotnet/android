@@ -19,6 +19,11 @@
     <None Include="..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\App.config" Link="App.config" />
   </ItemGroup>
 
+   <ItemGroup>
+    <Compile Remove="Resources\**\*.cs" />
+    <EmbeddedResource Include="Resources\LinkDescTest\*.*" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="NodaTime" Version="2.4.5" />
   </ItemGroup>

@@ -90,16 +90,16 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			}, Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 45), $"Output did not contain {expectedLogcatOutput}!");
 		}
 
+		Regex ObfuscatedStackRegex = new Regex ("in <.*>:0", RegexOptions.Compiled);
 
 		void SymbolicateAndAssert (string symbolArchivePath, string logcatFilePath, IEnumerable<string> expectedStackTraceContents)
 		{
 			// 09-22 14:21:07.064 12786 12786 I MonoDroid:   at UnnamedProject.MainActivity.OnCreate (Android.OS.Bundle bundle) [0x00051] in <b3164619c4824e379aecfb7335bd4cce>:0
-			var obfuscatedStackRegex = new Regex ("in <.*>:0");
-			Assert.IsTrue (obfuscatedStackRegex.IsMatch (File.ReadAllText (logcatFilePath)), "Original logcat output did not contain obfuscated crash info.");
+			Assert.IsTrue (ObfuscatedStackRegex.IsMatch (File.ReadAllText (logcatFilePath)), "Original logcat output did not contain obfuscated crash info.");
 			var monoSymbolicate = IsWindows ? Path.Combine (TestEnvironment.MonoAndroidToolsDirectory, "mono-symbolicate.exe") : "mono-symbolicate";
 			var symbolicatedOutput = RunProcess (monoSymbolicate, $"\"{symbolArchivePath}\" \"{logcatFilePath}\"");
 			File.WriteAllText (Path.Combine (Path.GetDirectoryName (logcatFilePath), "mono-symbol.log"), symbolicatedOutput);
-			Assert.IsFalse (obfuscatedStackRegex.IsMatch (symbolicatedOutput), "Symbolicated logcat output did contain obfuscated crash info.");
+			Assert.IsFalse (ObfuscatedStackRegex.IsMatch (symbolicatedOutput), "Symbolicated logcat output did contain obfuscated crash info.");
 			foreach (string expectedString in expectedStackTraceContents) {
 				StringAssert.Contains (expectedString, symbolicatedOutput);
 			}
@@ -293,29 +293,19 @@ namespace Library1 {
 
 		public bool IsPreserved { get { return true; } }
 
-		public bool ThisMethodShouldBePreserved ()
-		{
-			return true;
-		}
+		public bool ThisMethodShouldBePreserved () { return true; }
 
-		public void WasThisMethodPreserved (string arg1)
-		{
-		}
+		public void WasThisMethodPreserved (string arg1) { }
 
 		[Android.Runtime.Preserve]
-		public void PreserveAttribMethod ()
-		{
-		}
+		public void PreserveAttribMethod () { }
 	}
 }",
 					}, new BuildItem.Source ("LinkModeFullClass.cs") {
 						TextContent = () => @"
 namespace Library1 {
 	public class LinkModeFullClass {
-		public bool ThisMethodShouldNotBePreserved ()
-		{
-			return true;
-		}
+		public bool ThisMethodShouldNotBePreserved () { return true; }
 	}
 }",
 					},
@@ -323,144 +313,27 @@ namespace Library1 {
 			};
 
 			var lib2 = new DotNetStandard {
-				ProjectName = "Library2",
+				ProjectName = "LinkTestLib",
 				Sdk = "Microsoft.NET.Sdk",
 				TargetFramework = "netstandard2.0",
 				Sources = {
 					new BuildItem.Source ("Bug21578.cs") {
-						TextContent = () => @"
-using System;
-using System.Net;
-using System.Net.Sockets;
-namespace Library2 {
-	// https://bugzilla.xamarin.com/show_bug.cgi?id=21578
-	// https://bugzilla.xamarin.com/show_bug.cgi?id=22183
-	public static class Bug21578 {
-		public static string MulticastOption_ShouldNotBeStripped ()
-		{
-			try {
-				using (var client = new UdpClient ()) {
-					var multicastAddress = IPAddress.Parse (""224.0.0.251"");
-					const int ifaceIndex = 0;
-					var multOpt = new MulticastOption (multicastAddress, ifaceIndex);
-					client.Client.SetSocketOption (SocketOptionLevel.IP, SocketOptionName.AddMembership, multOpt);
-					return ""[PASS] SetSocketOption was not stripped."";
-				}
-			} catch (Exception ex) {
-				if (ex is SocketException && ex.Message.Contains(""Network subsystem is down"")) {
-					return ""[IGNORE] SetSocketOption test was inconclusive."";
-				}
-				return $""[FAIL] SetSocketOption was stripped!\n{ex}"";
-			}
-		}
-
-		public static string MulticastOption_ShouldNotBeStripped2 ()
-		{
-			try {
-				using (var clientWriter = new UdpClient ()) {
-					var multicastAddress = IPAddress.Parse (""224.0.0.224"");
-					clientWriter.JoinMulticastGroup (multicastAddress);
-					return ""[PASS] JoinMulticastGroup was not stripped"";
-				}
-			} catch (Exception ex) {
-				if (ex is SocketException && ex.Message.Contains (""Network subsystem is down"")) {
-					return ""[IGNORE] MulticastGroup test was inconclusive."";
-				}
-				return $""[FAIL] SetSocketOption was stripped!\n{ex}"";
-			}
-		}
-	}
-}",
+						TextContent = () => {
+							using (var sr = new StreamReader (typeof (InstallAndRunTests).Assembly.GetManifestResourceStream ("Xamarin.Android.Build.Tests.Resources.LinkDescTest.Bug21578.cs")))
+								return sr.ReadToEnd ();
+						},
 					},
 					new BuildItem.Source ("Bug35195.cs") {
-						TextContent = () => @"
-using System;
-using System.IO;
-using SQLite;
-namespace Library2 {
-	// https://bugzilla.xamarin.com/show_bug.cgi?id=35195
-	public static class Bug35195 {
-		public static string AttemptCreateTable ()
-		{
-			try {
-				// Initialize the database name.
-				const string sqliteFilename = ""TaskDB.db3"";
-				string libraryPath = Environment.GetFolderPath (Environment.SpecialFolder.Personal);
-				string path = Path.Combine (libraryPath, sqliteFilename);
-				var db = new SQLiteAsyncConnection (path);
-				db.CreateTableAsync<TodoTask> ().GetAwaiter ().GetResult ();
-				return ""[PASS] Create table attempt did not throw"";
-			} catch (Exception ex) {
-				return $""[FAIL] Create table attempt failed!\n{ex}"";
-			}
-		}
-	}
-
-	public class TodoTask {
-		[PrimaryKey, AutoIncrement]
-		public int ID { get; set; }
-		public string Name { get; set; }
-		public string Notes { get; set; }
-		public bool Done { get; set; }
-	}
-}",
+						TextContent = () => {
+							using (var sr = new StreamReader (typeof (InstallAndRunTests).Assembly.GetManifestResourceStream ("Xamarin.Android.Build.Tests.Resources.LinkDescTest.Bug35195.cs")))
+								return sr.ReadToEnd ();
+						},
 					},
 					new BuildItem.Source ("Bug36250.cs") {
-						TextContent = () => @"
-using System;
-using System.IO;
-using System.Text;
-using System.Collections.Generic;
-using System.Runtime.Serialization;
-namespace Library2 {
-	// https://bugzilla.xamarin.com/show_bug.cgi?id=36250
-	public class Bug36250
-	{
-		// [Test]
-		public static string SerializeSearchRequestWithDictionary ()
-		{
-			var req = new SearchRequest () {
-				Query = ""query"",
-
-				Users = new List<string> () {
-					""user_a"", ""user_b""
-				},
-
-				Filters = new List<string> () {
-					""filter_a"", ""filter_b""
-				},
-
-				Parameters = new Dictionary<string, string> () {
-					{ ""param_key_b"", ""param_value_a"" },
-					{ ""param_key_a"", ""param_value_b"" },
-				}
-			};
-
-			try {
-				using (MemoryStream memoryStream = new MemoryStream ()) {
-					var dataContractSerializer = new DataContractSerializer (typeof (SearchRequest));
-					dataContractSerializer.WriteObject (memoryStream, req);
-					string serializedDataContract = Encoding.UTF8.GetString (memoryStream.ToArray (), 0, (int) memoryStream.Length);
-					return $""[PASS] SearchRequest successfully serialized: {serializedDataContract.Substring (0, 14)}"";
-				}
-			} catch (Exception ex) {
-				return $""[FAIL] SearchRequest serialization FAILED: {ex}"";
-			}
-		}
-	}
-
-	[DataContract]
-	public class SearchRequest {
-		[DataMember]
-		public string Query { get; set; }
-		[DataMember]
-		public List<string> Users { get; set; }
-		[DataMember]
-		public List<string> Filters { get; set; }
-		[DataMember]
-		public Dictionary<string, string> Parameters { get; set; }
-	}
-}",
+						TextContent = () => {
+							using (var sr = new StreamReader (typeof (InstallAndRunTests).Assembly.GetManifestResourceStream ("Xamarin.Android.Build.Tests.Resources.LinkDescTest.Bug36250.cs")))
+								return sr.ReadToEnd ();
+						},
 					},
 				},
 				PackageReferences = {
@@ -476,30 +349,7 @@ namespace Library2 {
 				AndroidLinkModeRelease = linkMode,
 				References = {
 					new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj"),
-					new BuildItem ("ProjectReference", "..\\Library2\\Library2.csproj"),
-				},
-				Sources = {
-					new BuildItem.Source ("CustomLinkerDescriptionTests.cs") {
-						TextContent = () => @"
-using System;
-namespace UnnamedProject {
-	public class CustomLinkerDescriptionTests {
-		Type t = typeof(Library1.LinkModeFullClass);
-		public string TryAccessNonXmlPreservedMethodOfLinkerModeFullClass()
-		{
-			try
-			{
-				var m = t.GetMethod(""ThisMethodShouldNotBePreserved"");
-				return $""[LINKALLFAIL] Able to locate method that should have been linked: '{m.Name}'"";
-			}
-			catch (NullReferenceException ex)
-			{
-				return $""[LINKALLPASS] Was unable to access 'ThisMethodShouldNotBePreserved ()' method of 'LinkerClass' as expected.\n{ex}"";
-			}
-		}
-	}
-}",
-					},
+					new BuildItem ("ProjectReference", "..\\LinkTestLib\\LinkTestLib.csproj"),
 				},
 				OtherBuildItems = {
 					new BuildItem ("LinkDescription", "linker.xml") {
@@ -512,8 +362,8 @@ namespace UnnamedProject {
       <method name=""get_IsPreserved"" />
     </type>
   </assembly>
-  <assembly fullname=""Library2"">
-    <type fullname=""Library2.TodoTask"" />
+  <assembly fullname=""LinkTestLib"">
+    <type fullname=""LinkTestLib.TodoTask"" />
   </assembly>
 </linker>
 ",
@@ -522,77 +372,8 @@ namespace UnnamedProject {
 			};
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("</manifest>", "<uses-permission android:name=\"android.permission.INTERNET\" /></manifest>");
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", @"
-			string TAG = ""XALINKERTESTS"";
-			// [Test] TryCreateInstanceOfSomeClass
-			try {
-				var asm = typeof (Library1.SomeClass).Assembly;
-				var o = Activator.CreateInstance (asm.GetType (""Library1.SomeClass""));
-				Android.Util.Log.Info (TAG, $""[PASS] Able to create instance of '{o.GetType ().Name}'."");
-			} catch (Exception ex) {
-				Android.Util.Log.Info (TAG, $""[FAIL] Unable to create instance of 'SomeClass'.\n{ex}"");
-			}
-
-			// [Test] TryCreateInstanceOfXmlPreservedLinkerClass
-			try {
-				var asm = typeof (Library1.SomeClass).Assembly;
-				var o = Activator.CreateInstance (asm.GetType (""Library1.LinkerClass""));
-				Android.Util.Log.Info (TAG, $""[PASS] Able to create instance of '{o.GetType ().Name}'."");
-			} catch (Exception ex) {
-				Android.Util.Log.Info (TAG, $""[FAIL] Unable to create instance of 'LinkerClass'.\n{ex}"");
-			}
-
-			// [Test] TryAccessXmlPreservedMethodOfLinkerClass
-			try {
-				var asm = typeof (Library1.SomeClass).Assembly;
-				var t = asm.GetType (""Library1.LinkerClass"");
-				var m = t.GetMethod (""WasThisMethodPreserved"");
-				Android.Util.Log.Info (TAG, $""[PASS] Able to locate method '{m.Name}'."");
-			} catch (Exception ex) {
-				Android.Util.Log.Info (TAG, $""[FAIL] Unable to access 'WasThisMethodPreserved ()' method of 'LinkerClass'.\n{ex}"");
-			}
-
-			// [Test] TryAccessAttributePreservedMethodOfLinkerClass
-			try {
-				var asm = typeof (Library1.SomeClass).Assembly;
-				var t = asm.GetType (""Library1.LinkerClass"");
-				var m = t.GetMethod (""PreserveAttribMethod"");
-				Android.Util.Log.Info (TAG, $""[PASS] Able to locate method '{m.Name}'."");
-			} catch (Exception ex) {
-				Android.Util.Log.Info (TAG, $""[FAIL] Unable to access 'PreserveAttribMethod ()' method of 'LinkerClass'.\n{ex}"");
-			}
-
-			// [Test] TryAccessXmlPreservedFieldOfLinkerClass
-			try {
-				var asm = typeof (Library1.SomeClass).Assembly;
-				var t = asm.GetType (""Library1.LinkerClass"");
-				var m = t.GetProperty (""IsPreserved"");
-				Android.Util.Log.Info (TAG, $""[PASS] Able to locate field '{m.Name}'."");
-			} catch (Exception ex) {
-				Android.Util.Log.Info (TAG, $""[FAIL] Unable to access 'IsPreserved' field of 'LinkerClass'.\n{ex}"");
-			}
-
-			// [Test] TryCreateInstanceOfNonXmlPreservedClass
-			try
-			{
-				var asm = typeof (Library1.SomeClass).Assembly;
-				var o = Activator.CreateInstance (asm.GetType (""Library1.NonPreserved""));
-				Android.Util.Log.Info (TAG, $""[LINKALLFAIL] Able to create instance of '{o.GetType ().Name}' which should have been linked away."");
-			} catch (Exception ex) {
-				Android.Util.Log.Info (TAG, $""[LINKALLPASS] Unable to create instance of 'NonPreserved' as expected.\n{ex}"");
-			}
-
-			// [Test] TryAccessNonXmlPreservedMethodOfLinkerModeFullClass
-			var newLinkerTestInstance = new CustomLinkerDescriptionTests ();
-			Android.Util.Log.Info (TAG, newLinkerTestInstance.TryAccessNonXmlPreservedMethodOfLinkerModeFullClass ());
-
-			Android.Util.Log.Info (TAG, Library2.Bug21578.MulticastOption_ShouldNotBeStripped ());
-			Android.Util.Log.Info (TAG, Library2.Bug21578.MulticastOption_ShouldNotBeStripped2 ());
-			Android.Util.Log.Info (TAG, Library2.Bug35195.AttemptCreateTable ());
-			Android.Util.Log.Info (TAG, Library2.Bug36250.SerializeSearchRequestWithDictionary ());
-
-			Android.Util.Log.Info (TAG, ""All regression tests completed."");
-");
+			using (var sr = new StreamReader (typeof (InstallAndRunTests).Assembly.GetManifestResourceStream ("Xamarin.Android.Build.Tests.Resources.LinkDescTest.MainActivityReplacement.cs")))
+				proj.MainActivity = sr.ReadToEnd ();
 
 			// Set up library projects
 			var rootPath = Path.Combine (Root, "temp", TestName);
