@@ -41,6 +41,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.CopyNuGetConfig (relativeProjDir);
 			var dotnet = new DotNetCLI (proj, Path.Combine (fullProjDir, proj.ProjectFilePath));
 
+			ClearAdbLogcat ();
 			Assert.IsTrue (dotnet.Run (), "`dotnet run` should succeed");
 			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
 				Path.Combine (fullProjDir, "logcat.log"), 30);
