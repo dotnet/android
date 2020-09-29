@@ -78,10 +78,12 @@ namespace Xamarin.Android.Tools.Plots
 					result.Message = $"EXCEPTION: Processing input arguments: {e.Message}";
 				}
 
-				if (ShowHelp) {
-					result.Status = Status.ShowHelp;
-				} else if (result.Status == Status.OK) {
-					result = Validate ();
+				if (result.Status == Status.OK) {
+					if (ShowHelp) {
+						result.Status = Status.ShowHelp;
+					} else {
+						result = Validate ();
+					}
 				}
 			}
 
