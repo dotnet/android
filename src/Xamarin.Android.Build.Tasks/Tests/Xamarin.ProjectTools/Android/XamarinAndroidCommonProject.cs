@@ -92,9 +92,6 @@ namespace Xamarin.ProjectTools
 
 					if (Builder.UseDotNet) {
 						this.AddDotNetCompatPackages ();
-
-						// NOTE: workaround for https://github.com/dotnet/sdk/issues/12954
-						SetProperty ("ProduceReferenceAssembly", "false");
 					}
 				}
 			}

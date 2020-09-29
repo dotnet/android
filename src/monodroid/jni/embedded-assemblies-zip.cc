@@ -42,7 +42,6 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, monodroid_sh
 	uint32_t              local_header_offset;
 	uint32_t              data_offset;
 	uint32_t              file_size;
-	char                 *entry_name;
 	char                 *file_name;
 
 	ssize_t nread = read (fd, buf.get (), cd_size);
@@ -51,10 +50,12 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, monodroid_sh
 		exit (FATAL_EXIT_NO_ASSEMBLIES);
 	}
 
+	dynamic_local_string<SENSIBLE_PATH_MAX> entry_name;
 	for (size_t i = 0; i < cd_entries; i++) {
+		entry_name.clear ();
+
 		bool result = zip_read_entry_info (buf.get (), cd_size, buf_offset, compression_method, local_header_offset, file_size, entry_name);
-		simple_pointer_guard<char> entry_name_guard = entry_name;
-		file_name = entry_name_guard.get ();
+		file_name = entry_name.get ();
 
 #ifdef DEBUG
 		log_warn (LOG_ASSEMBLY, "%s entry: %s", apk_name, file_name);
@@ -174,14 +175,14 @@ EmbeddedAssemblies::zip_read_cd_info (int fd, uint32_t& cd_offset, uint32_t& cd_
 	}
 
 	// Most probably a ZIP with comment
-	size_t alloc_size = 65535 + ZIP_EOCD_LEN; // 64k is the biggest comment size allowed
+	constexpr size_t alloc_size = 65535 + ZIP_EOCD_LEN; // 64k is the biggest comment size allowed
 	ret = ::lseek (fd, static_cast<off_t>(-alloc_size), SEEK_END);
 	if (ret < 0) {
 		log_error (LOG_ASSEMBLY, "Unable to seek into the file to find ECOD before APK comment: %s (ret: %d; errno: %d)", std::strerror (errno), ret, errno);
 		return false;
 	}
 
-	auto buf = new uint8_t[alloc_size];
+	simple_pointer_guard<uint8_t[]> buf (new uint8_t[alloc_size]);
 	// The cast removes warning on mingw:
 	//
 	//   warning: conversion from ‘size_t’ {aka ‘long long unsigned int’} to ‘unsigned int’ may change value [-Wconversion]
@@ -196,15 +197,14 @@ EmbeddedAssemblies::zip_read_cd_info (int fd, uint32_t& cd_offset, uint32_t& cd_
 	// We scan from the end to save time
 	bool found = false;
 	for (ssize_t i = static_cast<ssize_t>(alloc_size - (ZIP_EOCD_LEN + 2)); i >= 0; i--) {
-		if (memcmp (buf + i, ZIP_EOCD_MAGIC, sizeof(ZIP_EOCD_MAGIC)) != 0)
+		if (memcmp (buf.get () + i, ZIP_EOCD_MAGIC, sizeof(ZIP_EOCD_MAGIC)) != 0)
 			continue;
 
 		found = true;
-		memcpy (eocd, buf + i, ZIP_EOCD_LEN);
+		memcpy (eocd, buf.get () + i, ZIP_EOCD_LEN);
 		break;
 	}
 
-	delete[] buf;
 	if (!found) {
 		log_error (LOG_ASSEMBLY, "Unable to find EOCD in the APK (with comment)");
 		return false;
@@ -351,22 +351,18 @@ EmbeddedAssemblies::zip_read_field (uint8_t* buf, size_t buf_len, size_t index, 
 }
 
 bool
-EmbeddedAssemblies::zip_read_field (uint8_t* buf, size_t buf_len, size_t index, size_t count, char*& characters)
+EmbeddedAssemblies::zip_read_field (uint8_t* buf, size_t buf_len, size_t index, size_t count, dynamic_local_string<SENSIBLE_PATH_MAX>& characters)
 {
 	if (!zip_ensure_valid_params (buf, buf_len, index, count)) {
 		return false;
 	}
 
-	size_t alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, count, 1);
-	characters = new char[alloc_size];
-	memcpy (characters, buf + index, count);
-	characters [count] = '\0';
-
+	characters.assign (reinterpret_cast<const char*>(buf) + index, count);
 	return true;
 }
 
 bool
-EmbeddedAssemblies::zip_read_entry_info (uint8_t* buf, size_t buf_len, size_t& buf_offset, uint16_t& compression_method, uint32_t& local_header_offset, uint32_t& file_size, char*& file_name)
+EmbeddedAssemblies::zip_read_entry_info (uint8_t* buf, size_t buf_len, size_t& buf_offset, uint16_t& compression_method, uint32_t& local_header_offset, uint32_t& file_size, dynamic_local_string<SENSIBLE_PATH_MAX>& file_name)
 {
 	static constexpr size_t CD_COMPRESSION_METHOD_OFFSET = 10;
 	static constexpr size_t CD_UNCOMPRESSED_SIZE_OFFSET  = 24;
@@ -430,8 +426,7 @@ EmbeddedAssemblies::zip_read_entry_info (uint8_t* buf, size_t buf_len, size_t& b
 	index += sizeof(local_header_offset);
 
 	if (file_name_length == 0) {
-		file_name = new char[1];
-		file_name[0] = '\0';
+		file_name.clear ();
 	} else if (!zip_read_field (buf, buf_len, index, file_name_length, file_name)) {
 		log_error (LOG_ASSEMBLY, "Failed to read Central Directory entry 'file name' field");
 		return false;

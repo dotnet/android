@@ -193,6 +193,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Category ("DotNetIgnore")] //TODO: @(LinkDescription) is not implemented yet
 		public void LinkDescription ()
 		{
 			string assembly_name = Builder.UseDotNet ? "System.Console" : "mscorlib";

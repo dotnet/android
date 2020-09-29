@@ -45,7 +45,10 @@ namespace Xamarin.Android.Build.Tests
 			using (var appb = CreateApkBuilder (Path.Combine ("temp", TestName, app.ProjectName))) {
 				Assert.IsTrue (libb.Build (lib), "Library build should have succeeded.");
 				Assert.IsTrue (appb.Build (app), "App should have succeeded.");
-				Assert.IsTrue (StringAssertEx.ContainsText (appb.LastBuildOutput, $"Save assembly: {linkSkip}"), $"{linkSkip} should be saved, and not linked!");
+				if (!Builder.UseDotNet) {
+					//TODO: $(AndroidLinkSkip) is not yet implemented
+					Assert.IsTrue (StringAssertEx.ContainsText (appb.LastBuildOutput, $"Save assembly: {linkSkip}"), $"{linkSkip} should be saved, and not linked!");
+				}
 
 				string intermediateOutputDir = Path.Combine (Root, appb.ProjectDirectory, app.IntermediateOutputPath);
 				List<string> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true);
@@ -156,7 +159,6 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty (proj.ReleaseProperties, "AndroidPackageFormat", packageFormat);
 			proj.SetAndroidSupportedAbis (supportedAbis);
 			using (var b = CreateApkBuilder ()) {
-				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj), "first build failed");
 				var outputPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);

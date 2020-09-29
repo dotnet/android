@@ -13,7 +13,6 @@ namespace Xamarin.ProjectTools
 		public ProjectBuilder (string projectDirectory)
 		{
 			ProjectDirectory = projectDirectory;
-			Verbosity = LoggerVerbosity.Normal;
 			Target = "Build";
 			ThrowOnBuildFailure = true;
 			BuildLogFile = "build.log";

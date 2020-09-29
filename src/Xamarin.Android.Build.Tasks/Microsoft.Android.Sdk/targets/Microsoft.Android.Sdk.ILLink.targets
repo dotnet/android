@@ -13,6 +13,16 @@ This file contains the .NET 5-specific targets to customize ILLink
       Condition=" '$(PublishTrimmed)' == 'true' "
       AfterTargets="ComputeResolvedFilesToPublishList"
       DependsOnTargets="GetReferenceAssemblyPaths">
+    <ItemGroup>
+      <!-- Mark all assemblies to be linked for AndroidLinkMode=Full -->
+      <ResolvedFileToPublish
+          Update="@(ResolvedFileToPublish)"
+          Condition=" '$(AndroidLinkMode)' == 'Full' and '%(ResolvedFileToPublish.Extension)' == '.dll' and '%(ResolvedFileToPublish.AssetType)' != 'native' "
+          TrimMode="link"
+      />
+      <!-- Mark our entry assembly as a root assembly. -->
+      <TrimmerRootAssembly Include="$(AssemblyName)" />
+    </ItemGroup>
     <PropertyGroup>
       <!-- make the output verbose to see what the linker is doing. FIXME: make dependent upon verbosity level -->
       <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --verbose --deterministic --custom-data XATargetFrameworkDirectories="$(_XATargetFrameworkDirectories)"</_ExtraTrimmerArgs>

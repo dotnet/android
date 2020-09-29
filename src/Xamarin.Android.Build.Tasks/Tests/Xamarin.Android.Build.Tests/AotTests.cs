@@ -115,7 +115,6 @@ namespace Xamarin.Android.Build.Tests
 				if (!b.GetSupportedRuntimes ().Any (x => supportedAbis == x.Abi))
 					Assert.Ignore ($"Runtime for {supportedAbis} was not available.");
 				b.ThrowOnBuildFailure = false;
-				b.Verbosity = LoggerVerbosity.Diagnostic;
 				Assert.AreEqual (expectedResult, b.Build (proj), "Build should have {0}.", expectedResult ? "succeeded" : "failed");
 				if (!expectedResult)
 					return;
@@ -214,7 +213,6 @@ namespace Xamarin.Android.Build.Tests
 			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = Path.Combine (Root, testPath);
 			var sb = new SolutionBuilder ("BuildAMassiveApp.sln") {
 				SolutionPath = Path.Combine (Root, testPath),
-				Verbosity = LoggerVerbosity.Diagnostic,
 			};
 			var app1 = new XamarinAndroidApplicationProject () {
 				TargetFrameworkVersion = sb.LatestTargetFrameworkVersion (),

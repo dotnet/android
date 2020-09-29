@@ -19,8 +19,7 @@ namespace Xamarin.Android.Build.Tests
 		public void BasicApplicationRepetitiveBuild ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
-			using (var b = CreateApkBuilder ("temp/BasicApplicationRepetitiveBuild", cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
-				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
+			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj), "first build failed");
 				var firstBuildTime = b.LastBuildTime;
@@ -231,7 +230,6 @@ namespace Lib
 			var testPath = Path.Combine ("temp", "AllProjectsHaveSameOutputDirectory");
 			var sb = new SolutionBuilder("AllProjectsHaveSameOutputDirectory.sln") {
 				SolutionPath = Path.Combine (Root, testPath),
-				Verbosity = LoggerVerbosity.Diagnostic,
 			};
 
 			var app1 = new XamarinAndroidApplicationProject () {
@@ -369,7 +367,6 @@ namespace Lib2
 					};
 					app.SetAndroidSupportedAbis ("armeabi-v7a");
 					using (var builder = CreateApkBuilder (Path.Combine (path, "App"))) {
-						builder.Verbosity = LoggerVerbosity.Diagnostic;
 						Assert.IsTrue (builder.Build (app), "app 1st. build failed");
 
 						var libfoo = ZipHelper.ReadFileFromZip (Path.Combine (Root, builder.ProjectDirectory, app.OutputPath, app.PackageName + "-Signed.apk"),
@@ -1028,7 +1025,6 @@ namespace Lib2
 				b.CleanupAfterSuccessfulBuild = false;
 				b.CleanupOnDispose = false;
 				b.ThrowOnBuildFailure = false;
-				b.Verbosity = LoggerVerbosity.Diagnostic;
 				Assert.AreEqual (expectedResult, b.Build (proj, doNotCleanupOnUpdate: true), "Build should have {0}.", expectedResult ? "succeeded" : "failed");
 				if (!expectedResult)
 					return;

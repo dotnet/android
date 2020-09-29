@@ -62,8 +62,7 @@ namespace Xamarin.Android.Build.Tests
 			if (isRelease) {
 				proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			}
-			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
-				builder.Verbosity = LoggerVerbosity.Diagnostic;
+			using (var builder = CreateApkBuilder ()) {
 				Assert.IsTrue (builder.Build (proj));
 				Assert.IsTrue (builder.Install (proj));
 				Assert.IsTrue (builder.Output.AreTargetsAllBuilt ("_Upload"), "_Upload should have built completely.");
@@ -93,8 +92,7 @@ namespace Xamarin.Android.Build.Tests
 				proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", "<application android:debuggable=\"true\" ");
 				proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			}
-			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
-				builder.Verbosity = LoggerVerbosity.Diagnostic;
+			using (var builder = CreateApkBuilder ()) {
 				Assert.IsTrue (builder.Build (proj));
 				Assert.IsTrue (builder.Install (proj));
 				Assert.AreEqual ($"package:{proj.PackageName}", RunAdbCommand ($"shell pm list packages {proj.PackageName}").Trim (),
@@ -153,8 +151,7 @@ namespace Xamarin.Android.Build.Tests
 			// Set debuggable=true to allow run-as command usage with a release build
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", "<application android:debuggable=\"true\" ");
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
-			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
-				builder.Verbosity = LoggerVerbosity.Diagnostic;
+			using (var builder = CreateApkBuilder ()) {
 				Assert.IsTrue (builder.Build (proj));
 				Assert.IsTrue (builder.Install (proj));
 				Assert.AreEqual ($"package:{proj.PackageName}", RunAdbCommand ($"shell pm list packages {proj.PackageName}").Trim (),
@@ -202,8 +199,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.RemoveProperty (proj.ReleaseProperties, "EmbedAssembliesIntoApk");
 			var abis = new [] { "armeabi-v7a", "x86" };
 			proj.SetAndroidSupportedAbis (abis);
-			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name), false, false)) {
-				builder.Verbosity = LoggerVerbosity.Diagnostic;
+			using (var builder = CreateApkBuilder ()) {
 				if (RunAdbCommand ("shell pm list packages Mono.Android.DebugRuntime").Trim ().Length != 0)
 					RunAdbCommand ("uninstall Mono.Android.DebugRuntime");
 				Assert.IsTrue (builder.Install (proj));
@@ -417,7 +413,6 @@ namespace Xamarin.Android.Build.Tests
 				Encoding = Encoding.ASCII,
 			});
 			using (var b = CreateApkBuilder (path, false, false)) {
-				b.Verbosity = LoggerVerbosity.Diagnostic;
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj, environmentVariables: envVar), "Build should have succeeded.");
 				if (packageFormat == "apk") {

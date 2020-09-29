@@ -18,6 +18,7 @@
     <BuildDependsOn>
       _CopyNDKTools;
       _GenerateXACommonProps;
+      _AssignRelativeParentLinkMetadata;
       $(BuildDependsOn);
       _CopyExtractedMultiDexJar;
       _BuildMonoScripts;
@@ -31,25 +32,29 @@
   <ItemGroup>
     <None Include="MSBuild\Novell\Novell.MonoDroid.Common.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>..\..\Novell\Novell.MonoDroid.Common.targets</Link>
+      <!-- Work around Visual Studio for Mac `Invalid value for Link property`
+           project load error by using custom `%(_RelativeParentLink)` metadata
+           that gets copied into `%(Link)` at build time by
+           `_AssignRelativeParentLinkMetadata`. -->
+      <_RelativeParentLink>..\..\Novell\Novell.MonoDroid.Common.targets</_RelativeParentLink>
     </None>
     <None Include="MSBuild\Novell\Novell.MonoDroid.CSharp.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>..\..\Novell\Novell.MonoDroid.CSharp.targets</Link>
+      <_RelativeParentLink>..\..\Novell\Novell.MonoDroid.CSharp.targets</_RelativeParentLink>
     </None>
     <None Include="MSBuild\Novell\MonoDroid.FSharp.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>..\..\Novell\MonoDroid.FSharp.targets</Link>
+      <_RelativeParentLink>..\..\Novell\MonoDroid.FSharp.targets</_RelativeParentLink>
     </None>
     <None
         Include="MSBuild\Xamarin\Xamarin.Android.Sdk.props">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>..\Xamarin.Android.Sdk.props</Link>
+      <_RelativeParentLink>..\Xamarin.Android.Sdk.props</_RelativeParentLink>
     </None>
     <None
         Include="MSBuild\Xamarin\Xamarin.Android.Sdk.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>..\Xamarin.Android.Sdk.targets</Link>
+      <_RelativeParentLink>..\Xamarin.Android.Sdk.targets</_RelativeParentLink>
     </None>
     <None
         Include="MSBuild\Xamarin\Android\Xamarin.Android.Bindings.Before.targets">
@@ -297,6 +302,13 @@
         Overwrite="false"/>
     <ItemGroup>
       <FileWrites Include="$(_GeneratedProfileClass)" />
+    </ItemGroup>
+  </Target>
+  <Target Name="_AssignRelativeParentLinkMetadata">
+    <ItemGroup>
+      <None Condition=" '%(None._RelativeParentLink)' != '' ">
+        <Link>%(None._RelativeParentLink)</Link>
+      </None>
     </ItemGroup>
   </Target>
 

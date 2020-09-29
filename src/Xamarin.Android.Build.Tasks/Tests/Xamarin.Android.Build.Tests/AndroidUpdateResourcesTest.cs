@@ -103,11 +103,9 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
 			using (var l = CreateDllBuilder (Path.Combine (path, lib.ProjectName), false, false)) {
 				using (var b = CreateApkBuilder (Path.Combine (path, proj.ProjectName), false, false)) {
-					l.Verbosity = LoggerVerbosity.Diagnostic;
 					l.Target = "Build";
 					Assert.IsTrue(l.Clean(lib), "Lib1 should have cleaned successfully");
 					Assert.IsTrue (l.Build (lib), "Lib1 should have built successfully");
-					b.Verbosity = LoggerVerbosity.Diagnostic;
 					b.ThrowOnBuildFailure = false;
 					b.Target = "Compile";
 					Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, parameters: new string [] { "DesignTimeBuild=true" }),
@@ -288,7 +286,6 @@ namespace Xamarin.Android.Build.Tests
 				proj.PackageReferences.Add (KnownPackages.GooglePlayServicesMaps_42_1021_1);
 				proj.PackageReferences.Add (KnownPackages.Xamarin_Build_Download_0_4_11);
 				using (var b = CreateApkBuilder (Path.Combine (projectPath, "Application1"), false, false)) {
-					b.Verbosity = LoggerVerbosity.Diagnostic;
 					Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 					var path = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/bin/packaged_resources");
 					var data = ZipHelper.ReadFileFromZip (path, "res/drawable/image1.9.png");
@@ -670,7 +667,6 @@ namespace UnnamedProject
 </LinearLayout>";
 			var projectPath = string.Format ("temp/CheckAaptErrorRaisedForMissingResource");
 			using (var b = CreateApkBuilder (Path.Combine (projectPath, "UnamedApp"), false, false)) {
-				b.Verbosity = LoggerVerbosity.Diagnostic;
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed");
 				StringAssertEx.Contains ("APT2260: ", b.LastBuildOutput);
@@ -687,9 +683,7 @@ namespace UnnamedProject
 <resources>
 </resources>"
 			});
-			var projectPath = string.Format ("temp/CheckAaptErrorRaisedForInvalidDirectoryName");
-			using (var b = CreateApkBuilder (Path.Combine (projectPath, "UnamedApp"), false, false)) {
-				b.Verbosity = LoggerVerbosity.Diagnostic;
+			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed");
 				StringAssertEx.Contains ("APT2144: ", b.LastBuildOutput);
@@ -711,9 +705,7 @@ namespace UnnamedProject
 	<string name=""hello"">Hello World, Click Me!</string>
 </resources>",
 			});
-			var projectPath = string.Format ($"temp/{TestName}");
-			using (var b = CreateApkBuilder (Path.Combine (projectPath, "UnamedApp"), false, false)) {
-				b.Verbosity = LoggerVerbosity.Diagnostic;
+			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed");
 				StringAssertEx.Contains ("Invalid file name:", b.LastBuildOutput);
@@ -737,9 +729,7 @@ namespace UnnamedProject
 	<string name=""hellome"">Hello World, Click Me!</string>
 </resources>",
 			});
-			var projectPath = string.Format ($"temp/{TestName}");
-			using (var b = CreateApkBuilder (Path.Combine (projectPath, "UnamedApp"), false, false)) {
-				b.Verbosity = LoggerVerbosity.Diagnostic;
+			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				StringAssertEx.DoesNotContain ("Invalid file name:", b.LastBuildOutput);
@@ -759,9 +749,7 @@ namespace UnnamedProject
 	<string name=""some_string_value"">Hello Me From the App</string>
 	<string name=""some_string_value"">Hello Me From the App 2</string>
 </resources>";
-			var projectPath = string.Format ("temp/CheckAaptErrorRaisedForDuplicateResourceinApp");
-			using (var b = CreateApkBuilder (Path.Combine (projectPath, "UnamedApp"), false, false)) {
-				b.Verbosity = LoggerVerbosity.Diagnostic;
+			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed");
 				StringAssertEx.Contains ("APT2057: ", b.LastBuildOutput);

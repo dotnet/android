@@ -239,7 +239,6 @@ namespace Com.Ipaulpro.Afilechooser {
 				};
 				proj.OtherBuildItems.Add (new BuildItem ("ProjectReference", "..\\AdalBinding\\UnnamedProject.csproj"));
 				using (var b = CreateApkBuilder ("temp/MergeAndroidManifest/App")) {
-					b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
 					Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 					var manifest = File.ReadAllText (Path.Combine (Root, b.ProjectDirectory, "obj", "Release", "android", "AndroidManifest.xml"));
 					Assert.IsTrue (manifest.Contains ("com.microsoft.aad.adal.AuthenticationActivity"), "manifest merge failure");
@@ -283,7 +282,6 @@ namespace Com.Ipaulpro.Afilechooser {
 				var proj = new XamarinAndroidApplicationProject ();
 				proj.OtherBuildItems.Add (new BuildItem ("ProjectReference", $"..\\MultiDexBinding\\{binding.ProjectName}.csproj"));
 				using (var b = CreateApkBuilder ("temp/BindingCustomJavaApplicationClass/App")) {
-					b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
 					Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				}
 			}
@@ -327,7 +325,6 @@ namespace Com.Ipaulpro.Afilechooser {
 			});
 			var path = Path.Combine ("temp", TestContext.CurrentContext.Test.Name);
 			using (var bindingBuilder = CreateDllBuilder (Path.Combine (path, "Binding"))) {
-				bindingBuilder.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
 				Assert.IsTrue (bindingBuilder.Build (binding), "binding build should have succeeded");
 				var proj = new XamarinAndroidApplicationProject ();
 				proj.OtherBuildItems.Add (new BuildItem ("ProjectReference", "..\\Binding\\UnnamedProject.csproj"));

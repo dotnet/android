@@ -39,7 +39,6 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty (proj.ReleaseProperties, "AndroidPackageFormat", packageFormat);
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			using (var b = CreateApkBuilder ()) {
-				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj), "first build failed");
 				var outputPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
@@ -68,16 +67,20 @@ namespace Xamarin.Android.Build.Tests
 				new [] {
 					"Java.Interop.dll",
 					"Mono.Android.dll",
+					"System.Collections.NonGeneric.dll",
 					"System.ComponentModel.Primitives.dll",
 					"System.Console.dll",
 					"System.Linq.Expressions.dll",
 					"System.ObjectModel.dll",
+					"System.Private.Uri.dll",
 					"System.Private.Xml.dll",
+					"System.Private.Xml.Linq.dll",
 					"System.Runtime.CompilerServices.Unsafe.dll",
 					"System.Runtime.Serialization.Formatters.dll",
 					"System.Runtime.Serialization.Primitives.dll",
 					"System.Security.Cryptography.Algorithms.dll",
 					"System.Security.Cryptography.Primitives.dll",
+					"System.Text.RegularExpressions.dll",
 					"System.Private.CoreLib.dll",
 					"System.Collections.Concurrent.dll",
 					"System.Collections.dll",
@@ -111,7 +114,7 @@ namespace Xamarin.Android.Build.Tests
 						proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
 				using (var zip = ZipHelper.OpenZip (apk)) {
 					var existingFiles = zip.Where (a => a.FullName.StartsWith ("assemblies/", StringComparison.InvariantCultureIgnoreCase));
-					var missingFiles = expectedFiles.Where (x => !zip.ContainsEntry ("assmelbies/" + Path.GetFileName (x)));
+					var missingFiles = expectedFiles.Where (x => !zip.ContainsEntry ("assemblies/" + Path.GetFileName (x)));
 					Assert.IsTrue (missingFiles.Any (),
 					string.Format ("The following Expected files are missing. {0}",
 						string.Join (Environment.NewLine, missingFiles)));
@@ -158,8 +161,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
 			proj.SetAndroidSupportedAbis ("x86");
 			proj.SetProperty (proj.ReleaseProperties, "AndroidStoreUncompressedFileExtensions", compressNativeLibraries ? "" : "so");
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
-				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
+			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj), "build failed");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
@@ -279,8 +281,7 @@ namespace Xamarin.Android.Build.Tests
 				TextContent = () => "namespace Foo { class Bar : Java.Lang.Object { } }"
 			});
 			proj.SetProperty (proj.DebugProperties, "AndroidPackageNamingPolicy", "Lowercase");
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
-				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build failed");
 				var text = b.Output.GetIntermediaryAsText (b.Output.IntermediateOutputPath, Path.Combine ("android", "src", "foo", "Bar.java"));
 				Assert.IsTrue (text.Contains ("package foo;"), "expected package not found in the source.");
@@ -331,9 +332,8 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 			proj.SetProperty (proj.DebugProperties, "AndroidPackageNamingPolicy", "Lowercase");
 			foreach (var package in packages)
 				proj.PackageReferences.Add (package);
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
-				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
 				Assert.IsTrue (b.Build (proj), "build failed");
 				var bin = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
 				var obj = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
