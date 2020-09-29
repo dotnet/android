@@ -25,7 +25,8 @@ namespace UnnamedProject
 			// and attach an event to it
 			Button button = FindViewById<Button>(Resource.Id.myButton);
 
-			button.Click += delegate {
+			button.Click += delegate
+			{
 				button.Text = string.Format("{0} clicks!", count++);
 			};
 
@@ -106,26 +107,37 @@ namespace UnnamedProject
 				Android.Util.Log.Info(TAG, $"[LINKALLPASS] Unable to create instance of 'NonPreserved' as expected.\n{ex}");
 			}
 
-			// [Test] TryAccessNonXmlPreservedMethodOfLinkerModeFullClass
-			try
-			{
-				var asm = typeof(Library1.SomeClass).Assembly;
-				var t = asm.GetType("Library1.LinkModeFullClass");
-				var m = t.GetMethod("ThisMethodShouldNotBePreserved");
-				Android.Util.Log.Info(TAG, $"[LINKALLFAIL] Able to locate method that should have been linked: '{m.Name}'.");
-			}
-			catch (NullReferenceException ex)
-			{
-				Android.Util.Log.Info(TAG, $"[LINKALLPASS] Was unable to access 'ThisMethodShouldNotBePreserved ()' method of 'LinkerClass' as expected.\n{ex}");
-			}
-
+			var cldt = new CustomLinkerDescriptionTests();
+			Android.Util.Log.Info(TAG, cldt.TryAccessNonXmlPreservedMethodOfLinkerModeFullClass());
 			Android.Util.Log.Info(TAG, LinkTestLib.Bug21578.MulticastOption_ShouldNotBeStripped());
 			Android.Util.Log.Info(TAG, LinkTestLib.Bug21578.MulticastOption_ShouldNotBeStripped2());
 			Android.Util.Log.Info(TAG, LinkTestLib.Bug35195.AttemptCreateTable());
 			Android.Util.Log.Info(TAG, LinkTestLib.Bug36250.SerializeSearchRequestWithDictionary());
 
 			Android.Util.Log.Info(TAG, "All regression tests completed.");
-
 		}
+	}
+
+	public class CustomLinkerDescriptionTests
+	{
+		Type t = typeof(Library1.LinkModeFullClass);
+
+		// [Test]
+		public string TryAccessNonXmlPreservedMethodOfLinkerModeFullClass()
+		{
+			try
+			{
+				System.Reflection.MethodInfo m = t.GetMethod("ThisMethodShouldNotBePreserved");
+				if (m == null)
+					return $"[LINKALLPASS] Was unable to locate 'ThisMethodShouldNotBePreserved ()' method of 'LinkModeFullClass' as expected.";
+				else
+					return $"[LINKALLFAIL] Able to locate method that should have been linked: '{m.Name}'.";
+			}
+			catch (Exception ex)
+			{
+				return $"[LINKALLFAIL] Unexpected exception thrown attempting to locate 'ThisMethodShouldNotBePreserved' method of 'LinkModeFullClass'.\n{ex}";
+			}
+		}
+
 	}
 }

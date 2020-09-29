@@ -139,7 +139,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			SymbolicateAndAssert (archivePath, logcatPath, new string [] {
 				Path.Combine (Root, builder.ProjectDirectory, "MainActivity.cs:32"),
 				Directory.Exists (builder.BuildOutputDirectory)
-					? Path.Combine ("src","Mono.Android", "obj", XABuildPaths.Configuration,"monoandroid10", $"android-{apiLevel}", "mcw", "Android.App.Activity.cs:")
+					? Path.Combine ("src", "Mono.Android", "obj", XABuildPaths.Configuration, "monoandroid10", $"android-{apiLevel}", "mcw", "Android.App.Activity.cs:")
 					: $"src/Mono.Android/obj/Release/monoandroid10/android-{apiLevel}/mcw/Android.App.Activity.cs:",
 			}) ;
 		}
@@ -213,7 +213,7 @@ namespace Library1 {
 					Path.Combine (Root, lb.ProjectDirectory, "Class1.cs:12"),
 					Path.Combine (Root, builder.ProjectDirectory, "MainActivity.cs:33"),
 					Directory.Exists (builder.BuildOutputDirectory)
-						? Path.Combine("src","Mono.Android", "obj", XABuildPaths.Configuration,"monoandroid10", $"android-{apiLevel}", "mcw", "Android.App.Activity.cs:")
+						? Path.Combine ("src", "Mono.Android", "obj", XABuildPaths.Configuration, "monoandroid10", $"android-{apiLevel}", "mcw", "Android.App.Activity.cs:")
 						: $"src/Mono.Android/obj/Release/monoandroid10/android-{apiLevel}/mcw/Android.App.Activity.cs:",
 				});
 			}
