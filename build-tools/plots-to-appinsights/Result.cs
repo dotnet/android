@@ -5,11 +5,11 @@ namespace Xamarin.Android.Tools.Plots
 	[Flags]
 	internal enum Status
 	{
-		OK                  = 0,
-		ShowHelp            = (1 << 0),
-		MissingArgument     = (1 << 1),
-		CsvFileDoesNotExist = (1 << 2),
-		Error               = (1 << 3),
+		OK = 0,
+		ShowHelp = 1,
+		MissingArgument = 2,
+		CsvFileDoesNotExist = 4,
+		Error = 8
 	}
 
 	internal class Result
