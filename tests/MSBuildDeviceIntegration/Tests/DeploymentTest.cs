@@ -71,6 +71,7 @@ namespace Xamarin.Android.Build.Tests
 		public void CheckResouceIsOverridden ([Values (true, false)] bool useAapt2)
 		{
 			AssertHasDevices ();
+			AssertAaptSupported (useAapt2);
 
 			var library = new XamarinAndroidLibraryProject () {
 				ProjectName = "Library1",
@@ -101,9 +102,9 @@ namespace Xamarin.Android.Build.Tests
 					new BuildItem.ProjectReference ("..\\Library2\\Library2.csproj"),
 				},
 			};
-			library.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
-			library2.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
-			app.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			library.AndroidUseAapt2 =
+				library2.AndroidUseAapt2 =
+				app.AndroidUseAapt2 = useAapt2;
 			app.LayoutMain = app.LayoutMain.Replace ("@string/hello", "@string/hello_me");
 			using (var l1 = CreateApkBuilder (Path.Combine ("temp", TestName, library.ProjectName)))
 			using (var l2 = CreateApkBuilder (Path.Combine ("temp", TestName, library2.ProjectName)))
@@ -142,7 +143,7 @@ namespace Xamarin.Android.Build.Tests
 				};
 
 				library2.References.Add (new BuildItem.ProjectReference ("..\\Library1\\Library1.csproj"));
-				app.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+				app.AndroidUseAapt2 = useAapt2;
 				app.LayoutMain = app.LayoutMain.Replace ("@string/hello", "@string/hello_me");
 				app.TargetFrameworkVersion = b.LatestTargetFrameworkVersion (out apiLevel);
 				app.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>

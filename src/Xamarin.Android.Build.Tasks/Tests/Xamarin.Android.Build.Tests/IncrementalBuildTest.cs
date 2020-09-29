@@ -74,15 +74,15 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void CheckNothingIsDeletedByIncrementalClean ([Values (true, false)] bool enableMultiDex, [Values (true, false)] bool useAapt2)
 		{
+			AssertAaptSupported (useAapt2);
 			var path = Path.Combine ("temp", TestName);
 			var proj = new XamarinFormsAndroidApplicationProject () {
 				ProjectName = "App1",
 				IsRelease = true,
+				AndroidUseAapt2 = useAapt2,
 			};
 			if (enableMultiDex)
 				proj.SetProperty ("AndroidEnableMultiDex", "True");
-			if (useAapt2)
-				proj.SetProperty ("AndroidUseAapt2", "True");
 			using (var b = CreateApkBuilder (path)) {
 				//To be sure we are at a clean state
 				var projectDir = Path.Combine (Root, b.ProjectDirectory);
@@ -655,12 +655,14 @@ namespace Lib2
 		[NonParallelizable] // /restore can fail on Mac in parallel
 		public void ConvertCustomView ([Values (true, false)] bool useAapt2)
 		{
+			AssertAaptSupported (useAapt2);
 			var path = Path.Combine ("temp", TestName);
 			var app = new XamarinAndroidApplicationProject {
 				ProjectName = "MyApp",
 				//NOTE: so _BuildApkEmbed runs in commercial tests
 				EmbedAssembliesIntoApk = true,
 				AndroidUseSharedRuntime = false,
+				AndroidUseAapt2 = useAapt2,
 				Sources = {
 					new BuildItem.Source ("Foo.cs") {
 						TextContent = () => "public class Foo : Bar { }"
@@ -684,7 +686,6 @@ namespace Lib2
 			};
 			// Use a custom view
 			app.LayoutMain = app.LayoutMain.Replace ("</LinearLayout>", "<MyApp.CustomTextView android:id=\"@+id/myText\" android:text=\"à请\" /></LinearLayout>");
-			app.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
 
 			int count = 0;
 			var lib = new DotNetStandard {
@@ -761,8 +762,9 @@ namespace Lib2
 		[Test]
 		public void ResolveLibraryProjectImports ([Values (true, false)] bool useAapt2)
 		{
+			AssertAaptSupported (useAapt2);
 			var proj = new XamarinFormsAndroidApplicationProject ();
-			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			proj.AndroidUseAapt2 = useAapt2;
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
 				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
@@ -837,12 +839,13 @@ namespace Lib2
 		[NonParallelizable]
 		public void InvalidAndroidResource ([Values (true, false)] bool useAapt2)
 		{
+			AssertAaptSupported (useAapt2);
 			var invalidXml = new AndroidItem.AndroidResource (@"Resources\values\ids.xml") {
 				TextContent = () => "<?xml version=\"1.0\" encoding=\"utf-8\" ?><resources><item/></resources>"
 			};
 
 			var proj = new XamarinAndroidApplicationProject ();
-			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			proj.AndroidUseAapt2 = useAapt2;
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				var projectFile = Path.Combine (Root, b.ProjectDirectory, proj.ProjectFilePath);
 				b.ThrowOnBuildFailure = false;
@@ -1177,6 +1180,7 @@ namespace Lib2
 		[Test]
 		public void AaptError ([Values (true, false)] bool useAapt2)
 		{
+			AssertAaptSupported (useAapt2);
 			var proj = new XamarinAndroidApplicationProject {
 				Sources = {
 					new BuildItem.Source ("TestActivity.cs") {
@@ -1184,7 +1188,7 @@ namespace Lib2
 					}
 				}
 			};
-			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			proj.AndroidUseAapt2 = useAapt2;
 			using (var builder = CreateApkBuilder ()) {
 				builder.ThrowOnBuildFailure = false;
 				Assert.IsFalse (builder.Build (proj), "Build should *not* have succeeded on the first build.");
@@ -1330,6 +1334,7 @@ namespace Lib2
 		[Test]
 		public void BuildPropsBreaksConvertResourcesCasesOnSecondBuild ([Values (true, false)] bool useAapt2)
 		{
+			AssertAaptSupported (useAapt2);
 			var proj = new XamarinAndroidApplicationProject () {
 				AndroidResources = {
 					new AndroidItem.AndroidResource (() => "Resources\\drawable\\IMALLCAPS.png") {
@@ -1342,7 +1347,7 @@ namespace Lib2
 					}
 				}
 			};
-			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			proj.AndroidUseAapt2 = useAapt2;
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
 				var assemblyPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, "UnnamedProject.dll");

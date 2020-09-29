@@ -17,13 +17,16 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
+<UsingTask TaskName="Xamarin.Android.Tasks.Aapt2Compile" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.Aapt2Link" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+
 <PropertyGroup>
   <Aapt2DaemonMaxInstanceCount Condition=" '$(Aapt2DaemonMaxInstanceCount)' == '' " >0</Aapt2DaemonMaxInstanceCount>
   <_Aapt2DaemonKeepInDomain Condition=" '$(_Aapt2DaemonKeepInDomain)' == '' ">false</_Aapt2DaemonKeepInDomain>
 </PropertyGroup>
 
 
-<Target Name="_InjectAapt2Dependencies" Condition=" '$(_AndroidUseAapt2)' == 'True' ">
+<Target Name="_InjectAaptDependencies">
   <PropertyGroup>
     <_SetLatestTargetFrameworkVersionDependsOnTargets>
       $(_SetLatestTargetFrameworkVersionDependsOnTargets);

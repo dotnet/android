@@ -27,9 +27,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.AndroidApkSigner" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.AppendCustomMetadataToItemGroup" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetAndroidPackageName" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.Aapt" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.Aapt2Compile" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.Aapt2Link" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Aot" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CilStrip" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.BuildApk" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -364,8 +361,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <!-- As we split up/refactor this file, put new imports here -->
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.D8.targets" Condition=" '$(AndroidDexTool)' == 'd8' " />
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.DX.targets" Condition=" '$(AndroidDexTool)' == 'dx' and '$(UsingAndroidNETSdk)' != 'true' " />
-<Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Aapt.targets" />
-<Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Aapt2.targets" />
+<Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Aapt.targets"  Condition=" '$(AndroidUseAapt2)' != 'true' and '$(UsingAndroidNETSdk)' != 'true' " />
+<Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Aapt2.targets" Condition=" '$(AndroidUseAapt2)' == 'true' or '$(UsingAndroidNETSdk)' == 'true' " />
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.DesignTime.targets" />
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.EmbeddedResource.targets" />
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.SkipCases.projitems" />
@@ -465,6 +462,14 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <AndroidError Code="XA1023"
       ResourceName="XA1023_dotnet"
       Condition="  '$(AndroidDexTool)' == 'dx' and '$(UsingAndroidNETSdk)' == 'true' "
+  />
+  <AndroidWarning Code="XA1026"
+      ResourceName="XA1026"
+      Condition=" '$(AndroidUseAapt2)' != 'true' and '$(UsingAndroidNETSdk)' != 'true' "
+  />
+  <AndroidError Code="XA1026"
+      ResourceName="XA1026_dotnet"
+      Condition=" '$(AndroidUseAapt2)' != 'true' and '$(UsingAndroidNETSdk)' == 'true' "
   />
 </Target>
 

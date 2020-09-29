@@ -16,7 +16,9 @@ Copyright (C) 2019  Microsoft Corporation. All rights reserved.
 
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-<Target Name="_InjectAaptDependencies" Condition=" '$(_AndroidUseAapt2)' != 'True' ">
+<UsingTask TaskName="Xamarin.Android.Tasks.Aapt" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+
+<Target Name="_InjectAaptDependencies">
   <PropertyGroup>
     <_UpdateAndroidResgenInputs>
       $(_UpdateAndroidResgenInputs);

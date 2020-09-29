@@ -965,7 +965,8 @@ in their `.csproj`. Alternatively provide the property on the command line:
 /p:AndroidUseAapt2=True
 ```
 
-Added in Xamarin.Android 8.3.
+Added in Xamarin.Android 8.3. `AndroidUseAapt2=false` is deprecated in
+Xamarin.Android 11.2.
 
 ## AndroidUseApkSigner
 

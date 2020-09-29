@@ -83,6 +83,7 @@ namespace Xamarin.Android.Build.Tests
 		[Category ("SmokeTests")]
 		public void DesignTimeBuild ([Values(false, true)] bool isRelease, [Values (false, true)] bool useManagedParser, [Values (false, true)] bool useAapt2)
 		{
+			AssertAaptSupported (useAapt2);
 			var regEx = new Regex (@"(?<type>([a-zA-Z_0-9])+)\slibrary_name=(?<value>([0-9A-Za-z])+);", RegexOptions.Compiled | RegexOptions.Multiline );
 
 			var path = Path.Combine (Root, "temp", $"DesignTimeBuild_{isRelease}_{useManagedParser}_{useAapt2}");
@@ -91,7 +92,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease,
 			};
 			lib.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", useManagedParser.ToString ());
-			lib.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			lib.AndroidUseAapt2 = useAapt2;
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 				References = {
@@ -100,7 +101,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			var intermediateOutputPath = Path.Combine (path, proj.ProjectName, proj.IntermediateOutputPath);
 			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", useManagedParser.ToString ());
-			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			proj.AndroidUseAapt2 = useAapt2;
 			using (var l = CreateDllBuilder (Path.Combine (path, lib.ProjectName), false, false)) {
 				using (var b = CreateApkBuilder (Path.Combine (path, proj.ProjectName), false, false)) {
 					l.Target = "Build";
@@ -200,10 +201,11 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void ReportAaptWarningsForBlankLevel ([Values (false, true)] bool useAapt2)
 		{
+			AssertAaptSupported (useAapt2);
 			//This test should get the warning `Invalid file name: must contain only [a-z0-9_.]`
 			//    However, <Aapt /> still fails due to aapt failing, Resource.designer.cs is not generated
 			var proj = new XamarinAndroidApplicationProject ();
-			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			proj.AndroidUseAapt2 = useAapt2;
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable\\Image (1).png") {
 				BinaryContent = () => XamarinAndroidCommonProject.icon_binary_mdpi
 			});
@@ -218,8 +220,9 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void RepetiviteBuildUpdateSingleResource ([Values (false, true)] bool useAapt2)
 		{
+			AssertAaptSupported (useAapt2);
 			var proj = new XamarinAndroidApplicationProject ();
-			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			proj.AndroidUseAapt2 = useAapt2;
 			using (var b = CreateApkBuilder ()) {
 				BuildItem image1, image2;
 				using (var stream = typeof (XamarinAndroidCommonProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.Icon.png")) {
@@ -314,6 +317,7 @@ namespace Xamarin.Android.Build.Tests
 		/// </summary>
 		public void CheckXmlResourcesFilesAreProcessed ([Values(false, true)] bool useAapt2)
 		{
+			AssertAaptSupported (useAapt2);
 			var projectPath = String.Format ("temp/CheckXmlResourcesFilesAreProcessed_{0}", useAapt2);
 
 			var layout =  @"<?xml version=""1.0"" encoding=""utf-8"" ?>
@@ -359,8 +363,7 @@ namespace ClassLibrary1
 					},
 				}
 			};
-
-			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			proj.AndroidUseAapt2 = useAapt2;
 
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\layout\\custom_text_app.xml") {
 				TextContent = () => layout,
@@ -694,8 +697,9 @@ namespace UnnamedProject
 		[Test]
 		public void CheckAaptErrorRaisedForInvalidFileName ([Values (false, true)] bool useAapt2)
 		{
+			AssertAaptSupported (useAapt2);
 			var proj = new XamarinAndroidApplicationProject ();
-			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			proj.AndroidUseAapt2 = useAapt2;
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable\\icon-2.png") {
 				BinaryContent = () => XamarinAndroidCommonProject.icon_binary_hdpi,
 			});
@@ -716,8 +720,9 @@ namespace UnnamedProject
 		[Test]
 		public void CheckAaptErrorNotRaisedForInvalidFileNameWithValidLogicalName ([Values (false, true)] bool useAapt2)
 		{
+			AssertAaptSupported (useAapt2);
 			var proj = new XamarinAndroidApplicationProject ();
-			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			proj.AndroidUseAapt2 = useAapt2;
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\drawable\\icon-2.png") {
 				Metadata = { { "LogicalName", "Resources\\drawable\\icon2.png" } },
 				BinaryContent = () => XamarinAndroidCommonProject.icon_binary_hdpi,
@@ -1047,6 +1052,7 @@ namespace Lib1 {
 		[Category ("DotNetIgnore")] // n/a in .NET 5, not possible to use $(TFV) of v8.0
 		public void CheckMaxResWarningIsEmittedAsAWarning([Values (false, true)] bool useAapt2)
 		{
+			AssertAaptSupported (useAapt2);
 			var path = Path.Combine ("temp", TestName);
 			var proj = new XamarinAndroidApplicationProject () {
 				TargetFrameworkVersion = "v8.0",
@@ -1059,7 +1065,7 @@ namespace Lib1 {
 					},
 				},
 			};
-			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			proj.AndroidUseAapt2 = useAapt2;
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values-v27\\Strings.xml") {
 				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
 <resources>
@@ -1083,6 +1089,7 @@ namespace Lib1 {
 		[Test]
 		public void CheckDefaultTranslationWarnings ()
 		{
+			AssertAaptSupported (useAapt2: false);
 			var path = Path.Combine ("temp", TestName);
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
@@ -1093,7 +1100,7 @@ namespace Lib1 {
 			};
 
 			string name = "test";
-			proj.SetProperty ("AndroidUseAapt2", "False");
+			proj.AndroidUseAapt2 = false;
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values-fr\\Strings.xml") {
 				TextContent = () => $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <resources>
@@ -1202,8 +1209,9 @@ namespace UnnamedProject
 		[Test]
 		public void CustomViewAddResourceId ([Values (false, true)] bool useAapt2)
 		{
+			AssertAaptSupported (useAapt2);
 			var proj = new XamarinAndroidApplicationProject ();
-			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			proj.AndroidUseAapt2 = useAapt2;
 			proj.LayoutMain = proj.LayoutMain.Replace ("</LinearLayout>", "<android.support.design.widget.BottomNavigationView android:id=\"@+id/navigation\" /></LinearLayout>");
 			proj.PackageReferences.Add (KnownPackages.Android_Arch_Core_Common_26_1_0);
 			proj.PackageReferences.Add (KnownPackages.Android_Arch_Lifecycle_Common_26_1_0);
@@ -1249,8 +1257,9 @@ namespace UnnamedProject
 		[Category ("DotNetIgnore")] // <ProcessGoogleServicesJson/> task is built for net45
 		public void Issue2205 ([Values (false, true)] bool useAapt2)
 		{
+			AssertAaptSupported (useAapt2);
 			var proj = new XamarinAndroidApplicationProject ();
-			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			proj.AndroidUseAapt2 = useAapt2;
 			proj.PackageReferences.Add (KnownPackages.Android_Arch_Core_Common_26_1_0);
 			proj.PackageReferences.Add (KnownPackages.Android_Arch_Lifecycle_Common_26_1_0);
 			proj.PackageReferences.Add (KnownPackages.Android_Arch_Lifecycle_Runtime_26_1_0);
@@ -1322,8 +1331,9 @@ namespace UnnamedProject
 		[Parallelizable (ParallelScope.Self)]
 		public void CheckNoVersionVectors ([Values (true, false)] bool useAapt2)
 		{
+			AssertAaptSupported (useAapt2);
 			var proj = new XamarinFormsAndroidApplicationProject ();
-			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			proj.AndroidUseAapt2 = useAapt2;
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 

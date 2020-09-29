@@ -68,11 +68,12 @@ namespace Bug12935
 		[Test]
 		public void Bug12935 ([Values (true, false)] bool useAapt2)
 		{
+			AssertAaptSupported (useAapt2);
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
 			proj.MainActivity = ScreenOrientationActivity;
-			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			proj.AndroidUseAapt2 = useAapt2;
 			var directory = $"temp/Bug12935_{useAapt2}";
 			using (var builder = CreateApkBuilder (directory)) {
 
@@ -127,11 +128,12 @@ namespace Bug12935
 		[Test]
 		public void CheckElementReOrdering ([Values (true, false)] bool useAapt2)
 		{
+			AssertAaptSupported (useAapt2);
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
 			proj.MainActivity = ScreenOrientationActivity;
-			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			proj.AndroidUseAapt2 = useAapt2;
 			var directory = $"temp/CheckElementReOrdering_{useAapt2}";
 			using (var builder = CreateApkBuilder (directory)) {
 				proj.AndroidManifest = ElementOrderManifest;
@@ -842,17 +844,15 @@ class TestActivity : Activity { }"
 		[Test]
 		public void Queries_API30 ([Values (true, false)] bool useAapt2)
 		{
-			if (!CommercialBuildAvailable) {
-				Assert.Ignore ("$(AndroidUseSharedRuntime) is required for this test.");
-				return;
-			}
+			AssertAaptSupported (useAapt2);
+			AssertCommercialBuild ();
 
 			var proj = new XamarinAndroidApplicationProject {
 				AndroidUseSharedRuntime = true,
 				EmbedAssembliesIntoApk = false,
 				TargetSdkVersion = "30",
 			};
-			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			proj.AndroidUseAapt2 = useAapt2;
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded");
 
