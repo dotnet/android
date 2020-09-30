@@ -175,7 +175,6 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease
 			};
 			proj.SetProperty (KnownProperties.RuntimeIdentifier, runtimeIdentifier);
-
 			var dotnet = CreateDotNetBuilder (proj);
 			Assert.IsTrue (dotnet.Publish (), "first `dotnet publish` should succeed");
 
