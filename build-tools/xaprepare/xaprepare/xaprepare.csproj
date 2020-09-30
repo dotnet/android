@@ -131,7 +131,8 @@
     <Compile Include="OperatingSystems\OS.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Scenarios\Scenario_DetermineApplicableTests.cs" />
-    <Compile Include="Scenarios\Scenario_AndroidToolchain.cs" />
+    <Compile Include="Scenarios\Scenario_EmulatorTestDependencies.cs" />
+    <Compile Include="Scenarios\Scenario_AndroidTestDependencies.cs" />
     <Compile Include="Scenarios\Scenario_PrepareExternal.cs" />
     <Compile Include="Scenarios\Scenario_PrepareExternalGitDependencies.cs" />
     <Compile Include="Scenarios\Scenario_PrepareImageDependencies.cs" />

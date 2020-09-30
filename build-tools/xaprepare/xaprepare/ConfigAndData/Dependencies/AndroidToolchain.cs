@@ -62,17 +62,16 @@ namespace Xamarin.Android.Prepare
 				new AndroidPlatformComponent ("platform-29_r01",   apiLevel: "29", pkgRevision: "1"),
 				new AndroidPlatformComponent ("platform-30_r01",   apiLevel: "30", pkgRevision: "1"),
 
-				new AndroidToolchainComponent ("docs-24_r01",                                       destDir: "docs", pkgRevision: "1"),
-				new AndroidToolchainComponent ("android_m2repository_r47",                          destDir: Path.Combine ("extras", "android", "m2repository"), pkgRevision: "47.0.0"),
-				new AndroidToolchainComponent ($"x86-29_r07-{osTag}",                               destDir: Path.Combine ("system-images", "android-29", "default", "x86"), relativeUrl: new Uri ("sys-img/android/", UriKind.Relative), pkgRevision: "7"),
-				new AndroidToolchainComponent ($"x86_64-29_r07-{osTag}",                            destDir: Path.Combine ("system-images", "android-29", "default", "x86_64"), relativeUrl: new Uri ("sys-img/android/", UriKind.Relative), pkgRevision: "7"),
-				new AndroidToolchainComponent ($"android-ndk-r{AndroidNdkVersion}-{osTag}-x86_64",  destDir: AndroidNdkDirectory, pkgRevision: AndroidPkgRevision),
+				new AndroidToolchainComponent ("docs-24_r01",                                       destDir: "docs", pkgRevision: "1", dependencyType: AndroidToolchainComponentType.BuildDependency),
+				new AndroidToolchainComponent ("android_m2repository_r47",                          destDir: Path.Combine ("extras", "android", "m2repository"), pkgRevision: "47.0.0", dependencyType: AndroidToolchainComponentType.BuildDependency),
+				new AndroidToolchainComponent ($"x86_64-29_r07-{osTag}",                            destDir: Path.Combine ("system-images", "android-29", "default", "x86_64"), relativeUrl: new Uri ("sys-img/android/", UriKind.Relative), pkgRevision: "7", dependencyType: AndroidToolchainComponentType.EmulatorDependency),
+				new AndroidToolchainComponent ($"android-ndk-r{AndroidNdkVersion}-{osTag}-x86_64",  destDir: AndroidNdkDirectory, pkgRevision: AndroidPkgRevision, dependencyType: AndroidToolchainComponentType.BuildDependency),
 				new AndroidToolchainComponent ($"{XABuildToolsPackagePrefix}build-tools_r{XABuildToolsVersion}-{altOsTag}",    destDir: Path.Combine ("build-tools", XABuildToolsFolder), isMultiVersion: true),
 				new AndroidToolchainComponent ($"commandlinetools-{cltOsTag}-{CommandLineToolsVersion}",
 					destDir: Path.Combine ("cmdline-tools", CommandLineToolsFolder), isMultiVersion: true),
 				new AndroidToolchainComponent ($"{XAPlatformToolsPackagePrefix}platform-tools_r{XAPlatformToolsVersion}-{osTag}", destDir: "platform-tools", pkgRevision: XAPlatformToolsVersion),
 				new AndroidToolchainComponent ($"sdk-tools-{osTag}-4333796",                        destDir: "tools", pkgRevision: "26.1.1"),
-				new AndroidToolchainComponent ($"emulator-{osTag}-{EmulatorVersion}",               destDir: "emulator", pkgRevision: EmulatorPkgRevision),
+				new AndroidToolchainComponent ($"emulator-{osTag}-{EmulatorVersion}",               destDir: "emulator", pkgRevision: EmulatorPkgRevision, dependencyType: AndroidToolchainComponentType.EmulatorDependency),
 				new AndroidToolchainComponent ($"cmake-{AndroidCmakeVersion}-{osTag}-x86_64",       destDir: Path.Combine ("cmake", AndroidCmakeVersionPath), isMultiVersion: true, noSubdirectory: true, pkgRevision: "3.10.2"),
 			};
 		}

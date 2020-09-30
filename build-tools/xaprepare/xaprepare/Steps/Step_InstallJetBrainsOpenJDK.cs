@@ -174,6 +174,7 @@ namespace Xamarin.Android.Prepare
 				}
 
 				cv = line.Substring (line.IndexOf ('=') + 1).Trim ('"');
+				cv = cv.Replace ("_", ".");
 				break;
 			}
 
