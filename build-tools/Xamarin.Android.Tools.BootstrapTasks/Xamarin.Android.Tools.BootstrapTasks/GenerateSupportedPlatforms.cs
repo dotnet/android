@@ -66,13 +66,13 @@ Specifies the supported Android platform versions for this SDK.
 				foreach (AndroidVersion version in versions.InstalledBindingVersions
 						.Where (v => v.ApiLevel >= MinimumApiLevel)
 						.OrderBy (v => v.ApiLevel)) {
-					writer.WriteStartElement ("AndroidSdkSupportedTargetPlatform");
+					writer.WriteStartElement ("AndroidSdkSupportedTargetPlatformVersion");
 					writer.WriteAttributeString ("Include", version.ApiLevel.ToString ());
-					writer.WriteEndElement (); // </AndroidSdkSupportedTargetPlatform>
+					writer.WriteEndElement (); // </AndroidSdkSupportedTargetPlatformVersion>
 				}
-				writer.WriteStartElement ("SdkSupportedTargetPlatform");
+				writer.WriteStartElement ("SdkSupportedTargetPlatformVersion");
 				writer.WriteAttributeString ("Condition", " '$(TargetPlatformIdentifier)' == 'Android' ");
-				writer.WriteAttributeString ("Include", "@(AndroidSdkSupportedTargetPlatform)");
+				writer.WriteAttributeString ("Include", "@(AndroidSdkSupportedTargetPlatformVersion)");
 
 				writer.WriteEndDocument (); // </Project>
 			}
