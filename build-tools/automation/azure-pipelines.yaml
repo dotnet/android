@@ -53,7 +53,7 @@ variables:
   NUnitConsoleVersion: 3.11.1
   DotNetCoreVersion: 3.1.201
   # Version number from: https://github.com/dotnet/installer#installers-and-binaries
-  DotNetCorePreviewVersion: 5.0.100-rc.2.20459.1
+  DotNetCorePreviewVersion: 5.0.100-rc.2.20480.7
   HostedMacMojave: Hosted Mac Internal Mojave
   HostedMac: Hosted Mac Internal
   HostedWinVS2019: Hosted Windows 2019 with VS2019
