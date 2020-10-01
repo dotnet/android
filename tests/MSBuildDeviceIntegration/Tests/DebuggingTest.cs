@@ -304,7 +304,7 @@ namespace ${ROOT_NAMESPACE} {
 		};
 #pragma warning restore 414
 
-		[Test]
+		[Test, Category ("SmokeTests")]
 		[TestCaseSource (nameof(DebuggerTestCases))]
 		public void ApplicationRunsWithDebuggerAndBreaks (bool useSharedRuntime, bool embedAssemblies, string fastDevType, bool allowDeltaInstall)
 		{
