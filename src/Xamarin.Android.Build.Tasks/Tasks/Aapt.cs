@@ -25,6 +25,8 @@ namespace Xamarin.Android.Tasks
 
 		public string AndroidComponentResgenFlagFile { get; set; }
 
+		public ITaskItem AndroidManifestFile { get; set;}
+
 		public bool NonConstantId { get; set; }
 
 		public string AssetDirectory { get; set; }
@@ -73,7 +75,6 @@ namespace Xamarin.Android.Tasks
 
 		public string ImportsDirectory { get; set; }
 		public string OutputImportDirectory { get; set; }
-		public bool UseShortFileNames { get; set; }
 		public string AssemblyIdentityMapFile { get; set; }
 
 		public string ResourceNameCaseMap { get; set; }
@@ -317,7 +318,7 @@ namespace Xamarin.Android.Tasks
 			if (LibraryProjectJars != null)
 				foreach (var jar in LibraryProjectJars)
 					cmd.AppendSwitchIfNotNull ("-j ", jar);
-			
+
 			cmd.AppendSwitchIfNotNull ("-I ", JavaPlatformJarPath);
 
 			// Add asset directory if it exists
@@ -340,35 +341,13 @@ namespace Xamarin.Android.Tasks
 			if (!string.IsNullOrEmpty (ResourceSymbolsTextFileDirectory))
 				cmd.AppendSwitchIfNotNull ("--output-text-symbols ", ResourceSymbolsTextFileDirectory);
 
-			var extraArgsExpanded = ExpandString (ExtraArgs);
-			if (extraArgsExpanded != ExtraArgs)
-				LogDebugMessage ("  ExtraArgs expanded: {0}", extraArgsExpanded);
-
-			if (!string.IsNullOrWhiteSpace (extraArgsExpanded))
-				cmd.AppendSwitch (extraArgsExpanded);
+			if (!string.IsNullOrWhiteSpace (ExtraArgs))
+				cmd.AppendSwitch (ExtraArgs);
 
 			if (!AndroidUseLatestPlatformSdk)
 				cmd.AppendSwitchIfNotNull ("--max-res-version ", ApiLevel);
 
 			return cmd.ToString ();
-		}
-
-		string ExpandString (string s)
-		{
-			if (s == null)
-				return null;
-			int start = 0;
-			int st = s.IndexOf ("${library.imports:", start, StringComparison.Ordinal);
-			if (st >= 0) {
-				int ed = s.IndexOf ('}', st);
-				if (ed < 0)
-					return s.Substring (0, st + 1) + ExpandString (s.Substring (st + 1));
-				int ast = st + "${library.imports:".Length;
-				string aname = s.Substring (ast, ed - ast);
-				return s.Substring (0, st) + Path.Combine (OutputImportDirectory, UseShortFileNames ? assemblyMap.GetLibraryImportDirectoryNameForAssembly (aname) : aname, ImportsDirectory) + Path.DirectorySeparatorChar + ExpandString (s.Substring (ed + 1));
-			}
-			else
-				return s;
 		}
 
 		protected string GenerateFullPathToTool ()
@@ -378,7 +357,7 @@ namespace Xamarin.Android.Tasks
 
 		protected void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance, bool apptResult)
 		{
-			if (string.IsNullOrEmpty (singleLine)) 
+			if (string.IsNullOrEmpty (singleLine))
 				return;
 
 			var match = AndroidRunToolTask.AndroidErrorRegex.Match (singleLine.Trim ());
@@ -406,12 +385,20 @@ namespace Xamarin.Android.Tasks
 					file = newfile;
 				}
 
+				bool manifestError = false;
+				if (AndroidManifestFile != null && string.Compare (Path.GetFileName (file), Path.GetFileName (AndroidManifestFile.ItemSpec), StringComparison.OrdinalIgnoreCase) == 0) {
+					manifestError = true;
+				}
+
 				// Strip any "Error:" text from aapt's output
 				if (message.StartsWith ("error: ", StringComparison.InvariantCultureIgnoreCase))
 					message = message.Substring ("error: ".Length);
 
 				if (level.Contains ("error") || (line != 0 && !string.IsNullOrEmpty (file))) {
-					LogCodedError (GetErrorCode (message), message, file, line);
+					if (manifestError)
+						LogCodedError (GetErrorCode (message), string.Format (Xamarin.Android.Tasks.Properties.Resources.AAPTManifestError, message.TrimEnd('.')), AndroidManifestFile.ItemSpec, 0);
+					else
+						LogCodedError (GetErrorCode (message), message, file, line);
 					return;
 				}
 			}

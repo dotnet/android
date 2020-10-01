@@ -29,7 +29,11 @@ namespace Xamarin.ProjectTools
 		/// This passes /p:BuildingInsideVisualStudio=True, command-line to MSBuild
 		/// </summary>
 		public bool BuildingInsideVisualStudio { get; set; } = true;
-		public LoggerVerbosity Verbosity { get; set; }
+		/// <summary>
+		/// Passes /m:N to MSBuild, defaults to null to omit the /m parameter completely.
+		/// </summary>
+		public int? MaxCpuCount { get; set; }
+		public LoggerVerbosity Verbosity { get; set; } = LoggerVerbosity.Diagnostic;
 		public IEnumerable<string> LastBuildOutput {
 			get {
 				if (!string.IsNullOrEmpty (buildLogFullPath) && File.Exists (buildLogFullPath)) {
@@ -149,32 +153,39 @@ namespace Xamarin.ProjectTools
 
 		public string FirstTargetFrameworkVersion ()
 		{
-			GetTargetFrameworkVersionRange (out string _, out string firstFrameworkVersion, out string _, out string _);
+			GetTargetFrameworkVersionRange (out string _, out string firstFrameworkVersion, out string _, out string _, out string[] _);
 			return firstFrameworkVersion;
 		}
 
 		public string FirstTargetFrameworkVersion (out string apiLevel)
 		{
-			GetTargetFrameworkVersionRange (out apiLevel, out string firstFrameworkVersion, out string _, out string _);
+			GetTargetFrameworkVersionRange (out apiLevel, out string firstFrameworkVersion, out string _, out string _, out string [] _);
 			return firstFrameworkVersion;
 		}
 
 		public string LatestTargetFrameworkVersion () {
-			GetTargetFrameworkVersionRange (out string _, out string _, out string _, out string lastFrameworkVersion);
+			GetTargetFrameworkVersionRange (out string _, out string _, out string _, out string lastFrameworkVersion, out string [] _);
 			return lastFrameworkVersion;
 		}
 
 		public string LatestTargetFrameworkVersion (out string apiLevel) {
-			GetTargetFrameworkVersionRange (out string _, out string _, out apiLevel, out string lastFrameworkVersion);
+			GetTargetFrameworkVersionRange (out string _, out string _, out apiLevel, out string lastFrameworkVersion, out string [] _);
 			return lastFrameworkVersion;
 		}
 
-		public void GetTargetFrameworkVersionRange (out string firstApiLevel, out string firstFrameworkVersion, out string lastApiLevel, out string lastFrameworkVersion)
+		public string[] GetAllSupportedTargetFrameworkVersions ()
+		{
+			GetTargetFrameworkVersionRange (out string _, out string _, out string _, out string _, out string [] allFrameworkVersions);
+			return allFrameworkVersions;
+		}
+
+		public void GetTargetFrameworkVersionRange (out string firstApiLevel, out string firstFrameworkVersion, out string lastApiLevel, out string lastFrameworkVersion, out string[] allFrameworkVersions)
 		{
 			firstApiLevel = firstFrameworkVersion = lastApiLevel = lastFrameworkVersion = null;
 
 			Version firstVersion    = null;
 			Version lastVersion     = null;
+			List<string> allTFVs    = new List<string> ();
 
 			foreach (var dir in Directory.EnumerateDirectories (FrameworkLibDirectory, "v*", SearchOption.TopDirectoryOnly)) {
 				// No binding assemblies in `v1.0`; don't process.
@@ -197,23 +208,9 @@ namespace Xamarin.ProjectTools
 					lastFrameworkVersion    = frameworkVersion;
 					lastApiLevel            = apiLevel;
 				}
+				allTFVs.Add (frameworkVersion);
 			}
-		}
-
-		public int GetMaxInstalledPlatform ()
-		{
-			string sdkPath = AndroidSdkResolver.GetAndroidSdkPath ();
-			int result = 0;
-			foreach (var dir in Directory.EnumerateDirectories (Path.Combine (sdkPath, "platforms"))) {
-				int version;
-				string v = Path.GetFileName (dir).Replace ("android-", "");
-				if (!int.TryParse (v, out version))
-					continue;
-				if (version < result)
-					continue;
-				result = version;
-			}
-			return result;
+			allFrameworkVersions = allTFVs.ToArray ();
 		}
 
 		static string GetApiLevelFromInfoPath (string androidApiInfo)
@@ -287,6 +284,14 @@ namespace Xamarin.ProjectTools
 					QuoteFileName (Path.Combine (XABuildPaths.TestOutputDirectory, projectOrSolution)), target, logger);
 			if (AutomaticNuGetRestore && restore && !UseDotNet) {
 				args.Append (" /restore");
+			}
+			if (MaxCpuCount != null) {
+				if (!string.Equals (Path.GetFileNameWithoutExtension (psi.FileName), "xabuild", StringComparison.OrdinalIgnoreCase)) {
+					args.Append ($" /maxCpuCount:{MaxCpuCount}");
+					args.Append (" /nodeReuse:false"); // Disable the MSBuild daemon
+				} else {
+					Console.WriteLine ($"Ignoring MaxCpuCount={MaxCpuCount}, running with xabuild.");
+				}
 			}
 			args.Append ($" @\"{responseFile}\"");
 			using (var sw = new StreamWriter (responseFile, append: false, encoding: Encoding.UTF8)) {

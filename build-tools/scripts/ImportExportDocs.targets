@@ -7,21 +7,41 @@
     <_XamarinDocsPath>$([MSBuild]::EnsureTrailingSlash($(XamarinDocsPath)))</_XamarinDocsPath>
     <_XamarinEngineeringDocsPath>$([MSBuild]::EnsureTrailingSlash($(XamarinEngineeringDocsPath)))</_XamarinEngineeringDocsPath>
   </PropertyGroup>
+  <ItemGroup>
+    <_Docs    Include="building-apps\build-items.md" />
+    <_Docs    Include="building-apps\build-process.md" />
+    <_Docs    Include="building-apps\build-properties.md" />
+    <_Docs    Include="building-apps\build-targets.md" />
+    <_MSDocs  Include="@(_Docs->'$(_XamarinDocsPath)docs\android\deploy-test\%(Identity)')" />
+    <_XADocs  Include="@(_Docs->'$(_TopDirImportExportDocs)Documentation\guides\%(Identity)')" />
+  </ItemGroup>
   <Target Name="ImportXamarinDocs">
+    <Error
+        Condition=" !Exists($(XamarinDocsPath)) "
+        Text="Cannot find checkout of https://github.com/MicrosoftDocs/xamarin-docs.  Please use /p:XamarinDocsPath"
+    />
     <Copy
-        SourceFiles="$(_XamarinDocsPath)docs\android\deploy-test\building-apps\build-process.md"
-        DestinationFiles="$(_TopDirImportExportDocs)Documentation\guides\BuildProcess.md"
+        SourceFiles="@(_MSDocs)"
+        DestinationFiles="@(_XADocs)"
         SkipUnchangedFiles="true"
     />
   </Target>
   <Target Name="ExportXamarinDocs">
+    <Error
+        Condition=" !Exists($(XamarinDocsPath)) "
+        Text="Cannot find checkout of https://github.com/MicrosoftDocs/xamarin-docs.  Please use /p:XamarinDocsPath"
+    />
     <Copy
-        SourceFiles="$(_TopDirImportExportDocs)Documentation\guides\BuildProcess.md"
-        DestinationFiles="$(_XamarinDocsPath)docs\android\deploy-test\building-apps\build-process.md"
+        SourceFiles="@(_XADocs)"
+        DestinationFiles="@(_MSDocs)"
         SkipUnchangedFiles="true"
     />
   </Target>
   <Target Name="ImportXamarinEngineeringDocs">
+    <Error
+        Condition=" !Exists($(XamarinEngineeringDocsPath)) "
+        Text="Cannot find checkout of https://github.com/MicrosoftDocs/xamarin-engineering-docs-pr.  Please use /p:XamarinEngineeringDocsPath"
+    />
     <ItemGroup>
       <_MessageDocumentationFile
           Include="$(_XamarinEngineeringDocsPath)docs\android\errors-and-warnings\*.md"
@@ -48,6 +68,10 @@
     />
   </Target>
   <Target Name="ExportXamarinEngineeringDocs">
+    <Error
+        Condition=" !Exists($(XamarinEngineeringDocsPath)) "
+        Text="Cannot find checkout of https://github.com/MicrosoftDocs/xamarin-engineering-docs-pr.  Please use /p:XamarinEngineeringDocsPath"
+    />
     <ItemGroup>
       <_MessageDocumentationFile
           Include="$(_TopDirImportExportDocs)Documentation\guides\messages\*.md"

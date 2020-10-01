@@ -16,6 +16,8 @@ namespace Android.Runtime {
 
 	class AndroidRuntime : JniRuntime {
 
+		public const string InternalDllName = "xa-internal-api";
+
 		internal AndroidRuntime (IntPtr jnienv,
 				IntPtr vm,
 				bool allocNewObjectSupported,
@@ -100,7 +102,7 @@ namespace Android.Runtime {
 
 	class AndroidObjectReferenceManager : JniRuntime.JniObjectReferenceManager {
 
-		[DllImport ("__Internal", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport (AndroidRuntime.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		static extern int _monodroid_gref_get ();
 
 		public override int GlobalReferenceCount {
@@ -558,10 +560,12 @@ namespace Android.Runtime {
 		{
 			if (value == null)
 				throw new ArgumentNullException (nameof (value));
-			if (!value.PeerReference.IsValid)
-				throw new ArgumentException ("Must have a valid JNI object reference!", nameof (value));
 
 			var reference       = value.PeerReference;
+			if (!reference.IsValid) {
+				// Likely an idempotent DIspose(); ignore.
+				return;
+			}
 			var hash            = JNIEnv.IdentityHash! (reference.Handle);
 
 			RemovePeer (value, hash);

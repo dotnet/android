@@ -9,7 +9,7 @@
     <_BclFrameworkDir>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\v1.0\</_BclFrameworkDir>
   </PropertyGroup>
 
-  <Target Name="_BuildSqlite" DependsOnTargets="_ConfigureSqlite;_BuildAndroidSqlite" />
+  <Target Name="_BuildSqlite" BeforeTargets="Build" DependsOnTargets="_ConfigureSqlite;_BuildAndroidSqlite" />
 
   <Target Name="_PrepareConfigureSqlite">
     <MakeDir Directories="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-$(Configuration)" />

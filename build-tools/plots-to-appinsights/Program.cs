@@ -47,7 +47,7 @@ namespace Xamarin.Android.Tools.Plots
 					appInsightsClientError.Flush ();
 				}
 
-				if (result.Status.HasFlag (Status.ShowHelp) || result.Status != Status.OK) {
+				if (result.Status != Status.OK) {
 					Console.WriteLine ("ProcessPlotCSVFile [OPTIONS] PlotFilename.csv");
 					Console.WriteLine ();
 					Console.WriteLine ("Options:");

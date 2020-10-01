@@ -8,7 +8,7 @@ using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks {
-	
+
 	public class CollectNonEmptyDirectories : AndroidTask {
 		public override string TaskPrefix => "CNE";
 
@@ -39,13 +39,14 @@ namespace Xamarin.Android.Tasks {
 					continue;
 				}
 				string stampFile = directory.GetMetadata ("StampFile");
+				string directoryHash = Files.HashString (directory.ItemSpec);
 				if (string.IsNullOrEmpty (stampFile)) {
 					if (Path.GetFullPath (directory.ItemSpec).StartsWith (libraryProjectDir)) {
 						// If inside the `lp` directory
 						stampFile = Path.GetFullPath (Path.Combine (directory.ItemSpec, "..", "..")) + ".stamp";
 					} else {
 						// Otherwise use a hashed stamp file
-						stampFile = Path.Combine (StampDirectory, Files.HashString (directory.ItemSpec) + ".stamp");
+						stampFile = Path.Combine (StampDirectory, $"{directoryHash}.stamp");
 					}
 				}
 
@@ -53,18 +54,25 @@ namespace Xamarin.Android.Tasks {
 				bool.TryParse (directory.GetMetadata (ResolveLibraryProjectImports.AndroidSkipResourceProcessing), out generateArchive);
 
 				IEnumerable<string> files;
-				string fileCache = Path.Combine (directory.ItemSpec, "..", "files.cache");
+				string filesCache = directory.GetMetadata ("FilesCache");
+				if (string.IsNullOrEmpty (filesCache)) {
+					if (Path.GetFullPath (directory.ItemSpec).StartsWith (libraryProjectDir)) {
+						filesCache = Path.Combine (directory.ItemSpec, "..", "files.cache");
+					} else {
+						filesCache = Path.Combine (directory.ItemSpec, "..", $"{directoryHash}-files.cache");
+					}
+				}
 				DateTime lastwriteTime = File.Exists (stampFile) ? File.GetLastWriteTimeUtc (stampFile) : DateTime.MinValue;
-				DateTime cacheLastWriteTime = File.Exists (fileCache) ? File.GetLastWriteTimeUtc (fileCache) : DateTime.MinValue;
+				DateTime cacheLastWriteTime = File.Exists (filesCache) ? File.GetLastWriteTimeUtc (filesCache) : DateTime.MinValue;
 
-				if (File.Exists (fileCache) && cacheLastWriteTime >= lastwriteTime) {
-					Log.LogDebugMessage ($"Reading cached Library resources list from  {fileCache}");
-					files = File.ReadAllLines (fileCache);
+				if (File.Exists (filesCache) && cacheLastWriteTime >= lastwriteTime) {
+					Log.LogDebugMessage ($"Reading cached Library resources list from  {filesCache}");
+					files = File.ReadAllLines (filesCache);
 				} else {
-					if (!File.Exists (fileCache))
-						Log.LogDebugMessage ($"Cached Library resources list {fileCache} does not exist.");
+					if (!File.Exists (filesCache))
+						Log.LogDebugMessage ($"Cached Library resources list {filesCache} does not exist.");
 					else
-						Log.LogDebugMessage ($"Cached Library resources list {fileCache} is out of date.");
+						Log.LogDebugMessage ($"Cached Library resources list {filesCache} is out of date.");
 					if (generateArchive) {
 						files = new string[1] { stampFile };
 					} else {
@@ -73,8 +81,8 @@ namespace Xamarin.Android.Tasks {
 				}
 
 				if (files.Any ()) {
-					if (!File.Exists (fileCache) || cacheLastWriteTime < lastwriteTime)
-						File.WriteAllLines (fileCache, files, Encoding.UTF8);
+					if (!File.Exists (filesCache) || cacheLastWriteTime < lastwriteTime)
+						File.WriteAllLines (filesCache, files, Encoding.UTF8);
 					var taskItem = new TaskItem (directory.ItemSpec, new Dictionary<string, string> () {
 						{"FileFound", files.First () },
 					});
@@ -85,11 +93,21 @@ namespace Xamarin.Android.Tasks {
 					} else {
 						Log.LogDebugMessage ($"%(StampFile) already set: {stampFile}");
 					}
+					if (string.IsNullOrEmpty (directory.GetMetadata ("FilesCache"))) {
+						taskItem.SetMetadata ("FilesCache", filesCache);
+					} else {
+						Log.LogDebugMessage ($"%(FilesCache) already set: {filesCache}");
+					}
 					output.Add (taskItem);
 					foreach (var file in files) {
+						if (Aapt2.IsInvalidFilename (file)) {
+							Log.LogDebugMessage ($"Invalid filename, ignoring: {file}");
+							continue;
+						}
 						var fileTaskItem = new TaskItem (file, new Dictionary<string, string> () {
 							{ "ResourceDirectory", directory.ItemSpec },
 							{ "StampFile", generateArchive ? stampFile : file },
+							{ "FilesCache", filesCache},
 							{ "Hash", stampFile },
 							{ "_ArchiveDirectory", Path.Combine (directory.ItemSpec, "..", "flat" + Path.DirectorySeparatorChar) },
 							{ "_FlatFile", generateArchive ?  $"{Path.GetFileNameWithoutExtension (stampFile)}.flata"  : Monodroid.AndroidResource.CalculateAapt2FlatArchiveFileName (file) },

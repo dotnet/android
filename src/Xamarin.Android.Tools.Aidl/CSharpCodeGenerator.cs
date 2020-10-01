@@ -452,7 +452,7 @@ namespace Xamarin.Android.Tools.Aidl
 				return String.Format ("{0} = (global::Android.Runtime.JavaList) {1}.ReadArrayList ((global::Java.Lang.ClassLoader) null);", arg, parcel);
 			case "Map":
 			case "Android.Runtime.JavaDictionary":
-				return String.Format ("{0} = {1}.ReadHashMap ();", arg, parcel);
+				return String.Format ("{0} = (global::Android.Runtime.JavaDictionary) {1}.ReadHashMap ((global::Java.Lang.ClassLoader) null);", arg, parcel);
 			case "Android.OS.IParcelable":
 				return String.Format ("{0} = {1}.ReadInt () != 0 ? ({2}) global::Android.OS.Bundle.Creator.CreateFromParcel ({1}) : null;", arg, parcel, ToOutputTypeName (csname));
 			case "Android.OS.IBinder":
@@ -513,10 +513,10 @@ namespace Xamarin.Android.Tools.Aidl
 						return String.Format ("{1}.ReadTypedList ({0}, {2}.Creator);", arg, parcel, ToOutputTypeName (name_cache.ToCSharp (type.GenericArguments [0])));
 					}
 				}
-				return String.Format ("{0} = {1}.ReadList ();", arg, parcel);
+				return String.Format ("{1}.ReadList ({0}, (global::Java.Lang.ClassLoader) null);", arg, parcel);
 			case "Map":
 			case "Android.Runtime.JavaDictionary":
-				return String.Format ("{0} = {1}.ReadMap ();", arg, parcel);
+				return String.Format ("{1}.ReadMap ({0}, (global::Java.Lang.ClassLoader) null);", arg, parcel);
 			case "Android.OS.IBinder":
 				return String.Format ("{0} = {1}.ReadStrongBinder ();", arg, parcel);
 			case "Android.OS.IBinder []":

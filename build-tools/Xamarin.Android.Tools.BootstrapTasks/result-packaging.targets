@@ -8,6 +8,7 @@
     <_BuildStatusFiles Include="$(BootstrapOutputDirectory)XABuildConfig.cs" Condition="Exists('$(BootstrapOutputDirectory)XABuildConfig.cs')" />
     <_BuildStatusFiles Include="$(BootstrapOutputDirectory)*.binlog" />
     <_BuildStatusFiles Include="$(BootstrapOutputDirectory)prepare*.log" />
+    <_BuildStatusFiles Include="$(BootstrapOutputDirectory)*.json" />
     <_BuildStatusFiles Include="$(BootstrapOutputDirectory)*.mk" />
     <_BuildStatusFiles Include="$(BootstrapOutputDirectory)*.projitems" />
     <_BuildStatusFiles Include="$(BootstrapOutputDirectory)*.cmake" />

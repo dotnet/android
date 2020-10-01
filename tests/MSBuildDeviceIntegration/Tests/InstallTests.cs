@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
 using System.IO;
@@ -25,6 +25,31 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		string[] GetOverrideDirectoryPaths (string packageName)
+		{
+			return new string [] {
+				$"/data/data/{packageName}/files/.__override__",
+				$"/storage/emulated/0/Android/data/{packageName}/files/.__override__",
+				$"/mnt/shell/emulated/0/Android/data/{packageName}/files/.__override__",
+				$"/storage/sdcard/Android/data/{packageName}/files/.__override__",
+			};
+		}
+
+		string GetContentFromAllOverrideDirectories (string packageName, bool useRunAsCommand = true)
+		{
+			var adbShellArgs = $"shell ls";
+			if (useRunAsCommand)
+				adbShellArgs = $"shell run-as {packageName} ls";
+
+			var directorylist = string.Empty;
+			foreach (var dir in GetOverrideDirectoryPaths (packageName)) {
+				var listing = RunAdbCommand ($"{adbShellArgs} {dir}");
+				if (!listing.Contains ("No such file or directory"))
+					directorylist += $"{listing} ";
+			}
+			return directorylist;
+		}
+
 		[Test]
 		public void ReInstallIfUserUninstalled ([Values (false, true)] bool isRelease)
 		{
@@ -35,11 +60,9 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease,
 			};
 			if (isRelease) {
-				var abis = new string [] { "armeabi-v7a", "x86" };
-				proj.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
+				proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			}
-			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
-				builder.Verbosity = LoggerVerbosity.Diagnostic;
+			using (var builder = CreateApkBuilder ()) {
 				Assert.IsTrue (builder.Build (proj));
 				Assert.IsTrue (builder.Install (proj));
 				Assert.IsTrue (builder.Output.AreTargetsAllBuilt ("_Upload"), "_Upload should have built completely.");
@@ -65,32 +88,22 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease,
 			};
 			if (isRelease) {
-				var abis = new string [] { "armeabi-v7a", "x86" };
-				proj.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
+				// Set debuggable=true to allow run-as command usage with a release build
+				proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", "<application android:debuggable=\"true\" ");
+				proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			}
-			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
-				builder.Verbosity = LoggerVerbosity.Diagnostic;
+			using (var builder = CreateApkBuilder ()) {
 				Assert.IsTrue (builder.Build (proj));
 				Assert.IsTrue (builder.Install (proj));
 				Assert.AreEqual ($"package:{proj.PackageName}", RunAdbCommand ($"shell pm list packages {proj.PackageName}").Trim (),
 					$"{proj.PackageName} is not installed on the device.");
 
-				var overrideDirs = new string [] {
-					$"/storage/emulated/0/Android/data/{proj.PackageName}/files/.__override__",
-					$"/mnt/shell/emulated/0/Android/data/{proj.PackageName}/files/.__override__",
-					$"/storage/sdcard/Android/data/{proj.PackageName}/files/.__override__",
-				};
-				var directorylist = string.Empty;
-				foreach (var dir in overrideDirs) {
-					var listing = RunAdbCommand ($"shell ls {dir}");
-					if (!listing.Contains ("No such file or directory"))
-						directorylist += listing;
-				}
+				var directorylist = GetContentFromAllOverrideDirectories (proj.PackageName);
 				if (!isRelease) {
 					StringAssert.Contains ($"{proj.AssemblyName}", directorylist, $"{proj.AssemblyName} not found in fastdev directory.");
 				}
 				else {
-					StringAssert.IsMatch ("", directorylist.Trim (), "fastdev directory should NOT exist for Release builds.");
+					Assert.AreEqual ("", directorylist.Trim (), "fastdev directory should NOT exist for Release builds.");
 				}
 
 				Assert.IsTrue (builder.Uninstall (proj));
@@ -106,8 +119,7 @@ namespace Xamarin.Android.Build.Tests
 			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject ();
-			var abis = new string [] { "armeabi-v7a", "x86" };
-			proj.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
+			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			using (var builder = CreateApkBuilder ()) {
 				// Use the default debug.keystore XA generates
 				Assert.IsTrue (builder.Install (proj), "first install should succeed.");
@@ -136,26 +148,16 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = false,
 			};
-			var abis = new string [] { "armeabi-v7a", "x86" };
-			proj.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
-			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
-				builder.Verbosity = LoggerVerbosity.Diagnostic;
+			// Set debuggable=true to allow run-as command usage with a release build
+			proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", "<application android:debuggable=\"true\" ");
+			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
+			using (var builder = CreateApkBuilder ()) {
 				Assert.IsTrue (builder.Build (proj));
 				Assert.IsTrue (builder.Install (proj));
 				Assert.AreEqual ($"package:{proj.PackageName}", RunAdbCommand ($"shell pm list packages {proj.PackageName}").Trim (),
 					$"{proj.PackageName} is not installed on the device.");
 
-				var overrideDirs = new string [] {
-					$"/storage/emulated/0/Android/data/{proj.PackageName}/files/.__override__",
-					$"/mnt/shell/emulated/0/Android/data/{proj.PackageName}/files/.__override__",
-					$"/storage/sdcard/Android/data/{proj.PackageName}/files/.__override__",
-				};
-				var directorylist = string.Empty;
-				foreach (var dir in overrideDirs) {
-					var listing = RunAdbCommand ($"shell ls {dir}");
-					if (!listing.Contains ("No such file or directory"))
-						directorylist += listing;
-				}
+				var directorylist = GetContentFromAllOverrideDirectories (proj.PackageName);
 				StringAssert.Contains ($"{proj.AssemblyName}", directorylist, $"{proj.AssemblyName} not found in fastdev directory.");
 
 				proj.IsRelease = true;
@@ -163,26 +165,17 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (builder.Install (proj));
 				Assert.AreEqual ($"package:{proj.PackageName}", RunAdbCommand ($"shell pm list packages {proj.PackageName}").Trim (),
 					$"{proj.PackageName} is not installed on the device.");
-			
-				directorylist = string.Empty;
-				foreach (var dir in overrideDirs) {
-					var listing = RunAdbCommand ($"shell ls {dir}");
-					if (!listing.Contains ("No such file or directory"))
-						directorylist += listing;
-				}
-				StringAssert.IsMatch ("", directorylist.Trim (), "fastdev directory should NOT exist for Release builds.");
+
+				directorylist = GetContentFromAllOverrideDirectories (proj.PackageName);
+				Assert.AreEqual ("", directorylist.Trim (), "fastdev directory should NOT exist for Release builds.");
 
 				proj.IsRelease = false;
 				Assert.IsTrue (builder.Build (proj));
 				Assert.IsTrue (builder.Install (proj));
 				Assert.AreEqual ($"package:{proj.PackageName}", RunAdbCommand ($"shell pm list packages {proj.PackageName}").Trim (),
 					$"{proj.PackageName} is not installed on the device.");
-				directorylist = string.Empty;
-				foreach (var dir in overrideDirs) {
-					var listing = RunAdbCommand ($"shell ls {dir}");
-					if (!listing.Contains ("No such file or directory"))
-						directorylist += listing;
-				}
+
+				directorylist = GetContentFromAllOverrideDirectories (proj.PackageName);
 				StringAssert.Contains ($"{proj.AssemblyName}", directorylist, $"{proj.AssemblyName} not found in fastdev directory.");
 			
 				Assert.IsTrue (builder.Uninstall (proj));
@@ -204,10 +197,9 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty (proj.ReleaseProperties, "DebugType", "none");
 			proj.SetProperty (proj.ReleaseProperties, "AndroidUseSharedRuntime", false);
 			proj.RemoveProperty (proj.ReleaseProperties, "EmbedAssembliesIntoApk");
-			var abis = new string [] { "armeabi-v7a", "x86" };
-			proj.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
-			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name), false, false)) {
-				builder.Verbosity = LoggerVerbosity.Diagnostic;
+			var abis = new [] { "armeabi-v7a", "x86" };
+			proj.SetAndroidSupportedAbis (abis);
+			using (var builder = CreateApkBuilder ()) {
 				if (RunAdbCommand ("shell pm list packages Mono.Android.DebugRuntime").Trim ().Length != 0)
 					RunAdbCommand ("uninstall Mono.Android.DebugRuntime");
 				Assert.IsTrue (builder.Install (proj));
@@ -227,18 +219,7 @@ namespace Xamarin.Android.Build.Tests
 				//FIXME: https://github.com/xamarin/androidtools/issues/141
 				//Assert.AreEqual (0, RunAdbCommand ("shell pm list packages Mono.Android.DebugRuntime").Trim ().Length,
 				//	"The Shared Runtime should not have been installed.");
-				var overrideDirs = new string [] {
-					$"/data/data/{proj.PackageName}/files/.__override__",
-					$"/storage/emulated/0/Android/data/{proj.PackageName}/files/.__override__",
-					$"/mnt/shell/emulated/0/Android/data/{proj.PackageName}/files/.__override__",
-					$"/storage/sdcard/Android/data/{proj.PackageName}/files/.__override__",
-				};
-				var directorylist = string.Empty;
-				foreach (var dir in overrideDirs) {
-					var listing = RunAdbCommand ($"shell ls {dir}");
-					if (!listing.Contains ("No such file or directory"))
-						directorylist += listing;
-				}
+				var directorylist = GetContentFromAllOverrideDirectories (proj.PackageName, false);
 				StringAssert.Contains ($"{proj.ProjectName}.dll", directorylist, $"{proj.ProjectName}.dll should exist in the .__override__ directory.");
 				StringAssert.Contains ($"System.dll", directorylist, $"System.dll should exist in the .__override__ directory.");
 				StringAssert.Contains ($"Mono.Android.dll", directorylist, $"Mono.Android.dll should exist in the .__override__ directory.");
@@ -258,7 +239,7 @@ namespace Xamarin.Android.Build.Tests
 				AndroidUseSharedRuntime = false,
 				EmbedAssembliesIntoApk = true,
 			};
-			proj.SetProperty (proj.DebugProperties, KnownProperties.AndroidSupportedAbis, abi);
+			proj.SetAndroidSupportedAbis (abi);
 
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				builder.ThrowOnBuildFailure = false;
@@ -279,44 +260,63 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject {
 				AndroidUseSharedRuntime = true,
 				EmbedAssembliesIntoApk = false,
+				OtherBuildItems = {
+					new BuildItem.NoActionResource ("UnnamedProject.dll.config") {
+						TextContent = () => "<?xml version='1.0' ?><configuration/>",
+						Metadata = {
+							{ "CopyToOutputDirectory", "PreserveNewest" },
+						}
+					}
+				}
 			};
 
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
-
-				var overrideDirs = new string [] {
-					$"/data/data/{proj.PackageName}/files/.__override__",
-					$"/storage/emulated/0/Android/data/{proj.PackageName}/files/.__override__",
-					$"/mnt/shell/emulated/0/Android/data/{proj.PackageName}/files/.__override__",
-					$"/storage/sdcard/Android/data/{proj.PackageName}/files/.__override__",
-				};
-				var directorylist = string.Empty;
-				foreach (var dir in overrideDirs) {
-					var listing = RunAdbCommand ($"shell ls {dir}");
-					if (!listing.Contains ("No such file or directory"))
-						directorylist += listing;
-				}
+				var directorylist = GetContentFromAllOverrideDirectories (proj.PackageName);
 				StringAssert.Contains ($"{proj.ProjectName}.dll", directorylist, $"{proj.ProjectName}.dll should exist in the .__override__ directory.");
+				// Configuration files are not supported in One .NET, we don't need to make sure that they're fast deployed.
+				if (!Builder.UseDotNet) {
+					StringAssert.Contains ($"{proj.ProjectName}.dll.config", directorylist, $"{proj.ProjectName}.dll.config should exist in the .__override__ directory.");
+				}
 
 				//Now toggle FastDev to OFF
 				proj.AndroidUseSharedRuntime = false;
 				proj.EmbedAssembliesIntoApk = true;
-				var abis = new string [] { "armeabi-v7a", "x86" };
-				proj.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
+				proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 
 				Assert.IsTrue (builder.Install (proj), "Second install should have succeeded.");
 
-				directorylist = string.Empty;
-				foreach (var dir in overrideDirs) {
-					var listing = RunAdbCommand ($"shell ls {dir}");
-					if (!listing.Contains ("No such file or directory"))
-						directorylist += listing;
-				}
-
+				directorylist = GetContentFromAllOverrideDirectories (proj.PackageName);
 				Assert.AreEqual ("", directorylist, "There should be no files in Fast Dev directories! Instead found: " + directorylist);
 
 				//Deploy one last time to verify install still works without the .__override__ directory existing
 				Assert.IsTrue (builder.Install (proj), "Third install should have succeeded.");
+			}
+		}
+
+		[Test]
+		public void LoggingPropsShouldCreateOverrideDirForRelease ()
+		{
+			AssertCommercialBuild ();
+			AssertHasDevices ();
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			// Set debuggable=true to allow run-as command usage with a release build
+			proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", "<application android:debuggable=\"true\" ");
+			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
+
+			using (var builder = CreateApkBuilder ()) {
+				Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
+				RunAdbCommand ("shell setprop debug.mono.log timing");
+				Assert.True (builder.RunTarget (proj, "_Run"), "Project should have run.");
+				var didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity", Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
+				RunAdbCommand ("shell setprop debug.mono.log \"\"");
+				Assert.True (didLaunch, "Activity should have started.");
+				var directorylist = GetContentFromAllOverrideDirectories (proj.PackageName);
+				builder.Uninstall (proj);
+				StringAssert.Contains ("counters.txt", directorylist, $"counters.txt did not exist in the .__override__ directory.\nFound:{directorylist}");
 			}
 		}
 
@@ -395,8 +395,7 @@ namespace Xamarin.Android.Build.Tests
 				proj.SetProperty ("AndroidSigningStorePass", password);
 				proj.SetProperty ("AndroidSigningKeyPass", password);
 			}
-			var abis = new string [] { "armeabi-v7a", "x86" };
-			proj.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
+			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			proj.SetProperty ("AndroidKeyStore", androidKeyStore);
 			proj.SetProperty ("AndroidSigningKeyStore", "test.keystore");
 			proj.SetProperty ("AndroidSigningKeyAlias", "mykey");
@@ -414,7 +413,6 @@ namespace Xamarin.Android.Build.Tests
 				Encoding = Encoding.ASCII,
 			});
 			using (var b = CreateApkBuilder (path, false, false)) {
-				b.Verbosity = LoggerVerbosity.Diagnostic;
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj, environmentVariables: envVar), "Build should have succeeded.");
 				if (packageFormat == "apk") {
@@ -433,5 +431,117 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Uninstall (proj, doNotCleanupOnUpdate: true), "Uninstall should have succeeded.");
 			}
 		}
+
+		// https://xamarin.github.io/bugzilla-archives/31/31705/bug.html
+		[Test]
+		public void LocalizedAssemblies_ShouldBeFastDeployed ()
+		{
+			AssertCommercialBuild ();
+			AssertHasDevices ();
+
+			var proj = new XamarinAndroidApplicationProject {
+				AndroidUseSharedRuntime = true,
+				EmbedAssembliesIntoApk = false,
+				OtherBuildItems = {
+					new BuildItem ("EmbeddedResource", "Foo.resx") {
+						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancel</value></data>")
+					},
+					new BuildItem ("EmbeddedResource", "Foo.es.resx") {
+						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancelar</value></data>")
+					}
+				}
+			};
+
+			using (var builder = CreateApkBuilder ()) {
+				Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
+				var projectOutputPath = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath);
+				var resourceFilesFromDisk = Directory.EnumerateFiles (projectOutputPath, "*.resources.dll", SearchOption.AllDirectories)
+					.Select (r => r = r.Replace (projectOutputPath, string.Empty).Replace ("\\", "/"));
+
+				var overrideContents = string.Empty;
+				foreach (var dir in GetOverrideDirectoryPaths (proj.PackageName)) {
+					overrideContents += RunAdbCommand ($"shell find {dir}");
+				}
+				builder.Uninstall (proj);
+				Assert.IsTrue (resourceFilesFromDisk.Any (), $"Unable to find any localized assemblies in {resourceFilesFromDisk}");
+				foreach (var res in resourceFilesFromDisk) {
+					StringAssert.Contains (res, overrideContents, $"{res} did not exist in the .__override__ directory.\nFound:{overrideContents}");
+				}
+
+			}
+		}
+
+		[Test]
+		public void IncrementalFastDeployment ()
+		{
+			AssertCommercialBuild ();
+			AssertHasDevices ();
+
+			var lib1 = new XamarinAndroidLibraryProject () {
+				ProjectName = "Library1",
+				Sources = {
+					new BuildItem.Source ("Class1.cs") {
+						TextContent = () => "namespace Library1 { public class Class1 { } }"
+					},
+				}
+			};
+
+			var lib2 = new DotNetStandard {
+				ProjectName = "Library2",
+				Sdk = "Microsoft.NET.Sdk",
+				TargetFramework = "netstandard2.0",
+				Sources = {
+					new BuildItem.Source ("Class2.cs") {
+						TextContent = () => "namespace Library2 { public class Class2 { } }"
+					},
+				}
+			};
+
+			var app = new XamarinFormsAndroidApplicationProject () {
+				AndroidUseSharedRuntime = true,
+				EmbedAssembliesIntoApk = false,
+				References = {
+					new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj"),
+					new BuildItem ("ProjectReference", "..\\Library2\\Library2.csproj"),
+				},
+			};
+
+			// Set up library projects
+			var rootPath = Path.Combine (Root, "temp", TestName);
+			using (var lb1 = CreateDllBuilder (Path.Combine (rootPath, lib1.ProjectName)))
+				Assert.IsTrue (lb1.Build (lib1), "First library build should have succeeded.");
+			using (var lb2 = CreateDllBuilder (Path.Combine (rootPath, lib2.ProjectName)))
+				Assert.IsTrue (lb2.Build (lib2), "Second library build should have succeeded.");
+
+			using (var builder = CreateApkBuilder (Path.Combine (rootPath, app.ProjectName))) {
+				builder.ThrowOnBuildFailure = false;
+				Assert.IsTrue (builder.Install (app), "First install should have succeeded.");
+				var firstInstallTime = builder.LastBuildTime;
+				Assert.IsTrue (builder.Install (app, doNotCleanupOnUpdate: true, saveProject: false), "Second install should have succeeded.");
+				var secondInstallTime = builder.LastBuildTime;
+
+				var filesToTouch = new [] {
+					Path.Combine (rootPath, lib1.ProjectName, "Class1.cs"),
+					Path.Combine (rootPath, lib2.ProjectName, "Class2.cs"),
+					Path.Combine (rootPath, app.ProjectName, "MainPage.xaml"),
+				};
+				foreach (var file in filesToTouch) {
+					FileAssert.Exists (file);
+					File.SetLastWriteTimeUtc (file, DateTime.UtcNow);
+				}
+
+				Assert.IsTrue (builder.Install (app, doNotCleanupOnUpdate: true, saveProject: false), "Third install should have succeeded.");
+				var thirdInstallTime = builder.LastBuildTime;
+				Assert.IsTrue (builder.Install (app, doNotCleanupOnUpdate: true, saveProject: false), "Fourth install should have succeeded.");
+				var fourthInstalTime = builder.LastBuildTime;
+
+				Assert.IsTrue (thirdInstallTime < firstInstallTime, $"Third incremental install: '{thirdInstallTime}' should be faster than clean install: '{firstInstallTime}'.");
+				Assert.IsTrue (secondInstallTime < firstInstallTime && secondInstallTime < thirdInstallTime,
+					$"Second unchanged install: '{secondInstallTime}' should be faster than clean install: '{firstInstallTime}' and incremental install: '{thirdInstallTime}'.");
+				Assert.IsTrue (fourthInstalTime < firstInstallTime && fourthInstalTime < thirdInstallTime,
+					$"Fourth unchanged install: '{fourthInstalTime}' should be faster than clean install: '{firstInstallTime}' and incremental install: '{thirdInstallTime}'.");
+			}
+		}
+
 	}
 }

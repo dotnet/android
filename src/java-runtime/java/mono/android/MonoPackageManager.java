@@ -18,9 +18,6 @@ import mono.android.BuildConfig;
 
 public class MonoPackageManager {
 
-	// Exists only since API23 onwards, we must define it here
-	static final int FLAG_EXTRACT_NATIVE_LIBS = 0x10000000;
-
 	static Object lock = new Object ();
 	static boolean initialized;
 
@@ -51,7 +48,6 @@ public class MonoPackageManager {
 				String externalLegacyDir = new java.io.File (
 							external0,
 							"../legacy/Android/data/" + context.getPackageName () + "/files/.__override__").getAbsolutePath ();
-				boolean embeddedDSOsEnabled = android.os.Build.VERSION.SDK_INT >= 23 && (runtimePackage.flags & FLAG_EXTRACT_NATIVE_LIBS) == 0;
 				String runtimeDir = getNativeLibraryPath (runtimePackage);
 				String[] appDirs = new String[] {filesDir, cacheDir, dataDir};
 				String[] externalStorageDirs = new String[] {externalDir, externalLegacyDir};
@@ -85,7 +81,7 @@ public class MonoPackageManager {
 				//
 				if (BuildConfig.Debug) {
 					System.loadLibrary ("xamarin-debug-app-helper");
-					DebugRuntime.init (apks, runtimeDir, appDirs, externalStorageDirs, android.os.Build.VERSION.SDK_INT, embeddedDSOsEnabled);
+					DebugRuntime.init (apks, runtimeDir, appDirs, externalStorageDirs);
 				} else {
 					System.loadLibrary("monosgen-2.0");
 				}
@@ -111,7 +107,6 @@ public class MonoPackageManager {
 						externalStorageDirs,
 						MonoPackageManager_Resources.Assemblies,
 						Build.VERSION.SDK_INT,
-						embeddedDSOsEnabled,
 						isEmulator ()
 					);
 

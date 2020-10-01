@@ -10,8 +10,11 @@
   <Import Project="Sdk.props" Sdk="Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk" />
   <UsingTask TaskName="CreateFrameworkListFile" AssemblyFile="$(DotNetBuildTasksSharedFrameworkTaskFile)"/>
 
-  <!-- Include initial pack content in ref and runtime. We aren't yet generating separate reference and runtime assemblies. -->
   <ItemGroup>
+    <!-- NOTE: we don't have a reference assembly for Java.Interop.dll yet -->
+    <_AndroidAppRefAssemblies Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild-frameworks\Microsoft.Android\netcoreapp3.1\Java.Interop.dll" />
+    <_AndroidAppRefAssemblies Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild-frameworks\Microsoft.Android\netcoreapp3.1\ref\Mono.Android.dll" />
+    <_AndroidAppRefAssemblies Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild-frameworks\Microsoft.Android\netcoreapp3.1\ref\Mono.Android.Export.dll" />
     <_AndroidAppPackAssemblies Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild-frameworks\Microsoft.Android\netcoreapp3.1\Java.Interop.dll" />
     <_AndroidAppPackAssemblies Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild-frameworks\Microsoft.Android\netcoreapp3.1\Mono.Android.dll" />
     <_AndroidAppPackAssemblies Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild-frameworks\Microsoft.Android\netcoreapp3.1\Mono.Android.Export.dll" />

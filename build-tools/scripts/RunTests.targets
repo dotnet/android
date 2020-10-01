@@ -15,10 +15,7 @@
     <_XABuildProperties>$(_XABuildDiag)/p:Configuration=$(Configuration)</_XABuildProperties>
   </PropertyGroup>
   <ItemGroup>
-    <_TestAssembly Include="$(_TopDir)\bin\Test$(Configuration)\Xamarin.Android.Build.Tests.dll" />
-    <_TestAssembly Include="$(_TopDir)\bin\Test$(Configuration)\CodeBehind\CodeBehindUnitTests.dll" />
-    <_TestAssembly Include="$(_TopDir)\bin\Test$(Configuration)\EmbeddedDSOUnitTests.dll" />
-    <_TestAssembly Include="$(_TopDir)\bin\Test$(Configuration)\Xamarin.Android.MakeBundle-UnitTests.dll" />
+    <_TestAssembly Include="$(_TopDir)\bin\Test$(Configuration)\net472\Xamarin.Android.Build.Tests.dll" />
     <_ApkTestProject Include="$(_TopDir)\src\Mono.Android\Test\Mono.Android-Tests.csproj" />
     <_ApkTestProject Include="$(_TopDir)\tests\CodeGen-Binding\Xamarin.Android.JcwGen-Tests\Xamarin.Android.JcwGen-Tests.csproj" />
     <_ApkTestProject Include="$(_TopDir)\tests\CodeGen-MkBundle\Xamarin.Android.MakeBundle-Tests\Xamarin.Android.MakeBundle-Tests.csproj" />
@@ -51,7 +48,7 @@
       </NUnitTarget>
     </ItemGroup>
     <Exec
-        Command="$(_NUnit) $(NUNIT_EXTRA) %(NUnitTarget.Identity) $(_Test) --labels=all --result=&quot;TestResult-%(NUnitTarget.TestFilename).xml;format=nunit2&quot; %(NUnitTarget.NUnitOutput)"
+        Command="$(_NUnit) $(NUNIT_EXTRA) %(NUnitTarget.Identity) $(_Test) --labels=all --result=&quot;TestResult-%(NUnitTarget.TestFilename).xml&quot; %(NUnitTarget.NUnitOutput)"
         WorkingDirectory="$(_TopDir)"
         IgnoreStandardErrorWarningFormat="true"
         ContinueOnError="ErrorAndContinue"

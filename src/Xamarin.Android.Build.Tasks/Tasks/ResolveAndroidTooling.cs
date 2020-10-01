@@ -55,12 +55,6 @@ namespace Xamarin.Android.Tasks
 		public string LintToolPath { get; set; }
 
 		[Output]
-		public string ApkSignerJar { get; set; }
-
-		[Output]
-		public bool AndroidUseApkSigner { get; set; }
-
-		[Output]
 		public bool AndroidUseAapt2 { get; set; }
 
 		[Output]
@@ -79,6 +73,8 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
+			AndroidApiLevel = GetMaxStableApiLevel ().ToString ();
+
 			string toolsZipAlignPath = Path.Combine (AndroidSdkPath, "tools", ZipAlign);
 			bool findZipAlign = (string.IsNullOrEmpty (ZipAlignPath) || !Directory.Exists (ZipAlignPath)) && !File.Exists (toolsZipAlignPath);
 
@@ -135,9 +131,6 @@ namespace Xamarin.Android.Tasks
 				return false;
 			}
 
-			ApkSignerJar = Path.Combine (AndroidSdkBuildToolsBinPath, "lib", ApkSigner);
-			AndroidUseApkSigner = File.Exists (ApkSignerJar);
-
 			if (string.IsNullOrEmpty (Aapt2ToolPath)) {
 				var osBinPath = MonoAndroidHelper.GetOSBinPath ();
 				var aapt2 = Path.Combine (osBinPath, Aapt2);
@@ -190,11 +183,7 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
-		protected virtual bool Validate ()
-		{
-			AndroidApiLevel = GetMaxStableApiLevel ().ToString ();
-			return true;
-		}
+		protected virtual bool Validate () => !string.IsNullOrEmpty (AndroidApiLevel);
 
 		protected virtual void LogOutputs ()
 		{
@@ -206,8 +195,6 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ($"  {nameof (ZipAlignPath)}: {ZipAlignPath}");
 			Log.LogDebugMessage ($"  {nameof (AndroidSequencePointsMode)}: {AndroidSequencePointsMode}");
 			Log.LogDebugMessage ($"  {nameof (LintToolPath)}: {LintToolPath}");
-			Log.LogDebugMessage ($"  {nameof (ApkSignerJar)}: {ApkSignerJar}");
-			Log.LogDebugMessage ($"  {nameof (AndroidUseApkSigner)}: {AndroidUseApkSigner}");
 			Log.LogDebugMessage ($"  {nameof (AndroidUseAapt2)}: {AndroidUseAapt2}");
 			Log.LogDebugMessage ($"  {nameof (Aapt2Version)}: {Aapt2Version}");
 		}

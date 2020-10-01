@@ -3,16 +3,23 @@ parameters:
   testRunTitle: Xamarin Android Tests
   testAssembly: []
   testResultsFile: TestResult.xml
-  testResultsFormat: NUnit
   nunitConsoleExtraArgs: ''
+  dotNetTestExtraArgs: ''
+  useDotNet: false
+  workers: $(NUnit.NumberOfTestWorkers)
   condition: succeeded()
 
 steps:
 - powershell: |
-    if ([Environment]::OSVersion.Platform -eq "Unix") {
-        mono ${{ parameters.nunitConsole }} ${{ parameters.testAssembly }} --result ${{ parameters.testResultsFile }} ${{ parameters.nunitConsoleExtraArgs }}
+    if ("${{ parameters.useDotNet }}" -eq $true) {
+        Write-Host '##vso[task.setvariable variable=TestResultsFormat]VSTest'
+        dotnet test ${{ parameters.testAssembly }} --results-directory . --logger "trx;LogFileName=${{ parameters.testResultsFile }}" ${{ parameters.dotNetTestExtraArgs }} -- NUnit.NumberOfTestWorkers=${{ parameters.workers }}
+    } elseif ([Environment]::OSVersion.Platform -eq "Unix") {
+        Write-Host '##vso[task.setvariable variable=TestResultsFormat]NUnit'
+        mono ${{ parameters.nunitConsole }} ${{ parameters.testAssembly }} --result ${{ parameters.testResultsFile }} --workers=${{ parameters.workers }} ${{ parameters.nunitConsoleExtraArgs }}
     } else {
-        ${{ parameters.nunitConsole }} ${{ parameters.testAssembly }} --result ${{ parameters.testResultsFile }}  ${{ parameters.nunitConsoleExtraArgs }}
+        Write-Host '##vso[task.setvariable variable=TestResultsFormat]NUnit'
+        ${{ parameters.nunitConsole }} ${{ parameters.testAssembly }} --result ${{ parameters.testResultsFile }} --workers=${{ parameters.workers }} ${{ parameters.nunitConsoleExtraArgs }}
     }
     if ($LASTEXITCODE -ne 0) {
         Write-Host "##vso[task.logissue type=error]Test suite had $LASTEXITCODE failure(s)."
@@ -27,7 +34,7 @@ steps:
 
 - task: PublishTestResults@2
   inputs:
-    testResultsFormat: ${{ parameters.testResultsFormat }}
+    testResultsFormat: $(TestResultsFormat)
     testResultsFiles: ${{ parameters.testResultsFile }}
     testRunTitle: ${{ parameters.testRunTitle }}
   condition: ${{ parameters.condition }}

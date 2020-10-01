@@ -2,7 +2,7 @@
     "nxunitExplorer.nunit": "packages/nunit.consolerunner/3.11.1/tools/nunit3-console.exe",
     "nxunitExplorer.modules": [
         "bin/TestDebug/MSBuildDeviceIntegration/MSBuildDeviceIntegration.dll",
-        "bin/TestDebug/Xamarin.Android.Build.Tests.dll",
+        "bin/TestDebug/net472/Xamarin.Android.Build.Tests.dll",
         "bin/TestDebug/Xamarin.Android.Build.Tests.Commercial.dll",
     ],
     "cmake.configureOnOpen": false

@@ -1,25 +1,20 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.Build.NoTargets">
   <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{53EE4C57-1C03-405A-8243-8DA539546C88}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
+  
   <Import Project="..\..\Configuration.props" />
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android\lib\</OutputPath>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android\lib\</OutputPath>
-  </PropertyGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
+
   <PropertyGroup>
-    <BuildDependsOn>
-      ResolveReferences;
-      _BuildRuntimes;
-    </BuildDependsOn>
+    <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android\lib\</OutputPath>
   </PropertyGroup>
+
   <Import Project="monodroid.targets" />
+  
   <ItemGroup>
     <!--
       `jnimarshalmethod-gen.exe` needs to be built first because our
@@ -30,10 +25,6 @@
       We don't want our updated version to be replaced by the
       `jnimarshalmethod-gen.exe` build.
       -->
-    <ProjectReference Include="..\..\external\Java.Interop\tools\jnimarshalmethod-gen\Xamarin.Android.Tools.JniMarshalMethodGenerator.csproj">
-      <Project>{D1295A8F-4F42-461D-A046-564476C10002}</Project>
-      <Name>jnimarshalmethod-gen</Name>
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-    </ProjectReference>
+    <ProjectReference Include="..\..\external\Java.Interop\tools\jnimarshalmethod-gen\Xamarin.Android.Tools.JniMarshalMethodGenerator.csproj" ReferenceOutputAssembly="False" />
   </ItemGroup>
 </Project>

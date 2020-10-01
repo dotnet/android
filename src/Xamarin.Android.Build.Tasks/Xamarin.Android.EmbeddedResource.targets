@@ -22,14 +22,11 @@ This file is used by all project types, including binding projects.
   <UsingTask TaskName="Xamarin.Android.Tasks.ResolveLibraryProjectImports"        AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 
   <PropertyGroup>
-    <_LibraryProjectImportsDirectoryName Condition=" '$(_LibraryProjectImportsDirectoryName)' == '' And '$(UseShortFileNames)' == 'true' ">jl</_LibraryProjectImportsDirectoryName>
-    <_LibraryProjectImportsDirectoryName Condition=" '$(_LibraryProjectImportsDirectoryName)' == '' ">library_project_imports</_LibraryProjectImportsDirectoryName>
-    <_NativeLibraryImportsDirectoryName  Condition=" '$(_NativeLibraryImportsDirectoryName)' == '' And '$(UseShortFileNames)' == 'true' ">nl</_NativeLibraryImportsDirectoryName>
-    <_NativeLibraryImportsDirectoryName  Condition=" '$(_NativeLibraryImportsDirectoryName)' == '' ">native_library_imports</_NativeLibraryImportsDirectoryName>
+    <_LibraryProjectImportsDirectoryName Condition=" '$(_LibraryProjectImportsDirectoryName)' == '' ">jl</_LibraryProjectImportsDirectoryName>
+    <_NativeLibraryImportsDirectoryName  Condition=" '$(_NativeLibraryImportsDirectoryName)' == '' ">nl</_NativeLibraryImportsDirectoryName>
     <_AndroidLibraryImportsCache>$(IntermediateOutputPath)libraryimports.cache</_AndroidLibraryImportsCache>
     <_AndroidLibraryProjectImportsCache>$(IntermediateOutputPath)libraryprojectimports.cache</_AndroidLibraryProjectImportsCache>
-    <_AndroidLibrayProjectIntermediatePath Condition=" '$(_AndroidLibrayProjectIntermediatePath)' == '' And '$(UseShortFileNames)' == 'true' ">$(IntermediateOutputPath)lp\</_AndroidLibrayProjectIntermediatePath>
-    <_AndroidLibrayProjectIntermediatePath Condition=" '$(_AndroidLibrayProjectIntermediatePath)' == '' ">$(IntermediateOutputPath)__library_projects__\</_AndroidLibrayProjectIntermediatePath>
+    <_AndroidLibrayProjectIntermediatePath Condition=" '$(_AndroidLibrayProjectIntermediatePath)' == '' ">$(IntermediateOutputPath)lp\</_AndroidLibrayProjectIntermediatePath>
     <_AndroidLibrayProjectAssemblyMapFile>$(_AndroidLibrayProjectIntermediatePath)map.cache</_AndroidLibrayProjectAssemblyMapFile>
   </PropertyGroup>
 
@@ -45,7 +42,6 @@ This file is used by all project types, including binding projects.
         AarLibraries="@(AndroidAarLibrary)"
         ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
         NativeImportsDirectory="$(_NativeLibraryImportsDirectoryName)"
-        UseShortFileNames="$(UseShortFileNames)"
         OutputDirectory="$(IntermediateOutputPath)"
         AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
         OutputImportDirectory="$(_AndroidLibrayProjectIntermediatePath)"
@@ -98,7 +94,7 @@ This file is used by all project types, including binding projects.
   </Target>
     
   <Target Name="_CreateNativeLibraryArchive"
-      Condition=" '$(AndroidApplication)' != 'true' And '@(EmbeddedNativeLibrary)' != '' "
+      Condition=" '$(AndroidApplication)' != 'true' And '@(EmbeddedNativeLibrary->Count())' != '0' "
       Inputs="@(EmbeddedNativeLibrary)"
       Outputs="$(IntermediateOutputPath)__AndroidNativeLibraries__.zip">
     <CreateNativeLibraryArchive

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
+using System.Xml.Linq;
 
 namespace Xamarin.ProjectTools
 {
@@ -41,14 +43,39 @@ namespace Xamarin.ProjectTools
 			}
 		}
 
+		/// <summary>
+		/// Save a NuGet.config file to a directory, with sources to support a local build of Microsoft.Android.Sdk
+		/// </summary>
+		public static void SaveNuGetConfig (string directory)
+		{
+			var doc = XDocument.Load (Path.Combine (XABuildPaths.TopDirectory, "NuGet.config"));
+			var project = new XASdkProject ();
+			project.AddNuGetConfigSources (doc);
+			doc.Save (Path.Combine (directory, "NuGet.config"));
+		}
+
+		/// <summary>
+		/// Save a global.json to a directory, with version number to support a local build of  Microsoft.Android.Sdk
+		/// </summary>
+		public static void SaveGlobalJson (string directory)
+		{
+			File.WriteAllText (Path.Combine (directory, "global.json"),
+$@"{{
+    ""msbuild-sdks"": {{
+            ""Microsoft.Android.Sdk"": ""{SdkVersion}""
+    }}
+}}");
+		}
+
 		public string PackageName { get; set; }
 		public string JavaPackageName { get; set; }
 
 		public XASdkProject (string outputType = "Exe")
 		{
 			Sdk = $"Microsoft.Android.Sdk/{SdkVersion}";
-			TargetFramework = "net5.0";
+			TargetFramework = "net5.0-android";
 
+			TargetSdkVersion = AndroidSdkResolver.GetMaxInstalledPlatform ().ToString ();
 			PackageName = PackageName ?? string.Format ("{0}.{0}", ProjectName);
 			JavaPackageName = JavaPackageName ?? PackageName.ToLowerInvariant ();
 			GlobalPackagesFolder = Path.Combine (XABuildPaths.TopDirectory, "packages");
@@ -57,7 +84,7 @@ namespace Xamarin.ProjectTools
 			// Add relevant Android content to our project without writing it to the .csproj file
 			if (outputType == "Exe") {
 				Sources.Add (new BuildItem.Source ("Properties\\AndroidManifest.xml") {
-					TextContent = () => default_android_manifest.Replace ("${PROJECT_NAME}", ProjectName).Replace ("${PACKAGENAME}", string.Format ("{0}.{0}", ProjectName))
+					TextContent = ProcessManifestTemplate
 				});
 			}
 			Sources.Add (new BuildItem.Source ($"MainActivity{Language.DefaultExtension}") { TextContent = () => ProcessSourceTemplate (MainActivity ?? DefaultMainActivity) });
@@ -67,7 +94,7 @@ namespace Xamarin.ProjectTools
 			Sources.Add (new BuildItem.Source ($"Resources\\Resource.designer{Language.DefaultExtension}") { TextContent = () => string.Empty });
 		}
 
-		protected override bool SetExtraNuGetConfigSources => true;
+		protected override bool UseDotNet => true;
 
 		public string OutputPath => Path.Combine ("bin", Configuration, TargetFramework.ToLowerInvariant ());
 
@@ -76,6 +103,39 @@ namespace Xamarin.ProjectTools
 		public string DefaultMainActivity => default_main_activity_cs;
 
 		public string MainActivity { get; set; }
+
+		public string AndroidManifest { get; set; } = default_android_manifest;
+
+		/// <summary>
+		/// Defaults to AndroidSdkResolver.GetMaxInstalledPlatform ()
+		/// </summary>
+		public string TargetSdkVersion { get; set; }
+
+		/// <summary>
+		/// Defaults to API 19
+		/// </summary>
+		public string MinSdkVersion { get; set; } = "19";
+
+		public virtual string ProcessManifestTemplate ()
+		{
+			var uses_sdk = new StringBuilder ("<uses-sdk ");
+			if (!string.IsNullOrEmpty (MinSdkVersion)) {
+				uses_sdk.Append ("android:minSdkVersion=\"");
+				uses_sdk.Append (MinSdkVersion);
+				uses_sdk.Append ("\" ");
+			}
+			if (!string.IsNullOrEmpty (TargetSdkVersion)) {
+				uses_sdk.Append ("android:targetSdkVersion=\"");
+				uses_sdk.Append (TargetSdkVersion);
+				uses_sdk.Append ("\" ");
+			}
+			uses_sdk.Append ("/>");
+
+			return AndroidManifest
+				.Replace ("${PROJECT_NAME}", ProjectName)
+				.Replace ("${PACKAGENAME}", PackageName)
+				.Replace ("${USES_SDK}", uses_sdk.ToString ());
+		}
 
 		public override string ProcessSourceTemplate (string source)
 		{

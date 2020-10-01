@@ -37,7 +37,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			proj = new XamarinFormsAndroidApplicationProject ();
-			proj.SetProperty (KnownProperties.AndroidSupportedAbis, "armeabi-v7a;x86");
+			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			var mainPage = proj.Sources.First (x => x.Include () == "MainPage.xaml.cs");
 			var source = mainPage.TextContent ().Replace ("InitializeComponent ();", @"InitializeComponent ();
 			Console.WriteLine ($""TimeZoneInfo={TimeZoneInfo.Local.DisplayName}"");
@@ -204,19 +204,16 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[TestCaseSource (nameof (GetTimeZoneTestCases), new object [] { 0 })]
-		[Retry (1)]
 		[Category ("TimeZoneInfo")]
 		public void CheckTimeZoneInfoIsCorrectNode1 (string timeZone) => CheckTimeZoneInfoIsCorrect (timeZone);
 
 		[Test]
 		[TestCaseSource (nameof (GetTimeZoneTestCases), new object [] { 1 })]
-		[Retry (1)]
 		[Category ("TimeZoneInfo")]
 		public void CheckTimeZoneInfoIsCorrectNode2 (string timeZone) => CheckTimeZoneInfoIsCorrect (timeZone);
 
 		[Test]
 		[TestCaseSource (nameof (GetTimeZoneTestCases), new object [] { 2 })]
-		[Retry (1)]
 		[Category ("TimeZoneInfo")]
 		public void CheckTimeZoneInfoIsCorrectNode3 (string timeZone) => CheckTimeZoneInfoIsCorrect (timeZone);
 

@@ -9,6 +9,9 @@ namespace Xamarin.Android.Prepare
 {
 	class ProcessRunner : AppObject
 	{
+		public const string StdoutSeverityName = "stdout";
+		public const string StderrSeverityName = "stderr";
+
 		public enum ErrorReasonCode
 		{
 			NotExecutedYet,
@@ -199,7 +202,7 @@ namespace Xamarin.Android.Prepare
 				if (StandardOutputEchoWrapper != null) {
 					AddStandardOutputSink (StandardOutputEchoWrapper);
 				} else if (!defaultStdoutEchoWrapperAdded) {
-					AddStandardOutputSink (new ProcessStandardStreamWrapper { LoggingLevel = EchoStandardOutputLevel, CustomSeverityName = "stdout" });
+					AddStandardOutputSink (new ProcessStandardStreamWrapper { LoggingLevel = EchoStandardOutputLevel, CustomSeverityName = StdoutSeverityName });
 					defaultStdoutEchoWrapperAdded = true;
 				}
 			}
@@ -208,7 +211,7 @@ namespace Xamarin.Android.Prepare
 				if (StandardErrorEchoWrapper != null) {
 					AddStandardErrorSink (StandardErrorEchoWrapper);
 				} else if (defaultStderrEchoWrapper == null) {
-					defaultStderrEchoWrapper = new ProcessStandardStreamWrapper { LoggingLevel = EchoStandardErrorLevel, CustomSeverityName = "stderr" };
+					defaultStderrEchoWrapper = new ProcessStandardStreamWrapper { LoggingLevel = EchoStandardErrorLevel, CustomSeverityName = StderrSeverityName };
 					AddStandardErrorSink (defaultStderrEchoWrapper);
 				}
 			}

@@ -13,7 +13,7 @@ using Xamarin.ProjectTools;
 namespace Xamarin.Android.Build.Tests
 {
 	[NonParallelizable]
-	[Category ("UsesDevices")]
+	[Category ("UsesDevices"), Category ("DotNetIgnore")] // These don't need to run under `--params dotnet=true`
 	public class XASdkDeployTests : DeviceTest
 	{
 		[Test]

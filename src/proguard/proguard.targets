@@ -9,11 +9,12 @@
     <_Outputs Include="$(_OutputJar);$(_OutputBat);$(_OutputSh);$(_OutputLicense)" />
   </ItemGroup>
   <Target Name="_BuildProGuard"
+      BeforeTargets="Build"
       Inputs="$(MSBuildThisFile)"
       Outputs="@(_Outputs)">
     <Exec
         Command="&quot;$(GradleWPath)&quot; jar $(GradleArgs)"
-        EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)"
+        EnvironmentVariables="JAVA_HOME=$(Java8SdkDirectory);APP_HOME=$(GradleHome)"
         WorkingDirectory="$(ProGuardSourceFullPath)\core"
     />
     <MakeDir Directories="$(OutputPath)" />
@@ -35,11 +36,11 @@
     />
     <Touch Files="@(_Outputs)" />
   </Target>
-  <Target Name="Clean">
+  <Target Name="_CleanProGuard" BeforeTargets="Clean">
     <Delete Files="@(_Outputs)" />
     <Exec
         Command="&quot;$(GradleWPath)&quot; clean $(GradleArgs)"
-        EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)"
+        EnvironmentVariables="JAVA_HOME=$(Java8SdkDirectory);APP_HOME=$(GradleHome)"
         WorkingDirectory="$(ProGuardSourceFullPath)\core"
     />
   </Target>

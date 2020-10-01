@@ -1,25 +1,16 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup>
-    <BuildDependsOn>
-      ResolveReferences;
-      _BuildR8;
-    </BuildDependsOn>
-    <CleanDependsOn>
-      _CleanR8;
-    </CleanDependsOn>
     <_Destination>$(XAInstallPrefix)xbuild\Xamarin\Android\r8.jar</_Destination>
   </PropertyGroup>
 
-  <Target Name="Build" DependsOnTargets="$(BuildDependsOn)" />
-  <Target Name="Clean" DependsOnTargets="$(CleanDependsOn)" />
-
   <Target Name="_BuildR8"
+      BeforeTargets="Build"
       Inputs="$(MSBuildThisFile);build.gradle"
       Outputs="$(_Destination)">
     <Exec
         Command="&quot;$(GradleWPath)&quot; jar $(GradleArgs) -PjavaSourceVer=$(JavacSourceVersion) -PjavaTargetVer=$(JavacTargetVersion)"
-        EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)"
+        EnvironmentVariables="JAVA_HOME=$(Java8SdkDirectory);APP_HOME=$(GradleHome)"
         WorkingDirectory="$(MSBuildThisFileDirectory)"
     />
     <Copy
@@ -29,11 +20,11 @@
     <Touch Files="$(_Destination)" />
   </Target>
 
-  <Target Name="_CleanR8">
+  <Target Name="_CleanR8" BeforeTargets="Clean">
     <Delete Files="$(_Destination)" />
     <Exec
         Command="&quot;$(GradleWPath)&quot; clean $(GradleArgs)"
-        EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)"
+        EnvironmentVariables="JAVA_HOME=$(Java8SdkDirectory);APP_HOME=$(GradleHome)"
         WorkingDirectory="$(MSBuildThisFileDirectory)"
     />
   </Target>

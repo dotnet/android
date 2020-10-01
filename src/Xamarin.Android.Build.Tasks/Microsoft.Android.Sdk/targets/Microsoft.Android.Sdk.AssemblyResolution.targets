@@ -12,6 +12,12 @@ _ResolveAssemblies MSBuild target.
 
   <UsingTask TaskName="Xamarin.Android.Tasks.ProcessAssemblies" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
+  <PropertyGroup Condition=" '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true' ">
+    <OutputPath Condition=" '$(_OuterOutputPath)' != '' ">$(_OuterOutputPath)</OutputPath>
+    <OutDir     Condition=" '$(_OuterOutputPath)' != '' ">$(_OuterOutputPath)</OutDir>
+    <PublishDir>$(OutputPath)</PublishDir>
+  </PropertyGroup>
+
   <Target Name="_ComputeFilesToPublishForRuntimeIdentifiers"
       DependsOnTargets="_FixupIntermediateAssembly;ResolveReferences;ComputeFilesToPublish"
       Returns="@(ResolvedFileToPublish)">
@@ -34,6 +40,7 @@ _ResolveAssemblies MSBuild target.
       <_AdditionalProperties>
         _ComputeFilesToPublishForRuntimeIdentifiers=true;
         _OuterIntermediateAssembly=@(IntermediateAssembly);
+        _OuterOutputPath=$(OutputPath);
         _ProguardProjectConfiguration=$(_ProguardProjectConfiguration);
       </_AdditionalProperties>
     </PropertyGroup>
@@ -45,6 +52,7 @@ _ResolveAssemblies MSBuild target.
     </MSBuild>
     <ItemGroup>
       <_ResolvedAssemblyFiles Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.Extension)' == '.dll' " />
+      <_ResolvedSymbolFiles   Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.Extension)' == '.pdb' " />
       <_UnusedConfigFiles     Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.Extension)' == '.config' " />
     </ItemGroup>
     <AndroidWarning
@@ -55,12 +63,23 @@ _ResolveAssemblies MSBuild target.
     />
     <ProcessAssemblies
         InputAssemblies="@(_ResolvedAssemblyFiles)"
-        IntermediateAssemblyDirectory="$(MonoAndroidIntermediateAssemblyDir)"
+        ResolvedSymbols="@(_ResolvedSymbolFiles)"
         UseSharedRuntime="$(AndroidUseSharedRuntime)"
         LinkMode="$(AndroidLinkMode)">
-      <Output TaskParameter="OutputAssemblies" ItemName="ResolvedAssemblies" />
-      <Output TaskParameter="ShrunkAssemblies" ItemName="_ShrunkAssemblies" />
+      <Output TaskParameter="OutputAssemblies" ItemName="_ProcessedAssemblies" />
+      <Output TaskParameter="ResolvedSymbols"  ItemName="ResolvedSymbols" />
+      <Output TaskParameter="ShrunkAssemblies" ItemName="_ProcessedShrunkAssemblies" />
     </ProcessAssemblies>
+    <AppendCustomMetadataToItemGroup
+        Inputs="@(_ProcessedAssemblies)"
+        MetaDataItems="@(AndroidCustomMetaDataForReferences)">
+      <Output TaskParameter="Output" ItemName="ResolvedAssemblies" />
+    </AppendCustomMetadataToItemGroup>
+    <AppendCustomMetadataToItemGroup
+        Inputs="@(_ProcessedShrunkAssemblies)"
+        MetaDataItems="@(AndroidCustomMetaDataForReferences)">
+      <Output TaskParameter="Output" ItemName="_ShrunkAssemblies" />
+    </AppendCustomMetadataToItemGroup>
     <ItemGroup>
       <ResolvedFrameworkAssemblies
           Include="@(ResolvedAssemblies)"
@@ -88,7 +107,6 @@ _ResolveAssemblies MSBuild target.
   <PropertyGroup>
     <_PrepareAssembliesDependsOnTargets>
       _ResolveAssemblies;
-      _CheckForObsoleteAssemblies;
       _ResolveSatellitePaths;
       _CreatePackageWorkspace;
       _ConvertPdbFiles;
@@ -99,9 +117,10 @@ _ResolveAssemblies MSBuild target.
   <Target Name="_PrepareAssemblies"
       DependsOnTargets="$(_PrepareAssembliesDependsOnTargets)">
     <ItemGroup Condition=" '$(AndroidLinkMode)' == 'None' ">
-      <_ResolvedAssemblies          Include="@(ResolvedAssemblies->'%(IntermediateLinkerOutput)')" />
-      <_ResolvedUserAssemblies      Include="@(ResolvedUserAssemblies->'%(IntermediateLinkerOutput)')" />
-      <_ResolvedFrameworkAssemblies Include="@(ResolvedFrameworkAssemblies->'%(IntermediateLinkerOutput)')" />
+      <_ResolvedAssemblies          Include="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')" />
+      <_ResolvedUserAssemblies      Include="@(ResolvedUserAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')" />
+      <_ResolvedFrameworkAssemblies Include="@(ResolvedFrameworkAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')" />
+      <_ResolvedSymbols             Include="@(ResolvedSymbols->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')" />
       <_ShrunkAssemblies            Include="@(_ResolvedAssemblies)" />
       <_ShrunkUserAssemblies        Include="@(_ResolvedUserAssemblies)" />
       <_ShrunkFrameworkAssemblies   Include="@(_ResolvedFrameworkAssemblies)" />
@@ -110,6 +129,7 @@ _ResolveAssemblies MSBuild target.
       <_ResolvedAssemblies          Include="@(ResolvedAssemblies)" />
       <_ResolvedUserAssemblies      Include="@(ResolvedUserAssemblies)" />
       <_ResolvedFrameworkAssemblies Include="@(ResolvedFrameworkAssemblies)" />
+      <_ResolvedSymbols             Include="@(ResolvedSymbols)" />
       <_ShrunkFrameworkAssemblies
           Include="@(_ShrunkAssemblies)"
           Condition=" '%(_ShrunkAssemblies.FrameworkAssembly)' == 'true' "

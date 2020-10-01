@@ -25,14 +25,17 @@ namespace Xamarin.Android.Build.Tests
 		public void BuildBasicBindingLibrary (string classParser)
 		{
 			var targets = new List<string> {
-				"_ExtractJavaDocJars",
 				"_ExportJarToXml",
 				"GenerateBindings",
 				"_CreateBindingResourceArchive",
-				"BuildDocumentation",
 				"_ResolveLibraryProjectImports",
 				"CoreCompile",
 			};
+			if (!Builder.UseDotNet) {
+				//TODO: .NET 5+ cannot support javadoc yet, due to missing mdoc
+				targets.Add ("_ExtractJavaDocJars");
+				targets.Add ("BuildDocumentation");
+			}
 
 			var proj = new XamarinAndroidBindingProject () {
 				IsRelease = true,
@@ -82,15 +85,20 @@ namespace Xamarin.Android.Build.Tests
 				};
 				var files = Directory.GetFiles (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath), "*", SearchOption.AllDirectories)
 					.Where (x => !ignoreFiles.Any (i => !Path.GetFileName (x).Contains (i)));
-				Assert.AreEqual (0, Directory.GetDirectories (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath), "*", SearchOption.AllDirectories).Length,
-					"All directories in {0} should have been removed", proj.IntermediateOutputPath);
-				Assert.AreEqual (0, files.Count (), "{0} should be empty. Found {1}",
-					proj.IntermediateOutputPath, string.Join (Environment.NewLine, files));
+				var directories = Directory.GetDirectories (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath), "*", SearchOption.AllDirectories)
+					// designtime folder is left behind, so Intellisense continues to work after a Clean
+					.Where (x => Path.GetFileName (x) != "designtime")
+					// .NET 5+ sets $(ProduceReferenceAssembly) by default
+					// https://github.com/dotnet/sdk/blob/18ee4eac8b3abe6d554d2e0c39d8952da0f23ce5/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.TargetFrameworkInference.targets#L242-L244
+					.Where (x => Path.GetFileName (x) != "ref");
+				CollectionAssert.IsEmpty (directories, $"{proj.IntermediateOutputPath} should have no directories.");
+				CollectionAssert.IsEmpty (files, $"{proj.IntermediateOutputPath} should have no files.");
 			}
 		}
 
 		[Test]
 		[TestCaseSource (nameof (ClassParseOptions))]
+		[Category ("LibraryProjectZip")]
 		public void BuildAarBindigLibraryStandalone (string classParser)
 		{
 			var proj = new XamarinAndroidBindingProject () {
@@ -109,6 +117,7 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[TestCaseSource (nameof (ClassParseOptions))]
+		[Category ("LibraryProjectZip")]
 		public void BuildAarBindigLibraryWithNuGetPackageOfJar (string classParser)
 		{
 			var proj = new XamarinAndroidBindingProject () {
@@ -135,7 +144,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		[TestCaseSource (nameof (ClassParseOptions))]
 		[NonParallelizable]
-		[Category ("SmokeTests")]
+		[Category ("SmokeTests"), Category ("LibraryProjectZip")]
 		public void BuildLibraryZipBindigLibraryWithAarOfJar (string classParser)
 		{
 			var proj = new XamarinAndroidBindingProject () {
@@ -209,6 +218,7 @@ namespace Com.Ipaulpro.Afilechooser {
 		}
 
 		[Test]
+		[Category ("LibraryProjectZip")]
 		public void MergeAndroidManifest ()
 		{
 			var binding = new XamarinAndroidBindingProject () {
@@ -229,7 +239,6 @@ namespace Com.Ipaulpro.Afilechooser {
 				};
 				proj.OtherBuildItems.Add (new BuildItem ("ProjectReference", "..\\AdalBinding\\UnnamedProject.csproj"));
 				using (var b = CreateApkBuilder ("temp/MergeAndroidManifest/App")) {
-					b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
 					Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 					var manifest = File.ReadAllText (Path.Combine (Root, b.ProjectDirectory, "obj", "Release", "android", "AndroidManifest.xml"));
 					Assert.IsTrue (manifest.Contains ("com.microsoft.aad.adal.AuthenticationActivity"), "manifest merge failure");
@@ -239,6 +248,7 @@ namespace Com.Ipaulpro.Afilechooser {
 		}
 
 		[Test]
+		[Category ("LibraryProjectZip")]
 		public void AnnotationSupport ()
 		{
 			// https://trello.com/c/a36dDVS6/37-support-for-annotations-zip
@@ -261,6 +271,7 @@ namespace Com.Ipaulpro.Afilechooser {
 		{
 			var binding = new XamarinAndroidBindingProject () {
 				IsRelease = true,
+				ProjectName = "Binding",
 			};
 			binding.AndroidClassParser = "class-parse";
 
@@ -269,15 +280,15 @@ namespace Com.Ipaulpro.Afilechooser {
 				binding.Jars.Add (new AndroidItem.EmbeddedJar (() => multidexJar));
 				bindingBuilder.Build (binding);
 				var proj = new XamarinAndroidApplicationProject ();
-				proj.OtherBuildItems.Add (new BuildItem ("ProjectReference", "..\\MultiDexBinding\\UnnamedProject.csproj"));
+				proj.OtherBuildItems.Add (new BuildItem ("ProjectReference", $"..\\MultiDexBinding\\{binding.ProjectName}.csproj"));
 				using (var b = CreateApkBuilder ("temp/BindingCustomJavaApplicationClass/App")) {
-					b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
 					Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				}
 			}
 		}
 
 		[Test]
+		[Category ("LibraryProjectZip")]
 		public void BindngFilterUnsupportedNativeAbiLibraries ()
 		{
 			var binding = new XamarinAndroidBindingProject () {
@@ -298,7 +309,8 @@ namespace Com.Ipaulpro.Afilechooser {
 		}
 
 		[Test]
-		public void BindingCheckHiddenFiles ([Values (true, false)] bool useShortFileNames)
+		[Category ("LibraryProjectZip")]
+		public void BindingCheckHiddenFiles ()
 		{
 			var binding = new XamarinAndroidBindingProject () {
 				UseLatestPlatformSdk = true,
@@ -312,13 +324,10 @@ namespace Com.Ipaulpro.Afilechooser {
 				WebContentFileNameFromAzure = "javaBindingIssue.jar"
 			});
 			var path = Path.Combine ("temp", TestContext.CurrentContext.Test.Name);
-			binding.SetProperty (binding.ActiveConfigurationProperties, "UseShortFileNames", useShortFileNames);
 			using (var bindingBuilder = CreateDllBuilder (Path.Combine (path, "Binding"))) {
-				bindingBuilder.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
 				Assert.IsTrue (bindingBuilder.Build (binding), "binding build should have succeeded");
 				var proj = new XamarinAndroidApplicationProject ();
 				proj.OtherBuildItems.Add (new BuildItem ("ProjectReference", "..\\Binding\\UnnamedProject.csproj"));
-				proj.SetProperty (proj.ActiveConfigurationProperties, "UseShortFileNames", useShortFileNames);
 				proj.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"" xmlns:tools=""http://schemas.android.com/tools"" android:versionCode=""1"" android:versionName=""1.0"" package=""{proj.PackageName}"">
 	<uses-sdk />
@@ -328,21 +337,13 @@ namespace Com.Ipaulpro.Afilechooser {
 				using (var b = CreateApkBuilder (Path.Combine (path, "App"))) {
 					Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 					var assemblyMap = b.Output.GetIntermediaryPath (Path.Combine ("lp", "map.cache"));
-					if (useShortFileNames)
-						Assert.IsTrue (File.Exists (assemblyMap), $"{assemblyMap} should exist.");
-					else
-						Assert.IsFalse (File.Exists (assemblyMap), $"{assemblyMap} should not exist.");
+					Assert.IsTrue (File.Exists (assemblyMap), $"{assemblyMap} should exist.");
 					var assemblyIdentityMap = new List<string> ();
-					if (useShortFileNames) {
-						foreach (var s in File.ReadLines (assemblyMap)) {
-							assemblyIdentityMap.Add (s);
-						}
+					foreach (var s in File.ReadLines (assemblyMap)) {
+						assemblyIdentityMap.Add (s);
 					}
-					var assmeblyIdentity = useShortFileNames ? assemblyIdentityMap.IndexOf ("UnnamedProject").ToString () : "UnnamedProject";
-					var libaryImportsFolder = useShortFileNames ? "lp" : "__library_projects__";
-					var jlibs = useShortFileNames ? "jl" : "library_project_imports";
-					var dsStorePath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, libaryImportsFolder,
-						assmeblyIdentity, jlibs);
+					var assemblyIdentity = assemblyIdentityMap.IndexOf ("UnnamedProject").ToString ();
+					var dsStorePath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "lp", assemblyIdentity, "jl");
 					Assert.IsTrue (Directory.Exists (dsStorePath), "{0} should exist.", dsStorePath);
 					Assert.IsFalse (File.Exists (Path.Combine (dsStorePath, ".DS_Store")), "{0} should NOT exist.",
 						Path.Combine (dsStorePath, ".DS_Store"));
@@ -405,6 +406,7 @@ namespace Foo {
 		}
 
 		[Test]
+		[Category ("LibraryProjectZip")]
 		public void RemoveEventHandlerResolution ()
 		{
 			var binding = new XamarinAndroidBindingProject () {
@@ -479,6 +481,7 @@ namespace Foo {
 
 		[Test]
 		[TestCaseSource (nameof (ClassParseOptions))]
+		[Category ("LibraryProjectZip")]
 		public void DesignTimeBuild (string classParser)
 		{
 			var proj = new XamarinAndroidBindingProject {
@@ -550,11 +553,11 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 			proj.SetProperty ("_EnableInterfaceMembers", "True");
 			proj.SetProperty ("LangVersion", "preview");
 
-			using (var b = CreateDllBuilder (Path.Combine ("temp", TestName), false, false)) {
+			using (var b = CreateDllBuilder ()) {
 				proj.NuGetRestore (b.ProjectDirectory);
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
-				string asmpath = Path.GetFullPath (Path.Combine (Path.GetDirectoryName (new Uri (GetType ().Assembly.CodeBase).LocalPath), b.ProjectDirectory, b.Output.OutputPath, (proj.AssemblyName ?? proj.ProjectName) + ".dll"));
+				string asmpath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.dll");
 				Assert.IsTrue (File.Exists (asmpath), "assembly does not exist");
 
 				var cs = b.Output.GetIntermediaryAsText (Path.Combine ("generated", "src", "Com.Xamarin.Test.IDefaultInterfaceMethods.cs"));
@@ -566,6 +569,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 		}
 
 		[Test]
+		[Category ("LibraryProjectZip")]
 		public void BugzillaBug11964 ()
 		{
 			var proj = new XamarinAndroidBindingProject ();
@@ -581,6 +585,38 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 						.SkipWhile (x => !x.StartsWith ("Build FAILED."))
 						.FirstOrDefault (x => x.Contains ("error XA1019:"));
 				Assert.IsNotNull (error, "Build should have failed with XA1019.");
+			}
+		}
+
+		[Test]
+		[Category ("LibraryProjectZip")]
+		public void LibraryProjectZipWithLint ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var lib = new XamarinAndroidBindingProject () {
+				ProjectName = "BindingsProject",
+				AndroidClassParser = "class-parse",
+				Jars = {
+					new AndroidItem.LibraryProjectZip ("fragment-1.2.2.aar") {
+						WebContent = "https://maven.google.com/androidx/fragment/fragment/1.2.2/fragment-1.2.2.aar"
+					}
+				},
+				MetadataXml = @"<metadata><remove-node path=""/api/package[@name='androidx.fragment.app']/interface[@name='FragmentManager.OpGenerator']"" /></metadata>"
+			};
+			var app = new XamarinAndroidApplicationProject () {
+				ProjectName = "App",
+				IsRelease = true,
+				LinkTool = "r8",
+				References = { new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid) }
+			};
+			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName), cleanupAfterSuccessfulBuild: false))
+			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+				Assert.IsTrue (libBuilder.Build (lib), "Library build should have succeeded.");
+				Assert.IsTrue (appBuilder.Build (app), "App build should have succeeded.");
+				StringAssertEx.DoesNotContain ("warning : Missing class: com.android.tools.lint.detector.api.Detector", appBuilder.LastBuildOutput, "Build output should contain no warnings about com.android.tools.lint.detector.api.Detector");
+				var libraryProjects = Path.Combine (Root, appBuilder.ProjectDirectory, app.IntermediateOutputPath, "lp");
+				Assert.IsFalse (Directory.EnumerateFiles (libraryProjects, "lint.jar", SearchOption.AllDirectories).Any (),
+					"`lint.jar` should not be extracted!");
 			}
 		}
 	}

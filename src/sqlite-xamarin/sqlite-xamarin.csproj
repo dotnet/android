@@ -1,23 +1,18 @@
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.Build.NoTargets">
   <PropertyGroup>
-    <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{B8F799C5-D7CE-4E09-9CE6-BAA4173E7EC8}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AppendTargetFrameworkToOutputPath>False</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
+  
   <Import Project="..\..\Configuration.props" />
-  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
-    <OutputPath>..\..\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\lib</OutputPath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)'=='Release'">
-    <OutputPath>..\..\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\lib</OutputPath>
-  </PropertyGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
+
   <PropertyGroup>
-    <BuildDependsOn>
-      _BuildSqlite;
-    </BuildDependsOn>
+    <OutputPath>..\..\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\lib</OutputPath>
   </PropertyGroup>
+  
   <Import Project="sqlite-xamarin.targets" />
+  
   <ItemGroup>
     <Content Include="Mono.Data.Sqlite.dll.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

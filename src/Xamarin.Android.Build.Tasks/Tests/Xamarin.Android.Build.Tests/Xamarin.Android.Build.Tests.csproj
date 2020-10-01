@@ -1,9 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net472</TargetFramework>
+    <TargetFrameworks>net472;netcoreapp3.1</TargetFrameworks>
     <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>..\..\..\..\bin\Test$(Configuration)</OutputPath>
   </PropertyGroup>
 
@@ -17,6 +16,12 @@
     </Reference>
   </ItemGroup>
 
+  <!-- Required packages for .NET Core -->
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.6.1" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.7.0" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Xamarin.ProjectTools\Xamarin.ProjectTools.csproj" />
     <ProjectReference Include="..\..\Xamarin.Android.Build.Tasks.csproj" />
@@ -26,12 +31,15 @@
   <ItemGroup>
     <Compile Remove="Expected\**" />
     <Content Include="Expected\GenerateDesignerFileExpected.cs">
+      <Link>..\Expected\GenerateDesignerFileExpected.cs</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Expected\GenerateDesignerFileWithElevenStyleableAttributesExpected.cs">
+      <Link>..\Expected\GenerateDesignerFileWithElevenStyleableAttributesExpected.cs</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Expected\GenerateDesignerFileWithLibraryReferenceExpected.cs">
+      <Link>..\Expected\GenerateDesignerFileWithLibraryReferenceExpected.cs</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

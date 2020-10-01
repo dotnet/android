@@ -70,7 +70,7 @@ Copyright (C) 2014 Xamarin. All rights reserved.
         
         <ItemGroup Condition="'@(NativeLibraryPaths)' != ''">
             <AndroidNativeLibrary Include="@(NativeLibraryPaths)"
-                                  Condition="'%(Extension)' == '.so' Or '%(FileName)' == 'gdbserver'">
+                                  Condition="'%(Extension)' == '.so' Or ('$(AndroidIncludeDebugSymbols)' == 'true' And '$(AndroidPackageFormat)' != 'aab' And '%(FileName)' == 'gdbserver')">
                 <Abi>$(NativeLibraryAbi)</Abi>
             </AndroidNativeLibrary>
             <Content Include="@(NativeLibraryPaths)"

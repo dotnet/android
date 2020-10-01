@@ -2,14 +2,14 @@
     path = external/android-api-docs
     url = https://github.com/xamarin/android-api-docs
     branch = master
+[submodule "external/apksig"]
+    path = external/apksig
+    url = https://android.googlesource.com/platform/tools/apksig
+    branch = platform-tools-30.0.3
 [submodule "external/debugger-libs"]
     path = external/debugger-libs
     url = https://github.com/mono/debugger-libs
     branch = master
-[submodule "external/dlfcn-win32"]
-    path = external/dlfcn-win32
-    url = https://github.com/dlfcn-win32/dlfcn-win32.git
-    branch = v1.1.1
 [submodule "external/Java.Interop"]
     path = external/Java.Interop
     url = https://github.com/xamarin/java.interop.git
