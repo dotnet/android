@@ -22,9 +22,10 @@ resources:
     type: github
     name: xamarin/release-scripts
     endpoint: xamarin
-  - repository: designer
+  - repository: uitools
     type: github
-    name: xamarin/designer
+    name: xamarin/UITools
+    ref: refs/heads/main
     endpoint: xamarin
   - repository: qa
     type: github
@@ -898,32 +899,32 @@ stages:
     variables:
       EnableRegressionTest: true
     steps:
-    - checkout: designer
+    - checkout: uitools
       clean: true
       submodules: recursive
-      path: s/designer
+      path: s/UITools
       persistCredentials: true
 
     - powershell: |
-        # Use the branch name of the source being built or the PR target branch name. Fall back to 'master' if the branch is unknown.
+        # Use the branch name of the source being built or the PR target branch name. Fall back to 'main' if the branch is unknown.
         $branchPrefix = "/refs/heads/"
         $branchName = "$(Build.SourceBranch)" -replace $branchPrefix, ""
         if ("$(Build.Reason)" -eq "PullRequest") {
             $branchName = "$(System.PullRequest.TargetBranch)" -replace $branchPrefix, ""
         }
-        if (("$branchName" -ne "master") -and ("$branchName" -notlike "d16*")) {
-            $branchName = "master"
+        if (("$branchName" -ne "main") -and ("$branchName" -notlike "d16*")) {
+            $branchName = "main"
         }
-        Set-Location -Path $(System.DefaultWorkingDirectory)/designer
+        Set-Location -Path $(System.DefaultWorkingDirectory)/UITools
         git checkout $branchName
         git submodule update -q --init --recursive
-      displayName: Clone and update designer
+      displayName: Clone and update UITools
 
     - task: provisionator@2
       displayName: provision designer dependencies
       inputs:
         github_token: $(GitHub.Token)
-        provisioning_script: $(System.DefaultWorkingDirectory)/designer/bot-provisioning/dependencies.csx
+        provisioning_script: $(System.DefaultWorkingDirectory)/UITools/Designer/bot-provisioning/dependencies.csx
         provisioning_extra_args: -remove Xamarin.Android -vv DEVDIV_PKGS_NUGET_TOKEN=$(DevDiv.NuGet.Token) SECTOOLS_PKGS_NUGET_TOKEN=$(SecTools.NuGet.Token)
 
     - template: yaml-templates/setup-test-environment.yaml
@@ -938,16 +939,16 @@ stages:
 
     - template: designer/android-designer-build-mac.yaml@yaml
       parameters:
-        designerSourcePath: $(System.DefaultWorkingDirectory)/designer
+        designerSourcePath: $(System.DefaultWorkingDirectory)/UITools/Designer
 
     - template: designer/android-designer-tests.yaml@yaml
       parameters:
-        designerSourcePath: $(System.DefaultWorkingDirectory)/designer
+        designerSourcePath: $(System.DefaultWorkingDirectory)/UITools/Designer
 
     - task: CopyFiles@2
       displayName: 'Copy binlogs'
       inputs:
-        sourceFolder: $(System.DefaultWorkingDirectory)/designer/Xamarin.Designer.Android
+        sourceFolder: $(System.DefaultWorkingDirectory)/UITools/Designer/Xamarin.Designer.Android
         contents: '**/*.binlog'
         targetFolder: $(Build.ArtifactStagingDirectory)/designer-binlogs
         overWrite: true
@@ -973,32 +974,32 @@ stages:
       RegressionTestSuiteOutputDir: C:\Git\ADesRegTestSuite
       VisualStudioInstallationPath: C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise
     steps:
-    - checkout: designer
+    - checkout: uitools
       clean: true
       submodules: recursive
-      path: s\designer
+      path: s\UITools
       persistCredentials: true
 
     - powershell: |
-        # Use the branch name of the source being built or the PR target branch name. Fall back to 'master' if the branch is unknown.
+        # Use the branch name of the source being built or the PR target branch name. Fall back to 'main' if the branch is unknown.
         $branchPrefix = "/refs/heads/"
         $branchName = "$(Build.SourceBranch)" -replace $branchPrefix, ""
         if ("$(Build.Reason)" -eq "PullRequest") {
             $branchName = "$(System.PullRequest.TargetBranch)" -replace $branchPrefix, ""
         }
-        if (("$branchName" -ne "master") -and ("$branchName" -notlike "d16*")) {
-            $branchName = "master"
+        if (("$branchName" -ne "main") -and ("$branchName" -notlike "d16*")) {
+            $branchName = "main"
         }
-        Set-Location -Path $(System.DefaultWorkingDirectory)\designer
+        Set-Location -Path $(System.DefaultWorkingDirectory)\UITools
         git checkout $branchName
         git submodule update -q --init --recursive
-      displayName: Clone and update designer
+      displayName: Clone and update UITools
 
     - task: provisionator@2
       displayName: provision designer dependencies
       inputs:
         github_token: $(GitHub.Token)
-        provisioning_script: $(System.DefaultWorkingDirectory)\designer\bot-provisioning\dependencies.csx
+        provisioning_script: $(System.DefaultWorkingDirectory)\UITools\Designer\bot-provisioning\dependencies.csx
         provisioning_extra_args: -vv DEVDIV_PKGS_NUGET_TOKEN=$(DevDiv.NuGet.Token) SECTOOLS_PKGS_NUGET_TOKEN=$(SecTools.NuGet.Token)
 
     - template: yaml-templates\setup-test-environment.yaml
@@ -1016,18 +1017,18 @@ stages:
 
     - template: designer\android-designer-build-win.yaml@yaml
       parameters:
-        designerSourcePath: $(System.DefaultWorkingDirectory)\designer
+        designerSourcePath: $(System.DefaultWorkingDirectory)\UITools\Designer
 
     - template: designer\android-designer-tests.yaml@yaml
       parameters:
-        designerSourcePath: $(System.DefaultWorkingDirectory)\designer
+        designerSourcePath: $(System.DefaultWorkingDirectory)\UITools\Designer
 
     - task: CopyFiles@2
       displayName: 'Copy binlogs'
       inputs:
-        sourceFolder: $(System.DefaultWorkingDirectory)/designer/Xamarin.Designer.Android
+        sourceFolder: $(System.DefaultWorkingDirectory)\UITools\Designer\Xamarin.Designer.Android
         contents: '**/*.binlog'
-        targetFolder: $(Build.ArtifactStagingDirectory)/designer-binlogs
+        targetFolder: $(Build.ArtifactStagingDirectory)\designer-binlogs
         overWrite: true
         flattenFolders: true
       condition: always()
@@ -1036,7 +1037,7 @@ stages:
       parameters:
         displayName: upload designer binlogs
         artifactName: Test Results - Designer - Windows
-        targetPath: $(Build.ArtifactStagingDirectory)/designer-binlogs
+        targetPath: $(Build.ArtifactStagingDirectory)\designer-binlogs
 
 - stage: tz_tests
   displayName: TimeZoneInfo Emulator Tests
