@@ -123,7 +123,7 @@ stages:
         mkdir -p bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName) &&
         cp bin/Build$(XA.Build.Configuration)/*.vsix bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName) &&
         cp bin/Build$(XA.Build.Configuration)/*.pkg bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
-      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
+      workingDirectory: $(Build.SourcesDirectory)
       displayName: copy installers
 
     - task: PublishPipelineArtifact@1
