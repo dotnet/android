@@ -76,7 +76,7 @@ namespace Xamarin.ProjectTools
 		/// <summary>
 		/// The top directory of a local build tree if it can be found, e.g. xamarin-android/bin/Debug.
 		/// </summary>
-		string BuildOutputDirectory {
+		public string BuildOutputDirectory {
 			get {
 				var outdir = Environment.GetEnvironmentVariable ("XA_BUILD_OUTPUT_PATH");
 				string configuration = Environment.GetEnvironmentVariable ("CONFIGURATION") ?? XABuildPaths.Configuration;
