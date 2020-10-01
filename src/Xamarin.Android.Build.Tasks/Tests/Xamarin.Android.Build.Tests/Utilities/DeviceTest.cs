@@ -40,6 +40,8 @@ namespace Xamarin.Android.Build.Tests
 				}
 			}
 
+			ClearAdbLogcat ();
+
 			base.CleanupTest ();
 		}
 
