@@ -23,6 +23,7 @@ variables:
   XA.Build.LinuxOSSPool: Xamarin-Android-Ubuntu-Public
   XA.Build.Configuration: Release
   NuGetArtifactName: nupkgs
+  InstallerArtifactName: Installers
   EXTRA_MSBUILD_ARGS: /p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False
   PREPARE_FLAGS: PREPARE_CI=1 PREPARE_CI_PR=1
   DotNetCoreVersion: 3.1.201
@@ -117,6 +118,19 @@ stages:
         make package-oss CONFIGURATION=$(XA.Build.Configuration) V=1
       workingDirectory: $(Build.SourcesDirectory)
       displayName: package oss
+
+    - script: >
+        mkdir -p bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName) &&
+        cp bin/Build$(XA.Build.Configuration)/*.vsix bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName) &&
+        cp bin/Build$(XA.Build.Configuration)/*.pkg bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
+      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
+      displayName: copy installers
+
+    - task: PublishPipelineArtifact@1
+      displayName: upload installers
+      inputs:
+        artifactName: $(InstallerArtifactName)
+        targetPath: $(Build.SourcesDirectory)/bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
 
     - script: >
         echo "all-tests CONFIGURATION=$(XA.Build.Configuration) V=1" &&
