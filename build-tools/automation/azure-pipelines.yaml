@@ -974,7 +974,7 @@ stages:
       RegressionTestSuiteOutputDir: C:\Git\ADesRegTestSuite
       VisualStudioInstallationPath: C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise
     steps:
-    - checkout: designer
+    - checkout: uitools
       clean: true
       submodules: recursive
       path: s\UITools
