@@ -129,7 +129,7 @@ stages:
     - task: PublishPipelineArtifact@1
       displayName: upload installers
       inputs:
-        artifactName: $(InstallerArtifactName)
+        artifactName: $(InstallerArtifactName) - macOS and Windows
         targetPath: $(Build.SourcesDirectory)/bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
 
     - script: >
@@ -154,7 +154,7 @@ stages:
     - task: PublishPipelineArtifact@1
       displayName: upload nupkgs
       inputs:
-        artifactName: $(NuGetArtifactName)
+        artifactName: $(NuGetArtifactName) - macOS
         targetPath: $(Build.SourcesDirectory)/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
 
     - script: >
@@ -228,13 +228,13 @@ stages:
     - task: PublishPipelineArtifact@1
       displayName: publish linux artifacts
       inputs:
-        artifactName: Linux Packages
+        artifactName: $(InstallerArtifactName) - Linux
         targetPath: $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/linux-artifacts
 
     - task: PublishPipelineArtifact@1
       displayName: upload nupkgs
       inputs:
-        artifactName: Linux $(NuGetArtifactName)
+        artifactName: $(NuGetArtifactName) - Linux
         targetPath: $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
 
     - template: yaml-templates/upload-results.yaml
