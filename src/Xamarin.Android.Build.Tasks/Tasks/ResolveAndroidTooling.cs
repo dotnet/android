@@ -33,6 +33,8 @@ namespace Xamarin.Android.Tasks
 
 		public bool AndroidApplication { get; set; } = true;
 
+		public bool AndroidUseAapt2 { get; set; }
+
 		[Output]
 		public string AndroidApiLevel { get; set; }
 
@@ -53,9 +55,6 @@ namespace Xamarin.Android.Tasks
 
 		[Output]
 		public string LintToolPath { get; set; }
-
-		[Output]
-		public bool AndroidUseAapt2 { get; set; }
 
 		[Output]
 		public string Aapt2Version { get; set; }
@@ -131,25 +130,17 @@ namespace Xamarin.Android.Tasks
 				return false;
 			}
 
-			if (string.IsNullOrEmpty (Aapt2ToolPath)) {
-				var osBinPath = MonoAndroidHelper.GetOSBinPath ();
-				var aapt2 = Path.Combine (osBinPath, Aapt2);
-				if (File.Exists (aapt2))
-					Aapt2ToolPath = osBinPath;
-			}
-
-			bool aapt2Installed = !string.IsNullOrEmpty (Aapt2ToolPath) && File.Exists (Path.Combine (Aapt2ToolPath, Aapt2));
-			if (aapt2Installed && AndroidUseAapt2) {
-				if (!GetAapt2Version ()) {
-					AndroidUseAapt2 = false;
-					aapt2Installed = false;
-					Log.LogCodedWarning ("XA0111", Properties.Resources.XA0111);
-				}
-			}
 			if (AndroidUseAapt2) {
-				if (!aapt2Installed) {
-					AndroidUseAapt2 = false;
-					Log.LogCodedWarning ("XA0112", Properties.Resources.XA0112);
+				if (string.IsNullOrEmpty (Aapt2ToolPath)) {
+					var osBinPath = MonoAndroidHelper.GetOSBinPath ();
+					var aapt2 = Path.Combine (osBinPath, Aapt2);
+					if (File.Exists (aapt2))
+						Aapt2ToolPath = osBinPath;
+				}
+				if (string.IsNullOrEmpty (Aapt2ToolPath) || !File.Exists (Path.Combine (Aapt2ToolPath, Aapt2))) {
+					Log.LogCodedError ("XA0112", Properties.Resources.XA0112, Aapt2ToolPath);
+				} else if (!GetAapt2Version ()) {
+					Log.LogCodedError ("XA0111", Properties.Resources.XA0111, Aapt2ToolPath);
 				}
 			}
 
@@ -195,8 +186,8 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ($"  {nameof (ZipAlignPath)}: {ZipAlignPath}");
 			Log.LogDebugMessage ($"  {nameof (AndroidSequencePointsMode)}: {AndroidSequencePointsMode}");
 			Log.LogDebugMessage ($"  {nameof (LintToolPath)}: {LintToolPath}");
-			Log.LogDebugMessage ($"  {nameof (AndroidUseAapt2)}: {AndroidUseAapt2}");
 			Log.LogDebugMessage ($"  {nameof (Aapt2Version)}: {Aapt2Version}");
+			Log.LogDebugMessage ($"  {nameof (Aapt2ToolPath)}: {Aapt2ToolPath}");
 		}
 
 		//  Android Asset Packaging Tool (aapt) 2:19

@@ -245,12 +245,12 @@ In this message, the phrase "should not be reached" means that this error messag
     <comment>{0} - The tool name</comment>
   </data>
   <data name="XA0111" xml:space="preserve">
-    <value>Could not get the `aapt2` version. Disabling `aapt2` support. Please check it is installed correctly.</value>
-    <comment>The following are literal names and should not be translated: `aapt2`</comment>
+    <value>Unsupported version of AAPT2 found at path '{0}'. Open the project file in a text editor and remove the 'Aapt2ToolPath' MSBuild property or ensure it is set to a valid location.</value>
+    <comment>The following are literal names and should not be translated: AAPT2, Aapt2ToolPath, MSBuild</comment>
   </data>
   <data name="XA0112" xml:space="preserve">
-    <value>`aapt2` is not installed. Disabling `aapt2` support. Please check it is installed correctly.</value>
-    <comment>The following are literal names and should not be translated: `aapt2`</comment>
+    <value>AAPT2 was not found at path '{0}'. Open the project file in a text editor and remove the 'Aapt2ToolPath' MSBuild property or ensure it is set to a valid location.</value>
+    <comment>The following are literal names and should not be translated: AAPT2, Aapt2ToolPath, MSBuild</comment>
   </data>
   <data name="XA0113" xml:space="preserve">
     <value>Google Play requires that new applications and updates must use a TargetFrameworkVersion of v9.0 (API level 28) or above. You are currently targeting {0} (API level {1}).</value>

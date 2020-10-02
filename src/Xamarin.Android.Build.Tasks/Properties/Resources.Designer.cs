@@ -302,7 +302,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Could not get the `aapt2` version. Disabling `aapt2` support. Please check it is installed correctly..
+        ///   Looks up a localized string similar to Unsupported version of AAPT2 found at path &apos;{0}&apos;. Open the project file in a text editor and remove the &apos;Aapt2ToolPath&apos; MSBuild property or ensure it is set to a valid location..
         /// </summary>
         internal static string XA0111 {
             get {
@@ -311,7 +311,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to `aapt2` is not installed. Disabling `aapt2` support. Please check it is installed correctly..
+        ///   Looks up a localized string similar to AAPT2 was not found at path &apos;{0}&apos;. Open the project file in a text editor and remove the &apos;Aapt2ToolPath&apos; MSBuild property or ensure it is set to a valid location..
         /// </summary>
         internal static string XA0112 {
             get {

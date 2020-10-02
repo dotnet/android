@@ -31,12 +31,10 @@ Copyright (C) 2019  Microsoft Corporation. All rights reserved.
   </PropertyGroup>
 </Target>
 
-<Target Name="_UpdateAndroidResgenAapt"
-    Condition="'$(_AndroidUseAapt2)' != 'True'">
+<Target Name="_UpdateAndroidResgenAapt">
 
   <!-- Change cases so we support mixed case resource names -->
   <ConvertResourcesCases
-      Condition="'$(_AndroidUseAapt2)' != 'True'"
       ResourceDirectories="$(MonoAndroidResDirIntermediate);@(LibraryResourceDirectories)"
       ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
       AcwMapFile="$(_AcwMapFile)"
@@ -46,7 +44,7 @@ Copyright (C) 2019  Microsoft Corporation. All rights reserved.
 
   <!-- Run aapt to generate R.java -->
   <Aapt
-      Condition="'$(_AndroidResourceDesignerFile)' != '' And '$(_AndroidUseAapt2)' != 'True'"
+      Condition=" '$(_AndroidResourceDesignerFile)' != '' "
       ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
       OutputImportDirectory="$(_AndroidLibrayProjectIntermediatePath)"
       JavaPlatformJarPath="$(JavaPlatformJarPath)"
@@ -72,10 +70,8 @@ Copyright (C) 2019  Microsoft Corporation. All rights reserved.
       ContinueOnError="$(DesignTimeBuild)"
   />
 </Target>
-<Target Name="_CreateBaseApkWithAapt"
-    Condition="'$(_AndroidUseAapt2)' != 'True'">
+<Target Name="_CreateBaseApkWithAapt">
   <Aapt
-     Condition="'$(_AndroidUseAapt2)' != 'True'"
      AndroidManifestFile="$(_AndroidManifestAbs)"
      ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
      OutputImportDirectory="$(_AndroidLibrayProjectIntermediatePath)"

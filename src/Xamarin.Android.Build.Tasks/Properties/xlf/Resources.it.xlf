@@ -185,14 +185,14 @@ In this message, the phrase "should not be reached" means that this error messag
         <note>{0} - The tool name</note>
       </trans-unit>
       <trans-unit id="XA0111">
-        <source>Could not get the `aapt2` version. Disabling `aapt2` support. Please check it is installed correctly.</source>
-        <target state="translated">Non è stato possibile ottenere la versione di `aapt2`. Il supporto per `aapt2` verrà disabilitato. Verificare che sia installato correttamente.</target>
-        <note>The following are literal names and should not be translated: `aapt2`</note>
+        <source>Unsupported version of AAPT2 found at path '{0}'. Open the project file in a text editor and remove the 'Aapt2ToolPath' MSBuild property or ensure it is set to a valid location.</source>
+        <target state="new">Unsupported version of AAPT2 found at path '{0}'. Open the project file in a text editor and remove the 'Aapt2ToolPath' MSBuild property or ensure it is set to a valid location.</target>
+        <note>The following are literal names and should not be translated: AAPT2, Aapt2ToolPath, MSBuild</note>
       </trans-unit>
       <trans-unit id="XA0112">
-        <source>`aapt2` is not installed. Disabling `aapt2` support. Please check it is installed correctly.</source>
-        <target state="translated">`aapt2` non è installato. Il supporto per `aapt2` verrà disabilitato. Verificare che sia installato correttamente.</target>
-        <note>The following are literal names and should not be translated: `aapt2`</note>
+        <source>AAPT2 was not found at path '{0}'. Open the project file in a text editor and remove the 'Aapt2ToolPath' MSBuild property or ensure it is set to a valid location.</source>
+        <target state="new">AAPT2 was not found at path '{0}'. Open the project file in a text editor and remove the 'Aapt2ToolPath' MSBuild property or ensure it is set to a valid location.</target>
+        <note>The following are literal names and should not be translated: AAPT2, Aapt2ToolPath, MSBuild</note>
       </trans-unit>
       <trans-unit id="XA0113">
         <source>Google Play requires that new applications and updates must use a TargetFrameworkVersion of v9.0 (API level 28) or above. You are currently targeting {0} (API level {1}).</source>

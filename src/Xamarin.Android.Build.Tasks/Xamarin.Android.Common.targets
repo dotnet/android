@@ -1002,7 +1002,7 @@ because xbuild doesn't support framework reference assemblies.
 	Outputs="$(_AndroidResFlagFile)"
 	DependsOnTargets="$(_OnResolveMonoAndroidSdks)">
 	<CheckForInvalidResourceFileNames
-		Condition=" '$(_AndroidUseAapt2)' == 'True' "
+		Condition=" '$(AndroidUseAapt2)' == 'true' "
 		Resources="@(_AndroidResolvedResources)"
 	/>
 	<CopyIfChanged SourceFiles="@(_AndroidResolvedResources)"
@@ -1161,8 +1161,8 @@ because xbuild doesn't support framework reference assemblies.
 	Outputs="$(_AndroidResgenFlagFile)"
 	DependsOnTargets="$(_UpdateAndroidResgenDependsOnTargets);$(_AfterGenerateAndroidResourceDir);_PrepareUpdateAndroidResgen">
 
-	<CallTarget Targets="_UpdateAndroidResgenAapt" Condition="'$(_AndroidUseAapt2)' != 'True'" />
-	<CallTarget Targets="_UpdateAndroidResgenAapt2" Condition="'$(_AndroidUseAapt2)' == 'True'" />
+	<CallTarget Targets="_UpdateAndroidResgenAapt"  Condition=" '$(AndroidUseAapt2)' != 'true' " />
+	<CallTarget Targets="_UpdateAndroidResgenAapt2" Condition=" '$(AndroidUseAapt2)' == 'true' " />
 
 	<GenerateLibraryResources
 		Condition=" '$(_AndroidResourceDesignerFile)' != '' And Exists('$(IntermediateOutputPath)R.txt') "
@@ -1182,7 +1182,7 @@ because xbuild doesn't support framework reference assemblies.
   <PropertyGroup>
     <!-- We need to strip out just filename from request Designer file location -->
     <AndroidResgenFilename>$([System.IO.Path]::GetFileName ('$(_AndroidResourceDesignerFile)'))</AndroidResgenFilename>
-    <_UseManagedResourceGenerator Condition=" '$(_AndroidUseAapt2)' == 'True' ">True</_UseManagedResourceGenerator>
+    <_UseManagedResourceGenerator Condition=" '$(AndroidUseAapt2)' == 'True' ">True</_UseManagedResourceGenerator>
     <_UseManagedResourceGenerator Condition=" '$(_UseManagedResourceGenerator)' == '' ">False</_UseManagedResourceGenerator>
   </PropertyGroup>
 
@@ -1622,7 +1622,7 @@ because xbuild doesn't support framework reference assemblies.
   For aapt2 we will consule the library assets in place.
   -->
   <CollectLibraryAssets
-      Condition=" '$(_AndroidUseAapt2)' != 'True' "
+      Condition=" '$(AndroidUseAapt2)' != 'true' "
       AdditionalAssetDirectories="@(LibraryAssetDirectories)"
       AssetDirectory="$(MonoAndroidAssetsDirIntermediate)" />
 </Target>
@@ -1647,8 +1647,8 @@ because xbuild doesn't support framework reference assemblies.
   Outputs="$(_PackagedResources)">
 
   <!-- Create the base .apk with resources and assets -->
-  <CallTarget Targets="_CreateBaseApkWithAapt" Condition="'$(_AndroidUseAapt2)' != 'True'" />
-  <CallTarget Targets="_CreateBaseApkWithAapt2" Condition="'$(_AndroidUseAapt2)' == 'True'" />
+  <CallTarget Targets="_CreateBaseApkWithAapt"  Condition=" '$(AndroidUseAapt2)' != 'true' " />
+  <CallTarget Targets="_CreateBaseApkWithAapt2" Condition=" '$(AndroidUseAapt2)' == 'true' " />
   <Touch Files="$(_PackagedResources)" />
   <!-- LibraryProjectJars must not be used for aapt in BuildApk*, or it will *bundle* the jar! -->
 
