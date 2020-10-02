@@ -43,6 +43,12 @@ This file contains the .NET 5-specific targets to customize ILLink
         <Type>Microsoft.Android.Sdk.ILLink.SetupStep</Type>
       </_TrimmerCustomSteps>
     </ItemGroup>
+    <ItemGroup>
+      <_PreserveLists Include="$(MSBuildThisFileDirectory)..\PreserveLists\*.xml" />
+      <TrimmerRootDescriptor
+          Condition=" '@(ResolvedFileToPublish->Count())' != '0' and '%(Filename)' != '' "
+          Include="@(_PreserveLists)" />
+    </ItemGroup>
   </Target>
 
   <Target Name="_LinkAssemblies"
