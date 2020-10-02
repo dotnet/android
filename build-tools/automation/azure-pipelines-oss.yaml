@@ -23,6 +23,7 @@ variables:
   XA.Build.LinuxOSSPool: Xamarin-Android-Ubuntu-Public
   XA.Build.Configuration: Release
   NuGetArtifactName: nupkgs
+  InstallerArtifactName: Installers
   EXTRA_MSBUILD_ARGS: /p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False
   PREPARE_FLAGS: PREPARE_CI=1 PREPARE_CI_PR=1
   DotNetCoreVersion: 3.1.201
@@ -119,6 +120,19 @@ stages:
       displayName: package oss
 
     - script: >
+        mkdir -p bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName) &&
+        cp bin/Build$(XA.Build.Configuration)/*.vsix bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName) &&
+        cp bin/Build$(XA.Build.Configuration)/*.pkg bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
+      workingDirectory: $(Build.SourcesDirectory)
+      displayName: copy installers
+
+    - task: PublishPipelineArtifact@1
+      displayName: upload installers
+      inputs:
+        artifactName: $(InstallerArtifactName) - macOS and Windows
+        targetPath: $(Build.SourcesDirectory)/bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
+
+    - script: >
         echo "all-tests CONFIGURATION=$(XA.Build.Configuration) V=1" &&
         make all-tests CONFIGURATION=$(XA.Build.Configuration) V=1
       workingDirectory: $(Build.SourcesDirectory)
@@ -140,7 +154,7 @@ stages:
     - task: PublishPipelineArtifact@1
       displayName: upload nupkgs
       inputs:
-        artifactName: $(NuGetArtifactName)
+        artifactName: $(NuGetArtifactName) - macOS
         targetPath: $(Build.SourcesDirectory)/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
 
     - script: >
@@ -214,13 +228,13 @@ stages:
     - task: PublishPipelineArtifact@1
       displayName: publish linux artifacts
       inputs:
-        artifactName: Linux Packages
+        artifactName: $(InstallerArtifactName) - Linux
         targetPath: $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/linux-artifacts
 
     - task: PublishPipelineArtifact@1
       displayName: upload nupkgs
       inputs:
-        artifactName: Linux $(NuGetArtifactName)
+        artifactName: $(NuGetArtifactName) - Linux
         targetPath: $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
 
     - template: yaml-templates/upload-results.yaml
