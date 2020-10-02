@@ -498,6 +498,7 @@ namespace Lib2
 					Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped!");
 				}
 
+				WaitFor (1000);
 				proj.Touch ("foo\\armeabi-v7a\\libtest.so");
 				proj.Touch ("Assets\\foo.txt");
 
