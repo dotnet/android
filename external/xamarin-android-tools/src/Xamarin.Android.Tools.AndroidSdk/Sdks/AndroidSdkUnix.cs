@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
+using Xamarin.Android.Tools.AndroidSdk.Properties;
+
 namespace Xamarin.Android.Tools
 {
 	class AndroidSdkUnix : AndroidSdkBase
@@ -232,7 +234,7 @@ namespace Xamarin.Android.Tools
 				try {
 					doc = XDocument.Load (file);
 				} catch (Exception ex) {
-					logger (TraceLevel.Error, "Could not load monodroid configuration file");
+					logger (TraceLevel.Error, string.Format (Resources.InvalidMonodroidConfigFile_path_message, file, ex.Message));
 					logger (TraceLevel.Verbose, ex.ToString ());
 
 					// move out of the way and create a new one

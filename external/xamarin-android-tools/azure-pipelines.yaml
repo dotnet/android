@@ -31,6 +31,8 @@ jobs:
     displayName: 'NuGet Restore'
     inputs:
       restoreSolution: Xamarin.Android.Tools.sln
+      feedsToUse: config
+      nugetConfigPath: NuGet.config
   - task: MSBuild@1
     displayName: 'Build solution Xamarin.Android.Tools.sln'
     inputs:

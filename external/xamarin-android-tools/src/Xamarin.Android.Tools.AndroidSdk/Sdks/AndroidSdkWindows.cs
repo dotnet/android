@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
+using Xamarin.Android.Tools.AndroidSdk.Properties;
+
 namespace Xamarin.Android.Tools
 {
 	class AndroidSdkWindows : AndroidSdkBase
@@ -114,7 +116,7 @@ namespace Xamarin.Android.Tools
 					jdk = new JdkInfo (path, locator);
 				}
 				catch (Exception e) {
-					logger (TraceLevel.Warning, $"The directory `{path}`, via locator `{locator}`, is not a valid JDK directory: {e.Message}");
+					logger (TraceLevel.Warning, string.Format (Resources.InvalidJdkDirectory_path_locator_message, path, locator, e.Message));
 					logger (TraceLevel.Verbose, e.ToString ());
 				}
 				return jdk;
