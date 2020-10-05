@@ -59,10 +59,11 @@ namespace NUnit.Framework.Constraints
 
                 stream.Seek(0, SeekOrigin.Begin);
 
-                var reader = XmlReader.Create (stream, new XmlReaderSettings { XmlResolver = null });
-                object value = serializer.Deserialize(reader);
+                using (var reader = XmlReader.Create (stream, new XmlReaderSettings { XmlResolver = null })) {
+                    object value = serializer.Deserialize(reader);
 
-                return value != null;
+                    return value != null;
+		}
             }
             catch (NotSupportedException)
             {
