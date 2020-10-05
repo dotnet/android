@@ -99,7 +99,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <!-- Change cases so we support mixed case resource names -->
   <ConvertResourcesCases
       ContinueOnError="$(DesignTimeBuild)"
-      AcwMapFile="$(_AcwMapFile)"
       AndroidConversionFlagFile="$(_AndroidStampDirectory)_ConvertResourcesCases.stamp"
       CustomViewMapFile="$(_CustomViewMapFile)"
       ResourceDirectories="$(MonoAndroidResDirIntermediate);@(_LibraryResourceDirectories)"

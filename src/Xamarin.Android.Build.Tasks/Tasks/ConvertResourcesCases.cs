@@ -19,9 +19,6 @@ namespace Xamarin.Android.Tasks
 		public ITaskItem[] ResourceDirectories { get; set; }
 
 		[Required]
-		public string AcwMapFile { get; set; }
-
-		[Required]
 		public string CustomViewMapFile { get; set; }
 
 		public string AndroidConversionFlagFile { get; set; }
@@ -34,23 +31,11 @@ namespace Xamarin.Android.Tasks
 		public override bool RunTask ()
 		{
 			resource_name_case_map = MonoAndroidHelper.LoadResourceCaseMap (ResourceNameCaseMap);
-			var acw_map = MonoAndroidHelper.LoadAcwMapFile (AcwMapFile);
-
 
 			if (CustomViewMapFile != null)
 				customViewMap = Xamarin.Android.Tasks.MonoAndroidHelper.LoadCustomViewMapFile (BuildEngine4, CustomViewMapFile);
 
 			// Look in the resource xml's for capitalized stuff and fix them
-			FixupResources (acw_map);
-
-			if (customViewMap != null)
-				Xamarin.Android.Tasks.MonoAndroidHelper.SaveCustomViewMapFile (BuildEngine4, CustomViewMapFile, customViewMap);
-
-			return true;
-		}
-
-		void FixupResources (Dictionary<string, string> acwMap)
-		{
 			foreach (var dir in ResourceDirectories) {
 				var skipResourceProcessing = dir.GetMetadata (ResolveLibraryProjectImports.AndroidSkipResourceProcessing);
 				if (skipResourceProcessing != null && skipResourceProcessing.Equals ("true", StringComparison.OrdinalIgnoreCase)) {
@@ -59,11 +44,16 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 
-				FixupResources (dir, acwMap);
+				FixupResources (dir);
 			}
+
+			if (customViewMap != null)
+				Xamarin.Android.Tasks.MonoAndroidHelper.SaveCustomViewMapFile (BuildEngine4, CustomViewMapFile, customViewMap);
+
+			return !Log.HasLoggedErrors;
 		}
 
-		void FixupResources (ITaskItem item, Dictionary<string, string> acwMap)
+		void FixupResources (ITaskItem item)
 		{
 			var resdir = item.ItemSpec;
 			// Find all the xml and axml files
@@ -100,7 +90,7 @@ namespace Xamarin.Android.Tasks
 				}
 				Log.LogDebugMessage ("  Processing: {0}   {1} > {2}", file, srcmodifiedDate, lastUpdate);
 				MonoAndroidHelper.SetWriteable (file);
-				bool success = AndroidResource.UpdateXmlResource (resdir, file, acwMap,
+				bool success = AndroidResource.UpdateXmlResource (resdir, file,
 					resourcedirectories, (level, message) => {
 						switch (level) {
 						case TraceLevel.Error:
