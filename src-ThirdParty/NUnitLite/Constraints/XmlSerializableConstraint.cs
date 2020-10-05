@@ -63,7 +63,7 @@ namespace NUnit.Framework.Constraints
                     object value = serializer.Deserialize(reader);
 
                     return value != null;
-		}
+                }
             }
             catch (NotSupportedException)
             {
