@@ -32,8 +32,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[Retry (1)]
-		public void ApplicationRunsWithoutDebugger ([Values (false, true)] bool isRelease)
+		public void ApplicationRunsWithoutDebugger ([Values (false, true)] bool isRelease, [Values (false, true)] bool extractNativeLibs)
 		{
 			AssertHasDevices ();
 
@@ -41,13 +40,15 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease,
 			};
 			if (isRelease || !CommercialBuildAvailable) {
-				var abis = new string [] { "armeabi-v7a", "x86" };
-				proj.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
+				proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			}
 			proj.SetDefaultTargetDevice ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				SetTargetFrameworkAndManifest (proj, b);
+				proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", $"<application android:extractNativeLibs=\"{extractNativeLibs.ToString ().ToLowerInvariant ()}\" ");
 				Assert.True (b.Install (proj), "Project should have installed.");
+				var manifest = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
+				AssertExtractNativeLibs (manifest, extractNativeLibs);
 				ClearAdbLogcat ();
 				if (CommercialBuildAvailable)
 					Assert.True (b.RunTarget (proj, "_Run"), "Project should have run.");
@@ -71,8 +72,7 @@ namespace Xamarin.Android.Build.Tests
 				ProjectName = "MyApp",
 			};
 			if (!CommercialBuildAvailable) {
-				var abis = new string [] { "armeabi-v7a", "x86" };
-				app.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
+				app.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			}
 			app.SetDefaultTargetDevice ();
 
@@ -155,7 +155,6 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[TestCaseSource (nameof (DebuggerCustomAppTestCases))]
-		[Retry (1)]
 		public void CustomApplicationRunsWithDebuggerAndBreaks (bool useSharedRuntime, bool embedAssemblies, string fastDevType, bool activityStarts)
 		{
 			AssertCommercialBuild ();
@@ -164,8 +163,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = false,
 				AndroidFastDeploymentType = fastDevType,
 			};
-			var abis = new string [] { "armeabi-v7a", "x86" };
-			proj.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
+			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			proj.SetProperty (KnownProperties.AndroidUseSharedRuntime, useSharedRuntime.ToString ());
 			proj.SetProperty ("EmbedAssembliesIntoApk", embedAssemblies.ToString ());
 			proj.SetDefaultTargetDevice ();
@@ -308,7 +306,6 @@ namespace ${ROOT_NAMESPACE} {
 
 		[Test]
 		[TestCaseSource (nameof(DebuggerTestCases))]
-		[Retry (1)]
 		public void ApplicationRunsWithDebuggerAndBreaks (bool useSharedRuntime, bool embedAssemblies, string fastDevType, bool allowDeltaInstall)
 		{
 			AssertCommercialBuild ();
@@ -319,8 +316,7 @@ namespace ${ROOT_NAMESPACE} {
 				EmbedAssembliesIntoApk = embedAssemblies,
 				AndroidFastDeploymentType = fastDevType
 			};
-			var abis = new string [] { "armeabi-v7a", "x86" };
-			proj.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
+			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			if (allowDeltaInstall)
 				proj.SetProperty (KnownProperties._AndroidAllowDeltaInstall, "true");
 			proj.SetDefaultTargetDevice ();

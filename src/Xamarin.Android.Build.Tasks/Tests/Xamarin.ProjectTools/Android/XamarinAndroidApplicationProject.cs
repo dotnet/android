@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Xml;
 using Microsoft.Build.Construction;
 
@@ -61,14 +62,15 @@ namespace Xamarin.ProjectTools
 			}
 
 			AndroidManifest = default_android_manifest;
+			TargetSdkVersion = AndroidSdkResolver.GetMaxInstalledPlatform ().ToString ();
 			LayoutMain = default_layout_main;
 			StringsXml = default_strings_xml;
 			PackageName = PackageName ?? string.Format ("{0}.{0}", ProjectName);
 			JavaPackageName = JavaPackageName ?? PackageName.ToLowerInvariant ();
 
-			OtherBuildItems.Add (new BuildItem.NoActionResource ("Properties\\AndroidManifest.xml") { TextContent = () => 
-					AndroidManifest.Replace("${PROJECT_NAME}", ProjectName).
-					Replace ("${PACKAGENAME}", PackageName) });
+			OtherBuildItems.Add (new BuildItem.NoActionResource ("Properties\\AndroidManifest.xml") {
+				TextContent = ProcessManifestTemplate,
+			});
 			AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\layout\\Main.axml") { TextContent = () => LayoutMain });
 			AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\Strings.xml") { TextContent = () => StringsXml.Replace ("${PROJECT_NAME}", ProjectName) });
 
@@ -79,6 +81,16 @@ namespace Xamarin.ProjectTools
 		public string DefaultMainActivity {
 			get { return Language == XamarinAndroidProjectLanguage.FSharp ? default_main_activity_fs : default_main_activity_cs; }
 		}
+
+		/// <summary>
+		/// Defaults to AndroidSdkResolver.GetMaxInstalledPlatform ()
+		/// </summary>
+		public string TargetSdkVersion { get; set; }
+
+		/// <summary>
+		/// Defaults to API 19
+		/// </summary>
+		public string MinSdkVersion { get; set; } = "19";
 
 		public bool BundleAssemblies {
 			get { return string.Equals (GetProperty (KnownProperties.BundleAssemblies), "True", StringComparison.OrdinalIgnoreCase); }
@@ -176,6 +188,27 @@ namespace Xamarin.ProjectTools
 		public void SetDefaultTargetDevice ()
 		{
 			SetProperty ("AdbTarget", Environment.GetEnvironmentVariable ("ADB_TARGET"));
+		}
+
+		public virtual string ProcessManifestTemplate ()
+		{
+			var uses_sdk = new StringBuilder ("<uses-sdk ");
+			if (!string.IsNullOrEmpty (MinSdkVersion)) {
+				uses_sdk.Append ("android:minSdkVersion=\"");
+				uses_sdk.Append (MinSdkVersion);
+				uses_sdk.Append ("\" ");
+			}
+			if (!string.IsNullOrEmpty (TargetSdkVersion)) {
+				uses_sdk.Append ("android:targetSdkVersion=\"");
+				uses_sdk.Append (TargetSdkVersion);
+				uses_sdk.Append ("\" ");
+			}
+			uses_sdk.Append ("/>");
+
+			return AndroidManifest
+				.Replace ("${PROJECT_NAME}", ProjectName)
+				.Replace ("${PACKAGENAME}", PackageName)
+				.Replace ("${USES_SDK}", uses_sdk.ToString ());
 		}
 
 		public override string ProcessSourceTemplate (string source)

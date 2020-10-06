@@ -41,7 +41,7 @@ namespace Xamarin.ProjectTools
 			: base (debugConfigurationName, releaseConfigurationName)
 		{
 			if (Builder.UseDotNet) {
-				PackageReferences.Add (KnownPackages.XamarinForms_4_5_0_617);
+				PackageReferences.Add (KnownPackages.XamarinForms_4_7_0_1142);
 				this.AddDotNetCompatPackages ();
 			} else {
 				PackageReferences.Add (KnownPackages.XamarinForms_4_0_0_425677);

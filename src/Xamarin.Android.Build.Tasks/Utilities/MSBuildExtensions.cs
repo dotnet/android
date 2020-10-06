@@ -239,5 +239,17 @@ namespace Xamarin.Android.Tasks
 			var targetfile = FixupResourceFilename (file, resourceDir, resourceNameCaseMap);
 			log.LogCodedWarning (code, file: targetfile, lineNumber: 0, message: message);
 		}
+
+		/// <summary>
+		/// Sets the default value for %(DestinationSubPath) if it is not already set
+		/// </summary>
+		public static void SetDestinationSubPath (this ITaskItem assembly)
+		{
+			if (string.IsNullOrEmpty (assembly.GetMetadata ("DestinationSubPath"))) {
+				var directory = assembly.GetMetadata ("DestinationSubDirectory");
+				var path = Path.Combine (directory, Path.GetFileName (assembly.ItemSpec));
+				assembly.SetMetadata ("DestinationSubPath", path);
+			}
+		}
 	}
 }

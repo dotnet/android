@@ -14,7 +14,7 @@ using System.Collections.Generic;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks {
-	
+
 	//aapt2 link -o resources.apk.bk --manifest Foo.xml --java . --custom-package com.infinitespace_studios.blankforms -R foo2 -v --auto-add-overlay
 	public class Aapt2Link : Aapt2 {
 		static Regex exraArgSplitRegEx = new Regex (@"[\""].+?[\""]|[\''].+?[\'']|[^ ]+", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Multiline);
@@ -45,6 +45,8 @@ namespace Xamarin.Android.Tasks {
 
 		public string AssetsDirectory { get; set; }
 
+		public ITaskItem [] AdditionalAndroidAssetPaths { get; set; }
+
 		public string ExtraPackages { get; set; }
 
 		public string ExtraArgs { get; set; }
@@ -70,8 +72,6 @@ namespace Xamarin.Android.Tasks {
 		public string OutputImportDirectory { get; set; }
 
 		public string ImportsDirectory { get; set; }
-
-		public bool UseShortFileNames { get; set; }
 
 		public bool NonConstantId { get; set; }
 
@@ -177,10 +177,10 @@ namespace Xamarin.Android.Tasks {
 				cmd.Add ("--custom-package");
 				cmd.Add (PackageName.ToLowerInvariant ());
 			}
-			
+
 			if (AdditionalResourceArchives != null) {
 				for (int i = AdditionalResourceArchives.Length - 1; i >= 0; i--) {
-					var flata = Path.Combine (WorkingDirectory, AdditionalResourceArchives [i].ItemSpec);
+					var flata = GetFullPath (AdditionalResourceArchives [i].ItemSpec);
 					if (Directory.Exists (flata)) {
 						foreach (var line in Directory.EnumerateFiles (flata, "*.flat", SearchOption.TopDirectoryOnly)) {
 							cmd.Add ("-R");
@@ -188,47 +188,48 @@ namespace Xamarin.Android.Tasks {
 						}
 					} else if (File.Exists (flata)) {
 						cmd.Add ("-R");
-						cmd.Add (GetFullPath (flata));
+						cmd.Add (flata);
 					} else {
-						LogDebugMessage ("Archive does not exist: " + flata);
+						LogDebugMessage ($"Archive does not exist: {flata}");
 					}
 				}
 			}
 
 			if (CompiledResourceFlatArchive != null) {
-				var flata = Path.Combine (WorkingDirectory, CompiledResourceFlatArchive.ItemSpec);
+				var flata = GetFullPath (CompiledResourceFlatArchive.ItemSpec);
 				if (Directory.Exists (flata)) {
 					foreach (var line in Directory.EnumerateFiles (flata, "*.flat", SearchOption.TopDirectoryOnly)) {
 						cmd.Add ("-R");
 						cmd.Add (GetFullPath (line));
 					}
 				} else if (File.Exists (flata)) {
-						cmd.Add ("-R");
-						cmd.Add (GetFullPath (flata));
+					cmd.Add ("-R");
+					cmd.Add (flata);
 				} else {
-					LogDebugMessage ("Archive does not exist: " + flata);
+					LogDebugMessage ($"Archive does not exist: {flata}");
 				}
 			}
 
 			if (CompiledResourceFlatFiles != null) {
-				List<ITaskItem> appFiles = new List<ITaskItem> ();
+				var appFiles = new List<string> ();
 				for (int i = CompiledResourceFlatFiles.Length - 1; i >= 0; i--) {
 					var file = CompiledResourceFlatFiles [i];
-					if (!string.IsNullOrEmpty (file.GetMetadata ("ResourceDirectory")) && File.Exists (file.ItemSpec)) {
+					var fullPath = GetFullPath (file.ItemSpec);
+					if (!File.Exists (fullPath)) {
+						LogDebugMessage ($"File does not exist: {fullPath}");
+					} else if (!string.IsNullOrEmpty (file.GetMetadata ("ResourceDirectory"))) {
 						cmd.Add ("-R");
-						cmd.Add (GetFullPath (file.ItemSpec));
+						cmd.Add (fullPath);
 					} else {
-						appFiles.Add(file);
+						appFiles.Add (fullPath);
 					}
 				}
-				foreach (var file in appFiles) {
-					if (File.Exists (file.ItemSpec)) {
-						cmd.Add ("-R");
-						cmd.Add (GetFullPath (file.ItemSpec));
-					}
+				foreach (var fullPath in appFiles) {
+					cmd.Add ("-R");
+					cmd.Add (fullPath);
 				}
 			}
-			
+
 			cmd.Add ("--auto-add-overlay");
 
 			if (!string.IsNullOrWhiteSpace (UncompressedFileExtensions))
@@ -253,27 +254,40 @@ namespace Xamarin.Android.Tasks {
 			if (ProtobufFormat)
 				cmd.Add ("--proto-format");
 
-			var extraArgsExpanded = ExpandString (ExtraArgs);
-			if (extraArgsExpanded != ExtraArgs)
-				LogDebugMessage ("  ExtraArgs expanded: {0}", extraArgsExpanded);
-
-			if (!string.IsNullOrWhiteSpace (extraArgsExpanded)) {
-				foreach (Match match in exraArgSplitRegEx.Matches (extraArgsExpanded)) {
+			if (!string.IsNullOrWhiteSpace (ExtraArgs)) {
+				foreach (Match match in exraArgSplitRegEx.Matches (ExtraArgs)) {
 					string value = match.Value.Trim (' ', '"', '\'');
 					if (!string.IsNullOrEmpty (value))
 						cmd.Add (value);
 				}
 			}
 
-			if (!string.IsNullOrWhiteSpace (AssetsDirectory)) {
-				var assetDir = AssetsDirectory.TrimEnd ('\\');
-				if (!Path.IsPathRooted (assetDir))
-					assetDir = Path.Combine (WorkingDirectory, assetDir);
-				if (!string.IsNullOrWhiteSpace (assetDir) && Directory.Exists (assetDir)) {
+			// When adding Assets the first item found takes precedence.
+			// So we need to add the applicaiton Assets first.
+			if (!string.IsNullOrEmpty (AssetsDirectory)) {
+				var assetDir = GetFullPath (AssetsDirectory.TrimEnd ('\\'));
+				if (Directory.Exists (assetDir)) {
 					cmd.Add ("-A");
-					cmd.Add (GetFullPath (assetDir));
+					cmd.Add (assetDir);
+				} else {
+					LogDebugMessage ($"asset directory did not exist: {assetDir}");
 				}
 			}
+
+			if (AdditionalAndroidAssetPaths != null) {
+				for (int i = 0; i < AdditionalAndroidAssetPaths.Length; i++) {
+					var assetDir = GetFullPath (AdditionalAndroidAssetPaths [i].ItemSpec.TrimEnd ('\\'));
+					if (!string.IsNullOrWhiteSpace (assetDir)) {
+						if (Directory.Exists (assetDir)) {
+							cmd.Add ("-A");
+							cmd.Add (GetFullPath (assetDir));
+						} else {
+							LogDebugMessage ($"asset directory did not exist: {assetDir}");
+						}
+					}
+				}
+			}
+
 			if (!string.IsNullOrEmpty (ProguardRuleOutput)) {
 				cmd.Add ("--proguard");
 				cmd.Add (GetFullPath (proguardRuleOutputTemp));
@@ -282,24 +296,6 @@ namespace Xamarin.Android.Tasks {
 			cmd.Add (GetFullPath (currentResourceOutputFile));
 
 			return cmd.ToArray ();
-		}
-
-		string ExpandString (string s)
-		{
-			if (s == null)
-				return null;
-			int start = 0;
-			int st = s.IndexOf ("${library.imports:", start, StringComparison.Ordinal);
-			if (st >= 0) {
-				int ed = s.IndexOf ('}', st);
-				if (ed < 0)
-					return s.Substring (0, st + 1) + ExpandString (s.Substring (st + 1));
-				int ast = st + "${library.imports:".Length;
-				string aname = s.Substring (ast, ed - ast);
-				return s.Substring (0, st) + Path.Combine (OutputImportDirectory, UseShortFileNames ? assemblyMap.GetLibraryImportDirectoryNameForAssembly (aname) : aname, ImportsDirectory) + Path.DirectorySeparatorChar + ExpandString (s.Substring (ed + 1));
-			}
-			else
-				return s;
 		}
 
 		bool ExecuteForAbi (string [] cmd, string currentResourceOutputFile)

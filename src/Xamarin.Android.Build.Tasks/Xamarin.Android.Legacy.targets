@@ -58,7 +58,6 @@ projects. .NET 5 projects will not import this file.
   <PropertyGroup Condition=" '$(AndroidApplication)' != 'True' And '$(_AndroidIsBindingProject)' != 'True' ">
     <BuildDependsOn>
       _ValidateLinkMode;
-      _CheckNonIdealConfigurations;
       _SetupDesignTimeBuildForBuild;
       _CreatePropertiesCache;
       _CleanIntermediateIfNeeded;
@@ -248,8 +247,6 @@ projects. .NET 5 projects will not import this file.
       <Output TaskParameter="ZipAlignPath"                PropertyName="ZipAlignToolPath"            Condition="'$(ZipAlignToolPath)' == ''" />
       <Output TaskParameter="AndroidSequencePointsMode"   PropertyName="_SequencePointsMode"         Condition="'$(_SequencePointsMode)' == ''" />
       <Output TaskParameter="LintToolPath"                PropertyName="LintToolPath"                Condition="'$(LintToolPath)' == ''" />
-      <Output TaskParameter="ApkSignerJar"                PropertyName="ApkSignerJar"                Condition="'$(ApkSignerJar)' == ''" />
-      <Output TaskParameter="AndroidUseApkSigner"         PropertyName="AndroidUseApkSigner"         Condition="'$(AndroidUseApkSigner)' == ''" />
       <Output TaskParameter="AndroidUseAapt2"             PropertyName="_AndroidUseAapt2" />
       <Output TaskParameter="Aapt2Version"                PropertyName="_Aapt2Version" />
       <Output TaskParameter="Aapt2ToolPath"               PropertyName="Aapt2ToolPath"               Condition="'$(Aapt2ToolPath)' == ''" />
@@ -268,20 +265,23 @@ projects. .NET 5 projects will not import this file.
           Condition="'%(ReferenceCopyLocalPaths.ResolvedFrom)' != 'ImplicitlyExpandDesignTimeFacades' And '%(ReferenceCopyLocalPaths.Extension)' == '.dll' And '%(ReferenceCopyLocalPaths.RelativeDir)' == '' And Exists('%(ReferenceCopyLocalPaths.Identity)') "
       />
       <FilteredAssemblies
+          Include="@(_ReferenceDependencyPaths)"
+          Condition="'%(_ReferenceDependencyPaths.ResolvedFrom)' != 'ImplicitlyExpandDesignTimeFacades' And Exists('%(_ReferenceDependencyPaths.Identity)') "
+      />
+      <FilteredAssemblies
           Include="@(_ReferencePath)"
           Condition="'%(ReferencePath.ResolvedFrom)' != 'ImplicitlyExpandDesignTimeFacades' And Exists('%(_ReferencePath.Identity)') "
       />
     </ItemGroup>
     <!-- Find all the assemblies this app requires -->
     <ResolveAssemblies
-        Assemblies="@(FilteredAssemblies)"
+        Assemblies="@(FilteredAssemblies->Distinct())"
         I18nAssemblies="$(MandroidI18n)"
         LinkMode="$(AndroidLinkMode)"
         ProjectFile="$(MSBuildProjectFullPath)"
         TargetFrameworkVersion="$(TargetFrameworkVersion)"
         ProjectAssetFile="$(ProjectLockFile)"
         TargetMoniker="$(NuGetTargetMoniker)"
-        IntermediateAssemblyDirectory="$(MonoAndroidIntermediateAssemblyDir)"
         ReferenceAssembliesDirectory="$(TargetFrameworkDirectory)">
       <Output TaskParameter="ResolvedAssemblies" ItemName="ResolvedAssemblies" />
       <Output TaskParameter="ResolvedUserAssemblies" ItemName="ResolvedUserAssemblies" />
@@ -332,7 +332,6 @@ projects. .NET 5 projects will not import this file.
   <PropertyGroup>
     <_PrepareAssembliesDependsOnTargets>
       _ResolveAssemblies;
-      _CheckForObsoleteAssemblies;
       _ResolveSatellitePaths;
       _CreatePackageWorkspace;
       _CopyConfigFiles;

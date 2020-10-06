@@ -32,10 +32,7 @@ namespace Xamarin.Android.Prepare
 			updater = updaterCallback;
 		}
 
-		public void Start ()
-		{
-			watch.Start ();
-		}
+		public void Start () => watch.Restart ();
 
 		public void Update (ulong bytesRead)
 		{

@@ -24,7 +24,7 @@ BasicUtilities::path_combine (const char *path1, const char *path2)
 	if (path2 == nullptr)
 		return strdup_new (path1);
 
-	size_t len = add_with_overflow_check<size_t> (__FILE__, __LINE__, strlen (path1), strlen (path2) + 2);
+	size_t len = ADD_WITH_OVERFLOW_CHECK (size_t, strlen (path1), strlen (path2) + 2);
 	char *ret = new char [len];
 	*ret = '\0';
 
@@ -309,7 +309,7 @@ BasicUtilities::monodroid_strsplit (const char *str, const char *delimiter, size
 
 			if (*str) {
 				size_t toklen = static_cast<size_t>((str - c));
-				size_t alloc_size = add_with_overflow_check<size_t> (__FILE__, __LINE__, toklen, 1);
+				size_t alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, toklen, 1);
 				token = new char [alloc_size];
 				strncpy (token, c, toklen);
 				token [toklen] = '\0';
@@ -377,7 +377,7 @@ BasicUtilities::add_to_vector (char ***vector, size_t size, char *token)
 	if (*vector == nullptr) {
 		*vector = (char **)static_cast<char**>(xmalloc (size * sizeof(*vector)));
 	} else {
-		size_t alloc_size = multiply_with_overflow_check<size_t> (__FILE__, __LINE__, sizeof(*vector), size + 1);
+		size_t alloc_size = MULTIPLY_WITH_OVERFLOW_CHECK (size_t, sizeof(*vector), size + 1);
 		*vector = static_cast<char**>(xrealloc (*vector, alloc_size));
 	}
 

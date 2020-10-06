@@ -1548,11 +1548,6 @@
   <remove-node api-since="30" path="/api/package[@name='android.telephony']/class[@name='CellInfo']/method[@name='getCellIdentity' and count(parameter)=0]" />
   <remove-node api-since="30" path="/api/package[@name='android.telephony']/class[@name='CellInfo']/method[@name='getCellSignalStrength' and count(parameter)=0]" />
 
-  <!-- We don't support methods that require Actions/Functions with more than 16 arguments -->
-  <remove-node api-since="30" path="/api/package[@name='java.util']/interface[@jni-signature='Ljava/util/Map;']/method[@name='of' and count(parameter)=16]" />
-  <remove-node api-since="30" path="/api/package[@name='java.util']/interface[@jni-signature='Ljava/util/Map;']/method[@name='of' and count(parameter)=18]" />
-  <remove-node api-since="30" path="/api/package[@name='java.util']/interface[@jni-signature='Ljava/util/Map;']/method[@name='of' and count(parameter)=20]" />
-
   <!-- Work around a generator bug where having multiple Listener methods with the same name cause multiple conflicting EventArgs classes to be created. -->
   <!-- These are "default" method versions, so it's ok to remove them from an interface. -->
   <remove-node api-since="30" path="/api/package[@name='android.animation']/interface[@name='Animator.AnimatorListener']/method[@name='onAnimationStart' and count(parameter)=2]" />
@@ -1631,7 +1626,12 @@
   <attr path="/api/package[@name='android.database']/class[@name='CursorJoiner']/method[@name='iterator' and count(parameter)=0]" name="return-not-null">true</attr>
   <attr api-since="24" path="/api/package[@name='android.icu.text']/class[@name='UnicodeSet']/method[@name='iterator' and count(parameter)=0]" name="return-not-null">true</attr>
 
-  
+  <!-- If you try to implement ICursor in API-30+, we generate an invalid invoker for this method due to the
+       generic parameters.  Since this is a default method we can just remove it until that bug is fixed.
+       https://github.com/xamarin/java.interop/issues/699 -->
+  <remove-node api-since="30" path="/api/package[@name='android.database']/interface[@name='Cursor']/method[@name='setNotificationUris' and count(parameter)=2 and parameter[1][@type='android.content.ContentResolver'] and parameter[2][@type='java.util.List&lt;android.net.Uri&gt;']]" />
+  <remove-node api-since="30" path="/api/package[@name='android.database']/interface[@name='Cursor']/method[@name='getNotificationUris']" />
+
   <!--
     ***********************************************************************
     THE FOLLOWING LINES MUST BE CREATED FOR ANY NEW PLATFORM THAT IS ADDED.

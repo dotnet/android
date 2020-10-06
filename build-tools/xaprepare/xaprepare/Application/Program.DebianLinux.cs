@@ -14,8 +14,9 @@ namespace Xamarin.Android.Prepare
 				LoggingLevel = ProcessStandardStreamWrapper.LogLevel.Message;
 			}
 
-			protected override string PreprocessMessage (string message, ref bool writeLine)
+			protected override string PreprocessMessage (string message, ref bool writeLine, out bool ignoreLine)
 			{
+				ignoreLine = false;
 				// apt-get calls `dpkg` which can't be persuaded to not show any progress and it shows the progress by
 				// writing a line which ends with `0x0D` that is supposed to move the caret to the beginning of the line
 				// which doesn't work with System.Diagnostics.Process because it strips 0x0D and 0x0A before passing the

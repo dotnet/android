@@ -4,12 +4,7 @@
 #include <errno.h>
 #include <assert.h>
 #include <ctype.h>
-#include <dlfcn.h>
 #include <fcntl.h>
-
-#ifdef ANDROID
-#include <sys/system_properties.h>
-#endif
 
 #if defined (WINDOWS)
 #include <windef.h>
@@ -27,6 +22,8 @@
 #include "jni-wrappers.hh"
 #include "xamarin-app.hh"
 #include "cpp-util.hh"
+#include "java-interop-dlfcn.h"
+#include "java-interop.h"
 
 #if defined (DEBUG) || !defined (ANDROID)
 namespace xamarin::android::internal {
@@ -39,6 +36,7 @@ namespace xamarin::android::internal {
 }
 #endif // DEBUG || !ANDROID
 
+using namespace microsoft::java_interop;
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
 
@@ -49,11 +47,6 @@ BundledProperty *AndroidSystem::bundled_properties = nullptr;
 #if defined (WINDOWS)
 std::mutex AndroidSystem::readdir_mutex;
 char *AndroidSystem::libmonoandroid_directory_path = nullptr;
-#endif
-
-#if !defined (ANDROID)
-static constexpr uint32_t PROP_NAME_MAX = 32;
-static constexpr uint32_t PROP_VALUE_MAX = 92;
 #endif
 
 #if defined (DEBUG) || !defined (ANDROID)
@@ -205,8 +198,8 @@ AndroidSystem::_monodroid__system_property_get (const char *name, char *sp_value
 		return -1;
 
 	char *buf = nullptr;
-	if (sp_value_len < PROP_VALUE_MAX + 1) {
-		size_t alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, PROP_VALUE_MAX, 1);
+	if (sp_value_len < PROPERTY_VALUE_BUFFER_LEN) {
+		size_t alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, PROPERTY_VALUE_BUFFER_LEN, 1);
 		log_warn (LOG_DEFAULT, "Buffer to store system property may be too small, will copy only %u bytes", sp_value_len);
 		buf = new char [alloc_size];
 	}
@@ -223,12 +216,31 @@ AndroidSystem::_monodroid__system_property_get (const char *name, char *sp_value
 #endif
 
 int
+AndroidSystem::monodroid_get_system_property (const char *name, dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& value)
+{
+	int len = _monodroid__system_property_get (name, value.get (), value.size ());
+	if (len > 0) {
+		// Clumsy, but if we want direct writes to be fast, this is the price we pay
+		value.set_length_after_direct_write (static_cast<size_t>(len));
+		return len;
+	}
+
+	size_t plen;
+	const char *v = lookup_system_property (name, plen);
+	if (v == nullptr)
+		return len;
+
+	value.assign (v, plen);
+	return ADD_WITH_OVERFLOW_CHECK (int, plen, 0);
+}
+
+int
 AndroidSystem::monodroid_get_system_property (const char *name, char **value)
 {
 	if (value)
 		*value = nullptr;
 
-	char  sp_value [PROP_VALUE_MAX+1] = { 0, };
+	char  sp_value [PROPERTY_VALUE_BUFFER_LEN] = { 0, };
 	char *pvalue = sp_value;
 	int len = _monodroid__system_property_get (name, sp_value, sizeof (sp_value));
 
@@ -332,22 +344,24 @@ AndroidSystem::create_update_dir (char *override_dir)
 	log_warn (LOG_DEFAULT, "Creating public update directory: `%s`", override_dir);
 }
 
-char*
-AndroidSystem::get_full_dso_path (const char *base_dir, const char *dso_path, bool &needs_free)
+bool
+AndroidSystem::get_full_dso_path (const char *base_dir, const char *dso_path, dynamic_local_string<SENSIBLE_PATH_MAX>& path)
 {
-	needs_free = false;
 	if (dso_path == nullptr)
-		return nullptr;
+		return false;
 
 	if (base_dir == nullptr || utils.is_path_rooted (dso_path))
 		return const_cast<char*>(dso_path); // Absolute path or no base path, can't do much with it
 
-	needs_free = true;
-	return utils.path_combine (base_dir, dso_path);
+	path.assign (base_dir)
+		.append (MONODROID_PATH_SEPARATOR)
+		.append (dso_path);
+
+	return true;
 }
 
 void*
-AndroidSystem::load_dso (const char *path, int dl_flags, bool skip_exists_check)
+AndroidSystem::load_dso (const char *path, unsigned int dl_flags, bool skip_exists_check)
 {
 	if (path == nullptr || *path == '\0')
 		return nullptr;
@@ -358,26 +372,27 @@ AndroidSystem::load_dso (const char *path, int dl_flags, bool skip_exists_check)
 		return nullptr;
 	}
 
-	void *handle = dlopen (path, dl_flags);
+	char *error = nullptr;
+	void *handle = java_interop_lib_load (path, dl_flags, &error);
 	if (handle == nullptr && utils.should_log (LOG_ASSEMBLY))
-		log_info_nocheck (LOG_ASSEMBLY, "Failed to load shared library '%s'. %s", path, dlerror ());
+		log_info_nocheck (LOG_ASSEMBLY, "Failed to load shared library '%s'. %s", path, error);
+	java_interop_free (error);
 	return handle;
 }
 
 void*
-AndroidSystem::load_dso_from_specified_dirs (const char **directories, size_t num_entries, const char *dso_name, int dl_flags)
+AndroidSystem::load_dso_from_specified_dirs (const char **directories, size_t num_entries, const char *dso_name, unsigned int dl_flags)
 {
 	assert (directories != nullptr);
 	if (dso_name == nullptr)
 		return nullptr;
 
-	bool needs_free = false;
-	char *full_path = nullptr;
+	dynamic_local_string<SENSIBLE_PATH_MAX> full_path;
 	for (size_t i = 0; i < num_entries; i++) {
-		full_path = get_full_dso_path (directories [i], dso_name, needs_free);
-		void *handle = load_dso (full_path, dl_flags, false);
-		if (needs_free)
-			delete[] full_path;
+		if (!get_full_dso_path (directories [i], dso_name, full_path)) {
+			continue;
+		}
+		void *handle = load_dso (full_path.get (), dl_flags, false);
 		if (handle != nullptr)
 			return handle;
 	}
@@ -386,13 +401,13 @@ AndroidSystem::load_dso_from_specified_dirs (const char **directories, size_t nu
 }
 
 void*
-AndroidSystem::load_dso_from_app_lib_dirs (const char *name, int dl_flags)
+AndroidSystem::load_dso_from_app_lib_dirs (const char *name, unsigned int dl_flags)
 {
 	return load_dso_from_specified_dirs (static_cast<const char**> (app_lib_directories), app_lib_directories_size, name, dl_flags);
 }
 
 void*
-AndroidSystem::load_dso_from_override_dirs ([[maybe_unused]] const char *name, [[maybe_unused]] int dl_flags)
+AndroidSystem::load_dso_from_override_dirs ([[maybe_unused]] const char *name, [[maybe_unused]] unsigned int dl_flags)
 {
 #ifdef RELEASE
 	return nullptr;
@@ -402,7 +417,7 @@ AndroidSystem::load_dso_from_override_dirs ([[maybe_unused]] const char *name, [
 }
 
 void*
-AndroidSystem::load_dso_from_any_directories (const char *name, int dl_flags)
+AndroidSystem::load_dso_from_any_directories (const char *name, unsigned int dl_flags)
 {
 	void *handle = load_dso_from_override_dirs (name, dl_flags);
 	if (handle == nullptr)
@@ -410,43 +425,35 @@ AndroidSystem::load_dso_from_any_directories (const char *name, int dl_flags)
 	return handle;
 }
 
-char*
-AndroidSystem::get_existing_dso_path_on_disk (const char *base_dir, const char *dso_name, bool &needs_free)
+bool
+AndroidSystem::get_existing_dso_path_on_disk (const char *base_dir, const char *dso_name, dynamic_local_string<SENSIBLE_PATH_MAX>& path)
 {
-	needs_free = false;
-	char *dso_path = get_full_dso_path (base_dir, dso_name, needs_free);
-	if (utils.file_exists (dso_path))
-		return dso_path;
+	if (get_full_dso_path (base_dir, dso_name, path) && utils.file_exists (path.get ()))
+		return true;
 
-	needs_free = false;
-	delete[] dso_path;
-	return nullptr;
+	return false;
 }
 
-char*
-AndroidSystem::get_full_dso_path_on_disk (const char *dso_name, bool &needs_free)
+bool
+AndroidSystem::get_full_dso_path_on_disk (const char *dso_name, dynamic_local_string<SENSIBLE_PATH_MAX>& path)
 {
-	needs_free = false;
 	if (is_embedded_dso_mode_enabled ())
-		return nullptr;
+		return false;
 
-	char *dso_path = nullptr;
 #ifndef RELEASE
 	for (size_t i = 0; i < AndroidSystem::MAX_OVERRIDES; i++) {
 		if (AndroidSystem::override_dirs [i] == nullptr)
 			continue;
-		dso_path = get_existing_dso_path_on_disk (AndroidSystem::override_dirs [i], dso_name, needs_free);
-		if (dso_path != nullptr)
-			return dso_path;
+		if (get_existing_dso_path_on_disk (AndroidSystem::override_dirs [i], dso_name, path))
+			return true;
 	}
 #endif
 	for (size_t i = 0; i < app_lib_directories_size; i++) {
-		dso_path = get_existing_dso_path_on_disk (app_lib_directories [i], dso_name, needs_free);
-		if (dso_path != nullptr)
-			return dso_path;
+		if (get_existing_dso_path_on_disk (app_lib_directories [i], dso_name, path))
+			return true;
 	}
 
-	return nullptr;
+	return false;
 }
 
 int
@@ -487,10 +494,10 @@ AndroidSystem::get_max_gref_count_from_system (void)
 		max = 51200;
 	}
 
-	char *override;
-	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_MAX_GREFC, &override) > 0) {
+	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> override;
+	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_MAX_GREFC, override) > 0) {
 		char *e;
-		max       = strtol (override, &e, 10);
+		max       = strtol (override.get (), &e, 10);
 		switch (*e) {
 			case 'k':
 				e++;
@@ -504,10 +511,9 @@ AndroidSystem::get_max_gref_count_from_system (void)
 		if (max < 0)
 			max = INT_MAX;
 		if (*e) {
-			log_warn (LOG_GC, "Unsupported '%s' value '%s'.", Debug::DEBUG_MONO_MAX_GREFC, override);
+			log_warn (LOG_GC, "Unsupported '%s' value '%s'.", Debug::DEBUG_MONO_MAX_GREFC, override.get ());
 		}
 		log_warn (LOG_GC, "Overriding max JNI Global Reference count to %i", max);
-		delete[] override;
 	}
 	return max;
 }

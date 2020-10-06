@@ -129,13 +129,29 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		public bool SkipExistingFile (string file, string fileInArchive)
+		public bool SkipExistingFile (string file, string fileInArchive, CompressionMethod compressionMethod)
 		{
 			if (!zip.ContainsEntry (fileInArchive)) {
 				return false;
 			}
-			var lastWrite = File.GetLastWriteTimeUtc (file);
 			var entry = zip.ReadEntry (fileInArchive);
+			switch (compressionMethod) {
+				case CompressionMethod.Unknown:
+					// If incoming value is Unknown, don't check anything
+					break;
+				case CompressionMethod.Default:
+					// For Default, existing entries could have CompressionMethod.Deflate
+					// Only compare against CompressionMethod.Store
+					if (entry.CompressionMethod == CompressionMethod.Store)
+						return false;
+					break;
+				default:
+					// Other values can just compare CompressionMethod
+					if (entry.CompressionMethod != compressionMethod)
+						return false;
+					break;
+			}
+			var lastWrite = File.GetLastWriteTimeUtc (file);
 			return WithoutMilliseconds (lastWrite) <= WithoutMilliseconds (entry.ModificationTime);
 		}
 

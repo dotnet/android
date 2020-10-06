@@ -17,19 +17,7 @@ namespace Xamarin.Android.Build.Tests
 	[Parallelizable (ParallelScope.Children)]
 	public class AndroidUpdateResourcesTest : BaseTest
 	{
-		string GetResourceDesignerPath (ProjectBuilder builder, XamarinAndroidProject project)
-		{
-			string path;
-			if (Builder.UseDotNet) {
-				path = Path.Combine (Root, builder.ProjectDirectory, project.IntermediateOutputPath);
-			} else {
-				path = Path.Combine (Root, builder.ProjectDirectory, "Resources");
-			}
-			return Path.Combine (path, "Resource.designer" + project.Language.DefaultDesignerExtension);
-		}
-
 		[Test]
-		[Category ("dotnet")]
 		public void CheckMultipleLibraryProjectReferenceAlias ([Values (true, false)] bool withGlobal)
 		{
 			var path = Path.Combine (Root, "temp", TestName);
@@ -92,27 +80,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void RepetitiveBuild ()
-		{
-			if (Directory.Exists ("temp/RepetitiveBuild"))
-				Directory.Delete ("temp/RepetitiveBuild", true);
-			var proj = new XamarinAndroidApplicationProject ();
-			using (var b = CreateApkBuilder ("temp/RepetitiveBuild", cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
-				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
-				b.ThrowOnBuildFailure = false;
-				Assert.IsTrue (b.Build (proj), "first build failed");
-				Assert.IsTrue (b.Build (proj), "second build failed");
-				Assert.IsTrue (b.Output.IsTargetSkipped ("_Sign"), "failed to skip some build");
-				var item = proj.AndroidResources.First (x => x.Include () == "Resources\\values\\Strings.xml");
-				item.TextContent = () => proj.StringsXml.Replace ("${PROJECT_NAME}", "Foo");
-				item.Timestamp = null;
-				Assert.IsTrue (b.Build (proj), "third build failed");
-				Assert.IsFalse (b.Output.IsTargetSkipped ("_Sign"), "incorrectly skipped some build");
-			}
-		}
-
-		[Test]
-		[Category ("SmokeTests"), Category ("dotnet")]
+		[Category ("SmokeTests")]
 		public void DesignTimeBuild ([Values(false, true)] bool isRelease, [Values (false, true)] bool useManagedParser, [Values (false, true)] bool useAapt2)
 		{
 			var regEx = new Regex (@"(?<type>([a-zA-Z_0-9])+)\slibrary_name=(?<value>([0-9A-Za-z])+);", RegexOptions.Compiled | RegexOptions.Multiline );
@@ -135,11 +103,9 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
 			using (var l = CreateDllBuilder (Path.Combine (path, lib.ProjectName), false, false)) {
 				using (var b = CreateApkBuilder (Path.Combine (path, proj.ProjectName), false, false)) {
-					l.Verbosity = LoggerVerbosity.Diagnostic;
 					l.Target = "Build";
 					Assert.IsTrue(l.Clean(lib), "Lib1 should have cleaned successfully");
 					Assert.IsTrue (l.Build (lib), "Lib1 should have built successfully");
-					b.Verbosity = LoggerVerbosity.Diagnostic;
 					b.ThrowOnBuildFailure = false;
 					b.Target = "Compile";
 					Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, parameters: new string [] { "DesignTimeBuild=true" }),
@@ -183,9 +149,11 @@ namespace Xamarin.Android.Build.Tests
 					KnownPackages.AndroidSupportV4_27_0_2_1,
 					KnownPackages.SupportV7AppCompat_27_0_2_1,
 				},
-				TargetFrameworkVersion = "v7.1",
 			};
-			using (var b = CreateApkBuilder ("temp/CheckEmbeddedSupportLibraryResources")) {
+			if (Builder.UseDotNet) {
+				proj.AddDotNetCompatPackages ();
+			}
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "First build should have succeeded.");
 				var Rdrawable = b.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes", "android", "support", "v7", "appcompat", "R$drawable.class"));
 				Assert.IsTrue (File.Exists (Rdrawable), $"{Rdrawable} should exist");
@@ -248,7 +216,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void RepetiviteBuildUpdateSingleResource ([Values (false, true)] bool useAapt2)
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -292,6 +259,7 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[NonParallelizable]
+		[Category ("DotNetIgnore")] // <ProcessGoogleServicesJson/> task is built for net45
 		public void Check9PatchFilesAreProcessed ()
 		{
 			var projectPath = Path.Combine ("temp", "Check9PatchFilesAreProcessed");
@@ -318,7 +286,6 @@ namespace Xamarin.Android.Build.Tests
 				proj.PackageReferences.Add (KnownPackages.GooglePlayServicesMaps_42_1021_1);
 				proj.PackageReferences.Add (KnownPackages.Xamarin_Build_Download_0_4_11);
 				using (var b = CreateApkBuilder (Path.Combine (projectPath, "Application1"), false, false)) {
-					b.Verbosity = LoggerVerbosity.Diagnostic;
 					Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 					var path = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/bin/packaged_resources");
 					var data = ZipHelper.ReadFileFromZip (path, "res/drawable/image1.9.png");
@@ -555,19 +522,18 @@ namespace UnnamedProject
 		[TestCaseSource (nameof (ReleaseLanguage))]
 		public void CheckResourceDesignerIsCreated (bool isRelease, ProjectLanguage language)
 		{
-			//Due to the MSBuild project automatically sorting <ItemGroup />, we can't possibly get the F# projects to build here on Windows
-			//  This API is sorting them: https://github.com/xamarin/xamarin-android/blob/c588bfe07aab224c97996a264579f4d4f18a151c/src/Xamarin.Android.Build.Tasks/Tests/Xamarin.ProjectTools/Common/DotNetXamarinProject.cs#L117
 			bool isFSharp = language == XamarinAndroidProjectLanguage.FSharp;
-			if (IsWindows && isFSharp) {
-				Assert.Ignore ("Skipping this F# test on Windows.");
-			}
 
 			var proj = new XamarinAndroidApplicationProject () {
 				Language = language,
 				IsRelease = isRelease,
 			};
+			if (Builder.UseDotNet && isFSharp && isRelease) {
+				//TODO: temporary until this is fixed: https://github.com/mono/linker/issues/1448
+				proj.AndroidLinkModeRelease = AndroidLinkMode.None;
+			}
 			proj.SetProperty ("AndroidUseIntermediateDesignerFile", "True");
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				// Intermediate designer file support is not compatible with F# projects using Xamarin.Android.FSharp.ResourceProvider.
 				var outputFile = isFSharp ? Path.Combine (Root, b.ProjectDirectory, "Resources", "Resource.designer" + proj.Language.DefaultDesignerExtension)
@@ -587,19 +553,18 @@ namespace UnnamedProject
 		[TestCaseSource(nameof (ReleaseLanguage))]
 		public void CheckResourceDesignerIsUpdatedWhenReadOnly (bool isRelease, ProjectLanguage language)
 		{
-			//Due to the MSBuild project automatically sorting <ItemGroup />, we can't possibly get the F# projects to build here on Windows
-			//  This API is sorting them: https://github.com/xamarin/xamarin-android/blob/c588bfe07aab224c97996a264579f4d4f18a151c/src/Xamarin.Android.Build.Tasks/Tests/Xamarin.ProjectTools/Common/DotNetXamarinProject.cs#L117
-			if (IsWindows && language == XamarinAndroidProjectLanguage.FSharp) {
-				Assert.Ignore ("Skipping this F# test on Windows.");
-			}
-
+			bool isFSharp = language == XamarinAndroidProjectLanguage.FSharp;
 			var proj = new XamarinAndroidApplicationProject () {
 				Language = language,
 				IsRelease = isRelease,
 			};
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			if (Builder.UseDotNet && isFSharp && isRelease) {
+				//TODO: temporary until this is fixed: https://github.com/mono/linker/issues/1448
+				proj.AndroidLinkModeRelease = AndroidLinkMode.None;
+			}
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				var designerPath = Path.Combine (Root, b.ProjectDirectory, "Resources", "Resource.designer" + proj.Language.DefaultDesignerExtension);
+				var designerPath = GetResourceDesignerPath (b, proj);
 				var attr = File.GetAttributes (designerPath);
 				File.SetAttributes (designerPath, FileAttributes.ReadOnly);
 				Assert.IsTrue ((File.GetAttributes (designerPath) & FileAttributes.ReadOnly) == FileAttributes.ReadOnly,
@@ -629,13 +594,9 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		[TestCaseSource(nameof (ReleaseLanguage))]
-		public void CheckOldResourceDesignerIsNotUsed (bool isRelease, ProjectLanguage language)
+		public void CheckOldResourceDesignerIsNotUsed ([Values (true, false)] bool isRelease)
 		{
-			if (language == XamarinAndroidProjectLanguage.FSharp)
-				Assert.Ignore ("Skipping CheckOldResourceDesignerIsNotUsed for FSharp until Xamarin.Android.FSharp.ResourceProvider supports it.");
 			var proj = new XamarinAndroidApplicationProject () {
-				Language = language,
 				IsRelease = isRelease,
 			};
 			proj.SetProperty ("AndroidUseIntermediateDesignerFile", "True");
@@ -660,13 +621,9 @@ namespace UnnamedProject
 
 		// ref https://bugzilla.xamarin.com/show_bug.cgi?id=30089
 		[Test]
-		[TestCaseSource(nameof (ReleaseLanguage))]
-		public void CheckOldResourceDesignerWithWrongCasingIsRemoved (bool isRelease, ProjectLanguage language)
+		public void CheckOldResourceDesignerWithWrongCasingIsRemoved ([Values (true, false)] bool isRelease)
 		{
-			if (language == XamarinAndroidProjectLanguage.FSharp)
-				Assert.Ignore ("Skipping CheckOldResourceDesignerIsNotUsed for FSharp until Xamarin.Android.FSharp.ResourceProvider supports it.");
 			var proj = new XamarinAndroidApplicationProject () {
-				Language = language,
 				IsRelease = isRelease,
 			};
 			proj.SetProperty ("AndroidUseIntermediateDesignerFile", "True");
@@ -710,7 +667,6 @@ namespace UnnamedProject
 </LinearLayout>";
 			var projectPath = string.Format ("temp/CheckAaptErrorRaisedForMissingResource");
 			using (var b = CreateApkBuilder (Path.Combine (projectPath, "UnamedApp"), false, false)) {
-				b.Verbosity = LoggerVerbosity.Diagnostic;
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed");
 				StringAssertEx.Contains ("APT2260: ", b.LastBuildOutput);
@@ -727,9 +683,7 @@ namespace UnnamedProject
 <resources>
 </resources>"
 			});
-			var projectPath = string.Format ("temp/CheckAaptErrorRaisedForInvalidDirectoryName");
-			using (var b = CreateApkBuilder (Path.Combine (projectPath, "UnamedApp"), false, false)) {
-				b.Verbosity = LoggerVerbosity.Diagnostic;
+			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed");
 				StringAssertEx.Contains ("APT2144: ", b.LastBuildOutput);
@@ -751,9 +705,7 @@ namespace UnnamedProject
 	<string name=""hello"">Hello World, Click Me!</string>
 </resources>",
 			});
-			var projectPath = string.Format ($"temp/{TestName}");
-			using (var b = CreateApkBuilder (Path.Combine (projectPath, "UnamedApp"), false, false)) {
-				b.Verbosity = LoggerVerbosity.Diagnostic;
+			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed");
 				StringAssertEx.Contains ("Invalid file name:", b.LastBuildOutput);
@@ -777,9 +729,7 @@ namespace UnnamedProject
 	<string name=""hellome"">Hello World, Click Me!</string>
 </resources>",
 			});
-			var projectPath = string.Format ($"temp/{TestName}");
-			using (var b = CreateApkBuilder (Path.Combine (projectPath, "UnamedApp"), false, false)) {
-				b.Verbosity = LoggerVerbosity.Diagnostic;
+			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				StringAssertEx.DoesNotContain ("Invalid file name:", b.LastBuildOutput);
@@ -799,9 +749,7 @@ namespace UnnamedProject
 	<string name=""some_string_value"">Hello Me From the App</string>
 	<string name=""some_string_value"">Hello Me From the App 2</string>
 </resources>";
-			var projectPath = string.Format ("temp/CheckAaptErrorRaisedForDuplicateResourceinApp");
-			using (var b = CreateApkBuilder (Path.Combine (projectPath, "UnamedApp"), false, false)) {
-				b.Verbosity = LoggerVerbosity.Diagnostic;
+			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsFalse (b.Build (proj), "Build should have failed");
 				StringAssertEx.Contains ("APT2057: ", b.LastBuildOutput);
@@ -812,7 +760,6 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void CheckFilesAreRemoved () {
 
 			var proj = new XamarinAndroidApplicationProject () {
@@ -848,7 +795,6 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void CheckDontUpdateResourceIfNotNeeded ()
 		{
 			var path = Path.Combine ("temp", TestName);
@@ -953,7 +899,6 @@ namespace Lib1 {
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void BuildAppWithManagedResourceParser()
 		{
 			var path = Path.Combine ("temp", "BuildAppWithManagedResourceParser");
@@ -993,7 +938,6 @@ namespace Lib1 {
 
 		[Test]
 		[NonParallelizable]
-		[Category ("dotnet")]
 		public void BuildAppWithManagedResourceParserAndLibraries ()
 		{
 			int maxBuildTimeMs = 10000;
@@ -1100,11 +1044,14 @@ namespace Lib1 {
 		}
 
 		[Test]
+		[Category ("DotNetIgnore")] // n/a in .NET 5, not possible to use $(TFV) of v8.0
 		public void CheckMaxResWarningIsEmittedAsAWarning([Values (false, true)] bool useAapt2)
 		{
 			var path = Path.Combine ("temp", TestName);
 			var proj = new XamarinAndroidApplicationProject () {
 				TargetFrameworkVersion = "v8.0",
+				TargetSdkVersion = "26",
+				MinSdkVersion = null,
 				UseLatestPlatformSdk = false,
 				IsRelease = true,
 				OtherBuildItems = {
@@ -1299,6 +1246,7 @@ namespace UnnamedProject
 		// https://github.com/xamarin/xamarin-android/issues/2205
 		[Test]
 		[NonParallelizable]
+		[Category ("DotNetIgnore")] // <ProcessGoogleServicesJson/> task is built for net45
 		public void Issue2205 ([Values (false, true)] bool useAapt2)
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -1388,6 +1336,89 @@ namespace UnnamedProject
 				}
 
 				Assert.Fail ($"aapt log message was not found: {aaptCommand}");
+			}
+		}
+
+		[Test]
+		public void InvalidFilenames ()
+		{
+			BuildItem CreateItem (string include) =>
+				new AndroidItem.AndroidResource (include) {
+					TextContent = () => "",
+				};
+
+			var proj = new XamarinAndroidApplicationProject ();
+			// Package requires packages.config
+			if (!Builder.UseDotNet) {
+				proj.Packages.Add (KnownPackages.Xamarin_PdfView_Android);
+			}
+			proj.AndroidResources.Add (CreateItem ("Resources\\raw\\.foo"));
+			proj.AndroidResources.Add (CreateItem ("Resources\\raw\\.git"));
+			proj.AndroidResources.Add (CreateItem ("Resources\\raw\\.svn"));
+			proj.AndroidResources.Add (CreateItem ("Resources\\raw\\.DS_Store"));
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
+				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
+				b.Output.AssertTargetIsSkipped ("_CompileResources");
+			}
+		}
+
+		[Test]
+		public void SolutionBuildSeveralProjects ()
+		{
+			const int libraryCount = 10;
+			var path = Path.Combine ("temp", TestName);
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = Path.Combine (Root, path);
+			using (var sb = new SolutionBuilder ($"{TestName}.sln") {
+				SolutionPath = Path.Combine (Root, path),
+				MaxCpuCount = 4,
+				BuildingInsideVisualStudio = false, // allow projects dependencies to build
+			}) {
+				var apps = new List<XamarinAndroidApplicationProject> ();
+				var app1 = new XamarinAndroidApplicationProject {
+					ProjectName = "App1"
+				};
+				apps.Add (app1);
+				sb.Projects.Add (app1);
+
+				var app2 = new XamarinAndroidApplicationProject {
+					ProjectName = "App2"
+				};
+				apps.Add (app2);
+				sb.Projects.Add (app2);
+
+				for (var i = 0; i < libraryCount; i++) {
+					var index = i;
+					var lib = new XamarinAndroidLibraryProject {
+						ProjectName = $"Lib{i}",
+						AndroidResources = {
+							new AndroidItem.AndroidResource ($"Resources\\values\\library_name{index}.xml") {
+								TextContent = () =>
+$@"<?xml version=""1.0"" encoding=""utf-8""?>
+<resources>
+	<string name=""library_name{index}"">Lib{index}</string>
+</resources>"
+							}
+						}
+					};
+					foreach (var app in apps) {
+						app.AddReference (lib);
+					}
+					sb.Projects.Add (lib);
+				}
+
+				// Add usage of Lib0.Resource.String.library_name0
+				var builder = new StringBuilder ();
+				for (int i = 0; i < libraryCount; i++) {
+					builder.AppendLine ($"int library_name{i} = Lib{i}.Resource.String.library_name{i};");
+				}
+				foreach (var app in apps) {
+					app.Sources.Add (new BuildItem.Source ("Foo.cs") {
+						TextContent = () => $"class Foo {{ void Bar () {{ {builder} }} }}",
+					});
+				}
+
+				Assert.IsTrue (sb.Build (), "Solution should have built.");
 			}
 		}
 	}

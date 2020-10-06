@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.GenerateProfile" />
+  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.GenerateSupportedPlatforms" />
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren" />
   <UsingTask AssemblyFile="$(PrepTasksAssembly)"      TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
   <UsingTask AssemblyFile="$(PrepTasksAssembly)"      TaskName="Xamarin.Android.BuildTools.PrepTasks.Which" />
@@ -10,9 +11,14 @@
   <PropertyGroup>
     <_SharedRuntimeBuildPath Condition=" '$(_SharedRuntimeBuildPath)' == '' ">$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\</_SharedRuntimeBuildPath>
     <_GeneratedProfileClass>$(MSBuildThisFileDirectory)$(IntermediateOutputPath)Profile.g.cs</_GeneratedProfileClass>
+    <ResolveReferencesDependsOn>
+      $(ResolveReferencesDependsOn);
+      _GenerateSupportedPlatforms;
+    </ResolveReferencesDependsOn>
     <BuildDependsOn>
       _CopyNDKTools;
       _GenerateXACommonProps;
+      _AssignRelativeParentLinkMetadata;
       $(BuildDependsOn);
       _CopyExtractedMultiDexJar;
       _BuildMonoScripts;
@@ -26,25 +32,29 @@
   <ItemGroup>
     <None Include="MSBuild\Novell\Novell.MonoDroid.Common.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>..\..\Novell\Novell.MonoDroid.Common.targets</Link>
+      <!-- Work around Visual Studio for Mac `Invalid value for Link property`
+           project load error by using custom `%(_RelativeParentLink)` metadata
+           that gets copied into `%(Link)` at build time by
+           `_AssignRelativeParentLinkMetadata`. -->
+      <_RelativeParentLink>..\..\Novell\Novell.MonoDroid.Common.targets</_RelativeParentLink>
     </None>
     <None Include="MSBuild\Novell\Novell.MonoDroid.CSharp.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>..\..\Novell\Novell.MonoDroid.CSharp.targets</Link>
+      <_RelativeParentLink>..\..\Novell\Novell.MonoDroid.CSharp.targets</_RelativeParentLink>
     </None>
     <None Include="MSBuild\Novell\MonoDroid.FSharp.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>..\..\Novell\MonoDroid.FSharp.targets</Link>
+      <_RelativeParentLink>..\..\Novell\MonoDroid.FSharp.targets</_RelativeParentLink>
     </None>
     <None
         Include="MSBuild\Xamarin\Xamarin.Android.Sdk.props">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>..\Xamarin.Android.Sdk.props</Link>
+      <_RelativeParentLink>..\Xamarin.Android.Sdk.props</_RelativeParentLink>
     </None>
     <None
         Include="MSBuild\Xamarin\Xamarin.Android.Sdk.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>..\Xamarin.Android.Sdk.targets</Link>
+      <_RelativeParentLink>..\Xamarin.Android.Sdk.targets</_RelativeParentLink>
     </None>
     <None
         Include="MSBuild\Xamarin\Android\Xamarin.Android.Bindings.Before.targets">
@@ -266,13 +276,25 @@
         Replacements="@PACKAGE_VERSION@=$(ProductVersion);@PACKAGE_VERSION_BUILD@=$(XAVersionCommitCount);@NDK_ARMEABI_V7_API@=$(AndroidNdkApiLevel_ArmV7a);@NDK_ARM64_V8A_API@=$(AndroidNdkApiLevel_ArmV8a);@NDK_X86_API@=$(AndroidNdkApiLevel_X86);@NDK_X86_64_API@=$(AndroidNdkApiLevel_X86_64);@BUNDLETOOL_VERSION@=$(XABundleToolVersion)">
     </ReplaceFileContents>
   </Target>
+  <Target Name="_FindAndroidApiInfo">
+    <ItemGroup>
+      <_AndroidApiInfo Include="$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\*\AndroidApiInfo.xml" />
+    </ItemGroup>
+  </Target>
+  <Target Name="_GenerateSupportedPlatforms"
+      DependsOnTargets="_FindAndroidApiInfo"
+      Inputs="$(BootstrapTasksAssembly);$(MSBuildThisFile);@(_AndroidApiInfo)"
+      Outputs="Microsoft.Android.Sdk\targets\Microsoft.Android.Sdk.SupportedPlatforms.props">
+    <GenerateSupportedPlatforms
+        AndroidApiInfo="@(_AndroidApiInfo)"
+        MinimumApiLevel="$(AndroidMinimumDotNetApiLevel)"
+        OutputFile="Microsoft.Android.Sdk\targets\Microsoft.Android.Sdk.SupportedPlatforms.props"
+    />
+  </Target>
   <Target Name="_GenerateProfileClass"
       BeforeTargets="CoreCompile"
       Inputs="@(_SharedRuntimeAssemblies)"
       Outputs="$(_GeneratedProfileClass)">
-    <ItemGroup>
-      <_SharedRuntimeAssemblies Remove="$(_SharedRuntimeBuildPath)v1.0\FSharp.Core.dll" />
-    </ItemGroup>
     <GenerateProfile Files="@(_SharedRuntimeAssemblies)" OutputFile="$(_GeneratedProfileClass)" />
     <WriteLinesToFile
         File="$(IntermediateOutputPath)$(CleanFile)"
@@ -280,6 +302,13 @@
         Overwrite="false"/>
     <ItemGroup>
       <FileWrites Include="$(_GeneratedProfileClass)" />
+    </ItemGroup>
+  </Target>
+  <Target Name="_AssignRelativeParentLinkMetadata">
+    <ItemGroup>
+      <None Condition=" '%(None._RelativeParentLink)' != '' ">
+        <Link>%(None._RelativeParentLink)</Link>
+      </None>
     </ItemGroup>
   </Target>
 
@@ -343,7 +372,6 @@
     <InputAssemblies Include="$(OutputPath)NuGet.ProjectModel.dll" />
     <InputAssemblies Include="$(OutputPath)NuGet.Protocol.dll" />
     <InputAssemblies Include="$(OutputPath)NuGet.Versioning.dll" />
-    <InputAssemblies Include="$(OutputPath)System.CodeDom.dll" />
     <InputAssemblies Include="$(OutputPath)System.Collections.Immutable.dll" />
     <InputAssemblies Include="$(OutputPath)System.Reflection.Metadata.dll" />
   </ItemGroup>
@@ -399,4 +427,7 @@
     />
   </Target>
 
+  <Target Name="_Remove32BitLinux" Condition="Exists ('$(OutputPath)lib32\libzip.so')" AfterTargets="CopyFilesToOutputDirectory">
+    <Delete Files="$(OutputPath)lib32\libzip.so" />
+  </Target>
 </Project>

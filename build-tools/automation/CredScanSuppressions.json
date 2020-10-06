@@ -26,6 +26,10 @@
             "_justification": "Android API documentation, does not contain a password."
         },
         {
+            "file": "external\\android-api-docs\\docs\\Mono.Android\\en\\Javax.Crypto\\ISecretKey.xml",
+            "_justification": "Android API documentation, does not contain a password."
+        },
+        {
             "file": "external\\android-api-docs\\docs\\Mono.Android\\en\\Javax.Crypto\\KeyAgreementSpi.xml",
             "_justification": "Android API documentation, does not contain a password."
         },

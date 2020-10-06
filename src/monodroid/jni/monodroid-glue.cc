@@ -1,5 +1,8 @@
-#include <stdlib.h>
-#include <stdarg.h>
+#include <array>
+#include <cstdlib>
+#include <cstdarg>
+#include <memory>
+
 #include <jni.h>
 #include <time.h>
 #include <stdio.h>
@@ -10,7 +13,10 @@
 #include <errno.h>
 #include <limits.h>
 
+#if defined (APPLE_OS_X)
 #include <dlfcn.h>
+#endif  // def APPLE_OX_X
+
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdint.h>
@@ -39,6 +45,10 @@
 #if defined (LINUX)
 #include <sys/syscall.h>
 #endif
+
+#if defined (APPLE_OS_X)
+#include <libgen.h>
+#endif  // defined(APPLE_OS_X)
 
 #ifndef WINDOWS
 #include <sys/mman.h>
@@ -70,13 +80,18 @@
 #include "globals.hh"
 #include "xamarin-app.hh"
 #include "timing.hh"
+#include "xa-internal-api-impl.hh"
 
 #ifndef WINDOWS
 #include "xamarin_getifaddrs.h"
 #endif
 
 #include "cpp-util.hh"
+#include "strings.hh"
 
+#include "java-interop-dlfcn.h"
+
+using namespace microsoft::java_interop;
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
 
@@ -86,6 +101,9 @@ using namespace xamarin::android::internal;
 
 #include "config.include"
 #include "machine.config.include"
+
+std::mutex MonodroidRuntime::api_init_lock;
+void *MonodroidRuntime::api_dso_handle = nullptr;
 
 #ifdef WINDOWS
 static const char* get_xamarin_android_msbuild_path (void);
@@ -143,23 +161,21 @@ MonodroidRuntime::setup_bundled_app (const char *dso_name)
 	if (!application_config.is_a_bundled_app)
 		return;
 
-	static int dlopen_flags = RTLD_LAZY;
+	static unsigned int dlopen_flags = JAVA_INTEROP_LIB_LOAD_LOCALLY;
 	void *libapp = nullptr;
 
 	if (androidSystem.is_embedded_dso_mode_enabled ()) {
 		log_info (LOG_DEFAULT, "bundle app: embedded DSO mode");
 		libapp = androidSystem.load_dso_from_any_directories (dso_name, dlopen_flags);
 	} else {
-		bool needs_free = false;
 		log_info (LOG_DEFAULT, "bundle app: normal mode");
-		char *bundle_path = androidSystem.get_full_dso_path_on_disk (dso_name, needs_free);
-		log_info (LOG_DEFAULT, "bundle_path == %s", bundle_path ? bundle_path : "<nullptr>");
-		if (bundle_path == nullptr)
+		dynamic_local_string<SENSIBLE_PATH_MAX> bundle_path;
+		if (!androidSystem.get_full_dso_path_on_disk (dso_name, bundle_path)) {
+			log_info (LOG_DEFAULT, "bundle %s not found on filesystem", dso_name);
 			return;
-		log_info (LOG_BUNDLE, "Attempting to load bundled app from %s", bundle_path);
-		libapp = androidSystem.load_dso (bundle_path, dlopen_flags, true);
-		if (needs_free)
-			delete[] bundle_path;
+		}
+		log_info (LOG_BUNDLE, "Attempting to load bundled app from %s", bundle_path.get ());
+		libapp = androidSystem.load_dso (bundle_path.get (), dlopen_flags, true);
 	}
 
 	if (libapp == nullptr) {
@@ -173,11 +189,11 @@ MonodroidRuntime::setup_bundled_app (const char *dso_name)
 		}
 	}
 
-	mono_mkbundle_initialize_mono_api = reinterpret_cast<mono_mkbundle_initialize_mono_api_ptr> (dlsym (libapp, "initialize_mono_api"));
+	mono_mkbundle_initialize_mono_api = reinterpret_cast<mono_mkbundle_initialize_mono_api_ptr> (java_interop_lib_symbol (libapp, "initialize_mono_api", nullptr));
 	if (!mono_mkbundle_initialize_mono_api)
 		log_error (LOG_BUNDLE, "Missing initialize_mono_api in the application");
 
-	mono_mkbundle_init = reinterpret_cast<mono_mkbundle_init_ptr> (dlsym (libapp, "mono_mkbundle_init"));
+	mono_mkbundle_init = reinterpret_cast<mono_mkbundle_init_ptr> (java_interop_lib_symbol (libapp, "mono_mkbundle_init", nullptr));
 	if (!mono_mkbundle_init)
 		log_error (LOG_BUNDLE, "Missing mono_mkbundle_init in the application");
 	log_info (LOG_BUNDLE, "Bundled app loaded: %s", dso_name);
@@ -284,29 +300,42 @@ MonodroidRuntime::open_from_update_dir (MonoAssemblyName *aname, [[maybe_unused]
 
 	const char *culture = reinterpret_cast<const char*> (mono_assembly_name_get_culture (aname));
 	const char *name    = reinterpret_cast<const char*> (mono_assembly_name_get_name (aname));
-	char *pname_raw_ptr;
+	size_t culture_len;
 
-	if (culture != nullptr && *culture != '\0')
-		pname_raw_ptr = utils.path_combine (culture, name);
+	if (culture != nullptr)
+		culture_len = strlen (culture);
 	else
-		pname_raw_ptr = utils.strdup_new (name);
+		culture_len = 0;
+	size_t name_len = strlen (name);
 
-	simple_pointer_guard<char[]> pname (pname_raw_ptr);
+	static_local_string<SENSIBLE_PATH_MAX> pname (name_len + culture_len);
+	if (culture_len > 0)
+		pname.append (culture, culture_len);
+	pname.append (name, name_len);
 
-	constexpr const char *format_none = "%s" MONODROID_PATH_SEPARATOR "%s";
-	constexpr const char *format_dll  = "%s" MONODROID_PATH_SEPARATOR "%s.dll";
+	constexpr char dll_extension[] = ".dll";
+	constexpr size_t dll_extension_len = sizeof(dll_extension) - 1;
+
+	bool is_dll = utils.ends_with (name, dll_extension);
+	size_t file_name_len = pname.length () + 1;
+	if (!is_dll)
+		file_name_len += dll_extension_len;
 
 	for (uint32_t oi = 0; oi < AndroidSystem::MAX_OVERRIDES; ++oi) {
 		override_dir = androidSystem.get_override_dir (oi);
 		if (override_dir == nullptr || !utils.directory_exists (override_dir))
 			continue;
 
-		const char *format = utils.ends_with (name, ".dll") ? format_none : format_dll;
-		simple_pointer_guard<char, false> fullpath (utils.monodroid_strdup_printf (format, override_dir, pname.get ()));
+		size_t override_dir_len = strlen (override_dir);
+		static_local_string<SENSIBLE_PATH_MAX> fullpath (override_dir_len + file_name_len);
+		utils.path_combine (fullpath, override_dir, override_dir_len, pname.get (), pname.length ());
+		if (!is_dll) {
+			fullpath.append (dll_extension, dll_extension_len);
+		}
 
-		log_info (LOG_ASSEMBLY, "open_from_update_dir: trying to open assembly: %s\n", static_cast<const char*>(fullpath));
-		if (utils.file_exists (fullpath))
-			result = mono_assembly_open_full (fullpath, nullptr, 0);
+		log_info (LOG_ASSEMBLY, "open_from_update_dir: trying to open assembly: %s\n", fullpath.get ());
+		if (utils.file_exists (fullpath.get ()))
+			result = mono_assembly_open_full (fullpath.get (), nullptr, 0);
 		if (result != nullptr) {
 			// TODO: register .mdb, .pdb file
 			break;
@@ -324,13 +353,16 @@ bool
 MonodroidRuntime::should_register_file ([[maybe_unused]] const char *filename)
 {
 #ifndef RELEASE
+	size_t filename_len = strlen (filename) + 1; // includes space for path separator
 	for (size_t i = 0; i < AndroidSystem::MAX_OVERRIDES; ++i) {
 		const char *odir = androidSystem.get_override_dir (i);
 		if (odir == nullptr)
 			continue;
 
-		simple_pointer_guard<char[]> p (utils.path_combine (odir, filename));
-		bool  exists  = utils.file_exists (p);
+		size_t odir_len = strlen (odir);
+		static_local_string<SENSIBLE_PATH_MAX> p (odir_len + filename_len);
+		utils.path_combine (p, odir, odir_len, filename, filename_len);
+		bool  exists  = utils.file_exists (p.get ());
 
 		if (exists) {
 			log_info (LOG_ASSEMBLY, "should not register '%s' as it exists in the override directory '%s'", filename, odir);
@@ -492,104 +524,108 @@ MonodroidRuntime::parse_gdb_options ()
 }
 
 #if defined (DEBUG) && !defined (WINDOWS)
-int
-MonodroidRuntime::parse_runtime_args (char *runtime_args, RuntimeOptions *options)
+bool
+MonodroidRuntime::parse_runtime_args (dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> &runtime_args, RuntimeOptions *options)
 {
-	char **args, **ptr;
+	if (runtime_args.length () == 0) {
+		log_warn (LOG_DEFAULT, "runtime args empty");
+		return true;
+	}
 
-	if (runtime_args == nullptr)
-		return 1;
+	constexpr char   ARG_DEBUG[]                   = "debug";
+	constexpr size_t ARG_DEBUG_LENGTH              = sizeof(ARG_DEBUG) - 1;
+	constexpr char   ARG_TIMEOUT[]                 = "timeout=";
+	constexpr size_t ARG_TIMEOUT_LENGTH            = sizeof(ARG_TIMEOUT) - 1;
+	constexpr char   ARG_SERVER[]                  = "server=";
+	constexpr size_t ARG_SERVER_LENGTH             = sizeof(ARG_SERVER) - 1;
+	constexpr char   ARG_LOGLEVEL[]                = "loglevel=";
+	constexpr size_t ARG_LOGLEVEL_LENGTH           = sizeof(ARG_LOGLEVEL) - 1;
 
-	options->timeout_time = 0;
-
-	args = utils.monodroid_strsplit (runtime_args, ",", 0);
-
-	for (ptr = args; ptr && *ptr; ptr++) {
-		const char *arg = *ptr;
-
-		if (!strncmp (arg, "debug", 5)) {
+	bool ret = true;
+	string_segment token;
+	while (runtime_args.next_token (',', token)) {
+		if (token.starts_with (ARG_DEBUG, ARG_DEBUG_LENGTH)) {
 			char *host = nullptr;
 			int sdb_port = 1000, out_port = -1;
 
-			options->debug = 1;
+			options->debug = true;
 
-			if (arg[5] == '=') {
-				const char *sep, *endp;
+			if (token.has_at ('=', ARG_DEBUG_LENGTH)) {
+				constexpr size_t arg_name_length = ARG_DEBUG_LENGTH + 1; // Includes the '='
 
-				arg += 6;
-				sep = strchr (arg, ':');
-				if (sep != nullptr) {
-					size_t arg_len = static_cast<size_t>(sep - arg);
-					size_t alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, arg_len, 1);
-					host = new char [alloc_size];
-					memset (host, 0x00, alloc_size);
-					strncpy (host, arg, arg_len);
-					arg = sep+1;
+				static_local_string<SMALL_STRING_PARSE_BUFFER_LEN> hostport (token.length () - arg_name_length);
+				hostport.assign (token.start () + arg_name_length, token.length () - arg_name_length);
 
-					sdb_port = (int) strtol (arg, const_cast<char**> (&endp), 10);
-					if (endp == arg) {
-						log_error (LOG_DEFAULT, "Invalid --debug argument.");
-						continue;
-					} else if (*endp == ':') {
-						arg = endp+1;
-						out_port = (int) strtol (arg, const_cast<char**> (&endp), 10);
-						if ((endp == arg) || (*endp != '\0')) {
-							log_error (LOG_DEFAULT, "Invalid --debug argument.");
-							continue;
-						}
-					} else if (*endp != '\0') {
-						log_error (LOG_DEFAULT, "Invalid --debug argument.");
-						continue;
+				string_segment address;
+				size_t field = 0;
+				while (field < 3 && hostport.next_token (':', address)) {
+					switch (field) {
+						case 0: // host
+							if (address.empty ()) {
+								log_error (LOG_DEFAULT, "Invalid --debug argument for the host field (empty string)");
+							} else {
+								host = utils.strdup_new (address.start (), address.length ());
+							}
+							break;
+
+						case 1: // sdb_port
+							if (!address.to_integer (sdb_port)) {
+								log_error (LOG_DEFAULT, "Invalid --debug argument for the sdb_port field");
+							}
+							break;
+
+						case 2: // out_port
+							if (!address.to_integer (out_port)) {
+								log_error (LOG_DEFAULT, "Invalid --debug argument for the sdb_port field");
+							}
+							break;
 					}
+					field++;
 				}
-			} else if (arg[5] != '\0') {
+			} else if (!token.has_at ('\0', ARG_DEBUG_LENGTH)) {
 				log_error (LOG_DEFAULT, "Invalid --debug argument.");
+				ret = false;
 				continue;
 			}
 
-			if (!host)
-				host = utils.strdup_new ("10.0.2.2");
-
 			if (sdb_port < 0 || sdb_port > USHRT_MAX) {
 				log_error (LOG_DEFAULT, "Invalid SDB port value %d", sdb_port);
+				ret = false;
 				continue;
 			}
 
 			if (out_port > USHRT_MAX) {
 				log_error (LOG_DEFAULT, "Invalid output port value %d", out_port);
+				ret = false;
 				continue;
 			}
+
+			if (host == nullptr)
+				host = utils.strdup_new ("10.0.2.2");
 
 			options->host = host;
 			options->sdb_port = static_cast<uint16_t>(sdb_port);
 			options->out_port = out_port == -1 ? 0 : static_cast<uint16_t>(out_port);
-		} else if (!strncmp (arg, "timeout=", 8)) {
-			char *endp;
-
-			arg += sizeof ("timeout");
-			options->timeout_time = strtoll (arg, &endp, 10);
-			if ((endp == arg) || (*endp != '\0'))
+		} else if (token.starts_with (ARG_TIMEOUT, ARG_TIMEOUT_LENGTH)) {
+			if (!token.to_integer (options->timeout_time, ARG_TIMEOUT_LENGTH)) {
 				log_error (LOG_DEFAULT, "Invalid --timeout argument.");
-			continue;
-		} else if (!strncmp (arg, "server=", 7)) {
-			arg += sizeof ("server");
-			options->server = *arg == 'y' || *arg == 'Y';
-			continue;
-		} else if (!strncmp (arg, "loglevel=", 9)) {
-			char *endp;
-
-			arg += sizeof ("loglevel");
-			options->loglevel = static_cast<int>(strtol (arg, &endp, 10));
-			if ((endp == arg) || (*endp != '\0'))
+				ret = false;
+			}
+		} else if (token.starts_with (ARG_SERVER, ARG_SERVER_LENGTH)) {
+			options->server = token.has_at ('y', ARG_SERVER_LENGTH) || token.has_at ('Y', ARG_SERVER_LENGTH);
+		} else if (token.starts_with (ARG_LOGLEVEL, ARG_LOGLEVEL_LENGTH)) {
+			if (!token.to_integer (options->loglevel, ARG_LOGLEVEL_LENGTH)) {
 				log_error (LOG_DEFAULT, "Invalid --loglevel argument.");
+				ret = false;
+			}
 		} else {
-				log_error (LOG_DEFAULT, "Unknown runtime argument: '%s'", arg);
-			continue;
+			static_local_string<SMALL_STRING_PARSE_BUFFER_LEN> arg (token);
+			log_error (LOG_DEFAULT, "Unknown runtime argument: '%s'", arg.get ());
+			ret = false;
 		}
 	}
 
-	utils.monodroid_strfreev (args);
-	return 1;
+	return ret;
 }
 #endif  // def DEBUG && !WINDOWS
 
@@ -604,17 +640,16 @@ MonodroidRuntime::set_debug_options (void)
 }
 
 void
-MonodroidRuntime::mono_runtime_init ([[maybe_unused]] char *runtime_args)
+MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& runtime_args)
 {
 #if defined (DEBUG) && !defined (WINDOWS)
 	RuntimeOptions options;
 	int64_t cur_time;
-	memset(&options, 0, sizeof (options));
 
 	cur_time = time (nullptr);
 
 	if (!parse_runtime_args (runtime_args, &options)) {
-		log_error (LOG_DEFAULT, "Failed to parse runtime args: '%s'", runtime_args);
+		log_error (LOG_DEFAULT, "Failed to parse runtime args: '%s'", runtime_args.get ());
 	} else if (options.debug && cur_time > options.timeout_time) {
 		log_warn (LOG_DEBUGGER, "Not starting the debugger as the timeout value has been reached; current-time: %lli  timeout: %lli", cur_time, options.timeout_time);
 	} else if (options.debug && cur_time <= options.timeout_time) {
@@ -729,16 +764,15 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] char *runtime_args)
 		}
 	}
 
-	char *prop_val;
+	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> prop_val;
 	/* Additional runtime arguments passed to mono_jit_parse_options () */
-	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_RUNTIME_ARGS_PROPERTY, &prop_val) > 0) {
+	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_RUNTIME_ARGS_PROPERTY, prop_val) > 0) {
 		char **ptr;
 
-		log_warn (LOG_DEBUGGER, "passing '%s' as extra arguments to the runtime.\n", prop_val);
+		log_warn (LOG_DEBUGGER, "passing '%s' as extra arguments to the runtime.\n", prop_val.get ());
 
-		char **args = utils.monodroid_strsplit (prop_val, " ", 0);
+		char **args = utils.monodroid_strsplit (prop_val.get (), " ", 0);
 		int argc = 0;
-		delete[] prop_val;
 
 		for (ptr = args; *ptr; ptr++)
 			argc ++;
@@ -782,7 +816,7 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] char *runtime_args)
 MonoDomain*
 MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks, bool is_root_domain)
 {
-	size_t user_assemblies_count   = 0;;
+	size_t user_assemblies_count   = 0;
 
 	gather_bundled_assemblies (runtimeApks, &user_assemblies_count);
 
@@ -798,8 +832,16 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 		domain = mono_jit_init_version (const_cast<char*> ("RootDomain"), const_cast<char*> ("mobile"));
 	} else {
 		MonoDomain* root_domain = mono_get_root_domain ();
-		simple_pointer_guard<char[], false> domain_name = utils.monodroid_strdup_printf ("MonoAndroidDomain%d", android_api_level);
-		domain = utils.monodroid_create_appdomain (root_domain, domain_name, /*shadow_copy:*/ 1, /*shadow_directory:*/ androidSystem.get_override_dir (0));
+
+		constexpr char DOMAIN_NAME[] = "MonoAndroidDomain";
+		constexpr size_t DOMAIN_NAME_LENGTH = sizeof(DOMAIN_NAME) - 1;
+		constexpr size_t DOMAIN_NAME_TOTAL_SIZE = DOMAIN_NAME_LENGTH + MAX_INTEGER_DIGIT_COUNT_BASE10;
+
+		static_local_string<DOMAIN_NAME_TOTAL_SIZE + 1> domain_name (DOMAIN_NAME_TOTAL_SIZE);
+		domain_name.append (DOMAIN_NAME);
+		domain_name.append (android_api_level);
+
+		domain = utils.monodroid_create_appdomain (root_domain, domain_name.get (), /*shadow_copy:*/ 1, /*shadow_directory:*/ androidSystem.get_override_dir (0));
 	}
 
 	if constexpr (is_running_on_desktop) {
@@ -844,57 +886,6 @@ MonodroidRuntime::LocalRefsAreIndirect (JNIEnv *env, jclass runtimeClass, int ve
 	java_System_identityHashCode = env->GetStaticMethodID (java_System, "identityHashCode", "(Ljava/lang/Object;)I");
 
 	return 1;
-}
-
-int
-MonodroidRuntime::get_display_dpi (float *x_dpi, float *y_dpi)
-{
-	if (!x_dpi) {
-		log_error (LOG_DEFAULT, "Internal error: x_dpi parameter missing in get_display_dpi");
-		return -1;
-	}
-
-	if (!y_dpi) {
-		log_error (LOG_DEFAULT, "Internal error: y_dpi parameter missing in get_display_dpi");
-		return -1;
-	}
-
-	MonoDomain *domain = nullptr;
-	if (runtime_GetDisplayDPI == nullptr) {
-		domain = mono_get_root_domain ();
-		MonoAssembly *assm = utils.monodroid_load_assembly (domain, "Mono.Android");;
-
-		MonoImage *image = nullptr;
-		if (assm != nullptr)
-			image = mono_assembly_get_image  (assm);
-
-		MonoClass *environment = nullptr;
-		if (image != nullptr)
-			environment = utils.monodroid_get_class_from_image (domain, image, "Android.Runtime", "AndroidEnvironment");
-
-		if (environment != nullptr)
-			runtime_GetDisplayDPI = mono_class_get_method_from_name (environment, "GetDisplayDPI", 2);
-	}
-
-	if (!runtime_GetDisplayDPI) {
-		*x_dpi = DEFAULT_X_DPI;
-		*y_dpi = DEFAULT_Y_DPI;
-		return 0;
-	}
-
-	void* args [] = {
-		x_dpi,
-		y_dpi,
-	};
-
-	MonoObject *exc = nullptr;
-	utils.monodroid_runtime_invoke (domain != nullptr ? domain : mono_get_root_domain (), runtime_GetDisplayDPI, nullptr, args, &exc);
-	if (exc != nullptr) {
-		*x_dpi = DEFAULT_X_DPI;
-		*y_dpi = DEFAULT_Y_DPI;
-	}
-
-	return 0;
 }
 
 inline void
@@ -1056,20 +1047,65 @@ setup_gc_logging (void)
 }
 #endif
 
-inline int
+force_inline unsigned int
 MonodroidRuntime::convert_dl_flags (int flags)
 {
-	int lflags = flags & static_cast<int> (MONO_DL_LOCAL) ? 0: RTLD_GLOBAL;
-
-	if (flags & static_cast<int> (MONO_DL_LAZY))
-		lflags |= RTLD_LAZY;
-	else
-		lflags |= RTLD_NOW;
+	unsigned int lflags = (flags & static_cast<int> (MONO_DL_LOCAL))
+		? JAVA_INTEROP_LIB_LOAD_LOCALLY
+		: JAVA_INTEROP_LIB_LOAD_GLOBALLY;
 	return lflags;
 }
 
-inline void*
-MonodroidRuntime::monodroid_dlopen_log_and_return (void *handle, char **err, const char *full_name, bool free_memory)
+force_inline void
+MonodroidRuntime::init_internal_api_dso (void *handle)
+{
+	if (handle == nullptr) {
+		log_fatal (LOG_DEFAULT, "Internal API library is required");
+		exit (FATAL_EXIT_MONO_MISSING_SYMBOLS);
+	}
+
+	// There's a very, very small chance of a race condition here, but it should be acceptable and we can save some time
+	// by not acquiring the lock on Android systems which don't have the dlopen bug we worked around in
+	// https://github.com/xamarin/xamarin-android/pull/4914
+	//
+	// The race condition will exist only on systems with the above dynamic loader bug and would become a problem only
+	// if an application were loading managed assemblies with p/invokes very quickly from different threads. All in all,
+	// not a very likely scenario.
+	//
+	if (handle == api_dso_handle) {
+		log_debug (LOG_DEFAULT, "Internal API library already loaded, initialization not necessary");
+		return;
+	}
+
+	std::lock_guard<std::mutex> lock (api_init_lock);
+	if (api_dso_handle != nullptr) {
+		auto api_shutdown = reinterpret_cast<external_api_shutdown_fn> (java_interop_lib_symbol (api_dso_handle, MonoAndroidInternalCalls::SHUTDOWN_FUNCTION_NAME, nullptr));
+		if (api_shutdown == nullptr) {
+			// We COULD ignore this situation, but if the function is missing it means we messed something up and thus
+			// it *is* a fatal error.
+			log_fatal (LOG_DEFAULT, "Unable to properly close Internal API library, shutdown function '%s' not found in the module", MonoAndroidInternalCalls::SHUTDOWN_FUNCTION_NAME);
+			exit (FATAL_EXIT_MONO_MISSING_SYMBOLS);
+		}
+		api_shutdown ();
+	}
+
+	api_dso_handle = handle;
+	auto api = new MonoAndroidInternalCalls_Impl ();
+	auto api_init = reinterpret_cast<external_api_init_fn>(java_interop_lib_symbol (handle, MonoAndroidInternalCalls::INIT_FUNCTION_NAME, nullptr));
+	if (api_init == nullptr) {
+		log_fatal (LOG_DEFAULT, "Unable to initialize Internal API library, init function '%s' not found in the module", MonoAndroidInternalCalls::INIT_FUNCTION_NAME);
+		exit (FATAL_EXIT_MONO_MISSING_SYMBOLS);
+	}
+
+	log_debug (LOG_DEFAULT, "Initializing Internal API library %p", handle);
+	if (!api_init (api)) {
+		log_fatal (LOG_DEFAULT, "Failed to initialize Internal API library");
+		exit (FATAL_EXIT_MONO_MISSING_SYMBOLS);
+	}
+}
+
+force_inline void*
+MonodroidRuntime::monodroid_dlopen_log_and_return (void *handle, char **err, const char *full_name, bool free_memory, bool need_api_init)
 {
 	if (handle == nullptr && err != nullptr) {
 		*err = utils.monodroid_strdup_printf ("Could not load library: Library '%s' not found.", full_name);
@@ -1079,34 +1115,105 @@ MonodroidRuntime::monodroid_dlopen_log_and_return (void *handle, char **err, con
 		delete[] full_name;
 	}
 
+	if (!need_api_init)
+		return handle;
+
+	init_internal_api_dso (handle);
+
 	return handle;
 }
 
 void*
 MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err, [[maybe_unused]] void *user_data)
 {
-	int dl_flags = monodroidRuntime.convert_dl_flags (flags);
+	unsigned int dl_flags = monodroidRuntime.convert_dl_flags (flags);
 	bool libmonodroid_fallback = false;
+	bool name_is_full_path = false;
+	bool name_needs_free = false;
+	/* name is nullptr when we're P/Invoking __Internal, so remap to libxa-internal-api */
+	if (name == nullptr || strstr (name, "xa-internal-api") != nullptr) {
+#if defined (WINDOWS)
+		char *tmp_name = nullptr;
 
-	/* name is nullptr when we're P/Invoking __Internal, so remap to libmonodroid */
-	if (name == nullptr) {
-		name = "libmonodroid.so";
-		libmonodroid_fallback = TRUE;
+		auto probe_dll_at = [&](const char *the_path) -> bool {
+			if (the_path == nullptr) {
+				return false;
+			}
+
+			const char *last_sep = strrchr (the_path, MONODROID_PATH_SEPARATOR_CHAR);
+			if (last_sep != nullptr) {
+				char *dir = utils.strdup_new (the_path, last_sep - the_path);
+				tmp_name = utils.string_concat (dir, MONODROID_PATH_SEPARATOR, API_DSO_NAME);
+				delete[] dir;
+				if (!utils.file_exists (tmp_name)) {
+					delete[] tmp_name;
+					tmp_name = nullptr;
+					return false;
+				}
+
+				return true;
+			}
+
+			return false;
+		};
+
+		//
+		// First try to see if it exist at the path pointed to by `name`. With p/invokes, currently (Sep 2020), we can't
+		// really trust the path since it consists of *some* directory path + p/invoke library name and it does not
+		// point to the location where the native library is. However, we still need to check the location first, should
+		// it point to the right place in the future.
+		//
+		// Context: https://github.com/mono/mono/issues/20295#issuecomment-679271621
+		//
+		bool found = probe_dll_at (name);
+		if (!found) {
+			// Next lets try the location of the XA runtime DLL, libxa-internal-api.dll should be next to it.
+			const char *path = get_my_location (false);
+			found = probe_dll_at (path);
+			if (path != nullptr) {
+				free (reinterpret_cast<void*>(const_cast<char*>(path)));
+			}
+
+			if (!found) {
+				log_warn (LOG_DEFAULT, "Failed to locate %s, using file name without the path", API_DSO_NAME);
+				name = API_DSO_NAME;
+			} else {
+				name = tmp_name;
+				name_is_full_path = true;
+				name_needs_free = true;
+			}
+		}
+#else // ndef WINDOWS
+		name = API_DSO_NAME;
+#endif // WINDOWS
+		libmonodroid_fallback = true;
 	}
 
-	void *h = androidSystem.load_dso_from_any_directories (name, dl_flags);
+	void *h = nullptr;
+	if (!name_is_full_path)
+		h = androidSystem.load_dso_from_any_directories (name, dl_flags);
+
 	if (h != nullptr) {
-		return monodroid_dlopen_log_and_return (h, err, name, false);
+		return monodroid_dlopen_log_and_return (h, err, name, name_needs_free, libmonodroid_fallback);
 	}
 
 	if (libmonodroid_fallback) {
-		char *full_name = utils.path_combine (AndroidSystem::SYSTEM_LIB_PATH, "libmonodroid.so");
+		const char *full_name;
+		if (name_is_full_path) {
+			full_name = name;
+		} else {
+			if (name_needs_free) {
+				delete[] name;
+			}
+			full_name = utils.path_combine (AndroidSystem::SYSTEM_LIB_PATH, API_DSO_NAME);
+			name_needs_free = true;
+		}
 		h = androidSystem.load_dso (full_name, dl_flags, false);
-		return monodroid_dlopen_log_and_return (h, err, full_name, true);
+		return monodroid_dlopen_log_and_return (h, err, full_name, name_needs_free, true);
 	}
 
 	if (!utils.ends_with (name, ".dll.so") && !utils.ends_with (name, ".exe.so")) {
-		return monodroid_dlopen_log_and_return (h, err, name, false);
+		return monodroid_dlopen_log_and_return (h, err, name, name_needs_free);
 	}
 
 	char *basename_part = const_cast<char*> (strrchr (name, '/'));
@@ -1115,11 +1222,23 @@ MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err, [[m
 	else
 		basename_part = (char*)name;
 
-	simple_pointer_guard<char[]> basename = utils.string_concat ("libaot-", basename_part);
-	h = androidSystem.load_dso_from_any_directories (basename, dl_flags);
+	constexpr char LIBAOT_PREFIX[] = "libaot-";
+	constexpr size_t LIBAOT_PREFIX_SIZE = sizeof(LIBAOT_PREFIX);
+
+	size_t base_len = strlen (basename_part);
+	size_t len = base_len + LIBAOT_PREFIX_SIZE; // includes the trailing \0
+	static_local_string<PATH_MAX> basename (len);
+
+	basename.append (LIBAOT_PREFIX).append (basename_part);
+
+	h = androidSystem.load_dso_from_any_directories (basename.get (), dl_flags);
 
 	if (h != nullptr && XA_UNLIKELY (utils.should_log (LOG_ASSEMBLY)))
-		log_info_nocheck (LOG_ASSEMBLY, "Loaded AOT image '%s'", static_cast<const char*>(basename));
+		log_info_nocheck (LOG_ASSEMBLY, "Loaded AOT image '%s'", basename.get ());
+
+	if (name_needs_free) {
+		delete[] name;
+	}
 
 	return h;
 }
@@ -1128,11 +1247,15 @@ void*
 MonodroidRuntime::monodroid_dlsym (void *handle, const char *name, char **err, [[maybe_unused]] void *user_data)
 {
 	void *s;
+	char *e = nullptr;
 
-	s = dlsym (handle, name);
+	s = java_interop_lib_symbol (handle, name, &e);
 
 	if (!s && err) {
-		*err = utils.monodroid_strdup_printf ("Could not find symbol '%s'.", name);
+		*err = utils.monodroid_strdup_printf ("Could not find symbol '%s': %s", name, e);
+	}
+	if (e) {
+		java_interop_free (e);
 	}
 
 	return s;
@@ -1150,145 +1273,175 @@ MonodroidRuntime::set_environment_variable_for_directory (const char *name, jstr
 }
 
 inline void
-MonodroidRuntime::create_xdg_directory (jstring_wrapper& home, const char *relativePath, const char *environmentVariableName)
+MonodroidRuntime::create_xdg_directory (jstring_wrapper& home, size_t home_len, const char *relativePath, size_t relative_path_len, const char *environmentVariableName)
 {
-	simple_pointer_guard<char> dir = utils.path_combine (home.get_cstr (), relativePath);
-	log_info (LOG_DEFAULT, "Creating XDG directory: %s", static_cast<char*>(dir));
-	int rv = utils.create_directory (dir, DEFAULT_DIRECTORY_MODE);
+	static_local_string<SENSIBLE_PATH_MAX> dir (home_len + relative_path_len);
+	utils.path_combine (dir, home.get_cstr (), home_len, relativePath, relative_path_len);
+	log_info (LOG_DEFAULT, "Creating XDG directory: %s", dir.get ());
+	int rv = utils.create_directory (dir.get (), DEFAULT_DIRECTORY_MODE);
 	if (rv < 0 && errno != EEXIST)
-		log_warn (LOG_DEFAULT, "Failed to create XDG directory %s. %s", static_cast<char*>(dir), strerror (errno));
+		log_warn (LOG_DEFAULT, "Failed to create XDG directory %s. %s", dir.get (), strerror (errno));
 	if (environmentVariableName)
-		setenv (environmentVariableName, dir, 1);
+		setenv (environmentVariableName, dir.get (), 1);
 }
 
 inline void
 MonodroidRuntime::create_xdg_directories_and_environment (jstring_wrapper &homeDir)
 {
-	create_xdg_directory (homeDir, ".local/share", "XDG_DATA_HOME");
-	create_xdg_directory (homeDir, ".config", "XDG_CONFIG_HOME");
+	size_t home_len = strlen (homeDir.get_cstr ());
+
+	constexpr char XDG_DATA_HOME[] = "XDG_DATA_HOME";
+	constexpr char HOME_PATH[] = ".local/share";
+	constexpr size_t HOME_PATH_LEN = sizeof(HOME_PATH) - 1;
+	create_xdg_directory (homeDir, home_len, HOME_PATH, HOME_PATH_LEN, XDG_DATA_HOME);
+
+	constexpr char XDG_CONFIG_HOME[] = "XDG_CONFIG_HOME";
+	constexpr char CONFIG_PATH[] = ".config";
+	constexpr size_t CONFIG_PATH_LEN = sizeof(CONFIG_PATH) - 1;
+	create_xdg_directory (homeDir, home_len, CONFIG_PATH, CONFIG_PATH_LEN, XDG_CONFIG_HOME);
 }
 
 #if DEBUG
 void
 MonodroidRuntime::set_debug_env_vars (void)
 {
-	char *value;
-
-	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_ENV_PROPERTY, &value) == 0)
+	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> value;
+	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_ENV_PROPERTY, value) == 0)
 		return;
 
-	char **args = utils.monodroid_strsplit (value, "|", 0);
-	delete[] value;
+	auto log_envvar = [](const char *name, const char *v) {
+		log_debug (LOG_DEFAULT, "Env variable '%s' set to '%s'.", name, v);
+	};
 
-	for (char **ptr = args; ptr && *ptr; ptr++) {
-		char *arg = *ptr;
-		char *v = strchr (arg, '=');
-		if (v) {
-			*v = '\0';
-			++v;
-		} else {
+	string_segment arg_token;
+	while (value.next_token ('|', arg_token)) {
+		static_local_string<SMALL_STRING_PARSE_BUFFER_LEN> arg (arg_token.length ());
+		arg.assign (arg_token.start (), arg_token.length ());
+
+		ssize_t idx = arg.index_of ('=');
+		size_t index = static_cast<size_t>(idx);
+		if (idx < 0 || index == arg.length () - 1) {
+			// ’name’ or ’name=’
 			constexpr char one[] = "1";
-			v = const_cast<char*> (one);
+			if (index == arg.length () - 1) {
+				arg[index] = '\0';
+			}
+			setenv (arg.get (), one, 1);
+			log_envvar (arg.get (), one);
+		} else if (index == 0) {
+			// ’=value’
+			log_warn (LOG_DEFAULT, "Attempt to set environment variable without specifying name: '%s'", arg.get ());
+		} else {
+			// ’name=value’
+			arg[index] = '\0';
+			const char *v = arg.get () + idx + 1;
+			setenv (arg.get (), v, 1);
+			log_envvar (arg.get (), v);
 		}
-		setenv (arg, v, 1);
-		log_info (LOG_DEFAULT, "Env variable '%s' set to '%s'.", arg, v);
 	}
-	utils.monodroid_strfreev (args);
 }
 #endif /* DEBUG */
 
 inline void
 MonodroidRuntime::set_trace_options (void)
 {
-	char *value;
-
-	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_TRACE_PROPERTY, &value) == 0)
+	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> value;
+	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_TRACE_PROPERTY, value) == 0)
 		return;
 
-	mono_jit_set_trace_options (value);
-	delete[] value;
+	mono_jit_set_trace_options (value.get ());
 }
 
 inline void
 MonodroidRuntime::set_profile_options ()
 {
-	constexpr const char mlpd_ext[] = "mlpd";
-	constexpr const char aot_ext[] = "aotprofile";
+	// We want to avoid dynamic allocation, thus let’s create a buffer that can take both the property value and a
+	// path without allocation
+	dynamic_local_string<SENSIBLE_PATH_MAX + PROPERTY_VALUE_BUFFER_LEN> value;
+	{
+		dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> prop_value;
+		if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_PROFILE_PROPERTY, prop_value) == 0)
+			return;
 
-	constexpr const char output_arg[] = "output=";
-	constexpr const size_t output_arg_len = sizeof(output_arg) - 1;
+		value.assign (prop_value.get (), prop_value.length ());
+	}
 
-	char *value;
-	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_PROFILE_PROPERTY, &value) == 0)
-		return;
+	constexpr char OUTPUT_ARG[] = "output=";
+	constexpr size_t OUTPUT_ARG_LEN = sizeof(OUTPUT_ARG) - 1;
 
-	char *output = nullptr;
-	char *delimiter = strchr (value, ',');
-	while (delimiter != nullptr) {
-		char *arg = delimiter + 1;
-		if (*arg == '\0') {
-			break;
-		}
+	ssize_t colon_idx = value.index_of (':');
+	size_t start_index = colon_idx < 0 ? 0 : static_cast<size_t>(colon_idx + 1);
+	dynamic_local_string<SENSIBLE_PATH_MAX> output_path;
+	bool have_output_arg = false;
+	string_segment param;
 
-		if (strncmp (arg, output_arg, output_arg_len) != 0) {
-			delimiter = strchr (arg, ',');
+	while (value.next_token (start_index, ',', param)) {
+		dynamic_local_string<SENSIBLE_PATH_MAX> temp;
+		temp.assign (param.start (), param.length ());
+		if (!param.starts_with (OUTPUT_ARG, OUTPUT_ARG_LEN) || param.length () == OUTPUT_ARG_LEN) {
 			continue;
 		}
 
-		arg += output_arg_len;
-		if (*arg == '\0') {
-			break; // empty...
-		}
-
-		delimiter = strchr (arg, ',');
-		if (delimiter == nullptr) {
-			output = utils.strdup_new (arg);
-		} else {
-			output = utils.strdup_new (arg, static_cast<size_t>(delimiter - arg));
-		}
+		output_path.assign (param.start () + OUTPUT_ARG_LEN, param.length () - OUTPUT_ARG_LEN);
+		have_output_arg = true;
 		break;
 	}
 
-	if (output == nullptr) {
-		const char* col = strchr (value, ':');
-		char *extension;
-		bool  extension_needs_free = false;
+	if (!have_output_arg) {
+		constexpr char   MLPD_EXT[] = "mlpd";
+		constexpr size_t MLPD_EXT_LEN = sizeof(MLPD_EXT) - 1;
+		constexpr char   AOT_EXT[] = "aotprofile";
+		constexpr size_t AOT_EXT_LEN = sizeof(AOT_EXT) - 1;
+		constexpr char   COV_EXT[] = "xml";
+		constexpr size_t COV_EXT_LEN = sizeof(COV_EXT) - 1;
+		constexpr char   LOG_PREFIX[] = "log:";
+		constexpr size_t LOG_PREFIX_LENGTH = sizeof(LOG_PREFIX) - 1;
+		constexpr char   AOT_PREFIX[] = "aot:";
+		constexpr size_t AOT_PREFIX_LENGTH = sizeof(AOT_PREFIX) - 1;
+		constexpr char   DEFAULT_PREFIX[] = "default:";
+		constexpr size_t DEFAULT_PREFIX_LENGTH = sizeof(DEFAULT_PREFIX) - 1;
+		constexpr char   COVERAGE_PREFIX[] = "coverage:";
+		constexpr size_t COVERAGE_PREFIX_LENGTH = sizeof(COVERAGE_PREFIX) - 1;
+		constexpr char   PROFILE_FILE_NAME_PREFIX[] = "profile.";
+		constexpr size_t PROFILE_FILE_NAME_PREFIX_LEN = sizeof(PROFILE_FILE_NAME_PREFIX) - 1;
 
-		if ((col != nullptr && strncmp (value, "log:", 4) == 0) || strcmp (value, "log") == 0)
-			extension = const_cast<char*>(mlpd_ext);
-		else if ((col != nullptr && !strncmp (value, "aot:", 4)) || !strcmp (value, "aot"))
-			extension = const_cast<char*>(aot_ext);
-		else if ((col != nullptr && strncmp (value, "default:", 8) == 0) || strcmp (value, "default") == 0)
-			extension = const_cast<char*>(mlpd_ext);
-		else {
-			size_t len = col != nullptr ? static_cast<size_t>(col - value) : strlen (value);
-			size_t alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, len, 1);
-			extension = new char [alloc_size];
-			strncpy (extension, value, len);
-			extension [len] = '\0';
-			extension_needs_free = true;
+		size_t length_adjust = colon_idx >= 1 ? 0 : 1;
+
+		output_path
+			.assign (androidSystem.get_override_dir (0))
+			.append (MONODROID_PATH_SEPARATOR)
+			.append (PROFILE_FILE_NAME_PREFIX, PROFILE_FILE_NAME_PREFIX_LEN);
+
+		if (value.starts_with (LOG_PREFIX, LOG_PREFIX_LENGTH - length_adjust)) {
+			output_path.append (MLPD_EXT, MLPD_EXT_LEN);
+		} else if (value.starts_with (AOT_PREFIX, AOT_PREFIX_LENGTH - length_adjust)) {
+			output_path.append (AOT_EXT, AOT_EXT_LEN);
+		} else if (value.starts_with (DEFAULT_PREFIX, DEFAULT_PREFIX_LENGTH - length_adjust)) {
+			output_path.append (MLPD_EXT, MLPD_EXT_LEN);
+		} else if (value.starts_with (COVERAGE_PREFIX, COVERAGE_PREFIX_LENGTH - length_adjust)) {
+			output_path.append (COV_EXT, COV_EXT_LEN);
+		} else {
+			size_t len = colon_idx < 0 ? value.length () : static_cast<size_t>(colon_idx + 1);
+			output_path.append (value.get (), len);
 		}
 
-		output = utils.string_concat (androidSystem.get_override_dir (0), MONODROID_PATH_SEPARATOR, "profile.", extension);
-		char *ovalue = utils.string_concat (value, col == nullptr ? ":" : ",", output_arg, output);
-
-		if (extension_needs_free)
-			delete[] extension;
-		delete[] value;
-		value = ovalue;
+		if (colon_idx < 0)
+			value.append (":");
+		else
+			value.append (",");
+		value
+			.append (OUTPUT_ARG, OUTPUT_ARG_LEN)
+			.append (output_path.get (), output_path.length ());
 	}
 
 	/*
 	 * libmono-profiler-log.so profiler won't overwrite existing files.
 	 * Remove it For Great Justice^H^H^H to preserve my sanity!
 	 */
-	unlink (output);
+	unlink (output_path.get ());
 
-	log_warn (LOG_DEFAULT, "Initializing profiler with options: %s", value);
-	debug.monodroid_profiler_load (androidSystem.get_runtime_libdir (), value, output);
-
-	delete[] value;
-	delete[] output;
+	log_warn (LOG_DEFAULT, "Initializing profiler with options: %s", value.get ());
+	debug.monodroid_profiler_load (androidSystem.get_runtime_libdir (), value.get (), output_path.get ());
 }
 
 /*
@@ -1308,9 +1461,9 @@ MonodroidRuntime::disable_external_signal_handlers (void)
 	if (!androidSystem.is_mono_llvm_enabled ())
 		return;
 
-	void *llvm  = androidSystem.load_dso ("libLLVM.so", RTLD_LAZY, TRUE);
+	void *llvm  = androidSystem.load_dso ("libLLVM.so", JAVA_INTEROP_LIB_LOAD_GLOBALLY, TRUE);
 	if (llvm) {
-		bool *disable_signals = reinterpret_cast<bool*> (dlsym (llvm, "_ZN4llvm23DisablePrettyStackTraceE"));
+		bool *disable_signals = reinterpret_cast<bool*> (java_interop_lib_symbol (llvm, "_ZN4llvm23DisablePrettyStackTraceE", nullptr));
 		if (disable_signals) {
 			*disable_signals = true;
 			log_info (LOG_DEFAULT, "Disabled LLVM signal trapping");
@@ -1418,11 +1571,52 @@ MonodroidRuntime::typemap_managed_to_java (MonoReflectionType *type, const uint8
 	return embeddedAssemblies.typemap_managed_to_java (type, mvid);
 }
 
+#if defined (WINDOWS)
+const char*
+MonodroidRuntime::get_my_location (bool remove_file_name)
+{
+	HMODULE hm = NULL;
+
+	DWORD handle_flags = GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT;
+	if (GetModuleHandleExW (handle_flags, (LPCWSTR) &get_xamarin_android_msbuild_path, &hm) == 0) {
+		int ret = GetLastError ();
+		log_warn (LOG_DEFAULT, "Unable to get HANDLE to `libmono-android.debug.dll`; GetModuleHandleExW returned %d\n", ret);
+		return nullptr;
+	}
+
+	WCHAR path[MAX_PATH * 2];
+	if (GetModuleFileNameW (hm, path, sizeof(path)) == 0) {
+		int ret = GetLastError ();
+		log_warn (LOG_DEFAULT, "Unable to get filename to `libmono-android.debug.dll`; GetModuleFileNameW returned %d\n", ret);
+		return nullptr;
+	}
+
+	if (remove_file_name)
+		PathRemoveFileSpecW (path);
+
+	return utils.utf16_to_utf8 (path);
+}
+#elif defined (APPLE_OS_X)
+const char*
+MonodroidRuntime::get_my_location (bool remove_file_name)
+{
+	Dl_info info;
+	if (dladdr (reinterpret_cast<const void*>(&MonodroidRuntime::get_my_location), &info) == 0) {
+		log_warn (LOG_DEFAULT, "Could not lookup library containing `MonodroidRuntime::get_my_location()`; dladdr failed: %s", dlerror ());
+		return nullptr;
+	}
+
+	if (remove_file_name)
+		return utils.strdup_new (dirname (const_cast<char*>(info.dli_fname)));
+	return utils.strdup_new (info.dli_fname);
+}
+#endif  // defined(WINDOWS)
+
 inline void
 MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
                                                           jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader,
                                                           [[maybe_unused]] jobjectArray externalStorageDirs, jobjectArray assembliesJava,
-                                                          jint apiLevel, jboolean embeddedDSOsEnabled, jboolean isEmulator)
+                                                          jint apiLevel, jboolean isEmulator)
 {
 	init_logging_categories ();
 
@@ -1432,8 +1626,10 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 		total_time.mark_start ();
 	}
 
+	jstring_array_wrapper applicationDirs (env, appDirs);
+
 	android_api_level = apiLevel;
-	androidSystem.set_embedded_dso_mode_enabled ((bool) embeddedDSOsEnabled);
+	androidSystem.detect_embedded_dso_mode (applicationDirs);
 	androidSystem.set_running_in_emulator (isEmulator);
 
 	java_TimeZone = utils.get_class_from_runtime_field (env, klass, "java_util_TimeZone", true);
@@ -1445,7 +1641,6 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 
 	androidSystem.setup_environment ();
 
-	jstring_array_wrapper applicationDirs (env, appDirs);
 	jstring_wrapper &home = applicationDirs[0];
 	set_environment_variable_for_directory ("TMPDIR", applicationDirs[1]);
 	set_environment_variable_for_directory ("HOME", home);
@@ -1455,7 +1650,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	disable_external_signal_handlers ();
 
 	jstring_array_wrapper runtimeApks (env, runtimeApksJava);
-	androidSystem.setup_app_library_directories (runtimeApks, applicationDirs, apiLevel);
+	androidSystem.setup_app_library_directories (runtimeApks, applicationDirs);
 
 	init_reference_logging (androidSystem.get_primary_override_dir ());
 	androidSystem.create_update_dir (androidSystem.get_primary_override_dir ());
@@ -1492,11 +1687,35 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)) && !(log_timing_categories & LOG_TIMING_BARE)) {
 		mono_counters_enable (static_cast<int>(XA_LOG_COUNTERS));
 
-		simple_pointer_guard<char[]> counters_path (utils.path_combine (androidSystem.get_override_dir (0), "counters.txt"));
+		dynamic_local_string<SENSIBLE_PATH_MAX> counters_path;
+		utils.path_combine (counters_path, androidSystem.get_override_dir (0), "counters.txt");
 		log_info_nocheck (LOG_TIMING, "counters path: %s", counters_path.get ());
-		counters = utils.monodroid_fopen (counters_path, "a");
-		utils.set_world_accessable (counters_path);
+		counters = utils.monodroid_fopen (counters_path.get (), "a");
+		utils.set_world_accessable (counters_path.get ());
 	}
+
+	void *dso_handle = nullptr;
+#if defined (WINDOWS) || defined (APPLE_OS_X)
+	const char *my_location = get_my_location ();
+	if (my_location != nullptr) {
+		simple_pointer_guard<char, false> dso_path (utils.path_combine (my_location, API_DSO_NAME));
+		log_info (LOG_DEFAULT, "Attempting to load %s", dso_path.get ());
+		dso_handle = java_interop_lib_load (dso_path.get (), JAVA_INTEROP_LIB_LOAD_GLOBALLY, nullptr);
+#if defined (APPLE_OS_X)
+		delete[] my_location;
+#else   // !defined(APPLE_OS_X)
+		free (static_cast<void*>(const_cast<char*>(my_location))); // JI allocates with `calloc`
+#endif  // defined(APPLE_OS_X)
+	}
+
+	if (dso_handle == nullptr) {
+		log_info (LOG_DEFAULT, "Attempting to load %s with \"bare\" dlopen", API_DSO_NAME);
+		dso_handle = java_interop_lib_load (API_DSO_NAME, JAVA_INTEROP_LIB_LOAD_GLOBALLY, nullptr);
+	}
+#endif  // defined(WINDOWS) || defined(APPLE_OS_X)
+	if (dso_handle == nullptr)
+		dso_handle = androidSystem.load_dso_from_any_directories (API_DSO_NAME, JAVA_INTEROP_LIB_LOAD_GLOBALLY);
+	init_internal_api_dso (dso_handle);
 
 	mono_dl_fallback_register (monodroid_dlopen, monodroid_dlsym, nullptr, nullptr);
 
@@ -1543,8 +1762,8 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 		mono_set_use_llvm (true);
 	}
 
-	char *runtime_args = nullptr;
-	androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_EXTRA_PROPERTY, &runtime_args);
+	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> runtime_args;
+	androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_EXTRA_PROPERTY, runtime_args);
 
 #if TRACE
 	__android_log_print (ANDROID_LOG_INFO, "*jonp*", "debug.mono.extra=%s", runtime_args);
@@ -1566,8 +1785,6 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	jstring_array_wrapper assembliesPaths (env);
 	/* the first assembly is used to initialize the AppDomain name */
 	create_and_initialize_domain (env, klass, runtimeApks, assemblies, nullptr, assembliesPaths, loader, /*is_root_domain:*/ true, /*force_preload_assemblies:*/ false);
-
-	delete[] runtime_args;
 
 	// Install our dummy exception handler on Desktop
 	if constexpr (is_running_on_desktop) {
@@ -1632,7 +1849,6 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 		externalStorageDirs,
 		assembliesJava,
 		apiLevel,
-		/* embeddedDSOsEnabled */ JNI_FALSE,
 		/* isEmulator */ JNI_FALSE
 	);
 }
@@ -1641,7 +1857,7 @@ JNIEXPORT void JNICALL
 Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
                                 jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader,
                                 jobjectArray externalStorageDirs, jobjectArray assembliesJava,
-                                jint apiLevel, jboolean embeddedDSOsEnabled, jboolean isEmulator)
+                                jint apiLevel, jboolean isEmulator)
 {
 	monodroidRuntime.Java_mono_android_Runtime_initInternal (
 		env,
@@ -1654,7 +1870,6 @@ Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang,
 		externalStorageDirs,
 		assembliesJava,
 		apiLevel,
-		embeddedDSOsEnabled,
 		isEmulator
 	);
 }
@@ -1664,7 +1879,7 @@ MonodroidRuntime::Java_mono_android_Runtime_register (JNIEnv *env, jstring manag
 {
 	timing_period total_time;
 
-	char *type = nullptr;
+	dynamic_local_string<SENSIBLE_TYPE_NAME_LENGTH> type;
 
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING)))
 		total_time.mark_start ();
@@ -1674,10 +1889,10 @@ MonodroidRuntime::Java_mono_android_Runtime_register (JNIEnv *env, jstring manag
 
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
 		const char *mt_ptr = env->GetStringUTFChars (managedType, nullptr);
-		type = utils.strdup_new (mt_ptr);
+		type.assign (mt_ptr, strlen (mt_ptr));
 		env->ReleaseStringUTFChars (managedType, mt_ptr);
 
-		log_info_nocheck (LOG_TIMING, "Runtime.register: registering type `%s`", type);
+		log_info_nocheck (LOG_TIMING, "Runtime.register: registering type `%s`", type.get ());
 	}
 
 	int methods_len = env->GetStringLength (methods);
@@ -1711,8 +1926,7 @@ MonodroidRuntime::Java_mono_android_Runtime_register (JNIEnv *env, jstring manag
 
 		Timing::info (total_time, "Runtime.register: end time");
 
-		dump_counters ("## Runtime.register: type=%s\n", type);
-		delete[] type;
+		dump_counters ("## Runtime.register: type=%s\n", type.get ());
 	}
 }
 

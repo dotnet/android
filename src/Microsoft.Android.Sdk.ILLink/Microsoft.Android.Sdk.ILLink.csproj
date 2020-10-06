@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\Configuration.props" />
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <DefineConstants>NET5_LINKER</DefineConstants>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>$(XamarinAndroidSourcePath)bin\Build$(Configuration)\packs\tools</OutputPath>
@@ -28,7 +28,6 @@
     <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\LinkerOptions.cs" />
 
     <!--Steps that are upstreamed, these are OK to remove-->
-    <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\ApplyPreserveAttribute.cs" />
     <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\OutputStepWithTimestamps.cs" />
     <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\PreserveCode.cs" />
     <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\PreserveDynamicTypes.cs" />

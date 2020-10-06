@@ -1,19 +1,16 @@
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.Build.NoTargets">
   <PropertyGroup>
-    <Configuration Condition="'$(Configuration)'==''">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>af8ac493-40ac-4195-82f6-b08ee4b4e49e</ProjectGuid>
     <OutputType>Exe</OutputType>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath Condition="'$(OutputPath)'==''">bin\$(Configuration)</OutputPath>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)'=='Debug'" />
-  <PropertyGroup Condition="'$(Configuration)'=='Release'" />
+  
   <Import Project="..\..\Configuration.props" />
+  
   <ItemGroup>
-    <ProjectReference Include="..\r8\r8.csproj">
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-    </ProjectReference>
+    <ProjectReference Include="..\r8\r8.csproj" ReferenceOutputAssembly="False" />
   </ItemGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
+  
   <Import Project="manifestmerger.targets" />
 </Project>

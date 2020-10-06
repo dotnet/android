@@ -143,6 +143,7 @@ if(STRIP_DEBUG)
 endif()
 
 if(ENABLE_NDK)
+  include_directories(${CMAKE_SYSROOT}/usr/include/c++/v1/)
   include_directories(${LZ4_INCLUDE_DIR})
   add_definitions("-DHAVE_LZ4")
   add_definitions("-DPLATFORM_ANDROID")
@@ -195,7 +196,7 @@ else()
   if(WIN32 OR MINGW)
     message(STATUS "Win32 or MinGW")
     set(EXTRA_COMPILER_FLAGS "${EXTRA_COMPILER_FLAGS} -DWINDOWS -DNTDDI_VERSION=NTDDI_VISTA -D_WIN32_WINNT=_WIN32_WINNT_VISTA -fomit-frame-pointer")
-    set(EXTRA_LINKER_FLAGS "${EXTRA_LINKER_FLAGS} -ldl -lmman -static -pthread -dynamic -lmincore -lmswsock -lwsock32 -lshlwapi -lpsapi -lwinmm")
+    set(EXTRA_LINKER_FLAGS "${EXTRA_LINKER_FLAGS} -lmman -static -pthread -dynamic -lmincore -lmswsock -lwsock32 -lshlwapi -lpsapi -lwinmm")
 
     if (MINGW_TARGET_32)
       set(ANDROID_ABI "host-mxe-Win32")
@@ -226,6 +227,8 @@ else()
     include_directories("../../bin/${CONFIGURATION}/include/${HOST_BUILD_NAME}/eglib")
   endif()
 endif()
+
+string(STRIP "${EXTRA_LINKER_FLAGS}" EXTRA_LINKER_FLAGS)
 
 if (ENABLE_TIMING)
   add_definitions("-DMONODROID_TIMING=1")
@@ -284,17 +287,23 @@ set(MONODROID_SOURCES
   ${SOURCES_DIR}/debug-constants.cc
   ${SOURCES_DIR}/embedded-assemblies.cc
   ${SOURCES_DIR}/embedded-assemblies-zip.cc
-  ${SOURCES_DIR}/external-api.cc
   ${SOURCES_DIR}/globals.cc
-  ${SOURCES_DIR}/jni.c
   ${SOURCES_DIR}/logger.cc
   ${SOURCES_DIR}/monodroid-glue.cc
+  ${SOURCES_DIR}/xa-internal-api.cc
   ${SOURCES_DIR}/osbridge.cc
   ${SOURCES_DIR}/shared-constants.cc
   ${SOURCES_DIR}/timezones.cc
   ${SOURCES_DIR}/util.cc
   ${JAVA_INTEROP_SRC_PATH}/java-interop.cc
   ${JAVA_INTEROP_SRC_PATH}/java-interop-mono.cc
+  ${JAVA_INTEROP_SRC_PATH}/java-interop-util.cc
+  ${JAVA_INTEROP_SRC_PATH}/java-interop-dlfcn.cc
+  )
+
+set(XA_INTERNAL_API_SOURCES
+  ${SOURCES_DIR}/jni.c
+  ${SOURCES_DIR}/internal-pinvoke-api.cc
   ${JAVA_INTEROP_SRC_PATH}/java-interop-util.cc
   )
 
@@ -312,6 +321,15 @@ if(UNIX)
     ${SOURCES_DIR}/xamarin_getifaddrs.cc
     )
 endif()
+
+add_library(xa-internal-api SHARED ${XA_INTERNAL_API_SOURCES})
+target_link_libraries(xa-internal-api ${EXTRA_LINKER_FLAGS})
+set_target_properties(
+  xa-internal-api
+  PROPERTIES
+  COMPILE_FLAGS -fvisibility=default
+  LINK_FLAGS -fvisibility=default
+  )
 
 set(XAMARIN_APP_STUB_SOURCES ${SOURCES_DIR}/application_dso_stub.cc)
 add_library(xamarin-app SHARED ${XAMARIN_APP_STUB_SOURCES})
@@ -375,11 +393,13 @@ else()
   set(LINK_LIBS "-lmonosgen-2.0 -lz ${EXTRA_LINKER_FLAGS}")
 endif()
 
-set(DEBUG_HELPER_LINK_LIBS "-ldl")
+if(NOT MINGW AND NOT WIN32)
+  set(DEBUG_HELPER_LINK_LIBS "-ldl")
+endif()
 if(ENABLE_NDK)
   set(LINK_LIBS "${LINK_LIBS} -llog")
   set(DEBUG_HELPER_LINK_LIBS "${DEBUG_HELPER_LINK_LIBS} -llog")
-elseif(NOT ANDROID)
+elseif(NOT ANDROID AND NOT MINGW AND NOT WIN32)
   set(LINK_LIBS "-pthread ${LINK_LIBS} -ldl")
 endif()
 

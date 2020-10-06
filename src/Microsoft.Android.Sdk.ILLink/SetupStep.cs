@@ -31,16 +31,20 @@ namespace Microsoft.Android.Sdk.ILLink
 			if (Context.TryGetCustomData ("XATargetFrameworkDirectories", out tfmPaths))
 				Xamarin.Android.Tasks.MonoAndroidHelper.TargetFrameworkDirectories = tfmPaths.Split (new char [] { ';' });
 
-			var subSteps = new SubStepDispatcher ();
-			subSteps.Add (new PreserveExportedTypes ());
-			subSteps.Add (new MarkJavaObjects ());
-			subSteps.Add (new PreserveJavaExceptions ());
-			subSteps.Add (new PreserveJavaTypeRegistrations ());
-			subSteps.Add (new PreserveApplications ());
+			var subSteps1 = new SubStepDispatcher ();
+			subSteps1.Add (new ApplyPreserveAttribute ());
+
+			var subSteps2 = new SubStepDispatcher ();
+			subSteps2.Add (new PreserveExportedTypes ());
+			subSteps2.Add (new MarkJavaObjects ());
+			subSteps2.Add (new PreserveJavaExceptions ());
+			subSteps2.Add (new PreserveJavaTypeRegistrations ());
+			subSteps2.Add (new PreserveApplications ());
 
 			var cache = new TypeDefinitionCache ();
 			InsertAfter (new FixAbstractMethodsStep (cache), "RemoveUnreachableBlocksStep");
-			InsertAfter (subSteps, "RemoveUnreachableBlocksStep");
+			InsertAfter (subSteps2, "RemoveUnreachableBlocksStep");
+			InsertAfter (subSteps1, "RemoveUnreachableBlocksStep");
 
 			string proguardPath;
 			if (Context.TryGetCustomData ("ProguardConfiguration", out proguardPath))

@@ -1,4 +1,4 @@
-﻿﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -12,49 +12,6 @@ namespace Xamarin.Android.Build.Tests
 	public partial class BuildTest : BaseTest
 	{
 #pragma warning disable 414
-		static object [] AotChecks () => new object [] {
-			new object[] {
-				/* supportedAbis */   "armeabi-v7a",
-				/* enableLLVM */      false,
-				/* expectedResult */  true,
-			},
-			new object[] {
-				/* supportedAbis */   "armeabi-v7a",
-				/* enableLLVM */      true,
-				/* expectedResult */  true,
-			},
-			new object[] {
-				/* supportedAbis */   "arm64-v8a",
-				/* enableLLVM */      false,
-				/* expectedResult */  true,
-			},
-			new object[] {
-				/* supportedAbis */   "arm64-v8a",
-				/* enableLLVM */      true,
-				/* expectedResult */  true,
-			},
-			new object[] {
-				/* supportedAbis */   "x86",
-				/* enableLLVM */      false,
-				/* expectedResult */  true,
-			},
-			new object[] {
-				/* supportedAbis */   "x86",
-				/* enableLLVM */      true,
-				/* expectedResult */  true,
-			},
-			new object[] {
-				/* supportedAbis */   "x86_64",
-				/* enableLLVM */      false,
-				/* expectedResult */  true,
-			},
-			new object[] {
-				/* supportedAbis */   "x86_64",
-				/* enableLLVM */      true,
-				/* expectedResult */  true,
-			},
-		};
-
 		static object [] RuntimeChecks () => new object [] {
 			new object[] {
 				/* supportedAbi */     "armeabi-v7a",

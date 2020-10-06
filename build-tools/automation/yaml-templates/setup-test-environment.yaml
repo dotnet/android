@@ -24,6 +24,7 @@ steps:
 - template: use-dot-net.yaml
   parameters:
     version: $(DotNetCorePreviewVersion)
+    remove_dotnet: true
 
 - template: use-dot-net.yaml
   parameters:

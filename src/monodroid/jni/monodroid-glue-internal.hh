@@ -15,14 +15,15 @@ namespace xamarin::android::internal
 	class MonodroidRuntime
 	{
 #if defined (DEBUG) && !defined (WINDOWS)
-		typedef struct {
-			int debug;
-			int loglevel;
-			int64_t timeout_time;
-			char *host;
-			uint16_t sdb_port, out_port;
-			mono_bool server;
-		} RuntimeOptions;
+		struct RuntimeOptions {
+			bool debug = false;
+			int loglevel = 0;
+			int64_t timeout_time = 0;
+			char *host = nullptr;
+			uint16_t sdb_port = 0;
+			uint16_t out_port = 0;
+			bool server = false;
+		};
 #endif
 
 		// Keep the enum values in sync with those in src/Mono.Android/AndroidRuntime/BoundExceptionType.cs
@@ -53,15 +54,21 @@ namespace xamarin::android::internal
 		};
 
 	private:
-		static constexpr float DEFAULT_X_DPI = 120.0f;
-		static constexpr float DEFAULT_Y_DPI = 120.0f;
+		static constexpr size_t SMALL_STRING_PARSE_BUFFER_LEN = 50;
 		static constexpr bool is_running_on_desktop =
 #if ANDROID
 		false;
 #else
 		true;
 #endif
-
+#define MAKE_API_DSO_NAME(_ext_) "libxa-internal-api." # _ext_
+#if defined (WINDOWS)
+		static constexpr char API_DSO_NAME[] = MAKE_API_DSO_NAME (dll);
+#elif defined (APPLE_OS_X)
+		static constexpr char API_DSO_NAME[] = MAKE_API_DSO_NAME (dylib);
+#else   // !defined(WINDOWS) && !defined(APPLE_OS_X)
+		static constexpr char API_DSO_NAME[] = MAKE_API_DSO_NAME (so);
+#endif  // defined(WINDOWS)
 	public:
 		static constexpr int XA_LOG_COUNTERS = MONO_COUNTER_JIT | MONO_COUNTER_METADATA | MONO_COUNTER_GC | MONO_COUNTER_GENERICS | MONO_COUNTER_INTERP;
 
@@ -70,7 +77,7 @@ namespace xamarin::android::internal
 		void Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
 		                                             jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader,
 		                                             jobjectArray externalStorageDirs, jobjectArray assembliesJava,
-		                                             jint apiLevel, jboolean embeddedDSOsEnabled, jboolean isEmulator);
+		                                             jint apiLevel, jboolean isEmulator);
 		jint Java_mono_android_Runtime_createNewContextWithData (JNIEnv *env, jclass klass, jobjectArray runtimeApksJava, jobjectArray assembliesJava,
 		                                                         jobjectArray assembliesBytes, jobjectArray assembliesPaths, jobject loader, jboolean force_preload_assemblies);
 		void Java_mono_android_Runtime_switchToContext (JNIEnv *env, jint contextID);
@@ -107,7 +114,6 @@ namespace xamarin::android::internal
 			return counters;
 		}
 
-		int get_display_dpi (float *x_dpi, float *y_dpi);
 		void propagate_uncaught_exception (MonoDomain *domain, JNIEnv *env, jobject javaThread, jthrowable javaException);
 
 		// The reason we don't use the C++ overload feature here is that there appears to be an issue in clang++ that
@@ -130,12 +136,16 @@ namespace xamarin::android::internal
 		char*	get_java_class_name_for_TypeManager (jclass klass);
 
 	private:
-		int convert_dl_flags (int flags);
+		unsigned int convert_dl_flags (int flags);
+#if defined (WINDOWS) || defined (APPLE_OS_X)
+		static const char* get_my_location (bool remove_file_name = true);
+#endif  // defined(WINDOWS) || defined(APPLE_OS_X)
 		static void* monodroid_dlopen (const char *name, int flags, char **err, void *user_data);
 		static void* monodroid_dlsym (void *handle, const char *name, char **err, void *user_data);
-		static void* monodroid_dlopen_log_and_return (void *handle, char **err, const char *full_name, bool free_memory);
+		static void* monodroid_dlopen_log_and_return (void *handle, char **err, const char *full_name, bool free_memory, bool need_api_init = false);
+		static void  init_internal_api_dso (void *handle);
 		int LocalRefsAreIndirect (JNIEnv *env, jclass runtimeClass, int version);
-		void create_xdg_directory (jstring_wrapper& home, const char *relativePath, const char *environmentVariableName);
+		void create_xdg_directory (jstring_wrapper& home, size_t home_len, const char *relativePath, size_t relative_path_len, const char *environmentVariableName);
 		void create_xdg_directories_and_environment (jstring_wrapper &homeDir);
 		void disable_external_signal_handlers ();
 		void lookup_bridge_info (MonoDomain *domain, MonoImage *image, const OSBridge::MonoJavaGCBridgeType *type, OSBridge::MonoJavaGCBridgeInfo *info);
@@ -143,7 +153,7 @@ namespace xamarin::android::internal
 		void load_assemblies (MonoDomain *domain, jstring_array_wrapper &assemblies);
 		void set_debug_options ();
 		void parse_gdb_options ();
-		void mono_runtime_init (char *runtime_args);
+		void mono_runtime_init (dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& runtime_args);
 		void setup_bundled_app (const char *dso_name);
 		void init_android_runtime (MonoDomain *domain, JNIEnv *env, jclass runtimeClass, jobject loader);
 		void set_environment_variable_for_directory (const char *name, jstring_wrapper &value, bool createDirectory, mode_t mode);
@@ -184,7 +194,7 @@ namespace xamarin::android::internal
 		void set_debug_env_vars (void);
 
 #if !defined (WINDOWS)
-		int parse_runtime_args (char *runtime_args, RuntimeOptions *options);
+		bool parse_runtime_args (dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> &runtime_args, RuntimeOptions *options);
 		int monodroid_debug_connect (int sock, struct sockaddr_in addr);
 		int monodroid_debug_accept (int sock, struct sockaddr_in addr);
 #endif // !WINDOWS
@@ -195,7 +205,6 @@ namespace xamarin::android::internal
 #endif
 	private:
 		MonoMethod         *registerType          = nullptr;
-		MonoMethod         *runtime_GetDisplayDPI = nullptr;
 		int                 android_api_level     = 0;
 		volatile bool       monodroid_gdb_wait    = true;
 		jclass              java_System;
@@ -218,6 +227,9 @@ namespace xamarin::android::internal
 		 * able to switch our different contexts from different threads.
 		 */
 		int                 current_context_id = -1;
+
+		static std::mutex   api_init_lock;
+		static void        *api_dso_handle;
 	};
 }
 #endif

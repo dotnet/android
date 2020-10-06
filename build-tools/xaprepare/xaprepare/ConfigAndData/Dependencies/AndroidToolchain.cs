@@ -23,6 +23,7 @@ namespace Xamarin.Android.Prepare
 			string EmulatorPkgRevision     = GetRequiredProperty (KnownProperties.EmulatorPkgRevision);
 			string XABuildToolsFolder      = GetRequiredProperty (KnownProperties.XABuildToolsFolder);
 			string XABuildToolsVersion     = GetRequiredProperty (KnownProperties.XABuildToolsVersion);
+			string XABuildToolsPackagePrefix = Context.Instance.Properties [KnownProperties.XABuildToolsPackagePrefix] ?? String.Empty;
 			string XAPlatformToolsVersion  = GetRequiredProperty (KnownProperties.XAPlatformToolsVersion);
 			string XAPlatformToolsPackagePrefix = Context.Instance.Properties [KnownProperties.XAPlatformToolsPackagePrefix] ?? String.Empty;
 
@@ -66,7 +67,7 @@ namespace Xamarin.Android.Prepare
 				new AndroidToolchainComponent ($"x86-29_r07-{osTag}",                               destDir: Path.Combine ("system-images", "android-29", "default", "x86"), relativeUrl: new Uri ("sys-img/android/", UriKind.Relative), pkgRevision: "7"),
 				new AndroidToolchainComponent ($"x86_64-29_r07-{osTag}",                            destDir: Path.Combine ("system-images", "android-29", "default", "x86_64"), relativeUrl: new Uri ("sys-img/android/", UriKind.Relative), pkgRevision: "7"),
 				new AndroidToolchainComponent ($"android-ndk-r{AndroidNdkVersion}-{osTag}-x86_64",  destDir: AndroidNdkDirectory, pkgRevision: AndroidPkgRevision),
-				new AndroidToolchainComponent ($"build-tools_r{XABuildToolsVersion}-{altOsTag}",    destDir: Path.Combine ("build-tools", XABuildToolsFolder), isMultiVersion: true),
+				new AndroidToolchainComponent ($"{XABuildToolsPackagePrefix}build-tools_r{XABuildToolsVersion}-{altOsTag}",    destDir: Path.Combine ("build-tools", XABuildToolsFolder), isMultiVersion: true),
 				new AndroidToolchainComponent ($"commandlinetools-{cltOsTag}-{CommandLineToolsVersion}",
 					destDir: Path.Combine ("cmdline-tools", CommandLineToolsFolder), isMultiVersion: true),
 				new AndroidToolchainComponent ($"{XAPlatformToolsPackagePrefix}platform-tools_r{XAPlatformToolsVersion}-{osTag}", destDir: "platform-tools", pkgRevision: XAPlatformToolsVersion),

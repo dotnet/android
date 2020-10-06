@@ -135,6 +135,38 @@ Default Android related file globbing behavior is defined in `Microsoft.Android.
 This behavior can be disabled for Android items by setting `$(EnableDefaultAndroidItems)` to `false`, or
 all default item inclusion behavior can be disabled by setting `$(EnableDefaultItems)` to `false`.
 
+## Linker (ILLink)
+
+.NET 5 and higher has new [settings for the linker][linker]:
+
+* `<PublishTrimmed>true</PublishTrimmed>`
+* `<TrimMode>copyused</TrimMode>` - Enable assembly-level trimming.
+* `<TrimMode>link</TrimMode>` - Enable member-level trimming.
+
+In Android application projects by default, `Debug` builds will not
+use the linker and `Release` builds will set `PublishTrimmed=true` and
+`TrimMode=link`. `TrimMode=copyused` is the default the dotnet/sdk,
+but it doesn't not seem to be appropriate for mobile applications.
+Developers can still opt into `TrimMode=copyused` if needed.
+
+If the legacy `AndroidLinkMode` setting is used, both `SdkOnly` and
+`Full` will default to equivalent linker settings:
+
+* `<PublishTrimmed>true</PublishTrimmed>`
+* `<TrimMode>link</TrimMode>`
+
+With `AndroidLinkMode=SdkOnly` only BCL and SDK assemblies marked with
+`%(Trimmable)` will be linked at the member level.
+`AndroidLinkMode=Full` will set `%(TrimMode)=link` on all .NET
+assemblies similar to the example in the [trimming
+documentation][linker-full].
+
+It is recommended to migrate to the new linker settings, as
+`AndroidLinkMode` will eventually be deprecated.
+
+[linker]: https://docs.microsoft.com/dotnet/core/deploying/trimming-options
+[linker-full]: https://docs.microsoft.com/dotnet/core/deploying/trimming-options#trimmed-assemblies
+
 ## dotnet cli
 
 There are currently a few "verbs" we are aiming to get working in
@@ -206,7 +238,7 @@ The following instructions can be used for early preview testing.
 ```xml
 <Project Sdk="Microsoft.Android.Sdk/10.0.100">
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net5.0-android</TargetFramework>
     <RuntimeIdentifier>android.21-arm64</RuntimeIdentifier>
     <OutputType>Exe</OutputType>
   </PropertyGroup>

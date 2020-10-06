@@ -36,17 +36,16 @@
     <PackageReference Include="Mono.Posix.NETStandard" Version="5.20.1-preview" GeneratePathProperty="true">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="System.Buffers" Version="4.5.0" />
+    <PackageReference Include="System.Buffers" Version="4.5.1" />
+    <PackageReference Include="System.Collections.Immutable" Version="1.7.1" />
+    <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.7.1" />
+    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
   </ItemGroup>
   <ItemGroup>
     <!-- Copy system Microsoft.Build*.dll and dependencies for tests to run against. We can remove this
           and rely entirely on NuGet assets when mono/msbuild is merged into microsoft/msbuild. -->
     <None Include="$(MSBuildToolsPath)\Microsoft.Build*.dll" Condition=" '$(OS)' == 'Windows_NT' " >
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="$(MSBuildToolsPath)\System.*.dll"
-        Exclude="$(MSBuildToolsPath)\System.Buffers.dll"
-        Condition=" '$(OS)' == 'Windows_NT' " >
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

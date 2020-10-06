@@ -43,8 +43,9 @@ namespace Xamarin.Android.Prepare
 		    DoWrite (value, true);
 	    }
 
-	    protected virtual string PreprocessMessage (string message, ref bool writeLine)
+	    protected virtual string PreprocessMessage (string message, ref bool writeLine, out bool ignoreLine)
 	    {
+		    ignoreLine = false;
 		    return message;
 	    }
 
@@ -53,8 +54,12 @@ namespace Xamarin.Android.Prepare
 		    Action<string, ConsoleColor, bool, string> writer;
 		    ConsoleColor color;
 		    bool showSeverity;
+		    bool ignoreLine;
 
-		    message = PreprocessMessage (message, ref writeLine) ?? String.Empty;
+		    message = PreprocessMessage (message, ref writeLine, out ignoreLine) ?? String.Empty;
+		    if (ignoreLine)
+			    return;
+
 		    switch (LoggingLevel) {
 			    case LogLevel.Error:
 				    color = Log.ErrorColor;

@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Xml.Linq;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
@@ -40,7 +41,11 @@ namespace Xamarin.Android.Build.Tests
 
 			static SetUp ()
 			{
-				Builder.UseDotNet = string.Equals (TestContext.Parameters ["dotnet"], bool.TrueString, StringComparison.OrdinalIgnoreCase);
+#if NETCOREAPP3_1
+				Builder.UseDotNet = true;
+#else
+				Builder.UseDotNet = false;
+#endif
 
 				using (var builder = new Builder ()) {
 					CommercialBuildAvailable = File.Exists (Path.Combine (builder.AndroidMSBuildDirectory, "Xamarin.Android.Common.Debugging.targets"));
@@ -224,14 +229,31 @@ namespace Xamarin.Android.Build.Tests
 				CreateNoWindow = true,
 				WindowStyle = ProcessWindowStyle.Hidden,
 			};
-			using (var proc = Process.Start (info)) {
+			using (var proc = new Process ()) {
+				StringBuilder standardOutput = new StringBuilder (), errorOutput = new StringBuilder ();
+				proc.StartInfo = info;
+				proc.OutputDataReceived += new DataReceivedEventHandler ((sender, e) => {
+					if (!string.IsNullOrEmpty (e.Data))
+						standardOutput.AppendLine (e.Data);
+				});
+				proc.ErrorDataReceived += new DataReceivedEventHandler ((sender, e) => {
+					if (!string.IsNullOrEmpty (e.Data))
+						errorOutput.AppendLine (e.Data);
+				});
+
+				proc.Start ();
+				proc.BeginOutputReadLine ();
+				proc.BeginErrorReadLine ();
+
 				if (!proc.WaitForExit ((int)TimeSpan.FromSeconds (30).TotalMilliseconds)) {
 					proc.Kill ();
 					TestContext.Out.WriteLine ($"{nameof (RunProcess)} timed out: {exe} {args}");
 					return null; //Don't try to read stdout/stderr
 				}
-				var result = proc.StandardOutput.ReadToEnd ().Trim () + proc.StandardError.ReadToEnd ().Trim ();
-				return result;
+
+				proc.WaitForExit ();
+
+				return standardOutput.ToString ().Trim () + errorOutput.ToString ().Trim ();
 			}
 		}
 
@@ -446,6 +468,12 @@ namespace Xamarin.Android.Build.Tests
 			return Path.Combine (path, "25.0.2");
 		}
 
+		protected string GetPathToZipAlign()
+		{
+			var exe = IsWindows ? "zipalign.exe" : "zipalign";
+			return GetPathToLatestBuildTools (exe);
+		}
+
 		protected string GetPathToAapt2 ()
 		{
 			var exe = IsWindows ? "aapt2.exe" : "aapt2";
@@ -459,6 +487,34 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var exe = IsWindows ? "aapt.exe" : "aapt";
 			return GetPathToLatestBuildTools (exe);
+		}
+
+		protected string GetResourceDesignerPath (ProjectBuilder builder, XamarinAndroidProject project)
+		{
+			string path;
+			if (Builder.UseDotNet) {
+				path = Path.Combine (Root, builder.ProjectDirectory, project.IntermediateOutputPath);
+			} else {
+				path = Path.Combine (Root, builder.ProjectDirectory, "Resources");
+			}
+			return Path.Combine (path, "Resource.designer" + project.Language.DefaultDesignerExtension);
+		}
+
+		/// <summary>
+		/// Asserts that a AndroidManifest.xml file contains the expected //application/@android:extractNativeLibs value.
+		/// </summary>
+		protected void AssertExtractNativeLibs (string manifest, bool extractNativeLibs)
+		{
+			FileAssert.Exists (manifest);
+			using (var stream = File.OpenRead (manifest)) {
+				var doc = XDocument.Load (stream);
+				var element = doc.Root.Element ("application");
+				Assert.IsNotNull (element, $"application element not found in {manifest}");
+				var ns = (XNamespace) "http://schemas.android.com/apk/res/android";
+				var attribute = element.Attribute (ns + "extractNativeLibs");
+				Assert.IsNotNull (attribute, $"android:extractNativeLibs attribute not found in {manifest}");
+				Assert.AreEqual (extractNativeLibs ? "true" : "false", attribute.Value, $"Unexpected android:extractNativeLibs value found in {manifest}");
+			}
 		}
 
 		[SetUp]
@@ -504,4 +560,3 @@ namespace Xamarin.Android.Build.Tests
 		}
 	}
 }
-

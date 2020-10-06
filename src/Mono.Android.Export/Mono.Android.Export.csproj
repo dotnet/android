@@ -1,15 +1,16 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project>
+<Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
   <Import Project="..\..\Configuration.props" />
 
   <PropertyGroup>
-    <TargetFrameworks>monoandroid10;netcoreapp3.1</TargetFrameworks>
+    <!-- Only build for netcoreapp3.1 for $(AndroidLatestStableFrameworkVersion) -->
+    <TargetFrameworks Condition=" '$(AndroidFrameworkVersion)' != '$(AndroidLatestStableFrameworkVersion)' ">monoandroid10</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(AndroidFrameworkVersion)' == '$(AndroidLatestStableFrameworkVersion)' ">monoandroid10;netcoreapp3.1</TargetFrameworks>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <NoStdLib>true</NoStdLib>
     <ImplicitlyExpandDesignTimeFacades>false</ImplicitlyExpandDesignTimeFacades>
+    <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(TargetFramework)' == 'monoandroid10' ">
@@ -58,12 +59,5 @@
   <ItemGroup>
     <ProjectReference Include="..\Mono.Android\Mono.Android.csproj" />
   </ItemGroup>
-
-  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
-
-  <!-- Only build the 'netcoreapp3.1' version of 'Mono.Android.Export.dll' once. -->
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' And '$(AndroidFrameworkVersion)' != '$(AndroidLatestStableFrameworkVersion)' ">
-    <BuildDependsOn></BuildDependsOn>
-  </PropertyGroup>
 
 </Project>

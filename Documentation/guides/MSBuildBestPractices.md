@@ -106,6 +106,63 @@ abbreviation could be used if the name is quite long, such as:
 [msbuild-transforms]: https://docs.microsoft.com/en-us/visualstudio/msbuild/msbuild-transforms
 [msbuild-metadata]: https://docs.microsoft.com/en-us/visualstudio/msbuild/msbuild-well-known-item-metadata
 
+## Conditions
+
+You can skip an MSBuild `<Target/>` or task with a `Condition` such
+as:
+
+```xml
+<Target Name="Foo" Condition=" '$(Bar)' == 'true' ">
+  <!-- ... -->
+</Target>
+```
+
+If you want to skip the target if an item group is empty, you might be
+tempted to do:
+
+```xml
+<Target Name="Foo" Condition=" '@(MyItems)' != '' ">
+  <!-- ... -->
+</Target>
+```
+
+If you think about what this does, it's doing a `string.Join()` on
+`@(MyItems)` to compare if it matches an empty string. Luckily MSBuild
+has a "fast path" for evaluating against an empty string, but it still
+can generate the log message:
+
+```
+Target "Foo" skipped, due to false condition; ('@(MyItems)' != '') was evaluated as ('A;B;C' != '')
+```
+
+If `@(MyItems)` was 100 full paths to files, this would be a long log
+message!
+
+The solution is you should generally do this instead:
+
+```xml
+<Target Name="Foo" Condition=" '@(MyItems->Count())' != '0' ">
+  <!-- ... -->
+</Target>
+```
+
+This causes MSBuild to always generate a reasonable log message:
+
+```
+Target "Foo" skipped, due to false condition; ('@(MyItems->Count())' != '0') was evaluated as ('100' != '0')
+```
+
+`->Count()` will return 0 even if the item group does not exist. See
+the [MSBuild Documentation][itemfunctions] for details.
+
+Some links around the logging behavior:
+
+* https://github.com/dotnet/msbuild/issues/5315
+* https://github.com/dotnet/msbuild/pull/5553
+* https://github.com/dotnet/roslyn/pull/46445
+
+[itemfunctions]: https://docs.microsoft.com/visualstudio/msbuild/item-functions
+
 ## Incremental Builds
 
 The MSBuild Github repo has some [documentation][msbuild] on this

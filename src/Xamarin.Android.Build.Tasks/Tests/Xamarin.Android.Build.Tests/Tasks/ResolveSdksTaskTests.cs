@@ -256,7 +256,7 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.NotNull (resolveSdks.ReferenceAssemblyPaths, "ReferenceAssemblyPaths should not be null.");
 			Assert.AreEqual (resolveSdks.ReferenceAssemblyPaths.Length, 1, "ReferenceAssemblyPaths should have 1 entry.");
 			Assert.AreEqual (resolveSdks.ReferenceAssemblyPaths[0], Path.Combine (referencePath, "MonoAndroid"), $"ReferenceAssemblyPaths should be {Path.Combine (referencePath, "MonoAndroid")}.");
-			var expected = Path.Combine (Root);
+			var expected = Path.GetDirectoryName (GetType ().Assembly.Location);
 			Assert.AreEqual (resolveSdks.MonoAndroidToolsPath, expected, $"MonoAndroidToolsPath should be {expected}");
 			expected += Path.DirectorySeparatorChar;
 			if (resolveSdks.MonoAndroidBinPath != expected) {
@@ -274,9 +274,6 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.AreEqual (androidTooling.AndroidSequencePointsMode, "None", "AndroidSequencePointsMode should be None");
 			expected = Path.Combine (androidSdkPath, "tools");
 			Assert.AreEqual (androidTooling.LintToolPath, expected, $"LintToolPath should be {expected}");
-			expected = Path.Combine (androidSdkPath, "build-tools", "26.0.3", "lib", "apksigner.jar");
-			Assert.AreEqual (androidTooling.ApkSignerJar, expected, $"ApkSignerJar should be {expected}");
-			Assert.AreEqual (androidTooling.AndroidUseApkSigner, false, "AndroidUseApkSigner should be false");
 			Assert.AreEqual (validateJavaVersion.JdkVersion, "1.8.0", "JdkVersion should be 1.8.0");
 			Assert.AreEqual (validateJavaVersion.MinimumRequiredJdkVersion, "1.8", "MinimumRequiredJdkVersion should be 1.8");
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
@@ -419,7 +416,7 @@ namespace Xamarin.Android.Build.Tests {
 			var proj = new XamarinAndroidApplicationProject {
 				UseLatestPlatformSdk = false,
 			};
-			proj.AndroidManifest = proj.AndroidManifest.Replace ("<uses-sdk />", "<uses-sdk android:targetSdkVersion=\"19\" />");
+			proj.TargetSdkVersion = "19";
 			using (var b = CreateApkBuilder ()) {
 				proj.TargetFrameworkVersion = b.LatestTargetFrameworkVersion ();
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");

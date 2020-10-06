@@ -20,6 +20,8 @@
     <!-- Should correspond to the first value from `$(API_LEVELS)` in `build-tools/api-xml-adjuster/Makefile` -->
     <AndroidFirstFrameworkVersion Condition="'$(AndroidFirstFrameworkVersion)' == ''">v4.4</AndroidFirstFrameworkVersion>
     <AndroidFirstApiLevel Condition="'$(AndroidFirstApiLevel)' == ''">19</AndroidFirstApiLevel>
+    <!-- The min API level supported by Microsoft.Android.Sdk, should refactor/remove when this value is the same as $(AndroidFirstApiLevel) -->
+    <AndroidMinimumDotNetApiLevel Condition="'$(AndroidMinimumDotNetApiLevel)' == ''">21</AndroidMinimumDotNetApiLevel>
     <AndroidFirstPlatformId Condition="'$(AndroidFirstPlatformId)' == ''">$(AndroidFirstApiLevel)</AndroidFirstPlatformId>
     <_IsRunningNuGetRestore Condition="$(RestoreTaskAssemblyFile.EndsWith('NuGet.exe', StringComparison.InvariantCultureIgnoreCase))">True</_IsRunningNuGetRestore>
     <!-- *Latest* *stable* API level binding that we support; used when building src/Xamarin.Android.Build.Tasks -->
@@ -97,11 +99,14 @@
     <AllSupported32BitTargetAndroidAbis>armeabi-v7a;x86</AllSupported32BitTargetAndroidAbis>
     <AllSupported64BitTargetAndroidAbis>arm64-v8a;x86_64</AllSupported64BitTargetAndroidAbis>
     <AllSupportedTargetAndroidAbis>$(AllSupported32BitTargetAndroidAbis);$(AllSupported64BitTargetAndroidAbis)</AllSupportedTargetAndroidAbis>
-    <XABuildToolsVersion>29.0.2</XABuildToolsVersion>
-    <XABuildToolsFolder Condition="'$(XABuildToolsFolder)' == ''">29.0.2</XABuildToolsFolder>
-
-    <!-- For some reason, the URL for the *macOS* version of platform-tools 30.0.2 is prefixed with what appears to be a GIT commit hash or some other checksum...
-         Linux and Windows packages don't have any prefix, but the macOS thing forces us to have *some* mechanism to handle this... -->
+    <!--
+      For some reason, the URL for platform-tools/build-tools 30.0.2 is prefixed with what appears to be a GIT commit hash or some other checksum...
+      Linux packages don't have any prefix, but this forces us to have *some* mechanism to handle this...
+    -->
+    <XABuildToolsPackagePrefix Condition=" '$(HostOS)' == 'Darwin' ">5a6ceea22103d8dec989aefcef309949c0c42f1d.</XABuildToolsPackagePrefix>
+    <XABuildToolsPackagePrefix Condition=" '$(HostOS)' == 'Windows' ">efbaa277338195608aa4e3dbd43927e97f60218c.</XABuildToolsPackagePrefix>
+    <XABuildToolsVersion>30.0.2</XABuildToolsVersion>
+    <XABuildToolsFolder Condition="'$(XABuildToolsFolder)' == ''">30.0.2</XABuildToolsFolder>
     <XAPlatformToolsPackagePrefix Condition=" '$(HostOS)' == 'Darwin' ">b2be9c80582174e645d3736daa0d44d8610b38a8.</XAPlatformToolsPackagePrefix>
     <XAPlatformToolsVersion>30.0.2</XAPlatformToolsVersion>
     <XAIncludeProprietaryBits Condition="'$(XAIncludeProprietaryBits)' == ''">False</XAIncludeProprietaryBits>
@@ -114,7 +119,7 @@
     <_TestsProfiledAotName Condition=" '$(AndroidEnableProfiledAot)' == 'true' ">-Profiled</_TestsProfiledAotName>
     <_TestsBundleName Condition=" '$(BundleAssemblies)' == 'true' ">-Bundle</_TestsBundleName>
     <TestsFlavor>$(_TestsProfiledAotName)$(_TestsAotName)$(_TestsBundleName)</TestsFlavor>
-    <LibZipSharpVersion>1.0.10</LibZipSharpVersion>
+    <LibZipSharpVersion>1.0.20</LibZipSharpVersion>
     <NuGetApiPackageVersion>5.4.0</NuGetApiPackageVersion>
   </PropertyGroup>
   <PropertyGroup>
@@ -124,6 +129,8 @@
   <PropertyGroup>
     <JavacSourceVersion>1.8</JavacSourceVersion>
     <JavacTargetVersion>1.8</JavacTargetVersion>
+    <Java8SdkDirectory Condition=" '$(Java8SdkDirectory)' == '' and Exists('$(JavaSdkDirectory)\..\jdk-1.8') ">$([System.IO.Path]::GetFullPath ('$(JavaSdkDirectory)\..\jdk-1.8'))</Java8SdkDirectory>
+    <Java8SdkDirectory Condition=" '$(Java8SdkDirectory)' == '' ">$(JavaSdkDirectory)</Java8SdkDirectory>
   </PropertyGroup>
   <PropertyGroup>
     <AndroidMxeFullPath Condition=" '$(AndroidMxeInstallPrefix)' != '' ">$([System.IO.Path]::GetFullPath ('$(AndroidMxeInstallPrefix)'))</AndroidMxeFullPath>

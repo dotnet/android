@@ -16,6 +16,62 @@ namespace Xamarin.Android.Build.Tests
 	public class IncrementalBuildTest : BaseTest
 	{
 		[Test]
+		public void BasicApplicationRepetitiveBuild ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			using (var b = CreateApkBuilder ()) {
+				b.ThrowOnBuildFailure = false;
+				Assert.IsTrue (b.Build (proj), "first build failed");
+				var firstBuildTime = b.LastBuildTime;
+				Assert.IsTrue (b.Build (proj), "second build failed");
+				Assert.IsTrue (
+					firstBuildTime > b.LastBuildTime, "Second build ({0}) should have been faster than the first ({1})",
+					b.LastBuildTime, firstBuildTime
+				);
+				Assert.IsTrue (
+					b.Output.IsTargetSkipped ("_Sign"),
+					"the _Sign target should not run");
+				var item = proj.AndroidResources.First (x => x.Include () == "Resources\\values\\Strings.xml");
+				item.TextContent = () => proj.StringsXml.Replace ("${PROJECT_NAME}", "Foo");
+				item.Timestamp = null;
+				Assert.IsTrue (b.Build (proj), "third build failed");
+				Assert.IsFalse (
+					b.Output.IsTargetSkipped ("_Sign"),
+					"the _Sign target should run");
+			}
+		}
+
+		[Test]
+		[Category ("SmokeTests")]
+		public void BasicApplicationRepetitiveReleaseBuild ()
+		{
+			var proj = new XamarinAndroidApplicationProject () { IsRelease = true };
+			using (var b = CreateApkBuilder ()) {
+				var foo = new BuildItem.Source ("Foo.cs") {
+					TextContent = () => @"using System;
+	namespace UnnamedProject {
+		public class Foo {
+		}
+	}"
+				};
+				proj.Sources.Add (foo);
+				Assert.IsTrue (b.Build (proj), "first build failed");
+				var firstBuildTime = b.LastBuildTime;
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build failed");
+				Assert.IsTrue (
+					firstBuildTime > b.LastBuildTime, "Second build ({0}) should have been faster than the first ({1})",
+					b.LastBuildTime, firstBuildTime
+				);
+				b.Output.AssertTargetIsSkipped ("_Sign");
+				b.Output.AssertTargetIsSkipped (KnownTargets.LinkAssembliesShrink);
+				proj.Touch ("Foo.cs");
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "third build failed");
+				b.Output.AssertTargetIsNotSkipped ("CoreCompile");
+				b.Output.AssertTargetIsNotSkipped ("_Sign");
+			}
+		}
+
+		[Test]
 		public void CheckNothingIsDeletedByIncrementalClean ([Values (true, false)] bool enableMultiDex, [Values (true, false)] bool useAapt2)
 		{
 			var path = Path.Combine ("temp", TestName);
@@ -174,16 +230,17 @@ namespace Lib
 			var testPath = Path.Combine ("temp", "AllProjectsHaveSameOutputDirectory");
 			var sb = new SolutionBuilder("AllProjectsHaveSameOutputDirectory.sln") {
 				SolutionPath = Path.Combine (Root, testPath),
-				Verbosity = LoggerVerbosity.Diagnostic,
 			};
 
 			var app1 = new XamarinAndroidApplicationProject () {
 				ProjectName = "App1",
+				PackageName = "com.companyname.App1",
 				OutputPath = Path.Combine("..","bin","Debug"),
 			};
 			sb.Projects.Add (app1);
 			var app2 = new XamarinAndroidApplicationProject () {
 				ProjectName = "App2",
+				PackageName = "com.companyname.App2",
 				OutputPath = Path.Combine("..","bin","Debug"),
 			};
 			sb.Projects.Add (app2);
@@ -234,7 +291,7 @@ public class TestMe {
 		}
 
 		[Test]
-		public void ResolveNativeLibrariesInManagedReferences ([Values(true, false)] bool useShortFileNames)
+		public void ResolveNativeLibrariesInManagedReferences ()
 		{
 			var lib = new XamarinAndroidLibraryProject () {
 				ProjectName = "Lib",
@@ -262,7 +319,6 @@ namespace Lib
 					},
 				},
 			};
-			lib.SetProperty (lib.ActiveConfigurationProperties, "UseShortFileNames", useShortFileNames);
 			var so = lib.OtherBuildItems.First (x => x.Include () == "libs/armeabi-v7a/libfoo.so");
 
 			var lib2 = new XamarinAndroidLibraryProject () {
@@ -294,8 +350,7 @@ namespace Lib2
 					},
 				},
 			};
-			lib2.SetProperty (lib.ActiveConfigurationProperties, "UseShortFileNames", useShortFileNames);
-			var path = Path.Combine (Root, "temp", $"ResolveNativeLibrariesInManagedReferences_{useShortFileNames}");
+			var path = Path.Combine (Root, "temp", TestName);
 			using (var libbuilder = CreateDllBuilder (Path.Combine(path, "Lib"))) {
 
 				Assert.IsTrue (libbuilder.Build (lib), "lib 1st. build failed");
@@ -310,9 +365,8 @@ namespace Lib2
 							new BuildItem.ProjectReference (@"..\Lib2\Lib2.csproj", "Lib2", lib2.ProjectGuid),
 						}
 					};
-					app.SetProperty (app.ActiveConfigurationProperties, "UseShortFileNames", useShortFileNames);
+					app.SetAndroidSupportedAbis ("armeabi-v7a");
 					using (var builder = CreateApkBuilder (Path.Combine (path, "App"))) {
-						builder.Verbosity = LoggerVerbosity.Diagnostic;
 						Assert.IsTrue (builder.Build (app), "app 1st. build failed");
 
 						var libfoo = ZipHelper.ReadFileFromZip (Path.Combine (Root, builder.ProjectDirectory, app.OutputPath, app.PackageName + "-Signed.apk"),
@@ -328,7 +382,7 @@ namespace Lib2
 						Assert.IsNotNull (libfoo, "libfoo.so should exist in the .apk");
 
 						Assert.AreEqual (so.TextContent ().Length, new FileInfo (Path.Combine (Root, libbuilder.ProjectDirectory, lib.IntermediateOutputPath,
-							useShortFileNames ? "nl" : "native_library_imports", "armeabi-v7a", "libfoo.so")).Length,
+							"nl", "armeabi-v7a", "libfoo.so")).Length,
 							"intermediate size mismatch");
 						libfoo = ZipHelper.ReadFileFromZip (Path.Combine (Root, builder.ProjectDirectory, app.OutputPath, app.PackageName + "-Signed.apk"),
 							"lib/armeabi-v7a/libfoo.so");
@@ -344,7 +398,8 @@ namespace Lib2
 
 		//https://github.com/xamarin/xamarin-android/issues/2247
 		[Test]
-		[Category ("SmokeTests"), Category ("dotnet")]
+		[Category ("SmokeTests")]
+		[NonParallelizable] // Do not run timing sensitive tests in parallel
 		public void AppProjectTargetsDoNotBreak ()
 		{
 			var targets = new List<string> {
@@ -372,6 +427,7 @@ namespace Lib2
 			}
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "first build should succeed");
+				var firstBuildTime = b.LastBuildTime;
 				foreach (var target in targets) {
 					Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped!");
 				}
@@ -393,15 +449,19 @@ namespace Lib2
 
 				//NOTE: second build, targets will run because inputs changed
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second build should succeed");
+				var secondBuildTime = b.LastBuildTime;
 				foreach (var target in targets) {
 					b.Output.AssertTargetIsNotSkipped (target);
 				}
 
 				//NOTE: third build, targets should certainly *not* run! there are no changes
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "third build should succeed");
+				var thirdBuildTime = b.LastBuildTime;
 				foreach (var target in targets) {
 					b.Output.AssertTargetIsSkipped (target);
 				}
+				Assert.IsTrue (thirdBuildTime < firstBuildTime, $"Third unchanged build: '{thirdBuildTime}' should be faster than clean build: '{firstBuildTime}'.");
+				Assert.IsTrue (thirdBuildTime < secondBuildTime, $"Third unchanged build: '{thirdBuildTime}' should be faster than partially incremental second build: '{secondBuildTime}'.");
 			}
 		}
 
@@ -438,15 +498,8 @@ namespace Lib2
 					Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped!");
 				}
 
-				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
-				var filesToTouch = new [] {
-					Path.Combine (Root, b.ProjectDirectory, "foo", "armeabi-v7a", "libtest.so"),
-					Path.Combine (Root, b.ProjectDirectory, "Assets", "foo.txt"),
-				};
-				foreach (var file in filesToTouch) {
-					FileAssert.Exists (file);
-					File.SetLastWriteTimeUtc (file, DateTime.UtcNow);
-				}
+				proj.Touch ("foo\\armeabi-v7a\\libtest.so");
+				proj.Touch ("Assets\\foo.txt");
 
 				//NOTE: second build, targets will run because inputs changed
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second build should succeed");
@@ -463,7 +516,7 @@ namespace Lib2
 		}
 
 		[Test]
-		[Category ("SmokeTests"), Category ("dotnet")]
+		[Category ("SmokeTests")]
 		public void ProduceReferenceAssembly ()
 		{
 			var path = Path.Combine ("temp", TestName);
@@ -517,7 +570,68 @@ namespace Lib2
 		}
 
 		[Test]
-		[Category ("dotnet")]
+		public void TransitiveDependencyProduceReferenceAssembly ()
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			var app = new XamarinAndroidApplicationProject {
+				ProjectName = "App",
+				Sources = {
+					new BuildItem.Source ("Class1.cs") {
+						TextContent = () => "public class Class1 : Library1.Class1 { }"
+					},
+				}
+			};
+			var lib1 = new DotNetStandard {
+				ProjectName = "Library1",
+				Sdk = "Microsoft.NET.Sdk",
+				TargetFramework = "netstandard2.0",
+				Sources = {
+					new BuildItem.Source ("Class1.cs") {
+						TextContent = () => "namespace Library1 { public class Class1 { } }"
+					},
+					new BuildItem.Source ("Class2.cs") {
+						TextContent = () => "namespace Library1 { public class Class2 : Library2.Class1 { } }"
+					}
+				}
+			};
+			lib1.SetProperty ("ProduceReferenceAssembly", "True");
+			var lib2 = new DotNetStandard {
+				ProjectName = "Library2",
+				Sdk = "Microsoft.NET.Sdk",
+				TargetFramework = "netstandard2.0",
+				Sources = {
+					new BuildItem.Source ("Class1.cs") {
+						TextContent = () => "namespace Library2 { public class Class1 { } }"
+					},
+				}
+			};
+			lib2.SetProperty ("ProduceReferenceAssembly", "True");
+			lib1.OtherBuildItems.Add (new BuildItem.ProjectReference ($"..\\{lib2.ProjectName}\\{lib2.ProjectName}.csproj", lib2.ProjectName, lib2.ProjectGuid));
+			app.References.Add (new BuildItem.ProjectReference ($"..\\{lib1.ProjectName}\\{lib1.ProjectName}.csproj", lib1.ProjectName, lib1.ProjectGuid));
+
+			using (var lib2Builder = CreateDllBuilder (Path.Combine (path, lib2.ProjectName), cleanupAfterSuccessfulBuild: false))
+			using (var lib1Builder = CreateDllBuilder (Path.Combine (path, lib1.ProjectName), cleanupAfterSuccessfulBuild: false))
+			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+				Assert.IsTrue (lib2Builder.Build (lib2), "first Library2 build should have succeeded.");
+				Assert.IsTrue (lib1Builder.Build (lib1), "first Library1 build should have succeeded.");
+				Assert.IsTrue (appBuilder.Build (app), "first app build should have succeeded.");
+
+				lib2.Sources.Add (new BuildItem.Source ("Class2.cs") {
+					TextContent = () => "namespace Library2 { public class Class2 { } }"
+				});
+
+				Assert.IsTrue (lib2Builder.Build (lib2, doNotCleanupOnUpdate: true), "second Library2 build should have succeeded.");
+				Assert.IsTrue (lib1Builder.Build (lib1, doNotCleanupOnUpdate: true, saveProject: false), "second Library1 build should have succeeded.");
+				appBuilder.Target = "SignAndroidPackage";
+				Assert.IsTrue (appBuilder.Build (app, doNotCleanupOnUpdate: true, saveProject: false), "app SignAndroidPackage build should have succeeded.");
+
+				var lib2Output = Path.Combine (path, lib2.ProjectName, "bin", "Debug", "netstandard2.0", $"{lib2.ProjectName}.dll");
+				var lib2InAppOutput = Path.Combine (path, app.ProjectName, app.IntermediateOutputPath, "android", "assets", $"{lib2.ProjectName}.dll");
+				FileAssert.AreEqual (lib2Output, lib2InAppOutput, "new Library2 should have been copied to app output directory");
+			}
+		}
+
+		[Test]
 		public void LinkAssembliesNoShrink ()
 		{
 			var proj = new XamarinFormsAndroidApplicationProject ();
@@ -776,7 +890,6 @@ namespace Lib2
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void GenerateJavaStubsAndAssembly ([Values (true, false)] bool isRelease)
 		{
 			var targets = new [] {
@@ -887,6 +1000,7 @@ namespace Lib2
 #pragma warning restore 414
 
 		[Test]
+		[Category ("AOT")]
 		[TestCaseSource (nameof (AotChecks))]
 		public void BuildIncrementalAot (string supportedAbis, string androidAotMode, bool aotAssemblies, bool expectedResult)
 		{
@@ -911,7 +1025,6 @@ namespace Lib2
 				b.CleanupAfterSuccessfulBuild = false;
 				b.CleanupOnDispose = false;
 				b.ThrowOnBuildFailure = false;
-				b.Verbosity = LoggerVerbosity.Diagnostic;
 				Assert.AreEqual (expectedResult, b.Build (proj, doNotCleanupOnUpdate: true), "Build should have {0}.", expectedResult ? "succeeded" : "failed");
 				if (!expectedResult)
 					return;
@@ -1081,7 +1194,6 @@ namespace Lib2
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void AndroidResourceChange ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -1097,6 +1209,43 @@ namespace Lib2
 				builder.Output.AssertTargetIsSkipped ("_GenerateJavaStubs");
 				builder.Output.AssertTargetIsSkipped ("_CompileJava");
 				builder.Output.AssertTargetIsSkipped ("_CompileToDalvik");
+			}
+		}
+
+		[Test]
+		public void AndroidAssetChange ()
+		{
+			var text = "Foo";
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.OtherBuildItems.Add (new AndroidItem.AndroidAsset ("Assets\\Foo.txt") {
+				TextContent = () => text
+			});
+			using (var b = CreateApkBuilder ()) {
+				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, "UnnamedProject.UnnamedProject.apk");
+				Assert.IsTrue (b.Build (proj), "first build should succeed");
+				AssertAssetContents (apk);
+
+				// AndroidAsset change
+				text = "Bar";
+				proj.Touch ("Assets\\Foo.txt");
+				Assert.IsTrue (b.Build (proj), "second build should succeed");
+
+				AssertAssetContents (apk);
+			}
+
+			void AssertAssetContents (string apk)
+			{
+				FileAssert.Exists (apk);
+				using (var zip = ZipHelper.OpenZip (apk)) {
+					var entry = zip.ReadEntry ("assets/Foo.txt");
+					Assert.IsNotNull (entry, "Foo.txt should exist in apk!");
+					using (var stream = new MemoryStream ())
+					using (var reader = new StreamReader (stream)) {
+						entry.Extract (stream);
+						stream.Position = 0;
+						Assert.AreEqual (text, reader.ReadToEnd ());
+					}
+				}
 			}
 		}
 
@@ -1168,13 +1317,51 @@ namespace Lib2
 		public void ChangeSupportedAbis ()
 		{
 			var proj = new XamarinFormsAndroidApplicationProject ();
-			proj.SetProperty (KnownProperties.AndroidSupportedAbis, "armeabi-v7a");
+			proj.SetAndroidSupportedAbis ("armeabi-v7a");
 			using (var b = CreateApkBuilder ()) {
 				b.Build (proj);
 
-				var parameters = new [] { $"{KnownProperties.AndroidSupportedAbis}=x86" };
+				var parameters = Builder.UseDotNet ?
+					new [] { $"{KnownProperties.RuntimeIdentifier}=android.21-x86" } :
+					new [] { $"{KnownProperties.AndroidSupportedAbis}=x86" };
 				b.Build (proj, parameters: parameters, doNotCleanupOnUpdate: true);
 			}
 		}
+
+		[Test]
+		public void BuildPropsBreaksConvertResourcesCasesOnSecondBuild ([Values (true, false)] bool useAapt2)
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				AndroidResources = {
+					new AndroidItem.AndroidResource (() => "Resources\\drawable\\IMALLCAPS.png") {
+						BinaryContent = () => XamarinAndroidApplicationProject.icon_binary_mdpi,
+					},
+					new AndroidItem.AndroidResource ("Resources\\layout\\test.axml") {
+						TextContent = () => {
+							return "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<ImageView xmlns:android=\"http://schemas.android.com/apk/res/android\" android:src=\"@drawable/IMALLCAPS\" />";
+						}
+					}
+				}
+			};
+			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
+				var assemblyPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, "UnnamedProject.dll");
+				var apkPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, "UnnamedProject.UnnamedProject-Signed.apk");
+				var firstAssemblyWrite = new FileInfo (assemblyPath).LastWriteTime;
+				var firstApkWrite = new FileInfo (apkPath).LastWriteTime;
+
+				// Invalidate build.props with newer timestamp, by updating a @(_PropertyCacheItems) property
+				proj.SetProperty ("AndroidLinkMode", "SdkOnly");
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build should have succeeded.");
+				var secondAssemblyWrite = new FileInfo (assemblyPath).LastWriteTime;
+				var secondApkWrite = new FileInfo (apkPath).LastWriteTime;
+				Assert.IsTrue (secondAssemblyWrite > firstAssemblyWrite,
+					$"Assembly write time was not updated on partially incremental build. Before: {firstAssemblyWrite}. After: {secondAssemblyWrite}.");
+				Assert.IsTrue (secondApkWrite > firstApkWrite,
+					$"Apk write time was not updated on partially incremental build. Before: {firstApkWrite}. After: {secondApkWrite}.");
+			}
+		}
+
 	}
 }

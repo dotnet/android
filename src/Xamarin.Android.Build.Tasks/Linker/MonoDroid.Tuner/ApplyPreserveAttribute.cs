@@ -8,6 +8,10 @@ using Mono.Tuner;
 
 using Mono.Cecil;
 
+#if NET5_LINKER
+using Microsoft.Android.Sdk.ILLink;
+#endif
+
 namespace MonoDroid.Tuner {
 
 	public class ApplyPreserveAttribute : ApplyPreserveAttributeBase {

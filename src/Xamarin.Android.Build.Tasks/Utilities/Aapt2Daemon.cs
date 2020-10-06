@@ -34,13 +34,15 @@ namespace Xamarin.Android.Tasks
 			public long JobId { get; private set; }
 			public string OutputFile { get; private set; }
 			public bool Succeeded { get; set; }
+			public CancellationToken Token { get; private set; }
 			public TPL.Task Task => tcs.Task;
 			public IList<OutputLine> Output => output;
-			public Job (string[] commands, long jobId, string outputFile)
+			public Job (string[] commands, long jobId, string outputFile, CancellationToken token)
 			{
 				Commands = commands;
 				JobId = jobId;
 				OutputFile = outputFile;
+				Token = token;
 			}
 
 			public void Complete (bool result)
@@ -107,12 +109,12 @@ namespace Xamarin.Android.Tasks
 			tcs.Cancel ();
 		}
 
-		public long QueueCommand (string[] job, string outputFile)
+		public long QueueCommand (string[] job, string outputFile, CancellationToken token)
 		{
 			if (!pendingJobs.IsAddingCompleted)
 			{
 				long id = Interlocked.Add (ref jobId, 1);
-				var j = new Job (job, id, outputFile);
+				var j = new Job (job, id, outputFile, token);
 				jobs [j.JobId] = j;
 				pendingJobs.Add (j);
 				// if we have allot of pending jobs, spawn more daemons
@@ -245,6 +247,9 @@ namespace Xamarin.Android.Tasks
 						// the daemon saying "Done" and the file finally being written to disk.
 						if (!string.IsNullOrEmpty (job.OutputFile) && !errored) {
 							while (!File.Exists (job.OutputFile)) {
+								// If either the AsyncTask.CancellationToken or tcs.Token are cancelled, we need to abort
+								tcs.Token.ThrowIfCancellationRequested ();
+								job.Token.ThrowIfCancellationRequested ();
 								Thread.Sleep (10);
 							}
 						}

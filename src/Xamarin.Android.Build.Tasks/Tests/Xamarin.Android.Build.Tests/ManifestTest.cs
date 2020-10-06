@@ -1,4 +1,4 @@
-﻿﻿﻿﻿using System;
+﻿﻿﻿using System;
 using System.Linq;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
@@ -119,6 +119,7 @@ namespace Bug12935
 				Assert.IsFalse (builder.Build (proj), "Build for TargetFrameworkVersion 15 should have failed");
 				StringAssertEx.Contains (useAapt2 ? "APT2259: " : "APT1134: ", builder.LastBuildOutput);
 				StringAssertEx.Contains (useAapt2 ? "APT2067" : "", builder.LastBuildOutput);
+				StringAssertEx.Contains (Path.Combine ("Properties", "AndroidManifest.xml"), builder.LastBuildOutput);
 				StringAssertEx.Contains ($"{(useAapt2 ? "2" : "1")} Error(s)", builder.LastBuildOutput);
 			}
 		}
@@ -427,11 +428,12 @@ namespace Bug12935
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
+				MinSdkVersion = null,
 			};
 			proj.SetProperty ("Foo", "1");
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, seperateApk);
 			if (!string.IsNullOrEmpty (abis))
-				proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidSupportedAbis, abis);
+				proj.SetAndroidSupportedAbis (abis);
 			if (!string.IsNullOrEmpty (versionCodePattern))
 				proj.SetProperty (proj.ReleaseProperties, "AndroidVersionCodePattern", versionCodePattern);
 			else
@@ -584,6 +586,7 @@ namespace Bug12935
 		}
 
 		[Test]
+		[Category ("LibraryProjectZip")]
 		public void MergeLibraryManifest ()
 		{
 			byte [] classesJar;
@@ -847,9 +850,9 @@ class TestActivity : Activity { }"
 			var proj = new XamarinAndroidApplicationProject {
 				AndroidUseSharedRuntime = true,
 				EmbedAssembliesIntoApk = false,
+				TargetSdkVersion = "30",
 			};
 			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
-			proj.AndroidManifest = proj.AndroidManifest.Replace ("<uses-sdk />", "<uses-sdk android:targetSdkVersion=\"30\" />");
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded");
 

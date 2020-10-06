@@ -7,6 +7,26 @@ namespace Xamarin.Android.Prepare
 {
 	partial class GitRunner : ToolRunner
 	{
+		// Redirects git progress output from standard error to standard output so that we show less red on the screen
+		sealed class GitProgressStderrWrapper : ProcessStandardStreamWrapper
+		{
+			public readonly List<string> Messages = new List<string> ();
+
+			protected override string PreprocessMessage (string message, ref bool writeLine, out bool ignoreLine)
+			{
+				ignoreLine = true;
+
+				if (message.Length == 0)
+					return message;
+
+				Messages.Add (message);
+				Log.Instance.MessageLine (message);
+				ignoreLine = true;
+
+				return message;
+			}
+		}
+
 		// These are passed to `git` itself *before* the command
 		static readonly List<string> standardGlobalOptions = new List<string> {
 			"--no-pager"
@@ -28,7 +48,7 @@ namespace Xamarin.Android.Prepare
 			if (String.IsNullOrEmpty (commitRef))
 				throw new ArgumentException ("must not be null or empty", nameof (commitRef));
 
-			var runner = CreateGitRunner (repositoryPath);
+			var runner = CreateGitRunner (repositoryPath, useCustomStderrWrapper: true);
 			runner.AddArgument ("checkout");
 			if (force)
 				runner.AddArgument ("--force");
@@ -48,7 +68,7 @@ namespace Xamarin.Android.Prepare
 				return false;
 			}
 
-			var runner = CreateGitRunner (repositoryPath);
+			var runner = CreateGitRunner (repositoryPath, useCustomStderrWrapper: true);
 			runner.AddArgument ("fetch");
 			runner.AddArgument ("--all");
 			runner.AddArgument ("--no-recurse-submodules");
@@ -67,7 +87,7 @@ namespace Xamarin.Android.Prepare
 			string parentDir = Path.GetDirectoryName (destinationDirectoryPath);
 			string dirName = Path.GetFileName (destinationDirectoryPath);
 			Utilities.CreateDirectory (parentDir);
-			var runner = CreateGitRunner (parentDir);;
+			var runner = CreateGitRunner (parentDir, useCustomStderrWrapper: true);
 			runner.AddArgument ("clone");
 			runner.AddArgument ("--progress");
 			runner.AddQuotedArgument (url);
@@ -75,11 +95,36 @@ namespace Xamarin.Android.Prepare
 			return await RunGit (runner, $"clone-{dirName}");
 		}
 
-		public async Task<bool> SubmoduleUpdate (string? workingDirectory = null, bool init = true, bool recursive = true)
+		public async Task<List<string>?> SubmoduleStatus (string? workingDirectory = null)
 		{
 			string runnerWorkingDirectory = DetermineRunnerWorkingDirectory (workingDirectory);
 
 			var runner = CreateGitRunner (runnerWorkingDirectory);;
+			runner.AddArgument ("submodule");
+			runner.AddArgument ("status");
+
+			var lines = new List<string> ();
+
+			bool success = await RunTool (
+				() => {
+					using (var outputSink = (OutputSink)SetupOutputSink (runner)) {
+						outputSink.LineCallback = (string line) => lines.Add (line);
+						return runner.Run ();
+					}
+				}
+			);
+
+			if (!success)
+				return null;
+
+			return lines;
+		}
+
+		public async Task<bool> SubmoduleUpdate (string? workingDirectory = null, bool init = true, bool recursive = true)
+		{
+			string runnerWorkingDirectory = DetermineRunnerWorkingDirectory (workingDirectory);
+
+			var runner = CreateGitRunner (runnerWorkingDirectory, useCustomStderrWrapper: true);;
 			runner.AddArgument ("submodule");
 			runner.AddArgument ("update");
 			if (init)
@@ -157,6 +202,31 @@ namespace Xamarin.Android.Prepare
 			return parserState.Entries;
 		}
 
+		public async Task<List<string>?> ConfigList (string[] fileOptions, string? workingDirectory = null)
+		{
+			var runner = CreateGitRunner (workingDirectory);
+			runner.AddArgument ("config");
+			foreach (var opt in fileOptions)
+				runner.AddArgument (opt);
+			runner.AddArgument ("--list");
+
+			var lines = new List<string> ();
+
+			bool success = await RunTool (
+				() => {
+					using (var outputSink = (OutputSink)SetupOutputSink (runner)) {
+						outputSink.LineCallback = (string line) => lines.Add (line);
+						return runner.Run ();
+					}
+				}
+			);
+
+			if (!success)
+				return null;
+
+			return lines;
+		}
+
 		public async Task<bool> IsRepoUrlHttps (string workingDirectory)
 		{
 			if (!Directory.Exists (workingDirectory))
@@ -187,10 +257,17 @@ namespace Xamarin.Android.Prepare
 			return containsHttps;
 		}
 
-		ProcessRunner CreateGitRunner (string? workingDirectory, List<string>? arguments = null)
+		ProcessRunner CreateGitRunner (string? workingDirectory, List<string>? arguments = null, bool useCustomStderrWrapper = false)
 		{
 			var runner = CreateProcessRunner ();
 			runner.WorkingDirectory = workingDirectory;
+			if (useCustomStderrWrapper) {
+				runner.StandardErrorEchoWrapper = new GitProgressStderrWrapper {
+					LoggingLevel = runner.EchoStandardErrorLevel,
+					CustomSeverityName = ProcessRunner.StderrSeverityName,
+				};
+			}
+
 			SetGitArguments (runner, workingDirectory, arguments);
 
 			return runner;
@@ -209,6 +286,11 @@ namespace Xamarin.Android.Prepare
 				);
 			} finally {
 				StopTwiddler ();
+				if (runner.ExitCode != 0 && runner.StandardErrorEchoWrapper is GitProgressStderrWrapper wrapper) {
+					foreach (string message in wrapper.Messages) {
+						Log.ErrorLine (message);
+					}
+				}
 			}
 		}
 

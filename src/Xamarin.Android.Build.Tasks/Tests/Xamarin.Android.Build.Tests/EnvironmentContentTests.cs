@@ -16,7 +16,7 @@ namespace Xamarin.Android.Build.Tests
 	{
 		[Test]
 		[NonParallelizable]
-		[Category ("SmokeTests"), Category ("dotnet")]
+		[Category ("SmokeTests")]
 		public void BuildApplicationWithMonoEnvironment ([Values ("", "Normal", "Offline")] string sequencePointsMode)
 		{
 			const string supportedAbis = "armeabi-v7a;x86";
@@ -45,7 +45,10 @@ namespace Xamarin.Android.Build.Tests
 			using (var appb = CreateApkBuilder (Path.Combine ("temp", TestName, app.ProjectName))) {
 				Assert.IsTrue (libb.Build (lib), "Library build should have succeeded.");
 				Assert.IsTrue (appb.Build (app), "App should have succeeded.");
-				Assert.IsTrue (StringAssertEx.ContainsText (appb.LastBuildOutput, $"Save assembly: {linkSkip}"), $"{linkSkip} should be saved, and not linked!");
+				if (!Builder.UseDotNet) {
+					//TODO: $(AndroidLinkSkip) is not yet implemented
+					Assert.IsTrue (StringAssertEx.ContainsText (appb.LastBuildOutput, $"Save assembly: {linkSkip}"), $"{linkSkip} should be saved, and not linked!");
+				}
 
 				string intermediateOutputDir = Path.Combine (Root, appb.ProjectDirectory, app.IntermediateOutputPath);
 				List<string> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true);
@@ -78,7 +81,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void CheckMonoDebugIsAddedToEnvironment ([Values ("", "Normal", "Offline")] string sequencePointsMode)
 		{
 			const string supportedAbis = "armeabi-v7a;x86";
@@ -110,7 +112,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void CheckConcurrentGC ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -142,6 +143,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Category ("MonoSymbolicate")]
 		public void CheckBuildIdIsUnique ([Values ("apk", "aab")] string packageFormat)
 		{
 			const string supportedAbis = "armeabi-v7a;x86";
@@ -157,7 +159,6 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty (proj.ReleaseProperties, "AndroidPackageFormat", packageFormat);
 			proj.SetAndroidSupportedAbis (supportedAbis);
 			using (var b = CreateApkBuilder ()) {
-				b.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj), "first build failed");
 				var outputPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
@@ -194,7 +195,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[Category ("dotnet")]
 		public void CheckHttpClientHandlerType ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -234,6 +234,7 @@ namespace Xamarin.Android.Build.Tests
 		};
 
 		[Test]
+		[Category ("DotNetIgnore")] // .NET 5+ does not use these native libraries
 		[TestCaseSource (nameof (TlsProviderTestCases))]
 		public void BuildWithTlsProvider (string androidTlsProvider, bool isRelease, bool expected)
 		{
@@ -241,7 +242,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease,
 			};
 			var supportedAbis = new string [] { "armeabi-v7a", "arm64-v8a" };
-			proj.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", supportedAbis));
+			proj.SetAndroidSupportedAbis (supportedAbis);
 
 			using (var b = CreateApkBuilder (Path.Combine ("temp", $"BuildWithTlsProvider_{androidTlsProvider}_{isRelease}_{expected}"))) {
 				proj.SetProperty ("AndroidTlsProvider", androidTlsProvider);

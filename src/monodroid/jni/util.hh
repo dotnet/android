@@ -74,6 +74,7 @@ namespace xamarin::android
 		static constexpr uint32_t ms_in_nsec = 1000000ULL;
 
 	public:
+		int              monodroid_getpagesize ();
 		void             monodroid_store_package_name (const char *name);
 		MonoAssembly    *monodroid_load_assembly (MonoDomain *domain, const char *basename);
 		MonoObject      *monodroid_runtime_invoke (MonoDomain *domain, MonoMethod *method, void *obj, void **params, MonoObject **exc);

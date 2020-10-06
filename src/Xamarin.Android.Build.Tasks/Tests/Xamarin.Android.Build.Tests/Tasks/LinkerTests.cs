@@ -169,6 +169,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Category ("DotNetIgnore")] // HttpClientHandler options not implemented in .NET 5+ yet
 		public void PreserveCustomHttpClientHandlers ()
 		{
 			PreserveCustomHttpClientHandler ("Xamarin.Android.Net.AndroidClientHandler", "",
@@ -178,24 +179,12 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void WarnAboutAppDomainsRelease ()
+		[Category ("DotNetIgnore")] // n/a on .NET 5+
+		public void WarnAboutAppDomains ([Values (true, false)] bool isRelease)
 		{
-			var proj = new XamarinAndroidApplicationProject () { IsRelease = true };
-			WarnAboutAppDomains (proj, TestName);
-		}
-
-		[Test]
-		public void WarnAboutAppDomainsDebug ()
-		{
-			var proj = new XamarinAndroidApplicationProject ();
-			WarnAboutAppDomains (proj, TestName);
-		}
-
-		void WarnAboutAppDomains (XamarinAndroidApplicationProject proj, string testName)
-		{
+			var proj = new XamarinAndroidApplicationProject () { IsRelease = isRelease };
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("base.OnCreate (bundle);", "base.OnCreate (bundle);\nvar appDomain = System.AppDomain.CreateDomain (\"myDomain\");");
-			var projDirectory = Path.Combine ("temp", testName);
-			using (var b = CreateApkBuilder (projDirectory)) {
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "2 Warning(s)"), "MSBuild should count 2 warnings.");
 				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "warning CS0618: 'AppDomain.CreateDomain(string)' is obsolete: 'AppDomain.CreateDomain will no longer be supported in .NET 5 and later."), "Should warn CS0618 about creating AppDomain.");
@@ -204,8 +193,10 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Category ("DotNetIgnore")] //TODO: @(LinkDescription) is not implemented yet
 		public void LinkDescription ()
 		{
+			string assembly_name = Builder.UseDotNet ? "System.Console" : "mscorlib";
 			string linker_xml = "<linker/>";
 
 			var proj = new XamarinAndroidApplicationProject {
@@ -223,8 +214,8 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
 
 				linker_xml =
-@"<linker>
-	<assembly fullname=""mscorlib"">
+$@"<linker>
+	<assembly fullname=""{assembly_name}"">
 		<type fullname=""System.Console"">
 			<method name=""Beep"" />
 		</type>
@@ -237,8 +228,8 @@ namespace Xamarin.Android.Build.Tests
 				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}.apk");
 				FileAssert.Exists (apk);
 				using (var zip = ZipHelper.OpenZip (apk)) {
-					var entry = zip.ReadEntry ("assemblies/mscorlib.dll");
-					Assert.IsNotNull (entry, "mscorlib.dll should exist in apk!");
+					var entry = zip.ReadEntry ($"assemblies/{assembly_name}.dll");
+					Assert.IsNotNull (entry, $"{assembly_name}.dll should exist in apk!");
 					using (var stream = new MemoryStream ()) {
 						entry.Extract (stream);
 						stream.Position = 0;
@@ -249,6 +240,53 @@ namespace Xamarin.Android.Build.Tests
 						}
 					}
 				}
+			}
+		}
+
+		[Test]
+		public void LinkWithNullAttribute ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				OtherBuildItems = {
+					new BuildItem ("Compile", "NullAttribute.cs") { TextContent = () => @"
+using System;
+using Android.Content;
+using Android.Widget;
+namespace UnnamedProject {
+	public class MyAttribute : Attribute
+	{
+		Type[] types;
+
+		public Type[] Types {
+			get { return types; }
+		}
+
+		public MyAttribute (Type[] ta)
+		{
+			types = ta;
+		}
+	}
+
+	[MyAttribute (null)]
+	public class AttributedButtonStub : Button
+	{
+		public AttributedButtonStub (Context context) : base (context)
+		{
+		}
+	}
+}"
+					},
+				}
+			};
+
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
+$@"			var myButton = new AttributedButtonStub (this);
+			myButton.Text = ""Bug #35710"";
+");
+
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Building a project with a null attribute value should have succeded.");
 			}
 		}
 	}
