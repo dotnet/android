@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net472</TargetFrameworks>
+    <TargetFramework>net472</TargetFramework>
     <ProjectGuid>{A3671983-ABC2-4693-8872-463427B57117}</ProjectGuid>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
