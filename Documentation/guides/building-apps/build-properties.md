@@ -418,6 +418,8 @@ compiler.
 
 Added in Xamarin.Android 10.2.
 
+<a name="AndroidFastDeploymentType"></a>
+
 ## AndroidFastDeploymentType
 
 A `:` (colon)-separated list
@@ -433,8 +435,8 @@ faster.) Valid values include:
 
 - `Assemblies`: Deploy application assemblies.
 
-- `Dexes`: Deploy `.dex` files, Android Resources, and Android
-  Assets. **This value can *only* be used on devices running
+- `Dexes`: Deploy `.dex` files, native libraries and typemaps.
+  **This value can *only* be used on devices running
   Android 4.4 or later (API-19).**
 
 The default value is `Assemblies`.
