@@ -34,14 +34,15 @@ namespace Microsoft.Android.Sdk.ILLink
 			var subSteps1 = new SubStepDispatcher ();
 			subSteps1.Add (new ApplyPreserveAttribute ());
 
+			var cache = new TypeDefinitionCache ();
 			var subSteps2 = new SubStepDispatcher ();
 			subSteps2.Add (new PreserveExportedTypes ());
 			subSteps2.Add (new MarkJavaObjects ());
 			subSteps2.Add (new PreserveJavaExceptions ());
 			subSteps2.Add (new PreserveJavaTypeRegistrations ());
 			subSteps2.Add (new PreserveApplications ());
+			subSteps2.Add (new PreserveRegistrations (cache));
 
-			var cache = new TypeDefinitionCache ();
 			InsertAfter (new FixAbstractMethodsStep (cache), "RemoveUnreachableBlocksStep");
 			InsertAfter (subSteps2, "RemoveUnreachableBlocksStep");
 			InsertAfter (subSteps1, "RemoveUnreachableBlocksStep");
