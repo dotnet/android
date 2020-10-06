@@ -1062,8 +1062,6 @@ namespace Lib2
 				EmbedAssembliesIntoApk = true,
 				AndroidUseSharedRuntime = false,
 			};
-			// NOTE: Deterministic is only supported for DebugType=portable
-			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugType", "portable");
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
 				var output = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.dll");

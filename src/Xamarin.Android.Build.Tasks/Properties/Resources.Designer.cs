@@ -437,6 +437,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; is using a deprecated debug information level. Set the debugging information to Portable in the Visual Studio project property pages or edit the project file in a text editor and set the &apos;DebugType&apos; MSBuild property to &apos;portable&apos; to use the newer, cross-platform debug information level. If this file comes from a NuGet package, update to a newer version of the NuGet package or notify the library author..
+        /// </summary>
+        internal static string XA0125 {
+            get {
+                return ResourceManager.GetString("XA0125", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to There was a problem parsing {0}. This is likely due to incomplete or invalid XML. Exception: {1}.
         /// </summary>
         internal static string XA1000 {

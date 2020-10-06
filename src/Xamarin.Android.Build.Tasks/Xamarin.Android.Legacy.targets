@@ -193,6 +193,7 @@ projects. .NET 5 projects will not import this file.
   </PropertyGroup>
 
   <UsingTask TaskName="Xamarin.Android.Tasks.CheckGoogleSdkRequirements"   AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.ConvertDebuggingFiles"        AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.Legacy.ValidateJavaVersion"   AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.Legacy.ResolveAndroidTooling" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.LinkAssemblies"               AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -327,6 +328,62 @@ projects. .NET 5 projects will not import this file.
         DestinationFiles="@(_ResolvedConfigFiles->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')"
     />
     <Touch Files="$(_AndroidStampDirectory)_CopyConfigFiles.stamp" AlwaysCreate="True" />
+  </Target>
+
+  <Target Name="_CollectMdbFiles"
+      DependsOnTargets="_CollectPdbFiles">
+    <GetFilesThatExist
+        Files="@(ResolvedAssemblies->'%(RootDir)%(Directory)%(Filename)%(Extension).mdb')"
+        IgnoreFiles="@(_ResolvedPortablePdbFiles->'%(RootDir)%(Directory)%(Filename).dll.mdb')">
+      <Output TaskParameter="FilesThatExist" ItemName="_ResolvedMdbFiles" />
+    </GetFilesThatExist>
+  </Target>
+
+  <Target Name="_CollectPdbFiles">
+    <CollectPdbFiles
+        ResolvedAssemblies="@(ResolvedAssemblies->'%(RootDir)%(Directory)%(Filename).pdb')">
+      <Output TaskParameter="PdbFiles" ItemName="_ResolvedPdbFiles" />
+      <Output TaskParameter="PortablePdbFiles" ItemName="_ResolvedPortablePdbFiles" />
+    </CollectPdbFiles>
+    <ItemGroup>
+      <_ConvertedMdbFiles Include="@(_ResolvedPdbFiles->'%(RootDir)%(Directory)%(Filename).dll.mdb')" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_ConvertPdbFiles"
+      Inputs="@(_ResolvedPdbFiles)"
+      Outputs="@(_ConvertedMdbFiles)"
+      DependsOnTargets="_CollectPdbFiles">
+    <ConvertDebuggingFiles Files="@(_ResolvedPdbFiles)" />
+    <Touch Files="@(_ConvertedMdbFiles)" ContinueOnError="true" />
+    <ItemGroup>
+      <!-- NOTE: @(_ResolvedPortablePdbFiles) are valid -->
+      <_DeprecatedSymbols Include="@(_ResolvedMdbFiles);@(_ResolvedPdbFiles)" />
+    </ItemGroup>
+    <AndroidWarning Code="XA0125"
+        ResourceName="XA0125"
+        FormatArguments="%(_DeprecatedSymbols.FileName)%(_DeprecatedSymbols.Extension)"
+        Condition=" '%(_DeprecatedSymbols.Identity)' != '' "
+    />
+    <ItemGroup>
+      <FileWrites Include="@(_ConvertedMdbFiles)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="ConvertDebuggingFiles"
+      Condition=" '$(AndroidIncludeDebugSymbols)' == 'true' And Exists ('$(_IntermediatePdbFile)') And '$(OS)' == 'Windows_NT'"
+      DependsOnTargets="_ConvertDebuggingFiles"
+  />
+
+  <Target Name="_ConvertDebuggingFiles"
+      Inputs="$(OutDir)$(TargetFileName);$(_IntermediatePdbFile)"
+      Outputs="$(OutDir)$(TargetFileName).mdb" 
+      DependsOnTargets="_ValidateAndroidPackageProperties">
+    <ConvertDebuggingFiles Files="$(OutDir)$(TargetFileName)" />
+    <Touch Files="$(OutDir)$(TargetFileName).mdb" />
+    <ItemGroup>
+      <FileWrites Include="$(OutDir)$(TargetFileName).mdb" />
+    </ItemGroup>
   </Target>
 
   <PropertyGroup>

@@ -40,7 +40,7 @@ namespace Xamarin.ProjectTools
 				SetProperty ("BaseIntermediateOutputPath", "obj\\", " '$(BaseIntermediateOutputPath)' == '' ");
 
 				SetProperty (DebugProperties, "DebugSymbols", "true");
-				SetProperty (DebugProperties, "DebugType", "full");
+				SetProperty (DebugProperties, "DebugType", "portable");
 				SetProperty (DebugProperties, "Optimize", "false");
 				SetProperty (DebugProperties, "DefineConstants", "DEBUG;");
 

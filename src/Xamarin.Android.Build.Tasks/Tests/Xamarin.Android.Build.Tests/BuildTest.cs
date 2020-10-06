@@ -1346,11 +1346,6 @@ namespace App1
 					},
 				},
 			};
-			//DebugType=Full produces mdbs on Windows
-			if (IsWindows) {
-				lib.DebugProperties.Add (new Property ("", "DebugType", "portable"));
-				proj.DebugProperties.Add (new Property ("", "DebugType", "portable"));
-			}
 			proj.SetProperty (KnownProperties.AndroidLinkMode, AndroidLinkMode.None.ToString ());
 			using (var libb = CreateDllBuilder (Path.Combine (path, "Library1"))) {
 				Assert.IsTrue (libb.Build (lib), "Library1 Build should have succeeded.");
@@ -1387,6 +1382,7 @@ namespace App1
 		}
 
 		[Test]
+		[Category ("DotNetIgnore")] // .mdb and non-portable .pdb files not supported in .NET 5+
 		public void BuildBasicApplicationCheckMdbAndPortablePdb ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -1408,6 +1404,7 @@ namespace App1
 				};
 				proj.References.Add (netStandardpdb);
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				StringAssertEx.Contains ("XA0125", b.LastBuildOutput, "Output should contain XA0125 warnings");
 				var pdbToMdbPath = Path.Combine (Root, b.ProjectDirectory, "PdbTestLibrary.dll.mdb");
 				Assert.IsTrue (
 					File.Exists (pdbToMdbPath),
@@ -2652,13 +2649,13 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 
 		[Test]
 		[Category ("SmokeTests")]
+		[Category ("DotNetIgnore")] // .mdb and non-portable .pdb files not supported in .NET 5+
 		public void BuildBasicApplicationCheckPdb ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				EmbedAssembliesIntoApk = true,
 				AndroidUseSharedRuntime = false,
 			};
-			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugType", "portable");
 			using (var b = CreateApkBuilder ()) {
 				var reference = new BuildItem.Reference ("PdbTestLibrary.dll") {
 					WebContentFileNameFromAzure = "PdbTestLibrary.dll"
