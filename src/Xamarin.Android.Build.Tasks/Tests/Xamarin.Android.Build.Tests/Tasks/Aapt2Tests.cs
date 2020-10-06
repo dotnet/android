@@ -403,11 +403,15 @@ namespace Xamarin.Android.Build.Tests
 </LinearLayout>
 ");
 			var errors = new List<BuildErrorEventArgs> ();
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors);
+			var engine = new MockBuildEngine (TestContext.Out, errors);
 			var directorySeperator = Path.DirectorySeparatorChar;
 			var current = Directory.GetCurrentDirectory ();
 			try {
 				Directory.SetCurrentDirectory (path);
+				MonoAndroidHelper.SaveResourceCaseMap (engine, new Dictionary<string, string> {
+					{ $"layout{directorySeperator}main.axml", $"Layout{directorySeperator}Main.xml" },
+					{ $"values{directorySeperator}strings.xml", $"Values{directorySeperator}Strings.xml" },
+ 				});
 				var task = new Aapt2Compile {
 					BuildEngine = engine,
 					ToolPath = GetPathToAapt2 (),
@@ -419,7 +423,6 @@ namespace Xamarin.Android.Build.Tests
 					},
 					FlatArchivesDirectory = archivePath,
 					FlatFilesDirectory = flatFilePath,
-					ResourceNameCaseMap = $"Layout{directorySeperator}Main.xml|layout{directorySeperator}main.axml;Values{directorySeperator}Strings.xml|values{directorySeperator}strings.xml",
 				};
 				Assert.False (task.Execute (), "task should not have succeeded.");
 			} finally {

@@ -787,7 +787,6 @@ because xbuild doesn't support framework reference assemblies.
 		ToolPath="$(LintToolPath)"
 		ToolExe="$(LintToolExe)"
 		JavaSdkPath="$(_JavaSdkDirectory)"
-		ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
 	/>
 </Target>
 
@@ -991,7 +990,6 @@ because xbuild doesn't support framework reference assemblies.
 			AndroidLibraryFlatFilesDirectory="$(_AndroidLibraryFlatFilesDirectory)"
 	>
 		<Output ItemName="_AndroidResourceDest" TaskParameter="IntermediateFiles" />
-		<Output PropertyName="_AndroidResourceNameCaseMap" TaskParameter="ResourceNameCaseMap" />
 		<Output ItemName="_AndroidResolvedResources" TaskParameter="ResolvedResourceFiles" />
 	</AndroidComputeResPaths>
   
@@ -1466,8 +1464,7 @@ because xbuild doesn't support framework reference assemblies.
   <ConvertCustomView
       CustomViewMapFile="$(_CustomViewMapFile)"
       AcwMapFile="$(_AcwMapFile)"
-      ResourceDirectories="$(MonoAndroidResDirIntermediate);@(_LibraryResourceHashDirectories)"
-      ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)">
+      ResourceDirectories="$(MonoAndroidResDirIntermediate);@(_LibraryResourceHashDirectories)">
     <Output TaskParameter="Processed" ItemName="_ProcessedCustomViews" />	
   </ConvertCustomView>
   <Touch Files="$(_AndroidStampDirectory)_ConvertCustomView.stamp" AlwaysCreate="True" />

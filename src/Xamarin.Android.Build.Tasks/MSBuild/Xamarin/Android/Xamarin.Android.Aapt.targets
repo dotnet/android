@@ -36,7 +36,6 @@ Copyright (C) 2019  Microsoft Corporation. All rights reserved.
   <!-- Change cases so we support mixed case resource names -->
   <ConvertResourcesCases
       ResourceDirectories="$(MonoAndroidResDirIntermediate);@(LibraryResourceDirectories)"
-      ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
       CustomViewMapFile="$(_CustomViewMapFile)"
       AndroidConversionFlagFile="$(_AndroidResgenFlagFile)"
   />
@@ -61,7 +60,6 @@ Copyright (C) 2019  Microsoft Corporation. All rights reserved.
       ToolExe="$(AaptToolExe)"
       ApiLevel="$(_AndroidTargetSdkVersion)"
       AndroidUseLatestPlatformSdk="$(AndroidUseLatestPlatformSdk)"
-      ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
       AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
       YieldDuringToolExecution="$(YieldDuringToolExecution)"
       SupportedAbis="@(_BuildTargetAbis)"
@@ -90,7 +88,6 @@ Copyright (C) 2019  Microsoft Corporation. All rights reserved.
      ToolExe="$(AaptToolExe)"
      ApiLevel="$(_AndroidTargetSdkVersion)"
      AndroidUseLatestPlatformSdk="$(AndroidUseLatestPlatformSdk)"
-     ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
      AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
      SupportedAbis="@(_BuildTargetAbis)"
      CreatePackagePerAbi="$(AndroidCreatePackagePerAbi)"

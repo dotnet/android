@@ -615,15 +615,14 @@ namespace Xamarin.Android.Tasks
 			return Path.Combine (platformPath, "android.jar");
 		}
 
-		public static Dictionary<string, string> LoadResourceCaseMap (string resourceCaseMap)
-		{
-			var result = new Dictionary<string, string> ();
-			if (resourceCaseMap != null) {
-				foreach (var arr in resourceCaseMap.Split (';').Select (l => l.Split ('|')).Where (a => a.Length == 2))
-					result [arr [1]] = arr [0]; // lowercase -> original
-			}
-			return result;
-		}
+		static readonly string ResourceCaseMapKey = $"{nameof (MonoAndroidHelper)}_ResourceCaseMap";
+
+		public static void SaveResourceCaseMap (IBuildEngine4 engine, Dictionary<string, string> map) =>
+			engine.RegisterTaskObject (ResourceCaseMapKey, map, RegisteredTaskObjectLifetime.Build, allowEarlyCollection: false);
+
+		public static Dictionary<string, string> LoadResourceCaseMap (IBuildEngine4 engine) =>
+			engine.GetRegisteredTaskObject (ResourceCaseMapKey, RegisteredTaskObjectLifetime.Build)
+				as Dictionary<string, string> ?? new Dictionary<string, string> (0);
 
 		public static string FixUpAndroidResourcePath (string file, string resourceDirectory, string resourceDirectoryFullPath, Dictionary<string, string> resource_name_case_map)
 		{

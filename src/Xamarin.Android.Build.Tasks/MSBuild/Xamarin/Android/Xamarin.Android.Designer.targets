@@ -114,7 +114,6 @@ Copyright (C) 2016 Xamarin. All rights reserved.
       CustomViewMapFile="$(_CustomViewMapFile)"
       AcwMapFile="$(_AcwMapFile)"
       ResourceDirectories="$(MonoAndroidResDirIntermediate);@(LibraryResourceDirectories)"
-      ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
   />
   <!-- Create java needed for Mono runtime -->
   <GeneratePackageManagerJava

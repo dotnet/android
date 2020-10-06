@@ -23,15 +23,13 @@ namespace Xamarin.Android.Tasks
 
 		public string AndroidConversionFlagFile { get; set; }
 
-		public string ResourceNameCaseMap { get; set; }
-
-		Dictionary<string,string> resource_name_case_map;
+		Dictionary<string,string> _resource_name_case_map;
 		Dictionary<string, HashSet<string>> customViewMap;
+
+		Dictionary<string, string> resource_name_case_map => _resource_name_case_map ??= MonoAndroidHelper.LoadResourceCaseMap (BuildEngine4);
 
 		public override bool RunTask ()
 		{
-			resource_name_case_map = MonoAndroidHelper.LoadResourceCaseMap (ResourceNameCaseMap);
-
 			if (CustomViewMapFile != null)
 				customViewMap = Xamarin.Android.Tasks.MonoAndroidHelper.LoadCustomViewMapFile (BuildEngine4, CustomViewMapFile);
 
