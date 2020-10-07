@@ -66,6 +66,7 @@ variables:
   RunAllTests: $[or(eq(variables['XA.RunAllTests'], true), eq(variables['IsMonoBranch'], true))]
   DotNetNUnitCategories: '& TestCategory != DotNetIgnore & TestCategory != AOT & TestCategory != LibraryProjectZip & TestCategory != MkBundle & TestCategory != MonoSymbolicate & TestCategory != PackagesConfig & TestCategory != StaticProject'
   NUnit.NumberOfTestWorkers: 4
+  GitHub.Token: $(github--pat--vs-mobiletools-engineering-service2)
 
 # Stage and Job "display names" are shortened because they are combined to form the name of the corresponding GitHub check.
 stages:
@@ -156,7 +157,7 @@ stages:
     - task: provisionator@2
       displayName: Install Xcode
       inputs:
-        github_token: $(github-pat)
+        github_token: $(GitHub.Token)
         provisioning_script: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/provisioning/xcode.csx
         provisioning_extra_args: '-v -v -v -v'
 
