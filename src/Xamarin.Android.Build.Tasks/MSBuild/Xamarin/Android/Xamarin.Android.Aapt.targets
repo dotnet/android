@@ -37,7 +37,6 @@ Copyright (C) 2019  Microsoft Corporation. All rights reserved.
       Condition="'$(_AndroidUseAapt2)' != 'True'"
       ResourceDirectories="$(MonoAndroidResDirIntermediate);@(LibraryResourceDirectories)"
       ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
-      AcwMapFile="$(_AcwMapFile)"
       CustomViewMapFile="$(_CustomViewMapFile)"
       AndroidConversionFlagFile="$(_AndroidResgenFlagFile)"
   />

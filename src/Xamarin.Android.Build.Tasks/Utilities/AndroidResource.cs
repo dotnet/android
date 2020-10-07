@@ -12,11 +12,11 @@ using Xamarin.Android.Tasks;
 namespace Monodroid {
 	static class AndroidResource {
 		
-		public static bool UpdateXmlResource (string res, string filename, Dictionary<string, string> acwMap, IEnumerable<string> additionalDirectories = null, Action<TraceLevel, string> logMessage = null, Action<string, string> registerCustomView = null)
+		public static bool UpdateXmlResource (string res, string filename, IEnumerable<string> additionalDirectories = null, Action<TraceLevel, string> logMessage = null, Action<string, string> registerCustomView = null)
 		{
 			try {
 				XDocument doc = XDocument.Load (filename, LoadOptions.SetLineInfo);
-				UpdateXmlResource (res, doc.Root, acwMap, additionalDirectories, (e) => {
+				UpdateXmlResource (res, doc.Root, additionalDirectories, (e) => {
 					registerCustomView?.Invoke (e, filename);
 				});
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ())
@@ -44,15 +44,10 @@ namespace Monodroid {
 
 		public static void UpdateXmlResource (XElement e)
 		{
-			UpdateXmlResource (e, new Dictionary<string,string> ());
+			UpdateXmlResource (null, e);
 		}
 
-		public static void UpdateXmlResource (XElement e, Dictionary<string, string> acwMap)
-		{
-			UpdateXmlResource (null, e, acwMap);
-		}
-
-		static void UpdateXmlResource (string resourcesBasePath, XElement e, Dictionary<string, string> acwMap, IEnumerable<string> additionalDirectories = null, Action<string> registerCustomView = null)
+		static void UpdateXmlResource (string resourcesBasePath, XElement e, IEnumerable<string> additionalDirectories = null, Action<string> registerCustomView = null)
 		{
 			foreach (var elem in GetElements (e).Prepend (e)) {
 				registerCustomView?.Invoke (elem.Name.ToString ());
@@ -68,12 +63,12 @@ namespace Monodroid {
 				if (a.IsNamespaceDeclaration)
 					continue;
 
-				TryFixFragment (a, acwMap, registerCustomView);
+				TryFixFragment (a, registerCustomView);
 				
-				if (TryFixResAuto (a, acwMap))
+				if (TryFixResAuto (a))
 					continue;
 
-				TryFixCustomClassAttribute (a, acwMap, registerCustomView);
+				TryFixCustomClassAttribute (a, registerCustomView);
 
 				if (a.Name.Namespace != android &&
 						!(a.Name.LocalName == "layout" && a.Name.Namespace == XNamespace.None &&
@@ -172,7 +167,7 @@ namespace Monodroid {
 			}
 		}
 
-		private static void TryFixFragment (XAttribute attr, Dictionary<string, string> acwMap, Action<string> registerCustomView = null)
+		private static void TryFixFragment (XAttribute attr, Action<string> registerCustomView = null)
 		{
 			// Looks for any: 
 			//   <fragment class="My.DotNet.Class" 
@@ -194,7 +189,7 @@ namespace Monodroid {
 			}
 		}
 
-		private static bool TryFixResAuto (XAttribute attr, Dictionary<string, string> acwMap)
+		private static bool TryFixResAuto (XAttribute attr)
 		{
 			if (attr.Name.Namespace != res_auto)
 				return false;
@@ -207,7 +202,7 @@ namespace Monodroid {
 			return false;
 		}
 
-		private static void TryFixCustomClassAttribute (XAttribute attr, Dictionary<string, string> acwMap, Action<string> registerCustomView = null)
+		private static void TryFixCustomClassAttribute (XAttribute attr, Action<string> registerCustomView = null)
 		{
 			/* Some attributes reference a Java class name.
 			 * try to convert those like for TryFixCustomView

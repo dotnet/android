@@ -75,21 +75,20 @@ namespace Xamarin.Android.Build.Tests
 			task.ResourceDirectories = new ITaskItem [] {
 				new TaskItem (resPath),
 			};
-			task.AcwMapFile = Path.Combine (path, "acwmap.txt");
 			task.CustomViewMapFile = Path.Combine (path, "classmap.txt");
-			File.WriteAllLines (task.AcwMapFile, new string [] {
-				"ClassLibrary1.CustomView;md5d6f7135293df7527c983d45d07471c5e.CustomTextView",
-				"classlibrary1.CustomView;md5d6f7135293df7527c983d45d07471c5e.CustomTextView",
-			});
 			Assert.IsTrue (task.Execute (), "Task should have executed successfully");
 			var custom = new ConvertCustomView () {
 				BuildEngine = engine,
 				CustomViewMapFile = task.CustomViewMapFile,
-				AcwMapFile = task.AcwMapFile,
+				AcwMapFile = Path.Combine (path, "acwmap.txt"),
 				ResourceDirectories = new ITaskItem [] {
 					new TaskItem (resPath),
 				},
 			};
+			File.WriteAllLines (custom.AcwMapFile, new string [] {
+				"ClassLibrary1.CustomView;md5d6f7135293df7527c983d45d07471c5e.CustomTextView",
+				"classlibrary1.CustomView;md5d6f7135293df7527c983d45d07471c5e.CustomTextView",
+			});
 			Assert.IsTrue (custom.Execute (), "Task should have executed successfully");
 			var output = File.ReadAllText (Path.Combine (resPath, "layout", "main.xml"));
 			StringAssert.Contains ("md5d6f7135293df7527c983d45d07471c5e.CustomTextView", output, "md5d6f7135293df7527c983d45d07471c5e.CustomTextView should exist in the main.xml");
@@ -124,12 +123,7 @@ namespace Xamarin.Android.Build.Tests
 			task.ResourceDirectories = new ITaskItem [] {
 				new TaskItem (resPath),
 			};
-			task.AcwMapFile = Path.Combine (path, "acwmap.txt");
 			task.CustomViewMapFile = Path.Combine (path, "classmap.txt");
-			File.WriteAllLines (task.AcwMapFile, new string [] {
-				"ClassLibrary1.CustomView;md5d6f7135293df7527c983d45d07471c5e.CustomTextView",
-				"classlibrary1.CustomView;md5d6f7135293df7527c983d45d07471c5e.CustomTextView",
-			});
 			Assert.IsTrue (task.Execute (), "Task should have executed successfully");
 			if (IsWindows) {
 				// Causes an NRE
@@ -138,11 +132,15 @@ namespace Xamarin.Android.Build.Tests
 			var custom = new ConvertCustomView () {
 				BuildEngine = engine,
 				CustomViewMapFile = task.CustomViewMapFile,
-				AcwMapFile = task.AcwMapFile,
+				AcwMapFile = Path.Combine (path, "acwmap.txt"),
 				ResourceDirectories = new ITaskItem [] {
 					new TaskItem (resPath),
 				},
 			};
+			File.WriteAllLines (custom.AcwMapFile, new string [] {
+				"ClassLibrary1.CustomView;md5d6f7135293df7527c983d45d07471c5e.CustomTextView",
+				"classlibrary1.CustomView;md5d6f7135293df7527c983d45d07471c5e.CustomTextView",
+			});
 			Assert.IsFalse (custom.Execute (), "Task should have executed successfully");
 			var output = File.ReadAllText (Path.Combine (resPath, "layout", "main.xml"));
 			StringAssert.Contains ("md5d6f7135293df7527c983d45d07471c5e.CustomTextView", output, "md5d6f7135293df7527c983d45d07471c5e.CustomTextView should exist in the main.xml");
