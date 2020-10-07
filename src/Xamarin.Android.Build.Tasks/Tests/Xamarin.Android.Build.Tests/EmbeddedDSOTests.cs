@@ -161,18 +161,20 @@ namespace Xamarin.Android.Build.Tests
 			string manifest = Path.Combine (testProjectPath, "obj", XABuildPaths.Configuration, "android", "manifest", "AndroidManifest.xml");
 			Assert.That (new FileInfo (manifest), Does.Exist, $"File {manifest} should exist");
 
-			var doc = new XPathDocument (manifest);
-			XPathNavigator nav = doc.CreateNavigator ();
+			using (var reader = XmlReader.Create (manifest, new XmlReaderSettings { XmlResolver = null })) {
+				var doc = new XPathDocument (reader);
+				XPathNavigator nav = doc.CreateNavigator ();
 
-			var manager = new XmlNamespaceManager (nav.NameTable);
-			manager.AddNamespace ("android", AndroidNS);
+				var manager = new XmlNamespaceManager (nav.NameTable);
+				manager.AddNamespace ("android", AndroidNS);
 
-			XPathNavigator application = nav.SelectSingleNode ("//manifest/application");
-			Assert.That (application, Is.Not.Null, $"Manifest {manifest} does not contain the `application` node");
+				XPathNavigator application = nav.SelectSingleNode ("//manifest/application");
+				Assert.That (application, Is.Not.Null, $"Manifest {manifest} does not contain the `application` node");
 
-			string attr = application.GetAttribute ("extractNativeLibs", AndroidNS)?.Trim ();
-			Assert.That (String.IsNullOrEmpty (attr), Is.False, $"Manifest {manifest} `application` node does not contain the `extractNativeLibs` attribute");
-			Assert.That (String.Compare ("false", attr, StringComparison.OrdinalIgnoreCase), Is.EqualTo (0), $"Manifest {manifest} `application` node's `extractNativeLibs` attribute is not set to `false`");
+				string attr = application.GetAttribute ("extractNativeLibs", AndroidNS)?.Trim ();
+				Assert.That (String.IsNullOrEmpty (attr), Is.False, $"Manifest {manifest} `application` node does not contain the `extractNativeLibs` attribute");
+				Assert.That (String.Compare ("false", attr, StringComparison.OrdinalIgnoreCase), Is.EqualTo (0), $"Manifest {manifest} `application` node's `extractNativeLibs` attribute is not set to `false`");
+			}
 		}
 
 		bool RunCommand (string command, string arguments)

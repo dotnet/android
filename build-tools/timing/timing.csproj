@@ -1,19 +1,16 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.Build.NoTargets">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{37CAA28C-40BE-4253-BA68-CC5D7316A617}</ProjectGuid>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
+
   <Import Project="..\..\Configuration.props" />
   <Import Project="timing.targets" />
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <OutputPath>..\..\bin\TestDebug</OutputPath>
+
+  <PropertyGroup>
+    <OutputPath>..\..\bin\Test$(Configuration)</OutputPath>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <OutputPath>..\..\bin\TestRelease</OutputPath>
-  </PropertyGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
+  
   <PropertyGroup>
     <BuildDependsOn>
       ResolveReferences;

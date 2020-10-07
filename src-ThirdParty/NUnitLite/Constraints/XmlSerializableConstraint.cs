@@ -24,6 +24,7 @@
 #if !SILVERLIGHT
 using System;
 using System.IO;
+using System.Xml;
 using System.Xml.Serialization;
 
 namespace NUnit.Framework.Constraints
@@ -58,9 +59,11 @@ namespace NUnit.Framework.Constraints
 
                 stream.Seek(0, SeekOrigin.Begin);
 
-                object value = serializer.Deserialize(stream);
+                using (var reader = XmlReader.Create (stream, new XmlReaderSettings { XmlResolver = null })) {
+                    object value = serializer.Deserialize(reader);
 
-                return value != null;
+                    return value != null;
+                }
             }
             catch (NotSupportedException)
             {

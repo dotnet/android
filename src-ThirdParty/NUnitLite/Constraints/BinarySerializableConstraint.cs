@@ -42,6 +42,7 @@ namespace NUnit.Framework.Constraints
         /// </summary>
         /// <param name="actual">The value to be tested</param>
         /// <returns>True for success, false for failure</returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage ("Security", "CA2302: Ensure BinaryFormatter.Binder is set before calling BinaryFormatter.Deserialize", Justification = "Data to be deserialized is trusted, as we create it in this same method.")]
         public override bool Matches(object actual)
         {
             this.actual = actual;
