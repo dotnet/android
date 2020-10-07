@@ -411,6 +411,9 @@ stages:
       parameters:
         configuration: $(ApkTestConfiguration)
 
+    - script: mono $(System.DefaultWorkingDirectory)/build-tools/xaprepare/xaprepare/bin/$(ApkTestConfiguration)/xaprepare.exe --s=EmulatorTestDependencies --no-emoji --run-mode=CI
+      displayName: install emulator
+
     - task: CmdLine@2
       displayName: install apkdiff dotnet tool
       inputs:
@@ -681,6 +684,9 @@ stages:
     steps:
     - template: yaml-templates/setup-test-environment.yaml
 
+    - script: mono $(System.DefaultWorkingDirectory)/build-tools/xaprepare/xaprepare/bin/$(XA.Build.Configuration)/xaprepare.exe --s=EmulatorTestDependencies --no-emoji --run-mode=CI
+      displayName: install emulator
+
     - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: $(TestAssembliesArtifactName)
@@ -842,6 +848,9 @@ stages:
       clean: all
     steps:
     - template: yaml-templates/setup-test-environment.yaml
+
+    - script: mono $(System.DefaultWorkingDirectory)/build-tools/xaprepare/xaprepare/bin/$(XA.Build.Configuration)/xaprepare.exe --s=EmulatorTestDependencies --no-emoji --run-mode=CI
+      displayName: install emulator
 
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -1071,6 +1080,9 @@ stages:
       clean: all
     steps:
     - template: yaml-templates/setup-test-environment.yaml
+
+    - script: mono $(System.DefaultWorkingDirectory)/build-tools/xaprepare/xaprepare/bin/$(XA.Build.Configuration)/xaprepare.exe --s=EmulatorTestDependencies --no-emoji --run-mode=CI
+      displayName: install emulator
 
     - task: DownloadPipelineArtifact@2
       inputs:

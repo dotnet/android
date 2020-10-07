@@ -51,13 +51,13 @@ steps:
 - script: >
     mono ${{ parameters.xaSourcePath }}/build-tools/xaprepare/xaprepare/bin/${{ parameters.configuration }}/xaprepare.exe --s=UpdateMono --auto-provision=yes --auto-provision-uses-sudo=yes --no-emoji --run-mode=CI &&
     mono ${{ parameters.xaSourcePath }}/build-tools/xaprepare/xaprepare/bin/${{ parameters.configuration }}/xaprepare.exe --s=Required --auto-provision=yes --auto-provision-uses-sudo=yes --no-emoji --run-mode=CI &&
-    mono ${{ parameters.xaSourcePath }}/build-tools/xaprepare/xaprepare/bin/${{ parameters.configuration }}/xaprepare.exe --s=AndroidToolchain --no-emoji --run-mode=CI
+    mono ${{ parameters.xaSourcePath }}/build-tools/xaprepare/xaprepare/bin/${{ parameters.configuration }}/xaprepare.exe --s=AndroidTestDependencies --no-emoji --run-mode=CI
   displayName: install test dependencies
   condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
 
 - script: >
     ${{ parameters.xaSourcePath }}\build-tools\xaprepare\xaprepare\bin\${{ parameters.configuration }}\xaprepare.exe --s=Required --auto-provision=yes --no-emoji --run-mode=CI &&
-    ${{ parameters.xaSourcePath }}\build-tools\xaprepare\xaprepare\bin\${{ parameters.configuration }}\xaprepare.exe --s=AndroidToolchain --no-emoji --run-mode=CI
+    ${{ parameters.xaSourcePath }}\build-tools\xaprepare\xaprepare\bin\${{ parameters.configuration }}\xaprepare.exe --s=AndroidTestDependencies --no-emoji --run-mode=CI
   displayName: install test dependencies
   condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
 

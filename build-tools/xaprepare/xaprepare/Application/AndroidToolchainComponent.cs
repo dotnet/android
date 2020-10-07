@@ -11,8 +11,10 @@ namespace Xamarin.Android.Prepare
 		public bool IsMultiVersion        { get; }
 		public bool NoSubdirectory        { get; }
 		public string? PkgRevision        { get; }
+		public AndroidToolchainComponentType DependencyType { get; }
 
-		public AndroidToolchainComponent (string name, string destDir, Uri? relativeUrl = null, bool isMultiVersion = false, bool noSubdirectory = false, string? pkgRevision = null)
+		public AndroidToolchainComponent (string name, string destDir, Uri? relativeUrl = null, bool isMultiVersion = false, bool noSubdirectory = false, string? pkgRevision = null,
+			AndroidToolchainComponentType dependencyType = AndroidToolchainComponentType.CoreDependency)
 		{
 			if (String.IsNullOrEmpty (name))
 				throw new ArgumentException ("must not be null or empty", nameof (name));
@@ -25,6 +27,7 @@ namespace Xamarin.Android.Prepare
 			IsMultiVersion = isMultiVersion;
 			NoSubdirectory = noSubdirectory;
 			PkgRevision = pkgRevision;
+			DependencyType = dependencyType;
 		}
 	}
 
@@ -34,4 +37,14 @@ namespace Xamarin.Android.Prepare
 			: base (name, Path.Combine ("platforms", $"android-{apiLevel}"), pkgRevision: pkgRevision)
 		{}
 	}
+
+	[Flags]
+	enum AndroidToolchainComponentType
+	{
+		CoreDependency          = 0,
+		BuildDependency         = 1 << 0,
+		EmulatorDependency      = 1 << 1,
+		All                     = CoreDependency | BuildDependency | EmulatorDependency,
+	}
+
 }

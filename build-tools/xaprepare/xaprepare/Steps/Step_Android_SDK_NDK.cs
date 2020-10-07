@@ -24,10 +24,13 @@ namespace Xamarin.Android.Prepare
 
 		bool RefreshSdk = false;
 		bool RefreshNdk = false;
+		AndroidToolchainComponentType DependencyTypeToInstall = AndroidToolchainComponentType.All;
 
-		public Step_Android_SDK_NDK ()
+		public Step_Android_SDK_NDK (AndroidToolchainComponentType dependencyTypeToInstall = AndroidToolchainComponentType.All)
 			: base ("Preparing Android SDK and NDK")
-		{}
+		{
+			DependencyTypeToInstall = dependencyTypeToInstall;
+		}
 
 		protected override async Task<bool> Execute (Context context)
 		{
@@ -144,7 +147,11 @@ namespace Xamarin.Android.Prepare
 
 		bool GatherNDKInfo (Context context, string ndkRoot)
 		{
-			return context.BuildInfo.GatherNDKInfo (context, ndkRoot);
+			// Ignore NDK property setting if not installing the NDK
+			if (!DependencyTypeToInstall.HasFlag (AndroidToolchainComponentType.BuildDependency))
+				return true;
+			else
+				return context.BuildInfo.GatherNDKInfo (context, ndkRoot);
 		}
 
 		void CheckPackageStatus (Context context, string packageCacheDir, AndroidPackage pkg, List <AndroidPackage> toDownload)
@@ -221,6 +228,11 @@ namespace Xamarin.Android.Prepare
 		void Check (Context context, string packageCacheDir, string sdkRoot, AndroidToolchainComponent component, List <AndroidPackage> toInstall, int padLeft)
 		{
 			Log.StatusLine ($"  {context.Characters.Bullet} Checking ", component.Name, tailColor: ConsoleColor.White);
+
+			if (!DependencyTypeToInstall.HasFlag (component.DependencyType)) {
+				LogStatus ($"skipping, did not match dependency type: {Enum.GetName(typeof(AndroidToolchainComponentType), DependencyTypeToInstall)}", padLeft, Log.InfoColor);
+				return;
+			}
 
 			const string statusMissing = "missing";
 			const string statusOutdated = "outdated";
