@@ -15,5 +15,10 @@ namespace Xamarin.Android.Prepare
 		{
 			public const string NdkToolchainOSTag = "linux-x86_64";
 		}
+
+		partial class Urls
+		{
+			public static readonly Uri DotNetInstallScript = new Uri ("https://dot.net/v1/dotnet-install.sh");
+		}
 	}
 }

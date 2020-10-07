@@ -19,6 +19,7 @@ namespace Xamarin.Android.Prepare
 				throw new ArgumentNullException (nameof (context));
 
 			Steps.Add (new Step_ShowEnabledRuntimes ());
+			Steps.Add (new Step_InstallDotNetSDKs ());
 			Steps.Add (new Step_InstallJetBrainsOpenJDK8 ());
 			Steps.Add (new Step_InstallJetBrainsOpenJDK11 ());
 			Steps.Add (new Step_Android_SDK_NDK ());

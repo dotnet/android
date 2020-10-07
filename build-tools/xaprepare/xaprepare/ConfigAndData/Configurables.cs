@@ -64,6 +64,10 @@ namespace Xamarin.Android.Prepare
 			public static readonly Version JetBrainsOpenJDK8Version = new Version (Configurables.JetBrainsOpenJDK8VersionFull);
 			public static readonly Version JetBrainsOpenJDK8Release = new Version (Configurables.JetBrainsOpenJDK8Release);
 
+			public const string DotNetVersion = "3.1.201";
+			// Version number from: https://github.com/dotnet/installer#installers-and-binaries
+			public const string DotNetPreviewVersion = "5.0.100-rc.2.20480.7";
+
 			// Mono runtimes
 			public const string DebugFileExtension                         = ".pdb";
 			public const string MonoHostMingwRuntimeNativeLibraryExtension = WindowsDLLSuffix;
@@ -274,6 +278,7 @@ namespace Xamarin.Android.Prepare
 			public static readonly string BuildToolsDir                    = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "build-tools");
 			public static readonly string BuildToolsScriptsDir             = Path.Combine (BuildToolsDir, "scripts");
 			public static readonly string BinDirRoot                       = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "bin");
+			public static readonly string DotNetRoot                       = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, ".dotnet");
 			public static readonly string ExternalDir                      = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "external");
 			public static readonly string LocalNugetPath                   = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, ".nuget", "NuGet.exe");
 			public static readonly string ExternalGitDepsFilePath          = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, ".external");

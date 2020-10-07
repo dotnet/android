@@ -146,6 +146,7 @@
     <Compile Include="Steps\Step_GenerateCGManifest.cs" />
     <Compile Include="Steps\Step_GenerateFiles.cs" />
     <Compile Include="Steps\Step_Get_Windows_Binutils.cs" />
+    <Compile Include="Steps\Step_InstallDotNetSDKs.cs" />
     <Compile Include="Steps\Step_InstallJetBrainsOpenJDK.cs" />
     <Compile Include="Steps\Step_InstallMonoRuntimes.cs" />
     <Compile Include="Steps\Step_PrepareExternal.cs" />

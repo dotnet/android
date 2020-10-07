@@ -26,11 +26,7 @@ variables:
   InstallerArtifactName: Installers
   EXTRA_MSBUILD_ARGS: /p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False
   PREPARE_FLAGS: PREPARE_CI=1 PREPARE_CI_PR=1
-  DotNetCoreVersion: 3.1.201
-  # Version number from: https://github.com/dotnet/installer#installers-and-binaries
-  DotNetCorePreviewVersion: 5.0.100-rc.2.20459.1
   GitHub.Token: $(github--pat--vs-mobiletools-engineering-service2)
-
 
 stages:
 - stage: mac_stage
@@ -51,15 +47,6 @@ stages:
       path: xamarin-android
       clean: true             # Executes: git clean -ffdx && git reset --hard HEAD
       submodules: recursive
-
-    - template: yaml-templates/use-dot-net.yaml
-      parameters:
-        version: $(DotNetCorePreviewVersion)
-        remove_dotnet: true
-
-    - template: yaml-templates/use-dot-net.yaml
-      parameters:
-        version: $(DotNetCoreVersion)
 
     - bash: |
         keychains=`security list-keychains`
@@ -89,6 +76,9 @@ stages:
             security -v list-keychains -s login.keychain
         fi
       displayName: restore default keychain
+
+    - script: echo "##vso[task.setvariable variable=PATH]$(Build.SourcesDirectory)/.dotnet:$PATH"
+      displayName: add local dotnet installation to PATH
 
     # Prepare and build everything
     - script: >

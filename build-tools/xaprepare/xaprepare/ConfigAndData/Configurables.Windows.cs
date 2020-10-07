@@ -19,5 +19,10 @@ namespace Xamarin.Android.Prepare
 			public static readonly string MonoRuntimeHostMingwNativeLibraryPrefix = Path.Combine ("..", "bin");
 			public const string NdkToolchainOSTag                                 = "windows-x86_64";
 		}
+
+		partial class Urls
+		{
+			public static readonly Uri DotNetInstallScript = new Uri ("https://dot.net/v1/dotnet-install.ps1");
+		}
 	}
 }
