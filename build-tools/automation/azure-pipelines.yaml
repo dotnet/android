@@ -149,7 +149,7 @@ stages:
         provisioning_script: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/provisioning/xcode.csx
         provisioning_extra_args: '-v -v -v -v'
 
-    - script: echo "##vso[task.setvariable variable=PATH]$(System.DefaultWorkingDirectory)/xamarin-android/.dotnet:$PATH"
+    - script: echo "##vso[task.setvariable variable=PATH]$HOME/Library/Android/dotnet:$PATH"
       displayName: add local dotnet installation to PATH
 
     # Prepare and build everything
@@ -306,7 +306,7 @@ stages:
     - template: environment/win/vs-msbuild.v1.yml@yaml   # Display (in log) VS installation(s) including installation status with associated MSBuild location(s)
 
     - script: |
-        echo ##vso[task.setvariable variable=PATH]$(Build.SourcesDirectory)\.dotnet;%PATH%
+        echo ##vso[task.setvariable variable=PATH]%USERPROFILE%\android-toolchain\dotnet;%PATH%
       displayName: add local dotnet installation to PATH
 
     - task: MSBuild@1

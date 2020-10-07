@@ -53,7 +53,7 @@ namespace Xamarin.ProjectTools
 		public string BuildTool {
 			get {
 				if (UseDotNet)
-					return "dotnet";
+					return Path.Combine (AndroidSdkResolver.GetDotNetPath (), "dotnet");
 
 				string xabuild;
 				if (IsUnix) {

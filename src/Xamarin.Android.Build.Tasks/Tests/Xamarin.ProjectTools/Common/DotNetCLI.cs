@@ -18,7 +18,6 @@ namespace Xamarin.ProjectTools
 
 		public string ProjectDirectory { get; private set; }
 
-		const string Executable = "dotnet";
 		readonly XASdkProject project;
 		readonly string projectOrSolution;
 
@@ -43,7 +42,7 @@ namespace Xamarin.ProjectTools
 			bool succeeded;
 
 			using (var p = new Process ()) {
-				p.StartInfo.FileName = Executable;
+				p.StartInfo.FileName = Path.Combine (AndroidSdkResolver.GetDotNetPath (), "dotnet");
 				p.StartInfo.Arguments = string.Join (" ", args);
 				p.StartInfo.CreateNoWindow = true;
 				p.StartInfo.UseShellExecute = false;

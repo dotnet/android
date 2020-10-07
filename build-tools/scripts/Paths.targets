@@ -37,4 +37,10 @@
         Importance="High"
     />
   </Target>
+  <Target Name="GetDotNetPath">
+    <Message
+        Text="$(DotNetPath)"
+        Importance="High"
+    />
+  </Target>
 </Project>

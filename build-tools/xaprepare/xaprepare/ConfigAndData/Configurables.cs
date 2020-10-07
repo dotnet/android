@@ -278,7 +278,6 @@ namespace Xamarin.Android.Prepare
 			public static readonly string BuildToolsDir                    = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "build-tools");
 			public static readonly string BuildToolsScriptsDir             = Path.Combine (BuildToolsDir, "scripts");
 			public static readonly string BinDirRoot                       = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "bin");
-			public static readonly string DotNetRoot                       = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, ".dotnet");
 			public static readonly string ExternalDir                      = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "external");
 			public static readonly string LocalNugetPath                   = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, ".nuget", "NuGet.exe");
 			public static readonly string ExternalGitDepsFilePath          = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, ".external");

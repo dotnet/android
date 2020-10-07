@@ -6,7 +6,6 @@ Configuration.OperatingSystem.props
 obj
 packages
 .DS_Store
-.dotnet
 .nuget
 *.nupkg
 TestResult.xml

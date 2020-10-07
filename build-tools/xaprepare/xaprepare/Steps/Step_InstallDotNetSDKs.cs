@@ -17,7 +17,8 @@ namespace Xamarin.Android.Prepare
 			if (context == null)
 				throw new ArgumentNullException (nameof (context));
 
-			var dotnetPath = Configurables.Paths.DotNetRoot;
+			var dotnetPath = context.Properties.GetRequiredValue (KnownProperties.DotNetPath);
+			dotnetPath = dotnetPath.TrimEnd (new char [] { Path.DirectorySeparatorChar });
 			var dotnetVersion = Configurables.Defaults.DotNetVersion;
 			var dotnetPreviewVersion = Configurables.Defaults.DotNetPreviewVersion;
 
@@ -52,8 +53,12 @@ namespace Xamarin.Android.Prepare
 
 		async Task<bool> InstallDotNetAsync (Context context, string dotnetPath, string version)
 		{
-			if (Directory.Exists (Path.Combine (dotnetPath, "sdk", version)))
+			if (Directory.Exists (Path.Combine (dotnetPath, "sdk", version))) {
+				Log.Status ($"dotnet SDK version ");
+				Log.Status (version, ConsoleColor.Yellow);
+				Log.StatusLine (" already installed in: ", Path.Combine (dotnetPath, "sdk", version), tailColor: ConsoleColor.Cyan);
 				return true;
+			}
 
 			Uri dotnetScriptUrl = Configurables.Urls.DotNetInstallScript;
 			string dotnetScriptPath = Path.Combine (dotnetPath, Path.GetFileName (dotnetScriptUrl.LocalPath));
