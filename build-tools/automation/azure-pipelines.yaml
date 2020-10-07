@@ -592,6 +592,15 @@ stages:
         artifactName: Xamarin.Forms_Performance_Integration-Signed.apk
         artifactFolder: Bundle
 
+    - template: yaml-templates/apk-instrumentation.yaml
+      parameters:
+        configuration: $(ApkTestConfiguration)
+        testName: VSAndroidApp
+        project: samples/VSAndroidAppProxy.csproj
+        testResultsFiles: TestResult-apkdiff-com.companyname.vsandroidapp-Signed-$(ApkTestConfiguration).xml
+        artifactName: com.companyname.vsandroidapp-Signed.apk
+        artifactFolder: Default
+
     - task: MSBuild@1
       displayName: shut down emulator
       inputs:
