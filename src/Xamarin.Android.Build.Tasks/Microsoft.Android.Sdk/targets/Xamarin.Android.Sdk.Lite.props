@@ -11,6 +11,8 @@
   <PropertyGroup>
     <!-- Ensure $(UsingAndroidNETSdk) is not set to retain legacy behavior -->
     <UsingAndroidNETSdk />
+    <!-- Ensure $(TargetPlatformIdentifier) is set to ensure default items will be set -->
+    <TargetPlatformIdentifier>Android</TargetPlatformIdentifier>
   </PropertyGroup>
 
   <!-- Default References -->

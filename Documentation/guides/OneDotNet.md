@@ -134,7 +134,7 @@ not be supported:
 
 ## Default file inclusion
 
-Default Android related file globbing behavior is defined in `Microsoft.Android.Sdk.DefaultItems.targets`.
+Default Android related file globbing behavior is defined in `Microsoft.Android.Sdk.DefaultItems.props`.
 This behavior can be disabled for Android items by setting `$(EnableDefaultAndroidItems)` to `false`, or
 all default item inclusion behavior can be disabled by setting `$(EnableDefaultItems)` to `false`.
 

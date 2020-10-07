@@ -31,7 +31,7 @@
     <OutputType Condition=" '$(OutputType)' == 'Exe' ">Library</OutputType>
   </PropertyGroup>
 
-  <Import Project="Microsoft.Android.Sdk.DefaultItems.targets" />
+  <Import Project="Microsoft.Android.Sdk.DefaultItems.props" />
   <ItemGroup>
     <!-- Remove Microsoft.Android FrameworkReference as it is incompatible with the Lite SDK. -->
     <FrameworkReference Remove="Microsoft.Android" />

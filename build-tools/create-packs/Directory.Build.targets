@@ -65,4 +65,27 @@
     <Exec Command="$(DotNetPreviewTool) pack -p:Configuration=$(Configuration) &quot;$(MSBuildThisFileDirectory)Xamarin.Android.Sdk.Lite.proj&quot;" />
   </Target>
 
+  <Target Name="ExtractWorkloadPacks"
+      DependsOnTargets="GetXAVersionInfo" >
+    <ItemGroup>
+      <_WLManifest Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Workload.*.nupkg" />
+      <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Sdk.*.nupkg" />
+      <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Ref.*.nupkg" />
+      <!-- Runtime packs are not yet supported by workloads -->
+      <!-- <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Runtime.*.nupkg" /> -->
+    </ItemGroup>
+    <Unzip
+        SourceFiles="@(_WLManifest)"
+        DestinationFolder="$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\Microsoft.Android.Workload"
+    />
+    <Unzip
+        SourceFiles="@(_WLPacks)"
+        DestinationFolder="$(DotNetPreviewPath)packs\$([System.String]::Copy('%(_WLPacks.Filename)').Replace('$(AndroidPackVersionLong)', ''))\$(AndroidPackVersionLong)"
+    />
+    <Touch
+        Files="$(DotNetPreviewPath)sdk\$(DotNetPreviewVersionFull)\EnableWorkloadResolver.sentinel"
+        AlwaysCreate="true"
+    />
+  </Target>
+
 </Project>

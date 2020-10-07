@@ -1,12 +1,20 @@
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <PropertyGroup>
-    <EnableDefaultAndroidItems Condition=" '$(EnableDefaultAndroidItems)' == '' ">$(EnableDefaultItems)</EnableDefaultAndroidItems>
-  </PropertyGroup>
+<!--
+***********************************************************************************************
+Microsoft.Android.Sdk.DefaultItems.props
+WARNING:  This file is imported by AutoImport.props, and will be imported by all
+          projects using Microsoft.NET.Sdk.  All Item includes in this file *MUST* be
+          hidden behind an Android property based condition.
+
+Default item includes (globs and implicit references).
+
+***********************************************************************************************
+-->
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <!-- Default Resource file inclusion -->
   <!-- https://developer.android.com/guide/topics/resources/providing-resources -->
-  <ItemGroup Condition=" '$(EnableDefaultAndroidItems)' == 'true' ">
+  <ItemGroup Condition=" '$(TargetPlatformIdentifier)' == 'Android' and '$(EnableDefaultAndroidItems)' == 'true' ">
     <AndroidResource Include="$(MonoAndroidResourcePrefix)\*\*.xml" />
     <AndroidResource Include="$(MonoAndroidResourcePrefix)\*\*.axml" />
     <AndroidResource Include="$(MonoAndroidResourcePrefix)\*\*.png" />
@@ -19,12 +27,12 @@
   </ItemGroup>
 
   <!-- Default Asset file inclusion -->
-  <ItemGroup Condition=" '$(EnableDefaultAndroidItems)' == 'true' ">
+  <ItemGroup Condition=" '$(TargetPlatformIdentifier)' == 'Android' and '$(EnableDefaultAndroidItems)' == 'true' ">
     <AndroidAsset Include="$(MonoAndroidAssetsPrefix)\**\*" Exclude="$(MonoAndroidAssetsPrefix)\**\.*\**" />
   </ItemGroup>
 
   <!-- Default References -->
-  <ItemGroup Condition=" '$(DisableImplicitFrameworkReferences)' != 'true' ">
+  <ItemGroup Condition=" '$(TargetPlatformIdentifier)' == 'Android' and '$(DisableImplicitFrameworkReferences)' != 'true' ">
     <FrameworkReference
         Include="Microsoft.Android"
         IsImplicitlyDefined="true"
@@ -34,11 +42,11 @@
   </ItemGroup>
 
   <!-- Automatically supply project capabilities for IDE use -->
-  <ItemGroup>
+  <ItemGroup Condition=" '$(TargetPlatformIdentifier)' == 'Android' ">
     <ProjectCapability Include="Mobile" />
     <ProjectCapability Include="Android" />
     <ProjectCapability Include="AndroidApplication" Condition="$(AndroidApplication)" />
-    
+
     <!-- Conflicts with our targets generator in VS+CPS: See https://work.azdo.io/1112733 -->
     <ProjectCapability Remove="LaunchProfiles" />
   </ItemGroup>

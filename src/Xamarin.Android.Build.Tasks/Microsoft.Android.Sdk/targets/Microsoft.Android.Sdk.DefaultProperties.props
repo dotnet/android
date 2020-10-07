@@ -19,6 +19,7 @@
     <!-- mono-symbolicate is not supported -->
     <MonoSymbolArchive>false</MonoSymbolArchive>
     <AndroidCodegenTarget Condition=" '$(AndroidCodegenTarget)' == '' ">XAJavaInterop1</AndroidCodegenTarget>
+    <EnableDefaultAndroidItems Condition=" '$(EnableDefaultAndroidItems)' == '' ">$(EnableDefaultItems)</EnableDefaultAndroidItems>
   </PropertyGroup>
 
   <!--  User-facing configuration-specific defaults -->

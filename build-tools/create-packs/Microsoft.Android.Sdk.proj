@@ -2,8 +2,8 @@
 ***********************************************************************************************
 Microsoft.Android.Sdk.proj
 
-This project file is used to create the Microsoft.Android.Sdk NuGet, which will serve as
-the new entry point for short-form style Android projets in .NET 5.
+This project file is used to create the Microsoft.Android.Sdk NuGet, which is the core workload
+sdk pack imported by Microsoft.Android.Workload.
 ***********************************************************************************************
 -->
 <Project Sdk="Microsoft.Build.NoTargets">
@@ -19,7 +19,7 @@ the new entry point for short-form style Android projets in .NET 5.
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Mono.Posix.NETStandard" Version="5.20.1-preview" GeneratePathProperty="true" />
+    <PackageReference Include="Mono.Posix.NETStandard" Version="5.20.1-preview" GeneratePathProperty="true" PrivateAssets="all" />
   </ItemGroup>
 
   <Import Project="..\..\Configuration.props" />
