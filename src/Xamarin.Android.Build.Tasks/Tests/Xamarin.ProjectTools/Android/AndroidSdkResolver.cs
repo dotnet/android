@@ -61,14 +61,12 @@ namespace Xamarin.ProjectTools
 		}
 
 		// Cache the result, so we don't run MSBuild on every call
-		static string DotNetPath;
-		public static string GetDotNetPath ()
+		static string DotNetPreviewPath;
+		public static string GetDotNetPreviewPath ()
 		{
-			if (string.IsNullOrEmpty (DotNetPath))
-				DotNetPath = Environment.GetEnvironmentVariable ("DOTNET_ROOT");
-			if (string.IsNullOrEmpty (DotNetPath))
-				DotNetPath = RunPathsTargets ("GetDotNetPath");
-			return DotNetPath;
+			if (string.IsNullOrEmpty (DotNetPreviewPath))
+				DotNetPreviewPath = RunPathsTargets ("GetDotNetPreviewPath");
+			return DotNetPreviewPath;
 		}
 
 		static string RunPathsTargets (string target)

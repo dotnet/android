@@ -55,7 +55,7 @@
       <Replacement Include="@Configuration@=$(Configuration)" />
       <Replacement Include="@CommandLineToolsFolder@=$(CommandLineToolsFolder)" />
       <Replacement Include="@CommandLineToolsVersion@=$(CommandLineToolsVersion)" />
-      <Replacement Include="@DotNetPath@=$(DotNetPath)" />
+      <Replacement Include="@DotNetPreviewPath@=$(DotNetPreviewPath)" />
       <Replacement Include="@EmulatorVersion@=$(EmulatorVersion)" />
       <Replacement Include="@EmulatorPkgRevision@=$(EmulatorPkgRevision)" />
       <Replacement Include="@IgnoreMaxMonoVersion@=$(IgnoreMaxMonoVersion)" />

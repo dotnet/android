@@ -42,7 +42,7 @@ namespace Xamarin.ProjectTools
 			bool succeeded;
 
 			using (var p = new Process ()) {
-				p.StartInfo.FileName = Path.Combine (AndroidSdkResolver.GetDotNetPath (), "dotnet");
+				p.StartInfo.FileName = Path.Combine (AndroidSdkResolver.GetDotNetPreviewPath (), "dotnet");
 				p.StartInfo.Arguments = string.Join (" ", args);
 				p.StartInfo.CreateNoWindow = true;
 				p.StartInfo.UseShellExecute = false;

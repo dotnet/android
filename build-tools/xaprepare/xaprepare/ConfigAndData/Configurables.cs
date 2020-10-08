@@ -64,7 +64,6 @@ namespace Xamarin.Android.Prepare
 			public static readonly Version JetBrainsOpenJDK8Version = new Version (Configurables.JetBrainsOpenJDK8VersionFull);
 			public static readonly Version JetBrainsOpenJDK8Release = new Version (Configurables.JetBrainsOpenJDK8Release);
 
-			public const string DotNetVersion = "3.1.201";
 			// Version number from: https://github.com/dotnet/installer#installers-and-binaries
 			public const string DotNetPreviewVersion = "5.0.100-rc.2.20480.7";
 

@@ -51,6 +51,7 @@ variables:
   InstallerArtifactName: installers
   TestAssembliesArtifactName: test-assemblies
   NUnitConsoleVersion: 3.11.1
+  DotNetCoreVersion: 3.1.201
   HostedMacMojave: Hosted Mac Internal Mojave
   HostedMac: Hosted Mac Internal
   HostedWinVS2019: Hosted Windows 2019 with VS2019
@@ -134,6 +135,11 @@ stages:
     - script: echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/Library/Android/$(XA.Jdk11.Folder)"
       displayName: set JI_JAVA_HOME
 
+    - task: UseDotNet@2
+      displayName: install .NET Core $(DotNetCoreVersion)
+      inputs:
+        version: $(DotNetCoreVersion)
+
     - template: install-certificates.yml@yaml
       parameters:
         DeveloperIdApplication: $(developer-id-application)
@@ -148,9 +154,6 @@ stages:
         github_token: $(GitHub.Token)
         provisioning_script: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/provisioning/xcode.csx
         provisioning_extra_args: '-v -v -v -v'
-
-    - script: echo "##vso[task.setvariable variable=PATH]$HOME/Library/Android/dotnet:$PATH"
-      displayName: add local dotnet installation to PATH
 
     # Prepare and build everything
     - script: make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
@@ -278,6 +281,11 @@ stages:
         echo ##vso[task.setvariable variable=JI_JAVA_HOME]%USERPROFILE%\android-toolchain\$(XA.Jdk11.Folder)
       displayName: set JI_JAVA_HOME
 
+    - task: UseDotNet@2
+      displayName: install .NET Core $(DotNetCoreVersion)
+      inputs:
+        version: $(DotNetCoreVersion)
+
     # Downgrade the XA .vsix installed into the instance of VS that we are building with so that we don't restore/build against a test version.
     # The VS installer will attempt to resume any failed or partial installation before trying to downgrade Xamarin.Android.
     # VSIXInstaller.exe will exit non-zero when the downgrade attempt is a no-op, so we will allow this step to fail silently.
@@ -304,10 +312,6 @@ stages:
       ignoreLASTEXITCODE: true
 
     - template: environment/win/vs-msbuild.v1.yml@yaml   # Display (in log) VS installation(s) including installation status with associated MSBuild location(s)
-
-    - script: |
-        echo ##vso[task.setvariable variable=PATH]%USERPROFILE%\android-toolchain\dotnet;%PATH%
-      displayName: add local dotnet installation to PATH
 
     - task: MSBuild@1
       displayName: msbuild Xamarin.Android /t:Prepare

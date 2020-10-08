@@ -22,7 +22,7 @@ namespace Xamarin.Android.Prepare
 			properties.Add (KnownProperties.Configuration,                       StripQuotes ("@Configuration@"));
 			properties.Add (KnownProperties.CommandLineToolsFolder,              StripQuotes ("@CommandLineToolsFolder@"));
 			properties.Add (KnownProperties.CommandLineToolsVersion,             StripQuotes ("@CommandLineToolsVersion@"));
-			properties.Add (KnownProperties.DotNetPath,                          StripQuotes (@"@DotNetPath@"));
+			properties.Add (KnownProperties.DotNetPreviewPath,                   StripQuotes (@"@DotNetPreviewPath@"));
 			properties.Add (KnownProperties.EmulatorVersion,                     StripQuotes ("@EmulatorVersion@"));
 			properties.Add (KnownProperties.EmulatorPkgRevision,                 StripQuotes ("@EmulatorPkgRevision@"));
 			properties.Add (KnownProperties.IgnoreMaxMonoVersion,                StripQuotes ("@IgnoreMaxMonoVersion@"));

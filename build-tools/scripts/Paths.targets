@@ -37,9 +37,9 @@
         Importance="High"
     />
   </Target>
-  <Target Name="GetDotNetPath">
+  <Target Name="GetDotNetPreviewPath">
     <Message
-        Text="$(DotNetPath)"
+        Text="$(DotNetPreviewPath)"
         Importance="High"
     />
   </Target>

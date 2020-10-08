@@ -6,40 +6,34 @@ using System.Threading.Tasks;
 
 namespace Xamarin.Android.Prepare
 {
-	class Step_InstallDotNetSDKs : StepWithDownloadProgress
+	class Step_InstallDotNetPreview : StepWithDownloadProgress
 	{
-		public Step_InstallDotNetSDKs ()
-			: base ("Install required .NET Core SDKs locally")
+		public Step_InstallDotNetPreview ()
+			: base ("Install required .NET Preview SDK locally")
 		{ }
 
 		protected override async Task<bool> Execute (Context context)
 		{
-			if (context == null)
-				throw new ArgumentNullException (nameof (context));
-
-			var dotnetPath = context.Properties.GetRequiredValue (KnownProperties.DotNetPath);
+			var dotnetPath = context.Properties.GetRequiredValue (KnownProperties.DotNetPreviewPath);
 			dotnetPath = dotnetPath.TrimEnd (new char [] { Path.DirectorySeparatorChar });
-			var dotnetVersion = Configurables.Defaults.DotNetVersion;
 			var dotnetPreviewVersion = Configurables.Defaults.DotNetPreviewVersion;
 
 			// Delete any custom Microsoft.Android packs that may have been installed by test runs. Other ref/runtime packs will be ignored.
 			var packsPath = Path.Combine (dotnetPath, "packs");
 			if (Directory.Exists (packsPath)) {
-				foreach (var packToRemove in Directory.EnumerateDirectories (packsPath).Where (p => new DirectoryInfo (p).Name.Contains ("Android")))
+				foreach (var packToRemove in Directory.EnumerateDirectories (packsPath).Where (p => new DirectoryInfo (p).Name.Contains ("Android"))) {
+					Log.StatusLine ($"Removing Android pack: {packToRemove}");
 					Utilities.DeleteDirectory (packToRemove);
+				}
 			}
 
 			// Delete any unnecessary SDKs if they exist.
 			var sdkPath = Path.Combine (dotnetPath, "sdk");
 			if (Directory.Exists (sdkPath)) {
-				var installedSdks = Directory.EnumerateDirectories (sdkPath).Select (d => new DirectoryInfo (d));
-				foreach (var sdkToRemove in installedSdks.Where (s => s.Name != dotnetVersion && s.Name != dotnetPreviewVersion))
-					Utilities.DeleteDirectory (sdkToRemove.FullName);
-			}
-
-			if (!await InstallDotNetAsync (context, dotnetPath, dotnetVersion)) {
-				Log.ErrorLine ($"Installation of dotnet SDK {dotnetVersion} failed.");
-				return false;
+				foreach (var sdkToRemove in Directory.EnumerateDirectories (sdkPath).Where (s => new DirectoryInfo (s).Name != dotnetPreviewVersion)) {
+					Log.StatusLine ($"Removing out of date SDK: {sdkToRemove}");
+					Utilities.DeleteDirectory (sdkToRemove);
+				}
 			}
 
 			if (!await InstallDotNetAsync (context, dotnetPath, dotnetPreviewVersion)) {
@@ -47,7 +41,6 @@ namespace Xamarin.Android.Prepare
 				return false;
 			}
 
-			SetVariables (dotnetPath);
 			return true;
 		}
 
@@ -98,15 +91,6 @@ namespace Xamarin.Android.Prepare
 					dotnetScriptPath, "--version", version, "--install-dir", dotnetPath, "--verbose"
 				});
 			}
-		}
-
-		void SetVariables (string dotnetPath)
-		{
-			var newPath = $"{dotnetPath}{Path.PathSeparator}{Environment.GetEnvironmentVariable ("PATH")}";
-			Environment.SetEnvironmentVariable ("PATH", newPath);
-			Environment.SetEnvironmentVariable ("DOTNET_ROOT", dotnetPath);
-			Log.MessageLine ($"##vso[task.setvariable variable=PATH]{newPath}");
-			Log.MessageLine ($"##vso[task.setvariable variable=DOTNET_ROOT]{dotnetPath}");
 		}
 
 	}

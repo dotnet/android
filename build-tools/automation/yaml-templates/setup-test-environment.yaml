@@ -21,6 +21,11 @@ steps:
   displayName: set JI_JAVA_HOME
   condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
 
+- task: UseDotNet@2
+  displayName: install .NET Core $(DotNetCoreVersion)
+  inputs:
+    version: $(DotNetCoreVersion)
+
 - script: |
     dotnet tool install --global boots
   displayName: install boots
