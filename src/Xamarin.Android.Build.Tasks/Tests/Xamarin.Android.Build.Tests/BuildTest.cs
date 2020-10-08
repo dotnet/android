@@ -377,9 +377,10 @@ class MemTest {
 		[NonParallelizable]
 		public void SkipConvertResourcesCases ([Values (false, true)] bool useAapt2)
 		{
+			AssertAaptSupported (useAapt2);
 			var target = "ConvertResourcesCases";
 			var proj = new XamarinFormsAndroidApplicationProject ();
-			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			proj.AndroidUseAapt2 = useAapt2;
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidAarLibrary", "Jars\\material-menu-1.1.0.aar") {
 				WebContent = "https://repo.jfrog.org/artifactory/libs-release-bintray/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar"
 			});
@@ -2162,6 +2163,7 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 		[Test]
 		public void AarContentExtraction ([Values (false, true)] bool useAapt2)
 		{
+			AssertAaptSupported (useAapt2);
 			var aar = new AndroidItem.AndroidAarLibrary ("Jars\\android-crop-1.0.1.aar") {
 				// https://mvnrepository.com/artifact/com.soundcloud.android/android-crop/1.0.1
 				WebContent = "https://repo1.maven.org/maven2/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar"
@@ -2174,7 +2176,7 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 					}
 				},
 			};
-			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			proj.AndroidUseAapt2 = useAapt2;
 			using (var builder = CreateApkBuilder ()) {
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
 				var assemblyMap = builder.Output.GetIntermediaryPath (Path.Combine ("lp", "map.cache"));
@@ -3661,6 +3663,7 @@ public class ApplicationRegistration { }");
 		[Test]
 		public void AllResourcesInClassLibrary ([Values (true, false)] bool useAapt2)
 		{
+			AssertAaptSupported (useAapt2);
 			var path = Path.Combine ("temp", TestName);
 
 			// Create a "library" with all the application stuff in it
@@ -3673,7 +3676,7 @@ public class ApplicationRegistration { }");
 				}
 			};
 			lib.SetProperty ("AndroidApplication", "False");
-			lib.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			lib.AndroidUseAapt2 = useAapt2;
 
 			// Create an "app" that is basically empty and references the library
 			var app = new XamarinAndroidLibraryProject {
@@ -3696,7 +3699,7 @@ public class ApplicationRegistration { }");
 				app.SetProperty ("AndroidResgenFile", "Resources\\Resource.designer.cs");
 				app.SetProperty ("AndroidApplication", "True");
 			}
-			app.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			app.AndroidUseAapt2 = useAapt2;
 
 			app.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
 

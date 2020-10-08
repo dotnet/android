@@ -434,9 +434,10 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void Aapt2Disabled ()
 		{
+			AssertAaptSupported (useAapt2: false);
 			var proj = new XamarinAndroidApplicationProject ();
-			proj.SetProperty ("AndroidUseAapt2", "False");
-			using (var b = CreateApkBuilder ("temp/Aapt2Disabled")) {
+			proj.AndroidUseAapt2 = false;
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, "Aapt2Link"), "Aapt2Link task should not run!");
 				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, "Aapt2Compile"), "Aapt2Compile task should not run!");

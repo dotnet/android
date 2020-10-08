@@ -164,11 +164,12 @@ namespace Xamarin.Android.Build.Tests
 		[Parallelizable (ParallelScope.Self)]
 		public void CheckIncludedNativeLibraries ([Values (true, false)] bool compressNativeLibraries, [Values (true, false)] bool useAapt2)
 		{
+			AssertAaptSupported (useAapt2);
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
 			proj.PackageReferences.Add(KnownPackages.SQLitePCLRaw_Core);
-			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			proj.AndroidUseAapt2 = useAapt2;
 			proj.SetAndroidSupportedAbis ("x86");
 			proj.SetProperty (proj.ReleaseProperties, "AndroidStoreUncompressedFileExtensions", compressNativeLibraries ? "" : "so");
 			using (var b = CreateApkBuilder ()) {

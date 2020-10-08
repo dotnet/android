@@ -11,6 +11,7 @@ namespace Xamarin.ProjectTools
 		public const string AndroidUseSharedRuntime = "AndroidUseSharedRuntime";
 		public const string EmbedAssembliesIntoApk = "EmbedAssembliesIntoApk";
 		public const string AndroidUseLatestPlatformSdk = "AndroidUseLatestPlatformSdk";
+		public const string AndroidUseAapt2 = "AndroidUseAapt2";
 		public const string AndroidCreatePackagePerAbi = "AndroidCreatePackagePerAbi";
 
 		public const string AndroidSupportedAbis = "AndroidSupportedAbis";

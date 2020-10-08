@@ -61,6 +61,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void CheckAssetsAreIncludedInAPK ([Values (true, false)] bool useAapt2)
 		{
+			AssertAaptSupported (useAapt2);
 			var projectPath = Path.Combine ("temp", TestName);
 			var libproj = new XamarinAndroidLibraryProject () {
 				ProjectName = "Library1",
@@ -106,7 +107,7 @@ namespace Xamarin.Android.Build.Tests
 					},
 				}
 			};
-			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			proj.AndroidUseAapt2 = useAapt2;
 			proj.References.Add (new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj"));
 			using (var libb = CreateDllBuilder (Path.Combine (projectPath, libproj.ProjectName))) {
 				Assert.IsTrue (libb.Build (libproj), "{0} should have built successfully.", libproj.ProjectName);

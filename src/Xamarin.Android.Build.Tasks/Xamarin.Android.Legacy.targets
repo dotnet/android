@@ -248,7 +248,6 @@ projects. .NET 5 projects will not import this file.
       <Output TaskParameter="ZipAlignPath"                PropertyName="ZipAlignToolPath"            Condition="'$(ZipAlignToolPath)' == ''" />
       <Output TaskParameter="AndroidSequencePointsMode"   PropertyName="_SequencePointsMode"         Condition="'$(_SequencePointsMode)' == ''" />
       <Output TaskParameter="LintToolPath"                PropertyName="LintToolPath"                Condition="'$(LintToolPath)' == ''" />
-      <Output TaskParameter="AndroidUseAapt2"             PropertyName="_AndroidUseAapt2" />
       <Output TaskParameter="Aapt2Version"                PropertyName="_Aapt2Version" />
       <Output TaskParameter="Aapt2ToolPath"               PropertyName="Aapt2ToolPath"               Condition="'$(Aapt2ToolPath)' == ''" />
     </ResolveAndroidTooling>

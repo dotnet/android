@@ -205,6 +205,13 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		protected static void AssertAaptSupported (bool useAapt2)
+		{
+			if (Builder.UseDotNet && !useAapt2) {
+				Assert.Ignore ("aapt(1) is not supported in .NET 5+");
+			}
+		}
+
 		protected static void WaitFor(int milliseconds)
 		{
 			var pause = new ManualResetEvent(false);

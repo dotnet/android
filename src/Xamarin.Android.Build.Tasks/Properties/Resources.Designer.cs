@@ -302,7 +302,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Could not get the `aapt2` version. Disabling `aapt2` support. Please check it is installed correctly..
+        ///   Looks up a localized string similar to Unsupported version of AAPT2 found at path &apos;{0}&apos;. Open the project file in a text editor and remove the &apos;Aapt2ToolPath&apos; MSBuild property or ensure it is set to a valid location..
         /// </summary>
         internal static string XA0111 {
             get {
@@ -311,7 +311,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to `aapt2` is not installed. Disabling `aapt2` support. Please check it is installed correctly..
+        ///   Looks up a localized string similar to AAPT2 was not found at path &apos;{0}&apos;. Open the project file in a text editor and remove the &apos;Aapt2ToolPath&apos; MSBuild property or ensure it is set to a valid location..
         /// </summary>
         internal static string XA0112 {
             get {
@@ -660,6 +660,24 @@ namespace Xamarin.Android.Tasks.Properties {
         internal static string XA1024 {
             get {
                 return ResourceManager.GetString("XA1024", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Using AAPT is deprecated in favor of AAPT2. Please enable &apos;Use incremental Android packaging system (aapt2)&apos; in the Visual Studio project property pages or edit the project file in a text editor and set the &apos;AndroidUseAapt2&apos; MSBuild property to &apos;true&apos;..
+        /// </summary>
+        internal static string XA1026 {
+            get {
+                return ResourceManager.GetString("XA1026", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Using AAPT is not supported in Xamarin.Android projects that target .NET 5 or higher. Please enable &apos;Use incremental Android packaging system (aapt2)&apos; in the Visual Studio project property pages or edit the project file in a text editor and set the &apos;AndroidUseAapt2&apos; MSBuild property to &apos;true&apos;..
+        /// </summary>
+        internal static string XA1026_dotnet {
+            get {
+                return ResourceManager.GetString("XA1026_dotnet", resourceCulture);
             }
         }
         

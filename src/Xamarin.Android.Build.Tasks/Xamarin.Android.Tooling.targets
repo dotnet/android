@@ -24,7 +24,6 @@ projects.
       _ResolveSdks;
       _ResolveAndroidTooling;
       _InjectAaptDependencies;
-      _InjectAapt2Dependencies;
     </_SetLatestTargetFrameworkVersionDependsOnTargets>
   </PropertyGroup>
 
