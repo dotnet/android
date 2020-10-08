@@ -19,6 +19,8 @@ namespace Xamarin.Android.Tasks
 
 		public string JavaResgenInputFile { get; set; }
 
+		public string RTxtFile { get; set; }
+
 		public string Namespace { get; set; }
 
 		[Required]
@@ -70,11 +72,14 @@ namespace Xamarin.Android.Tasks
 
 			// Create our capitalization maps so we can support mixed case resources
 			foreach (var item in Resources) {
-				if (!item.ItemSpec.StartsWith (ResourceDirectory))
+				var path = Path.GetFullPath (item.ItemSpec);
+				if (!path.StartsWith (ResourceDirectory, StringComparison.OrdinalIgnoreCase))
 					continue;
 
-				var name = item.ItemSpec.Substring (ResourceDirectory.Length);
+				var name = path.Substring (ResourceDirectory.Length).TrimStart ('/', '\\');
 				var logical_name = item.GetMetadata ("LogicalName").Replace ('\\', '/');
+				if (string.IsNullOrEmpty (logical_name))
+					logical_name = Path.GetFileName (path);
 
 				AddRename (name.Replace ('/', Path.DirectorySeparatorChar), logical_name.Replace ('/', Path.DirectorySeparatorChar));
 			}
@@ -94,7 +99,7 @@ namespace Xamarin.Android.Tasks
 			CodeTypeDeclaration resources;
 			if (UseManagedResourceGenerator) {
 				var parser = new ManagedResourceParser () { Log = Log, JavaPlatformDirectory = javaPlatformDirectory, ResourceFlagFile = ResourceFlagFile };
-				resources = parser.Parse (ResourceDirectory, AdditionalResourceDirectories?.Select (x => x.ItemSpec), IsApplication, resource_fixup);
+				resources = parser.Parse (ResourceDirectory, RTxtFile ?? string.Empty, AdditionalResourceDirectories?.Select (x => x.ItemSpec), IsApplication, resource_fixup);
 			} else {
 				var parser = new JavaResourceParser () { Log = Log };
 				resources = parser.Parse (JavaResgenInputFile, IsApplication, resource_fixup);
@@ -253,7 +258,6 @@ namespace Xamarin.Android.Tasks
 						Path.Combine (dir, Path.GetFileName (to) + ext),
 						Path.Combine (dir, Path.GetFileName (curTo) + ext));
 				}
-
 				return;
 			}
 

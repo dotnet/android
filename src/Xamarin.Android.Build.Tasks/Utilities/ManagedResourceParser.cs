@@ -14,6 +14,14 @@ namespace Xamarin.Android.Tasks
 {
 	class ManagedResourceParser : ResourceParser
 	{
+		class CompareTuple : IComparer<(int Key, CodeMemberField Value)>
+		{
+			public int Compare((int Key, CodeMemberField Value) x, (int Key, CodeMemberField Value) y)
+			{
+				return x.Key.CompareTo (y.Key);
+			}
+		}
+
 		CodeTypeDeclaration resources;
 		CodeTypeDeclaration layout, ids, drawable, strings, colors, dimension, raw, animator, animation, attrib, boolean, font, ints, interpolators, menu, mipmaps, plurals, styleable, style, arrays, xml, transition;
 		Dictionary<string, string> map;
@@ -23,6 +31,7 @@ namespace Xamarin.Android.Tasks
 		List<CodeTypeDeclaration> typeIds = new List<CodeTypeDeclaration> ();
 		Dictionary<CodeMemberField, CodeMemberField []> arrayMapping = new Dictionary<CodeMemberField, CodeMemberField []> ();
 		const string itemPackageId = "0x7f";
+		static CompareTuple compareTuple = new CompareTuple ();
 
 		XDocument publicXml;
 
@@ -44,7 +53,7 @@ namespace Xamarin.Android.Tasks
 			return decl.Members.Cast<CodeTypeMember> ().OrderBy (x => x.Name, comparer);
 		}
 
-		public CodeTypeDeclaration Parse (string resourceDirectory, IEnumerable<string> additionalResourceDirectories, bool isApp, Dictionary<string, string> resourceMap)
+		public CodeTypeDeclaration Parse (string resourceDirectory, string rTxtFile, IEnumerable<string> additionalResourceDirectories, bool isApp, Dictionary<string, string> resourceMap)
 		{
 			app = isApp;
 			if (!Directory.Exists (resourceDirectory))
@@ -86,11 +95,9 @@ namespace Xamarin.Android.Tasks
 				: DateTime.MinValue;
 			// This top most R.txt will contain EVERYTHING we need. including library resources since it represents
 			// the final build.
-			var rTxt = Path.Combine(resourceDirectory, "..", "R.txt");
-			Log.LogDebugMessage ($"Checking {rTxt} {File.Exists (rTxt)} {File.GetLastWriteTimeUtc (rTxt)} {resModifiedDate}");
-			if (File.Exists (rTxt) && File.GetLastWriteTimeUtc (rTxt) > resModifiedDate) {
-				Log.LogDebugMessage ($"Processing File {rTxt}");
-				ProcessRtxtFile (rTxt);
+			if (File.Exists (rTxtFile) && File.GetLastWriteTimeUtc (rTxtFile) > resModifiedDate) {
+				Log.LogDebugMessage ($"Processing File {rTxtFile}");
+				ProcessRtxtFile (rTxtFile);
 			} else {
 				Log.LogDebugMessage ($"Processing Directory {resourceDirectory}");
 				foreach (var dir in Directory.EnumerateDirectories (resourceDirectory, "*", SearchOption.TopDirectoryOnly)) {
@@ -166,7 +173,7 @@ namespace Xamarin.Android.Tasks
 			declarationIds.Sort ((a, b) => {
 				return string.Compare (a.Name, b.Name, StringComparison.OrdinalIgnoreCase);
 			});
-			
+
 			foreach (var codeDeclaration in declarationIds) {
 				int itemid = 0;
 				Log.LogDebugMessage ($"Processing {codeDeclaration.Name}");
@@ -181,15 +188,11 @@ namespace Xamarin.Android.Tasks
 					}
 					int typeid = typeIds.IndexOf (codeDeclaration) + 1;
 					if (typeid == 0) {
-						Log.LogDebugMessage ($"Adding code declaration for {codeDeclaration.Name} {typeid}");
 						typeIds.Add (codeDeclaration);
 						typeid = typeIds.Count;
 					}
-					Log.LogDebugMessage ($"code declaration {codeDeclaration.Name} typeid = {typeid} {field.Name}");
 					if (field.InitExpression == null) {
-						Log.LogDebugMessage ($"Adding InitExpression for {field.Name}");
 						int id = Convert.ToInt32 (itemPackageId + typeid.ToString ("X2") + itemid.ToString ("X4"), fromBase: 16);
-						Log.LogDebugMessage ($"{itemPackageId} {id} {itemid} = {id.ToString ("X")}");
 						field.InitExpression = new CodePrimitiveExpression (id);
 						field.Comments.Add (new CodeCommentStatement ($"aapt resource value: 0x{id.ToString ("X")}"));
 						itemid++;
@@ -198,13 +201,13 @@ namespace Xamarin.Android.Tasks
 			}
 
 			var sb = new StringBuilder ();
-			SortedDictionary<int, CodeMemberField> arrayValues = new SortedDictionary<int, CodeMemberField> ();
+
+			List<(int Key, CodeMemberField Value)> arrayValues = new List<(int Key, CodeMemberField Value)> ();
 			int value;
 			foreach (var kvp in arrayMapping) {
 				CodeMemberField field = kvp.Key;
 				CodeArrayCreateExpression expression = field.InitExpression as CodeArrayCreateExpression;
 				CodeMemberField [] fields = kvp.Value;
-
 				int count = expression.Initializers.Count;
 				sb.Clear ();
 				arrayValues.Clear ();
@@ -214,13 +217,13 @@ namespace Xamarin.Android.Tasks
 						name = name.Replace ("android:", string.Empty);
 						var element = publicXml?.XPathSelectElement ($"/resources/public[@name='{name}']") ?? null;
 						value = Convert.ToInt32 (element?.Attribute ("id")?.Value ?? "0x0", fromBase: 16);
-						
 					} else {
 						CodePrimitiveExpression initExpression = fields [i].InitExpression as CodePrimitiveExpression;
 						value = Convert.ToInt32 (initExpression.Value);
 					}
-					arrayValues.Add (value, fields [i]);
+					arrayValues.Add ((Key: value, Value: fields [i]));
 				}
+				arrayValues.Sort (compareTuple);
 				int index = 0;
 				foreach (var arrayValue in arrayValues) {
 					value = arrayValue.Key;
@@ -646,7 +649,6 @@ namespace Xamarin.Android.Tasks
 				CodeArrayCreateExpression c = field.InitExpression as CodeArrayCreateExpression;
 				if (c == null)
 					return;
-				
 				arrayMapping.Add (field, fields.ToArray ());
 			}
 		}
@@ -680,7 +682,7 @@ namespace Xamarin.Android.Tasks
 										}
 										id = values [1];
 									}
-									
+
 								}
 								if (reader.LocalName == "inflatedId") {
 									string inflateId = reader.Value.Replace ("@+id/", "").Replace ("@id/", "");
