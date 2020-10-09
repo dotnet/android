@@ -243,24 +243,6 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		public void BuildWithLiteSdk ()
-		{
-			var sdkVersion = typeof (XASdkProject).Assembly
-				.GetCustomAttributes<AssemblyMetadataAttribute> ()
-				.Where (attr => attr.Key == "SdkVersion")
-				.Select (attr => attr.Value)
-				.FirstOrDefault () ?? "0.0.1";
-
-			var proj = new XASdkProject () {
-				Sdk = $"Xamarin.Android.Sdk.Lite/{sdkVersion}",
-				TargetFramework = "monoandroid10.0"
-			};
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-			}
-		}
-
 		DotNetCLI CreateDotNetBuilder (XASdkProject project)
 		{
 			var relativeProjDir = Path.Combine ("temp", TestName);

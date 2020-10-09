@@ -62,7 +62,7 @@
       DependsOnTargets="CreateAllRuntimePacks" >
     <Exec Command="$(DotNetPreviewTool) pack -p:Configuration=$(Configuration) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Ref.proj&quot;" />
     <Exec Command="$(DotNetPreviewTool) pack -p:Configuration=$(Configuration) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.proj&quot;" />
-    <Exec Command="$(DotNetPreviewTool) pack -p:Configuration=$(Configuration) &quot;$(MSBuildThisFileDirectory)Xamarin.Android.Sdk.Lite.proj&quot;" />
+    <Exec Command="$(DotNetPreviewTool) pack -p:Configuration=$(Configuration) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Workload.proj&quot;" />
   </Target>
 
   <Target Name="ExtractWorkloadPacks"
