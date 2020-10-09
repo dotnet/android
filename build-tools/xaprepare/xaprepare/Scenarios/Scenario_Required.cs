@@ -21,6 +21,7 @@ namespace Xamarin.Android.Prepare
 			// Install essential tools, should they be missing
 			context.SetCondition (KnownConditions.EnsureEssential, true);
 
+			Steps.Add (new Step_InstallDotNetPreview ());
 			Steps.Add (new Step_GenerateFiles (atBuildStart: true, onlyRequired: true));
 			Steps.Add (new Step_PrepareExternalJavaInterop ());
 		}
