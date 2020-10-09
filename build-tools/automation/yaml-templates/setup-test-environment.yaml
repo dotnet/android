@@ -80,3 +80,16 @@ steps:
     solution: ${{ parameters.xaSourcePath }}/build-tools/xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
     configuration: ${{ parameters.configuration }}
     msbuildArguments: /restore /bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/BootstrapTasks.binlog
+
+# Download and install .NET nupkgs
+- task: DownloadPipelineArtifact@2
+  inputs:
+    artifactName: $(NuGetArtifactName)
+    downloadPath: ${{ parameters.xaSourcePath }}/bin/Build${{ parameters.configuration }}/$(NuGetArtifactName)
+
+- task: MSBuild@1
+  displayName: extract workload packs
+  inputs:
+    solution: ${{ parameters.xaSourcePath }}/build-tools/create-packs/Microsoft.Android.Sdk.proj
+    configuration: ${{ parameters.configuration }}
+    msbuildArguments: /t:ExtractWorkloadPacks /restore /bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/extract-workloads.binlog

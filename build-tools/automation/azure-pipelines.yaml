@@ -339,7 +339,7 @@ stages:
       inputs:
         solution: $(System.DefaultWorkingDirectory)\build-tools\create-packs\Microsoft.Android.Sdk.proj
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:CreateAllPacks /restore /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\create-all-packs.binlog
+        msbuildArguments: /t:CreateAllPacks,ExtractWorkloadPacks /restore /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\create-all-packs.binlog
 
     - task: CmdLine@1
       displayName: xabuild Xamarin.Android-Tests
@@ -692,11 +692,6 @@ stages:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: $(NuGetArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
-
     - task: MSBuild@1
       displayName: start emulator
       inputs:
@@ -856,11 +851,6 @@ stages:
       inputs:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
-
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: $(NuGetArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
 
     - task: MSBuild@1
       displayName: start emulator

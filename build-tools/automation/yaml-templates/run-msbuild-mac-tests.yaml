@@ -26,11 +26,6 @@ jobs:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
-    - task: DownloadPipelineArtifact@1
-      inputs:
-        artifactName: $(NuGetArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
-
     - template: run-nunit-tests.yaml
       parameters:
         useDotNet: $(UseDotNet)
