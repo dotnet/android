@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.Android.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net5.0-android</TargetFramework>
     <RootNamespace>CommonSampleLibrary</RootNamespace>

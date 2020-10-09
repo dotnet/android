@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -76,7 +76,7 @@ namespace Xamarin.ProjectTools
 			set { SetProperty (ActiveConfigurationProperties, KnownProperties.IntermediateOutputPath, value); }
 		}
 
-		public string Sdk { get; set; } = $"Microsoft.Android.Sdk/{XASdkProject.SdkVersion}";
+		public string Sdk { get; set; } = "Microsoft.NET.Sdk";
 
 		public bool EnableDefaultItems => false;
 

@@ -6,6 +6,7 @@
     <MSBuild Projects="$(_TopDir)build-tools\xa-prep-tasks\xa-prep-tasks.csproj" />
     <MSBuild Projects="$(_TopDir)Xamarin.Android.sln" Properties="DisableApiCompatibilityCheck=true" />
     <MSBuild Projects="$(_TopDir)build-tools\create-packs\Microsoft.Android.Sdk.proj" Targets="CreateAllPacks" />
+    <MSBuild Projects="$(_TopDir)build-tools\create-packs\Microsoft.Android.Sdk.proj" Targets="ExtractWorkloadPacks" />
     <!-- Clean up old, previously restored packages -->
     <ItemGroup>
       <_OldPackages Include="$(_TopDir)packages\microsoft.android.*\**\*.nupkg" />
