@@ -13,13 +13,13 @@
       Inputs="$(MSBuildThisFile)"
       Outputs="@(_Outputs)">
     <Exec
-        Command="&quot;$(GradleWPath)&quot; jar $(GradleArgs)"
+        Command="&quot;..\gradlew&quot; fatJar $(GradleArgs)"
         EnvironmentVariables="JAVA_HOME=$(Java8SdkDirectory);APP_HOME=$(GradleHome)"
-        WorkingDirectory="$(ProGuardSourceFullPath)\core"
+        WorkingDirectory="$(ProGuardSourceFullPath)\base"
     />
     <MakeDir Directories="$(OutputPath)" />
     <Copy
-        SourceFiles="..\..\external\proguard\core\build\libs\core.jar"
+        SourceFiles="..\..\external\proguard\lib\proguard.jar"
         DestinationFiles="$(_OutputJar)"
     />
     <Copy
@@ -31,7 +31,7 @@
         DestinationFiles="$(_OutputSh)"
     />
     <Copy
-        SourceFiles="..\..\external\proguard\docs\license.md"
+        SourceFiles="..\..\external\proguard\docs\md\license.md"
         DestinationFiles="$(_OutputLicense)"
     />
     <Touch Files="@(_Outputs)" />
@@ -41,9 +41,8 @@
     <Exec
         Command="&quot;$(GradleWPath)&quot; clean $(GradleArgs)"
         EnvironmentVariables="JAVA_HOME=$(Java8SdkDirectory);APP_HOME=$(GradleHome)"
-        WorkingDirectory="$(ProGuardSourceFullPath)\core"
+        WorkingDirectory="$(ProGuardSourceFullPath)\base"
     />
   </Target>
   <Target Name="CoreCompile" />
 </Project>
-
