@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -17,6 +18,7 @@ namespace Xamarin.Android.Prepare
 			var dotnetPath = context.Properties.GetRequiredValue (KnownProperties.DotNetPreviewPath);
 			dotnetPath = dotnetPath.TrimEnd (new char [] { Path.DirectorySeparatorChar });
 			var dotnetPreviewVersion = Configurables.Defaults.DotNetPreviewVersion;
+			var dotnetTestRuntimeVersion = Configurables.Defaults.DotNetTestRuntimeVersion;
 
 			// Delete any custom Microsoft.Android packs that may have been installed by test runs. Other ref/runtime packs will be ignored.
 			var packsPath = Path.Combine (dotnetPath, "packs");
@@ -41,23 +43,35 @@ namespace Xamarin.Android.Prepare
 				return false;
 			}
 
+			if (!await InstallDotNetAsync (context, dotnetPath, dotnetTestRuntimeVersion, runtimeOnly: true)) {
+				Log.ErrorLine ($"Installation of dotnet runtime {dotnetTestRuntimeVersion} failed.");
+				return false;
+			}
+
 			return true;
 		}
 
-		async Task<bool> InstallDotNetAsync (Context context, string dotnetPath, string version)
+		async Task<bool> InstallDotNetAsync (Context context, string dotnetPath, string version, bool runtimeOnly = false)
 		{
-			if (Directory.Exists (Path.Combine (dotnetPath, "sdk", version))) {
+			if (Directory.Exists (Path.Combine (dotnetPath, "sdk", version)) && !runtimeOnly) {
 				Log.Status ($"dotnet SDK version ");
 				Log.Status (version, ConsoleColor.Yellow);
 				Log.StatusLine (" already installed in: ", Path.Combine (dotnetPath, "sdk", version), tailColor: ConsoleColor.Cyan);
 				return true;
 			}
 
+			if (Directory.Exists (Path.Combine (dotnetPath, "shared", "Microsoft.NETCore.App", version)) && runtimeOnly) {
+				Log.Status ($"dotnet runtime version ");
+				Log.Status (version, ConsoleColor.Yellow);
+				Log.StatusLine (" already installed in: ", Path.Combine (dotnetPath, "shared", "Microsoft.NETCore.App", version), tailColor: ConsoleColor.Cyan);
+				return true;
+			}
+
 			Uri dotnetScriptUrl = Configurables.Urls.DotNetInstallScript;
 			string dotnetScriptPath = Path.Combine (dotnetPath, Path.GetFileName (dotnetScriptUrl.LocalPath));
-
 			if (File.Exists (dotnetScriptPath))
 				Utilities.DeleteFile (dotnetScriptPath);
+
 			Log.StatusLine ("Downloading dotnet-install...");
 
 			(bool success, ulong size, HttpStatusCode status) = await Utilities.GetDownloadSizeWithStatus (dotnetScriptUrl);
@@ -78,18 +92,25 @@ namespace Xamarin.Android.Prepare
 				return false;
 			}
 
-			Log.StatusLine ($"Installing dotnet SDK '{version}'...");
-
+			Log.StatusLine ($"Installing dotnet SDK/runtime '{version}'...");
 
 			if (Context.IsWindows) {
-				return Utilities.RunCommand ("powershell.exe", new string [] {
+				var args = new List<string> {
 					"-NoProfile", "-ExecutionPolicy", "unrestricted", "-file", dotnetScriptPath,
 					"-Version", version, "-InstallDir", dotnetPath, "-Verbose"
-				});
+				};
+				if (runtimeOnly)
+					args.AddRange (new string [] { "-Runtime", "dotnet" });
+
+				return Utilities.RunCommand ("powershell.exe", args.ToArray ());
 			} else {
-				return Utilities.RunCommand ("bash", new string [] {
+				var args = new List<string> {
 					dotnetScriptPath, "--version", version, "--install-dir", dotnetPath, "--verbose"
-				});
+				};
+				if (runtimeOnly)
+					args.AddRange (new string [] { "-Runtime", "dotnet" });
+
+				return Utilities.RunCommand ("bash", args.ToArray ());
 			}
 		}
 

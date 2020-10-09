@@ -65,7 +65,8 @@ namespace Xamarin.Android.Prepare
 			public static readonly Version JetBrainsOpenJDK8Release = new Version (Configurables.JetBrainsOpenJDK8Release);
 
 			// Version number from: https://github.com/dotnet/installer#installers-and-binaries
-			public const string DotNetPreviewVersion = "5.0.100-rc.2.20480.7";
+			public const string DotNetPreviewVersion                       = "5.0.100-rc.2.20480.7";
+			public const string DotNetTestRuntimeVersion                   = "3.1.3";
 
 			// Mono runtimes
 			public const string DebugFileExtension                         = ".pdb";
