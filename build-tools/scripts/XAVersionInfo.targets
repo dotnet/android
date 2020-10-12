@@ -88,6 +88,7 @@
       <_AndroidPackBranch>$([System.Text.RegularExpressions.Regex]::Replace('$(XAVersionBranch)', '[^a-zA-Z0-9-]', '-'))</_AndroidPackBranch>
       <_AndroidPackLabel Condition=" '$(_AndroidPackLabel)' == '' ">ci.$(_AndroidPackBranch).$(PackVersionCommitCount)</_AndroidPackLabel>
       <AndroidPackVersionLong>$(AndroidPackVersion)-$(_AndroidPackLabel)</AndroidPackVersionLong>
+      <AndroidMSIVersion>$(AndroidPackVersion).$(PackVersionCommitCount)</AndroidMSIVersion>
     </PropertyGroup>
   </Target>
 </Project>

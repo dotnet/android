@@ -6,6 +6,15 @@ steps:
   inputs:
     artifactName: $(InstallerArtifactName)
     downloadPath: $(System.DefaultWorkingDirectory)
+    patterns: xamarin.android*.pkg
+  condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
+
+- task: DownloadPipelineArtifact@2
+  inputs:
+    artifactName: $(InstallerArtifactName)
+    downloadPath: $(System.DefaultWorkingDirectory)
+    patterns: Xamarin.Android*.vsix
+  condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
 
 - powershell: |
     $itemPattern = "*.vsix"

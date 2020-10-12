@@ -1,4 +1,4 @@
-create-installers: create-pkg create-vsix
+create-installers: create-pkg create-vsix create-workload-installers
 
 create-pkg:
 	MONO_IOMAP=all MONO_OPTIONS="$(MONO_OPTIONS)" $(call MSBUILD_BINLOG,create-pkg) /p:Configuration=$(CONFIGURATION) /t:CreatePkg \
@@ -8,6 +8,11 @@ create-pkg:
 		$(if $(PKG_LICENSE_EN),/p:PkgLicenseSrcEn="$(PKG_LICENSE_EN)") \
 		$(if $(PKG_OUTPUT_PATH),/p:PkgProductOutputPath="$(PKG_OUTPUT_PATH)") \
 		$(if $(USE_COMMERCIAL_INSTALLER_NAME),/p:UseCommercialInstallerName="$(USE_COMMERCIAL_INSTALLER_NAME)") \
+		$(if $(_MSBUILD_ARGS),"$(_MSBUILD_ARGS)")
+
+create-workload-installers:
+	MONO_IOMAP=all MONO_OPTIONS="$(MONO_OPTIONS)" $(call MSBUILD_BINLOG,create-workload-installers) /p:Configuration=$(CONFIGURATION) /t:CreateWorkloadInstallers \
+		Xamarin.Android.sln \
 		$(if $(_MSBUILD_ARGS),"$(_MSBUILD_ARGS)")
 
 create-vsix:
