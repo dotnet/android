@@ -11,7 +11,7 @@ namespace Xamarin.Android.Tasks
 {
 	/// <summary>
 	/// Processes .dll files coming from @(ResolvedFileToPublish). Removes duplicate .NET assemblies by MVID.
-	/// 
+	///
 	/// Also sets some metadata:
 	/// * %(FrameworkAssembly)=True to determine if framework or user assembly
 	/// * %(HasMonoAndroidReference)=True for incremental build performance
@@ -21,9 +21,9 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "PRAS";
 
-		public bool UseSharedRuntime { get; set; }
-
 		public string LinkMode { get; set; }
+
+		public bool IncludeDebugSymbols { get; set; }
 
 		public ITaskItem [] InputAssemblies { get; set; }
 
@@ -100,7 +100,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			// Set ShrunkAssemblies for _RemoveRegisterAttribute and <BuildApk/>
-			if (!string.IsNullOrEmpty (LinkMode) && !string.Equals (LinkMode, "None", StringComparison.OrdinalIgnoreCase) && !UseSharedRuntime) {
+			if (!string.IsNullOrEmpty (LinkMode) && !string.Equals (LinkMode, "None", StringComparison.OrdinalIgnoreCase) && !IncludeDebugSymbols) {
 				ShrunkAssemblies = OutputAssemblies.Select (a => {
 					var dir = Path.GetDirectoryName (a.ItemSpec);
 					var file = Path.GetFileName (a.ItemSpec);

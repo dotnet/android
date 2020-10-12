@@ -67,14 +67,12 @@ namespace Xamarin.Android.Tasks
 		public bool NeedsInternet   { get; set; }
 		public bool InstantRunEnabled { get; set; }
 
-		public bool UseSharedRuntime { get; set; }
-
 		public bool ErrorOnCustomJavaObject { get; set; }
 
 		public string BundledWearApplicationName { get; set; }
 
 		public string PackageNamingPolicy { get; set; }
-		
+
 		public string ApplicationJavaClass { get; set; }
 
 		public bool SkipJniAddNativeMethodRegistrationAttributeScan { get; set; }
@@ -267,7 +265,6 @@ namespace Xamarin.Android.Tasks
 			manifest.MultiDex = MultiDex;
 			manifest.NeedsInternet = NeedsInternet;
 			manifest.InstantRunEnabled = InstantRunEnabled;
-			manifest.UseSharedRuntime = UseSharedRuntime;
 
 			var additionalProviders = manifest.Merge (Log, cache, allJavaTypes, ApplicationJavaClass, EmbedAssemblies, BundledWearApplicationName, MergedManifestDocuments);
 
@@ -277,9 +274,9 @@ namespace Xamarin.Android.Tasks
 			}
 
 			// Create additional runtime provider java sources.
-			string providerTemplateFile = UseSharedRuntime ? "MonoRuntimeProvider.Shared.java" : "MonoRuntimeProvider.Bundled.java";
+			string providerTemplateFile = "MonoRuntimeProvider.Bundled.java";
 			string providerTemplate = GetResource (providerTemplateFile);
-			
+
 			foreach (var provider in additionalProviders) {
 				var contents = providerTemplate.Replace ("MonoRuntimeProvider", provider);
 				var real_provider = Path.Combine (OutputDirectory, "src", "mono", provider + ".java");
@@ -291,7 +288,7 @@ namespace Xamarin.Android.Tasks
 			regCallsWriter.WriteLine ("\t\t// Application and Instrumentation ACWs must be registered first.");
 			foreach (var type in javaTypes) {
 				if (JavaNativeTypeManager.IsApplication (type, cache) || JavaNativeTypeManager.IsInstrumentation (type, cache)) {
-					string javaKey = JavaNativeTypeManager.ToJniName (type).Replace ('/', '.');				
+					string javaKey = JavaNativeTypeManager.ToJniName (type).Replace ('/', '.');
 					regCallsWriter.WriteLine ("\t\tmono.android.Runtime.register (\"{0}\", {1}.class, {1}.__md_methods);",
 						type.GetAssemblyQualifiedName (cache), javaKey);
 				}
@@ -307,7 +304,7 @@ namespace Xamarin.Android.Tasks
 		bool CreateJavaSources (IEnumerable<TypeDefinition> javaTypes, TypeDefinitionCache cache)
 		{
 			string outputPath = Path.Combine (OutputDirectory, "src");
-			string monoInit = GetMonoInitSource (AndroidSdkPlatform, UseSharedRuntime);
+			string monoInit = GetMonoInitSource (AndroidSdkPlatform);
 			bool hasExportReference = ResolvedAssemblies.Any (assembly => Path.GetFileName (assembly.ItemSpec) == "Mono.Android.Export.dll");
 			bool generateOnCreateOverrides = int.Parse (AndroidSdkPlatform) <= 10;
 
@@ -358,13 +355,13 @@ namespace Xamarin.Android.Tasks
 			return ok;
 		}
 
-		static string GetMonoInitSource (string androidSdkPlatform, bool useSharedRuntime)
+		static string GetMonoInitSource (string androidSdkPlatform)
 		{
 			// Lookup the mono init section from MonoRuntimeProvider:
 			// Mono Runtime Initialization {{{
 			// }}}
 			var builder = new StringBuilder ();
-			var runtime = useSharedRuntime ? "Shared" : "Bundled";
+			var runtime = "Bundled";
 			var api = "";
 			if (int.TryParse (androidSdkPlatform, out int apiLevel) && apiLevel < 21) {
 				api = ".20";

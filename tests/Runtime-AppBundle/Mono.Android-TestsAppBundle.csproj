@@ -17,7 +17,6 @@
     <AssemblyName>Mono.Android-TestsAppBundle</AssemblyName>
     <AndroidManifest>Properties\AndroidManifest.xml</AndroidManifest>
     <AndroidSupportedAbis>armeabi-v7a;x86</AndroidSupportedAbis>
-    <AndroidUseSharedRuntime>False</AndroidUseSharedRuntime>
     <MandroidI18n>All</MandroidI18n>
     <AndroidDexTool Condition=" '$(AndroidDexTool)' == '' ">d8</AndroidDexTool>
     <AndroidPackageFormat>aab</AndroidPackageFormat>
@@ -137,5 +136,5 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Properties\AndroidManifest.xml" />
-  </ItemGroup>	
+  </ItemGroup>
 </Project>

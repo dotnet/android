@@ -88,7 +88,6 @@ namespace Xamarin.Android.Tasks {
 		public bool MultiDex { get; set; }
 		public bool NeedsInternet { get; set; }
 		public bool InstantRunEnabled { get; set; }
-		public bool UseSharedRuntime { get; set; }
 		public string VersionCode {
 			get {
 				XAttribute attr = doc.Root.Attribute (androidNs + "versionCode");
@@ -410,8 +409,7 @@ namespace Xamarin.Android.Tasks {
 			AddUsesPermissions (app);
 			AddUsesFeatures (app);
 			AddSupportsGLTextures (app);
-			if (UseSharedRuntime && targetSdkVersionValue >= 30)
-				AddQueries (app, targetSdkVersionValue);
+
 			if (targetSdkVersionValue >= 23) {
 				if (app.Attribute (androidNs + "extractNativeLibs") == null)
 					app.SetAttributeValue (androidNs + "extractNativeLibs", "true");
@@ -837,18 +835,6 @@ namespace Xamarin.Android.Tasks {
 				if (!application.Parent.Descendants ("uses-permission").Any (x => (string)x.Attribute (attName) == upa.Name))
 					application.AddBeforeSelf (upa.ToElement (PackageName));
 		}
-
-		void AddQueries (XElement application, int targetSdkVersion)
-		{
-			var queries = application.Parent.Element ("queries");
-			if (queries == null) {
-				application.AddAfterSelf (queries = new XElement ("queries"));
-			}
-
-			queries.Add (new XElement ("package", new XAttribute (androidNs + "name", "Mono.Android.DebugRuntime")));
-			queries.Add (new XElement ("package", new XAttribute (androidNs + "name", $"Mono.Android.Platform.ApiLevel_{targetSdkVersion}")));
-		}
-
 		void AddUsesConfigurations (XElement application, IEnumerable<UsesConfigurationAttribute> configs)
 		{
 			foreach (var uca in configs)

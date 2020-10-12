@@ -69,8 +69,7 @@ JNI_OnLoad ([[maybe_unused]] JavaVM *vm, [[maybe_unused]] void *reserved)
 
 JNIEXPORT void JNICALL
 Java_mono_android_DebugRuntime_init (JNIEnv *env, [[maybe_unused]] jclass klass, jobjectArray runtimeApksJava,
-                                     jstring runtimeNativeLibDir, jobjectArray appDirs,
-                                     jobjectArray externalStorageDirs)
+                                     jstring runtimeNativeLibDir, jobjectArray appDirs)
 {
 	jstring_array_wrapper applicationDirs (env, appDirs);
 	jstring_array_wrapper runtimeApks (env, runtimeApksJava);
@@ -81,18 +80,6 @@ Java_mono_android_DebugRuntime_init (JNIEnv *env, [[maybe_unused]] jclass klass,
 	androidSystem.setup_app_library_directories (runtimeApks, applicationDirs);
 
 	jstring_wrapper jstr (env);
-	jstr = env->GetObjectArrayElement (externalStorageDirs, 0);
-	androidSystem.set_override_dir (1, utils.strdup_new (jstr.get_cstr ()));
-
-	jstr = env->GetObjectArrayElement (externalStorageDirs, 1);
-	androidSystem.set_override_dir (2, utils.strdup_new (jstr.get_cstr ()));
-
-	for (uint32_t i = 0; i < BasicAndroidSystem::MAX_OVERRIDES; ++i) {
-		const char *p = androidSystem.get_override_dir (i);
-		if (p == nullptr || !utils.directory_exists (p))
-			continue;
-		log_warn (LOG_DEFAULT, "Using override path: %s", p);
-	}
 
 	if (runtimeNativeLibDir != nullptr) {
 		jstr = runtimeNativeLibDir;

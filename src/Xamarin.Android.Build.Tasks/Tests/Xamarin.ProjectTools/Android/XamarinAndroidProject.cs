@@ -25,7 +25,6 @@ namespace Xamarin.ProjectTools
 				SetProperty ("MonoAndroidResourcePrefix", "Resources");
 				SetProperty (KnownProperties.AndroidUseLatestPlatformSdk, () => UseLatestPlatformSdk ? "True" : "False");
 				SetProperty (KnownProperties.TargetFrameworkVersion, () => TargetFrameworkVersion);
-				SetProperty (ReleaseProperties, KnownProperties.AndroidUseSharedRuntime, "False");
 			}
 
 			SetProperty (KnownProperties.OutputType, "Library");

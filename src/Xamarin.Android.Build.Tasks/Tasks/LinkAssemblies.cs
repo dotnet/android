@@ -26,9 +26,6 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "LNK";
 
 		[Required]
-		public string UseSharedRuntime { get; set; }
-
-		[Required]
 		public string MainAssembly { get; set; }
 
 		[Required]
@@ -105,11 +102,8 @@ namespace Xamarin.Android.Tasks
 			options.TlsProvider = TlsProvider;
 			options.PreserveJniMarshalMethods = PreserveJniMarshalMethods;
 			options.DeterministicOutput = Deterministic;
-			
-			var skiplist = new List<string> ();
 
-			if (string.Compare (UseSharedRuntime, "true", true) == 0)
-				skiplist.AddRange (Profile.SharedRuntimeAssemblies.Where (a => a.EndsWith (".dll")).Select (a => Path.GetFileNameWithoutExtension (a)));
+			var skiplist = new List<string> ();
 
 			// Add LinkSkip options
 			if (!string.IsNullOrWhiteSpace (LinkSkip))
