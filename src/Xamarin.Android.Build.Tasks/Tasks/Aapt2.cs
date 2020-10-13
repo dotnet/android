@@ -22,7 +22,9 @@ namespace Xamarin.Android.Tasks {
 	public abstract class Aapt2 : AndroidAsyncTask {
 
 		private static readonly int DefaultMaxAapt2Daemons = 6;
-		protected Dictionary<string, string> resource_name_case_map;
+		protected Dictionary<string, string> _resource_name_case_map;
+
+		Dictionary<string, string> resource_name_case_map => _resource_name_case_map ??= MonoAndroidHelper.LoadResourceCaseMap (BuildEngine4);
 
 		protected virtual int ProcessorCount => Environment.ProcessorCount;
 
@@ -33,8 +35,6 @@ namespace Xamarin.Android.Tasks {
 		public ITaskItem [] ResourceDirectories { get; set; }
 
 		public ITaskItem AndroidManifestFile { get; set;}
-
-		public string ResourceNameCaseMap { get; set; }
 
 		public string ResourceSymbolsTextFile { get; set; }
 
@@ -202,11 +202,6 @@ namespace Xamarin.Android.Tasks {
 				LogCodedWarning (GetErrorCode (singleLine), singleLine);
 			}
 			return true;
-		}
-
-		protected void LoadResourceCaseMap ()
-		{
-			resource_name_case_map = MonoAndroidHelper.LoadResourceCaseMap (ResourceNameCaseMap);
 		}
 
 		static string GetErrorCode (string message)

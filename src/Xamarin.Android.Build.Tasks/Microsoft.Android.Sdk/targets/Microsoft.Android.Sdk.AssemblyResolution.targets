@@ -64,7 +64,7 @@ _ResolveAssemblies MSBuild target.
     <ProcessAssemblies
         InputAssemblies="@(_ResolvedAssemblyFiles)"
         ResolvedSymbols="@(_ResolvedSymbolFiles)"
-        UseSharedRuntime="$(AndroidUseSharedRuntime)"
+        IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
         LinkMode="$(AndroidLinkMode)">
       <Output TaskParameter="OutputAssemblies" ItemName="_ProcessedAssemblies" />
       <Output TaskParameter="ResolvedSymbols"  ItemName="ResolvedSymbols" />
@@ -115,7 +115,7 @@ _ResolveAssemblies MSBuild target.
 
   <Target Name="_PrepareAssemblies"
       DependsOnTargets="$(_PrepareAssembliesDependsOnTargets)">
-    <ItemGroup Condition=" '$(AndroidLinkMode)' == 'None' ">
+    <ItemGroup Condition=" '$(AndroidLinkMode)' == 'None' And '$(AndroidIncludeDebugSymbols)' == 'true'  ">
       <_ResolvedAssemblies          Include="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')" />
       <_ResolvedUserAssemblies      Include="@(ResolvedUserAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')" />
       <_ResolvedFrameworkAssemblies Include="@(ResolvedFrameworkAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')" />
@@ -124,7 +124,7 @@ _ResolveAssemblies MSBuild target.
       <_ShrunkUserAssemblies        Include="@(_ResolvedUserAssemblies)" />
       <_ShrunkFrameworkAssemblies   Include="@(_ResolvedFrameworkAssemblies)" />
     </ItemGroup>
-    <ItemGroup Condition=" '$(AndroidLinkMode)' != 'None' ">
+    <ItemGroup Condition=" '$(AndroidLinkMode)' != 'None' And '$(AndroidIncludeDebugSymbols)' != 'true'  ">
       <_ResolvedAssemblies          Include="@(ResolvedAssemblies)" />
       <_ResolvedUserAssemblies      Include="@(ResolvedUserAssemblies)" />
       <_ResolvedFrameworkAssemblies Include="@(ResolvedFrameworkAssemblies)" />

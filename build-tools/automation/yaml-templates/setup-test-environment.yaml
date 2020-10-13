@@ -21,13 +21,9 @@ steps:
   displayName: set JI_JAVA_HOME
   condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
 
-- template: use-dot-net.yaml
-  parameters:
-    version: $(DotNetCorePreviewVersion)
-    remove_dotnet: true
-
-- template: use-dot-net.yaml
-  parameters:
+- task: UseDotNet@2
+  displayName: install .NET Core $(DotNetCoreVersion)
+  inputs:
     version: $(DotNetCoreVersion)
 
 - script: |

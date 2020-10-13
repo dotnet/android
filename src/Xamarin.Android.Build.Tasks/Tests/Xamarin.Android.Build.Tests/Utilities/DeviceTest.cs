@@ -153,6 +153,16 @@ namespace Xamarin.Android.Build.Tests
 			return result;
 		}
 
+		protected static bool WaitForAppBuiltForOlderAndroidWarning (string packageName, string logcatFilePath, int timeout = 5)
+		{
+			bool result = MonitorAdbLogcat ((line) => {
+				return line.Contains ($"ActivityTaskManager: Showing SDK deprecation warning for package {packageName}");
+			}, logcatFilePath, timeout);
+			if (result)
+				ClickButton ("", "android:id/button1", "OK");
+			return result;
+		}
+
 		protected static bool WaitForActivityToStart (string activityNamespace, string activityName, string logcatFilePath, int timeout = 60)
 		{
 			return WaitForActivityToStart (activityNamespace, activityName, logcatFilePath, out TimeSpan time, timeout);
@@ -219,7 +229,7 @@ namespace Xamarin.Android.Build.Tests
 
 		/// <summary>
 		/// Returns the first device listed via `adb devices`
-		/// 
+		///
 		/// Output is:
 		/// > adb devices
 		/// List of devices attached

@@ -60,6 +60,15 @@ namespace Xamarin.ProjectTools
 			return JavaSdkPath;
 		}
 
+		// Cache the result, so we don't run MSBuild on every call
+		static string DotNetPreviewPath;
+		public static string GetDotNetPreviewPath ()
+		{
+			if (string.IsNullOrEmpty (DotNetPreviewPath))
+				DotNetPreviewPath = RunPathsTargets ("GetDotNetPreviewPath");
+			return DotNetPreviewPath;
+		}
+
 		static string RunPathsTargets (string target)
 		{
 			var targets = Path.Combine (XABuildPaths.TopDirectory, "build-tools", "scripts", "Paths.targets");

@@ -29,6 +29,11 @@ namespace Xamarin.Android.Build.Tests
 				private set;
 			}
 
+			public static int DeviceSdkVersion {
+				get;
+				private set;
+			}
+
 			public static bool CommercialBuildAvailable {
 				get;
 				private set;
@@ -57,13 +62,17 @@ namespace Xamarin.Android.Build.Tests
 			public void BeforeAllTests ()
 			{
 				try {
-					int sdkVersion = GetSdkVersion ();
-					if (HasDevices = sdkVersion != -1) {
-						if (sdkVersion >= 21)
+					DeviceSdkVersion = GetSdkVersion ();
+					if (HasDevices = DeviceSdkVersion != -1) {
+						if (DeviceSdkVersion >= 21)
 							DeviceAbi = RunAdbCommand ("shell getprop ro.product.cpu.abilist64").Trim ();
 
 						if (string.IsNullOrEmpty (DeviceAbi))
 							DeviceAbi = RunAdbCommand ("shell getprop ro.product.cpu.abi") ?? RunAdbCommand ("shell getprop ro.product.cpu.abi2");
+
+						if (DeviceAbi.Contains (",")) {
+							DeviceAbi = DeviceAbi.Split (',')[0];
+						}
 					}
 				} catch (Exception ex) {
 					Console.Error.WriteLine ("Failed to determine whether there is Android target emulator or not: " + ex);
@@ -131,6 +140,8 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		protected string DeviceAbi => SetUp.DeviceAbi;
+
+		protected int DeviceSdkVersion => SetUp.DeviceSdkVersion;
 
 		protected bool IsWindows => TestEnvironment.IsWindows;
 
@@ -550,7 +561,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 			if (!Directory.Exists (output))
 				return;
-			if (TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Passed || 
+			if (TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Passed ||
 			    TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Skipped) {
 				FileSystemUtils.SetDirectoryWriteable (output);
 				try {

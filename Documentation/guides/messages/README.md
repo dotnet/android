@@ -69,6 +69,15 @@ ms.date: 01/24/2020
 + [XA0122](xa0122.md): Assembly '{assembly}' is using a deprecated attribute '[assembly: Java.Interop.DoNotPackageAttribute]'. Use a newer version of this NuGet package or notify the library author.
 + XA0123: Removing {issue} from {propertyName}. Lint {version} does not support this check.
 + [XA0124](xa0124.md): Interpreter is not supported by the x86 ABI
++ [XA0125](xa0125.md): `{Project}` is using a deprecated debug information level.
+Set the debugging information to Portable in the Visual Studio project property pages or edit the project file in a text editor and set the 'DebugType' MSBuild property to 'portable' to use the newer, cross-platform debug information level.
+If this file comes from a NuGet package, update to a newer version of the NuGet package or notify the library author.
++ [XA0126](xa0126.md): Error installing FastDev Tools. This device does not support Fast Deployment. Please rebuild your app using `EmbedAssembliesIntoApk = True`.
++ [XA0127](xa0127.md): There was an issue deploying {destination} using {FastDevTool}. We encountered the following error {output}. Please rebuild your app using `EmbedAssembliesIntoApk = True`.
++ [XA0128](xa0128.md): Stdio Redirection is enabled. Please disable it to use Fast Deployment.
++ [XA0129](xa0129.md): Error deploying `{File}`. Please disable fast deployment in the Visual Studio project property pages or edit the project file in a text editor and set the 'EmbedAssembliesIntoApk' MSBuild property to 'true'.
++ [XA0130](xa0130.md): Sorry. Fast deployment is only supported on devices running Android 5.0 (API level 21) or higher.
+Please disable fast deployment in the Visual Studio project property pages or edit the project file in a text editor and set the 'EmbedAssembliesIntoApk' MSBuild property to 'true'.
 
 ## XA1xxx: Project related
 
@@ -233,6 +242,7 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `DES` - `Desugar`
 * `DJL` - `DetermineJavaLibrariesToCompile`
 * `DX8` - `D8`
+* `FD`  - `FastDeploy`
 * `FLB` - `FindLayoutsToBind`
 * `FLT` - `FilterAssemblies`
 * `GAD` - `GetAndroidDefineConstants`

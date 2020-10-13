@@ -41,8 +41,6 @@ namespace Xamarin.Android.Tasks {
 
 		public async override System.Threading.Tasks.Task RunTaskAsync ()
 		{
-			LoadResourceCaseMap ();
-
 			await this.WhenAllWithLock (ResourcesToCompile ?? ResourceDirectories, ProcessDirectory);
 
 			ProcessOutput ();

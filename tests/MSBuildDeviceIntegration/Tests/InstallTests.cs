@@ -27,14 +27,12 @@ namespace Xamarin.Android.Build.Tests
 
 		string GetContentFromAllOverrideDirectories (string packageName, bool useRunAsCommand = true)
 		{
-			var adbShellArgs = $"shell ls";
-			if (useRunAsCommand)
-				adbShellArgs = $"shell run-as {packageName} ls";
+			var adbShellArgs = $"shell run-as {packageName} ls";
 
 			var directorylist = string.Empty;
 			foreach (var dir in GetOverrideDirectoryPaths (packageName)) {
 				var listing = RunAdbCommand ($"{adbShellArgs} {dir}");
-				if (!listing.Contains ("No such file or directory"))
+				if (!listing.Contains ("No such file or directory") && !listing.Contains ("Permission denied"))
 					directorylist += $"{listing} ";
 			}
 			return directorylist;
@@ -65,6 +63,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (builder.Output.AreTargetsAllBuilt ("_Upload"), "_Upload should have built completely.");
 				Assert.AreEqual ($"package:{proj.PackageName}", RunAdbCommand ($"shell pm list packages {proj.PackageName}").Trim (),
 					$"{proj.PackageName} is not installed on the device.");
+				Assert.IsTrue (builder.Uninstall (proj), "unnstall should have succeeded.");
 			}
 		}
 
@@ -108,7 +107,9 @@ namespace Xamarin.Android.Build.Tests
 			AssertCommercialBuild ();
 			AssertHasDevices ();
 
-			var proj = new XamarinAndroidApplicationProject ();
+			var proj = new XamarinAndroidApplicationProject () {
+				PackageName = "com.xamarin.keytest"
+			};
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			using (var builder = CreateApkBuilder ()) {
 				// Use the default debug.keystore XA generates
@@ -126,6 +127,7 @@ namespace Xamarin.Android.Build.Tests
 				proj.SetProperty ("AndroidSigningKeyAlias", "mykey");
 
 				Assert.IsTrue (builder.Install (proj), "second install should succeed.");
+				Assert.IsTrue (builder.Uninstall (proj), "unnstall should have succeeded.");
 			}
 		}
 
@@ -167,7 +169,7 @@ namespace Xamarin.Android.Build.Tests
 
 				directorylist = GetContentFromAllOverrideDirectories (proj.PackageName);
 				StringAssert.Contains ($"{proj.AssemblyName}", directorylist, $"{proj.AssemblyName} not found in fastdev directory.");
-			
+
 				Assert.IsTrue (builder.Uninstall (proj));
 				Assert.AreNotEqual ($"package:{proj.PackageName}", RunAdbCommand ($"shell pm list packages {proj.PackageName}").Trim (),
 					$"{proj.PackageName} is installed on the device.");
@@ -185,7 +187,6 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetProperty (proj.ReleaseProperties, "Optimize", false);
 			proj.SetProperty (proj.ReleaseProperties, "DebugType", "none");
-			proj.SetProperty (proj.ReleaseProperties, "AndroidUseSharedRuntime", false);
 			proj.RemoveProperty (proj.ReleaseProperties, "EmbedAssembliesIntoApk");
 			var abis = new [] { "armeabi-v7a", "x86" };
 			proj.SetAndroidSupportedAbis (abis);
@@ -209,11 +210,11 @@ namespace Xamarin.Android.Build.Tests
 				//FIXME: https://github.com/xamarin/androidtools/issues/141
 				//Assert.AreEqual (0, RunAdbCommand ("shell pm list packages Mono.Android.DebugRuntime").Trim ().Length,
 				//	"The Shared Runtime should not have been installed.");
-				var directorylist = GetContentFromAllOverrideDirectories (proj.PackageName, false);
+				var directorylist = GetContentFromAllOverrideDirectories (proj.PackageName);
 				StringAssert.Contains ($"{proj.ProjectName}.dll", directorylist, $"{proj.ProjectName}.dll should exist in the .__override__ directory.");
 				StringAssert.Contains ($"System.dll", directorylist, $"System.dll should exist in the .__override__ directory.");
 				StringAssert.Contains ($"Mono.Android.dll", directorylist, $"Mono.Android.dll should exist in the .__override__ directory.");
-
+				Assert.IsTrue (builder.Uninstall (proj), "unnstall should have succeeded.");
 			}
 		}
 
@@ -226,7 +227,6 @@ namespace Xamarin.Android.Build.Tests
 			//Setup a situation where we get INSTALL_FAILED_NO_MATCHING_ABIS
 			var abi = "armeabi-v7a";
 			var proj = new XamarinAndroidApplicationProject {
-				AndroidUseSharedRuntime = false,
 				EmbedAssembliesIntoApk = true,
 			};
 			proj.SetAndroidSupportedAbis (abi);
@@ -248,7 +248,6 @@ namespace Xamarin.Android.Build.Tests
 			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject {
-				AndroidUseSharedRuntime = true,
 				EmbedAssembliesIntoApk = false,
 				OtherBuildItems = {
 					new BuildItem.NoActionResource ("UnnamedProject.dll.config") {
@@ -270,7 +269,6 @@ namespace Xamarin.Android.Build.Tests
 				}
 
 				//Now toggle FastDev to OFF
-				proj.AndroidUseSharedRuntime = false;
 				proj.EmbedAssembliesIntoApk = true;
 				proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 
@@ -281,6 +279,7 @@ namespace Xamarin.Android.Build.Tests
 
 				//Deploy one last time to verify install still works without the .__override__ directory existing
 				Assert.IsTrue (builder.Install (proj), "Third install should have succeeded.");
+				Assert.IsTrue (builder.Uninstall (proj), "unnstall should have succeeded.");
 			}
 		}
 
@@ -318,7 +317,6 @@ namespace Xamarin.Android.Build.Tests
 
 			var serial = GetAttachedDeviceSerial ();
 			var proj = new XamarinAndroidApplicationProject ();
-			proj.SetProperty (proj.DebugProperties, "AndroidUseSharedRuntime", true);
 			proj.SetProperty (proj.DebugProperties, "EmbedAssembliesIntoApk", false);
 
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
@@ -365,6 +363,10 @@ namespace Xamarin.Android.Build.Tests
 		public void TestAndroidStoreKey (bool useApkSigner, bool isRelease, string packageFormat, string androidKeyStore, string password, string expected, bool shouldInstall)
 		{
 			AssertHasDevices ();
+			if (DeviceSdkVersion >= 30 && !useApkSigner && packageFormat == "apk") {
+				Assert.Ignore ($"Test Skipped. jarsigner and {packageFormat} does not work with API 30 and above");
+				return;
+			}
 
 			string path = Path.Combine ("temp", TestName.Replace (expected, expected.Replace ("-", "_")));
 			string storepassfile = Path.Combine (Root, path, "storepass.txt");
@@ -430,7 +432,6 @@ namespace Xamarin.Android.Build.Tests
 			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject {
-				AndroidUseSharedRuntime = true,
 				EmbedAssembliesIntoApk = false,
 				OtherBuildItems = {
 					new BuildItem ("EmbeddedResource", "Foo.resx") {
@@ -450,8 +451,9 @@ namespace Xamarin.Android.Build.Tests
 
 				var overrideContents = string.Empty;
 				foreach (var dir in GetOverrideDirectoryPaths (proj.PackageName)) {
-					overrideContents += RunAdbCommand ($"shell find {dir}");
+					overrideContents += RunAdbCommand ($"shell run-as {proj.PackageName} find {dir}");
 				}
+				builder.BuildLogFile = "uninstall.log";
 				builder.Uninstall (proj);
 				Assert.IsTrue (resourceFilesFromDisk.Any (), $"Unable to find any localized assemblies in {resourceFilesFromDisk}");
 				foreach (var res in resourceFilesFromDisk) {
@@ -488,7 +490,6 @@ namespace Xamarin.Android.Build.Tests
 			};
 
 			var app = new XamarinFormsAndroidApplicationProject () {
-				AndroidUseSharedRuntime = true,
 				EmbedAssembliesIntoApk = false,
 				References = {
 					new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj"),

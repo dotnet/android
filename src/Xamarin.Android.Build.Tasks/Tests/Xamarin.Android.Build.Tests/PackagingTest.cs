@@ -520,8 +520,8 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 				IsRelease = isRelease,
 			};
 			proj.SetProperty ("AndroidPackageFormat", "aab");
-			// Disable the shared runtime because it is not currently compatible with aabs and so gives an XA0119 build error.
-			proj.AndroidUseSharedRuntime = false;
+			// Disable the fast deployment because it is not currently compatible with aabs and so gives an XA0119 build error.
+			proj.EmbedAssembliesIntoApk = true;
 
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				var bin = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);

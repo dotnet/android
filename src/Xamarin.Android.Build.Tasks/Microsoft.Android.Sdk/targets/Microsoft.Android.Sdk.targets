@@ -7,11 +7,12 @@
 
   <!-- Default property settings, imported before Microsoft.NET.Sdk -->
   <Import Project="Microsoft.Android.Sdk.DefaultProperties.props" />
+  <Import Project="$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Common.Debugging.props"
+      Condition="Exists('$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Common.Debugging.props')"/>
   <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.targets" />
   <PropertyGroup>
     <TargetPlatformSupported Condition=" '$(TargetPlatformIdentifier)' == 'Android' ">true</TargetPlatformSupported>
   </PropertyGroup>
-
   <!-- Build ordering, should be imported before Xamarin.Android.Common.targets -->
   <Import Project="Microsoft.Android.Sdk.BuildOrder.targets" />
 

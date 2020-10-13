@@ -40,13 +40,15 @@ namespace Xamarin.Android.Tasks
 		const string NoFileWarningOrErrorRegExString = @"(?<type>Warning|Error):(?<text>.+)";
 		Regex codeErrorRegEx = new Regex (CodeErrorRegExString, RegexOptions.Compiled);
 		Regex noFileWarningOrErrorRegEx = new Regex(NoFileWarningOrErrorRegExString, RegexOptions.Compiled);
-		protected Dictionary<string, string> resource_name_case_map;
+		Dictionary<string, string> _resource_name_case_map;
 		bool matched = false;
 		string file;
 		int line;
 		int column;
 		string text;
 		string type;
+
+		Dictionary<string, string> resource_name_case_map => _resource_name_case_map ??= MonoAndroidHelper.LoadResourceCaseMap (BuildEngine4);
 
 		[Required]
 		public string TargetDirectory { get; set; }
@@ -150,8 +152,6 @@ namespace Xamarin.Android.Tasks
 			get { return OS.IsWindows ? "lint.bat" : "lint"; }
 		}
 
-		public string ResourceNameCaseMap { get; set; }
-
 		public Lint ()
 		{
 			ResourceDirectories = new ITaskItem[0];
@@ -214,8 +214,6 @@ namespace Xamarin.Android.Tasks
 			}
 
 			EnvironmentVariables = new [] { "JAVA_HOME=" + JavaSdkPath };
-
-			resource_name_case_map = MonoAndroidHelper.LoadResourceCaseMap (ResourceNameCaseMap);
 
 			base.RunTask ();
 

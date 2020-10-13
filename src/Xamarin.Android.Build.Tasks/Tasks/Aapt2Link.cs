@@ -92,8 +92,6 @@ namespace Xamarin.Android.Tasks {
 		public async override System.Threading.Tasks.Task RunTaskAsync ()
 		{
 			try {
-				LoadResourceCaseMap ();
-
 				assemblyMap.Load (Path.Combine (WorkingDirectory, AssemblyIdentityMapFile));
 
 				proguardRuleOutputTemp = GetTempFile ();
