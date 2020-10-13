@@ -555,6 +555,50 @@ The most common values for this property are:
 
 Added in Xamarin.Android 6.1.
 
+## AndroidIncludeWrapSh
+
+A boolean value which indicates whether the Android wrapper script
+([`wrap.sh`](https://developer.android.com/ndk/guides/wrap-script))
+should be packaged into the APK. The property defaults to `false`
+since the wrapper script may significantly influence the way the
+application starts up and works and the script should be included only
+when necessary e.g. for debugging or otherwise changing the
+application startup/runtime behavior.
+
+The script is added to the project using the
+[`@(AndroidNativeLibrary)`](~/android/deploy-test/building-apps/build-items.md#androidnativelibrary)
+build action, because it is placed in the same directory where
+architecture-specific native libraries, and must be named `wrap.sh`.
+
+The easiest way to specify path to the `wrap.sh` script is to put it
+in a directory named after the target architecture. This approach will
+work if you have just one `wrap.sh` per architecture:
+
+```xml
+<AndroidNativeLibrary Include="path/to/arm64-v8a/wrap.sh" />
+```
+
+However, if your project needs more than one `wrap.sh` per
+architecture, for different purposes, this approach won't work.
+Instead, in such cases the name can be specified using the `Link`
+metadata of the `AndroidNativeLibrary`:
+
+```xml
+<AndroidNativeLibrary Include="/path/to/my/arm64-wrap.sh">
+  <Link>lib\arm64-v8a\wrap.sh</Link>
+</AndroidNativeLibrary>
+```
+
+If the `Link` metadata is used, the path specified in its value must
+be a valid native architecture-specific library path, relative to the
+APK root directory. The format of the path is `lib\ARCH\wrap.sh` where
+`ARCH` can be one of:
+
++ `arm64-v8a`
++ `armeabi-v7a`
++ `x86_64`
++ `x86`
+
 ## AndroidKeyStore
 
 A boolean value which indicates whether

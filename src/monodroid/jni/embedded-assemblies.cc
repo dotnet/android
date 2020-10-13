@@ -805,7 +805,10 @@ EmbeddedAssemblies::typemap_load_file (BinaryTypeMapHeader &header, const char *
 		cur = &module.java_to_managed[i];
 		cur->from = reinterpret_cast<char*>(java_pos);
 
-		uint32_t idx = *(reinterpret_cast<uint32_t*>(java_pos + header.java_name_width));
+		uint32_t idx;
+		// This might seem slow but it is in fact compiled into a single instruction and is safe when loading the 32-bit
+		// integer from unaligned memory
+		memcpy (&idx, java_pos + header.java_name_width, sizeof (idx));
 		if (idx < INVALID_TYPE_INDEX) {
 			cur->to = reinterpret_cast<char*>(managed_start + (managed_entry_size * idx));
 		} else {
@@ -817,7 +820,7 @@ EmbeddedAssemblies::typemap_load_file (BinaryTypeMapHeader &header, const char *
 		cur = &module.managed_to_java[i];
 		cur->from = reinterpret_cast<char*>(managed_pos);
 
-		idx = *(reinterpret_cast<uint32_t*>(managed_pos + header.managed_name_width));
+		memcpy (&idx, managed_pos + header.managed_name_width, sizeof (idx));
 		cur->to = reinterpret_cast<char*>(java_start + (java_entry_size * idx));
 		managed_pos += managed_entry_size;
 	}

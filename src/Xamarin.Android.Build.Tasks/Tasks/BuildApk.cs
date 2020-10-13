@@ -85,6 +85,10 @@ namespace Xamarin.Android.Tasks
 		//[Required]
 		public bool EnableCompression { get; set; }
 
+		public bool IncludeWrapSh { get; set; }
+
+		public string CheckedBuild { get; set; }
+
 		[Required]
 		public string ProjectFullPath { get; set; }
 
@@ -499,9 +503,10 @@ namespace Xamarin.Android.Tasks
 			return assembliesPath;
 		}
 
-		class LibInfo
+		sealed class LibInfo
 		{
 			public string Path;
+			public string Link;
 			public string Abi;
 			public string ArchiveFileName;
 		}
@@ -537,25 +542,118 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
+		bool IsWrapperScript (string path, string link)
+		{
+			if (Path.DirectorySeparatorChar == '/') {
+				path = path.Replace ('\\', '/');
+			}
+
+			if (String.Compare (Path.GetFileName (path), "wrap.sh", StringComparison.Ordinal) == 0) {
+				return true;
+			}
+
+			if (String.IsNullOrEmpty (link)) {
+				return false;
+			}
+
+			if (Path.DirectorySeparatorChar == '/') {
+				link = link.Replace ('\\', '/');
+			}
+
+			return String.Compare (Path.GetFileName (link), "wrap.sh", StringComparison.Ordinal) == 0;
+		}
+
+		bool IncludeNativeLibrary (ITaskItem item)
+		{
+			if (IncludeWrapSh)
+				return true;
+
+			return !IsWrapperScript (item.ItemSpec, item.GetMetadata ("Link"));
+		}
+
+		string GetArchiveFileName (ITaskItem item)
+		{
+			string archiveFileName = item.GetMetadata ("ArchiveFileName");
+			if (!String.IsNullOrEmpty (archiveFileName))
+				return archiveFileName;
+
+			if (!IsWrapperScript (item.ItemSpec, item.GetMetadata ("Link"))) {
+				return null;
+			}
+
+			return "wrap.sh";
+		}
+
 		private void AddNativeLibraries (ArchiveFileList files, string [] supportedAbis)
 		{
 			var frameworkLibs = FrameworkNativeLibraries.Select (v => new LibInfo {
 				Path = v.ItemSpec,
+				Link = v.GetMetadata ("Link"),
 				Abi = GetNativeLibraryAbi (v),
-				ArchiveFileName = v.GetMetadata ("ArchiveFileName")
+				ArchiveFileName = GetArchiveFileName (v)
 			});
 
 			AddNativeLibraries (files, supportedAbis, frameworkLibs);
 
 			var libs = NativeLibraries.Concat (BundleNativeLibraries ?? Enumerable.Empty<ITaskItem> ())
+				.Where (v => IncludeNativeLibrary (v))
 				.Select (v => new LibInfo {
 						Path = v.ItemSpec,
+						Link = v.GetMetadata ("Link"),
 						Abi = GetNativeLibraryAbi (v),
-						ArchiveFileName = v.GetMetadata ("ArchiveFileName")
+						ArchiveFileName = GetArchiveFileName (v)
 					}
 				);
 
 			AddNativeLibraries (files, supportedAbis, libs);
+
+			if (String.IsNullOrWhiteSpace (CheckedBuild))
+				return;
+
+			string mode = CheckedBuild;
+			string sanitizerName;
+			if (String.Compare ("asan", mode, StringComparison.Ordinal) == 0) {
+				sanitizerName = "asan";
+			} else if (String.Compare ("ubsan", mode, StringComparison.Ordinal) == 0) {
+				sanitizerName = "ubsan_standalone";
+			} else {
+				LogSanitizerWarning ($"Unknown checked build mode '{CheckedBuild}'");
+				return;
+			}
+
+			if (!IncludeWrapSh) {
+				LogSanitizerError ("Checked builds require the wrapper script to be packaged. Please set the `$(AndroidIncludeWrapSh)` MSBuild property to `true` in your project.");
+				return;
+			}
+
+			if (!libs.Any (info => IsWrapperScript (info.Path, info.Link))) {
+				LogSanitizerError ($"Checked builds require the wrapper script to be packaged. Please add `wrap.sh` appropriate for the {CheckedBuild} checker to your project.");
+				return;
+			}
+
+			NdkUtil.Init (AndroidNdkDirectory);
+			string clangDir = NdkUtil.GetClangDeviceLibraryPath (AndroidNdkDirectory);
+			if (String.IsNullOrEmpty (clangDir)) {
+				LogSanitizerError ($"Unable to find the clang compiler directory. Is NDK installed?");
+				return;
+			}
+
+			foreach (string abi in supportedAbis) {
+				string clangAbi = MonoAndroidHelper.MapAndroidAbiToClang (abi);
+				if (String.IsNullOrEmpty (clangAbi)) {
+					LogSanitizerError ($"Unable to map Android ABI {abi} to clang ABI");
+					return;
+				}
+
+				string sanitizerLib = $"libclang_rt.{sanitizerName}-{clangAbi}-android.so";
+				string sanitizerLibPath = Path.Combine (clangDir, sanitizerLib);
+				if (!File.Exists (sanitizerLibPath)) {
+					LogSanitizerError ($"Unable to find sanitizer runtime for the {CheckedBuild} checker at {sanitizerLibPath}");
+					return;
+				}
+
+				AddNativeLibrary (files, sanitizerLibPath, abi, sanitizerLib);
+			}
 		}
 
 		string GetNativeLibraryAbi (ITaskItem lib)
@@ -604,6 +702,18 @@ namespace Xamarin.Android.Tasks
 				return;
 			}
 			files.Add (item);
+		}
+
+		// This method is used only for internal warnings which will never be shown to the end user, therefore there's
+		// no need to use coded warnings.
+		void LogSanitizerWarning (string message)
+		{
+			Log.LogWarning (message);
+		}
+
+		void LogSanitizerError (string message)
+		{
+			Log.LogError (message);
 		}
 	}
 }

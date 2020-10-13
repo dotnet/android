@@ -50,7 +50,6 @@ macro(xa_common_prepare)
     Wa,-noexecstack
     fPIC
     g
-    fomit-frame-pointer
     O2
     )
 

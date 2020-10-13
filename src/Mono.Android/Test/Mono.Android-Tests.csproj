@@ -24,6 +24,11 @@
     <TargetFrameworkVersion>v11.0</TargetFrameworkVersion>
     <AndroidDexTool Condition=" '$(AndroidDexTool)' == '' ">d8</AndroidDexTool>
     <_SkipJniAddNativeMethodRegistrationAttributeScan>True</_SkipJniAddNativeMethodRegistrationAttributeScan>
+    <AndroidIncludeWrapSh Condition=" '$(UseASAN)' != '' Or '$(UseUBSAN)' != '' ">true</AndroidIncludeWrapSh>
+    <_AndroidCheckedBuild Condition=" '$(UseASAN)' != '' ">asan</_AndroidCheckedBuild>
+    <_AndroidCheckedBuild Condition=" '$(UseUBSAN)' != '' ">ubsan</_AndroidCheckedBuild>
+    <_ASANScript>..\..\..\build-tools\wrap.sh\asan.sh</_ASANScript>
+    <_UBSANScript>..\..\..\build-tools\wrap.sh\ubsan.sh</_UBSANScript>
   </PropertyGroup>
   <Import Project="Mono.Android-Test.Shared.projitems" Label="Shared" Condition="Exists('Mono.Android-Test.Shared.projitems')" />
   <Import Project="..\..\..\Configuration.props" />
@@ -123,5 +128,32 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Localization\" />
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidNativeLibrary Include="$(_ASANScript)" Condition=" '$(UseASAN)' != '' ">
+      <Link>lib\arm64-v8a\wrap.sh</Link>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="$(_ASANScript)" Condition=" '$(UseASAN)' != '' ">
+      <Link>lib\armeabi-v7a\wrap.sh</Link>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="$(_ASANScript)" Condition=" '$(UseASAN)' != '' ">
+      <Link>lib\x86\wrap.sh</Link>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="$(_ASANScript)" Condition=" '$(UseASAN)' != '' ">
+      <Link>lib\x86_64\wrap.sh</Link>
+    </AndroidNativeLibrary>
+
+    <AndroidNativeLibrary Include="$(_UBSANScript)" Condition=" '$(UseUBSAN)' != '' ">
+      <Link>lib\arm64-v8a\wrap.sh</Link>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="$(_UBSANScript)" Condition=" '$(UseUBSAN)' != '' ">
+      <Link>lib\armeabi-v7a\wrap.sh</Link>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="$(_UBSANScript)" Condition=" '$(UseUBSAN)' != '' ">
+      <Link>lib\x86\wrap.sh</Link>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="$(_UBSANScript)" Condition=" '$(UseUBSAN)' != '' ">
+      <Link>lib\x86_64\wrap.sh</Link>
+    </AndroidNativeLibrary>
   </ItemGroup>
 </Project>

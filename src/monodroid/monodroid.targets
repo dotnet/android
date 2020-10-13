@@ -45,6 +45,26 @@
       </_ConfigureRuntimeCommands>
     </ItemGroup>
 
+    <MakeDir Directories="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-asan-Debug" />
+    <ItemGroup>
+      <_ConfigureRuntimeCommands
+          Include="@(AndroidSupportedTargetJitAbi)">
+        <Command>$(CmakePath)</Command>
+        <Arguments>--debug-output $(_CmakeAndroidFlags) -DENABLE_CLANG_ASAN=ON -DCONFIGURATION=Release -DCMAKE_BUILD_TYPE=Debug -DANDROID_NATIVE_API_LEVEL=%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_PLATFORM=android-%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_ABI=%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) $(MSBuildThisFileDirectory)</Arguments>
+        <WorkingDirectory>$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-asan-Debug</WorkingDirectory>
+      </_ConfigureRuntimeCommands>
+    </ItemGroup>
+
+    <MakeDir Directories="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-ubsan-Debug" />
+    <ItemGroup>
+      <_ConfigureRuntimeCommands
+          Include="@(AndroidSupportedTargetJitAbi)">
+        <Command>$(CmakePath)</Command>
+        <Arguments>--debug-output $(_CmakeAndroidFlags) -DENABLE_CLANG_UBSAN=ON -DCONFIGURATION=Release -DCMAKE_BUILD_TYPE=Debug -DANDROID_NATIVE_API_LEVEL=%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_PLATFORM=android-%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_ABI=%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) $(MSBuildThisFileDirectory)</Arguments>
+        <WorkingDirectory>$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-ubsan-Debug</WorkingDirectory>
+      </_ConfigureRuntimeCommands>
+    </ItemGroup>
+
     <MakeDir Directories="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-Release" />
     <ItemGroup>
       <_ConfigureRuntimeCommands
@@ -52,6 +72,26 @@
         <Command>$(CmakePath)</Command>
         <Arguments>--debug-output $(_CmakeAndroidFlags) -DSTRIP_DEBUG=ON -DCONFIGURATION=Debug -DCMAKE_BUILD_TYPE=Release -DANDROID_NATIVE_API_LEVEL=%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_PLATFORM=android-%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_ABI=%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) $(MSBuildThisFileDirectory)</Arguments>
         <WorkingDirectory>$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-Release</WorkingDirectory>
+      </_ConfigureRuntimeCommands>
+    </ItemGroup>
+
+    <MakeDir Directories="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-asan-Release" />
+    <ItemGroup>
+      <_ConfigureRuntimeCommands
+          Include="@(AndroidSupportedTargetJitAbi)">
+        <Command>$(CmakePath)</Command>
+        <Arguments>--debug-output $(_CmakeAndroidFlags) -DENABLE_CLANG_ASAN=ON -DSTRIP_DEBUG=ON -DCONFIGURATION=Debug -DCMAKE_BUILD_TYPE=Release -DANDROID_NATIVE_API_LEVEL=%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_PLATFORM=android-%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_ABI=%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) $(MSBuildThisFileDirectory)</Arguments>
+        <WorkingDirectory>$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-asan-Release</WorkingDirectory>
+      </_ConfigureRuntimeCommands>
+    </ItemGroup>
+
+    <MakeDir Directories="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-ubsan-Release" />
+    <ItemGroup>
+      <_ConfigureRuntimeCommands
+          Include="@(AndroidSupportedTargetJitAbi)">
+        <Command>$(CmakePath)</Command>
+        <Arguments>--debug-output $(_CmakeAndroidFlags) -DENABLE_CLANG_UBSAN=ON -DSTRIP_DEBUG=ON -DCONFIGURATION=Debug -DCMAKE_BUILD_TYPE=Release -DANDROID_NATIVE_API_LEVEL=%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_PLATFORM=android-%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_ABI=%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) $(MSBuildThisFileDirectory)</Arguments>
+        <WorkingDirectory>$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-ubsan-Release</WorkingDirectory>
       </_ConfigureRuntimeCommands>
     </ItemGroup>
 
@@ -87,7 +127,7 @@
 
   <Target Name="_BuildAndroidRuntimes"
       Inputs="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Debug\CMakeCache.txt');@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Release\CMakeCache.txt');jni\*.cc;jni\*.h;jni\*.hh;jni\**\*.c;;..\..\build-tools\scripts\Ndk.targets"
-      Outputs="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.debug.so');@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.release.so');@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Debug\libxamarin-app.so');@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Release\libxamarin-app.so')">
+      Outputs="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.debug.so');@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android-checked+asan.debug.so');@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android-checked+ubsan.debug.so');@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.release.so');@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android-checked+asan.release.so');@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android-checked+ubsan.release.so');@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Debug\libxamarin-app.so');@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Release\libxamarin-app.so')">
     <Exec
         Command="$(NinjaPath) -v"
         WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-Debug"
@@ -95,7 +135,27 @@
 
     <Exec
         Command="$(NinjaPath) -v"
+        WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-asan-Debug"
+    />
+
+    <Exec
+        Command="$(NinjaPath) -v"
+        WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-ubsan-Debug"
+    />
+
+    <Exec
+        Command="$(NinjaPath) -v"
         WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-Release"
+    />
+
+    <Exec
+        Command="$(NinjaPath) -v"
+        WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-asan-Release"
+    />
+
+    <Exec
+        Command="$(NinjaPath) -v"
+        WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-ubsan-Release"
     />
   </Target>
 
@@ -160,5 +220,38 @@
 
   <Target Name="CoreCompile"
       DependsOnTargets="Build">
+  </Target>
+
+  <Target Name="_GetCompileCommandsDirs"
+          DependsOnTargets="_BuildHostRuntimes;_BuildAndroidRuntimes">
+    <ItemGroup>
+      <_CompileCommandsDir Include="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-Debug">
+        <LogTag>%(AndroidSupportedTargetJitAbi.Identity)-Debug</LogTag>
+      </_CompileCommandsDir>
+      <_CompileCommandsDir Include="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-Release">
+        <LogTag>%(AndroidSupportedTargetJitAbi.Identity)-Release</LogTag>
+      </_CompileCommandsDir>
+
+      <!-- clang-tidy won't work with mingw builds, we need to disable them -->
+      <_CompileCommandsDir Include="$(IntermediateOutputPath)%(_HostRuntime.OutputDirectory)-Debug" Condition=" '%(_HostRuntime.Identity)' != 'host-mxe-Win64' And '%(_HostRuntime.Identity)' != 'host-mxe-Win32' ">
+        <LogTag>%(_HostRuntime.OutputDirectory)-Debug</LogTag>
+      </_CompileCommandsDir>
+      <_CompileCommandsDir Include="$(IntermediateOutputPath)%(_HostRuntime.OutputDirectory)-Release" Condition=" '%(_HostRuntime.Identity)' != 'host-mxe-Win64' And '%(_HostRuntime.Identity)' != 'host-mxe-Win32' ">
+        <LogTag>%(_HostRuntime.OutputDirectory)-Release</LogTag>
+      </_CompileCommandsDir>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="ClangTidyCheck"
+          DependsOnTargets="_GetCompileCommandsDirs">
+    <PropertyGroup>
+      <ClangTidy>$(AndroidNdkDirectory)\toolchains\llvm\prebuilt\$(NdkLlvmTag)\bin\clang-tidy</ClangTidy>
+    </PropertyGroup>
+
+    <Exec
+        ContinueOnError="ErrorAndContinue"
+        Command="$(ClangTidy) -p $(MSBuildThisFileDirectory)%(_CompileCommandsDir.Identity) *.cc > ..\..\..\bin\Build$(Configuration)\clang-tidy.%(_CompileCommandsDir.LogTag).log"
+        WorkingDirectory="$(MSBuildThisFileDirectory)\jni"
+    />
   </Target>
 </Project>

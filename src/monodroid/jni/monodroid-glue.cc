@@ -643,7 +643,7 @@ void
 MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& runtime_args)
 {
 #if defined (DEBUG) && !defined (WINDOWS)
-	RuntimeOptions options;
+	RuntimeOptions options{};
 	int64_t cur_time;
 
 	cur_time = time (nullptr);
@@ -733,9 +733,19 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 	} else {
 		set_debug_options ();
 	}
+
+	delete[] options.host;
 #else
 	set_debug_options ();
 #endif
+
+	// TESTING ASAN: use-after-free
+	// char *x = new char[10]{};
+	// delete[] x;
+	// log_warn (LOG_DEFAULT, "x == %s", x);
+
+	// TESTING UBSAN: integer overflow
+	//log_warn (LOG_DEFAULT, "Let us have an overflow: %d", INT_MAX + 1);
 
 	bool log_methods = utils.should_log (LOG_TIMING) && !(log_timing_categories & LOG_TIMING_BARE);
 	if (XA_UNLIKELY (log_methods)) {
