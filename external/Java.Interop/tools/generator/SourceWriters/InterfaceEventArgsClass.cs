@@ -18,18 +18,12 @@ namespace generator.SourceWriters
 			IsPublic = true;
 			IsPartial = true;
 
+			UsePriorityOrder = true;
+
 			Comments.Add ($"// event args for {iface.JavaName}.{method.JavaName}");
 
-			// Add: public bool Handled { get; set; }
 			if (method.IsEventHandlerWithHandledProperty)
-				Properties.Add (new PropertyWriter {
-					Name = "Handled",
-					PropertyType = TypeReferenceWriter.Bool,
-					IsPublic = true,
-					HasGet = true,
-					HasSet = true,
-					IsAutoProperty = true
-				});
+				Properties.Add (new HandledProperty ());
 		}
 
 		public void AddMembersFromMethod (InterfaceGen iface, Method method, CodeGenerationOptions opt)
@@ -47,7 +41,7 @@ namespace generator.SourceWriters
 
 			if (method.IsEventHandlerWithHandledProperty) {
 				ctor.Parameters.Add (new MethodParameterWriter ("handled", TypeReferenceWriter.Bool));
-				ctor.Body.Add ("this.Handled = handled;");
+				ctor.Body.Add ("this.handled = handled;");
 			}
 
 			foreach (var p in method.Parameters) {
@@ -55,7 +49,7 @@ namespace generator.SourceWriters
 					continue;
 
 				ctor.Parameters.Add (new MethodParameterWriter (p.Name, new TypeReferenceWriter (opt.GetTypeReferenceName (p))));
-				ctor.Body.Add ($"this.{p.PropertyName} = {opt.GetSafeIdentifier (p.Name)};");
+				ctor.Body.Add ($"this.{opt.GetSafeIdentifier (p.Name)} = {opt.GetSafeIdentifier (p.Name)};");
 			}
 
 			Constructors.Add (ctor);
@@ -71,18 +65,47 @@ namespace generator.SourceWriters
 				if (Properties.Any (prop => prop.Name == p.PropertyName))
 					continue;
 
+				Fields.Add (new FieldWriter {
+					Name = opt.GetSafeIdentifier (p.Name),
+					Type = new TypeReferenceWriter (opt.GetTypeReferenceName (p))
+				});
+
 				var prop = new PropertyWriter {
 					Name = p.PropertyName,
 					PropertyType = new TypeReferenceWriter (opt.GetTypeReferenceName (p)),
 					IsPublic = true,
-					HasGet = true,
-					HasSet = true,
-					IsAutoProperty = true,
-					AutoSetterVisibility = Visibility.Private
+					HasGet = true
 				};
+
+				prop.GetBody.Add ($"return {opt.GetSafeIdentifier (p.Name)};");
 
 				Properties.Add (prop);
 			}
+		}
+	}
+
+	public class HandledProperty : PropertyWriter
+	{
+		public HandledProperty ()
+		{
+			Name = "Handled";
+			PropertyType = TypeReferenceWriter.Bool;
+
+			IsPublic = true;
+
+			HasGet = true;
+			GetBody.Add ("return handled;");
+
+			HasSet = true;
+			SetBody.Add ("handled = value;");
+		}
+
+		public override void Write (CodeWriter writer)
+		{
+			writer.WriteLine ("bool handled;");
+			writer.WriteLine ();
+
+			base.Write (writer);
 		}
 	}
 }

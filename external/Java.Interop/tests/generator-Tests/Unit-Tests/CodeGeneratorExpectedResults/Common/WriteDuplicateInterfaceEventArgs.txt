@@ -123,24 +123,37 @@ internal partial class AnimatorListenerInvoker : global::Java.Lang.Object, Anima
 
 // event args for java.code.AnimatorListener.OnAnimationEnd
 public partial class AnimationEndEventArgs : global::System.EventArgs {
+	bool handled;
+
+	public bool Handled {
+		get { return handled; }
+		set { handled = value; }
+	}
+
 	public AnimationEndEventArgs (bool handled, int param1)
 	{
-		this.Handled = handled;
-		this.Param1 = param1;
+		this.handled = handled;
+		this.param1 = param1;
+	}
+
+	int param1;
+
+	public int Param1 {
+		get { return param1; }
 	}
 
 	public AnimationEndEventArgs (bool handled, int param1, int param2)
 	{
-		this.Handled = handled;
-		this.Param1 = param1;
-		this.Param2 = param2;
+		this.handled = handled;
+		this.param1 = param1;
+		this.param2 = param2;
 	}
 
-	public bool Handled { get; set; }
+	int param2;
 
-	public int Param1 { get; private set; }
-
-	public int Param2 { get; private set; }
+	public int Param2 {
+		get { return param2; }
+	}
 
 }
 
