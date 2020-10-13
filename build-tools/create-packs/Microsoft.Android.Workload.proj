@@ -36,7 +36,7 @@ workload manifest pack containing information about the various Microsoft.Androi
 <![CDATA[
 <Project>
     <Import Project="Sdk.targets"
-        Sdk="Microsoft.Android.SDK"
+        Sdk="Microsoft.Android.Sdk"
         Condition=" '%24(TargetPlatformIdentifier)' == 'Android' " />
 </Project>
 ]]>
