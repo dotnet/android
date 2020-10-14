@@ -88,7 +88,7 @@ sdk pack imported by Microsoft.Android.Workload.
       DependsOnTargets="_GetDefaultPackageVersion" >
     <PropertyGroup>
       <_AndroidNETAppTargetFramework>net5.0</_AndroidNETAppTargetFramework>
-      <BundledVersionsPropsFileName>Microsoft.Android.Sdk.BundledVersions.props</BundledVersionsPropsFileName>
+      <BundledVersionsFileName>Microsoft.Android.Sdk.BundledVersions.targets</BundledVersionsFileName>
     </PropertyGroup>
 
     <ItemGroup>
@@ -96,11 +96,11 @@ sdk pack imported by Microsoft.Android.Workload.
     </ItemGroup>
 
     <PropertyGroup>
-      <BundledVersionsPropsContent>
+      <BundledVersionsContent>
 <![CDATA[
 <!--
 ***********************************************************************************************
-$(BundledVersionsPropsFileName)
+$(BundledVersionsFileName)
 WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and have
           created a backup copy.  Incorrect changes to this file will make it
           impossible to load or build your projects from the command-line or the IDE.
@@ -128,11 +128,11 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
   </ItemGroup>
 </Project>
 ]]>
-      </BundledVersionsPropsContent>
+      </BundledVersionsContent>
     </PropertyGroup>
 
-    <WriteLinesToFile File="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\targets\$(BundledVersionsPropsFileName)"
-                      Lines="$(BundledVersionsPropsContent)"
+    <WriteLinesToFile File="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\targets\$(BundledVersionsFileName)"
+                      Lines="$(BundledVersionsContent)"
                       Overwrite="true" />
   </Target>
 
