@@ -232,7 +232,7 @@ stages:
       inputs:
         solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/create-packs/Microsoft.Android.Sdk.proj
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:CreateAllPacks /restore /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/create-all-packs.binlog
+        msbuildArguments: /t:CreateAllPacks /restore /p:NuGetLicense=$(System.DefaultWorkingDirectory)/xamarin-android/external/monodroid/tools/scripts/License.txt /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/create-all-packs.binlog
 
     - task: NuGetCommand@2
       displayName: push nupkgs
