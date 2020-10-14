@@ -86,7 +86,7 @@
       <_UnixExecutables Include="$(DotNetPreviewPath)packs\Microsoft.Android.Sdk\*\tools\$(HostOS)\**\*.*" />
     </ItemGroup>
     <Exec
-        Condition="$([MSBuild]::IsOSPlatform('osx'))"
+        Condition=" '$(HostOS)' == 'Darwin' or '$(HostOS)' == 'Linux' "
         Command="chmod +x &quot;%(_UnixExecutables.Identity)&quot;"
     />
     <Touch
