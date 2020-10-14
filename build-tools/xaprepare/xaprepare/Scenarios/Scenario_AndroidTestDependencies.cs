@@ -6,11 +6,12 @@ namespace Xamarin.Android.Prepare
 	partial class Scenario_AndroidTestDependencies : ScenarioNoStandardEndSteps
 	{
 		public Scenario_AndroidTestDependencies () 
-			: base ("AndroidTestDependencies", "Install Android SDK and OpenJDK test dependencies.")
+			: base ("AndroidTestDependencies", "Install Android SDK, OpenJDK and .NET preview test dependencies.")
 		{}
 
 		protected override void AddSteps (Context context)
 		{
+			Steps.Add (new Step_InstallDotNetPreview ());
 			Steps.Add (new Step_InstallJetBrainsOpenJDK8 ());
 			Steps.Add (new Step_InstallJetBrainsOpenJDK11 ());
 			Steps.Add (new Step_Android_SDK_NDK (AndroidToolchainComponentType.CoreDependency));
