@@ -4,7 +4,6 @@
     <MicrosoftAndroidSdkTargetsImported>true</MicrosoftAndroidSdkTargetsImported>
     <_XamarinAndroidBuildTasksAssembly>..\tools\Xamarin.Android.Build.Tasks.dll</_XamarinAndroidBuildTasksAssembly>
     <UsingAndroidNETSdk>true</UsingAndroidNETSdk>
-    <TargetPlatformSupported>true</TargetPlatformSupported>
     <!-- Enable nuget package conflict resolution -->
     <ResolveAssemblyConflicts>true</ResolveAssemblyConflicts>
     <_AndroidResourceDesigner>Resource.designer.cs</_AndroidResourceDesigner>
