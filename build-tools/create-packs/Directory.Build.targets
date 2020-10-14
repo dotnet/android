@@ -66,18 +66,14 @@
   </Target>
 
   <Target Name="ExtractWorkloadPacks"
-      DependsOnTargets="GetXAVersionInfo" >
+      DependsOnTargets="DeleteExtractedWorkloadPacks;GetXAVersionInfo" >
     <ItemGroup>
-      <_PackFilesToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android*\**\*.*" />
       <_WLManifest Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Workload.$(AndroidPackVersionLong).nupkg" />
       <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Sdk.$(AndroidPackVersionLong).nupkg" />
       <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Ref.$(AndroidPackVersionLong).nupkg" />
       <!-- Runtime packs are not yet supported by workloads -->
       <!-- <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Runtime.$(AndroidPackVersionLong).nupkg" /> -->
     </ItemGroup>
-    <RemoveDir
-        Directories="%(_PackFilesToDelete.RootDir)%(_PackFilesToDelete.Directory)"
-    />
     <Unzip
         SourceFiles="@(_WLManifest)"
         DestinationFolder="$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\Microsoft.Android.Workload"
@@ -97,6 +93,13 @@
         Files="$(DotNetPreviewPath)sdk\$(DotNetPreviewVersionFull)\EnableWorkloadResolver.sentinel"
         AlwaysCreate="true"
     />
+  </Target>
+
+  <Target Name="DeleteExtractedWorkloadPacks" >
+    <ItemGroup>
+      <_PackFilesToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android*\**\*.*" />
+    </ItemGroup>
+    <RemoveDir Directories="%(_PackFilesToDelete.RootDir)%(_PackFilesToDelete.Directory)" />
   </Target>
 
 </Project>
