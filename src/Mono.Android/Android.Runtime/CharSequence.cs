@@ -33,19 +33,16 @@ namespace Android.Runtime {
 			return ret;
 		}
 
-		[Preserve (Conditional=true)]
 		public static IntPtr ToLocalJniHandle (string? value)
 		{
 			return JNIEnv.NewString (value);
 		}
 
-		[Preserve (Conditional=true)]
 		public static IntPtr ToLocalJniHandle (Java.Lang.ICharSequence? value)
 		{
 			return value == null ? IntPtr.Zero : JNIEnv.ToLocalJniHandle (value);
 		}
 
-		[Preserve (Conditional=true)]
 		public static IntPtr ToLocalJniHandle (IEnumerable<char>? value)
 		{
 			if (value == null) {
