@@ -14,7 +14,7 @@ Default item includes (globs and implicit references).
 
   <!-- Default Resource file inclusion -->
   <!-- https://developer.android.com/guide/topics/resources/providing-resources -->
-  <ItemGroup Condition=" '$(TargetPlatformIdentifier)' == 'Android' and '$(EnableDefaultAndroidItems)' == 'true' ">
+  <ItemGroup Condition=" '$(EnableDefaultAndroidItems)' == 'true' ">
     <AndroidResource Include="$(MonoAndroidResourcePrefix)\*\*.xml" />
     <AndroidResource Include="$(MonoAndroidResourcePrefix)\*\*.axml" />
     <AndroidResource Include="$(MonoAndroidResourcePrefix)\*\*.png" />
@@ -27,28 +27,18 @@ Default item includes (globs and implicit references).
   </ItemGroup>
 
   <!-- Default Asset file inclusion -->
-  <ItemGroup Condition=" '$(TargetPlatformIdentifier)' == 'Android' and '$(EnableDefaultAndroidItems)' == 'true' ">
+  <ItemGroup Condition=" '$(EnableDefaultAndroidItems)' == 'true' ">
     <AndroidAsset Include="$(MonoAndroidAssetsPrefix)\**\*" Exclude="$(MonoAndroidAssetsPrefix)\**\.*\**" />
   </ItemGroup>
 
   <!-- Default References -->
-  <ItemGroup Condition=" '$(TargetPlatformIdentifier)' == 'Android' and '$(DisableImplicitFrameworkReferences)' != 'true' ">
+  <ItemGroup Condition=" '$(DisableImplicitFrameworkReferences)' != 'true' ">
     <FrameworkReference
         Include="Microsoft.Android"
         IsImplicitlyDefined="true"
         Pack="false"
         PrivateAssets="All"
     />
-  </ItemGroup>
-
-  <!-- Automatically supply project capabilities for IDE use -->
-  <ItemGroup Condition=" '$(TargetPlatformIdentifier)' == 'Android' ">
-    <ProjectCapability Include="Mobile" />
-    <ProjectCapability Include="Android" />
-    <ProjectCapability Include="AndroidApplication" Condition="$(AndroidApplication)" />
-
-    <!-- Conflicts with our targets generator in VS+CPS: See https://work.azdo.io/1112733 -->
-    <ProjectCapability Remove="LaunchProfiles" />
   </ItemGroup>
 
 </Project>

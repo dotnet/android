@@ -71,7 +71,6 @@ Specifies the supported Android platform versions for this SDK.
 					writer.WriteEndElement (); // </AndroidSdkSupportedTargetPlatformVersion>
 				}
 				writer.WriteStartElement ("SdkSupportedTargetPlatformVersion");
-				writer.WriteAttributeString ("Condition", " '$(TargetPlatformIdentifier)' == 'Android' ");
 				writer.WriteAttributeString ("Include", "@(AndroidSdkSupportedTargetPlatformVersion)");
 
 				writer.WriteEndDocument (); // </Project>
