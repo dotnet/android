@@ -19,14 +19,19 @@ namespace MonoDroid.Generation
 
 		public string GetContextTypeMember ()
 		{
-			var output = ContextType?.FullName ?? string.Empty;
+			var parts = new List<string> ();
 
-			if (ContextMethod != null) {
-				output += $"{ContextMethod.Name} ({string.Join (", ", ContextMethod?.Parameters.Select (p => p.InternalType).ToArray ())})";
-				return output;
-			}
+			// Type name
+			if (!string.IsNullOrEmpty (ContextType?.FullName))
+				parts.Add (ContextType?.FullName);
 
-			return output + ContextField?.Name;
+			// Member name
+			if (ContextMethod != null)
+				parts.Add ($"{ContextMethod.Name} ({string.Join (", ", ContextMethod?.Parameters.Select (p => p.InternalType).ToArray ())})");
+			else if (ContextField != null)
+				parts.Add (ContextField.Name);
+
+			return string.Join (".", parts);
 		}
 	}
 }
