@@ -326,14 +326,14 @@ class MemTest {
 		}
 
 		[Test]
-		[Category ("SmokeTests"), Category ("DotNetIgnore")] // <ProcessGoogleServicesJson/> task is built for net45]
+		[Category ("SmokeTests")]
 		[NonParallelizable] // parallel NuGet restore causes failures
 		public void BuildXamarinFormsMapsApplication ([Values (true, false)] bool multidex)
 		{
 			var proj = new XamarinFormsMapsApplicationProject ();
 			if (multidex)
 				proj.SetProperty ("AndroidEnableMultiDex", "True");
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first should have succeeded.");
 				b.BuildLogFile = "build2.log";
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second should have succeeded.");
@@ -342,19 +342,19 @@ class MemTest {
 					"_UpdateAndroidResgen",
 				};
 				foreach (var target in targets) {
-					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped.");
+					b.Output.AssertTargetIsSkipped (target);
 				}
 				proj.Touch ("MainPage.xaml");
 				b.BuildLogFile = "build3.log";
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "third should have succeeded.");
 				foreach (var target in targets) {
-					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped.");
+					b.Output.AssertTargetIsSkipped (target);
 				}
-				Assert.IsFalse (b.Output.IsTargetSkipped ("CoreCompile"), $"`CoreCompile` should not be skipped.");
+				b.Output.AssertTargetIsNotSkipped ("CoreCompile");
 				b.BuildLogFile = "build4.log";
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "forth should have succeeded.");
 				foreach (var target in targets) {
-					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped.");
+					b.Output.AssertTargetIsSkipped (target);
 				}
 			}
 		}
