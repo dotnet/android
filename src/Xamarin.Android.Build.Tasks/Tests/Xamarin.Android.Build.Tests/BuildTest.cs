@@ -56,6 +56,21 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		[Test]
+		public void BuildReleaseArm64 ([Values (false, true)] bool forms)
+		{
+			var proj = forms ?
+				new XamarinFormsAndroidApplicationProject () :
+				new XamarinAndroidApplicationProject ();
+			proj.IsRelease = true;
+			proj.SetAndroidSupportedAbis ("arm64-v8a");
+
+			// use BuildHelper.CreateApkBuilder so that the test directory is not removed in tearup
+			using (var b = BuildHelper.CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			}
+		}
+
 		static readonly object [] BuildHasNoWarningsSource = new object [] {
 			new object [] {
 				/* isRelease */     false,
