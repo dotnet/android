@@ -124,7 +124,6 @@ namespace Android.Runtime
 			set { throw new NotSupportedException (); }
 		}
 		
-		[Preserve (Conditional=true)]
 		public static Stream? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			return FromNative (handle, transfer);

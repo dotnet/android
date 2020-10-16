@@ -475,7 +475,6 @@ namespace Android.Runtime {
 					JniHandleOwnership.TransferLocalRef);
 		}
 		
-		[Preserve (Conditional=true)]
 		public static IList? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
@@ -490,7 +489,6 @@ namespace Android.Runtime {
 			return (IList) inst;
 		}
 
-		[Preserve (Conditional=true)]
 		public static IntPtr ToLocalJniHandle (IList? items)
 		{
 			if (items == null)
@@ -940,7 +938,6 @@ namespace Android.Runtime {
 			return true;
 		}
 		
-		[Preserve (Conditional=true)]
 		public static IList<T>? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
@@ -955,7 +952,6 @@ namespace Android.Runtime {
 			return (IList<T>) inst;
 		}
 
-		[Preserve (Conditional=true)]
 		public static IntPtr ToLocalJniHandle (IList<T>? items)
 		{
 			if (items == null)
