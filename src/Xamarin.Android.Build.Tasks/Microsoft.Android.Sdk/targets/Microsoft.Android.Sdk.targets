@@ -9,6 +9,16 @@
     <_AndroidResourceDesigner>Resource.designer.cs</_AndroidResourceDesigner>
   </PropertyGroup>
 
+  <!-- Default References -->
+  <ItemGroup Condition=" '$(DisableImplicitFrameworkReferences)' != 'true' ">
+    <FrameworkReference
+        Include="Microsoft.Android"
+        IsImplicitlyDefined="true"
+        Pack="false"
+        PrivateAssets="All"
+    />
+  </ItemGroup>
+
   <Import Project="Microsoft.Android.Sdk.BundledVersions.targets" />
   <Import Project="Microsoft.Android.Sdk.SupportedPlatforms.targets" />
   <Import Project="Microsoft.Android.Sdk.DefaultProperties.targets" />
