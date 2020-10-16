@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -45,6 +46,11 @@ namespace Xamarin.ProjectTools
 			return File.ReadAllText (GetIntermediaryPath (file));
 		}
 
+		public List<string> GetAssemblyMapCache ()
+		{
+			var path = GetIntermediaryPath (Path.Combine ("lp", "map.cache"));
+			return File.ReadLines (path).ToList ();
+		}
 
 		public bool IsTargetSkipped (string target)
 		{

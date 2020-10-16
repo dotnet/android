@@ -16,11 +16,13 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
       _ValidateLinkMode;
       _CheckNonIdealConfigurations;
       _SetupDesignTimeBuildForBuild;
+      _CategorizeAndroidLibraries;
       _CreatePropertiesCache;
       _CleanIntermediateIfNeeded;
       _CheckProjectItems;
       _CheckForContent;
       _ValidateAndroidPackageProperties;
+      AddLibraryJarsToBind;
       $(BuildDependsOn);
       _CompileDex;
       $(_AfterCompileDex);
@@ -69,14 +71,14 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
     <BuildDependsOn>
       _ValidateLinkMode;
       _SetupDesignTimeBuildForBuild;
+      _CategorizeAndroidLibraries;
       _CreatePropertiesCache;
       _CleanIntermediateIfNeeded;
       _AddAndroidDefines;
-      _CreateNativeLibraryArchive;
-      _AddAndroidEnvironmentToCompile;
       _CheckForContent;
       _RemoveLegacyDesigner;
       _ValidateAndroidPackageProperties;
+      AddLibraryJarsToBind;
       $(BuildDependsOn);
     </BuildDependsOn>
     <_BeforeIncrementalClean>
@@ -90,15 +92,22 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
       _SeparateAppExtensionReferences;
       $(ResolveReferencesDependsOn);
       _AddAndroidCustomMetaData;
+      _ResolveAars;
     </CoreResolveReferencesDependsOn>
     <ResolveReferencesDependsOn>
       $(CoreResolveReferencesDependsOn);
       UpdateAndroidInterfaceProxies;
       UpdateAndroidResources;
       AddBindingsToCompile;
-      AddEmbeddedJarsAsResources;
-      AddEmbeddedReferenceJarsAsResources;
     </ResolveReferencesDependsOn>
+    <_UpdateAndroidResourcesDependsOn>
+      $(CoreResolveReferencesDependsOn);
+      _CreatePropertiesCache;
+      _CheckForDeletedResourceFile;
+      _ComputeAndroidResourcePaths;
+      _UpdateAndroidResgen;
+      _CreateAar;
+    </_UpdateAndroidResourcesDependsOn>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -136,6 +145,7 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
       _ResolveMonoAndroidSdks;
       _ExtractLibraryProjectImports;
       _GetLibraryImports;
+      _ExtractAar;
       _ExportJarToXml;
     </ExportJarToXmlDependsOnTargets>
     <GetAndroidDependenciesDependsOn>
@@ -145,6 +155,9 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
       _ResolveAndroidTooling;
       $(GetAndroidDependenciesDependsOn);
     </GetAndroidDependenciesDependsOn>
+    <_ResolveLibraryProjectsDependsOn>
+      _ExtractAar;
+    </_ResolveLibraryProjectsDependsOn>
   </PropertyGroup>
 
 </Project>

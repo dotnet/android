@@ -12,6 +12,7 @@ namespace Xamarin.ProjectTools
 		bool EnableDefaultItems { get; }
 		string Sdk { get; set; }
 		IList<PropertyGroup> PropertyGroups { get; }
+		IList<BuildItem> References { get; }
 		IList<Package> PackageReferences { get; }
 		IList<BuildItem> OtherBuildItems { get; }
 		IList<IList<BuildItem>> ItemGroupList { get; }

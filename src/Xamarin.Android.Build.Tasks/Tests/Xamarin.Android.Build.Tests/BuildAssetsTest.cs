@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
 using System.IO;
@@ -152,15 +152,17 @@ namespace Xamarin.Android.Build.Tests
 			using (var b = CreateDllBuilder (Path.Combine ("temp", TestName, "SubDir"))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var libraryProjectImports = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "__AndroidLibraryProjects__.zip");
-				FileAssert.Exists (libraryProjectImports);
-				using (var zip = ZipHelper.OpenZip (libraryProjectImports)) {
-					var entryName = "library_project_imports/assets/foo.txt";
-					var entry = zip.ReadEntry (entryName);
-					Assert.IsNotNull (entry, $"{libraryProjectImports} should contain {entryName}");
-					using (var memory = new MemoryStream ()) {
-						entry.Extract (memory);
-						memory.Position = 0;
-						Assert.AreEqual ("bar", Encoding.Default.GetString (memory.ToArray ()));
+				if (Builder.UseDotNet) {
+					var aarPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.aar");
+					FileAssert.Exists (aarPath);
+					using (var aar = ZipHelper.OpenZip (aarPath)) {
+						aar.AssertEntryContents (aarPath, "assets/foo.txt", contents: "bar");
+					}
+					FileAssert.DoesNotExist (libraryProjectImports);
+				} else {
+					FileAssert.Exists (libraryProjectImports);
+					using (var zip = ZipHelper.OpenZip (libraryProjectImports)) {
+						zip.AssertEntryContents (libraryProjectImports, "library_project_imports/assets/foo.txt", contents: "bar");
 					}
 				}
 			}
