@@ -255,6 +255,21 @@ namespace Xamarin.Android.Tasks
 			"x86_64",
 		};
 
+		static readonly Dictionary<string, string> ClangAbiMap = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase) {
+			{"arm64-v8a",   "aarch64"},
+			{"armeabi-v7a", "arm"},
+			{"x86",         "i686"},
+			{"x86_64",      "x86_64"}
+		};
+
+		public static string MapAndroidAbiToClang (string androidAbi)
+		{
+			if (ClangAbiMap.TryGetValue (androidAbi, out string clangAbi)) {
+				return clangAbi;
+			}
+			return null;
+		}
+
 		public static string GetNativeLibraryAbi (string lib)
 		{
 			// The topmost directory the .so file is contained within
@@ -640,6 +655,20 @@ namespace Xamarin.Android.Tasks
 				return newfile;
 			}
 			return string.Empty;
+		}
+
+		static readonly char [] DirectorySeparators = new [] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
+
+		/// <summary>
+		/// Returns the relative path that should be used for an @(AndroidAsset) item
+		/// </summary>
+		public static string GetRelativePathForAndroidAsset (string assetsDirectory, ITaskItem androidAsset)
+		{
+			var path = androidAsset.GetMetadata ("Link");
+			path = !string.IsNullOrWhiteSpace (path) ? path : androidAsset.ItemSpec;
+			var head = string.Join ("\\", path.Split (DirectorySeparators).TakeWhile (s => !s.Equals (assetsDirectory, StringComparison.OrdinalIgnoreCase)));
+			path = head.Length == path.Length ? path : path.Substring ((head.Length == 0 ? 0 : head.Length + 1) + assetsDirectory.Length).TrimStart (DirectorySeparators);
+			return path;
 		}
 
 		/// <summary>

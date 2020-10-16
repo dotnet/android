@@ -214,21 +214,11 @@ namespace Xamarin.Android.Build.Tests
 			var sb = new SolutionBuilder ("BuildAMassiveApp.sln") {
 				SolutionPath = Path.Combine (Root, testPath),
 			};
-			var app1 = new XamarinAndroidApplicationProject () {
+			var app1 = new XamarinFormsMapsApplicationProject {
 				TargetFrameworkVersion = sb.LatestTargetFrameworkVersion (),
 				ProjectName = "App1",
 				AotAssemblies = true,
 				IsRelease = true,
-				PackageReferences = {
-					KnownPackages.SupportDesign_27_0_2_1,
-					KnownPackages.SupportCompat_27_0_2_1,
-					KnownPackages.SupportCoreUI_27_0_2_1,
-					KnownPackages.SupportCoreUtils_27_0_2_1,
-					KnownPackages.SupportFragment_27_0_2_1,
-					KnownPackages.SupportMediaCompat_27_0_2_1,
-					KnownPackages.GooglePlayServicesMaps_42_1021_1,
-					KnownPackages.Xamarin_Build_Download_0_4_11,
-				},
 			};
 			//NOTE: BuildingInsideVisualStudio prevents the projects from being built as dependencies
 			sb.BuildingInsideVisualStudio = false;

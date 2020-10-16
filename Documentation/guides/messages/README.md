@@ -92,7 +92,7 @@ Please disable fast deployment in the Visual Studio project property pages or ed
 + [XA1008](xa1008.md): The TargetFrameworkVersion (Android API level {compileSdk}) is lower than the targetSdkVersion ({targetSdk}).
 + [XA1009](xa1009.md): The {assembly} is Obsolete. Please upgrade to {assembly} {version}
 + [XA1010](xa1010.md): Invalid \`$(AndroidManifestPlaceholders)\` value for Android manifest placeholders. Please use \`key1=value1;key2=value2\` format. The specified value was: `{placeholders}`
-+ [XA1011](xa1011.md): Using ProGuard with the D8 DEX compiler is no longer supported. Please set the code shrinker to \`r8\` in the Visual Studio project property pages or edit the project file in a text editor and set the \`AndroidLinkTool\` MSBuild property to \`r8\`.
++ [XA1011](xa1011.md): Using ProGuard with the D8 DEX compiler is no longer supported. Please set the code shrinker to 'r8' in the Visual Studio project property pages or edit the project file in a text editor and set the 'AndroidLinkTool' MSBuild property to 'r8'.
 + XA1012: Included layout root element override ID '{id}' is not valid.
 + XA1013: Failed to parse ID of node '{name}' in the layout file '{file}'.
 + XA1014: JAR library references with identical file names but different contents were found: {libraries}. Please remove any conflicting libraries from EmbeddedJar, InputJar and AndroidJavaLibrary.
@@ -106,6 +106,8 @@ Please disable fast deployment in the Visual Studio project property pages or ed
 + XA1022: Specified reference Java library not found: {file}
 + [XA1023](xa1023.md): Using the DX DEX Compiler is deprecated.
 + [XA1024](xa1024.md): Ignoring configuration file 'Foo.dll.config'. .NET configuration files are not supported in Xamarin.Android projects that target .NET 5 or higher.
++ [XA1027](xa1027.md): The 'EnableProguard' MSBuild property is set to 'true' and the 'AndroidLinkTool' MSBuild property is empty, so 'AndroidLinkTool' will default to 'proguard'.
++ [XA1028](xa1028.md): The 'AndroidEnableProguard' MSBuild property is set to 'true' and the 'AndroidLinkTool' MSBuild property is empty, so 'AndroidLinkTool' will default to 'proguard'.
 
 ## XA2xxx: Linker
 

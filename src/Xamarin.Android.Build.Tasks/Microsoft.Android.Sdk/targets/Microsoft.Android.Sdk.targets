@@ -26,11 +26,12 @@
       Condition="Exists('$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Common.Debugging.props')"/>
 
   <!-- Build ordering, should be imported before Xamarin.Android.Common.targets -->
-  <Import Project="Microsoft.Android.Sdk.BuildOrder.targets" />
+  <Import Project="Microsoft.Android.Sdk.BuildOrder.targets" Condition=" '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' " />
 
   <Import Project="..\tools\Xamarin.Android.Common.targets" />
   <Import Project="..\tools\Xamarin.Android.Bindings.Core.targets" />
   <Import Project="..\tools\Xamarin.Android.Bindings.ClassParse.targets" />
+  <Import Project="Microsoft.Android.Sdk.AndroidLibraries.targets" />
   <Import Project="Microsoft.Android.Sdk.Application.targets" Condition=" '$(AndroidApplication)' == 'true' " />
   <Import Project="Microsoft.Android.Sdk.AssemblyResolution.targets" />
   <Import Project="Microsoft.Android.Sdk.ILLink.targets" />

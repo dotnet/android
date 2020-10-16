@@ -372,8 +372,8 @@ The capitalized word "Portable" that appears earlier in the message is plain tex
     <comment>The following are literal names and should not be translated: `$(AndroidManifestPlaceholders)`</comment>
   </data>
   <data name="XA1011" xml:space="preserve">
-    <value>Using ProGuard with the D8 DEX compiler is no longer supported. Please set the code shrinker to `r8` in the Visual Studio project property pages or edit the project file in a text editor and set the `AndroidLinkTool` MSBuild property to `r8`.</value>
-    <comment>The following are literal names and should not be translated: ProGuard, D8, DEX, `r8`, `AndroidLinkTool`</comment>
+    <value>Using ProGuard with the D8 DEX compiler is no longer supported. Please set the code shrinker to 'r8' in the Visual Studio project property pages or edit the project file in a text editor and set the 'AndroidLinkTool' MSBuild property to 'r8'.</value>
+    <comment>The following are literal names and should not be translated: ProGuard, D8, DEX, 'r8', 'AndroidLinkTool'</comment>
   </data>
   <data name="XA1012" xml:space="preserve">
     <value>Included layout root element override ID '{0}' is not valid.</value>
@@ -449,6 +449,14 @@ In this message, the term "binding" means a piece of generated code that makes i
   <data name="XA1026_dotnet" xml:space="preserve">
     <value>Using AAPT is not supported in Xamarin.Android projects that target .NET 5 or higher. Please enable 'Use incremental Android packaging system (aapt2)' in the Visual Studio project property pages or edit the project file in a text editor and set the 'AndroidUseAapt2' MSBuild property to 'true'.</value>
     <comment>The following are literal names and should not be translated: AAPT, Android, AndroidUseAapt2, true.</comment>
+  </data>
+  <data name="XA1027" xml:space="preserve">
+    <value>The 'EnableProguard' MSBuild property is set to 'true' and the 'AndroidLinkTool' MSBuild property is empty, so 'AndroidLinkTool' will default to 'proguard'.</value>
+    <comment>The following are literal names and should not be translated: 'EnableProguard', 'true', 'AndroidLinkTool', 'proguard'</comment>
+  </data>
+  <data name="XA1028" xml:space="preserve">
+    <value>The 'AndroidEnableProguard' MSBuild property is set to 'true' and the 'AndroidLinkTool' MSBuild property is empty, so 'AndroidLinkTool' will default to 'proguard'.</value>
+    <comment>The following are literal names and should not be translated: 'AndroidEnableProguard', 'true', 'AndroidLinkTool', 'proguard'</comment>
   </data>
   <data name="XA2000" xml:space="preserve">
     <value>Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 5 will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 5 is released.</value>

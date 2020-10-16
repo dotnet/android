@@ -41,6 +41,12 @@ tab_width = 8
 indent_size = 8
 max_line_length = 180
 
+# CMake files
+[CMakeLists.txt]
+indent_style = space
+indent_size = 2
+insert_final_newline = true
+
 ###############################
 # .NET Coding Conventions     #
 ###############################

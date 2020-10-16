@@ -2513,11 +2513,11 @@
 29, android.app.admin, DevicePolicyManager, getPasswordComplexity, return, Android.App.Admin.PasswordComplexity
 29, android.app.admin, DevicePolicyManager, setGlobalPrivateDnsModeOpportunistic, return, Android.App.Admin.PrivateDnsSet
 29, android.app.admin, DevicePolicyManager, setGlobalPrivateDnsModeSpecifiedHost, return, Android.App.Admin.PrivateDnsSet
-29, android.app, AppOpsManager, unsafeCheckOp, return, Android.App.Admin.AppOpsManagerMode
-29, android.app, AppOpsManager, unsafeCheckOpNoThrow, return, Android.App.Admin.AppOpsManagerMode
-29, android.app, AppOpsManager, unsafeCheckOpRaw, return, Android.App.Admin.AppOpsManagerMode
-29, android.app, AppOpsManager, unsafeCheckOpRawNoThrow, return, Android.App.Admin.AppOpsManagerMode
-29, android.app, AppOpsManager, startWatchingMode, flags, Android.App.Admin.WatchForeground
+29, android.app, AppOpsManager, unsafeCheckOp, return, Android.App.AppOpsManagerMode
+29, android.app, AppOpsManager, unsafeCheckOpNoThrow, return, Android.App.AppOpsManagerMode
+29, android.app, AppOpsManager, unsafeCheckOpRaw, return, Android.App.AppOpsManagerMode
+29, android.app, AppOpsManager, unsafeCheckOpRawNoThrow, return, Android.App.AppOpsManagerMode
+29, android.app, AppOpsManager, startWatchingMode, flags, Android.App.WatchForeground
 29, android.app, RemoteInput.Builder, setEditChoicesBeforeSending, editChoicesBeforeSending, Android.App.EditChoices
 29, android.app, RemoteInput, getEditChoicesBeforeSending, return, Android.App.EditChoices
 29, android.app, Service, getForegroundServiceType, return, Android.App.ForegroundService

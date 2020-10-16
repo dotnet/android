@@ -238,7 +238,6 @@ namespace Android.Runtime {
 			});
 		}
 
-		[Preserve (Conditional=true)]
 		public static ICollection? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
@@ -253,7 +252,6 @@ namespace Android.Runtime {
 			return (ICollection) inst;
 		}
 		
-		[Preserve (Conditional=true)]
 		public static IntPtr ToLocalJniHandle (ICollection? items)
 		{
 			if (items == null)
@@ -426,7 +424,6 @@ namespace Android.Runtime {
 			});
 		}
 
-		[Preserve (Conditional=true)]
 		public static ICollection<T>? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
@@ -441,7 +438,6 @@ namespace Android.Runtime {
 			return (ICollection<T>) inst;
 		}
 
-		[Preserve (Conditional=true)]
 		public static IntPtr ToLocalJniHandle (ICollection<T>? items)
 		{
 			if (items == null)

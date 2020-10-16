@@ -86,7 +86,6 @@ namespace Android.Runtime {
 			throw new InvalidOperationException ();
 		}
 
-		[Preserve (Conditional=true)]
 		public static JavaArray<T>? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
@@ -100,7 +99,6 @@ namespace Android.Runtime {
 			return new JavaArray<T>(handle, transfer);
 		}
 
-		[Preserve (Conditional=true)]
 		public static IntPtr ToLocalJniHandle (IList<T>? value)
 		{
 			if (value == null)

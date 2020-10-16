@@ -155,16 +155,6 @@ namespace Xamarin.ProjectTools
 					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.Design.27.0.2.1\\lib\\MonoAndroid81\\Xamarin.Android.Support.Design.dll" }
 				}
 		};
-		public static Package GooglePlayServicesMaps_42_1021_1 = new Package {
-			Id = "Xamarin.GooglePlayServices.Maps",
-			Version = "42.1021.1",
-			TargetFramework = "MonoAndroid70",
-			References = {
-				new BuildItem.Reference ("Xamarin.GooglePlayServices.Maps.dll") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.GooglePlayServices.Maps.42.1021.1\\lib\\MonoAndroid70\\Xamarin.GooglePlayServices.Maps.dll"
-				}
-			}
-		};
 		public static Package XamarinFormsPCL_2_3_4_231 = new Package {
 			Id = "Xamarin.Forms",
 			Version = "2.3.4.231",
@@ -536,67 +526,19 @@ namespace Xamarin.ProjectTools
 		};
 		public static Package Xamarin_GooglePlayServices_Base = new Package {
 			Id = "Xamarin.GooglePlayServices.Base",
-	    		Version = "60.1142.1",
-			TargetFramework = "MonoAndroid80",
-	    		References = {
-				new BuildItem.Reference ("Xamarin.GooglePlayServices.Base") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.GooglePlayServices.Base.60.1142.1\\lib\\MonoAndroid80\\Xamarin.GooglePlayServices.Base.dll"
-				}
-			},
+			Version = "117.1.0",
 		};
-		public static Package Xamarin_GooglePlayServices_Basement = new Package
-		{
+		public static Package Xamarin_GooglePlayServices_Basement = new Package {
 			Id = "Xamarin.GooglePlayServices.Basement",
-			Version = "60.1142.1",
-			TargetFramework = "MonoAndroid80",
-			References = {
-				new BuildItem.Reference ("Xamarin.GooglePlayServices.Basement") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.GooglePlayServices.Basement.60.1142.1\\lib\\MonoAndroid80\\Xamarin.GooglePlayServices.Basement.dll"
-				}
-			},
+			Version = "117.1.0",
 		};
-		public static Package Xamarin_GooglePlayServices_Tasks = new Package
-		{
+		public static Package Xamarin_GooglePlayServices_Tasks = new Package {
 			Id = "Xamarin.GooglePlayServices.Tasks",
-			Version = "60.1142.1",
-			TargetFramework = "MonoAndroid80",
-			References = {
-				new BuildItem.Reference ("Xamarin.GooglePlayServices.Tasks") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.GooglePlayServices.Tasks.60.1142.1\\lib\\MonoAndroid80\\Xamarin.GooglePlayServices.Tasks.dll"
-				}
-			},
-		};
-		public static Package Xamarin_GooglePlayServices_Iid = new Package
-		{
-			Id = "Xamarin.GooglePlayServices.Iid",
-			Version = "60.1142.1",
-			TargetFramework = "MonoAndroid80",
-			References = {
-				new BuildItem.Reference ("Xamarin.GooglePlayServices.Iid") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.GooglePlayServices.Iid.60.1142.1\\lib\\MonoAndroid80\\Xamarin.GooglePlayServices.Iid.dll"
-				}
-			},
-		};
-		public static Package Xamarin_GooglePlayServices_Gcm = new Package
-		{
-			Id = "Xamarin.GooglePlayServices.Gcm",
-			Version = "60.1142.1",
-			TargetFramework = "MonoAndroid80",
-			References = {
-				new BuildItem.Reference ("Xamarin.GooglePlayServices.Gcm") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.GooglePlayServices.Gcm.60.1142.1\\lib\\MonoAndroid80\\Xamarin.GooglePlayServices.Gcm.dll"
-				}
-			},
+			Version = "117.0.0",
 		};
 		public static Package Xamarin_GooglePlayServices_Maps = new Package {
 			Id = "Xamarin.GooglePlayServices.Maps",
-			Version = "60.1142.1",
-			TargetFramework = "MonoAndroid80",
-			References = {
-				new BuildItem.Reference ("Xamarin.GooglePlayServices.Maps") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.GooglePlayServices.Maps.60.1142.1\\lib\\MonoAndroid80\\Xamarin.GooglePlayServices.Maps.dll"
-				}
-			},
+			Version = "117.0.0",
 		};
 		public static Package Acr_UserDialogs = new Package {
 			Id = "Acr.UserDialogs",

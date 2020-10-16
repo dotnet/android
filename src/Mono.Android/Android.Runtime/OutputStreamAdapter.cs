@@ -44,7 +44,6 @@ namespace Android.Runtime
 			BaseStream.WriteByte ((byte)oneByte);
 		}
 
-		[Preserve (Conditional=true)]
 		public static IntPtr ToLocalJniHandle (Stream? value)
 		{
 			if (value == null)

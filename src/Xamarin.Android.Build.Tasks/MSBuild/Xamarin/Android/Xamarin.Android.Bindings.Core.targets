@@ -38,14 +38,14 @@ It is shared between "legacy" binding projects and .NET 5 projects.
 
   <Target Name="ExportJarToXml"
       DependsOnTargets="$(ExportJarToXmlDependsOnTargets)"
-      Condition=" '$(UsingAndroidNETSdk)' != 'true' Or '@(InputJar->Count())' != '0' Or '@(EmbeddedJar->Count())' != '0' ">
+      Condition=" '$(UsingAndroidNETSdk)' != 'true' Or '@(InputJar->Count())' != '0' Or '@(EmbeddedJar->Count())' != '0' Or '@(LibraryProjectZip->Count())' != '0' ">
     <PropertyGroup>
       <AllowUnsafeBlocks Condition=" '$(AllowUnsafeBlocks)' != 'true' ">true</AllowUnsafeBlocks>
     </PropertyGroup>
   </Target>
 
   <Target Name="GenerateBindings"
-      Condition=" '$(UsingAndroidNETSdk)' != 'true' Or '@(InputJar->Count())' != '0' Or '@(EmbeddedJar->Count())' != '0' "
+      Condition=" '$(UsingAndroidNETSdk)' != 'true' Or '@(InputJar->Count())' != '0' Or '@(EmbeddedJar->Count())' != '0' Or '@(LibraryProjectZip->Count())' != '0' "
       DependsOnTargets="ExportJarToXml;_ResolveMonoAndroidSdks"
       Inputs="$(ApiOutputFile);@(TransformFile);@(ReferencePath);@(ReferenceDependencyPaths);$(MSBuildAllProjects)"
       Outputs="$(_GeneratorStampFile)">
@@ -54,7 +54,7 @@ It is shared between "legacy" binding projects and .NET 5 projects.
     <RemoveDirFixed Directories="$(GeneratedOutputPath)" Condition="Exists ('$(GeneratedOutputPath)')" />
 
     <ItemGroup>
-      <AnnotationsZip Include="$(IntermediateOutputPath)library_project_annotations\*.zip" />
+      <AnnotationsZip Include="$(IntermediateOutputPath)library_project_annotations\**\*.zip" />
     </ItemGroup>
 
     <!-- Create the .cs binding source files -->
@@ -89,27 +89,11 @@ It is shared between "legacy" binding projects and .NET 5 projects.
     </ItemGroup>
   </Target>
 
-  <Target Name="AddEmbeddedJarsAsResources" DependsOnTargets="GenerateBindings">
-    <ItemGroup>
-      <EmbeddedResource Include="@(EmbeddedJar)">
-        <LogicalName>%(Filename)%(Extension)</LogicalName>
-      </EmbeddedResource>
-    </ItemGroup>
-  </Target>
-
-  <Target Name="AddEmbeddedReferenceJarsAsResources" DependsOnTargets="GenerateBindings">
-    <ItemGroup>
-      <EmbeddedResource Include="@(EmbeddedReferenceJar)">
-        <LogicalName>__reference__%(Filename)%(Extension)</LogicalName>
-      </EmbeddedResource>
-    </ItemGroup>
-  </Target>
-
-  <Target Name="ResolveLibraryProjects" DependsOnTargets="_CreateBindingResourceArchive" />
+  <Target Name="ResolveLibraryProjects" DependsOnTargets="$(_ResolveLibraryProjectsDependsOn)" />
 
   <Target Name="AddLibraryJarsToBind" DependsOnTargets="ResolveLibraryProjects">
     <ItemGroup>
-      <InputJar Include="$(IntermediateOutputPath)library_project_jars\*.jar" />
+      <InputJar Include="$(IntermediateOutputPath)library_project_jars\**\*.jar" />
     </ItemGroup>
   </Target>
 

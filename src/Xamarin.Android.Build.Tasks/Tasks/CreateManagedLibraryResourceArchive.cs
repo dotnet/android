@@ -58,16 +58,12 @@ namespace Xamarin.Android.Tasks
 				MonoAndroidHelper.CopyIfChanged (compiledArchive, Path.Combine (outDirInfo.FullName, "compiled.flata"));
 			}
 
-			var dir_sep = new char [] {Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar};
 			if (AndroidAssets != null) {
 				var dstsub = Path.Combine (outDirInfo.FullName, "assets");
 				if (!Directory.Exists (dstsub))
 					Directory.CreateDirectory (dstsub);
 				foreach (var item in AndroidAssets) {
-					var path = item.GetMetadata ("Link");
-					path = !string.IsNullOrWhiteSpace (path) ? path : item.ItemSpec;
-					var head = string.Join ("\\", path.Split (dir_sep).TakeWhile (s => !s.Equals (MonoAndroidAssetsPrefix, StringComparison.OrdinalIgnoreCase)));
-					path = head.Length == path.Length ? path : path.Substring ((head.Length == 0 ? 0 : head.Length + 1) + MonoAndroidAssetsPrefix.Length).TrimStart (dir_sep);
+					var path = MonoAndroidHelper.GetRelativePathForAndroidAsset (MonoAndroidAssetsPrefix, item);
 					MonoAndroidHelper.CopyIfChanged (item.ItemSpec, Path.Combine (dstsub, path));
 				}
 			}

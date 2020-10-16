@@ -262,7 +262,6 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[NonParallelizable]
-		[Category ("DotNetIgnore")] // <ProcessGoogleServicesJson/> task is built for net45
 		public void Check9PatchFilesAreProcessed ()
 		{
 			var projectPath = Path.Combine ("temp", "Check9PatchFilesAreProcessed");
@@ -275,7 +274,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 			using (var libb = CreateDllBuilder (Path.Combine (projectPath, "Library1"))) {
 				libb.Build (libproj);
-				var proj = new XamarinAndroidApplicationProject ();
+				var proj = new XamarinFormsMapsApplicationProject ();
 				using (var stream = typeof (XamarinAndroidCommonProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.Image.9.png")) {
 					var image_data = new byte [stream.Length];
 					stream.Read (image_data, 0, (int)stream.Length);
@@ -283,11 +282,6 @@ namespace Xamarin.Android.Build.Tests
 					proj.AndroidResources.Add (image1);
 				}
 				proj.References.Add (new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj"));
-				proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
-				proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
-				proj.PackageReferences.Add (KnownPackages.SupportV7MediaRouter_27_0_2_1);
-				proj.PackageReferences.Add (KnownPackages.GooglePlayServicesMaps_42_1021_1);
-				proj.PackageReferences.Add (KnownPackages.Xamarin_Build_Download_0_4_11);
 				using (var b = CreateApkBuilder (Path.Combine (projectPath, "Application1"), false, false)) {
 					Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 					var path = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/bin/packaged_resources");
@@ -436,8 +430,11 @@ namespace UnnamedProject
 				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 				var packaged_resources = Path.Combine (intermediate, "android", "bin", "packaged_resources");
 				FileAssert.Exists (packaged_resources);
+				var assemblyIdentityMap = b.Output.GetAssemblyMapCache ();
+				var extension = Builder.UseDotNet ? ".aar" : ".dll";
+				var assemblyIndex = assemblyIdentityMap.IndexOf ($"{lib.ProjectName}{extension}").ToString ();
 				using (var zip = ZipHelper.OpenZip (packaged_resources)) {
-					CheckCustomView (zip, intermediate, "lp", "0", "jl", "res", "layout", "custom_text_lib.xml");
+					CheckCustomView (zip, intermediate, "lp", assemblyIndex, "jl", "res", "layout", "custom_text_lib.xml");
 					CheckCustomView (zip, intermediate, "res", "layout", "custom_text_app.xml");
 				}
 
@@ -473,7 +470,7 @@ namespace UnnamedProject
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second app build should have succeeded.");
 
 				using (var zip = ZipHelper.OpenZip (packaged_resources)) {
-					CheckCustomView (zip, intermediate, "lp", "0", "jl", "res", "layout", "custom_text_lib.xml");
+					CheckCustomView (zip, intermediate, "lp", assemblyIndex, "jl", "res", "layout", "custom_text_lib.xml");
 					CheckCustomView (zip, intermediate, "res", "layout", "custom_text_app.xml");
 				}
 
@@ -803,6 +800,7 @@ namespace UnnamedProject
 		public void CheckDontUpdateResourceIfNotNeeded ()
 		{
 			var path = Path.Combine ("temp", TestName);
+			var target = Builder.UseDotNet ? "_CreateAar" : "_CreateManagedLibraryResourceArchive";
 			var foo = new BuildItem.Source ("Foo.cs") {
 				TextContent = () => @"using System;
 namespace Lib1 {
@@ -848,13 +846,13 @@ namespace Lib1 {
 				Assert.IsTrue (libBuilder.Build (libProj), "Library project should have built");
 				using (var appBuilder = CreateApkBuilder (Path.Combine (path, appProj.ProjectName), false, false)) {
 					Assert.IsTrue (appBuilder.Build (appProj), "Application Build should have succeeded.");
-					Assert.IsFalse (appBuilder.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "_UpdateAndroidResgen target not should be skipped.");
+					appBuilder.Output.AssertTargetIsNotSkipped ("_UpdateAndroidResgen");
 					foo.Timestamp = DateTimeOffset.UtcNow;
 					Assert.IsTrue (libBuilder.Build (libProj, doNotCleanupOnUpdate: true, saveProject: false), "Library project should have built");
-					Assert.IsTrue (libBuilder.Output.IsTargetSkipped ("_CreateManagedLibraryResourceArchive"), "_CreateManagedLibraryResourceArchive should be skipped.");
+					libBuilder.Output.AssertTargetIsSkipped (target);
 					appBuilder.BuildLogFile = "build1.log";
 					Assert.IsTrue (appBuilder.Build (appProj, doNotCleanupOnUpdate: true, saveProject: false), "Application Build should have succeeded.");
-					Assert.IsTrue (appBuilder.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "_UpdateAndroidResgen target should be skipped.");
+					appBuilder.Output.AssertTargetIsSkipped ("_UpdateAndroidResgen");
 					// Check Contents of the file in the apk are correct.
 					string apk = Path.Combine (Root, appBuilder.ProjectDirectory, appProj.OutputPath, appProj.PackageName + "-Signed.apk");
 					byte[] rawContentBuildOne = ZipHelper.ReadFileFromZip (apk,
@@ -873,15 +871,15 @@ namespace Lib1 {
 					raw.TextContent = () => @"Test Build 2 Now";
 					raw.Timestamp = DateTimeOffset.UtcNow;
 					Assert.IsTrue (libBuilder.Build (libProj, doNotCleanupOnUpdate: true, saveProject: false), "Library project should have built");
-					Assert.IsFalse (libBuilder.Output.IsTargetSkipped ("_CreateManagedLibraryResourceArchive"), "_CreateManagedLibraryResourceArchive should not be skipped.");
+					libBuilder.Output.AssertTargetIsNotSkipped (target);
 					appBuilder.BuildLogFile = "build2.log";
 					Assert.IsTrue (appBuilder.Build (appProj, doNotCleanupOnUpdate: true, saveProject: false), "Application Build should have succeeded.");
 					string resource_designer_cs = GetResourceDesignerPath (appBuilder, appProj);
 					string text = File.ReadAllText (resource_designer_cs);
 					StringAssert.Contains ("theme_devicedefault_background2", text, "Resource.designer.cs was not updated.");
-					Assert.IsFalse (appBuilder.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "_UpdateAndroidResgen target should NOT be skipped.");
-					Assert.IsFalse (appBuilder.Output.IsTargetSkipped ("_CreateBaseApk"), "_CreateBaseApk target should NOT be skipped.");
-					Assert.IsFalse (appBuilder.Output.IsTargetSkipped ("_BuildApkEmbed"), "_BuildApkEmbed target should NOT be skipped.");
+					appBuilder.Output.AssertTargetIsNotSkipped ("_UpdateAndroidResgen");
+					appBuilder.Output.AssertTargetIsNotSkipped ("_CreateBaseApk");
+					appBuilder.Output.AssertTargetIsNotSkipped ("_BuildApkEmbed");
 					byte[] rawContentBuildTwo = ZipHelper.ReadFileFromZip (apk,
 						"res/raw/test.txt");
 					Assert.IsNotNull (rawContentBuildTwo, "res/raw/test.txt should have been in the apk ");
@@ -894,7 +892,12 @@ namespace Lib1 {
 					Assert.IsTrue (libBuilder.Build (libProj, doNotCleanupOnUpdate: true, saveProject: true), "Library project should have built");
 					var themeFile = Path.Combine (Root, path, libProj.ProjectName, libProj.IntermediateOutputPath, "res", "values", "theme.xml");
 					Assert.IsTrue (!File.Exists (themeFile), $"{themeFile} should have been deleted.");
-					var archive = Path.Combine (Root, path, libProj.ProjectName, libProj.IntermediateOutputPath, "__AndroidLibraryProjects__.zip");
+					string archive;
+					if (Builder.UseDotNet) {
+						archive = Path.Combine (Root, path, libProj.ProjectName, libProj.OutputPath, $"{libProj.ProjectName}.aar");
+					} else {
+						archive = Path.Combine (Root, path, libProj.ProjectName, libProj.IntermediateOutputPath, "__AndroidLibraryProjects__.zip");
+					}
 					Assert.IsNull (ZipHelper.ReadFileFromZip (archive, "res/values/theme.xml"), "res/values/theme.xml should have been removed from __AndroidLibraryProjects__.zip");
 					appBuilder.BuildLogFile = "build3.log";
 					Assert.IsTrue (appBuilder.Build (appProj, doNotCleanupOnUpdate: true, saveProject: false), "Application Build should have succeeded.");
@@ -1248,82 +1251,6 @@ namespace UnnamedProject
 				FileAssert.Exists (r_java);
 				var r_java_contents = File.ReadAllLines (r_java);
 				Assert.IsTrue (StringAssertEx.ContainsText (r_java_contents, textView1), $"android/support/compat/R.java should contain `{textView1}`!");
-			}
-		}
-
-		// https://github.com/xamarin/xamarin-android/issues/2205
-		[Test]
-		[NonParallelizable]
-		[Category ("DotNetIgnore")] // <ProcessGoogleServicesJson/> task is built for net45
-		public void Issue2205 ([Values (false, true)] bool useAapt2)
-		{
-			AssertAaptSupported (useAapt2);
-			var proj = new XamarinAndroidApplicationProject ();
-			proj.AndroidUseAapt2 = useAapt2;
-			proj.PackageReferences.Add (KnownPackages.Android_Arch_Core_Common_26_1_0);
-			proj.PackageReferences.Add (KnownPackages.Android_Arch_Lifecycle_Common_26_1_0);
-			proj.PackageReferences.Add (KnownPackages.Android_Arch_Lifecycle_Runtime_26_1_0);
-			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportCompat_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportCoreUI_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportCoreUtils_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportDesign_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportFragment_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportMediaCompat_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportV7CardView_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportV7MediaRouter_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportV7RecyclerView_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Gcm);
-			proj.PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Tasks);
-			proj.PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Iid);
-			proj.PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Basement);
-			proj.PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Base);
-			proj.OtherBuildItems.Add (new BuildItem ("GoogleServicesJson", "googleservices.json") {
-				Encoding = Encoding.ASCII,
-				TextContent = () => @"{
-    ""project_info"": {
-        ""project_number"": ""12351255213413432"",
-        ""project_id"": ""12341234-app""
-    },
-    ""client"": [
-        {
-            ""client_info"": {
-                ""mobilesdk_app_id"": ""1:111111111:android:asdfasdf"",
-                ""android_client_info"": {
-                    ""package_name"": ""com.app.apppp""
-                }
-            },
-            ""oauth_client"": [
-                {
-                    ""client_id"": ""dddddddddddddddddd.apps.googleusercontent.com"",
-                    ""client_type"": 3
-                }
-            ],
-            ""api_key"": [
-                {
-                    ""current_key"": ""aaaaaaapppp1123423""
-                }
-            ],
-            ""services"": {
-                ""analytics_service"": {
-                    ""status"": 1
-                },
-                ""appinvite_service"": {
-                    ""status"": 1,
-                    ""other_platform_oauth_client"": []
-                },
-                ""ads_service"": {
-                    ""status"": 2
-                }
-            }
-        }
-    ],
-    ""configuration_version"": ""1""
-}"
-			});
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
-				Assert.IsTrue (b.Build (proj), "first build should have succeeded");
 			}
 		}
 

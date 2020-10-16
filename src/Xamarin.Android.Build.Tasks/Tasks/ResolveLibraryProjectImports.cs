@@ -170,7 +170,7 @@ namespace Xamarin.Android.Tasks
 					Log.LogDebugMessage ("Skipping resource extraction for '{0}' .", assemblyPath);
 					continue;
 				}
-				string assemblyFileName = Path.GetFileNameWithoutExtension (assemblyPath);
+				string assemblyFileName = Path.GetFileName (assemblyPath);
 				string assemblyIdentName = assemblyMap.GetLibraryImportDirectoryNameForAssembly (assemblyFileName);
 				string outDirForDll = Path.Combine (OutputImportDirectory, assemblyIdentName);
 				string importsDir = Path.Combine (outDirForDll, ImportsDirectory);
@@ -210,7 +210,7 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 
-				Log.LogDebugMessage ($"Refreshing {assemblyFileName}.dll");
+				Log.LogDebugMessage ($"Refreshing {assemblyFileName}");
 
 				using (var pe = new PEReader (File.OpenRead (assemblyPath))) {
 					var reader = pe.GetMetadataReader ();
@@ -329,7 +329,7 @@ namespace Xamarin.Android.Tasks
 			foreach (var aarFile in AarLibraries ?? new ITaskItem[0]) {
 				if (!File.Exists (aarFile.ItemSpec))
 					continue;
-				string aarIdentityName = Path.GetFileNameWithoutExtension (aarFile.ItemSpec);
+				string aarIdentityName = Path.GetFileName (aarFile.ItemSpec);
 				aarIdentityName = assemblyMap.GetLibraryImportDirectoryNameForAssembly (aarIdentityName);
 				string outDirForDll = Path.Combine (OutputImportDirectory, aarIdentityName);
 				string importsDir = Path.Combine (outDirForDll, ImportsDirectory);
@@ -348,11 +348,16 @@ namespace Xamarin.Android.Tasks
 							AddJar (jars, Path.GetFullPath (file));
 						}
 					}
-					if (Directory.Exists (resDir))
+					if (Directory.Exists (resDir)) {
+						var skipProcessing = aarFile.GetMetadata (AndroidSkipResourceProcessing);
+						if (string.IsNullOrEmpty (skipProcessing)) {
+							skipProcessing = "True";
+						}
 						resolvedResourceDirectories.Add (new TaskItem (Path.GetFullPath (resDir), new Dictionary<string, string> {
 							{ OriginalFile, Path.GetFullPath (aarFile.ItemSpec) },
-							{ AndroidSkipResourceProcessing, "True" },
+							{ AndroidSkipResourceProcessing, skipProcessing },
 						}));
+					}
 					if (Directory.Exists (assetsDir))
 						resolvedAssetDirectories.Add (new TaskItem  (Path.GetFullPath (assetsDir), new Dictionary<string, string> {
 							{ OriginalFile, aarFullPath },
@@ -378,6 +383,12 @@ namespace Xamarin.Android.Tasks
 							}
 							if (entryFullName.EndsWith (".jar", StringComparison.OrdinalIgnoreCase)) {
 								AddJar (jars, importsDir, entryFullName, aarFullPath);
+							} else if (entryFullName.StartsWith (".netenv/", StringComparison.OrdinalIgnoreCase) ||
+									entryFullName.StartsWith (".netenv\\", StringComparison.OrdinalIgnoreCase)) {
+								var fullPath = Path.GetFullPath (Path.Combine (importsDir, entryFullName));
+								resolvedEnvironments.Add (new TaskItem (fullPath, new Dictionary<string, string> {
+									{ OriginalFile, aarFile.ItemSpec }
+								}));
 							}
 							return entryFullName;
 						}, deleteCallback: (fileToDelete) => {
@@ -393,11 +404,16 @@ namespace Xamarin.Android.Tasks
 						Log.LogErrorFromException (new PathTooLongException ($"Error extracting resources from \"{aarFile.ItemSpec}\"", ex));
 					}
 				}
-				if (Directory.Exists (resDir))
+				if (Directory.Exists (resDir)) {
+					var skipProcessing = aarFile.GetMetadata (AndroidSkipResourceProcessing);
+					if (string.IsNullOrEmpty (skipProcessing)) {
+						skipProcessing = "True";
+					}
 					resolvedResourceDirectories.Add (new TaskItem (Path.GetFullPath (resDir), new Dictionary<string, string> {
 						{ OriginalFile, aarFullPath },
-						{ AndroidSkipResourceProcessing, "True" },
+						{ AndroidSkipResourceProcessing, skipProcessing },
 					}));
+				}
 				if (Directory.Exists (assetsDir))
 					resolvedAssetDirectories.Add (new TaskItem (Path.GetFullPath (assetsDir), new Dictionary<string, string> {
 						{ OriginalFile, aarFullPath },

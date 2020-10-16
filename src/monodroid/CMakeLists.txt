@@ -18,8 +18,10 @@ option(ENABLE_NDK "Build with Android's NDK" ON)
 option(STRIP_DEBUG "Strip debugging information when linking" OFF)
 option(ENABLE_TIMING "Build with timing support" OFF)
 option(DISABLE_DEBUG "Disable the built-in debugging code" OFF)
+option(ENABLE_CLANG_ASAN "Enable the clang AddressSanitizer support" OFF)
+option(ENABLE_CLANG_UBSAN "Enable the clang UndefinedBehaviorSanitizer support" OFF)
 
-include(CheckIncludeFiles)
+include(CheckIncludeFileCXX)
 include(CheckCXXSymbolExists)
 include(CheckCCompilerFlag)
 include(CheckCXXCompilerFlag)
@@ -115,6 +117,33 @@ set(TEST_COMPILER_ARGS_CPP ${XA_COMPILER_FLAGS}
   Wsign-compare
   Wuninitialized
   )
+
+if(ENABLE_NDK)
+  if (ENABLE_CLANG_ASAN OR ENABLE_CLANG_UBSAN)
+    set(TEST_COMPILER_ARGS_CPP
+      ${TEST_COMPILER_ARGS_CPP}
+      fno-omit-frame-pointer
+      fno-optimize-sibling-calls
+      )
+  endif()
+
+  unset(SANITIZER_FLAGS)
+  if (ENABLE_CLANG_ASAN)
+    set(SANITIZER_FLAGS "-fsanitize=address")
+    set(CHECKED_BUILD_INFIX "-checked+asan")
+  elseif(ENABLE_CLANG_UBSAN)
+    set(SANITIZER_FLAGS "-fsanitize=undefined")
+    set(CHECKED_BUILD_INFIX "-checked+ubsan")
+  endif()
+
+  if(SANITIZER_FLAGS)
+    set(CHECKED_COMPILER_FLAGS "${CHECKED_COMPILER_FLAGS} ${SANITIZER_FLAGS}")
+    set(CHECKED_LINKER_FLAGS "${CHECKED_LINKER_FLAGS} ${SANITIZER_FLAGS}")
+
+    string(STRIP "${CHECKED_COMPILER_FLAGS}" CHECKED_COMPILER_FLAGS)
+    string(STRIP "${CHECKED_LINKER_FLAGS}" CHECKED_LINKER_FLAGS)
+  endif()
+endif()
 
 set(TEST_COMPILER_ARGS_C ${XA_COMPILER_FLAGS})
 
@@ -243,8 +272,11 @@ add_definitions("-D_REENTRANT")
 add_definitions("-DJI_DLL_EXPORT")
 add_definitions("-DMONO_DLL_EXPORT")
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_COMPILER_FLAGS} ${EXTRA_C_FLAGS}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_COMPILER_FLAGS} ${EXTRA_CXX_FLAGS}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_COMPILER_FLAGS} ${EXTRA_C_FLAGS} ${CHECKED_COMPILER_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_COMPILER_FLAGS} ${EXTRA_CXX_FLAGS} ${CHECKED_COMPILER_FLAGS}")
+
+string(STRIP "${CMAKE_C_FLAGS}" CMAKE_C_FLAGS)
+string(STRIP "${CMAKE_CXX_FLAGS}" CMAKE_CXX_FLAGS)
 
 if(CMAKE_BUILD_TYPE STREQUAL Debug)
   # Convince NDK to really optimize our Debug builds. Without this, NDK's cmake toolchain definition
@@ -269,9 +301,19 @@ include_directories("${MONO_PATH}/mono/eglib")
 include_directories("jni/zip")
 include_directories("${JAVA_INTEROP_SRC_PATH}")
 
-check_include_files("linux/netlink.h" HAVE_LINUX_NETLINK_H)
-check_include_files("linux/rtnetlink.h" HAVE_LINUX_RTNETLINK_H)
-check_include_files("linux/if_arp.h" HAVE_LINUX_IF_ARP_H)
+if(ENABLE_NDK AND (ENABLE_CLANG_UBSAN OR ENABLE_CLANG_ASAN))
+  set(OLD_CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS}")
+  set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -llog")
+  string(STRIP "${CMAKE_REQUIRED_FLAGS}" CMAKE_REQUIRED_FLAGS)
+endif()
+
+check_include_file_cxx("linux/netlink.h" HAVE_LINUX_NETLINK_H)
+check_include_file_cxx("linux/rtnetlink.h" HAVE_LINUX_RTNETLINK_H)
+check_include_file_cxx("linux/if_arp.h" HAVE_LINUX_IF_ARP_H)
+
+if(ENABLE_NDK AND (ENABLE_CLANG_UBSAN OR ENABLE_CLANG_ASAN))
+  set(CMAKE_REQUIRED_FLAGS "${OLD_CMAKE_REQUIRED_FLAGS}")
+endif()
 
 configure_file(jni/host-config.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/host-config.h)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/include/ ${CMAKE_SOURCE_DIR}/include)
@@ -309,9 +351,9 @@ set(XA_INTERNAL_API_SOURCES
 
 if(ENABLE_NDK)
   set(MONODROID_SOURCES
-	${MONODROID_SOURCES}
-	${LZ4_SOURCES}
-	)
+    ${MONODROID_SOURCES}
+    ${LZ4_SOURCES}
+    )
 endif()
 
 if(UNIX)
@@ -322,10 +364,11 @@ if(UNIX)
     )
 endif()
 
-add_library(xa-internal-api SHARED ${XA_INTERNAL_API_SOURCES})
-target_link_libraries(xa-internal-api ${EXTRA_LINKER_FLAGS})
+set(XA_INTERNAL_API xa-internal-api${CHECKED_BUILD_INFIX})
+add_library(${XA_INTERNAL_API} SHARED ${XA_INTERNAL_API_SOURCES})
+target_link_libraries(${XA_INTERNAL_API} ${EXTRA_LINKER_FLAGS})
 set_target_properties(
-  xa-internal-api
+  ${XA_INTERNAL_API}
   PROPERTIES
   COMPILE_FLAGS -fvisibility=default
   LINK_FLAGS -fvisibility=default
@@ -357,22 +400,27 @@ if(NOT WIN32 AND NOT MINGW AND CMAKE_BUILD_TYPE STREQUAL Debug)
     ${SOURCES_DIR}/new_delete.cc
     ${SOURCES_DIR}/shared-constants.cc
     )
-  add_library(xamarin-debug-app-helper SHARED ${XAMARIN_DEBUG_APP_HELPER_SOURCES})
+  set(XAMARIN_DEBUG_APP_HELPER xamarin-debug-app-helper${CHECKED_BUILD_INFIX})
+  add_library(${XAMARIN_DEBUG_APP_HELPER} SHARED ${XAMARIN_DEBUG_APP_HELPER_SOURCES})
   target_compile_definitions(
-    xamarin-debug-app-helper
+    ${XAMARIN_DEBUG_APP_HELPER}
     PUBLIC -DDEBUG_APP_HELPER
     )
   if(APPLE)
     set_target_properties(
-      xamarin-debug-app-helper
+      ${XAMARIN_DEBUG_APP_HELPER}
       PROPERTIES
       OSX_ARCHITECTURES "${XA_OSX_ARCHITECTURES}"
     )
   endif()
+  target_compile_options(
+    ${XAMARIN_DEBUG_APP_HELPER}
+    PRIVATE ${CHECKED_COMPILER_FLAGS}
+  )
 endif()
 
 string(TOLOWER ${CMAKE_BUILD_TYPE} MONO_ANDROID_SUFFIX)
-set(MONO_ANDROID_LIB "mono-android.${MONO_ANDROID_SUFFIX}")
+set(MONO_ANDROID_LIB "mono-android${CHECKED_BUILD_INFIX}.${MONO_ANDROID_SUFFIX}")
 add_library(${MONO_ANDROID_LIB} SHARED ${MONODROID_SOURCES})
 if(APPLE)
   set_target_properties(
@@ -388,10 +436,11 @@ if(APPLE)
 endif()
 
 if(MINGW_ZLIB_LIBRARY_PATH)
-  set(LINK_LIBS "-lmonosgen-2.0.dll ${MINGW_ZLIB_LIBRARY_PATH} ${EXTRA_LINKER_FLAGS}")
+  set(LINK_LIBS "-lmonosgen-2.0.dll ${MINGW_ZLIB_LIBRARY_PATH} ${EXTRA_LINKER_FLAGS} ${CHECKED_LINKER_FLAGS}")
 else()
-  set(LINK_LIBS "-lmonosgen-2.0 -lz ${EXTRA_LINKER_FLAGS}")
+  set(LINK_LIBS "-lmonosgen-2.0 -lz ${EXTRA_LINKER_FLAGS} ${CHECKED_LINKER_FLAGS}")
 endif()
+string(STRIP "${LINK_LIBS}" LINK_LIBS)
 
 if(NOT MINGW AND NOT WIN32)
   set(DEBUG_HELPER_LINK_LIBS "-ldl")
@@ -403,8 +452,13 @@ elseif(NOT ANDROID AND NOT MINGW AND NOT WIN32)
   set(LINK_LIBS "-pthread ${LINK_LIBS} -ldl")
 endif()
 
+target_compile_options(
+  ${MONO_ANDROID_LIB}
+  PRIVATE ${CHECKED_COMPILER_FLAGS}
+)
+
 target_link_libraries(${MONO_ANDROID_LIB} ${LINK_LIBS} xamarin-app)
 
 if(NOT WIN32 AND NOT MINGW AND CMAKE_BUILD_TYPE STREQUAL Debug)
-  target_link_libraries(xamarin-debug-app-helper ${DEBUG_HELPER_LINK_LIBS})
+  target_link_libraries(${XAMARIN_DEBUG_APP_HELPER} ${DEBUG_HELPER_LINK_LIBS})
 endif()

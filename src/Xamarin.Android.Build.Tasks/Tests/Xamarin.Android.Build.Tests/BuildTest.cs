@@ -326,14 +326,14 @@ class MemTest {
 		}
 
 		[Test]
-		[Category ("SmokeTests"), Category ("DotNetIgnore")] // <ProcessGoogleServicesJson/> task is built for net45]
+		[Category ("SmokeTests")]
 		[NonParallelizable] // parallel NuGet restore causes failures
 		public void BuildXamarinFormsMapsApplication ([Values (true, false)] bool multidex)
 		{
 			var proj = new XamarinFormsMapsApplicationProject ();
 			if (multidex)
 				proj.SetProperty ("AndroidEnableMultiDex", "True");
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first should have succeeded.");
 				b.BuildLogFile = "build2.log";
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second should have succeeded.");
@@ -342,19 +342,19 @@ class MemTest {
 					"_UpdateAndroidResgen",
 				};
 				foreach (var target in targets) {
-					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped.");
+					b.Output.AssertTargetIsSkipped (target);
 				}
 				proj.Touch ("MainPage.xaml");
 				b.BuildLogFile = "build3.log";
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "third should have succeeded.");
 				foreach (var target in targets) {
-					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped.");
+					b.Output.AssertTargetIsSkipped (target);
 				}
-				Assert.IsFalse (b.Output.IsTargetSkipped ("CoreCompile"), $"`CoreCompile` should not be skipped.");
+				b.Output.AssertTargetIsNotSkipped ("CoreCompile");
 				b.BuildLogFile = "build4.log";
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "forth should have succeeded.");
 				foreach (var target in targets) {
-					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped.");
+					b.Output.AssertTargetIsSkipped (target);
 				}
 			}
 		}
@@ -2005,26 +2005,30 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 		[Category ("SmokeTests")]
 		public void BuildWithExternalJavaLibrary ()
 		{
-			var path = Path.Combine ("temp", "BuildWithExternalJavaLibrary");
-			var binding = new XamarinAndroidBindingProject () {
+			var path = Path.Combine ("temp", TestName);
+			var binding = new XamarinAndroidBindingProject {
 				ProjectName = "BuildWithExternalJavaLibraryBinding",
 				AndroidClassParser = "class-parse",
 			};
 			using (var bbuilder = CreateDllBuilder (Path.Combine (path, "BuildWithExternalJavaLibraryBinding"))) {
-				string multidex_path = TestEnvironment.IsRunningOnCI ? TestEnvironment.MonoAndroidToolsDirectory : @"$(MonoDroidInstallDirectory)\lib\xamarin.android\xbuild\Xamarin\Android";
-				string multidex_jar = $@"{multidex_path}\android-support-multidex.jar";
+				string multidex_path = TestEnvironment.IsRunningOnCI ?
+					TestEnvironment.MonoAndroidToolsDirectory :
+					Path.Combine (XABuildPaths.PrefixDirectory, "lib", "xamarin.android", "xbuild", "Xamarin", "Android");
+				string multidex_jar = Path.Combine (multidex_path, "android-support-multidex.jar");
 				binding.Jars.Add (new AndroidItem.InputJar (() => multidex_jar));
 
-				Assert.IsTrue (bbuilder.Build (binding));
-				var proj = new XamarinAndroidApplicationProject () {
+				Assert.IsTrue (bbuilder.Build (binding), "Binding build should succeed.");
+				var proj = new XamarinAndroidApplicationProject {
 					References = { new BuildItem ("ProjectReference", "..\\BuildWithExternalJavaLibraryBinding\\BuildWithExternalJavaLibraryBinding.csproj"), },
 					OtherBuildItems = { new BuildItem ("AndroidExternalJavaLibrary", multidex_jar) },
-					Sources = { new BuildItem ("Compile", "Foo.cs") {
+					Sources = {
+						new BuildItem ("Compile", "Foo.cs") {
 							TextContent = () => "public class Foo { public void X () { new Android.Support.Multidex.MultiDexApplication (); } }"
-						} },
+						}
+					},
 				};
 				using (var builder = CreateApkBuilder (Path.Combine (path, "BuildWithExternalJavaLibrary"))) {
-					Assert.IsTrue (builder.Build (proj));
+					Assert.IsTrue (builder.Build (proj), "App build should succeed");
 				}
 			}
 		}
@@ -2178,16 +2182,11 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 			proj.AndroidUseAapt2 = useAapt2;
 			using (var builder = CreateApkBuilder ()) {
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
-				var assemblyMap = builder.Output.GetIntermediaryPath (Path.Combine ("lp", "map.cache"));
 				var cache = builder.Output.GetIntermediaryPath ("libraryprojectimports.cache");
-				Assert.IsTrue (File.Exists (assemblyMap), $"{assemblyMap} should exist.");
 				Assert.IsTrue (File.Exists (cache), $"{cache} should exist.");
-				var assemblyIdentityMap = new List<string> ();
-				foreach (var s in File.ReadLines (assemblyMap)) {
-					assemblyIdentityMap.Add (s);
-				}
+				var assemblyIdentityMap = builder.Output.GetAssemblyMapCache ();
 				var libraryProjects = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "lp");
-				FileAssert.Exists (Path.Combine (libraryProjects, assemblyIdentityMap.IndexOf ("android-crop-1.0.1").ToString (), "jl", "classes.jar"),
+				FileAssert.Exists (Path.Combine (libraryProjects, assemblyIdentityMap.IndexOf ("android-crop-1.0.1.aar").ToString (), "jl", "classes.jar"),
 					"classes.jar was not extracted from the aar.");
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
 				Assert.IsTrue (builder.Output.IsTargetSkipped ("_ResolveLibraryProjectImports"),
@@ -2748,6 +2747,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		}
 
 		[Test]
+		[Category ("DotNetIgnore")] // n/a in .NET 5+, test validates __AndroidLibraryProjects__.zip generation
 		public void CheckLibraryImportsUpgrade ()
 		{
 			var path = Path.Combine ("temp", TestContext.CurrentContext.Test.Name);
@@ -2811,6 +2811,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		}
 
 		[Test]
+		[Category ("DotNetIgnore")] // n/a in .NET 5+, test validates __AndroidLibraryProjects__.zip generation
 		public void AndroidLibraryProjectsZipWithOddPaths ()
 		{
 			var proj = new XamarinAndroidLibraryProject ();
@@ -2825,7 +2826,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\foo.xml") {
 				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?><resources><string name=""foo"">bar</string></resources>",
 			});
-			using (var b = CreateDllBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
+			using (var b = CreateDllBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
 				var zipFile = Path.Combine (Root, b.ProjectDirectory, b.Output.IntermediateOutputPath, "foo", "__AndroidLibraryProjects__.zip");
@@ -3876,6 +3877,68 @@ namespace UnnamedProject
 						.FirstOrDefault (x => x.Contains ("error XA1018:"));
 				Assert.IsNotNull (error, "Build should have failed with XA1018.");
 				StringAssert.Contains ("DoesNotExist", error, "Error should include the name of the nonexistent file");
+			}
+		}
+
+		static readonly object [] XA1027XA1028Source = new object [] {
+			new object [] {
+				/* linkTool */                   "r8",
+				/* enableProguard */             null,
+				/* androidEnableProguard */      "true",
+				/* expectedBuildResult */        true,
+				/* expectedWarning */            "0 Warning(s)",
+			},
+			new object [] {
+				/* linkTool */                   "proguard",
+				/* enableProguard */             null,
+				/* androidEnableProguard */      "true",
+				/* expectedBuildResult */        false,
+				/* expectedWarning */            "0 Warning(s)",
+			},
+			new object [] {
+				/* linkTool */                   null,
+				/* enableProguard */             null,
+				/* androidEnableProguard */      null,
+				/* expectedBuildResult */        true,
+				/* expectedWarning */            "0 Warning(s)",
+			},
+			new object [] {
+				/* linkTool */                   null,
+				/* enableProguard */             "true",
+				/* androidEnableProguard */      null,
+				/* expectedBuildResult */        false,
+				/* expectedWarning */            "warning XA1027:",
+			},
+			new object [] {
+				/* linkTool */                   null,
+				/* enableProguard */             null,
+				/* androidEnableProguard */      "true",
+				/* expectedBuildResult */        false,
+				/* expectedWarning */            "warning XA1028:",
+			}
+		};
+
+		[Test]
+		[TestCaseSource (nameof (XA1027XA1028Source))]
+		public void XA1027XA1028 (string linkTool, string enableProguard, string androidEnableProguard, bool expectedBuildResult, string expectedWarning)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				// Make sure the test covers the scenario where `$(AndroidDexTool)` is not explicitly configured
+				DexTool = null,
+				LinkTool = linkTool,
+				IsRelease = true
+			};
+			proj.SetProperty ("EnableProguard", enableProguard);
+			proj.SetProperty ("AndroidEnableProguard", androidEnableProguard);
+			using (var builder = CreateApkBuilder ()) {
+				builder.Target = "_CheckNonIdealConfigurations";
+				builder.ThrowOnBuildFailure = expectedBuildResult;
+				builder.Build (proj);
+				Assert.IsNotNull(
+					builder.LastBuildOutput
+						.SkipWhile (x => !x.StartsWith (expectedBuildResult ? "Build succeeded." : "Build FAILED."))
+						.FirstOrDefault (x => x.Contains (expectedWarning)),
+					$"Build output should contain '{expectedWarning}'.");
 			}
 		}
 
