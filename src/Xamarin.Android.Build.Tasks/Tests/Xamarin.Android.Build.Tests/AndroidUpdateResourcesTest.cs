@@ -262,7 +262,6 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[NonParallelizable]
-		[Category ("DotNetIgnore")] // <ProcessGoogleServicesJson/> task is built for net45
 		public void Check9PatchFilesAreProcessed ()
 		{
 			var projectPath = Path.Combine ("temp", "Check9PatchFilesAreProcessed");
@@ -275,7 +274,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 			using (var libb = CreateDllBuilder (Path.Combine (projectPath, "Library1"))) {
 				libb.Build (libproj);
-				var proj = new XamarinAndroidApplicationProject ();
+				var proj = new XamarinFormsMapsApplicationProject ();
 				using (var stream = typeof (XamarinAndroidCommonProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.Image.9.png")) {
 					var image_data = new byte [stream.Length];
 					stream.Read (image_data, 0, (int)stream.Length);
@@ -283,11 +282,6 @@ namespace Xamarin.Android.Build.Tests
 					proj.AndroidResources.Add (image1);
 				}
 				proj.References.Add (new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj"));
-				proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
-				proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
-				proj.PackageReferences.Add (KnownPackages.SupportV7MediaRouter_27_0_2_1);
-				proj.PackageReferences.Add (KnownPackages.GooglePlayServicesMaps_42_1021_1);
-				proj.PackageReferences.Add (KnownPackages.Xamarin_Build_Download_0_4_11);
 				using (var b = CreateApkBuilder (Path.Combine (projectPath, "Application1"), false, false)) {
 					Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 					var path = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/bin/packaged_resources");
@@ -1248,82 +1242,6 @@ namespace UnnamedProject
 				FileAssert.Exists (r_java);
 				var r_java_contents = File.ReadAllLines (r_java);
 				Assert.IsTrue (StringAssertEx.ContainsText (r_java_contents, textView1), $"android/support/compat/R.java should contain `{textView1}`!");
-			}
-		}
-
-		// https://github.com/xamarin/xamarin-android/issues/2205
-		[Test]
-		[NonParallelizable]
-		[Category ("DotNetIgnore")] // <ProcessGoogleServicesJson/> task is built for net45
-		public void Issue2205 ([Values (false, true)] bool useAapt2)
-		{
-			AssertAaptSupported (useAapt2);
-			var proj = new XamarinAndroidApplicationProject ();
-			proj.AndroidUseAapt2 = useAapt2;
-			proj.PackageReferences.Add (KnownPackages.Android_Arch_Core_Common_26_1_0);
-			proj.PackageReferences.Add (KnownPackages.Android_Arch_Lifecycle_Common_26_1_0);
-			proj.PackageReferences.Add (KnownPackages.Android_Arch_Lifecycle_Runtime_26_1_0);
-			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportCompat_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportCoreUI_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportCoreUtils_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportDesign_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportFragment_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportMediaCompat_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportV7CardView_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportV7MediaRouter_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportV7RecyclerView_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Gcm);
-			proj.PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Tasks);
-			proj.PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Iid);
-			proj.PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Basement);
-			proj.PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Base);
-			proj.OtherBuildItems.Add (new BuildItem ("GoogleServicesJson", "googleservices.json") {
-				Encoding = Encoding.ASCII,
-				TextContent = () => @"{
-    ""project_info"": {
-        ""project_number"": ""12351255213413432"",
-        ""project_id"": ""12341234-app""
-    },
-    ""client"": [
-        {
-            ""client_info"": {
-                ""mobilesdk_app_id"": ""1:111111111:android:asdfasdf"",
-                ""android_client_info"": {
-                    ""package_name"": ""com.app.apppp""
-                }
-            },
-            ""oauth_client"": [
-                {
-                    ""client_id"": ""dddddddddddddddddd.apps.googleusercontent.com"",
-                    ""client_type"": 3
-                }
-            ],
-            ""api_key"": [
-                {
-                    ""current_key"": ""aaaaaaapppp1123423""
-                }
-            ],
-            ""services"": {
-                ""analytics_service"": {
-                    ""status"": 1
-                },
-                ""appinvite_service"": {
-                    ""status"": 1,
-                    ""other_platform_oauth_client"": []
-                },
-                ""ads_service"": {
-                    ""status"": 2
-                }
-            }
-        }
-    ],
-    ""configuration_version"": ""1""
-}"
-			});
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
-				Assert.IsTrue (b.Build (proj), "first build should have succeeded");
 			}
 		}
 
