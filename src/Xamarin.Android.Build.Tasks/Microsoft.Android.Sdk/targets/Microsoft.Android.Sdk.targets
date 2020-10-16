@@ -25,16 +25,6 @@
   <Import Project="$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Common.Debugging.props"
       Condition="Exists('$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Common.Debugging.props')"/>
 
-   <!-- Automatically supply project capabilities for IDE use -->
-  <ItemGroup>
-    <ProjectCapability Include="Mobile" />
-    <ProjectCapability Include="Android" />
-    <ProjectCapability Include="AndroidApplication" Condition="$(AndroidApplication)" />
-
-    <!-- Conflicts with our targets generator in VS+CPS: See https://work.azdo.io/1112733 -->
-    <ProjectCapability Remove="LaunchProfiles" />
-  </ItemGroup>
-
   <!-- Build ordering, should be imported before Xamarin.Android.Common.targets -->
   <Import Project="Microsoft.Android.Sdk.BuildOrder.targets" />
 
@@ -45,6 +35,7 @@
   <Import Project="Microsoft.Android.Sdk.AssemblyResolution.targets" />
   <Import Project="Microsoft.Android.Sdk.ILLink.targets" />
   <Import Project="Microsoft.Android.Sdk.NuGet.targets" />
+  <Import Project="Microsoft.Android.Sdk.ProjectCapabilities.targets" />
   <Import Project="Microsoft.Android.Sdk.Publish.targets" />
   <Import Project="Microsoft.Android.Sdk.Tooling.targets" />
 
