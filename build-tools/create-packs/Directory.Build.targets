@@ -84,11 +84,15 @@
     />
     <ItemGroup>
       <_UnixExecutables Include="$(DotNetPreviewPath)packs\Microsoft.Android.Sdk\*\tools\$(HostOS)\**\*.*" />
+      <_FilesToTouch Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\Microsoft.Android.Workload\**" />
+      <_FilesToTouch Include="$(DotNetPreviewPath)packs\$([System.String]::Copy('%(_WLPacks.Filename)').Replace('.$(AndroidPackVersionLong)', ''))\$(AndroidPackVersionLong)\**" />
     </ItemGroup>
     <Exec
         Condition=" '$(HostOS)' == 'Darwin' or '$(HostOS)' == 'Linux' "
         Command="chmod +x &quot;%(_UnixExecutables.Identity)&quot;"
     />
+    <!-- Some files had timestamps in the future -->
+    <Touch Files="@(_FilesToTouch)" />
     <Touch
         Files="$(DotNetPreviewPath)sdk\$(DotNetPreviewVersionFull)\EnableWorkloadResolver.sentinel"
         AlwaysCreate="true"
