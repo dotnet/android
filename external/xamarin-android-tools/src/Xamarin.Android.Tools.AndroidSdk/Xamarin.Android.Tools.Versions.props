@@ -9,12 +9,12 @@
     If this file is changed the submodule for androidtools should be updated, 
     along with any other repo which references androidtools. 
     -->
-    <AndroidSdkBuildToolsVersion Condition="'$(AndroidSdkBuildToolsVersion)' == ''">29.0.2</AndroidSdkBuildToolsVersion>
-    <AndroidCommandLineToolsVersion Condition=" '$(AndroidCommandLineToolsVersion)' == '' ">1.0</AndroidCommandLineToolsVersion>
-    <AndroidSdkPlatformToolsVersion Condition="'$(AndroidSdkPlatformToolsVersion)' == ''">29.0.5</AndroidSdkPlatformToolsVersion>
+    <AndroidSdkBuildToolsVersion Condition="'$(AndroidSdkBuildToolsVersion)' == ''">30.0.2</AndroidSdkBuildToolsVersion>
+    <AndroidCommandLineToolsVersion Condition=" '$(AndroidCommandLineToolsVersion)' == '' ">2.1</AndroidCommandLineToolsVersion>
+    <AndroidSdkPlatformToolsVersion Condition="'$(AndroidSdkPlatformToolsVersion)' == ''">30.0.4</AndroidSdkPlatformToolsVersion>
     <AndroidSdkToolsVersion Condition="'$(AndroidSdkToolsVersion)' == ''">26.1.1</AndroidSdkToolsVersion>
     <AndroidSdkEmulatorVersion Condition="'$(AndroidSdkEmulatorVersion)' == ''"></AndroidSdkEmulatorVersion>
-    <AndroidSdkPlatformVersion Condition="'$(AndroidSdkPlatformVersion)' == ''">android-29</AndroidSdkPlatformVersion>
-    <AndroidNdkVersion Condition="'$(AndroidNdkVersion)' == ''">16.1</AndroidNdkVersion>
+    <AndroidSdkPlatformVersion Condition="'$(AndroidSdkPlatformVersion)' == ''">android-30</AndroidSdkPlatformVersion>
+    <AndroidNdkVersion Condition="'$(AndroidNdkVersion)' == ''">21.3.6528147</AndroidNdkVersion>
   </PropertyGroup>
 </Project>
