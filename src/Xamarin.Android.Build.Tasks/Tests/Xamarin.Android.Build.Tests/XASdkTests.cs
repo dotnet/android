@@ -196,9 +196,7 @@ namespace Xamarin.Android.Build.Tests
 			var nupkgPath = Path.Combine (FullProjectDirectory, proj.OutputPath, "..", $"{proj.ProjectName}.1.0.0.nupkg");
 			FileAssert.Exists (nupkgPath);
 			using (var nupkg = ZipHelper.OpenZip (nupkgPath)) {
-				// TODO: should eventually be $"lib/net5.0-android/{proj.ProjectName}.dll"
-				// See: https://github.com/dotnet/sdk/issues/14042
-				nupkg.AssertContainsEntry (nupkgPath, $"lib/net5.0/{proj.ProjectName}.dll");
+				nupkg.AssertContainsEntry (nupkgPath, $"lib/net5.0-android/{proj.ProjectName}.dll");
 				nupkg.AssertContainsEntry (nupkgPath, $"lib/net5.0-android/{proj.ProjectName}.aar");
 			}
 		}
