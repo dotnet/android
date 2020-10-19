@@ -360,14 +360,14 @@ namespace Xamarin.Android.Tasks
 			return false;
 		}
 
-		public static void SetWriteable (string source)
+		public static void SetWriteable (string source, bool checkExists = true)
 		{
-			if (!File.Exists (source))
+			if (checkExists && !File.Exists (source))
 				return;
 
-			var fileInfo = new FileInfo (source);
-			if (fileInfo.IsReadOnly)
-				fileInfo.IsReadOnly = false;
+			var attributes = File.GetAttributes (source);
+			if ((attributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
+				File.SetAttributes (source, attributes & ~FileAttributes.ReadOnly);
 		}
 
 		public static void SetDirectoryWriteable (string directory)
@@ -376,12 +376,12 @@ namespace Xamarin.Android.Tasks
 				return;
 
 			var dirInfo = new DirectoryInfo (directory);
-			if ((dirInfo.Attributes | FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
+			if ((dirInfo.Attributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
 				dirInfo.Attributes &= ~FileAttributes.ReadOnly;
 
 			foreach (var dir in Directory.EnumerateDirectories (directory, "*", SearchOption.AllDirectories)) {
 				dirInfo = new DirectoryInfo (dir);
-				if ((dirInfo.Attributes | FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
+				if ((dirInfo.Attributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
 					dirInfo.Attributes &= ~FileAttributes.ReadOnly;
 			}
 
