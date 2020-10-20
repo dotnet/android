@@ -39,8 +39,8 @@ jobs:
 
   - task: NuGetCommand@2
     inputs:
-      command: restore
-      restoreSolution: 'external\xamarin-android-tools\Xamarin.Android.Tools.sln'
+      command: custom
+      arguments: restore external\xamarin-android-tools\Xamarin.Android.Tools.sln -ConfigFile external\xamarin-android-tools\NuGet.config
       
   - task: MSBuild@1
     displayName: MSBuild Java.Interop.sln /t:Prepare
