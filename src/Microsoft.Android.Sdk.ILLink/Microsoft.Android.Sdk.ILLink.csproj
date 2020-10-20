@@ -37,9 +37,6 @@
     <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\PreserveTlsProvider.cs" />
     <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\PreserveTypeConverters.cs" />
 
-    <!--TODO: Subclasses RemoveAttributesBase-->
-    <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\RemoveAttributes.cs" />
-
     <!--TODO: Subclasses MarkStep-->
     <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\MonoDroidMarkStep.cs" />
 

@@ -6,6 +6,10 @@ using System.Linq;
 using Mono.Linker;
 using Mono.Linker.Steps;
 
+#if NET5_LINKER
+using Microsoft.Android.Sdk.ILLink;
+#endif
+
 using Mono.Tuner;
 using Mobile.Tuner;
 
@@ -16,7 +20,13 @@ namespace MonoDroid.Tuner {
 	public class RemoveAttributes : RemoveAttributesBase {
 
 		protected virtual bool DebugBuild {
-			get { return context.LinkSymbols; }
+			get {
+#if NET5_LINKER
+				return true;
+#else
+				return context.LinkSymbols;
+#endif
+			}
 		}
 
 		protected override bool IsRemovedAttribute (CustomAttribute attribute)
