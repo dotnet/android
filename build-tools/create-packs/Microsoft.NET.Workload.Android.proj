@@ -1,8 +1,8 @@
 <!--
 ***********************************************************************************************
-Microsoft.Android.Workload.proj
+Microsoft.NET.Workload.Android.proj
 
-This project file is used to create the Microsoft.Android.Workload NuGet, which is the
+This project file is used to create the Microsoft.NET.Workload.Android NuGet, which is the
 workload manifest pack containing information about the various Microsoft.Android workloads.
 ***********************************************************************************************
 -->
@@ -10,7 +10,7 @@ workload manifest pack containing information about the various Microsoft.Androi
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <PackageId>Microsoft.Android.Workload</PackageId>
+    <PackageId>Microsoft.NET.Workload.Android</PackageId>
     <Authors>Microsoft</Authors>
     <Description>Microsoft.Android workload manifest. Please do not reference directly.</Description>
     <OutputPath>..\..\bin\Build$(Configuration)\nupkgs\</OutputPath>

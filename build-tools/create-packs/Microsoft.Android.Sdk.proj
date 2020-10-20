@@ -3,7 +3,7 @@
 Microsoft.Android.Sdk.proj
 
 This project file is used to create the Microsoft.Android.Sdk NuGet, which is the core workload
-sdk pack imported by Microsoft.Android.Workload.
+sdk pack imported by Microsoft.NET.Workload.Android.
 ***********************************************************************************************
 -->
 <Project Sdk="Microsoft.Build.NoTargets">

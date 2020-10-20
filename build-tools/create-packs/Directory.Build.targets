@@ -62,13 +62,13 @@
       DependsOnTargets="CreateAllRuntimePacks" >
     <Exec Command="$(DotNetPreviewTool) pack -p:Configuration=$(Configuration) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Ref.proj&quot;" />
     <Exec Command="$(DotNetPreviewTool) pack -p:Configuration=$(Configuration) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.proj&quot;" />
-    <Exec Command="$(DotNetPreviewTool) pack -p:Configuration=$(Configuration) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Workload.proj&quot;" />
+    <Exec Command="$(DotNetPreviewTool) pack -p:Configuration=$(Configuration) &quot;$(MSBuildThisFileDirectory)Microsoft.NET.Workload.Android.proj&quot;" />
   </Target>
 
   <Target Name="ExtractWorkloadPacks"
       DependsOnTargets="DeleteExtractedWorkloadPacks;GetXAVersionInfo" >
     <ItemGroup>
-      <_WLManifest Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Workload.$(AndroidPackVersionLong).nupkg" />
+      <_WLManifest Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.NET.Workload.Android.$(AndroidPackVersionLong).nupkg" />
       <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Sdk.$(AndroidPackVersionLong).nupkg" />
       <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Ref.$(AndroidPackVersionLong).nupkg" />
       <!-- Runtime packs are not yet supported by workloads -->
@@ -76,7 +76,7 @@
     </ItemGroup>
     <Unzip
         SourceFiles="@(_WLManifest)"
-        DestinationFolder="$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\Microsoft.Android.Workload"
+        DestinationFolder="$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\Microsoft.NET.Workload.Android"
     />
     <Unzip
         SourceFiles="@(_WLPacks)"
@@ -84,7 +84,7 @@
     />
     <ItemGroup>
       <_UnixExecutables Include="$(DotNetPreviewPath)packs\Microsoft.Android.Sdk\*\tools\$(HostOS)\**\*.*" />
-      <_FilesToTouch Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\Microsoft.Android.Workload\**" />
+      <_FilesToTouch Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\Microsoft.NET.Workload.Android\**" />
       <_FilesToTouch Include="$(DotNetPreviewPath)packs\$([System.String]::Copy('%(_WLPacks.Filename)').Replace('.$(AndroidPackVersionLong)', ''))\$(AndroidPackVersionLong)\**" />
     </ItemGroup>
     <Exec
