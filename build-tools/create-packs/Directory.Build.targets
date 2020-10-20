@@ -10,6 +10,10 @@
   <Import Project="Sdk.props" Sdk="Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk" />
   <UsingTask TaskName="CreateFrameworkListFile" AssemblyFile="$(DotNetBuildTasksSharedFrameworkTaskFile)"/>
 
+  <PropertyGroup>
+    <_WorkloadResolverFlagFile>$(DotNetPreviewPath)sdk\$(DotNetPreviewVersionFull)\EnableWorkloadResolver.sentinel</_WorkloadResolverFlagFile>
+  </PropertyGroup>
+
   <ItemGroup>
     <!-- NOTE: we don't have a reference assembly for Java.Interop.dll yet -->
     <_AndroidAppRefAssemblies Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild-frameworks\Microsoft.Android\netcoreapp3.1\Java.Interop.dll" />
@@ -53,6 +57,7 @@
 
   <Target Name="CreateAllPacks"
       DependsOnTargets="DeleteExtractedWorkloadPacks" >
+    <RemoveDir Directories="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs" />
     <Exec Command="$(DotNetPreviewTool) pack -p:Configuration=$(Configuration) -p:AndroidRID=android.21-arm -p:AndroidABI=armeabi-v7a &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
     <Exec Command="$(DotNetPreviewTool) pack -p:Configuration=$(Configuration) -p:AndroidRID=android.21-arm64 -p:AndroidABI=arm64-v8a &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
     <Exec Command="$(DotNetPreviewTool) pack -p:Configuration=$(Configuration) -p:AndroidRID=android.21-x86 -p:AndroidABI=x86 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
@@ -63,26 +68,29 @@
   </Target>
 
   <Target Name="ExtractWorkloadPacks"
-      DependsOnTargets="DeleteExtractedWorkloadPacks;GetXAVersionInfo" >
+      DependsOnTargets="DeleteExtractedWorkloadPacks" >
     <ItemGroup>
-      <_WLManifest Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.NET.Workload.Android.$(AndroidPackVersionLong).nupkg" />
-      <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Sdk.$(AndroidPackVersionLong).nupkg" />
-      <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Ref.$(AndroidPackVersionLong).nupkg" />
+      <_WLManifest Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.NET.Workload.Android.*.nupkg" />
+      <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Sdk.*.nupkg" />
+      <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Ref.*.nupkg" />
       <!-- Runtime packs are not yet supported by workloads -->
-      <!-- <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Runtime.$(AndroidPackVersionLong).nupkg" /> -->
+      <!-- <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Runtime.*.nupkg" /> -->
     </ItemGroup>
+    <PropertyGroup>
+      <_WLPackVersion>@(_WLManifest->'%(Filename)'->Replace('Microsoft.NET.Workload.Android.', ''))</_WLPackVersion>
+    </PropertyGroup>
     <Unzip
         SourceFiles="@(_WLManifest)"
         DestinationFolder="$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\Microsoft.NET.Workload.Android"
     />
     <Unzip
         SourceFiles="@(_WLPacks)"
-        DestinationFolder="$(DotNetPreviewPath)packs\$([System.String]::Copy('%(_WLPacks.Filename)').Replace('.$(AndroidPackVersionLong)', ''))\$(AndroidPackVersionLong)"
+        DestinationFolder="$(DotNetPreviewPath)packs\$([System.String]::Copy('%(_WLPacks.Filename)').Replace('.$(_WLPackVersion)', ''))\$(_WLPackVersion)"
     />
     <ItemGroup>
       <_UnixExecutables Include="$(DotNetPreviewPath)packs\Microsoft.Android.Sdk\*\tools\$(HostOS)\**\*.*" />
       <_FilesToTouch Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\Microsoft.NET.Workload.Android\**" />
-      <_FilesToTouch Include="$(DotNetPreviewPath)packs\$([System.String]::Copy('%(_WLPacks.Filename)').Replace('.$(AndroidPackVersionLong)', ''))\$(AndroidPackVersionLong)\**" />
+      <_FilesToTouch Include="$(DotNetPreviewPath)packs\$([System.String]::Copy('%(_WLPacks.Filename)').Replace('.$(_WLPackVersion)', ''))\$(_WLPackVersion)\**" />
     </ItemGroup>
     <Exec
         Condition=" '$(HostOS)' == 'Darwin' or '$(HostOS)' == 'Linux' "
@@ -91,7 +99,7 @@
     <!-- Some files had timestamps in the future -->
     <Touch Files="@(_FilesToTouch)" />
     <Touch
-        Files="$(DotNetPreviewPath)sdk\$(DotNetPreviewVersionFull)\EnableWorkloadResolver.sentinel"
+        Files="$(_WorkloadResolverFlagFile)"
         AlwaysCreate="true"
     />
   </Target>
@@ -103,6 +111,7 @@
       <_PackFilesToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android*\**\*.*" />
     </ItemGroup>
     <RemoveDir Directories="%(_PackFilesToDelete.RootDir)%(_PackFilesToDelete.Directory)" />
+    <Delete Files="$(_WorkloadResolverFlagFile)" />
   </Target>
 
 </Project>
