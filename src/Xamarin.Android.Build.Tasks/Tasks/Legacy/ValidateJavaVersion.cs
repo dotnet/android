@@ -76,8 +76,6 @@ namespace Xamarin.Android.Tasks.Legacy
 			if (!Version.TryParse (buildToolsVersionString, out buildTools)) {
 				return Version.Parse (LatestSupportedJavaVersion);
 			}
-			if (buildTools >= new Version (30, 0, 0))
-				return new Version (11, 0);
 			if (buildTools >= new Version (24, 0, 1))
 				return new Version (1, 8);
 			return Version.Parse (MinimumSupportedJavaVersion);
