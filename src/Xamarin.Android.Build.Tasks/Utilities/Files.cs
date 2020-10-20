@@ -88,10 +88,12 @@ namespace Xamarin.Android.Tools
 					Directory.CreateDirectory (directory);
 
 				if (!Directory.Exists (source)) {
-					MonoAndroidHelper.SetWriteable (destination);
-					File.Delete (destination);
-					File.Copy (source, destination);
-					MonoAndroidHelper.SetWriteable (destination);
+					if (File.Exists (destination)) {
+						MonoAndroidHelper.SetWriteable (destination, checkExists: false);
+						File.Delete (destination);
+					}
+					File.Copy (source, destination, overwrite: true);
+					MonoAndroidHelper.SetWriteable (destination, checkExists: false);
 					File.SetLastWriteTimeUtc (destination, DateTime.UtcNow);
 					return true;
 				}
@@ -114,8 +116,10 @@ namespace Xamarin.Android.Tools
 				if (!string.IsNullOrEmpty (directory))
 					Directory.CreateDirectory (directory);
 
-				MonoAndroidHelper.SetWriteable (destination);
-				File.Delete (destination);
+				if (File.Exists (destination)) {
+					MonoAndroidHelper.SetWriteable (destination, checkExists: false);
+					File.Delete (destination);
+				}
 				File.WriteAllBytes (destination, bytes);
 				return true;
 			}
@@ -129,8 +133,10 @@ namespace Xamarin.Android.Tools
 				if (!string.IsNullOrEmpty (directory))
 					Directory.CreateDirectory (directory);
 
-				MonoAndroidHelper.SetWriteable (destination);
-				File.Delete (destination);
+				if (File.Exists (destination)) {
+					MonoAndroidHelper.SetWriteable (destination, checkExists: false);
+					File.Delete (destination);
+				}
 				using (var fileStream = File.Create (destination)) {
 					stream.Position = 0; //HasStreamChanged read to the end
 					stream.CopyTo (fileStream);

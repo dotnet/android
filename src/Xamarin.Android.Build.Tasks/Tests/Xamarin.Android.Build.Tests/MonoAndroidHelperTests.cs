@@ -204,5 +204,34 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreSame (expected, actual);
 			Assert.AreEqual (0, actual.Length);
 		}
+
+		[Test]
+		public void SetWriteable ()
+		{
+			File.WriteAllText (temp, contents: "foo");
+			File.SetAttributes (temp, FileAttributes.ReadOnly);
+
+			MonoAndroidHelper.SetWriteable (temp);
+
+			var attributes = File.GetAttributes (temp);
+			Assert.AreEqual (FileAttributes.Normal, attributes);
+			File.WriteAllText (temp, contents: "bar");
+		}
+
+		[Test]
+		public void SetDirectoryWriteable ()
+		{
+			Directory.CreateDirectory (temp);
+			try {
+				var directoryInfo = new DirectoryInfo (temp);
+				directoryInfo.Attributes |= FileAttributes.ReadOnly;
+				MonoAndroidHelper.SetDirectoryWriteable (temp);
+
+				directoryInfo = new DirectoryInfo (temp);
+				Assert.AreEqual (FileAttributes.Directory, directoryInfo.Attributes);
+			} finally {
+				Directory.Delete (temp);
+			}
+		}
 	}
 }
