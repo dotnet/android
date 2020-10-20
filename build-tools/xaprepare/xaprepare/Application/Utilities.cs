@@ -12,9 +12,9 @@ namespace Xamarin.Android.Prepare
 {
 	static partial class Utilities
 	{
-		static readonly TimeSpan IOExceptionRetryInitialDelay = TimeSpan.FromMilliseconds (250);
+		static readonly TimeSpan ExceptionRetryInitialDelay = TimeSpan.FromMilliseconds (250);
 		static readonly TimeSpan WebRequestTimeout = TimeSpan.FromMinutes (60);
-		static readonly int IOExceptionRetries = 5;
+		static readonly int ExceptionRetries = 5;
 
 		const string MSBuildPropertyListSeparator = ":";
 
@@ -431,17 +431,27 @@ namespace Xamarin.Android.Prepare
 
 		public static async Task<(bool success, ulong size, HttpStatusCode status)> GetDownloadSizeWithStatus (Uri url)
 		{
-			using (var httpClient = new HttpClient ()) {
-				httpClient.Timeout = WebRequestTimeout;
-				var req = new HttpRequestMessage (HttpMethod.Head, url);
-				req.Headers.ConnectionClose = true;
+			TimeSpan delay = ExceptionRetryInitialDelay;
+			for (int i = 0; i < ExceptionRetries; i++) {
+				try {
+					using (var httpClient = new HttpClient ()) {
+						httpClient.Timeout = WebRequestTimeout;
+						var req = new HttpRequestMessage (HttpMethod.Head, url);
+						req.Headers.ConnectionClose = true;
 
-				HttpResponseMessage resp = await httpClient.SendAsync (req, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait (true);
-				if (!resp.IsSuccessStatusCode || !resp.Content.Headers.ContentLength.HasValue)
-					return (false, 0, resp.StatusCode);
+						HttpResponseMessage resp = await httpClient.SendAsync (req, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait (true);
+						if (!resp.IsSuccessStatusCode || !resp.Content.Headers.ContentLength.HasValue)
+							return (false, 0, resp.StatusCode);
 
-				return (true, (ulong)resp.Content.Headers.ContentLength.Value, resp.StatusCode);
+						return (true, (ulong) resp.Content.Headers.ContentLength.Value, resp.StatusCode);
+					}
+				} catch (Exception ex) {
+					if (i < ExceptionRetries - 1) {
+						WaitAWhile ($"GetDownloadSize {url}", i, ref ex, ref delay);
+					}
+				}
 			}
+			return (false, 0, HttpStatusCode.InternalServerError);
 		}
 
 		public static async Task<bool> Download (Uri url, string targetFile, DownloadStatus status)
@@ -453,18 +463,16 @@ namespace Xamarin.Android.Prepare
 			if (status == null)
 				throw new ArgumentNullException (nameof (status));
 
+			TimeSpan delay = ExceptionRetryInitialDelay;
 			bool succeeded = false;
-			const int retries = 5;
-			for (int i = 0; i < retries; i++) {
+			for (int i = 0; i < ExceptionRetries; i++) {
 				try {
 					await DoDownload (url, targetFile, status);
 					succeeded = true;
 					break;
 				} catch (Exception ex) {
-					Log.DebugLine ($"Exception: {ex}");
-					if (i < retries - 1) {
-						Log.StatusLine ($"'{ex.Message}'. Retrying...", ConsoleColor.Yellow);
-						await Task.Delay (1000);
+					if (i < ExceptionRetries - 1) {
+						WaitAWhile ($"Download {url}", i, ref ex, ref delay);
 					}
 				}
 			}
@@ -576,10 +584,10 @@ namespace Xamarin.Android.Prepare
 				return;
 
 			Log.DebugLine ($"Resetting timestamp of {filePath}");
-			TimeSpan delay = IOExceptionRetryInitialDelay;
+			TimeSpan delay = ExceptionRetryInitialDelay;
 			Exception? ex = null;
 
-			for (int i = 0; i < IOExceptionRetries; i++) {
+			for (int i = 0; i < ExceptionRetries; i++) {
 				try {
 					// Don't attempt to set write/access time on linked files.
 					var destFileInfo = new FileInfo (filePath);
@@ -602,11 +610,11 @@ namespace Xamarin.Android.Prepare
 
 		public static void MoveFileWithRetry (string source, string destination, bool resetFileTimestamp = false)
 		{
-			TimeSpan delay = IOExceptionRetryInitialDelay;
+			TimeSpan delay = ExceptionRetryInitialDelay;
 			Exception? ex = null;
 
 			Log.DebugLine ($"Moving '{source}' to '{destination}'");
-			for (int i = 0; i < IOExceptionRetries; i++) {
+			for (int i = 0; i < ExceptionRetries; i++) {
 				try {
 					FileMove (source, destination);
 					break;
@@ -638,11 +646,11 @@ namespace Xamarin.Android.Prepare
 
 		public static void DeleteDirectoryWithRetry (string directoryPath, bool recursive)
 		{
-			TimeSpan delay = IOExceptionRetryInitialDelay;
+			TimeSpan delay = ExceptionRetryInitialDelay;
 			Exception? ex = null;
 			bool tryResetFilePermissions = false;
 
-			for (int i = 0; i < IOExceptionRetries; i++) {
+			for (int i = 0; i < ExceptionRetries; i++) {
 				ex = null;
 				try {
 					if (tryResetFilePermissions) {
