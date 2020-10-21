@@ -26,6 +26,8 @@ sdk pack imported by Microsoft.NET.Workload.Android.
   <Import Project="..\..\build-tools\installers\create-installers.targets" />
 
   <PropertyGroup>
+    <NuGetLicense Condition=" '$(NuGetLicense)' == '' ">$(XamarinAndroidSourcePath)\LICENSE</NuGetLicense>
+    <PackageLicenseFile>$([System.IO.Path]::GetFileName($(NuGetLicense)))</PackageLicenseFile>
     <BeforePack>
       _GenerateXASdkContent;
       $(BeforePack);
@@ -69,6 +71,7 @@ sdk pack imported by Microsoft.NET.Workload.Android.
         Condition="$([MSBuild]::IsOSPlatform('osx')) or $([MSBuild]::IsOSPlatform('linux'))"
     />
     <ItemGroup>
+      <_PackageFiles Include="$(NuGetLicense)" PackagePath="\" />
       <_PackageFiles Include="$(ToolsSourceDir)**" PackagePath="tools" />
       <_PackageFiles Include="$(NetCoreAppToolsSourceDir)generator.dll" PackagePath="tools" />
       <_PackageFiles Include="$(NetCoreAppToolsSourceDir)generator.runtimeconfig.json" PackagePath="tools" />

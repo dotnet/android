@@ -20,6 +20,8 @@ workload manifest pack containing information about the various Microsoft.Androi
   <Import Project="..\..\build-tools\installers\create-installers.targets" />
 
   <PropertyGroup>
+    <NuGetLicense Condition=" '$(NuGetLicense)' == '' ">$(XamarinAndroidSourcePath)\LICENSE</NuGetLicense>
+    <PackageLicenseFile>$([System.IO.Path]::GetFileName($(NuGetLicense)))</PackageLicenseFile>
     <BeforePack>
       _GenerateXAWorkloadContent;
       $(BeforePack);
@@ -78,6 +80,7 @@ workload manifest pack containing information about the various Microsoft.Androi
         Overwrite="true" />
 
     <ItemGroup>
+      <_PackageFiles Include="$(NuGetLicense)" PackagePath="\" />
       <_PackageFiles Include="$(WorkloadManifestTargetsPath)" PackagePath="\" />
       <_PackageFiles Include="$(WorkloadManifestJsonPath)" PackagePath="\" />
     </ItemGroup>

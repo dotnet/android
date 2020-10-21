@@ -21,7 +21,11 @@ projects that use the Microsoft.Android framework in .NET 5.
     <_AndroidRuntimePackNativePath>runtimes\$(AndroidRID)\native</_AndroidRuntimePackNativePath>
   </PropertyGroup>
 
+  <Import Project="..\..\Configuration.props" />
+
   <PropertyGroup>
+    <NuGetLicense Condition=" '$(NuGetLicense)' == '' ">$(XamarinAndroidSourcePath)\LICENSE</NuGetLicense>
+    <PackageLicenseFile>$([System.IO.Path]::GetFileName($(NuGetLicense)))</PackageLicenseFile>
     <BeforePack>
       _GetRuntimePackItems;
       _GetDefaultPackageVersion;
@@ -44,6 +48,7 @@ projects that use the Microsoft.Android framework in .NET 5.
     </ItemGroup>
 
     <ItemGroup>
+      <_PackageFiles Include="$(NuGetLicense)" PackagePath="\" />
       <_PackageFiles Include="@(_AndroidAppPackAssemblies)" PackagePath="$(_AndroidRuntimePackAssemblyPath)" TargetPath="$(_AndroidRuntimePackAssemblyPath)" />
       <_PackageFiles Include="@(_AndroidRuntimePackAssets)" PackagePath="$(_AndroidRuntimePackNativePath)" TargetPath="$(_AndroidRuntimePackNativePath)" IsNative="true" />
     </ItemGroup>
