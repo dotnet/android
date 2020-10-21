@@ -21,6 +21,9 @@ namespace Xamarin.ProjectTools
 				PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Basement);
 				PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Maps);
 				PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Tasks);
+
+				//TODO: temporary fix for <Import/> ordering breakage and workloads
+				SetProperty ("AndroidApplication", "True");
 			} else {
 				PackageReferences.Add (KnownPackages.XamarinFormsMaps_4_0_0_425677);
 			}

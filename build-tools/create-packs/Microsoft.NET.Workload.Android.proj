@@ -1,0 +1,86 @@
+<!--
+***********************************************************************************************
+Microsoft.NET.Workload.Android.proj
+
+This project file is used to create the Microsoft.NET.Workload.Android NuGet, which is the
+workload manifest pack containing information about the various Microsoft.Android workloads.
+***********************************************************************************************
+-->
+<Project Sdk="Microsoft.Build.NoTargets">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <PackageId>Microsoft.NET.Workload.Android</PackageId>
+    <Authors>Microsoft</Authors>
+    <Description>Microsoft.Android workload manifest. Please do not reference directly.</Description>
+    <OutputPath>..\..\bin\Build$(Configuration)\nupkgs\</OutputPath>
+  </PropertyGroup>
+
+  <Import Project="..\..\Configuration.props" />
+  <Import Project="..\..\build-tools\installers\create-installers.targets" />
+
+  <PropertyGroup>
+    <BeforePack>
+      _GenerateXAWorkloadContent;
+      $(BeforePack);
+    </BeforePack>
+  </PropertyGroup>
+
+  <!-- FIXME: Temporarily Generate WorkloadManifest.targets and WorkloadManifest.json files inline while content is trivial. -->
+  <Target Name="_GenerateXAWorkloadContent"
+      DependsOnTargets="_GetDefaultPackageVersion" >
+    <PropertyGroup>
+      <WorkloadManifestTargetsPath>$(OutputPath)\workload-manifest\WorkloadManifest.targets</WorkloadManifestTargetsPath>
+      <WorkloadManifestJsonPath>$(OutputPath)\workload-manifest\WorkloadManifest.json</WorkloadManifestJsonPath>
+      <WorkloadManifestTargetsContent>
+<![CDATA[
+<Project>
+    <Import Project="Sdk.targets"
+        Sdk="Microsoft.Android.Sdk"
+        Condition=" '%24(TargetPlatformIdentifier)' == 'Android' " />
+</Project>
+]]>
+      </WorkloadManifestTargetsContent>
+      <WorkloadManifestJsonContent>
+<![CDATA[
+{
+  "version": 5,
+  "workloads": {
+    "microsoft-android-sdk-full": {
+      "description": "Android SDK",
+      "packs": [
+        "Microsoft.Android.Sdk",
+        "Microsoft.Android.Ref",
+      ]
+    }
+  },
+  "packs": {
+    "Microsoft.Android.Sdk": {
+      "kind": "sdk",
+      "version": "$(AndroidPackVersionLong)"
+    },
+    "Microsoft.Android.Ref": {
+      "kind": "framework",
+      "version": "$(AndroidPackVersionLong)"
+    }
+  }
+}
+]]>
+      </WorkloadManifestJsonContent>
+    </PropertyGroup>
+
+    <WriteLinesToFile File="$(WorkloadManifestTargetsPath)"
+        Lines="$(WorkloadManifestTargetsContent)"
+        Overwrite="true" />
+
+    <WriteLinesToFile File="$(WorkloadManifestJsonPath)"
+        Lines="$(WorkloadManifestJsonContent)"
+        Overwrite="true" />
+
+    <ItemGroup>
+      <_PackageFiles Include="$(WorkloadManifestTargetsPath)" PackagePath="\" />
+      <_PackageFiles Include="$(WorkloadManifestJsonPath)" PackagePath="\" />
+    </ItemGroup>
+  </Target>
+
+</Project>

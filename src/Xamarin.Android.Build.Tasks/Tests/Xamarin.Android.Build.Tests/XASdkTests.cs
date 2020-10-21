@@ -196,10 +196,8 @@ namespace Xamarin.Android.Build.Tests
 			var nupkgPath = Path.Combine (FullProjectDirectory, proj.OutputPath, "..", $"{proj.ProjectName}.1.0.0.nupkg");
 			FileAssert.Exists (nupkgPath);
 			using (var nupkg = ZipHelper.OpenZip (nupkgPath)) {
-				// TODO: should eventually be $"lib/net5.0-android/{proj.ProjectName}.dll"
-				// See: https://github.com/dotnet/sdk/issues/14042
-				nupkg.AssertContainsEntry (nupkgPath, $"lib/net5.0/{proj.ProjectName}.dll");
-				nupkg.AssertContainsEntry (nupkgPath, $"lib/net5.0-android/{proj.ProjectName}.aar");
+				nupkg.AssertContainsEntry (nupkgPath, $"lib/net5.0-android30.0/{proj.ProjectName}.dll");
+				nupkg.AssertContainsEntry (nupkgPath, $"lib/net5.0-android30.0/{proj.ProjectName}.aar");
 			}
 		}
 
@@ -333,7 +331,12 @@ namespace Xamarin.Android.Build.Tests
 				outputPath = Path.Combine (outputPath, runtimeIdentifiers);
 			}
 
-			var files = Directory.EnumerateFileSystemEntries (outputPath)
+			// TODO: With workloads we don't control the import of Microsoft.NET.Sdk/Sdk.targets.
+			//  We can no longer change the default values of `$(GenerateDependencyFile)` and `$(ProduceReferenceAssembly)` as a result.
+			//  We should update Microsoft.NET.Sdk to default both of these properties to false when the `$(TargetPlatformIdentifier)` is "mobile" (Android, iOS, etc).
+			//  Alternatively, the workload concept could be updated to support some sort of `Before.Microsoft.NET.targets` hook.
+
+			/* var files = Directory.EnumerateFileSystemEntries (outputPath)
 				.Select (Path.GetFileName)
 				.OrderBy (f => f);
 			CollectionAssert.AreEqual (new [] {
@@ -342,6 +345,7 @@ namespace Xamarin.Android.Build.Tests
 				$"{proj.PackageName}.apk",
 				$"{proj.PackageName}-Signed.apk",
 			}, files);
+			*/
 
 			var assemblyPath = Path.Combine (outputPath, $"{proj.ProjectName}.dll");
 			FileAssert.Exists (assemblyPath);
@@ -437,18 +441,6 @@ namespace Xamarin.Android.Build.Tests
 			using (var apk = ZipHelper.OpenZip (apkPath)) {
 				apk.AssertContainsEntry (apkPath, "res/raw/foo.txt");
 				apk.AssertContainsEntry (apkPath, "assets/foo/bar.txt");
-			}
-		}
-
-		[Test]
-		public void BuildWithLiteSdk ()
-		{
-			var proj = new XASdkProject () {
-				Sdk = $"Xamarin.Android.Sdk.Lite/{XASdkProject.SdkVersion}",
-				TargetFramework = "monoandroid10.0"
-			};
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
 		}
 

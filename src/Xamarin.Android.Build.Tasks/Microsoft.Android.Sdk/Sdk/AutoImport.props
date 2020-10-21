@@ -1,8 +1,20 @@
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<!--
+***********************************************************************************************
+AutoImport.props
 
-  <PropertyGroup>
-    <EnableDefaultAndroidItems Condition=" '$(EnableDefaultAndroidItems)' == '' ">$(EnableDefaultItems)</EnableDefaultAndroidItems>
-  </PropertyGroup>
+Contains Android default MSBuild item includes.
+
+WARNING:  This file is imported by all projects using
+          Microsoft.NET.Sdk. All Item includes in this file *MUST* be
+          hidden behind an Android property based condition.
+
+Spec for AutoImport.props:
+
+https://github.com/dotnet/designs/blob/4703666296f5e59964961464c25807c727282cae/accepted/2020/workloads/workload-resolvers.md#workload-props-files
+
+***********************************************************************************************
+-->
+<Project>
 
   <!-- Default Resource file inclusion -->
   <!-- https://developer.android.com/guide/topics/resources/providing-resources -->
@@ -21,26 +33,6 @@
   <!-- Default Asset file inclusion -->
   <ItemGroup Condition=" '$(EnableDefaultAndroidItems)' == 'true' ">
     <AndroidAsset Include="$(MonoAndroidAssetsPrefix)\**\*" Exclude="$(MonoAndroidAssetsPrefix)\**\.*\**" />
-  </ItemGroup>
-
-  <!-- Default References -->
-  <ItemGroup Condition=" '$(DisableImplicitFrameworkReferences)' != 'true' ">
-    <FrameworkReference
-        Include="Microsoft.Android"
-        IsImplicitlyDefined="true"
-        Pack="false"
-        PrivateAssets="All"
-    />
-  </ItemGroup>
-
-  <!-- Automatically supply project capabilities for IDE use -->
-  <ItemGroup>
-    <ProjectCapability Include="Mobile" />
-    <ProjectCapability Include="Android" />
-    <ProjectCapability Include="AndroidApplication" Condition="$(AndroidApplication)" />
-    
-    <!-- Conflicts with our targets generator in VS+CPS: See https://work.azdo.io/1112733 -->
-    <ProjectCapability Remove="LaunchProfiles" />
   </ItemGroup>
 
 </Project>

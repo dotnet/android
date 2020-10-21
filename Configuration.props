@@ -69,6 +69,9 @@
     <AndroidNdkDirectory Condition=" '$(AndroidNdkDirectory)' == '' ">$(AndroidToolchainDirectory)\ndk</AndroidNdkDirectory>
     <DotNetPreviewPath Condition=" '$(DotNetPreviewPath)' == '' ">$(AndroidToolchainDirectory)\dotnet\</DotNetPreviewPath>
     <DotNetPreviewTool Condition=" '$(DotNetPreviewTool)' == '' ">$(DotNetPreviewPath)dotnet</DotNetPreviewTool>
+    <!-- Version number from: https://github.com/dotnet/installer#installers-and-binaries -->
+    <DotNetPreviewVersionBand Condition=" '$(DotNetPreviewVersionBand)' == '' ">5.0.100</DotNetPreviewVersionBand>
+    <DotNetPreviewVersionFull Condition=" '$(DotNetPreviewVersionFull)' == '' ">$(DotNetPreviewVersionBand)-rtm.20509.5</DotNetPreviewVersionFull>
     <AndroidCmakeVersion Condition=" '$(AndroidCmakeVersion)' == '' ">3.10.2</AndroidCmakeVersion>
     <AndroidCmakeVersionPath Condition=" '$(AndroidCmakeVersionPath)' == '' ">$(AndroidCmakeVersion).4988404</AndroidCmakeVersionPath>
     <AndroidSdkCmakeDirectory>$(AndroidSdkDirectory)\cmake\$(AndroidCmakeVersionPath)</AndroidSdkCmakeDirectory>

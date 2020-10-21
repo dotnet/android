@@ -103,7 +103,7 @@ projects.
     />
     <ItemGroup>
       <FileWrites Include="$(_AarOutputPath)" />
-      <None       Include="$(_AarOutputPath)" Pack="true" PackagePath="lib\$(TargetFramework)" />
+      <None       Include="$(_AarOutputPath)" Pack="true" PackagePath="lib\$(TargetFramework)$(TargetPlatformVersion).0" />
     </ItemGroup>
   </Target>
 

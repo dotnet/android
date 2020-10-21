@@ -320,12 +320,13 @@ stages:
         configuration: $(XA.Build.Configuration)
         msbuildArguments: /t:Prepare /p:AutoProvision=true /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-prepare.binlog
 
+    # Build, pack .nupkgs, and extract workload packs to dotnet preview test directory
     - task: MSBuild@1
       displayName: msbuild Xamarin.Android
       inputs:
         solution: Xamarin.Android.sln
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-build.binlog
+        msbuildArguments: /t:PackDotNet /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-build.binlog
 
     - task: MSBuild@1
       displayName: msbuild create-vsix
@@ -333,13 +334,6 @@ stages:
         solution: build-tools\create-vsix\create-vsix.csproj
         configuration: $(XA.Build.Configuration)
         msbuildArguments: /p:CreateVsixContainer=True /p:ZipPackageCompressionLevel=Normal /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-create-vsix.binlog
-
-    - task: MSBuild@1
-      displayName: pack all nupkgs
-      inputs:
-        solution: $(System.DefaultWorkingDirectory)\build-tools\create-packs\Microsoft.Android.Sdk.proj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:CreateAllPacks /restore /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\create-all-packs.binlog
 
     - task: CmdLine@1
       displayName: xabuild Xamarin.Android-Tests
@@ -695,11 +689,6 @@ stages:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: $(NuGetArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
-
     - task: MSBuild@1
       displayName: start emulator
       inputs:
@@ -859,11 +848,6 @@ stages:
       inputs:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
-
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: $(NuGetArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
 
     - task: MSBuild@1
       displayName: start emulator

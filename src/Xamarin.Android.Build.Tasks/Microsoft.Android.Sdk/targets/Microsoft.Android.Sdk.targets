@@ -3,16 +3,28 @@
   <PropertyGroup>
     <MicrosoftAndroidSdkTargetsImported>true</MicrosoftAndroidSdkTargetsImported>
     <_XamarinAndroidBuildTasksAssembly>..\tools\Xamarin.Android.Build.Tasks.dll</_XamarinAndroidBuildTasksAssembly>
+    <UsingAndroidNETSdk>true</UsingAndroidNETSdk>
+    <!-- Enable nuget package conflict resolution -->
+    <ResolveAssemblyConflicts>true</ResolveAssemblyConflicts>
+    <_AndroidResourceDesigner>Resource.designer.cs</_AndroidResourceDesigner>
   </PropertyGroup>
 
-  <!-- Default property settings, imported before Microsoft.NET.Sdk -->
-  <Import Project="Microsoft.Android.Sdk.DefaultProperties.props" />
+  <!-- Default References -->
+  <ItemGroup Condition=" '$(DisableImplicitFrameworkReferences)' != 'true' ">
+    <FrameworkReference
+        Include="Microsoft.Android"
+        IsImplicitlyDefined="true"
+        Pack="false"
+        PrivateAssets="All"
+    />
+  </ItemGroup>
+
+  <Import Project="Microsoft.Android.Sdk.BundledVersions.targets" />
+  <Import Project="Microsoft.Android.Sdk.SupportedPlatforms.targets" />
+  <Import Project="Microsoft.Android.Sdk.DefaultProperties.targets" />
   <Import Project="$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Common.Debugging.props"
       Condition="Exists('$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Common.Debugging.props')"/>
-  <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.targets" />
-  <PropertyGroup>
-    <TargetPlatformSupported Condition=" '$(TargetPlatformIdentifier)' == 'Android' ">true</TargetPlatformSupported>
-  </PropertyGroup>
+
   <!-- Build ordering, should be imported before Xamarin.Android.Common.targets -->
   <Import Project="Microsoft.Android.Sdk.BuildOrder.targets" Condition=" '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' " />
 
@@ -22,11 +34,10 @@
   <Import Project="Microsoft.Android.Sdk.AndroidLibraries.targets" />
   <Import Project="Microsoft.Android.Sdk.Application.targets" Condition=" '$(AndroidApplication)' == 'true' " />
   <Import Project="Microsoft.Android.Sdk.AssemblyResolution.targets" />
-  <Import Project="Microsoft.Android.Sdk.DefaultItems.targets" />
   <Import Project="Microsoft.Android.Sdk.ILLink.targets" />
   <Import Project="Microsoft.Android.Sdk.NuGet.targets" />
+  <Import Project="Microsoft.Android.Sdk.ProjectCapabilities.targets" />
   <Import Project="Microsoft.Android.Sdk.Publish.targets" />
-  <Import Project="Microsoft.Android.Sdk.SupportedPlatforms.props" />
   <Import Project="Microsoft.Android.Sdk.Tooling.targets" />
 
 </Project>
