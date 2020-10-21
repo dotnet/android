@@ -65,6 +65,14 @@ namespace Xamarin.Android.Build.Tests
 			proj.IsRelease = true;
 			proj.SetAndroidSupportedAbis ("arm64-v8a");
 
+			if (forms) {
+				proj.PackageReferences.Clear ();
+				proj.PackageReferences.Add (KnownPackages.XamarinForms_4_7_0_1142);
+
+				if (Builder.UseDotNet)
+					proj.AddDotNetCompatPackages ();
+			}
+
 			// use BuildHelper.CreateApkBuilder so that the test directory is not removed in tearup
 			using (var b = BuildHelper.CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
