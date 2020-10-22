@@ -359,14 +359,16 @@ namespace Xamarin.Android.Build.Tests
 			var apkPath = Path.Combine (outputPath, "UnnamedProject.UnnamedProject.apk");
 			FileAssert.Exists (apkPath);
 			using (var apk = ZipHelper.OpenZip (apkPath)) {
+				apk.AssertContainsEntry (apkPath, $"assemblies/{proj.ProjectName}.dll", shouldContainEntry: expectEmbeddedAssembies);
+				apk.AssertContainsEntry (apkPath, $"assemblies/{proj.ProjectName}.pdb", shouldContainEntry: !CommercialBuildAvailable && !isRelease);
 				var rids = runtimeIdentifiers.Split (';');
 				foreach (var abi in rids.Select (MonoAndroidHelper.RuntimeIdentifierToAbi)) {
 					apk.AssertContainsEntry (apkPath, $"lib/{abi}/libmonodroid.so");
 					apk.AssertContainsEntry (apkPath, $"lib/{abi}/libmonosgen-2.0.so");
 					if (rids.Length > 1) {
-						apk.AssertContainsEntry (apkPath, $"assemblies/{abi}/System.Private.CoreLib.dll", expectEmbeddedAssembies);
+						apk.AssertContainsEntry (apkPath, $"assemblies/{abi}/System.Private.CoreLib.dll", shouldContainEntry: expectEmbeddedAssembies);
 					} else {
-						apk.AssertContainsEntry (apkPath, "assemblies/System.Private.CoreLib.dll", expectEmbeddedAssembies);
+						apk.AssertContainsEntry (apkPath, "assemblies/System.Private.CoreLib.dll", shouldContainEntry: expectEmbeddedAssembies);
 					}
 				}
 			}
