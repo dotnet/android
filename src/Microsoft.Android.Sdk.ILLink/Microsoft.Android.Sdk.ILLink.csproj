@@ -7,7 +7,7 @@
     <OutputPath>$(XamarinAndroidSourcePath)bin\Build$(Configuration)\packs\tools</OutputPath>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.ILLink" Version="5.0.0-preview.3.20227.3" />
+    <PackageReference Include="Microsoft.NET.ILLink" Version="5.0.0-rtm.20509.1" />
     <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Export\Java.Interop.Export.csproj" />
     <ProjectReference Include="..\..\src\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj">
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
