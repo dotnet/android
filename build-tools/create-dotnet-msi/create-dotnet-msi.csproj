@@ -90,8 +90,13 @@
       DependsOnTargets="_CompileWixObj"
       Inputs="$(_WixObj)"
       Outputs="$(_WixMsi)">
-    <!--NOTE: ignore ICE03 warning for zh-Hant: error LGHT0204: ICE03: Invalid Language Id -->
-    <Exec Command="&quot;$(WixToolPath)light.exe&quot; -ext WixUIExtension -cultures:en-US -sice:ICE03 Microsoft.NET.Workload.Android.wixobj" WorkingDirectory="$(IntermediateOutputPath)" />
+    <ItemGroup>
+      <!-- ignore ICE03 warning for zh-Hant: error LGHT0204: ICE03: Invalid Language Id -->
+      <_IgnoredWarnings Include="-sice:ICE03" />
+      <!-- ignore ICE61 warning for AllowSameVersionUpgrades usage -->
+      <_IgnoredWarnings Include="-sice:ICE61" />
+    </ItemGroup>
+    <Exec Command="&quot;$(WixToolPath)light.exe&quot; -ext WixUIExtension -cultures:en-US @(_IgnoredWarnings, ' ') Microsoft.NET.Workload.Android.wixobj" WorkingDirectory="$(IntermediateOutputPath)" />
     <ItemGroup>
       <FileWrites Include="$(_WixMsi)" />
       <None Include="$(_WixMsi)" CopyToOutputDirectory="PreserveNewest" Link="Microsoft.NET.Workload.Android.$(AndroidMSIVersion).msi" />

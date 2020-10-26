@@ -8,7 +8,11 @@
       Manufacturer="Microsoft"
       UpgradeCode="86a83cc9-6b75-489f-be10-27988df907c6">
     <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" Platform="x64" />
-    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+    <!--
+      Use AllowSameVersionUpgrades for upgrades of an .msi where only the 4th component of the version changed
+      see: https://wixtoolset.org/documentation/manual/v3/xsd/wix/majorupgrade.html
+    -->
+    <MajorUpgrade AllowSameVersionUpgrades="yes" DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
     <MediaTemplate CompressionLevel="high" EmbedCab="yes" />
     <UIRef Id="WixUI_Minimal" />
     <Feature Id="ProductFeature" Title="Microsoft.NET.Workload.Android">
