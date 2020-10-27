@@ -192,6 +192,10 @@ namespace Android.Runtime {
 				}
 			}
 
+#if !MONOANDROID1_0
+			SynchronizationContext.SetSynchronizationContext (Android.App.Application.SynchronizationContext);
+#endif
+
 			if (logTiming) {
 				monodroid_timing_stop (total_timing_sequence, "JNIEnv.Initialize end");
 			}
