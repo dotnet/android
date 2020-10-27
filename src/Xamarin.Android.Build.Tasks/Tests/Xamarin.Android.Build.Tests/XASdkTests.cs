@@ -166,9 +166,10 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void DotNetPack ()
+		public void DotNetPack ([Values ("net5.0-android", "net5.0-android30")] string targetFramework)
 		{
 			var proj = new XASdkProject (outputType: "Library") {
+				TargetFramework = targetFramework,
 				IsRelease = true,
 				Sources = {
 					new BuildItem.Source ("Foo.cs") {
