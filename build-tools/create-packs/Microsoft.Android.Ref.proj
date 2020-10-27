@@ -21,8 +21,6 @@ by projects that use the Microsoft.Android framework in .NET 5.
   <Import Project="..\..\Configuration.props" />
 
   <PropertyGroup>
-    <NuGetLicense Condition=" '$(NuGetLicense)' == '' ">$(XamarinAndroidSourcePath)\LICENSE</NuGetLicense>
-    <PackageLicenseFile>$([System.IO.Path]::GetFileName($(NuGetLicense)))</PackageLicenseFile>
     <BeforePack>
       _GetTargetingPackItems;
       _GetDefaultPackageVersion;
@@ -31,13 +29,13 @@ by projects that use the Microsoft.Android framework in .NET 5.
     </BeforePack>
   </PropertyGroup>
 
-  <Target Name="_GetTargetingPackItems" >
+  <Target Name="_GetTargetingPackItems"
+      DependsOnTargets="_GetLicense">
     <PropertyGroup>
       <FrameworkListFile>$(IntermediateOutputPath)FrameworkList.xml</FrameworkListFile>
     </PropertyGroup>
 
     <ItemGroup>
-      <_PackageFiles Include="$(NuGetLicense)" PackagePath="\" />
       <_PackageFiles Include="@(_AndroidAppRefAssemblies)" PackagePath="$(_AndroidRefPackAssemblyPath)" TargetPath="$(_AndroidRefPackAssemblyPath)" />
       <_PackageFiles Include="$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\netcoreapp3.1\mono.android.jar" PackagePath="$(_AndroidRefPackAssemblyPath)" />
       <_PackageFiles Include="$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\netcoreapp3.1\mono.android.dex" PackagePath="$(_AndroidRefPackAssemblyPath)" />

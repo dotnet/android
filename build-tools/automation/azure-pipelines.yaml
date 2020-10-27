@@ -203,6 +203,13 @@ stages:
         artifactName: $(TestAssembliesArtifactName)
         targetPath: xamarin-android/bin/Test$(XA.Build.Configuration)
 
+    - task: MSBuild@1
+      displayName: pack all nupkgs
+      inputs:
+        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/create-packs/Microsoft.Android.Sdk.proj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: /t:CreateAllPacks /restore /p:NuGetLicense=$(System.DefaultWorkingDirectory)/xamarin-android/external/monodroid/tools/scripts/License.txt /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/create-all-packs.binlog
+
     # Create installers
     - script: make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
@@ -226,13 +233,6 @@ stages:
       inputs:
         artifactName: $(InstallerArtifactName)
         targetPath: xamarin-android/bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
-
-    - task: MSBuild@1
-      displayName: pack all nupkgs
-      inputs:
-        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/create-packs/Microsoft.Android.Sdk.proj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:CreateAllPacks /restore /p:NuGetLicense=$(System.DefaultWorkingDirectory)/xamarin-android/external/monodroid/tools/scripts/License.txt /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/create-all-packs.binlog
 
     - task: NuGetCommand@2
       displayName: push nupkgs
@@ -1115,6 +1115,60 @@ stages:
 
     - template: yaml-templates/fail-on-issue.yaml
 
+- stage: dotnet_installers
+  displayName: .NET 6 Preview Installers
+  dependsOn: mac_build
+  jobs:
+  # Check - "Xamarin.Android (.NET 6 Preview Installers Create .msi and Upload)"
+  - job: dotnet_preview_installers
+    displayName: Create .msi and Upload
+    pool: $(HostedWinVS2019)
+    workspace:
+      clean: all
+    steps:
+    - checkout: self
+      submodules: recursive
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: $(NuGetArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\nupkgs
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: $(InstallerArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)\installer-artifacts
+        patterns: Microsoft.*.pkg
+
+    - task: MSBuild@1
+      displayName: msbuild Xamarin.Android.BootstrapTasks
+      inputs:
+        solution: Xamarin.Android.BootstrapTasks.sln
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: /restore /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-bootstraptasks.binlog
+
+    - task: MSBuild@1
+      displayName: msbuild /t:CreateWorkloadInstallers
+      inputs:
+        solution: Xamarin.Android.sln
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: /t:CreateWorkloadInstallers /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-workload.binlog
+
+    - script: copy /Y $(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\*.msi $(System.DefaultWorkingDirectory)\installer-artifacts
+      displayName: copy .msi
+
+    - template: upload-to-storage\win\v1.yml@yaml
+      parameters:
+        ArtifactsDirectory: $(System.DefaultWorkingDirectory)\installer-artifacts
+        Azure.ContainerName: $(Azure.Container.Name)
+        Azure.BlobPrefix: $(Build.DefinitionName)/public/$(Build.BuildId)/$(Build.SourceBranchName)/$(Build.SourceVersion)
+        GitHub.Context: .NET 6 Preview Installers
+
+    - template: yaml-templates/upload-results.yaml
+      parameters:
+        solution: build-tools\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj
+        artifactName: Build Results - .NET 6 Preview Installers
+
 - stage: finalize_installers
   displayName: Finalize Installers
   dependsOn: mac_build
@@ -1148,6 +1202,9 @@ stages:
       inputs:
         artifactName: $(InstallerArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/storage-artifacts
+        patterns: |
+          xamarin.android*.pkg
+          Xamarin.Android*.vsix
 
     - powershell: |
         $pkg = Get-ChildItem -Path "$(System.DefaultWorkingDirectory)/storage-artifacts/*" -Include *.pkg -File

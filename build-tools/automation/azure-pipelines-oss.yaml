@@ -103,8 +103,8 @@ stages:
       displayName: make jenkins
 
     - script: >
-        echo "make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)" &&
-        make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)
+        echo "make create-pkg create-vsix V=1 CONFIGURATION=$(XA.Build.Configuration)" &&
+        make create-pkg create-vsix V=1 CONFIGURATION=$(XA.Build.Configuration)
       workingDirectory: $(Build.SourcesDirectory)
       displayName: create installers
 
