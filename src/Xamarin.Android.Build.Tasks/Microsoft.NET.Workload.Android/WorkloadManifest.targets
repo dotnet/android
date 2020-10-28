@@ -1,0 +1,4 @@
+<Project>
+  <Import Project="Sdk.targets" Sdk="Microsoft.Android.Sdk"
+      Condition=" '$(TargetPlatformIdentifier)' == 'android' " />
+</Project>

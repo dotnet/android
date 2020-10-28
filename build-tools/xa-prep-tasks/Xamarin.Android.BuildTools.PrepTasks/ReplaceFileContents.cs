@@ -32,7 +32,8 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 				}
 			}
 
-			File.Delete (DestinationFile.ItemSpec);
+			if (File.Exists (DestinationFile.ItemSpec))
+				File.Delete (DestinationFile.ItemSpec);
 
 			string[] replacements;
 			if (!String.IsNullOrEmpty (ReplacementFilePath))

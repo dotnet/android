@@ -1,0 +1,26 @@
+{
+  "version": 5,
+  "workloads": {
+    "microsoft-android-sdk-full": {
+      "description": "Android SDK",
+      "packs": [
+        "Microsoft.Android.Sdk",
+        "Microsoft.Android.Ref"
+      ]
+    }
+  },
+  "packs": {
+    "Microsoft.Android.Sdk": {
+      "kind": "sdk",
+      "version": "@SDK_PACK_VERSION@",
+      "alias-to": {
+        "osx-x64": "Microsoft.Android.Sdk.osx-x64",
+        "windows-x64": "Microsoft.Android.Sdk.windows-x64"
+      }
+    },
+    "Microsoft.Android.Ref": {
+      "kind": "framework",
+      "version": "@REF_PACK_VERSION@"
+    }
+  }
+}

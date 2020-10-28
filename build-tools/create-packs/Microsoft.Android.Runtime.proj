@@ -10,7 +10,7 @@ projects that use the Microsoft.Android framework in .NET 5.
 <Project Sdk="Microsoft.Build.NoTargets">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
     <AndroidRID Condition=" '$(AndroidRID)' == '' ">android.21-arm64</AndroidRID>
     <AndroidABI Condition=" '$(AndroidABI)' == '' ">arm64-v8a</AndroidABI>
     <PackageId>Microsoft.Android.Runtime.$(AndroidRID)</PackageId>
@@ -20,8 +20,6 @@ projects that use the Microsoft.Android framework in .NET 5.
     <_AndroidRuntimePackAssemblyPath>runtimes\$(AndroidRID)\lib\net5.0</_AndroidRuntimePackAssemblyPath>
     <_AndroidRuntimePackNativePath>runtimes\$(AndroidRID)\native</_AndroidRuntimePackNativePath>
   </PropertyGroup>
-
-  <Import Project="..\..\Configuration.props" />
 
   <PropertyGroup>
     <BeforePack>
@@ -39,15 +37,19 @@ projects that use the Microsoft.Android framework in .NET 5.
     </PropertyGroup>
 
     <ItemGroup>
-      <_AndroidRuntimePackAssets Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\lib\$(AndroidABI)\libmono-android.debug.so" />
-      <_AndroidRuntimePackAssets Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\lib\$(AndroidABI)\libmono-android.release.so" />
-      <_AndroidRuntimePackAssets Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\lib\$(AndroidABI)\libxa-internal-api.so" />
-      <_AndroidRuntimePackAssets Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\lib\$(AndroidABI)\libxamarin-debug-app-helper.so" />
+      <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETOutputDir)Java.Interop.dll" />
+      <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETOutputDir)Mono.Android.dll" />
+      <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETOutputDir)Mono.Android.Export.dll" />
+      <_AndroidRuntimePackAssets Include="$(XAInstallPrefix)xbuild\Xamarin\Android\lib\$(AndroidABI)\libmono-android.debug.so" />
+      <_AndroidRuntimePackAssets Include="$(XAInstallPrefix)xbuild\Xamarin\Android\lib\$(AndroidABI)\libmono-android.release.so" />
+      <_AndroidRuntimePackAssets Include="$(XAInstallPrefix)xbuild\Xamarin\Android\lib\$(AndroidABI)\libxa-internal-api.so" />
+      <_AndroidRuntimePackAssets Include="$(XAInstallPrefix)xbuild\Xamarin\Android\lib\$(AndroidABI)\libxamarin-debug-app-helper.so" />
+      <FrameworkListFileClass Include="@(_AndroidRuntimePackAssemblies->'%(Filename)%(Extension)')" Profile="Android" />
       <FrameworkListFileClass Include="@(_AndroidRuntimePackAssets->'%(Filename)%(Extension)')" Profile="Android" />
     </ItemGroup>
 
     <ItemGroup>
-      <_PackageFiles Include="@(_AndroidAppPackAssemblies)" PackagePath="$(_AndroidRuntimePackAssemblyPath)" TargetPath="$(_AndroidRuntimePackAssemblyPath)" />
+      <_PackageFiles Include="@(_AndroidRuntimePackAssemblies)" PackagePath="$(_AndroidRuntimePackAssemblyPath)" TargetPath="$(_AndroidRuntimePackAssemblyPath)" />
       <_PackageFiles Include="@(_AndroidRuntimePackAssets)" PackagePath="$(_AndroidRuntimePackNativePath)" TargetPath="$(_AndroidRuntimePackNativePath)" IsNative="true" />
     </ItemGroup>
   </Target>
