@@ -66,12 +66,7 @@ namespace Xamarin.Android.Tasks
 						assembly.SetMetadata ("FrameworkAssembly", frameworkAssembly.ToString ());
 						assembly.SetMetadata ("HasMonoAndroidReference", MonoAndroidHelper.HasMonoAndroidReference (reader).ToString ());
 					} else {
-						Log.LogDebugMessage ($"Removing duplicate: {assembly.ItemSpec}");
-
-						var symbolPath = Path.ChangeExtension (assembly.ItemSpec, ".pdb");
-						if (symbols.Remove (symbolPath)) {
-							Log.LogDebugMessage ($"Removing duplicate: {symbolPath}");
-						}
+						symbols.Remove (Path.ChangeExtension (assembly.ItemSpec, ".pdb"));
 					}
 				}
 			}

@@ -33,6 +33,10 @@ _ResolveAssemblies MSBuild target.
       <IntermediateAssembly Remove="@(IntermediateAssembly)" />
       <IntermediateAssembly Include="$(_OuterIntermediateAssembly)" />
     </ItemGroup>
+    <ItemGroup Condition=" '@(_DebugSymbolsIntermediatePath->Count())' != '0' ">
+      <_DebugSymbolsIntermediatePath Remove="@(_DebugSymbolsIntermediatePath)" />
+      <_DebugSymbolsIntermediatePath Include="$([System.IO.Path]::ChangeExtension ($(_OuterIntermediateAssembly), '.pdb'))" />
+    </ItemGroup>
   </Target>
 
   <Target Name="_ResolveAssemblies">
@@ -67,8 +71,8 @@ _ResolveAssemblies MSBuild target.
         Condition=" '%(Identity)' != '' "
     />
     <ProcessAssemblies
-        InputAssemblies="@(_ResolvedAssemblyFiles)"
-        ResolvedSymbols="@(_ResolvedSymbolFiles)"
+        InputAssemblies="@(_ResolvedAssemblyFiles->Distinct())"
+        ResolvedSymbols="@(_ResolvedSymbolFiles->Distinct())"
         IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
         LinkMode="$(AndroidLinkMode)">
       <Output TaskParameter="OutputAssemblies" ItemName="_ProcessedAssemblies" />
@@ -121,10 +125,10 @@ _ResolveAssemblies MSBuild target.
   <Target Name="_PrepareAssemblies"
       DependsOnTargets="$(_PrepareAssembliesDependsOnTargets)">
     <ItemGroup Condition=" '$(AndroidLinkMode)' == 'None' And '$(AndroidIncludeDebugSymbols)' == 'true'  ">
-      <_ResolvedAssemblies          Include="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')" />
-      <_ResolvedUserAssemblies      Include="@(ResolvedUserAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')" />
-      <_ResolvedFrameworkAssemblies Include="@(ResolvedFrameworkAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')" />
-      <_ResolvedSymbols             Include="@(ResolvedSymbols->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')" />
+      <_ResolvedAssemblies          Include="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')"          Condition=" '%(DestinationSubPath)' != '' " />
+      <_ResolvedUserAssemblies      Include="@(ResolvedUserAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')"      Condition=" '%(DestinationSubPath)' != '' " />
+      <_ResolvedFrameworkAssemblies Include="@(ResolvedFrameworkAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')" Condition=" '%(DestinationSubPath)' != '' " />
+      <_ResolvedSymbols             Include="@(ResolvedSymbols->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')"             Condition=" '%(DestinationSubPath)' != '' " />
       <_ShrunkAssemblies            Include="@(_ResolvedAssemblies)" />
       <_ShrunkUserAssemblies        Include="@(_ResolvedUserAssemblies)" />
       <_ShrunkFrameworkAssemblies   Include="@(_ResolvedFrameworkAssemblies)" />
