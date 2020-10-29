@@ -132,6 +132,7 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\illinkanalyzer.pdb"  ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Irony.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\java-interop.jar" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\java-source-utils.jar" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\javadoc-to-mdoc.exe" ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\javadoc-to-mdoc.pdb" ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.dll" />
@@ -149,6 +150,8 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Tools.Generator.pdb"  ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Tools.JavaCallableWrappers.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Tools.JavaCallableWrappers.pdb" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Tools.JavaSource.dll" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Tools.JavaSource.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Runtime.Environment.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Runtime.Environment.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Runtime.Environment.dll.config" Condition=" '$(HostOS)' != 'Windows' " />

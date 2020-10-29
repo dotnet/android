@@ -12,6 +12,7 @@ It is shared between "legacy" binding projects and .NET 5 projects.
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <UsingTask TaskName="Xamarin.Android.Tasks.BindingsGenerator" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.JavaSourceUtils"   AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.RemoveDirFixed"    AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 
   <PropertyGroup>
@@ -19,6 +20,11 @@ It is shared between "legacy" binding projects and .NET 5 projects.
     <GeneratedOutputPath        Condition=" '$(GeneratedOutputPath)' == '' ">$(IntermediateOutputPath)generated\</GeneratedOutputPath>
     <ApiOutputFile              Condition=" '$(ApiOutputFile)' == '' ">$(IntermediateOutputPath)api.xml</ApiOutputFile>
     <_GeneratorStampFile>$(IntermediateOutputPath)generator.stamp</_GeneratorStampFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(_UseLegacyJavadocImport' != 'True' ">
+    <DocumentationFile Condition=" '$(DocumentationFile)' == '' ">$(OutputPath)\$(AssemblyName).xml</DocumentationFile>
+    <NoWarn Condition=" '$(DocumentationFile)' != '' ">$(NoWarn);CS1573;CS1591</NoWarn>
   </PropertyGroup>
 
   <Target Name="ExportJarToXml"
@@ -42,6 +48,22 @@ It is shared between "legacy" binding projects and .NET 5 projects.
       <AnnotationsZip Include="$(IntermediateOutputPath)library_project_annotations\**\*.zip" />
     </ItemGroup>
 
+    <JavaSourceUtils
+        Condition=" '$(_UseLegacyJavadocImport)' != 'True' And '@(JavaSourceJar->Count())' != '0' "
+        ContinueOnError="True"
+        InputFiles="@(JavaSourceJar)"
+        JavadocCopyrightFile="%(JavaSourceJar.CopyrightFile)"
+        JavadocUrlPrefix="%(JavaSourceJar.UrlPrefix)"
+        JavadocUrlStyle="%(JavaSourceJar.UrlStyle)"
+        JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
+        JavaOptions="$(JavaOptions)"
+        JavaSdkDirectory="$(_JavaSdkDirectory)"
+        MonoAndroidToolsDirectory="$(MonoAndroidToolsDirectory)"
+        OutputDirectory="$(GeneratedOutputPath)docs"
+        References="">
+      <Output TaskParameter="OutputJavadocXml" ItemName="_JavadocXml" />
+    </JavaSourceUtils>
+
     <!-- Create the .cs binding source files -->
     <BindingsGenerator
         OutputDirectory="$(GeneratedOutputPath)src"
@@ -52,6 +74,7 @@ It is shared between "legacy" binding projects and .NET 5 projects.
         ApiXmlInput="$(ApiOutputFile)"
         AnnotationsZipFiles="@(AnnotationsZip)"
         AssemblyName="$(AssemblyName)"
+        JavadocXml="@(_JavadocXml)"
         TransformFiles="@(TransformFile)"
         ReferencedManagedLibraries="@(ReferencePath);@(ReferenceDependencyPaths)"
         MonoAndroidFrameworkDirectories="$(_XATargetFrameworkDirectories)"

@@ -76,6 +76,7 @@ core workload sdk packs imported by Microsoft.NET.Workload.Android.
       <_PackageFiles Include="$(ToolsSourceDir)**" PackagePath="tools" />
       <_PackageFiles Include="$(NetCoreAppToolsSourceDir)generator.dll" PackagePath="tools" />
       <_PackageFiles Include="$(NetCoreAppToolsSourceDir)generator.runtimeconfig.json" PackagePath="tools" />
+      <_PackageFiles Include="$(NetCoreAppToolsSourceDir)Java.Interop.Tools.Generator.dll" PackagePath="tools" />
       <_PackageFiles Include="$(NetCoreAppToolsSourceDir)javadoc-to-mdoc.dll" PackagePath="tools" />
       <_PackageFiles Include="$(NetCoreAppToolsSourceDir)javadoc-to-mdoc.runtimeconfig.json" PackagePath="tools" />
       <_PackageFiles Include="$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\Version*" PackagePath="tools" />

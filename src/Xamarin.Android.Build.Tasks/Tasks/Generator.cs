@@ -52,6 +52,8 @@ namespace Xamarin.Android.Tasks
 		public ITaskItem[] ReferencedManagedLibraries { get; set; }
 		public ITaskItem[] AnnotationsZipFiles { get; set; }
 
+		public ITaskItem[] JavadocXml { get; set; }
+
 		private List<Tuple<string, string>> transform_files = new List<Tuple<string,string>> ();
 
 		public override bool RunTask ()
@@ -166,6 +168,12 @@ namespace Xamarin.Android.Tasks
 
 				if (EnableInterfaceMembersPreview && SupportsCSharp8)
 					WriteLine (sw, "--lang-features=interface-constants,default-interface-methods");
+
+				if (JavadocXml != null) {
+					foreach (var xml in JavadocXml) {
+						WriteLine (sw, $"--with-javadoc-xml=\"{Path.GetFullPath (xml.ItemSpec)}\"");
+					}
+				}
 			}
 
 			cmd.AppendSwitch (ApiXmlInput);

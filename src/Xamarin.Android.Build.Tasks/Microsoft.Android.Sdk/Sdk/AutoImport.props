@@ -33,9 +33,10 @@ https://github.com/dotnet/designs/blob/4703666296f5e59964961464c25807c727282cae/
     <!-- Default XPath transforms for bindings -->
     <TransformFile Include="Transforms\**\*.xml" />
     <!-- Default Java or native libraries -->
-    <AndroidLibrary       Include="**\*.jar" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
+    <AndroidLibrary       Include="**\*.jar" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder);**\*-source?.jar;**\*-src.jar" />
     <AndroidLibrary       Include="**\*.aar" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
     <AndroidNativeLibrary Include="**\*.so"  Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
+    <JavaSourceJar        Include="**\*-source?.jar;**\*-src.jar"   Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
   </ItemGroup>
 
 </Project>

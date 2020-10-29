@@ -142,6 +142,9 @@
   <ItemGroup>
     <EmbeddedReferenceJar Include="Jars\org.jetbrains.kotlin.kotlin-stdlib.jar" />
   </ItemGroup>
+  <ItemGroup>
+    <JavaSourceJar Include="$(OutputPath)xamarin-test-sources.jar" />
+  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.Bindings.targets" />
   <Import Project="..\..\..\build-tools\scripts\Jar.targets" />
   <Import Project="Xamarin.Android.McwGen-Tests.targets" />
@@ -149,6 +152,7 @@
     <BuildDependsOn>
       BuildTestJarFile;
       _CopyTestJarFiles;
+      _CreateJavaSourceJar;
       $(BuildDependsOn)
     </BuildDependsOn>
   </PropertyGroup>

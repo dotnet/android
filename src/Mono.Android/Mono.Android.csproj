@@ -24,6 +24,16 @@
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <!-- TODO: Default to False; ~doubles the `make jenkins` build time -->
+    <IncludeAndroidJavadoc Condition=" '$(IncludeAndroidJavadoc)' == '' And '$(AndroidFrameworkVersion)' == '$(AndroidLatestStableFrameworkVersion)'">True</IncludeAndroidJavadoc>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(IncludeAndroidJavadoc)' == 'True' ">
+    <DocumentationFile>$(OutputPath)Mono.Android.xml</DocumentationFile>
+    <NoWarn>CS1573;CS1591</NoWarn>
+  </PropertyGroup>
+
   <PropertyGroup Condition=" '$(TargetFramework)' == 'monoandroid10' ">
     <TargetFrameworkIdentifier>MonoAndroid</TargetFrameworkIdentifier>
     <TargetFrameworkVersion>v1.0</TargetFrameworkVersion>
@@ -347,6 +357,7 @@
     <ProjectReference Include="..\..\build-tools\api-merge\api-merge.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="TargetFramework=net472" />
     <ProjectReference Include="..\..\build-tools\jnienv-gen\jnienv-gen.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="TargetFramework=net472" />
     <ProjectReference Include="..\..\external\Java.Interop\tools\generator\generator.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="TargetFramework=net472"/>
+    <ProjectReference Include="..\..\external\Java.Interop\tools\java-source-utils\java-source-utils.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="TargetFramework=net472" />
     <ProjectReference Include="..\..\external\Java.Interop\tools\jcw-gen\jcw-gen.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="TargetFramework=net472" />
     <ProjectReference Include="..\..\src\java-runtime\java-runtime.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\r8\r8.csproj" ReferenceOutputAssembly="False" />

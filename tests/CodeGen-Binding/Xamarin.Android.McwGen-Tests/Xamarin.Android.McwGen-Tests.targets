@@ -6,7 +6,18 @@
         DestinationFolder="$(OutputPath)"
     />
   </Target>
+  <Target Name="_CreateJavaSourceJar"
+      DependsOnTargets="_GetJavacVersions"
+      Inputs="@(TestJarEntry);$(MSBuildThisFile)"
+      Outputs="$(OutputPath)xamarin-test-sources.jar">
+    <Exec
+        Command="&quot;$(JarPath)&quot; cf &quot;$(OutputPath)xamarin-test-sources.jar&quot; -C java ."
+        WorkingDirectory="$(MSBuildThisFileDirectory)"
+    />
+  </Target>
   <Target Name="CleanLocal">
     <RemoveDir Directories="bin;obj;libs"/>
+    <Delete Files="$(OutputPath)xamarin-test-sources.jar" />
+    <Delete Files="%(TestJarEntry.OutputFile)" />
   </Target>
 </Project>

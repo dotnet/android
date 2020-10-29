@@ -369,12 +369,14 @@ namespace Xamarin.Android.Build.Tests
 				.Select (Path.GetFileName)
 				.OrderBy (f => f)
 				.ToArray ();
-			CollectionAssert.AreEqual (new [] {
+			var expectedFiles = new[]{
 				$"{proj.ProjectName}.dll",
 				$"{proj.ProjectName}.pdb",
+				$"{proj.ProjectName}.xml",
 				$"{proj.PackageName}.apk",
 				$"{proj.PackageName}-Signed.apk",
-			}, files);
+			};
+			CollectionAssert.AreEqual (expectedFiles, files, $"Expected: {string.Join (";", expectedFiles)}\n   Found: {string.Join (";", files)}");
 
 			var assemblyPath = Path.Combine (outputPath, $"{proj.ProjectName}.dll");
 			FileAssert.Exists (assemblyPath);
