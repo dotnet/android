@@ -85,12 +85,17 @@ namespace Xamarin.Android.Tasks
 			}
 			if (AdditionalResourceDirectories != null) {
 				foreach (var additionalDir in AdditionalResourceDirectories) {
-					var file = Path.Combine (ProjectDir, Path.GetDirectoryName (additionalDir.ItemSpec), "__res_name_case_map.txt");
-					if (File.Exists (file)) {
-						foreach (var line in File.ReadAllLines (file).Where (l => !string.IsNullOrEmpty (l))) {
-							string [] tok = line.Split (';');
-							AddRename (tok [1].Replace ('/', Path.DirectorySeparatorChar), tok [0].Replace ('/', Path.DirectorySeparatorChar));
-						}
+					var dir = Path.Combine (ProjectDir, Path.GetDirectoryName (additionalDir.ItemSpec));
+					var file = Path.Combine (dir, "__res_name_case_map.txt");
+					if (!File.Exists (file)) {
+						// .NET 6 .aar files place the file in a sub-directory
+						file = Path.Combine (dir, ".net", "__res_name_case_map.txt");
+						if (!File.Exists (file))
+							continue;
+					}
+					foreach (var line in File.ReadAllLines (file).Where (l => !string.IsNullOrEmpty (l))) {
+						string [] tok = line.Split (';');
+						AddRename (tok [1].Replace ('/', Path.DirectorySeparatorChar), tok [0].Replace ('/', Path.DirectorySeparatorChar));
 					}
 				}
 			}

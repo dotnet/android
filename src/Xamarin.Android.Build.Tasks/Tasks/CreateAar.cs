@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;
 using Xamarin.Tools.Zip;
@@ -52,6 +53,7 @@ namespace Xamarin.Android.Tasks
 					}
 				}
 				if (AndroidResources != null) {
+					var nameCaseMap = new StringBuilder ();
 					foreach (var resource in AndroidResources) {
 						// See: https://github.com/xamarin/xamarin-android/commit/665cb59205f8ac565b6acbda740624844bc1cbd9
 						if (Directory.Exists (resource.ItemSpec)) {
@@ -59,14 +61,24 @@ namespace Xamarin.Android.Tasks
 							continue;
 						}
 						var directory = Path.GetDirectoryName (resource.ItemSpec);
-						var archivePath = "res/" + Path.GetFileName (directory) + "/" + Path.GetFileName (resource.ItemSpec);
+						var resourcePath = Path.GetFileName (directory) + "/" + Path.GetFileName (resource.ItemSpec);
+						var archivePath = "res/" + resourcePath;
 						aar.AddStream (File.OpenRead (resource.ItemSpec), archivePath);
+						existingEntries.Remove (archivePath);
+
+						nameCaseMap.Append (resource.GetMetadata ("LogicalName").Replace ('\\', '/'));
+						nameCaseMap.Append (';');
+						nameCaseMap.AppendLine (resourcePath);
+					}
+					if (nameCaseMap.Length > 0) {
+						var archivePath = ".net/__res_name_case_map.txt";
+						aar.AddEntry (archivePath, nameCaseMap.ToString (), MonoAndroidHelper.UTF8withoutBOM);
 						existingEntries.Remove (archivePath);
 					}
 				}
 				if (AndroidEnvironment != null) {
 					foreach (var env in AndroidEnvironment) {
-						var archivePath = $".netenv/{GetHashedFileName (env)}.env";
+						var archivePath = $".net/env/{GetHashedFileName (env)}.env";
 						aar.AddStream (File.OpenRead (env.ItemSpec), archivePath);
 						existingEntries.Remove (archivePath);
 					}

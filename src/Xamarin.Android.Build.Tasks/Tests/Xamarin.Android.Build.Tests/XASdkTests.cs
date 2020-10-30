@@ -76,6 +76,9 @@ namespace Xamarin.Android.Build.Tests
 			libB.OtherBuildItems.Add (new AndroidItem.AndroidAsset ("Assets\\foo\\foo.txt") {
 				BinaryContent = () => Array.Empty<byte> (),
 			});
+			libB.OtherBuildItems.Add (new AndroidItem.AndroidResource ("Resources\\layout\\MyLayout.axml") {
+				TextContent = () => "<?xml version=\"1.0\" encoding=\"utf-8\" ?><LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\" />"
+			});
 			libB.OtherBuildItems.Add (new AndroidItem.AndroidResource ("Resources\\raw\\bar.txt") {
 				BinaryContent = () => Array.Empty<byte> (),
 			});
@@ -108,9 +111,11 @@ namespace Xamarin.Android.Build.Tests
 			FileAssert.Exists (aarPath);
 			using (var aar = ZipHelper.OpenZip (aarPath)) {
 				aar.AssertContainsEntry (aarPath, "assets/foo/foo.txt");
+				aar.AssertContainsEntry (aarPath, "res/layout/mylayout.xml");
 				aar.AssertContainsEntry (aarPath, "res/raw/bar.txt");
-				aar.AssertContainsEntry (aarPath, ".netenv/190E30B3D205731E.env");
-				aar.AssertContainsEntry (aarPath, ".netenv/2CBDAB7FEEA94B19.env");
+				aar.AssertContainsEntry (aarPath, ".net/__res_name_case_map.txt");
+				aar.AssertContainsEntry (aarPath, ".net/env/190E30B3D205731E.env");
+				aar.AssertContainsEntry (aarPath, ".net/env/2CBDAB7FEEA94B19.env");
 				aar.AssertContainsEntry (aarPath, "libs/A1AFA985571E728E.jar");
 				aar.AssertContainsEntry (aarPath, "jni/arm64-v8a/libfoo.so");
 				aar.AssertContainsEntry (aarPath, "jni/x86/libfoo.so");
@@ -146,6 +151,7 @@ namespace Xamarin.Android.Build.Tests
 			using (var apk = ZipHelper.OpenZip (apkPath)) {
 				apk.AssertContainsEntry (apkPath, "assets/foo/foo.txt");
 				apk.AssertContainsEntry (apkPath, "assets/bar/bar.txt");
+				apk.AssertContainsEntry (aarPath, "res/layout/mylayout.xml");
 				apk.AssertContainsEntry (apkPath, "res/raw/bar.txt");
 				apk.AssertContainsEntry (apkPath, "lib/arm64-v8a/libfoo.so");
 				apk.AssertContainsEntry (apkPath, "lib/x86/libfoo.so");
@@ -163,6 +169,12 @@ namespace Xamarin.Android.Build.Tests
 			var environmentVariables = EnvironmentHelper.ReadEnvironmentVariables (environmentFiles);
 			Assert.IsTrue (environmentVariables.TryGetValue (env_var, out string actual), $"Environment should contain {env_var}");
 			Assert.AreEqual (env_val, actual, $"{env_var} should be {env_val}");
+
+			// Check Resource.designer.cs
+			var resource_designer_cs = Path.Combine (intermediate, "Resource.designer.cs");
+			FileAssert.Exists (resource_designer_cs);
+			var resource_designer_text = File.ReadAllText (resource_designer_cs);
+			StringAssert.Contains ("public const int MyLayout", resource_designer_text);
 		}
 
 		[Test]

@@ -75,15 +75,27 @@ files. A Xamarin.Android library, `Foo.csproj`, could also generate an
         libs/*.jar
         jni/[arch]/*.so
 
-`@(AndroidEnvironment)` files are specific to Xamarin.Android, so we
-can make one addition to the file format:
+Additionally, there is a need for Xamarin.Android-specific files
+within the [`.aar`][aar]. These are placed in a `.net` directory:
 
     Foo.aar
-        .netenv/MyEnvironment.txt
+        .net/__res_name_case_map.txt
+        .net/env/MyEnvironment.txt
 
-The name `.netenv` would be unlikely to collide with anything Google
-creates in the `.aar` file format in the future. It should also be
-completely ignored by Android tooling.
+The `__res_name_case_map.txt` file includes the original casing of
+`@(AndroidResource)` files. This is used during `Resource.designer.cs`
+generation to ensure that the casing matches the original file for a
+layout such as `Resource.Layout.Foo`. It is the same file format
+included in `__AndroidLibraryProjects__.zip` in "legacy" Xamarin.Android.
+
+`@(AndroidEnvironment)` files will be placed in `.net/env` so they can
+be added to the `@(AndroidEnvironment)` item group for application
+projects that consuming the class library.
+
+The name `.net` would be unlikely to collide with anything Google
+creates in the `.aar` file format in the future. These folders should
+also be completely ignored by Android tooling. The `.net` folder could
+also be used for other Xamarin.Android specific files down the road.
 
 So the output of `Foo.csproj` would look like:
 
