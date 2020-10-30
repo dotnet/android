@@ -3,9 +3,14 @@
  */
 package com.microsoft.android;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.*;
 
 import org.junit.Test;
+
+import jdk.nashorn.internal.AssertsEnabled;
+
 import static org.junit.Assert.*;
 
 public class JavaSourceUtilsOptionsTest {
@@ -16,5 +21,53 @@ public class JavaSourceUtilsOptionsTest {
 		assertNull(options);
 		options = JavaSourceUtilsOptions.parse(new String[]{"-h"});
 		assertNull(options);
+	}
+
+	@Test public void testParse_ResponseFiles() throws IOException {
+		JavaSourceUtilsOptions options;
+
+		final   File        responseFile 	= File.createTempFile("jsu-test", ".java");
+		final   String  responseFilePath    = responseFile.getAbsolutePath();
+
+		try (PrintWriter contents = new PrintWriter(responseFile)) {
+			contents.println("--help");
+		}
+
+		options = JavaSourceUtilsOptions.parse(new String[]{"@" + responseFilePath});
+		responseFile.delete();
+		assertNull(options);
+
+		try (PrintWriter contents = new PrintWriter(responseFile)) {
+			contents.println("# aar?");
+			contents.println("-a");
+			contents.println(responseFilePath);
+			contents.println("# jar?");
+			contents.println("-j");
+			contents.println(responseFilePath);
+			contents.println("# source?");
+			contents.println("-s");
+			contents.println(responseFilePath);
+			contents.println("-bootclasspath");
+			contents.println(responseFilePath + File.pathSeparator + responseFilePath);
+			contents.println("# params output?");
+			contents.println("-P");
+			contents.println("params.txt");
+			contents.println("# xml javadoc output?");
+			contents.println("-D");
+			contents.println("javadoc.xml");
+			contents.println("# comment; FILEs…");
+			contents.println(responseFilePath);
+		}
+
+		options = JavaSourceUtilsOptions.parse(new String[]{"@" + responseFilePath});
+		responseFile.delete();
+
+		assertEquals(responseFilePath,  options.aarFiles.get(0).getAbsolutePath());
+		assertEquals(responseFilePath,  options.jarFiles.get(0).getAbsolutePath());
+		assertEquals("params.txt",      options.outputParamsTxt);
+		assertEquals("javadoc.xml",     options.outputJavadocXml);
+		assertEquals(1,                 options.inputFiles.size());
+		assertEquals(responseFilePath,  options.inputFiles.iterator().next().getAbsolutePath());
+		assertTrue(options.haveBootClassPath);
 	}
 }
