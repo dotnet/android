@@ -383,8 +383,8 @@ namespace Xamarin.Android.Tasks
 							}
 							if (entryFullName.EndsWith (".jar", StringComparison.OrdinalIgnoreCase)) {
 								AddJar (jars, importsDir, entryFullName, aarFullPath);
-							} else if (entryFullName.StartsWith (".netenv/", StringComparison.OrdinalIgnoreCase) ||
-									entryFullName.StartsWith (".netenv\\", StringComparison.OrdinalIgnoreCase)) {
+							} else if (entryFullName.StartsWith (".net/env/", StringComparison.OrdinalIgnoreCase) ||
+									entryFullName.StartsWith (".net\\env\\", StringComparison.OrdinalIgnoreCase)) {
 								var fullPath = Path.GetFullPath (Path.Combine (importsDir, entryFullName));
 								resolvedEnvironments.Add (new TaskItem (fullPath, new Dictionary<string, string> {
 									{ OriginalFile, aarFile.ItemSpec }
