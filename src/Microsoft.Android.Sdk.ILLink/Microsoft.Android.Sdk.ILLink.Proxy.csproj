@@ -1,0 +1,6 @@
+﻿<Project>
+  <Import Project="..\..\Configuration.props" />
+  <Target Name="Build">
+    <Exec Command="$(DotNetPreviewTool) build -p:Configuration=$(Configuration) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.ILLink.csproj&quot;" />
+  </Target>
+</Project>

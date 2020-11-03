@@ -266,9 +266,7 @@ stages:
   jobs:
   - job: win_build_test
     displayName: Build and Smoke Test
-    pool:
-      name: NetCorePublic-Pool
-      queue: BuildPool.Windows.10.Amd64.VS2019.Pre.Open
+    pool: $(VSEngWinVS2019)
     timeoutInMinutes: 360
     cancelTimeoutInMinutes: 5
     steps:
