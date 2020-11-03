@@ -51,7 +51,7 @@ variables:
   InstallerArtifactName: installers
   TestAssembliesArtifactName: test-assemblies
   NUnitConsoleVersion: 3.11.1
-  DotNetCoreVersion: 3.1.201
+  DotNetCoreVersion: 5.0.100-rc.2.20479.15
   HostedMacMojave: Hosted Mac Internal Mojave
   HostedMac: Hosted Mac Internal
   HostedWinVS2019: Hosted Windows 2019 with VS2019
