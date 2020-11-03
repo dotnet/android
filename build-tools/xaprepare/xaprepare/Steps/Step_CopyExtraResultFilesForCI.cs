@@ -98,9 +98,17 @@ namespace Xamarin.Android.Prepare
 
 			var testConfigDir = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "bin", $"Test{context.Configuration}");
 			if (Directory.Exists (testConfigDir)) {
+				var matchedFiles = new List<string> ();
 				foreach (var fileMatch in testConfigFiles) {
-					Utilities.CopyFilesSimple (Directory.GetFiles (testConfigDir, fileMatch), destinationRoot, false);
+					// Handle files which might appear in multiple filters
+					// eg logcat-Relase-full.log will appear in both logcat* AND *log
+					foreach (var file in Directory.GetFiles (testConfigDir, fileMatch)) {
+						if (matchedFiles.Contains (file))
+							continue;
+						matchedFiles.Add (file);
+					}
 				}
+				Utilities.CopyFilesSimple (matchedFiles, destinationRoot, false);
 			}
 
 			var testConfigCompatDir = Path.Combine (testConfigDir, "compatibility");

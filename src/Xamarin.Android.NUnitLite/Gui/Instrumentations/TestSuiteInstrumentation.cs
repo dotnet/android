@@ -60,11 +60,14 @@ namespace Xamarin.Android.NUnitLite {
 				Log.Info (TAG, "NUnit automated tests started");
 				var testResult  = AndroidRunner.Runner.Run (AndroidRunner.GetSetupTestTarget (arguments), TargetContext);
 				var resultsFile = GetResultsPath ();
+				Log.Info (TAG, $"NUnit resultsFile {resultsFile}");
 				if (resultsFile != null) {
 					var startTime   = DateTime.Now;
 					var resultsXml  = new NUnit2XmlOutputWriter (startTime);
 					resultsXml.WriteResultFile (testResult, resultsFile);
-					results.PutString ("nunit2-results-path", ToAdbPath (resultsFile));
+					Log.Info (TAG, $"NUnit resultsFile {resultsFile} written");
+					results.PutString ("nunit2-results-path", resultsFile);
+					Log.Info (TAG, $"NUnit PutString {resultsFile} done.");
 				}
 				Log.Info (TAG, "NUnit automated tests completed");
 				int run = 0, passed = 0, skipped = 0, inconclusive = 0;
@@ -103,47 +106,18 @@ namespace Xamarin.Android.NUnitLite {
 
 		string GetResultsPath ()
 		{
-			Java.IO.File resultsPathFile = GetExternalFilesDir ();
-			var usePathFile = resultsPathFile != null && resultsPathFile.Exists ();
-			var resultsPath = usePathFile
-				? resultsPathFile.AbsolutePath
-				: Path.Combine (Context.FilesDir.AbsolutePath, ".__override__");
+			string pid = Guid.NewGuid ().ToString ();
+			Java.IO.File resultsPathFile = null;
+#if __ANDROID_19__
+			int sdk = ((int)Build.VERSION.SdkInt);
+			if (sdk >= 19)
+				resultsPathFile = TargetContext.GetExternalFilesDir (null);
+#endif
+			bool usePathFile = resultsPathFile != null && resultsPathFile.Exists ();
+			string resultsPath = usePathFile ? resultsPathFile.AbsolutePath : TargetContext.FilesDir.AbsolutePath;
 			if (!usePathFile && !Directory.Exists (resultsPath))
 				Directory.CreateDirectory (resultsPath);
-			return Path.Combine (resultsPath, "TestResults.xml");
-		}
-
-		Java.IO.File GetExternalFilesDir ()
-		{
-			if (((int)Build.VERSION.SdkInt) < 19)
-				return null;
-			string type = null;
-#if __ANDROID_19__
-			type = global::Android.OS.Environment.DirectoryDocuments;
-#else   // !__ANDROID_19__
-			type = global::Android.OS.Environment.DirectoryDownloads;
-#endif  // !__ANDROID_19__
-			return Context.GetExternalFilesDir (type);
-		}
-
-		// On some Android targets, the external storage directory is "emulated",
-		// in which case the paths used on-device by the application are *not*
-		// paths that can be used off-device with `adb pull`.
-		// For example, `Contxt.GetExternalFilesDir()` may return `/storage/emulated/foo`,
-		// but `adb pull /storage/emulated/foo` will *fail*; instead, we may need
-		// `adb pull /mnt/shell/emulated/foo`.
-		// The `$EMULATED_STORAGE_SOURCE` and `$EMULATED_STORAGE_TARGET` environment
-		// variables control the "on-device" (`$EMULATED_STORAGE_TARGET`) and
-		// "off-device" (`$EMULATED_STORAGE_SOURCE`) directory prefixes
-		string ToAdbPath (string path)
-		{
-			var source  = System.Environment.GetEnvironmentVariable ("EMULATED_STORAGE_SOURCE");
-			var target  = System.Environment.GetEnvironmentVariable ("EMULATED_STORAGE_TARGET");
-
-			if (!string.IsNullOrEmpty (source) && !string.IsNullOrEmpty (target) && path.StartsWith (target, StringComparison.Ordinal)) {
-				return path.Replace (target, source);
-			}
-			return path;
+			return Path.Combine (resultsPath, $"TestResults_{(pid.Replace ("-", "_"))}.xml");
 		}
 
 		protected abstract void AddTests ();

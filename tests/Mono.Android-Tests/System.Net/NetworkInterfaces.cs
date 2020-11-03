@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using Java.Net;
@@ -9,7 +10,7 @@ using NUnit.Framework;
 using MNetworkInterface = System.Net.NetworkInformation.NetworkInterface;
 using JNetworkInterface = Java.Net.NetworkInterface;
 
-namespace System.NetTests 
+namespace System.NetTests
 {
 	[TestFixture]
 	public class NetworkInterfacesTest
@@ -73,7 +74,7 @@ namespace System.NetTests
 					return false;
 				if (one.Count != two.Count)
 					return false;
-					
+
 				foreach (IPAddress addr in one) {
 					if (!two.Contains (addr))
 						return false;
@@ -180,6 +181,9 @@ namespace System.NetTests
 			byte[] bytes = inf.GetPhysicalAddress ().GetAddressBytes ();
 			// Map to android's idea of device address
 			if (bytes.Length == 0 || inf.NetworkInterfaceType == NetworkInterfaceType.Tunnel)
+				return null;
+			// if all the bytes are zero return null like Java does.
+			if (bytes.All (x => x == 0))
 				return null;
 			return bytes;
 		}

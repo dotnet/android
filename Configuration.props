@@ -184,8 +184,9 @@
     <CommandLineToolsFolder Condition=" '$(CommandLineToolsFolder)' == '' ">5.0</CommandLineToolsFolder>
     <CommandLineToolsVersion Condition=" '$(CommandLineToolsVersion)' == '' ">7583922_latest</CommandLineToolsVersion>
     <CommandLineToolsBinPath Condition=" '$(CommandLineToolsBinPath)' == '' ">$(AndroidSdkFullPath)\cmdline-tools\$(CommandLineToolsFolder)\bin</CommandLineToolsBinPath>
-    <EmulatorVersion Condition=" '$(EmulatorVersion)' == '' ">7033400</EmulatorVersion>
-    <EmulatorPkgRevision Condition=" '$(EmulatorPkgRevision)' == '' ">30.3.5</EmulatorPkgRevision>
+    <!-- Version numbers and PkgVersion are found in https://dl-ssl.google.com/android/repository/repository2-1.xml -->
+    <EmulatorVersion Condition=" '$(EmulatorVersion)' == '' ">8129060</EmulatorVersion>
+    <EmulatorPkgRevision Condition=" '$(EmulatorPkgRevision)' == '' ">31.3.1</EmulatorPkgRevision>
     <EmulatorToolPath Condition=" '$(EmulatorToolPath)' == '' ">$(AndroidSdkFullPath)\emulator</EmulatorToolPath>
     <EmulatorToolExe Condition=" '$(EmulatorToolExe)' == '' ">emulator</EmulatorToolExe>
     <NdkBuildPath Condition=" '$(NdkBuildPath)' == '' And '$(HostOS)' != 'Windows' ">$(AndroidNdkDirectory)\ndk-build</NdkBuildPath>
@@ -242,12 +243,12 @@
 
   <!-- Fix for IDEs -->
   <Target Name="CreateManifestResourceNames" />
-   
+
   <!-- Don't analyze code from external repos -->
   <PropertyGroup Condition=" !$(MSBuildProjectDirectory.Contains ('external')) and !$(MSBuildProjectDirectory.Contains ('NUnitLite')) ">
     <XAShouldAnalyzeAssembly>True</XAShouldAnalyzeAssembly>
   </PropertyGroup>
-   
+
   <!-- The net6.0 versions of these analyzers are stricter and require overloads not available in .NET Framework, so start with just .NET Framework -->
   <PropertyGroup Condition=" '$(TargetFramework)' != '' And (!$(TargetFramework.StartsWith('nets')) And !$(TargetFramework.StartsWith('net4')) And !$(TargetFramework.StartsWith('monoandroid'))) ">
     <XABuildingForNetCoreApp>True</XABuildingForNetCoreApp>
