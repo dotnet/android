@@ -279,7 +279,7 @@ class MemTest {
 				Assert.IsFalse (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should *not* include `{className}`!");
 				// FormsAppCompatActivity should inherit the AndroidX C# type
 				var forms = Builder.UseDotNet && isRelease ?
-					b.Output.GetIntermediaryPath (Path.Combine ("linked", "Xamarin.Forms.Platform.Android.dll")) :
+					b.Output.GetIntermediaryPath (Path.Combine ("android.21-arm64", "linked", "Xamarin.Forms.Platform.Android.dll")) :
 					b.Output.GetIntermediaryPath (Path.Combine ("android", "assets", "Xamarin.Forms.Platform.Android.dll"));
 				using (var assembly = AssemblyDefinition.ReadAssembly (forms)) {
 					var activity = assembly.MainModule.GetType ("Xamarin.Forms.Platform.Android.FormsAppCompatActivity");
