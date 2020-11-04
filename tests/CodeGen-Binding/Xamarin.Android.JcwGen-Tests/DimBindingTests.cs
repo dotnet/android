@@ -83,6 +83,12 @@ namespace Xamarin.Android.JcwGenTests
 			Assert.AreEqual (6, iface.InvokeFoo ());
 		}
 
+		[Test]
+		public void TestStaticInterfaceMethods ()
+		{
+			Assert.AreEqual (0, IDefaultMethodsInterface.StaticFoo ());
+		}
+
 		class ManagedEmptyDefault : Java.Lang.Object, IDefaultMethodsInterface
 		{
 		}
