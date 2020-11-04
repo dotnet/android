@@ -16,6 +16,7 @@ _ResolveAssemblies MSBuild target.
     <OutputPath Condition=" '$(_OuterOutputPath)' != '' ">$(_OuterOutputPath)</OutputPath>
     <OutDir     Condition=" '$(_OuterOutputPath)' != '' ">$(_OuterOutputPath)</OutDir>
     <PublishDir>$(OutputPath)</PublishDir>
+    <_AndroidLinkFlag>$(_OuterIntermediateOutputPath)link.flag</_AndroidLinkFlag>
     <BuildDependsOn>_RemoveLegacyDesigner;$(BuildDependsOn)</BuildDependsOn>
     <!-- We don't want IncrementalClean to run here, or files get deleted -->
     <CoreBuildDependsOn>
@@ -48,8 +49,10 @@ _ResolveAssemblies MSBuild target.
       <_ProguardProjectConfiguration Condition=" '$(AndroidLinkTool)' != '' ">$(IntermediateOutputPath)proguard\proguard_project_references.cfg</_ProguardProjectConfiguration>
       <_AdditionalProperties>
         _ComputeFilesToPublishForRuntimeIdentifiers=true;
+        AppendRuntimeIdentifierToOutputPath=true;
         _OuterIntermediateAssembly=@(IntermediateAssembly);
         _OuterOutputPath=$(OutputPath);
+        _OuterIntermediateOutputPath=$(IntermediateOutputPath);
         _ProguardProjectConfiguration=$(_ProguardProjectConfiguration);
       </_AdditionalProperties>
     </PropertyGroup>
