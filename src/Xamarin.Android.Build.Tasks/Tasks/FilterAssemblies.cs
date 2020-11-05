@@ -35,6 +35,10 @@ namespace Xamarin.Android.Tasks
 
 			var output = new List<ITaskItem> (InputAssemblies.Length);
 			foreach (var assemblyItem in InputAssemblies) {
+				// Skip .NET 6.0 <FrameworkReference/> assemblies
+				if (!string.IsNullOrEmpty (assemblyItem.GetMetadata ("FrameworkReferenceName"))) {
+					continue;
+				}
 				if (!File.Exists (assemblyItem.ItemSpec)) {
 					Log.LogDebugMessage ($"Skipping non-existent dependency '{assemblyItem.ItemSpec}'.");
 					continue;
