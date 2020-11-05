@@ -38,6 +38,8 @@ namespace Xamarin.Android.Tasks
 			// compress all the class files
 			if (!string.IsNullOrEmpty (ClassesZip)) {
 				using (var zip = new ZipArchiveEx (ClassesZip, FileMode.OpenOrCreate)) {
+					zip.AutoFlush = false;
+					zip.CreateDirectoriesInZip = false;
 					zip.AddDirectory (ClassesOutputDirectory, "", CompressionMethod.Store);
 				}
 			}

@@ -17,6 +17,10 @@ namespace Xamarin.Android.Tasks
 			get { return zip; }
 		}
 
+		public bool AutoFlush { get; set; } = true;
+
+		public bool CreateDirectoriesInZip { get; set; } = true;
+
 		public ZipArchiveEx (string archive) : this (archive, FileMode.CreateNew)
 		{
 		}
@@ -27,8 +31,10 @@ namespace Xamarin.Android.Tasks
 			zip = ZipArchive.Open(archive, filemode);
 		}
 
-		public void Flush ()
+		public void Flush (bool forceFlush = false)
 		{
+			if (!AutoFlush && !forceFlush)
+				return;
 			if (zip != null) {
 				zip.Close ();
 				zip.Dispose ();
@@ -52,6 +58,11 @@ namespace Xamarin.Android.Tasks
 			return pathName.Replace ("\\", "/");
 		}
 
+		string TrimEntryName (string entryName, bool appendSeparator = false)
+		{
+			return entryName.Replace ("\\", "/").TrimStart ('/') + (appendSeparator ? "/" : "");
+		}
+
 		void AddFiles (string folder, string folderInArchive, CompressionMethod method)
 		{
 			int count = 0;
@@ -59,11 +70,11 @@ namespace Xamarin.Android.Tasks
 				var fi = new FileInfo (fileName);
 				if ((fi.Attributes & FileAttributes.Hidden) != 0)
 					continue;
-				var archiveFileName = ArchiveNameForFile (fileName, folderInArchive);
+				var archiveFileName = TrimEntryName (ArchiveNameForFile (fileName, folderInArchive));
 				long index = -1;
 				if (zip.ContainsEntry (archiveFileName, out index)) {
 					var e = zip.First (x => x.FullName == archiveFileName);
-					if (e.ModificationTime < fi.LastWriteTimeUtc)
+					if (e.ModificationTime < fi.LastWriteTimeUtc || e.Size != (ulong)fi.Length)
 						zip.AddFile (fileName, archiveFileName, compressionMethod: method);
 				} else {
 					zip.AddFile (fileName, archiveFileName, compressionMethod: method);
@@ -102,9 +113,11 @@ namespace Xamarin.Android.Tasks
 				var internalDir = dir.Replace (folder, string.Empty);
 				string fullDirPath = folderInArchive + internalDir;
 				try {
-					zip.CreateDirectory (fullDirPath);
+					string dirPathInZip = TrimEntryName (fullDirPath, appendSeparator: true);
+					if (CreateDirectoriesInZip && !zip.ContainsEntry (dirPathInZip))
+						zip.CreateDirectory (fullDirPath);
 				} catch (ZipException) {
-					
+
 				}
 				AddFiles (dir, fullDirPath, method);
 			}
@@ -125,7 +138,7 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 			if (modified) {
-				Flush ();
+				Flush (forceFlush: true);
 			}
 		}
 
@@ -182,7 +195,7 @@ namespace Xamarin.Android.Tasks
 					zip.Dispose ();
 					zip = null;
 				}
-			}	
+			}
 		}
 	}
 }
