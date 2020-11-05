@@ -1232,7 +1232,7 @@ stages:
       parameters:
         BuildPackages: $(System.DefaultWorkingDirectory)/storage-artifacts
         AzureContainerName: $(Azure.Container.Name)
-        AzureUploadLocation: $(Build.DefinitionName)/$(Build.BuildId)/$(Build.SourceBranchName)/$(Build.SourceVersion)
+        AzureUploadLocation: $(Build.DefinitionName)/public/$(Build.BuildId)/$(Build.SourceBranchName)/$(Build.SourceVersion)
         SourceDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
 
     - script: cp $(System.DefaultWorkingDirectory)/storage-artifacts/*.pkg $(Build.ArtifactStagingDirectory)
