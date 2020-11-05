@@ -13,15 +13,17 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 	
 	public static class JavaApiTypeResolverExtensions
 	{
-		public static JavaTypeReference Parse (this JavaApi api, string name, params JavaTypeParameters [] contextTypeParameters)
+		public static JavaTypeReference Parse (this JavaApi api, string name, params JavaTypeParameters?[] contextTypeParameters)
 		{
 			var tn = JavaTypeName.Parse (name);
 			return JavaTypeNameToReference (api, tn, contextTypeParameters);
 		}
 
-		static JavaTypeReference JavaTypeNameToReference (this JavaApi api, JavaTypeName tn, params JavaTypeParameters [] contextTypeParameters)
+		static JavaTypeReference JavaTypeNameToReference (this JavaApi api, JavaTypeName tn, params JavaTypeParameters?[] contextTypeParameters)
 		{
-			var tp = contextTypeParameters.Where (tps => tps != null).SelectMany (tps => tps.TypeParameters).FirstOrDefault (_ => _.Name == tn.DottedName);
+			var tp = contextTypeParameters.Where (tps => tps != null)
+				.SelectMany (tps => tps!.TypeParameters)
+				.FirstOrDefault (xp => xp.Name == tn.DottedName);
 			if (tp != null)
 				return new JavaTypeReference (tp, tn.ArrayPart);
 			if (tn.DottedName == JavaTypeReference.GenericWildcard.SpecialName)
@@ -35,11 +37,11 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 				tn.ArrayPart);
 		}
 		
-		public static JavaType FindNonGenericType (this JavaApi api, string name)
+		public static JavaType FindNonGenericType (this JavaApi api, string? name)
 		{
-			var ret = FindPackages (api, name)
+			var ret = FindPackages (api, name ?? "")
 				.SelectMany (p => p.Types)
-				.FirstOrDefault (t => name == t.Parent.Name + '.' + t.Name);
+				.FirstOrDefault (t => name == (t.Parent?.Name != null ? t.Parent.Name + "." : "") + t.Name);
 			if (ret == null)
 				ret = ManagedType.DummyManagedPackages
 				                 .SelectMany (p => p.Types)
@@ -78,9 +80,22 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			while (true) {
 				bool errors = false;
 				foreach (var t in api.Packages.SelectMany (p => p.Types).OfType<JavaClass> ().ToArray ())
-					try { t.Resolve (); } catch (JavaTypeResolutionException ex) { Log.LogError ("Error while processing type '{0}': {1}", t, ex.Message); errors = true; t.Parent.Types.Remove (t); }
+					try {
+						t.Resolve ();
+					}
+					catch (JavaTypeResolutionException ex) {
+						Log.LogError ("Error while processing type '{0}': {1}", t, ex.Message);
+						errors = true;
+						t.Parent?.Types.Remove (t);
+					}
 				foreach (var t in api.Packages.SelectMany (p => p.Types).OfType<JavaInterface> ().ToArray ())
-					try { t.Resolve (); } catch (JavaTypeResolutionException ex) { Log.LogError ("Error while processing type '{0}': {1}", t, ex.Message); errors = true; t.Parent.Types.Remove (t); }
+					try {
+						t.Resolve ();
+					} catch (JavaTypeResolutionException ex) {
+						Log.LogError ("Error while processing type '{0}': {1}", t, ex.Message);
+						errors = true;
+						t.Parent?.Types.Remove (t);
+					}
 				if (!errors)
 					break;
 			}
@@ -90,8 +105,11 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		{
 			if (type.TypeParameters != null)
 				type.TypeParameters.Resolve (type.GetApi (), type.TypeParameters);
-			foreach (var t in type.Implements)
+			foreach (var t in type.Implements) {
+				if (t.NameGeneric == null)
+					continue;
 				t.ResolvedName = type.GetApi ().Parse (t.NameGeneric, type.TypeParameters);
+			}
 			
 			foreach (var m in type.Members.OfType<JavaField> ().ToArray ())
 				ResolveWithTryCatch (m.Resolve, m);
@@ -114,7 +132,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 				resolve ();
 			} catch (JavaTypeResolutionException ex) {
 				Log.LogError ("Error while processing '{0}' in '{1}': {2}", m, m.Parent, ex.Message);
-				m.Parent.Members.Remove (m);
+				m.Parent?.Members.Remove (m);
 			}
 		}
 		
@@ -125,21 +143,28 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		
 		public static void Resolve (this JavaField f)
 		{
-			f.ResolvedType = f.GetApi ().Parse (f.TypeGeneric, f.Parent.TypeParameters);
+			if (f.TypeGeneric == null)
+				return;
+			f.ResolvedType = f.GetApi ().Parse (f.TypeGeneric, f.Parent?.TypeParameters);
 		}
 		
 		static void ResolveMethodBase (this JavaMethodBase m)
 		{
 			if (m.TypeParameters != null)
 				m.TypeParameters.Resolve (m.GetApi (), m.TypeParameters);
-			foreach (var p in m.Parameters)
-				p.ResolvedType = m.GetApi ().Parse (p.Type, m.Parent.TypeParameters, m.TypeParameters);
+			foreach (var p in m.Parameters) {
+				if (p.Type == null)
+					continue;
+				p.ResolvedType = m.GetApi ().Parse (p.Type, m.Parent?.TypeParameters, m.TypeParameters);
+			}
 		}
 		
 		public static void Resolve (this JavaMethod m)
 		{
 			m.ResolveMethodBase ();
-			m.ResolvedReturnType = m.GetApi ().Parse (m.Return, m.Parent.TypeParameters, m.TypeParameters);
+			if (m.Return == null)
+				return;
+			m.ResolvedReturnType = m.GetApi ().Parse (m.Return, m.Parent?.TypeParameters, m.TypeParameters);
 		}
 		
 		public static void Resolve (this JavaConstructor c)
@@ -147,12 +172,22 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			c.ResolveMethodBase ();
 		}
 		
-		static void Resolve (this JavaTypeParameters tp, JavaApi api, params JavaTypeParameters [] additionalTypeParameters)
+		static void Resolve (this JavaTypeParameters tp, JavaApi api, params JavaTypeParameters?[] additionalTypeParameters)
 		{
-			foreach (var t in tp.TypeParameters)
-				if (t.GenericConstraints != null)
-					foreach (var g in t.GenericConstraints.GenericConstraints)
-						try { g.ResolvedType = api.Parse (g.Type, additionalTypeParameters); } catch (JavaTypeResolutionException ex) { Log.LogWarning ("Warning: failed to resolve generic constraint: '{0}': {1}", g.Type, ex.Message); }
+			foreach (var t in tp.TypeParameters) {
+				if (t.GenericConstraints == null || t.GenericConstraints.GenericConstraints == null)
+					continue;
+				foreach (var g in t.GenericConstraints.GenericConstraints) {
+					if (g.Type == null)
+						 continue;
+					try {
+						g.ResolvedType = api.Parse (g.Type, additionalTypeParameters);
+					}
+					catch (JavaTypeResolutionException ex) {
+						Log.LogDebug ("Warning: failed to resolve generic constraint: '{0}': {1}", g.Type, ex.Message);
+					}
+				}
+			}
 		}
 	}
 }

@@ -2,6 +2,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>8.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <DefineConstants>INTERNAL_NULLABLE_ATTRIBUTES</DefineConstants>
     <ProjectGuid>{5C0B3562-8DA0-4726-9762-75B9709ED6B7}</ProjectGuid>
     <AssemblyTitle>Java.Interop.Tools.JavaSource</AssemblyTitle>
     <Company>Microsoft Corporation</Company>
@@ -11,6 +14,9 @@
   <PropertyGroup>
     <OutputPath>$(ToolOutputFullPath)</OutputPath>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\utils\NullableAttributes.cs" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Irony" Version="1.1.0" />
   </ItemGroup>

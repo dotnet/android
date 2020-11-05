@@ -34,7 +34,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		
 		static void MarkBaseMethod (this JavaClass cls, JavaMethod method)
 		{
-			JavaClass k = cls;
+			JavaClass? k = cls;
 			while (true) {
 				k = k.ResolvedExtends != null ? k.ResolvedExtends.ReferencedType as JavaClass : null;
 				if (k == null)
@@ -44,14 +44,14 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 				var candidates = k.Members.OfType<JavaMethod> ().Where (_ => _.Name == method.Name);
 				// Then we find exact parameter type matches.
 				// No need to check returns. We only care about Java.
-				var candidate = candidates.FirstOrDefault (c => method.IsImplementing (c, cls.GenericInheritanceMapping));
+				var candidate = candidates.FirstOrDefault (c => method.IsImplementing (c, cls.GenericInheritanceMapping ?? throw new InvalidOperationException ($"missing {nameof(cls.GenericInheritanceMapping)}!")));
 				if (candidate != null) {
 					method.BaseMethod = new JavaMethodReference (candidate);
 					
 					for (int i = 0; i < candidate.Parameters.Count; i++)
-						if (candidate.Parameters [i].ResolvedType.ReferencedTypeParameter != null &&
-						    method.Parameters [i].ResolvedType.ReferencedTypeParameter == null)
-							method.Parameters [i].InstantiatedGenericArgumentName = candidate.Parameters [i].ResolvedType.ReferencedTypeParameter.Name;
+						if (candidate.Parameters [i].ResolvedType?.ReferencedTypeParameter != null &&
+							    method.Parameters [i].ResolvedType?.ReferencedTypeParameter == null)
+							method.Parameters [i].InstantiatedGenericArgumentName = candidate.Parameters [i].ResolvedType?.ReferencedTypeParameter?.Name;
 					break;
 				}
 			}

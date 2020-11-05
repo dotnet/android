@@ -11,10 +11,10 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		static string GetLocation (XmlReader reader)
 		{
 			var li = reader as IXmlLineInfo;
-			return string.Format ("{0} ({1},{2})", string.IsNullOrEmpty (reader.BaseURI) ? null : new Uri (reader.BaseURI).LocalPath, li.LineNumber, li.LinePosition);
+			return string.Format ("{0} ({1},{2})", string.IsNullOrEmpty (reader.BaseURI) ? null : new Uri (reader.BaseURI).LocalPath, li?.LineNumber ?? 0, li?.LinePosition ?? 0);
 		}
 		
-		public static Exception UnexpectedElementOrContent (string elementName, XmlReader reader, params string [] expected)
+		public static Exception UnexpectedElementOrContent (string? elementName, XmlReader reader, params string?[] expected)
 		{
 			return new Exception (string.Format ("{0}: Unexpected element or content in '{1}': node is {2}, name is '{3}'. Expected elements are: {4}",
 				GetLocation (reader), elementName ?? "(top level)", reader.NodeType, reader.LocalName, string.Join (", ", expected)));

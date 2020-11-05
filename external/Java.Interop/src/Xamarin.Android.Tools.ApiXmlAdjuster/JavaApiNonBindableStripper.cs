@@ -13,7 +13,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			         .SelectMany (t => t.Members).Where (m => m.Name != null && m.Name.Contains ('$')))
 				invalids.Add (member);
 			foreach (var invalid in invalids)
-				invalid.Parent.Members.Remove (invalid);
+				invalid.Parent?.Members.Remove (invalid);
 		}
 	}
 }

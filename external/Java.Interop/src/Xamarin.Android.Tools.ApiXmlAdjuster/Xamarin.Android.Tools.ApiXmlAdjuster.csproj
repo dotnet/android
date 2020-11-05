@@ -2,10 +2,17 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>8.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <DefineConstants>INTERNAL_NULLABLE_ATTRIBUTES</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup>
     <OutputPath>$(TestOutputFullPath)</OutputPath>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\utils\NullableAttributes.cs" />
+  </ItemGroup>
 
 </Project>

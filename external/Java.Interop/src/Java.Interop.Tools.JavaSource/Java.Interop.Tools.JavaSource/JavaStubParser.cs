@@ -421,7 +421,9 @@ namespace Java.Interop.Tools.JavaSource {
 					var packageTokens = s.Split ('.').TakeWhile (t => !t.Any (c => Char.IsUpper (c)));
 					return s.Substring (Enumerable.Sum (packageTokens.Select (t => t.Length)) + packageTokens.Count ());
 				};
-				method.Exceptions = ((IEnumerable<string>)node.ChildNodes [ctor ? 6 : 7].AstNode)?.Select (s => new JavaException { Type = s, Name = stripPackage (s) })?.ToArray ();
+				method.Exceptions = ((IEnumerable<string>)node.ChildNodes [ctor ? 6 : 7].AstNode)
+					?.Select (s => new JavaException { Type = s, Name = stripPackage (s) })
+					?.ToArray ();
 				method.Deprecated = ((IEnumerable<string>)node.ChildNodes [0].AstNode).Any (v => v == "java.lang.Deprecated" || v == "Deprecated") ? "deprecated" : "not deprecated";
 				method.Final = mods.Contains ("final");
 				method.TypeParameters = modsOrTps.OfType<JavaTypeParameters> ().FirstOrDefault ();
@@ -501,7 +503,7 @@ namespace Java.Interop.Tools.JavaSource {
 			assignment.AstConfig.NodeCreator = SelectChildValueAt (0);
 			assign_expr.AstConfig.NodeCreator = (ctx, node) => {
 				ProcessChildren (ctx, node);
-				node.AstNode = new KeyValuePair<string, string> ((string)node.ChildNodes [0].AstNode, node.ChildNodes [2].AstNode?.ToString ());
+				node.AstNode = new KeyValuePair<string, string?> ((string)node.ChildNodes [0].AstNode, node.ChildNodes [2].AstNode?.ToString ());
 			};
 			rvalue_expressions.AstConfig.NodeCreator = CreateArrayCreator<object> ();
 			rvalue_expression.AstConfig.NodeCreator = SelectSingleChild;
@@ -542,7 +544,7 @@ namespace Java.Interop.Tools.JavaSource {
 			};
 			generic_definition_arguments.AstConfig.NodeCreator = (ctx, node) => {
 				ProcessChildren (ctx, node);
-				node.AstNode = new JavaTypeParameters ((JavaMethod) null) { TypeParameters = node.ChildNodes.Select (c => c.AstNode).Cast<JavaTypeParameter> ().ToList () };
+				node.AstNode = new JavaTypeParameters ((JavaMethod?) null) { TypeParameters = node.ChildNodes.Select (c => c.AstNode).Cast<JavaTypeParameter> ().ToList () };
 			};
 			generic_definition_argument.AstConfig.NodeCreator = (ctx, node) => {
 				ProcessChildren (ctx, node);
@@ -557,7 +559,7 @@ namespace Java.Interop.Tools.JavaSource {
 			generic_instance_identifier_or_q.AstConfig.NodeCreator = SelectSingleChild;
 			generic_instance_constraints.AstConfig.NodeCreator = (ctx, node) => {
 				ProcessChildren (ctx, node);
-				var c = (JavaGenericConstraints) node.ChildNodes.FirstOrDefault ()?.AstNode;
+				var c = (JavaGenericConstraints?) node.ChildNodes.FirstOrDefault ()?.AstNode;
 				if (c != null)
 					node.AstNode = " " + c.BoundsType + " " + string.Join (" & ", c.GenericConstraints.Select (cc => cc.Type));
 			};
@@ -602,27 +604,27 @@ namespace Java.Interop.Tools.JavaSource {
 
 		}
 
-		public JavaPackage TryLoad (string uri)
+		public JavaPackage? TryLoad (string uri)
 		{
 			return TryLoad (uri, out var _);
 		}
 
-		public JavaPackage TryLoad (string uri, out ParseTree parseTree)
+		public JavaPackage? TryLoad (string uri, out ParseTree parseTree)
 		{
 			return TryParse (File.ReadAllText (uri), uri, out parseTree);
 		}
 
-		public JavaPackage TryParse (string text)
+		public JavaPackage? TryParse (string text)
 		{
 			return TryParse (text, null, out var _);
 		}
 
-		public JavaPackage TryParse (string text, out ParseTree parseTree)
+		public JavaPackage? TryParse (string text, out ParseTree parseTree)
 		{
 			return TryParse (text, null, out parseTree);
 		}
 
-		public JavaPackage TryParse (string text, string fileName, out ParseTree parseTree)
+		public JavaPackage? TryParse (string text, string? fileName, out ParseTree parseTree)
 		{
 			parseTree = base.Parse (text, fileName);
 			if (parseTree.HasErrors ())
@@ -634,32 +636,35 @@ namespace Java.Interop.Tools.JavaSource {
 
 		void FlattenNestedTypes (JavaPackage package)
 		{
-			Action<List<JavaType>,JavaType> flatten = null;
-			flatten = (list, t) => {
+			var results = new List<JavaType> ();
+			foreach (var t in package.Types)
+				Flatten (results, t);
+			package.Types = results.ToList ();
+
+			void Flatten (List<JavaType> list, JavaType t)
+			{
 				list.Add (t);
 				foreach (var nt in t.Members.OfType<JavaNestedType> ()) {
+					if (nt.Type == null)
+						continue;
 					nt.Type.Name = t.Name + '.' + nt.Type.Name;
 					foreach (var nc in nt.Type.Members.OfType<JavaConstructor> ())
 						nc.Name = nt.Type.Name;
-					flatten (list, nt.Type);
+					Flatten (list, nt.Type);
 				}
 				t.Members = t.Members.Where (_ => !(_ is JavaNestedType)).ToArray ();
-			};
-			var results = new List<JavaType> ();
-			foreach (var t in package.Types)
-				flatten (results, t);
-			package.Types = results.ToList ();
+			}
 		}
 	}
 
 	class JavaNestedType : JavaMember
 	{
-		public JavaNestedType (JavaType type)
+		public JavaNestedType (JavaType? type)
 			: base (type)
 		{
 		}
 
-		public JavaType Type { get; set; }
+		public  JavaType?   Type    { get; set; }
 	}
 }
 

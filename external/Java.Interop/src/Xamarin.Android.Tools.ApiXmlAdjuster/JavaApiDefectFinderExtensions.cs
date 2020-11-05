@@ -21,7 +21,8 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		{
 			int dummy;
 			foreach (var p in methodBase.Parameters) {
-				if (p.Name.StartsWith ("p", StringComparison.Ordinal) && int.TryParse (p.Name.Substring (1), out dummy)) {
+				if ((p.Name?.StartsWith ("p", StringComparison.Ordinal) ?? false) &&
+						int.TryParse (p.Name.Substring (1), out dummy)) {
 					Log.LogWarning ("Warning: {0} in {1} has 'unnamed' parameters", methodBase.Parent, methodBase);
 					break; // reporting once is enough.
 				}

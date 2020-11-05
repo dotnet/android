@@ -131,14 +131,14 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			}
 		}
 
-		public JavaTypeName GenericParent { get; set; }
-		public string DottedName { get; set; }
-		public string BoundsType { get; set; } // " extends " / " super "
-		public IList<JavaTypeName> GenericConstraints { get; private set; }
-		public IList<JavaTypeName> GenericArguments { get; private set; }
-		public string ArrayPart { get; set; }
+		public  JavaTypeName?           GenericParent       { get; set; }
+		public  string?                 DottedName          { get; set; }
+		public  string?                 BoundsType          { get; set; } // " extends " / " super "
+		public  IList<JavaTypeName>?    GenericConstraints  { get; private set; }
+		public  IList<JavaTypeName>?    GenericArguments    { get; private set; }
+		public  string?                 ArrayPart           { get; set; }
 
-		public string FullNameNonGeneric {
+		public string? FullNameNonGeneric {
 			get {
 				if (GenericParent != null)
 					return GenericParent.FullNameNonGeneric + "." + DottedName;

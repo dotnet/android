@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Xml;
 
@@ -12,25 +13,25 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			Packages = new List<JavaPackage> ();
 		}
 
-		public string ExtendedApiSource { get; set; }
-		public string Platform { get; set; }
-		public IList<JavaPackage> Packages { get; set; }
+		public  string?                 ExtendedApiSource   { get; set; }
+		public  string?                 Platform            { get; set; }
+		public  IList<JavaPackage>      Packages            { get; set; }
 	}
 
 	public partial class JavaPackage
 	{
-		public JavaPackage (JavaApi parent)
+		public JavaPackage (JavaApi? parent)
 		{
 			Parent = parent;
 			
 			Types = new List<JavaType> ();
 		}
 		
-		public JavaApi Parent { get; private set; }
+		public  JavaApi?                Parent              { get; private set; }
 
-		public string Name { get; set; }
-		public string JniName { get; set; }
-		public IList<JavaType> Types { get; set; }
+		public  string?                 Name                { get; set; }
+		public  string?                 JniName             { get; set; }
+		public  IList<JavaType>         Types               { get; set; }
 		
 		// Content of this value is not stable.
 		public override string ToString ()
@@ -41,7 +42,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 
 	public abstract partial class JavaType
 	{
-		protected JavaType (JavaPackage parent)
+		protected JavaType (JavaPackage? parent)
 		{
 			Parent = parent;
 			
@@ -49,22 +50,22 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			Members = new List<JavaMember> ();
 		}
 
-		public JavaPackage Parent { get; private set; }
+		public  JavaPackage?            Parent                  { get; private set; }
 
-		public bool IsReferenceOnly { get; set; }
+		public  bool                    IsReferenceOnly         { get; set; }
 
-		public bool Abstract { get; set; }
-		public string Deprecated { get; set; }
-		public bool Final { get; set; }
-		public string Name { get; set; }
-		public bool Static { get; set; }
-		public string Visibility { get; set; }
+		public  bool                    Abstract                { get; set; }
+		public  string?                 Deprecated              { get; set; }
+		public  bool                    Final                   { get; set; }
+		public  string?                 Name                    { get; set; }
+		public  bool                    Static                  { get; set; }
+		public  string?                 Visibility              { get; set; }
 
-		public string ExtendedJniSignature { get; set; }
+		public  string?                 ExtendedJniSignature    { get; set; }
 
-		public IList<JavaImplements> Implements { get; set; }
-		public JavaTypeParameters TypeParameters { get; set; }
-		public IList<JavaMember> Members { get; set; }
+		public  IList<JavaImplements>   Implements              { get; set; }
+		public  JavaTypeParameters?     TypeParameters          { get; set; }
+		public  IList<JavaMember>       Members                 { get; set; }
 
 		public string FullName {
 			get { return Parent?.Name + ((Parent?.Name?.Length ?? 0) > 0 ? "." : string.Empty) + Name; }
@@ -74,13 +75,14 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		public string ToStringHelper ()
 		{
 			// FIXME: add type attributes.
-			return Parent.Name + "." + Name;
+			return (Parent?.Name == null ? "" : Parent.Name + ".") +
+				(Name ?? "");
 		}
 	}
 
 	public partial class JavaInterface : JavaType
 	{
-		public JavaInterface (JavaPackage parent)
+		public JavaInterface (JavaPackage? parent)
 			: base (parent)
 		{
 		}
@@ -94,14 +96,14 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 
 	public partial class JavaClass : JavaType
 	{
-		public JavaClass (JavaPackage parent)
+		public JavaClass (JavaPackage? parent)
 			: base (parent)
 		{
 		}
 		
-		public string Extends { get; set; }
-		public string ExtendsGeneric { get; set; }
-		public string ExtendedJniExtends { get; set; }
+		public  string?                 Extends             { get; set; }
+		public  string?                 ExtendsGeneric      { get; set; }
+		public  string?                 ExtendedJniExtends  { get; set; }
 
 		// Content of this value is not stable.
 		public override string ToString ()
@@ -147,42 +149,42 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 
 	public partial class JavaImplements
 	{
-		public string Name { get; set; }
-		public string NameGeneric { get; set; }
-		
-		public string ExtendedJniType { get; set; }
+		public  string?                 Name                { get; set; }
+		public  string?                 NameGeneric         { get; set; }
+
+		public  string?                 ExtendedJniType     { get; set; }
 	}
 
 	public partial class JavaMember
 	{
-		protected JavaMember (JavaType parent)
+		protected JavaMember (JavaType? parent)
 		{
 			Parent = parent;
 		}
 		
-		public JavaType Parent { get; private set; }
-		
-		public string Deprecated { get; set; }
-		public bool Final { get; set; }
-		public string Name { get; set; }
-		public bool Static { get; set; }
-		public string Visibility { get; set; }
-		public string ExtendedJniSignature { get; set; }
+		public  JavaType?               Parent                  { get; private set; }
+
+		public  string?                 Deprecated              { get; set; }
+		public  bool                    Final                   { get; set; }
+		public  string?                 Name                    { get; set; }
+		public  bool                    Static                  { get; set; }
+		public  string?                 Visibility              { get; set; }
+		public  string?                 ExtendedJniSignature    { get; set; }
 	}
 
 	public partial class JavaField : JavaMember
 	{
-		public JavaField (JavaType parent)
+		public JavaField (JavaType? parent)
 			: base (parent)
 		{
 		}
 
-		public bool NotNull { get; set; }
-		public bool Transient { get; set; }
-		public string Type { get; set; }
-		public string TypeGeneric { get; set; }
-		public string Value { get; set; }
-		public bool Volatile { get; set; }
+		public  bool                    NotNull                 { get; set; }
+		public  bool                    Transient               { get; set; }
+		public  string?                 Type                    { get; set; }
+		public  string?                 TypeGeneric             { get; set; }
+		public  string?                 Value                   { get; set; }
+		public  bool                    Volatile                { get; set; }
 		
 		// Content of this value is not stable.
 		public override string ToString ()
@@ -193,23 +195,29 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 
 	public partial class JavaMethodBase : JavaMember
 	{
-		protected JavaMethodBase (JavaType parent)
+		protected JavaMethodBase (JavaType? parent)
 			: base (parent)
 		{
 			Parameters = new List<JavaParameter> ();
-			Exceptions = new List<JavaException> ();
 		}
 
-		public IList<JavaParameter> Parameters { get; set; }
-		public IList<JavaException> Exceptions { get; set; }
-		public JavaTypeParameters TypeParameters { get; set; }
+		IList<JavaException>? exceptions;
+
+		public  IList<JavaParameter>    Parameters          { get; set; }
+		public  JavaTypeParameters?     TypeParameters      { get; set; }
 		
-		public bool ExtendedBridge { get; set; }
-		public string ExtendedJniReturn { get; set; }
-		public bool ExtendedSynthetic { get; set; }
+		public  bool                    ExtendedBridge      { get; set; }
+		public  string?                 ExtendedJniReturn   { get; set; }
+		public  bool                    ExtendedSynthetic   { get; set; }
+
+		[NotNull]
+		public  IList<JavaException>?   Exceptions          {
+			get => exceptions ?? (exceptions = new List<JavaException>());
+			set => exceptions = value;
+		}
 
 		// Content of this value is not stable.
-		public string ToStringHelper (string returnType, string name, JavaTypeParameters typeParameters)
+		public string ToStringHelper (string? returnType, string? name, JavaTypeParameters? typeParameters)
 		{
 			return string.Format ("{0}{1}{2}{3}{4}{5}({6})",
 				returnType,
@@ -224,33 +232,33 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 
 	public partial class JavaConstructor : JavaMethodBase
 	{
-		public JavaConstructor (JavaType parent)
+		public JavaConstructor (JavaType? parent)
 			: base (parent)
 		{
 		}
 		
 		// it was required in the original API XML, but removed in class-parsed...
-		public string Type { get; set; }
+		public  string?                 Type                { get; set; }
 		
 		// Content of this value is not stable.
 		public override string ToString ()
 		{
-			return "[Constructor] " + ToStringHelper (null, Parent.Name, null);
+			return "[Constructor] " + ToStringHelper (null, Parent?.Name, null);
 		}
 	}
 
 	public partial class JavaMethod : JavaMethodBase
 	{
-		public JavaMethod (JavaType parent)
+		public JavaMethod (JavaType? parent)
 			: base (parent)
 		{
 		}
 		
-		public bool Abstract { get; set; }
-		public bool Native { get; set; }
-		public string Return { get; set; }
-		public bool ReturnNotNull { get; set; }
-		public bool Synchronized { get; set; }
+		public  bool                    Abstract            { get; set; }
+		public  bool                    Native              { get; set; }
+		public  string?                 Return              { get; set; }
+		public  bool                    ReturnNotNull       { get; set; }
+		public  bool                    Synchronized        { get; set; }
 
 		// Content of this value is not stable.
 		public override string ToString ()
@@ -261,16 +269,16 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 
 	public partial class JavaParameter
 	{
-		public JavaParameter (JavaMethodBase parent)
+		public JavaParameter (JavaMethodBase? parent)
 		{
 			Parent = parent;
 		}
 
-		public JavaMethodBase Parent { get; private set; }
-		public string Name { get; set; }
-		public string Type { get; set; }
-		public string JniType { get; set; }
-		public bool NotNull { get; set; }
+		public  JavaMethodBase?         Parent              { get; private set; }
+		public  string?                 Name                { get; set; }
+		public  string?                 Type                { get; set; }
+		public  string?                 JniType             { get; set; }
+		public  bool                    NotNull             { get; set; }
 
 		// Content of this value is not stable.
 		public override string ToString ()
@@ -281,9 +289,9 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 
 	public partial class JavaException
 	{
-		public string Name { get; set; }
-		public string Type { get; set; }
-		public string TypeGenericAware { get; set; }
+		public  string?                 Name                { get; set; }
+		public  string?                 Type                { get; set; }
+		public  string?                 TypeGenericAware    { get; set; }
 	}
 
 	public partial class JavaTypeParameters
@@ -294,39 +302,39 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			TypeParameters = new List<JavaTypeParameter> ();
 		}
 		
-		public JavaTypeParameters (JavaMethodBase parent)
+		public JavaTypeParameters (JavaMethodBase? parent)
 		{
 			ParentMethod = parent;
 			TypeParameters = new List<JavaTypeParameter> ();
 		}
 		
-		public JavaType ParentType { get; set; }
-		public JavaMethodBase ParentMethod { get; set; }
+		public  JavaType?                   ParentType      { get; set; }
+		public  JavaMethodBase?             ParentMethod    { get; set; }
 		
-		public IList<JavaTypeParameter> TypeParameters { get; set; }
+		public  IList<JavaTypeParameter>    TypeParameters  { get; set; }
 	}
 
 	public partial class JavaTypeParameter
 	{
-		public JavaTypeParameter (JavaTypeParameters parent)
+		public JavaTypeParameter (JavaTypeParameters? parent)
 		{
 			Parent = parent;
 		}
 		
-		public JavaTypeParameters Parent { get; set; }
+		public  JavaTypeParameters?     Parent                      { get; set; }
 		
-		public string Name { get; set; }
+		public  string?                 Name                        { get; set; }
+
+		public  string?                 ExtendedJniClassBound       { get; set; }
+		public  string?                 ExtendedClassBound          { get; set; }
+		public  string?                 ExtendedInterfaceBounds     { get; set; }
+		public  string?                 ExtendedJniInterfaceBounds  { get; set; }
 		
-		public string ExtendedJniClassBound { get; set; }
-		public string ExtendedClassBound { get; set; }
-		public string ExtendedInterfaceBounds { get; set; }
-		public string ExtendedJniInterfaceBounds { get; set; }
-		
-		public JavaGenericConstraints GenericConstraints { get; set; }
+		public  JavaGenericConstraints? GenericConstraints          { get; set; }
 		
 		public override string ToString ()
 		{
-			return Name;
+			return Name ?? "";
 		}
 	}
 
@@ -337,9 +345,15 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			GenericConstraints = new List<JavaGenericConstraint> ();
 		}
 		
-		public string BoundsType { get; set; } // extends / super
+		public  string?                         BoundsType          { get; set; } // extends / super
 		
-		public IList<JavaGenericConstraint> GenericConstraints { get; set; }
+		IList<JavaGenericConstraint>?   genericConstraints;
+
+		[NotNull]
+		public  IList<JavaGenericConstraint>?   GenericConstraints  {
+			get => genericConstraints ?? (genericConstraints = new List<JavaGenericConstraint> ());
+			set => genericConstraints = value;
+		}
 		
 		public override string ToString ()
 		{
@@ -352,11 +366,11 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 	
 	public partial class JavaGenericConstraint
 	{
-		public string Type { get; set; }
+		public  string?                         Type                { get; set; }
 		
 		public override string ToString ()
 		{
-			return Type;
+			return Type ?? "";
 		}
 	}
 }

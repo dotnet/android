@@ -55,7 +55,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			SaveTypeCommon (iface, writer, "interface", "true", null, null, null);
 		}
 		
-		static void SaveTypeCommon (this JavaType cls, XmlWriter writer, string elementName, string abs, string ext, string extgen, string jniExt)
+		static void SaveTypeCommon (this JavaType cls, XmlWriter writer, string elementName, string abs, string? ext, string? extgen, string? jniExt)
 		{
 			writer.WriteStartElement (elementName);
 			if (abs != null)
@@ -166,12 +166,12 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		
 		static void Save (this JavaConstructor ctor, XmlWriter writer)
 		{
-			SaveCommon (ctor, writer, "constructor", null, null, null, null, null, ctor.Type ?? ctor.Parent.FullName, null, null, null, ctor.TypeParameters, ctor.Parameters, ctor.Exceptions, ctor.ExtendedBridge, ctor.ExtendedJniReturn, ctor.ExtendedSynthetic, null);
+			SaveCommon (ctor, writer, "constructor", null, null, null, null, null, ctor.Type ?? ctor.Parent?.FullName, null, null, null, ctor.TypeParameters, ctor.Parameters, ctor.Exceptions, ctor.ExtendedBridge, ctor.ExtendedJniReturn, ctor.ExtendedSynthetic, null);
 		}
 		
 		static void Save (this JavaMethod method, XmlWriter writer)
 		{
-			Func<JavaMethod,bool> check = _ => _.BaseMethod.Method.Parent.Visibility == "public" &&
+			Func<JavaMethod,bool> check = _ => _.BaseMethod?.Method?.Parent?.Visibility == "public" &&
 			    !method.Static &&
 			    method.Parameters.All (p => p.InstantiatedGenericArgumentName == null);
 			
@@ -194,7 +194,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			// - the base method is in the NON-public class.
 			// - none of the arguments are type parameters.
 			// - finally, it is the synthetic method already checked above.
-			if (method.BaseMethod != null &&
+			if (method.BaseMethod != null && method.BaseMethod.Method != null &&
 			    !method.BaseMethod.Method.Abstract &&
 			    method.BaseMethod.Method.Visibility == method.Visibility &&
 			    method.BaseMethod.Method.Abstract == method.Abstract &&
@@ -223,16 +223,16 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		}
 		
 		static void SaveCommon (this JavaMember m, XmlWriter writer, string elementName,
-					string abs, string native, string ret, string sync,
-					string transient, string type, string typeGeneric,
-					string value, string volat,
-					JavaTypeParameters typeParameters,
-					IEnumerable<JavaParameter> parameters,
-					IEnumerable<JavaException> exceptions,
-					bool? extBridge, string jniReturn, bool? extSynthetic, bool? notNull)
+					string? abs, string? native, string? ret, string? sync,
+					string? transient, string? type, string? typeGeneric,
+					string? value, string? volat,
+					JavaTypeParameters? typeParameters,
+					IEnumerable<JavaParameter>? parameters,
+					IEnumerable<JavaException>? exceptions,
+					bool? extBridge, string? jniReturn, bool? extSynthetic, bool? notNull)
 		{
 			// If any of the parameters contain reference to non-public type, it cannot be generated.
-			if (parameters != null && parameters.Any (p => p.ResolvedType.ReferencedType != null && string.IsNullOrEmpty (p.ResolvedType.ReferencedType.Visibility)))
+			if (parameters != null && parameters.Any (p => p.ResolvedType?.ReferencedType != null && string.IsNullOrEmpty (p.ResolvedType.ReferencedType.Visibility)))
 				return;
 			
 			writer.WriteStartElement (elementName);
@@ -289,9 +289,9 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			}
 
 			if (exceptions != null) {
-				foreach (var e in exceptions.OrderBy (e => e.Name.Substring (e.Name.LastIndexOf ('/') + 1).Replace ('$', '.'), StringComparer.Ordinal)) {
+				foreach (var e in exceptions.OrderBy (e => GetName (e.Name), StringComparer.Ordinal)) {
 					writer.WriteStartElement ("exception");
-					writer.WriteAttributeString ("name", e.Name.Substring (e.Name.LastIndexOf ('/') + 1).Replace ('$', '.'));
+					writer.WriteAttributeString ("name", GetName (e.Name));
 					writer.WriteAttributeString ("type", e.Type);
 					if (!string.IsNullOrEmpty (e.TypeGenericAware)) {
 						writer.WriteAttributeString ("type-generic-aware", e.TypeGenericAware);
@@ -303,6 +303,18 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 
 			writer.WriteString ("\n      ");			
 			writer.WriteFullEndElement ();
+		}
+
+		static string? GetName (string? jniName)
+		{
+			if (jniName == null)
+				return null;
+
+			int slash   = jniName.LastIndexOf ('/');
+			var name    = slash >= 0
+				? jniName.Substring (slash + 1)
+				: jniName;
+			return name;
 		}
 		
 	}

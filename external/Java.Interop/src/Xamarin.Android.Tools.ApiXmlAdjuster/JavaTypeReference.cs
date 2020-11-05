@@ -21,7 +21,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		public static readonly JavaTypeReference ULong;
 		public static readonly JavaTypeReference UByte;
 
-		internal static JavaTypeReference GetSpecialType (string name)
+		internal static JavaTypeReference? GetSpecialType (string? name)
 		{
 			switch (name) {
 			case "void": return Void;
@@ -60,12 +60,12 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			UByte = new JavaTypeReference ("ubyte");
 		}
 
-		JavaTypeReference (string specialName)
+		JavaTypeReference (string? specialName)
 		{
 			SpecialName = specialName;
 		}
 		
-		public JavaTypeReference (string constraintLabel, IEnumerable<JavaTypeReference> wildcardConstraints, string arrayPart)
+		public JavaTypeReference (string? constraintLabel, IEnumerable<JavaTypeReference>? wildcardConstraints, string? arrayPart)
 		{
 			SpecialName = GenericWildcard.SpecialName;
 			ArrayPart = arrayPart;
@@ -73,7 +73,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			WildcardConstraints = wildcardConstraints != null && wildcardConstraints.Any () ? wildcardConstraints.ToList () : null;
 		}
 
-		public JavaTypeReference (JavaTypeReference referencedType, string arrayPart, string wildcardBoundsType, IEnumerable<JavaTypeReference> wildcardConstraints)
+		public JavaTypeReference (JavaTypeReference referencedType, string? arrayPart, string? wildcardBoundsType, IEnumerable<JavaTypeReference>? wildcardConstraints)
 		{
 			if (referencedType == null)
 				throw new ArgumentNullException ("referencedType");
@@ -86,7 +86,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			ArrayPart = arrayPart;
 		}
 		
-		public JavaTypeReference (JavaTypeParameter referencedTypeParameter, string arrayPart)
+		public JavaTypeReference (JavaTypeParameter referencedTypeParameter, string? arrayPart)
 		{
 			if (referencedTypeParameter == null)
 				throw new ArgumentNullException ("referencedTypeParameter");
@@ -94,7 +94,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			ArrayPart = arrayPart;
 		}
 		
-		public JavaTypeReference (JavaType referencedType, IList<JavaTypeReference> typeParameters, string arrayPart)
+		public JavaTypeReference (JavaType referencedType, IList<JavaTypeReference>? typeParameters, string? arrayPart)
 		{
 			if (referencedType == null)
 				throw new ArgumentNullException ("referencedType");
@@ -103,15 +103,15 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			ArrayPart = arrayPart;
 		}
 		
-		public string SpecialName { get; private set; }
+		public  string?                     SpecialName             { get; private set; }
 
-		public string WildcardBoundsType { get; private set; }
-		public IList<JavaTypeReference> WildcardConstraints { get; private set; }
+		public  string?                     WildcardBoundsType      { get; private set; }
+		public  IList<JavaTypeReference>?   WildcardConstraints     { get; private set; }
 
-		public JavaType ReferencedType { get; private set; }
-		public JavaTypeParameter ReferencedTypeParameter { get; private set; }
-		public IList<JavaTypeReference> TypeParameters { get; private set; }
-		public string ArrayPart { get; private set; }
+		public  JavaType?                   ReferencedType          { get; private set; }
+		public  JavaTypeParameter?          ReferencedTypeParameter { get; private set; }
+		public  IList<JavaTypeReference>?   TypeParameters          { get; private set; }
+		public  string?                     ArrayPart               { get; private set; }
 		
 		public override string ToString ()
 		{
@@ -123,9 +123,9 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 				return ReferencedTypeParameter.ToString () + ArrayPart;
 			else
 				return string.Format ("{0}{1}{2}{3}{4}",
-					ReferencedType.Parent.Name,
-					string.IsNullOrEmpty (ReferencedType.Parent.Name) ? string.Empty : ".",
-					ReferencedType.Name,
+					ReferencedType?.Parent?.Name,
+					string.IsNullOrEmpty (ReferencedType?.Parent?.Name) ? string.Empty : ".",
+					ReferencedType?.Name,
 					TypeParameters == null ? null : '<' + string.Join (", ", TypeParameters.Select (_ => _.ToString ())) + '>',
 					ArrayPart);
 		}
@@ -135,12 +135,12 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			// it's skipping TypeParameters because it's too annoying...
 			if (SpecialName != null)
 				return SpecialName.GetHashCode ();
-			return  (ReferencedType != null ? ReferencedType.Name.GetHashCode () : 0) << 15 +
-				(ReferencedTypeParameter != null ? ReferencedTypeParameter.Name.GetHashCode () : 0) << 7 +
+			return  (ReferencedType != null ? ReferencedType.Name?.GetHashCode () ?? 0 : 0) << 15 +
+				(ReferencedTypeParameter != null ? ReferencedTypeParameter.Name?.GetHashCode () ?? 0 : 0) << 7 +
 				(ArrayPart != null ? ArrayPart.GetHashCode () : 0);
 		}
 		
-		public override bool Equals (object obj)
+		public override bool Equals (object? obj)
 		{
 			return AreEqual (this, obj as JavaTypeReference);
 		}
@@ -149,7 +149,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		// Note that it is to compare them as a type reference, not as its object entity.
 		// So, for example, if one has a TypeParameter with T with some contraint and
 		// the other has a TypeParameter with T somehow without it, they are still "same".
-		public static bool AreEqual (JavaTypeReference tr1, JavaTypeReference tr2)
+		public static bool AreEqual (JavaTypeReference tr1, JavaTypeReference? tr2)
 		{
 			if (tr1 == null)
 				return tr2 == null;
