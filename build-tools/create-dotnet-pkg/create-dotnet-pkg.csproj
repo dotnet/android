@@ -34,7 +34,7 @@
       <_FilesToCopy Include="$(DotNetPreviewPath)\sdk\$(DotNetPreviewVersionFull)\EnableWorkloadResolver.sentinel" />
       <_FilesToCopy Include="$(DotNetPreviewPath)\sdk-manifests\$(DotNetPreviewVersionBand)\Microsoft.NET.Workload.Android\**\*" />
       <_FilesToCopy Include="$(DotNetPreviewPath)\packs\Microsoft.Android.Ref\**\*" />
-      <_FilesToCopy Include="$(DotNetPreviewPath)\packs\Microsoft.Android.Sdk\**\*" />
+      <_FilesToCopy Include="$(DotNetPreviewPath)\packs\Microsoft.Android.Sdk.osx-x64\**\*" />
     </ItemGroup>
     <MakeDir Directories="$(PkgOutputPath);$(PayloadDir);$(PkgResourcesPath);$(LicenseDestination)"/>
     <ReplaceFileContents

@@ -9,15 +9,14 @@ workload manifest pack containing information about the various Microsoft.Androi
 <Project Sdk="Microsoft.Build.NoTargets">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
     <PackageId>Microsoft.NET.Workload.Android</PackageId>
     <Authors>Microsoft</Authors>
     <Description>Microsoft.Android workload manifest. Please do not reference directly.</Description>
     <OutputPath>..\..\bin\Build$(Configuration)\nupkgs\</OutputPath>
   </PropertyGroup>
 
-  <Import Project="..\..\Configuration.props" />
-  <Import Project="..\..\build-tools\installers\create-installers.targets" />
+  <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
 
   <PropertyGroup>
     <BeforePack>
@@ -30,55 +29,18 @@ workload manifest pack containing information about the various Microsoft.Androi
   <Target Name="_GenerateXAWorkloadContent"
       DependsOnTargets="_GetDefaultPackageVersion;_GetLicense">
     <PropertyGroup>
-      <WorkloadManifestTargetsPath>$(OutputPath)\workload-manifest\WorkloadManifest.targets</WorkloadManifestTargetsPath>
-      <WorkloadManifestJsonPath>$(OutputPath)\workload-manifest\WorkloadManifest.json</WorkloadManifestJsonPath>
-      <WorkloadManifestTargetsContent>
-<![CDATA[
-<Project>
-    <Import Project="Sdk.targets"
-        Sdk="Microsoft.Android.Sdk"
-        Condition=" '%24(TargetPlatformIdentifier)' == 'Android' " />
-</Project>
-]]>
-      </WorkloadManifestTargetsContent>
-      <WorkloadManifestJsonContent>
-<![CDATA[
-{
-  "version": 5,
-  "workloads": {
-    "microsoft-android-sdk-full": {
-      "description": "Android SDK",
-      "packs": [
-        "Microsoft.Android.Sdk",
-        "Microsoft.Android.Ref",
-      ]
-    }
-  },
-  "packs": {
-    "Microsoft.Android.Sdk": {
-      "kind": "sdk",
-      "version": "$(AndroidPackVersionLong)"
-    },
-    "Microsoft.Android.Ref": {
-      "kind": "framework",
-      "version": "$(AndroidPackVersionLong)"
-    }
-  }
-}
-]]>
-      </WorkloadManifestJsonContent>
+      <WorkloadManifestJsonPath>$(OutputPath)workload-manifest\WorkloadManifest.json</WorkloadManifestJsonPath>
     </PropertyGroup>
 
-    <WriteLinesToFile File="$(WorkloadManifestTargetsPath)"
-        Lines="$(WorkloadManifestTargetsContent)"
-        Overwrite="true" />
-
-    <WriteLinesToFile File="$(WorkloadManifestJsonPath)"
-        Lines="$(WorkloadManifestJsonContent)"
-        Overwrite="true" />
+    <MakeDir Directories="$([System.IO.Path]::GetDirectoryName ($(WorkloadManifestJsonPath)))" />
+    <ReplaceFileContents
+        SourceFile="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.NET.Workload.Android\WorkloadManifest.in.json"
+        DestinationFile="$(WorkloadManifestJsonPath)"
+        Replacements="@SDK_PACK_VERSION@=$(AndroidPackVersionLong);@REF_PACK_VERSION@=$(AndroidPackVersionLong)">
+    </ReplaceFileContents>
 
     <ItemGroup>
-      <_PackageFiles Include="$(WorkloadManifestTargetsPath)" PackagePath="\" />
+      <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.NET.Workload.Android\WorkloadManifest.targets" PackagePath="\" />
       <_PackageFiles Include="$(WorkloadManifestJsonPath)" PackagePath="\" />
     </ItemGroup>
   </Target>

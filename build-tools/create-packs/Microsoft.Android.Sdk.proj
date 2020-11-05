@@ -2,15 +2,18 @@
 ***********************************************************************************************
 Microsoft.Android.Sdk.proj
 
-This project file is used to create the Microsoft.Android.Sdk NuGet, which is the core workload
-sdk pack imported by Microsoft.NET.Workload.Android.
+This project file is used to create the Microsoft.Android.Sdk.$(RID) NuGets, which are the
+core workload sdk packs imported by Microsoft.NET.Workload.Android.
 ***********************************************************************************************
 -->
 <Project Sdk="Microsoft.Build.NoTargets">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <PackageId>Microsoft.Android.Sdk</PackageId>
+    <TargetFramework>net5.0</TargetFramework>
+    <AndroidHostRID Condition=" '$(AndroidHostRID)' == '' and '$(HostOS)' == 'Linux' ">linux-x64</AndroidHostRID>
+    <AndroidHostRID Condition=" '$(AndroidHostRID)' == '' and '$(HostOS)' == 'Darwin' ">osx-x64</AndroidHostRID>
+    <AndroidHostRID Condition=" '$(AndroidHostRID)' == '' and '$(HostOS)' == 'Windows' ">windows-x64</AndroidHostRID>
+    <PackageId>Microsoft.Android.Sdk.$(AndroidHostRID)</PackageId>
     <Authors>Microsoft</Authors>
     <Description>C# Tools and Bindings for the Android SDK</Description>
     <OutputPath>..\..\bin\Build$(Configuration)\nupkgs\</OutputPath>
@@ -22,10 +25,7 @@ sdk pack imported by Microsoft.NET.Workload.Android.
     <PackageReference Include="Mono.Posix.NETStandard" Version="5.20.1-preview" GeneratePathProperty="true" PrivateAssets="all" />
   </ItemGroup>
 
-  <Import Project="..\..\Configuration.props" />
-  <Import Project="..\..\build-tools\installers\create-installers.targets" />
-
-  <PropertyGroup>
+ <PropertyGroup>
     <BeforePack>
       _GenerateXASdkContent;
       $(BeforePack);
@@ -38,37 +38,41 @@ sdk pack imported by Microsoft.NET.Workload.Android.
       <ToolsSourceDir>$(XamarinAndroidSourcePath)bin\Build$(Configuration)\packs\tools\</ToolsSourceDir>
       <NetCoreAppToolsSourceDir>$(XamarinAndroidSourcePath)bin\$(Configuration)-netcoreapp3.1\</NetCoreAppToolsSourceDir>
     </PropertyGroup>
+
     <ItemGroup>
-      <AndroidSdkBuildTools Include="@(_MSBuildFiles);@(_MSBuildFilesWin)" >
+      <AndroidSdkBuildTools Include="@(_MSBuildFiles)" >
         <RelativePath>$([MSBuild]::MakeRelative($(MSBuildSrcDir), %(FullPath)))</RelativePath>
       </AndroidSdkBuildTools>
       <AndroidSdkBuildTools Include="@(_MSBuildTargetsSrcFiles)" >
         <RelativePath>$([MSBuild]::MakeRelative($(MSBuildTargetsSrcDir), %(FullPath)))</RelativePath>
       </AndroidSdkBuildTools>
-      <!-- Exclude host-os specific native libraries, aside from libMonoPosixHelper.dylib which is required by LibZipSharp on macOS. -->
-      <AndroidSdkBuildToolsUnix Include="@(_MSBuildFilesUnix);@(_MSBuildFilesUnixSign);@(_MSBuildFilesUnixSignAndHarden)" >
+      <AndroidSdkBuildTools Include="@(_MSBuildFilesWin)" Condition=" '$(AndroidHostRID)' == 'windows-x64' ">
         <RelativePath>$([MSBuild]::MakeRelative($(MSBuildSrcDir), %(FullPath)))</RelativePath>
-      </AndroidSdkBuildToolsUnix>
-      <AndroidSdkBuildToolsUnix Include="$(PkgMono_Posix_NETStandard)\runtimes\osx\native\libMonoPosixHelper.dylib" Condition="$([MSBuild]::IsOSPlatform('osx'))">
+      </AndroidSdkBuildTools>
+      <!-- Exclude host-os specific native libraries, aside from libMonoPosixHelper.dylib which is required by LibZipSharp on macOS. -->
+      <AndroidSdkBuildTools Include="@(_MSBuildFilesUnix);@(_MSBuildFilesUnixSign);@(_MSBuildFilesUnixSignAndHarden)" Condition=" '$(AndroidHostRID)' == 'linux-x64' or '$(AndroidHostRID)' == 'osx-x64' ">
+        <RelativePath>$([MSBuild]::MakeRelative($(MSBuildSrcDir), %(FullPath)))</RelativePath>
+      </AndroidSdkBuildTools>
+      <AndroidSdkBuildTools Include="$(PkgMono_Posix_NETStandard)\runtimes\osx\native\libMonoPosixHelper.dylib" Condition=" '$(AndroidHostRID)' == 'osx-x64' ">
         <RelativePath>libMonoPosixHelper.dylib</RelativePath>
-      </AndroidSdkBuildToolsUnix>
-      <AndroidSdkBuildToolsUnix Include="$(PkgMono_Posix_NETStandard)\runtimes\linux-x64\native\libMonoPosixHelper.so" Condition="$([MSBuild]::IsOSPlatform('linux'))" >
+      </AndroidSdkBuildTools>
+      <AndroidSdkBuildTools Include="$(PkgMono_Posix_NETStandard)\runtimes\linux-x64\native\libMonoPosixHelper.so" Condition=" '$(AndroidHostRID)' == 'linux-x64' " >
         <RelativePath>libMonoPosixHelper.so</RelativePath>
-      </AndroidSdkBuildToolsUnix>
+      </AndroidSdkBuildTools>
+      <!-- Remove items with '%(ExcludeFromAndroidNETSdk)' == 'true' metadata -->
+      <AndroidSdkBuildTools Remove="@(AndroidSdkBuildTools)" Condition=" '%(AndroidSdkBuildTools.ExcludeFromAndroidNETSdk)' == 'true' " />
     </ItemGroup>
-    <!-- Copy only the required tools to new folder. Skip Unix item copying on Windows. -->
+
+    <RemoveDir Directories="$(ToolsSourceDir)" />
     <Copy
         SourceFiles="@(AndroidSdkBuildTools)"
         DestinationFiles="@(AndroidSdkBuildTools->'$(ToolsSourceDir)%(RelativePath)')"
-        SkipUnchangedFiles="True"
     />
-    <Copy
-        SourceFiles="@(AndroidSdkBuildToolsUnix)"
-        DestinationFiles="@(AndroidSdkBuildToolsUnix->'$(ToolsSourceDir)%(RelativePath)')"
-        SkipUnchangedFiles="True"
-        Condition="$([MSBuild]::IsOSPlatform('osx')) or $([MSBuild]::IsOSPlatform('linux'))"
-    />
+
     <ItemGroup>
+      <!-- Microsoft.Android.Sdk.ILLink output -->
+      <_PackageFiles Include="$(XAInstallPrefix)xbuild\Xamarin\Android\Microsoft.Android.Sdk.ILLink.dll" PackagePath="tools" />
+      <_PackageFiles Include="$(XAInstallPrefix)xbuild\Xamarin\Android\Microsoft.Android.Sdk.ILLink.pdb" PackagePath="tools" />
       <_PackageFiles Include="$(ToolsSourceDir)**" PackagePath="tools" />
       <_PackageFiles Include="$(NetCoreAppToolsSourceDir)generator.dll" PackagePath="tools" />
       <_PackageFiles Include="$(NetCoreAppToolsSourceDir)generator.runtimeconfig.json" PackagePath="tools" />
