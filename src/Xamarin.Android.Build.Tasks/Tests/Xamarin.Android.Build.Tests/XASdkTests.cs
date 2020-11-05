@@ -178,7 +178,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void DotNetPack ([Values ("net5.0-android", "net5.0-android30")] string targetFramework)
+		public void DotNetPack ([Values ("net6.0-android", "net6.0-android30")] string targetFramework)
 		{
 			var proj = new XASdkProject (outputType: "Library") {
 				TargetFramework = targetFramework,
@@ -209,8 +209,8 @@ namespace Xamarin.Android.Build.Tests
 			var nupkgPath = Path.Combine (FullProjectDirectory, proj.OutputPath, "..", $"{proj.ProjectName}.1.0.0.nupkg");
 			FileAssert.Exists (nupkgPath);
 			using (var nupkg = ZipHelper.OpenZip (nupkgPath)) {
-				nupkg.AssertContainsEntry (nupkgPath, $"lib/net5.0-android30.0/{proj.ProjectName}.dll");
-				nupkg.AssertContainsEntry (nupkgPath, $"lib/net5.0-android30.0/{proj.ProjectName}.aar");
+				nupkg.AssertContainsEntry (nupkgPath, $"lib/net6.0-android30.0/{proj.ProjectName}.dll");
+				nupkg.AssertContainsEntry (nupkgPath, $"lib/net6.0-android30.0/{proj.ProjectName}.aar");
 			}
 		}
 
@@ -348,21 +348,16 @@ namespace Xamarin.Android.Build.Tests
 				outputPath = Path.Combine (outputPath, runtimeIdentifiers);
 			}
 
-			// TODO: With workloads we don't control the import of Microsoft.NET.Sdk/Sdk.targets.
-			//  We can no longer change the default values of `$(GenerateDependencyFile)` and `$(ProduceReferenceAssembly)` as a result.
-			//  We should update Microsoft.NET.Sdk to default both of these properties to false when the `$(TargetPlatformIdentifier)` is "mobile" (Android, iOS, etc).
-			//  Alternatively, the workload concept could be updated to support some sort of `Before.Microsoft.NET.targets` hook.
-
-			/* var files = Directory.EnumerateFileSystemEntries (outputPath)
+			var files = Directory.EnumerateFileSystemEntries (outputPath)
 				.Select (Path.GetFileName)
-				.OrderBy (f => f);
+				.OrderBy (f => f)
+				.ToArray ();
 			CollectionAssert.AreEqual (new [] {
 				$"{proj.ProjectName}.dll",
 				$"{proj.ProjectName}.pdb",
 				$"{proj.PackageName}.apk",
 				$"{proj.PackageName}-Signed.apk",
 			}, files);
-			*/
 
 			var assemblyPath = Path.Combine (outputPath, $"{proj.ProjectName}.dll");
 			FileAssert.Exists (assemblyPath);

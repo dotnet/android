@@ -9,10 +9,10 @@ core workload sdk packs imported by Microsoft.NET.Workload.Android.
 <Project Sdk="Microsoft.Build.NoTargets">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <AndroidHostRID Condition=" '$(AndroidHostRID)' == '' and '$(HostOS)' == 'Linux' ">linux-x64</AndroidHostRID>
     <AndroidHostRID Condition=" '$(AndroidHostRID)' == '' and '$(HostOS)' == 'Darwin' ">osx-x64</AndroidHostRID>
-    <AndroidHostRID Condition=" '$(AndroidHostRID)' == '' and '$(HostOS)' == 'Windows' ">windows-x64</AndroidHostRID>
+    <AndroidHostRID Condition=" '$(AndroidHostRID)' == '' and '$(HostOS)' == 'Windows' ">win-x64</AndroidHostRID>
     <PackageId>Microsoft.Android.Sdk.$(AndroidHostRID)</PackageId>
     <Authors>Microsoft</Authors>
     <Description>C# Tools and Bindings for the Android SDK</Description>
@@ -46,7 +46,7 @@ core workload sdk packs imported by Microsoft.NET.Workload.Android.
       <AndroidSdkBuildTools Include="@(_MSBuildTargetsSrcFiles)" >
         <RelativePath>$([MSBuild]::MakeRelative($(MSBuildTargetsSrcDir), %(FullPath)))</RelativePath>
       </AndroidSdkBuildTools>
-      <AndroidSdkBuildTools Include="@(_MSBuildFilesWin)" Condition=" '$(AndroidHostRID)' == 'windows-x64' ">
+      <AndroidSdkBuildTools Include="@(_MSBuildFilesWin)" Condition=" '$(AndroidHostRID)' == 'win-x64' ">
         <RelativePath>$([MSBuild]::MakeRelative($(MSBuildSrcDir), %(FullPath)))</RelativePath>
       </AndroidSdkBuildTools>
       <!-- Exclude host-os specific native libraries, aside from libMonoPosixHelper.dylib which is required by LibZipSharp on macOS. -->
@@ -91,7 +91,7 @@ core workload sdk packs imported by Microsoft.NET.Workload.Android.
   <Target Name="_GenerateBundledVersions"
       DependsOnTargets="_GetDefaultPackageVersion" >
     <PropertyGroup>
-      <_AndroidNETAppTargetFramework>net5.0</_AndroidNETAppTargetFramework>
+      <_AndroidNETAppTargetFramework>net6.0</_AndroidNETAppTargetFramework>
       <BundledVersionsFileName>Microsoft.Android.Sdk.BundledVersions.targets</BundledVersionsFileName>
     </PropertyGroup>
 
