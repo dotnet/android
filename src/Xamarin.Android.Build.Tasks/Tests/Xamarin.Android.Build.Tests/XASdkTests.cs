@@ -305,6 +305,10 @@ namespace Xamarin.Android.Build.Tests
 				/* isRelease */          false,
 			},
 			new object [] {
+				/* runtimeIdentifiers */ "android.21-arm;android.21-arm64;android.21-x86",
+				/* isRelease */          true,
+			},
+			new object [] {
 				/* runtimeIdentifiers */ "android.21-arm;android.21-arm64;android.21-x86;android.21-x64",
 				/* isRelease */          true,
 			},
@@ -374,14 +378,17 @@ namespace Xamarin.Android.Build.Tests
 			using (var apk = ZipHelper.OpenZip (apkPath)) {
 				apk.AssertContainsEntry (apkPath, $"assemblies/{proj.ProjectName}.dll", shouldContainEntry: expectEmbeddedAssembies);
 				apk.AssertContainsEntry (apkPath, $"assemblies/{proj.ProjectName}.pdb", shouldContainEntry: !CommercialBuildAvailable && !isRelease);
+				apk.AssertContainsEntry (apkPath, $"assemblies/System.Linq.dll",        shouldContainEntry: expectEmbeddedAssembies);
 				var rids = runtimeIdentifiers.Split (';');
 				foreach (var abi in rids.Select (MonoAndroidHelper.RuntimeIdentifierToAbi)) {
 					apk.AssertContainsEntry (apkPath, $"lib/{abi}/libmonodroid.so");
 					apk.AssertContainsEntry (apkPath, $"lib/{abi}/libmonosgen-2.0.so");
 					if (rids.Length > 1) {
-						apk.AssertContainsEntry (apkPath, $"assemblies/{abi}/System.Private.CoreLib.dll", shouldContainEntry: expectEmbeddedAssembies);
+						apk.AssertContainsEntry (apkPath, $"assemblies/{abi}/System.Private.CoreLib.dll",        shouldContainEntry: expectEmbeddedAssembies);
+						apk.AssertContainsEntry (apkPath, $"assemblies/{abi}/System.Collections.Concurrent.dll", shouldContainEntry: expectEmbeddedAssembies);
 					} else {
-						apk.AssertContainsEntry (apkPath, "assemblies/System.Private.CoreLib.dll", shouldContainEntry: expectEmbeddedAssembies);
+						apk.AssertContainsEntry (apkPath, "assemblies/System.Private.CoreLib.dll",        shouldContainEntry: expectEmbeddedAssembies);
+						apk.AssertContainsEntry (apkPath, "assemblies/System.Collections.Concurrent.dll", shouldContainEntry: expectEmbeddedAssembies);
 					}
 				}
 			}

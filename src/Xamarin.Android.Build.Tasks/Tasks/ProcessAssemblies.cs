@@ -38,7 +38,7 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
-			var output = new Dictionary<Guid, ITaskItem> ();
+			var output = new List<ITaskItem> ();
 			var symbols = new Dictionary<string, ITaskItem> ();
 
 			if (ResolvedSymbols != null) {
@@ -47,52 +47,59 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			foreach (var assembly in InputAssemblies) {
-				if (!File.Exists (assembly.ItemSpec)) {
-					Log.LogDebugMessage ($"Skipping non-existent dependency '{assembly.ItemSpec}'.");
-					continue;
-				}
-				using (var pe = new PEReader (File.OpenRead (assembly.ItemSpec))) {
-					var reader = pe.GetMetadataReader ();
-					var module = reader.GetModuleDefinition ();
-					var mvid = reader.GetGuid (module.Mvid);
-					if (!output.ContainsKey (mvid)) {
-						output.Add (mvid, assembly);
+			// Group by assembly file name
+			foreach (var group in InputAssemblies.Where (Filter).GroupBy (a => Path.GetFileName (a.ItemSpec))) {
+				// Get the unique list of MVIDs
+				var mvids = new HashSet<Guid> ();
+				bool? frameworkAssembly = null, hasMonoAndroidReference = null;
+				foreach (var assembly in group) {
+					using (var pe = new PEReader (File.OpenRead (assembly.ItemSpec))) {
+						var reader = pe.GetMetadataReader ();
+						var module = reader.GetModuleDefinition ();
+						var mvid = reader.GetGuid (module.Mvid);
+						mvids.Add (mvid);
 
-						// Set metadata, such as %(FrameworkAssembly) and %(HasMonoAndroidReference)
-						string packageId = assembly.GetMetadata ("NuGetPackageId");
-						bool frameworkAssembly = packageId.StartsWith ("Microsoft.NETCore.App.Runtime.") ||
-							packageId.StartsWith ("Microsoft.Android.Runtime.");
+						// Calculate %(FrameworkAssembly) and %(HasMonoAndroidReference) for the first
+						if (frameworkAssembly == null) {
+							string packageId = assembly.GetMetadata ("NuGetPackageId") ?? "";
+							frameworkAssembly = packageId.StartsWith ("Microsoft.NETCore.App.Runtime.") ||
+								packageId.StartsWith ("Microsoft.Android.Runtime.");
+						}
+						if (hasMonoAndroidReference == null) {
+							hasMonoAndroidReference = MonoAndroidHelper.HasMonoAndroidReference (reader);
+						}
 						assembly.SetMetadata ("FrameworkAssembly", frameworkAssembly.ToString ());
-						assembly.SetMetadata ("HasMonoAndroidReference", MonoAndroidHelper.HasMonoAndroidReference (reader).ToString ());
-					} else {
-						symbols.Remove (Path.ChangeExtension (assembly.ItemSpec, ".pdb"));
+						assembly.SetMetadata ("HasMonoAndroidReference", hasMonoAndroidReference.ToString ());
 					}
 				}
-			}
-
-			OutputAssemblies = output.Values.ToArray ();
-			ResolvedSymbols = symbols.Values.ToArray ();
-
-			// Set %(DestinationSubDirectory) and %(DestinationSubPath) for architecture-specific assemblies
-			var fileNames = new Dictionary<string, ITaskItem> (StringComparer.OrdinalIgnoreCase);
-			foreach (var assembly in OutputAssemblies) {
-				var fileName = Path.GetFileName (assembly.ItemSpec);
-				symbols.TryGetValue (Path.ChangeExtension (assembly.ItemSpec, ".pdb"), out var symbol);
-				if (fileNames.TryGetValue (fileName, out ITaskItem other)) {
-					SetDestinationSubDirectory (assembly, fileName, symbol);
-					if (other != null) {
-						symbols.TryGetValue (Path.ChangeExtension (other.ItemSpec, ".pdb"), out symbol);
-						SetDestinationSubDirectory (other, fileName, symbol);
-						// We don't need to check "other" again
-						fileNames [fileName] = null;
+				// If we end up with more than 1 unique mvid, we need *all* assemblies
+				if (mvids.Count > 1) {
+					foreach (var assembly in group) {
+						symbols.TryGetValue (Path.ChangeExtension (assembly.ItemSpec, ".pdb"), out var symbol);
+						SetDestinationSubDirectory (assembly, group.Key, symbol);
+						output.Add (assembly);
 					}
 				} else {
-					fileNames.Add (fileName, assembly);
-					assembly.SetDestinationSubPath ();
-					symbol?.SetDestinationSubPath ();
+					// Otherwise only include the first assembly
+					bool first = true;
+					foreach (var assembly in group) {
+						var symbolPath = Path.ChangeExtension (assembly.ItemSpec, ".pdb");
+						if (first) {
+							first = false;
+							if (symbols.TryGetValue (symbolPath, out var symbol)) {
+								symbol.SetDestinationSubPath ();
+							}
+							assembly.SetDestinationSubPath ();
+							output.Add (assembly);
+						} else {
+							symbols.Remove (symbolPath);
+						}
+					}
 				}
 			}
+
+			OutputAssemblies = output.ToArray ();
+			ResolvedSymbols = symbols.Values.ToArray ();
 
 			// Set ShrunkAssemblies for _RemoveRegisterAttribute and <BuildApk/>
 			if (!string.IsNullOrEmpty (LinkMode) && !string.Equals (LinkMode, "None", StringComparison.OrdinalIgnoreCase) && !IncludeDebugSymbols) {
@@ -106,6 +113,15 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return !Log.HasLoggedErrors;
+		}
+
+		bool Filter (ITaskItem assembly)
+		{
+			if (!File.Exists (assembly.ItemSpec)) {
+				Log.LogDebugMessage ($"Skipping non-existent dependency '{assembly.ItemSpec}'.");
+				return false;
+			}
+			return true;
 		}
 
 		/// <summary>
