@@ -21,9 +21,7 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "PRAS";
 
-		public string LinkMode { get; set; }
-
-		public bool IncludeDebugSymbols { get; set; }
+		public bool PublishTrimmed { get; set; }
 
 		public ITaskItem [] InputAssemblies { get; set; }
 
@@ -95,7 +93,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			// Set ShrunkAssemblies for _RemoveRegisterAttribute and <BuildApk/>
-			if (!string.IsNullOrEmpty (LinkMode) && !string.Equals (LinkMode, "None", StringComparison.OrdinalIgnoreCase) && !IncludeDebugSymbols) {
+			if (PublishTrimmed) {
 				ShrunkAssemblies = OutputAssemblies.Select (a => {
 					var dir = Path.GetDirectoryName (a.ItemSpec);
 					var file = Path.GetFileName (a.ItemSpec);

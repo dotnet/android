@@ -16,8 +16,37 @@ namespace Xamarin.Android.Build.Tests
 	[Category ("UsesDevices"), Category ("SmokeTests"), Category ("DotNetIgnore")] // These don't need to run under `dotnet test`
 	public class XASdkDeployTests : DeviceTest
 	{
+		static object [] DotNetInstallAndRunSource = new object [] {
+			new object[] {
+				/* isRelease */      false,
+				/* xamarinForms */   false,
+				/* publishTrimmed */ default (bool?),
+			},
+			new object[] {
+				/* isRelease */      true,
+				/* xamarinForms */   false,
+				/* publishTrimmed */ default (bool?),
+			},
+			new object[] {
+				/* isRelease */      false,
+				/* xamarinForms */   true,
+				/* publishTrimmed */ default (bool?),
+			},
+			new object[] {
+				/* isRelease */      true,
+				/* xamarinForms */   true,
+				/* publishTrimmed */ default (bool?),
+			},
+			new object[] {
+				/* isRelease */      true,
+				/* xamarinForms */   false,
+				/* publishTrimmed */ false,
+			},
+		};
+
 		[Test]
-		public void DotNetInstallAndRun ([Values (false, true)] bool isRelease, [Values (false, true)] bool xamarinForms)
+		[TestCaseSource (nameof (DotNetInstallAndRunSource))]
+		public void DotNetInstallAndRun (bool isRelease, bool xamarinForms, bool? publishTrimmed)
 		{
 			AssertHasDevices ();
 
@@ -30,6 +59,9 @@ namespace Xamarin.Android.Build.Tests
 				proj = new XASdkProject {
 					IsRelease = isRelease
 				};
+			}
+			if (publishTrimmed != null) {
+				proj.SetProperty (KnownProperties.PublishTrimmed, publishTrimmed.ToString ());
 			}
 			proj.SetRuntimeIdentifier (DeviceAbi);
 

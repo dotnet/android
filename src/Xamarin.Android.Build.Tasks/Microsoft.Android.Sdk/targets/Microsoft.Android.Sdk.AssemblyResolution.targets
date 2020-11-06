@@ -76,11 +76,10 @@ _ResolveAssemblies MSBuild target.
     <ProcessAssemblies
         InputAssemblies="@(_ResolvedAssemblyFiles->Distinct())"
         ResolvedSymbols="@(_ResolvedSymbolFiles->Distinct())"
-        IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
-        LinkMode="$(AndroidLinkMode)">
-      <Output TaskParameter="OutputAssemblies" ItemName="_ProcessedAssemblies" />
-      <Output TaskParameter="ResolvedSymbols"  ItemName="ResolvedSymbols" />
-      <Output TaskParameter="ShrunkAssemblies" ItemName="_ProcessedShrunkAssemblies" />
+        PublishTrimmed="$(PublishTrimmed)">
+      <Output TaskParameter="OutputAssemblies"    ItemName="_ProcessedAssemblies" />
+      <Output TaskParameter="ResolvedSymbols"     ItemName="ResolvedSymbols" />
+      <Output TaskParameter="ShrunkAssemblies"    ItemName="_ProcessedShrunkAssemblies" />
     </ProcessAssemblies>
     <AppendCustomMetadataToItemGroup
         Inputs="@(_ProcessedAssemblies)"
@@ -127,7 +126,7 @@ _ResolveAssemblies MSBuild target.
 
   <Target Name="_PrepareAssemblies"
       DependsOnTargets="$(_PrepareAssembliesDependsOnTargets)">
-    <ItemGroup Condition=" '$(AndroidLinkMode)' == 'None' And '$(AndroidIncludeDebugSymbols)' == 'true'  ">
+    <ItemGroup Condition=" '$(PublishTrimmed)' != 'true' ">
       <_ResolvedAssemblies          Include="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')"          Condition=" '%(DestinationSubPath)' != '' " />
       <_ResolvedUserAssemblies      Include="@(ResolvedUserAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')"      Condition=" '%(DestinationSubPath)' != '' " />
       <_ResolvedFrameworkAssemblies Include="@(ResolvedFrameworkAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')" Condition=" '%(DestinationSubPath)' != '' " />
@@ -136,7 +135,7 @@ _ResolveAssemblies MSBuild target.
       <_ShrunkUserAssemblies        Include="@(_ResolvedUserAssemblies)" />
       <_ShrunkFrameworkAssemblies   Include="@(_ResolvedFrameworkAssemblies)" />
     </ItemGroup>
-    <ItemGroup Condition=" '$(AndroidLinkMode)' != 'None' And '$(AndroidIncludeDebugSymbols)' != 'true'  ">
+    <ItemGroup Condition=" '$(PublishTrimmed)' == 'true' ">
       <_ResolvedAssemblies          Include="@(ResolvedAssemblies)" />
       <_ResolvedUserAssemblies      Include="@(ResolvedUserAssemblies)" />
       <_ResolvedFrameworkAssemblies Include="@(ResolvedFrameworkAssemblies)" />
