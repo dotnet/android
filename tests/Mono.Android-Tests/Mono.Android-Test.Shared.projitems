@@ -51,13 +51,12 @@
     <Compile Include="$(MSBuildThisFileDirectory)Xamarin.Android.RuntimeTests\MyIntent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Xamarin.Android.RuntimeTests\NonJavaObject.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Xamarin.Android.RuntimeTests\NUnitInstrumentation.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Xamarin.Android.RuntimeTests\TestInstrumentation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Android.OS\BundleTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Mono.Data.Sqlite\SqliteTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Android.Widget\CustomWidgetTests.cs" />
   </ItemGroup>
   <ItemGroup>
-    <AndroidResource Include="$(MSBuildThisFileDirectory)..\..\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Resources\Base\Image.9.png">
+    <AndroidResource Include="$(MSBuildThisFileDirectory)..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Resources\Base\Image.9.png">
       <Link>Resources\Drawable\Image.9.png</Link>
     </AndroidResource>
   </ItemGroup>

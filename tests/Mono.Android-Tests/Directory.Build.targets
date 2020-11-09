@@ -1,0 +1,43 @@
+<Project>
+
+  <ItemGroup>
+    <TestApkInstrumentation Include="xamarin.android.runtimetests.NUnitInstrumentation">
+      <Package>$(_MonoAndroidTestPackage)</Package>
+      <ResultsPath>$(OutputPath)TestResult-$(_MonoAndroidTestPackage).xml</ResultsPath>
+    </TestApkInstrumentation>
+
+    <TestApkPermission Include="READ_EXTERNAL_STORAGE">
+      <Package>$(_MonoAndroidTestPackage)</Package>
+    </TestApkPermission>
+
+    <TestApkPermission Include="WRITE_EXTERNAL_STORAGE">
+      <Package>$(_MonoAndroidTestPackage)</Package>
+    </TestApkPermission>
+  </ItemGroup>
+
+  <ItemGroup>
+    <AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)libs\arm64-v8a\libreuse-threads.so" />
+    <AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)libs\armeabi-v7a\libreuse-threads.so" />
+    <AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)libs\x86\libreuse-threads.so" />
+    <AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)libs\x86_64\libreuse-threads.so" />
+  </ItemGroup>
+
+  <Target Name="BuildNativeLibs"
+      BeforeTargets="Build"
+      DependsOnTargets="AndroidPrepareForBuild"
+      Inputs="$(MSBuildThisFileDirectory)jni\reuse-threads.c;$(MSBuildThisFileDirectory)jni\Android.mk"
+      Outputs="@(AndroidNativeLibrary)">
+    <Error Text="Could not locate Android NDK." Condition="!Exists ('$(NdkBuildPath)')" />
+    <Exec Command="&quot;$(NdkBuildPath)&quot;" WorkingDirectory="$(MSBuildThisFileDirectory)"/>
+  </Target>
+
+  <Import Project="$(MSBuildThisFileDirectory)..\..\build-tools\scripts\JavaInteropDllConfigs.targets" />
+
+  <!-- Not required when testing against a system installation of XA. -->
+  <Target Name="EnsureJavaInteropDllConfigs"
+      Condition="Exists ('$(XAInstallPrefix)xbuild\Xamarin\Android\Java.Interop.dll')"
+      BeforeTargets="_GenerateJniMarshalMethods"
+      DependsOnTargets="_CreateJavaInteropDllConfigs">
+  </Target>
+
+</Project>

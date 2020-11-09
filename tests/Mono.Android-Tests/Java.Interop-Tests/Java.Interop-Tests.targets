@@ -3,14 +3,14 @@
   <ItemGroup>
     <AndroidJavaLibrary Include="Jars\Mono.Android-Test-classes.jar" />
   </ItemGroup>
-  <Import Project="..\..\..\..\build-tools\scripts\Jar.targets" />
+  <Import Project="..\..\..\build-tools\scripts\Jar.targets" />
   <ItemDefinitionGroup>
     <TestJarEntry>
       <OutputFile>Jars\Mono.Android-Test-classes.jar</OutputFile>
     </TestJarEntry>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <TestJarEntry Include="$(MSBuildThisFileDirectory)..\..\..\..\external\Java.Interop\tests\Java.Interop-Tests\java\**\*.java" />
+    <TestJarEntry Include="$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\java\**\*.java" />
   </ItemGroup>
   <Target Name="_CopyTestJarFiles">
     <Copy

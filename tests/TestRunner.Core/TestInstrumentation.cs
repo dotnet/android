@@ -219,9 +219,10 @@ namespace Xamarin.Android.UnitTests
 			if (sdkInt >= 8) {
 #if __ANDROID_26__
 				// .Serial was deprecated in API26, .GetSerial () is the recommended replacement
-				if (((int) Build.VERSION.SdkInt) >= 26)
-					LogPaddedInfo ("Serial", Build.GetSerial (), alignColumn);		
-				else
+				// GetSerial is now restricted on API 29+ - https://developer.android.com/reference/android/os/Build.html#getSerial()
+				if (sdkInt >= 26 && sdkInt < 29)
+					LogPaddedInfo ("Serial", Build.GetSerial (), alignColumn);
+				else if (sdkInt < 26)
 #endif
 					LogPaddedInfo ("Serial", Build.Serial, alignColumn);
 			}

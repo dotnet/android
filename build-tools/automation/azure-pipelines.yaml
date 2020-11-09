@@ -419,7 +419,7 @@ stages:
     - task: MSBuild@1
       displayName: Run check-boot-times
       inputs:
-        solution: src/Mono.Android/Test/Mono.Android-Tests.csproj
+        solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
         configuration: $(ApkTestConfiguration)
         msbuildArguments: /t:CheckBootTimes /bl:$(System.DefaultWorkingDirectory)/bin/Test$(ApkTestConfiguration)/run-check-boot-times.binlog
       continueOnError: true
@@ -428,7 +428,7 @@ stages:
       parameters:
         configuration: $(ApkTestConfiguration)
         testName: Mono.Android_Tests
-        project: src/Mono.Android/Test/Mono.Android-Tests.csproj
+        project: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
         testResultsFiles: TestResult-Mono.Android_Tests-$(ApkTestConfiguration).xml
         artifactName: Mono.Android_Tests-Signed.apk
         artifactFolder: Default
@@ -437,7 +437,7 @@ stages:
       parameters:
         configuration: $(ApkTestConfiguration)
         testName: Mono.Android_Tests-Aot
-        project: src/Mono.Android/Test/Mono.Android-Tests.csproj
+        project: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
         testResultsFiles: TestResult-Mono.Android_Tests-$(ApkTestConfiguration)-Aot.xml
         extraBuildArgs: /p:AotAssemblies=True /p:EnableLlvm=True
         artifactName: Mono.Android_Tests-Signed.apk
@@ -447,7 +447,7 @@ stages:
       parameters:
         configuration: $(ApkTestConfiguration)
         testName: Mono.Android_Tests-Profiled-Aot
-        project: src/Mono.Android/Test/Mono.Android-Tests.csproj
+        project: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
         testResultsFiles: TestResult-Mono.Android_Tests-$(ApkTestConfiguration)-Profiled-Aot.xml
         extraBuildArgs: /p:AotAssemblies=True /p:AndroidEnableProfiledAot=true
         artifactName: Mono.Android_Tests-Signed.apk
@@ -457,7 +457,7 @@ stages:
       parameters:
         configuration: $(ApkTestConfiguration)
         testName: Mono.Android_Tests-Bundle
-        project: src/Mono.Android/Test/Mono.Android-Tests.csproj
+        project: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
         testResultsFiles: TestResult-Mono.Android_Tests-$(ApkTestConfiguration)-Bundle.xml
         extraBuildArgs: /p:BundleAssemblies=true
         artifactName: Mono.Android_Tests-Signed.apk
@@ -467,7 +467,7 @@ stages:
       parameters:
         configuration: $(ApkTestConfiguration)
         testName: Mono.Android_TestsAppBundle
-        project: tests/Runtime-AppBundle/Mono.Android-TestsAppBundle.csproj
+        project: tests/Mono.Android-Tests/Runtime-AppBundle/Mono.Android-TestsAppBundle.csproj
         testResultsFiles: TestResult-Mono.Android_TestsAppBundle-$(ApkTestConfiguration).xml
         packageType: Aab
         artifactName: Mono.Android_TestsAppBundle-Signed.aab
@@ -477,7 +477,7 @@ stages:
       parameters:
         configuration: $(ApkTestConfiguration)
         testName: Mono.Android_TestsMultiDex
-        project: tests/Runtime-MultiDex/Mono.Android-TestsMultiDex.csproj
+        project: tests/Mono.Android-Tests/Runtime-MultiDex/Mono.Android-TestsMultiDex.csproj
         testResultsFiles: TestResult-Mono.Android_TestsMultiDex-$(ApkTestConfiguration).xml
         artifactName: Mono.Android_TestsMultiDex-Signed.apk
         artifactFolder: MultiDex
@@ -591,7 +591,7 @@ stages:
     - task: MSBuild@1
       displayName: shut down emulator
       inputs:
-        solution: src/Mono.Android/Test/Mono.Android-Tests.csproj
+        solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
         configuration: $(ApkTestConfiguration)
         msbuildArguments: >-
           /t:AcquireAndroidTarget,ReleaseAndroidTarget
@@ -692,7 +692,7 @@ stages:
     - task: MSBuild@1
       displayName: start emulator
       inputs:
-        solution: src/Mono.Android/Test/Mono.Android-Tests.csproj
+        solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
         configuration: $(XA.Build.Configuration)
         msbuildArguments: /t:AcquireAndroidTarget /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/start-emulator.binlog
 
@@ -706,7 +706,7 @@ stages:
     - task: MSBuild@1
       displayName: shut down emulator
       inputs:
-        solution: src/Mono.Android/Test/Mono.Android-Tests.csproj
+        solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
         configuration: $(XA.Build.Configuration)
         msbuildArguments: >-
           /t:AcquireAndroidTarget,ReleaseAndroidTarget
@@ -852,7 +852,7 @@ stages:
     - task: MSBuild@1
       displayName: start emulator
       inputs:
-        solution: src/Mono.Android/Test/Mono.Android-Tests.csproj
+        solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
         configuration: $(XA.Build.Configuration)
         msbuildArguments: /t:AcquireAndroidTarget /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/start-emulator.binlog
 
@@ -866,7 +866,7 @@ stages:
     - task: MSBuild@1
       displayName: shut down emulator
       inputs:
-        solution: src/Mono.Android/Test/Mono.Android-Tests.csproj
+        solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
         configuration: $(XA.Build.Configuration)
         msbuildArguments: >-
           /t:AcquireAndroidTarget,ReleaseAndroidTarget
