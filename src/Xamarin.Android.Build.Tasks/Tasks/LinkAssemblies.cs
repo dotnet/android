@@ -49,6 +49,8 @@ namespace Xamarin.Android.Tasks
 
 		public string TlsProvider { get; set; }
 
+		public bool AddKeepAlives { get; set; }
+
 		public bool PreserveJniMarshalMethods { get; set; }
 
 		public bool Deterministic { get; set; }
@@ -100,6 +102,7 @@ namespace Xamarin.Android.Tasks
 			options.DumpDependencies = DumpDependencies;
 			options.HttpClientHandlerType = HttpClientHandlerType;
 			options.TlsProvider = TlsProvider;
+			options.AddKeepAlives = AddKeepAlives;
 			options.PreserveJniMarshalMethods = PreserveJniMarshalMethods;
 			options.DeterministicOutput = Deterministic;
 

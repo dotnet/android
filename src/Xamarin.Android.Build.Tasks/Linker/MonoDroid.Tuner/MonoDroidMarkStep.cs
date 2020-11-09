@@ -39,7 +39,7 @@ namespace MonoDroid.Tuner
 			var updated = false;
 
 			var typeName = "Java.Interop.TypeManager/JavaTypeManager/__<$>_jni_marshal_methods";
-			var javaTypeManager = GetType ("Mono.Android", typeName);
+			var javaTypeManager = _context.GetType ("Mono.Android", typeName);
 			if (javaTypeManager == null)
 				throw new InvalidOperationException ($"Unable to find '{typeName}' in Mono.Android.dll!");
 			marshalTypes.Add (javaTypeManager);
@@ -73,56 +73,6 @@ namespace MonoDroid.Tuner
 			return updated;
 		}
 
-		MethodDefinition GetMethod (TypeDefinition td, string name)
-		{
-			MethodDefinition method = null;
-			foreach (var md in td.Methods) {
-				if (md.Name == name) {
-					method = md;
-					break;
-				}
-			}
-
-			return method;
-		}
-
-		MethodDefinition GetMethod (string ns, string typeName, string name, string[] parameters)
-		{
-			var type = GetType (ns, typeName);
-			if (type == null)
-				return null;
-
-			return GetMethod (type, name, parameters);
-		}
-
-		MethodDefinition GetMethod (TypeDefinition type, string name, string[] parameters)
-		{
-			MethodDefinition method = null;
-			foreach (var md in type.Methods) {
-				if (md.Name != name)
-					continue;
-
-				if (md.Parameters.Count != parameters.Length)
-					continue;
-
-				var equal = true;
-				for (int i = 0; i < parameters.Length; i++) {
-					if (md.Parameters [i].ParameterType.FullName != parameters [i]) {
-						equal = false;
-						break;
-					}
-				}
-
-				if (!equal)
-					continue;
-
-				method = md;
-				break;
-			}
-
-			return method;
-		}
-
 		MethodReference CreateGenericMethodReference (MethodReference method, GenericInstanceType type)
 		{
 			var genericMethod = new MethodReference (method.Name, method.ReturnType) {
@@ -146,10 +96,10 @@ namespace MonoDroid.Tuner
 
 			instructions.Clear ();
 
-			var typeNullable = GetType ("mscorlib", "System.Nullable`1");
-			var methodGetValueOrDefault = GetMethod (typeNullable, "GetValueOrDefault");
+			var typeNullable = _context.GetType ("mscorlib", "System.Nullable`1");
+			var methodGetValueOrDefault = Extensions.GetMethod (typeNullable, "GetValueOrDefault");
 			var genericTypeNullable = new GenericInstanceType (typeNullable);
-			genericTypeNullable.GenericArguments.Add (GetType ("mscorlib", "System.Int32"));
+			genericTypeNullable.GenericArguments.Add (_context.GetType ("mscorlib", "System.Int32"));
 
 			var typeIdxVariable = new VariableDefinition (module.ImportReference (genericTypeNullable));
 			method.Body.Variables.Clear ();
@@ -165,8 +115,8 @@ namespace MonoDroid.Tuner
 			for (var i = 0; i < switchMethods.Length; i++)
 				switchInstructions [i] = Instruction.Create (OpCodes.Ldtoken, switchMethods [i].DeclaringType);
 
-			var typeType = GetType ("mscorlib", "System.Type");
-			var methodGetTypeFromHandle = GetMethod ("mscorlib", "System.Type", "GetTypeFromHandle", new string[] { "System.RuntimeTypeHandle" });
+			var typeType = _context.GetType ("mscorlib", "System.Type");
+			var methodGetTypeFromHandle = _context.GetMethod ("mscorlib", "System.Type", "GetTypeFromHandle", new string[] { "System.RuntimeTypeHandle" });
 			var callDelegateStart = Instruction.Create (OpCodes.Call, module.ImportReference (methodGetTypeFromHandle));
 
 			instructions.Add (Instruction.Create (OpCodes.Switch, switchInstructions));
@@ -179,19 +129,19 @@ namespace MonoDroid.Tuner
 			instructions.Add (Instruction.Create (OpCodes.Ldc_I4_0));
 			instructions.Add (Instruction.Create (OpCodes.Ret));
 
-			var actionType = GetType ("mscorlib", "System.Action`1");
+			var actionType = _context.GetType ("mscorlib", "System.Action`1");
 
 			var genericActionType = new GenericInstanceType (actionType);
-			var argsType = GetType ("Java.Interop", "Java.Interop.JniNativeMethodRegistrationArguments");
+			var argsType = _context.GetType ("Java.Interop", "Java.Interop.JniNativeMethodRegistrationArguments");
 
 			genericActionType.GenericArguments.Add (argsType);
 
 			MarkType (genericActionType);
 
-			var actionInvoke = GetMethod (actionType, "Invoke", new string[] { "T" });
-			var methodGetMethod = GetMethod ("mscorlib", "System.Type", "GetMethod", new string[] { "System.String" });
-			var typeMethodInfo = GetType ("mscorlib", "System.Reflection.MethodInfo");
-			var methodCreateDelegate = GetMethod ("mscorlib", "System.Reflection.MethodInfo", "CreateDelegate", new string[] { "System.Type" });
+			var actionInvoke = Extensions.GetMethod (actionType, "Invoke", new string[] { "T" });
+			var methodGetMethod = _context.GetMethod ("mscorlib", "System.Type", "GetMethod", new string[] { "System.String" });
+			var typeMethodInfo = _context.GetType ("mscorlib", "System.Reflection.MethodInfo");
+			var methodCreateDelegate = _context.GetMethod ("mscorlib", "System.Reflection.MethodInfo", "CreateDelegate", new string[] { "System.Type" });
 
 			instructions.Add (callDelegateStart);
 
@@ -220,16 +170,16 @@ namespace MonoDroid.Tuner
 			if (fieldTypesMap == null)
 				return;
 
-			var methodPrefill = GetMethod (magicType, "Prefill");
+			var methodPrefill = Extensions.GetMethod (magicType, "Prefill");
 			if (methodPrefill == null)
 				return;
 
-			var typeDictionary = GetType ("mscorlib", "System.Collections.Generic.Dictionary`2");
-			var ctorDictionary = GetMethod (typeDictionary, ".ctor", new string[] { "System.Int32" });
-			var methodSetItem = GetMethod (typeDictionary, "set_Item", new string[] { "TKey", "TValue" });
+			var typeDictionary = _context.GetType ("mscorlib", "System.Collections.Generic.Dictionary`2");
+			var ctorDictionary = Extensions.GetMethod (typeDictionary, ".ctor", new string[] { "System.Int32" });
+			var methodSetItem = Extensions.GetMethod (typeDictionary, "set_Item", new string[] { "TKey", "TValue" });
 			var genericTypeDictionary = new GenericInstanceType (typeDictionary);
-			genericTypeDictionary.GenericArguments.Add (GetType ("mscorlib", "System.String"));
-			genericTypeDictionary.GenericArguments.Add (GetType ("mscorlib", "System.Int32"));
+			genericTypeDictionary.GenericArguments.Add (_context.GetType ("mscorlib", "System.String"));
+			genericTypeDictionary.GenericArguments.Add (_context.GetType ("mscorlib", "System.Int32"));
 
 			var genericMethodDictionaryCtor = CreateGenericMethodReference (ctorDictionary, genericTypeDictionary);
 			var genericMethodDictionarySetItem = CreateGenericMethodReference (methodSetItem, genericTypeDictionary);
@@ -256,11 +206,11 @@ namespace MonoDroid.Tuner
 
 		void UpdateMagicRegistration ()
 		{
-			TypeDefinition magicType = GetType ("Mono.Android", "Android.Runtime.AndroidTypeManager/MagicRegistrationMap");
+			TypeDefinition magicType = _context.GetType ("Mono.Android", "Android.Runtime.AndroidTypeManager/MagicRegistrationMap");
 			if (magicType == null)
 				return;
 
-			MethodDefinition magicCall = GetMethod (magicType, "CallRegisterMethodByIndex");
+			MethodDefinition magicCall = Extensions.GetMethod (magicType, "CallRegisterMethodByIndex");
 			if (magicCall == null)
 				return;
 
@@ -268,7 +218,7 @@ namespace MonoDroid.Tuner
 			var module = magicType.Module;
 			int idx = 0;
 			foreach (var type in marshalTypes) {
-				var md = GetMethod (type, "__RegisterNativeMembers");
+				var md = Extensions.GetMethod (type, "__RegisterNativeMembers");
 				if (md == null)
 					return;
 
@@ -594,24 +544,6 @@ namespace MonoDroid.Tuner
 			}
 		}
 
-		protected AssemblyDefinition GetAssembly (string assemblyName)
-		{
-			AssemblyDefinition ad;
-			_context.TryGetLinkedAssembly (assemblyName, out ad);
-			return ad;
-		}
-
-		protected TypeDefinition GetType (string assemblyName, string typeName)
-		{
-			AssemblyDefinition ad = GetAssembly (assemblyName);
-			return ad == null ? null : GetType (ad, typeName);
-		}
-
-		protected TypeDefinition GetType (AssemblyDefinition assembly, string typeName)
-		{
-			return assembly.MainModule.GetType (typeName);
-		}
-
 		void ProcessSystemData (TypeDefinition type)
 		{
 			switch (type.Namespace) {
@@ -619,7 +551,7 @@ namespace MonoDroid.Tuner
 				switch (type.Name) {
 				case "SqlXml":
 					// TODO: Needed only if CreateSqlReaderDelegate is used
-					TypeDefinition xml_reader = GetType ("System.Xml", "System.Xml.XmlReader");
+					TypeDefinition xml_reader = _context.GetType ("System.Xml", "System.Xml.XmlReader");
 					MarkNamedMethod (xml_reader, "CreateSqlReader");
 					break;
 				}

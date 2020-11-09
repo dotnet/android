@@ -28,6 +28,8 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public ITaskItem [] DestinationFiles { get; set; }
 
+		public bool AddKeepAlives { get; set; }
+
 		public bool Deterministic { get; set; }
 
 		public override bool RunTask ()
@@ -50,8 +52,10 @@ namespace Xamarin.Android.Tasks
 						resolver.SearchDirectories.Add (path);
 				}
 
-				// Run the FixAbstractMethodsStep
-				var step = new FixAbstractMethodsStep (resolver, new TypeDefinitionCache (), Log);
+				// Set up the FixAbstractMethodsStep
+				var step1 = new FixAbstractMethodsStep (resolver, new TypeDefinitionCache (), Log);
+				// Set up the AddKeepAlivesStep
+				var step2 = new MonoDroid.Tuner.AddKeepAlivesStep (new TypeDefinitionCache ());
 				for (int i = 0; i < SourceFiles.Length; i++) {
 					var source = SourceFiles [i];
 					var destination = DestinationFiles [i];
@@ -60,7 +64,7 @@ namespace Xamarin.Android.Tasks
 					var assemblyName = Path.GetFileNameWithoutExtension (source.ItemSpec);
 					if (!MTProfile.IsSdkAssembly (assemblyName) && !MTProfile.IsProductAssembly (assemblyName)) {
 						assemblyDefinition = resolver.GetAssembly (source.ItemSpec);
-						step.CheckAppDomainUsage (assemblyDefinition, (string msg) => Log.LogMessageFromText (msg, MessageImportance.High));
+						step1.CheckAppDomainUsage (assemblyDefinition, (string msg) => Log.LogMessageFromText (msg, MessageImportance.High));
 					}
 
 					// Only run the step on "MonoAndroid" assemblies
@@ -68,7 +72,8 @@ namespace Xamarin.Android.Tasks
 						if (assemblyDefinition == null)
 							assemblyDefinition = resolver.GetAssembly (source.ItemSpec);
 
-						if (step.FixAbstractMethods (assemblyDefinition)) {
+						if (step1.FixAbstractMethods (assemblyDefinition) ||
+						    (AddKeepAlives && step2.AddKeepAlives (assemblyDefinition))) {
 							Log.LogDebugMessage ($"Saving modified assembly: {destination.ItemSpec}");
 							writerParameters.WriteSymbols = assemblyDefinition.MainModule.HasSymbols;
 							assemblyDefinition.Write (destination.ItemSpec, writerParameters);

@@ -1327,6 +1327,7 @@ because xbuild doesn't support framework reference assemblies.
       ResolvedAssemblies="@(_AllResolvedAssemblies)"
       SourceFiles="@(ResolvedAssemblies)"
       DestinationFiles="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')"
+      AddKeepAlives="$(AndroidAddKeepAlives)"
       Deterministic="$(Deterministic)"
   />
   <ItemGroup>
