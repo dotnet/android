@@ -15,13 +15,6 @@
     </TestApkPermission>
   </ItemGroup>
 
-  <ItemGroup>
-    <AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)libs\arm64-v8a\libreuse-threads.so" />
-    <AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)libs\armeabi-v7a\libreuse-threads.so" />
-    <AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)libs\x86\libreuse-threads.so" />
-    <AndroidNativeLibrary Include="$(MSBuildThisFileDirectory)libs\x86_64\libreuse-threads.so" />
-  </ItemGroup>
-
   <Target Name="BuildNativeLibs"
       BeforeTargets="Build"
       DependsOnTargets="AndroidPrepareForBuild"
