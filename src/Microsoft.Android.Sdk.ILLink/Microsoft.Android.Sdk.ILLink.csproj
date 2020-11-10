@@ -1,8 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\Configuration.props" />
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <DefineConstants>NET5_LINKER</DefineConstants>
+    <TargetFramework>net5.0</TargetFramework>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android\</OutputPath>
   </PropertyGroup>

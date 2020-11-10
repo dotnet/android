@@ -11,7 +11,7 @@
   <UsingTask TaskName="CreateFrameworkListFile" AssemblyFile="$(DotNetBuildTasksSharedFrameworkTaskFile)"/>
 
   <PropertyGroup>
-    <_MonoAndroidNETOutputDir>$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\netcoreapp3.1\</_MonoAndroidNETOutputDir>
+    <_MonoAndroidNETOutputDir>$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\net5.0\</_MonoAndroidNETOutputDir>
     <_WorkloadResolverFlagFile>$(DotNetPreviewPath)sdk\$(DotNetPreviewVersionFull)\EnableWorkloadResolver.sentinel</_WorkloadResolverFlagFile>
   </PropertyGroup>
 

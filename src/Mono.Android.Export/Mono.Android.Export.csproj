@@ -3,9 +3,9 @@
   <Import Project="..\..\Configuration.props" />
 
   <PropertyGroup>
-    <!-- Only build for netcoreapp3.1 for $(AndroidLatestStableFrameworkVersion) -->
+    <!-- Only build for net5.0 for $(AndroidLatestStableFrameworkVersion) -->
     <TargetFrameworks Condition=" '$(AndroidFrameworkVersion)' != '$(AndroidLatestStableFrameworkVersion)' ">monoandroid10</TargetFrameworks>
-    <TargetFrameworks Condition=" '$(AndroidFrameworkVersion)' == '$(AndroidLatestStableFrameworkVersion)' ">monoandroid10;netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(AndroidFrameworkVersion)' == '$(AndroidLatestStableFrameworkVersion)' ">monoandroid10;net5.0</TargetFrameworks>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <NoStdLib>true</NoStdLib>
@@ -21,7 +21,7 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net5.0' ">
     <OutputPath>$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\</OutputPath>
   </PropertyGroup>
 
@@ -52,7 +52,7 @@
     </Reference>
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net5.0' ">
     <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop\Java.Interop.csproj" />
   </ItemGroup>
 

@@ -32,7 +32,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 		static readonly string assemblyToValidate = "Mono.Android.dll";
 
-		static readonly string netCoreAppVersion = "netcoreapp3.1";
+		static readonly string netCoreAppVersion = "net5.0";
 		static string compatApiCommand = null;
 
 		// Path where Microsoft.DotNet.ApiCompat nuget package is located

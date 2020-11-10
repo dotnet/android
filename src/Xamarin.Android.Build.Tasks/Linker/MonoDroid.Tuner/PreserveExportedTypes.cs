@@ -8,7 +8,7 @@ using Mono.Linker.Steps;
 
 using Mono.Cecil;
 
-#if NET5_LINKER
+#if NET5_0
 using Microsoft.Android.Sdk.ILLink;
 #endif
 

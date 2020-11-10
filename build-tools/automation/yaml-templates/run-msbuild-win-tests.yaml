@@ -16,7 +16,7 @@ jobs:
     cancelTimeoutInMinutes: 5
     variables:
       VSINSTALLDIR: C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise
-      UseDotNet: ${{ eq(parameters.target_framework, 'netcoreapp3.1') }}
+      UseDotNet: ${{ eq(parameters.target_framework, 'net5.0') }}
     steps:
 
     - template: kill-processes.yaml

@@ -6,7 +6,7 @@ using System.Linq;
 using Mono.Linker;
 using Mono.Linker.Steps;
 
-#if NET5_LINKER
+#if NET5_0
 using Microsoft.Android.Sdk.ILLink;
 #endif
 
@@ -21,7 +21,7 @@ namespace MonoDroid.Tuner {
 
 		protected virtual bool DebugBuild {
 			get {
-#if NET5_LINKER
+#if NET5_0
 				return true;
 #else
 				return context.LinkSymbols;

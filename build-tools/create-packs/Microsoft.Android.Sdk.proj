@@ -36,7 +36,7 @@ core workload sdk packs imported by Microsoft.NET.Workload.Android.
       DependsOnTargets="ConstructInstallerItems;_GenerateBundledVersions;_GetLicense">
     <PropertyGroup>
       <ToolsSourceDir>$(XamarinAndroidSourcePath)bin\Build$(Configuration)\packs\tools\</ToolsSourceDir>
-      <NetCoreAppToolsSourceDir>$(XamarinAndroidSourcePath)bin\$(Configuration)-netcoreapp3.1\</NetCoreAppToolsSourceDir>
+      <NetCoreAppToolsSourceDir>$(XamarinAndroidSourcePath)bin\$(Configuration)-net5.0\</NetCoreAppToolsSourceDir>
     </PropertyGroup>
 
     <ItemGroup>

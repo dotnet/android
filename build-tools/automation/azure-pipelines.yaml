@@ -51,7 +51,7 @@ variables:
   InstallerArtifactName: installers
   TestAssembliesArtifactName: test-assemblies
   NUnitConsoleVersion: 3.11.1
-  DotNetCoreVersion: 3.1.201
+  DotNetCoreVersion: 5.0.100-rc.2.20479.15
   HostedMacMojave: Hosted Mac Internal Mojave
   HostedMac: Hosted Mac Internal
   HostedWinVS2019: Hosted Windows 2019 with VS2019
@@ -782,7 +782,7 @@ stages:
       job_name: mac_dotnet_tests_1
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories)
-      target_framework: 'netcoreapp3.1'
+      target_framework: 'net5.0'
 
   - template: yaml-templates\run-msbuild-mac-tests.yaml
     parameters:
@@ -790,7 +790,7 @@ stages:
       job_name: mac_dotnet_tests_2
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories)
-      target_framework: 'netcoreapp3.1'
+      target_framework: 'net5.0'
 
   - template: yaml-templates\run-msbuild-mac-tests.yaml
     parameters:
@@ -798,7 +798,7 @@ stages:
       job_name: mac_dotnet_tests_3
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories)
-      target_framework: 'netcoreapp3.1'
+      target_framework: 'net5.0'
 
   # Xamarin.Android (Test MSBuild One .NET - Windows)
   - template: yaml-templates\run-msbuild-win-tests.yaml
@@ -807,7 +807,7 @@ stages:
       job_name: win_dotnet_tests_1
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories)
-      target_framework: 'netcoreapp3.1'
+      target_framework: 'net5.0'
 
   - template: yaml-templates\run-msbuild-win-tests.yaml
     parameters:
@@ -815,7 +815,7 @@ stages:
       job_name: win_dotnet_tests_2
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories)
-      target_framework: 'netcoreapp3.1'
+      target_framework: 'net5.0'
 
   - template: yaml-templates\run-msbuild-win-tests.yaml
     parameters:
@@ -823,7 +823,7 @@ stages:
       job_name: win_dotnet_tests_3
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories)
-      target_framework: 'netcoreapp3.1'
+      target_framework: 'net5.0'
 
 - stage: msbuilddevice_tests
   displayName: MSBuild Emulator Tests

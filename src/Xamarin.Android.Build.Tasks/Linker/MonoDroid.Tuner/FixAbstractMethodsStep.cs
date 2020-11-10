@@ -10,7 +10,7 @@ using Mono.Linker;
 using Mono.Linker.Steps;
 
 using Mono.Tuner;
-#if NET5_LINKER
+#if NET5_0
 using Microsoft.Android.Sdk.ILLink;
 #endif
 
@@ -36,12 +36,12 @@ namespace MonoDroid.Tuner
 			if (IsProductOrSdkAssembly (assembly))
 				return;
 
-#if !NET5_LINKER
+#if !NET5_0
 			CheckAppDomainUsageUnconditional (assembly, (string msg) => Context.LogMessage (MessageImportance.High, msg));
 #endif
 
 			if (FixAbstractMethodsUnconditional (assembly)) {
-#if !NET5_LINKER
+#if !NET5_0
 				Context.SafeReadSymbols (assembly);
 #endif
 				AssemblyAction action = Annotations.HasAction (assembly) ? Annotations.GetAction (assembly) : AssemblyAction.Skip;
@@ -55,7 +55,7 @@ namespace MonoDroid.Tuner
 		}
 
 
-#if !NET5_LINKER
+#if !NET5_0
 		internal void CheckAppDomainUsage (AssemblyDefinition assembly, Action<string> warn)
 		{
 			if (IsProductOrSdkAssembly (assembly))
@@ -304,7 +304,7 @@ namespace MonoDroid.Tuner
 
 		protected virtual AssemblyDefinition GetMonoAndroidAssembly ()
 		{
-#if !NET5_LINKER
+#if !NET5_0
 			foreach (var assembly in Context.GetAssemblies ()) {
 				if (assembly.Name.Name == "Mono.Android")
 					return assembly;
