@@ -77,9 +77,9 @@ _ResolveAssemblies MSBuild target.
         InputAssemblies="@(_ResolvedAssemblyFiles->Distinct())"
         ResolvedSymbols="@(_ResolvedSymbolFiles->Distinct())"
         PublishTrimmed="$(PublishTrimmed)">
-      <Output TaskParameter="OutputAssemblies"    ItemName="_ProcessedAssemblies" />
-      <Output TaskParameter="ResolvedSymbols"     ItemName="ResolvedSymbols" />
-      <Output TaskParameter="ShrunkAssemblies"    ItemName="_ProcessedShrunkAssemblies" />
+      <Output TaskParameter="OutputAssemblies" ItemName="_ProcessedAssemblies" />
+      <Output TaskParameter="ResolvedSymbols"  ItemName="ResolvedSymbols" />
+      <Output TaskParameter="ShrunkAssemblies" ItemName="_ProcessedShrunkAssemblies" />
     </ProcessAssemblies>
     <AppendCustomMetadataToItemGroup
         Inputs="@(_ProcessedAssemblies)"
