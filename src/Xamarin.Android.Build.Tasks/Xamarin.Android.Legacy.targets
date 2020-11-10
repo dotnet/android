@@ -27,6 +27,7 @@ projects. .NET 5 projects will not import this file.
     <BuildDependsOn>
       _ValidateLinkMode;
       _CheckNonIdealConfigurations;
+      _SetupMSBuildAllProjects;
       _SetupDesignTimeBuildForBuild;
       _CreatePropertiesCache;
       _CleanIntermediateIfNeeded;
@@ -58,6 +59,7 @@ projects. .NET 5 projects will not import this file.
   <PropertyGroup Condition=" '$(AndroidApplication)' != 'True' And '$(_AndroidIsBindingProject)' != 'True' ">
     <BuildDependsOn>
       _ValidateLinkMode;
+      _SetupMSBuildAllProjects;
       _SetupDesignTimeBuildForBuild;
       _CreatePropertiesCache;
       _CleanIntermediateIfNeeded;
@@ -82,6 +84,7 @@ projects. .NET 5 projects will not import this file.
       $([MSBuild]::Unescape($(CoreBuildDependsOn.Replace('IncrementalClean;', '$(_BeforeIncrementalClean);IncrementalClean;'))))
     </CoreBuildDependsOn>
     <CompileDependsOn>
+      _SetupMSBuildAllProjects;
       _SetupDesignTimeBuildForCompile;
       _AddAndroidDefines;
       _IncludeLayoutBindingSources;
@@ -162,6 +165,7 @@ projects. .NET 5 projects will not import this file.
 
   <PropertyGroup Condition=" '$(_AndroidIsBindingProject)' == 'True' ">
     <BuildDependsOn>
+      _SetupMSBuildAllProjects;
       _SetupDesignTimeBuildForBuild;
       AddLibraryJarsToBind;
       $(BuildDependsOn);
@@ -169,6 +173,7 @@ projects. .NET 5 projects will not import this file.
     </BuildDependsOn>
 
     <CompileDependsOn>
+      _SetupMSBuildAllProjects;
       _SetupDesignTimeBuildForCompile;
       AddLibraryJarsToBind;
       $(CompileDependsOn);

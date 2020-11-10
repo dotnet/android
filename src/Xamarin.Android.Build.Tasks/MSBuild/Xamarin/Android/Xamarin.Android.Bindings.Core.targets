@@ -47,7 +47,7 @@ It is shared between "legacy" binding projects and .NET 5 projects.
   <Target Name="GenerateBindings"
       Condition=" '$(UsingAndroidNETSdk)' != 'true' Or '@(InputJar->Count())' != '0' Or '@(EmbeddedJar->Count())' != '0' Or '@(LibraryProjectZip->Count())' != '0' "
       DependsOnTargets="ExportJarToXml;_ResolveMonoAndroidSdks"
-      Inputs="$(ApiOutputFile);@(TransformFile);@(ReferencePath);@(ReferenceDependencyPaths);$(MSBuildAllProjects)"
+      Inputs="$(ApiOutputFile);@(TransformFile);@(ReferencePath);@(ReferenceDependencyPaths);@(_AndroidMSBuildAllProjects)"
       Outputs="$(_GeneratorStampFile)">
 
     <!-- Delete previous generated files if they still exist -->
