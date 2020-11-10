@@ -59,6 +59,36 @@
     <AndroidResource Include="$(MSBuildThisFileDirectory)..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Resources\Base\Image.9.png">
       <Link>Resources\Drawable\Image.9.png</Link>
     </AndroidResource>
+    <AndroidResource Include="$(MSBuildThisFileDirectory)Resources\drawable\Icon.png">
+      <Link>Resources\drawable\Icon.png</Link>
+    </AndroidResource>
+    <AndroidResource Include="$(MSBuildThisFileDirectory)Resources\drawable\AndroidPressed.png">
+      <Link>Resources\drawable\AndroidPressed.png</Link>
+    </AndroidResource>
+    <AndroidResource Include="$(MSBuildThisFileDirectory)Resources\drawable\android_focused.png">
+      <Link>Resources\drawable\android_focused.png</Link>
+    </AndroidResource>
+    <AndroidResource Include="$(MSBuildThisFileDirectory)Resources\drawable\android_normal.png">
+      <Link>Resources\drawable\android_normal.png</Link>
+    </AndroidResource>
+    <AndroidResource Include="$(MSBuildThisFileDirectory)Resources\drawable\android_button.xml">
+      <Link>Resources\drawable\android_button.xml</Link>
+    </AndroidResource>
+    <AndroidResource Include="$(MSBuildThisFileDirectory)Resources\layout\uppercase_custom.axml">
+      <Link>Resources\layout\uppercase_custom.axml</Link>
+    </AndroidResource>
+    <AndroidResource Include="$(MSBuildThisFileDirectory)Resources\layout\lowercase_custom.axml">
+      <Link>Resources\layout\lowercase_custom.axml</Link>
+    </AndroidResource>
+    <AndroidResource Include="$(MSBuildThisFileDirectory)Resources\xml\XmlReaderResourceParser.xml">
+      <Link>Resources\xml\XmlReaderResourceParser.xml</Link>
+    </AndroidResource>
+    <AndroidResource Include="$(MSBuildThisFileDirectory)Resources\layout\FragmentFixup.axml">
+      <Link>Resources\layout\FragmentFixup.axml</Link>
+    </AndroidResource>
+    <AndroidBoundLayout Include="$(MSBuildThisFileDirectory)Resources\layout\Main.axml">
+      <Link>Resources\layout\Main.axml</Link>
+    </AndroidBoundLayout>
   </ItemGroup>
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)LinkedAssets\folder.png" />
@@ -73,9 +103,28 @@
     <AndroidAsset Include="$(MSBuildThisFileDirectory)LinkedAssets\linked_text.txt">
       <Link>Assets\linked_text.txt</Link>
     </AndroidAsset>
-    <AndroidAsset Include="$(MSBuildThisFileDirectory)Assets\subfolder\accept_request.png" />
+    <AndroidAsset Include="$(MSBuildThisFileDirectory)Assets\subfolder\accept_request.png">
+      <Link>Assets\subfolder\accept_request.png</Link>
+    </AndroidAsset>
+    <AndroidAsset Include="$(MSBuildThisFileDirectory)Assets\asset1.txt">
+      <Link>Assets\asset1.txt</Link>
+    </AndroidAsset>
+    <AndroidAsset Include="$(MSBuildThisFileDirectory)Assets\subfolder\asset2.txt">
+      <Link>Assets\subfolder\asset2.txt</Link>
+    </AndroidAsset>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="$(MSBuildThisFileDirectory)LinkedAssets\" />
   </ItemGroup>
+  <ItemGroup>
+    <ProguardConfiguration Include="$(MSBuildThisFileDirectory)proguard.cfg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\TestRunner.Core\TestRunner.Core.csproj" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\TestRunner.NUnit\TestRunner.NUnit.csproj" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)Java.Interop-Tests\Java.Interop-Tests.csproj" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)Mono.Android-Test.Library\Mono.Android-Test.Library.csproj" />
+  </ItemGroup>
+
 </Project>
