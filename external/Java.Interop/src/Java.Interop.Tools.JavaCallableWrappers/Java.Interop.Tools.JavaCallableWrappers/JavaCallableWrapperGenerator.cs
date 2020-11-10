@@ -153,7 +153,8 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 						return d;
 					})
 					.Where (d => GetRegisterAttributes (d).Any ())
-					.SelectMany (d => d.Methods)) {
+					.SelectMany (d => d.Methods)
+					.Where (m => !m.IsStatic)) {
 				AddMethod (imethod, imethod);
 			}
 

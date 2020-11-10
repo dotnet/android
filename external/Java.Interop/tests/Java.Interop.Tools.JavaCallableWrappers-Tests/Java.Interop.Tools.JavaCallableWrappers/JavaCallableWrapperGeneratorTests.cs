@@ -189,6 +189,7 @@ public class ExportsMembers
 		__md_methods = 
 			""n_GetInstance:()Lcrc64197ae30a36756915/ExportsMembers;:__export__\n"" +
 			""n_GetValue:()Ljava/lang/String;:__export__\n"" +
+			""n_staticMethodNotMangled:()V:__export__\n"" +
 			""n_methodNamesNotMangled:()V:__export__\n"" +
 			""n_CompletelyDifferentName:(Ljava/lang/String;I)Ljava/lang/String;:__export__\n"" +
 			""n_methodThatThrows:()V:__export__\n"" +
@@ -216,6 +217,14 @@ public class ExportsMembers
 	}
 
 	private native java.lang.String n_GetValue ();
+
+
+	public static void staticMethodNotMangled ()
+	{
+		n_staticMethodNotMangled ();
+	}
+
+	private static native void n_staticMethodNotMangled ();
 
 
 	public void methodNamesNotMangled ()

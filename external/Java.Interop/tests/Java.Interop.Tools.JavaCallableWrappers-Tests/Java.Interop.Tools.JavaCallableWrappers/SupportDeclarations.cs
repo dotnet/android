@@ -275,6 +275,11 @@ namespace Xamarin.Android.ToolsTests {
 		}
 
 		[Export]
+		public static void staticMethodNotMangled ()
+		{
+		}
+
+		[Export]
 		public void methodNamesNotMangled ()
 		{
 		}
