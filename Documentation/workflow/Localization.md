@@ -11,12 +11,14 @@ so when adding a new message, follow these steps:
     ![Managed Resources Editor with XA0000 as the name for a
     resource][resources-editor]
 
-    Be sure to use Visual Studio or Visual Studio for Mac to edit the `.resx`
-    file so that the `ResXFileCodeGenerator` tool will run and update the
-    corresponding `Resources.Designer.cs` file.
+ 2. If using Visual Studio or Visual Studio for Mac, skip to the next step.
 
- 2. Use the generated property from `Resources.Designer.cs` in the
-    `LogCodedError()` and `LogCodedWarning()` calls:
+    If using an editor that does not automatically run design-time builds for
+    MSBuild targets specified via `%(Generator)` MSBuild item metadata,
+    explicitly build the project to update the generated properties.
+
+ 3. Use the generated C# property for the resource in the `LogCodedError()` and
+    `LogCodedWarning()` calls:
 
     ```csharp
     Log.LogCodedError ("XA0000", Properties.Resources.XA0000);
@@ -30,13 +32,13 @@ so when adding a new message, follow these steps:
     <AndroidError Code="XA0000" ResourceName="XA0000" />
     ```
 
- 3. After adding the new message, build `Xamarin.Android.Build.Tasks.csproj`
+ 4. After adding the new message, build `Xamarin.Android.Build.Tasks.csproj`
     locally.  This will run the targets from [dotnet/xliff-tasks][xliff-tasks]
     to update the `.xlf` [XLIFF][xliff] localization files with the latest
     changes from the `.resx` file.
 
- 4. Include the changes to the`.resx` file as well as the generated changes to
-    the `Resources.Designer.cs` file and the `.xlf` files in the commit.
+ 5. Include the changes to the`.resx` file as well as the generated changes to
+    the `.xlf` files in the commit.
 
 ## Guidelines
 
