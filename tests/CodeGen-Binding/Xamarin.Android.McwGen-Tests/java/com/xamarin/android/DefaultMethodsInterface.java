@@ -7,4 +7,5 @@ public interface DefaultMethodsInterface
     default void setBar (int value) { }
     default int toImplement () { throw new UnsupportedOperationException (); }
     default int invokeFoo () { return foo (); }
+    static int staticFoo () { return 0; }
 }
