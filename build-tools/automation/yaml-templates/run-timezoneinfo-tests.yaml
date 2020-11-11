@@ -25,7 +25,7 @@ jobs:
     - task: MSBuild@1
       displayName: start emulator
       inputs:
-        solution: src/Mono.Android/Test/Mono.Android-Tests.csproj
+        solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
         configuration: $(XA.Build.Configuration)
         msbuildArguments: >-
           /t:AcquireAndroidTarget /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/start-emulator.binlog
@@ -40,7 +40,7 @@ jobs:
     - task: MSBuild@1
       displayName: shut down emulator
       inputs:
-        solution: src/Mono.Android/Test/Mono.Android-Tests.csproj
+        solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
         configuration: $(XA.Build.Configuration)
         msbuildArguments: >-
           /t:AcquireAndroidTarget,ReleaseAndroidTarget

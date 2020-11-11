@@ -2,7 +2,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29411.108
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mono.Android-Tests", "src\Mono.Android\Test\Mono.Android-Tests.csproj", "{40EAD437-216B-4DF4-8258-3F47E1672C3A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mono.Android-Tests", "tests\Mono.Android-Tests\Mono.Android-Tests.csproj", "{40EAD437-216B-4DF4-8258-3F47E1672C3A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HelloWorld", "samples\HelloWorld\HelloWorld.csproj", "{2305B00D-DE81-4744-B0DA-357835CAFE5A}"
 EndProject
@@ -78,23 +78,21 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "timing", "build-tools\timin
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EmbeddedDSO", "tests\EmbeddedDSOs\EmbeddedDSO\EmbeddedDSO.csproj", "{056ED976-618F-4A3E-910E-AA25230C2296}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Mono.Android-Test.Shared", "src\Mono.Android\Test\Mono.Android-Test.Shared.shproj", "{0AB4956E-6FB9-4DA0-9D49-AB65A3FF403A}"
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Mono.Android-Test.Shared", "tests\Mono.Android-Tests\Mono.Android-Test.Shared.shproj", "{0AB4956E-6FB9-4DA0-9D49-AB65A3FF403A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mono.Android-Test.Library", "src\Mono.Android\Test\Mono.Android-Test.Library\Mono.Android-Test.Library.csproj", "{8CB5FF58-FF95-43B9-9064-9ACE9525866F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mono.Android-Test.Library", "tests\Mono.Android-Tests\Mono.Android-Test.Library\Mono.Android-Test.Library.csproj", "{8CB5FF58-FF95-43B9-9064-9ACE9525866F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mono.Android-TestsMultiDex", "tests\Runtime-MultiDex\Mono.Android-TestsMultiDex.csproj", "{9ECBEA14-B79F-4F92-9266-495C03A32571}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mono.Android-TestsMultiDex", "tests\Mono.Android-Tests\Runtime-MultiDex\Mono.Android-TestsMultiDex.csproj", "{9ECBEA14-B79F-4F92-9266-495C03A32571}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Java.Interop.GenericMarshaler", "external\Java.Interop\src\Java.Interop.GenericMarshaler\Java.Interop.GenericMarshaler.csproj", "{D1243BAB-23CA-4566-A2A3-3ADA2C2DC3AF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop-Tests", "src\Mono.Android\Test\Java.Interop-Tests\Java.Interop-Tests.csproj", "{6CB00820-A66B-43E5-8785-ED456C6E9F39}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop-Tests", "tests\Mono.Android-Tests\Java.Interop-Tests\Java.Interop-Tests.csproj", "{6CB00820-A66B-43E5-8785-ED456C6E9F39}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Java.Interop", "external\Java.Interop\src\Java.Interop\Java.Interop.csproj", "{94BD81F7-B06F-4295-9636-F8A3B6BDC762}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		src\Mono.Android\Test\Mono.Android-Test.Shared.projitems*{0ab4956e-6fb9-4da0-9d49-ab65a3ff403a}*SharedItemsImports = 13
-		src\Mono.Android\Test\Mono.Android-Test.Shared.projitems*{40ead437-216b-4df4-8258-3f47e1672c3a}*SharedItemsImports = 4
-		src\Mono.Android\Test\Mono.Android-Test.Shared.projitems*{9ecbea14-b79f-4f92-9266-495c03a32571}*SharedItemsImports = 4
+		tests\Mono.Android-Tests\Mono.Android-Test.Shared.projitems*{0ab4956e-6fb9-4da0-9d49-ab65a3ff403a}*SharedItemsImports = 13
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

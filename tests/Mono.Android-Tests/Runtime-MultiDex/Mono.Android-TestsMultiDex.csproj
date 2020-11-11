@@ -21,11 +21,12 @@
     <AndroidEnableMultiDex>true</AndroidEnableMultiDex>
     <AndroidDexTool Condition=" '$(AndroidDexTool)' == '' ">d8</AndroidDexTool>
     <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>..\..\..\product.snk</AssemblyOriginatorKeyFile>
     <_SkipJniAddNativeMethodRegistrationAttributeScan>True</_SkipJniAddNativeMethodRegistrationAttributeScan>
+    <_MonoAndroidTestPackage>Mono.Android_TestsMultiDex</_MonoAndroidTestPackage>
   </PropertyGroup>
-  <Import Project="..\..\src\Mono.Android\Test\Mono.Android-Test.Shared.projitems" Label="Shared" Condition="Exists('..\..\src\Mono.Android\Test\Mono.Android-Test.Shared.projitems')" />
-  <Import Project="..\..\Configuration.props" />
+  <Import Project="..\Mono.Android-Test.Shared.projitems" Label="Shared" Condition="Exists('..\Mono.Android-Test.Shared.projitems')" />
+  <Import Project="..\..\..\Configuration.props" />
   <PropertyGroup>
     <TargetFrameworkVersion>$(AndroidFrameworkVersion)</TargetFrameworkVersion>
   </PropertyGroup>
@@ -33,7 +34,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\bin\TestDebug</OutputPath>
+    <OutputPath>..\..\..\bin\TestDebug</OutputPath>
     <DefineConstants>DEBUG;</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -43,7 +44,7 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
-    <OutputPath>..\..\bin\TestRelease</OutputPath>
+    <OutputPath>..\..\..\bin\TestRelease</OutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
@@ -64,56 +65,27 @@
   <ItemGroup>
     <None Include="Resources\AboutResources.txt" />
     <None Include="Assets\AboutAssets.txt" />
-    <Compile Remove="..\..\src\Mono.Android\Test\Resources\Resource.designer.cs" />
+    <Compile Remove="..\Resources\Resource.designer.cs" />
     <Compile Include="Resources\Resource.designer.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <ProguardConfiguration Include="..\..\src\Mono.Android\Test\proguard.cfg" />
-  </ItemGroup>
-  <ItemGroup>
-    <AndroidResource Include="Resources\drawable\Icon.png" />
-    <AndroidResource Include="Resources\drawable\AndroidPressed.png" />
-    <AndroidResource Include="Resources\drawable\android_focused.png" />
-    <AndroidResource Include="Resources\drawable\android_normal.png" />
-    <AndroidResource Include="Resources\drawable\android_button.xml" />
-    <AndroidResource Include="Resources\layout\uppercase_custom.axml" />
-    <AndroidResource Include="Resources\layout\lowercase_custom.axml" />
-    <AndroidResource Include="Resources\xml\XmlReaderResourceParser.xml" />
-    <AndroidResource Include="Resources\layout\FragmentFixup.axml" />
-    <AndroidBoundLayout Include="Resources\layout\Main.axml" />
-  </ItemGroup>
-  <ItemGroup>
-    <AndroidAsset Include="..\..\src\Mono.Android\Test\Assets\asset1.txt">
-      <Link>Assets\asset1.txt</Link>
-    </AndroidAsset>
-    <AndroidAsset Include="..\..\src\Mono.Android\Test\Assets\subfolder\asset2.txt">
-      <Link>Assets\subfolder\asset2.txt</Link>
-    </AndroidAsset>
-    <AndroidAsset Include="..\..\src\Mono.Android\Test\Assets\subfolder\accept_request.png">
-      <Link>Assets\subfolder\accept_request.png</Link>
-    </AndroidAsset>
-  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
-  <Import Project="Mono.Android-TestsMultiDex.targets" />
-  <ItemGroup>
-    <ProjectReference Include="..\TestRunner.Core\TestRunner.Core.csproj">
-      <Project>{3cc4e384-4985-4d93-a34c-73f69a379fa7}</Project>
-      <Name>TestRunner.Core</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\TestRunner.NUnit\TestRunner.NUnit.csproj">
-      <Project>{CB2335CB-0050-4020-8A05-E9614EDAA05E}</Project>
-      <Name>TestRunner.NUnit</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\src\Mono.Android\Test\Java.Interop-Tests\Java.Interop-Tests.csproj">
-      <Project>{6CB00820-A66B-43E5-8785-ED456C6E9F39}</Project>
-      <Name>Java.Interop-Tests</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\src\Mono.Android\Test\Mono.Android-Test.Library\Mono.Android-Test.Library.csproj">
-      <Project>{8CB5FF58-FF95-43B9-9064-9ACE9525866F}</Project>
-      <Name>Mono.Android-Test.Library</Name>
-    </ProjectReference>
-  </ItemGroup>
   <ItemGroup>
     <None Include="Properties\AndroidManifest.xml" />
   </ItemGroup>
+
+  <ItemGroup>
+    <TestApk Include="$(OutputPath)$(_MonoAndroidTestPackage)-Signed.apk">
+      <Package>$(_MonoAndroidTestPackage)</Package>
+      <InstrumentationType>xamarin.android.runtimetests.NUnitInstrumentation</InstrumentationType>
+      <ResultsPath>$(MSBuildThisFileDirectory)..\..\..\TestResult-$(_MonoAndroidTestPackage).xml</ResultsPath>
+      <TimingDefinitionsFilename>$(MSBuildThisFileDirectory)..\..\..\build-tools\scripts\TimingDefinitions.txt</TimingDefinitionsFilename>
+      <TimingResultsFilename>$(MSBuildThisFileDirectory)..\..\..\TestResult-$(_MonoAndroidTestPackage)-times.csv</TimingResultsFilename>
+      <ApkSizesInputFilename>apk-sizes-$(_MonoAndroidTestPackage)-$(Configuration)$(TestsFlavor).txt</ApkSizesInputFilename>
+      <ApkSizesDefinitionFilename>$(MSBuildThisFileDirectory)..\..\..\build-tools\scripts\ApkSizesDefinitions.txt</ApkSizesDefinitionFilename>
+      <ApkSizesResultsFilename>$(MSBuildThisFileDirectory)..\..\..\TestResult-$(_MonoAndroidTestPackage)-values-$(Configuration).csv</ApkSizesResultsFilename>
+    </TestApk>
+  </ItemGroup>
+
+  <Import Project="$(MSBuildThisFileDirectory)..\..\..\build-tools\scripts\TestApks.targets" />
+
 </Project>
