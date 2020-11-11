@@ -8,6 +8,10 @@ steps:
   clean: true
   submodules: recursive
 
+- template: update-vs.yaml
+  parameters:
+    xaSourcePath: ${{ parameters.xaSourcePath }}
+
 - template: run-installer.yaml
   parameters:
     provisionExtraArgs: ${{ parameters.provisionExtraArgs }}
@@ -23,8 +27,12 @@ steps:
 
 - template: use-dot-net.yaml
   parameters:
-    version: $(DotNetCoreVersion)
+    version: $(DotNet5Version)
     remove_dotnet: true
+
+- template: use-dot-net.yaml
+  parameters:
+    version: $(DotNetCoreVersion)
 
 - script: |
     dotnet tool install --global boots
@@ -90,4 +98,4 @@ steps:
   inputs:
     solution: ${{ parameters.xaSourcePath }}/build-tools/create-packs/Microsoft.Android.Sdk.proj
     configuration: ${{ parameters.configuration }}
-    msbuildArguments: /t:ExtractWorkloadPacks /restore /bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/extract-workloads.binlog
+    msbuildArguments: /t:ExtractWorkloadPacks /bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/extract-workloads.binlog
