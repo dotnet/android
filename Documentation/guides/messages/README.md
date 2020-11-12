@@ -106,6 +106,7 @@ Please disable fast deployment in the Visual Studio project property pages or ed
 + XA1022: Specified reference Java library not found: {file}
 + [XA1023](xa1023.md): Using the DX DEX Compiler is deprecated.
 + [XA1024](xa1024.md): Ignoring configuration file 'Foo.dll.config'. .NET configuration files are not supported in Xamarin.Android projects that target .NET 5 or higher.
++ [XA1025](xa1025.md): The experimental 'Hybrid' value for the 'AndroidAotMode' MSBuild property is not currently compatible with the armeabi-v7a target ABI.
 + [XA1027](xa1027.md): The 'EnableProguard' MSBuild property is set to 'true' and the 'AndroidLinkTool' MSBuild property is empty, so 'AndroidLinkTool' will default to 'proguard'.
 + [XA1028](xa1028.md): The 'AndroidEnableProguard' MSBuild property is set to 'true' and the 'AndroidLinkTool' MSBuild property is empty, so 'AndroidLinkTool' will default to 'proguard'.
 

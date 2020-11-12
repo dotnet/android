@@ -980,13 +980,13 @@ namespace Lib2
 				/* supportedAbis */   "arm64-v8a",
 				/* androidAotMode */  "Full", // None, Normal, Hybrid, Full
 				/* aotAssemblies */   true,
-				/* expectedResult */  false,
+				/* expectedResult */  true,
 			},
 			new object[] {
 				/* supportedAbis */   "arm64-v8a",
 				/* androidAotMode */  "Full", // None, Normal, Hybrid, Full
 				/* aotAssemblies */   false,
-				/* expectedResult */  false,
+				/* expectedResult */  true,
 			},
 			new object[] {
 				/* supportedAbis */   "arm64-v8a",
@@ -1018,6 +1018,7 @@ namespace Lib2
 				BundleAssemblies = false,
 				AotAssemblies = aotAssemblies,
 			};
+			proj.SetAndroidSupportedAbis (supportedAbis);
 			if (!string.IsNullOrEmpty (androidAotMode))
 			    proj.SetProperty ("AndroidAotMode", androidAotMode);
 			using (var b = CreateApkBuilder (path)) {

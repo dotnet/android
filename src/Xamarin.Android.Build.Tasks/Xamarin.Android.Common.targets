@@ -2164,6 +2164,9 @@ because xbuild doesn't support framework reference assemblies.
       Condition=" '%(_BuildTargetAbis.Identity)' == 'armeabi' "
       Text="Invalid value 'armeabi' in %24(AndroidSupportedAbis). This ABI is no longer supported. Please update your project properties to remove the old value. If the properties page does not show an 'armeabi' checkbox, un-check and re-check one of the other ABIs and save the changes."
   />
+  <AndroidError Code="XA1025"
+      ResourceName="XA1025"
+      Condition=" '$(_AndroidAotModeValidateAbi)' != 'false' AND '%(_BuildTargetAbis.Identity)' == 'armeabi-v7a' AND '$(AndroidAotMode)' == 'Hybrid' " />
 </Target>
 
 <PropertyGroup>

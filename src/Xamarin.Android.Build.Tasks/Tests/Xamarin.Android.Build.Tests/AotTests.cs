@@ -299,7 +299,7 @@ namespace "+ libName + @" {
 		}
 
 		[Test]
-		public void HybridAOT ()
+		public void HybridAOT ([Values ("armeabi-v7a;arm64-v8a", "armeabi-v7a", "arm64-v8a")] string abis)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
@@ -308,8 +308,26 @@ namespace "+ libName + @" {
 			proj.SetProperty ("AndroidAotMode", "Hybrid");
 			// So we can use Mono.Cecil to open assemblies directly
 			proj.SetProperty ("AndroidEnableAssemblyCompression", "False");
+			proj.SetAndroidSupportedAbis (abis);
 
 			using (var b = CreateApkBuilder ()) {
+
+				if (abis == "armeabi-v7a") {
+					proj.SetProperty ("_AndroidAotModeValidateAbi", "False");
+					b.Build (proj);
+					proj.SetProperty ("_AndroidAotModeValidateAbi", () => null);
+				}
+
+				if (abis.Contains ("armeabi-v7a")) {
+					b.ThrowOnBuildFailure = false;
+					Assert.IsFalse (b.Build (proj), "Build should have failed.");
+					string error = b.LastBuildOutput
+							.SkipWhile (x => !x.StartsWith ("Build FAILED."))
+							.FirstOrDefault (x => x.Contains ("error XA1025:"));
+					Assert.IsNotNull (error, "Build should have failed with XA1025.");
+					return;
+				}
+
 				b.Build (proj);
 
 				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}.apk");
