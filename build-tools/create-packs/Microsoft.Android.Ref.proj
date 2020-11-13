@@ -10,12 +10,12 @@ by projects that use the Microsoft.Android framework in .NET 5.
 <Project Sdk="Microsoft.Build.NoTargets">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <PackageId>Microsoft.Android.Ref</PackageId>
     <Authors>Microsoft</Authors>
     <Description>Microsoft.Android reference assemblies. Please do not reference directly.</Description>
     <OutputPath>..\..\bin\Build$(Configuration)\nupkgs\</OutputPath>
-    <_AndroidRefPackAssemblyPath>ref\net5.0</_AndroidRefPackAssemblyPath>
+    <_AndroidRefPackAssemblyPath>ref\net6.0</_AndroidRefPackAssemblyPath>
   </PropertyGroup>
 
   <PropertyGroup>

@@ -80,7 +80,7 @@
     <Exec Command="$(DotNetPreviewTool) pack @(_GlobalProperties, ' ') &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Ref.proj&quot;" />
     <Exec Command="$(DotNetPreviewTool) pack @(_GlobalProperties, ' ') -p:AndroidHostRID=linux-x64 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.proj&quot;"     Condition=" '$(HostOS)' == 'Linux' " />
     <Exec Command="$(DotNetPreviewTool) pack @(_GlobalProperties, ' ') -p:AndroidHostRID=osx-x64   &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.proj&quot;"     Condition=" '$(HostOS)' == 'Darwin' " />
-    <Exec Command="$(DotNetPreviewTool) pack @(_GlobalProperties, ' ') -p:AndroidHostRID=windows-x64   &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.proj&quot;" Condition=" '$(HostOS)' != 'Linux' " /> <!-- Windows pack should be built both Windows and macOS -->
+    <Exec Command="$(DotNetPreviewTool) pack @(_GlobalProperties, ' ') -p:AndroidHostRID=win-x64   &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.proj&quot;" Condition=" '$(HostOS)' != 'Linux' " /> <!-- Windows pack should be built both Windows and macOS -->
     <Exec Command="$(DotNetPreviewTool) pack @(_GlobalProperties, ' ') &quot;$(MSBuildThisFileDirectory)Microsoft.NET.Workload.Android.proj&quot;" />
   </Target>
 
@@ -90,7 +90,7 @@
       <_WLManifest Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.NET.Workload.Android.*.nupkg" />
       <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Sdk.linux-x64.*.nupkg"   Condition=" '$(HostOS)' == 'Linux' " />
       <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Sdk.osx-x64.*.nupkg"     Condition=" '$(HostOS)' == 'Darwin' " />
-      <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Sdk.windows-x64.*.nupkg" Condition=" '$(HostOS)' == 'Windows' " />
+      <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Sdk.win-x64.*.nupkg" Condition=" '$(HostOS)' == 'Windows' " />
       <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Ref.*.nupkg" />
       <!-- Runtime packs are not yet supported by workloads -->
       <!-- <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Runtime.*.nupkg" /> -->

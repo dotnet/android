@@ -7,6 +7,7 @@
     <!-- Enable nuget package conflict resolution -->
     <ResolveAssemblyConflicts>true</ResolveAssemblyConflicts>
     <_AndroidResourceDesigner>Resource.designer.cs</_AndroidResourceDesigner>
+    <AfterMicrosoftNETSdkTargets>$(AfterMicrosoftNETSdkTargets);$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.After.targets</AfterMicrosoftNETSdkTargets>
   </PropertyGroup>
 
   <!-- Default References -->
@@ -24,20 +25,5 @@
   <Import Project="Microsoft.Android.Sdk.DefaultProperties.targets" />
   <Import Project="$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Common.Debugging.props"
       Condition="Exists('$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Common.Debugging.props')"/>
-
-  <!-- Build ordering, should be imported before Xamarin.Android.Common.targets -->
-  <Import Project="Microsoft.Android.Sdk.BuildOrder.targets" Condition=" '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' " />
-
-  <Import Project="..\tools\Xamarin.Android.Common.targets" />
-  <Import Project="..\tools\Xamarin.Android.Bindings.Core.targets" />
-  <Import Project="..\tools\Xamarin.Android.Bindings.ClassParse.targets" />
-  <Import Project="Microsoft.Android.Sdk.AndroidLibraries.targets" />
-  <Import Project="Microsoft.Android.Sdk.Application.targets" Condition=" '$(AndroidApplication)' == 'true' " />
-  <Import Project="Microsoft.Android.Sdk.AssemblyResolution.targets" />
-  <Import Project="Microsoft.Android.Sdk.ILLink.targets" />
-  <Import Project="Microsoft.Android.Sdk.NuGet.targets" />
-  <Import Project="Microsoft.Android.Sdk.ProjectCapabilities.targets" />
-  <Import Project="Microsoft.Android.Sdk.Publish.targets" />
-  <Import Project="Microsoft.Android.Sdk.Tooling.targets" />
 
 </Project>

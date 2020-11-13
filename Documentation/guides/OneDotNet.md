@@ -34,7 +34,7 @@ For example, a binding library could look like:
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net5.0-android</TargetFramework>
+    <TargetFramework>net6.0-android</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
     <TransformFile Include="Transforms\Metadata.xml" />
@@ -243,7 +243,7 @@ The following instructions can be used for early preview testing.
 ```xml
 <Project Sdk="Microsoft.Android.Sdk/10.0.100">
   <PropertyGroup>
-    <TargetFramework>net5.0-android</TargetFramework>
+    <TargetFramework>net6.0-android</TargetFramework>
     <RuntimeIdentifier>android.21-arm64</RuntimeIdentifier>
     <OutputType>Exe</OutputType>
   </PropertyGroup>

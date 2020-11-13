@@ -82,6 +82,7 @@ namespace Xamarin.Android.Build.Tests
 					"System.Net.NameResolution.dll",
 					"System.Net.NetworkInformation.dll",
 					"System.Net.Primitives.dll",
+					"System.Net.Quic.dll",
 					"System.Net.Security.dll",
 					"System.Net.Sockets.dll",
 					"System.ObjectModel.dll",
