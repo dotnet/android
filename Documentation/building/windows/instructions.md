@@ -90,7 +90,7 @@ So for example:
 # Creating a local .NET 6 Workload
 
 `msbuild Xamarin.Android.sln /t:Prepare` provisions a specific build
-of .NET 5/6 to `%USERPROFILE%\android-toolchain\dotnet`.
+of .NET 6 to `%USERPROFILE%\android-toolchain\dotnet`.
 
 Once `msbuild Xamarin.Android.sln /t:Build` is complete, you can build
 the .NET 6 packages with:
@@ -110,7 +110,6 @@ To use the Android workload, you will need a `NuGet.config`:
 <configuration>
   <packageSources>
     <add key="dotnet6" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json" />
-    <add key="dotnet5" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5/nuget/v3/index.json" />
     <add key="local-xa" value="C:\full\path\to\bin\BuildDebug\nupkgs" />
   </packageSources>
 </configuration>

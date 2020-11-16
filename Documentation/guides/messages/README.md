@@ -47,7 +47,7 @@ ms.date: 01/24/2020
 + [XA0033](xa0033.md): Failed to get the Java SDK version because the returned value does not appear to contain a valid version number.
 + [XA0034](xa0034.md): Failed to get the Java SDK version.
 + [XA0035](xa0035.md): Failed to determine the Android ABI for the project.
-+ [XA0036](xa0036.md): $(AndroidSupportedAbis) is not supported in .NET 5 and higher.
++ [XA0036](xa0036.md): $(AndroidSupportedAbis) is not supported in .NET 6 and higher.
 + XA0100: EmbeddedNativeLibrary is invalid in Android Application projects. Please use AndroidNativeLibrary instead.
 + [XA0101](xa0101.md): warning XA0101: @(Content) build action is not supported.
 + [XA0102](xa0102.md): Generic `lint` Warning.
@@ -105,13 +105,13 @@ Please disable fast deployment in the Visual Studio project property pages or ed
 + XA1021: Specified source Java library not found: {file}
 + XA1022: Specified reference Java library not found: {file}
 + [XA1023](xa1023.md): Using the DX DEX Compiler is deprecated.
-+ [XA1024](xa1024.md): Ignoring configuration file 'Foo.dll.config'. .NET configuration files are not supported in Xamarin.Android projects that target .NET 5 or higher.
++ [XA1024](xa1024.md): Ignoring configuration file 'Foo.dll.config'. .NET configuration files are not supported in Xamarin.Android projects that target .NET 6 or higher.
 + [XA1027](xa1027.md): The 'EnableProguard' MSBuild property is set to 'true' and the 'AndroidLinkTool' MSBuild property is empty, so 'AndroidLinkTool' will default to 'proguard'.
 + [XA1028](xa1028.md): The 'AndroidEnableProguard' MSBuild property is set to 'true' and the 'AndroidLinkTool' MSBuild property is empty, so 'AndroidLinkTool' will default to 'proguard'.
 
 ## XA2xxx: Linker
 
-+ [XA2000](xa2000.md): Use of AppDomain.CreateDomain() detected in assembly: {assembly}. .NET 5 will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 5 is released.
++ [XA2000](xa2000.md): Use of AppDomain.CreateDomain() detected in assembly: {assembly}. .NET 6 will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 6 is released.
 + [XA2001](xa2001.md): Source file '{filename}' could not be found.
 + [XA2002](xa2002.md): Can not resolve reference: \`{missing}\`, referenced by {assembly}. Perhaps it doesn't exist in the Mono for Android profile?
 + XA2006: Could not resolve reference to '{member}' (defined in assembly '{assembly}') with scope '{scope}'. When the scope is different from the defining assembly, it usually means that the type is forwarded.

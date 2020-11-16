@@ -37,9 +37,9 @@
   <Target Name="_GenerateFrameworkListFile" >
     <!-- Hardcode framework attributes -->
     <ItemGroup>
-      <FrameworkListRootAttributes Include="Name" Value=".NET 5.0 - Android" />
+      <FrameworkListRootAttributes Include="Name" Value=".NET 6.0 - Android" />
       <FrameworkListRootAttributes Include="TargetFrameworkIdentifier" Value=".NETCoreApp" />
-      <FrameworkListRootAttributes Include="TargetFrameworkVersion" Value="5.0" />
+      <FrameworkListRootAttributes Include="TargetFrameworkVersion" Value="6.0" />
       <FrameworkListRootAttributes Include="FrameworkName" Value="Microsoft.Android" />
     </ItemGroup>
 
