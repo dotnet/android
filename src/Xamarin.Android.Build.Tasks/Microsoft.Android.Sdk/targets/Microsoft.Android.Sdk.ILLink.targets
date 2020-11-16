@@ -53,6 +53,7 @@ This file contains the .NET 5-specific targets to customize ILLink
       <TrimmerRootDescriptor
           Condition=" '@(ResolvedFileToPublish->Count())' != '0' and '%(Filename)' != '' "
           Include="@(_PreserveLists)" />
+      <TrimmerRootDescriptor Include="@(LinkDescription)" />
     </ItemGroup>
   </Target>
 
