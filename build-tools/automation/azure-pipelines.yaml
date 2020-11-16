@@ -1205,6 +1205,7 @@ stages:
         patterns: |
           xamarin.android*.pkg
           Xamarin.Android*.vsix
+          updateinfo
 
     - powershell: |
         $pkg = Get-ChildItem -Path "$(System.DefaultWorkingDirectory)/storage-artifacts/*" -Include *.pkg -File
