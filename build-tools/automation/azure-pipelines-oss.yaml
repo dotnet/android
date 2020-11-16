@@ -49,10 +49,10 @@ stages:
       clean: true             # Executes: git clean -ffdx && git reset --hard HEAD
       submodules: recursive
 
-    - task: UseDotNet@2
-      displayName: install .NET Core $(DotNetCoreVersion)
-      inputs:
+    - template: yaml-templates/use-dot-net.yaml
+      parameters:
         version: $(DotNetCoreVersion)
+        remove_dotnet: true
 
     - bash: |
         keychains=`security list-keychains`

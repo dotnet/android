@@ -135,10 +135,10 @@ stages:
     - script: echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/Library/Android/$(XA.Jdk11.Folder)"
       displayName: set JI_JAVA_HOME
 
-    - task: UseDotNet@2
-      displayName: install .NET Core $(DotNetCoreVersion)
-      inputs:
+    - template: yaml-templates/use-dot-net.yaml
+      parameters:
         version: $(DotNetCoreVersion)
+        remove_dotnet: true
 
     - template: install-certificates.yml@yaml
       parameters:
@@ -281,10 +281,10 @@ stages:
         echo ##vso[task.setvariable variable=JI_JAVA_HOME]%USERPROFILE%\android-toolchain\$(XA.Jdk11.Folder)
       displayName: set JI_JAVA_HOME
 
-    - task: UseDotNet@2
-      displayName: install .NET Core $(DotNetCoreVersion)
-      inputs:
+    - template: yaml-templates\use-dot-net.yaml
+      parameters:
         version: $(DotNetCoreVersion)
+        remove_dotnet: true
 
     # Downgrade the XA .vsix installed into the instance of VS that we are building with so that we don't restore/build against a test version.
     # The VS installer will attempt to resume any failed or partial installation before trying to downgrade Xamarin.Android.

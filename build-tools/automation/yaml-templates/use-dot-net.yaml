@@ -1,0 +1,34 @@
+# This template enables installation of stable and master/nighly builds of .NET.
+# We prefer this over the UseDotNet task so that we can always clean up old/unstable versions on disk.
+
+parameters:
+  version: $(DotNetCoreVersion)
+  remove_dotnet: false
+
+steps:
+
+  - powershell: |
+      $ErrorActionPreference = 'Stop'
+      $ProgressPreference = 'SilentlyContinue'
+      $DotNetRoot = "$env:ProgramFiles\dotnet\"
+      if ("${{ parameters.remove_dotnet }}" -eq $true) {
+        Remove-Item -Recurse $DotNetRoot -Verbose
+      }
+      Invoke-WebRequest -Uri "https://dot.net/v1/dotnet-install.ps1" -OutFile dotnet-install.ps1
+      & .\dotnet-install.ps1 -Version ${{ parameters.version }} -InstallDir $DotNetRoot -Verbose
+      & dotnet --list-sdks
+    displayName: install .NET Core ${{ parameters.version }}
+    condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
+
+  - bash: >
+      DOTNET_ROOT=~/.dotnet/ &&
+      (if [[ "${{ parameters.remove_dotnet }}" == "true" ]] ; then rm -rfv $DOTNET_ROOT; fi) &&
+      curl -L https://dot.net/v1/dotnet-install.sh > dotnet-install.sh &&
+      chmod +x dotnet-install.sh &&
+      ./dotnet-install.sh --version ${{ parameters.version }} --install-dir $DOTNET_ROOT --verbose &&
+      PATH="$DOTNET_ROOT:$PATH" &&
+      dotnet --list-sdks &&
+      echo "##vso[task.setvariable variable=DOTNET_ROOT]$DOTNET_ROOT" &&
+      echo "##vso[task.setvariable variable=PATH]$PATH"
+    displayName: install .NET Core ${{ parameters.version }}
+    condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
