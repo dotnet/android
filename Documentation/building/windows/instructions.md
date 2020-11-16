@@ -124,7 +124,8 @@ Then use a `.csproj` file such as:
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net5.0-android</TargetFramework>
+    <TargetFramework>net6.0-android</TargetFramework>
+    <OutputType>Exe</OutputType>
   </PropertyGroup>
 </Project>
 ```

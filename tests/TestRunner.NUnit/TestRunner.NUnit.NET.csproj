@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk" >
+
+  <PropertyGroup>
+    <TargetFramework>net6.0-android</TargetFramework>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Xamarin.Android.UnitTests.NUnit</RootNamespace>
+    <AssemblyName>TestRunner.NUnit.NET</AssemblyName>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TestRunner.Core\TestRunner.Core.NET.csproj" />
+    <ProjectReference Include="..\..\src\Xamarin.Android.NUnitLite\Xamarin.Android.NUnitLite.NET.csproj" />
+  </ItemGroup>
+</Project>

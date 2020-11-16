@@ -155,7 +155,7 @@ namespace Xamarin.Android.Build.Tests
 			CommonSampleLibraryRootDirectory = Path.GetFullPath (Path.Combine (XABuildPaths.TopDirectory, "tests", "CodeBehind", CommonSampleLibraryName));
 			TestOutputDir = Path.Combine (XABuildPaths.TestOutputDirectory, "temp", "CodeBehind");
 			if (Builder.UseDotNet) {
-				ProjectName += "DotNet";
+				ProjectName += ".NET";
 			}
 
 			generated_sources = new List <SourceFile> {

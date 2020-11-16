@@ -66,6 +66,7 @@ projects.
       <_CreateAarInputs Include="@(AndroidAsset)" />
       <_CreateAarInputs Include="@(_AndroidResourceDest)" />
       <_CreateAarInputs Include="@(AndroidEnvironment)" />
+      <_CreateAarInputs Include="@(AndroidJavaLibrary)" />
       <_CreateAarInputs Include="@(EmbeddedJar)" />
       <_CreateAarInputs Include="@(EmbeddedNativeLibrary)" />
     </ItemGroup>

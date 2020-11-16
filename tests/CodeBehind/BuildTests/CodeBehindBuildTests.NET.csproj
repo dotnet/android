@@ -60,6 +60,6 @@
     <AndroidResource Include="Resources\layout-v16\player_list_item_many2.xml" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CommonSampleLibrary\CommonSampleLibraryDotNet.csproj" />
+    <ProjectReference Include="..\CommonSampleLibrary\CommonSampleLibrary.NET.csproj" />
   </ItemGroup>
 </Project>

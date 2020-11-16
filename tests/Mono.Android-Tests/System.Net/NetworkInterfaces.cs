@@ -101,6 +101,7 @@ namespace System.NetTests
 		}
 
 		[Test, Category("NetworkInterfaces")]
+		[Category ("DotNetIgnore")] // https://github.com/dotnet/runtime/issues/35836
 		public void DotNetInterfacesShouldEqualJavaInterfaces ()
 		{
 			List <InterfaceInfo> dotnetInterfaces = GetInfos (MNetworkInterface.GetAllNetworkInterfaces ());
