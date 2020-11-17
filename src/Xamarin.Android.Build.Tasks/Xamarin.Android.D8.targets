@@ -67,6 +67,7 @@ Copyright (C) 2018 Xamarin. All rights reserved.
         ProguardCommonXamarinConfiguration="$(IntermediateOutputPath)proguard\proguard_xamarin.cfg"
         ProguardGeneratedReferenceConfiguration="$(_ProguardProjectConfiguration)"
         ProguardGeneratedApplicationConfiguration="$(IntermediateOutputPath)proguard\proguard_project_primary.cfg"
+        ProguardMappingFileOutput="$(AndroidProguardMappingFile)"
         ProguardConfigurationFiles="@(_ProguardConfiguration)"
         EnableShrinking="$(_R8EnableShrinking)"
         EnableMultiDex="$(AndroidEnableMultiDex)"
@@ -96,6 +97,7 @@ Copyright (C) 2018 Xamarin. All rights reserved.
     <Touch Files="$(_AndroidStampDirectory)_CompileToDalvik.stamp" AlwaysCreate="true" />
     <ItemGroup>
       <FileWrites Include="$(_AndroidIntermediateDexOutputDirectory)*.dex" />
+      <FileWrites Include="$(AndroidProguardMappingFile)" />
     </ItemGroup>
 
   </Target>

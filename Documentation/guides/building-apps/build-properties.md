@@ -806,6 +806,17 @@ with build environments that have FIPS compliance enforced.
 
 Added in Xamarin.Android 10.1.
 
+## AndroidProguardMappingFile
+
+Specifies the `-printmapping` proguard rule for `r8`. This will
+mean the `mapping.txt` file will be produced in the `$(OutputPath)`
+folder. This file can then be used when uploading packages to the
+Google Play Store.
+
+Default value is `$(OutputPath)mapping.txt`
+
+Added in Xamarin.Android 11.2
+
 ## AndroidR8IgnoreWarnings
 
 Specifies

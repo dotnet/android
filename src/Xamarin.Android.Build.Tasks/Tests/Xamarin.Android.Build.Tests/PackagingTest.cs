@@ -49,6 +49,21 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void CheckProguardMappingFileExists ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidDexTool, "d8");
+			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidLinkTool, "r8");
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
+				string mappingFile = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, "mapping.txt");
+				FileAssert.Exists (mappingFile, $"'{mappingFile}' should have been generated.");
+			}
+		}
+
+		[Test]
 		public void CheckIncludedAssemblies ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
