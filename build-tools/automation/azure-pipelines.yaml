@@ -408,22 +408,6 @@ stages:
         script: 'dotnet tool update apkdiff -g'
       continueOnError: true
 
-    - task: MSBuild@1
-      displayName: build check-boot-times.csproj
-      inputs:
-        solution: build-tools/check-boot-times/check-boot-times.csproj
-        configuration: $(ApkTestConfiguration)
-        msbuildArguments: /restore /bl:$(System.DefaultWorkingDirectory)/bin/Test$(ApkTestConfiguration)/build-check-boot-times.binlog
-      continueOnError: true
-
-    - task: MSBuild@1
-      displayName: Run check-boot-times
-      inputs:
-        solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
-        configuration: $(ApkTestConfiguration)
-        msbuildArguments: /t:CheckBootTimes /bl:$(System.DefaultWorkingDirectory)/bin/Test$(ApkTestConfiguration)/run-check-boot-times.binlog
-      continueOnError: true
-
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
         configuration: $(ApkTestConfiguration)
@@ -876,6 +860,22 @@ stages:
         solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
         configuration: $(XA.Build.Configuration)
         msbuildArguments: /t:AcquireAndroidTarget /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/start-emulator.binlog
+
+    - task: MSBuild@1
+      displayName: build check-boot-times.csproj
+      inputs:
+        solution: build-tools/check-boot-times/check-boot-times.csproj
+        configuration: $(ApkTestConfiguration)
+        msbuildArguments: /restore /bl:$(System.DefaultWorkingDirectory)/bin/Test$(ApkTestConfiguration)/build-check-boot-times.binlog
+      continueOnError: true
+
+    - task: MSBuild@1
+      displayName: Run check-boot-times
+      inputs:
+        solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
+        configuration: $(ApkTestConfiguration)
+        msbuildArguments: /t:CheckBootTimes /bl:$(System.DefaultWorkingDirectory)/bin/Test$(ApkTestConfiguration)/run-check-boot-times.binlog
+      continueOnError: true
 
     - template: yaml-templates/run-nunit-tests.yaml
       parameters:
