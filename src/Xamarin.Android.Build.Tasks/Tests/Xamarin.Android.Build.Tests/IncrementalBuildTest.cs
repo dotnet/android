@@ -519,6 +519,27 @@ namespace Lib2
 		}
 
 		[Test]
+		public void ManifestMergerIncremental ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				ManifestMerger = "manifestmerger.jar"
+			};
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "first build should succeed");
+				b.Output.AssertTargetIsNotSkipped ("_ManifestMerger");
+
+				// Change .csproj & build again
+				proj.SetProperty ("Foo", "Bar");
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build should succeed");
+				b.Output.AssertTargetIsNotSkipped ("_ManifestMerger");
+
+				// Build with no changes
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "third build should succeed");
+				b.Output.AssertTargetIsSkipped ("_ManifestMerger");
+			}
+		}
+
+		[Test]
 		[Category ("SmokeTests")]
 		public void ProduceReferenceAssembly ()
 		{
