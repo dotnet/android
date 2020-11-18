@@ -251,36 +251,60 @@ namespace ${ROOT_NAMESPACE} {
 				/* embedAssemblies */    true,
 				/* fastDevType */        "Assemblies",
 				/* allowDeltaInstall */  false,
+				/* user */		 "Owner",
 			},
 			new object[] {
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies",
 				/* allowDeltaInstall */  false,
+				/* user */		 "Owner",
 			},
 			new object[] {
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies",
 				/* allowDeltaInstall */  true,
+				/* user */		 "Owner",
 			},
 			new object[] {
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies:Dexes",
 				/* allowDeltaInstall */  false,
+				/* user */		 "Owner",
 			},
 			new object[] {
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies:Dexes",
 				/* allowDeltaInstall */  true,
+				/* user */		 "Owner",
+			},
+			new object[] {
+				/* embedAssemblies */    true,
+				/* fastDevType */        "Assemblies",
+				/* allowDeltaInstall */  false,
+				/* user */		 DeviceTest.GuestUserName,
+			},
+			new object[] {
+				/* embedAssemblies */    false,
+				/* fastDevType */        "Assemblies",
+				/* allowDeltaInstall */  false,
+				/* user */		 DeviceTest.GuestUserName,
 			},
 		};
 #pragma warning restore 414
 
 		[Test, Category ("SmokeTests"), Category ("Debugger")]
 		[TestCaseSource (nameof(DebuggerTestCases))]
-		public void ApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, string fastDevType, bool allowDeltaInstall)
+		public void ApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, string fastDevType, bool allowDeltaInstall, string username)
 		{
 			AssertCommercialBuild ();
 			AssertHasDevices ();
+
+			int userId = GetUserId (username);
+			if (SwitchUser (username)) {
+				WaitFor (5);
+				ClickButton ("", "android:id/button1", "Yes continue");
+			}
+
 			var proj = new XamarinFormsAndroidApplicationProject () {
 				IsRelease = false,
 				EmbedAssembliesIntoApk = embedAssemblies,
@@ -291,7 +315,7 @@ namespace ${ROOT_NAMESPACE} {
 			proj.SetDefaultTargetDevice ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				SetTargetFrameworkAndManifest (proj, b);
-				Assert.True (b.Install (proj), "Project should have installed.");
+				Assert.True (b.Install (proj, parameters: new string [] { $"AndroidDeviceUserId={userId}" }), "Project should have installed.");
 
 				int breakcountHitCount = 0;
 				ManualResetEvent resetEvent = new ManualResetEvent (false);
@@ -328,6 +352,7 @@ namespace ${ROOT_NAMESPACE} {
 					$"AndroidSdbTargetPort={port}",
 					$"AndroidSdbHostPort={port}",
 					"AndroidAttachDebugger=True",
+					$"AndroidDeviceUserId={userId}"
 				}), "Project should have run.");
 
 				Assert.IsTrue (WaitForDebuggerToStart (Path.Combine (Root, b.ProjectDirectory, "logcat.log")), "Activity should have started");
