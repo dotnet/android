@@ -110,6 +110,11 @@ supported.
 `$(AndroidCodegenTarget)` will be `XAJavaInterop1` by default.
 `XamarinAndroid` will not be supported.
 
+`$(AndroidManifest)` will default to `AndroidManifest.xml` in the root
+of projects as `Properties\AssemblyInfo.cs` is no longer used in
+short-form MSBuild projects. `Properties\AndroidManifest.xml` will
+also be detected and used if it exists to ease migration.
+
 `$(DebugType)` will be `portable` by default. `full` and `pdbonly`
 will not be supported.
 
