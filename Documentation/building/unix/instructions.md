@@ -79,7 +79,7 @@ installer.
 
 # Creating a local .NET 6 Workload
 
-`make prepare` provisions a specific build of .NET 5/6 to
+`make prepare` provisions a specific build of .NET 6 to
 `~/android-toolchain/dotnet`.
 
 Once `make all` or `make jenkins` have completed, you can build the .NET 6
@@ -100,7 +100,6 @@ To use the Android workload, you will need a `NuGet.config`:
 <configuration>
   <packageSources>
     <add key="dotnet6" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json" />
-    <add key="dotnet5" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5/nuget/v3/index.json" />
     <add key="local-xa" value="/full/path/to/bin/BuildDebug/nupkgs" />
   </packageSources>
 </configuration>

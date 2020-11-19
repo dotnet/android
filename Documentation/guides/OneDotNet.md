@@ -140,6 +140,13 @@ all default item inclusion behavior can be disabled by setting `$(EnableDefaultI
 
 [autoimport]: https://github.com/dotnet/designs/blob/4703666296f5e59964961464c25807c727282cae/accepted/2020/workloads/workload-resolvers.md#workload-props-files
 
+## Runtime behavior
+
+There is some behavioral changes to the `String.IndexOf()` method in
+.NET 5 and higher on different platforms, see details [here][indexof].
+
+[indexof]: https://docs.microsoft.com/dotnet/standard/globalization-localization/globalization-icu
+
 ## Linker (ILLink)
 
 .NET 5 and higher has new [settings for the linker][linker]:
@@ -220,39 +227,10 @@ device or emulator via the `--project` switch:
 
 ### Preview testing
 
-The following instructions can be used for early preview testing.
+For the latest instructions on preview testing and sample projects,
+see the [net6-samples][net6-samples] repo.
 
-  1) Install the [latest .NET 5 preview][0]. Preview 4 or later is required.
-
-  2) Create a `nuget.config` file that has a package source pointing to
-     local packages or `xamarin-impl` feed, as well as the .NET 5 feed:
-
-```xml
-<configuration>
-  <packageSources>
-    <add key="xamarin-impl" value="https://pkgs.dev.azure.com/azure-public/vside/_packaging/xamarin-impl/nuget/v3/index.json" />
-    <add key="dotnet5" value="https://dnceng.pkgs.visualstudio.com/public/_packaging/dotnet5/nuget/v3/index.json" />
-  </packageSources>
-</configuration>
-```
-
-  3) Open an existing Android project (ideally something minimal) and
-    tweak it as shown below. The version should match the version of the
-    packages you want to use:
-
-```xml
-<Project Sdk="Microsoft.Android.Sdk/10.0.100">
-  <PropertyGroup>
-    <TargetFramework>net6.0-android</TargetFramework>
-    <RuntimeIdentifier>android.21-arm64</RuntimeIdentifier>
-    <OutputType>Exe</OutputType>
-  </PropertyGroup>
-</Project>
-```
-
-  4) Build (and optionally run) the project:
-
-    dotnet build *.csproj -t:Run
+[net6-samples]: https://github.com/xamarin/net6-samples
 
 ## Package Versioning Scheme
 
