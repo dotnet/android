@@ -8,10 +8,6 @@ steps:
   clean: true
   submodules: recursive
 
-- template: update-vs.yaml
-  parameters:
-    xaSourcePath: ${{ parameters.xaSourcePath }}
-
 - template: run-installer.yaml
   parameters:
     provisionExtraArgs: ${{ parameters.provisionExtraArgs }}

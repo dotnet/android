@@ -23,6 +23,12 @@ jobs:
 
     - template: clean.yaml
 
+    - checkout: self
+      clean: true
+      submodules: recursive
+
+    - template: update-vs.yaml
+
     - template: setup-test-environment.yaml
 
     - task: DownloadPipelineArtifact@1
