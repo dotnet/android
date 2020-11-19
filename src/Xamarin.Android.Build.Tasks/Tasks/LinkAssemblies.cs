@@ -56,6 +56,8 @@ namespace Xamarin.Android.Tasks
 
 		public bool Deterministic { get; set; }
 
+		public bool LinkResources { get; set; }
+
 		IEnumerable<AssemblyDefinition> GetRetainAssemblies (DirectoryAssemblyResolver res)
 		{
 			List<AssemblyDefinition> retainList = null;
@@ -106,6 +108,7 @@ namespace Xamarin.Android.Tasks
 			options.AddKeepAlives = AddKeepAlives;
 			options.PreserveJniMarshalMethods = PreserveJniMarshalMethods;
 			options.DeterministicOutput = Deterministic;
+			options.LinkResources = LinkResources;
 
 			var skiplist = new List<string> ();
 

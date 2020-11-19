@@ -696,6 +696,27 @@ used in Android Application projects. The default value is
 <AndroidLinkMode>SdkOnly</AndroidLinkMode>
 ```
 
+## AndroidLinkResources
+
+When `true` this will make the build system link out the Nested Types
+of the Resource.Designer.cs `Resource` class in all assemblies. The
+IL code that uses those types will be updated to use the values
+directly rather than accessing fields.
+
+This can have a small impact on reducing the apk size, it might also
+help slightly with startup performance. This will only effect "Release"
+based builds.
+
+***Experimental***.  Only designed to work with code such as
+
+```
+var view = FindViewById(Resources.Ids.foo);
+```
+
+Any other scenarios (such as reflection) will not be supported.
+
+Added in Xamarin.Android 11.3.
+
 ## AndroidLinkSkip
 
 Specifies a semicolon-delimited (`;`)

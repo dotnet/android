@@ -399,7 +399,7 @@ projects. .NET 5 projects will not import this file.
 
   <Target Name="_ConvertDebuggingFiles"
       Inputs="$(OutDir)$(TargetFileName);$(_IntermediatePdbFile)"
-      Outputs="$(OutDir)$(TargetFileName).mdb" 
+      Outputs="$(OutDir)$(TargetFileName).mdb"
       DependsOnTargets="_ValidateAndroidPackageProperties">
     <ConvertDebuggingFiles Files="$(OutDir)$(TargetFileName)" />
     <Touch Files="$(OutDir)$(TargetFileName).mdb" />
@@ -638,6 +638,7 @@ projects. .NET 5 projects will not import this file.
         LinkDescriptions="@(LinkDescription)"
         ProguardConfiguration="$(_ProguardProjectConfiguration)"
         AddKeepAlives="$(AndroidAddKeepAlives)"
+        LinkResources="$(AndroidLinkResources)"
         PreserveJniMarshalMethods="$(AndroidGenerateJniMarshalMethods)"
         EnableProguard="$(AndroidEnableProguard)"
         Deterministic="$(Deterministic)"

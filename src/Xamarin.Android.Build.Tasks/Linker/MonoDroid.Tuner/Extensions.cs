@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 
 using Mono.Cecil;
+using Mono.Cecil.Cil;
 
 using Mono.Linker;
 
@@ -326,6 +327,40 @@ namespace MonoDroid.Tuner {
 				}
 
 			return false;
+		}
+
+		public static Instruction CreateLoadArraySizeOrOffsetInstruction (int intValue)
+		{
+			if (intValue < 0)
+				throw new ArgumentException ($"{nameof (intValue)} cannot be negative");
+
+			if (intValue < 9) {
+				switch (intValue) {
+				case 0:
+					return Instruction.Create (OpCodes.Ldc_I4_0);
+				case 1:
+					return Instruction.Create (OpCodes.Ldc_I4_1);
+				case 2:
+					return Instruction.Create (OpCodes.Ldc_I4_2);
+				case 3:
+					return Instruction.Create (OpCodes.Ldc_I4_3);
+				case 4:
+					return Instruction.Create (OpCodes.Ldc_I4_4);
+				case 5:
+					return Instruction.Create (OpCodes.Ldc_I4_5);
+				case 6:
+					return Instruction.Create (OpCodes.Ldc_I4_6);
+				case 7:
+					return Instruction.Create (OpCodes.Ldc_I4_7);
+				case 8:
+					return Instruction.Create (OpCodes.Ldc_I4_8);
+				}
+			}
+
+			if (intValue < 128)
+				return Instruction.Create (OpCodes.Ldc_I4_S, (sbyte)intValue);
+
+			return Instruction.Create (OpCodes.Ldc_I4, intValue);
 		}
 	}
 }
