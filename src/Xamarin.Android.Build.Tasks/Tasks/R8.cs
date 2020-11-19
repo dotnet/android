@@ -29,6 +29,7 @@ namespace Xamarin.Android.Tasks
 		public string ProguardGeneratedReferenceConfiguration { get; set; }
 		public string ProguardGeneratedApplicationConfiguration { get; set; }
 		public string ProguardCommonXamarinConfiguration { get; set; }
+		public string ProguardMappingFileOutput { get; set; }
 		public string [] ProguardConfigurationFiles { get; set; }
 
 		protected override string MainClass => "com.android.tools.r8.R8";
@@ -99,6 +100,8 @@ namespace Xamarin.Android.Tasks
 						if (IgnoreWarnings) {
 							xamcfg.WriteLine ("-ignorewarnings");
 						}
+						if (!string.IsNullOrEmpty (ProguardMappingFileOutput))
+							xamcfg.WriteLine ($"-printmapping {Path.GetFullPath (ProguardMappingFileOutput)}");
 					}
 				}
 			} else {
@@ -115,6 +118,8 @@ namespace Xamarin.Android.Tasks
 				if (IgnoreWarnings) {
 					lines.Add ("-ignorewarnings");
 				}
+				if (!string.IsNullOrEmpty (ProguardMappingFileOutput))
+					lines.Add ($"-printmapping {Path.GetFullPath (ProguardMappingFileOutput)}");
 				File.WriteAllLines (temp, lines);
 				tempFiles.Add (temp);
 				cmd.AppendSwitchIfNotNull ("--pg-conf ", temp);
@@ -131,5 +136,5 @@ namespace Xamarin.Android.Tasks
 			return cmd;
 		}
 	}
-	
+
 }
