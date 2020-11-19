@@ -56,9 +56,12 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidDexTool, "d8");
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidLinkTool, "r8");
+			// Projects must provide a $(AndroidProguardMappingFile) value to opt in
+			proj.SetProperty (proj.ReleaseProperties, "AndroidProguardMappingFile", @"$(OutputPath)\mapping.txt");
+
 			using (var b = CreateApkBuilder ()) {
-				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 				string mappingFile = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, "mapping.txt");
+				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 				FileAssert.Exists (mappingFile, $"'{mappingFile}' should have been generated.");
 			}
 		}
