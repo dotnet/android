@@ -37,12 +37,11 @@ namespace Xamarin.Android.Build.Tests
 
 			proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
+				MinSdkVersion = "23",
+				TargetSdkVersion = null,
 			};
 			if (isRelease || !CommercialBuildAvailable) {
 				proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86");
-			} else {
-				proj.MinSdkVersion = "23";
-				proj.TargetSdkVersion = null;
 			}
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
 $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
@@ -61,6 +60,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 		}
 
 		[Test]
+		[Category ("DotNetIgnore")] // TODO: UnhandledException not firing: https://github.com/dotnet/runtime/issues/44526
 		public void SubscribeToAppDomainUnhandledException ()
 		{
 			AssertHasDevices ();
@@ -231,6 +231,7 @@ namespace Library1 {
 		};
 
 		[Test]
+		[Category ("DotNetIgnore")] // TODO: libmono-profiler-log.so is missing in .NET 6
 		public void ProfilerLogOptions_ShouldCreateMlpdFiles ([ValueSource (nameof (ProfilerOptions))] string profilerOption)
 		{
 			AssertHasDevices ();
@@ -323,12 +324,6 @@ namespace Library1 {
 								return sr.ReadToEnd ();
 						},
 					},
-					new BuildItem.Source ("Bug35195.cs") {
-						TextContent = () => {
-							using (var sr = new StreamReader (typeof (InstallAndRunTests).Assembly.GetManifestResourceStream ("Xamarin.Android.Build.Tests.Resources.LinkDescTest.Bug35195.cs")))
-								return sr.ReadToEnd ();
-						},
-					},
 					new BuildItem.Source ("Bug36250.cs") {
 						TextContent = () => {
 							using (var sr = new StreamReader (typeof (InstallAndRunTests).Assembly.GetManifestResourceStream ("Xamarin.Android.Build.Tests.Resources.LinkDescTest.Bug36250.cs")))
@@ -336,13 +331,21 @@ namespace Library1 {
 						},
 					},
 				},
-				PackageReferences = {
-					new Package {
-						Id = "sqlite-net-pcl",
-						Version = "1.7.335",
-					},
-				},
 			};
+
+			// sqlite-net-pcl does not work in .NET 6
+			if (!Builder.UseDotNet) {
+				lib2.PackageReferences.Add (new Package {
+					Id = "sqlite-net-pcl",
+					Version = "1.7.335",
+				});
+				lib2.Sources.Add (new BuildItem.Source ("Bug35195.cs") {
+					TextContent = () => {
+						using (var sr = new StreamReader (typeof (InstallAndRunTests).Assembly.GetManifestResourceStream ("Xamarin.Android.Build.Tests.Resources.LinkDescTest.Bug35195.cs")))
+							return sr.ReadToEnd ();
+					},
+				});
+			}
 
 			proj = new XamarinFormsAndroidApplicationProject () {
 				IsRelease = true,

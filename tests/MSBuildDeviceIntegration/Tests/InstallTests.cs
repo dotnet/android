@@ -187,7 +187,12 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetProperty (proj.ReleaseProperties, "Optimize", false);
 			proj.SetProperty (proj.ReleaseProperties, "DebugType", "none");
-			proj.RemoveProperty (proj.ReleaseProperties, "EmbedAssembliesIntoApk");
+			if (Builder.UseDotNet) {
+				// NOTE: in .NET 6, EmbedAssembliesIntoApk=true by default for Release builds
+				proj.SetProperty (proj.ReleaseProperties, "EmbedAssembliesIntoApk", "false");
+			} else {
+				proj.RemoveProperty (proj.ReleaseProperties, "EmbedAssembliesIntoApk");
+			}
 			var abis = new [] { "armeabi-v7a", "x86" };
 			proj.SetAndroidSupportedAbis (abis);
 			using (var builder = CreateApkBuilder ()) {

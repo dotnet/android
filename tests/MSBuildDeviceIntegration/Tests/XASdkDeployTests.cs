@@ -82,6 +82,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Category ("Debugger")]
 		public void DotNetDebug ()
 		{
 			AssertCommercialBuild ();

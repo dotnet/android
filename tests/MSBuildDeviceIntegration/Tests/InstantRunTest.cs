@@ -14,6 +14,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void InstantRunSimpleBuild ([Values ("dx", "d8")] string dexTool)
 		{
+			AssertDexToolSupported (dexTool);
 			AssertCommercialBuild ();
 			AssertHasDevices ();
 
@@ -123,6 +124,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void SimpleInstallAndUninstall ([Values ("dx", "d8")] string dexTool)
 		{
+			AssertDexToolSupported (dexTool);
 			AssertCommercialBuild ();
 			AssertHasDevices ();
 
@@ -141,6 +143,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void SkipFastDevAlreadyInstalledFile ([Values ("dx", "d8")] string dexTool)
 		{
+			AssertDexToolSupported (dexTool);
 			AssertCommercialBuild ();
 			AssertHasDevices ();
 
@@ -210,6 +213,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void InstantRunResourceChange ([Values ("dx", "d8")] string dexTool)
 		{
+			AssertDexToolSupported (dexTool);
 			AssertCommercialBuild ();
 			AssertHasDevices ();
 
@@ -244,6 +248,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void InstantRunFastDevTypemaps ([Values ("dx", "d8")] string dexTool)
 		{
+			AssertDexToolSupported (dexTool);
 			AssertCommercialBuild ();
 			AssertHasDevices ();
 
@@ -271,6 +276,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void InstantRunNativeLibrary ([Values ("dx", "d8")] string dexTool)
 		{
+			AssertDexToolSupported (dexTool);
 			AssertCommercialBuild ();
 			AssertHasDevices ();
 

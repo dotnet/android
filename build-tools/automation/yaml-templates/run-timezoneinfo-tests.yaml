@@ -33,7 +33,7 @@ jobs:
     - template: run-nunit-tests.yaml
       parameters:
         testRunTitle: TimeZoneInfoTests On Device - macOS
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/MSBuildDeviceIntegration.dll
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/net472/MSBuildDeviceIntegration.dll
         nunitConsoleExtraArgs: --where "test == Xamarin.Android.Build.Tests.DeploymentTest.CheckTimeZoneInfoIsCorrectNode${{ parameters.node_id }}"
         testResultsFile: TestResult-TimeZoneInfoTests-Node${{ parameters.node_id }}-$(XA.Build.Configuration).xml
 
