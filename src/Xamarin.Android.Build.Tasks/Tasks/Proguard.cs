@@ -118,12 +118,16 @@ namespace Xamarin.Android.Tasks
 						// skip invalid lines
 					}
 
-			if (!string.IsNullOrWhiteSpace (ProguardCommonXamarinConfiguration))
+			if (!string.IsNullOrWhiteSpace (ProguardCommonXamarinConfiguration)) {
 				using (var xamcfg = File.CreateText (ProguardCommonXamarinConfiguration)) {
 					GetType ().Assembly.GetManifestResourceStream ("proguard_xamarin.cfg").CopyTo (xamcfg.BaseStream);
-					if (!string.IsNullOrEmpty (ProguardMappingFileOutput))
+					if (!string.IsNullOrEmpty (ProguardMappingFileOutput)) {
+						xamcfg.WriteLine ("-keepattributes SourceFile");
+						xamcfg.WriteLine ("-keepattributes LineNumberTable");
 						xamcfg.WriteLine ($"-printmapping {Path.GetFullPath (ProguardMappingFileOutput)}");
+					}
 				}
+			}
 
 			var enclosingChar = OS.IsWindows ? "\"" : string.Empty;
 
