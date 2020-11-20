@@ -18,7 +18,7 @@ steps:
       & .\dotnet-install.ps1 -Version ${{ parameters.version }} -InstallDir $DotNetRoot -Verbose
       & dotnet --list-sdks
     displayName: install .NET Core ${{ parameters.version }}
-    condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
+    condition: and(succeeded(), eq(variables['Agent.OS'], 'Windows_NT'))
 
   - bash: >
       DOTNET_ROOT=~/.dotnet/ &&

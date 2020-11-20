@@ -382,7 +382,7 @@ class MemTest {
 			}
 		}
 
-		[Test]
+		[Test, Ignore ("Deprecated CodeAnalysis feature is broken in 16.8: https://developercommunity.visualstudio.com/solutions/1255925/view.html")]
 		public void CodeAnalysis ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
