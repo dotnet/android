@@ -2,11 +2,17 @@ parameters:
   configuration: $(XA.Build.Configuration)
   provisionExtraArgs: -vv -f
   xaSourcePath: $(System.DefaultWorkingDirectory)
+  updateVS: false
 
 steps:
 - checkout: self
   clean: true
   submodules: recursive
+
+- ${{ if eq(parameters.updateVS, true) }}:
+  - template: update-vs.yaml
+    parameters: 
+      xasourcePath: ${{ parameters.xaSourcePath }}
 
 - template: run-installer.yaml
   parameters:
