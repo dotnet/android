@@ -170,6 +170,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <AvailableItemName Include="MultiDexMainDexList" />
   <AvailableItemName Include="ProguardConfiguration" />
   <AvailableItemName Include="ProjectReference" />
+  <AvailableItemName Include="AndroidManifestOverlay" />
 </ItemGroup>
 
 <!-- Version/fx properties -->
@@ -1441,6 +1442,7 @@ because xbuild doesn't support framework reference assemblies.
       OutputManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
       LibraryManifestFiles="@(ExtractedManifestDocuments)"
       ManifestPlaceholders="$(AndroidManifestPlaceholders)"
+      ManifestOverlayFiles="@(AndroidManifestOverlay)"
   />
   <ItemGroup>
     <FileWrites Include="$(IntermediateOutputPath)android\AndroidManifest.xml" />

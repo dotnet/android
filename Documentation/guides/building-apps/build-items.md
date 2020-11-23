@@ -83,6 +83,36 @@ which tests to enable and disable.
 See the [lint documentation](https://developer.android.com/studio/write/lint)
 for more details.
 
+## AndroidManifestOverlay
+
+The build action `AndroidManifestOverlay` can we used to provide additional
+`AndroidManifest.xml` files to the [Manifest Merger]([~/android/deploy-test/building-apps/build-properties.md#](https://developer.android.com/studio/build/manifest-merge)) tool.
+Files with this build action will be passed to the Manifest Merger along with
+the main `AndroidManifest.xml` file and any additional manifest files from
+references. These will then be merged into the final manifest.
+
+You can use this build action to provide additional changes and settings to
+your app depending on your build configuration. For example if you need to
+have a specific permission only while debugging, you can use the overlay to
+inject that permission when debugging. For example given the following
+overlay file contents
+
+```
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <uses-permission android:name="android.permission.CAMERA" />
+</manifest>
+```
+
+you can use the following to add this for a debug build.
+
+```
+<ItemGroup>
+  <AndroidManifestOverlay Include="DebugPermissions.xml" Condition=" '$(Configuration)' == 'Debug' " />
+</ItemGroup>
+```
+
+Introduced in Xamarin.Android 11.2
+
 ## AndroidNativeLibrary
 
 [Native libraries](~/android/platform/native-libraries.md)
