@@ -85,7 +85,7 @@ for more details.
 
 ## AndroidManifestOverlay
 
-The build action `AndroidManifestOverlay` can we used to provide additional
+The build action `AndroidManifestOverlay` can be used to provide additional
 `AndroidManifest.xml` files to the [Manifest Merger]([~/android/deploy-test/building-apps/build-properties.md#](https://developer.android.com/studio/build/manifest-merge)) tool.
 Files with this build action will be passed to the Manifest Merger along with
 the main `AndroidManifest.xml` file and any additional manifest files from
