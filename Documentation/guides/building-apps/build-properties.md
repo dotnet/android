@@ -198,6 +198,12 @@ Added in Xamarin.Android 10.3.
 
 [bundle-config-format]: https://developer.android.com/studio/build/building-cmdline#bundleconfig
 
+## AndroidBundleToolExtraArgs
+
+Specifies additional
+command-line options to pass to the **bundletool** command when
+build app bundles.
+
 ## AndroidClassParser
 
 A string property which controls how

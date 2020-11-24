@@ -146,6 +146,13 @@ you can use the following to add this for a debug build.
 
 Introduced in Xamarin.Android 11.2
 
+## AndroidInstallModules
+
+Specifies the modules which get installed by **bundletool** command when
+installing app bundles.
+
+Introduced in Xamarin.Android 11.3
+
 ## AndroidNativeLibrary
 
 [Native libraries](~/android/platform/native-libraries.md)
