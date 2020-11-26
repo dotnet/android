@@ -18,7 +18,7 @@
 # Guides
 
   * [One .NET](guides/OneDotNet.md)
-  * [Build Process](guides/BuildProcess.md)
+  * [Build Process](guides/building-apps/build-process.md)
   * [`.axml` CodeBehind Support](guides/LayoutCodeBehind.md)
   * [MSBuild Best Practices](guides/MSBuildBestPractices.md)
   * [D8 and R8 Integration](guides/D8andR8.md)
