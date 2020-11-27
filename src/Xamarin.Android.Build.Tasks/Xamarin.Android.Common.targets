@@ -154,6 +154,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <!-- Get our Build Action to show up in VS -->
 <ItemGroup>
   <AvailableItemName Include="AndroidAarLibrary" />
+  <AvailableItemName Include="AndroidAotProfile" />
   <AvailableItemName Include="AndroidAsset" />
   <AvailableItemName Include="AndroidEnvironment" />
   <AvailableItemName Include="AndroidExternalJavaLibrary" />

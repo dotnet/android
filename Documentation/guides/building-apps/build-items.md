@@ -33,7 +33,10 @@ and `.jar` files will be included in the appropriate item groups.
 
 ## AndroidAotProfile
 
-Used to provide an AOT profile, for use with profile-guided AOT.
+Used to provide AOT profiles, for use with profile-guided AOT.
+
+It can be also used from Visual Studio by setting `AndroidAotProfile`
+build action to a file containing an AOT profile.
 
 ## AndroidBoundLayout
 
