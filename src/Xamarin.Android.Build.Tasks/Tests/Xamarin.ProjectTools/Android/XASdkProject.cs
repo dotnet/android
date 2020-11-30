@@ -64,7 +64,7 @@ namespace Xamarin.ProjectTools
 
 			// Add relevant Android content to our project without writing it to the .csproj file
 			if (outputType == "Exe") {
-				Sources.Add (new BuildItem.Source ("Properties\\AndroidManifest.xml") {
+				Sources.Add (new BuildItem.Source ("AndroidManifest.xml") {
 					TextContent = ProcessManifestTemplate
 				});
 			}
