@@ -90,7 +90,6 @@ namespace Xamarin.Android.Build.Tests
 					"System.Collections.NonGeneric.dll",
 					"System.ComponentModel.Primitives.dll",
 					"System.Console.dll",
-					"System.Diagnostics.DiagnosticSource.dll",
 					"System.Formats.Asn1.dll",
 					"System.IO.Compression.Brotli.dll",
 					"System.IO.Compression.dll",
