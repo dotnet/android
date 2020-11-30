@@ -1,0 +1,15 @@
+<Project>
+  <Import Project="..\..\build-tools\scripts\XAVersionInfo.targets" />
+  <PropertyGroup>
+    <BeforePack>
+      _GetDefaultPackageVersion;
+      $(BeforePack);
+    </BeforePack>
+  </PropertyGroup>
+  <Target Name="_GetDefaultPackageVersion"
+      DependsOnTargets="GetXAVersionInfo" >
+    <PropertyGroup>
+      <PackageVersion>$(AndroidPackVersionLong)+sha.$(XAVersionHash)</PackageVersion>
+    </PropertyGroup>
+  </Target>
+</Project>
