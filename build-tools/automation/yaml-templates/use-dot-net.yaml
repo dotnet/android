@@ -24,7 +24,8 @@ steps:
       DOTNET_ROOT=~/.dotnet/ &&
       (if [[ "${{ parameters.remove_dotnet }}" == "true" ]] ; then rm -rfv $DOTNET_ROOT; fi) &&
       curl -L https://dot.net/v1/dotnet-install.sh > dotnet-install.sh &&
-      sh dotnet-install.sh --version ${{ parameters.version }} --install-dir $DOTNET_ROOT --verbose &&
+      chmod +x dotnet-install.sh &&
+      ./dotnet-install.sh --version ${{ parameters.version }} --install-dir $DOTNET_ROOT --verbose &&
       PATH="$DOTNET_ROOT:$PATH" &&
       dotnet --list-sdks &&
       echo "##vso[task.setvariable variable=DOTNET_ROOT]$DOTNET_ROOT" &&
