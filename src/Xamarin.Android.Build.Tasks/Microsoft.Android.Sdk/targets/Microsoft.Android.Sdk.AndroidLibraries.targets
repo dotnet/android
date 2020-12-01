@@ -18,7 +18,7 @@ projects.
   </ItemGroup>
   <ItemDefinitionGroup>
     <AndroidLibrary>
-      <Bind>false</Bind>
+      <Bind>true</Bind>
       <Pack>true</Pack>
     </AndroidLibrary>
   </ItemDefinitionGroup>

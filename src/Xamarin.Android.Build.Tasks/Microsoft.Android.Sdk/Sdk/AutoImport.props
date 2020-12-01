@@ -16,9 +16,9 @@ https://github.com/dotnet/designs/blob/4703666296f5e59964961464c25807c727282cae/
 -->
 <Project>
 
-  <!-- Default Resource file inclusion -->
-  <!-- https://developer.android.com/guide/topics/resources/providing-resources -->
   <ItemGroup Condition=" '$(EnableDefaultAndroidItems)' == 'true' ">
+    <!-- Default Resource file inclusion -->
+    <!-- https://developer.android.com/guide/topics/resources/providing-resources -->
     <AndroidResource Include="$(MonoAndroidResourcePrefix)\*\*.xml" />
     <AndroidResource Include="$(MonoAndroidResourcePrefix)\*\*.axml" />
     <AndroidResource Include="$(MonoAndroidResourcePrefix)\*\*.png" />
@@ -28,11 +28,14 @@ https://github.com/dotnet/designs/blob/4703666296f5e59964961464c25807c727282cae/
     <AndroidResource Include="$(MonoAndroidResourcePrefix)\font\*.otf" />
     <AndroidResource Include="$(MonoAndroidResourcePrefix)\font\*.ttc" />
     <AndroidResource Include="$(MonoAndroidResourcePrefix)\raw\*" Exclude="$(MonoAndroidResourcePrefix)\raw\.*" />
-  </ItemGroup>
-
-  <!-- Default Asset file inclusion -->
-  <ItemGroup Condition=" '$(EnableDefaultAndroidItems)' == 'true' ">
+    <!-- Default Asset file inclusion -->
     <AndroidAsset Include="$(MonoAndroidAssetsPrefix)\**\*" Exclude="$(MonoAndroidAssetsPrefix)\**\.*\**" />
+    <!-- Default XPath transforms for bindings -->
+    <TransformFile Include="Transforms\**\*.xml" />
+    <!-- Default Java or native libraries -->
+    <AndroidLibrary       Include="**\*.jar" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
+    <AndroidLibrary       Include="**\*.aar" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
+    <AndroidNativeLibrary Include="**\*.so"  Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
   </ItemGroup>
 
 </Project>
