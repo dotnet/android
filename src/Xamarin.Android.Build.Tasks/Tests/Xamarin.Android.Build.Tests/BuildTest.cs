@@ -85,7 +85,7 @@ namespace Xamarin.Android.Build.Tests
 			using (var b = BuildHelper.CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
-				var depsFile = GetLinkedPath (b, true, "linker - dependencies.xml.gz");
+				var depsFile = GetLinkedPath (b, true, "linker-dependencies.xml.gz");
 				FileAssert.Exists (depsFile);
 			}
 		}
