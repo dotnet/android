@@ -244,10 +244,12 @@ In this message, the phrase "should not be reached" means that this error messag
     <comment>The following are literal names and should not be translated: AAPT2, Aapt2ToolPath, MSBuild</comment>
   </data>
   <data name="XA0113" xml:space="preserve">
-    <value>Google Play requires that new applications and updates must use a TargetFrameworkVersion of v9.0 (API level 28) or above. You are currently targeting {0} (API level {1}).</value>
-    <comment>The following are literal names and should not be translated: TargetFrameworkVersion, v9.0
-{0} - The current value of TargetFrameworkVersion
-{1} - The corresponding API level number</comment>
+    <value>Google Play requires that new applications and updates must use a TargetFrameworkVersion of {0} (API level {1}) or above. You are currently targeting {2} (API level {3}).</value>
+    <comment>The following are literal names and should not be translated: TargetFrameworkVersion
+{0} - The required minimum TargetFrameworkVersion, such as 'v10.0'
+{1} - The required minimum API level number, such as '29'
+{2} - The specified TargetFrameworkVersion
+{3} - The specified API level number</comment>
   </data>
   <data name="XA0116" xml:space="preserve">
     <value>Unable to find `EmbeddedResource` named `{0}`.</value>
