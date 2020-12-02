@@ -106,9 +106,10 @@ namespace Android.Runtime {
 
 		internal static void UnhandledException (Exception e)
 		{
-			var info = new RaiseThrowableEventArgs (e);
-			if (UnhandledExceptionRaiser != null) {
-				foreach (EventHandler<RaiseThrowableEventArgs> handler in UnhandledExceptionRaiser.GetInvocationList()) {
+			var raisers         = UnhandledExceptionRaiser;
+			if (raisers != null) {
+				var info    = new RaiseThrowableEventArgs (e);
+				foreach (EventHandler<RaiseThrowableEventArgs> handler in raisers.GetInvocationList ()) {
 					handler (null, info);
 					if (info.Handled)
 						return;
