@@ -308,6 +308,11 @@ will re-run the target completely. `$(MSBuildAllProjects)` is a list
 of every MSBuild file imported during a build, MSBuild automatically
 evaluates `$(MSBuildAllProjects)` since [MSBuild 16.0][allprojects].
 
+> NOTE: You might consider using `@(_AndroidMSBuildAllProjects)`
+> instead of `$(MSBuildAllProjects)` when working on the
+> Xamarin.Android MSBuild targets. We have excluded the `*.csproj.user`
+> file for performance reasons.
+
 One pitfall, is this `_GenerateDocumentation` example *must* touch the
 timestamps on all files in `Outputs` -- regardless if they were
 actually changed. Otherwise, your target can get into a state where it

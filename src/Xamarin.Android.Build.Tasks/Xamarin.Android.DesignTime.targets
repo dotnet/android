@@ -26,6 +26,12 @@ This file is used by all project types, including binding projects.
     />
   </Target>
 
+  <Target Name="_SetupMSBuildAllProjects">
+    <ItemGroup>
+      <_AndroidMSBuildAllProjects Include="$(MSBuildAllProjects)" Exclude="$(MSBuildProjectFullPath).user" />
+    </ItemGroup>
+  </Target>
+
   <Target Name="_SetupDesignTimeBuildForBuild" DependsOnTargets="_CreateStampDirectory">
     <PropertyGroup>
       <DesignTimeBuild Condition=" '$(DesignTimeBuild)' == '' ">false</DesignTimeBuild>

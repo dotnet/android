@@ -674,6 +674,29 @@ namespace Lib2
 		}
 
 		[Test]
+		public void CSProjUserFileChanges ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			var selectedDevice = "foo";
+			var csproj_user_file = $"{proj.ProjectName}.csproj.user";
+			proj.Sources.Add (new BuildItem.NoActionResource (csproj_user_file) {
+				TextContent = () => $"<Project><PropertyGroup><SelectedDevice>{selectedDevice}</SelectedDevice></PropertyGroup></Project>"
+			});
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
+
+				// Simulates a different device/emulator selection in the IDE
+				selectedDevice = "bar";
+				proj.Touch (csproj_user_file);
+
+				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
+				b.Output.AssertTargetIsSkipped ("_CompileJava");
+				b.Output.AssertTargetIsSkipped ("_CompileToDalvik");
+				b.Output.AssertTargetIsSkipped ("_Sign");
+			}
+		}
+
+		[Test]
 		[NonParallelizable] // /restore can fail on Mac in parallel
 		public void ConvertCustomView ([Values (true, false)] bool useAapt2)
 		{

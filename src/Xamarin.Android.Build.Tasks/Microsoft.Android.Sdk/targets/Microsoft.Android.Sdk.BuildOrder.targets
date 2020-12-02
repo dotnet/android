@@ -15,6 +15,7 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
     <BuildDependsOn>
       _ValidateLinkMode;
       _CheckNonIdealConfigurations;
+      _SetupMSBuildAllProjects;
       _SetupDesignTimeBuildForBuild;
       _CategorizeAndroidLibraries;
       _CreatePropertiesCache;
@@ -70,6 +71,7 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
   <PropertyGroup Condition=" '$(AndroidApplication)' != 'True' ">
     <BuildDependsOn>
       _ValidateLinkMode;
+      _SetupMSBuildAllProjects;
       _SetupDesignTimeBuildForBuild;
       _CategorizeAndroidLibraries;
       _CreatePropertiesCache;
@@ -115,6 +117,7 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
       $([MSBuild]::Unescape($(CoreBuildDependsOn.Replace('IncrementalClean;', '$(_BeforeIncrementalClean);IncrementalClean;'))))
     </CoreBuildDependsOn>
     <CompileDependsOn>
+      _SetupMSBuildAllProjects;
       _SetupDesignTimeBuildForCompile;
       _AddAndroidDefines;
       _IncludeLayoutBindingSources;
