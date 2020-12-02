@@ -104,28 +104,18 @@ namespace Android.Runtime {
 			JNIEnv.Throw (throwable.Handle);
 		}
 
-		static IEnumerable<EventHandler<RaiseThrowableEventArgs>> GetUnhandledExceptionRaiserInvocationList ()
-		{
-			EventHandler<RaiseThrowableEventArgs>? h = UnhandledExceptionRaiser;
-			if (h == null)
-				return new EventHandler<RaiseThrowableEventArgs>[0];
-			return h.GetInvocationList ().Cast<EventHandler<RaiseThrowableEventArgs>> ();
-		}
-
 		internal static void UnhandledException (Exception e)
 		{
 			var info = new RaiseThrowableEventArgs (e);
-			bool handled = false;
-			foreach (EventHandler<RaiseThrowableEventArgs> handler in GetUnhandledExceptionRaiserInvocationList ()) {
-				handler (null, info);
-				if (info.Handled) {
-					handled = true;
-					break;
+			if (UnhandledExceptionRaiser != null) {
+				foreach (EventHandler<RaiseThrowableEventArgs> handler in UnhandledExceptionRaiser.GetInvocationList()) {
+					handler (null, info);
+					if (info.Handled)
+						return;
 				}
 			}
 
-			if (!handled)
-				RaiseThrowable (Java.Lang.Throwable.FromException (e));
+			RaiseThrowable (Java.Lang.Throwable.FromException (e));
 		}
 
 		// This is invoked by
