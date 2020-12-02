@@ -641,9 +641,10 @@ In this message, "root element" refers to the root element of an XML file.
 {0} - The name of the current code generation target</comment>
   </data>
   <data name="XA4300" xml:space="preserve">
-    <value>Native library '{0}' will not be bundled because it has an unsupported ABI.</value>
-    <comment>The abbreviation "ABI" should not be translated.
-In this message, the term "bundled" is a short way of saying "included into the final application package."</comment>
+    <value>Native library '{0}' will not be bundled because it has an unsupported ABI. Move this file to a directory with a valid Android ABI name such as 'libs/armeabi-v7a/'.</value>
+    <comment>In this message, the term "bundled" is a short way of saying "included into the final application package."
+The following are literal names and should not be translated: ABI, 'libs/armeabi-v7a/'
+{0} - The file path</comment>
   </data>
   <data name="XA4301" xml:space="preserve">
     <value>APK already contains the item {0}; ignoring.</value>
@@ -651,8 +652,9 @@ In this message, the term "bundled" is a short way of saying "included into the 
 {0} - The file name.</comment>
   </data>
   <data name="XA4301_ABI" xml:space="preserve">
-    <value>Cannot determine ABI of native library {0}.</value>
-    <comment>The abbreviation "ABI" should not be translated.</comment>
+    <value>Cannot determine ABI of native library '{0}'. Move this file to a directory with a valid Android ABI name such as 'libs/armeabi-v7a/'.</value>
+    <comment>The following are literal names and should not be translated: ABI, 'libs/armeabi-v7a/'
+{0} - The file path</comment>
   </data>
   <data name="XA4301_ABI_Ignoring" xml:space="preserve">
     <value>Could not determine ABI of some native libraries. Ignoring those: {0}</value>
