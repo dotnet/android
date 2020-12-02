@@ -11,10 +11,7 @@ using Mono.Cecil;
 namespace Microsoft.Android.Sdk.ILLink
 {
 
-	public abstract class ApplyPreserveAttributeBase : BaseSubStep {
-
-		// set 'removeAttribute' to true if you want the preserved attribute to be removed from the final assembly
-		protected abstract bool IsPreservedAttribute (ICustomAttributeProvider provider, CustomAttribute attribute, out bool removeAttribute);
+	public class ApplyPreserveAttribute : BaseSubStep {
 
 		public override SubStepTargets Targets {
 			get {
@@ -66,7 +63,7 @@ namespace Microsoft.Android.Sdk.ILLink
 
 		void MarkMethodIfPreserved (MethodDefinition method)
 		{
-			foreach (var attribute in GetPreserveAttributes (method)) 
+			foreach (var attribute in GetPreserveAttributes (method))
 				MarkMethod (method, attribute);
 		}
 
@@ -126,6 +123,9 @@ namespace Microsoft.Android.Sdk.ILLink
 
 		void TryApplyPreserveAttribute (TypeDefinition type)
 		{
+			if (!type.HasCustomAttributes)
+				return;
+
 			foreach (var attribute in GetPreserveAttributes (type)) {
 				Annotations.Mark (type);
 
@@ -138,28 +138,12 @@ namespace Microsoft.Android.Sdk.ILLink
 			}
 		}
 
-		List<CustomAttribute> GetPreserveAttributes (ICustomAttributeProvider provider)
+		static IEnumerable<CustomAttribute> GetPreserveAttributes (ICustomAttributeProvider provider)
 		{
-			List<CustomAttribute> attrs = new List<CustomAttribute> ();
-
-			if (!provider.HasCustomAttributes)
-				return attrs;
-
-			var attributes = provider.CustomAttributes;
-
-			for (int i = attributes.Count - 1; i >= 0; i--) {
-				var attribute = attributes [i];
-
-				bool remote_attribute;
-				if (!IsPreservedAttribute (provider, attribute, out remote_attribute))
-					continue;
-
-				attrs.Add (attribute);
-				if (remote_attribute)
-					attributes.RemoveAt (i);
-			}
-
-			return attrs;
+			return provider.CustomAttributes.Where (a => {
+				var type = a.Constructor.DeclaringType;
+				return type.Namespace == "Android.Runtime" && type.Name == "PreserveAttribute";
+			});
 		}
 	}
 }
