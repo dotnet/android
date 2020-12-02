@@ -402,9 +402,6 @@ namespace Xamarin.Android.Tasks {
 			if (Debug || NeedsInternet)
 				AddInternetPermissionForDebugger ();
 
-			if (!embed)
-				AddFastDeployPermissions ();
-
 			// If the manifest has android:installLocation, but we are targeting
 			// API 7 or lower, remove it for the user and show a warning
 			if (manifest.Attribute (androidNs + "installLocation") != null) {
@@ -796,13 +793,6 @@ namespace Xamarin.Android.Tasks {
 			const string permInternet ="android.permission.INTERNET";
 			if (!doc.Root.Descendants ("uses-permission").Any (x => (string)x.Attribute (attName) == permInternet))
 				app.AddBeforeSelf (new XElement ("uses-permission", new XAttribute (attName, permInternet)));
-		}
-
-		public void AddFastDeployPermissions ()
-		{
-			const string permReadExternalStorage  ="android.permission.READ_EXTERNAL_STORAGE";
-			if (!doc.Root.Descendants ("uses-permission").Any (x => (string)x.Attribute (attName) == permReadExternalStorage))
-				app.AddBeforeSelf (new XElement ("uses-permission", new XAttribute (attName, permReadExternalStorage)));
 		}
 
 		void AddPermissions (XElement application)
