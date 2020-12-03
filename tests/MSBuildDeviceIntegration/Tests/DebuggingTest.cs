@@ -300,9 +300,9 @@ namespace ${ROOT_NAMESPACE} {
 			AssertHasDevices ();
 
 			int userId = GetUserId (username);
-			string [] parameters = null;
+			List<string> parameters = new List<string>;
 			if (userId >= 0)
-				parameters = new string [] { $"AndroidDeviceUserId={userId}" };
+				parameters.Add ($"AndroidDeviceUserId={userId}");
 			if (SwitchUser (username)) {
 				WaitFor (5);
 				ClickButton ("", "android:id/button1", "Yes continue");
@@ -318,7 +318,7 @@ namespace ${ROOT_NAMESPACE} {
 			proj.SetDefaultTargetDevice ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				SetTargetFrameworkAndManifest (proj, b);
-				Assert.True (b.Install (proj, parameters: parameters), "Project should have installed.");
+				Assert.True (b.Install (proj, parameters: parameters.ToArray ()), "Project should have installed.");
 
 				int breakcountHitCount = 0;
 				ManualResetEvent resetEvent = new ManualResetEvent (false);
@@ -351,12 +351,13 @@ namespace ${ROOT_NAMESPACE} {
 				options.EvaluationOptions.UseExternalTypeResolver = true;
 				ClearAdbLogcat ();
 				b.BuildLogFile = "run.log";
-				Assert.True (b.RunTarget (proj, "_Run", doNotCleanupOnUpdate: true, parameters: new string [] {
-					$"AndroidSdbTargetPort={port}",
-					$"AndroidSdbHostPort={port}",
-					"AndroidAttachDebugger=True",
-					$"AndroidDeviceUserId={userId}"
-				}), "Project should have run.");
+
+				parameters.Add ($"AndroidSdbTargetPort={port}");
+				parameters.Add ($"AndroidSdbHostPort={port}");
+				parameters.Add ("AndroidAttachDebugger=True");
+
+				Assert.True (b.RunTarget (proj, "_Run", doNotCleanupOnUpdate: true,
+					parameters: parameters.ToArray ()), "Project should have run.");
 
 				Assert.IsTrue (WaitForDebuggerToStart (Path.Combine (Root, b.ProjectDirectory, "logcat.log")), "Activity should have started");
 				// we need to give a bit of time for the debug server to start up.
