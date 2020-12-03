@@ -26,6 +26,7 @@ namespace Java.Interop
 		// NewArray<T>(T[])
 		static readonly MethodInfo jnienv_newarray                        = GetTArrayToIntPtr<int> (JNIEnv.NewArray<int>);
 		static readonly MethodInfo jnienv_getarray                        = GetIntPtrToTArray<int> (JNIEnv.GetArray<int>);
+		[DynamicDependency ("ToLocalJniHandle", "Android.Runtime.CharSequence", "Mono.Android")]
 		static readonly MethodInfo charsequence_tojnihandle               = GetEnumerableCharToIntPtrMethodInfo (CharSequence.ToLocalJniHandle);
 		static readonly MethodInfo jnienv_tojnihandle                     = GetObjectToIntPtrMethodInfo (JNIEnv.ToLocalJniHandle);
 		static readonly MethodInfo jnienv_newstring                       = GetStringToIntPtrMethodInfo (JNIEnv.NewString);
