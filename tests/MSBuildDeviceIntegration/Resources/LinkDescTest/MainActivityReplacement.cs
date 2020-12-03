@@ -116,9 +116,7 @@ namespace UnnamedProject
 			Android.Util.Log.Info(TAG, cldt.TryAccessNonXmlPreservedMethodOfLinkerModeFullClass());
 			Android.Util.Log.Info(TAG, LinkTestLib.Bug21578.MulticastOption_ShouldNotBeStripped());
 			Android.Util.Log.Info(TAG, LinkTestLib.Bug21578.MulticastOption_ShouldNotBeStripped2());
-#if !NET
 			Android.Util.Log.Info(TAG, LinkTestLib.Bug35195.AttemptCreateTable());
-#endif
 			Android.Util.Log.Info(TAG, LinkTestLib.Bug36250.SerializeSearchRequestWithDictionary());
 
 			Android.Util.Log.Info(TAG, "All regression tests completed.");
