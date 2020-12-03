@@ -4,7 +4,6 @@
 		<type fullname="Android.Runtime.AndroidEnvironment" />
 		<type fullname="Android.Runtime.AnnotationAttribute" />
 		<type fullname="Android.Runtime.CharSequence" />
-		<type fullname="Android.Runtime.ConstructorBuilder" />
 		<type fullname="Android.Runtime.Extensions" />
 		<type fullname="Android.Runtime.GeneratedDummyHost" />
 		<type fullname="Android.Runtime.GeneratedEnumAttribute" />
