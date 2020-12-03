@@ -85,7 +85,6 @@ namespace Xamarin.Android.Build.Tests
 			var expectedFiles = Builder.UseDotNet ?
 				new [] {
 					"Java.Interop.dll",
-					"Microsoft.Win32.Primitives.dll",
 					"Mono.Android.dll",
 					"System.ComponentModel.Primitives.dll",
 					"System.Console.dll",
