@@ -56,6 +56,13 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		string GetLinkedPath (ProjectBuilder builder, bool isRelease, string filename)
+		{
+			return Builder.UseDotNet && isRelease ?
+				builder.Output.GetIntermediaryPath (Path.Combine ("android.21-arm64", "linked", filename)) :
+				builder.Output.GetIntermediaryPath (Path.Combine ("android", "assets", filename));
+		}
+
 		[Test]
 		public void BuildReleaseArm64 ([Values (false, true)] bool forms)
 		{
@@ -64,6 +71,7 @@ namespace Xamarin.Android.Build.Tests
 				new XamarinAndroidApplicationProject ();
 			proj.IsRelease = true;
 			proj.SetAndroidSupportedAbis ("arm64-v8a");
+			proj.SetProperty ("LinkerDumpDependencies", "True");
 
 			if (forms) {
 				proj.PackageReferences.Clear ();
@@ -76,6 +84,12 @@ namespace Xamarin.Android.Build.Tests
 			// use BuildHelper.CreateApkBuilder so that the test directory is not removed in tearup
 			using (var b = BuildHelper.CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+				var depsFilename = "linker-dependencies.xml.gz";
+				var depsFile = Builder.UseDotNet
+					? GetLinkedPath (b, true, depsFilename)
+					: Path.Combine (proj.Root, b.ProjectDirectory, depsFilename);
+				FileAssert.Exists (depsFile);
 			}
 		}
 
@@ -278,9 +292,7 @@ class MemTest {
 				className = "Landroid/appcompat/app/AppCompatActivity;";
 				Assert.IsFalse (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should *not* include `{className}`!");
 				// FormsAppCompatActivity should inherit the AndroidX C# type
-				var forms = Builder.UseDotNet && isRelease ?
-					b.Output.GetIntermediaryPath (Path.Combine ("android.21-arm64", "linked", "Xamarin.Forms.Platform.Android.dll")) :
-					b.Output.GetIntermediaryPath (Path.Combine ("android", "assets", "Xamarin.Forms.Platform.Android.dll"));
+				var forms = GetLinkedPath (b, isRelease, "Xamarin.Forms.Platform.Android.dll");
 				using (var assembly = AssemblyDefinition.ReadAssembly (forms)) {
 					var activity = assembly.MainModule.GetType ("Xamarin.Forms.Platform.Android.FormsAppCompatActivity");
 					Assert.AreEqual ("AndroidX.AppCompat.App.AppCompatActivity", activity.BaseType.FullName);
