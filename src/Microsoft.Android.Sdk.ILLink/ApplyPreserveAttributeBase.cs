@@ -140,10 +140,7 @@ namespace Microsoft.Android.Sdk.ILLink
 
 		static IEnumerable<CustomAttribute> GetPreserveAttributes (ICustomAttributeProvider provider)
 		{
-			return provider.CustomAttributes.Where (a => {
-				var type = a.Constructor.DeclaringType;
-				return type.Namespace == "Android.Runtime" && type.Name == "PreserveAttribute";
-			});
+			return provider.CustomAttributes.Where (a => a.Constructor.DeclaringType.Name == "PreserveAttribute");
 		}
 	}
 }
