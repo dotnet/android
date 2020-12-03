@@ -8,7 +8,7 @@ using System.Threading;
 namespace Android.Runtime {
 	internal static class ConstructorBuilder {
 		static readonly MethodInfo newobject =
-#if NETFRAMEWORK
+#if NETFRAMEWORK || NET_2_0
 			typeof (System.Runtime.Serialization.FormatterServices).GetMethod ("GetUninitializedObject", BindingFlags.Public | BindingFlags.Static)!;
 #else
 			typ##eof (System.Runtime.CompilerServices.RuntimeHelpers).GetMethod ("GetUninitializedObject", BindingFlags.Public | BindingFlags.Static)!;
