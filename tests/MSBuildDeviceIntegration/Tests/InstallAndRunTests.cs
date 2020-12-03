@@ -330,20 +330,31 @@ namespace Library1 {
 								return sr.ReadToEnd ();
 						},
 					},
-					new BuildItem.Source ("Bug36250.cs") {
-						TextContent = () => {
-							using (var sr = new StreamReader (typeof (InstallAndRunTests).Assembly.GetManifestResourceStream ("Xamarin.Android.Build.Tests.Resources.LinkDescTest.Bug36250.cs")))
-								return sr.ReadToEnd ();
-						},
-					},
-					new BuildItem.Source ("Bug35195.cs") {
-						TextContent = () => {
-							using (var sr = new StreamReader (typeof (InstallAndRunTests).Assembly.GetManifestResourceStream ("Xamarin.Android.Build.Tests.Resources.LinkDescTest.Bug35195.cs")))
-								return sr.ReadToEnd ();
-						},
-					},
 				},
 			};
+
+			// sqlite-net-pcl does not work in .NET 6
+			if (!Builder.UseDotNet) {
+				lib2.PackageReferences.Add (new Package {
+					Id = "sqlite-net-pcl",
+					Version = "1.7.335",
+				});
+
+				// https://github.com/dotnet/runtime/issues/45559
+				lib2.Sources.Add (new BuildItem.Source ("Bug36250.cs") {
+					TextContent = () => {
+						using (var sr = new StreamReader (typeof (InstallAndRunTests).Assembly.GetManifestResourceStream ("Xamarin.Android.Build.Tests.Resources.LinkDescTest.Bug36250.cs")))
+							return sr.ReadToEnd ();
+					},
+				});
+)
+				lib2.Sources.Add (new BuildItem.Source ("Bug35195.cs") {
+					TextContent = () => {
+						using (var sr = new StreamReader (typeof (InstallAndRunTests).Assembly.GetManifestResourceStream ("Xamarin.Android.Build.Tests.Resources.LinkDescTest.Bug35195.cs")))
+							return sr.ReadToEnd ();
+					},
+				});
+			}
 
 			proj = new XamarinFormsAndroidApplicationProject () {
 				IsRelease = true,
@@ -406,8 +417,9 @@ namespace Library1 {
 			}, logcatPath, 90), "Linker test app did not run successfully.");
 
 			var logcatOutput = File.ReadAllText (logcatPath);
+			var logcatOutputCut = Substring(Math.Min(logcatOutput.Length - 3000, logcatOutput), logcatOutput.Length);
 			StringAssert.Contains ("[PASS]", logcatOutput);
-			StringAssert.DoesNotContain ("[FAIL]", logcatOutput);
+			StringAssert.DoesNotContain ("[FAIL]", logcatOutputCut);
 			if (linkMode == AndroidLinkMode.Full) {
 				StringAssert.Contains ("[LINKALLPASS]", logcatOutput);
 				StringAssert.DoesNotContain ("[LINKALLFAIL]", logcatOutput);
