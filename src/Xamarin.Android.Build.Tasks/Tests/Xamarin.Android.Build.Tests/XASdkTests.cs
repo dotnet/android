@@ -259,8 +259,13 @@ namespace Xamarin.Android.Build.Tests
 		public void DotNetBuildBinding ()
 		{
 			var proj = new XASdkProject (outputType: "Library");
-			proj.OtherBuildItems.Add (new AndroidItem.AndroidLibrary ("javaclasses.jar") {
-				MetadataValues = "Bind=true",
+			proj.Sources.Add (new AndroidItem.TransformFile ("Transforms\\Metadata.xml") {
+				TextContent = () =>
+@"<metadata>
+  <attr path=""/api/package[@name='com.xamarin.android.test.msbuildtest']"" name=""managedName"">MSBuildTest</attr>
+</metadata>",
+			});
+			proj.Sources.Add (new AndroidItem.AndroidLibrary ("javaclasses.jar") {
 				BinaryContent = () => Convert.FromBase64String (InlineData.JavaClassesJarBase64)
 			});
 			// TODO: bring back when Xamarin.Android.Bindings.Documentation.targets is working
@@ -273,7 +278,7 @@ namespace Xamarin.Android.Build.Tests
 			var assemblyPath = Path.Combine (FullProjectDirectory, proj.OutputPath, "UnnamedProject.dll");
 			FileAssert.Exists (assemblyPath);
 			using (var assembly = AssemblyDefinition.ReadAssembly (assemblyPath)) {
-				var typeName = "Com.Xamarin.Android.Test.Msbuildtest.JavaSourceJarTest";
+				var typeName = "MSBuildTest.JavaSourceJarTest";
 				var type = assembly.MainModule.GetType (typeName);
 				Assert.IsNotNull (type, $"{assemblyPath} should contain {typeName}");
 			}
