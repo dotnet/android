@@ -287,14 +287,14 @@ namespace Xamarin.Android.Build.Tests
 			if (match.Success) {
 				return int.Parse (match.Groups ["userId"].Value);
 			}
-			if (username == "Owner")
-				return 0;
 			return -1;
 		}
 
 		protected static bool SwitchUser (string username)
 		{
 			int userId = GetUserId (username);
+			if (userId == -1)
+				userId = 0;
 			if (userId >= 0) {
 				RunAdbCommand ($"shell am switch-user {userId}");
 				return true;

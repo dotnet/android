@@ -251,31 +251,31 @@ namespace ${ROOT_NAMESPACE} {
 				/* embedAssemblies */    true,
 				/* fastDevType */        "Assemblies",
 				/* allowDeltaInstall */  false,
-				/* user */		 "Owner",
+				/* user */		 null,
 			},
 			new object[] {
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies",
 				/* allowDeltaInstall */  false,
-				/* user */		 "Owner",
+				/* user */		 null,
 			},
 			new object[] {
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies",
 				/* allowDeltaInstall */  true,
-				/* user */		 "Owner",
+				/* user */		 null,
 			},
 			new object[] {
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies:Dexes",
 				/* allowDeltaInstall */  false,
-				/* user */		 "Owner",
+				/* user */		 null,
 			},
 			new object[] {
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies:Dexes",
 				/* allowDeltaInstall */  true,
-				/* user */		 "Owner",
+				/* user */		 null,
 			},
 			new object[] {
 				/* embedAssemblies */    true,
@@ -300,6 +300,9 @@ namespace ${ROOT_NAMESPACE} {
 			AssertHasDevices ();
 
 			int userId = GetUserId (username);
+			string [] parameters = null;
+			if (userId >= 0)
+				parameters = new string [] { $"AndroidDeviceUserId={userId}" };
 			if (SwitchUser (username)) {
 				WaitFor (5);
 				ClickButton ("", "android:id/button1", "Yes continue");
@@ -315,7 +318,7 @@ namespace ${ROOT_NAMESPACE} {
 			proj.SetDefaultTargetDevice ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				SetTargetFrameworkAndManifest (proj, b);
-				Assert.True (b.Install (proj, parameters: new string [] { $"AndroidDeviceUserId={userId}" }), "Project should have installed.");
+				Assert.True (b.Install (proj, parameters: parameters), "Project should have installed.");
 
 				int breakcountHitCount = 0;
 				ManualResetEvent resetEvent = new ManualResetEvent (false);
