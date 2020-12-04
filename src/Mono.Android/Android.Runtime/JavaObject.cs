@@ -90,14 +90,6 @@ namespace Android.Runtime {
 			get { return inst; }
 		}
 
-		protected override Java.Lang.Object Clone ()
-		{
-			if (inst is ICloneable)
-				return new JavaObject (((ICloneable)inst).Clone ());
-			else
-				return new JavaObject (inst);
-		}
-
 		public override bool Equals (Java.Lang.Object? obj)
 		{
 			if (obj is JavaObject jobj) {
