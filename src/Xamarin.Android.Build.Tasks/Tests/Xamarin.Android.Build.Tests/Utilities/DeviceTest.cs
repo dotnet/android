@@ -13,7 +13,7 @@ namespace Xamarin.Android.Build.Tests
 {
 	public class DeviceTest: BaseTest
 	{
-		public readonly const string GuestUserName = "guest1";
+		public const string GuestUserName = "guest1";
 
 		[OneTimeSetUp]
 		public void DeviceSetup ()

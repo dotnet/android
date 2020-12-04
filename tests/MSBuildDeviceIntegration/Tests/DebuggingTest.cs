@@ -300,7 +300,7 @@ namespace ${ROOT_NAMESPACE} {
 			AssertHasDevices ();
 
 			int userId = GetUserId (username);
-			List<string> parameters = new List<string>;
+			List<string> parameters = new List<string> ();
 			if (userId >= 0)
 				parameters.Add ($"AndroidDeviceUserId={userId}");
 			if (SwitchUser (username)) {
