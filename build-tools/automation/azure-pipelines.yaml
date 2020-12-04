@@ -1240,7 +1240,7 @@ stages:
 
       # https://github.com/huserben/TfsExtensions/blob/master/BuildTasks/overview.md
     - task: benjhuser.tfs-extensions-build-tasks.trigger-build-task.TriggerBuild@3
-      displayName: 'Trigger sign-from-github-esrp YAML build'
+      displayName: 'xamarin vsix codesign - run Azure DevOps job'
       inputs:
         buildDefinition: $(Signing.Job)
         useSameSourceVersion: false
