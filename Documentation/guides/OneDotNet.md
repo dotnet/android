@@ -29,22 +29,28 @@ project][binding] as a separate project type. Any of the MSBuild item
 groups or build actions that currently work in binding projects will
 be supported through a .NET 6 Android application or library.
 
-For example, a binding library could look like:
+For example, a binding library would be identical to a class library:
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net6.0-android</TargetFramework>
   </PropertyGroup>
-  <ItemGroup>
-    <TransformFile Include="Transforms\Metadata.xml" />
-    <EmbeddedJar Include="Jars\foo.jar" />
-  </ItemGroup>
 </Project>
 ```
 
+Along with the file structure:
+
+    Transforms/
+        Metadata.xml
+    foo.jar
+
+`Transforms\*.xml` files are automatically included as a
+`@(TransformFile)` item, and `.jar` files are automatically included
+as a `@(AndroidLibrary)` item.
+
 This will bind C# types for the Java types found in `foo.jar` using
-the metadata fixups from `Metadata.xml`.
+the metadata fixups from `Transforms\Metadata.xml`.
 
 [binding]: https://docs.microsoft.com/xamarin/android/platform/binding-java-library/
 

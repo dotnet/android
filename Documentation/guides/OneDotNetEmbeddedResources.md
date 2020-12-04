@@ -179,15 +179,15 @@ Let's simplify this, we could support all of the above with a new
 
 ```xml
 <!-- Include and bind -->
-<AndroidLibrary Include="foo.aar" Bind="true" />
+<AndroidLibrary Include="foo.aar" />
 <!-- Just include, do not bind -->
-<AndroidLibrary Include="bar.aar" />
-<AndroidLibrary Include="baz.jar" />
+<AndroidLibrary Include="bar.aar" Bind="false" />
+<AndroidLibrary Include="baz.jar" Bind="false" />
 <!--
   Bind but do not include in NuGet package.
   %(Pack) is built into NuGet MSBuild targets.
 -->
-<AndroidLibrary Include="bar.aar" Bind="true" Pack="false" />
+<AndroidLibrary Include="bar.aar" Pack="false" />
 <!-- Native libraries need ABI directory -->
 <AndroidLibrary Include="armeabi-v7a\libfoo.so" />
 <AndroidLibrary Include="x86\libfoo.so" />
@@ -195,9 +195,9 @@ Let's simplify this, we could support all of the above with a new
 
 The new `@(AndroidLibrary)` item group will simply translate to the
 old ones for backwards compatibility. The extension of the file can be
-used to determine what kind of library each item is. `%(Bind)` will be
-`false` by default, and `%(Pack)` will be `true` by default. `%(Pack)`
-will not do anything in application projects.
+used to determine what kind of library each item is. `%(Bind)` and
+`%(Pack)` will both be `true` by default. `%(Pack)` will not do
+anything in application projects.
 
 The deprecated item groups will no longer embed, but pack into
 `.nupkg` files instead:

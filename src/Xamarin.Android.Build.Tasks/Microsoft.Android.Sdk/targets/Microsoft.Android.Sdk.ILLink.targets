@@ -55,6 +55,10 @@ This file contains the .NET 5-specific targets to customize ILLink
         Condition=" '$(_ProguardProjectConfiguration)' != '' ">
       <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --custom-data ProguardConfiguration="$(_ProguardProjectConfiguration)"</_ExtraTrimmerArgs>
     </PropertyGroup>
+    <PropertyGroup
+        Condition=" '$(LinkerDumpDependencies)' == 'true' ">
+      <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --dump-dependencies"</_ExtraTrimmerArgs>
+    </PropertyGroup>
     <ItemGroup>
       <!-- add our custom steps -->
       <_TrimmerCustomSteps Include="$(MSBuildThisFileDirectory)..\tools\Microsoft.Android.Sdk.ILLink.dll">
