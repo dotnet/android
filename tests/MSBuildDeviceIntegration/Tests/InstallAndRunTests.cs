@@ -347,7 +347,7 @@ namespace Library1 {
 							return sr.ReadToEnd ();
 					},
 				});
-)
+
 				lib2.Sources.Add (new BuildItem.Source ("Bug35195.cs") {
 					TextContent = () => {
 						using (var sr = new StreamReader (typeof (InstallAndRunTests).Assembly.GetManifestResourceStream ("Xamarin.Android.Build.Tests.Resources.LinkDescTest.Bug35195.cs")))
