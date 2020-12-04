@@ -8,6 +8,7 @@ using Mono.Debugging.Client;
 using Mono.Debugging.Soft;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
+using System.Collections.Generic;
 
 namespace Xamarin.Android.Build.Tests
 {
