@@ -29,6 +29,7 @@ projects. .NET 5 projects will not import this file.
       _CheckNonIdealConfigurations;
       _SetupMSBuildAllProjects;
       _SetupDesignTimeBuildForBuild;
+      _CategorizeAndroidLibraries;
       _CreatePropertiesCache;
       _CleanIntermediateIfNeeded;
       _CheckProjectItems;
@@ -61,6 +62,7 @@ projects. .NET 5 projects will not import this file.
       _ValidateLinkMode;
       _SetupMSBuildAllProjects;
       _SetupDesignTimeBuildForBuild;
+      _CategorizeAndroidLibraries;
       _CreatePropertiesCache;
       _CleanIntermediateIfNeeded;
       _AddAndroidDefines;
@@ -167,6 +169,7 @@ projects. .NET 5 projects will not import this file.
     <BuildDependsOn>
       _SetupMSBuildAllProjects;
       _SetupDesignTimeBuildForBuild;
+      _CategorizeAndroidLibraries;
       AddLibraryJarsToBind;
       $(BuildDependsOn);
       BuildDocumentation;

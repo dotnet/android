@@ -42,7 +42,7 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidBindingProject () {
 				IsRelease = true,
 			};
-			proj.Jars.Add (new AndroidItem.EmbeddedJar ("Jars\\svg-android.jar") {
+			proj.Jars.Add (new AndroidItem.AndroidLibrary ("Jars\\svg-android.jar") {
 				WebContent = "https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/svg-android/svg-android.jar"
 			});
 			proj.AndroidClassParser = classParser;
@@ -106,7 +106,7 @@ namespace Xamarin.Android.Build.Tests
 				UseLatestPlatformSdk = true,
 				IsRelease = true,
 			};
-			proj.Jars.Add (new AndroidItem.LibraryProjectZip ("Jars\\material-menu-1.1.0.aar") {
+			proj.Jars.Add (new AndroidItem.AndroidLibrary ("Jars\\material-menu-1.1.0.aar") {
 				WebContent = "https://repo.jfrog.org/artifactory/libs-release-bintray/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar"
 			});
 			proj.AndroidClassParser = classParser;

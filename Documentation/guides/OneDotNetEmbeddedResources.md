@@ -174,8 +174,9 @@ Right now we have a confusing collection of MSBuild item groups:
 * `@(AndroidNativeLibrary)` - `.so` file to include in an application
   project.
 
-Let's simplify this, we could support all of the above with a new
-`@(AndroidLibrary)` item group:
+We could simplify much of the above with a new `@(AndroidLibrary)`
+item group. `@(AndroidNativeLibrary)` can be used for
+`@(EmbeddedNativeLibrary)` as well:
 
 ```xml
 <!-- Include and bind -->
@@ -188,10 +189,14 @@ Let's simplify this, we could support all of the above with a new
   %(Pack) is built into NuGet MSBuild targets.
 -->
 <AndroidLibrary Include="bar.aar" Pack="false" />
-<!-- Native libraries need ABI directory -->
-<AndroidLibrary Include="armeabi-v7a\libfoo.so" />
-<AndroidLibrary Include="x86\libfoo.so" />
+<!-- Native libraries need ABI directory or %(Abi) -->
+<AndroidNativeLibrary Include="armeabi-v7a\libfoo.so" />
+<AndroidNativeLibrary Include="libfoo.so" Abi="x86" />
 ```
+
+`@(AndroidNativeLibrary)` should remain distinct from
+`@(AndroidLibrary)` because the `%(Bind)` and `%(Abi)` metadata do not
+really make sense for both native libraries and Java/Kotlin libraries.
 
 The new `@(AndroidLibrary)` item group will simply translate to the
 old ones for backwards compatibility. The extension of the file can be

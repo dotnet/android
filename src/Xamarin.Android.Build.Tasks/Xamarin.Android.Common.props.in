@@ -26,16 +26,6 @@
 		<!-- Enable nuget package conflict resolution -->
 		<ResolveAssemblyConflicts>true</ResolveAssemblyConflicts>
 	</PropertyGroup>
-	<ItemDefinitionGroup>
-		<AndroidResource>
-			<SubType>Designer</SubType>
-			<Generator>MSBuild:UpdateGeneratedFiles</Generator>
-		</AndroidResource>
-		<!-- NOTE: .aar items should skip %(AndroidSkipResourceProcessing) by default -->
-		<AndroidAarLibrary>
-			<AndroidSkipResourceProcessing>true</AndroidSkipResourceProcessing>
-		</AndroidAarLibrary>
-	</ItemDefinitionGroup>
         <ItemGroup>
           <AndroidMinimumSupportedApiLevel Include="armeabi-v7a">
             <ApiLevel>@NDK_ARMEABI_V7_API@</ApiLevel>

@@ -75,6 +75,36 @@ package.
 Files with a Build action of `AndroidJavaSource` are Java source code which
 will be included in the final Android package.
 
+## AndroidLibrary
+
+**AndroidLibrary** is a new build action for simplifying how
+`.jar` and `.aar` files are included in projects.
+
+Any project can specify:
+
+```xml
+<ItemGroup>
+  <AndroidLibrary Include="foo.jar" />
+  <AndroidLibrary Include="bar.aar" />
+</ItemGroup>
+```
+
+The result of the above code snippet has a different effect for each
+Xamarin.Android project type:
+
+* Application and class library projects:
+  * `foo.jar` maps to [**AndroidJavaLibrary**](#androidjavalibrary)
+  * `bar.aar` maps to [**AndroidAarLibrary**](#androidaarlibrary)
+* Java binding projects:
+  * `foo.jar` maps to [**EmbeddedJar**](#embeddedjar)
+  * `foo.jar` maps to [**EmbeddedReferenceJar**](#embeddedreferencejar)
+    if `Bind="false"` metadata is added
+  * `bar.aar` maps to [**LibraryProjectZip**](#libraryprojectzip)
+
+This simplification means you can use **AndroidLibrary** everywhere.
+
+Added in Xamarin.Android 11.2.
+
 ## AndroidLintConfig
 
 The Build action 'AndroidLintConfig' should be used in conjunction with the
@@ -212,6 +242,75 @@ step).
 
 Starting in Xamarin.Android 5.1, attempting to use the `@(Content)`
 Build action will result in a `XA0101` warning.
+
+## EmbeddedJar
+
+In a Xamarin.Android binding project, the **EmbeddedJar** build action
+binds the Java/Kotlin library and embeds the `.jar` file into the
+library. When a Xamarin.Android application project consumes the
+library, it will have access to the Java/Kotlin APIs from C# as well
+as include the Java/Kotlin code in the final Android application.
+
+Since Xamarin.Android 11.2, you can use the
+[**AndroidLibrary**](#androidlibrary) build action as an alternative
+such as:
+
+```xml
+<Project>
+  <ItemGroup>
+    <AndroidLibrary Include="Library.jar" />
+  </ItemGroup>
+</Project>
+```
+
+## EmbeddedNativeLibrary
+
+In a Xamarin.Android class library or Java binding project, the
+**EmbeddedNativeLibrary** build action bundles a native library such
+as `lib/armeabi-v7a/libfoo.so` into the library. When a
+Xamarin.Android application consumes the library, the `libfoo.so` file
+will be included in the final Android application.
+
+Since Xamarin.Android 11.2, you can use the
+[**AndroidNativeLibrary**](#androidnativelibrary) build action as an
+alternative.
+
+## EmbeddedReferenceJar
+
+In a Xamarin.Android binding project, the **EmbeddedReferenceJar**
+build action embeds the `.jar` file into the library but does not
+create a C# binding as [**EmbeddedJar**](#embeddedjar) does. When a
+Xamarin.Android application project consumes the library, it will
+include the Java/Kotlin code in the final Android application.
+
+Since Xamarin.Android 11.2, you can use the
+[**AndroidLibrary**](#androidlibrary) build action as an alternative
+such as `<AndroidLibrary Include="..." Bind="false" />`:
+
+```xml
+<Project>
+  <ItemGroup>
+    <!-- A .jar file to bind & embed -->
+    <AndroidLibrary Include="Library.jar" />
+    <!-- A .jar file to only embed -->
+    <AndroidLibrary Include="Dependency.jar" Bind="false" />
+  </ItemGroup>
+</Project>
+```
+
+## LibraryProjectZip
+
+In a Xamarin.Android binding project, the **LibraryProjectZip** build
+action binds the Java/Kotlin library and embeds the `.zip` or `.aar`
+file into the library. When a Xamarin.Android application project
+consumes the library, it will have access to the Java/Kotlin APIs from
+C# as well as include the Java/Kotlin code in the final Android
+application.
+
+> [!NOTE]
+> Only a single **LibraryProjectZip** can be included in a
+> Xamarin.Android binding project. This limitation will be removed
+> going forward in .NET 6.
 
 ## LinkDescription
 

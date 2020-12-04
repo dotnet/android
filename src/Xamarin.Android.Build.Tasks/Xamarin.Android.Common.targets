@@ -134,6 +134,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Common.Debugging.props"
 	Condition=" '$(UsingAndroidNETSdk)' != 'True' And Exists('$(MSBuildThisFileDirectory)Xamarin.Android.Common.Debugging.props')" />
+
+<Import Project="Xamarin.Android.AvailableItems.targets" />
+
 <!--
 *******************************************
           Framework Setup
@@ -150,29 +153,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 		$(GetReferenceAssemblyPathsDependsOn)
 	</GetReferenceAssemblyPathsDependsOn>
 </PropertyGroup>
-
-<!-- Get our Build Action to show up in VS -->
-<ItemGroup>
-  <AvailableItemName Include="AndroidAarLibrary" />
-  <AvailableItemName Include="AndroidAotProfile" />
-  <AvailableItemName Include="AndroidAsset" />
-  <AvailableItemName Include="AndroidEnvironment" />
-  <AvailableItemName Include="AndroidExternalJavaLibrary" />
-  <AvailableItemName Include="AndroidInterfaceDescription" />
-  <AvailableItemName Include="AndroidJavaLibrary" />
-  <AvailableItemName Include="AndroidJavaSource" />
-  <AvailableItemName Include="AndroidLintConfig" />
-  <AvailableItemName Include="AndroidResourceAnalysisConfig" />
-  <AvailableItemName Include="AndroidNativeLibrary" />
-  <AvailableItemName Include="AndroidResource" />
-  <AvailableItemName Include="AndroidBoundLayout" />
-  <AvailableItemName Include="EmbeddedNativeLibrary" />
-  <AvailableItemName Include="LinkDescription" />
-  <AvailableItemName Include="MultiDexMainDexList" />
-  <AvailableItemName Include="ProguardConfiguration" />
-  <AvailableItemName Include="ProjectReference" />
-  <AvailableItemName Include="AndroidManifestOverlay" />
-</ItemGroup>
 
 <!-- Version/fx properties -->
 <PropertyGroup>
