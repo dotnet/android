@@ -21,7 +21,6 @@
 		<type fullname="Android.Runtime.JavaDictionary`2" />
 		<type fullname="Android.Runtime.JavaList" />
 		<type fullname="Android.Runtime.JavaList`1" />
-		<type fullname="Android.Runtime.JavaObject" />
 		<type fullname="Android.Runtime.JavaSet" />
 		<type fullname="Android.Runtime.JavaSet`1" />
 		<type fullname="Android.Runtime.JavaTypeConverter`1" />
