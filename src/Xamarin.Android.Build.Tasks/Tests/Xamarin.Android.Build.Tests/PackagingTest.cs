@@ -112,7 +112,6 @@ namespace Xamarin.Android.Build.Tests
 					"System.Security.Cryptography.Encoding.dll",
 					"System.Security.Cryptography.OpenSsl.dll",
 					"System.Security.Cryptography.X509Certificates.dll",
-					"System.Runtime.Serialization.Formatters.dll",
 					"System.Runtime.Serialization.Primitives.dll",
 					"System.Security.Cryptography.Algorithms.dll",
 					"System.Security.Cryptography.Primitives.dll",
