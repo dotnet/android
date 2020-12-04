@@ -417,9 +417,8 @@ namespace Library1 {
 			}, logcatPath, 90), "Linker test app did not run successfully.");
 
 			var logcatOutput = File.ReadAllText (logcatPath);
-			var logcatOutputCut = Substring(Math.Min(logcatOutput.Length - 3000, logcatOutput), logcatOutput.Length);
 			StringAssert.Contains ("[PASS]", logcatOutput);
-			StringAssert.DoesNotContain ("[FAIL]", logcatOutputCut);
+			StringAssert.DoesNotContain ("[FAIL]", logcatOutput);
 			if (linkMode == AndroidLinkMode.Full) {
 				StringAssert.Contains ("[LINKALLPASS]", logcatOutput);
 				StringAssert.DoesNotContain ("[LINKALLFAIL]", logcatOutput);
