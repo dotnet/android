@@ -317,6 +317,12 @@ namespace Library1 {
 				ProjectName = "LinkTestLib",
 				Sdk = "Microsoft.NET.Sdk",
 				TargetFramework = "netstandard2.0",
+				PackageReferences = {
+					new Package {
+						Id = "sqlite-net-pcl",
+						Version = "1.7.335",
+					}
+				},
 				Sources = {
 					new BuildItem.Source ("Bug21578.cs") {
 						TextContent = () => {
@@ -330,22 +336,14 @@ namespace Library1 {
 								return sr.ReadToEnd ();
 						},
 					},
+					new BuildItem.Source ("Bug35195.cs") {
+						TextContent = () => {
+							using (var sr = new StreamReader (typeof (InstallAndRunTests).Assembly.GetManifestResourceStream ("Xamarin.Android.Build.Tests.Resources.LinkDescTest.Bug35195.cs")))
+								return sr.ReadToEnd ();
+						},
+					},
 				},
 			};
-
-			// sqlite-net-pcl does not work in .NET 6
-			if (!Builder.UseDotNet) {
-				lib2.PackageReferences.Add (new Package {
-					Id = "sqlite-net-pcl",
-					Version = "1.7.335",
-				});
-				lib2.Sources.Add (new BuildItem.Source ("Bug35195.cs") {
-					TextContent = () => {
-						using (var sr = new StreamReader (typeof (InstallAndRunTests).Assembly.GetManifestResourceStream ("Xamarin.Android.Build.Tests.Resources.LinkDescTest.Bug35195.cs")))
-							return sr.ReadToEnd ();
-					},
-				});
-			}
 
 			proj = new XamarinFormsAndroidApplicationProject () {
 				IsRelease = true,
@@ -373,6 +371,14 @@ namespace Library1 {
 					},
 				},
 			};
+			if (Builder.UseDotNet) {
+				// NOTE: workaround for netcoreapp3.1 dependency preferred over monoandroid8.0
+				proj.PackageReferences.Add (new Package {
+					Id = "SQLitePCLRaw.lib.e_sqlite3.android",
+					Version = "2.0.4",
+				});
+			}
+
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("</manifest>", "<uses-permission android:name=\"android.permission.INTERNET\" /></manifest>");
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
 			using (var sr = new StreamReader (typeof (InstallAndRunTests).Assembly.GetManifestResourceStream ("Xamarin.Android.Build.Tests.Resources.LinkDescTest.MainActivityReplacement.cs")))
