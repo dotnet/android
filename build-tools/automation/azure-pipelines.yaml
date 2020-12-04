@@ -1238,15 +1238,16 @@ stages:
       clean: all
     steps:
 
-    - task: JenkinsQueueJob@2
-      displayName: xamarin vsix codesign - run jenkins job
+      # https://github.com/huserben/TfsExtensions/blob/master/BuildTasks/overview.md
+    - task: benjhuser.tfs-extensions-build-tasks.trigger-build-task.TriggerBuild@3
+      displayName: 'Trigger sign-from-github-esrp YAML build'
       inputs:
-        serverEndpoint: $(Signing.Endpoint)
-        jobName: $(Signing.Job)
-        isParameterizedJob: true
-        jobParameters: |
-          REPO=$(Build.Repository.Name)
-          COMMIT=$(Build.SourceVersion)
-          SIGN_TYPE=Real
-          GITHUB_CONTEXT=$(GitHub.Artifacts.Context)
-          ENABLE_JAR_SIGNING=true
+        buildDefinition: $(Signing.Job)
+        useSameSourceVersion: false
+        useSameBranch: false
+        branchToUse: 'full-esrp-integration'
+        waitForQueuedBuildsToFinish: true
+        storeInEnvironmentVariable: true
+        buildParameters: '{ "REPO": "$(Build.Repository.Name)", "COMMIT": "$(Build.SourceVersion)", "SIGN_TYPE": "Real", "GITHUB_CONTEXT": "$(GitHub.Artifacts.Context)" }'
+        authenticationMethod: 'OAuth Token'
+        password: $(System.AccessToken)     # Equivalent to the 'Allow scripts to access OAuth token option': https://stackoverflow.com/questions/52837980/how-to-allow-scripts-to-access-oauth-token-from-yaml-builds
