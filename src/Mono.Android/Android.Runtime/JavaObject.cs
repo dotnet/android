@@ -92,8 +92,8 @@ namespace Android.Runtime {
 
 		protected override Java.Lang.Object Clone ()
 		{
-			if (inst is ICloneable c)
-				return new JavaObject (c.Clone ());
+			if (inst is ICloneable)
+				return new JavaObject (((ICloneable)inst).Clone ());
 			else
 				return new JavaObject (inst);
 		}
