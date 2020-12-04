@@ -178,6 +178,16 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void DotNetNew ([Values ("android", "androidlib", "android-bindinglib")] string template)
+		{
+			var dotnet = CreateDotNetBuilder ();
+			Assert.IsTrue (dotnet.New (template), $"`dotnet new {template}` should succeed");
+			Assert.IsTrue (dotnet.New ("android-activity"), "`dotnet new android-activity` should succeed");
+			Assert.IsTrue (dotnet.New ("android-layout", Path.Combine (dotnet.ProjectDirectory, "Resources", "layout")), "`dotnet new android-layout` should succeed");
+			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
+		}
+
+		[Test]
 		public void DotNetPack ([Values ("net6.0-android", "net6.0-android30")] string targetFramework)
 		{
 			var proj = new XASdkProject (outputType: "Library") {
@@ -464,6 +474,16 @@ namespace Xamarin.Android.Build.Tests
 				apk.AssertContainsEntry (apkPath, "res/raw/foo.txt");
 				apk.AssertContainsEntry (apkPath, "assets/foo/bar.txt");
 			}
+		}
+
+		DotNetCLI CreateDotNetBuilder (string relativeProjectDir = null)
+		{
+			if (string.IsNullOrEmpty (relativeProjectDir)) {
+				relativeProjectDir = Path.Combine ("temp", TestName);
+			}
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] =
+				FullProjectDirectory = Path.Combine (Root, relativeProjectDir);
+			return new DotNetCLI (Path.Combine (FullProjectDirectory, $"{TestName}.csproj"));
 		}
 
 		DotNetCLI CreateDotNetBuilder (XASdkProject project, string relativeProjectDir = null)

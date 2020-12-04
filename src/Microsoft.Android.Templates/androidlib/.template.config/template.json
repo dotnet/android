@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Microsoft",
+  "classifications": [ "Android" ],
+  "identity": "Microsoft.Android.AndroidLib",
+  "name": "Android Class library",
+  "description": "A project for creating an Android class library",
+  "shortName": "androidlib",
+  "tags": {
+    "language": "C#",
+    "type": "project"
+  },
+  "sourceName": "AndroidLib1",
+  "preferNameDirectory": true,
+  "primaryOutputs": [
+    { "path": "AndroidLib1.csproj" }
+  ],
+  "defaultName": "AndroidLib1"
+}
