@@ -1,5 +1,5 @@
 <linker>
-  <assembly fullname="*">
+  <assembly fullname="Mono.Android">
     <type fullname="Android.Runtime.PreserveAttribute">
       <attribute internal="RemoveAttributeInstances" />
     </type>
