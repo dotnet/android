@@ -37,6 +37,7 @@ namespace Xamarin.Android.Tests
 	class ListCommand : XatCommandOption
 	{
 		ListItem whatToList = ListItem.None;
+		bool verbose;
 
 		public ListCommand ()
 			: base ("list", "List known tests/categories/etc")
@@ -47,6 +48,8 @@ namespace Xamarin.Android.Tests
 				"",
 				{ "g|groups", "list only test groups", v => whatToList |= ListItem.Groups },
 				{ "s|suites", "list only test suites", v => whatToList |= ListItem.Suites },
+				{ "" },
+				{ "m|more", "list more information", v => verbose = true },
 				{ "?|h|help", "show this help", v => ShowHelp = v != null },
 			};
 		}
@@ -57,7 +60,7 @@ namespace Xamarin.Android.Tests
 				return 0;
 			}
 
-			var list = new List (whatToList == ListItem.None ? ListItem.All : whatToList);
+			var list = new List (whatToList == ListItem.None ? ListItem.All : whatToList, verbose);
 			return Invoke (list).Result;
 		}
 	}

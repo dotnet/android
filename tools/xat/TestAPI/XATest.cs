@@ -99,7 +99,7 @@ namespace Xamarin.Android.Tests
 			Name = EnsureParameterValue (nameof (name), name);
 			TestFilePath = Utilities.EnsureFullPath (EnsureParameterValue (nameof (testFilePath), testFilePath));
 			TestProjectFilePath = Utilities.EnsureFullPath (EnsureParameterValue (nameof (testProjectFilePath), testProjectFilePath));
-			ID = MakeID (name);
+			ID = Utilities.MakeID (name);
 		}
 
 #pragma warning disable 1998
@@ -207,29 +207,6 @@ namespace Xamarin.Android.Tests
 		protected virtual bool BeforeExecuteCommands (List<TestCommand> commands, string phaseName)
 		{
 			return true;
-		}
-
-		string MakeID (string name)
-		{
-			var sb = new StringBuilder ();
-
-			char previousChar = Char.MinValue;
-			foreach (char ch in name) {
-				if (!Char.IsDigit (ch) && !Char.IsLetter (ch)) {
-					if (previousChar == '_') {
-						continue;
-					}
-
-					sb.Append ('_');
-					previousChar = '_';
-					continue;
-				}
-
-				sb.Append (ch);
-				previousChar = ch;
-			}
-
-			return sb.ToString ();
 		}
 	}
 }

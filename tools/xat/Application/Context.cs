@@ -50,6 +50,8 @@ namespace Xamarin.Android.Prepare
 		public string JavaPath                   { get; set; } = String.Empty;
 		public string NUnitPath                  { get; set; } = String.Empty;
 		public string NUnitOptions               { get; set; } = String.Empty;
+		public string DotnetPath                 { get; set; } = String.Empty; // TODO: implement DotnetPath
+		public string DotnetTestOptions          { get; set; } = String.Empty; // TODO: implement DOtnetTestOptions
 		public string MSBuildBinary              { get; set; } = String.Empty;
 
 		public TestCollection Tests {

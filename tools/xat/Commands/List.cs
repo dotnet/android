@@ -8,10 +8,12 @@ namespace Xamarin.Android.Tests
 	class List : XatCommand
 	{
 		ListItem whatToList;
+		bool verbose;
 
-		public List (ListItem whatToList)
+		public List (ListItem whatToList, bool verbose)
 		{
 			this.whatToList = whatToList;
+			this.verbose = verbose;
 		}
 
 #pragma warning disable 1998
@@ -22,6 +24,9 @@ namespace Xamarin.Android.Tests
 			}
 
 			if (whatToList.HasFlag (ListItem.Groups)) {
+				if (whatToList.HasFlag (ListItem.Suites)) {
+					Log.MessageLine ();
+				}
 				ListGroups ();
 			}
 
@@ -31,20 +36,54 @@ namespace Xamarin.Android.Tests
 
 		void ListSuites ()
 		{
+			Log.MessageLine ("Suites:");
 			foreach (var kvp in Context.Instance.Tests.AllSuitesByName) {
-				string testName = kvp.Key;
-				XATest test = kvp.Value;
-
-				Log.Message ($" {Context.Characters.Bullet} ");
-				Log.Message (test.ID, ConsoleColor.Cyan);
-				Log.Message ($" ({test.KindName}", ConsoleColor.White);
-				Log.MessageLine ($": '{test.Name}')");
+				XATest suite = kvp.Value;
+				PrintSuiteInfo (" ", suite);
 			}
+		}
+
+		void PrintSuiteInfo (string indent, XATest suite)
+		{
+			Log.Message ($"{indent}{Context.Characters.Bullet} ");
+			Log.Message (suite.ID, ConsoleColor.Cyan);
+			Log.Message ($" ({suite.KindName}", ConsoleColor.White);
+			Log.MessageLine ($": '{suite.Name}')");
 		}
 
 		void ListGroups ()
 		{
-			Log.WarningLine ($"  not implemented yet (would list {whatToList})");
+			TestCollection tests = Context.Instance.Tests;
+			string indent = " ";
+			string verboseIndent = $"{indent}  ";
+			bool first = true;
+
+			Log.MessageLine ("Groups:");
+			foreach (var kvp in tests.GroupsByName) {
+				string groupName = kvp.Key;
+				TestGroup group = kvp.Value;
+
+				if (first) {
+					first = false;
+				} else {
+					Log.MessageLine ();
+				}
+
+				Log.Message ($"{indent}{Context.Characters.Bullet} ");
+				Log.Message (group.ID, ConsoleColor.Cyan);
+				Log.MessageLine ($": '{group.Name}'");
+				if (!verbose) {
+					continue;
+				}
+
+				foreach (string suiteID in group.SuitesByID) {
+					if (!tests.AllSuitesByID.TryGetValue (suiteID, out XATest suite)) {
+						throw new InvalidOperationException ($"Unknown suite id '{suiteID}'");
+					}
+
+					PrintSuiteInfo (verboseIndent, suite);
+				}
+			}
 		}
 	}
 }

@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Text;
 
 #if UNIX
 using Mono.Unix.Native;
@@ -9,6 +10,29 @@ namespace Xamarin.Android.Prepare
 {
 	static partial class Utilities
 	{
+		public static string MakeID (string name)
+		{
+			var sb = new StringBuilder ();
+
+			char previousChar = Char.MinValue;
+			foreach (char ch in name) {
+				if (!Char.IsDigit (ch) && !Char.IsLetter (ch)) {
+					if (previousChar == '_') {
+						continue;
+					}
+
+					sb.Append ('_');
+					previousChar = '_';
+					continue;
+				}
+
+				sb.Append (ch);
+				previousChar = ch;
+			}
+
+			return sb.ToString ();
+		}
+
 		public static void Touch (string path)
 		{
 			var now = DateTime.Now;

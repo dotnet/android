@@ -9,8 +9,10 @@ namespace Xamarin.Android.Tests
 	// NOTE: ALL the file/directory paths must be either absolute (unlikely, unless referring to some system location or
 	// taken from Configurables.Paths) or relative to Xamarin.Android source root. They will be converted to correct
 	// paths during execution.
-	class TestCollection
+	partial class TestCollection
 	{
+		const int NumberOfTestNodes = 3;
+
 		readonly string testsFlavor;
 		readonly string configuration;
 		readonly string outputPath;
@@ -18,6 +20,8 @@ namespace Xamarin.Android.Tests
 
 		public IDictionary<string, XATest> AllSuitesByName { get; } = new SortedDictionary<string, XATest> (StringComparer.OrdinalIgnoreCase);
 		public IDictionary<string, XATest> AllSuitesByID   { get; } = new SortedDictionary<string, XATest> (StringComparer.OrdinalIgnoreCase);
+		public IDictionary<string, TestGroup> GroupsByName { get; } = new SortedDictionary<string, TestGroup> (StringComparer.OrdinalIgnoreCase);
+		public IDictionary<string, TestGroup> GroupsByID   { get; } = new SortedDictionary<string, TestGroup> (StringComparer.OrdinalIgnoreCase);
 
 		public TestCollection ()
 		{
@@ -26,9 +30,15 @@ namespace Xamarin.Android.Tests
 			outputPath = Configurables.Paths.TestBinDir;
 			timingDefinitionsPath = Path.Combine ("build-tools", "scripts", "TimingDefinitions.txt");
 
+			CreateTestGroups ();
 			AddApkTests ();
 			AddHostUnitTests ();
 			AddMSBuildTimingTests ();
+
+			// TODO: dotnet runner
+			// TODO: dotnet tests
+			// TODO: check boot times (build-tools/automation/yaml-templates/run-msbuild-device-tests.yaml)
+			// TODO: add commercial tests
 		}
 
 		void AddMSBuildTimingTests ()
@@ -151,6 +161,9 @@ namespace Xamarin.Android.Tests
 				},
 			};
 			AddTest (test);
+			AddToGroup (test, GroupNick.UnitMSBuildMacOSSmokeTests);
+			AddToGroup (test, GroupNick.UnitMSBuildLegacyMacOSOnNode);
+			AddToGroup (test, GroupNick.UnitMSBuildExtraNoNode);
 
 			// We could introduce a factory for Java.Interop tests which would enumerate the files using a glob pattern on the
 			// runtime, but then we'd not be able to `xat list` them until they were built - discoverability would be
@@ -217,6 +230,7 @@ namespace Xamarin.Android.Tests
 				};
 
 				AddTest (test);
+				AddToGroup (test, GroupNick.UnitJavaInterop);
 			}
 
 			// TODO: RunNUnitDeviceTests
@@ -276,6 +290,7 @@ namespace Xamarin.Android.Tests
 			};
 			SetCommonMonoAndroidProperties (test);
 			AddTest (test);
+			AddToGroup (test, GroupNick.APK);
 
 			testName = "AOT: Mono.Android";
 			test = new TestAPK (androidPackageName, testName, projectFilePath) {
@@ -283,6 +298,7 @@ namespace Xamarin.Android.Tests
 			};
 			SetCommonMonoAndroidProperties (test);
 			AddTest (test);
+			AddToGroup (test, GroupNick.APK);
 
 			testName = "MonoBundle: Mono.Android";
 			test = new TestAPK (androidPackageName, testName, projectFilePath) {
@@ -298,6 +314,7 @@ namespace Xamarin.Android.Tests
 			};
 			SetCommonMonoAndroidProperties (test);
 			AddTest (test);
+			AddToGroup (test, GroupNick.APK);
 
 			androidPackageName = "Mono.Android_TestsMultiDex";
 			projectFilePath = Path.Combine ("tests", "Mono.Android-Tests", "Runtime-MultiDex", "Mono.Android-TestsMultiDex.csproj");
@@ -313,6 +330,7 @@ namespace Xamarin.Android.Tests
 			};
 			SetCommonMonoAndroidProperties (test);
 			AddTest (test);
+			AddToGroup (test, GroupNick.APK);
 
 			androidPackageName = "Mono.Android_TestsAppBundle";
 			projectFilePath = Path.Combine ("tests", "Mono.Android-Tests", "Runtime-AppBundle", "Mono.Android-TestsAppBundle.csproj");
@@ -330,6 +348,7 @@ namespace Xamarin.Android.Tests
 			};
 			SetCommonMonoAndroidProperties (test, addApkSizes: false);
 			AddTest (test);
+			AddToGroup (test, GroupNick.APK);
 
 			// TODO: add .NET6 Mono.Android-Tests (see commit 9fdf6c46fc4f01e55b74bd6a0bf73b9ff731e766)
 
@@ -348,6 +367,7 @@ namespace Xamarin.Android.Tests
 			};
 			SetCommonLocaleTestProperties (test);
 			AddTest (test);
+			AddToGroup (test, GroupNick.APK);
 
 			testName = "AOT: Xamarin.Android Locale";
 			test = new TestAPK (androidPackageName, testName, projectFilePath) {
@@ -363,6 +383,7 @@ namespace Xamarin.Android.Tests
 			};
 			SetCommonLocaleTestProperties (test);
 			AddTest (test);
+			AddToGroup (test, GroupNick.APK);
 
 			// Xamarin.Forms.Performance.Integration tests
 			androidPackageName = "Xamarin.Forms_Performance_Integration";
@@ -379,6 +400,7 @@ namespace Xamarin.Android.Tests
 			};
 			SetCommonXFIntegrationTestProperties (test);
 			AddTest (test);
+			AddToGroup (test, GroupNick.APK);
 
 			testName = "AOT: Xamarin.Forms Performance Integration";
 			test = new TestAPK (androidPackageName, testName, projectFilePath) {
@@ -394,6 +416,7 @@ namespace Xamarin.Android.Tests
 			};
 			SetCommonXFIntegrationTestProperties (test);
 			AddTest (test);
+			AddToGroup (test, GroupNick.APK);
 
 			testName = "MonoBundle: Xamarin.Forms Performance Integration";
 			test = new TestAPK (androidPackageName, testName, projectFilePath) {
@@ -409,6 +432,7 @@ namespace Xamarin.Android.Tests
 			};
 			SetCommonXFIntegrationTestProperties (test);
 			AddTest (test);
+			AddToGroup (test, GroupNick.APK);
 
 			// Xamarin.Android.EmbeddedDSO tests
 			androidPackageName = "Xamarin.Android.EmbeddedDSO_Test";
@@ -434,6 +458,7 @@ namespace Xamarin.Android.Tests
 			SetStandardTimingDefinitionProperties (test);
 			SetStandardStoragePermissions (test);
 			AddTest (test);
+			AddToGroup (test, GroupNick.APK);
 
 			// Xamarin.Android.Bcl tests
 			androidPackageName = "Xamarin.Android.Bcl_Tests";
@@ -466,6 +491,7 @@ namespace Xamarin.Android.Tests
 			};
 			SetStandardStoragePermissions (test);
 			AddTest (test);
+			AddToGroup (test, GroupNick.APK);
 
 			// Xamarin.Android.JcwGen tests
 			androidPackageName = "Xamarin.Android.JcwGen_Tests";
@@ -489,6 +515,7 @@ namespace Xamarin.Android.Tests
 			SetStandardTimingDefinitionProperties (test);
 			SetStandardStoragePermissions (test);
 			AddTest (test);
+			AddToGroup (test, GroupNick.APK);
 
 			void SetCommonXFIntegrationTestProperties (TestAPK test)
 			{
