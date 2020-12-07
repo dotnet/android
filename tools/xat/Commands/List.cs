@@ -76,7 +76,7 @@ namespace Xamarin.Android.Tests
 					continue;
 				}
 
-				foreach (string suiteID in group.SuitesByID) {
+				foreach (string suiteID in group.SuitesByID.Keys) {
 					if (!tests.AllSuitesByID.TryGetValue (suiteID, out XATest suite)) {
 						throw new InvalidOperationException ($"Unknown suite id '{suiteID}'");
 					}
