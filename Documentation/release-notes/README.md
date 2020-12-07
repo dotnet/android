@@ -370,7 +370,7 @@ added to `Documentation/release-notes/images/`.
 
 8. When a version is promoted from Preview to Release or when a new Preview 1
    version is published, update the _Downloads_ section of the xamarin-android
-   [_README_][/README.md] with the new info.
+   [_README_](/README.md) with the new info.
 
 9. Add all of the pull requests and issues included in the new version to the
    appropriate GitHub milestone.
