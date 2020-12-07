@@ -330,27 +330,21 @@ namespace Library1 {
 								return sr.ReadToEnd ();
 						},
 					},
+					new BuildItem.Source ("Bug35195.cs") {
+						TextContent = () => {
+							using (var sr = new StreamReader (typeof (InstallAndRunTests).Assembly.GetManifestResourceStream ("Xamarin.Android.Build.Tests.Resources.LinkDescTest.Bug35195.cs")))
+								return sr.ReadToEnd ();
+						},
+					},
 				},
 			};
 
 			// sqlite-net-pcl does not work in .NET 6
 			if (!Builder.UseDotNet) {
-				lib2.PackageReferences.Add (new Package {
-					Id = "sqlite-net-pcl",
-					Version = "1.7.335",
-				});
-
 				// https://github.com/dotnet/runtime/issues/45559
 				lib2.Sources.Add (new BuildItem.Source ("Bug36250.cs") {
 					TextContent = () => {
 						using (var sr = new StreamReader (typeof (InstallAndRunTests).Assembly.GetManifestResourceStream ("Xamarin.Android.Build.Tests.Resources.LinkDescTest.Bug36250.cs")))
-							return sr.ReadToEnd ();
-					},
-				});
-
-				lib2.Sources.Add (new BuildItem.Source ("Bug35195.cs") {
-					TextContent = () => {
-						using (var sr = new StreamReader (typeof (InstallAndRunTests).Assembly.GetManifestResourceStream ("Xamarin.Android.Build.Tests.Resources.LinkDescTest.Bug35195.cs")))
 							return sr.ReadToEnd ();
 					},
 				});
