@@ -339,8 +339,8 @@ namespace Library1 {
 				},
 			};
 
-			// sqlite-net-pcl does not work in .NET 6
 			if (!Builder.UseDotNet) {
+				// DataContractSerializer is not trimming safe
 				// https://github.com/dotnet/runtime/issues/45559
 				lib2.Sources.Add (new BuildItem.Source ("Bug36250.cs") {
 					TextContent = () => {
