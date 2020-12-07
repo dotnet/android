@@ -16,7 +16,7 @@ namespace Xamarin.Android.Tests
 		/// <summary>
 		///  Unit: MSBuild macOS Smoke Tests
 		/// </summary>
-		UnitMSBuildMacOSSmokeTests,
+		UnitSmokeTests,
 
 		/// <summary>
 		///  Unit: No Node
@@ -61,7 +61,7 @@ namespace Xamarin.Android.Tests
 			};
 			AddGroup (group);
 
-			group = new TestGroup ($"Unit: MSBuild macOS Smoke Tests", GroupNick.UnitMSBuildMacOSSmokeTests) {
+			group = new TestGroup ($"Unit: MSBuild Smoke Tests", GroupNick.UnitSmokeTests) {
 				IncludeCategories = {
 					"SmokeTests",
 				},
@@ -131,14 +131,14 @@ namespace Xamarin.Android.Tests
 			GroupsByID.Add (group.ID, group);
 		}
 
-		void AddToGroup (XATest test, GroupNick nick)
+		void AddToGroup (XATest test, GroupNick nick, string? resultFileName = null)
 		{
 			foreach (TestGroup group in GroupsByName.Values) {
 				if (group.Nick != nick) {
 					continue;
 				}
 
-				group.AddSuite (test);
+				group.AddSuite (test, resultFileName);
 			}
 		}
 	}

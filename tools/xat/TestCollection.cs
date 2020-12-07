@@ -161,7 +161,7 @@ namespace Xamarin.Android.Tests
 				},
 			};
 			AddTest (test);
-			AddToGroup (test, GroupNick.UnitMSBuildMacOSSmokeTests);
+			AddToGroup (test, GroupNick.UnitSmokeTests);
 			AddToGroup (test, GroupNick.UnitMSBuildLegacyMacOSOnNode);
 			AddToGroup (test, GroupNick.UnitMSBuildExtraNoNode);
 
@@ -233,7 +233,24 @@ namespace Xamarin.Android.Tests
 				AddToGroup (test, GroupNick.UnitJavaInterop);
 			}
 
-			// TODO: RunNUnitDeviceTests
+			test = new TestHostUnit (
+				familyName: "MSBuild Device Integration",
+				name: "MSBuild Device Integration",
+				testAssemblyPath: Path.Combine (Configurables.Paths.TestBinDir, "net472", "MSBuildDeviceIntegration.dll"),
+				testProjectFilePath: Path.Combine ("tests", "MSBuildDeviceIntegration", "MSBuildDeviceIntegration.csproj")
+			) {
+				BuildCommands = {
+					standardBuildCommands,
+				},
+
+				RunCommands = {
+					new Host.AcquireAndroidTarget (),
+					standardRunCommands,
+					new Host.ReleaseAndroidTarget (),
+				},
+			};
+			AddTest (test);
+			AddToGroup (test, GroupNick.UnitSmokeTests, $"TestResult-MSBuildDeviceIntegrationSmoke-{Context.Instance.Configuration}.xml");
 		}
 
 		//

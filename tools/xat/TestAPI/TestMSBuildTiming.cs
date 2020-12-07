@@ -79,12 +79,9 @@ namespace Xamarin.Android.Tests
 
 		protected override async Task<bool> ExecuteCommand (TestCommand command, string phaseName)
 		{
-			bool isGlobalPhase = String.Compare (phaseName, GlobalInitPhaseName, StringComparison.Ordinal) == 0 ||
-				String.Compare (phaseName, GlobalShutdownPhaseName, StringComparison.Ordinal) == 0;
-
 			switch (command) {
 				case MSBuildTiming.MSBuildTimingTestCommand msbuildTimingCommand:
-					if (isGlobalPhase) {
+					if (IsGlobalPhase (phaseName)) {
 						msbuildTimingCommand.State = globalState;
 					} else {
 						msbuildTimingCommand.State = state;

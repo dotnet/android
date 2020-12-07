@@ -1,21 +1,18 @@
 using System.Threading.Tasks;
 
-namespace Xamarin.Android.Tests.MSBuildTiming
+namespace Xamarin.Android.Tests.Host
 {
 	/// <summary>
 	///   Makes sure that an Android device/emulator is running. This may involve creation of
 	///   AVD (virtual Android device to be executed inside the emulator)
 	/// </summary>
-	class AcquireAndroidTarget : MSBuildTimingTestCommand
+	class AcquireAndroidTarget : HostTestCommand
 	{
-		public override string Target => "UNUSED";
-		public override string ID => nameof (AcquireAndroidTarget);
-
 		public AcquireAndroidTarget ()
 			: base ("AcquireAndroidTarget", "Makes sure an Android device/emulator are running and available")
 		{}
 
-		protected override async Task<bool> Run (TestMSBuildTiming test)
+		protected override async Task<bool> Run (TestHostUnit test)
 		{
 			var androidDevice = new AndroidDevice ();
 			(bool success, int emulatorProcessId, string adbTarget, string _) = await androidDevice.Start ();

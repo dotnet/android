@@ -9,6 +9,9 @@ namespace Xamarin.Android.Tests
 {
 	class TestHostUnit : XATest
 	{
+		static AndroidState? globalState;
+		AndroidState? state;
+
 		public override string KindName => "Host Unit";
 		public override string TestFamilyName { get; }
 
@@ -38,10 +41,36 @@ namespace Xamarin.Android.Tests
 			ResultPath = MakeResultPath (testFileName);
 		}
 
+		protected override bool BeforeExecuteCommands (List<TestCommand> commands, string phaseName)
+		{
+			EnsurePropertyValue (nameof (OutputFilePath), OutputFilePath);
+			EnsurePropertyValue (nameof (ResultPath), ResultPath);
+
+			if (String.Compare (phaseName, GlobalInitPhaseName, StringComparison.Ordinal) == 0 && globalState == null) {
+				globalState = new AndroidState ();
+				return true;
+			}
+
+			if (state == null) {
+				state = new AndroidState ();
+				if (globalState != null) {
+					state.EmulatorProcessId = globalState.EmulatorProcessId;
+					state.AdbTarget = globalState.AdbTarget;
+				}
+			}
+
+			return true;
+		}
+
 		protected override async Task<bool> ExecuteCommand (TestCommand command, string phaseName)
 		{
 			switch (command) {
-				case Host.HostTestCommand hoastCommand:
+				case Host.HostTestCommand hostCommand:
+					if (IsGlobalPhase (phaseName)) {
+						hostCommand.State = globalState;
+					} else {
+						hostCommand.State = state;
+					}
 					break;
 
 				case Shared.SharedTestCommand sharedCommand:

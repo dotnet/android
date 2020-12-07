@@ -208,5 +208,12 @@ namespace Xamarin.Android.Tests
 		{
 			return true;
 		}
+
+		protected bool IsGlobalPhase (string phaseName)
+		{
+			return
+				String.Compare (phaseName, GlobalInitPhaseName, StringComparison.Ordinal) == 0 ||
+				String.Compare (phaseName, GlobalShutdownPhaseName, StringComparison.Ordinal) == 0;
+		}
 	}
 }

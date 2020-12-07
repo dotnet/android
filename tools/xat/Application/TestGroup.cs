@@ -100,7 +100,7 @@ namespace Xamarin.Android.Tests
 			Nick = nick;
 		}
 
-		public void AddSuite (string id)
+		public void AddSuite (string id, string? resultFileName = null)
 		{
 			if (id.Length == 0 || addedIDs.Contains (id)) {
 				return;
@@ -108,11 +108,13 @@ namespace Xamarin.Android.Tests
 
 			addedIDs.Add (id);
 			SuitesByID.Add (id);
+
+			// TODO: implement per-test result file name override
 		}
 
-		public void AddSuite (XATest suite)
+		public void AddSuite (XATest suite, string? resultFileName = null)
 		{
-			AddSuite (suite.ID);
+			AddSuite (suite.ID, resultFileName);
 		}
 	}
 }
