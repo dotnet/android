@@ -1237,7 +1237,7 @@ stages:
     workspace:
       clean: all
     steps:
-
+      # Signing job is run here: https://dev.azure.com/devdiv/DevDiv/_build?definitionId=13878
       # https://github.com/huserben/TfsExtensions/blob/master/BuildTasks/overview.md
     - task: benjhuser.tfs-extensions-build-tasks.trigger-build-task.TriggerBuild@3
       displayName: 'xamarin vsix codesign - run Azure DevOps job'
