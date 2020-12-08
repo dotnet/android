@@ -10,7 +10,8 @@ _ResolveAssemblies MSBuild target.
 
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <UsingTask TaskName="Xamarin.Android.Tasks.ProcessAssemblies" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.ProcessAssemblies"      AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.ProcessNativeLibraries" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <PropertyGroup Condition=" '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true' ">
     <OutputPath Condition=" '$(_OuterOutputPath)' != '' ">$(_OuterOutputPath)</OutputPath>
@@ -155,6 +156,17 @@ _ResolveAssemblies MSBuild target.
           Condition=" '%(_ResolvedUserAssemblies.TargetFrameworkIdentifier)' == 'MonoAndroid' Or '%(_ResolvedUserAssemblies.HasMonoAndroidReference)' == 'True' "
       />
     </ItemGroup>
+  </Target>
+
+  <Target Name="_IncludeNativeSystemLibraries">
+    <ItemGroup>
+      <_ResolvedNativeLibraries Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.Extension)' == '.so' " />
+    </ItemGroup>
+    <ProcessNativeLibraries
+        InputLibraries="@(_ResolvedNativeLibraries)"
+        IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)">
+      <Output TaskParameter="OutputLibraries" ItemName="FrameworkNativeLibrary" />
+    </ProcessNativeLibraries>
   </Target>
 
 </Project>
