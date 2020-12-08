@@ -14,6 +14,10 @@ namespace Xamarin.Android.Prepare
 			}
 		}
 
+		/// <summary>
+		///   Ensure that the passed property has a value that isn't an empty string.  Return the property value if
+		///   valid, throw <c>InvalidOperationException</c> otherwise.
+		/// </summary>
 		protected string EnsurePropertyValue (string propertyName, string propertyValue)
 		{
 			if (propertyValue.Length > 0) {
@@ -23,6 +27,11 @@ namespace Xamarin.Android.Prepare
 			throw new InvalidOperationException ($"{propertyName} property must have a value");
 		}
 
+		/// <summary>
+		///   Ensure that the passed parameter has a value that isn't an empty string (after optionally, and by default,
+		///   trimming the leading and trailing whitespace).  Return the parameter value if valid, throw
+		///   <c>InvalidOperationException</c> otherwise.
+		/// </summary>
 		protected string EnsureParameterValue (string parameterName, string parameterValue, bool trimWhitespace = true)
 		{
 			if (trimWhitespace) {
@@ -36,6 +45,10 @@ namespace Xamarin.Android.Prepare
 			throw new ArgumentException (parameterName, "must not be an empty string");
 		}
 
+		/// <summary>
+		///   Ensure that the passed property has a value that is a positive integer.  Return the property value if
+		///   valid, throw <c>InvalidOperationException</c> otherwise.
+		/// </summary>
 		protected int EnsurePositivePropertyValue (string propertyName, int propertyValue)
 		{
 			if (propertyValue > 0) {

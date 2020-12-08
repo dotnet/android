@@ -7,7 +7,10 @@ using Xamarin.Android.Tests;
 
 namespace Xamarin.Android.Prepare
 {
-	// Minimum implementation to satisfy needs of the classes we use from xaprepare
+	/// <summary>
+	///   A singleton class which holds global state/information for other parts of the application.  Partially shared
+	///   with <c>xaprepare</c>
+	/// </summary>
 	partial class Context
 	{
 		readonly object testCollectionLock = new object ();
@@ -17,22 +20,85 @@ namespace Xamarin.Android.Prepare
 		TestCollection? testCollection;
 		Characters? characters;
 
+		/// <summary>
+		///   Return the single instance of Context.
+		/// </summary>
 		public static Context Instance           { get; } = new Context ();
 
+		/// <summary>
+		///   Describes the current operating system. See <see cref="Xamarin.Android.Prepare.OS"/>
+		/// </summary>
 		public OS OS                             { get; } = new OS ();
-		public bool DullMode                     => false;
-		public bool NoEmoji                      => false;
+
+		/// <summary>
+		///   If <c>true</c> then <c>xat</c> will run in "dull mode" - no colors, no emoji.  Meant to be used on CI when
+		///   such frivolous things don't matter :)
+		/// </summary>
+		public bool DullMode                     { get; set; }
+
+		/// <summary>
+		///   Do not use any emoji characters if <c>true</c>
+		/// </summary>
+		public bool NoEmoji                      { get; set; }
+
+		/// <summary>
+		///   Allow xat to use color, if <c>true</c>
+		/// </summary>
 		public bool UseColor                     { get; set; } = true;
+
+		/// <summary>
+		///   If <c>true</c>, then xat detected that color is supported by the current console/terminal.
+		/// </summary>
 		public bool CanConsoleUseUnicode         { get; }
+
+		/// <summary>
+		///   Ignore. Required by code imported from <c>xaprepare</c>
+		/// </summary>
 		public VersionFetchers VersionFetchers   { get; } = new VersionFetchers ();
+
+		/// <summary>
+		///   Set the logging verbosity.  Defaults to <c>Normal</c>
+		/// </summary>
 		public LoggingVerbosity LoggingVerbosity { get; set; } = LoggingVerbosity.Normal;
+
+		/// <summary>
+		///   Build test suites using this configuration.  Defaults to xat build configuration.
+		/// </summary>
 		public string Configuration              { get; set; } = Configurables.Defaults.DefaultConfiguration;
+
+		/// <summary>
+		///   Time when xat was started, used to create log file names.
+		/// </summary>
 		public string BuildTimeStamp             { get; }
+
+		/// <summary>
+		///   Ignore. required by code imported from <c>xaprepare</c>
+		/// </summary>
 		public uint MakeConcurrency              { get; set; } = Configurables.Defaults.MakeConcurrency;
+
+		/// <summary>
+		///   MSBuild properties as set on the xat's build time. See <see cref="KnownProperties"/>
+		/// </summary>
 		public Properties Properties             { get; } = new Properties ();
+
+		/// <summary>
+		///   List of any failed test IDs, if any.
+		/// </summary>
 		public List<string> FailedTests          { get; } = new List<string> ();
+
+		/// <summary>
+		///   Path to the main log file (where all the xat messages are logged)
+		/// </summary>
 		public string MainLogFilePath            { get; }
+
+		/// <summary>
+		///   Directory in which to create log files for xat and all the external commands it runs.
+		/// </summary>
 		public string LogDirectory               { get; }
+
+		/// <summary>
+		///   Various characters used when logging (bullet, icons etc).
+		/// </summary>
 		public Characters Characters             => characters ?? throw new InvalidOperationException ("Context not initialized properly (was .Init called?)");
 
 		/// <summary>
@@ -40,20 +106,77 @@ namespace Xamarin.Android.Prepare
 		/// </summary>
 		public EssentialTools Tools                    { get; private set; } = new EssentialTools ();
 
+		/// <summary>
+		///   If <c>true</c>, each test suite requiring and Android device will have a fresh emulator image (AVD)
+		///   created before it runs.
+		/// </summary>
 		public bool RequireNewEmulator           { get; set; }
-		public string AdbTarget                  { get; set; } = String.Empty;
-		public string AdbPath                    { get; set; } = String.Empty;
-		public string AdbOptions                 { get; set; } = String.Empty;
-		public string EmulatorPath               { get; set; } = String.Empty;
-		public string AvdManagerPath             { get; set; } = String.Empty;
-		public string BundleToolJarPath          { get; set; } = String.Empty;
-		public string JavaPath                   { get; set; } = String.Empty;
-		public string NUnitPath                  { get; set; } = String.Empty;
-		public string NUnitOptions               { get; set; } = String.Empty;
-		public string DotnetPath                 { get; set; } = String.Empty; // TODO: implement DotnetPath
-		public string DotnetTestOptions          { get; set; } = String.Empty; // TODO: implement DOtnetTestOptions
-		public string MSBuildBinary              { get; set; } = String.Empty;
 
+		/// <summary>
+		///   ADB target device.  Either auto-detected or passed on command line.
+		/// </summary>
+		public string AdbTarget                  { get; set; } = String.Empty;
+
+		/// <summary>
+		///   Path to ADB, detected using <see cref="Properties"/>
+		/// </summary>
+		public string AdbPath                    { get; set; } = String.Empty;
+
+		/// <summary>
+		///   Additional ADB options specified on command line.
+		/// </summary>
+		public string AdbOptions                 { get; set; } = String.Empty;
+
+		/// <summary>
+		///   Path to Android emulator, detected using <see cref="Properties"/>
+		/// </summary>
+		public string EmulatorPath               { get; set; } = String.Empty;
+
+		/// <summary>
+		///   Path to Android emulator (AVD) manager, detected using <see cref="Properties"/>
+		/// </summary>
+		public string AvdManagerPath             { get; set; } = String.Empty;
+
+		/// <summary>
+		///   Path to Android BundleTool utility, detected using <see cref="Properties"/>
+		/// </summary>
+		public string BundleToolJarPath          { get; set; } = String.Empty;
+
+		/// <summary>
+		///   Path to the Java VM, detected using <see cref="Properties"/>
+		/// </summary>
+		public string JavaPath                   { get; set; } = String.Empty;
+
+		/// <summary>
+		///   Path to NUnit console runner, detected using <see cref="Properties"/>
+		/// </summary>
+		public string NUnitPath                  { get; set; } = String.Empty;
+
+		/// <summary>
+		///   Additional NUnit runner options, specified on the command line
+		/// </summary>
+		public string NUnitOptions               { get; set; } = String.Empty;
+
+		/// <summary>
+		///   Path to the <c>dotnet</c> command. NOT IMPLEMENTED YET
+		/// </summary>
+		public string DotnetPath                 { get; set; } = String.Empty; // TODO: implement DotnetPath
+
+		/// <summary>
+		///  Additional <c>dotnet test</c> options, specified on the command line. NOT IMPLEMENTED YET
+		/// </summary>
+		public string DotnetTestOptions          { get; set; } = String.Empty; // TODO: implement DOtnetTestOptions
+
+		/// <summary>
+		///   Path to (or name of) the MSBuild binary to use. The intention is the choice between <c>xabuild</c> and
+		///   <c>msbuild</c>.  Autodetected by first looking for <c>xabuild</c> and, if it's absent, using
+		///   <c>msbuild</c>
+		/// </summary>
+		public string MSBuildBinary              { get; set; } = String.Empty; // TODO: add support for `dotnet msbuild`
+
+		/// <summary>
+		///   Collection all the known tests.
+		/// </summary>
 		public TestCollection Tests {
 			get {
 				lock (testCollectionLock) {

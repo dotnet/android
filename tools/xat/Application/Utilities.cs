@@ -10,6 +10,12 @@ namespace Xamarin.Android.Prepare
 {
 	static partial class Utilities
 	{
+		/// <summary>
+		///   Create an ID from the string passed in <paramref name="name"/>.  The ID is created by replacing or
+		///   non-alphanumeric characters with an underscore.  This is done to make it easier to specify suites or
+		///   groups when invoking <c>xat</c> from the shell, by removing the need to quote special characters (path
+		///   separators, whitespace, punctuation etc)
+		/// </summary>
 		public static string MakeID (string name)
 		{
 			var sb = new StringBuilder ();
@@ -33,6 +39,11 @@ namespace Xamarin.Android.Prepare
 			return sb.ToString ();
 		}
 
+		/// <summary>
+		///   Set the last write and last access times of the file/directory pointed to by <paramref name="path"/> to
+		///   the current time (local timezone).  The method never fails, but will show and error whenever any I/O
+		///   exception is thrown.  The exception will be logged in the log file using the Debug priority.
+		/// </summary>
 		public static void Touch (string path)
 		{
 			var now = DateTime.Now;
@@ -74,11 +85,17 @@ namespace Xamarin.Android.Prepare
 		}
 
 #if UNIX
+		/// <summary>
+		///   Send the <c>SIGHUP</c> signal to the Unix process specified in <paramref name="processId"/>
+		/// </summary>
 		public static bool ProcessHUP (int processId)
 		{
 			return SendSignal (nameof (ProcessHUP), Signum.SIGHUP, processId);
 		}
 
+		/// <summary>
+		///   Send the <c>SIGKILL</c> signal to the Unix process specified in <paramref name="processId"/>
+		/// </summary>
 		public static bool ProcessKILL (int processId)
 		{
 			return SendSignal (nameof (ProcessKILL), Signum.SIGKILL, processId);
@@ -108,11 +125,17 @@ namespace Xamarin.Android.Prepare
 			return false;
 		}
 #else
+		/// <summary>
+		///   Does nothing on Windows.
+		/// </summary>
 		public static bool ProcessHUP (int processId)
 		{
 			return true;
 		}
 
+		/// <summary>
+		///   Does nothing on Windows.
+		/// </summary>
 		public static bool ProcessKILL (int processId)
 		{
 			return true;

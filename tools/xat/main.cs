@@ -170,6 +170,8 @@ namespace Xamarin.Android.Tests
 				"Global options:",
 				{"v|verbosity=", $"Set console log verbosity to {{LEVEL}}. Level name may be abbreviated to the smallest unique part (one of: {GetVerbosityLevels ()}). Default: {Context.Instance.LoggingVerbosity.ToString().ToLowerInvariant ()}", v => Context.Instance.LoggingVerbosity = ParseLogVerbosity (v) },
 				{"c|configuration=", $"Set build {{CONFIGURATION}} instead of the default '{Context.Instance.Configuration}'", v => Context.Instance.Configuration = v.Trim () },
+				{"D|dull-mode", "Run xat in \"dull mode\" - no colors, no emoji", v => Context.Instance.DullMode = true },
+				{"E|no-emoji", "Run xat without using emoji, but still allow color", v => Context.Instance.NoEmoji = true },
 				"",
 				"Available commands:",
 				new ListCommand (),

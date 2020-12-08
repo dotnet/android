@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 using Xamarin.Android.Prepare;
@@ -86,12 +85,47 @@ namespace Xamarin.Android.Tests
 		/// </summary>
 		public Dictionary<string, string> EnvironmentVariables { get; } = new Dictionary<string, string> (StringComparer.Ordinal);
 
+		/// <summary>
+		///   List of category names to be included when running the test suite(s).  If a test suite is executed as part
+		///   of a test group, this property is ignored in favor of <see cref="TestGroup.IncludeCategories"/>
+		/// <summary>
 		public List<string> IncludeCategories                  { get; } = new List<string> ();
+
+		/// <summary>
+		///   List of category names to be excluded when running the test suite(s).  If a test suite is executed as part
+		///   of a test group, this property is ignored in favor of <see cref="TestGroup.ExcludeCategories"/>
+		/// <summary>
 		public List<string> ExcludeCategories                  { get; } = new List<string> ();
+
+		/// <summary>
+		///   List of test names to be included when running the test suite(s).  The format of the name is specific to
+		///   the runner used (xUnit, NUnit etc).  If a test suite is executed as part of a test group, this property is
+		///   ignored in favor of <see cref="TestGroup.IncludeTests"/>
+		/// <summary>
 		public List<string> IncludeTests                       { get; } = new List<string> ();
+
+		/// <summary>
+		///   List of test names to be excluded when running the test suite(s).  The format of the name is specific to
+		///   the runner used (xUnit, NUnit etc).  If a test suite is executed as part of a test group, this property is
+		///   ignored in favor of <see cref="TestGroup.ExcludeTests"/>
+		/// <summary>
 		public List<string> ExcludeTests                       { get; } = new List<string> ();
+
+		/// <summary>
+		///   List of test names to be executed when running the test suite(s).  The format of the name is specific to
+		///   the runner used (xUnit, NUnit etc).  If a test suite is executed as part of a test group, this property is
+		///   ignored in favor of <see cref="TestGroup.Tests"/>
+		/// <summary>
 		public List<string> TestNames                          { get; } = new List<string> ();
+
+		/// <summary>
+		///   A collection of all exceptions thrown when executing the test suite.
+		/// </summary>
 		public List<Exception> Exceptions                      { get; } = new List<Exception> ();
+
+		/// <summary>
+		///   A collection of all commands that failed when executing the test suite.
+		/// </summary>
 		public List<FailedCommand> FailedCommands              { get; } = new List<FailedCommand> ();
 
 		protected XATest (string name, string testFilePath, string testProjectFilePath)
@@ -103,32 +137,68 @@ namespace Xamarin.Android.Tests
 		}
 
 #pragma warning disable 1998
+		/// <summary>
+		///   When overridden in a derived class, runs a set of global initialization commands for the entire collection
+		///   of suites that belong to the same kind (e.g. APK or Host Unit).  It will be invoked only for the first
+		///   test suite that runs as part of the suite collection.
+		/// </summary>
 		public virtual async Task<bool> RunGlobalInitCommands ()
 		{
 			return true;
 		}
 
+		/// <summary>
+		///   When overridden in a derived class, runs a set of global shutdown commands for the entire collection
+		///   of suites that belong to the same kind (e.g. APK or Host Unit).  It will be invoked only for the last
+		///   test suite that runs as part of the suite collection.
+		/// </summary>
 		public virtual async Task<bool> RunGlobalShutdownCommands ()
 		{
 			return true;
 		}
 #pragma warning restore 1998
 
+		/// <summary>
+		///   Build the test suite: run all the commands in the <see cref="BuildCommands"/> collection
+		/// </summary>
 		public virtual async Task<bool> Build ()
 		{
 			return await ExecuteCommands (BuildCommands, BuildPhaseName);
 		}
 
+		/// <summary>
+		///   Run the test suite: run all the commands in the <see cref="RunCommands"/> collection
+		/// </summary>
 		public virtual async Task<bool> Run ()
 		{
 			return await ExecuteCommands (RunCommands, RunPhaseName);
 		}
 
+		/// <summary>
+		///   Clean up the test suite: run all the commands in the <see cref="CleanCommands"/> collection
+		/// </summary>
 		public virtual async Task<bool> Cleanup ()
 		{
 			return await ExecuteCommands (CleanupCommands, CleanupPhaseName);
 		}
 
+		/// <summary>
+		///  <para>
+		///   Sequentially execute commands in <paramref name="commands"/>.  If any command fails, reaction to the
+		///   failure depends on the value of the command's <see cref="TestCommand.FailureMode"/> property.  If it's
+		///   anything else than <see cref="CommandFailureMode.Error"/> the execution continues.  Otherwise the test
+		///   suite fails.  Any failed commands are stored in the <see cref="FailedCommands"/> collection and are
+		///   reported at the end of the run.
+		///  </para>
+		///
+		///  <para>
+		///    Before running the commands, the <see cref="BeforeExecuteCommands"/> method is called, to allow derived
+		///    classes to set up their run state before commands are ran.  <paramref name="phaseName"/> indicates the
+		///    name of the current phase (<see cref="BuildPhaseName"/>, <see cref="RunPhaseName"/>, <see
+		///    cref="CleanupPhaseName"/>, <see cref="GlobalInitPhaseName"/>, <see cref="GlobalShutdownPhaseName"/>) and
+		///    can be used to vary the preparation steps based on which set of commands is being executed.
+		///  </para>
+		/// </summary>
 		protected async Task<bool> ExecuteCommands (List<TestCommand> commands, string phaseName)
 		{
 			if (commands.Count == 0) {
@@ -195,6 +265,11 @@ namespace Xamarin.Android.Tests
 			}
 		}
 
+		/// <summary>
+		///   Execute a single command for the given phase.  Derived classes can override the method in order to
+		///   customize the execution or perform sanity checks (e.g. whether <paramref name="command"/> is of a type
+		///   known to the derived class)
+		/// </summary>
 		protected virtual async Task<bool> ExecuteCommand (TestCommand command, string phaseName)
 		{
 			command.FailedCommands.Clear ();
@@ -205,11 +280,17 @@ namespace Xamarin.Android.Tests
 			return true;
 		}
 
+		/// <summary>
+		///   Allow the derived class to prepare for execution of commands in the given phase.
+		/// </summary>
 		protected virtual bool BeforeExecuteCommands (List<TestCommand> commands, string phaseName)
 		{
 			return true;
 		}
 
+		/// <summary>
+		///   Returns <c>true</c> if the current phase is either of the global ones - init and shutdown.
+		/// </summary>
 		protected bool IsGlobalPhase (string phaseName)
 		{
 			return
