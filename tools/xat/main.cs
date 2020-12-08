@@ -94,7 +94,7 @@ namespace Xamarin.Android.Tests
 			: base ("run", "Invoke selected tests/categories")
 		{
 			Options = new OptionSet {
-				"usage: xat list [OPTIONS]",
+				"usage: xat run [OPTIONS]",
 				"By default the command runs all the tests. Options can be combined and repeated on the command line unless stated otherwise",
 				"",
 				{ "m|msbuild=", "Use the specified MSBuild {BINARY}. If omitted, XAT will first try to find `xabuild` and fall back to `msbuild`", v => Context.Instance.MSBuildBinary = v },
