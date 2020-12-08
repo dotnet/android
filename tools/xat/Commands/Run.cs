@@ -167,38 +167,62 @@ namespace Xamarin.Android.Tests
 		{
 			globalInitCompleted.Clear ();
 
+			XATest? suite;
 			TestCollection tc = Context.Tests;
 			bool ret = true;
 			var lastSuites = new Dictionary<string, XATest> (StringComparer.Ordinal);
 
 			if (SuiteNames.Count > 0) {
-				XATest? suite;
-
 				foreach (string suiteName in SuiteNames) {
 					suite = FindSuite (suiteName, tc);
 					if (suite == null) {
-						Log.ErrorLine ($"Test suite '{suiteName}' unknown");
+						Log.ErrorLine ($"Test suite '{suiteName}' is unknown");
 						return false;
 					}
 
 					ret &= await RunTest (suite);
 					lastSuites[MakeSuiteInitKey (suite)] = suite;
 				}
-			} else {
-				foreach (XATest suite in tc.AllSuitesByID.Values) {
-					ret &= await RunTest (suite);
-					lastSuites[MakeSuiteInitKey (suite)] = suite;
+			}
+
+			if (GroupNames.Count > 0) {
+				TestGroup? group;
+
+				foreach (string groupName in GroupNames) {
+					group = FindGroup (groupName, tc);
+					if (group == null) {
+						Log.ErrorLine ($"Test group '{groupName}' is unknown");
+						return false;
+					}
+
+					foreach (string suiteID in group.SuitesByID.Keys) {
+						suite = FindSuite (suiteID, tc);
+						if (suite == null) {
+							Log.ErrorLine ($"Test suite with ID '{suiteID}' in group '{groupName}' is unknown");
+							return false;
+						}
+
+						ret &= await RunTest (suite, group);
+						lastSuites[MakeSuiteInitKey (suite)] = suite;
+					}
+				}
+			}
+
+			if (SuiteNames.Count == 0 && GroupNames.Count == 0) {
+				foreach (XATest s in tc.AllSuitesByID.Values) {
+					ret &= await RunTest (s);
+					lastSuites[MakeSuiteInitKey (s)] = s;
 				}
 			}
 
 			if (lastSuites.Count > 0) {
 				foreach (var kvp in lastSuites) {
 					string kindName = kvp.Key;
-					XATest suite = kvp.Value;
+					XATest lastSuite = kvp.Value;
 
-					Log.StatusLine ($"Running global shutdown steps for suite kind '{suite.KindName}, family '{suite.TestFamilyName}'");
-					if (!await suite.RunGlobalShutdownCommands ()) {
-						Log.WarningLine ($"Failed to run global shutdown steps for suite kind '{suite.KindName}', family '{suite.TestFamilyName}'");
+					Log.StatusLine ($"Running global shutdown steps for suite kind '{lastSuite.KindName}, family '{lastSuite.TestFamilyName}'");
+					if (!await lastSuite.RunGlobalShutdownCommands ()) {
+						Log.WarningLine ($"Failed to run global shutdown steps for suite kind '{lastSuite.KindName}', family '{lastSuite.TestFamilyName}'");
 					}
 				}
 			}
@@ -224,32 +248,44 @@ namespace Xamarin.Android.Tests
 			return null;
 		}
 
-		async Task<bool> RunTest (XATest suite)
+		TestGroup? FindGroup (string groupName, TestCollection tc)
+		{
+			if (tc.GroupsByID.TryGetValue (groupName, out TestGroup group)) {
+				return group;
+			}
+
+			if (tc.GroupsByName.TryGetValue (groupName, out group)) {
+				return group;
+			}
+
+			return null;
+		}
+
+		async Task<bool> RunTest (XATest suite, TestGroup? group = null)
 		{
 			Log.InfoLine ($"Running suite: {suite.Name}");
-			if (IncludeCategories.Count > 0) {
-				suite.IncludeCategories.Clear ();
-				suite.IncludeCategories.AddRange (IncludeCategories);
-			}
 
-			if (ExcludeCategories.Count > 0) {
-				suite.ExcludeCategories.Clear ();
-				suite.ExcludeCategories.AddRange (ExcludeCategories);
-			}
+			string? savedResultPath = null;
+			if (group == null) {
+				ClearAndAddRange (IncludeCategories, suite.IncludeCategories);
+				ClearAndAddRange (ExcludeCategories, suite.ExcludeCategories);
+				ClearAndAddRange (TestNames, suite.TestNames);
+				ClearAndAddRange (IncludeTests, suite.IncludeTests);
+				ClearAndAddRange (ExcludeTests, suite.ExcludeTests);
+			} else {
+				Log.InfoLine ($"Running as part of group '{group.Name}'");
 
-			if (TestNames.Count > 0) {
-				suite.TestNames.Clear ();
-				suite.TestNames.AddRange (TestNames);
-			}
+				ClearAndAddRange (group.IncludeCategories, suite.IncludeCategories);
+				ClearAndAddRange (group.ExcludeCategories, suite.ExcludeCategories);
+				ClearAndAddRange (group.Tests, suite.TestNames);
+				ClearAndAddRange (group.IncludeTests, suite.IncludeTests);
+				ClearAndAddRange (group.ExcludeTests, suite.ExcludeTests);
 
-			if (IncludeTests.Count > 0) {
-				suite.IncludeTests.Clear ();
-				suite.IncludeTests.AddRange (IncludeTests);
-			}
-
-			if (ExcludeTests.Count > 0) {
-				suite.ExcludeTests.Clear ();
-				suite.ExcludeTests.AddRange (ExcludeTests);
+				string? overrideResultPath = group.SuitesByID [suite.ID];
+				if (!String.IsNullOrEmpty (overrideResultPath) && suite is TestHostUnit hostUnit) {
+					savedResultPath = hostUnit.ResultPath;
+					hostUnit.ResultPath = overrideResultPath!;
+				}
 			}
 
 			bool success = true;
@@ -266,6 +302,9 @@ namespace Xamarin.Android.Tests
 				success = false;
 			} finally {
 				testTimes[suite] = timer.Elapsed;
+				if (savedResultPath != null && suite is TestHostUnit hostUnit) {
+					hostUnit.ResultPath = savedResultPath;
+				}
 			}
 
 			if (!success) {
@@ -273,6 +312,16 @@ namespace Xamarin.Android.Tests
 			}
 
 			return success;
+
+			void ClearAndAddRange (List<string> src, List<string> dest)
+			{
+				dest.Clear ();
+				if (src.Count == 0) {
+					return;
+				}
+
+				dest.AddRange (src);
+			}
 		}
 
 		async Task<bool> DoRunTest (XATest suite, Stopwatch timer)

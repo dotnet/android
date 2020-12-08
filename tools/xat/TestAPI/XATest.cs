@@ -197,6 +197,7 @@ namespace Xamarin.Android.Tests
 
 		protected virtual async Task<bool> ExecuteCommand (TestCommand command, string phaseName)
 		{
+			command.FailedCommands.Clear ();
 			if (!await command.Run (this)) {
 				return false;
 			}

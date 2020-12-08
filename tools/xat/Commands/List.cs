@@ -63,10 +63,12 @@ namespace Xamarin.Android.Tests
 				string groupName = kvp.Key;
 				TestGroup group = kvp.Value;
 
-				if (first) {
-					first = false;
-				} else {
-					Log.MessageLine ();
+				if (verbose) {
+					if (first) {
+						first = false;
+					} else {
+						Log.MessageLine ();
+					}
 				}
 
 				Log.Message ($"{indent}{Context.Characters.Bullet} ");

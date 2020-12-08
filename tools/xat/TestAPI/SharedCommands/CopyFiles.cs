@@ -9,12 +9,14 @@ namespace Xamarin.Android.Tests.Shared
 	{
 		string sourcePathGlob;
 		string destinationDirectoryPath;
+		bool required;
 
-		public CopyFiles (string sourcePathGlob, string destinationDirectoryPath)
+		public CopyFiles (string sourcePathGlob, string destinationDirectoryPath, bool required)
 			: base (nameof (CopyFiles), "Copy files using a glob pattern")
 		{
 			this.sourcePathGlob = EnsureParameterValue (nameof (sourcePathGlob), sourcePathGlob);
 			this.destinationDirectoryPath = EnsureParameterValue (nameof (destinationDirectoryPath), destinationDirectoryPath);
+			this.required = required;
 
 			if (!Path.IsPathRooted (this.destinationDirectoryPath)) {
 				this.destinationDirectoryPath = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, this.destinationDirectoryPath);
@@ -30,8 +32,15 @@ namespace Xamarin.Android.Tests.Shared
 		{
 			Utilities.CreateDirectory (destinationDirectoryPath);
 
+			bool copiedAny = false;
 			foreach (string filePath in Directory.EnumerateFiles (Path.GetDirectoryName (sourcePathGlob), Path.GetFileName (sourcePathGlob))) {
 				Utilities.CopyFileToDir (filePath, destinationDirectoryPath);
+				copiedAny = true;
+			}
+
+			if (required && !copiedAny) {
+				Log.ErrorLine ($"Failed to copy required file(s) using glob '{sourcePathGlob}'");
+				return false;
 			}
 
 			return true;

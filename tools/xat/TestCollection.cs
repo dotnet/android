@@ -196,7 +196,11 @@ namespace Xamarin.Android.Tests
 				t.EnvironmentVariables ["JAVA_INTEROP_LREF_LOG"] = Path.Combine (Configurables.Paths.JavaInteropTestDir, $"l-{assemblyFileName}.txt");
 				t.EnvironmentVariables ["JI_JVM_PATH"] = Context.Instance.Properties.GetRequiredValue (KnownProperties.JavaSdkDirectory);
 			});
-			var copyDSO = new Shared.CopyFiles (Path.Combine (Configurables.Paths.JavaInteropBinDir, "libjava-interop.*"), Configurables.Paths.JavaInteropTestDir);
+
+			var buildDSO = new Shared.BuildWithMSBuild {
+				ProjectFilePath = Path.Combine (Configurables.Paths.JavaInteropDir, "src", "java-interop", "java-interop.csproj")
+			};
+			var copyDSO = new Shared.CopyFiles (Path.Combine (Configurables.Paths.JavaInteropBinDir, "libjava-interop.*"), Configurables.Paths.JavaInteropTestDir, required: true);
 
 			TimeSpan jiTimeout = TimeSpan.FromMinutes (15);
 			foreach (var kvp in javaInteropTests) {
@@ -212,6 +216,7 @@ namespace Xamarin.Android.Tests
 					Timeout = jiTimeout,
 
 					GlobalInitCommands = {
+						buildDSO,
 						copyDSO,
 					},
 

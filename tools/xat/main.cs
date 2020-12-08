@@ -102,7 +102,7 @@ namespace Xamarin.Android.Tests
 				{ "g|group=", "Run the specified {GROUPS}. Takes a comma-separated list of test group names or can be repeated on command line", v => AddName ("test group", groupNames, usedGroupNames, v) },
 				{ "s|suite=", "Run the specified {SUITES}. Takes a comma-separated list of test suite names or can be repeated on command line", v => AddName ("test suite", suiteNames, usedSuiteNames, v) },
 				"",
-				"The arguments below use suite-specific format for each entry",
+				"The arguments below use suite-specific format for each entry. They are ignored if a test suite runs as part of predefined group:",
 				{ "t|test=", "Run the specified {TESTS}. Takes a comma-separated list of test names", v => AddName ("test", testNames, usedTestNames, v) },
 				{ "i|include-categories=", "Run tests in the specified {CATEGORIES}. Takes a comma-separated list of test categories", v => AddName ("category to include", includeCategories, usedIncludeCategories, v) },
 				{ "e|exclude-categories=", "Do not tun tests in the specified {CATEGORIES}. Takes a comma-separated list of test categories", v => AddName ("category to exclude", excludeCategories, usedExcludeCategories, v) },
