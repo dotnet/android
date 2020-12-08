@@ -1126,3 +1126,28 @@ stages:
   - template: yaml-templates\run-timezoneinfo-tests.yaml
     parameters:
       node_id: 3
+
+  # Check - "Xamarin.Android (Finalize Installers Queue Vsix Signing)"
+  - job: queue_vsix_signing
+    displayName: Queue Vsix Signing
+    dependsOn: notarize_pkg_upload_storage
+    pool: VSEng-MicroBuildVS2019
+    timeoutInMinutes: 90
+    cancelTimeoutInMinutes: 1
+    workspace:
+      clean: all
+    steps:
+      # Signing job is run here: https://dev.azure.com/devdiv/DevDiv/_build?definitionId=13878
+      # https://github.com/huserben/TfsExtensions/blob/master/BuildTasks/overview.md
+    - task: benjhuser.tfs-extensions-build-tasks.trigger-build-task.TriggerBuild@3
+      displayName: 'xamarin vsix codesign - run Azure DevOps job'
+      inputs:
+        buildDefinition: $(Signing.Job)
+        useSameSourceVersion: false
+        useSameBranch: false
+        branchToUse: 'full-esrp-integration'
+        waitForQueuedBuildsToFinish: true
+        storeInEnvironmentVariable: true
+        buildParameters: '{ "REPO": "$(Build.Repository.Name)", "COMMIT": "$(Build.SourceVersion)", "SIGN_TYPE": "Real", "GITHUB_CONTEXT": "$(GitHub.Artifacts.Context)" }'
+        authenticationMethod: 'OAuth Token'
+        password: $(System.AccessToken)     # Equivalent to the 'Allow scripts to access OAuth token option': https://stackoverflow.com/questions/52837980/how-to-allow-scripts-to-access-oauth-token-from-yaml-builds
