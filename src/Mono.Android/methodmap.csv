@@ -1133,7 +1133,6 @@
 0, android.view.accessibility, [Interface]AccessibilityEventSource, sendAccessibilityEvent, eventType, Android.Views.Accessibility.EventTypes
 0, android.view.accessibility, AccessibilityManager, getEnabledAccessibilityServiceList, feedbackTypeFlags, Android.AccessibilityServices.FeedbackFlags
 0, android.view.accessibility, AccessibilityNodeInfo, getActions, return, Android.Views.Accessibility.Action
-0, android.view.accessibility, AccessibilityNodeInfo, addAction, action, Android.Views.Accessibility.Action
 0, android.view.accessibility, AccessibilityNodeInfo, performAction, action, Android.Views.Accessibility.Action
 
 0, android.view.animation, RotateAnimation, ctor, pivotXType, Android.Views.Animations.Dimension
