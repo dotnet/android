@@ -21,6 +21,7 @@ resources:
   - repository: release_scripts
     type: github
     name: xamarin/release-scripts
+    ref: refs/heads/sign-and-notarized
     endpoint: xamarin
   - repository: uitools
     type: github
@@ -1197,11 +1198,15 @@ stages:
       parameters:
         UnsignedPkgPath: $(XA.Unsigned.Pkg)
 
+    - task: MicroBuildSigningPlugin@3
+      displayName: Install Signing Plugin
+      inputs:
+        signType: real
+        azureSubscription: MicroBuild Signing Task (DevDiv)
+
     - script: >
         cd $(System.DefaultWorkingDirectory)/release-scripts &&
-        git checkout $(ReleaseScriptsBranch) &&
-        sudo xcode-select -s /Applications/$(NotarizationXcode) &&
-        ruby notarize.rb $(XA.Unsigned.Pkg) $(XamarinIdentifier) $(XamarinUserId) $(XamarinPassword) $(TeamID)
+        pwsh notarize.ps1 -FolderForApps $(System.DefaultWorkingDirectory)/storage-artifacts
       displayName: Notarize PKG
 
     - script: xcrun stapler validate $(XA.Unsigned.Pkg)
