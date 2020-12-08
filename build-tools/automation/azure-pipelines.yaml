@@ -1163,6 +1163,8 @@ stages:
       clean: all
     variables:
     - group: Xamarin Notarization
+    - name: TeamName
+      value: XamarinAndroid
     steps:
     - checkout: self
 
