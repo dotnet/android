@@ -117,8 +117,9 @@ namespace UnnamedProject
 			Android.Util.Log.Info(TAG, LinkTestLib.Bug21578.MulticastOption_ShouldNotBeStripped());
 			Android.Util.Log.Info(TAG, LinkTestLib.Bug21578.MulticastOption_ShouldNotBeStripped2());
 			Android.Util.Log.Info(TAG, LinkTestLib.Bug35195.AttemptCreateTable());
+#if !NET
 			Android.Util.Log.Info(TAG, LinkTestLib.Bug36250.SerializeSearchRequestWithDictionary());
-
+#endif
 			Android.Util.Log.Info(TAG, "All regression tests completed.");
 		}
 	}
