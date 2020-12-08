@@ -40,6 +40,7 @@ namespace Xamarin.ProjectTools
 			if (Builder.UseDotNet) {
 				SetProperty (KnownProperties.OutputType, "Exe");
 				SetProperty ("XamarinAndroidSupportSkipVerifyVersions", "True");
+				SetProperty ("_FastDeploymentDiagnosticLogging", "True");
 
 				// Workaround for AndroidX, see: https://github.com/xamarin/AndroidSupportComponents/pull/239
 				Imports.Add (new Import (() => "Directory.Build.targets") {
@@ -51,6 +52,7 @@ namespace Xamarin.ProjectTools
 						</Project>"
 				});
 			} else {
+				SetProperty ("_FastDeploymentDiagnosticLogging", "True");
 				SetProperty ("AndroidApplication", "True");
 				SetProperty ("AndroidResgenClass", "Resource");
 				SetProperty ("AndroidResgenFile", () => "Resources\\Resource.designer" + Language.DefaultDesignerExtension);
