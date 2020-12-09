@@ -1073,9 +1073,11 @@
   <!-- This is required because "System" causes several namespace resolution problem... -->
   <attr api-since="21" path="/api/package[@name='android.system']" name="managedName">Android.Systems</attr>
   <attr api-since="21" path="/api/package[@name='android.app.job']/class[@name='JobInfo']/method[@name='getBackoffPolicy']" name="managedName">GetBackoffPolicyValue</attr>
-  <!-- Thanks to the deprecated API, somehow we cannot add binding for the non-deprecated version of the API.
-       FIXME: It might be overkill, we can revisit here later. -->
-  <remove-node api-since="21" path="/api/package[@name='android.view.accessibility']/class[@name='AccessibilityNodeInfo']/method[@name='addAction'][parameter/@type='android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction']" name="eventName" />
+
+  <!-- We have 2 methods with the same name and the same parameter name.  The original one used an int which we mapped to an enum.
+       Our methodmap.csv isn't capable of only choosing 1 of the methods, so it sets them both as the enum, making both have  the
+       same signature.  So we are going to set the enum transformation here instead, where we can specify a path that only affects a single method. -->
+  <attr api-since="14" path="/api/package[@name='android.view.accessibility']/*[@name='AccessibilityNodeInfo']/method[@name='addAction' and count(parameter)=1 and parameter[1][@type='int']]/parameter[@name='action']" name="enumType">Android.Views.Accessibility.Action</attr>
 
   <!-- FIXME: this should be fixed in generator ("Raw" method resolution is complicated). Since we can call base method, it can be even ignored... -->
   <remove-node api-since="21" path="/api/package[@name='java.util.concurrent']/class[@name='RecursiveAction']/method[@name='getRawResult']" />

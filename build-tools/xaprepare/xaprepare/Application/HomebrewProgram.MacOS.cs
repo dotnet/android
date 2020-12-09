@@ -6,6 +6,8 @@ namespace Xamarin.Android.Prepare
 {
 	class HomebrewProgram : Program
 	{
+		static readonly char[] lineSplit = new [] { '\n' };
+
 		string cachedVersionOutput;
 		bool brewNeedsSudo = false;
 		bool multipleVersionsPickle = false;
@@ -204,13 +206,21 @@ namespace Xamarin.Android.Prepare
 
 		string GetPackageVersion ()
 		{
-			return Utilities.GetStringFromStdout (
+			string output = Utilities.GetStringFromStdout (
 				Context.Instance.Tools.BrewPath,
 				false, // throwOnErrors
 				true,  // trimTrailingWhitespace
 				true,  // quietErrors
-				"ls", "--versions", "-1", Name
+				"ls", "--versions", Name
 			);
+
+			if (String.IsNullOrEmpty (output))
+				return output;
+
+			string[] lines = output.Split (lineSplit, StringSplitOptions.RemoveEmptyEntries);
+			if (lines.Length == 0)
+				return String.Empty;
+			return lines [0];
 		}
 	}
 }

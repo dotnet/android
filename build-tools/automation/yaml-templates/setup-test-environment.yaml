@@ -2,11 +2,17 @@ parameters:
   configuration: $(XA.Build.Configuration)
   provisionExtraArgs: -vv -f
   xaSourcePath: $(System.DefaultWorkingDirectory)
+  updateVS: false
 
 steps:
 - checkout: self
   clean: true
   submodules: recursive
+
+- ${{ if eq(parameters.updateVS, true) }}:
+  - template: update-vs.yaml
+    parameters: 
+      xasourcePath: ${{ parameters.xaSourcePath }}
 
 - template: run-installer.yaml
   parameters:
@@ -21,9 +27,13 @@ steps:
   displayName: set JI_JAVA_HOME
   condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
 
-- task: UseDotNet@2
-  displayName: install .NET Core $(DotNetCoreVersion)
-  inputs:
+- template: use-dot-net.yaml
+  parameters:
+    version: $(DotNet5Version)
+    remove_dotnet: true
+
+- template: use-dot-net.yaml
+  parameters:
     version: $(DotNetCoreVersion)
 
 - script: |
@@ -90,4 +100,4 @@ steps:
   inputs:
     solution: ${{ parameters.xaSourcePath }}/build-tools/create-packs/Microsoft.Android.Sdk.proj
     configuration: ${{ parameters.configuration }}
-    msbuildArguments: /t:ExtractWorkloadPacks /restore /bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/extract-workloads.binlog
+    msbuildArguments: /t:ExtractWorkloadPacks /bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/extract-workloads.binlog

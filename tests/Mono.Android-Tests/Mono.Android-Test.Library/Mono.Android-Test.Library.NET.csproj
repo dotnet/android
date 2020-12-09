@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk" >
+
+  <PropertyGroup>
+    <TargetFramework>net6.0-android</TargetFramework>
+    <RootNamespace>Xamarin.Android.RuntimeTests</RootNamespace>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Mono.Android_Test.Library</RootNamespace>
+    <FileAlignment>512</FileAlignment>
+    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AndroidAsset Include="..\LinkedAssets\linked_text2.txt">
+      <Link>Assets\linked_text2.txt</Link>
+    </AndroidAsset>
+    <AndroidAsset Include="..\LinkedAssets\folder.png">
+      <Link>Assets\LibAssetSubFolder\folder.png</Link>
+    </AndroidAsset>
+  </ItemGroup>
+
+</Project>

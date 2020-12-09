@@ -48,14 +48,15 @@ namespace Xamarin.Android.Tasks
 		public string ProguardGeneratedReferenceConfiguration { get; set; }
 		public string ProguardGeneratedApplicationConfiguration { get; set; }
 		public string ProguardCommonXamarinConfiguration { get; set; }
+		public string ProguardMappingFileOutput { get; set; }
 
 		[Required]
 		public string [] ProguardConfigurationFiles { get; set; }
 
 		public ITaskItem[] JavaLibrariesToEmbed { get; set; }
-		
+
 		public ITaskItem[] JavaLibrariesToReference { get; set; }
-		
+
 		public bool UseProguard { get; set; }
 
 		public string JavaOptions { get; set; }
@@ -92,11 +93,11 @@ namespace Xamarin.Android.Tasks
 				// Add the JavaOptions if they are not null
 				// These could be any of the additional options
 				if (!string.IsNullOrEmpty (JavaOptions)) {
-					cmd.AppendSwitch (JavaOptions);		
+					cmd.AppendSwitch (JavaOptions);
 				}
 
 				// Add the specific -XmxN to override the default heap size for the JVM
-				// N can be in the form of Nm or NGB (e.g 100m or 1GB ) 
+				// N can be in the form of Nm or NGB (e.g 100m or 1GB )
 				cmd.AppendSwitchIfNotNull ("-Xmx", JavaMaximumHeapSize);
 
 				cmd.AppendSwitchIfNotNull ("-jar ", Path.Combine (ProguardJarPath));
@@ -117,10 +118,17 @@ namespace Xamarin.Android.Tasks
 						// skip invalid lines
 					}
 
-			if (!string.IsNullOrWhiteSpace (ProguardCommonXamarinConfiguration))
-				using (var xamcfg = File.Create (ProguardCommonXamarinConfiguration))
-					GetType ().Assembly.GetManifestResourceStream ("proguard_xamarin.cfg").CopyTo (xamcfg);
-			
+			if (!string.IsNullOrWhiteSpace (ProguardCommonXamarinConfiguration)) {
+				using (var xamcfg = File.CreateText (ProguardCommonXamarinConfiguration)) {
+					GetType ().Assembly.GetManifestResourceStream ("proguard_xamarin.cfg").CopyTo (xamcfg.BaseStream);
+					if (!string.IsNullOrEmpty (ProguardMappingFileOutput)) {
+						xamcfg.WriteLine ("-keepattributes SourceFile");
+						xamcfg.WriteLine ("-keepattributes LineNumberTable");
+						xamcfg.WriteLine ($"-printmapping {Path.GetFullPath (ProguardMappingFileOutput)}");
+					}
+				}
+			}
+
 			var enclosingChar = OS.IsWindows ? "\"" : string.Empty;
 
 			foreach (var file in ProguardConfigurationFiles) {

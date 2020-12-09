@@ -18,7 +18,7 @@
 # Guides
 
   * [One .NET](guides/OneDotNet.md)
-  * [Build Process](guides/BuildProcess.md)
+  * [Build Process](guides/building-apps/build-process.md)
   * [`.axml` CodeBehind Support](guides/LayoutCodeBehind.md)
   * [MSBuild Best Practices](guides/MSBuildBestPractices.md)
   * [D8 and R8 Integration](guides/D8andR8.md)
@@ -38,7 +38,7 @@
 
   * [How to add support for a new Android API level](workflow/HowToAddNewApiLevel.md)
   * [Using Your Build](workflow/UsingYourBuild.md)
-  * [Jenkins Build Artifacts](workflow/JenkinsBuildArtifacts.md)
+  * [OSS Build Artifacts](workflow/OSSBuildArtifacts.md)
   * [Development tips and native debugging](workflow/DevelopmentTips.md)
   * [Localization](workflow/Localization.md)
 

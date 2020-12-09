@@ -139,15 +139,16 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 
   </Target>
 
-  <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Bindings.Core.targets" />
-  <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Bindings.ClassParse.targets" Condition=" '$(AndroidClassParser)' == 'class-parse' " />
-  <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Bindings.JarToXml.targets"   Condition=" '$(AndroidClassParser)' == 'jar2xml' " />
-  <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.DesignTime.targets" />
-  <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Bindings.Documentation.targets" />
-  <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.EmbeddedResource.targets" />
-  <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.PCLSupport.targets" />
-  <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Tooling.targets" />
-  <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Legacy.targets" />
+  <Import Project="Xamarin.Android.AvailableItems.targets" />
+  <Import Project="Xamarin.Android.Bindings.Core.targets" />
+  <Import Project="Xamarin.Android.Bindings.ClassParse.targets" Condition=" '$(AndroidClassParser)' == 'class-parse' " />
+  <Import Project="Xamarin.Android.Bindings.JarToXml.targets"   Condition=" '$(AndroidClassParser)' == 'jar2xml' " />
+  <Import Project="Xamarin.Android.DesignTime.targets" />
+  <Import Project="Xamarin.Android.Bindings.Documentation.targets" />
+  <Import Project="Xamarin.Android.EmbeddedResource.targets" />
+  <Import Project="Xamarin.Android.PCLSupport.targets" />
+  <Import Project="Xamarin.Android.Tooling.targets" />
+  <Import Project="Xamarin.Android.Legacy.targets" />
 
   <!--
   *******************************************

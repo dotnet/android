@@ -26,7 +26,7 @@ Copyright (C) 2018 Xamarin. All rights reserved.
     <ItemGroup>
       <_JarsToProguard Include="@(_JavaLibrariesToCompile)" />
     </ItemGroup>
-    
+
     <MakeDir Directories="$(IntermediateOutputPath)proguard" />
 
     <Proguard
@@ -42,6 +42,7 @@ Copyright (C) 2018 Xamarin. All rights reserved.
         ProguardCommonXamarinConfiguration="$(IntermediateOutputPath)proguard\proguard_xamarin.cfg"
         ProguardGeneratedReferenceConfiguration="$(_ProguardProjectConfiguration)"
         ProguardGeneratedApplicationConfiguration="$(IntermediateOutputPath)proguard\proguard_project_primary.cfg"
+        ProguardMappingFileOutput="$(AndroidProguardMappingFile)"
         ProguardConfigurationFiles="@(_ProguardConfiguration)"
         JavaLibrariesToEmbed="@(_JarsToProguard);@(_InstantRunJavaReference)"
         JavaLibrariesToReference="@(AndroidExternalJavaLibrary)"
@@ -79,7 +80,7 @@ Copyright (C) 2018 Xamarin. All rights reserved.
     <Delete Files="@(_DexesToDelete)" />
 
     <!-- Compile java code to dalvik -->
-    <CompileToDalvik 
+    <CompileToDalvik
         DxJarPath="$(DxJarPath)"
         DxExtraArguments="$(DxExtraArguments)"
         JavaToolPath="$(JavaToolPath)"
@@ -98,6 +99,7 @@ Copyright (C) 2018 Xamarin. All rights reserved.
     <Touch Files="$(_AndroidStampDirectory)_CompileToDalvik.stamp" AlwaysCreate="true" />
     <ItemGroup>
       <FileWrites Include="$(_AndroidIntermediateDexOutputDirectory)*.dex" />
+      <FileWrites Include="$(AndroidProguardMappingFile)" />
     </ItemGroup>
 
   </Target>

@@ -308,6 +308,12 @@ namespace Xamarin.Android.Build
 					if (!Directory.Exists (sdksDir))
 						sdksDir = Path.Combine (dir, "bin", "Sdks");
 					if (version != null && version > latest) {
+						// Mono does not yet support MSBuild 16.8 and .NET 5+.  If we want xabuild to be aware of .NET 5+ in the future, 
+						// we will need to workaround the fact that the .NET 5 targets now require a version of `NuGet.Frameworks.dll` next to `MSBuildExeTempPath`:
+						// https://github.com/dotnet/msbuild/blob/755d4d1e3d2a89f72f659fc3d7d2933cab619828/src/Build/Utilities/NuGetFrameworkWrapper.cs#L32
+						if (version >= new Version (5, 0, 100)) {
+							continue;
+						}
 						if (Directory.Exists (sdksDir) && File.Exists (Path.Combine (sdksDir, "Microsoft.NET.Sdk", "Sdk", "Sdk.props"))) {
 							latest = version;
 							Sdk = sdksDir;

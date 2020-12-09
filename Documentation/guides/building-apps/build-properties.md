@@ -806,6 +806,17 @@ with build environments that have FIPS compliance enforced.
 
 Added in Xamarin.Android 10.1.
 
+## AndroidProguardMappingFile
+
+Specifies the `-printmapping` proguard rule for `r8`. This will
+mean the `mapping.txt` file will be produced in the `$(OutputPath)`
+folder. This file can then be used when uploading packages to the
+Google Play Store.
+
+Default value is `$(OutputPath)mapping.txt`
+
+Added in Xamarin.Android 11.2
+
 ## AndroidR8IgnoreWarnings
 
 Specifies
@@ -1293,6 +1304,10 @@ generating of linker dependencies file. This file can be used as
 input for
 [illinkanalyzer](https://github.com/mono/linker/blob/master/src/analyzer/README.md)
 tool.
+
+The dependencies file named `linker-dependencies.xml.gz` is written
+to the project directory. On .NET5/6 it is written next to the linked
+assemblies in `obj/<Configuration>/android<ABI>/linked` directory.
 
 The default value is False.
 

@@ -82,7 +82,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				packWriter.WriteAttributeString ("Id", "sdk_manifests");
 				packWriter.WriteAttributeString ("Name", "sdk-manifests");
 
-				// 5.0.100
+				// $(DotNetPreviewVersionBand) 6.0.100
 				var sdk_manifests = Directory.EnumerateDirectories (sdk_manifests_root).FirstOrDefault ();
 				if (string.IsNullOrEmpty (sdk_manifests)) {
 					Log.LogError ($"Cannot find child directory of: {sdk_manifests_root}");
@@ -108,9 +108,22 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				packWriter.WriteStartElement ("Directory");
 				packWriter.WriteAttributeString ("Id", "packs");
 				packWriter.WriteAttributeString ("Name", "packs");
+				packWriter.WriteAttributeString ("FileSource", packs_dir);
 				foreach (var directory in Directory.EnumerateDirectories (packs_dir, "Microsoft.Android.*")) {
 					RecurseDirectory (packs_dir, packWriter, componentWriter, directory);
 				}
+				packWriter.WriteEndElement (); // </Directory> packs
+
+				// template-packs
+				var templates_dir = Path.Combine (DotNetPath, "template-packs");
+				packWriter.WriteStartElement ("Directory");
+				packWriter.WriteAttributeString ("Id", "templatepacks");
+				packWriter.WriteAttributeString ("Name", "template-packs");
+				packWriter.WriteAttributeString ("FileSource", templates_dir);
+				foreach (var file in Directory.EnumerateFiles (templates_dir, "Microsoft.Android.Templates.*.nupkg")) {
+					AddFile (templates_dir, packWriter, componentWriter, file);
+				}
+				packWriter.WriteEndElement (); // </Directory> template-packs
 
 				packWriter.WriteEndDocument (); // </Directory>
 				componentWriter.WriteEndDocument (); // </ComponentGroup>
@@ -145,20 +158,25 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				var fileName = Path.GetFileName (file);
 				if (fileName.StartsWith (".") || fileName.StartsWith ("_"))
 					continue;
-				var componentId = GetId (top_dir, file);
-				packWriter.WriteStartElement ("Component");
-				packWriter.WriteAttributeString ("Id", componentId);
-				packWriter.WriteStartElement ("File");
-				packWriter.WriteAttributeString ("Id", componentId);
-				packWriter.WriteAttributeString ("Name", Path.GetFileName (file));
-				packWriter.WriteAttributeString ("KeyPath", "yes");
-				packWriter.WriteEndElement (); // </File>
-				packWriter.WriteEndElement (); // </Component>
-				componentWriter.WriteStartElement ("ComponentRef");
-				componentWriter.WriteAttributeString ("Id", componentId);
-				componentWriter.WriteEndElement (); // </ComponentRef>
+				AddFile (top_dir, packWriter, componentWriter, file);
 			}
 			packWriter.WriteEndElement (); // </Directory>
+		}
+
+		static void AddFile (string top_dir, XmlWriter packWriter, XmlWriter componentWriter, string file)
+		{
+			string componentId = GetId (top_dir, file);
+			packWriter.WriteStartElement ("Component");
+			packWriter.WriteAttributeString ("Id", componentId);
+			packWriter.WriteStartElement ("File");
+			packWriter.WriteAttributeString ("Id", componentId);
+			packWriter.WriteAttributeString ("Name", Path.GetFileName (file));
+			packWriter.WriteAttributeString ("KeyPath", "yes");
+			packWriter.WriteEndElement (); // </File>
+			packWriter.WriteEndElement (); // </Component>
+			componentWriter.WriteStartElement ("ComponentRef");
+			componentWriter.WriteAttributeString ("Id", componentId);
+			componentWriter.WriteEndElement (); // </ComponentRef>
 		}
 
 		static string GetId (string top_dir, string path)

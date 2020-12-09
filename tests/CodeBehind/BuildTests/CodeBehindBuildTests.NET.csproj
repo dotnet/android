@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net5.0-android</TargetFramework>
+    <TargetFramework>net6.0-android</TargetFramework>
     <RootNamespace>Xamarin.Android.Tests.CodeBehindBuildTests</RootNamespace>
     <OutputType>Exe</OutputType>
     <AndroidGenerateLayoutBindings>True</AndroidGenerateLayoutBindings>
@@ -60,6 +60,6 @@
     <AndroidResource Include="Resources\layout-v16\player_list_item_many2.xml" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CommonSampleLibrary\CommonSampleLibraryDotNet.csproj" />
+    <ProjectReference Include="..\CommonSampleLibrary\CommonSampleLibrary.NET.csproj" />
   </ItemGroup>
 </Project>

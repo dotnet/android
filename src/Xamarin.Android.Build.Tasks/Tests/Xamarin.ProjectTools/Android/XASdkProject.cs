@@ -54,7 +54,7 @@ namespace Xamarin.ProjectTools
 		public XASdkProject (string outputType = "Exe")
 		{
 			Sdk = "Microsoft.NET.Sdk";
-			TargetFramework = "net5.0-android";
+			TargetFramework = "net6.0-android";
 
 			TargetSdkVersion = AndroidSdkResolver.GetMaxInstalledPlatform ().ToString ();
 			PackageName = PackageName ?? string.Format ("{0}.{0}", ProjectName);
@@ -64,7 +64,7 @@ namespace Xamarin.ProjectTools
 
 			// Add relevant Android content to our project without writing it to the .csproj file
 			if (outputType == "Exe") {
-				Sources.Add (new BuildItem.Source ("Properties\\AndroidManifest.xml") {
+				Sources.Add (new BuildItem.Source ("AndroidManifest.xml") {
 					TextContent = ProcessManifestTemplate
 				});
 			}

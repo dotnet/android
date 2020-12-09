@@ -9,6 +9,20 @@ This file contains the .NET 5-specific targets to customize ILLink
 
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
+  <PropertyGroup>
+    <!--
+      Runtime libraries feature switches defaults
+      Available feature switches: https://github.com/dotnet/runtime/blob/master/docs/workflow/trimming/feature-switches.md
+     -->
+    <DebuggerSupport Condition="'$(DebuggerSupport)' == ''">$(AndroidUseDebugRuntime)</DebuggerSupport>
+    <EnableUnsafeUTF7Encoding Condition="'$(EnableUnsafeUTF7Encoding)' == ''">false</EnableUnsafeUTF7Encoding>
+    <EnableUnsafeBinaryFormatterSerialization Condition="'$(EnableUnsafeBinaryFormatterSerialization)' == ''">false</EnableUnsafeBinaryFormatterSerialization>
+    <EventSourceSupport Condition="'$(EventSourceSupport)' == ''">false</EventSourceSupport>
+    <UseSystemResourceKeys Condition="'$(UseSystemResourceKeys)' == ''">true</UseSystemResourceKeys>
+    <HttpActivityPropagationSupport Condition="'$(HttpActivityPropagationSupport)' == ''">false</HttpActivityPropagationSupport>
+    <StartupHookSupport Condition="'$(StartupHookSupport)' == ''">false</StartupHookSupport>
+  </PropertyGroup>
+
   <Target Name="_PrepareLinking"
       Condition=" '$(PublishTrimmed)' == 'true' "
       AfterTargets="ComputeResolvedFilesToPublishList"
@@ -20,6 +34,11 @@ This file contains the .NET 5-specific targets to customize ILLink
           Condition=" '$(AndroidLinkMode)' == 'Full' and '%(ResolvedFileToPublish.Extension)' == '.dll' and '%(ResolvedFileToPublish.AssetType)' != 'native' "
           TrimMode="link"
       />
+      <!-- TODO: remove setting the trim mode here, once the support packages are updated to NET6 and compatability packages not needed -->
+      <ResolvedFileToPublish
+          Condition=" '$(AndroidLinkMode)' == 'SdkOnly' and ( $([System.String]::Copy(%(Filename)).StartsWith ('Xamarin.AndroidX.')) or $([System.String]::Copy(%(Filename)).StartsWith ('Xamarin.Android.Support.')) or $([System.String]::Copy(%(Filename)).StartsWith ('Xamarin.Google.')) or $([System.String]::Copy(%(Filename)).StartsWith ('Xamarin.GooglePlayServices.')) ) ">
+        <TrimMode>link</TrimMode>
+      </ResolvedFileToPublish>
       <!-- Mark our entry assembly as a root assembly. -->
       <TrimmerRootAssembly Include="$(AssemblyName)" />
     </ItemGroup>
@@ -36,6 +55,10 @@ This file contains the .NET 5-specific targets to customize ILLink
         Condition=" '$(_ProguardProjectConfiguration)' != '' ">
       <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --custom-data ProguardConfiguration="$(_ProguardProjectConfiguration)"</_ExtraTrimmerArgs>
     </PropertyGroup>
+    <PropertyGroup
+        Condition=" '$(LinkerDumpDependencies)' == 'true' ">
+      <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --dump-dependencies"</_ExtraTrimmerArgs>
+    </PropertyGroup>
     <ItemGroup>
       <!-- add our custom steps -->
       <_TrimmerCustomSteps Include="$(MSBuildThisFileDirectory)..\tools\Microsoft.Android.Sdk.ILLink.dll">
@@ -48,6 +71,7 @@ This file contains the .NET 5-specific targets to customize ILLink
       <TrimmerRootDescriptor
           Condition=" '@(ResolvedFileToPublish->Count())' != '0' and '%(Filename)' != '' "
           Include="@(_PreserveLists)" />
+      <TrimmerRootDescriptor Include="@(LinkDescription)" />
     </ItemGroup>
   </Target>
 

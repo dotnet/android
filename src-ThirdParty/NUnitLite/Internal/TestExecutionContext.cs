@@ -34,7 +34,7 @@ using System.Security.Principal;
 #endif
 
 using NUnit.Framework.Api;
-#if !SILVERLIGHT && !NETCF
+#if !SILVERLIGHT && !NETCF && !NET
 using System.Runtime.Remoting.Messaging;
 #endif
 
@@ -53,7 +53,7 @@ namespace NUnit.Framework.Internal
 	/// object on the top of the stack.
 	/// </summary>
 	public class TestExecutionContext
-#if !SILVERLIGHT && !NETCF
+#if !SILVERLIGHT && !NETCF && !NET
 		: ILogicalThreadAffinative
 #endif
 	{

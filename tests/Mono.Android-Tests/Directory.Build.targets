@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <Target Name="BuildNativeLibs"
-      BeforeTargets="Build"
+      BeforeTargets="CoreBuild"
       DependsOnTargets="AndroidPrepareForBuild"
       Inputs="$(MSBuildThisFileDirectory)jni\reuse-threads.c;$(MSBuildThisFileDirectory)jni\Android.mk"
       Outputs="@(AndroidNativeLibrary)">
@@ -31,6 +31,42 @@
       Condition="Exists ('$(XAInstallPrefix)xbuild\Xamarin\Android\Java.Interop.dll')"
       BeforeTargets="_GenerateJniMarshalMethods"
       DependsOnTargets="_CreateJavaInteropDllConfigs">
+  </Target>
+
+  <Target Name="GenerateNuGetConfig" >
+    <PropertyGroup>
+      <LocalNupkgDirectory Condition=" '$(LocalNupkgDirectory)' == '' ">$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\</LocalNupkgDirectory>
+      <AndroidNETTestConfigOutputDir Condition=" '$(AndroidNETTestConfigOutputDir)' == '' ">$(MSBuildThisFileDirectory)Runtime-Microsoft.Android.Sdk\</AndroidNETTestConfigOutputDir>
+      <AndroidNETTestConfigOutputDir>$([MSBuild]::EnsureTrailingSlash($(AndroidNETTestConfigOutputDir)))</AndroidNETTestConfigOutputDir>
+      <NuGetConfigContent>
+<![CDATA[
+<configuration>
+  <packageSources>
+    <add key="xamarin-impl" value="https://pkgs.dev.azure.com/azure-public/vside/_packaging/xamarin-impl/nuget/v3/index.json" />
+    <add key="dotnet5" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5/nuget/v3/index.json" />
+    <add key="dotnet6" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json" />
+    <add key="xa-nupkgs" value="$(LocalNupkgDirectory)" />
+  </packageSources>
+</configuration>
+]]>
+      </NuGetConfigContent>
+    </PropertyGroup>
+
+    <WriteLinesToFile
+        File="$(AndroidNETTestConfigOutputDir)nuget.config"
+        Lines="$(NuGetConfigContent)"
+        Overwrite="true"
+    />
+  </Target>
+
+  <Target Name="RunDotNetInstrumentation"
+      DependsOnTargets="GenerateNuGetConfig" >
+    <ItemGroup>
+      <_RuntimeTestArgs Include="-p:Configuration=$(Configuration)" />
+      <_RuntimeTestArgs Include="-t:AcquireAndroidTarget,SignAndroidPackage,DeployTestApks,RunTestApks,UndeployTestApks,RenameApkTestCases,ReportComponentFailures" />
+      <_RuntimeTestArgs Include="-bl:$(XamarinAndroidSourcePath)bin\Test$(Configuration)\run-Mono.Android.NET-Tests.binlog" />
+    </ItemGroup>
+    <Exec Command="$(DotNetPreviewTool) build /v:n @(_RuntimeTestArgs, ' ') &quot;$(MSBuildThisFileDirectory)Runtime-Microsoft.Android.Sdk\Mono.Android.NET-Tests.csproj&quot;" />
   </Target>
 
 </Project>

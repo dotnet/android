@@ -29,6 +29,29 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		[Test, Category ("SmokeTests")]
+		public void BuildBasicApplicationReleaseWithCustomAotProfile ()
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+				AndroidEnableProfiledAot = true,
+			};
+			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidExtraAotOptions", "--verbose");
+
+			byte [] custom_aot_profile;
+			using (var stream = typeof (XamarinAndroidApplicationProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.custom.aotprofile")) {
+				custom_aot_profile = new byte [stream.Length];
+				stream.Read (custom_aot_profile, 0, (int) stream.Length);
+			}
+			proj.OtherBuildItems.Add (new BuildItem ("AndroidAotProfile", "custom.aotprofile") { BinaryContent = () => custom_aot_profile });
+
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				StringAssertEx.ContainsRegex (@"\[aot-compiler stdout\] Using profile data file.*custom\.aotprofile", b.LastBuildOutput, "Should use custom AOT profile", RegexOptions.IgnoreCase);
+				StringAssertEx.ContainsRegex (@"\[aot-compiler stdout\] Method.*emitted at", b.LastBuildOutput, "Should contain verbose AOT compiler output", RegexOptions.IgnoreCase);
+			}
+		}
+
 		[Test]
 		public void BuildBasicApplicationReleaseProfiledAotWithoutDefaultProfile ()
 		{

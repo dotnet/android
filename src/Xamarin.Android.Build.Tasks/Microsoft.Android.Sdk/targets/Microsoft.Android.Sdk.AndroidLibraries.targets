@@ -13,35 +13,10 @@ projects.
   <UsingTask TaskName="Xamarin.Android.Tasks.CreateAar"          AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.ExtractJarsFromAar" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
-  <ItemGroup>
-    <AvailableItemName Include="AndroidLibrary" />
-  </ItemGroup>
-  <ItemDefinitionGroup>
-    <AndroidLibrary>
-      <Bind>false</Bind>
-      <Pack>true</Pack>
-    </AndroidLibrary>
-  </ItemDefinitionGroup>
   <PropertyGroup>
     <_AarCacheFile>$(IntermediateOutputPath)$(TargetName).aar.cache</_AarCacheFile>
     <_AarOutputPath>$(OutputPath)$(TargetName).aar</_AarOutputPath>
   </PropertyGroup>
-
-  <Target Name="_CategorizeAndroidLibraries">
-    <ItemGroup Condition=" '$(AndroidApplication)' == 'true' ">
-      <AndroidAarLibrary    Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.aar' " />
-      <AndroidJavaLibrary   Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.jar' " />
-      <AndroidNativeLibrary Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.so' " />
-    </ItemGroup>
-    <ItemGroup Condition=" '$(AndroidApplication)' != 'true' ">
-      <AndroidAarLibrary     Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.aar' and '%(AndroidLibrary.Bind)' != 'true' " />
-      <LibraryProjectZip     Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.aar' and '%(AndroidLibrary.Bind)' == 'true' " />
-      <AndroidJavaLibrary    Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.jar' and '%(AndroidLibrary.Bind)' != 'true' " />
-      <EmbeddedJar           Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.jar' and '%(AndroidLibrary.Bind)' == 'true' " />
-      <EmbeddedNativeLibrary Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.so' " />
-      <None Include="@(LibraryProjectZip)" CopyToOutputDirectory="PreserveNewest" Link="%(Filename)%(Extension)" />
-    </ItemGroup>
-  </Target>
 
   <Target Name="_ResolveAars" Condition=" '$(AndroidApplication)' == 'true' ">
     <ItemGroup>
@@ -66,6 +41,7 @@ projects.
       <_CreateAarInputs Include="@(AndroidAsset)" />
       <_CreateAarInputs Include="@(_AndroidResourceDest)" />
       <_CreateAarInputs Include="@(AndroidEnvironment)" />
+      <_CreateAarInputs Include="@(AndroidJavaLibrary)" />
       <_CreateAarInputs Include="@(EmbeddedJar)" />
       <_CreateAarInputs Include="@(EmbeddedNativeLibrary)" />
     </ItemGroup>

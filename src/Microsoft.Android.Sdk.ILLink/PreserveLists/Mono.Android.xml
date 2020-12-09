@@ -1,12 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <linker>
 	<assembly fullname="Mono.Android">
-		<namespace fullname="Java.Interop" />
-		<type fullname="Android.Runtime.AndroidEnvironment" />
 		<type fullname="Android.Runtime.AnnotationAttribute" />
-		<type fullname="Android.Runtime.CharSequence" />
-		<type fullname="Android.Runtime.ConstructorBuilder" />
-		<type fullname="Android.Runtime.Extensions" />
 		<type fullname="Android.Runtime.GeneratedDummyHost" />
 		<type fullname="Android.Runtime.GeneratedEnumAttribute" />
 		<type fullname="Android.Runtime.IJavaObject" />
@@ -47,6 +42,7 @@
 		<type fullname="Android.Runtime.XmlReaderResourceParser" />
 		<type fullname="Android.Runtime.XmlReaderPullParser" />
 		-->
+		<type fullname="Java.Interop.TypeManager*JavaTypeManager" />
 		<type fullname="Java.Lang.Object">
 			<field name="handle" />
 			<field name="handle_type" />

@@ -85,6 +85,8 @@
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
     <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop\Java.Interop.csproj" />
+
+    <EmbeddedResource Include="ILLink/ILLink.LinkAttributes.xml" />
   </ItemGroup>
 
   <ItemGroup>

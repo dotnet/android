@@ -37,12 +37,11 @@ namespace Xamarin.Android.Build.Tests
 
 			proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
+				MinSdkVersion = "23",
+				TargetSdkVersion = null,
 			};
 			if (isRelease || !CommercialBuildAvailable) {
 				proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86");
-			} else {
-				proj.MinSdkVersion = "23";
-				proj.TargetSdkVersion = null;
 			}
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
 $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
@@ -61,6 +60,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 		}
 
 		[Test]
+		[Category ("DotNetIgnore")] // TODO: UnhandledException not firing: https://github.com/dotnet/runtime/issues/44526
 		public void SubscribeToAppDomainUnhandledException ()
 		{
 			AssertHasDevices ();
@@ -231,6 +231,7 @@ namespace Library1 {
 		};
 
 		[Test]
+		[Category ("DotNetIgnore")] // TODO: libmono-profiler-log.so is missing in .NET 6
 		public void ProfilerLogOptions_ShouldCreateMlpdFiles ([ValueSource (nameof (ProfilerOptions))] string profilerOption)
 		{
 			AssertHasDevices ();
@@ -316,6 +317,12 @@ namespace Library1 {
 				ProjectName = "LinkTestLib",
 				Sdk = "Microsoft.NET.Sdk",
 				TargetFramework = "netstandard2.0",
+				PackageReferences = {
+					new Package {
+						Id = "sqlite-net-pcl",
+						Version = "1.7.335",
+					}
+				},
 				Sources = {
 					new BuildItem.Source ("Bug21578.cs") {
 						TextContent = () => {
@@ -329,20 +336,19 @@ namespace Library1 {
 								return sr.ReadToEnd ();
 						},
 					},
-					new BuildItem.Source ("Bug36250.cs") {
-						TextContent = () => {
-							using (var sr = new StreamReader (typeof (InstallAndRunTests).Assembly.GetManifestResourceStream ("Xamarin.Android.Build.Tests.Resources.LinkDescTest.Bug36250.cs")))
-								return sr.ReadToEnd ();
-						},
-					},
-				},
-				PackageReferences = {
-					new Package {
-						Id = "sqlite-net-pcl",
-						Version = "1.7.335",
-					},
 				},
 			};
+
+			if (!Builder.UseDotNet) {
+				// DataContractSerializer is not trimming safe
+				// https://github.com/dotnet/runtime/issues/45559
+				lib2.Sources.Add (new BuildItem.Source ("Bug36250.cs") {
+					TextContent = () => {
+						using (var sr = new StreamReader (typeof (InstallAndRunTests).Assembly.GetManifestResourceStream ("Xamarin.Android.Build.Tests.Resources.LinkDescTest.Bug36250.cs")))
+							return sr.ReadToEnd ();
+					},
+				});
+			}
 
 			proj = new XamarinFormsAndroidApplicationProject () {
 				IsRelease = true,
@@ -370,6 +376,14 @@ namespace Library1 {
 					},
 				},
 			};
+			if (Builder.UseDotNet) {
+				// NOTE: workaround for netcoreapp3.1 dependency preferred over monoandroid8.0
+				proj.PackageReferences.Add (new Package {
+					Id = "SQLitePCLRaw.lib.e_sqlite3.android",
+					Version = "2.0.4",
+				});
+			}
+
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("</manifest>", "<uses-permission android:name=\"android.permission.INTERNET\" /></manifest>");
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
 			using (var sr = new StreamReader (typeof (InstallAndRunTests).Assembly.GetManifestResourceStream ("Xamarin.Android.Build.Tests.Resources.LinkDescTest.MainActivityReplacement.cs")))

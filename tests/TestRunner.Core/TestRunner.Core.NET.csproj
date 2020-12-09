@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk" >
+
+  <PropertyGroup>
+    <TargetFramework>net6.0-android</TargetFramework>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Xamarin.Android.UnitTests</RootNamespace>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+
+</Project>

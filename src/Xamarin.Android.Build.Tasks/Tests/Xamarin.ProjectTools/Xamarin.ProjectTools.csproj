@@ -60,6 +60,7 @@
     <EmbeddedResource Include="Resources\Base\classes.jar">
       <LogicalName>Xamarin.ProjectTools.Resources.Base.classes.jar</LogicalName>
     </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Base\custom.aotprofile" />
     <EmbeddedResource Include="Resources\Forms\MainActivity.cs" />
     <EmbeddedResource Include="Resources\Forms\App.xaml" />
     <EmbeddedResource Include="Resources\Forms\App.xaml.cs" />

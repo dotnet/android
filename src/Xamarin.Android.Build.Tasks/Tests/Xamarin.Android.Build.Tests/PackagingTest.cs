@@ -49,6 +49,24 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void CheckProguardMappingFileExists ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidDexTool, "d8");
+			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidLinkTool, "r8");
+			// Projects must provide a $(AndroidProguardMappingFile) value to opt in
+			proj.SetProperty (proj.ReleaseProperties, "AndroidProguardMappingFile", @"$(OutputPath)\mapping.txt");
+
+			using (var b = CreateApkBuilder ()) {
+				string mappingFile = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, "mapping.txt");
+				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
+				FileAssert.Exists (mappingFile, $"'{mappingFile}' should have been generated.");
+			}
+		}
+
+		[Test]
 		public void CheckIncludedAssemblies ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
@@ -67,39 +85,14 @@ namespace Xamarin.Android.Build.Tests
 			var expectedFiles = Builder.UseDotNet ?
 				new [] {
 					"Java.Interop.dll",
-					"Microsoft.Win32.Primitives.dll",
 					"Mono.Android.dll",
-					"System.Collections.NonGeneric.dll",
 					"System.ComponentModel.Primitives.dll",
 					"System.Console.dll",
-					"System.Diagnostics.DiagnosticSource.dll",
-					"System.Formats.Asn1.dll",
-					"System.IO.Compression.Brotli.dll",
-					"System.IO.Compression.dll",
-					"System.IO.FileSystem.dll",
 					"System.Linq.Expressions.dll",
-					"System.Net.Http.dll",
-					"System.Net.NameResolution.dll",
-					"System.Net.NetworkInformation.dll",
 					"System.Net.Primitives.dll",
-					"System.Net.Security.dll",
-					"System.Net.Sockets.dll",
 					"System.ObjectModel.dll",
-					"System.Private.Uri.dll",
-					"System.Private.Xml.dll",
-					"System.Private.Xml.Linq.dll",
-					"System.Runtime.CompilerServices.Unsafe.dll",
-					"System.Runtime.InteropServices.RuntimeInformation.dll",
-					"System.Runtime.Numerics.dll",
-					"System.Security.Cryptography.Encoding.dll",
-					"System.Security.Cryptography.OpenSsl.dll",
-					"System.Security.Cryptography.X509Certificates.dll",
-					"System.Runtime.Serialization.Formatters.dll",
 					"System.Runtime.Serialization.Primitives.dll",
-					"System.Security.Cryptography.Algorithms.dll",
 					"System.Security.Cryptography.Primitives.dll",
-					"System.Text.RegularExpressions.dll",
-					"System.Threading.Channels.dll",
 					"System.Private.CoreLib.dll",
 					"System.Collections.Concurrent.dll",
 					"System.Collections.dll",

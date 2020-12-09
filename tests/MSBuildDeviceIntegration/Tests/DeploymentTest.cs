@@ -106,8 +106,8 @@ namespace Xamarin.Android.Build.Tests
 				library2.AndroidUseAapt2 =
 				app.AndroidUseAapt2 = useAapt2;
 			app.LayoutMain = app.LayoutMain.Replace ("@string/hello", "@string/hello_me");
-			using (var l1 = CreateApkBuilder (Path.Combine ("temp", TestName, library.ProjectName)))
-			using (var l2 = CreateApkBuilder (Path.Combine ("temp", TestName, library2.ProjectName)))
+			using (var l1 = CreateDllBuilder (Path.Combine ("temp", TestName, library.ProjectName)))
+			using (var l2 = CreateDllBuilder (Path.Combine ("temp", TestName, library2.ProjectName)))
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName, app.ProjectName))) {
 				b.ThrowOnBuildFailure = false;
 				string apiLevel;

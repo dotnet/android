@@ -52,7 +52,7 @@ namespace Android.Runtime {
 			} else if (value is Java.Lang.ICharSequence) {
 				return JNIEnv.ToLocalJniHandle ((Java.Lang.ICharSequence) value);
 			} else {
-				return ToLocalJniHandle (new string (value.ToArray ()));
+				return ToLocalJniHandle (string.Concat (value));
 			}
 		}
 

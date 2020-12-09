@@ -1,0 +1,51 @@
+<Project Sdk="Microsoft.NET.Sdk" >
+
+  <Import Project="..\..\..\Configuration.props" />
+  <Import Project="..\Mono.Android-Test.Shared.projitems" Label="Shared" Condition="Exists('..\Mono.Android-Test.Shared.projitems')" />
+
+  <PropertyGroup>
+    <TargetFramework>net6.0-android</TargetFramework>
+    <RootNamespace>Xamarin.Android.RuntimeTests</RootNamespace>
+    <OutputType>Exe</OutputType>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>$(XamarinAndroidSourcePath)product.snk</AssemblyOriginatorKeyFile>
+    <AndroidDexTool Condition=" '$(AndroidDexTool)' == '' ">d8</AndroidDexTool>
+    <_SkipJniAddNativeMethodRegistrationAttributeScan>True</_SkipJniAddNativeMethodRegistrationAttributeScan>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <OutputPath>$(XamarinAndroidSourcePath)bin\Test$(Configuration)</OutputPath>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <EnableDefaultAndroidResourceItems>false</EnableDefaultAndroidResourceItems>
+    <EnableDefaultAndroidAssetItems>false</EnableDefaultAndroidAssetItems>
+    <_MonoAndroidTestPackage>Mono.Android.NET_Tests</_MonoAndroidTestPackage>
+    <!-- TODO: Fix excluded tests -->
+    <ExcludeCategories>DotNetIgnore:InetAccess</ExcludeCategories>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <AndroidLinkTool Condition=" '$(AndroidLinkTool)' == '' ">r8</AndroidLinkTool>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="..\Resources\Resource.designer.cs" />
+    <Compile Include="Resources\Resource.designer.cs" />
+    <!-- Mono.Data.Sqlite is not supported in .NET 6 -->
+    <Compile Remove="..\Mono.Data.Sqlite\SqliteTests.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <TestApk Include="$(OutputPath)$(_MonoAndroidTestPackage)-Signed.apk">
+      <Package>$(_MonoAndroidTestPackage)</Package>
+      <InstrumentationType>xamarin.android.runtimetests.NUnitInstrumentation</InstrumentationType>
+      <ResultsPath>$(XamarinAndroidSourcePath)TestResult-$(_MonoAndroidTestPackage).xml</ResultsPath>
+      <TimingDefinitionsFilename>$(XamarinAndroidSourcePath)build-tools\scripts\TimingDefinitions.txt</TimingDefinitionsFilename>
+      <TimingResultsFilename>$(XamarinAndroidSourcePath)TestResult-$(_MonoAndroidTestPackage)-times.csv</TimingResultsFilename>
+      <ApkSizesInputFilename>apk-sizes-$(_MonoAndroidTestPackage)-$(Configuration)$(TestsFlavor).txt</ApkSizesInputFilename>
+      <ApkSizesDefinitionFilename>$(XamarinAndroidSourcePath)build-tools\scripts\ApkSizesDefinitions.txt</ApkSizesDefinitionFilename>
+      <ApkSizesResultsFilename>$(XamarinAndroidSourcePath)TestResult-$(_MonoAndroidTestPackage)-values-$(Configuration).csv</ApkSizesResultsFilename>
+    </TestApk>
+  </ItemGroup>
+
+  <Import Project="$(XamarinAndroidSourcePath)build-tools\scripts\TestApks.targets" />
+
+</Project>

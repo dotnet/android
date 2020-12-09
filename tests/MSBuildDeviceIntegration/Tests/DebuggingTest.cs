@@ -140,7 +140,7 @@ namespace Xamarin.Android.Build.Tests
 		};
 #pragma warning restore 414
 
-		[Test]
+		[Test, Category ("Debugger")]
 		[TestCaseSource (nameof (DebuggerCustomAppTestCases))]
 		public void CustomApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, string fastDevType, bool activityStarts)
 		{
@@ -275,7 +275,7 @@ namespace ${ROOT_NAMESPACE} {
 		};
 #pragma warning restore 414
 
-		[Test, Category ("SmokeTests")]
+		[Test, Category ("SmokeTests"), Category ("Debugger")]
 		[TestCaseSource (nameof(DebuggerTestCases))]
 		public void ApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, string fastDevType, bool allowDeltaInstall)
 		{
@@ -287,8 +287,7 @@ namespace ${ROOT_NAMESPACE} {
 				AndroidFastDeploymentType = fastDevType
 			};
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
-			if (allowDeltaInstall)
-				proj.SetProperty (KnownProperties._AndroidAllowDeltaInstall, "true");
+			proj.SetProperty (KnownProperties._AndroidAllowDeltaInstall, allowDeltaInstall.ToString ());
 			proj.SetDefaultTargetDevice ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				SetTargetFrameworkAndManifest (proj, b);

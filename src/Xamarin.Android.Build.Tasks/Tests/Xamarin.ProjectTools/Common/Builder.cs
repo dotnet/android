@@ -282,7 +282,11 @@ namespace Xamarin.ProjectTools
 				args.Append ("build ");
 			args.AppendFormat ("{0} /t:{1} {2}",
 					QuoteFileName (Path.Combine (XABuildPaths.TestOutputDirectory, projectOrSolution)), target, logger);
-			if (AutomaticNuGetRestore && restore && !UseDotNet) {
+			if (UseDotNet) {
+				if (!AutomaticNuGetRestore) {
+					args.Append (" --no-restore");
+				}
+			} else if (AutomaticNuGetRestore && restore) {
 				args.Append (" /restore");
 			}
 			if (MaxCpuCount != null) {

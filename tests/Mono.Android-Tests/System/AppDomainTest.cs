@@ -14,6 +14,7 @@ namespace SystemTests {
 
 		[Test]
 		[Category ("HybridAotNotWorking")] // See https://github.com/xamarin/xamarin-android/issues/1536
+		[Category ("DotNetIgnore")] // System.PlatformNotSupportedException : Secondary AppDomains are not supported on this platform.
 		public void DateTime_Now_Works ()
 		{
 			new Boom().Bang();

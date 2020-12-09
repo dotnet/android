@@ -94,7 +94,8 @@ namespace Xamarin.Android.Build.Tests
 			libB.OtherBuildItems.Add (new AndroidItem.AndroidLibrary ("sub\\directory\\arm64-v8a\\libfoo.so") {
 				BinaryContent = () => Array.Empty<byte> (),
 			});
-			libB.OtherBuildItems.Add (new AndroidItem.AndroidLibrary ("libfoo.so") {
+			libB.OtherBuildItems.Add (new AndroidItem.AndroidNativeLibrary (default (Func<string>)) {
+				Update = () => "libfoo.so",
 				MetadataValues = "Link=x86\\libfoo.so",
 				BinaryContent = () => Array.Empty<byte> (),
 			});
@@ -178,7 +179,17 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void DotNetPack ([Values ("net5.0-android", "net5.0-android30")] string targetFramework)
+		public void DotNetNew ([Values ("android", "androidlib", "android-bindinglib")] string template)
+		{
+			var dotnet = CreateDotNetBuilder ();
+			Assert.IsTrue (dotnet.New (template), $"`dotnet new {template}` should succeed");
+			Assert.IsTrue (dotnet.New ("android-activity"), "`dotnet new android-activity` should succeed");
+			Assert.IsTrue (dotnet.New ("android-layout", Path.Combine (dotnet.ProjectDirectory, "Resources", "layout")), "`dotnet new android-layout` should succeed");
+			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
+		}
+
+		[Test]
+		public void DotNetPack ([Values ("net6.0-android", "net6.0-android30")] string targetFramework)
 		{
 			var proj = new XASdkProject (outputType: "Library") {
 				TargetFramework = targetFramework,
@@ -198,7 +209,8 @@ namespace Xamarin.Android.Build.Tests
 			proj.OtherBuildItems.Add (new AndroidItem.AndroidLibrary ("sub\\directory\\arm64-v8a\\libfoo.so") {
 				BinaryContent = () => Array.Empty<byte> (),
 			});
-			proj.OtherBuildItems.Add (new AndroidItem.AndroidLibrary ("libfoo.so") {
+			proj.OtherBuildItems.Add (new AndroidItem.AndroidNativeLibrary (default (Func<string>)) {
+				Update = () => "libfoo.so",
 				MetadataValues = "Link=x86\\libfoo.so",
 				BinaryContent = () => Array.Empty<byte> (),
 			});
@@ -209,8 +221,8 @@ namespace Xamarin.Android.Build.Tests
 			var nupkgPath = Path.Combine (FullProjectDirectory, proj.OutputPath, "..", $"{proj.ProjectName}.1.0.0.nupkg");
 			FileAssert.Exists (nupkgPath);
 			using (var nupkg = ZipHelper.OpenZip (nupkgPath)) {
-				nupkg.AssertContainsEntry (nupkgPath, $"lib/net5.0-android30.0/{proj.ProjectName}.dll");
-				nupkg.AssertContainsEntry (nupkgPath, $"lib/net5.0-android30.0/{proj.ProjectName}.aar");
+				nupkg.AssertContainsEntry (nupkgPath, $"lib/net6.0-android30.0/{proj.ProjectName}.dll");
+				nupkg.AssertContainsEntry (nupkgPath, $"lib/net6.0-android30.0/{proj.ProjectName}.aar");
 			}
 		}
 
@@ -259,8 +271,13 @@ namespace Xamarin.Android.Build.Tests
 		public void DotNetBuildBinding ()
 		{
 			var proj = new XASdkProject (outputType: "Library");
-			proj.OtherBuildItems.Add (new AndroidItem.AndroidLibrary ("javaclasses.jar") {
-				MetadataValues = "Bind=true",
+			proj.Sources.Add (new AndroidItem.TransformFile ("Transforms\\Metadata.xml") {
+				TextContent = () =>
+@"<metadata>
+  <attr path=""/api/package[@name='com.xamarin.android.test.msbuildtest']"" name=""managedName"">MSBuildTest</attr>
+</metadata>",
+			});
+			proj.Sources.Add (new AndroidItem.AndroidLibrary ("javaclasses.jar") {
 				BinaryContent = () => Convert.FromBase64String (InlineData.JavaClassesJarBase64)
 			});
 			// TODO: bring back when Xamarin.Android.Bindings.Documentation.targets is working
@@ -273,7 +290,7 @@ namespace Xamarin.Android.Build.Tests
 			var assemblyPath = Path.Combine (FullProjectDirectory, proj.OutputPath, "UnnamedProject.dll");
 			FileAssert.Exists (assemblyPath);
 			using (var assembly = AssemblyDefinition.ReadAssembly (assemblyPath)) {
-				var typeName = "Com.Xamarin.Android.Test.Msbuildtest.JavaSourceJarTest";
+				var typeName = "MSBuildTest.JavaSourceJarTest";
 				var type = assembly.MainModule.GetType (typeName);
 				Assert.IsNotNull (type, $"{assemblyPath} should contain {typeName}");
 			}
@@ -348,21 +365,16 @@ namespace Xamarin.Android.Build.Tests
 				outputPath = Path.Combine (outputPath, runtimeIdentifiers);
 			}
 
-			// TODO: With workloads we don't control the import of Microsoft.NET.Sdk/Sdk.targets.
-			//  We can no longer change the default values of `$(GenerateDependencyFile)` and `$(ProduceReferenceAssembly)` as a result.
-			//  We should update Microsoft.NET.Sdk to default both of these properties to false when the `$(TargetPlatformIdentifier)` is "mobile" (Android, iOS, etc).
-			//  Alternatively, the workload concept could be updated to support some sort of `Before.Microsoft.NET.targets` hook.
-
-			/* var files = Directory.EnumerateFileSystemEntries (outputPath)
+			var files = Directory.EnumerateFileSystemEntries (outputPath)
 				.Select (Path.GetFileName)
-				.OrderBy (f => f);
+				.OrderBy (f => f)
+				.ToArray ();
 			CollectionAssert.AreEqual (new [] {
 				$"{proj.ProjectName}.dll",
 				$"{proj.ProjectName}.pdb",
 				$"{proj.PackageName}.apk",
 				$"{proj.PackageName}-Signed.apk",
 			}, files);
-			*/
 
 			var assemblyPath = Path.Combine (outputPath, $"{proj.ProjectName}.dll");
 			FileAssert.Exists (assemblyPath);
@@ -464,6 +476,16 @@ namespace Xamarin.Android.Build.Tests
 				apk.AssertContainsEntry (apkPath, "res/raw/foo.txt");
 				apk.AssertContainsEntry (apkPath, "assets/foo/bar.txt");
 			}
+		}
+
+		DotNetCLI CreateDotNetBuilder (string relativeProjectDir = null)
+		{
+			if (string.IsNullOrEmpty (relativeProjectDir)) {
+				relativeProjectDir = Path.Combine ("temp", TestName);
+			}
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] =
+				FullProjectDirectory = Path.Combine (Root, relativeProjectDir);
+			return new DotNetCLI (Path.Combine (FullProjectDirectory, $"{TestName}.csproj"));
 		}
 
 		DotNetCLI CreateDotNetBuilder (XASdkProject project, string relativeProjectDir = null)

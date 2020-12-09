@@ -37,9 +37,9 @@
   <Target Name="_GenerateFrameworkListFile" >
     <!-- Hardcode framework attributes -->
     <ItemGroup>
-      <FrameworkListRootAttributes Include="Name" Value=".NET 5.0 - Android" />
+      <FrameworkListRootAttributes Include="Name" Value=".NET 6.0 - Android" />
       <FrameworkListRootAttributes Include="TargetFrameworkIdentifier" Value=".NETCoreApp" />
-      <FrameworkListRootAttributes Include="TargetFrameworkVersion" Value="5.0" />
+      <FrameworkListRootAttributes Include="TargetFrameworkVersion" Value="6.0" />
       <FrameworkListRootAttributes Include="FrameworkName" Value="Microsoft.Android" />
     </ItemGroup>
 
@@ -80,8 +80,9 @@
     <Exec Command="$(DotNetPreviewTool) pack @(_GlobalProperties, ' ') &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Ref.proj&quot;" />
     <Exec Command="$(DotNetPreviewTool) pack @(_GlobalProperties, ' ') -p:AndroidHostRID=linux-x64 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.proj&quot;"     Condition=" '$(HostOS)' == 'Linux' " />
     <Exec Command="$(DotNetPreviewTool) pack @(_GlobalProperties, ' ') -p:AndroidHostRID=osx-x64   &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.proj&quot;"     Condition=" '$(HostOS)' == 'Darwin' " />
-    <Exec Command="$(DotNetPreviewTool) pack @(_GlobalProperties, ' ') -p:AndroidHostRID=windows-x64   &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.proj&quot;" Condition=" '$(HostOS)' != 'Linux' " /> <!-- Windows pack should be built both Windows and macOS -->
+    <Exec Command="$(DotNetPreviewTool) pack @(_GlobalProperties, ' ') -p:AndroidHostRID=win-x64   &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.proj&quot;" Condition=" '$(HostOS)' != 'Linux' " /> <!-- Windows pack should be built both Windows and macOS -->
     <Exec Command="$(DotNetPreviewTool) pack @(_GlobalProperties, ' ') &quot;$(MSBuildThisFileDirectory)Microsoft.NET.Workload.Android.proj&quot;" />
+    <Exec Command="$(DotNetPreviewTool) pack @(_GlobalProperties, ' ') &quot;$(XamarinAndroidSourcePath)src\Microsoft.Android.Templates\Microsoft.Android.Templates.csproj&quot;" />
   </Target>
 
   <Target Name="ExtractWorkloadPacks"
@@ -90,8 +91,9 @@
       <_WLManifest Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.NET.Workload.Android.*.nupkg" />
       <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Sdk.linux-x64.*.nupkg"   Condition=" '$(HostOS)' == 'Linux' " />
       <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Sdk.osx-x64.*.nupkg"     Condition=" '$(HostOS)' == 'Darwin' " />
-      <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Sdk.windows-x64.*.nupkg" Condition=" '$(HostOS)' == 'Windows' " />
+      <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Sdk.win-x64.*.nupkg" Condition=" '$(HostOS)' == 'Windows' " />
       <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Ref.*.nupkg" />
+      <_WLTemplates Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Templates.*.nupkg" />
       <!-- Runtime packs are not yet supported by workloads -->
       <!-- <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Runtime.*.nupkg" /> -->
     </ItemGroup>
@@ -106,6 +108,8 @@
         SourceFiles="@(_WLPacks)"
         DestinationFolder="$(DotNetPreviewPath)packs\$([System.String]::Copy('%(_WLPacks.Filename)').Replace('.$(_WLPackVersion)', ''))\$(_WLPackVersion)"
     />
+    <MakeDir Directories="$(DotNetPreviewPath)template-packs" />
+    <Copy SourceFiles="@(_WLTemplates)" DestinationFolder="$(DotNetPreviewPath)template-packs" />
     <ItemGroup>
       <_UnixExecutables Include="$(DotNetPreviewPath)packs\Microsoft.Android.Sdk.*\*\tools\$(HostOS)\**\*.*" />
       <_FilesToTouch Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\Microsoft.NET.Workload.Android\**" />
@@ -129,6 +133,7 @@
       <_PackFilesToDelete Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\Microsoft.Android.Workload\**\*.*" />
       <_PackFilesToDelete Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\Microsoft.NET.Workload.Android\**\*.*" />
       <_PackFilesToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android*\**\*.*" />
+      <_PackFilesToDelete Include="$(DotNetPreviewPath)template-packs\Microsoft.Android.Templates.*.nupkg" />
     </ItemGroup>
     <RemoveDir Directories="%(_PackFilesToDelete.RootDir)%(_PackFilesToDelete.Directory)" />
     <Delete Files="$(_WorkloadResolverFlagFile)" />

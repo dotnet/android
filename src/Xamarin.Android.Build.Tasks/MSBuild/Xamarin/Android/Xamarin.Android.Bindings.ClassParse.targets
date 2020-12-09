@@ -14,7 +14,7 @@ This file is only used by binding projects.
   <UsingTask TaskName="Xamarin.Android.Tasks.ClassParse" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 
   <Target Name="_ExportJarToXml"
-      Inputs="@(EmbeddedJar);@(EmbeddedReferenceJar);@(InputJar);@(ReferenceJar);$(MSBuildAllProjects)"
+      Inputs="@(EmbeddedJar);@(EmbeddedReferenceJar);@(InputJar);@(ReferenceJar);@(_AndroidMSBuildAllProjects)"
       Outputs="$(ApiOutputFile)">
     <ItemGroup>
       <_AndroidDocumentationPath Include="@(JavaDocIndex->'%(RootDir)\%(Directory)')" />
