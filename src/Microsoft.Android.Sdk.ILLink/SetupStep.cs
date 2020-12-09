@@ -43,7 +43,6 @@ namespace Microsoft.Android.Sdk.ILLink
 			subSteps2.Add (new PreserveApplications ());
 			subSteps2.Add (new PreserveRegistrations (cache));
 			subSteps2.Add (new PreserveJavaInterfaces ());
-			subSteps2.Add (new RemoveAttributes ());
 
 			InsertAfter (new FixAbstractMethodsStep (cache), "RemoveUnreachableBlocksStep");
 			InsertAfter (subSteps2, "RemoveUnreachableBlocksStep");

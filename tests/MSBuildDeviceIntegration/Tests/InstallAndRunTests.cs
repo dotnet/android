@@ -330,12 +330,6 @@ namespace Library1 {
 								return sr.ReadToEnd ();
 						},
 					},
-					new BuildItem.Source ("Bug36250.cs") {
-						TextContent = () => {
-							using (var sr = new StreamReader (typeof (InstallAndRunTests).Assembly.GetManifestResourceStream ("Xamarin.Android.Build.Tests.Resources.LinkDescTest.Bug36250.cs")))
-								return sr.ReadToEnd ();
-						},
-					},
 					new BuildItem.Source ("Bug35195.cs") {
 						TextContent = () => {
 							using (var sr = new StreamReader (typeof (InstallAndRunTests).Assembly.GetManifestResourceStream ("Xamarin.Android.Build.Tests.Resources.LinkDescTest.Bug35195.cs")))
@@ -344,6 +338,17 @@ namespace Library1 {
 					},
 				},
 			};
+
+			if (!Builder.UseDotNet) {
+				// DataContractSerializer is not trimming safe
+				// https://github.com/dotnet/runtime/issues/45559
+				lib2.Sources.Add (new BuildItem.Source ("Bug36250.cs") {
+					TextContent = () => {
+						using (var sr = new StreamReader (typeof (InstallAndRunTests).Assembly.GetManifestResourceStream ("Xamarin.Android.Build.Tests.Resources.LinkDescTest.Bug36250.cs")))
+							return sr.ReadToEnd ();
+					},
+				});
+			}
 
 			proj = new XamarinFormsAndroidApplicationProject () {
 				IsRelease = true,
