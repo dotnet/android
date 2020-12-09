@@ -274,6 +274,30 @@ to `pkcs12`.
 
 Added in Xamarin.Android 10.2.
 
+
+## AndroidDeviceUserId
+
+Allows deploying and debugging the application under guest
+or work accounts. The value is the `uid` value you get
+from the following adb command
+
+```
+adb shell pm list users
+```
+
+This will return the following data
+
+```
+Users:
+	UserInfo{0:Owner:c13} running
+	UserInfo{10:Guest:404}
+```
+
+The `uid` is the first integer value. In the example they
+are `0` and `10`.
+
+Added in Xamarin.Android 11.2
+
 ## AndroidDexTool
 
 An enum-style property with valid

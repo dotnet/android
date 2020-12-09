@@ -13,11 +13,14 @@ namespace Xamarin.Android.Build.Tests
 {
 	public class DeviceTest: BaseTest
 	{
+		public const string GuestUserName = "guest1";
+
 		[OneTimeSetUp]
 		public void DeviceSetup ()
 		{
 			SetAdbLogcatBufferSize (64);
 			RunAdbCommand ("logcat -c");
+			CreateGuestUser (GuestUserName);
 		}
 
 		[TearDown]
@@ -41,6 +44,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			ClearAdbLogcat ();
+
 
 			base.CleanupTest ();
 		}
@@ -259,6 +263,43 @@ namespace Xamarin.Android.Build.Tests
 				$"/mnt/shell/emulated/0/Android/data/{packageName}/files/.__override__",
 				$"/storage/sdcard/Android/data/{packageName}/files/.__override__",
 			};
+		}
+
+		protected static void CreateGuestUser (string username)
+		{
+			if (GetUserId (username) != -1)
+				RunAdbCommand ($"shell pm create-user --guest {username}");
+		}
+
+		protected static void DeleteGuestUser (string username)
+		{
+			int userId = GetUserId (username);
+			if (userId > 0)
+				RunAdbCommand ($"shell pm remove-user --guest {userId}");
+		}
+
+		protected static int GetUserId (string username)
+		{
+			string output = RunAdbCommand ($"shell pm list users");
+			Regex regex = new Regex (@"UserInfo{(?<userId>\d+):" + username, RegexOptions.Compiled);
+			Console.WriteLine (output);
+			var match = regex.Match (output);
+			if (match.Success) {
+				return int.Parse (match.Groups ["userId"].Value);
+			}
+			return -1;
+		}
+
+		protected static bool SwitchUser (string username)
+		{
+			int userId = GetUserId (username);
+			if (userId == -1)
+				userId = 0;
+			if (userId >= 0) {
+				RunAdbCommand ($"shell am switch-user {userId}");
+				return true;
+			}
+			return false;
 		}
 	}
 }

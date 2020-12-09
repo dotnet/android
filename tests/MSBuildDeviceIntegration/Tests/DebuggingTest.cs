@@ -8,6 +8,7 @@ using Mono.Debugging.Client;
 using Mono.Debugging.Soft;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
+using System.Collections.Generic;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -251,36 +252,63 @@ namespace ${ROOT_NAMESPACE} {
 				/* embedAssemblies */    true,
 				/* fastDevType */        "Assemblies",
 				/* allowDeltaInstall */  false,
+				/* user */		 null,
 			},
 			new object[] {
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies",
 				/* allowDeltaInstall */  false,
+				/* user */		 null,
 			},
 			new object[] {
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies",
 				/* allowDeltaInstall */  true,
+				/* user */		 null,
 			},
 			new object[] {
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies:Dexes",
 				/* allowDeltaInstall */  false,
+				/* user */		 null,
 			},
 			new object[] {
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies:Dexes",
 				/* allowDeltaInstall */  true,
+				/* user */		 null,
+			},
+			new object[] {
+				/* embedAssemblies */    true,
+				/* fastDevType */        "Assemblies",
+				/* allowDeltaInstall */  false,
+				/* user */		 DeviceTest.GuestUserName,
+			},
+			new object[] {
+				/* embedAssemblies */    false,
+				/* fastDevType */        "Assemblies",
+				/* allowDeltaInstall */  false,
+				/* user */		 DeviceTest.GuestUserName,
 			},
 		};
 #pragma warning restore 414
 
 		[Test, Category ("SmokeTests"), Category ("Debugger")]
 		[TestCaseSource (nameof(DebuggerTestCases))]
-		public void ApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, string fastDevType, bool allowDeltaInstall)
+		public void ApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, string fastDevType, bool allowDeltaInstall, string username)
 		{
 			AssertCommercialBuild ();
 			AssertHasDevices ();
+
+			int userId = GetUserId (username);
+			List<string> parameters = new List<string> ();
+			if (userId >= 0)
+				parameters.Add ($"AndroidDeviceUserId={userId}");
+			if (SwitchUser (username)) {
+				WaitFor (5);
+				ClickButton ("", "android:id/button1", "Yes continue");
+			}
+
 			var proj = new XamarinFormsAndroidApplicationProject () {
 				IsRelease = false,
 				EmbedAssembliesIntoApk = embedAssemblies,
@@ -291,7 +319,7 @@ namespace ${ROOT_NAMESPACE} {
 			proj.SetDefaultTargetDevice ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				SetTargetFrameworkAndManifest (proj, b);
-				Assert.True (b.Install (proj), "Project should have installed.");
+				Assert.True (b.Install (proj, parameters: parameters.ToArray ()), "Project should have installed.");
 
 				int breakcountHitCount = 0;
 				ManualResetEvent resetEvent = new ManualResetEvent (false);
@@ -324,11 +352,13 @@ namespace ${ROOT_NAMESPACE} {
 				options.EvaluationOptions.UseExternalTypeResolver = true;
 				ClearAdbLogcat ();
 				b.BuildLogFile = "run.log";
-				Assert.True (b.RunTarget (proj, "_Run", doNotCleanupOnUpdate: true, parameters: new string [] {
-					$"AndroidSdbTargetPort={port}",
-					$"AndroidSdbHostPort={port}",
-					"AndroidAttachDebugger=True",
-				}), "Project should have run.");
+
+				parameters.Add ($"AndroidSdbTargetPort={port}");
+				parameters.Add ($"AndroidSdbHostPort={port}");
+				parameters.Add ("AndroidAttachDebugger=True");
+
+				Assert.True (b.RunTarget (proj, "_Run", doNotCleanupOnUpdate: true,
+					parameters: parameters.ToArray ()), "Project should have run.");
 
 				Assert.IsTrue (WaitForDebuggerToStart (Path.Combine (Root, b.ProjectDirectory, "logcat.log")), "Activity should have started");
 				// we need to give a bit of time for the debug server to start up.
