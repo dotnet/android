@@ -3,7 +3,6 @@
 	<assembly fullname="Mono.Android">
 		<type fullname="Android.Runtime.AndroidEnvironment" />
 		<type fullname="Android.Runtime.AnnotationAttribute" />
-		<type fullname="Android.Runtime.ConstructorBuilder" />
 		<type fullname="Android.Runtime.GeneratedDummyHost" />
 		<type fullname="Android.Runtime.GeneratedEnumAttribute" />
 		<type fullname="Android.Runtime.IJavaObject" />
