@@ -50,17 +50,15 @@ namespace Xamarin.Android.Build.Tests
 				Assert.Fail ($"No timeout value found for a key of {caller}");
 			}
 
-			if (Builder.UseDotNet) {
-				//TODO: there is currently a slight performance regression in .NET 6
-				expected += 500;
-			}
-
 			action (builder);
 			var actual = GetDurationFromBinLog (builder);
 			TestContext.Out.WriteLine($"expected: {expected}ms, actual: {actual}ms");
 			if (actual > expected) {
 				Assert.Fail ($"Exceeded expected time of {expected}ms, actual {actual}ms");
 			}
+
+			//TODO: remove this
+			Assert.Fail ("Fail on purpose to compare times.");
 		}
 
 		double GetDurationFromBinLog (ProjectBuilder builder)
