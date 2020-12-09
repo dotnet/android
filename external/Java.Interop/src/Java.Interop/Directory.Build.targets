@@ -16,14 +16,11 @@
       Inputs="$(_JNIEnvGenPath)"
       Outputs="Java.Interop/JniEnvironment.g.cs;$(IntermediateOutputPath)jni.c">
     <MakeDir Directories="$(IntermediateOutputPath)" />
-    <PropertyGroup>
-      <_AddCompile Condition=" !Exists('Java.Interop/JniEnvironment.g.cs') ">True</_AddCompile>
-    </PropertyGroup>
     <Exec
         Command="$(_RunJNIEnvGen) Java.Interop/JniEnvironment.g.cs $(IntermediateOutputPath)jni.c"
     />
     <ItemGroup>
-      <Compile Include="Java.Interop/JniEnvironment.g.cs" Condition=" '$(_AddCompile)' == 'True' " />
+      <Compile Include="$([System.IO.Path]::Combine('Java.Interop','JniEnvironment.g.cs'))" KeepDuplicates="false" />
     </ItemGroup>
   </Target>
   <Target Name="BuildInteropJar"
