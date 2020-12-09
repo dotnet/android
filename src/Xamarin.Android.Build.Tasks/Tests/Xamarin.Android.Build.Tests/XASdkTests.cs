@@ -94,7 +94,8 @@ namespace Xamarin.Android.Build.Tests
 			libB.OtherBuildItems.Add (new AndroidItem.AndroidLibrary ("sub\\directory\\arm64-v8a\\libfoo.so") {
 				BinaryContent = () => Array.Empty<byte> (),
 			});
-			libB.OtherBuildItems.Add (new AndroidItem.AndroidLibrary ("libfoo.so") {
+			libB.OtherBuildItems.Add (new AndroidItem.AndroidNativeLibrary (default (Func<string>)) {
+				Update = () => "libfoo.so",
 				MetadataValues = "Link=x86\\libfoo.so",
 				BinaryContent = () => Array.Empty<byte> (),
 			});
@@ -208,7 +209,8 @@ namespace Xamarin.Android.Build.Tests
 			proj.OtherBuildItems.Add (new AndroidItem.AndroidLibrary ("sub\\directory\\arm64-v8a\\libfoo.so") {
 				BinaryContent = () => Array.Empty<byte> (),
 			});
-			proj.OtherBuildItems.Add (new AndroidItem.AndroidLibrary ("libfoo.so") {
+			proj.OtherBuildItems.Add (new AndroidItem.AndroidNativeLibrary (default (Func<string>)) {
+				Update = () => "libfoo.so",
 				MetadataValues = "Link=x86\\libfoo.so",
 				BinaryContent = () => Array.Empty<byte> (),
 			});
