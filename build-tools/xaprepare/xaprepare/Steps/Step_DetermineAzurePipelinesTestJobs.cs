@@ -56,6 +56,12 @@ namespace Xamarin.Android.Prepare
 					testAreas.Add ("Designer");
 				}
 
+				if (file.Contains ("build-tools/installers")) {
+					testAreas.Add ("MSBuild");
+					testAreas.Add ("MSBuildDevice");
+					testAreas.Add ("Designer");
+				}
+
 				if (file.Contains ("external/Java.Interop")) {
 					testAreas.Add ("MSBuild");
 					testAreas.Add ("MSBuildDevice");
