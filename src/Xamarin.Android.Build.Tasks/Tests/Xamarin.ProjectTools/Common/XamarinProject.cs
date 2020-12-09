@@ -252,7 +252,7 @@ $@"<Project>
 			foreach (var ig in ItemGroupList)
 				list.AddRange (ig.Select (s => new ProjectResource () {
 					Timestamp = s.Timestamp,
-					Path = s.Include?.Invoke (),
+					Path = s.Include?.Invoke () ?? s.Update?.Invoke (),
 					Content = s.TextContent == null ? null : s.TextContent (),
 					BinaryContent = s.BinaryContent == null ? null : s.BinaryContent (),
 					Encoding = s.Encoding,

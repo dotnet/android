@@ -1305,6 +1305,10 @@ input for
 [illinkanalyzer](https://github.com/mono/linker/blob/master/src/analyzer/README.md)
 tool.
 
+The dependencies file named `linker-dependencies.xml.gz` is written
+to the project directory. On .NET5/6 it is written next to the linked
+assemblies in `obj/<Configuration>/android<ABI>/linked` directory.
+
 The default value is False.
 
 ## MandroidI18n

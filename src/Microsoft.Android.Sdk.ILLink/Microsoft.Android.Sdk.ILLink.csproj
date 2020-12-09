@@ -28,6 +28,7 @@
     <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\LinkerOptions.cs" />
 
     <!--Steps that are upstreamed, these are OK to remove-->
+    <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\ApplyPreserveAttribute.cs" />
     <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\OutputStepWithTimestamps.cs" />
     <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\PreserveCode.cs" />
     <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\PreserveDynamicTypes.cs" />
@@ -36,6 +37,7 @@
     <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\PreserveRuntimeSerialization.cs" />
     <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\PreserveTlsProvider.cs" />
     <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\PreserveTypeConverters.cs" />
+    <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\RemoveAttributes.cs" />
 
     <!--TODO: Subclasses MarkStep-->
     <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\MonoDroidMarkStep.cs" />

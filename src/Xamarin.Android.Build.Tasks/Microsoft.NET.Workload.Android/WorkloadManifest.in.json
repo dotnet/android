@@ -5,7 +5,8 @@
       "description": "Android SDK",
       "packs": [
         "Microsoft.Android.Sdk",
-        "Microsoft.Android.Ref"
+        "Microsoft.Android.Ref",
+        "Microsoft.Android.Templates"
       ]
     }
   },
@@ -21,6 +22,10 @@
     "Microsoft.Android.Ref": {
       "kind": "framework",
       "version": "@REF_PACK_VERSION@"
+    },
+    "Microsoft.Android.Templates": {
+      "kind": "template",
+      "version": "@TEMPLATE_PACK_VERSION@"
     }
   }
 }

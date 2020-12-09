@@ -33,18 +33,6 @@
       DependsOnTargets="_CreateJavaInteropDllConfigs">
   </Target>
 
-  <!-- When we build the multitargeted Java.Interop project as a dependency of this test project we hit the following error:
-  error NETSDK1148: Found multiple publish output files with the same relative path: external\Java.Interop\bin\Release\java-interop.jar, \external\Java.Interop\bin\Release-netcoreapp3.1\java-interop.jar.
-    We do not need to include any of this content in the output directory, so remove it here:
-  -->
-  <Target Name="RemoveJavaInteropJarContent"
-      Condition=" '$(TargetFramework)' == 'net6.0-android' "
-      BeforeTargets="ComputeResolvedFilesToPublishList" >
-    <ItemGroup>
-      <ResolvedFileToPublish Remove="$(JavaInteropSourceDirectory)\bin\**\java-interop.jar" />
-    </ItemGroup>
-  </Target>
-
   <Target Name="GenerateNuGetConfig" >
     <PropertyGroup>
       <LocalNupkgDirectory Condition=" '$(LocalNupkgDirectory)' == '' ">$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\</LocalNupkgDirectory>

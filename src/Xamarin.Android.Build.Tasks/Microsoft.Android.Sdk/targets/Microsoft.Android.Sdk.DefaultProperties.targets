@@ -22,6 +22,11 @@
     <!-- mono-symbolicate is not supported -->
     <MonoSymbolArchive>false</MonoSymbolArchive>
     <AndroidCodegenTarget Condition=" '$(AndroidCodegenTarget)' == '' ">XAJavaInterop1</AndroidCodegenTarget>
+    <!--
+      Disable @(Content) from referenced projects 
+      See: https://github.com/dotnet/sdk/blob/955c0fc7b06e2fa34bacd076ed39f61e4fb61716/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.Publish.targets#L16
+    -->
+    <_GetChildProjectCopyToPublishDirectoryItems>false</_GetChildProjectCopyToPublishDirectoryItems>
   </PropertyGroup>
 
   <!--  User-facing configuration-specific defaults -->
@@ -51,7 +56,8 @@
     <!-- Prefer $(RuntimeIdentifiers) plural -->
     <RuntimeIdentifiers Condition=" '$(RuntimeIdentifier)' == '' And '$(RuntimeIdentifiers)' == '' ">android.21-arm64;android.21-x86</RuntimeIdentifiers>
     <RuntimeIdentifier  Condition=" '$(RuntimeIdentifiers)' != '' And '$(RuntimeIdentifier)' != '' " />
-    <AndroidManifest Condition=" '$(AndroidManifest)' == '' ">Properties\AndroidManifest.xml</AndroidManifest>
+    <AndroidManifest Condition=" '$(AndroidManifest)' == '' and Exists ('Properties\AndroidManifest.xml') and !Exists ('AndroidManifest.xml') ">Properties\AndroidManifest.xml</AndroidManifest>
+    <AndroidManifest Condition=" '$(AndroidManifest)' == '' ">AndroidManifest.xml</AndroidManifest>
   </PropertyGroup>
 
 </Project>

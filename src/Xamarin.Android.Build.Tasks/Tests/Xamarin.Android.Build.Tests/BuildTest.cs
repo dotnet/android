@@ -56,6 +56,13 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		string GetLinkedPath (ProjectBuilder builder, bool isRelease, string filename)
+		{
+			return Builder.UseDotNet && isRelease ?
+				builder.Output.GetIntermediaryPath (Path.Combine ("android.21-arm64", "linked", filename)) :
+				builder.Output.GetIntermediaryPath (Path.Combine ("android", "assets", filename));
+		}
+
 		[Test]
 		public void BuildReleaseArm64 ([Values (false, true)] bool forms)
 		{
@@ -64,6 +71,7 @@ namespace Xamarin.Android.Build.Tests
 				new XamarinAndroidApplicationProject ();
 			proj.IsRelease = true;
 			proj.SetAndroidSupportedAbis ("arm64-v8a");
+			proj.SetProperty ("LinkerDumpDependencies", "True");
 
 			if (forms) {
 				proj.PackageReferences.Clear ();
@@ -76,6 +84,12 @@ namespace Xamarin.Android.Build.Tests
 			// use BuildHelper.CreateApkBuilder so that the test directory is not removed in tearup
 			using (var b = BuildHelper.CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+				var depsFilename = "linker-dependencies.xml.gz";
+				var depsFile = Builder.UseDotNet
+					? GetLinkedPath (b, true, depsFilename)
+					: Path.Combine (proj.Root, b.ProjectDirectory, depsFilename);
+				FileAssert.Exists (depsFile);
 			}
 		}
 
@@ -278,9 +292,7 @@ class MemTest {
 				className = "Landroid/appcompat/app/AppCompatActivity;";
 				Assert.IsFalse (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should *not* include `{className}`!");
 				// FormsAppCompatActivity should inherit the AndroidX C# type
-				var forms = Builder.UseDotNet && isRelease ?
-					b.Output.GetIntermediaryPath (Path.Combine ("android.21-arm64", "linked", "Xamarin.Forms.Platform.Android.dll")) :
-					b.Output.GetIntermediaryPath (Path.Combine ("android", "assets", "Xamarin.Forms.Platform.Android.dll"));
+				var forms = GetLinkedPath (b, isRelease, "Xamarin.Forms.Platform.Android.dll");
 				using (var assembly = AssemblyDefinition.ReadAssembly (forms)) {
 					var activity = assembly.MainModule.GetType ("Xamarin.Forms.Platform.Android.FormsAppCompatActivity");
 					Assert.AreEqual ("AndroidX.AppCompat.App.AppCompatActivity", activity.BaseType.FullName);
@@ -382,7 +394,7 @@ class MemTest {
 			}
 		}
 
-		[Test]
+		[Test, Ignore ("Deprecated CodeAnalysis feature is broken in 16.8: https://developercommunity.visualstudio.com/solutions/1255925/view.html")]
 		public void CodeAnalysis ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
@@ -1484,21 +1496,55 @@ namespace App1
 		}
 
 		[Test]
-		public void BuildApplicationCheckItEmitsAWarningWithContentItems ()
+		public void CheckContentBuildAction ()
 		{
-			var proj = new XamarinAndroidApplicationProject ();
-			using (var b = CreateApkBuilder ("temp/BuildApplicationCheckItEmitsAWarningWithContentItems")) {
-				b.ThrowOnBuildFailure = false;
+			var metadata = "CopyToOutputDirectory=PreserveNewest";
+			var path = Path.Combine ("temp", TestName);
+
+			var lib = new XamarinAndroidLibraryProject {
+				ProjectName = "Library1",
+				Sources = {
+					new BuildItem.Source ("Bar.cs") {
+						TextContent = () => "public class Bar { }"
+					},
+				},
+				OtherBuildItems = {
+					new BuildItem.Content ("TestContent.txt") {
+						TextContent = () => "Test Content from Library",
+						MetadataValues = metadata,
+					}
+				}
+			};
+
+			var proj = new XamarinAndroidApplicationProject {
+				ProjectName = "App",
+				Sources = {
+					new BuildItem.Source ("Foo.cs") {
+						TextContent = () => "public class Foo : Bar { }"
+					},
+				},
+				References = {
+					new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj"),
+				}
+			};
+			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
+			using (var appBuilder = CreateApkBuilder (Path.Combine (path, proj.ProjectName))) {
+				Assert.IsTrue (libBuilder.Build (lib), "library should have built successfully");
+				StringAssertEx.Contains ("TestContent.txt : warning XA0101: @(Content) build action is not supported", libBuilder.LastBuildOutput,
+					"Build Output did not contain 'TestContent.txt : warning XA0101'.");
+
 				proj.AndroidResources.Add (new BuildItem.Content ("TestContent.txt") {
-					TextContent = () => "Test Content"
+					TextContent = () => "Test Content",
+					MetadataValues = metadata,
 				});
 				proj.AndroidResources.Add (new BuildItem.Content ("TestContent1.txt") {
-					TextContent = () => "Test Content 1"
+					TextContent = () => "Test Content 1",
+					MetadataValues = metadata,
 				});
-				Assert.IsTrue (b.Build (proj), "Build should have built successfully");
-				StringAssertEx.Contains ("TestContent.txt : warning XA0101: @(Content) build action is not supported", b.LastBuildOutput,
+				Assert.IsTrue (appBuilder.Build (proj), "app should have built successfully");
+				StringAssertEx.Contains ("TestContent.txt : warning XA0101: @(Content) build action is not supported", appBuilder.LastBuildOutput,
 					"Build Output did not contain 'TestContent.txt : warning XA0101'.");
-				StringAssertEx.Contains ("TestContent1.txt : warning XA0101: @(Content) build action is not supported", b.LastBuildOutput,
+				StringAssertEx.Contains ("TestContent1.txt : warning XA0101: @(Content) build action is not supported", appBuilder.LastBuildOutput,
 					"Build Output did not contain 'TestContent1.txt : warning XA0101'.");
 			}
 		}
@@ -2019,7 +2065,7 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				builder.ThrowOnBuildFailure = false;
 				Assert.IsFalse (builder.Build (proj), "Build should have failed.");
-				Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, $"error XA4301: Cannot determine ABI of native library not-a-real-abi{Path.DirectorySeparatorChar}libtest.so."),
+				Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, $"error XA4301: Cannot determine ABI of native library 'not-a-real-abi{Path.DirectorySeparatorChar}libtest.so'. Move this file to a directory with a valid Android ABI name such as 'libs/armeabi-v7a/'."),
 					"error about libtest.so should have been raised");
 			}
 		}

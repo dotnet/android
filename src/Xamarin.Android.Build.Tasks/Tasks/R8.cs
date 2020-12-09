@@ -100,8 +100,11 @@ namespace Xamarin.Android.Tasks
 						if (IgnoreWarnings) {
 							xamcfg.WriteLine ("-ignorewarnings");
 						}
-						if (!string.IsNullOrEmpty (ProguardMappingFileOutput))
+						if (!string.IsNullOrEmpty (ProguardMappingFileOutput)) {
+							xamcfg.WriteLine ("-keepattributes SourceFile");
+							xamcfg.WriteLine ("-keepattributes LineNumberTable");
 							xamcfg.WriteLine ($"-printmapping {Path.GetFullPath (ProguardMappingFileOutput)}");
+						}
 					}
 				}
 			} else {
@@ -118,8 +121,11 @@ namespace Xamarin.Android.Tasks
 				if (IgnoreWarnings) {
 					lines.Add ("-ignorewarnings");
 				}
-				if (!string.IsNullOrEmpty (ProguardMappingFileOutput))
+				if (!string.IsNullOrEmpty (ProguardMappingFileOutput)) {
+					lines.Add ("-keepattributes SourceFile");
+					lines.Add ("-keepattributes LineNumberTable");
 					lines.Add ($"-printmapping {Path.GetFullPath (ProguardMappingFileOutput)}");
+				}
 				File.WriteAllLines (temp, lines);
 				tempFiles.Add (temp);
 				cmd.AppendSwitchIfNotNull ("--pg-conf ", temp);

@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Microsoft",
+  "classifications": [ "Android" ],
+  "identity": "Microsoft.Android.AndroidBinding",
+  "name": "Android Java Library Binding",
+  "description": "A project for creating an Android class library that binds to a native Java library",
+  "shortName": "android-bindinglib",
+  "tags": {
+    "language": "C#",
+    "type": "project"
+  },
+  "sourceName": "AndroidBinding1",
+  "preferNameDirectory": true,
+  "primaryOutputs": [
+    { "path": "AndroidBinding1.csproj" }
+  ],
+  "defaultName": "AndroidBinding1"
+}

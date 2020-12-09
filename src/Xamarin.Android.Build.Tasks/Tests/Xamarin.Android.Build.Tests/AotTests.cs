@@ -29,6 +29,29 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		[Test, Category ("SmokeTests")]
+		public void BuildBasicApplicationReleaseWithCustomAotProfile ()
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+				AndroidEnableProfiledAot = true,
+			};
+			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidExtraAotOptions", "--verbose");
+
+			byte [] custom_aot_profile;
+			using (var stream = typeof (XamarinAndroidApplicationProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.custom.aotprofile")) {
+				custom_aot_profile = new byte [stream.Length];
+				stream.Read (custom_aot_profile, 0, (int) stream.Length);
+			}
+			proj.OtherBuildItems.Add (new BuildItem ("AndroidAotProfile", "custom.aotprofile") { BinaryContent = () => custom_aot_profile });
+
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				StringAssertEx.ContainsRegex (@"\[aot-compiler stdout\] Using profile data file.*custom\.aotprofile", b.LastBuildOutput, "Should use custom AOT profile", RegexOptions.IgnoreCase);
+				StringAssertEx.ContainsRegex (@"\[aot-compiler stdout\] Method.*emitted at", b.LastBuildOutput, "Should contain verbose AOT compiler output", RegexOptions.IgnoreCase);
+			}
+		}
+
 		[Test]
 		public void BuildBasicApplicationReleaseProfiledAotWithoutDefaultProfile ()
 		{
@@ -299,7 +322,7 @@ namespace "+ libName + @" {
 		}
 
 		[Test]
-		public void HybridAOT ()
+		public void HybridAOT ([Values ("armeabi-v7a;arm64-v8a", "armeabi-v7a", "arm64-v8a")] string abis)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
@@ -308,8 +331,26 @@ namespace "+ libName + @" {
 			proj.SetProperty ("AndroidAotMode", "Hybrid");
 			// So we can use Mono.Cecil to open assemblies directly
 			proj.SetProperty ("AndroidEnableAssemblyCompression", "False");
+			proj.SetAndroidSupportedAbis (abis);
 
 			using (var b = CreateApkBuilder ()) {
+
+				if (abis == "armeabi-v7a") {
+					proj.SetProperty ("_AndroidAotModeValidateAbi", "False");
+					b.Build (proj);
+					proj.SetProperty ("_AndroidAotModeValidateAbi", () => null);
+				}
+
+				if (abis.Contains ("armeabi-v7a")) {
+					b.ThrowOnBuildFailure = false;
+					Assert.IsFalse (b.Build (proj), "Build should have failed.");
+					string error = b.LastBuildOutput
+							.SkipWhile (x => !x.StartsWith ("Build FAILED."))
+							.FirstOrDefault (x => x.Contains ("error XA1025:"));
+					Assert.IsNotNull (error, "Build should have failed with XA1025.");
+					return;
+				}
+
 				b.Build (proj);
 
 				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}.apk");

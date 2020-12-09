@@ -52,17 +52,18 @@ variables:
   TestAssembliesArtifactName: test-assemblies
   NUnitConsoleVersion: 3.11.1
   DotNetCoreVersion: 3.1.201
+  DotNet5Version: 5.0.100
   HostedMacMojave: Hosted Mac Internal Mojave
   HostedMac: Hosted Mac Internal
   HostedWinVS2019: Hosted Windows 2019 with VS2019
-  VSEngWinVS2019: Xamarin-Android-Win2019
+  VSEngWinVS2019: Xamarin-Android-Win2019-1120
   # Run all tests if:
   # - User who queued the job requested it (They set XA.RunAllTests to true)
   # - This is the master integration branch (Pipeline defaults XA.RunAllTests to true)
   # - This is a non-fork branch with name containing "mono-" (for Mono bumps)
   IsMonoBranch: $[and(eq(variables['XA.Commercial.Build'], 'true'), ne(variables['System.PullRequest.IsFork'], 'True'), or(contains(variables['Build.SourceBranchName'], 'mono-'), contains(variables['System.PullRequest.SourceBranch'], 'mono-')))]
   RunAllTests: $[or(eq(variables['XA.RunAllTests'], true), eq(variables['IsMonoBranch'], true))]
-  DotNetNUnitCategories: '& TestCategory != DotNetIgnore & TestCategory != AOT & TestCategory != MkBundle & TestCategory != MonoSymbolicate & TestCategory != PackagesConfig & TestCategory != StaticProject'
+  DotNetNUnitCategories: '& TestCategory != DotNetIgnore & TestCategory != AOT & TestCategory != MkBundle & TestCategory != MonoSymbolicate & TestCategory != PackagesConfig & TestCategory != StaticProject & TestCategory != Debugger'
   NUnit.NumberOfTestWorkers: 4
   GitHub.Token: $(github--pat--vs-mobiletools-engineering-service2)
 
@@ -137,8 +138,12 @@ stages:
 
     - template: yaml-templates/use-dot-net.yaml
       parameters:
-        version: $(DotNetCoreVersion)
+        version: $(DotNet5Version)
         remove_dotnet: true
+
+    - template: yaml-templates/use-dot-net.yaml
+      parameters:
+        version: $(DotNetCoreVersion)
 
     - template: install-certificates.yml@yaml
       parameters:
@@ -277,14 +282,19 @@ stages:
 
     - template: yaml-templates\clean.yaml
 
+    - template: yaml-templates\update-vs.yaml
+
     - script: |
         echo ##vso[task.setvariable variable=JI_JAVA_HOME]%USERPROFILE%\android-toolchain\$(XA.Jdk11.Folder)
       displayName: set JI_JAVA_HOME
 
     - template: yaml-templates\use-dot-net.yaml
       parameters:
+        version: $(DotNet5Version)
+
+    - template: yaml-templates\use-dot-net.yaml
+      parameters:
         version: $(DotNetCoreVersion)
-        remove_dotnet: true
 
     # Downgrade the XA .vsix installed into the instance of VS that we are building with so that we don't restore/build against a test version.
     # The VS installer will attempt to resume any failed or partial installation before trying to downgrade Xamarin.Android.
@@ -310,8 +320,6 @@ stages:
         Remove-Item "${env:TEMP}\$log"
       displayName: downgrade XA to stable
       ignoreLASTEXITCODE: true
-
-    - template: environment/win/vs-msbuild.v1.yml@yaml   # Display (in log) VS installation(s) including installation status with associated MSBuild location(s)
 
     - task: MSBuild@1
       displayName: msbuild Xamarin.Android /t:Prepare
@@ -395,6 +403,9 @@ stages:
     - template: yaml-templates/setup-test-environment.yaml
       parameters:
         configuration: $(ApkTestConfiguration)
+
+    - script: 'brew uninstall openssl@1.0.2t && rm -rf /usr/local/etc/openssl && rm -rf /usr/local/etc/openssl@1.1'
+      displayName: fix Homebrew
 
     - script: mono $(System.DefaultWorkingDirectory)/build-tools/xaprepare/xaprepare/bin/$(ApkTestConfiguration)/xaprepare.exe --s=Required --auto-provision=yes --auto-provision-uses-sudo=yes --no-emoji --run-mode=CI
       displayName: install required brew tools and prepare java.interop
@@ -704,7 +715,7 @@ stages:
     - template: yaml-templates/run-nunit-tests.yaml
       parameters:
         testRunTitle: MSBuildDeviceIntegration Smoke - macOS
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/MSBuildDeviceIntegration.dll
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/net472/MSBuildDeviceIntegration.dll
         nunitConsoleExtraArgs: --where "cat == SmokeTests"
         testResultsFile: TestResult-MSBuildDeviceIntegrationSmoke-$(XA.Build.Configuration).xml
 
@@ -835,70 +846,19 @@ stages:
   dependsOn: mac_build
   condition: and(succeeded(), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'MSBuildDevice')))
   jobs:
-  # Check - "Xamarin.Android (MSBuild Emulator Tests macOS)"
-  - job: mac_msbuilddevice_tests
-    displayName: macOS
-    pool: $(HostedMac)
-    timeoutInMinutes: 150
-    cancelTimeoutInMinutes: 5
-    workspace:
-      clean: all
-    steps:
-    - template: yaml-templates/setup-test-environment.yaml
+  # Check - "Xamarin.Android (MSBuild Emulator Tests macOS - Legacy)"
+  - template: yaml-templates/run-msbuild-device-tests.yaml
+    parameters:
+      job_name: mac_msbuilddevice_tests
+      job_suffix: Legacy
 
-    - script: mono $(System.DefaultWorkingDirectory)/build-tools/xaprepare/xaprepare/bin/$(XA.Build.Configuration)/xaprepare.exe --s=EmulatorTestDependencies --no-emoji --run-mode=CI
-      displayName: install emulator
-
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: $(TestAssembliesArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
-
-    - task: MSBuild@1
-      displayName: build check-boot-times.csproj
-      inputs:
-        solution: build-tools/check-boot-times/check-boot-times.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /restore /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/build-check-boot-times.binlog
-      continueOnError: true
-
-    - task: MSBuild@1
-      displayName: Run check-boot-times
-      inputs:
-        solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:CheckBootTimes /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/run-check-boot-times.binlog
-      continueOnError: true
-
-    - task: MSBuild@1
-      displayName: start emulator
-      inputs:
-        solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:AcquireAndroidTarget /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/start-emulator.binlog
-
-    - template: yaml-templates/run-nunit-tests.yaml
-      parameters:
-        testRunTitle: MSBuildDeviceIntegration On Device - macOS
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/MSBuildDeviceIntegration.dll
-        nunitConsoleExtraArgs: --where "cat != TimeZoneInfo && cat != SmokeTests"
-        testResultsFile: TestResult-MSBuildDeviceIntegration-$(XA.Build.Configuration).xml
-
-    - task: MSBuild@1
-      displayName: shut down emulator
-      inputs:
-        solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: >-
-          /t:AcquireAndroidTarget,ReleaseAndroidTarget
-          /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/shutdown-emulator.binlog
-      condition: always()
-
-    - template: yaml-templates/upload-results.yaml
-      parameters:
-        artifactName: Test Results - MSBuild With Emulator - macOS
-
-    - template: yaml-templates/fail-on-issue.yaml
+  # Check - "Xamarin.Android (MSBuild Emulator Tests macOS - One .NET)"
+  - template: yaml-templates/run-msbuild-device-tests.yaml
+    parameters:
+      job_name: mac_dotnetdevice_tests
+      job_suffix: One .NET
+      nunit_categories: $(DotNetNUnitCategories)
+      target_framework: 'netcoreapp3.1'
 
 - stage: designer_tests
   displayName: Designer Tests
@@ -1280,16 +1240,17 @@ stages:
     workspace:
       clean: all
     steps:
-
-    - task: JenkinsQueueJob@2
-      displayName: xamarin vsix codesign - run jenkins job
+      # Signing job is run here: https://dev.azure.com/devdiv/DevDiv/_build?definitionId=13878
+      # https://github.com/huserben/TfsExtensions/blob/master/BuildTasks/overview.md
+    - task: benjhuser.tfs-extensions-build-tasks.trigger-build-task.TriggerBuild@3
+      displayName: 'xamarin vsix codesign - run Azure DevOps job'
       inputs:
-        serverEndpoint: $(Signing.Endpoint)
-        jobName: $(Signing.Job)
-        isParameterizedJob: true
-        jobParameters: |
-          REPO=$(Build.Repository.Name)
-          COMMIT=$(Build.SourceVersion)
-          SIGN_TYPE=Real
-          GITHUB_CONTEXT=$(GitHub.Artifacts.Context)
-          ENABLE_JAR_SIGNING=true
+        buildDefinition: $(Signing.Job)
+        useSameSourceVersion: false
+        useSameBranch: false
+        branchToUse: 'full-esrp-integration'
+        waitForQueuedBuildsToFinish: true
+        storeInEnvironmentVariable: true
+        buildParameters: '{ "REPO": "$(Build.Repository.Name)", "COMMIT": "$(Build.SourceVersion)", "SIGN_TYPE": "Real", "GITHUB_CONTEXT": "$(GitHub.Artifacts.Context)" }'
+        authenticationMethod: 'OAuth Token'
+        password: $(System.AccessToken)     # Equivalent to the 'Allow scripts to access OAuth token option': https://stackoverflow.com/questions/52837980/how-to-allow-scripts-to-access-oauth-token-from-yaml-builds

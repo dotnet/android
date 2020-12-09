@@ -37,9 +37,6 @@ namespace Xamarin.ProjectTools
 			{
 			}
 		}
-		/// <summary>
-		/// Only supported in .NET 5+
-		/// </summary>
 		public class AndroidLibrary : BuildItem
 		{
 			public AndroidLibrary (string include)

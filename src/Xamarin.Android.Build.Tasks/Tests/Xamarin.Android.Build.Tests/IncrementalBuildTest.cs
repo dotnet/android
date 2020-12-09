@@ -519,6 +519,27 @@ namespace Lib2
 		}
 
 		[Test]
+		public void ManifestMergerIncremental ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				ManifestMerger = "manifestmerger.jar"
+			};
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "first build should succeed");
+				b.Output.AssertTargetIsNotSkipped ("_ManifestMerger");
+
+				// Change .csproj & build again
+				proj.SetProperty ("Foo", "Bar");
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build should succeed");
+				b.Output.AssertTargetIsNotSkipped ("_ManifestMerger");
+
+				// Build with no changes
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "third build should succeed");
+				b.Output.AssertTargetIsSkipped ("_ManifestMerger");
+			}
+		}
+
+		[Test]
 		[Category ("SmokeTests")]
 		public void ProduceReferenceAssembly ()
 		{
@@ -649,6 +670,29 @@ namespace Lib2
 				// No changes
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "build should have succeeded.");
 				b.Output.AssertTargetIsSkipped (KnownTargets.LinkAssembliesNoShrink);
+			}
+		}
+
+		[Test]
+		public void CSProjUserFileChanges ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			var selectedDevice = "foo";
+			var csproj_user_file = $"{proj.ProjectName}.csproj.user";
+			proj.Sources.Add (new BuildItem.NoActionResource (csproj_user_file) {
+				TextContent = () => $"<Project><PropertyGroup><SelectedDevice>{selectedDevice}</SelectedDevice></PropertyGroup></Project>"
+			});
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
+
+				// Simulates a different device/emulator selection in the IDE
+				selectedDevice = "bar";
+				proj.Touch (csproj_user_file);
+
+				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
+				b.Output.AssertTargetIsSkipped ("_CompileJava");
+				b.Output.AssertTargetIsSkipped ("_CompileToDalvik");
+				b.Output.AssertTargetIsSkipped ("_Sign");
 			}
 		}
 
@@ -980,13 +1024,13 @@ namespace Lib2
 				/* supportedAbis */   "arm64-v8a",
 				/* androidAotMode */  "Full", // None, Normal, Hybrid, Full
 				/* aotAssemblies */   true,
-				/* expectedResult */  false,
+				/* expectedResult */  true,
 			},
 			new object[] {
 				/* supportedAbis */   "arm64-v8a",
 				/* androidAotMode */  "Full", // None, Normal, Hybrid, Full
 				/* aotAssemblies */   false,
-				/* expectedResult */  false,
+				/* expectedResult */  true,
 			},
 			new object[] {
 				/* supportedAbis */   "arm64-v8a",
@@ -1018,6 +1062,7 @@ namespace Lib2
 				BundleAssemblies = false,
 				AotAssemblies = aotAssemblies,
 			};
+			proj.SetAndroidSupportedAbis (supportedAbis);
 			if (!string.IsNullOrEmpty (androidAotMode))
 			    proj.SetProperty ("AndroidAotMode", androidAotMode);
 			using (var b = CreateApkBuilder (path)) {

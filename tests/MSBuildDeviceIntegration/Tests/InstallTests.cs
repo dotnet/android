@@ -187,7 +187,12 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetProperty (proj.ReleaseProperties, "Optimize", false);
 			proj.SetProperty (proj.ReleaseProperties, "DebugType", "none");
-			proj.RemoveProperty (proj.ReleaseProperties, "EmbedAssembliesIntoApk");
+			if (Builder.UseDotNet) {
+				// NOTE: in .NET 6, EmbedAssembliesIntoApk=true by default for Release builds
+				proj.SetProperty (proj.ReleaseProperties, "EmbedAssembliesIntoApk", "false");
+			} else {
+				proj.RemoveProperty (proj.ReleaseProperties, "EmbedAssembliesIntoApk");
+			}
 			var abis = new [] { "armeabi-v7a", "x86" };
 			proj.SetAndroidSupportedAbis (abis);
 			using (var builder = CreateApkBuilder ()) {
@@ -212,7 +217,11 @@ namespace Xamarin.Android.Build.Tests
 				//	"The Shared Runtime should not have been installed.");
 				var directorylist = GetContentFromAllOverrideDirectories (proj.PackageName);
 				StringAssert.Contains ($"{proj.ProjectName}.dll", directorylist, $"{proj.ProjectName}.dll should exist in the .__override__ directory.");
-				StringAssert.Contains ($"System.dll", directorylist, $"System.dll should exist in the .__override__ directory.");
+				if (Builder.UseDotNet)
+					StringAssert.Contains ($"System.Private.CoreLib.dll", directorylist, $"System.Private.CoreLib.dll should exist in the .__override__ directory.");
+				else
+					StringAssert.Contains ($"System.dll", directorylist, $"System.dll should exist in the .__override__ directory.");
+
 				StringAssert.Contains ($"Mono.Android.dll", directorylist, $"Mono.Android.dll should exist in the .__override__ directory.");
 				Assert.IsTrue (builder.Uninstall (proj), "unnstall should have succeeded.");
 			}

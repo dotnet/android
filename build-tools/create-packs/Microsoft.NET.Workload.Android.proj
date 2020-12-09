@@ -36,7 +36,7 @@ workload manifest pack containing information about the various Microsoft.Androi
     <ReplaceFileContents
         SourceFile="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.NET.Workload.Android\WorkloadManifest.in.json"
         DestinationFile="$(WorkloadManifestJsonPath)"
-        Replacements="@SDK_PACK_VERSION@=$(AndroidPackVersionLong);@REF_PACK_VERSION@=$(AndroidPackVersionLong)">
+        Replacements="@SDK_PACK_VERSION@=$(AndroidPackVersionLong);@REF_PACK_VERSION@=$(AndroidPackVersionLong);@TEMPLATE_PACK_VERSION@=$(AndroidPackVersionLong);">
     </ReplaceFileContents>
 
     <ItemGroup>

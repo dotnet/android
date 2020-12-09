@@ -59,7 +59,7 @@ ms.date: 01/24/2020
 + [XA0109](xa0109.md): Unsupported or invalid `$(TargetFrameworkVersion)` value of 'v4.5'.
 + [XA0111](xa0111.md): Could not get the `aapt2` version. Please check it is installed correctly.
 + [XA0112](xa0112.md): `aapt2` is not installed. Disabling `aapt2` support. Please check it is installed correctly.
-+ [XA0113](xa0113.md): Google Play requires that new applications and updates must use a TargetFrameworkVersion of v8.0 (API level 26) or above.
++ [XA0113](xa0113.md): Google Play requires that new applications and updates must use a TargetFrameworkVersion of v10.0 (API level 29) or above.
 + [XA0115](xa0115.md): Invalid value 'armeabi' in $(AndroidSupportedAbis). This ABI is no longer supported. Please update your project properties to remove the old value. If the properties page does not show an 'armeabi' checkbox, un-check and re-check one of the other ABIs and save the changes.
 + [XA0116](xa0116.md): Unable to find `EmbeddedResource` named `{ResourceName}`.
 + [XA0117](xa0117.md): The TargetFrameworkVersion {TargetFrameworkVersion} is deprecated. Please update it to be v4.4 or higher.
@@ -106,6 +106,7 @@ Please disable fast deployment in the Visual Studio project property pages or ed
 + XA1022: Specified reference Java library not found: {file}
 + [XA1023](xa1023.md): Using the DX DEX Compiler is deprecated.
 + [XA1024](xa1024.md): Ignoring configuration file 'Foo.dll.config'. .NET configuration files are not supported in Xamarin.Android projects that target .NET 6 or higher.
++ [XA1025](xa1025.md): The experimental 'Hybrid' value for the 'AndroidAotMode' MSBuild property is not currently compatible with the armeabi-v7a target ABI.
 + [XA1027](xa1027.md): The 'EnableProguard' MSBuild property is set to 'true' and the 'AndroidLinkTool' MSBuild property is empty, so 'AndroidLinkTool' will default to 'proguard'.
 + [XA1028](xa1028.md): The 'AndroidEnableProguard' MSBuild property is set to 'true' and the 'AndroidLinkTool' MSBuild property is empty, so 'AndroidLinkTool' will default to 'proguard'.
 + [XA1029](xa1029.md): '{item}' is included in the project under duplicate names, once as '{name1}', and once as '{name2}'. Remove one of the duplicates to resolve this warning.

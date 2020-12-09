@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Microsoft",
+  "classifications": [ "Android" ],
+  "name": "Android Layout template",
+  "description": "An Android layout (XML) file",
+  "tags": {
+    "language": "C#",
+    "type": "item"
+  },
+  "identity": "Microsoft.Android.AndroidLayout",
+  "shortName": "android-layout",
+  "sourceName": "Layout",
+  "primaryOutputs": [
+    { "path": "Layout.xml" }
+  ],
+  "defaultName": "Layout"
+}

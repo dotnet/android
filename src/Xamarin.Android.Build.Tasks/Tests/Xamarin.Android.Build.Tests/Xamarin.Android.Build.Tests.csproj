@@ -16,12 +16,6 @@
     </Reference>
   </ItemGroup>
 
-  <!-- Required packages for .NET Core -->
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.6.1" />
-    <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.7.0" />
-  </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\Xamarin.ProjectTools\Xamarin.ProjectTools.csproj" />
     <ProjectReference Include="..\..\Xamarin.Android.Build.Tasks.csproj" />

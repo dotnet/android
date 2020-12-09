@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Java.Interop {
 
@@ -11,10 +12,12 @@ namespace Java.Interop {
 #endif  // !JCW_ONLY_TYPE_NAMES
 	partial class ExportAttribute : Attribute {
 
+		[DynamicDependency (DynamicallyAccessedMemberTypes.All, "Java.Interop.DynamicCallbackCodeGenerator", "Mono.Android.Export")]
 		public ExportAttribute ()
 		{
 		}
 		
+		[DynamicDependency (DynamicallyAccessedMemberTypes.All, "Java.Interop.DynamicCallbackCodeGenerator", "Mono.Android.Export")]
 		public ExportAttribute (string name)
 		{
 			Name = name;

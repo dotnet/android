@@ -1,0 +1,103 @@
+<!--
+***********************************************************************************************
+Xamarin.Android.AvailableItems.targets
+
+This file is imported by every project type to setup @(AvailableItemName).
+This item group populates the Build Action drop-down in IDEs.
+
+***********************************************************************************************
+-->
+<Project>
+
+  <!-- Not legacy binding projects -->
+  <ItemGroup Condition=" '$(_AndroidIsBindingProject)' != 'true' ">
+    <AvailableItemName Include="AndroidAotProfile" />
+    <AvailableItemName Include="AndroidAsset" />
+    <AvailableItemName Include="AndroidEnvironment" />
+    <AvailableItemName Include="AndroidExternalJavaLibrary" />
+    <AvailableItemName Include="AndroidInterfaceDescription" />
+    <AvailableItemName Include="AndroidJavaSource" />
+    <AvailableItemName Include="AndroidLibrary" />
+    <AvailableItemName Include="AndroidLintConfig" />
+    <AvailableItemName Include="AndroidResourceAnalysisConfig" />
+    <AvailableItemName Include="AndroidNativeLibrary" />
+    <AvailableItemName Include="AndroidResource" />
+    <AvailableItemName Include="AndroidBoundLayout" />
+    <AvailableItemName Include="LinkDescription" />
+    <AvailableItemName Include="MultiDexMainDexList" />
+    <AvailableItemName Include="ProguardConfiguration" />
+    <AvailableItemName Include="ProjectReference" />
+    <AvailableItemName Include="AndroidManifestOverlay" />
+  </ItemGroup>
+  <!-- Legacy, non-binding projects -->
+  <ItemGroup Condition=" '$(_AndroidIsBindingProject)' != 'true' and '$(UsingAndroidNETSdk)' != 'true' ">
+    <AvailableItemName Include="AndroidAarLibrary" />
+    <AvailableItemName Include="AndroidJavaLibrary" />
+  </ItemGroup>
+  <!-- Legacy, non-application projects -->
+  <ItemGroup Condition=" '$(AndroidApplication)' != 'true' and '$(UsingAndroidNETSdk)' != 'true' ">
+    <AvailableItemName Include="EmbeddedNativeLibrary" />
+  </ItemGroup>
+  <!-- Legacy binding projects or .NET 6 -->
+  <ItemGroup Condition=" '$(_AndroidIsBindingProject)' == 'true' or '$(UsingAndroidNETSdk)' == 'true' ">
+    <AvailableItemName Include="TransformFile" />
+    <AvailableItemName Include="LibraryProjectProperties" />
+    <AvailableItemName Include="JavaDocIndex" />
+    <AvailableItemName Include="JavaDocJar" />
+    <AvailableItemName Include="JavaSourceJar" />
+  </ItemGroup>
+  <!-- Legacy binding projects -->
+  <ItemGroup Condition=" '$(_AndroidIsBindingProject)' == 'true' and '$(UsingAndroidNETSdk)' != 'true' ">
+    <AvailableItemName Include="EmbeddedJar" />
+    <AvailableItemName Include="EmbeddedNativeLibrary" />
+    <AvailableItemName Include="EmbeddedReferenceJar" />
+    <AvailableItemName Include="InputJar" />
+    <AvailableItemName Include="ReferenceJar" />
+    <AvailableItemName Include="LibraryProjectZip" />
+  </ItemGroup>
+
+  <!-- Default item metadata -->
+  <ItemDefinitionGroup>
+    <AndroidResource>
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:UpdateGeneratedFiles</Generator>
+    </AndroidResource>
+    <AndroidLibrary>
+      <Bind>true</Bind>
+      <Pack Condition=" '$(UsingAndroidNETSdk)' == 'true' ">true</Pack>
+    </AndroidLibrary>
+    <AndroidAarLibrary>
+      <!-- NOTE: .aar items should skip %(AndroidSkipResourceProcessing) by default -->
+      <AndroidSkipResourceProcessing>true</AndroidSkipResourceProcessing>
+    </AndroidAarLibrary>
+  </ItemDefinitionGroup>
+
+  <!-- Convert @(AndroidLibrary) to the legacy item group names -->
+  <Target Name="_CategorizeAndroidLibraries">
+    <!-- Applications, or legacy class libraries -->
+    <ItemGroup Condition=" '$(AndroidApplication)' == 'true' or ('$(_AndroidIsBindingProject)' != 'true' and '$(UsingAndroidNETSdk)' != 'true') ">
+      <AndroidAarLibrary  Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.aar' " />
+      <AndroidJavaLibrary Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.jar' " />
+    </ItemGroup>
+    <!-- Any library that is not an app -->
+    <ItemGroup Condition=" '$(AndroidApplication)' != 'true' ">
+      <EmbeddedNativeLibrary Include="@(AndroidNativeLibrary)" />
+    </ItemGroup>
+    <!-- .NET 6 class libraries-->
+    <ItemGroup Condition=" '$(AndroidApplication)' != 'true' and '$(UsingAndroidNETSdk)' == 'true' ">
+      <AndroidAarLibrary  Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.aar' and '%(AndroidLibrary.Bind)' != 'true' " />
+      <LibraryProjectZip  Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.aar' and '%(AndroidLibrary.Bind)' == 'true' " />
+      <AndroidJavaLibrary Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.jar' and '%(AndroidLibrary.Bind)' != 'true' " />
+      <EmbeddedJar        Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.jar' and '%(AndroidLibrary.Bind)' == 'true' " />
+      <!-- .aar files should be copied to $(OutputPath) in .NET 6-->
+      <None Include="@(LibraryProjectZip)" CopyToOutputDirectory="PreserveNewest" Link="%(Filename)%(Extension)" />
+    </ItemGroup>
+    <!-- Legacy binding projects -->
+    <ItemGroup Condition=" '$(_AndroidIsBindingProject)' == 'true' and '$(UsingAndroidNETSdk)' != 'true' ">
+      <LibraryProjectZip    Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.aar' and '%(AndroidLibrary.Bind)' == 'true' " />
+      <EmbeddedJar          Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.jar' and '%(AndroidLibrary.Bind)' != 'true' " />
+      <EmbeddedReferenceJar Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.jar' and '%(AndroidLibrary.Bind)' == 'true' " />
+    </ItemGroup>
+  </Target>
+
+</Project>

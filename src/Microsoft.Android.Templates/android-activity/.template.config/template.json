@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Microsoft",
+  "classifications": [ "Android" ],
+  "name": "Android Activity template",
+  "description": "An Android Activity class",
+  "tags": {
+    "language": "C#",
+    "type": "item"
+  },
+  "identity": "Microsoft.Android.AndroidActivity",
+  "shortName": "android-activity",
+  "sourceName": "Activity1",
+  "primaryOutputs": [
+    { "path": "Activity1.cs" }
+  ],
+  "defaultName": "Activity1",
+  "symbols": {
+    "namespace": {
+      "description": "namespace for the generated code",
+      "replaces": "AndroidApp1",
+      "type": "parameter"
+    }
+  }
+}

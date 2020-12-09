@@ -29,22 +29,28 @@ project][binding] as a separate project type. Any of the MSBuild item
 groups or build actions that currently work in binding projects will
 be supported through a .NET 6 Android application or library.
 
-For example, a binding library could look like:
+For example, a binding library would be identical to a class library:
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net6.0-android</TargetFramework>
   </PropertyGroup>
-  <ItemGroup>
-    <TransformFile Include="Transforms\Metadata.xml" />
-    <EmbeddedJar Include="Jars\foo.jar" />
-  </ItemGroup>
 </Project>
 ```
 
+Along with the file structure:
+
+    Transforms/
+        Metadata.xml
+    foo.jar
+
+`Transforms\*.xml` files are automatically included as a
+`@(TransformFile)` item, and `.jar` files are automatically included
+as a `@(AndroidLibrary)` item.
+
 This will bind C# types for the Java types found in `foo.jar` using
-the metadata fixups from `Metadata.xml`.
+the metadata fixups from `Transforms\Metadata.xml`.
 
 [binding]: https://docs.microsoft.com/xamarin/android/platform/binding-java-library/
 
@@ -109,6 +115,11 @@ supported.
 
 `$(AndroidCodegenTarget)` will be `XAJavaInterop1` by default.
 `XamarinAndroid` will not be supported.
+
+`$(AndroidManifest)` will default to `AndroidManifest.xml` in the root
+of projects as `Properties\AssemblyInfo.cs` is no longer used in
+short-form MSBuild projects. `Properties\AndroidManifest.xml` will
+also be detected and used if it exists to ease migration.
 
 `$(DebugType)` will be `portable` by default. `full` and `pdbonly`
 will not be supported.
@@ -184,12 +195,47 @@ It is recommended to migrate to the new linker settings, as
 There are currently a few "verbs" we are aiming to get working in
 Xamarin.Android:
 
+    dotnet new
     dotnet build
     dotnet publish
     dotnet run
 
-Currently in .NET 5 console apps, `dotnet publish` is where all the
-work to produce a self-contained "app" happens:
+### dotnet new
+
+To support `dotnet new`, we created a few basic project and item
+templates for Android that are named following the patterns and naming
+of existing .NET templates:
+
+    Templates                                     Short Name           Language    Tags
+    --------------------------------------------  -------------------  ----------  ----------------------
+    Android Activity template                     android-activity     [C#]        Android
+    Android Java Library Binding                  android-bindinglib   [C#]        Android
+    Android Layout template                       android-layout       [C#]        Android
+    Android Class library                         androidlib           [C#]        Android
+    Android Application                           android              [C#]        Android
+    Console Application                           console              [C#],F#,VB  Common/Console
+    Class library                                 classlib             [C#],F#,VB  Common/Library
+    WPF Application                               wpf                  [C#],VB     Common/WPF
+    WPF Class library                             wpflib               [C#],VB     Common/WPF
+    NUnit 3 Test Project                          nunit                [C#],F#,VB  Test/NUnit
+    NUnit 3 Test Item                             nunit-test           [C#],F#,VB  Test/NUnit
+
+To create different types of Android projects:
+
+    dotnet new android            --output MyAndroidApp     --packageName com.mycompany.myandroidapp
+    dotnet new androidlib         --output MyAndroidLibrary
+    dotnet new android-bindinglib --output MyJavaBinding
+
+Once the projects are created, some basic item templates can also be
+used such as:
+
+    dotnet new android-activity --name LoginActivity --namespace MyAndroidApp
+    dotnet new android-layout   --name MyLayout      --output Resources/layout
+
+### dotnet build & publish
+
+Currently in .NET console apps, `dotnet publish` is where all the work
+to produce a self-contained "app" happens:
 
 * The linker via the `<IlLink/>` MSBuild task
 * .NET Core's version of AOT, named "ReadyToRun"
@@ -218,12 +264,18 @@ Play, ad-hoc distribution, etc. It could be able to sign the `.apk` or
 `.aab` with different keys. As a starting point, this will currently
 copy the output to a `publish` directory on disk.
 
+[illink]: https://github.com/mono/linker/blob/master/src/linker/README.md
+
+### dotnet run
+
 `dotnet run` can be used to launch applications on a
 device or emulator via the `--project` switch:
 
     dotnet run --project HelloAndroid.csproj
 
-[illink]: https://github.com/mono/linker/blob/master/src/linker/README.md
+Alternatively, you could use the `Run` MSBuild target such as:
+
+    dotnet build HelloAndroid.csproj -t:Run
 
 ### Preview testing
 
