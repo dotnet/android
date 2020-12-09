@@ -357,9 +357,9 @@ namespace Xamarin.Android.Build.Tests
 			new object[] { false, false , "apk"     , "True"         , "file:android", "-keystore test.keystore", true},
 			new object[] { false, true  , "apk"     , "True"         , "file:android", "-keystore test.keystore", true},
 			// aab signing tests
-			new object[] { true,  true  , "aab"     , "True"         , "android",      "-keystore test.keystore"      , true},
-			new object[] { true,  true  , "aab"     , "True"         , "file:android", "-keystore test.keystore"      , true},
-			new object[] { true,  true  , "aab"     , "True"         , "env:android",  "-keystore test.keystore"      , false},
+			new object[] { true,  true  , "aab"     , "True"         , "android",      "-ks test.keystore"      , true},
+			new object[] { true,  true  , "aab"     , "True"         , "file:android", "-ks test.keystore"      , true},
+			new object[] { true,  true  , "aab"     , "True"         , "env:android",  "-ks test.keystore"      , false},
 		};
 #pragma warning restore 414
 
@@ -412,10 +412,16 @@ namespace Xamarin.Android.Build.Tests
 			using (var b = CreateApkBuilder (path, false, false)) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj, environmentVariables: envVar), "Build should have succeeded.");
-				StringAssertEx.Contains (expected, b.LastBuildOutput,
-					"The Wrong keystore was used to sign the ${packageFormat}");
+				if (packageFormat == "apk") {
+					StringAssertEx.Contains (expected, b.LastBuildOutput,
+					"The Wrong keystore was used to sign the apk");
+				}
 				b.BuildLogFile = "install.log";
 				Assert.AreEqual (shouldInstall, b.Install (proj, doNotCleanupOnUpdate: true), $"Install should have {(shouldInstall ? "succeeded" : "failed")}.");
+				if (packageFormat == "aab") {
+					StringAssertEx.Contains (expected, b.LastBuildOutput,
+						"The Wrong keystore was used to sign the apk");
+				}
 				if (!shouldInstall)
 					return;
 				b.BuildLogFile = "uninstall.log";
