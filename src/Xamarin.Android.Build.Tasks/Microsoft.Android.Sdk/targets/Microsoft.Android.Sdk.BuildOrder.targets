@@ -30,12 +30,13 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
       _CopyPackage;
       _Sign;
     </BuildDependsOn>
-    <_BeforeIncrementalClean>
+    <IncrementalCleanDependsOn>
       _PrepareAssemblies;
       _CompileDex;
       $(_AfterCompileDex);
       _AddFilesToFileWrites;
-    </_BeforeIncrementalClean>
+      $(IncrementalCleanDependsOn);
+    </IncrementalCleanDependsOn>
     <_PackageForAndroidDependsOn>
       Build;
       _CopyPackage;
@@ -83,13 +84,13 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
       AddLibraryJarsToBind;
       $(BuildDependsOn);
     </BuildDependsOn>
-    <_BeforeIncrementalClean>
+    <IncrementalCleanDependsOn>
       _AddFilesToFileWrites;
-    </_BeforeIncrementalClean>
+      $(IncrementalCleanDependsOn);
+    </IncrementalCleanDependsOn>
   </PropertyGroup>
 
-  <!-- Targets that run unless we are running _ComputeFilesToPublishForRuntimeIdentifiers -->
-  <PropertyGroup Condition=" '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' ">
+  <PropertyGroup>
     <CoreResolveReferencesDependsOn>
       _SeparateAppExtensionReferences;
       $(ResolveReferencesDependsOn);
@@ -110,12 +111,6 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
       _UpdateAndroidResgen;
       _CreateAar;
     </_UpdateAndroidResourcesDependsOn>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <CoreBuildDependsOn>
-      $([MSBuild]::Unescape($(CoreBuildDependsOn.Replace('IncrementalClean;', '$(_BeforeIncrementalClean);IncrementalClean;'))))
-    </CoreBuildDependsOn>
     <CompileDependsOn>
       _SetupMSBuildAllProjects;
       _SetupDesignTimeBuildForCompile;
