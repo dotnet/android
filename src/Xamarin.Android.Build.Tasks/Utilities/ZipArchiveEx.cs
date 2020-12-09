@@ -55,7 +55,7 @@ namespace Xamarin.Android.Tasks
 			else {
 				pathName = Path.Combine (directoryPathInZip, Path.GetFileName (filename));
 			}
-			return pathName.Replace ("\\", "/");
+			return pathName.Replace ("\\", "/").TrimStart ('/');
 		}
 
 		string TrimEntryName (string entryName, bool appendSeparator = false)
@@ -70,7 +70,7 @@ namespace Xamarin.Android.Tasks
 				var fi = new FileInfo (fileName);
 				if ((fi.Attributes & FileAttributes.Hidden) != 0)
 					continue;
-				var archiveFileName = TrimEntryName (ArchiveNameForFile (fileName, folderInArchive));
+				var archiveFileName = ArchiveNameForFile (fileName, folderInArchive);
 				long index = -1;
 				if (zip.ContainsEntry (archiveFileName, out index)) {
 					var e = zip.First (x => x.FullName == archiveFileName);
@@ -115,7 +115,7 @@ namespace Xamarin.Android.Tasks
 				try {
 					string dirPathInZip = TrimEntryName (fullDirPath, appendSeparator: true);
 					if (CreateDirectoriesInZip && !zip.ContainsEntry (dirPathInZip))
-						zip.CreateDirectory (fullDirPath);
+						zip.CreateDirectory (dirPathInZip);
 				} catch (ZipException) {
 
 				}
