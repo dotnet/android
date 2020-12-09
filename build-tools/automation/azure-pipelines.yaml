@@ -1172,6 +1172,10 @@ stages:
       clean: true
       persistCredentials: true
 
+    - template: yaml-templates/use-dot-net.yaml
+      parameters:
+        version: $(DotNetCoreVersion)
+
     - template: install-certificates.yml@yaml
       parameters:
         DeveloperIdApplication: $(developer-id-application)
