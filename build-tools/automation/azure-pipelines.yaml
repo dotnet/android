@@ -21,7 +21,7 @@ resources:
   - repository: release_scripts
     type: github
     name: xamarin/release-scripts
-    ref: refs/heads/dev/trevors/sign-and-notarized/logging
+    ref: refs/heads/sign-and-notarized
     endpoint: xamarin
   - repository: uitools
     type: github
