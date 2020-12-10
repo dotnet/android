@@ -443,7 +443,7 @@ stages:
         branchToUse: 'full-esrp-integration'
         waitForQueuedBuildsToFinish: true
         storeInEnvironmentVariable: true
-        buildParameters: '{ "REPO": "$(Build.Repository.Name)", "COMMIT": "$(Build.SourceVersion)", "SIGN_TYPE": "Real", "GITHUB_CONTEXT": "$(GitHub.Artifacts.Context)" }'
+        buildParameters: '{ "REPO": "$(Build.Repository.Name)", "COMMIT": "$(Build.SourceVersion)", "SIGN_TYPE": "Real", "GITHUB_CONTEXT": "$(GitHub.Artifacts.Context)", "BUILD_DEFINITIONNAME": "$(Build.DefinitionName)", "BUILD_ID": "$(Build.BuildId)", "BUILD_NUMBER": "$(Build.BuildNumber)", "BUILD_URI": "$(Build.BuildUri)" }'
         authenticationMethod: 'OAuth Token'
         password: $(System.AccessToken)     # Equivalent to the 'Allow scripts to access OAuth token option': https://stackoverflow.com/questions/52837980/how-to-allow-scripts-to-access-oauth-token-from-yaml-builds
 
