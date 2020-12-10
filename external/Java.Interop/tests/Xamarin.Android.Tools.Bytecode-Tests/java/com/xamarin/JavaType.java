@@ -6,6 +6,7 @@ import java.util.List;
 /**
  * JNI sig: Lcom/xamarin/JavaEnum;
  */
+// Disconnective comment?
 enum JavaEnum {
 	/** FIRST; JNI sig: Lcom/xamarin/JavaEnum; */
 	FIRST,
@@ -161,6 +162,7 @@ public class JavaType<E>
 	}
 
 	/** JNI sig: func.(Ljava/lang/StringBuilder;)Ljava/util/List; */
+	// Comment to "disconnect" Javadoc from the member
 	public List<String> func (StringBuilder value) {
 		return null;
 	}

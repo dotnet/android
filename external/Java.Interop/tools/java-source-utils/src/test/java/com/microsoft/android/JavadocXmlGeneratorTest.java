@@ -109,6 +109,11 @@ public final class JavadocXmlGeneratorTest {
 		testWritePackages("../../../com/xamarin/JavaType.java", "JavaType.xml");
 	}
 
+	@Test
+	public void testWritePackages_UnresolvedTypes_txt() throws Throwable {
+		testWritePackages("../../../UnresolvedTypes.txt", "../../../UnresolvedTypes.xml");
+	}
+
 	private static void testWritePackages(final String resourceJava, final String resourceXml) throws Throwable {
 		final   JavaParser              parser          = JniPackagesInfoFactoryTest.createParser();
 		final   JniPackagesInfoFactory  factory         = new JniPackagesInfoFactory(parser);

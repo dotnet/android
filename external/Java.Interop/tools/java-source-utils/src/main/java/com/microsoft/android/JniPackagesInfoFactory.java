@@ -361,7 +361,7 @@ public final class JniPackagesInfoFactory {
 			final ResolvedType rt = type.resolve();
 			return rt.describe();
 		} catch (final Throwable thr) {
-			return ".*" + type.asString();
+			return getUnresolvedJavaType(type);
 		}
 	}
 
@@ -389,7 +389,8 @@ public final class JniPackagesInfoFactory {
 		}
 		catch (final Exception thr) {
 		}
-		return ".*" + type.asString();
+
+		return getUnresolvedJniType(type);
 	}
 
 	static String getJniType(JniTypeInfo typeInfo, JniMethodInfo methodInfo, ArrayType type) {
@@ -412,7 +413,7 @@ public final class JniPackagesInfoFactory {
 			case "short":   return "S";
 			case "void":    return "V";
 		}
-		throw new Error("Don't know JNI type for `" + javaType + "`!");
+		throw new Error("Don't know JNI type for primitive type `" + javaType + "`!");
 	}
 
 	static String getJniType(ResolvedType type) {
@@ -452,5 +453,43 @@ public final class JniPackagesInfoFactory {
 		name.append(typeDecl.getName().replace(".", "$"));
 		name.append(";");
 		return name.toString();
+	}
+
+	static String getUnresolvedJavaType(Type type) {
+		final   StringBuilder   jniType     = new StringBuilder();
+
+		jniType.append(".*");
+
+		if (type.isClassOrInterfaceType()) {
+			// Special-case class-or-interface declarations so that we skip type parameters.
+			type.ifClassOrInterfaceType(c -> {
+				c.getScope().ifPresent(s -> jniType.append(s.asString()).append("."));
+				jniType.append(c.getName().asString());
+			});
+		} else {
+			jniType.append(type.asString());
+		}
+
+		return jniType.toString();
+	}
+
+	static String getUnresolvedJniType(Type type) {
+		final   StringBuilder   jniType     = new StringBuilder();
+
+		jniType.append("L.*");
+
+		if (type.isClassOrInterfaceType()) {
+			// Special-case class-or-interface declarations so that we skip type parameters.
+			type.ifClassOrInterfaceType(c -> {
+				c.getScope().ifPresent(s -> jniType.append(s.asString()).append("."));
+				jniType.append(c.getName().asString());
+			});
+		} else {
+			jniType.append(type.asString());
+		}
+
+		jniType.append(";");
+
+		return jniType.toString();
 	}
 }
