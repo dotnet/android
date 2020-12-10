@@ -183,6 +183,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var dotnet = CreateDotNetBuilder ();
 			Assert.IsTrue (dotnet.New (template), $"`dotnet new {template}` should succeed");
+			File.WriteAllBytes (Path.Combine (dotnet.ProjectDirectory, "foo.jar"), Convert.FromBase64String (InlineData.JavaClassesJarBase64));
 			Assert.IsTrue (dotnet.New ("android-activity"), "`dotnet new android-activity` should succeed");
 			Assert.IsTrue (dotnet.New ("android-layout", Path.Combine (dotnet.ProjectDirectory, "Resources", "layout")), "`dotnet new android-layout` should succeed");
 			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
