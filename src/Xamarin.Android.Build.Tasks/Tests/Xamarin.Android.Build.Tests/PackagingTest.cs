@@ -86,10 +86,8 @@ namespace Xamarin.Android.Build.Tests
 				new [] {
 					"Java.Interop.dll",
 					"Mono.Android.dll",
-					"System.ComponentModel.Primitives.dll",
 					"System.Console.dll",
 					"System.Linq.Expressions.dll",
-					"System.Net.Primitives.dll",
 					"System.ObjectModel.dll",
 					"System.Runtime.Serialization.Primitives.dll",
 					"System.Security.Cryptography.Primitives.dll",
