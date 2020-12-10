@@ -10,29 +10,77 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 	{
 		public JavaApi ()
 		{
-			Packages = new List<JavaPackage> ();
+			Packages = new Dictionary<string, JavaPackage> ();
 		}
 
 		public  string?                 ExtendedApiSource   { get; set; }
 		public  string?                 Platform            { get; set; }
-		public  IList<JavaPackage>      Packages            { get; set; }
+		public  IDictionary<string, JavaPackage>      Packages            { get; }
+
+		public ICollection<JavaPackage> AllPackages => Packages.Values;
 	}
 
 	public partial class JavaPackage
 	{
+		private Dictionary<string, List<JavaType>> types = new Dictionary<string, List<JavaType>> ();
+
 		public JavaPackage (JavaApi? parent)
 		{
 			Parent = parent;
-			
-			Types = new List<JavaType> ();
 		}
 		
 		public  JavaApi?                Parent              { get; private set; }
 
 		public  string?                 Name                { get; set; }
 		public  string?                 JniName             { get; set; }
-		public  IList<JavaType>         Types               { get; set; }
-		
+
+		// Yes, there can be multiple types with the same *Java* name.
+		// For example:
+		// - MyInterface
+		// - MyInterfaceConsts
+		// It's debatable whether we handle this "properly", as most callers just
+		// do `First ()`, but it's been working for years so I'm not changing it.
+		// Exposes an IReadOnlyDictionary so caller cannot bypass our AddType/RemoveType code.
+		public  IReadOnlyDictionary<string, List<JavaType>>   Types => types;
+
+		// Use this for a flat list of *all* types
+		public IEnumerable<JavaType> AllTypes => Types.Values.SelectMany (v => v);
+
+		public void AddType (JavaType type)
+		{
+			// If this is a duplicate key, add it to existing list
+			if (Types.TryGetValue (type.Name!, out var list)) {
+				list.Add (type);
+				return;
+			}
+
+			// Add to a new list
+			var new_list = new List<JavaType> ();
+			new_list.Add (type);
+
+			types.Add (type.Name!, new_list);
+		}
+
+		public void RemoveType (JavaType type)
+		{
+			if (!Types.TryGetValue (type.Name!, out var list))
+				return;
+
+			// Remove 1 type from list if it contains multiple types
+			if (list.Count > 1) {
+				list.Remove (type);
+				return;
+			}
+
+			// Remove the whole dictionary entry
+			types.Remove (type.Name!);
+		}
+
+		public void ClearTypes ()
+		{
+			types.Clear ();
+		}
+
 		// Content of this value is not stable.
 		public override string ToString ()
 		{
@@ -123,14 +171,14 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			dummy_system_package = new JavaPackage (null) { Name = "System" };
 			system_object = new ManagedType (dummy_system_package) { Name = "Object" };
 			system_exception = new ManagedType (dummy_system_package) { Name = "Exception" };
-			dummy_system_package.Types.Add (system_object);
-			dummy_system_package.Types.Add (system_exception);
+			dummy_system_package.AddType (system_object);
+			dummy_system_package.AddType (system_exception);
 			dummy_system_io_package = new JavaPackage (null) { Name = "System.IO" };
 			system_io_stream = new ManagedType (dummy_system_io_package) { Name = "Stream" };
-			dummy_system_io_package.Types.Add (system_io_stream);
+			dummy_system_io_package.AddType (system_io_stream);
 			dummy_system_xml_package = new JavaPackage (null) { Name = "System.Xml" };
 			system_xml_xmlreader = new ManagedType (dummy_system_xml_package) { Name = "XmlReader" };
-			dummy_system_io_package.Types.Add (system_xml_xmlreader);
+			dummy_system_io_package.AddType (system_xml_xmlreader);
 		}
 
 		public static IEnumerable<JavaPackage> DummyManagedPackages {

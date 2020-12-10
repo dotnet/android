@@ -32,11 +32,14 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 						break; // </api>
 					if (reader.NodeType != XmlNodeType.Element || reader.LocalName != "package")
 						throw XmlUtil.UnexpectedElementOrContent ("api", reader, "package");
-					var pkg = api.Packages.FirstOrDefault (p => p.Name == reader.GetAttribute ("name"));
-					if (pkg == null) {
+
+					var name = reader.GetAttribute ("name");
+
+					if (!api.Packages.TryGetValue (name, out var pkg)) {
 						pkg = new JavaPackage (api);
-						api.Packages.Add (pkg);
+						api.Packages.Add (name, pkg);
 					}
+
 					pkg.Load (reader, isReferenceOnly);
 				} while (true);
 	
@@ -67,11 +70,11 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 					if (reader.LocalName == "class") {
 						var kls = new JavaClass (package) { IsReferenceOnly = isReferenceOnly };
 						kls.Load (reader);
-						package.Types.Add (kls);
+						package.AddType (kls);
 					} else if (reader.LocalName == "interface") {
 						var iface = new JavaInterface (package) { IsReferenceOnly = isReferenceOnly };
 						iface.Load (reader);
-						package.Types.Add (iface);
+						package.AddType (iface);
 					} else
 						throw XmlUtil.UnexpectedElementOrContent ("package", reader, "class", "interface");
 				} while (true);

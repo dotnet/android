@@ -35,7 +35,7 @@ class Example {
 			Assert.AreEqual (null, package.Name);
 			Assert.AreEqual (1, package.Types.Count);
 
-			var Example_Type = package.Types [0];
+			var Example_Type = package.AllTypes.First ();
 			Assert.AreEqual ("Example", Example_Type.FullName);
 
 			Assert.AreEqual (1, Example_Type.Members.Count);

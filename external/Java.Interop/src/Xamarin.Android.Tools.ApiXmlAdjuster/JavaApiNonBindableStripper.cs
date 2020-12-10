@@ -9,7 +9,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		public static void StripNonBindables (this JavaApi api)
 		{
 			var invalids = new List<JavaMember> ();
-			foreach (var member in api.Packages.SelectMany (p => p.Types)
+			foreach (var member in api.AllPackages.SelectMany (p => p.AllTypes)
 			         .SelectMany (t => t.Members).Where (m => m.Name != null && m.Name.Contains ('$')))
 				invalids.Add (member);
 			foreach (var invalid in invalids)

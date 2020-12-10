@@ -31,11 +31,11 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 				}
 			};
 
-			foreach (var package in api.Packages) {
+			foreach (var package in api.AllPackages.OrderBy (p => p.Name)) {
 				writer.WriteStartElement ("package");
 				writer.WriteAttributeString ("name", package.Name);
 
-				foreach (var type in package.Types) {
+				foreach (var type in package.AllTypes.OrderBy (t => t.Name)) {
 					if (!type.Members.OfType<JavaMethodBase> ().Any (m => m.Parameters.Any ()))
 						continue; // we care only about types that has any methods that have parameters.
 					
@@ -115,12 +115,12 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 					writer.Write ($"{indent}<{string.Join (",", tps.TypeParameters.Select (p => p.Name))}>");
 			};
 
-			foreach (var package in api.Packages) {
+			foreach (var package in api.AllPackages.OrderBy (p => p.Name)) {
 				writer.WriteLine ();
 				writer.WriteLine ($"package {package.Name}");
 				writer.WriteLine (";---------------------------------------");
 
-				foreach (var type in package.Types) {
+				foreach (var type in package.AllTypes.OrderBy (t => t.Name)) {
 					if (!type.Members.OfType<JavaMethodBase> ().Any (m => m.Parameters.Any ()))
 						continue; // we care only about types that has any methods that have parameters.
 					writer.Write (type is JavaClass ? "  class " : "  interface ");

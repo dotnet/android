@@ -97,15 +97,15 @@ namespace Xamarin.Android.ApiTools.DroidDocImporter
 				bool isClass = apiSignatureTokens.Contains ("class");
 				options.DiagnosticWriter.WriteLine (apiSignatureTokens);
 
-				var javaPackage = api.Packages.FirstOrDefault (p => p.Name == packageName);
+				var javaPackage = api.AllPackages.FirstOrDefault (p => p.Name == packageName);
 				if (javaPackage == null) {
 					javaPackage = new JavaPackage (api) { Name = packageName };
-					api.Packages.Add (javaPackage);
+					api.Packages.Add (packageName, javaPackage);
 				}
 
 				var javaType = isClass ? (JavaType)new JavaClass (javaPackage) : new JavaInterface (javaPackage);
 				javaType.Name = apiSignatureTokens.Substring (apiSignatureTokens.LastIndexOf (' ') + 1);
-				javaPackage.Types.Add (javaType);
+				javaPackage.AddType (javaType);
 
 				string sectionType = null;
 				var sep = new string [] { ", " };
@@ -166,9 +166,6 @@ namespace Xamarin.Android.ApiTools.DroidDocImporter
 					.OrderBy (m => m.Name + "(" + string.Join (",", m.Parameters.Select (p => p.Type)) + ")")
 					.ToArray ();
 			}
-			foreach (var pkg in api.Packages)
-				pkg.Types = pkg.Types.OrderBy (t => t.Name).ToArray ();
-			api.Packages = api.Packages.OrderBy (p => p.Name).ToArray ();
 
 			if (options.OutputTextFile != null)
 				api.WriteParameterNamesText (options.OutputTextFile);

@@ -39,13 +39,31 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		
 		public static JavaType FindNonGenericType (this JavaApi api, string? name)
 		{
-			var ret = FindPackages (api, name ?? "")
-				.SelectMany (p => p.Types)
-				.FirstOrDefault (t => name == (t.Parent?.Name != null ? t.Parent.Name + "." : "") + t.Name);
-			if (ret == null)
-				ret = ManagedType.DummyManagedPackages
-				                 .SelectMany (p => p.Types)
-				                 .FirstOrDefault (t => t.FullName == name);
+			// Given a type name like 'android.graphics.BitmapFactory.Options'
+			// We're going to search for:
+			// - Pkg: android.graphics.BitmapFactory  Type: Options
+			// - Pkg: android.graphics                Type: BitmapFactory.Options
+			// - Pkg: android                         Type: graphics.BitmapFactory.Options
+			// etc.  We will short-circuit as soon as we find a match
+			var index = name?.LastIndexOf ('.') ?? -1;
+
+			while (index > 0) {
+				var ns = name!.Substring (0, index);
+				var type_name = name.Substring (index + 1);
+
+				if (api.Packages.TryGetValue (ns, out var pkg)) {
+					if (pkg.Types.TryGetValue (type_name, out var type))
+						return type.First ();
+				}
+
+				index = name.LastIndexOf ('.', index - 1);
+			}
+
+			// See if it's purely a C# type
+			var ret = ManagedType.DummyManagedPackages
+				.SelectMany (p => p.AllTypes)
+				.FirstOrDefault (t => t.FullName == name);
+
 			if (ret == null) {
 				// We moved this type to "mono.android.app.IntentService" which makes this
 				// type resolution fail if a user tries to reference it in Java.
@@ -58,43 +76,26 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			return ret;
 		}
 
-		static IEnumerable<JavaPackage> FindPackages (JavaApi api, string name)
-		{
-			// Given a type name like "java.lang.Object", return packages that could
-			// possibly contain the type so we don't search all packages, ie:
-			// - java.lang
-			// - java
-			var package_names = new List<string> ();
-			int index;
-
-			while ((index = name.LastIndexOf ('.')) >= 0) {
-				name = name.Substring (0, index);
-				package_names.Add (name);
-			}
-
-			return api.Packages.Where (p => package_names.Contains (p.Name, StringComparer.Ordinal)).ToList ();
-		}
-
 		public static void Resolve (this JavaApi api)
 		{
 			while (true) {
 				bool errors = false;
-				foreach (var t in api.Packages.SelectMany (p => p.Types).OfType<JavaClass> ().ToArray ())
+				foreach (var t in api.AllPackages.SelectMany (p => p.AllTypes).OfType<JavaClass> ().ToArray ())
 					try {
 						t.Resolve ();
 					}
 					catch (JavaTypeResolutionException ex) {
 						Log.LogError ("Error while processing type '{0}': {1}", t, ex.Message);
 						errors = true;
-						t.Parent?.Types.Remove (t);
+						t.Parent?.RemoveType (t);
 					}
-				foreach (var t in api.Packages.SelectMany (p => p.Types).OfType<JavaInterface> ().ToArray ())
+				foreach (var t in api.AllPackages.SelectMany (p => p.AllTypes).OfType<JavaInterface> ().ToArray ())
 					try {
 						t.Resolve ();
 					} catch (JavaTypeResolutionException ex) {
 						Log.LogError ("Error while processing type '{0}': {1}", t, ex.Message);
 						errors = true;
-						t.Parent?.Types.Remove (t);
+						t.Parent?.RemoveType (t);
 					}
 				if (!errors)
 					break;

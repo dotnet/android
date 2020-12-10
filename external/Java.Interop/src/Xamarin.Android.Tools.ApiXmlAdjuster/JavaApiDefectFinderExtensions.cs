@@ -7,7 +7,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 	{
 		public static void FindDefects (this JavaApi api)
 		{
-			foreach (var type in api.Packages.SelectMany (p => p.Types).Where (t => !t.IsReferenceOnly))
+			foreach (var type in api.AllPackages.SelectMany (p => p.AllTypes).Where (t => !t.IsReferenceOnly))
 				type.FindDefects ();
 		}
 		

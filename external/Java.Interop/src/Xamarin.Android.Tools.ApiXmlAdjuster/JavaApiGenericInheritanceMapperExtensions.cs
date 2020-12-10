@@ -8,7 +8,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 	{
 		public static void CreateGenericInheritanceMapping (this JavaApi api)
 		{
-			foreach (var kls in api.Packages.SelectMany (p => p.Types).OfType<JavaClass> ())
+			foreach (var kls in api.AllPackages.SelectMany (p => p.AllTypes).OfType<JavaClass> ())
 				kls.PrepareGenericInheritanceMapping ();
 		}
 		

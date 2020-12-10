@@ -24,15 +24,15 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			if (api.Platform != null)
 				writer.WriteAttributeString ("platform", api.Platform);
 
-			foreach (var pkg in api.Packages) {
-				if (!pkg.Types.Any (t => !t.IsReferenceOnly))
+			foreach (var pkg in api.AllPackages) {
+				if (!pkg.AllTypes.Any (t => !t.IsReferenceOnly))
 					continue;
 				writer.WriteStartElement ("package");
 				writer.WriteAttributeString ("name", pkg.Name);
 				if (!string.IsNullOrEmpty (pkg.JniName)) {
 					writer.WriteAttributeString ("jni-name", pkg.JniName);
 				}
-				foreach (var type in pkg.Types) {
+				foreach (var type in pkg.AllTypes) {
 					if (type.IsReferenceOnly)
 						continue; // skip reference only types
 					if (type is JavaClass)

@@ -315,7 +315,12 @@ namespace Java.Interop.Tools.JavaSource {
 			identifier.AstConfig.NodeCreator = (ctx, node) => node.AstNode = node.Token.ValueString;
 			compile_unit.AstConfig.NodeCreator = (ctx, node) => {
 				ProcessChildren (ctx, node);
-				node.AstNode = new JavaPackage (null) { Name = (string)node.ChildNodes [0].AstNode, Types = ((IEnumerable<JavaType>)node.ChildNodes [2].AstNode).ToList () };
+				var pkg = new JavaPackage (null) { Name = (string) node.ChildNodes [0].AstNode };
+
+				foreach (var t in (IEnumerable<JavaType>) node.ChildNodes [2].AstNode)
+					pkg.AddType (t);
+
+				node.AstNode = pkg;
 			};
 			opt_package_decl.AstConfig.NodeCreator = SelectSingleChild;
 			package_decl.AstConfig.NodeCreator = SelectChildValueAt (1);
@@ -637,9 +642,13 @@ namespace Java.Interop.Tools.JavaSource {
 		void FlattenNestedTypes (JavaPackage package)
 		{
 			var results = new List<JavaType> ();
-			foreach (var t in package.Types)
+			foreach (var t in package.AllTypes)
 				Flatten (results, t);
-			package.Types = results.ToList ();
+
+			package.ClearTypes ();
+
+			foreach (var t in results)
+				package.AddType (t);
 
 			void Flatten (List<JavaType> list, JavaType t)
 			{

@@ -53,7 +53,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster.Tests
 			xapi.Resolve ();
 			xapi.CreateGenericInheritanceMapping ();
 			xapi.MarkOverrides ();
-			var t = xapi.Packages.First (_ => _.Name == "XXX").Types.First (_ => _.Name == "SherlockExpandableListActivity");
+			var t = xapi.AllPackages.First (_ => _.Name == "XXX").AllTypes.First (_ => _.Name == "SherlockExpandableListActivity");
 			var m = t.Members.OfType<JavaMethod> ().First (_ => _.Name == "addContentView");
 			Assert.IsNotNull (m.BaseMethod, "base method not found");
 		}
@@ -88,7 +88,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster.Tests
 			xapi = new JavaApi ();
 			using (var xr = XmlReader.Create (new StringReader (sw.ToString ())))
 				xapi.Load (xr, true);
-			var t = xapi.Packages.First (_ => _.Name == "XXX").Types.First (_ => _.Name == "GenericConstructors");
+			var t = xapi.AllPackages.First (_ => _.Name == "XXX").AllTypes.First (_ => _.Name == "GenericConstructors");
 			var m = t.Members.OfType<JavaConstructor> ().FirstOrDefault ();
 			Assert.IsNotNull (m.TypeParameters, "constructor not found");
 		}

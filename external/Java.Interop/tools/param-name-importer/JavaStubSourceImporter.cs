@@ -28,8 +28,8 @@ namespace Xamarin.Android.ApiTools.JavaStubImporter
 						break;
 				}
 			}
-			foreach (var pkg in api.Packages) {
-				foreach (var t in pkg.Types) {
+			foreach (var pkg in api.AllPackages) {
+				foreach (var t in pkg.AllTypes.OrderBy (t => t.Name)) {
 					// Our API definitions don't contain non-public members, so remove those (but it does contain non-public types).
 					t.Members = t.Members.Where (m => m != null && m.Visibility != "").ToList ();
 					// Constructor "type" is the full name of the class.
@@ -56,9 +56,7 @@ namespace Xamarin.Android.ApiTools.JavaStubImporter
 						.OrderBy (m => m.Name + "(" + string.Join (",", m.Parameters.Select (p => p.Type)) + ")")
 						.ToArray ();
 				}
-				pkg.Types = pkg.Types.OrderBy (t => t.Name).ToArray ();
 			}
-			api.Packages = api.Packages.OrderBy (p => p.Name).ToArray ();
 
 			if (options.OutputTextFile != null)
 				api.WriteParameterNamesText (options.OutputTextFile);
@@ -78,14 +76,14 @@ namespace Xamarin.Android.ApiTools.JavaStubImporter
 			if (parsedPackage == null) {
 				return false;
 			}
-			var pkg = api.Packages.FirstOrDefault (p => p.Name == parsedPackage.Name);
+			var pkg = api.AllPackages.FirstOrDefault (p => p.Name == parsedPackage.Name);
 			if (pkg == null) {
-				api.Packages.Add (parsedPackage);
+				api.AllPackages.Add (parsedPackage);
 				pkg = parsedPackage;
 			} else
-				foreach (var t in parsedPackage.Types)
-					pkg.Types.Add (t);
-			pkg.Types = pkg.Types.OrderBy (t => t.Name).ToList ();
+				foreach (var t in parsedPackage.AllTypes)
+					pkg.AddType (t);
+
 			return true;
 		}
 	}

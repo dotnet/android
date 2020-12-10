@@ -76,20 +76,20 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster.Tests
 			var api = JavaApiTestHelper.GetLoadedApi ();
 
 			// Create "mono.android.app" package
-			var mono_android_app = new JavaPackage (api) { Name = "mono.android.app", JniName = "mono/android/app", Types = new List<JavaType> () };
-			api.Packages.Add (mono_android_app);
+			var mono_android_app = new JavaPackage (api) { Name = "mono.android.app", JniName = "mono/android/app" };
+			api.Packages.Add (mono_android_app.Name, mono_android_app);
 
 			// Remove "android.app.IntentService" type
-			var android_app = api.Packages.Single (p => p.Name == "android.app");
-			var intent_service = android_app.Types.Single (t => t.Name == "IntentService");
-			android_app.Types.Remove (intent_service);
+			var android_app = api.AllPackages.Single (p => p.Name == "android.app");
+			var intent_service = android_app.AllTypes.Single (t => t.Name == "IntentService");
+			android_app.RemoveType (intent_service);
 
 			// Create new "mono.android.app.IntentService" type
 			var new_intent_service = new JavaClass (mono_android_app) {
 				Name = intent_service.Name,
 			};
 
-			mono_android_app.Types.Add (new_intent_service);
+			mono_android_app.AddType (new_intent_service);
 
 			api.Resolve ();
 

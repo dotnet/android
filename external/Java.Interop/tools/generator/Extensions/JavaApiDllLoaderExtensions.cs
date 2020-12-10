@@ -12,19 +12,21 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		{
 			JavaPackage pkg = null;
 			foreach (var gen in gens.Where (_ => _.IsAcw)) {
-				pkg = api.Packages.FirstOrDefault (_ => _.Name == gen.PackageName);
-				if (pkg == null) {
+				if (!api.Packages.TryGetValue (gen.PackageName, out pkg)) {
 					pkg = new JavaPackage (api) { Name = gen.PackageName };
-					api.Packages.Add (pkg);
+					api.Packages.Add (pkg.Name, pkg);
 				}
-				if (gen is InterfaceGen) {
+
+				if (gen is InterfaceGen iface_gen) {
 					var iface = new JavaInterface (pkg);
-					pkg.Types.Add (iface);
-					iface.Load ((InterfaceGen) gen);
-				} else if (gen is ClassGen c) {
+					iface.Load (iface_gen);
+
+					pkg.AddType (iface);
+				} else if (gen is ClassGen class_gen) {
 					var kls = new JavaClass (pkg);
-					pkg.Types.Add (kls);
-					kls.Load (opt, c);
+					kls.Load (opt, class_gen);
+
+					pkg.AddType (kls);
 				}
 				else
 					throw new InvalidOperationException ();
