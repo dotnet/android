@@ -7,7 +7,12 @@
 		<type fullname="Android.Runtime.IJavaObject" />
 		<type fullname="Android.Runtime.InputStreamAdapter" />
 		<type fullname="Android.Runtime.InputStreamInvoker" />
-		<type fullname="Android.Runtime.JNIEnv" />
+		<type fullname="Android.Runtime.JNIEnv">
+			<method name="Exit" />
+			<method name="Initialize" />
+			<method name="PropagateUncaughtException" />
+			<method name="RegisterJniNatives" />
+		</type>
 		<type fullname="Android.Runtime.JniNativeInterfaceStruct" />
 		<type fullname="Android.Runtime.JniNativeInterfaceInvoker" />
 		<type fullname="Android.Runtime.JNINativeWrapper" />
