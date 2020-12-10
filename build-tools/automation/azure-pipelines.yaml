@@ -1260,9 +1260,9 @@ stages:
         pwsh notarize.ps1 -FolderForApps $(System.DefaultWorkingDirectory)/storage-artifacts
       displayName: Notarize PKG
 
-  - powershell: |
-      & brew link azure-cli
-    displayName: 'Link azure-cli'
+    - powershell: |
+        & brew link azure-cli
+      displayName: 'Link azure-cli'
 
     - script: xcrun stapler validate $(XA.Unsigned.Pkg)
       displayName: validate notarized pkg
