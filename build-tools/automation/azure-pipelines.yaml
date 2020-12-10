@@ -21,7 +21,7 @@ resources:
   - repository: release_scripts
     type: github
     name: xamarin/release-scripts
-    ref: refs/heads/sign-and-notarized
+    ref: refs/heads/dev/trevors/sign-and-notarized/logging
     endpoint: xamarin
   - repository: uitools
     type: github
@@ -1258,6 +1258,7 @@ stages:
     - script: >
         cd $(System.DefaultWorkingDirectory)/release-scripts &&
         pwsh notarize.ps1 -FolderForApps $(System.DefaultWorkingDirectory)/storage-artifacts
+      failOnStderr: true
       displayName: Notarize PKG
 
     - powershell: |
