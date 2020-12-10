@@ -1204,48 +1204,48 @@ stages:
       parameters:
         UnsignedPkgPath: $(XA.Unsigned.Pkg)
 
-  - powershell: |
-      # We require at a minimum version 2.8.0 of the azure cli installed for the ESRP signing
-      # First, check for what version is currently installed on the machine
-      & brew link azure-cli
-      $Versions = & az --version 
-      $AzureVersion = $Versions[0]
-      $AzureVersionFields = $AzureVersion.split(" ", [StringSplitOptions]::RemoveEmptyEntries)
-      $CurrentVersion = New-Object -TypeName System.Version -ArgumentList $AzureVersionFields[1]
-      $Version280 = New-Object -TypeName System.Version -ArgumentList "2.8.0"
+    - powershell: |
+        # We require at a minimum version 2.8.0 of the azure cli installed for the ESRP signing
+        # First, check for what version is currently installed on the machine
+        & brew link azure-cli
+        $Versions = & az --version 
+        $AzureVersion = $Versions[0]
+        $AzureVersionFields = $AzureVersion.split(" ", [StringSplitOptions]::RemoveEmptyEntries)
+        $CurrentVersion = New-Object -TypeName System.Version -ArgumentList $AzureVersionFields[1]
+        $Version280 = New-Object -TypeName System.Version -ArgumentList "2.8.0"
 
-      Write-Host "Current Version of azure-cli is $CurrentVersion"
+        Write-Host "Current Version of azure-cli is $CurrentVersion"
 
-      # Check if version 2.8 is higher than the current version.
-      # If it is then we need to do work and download and install the 2.8.0 version of the azure cli in
-      # a really really freaked out non-intuitive way using brew. Why is this so hard to do???
-      # https://stackoverflow.com/questions/62785290/installing-previous-versions-of-a-formula-with-brew-extract
-      if ($Version280 -gt $CurrentVersion)
-      {
-          Write-Host "Version $CurrentVersion of azure-cli is lower than 2.8.0.  Installing the 2.8.0 version of azure-cli..."
+        # Check if version 2.8 is higher than the current version.
+        # If it is then we need to do work and download and install the 2.8.0 version of the azure cli in
+        # a really really freaked out non-intuitive way using brew. Why is this so hard to do???
+        # https://stackoverflow.com/questions/62785290/installing-previous-versions-of-a-formula-with-brew-extract
+        if ($Version280 -gt $CurrentVersion)
+        {
+            Write-Host "Version $CurrentVersion of azure-cli is lower than 2.8.0.  Installing the 2.8.0 version of azure-cli..."
 
-          & brew untap builder/azure-cli
+            & brew untap builder/azure-cli
 
-          # unlink the current version
-          & brew unlink azure-cli
+            # unlink the current version
+            & brew unlink azure-cli
 
-          # Create a new tap
-          & brew tap-new builder/azure-cli
+            # Create a new tap
+            & brew tap-new builder/azure-cli
 
-          # Extract version 2.8.0 to the tap
-          & brew extract --force --version 2.8.0 azure-cli builder/azure-cli
+            # Extract version 2.8.0 to the tap
+            & brew extract --force --version 2.8.0 azure-cli builder/azure-cli
 
-          # Install this version 
-          & brew install builder/azure-cli/azure-cli@2.8.0
+            # Install this version 
+            & brew install builder/azure-cli/azure-cli@2.8.0
 
-          # link this version to start using it
-          & brew link azure-cli@2.8.0
-      }
-      else 
-      {
-          Write-Host "Version $CurrentVersion of azure-cli is higher than 2.8.0.  Nothin to do..."
-      }
-    displayName: 'Install Azure CLI >= 2.8.0'
+            # link this version to start using it
+            & brew link azure-cli@2.8.0
+        }
+        else 
+        {
+            Write-Host "Version $CurrentVersion of azure-cli is higher than 2.8.0.  Nothin to do..."
+        }
+      displayName: 'Install Azure CLI >= 2.8.0'
 
     - task: MicroBuildSigningPlugin@3
       displayName: Install Signing Plugin
