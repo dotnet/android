@@ -1,6 +1,7 @@
 package com.microsoft.android;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -34,8 +35,6 @@ import com.github.javaparser.ParseResult;
 import com.github.javaparser.ast.CompilationUnit;
 
 import com.microsoft.android.ast.*;
-
-import javassist.compiler.ast.FieldDecl;
 
 import static com.microsoft.android.util.Parameter.*;
 
@@ -89,6 +88,8 @@ public final class JniPackagesInfoFactory {
 			? unit.getPackageDeclaration().get().getNameAsString()
 			: "";
 		final   JniPackageInfo packageInfo  = packages.getPackage(packageName);
+
+		fixJavadocComments(unit, unit.getTypes());
 
 		for (final TypeDeclaration<?> type : unit.getTypes()) {
 			if (JavaSourceUtilsOptions.verboseOutput && type.getFullyQualifiedName().isPresent()) {
@@ -171,6 +172,7 @@ public final class JniPackagesInfoFactory {
 	}
 
 	private final void parseType(final JniPackageInfo packageInfo, final JniTypeInfo typeInfo, TypeDeclaration<?> typeDecl) {
+		fixJavadocComments(typeDecl, getUndocumentedBodyMembers(typeDecl.getMembers()));
 		for (final BodyDeclaration<?> body : typeDecl.getMembers()) {
 			if (body.isAnnotationDeclaration()) {
 				final   AnnotationDeclaration       annoDecl    = body.asAnnotationDeclaration();
@@ -213,6 +215,68 @@ public final class JniPackagesInfoFactory {
 			System.out.println("# TODO: unknown body member " + body.getClass().getName());
 			System.out.println(body.toString());
 		}
+	}
+
+	private final void fixJavadocComments(final Node decl, final Iterable<? extends BodyDeclaration<?>> bodyMembers) {
+		final List<BodyDeclaration<?>>  members             = getUndocumentedBodyMembers(bodyMembers);
+		final List<JavadocComment>      orphanedComments    = getOrphanComments(decl);
+
+		if (members.size() == 0)
+			return;
+
+		final BodyDeclaration<?>        firstMember = members.get(0);
+		JavadocComment                  comment     = orphanedComments.stream()
+			.filter(c -> c.getBegin().get().isBefore(firstMember.getBegin().get()))
+			.reduce((a, b) -> b)
+			.orElse(null);
+		if (comment != null) {
+			((NodeWithJavadoc<?>) firstMember).setJavadocComment(comment);
+		}
+
+		for (int i = 1; i < members.size(); ++i) {
+			BodyDeclaration<?> prevMember   = members.get(i-1);
+			BodyDeclaration<?> member       = members.get(i);
+
+			Optional<JavadocComment> commentOpt = orphanedComments.stream()
+				.filter(c -> c.getBegin().get().isAfter(prevMember.getEnd().get()) &&
+					c.getEnd().get().isBefore(member.getBegin().get()))
+				.findFirst();
+			if (!commentOpt.isPresent())
+				continue;
+			((NodeWithJavadoc<?>)member).setJavadocComment(commentOpt.get());
+		}
+	}
+
+	private final List<BodyDeclaration<?>> getUndocumentedBodyMembers(Iterable<? extends BodyDeclaration<?>> bodyMembers) {
+		final List<BodyDeclaration<?>> members = new ArrayList<BodyDeclaration<?>> ();
+		for (BodyDeclaration<?> member : bodyMembers) {
+			if (!(member instanceof NodeWithJavadoc<?>)) {
+				continue;
+			}
+			final NodeWithJavadoc<?> memberJavadoc = (NodeWithJavadoc<?>) member;
+			if (memberJavadoc.getJavadocComment().isPresent())
+				continue;
+			final Optional<Position> memberBeginOpt = member.getBegin();
+			if (!memberBeginOpt.isPresent())
+				continue;
+			members.add(member);
+		}
+		members.sort((a, b) -> a.getBegin().get().compareTo(b.getBegin().get()));
+		return members;
+	}
+
+	private final List<JavadocComment> getOrphanComments(Node decl) {
+		final List<JavadocComment> orphanedComments = new ArrayList<JavadocComment>(decl.getOrphanComments().size());
+		for (Comment c : decl.getOrphanComments()) {
+			if (!c.isJavadocComment())
+				continue;
+			final Optional<Position> commentBeginOpt = c.getBegin();
+			if (!commentBeginOpt.isPresent())
+				continue;
+			orphanedComments.add(c.asJavadocComment());
+		}
+		orphanedComments.sort((a, b) -> a.getBegin().get().compareTo(b.getBegin().get()));
+		return orphanedComments;
 	}
 
 	private final void parseAnnotationMemberDecl(final JniTypeInfo typeInfo, final AnnotationMemberDeclaration memberDecl) {
@@ -266,30 +330,8 @@ public final class JniPackagesInfoFactory {
 		JavadocComment javadoc = null;
 		if (nodeWithJavadoc.getJavadocComment().isPresent()) {
 			javadoc = nodeWithJavadoc.getJavadocComment().get();
-		} else {
-			Node node = (Node) nodeWithJavadoc;
-			if (!node.getParentNode().isPresent())
-				return;
-
-			/*
-			 * Sometimes `JavaParser` won't associate a Javadoc comment block with
-			 * the AST node we expect it to.  In such circumstances the Javadoc
-			 * comment will become an "orphan" comment, unassociated with anything.
-			 *
-			 * If `nodeWithJavadoc` has no Javadoc comment, use the *first*
-			 * orphan Javadoc comment in the *parent* scope, then *remove* that
-			 * comment so that it doesn't "stick around" for the next member we
-			 * attempt to grab Javadoc comments for.
-			 */
-			Node parent = node.getParentNode().get();
-			for (Comment c : parent.getOrphanComments()) {
-				if (c.isJavadocComment()) {
-					javadoc = c.asJavadocComment();
-					c.remove();
-					break;
-				}
-			}
 		}
+
 		if (javadoc != null) {
 			member.setJavadocComment(javadoc.parse().toText());
 		}

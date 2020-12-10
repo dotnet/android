@@ -9,7 +9,7 @@ import java.util.Map;
  * 
  * JNI sig: Lexample/Outer;
  */
-
+// Cause the above Javadoc block to be orphaned from the below class declaration
  @Outer.MyAnnotation(keys={"a", "b", "c"})
 public class Outer<T extends Object & Runnable, U extends Error> {
 

@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
+import java.io.FileOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import javax.xml.parsers.ParserConfigurationException;
@@ -120,6 +121,9 @@ public final class JavadocXmlGeneratorTest {
 		final   String                  expected        = JniPackagesInfoTest.getResourceContents(resourceXml);
 
 		generator.writePackages(packagesInfo);
+		// try (FileOutputStream o = new FileOutputStream(resourceXml + "-jonp.xml")) {
+		// 	bytes.writeTo(o);
+		// }
 		assertEquals(resourceJava + " Javadoc XML", expected, bytes.toString());
 	}
 }

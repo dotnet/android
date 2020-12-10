@@ -30,8 +30,8 @@ repositories {
 
 dependencies {
     // This dependency is used by the application.
-    implementation 'com.github.javaparser:javaparser-core:3.16.1'
-    implementation 'com.github.javaparser:javaparser-symbol-solver-core:3.16.1'
+    implementation 'com.github.javaparser:javaparser-core:3.18.0'
+    implementation 'com.github.javaparser:javaparser-symbol-solver-core:3.18.0'
 
     // Use JUnit test framework
     testImplementation 'junit:junit:4.12'
