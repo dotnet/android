@@ -233,7 +233,7 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Aapt2.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Analysis.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Application.targets" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Bindings.targets" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Bindings.targets" ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Bindings.ClassParse.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Bindings.Core.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Bindings.Documentation.targets" />
@@ -249,14 +249,14 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Cecil.Mdb.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Common.props" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Common.targets" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.CSharp.targets" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.CSharp.targets" ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.D8.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Designer.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.DesignTime.targets" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.DX.targets" ExcludeFromAndroidNETSdk="true" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.DX.targets"     ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.EmbeddedResource.targets" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.FSharp.targets" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Legacy.targets" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.FSharp.targets" ExcludeFromAndroidNETSdk="true" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Legacy.targets" ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.PCLSupport.props" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.PCLSupport.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.SkipCases.projitems" />
@@ -274,8 +274,8 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.JavadocImporter.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.JavadocImporter.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Tools.Versions.props" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.VisualBasic.targets" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Wear.targets" ExcludeFromAndroidNETSdk="true" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.VisualBasic.targets" ExcludeFromAndroidNETSdk="true" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Wear.targets"        ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Build.AsyncTask.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Build.AsyncTask.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.SourceWriter.dll" />
