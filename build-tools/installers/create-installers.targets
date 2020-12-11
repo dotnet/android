@@ -145,8 +145,8 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Tools.Cecil.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Tools.Diagnostics.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Tools.Diagnostics.pdb" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Tools.Generator.dll"  ExcludeFromAndroidNETSdk="true" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Tools.Generator.pdb"  ExcludeFromAndroidNETSdk="true" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Tools.Generator.dll" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Tools.Generator.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Tools.JavaCallableWrappers.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Interop.Tools.JavaCallableWrappers.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Java.Runtime.Environment.dll" />
