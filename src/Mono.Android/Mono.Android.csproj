@@ -25,8 +25,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <!-- TODO: Default to False; ~doubles the `make jenkins` build time -->
-    <IncludeAndroidJavadoc Condition=" '$(IncludeAndroidJavadoc)' == '' And '$(AndroidFrameworkVersion)' == '$(AndroidLatestStableFrameworkVersion)'">True</IncludeAndroidJavadoc>
+    <IncludeAndroidJavadoc Condition=" '$(IncludeAndroidJavadoc)' == '' And '$(CONVERT_JAVADOC_TO_XMLDOC)' == 'true' And '$(AndroidFrameworkVersion)' == '$(AndroidLatestStableFrameworkVersion)'">True</IncludeAndroidJavadoc>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(IncludeAndroidJavadoc)' == 'True' ">
