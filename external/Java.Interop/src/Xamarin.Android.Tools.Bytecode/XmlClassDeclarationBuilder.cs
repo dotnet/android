@@ -464,6 +464,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 			// https://stackoverflow.com/questions/4963300/which-notnull-java-annotation-should-i-use
 			switch (annotation.Type) {
 				case "Landroid/annotation/NonNull;":
+				case "Landroidx/annotation/NonNull;":
 				case "Landroidx/annotation/RecentlyNonNull;":
 				case "Ljavax/validation/constraints/NotNull;":
 				case "Ledu/umd/cs/findbugs/annotations/NonNull;":
