@@ -22,8 +22,8 @@ It is shared between "legacy" binding projects and .NET 5 projects.
     <_GeneratorStampFile>$(IntermediateOutputPath)generator.stamp</_GeneratorStampFile>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(_UseLegacyJavadocImport' != 'True' ">
-    <DocumentationFile Condition=" '$(DocumentationFile)' == '' ">$(OutputPath)\$(AssemblyName).xml</DocumentationFile>
+  <PropertyGroup Condition=" '$(_UseLegacyJavadocImport)' != 'true' ">
+    <DocumentationFile Condition=" '$(DocumentationFile)' == '' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' ">$(OutputPath)$(AssemblyName).xml</DocumentationFile>
     <NoWarn Condition=" '$(DocumentationFile)' != '' ">$(NoWarn);CS1573;CS1591</NoWarn>
   </PropertyGroup>
 

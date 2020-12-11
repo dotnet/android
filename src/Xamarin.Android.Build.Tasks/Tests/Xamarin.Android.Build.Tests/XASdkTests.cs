@@ -372,9 +372,9 @@ namespace Xamarin.Android.Build.Tests
 			var expectedFiles = new[]{
 				$"{proj.ProjectName}.dll",
 				$"{proj.ProjectName}.pdb",
-				$"{proj.ProjectName}.xml",
 				$"{proj.PackageName}.apk",
 				$"{proj.PackageName}-Signed.apk",
+				$"{proj.ProjectName}.xml",
 			};
 			CollectionAssert.AreEqual (expectedFiles, files, $"Expected: {string.Join (";", expectedFiles)}\n   Found: {string.Join (";", files)}");
 
