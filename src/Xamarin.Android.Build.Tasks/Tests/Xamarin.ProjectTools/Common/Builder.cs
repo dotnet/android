@@ -399,12 +399,17 @@ namespace Xamarin.ProjectTools
 					if (psi.RedirectStandardError)
 						err.WaitOne ();
 					result = ranToCompletion && p.ExitCode == 0;
+					if (processLog != null) {
+						if (ranToCompletion) {
+							File.AppendAllText (processLog, $"ExitCode: {p.ExitCode}{Environment.NewLine}");
+						} else {
+							File.AppendAllText (processLog, $"Build Timed Out!{Environment.ExitCode}");
+						}
+					}
 				}
 
 				LastBuildTime = DateTime.UtcNow - start;
 
-				if (processLog != null && !ranToCompletion)
-					File.AppendAllText (processLog, "Build Timed Out!");
 				if (buildLogFullPath != null && File.Exists (buildLogFullPath)) {
 					foreach (var line in LastBuildOutput) {
 						if (line.StartsWith ("Time Elapsed", StringComparison.OrdinalIgnoreCase)) {
