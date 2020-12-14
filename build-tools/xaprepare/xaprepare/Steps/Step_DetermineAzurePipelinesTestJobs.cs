@@ -48,7 +48,7 @@ namespace Xamarin.Android.Prepare
 				// BCL: Runs BCL tests on emulator
 				// TimeZone: Runs timezone unit tests on emulator
 				// Designer: Runs designer integration tests
-				if (file == ".external") {
+				if (file == ".external" || file == "Configuration.props") {
 					testAreas.Add ("MSBuild");
 					testAreas.Add ("MSBuildDevice");
 					testAreas.Add ("BCL");
