@@ -22,14 +22,11 @@ Xamarin.Android and Xamarin.iOS/Mac SDKs:
 * `$(ApplicationVersion)` maps to `android:versionName` or
   `CFBundleVersion`. This is a version string that must be incremented
   for each iOS App Store or TestFlight submission.
-* `$(ApplicationVersionCode)` maps to `android:versionCode` (_Android
+* `$(AndroidVersionCode)` maps to `android:versionCode` (_Android
   only)_. This is unfortunately an integer and must be incremented for
-  each Google Play submission. If omitted, the Android SDK can use
-  `$(ApplicationVersion)` for values up to 128.128.128.128. We can
-  pack most version strings into a 32-bit integer by default.
-* `$(ApplicationDisplayVersion)` maps to `CFBundleShortVersionString`
-  (_iOS only)_. This can default to `$(ApplicationVersion)` when
-  blank.
+  each Google Play submission.
+* `$(AppleShortVersion)` maps to `CFBundleShortVersionString` (_iOS
+  only)_. This can default to `$(ApplicationVersion)` when blank.
 * `$(ApplicationTitle)` maps to `/application/@android:title` or
   `CFBundleDisplayName`
 
@@ -71,8 +68,10 @@ The full list of defaults might be something like:
 ```xml
 <PropertyGroup>
   <ApplicationVersion Condition=" '$(ApplicationVersion)' == '' ">1.0</ApplicationVersion>
-  <!-- $(ApplicationDisplayVersion) is iOS only -->
-  <ApplicationDisplayVersion Condition=" '$(ApplicationDisplayVersion)' == '' ">$(ApplicationVersion)</ApplicationVersion>
+  <!-- Android only -->
+  <AndroidVersionCode Condition=" '$(AndroidVersionCode)' == '' ">1</AndroidVersionCode>
+  <!-- Apple platforms only -->
+  <AppleShortVersion Condition=" '$(AppleShortVersion)' == '' ">$(AppleShortVersion)</ApplicationVersion>
   <AssemblyVersion Condition=" '$(AssemblyVersion)' == '' ">$(ApplicationVersion)</AssemblyVersion>
   <FileVersion Condition=" '$(FileVersion)' == '' ">$(ApplicationVersion)</FileVersion>
 </PropertyGroup>
@@ -90,6 +89,7 @@ The default Android project template would include:
     <ApplicationTitle>@string/application_title</ApplicationTitle>
     <ApplicationId>com.companyname.myapp</ApplicationId>
     <ApplicationVersion>1.0</ApplicationVersion>
+    <AndroidVersionCode>1</AndroidVersionCode>
   </PropertyGroup>
 </Project>
 
@@ -98,9 +98,6 @@ The default Android project template would include:
     <string name="application_title">MyApp</string>
 </resources>
 ```
-
-`$(ApplicationVersionCode)` is computed by a math expression to
-translate versions up to 128.128.128.128 to a 32-bit integer.
 
 Removed from `AndroidManifest.xml` in the project template:
 
@@ -127,8 +124,8 @@ The default iOS project template would include:
 </Project>
 ```
 
-`$(ApplicationDisplayVersion)` can default to `$(ApplicationVersion)`
-when blank.
+`$(AppleShortVersion)` can default to `$(ApplicationVersion)` when
+blank.
 
 Removed from `Info.plist` in the project template:
 
@@ -158,14 +155,14 @@ with:
   <PropertyGroup>
     <ApplicationTitle>Hello!</ApplicationTitle>
     <ApplicationId>com.companyname.hello</ApplicationId>
-    <!-- Increment to 1.0.1, 1.0.2, etc. on each release -->
     <ApplicationVersion>1.0.0</ApplicationVersion>
+    <AndroidVersionCode>1</AndroidVersionCode>
   </PropertyGroup>
 </Project>
 ```
 
-In this project, a developer would only need to increment
-`$(ApplicationVersion)` for each public release.
+In this project, a developer would increment `$(ApplicationVersion)`
+and `$(AndroidVersionCode)` for each public release.
 
 For our long-term vision, we could one day have a single project that
 multi-targets:
@@ -177,6 +174,7 @@ multi-targets:
     <ApplicationTitle>Hello!</ApplicationTitle>
     <ApplicationId>com.companyname.hello</ApplicationId>
     <ApplicationVersion>1.0.0</ApplicationVersion>
+    <AndroidVersionCode>1</AndroidVersionCode>
   </PropertyGroup>
 </Project>
 ```
@@ -205,8 +203,8 @@ and Android. This is a consideration for the future.
 
 In future iterations, we can consider additional MSBuild properties
 beyond `$(ApplicationTitle)`, `$(ApplicationId)`,
-`$(ApplicationVersion)`, `$(ApplicationVersionCode)`, and
-`$(ApplicationDisplayVersion)`.
+`$(ApplicationVersion)`, `$(AndroidVersionCode)`, and
+`$(AppleShortVersion)`.
 
 This is a list of additional properties that cover most of the
 property pages in Visual Studio:
