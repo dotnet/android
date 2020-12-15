@@ -17,7 +17,7 @@
 [submodule "external/lz4"]
     path = external/lz4
     url = https://github.com/lz4/lz4.git
-    branch = master
+    branch = release
 [submodule "external/mman-win32"]
     path = external/mman-win32
     url = https://github.com/witwall/mman-win32.git
