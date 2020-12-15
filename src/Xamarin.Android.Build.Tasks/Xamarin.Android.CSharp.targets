@@ -29,6 +29,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
         <TargetFrameworkIdentifier>MonoAndroid</TargetFrameworkIdentifier>
         <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == ''">v5.0</TargetFrameworkVersion>
         <LangVersion Condition=" '$(LangVersion)' == '' ">8.0</LangVersion>
+        <AndroidAddKeepAlives Condition="'$(AndroidAddKeepAlives)' == ''">True</AndroidAddKeepAlives>
         <AndroidLinkMode Condition="'$(AndroidLinkMode)' == ''">SdkOnly</AndroidLinkMode>
         <!-- The .NET SGEN tool cannot process Xamarin.Android assemblies because
              our mscorlib.dll isn't properly signed, as far as its concerned.
