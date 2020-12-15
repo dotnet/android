@@ -248,6 +248,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			// Change res/raw/bar.txt contents
+			WaitFor (1000);
 			var bar_txt = Path.Combine (FullProjectDirectory, "Resources", "raw", "bar.txt");
 			File.WriteAllText (bar_txt, contents: "baz");
 			Assert.IsTrue (dotnet.Build (), "second build should succeed");
