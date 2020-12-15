@@ -117,7 +117,6 @@
     <XAPlatformToolsVersion>30.0.2</XAPlatformToolsVersion>
     <XAIncludeProprietaryBits Condition="'$(XAIncludeProprietaryBits)' == ''">False</XAIncludeProprietaryBits>
     <XABundleToolVersion Condition="'$(XABundleToolVersion)' == ''">1.2.0</XABundleToolVersion>
-    <XAManifestMergerToolVersion Condition="'$(XAManifestMergerToolVersion)' == ''">26.5.0</XAManifestMergerToolVersion>
     <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' And '$(NUGET_PACKAGES)' != '' ">$(NUGET_PACKAGES)</XAPackagesDir>
     <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' ">$(XamarinAndroidSourcePath)\packages</XAPackagesDir>
     <PathSeparator>$([System.IO.Path]::PathSeparator)</PathSeparator>
