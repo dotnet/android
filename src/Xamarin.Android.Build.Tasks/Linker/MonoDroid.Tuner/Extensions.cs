@@ -46,12 +46,29 @@ namespace MonoDroid.Tuner {
 			return td != null ? td.FullName + "," + td.Module.Assembly.FullName : arg.Value;
 		}
 
+#if !NETCOREAPP
 		public static AssemblyDefinition GetAssembly (this LinkContext context, string assemblyName)
 		{
 			AssemblyDefinition ad;
 			context.TryGetLinkedAssembly (assemblyName, out ad);
 			return ad;
 		}
+
+		public static TypeDefinition GetType (this LinkContext context, string assemblyName, string typeName)
+		{
+			AssemblyDefinition ad = context.GetAssembly (assemblyName);
+			return ad == null ? null : GetType (ad, typeName);
+		}
+
+		public static MethodDefinition GetMethod (this LinkContext context, string ns, string typeName, string name, string [] parameters)
+		{
+			var type = context.GetType (ns, typeName);
+			if (type == null)
+				return null;
+
+			return GetMethod (type, name, parameters);
+		}
+#endif
 
 		public static MethodDefinition GetMethod (TypeDefinition td, string name)
 		{
@@ -64,15 +81,6 @@ namespace MonoDroid.Tuner {
 			}
 
 			return method;
-		}
-
-		public static MethodDefinition GetMethod (this LinkContext context, string ns, string typeName, string name, string [] parameters)
-		{
-			var type = context.GetType (ns, typeName);
-			if (type == null)
-				return null;
-
-			return GetMethod (type, name, parameters);
 		}
 
 		public static MethodDefinition GetMethod (TypeDefinition type, string name, string [] parameters)
@@ -101,12 +109,6 @@ namespace MonoDroid.Tuner {
 			}
 
 			return method;
-		}
-
-		public static TypeDefinition GetType (this LinkContext context, string assemblyName, string typeName)
-		{
-			AssemblyDefinition ad = context.GetAssembly (assemblyName);
-			return ad == null ? null : GetType (ad, typeName);
 		}
 
 		public static TypeDefinition GetType (AssemblyDefinition assembly, string typeName)
