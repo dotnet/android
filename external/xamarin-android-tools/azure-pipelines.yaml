@@ -1,11 +1,11 @@
 name: Xamarin.Android.Tools $(Rev:r)
 
 trigger:
-  - master
+  - main
   - d16-*
 
 pr:
-  - master
+  - main
   - d16-*
 
 # Global variables
