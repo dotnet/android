@@ -33,15 +33,18 @@ namespace MonoDroid.Tuner
 
 		internal bool AddKeepAlives (AssemblyDefinition assembly)
 		{
-			if (assembly.MainModule.HasTypeReference ("Java.Lang.Object"))
+			if (assembly.Name.Name != "Mono.Android" && !assembly.MainModule.HasTypeReference ("Java.Lang.Object"))
 				return false;
+
 			bool changed = false;
 			List<TypeDefinition> types = assembly.MainModule.Types.ToList ();
 			foreach (TypeDefinition type in assembly.MainModule.Types)
 				AddNestedTypes (types, type);
+
 			foreach (TypeDefinition type in types)
 				if (MightNeedFix (type))
 					changed |= AddKeepAlives (type);
+
 			return changed;
 		}
 
