@@ -118,11 +118,24 @@
     </ItemGroup>
   </Target>
 
+  <Target Name="_ConfigureRuntimesInputs">
+    <ItemGroup>
+      <_ConfigureRuntimesInputs  Include="CMakeLists.txt" />
+      <_ConfigureRuntimesInputs  Include="..\..\build-tools\scripts\cmake-common.props" />
+      <_ConfigureRuntimesInputs  Include="..\..\build-tools\scripts\Ndk.targets" />
+      <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Debug\CMakeCache.txt')" />
+      <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Release\CMakeCache.txt')" />
+      <_ConfigureRuntimesOutputs Include="@(_HostRuntime->'$(IntermediateOutputPath)%(OutputDirectory)-Debug\CMakeCache.txt')" />
+      <_ConfigureRuntimesOutputs Include="@(_HostRuntime->'$(IntermediateOutputPath)%(OutputDirectory)-Release\CMakeCache.txt')" />
+    </ItemGroup>
+  </Target>
+
   <Target Name="_ConfigureRuntimes"
-      DependsOnTargets="_PrepareConfigureRuntimeCommands"
-      Inputs="CMakeLists.txt;..\..\build-tools\scripts\cmake-common.props;..\..\build-tools\scripts\Ndk.targets"
-      Outputs="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Debug\CMakeCache.txt');@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Release\CMakeCache.txt');@(_HostRuntime->'$(IntermediatePath)%(OutputDirectory)-Debug\CMakeCache.txt');@(_HostRuntime->'$(IntermediatePath)%(OutputDirectory)-Release\CMakeCache.txt')">
+      DependsOnTargets="_PrepareConfigureRuntimeCommands;_ConfigureRuntimesInputs"
+      Inputs="@(_ConfigureRuntimesInputs)"
+      Outputs="@(_ConfigureRuntimesOutputs)">
     <RunParallelCmds Commands="@(_ConfigureRuntimeCommands)" />
+    <Touch Files="@(_ConfigureRuntimesOutputs)" />
   </Target>
 
   <Target Name="_FindMonoDroidSources">
