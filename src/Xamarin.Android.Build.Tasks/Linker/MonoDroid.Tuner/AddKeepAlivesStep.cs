@@ -65,22 +65,46 @@ namespace MonoDroid.Tuner
 			return !type.IsAbstract && type.IsSubclassOf ("Java.Lang.Object", cache);
 		}
 
+		MethodDefinition methodKeepAlive = null;
+
 		bool AddKeepAlives (TypeDefinition type)
 		{
 			bool changed = false;
 			foreach (MethodDefinition method in type.Methods) {
 				if (!method.CustomAttributes.Any (a => a.AttributeType.FullName == "Android.Runtime.RegisterAttribute"))
 					continue;
-				ILProcessor processor = method.Body.GetILProcessor ();
-				ModuleDefinition module = method.DeclaringType.Module;
-				MethodDefinition methodKeepAlive = Context.GetMethod ("mscorlib", "System.GC", "KeepAlive", new string [] { "System.Object" });
-				Instruction end = method.Body.Instructions.Last ();
+
+				if (method.Parameters.Count == 0)
+					continue;
+
+				var processor = method.Body.GetILProcessor ();
+				var module = method.DeclaringType.Module;
+				var instructions = method.Body.Instructions;
+				var end = instructions.Last ();
 				if (end.Previous.OpCode == OpCodes.Endfinally)
 					end = end.Previous;
+
+				var found = false;
+				for (int off = Math.Max (0, instructions.Count - 6); off < instructions.Count; off++) {
+					var current = instructions [off];
+					if (current.OpCode == OpCodes.Call && current.Operand.ToString ().Contains ("System.GC::KeepAlive")) {
+						found = true;
+						break;
+					}
+				}
+
+				if (found)
+					continue;
+
 				for (int i = 0; i < method.Parameters.Count; i++) {
-					if (method.Parameters [i].ParameterType.IsValueType)
+					if (method.Parameters [i].ParameterType.IsValueType || method.Parameters [i].ParameterType.FullName == "System.String")
 						continue;
+
 					changed = true;
+
+					if (methodKeepAlive == null)
+						methodKeepAlive = Context.GetMethod ("mscorlib", "System.GC", "KeepAlive", new string [] { "System.Object" });
+
 					processor.InsertBefore (end, GetLoadArgumentInstruction (method.IsStatic ? i : i + 1, method.Parameters [i]));
 					processor.InsertBefore (end, Instruction.Create (OpCodes.Call, module.ImportReference (methodKeepAlive)));
 				}
