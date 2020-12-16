@@ -168,9 +168,12 @@ namespace Xamarin.Android.Tasks
 				if (SupportsCSharp8) {
 					var features = new List<string> ();
 
-					if (EnableInterfaceMembersPreview)
-						features.AddRange (new [] { "interface-constants", "default-interface-methods" });
-					if (Nullable == "enable")
+					if (EnableInterfaceMembersPreview) {
+						features.Add ("interface-constants");
+						features.Add ("default-interface-methods");
+					}
+
+					if (string.Equals (Nullable, "enable", StringComparison.OrdinalIgnoreCase))
 						features.Add ("nullable-reference-types");
 
 					if (features.Any ())

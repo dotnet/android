@@ -515,6 +515,29 @@ namespace Foo {
 
 		[Test]
 		[TestCaseSource (nameof (ClassParseOptions))]
+		public void NullableReferenceTypes (string classParser)
+		{
+			var proj = new XamarinAndroidBindingProject {
+				AndroidClassParser = classParser,
+				Jars = {
+					new AndroidItem.EmbeddedJar ("foo.jar") {
+						BinaryContent = () => Convert.FromBase64String (InlineData.JavaClassesJarBase64),
+					}
+				}
+			};
+			proj.SetProperty ("Nullable", "enable");
+			using (var b = CreateDllBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+				var cs_file = b.Output.GetIntermediaryPath (
+					Path.Combine ("generated", "src", "Com.Xamarin.Android.Test.Msbuildtest.JavaSourceJarTest.cs"));
+				FileAssert.Exists (cs_file);
+				StringAssert.Contains ("string? Greet", File.ReadAllText (cs_file));
+			}
+		}
+
+		[Test]
+		[TestCaseSource (nameof (ClassParseOptions))]
 		public void BindDefaultInterfaceMethods (string classParser)
 		{
 			var proj = new XamarinAndroidBindingProject {

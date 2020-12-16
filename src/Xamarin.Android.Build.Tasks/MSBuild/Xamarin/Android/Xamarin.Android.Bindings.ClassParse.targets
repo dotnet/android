@@ -39,6 +39,7 @@ This file is only used by binding projects.
         MonoAndroidFrameworkDirectories="$(_XATargetFrameworkDirectories)"
         ToolPath="$(MonoAndroidToolsDirectory)"
         ToolExe="$(BindingsGeneratorToolExe)"
+        Nullable="$(Nullable)"
     />
   </Target>
 
