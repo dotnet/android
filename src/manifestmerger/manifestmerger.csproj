@@ -8,9 +8,5 @@
   
   <Import Project="..\..\Configuration.props" />
   
-  <ItemGroup>
-    <ProjectReference Include="..\r8\r8.csproj" ReferenceOutputAssembly="False" />
-  </ItemGroup>
-  
   <Import Project="manifestmerger.targets" />
 </Project>
