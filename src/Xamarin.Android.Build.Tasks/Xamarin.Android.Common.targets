@@ -2615,7 +2615,8 @@ because xbuild doesn't support framework reference assemblies.
 
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Application.targets"
         Condition=" '$(AndroidApplication)' == 'True' "/>
-<Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.PCLSupport.targets" />
+<Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.PCLSupport.targets"
+        Condition=" '$(UsingAndroidNETSdk)' != 'true' " />
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Designer.targets" />
 
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Installer.Common.targets"
