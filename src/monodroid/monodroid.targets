@@ -182,6 +182,8 @@
         Command="$(NinjaPath) -v"
         WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-ubsan-Release"
     />
+
+    <Touch Files="@(_BuildAndroidRuntimesOutputs)" />
   </Target>
 
   <Target Name="_BuildHostRuntimesInputs"
@@ -221,6 +223,7 @@
         DestinationFiles="@(_HostRuntime->'$(OutputPath)%(OutputDirectory)\libmono-android.release.d.%(NativeLibraryExtension)')"
     />
 
+    <Touch Files="@(_BuildHostRuntimesOutputs)" />
   </Target>
   <Target Name="_CleanRuntimes"
       DependsOnTargets="_GetBuildHostRuntimes"
