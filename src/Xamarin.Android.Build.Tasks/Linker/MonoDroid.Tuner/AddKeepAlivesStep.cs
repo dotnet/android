@@ -24,9 +24,12 @@ namespace MonoDroid.Tuner
 
 		protected override void ProcessAssembly (AssemblyDefinition assembly)
 		{
+			var action = Annotations.HasAction (assembly) ? Annotations.GetAction (assembly) : AssemblyAction.Skip;
+			if (action == AssemblyAction.Delete)
+				return;
+
 			if (AddKeepAlives (assembly)) {
-				AssemblyAction action = Annotations.HasAction (assembly) ? Annotations.GetAction (assembly) : AssemblyAction.Skip;
-				if (action == AssemblyAction.Skip || action == AssemblyAction.Copy || action == AssemblyAction.Delete)
+				if (action == AssemblyAction.Skip || action == AssemblyAction.Copy)
 					Annotations.SetAction (assembly, AssemblyAction.Save);
 			}
 		}
