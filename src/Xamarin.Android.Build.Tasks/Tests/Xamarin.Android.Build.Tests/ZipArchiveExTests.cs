@@ -51,13 +51,13 @@ namespace Xamarin.Android.Build.Tests
 		public string TestPath {
 			get {
 				paths.TryGetValue (TestContext.CurrentContext.Test.Name, out string value);
-				return value; 
+				return value;
 			}
 		}
 
 		public string Zip {
 			get {
-				return Path.Combine (root, "temp", $"{TestContext.CurrentContext.Test.Name}.zip"); 
+				return Path.Combine (root, "temp", $"{TestContext.CurrentContext.Test.Name}.zip");
 			}
 		}
 
@@ -115,7 +115,6 @@ namespace Xamarin.Android.Build.Tests
 
 			AssertZip (
 @"temp/A.txt
-temp/B/
 temp/B/B.txt");
 		}
 
@@ -130,7 +129,6 @@ temp/B/B.txt");
 
 			AssertZip (
 @"temp/A.txt
-temp/B/
 temp/B/B.txt");
 		}
 
@@ -149,7 +147,6 @@ temp/B/B.txt");
 
 				AssertZip (
 @"temp/A.txt
-temp/B/
 temp/B/B.txt");
 			} finally {
 				Directory.SetCurrentDirectory (cwd);
@@ -168,7 +165,6 @@ temp/B/B.txt");
 
 			AssertZip (
 @"A.txt
-B/
 B/B.txt");
 			AssertSkipExisting (Path.Combine (TestPath, "A.txt"), "A.txt", expected: true);
 			AssertSkipExisting (Path.Combine (TestPath, "B", "B.txt"), "B/B.txt", expected: true);
@@ -188,7 +184,6 @@ B/B.txt");
 
 			AssertZip (
 @"A.txt
-B/
 B/B.txt");
 			var file = Path.Combine (TestPath, "A.txt");
 			File.SetLastWriteTimeUtc (file, DateTime.UtcNow.AddSeconds (1));
