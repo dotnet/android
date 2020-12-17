@@ -118,16 +118,54 @@
     </ItemGroup>
   </Target>
 
+  <Target Name="_ConfigureRuntimesInputs">
+    <ItemGroup>
+      <_ConfigureRuntimesInputs  Include="CMakeLists.txt" />
+      <_ConfigureRuntimesInputs  Include="..\..\build-tools\scripts\cmake-common.props" />
+      <_ConfigureRuntimesInputs  Include="..\..\build-tools\scripts\Ndk.targets" />
+      <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Debug\CMakeCache.txt')" />
+      <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Release\CMakeCache.txt')" />
+      <_ConfigureRuntimesOutputs Include="@(_HostRuntime->'$(IntermediateOutputPath)%(OutputDirectory)-Debug\CMakeCache.txt')" />
+      <_ConfigureRuntimesOutputs Include="@(_HostRuntime->'$(IntermediateOutputPath)%(OutputDirectory)-Release\CMakeCache.txt')" />
+    </ItemGroup>
+  </Target>
+
   <Target Name="_ConfigureRuntimes"
-      DependsOnTargets="_PrepareConfigureRuntimeCommands"
-      Inputs="CMakeLists.txt;..\..\build-tools\scripts\cmake-common.props;..\..\build-tools\scripts\Ndk.targets"
-      Outputs="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Debug\CMakeCache.txt');@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Release\CMakeCache.txt');@(_HostRuntime->'$(IntermediatePath)%(OutputDirectory)-Debug\CMakeCache.txt');@(_HostRuntime->'$(IntermediatePath)%(OutputDirectory)-Release\CMakeCache.txt')">
+      DependsOnTargets="_PrepareConfigureRuntimeCommands;_ConfigureRuntimesInputs"
+      Inputs="@(_ConfigureRuntimesInputs)"
+      Outputs="@(_ConfigureRuntimesOutputs)">
     <RunParallelCmds Commands="@(_ConfigureRuntimeCommands)" />
+    <Touch Files="@(_ConfigureRuntimesOutputs)" />
+  </Target>
+
+  <Target Name="_FindMonoDroidSources">
+    <ItemGroup>
+      <_MonoDroidSources Include="jni\*.cc;jni\*.h;jni\*.hh;jni\**\*.c;" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_BuildAndroidRuntimesInputs"
+      DependsOnTargets="_FindMonoDroidSources">
+    <ItemGroup>
+      <_BuildAndroidRuntimesInputs  Include="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Debug\CMakeCache.txt')" />
+      <_BuildAndroidRuntimesInputs  Include="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Release\CMakeCache.txt')" />
+      <_BuildAndroidRuntimesInputs  Include="@(_MonoDroidSources)" />
+      <_BuildAndroidRuntimesInputs  Include="..\..\build-tools\scripts\Ndk.targets" />
+      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.debug.so')" />
+      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android-checked+ubsan.debug.so')" />
+      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android-checked+asan.debug.so')" />
+      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.release.so')" />
+      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android-checked+asan.release.so')" />
+      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android-checked+ubsan.release.so')" />
+      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\Debug\libxamarin-app.so')" />
+      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\Release\libxamarin-app.so')" />
+    </ItemGroup>
   </Target>
 
   <Target Name="_BuildAndroidRuntimes"
-      Inputs="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Debug\CMakeCache.txt');@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Release\CMakeCache.txt');jni\*.cc;jni\*.h;jni\*.hh;jni\**\*.c;;..\..\build-tools\scripts\Ndk.targets"
-      Outputs="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.debug.so');@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android-checked+asan.debug.so');@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android-checked+ubsan.debug.so');@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.release.so');@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android-checked+asan.release.so');@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android-checked+ubsan.release.so');@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Debug\libxamarin-app.so');@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Release\libxamarin-app.so')">
+      DependsOnTargets="_BuildAndroidRuntimesInputs"
+      Inputs="@(_BuildAndroidRuntimesInputs)"
+      Outputs="@(_BuildAndroidRuntimesOutputs)">
     <Exec
         Command="$(NinjaPath) -v"
         WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-Debug"
@@ -157,12 +195,26 @@
         Command="$(NinjaPath) -v"
         WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-ubsan-Release"
     />
+
+    <Touch Files="@(_BuildAndroidRuntimesOutputs)" />
+  </Target>
+
+  <Target Name="_BuildHostRuntimesInputs"
+      DependsOnTargets="_FindMonoDroidSources">
+    <ItemGroup>
+      <_BuildHostRuntimesInputs  Include="@(_HostRuntime->'$(IntermediateOutputPath)%(OutputDirectory)-Debug\CMakeCache.txt')" />
+      <_BuildHostRuntimesInputs  Include="@(_HostRuntime->'$(IntermediateOutputPath)%(OutputDirectory)-Release\CMakeCache.txt')" />
+      <_BuildHostRuntimesInputs  Include="@(_MonoDroidSources)" />
+      <_BuildHostRuntimesOutputs Include="@(_HostRuntime->'$(OutputPath)%(OutputDirectory)\libmono-android.debug.%(NativeLibraryExtension)')" />
+      <_BuildHostRuntimesOutputs Include="@(_HostRuntime->'$(OutputPath)%(OutputDirectory)\libmono-android.release.%(NativeLibraryExtension)')" />
+      <_BuildHostRuntimesOutputs Include="@(_HostRuntime->'$(OutputPath)%(OutputDirectory)\libxamarin-app.%(NativeLibraryExtension)')" />
+    </ItemGroup>
   </Target>
 
   <Target Name="_BuildHostRuntimes"
-      DependsOnTargets="_CreateJavaInteropDllConfigs"
-      Inputs="@(_HostRuntime->'$(IntermediatePath)%(OutputDirectory)-Debug\CMakeCache.txt');@(_HostRuntime->'$(IntermediatePath)%(OutputDirectory)-Release\CMakeCache.txt');jni\*.cc;jni\*.h;jni\*.hh;jni\**\*.c;"
-      Outputs="@(_HostRuntime->'$(OutputPath)%(OutputDirectory)\libmono-android.debug.%(NativeLibraryExtension)');@(_HostRuntime->'$(OutputPath)%(OutputDirectory)\libmono-android.release.%(NativeLibraryExtension)');@(_HostRuntime->'$(OutputPath)%(OutputDirectory)\libxamarin-app.%(NativeLibraryExtension)')">
+      DependsOnTargets="_CreateJavaInteropDllConfigs;_BuildHostRuntimesInputs"
+      Inputs="@(_BuildHostRuntimesInputs)"
+      Outputs="@(_BuildHostRuntimesOutputs)">
     <Message Text="Building host runtime %(_HostRuntime.Identity) in $(OutputPath)%(_HostRuntime.OutputDirectory)"/>
     <MakeDir Directories="$(OutputPath)%(_HostRuntime.OutputDirectory)" />
 
@@ -184,6 +236,7 @@
         DestinationFiles="@(_HostRuntime->'$(OutputPath)%(OutputDirectory)\libmono-android.release.d.%(NativeLibraryExtension)')"
     />
 
+    <Touch Files="@(_BuildHostRuntimesOutputs)" />
   </Target>
   <Target Name="_CleanRuntimes"
       DependsOnTargets="_GetBuildHostRuntimes"
