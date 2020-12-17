@@ -73,6 +73,10 @@ namespace Xamarin.Android.Prepare
 					testAreas.Add ("MSBuildDevice");
 				}
 
+				if (file.Contains ("external/sqlite")) {
+					testAreas.Add ("MSBuildDevice");
+				}
+
 				if (file.Contains ("src/aapt2")) {
 					testAreas.Add ("MSBuild");
 				}
