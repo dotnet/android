@@ -9,7 +9,7 @@ namespace Xamarin.Android.Tasks
 	{
 
 		public static int ZipFlushSizeLimit = 50 * 1024 * 1024;
-		public static int ZipFlushFilesLimit = 200;
+		public static int ZipFlushFilesLimit = 50;
 
 		ZipArchive zip;
 		string archive;
