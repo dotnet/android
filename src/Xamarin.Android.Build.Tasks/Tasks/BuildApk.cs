@@ -209,7 +209,7 @@ namespace Xamarin.Android.Tasks
 					Log.LogDebugMessage ("\tAdding {0}", file.filePath);
 					apk.Archive.AddFile (file.filePath, item, compressionMethod: compressionMethod);
 					count++;
-					if (count == ZipArchiveEx.ZipFlushLimit) {
+					if (count >= ZipArchiveEx.ZipFlushFilesLimit) {
 						apk.Flush();
 						count = 0;
 					}
@@ -257,7 +257,7 @@ namespace Xamarin.Android.Tasks
 						}
 					}
 					count++;
-					if (count == ZipArchiveEx.ZipFlushLimit) {
+					if (count >= ZipArchiveEx.ZipFlushFilesLimit) {
 						apk.Flush();
 						count = 0;
 					}
@@ -353,7 +353,7 @@ namespace Xamarin.Android.Tasks
 						AddFileToArchiveIfNewer (apk, symbols, assemblyPath + Path.GetFileName (symbols), compressionMethod: UncompressedMethod);
 				}
 				count++;
-				if (count == ZipArchiveEx.ZipFlushLimit) {
+				if (count >= ZipArchiveEx.ZipFlushFilesLimit) {
 					apk.Flush();
 					count = 0;
 				}
@@ -389,7 +389,7 @@ namespace Xamarin.Android.Tasks
 						AddFileToArchiveIfNewer (apk, symbols, assemblyPath + Path.GetFileName (symbols), compressionMethod: UncompressedMethod);
 				}
 				count++;
-				if (count == ZipArchiveEx.ZipFlushLimit) {
+				if (count >= ZipArchiveEx.ZipFlushFilesLimit) {
 					apk.Flush();
 					count = 0;
 				}

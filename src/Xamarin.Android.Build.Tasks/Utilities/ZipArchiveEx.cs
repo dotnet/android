@@ -8,11 +8,13 @@ namespace Xamarin.Android.Tasks
 	public class ZipArchiveEx : IDisposable
 	{
 
-		public static int ZipFlushLimit = 500 * 1024 * 1024;
+		public static int ZipFlushSizeLimit = 50 * 1024 * 1024;
+		public static int ZipFlushFilesLimit = 200;
 
 		ZipArchive zip;
 		string archive;
 		long filesWrittenTotalSize = 0;
+		long filesWrittenTotalCount = 0;
 
 		public ZipArchive Archive {
 			get { return zip; }
@@ -41,6 +43,7 @@ namespace Xamarin.Android.Tasks
 			}
 			zip = ZipArchive.Open (archive, FileMode.Open);
 			filesWrittenTotalSize = 0;
+			filesWrittenTotalCount = 0;
 		}
 
 		string ArchiveNameForFile (string filename, string directoryPathInZip)
@@ -62,7 +65,7 @@ namespace Xamarin.Android.Tasks
 		{
 			filesWrittenTotalSize += fileLength;
 			zip.AddFile (filename, archiveFileName, compressionMethod: compressionMethod);
-			if (filesWrittenTotalSize > ZipArchiveEx.ZipFlushLimit && AutoFlush) {
+			if ((filesWrittenTotalSize > ZipArchiveEx.ZipFlushSizeLimit || filesWrittenTotalCount > ZipArchiveEx.ZipFlushFilesLimit) && AutoFlush) {
 				Flush ();
 			}
 		}
