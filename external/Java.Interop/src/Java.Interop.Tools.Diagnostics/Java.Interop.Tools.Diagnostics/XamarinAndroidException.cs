@@ -24,7 +24,7 @@ namespace Java.Interop.Tools.Diagnostics {
 			return m.ToString ();
 		}
 
-		public XamarinAndroidException (int code, Exception innerException, string message, params object [] args)
+		public XamarinAndroidException (int code, Exception? innerException, string message, params object [] args)
 			: base (GetMessage (code, message, args), innerException)
 		{
 			Code = code;
@@ -35,10 +35,10 @@ namespace Java.Interop.Tools.Diagnostics {
 
 		public int Code { get; private set; }
 
-		public SequencePoint Location { get; set; }
+		public SequencePoint? Location { get; set; }
 
-		public string SourceFile {
-			get { return Location == null ? null : Location.Document.Url; }
+		public string? SourceFile {
+			get { return Location?.Document.Url; }
 		}
 
 		public int SourceLine {

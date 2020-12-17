@@ -10,10 +10,10 @@ namespace Java.Interop.Tools.Generator.Enumification
 	{
 		public ConstantAction Action { get; set; }
 		public int ApiLevel { get; set; }
-		public string JavaSignature { get; set; }
-		public string Value { get; set; }
-		public string EnumFullType { get; set; }
-		public string EnumMember { get; set; }
+		public string? JavaSignature { get; set; }
+		public string? Value { get; set; }
+		public string? EnumFullType { get; set; }
+		public string? EnumMember { get; set; }
 		public FieldAction FieldAction { get; set; }
 		public bool IsFlags { get; set; }
 
@@ -76,7 +76,7 @@ namespace Java.Interop.Tools.Generator.Enumification
 
 		public string JavaName {
 			get {
-					if (!JavaSignature.HasValue ())
+				if (!JavaSignature.HasValue ())
 					return string.Empty;
 
 			var index = JavaSignature.LastIndexOf ('.');

@@ -13,7 +13,7 @@ namespace Java.Interop.Tools.Cecil {
 		public static MethodDefinition GetBaseDefinition (this MethodDefinition method) =>
 			GetBaseDefinition (method, cache: null);
 
-		public static MethodDefinition GetBaseDefinition (this MethodDefinition method, TypeDefinitionCache cache)
+		public static MethodDefinition GetBaseDefinition (this MethodDefinition method, TypeDefinitionCache? cache)
 		{
 			if (method.IsStatic || method.IsNewSlot || !method.IsVirtual)
 				return method;
@@ -35,7 +35,7 @@ namespace Java.Interop.Tools.Cecil {
 		public static IEnumerable<MethodDefinition> GetOverriddenMethods (MethodDefinition method, bool inherit) =>
 			GetOverriddenMethods (method, inherit, cache: null);
 
-		public static IEnumerable<MethodDefinition> GetOverriddenMethods (MethodDefinition method, bool inherit, TypeDefinitionCache cache)
+		public static IEnumerable<MethodDefinition> GetOverriddenMethods (MethodDefinition method, bool inherit, TypeDefinitionCache? cache)
 		{
 			yield return method;
 			if (inherit) {
@@ -51,7 +51,7 @@ namespace Java.Interop.Tools.Cecil {
 		public static bool AreParametersCompatibleWith (this Collection<ParameterDefinition> a, Collection<ParameterDefinition> b) =>
 			AreParametersCompatibleWith (a, b, cache: null);
 
-		public static bool AreParametersCompatibleWith (this Collection<ParameterDefinition> a, Collection<ParameterDefinition> b, TypeDefinitionCache cache)
+		public static bool AreParametersCompatibleWith (this Collection<ParameterDefinition> a, Collection<ParameterDefinition> b, TypeDefinitionCache? cache)
 		{
 			if (a.Count != b.Count)
 				return false;
@@ -66,7 +66,7 @@ namespace Java.Interop.Tools.Cecil {
 			return true;
 		}
 
-		static bool IsParameterCompatibleWith (IModifierType a, IModifierType b, TypeDefinitionCache cache)
+		static bool IsParameterCompatibleWith (IModifierType a, IModifierType b, TypeDefinitionCache? cache)
 		{
 			if (!IsParameterCompatibleWith (a.ModifierType, b.ModifierType, cache))
 				return false;
@@ -74,7 +74,7 @@ namespace Java.Interop.Tools.Cecil {
 			return IsParameterCompatibleWith (a.ElementType, b.ElementType, cache);
 		}
 
-		static bool IsParameterCompatibleWith (TypeSpecification a, TypeSpecification b, TypeDefinitionCache cache)
+		static bool IsParameterCompatibleWith (TypeSpecification a, TypeSpecification b, TypeDefinitionCache? cache)
 		{
 			if (a is GenericInstanceType)
 				return IsParameterCompatibleWith ((GenericInstanceType) a, (GenericInstanceType) b, cache);
@@ -85,7 +85,7 @@ namespace Java.Interop.Tools.Cecil {
 			return IsParameterCompatibleWith (a.ElementType, b.ElementType, cache);
 		}
 
-		static bool IsParameterCompatibleWith (GenericInstanceType a, GenericInstanceType b, TypeDefinitionCache cache)
+		static bool IsParameterCompatibleWith (GenericInstanceType a, GenericInstanceType b, TypeDefinitionCache? cache)
 		{
 			if (!IsParameterCompatibleWith (a.ElementType, b.ElementType, cache))
 				return false;
@@ -103,7 +103,7 @@ namespace Java.Interop.Tools.Cecil {
 			return true;
 		}
 
-		static bool IsParameterCompatibleWith (TypeReference a, TypeReference b, TypeDefinitionCache cache)
+		static bool IsParameterCompatibleWith (TypeReference a, TypeReference b, TypeDefinitionCache? cache)
 		{
 			if (a is TypeSpecification || b is TypeSpecification) {
 				if (a.GetType () != b.GetType ())
