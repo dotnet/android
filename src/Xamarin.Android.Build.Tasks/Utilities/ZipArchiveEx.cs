@@ -8,14 +8,21 @@ namespace Xamarin.Android.Tasks
 	public class ZipArchiveEx : IDisposable
 	{
 
-		public static int ZipFlushLimit = 50;
+		public static int ZipFlushSizeLimit = 50 * 1024 * 1024;
+		public static int ZipFlushFilesLimit = 50;
 
 		ZipArchive zip;
 		string archive;
+		long filesWrittenTotalSize = 0;
+		long filesWrittenTotalCount = 0;
 
 		public ZipArchive Archive {
 			get { return zip; }
 		}
+
+		public bool AutoFlush { get; set; } = true;
+
+		public bool CreateDirectoriesInZip { get; set; } = true;
 
 		public ZipArchiveEx (string archive) : this (archive, FileMode.CreateNew)
 		{
@@ -35,6 +42,8 @@ namespace Xamarin.Android.Tasks
 				zip = null;
 			}
 			zip = ZipArchive.Open (archive, FileMode.Open);
+			filesWrittenTotalSize = 0;
+			filesWrittenTotalCount = 0;
 		}
 
 		string ArchiveNameForFile (string filename, string directoryPathInZip)
@@ -49,12 +58,20 @@ namespace Xamarin.Android.Tasks
 			else {
 				pathName = Path.Combine (directoryPathInZip, Path.GetFileName (filename));
 			}
-			return pathName.Replace ("\\", "/");
+			return pathName.Replace ("\\", "/").TrimStart ('/');
+		}
+
+		void AddFileAndFlush (string filename, long fileLength, string archiveFileName, CompressionMethod compressionMethod)
+		{
+			filesWrittenTotalSize += fileLength;
+			zip.AddFile (filename, archiveFileName, compressionMethod: compressionMethod);
+			if ((filesWrittenTotalSize >= ZipArchiveEx.ZipFlushSizeLimit || filesWrittenTotalCount >= ZipArchiveEx.ZipFlushFilesLimit) && AutoFlush) {
+				Flush ();
+			}
 		}
 
 		void AddFiles (string folder, string folderInArchive, CompressionMethod method)
 		{
-			int count = 0;
 			foreach (string fileName in Directory.GetFiles (folder, "*.*", SearchOption.TopDirectoryOnly)) {
 				var fi = new FileInfo (fileName);
 				if ((fi.Attributes & FileAttributes.Hidden) != 0)
@@ -63,15 +80,11 @@ namespace Xamarin.Android.Tasks
 				long index = -1;
 				if (zip.ContainsEntry (archiveFileName, out index)) {
 					var e = zip.First (x => x.FullName == archiveFileName);
-					if (e.ModificationTime < fi.LastWriteTimeUtc)
-						zip.AddFile (fileName, archiveFileName, compressionMethod: method);
+					if (e.ModificationTime < fi.LastWriteTimeUtc || e.Size != (ulong)fi.Length) {
+						AddFileAndFlush (fileName, fi.Length, archiveFileName, compressionMethod: method);
+					}
 				} else {
-					zip.AddFile (fileName, archiveFileName, compressionMethod: method);
-				}
-				count++;
-				if (count == ZipArchiveEx.ZipFlushLimit) {
-					Flush ();
-					count = 0;
+					AddFileAndFlush (fileName, fi.Length, archiveFileName, compressionMethod: method);
 				}
 			}
 		}
@@ -101,11 +114,6 @@ namespace Xamarin.Android.Tasks
 					continue;
 				var internalDir = dir.Replace (folder, string.Empty);
 				string fullDirPath = folderInArchive + internalDir;
-				try {
-					zip.CreateDirectory (fullDirPath);
-				} catch (ZipException) {
-					
-				}
 				AddFiles (dir, fullDirPath, method);
 			}
 		}
@@ -182,7 +190,7 @@ namespace Xamarin.Android.Tasks
 					zip.Dispose ();
 					zip = null;
 				}
-			}	
+			}
 		}
 	}
 }

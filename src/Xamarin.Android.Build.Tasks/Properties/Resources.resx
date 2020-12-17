@@ -662,6 +662,12 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
     <comment>The following are literal names and should not be translated: ABI, 'libs/armeabi-v7a/'
 {0} - The file path</comment>
   </data>
+  <data name="XA4301_ABI_NuGet" xml:space="preserve">
+    <value>Cannot determine ABI of native library '{0}'. Remove the '{1}' NuGet package, or notify the library author.</value>
+    <comment>The following are literal names and should not be translated: ABI, NuGet
+{0} - The native library file path
+{1} - Either the name of the NuGet package or a path to the native library</comment>
+  </data>
   <data name="XA4301_ABI_Ignoring" xml:space="preserve">
     <value>Could not determine ABI of some native libraries. Ignoring those: {0}</value>
     <comment>The abbreviation "ABI" should not be translated.
