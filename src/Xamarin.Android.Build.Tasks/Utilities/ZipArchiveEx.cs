@@ -65,7 +65,7 @@ namespace Xamarin.Android.Tasks
 		{
 			filesWrittenTotalSize += fileLength;
 			zip.AddFile (filename, archiveFileName, compressionMethod: compressionMethod);
-			if ((filesWrittenTotalSize > ZipArchiveEx.ZipFlushSizeLimit || filesWrittenTotalCount > ZipArchiveEx.ZipFlushFilesLimit) && AutoFlush) {
+			if ((filesWrittenTotalSize >= ZipArchiveEx.ZipFlushSizeLimit || filesWrittenTotalCount >= ZipArchiveEx.ZipFlushFilesLimit) && AutoFlush) {
 				Flush ();
 			}
 		}
