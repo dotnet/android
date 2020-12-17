@@ -129,9 +129,25 @@ namespace MonoDroid.Generation
 		
 		public static string Format (bool error, int errorCode, string sourceFile, int line, int column, string format, params object[] args)
 		{
-			var origin = sourceFile != null ? sourceFile + (line > 0 ? column > 0 ? $"({line}, {column})" : $"({line})" : null) + ' ' : null;
-			return string.Format ("{0}{1} BG{2:X04}: ", origin, error ? "error" : "warning", errorCode) +
-				string.Format (format, args);
+			var origin = FormatOrigin (sourceFile, line, column);
+
+			return $"{origin}{(error ? "error" : "warning")} BG{errorCode:X04}: " + string.Format (format, args);
+		}
+
+		static string FormatOrigin (string sourceFile, int line, int column)
+		{
+			if (string.IsNullOrWhiteSpace (sourceFile))
+				return null;
+
+			var ret = sourceFile;
+
+			if (line == 0)
+				return ret + ": ";
+
+			if (column > 0)
+				return ret + $"({line}, {column}): ";
+
+			return ret + $"({line}): ";
 		}
 	}
 	
