@@ -47,6 +47,7 @@ namespace Xamarin.Android.Tasks
 		public string LangVersion { get; set; }
 
 		public bool EnableInterfaceMembersPreview { get; set; }
+		public string Nullable { get; set; }
 
 		public ITaskItem[] TransformFiles { get; set; }
 		public ITaskItem[] ReferencedManagedLibraries { get; set; }
@@ -164,8 +165,20 @@ namespace Xamarin.Android.Tasks
 				if (UseShortFileNames)
 					WriteLine (sw, "--use-short-file-names");
 
-				if (EnableInterfaceMembersPreview && SupportsCSharp8)
-					WriteLine (sw, "--lang-features=interface-constants,default-interface-methods");
+				if (SupportsCSharp8) {
+					var features = new List<string> ();
+
+					if (EnableInterfaceMembersPreview) {
+						features.Add ("interface-constants");
+						features.Add ("default-interface-methods");
+					}
+
+					if (string.Equals (Nullable, "enable", StringComparison.OrdinalIgnoreCase))
+						features.Add ("nullable-reference-types");
+
+					if (features.Any ())
+						WriteLine (sw, $"--lang-features={string.Join (",", features)}");
+				}
 			}
 
 			cmd.AppendSwitch (ApiXmlInput);
