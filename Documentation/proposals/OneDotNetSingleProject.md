@@ -71,7 +71,7 @@ The full list of defaults might be something like:
   <!-- Android only -->
   <AndroidVersionCode Condition=" '$(AndroidVersionCode)' == '' ">1</AndroidVersionCode>
   <!-- Apple platforms only -->
-  <AppleShortVersion Condition=" '$(AppleShortVersion)' == '' ">$(AppleShortVersion)</ApplicationVersion>
+  <AppleShortVersion Condition=" '$(AppleShortVersion)' == '' ">$(ApplicationVersion)</ApplicationVersion>
   <AssemblyVersion Condition=" '$(AssemblyVersion)' == '' ">$(ApplicationVersion)</AssemblyVersion>
   <FileVersion Condition=" '$(FileVersion)' == '' ">$(ApplicationVersion)</FileVersion>
 </PropertyGroup>
