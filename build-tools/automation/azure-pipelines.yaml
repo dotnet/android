@@ -405,9 +405,6 @@ stages:
       parameters:
         configuration: $(ApkTestConfiguration)
 
-    - script: 'brew uninstall openssl@1.0.2t && rm -rf /usr/local/etc/openssl && rm -rf /usr/local/etc/openssl@1.1'
-      displayName: fix Homebrew
-
     - script: mono $(System.DefaultWorkingDirectory)/build-tools/xaprepare/xaprepare/bin/$(ApkTestConfiguration)/xaprepare.exe --s=Required --auto-provision=yes --auto-provision-uses-sudo=yes --no-emoji --run-mode=CI
       displayName: install required brew tools and prepare java.interop
 
