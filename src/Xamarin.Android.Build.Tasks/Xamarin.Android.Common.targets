@@ -1816,69 +1816,6 @@ because xbuild doesn't support framework reference assemblies.
    <Touch Files="$(_AndroidApkPerAbiFlagFile)" Condition="'$(AndroidCreatePackagePerAbi)' == 'true'" AlwaysCreate="True" />
 </Target>
 
-<Target Name="_IncludeNativeSystemLibraries">
-  <PropertyGroup>
-    <_Assemblies>@(_ResolvedFrameworkAssemblies)</_Assemblies>
-	<_TargetInterpreterPrefix Condition=" '$(_AndroidUseInterpreter)' != 'False' ">interpreter-</_TargetInterpreterPrefix>
-    <_AndroidDebugNativeLibraries Condition=" '$(_AndroidDebugNativeLibraries)' == '' ">False</_AndroidDebugNativeLibraries>
-  </PropertyGroup>
-  <ItemGroup>
-    <_TargetArchitecture Include="$(_Android32bitArchitectures);$(_Android64bitArchitectures)" />
-  </ItemGroup>
-  <ItemGroup>
-    <_TargetLibDir Include="$(MSBuildThisFileDirectory)lib\%(_TargetArchitecture.Identity)" Condition=" Exists('$(MSBuildThisFileDirectory)lib\%(_TargetArchitecture.Identity)') "/>
-	<_TargetLibInterpreterDir Include="$(MSBuildThisFileDirectory)lib\$(_TargetInterpreterPrefix)%(_TargetArchitecture.Identity)" Condition=" Exists('$(MSBuildThisFileDirectory)lib\$(_TargetInterpreterPrefix)%(_TargetArchitecture.Identity)') "/>
-  </ItemGroup>
-  <SplitProperty Value="$(AndroidEmbedProfilers)" Condition=" '$(AndroidEmbedProfilers)' != '' ">
-    <Output TaskParameter="Output" ItemName="_EmbedProfilers" />
-  </SplitProperty>
-  <ItemGroup Condition=" '$(UsingAndroidNETSdk)' != 'True' ">
-    <AndroidNativeLibrary Include="%(_TargetLibDir.Identity)\libsqlite3_xamarin.so" Condition="$(_Assemblies.Contains('Mono.Data.Sqlite.dll'))" />
-    <AndroidNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libMonoPosixHelper.so" Condition="$(_Assemblies.Contains('Mono.Posix.dll')) and '$(_AndroidDebugNativeLibraries)' != 'True' " />
-    <AndroidNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libMonoPosixHelper.d.so" Condition="$(_Assemblies.Contains('Mono.Posix.dll')) and '$(_AndroidDebugNativeLibraries)' == 'True' " ArchiveFileName="libMonoPosixHelper.so" />
-    <AndroidNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libmono-native.so" Condition=" '$(_AndroidDebugNativeLibraries)' != 'True' " />
-    <AndroidNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libmono-native.d.so" Condition=" '$(_AndroidDebugNativeLibraries)' == 'True' " ArchiveFileName="libmono-native.so" />
-    <AndroidNativeLibrary Include="%(_TargetLibDir.Identity)\libxamarin-debug-app-helper.so" Condition=" '$(AndroidUseDebugRuntime)' == 'True' And '$(_AndroidCheckedBuild)' == '' "/>
-    <AndroidNativeLibrary Include="%(_TargetLibDir.Identity)\libxamarin-debug-app-helper-checked+$(_AndroidCheckedBuild).so" Condition=" '$(AndroidUseDebugRuntime)' == 'True' And '$(_AndroidCheckedBuild)' != '' " ArchiveFileName="libxamarin-debug-app-helper.so" />
-    <_AndroidNativeLibraryForFastDev Condition=" '$(_InstantRunEnabled)' == 'True' And '$(AndroidUseDebugRuntime)' == 'True' " Include="%(_TargetLibInterpreterDir.Identity)\libmono-native.so" />
-    <_AndroidNativeLibraryForFastDev Condition=" '$(_InstantRunEnabled)' == 'True' And '$(AndroidUseDebugRuntime)' == 'True' And '$(_AndroidCheckedBuild)' == '' " Include="%(_TargetLibDir.Identity)\libxamarin-debug-app-helper.so" />
-    <_AndroidNativeLibraryForFastDev Condition=" '$(_InstantRunEnabled)' == 'True' And '$(AndroidUseDebugRuntime)' == 'True' And '$(_AndroidCheckedBuild)' != '' " Include="%(_TargetLibDir.Identity)\libxamarin-debug-app-helper-checked+$(_AndroidCheckedBuild).so" ArchiveFileName="libxamarin-debug-app-helper.so" />
-    <FrameworkNativeLibrary Include="%(_TargetLibDir.Identity)\libmono-android.debug.so" Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' And '$(_AndroidCheckedBuild)' == '' " ArchiveFileName="libmonodroid.so" />
-    <FrameworkNativeLibrary Include="%(_TargetLibDir.Identity)\libmono-android-checked+$(_AndroidCheckedBuild).debug.so" Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' And '$(_AndroidCheckedBuild)' != '' " ArchiveFileName="libmonodroid.so" />
-    <FrameworkNativeLibrary Include="%(_TargetLibDir.Identity)\libmono-android.release.so" Condition=" '$(AndroidIncludeDebugSymbols)' != 'True'  And '$(_AndroidCheckedBuild)' == '' " ArchiveFileName="libmonodroid.so" />
-    <FrameworkNativeLibrary Include="%(_TargetLibDir.Identity)\libmono-android-checked+$(_AndroidCheckedBuild).release.so" Condition=" '$(AndroidIncludeDebugSymbols)' != 'True' And '$(_AndroidCheckedBuild)' != '' " ArchiveFileName="libmonodroid.so" />
-    <FrameworkNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libxa-internal-api.so" Condition=" '$(_AndroidCheckedBuild)' == ''" />
-    <FrameworkNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libxa-internal-api-checked+$(_AndroidCheckedBuild).so" Condition=" '$(_AndroidCheckedBuild)' != '' " ArchiveFileName="libxa-internal-api.so" />
-    <FrameworkNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libmono-btls-shared.so" Condition=" '$(_AndroidDebugNativeLibraries)' != 'True' " />
-    <FrameworkNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libmono-btls-shared.d.so" Condition=" '$(_AndroidDebugNativeLibraries)' == 'True' " ArchiveFileName="libmono-btls-shared.so" />
-    <FrameworkNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libmono-profiler-aot.so" Condition=" @(_EmbedProfilers->Count()) > 0 and (@(_EmbedProfilers->AnyHaveMetadataValue('Identity', 'aot')) or @(_EmbedProfilers->AnyHaveMetadataValue('Identity', 'all'))) " />
-    <FrameworkNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libmono-profiler-log.so" Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' or (@(_EmbedProfilers->Count()) > 0 and (@(_EmbedProfilers->AnyHaveMetadataValue('Identity', 'log')) or @(_EmbedProfilers->AnyHaveMetadataValue('Identity', 'all')))) " />
-    <FrameworkNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libmonosgen-2.0.so" Condition=" '$(_AndroidDebugNativeLibraries)' != 'True' " />
-    <FrameworkNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libmonosgen-2.0.d.so" Condition=" '$(_AndroidDebugNativeLibraries)' == 'True' " ArchiveFileName="libmonosgen-2.0.so" />
-  </ItemGroup>
-  <ItemGroup Condition=" '$(UsingAndroidNETSdk)' == 'True' ">
-    <FrameworkNativeLibrary
-        Include="@(ResolvedFileToPublish)"
-        Condition=" '%(Filename)%(Extension)' == 'libmono-android.debug.so' and '$(AndroidIncludeDebugSymbols)' == 'True' "
-        ArchiveFileName="libmonodroid.so"
-    />
-    <FrameworkNativeLibrary
-        Include="@(ResolvedFileToPublish)"
-        Condition=" '%(Filename)%(Extension)' == 'libmono-android.release.so' and '$(AndroidIncludeDebugSymbols)' != 'True' "
-        ArchiveFileName="libmonodroid.so"
-    />
-    <FrameworkNativeLibrary
-        Include="@(ResolvedFileToPublish)"
-        Condition=" '%(Extension)' == '.so' and '%(Filename)' != 'libmono-android.debug' and '%(Filename)' != 'libmono-android.release' "
-    />
-    <!-- HACK remove any unexpected runtime components -->
-    <FrameworkNativeLibrary
-        Remove="@(ResolvedFileToPublish)"
-        Condition="  $([System.Text.RegularExpressions.Regex]::IsMatch('%(FullPath)', '.*linux-.*'))  "
-    />
-  </ItemGroup>
-</Target>
-
 <Target Name="_PrepareNativeAssemblyItems" DependsOnTargets="_GenerateJavaStubs">
   <ItemGroup>
     <_NativeAssemblyTarget Include="@(_TypeMapAssemblySource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
