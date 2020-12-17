@@ -157,7 +157,7 @@
       <_TypeMap>--type-map-report=$(IntermediateOutputPath)mcw\type-mapping.txt</_TypeMap>
       <_Api>$(IntermediateOutputPath)mcw\api.xml</_Api>
       <_Dirs>--enumdir=$(IntermediateOutputPath)mcw</_Dirs>
-      <_WithJavadocXml Condition=" '$(IncludeAndroidJavadoc)' == 'True' ">"--with-javadoc-xml=$(_AndroidJavadocXml)"</_WithJavadocXml>
+      <_WithJavadocXml Condition=" '$(IncludeAndroidJavadoc)' == 'True' ">--doc-comment-verbosity=$(AndroidJavadocVerbosity) "--with-javadoc-xml=$(_AndroidJavadocXml)"</_WithJavadocXml>
       <_FullIntermediateOutputPath>$([System.IO.Path]::GetFullPath('$(IntermediateOutputPath)'))</_FullIntermediateOutputPath>
       <_LangFeatures>--lang-features=nullable-reference-types</_LangFeatures>
       <_LangFeatures Condition="$(AndroidApiLevel) &gt;= 30">$(_LangFeatures),default-interface-methods,nested-interface-types,interface-constants</_LangFeatures>

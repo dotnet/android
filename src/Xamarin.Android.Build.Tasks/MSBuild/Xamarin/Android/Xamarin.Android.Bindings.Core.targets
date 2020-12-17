@@ -18,6 +18,7 @@ It is shared between "legacy" binding projects and .NET 5 projects.
   <PropertyGroup>
     <UseShortGeneratorFileNames Condition=" '$(UseShortGeneratorFileNames)' == '' ">false</UseShortGeneratorFileNames>
     <GeneratedOutputPath        Condition=" '$(GeneratedOutputPath)' == '' ">$(IntermediateOutputPath)generated\</GeneratedOutputPath>
+    <AndroidJavadocVerbosity    Condition=" '$(AndroidJavadocVerbosity)' == '' ">intellisense</AndroidJavadocVerbosity>
     <ApiOutputFile              Condition=" '$(ApiOutputFile)' == '' ">$(IntermediateOutputPath)api.xml</ApiOutputFile>
     <_GeneratorStampFile>$(IntermediateOutputPath)generator.stamp</_GeneratorStampFile>
   </PropertyGroup>
@@ -74,6 +75,7 @@ It is shared between "legacy" binding projects and .NET 5 projects.
         ApiXmlInput="$(ApiOutputFile)"
         AnnotationsZipFiles="@(AnnotationsZip)"
         AssemblyName="$(AssemblyName)"
+        JavadocVerbosity="$(AndroidJavadocVerbosity)"
         JavadocXml="@(_JavadocXml)"
         TransformFiles="@(TransformFile)"
         ReferencedManagedLibraries="@(ReferencePath);@(ReferenceDependencyPaths)"

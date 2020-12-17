@@ -53,6 +53,7 @@ namespace Xamarin.Android.Tasks
 		public ITaskItem[] AnnotationsZipFiles { get; set; }
 
 		public ITaskItem[] JavadocXml { get; set; }
+		public string JavadocVerbosity { get; set; }
 
 		private List<Tuple<string, string>> transform_files = new List<Tuple<string,string>> ();
 
@@ -169,9 +170,12 @@ namespace Xamarin.Android.Tasks
 				if (EnableInterfaceMembersPreview && SupportsCSharp8)
 					WriteLine (sw, "--lang-features=interface-constants,default-interface-methods");
 
+				if (!string.IsNullOrEmpty (JavadocVerbosity))
+					WriteLine (sw, $"\"--doc-comment-verbosity={JavadocVerbosity}\"");
+
 				if (JavadocXml != null) {
 					foreach (var xml in JavadocXml) {
-						WriteLine (sw, $"--with-javadoc-xml=\"{Path.GetFullPath (xml.ItemSpec)}\"");
+						WriteLine (sw, $"\"--with-javadoc-xml={Path.GetFullPath (xml.ItemSpec)}\"");
 					}
 				}
 			}
