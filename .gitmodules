@@ -13,7 +13,7 @@
 [submodule "external/Java.Interop"]
     path = external/Java.Interop
     url = https://github.com/xamarin/java.interop.git
-    branch = master
+    branch = d16-9
 [submodule "external/lz4"]
     path = external/lz4
     url = https://github.com/lz4/lz4.git
@@ -33,8 +33,8 @@
 [submodule "external/proguard"]
     path = external/proguard
     url = https://github.com/Guardsquare/proguard.git
-    branch = master
     ignore = dirty
+    branch = master
 [submodule "external/sqlite"]
     path = external/sqlite
     url = https://github.com/xamarin/sqlite.git
@@ -42,4 +42,4 @@
 [submodule "external/xamarin-android-tools"]
     path = external/xamarin-android-tools
     url = https://github.com/xamarin/xamarin-android-tools
-    branch = main
+    branch = d16-9

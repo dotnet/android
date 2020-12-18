@@ -20,7 +20,7 @@
          * Bump last two digits of the patch version for service releases.
          * Bump first digit of the patch version for feature releases (and reset the first two digits to 0)
     -->
-    <AndroidPackVersion>11.0.100</AndroidPackVersion>
+    <AndroidPackVersion>11.2.0</AndroidPackVersion>
   </PropertyGroup>
   
   <!-- Add Roslyn analyzers NuGet to all projects (except NRefactory which has violations but is only used for running tests and XamarinManifestGenerator which uses packages.config ) -->
