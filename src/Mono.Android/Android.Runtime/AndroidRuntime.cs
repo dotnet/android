@@ -246,11 +246,12 @@ namespace Android.Runtime {
 
 		protected override IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
 		{
+			foreach (var ti in base.GetTypesForSimpleReference (jniSimpleReference))
+				yield return ti;
+
 			var t = Java.Interop.TypeManager.GetJavaToManagedType (jniSimpleReference);
-			if (t == null)
-				return base.GetTypesForSimpleReference (jniSimpleReference);
-			return base.GetTypesForSimpleReference (jniSimpleReference)
-				.Concat (Enumerable.Repeat (t, 1));
+			if (t != null)
+				yield return t;
 		}
 
 		protected override string? GetSimpleReference (Type type)
@@ -395,7 +396,13 @@ namespace Android.Runtime {
 				Delegate callback;
 				if (toks [2] == "__export__") {
 					var mname = toks [0].Substring (2);
-					var minfo = type.GetMethods (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static).Where (m => m.Name == mname && JavaNativeTypeManager.GetJniSignature (m) == toks [1]).FirstOrDefault ();
+					MethodInfo? minfo = null;
+					foreach (var mi in type.GetMethods (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static))
+						if (mi.Name == mname && JavaNativeTypeManager.GetJniSignature (mi) == toks [1]) {
+							minfo = mi;
+							break;
+						}
+
 					if (minfo == null)
 						throw new InvalidOperationException (String.Format ("Specified managed method '{0}' was not found. Signature: {1}", mname, toks [1]));
 					callback = CreateDynamicCallback (minfo);
