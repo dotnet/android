@@ -65,6 +65,8 @@ namespace MonoDroid.Tuner
 
 			if (options.LinkNone) {
 				pipeline.AppendStep (new FixAbstractMethodsStep (cache));
+				if (options.AddKeepAlives)
+					pipeline.AppendStep (new AddKeepAlivesStep (cache));
 				pipeline.AppendStep (new OutputStepWithTimestamps ());
 				return pipeline;
 			}
@@ -118,6 +120,8 @@ namespace MonoDroid.Tuner
 			if (!string.IsNullOrWhiteSpace (options.ProguardConfiguration))
 				pipeline.AppendStep (new GenerateProguardConfiguration (options.ProguardConfiguration));
 			pipeline.AppendStep (new StripEmbeddedLibraries ());
+			if (options.AddKeepAlives)
+				pipeline.AppendStep (new AddKeepAlivesStep (cache));
 			// end monodroid specific
 			pipeline.AppendStep (new RegenerateGuidStep ());
 			pipeline.AppendStep (new OutputStepWithTimestamps ());

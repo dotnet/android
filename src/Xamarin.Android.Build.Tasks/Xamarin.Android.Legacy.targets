@@ -637,6 +637,7 @@ projects. .NET 5 projects will not import this file.
         LinkSkip="$(AndroidLinkSkip)"
         LinkDescriptions="@(LinkDescription)"
         ProguardConfiguration="$(_ProguardProjectConfiguration)"
+        AddKeepAlives="$(AndroidAddKeepAlives)"
         PreserveJniMarshalMethods="$(AndroidGenerateJniMarshalMethods)"
         EnableProguard="$(AndroidEnableProguard)"
         Deterministic="$(Deterministic)"

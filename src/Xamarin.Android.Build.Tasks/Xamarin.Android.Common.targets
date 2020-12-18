@@ -842,6 +842,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_CreatePropertiesCache" DependsOnTargets="_SetupDesignTimeBuildForBuild;_SetLatestTargetFrameworkVersion;_ResolveMonoAndroidSdks">
 	<PropertyGroup>
+		<AndroidAddKeepAlives Condition="'$(AndroidAddKeepAlives)' == '' And '$(AndroidIncludeDebugSymbols)' != 'True'">True</AndroidAddKeepAlives>
 		<_AndroidBuildPropertiesCacheExists Condition=" Exists('$(_AndroidBuildPropertiesCache)') ">True</_AndroidBuildPropertiesCacheExists>
 		<_NuGetAssetsFile      Condition=" Exists('$(ProjectLockFile)') ">$(ProjectLockFile)</_NuGetAssetsFile>
 		<_NuGetAssetsFile      Condition=" '$(_NuGetAssetsFile)' == '' and Exists('packages.config') ">packages.config</_NuGetAssetsFile>
@@ -854,6 +855,7 @@ because xbuild doesn't support framework reference assemblies.
 		<!-- List of items we want to trigger a build if changed -->
 		<_PropertyCacheItems Include="BundleAssemblies=$(BundleAssemblies)" />
 		<_PropertyCacheItems Include="AotAssemblies=$(AotAssemblies)" />
+		<_PropertyCacheItems Include="AndroidAddKeepAlives=$(AndroidAddKeepAlives)" />
 		<_PropertyCacheItems Include="AndroidAotMode=$(AndroidAotMode)" />
 		<_PropertyCacheItems Include="AndroidEmbedProfilers=$(AndroidEmbedProfilers)" />
 		<_PropertyCacheItems Include="AndroidEnableProfiledAot=$(AndroidEnableProfiledAot)" />
@@ -1327,6 +1329,7 @@ because xbuild doesn't support framework reference assemblies.
       ResolvedAssemblies="@(_AllResolvedAssemblies)"
       SourceFiles="@(ResolvedAssemblies)"
       DestinationFiles="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')"
+      AddKeepAlives="$(AndroidAddKeepAlives)"
       Deterministic="$(Deterministic)"
   />
   <ItemGroup>
