@@ -19,15 +19,6 @@
 		<type fullname="Android.Runtime.JObjectRefType" />
 		<type fullname="Android.Runtime.JValue" />
 		<!-- it seems that generics identifier `n is not taken into consideration though ... -->
-		<type fullname="Android.Runtime.JavaArray`1" />
-		<type fullname="Android.Runtime.JavaCollection" />
-		<type fullname="Android.Runtime.JavaCollection`1" />
-		<type fullname="Android.Runtime.JavaDictionary" />
-		<type fullname="Android.Runtime.JavaDictionary`2" />
-		<type fullname="Android.Runtime.JavaList" />
-		<type fullname="Android.Runtime.JavaList`1" />
-		<type fullname="Android.Runtime.JavaSet" />
-		<type fullname="Android.Runtime.JavaSet`1" />
 		<type fullname="Android.Runtime.JavaTypeConverter`1" />
 		<type fullname="Android.Runtime.JniHandleOwnership" />
 		<type fullname="Android.Runtime.Logger" />
