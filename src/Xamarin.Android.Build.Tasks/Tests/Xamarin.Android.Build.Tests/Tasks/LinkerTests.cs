@@ -290,7 +290,6 @@ $@"			var myButton = new AttributedButtonStub (this);
 		}
 
 		[Test]
-		[Category ("DotNetIgnore")]
 		public void AndroidAddKeepAlives ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
@@ -327,7 +326,7 @@ namespace UnnamedProject {
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Building a project should have succeded.");
 
-				var assemblyPath = b.Output.GetIntermediaryPath (Path.Combine ("android", "assets", "UnnamedProject.dll"));
+				var assemblyPath = BuildTest.GetLinkedPath (b,  true, "UnnamedProject.dll");
 				using (var assembly = AssemblyDefinition.ReadAssembly (assemblyPath)) {
 					Assert.IsTrue (assembly != null);
 
