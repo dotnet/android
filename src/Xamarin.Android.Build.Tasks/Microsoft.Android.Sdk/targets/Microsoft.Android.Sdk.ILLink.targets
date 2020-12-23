@@ -26,7 +26,7 @@ This file contains the .NET 5-specific targets to customize ILLink
   <Target Name="_PrepareLinking"
       Condition=" '$(PublishTrimmed)' == 'true' "
       AfterTargets="ComputeResolvedFilesToPublishList"
-      DependsOnTargets="GetReferenceAssemblyPaths">
+      DependsOnTargets="GetReferenceAssemblyPaths;_CreatePropertiesCache">
     <ItemGroup>
       <!-- Mark all assemblies to be linked for AndroidLinkMode=Full -->
       <ResolvedFileToPublish
@@ -50,6 +50,10 @@ This file contains the .NET 5-specific targets to customize ILLink
       <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --skip-unresolved false</_ExtraTrimmerArgs>
       <_AdditionalTaskAssemblyDirectory>$(XamarinSdkRootDirectory)tools/dotnet-linker/</_AdditionalTaskAssemblyDirectory>
       <_AdditionalTaskAssembly>$(_AdditionalTaskAssemblyDirectory)dotnet-linker.dll</_AdditionalTaskAssembly>
+    </PropertyGroup>
+    <PropertyGroup
+        Condition=" '$(AndroidAddKeepAlives)' != '' ">
+      <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --custom-data AddKeepAlivesStep="$(AndroidAddKeepAlives)"</_ExtraTrimmerArgs>
     </PropertyGroup>
     <PropertyGroup
         Condition=" '$(_ProguardProjectConfiguration)' != '' ">
