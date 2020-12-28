@@ -5,8 +5,6 @@
 		<type fullname="Android.Runtime.GeneratedDummyHost" />
 		<type fullname="Android.Runtime.GeneratedEnumAttribute" />
 		<type fullname="Android.Runtime.IJavaObject" />
-		<type fullname="Android.Runtime.InputStreamAdapter" />
-		<type fullname="Android.Runtime.InputStreamInvoker" />
 		<type fullname="Android.Runtime.JNIEnv">
 			<method name="Exit" />
 			<method name="Initialize" />
@@ -34,8 +32,6 @@
 		<type fullname="Android.Runtime.LogLevel" />
 		<type fullname="Android.Runtime.LogCategories" />
 		<type fullname="Android.Runtime.NamespaceMappingAttribute" />
-		<type fullname="Android.Runtime.OutputStreamAdapter" />
-		<type fullname="Android.Runtime.OutputStreamInvoker" />
 		<type fullname="Android.Runtime.PreserveAttribute" />
 		<type fullname="Android.Runtime.RaiseThrowableEventArgs" />
 		<type fullname="Android.Runtime.RegisterAttribute" />
