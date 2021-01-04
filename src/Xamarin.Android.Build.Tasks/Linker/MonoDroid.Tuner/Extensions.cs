@@ -46,6 +46,76 @@ namespace MonoDroid.Tuner {
 			return td != null ? td.FullName + "," + td.Module.Assembly.FullName : arg.Value;
 		}
 
+#if !NETCOREAPP
+		public static AssemblyDefinition GetAssembly (this LinkContext context, string assemblyName)
+		{
+			AssemblyDefinition ad;
+			context.TryGetLinkedAssembly (assemblyName, out ad);
+			return ad;
+		}
+
+		public static TypeDefinition GetType (this LinkContext context, string assemblyName, string typeName)
+		{
+			AssemblyDefinition ad = context.GetAssembly (assemblyName);
+			return ad == null ? null : GetType (ad, typeName);
+		}
+
+		public static MethodDefinition GetMethod (this LinkContext context, string ns, string typeName, string name, string [] parameters)
+		{
+			var type = context.GetType (ns, typeName);
+			if (type == null)
+				return null;
+
+			return GetMethod (type, name, parameters);
+		}
+#endif
+
+		public static MethodDefinition GetMethod (TypeDefinition td, string name)
+		{
+			MethodDefinition method = null;
+			foreach (var md in td.Methods) {
+				if (md.Name == name) {
+					method = md;
+					break;
+				}
+			}
+
+			return method;
+		}
+
+		public static MethodDefinition GetMethod (TypeDefinition type, string name, string [] parameters)
+		{
+			MethodDefinition method = null;
+			foreach (var md in type.Methods) {
+				if (md.Name != name)
+					continue;
+
+				if (md.Parameters.Count != parameters.Length)
+					continue;
+
+				var equal = true;
+				for (int i = 0; i < parameters.Length; i++) {
+					if (md.Parameters [i].ParameterType.FullName != parameters [i]) {
+						equal = false;
+						break;
+					}
+				}
+
+				if (!equal)
+					continue;
+
+				method = md;
+				break;
+			}
+
+			return method;
+		}
+
+		public static TypeDefinition GetType (AssemblyDefinition assembly, string typeName)
+		{
+			return assembly.MainModule.GetType (typeName);
+		}
+
 		public static bool Implements (this TypeReference self, string interfaceName)
 		{
 			if (interfaceName == null)

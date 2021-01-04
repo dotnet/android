@@ -50,6 +50,16 @@ processing Android assets and resources.
 
 Added in Xamarin.Android 9.1.
 
+## AndroidAddKeepAlives
+
+A boolean property that controls whether the linker will insert
+`GC.KeepAlive()` invocations within binding projects to prevent premature
+object collection.
+
+Defaults to `True` for Release configuration builds.
+
+Added in Xamarin.Android 11.2.
+
 ## AndroidAotCustomProfilePath
 
 The file that `aprofutil` should create to hold profiler data.
