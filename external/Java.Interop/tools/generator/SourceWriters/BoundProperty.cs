@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using MonoDroid.Generation;
 using Xamarin.SourceWriter;
 
@@ -97,6 +98,8 @@ namespace generator.SourceWriters
 				SetterComments.Add ("// This is a dispatching setter");
 				SetBody.Add ($"Set{property.Name} (value);");
 			}
+
+			AddJavadocs (property);
 		}
 
 		public override void Write (CodeWriter writer)
@@ -143,6 +146,62 @@ namespace generator.SourceWriters
 				return true;
 
 			return false;
+		}
+
+		void AddJavadocs (Property property)
+		{
+			if (property.Getter?.JavadocInfo == null && property.Setter?.JavadocInfo == null)
+				return;
+
+			var memberDocs = new XElement ("member");
+
+			if (property.Getter?.JavadocInfo != null) {
+				memberDocs.Add (property.Getter.JavadocInfo.ParseJavadoc ());
+			}
+
+			if (property.Setter?.JavadocInfo != null) {
+				var setterDocs  = new XElement ("member", property.Setter.JavadocInfo.ParseJavadoc ());
+
+				MergeSummary (memberDocs, setterDocs);
+				MergeRemarks (memberDocs, setterDocs);
+
+				memberDocs.Add (setterDocs.DescendantNodes ());
+			}
+
+			JavadocInfo.AddComments (Comments, memberDocs.Elements ());
+		}
+
+		static void MergeSummary (XElement mergeInto, XElement mergeFrom)
+		{
+			var toContent   = mergeInto.Element ("summary");
+			var fromContent = mergeFrom.Element ("summary");
+
+			if (toContent == null && fromContent != null) {
+				fromContent.Remove ();
+				mergeInto.Add (fromContent);
+			}
+			else if (toContent != null && fromContent != null) {
+				fromContent.Remove ();
+				toContent.Add (" -or- ");
+				toContent.Add (fromContent.DescendantNodes ());
+			}
+		}
+
+		static void MergeRemarks (XElement mergeInto, XElement mergeFrom)
+		{
+			var toContent   = mergeInto.Element ("remarks");
+			var fromContent = mergeFrom.Element ("remarks");
+
+			if (toContent == null && fromContent != null) {
+				fromContent.Remove ();
+				mergeInto.Add (fromContent);
+			}
+			else if (toContent != null && fromContent != null) {
+				fromContent.Remove ();
+				toContent.AddFirst (new XElement ("para", "Property getter documentation:"));
+				toContent.Add (new XElement ("para", "Property setter documentation:"));
+				toContent.Add (fromContent.DescendantNodes ());
+			}
 		}
 	}
 }

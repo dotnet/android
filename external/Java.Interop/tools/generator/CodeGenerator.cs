@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml;
+using System.Xml.Linq;
 using Mono.Cecil;
 using MonoDroid.Generation;
 using Xamarin.AndroidTools.AnnotationSupport;
@@ -179,6 +180,7 @@ namespace Xamarin.Android.Binder
 			SealedProtectedFixups.Fixup (gens);
 
 			GenerateAnnotationAttributes (gens, annotations_zips);
+			JavadocFixups.Fixup (gens, options);
 
 			//SymbolTable.Dump ();
 

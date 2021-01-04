@@ -24,6 +24,7 @@ namespace generator.SourceWriters
 
 			Name = klass.Name;
 
+			constructor.JavadocInfo?.AddJavadocs (Comments);
 			Comments.Add (string.Format ("// Metadata.xml XPath constructor reference: path=\"{0}/constructor[@name='{1}'{2}]\"", klass.MetadataXPathReference, klass.JavaSimpleName, constructor.Parameters.GetMethodXPathPredicate ()));
 
 			Attributes.Add (new RegisterAttr (".ctor", constructor.JniSignature, string.Empty, additionalProperties: constructor.AdditionalAttributeString ()));

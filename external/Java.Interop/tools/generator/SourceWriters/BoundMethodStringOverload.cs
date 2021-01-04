@@ -27,6 +27,8 @@ namespace generator.SourceWriters
 			if (method.Deprecated != null)
 				Attributes.Add (new ObsoleteAttr (method.Deprecated.Replace ("\"", "\"\"").Trim ()));
 
+			method.JavadocInfo?.AddJavadocs (Comments);
+
 			this.AddMethodParametersStringOverloads (method.Parameters, opt);
 		}
 

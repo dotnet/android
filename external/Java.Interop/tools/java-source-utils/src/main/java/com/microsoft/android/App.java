@@ -40,7 +40,7 @@ public class App {
 			if ((options.outputParamsTxt = Parameter.normalize(options.outputParamsTxt, "")).length() > 0) {
 				generateParamsTxt(options.outputParamsTxt, packages);
 			}
-			generateXml(options.outputJavadocXml, packages);
+			generateXml(options, packages);
 			options.close();
 		}
 		catch (Throwable t) {
@@ -66,8 +66,9 @@ public class App {
 		}
 	}
 
-	static void generateXml(String filename, JniPackagesInfo packages) throws Throwable {
-		try (final   JavadocXmlGenerator       javadocXmlGen   = new JavadocXmlGenerator(filename)) {
+	static void generateXml(JavaSourceUtilsOptions options, JniPackagesInfo packages) throws Throwable {
+		try (final   JavadocXmlGenerator       javadocXmlGen   = new JavadocXmlGenerator(options.outputJavadocXml)) {
+			javadocXmlGen.writeCopyrightInfo(options.docCopyrightFile, options.docUrlPrefix, options.docUrlStyle);
 			javadocXmlGen.writePackages(packages);
 		}
 	}

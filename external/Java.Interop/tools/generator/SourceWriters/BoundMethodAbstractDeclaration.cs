@@ -41,6 +41,8 @@ namespace generator.SourceWriters
 
 			method_callback = new MethodCallback (impl, method, opt, null, method.IsReturnCharSequence);
 
+			method.JavadocInfo?.AddJavadocs (Comments);
+
 			if (method.DeclaringType.IsGeneratable)
 				Comments.Add ($"// Metadata.xml XPath method reference: path=\"{method.GetMetadataXPathReference (method.DeclaringType)}\"");
 

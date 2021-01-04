@@ -37,6 +37,7 @@ namespace generator.SourceWriters
 
 			SetVisibility (iface.Visibility);
 
+			iface.JavadocInfo?.AddJavadocs (Comments);
 			Comments.Add ($"// Metadata.xml XPath interface reference: path=\"{iface.MetadataXPathReference}\"");
 
 			if (iface.IsDeprecated)

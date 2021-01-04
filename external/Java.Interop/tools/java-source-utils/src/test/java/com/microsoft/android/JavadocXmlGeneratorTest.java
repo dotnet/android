@@ -18,7 +18,7 @@ import com.microsoft.android.ast.*;
 
 public final class JavadocXmlGeneratorTest {
 	@Test(expected = FileNotFoundException.class)
-	public void init_invalidFileThrows() throws FileNotFoundException, UnsupportedEncodingException {
+	public void init_invalidFileThrows() throws FileNotFoundException, ParserConfigurationException, TransformerException, UnsupportedEncodingException {
 		try (JavadocXmlGenerator g = new JavadocXmlGenerator("/this/file/does/not/exist")) {
 		}
 	}
@@ -38,6 +38,7 @@ public final class JavadocXmlGeneratorTest {
 
 		JniPackagesInfo packages = new JniPackagesInfo();
 		generator.writePackages(packages);
+		generator.close();
 
 		final   String  expected =
 			"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n" +
@@ -96,6 +97,7 @@ public final class JavadocXmlGeneratorTest {
 			"</api>\n";
 
 		generator.writePackages(packages);
+		generator.close();
 		assertEquals("global package + example packages", expected, bytes.toString());
 	}
 
@@ -126,6 +128,7 @@ public final class JavadocXmlGeneratorTest {
 		final   String                  expected        = JniPackagesInfoTest.getResourceContents(resourceXml);
 
 		generator.writePackages(packagesInfo);
+		generator.close();
 		// try (FileOutputStream o = new FileOutputStream(resourceXml + "-jonp.xml")) {
 		// 	bytes.writeTo(o);
 		// }

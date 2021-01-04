@@ -19,6 +19,7 @@ namespace generator.SourceWriters
 			Name = field.Name;
 			Type = new TypeReferenceWriter (opt.GetOutputName (field.Symbol.FullName));
 
+			field.JavadocInfo?.AddJavadocs (Comments);
 			Comments.Add ($"// Metadata.xml XPath field reference: path=\"{type.MetadataXPathReference}/field[@name='{field.JavaName}']\"");
 
 			Attributes.Add (new RegisterAttr (field.JavaName, additionalProperties: field.AdditionalAttributeString ()));

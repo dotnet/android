@@ -39,6 +39,8 @@ namespace MonoDroid.Generation
 
 		public string ReturnCast => string.Empty;
 
+		public JavadocInfo JavadocInfo { get; set; }
+
 		// This means Ctors/Methods/Properties/Fields has not been populated yet.
 		// If this type is retrieved from the SymbolTable, it will call PopulateAction
 		// to fill in members before returning it to the user.

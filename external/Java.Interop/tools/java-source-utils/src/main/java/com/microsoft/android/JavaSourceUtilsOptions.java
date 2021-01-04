@@ -40,10 +40,45 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.*;
 
 
 public class JavaSourceUtilsOptions implements AutoCloseable {
-	public static final String HELP_STRING = "[-v] [<-a|--aar> AAR]* [<-j|--jar> JAR]* [<-s|--source> DIRS]*\n" +
+	public static final String HELP_STRING =
+		"[-v] [<-a|--aar> AAR]* [<-j|--jar> JAR]* [<-s|--source> DIRS]*\n" +
 		"\t[--bootclasspath CLASSPATH]\n" +
 		"\t[<-P|--output-params> OUT.params.txt] [<-D|--output-javadoc> OUT.xml]\n" +
-		"\t[@RESPONSE-FILE]* FILES";
+		"\t[--doc-copyright FILE] [--doc-url-prefix URL] [--doc-url-style STYLE]\n" +
+		"\t[@RESPONSE-FILE]* FILES\n" +
+		"\n" +
+		"Options:\n" +
+		"      @RESPONSE-FILE         Additional options to parse, one option per line.\n" +
+		"      FILES                  .java files to parse.\n" +
+		"  -v                         Verbose output; show diagnostic information.\n" +
+		"  -h, -?, --help             Show this message and exit.\n" +
+		"\n" +
+		"Java type resolution options:\n" +
+		"      --bootclasspath CLASSPATH\n" +
+		"                             '" + File.pathSeparator + "'-separated list of .jar files to use\n" +
+		"                               for type resolution.\n" +
+		"  -a, --aar FILE             .aar file to use for type resolution.\n" +
+		"  -j, --jar FILE             .jar file to use for type resolution.\n" +
+		"  -s, --source DIR           Directory containing .java files for type\n" +
+		"                               resolution purposes.  DOES NOT parse all files.\n" +
+		"\n" +
+		"Documentation copyright file options:\n" +
+		"  Results in an additional '/api/javadoc-metadata' element when using\n" +
+		"  --output-javadoc.\n" +
+		"      --doc-copyright FILE   Copyright information for Javadoc.  Should be in\n" +
+		"                               mdoc(5) XML, to be held within <remarks/>.\n" +
+		"                               Stored in //javadoc-metadata/copyright.\n" +
+		"      --doc-url-prefix URL   Base URL for links to documentation.\n" +
+		"                               Stored in //javadoc-metadata/link/@prefix.\n" +
+		"      --doc-url-style STYLE  STYLE of URLs to generate for member links.\n" +
+		"                               Stored in //javadoc-metadata/link/@style.\n" +
+		"                               Supported styles include:\n" +
+		"                               - developer.android.com/reference@2020-Nov\n" +
+		"\n" +
+		"Output file options:\n" +
+		"  -P, --output-params FILE   Write method parameter names to FILE.\n" +
+		"  -D, --output-javadoc FILE  Write Javadoc within XML container to FILE.\n" +
+		"";
 
 	public  static  boolean             verboseOutput;
 
@@ -55,6 +90,10 @@ public class JavaSourceUtilsOptions implements AutoCloseable {
 	public  boolean haveBootClassPath;
 	public  String  outputParamsTxt;
 	public  String  outputJavadocXml;
+
+	public  File    docCopyrightFile;
+	public  String  docUrlPrefix;
+	public  String  docUrlStyle;
 
 	private final   Collection<File>    sourceDirectoryFiles  = new ArrayList<File>();
 	private         File                extractedTempDir;
@@ -147,6 +186,24 @@ public class JavaSourceUtilsOptions implements AutoCloseable {
 					aarFiles.add(file);
 					break;
 				}
+				case "--doc-copyright": {
+					final   File    file    = getNextOptionFile(args, arg);
+					if (file == null) {
+						break;
+					}
+					docCopyrightFile = file;
+					break;
+				}
+				case "--doc-url-prefix": {
+					final   String  prefix  = getNextOptionValue(args, arg);
+					docUrlPrefix            = prefix;
+					break;
+				}
+				case "--doc-url-style": {
+					final   String  style   = getNextOptionValue(args, arg);
+					docUrlStyle             = style;
+					break;
+				}
 				case "-j":
 				case "--jar": {
 					final   File    file    = getNextOptionFile(args, arg);
@@ -180,6 +237,7 @@ public class JavaSourceUtilsOptions implements AutoCloseable {
 					break;
 				}
 				case "-h":
+				case "-?":
 				case "--help": {
 					return null;
 				}

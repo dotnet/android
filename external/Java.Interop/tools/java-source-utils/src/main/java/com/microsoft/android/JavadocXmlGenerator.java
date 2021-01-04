@@ -2,9 +2,13 @@ package com.microsoft.android;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 
+import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
@@ -16,6 +20,7 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 
 import com.microsoft.android.ast.*;
 import com.microsoft.android.util.Parameter;
@@ -24,7 +29,10 @@ public final class JavadocXmlGenerator implements AutoCloseable {
 
 	final   PrintStream output;
 
-	public JavadocXmlGenerator(final String output) throws FileNotFoundException, UnsupportedEncodingException {
+	Document    document;
+	Element     api;
+
+	public JavadocXmlGenerator(final String output) throws FileNotFoundException, ParserConfigurationException, UnsupportedEncodingException {
 		if (output == null)
 			this.output = System.out;
 		else {
@@ -35,40 +43,86 @@ public final class JavadocXmlGenerator implements AutoCloseable {
 			}
 			this.output = new PrintStream(file, "UTF-8");
 		}
+
+		startApi();
 	}
 
-	public JavadocXmlGenerator(final PrintStream output) {
+	public JavadocXmlGenerator(final PrintStream output) throws ParserConfigurationException {
 		Parameter.requireNotNull("output", output);
 
 		this.output = output;
+
+		startApi();
 	}
 
-	public void close() {
+	private void startApi() throws ParserConfigurationException {
+		document    = DocumentBuilderFactory.newInstance ()
+			.newDocumentBuilder()
+			.newDocument();
+		api         = document.createElement("api");
+		api.setAttribute("api-source", "java-source-utils");
+		document.appendChild(api);
+	}
+
+	public void close() throws TransformerException {
+		Transformer transformer = TransformerFactory.newInstance()
+			.newTransformer();
+		transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+		transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+		transformer.transform(new DOMSource(document), new StreamResult(output));
+
 		if (output != System.out) {
 			output.flush();
 			output.close();
 		}
 	}
 
+	public final void writeCopyrightInfo(final File copyright, final String urlPrefix, final String urlStyle) throws IOException, ParserConfigurationException {
+		final   Element    info         = document.createElement("javadoc-metadata");
+		if (copyright != null) {
+			final   Element    blurb    = document.createElement("copyright");
+			final   NodeList   contents = readXmlFile(copyright);
+			if (contents == null) {
+				final byte[]   data     = Files.readAllBytes(copyright.toPath());
+				blurb.appendChild(document.createCDATASection(new String(data, StandardCharsets.UTF_8)));
+			} else {
+				final int len = contents.getLength();
+				for (int i = 0; i < len; ++i)
+					blurb.appendChild(document.importNode(contents.item(i),true));
+			}
+			info.appendChild(blurb);
+		}
+		if (urlPrefix != null && urlStyle != null) {
+			final   Element    link = document.createElement("link");
+			link.setAttribute("prefix", urlPrefix);
+			link.setAttribute("style", urlStyle);
+
+			info.appendChild(link);
+		}
+
+		if (info.hasChildNodes()) {
+			api.appendChild(info);
+		}
+	}
+
+	final NodeList readXmlFile(final File file) throws ParserConfigurationException {
+		final   DocumentBuilder     builder     = DocumentBuilderFactory.newInstance ()
+			.newDocumentBuilder();
+		try {
+			final   Document        contents    = builder.parse(file);
+			return contents.getChildNodes();
+		}
+		catch (Throwable t) {
+			return null;
+		}
+	}
+
 	public final void writePackages(final JniPackagesInfo packages) throws ParserConfigurationException, TransformerException {
 		Parameter.requireNotNull("packages", packages);
-
-		final   Document    document    = DocumentBuilderFactory.newInstance ()
-			.newDocumentBuilder()
-			.newDocument();
-		final   Element     api         = document.createElement("api");
-		api.setAttribute("api-source", "java-source-utils");
-		document.appendChild(api);
 
 		for (JniPackageInfo packageInfo : packages.getSortedPackages()) {
 			writePackage(document, api, packageInfo);
 		}
-
-		Transformer transformer = TransformerFactory.newInstance()
-			.newTransformer();
-		transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-		transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
-		transformer.transform(new DOMSource(document), new StreamResult(output));
 	}
 
 	private static final void writePackage(final Document document, final Element api, final JniPackageInfo packageInfo) {

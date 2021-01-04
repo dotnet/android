@@ -39,6 +39,7 @@ namespace generator.SourceWriters
 
 			AddImplementedInterfaces (klass);
 
+			klass.JavadocInfo?.AddJavadocs (Comments);
 			Comments.Add ($"// Metadata.xml XPath class reference: path=\"{klass.MetadataXPathReference}\"");
 
 			if (klass.IsDeprecated)

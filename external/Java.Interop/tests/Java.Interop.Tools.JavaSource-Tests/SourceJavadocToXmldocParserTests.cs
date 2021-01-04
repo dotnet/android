@@ -1,0 +1,175 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Xml.Linq;
+using System.Text;
+
+using NUnit.Framework;
+
+using Java.Interop.Tools.JavaSource;
+
+using Irony;
+using Irony.Parsing;
+
+namespace Java.Interop.Tools.JavaSource.Tests
+{
+	[TestFixture]
+	public class SourceJavadocToXmldocParserTests : SourceJavadocToXmldocGrammarFixture {
+
+		[Test]
+		public void TryParse ()
+		{
+			foreach (var values in TryParse_Success) {
+				ParseTree parseTree;
+				var p = new SourceJavadocToXmldocParser (XmldocStyle.Full);
+				var n = p.TryParse (values.Javadoc, null, out parseTree);
+				Assert.IsFalse (parseTree.HasErrors (), DumpMessages (parseTree, p));
+				Assert.AreEqual (values.FullXml, GetMemberXml (n), $"while parsing input: ```{values.Javadoc}```");
+
+				p = new SourceJavadocToXmldocParser (XmldocStyle.IntelliSense);
+				n = p.TryParse (values.Javadoc, null, out parseTree);
+				Assert.IsFalse (parseTree.HasErrors (), DumpMessages (parseTree, p));
+				Assert.AreEqual (values.IntelliSenseXml, GetMemberXml (n), $"while parsing input: ```{values.Javadoc}```");
+			}
+		}
+
+		static string GetMemberXml (IEnumerable<XNode> members)
+		{
+			var e = new XElement ("member", members);
+			return e.ToString ();
+		}
+
+		static readonly ParseResult[] TryParse_Success = new ParseResult[]{
+			new ParseResult {
+				Javadoc = "Summary.\n\nP2.\n\n<p>Hello!</p>",
+				FullXml = @"<member>
+  <summary>Summary.</summary>
+  <remarks>
+    <para>Summary.</para>
+    <para>P2.</para>
+    <para>Hello!</para>
+  </remarks>
+</member>",
+				IntelliSenseXml = @"<member>
+  <summary>Summary.</summary>
+</member>",
+			},
+			new ParseResult {
+				Javadoc = "The inline {@code code} tag should work for summary info.",
+				FullXml = @"<member>
+  <summary>The inline <c>code</c> tag should work for summary info.</summary>
+  <remarks>
+    <para>The inline <c>code</c> tag should work for summary info.</para>
+  </remarks>
+</member>",
+				IntelliSenseXml = @"<member>
+  <summary>The inline <c>code</c> tag should work for summary info.</summary>
+</member>",
+			},
+			new ParseResult {
+				Javadoc = "@return {@code true} if something\n or other; otherwise {@code false}.",
+				FullXml = @"<member>
+  <returns>
+    <c>true</c> if something
+ or other; otherwise <c>false</c>.</returns>
+</member>",
+				IntelliSenseXml = @"<member>
+  <returns>
+    <c>true</c> if something
+ or other; otherwise <c>false</c>.</returns>
+</member>",
+			},
+			new ParseResult {
+				Javadoc = @"This is the summary sentence.  Insert
+more description here.
+
+What about soft paragraphs?
+
+<p>What about <i>hard</i> paragraphs?
+
+@param a something
+@see #method()
+@apiSince 1
+",
+				FullXml = @"<member>
+  <param name=""a"">something</param>
+  <summary>This is the summary sentence.</summary>
+  <remarks>
+    <para>This is the summary sentence.  Insert
+more description here.</para>
+    <para>What about soft paragraphs?</para>
+    <para>What about <i>hard</i> paragraphs?</para>
+    <para>Added in API level 1.</para>
+  </remarks>
+  <seealso cref=""#method()"" />
+</member>",
+				IntelliSenseXml = @"<member>
+  <param name=""a"">something</param>
+  <summary>This is the summary sentence.</summary>
+</member>",
+			},
+			new ParseResult {
+				Javadoc = "Summary.\n\n<p>Paragraph.</p><pre>foo @bar baz</pre>",
+				FullXml = @"<member>
+  <summary>Summary.</summary>
+  <remarks>
+    <para>Summary.</para>
+    <para>Paragraph.</para>
+    <code lang=""text/java"">foo @bar baz</code>
+  </remarks>
+</member>",
+				IntelliSenseXml = @"<member>
+  <summary>Summary.</summary>
+</member>",
+			},
+			new ParseResult {
+				Javadoc = "Something {@link #method}: description, \"<code>declaration</code>\" or \"<code>another declaration</code>\".\n\n@apiSince 1\n",
+				FullXml = @"<member>
+  <summary>Something <c><see cref=""#method"" /></c>: description, ""&lt;code&gt;declaration&lt;/code&gt;"" or ""&lt;code&gt;another declaration&lt;/code&gt;"".</summary>
+  <remarks>
+    <para>Something <c><see cref=""#method"" /></c>: description, ""&lt;code&gt;declaration&lt;/code&gt;"" or ""&lt;code&gt;another declaration&lt;/code&gt;"".</para>
+    <para>Added in API level 1.</para>
+  </remarks>
+</member>",
+				IntelliSenseXml = @"<member>
+  <summary>Something <c><see cref=""#method"" /></c>: description, ""&lt;code&gt;declaration&lt;/code&gt;"" or ""&lt;code&gt;another declaration&lt;/code&gt;"".</summary>
+</member>",
+			},
+			new ParseResult {
+				// @jls is currently not supported; should be handled by @unknown-tag & ignored.
+				Javadoc = "Summary.\n\n@jls 1.2\n",
+				FullXml = @"<member>
+  <summary>Summary.</summary>
+  <remarks>
+    <para>Summary.</para>
+  </remarks>
+</member>",
+				IntelliSenseXml = @"<member>
+  <summary>Summary.</summary>
+</member>",
+			},
+			new ParseResult {
+				// @jls is currently not supported; should be handled by @unknown-tag & ignored.
+				Javadoc = "Summary.\n\n@throws Throwable insert <i>description</i> here.\n",
+				FullXml = @"<member>
+  <summary>Summary.</summary>
+  <remarks>
+    <para>Summary.</para>
+  </remarks>
+  <exception cref=""Throwable"">insert <i>description</i> here.</exception>
+</member>",
+				IntelliSenseXml = @"<member>
+  <summary>Summary.</summary>
+  <exception cref=""Throwable"">insert <i>description</i> here.</exception>
+</member>",
+			},
+		};
+
+		class ParseResult {
+			public  string  Javadoc;
+			public  string  FullXml;
+			public  string  IntelliSenseXml;
+		}
+	}
+}

@@ -59,6 +59,8 @@ namespace generator.SourceWriters
 
 			ReturnType = new TypeReferenceWriter (opt.GetTypeReferenceName (method.RetVal));
 
+			method.JavadocInfo?.AddJavadocs (Comments);
+
 			if (method.DeclaringType.IsGeneratable)
 				Comments.Add ($"// Metadata.xml XPath method reference: path=\"{method.GetMetadataXPathReference (method.DeclaringType)}\"");
 

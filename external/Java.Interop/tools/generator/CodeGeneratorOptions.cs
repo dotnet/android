@@ -2,6 +2,9 @@ using System;
 using System.Collections.ObjectModel;
 using Mono.Cecil;
 using Mono.Options;
+
+using Java.Interop.Tools.JavaSource;
+
 using MonoDroid.Generation;
 
 namespace Xamarin.Android.Binder
@@ -15,6 +18,7 @@ namespace Xamarin.Android.Binder
 			FixupFiles          = new Collection<string> ();
 			LibraryPaths        = new Collection<string> ();
 			AnnotationsZipFiles = new Collection<string> ();
+			JavadocXmlFiles     = new Collection<string> ();
 		}
 
 		public string               ApiLevel {get; set;}
@@ -24,6 +28,7 @@ namespace Xamarin.Android.Binder
 		public Collection<string>   AssemblyReferences {get; private set;}
 		public Collection<string>   FixupFiles {get; private set;}
 		public Collection<string>   LibraryPaths {get; private set;}
+		public Collection<string>   JavadocXmlFiles {get; private set;}
 		public bool                 GlobalTypeNames {get; set;}
 		public bool                 OnlyBindPublicTypes {get; set;}
 		public string               ApiDescriptionFile {get; set;}
@@ -46,6 +51,8 @@ namespace Xamarin.Android.Binder
 		public bool		    SupportDefaultInterfaceMethods { get; set; }
 		public bool		    SupportNestedInterfaceTypes { get; set; }
 		public bool		    SupportNullableReferenceTypes { get; set; }
+
+		public XmldocStyle		    XmldocStyle { get; set; } = XmldocStyle.IntelliSense;
 
 		public static CodeGeneratorOptions Parse (string[] args)
 		{
@@ -125,6 +132,18 @@ namespace Xamarin.Android.Binder
 					"Show this message and exit.",
 					v => show_help = v != null },
 				"",
+				"Javadoc to C# Documentation Comments Support:",
+				{ "doc-comment-verbosity=",
+					"{STYLE} of C# documentation comments to emit.\n" +
+					"Defaults to `full`.  {STYLE} may be:\n" +
+					"  * `intellisense`: emit <summary>, <param>,\n" +
+					"    <returns>, <exception>.\n" +
+					"  * `full`: plus <remarks>, <seealso>, ...",
+					v => opts.XmldocStyle = ParseXmldocStyle (v) },
+				{ "with-javadoc-xml=",
+					"{PATH} to `api.xml` containing Javadoc docs in\n`<javadoc/>` elements",
+					v => opts.JavadocXmlFiles.Add (v) },
+				"",
 				"C# Enumeration Support:",
 				{ "enumdir=",
 					"{DIRECTORY} to write enumeration declarations.",
@@ -189,5 +208,11 @@ namespace Xamarin.Android.Binder
 			}
 			throw new NotSupportedException ($"Don't know how to convert '{value}' to a CodeGenerationTarget value!");
 		}
+
+		static XmldocStyle ParseXmldocStyle (string style) => style?.ToLowerInvariant () switch {
+			"intellisense" => XmldocStyle.IntelliSense,
+			"full" => XmldocStyle.Full,
+			_ => XmldocStyle.Full,
+		};
 	}
 }

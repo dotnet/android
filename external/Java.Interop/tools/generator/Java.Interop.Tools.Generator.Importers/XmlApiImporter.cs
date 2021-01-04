@@ -113,6 +113,7 @@ namespace MonoDroid.Generation
 				IsFinal = elem.XGetAttribute ("final") == "true",
 				IsStatic = elem.XGetAttribute ("static") == "true",
 				JavaName = elem.XGetAttribute ("name"),
+				JniSignature = elem.XGetAttribute ("jni-signature"),
 				NotNull = elem.XGetAttribute ("not-null") == "true",
 				SetterParameter = CreateParameter (elem, options),
 				TypeName = elem.XGetAttribute ("type"),

@@ -24,6 +24,9 @@ namespace MonoDroid.Generation
 		public string TypeName { get; set; }
 		public string Value { get; set; }
 		public string Visibility { get; set; }
+		public string JniSignature { get; set; }
+
+		public JavadocInfo JavadocInfo { get; set; }
 
 		public int LineNumber { get; set; } = -1;
 		public int LinePosition { get; set; } = -1;

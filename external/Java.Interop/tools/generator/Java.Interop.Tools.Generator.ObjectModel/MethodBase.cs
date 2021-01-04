@@ -28,6 +28,8 @@ namespace MonoDroid.Generation
 		public int LinePosition { get; set; } = -1;
 		public string SourceFile { get; set; }
 
+		public JavadocInfo JavadocInfo { get; set; }
+
 		public string [] AutoDetectEnumifiedOverrideParameters (AncestorDescendantCache cache)
 		{
 			if (Parameters.All (p => p.Type != "int"))

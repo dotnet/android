@@ -25,6 +25,7 @@ namespace generator.SourceWriters
 			var fieldType = field.Symbol.IsArray ? "IList<" + field.Symbol.ElementType + ">" + opt.NullableOperator : opt.GetTypeReferenceName (field);
 			PropertyType = new TypeReferenceWriter (fieldType);
 
+			field.JavadocInfo?.AddJavadocs (Comments);
 			Comments.Add ($"// Metadata.xml XPath field reference: path=\"{type.MetadataXPathReference}/field[@name='{field.JavaName}']\"");
 
 			if (field.IsEnumified)

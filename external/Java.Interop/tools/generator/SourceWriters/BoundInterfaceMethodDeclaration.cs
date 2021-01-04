@@ -33,6 +33,8 @@ namespace generator.SourceWriters
 
 			Attributes.Add (new RegisterAttr (method.JavaName, method.JniSignature, method.ConnectorName + ":" + method.GetAdapterName (opt, adapter), additionalProperties: method.AdditionalAttributeString ()));
 
+			method.JavadocInfo?.AddJavadocs (Comments);
+
 			SourceWriterExtensions.AddMethodCustomAttributes (Attributes, method);
 			this.AddMethodParameters (method.Parameters, opt);
 		}
