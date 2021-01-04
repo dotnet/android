@@ -205,8 +205,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 			case PackageNamingPolicy.LowercaseWithAssemblyName:
 				return "assembly_" + (assemblyName.Replace ('.', '_') + "." + type.Namespace).ToLowerInvariant ();
 			case PackageNamingPolicy.LowercaseCrc64:
-				using (var crc = new Crc64 ())
-					return CRC_PREFIX + ToHash (type.Namespace + ":" + assemblyName, crc);
+				return CRC_PREFIX + ToCrc64 (type.Namespace + ":" + assemblyName);
 			default:
 					throw new NotSupportedException ($"PackageNamingPolicy.{PackageNamingPolicy} is no longer supported.");
 			}
@@ -574,8 +573,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 			case PackageNamingPolicy.LowercaseWithAssemblyName:
 				return "assembly_" + (type.GetPartialAssemblyName (cache).Replace ('.', '_') + "." + type.Namespace).ToLowerInvariant ();
 			case PackageNamingPolicy.LowercaseCrc64:
-				using (var crc = new Crc64 ())
-					return CRC_PREFIX + ToHash (type.Namespace + ":" + type.GetPartialAssemblyName (cache), crc);
+				return CRC_PREFIX + ToCrc64 (type.Namespace + ":" + type.GetPartialAssemblyName (cache));
 			default:
 					throw new NotSupportedException ($"PackageNamingPolicy.{PackageNamingPolicy} is no longer supported.");
 			}
@@ -644,10 +642,10 @@ namespace Java.Interop.Tools.TypeNameMappings
 		}
 #endif  // HAVE_CECIL
 
-		static string ToHash (string value, HashAlgorithm algorithm)
+		static string ToCrc64 (string value)
 		{
 			var data = Encoding.UTF8.GetBytes (value);
-			var hash = algorithm.ComputeHash (data);
+			var hash = Crc64Helper.Compute (data);
 			var buf  = new StringBuilder (hash.Length * 2);
 			foreach (var b in hash)
 				buf.AppendFormat ("{0:x2}", b);
