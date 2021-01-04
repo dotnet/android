@@ -489,20 +489,31 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	</ItemGroup>
 </Target>
 
-<Target Name="_ValidateAndroidPackageProperties">
-	<CreateProperty Value="$(ProjectDir)$(AndroidManifest)" Condition="'$(AndroidManifest)' != ''">
-		<Output TaskParameter="Value" PropertyName="_AndroidManifestAbs"/>
-	</CreateProperty>
-	<AndroidError Code="XA1018"
-		ResourceName="XA1018"
-		FormatArguments="$(_AndroidManifestAbs)"
-		Condition="'$(_AndroidManifestAbs)'!='' And !Exists ('$(_AndroidManifestAbs)')" />
+<Target Name="_GetAndroidPackageName">
+  <PropertyGroup>
+    <_AndroidManifestAbs Condition=" '$(AndroidManifest)' != '' ">$(ProjectDir)$(AndroidManifest)</_AndroidManifestAbs>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(GenerateApplicationManifest)' == 'true' ">
+    <_AndroidPackage>$(ApplicationId)</_AndroidPackage>
+    <_ApplicationLabel>$(ApplicationTitle)</_ApplicationLabel>
+    <_AndroidVersionName>$(ApplicationVersion)</_AndroidVersionName>
+    <_AndroidVersionCode Condition=" '$(AndroidCreatePackagePerAbi)' != 'true' ">$(AndroidVersionCode)</_AndroidVersionCode>
+  </PropertyGroup>
+  <AndroidError Code="XA1018"
+      ResourceName="XA1018"
+      FormatArguments="$(_AndroidManifestAbs)"
+      Condition=" '$(_AndroidManifestAbs)' != '' and !Exists ('$(_AndroidManifestAbs)') "
+  />
+  <GetAndroidPackageName
+      ManifestFile="$(_AndroidManifestAbs)"
+      AssemblyName="$(AssemblyName)"
+      PackageName="$(_AndroidPackage)">
+    <Output TaskParameter="PackageName" PropertyName="_AndroidPackage" />
+  </GetAndroidPackageName>
+</Target>
 
-	<GetAndroidPackageName ManifestFile="$(_AndroidManifestAbs)" AssemblyName="$(AssemblyName)">
-		<Output TaskParameter="PackageName" PropertyName="_AndroidPackage" />
-	</GetAndroidPackageName>
-	<Error Text="Could not determine package name." Condition="'$(_AndroidPackage)' == ''" />
-
+<Target Name="_ValidateAndroidPackageProperties"
+    DependsOnTargets="_GetAndroidPackageName">
 	<GetJavaPlatformJar
 		AndroidSdkPlatform="$(_AndroidApiLevel)"
 		AndroidManifest="$(_AndroidManifestAbs)">
@@ -1393,6 +1404,9 @@ because xbuild doesn't support framework reference assemblies.
       AndroidSdkPlatform="$(_AndroidApiLevel)"
       AndroidSdkDir="$(_AndroidSdkDirectory)"
       PackageName="$(_AndroidPackage)"
+      VersionName="$(_AndroidVersionName)"
+      VersionCode="$(_AndroidVersionCode)"
+      ApplicationLabel="$(_ApplicationLabel)"
       ManifestPlaceholders="$(AndroidManifestPlaceholders)"
       OutputDirectory="$(IntermediateOutputPath)android"
       TypemapOutputDirectory="$(_NativeAssemblySourceDir)"
@@ -2356,10 +2370,8 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 </Target>
 
-<Target Name="_CleanMsymArchive">
-	<GetAndroidPackageName ManifestFile="$(ProjectDir)$(AndroidManifest)" AssemblyName="$(AssemblyName)">
-		<Output TaskParameter="PackageName" PropertyName="_AndroidPackage" />
-	</GetAndroidPackageName>
+<Target Name="_CleanMsymArchive"
+    DependsOnTargets="_GetAndroidPackageName">
 	<RemoveDirFixed Directories="$(OutDir)$(_AndroidPackage).$(AndroidPackageFormat).mSYM" Condition=" '$(_AndroidPackage)' != '' " />
 </Target>
 

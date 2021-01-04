@@ -26,9 +26,6 @@ namespace Xamarin.Android.Tasks {
 		[Required]
 		public string JavaPlatformJarPath { get; set; }
 
-		[Required]
-		public string ApplicationName { get; set; }
-
 		public string PackageName { get; set; }
 
 		public ITaskItem [] AdditionalResourceArchives { get; set; }
@@ -157,7 +154,6 @@ namespace Xamarin.Android.Tasks {
 				LogCodedError (errorCode, ManifestFile, 0, error);
 				return cmd.ToArray ();
 			}
-			manifest.ApplicationName = ApplicationName;
 			manifest.Save (LogCodedWarning, manifestFile);
 
 			cmd.Add ("link");
