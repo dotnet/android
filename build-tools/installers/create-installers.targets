@@ -220,7 +220,7 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\startup.aotprofile" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\startup-xf.aotprofile" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\r8.jar" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\bundletool.jar" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\bundletool.jar" ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\java_runtime.jar" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\java_runtime_fastdev.jar" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\java_runtime.dex" />

@@ -5,6 +5,7 @@
       "description": "Android SDK",
       "packs": [
         "Microsoft.Android.Sdk",
+        "Microsoft.Android.Sdk.BundleTool",
         "Microsoft.Android.Ref",
         "Microsoft.Android.Templates"
       ]
@@ -18,6 +19,10 @@
         "osx-x64": "Microsoft.Android.Sdk.osx-x64",
         "win-x64": "Microsoft.Android.Sdk.win-x64"
       }
+    },
+    "Microsoft.Android.Sdk.BundleTool": {
+      "kind": "sdk",
+      "version": "@SDK_PACK_VERSION@"
     },
     "Microsoft.Android.Ref": {
       "kind": "framework",
