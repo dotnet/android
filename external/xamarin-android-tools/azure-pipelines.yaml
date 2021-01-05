@@ -11,77 +11,82 @@ pr:
 # Global variables
 variables:
   DotNetCoreVersion: 3.1.100
-  HostedMac: Hosted Mac Internal
-  HostedWinVS2019: Hosted Windows 2019 with VS2019
 
 jobs:
-- job: windows
-  displayName: windows
-  pool: $(HostedWinVS2019)
+- job: build
+  displayName: Build and Test
+  timeoutInMinutes: 60
+  cancelTimeoutInMinutes: 2
+
+  strategy:
+    matrix:
+      macOS:
+        vmImage: macOS-10.15
+      win2019:
+        vmImage: windows-2019
+
+  pool:
+    vmImage: $(vmImage)
+
+  workspace:
+    clean: all
+
   steps:
+  - checkout: self
+    clean: true
+
   - task: UseDotNet@2
     displayName: Use .NET Core $(DotNetCoreVersion)
     inputs:
       version: $(DotNetCoreVersion)
+
   - task: NuGetToolInstaller@0
     displayName: 'Install NuGet'
     inputs:
       versionSpec: 5.x
+
+  - script: |
+      dotnet tool install --global boots
+      boots https://download.mono-project.com/archive/6.12.0/macos-10-universal/MonoFramework-MDK-6.12.0.107.macos10.xamarin.universal.pkg
+    displayName: Install Mono 6.12
+    condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
+
   - task: NuGetCommand@2
     displayName: 'NuGet Restore'
     inputs:
       restoreSolution: Xamarin.Android.Tools.sln
       feedsToUse: config
       nugetConfigPath: NuGet.config
+
   - task: MSBuild@1
     displayName: 'Build solution Xamarin.Android.Tools.sln'
     inputs:
       solution: Xamarin.Android.Tools.sln
-  - task: VSTest@2
+
+  - task: DotNetCoreCLI@2
     displayName: 'Run Tests'
     inputs:
-      testAssemblyVer2: 'bin\TestDebug\*-Tests.dll'
-      testRunTitle: windows-tests
+      command: test
+      projects: bin/TestDebug-net*/**/*-Tests.dll
+      testRunTitle: Xamarin.Android.Tools Tests - $(vmImage)
+
   - powershell: |
       $hashOfLastVersionChange = & "git" "log" "--follow" "-1" "--pretty=%H" "nuget.version"
       $commitsSinceVersionChange = & "git" "rev-list" "--count" "$hashOfLastVersionChange..HEAD"
       $majorMinor = Get-Content "nuget.version"
       $version = "$majorMinor.$commitsSinceVersionChange"
       Write-Host "##vso[task.setvariable variable=xat.nuget.version]$version"
+    condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
+
   - task: MSBuild@1
     displayName: 'Build NuGet'
     inputs:
       solution: 'src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj'
       msbuildArguments: '/t:pack /p:Version=$(xat.nuget.version) /p:OutputPath=$(Build.ArtifactStagingDirectory)'
+    condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
+
   - task: PublishBuildArtifacts@1
     displayName: Upload Artifacts
     inputs:
       pathtoPublish: $(Build.ArtifactStagingDirectory)
-- job: mac
-  displayName: mac
-  pool: $(HostedMac)
-  steps:
-  - task: UseDotNet@2
-    displayName: Use .NET Core $(DotNetCoreVersion)
-    inputs:
-      version: $(DotNetCoreVersion)
-  - script: |
-      dotnet tool install --global boots
-      boots https://download.mono-project.com/archive/6.4.0/macos-10-universal/MonoFramework-MDK-6.4.0.198.macos10.xamarin.universal.pkg
-    displayName: Install Mono 6.4
-  - script: make prepare CONFIGURATION=$(Build.Configuration)
-    displayName: make prepare
-
-  - script: make all CONFIGURATION=$(Build.Configuration)
-    displayName: make all
-
-  - script: make run-all-tests CONFIGURATION=$(Build.Configuration)
-    displayName: make run-all-tests
-
-  - task: PublishTestResults@2
-    condition: always()
-    inputs:
-      testResultsFormat: NUnit
-      testResultsFiles: TestResult*.xml
-      testRunTitle: mac-tests
-      failTaskOnFailedTests: true
+    condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))

@@ -38,7 +38,11 @@ The default `make all` target accepts the following optional
 
 # Build
 
-To build **xamarin-android-tools**, first prepare the project:
+To build **xamarin-android-tools**:
+
+	msbuild /restore Xamarin.Android.Tools.sln
+
+Alternatively, first prepare the project:
 
 	make prepare
 
@@ -53,7 +57,7 @@ Next, run `make`:
 
 To run the unit tests:
 
-	make run-all-tests
+	dotnet test tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj -l "console;verbosity=detailed"
 
 # Build Output Directory Structure
 

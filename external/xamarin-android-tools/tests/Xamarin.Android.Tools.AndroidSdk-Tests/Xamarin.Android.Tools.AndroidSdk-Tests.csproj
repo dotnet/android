@@ -1,20 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net461;netcoreapp3.1</TargetFrameworks>
+    <!-- $(TargetFrameworks) is used to allow the $(TargetFramework) check in Directory.Build.props to work.
+        If $(TargetFramework) is declared here instead, it will not be evaluated before Directory.Build.props
+        is loaded and the wrong $(TestOutputFullPath) will be used. -->
+    <TargetFrameworks>netcoreapp3.1</TargetFrameworks>
     <IsPackable>false</IsPackable>
+    <OutputPath>$(TestOutputFullPath)</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <OutputPath>$(TestOutputFullPath)</OutputPath>
-  </PropertyGroup>
-
   <ItemGroup>
-    <PackageReference Include="nunit" Version="3.11.0" />
-    <PackageReference Include="NUnit.ConsoleRunner" Version="3.9.0" />
-    <PackageReference Include="NUnit3TestAdapter" Version="3.13.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.2.0" />
+    <PackageReference Include="NUnit" Version="3.12.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="3.16.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0"/>
   </ItemGroup>
 
   <ItemGroup>

@@ -30,7 +30,11 @@
         {
             "label": "Run Unit Tests",
             "type": "shell",
-            "command": "make run-all-tests",
+            "command": "dotnet",
+            "args": [
+                "test",
+                "${workspaceFolder}/tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj"
+            ],
             "group": {
                 "kind": "test",
                 "isDefault": true
