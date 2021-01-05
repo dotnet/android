@@ -229,7 +229,8 @@ namespace Xamarin.Android.Tasks
 
 				count = 0;
 				foreach (var jarFile in jarFilePaths) {
-					using (var jar = ZipArchive.Open (File.OpenRead (jarFile))) {
+					using (var stream = File.OpenRead (jarFile))
+					using (var jar = ZipArchive.Open (stream)) {
 						foreach (var jarItem in jar) {
 							if (jarItem.IsDirectory)
 								continue;
