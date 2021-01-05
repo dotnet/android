@@ -35,7 +35,7 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 				var sdkDir = AndroidSdkPath;
 				MonoAndroidHelper.AndroidSdk = new AndroidSdkInfo ((arg1, arg2) => { }, sdkDir, ndkDir);
 				NdkUtil.Init (log, ndkDir);
-				var platforms = NdkUtil.GetSupportedPlatforms (ndkDir);
+				var platforms = NdkUtil.GetSupportedPlatforms (log, ndkDir);
 				Assert.AreNotEqual (0, platforms.Count (), "No platforms found");
 				var arch = AndroidTargetArch.X86;
 				Assert.IsTrue (NdkUtil.ValidateNdkPlatform (log, ndkDir, arch, enableLLVM: false));

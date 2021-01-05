@@ -22,6 +22,7 @@ namespace Xamarin.Android.Prepare
 		public const string DotNetPreviewVersionFull            = "DotNetPreviewVersionFull";
 		public const string EmulatorVersion                     = "EmulatorVersion";
 		public const string EmulatorPkgRevision                 = "EmulatorPkgRevision";
+		public const string HostOS                              = "HostOS";
 		public const string IgnoreMaxMonoVersion                = "IgnoreMaxMonoVersion";
 		public const string IgnoreMinMonoVersion                = "IgnoreMinMonoVersion";
 		public const string JavaInteropFullPath                 = "JavaInteropFullPath";

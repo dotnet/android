@@ -10,7 +10,6 @@ namespace Xamarin.Android.Prepare
 	partial class BuildInfo : AppObject
 	{
 		static readonly char[] NDKPropertySeparator = new [] { '=' };
-		static readonly char[] NDKPlatformDirectorySeparator = new [] { '-' };
 
 		public string CommitOfLastVersionChange { get; private set; } = String.Empty;
 
@@ -38,9 +37,10 @@ namespace Xamarin.Android.Prepare
 			Log.StatusLine ();
 		}
 
-		public bool GatherNDKInfo (Context context, string ndkRoot)
+		public bool GatherNDKInfo (Context context)
 		{
-			string props = Path.Combine (ndkRoot, "source.properties");
+			string ndkDir = Configurables.Paths.AndroidNdkDirectory;
+			string props = Path.Combine (ndkDir, "source.properties");
 			if (!File.Exists (props)) {
 				Log.ErrorLine ("NDK properties file does not exist: ", props, tailColor: Log.DestinationColor);
 				return false;
@@ -71,24 +71,32 @@ namespace Xamarin.Android.Prepare
 				break;
 			}
 
+			Log.DebugLine ($"Looking for minimum API available in {ndkDir}");
 			int minimumApi = Int32.MaxValue;
-			string platforms = Path.Combine (ndkRoot, "platforms");
-			foreach (string p in Directory.EnumerateDirectories (platforms, "android-*", SearchOption.TopDirectoryOnly)) {
-				string pdir = Path.GetFileName (p);
-				string[] parts = pdir.Split (NDKPlatformDirectorySeparator, 2);
-				if (parts.Length != 2)
-					continue;
+			foreach (var kvp in Configurables.Defaults.AndroidToolchainPrefixes) {
+				string dirName = kvp.Value;
+				string platforms = Path.Combine (Configurables.Paths.AndroidToolchainSysrootLibDirectory, dirName);
+				Log.DebugLine ($"  searching in {platforms}");
+				foreach (string p in Directory.EnumerateDirectories (platforms, "*", SearchOption.TopDirectoryOnly)) {
+					string plibc = Path.Combine (p, "libc.so");
+					if (!Utilities.FileExists (plibc)) {
+						continue;
+					}
 
-				int api;
-				if (!Int32.TryParse (parts [1].Trim (), out api))
-					continue;
+					Log.DebugLine ($"    found {p}");
+					string pdir = Path.GetFileName (p);
+					int api;
+					if (!Int32.TryParse (pdir, out api))
+						continue;
 
-				if (api >= minimumApi)
-					continue;
+					if (api >= minimumApi)
+						continue;
 
-				minimumApi = api;
+					minimumApi = api;
+				}
 			}
 
+			Log.DebugLine ($"Detected minimum NDK API level: {minimumApi}");
 			NDKMinimumApiAvailable = minimumApi.ToString ();
 			return true;
 		}
