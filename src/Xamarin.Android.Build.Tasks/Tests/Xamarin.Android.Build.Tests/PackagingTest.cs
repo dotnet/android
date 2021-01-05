@@ -90,7 +90,6 @@ namespace Xamarin.Android.Build.Tests
 					"System.Linq.Expressions.dll",
 					"System.ObjectModel.dll",
 					"System.Runtime.Serialization.Primitives.dll",
-					"System.Security.Cryptography.Primitives.dll",
 					"System.Private.CoreLib.dll",
 					"System.Collections.Concurrent.dll",
 					"System.Collections.dll",
