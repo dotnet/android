@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System.Text.RegularExpressions;
@@ -8,6 +8,7 @@ using System.Linq;
 using Xamarin.Android.Tools;
 using System.Collections.Generic;
 using System.Text;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {

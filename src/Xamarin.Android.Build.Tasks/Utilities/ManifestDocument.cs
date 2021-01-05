@@ -23,6 +23,7 @@ using Java.Interop.Tools.TypeNameMappings;
 using System.Xml;
 using System.Text;
 using Xamarin.Android.Tools;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks {
 
@@ -911,7 +912,7 @@ namespace Xamarin.Android.Tasks {
 			MemoryStream stream = MemoryStreamPool.Shared.Rent ();
 			try {
 				Save (log, stream);
-				return MonoAndroidHelper.CopyIfStreamChanged (stream, filename);
+				return Files.CopyIfStreamChanged (stream, filename);
 			} finally {
 				MemoryStreamPool.Shared.Return (stream);
 			}
@@ -922,7 +923,7 @@ namespace Xamarin.Android.Tasks {
 
 		public void Save (Action<string, string> logCodedWarning, string filename)
 		{
-			using (var file = new StreamWriter (filename, append: false, encoding: MonoAndroidHelper.UTF8withoutBOM))
+			using (var file = new StreamWriter (filename, append: false, encoding: Files.UTF8withoutBOM))
 				Save (logCodedWarning, file);
 		}
 
@@ -931,7 +932,7 @@ namespace Xamarin.Android.Tasks {
 
 		public void Save (Action<string, string> logCodedWarning, Stream stream, bool removeNodes = false)
 		{
-			using (var file = new StreamWriter (stream, MonoAndroidHelper.UTF8withoutBOM, bufferSize: 1024, leaveOpen: true))
+			using (var file = new StreamWriter (stream, Files.UTF8withoutBOM, bufferSize: 1024, leaveOpen: true))
 				Save (logCodedWarning, file, removeNodes: removeNodes);
 		}
 

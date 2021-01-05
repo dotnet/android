@@ -13,6 +13,7 @@ using Microsoft.Build.Utilities;
 using Java.Interop.Tools.Diagnostics;
 using Xamarin.Android.Tools;
 using Xamarin.Build;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -445,7 +446,7 @@ namespace Xamarin.Android.Tasks
 			var stdout_completed = new ManualResetEvent (false);
 			var stderr_completed = new ManualResetEvent (false);
 
-			using (var sw = new StreamWriter (responseFile, append: false, encoding: MonoAndroidHelper.UTF8withoutBOM)) {
+			using (var sw = new StreamWriter (responseFile, append: false, encoding: Files.UTF8withoutBOM)) {
 				sw.WriteLine (aotOptions + " " + QuoteFileName (assembly));
 			}
 

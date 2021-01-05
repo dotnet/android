@@ -6,6 +6,7 @@ using System.Text;
 
 using Java.Interop.Tools.Cecil;
 using Mono.Cecil;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -111,7 +112,7 @@ namespace Xamarin.Android.Tasks
 				throw new ArgumentNullException (nameof (supportedAbis));
 			this.supportedAbis = supportedAbis;
 
-			outputEncoding = MonoAndroidHelper.UTF8withoutBOM;
+			outputEncoding = Files.UTF8withoutBOM;
 			moduleMagicString = outputEncoding.GetBytes (TypeMapMagicString);
 			typemapIndexMagicString = outputEncoding.GetBytes (TypeMapIndexMagicString);
 		}
@@ -214,7 +215,7 @@ namespace Xamarin.Android.Tasks
 			using (var indexWriter = MemoryStreamPool.Shared.CreateBinaryWriter ()) {
 				OutputModules (modules, indexWriter, maxModuleFileNameWidth + 1);
 				indexWriter.Flush ();
-				MonoAndroidHelper.CopyIfStreamChanged (indexWriter.BaseStream, typeMapIndexPath);
+				Files.CopyIfStreamChanged (indexWriter.BaseStream, typeMapIndexPath);
 			}
 			GeneratedBinaryTypeMaps.Add (typeMapIndexPath);
 
@@ -476,7 +477,7 @@ namespace Xamarin.Android.Tasks
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter (outputEncoding)) {
 					generator.Write (sw);
 					sw.Flush ();
-					MonoAndroidHelper.CopyIfStreamChanged (sw.BaseStream, generator.MainSourceFile);
+					Files.CopyIfStreamChanged (sw.BaseStream, generator.MainSourceFile);
 					if (!sharedIncludeUsesAbiPrefix)
 						sharedBitsWritten = true;
 				}
@@ -523,7 +524,7 @@ namespace Xamarin.Android.Tasks
 			using (var bw = MemoryStreamPool.Shared.CreateBinaryWriter ()) {
 				OutputModule (bw, moduleData);
 				bw.Flush ();
-				MonoAndroidHelper.CopyIfStreamChanged (bw.BaseStream, moduleData.OutputFilePath);
+				Files.CopyIfStreamChanged (bw.BaseStream, moduleData.OutputFilePath);
 			}
 			GeneratedBinaryTypeMaps.Add (moduleData.OutputFilePath);
 		}

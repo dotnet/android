@@ -17,6 +17,7 @@ using ArchiveFileList = System.Collections.Generic.List<(string filePath, string
 using Mono.Cecil;
 using Xamarin.Android.Tools;
 using Xamarin.Tools.Zip;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -660,7 +661,7 @@ namespace Xamarin.Android.Tasks
 		string GetNativeLibraryAbi (ITaskItem lib)
 		{
 			// If Abi is explicitly specified, simply return it.
-			var lib_abi = MonoAndroidHelper.GetNativeLibraryAbi (lib);
+			var lib_abi = AndroidRidAbiHelper.GetNativeLibraryAbi (lib);
 
 			if (string.IsNullOrWhiteSpace (lib_abi)) {
 				Log.LogCodedError ("XA4301", lib.ItemSpec, 0, Properties.Resources.XA4301_ABI, lib.ItemSpec);
@@ -689,7 +690,7 @@ namespace Xamarin.Android.Tasks
 				return;
 
 			var libs = AdditionalNativeLibraryReferences
-				.Select (l => new LibInfo { Path = l.ItemSpec, Abi = MonoAndroidHelper.GetNativeLibraryAbi (l) });
+				.Select (l => new LibInfo { Path = l.ItemSpec, Abi = AndroidRidAbiHelper.GetNativeLibraryAbi (l) });
 
 			AddNativeLibraries (files, supportedAbis, libs);
 		}

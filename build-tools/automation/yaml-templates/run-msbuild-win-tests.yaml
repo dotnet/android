@@ -48,13 +48,6 @@ jobs:
       - template: run-nunit-tests.yaml
         parameters:
           useDotNet: $(UseDotNet)
-          testRunTitle: Xamarin.Android.Build.Tests.Commercial - Windows
-          testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\Xamarin.Android.Build.Tests.Commercial.dll
-          testResultsFile: TestResult-MSBuildTestsCommercial-Windows-$(XA.Build.Configuration).xml
-          
-      - template: run-nunit-tests.yaml
-        parameters:
-          useDotNet: $(UseDotNet)
           testRunTitle: Xamarin.Android.Build.Tests - Windows - No Node
           testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\${{ parameters.target_framework }}\Xamarin.Android.Build.Tests.dll
           nunitConsoleExtraArgs: --where "cat != Node-1 && cat != Node-2 && cat != Node-3"

@@ -25,6 +25,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mono.Debugging.Soft", "exte
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "vswhere", "tools\vswhere\vswhere.csproj", "{DBDC804F-8406-4F5E-83C6-720CB0CB6C6F}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Android.Build.BaseTasks", "external\xamarin-android-tools\src\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj", "{3DE17662-DCD6-4F49-AF06-D39AACC8649A}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.Android.Tools.AndroidSdk", "external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj", "{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Android.Sdk.ILLink", "src\Microsoft.Android.Sdk.ILLink\Microsoft.Android.Sdk.ILLink.csproj", "{2A237E71-1FA3-409B-B13E-F6294932A5A9}"
@@ -78,6 +80,10 @@ Global
 		{DBDC804F-8406-4F5E-83C6-720CB0CB6C6F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DBDC804F-8406-4F5E-83C6-720CB0CB6C6F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DBDC804F-8406-4F5E-83C6-720CB0CB6C6F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3DE17662-DCD6-4F49-AF06-D39AACC8649A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3DE17662-DCD6-4F49-AF06-D39AACC8649A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3DE17662-DCD6-4F49-AF06-D39AACC8649A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3DE17662-DCD6-4F49-AF06-D39AACC8649A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -96,6 +102,7 @@ Global
 		{90C99ADB-7D4B-4EB4-98C2-40BD1B14C7D2} = {385E71CC-BAE5-488B-805E-ACAE55F01DF5}
 		{372E8E3E-29D5-4B4D-88A2-4711CD628C4E} = {385E71CC-BAE5-488B-805E-ACAE55F01DF5}
 		{DE40756E-57F6-4AF2-B155-55E3A88CCED8} = {385E71CC-BAE5-488B-805E-ACAE55F01DF5}
+		{3DE17662-DCD6-4F49-AF06-D39AACC8649A} = {385E71CC-BAE5-488B-805E-ACAE55F01DF5}
 		{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157} = {385E71CC-BAE5-488B-805E-ACAE55F01DF5}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution

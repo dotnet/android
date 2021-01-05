@@ -18,15 +18,7 @@ MSBuild version 15 or later is required.
 
  4. (Optional) [Configure the build](../configuration.md).
 
- 5. (For Microsoft team members only) (Optional) In a [Developer Command
-    Prompt][developer-prompt], prepare external proprietary git
-    dependencies:
-
-        msbuild Xamarin.Android.sln /t:PrepareExternal
-
-    This will configure external proprietary components such as monodroid.
-
- 6. In a [Developer Command Prompt][developer-prompt], prepare the project:
+ 5. In a [Developer Command Prompt][developer-prompt], prepare the project:
 
         msbuild Xamarin.Android.sln /t:Prepare
 
@@ -34,9 +26,17 @@ MSBuild version 15 or later is required.
     `git submodule update`, download NuGet dependencies, and other
     "preparatory" and pre-build tasks that need to be performed.
 
- 7. Build the project:
+ 6. Build the project:
 
         msbuild Xamarin.Android.sln
+
+ 7. (For Microsoft team members only - Optional) In a [Developer Command
+    Prompt][developer-prompt], build external proprietary git
+    dependencies:
+
+        msbuild Xamarin.Android.sln /t:BuildExternal
+
+    This will clone and build external proprietary components such as `monodroid`.
 
 After the solution has built successfully, you can [use your
 build][using-your-build] to build Xamarin.Android application and library

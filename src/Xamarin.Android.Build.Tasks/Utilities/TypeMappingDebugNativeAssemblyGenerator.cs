@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -35,7 +36,7 @@ namespace Xamarin.Android.Tasks
 			using (var sharedOutput = MemoryStreamPool.Shared.CreateStreamWriter (output.Encoding)) {
 				WriteSharedBits (sharedOutput, haveJavaToManaged, haveManagedToJava);
 				sharedOutput.Flush ();
-				MonoAndroidHelper.CopyIfStreamChanged (sharedOutput.BaseStream, SharedIncludeFile);
+				Files.CopyIfStreamChanged (sharedOutput.BaseStream, SharedIncludeFile);
 			}
 
 			if (haveJavaToManaged || haveManagedToJava) {

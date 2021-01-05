@@ -1,5 +1,6 @@
 using System.Linq;
 using Microsoft.Build.Framework;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -26,13 +27,13 @@ namespace Xamarin.Android.Tasks
 			}
 			if (RuntimeIdentifiers != null && RuntimeIdentifiers.Length > 0) {
 				SupportedAbis = string.Join (";", RuntimeIdentifiers.Select (rid => {
-					var abi = MonoAndroidHelper.RuntimeIdentifierToAbi (rid);
+					var abi = AndroidRidAbiHelper.RuntimeIdentifierToAbi (rid);
 					if (string.IsNullOrEmpty (abi))
 						Log.LogCodedError ("XA0035", Properties.Resources.XA0035, rid);
 					return abi;
 				}));
 			} else if (!string.IsNullOrEmpty (RuntimeIdentifier)) {
-				SupportedAbis = MonoAndroidHelper.RuntimeIdentifierToAbi (RuntimeIdentifier);
+				SupportedAbis = AndroidRidAbiHelper.RuntimeIdentifierToAbi (RuntimeIdentifier);
 				if (string.IsNullOrEmpty (SupportedAbis))
 					Log.LogCodedError ("XA0035", Properties.Resources.XA0035, RuntimeIdentifier);
 			} else if (string.IsNullOrEmpty (SupportedAbis)) {

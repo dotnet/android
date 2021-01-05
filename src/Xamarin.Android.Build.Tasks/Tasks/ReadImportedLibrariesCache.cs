@@ -1,4 +1,4 @@
-﻿// 
+// 
 // ReadImportedLibrariesCache.cs
 //  
 // Author:
@@ -29,6 +29,8 @@ using System.Linq;
 using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Microsoft.Android.Build.Tasks;
+
 
 namespace Xamarin.Android.Tasks
 {

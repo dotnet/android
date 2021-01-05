@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using Xamarin.Android.Tools;
 using Xamarin.Build;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -86,7 +87,7 @@ namespace Xamarin.Android.Tasks
 
 				writer.Flush ();
 				var r_java = Path.Combine (output_directory, package.Name.Replace ('.', Path.DirectorySeparatorChar), "R.java");
-				if (MonoAndroidHelper.CopyIfStreamChanged (writer.BaseStream, r_java)) {
+				if (Files.CopyIfStreamChanged (writer.BaseStream, r_java)) {
 					LogDebugMessage ($"Writing: {r_java}");
 				} else {
 					LogDebugMessage ($"Up to date: {r_java}");

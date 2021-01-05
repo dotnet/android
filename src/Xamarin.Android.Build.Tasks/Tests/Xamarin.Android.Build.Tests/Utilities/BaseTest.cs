@@ -10,6 +10,7 @@ using System.Threading;
 using System.Xml.Linq;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -455,8 +456,8 @@ namespace Xamarin.Android.Build.Tests
 		{
 			Assert.IsNotNull (stream1, "stream1 of StreamCompare should not be null");
 			Assert.IsNotNull (stream2, "stream2 of StreamCompare should not be null");
-			string hash1 = MonoAndroidHelper.HashBytes (ReadAllBytesIgnoringLineEndings (stream1));
-			string hash2 = MonoAndroidHelper.HashBytes (ReadAllBytesIgnoringLineEndings (stream2));
+			string hash1 = Files.HashBytes (ReadAllBytesIgnoringLineEndings (stream1));
+			string hash2 = Files.HashBytes (ReadAllBytesIgnoringLineEndings (stream2));
 			return hash1 == hash2;
 		}
 

@@ -6,6 +6,7 @@ using System;
 using System.IO;
 
 using MTProfile = Mono.Tuner.Profile;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {

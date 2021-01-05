@@ -11,6 +11,7 @@ using System.Text.RegularExpressions;
 using Xamarin.Tools.Zip;
 
 using Xamarin.Android.Tools;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -118,7 +119,7 @@ namespace Xamarin.Android.Tasks
 				foreach (var file in Directory.GetFiles (projdir)) {
 					string dstpath = Path.Combine (dstdir, Path.GetFileName (file));
 					if (!File.Exists (dstpath))
-						MonoAndroidHelper.CopyIfChanged (file, dstpath);
+						Files.CopyIfChanged (file, dstpath);
 				}
 			}
 			return true;
@@ -130,15 +131,15 @@ namespace Xamarin.Android.Tasks
 				if (file.EndsWith (".jar", StringComparison.OrdinalIgnoreCase)) {
 					var dstpath = Path.Combine (OutputJarsDirectory, Path.GetFileName (file));
 					if (!File.Exists (dstpath))
-						MonoAndroidHelper.CopyIfChanged (file, dstpath);
+						Files.CopyIfChanged (file, dstpath);
 				} else if (file.EndsWith ("annotations.zip", StringComparison.OrdinalIgnoreCase)) {
 					var dstpath = Path.Combine (OutputAnnotationsDirectory, Path.GetFileName (file));
 					if (!File.Exists (dstpath))
-						MonoAndroidHelper.CopyIfChanged (file, dstpath);
+						Files.CopyIfChanged (file, dstpath);
 				} else {
 					var dstpath = Path.Combine (OutputDirectory, Path.GetFileName (file));
 					if (!File.Exists (dstpath))
-						MonoAndroidHelper.CopyIfChanged (file, dstpath);
+						Files.CopyIfChanged (file, dstpath);
 				}
 			}
 		}
@@ -155,7 +156,7 @@ namespace Xamarin.Android.Tasks
 				CopyDirectory (subsub, dstsub, false);
 			}
 			foreach (var file in srcSubdirInfo.GetFiles ())
-				MonoAndroidHelper.CopyIfChanged (file.FullName, Path.Combine (dstsub, file.Name));
+				Files.CopyIfChanged (file.FullName, Path.Combine (dstsub, file.Name));
 		}
 		
 		IEnumerable<string> ResolveLibraryProjectReferences (IEnumerable<string> inputs)

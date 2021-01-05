@@ -8,6 +8,7 @@ using Microsoft.Build.Utilities;
 using System.Text;
 using System.Collections.Generic;
 using Xamarin.Android.Tools;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -58,7 +59,7 @@ namespace Xamarin.Android.Tasks
 			TemporarySourceListFile = Path.GetTempFileName ();
 
 			using (var sw = new StreamWriter (path:TemporarySourceListFile, append:false,
-						encoding: MonoAndroidHelper.UTF8withoutBOM)) {
+						encoding: Files.UTF8withoutBOM)) {
 
 				WriteOptionsToResponseFile (sw);
 				// Include any user .java files

@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2011 Xamarin, Inc. All rights reserved.
+// Copyright (C) 2011 Xamarin, Inc. All rights reserved.
 
 using System;
 using System.Diagnostics;
@@ -8,6 +8,7 @@ using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Monodroid;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -87,7 +88,7 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 				Log.LogDebugMessage ("  Processing: {0}   {1} > {2}", file, srcmodifiedDate, lastUpdate);
-				MonoAndroidHelper.SetWriteable (file);
+				Files.SetWriteable (file);
 				bool success = AndroidResource.UpdateXmlResource (resdir, file,
 					resourcedirectories, (level, message) => {
 						switch (level) {
@@ -119,7 +120,7 @@ namespace Xamarin.Android.Tasks
 				// doesn't support those type of BOM (it really wants the document to start
 				// with "<?"). Since there is no way to plug into the file saving mechanism in X.S
 				// we strip those here and point the designer to use resources from obj/
-				MonoAndroidHelper.CleanBOM (file);
+				Files.CleanBOM (file);
 			}
 		}
 	}

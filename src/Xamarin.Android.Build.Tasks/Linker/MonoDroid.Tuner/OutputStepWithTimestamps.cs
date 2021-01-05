@@ -3,6 +3,7 @@ using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Linker.Steps;
 using Xamarin.Android.Tools;
+using Microsoft.Android.Build.Tasks;
 
 namespace MonoDroid.Tuner
 {

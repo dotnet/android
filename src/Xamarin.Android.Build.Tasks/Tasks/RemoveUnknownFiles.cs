@@ -5,6 +5,7 @@ using Microsoft.Build.Framework;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -48,7 +49,7 @@ namespace Xamarin.Android.Tasks
 					Log.LogDebugMessage ("Deleting File {0}", f);
 					var item = new TaskItem (f.Replace (absDir, "res" + Path.DirectorySeparatorChar));
 					removedFiles.Add (item);
-					MonoAndroidHelper.SetWriteable (f);
+					Microsoft.Android.Build.Tasks.Files.SetWriteable (f);
 					File.Delete (f);
 				}
 			
@@ -60,7 +61,7 @@ namespace Xamarin.Android.Tasks
 					if (!knownDirs.Contains (d) && IsDirectoryEmpty (d)) {
 						Log.LogDebugMessage ("Deleting Directory {0}", d);
 						removedDirectories.Add (new TaskItem(d));
-						MonoAndroidHelper.SetDirectoryWriteable (d);
+						Microsoft.Android.Build.Tasks.Files.SetDirectoryWriteable (d);
 						System.IO.Directory.Delete (d);
 					}
 			}

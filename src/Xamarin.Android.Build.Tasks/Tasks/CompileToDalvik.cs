@@ -9,6 +9,7 @@ using System.Text;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -117,7 +118,7 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendSwitchIfNotNull ("--output ", ClassesOutputDirectory);
 
 			using (var sw = new StreamWriter (path: inputListFile, append: false,
-					encoding: MonoAndroidHelper.UTF8withoutBOM)) {
+					encoding: Files.UTF8withoutBOM)) {
 				// .jar files
 				if (AlternativeJarFiles != null && AlternativeJarFiles.Any ()) {
 					Log.LogDebugMessage ("  processing AlternativeJarFiles...");

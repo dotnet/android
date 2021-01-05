@@ -19,8 +19,9 @@ else
 	$(MAKE) prepare
 endif
 	$(MAKE) leeroy $(ZIP_OUTPUT)
-ifeq ($(XA_INVERTED_COMMERCIAL_BUILD),true)
-	$(MAKE) commercial
+ifneq ("$(wildcard $(topdir)/external/monodroid/Makefile)","")
+	cd $(topdir)/external/monodroid && ./configure --with-xamarin-android='$(topdir)'
+	cd $(topdir)/external/monodroid && $(MAKE) build-monodroid CONFIGURATION=$(CONFIGURATION) XAMARIN_ANDROID_PATH=$(topdir)
 endif
 
 leeroy: leeroy-all framework-assemblies opentk-jcw

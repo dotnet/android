@@ -12,6 +12,7 @@ using Microsoft.Build.Utilities;
 
 using Java.Interop.Tools.Diagnostics;
 using Xamarin.Android.Tools;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {

@@ -7,6 +7,7 @@ using System.Reflection;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Xamarin.Android.Tools;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -96,7 +97,7 @@ namespace Xamarin.Android.Tasks
 		{
 			var responseFile    = Path.GetTempFileName ();
 
-			using var response  = new StreamWriter (responseFile, append: false, encoding: MonoAndroidHelper.UTF8withoutBOM);
+			using var response  = new StreamWriter (responseFile, append: false, encoding: Files.UTF8withoutBOM);
 			Log.LogDebugMessage ("[java-source-utils] response file contents: {0}", responseFile);
 
 			if (BootClassPath != null && BootClassPath.Any ()) {
