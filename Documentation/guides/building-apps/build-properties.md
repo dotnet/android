@@ -633,6 +633,33 @@ APK root directory. The format of the path is `lib\ARCH\wrap.sh` where
 + `x86_64`
 + `x86`
 
+## AndroidJavadocVerbosity
+
+Specifies how "verbose"
+[C# XML Documentation Comments](https://docs.microsoft.com/en-us/dotnet/csharp/codedoc)
+should be when importing Javadoc documentation within binding projects.
+
+Requires use of the
+[`@(JavaSourceJar)`](~/android/deploy-test/building-apps/build-items.md#javasourcejar)
+build action.
+
+This is an enum-style property, with possible values of `full` or
+`intellisense`:
+
+  * `intellisense`: Only emit the XML comments:
+    [`<exception/>](https://docs.microsoft.com/en-us/dotnet/csharp/codedoc#exception),
+    [`<param/>`](https://docs.microsoft.com/en-us/dotnet/csharp/codedoc#param),
+    [`<returns/>`](https://docs.microsoft.com/en-us/dotnet/csharp/codedoc#returns),
+    [`<summary/>`](https://docs.microsoft.com/en-us/dotnet/csharp/codedoc#summary).
+  * `full`: Emit `intellisense` elements, as well as
+    [`<remarks/>`](https://docs.microsoft.com/en-us/dotnet/csharp/codedoc#remarks),
+    [`<seealso/>`](https://docs.microsoft.com/en-us/dotnet/csharp/codedoc#seealso),
+    and anything else that's supportable.
+
+The default value is `intellisense`.
+
+Added in Xamarin.Android 11.3.
+
 ## AndroidKeyStore
 
 A boolean value which indicates whether

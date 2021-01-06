@@ -23,6 +23,16 @@
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <IncludeAndroidJavadoc Condition=" '$(IncludeAndroidJavadoc)' == '' And '$(CONVERT_JAVADOC_TO_XMLDOC)' == 'true' And '$(AndroidFrameworkVersion)' == '$(AndroidLatestStableFrameworkVersion)'">True</IncludeAndroidJavadoc>
+    <AndroidJavadocVerbosity Condition=" '$(AndroidJavadocVerbosity)' == '' ">intellisense</AndroidJavadocVerbosity>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(IncludeAndroidJavadoc)' == 'True' ">
+    <DocumentationFile>$(OutputPath)Mono.Android.xml</DocumentationFile>
+    <NoWarn>$(NoWarn);CS1572;CS1573;CS1574;CS1587;CS1591;</NoWarn>
+  </PropertyGroup>
+
   <PropertyGroup Condition=" '$(TargetFramework)' == 'monoandroid10' ">
     <TargetFrameworkIdentifier>MonoAndroid</TargetFrameworkIdentifier>
     <TargetFrameworkVersion>v1.0</TargetFrameworkVersion>
@@ -349,6 +359,7 @@
     <ProjectReference Include="..\..\build-tools\api-merge\api-merge.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="TargetFramework=net472" />
     <ProjectReference Include="..\..\build-tools\jnienv-gen\jnienv-gen.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="TargetFramework=net472" />
     <ProjectReference Include="..\..\external\Java.Interop\tools\generator\generator.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="TargetFramework=net472"/>
+    <ProjectReference Include="..\..\external\Java.Interop\tools\java-source-utils\java-source-utils.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="TargetFramework=net472" />
     <ProjectReference Include="..\..\external\Java.Interop\tools\jcw-gen\jcw-gen.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="TargetFramework=net472" />
     <ProjectReference Include="..\..\src\java-runtime\java-runtime.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\r8\r8.csproj" ReferenceOutputAssembly="False" />

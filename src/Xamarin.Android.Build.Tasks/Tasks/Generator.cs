@@ -53,6 +53,9 @@ namespace Xamarin.Android.Tasks
 		public ITaskItem[] ReferencedManagedLibraries { get; set; }
 		public ITaskItem[] AnnotationsZipFiles { get; set; }
 
+		public ITaskItem[] JavadocXml { get; set; }
+		public string JavadocVerbosity { get; set; }
+
 		private List<Tuple<string, string>> transform_files = new List<Tuple<string,string>> ();
 
 		public override bool RunTask ()
@@ -178,6 +181,15 @@ namespace Xamarin.Android.Tasks
 
 					if (features.Any ())
 						WriteLine (sw, $"--lang-features={string.Join (",", features)}");
+				}
+
+				if (!string.IsNullOrEmpty (JavadocVerbosity))
+					WriteLine (sw, $"\"--doc-comment-verbosity={JavadocVerbosity}\"");
+
+				if (JavadocXml != null) {
+					foreach (var xml in JavadocXml) {
+						WriteLine (sw, $"\"--with-javadoc-xml={Path.GetFullPath (xml.ItemSpec)}\"");
+					}
 				}
 			}
 

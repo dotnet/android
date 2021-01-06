@@ -62,6 +62,8 @@ namespace Xamarin.Android.Prepare
 				new AndroidPlatformComponent ("platform-29_r01",   apiLevel: "29", pkgRevision: "1"),
 				new AndroidPlatformComponent ("platform-30_r01",   apiLevel: "30", pkgRevision: "1"),
 
+				new AndroidToolchainComponent ("sources-30_r01",   destDir: Path.Combine ("platforms", $"android-30", "src"), pkgRevision: "1", dependencyType: AndroidToolchainComponentType.BuildDependency),
+
 				new AndroidToolchainComponent ("docs-24_r01",                                       destDir: "docs", pkgRevision: "1", dependencyType: AndroidToolchainComponentType.BuildDependency),
 				new AndroidToolchainComponent ("android_m2repository_r47",                          destDir: Path.Combine ("extras", "android", "m2repository"), pkgRevision: "47.0.0", dependencyType: AndroidToolchainComponentType.BuildDependency),
 				new AndroidToolchainComponent ($"x86_64-29_r07-{osTag}",                            destDir: Path.Combine ("system-images", "android-29", "default", "x86_64"), relativeUrl: new Uri ("sys-img/android/", UriKind.Relative), pkgRevision: "7", dependencyType: AndroidToolchainComponentType.EmulatorDependency),

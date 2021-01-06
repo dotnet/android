@@ -67,6 +67,7 @@ variables:
   DotNetNUnitCategories: '& TestCategory != DotNetIgnore & TestCategory != AOT & TestCategory != MkBundle & TestCategory != MonoSymbolicate & TestCategory != PackagesConfig & TestCategory != StaticProject & TestCategory != Debugger'
   NUnit.NumberOfTestWorkers: 4
   GitHub.Token: $(github--pat--vs-mobiletools-engineering-service2)
+  CONVERT_JAVADOC_TO_XMLDOC: $[ne(variables['Build.DefinitionName'], 'Xamarin.Android-PR')]
 
 # Stage and Job "display names" are shortened because they are combined to form the name of the corresponding GitHub check.
 stages:

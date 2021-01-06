@@ -12,13 +12,20 @@ It is shared between "legacy" binding projects and .NET 5 projects.
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <UsingTask TaskName="Xamarin.Android.Tasks.BindingsGenerator" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.JavaSourceUtils"   AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.RemoveDirFixed"    AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 
   <PropertyGroup>
     <UseShortGeneratorFileNames Condition=" '$(UseShortGeneratorFileNames)' == '' ">false</UseShortGeneratorFileNames>
     <GeneratedOutputPath        Condition=" '$(GeneratedOutputPath)' == '' ">$(IntermediateOutputPath)generated\</GeneratedOutputPath>
+    <AndroidJavadocVerbosity    Condition=" '$(AndroidJavadocVerbosity)' == '' ">intellisense</AndroidJavadocVerbosity>
     <ApiOutputFile              Condition=" '$(ApiOutputFile)' == '' ">$(IntermediateOutputPath)api.xml</ApiOutputFile>
     <_GeneratorStampFile>$(IntermediateOutputPath)generator.stamp</_GeneratorStampFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(_UseLegacyJavadocImport)' != 'true' ">
+    <DocumentationFile Condition=" '$(DocumentationFile)' == '' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' ">$(OutputPath)$(AssemblyName).xml</DocumentationFile>
+    <NoWarn Condition=" '$(DocumentationFile)' != '' ">$(NoWarn);CS1573;CS1591</NoWarn>
   </PropertyGroup>
 
   <Target Name="ExportJarToXml"
@@ -52,6 +59,8 @@ It is shared between "legacy" binding projects and .NET 5 projects.
         ApiXmlInput="$(ApiOutputFile)"
         AnnotationsZipFiles="@(AnnotationsZip)"
         AssemblyName="$(AssemblyName)"
+        JavadocVerbosity="$(AndroidJavadocVerbosity)"
+        JavadocXml="@(_JavaSourceJavadocXml)"
         TransformFiles="@(TransformFile)"
         ReferencedManagedLibraries="@(ReferencePath);@(ReferenceDependencyPaths)"
         MonoAndroidFrameworkDirectories="$(_XATargetFrameworkDirectories)"

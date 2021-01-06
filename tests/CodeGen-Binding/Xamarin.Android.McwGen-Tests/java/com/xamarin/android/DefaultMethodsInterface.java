@@ -1,5 +1,6 @@
 package com.xamarin.android;
 
+/** An interface which contains interface default methods. */
 public interface DefaultMethodsInterface
 {
     default int foo () { return 0; }

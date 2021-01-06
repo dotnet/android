@@ -298,6 +298,37 @@ such as `<AndroidLibrary Include="..." Bind="false" />`:
 </Project>
 ```
 
+## JavaSourceJar
+
+In a Xamarin.Android binding project, the **JavaSourceJar** build action
+is used on `.jar` files which contain *Java source code*, which contains
+[Javadoc documentation comments](https://www.oracle.com/technical-resources/articles/java/javadoc-tool.html).
+
+Prior to Xamarin.Android 11.3, the Javadoc would be converted into HTML
+via the `javadoc` utility during build time, and later turned into
+XML documentation.
+
+Starting with Xamarin.Android 11.3, Javadoc will instead be converted into
+[C# XML Documentation Comments](https://docs.microsoft.com/en-us/dotnet/csharp/codedoc)
+within the generated binding source code.
+
+[`$(AndroidJavadocVerbosity)`](~/android/deploy-test/building-apps/build-properties.md#androidjavadocverbosity)
+controls how "verbose" or "complete" the imported Javadoc is.
+
+Starting in Xamarin.Android 11.3, the following MSBuild metadata is supported:
+
+* `%(CopyrightFile)`: A path to a file that contains copyright
+    information for the Javadoc contents, which will be appended to
+    all imported documentation.
+
+* `%(UrlPrefix)`: A URL prefix to support linking to online
+    documentation within imported documentation.
+
+* `%(UrlStyle)`: The "style" of URLs to generate when linking to
+    online documentation.  Only one style is currently supported:
+    `developer.android.com/reference@2020-Nov`.
+
+
 ## LibraryProjectZip
 
 In a Xamarin.Android binding project, the **LibraryProjectZip** build
