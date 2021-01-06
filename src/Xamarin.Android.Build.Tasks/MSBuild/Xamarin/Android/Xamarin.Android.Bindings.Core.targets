@@ -49,22 +49,6 @@ It is shared between "legacy" binding projects and .NET 5 projects.
       <AnnotationsZip Include="$(IntermediateOutputPath)library_project_annotations\**\*.zip" />
     </ItemGroup>
 
-    <JavaSourceUtils
-        Condition=" '$(_UseLegacyJavadocImport)' != 'True' And '@(JavaSourceJar->Count())' != '0' "
-        ContinueOnError="True"
-        InputFiles="@(JavaSourceJar)"
-        JavadocCopyrightFile="%(JavaSourceJar.CopyrightFile)"
-        JavadocUrlPrefix="%(JavaSourceJar.UrlPrefix)"
-        JavadocUrlStyle="%(JavaSourceJar.UrlStyle)"
-        JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
-        JavaOptions="$(JavaOptions)"
-        JavaSdkDirectory="$(_JavaSdkDirectory)"
-        MonoAndroidToolsDirectory="$(MonoAndroidToolsDirectory)"
-        OutputDirectory="$(GeneratedOutputPath)docs"
-        References="">
-      <Output TaskParameter="OutputJavadocXml" ItemName="_JavadocXml" />
-    </JavaSourceUtils>
-
     <!-- Create the .cs binding source files -->
     <BindingsGenerator
         OutputDirectory="$(GeneratedOutputPath)src"
@@ -76,7 +60,7 @@ It is shared between "legacy" binding projects and .NET 5 projects.
         AnnotationsZipFiles="@(AnnotationsZip)"
         AssemblyName="$(AssemblyName)"
         JavadocVerbosity="$(AndroidJavadocVerbosity)"
-        JavadocXml="@(_JavadocXml)"
+        JavadocXml="@(_JavaSourceJavadocXml)"
         TransformFiles="@(TransformFile)"
         ReferencedManagedLibraries="@(ReferencePath);@(ReferenceDependencyPaths)"
         MonoAndroidFrameworkDirectories="$(_XATargetFrameworkDirectories)"

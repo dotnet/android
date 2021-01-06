@@ -19,6 +19,7 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
 -->
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <UsingTask TaskName="Xamarin.Android.Tasks.AndroidWarning" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.ComputeHash"    AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 
   <!--
   *******************************************
@@ -126,6 +127,12 @@ Copyright (C) 2012 Xamarin Inc. All rights reserved.
     <Message Text="Java SDK: $(_JavaSdkDirectory)"/>
     <Message Text="Android Platform API level: $(_AndroidApiLevel)"/>
     <Message Text="TargetFrameworkVersion: $(_TargetFrameworkVersion)"/>
+
+    <CreateProperty Value="$(MonoAndroidToolsDirectory)\java-source-utils.jar">
+      <Output TaskParameter="Value" PropertyName="AndroidJavaSourceUtilsJar"
+          Condition=" '$(AndroidJavaSourceUtilsJar)' == '' "
+      />
+    </CreateProperty>
 
 
     <!-- Misc paths -->

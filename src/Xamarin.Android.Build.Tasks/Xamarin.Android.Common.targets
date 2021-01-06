@@ -641,6 +641,12 @@ because xbuild doesn't support framework reference assemblies.
 		/>
 	</CreateProperty>
 
+	<CreateProperty Value="$(MonoAndroidToolsDirectory)\java-source-utils.jar">
+		<Output TaskParameter="Value" PropertyName="AndroidJavaSourceUtilsJar"
+				Condition=" '$(AndroidJavaSourceUtilsJar)' == '' "
+		/>
+	</CreateProperty>
+
 	<CreateProperty Value="$(MonoAndroidToolsDirectory)\r8.jar">
 		<Output TaskParameter="Value" PropertyName="AndroidR8JarPath"
 				Condition="'$(AndroidR8JarPath)' == ''"

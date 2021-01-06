@@ -15,13 +15,10 @@ namespace Xamarin.Android.Tasks
 		public  override    string  TaskPrefix => "JSU";
 
 		[Required]
-		public  string      MonoAndroidToolsDirectory   { get; set; }
+		public  string      JavaSourceUtilsJar          { get; set; }
 
 		[Required]
 		public  string      JavaSdkDirectory            { get; set; }
-
-		[Required]
-		public  ITaskItem   OutputDirectory             { get; set; }
 
 		[Required]
 		public  ITaskItem[] InputFiles                  { get; set; }
@@ -38,7 +35,6 @@ namespace Xamarin.Android.Tasks
 
 		public  string      JavaMaximumHeapSize         { get; set; }
 
-		[Output]
 		public  ITaskItem   OutputJavadocXml            { get; set; }
 
 		string  responseFilePath;
@@ -57,8 +53,6 @@ namespace Xamarin.Android.Tasks
 
 			if (Log.HasLoggedErrors)
 				return false;
-
-			OutputJavadocXml	= new TaskItem (Path.Combine (OutputDirectory.ItemSpec, GetOutputFileName (InputFiles)) + ".xml");
 
 			try {
 				return base.RunTask ();
@@ -90,7 +84,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			// Arguments sent to java.exe
-			cmd.AppendSwitchIfNotNull ("-jar ", Path.Combine (MonoAndroidToolsDirectory, "java-source-utils.jar"));
+			cmd.AppendSwitchIfNotNull ("-jar ", JavaSourceUtilsJar);
 
 			cmd.AppendSwitch ($"@{responseFilePath}");
 
