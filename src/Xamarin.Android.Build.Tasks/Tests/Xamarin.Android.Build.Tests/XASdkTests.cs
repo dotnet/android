@@ -339,7 +339,15 @@ namespace Xamarin.Android.Build.Tests
 		public void DotNetBuild (string runtimeIdentifiers, bool isRelease)
 		{
 			var proj = new XASdkProject {
-				IsRelease = isRelease
+				IsRelease = isRelease,
+				Sources = {
+					new BuildItem ("EmbeddedResource", "Foo.resx") {
+						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancel</value></data>")
+					},
+					new BuildItem ("EmbeddedResource", "Foo.es.resx") {
+						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancelar</value></data>")
+					},
+				}
 			};
 			proj.OtherBuildItems.Add (new AndroidItem.InputJar ("javaclasses.jar") {
 				BinaryContent = () => Convert.FromBase64String (InlineData.JavaClassesJarBase64)
@@ -372,6 +380,7 @@ namespace Xamarin.Android.Build.Tests
 				.OrderBy (f => f)
 				.ToArray ();
 			var expectedFiles = new[]{
+				"es",
 				$"{proj.ProjectName}.dll",
 				$"{proj.ProjectName}.pdb",
 				$"{proj.PackageName}.apk",
@@ -395,6 +404,7 @@ namespace Xamarin.Android.Build.Tests
 				apk.AssertContainsEntry (apkPath, $"assemblies/{proj.ProjectName}.dll", shouldContainEntry: expectEmbeddedAssembies);
 				apk.AssertContainsEntry (apkPath, $"assemblies/{proj.ProjectName}.pdb", shouldContainEntry: !CommercialBuildAvailable && !isRelease);
 				apk.AssertContainsEntry (apkPath, $"assemblies/System.Linq.dll",        shouldContainEntry: expectEmbeddedAssembies);
+				apk.AssertContainsEntry (apkPath, $"assemblies/es/{proj.ProjectName}.resources.dll", shouldContainEntry: expectEmbeddedAssembies);
 				var rids = runtimeIdentifiers.Split (';');
 				foreach (var abi in rids.Select (MonoAndroidHelper.RuntimeIdentifierToAbi)) {
 					apk.AssertContainsEntry (apkPath, $"lib/{abi}/libmonodroid.so");
