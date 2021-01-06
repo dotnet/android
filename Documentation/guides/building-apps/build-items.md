@@ -315,7 +315,7 @@ within the generated binding source code.
 [`$(AndroidJavadocVerbosity)`](~/android/deploy-test/building-apps/build-properties.md#androidjavadocverbosity)
 controls how "verbose" or "complete" the imported Javadoc is.
 
-The following MSBuild metadata is supported:
+Starting in Xamarin.Android 11.3, the following MSBuild metadata is supported:
 
 * `%(CopyrightFile)`: A path to a file that contains copyright
     information for the Javadoc contents, which will be appended to
