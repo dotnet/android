@@ -404,12 +404,6 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\jar2xml.jar" ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.AndroidTools.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.AndroidTools.pdb" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Android.DebugRuntime-arm64-v8a.apk"   ExcludeFromAndroidNETSdk="true" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Android.DebugRuntime-armeabi-v7a.apk" ExcludeFromAndroidNETSdk="true" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Android.DebugRuntime-debug.apk"       ExcludeFromAndroidNETSdk="true" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Android.DebugRuntime-debug.xml"       ExcludeFromAndroidNETSdk="true" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Android.DebugRuntime-x86.apk"         ExcludeFromAndroidNETSdk="true" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Android.DebugRuntime-x86_64.apk"      ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Analysis.Compatibility.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Analysis.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Analysis.Tasks.dll" />
