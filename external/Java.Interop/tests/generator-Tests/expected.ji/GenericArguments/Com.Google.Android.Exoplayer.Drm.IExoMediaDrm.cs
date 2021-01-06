@@ -51,7 +51,7 @@ namespace Com.Google.Android.Exoplayer.Drm {
 		static IntPtr Validate (IntPtr handle)
 		{
 			if (!JNIEnv.IsInstanceOf (handle, java_class_ref))
-				throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.", JNIEnv.GetClassNameFromInstance (handle), "com.google.android.exoplayer.drm.ExoMediaDrm.OnEventListener"));
+				throw new InvalidCastException ($"Unable to convert instance of type '{JNIEnv.GetClassNameFromInstance (handle)}' to type 'com.google.android.exoplayer.drm.ExoMediaDrm.OnEventListener'.");
 			return handle;
 		}
 
@@ -237,7 +237,7 @@ namespace Com.Google.Android.Exoplayer.Drm {
 		static IntPtr Validate (IntPtr handle)
 		{
 			if (!JNIEnv.IsInstanceOf (handle, java_class_ref))
-				throw new InvalidCastException (string.Format ("Unable to convert instance of type '{0}' to type '{1}'.", JNIEnv.GetClassNameFromInstance (handle), "com.google.android.exoplayer.drm.ExoMediaDrm"));
+				throw new InvalidCastException ($"Unable to convert instance of type '{JNIEnv.GetClassNameFromInstance (handle)}' to type 'com.google.android.exoplayer.drm.ExoMediaDrm'.");
 			return handle;
 		}
 

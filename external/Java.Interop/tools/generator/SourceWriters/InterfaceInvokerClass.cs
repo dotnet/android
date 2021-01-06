@@ -132,7 +132,7 @@ namespace generator.SourceWriters
 			Parameters.Add (new MethodParameterWriter ("handle", TypeReferenceWriter.IntPtr));
 
 			Body.Add ("if (!JNIEnv.IsInstanceOf (handle, java_class_ref))");
-			Body.Add ($"\tthrow new InvalidCastException (string.Format (\"Unable to convert instance of type '{{0}}' to type '{{1}}'.\", JNIEnv.GetClassNameFromInstance (handle), \"{iface.JavaName}\"));");
+			Body.Add ($"\tthrow new InvalidCastException ($\"Unable to convert instance of type '{{JNIEnv.GetClassNameFromInstance (handle)}}' to type '{iface.JavaName}'.\");");
 			Body.Add ("return handle;");
 		}
 	}
