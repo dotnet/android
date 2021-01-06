@@ -65,7 +65,6 @@ namespace MonoDroid.Tuner {
 
 		public static MethodDefinition GetMethod (this LinkContext context, string assemblyName, string typeName, string name, string [] parameters)
 		{
-			Console.WriteLine ($"assembly: {assemblyName}");
 			var type = context.GetType (assemblyName, typeName);
 			if (type == null)
 				return null;
