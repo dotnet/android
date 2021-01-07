@@ -19,9 +19,7 @@ This file is only used by binding projects.
       Outputs="$(ApiOutputFile)">
 
     <ItemGroup>
-      <!-- TODO: add when `ClassPath` supports `<api api-source="java-source-utils">`
       <_AndroidDocumentationPath Include="@(_JavaSourceJavadocXml)" />
-        -->
       <_AndroidDocumentationPath Include="@(JavaDocIndex->'%(RootDir)\%(Directory)')" />
       <_AndroidDocumentationPath Include="$(JavaDocPaths)" />
       <_AndroidDocumentationPath Include="$(Java7DocPaths)" />
