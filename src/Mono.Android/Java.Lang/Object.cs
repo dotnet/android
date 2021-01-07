@@ -12,21 +12,21 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Java.Lang {
 
-	[DataContract]
+	[Serializable]
 	public partial class Object : IDisposable, IJavaObject, IJavaObjectEx
 #if JAVA_INTEROP
 		, IJavaPeerable
 #endif  // JAVA_INTEROP
 	{
-		IntPtr key_handle;
+		[NonSerialized] IntPtr key_handle;
 #pragma warning disable CS0649, CS0169, CS0414 // Suppress fields are never used warnings, these fields are used directly by monodroid-glue.cc
-		IntPtr weak_handle;
-		int refs_added;
+		[NonSerialized] IntPtr weak_handle;
+		[NonSerialized] int refs_added;
 #pragma warning restore CS0649, CS0169, CS0414
-		JObjectRefType handle_type;
-		IntPtr handle;
-		bool             needsActivation;
-		bool             isProxy;
+		[NonSerialized] JObjectRefType handle_type;
+		[NonSerialized] IntPtr handle;
+		[NonSerialized] bool             needsActivation;
+		[NonSerialized] bool             isProxy;
 
 		IntPtr IJavaObjectEx.KeyHandle {
 			get {return key_handle;}

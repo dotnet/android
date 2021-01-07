@@ -419,5 +419,75 @@ namespace Library1 {
 			}
 		}
 
+		[Test]
+		public void JsonDeserializationCreatesJavaHandle ([Values (false, true)] bool isRelease)
+		{
+			AssertHasDevices ();
+
+			proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
+			};
+
+			if (isRelease || !CommercialBuildAvailable) {
+				proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86");
+			}
+
+			proj.References.Add (new BuildItem.Reference ("System.Runtime.Serialization"));
+
+			if (Builder.UseDotNet)
+				proj.References.Add (new BuildItem.Reference ("System.Runtime.Serialization.Json"));
+
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
+				@"TestJsonDeserializationCreatesJavaHandle();
+		}
+
+		void TestJsonDeserializationCreatesJavaHandle ()
+		{
+			Person p = new Person () {
+				Name = ""John Smith"",
+				Age = 900,
+			};
+			var stream      = new MemoryStream ();
+			var serializer  = new DataContractJsonSerializer (typeof (Person));
+
+			serializer.WriteObject (stream, p);
+
+			stream.Position = 0;
+			StreamReader sr = new StreamReader (stream);
+
+			Console.WriteLine ($""JSON Person representation: {sr.ReadToEnd ()}"");
+
+			stream.Position = 0;
+			Person p2 = (Person) serializer.ReadObject (stream);
+
+			Console.WriteLine ($""JSON Person parsed: Name '{p2.Name}' Age '{p2.Age}' Handle '0x{p2.Handle:X}'"");
+
+			if (p2.Name != ""John Smith"")
+				throw new InvalidOperationException (""JSON deserialization of Name"");
+			if (p2.Age != 900)
+				throw new InvalidOperationException (""JSON deserialization of Age"");
+			if (p2.Handle == IntPtr.Zero)
+				throw new InvalidOperationException (""Failed to instantiate new Java instance for Person!"");
+
+			Console.WriteLine ($""JSON Person deserialized OK"");").Replace ("//${AFTER_MAINACTIVITY}", @"
+	[DataContract]
+	class Person : Java.Lang.Object {
+		[DataMember]
+		public string Name;
+
+		[DataMember]
+		public int Age;
+	}").Replace ("using System;", @"using System;
+using System.IO;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Json;");
+			builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
+			ClearAdbLogcat ();
+			AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
+			Assert.IsFalse (MonitorAdbLogcat ((line) => {
+				return line.Contains ("InvalidOperationException");
+			}, Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 45), $"Output did contain InvalidOperationException!");
+		}
 	}
 }
