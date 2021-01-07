@@ -29,7 +29,7 @@ This file is only used by "legacy" Xamarin.Android projects.
         Value="AndroidKeyStore=True;AndroidSigningKeyStore=$([System.IO.Path]::GetFullPath ('$(AndroidSigningKeyStore)'));AndroidSigningStorePass=$(AndroidSigningStorePass);AndroidSigningKeyAlias=$(AndroidSigningKeyAlias);AndroidSigningKeyPass=$(AndroidSigningKeyPass)">
       <Output TaskParameter="Value" PropertyName="_AdditionaEmbeddedWearAppProperties" />
     </CreateProperty>
-    <MSBuild Projects="@(_AppExtensionReference)" Properties="Configuration=$(Configuration);AndroidUseSharedRuntime=False;EmbedAssembliesIntoApk=True;$(_AdditionaEmbeddedWearAppProperties)" Targets="Build;SignAndroidPackage"/>
+    <MSBuild Projects="@(_AppExtensionReference)" Properties="Configuration=$(Configuration);EmbedAssembliesIntoApk=True;$(_AdditionaEmbeddedWearAppProperties)" Targets="Build;SignAndroidPackage"/>
     <CreateProperty
         Condition="$(BundledWearApplicationApkPath) == '' And ($(WearAppTarget) == 'SignAndroidPackage' Or !Exists('%(_AppExtensionReference.RootDir)%(_AppExtensionReference.Directory)$(_AndroidDebugKeyStoreFlag)'))"
         Value="%(_AppExtensionReference.RootDir)%(_AppExtensionReference.Directory)bin\$(Configuration)\$(BundledWearApplicationPackageName)-Signed.apk">

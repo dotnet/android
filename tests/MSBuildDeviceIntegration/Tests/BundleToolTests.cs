@@ -13,6 +13,7 @@ namespace Xamarin.Android.Build.Tests
 	[Category ("Node-2")]
 	public class BundleToolTests : BaseTest
 	{
+		static readonly string [] Abis = new [] { "armeabi-v7a", "arm64-v8a", "x86" };
 		XamarinAndroidLibraryProject lib;
 		XamarinAndroidApplicationProject app;
 		ProjectBuilder libBuilder, appBuilder;
@@ -69,7 +70,7 @@ namespace Xamarin.Android.Build.Tests
 			//NOTE: this is here to enable adb shell run-as
 			app.AndroidManifest = app.AndroidManifest.Replace ("<application ", "<application android:debuggable=\"true\" ");
 			app.SetProperty (app.ReleaseProperties, "AndroidPackageFormat", "aab");
-			app.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86");
+			app.SetAndroidSupportedAbis (Abis);
 			app.SetProperty ("AndroidBundleConfigurationFile", "buildConfig.json");
 
 			libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName), cleanupOnDispose: true);
@@ -118,23 +119,8 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var baseZip = Path.Combine (intermediate, "android", "bin", "base.zip");
 			var contents = ListArchiveContents (baseZip);
-			var expectedFiles = new [] {
+			var expectedFiles = new List<string> {
 				"dex/classes.dex",
-				"lib/arm64-v8a/libmono-btls-shared.so",
-				"lib/arm64-v8a/libmonodroid.so",
-				"lib/arm64-v8a/libmono-native.so",
-				"lib/arm64-v8a/libmonosgen-2.0.so",
-				"lib/arm64-v8a/libxamarin-app.so",
-				"lib/armeabi-v7a/libmono-btls-shared.so",
-				"lib/armeabi-v7a/libmonodroid.so",
-				"lib/armeabi-v7a/libmono-native.so",
-				"lib/armeabi-v7a/libmonosgen-2.0.so",
-				"lib/armeabi-v7a/libxamarin-app.so",
-				"lib/x86/libmono-btls-shared.so",
-				"lib/x86/libmonodroid.so",
-				"lib/x86/libmono-native.so",
-				"lib/x86/libmonosgen-2.0.so",
-				"lib/x86/libxamarin-app.so",
 				"manifest/AndroidManifest.xml",
 				"res/drawable-hdpi-v4/icon.png",
 				"res/drawable-mdpi-v4/icon.png",
@@ -145,19 +131,45 @@ namespace Xamarin.Android.Build.Tests
 				"resources.pb",
 				"root/assemblies/Java.Interop.dll",
 				"root/assemblies/Mono.Android.dll",
-				"root/assemblies/mscorlib.dll",
-				"root/assemblies/System.Core.dll",
-				"root/assemblies/System.dll",
-				"root/assemblies/System.Runtime.Serialization.dll",
 				"root/assemblies/Localization.dll",
 				"root/assemblies/es/Localization.resources.dll",
 				"root/assemblies/UnnamedProject.dll",
-				//These are random files from Google Play Services .jar/.aar files
-				"root/build-data.properties",
-				"root/com/google/api/client/repackaged/org/apache/commons/codec/language/dmrules.txt",
-				"root/error_prone/Annotations.gwt.xml",
-				"root/protobuf.meta",
 			};
+			if (Builder.UseDotNet) {
+				expectedFiles.Add ("root/assemblies/System.Console.dll");
+				expectedFiles.Add ("root/assemblies/System.IO.FileSystem.dll");
+				expectedFiles.Add ("root/assemblies/System.Linq.dll");
+				expectedFiles.Add ("root/assemblies/System.Net.Http.dll");
+
+				//These are random files from Google Play Services .aar files
+				expectedFiles.Add ("root/play-services-base.properties");
+				expectedFiles.Add ("root/play-services-basement.properties");
+				expectedFiles.Add ("root/play-services-maps.properties");
+				expectedFiles.Add ("root/play-services-tasks.properties");
+			} else {
+				expectedFiles.Add ("root/assemblies/mscorlib.dll");
+				expectedFiles.Add ("root/assemblies/System.Core.dll");
+				expectedFiles.Add ("root/assemblies/System.dll");
+				expectedFiles.Add ("root/assemblies/System.Runtime.Serialization.dll");
+
+				//These are random files from Google Play Services .aar files
+				expectedFiles.Add ("root/build-data.properties");
+				expectedFiles.Add ("root/com/google/api/client/repackaged/org/apache/commons/codec/language/dmrules.txt");
+				expectedFiles.Add ("root/error_prone/Annotations.gwt.xml");
+				expectedFiles.Add ("root/protobuf.meta");
+			}
+			foreach (var abi in Abis) {
+				expectedFiles.Add ($"lib/{abi}/libmonodroid.so");
+				expectedFiles.Add ($"lib/{abi}/libmonosgen-2.0.so");
+				expectedFiles.Add ($"lib/{abi}/libxamarin-app.so");
+				if (Builder.UseDotNet) {
+					expectedFiles.Add ($"lib/{abi}/libSystem.IO.Compression.Native.so");
+					expectedFiles.Add ($"lib/{abi}/libSystem.Native.so");
+				} else {
+					expectedFiles.Add ($"lib/{abi}/libmono-native.so");
+					expectedFiles.Add ($"lib/{abi}/libmono-btls-shared.so");
+				}
+			}
 			foreach (var expected in expectedFiles) {
 				CollectionAssert.Contains (contents, expected, $"`{baseZip}` did not contain `{expected}`");
 			}
@@ -169,23 +181,8 @@ namespace Xamarin.Android.Build.Tests
 			var aab = Path.Combine (intermediate, "android", "bin", "UnnamedProject.UnnamedProject.aab");
 			FileAssert.Exists (aab);
 			var contents = ListArchiveContents (aab);
-			var expectedFiles = new [] {
+			var expectedFiles = new List<string> {
 				"base/dex/classes.dex",
-				"base/lib/arm64-v8a/libmono-btls-shared.so",
-				"base/lib/arm64-v8a/libmonodroid.so",
-				"base/lib/arm64-v8a/libmono-native.so",
-				"base/lib/arm64-v8a/libmonosgen-2.0.so",
-				"base/lib/arm64-v8a/libxamarin-app.so",
-				"base/lib/armeabi-v7a/libmono-btls-shared.so",
-				"base/lib/armeabi-v7a/libmonodroid.so",
-				"base/lib/armeabi-v7a/libmono-native.so",
-				"base/lib/armeabi-v7a/libmonosgen-2.0.so",
-				"base/lib/armeabi-v7a/libxamarin-app.so",
-				"base/lib/x86/libmono-btls-shared.so",
-				"base/lib/x86/libmonodroid.so",
-				"base/lib/x86/libmono-native.so",
-				"base/lib/x86/libmonosgen-2.0.so",
-				"base/lib/x86/libxamarin-app.so",
 				"base/manifest/AndroidManifest.xml",
 				"base/native.pb",
 				"base/res/drawable-hdpi-v4/icon.png",
@@ -197,20 +194,46 @@ namespace Xamarin.Android.Build.Tests
 				"base/resources.pb",
 				"base/root/assemblies/Java.Interop.dll",
 				"base/root/assemblies/Mono.Android.dll",
-				"base/root/assemblies/mscorlib.dll",
-				"base/root/assemblies/System.Core.dll",
-				"base/root/assemblies/System.dll",
-				"base/root/assemblies/System.Runtime.Serialization.dll",
 				"base/root/assemblies/Localization.dll",
 				"base/root/assemblies/es/Localization.resources.dll",
 				"base/root/assemblies/UnnamedProject.dll",
 				"BundleConfig.pb",
-				//These are random files from Google Play Services .jar/.aar files
-				"base/root/build-data.properties",
-				"base/root/com/google/api/client/repackaged/org/apache/commons/codec/language/dmrules.txt",
-				"base/root/error_prone/Annotations.gwt.xml",
-				"base/root/protobuf.meta",
 			};
+			if (Builder.UseDotNet) {
+				expectedFiles.Add ("base/root/assemblies/System.Console.dll");
+				expectedFiles.Add ("base/root/assemblies/System.IO.FileSystem.dll");
+				expectedFiles.Add ("base/root/assemblies/System.Linq.dll");
+				expectedFiles.Add ("base/root/assemblies/System.Net.Http.dll");
+
+				//These are random files from Google Play Services .aar files
+				expectedFiles.Add ("base/root/play-services-base.properties");
+				expectedFiles.Add ("base/root/play-services-basement.properties");
+				expectedFiles.Add ("base/root/play-services-maps.properties");
+				expectedFiles.Add ("base/root/play-services-tasks.properties");
+			} else {
+				expectedFiles.Add ("base/root/assemblies/mscorlib.dll");
+				expectedFiles.Add ("base/root/assemblies/System.Core.dll");
+				expectedFiles.Add ("base/root/assemblies/System.dll");
+				expectedFiles.Add ("base/root/assemblies/System.Runtime.Serialization.dll");
+
+				//These are random files from Google Play Services .aar files
+				expectedFiles.Add ("base/root/build-data.properties");
+				expectedFiles.Add ("base/root/com/google/api/client/repackaged/org/apache/commons/codec/language/dmrules.txt");
+				expectedFiles.Add ("base/root/error_prone/Annotations.gwt.xml");
+				expectedFiles.Add ("base/root/protobuf.meta");
+			}
+			foreach (var abi in Abis) {
+				expectedFiles.Add ($"base/lib/{abi}/libmonodroid.so");
+				expectedFiles.Add ($"base/lib/{abi}/libmonosgen-2.0.so");
+				expectedFiles.Add ($"base/lib/{abi}/libxamarin-app.so");
+				if (Builder.UseDotNet) {
+					expectedFiles.Add ($"base/lib/{abi}/libSystem.IO.Compression.Native.so");
+					expectedFiles.Add ($"base/lib/{abi}/libSystem.Native.so");
+				} else {
+					expectedFiles.Add ($"base/lib/{abi}/libmono-native.so");
+					expectedFiles.Add ($"base/lib/{abi}/libmono-btls-shared.so");
+				}
+			}
 			foreach (var expected in expectedFiles) {
 				CollectionAssert.Contains (contents, expected, $"`{aab}` did not contain `{expected}`");
 			}
@@ -230,6 +253,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			AssertHasDevices ();
 
+			appBuilder.BuildLogFile = "install.log";
 			Assert.IsTrue (appBuilder.RunTarget (app, "Install"), "App should have installed.");
 
 			var aab = Path.Combine (intermediate, "android", "bin", "UnnamedProject.UnnamedProject.apks");

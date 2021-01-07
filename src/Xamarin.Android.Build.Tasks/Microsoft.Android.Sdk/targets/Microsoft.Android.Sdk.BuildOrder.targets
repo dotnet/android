@@ -15,24 +15,28 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
     <BuildDependsOn>
       _ValidateLinkMode;
       _CheckNonIdealConfigurations;
+      _SetupMSBuildAllProjects;
       _SetupDesignTimeBuildForBuild;
+      _CategorizeAndroidLibraries;
       _CreatePropertiesCache;
       _CleanIntermediateIfNeeded;
       _CheckProjectItems;
       _CheckForContent;
       _ValidateAndroidPackageProperties;
+      AddLibraryJarsToBind;
       $(BuildDependsOn);
       _CompileDex;
       $(_AfterCompileDex);
       _CopyPackage;
       _Sign;
     </BuildDependsOn>
-    <_BeforeIncrementalClean>
+    <IncrementalCleanDependsOn>
       _PrepareAssemblies;
       _CompileDex;
       $(_AfterCompileDex);
       _AddFilesToFileWrites;
-    </_BeforeIncrementalClean>
+      $(IncrementalCleanDependsOn);
+    </IncrementalCleanDependsOn>
     <_PackageForAndroidDependsOn>
       Build;
       _CopyPackage;
@@ -44,7 +48,6 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
       _ResolveAssemblies;
       _ResolveSatellitePaths;
       _CreatePackageWorkspace;
-      _ConvertPdbFiles;
       _LinkAssemblies;
       _GenerateJavaStubs;
       _ManifestMerger;
@@ -69,44 +72,47 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
   <PropertyGroup Condition=" '$(AndroidApplication)' != 'True' ">
     <BuildDependsOn>
       _ValidateLinkMode;
+      _SetupMSBuildAllProjects;
       _SetupDesignTimeBuildForBuild;
+      _CategorizeAndroidLibraries;
       _CreatePropertiesCache;
       _CleanIntermediateIfNeeded;
       _AddAndroidDefines;
-      _CreateNativeLibraryArchive;
-      _AddAndroidEnvironmentToCompile;
       _CheckForContent;
       _RemoveLegacyDesigner;
       _ValidateAndroidPackageProperties;
+      AddLibraryJarsToBind;
       $(BuildDependsOn);
     </BuildDependsOn>
-    <_BeforeIncrementalClean>
+    <IncrementalCleanDependsOn>
       _AddFilesToFileWrites;
-    </_BeforeIncrementalClean>
+      $(IncrementalCleanDependsOn);
+    </IncrementalCleanDependsOn>
   </PropertyGroup>
 
-  <!-- Targets that run unless we are running _ComputeFilesToPublishForRuntimeIdentifiers -->
-  <PropertyGroup Condition=" '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' ">
+  <PropertyGroup>
     <CoreResolveReferencesDependsOn>
       _SeparateAppExtensionReferences;
       $(ResolveReferencesDependsOn);
       _AddAndroidCustomMetaData;
+      _ResolveAars;
     </CoreResolveReferencesDependsOn>
     <ResolveReferencesDependsOn>
       $(CoreResolveReferencesDependsOn);
       UpdateAndroidInterfaceProxies;
       UpdateAndroidResources;
       AddBindingsToCompile;
-      AddEmbeddedJarsAsResources;
-      AddEmbeddedReferenceJarsAsResources;
     </ResolveReferencesDependsOn>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <CoreBuildDependsOn>
-      $([MSBuild]::Unescape($(CoreBuildDependsOn.Replace('IncrementalClean;', '$(_BeforeIncrementalClean);IncrementalClean;'))))
-    </CoreBuildDependsOn>
+    <_UpdateAndroidResourcesDependsOn>
+      $(CoreResolveReferencesDependsOn);
+      _CreatePropertiesCache;
+      _CheckForDeletedResourceFile;
+      _ComputeAndroidResourcePaths;
+      _UpdateAndroidResgen;
+      _CreateAar;
+    </_UpdateAndroidResourcesDependsOn>
     <CompileDependsOn>
+      _SetupMSBuildAllProjects;
       _SetupDesignTimeBuildForCompile;
       _AddAndroidDefines;
       _IncludeLayoutBindingSources;
@@ -137,6 +143,7 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
       _ResolveMonoAndroidSdks;
       _ExtractLibraryProjectImports;
       _GetLibraryImports;
+      _ExtractAar;
       _ExportJarToXml;
     </ExportJarToXmlDependsOnTargets>
     <GetAndroidDependenciesDependsOn>
@@ -146,6 +153,9 @@ projects, these properties are set in Xamarin.Android.Legacy.targets.
       _ResolveAndroidTooling;
       $(GetAndroidDependenciesDependsOn);
     </GetAndroidDependenciesDependsOn>
+    <_ResolveLibraryProjectsDependsOn>
+      _ExtractAar;
+    </_ResolveLibraryProjectsDependsOn>
   </PropertyGroup>
 
 </Project>

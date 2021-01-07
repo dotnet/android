@@ -1,15 +1,10 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project Sdk="Microsoft.NET.Sdk" >
-
- <PropertyGroup>
+<Project Sdk="Microsoft.Build.NoTargets">
+  <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  <PropertyGroup>
     <OutputPath>..\..\bin\Test$(Configuration)</OutputPath>
   </PropertyGroup>
-
-  <Import Project="..\..\Configuration.props" />
-  <Import Project="timing.targets" />
-
   <PropertyGroup>
     <BuildDependsOn>
       ResolveReferences;

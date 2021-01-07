@@ -57,14 +57,11 @@ namespace Xamarin.Android.Tasks
 
 		[Output]
 		public ITaskItem [] ResolvedResourceFiles { get; set; }
-		
-		[Output]
-		public string ResourceNameCaseMap { get; set; }
 
 		public override bool RunTask ()
 		{
-			var intermediateFiles = new List<ITaskItem> ();
-			var resolvedFiles = new List<ITaskItem> ();
+			var intermediateFiles = new List<ITaskItem> (ResourceFiles.Length);
+			var resolvedFiles = new List<ITaskItem> (ResourceFiles.Length);
 			
 			string[] prefixes = Prefixes != null ? Prefixes.Split (';') : null;
 			if (prefixes != null) {
@@ -76,7 +73,7 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			var nameCaseMap = new StringWriter ();
+			var nameCaseMap = new Dictionary<string, string> (ResourceFiles.Length, StringComparer.Ordinal);
 
 			for (int i = 0; i < ResourceFiles.Length; i++) {
 				var item = ResourceFiles [i];
@@ -123,8 +120,9 @@ namespace Xamarin.Android.Tasks
 				}
 				if (Path.GetExtension (baseFileName) == ".axml")
 					baseFileName = Path.ChangeExtension (baseFileName, ".xml");
-				if (baseFileName != rel)
-					nameCaseMap.WriteLine ("{0}|{1}", rel, baseFileName);
+				if (baseFileName != rel) {
+					nameCaseMap [baseFileName] = rel;
+				}
 				string dest = Path.GetFullPath (Path.Combine (IntermediateDir, baseFileName));
 				string intermediateDirFullPath = Path.GetFullPath (IntermediateDir);
 				// if the path ends up "outside" of our target intermediate directory, just use the filename
@@ -146,10 +144,7 @@ namespace Xamarin.Android.Tasks
 
 			IntermediateFiles = intermediateFiles.ToArray ();
 			ResolvedResourceFiles = resolvedFiles.ToArray ();
-			ResourceNameCaseMap = nameCaseMap.ToString ().Replace (nameCaseMap.NewLine, ";");
-			Log.LogDebugTaskItems ("  IntermediateFiles:", IntermediateFiles);
-			Log.LogDebugTaskItems ("  ResolvedResourceFiles:", ResolvedResourceFiles);
-			Log.LogDebugTaskItems ("  ResourceNameCaseMap:", ResourceNameCaseMap);
+			MonoAndroidHelper.SaveResourceCaseMap (BuildEngine4, nameCaseMap);
 			return !Log.HasLoggedErrors;
 		}
 	}

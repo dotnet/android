@@ -26,12 +26,6 @@
 		<!-- Enable nuget package conflict resolution -->
 		<ResolveAssemblyConflicts>true</ResolveAssemblyConflicts>
 	</PropertyGroup>
-	<ItemDefinitionGroup>
-		<AndroidResource>
-			<SubType>Designer</SubType>
-			<Generator>MSBuild:UpdateGeneratedFiles</Generator>
-		</AndroidResource>
-	</ItemDefinitionGroup>
         <ItemGroup>
           <AndroidMinimumSupportedApiLevel Include="armeabi-v7a">
             <ApiLevel>@NDK_ARMEABI_V7_API@</ApiLevel>

@@ -30,7 +30,14 @@ namespace Xamarin.ProjectTools
 				sb.AppendLine ("\t</ItemGroup>");
 			}
 			if (project.EnableDefaultItems) {
-				// If $(EnableDefaultItems), then only OtherBuildItems are added
+				// If $(EnableDefaultItems), then only OtherBuildItems and References are added
+				if (project.References.Count > 0) {
+					sb.AppendLine ("\t<ItemGroup>");
+					foreach (var reference in project.References) {
+						AppendBuildItem (sb, reference);
+					}
+					sb.AppendLine ("\t</ItemGroup>");
+				}
 				if (project.OtherBuildItems.Count > 0) {
 					sb.AppendLine ("\t<ItemGroup>");
 					foreach (var bi in project.OtherBuildItems) {

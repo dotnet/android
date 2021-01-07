@@ -10,7 +10,7 @@ parameters:
 
 jobs:
   - job: ${{ parameters.job_name }}
-    displayName: MSBuild - Mac-${{ parameters.node_id }} - ${{ parameters.job_suffix }}
+    displayName: MSBuild ${{ parameters.job_suffix }} - macOS-${{ parameters.node_id }}
     pool: $(HostedMac)
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
@@ -25,11 +25,6 @@ jobs:
       inputs:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
-
-    - task: DownloadPipelineArtifact@1
-      inputs:
-        artifactName: $(NuGetArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
 
     - template: run-nunit-tests.yaml
       parameters:
@@ -60,6 +55,6 @@ jobs:
 
     - template: upload-results.yaml
       parameters:
-        artifactName: Test Results - MSBuild - Mac-${{ parameters.node_id }} - ${{ parameters.job_suffix }}
+        artifactName: Test Results - MSBuild ${{ parameters.job_suffix }} - macOS-${{ parameters.node_id }}
 
     - template: fail-on-issue.yaml

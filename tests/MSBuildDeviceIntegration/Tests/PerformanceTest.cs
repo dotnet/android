@@ -43,10 +43,20 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		void Profile (ProjectBuilder builder, Action<ProjectBuilder> action, [CallerMemberName] string caller = null)
+		void Profile (ProjectBuilder builder, Action<ProjectBuilder> action, bool additionalTimeForSigning, [CallerMemberName] string caller = null)
 		{
 			if (!csv_values.TryGetValue (caller, out int expected)) {
 				Assert.Fail ($"No timeout value found for a key of {caller}");
+			}
+
+			if (Builder.UseDotNet) {
+				//TODO: there is currently a slight performance regression in .NET 6
+				expected += 500;
+
+				//NOTE: some tests run `dotnet build`, which would sign the .apk
+				if (additionalTimeForSigning) {
+					expected += 500;
+				}
 			}
 
 			action (builder);
@@ -85,24 +95,31 @@ namespace Xamarin.Android.Build.Tests
 			return duration.TotalMilliseconds;
 		}
 
-		ProjectBuilder CreateBuilderWithoutLogFile (string directory = null)
+		ProjectBuilder CreateBuilderWithoutLogFile (string directory = null, bool isApp = true)
 		{
-			var builder = CreateApkBuilder (directory);
+			var builder = isApp ? CreateApkBuilder (directory) : CreateDllBuilder (directory);
 			builder.BuildLogFile = null;
 			builder.Verbosity = LoggerVerbosity.Quiet;
 			return builder;
+		}
+
+		XamarinAndroidApplicationProject CreateApplicationProject ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetAndroidSupportedAbis ("x86"); // Use a single ABI
+			return proj;
 		}
 
 		[Test]
 		[Retry (2)]
 		public void Build_From_Clean_DontIncludeRestore ()
 		{
-			var proj = new XamarinAndroidApplicationProject ();
-			proj.MainActivity = proj.DefaultMainActivity;
+			var proj = CreateApplicationProject ();
 			using (var builder = CreateBuilderWithoutLogFile ()) {
+				builder.AutomaticNuGetRestore = false;
 				builder.Target = "Build";
 				builder.Restore (proj);
-				Profile (builder, b => b.Build (proj));
+				Profile (builder, b => b.Build (proj), additionalTimeForSigning: true);
 			}
 		}
 
@@ -110,14 +127,15 @@ namespace Xamarin.Android.Build.Tests
 		[Retry (2)]
 		public void Build_No_Changes ()
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			var proj = CreateApplicationProject ();
 			proj.MainActivity = proj.DefaultMainActivity;
 			using (var builder = CreateBuilderWithoutLogFile ()) {
 				builder.Target = "Build";
 				builder.Build (proj);
+				builder.AutomaticNuGetRestore = false;
 
 				// Profile no changes
-				Profile (builder, b => b.Build (proj));
+				Profile (builder, b => b.Build (proj), additionalTimeForSigning: false);
 
 				// Change C# and build
 				proj.MainActivity += $"{Environment.NewLine}//comment";
@@ -125,7 +143,7 @@ namespace Xamarin.Android.Build.Tests
 				builder.Build (proj);
 
 				// Profile no changes
-				Profile (builder, b => b.Build (proj));
+				Profile (builder, b => b.Build (proj), additionalTimeForSigning: false);
 			}
 		}
 
@@ -133,16 +151,17 @@ namespace Xamarin.Android.Build.Tests
 		[Retry (2)]
 		public void Build_CSharp_Change ()
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			var proj = CreateApplicationProject ();
 			proj.MainActivity = proj.DefaultMainActivity;
 			using (var builder = CreateBuilderWithoutLogFile ()) {
 				builder.Target = "Build";
 				builder.Build (proj);
+				builder.AutomaticNuGetRestore = false;
 
 				// Profile C# change
 				proj.MainActivity += $"{Environment.NewLine}//comment";
 				proj.Touch ("MainActivity.cs");
-				Profile (builder, b => b.Build (proj));
+				Profile (builder, b => b.Build (proj), additionalTimeForSigning: false);
 			}
 		}
 
@@ -150,15 +169,16 @@ namespace Xamarin.Android.Build.Tests
 		[Retry (2)]
 		public void Build_AndroidResource_Change ()
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			var proj = CreateApplicationProject ();
 			using (var builder = CreateBuilderWithoutLogFile ()) {
 				builder.Target = "Build";
 				builder.Build (proj);
+				builder.AutomaticNuGetRestore = false;
 
 				// Profile AndroidResource change
 				proj.LayoutMain += $"{Environment.NewLine}<!--comment-->";
 				proj.Touch ("Resources\\layout\\Main.axml");
-				Profile (builder, b => b.Build (proj));
+				Profile (builder, b => b.Build (proj), additionalTimeForSigning: true);
 			}
 		}
 
@@ -175,28 +195,27 @@ namespace Xamarin.Android.Build.Tests
 			lib.OtherBuildItems.Add (new AndroidItem.AndroidAsset ("Assets\\foo.bar") {
 				BinaryContent = () => bytes,
 			});
-			var proj = new XamarinAndroidApplicationProject () {
-				ProjectName = "App1",
-				References = {
-					new BuildItem.ProjectReference ("..\\Library1\\Library1.csproj"),
-				},
-			};
+			var proj = CreateApplicationProject ();
+			proj.ProjectName = "App1";
+			proj.References.Add (new BuildItem.ProjectReference ("..\\Library1\\Library1.csproj"));
 			rnd.NextBytes (bytes);
 			proj.OtherBuildItems.Add (new AndroidItem.AndroidAsset ("Assets\\foo.bar") {
 				BinaryContent = () => bytes,
 			});
-			using (var libBuilder = CreateBuilderWithoutLogFile (Path.Combine ("temp", TestName, lib.ProjectName)))
+			using (var libBuilder = CreateBuilderWithoutLogFile (Path.Combine ("temp", TestName, lib.ProjectName), isApp: false))
 			using (var builder = CreateBuilderWithoutLogFile (Path.Combine ("temp", TestName, proj.ProjectName))) {
 				builder.Target = "Build";
 				libBuilder.Build (lib);
 				builder.Build (proj);
+				libBuilder.AutomaticNuGetRestore =
+					builder.AutomaticNuGetRestore = false;
 
 				rnd.NextBytes (bytes);
 				lib.Touch ("Assets\\foo.bar");
 				libBuilder.Build (lib);
 				builder.Target = "SignAndroidPackage";
 				// Profile AndroidAsset change
-				Profile (builder, b => b.Build (proj));
+				Profile (builder, b => b.Build (proj), additionalTimeForSigning: false);
 			}
 		}
 
@@ -204,11 +223,11 @@ namespace Xamarin.Android.Build.Tests
 		[Retry (2)]
 		public void Build_Designer_Change ()
 		{
-			var proj = new XamarinAndroidApplicationProject ();
-			proj.MainActivity = proj.DefaultMainActivity;
+			var proj = CreateApplicationProject ();
 			using (var builder = CreateBuilderWithoutLogFile ()) {
 				builder.Target = "Build";
 				builder.Build (proj);
+				builder.AutomaticNuGetRestore = false;
 
 				// Change AndroidResource & run SetupDependenciesForDesigner
 				proj.LayoutMain += $"{Environment.NewLine}<!--comment-->";
@@ -217,7 +236,7 @@ namespace Xamarin.Android.Build.Tests
 				builder.RunTarget (proj, "SetupDependenciesForDesigner", parameters: parameters);
 
 				// Profile AndroidResource change
-				Profile (builder, b => b.Build (proj));
+				Profile (builder, b => b.Build (proj), additionalTimeForSigning: true);
 			}
 		}
 
@@ -226,18 +245,19 @@ namespace Xamarin.Android.Build.Tests
 		public void Build_JLO_Change ()
 		{
 			var className = "Foo";
-			var proj = new XamarinAndroidApplicationProject ();
+			var proj = CreateApplicationProject ();
 			proj.Sources.Add (new BuildItem.Source ("Foo.cs") {
 				TextContent = () => $"class {className} : Java.Lang.Object {{}}"
 			});
 			using (var builder = CreateBuilderWithoutLogFile ()) {
 				builder.Target = "Build";
 				builder.Build (proj);
+				builder.AutomaticNuGetRestore = false;
 
 				// Profile Java.Lang.Object rename
 				className = "Foo2";
 				proj.Touch ("Foo.cs");
-				Profile (builder, b => b.Build (proj));
+				Profile (builder, b => b.Build (proj), additionalTimeForSigning: true);
 			}
 		}
 
@@ -245,15 +265,16 @@ namespace Xamarin.Android.Build.Tests
 		[Retry (2)]
 		public void Build_AndroidManifest_Change ()
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			var proj = CreateApplicationProject ();
 			using (var builder = CreateBuilderWithoutLogFile ()) {
 				builder.Target = "Build";
 				builder.Build (proj);
+				builder.AutomaticNuGetRestore = false;
 
 				// Profile AndroidManifest.xml change
 				proj.AndroidManifest += $"{Environment.NewLine}<!--comment-->";
 				proj.Touch ("Properties\\AndroidManifest.xml");
-				Profile (builder, b => b.Build (proj));
+				Profile (builder, b => b.Build (proj), additionalTimeForSigning: true);
 			}
 		}
 
@@ -261,16 +282,17 @@ namespace Xamarin.Android.Build.Tests
 		[Retry (2)]
 		public void Build_CSProj_Change ()
 		{
-			var proj = new XamarinAndroidApplicationProject ();
+			var proj = CreateApplicationProject ();
 			using (var builder = CreateBuilderWithoutLogFile ()) {
 				builder.Target = "Build";
 				builder.Build (proj);
+				builder.AutomaticNuGetRestore = false;
 
 				// Profile .csproj change
 				proj.Sources.Add (new BuildItem ("None", "Foo.txt") {
 					TextContent = () => "Bar",
 				});
-				Profile (builder, b => b.Build (proj));
+				Profile (builder, b => b.Build (proj), additionalTimeForSigning: true);
 			}
 		}
 
@@ -313,14 +335,11 @@ namespace Xamarin.Android.Build.Tests
 			} else if (produceReferenceAssembly) {
 				caller += "_RefAssembly";
 			}
-			var app = new XamarinFormsAndroidApplicationProject {
-				ProjectName = "MyApp",
-				Sources = {
-					new BuildItem.Source ("Foo.cs") {
-						TextContent = () => "public class Foo : Bar { }"
-					},
-				}
-			};
+			var app = CreateApplicationProject ();
+			app.ProjectName = "MyApp";
+			app.Sources.Add (new BuildItem.Source ("Foo.cs") {
+				TextContent = () => "public class Foo : Bar { }"
+			});
 			//NOTE: this will skip a 382ms <VerifyVersionsTask/> from the support library
 			app.SetProperty ("XamarinAndroidSupportSkipVerifyVersions", "True");
 
@@ -344,7 +363,7 @@ namespace Xamarin.Android.Build.Tests
 			lib.SetProperty ("ProduceReferenceAssembly", produceReferenceAssembly.ToString ());
 			app.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
 
-			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
+			using (var libBuilder = CreateBuilderWithoutLogFile (Path.Combine (path, lib.ProjectName), isApp: false))
 			using (var appBuilder = CreateBuilderWithoutLogFile (Path.Combine (path, app.ProjectName))) {
 				libBuilder.Build (lib);
 				appBuilder.Target = "Build";
@@ -362,9 +381,9 @@ namespace Xamarin.Android.Build.Tests
 				lib.Touch ("MyPage.xaml");
 				libBuilder.Build (lib, doNotCleanupOnUpdate: true);
 				if (install) {
-					Profile (appBuilder, b => b.Install (app, doNotCleanupOnUpdate: true), caller);
+					Profile (appBuilder, b => b.Install (app, doNotCleanupOnUpdate: true), additionalTimeForSigning: false, caller);
 				} else {
-					Profile (appBuilder, b => b.Build (app, doNotCleanupOnUpdate: true), caller);
+					Profile (appBuilder, b => b.Build (app, doNotCleanupOnUpdate: true), additionalTimeForSigning: false, caller);
 				}
 			}
 		}
@@ -377,15 +396,17 @@ namespace Xamarin.Android.Build.Tests
 			AssertCommercialBuild (); // This test will fail without Fast Deployment
 			AssertHasDevices ();
 
-			var proj = new XamarinAndroidApplicationProject ();
+			var proj = CreateApplicationProject ();
+			proj.PackageName = "com.xamarin.install_csharp_change";
 			proj.MainActivity = proj.DefaultMainActivity;
 			using (var builder = CreateBuilderWithoutLogFile ()) {
 				builder.Install (proj);
+				builder.AutomaticNuGetRestore = false;
 
 				// Profile C# change
 				proj.MainActivity += $"{Environment.NewLine}//comment";
 				proj.Touch ("MainActivity.cs");
-				Profile (builder, b => b.Install (proj));
+				Profile (builder, b => b.Install (proj), additionalTimeForSigning: false);
 			}
 		}
 	}

@@ -6,8 +6,13 @@ using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace Android.Runtime {
-	internal class ConstructorBuilder {
-		static MethodInfo newobject = typeof (System.Runtime.Serialization.FormatterServices).GetMethod ("GetUninitializedObject", BindingFlags.Public | BindingFlags.Static)!;
+	internal static class ConstructorBuilder {
+		static readonly MethodInfo newobject =
+#if NETFRAMEWORK || NET_2_0
+			typeof (System.Runtime.Serialization.FormatterServices).GetMethod ("GetUninitializedObject", BindingFlags.Public | BindingFlags.Static)!;
+#else
+			typeof (System.Runtime.CompilerServices.RuntimeHelpers).GetMethod ("GetUninitializedObject", BindingFlags.Public | BindingFlags.Static)!;
+#endif
 		static MethodInfo gettype = typeof (System.Type).GetMethod ("GetTypeFromHandle", BindingFlags.Public | BindingFlags.Static)!;
 		static FieldInfo handlefld = typeof (Java.Lang.Object).GetField ("handle", BindingFlags.NonPublic | BindingFlags.Instance)!;
 		static FieldInfo Throwable_handle = typeof (Java.Lang.Throwable).GetField ("handle", BindingFlags.NonPublic | BindingFlags.Instance)!;

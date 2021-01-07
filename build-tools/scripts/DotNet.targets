@@ -1,16 +1,36 @@
 <Project>
+  <PropertyGroup>
+    <_Root>$(MSBuildThisFileDirectory)..\..\</_Root>
+  </PropertyGroup>
   <Target Name="PackDotNet">
-    <PropertyGroup>
-      <_TopDir>$(MSBuildThisFileDirectory)..\..\</_TopDir>
-    </PropertyGroup>
-    <MSBuild Projects="$(_TopDir)build-tools\xa-prep-tasks\xa-prep-tasks.csproj" />
-    <MSBuild Projects="$(_TopDir)Xamarin.Android.sln" Properties="DisableApiCompatibilityCheck=true" />
-    <MSBuild Projects="$(_TopDir)build-tools\create-packs\Microsoft.Android.Sdk.proj" Targets="CreateAllPacks" />
+    <MSBuild Projects="$(_Root)build-tools\xa-prep-tasks\xa-prep-tasks.csproj" />
+    <MSBuild Projects="$(_Root)Xamarin.Android.sln" Properties="DisableApiCompatibilityCheck=true" />
+    <MSBuild Projects="$(_Root)build-tools\create-packs\Microsoft.Android.Sdk.proj" Targets="CreateAllPacks" />
+    <MSBuild Projects="$(_Root)build-tools\create-packs\Microsoft.Android.Sdk.proj" Targets="ExtractWorkloadPacks" />
     <!-- Clean up old, previously restored packages -->
     <ItemGroup>
-      <_OldPackages Include="$(_TopDir)packages\microsoft.android.*\**\*.nupkg" />
+      <_OldPackages Include="$(_Root)packages\microsoft.android.*\**\*.nupkg" />
       <_DirectoriesToRemove Include="%(_OldPackages.RootDir)%(_OldPackages.Directory)" />
     </ItemGroup>
     <RemoveDir Directories="@(_DirectoriesToRemove)" />
+  </Target>
+  <Target Name="CreateWorkloadInstallers">
+    <MSBuild
+        Targets="ExtractWorkloadPacks"
+        Projects="$(_Root)build-tools\create-packs\Microsoft.Android.Sdk.proj"
+        Properties="Configuration=$(Configuration)"
+    />
+    <MSBuild
+        Condition=" $([MSBuild]::IsOSPlatform('windows')) "
+        Targets="Restore;Build"
+        Projects="$(_Root)build-tools\create-dotnet-msi\create-dotnet-msi.csproj"
+        Properties="Configuration=$(Configuration)"
+    />
+    <MSBuild
+        Condition=" $([MSBuild]::IsOSPlatform('osx')) "
+        Targets="Restore;Build"
+        Projects="$(_Root)build-tools\create-dotnet-pkg\create-dotnet-pkg.csproj"
+        Properties="Configuration=$(Configuration)"
+    />
   </Target>
 </Project>

@@ -10,7 +10,6 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <NoWarn>0618;0809;0108;0114;0465;8609;8610;8614;8617;8613;8764;8765;8766;8767</NoWarn>
-    <LangVersion>latest</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DefineConstants>$(DefineConstants);JAVA_INTEROP</DefineConstants>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\$(TargetFramework)\android-$(AndroidPlatformId)\</IntermediateOutputPath>
@@ -22,6 +21,16 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Nullable>enable</Nullable>
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <IncludeAndroidJavadoc Condition=" '$(IncludeAndroidJavadoc)' == '' And '$(CONVERT_JAVADOC_TO_XMLDOC)' == 'true' And '$(AndroidFrameworkVersion)' == '$(AndroidLatestStableFrameworkVersion)'">True</IncludeAndroidJavadoc>
+    <AndroidJavadocVerbosity Condition=" '$(AndroidJavadocVerbosity)' == '' ">intellisense</AndroidJavadocVerbosity>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(IncludeAndroidJavadoc)' == 'True' ">
+    <DocumentationFile>$(OutputPath)Mono.Android.xml</DocumentationFile>
+    <NoWarn>$(NoWarn);CS1572;CS1573;CS1574;CS1587;CS1591;</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(TargetFramework)' == 'monoandroid10' ">
@@ -85,6 +94,8 @@
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
     <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop\Java.Interop.csproj" />
+
+    <EmbeddedResource Include="ILLink/ILLink.LinkAttributes.xml" />
   </ItemGroup>
 
   <ItemGroup>
@@ -93,6 +104,9 @@
     </Compile>
     <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64.cs">
       <Link>Crc64.cs</Link>
+    </Compile>
+    <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64Helper.cs">
+      <Link>Crc64Helper.cs</Link>
     </Compile>
     <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64.Table.cs">
       <Link>Crc64.Table.cs</Link>
@@ -340,17 +354,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="Test\**" />
-    <None Remove="Test\**" />
-    <EmbeddedResource Remove="Test\**" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\..\build-tools\api-xml-adjuster\api-xml-adjuster.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="TargetFramework=net472" />
     <!-- Explicitly pass the target framework of the project so we don't have conflicts with the multiple targets in this file. -->
     <ProjectReference Include="..\..\build-tools\api-merge\api-merge.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="TargetFramework=net472" />
     <ProjectReference Include="..\..\build-tools\jnienv-gen\jnienv-gen.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="TargetFramework=net472" />
     <ProjectReference Include="..\..\external\Java.Interop\tools\generator\generator.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="TargetFramework=net472"/>
+    <ProjectReference Include="..\..\external\Java.Interop\tools\java-source-utils\java-source-utils.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="TargetFramework=net472" />
     <ProjectReference Include="..\..\external\Java.Interop\tools\jcw-gen\jcw-gen.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="TargetFramework=net472" />
     <ProjectReference Include="..\..\src\java-runtime\java-runtime.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\r8\r8.csproj" ReferenceOutputAssembly="False" />

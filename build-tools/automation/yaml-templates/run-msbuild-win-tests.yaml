@@ -10,7 +10,7 @@ parameters:
 
 jobs:
   - job: ${{ parameters.job_name }}
-    displayName: MSBuild - Windows-${{ parameters.node_id }} - ${{ parameters.job_suffix }}
+    displayName: MSBuild ${{ parameters.job_suffix }} - Windows-${{ parameters.node_id }}
     pool: $(VSEngWinVS2019)
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
@@ -23,21 +23,14 @@ jobs:
 
     - template: clean.yaml
 
-    - template: environment/win/vs-msbuild.v1.yml@yaml   # Display (in log) VS installation(s) including installation status with associated MSBuild location(s)
-
     - template: setup-test-environment.yaml
       parameters:
-        provisionExtraArgs: -vv PROVISIONATOR_VISUALSTUDIO_LOCATION="$(VSINSTALLDIR)" -f
+        updateVS: true
 
     - task: DownloadPipelineArtifact@1
       inputs:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)
-
-    - task: DownloadPipelineArtifact@1
-      inputs:
-        artifactName: $(NuGetArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\$(NuGetArtifactName)
 
     # Limit the amount of worker threads used to run these tests in parallel to half of what is currently available (8) on the Windows pool.
     # Using all available cores seems to occasionally bog down our machines and cause parallel test execution to slow down dramatically.
@@ -70,6 +63,6 @@ jobs:
 
     - template: upload-results.yaml
       parameters:
-        artifactName: Test Results - MSBuild - Windows-${{ parameters.node_id }} - ${{ parameters.job_suffix }}
+        artifactName: Test Results - MSBuild ${{ parameters.job_suffix }} - Windows-${{ parameters.node_id }}
 
     - template: fail-on-issue.yaml

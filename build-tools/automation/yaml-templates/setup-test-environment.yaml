@@ -2,11 +2,17 @@ parameters:
   configuration: $(XA.Build.Configuration)
   provisionExtraArgs: -vv -f
   xaSourcePath: $(System.DefaultWorkingDirectory)
+  updateVS: false
 
 steps:
 - checkout: self
   clean: true
   submodules: recursive
+
+- ${{ if eq(parameters.updateVS, true) }}:
+  - template: update-vs.yaml
+    parameters: 
+      xasourcePath: ${{ parameters.xaSourcePath }}
 
 - template: run-installer.yaml
   parameters:
@@ -23,7 +29,7 @@ steps:
 
 - template: use-dot-net.yaml
   parameters:
-    version: $(DotNetCorePreviewVersion)
+    version: $(DotNet5Version)
     remove_dotnet: true
 
 - template: use-dot-net.yaml
@@ -50,14 +56,12 @@ steps:
 
 - script: >
     mono ${{ parameters.xaSourcePath }}/build-tools/xaprepare/xaprepare/bin/${{ parameters.configuration }}/xaprepare.exe --s=UpdateMono --auto-provision=yes --auto-provision-uses-sudo=yes --no-emoji --run-mode=CI &&
-    mono ${{ parameters.xaSourcePath }}/build-tools/xaprepare/xaprepare/bin/${{ parameters.configuration }}/xaprepare.exe --s=Required --auto-provision=yes --auto-provision-uses-sudo=yes --no-emoji --run-mode=CI &&
-    mono ${{ parameters.xaSourcePath }}/build-tools/xaprepare/xaprepare/bin/${{ parameters.configuration }}/xaprepare.exe --s=AndroidToolchain --no-emoji --run-mode=CI
+    mono ${{ parameters.xaSourcePath }}/build-tools/xaprepare/xaprepare/bin/${{ parameters.configuration }}/xaprepare.exe --s=AndroidTestDependencies --no-emoji --run-mode=CI
   displayName: install test dependencies
   condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
 
 - script: >
-    ${{ parameters.xaSourcePath }}\build-tools\xaprepare\xaprepare\bin\${{ parameters.configuration }}\xaprepare.exe --s=Required --auto-provision=yes --no-emoji --run-mode=CI &&
-    ${{ parameters.xaSourcePath }}\build-tools\xaprepare\xaprepare\bin\${{ parameters.configuration }}\xaprepare.exe --s=AndroidToolchain --no-emoji --run-mode=CI
+    ${{ parameters.xaSourcePath }}\build-tools\xaprepare\xaprepare\bin\${{ parameters.configuration }}\xaprepare.exe --s=AndroidTestDependencies --no-emoji --run-mode=CI
   displayName: install test dependencies
   condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
 
@@ -84,3 +88,16 @@ steps:
     solution: ${{ parameters.xaSourcePath }}/build-tools/xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
     configuration: ${{ parameters.configuration }}
     msbuildArguments: /restore /bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/BootstrapTasks.binlog
+
+# Download and install .NET nupkgs
+- task: DownloadPipelineArtifact@2
+  inputs:
+    artifactName: $(NuGetArtifactName)
+    downloadPath: ${{ parameters.xaSourcePath }}/bin/Build${{ parameters.configuration }}/$(NuGetArtifactName)
+
+- task: MSBuild@1
+  displayName: extract workload packs
+  inputs:
+    solution: ${{ parameters.xaSourcePath }}/build-tools/create-packs/Microsoft.Android.Sdk.proj
+    configuration: ${{ parameters.configuration }}
+    msbuildArguments: /t:ExtractWorkloadPacks /bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/extract-workloads.binlog

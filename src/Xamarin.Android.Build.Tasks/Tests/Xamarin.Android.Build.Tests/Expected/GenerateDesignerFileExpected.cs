@@ -91,10 +91,13 @@ namespace Foo.Foo
 			public const int customFont = 2130968576;
 			
 			// aapt resource value: 0x7F040001
-			public const int entries = 2130968577;
+			public const int customFont1 = 2130968577;
 			
 			// aapt resource value: 0x7F040002
-			public const int entryValues = 2130968578;
+			public const int entries = 2130968578;
+			
+			// aapt resource value: 0x7F040003
+			public const int entryValues = 2130968579;
 			
 			static Attribute()
 			{
@@ -356,10 +359,12 @@ namespace Foo.Foo
 		public partial class Styleable
 		{
 			
-			// aapt resource value: { 0x10100D2,0x7F040000 }
+			// aapt resource value: { 0x10100D2,0x7F040000,0x7F040000,0x7F040001 }
 			public static int[] CustomFonts = new int[] {
 					16842962,
-					2130968576};
+					2130968576,
+					2130968576,
+					2130968577};
 			
 			// aapt resource value: 0
 			public const int CustomFonts_android_scrollX = 0;
@@ -367,12 +372,15 @@ namespace Foo.Foo
 			// aapt resource value: 1
 			public const int CustomFonts_customFont = 1;
 			
-			// aapt resource value: { 0x10100B2,0x10101F8,0x7F040001,0x7F040002 }
+			// aapt resource value: 3
+			public const int CustomFonts_customFont1 = 3;
+			
+			// aapt resource value: { 0x10100B2,0x10101F8,0x7F040002,0x7F040003 }
 			public static int[] MultiSelectListPreference = new int[] {
 					16842930,
 					16843256,
-					2130968577,
-					2130968578};
+					2130968578,
+					2130968579};
 			
 			// aapt resource value: 0
 			public const int MultiSelectListPreference_android_entries = 0;

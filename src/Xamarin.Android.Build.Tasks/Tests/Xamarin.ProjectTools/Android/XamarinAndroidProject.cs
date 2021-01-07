@@ -25,7 +25,6 @@ namespace Xamarin.ProjectTools
 				SetProperty ("MonoAndroidResourcePrefix", "Resources");
 				SetProperty (KnownProperties.AndroidUseLatestPlatformSdk, () => UseLatestPlatformSdk ? "True" : "False");
 				SetProperty (KnownProperties.TargetFrameworkVersion, () => TargetFrameworkVersion);
-				SetProperty (ReleaseProperties, KnownProperties.AndroidUseSharedRuntime, "False");
 			}
 
 			SetProperty (KnownProperties.OutputType, "Library");
@@ -49,5 +48,10 @@ namespace Xamarin.ProjectTools
 		/// TargetFrameworkVersion=v8.1 -> MonoAndroid81
 		/// </summary>
 		public string TargetFrameworkMoniker => "MonoAndroid" + TargetFrameworkAbbreviated;
+
+		public bool AndroidUseAapt2 {
+			get { return string.Equals (GetProperty (KnownProperties.AndroidUseAapt2), "True", StringComparison.OrdinalIgnoreCase); }
+			set { SetProperty (KnownProperties.AndroidUseAapt2, value.ToString ()); }
+		}
 	}
 }

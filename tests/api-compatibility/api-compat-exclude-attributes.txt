@@ -1,5 +1,7 @@
 // These attributes should be excluded from api-compat check reference assemblies.
 
+T:Android.Runtime.PreserveAttribute
+
 T:Java.Interop.JavaTypeParametersAttribute
 
 T:System.Diagnostics.DebuggerStepThroughAttribute

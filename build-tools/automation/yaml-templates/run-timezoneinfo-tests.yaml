@@ -5,7 +5,7 @@ parameters:
 
 jobs:
   - job: mac_timezoneinfo_tests_${{ parameters.node_id }}
-    displayName: TimeZone - Mac-${{ parameters.node_id }}
+    displayName: macOS-${{ parameters.node_id }}
     pool: $(HostedMac)
     timeoutInMinutes: 90
     cancelTimeoutInMinutes: 5
@@ -13,6 +13,9 @@ jobs:
       clean: all
     steps:
     - template: setup-test-environment.yaml
+
+    - script: mono $(System.DefaultWorkingDirectory)/build-tools/xaprepare/xaprepare/bin/$(XA.Build.Configuration)/xaprepare.exe --s=EmulatorTestDependencies --no-emoji --run-mode=CI
+      displayName: install emulator
 
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -22,7 +25,7 @@ jobs:
     - task: MSBuild@1
       displayName: start emulator
       inputs:
-        solution: src/Mono.Android/Test/Mono.Android-Tests.csproj
+        solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
         configuration: $(XA.Build.Configuration)
         msbuildArguments: >-
           /t:AcquireAndroidTarget /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/start-emulator.binlog
@@ -30,14 +33,14 @@ jobs:
     - template: run-nunit-tests.yaml
       parameters:
         testRunTitle: TimeZoneInfoTests On Device - macOS
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/MSBuildDeviceIntegration.dll
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/net472/MSBuildDeviceIntegration.dll
         nunitConsoleExtraArgs: --where "test == Xamarin.Android.Build.Tests.DeploymentTest.CheckTimeZoneInfoIsCorrectNode${{ parameters.node_id }}"
         testResultsFile: TestResult-TimeZoneInfoTests-Node${{ parameters.node_id }}-$(XA.Build.Configuration).xml
 
     - task: MSBuild@1
       displayName: shut down emulator
       inputs:
-        solution: src/Mono.Android/Test/Mono.Android-Tests.csproj
+        solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
         configuration: $(XA.Build.Configuration)
         msbuildArguments: >-
           /t:AcquireAndroidTarget,ReleaseAndroidTarget

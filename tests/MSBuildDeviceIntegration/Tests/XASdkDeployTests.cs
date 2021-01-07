@@ -13,11 +13,40 @@ using Xamarin.ProjectTools;
 namespace Xamarin.Android.Build.Tests
 {
 	[NonParallelizable]
-	[Category ("UsesDevices"), Category ("DotNetIgnore")] // These don't need to run under `--params dotnet=true`
+	[Category ("UsesDevices"), Category ("SmokeTests"), Category ("DotNetIgnore")] // These don't need to run under `dotnet test`
 	public class XASdkDeployTests : DeviceTest
 	{
+		static object [] DotNetInstallAndRunSource = new object [] {
+			new object[] {
+				/* isRelease */      false,
+				/* xamarinForms */   false,
+				/* publishTrimmed */ default (bool?),
+			},
+			new object[] {
+				/* isRelease */      true,
+				/* xamarinForms */   false,
+				/* publishTrimmed */ default (bool?),
+			},
+			new object[] {
+				/* isRelease */      false,
+				/* xamarinForms */   true,
+				/* publishTrimmed */ default (bool?),
+			},
+			new object[] {
+				/* isRelease */      true,
+				/* xamarinForms */   true,
+				/* publishTrimmed */ default (bool?),
+			},
+			new object[] {
+				/* isRelease */      true,
+				/* xamarinForms */   false,
+				/* publishTrimmed */ false,
+			},
+		};
+
 		[Test]
-		public void DotNetInstallAndRun ([Values (false, true)] bool isRelease, [Values (false, true)] bool xamarinForms)
+		[TestCaseSource (nameof (DotNetInstallAndRunSource))]
+		public void DotNetInstallAndRun (bool isRelease, bool xamarinForms, bool? publishTrimmed)
 		{
 			AssertHasDevices ();
 
@@ -31,6 +60,9 @@ namespace Xamarin.Android.Build.Tests
 					IsRelease = isRelease
 				};
 			}
+			if (publishTrimmed != null) {
+				proj.SetProperty (KnownProperties.PublishTrimmed, publishTrimmed.ToString ());
+			}
 			proj.SetRuntimeIdentifier (DeviceAbi);
 
 			var relativeProjDir = Path.Combine ("temp", TestName);
@@ -42,6 +74,7 @@ namespace Xamarin.Android.Build.Tests
 			var dotnet = new DotNetCLI (proj, Path.Combine (fullProjDir, proj.ProjectFilePath));
 
 			Assert.IsTrue (dotnet.Run (), "`dotnet run` should succeed");
+			WaitForPermissionActivity (Path.Combine (Root, dotnet.ProjectDirectory, "permission-logcat.log"));
 			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
 				Path.Combine (fullProjDir, "logcat.log"), 30);
 			RunAdbCommand ($"uninstall {proj.PackageName}");
@@ -49,6 +82,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Category ("Debugger")]
 		public void DotNetDebug ()
 		{
 			AssertCommercialBuild ();
@@ -57,6 +91,7 @@ namespace Xamarin.Android.Build.Tests
 			XASdkProject proj;
 			proj = new XASdkProject ();
 			proj.SetRuntimeIdentifier (DeviceAbi);
+			string runtimeId = proj.GetProperty (KnownProperties.RuntimeIdentifier);
 
 			var relativeProjDir = Path.Combine ("temp", TestName);
 			var fullProjDir = Path.Combine (Root, relativeProjDir);
@@ -87,19 +122,20 @@ namespace Xamarin.Android.Build.Tests
 				MaxConnectionAttempts = 10,
 			};
 			var startInfo = new SoftDebuggerStartInfo (args) {
-				WorkingDirectory = Path.Combine (dotnet.ProjectDirectory, proj.IntermediateOutputPath, "android", "assets"),
+				WorkingDirectory = Path.Combine (dotnet.ProjectDirectory, proj.IntermediateOutputPath, runtimeId, "android", "assets"),
 			};
 			var options = new DebuggerSessionOptions () {
 				EvaluationOptions = EvaluationOptions.DefaultOptions,
 			};
 			options.EvaluationOptions.UseExternalTypeResolver = true;
 			ClearAdbLogcat ();
+			dotnet.BuildLogFile = Path.Combine (Root, dotnet.ProjectDirectory, "run.log");
 			Assert.True (dotnet.Build ("Run", new string [] {
 				$"AndroidSdbTargetPort={port}",
 				$"AndroidSdbHostPort={port}",
 				"AndroidAttachDebugger=True",
 			}), "Project should have run.");
-
+			WaitForPermissionActivity (Path.Combine (Root, dotnet.ProjectDirectory, "permission-logcat.log"));
 			Assert.IsTrue (WaitForDebuggerToStart (Path.Combine (Root, dotnet.ProjectDirectory, "logcat.log")), "Activity should have started");
 			// we need to give a bit of time for the debug server to start up.
 			WaitFor (2000);

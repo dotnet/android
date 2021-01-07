@@ -9,17 +9,13 @@ java {
     targetCompatibility = ext.javaTargetVer
 }
 
-// See: https://r8.googlesource.com/r8/+/refs/tags/1.6.82/build.gradle#55
 repositories {
-    maven {
-       url 'http://storage.googleapis.com/r8-deps/maven_mirror/'
-    }
     google()
     mavenCentral()
 }
 
 dependencies {
-    compile group: 'com.android.tools', name: 'r8', version: '1.6.82'
+    compile group: 'com.android.tools', name: 'r8', version: '2.1.75'
 }
 
 jar {

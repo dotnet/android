@@ -44,7 +44,10 @@ namespace Xamarin.Android.Tasks
 				var ms = MemoryStreamPool.Shared.Rent ();
 				try {
 					m.Save (Log, ms, removeNodes: true);
-					MonoAndroidHelper.CopyIfStreamChanged (ms, OutputManifestFile);
+					if (!MonoAndroidHelper.CopyIfStreamChanged (ms, OutputManifestFile)) {
+						// NOTE: We still need to update the timestamp on this file, or the target would run again
+						File.SetLastWriteTimeUtc (OutputManifestFile, DateTime.UtcNow);
+					}
 					return result;
 				} finally {
 					MemoryStreamPool.Shared.Return (ms);

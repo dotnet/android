@@ -18,15 +18,19 @@ namespace Xamarin.ProjectTools
 
 		public string ProjectDirectory { get; private set; }
 
-		const string Executable = "dotnet";
 		readonly XASdkProject project;
 		readonly string projectOrSolution;
 
-		public DotNetCLI (XASdkProject project, string projectOrSolution)
+		public DotNetCLI (string projectOrSolution)
 		{
-			this.project = project;
 			this.projectOrSolution = projectOrSolution;
 			ProjectDirectory = Path.GetDirectoryName (projectOrSolution);
+		}
+
+		public DotNetCLI (XASdkProject project, string projectOrSolution)
+			: this (projectOrSolution)
+		{
+			this.project = project;
 		}
 
 		/// <summary>
@@ -43,7 +47,7 @@ namespace Xamarin.ProjectTools
 			bool succeeded;
 
 			using (var p = new Process ()) {
-				p.StartInfo.FileName = Executable;
+				p.StartInfo.FileName = Path.Combine (AndroidSdkResolver.GetDotNetPreviewPath (), "dotnet");
 				p.StartInfo.Arguments = string.Join (" ", args);
 				p.StartInfo.CreateNoWindow = true;
 				p.StartInfo.UseShellExecute = false;
@@ -74,9 +78,25 @@ namespace Xamarin.ProjectTools
 			return succeeded;
 		}
 
+		public bool New (string template, string output = null)
+		{
+			var arguments = new List<string> {
+				"new",
+				template,
+				"--output", $"\"{output ?? ProjectDirectory}\"",
+			};
+			return Execute (arguments.ToArray ());
+		}
+
 		public bool Build (string target = null, string [] parameters = null)
 		{
 			var arguments = GetDefaultCommandLineArgs ("build", target, parameters);
+			return Execute (arguments.ToArray ());
+		}
+
+		public bool Pack (string target = null, string [] parameters = null)
+		{
+			var arguments = GetDefaultCommandLineArgs ("pack", target, parameters);
 			return Execute (arguments.ToArray ());
 		}
 
@@ -118,13 +138,15 @@ namespace Xamarin.ProjectTools
 			var arguments = new List<string> {
 				verb,
 				$"\"{projectOrSolution}\"",
-				$"/p:Configuration={project.Configuration}",
 				"/noconsolelogger",
 				$"/flp1:LogFile=\"{BuildLogFile}\";Encoding=UTF-8;Verbosity={Verbosity}",
 				$"/bl:\"{Path.Combine (testDir, "msbuild.binlog")}\""
 			};
 			if (!string.IsNullOrEmpty (target)) {
 				arguments.Add ($"/t:{target}");
+			}
+			if (project != null) {
+				arguments.Add ($"/p:Configuration={project.Configuration}");
 			}
 			if (Directory.Exists (AndroidSdkPath)) {
 				arguments.Add ($"/p:AndroidSdkDirectory=\"{AndroidSdkPath}\"");

@@ -35,6 +35,7 @@
     <AndroidUseLatestPlatformSdk Condition=" '$(AndroidFrameworkVersion)' == '' And '$(_IsRunningNuGetRestore)' == 'True' ">True</AndroidUseLatestPlatformSdk>
     <DebugType Condition=" '$(DebugType)' == '' ">portable</DebugType>
     <Deterministic Condition=" '$(Deterministic)' == '' ">True</Deterministic>
+    <LangVersion Condition=" '$(LangVersion)' == '' ">latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(HostOS)' == '' ">
     <HostOS Condition="$([MSBuild]::IsOSPlatform('windows'))">Windows</HostOS>
@@ -67,6 +68,12 @@
     <AndroidMxeInstallPrefix Condition=" '$(HostOS)' == 'Darwin' ">$(HostHomebrewPrefix)</AndroidMxeInstallPrefix>
     <AndroidSdkDirectory Condition=" '$(AndroidSdkDirectory)' == '' ">$(AndroidToolchainDirectory)\sdk</AndroidSdkDirectory>
     <AndroidNdkDirectory Condition=" '$(AndroidNdkDirectory)' == '' ">$(AndroidToolchainDirectory)\ndk</AndroidNdkDirectory>
+    <DotNetPreviewPath Condition=" '$(DotNetPreviewPath)' == '' ">$(AndroidToolchainDirectory)\dotnet\</DotNetPreviewPath>
+    <DotNetPreviewTool Condition=" '$(DotNetPreviewTool)' == '' ">$(DotNetPreviewPath)dotnet</DotNetPreviewTool>
+    <!-- Version number from: https://github.com/dotnet/installer#installers-and-binaries -->
+    <DotNetPreviewVersionBand Condition=" '$(DotNetPreviewVersionBand)' == '' ">6.0.100</DotNetPreviewVersionBand>
+    <DotNetPreviewVersionFull Condition=" '$(DotNetPreviewVersionFull)' == '' ">$(DotNetPreviewVersionBand)-alpha.1.20562.2</DotNetPreviewVersionFull>
+    <WixToolPath Condition=" '$(WixToolPath)' == '' ">$(AndroidToolchainDirectory)\wix\</WixToolPath>
     <AndroidCmakeVersion Condition=" '$(AndroidCmakeVersion)' == '' ">3.10.2</AndroidCmakeVersion>
     <AndroidCmakeVersionPath Condition=" '$(AndroidCmakeVersionPath)' == '' ">$(AndroidCmakeVersion).4988404</AndroidCmakeVersionPath>
     <AndroidSdkCmakeDirectory>$(AndroidSdkDirectory)\cmake\$(AndroidCmakeVersionPath)</AndroidSdkCmakeDirectory>
@@ -110,8 +117,7 @@
     <XAPlatformToolsPackagePrefix Condition=" '$(HostOS)' == 'Darwin' ">b2be9c80582174e645d3736daa0d44d8610b38a8.</XAPlatformToolsPackagePrefix>
     <XAPlatformToolsVersion>30.0.2</XAPlatformToolsVersion>
     <XAIncludeProprietaryBits Condition="'$(XAIncludeProprietaryBits)' == ''">False</XAIncludeProprietaryBits>
-    <XABundleToolVersion Condition="'$(XABundleToolVersion)' == ''">0.14.0</XABundleToolVersion>
-    <XAManifestMergerToolVersion Condition="'$(XAManifestMergerToolVersion)' == ''">26.5.0</XAManifestMergerToolVersion>
+    <XABundleToolVersion Condition="'$(XABundleToolVersion)' == ''">1.4.0</XABundleToolVersion>
     <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' And '$(NUGET_PACKAGES)' != '' ">$(NUGET_PACKAGES)</XAPackagesDir>
     <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' ">$(XamarinAndroidSourcePath)\packages</XAPackagesDir>
     <PathSeparator>$([System.IO.Path]::PathSeparator)</PathSeparator>

@@ -1,0 +1,46 @@
+<!--
+***********************************************************************************************
+AutoImport.props
+
+Contains Android default MSBuild item includes.
+
+WARNING:  This file is imported by all projects using
+          Microsoft.NET.Sdk. All Item includes in this file *MUST* be
+          hidden behind an Android property based condition.
+
+Spec for AutoImport.props:
+
+https://github.com/dotnet/designs/blob/4703666296f5e59964961464c25807c727282cae/accepted/2020/workloads/workload-resolvers.md#workload-props-files
+
+***********************************************************************************************
+-->
+<Project>
+
+  <PropertyGroup>
+    <_DefaultJavaSourceJarPattern>**\*-source.jar;**\*-sources.jar;**\*-src.jar</_DefaultJavaSourceJarPattern>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(EnableDefaultAndroidItems)' == 'true' ">
+    <!-- Default Resource file inclusion -->
+    <!-- https://developer.android.com/guide/topics/resources/providing-resources -->
+    <AndroidResource Include="$(MonoAndroidResourcePrefix)\*\*.xml" />
+    <AndroidResource Include="$(MonoAndroidResourcePrefix)\*\*.axml" />
+    <AndroidResource Include="$(MonoAndroidResourcePrefix)\*\*.png" />
+    <AndroidResource Include="$(MonoAndroidResourcePrefix)\*\*.jpg" />
+    <AndroidResource Include="$(MonoAndroidResourcePrefix)\*\*.gif" />
+    <AndroidResource Include="$(MonoAndroidResourcePrefix)\font\*.ttf" />
+    <AndroidResource Include="$(MonoAndroidResourcePrefix)\font\*.otf" />
+    <AndroidResource Include="$(MonoAndroidResourcePrefix)\font\*.ttc" />
+    <AndroidResource Include="$(MonoAndroidResourcePrefix)\raw\*" Exclude="$(MonoAndroidResourcePrefix)\raw\.*" />
+    <!-- Default Asset file inclusion -->
+    <AndroidAsset Include="$(MonoAndroidAssetsPrefix)\**\*" Exclude="$(MonoAndroidAssetsPrefix)\**\.*\**" />
+    <!-- Default XPath transforms for bindings -->
+    <TransformFile Include="Transforms\**\*.xml" />
+    <!-- Default Java or native libraries -->
+    <AndroidLibrary       Include="**\*.jar" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder);$(_DefaultJavaSourceJarPattern)" />
+    <AndroidLibrary       Include="**\*.aar" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
+    <AndroidNativeLibrary Include="**\*.so"  Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
+    <JavaSourceJar        Include="$(_DefaultJavaSourceJarPattern)"   Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
+  </ItemGroup>
+
+</Project>

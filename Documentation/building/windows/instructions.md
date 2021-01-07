@@ -87,37 +87,67 @@ So for example:
 [windows_path]: https://www.java.com/en/download/help/path.xml
 [set_alias]: https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/set-alias?view=powershell-6
 
-# Creating .NET 6 NuGet packages
+# Creating a local .NET 6 Workload
 
-Once `Xamarin.Android.sln` is built, you can build the .NET 6 packages
-with:
+`msbuild Xamarin.Android.sln /t:Prepare` provisions a specific build
+of .NET 6 to `%USERPROFILE%\android-toolchain\dotnet`.
+
+Once `msbuild Xamarin.Android.sln /t:Build` is complete, you can build
+the .NET 6 packages with:
 
     msbuild Xamarin.Android.sln /t:PackDotNet
 
-Several `.nupkg` files will be output in `.\bin\BuildDebug\nupkgs\`, you
-can use these with a `nuget.config` such as:
+Several `.nupkg` files will be output in `.\bin\BuildDebug\nupkgs`,
+but this is only part of the story. Your local
+`%USERPROFILE%\android-toolchain\dotnet\packs` directory will be
+populated with a local Android "workload" in
+`Microsoft.Android.Sdk.win-x64` matching your operating system.
+
+To use the Android workload, you will need a `NuGet.config`:
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
   <packageSources>
-    <add key="dotnet5" value="https://dnceng.pkgs.visualstudio.com/public/_packaging/dotnet5/nuget/v3/index.json" />
+    <add key="dotnet6" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json" />
     <add key="local-xa" value="C:\full\path\to\bin\BuildDebug\nupkgs" />
   </packageSources>
 </configuration>
 ```
 
-Then use a `global.json` for the locally built version of the packages:
+The local package source in the `bin\BuildDebug\nupkgs` directory is
+currently needed for the Android runtime packages.
 
-```json
-{
-    "msbuild-sdks": {
-            "Microsoft.Android.Sdk": "11.0.100-ci.master.11"
-    }
-}
+Then use a `.csproj` file such as:
+
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0-android</TargetFramework>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+</Project>
 ```
 
+Build the project in `cmd` with:
+
+    > %USERPROFILE%\android-toolchain\dotnet\dotnet build foo.csproj
+
+Or in powershell:
+
+    > ~\android-toolchain\dotnet\dotnet build foo.csproj
+
+Using the `dotnet` provisioned in `%USERPROFILE%\android-toolchain`
+will use the locally built binaries.
+
 See the [One .NET Documentation](../../guides/OneDotNet.md) for further details.
+
+# Creating .NET 6 installer
+
+Once `msbuild Xamarin.Android.sln /t:Build` is complete, you can
+create an `.msi` for the .NET 6 Android workload via:
+
+    > msbuild Xamarin.Android.sln /t:CreateWorkloadInstallers
 
 # Building Unit Tests
 

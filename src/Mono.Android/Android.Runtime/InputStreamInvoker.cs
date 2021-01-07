@@ -153,7 +153,6 @@ namespace Android.Runtime
 			}
 		}
 		
-		[Preserve (Conditional=true)]
 		public static Stream? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)

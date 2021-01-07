@@ -1,0 +1,48 @@
+<!--
+***********************************************************************************************
+Microsoft.NET.Workload.Android.proj
+
+This project file is used to create the Microsoft.NET.Workload.Android NuGet, which is the
+workload manifest pack containing information about the various Microsoft.Android workloads.
+***********************************************************************************************
+-->
+<Project Sdk="Microsoft.Build.NoTargets">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <PackageId>Microsoft.NET.Workload.Android</PackageId>
+    <Authors>Microsoft</Authors>
+    <Description>Microsoft.Android workload manifest. Please do not reference directly.</Description>
+    <OutputPath>..\..\bin\Build$(Configuration)\nupkgs\</OutputPath>
+  </PropertyGroup>
+
+  <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
+
+  <PropertyGroup>
+    <BeforePack>
+      _GenerateXAWorkloadContent;
+      $(BeforePack);
+    </BeforePack>
+  </PropertyGroup>
+
+  <!-- FIXME: Temporarily Generate WorkloadManifest.targets and WorkloadManifest.json files inline while content is trivial. -->
+  <Target Name="_GenerateXAWorkloadContent"
+      DependsOnTargets="_GetDefaultPackageVersion;_GetLicense">
+    <PropertyGroup>
+      <WorkloadManifestJsonPath>$(OutputPath)workload-manifest\WorkloadManifest.json</WorkloadManifestJsonPath>
+    </PropertyGroup>
+
+    <MakeDir Directories="$([System.IO.Path]::GetDirectoryName ($(WorkloadManifestJsonPath)))" />
+    <ReplaceFileContents
+        SourceFile="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.NET.Workload.Android\WorkloadManifest.in.json"
+        DestinationFile="$(WorkloadManifestJsonPath)"
+        Replacements="@SDK_PACK_VERSION@=$(AndroidPackVersionLong);@REF_PACK_VERSION@=$(AndroidPackVersionLong);@TEMPLATE_PACK_VERSION@=$(AndroidPackVersionLong);">
+    </ReplaceFileContents>
+
+    <ItemGroup>
+      <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.NET.Workload.Android\WorkloadManifest.targets" PackagePath="\" />
+      <_PackageFiles Include="$(WorkloadManifestJsonPath)" PackagePath="\" />
+    </ItemGroup>
+  </Target>
+
+</Project>

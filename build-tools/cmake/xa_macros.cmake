@@ -50,7 +50,6 @@ macro(xa_common_prepare)
     Wa,-noexecstack
     fPIC
     g
-    fomit-frame-pointer
     O2
     )
 
@@ -95,10 +94,10 @@ macro(xa_macos_prepare_arm64)
 
       # CAUTION: do NOT ever remove the '-o -' parameter, without '-o' plutil will overwrite the .plist file
       execute_process(
-		COMMAND plutil -extract SupportedTargets.macosx.Archs json -o - "${SDKSETTINGS_PATH}"
+        COMMAND plutil -extract SupportedTargets.macosx.Archs json -o - "${SDKSETTINGS_PATH}"
         RESULT_VARIABLE PLUTIL_RESULT
         OUTPUT_VARIABLE SDK_ARCHITECTURES
-		)
+      )
       if(NOT ${PLUTIL_RESULT} EQUAL 0)
         message(WARNING "plutil failed to read ${SDKSETTINGS_PATH}, returned with result ${PLUTIL_RESULT}")
       else()
@@ -117,7 +116,29 @@ macro(xa_macos_prepare_arm64)
     unset(XA_OSX_ARCHITECTURES)
     if(SDK_SUPPORTS_ARM64)
       message(STATUS "SDK at ${XCODE_DEVELOPER_PATH} supports creation of ARM64 binaries")
-      list(APPEND XA_OSX_ARCHITECTURES "arm64")
+      set(MONOSGEN_DYLIB "${XA_LIB_TOP_DIR}/host-Darwin/libmonosgen-2.0.dylib")
+      execute_process(
+        COMMAND lipo -archs ${MONOSGEN_DYLIB}
+        RESULT_VARIABLE LIPO_RESULT
+        OUTPUT_VARIABLE LIPO_OUTPUT
+      )
+      set(ADD_ARM64 False)
+      if(${LIPO_RESULT} EQUAL "0")
+        string(FIND "${LIPO_OUTPUT}" "\"arm64\"" ARCH_POS)
+        if(${ARCH_POS} GREATER_EQUAL 0)
+          set(ADD_ARM64 True)
+        else()
+          message(WARNING "lipo reported ${MONOSGEN_DYLIB} does not contain the ARM64 image")
+        endif()
+      else()
+        message(WARNING "lipo check on ${MONOSGEN_DYLIB} failed with exit code ${LIPO_RESULT}")
+      endif()
+
+      if(ADD_ARM64)
+        list(APPEND XA_OSX_ARCHITECTURES "arm64")
+      else()
+        message(WARNING "Disabling ARM64 build")
+      endif()
     endif()
     if(SDK_SUPPORTS_X86_64)
       message(STATUS "SDK at ${XCODE_DEVELOPER_PATH} supports creation of X86_64 binaries")

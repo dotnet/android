@@ -1,0 +1,28 @@
+<!--
+***********************************************************************************************
+Microsoft.Android.Sdk.After.targets
+
+This file is imported *after* the Microsoft.NET.Sdk/Sdk.targets.
+
+***********************************************************************************************
+-->
+<Project>
+  <PropertyGroup>
+    <EnableDefaultAndroidItems Condition=" '$(EnableDefaultAndroidItems)' == '' ">$(EnableDefaultItems)</EnableDefaultAndroidItems>
+  </PropertyGroup>
+
+  <!-- Build ordering, should be imported before Xamarin.Android.Common.targets -->
+  <Import Project="Microsoft.Android.Sdk.BuildOrder.targets" Condition=" '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' " />
+
+  <Import Project="..\tools\Xamarin.Android.Common.targets" />
+  <Import Project="..\tools\Xamarin.Android.Bindings.Core.targets" />
+  <Import Project="..\tools\Xamarin.Android.Bindings.ClassParse.targets" />
+  <Import Project="Microsoft.Android.Sdk.AndroidLibraries.targets" />
+  <Import Project="Microsoft.Android.Sdk.Application.targets" Condition=" '$(AndroidApplication)' == 'true' " />
+  <Import Project="Microsoft.Android.Sdk.AssemblyResolution.targets" />
+  <Import Project="Microsoft.Android.Sdk.ILLink.targets" />
+  <Import Project="Microsoft.Android.Sdk.NuGet.targets" />
+  <Import Project="Microsoft.Android.Sdk.ProjectCapabilities.targets" />
+  <Import Project="Microsoft.Android.Sdk.Publish.targets" />
+  <Import Project="Microsoft.Android.Sdk.Tooling.targets" />
+</Project>

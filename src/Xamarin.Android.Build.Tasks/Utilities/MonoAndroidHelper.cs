@@ -255,6 +255,21 @@ namespace Xamarin.Android.Tasks
 			"x86_64",
 		};
 
+		static readonly Dictionary<string, string> ClangAbiMap = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase) {
+			{"arm64-v8a",   "aarch64"},
+			{"armeabi-v7a", "arm"},
+			{"x86",         "i686"},
+			{"x86_64",      "x86_64"}
+		};
+
+		public static string MapAndroidAbiToClang (string androidAbi)
+		{
+			if (ClangAbiMap.TryGetValue (androidAbi, out string clangAbi)) {
+				return clangAbi;
+			}
+			return null;
+		}
+
 		public static string GetNativeLibraryAbi (string lib)
 		{
 			// The topmost directory the .so file is contained within
@@ -345,14 +360,14 @@ namespace Xamarin.Android.Tasks
 			return false;
 		}
 
-		public static void SetWriteable (string source)
+		public static void SetWriteable (string source, bool checkExists = true)
 		{
-			if (!File.Exists (source))
+			if (checkExists && !File.Exists (source))
 				return;
 
-			var fileInfo = new FileInfo (source);
-			if (fileInfo.IsReadOnly)
-				fileInfo.IsReadOnly = false;
+			var attributes = File.GetAttributes (source);
+			if ((attributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
+				File.SetAttributes (source, attributes & ~FileAttributes.ReadOnly);
 		}
 
 		public static void SetDirectoryWriteable (string directory)
@@ -361,12 +376,12 @@ namespace Xamarin.Android.Tasks
 				return;
 
 			var dirInfo = new DirectoryInfo (directory);
-			if ((dirInfo.Attributes | FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
+			if ((dirInfo.Attributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
 				dirInfo.Attributes &= ~FileAttributes.ReadOnly;
 
 			foreach (var dir in Directory.EnumerateDirectories (directory, "*", SearchOption.AllDirectories)) {
 				dirInfo = new DirectoryInfo (dir);
-				if ((dirInfo.Attributes | FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
+				if ((dirInfo.Attributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
 					dirInfo.Attributes &= ~FileAttributes.ReadOnly;
 			}
 
@@ -615,15 +630,14 @@ namespace Xamarin.Android.Tasks
 			return Path.Combine (platformPath, "android.jar");
 		}
 
-		public static Dictionary<string, string> LoadResourceCaseMap (string resourceCaseMap)
-		{
-			var result = new Dictionary<string, string> ();
-			if (resourceCaseMap != null) {
-				foreach (var arr in resourceCaseMap.Split (';').Select (l => l.Split ('|')).Where (a => a.Length == 2))
-					result [arr [1]] = arr [0]; // lowercase -> original
-			}
-			return result;
-		}
+		static readonly string ResourceCaseMapKey = $"{nameof (MonoAndroidHelper)}_ResourceCaseMap";
+
+		public static void SaveResourceCaseMap (IBuildEngine4 engine, Dictionary<string, string> map) =>
+			engine.RegisterTaskObject (ResourceCaseMapKey, map, RegisteredTaskObjectLifetime.Build, allowEarlyCollection: false);
+
+		public static Dictionary<string, string> LoadResourceCaseMap (IBuildEngine4 engine) =>
+			engine.GetRegisteredTaskObject (ResourceCaseMapKey, RegisteredTaskObjectLifetime.Build)
+				as Dictionary<string, string> ?? new Dictionary<string, string> (0);
 
 		public static string FixUpAndroidResourcePath (string file, string resourceDirectory, string resourceDirectoryFullPath, Dictionary<string, string> resource_name_case_map)
 		{
@@ -641,6 +655,20 @@ namespace Xamarin.Android.Tasks
 				return newfile;
 			}
 			return string.Empty;
+		}
+
+		static readonly char [] DirectorySeparators = new [] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
+
+		/// <summary>
+		/// Returns the relative path that should be used for an @(AndroidAsset) item
+		/// </summary>
+		public static string GetRelativePathForAndroidAsset (string assetsDirectory, ITaskItem androidAsset)
+		{
+			var path = androidAsset.GetMetadata ("Link");
+			path = !string.IsNullOrWhiteSpace (path) ? path : androidAsset.ItemSpec;
+			var head = string.Join ("\\", path.Split (DirectorySeparators).TakeWhile (s => !s.Equals (assetsDirectory, StringComparison.OrdinalIgnoreCase)));
+			path = head.Length == path.Length ? path : path.Substring ((head.Length == 0 ? 0 : head.Length + 1) + assetsDirectory.Length).TrimStart (DirectorySeparators);
+			return path;
 		}
 
 		/// <summary>

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -26,7 +26,7 @@ namespace Xamarin.ProjectTools
 			SetProperty ("AssemblyName", () => AssemblyName ?? ProjectName);
 
 			if (Builder.UseDotNet) {
-				SetProperty ("TargetFramework", "net5.0-android");
+				SetProperty ("TargetFramework", "net6.0-android");
 				SetProperty ("EnableDefaultItems", "false");
 				SetProperty ("AppendTargetFrameworkToOutputPath", "false");
 				SetProperty ("AppendRuntimeIdentifierToOutputPath", "false");
@@ -40,7 +40,7 @@ namespace Xamarin.ProjectTools
 				SetProperty ("BaseIntermediateOutputPath", "obj\\", " '$(BaseIntermediateOutputPath)' == '' ");
 
 				SetProperty (DebugProperties, "DebugSymbols", "true");
-				SetProperty (DebugProperties, "DebugType", "full");
+				SetProperty (DebugProperties, "DebugType", "portable");
 				SetProperty (DebugProperties, "Optimize", "false");
 				SetProperty (DebugProperties, "DefineConstants", "DEBUG;");
 
@@ -76,7 +76,7 @@ namespace Xamarin.ProjectTools
 			set { SetProperty (ActiveConfigurationProperties, KnownProperties.IntermediateOutputPath, value); }
 		}
 
-		public string Sdk { get; set; } = $"Microsoft.Android.Sdk/{XASdkProject.SdkVersion}";
+		public string Sdk { get; set; } = "Microsoft.NET.Sdk";
 
 		public bool EnableDefaultItems => false;
 

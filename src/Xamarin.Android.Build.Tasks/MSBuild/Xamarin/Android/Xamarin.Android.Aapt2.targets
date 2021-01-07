@@ -17,13 +17,16 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
+<UsingTask TaskName="Xamarin.Android.Tasks.Aapt2Compile" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.Aapt2Link" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+
 <PropertyGroup>
   <Aapt2DaemonMaxInstanceCount Condition=" '$(Aapt2DaemonMaxInstanceCount)' == '' " >0</Aapt2DaemonMaxInstanceCount>
   <_Aapt2DaemonKeepInDomain Condition=" '$(_Aapt2DaemonKeepInDomain)' == '' ">false</_Aapt2DaemonKeepInDomain>
 </PropertyGroup>
 
 
-<Target Name="_InjectAapt2Dependencies" Condition=" '$(_AndroidUseAapt2)' == 'True' ">
+<Target Name="_InjectAaptDependencies">
   <PropertyGroup>
     <_SetLatestTargetFrameworkVersionDependsOnTargets>
       $(_SetLatestTargetFrameworkVersionDependsOnTargets);
@@ -49,7 +52,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 </Target>
 
 <Target Name="_CreateAapt2VersionCache"
-    Condition=" '$(_AndroidUseAapt2)' == 'True' And '$(_Aapt2Version)' != '@(_Aapt2VersionCache)' "
+    Condition=" '$(_Aapt2Version)' != '@(_Aapt2VersionCache)' "
     DependsOnTargets="_ReadAapt2VersionCache"
   >
   <MakeDir Directories="$(IntermediateOutputPath)" Condition="!Exists('$(IntermediateOutputPath)')" />
@@ -72,9 +75,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   />
 </Target>
 
-<Target Name="_CollectLibraryResourceDirectories"
-    Condition=" '$(_AndroidUseAapt2)' == 'True' "
-  >
+<Target Name="_CollectLibraryResourceDirectories">
   <CollectNonEmptyDirectories
       Directories="@(LibraryResourceDirectories)"
       LibraryProjectIntermediatePath="$(_AndroidLibrayProjectIntermediatePath)"
@@ -89,8 +90,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 </Target>
 
 <Target Name="_ConvertResourcesCases"
-    Condition=" '$(_AndroidUseAapt2)' == 'True' "
-    Inputs="$(MSBuildAllProjects);$(_AndroidBuildPropertiesCache);@(AndroidResource);@(_LibraryResourceDirectories->'%(StampFile)')"
+    Inputs="@(_AndroidMSBuildAllProjects);$(_AndroidBuildPropertiesCache);@(AndroidResource);@(_LibraryResourceDirectories->'%(StampFile)')"
     Outputs="$(_AndroidStampDirectory)_ConvertResourcesCases.stamp"
     DependsOnTargets="_CollectLibraryResourceDirectories;$(_BeforeConvertResourcesCases)"
   >
@@ -99,17 +99,14 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <!-- Change cases so we support mixed case resource names -->
   <ConvertResourcesCases
       ContinueOnError="$(DesignTimeBuild)"
-      AcwMapFile="$(_AcwMapFile)"
       AndroidConversionFlagFile="$(_AndroidStampDirectory)_ConvertResourcesCases.stamp"
       CustomViewMapFile="$(_CustomViewMapFile)"
       ResourceDirectories="$(MonoAndroidResDirIntermediate);@(_LibraryResourceDirectories)"
-      ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
   />
   <Touch Files="$(_AndroidStampDirectory)_ConvertResourcesCases.stamp" AlwaysCreate="True" />
 </Target>
 
-<Target Name="_CalculateResourceFileName"
-    Condition=" '$(_AndroidUseAapt2)' == 'True' ">
+<Target Name="_CalculateResourceFileName">
   <ItemGroup>
     <_CompileResourcesInputs Include="@(_AndroidResourceDest)">
       <StampFile>%(Identity)</StampFile>
@@ -119,8 +116,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 </Target>
 
 <Target Name="_CompileResources"
-    Condition=" '$(_AndroidUseAapt2)' == 'True' "
-    Inputs="$(MSBuildAllProjects);$(_AndroidBuildPropertiesCache);@(_CompileResourcesInputs)"
+    Inputs="@(_AndroidMSBuildAllProjects);$(_AndroidBuildPropertiesCache);@(_CompileResourcesInputs)"
     Outputs="@(_CompileResourcesInputs->'%(_ArchiveDirectory)%(_FlatFile)')"
     DependsOnTargets="$(_BeforeCompileResources);_ConvertResourcesCases;_CalculateResourceFileName"
   >
@@ -133,7 +129,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       FlatArchivesDirectory="$(_AndroidLibraryFlatArchivesDirectory)"
       ResourcesToCompile="@(_CompileResourcesInputs)"
       ResourceDirectories="$(MonoAndroidResDirIntermediate)"
-      ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
       ToolPath="$(Aapt2ToolPath)"
       ToolExe="$(Aapt2ToolExe)"
   />
@@ -154,19 +149,16 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   </PropertyGroup>
 </Target>
 
-<Target Name="_UpdateAndroidResgenAapt2"
-    Condition=" '$(_AndroidUseAapt2)' == 'True' "
-  >
+<Target Name="_UpdateAndroidResgenAapt2">
   <PropertyGroup>
-    <AndroidAapt2LinkExtraArgs Condition=" '$(_AndroidUseAapt2)' == 'True' And $(AndroidResgenExtraArgs.Contains('--no-version-vectors')) And !($(AndroidAapt2LinkExtraArgs.Contains('--no-version-vectors'))) ">--no-version-vectors $(AndroidAapt2LinkExtraArgs) </AndroidAapt2LinkExtraArgs>
+    <AndroidAapt2LinkExtraArgs Condition=" $(AndroidResgenExtraArgs.Contains('--no-version-vectors')) And !($(AndroidAapt2LinkExtraArgs.Contains('--no-version-vectors'))) ">--no-version-vectors $(AndroidAapt2LinkExtraArgs) </AndroidAapt2LinkExtraArgs>
     <_Aapt2ProguardRules Condition=" '$(AndroidLinkTool)' != '' ">$(IntermediateOutputPath)aapt_rules.txt</_Aapt2ProguardRules>
   </PropertyGroup>
   <Aapt2Link
-      Condition=" '$(_AndroidResourceDesignerFile)' != '' And '$(_AndroidUseAapt2)' == 'True' "
+      Condition=" '$(_AndroidResourceDesignerFile)' != '' "
       ContinueOnError="$(DesignTimeBuild)"
       DaemonMaxInstanceCount="$(Aapt2DaemonMaxInstanceCount)"
       DaemonKeepInDomain="$(_Aapt2DaemonKeepInDomain)"
-      ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
       AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
       ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
       OutputImportDirectory="$(_AndroidLibrayProjectIntermediatePath)"
@@ -192,17 +184,17 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     <FileWrites Include="$(_Aapt2ProguardRules)" />
   </ItemGroup>
   <ItemGroup>
-    <FileWrites Include="$(IntermediateOutputPath)R.txt" Condition=" '$(_AndroidUseAapt2)' == 'True' And Exists ('$(IntermediateOutputPath)R.txt') " />
+    <FileWrites Include="$(IntermediateOutputPath)R.txt" Condition=" Exists ('$(IntermediateOutputPath)R.txt') " />
   </ItemGroup>
 </Target>
 
 <Target Name="_FixupCustomViewsForAapt2"
-    Condition=" '$(_AndroidUseAapt2)' == 'True' And '@(_ProcessedCustomViews->Count())' != '0' ">
+    Condition=" '@(_ProcessedCustomViews->Count())' != '0' ">
   <ItemGroup>
     <_ItemsToFixup Include="@(_CompileResourcesInputs)" Condition=" '@(_ProcessedCustomViews->'%(Identity)')' == '%(Identity)' "/>
   </ItemGroup>
   <Aapt2Compile
-      Condition=" '$(AndroidUseAapt2)' == 'True' And '@(_ItemsToFixup->Count())' != '0' "
+      Condition=" '@(_ItemsToFixup->Count())' != '0' "
       ContinueOnError="$(DesignTimeBuild)"
       DaemonMaxInstanceCount="$(Aapt2DaemonMaxInstanceCount)"
       DaemonKeepInDomain="$(_Aapt2DaemonKeepInDomain)"
@@ -218,20 +210,16 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <Touch Files="$(_AndroidResgenFlagFile)" AlwaysCreate="True" Condition=" '@(_UpdatedFlatFiles->Count())' != '0' " />
 </Target>
 
-<Target Name="_CreateBaseApkWithAapt2"
-    Condition=" '$(_AndroidUseAapt2)' == 'True' "
-  >
+<Target Name="_CreateBaseApkWithAapt2">
   <PropertyGroup>
     <_ProtobufFormat Condition=" '$(AndroidPackageFormat)' == 'aab' ">True</_ProtobufFormat>
     <_ProtobufFormat Condition=" '$(_ProtobufFormat)' == '' ">False</_ProtobufFormat>
   </PropertyGroup>
   <Aapt2Link
-      Condition="'$(_AndroidUseAapt2)' == 'True'"
       AndroidManifestFile="$(_AndroidManifestAbs)"
       CompiledResourceFlatFiles="@(_CompiledFlatFiles)"
       DaemonMaxInstanceCount="$(Aapt2DaemonMaxInstanceCount)"
       DaemonKeepInDomain="$(_Aapt2DaemonKeepInDomain)"
-      ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
       ResourceDirectories="$(MonoAndroidResDirIntermediate)"
       AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
       ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"

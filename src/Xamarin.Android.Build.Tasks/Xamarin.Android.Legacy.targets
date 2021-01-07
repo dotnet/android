@@ -27,7 +27,9 @@ projects. .NET 5 projects will not import this file.
     <BuildDependsOn>
       _ValidateLinkMode;
       _CheckNonIdealConfigurations;
+      _SetupMSBuildAllProjects;
       _SetupDesignTimeBuildForBuild;
+      _CategorizeAndroidLibraries;
       _CreatePropertiesCache;
       _CleanIntermediateIfNeeded;
       _CheckProjectItems;
@@ -58,7 +60,9 @@ projects. .NET 5 projects will not import this file.
   <PropertyGroup Condition=" '$(AndroidApplication)' != 'True' And '$(_AndroidIsBindingProject)' != 'True' ">
     <BuildDependsOn>
       _ValidateLinkMode;
+      _SetupMSBuildAllProjects;
       _SetupDesignTimeBuildForBuild;
+      _CategorizeAndroidLibraries;
       _CreatePropertiesCache;
       _CleanIntermediateIfNeeded;
       _AddAndroidDefines;
@@ -82,6 +86,7 @@ projects. .NET 5 projects will not import this file.
       $([MSBuild]::Unescape($(CoreBuildDependsOn.Replace('IncrementalClean;', '$(_BeforeIncrementalClean);IncrementalClean;'))))
     </CoreBuildDependsOn>
     <CompileDependsOn>
+      _SetupMSBuildAllProjects;
       _SetupDesignTimeBuildForCompile;
       _AddAndroidDefines;
       _IncludeLayoutBindingSources;
@@ -143,6 +148,14 @@ projects. .NET 5 projects will not import this file.
       _IncludeNativeSystemLibraries;
       _CheckGoogleSdkRequirements;
     </_PrepareBuildApkDependsOnTargets>
+    <_UpdateAndroidResourcesDependsOn>
+      $(CoreResolveReferencesDependsOn);
+      _CreatePropertiesCache;
+      _CheckForDeletedResourceFile;
+      _ComputeAndroidResourcePaths;
+      _UpdateAndroidResgen;
+      _CreateManagedLibraryResourceArchive;
+    </_UpdateAndroidResourcesDependsOn>
     <GetAndroidDependenciesDependsOn>
       _BeforeGetAndroidDependencies;
       _SetLatestTargetFrameworkVersion;
@@ -154,13 +167,16 @@ projects. .NET 5 projects will not import this file.
 
   <PropertyGroup Condition=" '$(_AndroidIsBindingProject)' == 'True' ">
     <BuildDependsOn>
+      _SetupMSBuildAllProjects;
       _SetupDesignTimeBuildForBuild;
+      _CategorizeAndroidLibraries;
       AddLibraryJarsToBind;
       $(BuildDependsOn);
       BuildDocumentation;
     </BuildDependsOn>
 
     <CompileDependsOn>
+      _SetupMSBuildAllProjects;
       _SetupDesignTimeBuildForCompile;
       AddLibraryJarsToBind;
       $(CompileDependsOn);
@@ -190,15 +206,23 @@ projects. .NET 5 projects will not import this file.
       _ExportJarToXml;
     </ExportJarToXmlDependsOnTargets>
 
+    <_ResolveLibraryProjectsDependsOn>
+      _CreateBindingResourceArchive;
+    </_ResolveLibraryProjectsDependsOn>
+
   </PropertyGroup>
 
-  <UsingTask TaskName="Xamarin.Android.Tasks.CheckGoogleSdkRequirements"   AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.Legacy.ValidateJavaVersion"   AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.Legacy.ResolveAndroidTooling" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.LinkAssemblies"               AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.CheckGoogleSdkRequirements"          AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.ConvertDebuggingFiles"               AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.CreateLibraryResourceArchive"        AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.CreateManagedLibraryResourceArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.CreateNativeLibraryArchive"          AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.Legacy.ValidateJavaVersion"          AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.Legacy.ResolveAndroidTooling"        AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.LinkAssemblies"                      AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 
   <Target Name="_CheckTargetFramework">
-    <Warning Code="XA0109" Text="Unsupported or invalid %24(TargetFrameworkVersion) value of 'v4.5'. Please update your Project Options." Condition=" '$(TargetFrameworkVersion)' == 'v4.5' "/> 
+    <Warning Code="XA0109" Text="Unsupported or invalid %24(TargetFrameworkVersion) value of 'v4.5'. Please update your Project Options." Condition=" '$(TargetFrameworkVersion)' == 'v4.5' "/>
   </Target>
 
   <Target Name="_GetReferenceAssemblyPaths">
@@ -236,7 +260,7 @@ projects. .NET 5 projects will not import this file.
         AotAssemblies="$(AotAssemblies)"
         Aapt2ToolPath="$(Aapt2ToolPath)"
         SequencePointsMode="$(_AndroidSequencePointsMode)"
-        ProjectFilePath="$(MSBuildProjectFullPath)"			
+        ProjectFilePath="$(MSBuildProjectFullPath)"
         LintToolPath="$(LintToolPath)"
         ZipAlignPath="$(ZipAlignToolPath)">
       <Output TaskParameter="TargetFrameworkVersion"      PropertyName="TargetFrameworkVersion" />
@@ -247,7 +271,6 @@ projects. .NET 5 projects will not import this file.
       <Output TaskParameter="ZipAlignPath"                PropertyName="ZipAlignToolPath"            Condition="'$(ZipAlignToolPath)' == ''" />
       <Output TaskParameter="AndroidSequencePointsMode"   PropertyName="_SequencePointsMode"         Condition="'$(_SequencePointsMode)' == ''" />
       <Output TaskParameter="LintToolPath"                PropertyName="LintToolPath"                Condition="'$(LintToolPath)' == ''" />
-      <Output TaskParameter="AndroidUseAapt2"             PropertyName="_AndroidUseAapt2" />
       <Output TaskParameter="Aapt2Version"                PropertyName="_Aapt2Version" />
       <Output TaskParameter="Aapt2ToolPath"               PropertyName="Aapt2ToolPath"               Condition="'$(Aapt2ToolPath)' == ''" />
     </ResolveAndroidTooling>
@@ -329,6 +352,184 @@ projects. .NET 5 projects will not import this file.
     <Touch Files="$(_AndroidStampDirectory)_CopyConfigFiles.stamp" AlwaysCreate="True" />
   </Target>
 
+  <Target Name="_CollectMdbFiles"
+      DependsOnTargets="_CollectPdbFiles">
+    <GetFilesThatExist
+        Files="@(ResolvedAssemblies->'%(RootDir)%(Directory)%(Filename)%(Extension).mdb')"
+        IgnoreFiles="@(_ResolvedPortablePdbFiles->'%(RootDir)%(Directory)%(Filename).dll.mdb')">
+      <Output TaskParameter="FilesThatExist" ItemName="_ResolvedMdbFiles" />
+    </GetFilesThatExist>
+  </Target>
+
+  <Target Name="_CollectPdbFiles">
+    <CollectPdbFiles
+        ResolvedAssemblies="@(ResolvedAssemblies->'%(RootDir)%(Directory)%(Filename).pdb')">
+      <Output TaskParameter="PdbFiles" ItemName="_ResolvedPdbFiles" />
+      <Output TaskParameter="PortablePdbFiles" ItemName="_ResolvedPortablePdbFiles" />
+    </CollectPdbFiles>
+    <ItemGroup>
+      <_ConvertedMdbFiles Include="@(_ResolvedPdbFiles->'%(RootDir)%(Directory)%(Filename).dll.mdb')" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_ConvertPdbFiles"
+      Inputs="@(_ResolvedPdbFiles)"
+      Outputs="@(_ConvertedMdbFiles)"
+      DependsOnTargets="_CollectPdbFiles">
+    <ConvertDebuggingFiles Files="@(_ResolvedPdbFiles)" />
+    <Touch Files="@(_ConvertedMdbFiles)" ContinueOnError="true" />
+    <ItemGroup>
+      <!-- NOTE: @(_ResolvedPortablePdbFiles) are valid -->
+      <_DeprecatedSymbols Include="@(_ResolvedMdbFiles);@(_ResolvedPdbFiles)" />
+    </ItemGroup>
+    <AndroidWarning Code="XA0125"
+        ResourceName="XA0125"
+        FormatArguments="%(_DeprecatedSymbols.FileName)%(_DeprecatedSymbols.Extension)"
+        Condition=" '%(_DeprecatedSymbols.Identity)' != '' "
+    />
+    <ItemGroup>
+      <FileWrites Include="@(_ConvertedMdbFiles)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="ConvertDebuggingFiles"
+      Condition=" '$(AndroidIncludeDebugSymbols)' == 'true' And Exists ('$(_IntermediatePdbFile)') And '$(OS)' == 'Windows_NT'"
+      DependsOnTargets="_ConvertDebuggingFiles"
+  />
+
+  <Target Name="_ConvertDebuggingFiles"
+      Inputs="$(OutDir)$(TargetFileName);$(_IntermediatePdbFile)"
+      Outputs="$(OutDir)$(TargetFileName).mdb" 
+      DependsOnTargets="_ValidateAndroidPackageProperties">
+    <ConvertDebuggingFiles Files="$(OutDir)$(TargetFileName)" />
+    <Touch Files="$(OutDir)$(TargetFileName).mdb" />
+    <ItemGroup>
+      <FileWrites Include="$(OutDir)$(TargetFileName).mdb" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_AddAndroidEnvironmentToCompile">
+    <ItemGroup>
+      <EmbeddedResource Include="@(AndroidEnvironment)">
+        <LogicalName>__AndroidEnvironment__%(Filename)%(Extension)</LogicalName>
+      </EmbeddedResource>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="AddEmbeddedJarsAsResources" DependsOnTargets="GenerateBindings">
+    <ItemGroup>
+      <EmbeddedResource Include="@(EmbeddedJar)">
+        <LogicalName>%(Filename)%(Extension)</LogicalName>
+      </EmbeddedResource>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="AddEmbeddedReferenceJarsAsResources" DependsOnTargets="GenerateBindings">
+    <ItemGroup>
+      <EmbeddedResource Include="@(EmbeddedReferenceJar)">
+        <LogicalName>__reference__%(Filename)%(Extension)</LogicalName>
+      </EmbeddedResource>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_CreateNativeLibraryArchive"
+      Condition=" '$(AndroidApplication)' != 'true' And '@(EmbeddedNativeLibrary->Count())' != '0' "
+      Inputs="@(EmbeddedNativeLibrary)"
+      Outputs="$(IntermediateOutputPath)__AndroidNativeLibraries__.zip">
+    <CreateNativeLibraryArchive
+        OutputDirectory="$(IntermediateOutputPath)$(_NativeLibraryImportsDirectoryName)"
+        EmbeddedNativeLibraries="@(EmbeddedNativeLibrary)"
+    />
+    <Touch Files="$(IntermediateOutputPath)__AndroidNativeLibraries__.zip" />
+    <ItemGroup>
+      <FileWrites Include="$(IntermediateOutputPath)__AndroidNativeLibraries__.zip" />
+      <EmbeddedResource Include="$(IntermediateOutputPath)__AndroidNativeLibraries__.zip">
+        <LogicalName>__AndroidNativeLibraries__.zip</LogicalName>
+      </EmbeddedResource>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_CreateManagedLibraryResourceArchive"
+      Condition=" '$(AndroidApplication)' != 'true' And '$(_AndroidIsBindingProject)' != 'true' "
+      Inputs="@(_AndroidResourceDest);@(AndroidAsset);@(AndroidJavaLibrary);@(AndroidJavaSource);@(_AndroidResourceDestRemovedFiles)"
+      Outputs="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip">
+    <CreateManagedLibraryResourceArchive
+        OutputDirectory="$(IntermediateOutputPath)$(_LibraryProjectImportsDirectoryName)"
+        ResourceDirectory="$(MonoAndroidResDirIntermediate)"
+        AndroidAssets="@(AndroidAsset)"
+        MonoAndroidAssetsPrefix="$(MonoAndroidAssetsPrefix)"
+        AndroidJavaSources="@(AndroidJavaSource)"
+        AndroidJavaLibraries="@(AndroidJavaLibrary)"
+        AndroidResourcesInThisExactProject="@(_AndroidResourceDest)"
+        FlatArchivesDirectory="$(_AndroidLibraryFlatArchivesDirectory)"
+        RemovedAndroidResourceFiles="@(_AndroidResourceDestRemovedFiles)"
+    />
+    <Touch Files="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip" />
+    <ItemGroup>
+      <FileWrites Include="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip" />
+      <EmbeddedResource Include="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip">
+        <LogicalName>__AndroidLibraryProjects__.zip</LogicalName>
+      </EmbeddedResource>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_CreateBindingResourceArchive"
+      Condition=" '$(_AndroidIsBindingProject)' == 'true' "
+      Inputs="@(LibraryProjectProperties);@(LibraryProjectZip)"
+      Outputs="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip">
+    <CreateLibraryResourceArchive
+        OutputDirectory="$(IntermediateOutputPath)$(_LibraryProjectImportsDirectoryName)"
+        OutputJarsDirectory="$(IntermediateOutputPath)library_project_jars"
+        OutputAnnotationsDirectory="$(IntermediateOutputPath)library_project_annotations"
+        LibraryProjectPropertiesFiles="@(LibraryProjectProperties)"
+        LibraryProjectZipFiles="@(LibraryProjectZip)"
+    />
+    <ItemGroup Condition="Exists ('$(IntermediateOutputPath)__AndroidLibraryProjects__.zip')">
+      <FileWrites Include="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip" />
+      <EmbeddedResource Include="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip">
+        <LogicalName>__AndroidLibraryProjects__.zip</LogicalName>
+      </EmbeddedResource>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_IncludeNativeSystemLibraries">
+    <PropertyGroup>
+      <_Assemblies>@(_ResolvedFrameworkAssemblies)</_Assemblies>
+      <_TargetInterpreterPrefix Condition=" '$(_AndroidUseInterpreter)' != 'False' ">interpreter-</_TargetInterpreterPrefix>
+      <_AndroidDebugNativeLibraries Condition=" '$(_AndroidDebugNativeLibraries)' == '' ">False</_AndroidDebugNativeLibraries>
+    </PropertyGroup>
+    <SplitProperty Value="$(AndroidEmbedProfilers)" Condition=" '$(AndroidEmbedProfilers)' != '' ">
+      <Output TaskParameter="Output" ItemName="_EmbedProfilers" />
+    </SplitProperty>
+    <ItemGroup>
+      <_TargetArchitecture Include="$(_Android32bitArchitectures);$(_Android64bitArchitectures)" />
+      <_TargetLibDir Include="$(MSBuildThisFileDirectory)lib\%(_TargetArchitecture.Identity)" Condition=" Exists('$(MSBuildThisFileDirectory)lib\%(_TargetArchitecture.Identity)') "/>
+      <_TargetLibInterpreterDir Include="$(MSBuildThisFileDirectory)lib\$(_TargetInterpreterPrefix)%(_TargetArchitecture.Identity)" Condition=" Exists('$(MSBuildThisFileDirectory)lib\$(_TargetInterpreterPrefix)%(_TargetArchitecture.Identity)') "/>
+      <AndroidNativeLibrary Include="%(_TargetLibDir.Identity)\libsqlite3_xamarin.so" Condition="$(_Assemblies.Contains('Mono.Data.Sqlite.dll'))" />
+      <AndroidNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libMonoPosixHelper.so" Condition="$(_Assemblies.Contains('Mono.Posix.dll')) and '$(_AndroidDebugNativeLibraries)' != 'True' " />
+      <AndroidNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libMonoPosixHelper.d.so" Condition="$(_Assemblies.Contains('Mono.Posix.dll')) and '$(_AndroidDebugNativeLibraries)' == 'True' " ArchiveFileName="libMonoPosixHelper.so" />
+      <AndroidNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libmono-native.so" Condition=" '$(_AndroidDebugNativeLibraries)' != 'True' " />
+      <AndroidNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libmono-native.d.so" Condition=" '$(_AndroidDebugNativeLibraries)' == 'True' " ArchiveFileName="libmono-native.so" />
+      <AndroidNativeLibrary Include="%(_TargetLibDir.Identity)\libxamarin-debug-app-helper.so" Condition=" '$(AndroidUseDebugRuntime)' == 'True' And '$(_AndroidCheckedBuild)' == '' "/>
+      <AndroidNativeLibrary Include="%(_TargetLibDir.Identity)\libxamarin-debug-app-helper-checked+$(_AndroidCheckedBuild).so" Condition=" '$(AndroidUseDebugRuntime)' == 'True' And '$(_AndroidCheckedBuild)' != '' " ArchiveFileName="libxamarin-debug-app-helper.so" />
+      <_AndroidNativeLibraryForFastDev Condition=" '$(_InstantRunEnabled)' == 'True' And '$(AndroidUseDebugRuntime)' == 'True' " Include="%(_TargetLibInterpreterDir.Identity)\libmono-native.so" />
+      <_AndroidNativeLibraryForFastDev Condition=" '$(_InstantRunEnabled)' == 'True' And '$(AndroidUseDebugRuntime)' == 'True' And '$(_AndroidCheckedBuild)' == '' " Include="%(_TargetLibDir.Identity)\libxamarin-debug-app-helper.so" />
+      <_AndroidNativeLibraryForFastDev Condition=" '$(_InstantRunEnabled)' == 'True' And '$(AndroidUseDebugRuntime)' == 'True' And '$(_AndroidCheckedBuild)' != '' " Include="%(_TargetLibDir.Identity)\libxamarin-debug-app-helper-checked+$(_AndroidCheckedBuild).so" ArchiveFileName="libxamarin-debug-app-helper.so" />
+      <FrameworkNativeLibrary Include="%(_TargetLibDir.Identity)\libmono-android.debug.so" Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' And '$(_AndroidCheckedBuild)' == '' " ArchiveFileName="libmonodroid.so" />
+      <FrameworkNativeLibrary Include="%(_TargetLibDir.Identity)\libmono-android-checked+$(_AndroidCheckedBuild).debug.so" Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' And '$(_AndroidCheckedBuild)' != '' " ArchiveFileName="libmonodroid.so" />
+      <FrameworkNativeLibrary Include="%(_TargetLibDir.Identity)\libmono-android.release.so" Condition=" '$(AndroidIncludeDebugSymbols)' != 'True'  And '$(_AndroidCheckedBuild)' == '' " ArchiveFileName="libmonodroid.so" />
+      <FrameworkNativeLibrary Include="%(_TargetLibDir.Identity)\libmono-android-checked+$(_AndroidCheckedBuild).release.so" Condition=" '$(AndroidIncludeDebugSymbols)' != 'True' And '$(_AndroidCheckedBuild)' != '' " ArchiveFileName="libmonodroid.so" />
+      <FrameworkNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libxa-internal-api.so" Condition=" '$(_AndroidCheckedBuild)' == ''" />
+      <FrameworkNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libxa-internal-api-checked+$(_AndroidCheckedBuild).so" Condition=" '$(_AndroidCheckedBuild)' != '' " ArchiveFileName="libxa-internal-api.so" />
+      <FrameworkNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libmono-btls-shared.so" Condition=" '$(_AndroidDebugNativeLibraries)' != 'True' " />
+      <FrameworkNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libmono-btls-shared.d.so" Condition=" '$(_AndroidDebugNativeLibraries)' == 'True' " ArchiveFileName="libmono-btls-shared.so" />
+      <FrameworkNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libmono-profiler-aot.so" Condition=" @(_EmbedProfilers->Count()) > 0 and (@(_EmbedProfilers->AnyHaveMetadataValue('Identity', 'aot')) or @(_EmbedProfilers->AnyHaveMetadataValue('Identity', 'all'))) " />
+      <FrameworkNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libmono-profiler-log.so" Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' or (@(_EmbedProfilers->Count()) > 0 and (@(_EmbedProfilers->AnyHaveMetadataValue('Identity', 'log')) or @(_EmbedProfilers->AnyHaveMetadataValue('Identity', 'all')))) " />
+      <FrameworkNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libmonosgen-2.0.so" Condition=" '$(_AndroidDebugNativeLibraries)' != 'True' " />
+      <FrameworkNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libmonosgen-2.0.d.so" Condition=" '$(_AndroidDebugNativeLibraries)' == 'True' " ArchiveFileName="libmonosgen-2.0.so" />
+    </ItemGroup>
+  </Target>
+
   <PropertyGroup>
     <_PrepareAssembliesDependsOnTargets>
       _ResolveAssemblies;
@@ -376,14 +577,14 @@ projects. .NET 5 projects will not import this file.
       <_ResolvedAssemblies          Include="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')" />
       <_ResolvedSymbols             Include="@(ResolvedSymbols->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')" />
       <_ResolvedUserAssemblies      Include="@(ResolvedUserAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')" />
-      <_ResolvedFrameworkAssemblies Include="@(ResolvedFrameworkAssemblies)" />
+      <_ResolvedFrameworkAssemblies Include="@(ResolvedFrameworkAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(Filename)%(Extension)')" />
     </ItemGroup>
-    <ItemGroup Condition=" ('$(AndroidLinkMode)' == 'None' Or '$(AndroidUseSharedRuntime)' == 'true') ">
+    <ItemGroup Condition=" ('$(AndroidLinkMode)' == 'None' Or '$(AndroidIncludeDebugSymbols)' == 'true') ">
       <_ShrunkAssemblies          Include="@(_ResolvedAssemblies)" />
       <_ShrunkUserAssemblies      Include="@(_ResolvedUserAssemblies)" />
       <_ShrunkFrameworkAssemblies Include="@(_ResolvedFrameworkAssemblies)" />
     </ItemGroup>
-    <ItemGroup Condition=" '$(AndroidLinkMode)' != 'None' And '$(AndroidUseSharedRuntime)' != 'true' ">
+    <ItemGroup Condition=" '$(AndroidLinkMode)' != 'None' And '$(AndroidIncludeDebugSymbols)' != 'true' ">
       <_ShrunkAssemblies          Include="@(_ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)shrunk\%(Filename)%(Extension)')" />
       <_ShrunkUserAssemblies      Include="@(_ResolvedUserAssemblies->'$(MonoAndroidIntermediateAssemblyDir)shrunk\%(Filename)%(Extension)')" />
       <_ShrunkFrameworkAssemblies Include="@(_ResolvedFrameworkAssemblies->'$(MonoAndroidIntermediateAssemblyDir)shrunk\%(Filename)%(Extension)')" />
@@ -429,7 +630,6 @@ projects. .NET 5 projects will not import this file.
     <MakeDir Condition=" '$(AndroidLinkTool)' != '' " Directories="$(IntermediateOutputPath)proguard" />
 
     <LinkAssemblies
-        UseSharedRuntime="$(AndroidUseSharedRuntime)"
         MainAssembly="$(_MainAssembly)"
         OutputDirectory="$(MonoAndroidIntermediateAssemblyDir)"
         I18nAssemblies="$(MandroidI18n)"
@@ -437,6 +637,7 @@ projects. .NET 5 projects will not import this file.
         LinkSkip="$(AndroidLinkSkip)"
         LinkDescriptions="@(LinkDescription)"
         ProguardConfiguration="$(_ProguardProjectConfiguration)"
+        AddKeepAlives="$(AndroidAddKeepAlives)"
         PreserveJniMarshalMethods="$(AndroidGenerateJniMarshalMethods)"
         EnableProguard="$(AndroidEnableProguard)"
         Deterministic="$(Deterministic)"

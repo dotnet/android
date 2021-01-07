@@ -72,35 +72,59 @@ and Windows (.vsix) installer files can be built with:
 Commercial installers will be created by this command if the
 `make prepare-external-git-dependencies` command was ran before building.
 
-# Creating .NET 6 NuGet packages
+A .NET 6 Workload installer is also created at
+`Microsoft.NET.Workload.Android-*.pkg`, you can run `make
+create-workload-installers` if you only want to create the .NET 6
+installer.
+
+# Creating a local .NET 6 Workload
+
+`make prepare` provisions a specific build of .NET 6 to
+`~/android-toolchain/dotnet`.
 
 Once `make all` or `make jenkins` have completed, you can build the .NET 6
 packages with:
 
     make pack-dotnet
 
-Several `.nupkg` files will be output in `./bin/BuildDebug/nupkgs/`, you
-can use these with a `nuget.config` such as:
+Several `.nupkg` files will be output in `./bin/BuildDebug/nupkgs`,
+but this is only part of the story. Your local
+`~/android-toolchain/dotnet/packs` directory will be populated with a
+local Android "workload" in `Microsoft.Android.Sdk.osx-x64` or
+`Microsoft.Android.Sdk.linux-x64` matching your operating system.
+
+To use the Android workload, you will need a `NuGet.config`:
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
   <packageSources>
-    <add key="dotnet5" value="https://dnceng.pkgs.visualstudio.com/public/_packaging/dotnet5/nuget/v3/index.json" />
+    <add key="dotnet6" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json" />
     <add key="local-xa" value="/full/path/to/bin/BuildDebug/nupkgs" />
   </packageSources>
 </configuration>
 ```
 
-Then use a `global.json` for the locally built version of the packages:
+The local package source in the `bin/BuildDebug/nupkgs` directory is
+currently needed for the Android runtime packages.
 
-```json
-{
-    "msbuild-sdks": {
-            "Microsoft.Android.Sdk": "11.0.100-ci.master.11"
-    }
-}
+Then use a `.csproj` file such as:
+
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0-android</TargetFramework>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+</Project>
 ```
+
+Build the project with:
+
+    $ ~/android-toolchain/dotnet/dotnet build foo.csproj
+
+Using the `dotnet` provisioned in `~/android-toolchain` will use the
+locally built binaries.
 
 See the [One .NET Documentation](../../guides/OneDotNet.md) for further details.
 

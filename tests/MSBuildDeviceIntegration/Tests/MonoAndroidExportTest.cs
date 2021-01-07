@@ -17,47 +17,27 @@ namespace Xamarin.Android.Build.Tests
 #pragma warning disable 414
 		static object [] MonoAndroidExportTestCases = new object [] {
 			new object[] {
-				/* useSharedRuntime */   false,
 				/* embedAssemblies */    true,
 				/* fastDevType */        "Assemblies",
-				/* activityStarts */     true,
 			},
 			new object[] {
-				/* useSharedRuntime */   false,
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies",
-				/* activityStarts */     true,
 			},
 			new object[] {
-				/* useSharedRuntime */   true,
-				/* embedAssemblies */    true,
-				/* fastDevType */        "Assemblies",
-				/* activityStarts */     true,
-			},
-			new object[] {
-				/* useSharedRuntime */   true,
-				/* embedAssemblies */    false,
-				/* fastDevType */        "Assemblies",
-				/* activityStarts */     true,
-			},
-			new object[] {
-				/* useSharedRuntime */   true,
 				/* embedAssemblies */    true,
 				/* fastDevType */        "Assemblies:Dexes",
-				/* activityStarts */     true,
 			},
 			new object[] {
-				/* useSharedRuntime */   true,
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies:Dexes",
-				/* activityStarts */     true,
 			},
 		};
 #pragma warning restore 414
 
 		[Test]
 		[TestCaseSource (nameof (MonoAndroidExportTestCases))]
-		public void MonoAndroidExportReferencedAppStarts (bool useSharedRuntime, bool embedAssemblies, string fastDevType, bool activityStarts)
+		public void MonoAndroidExportReferencedAppStarts (bool embedAssemblies, string fastDevType)
 		{
 			AssertCommercialBuild ();
 			AssertHasDevices ();
@@ -114,8 +94,8 @@ namespace UnnamedProject
 			}
 		}
 	}";
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
-			proj.SetProperty (KnownProperties.AndroidUseSharedRuntime, useSharedRuntime.ToString ());
+			//TODO: x86_64 is a workaround in .NET 6 for: https://github.com/xamarin/monodroid/issues/1136
+			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
 			proj.SetProperty ("EmbedAssembliesIntoApk", embedAssemblies.ToString ());
 			proj.SetDefaultTargetDevice ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {

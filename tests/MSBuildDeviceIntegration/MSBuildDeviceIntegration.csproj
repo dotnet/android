@@ -1,11 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net472</TargetFramework>
+    <TargetFrameworks>net472;netcoreapp3.1</TargetFrameworks>
     <RootNamespace>Xamarin.Android.Build.Tests</RootNamespace>
     <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <OutputPath>..\..\bin\Test$(Configuration)\MSBuildDeviceIntegration</OutputPath>
+    <OutputPath>..\..\bin\Test$(Configuration)\MSBuildDeviceIntegration\</OutputPath>
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />
@@ -17,6 +16,11 @@
       <Link>Utilities\%(FileName).cs</Link>
     </Compile>
     <None Include="..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\App.config" Link="App.config" />
+  </ItemGroup>
+
+   <ItemGroup>
+    <Compile Remove="Resources\**\*.cs" />
+    <EmbeddedResource Include="Resources\LinkDescTest\*.*" />
   </ItemGroup>
 
   <ItemGroup>

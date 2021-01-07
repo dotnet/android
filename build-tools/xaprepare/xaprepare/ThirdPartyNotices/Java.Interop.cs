@@ -12,6 +12,7 @@ namespace Xamarin.Android.Prepare
 		public override List<ThirdPartyNotice> Notices => new List <ThirdPartyNotice> {
 			new JavaInterop_xamarin_Java_Interop_TPN (),
 			new JavaInterop_gityf_crc_TPN (),
+			new JavaInterop_javaparser_javaparser_TPN (),
 			new JavaInterop_jbevain_mono_linq_expressions_TPN (),
 			new JavaInterop_mono_csharp_TPN (),
 			new JavaInterop_mono_LineEditor_TPN (),
@@ -67,6 +68,18 @@ CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 ";
+	}
+
+	// via: https://github.com/xamarin/java.interop/blob/b588ef502d8d3b4c32e0ad731115e1b71fd56b5c/tools/java-source-utils/build.gradle#L33-L34
+	class JavaInterop_javaparser_javaparser_TPN : ThirdPartyNotice
+	{
+		static readonly Uri    url         = new Uri ("https://github.com/javaparser/javaparser/");
+		static readonly string licenseFile = Path.Combine (Configurables.Paths.ExternalJavaInteropDir, "LICENSE");
+
+		public override string LicenseFile => CommonLicenses.Apache20Path;
+		public override string Name        => "javaparser/javaparser";
+		public override Uri    SourceUrl   => url;
+		public override string LicenseText => String.Empty;
 	}
 
 	// git submodules of Java.Interop

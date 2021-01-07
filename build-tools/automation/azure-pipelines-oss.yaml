@@ -23,11 +23,12 @@ variables:
   XA.Build.LinuxOSSPool: Xamarin-Android-Ubuntu-Public
   XA.Build.Configuration: Release
   NuGetArtifactName: nupkgs
+  InstallerArtifactName: Installers
   EXTRA_MSBUILD_ARGS: /p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False
   PREPARE_FLAGS: PREPARE_CI=1 PREPARE_CI_PR=1
   DotNetCoreVersion: 3.1.201
-  # Version number from: https://github.com/dotnet/installer#installers-and-binaries
-  DotNetCorePreviewVersion: 5.0.100-rc.2.20459.1
+  DotNet5Version: 5.0.100
+  GitHub.Token: $(github--pat--vs-mobiletools-engineering-service2)
 
 stages:
 - stage: mac_stage
@@ -51,7 +52,7 @@ stages:
 
     - template: yaml-templates/use-dot-net.yaml
       parameters:
-        version: $(DotNetCorePreviewVersion)
+        version: $(DotNet5Version)
         remove_dotnet: true
 
     - template: yaml-templates/use-dot-net.yaml
@@ -73,7 +74,7 @@ stages:
     - task: provisionator@2
       displayName: Install Xcode
       inputs:
-        github_token: $(github-pat)
+        github_token: $(GitHub.Token)
         provisioning_script: $(Build.SourcesDirectory)/build-tools/provisioning/xcode.csx
         provisioning_extra_args: '-v -v -v -v'
 
@@ -107,8 +108,8 @@ stages:
       displayName: make jenkins
 
     - script: >
-        echo "make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)" &&
-        make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)
+        echo "make create-pkg create-vsix V=1 CONFIGURATION=$(XA.Build.Configuration)" &&
+        make create-pkg create-vsix V=1 CONFIGURATION=$(XA.Build.Configuration)
       workingDirectory: $(Build.SourcesDirectory)
       displayName: create installers
 
@@ -117,6 +118,19 @@ stages:
         make package-oss CONFIGURATION=$(XA.Build.Configuration) V=1
       workingDirectory: $(Build.SourcesDirectory)
       displayName: package oss
+
+    - script: >
+        mkdir -p bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName) &&
+        cp bin/Build$(XA.Build.Configuration)/*.vsix bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName) &&
+        cp bin/Build$(XA.Build.Configuration)/*.pkg bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
+      workingDirectory: $(Build.SourcesDirectory)
+      displayName: copy installers
+
+    - task: PublishPipelineArtifact@1
+      displayName: upload installers
+      inputs:
+        artifactName: $(InstallerArtifactName) - macOS and Windows
+        targetPath: $(Build.SourcesDirectory)/bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
 
     - script: >
         echo "all-tests CONFIGURATION=$(XA.Build.Configuration) V=1" &&
@@ -140,7 +154,7 @@ stages:
     - task: PublishPipelineArtifact@1
       displayName: upload nupkgs
       inputs:
-        artifactName: $(NuGetArtifactName)
+        artifactName: $(NuGetArtifactName) - macOS
         targetPath: $(Build.SourcesDirectory)/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
 
     - script: >
@@ -214,13 +228,13 @@ stages:
     - task: PublishPipelineArtifact@1
       displayName: publish linux artifacts
       inputs:
-        artifactName: Linux Packages
+        artifactName: $(InstallerArtifactName) - Linux
         targetPath: $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/linux-artifacts
 
     - task: PublishPipelineArtifact@1
       displayName: upload nupkgs
       inputs:
-        artifactName: Linux $(NuGetArtifactName)
+        artifactName: $(NuGetArtifactName) - Linux
         targetPath: $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
 
     - template: yaml-templates/upload-results.yaml

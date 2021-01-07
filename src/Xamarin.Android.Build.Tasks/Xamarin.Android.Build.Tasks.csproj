@@ -1,6 +1,7 @@
 <Project>
 
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+  <Import Project="..\tools\BuildTasks.props" Sdk="Microsoft.DotNet.Arcade.Sdk" />
   <Import Project="..\..\Configuration.props" />
   <Import Project="..\..\build-tools\scripts\LocalizationLanguages.projitems" />
   <Import Project="..\..\build-tools\scripts\MSBuildReferences.projitems" />
@@ -15,8 +16,8 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <DefineConstants>$(DefineConstants);TRACE;HAVE_CECIL;MSBUILD;ANDROID_24</DefineConstants>
     <AndroidGeneratedClassDirectory Condition=" '$(AndroidGeneratedClassDirectory)' == '' ">..\..\src\Mono.Android\obj\$(Configuration)\monoandroid10\android-$(AndroidLatestStablePlatformId)\mcw</AndroidGeneratedClassDirectory>
-    <LangVersion>latest</LangVersion>
     <NoWarn>8632</NoWarn>
+    <GenerateResxSource>true</GenerateResxSource>
   </PropertyGroup>
 
   <ItemGroup>
@@ -378,12 +379,6 @@
     <EmbeddedResource Include="Resources\MonoRuntimeProvider.Bundled.20.java">
       <LogicalName>MonoRuntimeProvider.Bundled.20.java</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\MonoRuntimeProvider.Shared.java">
-      <LogicalName>MonoRuntimeProvider.Shared.java</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\MonoRuntimeProvider.Shared.20.java">
-      <LogicalName>MonoRuntimeProvider.Shared.20.java</LogicalName>
-    </EmbeddedResource>
     <EmbeddedResource Include="Linker\PreserveLists\Java.Interop.xml">
       <LogicalName>Java.Interop.xml</LogicalName>
     </EmbeddedResource>
@@ -451,24 +446,10 @@
     <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop\Java.Interop.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Compile Update="Properties\Resources.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Update="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-  </ItemGroup>
-
   <!-- Import Microsoft.NET.Sdk targets before our targets so we can override behavior -->
   <!-- See https://github.com/microsoft/msbuild/pull/4922 -->
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+  <Import Project="..\tools\GenerateResxSource.targets" Sdk="Microsoft.DotNet.Arcade.Sdk" />
   <Import Project="Xamarin.Android.Build.Tasks.targets" />
 
 </Project>

@@ -20,6 +20,11 @@
     <AndroidSupportedAbis Condition=" '$(Enable64BitBuild)' == '' ">armeabi-v7a;x86</AndroidSupportedAbis>
     <AndroidSupportedAbis  Condition=" '$(Enable64BitBuild)' != '' ">arm64-v8a;x86</AndroidSupportedAbis>
     <AndroidEnablePreloadAssemblies Condition=" '$(AndroidEnablePreloadAssemblies)' == '' ">True</AndroidEnablePreloadAssemblies>
+    <AndroidIncludeWrapSh Condition=" '$(UseASAN)' != '' Or '$(UseUBSAN)' != '' ">true</AndroidIncludeWrapSh>
+    <_AndroidCheckedBuild Condition=" '$(UseASAN)' != '' ">asan</_AndroidCheckedBuild>
+    <_AndroidCheckedBuild Condition=" '$(UseUBSAN)' != '' ">ubsan</_AndroidCheckedBuild>
+    <_ASANScript>..\..\..\build-tools\wrap.sh\asan.sh</_ASANScript>
+    <_UBSANScript>..\..\..\build-tools\wrap.sh\ubsan.sh</_UBSANScript>
   </PropertyGroup>
   <Import Project="..\..\..\Configuration.props" />
   <PropertyGroup>
@@ -41,7 +46,6 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AndroidManagedSymbols>true</AndroidManagedSymbols>
-    <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
     <AndroidLinkTool Condition=" '$(AndroidLinkTool)' == '' ">r8</AndroidLinkTool>
   </PropertyGroup>
   <ItemGroup>
@@ -78,6 +82,33 @@
     <AndroidResource Include="Resources\layout\Tabbar.axml" />
     <AndroidResource Include="Resources\layout\Toolbar.axml" />
     <AndroidResource Include="Resources\values\styles.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidNativeLibrary Include="$(_ASANScript)" Condition=" '$(UseASAN)' != '' ">
+      <Link>lib\arm64-v8a\wrap.sh</Link>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="$(_ASANScript)" Condition=" '$(UseASAN)' != '' ">
+      <Link>lib\armeabi-v7a\wrap.sh</Link>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="$(_ASANScript)" Condition=" '$(UseASAN)' != '' ">
+      <Link>lib\x86\wrap.sh</Link>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="$(_ASANScript)" Condition=" '$(UseASAN)' != '' ">
+      <Link>lib\x86_64\wrap.sh</Link>
+    </AndroidNativeLibrary>
+
+    <AndroidNativeLibrary Include="$(_UBSANScript)" Condition=" '$(UseUBSAN)' != '' ">
+      <Link>lib\arm64-v8a\wrap.sh</Link>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="$(_UBSANScript)" Condition=" '$(UseUBSAN)' != '' ">
+      <Link>lib\armeabi-v7a\wrap.sh</Link>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="$(_UBSANScript)" Condition=" '$(UseUBSAN)' != '' ">
+      <Link>lib\x86\wrap.sh</Link>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="$(_UBSANScript)" Condition=" '$(UseUBSAN)' != '' ">
+      <Link>lib\x86_64\wrap.sh</Link>
+    </AndroidNativeLibrary>
   </ItemGroup>
   <Import Project="Xamarin.Forms.Performance.Integration.Droid.targets" />
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />

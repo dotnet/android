@@ -257,6 +257,34 @@ namespace Xamarin.Android.Prepare
 			return containsHttps;
 		}
 
+		public async Task<List<string>> RunCommandForOutputAsync (string workingDirectory, params string[] args)
+		{
+			if (!Directory.Exists (workingDirectory))
+				throw new ArgumentException ("must exist", nameof (workingDirectory));
+
+			var runner = CreateGitRunner (workingDirectory);
+			runner.AddArguments (args);
+			return await RunForOutputAsync (runner);
+		}
+
+		async Task<List<string>> RunForOutputAsync (ProcessRunner runner)
+		{
+			var lines = new List<string> ();
+			bool success = await RunTool (
+				() => {
+					using (var outputSink = (OutputSink) SetupOutputSink (runner)) {
+						outputSink.LineCallback = (string line) => lines.Add (line);
+						return runner.Run ();
+					}
+				}
+			);
+
+			if (!success)
+				return null;
+
+			return lines;
+		}
+
 		ProcessRunner CreateGitRunner (string? workingDirectory, List<string>? arguments = null, bool useCustomStderrWrapper = false)
 		{
 			var runner = CreateProcessRunner ();

@@ -56,6 +56,9 @@ Specifies the supported Android platform versions for this SDK.
 				writer.WriteStartElement ("Project");
 
 				writer.WriteStartElement ("PropertyGroup");
+				writer.WriteStartElement ("TargetPlatformSupported");
+				writer.WriteString ("true");
+				writer.WriteEndElement (); // </TargetPlatformSupported>
 				writer.WriteStartElement ("TargetPlatformVersion");
 				writer.WriteAttributeString ("Condition", " '$(TargetPlatformVersion)' == '' ");
 				writer.WriteString (versions.MaxStableVersion.ApiLevel.ToString ());
@@ -66,13 +69,12 @@ Specifies the supported Android platform versions for this SDK.
 				foreach (AndroidVersion version in versions.InstalledBindingVersions
 						.Where (v => v.ApiLevel >= MinimumApiLevel)
 						.OrderBy (v => v.ApiLevel)) {
-					writer.WriteStartElement ("AndroidSdkSupportedTargetPlatform");
+					writer.WriteStartElement ("AndroidSdkSupportedTargetPlatformVersion");
 					writer.WriteAttributeString ("Include", version.ApiLevel.ToString ());
-					writer.WriteEndElement (); // </AndroidSdkSupportedTargetPlatform>
+					writer.WriteEndElement (); // </AndroidSdkSupportedTargetPlatformVersion>
 				}
-				writer.WriteStartElement ("SdkSupportedTargetPlatform");
-				writer.WriteAttributeString ("Condition", " '$(TargetPlatformIdentifier)' == 'Android' ");
-				writer.WriteAttributeString ("Include", "@(AndroidSdkSupportedTargetPlatform)");
+				writer.WriteStartElement ("SdkSupportedTargetPlatformVersion");
+				writer.WriteAttributeString ("Include", "@(AndroidSdkSupportedTargetPlatformVersion)");
 
 				writer.WriteEndDocument (); // </Project>
 			}

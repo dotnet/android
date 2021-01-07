@@ -29,22 +29,28 @@ project][binding] as a separate project type. Any of the MSBuild item
 groups or build actions that currently work in binding projects will
 be supported through a .NET 6 Android application or library.
 
-For example, a binding library could look like:
+For example, a binding library would be identical to a class library:
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net5.0-android</TargetFramework>
+    <TargetFramework>net6.0-android</TargetFramework>
   </PropertyGroup>
-  <ItemGroup>
-    <TransformFile Include="Transforms\Metadata.xml" />
-    <EmbeddedJar Include="Jars\foo.jar" />
-  </ItemGroup>
 </Project>
 ```
 
+Along with the file structure:
+
+    Transforms/
+        Metadata.xml
+    foo.jar
+
+`Transforms\*.xml` files are automatically included as a
+`@(TransformFile)` item, and `.jar` files are automatically included
+as a `@(AndroidLibrary)` item.
+
 This will bind C# types for the Java types found in `foo.jar` using
-the metadata fixups from `Metadata.xml`.
+the metadata fixups from `Transforms\Metadata.xml`.
 
 [binding]: https://docs.microsoft.com/xamarin/android/platform/binding-java-library/
 
@@ -110,6 +116,14 @@ supported.
 `$(AndroidCodegenTarget)` will be `XAJavaInterop1` by default.
 `XamarinAndroid` will not be supported.
 
+`$(AndroidManifest)` will default to `AndroidManifest.xml` in the root
+of projects as `Properties\AssemblyInfo.cs` is no longer used in
+short-form MSBuild projects. `Properties\AndroidManifest.xml` will
+also be detected and used if it exists to ease migration.
+
+`$(DebugType)` will be `portable` by default. `full` and `pdbonly`
+will not be supported.
+
 `$(MonoSymbolArchive)` will be `False`, since `mono-symbolicate` is
 not yet supported.
 
@@ -131,9 +145,18 @@ not be supported:
 
 ## Default file inclusion
 
-Default Android related file globbing behavior is defined in `Microsoft.Android.Sdk.DefaultItems.targets`.
+Default Android related file globbing behavior is defined in [`AutoImport.props`][autoimport].
 This behavior can be disabled for Android items by setting `$(EnableDefaultAndroidItems)` to `false`, or
 all default item inclusion behavior can be disabled by setting `$(EnableDefaultItems)` to `false`.
+
+[autoimport]: https://github.com/dotnet/designs/blob/4703666296f5e59964961464c25807c727282cae/accepted/2020/workloads/workload-resolvers.md#workload-props-files
+
+## Runtime behavior
+
+There is some behavioral changes to the `String.IndexOf()` method in
+.NET 5 and higher on different platforms, see details [here][indexof].
+
+[indexof]: https://docs.microsoft.com/dotnet/standard/globalization-localization/globalization-icu
 
 ## Linker (ILLink)
 
@@ -172,12 +195,47 @@ It is recommended to migrate to the new linker settings, as
 There are currently a few "verbs" we are aiming to get working in
 Xamarin.Android:
 
+    dotnet new
     dotnet build
     dotnet publish
     dotnet run
 
-Currently in .NET 5 console apps, `dotnet publish` is where all the
-work to produce a self-contained "app" happens:
+### dotnet new
+
+To support `dotnet new`, we created a few basic project and item
+templates for Android that are named following the patterns and naming
+of existing .NET templates:
+
+    Templates                                     Short Name           Language    Tags
+    --------------------------------------------  -------------------  ----------  ----------------------
+    Android Activity template                     android-activity     [C#]        Android
+    Android Java Library Binding                  android-bindinglib   [C#]        Android
+    Android Layout template                       android-layout       [C#]        Android
+    Android Class library                         androidlib           [C#]        Android
+    Android Application                           android              [C#]        Android
+    Console Application                           console              [C#],F#,VB  Common/Console
+    Class library                                 classlib             [C#],F#,VB  Common/Library
+    WPF Application                               wpf                  [C#],VB     Common/WPF
+    WPF Class library                             wpflib               [C#],VB     Common/WPF
+    NUnit 3 Test Project                          nunit                [C#],F#,VB  Test/NUnit
+    NUnit 3 Test Item                             nunit-test           [C#],F#,VB  Test/NUnit
+
+To create different types of Android projects:
+
+    dotnet new android            --output MyAndroidApp     --packageName com.mycompany.myandroidapp
+    dotnet new androidlib         --output MyAndroidLibrary
+    dotnet new android-bindinglib --output MyJavaBinding
+
+Once the projects are created, some basic item templates can also be
+used such as:
+
+    dotnet new android-activity --name LoginActivity --namespace MyAndroidApp
+    dotnet new android-layout   --name MyLayout      --output Resources/layout
+
+### dotnet build & publish
+
+Currently in .NET console apps, `dotnet publish` is where all the work
+to produce a self-contained "app" happens:
 
 * The linker via the `<IlLink/>` MSBuild task
 * .NET Core's version of AOT, named "ReadyToRun"
@@ -206,48 +264,25 @@ Play, ad-hoc distribution, etc. It could be able to sign the `.apk` or
 `.aab` with different keys. As a starting point, this will currently
 copy the output to a `publish` directory on disk.
 
+[illink]: https://github.com/mono/linker/blob/master/src/linker/README.md
+
+### dotnet run
+
 `dotnet run` can be used to launch applications on a
 device or emulator via the `--project` switch:
 
     dotnet run --project HelloAndroid.csproj
 
-[illink]: https://github.com/mono/linker/blob/master/src/linker/README.md
+Alternatively, you could use the `Run` MSBuild target such as:
+
+    dotnet build HelloAndroid.csproj -t:Run
 
 ### Preview testing
 
-The following instructions can be used for early preview testing.
+For the latest instructions on preview testing and sample projects,
+see the [net6-samples][net6-samples] repo.
 
-  1) Install the [latest .NET 5 preview][0]. Preview 4 or later is required.
-
-  2) Create a `nuget.config` file that has a package source pointing to
-     local packages or `xamarin-impl` feed, as well as the .NET 5 feed:
-
-```xml
-<configuration>
-  <packageSources>
-    <add key="xamarin-impl" value="https://pkgs.dev.azure.com/azure-public/vside/_packaging/xamarin-impl/nuget/v3/index.json" />
-    <add key="dotnet5" value="https://dnceng.pkgs.visualstudio.com/public/_packaging/dotnet5/nuget/v3/index.json" />
-  </packageSources>
-</configuration>
-```
-
-  3) Open an existing Android project (ideally something minimal) and
-    tweak it as shown below. The version should match the version of the
-    packages you want to use:
-
-```xml
-<Project Sdk="Microsoft.Android.Sdk/10.0.100">
-  <PropertyGroup>
-    <TargetFramework>net5.0-android</TargetFramework>
-    <RuntimeIdentifier>android.21-arm64</RuntimeIdentifier>
-    <OutputType>Exe</OutputType>
-  </PropertyGroup>
-</Project>
-```
-
-  4) Build (and optionally run) the project:
-
-    dotnet build *.csproj -t:Run
+[net6-samples]: https://github.com/xamarin/net6-samples
 
 ## Package Versioning Scheme
 

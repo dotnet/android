@@ -8,8 +8,8 @@
             "name": "Launch",
             "type": "mono",
             "request": "launch",
-            "program": "${workspaceRoot}packages/nunit.consolerunner/3.11.1/tools/nunit3-console.exe ${workspaceRoot}bin/TestDebug/net472/Xamarin.Android.Build.Tests.dll",
-            "cwd": "${workspaceRoot}bin/TestDebug/"
+            "program": "${workspaceRoot}packages/nunit.consolerunner/3.11.1/tools/nunit3-console.exe ${workspaceRoot}bin/Test${input:configuration}/net472/Xamarin.Android.Build.Tests.dll",
+            "cwd": "${workspaceRoot}bin/Test${input:configuration}/"
         },
         {
             "name": "Attach",
@@ -23,10 +23,19 @@
           "type": "mono",
           "request": "launch",
           "preLaunchTask": "build-emulator-checkboottimes",
-          "program": "${workspaceRoot}/bin/BuildDebug/check-boot-times.exe",
+          "program": "${workspaceRoot}/bin/Build${input:configuration}/check-boot-times.exe",
           "args": [ ],
           "cwd": "${workspaceRoot}",
           "stopAtEntry": false
         }
+    ],
+    "inputs": [
+      {
+        "id": "configuration",
+        "type": "pickString",
+        "default": "Debug",
+        "description": "The Build Configuration",
+        "options": [ "Debug", "Release"]
+      }
     ]
 }

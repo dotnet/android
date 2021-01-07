@@ -77,8 +77,6 @@ namespace Xamarin.Android.Tasks
 		public string OutputImportDirectory { get; set; }
 		public string AssemblyIdentityMapFile { get; set; }
 
-		public string ResourceNameCaseMap { get; set; }
-
 		// pattern to use for the version code. Used in CreatePackagePerAbi
 		// eg. {abi:00}{dd}{version}
 		// known keyworks
@@ -94,9 +92,11 @@ namespace Xamarin.Android.Tasks
 
 		public string ResourceSymbolsTextFileDirectory { get; set; }
 
-		Dictionary<string,string> resource_name_case_map;
+		Dictionary<string,string> _resource_name_case_map;
 		AssemblyIdentityMap assemblyMap = new AssemblyIdentityMap ();
 		string resourceDirectory;
+
+		Dictionary<string, string> resource_name_case_map => _resource_name_case_map ??= MonoAndroidHelper.LoadResourceCaseMap (BuildEngine4);
 
 		bool ManifestIsUpToDate (string manifestFile)
 		{
@@ -218,8 +218,6 @@ namespace Xamarin.Android.Tasks
 			resourceDirectory = ResourceDirectory.TrimEnd ('\\');
 			if (!Path.IsPathRooted (resourceDirectory))
 				resourceDirectory = Path.Combine (WorkingDirectory, resourceDirectory);
-
-			resource_name_case_map = MonoAndroidHelper.LoadResourceCaseMap (ResourceNameCaseMap);
 
 			assemblyMap.Load (Path.Combine (WorkingDirectory, AssemblyIdentityMapFile));
 

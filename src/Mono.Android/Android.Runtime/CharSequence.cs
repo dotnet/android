@@ -33,19 +33,16 @@ namespace Android.Runtime {
 			return ret;
 		}
 
-		[Preserve (Conditional=true)]
 		public static IntPtr ToLocalJniHandle (string? value)
 		{
 			return JNIEnv.NewString (value);
 		}
 
-		[Preserve (Conditional=true)]
 		public static IntPtr ToLocalJniHandle (Java.Lang.ICharSequence? value)
 		{
 			return value == null ? IntPtr.Zero : JNIEnv.ToLocalJniHandle (value);
 		}
 
-		[Preserve (Conditional=true)]
 		public static IntPtr ToLocalJniHandle (IEnumerable<char>? value)
 		{
 			if (value == null) {
@@ -55,7 +52,7 @@ namespace Android.Runtime {
 			} else if (value is Java.Lang.ICharSequence) {
 				return JNIEnv.ToLocalJniHandle ((Java.Lang.ICharSequence) value);
 			} else {
-				return ToLocalJniHandle (new string (value.ToArray ()));
+				return ToLocalJniHandle (string.Concat (value));
 			}
 		}
 

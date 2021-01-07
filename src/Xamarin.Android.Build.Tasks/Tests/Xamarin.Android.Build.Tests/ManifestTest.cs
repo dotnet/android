@@ -1,4 +1,4 @@
-﻿﻿﻿using System;
+﻿﻿using System;
 using System.Linq;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
@@ -68,11 +68,12 @@ namespace Bug12935
 		[Test]
 		public void Bug12935 ([Values (true, false)] bool useAapt2)
 		{
+			AssertAaptSupported (useAapt2);
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
 			proj.MainActivity = ScreenOrientationActivity;
-			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			proj.AndroidUseAapt2 = useAapt2;
 			var directory = $"temp/Bug12935_{useAapt2}";
 			using (var builder = CreateApkBuilder (directory)) {
 
@@ -127,11 +128,12 @@ namespace Bug12935
 		[Test]
 		public void CheckElementReOrdering ([Values (true, false)] bool useAapt2)
 		{
+			AssertAaptSupported (useAapt2);
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
 			proj.MainActivity = ScreenOrientationActivity;
-			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			proj.AndroidUseAapt2 = useAapt2;
 			var directory = $"temp/CheckElementReOrdering_{useAapt2}";
 			using (var builder = CreateApkBuilder (directory)) {
 				proj.AndroidManifest = ElementOrderManifest;
@@ -145,6 +147,33 @@ namespace Bug12935
 				Assert.IsNotNull (app, "application element should not be null.");
 				Assert.AreEqual (0, app.ElementsAfterSelf ().Count (),
 					"There should be no elements after the application element");
+			}
+		}
+
+		[Test]
+		public void OverlayManifestTest ()
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+				ManifestMerger = "manifestmerger.jar",
+			};
+			proj.AndroidManifest = @"<?xml version=""1.0"" encoding=""utf-8""?>
+<manifest xmlns:android=""http://schemas.android.com/apk/res/android"" xmlns:tools=""http://schemas.android.com/tools"" android:versionCode=""1"" android:versionName=""1.0"" package=""foo.foo"">
+	<application android:label=""foo"">
+	</application>
+</manifest>";
+			proj.OtherBuildItems.Add (new BuildItem ("AndroidManifestOverlay", "ManifestOverlay.xml") {
+				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
+<manifest xmlns:android=""http://schemas.android.com/apk/res/android"">
+	<uses-permission android:name=""android.permission.CAMERA"" />
+</manifest>
+"
+			});
+			using (var b = CreateApkBuilder ("temp/OverlayManifestTest", cleanupAfterSuccessfulBuild: true, cleanupOnDispose: false)) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				var manifestFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
+				var text = File.ReadAllText (manifestFile);
+				StringAssert.Contains ("android.permission.CAMERA", text, $"{manifestFile} should contain 'android.permission.CAMERA'");
 			}
 		}
 
@@ -586,7 +615,6 @@ namespace Bug12935
 		}
 
 		[Test]
-		[Category ("LibraryProjectZip")]
 		public void MergeLibraryManifest ()
 		{
 			byte [] classesJar;
@@ -838,34 +866,5 @@ class TestActivity : Activity { }"
  				Assert.AreEqual (expectedOutput, string.Join (" ", e.Attributes ()));
  			}
  		}
-
-		[Test]
-		public void Queries_API30 ([Values (true, false)] bool useAapt2)
-		{
-			if (!CommercialBuildAvailable) {
-				Assert.Ignore ("$(AndroidUseSharedRuntime) is required for this test.");
-				return;
-			}
-
-			var proj = new XamarinAndroidApplicationProject {
-				AndroidUseSharedRuntime = true,
-				EmbedAssembliesIntoApk = false,
-				TargetSdkVersion = "30",
-			};
-			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
-			using (var b = CreateApkBuilder ()) {
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded");
-
-				string manifest = b.Output.GetIntermediaryAsText (Path.Combine ("android", "AndroidManifest.xml"));
-				var doc = XDocument.Parse (manifest);
-				var ns = XNamespace.Get ("http://schemas.android.com/apk/res/android");
-				var names = doc.Element ("manifest")?
-					.Element ("queries")?
-					.Elements ("package")?
-					.Select (e => e.Attribute (ns + "name")?.Value);
-				StringAssertEx.Contains ("Mono.Android.DebugRuntime", names);
-				StringAssertEx.Contains ("Mono.Android.Platform.ApiLevel_30", names);
-			}
-		}
 	}
 }

@@ -19,6 +19,8 @@ namespace Xamarin.Android.Tasks
 
 		public string JavaResgenInputFile { get; set; }
 
+		public string RTxtFile { get; set; }
+
 		public string Namespace { get; set; }
 
 		[Required]
@@ -70,22 +72,30 @@ namespace Xamarin.Android.Tasks
 
 			// Create our capitalization maps so we can support mixed case resources
 			foreach (var item in Resources) {
-				if (!item.ItemSpec.StartsWith (ResourceDirectory))
+				var path = Path.GetFullPath (item.ItemSpec);
+				if (!path.StartsWith (ResourceDirectory, StringComparison.OrdinalIgnoreCase))
 					continue;
 
-				var name = item.ItemSpec.Substring (ResourceDirectory.Length);
+				var name = path.Substring (ResourceDirectory.Length).TrimStart ('/', '\\');
 				var logical_name = item.GetMetadata ("LogicalName").Replace ('\\', '/');
+				if (string.IsNullOrEmpty (logical_name))
+					logical_name = Path.GetFileName (path);
 
 				AddRename (name.Replace ('/', Path.DirectorySeparatorChar), logical_name.Replace ('/', Path.DirectorySeparatorChar));
 			}
 			if (AdditionalResourceDirectories != null) {
 				foreach (var additionalDir in AdditionalResourceDirectories) {
-					var file = Path.Combine (ProjectDir, Path.GetDirectoryName (additionalDir.ItemSpec), "__res_name_case_map.txt");
-					if (File.Exists (file)) {
-						foreach (var line in File.ReadAllLines (file).Where (l => !string.IsNullOrEmpty (l))) {
-							string [] tok = line.Split (';');
-							AddRename (tok [1].Replace ('/', Path.DirectorySeparatorChar), tok [0].Replace ('/', Path.DirectorySeparatorChar));
-						}
+					var dir = Path.Combine (ProjectDir, Path.GetDirectoryName (additionalDir.ItemSpec));
+					var file = Path.Combine (dir, "__res_name_case_map.txt");
+					if (!File.Exists (file)) {
+						// .NET 6 .aar files place the file in a sub-directory
+						file = Path.Combine (dir, ".net", "__res_name_case_map.txt");
+						if (!File.Exists (file))
+							continue;
+					}
+					foreach (var line in File.ReadAllLines (file).Where (l => !string.IsNullOrEmpty (l))) {
+						string [] tok = line.Split (';');
+						AddRename (tok [1].Replace ('/', Path.DirectorySeparatorChar), tok [0].Replace ('/', Path.DirectorySeparatorChar));
 					}
 				}
 			}
@@ -94,7 +104,7 @@ namespace Xamarin.Android.Tasks
 			CodeTypeDeclaration resources;
 			if (UseManagedResourceGenerator) {
 				var parser = new ManagedResourceParser () { Log = Log, JavaPlatformDirectory = javaPlatformDirectory, ResourceFlagFile = ResourceFlagFile };
-				resources = parser.Parse (ResourceDirectory, AdditionalResourceDirectories?.Select (x => x.ItemSpec), IsApplication, resource_fixup);
+				resources = parser.Parse (ResourceDirectory, RTxtFile ?? string.Empty, AdditionalResourceDirectories?.Select (x => x.ItemSpec), IsApplication, resource_fixup);
 			} else {
 				var parser = new JavaResourceParser () { Log = Log };
 				resources = parser.Parse (JavaResgenInputFile, IsApplication, resource_fixup);
@@ -253,7 +263,6 @@ namespace Xamarin.Android.Tasks
 						Path.Combine (dir, Path.GetFileName (to) + ext),
 						Path.Combine (dir, Path.GetFileName (curTo) + ext));
 				}
-
 				return;
 			}
 

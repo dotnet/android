@@ -21,5 +21,10 @@ namespace Xamarin.Android.Prepare
 
 			static string? hostRuntimeDir;
 		}
+
+		partial class Urls
+		{
+			public static readonly Uri DotNetInstallScript = new Uri ("https://dot.net/v1/dotnet-install.sh");
+		}
 	}
 }

@@ -155,7 +155,7 @@ namespace Xamarin.Android.Build.Tests
 			CommonSampleLibraryRootDirectory = Path.GetFullPath (Path.Combine (XABuildPaths.TopDirectory, "tests", "CodeBehind", CommonSampleLibraryName));
 			TestOutputDir = Path.Combine (XABuildPaths.TestOutputDirectory, "temp", "CodeBehind");
 			if (Builder.UseDotNet) {
-				ProjectName += "DotNet";
+				ProjectName += ".NET";
 			}
 
 			generated_sources = new List <SourceFile> {
@@ -655,7 +655,6 @@ namespace Xamarin.Android.Build.Tests
 			CopyRecursively (CommonSampleLibraryRootDirectory, Path.Combine (tempRoot, CommonSampleLibraryName), ignore);
 			if (Builder.UseDotNet) {
 				XASdkProject.SaveNuGetConfig (tempRoot);
-				XASdkProject.SaveGlobalJson (tempRoot);
 			}
 			return temporaryProjectPath;
 		}

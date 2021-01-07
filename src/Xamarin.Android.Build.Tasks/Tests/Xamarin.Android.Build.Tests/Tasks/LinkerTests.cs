@@ -193,7 +193,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[Category ("DotNetIgnore")] //TODO: @(LinkDescription) is not implemented yet
 		public void LinkDescription ()
 		{
 			string assembly_name = Builder.UseDotNet ? "System.Console" : "mscorlib";
@@ -287,6 +286,73 @@ $@"			var myButton = new AttributedButtonStub (this);
 
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Building a project with a null attribute value should have succeded.");
+			}
+		}
+
+		[Test]
+		public void AndroidAddKeepAlives ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				OtherBuildItems = {
+					new BuildItem ("Compile", "Method.cs") { TextContent = () => @"
+using System;
+using Java.Interop;
+
+namespace UnnamedProject {
+	public class MyClass : Java.Lang.Object
+	{
+		[Android.Runtime.Register(""MyMethod"")]
+		public unsafe bool MyMethod (Android.OS.IBinder windowToken, [global::Android.Runtime.GeneratedEnum] Android.Views.InputMethods.HideSoftInputFlags flags)
+        {
+            const string __id = ""hideSoftInputFromWindow.(Landroid/os/IBinder;I)Z"";
+            try {
+                JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+                __args [0] = new JniArgumentValue ((windowToken == null) ? IntPtr.Zero : ((global::Java.Lang.Object) windowToken).Handle);
+                __args [1] = new JniArgumentValue ((int) flags);
+                var __rm = JniPeerMembers.InstanceMethods.InvokeAbstractBooleanMethod (__id, this, __args);
+                return __rm;
+            } finally {
+            }
+        }
+	}
+}"
+					},
+				}
+			};
+
+			proj.SetProperty ("AllowUnsafeBlocks", "True");
+
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Building a project should have succeded.");
+
+				var assemblyPath = BuildTest.GetLinkedPath (b,  true, "UnnamedProject.dll");
+				using (var assembly = AssemblyDefinition.ReadAssembly (assemblyPath)) {
+					Assert.IsTrue (assembly != null);
+
+					var td = assembly.MainModule.GetType ("UnnamedProject.MyClass");
+					Assert.IsTrue (td != null);
+
+					var mr = td.GetMethods ().Where (m => m.Name == "MyMethod").FirstOrDefault ();
+					Assert.IsTrue (mr != null);
+
+					var md = mr.Resolve ();
+					Assert.IsTrue (md != null);
+
+					bool hasKeepAliveCall = false;
+					foreach (var i in md.Body.Instructions) {
+						if (i.OpCode.Code != Mono.Cecil.Cil.Code.Call)
+							continue;
+
+						if (!i.Operand.ToString ().Contains ("System.GC::KeepAlive"))
+							continue;
+
+						hasKeepAliveCall = true;
+						break;
+					}
+
+					Assert.IsTrue (hasKeepAliveCall);
+				}
 			}
 		}
 	}

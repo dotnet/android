@@ -8,6 +8,7 @@ using Mono.Debugging.Client;
 using Mono.Debugging.Soft;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
+using System.Collections.Generic;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -50,6 +51,7 @@ namespace Xamarin.Android.Build.Tests
 				var manifest = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
 				AssertExtractNativeLibs (manifest, extractNativeLibs);
 				ClearAdbLogcat ();
+				b.BuildLogFile = "run.log";
 				if (CommercialBuildAvailable)
 					Assert.True (b.RunTarget (proj, "_Run"), "Project should have run.");
 				else
@@ -57,6 +59,7 @@ namespace Xamarin.Android.Build.Tests
 
 				Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
 					Path.Combine (Root, b.ProjectDirectory, "logcat.log"), 30), "Activity should have started.");
+				b.BuildLogFile = "uninstall.log";
 				Assert.True (b.Uninstall (proj), "Project should have uninstalled.");
 			}
 		}
@@ -102,6 +105,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (libBuilder.Build (lib), "library build should have succeeded.");
 				Assert.True (appBuilder.Install (app), "app should have installed.");
 				ClearAdbLogcat ();
+				appBuilder.BuildLogFile = "run.log";
 				if (CommercialBuildAvailable)
 					Assert.True (appBuilder.RunTarget (app, "_Run"), "Project should have run.");
 				else
@@ -115,37 +119,21 @@ namespace Xamarin.Android.Build.Tests
 #pragma warning disable 414
 		static object [] DebuggerCustomAppTestCases = new object [] {
 			new object[] {
-				/* useSharedRuntime */   false,
 				/* embedAssemblies */    true,
 				/* fastDevType */        "Assemblies",
 				/* activityStarts */     true,
 			},
 			new object[] {
-				/* useSharedRuntime */   false,
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies",
 				/* activityStarts */     true,
 			},
 			new object[] {
-				/* useSharedRuntime */   true,
-				/* embedAssemblies */    true,
-				/* fastDevType */        "Assemblies",
-				/* activityStarts */     true,
-			},
-			new object[] {
-				/* useSharedRuntime */   true,
-				/* embedAssemblies */    false,
-				/* fastDevType */        "Assemblies",
-				/* activityStarts */     true,
-			},
-			new object[] {
-				/* useSharedRuntime */   true,
 				/* embedAssemblies */    true,
 				/* fastDevType */        "Assemblies:Dexes",
 				/* activityStarts */     true,
 			},
 			new object[] {
-				/* useSharedRuntime */   true,
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies:Dexes",
 				/* activityStarts */     false,
@@ -153,9 +141,9 @@ namespace Xamarin.Android.Build.Tests
 		};
 #pragma warning restore 414
 
-		[Test]
+		[Test, Category ("Debugger")]
 		[TestCaseSource (nameof (DebuggerCustomAppTestCases))]
-		public void CustomApplicationRunsWithDebuggerAndBreaks (bool useSharedRuntime, bool embedAssemblies, string fastDevType, bool activityStarts)
+		public void CustomApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, string fastDevType, bool activityStarts)
 		{
 			AssertCommercialBuild ();
 			AssertHasDevices ();
@@ -164,7 +152,6 @@ namespace Xamarin.Android.Build.Tests
 				AndroidFastDeploymentType = fastDevType,
 			};
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
-			proj.SetProperty (KnownProperties.AndroidUseSharedRuntime, useSharedRuntime.ToString ());
 			proj.SetProperty ("EmbedAssembliesIntoApk", embedAssemblies.ToString ());
 			proj.SetDefaultTargetDevice ();
 			proj.Sources.Add (new BuildItem.Source ("MyApplication.cs") {
@@ -222,7 +209,8 @@ namespace ${ROOT_NAMESPACE} {
 				};
 				options.EvaluationOptions.UseExternalTypeResolver = true;
 				ClearAdbLogcat ();
-				Assert.True (b.RunTarget (proj, "_Run", parameters: new string [] {
+				b.BuildLogFile = "run.log";
+				Assert.True (b.RunTarget (proj, "_Run", doNotCleanupOnUpdate: true, parameters: new string [] {
 					$"AndroidSdbTargetPort={port}",
 					$"AndroidSdbHostPort={port}",
 					"AndroidAttachDebugger=True",
@@ -252,6 +240,7 @@ namespace ${ROOT_NAMESPACE} {
 				WaitFor (2000);
 				int expected = 2;
 				Assert.AreEqual (expected, breakcountHitCount, $"Should have hit {expected} breakpoints. Only hit {breakcountHitCount}");
+				b.BuildLogFile = "uninstall.log";
 				Assert.True (b.Uninstall (proj), "Project should have uninstalled.");
 				session.Exit ();
 			}
@@ -260,69 +249,77 @@ namespace ${ROOT_NAMESPACE} {
 #pragma warning disable 414
 		static object [] DebuggerTestCases = new object [] {
 			new object[] {
-				/* useSharedRuntime */   false,
 				/* embedAssemblies */    true,
 				/* fastDevType */        "Assemblies",
 				/* allowDeltaInstall */  false,
+				/* user */		 null,
 			},
 			new object[] {
-				/* useSharedRuntime */   false,
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies",
 				/* allowDeltaInstall */  false,
+				/* user */		 null,
 			},
 			new object[] {
-				/* useSharedRuntime */   true,
-				/* embedAssemblies */    true,
-				/* fastDevType */        "Assemblies",
-				/* allowDeltaInstall */  false,
-			},
-			new object[] {
-				/* useSharedRuntime */   true,
-				/* embedAssemblies */    false,
-				/* fastDevType */        "Assemblies",
-				/* allowDeltaInstall */  false,
-			},
-			new object[] {
-				/* useSharedRuntime */   true,
-				/* embedAssemblies */    true,
-				/* fastDevType */        "Assemblies:Dexes",
-				/* allowDeltaInstall */  false,
-			},
-			new object[] {
-				/* useSharedRuntime */   true,
-				/* embedAssemblies */    false,
-				/* fastDevType */        "Assemblies:Dexes",
-				/* allowDeltaInstall */  false,
-			},
-			new object[] {
-				/* useSharedRuntime */   true,
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies",
 				/* allowDeltaInstall */  true,
+				/* user */		 null,
+			},
+			new object[] {
+				/* embedAssemblies */    false,
+				/* fastDevType */        "Assemblies:Dexes",
+				/* allowDeltaInstall */  false,
+				/* user */		 null,
+			},
+			new object[] {
+				/* embedAssemblies */    false,
+				/* fastDevType */        "Assemblies:Dexes",
+				/* allowDeltaInstall */  true,
+				/* user */		 null,
+			},
+			new object[] {
+				/* embedAssemblies */    true,
+				/* fastDevType */        "Assemblies",
+				/* allowDeltaInstall */  false,
+				/* user */		 DeviceTest.GuestUserName,
+			},
+			new object[] {
+				/* embedAssemblies */    false,
+				/* fastDevType */        "Assemblies",
+				/* allowDeltaInstall */  false,
+				/* user */		 DeviceTest.GuestUserName,
 			},
 		};
 #pragma warning restore 414
 
-		[Test]
+		[Test, Category ("SmokeTests"), Category ("Debugger")]
 		[TestCaseSource (nameof(DebuggerTestCases))]
-		public void ApplicationRunsWithDebuggerAndBreaks (bool useSharedRuntime, bool embedAssemblies, string fastDevType, bool allowDeltaInstall)
+		public void ApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, string fastDevType, bool allowDeltaInstall, string username)
 		{
 			AssertCommercialBuild ();
 			AssertHasDevices ();
+
+			int userId = GetUserId (username);
+			List<string> parameters = new List<string> ();
+			if (userId >= 0)
+				parameters.Add ($"AndroidDeviceUserId={userId}");
+			if (SwitchUser (username)) {
+				WaitFor (5);
+				ClickButton ("", "android:id/button1", "Yes continue");
+			}
+
 			var proj = new XamarinFormsAndroidApplicationProject () {
 				IsRelease = false,
-				AndroidUseSharedRuntime = useSharedRuntime,
 				EmbedAssembliesIntoApk = embedAssemblies,
 				AndroidFastDeploymentType = fastDevType
 			};
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
-			if (allowDeltaInstall)
-				proj.SetProperty (KnownProperties._AndroidAllowDeltaInstall, "true");
+			proj.SetProperty (KnownProperties._AndroidAllowDeltaInstall, allowDeltaInstall.ToString ());
 			proj.SetDefaultTargetDevice ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				SetTargetFrameworkAndManifest (proj, b);
-				Assert.True (b.Install (proj), "Project should have installed.");
+				Assert.True (b.Install (proj, parameters: parameters.ToArray ()), "Project should have installed.");
 
 				int breakcountHitCount = 0;
 				ManualResetEvent resetEvent = new ManualResetEvent (false);
@@ -354,11 +351,14 @@ namespace ${ROOT_NAMESPACE} {
 				};
 				options.EvaluationOptions.UseExternalTypeResolver = true;
 				ClearAdbLogcat ();
-				Assert.True (b.RunTarget (proj, "_Run", parameters: new string [] {
-					$"AndroidSdbTargetPort={port}",
-					$"AndroidSdbHostPort={port}",
-					"AndroidAttachDebugger=True",
-				}), "Project should have run.");
+				b.BuildLogFile = "run.log";
+
+				parameters.Add ($"AndroidSdbTargetPort={port}");
+				parameters.Add ($"AndroidSdbHostPort={port}");
+				parameters.Add ("AndroidAttachDebugger=True");
+
+				Assert.True (b.RunTarget (proj, "_Run", doNotCleanupOnUpdate: true,
+					parameters: parameters.ToArray ()), "Project should have run.");
 
 				Assert.IsTrue (WaitForDebuggerToStart (Path.Combine (Root, b.ProjectDirectory, "logcat.log")), "Activity should have started");
 				// we need to give a bit of time for the debug server to start up.
@@ -388,6 +388,7 @@ namespace ${ROOT_NAMESPACE} {
 				}
 				expected = 1;
 				Assert.AreEqual (expected, breakcountHitCount, $"Should have hit {expected} breakpoints. Only hit {breakcountHitCount}");
+				b.BuildLogFile = "uninstall.log";
 				Assert.True (b.Uninstall (proj), "Project should have uninstalled.");
 				session.Exit ();
 			}

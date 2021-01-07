@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
 using System.IO;
@@ -61,6 +61,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void CheckAssetsAreIncludedInAPK ([Values (true, false)] bool useAapt2)
 		{
+			AssertAaptSupported (useAapt2);
 			var projectPath = Path.Combine ("temp", TestName);
 			var libproj = new XamarinAndroidLibraryProject () {
 				ProjectName = "Library1",
@@ -106,7 +107,7 @@ namespace Xamarin.Android.Build.Tests
 					},
 				}
 			};
-			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			proj.AndroidUseAapt2 = useAapt2;
 			proj.References.Add (new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj"));
 			using (var libb = CreateDllBuilder (Path.Combine (projectPath, libproj.ProjectName))) {
 				Assert.IsTrue (libb.Build (libproj), "{0} should have built successfully.", libproj.ProjectName);
@@ -151,15 +152,17 @@ namespace Xamarin.Android.Build.Tests
 			using (var b = CreateDllBuilder (Path.Combine ("temp", TestName, "SubDir"))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var libraryProjectImports = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "__AndroidLibraryProjects__.zip");
-				FileAssert.Exists (libraryProjectImports);
-				using (var zip = ZipHelper.OpenZip (libraryProjectImports)) {
-					var entryName = "library_project_imports/assets/foo.txt";
-					var entry = zip.ReadEntry (entryName);
-					Assert.IsNotNull (entry, $"{libraryProjectImports} should contain {entryName}");
-					using (var memory = new MemoryStream ()) {
-						entry.Extract (memory);
-						memory.Position = 0;
-						Assert.AreEqual ("bar", Encoding.Default.GetString (memory.ToArray ()));
+				if (Builder.UseDotNet) {
+					var aarPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.aar");
+					FileAssert.Exists (aarPath);
+					using (var aar = ZipHelper.OpenZip (aarPath)) {
+						aar.AssertEntryContents (aarPath, "assets/foo.txt", contents: "bar");
+					}
+					FileAssert.DoesNotExist (libraryProjectImports);
+				} else {
+					FileAssert.Exists (libraryProjectImports);
+					using (var zip = ZipHelper.OpenZip (libraryProjectImports)) {
+						zip.AssertEntryContents (libraryProjectImports, "library_project_imports/assets/foo.txt", contents: "bar");
 					}
 				}
 			}

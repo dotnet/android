@@ -53,7 +53,7 @@ namespace Xamarin.ProjectTools
 		public string BuildTool {
 			get {
 				if (UseDotNet)
-					return "dotnet";
+					return Path.Combine (AndroidSdkResolver.GetDotNetPreviewPath (), "dotnet");
 
 				string xabuild;
 				if (IsUnix) {
@@ -76,7 +76,7 @@ namespace Xamarin.ProjectTools
 		/// <summary>
 		/// The top directory of a local build tree if it can be found, e.g. xamarin-android/bin/Debug.
 		/// </summary>
-		string BuildOutputDirectory {
+		public string BuildOutputDirectory {
 			get {
 				var outdir = Environment.GetEnvironmentVariable ("XA_BUILD_OUTPUT_PATH");
 				string configuration = Environment.GetEnvironmentVariable ("CONFIGURATION") ?? XABuildPaths.Configuration;
@@ -282,7 +282,11 @@ namespace Xamarin.ProjectTools
 				args.Append ("build ");
 			args.AppendFormat ("{0} /t:{1} {2}",
 					QuoteFileName (Path.Combine (XABuildPaths.TestOutputDirectory, projectOrSolution)), target, logger);
-			if (AutomaticNuGetRestore && restore && !UseDotNet) {
+			if (UseDotNet) {
+				if (!AutomaticNuGetRestore) {
+					args.Append (" --no-restore");
+				}
+			} else if (AutomaticNuGetRestore && restore) {
 				args.Append (" /restore");
 			}
 			if (MaxCpuCount != null) {
@@ -395,12 +399,17 @@ namespace Xamarin.ProjectTools
 					if (psi.RedirectStandardError)
 						err.WaitOne ();
 					result = ranToCompletion && p.ExitCode == 0;
+					if (processLog != null) {
+						if (ranToCompletion) {
+							File.AppendAllText (processLog, $"ExitCode: {p.ExitCode}{Environment.NewLine}");
+						} else {
+							File.AppendAllText (processLog, $"Build Timed Out!{Environment.ExitCode}");
+						}
+					}
 				}
 
 				LastBuildTime = DateTime.UtcNow - start;
 
-				if (processLog != null && !ranToCompletion)
-					File.AppendAllText (processLog, "Build Timed Out!");
 				if (buildLogFullPath != null && File.Exists (buildLogFullPath)) {
 					foreach (var line in LastBuildOutput) {
 						if (line.StartsWith ("Time Elapsed", StringComparison.OrdinalIgnoreCase)) {

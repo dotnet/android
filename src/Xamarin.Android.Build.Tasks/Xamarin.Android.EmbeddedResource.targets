@@ -2,9 +2,11 @@
 ***********************************************************************************************
 Xamarin.Android.EmbeddedResource.targets
 
-This file contains MSBuild targets related to the creation or extraction
-of `__AndroidLibraryProjects__.zip` or `__AndroidNativeLibraries__.zip`.
-These are packaged as `EmbeddedResource` files in Xamarin.Android assemblies.
+This file contains MSBuild targets related to the creation or
+extraction of `__AndroidLibraryProjects__.zip` or
+`__AndroidNativeLibraries__.zip`. These are packaged as
+`EmbeddedResource` files in Xamarin.Android assemblies. The actual
+creation of these files has moved to Xamarin.Android.Legacy.targets.
 
 This file is used by all project types, including binding projects.
 
@@ -13,9 +15,6 @@ This file is used by all project types, including binding projects.
 
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <UsingTask TaskName="Xamarin.Android.Tasks.CreateLibraryResourceArchive"        AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.CreateManagedLibraryResourceArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.CreateNativeLibraryArchive"          AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GetImportedLibraries"                AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.ReadImportedLibrariesCache"          AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.ReadLibraryProjectImportsCache"      AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -91,66 +90,6 @@ This file is used by all project types, including binding projects.
       <Output TaskParameter="NativeLibraries"   ItemName="AndroidNativeLibrary" />
       <Output TaskParameter="ManifestDocuments" ItemName="ExtractedManifestDocuments" />
     </ReadImportedLibrariesCache>
-  </Target>
-    
-  <Target Name="_CreateNativeLibraryArchive"
-      Condition=" '$(AndroidApplication)' != 'true' And '@(EmbeddedNativeLibrary->Count())' != '0' "
-      Inputs="@(EmbeddedNativeLibrary)"
-      Outputs="$(IntermediateOutputPath)__AndroidNativeLibraries__.zip">
-    <CreateNativeLibraryArchive
-        OutputDirectory="$(IntermediateOutputPath)$(_NativeLibraryImportsDirectoryName)"
-        EmbeddedNativeLibraries="@(EmbeddedNativeLibrary)"
-    />
-    <Touch Files="$(IntermediateOutputPath)__AndroidNativeLibraries__.zip" />
-    <ItemGroup>
-      <FileWrites Include="$(IntermediateOutputPath)__AndroidNativeLibraries__.zip" />
-      <EmbeddedResource Include="$(IntermediateOutputPath)__AndroidNativeLibraries__.zip">
-        <LogicalName>__AndroidNativeLibraries__.zip</LogicalName>
-      </EmbeddedResource>
-    </ItemGroup>
-  </Target>
-
-  <Target Name="_CreateManagedLibraryResourceArchive"
-      Condition=" '$(AndroidApplication)' != 'true' And '$(_AndroidIsBindingProject)' != 'true' "
-      Inputs="@(_AndroidResourceDest);@(AndroidAsset);@(AndroidJavaLibrary);@(AndroidJavaSource);@(_AndroidResourceDestRemovedFiles)"
-      Outputs="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip">
-    <CreateManagedLibraryResourceArchive
-        OutputDirectory="$(IntermediateOutputPath)$(_LibraryProjectImportsDirectoryName)"
-        ResourceDirectory="$(MonoAndroidResDirIntermediate)"
-        AndroidAssets="@(AndroidAsset)"
-        MonoAndroidAssetsPrefix="$(MonoAndroidAssetsPrefix)"
-        AndroidJavaSources="@(AndroidJavaSource)"
-        AndroidJavaLibraries="@(AndroidJavaLibrary)"
-        AndroidResourcesInThisExactProject="@(_AndroidResourceDest)"
-        FlatArchivesDirectory="$(_AndroidLibraryFlatArchivesDirectory)"
-        RemovedAndroidResourceFiles="@(_AndroidResourceDestRemovedFiles)"
-    />
-    <Touch Files="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip" />
-    <ItemGroup>
-      <FileWrites Include="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip" />
-      <EmbeddedResource Include="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip">
-        <LogicalName>__AndroidLibraryProjects__.zip</LogicalName>
-      </EmbeddedResource>
-    </ItemGroup>
-  </Target>
-
-  <Target Name="_CreateBindingResourceArchive"
-      Condition=" '$(_AndroidIsBindingProject)' == 'true' "
-      Inputs="@(LibraryProjectProperties);@(LibraryProjectZip)"
-      Outputs="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip">
-    <CreateLibraryResourceArchive
-        OutputDirectory="$(IntermediateOutputPath)$(_LibraryProjectImportsDirectoryName)"
-        OutputJarsDirectory="$(IntermediateOutputPath)library_project_jars"
-        OutputAnnotationsDirectory="$(IntermediateOutputPath)library_project_annotations"
-        LibraryProjectPropertiesFiles="@(LibraryProjectProperties)"
-        LibraryProjectZipFiles="@(LibraryProjectZip)"
-    />
-    <ItemGroup Condition="Exists ('$(IntermediateOutputPath)__AndroidLibraryProjects__.zip')">
-      <FileWrites Include="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip" />
-      <EmbeddedResource Include="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip">
-        <LogicalName>__AndroidLibraryProjects__.zip</LogicalName>
-      </EmbeddedResource>
-    </ItemGroup>
   </Target>
 
 </Project>

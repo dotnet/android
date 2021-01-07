@@ -19,9 +19,11 @@ namespace Xamarin.Android.Prepare
 		const string JetBrainsOpenJDK11Release = "944.14";
 		static readonly string JetBrainsOpenJDK11DownloadVersion = JetBrainsOpenJDK11Version.Replace ('.', '_');
 
-		const string JetBrainsOpenJDK8Version = "8.202";
+		const string JetBrainsOpenJDK8VersionMinor = "8";
+		const string JetBrainsOpenJDK8VersionRevision = "202";
+		const string JetBrainsOpenJDK8VersionFull = "1." + JetBrainsOpenJDK8VersionMinor + ".0." + JetBrainsOpenJDK8VersionRevision;
 		const string JetBrainsOpenJDK8Release = "1483.37";
-		static readonly string JetBrainsOpenJDK8DownloadVersion = JetBrainsOpenJDK8Version.Replace ('.', 'u');
+		static readonly string JetBrainsOpenJDK8DownloadVersion = $"{JetBrainsOpenJDK8VersionMinor}u{JetBrainsOpenJDK8VersionRevision}";
 
 		const string CorrettoDistVersion = "8.242.08.1";
 		const string CorrettoUrlPathVersion = CorrettoDistVersion;
@@ -59,8 +61,10 @@ namespace Xamarin.Android.Prepare
 			public static readonly Version JetBrainsOpenJDK11Version = new Version (Configurables.JetBrainsOpenJDK11Version);
 			public static readonly Version JetBrainsOpenJDK11Release = new Version (Configurables.JetBrainsOpenJDK11Release);
 
-			public static readonly Version JetBrainsOpenJDK8Version = new Version (Configurables.JetBrainsOpenJDK8Version);
+			public static readonly Version JetBrainsOpenJDK8Version = new Version (Configurables.JetBrainsOpenJDK8VersionFull);
 			public static readonly Version JetBrainsOpenJDK8Release = new Version (Configurables.JetBrainsOpenJDK8Release);
+
+			public const string DotNetTestRuntimeVersion                   = "3.1.3";
 
 			// Mono runtimes
 			public const string DebugFileExtension                         = ".pdb";

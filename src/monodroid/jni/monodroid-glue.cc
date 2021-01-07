@@ -643,7 +643,7 @@ void
 MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& runtime_args)
 {
 #if defined (DEBUG) && !defined (WINDOWS)
-	RuntimeOptions options;
+	RuntimeOptions options{};
 	int64_t cur_time;
 
 	cur_time = time (nullptr);
@@ -733,9 +733,19 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 	} else {
 		set_debug_options ();
 	}
+
+	delete[] options.host;
 #else
 	set_debug_options ();
 #endif
+
+	// TESTING ASAN: use-after-free
+	// char *x = new char[10]{};
+	// delete[] x;
+	// log_warn (LOG_DEFAULT, "x == %s", x);
+
+	// TESTING UBSAN: integer overflow
+	//log_warn (LOG_DEFAULT, "Let us have an overflow: %d", INT_MAX + 1);
 
 	bool log_methods = utils.should_log (LOG_TIMING) && !(log_timing_categories & LOG_TIMING_BARE);
 	if (XA_UNLIKELY (log_methods)) {
@@ -1615,8 +1625,7 @@ MonodroidRuntime::get_my_location (bool remove_file_name)
 inline void
 MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
                                                           jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader,
-                                                          [[maybe_unused]] jobjectArray externalStorageDirs, jobjectArray assembliesJava,
-                                                          jint apiLevel, jboolean isEmulator)
+                                                          jobjectArray assembliesJava, jint apiLevel, jboolean isEmulator)
 {
 	init_logging_categories ();
 
@@ -1660,20 +1669,6 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	set_debug_env_vars ();
 #endif
 
-#ifndef RELEASE
-	jstr = env->GetObjectArrayElement (externalStorageDirs, 0);
-	androidSystem.set_override_dir (1, utils.strdup_new (jstr.get_cstr ()));
-
-	jstr = env->GetObjectArrayElement (externalStorageDirs, 1);
-	androidSystem.set_override_dir (2, utils.strdup_new (jstr.get_cstr ()));
-
-	for (uint32_t i = 0; i < AndroidSystem::MAX_OVERRIDES; ++i) {
-		const char *p = androidSystem.get_override_dir (i);
-		if (!utils.directory_exists (p))
-			continue;
-		log_warn (LOG_DEFAULT, "Using override path: %s", p);
-	}
-#endif
 	setup_bundled_app ("libmonodroid_bundle_app.so");
 
 	if (runtimeNativeLibDir != nullptr) {
@@ -1846,7 +1841,6 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 		runtimeNativeLibDir,
 		appDirs,
 		loader,
-		externalStorageDirs,
 		assembliesJava,
 		apiLevel,
 		/* isEmulator */ JNI_FALSE
@@ -1856,8 +1850,7 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 JNIEXPORT void JNICALL
 Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
                                 jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader,
-                                jobjectArray externalStorageDirs, jobjectArray assembliesJava,
-                                jint apiLevel, jboolean isEmulator)
+                                jobjectArray assembliesJava, jint apiLevel, jboolean isEmulator)
 {
 	monodroidRuntime.Java_mono_android_Runtime_initInternal (
 		env,
@@ -1867,7 +1860,6 @@ Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang,
 		runtimeNativeLibDir,
 		appDirs,
 		loader,
-		externalStorageDirs,
 		assembliesJava,
 		apiLevel,
 		isEmulator

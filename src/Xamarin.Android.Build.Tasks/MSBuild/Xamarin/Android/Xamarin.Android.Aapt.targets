@@ -16,7 +16,9 @@ Copyright (C) 2019  Microsoft Corporation. All rights reserved.
 
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-<Target Name="_InjectAaptDependencies" Condition=" '$(_AndroidUseAapt2)' != 'True' ">
+<UsingTask TaskName="Xamarin.Android.Tasks.Aapt" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+
+<Target Name="_InjectAaptDependencies">
   <PropertyGroup>
     <_UpdateAndroidResgenInputs>
       $(_UpdateAndroidResgenInputs);
@@ -29,22 +31,18 @@ Copyright (C) 2019  Microsoft Corporation. All rights reserved.
   </PropertyGroup>
 </Target>
 
-<Target Name="_UpdateAndroidResgenAapt"
-    Condition="'$(_AndroidUseAapt2)' != 'True'">
+<Target Name="_UpdateAndroidResgenAapt">
 
   <!-- Change cases so we support mixed case resource names -->
   <ConvertResourcesCases
-      Condition="'$(_AndroidUseAapt2)' != 'True'"
       ResourceDirectories="$(MonoAndroidResDirIntermediate);@(LibraryResourceDirectories)"
-      ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
-      AcwMapFile="$(_AcwMapFile)"
       CustomViewMapFile="$(_CustomViewMapFile)"
       AndroidConversionFlagFile="$(_AndroidResgenFlagFile)"
   />
 
   <!-- Run aapt to generate R.java -->
   <Aapt
-      Condition="'$(_AndroidResourceDesignerFile)' != '' And '$(_AndroidUseAapt2)' != 'True'"
+      Condition=" '$(_AndroidResourceDesignerFile)' != '' "
       ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
       OutputImportDirectory="$(_AndroidLibrayProjectIntermediatePath)"
       JavaPlatformJarPath="$(JavaPlatformJarPath)"
@@ -62,7 +60,6 @@ Copyright (C) 2019  Microsoft Corporation. All rights reserved.
       ToolExe="$(AaptToolExe)"
       ApiLevel="$(_AndroidTargetSdkVersion)"
       AndroidUseLatestPlatformSdk="$(AndroidUseLatestPlatformSdk)"
-      ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
       AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
       YieldDuringToolExecution="$(YieldDuringToolExecution)"
       SupportedAbis="@(_BuildTargetAbis)"
@@ -70,10 +67,8 @@ Copyright (C) 2019  Microsoft Corporation. All rights reserved.
       ContinueOnError="$(DesignTimeBuild)"
   />
 </Target>
-<Target Name="_CreateBaseApkWithAapt"
-    Condition="'$(_AndroidUseAapt2)' != 'True'">
+<Target Name="_CreateBaseApkWithAapt">
   <Aapt
-     Condition="'$(_AndroidUseAapt2)' != 'True'"
      AndroidManifestFile="$(_AndroidManifestAbs)"
      ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
      OutputImportDirectory="$(_AndroidLibrayProjectIntermediatePath)"
@@ -93,7 +88,6 @@ Copyright (C) 2019  Microsoft Corporation. All rights reserved.
      ToolExe="$(AaptToolExe)"
      ApiLevel="$(_AndroidTargetSdkVersion)"
      AndroidUseLatestPlatformSdk="$(AndroidUseLatestPlatformSdk)"
-     ResourceNameCaseMap="$(_AndroidResourceNameCaseMap)"
      AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
      SupportedAbis="@(_BuildTargetAbis)"
      CreatePackagePerAbi="$(AndroidCreatePackagePerAbi)"

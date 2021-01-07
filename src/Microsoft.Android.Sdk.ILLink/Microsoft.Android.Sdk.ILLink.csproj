@@ -4,7 +4,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <DefineConstants>NET5_LINKER</DefineConstants>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <OutputPath>$(XamarinAndroidSourcePath)bin\Build$(Configuration)\packs\tools</OutputPath>
+    <OutputPath>$(XAInstallPrefix)xbuild\Xamarin\Android\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.ILLink" Version="5.0.0-preview.3.20227.3" />
@@ -28,6 +28,7 @@
     <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\LinkerOptions.cs" />
 
     <!--Steps that are upstreamed, these are OK to remove-->
+    <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\ApplyPreserveAttribute.cs" />
     <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\OutputStepWithTimestamps.cs" />
     <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\PreserveCode.cs" />
     <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\PreserveDynamicTypes.cs" />
@@ -36,8 +37,6 @@
     <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\PreserveRuntimeSerialization.cs" />
     <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\PreserveTlsProvider.cs" />
     <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\PreserveTypeConverters.cs" />
-
-    <!--TODO: Subclasses RemoveAttributesBase-->
     <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\RemoveAttributes.cs" />
 
     <!--TODO: Subclasses MarkStep-->

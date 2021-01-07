@@ -39,7 +39,7 @@ namespace Xamarin.Android.Build.Tests {
 <LinearLayout>
 </LinearLayout>
 ");
-			Monodroid.AndroidResource.UpdateXmlResource (Path.Combine (path, "res"), main, new Dictionary<string, string> (), null);
+			Monodroid.AndroidResource.UpdateXmlResource (Path.Combine (path, "res"), main, null);
 			var mainText = File.ReadAllText (main);
 			Assert.True (mainText.Contains ("@layout/headerlayout"), "'@layout/headerLayout' was not converted to '@layout/headerlayout'");
 			Directory.Delete (path, recursive: true);
@@ -98,7 +98,7 @@ namespace Xamarin.Android.Build.Tests {
 		app:showAsAction = ""never"" />
 
 </menu>");
-			Monodroid.AndroidResource.UpdateXmlResource (Path.Combine (path, "res"), actions, new Dictionary<string, string> (), null);
+			Monodroid.AndroidResource.UpdateXmlResource (Path.Combine (path, "res"), actions, null);
 			var actionsText = File.ReadAllText (actions);
 			Assert.True (actionsText.Contains ("@layout/servinglayout"), "'@layout/ServingLayout' was not converted to '@layout/servinglayout'");
 			Directory.Delete (path, recursive: true);
@@ -134,8 +134,8 @@ namespace Xamarin.Android.Build.Tests {
 	</declare-styleable>
 </resources>
 ");
-			Monodroid.AndroidResource.UpdateXmlResource (Path.Combine (path, "res"), attrs, new Dictionary<string, string> (), null);
-			Monodroid.AndroidResource.UpdateXmlResource (Path.Combine (path, "res"), main, new Dictionary<string, string> (), null);
+			Monodroid.AndroidResource.UpdateXmlResource (Path.Combine (path, "res"), attrs, null);
+			Monodroid.AndroidResource.UpdateXmlResource (Path.Combine (path, "res"), main, null);
 			var mainText = File.ReadAllText (main);
 			Assert.True (mainText.Contains ("FixedWidth"), "'FixedWidth' was converted to 'fixedwidth'");
 			Directory.Delete (path, recursive: true);

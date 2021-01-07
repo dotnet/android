@@ -12,49 +12,41 @@ It is shared between "legacy" binding projects and .NET 5 projects.
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <UsingTask TaskName="Xamarin.Android.Tasks.BindingsGenerator" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.JavaSourceUtils"   AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.RemoveDirFixed"    AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 
   <PropertyGroup>
     <UseShortGeneratorFileNames Condition=" '$(UseShortGeneratorFileNames)' == '' ">false</UseShortGeneratorFileNames>
     <GeneratedOutputPath        Condition=" '$(GeneratedOutputPath)' == '' ">$(IntermediateOutputPath)generated\</GeneratedOutputPath>
+    <AndroidJavadocVerbosity    Condition=" '$(AndroidJavadocVerbosity)' == '' ">intellisense</AndroidJavadocVerbosity>
     <ApiOutputFile              Condition=" '$(ApiOutputFile)' == '' ">$(IntermediateOutputPath)api.xml</ApiOutputFile>
     <_GeneratorStampFile>$(IntermediateOutputPath)generator.stamp</_GeneratorStampFile>
   </PropertyGroup>
 
-  <!-- Get our Build Actions to show up in VS -->
-  <ItemGroup>
-    <AvailableItemName Include="EmbeddedJar" />
-    <AvailableItemName Include="EmbeddedNativeLibrary" />
-    <AvailableItemName Include="EmbeddedReferenceJar" />
-    <AvailableItemName Include="InputJar" />
-    <AvailableItemName Include="ReferenceJar" />
-    <AvailableItemName Include="TransformFile" />
-    <AvailableItemName Include="LibraryProjectProperties" />
-    <AvailableItemName Include="LibraryProjectZip" />
-    <AvailableItemName Include="JavaDocIndex" />
-    <AvailableItemName Include="JavaDocJar" />
-    <AvailableItemName Include="JavaSourceJar" />
-  </ItemGroup>
+  <PropertyGroup Condition=" '$(_UseLegacyJavadocImport)' != 'true' ">
+    <DocumentationFile Condition=" '$(DocumentationFile)' == '' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' ">$(OutputPath)$(AssemblyName).xml</DocumentationFile>
+    <NoWarn Condition=" '$(DocumentationFile)' != '' ">$(NoWarn);CS1573;CS1591</NoWarn>
+  </PropertyGroup>
 
   <Target Name="ExportJarToXml"
       DependsOnTargets="$(ExportJarToXmlDependsOnTargets)"
-      Condition=" '$(UsingAndroidNETSdk)' != 'true' Or '@(InputJar->Count())' != '0' Or '@(EmbeddedJar->Count())' != '0' ">
+      Condition=" '$(UsingAndroidNETSdk)' != 'true' Or '@(InputJar->Count())' != '0' Or '@(EmbeddedJar->Count())' != '0' Or '@(LibraryProjectZip->Count())' != '0' ">
     <PropertyGroup>
       <AllowUnsafeBlocks Condition=" '$(AllowUnsafeBlocks)' != 'true' ">true</AllowUnsafeBlocks>
     </PropertyGroup>
   </Target>
 
   <Target Name="GenerateBindings"
-      Condition=" '$(UsingAndroidNETSdk)' != 'true' Or '@(InputJar->Count())' != '0' Or '@(EmbeddedJar->Count())' != '0' "
+      Condition=" '$(UsingAndroidNETSdk)' != 'true' Or '@(InputJar->Count())' != '0' Or '@(EmbeddedJar->Count())' != '0' Or '@(LibraryProjectZip->Count())' != '0' "
       DependsOnTargets="ExportJarToXml;_ResolveMonoAndroidSdks"
-      Inputs="$(ApiOutputFile);@(TransformFile);@(ReferencePath);@(ReferenceDependencyPaths);$(MSBuildAllProjects)"
+      Inputs="$(ApiOutputFile);@(TransformFile);@(ReferencePath);@(ReferenceDependencyPaths);@(_AndroidMSBuildAllProjects)"
       Outputs="$(_GeneratorStampFile)">
 
     <!-- Delete previous generated files if they still exist -->
     <RemoveDirFixed Directories="$(GeneratedOutputPath)" Condition="Exists ('$(GeneratedOutputPath)')" />
 
     <ItemGroup>
-      <AnnotationsZip Include="$(IntermediateOutputPath)library_project_annotations\*.zip" />
+      <AnnotationsZip Include="$(IntermediateOutputPath)library_project_annotations\**\*.zip" />
     </ItemGroup>
 
     <!-- Create the .cs binding source files -->
@@ -67,6 +59,8 @@ It is shared between "legacy" binding projects and .NET 5 projects.
         ApiXmlInput="$(ApiOutputFile)"
         AnnotationsZipFiles="@(AnnotationsZip)"
         AssemblyName="$(AssemblyName)"
+        JavadocVerbosity="$(AndroidJavadocVerbosity)"
+        JavadocXml="@(_JavaSourceJavadocXml)"
         TransformFiles="@(TransformFile)"
         ReferencedManagedLibraries="@(ReferencePath);@(ReferenceDependencyPaths)"
         MonoAndroidFrameworkDirectories="$(_XATargetFrameworkDirectories)"
@@ -75,6 +69,7 @@ It is shared between "legacy" binding projects and .NET 5 projects.
         ToolExe="$(BindingsGeneratorToolExe)"
         LangVersion="$(LangVersion)"
         EnableInterfaceMembersPreview="$(_EnableInterfaceMembers)"
+        Nullable="$(Nullable)"
     />
 
     <!-- Write a flag so we won't redo this target if nothing changed -->
@@ -89,27 +84,11 @@ It is shared between "legacy" binding projects and .NET 5 projects.
     </ItemGroup>
   </Target>
 
-  <Target Name="AddEmbeddedJarsAsResources" DependsOnTargets="GenerateBindings">
-    <ItemGroup>
-      <EmbeddedResource Include="@(EmbeddedJar)">
-        <LogicalName>%(Filename)%(Extension)</LogicalName>
-      </EmbeddedResource>
-    </ItemGroup>
-  </Target>
-
-  <Target Name="AddEmbeddedReferenceJarsAsResources" DependsOnTargets="GenerateBindings">
-    <ItemGroup>
-      <EmbeddedResource Include="@(EmbeddedReferenceJar)">
-        <LogicalName>__reference__%(Filename)%(Extension)</LogicalName>
-      </EmbeddedResource>
-    </ItemGroup>
-  </Target>
-
-  <Target Name="ResolveLibraryProjects" DependsOnTargets="_CreateBindingResourceArchive" />
+  <Target Name="ResolveLibraryProjects" DependsOnTargets="$(_ResolveLibraryProjectsDependsOn)" />
 
   <Target Name="AddLibraryJarsToBind" DependsOnTargets="ResolveLibraryProjects">
     <ItemGroup>
-      <InputJar Include="$(IntermediateOutputPath)library_project_jars\*.jar" />
+      <InputJar Include="$(IntermediateOutputPath)library_project_jars\**\*.jar" />
     </ItemGroup>
   </Target>
 

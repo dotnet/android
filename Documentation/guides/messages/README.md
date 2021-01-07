@@ -47,7 +47,7 @@ ms.date: 01/24/2020
 + [XA0033](xa0033.md): Failed to get the Java SDK version because the returned value does not appear to contain a valid version number.
 + [XA0034](xa0034.md): Failed to get the Java SDK version.
 + [XA0035](xa0035.md): Failed to determine the Android ABI for the project.
-+ [XA0036](xa0036.md): $(AndroidSupportedAbis) is not supported in .NET 5 and higher.
++ [XA0036](xa0036.md): $(AndroidSupportedAbis) is not supported in .NET 6 and higher.
 + XA0100: EmbeddedNativeLibrary is invalid in Android Application projects. Please use AndroidNativeLibrary instead.
 + [XA0101](xa0101.md): warning XA0101: @(Content) build action is not supported.
 + [XA0102](xa0102.md): Generic `lint` Warning.
@@ -59,7 +59,7 @@ ms.date: 01/24/2020
 + [XA0109](xa0109.md): Unsupported or invalid `$(TargetFrameworkVersion)` value of 'v4.5'.
 + [XA0111](xa0111.md): Could not get the `aapt2` version. Please check it is installed correctly.
 + [XA0112](xa0112.md): `aapt2` is not installed. Disabling `aapt2` support. Please check it is installed correctly.
-+ [XA0113](xa0113.md): Google Play requires that new applications and updates must use a TargetFrameworkVersion of v8.0 (API level 26) or above.
++ [XA0113](xa0113.md): Google Play requires that new applications and updates must use a TargetFrameworkVersion of v10.0 (API level 29) or above.
 + [XA0115](xa0115.md): Invalid value 'armeabi' in $(AndroidSupportedAbis). This ABI is no longer supported. Please update your project properties to remove the old value. If the properties page does not show an 'armeabi' checkbox, un-check and re-check one of the other ABIs and save the changes.
 + [XA0116](xa0116.md): Unable to find `EmbeddedResource` named `{ResourceName}`.
 + [XA0117](xa0117.md): The TargetFrameworkVersion {TargetFrameworkVersion} is deprecated. Please update it to be v4.4 or higher.
@@ -69,6 +69,15 @@ ms.date: 01/24/2020
 + [XA0122](xa0122.md): Assembly '{assembly}' is using a deprecated attribute '[assembly: Java.Interop.DoNotPackageAttribute]'. Use a newer version of this NuGet package or notify the library author.
 + XA0123: Removing {issue} from {propertyName}. Lint {version} does not support this check.
 + [XA0124](xa0124.md): Interpreter is not supported by the x86 ABI
++ [XA0125](xa0125.md): `{Project}` is using a deprecated debug information level.
+Set the debugging information to Portable in the Visual Studio project property pages or edit the project file in a text editor and set the 'DebugType' MSBuild property to 'portable' to use the newer, cross-platform debug information level.
+If this file comes from a NuGet package, update to a newer version of the NuGet package or notify the library author.
++ [XA0126](xa0126.md): Error installing FastDev Tools. This device does not support Fast Deployment. Please rebuild your app using `EmbedAssembliesIntoApk = True`.
++ [XA0127](xa0127.md): There was an issue deploying {destination} using {FastDevTool}. We encountered the following error {output}. Please rebuild your app using `EmbedAssembliesIntoApk = True`.
++ [XA0128](xa0128.md): Stdio Redirection is enabled. Please disable it to use Fast Deployment.
++ [XA0129](xa0129.md): Error deploying `{File}`. Please disable fast deployment in the Visual Studio project property pages or edit the project file in a text editor and set the 'EmbedAssembliesIntoApk' MSBuild property to 'true'.
++ [XA0130](xa0130.md): Sorry. Fast deployment is only supported on devices running Android 5.0 (API level 21) or higher.
+Please disable fast deployment in the Visual Studio project property pages or edit the project file in a text editor and set the 'EmbedAssembliesIntoApk' MSBuild property to 'true'.
 
 ## XA1xxx: Project related
 
@@ -83,7 +92,7 @@ ms.date: 01/24/2020
 + [XA1008](xa1008.md): The TargetFrameworkVersion (Android API level {compileSdk}) is lower than the targetSdkVersion ({targetSdk}).
 + [XA1009](xa1009.md): The {assembly} is Obsolete. Please upgrade to {assembly} {version}
 + [XA1010](xa1010.md): Invalid \`$(AndroidManifestPlaceholders)\` value for Android manifest placeholders. Please use \`key1=value1;key2=value2\` format. The specified value was: `{placeholders}`
-+ [XA1011](xa1011.md): Using ProGuard with the D8 DEX compiler is no longer supported. Please set the code shrinker to \`r8\` in the Visual Studio project property pages or edit the project file in a text editor and set the \`AndroidLinkTool\` MSBuild property to \`r8\`.
++ [XA1011](xa1011.md): Using ProGuard with the D8 DEX compiler is no longer supported. Please set the code shrinker to 'r8' in the Visual Studio project property pages or edit the project file in a text editor and set the 'AndroidLinkTool' MSBuild property to 'r8'.
 + XA1012: Included layout root element override ID '{id}' is not valid.
 + XA1013: Failed to parse ID of node '{name}' in the layout file '{file}'.
 + XA1014: JAR library references with identical file names but different contents were found: {libraries}. Please remove any conflicting libraries from EmbeddedJar, InputJar and AndroidJavaLibrary.
@@ -96,11 +105,14 @@ ms.date: 01/24/2020
 + XA1021: Specified source Java library not found: {file}
 + XA1022: Specified reference Java library not found: {file}
 + [XA1023](xa1023.md): Using the DX DEX Compiler is deprecated.
-+ [XA1024](xa1024.md): Ignoring configuration file 'Foo.dll.config'. .NET configuration files are not supported in Xamarin.Android projects that target .NET 5 or higher.
++ [XA1024](xa1024.md): Ignoring configuration file 'Foo.dll.config'. .NET configuration files are not supported in Xamarin.Android projects that target .NET 6 or higher.
++ [XA1025](xa1025.md): The experimental 'Hybrid' value for the 'AndroidAotMode' MSBuild property is not currently compatible with the armeabi-v7a target ABI.
++ [XA1027](xa1027.md): The 'EnableProguard' MSBuild property is set to 'true' and the 'AndroidLinkTool' MSBuild property is empty, so 'AndroidLinkTool' will default to 'proguard'.
++ [XA1028](xa1028.md): The 'AndroidEnableProguard' MSBuild property is set to 'true' and the 'AndroidLinkTool' MSBuild property is empty, so 'AndroidLinkTool' will default to 'proguard'.
 
 ## XA2xxx: Linker
 
-+ [XA2000](xa2000.md): Use of AppDomain.CreateDomain() detected in assembly: {assembly}. .NET 5 will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 5 is released.
++ [XA2000](xa2000.md): Use of AppDomain.CreateDomain() detected in assembly: {assembly}. .NET 6 will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 6 is released.
 + [XA2001](xa2001.md): Source file '{filename}' could not be found.
 + [XA2002](xa2002.md): Can not resolve reference: \`{missing}\`, referenced by {assembly}. Perhaps it doesn't exist in the Mono for Android profile?
 + XA2006: Could not resolve reference to '{member}' (defined in assembly '{assembly}') with scope '{scope}'. When the scope is different from the defining assembly, it usually means that the type is forwarded.
@@ -233,6 +245,7 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `DES` - `Desugar`
 * `DJL` - `DetermineJavaLibrariesToCompile`
 * `DX8` - `D8`
+* `FD`  - `FastDeploy`
 * `FLB` - `FindLayoutsToBind`
 * `FLT` - `FilterAssemblies`
 * `GAD` - `GetAndroidDefineConstants`

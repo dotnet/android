@@ -356,7 +356,6 @@ namespace Android.Runtime {
 			JNIEnv.DeleteLocalRef (r);
 		}
 		
-		[Preserve (Conditional=true)]
 		public static IDictionary? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
@@ -371,7 +370,6 @@ namespace Android.Runtime {
 			return (IDictionary) inst;
 		}
 
-		[Preserve (Conditional=true)]
 		public static IntPtr ToLocalJniHandle (IDictionary? dictionary)
 		{
 			if (dictionary == null)
@@ -638,7 +636,6 @@ namespace Android.Runtime {
 			return ContainsKey (key);
 		}
 		
-		[Preserve (Conditional=true)]
 		public static IDictionary<K, V>? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
@@ -653,7 +650,6 @@ namespace Android.Runtime {
 			return (IDictionary<K, V>) inst;
 		}
 
-		[Preserve (Conditional=true)]
 		public static IntPtr ToLocalJniHandle (IDictionary<K, V>? dictionary)
 		{
 			if (dictionary == null)

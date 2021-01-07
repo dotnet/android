@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -29,11 +29,13 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				return !Log.HasLoggedErrors;
 			}
 
+			var timeoutInMS = (int) TimeSpan.FromMinutes (12).TotalMilliseconds;
 			bool finishAsExpected = false;
+			bool processTimedOut = false;
 			var success = RunProcess (
 				fileInfo.FullName,
 				$"--devicename {DeviceName}",
-				5 * 60000,
+				timeoutInMS,
 				(string data, ManualResetEvent mre) => {
 					Log.LogMessage (MessageImportance.High, $"CheckBootTimes ({DateTime.UtcNow}): {data}");
 					if (!string.IsNullOrWhiteSpace (data) && data.IndexOf ("Check-Boot-Times Done.", StringComparison.OrdinalIgnoreCase) != -1) {
@@ -42,10 +44,18 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 					}
 
 					return true;
-				});
+				},
+				() => {
+					processTimedOut = true;
+				}
+			);
 
 			if (!success || !finishAsExpected) {
-				Log.LogError ("check-boot-times did not run as expected, please see logs for more info.");
+				if (processTimedOut) {
+					Log.LogError ($"Process '{fileInfo.FullName} --devicename {DeviceName}' timed out after {timeoutInMS} ms.");
+				} else {
+					Log.LogError ("check-boot-times did not run as expected, please see logs for more info.");
+				}
 				CloseProcesses ();
 				return false;
 			}

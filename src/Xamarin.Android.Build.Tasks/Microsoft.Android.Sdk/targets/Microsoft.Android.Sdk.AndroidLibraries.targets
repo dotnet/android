@@ -1,0 +1,111 @@
+<!--
+***********************************************************************************************
+Microsoft.Android.Sdk.AndroidLibraries.targets
+
+This file contains the .NET 5-specific targets related to
+@(AndroidLibrary) items and .aar files generation for class library
+projects.
+
+***********************************************************************************************
+-->
+<Project>
+
+  <UsingTask TaskName="Xamarin.Android.Tasks.CreateAar"          AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.ExtractJarsFromAar" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+
+  <PropertyGroup>
+    <_AarCacheFile>$(IntermediateOutputPath)$(TargetName).aar.cache</_AarCacheFile>
+    <_AarOutputPath>$(OutputPath)$(TargetName).aar</_AarOutputPath>
+  </PropertyGroup>
+
+  <Target Name="_ResolveAars" Condition=" '$(AndroidApplication)' == 'true' ">
+    <ItemGroup>
+      <_AarSearchDirectory   Include="@(_ReferencePath->'%(RootDir)%(Directory)')" />
+      <_AarSearchDirectory   Include="@(_ReferenceDependencyPaths->'%(RootDir)%(Directory)')" />
+      <_AarDistinctDirectory Include="@(_AarSearchDirectory->Distinct())" />
+      <_AarFromLibraries     Include="%(_AarDistinctDirectory.Identity)*.aar" />
+    </ItemGroup>
+    <ItemGroup Condition=" '@(_AarFromLibraries->Count())' != '0' ">
+      <AndroidAarLibrary Include="@(_AarFromLibraries)" Exclude="@(AndroidAarLibrary)" />
+      <!--
+        NOTE: %(AndroidSkipResourceProcessing) is required for located .aar's; there could be custom views.
+        Update in a second step, in case there is was an existing @(AndroidAarLibrary) with the same path.
+      -->
+      <AndroidAarLibrary Update="@(_AarFromLibraries)" AndroidSkipResourceProcessing="false" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_CreateAarCache"
+      Condition=" '$(AndroidApplication)' != 'true' ">
+    <ItemGroup>
+      <_CreateAarInputs Include="@(AndroidAsset)" />
+      <_CreateAarInputs Include="@(_AndroidResourceDest)" />
+      <_CreateAarInputs Include="@(AndroidEnvironment)" />
+      <_CreateAarInputs Include="@(AndroidJavaLibrary)" />
+      <_CreateAarInputs Include="@(EmbeddedJar)" />
+      <_CreateAarInputs Include="@(EmbeddedNativeLibrary)" />
+    </ItemGroup>
+    <Hash
+        ItemsToHash="@(_CreateAarInputs)"
+        IgnoreCase="false">
+      <Output TaskParameter="HashResult" PropertyName="_AarDependencyHash" />
+    </Hash>
+    <WriteLinesToFile
+        Condition=" '$(_AarDependencyHash)' != '' "
+        Lines="$(_AarDependencyHash)"
+        File="$(_AarCacheFile)"
+        Overwrite="True"
+        WriteOnlyWhenDifferent="True"
+    />
+    <ItemGroup Condition=" '$(_AarDependencyHash)' != '' ">
+      <_CreateAarInputs Include="$(_AarCacheFile)" />
+      <FileWrites       Include="$(_AarCacheFile)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_CreateAar"
+      Condition=" '$(AndroidApplication)' != 'true' "
+      DependsOnTargets="_CreateAarCache"
+      Inputs="@(_CreateAarInputs)"
+      Outputs="$(_AarOutputPath)">
+    <CreateAar
+        AssetDirectory="$(MonoAndroidAssetsPrefix)"
+        AndroidAssets="@(AndroidAsset)"
+        AndroidResources="@(_AndroidResourceDest)"
+        AndroidEnvironment="@(AndroidEnvironment)"
+        JarFiles="@(AndroidJavaLibrary);@(EmbeddedJar)"
+        NativeLibraries="@(EmbeddedNativeLibrary)"
+        OutputFile="$(_AarOutputPath)"
+    />
+    <ItemGroup>
+      <FileWrites Include="$(_AarOutputPath)" />
+    </ItemGroup>
+  </Target>
+
+  <PropertyGroup>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_IncludeAarInNuGetPackage</TargetsForTfmSpecificContentInPackage>
+  </PropertyGroup>
+  <Target Name="_IncludeAarInNuGetPackage"
+      Condition=" '$(IncludeBuildOutput)' != 'false' and '$(AndroidApplication)' != 'true' and Exists('$(_AarOutputPath)') ">
+    <GetNuGetShortFolderName
+        TargetFrameworkMoniker="$(TargetFrameworkMoniker)"
+        TargetPlatformMoniker="$(TargetPlatformMoniker)">
+      <Output TaskParameter="NuGetShortFolderName" PropertyName="_NuGetShortFolderName" />
+    </GetNuGetShortFolderName>
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="$(_AarOutputPath)" PackagePath="lib\$(_NuGetShortFolderName)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_ExtractAar"
+      Inputs="@(LibraryProjectZip)"
+      Outputs="$(_AndroidStampDirectory)_ExtractAar.stamp">
+    <ExtractJarsFromAar
+        OutputJarsDirectory="$(IntermediateOutputPath)library_project_jars"
+        OutputAnnotationsDirectory="$(IntermediateOutputPath)library_project_annotations"
+        Libraries="@(LibraryProjectZip)"
+    />
+    <Touch Files="$(_AndroidStampDirectory)_ExtractAar.stamp" AlwaysCreate="true" />
+  </Target>
+
+</Project>

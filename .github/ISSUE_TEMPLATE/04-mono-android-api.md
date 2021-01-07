@@ -46,11 +46,16 @@ If you have a repro project, you may drag & drop the .zip/etc. onto the issue ed
 ### Log File
 
 <!--
-1. On macOS and within Visual Studio:
-    a. Click **Tools** > **SDK Command Prompt**.
-    b. Within the launched `Terminal.app` window, run:
+1. Within Visual Studio:
+    a. Click **Tools** > **SDK Command Prompt** on macOS or
+       **Tools** > **Android** > **Android Adb Command Prompt** on Windows
+    b. On macOS, in the launched `Terminal.app` window, run:
 
             adb logcat -d | pbcopy
+
+       On Windows, in the launched `cmd.exe` window, run:
+
+            adb logcat -d | clip
 
 2. Paste below this comment block
 -->

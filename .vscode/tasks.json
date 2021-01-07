@@ -6,7 +6,7 @@
         {
             "label": "Build Xamarin.Android Build Tasks",
             "type": "shell",
-            "command": "msbuild src/Xamarin.Android.Build.Tasks/Xamarin.Android.Build.Tasks.csproj /restore /t:Build",
+            "command": "msbuild src/Xamarin.Android.Build.Tasks/Xamarin.Android.Build.Tasks.csproj /restore /t:Build /p:Configuration=${input:configuration}",
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -18,7 +18,7 @@
         {
             "label": "Clean Xamarin.Android Build Tasks",
             "type": "shell",
-            "command": "msbuild src/Xamarin.Android.Build.Tasks/Xamarin.Android.Build.Tasks.csproj /restore /t:Clean",
+            "command": "msbuild src/Xamarin.Android.Build.Tasks/Xamarin.Android.Build.Tasks.csproj /restore /t:Clean /p:Configuration=${input:configuration}",
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -30,7 +30,7 @@
         {
             "label": "Build Xamarin.Android Build Test Tasks",
             "type": "shell",
-            "command": "msbuild src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/Xamarin.Android.Build.Tests.csproj /restore /t:Build",
+            "command": "msbuild src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/Xamarin.Android.Build.Tests.csproj /restore /t:Build /p:Configuration=${input:configuration}",
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -42,7 +42,7 @@
         {
             "label": "Build Xamarin.Android Build Device Tests",
             "type": "shell",
-            "command": "msbuild tests/MSBuildDeviceIntegration/MSBuildDeviceIntegration.csproj /restore /t:Build",
+            "command": "msbuild tests/MSBuildDeviceIntegration/MSBuildDeviceIntegration.csproj /restore /t:Build /p:Configuration=${input:configuration}",
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -54,7 +54,7 @@
         {
             "label": "Build Xamarin.Android Build Commercial Tests",
             "type": "shell",
-            "command": "msbuild external/monodroid/tests/msbuild/nunit/Xamarin.Android.Build.Tests/Xamarin.Android.Build.Tests/Xamarin.Android.Build.Tests.csproj /restore /t:Build",
+            "command": "msbuild external/monodroid/tests/msbuild/nunit/Xamarin.Android.Build.Tests/Xamarin.Android.Build.Tests/Xamarin.Android.Build.Tests.csproj /restore /t:Build /p:Configuration=${input:configuration}",
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -66,7 +66,7 @@
         {
             "label": "Run Xamarin.Android Build Tasks Unit Tests",
             "type": "shell",
-            "command": "msbuild Xamarin.Android.sln /t:RunNunitTests",
+            "command": "msbuild Xamarin.Android.sln /t:RunNunitTests /p:Configuration=${input:configuration}",
             "group": {
                 "kind": "test",
                 "isDefault": true
@@ -78,7 +78,7 @@
         {
           "label": "build-emulator-checkboottimes",
           "type": "shell",
-          "command": "msbuild build-tools/check-boot-times/check-boot-times.csproj",
+          "command": "msbuild build-tools/check-boot-times/check-boot-times.csproj /p:Configuration=${input:configuration}",
           "group": {
               "kind": "build",
               "isDefault": true
@@ -87,5 +87,14 @@
               "$msCompile"
           ]
       },
+    ],
+    "inputs": [
+      {
+        "id": "configuration",
+        "type": "pickString",
+        "default": "Debug",
+        "description": "The Build Configuration",
+        "options": [ "Debug", "Release"]
+      }
     ]
 }

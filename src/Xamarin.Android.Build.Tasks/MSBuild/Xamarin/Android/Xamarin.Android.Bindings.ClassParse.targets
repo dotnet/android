@@ -14,9 +14,12 @@ This file is only used by binding projects.
   <UsingTask TaskName="Xamarin.Android.Tasks.ClassParse" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 
   <Target Name="_ExportJarToXml"
-      Inputs="@(EmbeddedJar);@(EmbeddedReferenceJar);@(InputJar);@(ReferenceJar);$(MSBuildAllProjects)"
+      DependsOnTargets="_ExtractJavadocsFromJavaSourceJars"
+      Inputs="@(EmbeddedJar);@(EmbeddedReferenceJar);@(InputJar);@(ReferenceJar);@(_AndroidMSBuildAllProjects)"
       Outputs="$(ApiOutputFile)">
+
     <ItemGroup>
+      <_AndroidDocumentationPath Include="@(_JavaSourceJavadocXml)" />
       <_AndroidDocumentationPath Include="@(JavaDocIndex->'%(RootDir)\%(Directory)')" />
       <_AndroidDocumentationPath Include="$(JavaDocPaths)" />
       <_AndroidDocumentationPath Include="$(Java7DocPaths)" />
@@ -39,7 +42,43 @@ This file is only used by binding projects.
         MonoAndroidFrameworkDirectories="$(_XATargetFrameworkDirectories)"
         ToolPath="$(MonoAndroidToolsDirectory)"
         ToolExe="$(BindingsGeneratorToolExe)"
+        Nullable="$(Nullable)"
     />
+  </Target>
+
+  <Target Name="_GetJavaSourceJarJavadocFiles"
+      Condition=" '$(_UseLegacyJavadocImport)' != 'True' And '@(JavaSourceJar->Count())' != '0' ">
+    <ComputeHash
+        CopyMetadata="True"
+        Source="@(JavaSourceJar)">
+      <Output TaskParameter="Output" ItemName="_JavaSourceJarHashes" />
+    </ComputeHash>
+    <ItemGroup>
+      <_JavaSourceJavadocXml Include="@(_JavaSourceJarHashes->'$(IntermediateOutputPath)javadoc-%(Filename)-%(Hash).xml')" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_ExtractJavadocsFromJavaSourceJars"
+      Condition=" '$(_UseLegacyJavadocImport)' != 'True' And '@(JavaSourceJar->Count())' != '0' "
+      DependsOnTargets="_GetJavaSourceJarJavadocFiles"
+      Inputs="@(JavaSourceJar)"
+      Outputs="@(_JavaSourceJavadocXml)">
+    <JavaSourceUtils
+        ContinueOnError="True"
+        JavaSourceUtilsJar="$(AndroidJavaSourceUtilsJar)"
+        InputFiles="%(_JavaSourceJavadocXml.OriginalItemSpec)"
+        JavadocCopyrightFile="%(_JavaSourceJavadocXml.CopyrightFile)"
+        JavadocUrlPrefix="%(_JavaSourceJavadocXml.UrlPrefix)"
+        JavadocUrlStyle="%(_JavaSourceJavadocXml.UrlStyle)"
+        JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
+        JavaOptions="$(JavaOptions)"
+        JavaSdkDirectory="$(_JavaSdkDirectory)"
+        OutputJavadocXml="%(_JavaSourceJavadocXml.Identity)"
+        References="@(JavaSourceJar)"
+    />
+    <ItemGroup>
+      <FileWrites Include="@(_JavaSourceJavadocXml)" />
+    </ItemGroup>
   </Target>
 
 </Project>

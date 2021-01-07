@@ -37,6 +37,17 @@ namespace Xamarin.ProjectTools
 			{
 			}
 		}
+		public class AndroidLibrary : BuildItem
+		{
+			public AndroidLibrary (string include)
+				: this (() => include)
+			{
+			}
+			public AndroidLibrary (Func<string> include)
+				: base (AndroidBuildActions.AndroidLibrary, include)
+			{
+			}
+		}
 		public class AndroidLintConfig : BuildItem 
 		{
 			public AndroidLintConfig (string include)

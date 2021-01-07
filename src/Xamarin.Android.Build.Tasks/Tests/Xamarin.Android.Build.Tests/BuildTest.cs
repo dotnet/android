@@ -56,6 +56,43 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		public static string GetLinkedPath (ProjectBuilder builder, bool isRelease, string filename)
+		{
+			return Builder.UseDotNet && isRelease ?
+				builder.Output.GetIntermediaryPath (Path.Combine ("android.21-arm64", "linked", filename)) :
+				builder.Output.GetIntermediaryPath (Path.Combine ("android", "assets", filename));
+		}
+
+		[Test]
+		public void BuildReleaseArm64 ([Values (false, true)] bool forms)
+		{
+			var proj = forms ?
+				new XamarinFormsAndroidApplicationProject () :
+				new XamarinAndroidApplicationProject ();
+			proj.IsRelease = true;
+			proj.SetAndroidSupportedAbis ("arm64-v8a");
+			proj.SetProperty ("LinkerDumpDependencies", "True");
+
+			if (forms) {
+				proj.PackageReferences.Clear ();
+				proj.PackageReferences.Add (KnownPackages.XamarinForms_4_7_0_1142);
+
+				if (Builder.UseDotNet)
+					proj.AddDotNetCompatPackages ();
+			}
+
+			// use BuildHelper.CreateApkBuilder so that the test directory is not removed in tearup
+			using (var b = BuildHelper.CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+				var depsFilename = "linker-dependencies.xml.gz";
+				var depsFile = Builder.UseDotNet
+					? GetLinkedPath (b, true, depsFilename)
+					: Path.Combine (proj.Root, b.ProjectDirectory, depsFilename);
+				FileAssert.Exists (depsFile);
+			}
+		}
+
 		static readonly object [] BuildHasNoWarningsSource = new object [] {
 			new object [] {
 				/* isRelease */     false,
@@ -115,7 +152,6 @@ namespace Xamarin.Android.Build.Tests
 				// Disable fast deployment for aabs, because we give:
 				//	XA0119: Using Fast Deployment and Android App Bundles at the same time is not recommended.
 				proj.EmbedAssembliesIntoApk = true;
-				proj.AndroidUseSharedRuntime = false;
 			}
 			proj.SetProperty ("XamarinAndroidSupportSkipVerifyVersions", "True"); // Disables API 29 warning in Xamarin.Build.Download
 			proj.SetProperty ("AndroidPackageFormat", packageFormat);
@@ -256,9 +292,7 @@ class MemTest {
 				className = "Landroid/appcompat/app/AppCompatActivity;";
 				Assert.IsFalse (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should *not* include `{className}`!");
 				// FormsAppCompatActivity should inherit the AndroidX C# type
-				var forms = Builder.UseDotNet && isRelease ?
-					b.Output.GetIntermediaryPath (Path.Combine ("linked", "Xamarin.Forms.Platform.Android.dll")) :
-					b.Output.GetIntermediaryPath (Path.Combine ("android", "assets", "Xamarin.Forms.Platform.Android.dll"));
+				var forms = GetLinkedPath (b, isRelease, "Xamarin.Forms.Platform.Android.dll");
 				using (var assembly = AssemblyDefinition.ReadAssembly (forms)) {
 					var activity = assembly.MainModule.GetType ("Xamarin.Forms.Platform.Android.FormsAppCompatActivity");
 					Assert.AreEqual ("AndroidX.AppCompat.App.AppCompatActivity", activity.BaseType.FullName);
@@ -327,14 +361,14 @@ class MemTest {
 		}
 
 		[Test]
-		[Category ("SmokeTests"), Category ("DotNetIgnore")] // <ProcessGoogleServicesJson/> task is built for net45]
+		[Category ("SmokeTests")]
 		[NonParallelizable] // parallel NuGet restore causes failures
 		public void BuildXamarinFormsMapsApplication ([Values (true, false)] bool multidex)
 		{
 			var proj = new XamarinFormsMapsApplicationProject ();
 			if (multidex)
 				proj.SetProperty ("AndroidEnableMultiDex", "True");
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first should have succeeded.");
 				b.BuildLogFile = "build2.log";
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second should have succeeded.");
@@ -343,24 +377,24 @@ class MemTest {
 					"_UpdateAndroidResgen",
 				};
 				foreach (var target in targets) {
-					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped.");
+					b.Output.AssertTargetIsSkipped (target);
 				}
 				proj.Touch ("MainPage.xaml");
 				b.BuildLogFile = "build3.log";
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "third should have succeeded.");
 				foreach (var target in targets) {
-					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped.");
+					b.Output.AssertTargetIsSkipped (target);
 				}
-				Assert.IsFalse (b.Output.IsTargetSkipped ("CoreCompile"), $"`CoreCompile` should not be skipped.");
+				b.Output.AssertTargetIsNotSkipped ("CoreCompile");
 				b.BuildLogFile = "build4.log";
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "forth should have succeeded.");
 				foreach (var target in targets) {
-					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped.");
+					b.Output.AssertTargetIsSkipped (target);
 				}
 			}
 		}
 
-		[Test]
+		[Test, Ignore ("Deprecated CodeAnalysis feature is broken in 16.8: https://developercommunity.visualstudio.com/solutions/1255925/view.html")]
 		public void CodeAnalysis ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
@@ -377,9 +411,10 @@ class MemTest {
 		[NonParallelizable]
 		public void SkipConvertResourcesCases ([Values (false, true)] bool useAapt2)
 		{
+			AssertAaptSupported (useAapt2);
 			var target = "ConvertResourcesCases";
 			var proj = new XamarinFormsAndroidApplicationProject ();
-			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			proj.AndroidUseAapt2 = useAapt2;
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidAarLibrary", "Jars\\material-menu-1.1.0.aar") {
 				WebContent = "https://repo.jfrog.org/artifactory/libs-release-bintray/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar"
 			});
@@ -728,8 +763,8 @@ namespace UnamedProject
 			};
 			proj.SetProperty ("AndroidPackageFormat", packageFormat);
 			if (packageFormat == "aab")
-				// Disable the shared runtime for aabs because it is not currently compatible and so gives an XA0119 build error.
-				proj.AndroidUseSharedRuntime = false;
+				// Disable fast deployment for aabs because it is not currently compatible and so gives an XA0119 build error.
+				proj.EmbedAssembliesIntoApk = true;
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
@@ -961,7 +996,6 @@ namespace UnamedProject
 
 		[Test]
 		[NonParallelizable] // On MacOS, parallel /restore causes issues
-		[Category ("SmokeTests")]
 		public void BuildProguardEnabledProject ([Values (true, false)] bool isRelease, [Values ("dx", "d8")] string dexTool, [Values ("", "proguard", "r8")] string linkTool)
 		{
 			AssertDexToolSupported (dexTool);
@@ -1347,11 +1381,6 @@ namespace App1
 					},
 				},
 			};
-			//DebugType=Full produces mdbs on Windows
-			if (IsWindows) {
-				lib.DebugProperties.Add (new Property ("", "DebugType", "portable"));
-				proj.DebugProperties.Add (new Property ("", "DebugType", "portable"));
-			}
 			proj.SetProperty (KnownProperties.AndroidLinkMode, AndroidLinkMode.None.ToString ());
 			using (var libb = CreateDllBuilder (Path.Combine (path, "Library1"))) {
 				Assert.IsTrue (libb.Build (lib), "Library1 Build should have succeeded.");
@@ -1388,6 +1417,7 @@ namespace App1
 		}
 
 		[Test]
+		[Category ("DotNetIgnore")] // .mdb and non-portable .pdb files not supported in .NET 5+
 		public void BuildBasicApplicationCheckMdbAndPortablePdb ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -1409,6 +1439,7 @@ namespace App1
 				};
 				proj.References.Add (netStandardpdb);
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				StringAssertEx.Contains ("XA0125", b.LastBuildOutput, "Output should contain XA0125 warnings");
 				var pdbToMdbPath = Path.Combine (Root, b.ProjectDirectory, "PdbTestLibrary.dll.mdb");
 				Assert.IsTrue (
 					File.Exists (pdbToMdbPath),
@@ -1465,21 +1496,55 @@ namespace App1
 		}
 
 		[Test]
-		public void BuildApplicationCheckItEmitsAWarningWithContentItems ()
+		public void CheckContentBuildAction ()
 		{
-			var proj = new XamarinAndroidApplicationProject ();
-			using (var b = CreateApkBuilder ("temp/BuildApplicationCheckItEmitsAWarningWithContentItems")) {
-				b.ThrowOnBuildFailure = false;
+			var metadata = "CopyToOutputDirectory=PreserveNewest";
+			var path = Path.Combine ("temp", TestName);
+
+			var lib = new XamarinAndroidLibraryProject {
+				ProjectName = "Library1",
+				Sources = {
+					new BuildItem.Source ("Bar.cs") {
+						TextContent = () => "public class Bar { }"
+					},
+				},
+				OtherBuildItems = {
+					new BuildItem.Content ("TestContent.txt") {
+						TextContent = () => "Test Content from Library",
+						MetadataValues = metadata,
+					}
+				}
+			};
+
+			var proj = new XamarinAndroidApplicationProject {
+				ProjectName = "App",
+				Sources = {
+					new BuildItem.Source ("Foo.cs") {
+						TextContent = () => "public class Foo : Bar { }"
+					},
+				},
+				References = {
+					new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj"),
+				}
+			};
+			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
+			using (var appBuilder = CreateApkBuilder (Path.Combine (path, proj.ProjectName))) {
+				Assert.IsTrue (libBuilder.Build (lib), "library should have built successfully");
+				StringAssertEx.Contains ("TestContent.txt : warning XA0101: @(Content) build action is not supported", libBuilder.LastBuildOutput,
+					"Build Output did not contain 'TestContent.txt : warning XA0101'.");
+
 				proj.AndroidResources.Add (new BuildItem.Content ("TestContent.txt") {
-					TextContent = () => "Test Content"
+					TextContent = () => "Test Content",
+					MetadataValues = metadata,
 				});
 				proj.AndroidResources.Add (new BuildItem.Content ("TestContent1.txt") {
-					TextContent = () => "Test Content 1"
+					TextContent = () => "Test Content 1",
+					MetadataValues = metadata,
 				});
-				Assert.IsTrue (b.Build (proj), "Build should have built successfully");
-				StringAssertEx.Contains ("TestContent.txt : warning XA0101: @(Content) build action is not supported", b.LastBuildOutput,
+				Assert.IsTrue (appBuilder.Build (proj), "app should have built successfully");
+				StringAssertEx.Contains ("TestContent.txt : warning XA0101: @(Content) build action is not supported", appBuilder.LastBuildOutput,
 					"Build Output did not contain 'TestContent.txt : warning XA0101'.");
-				StringAssertEx.Contains ("TestContent1.txt : warning XA0101: @(Content) build action is not supported", b.LastBuildOutput,
+				StringAssertEx.Contains ("TestContent1.txt : warning XA0101: @(Content) build action is not supported", appBuilder.LastBuildOutput,
 					"Build Output did not contain 'TestContent1.txt : warning XA0101'.");
 			}
 		}
@@ -2000,7 +2065,7 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				builder.ThrowOnBuildFailure = false;
 				Assert.IsFalse (builder.Build (proj), "Build should have failed.");
-				Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, $"error XA4301: Cannot determine ABI of native library not-a-real-abi{Path.DirectorySeparatorChar}libtest.so."),
+				Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, $"error XA4301: Cannot determine ABI of native library 'not-a-real-abi{Path.DirectorySeparatorChar}libtest.so'. Move this file to a directory with a valid Android ABI name such as 'libs/armeabi-v7a/'."),
 					"error about libtest.so should have been raised");
 			}
 		}
@@ -2009,26 +2074,30 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 		[Category ("SmokeTests")]
 		public void BuildWithExternalJavaLibrary ()
 		{
-			var path = Path.Combine ("temp", "BuildWithExternalJavaLibrary");
-			var binding = new XamarinAndroidBindingProject () {
+			var path = Path.Combine ("temp", TestName);
+			var binding = new XamarinAndroidBindingProject {
 				ProjectName = "BuildWithExternalJavaLibraryBinding",
 				AndroidClassParser = "class-parse",
 			};
 			using (var bbuilder = CreateDllBuilder (Path.Combine (path, "BuildWithExternalJavaLibraryBinding"))) {
-				string multidex_path = TestEnvironment.IsRunningOnCI ? TestEnvironment.MonoAndroidToolsDirectory : @"$(MonoDroidInstallDirectory)\lib\xamarin.android\xbuild\Xamarin\Android";
-				string multidex_jar = $@"{multidex_path}\android-support-multidex.jar";
+				string multidex_path = TestEnvironment.IsRunningOnCI ?
+					TestEnvironment.MonoAndroidToolsDirectory :
+					Path.Combine (XABuildPaths.PrefixDirectory, "lib", "xamarin.android", "xbuild", "Xamarin", "Android");
+				string multidex_jar = Path.Combine (multidex_path, "android-support-multidex.jar");
 				binding.Jars.Add (new AndroidItem.InputJar (() => multidex_jar));
 
-				Assert.IsTrue (bbuilder.Build (binding));
-				var proj = new XamarinAndroidApplicationProject () {
+				Assert.IsTrue (bbuilder.Build (binding), "Binding build should succeed.");
+				var proj = new XamarinAndroidApplicationProject {
 					References = { new BuildItem ("ProjectReference", "..\\BuildWithExternalJavaLibraryBinding\\BuildWithExternalJavaLibraryBinding.csproj"), },
 					OtherBuildItems = { new BuildItem ("AndroidExternalJavaLibrary", multidex_jar) },
-					Sources = { new BuildItem ("Compile", "Foo.cs") {
+					Sources = {
+						new BuildItem ("Compile", "Foo.cs") {
 							TextContent = () => "public class Foo { public void X () { new Android.Support.Multidex.MultiDexApplication (); } }"
-						} },
+						}
+					},
 				};
 				using (var builder = CreateApkBuilder (Path.Combine (path, "BuildWithExternalJavaLibrary"))) {
-					Assert.IsTrue (builder.Build (proj));
+					Assert.IsTrue (builder.Build (proj), "App build should succeed");
 				}
 			}
 		}
@@ -2166,6 +2235,7 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 		[Test]
 		public void AarContentExtraction ([Values (false, true)] bool useAapt2)
 		{
+			AssertAaptSupported (useAapt2);
 			var aar = new AndroidItem.AndroidAarLibrary ("Jars\\android-crop-1.0.1.aar") {
 				// https://mvnrepository.com/artifact/com.soundcloud.android/android-crop/1.0.1
 				WebContent = "https://repo1.maven.org/maven2/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar"
@@ -2178,19 +2248,14 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 					}
 				},
 			};
-			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			proj.AndroidUseAapt2 = useAapt2;
 			using (var builder = CreateApkBuilder ()) {
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
-				var assemblyMap = builder.Output.GetIntermediaryPath (Path.Combine ("lp", "map.cache"));
 				var cache = builder.Output.GetIntermediaryPath ("libraryprojectimports.cache");
-				Assert.IsTrue (File.Exists (assemblyMap), $"{assemblyMap} should exist.");
 				Assert.IsTrue (File.Exists (cache), $"{cache} should exist.");
-				var assemblyIdentityMap = new List<string> ();
-				foreach (var s in File.ReadLines (assemblyMap)) {
-					assemblyIdentityMap.Add (s);
-				}
+				var assemblyIdentityMap = builder.Output.GetAssemblyMapCache ();
 				var libraryProjects = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "lp");
-				FileAssert.Exists (Path.Combine (libraryProjects, assemblyIdentityMap.IndexOf ("android-crop-1.0.1").ToString (), "jl", "classes.jar"),
+				FileAssert.Exists (Path.Combine (libraryProjects, assemblyIdentityMap.IndexOf ("android-crop-1.0.1.aar").ToString (), "jl", "classes.jar"),
 					"classes.jar was not extracted from the aar.");
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
 				Assert.IsTrue (builder.Output.IsTargetSkipped ("_ResolveLibraryProjectImports"),
@@ -2377,6 +2442,7 @@ public class Test
 
 		[Test]
 		[Category ("SmokeTests"), Category ("AOT")]
+		[NonParallelizable]
 		public void BuildApplicationWithSpacesInPath ([Values (true, false)] bool enableMultiDex, [Values ("dx", "d8")] string dexTool, [Values ("", "proguard", "r8")] string linkTool)
 		{
 			AssertDexToolSupported (dexTool);
@@ -2653,13 +2719,12 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 
 		[Test]
 		[Category ("SmokeTests")]
+		[Category ("DotNetIgnore")] // .mdb and non-portable .pdb files not supported in .NET 5+
 		public void BuildBasicApplicationCheckPdb ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				EmbedAssembliesIntoApk = true,
-				AndroidUseSharedRuntime = false,
 			};
-			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugType", "portable");
 			using (var b = CreateApkBuilder ()) {
 				var reference = new BuildItem.Reference ("PdbTestLibrary.dll") {
 					WebContentFileNameFromAzure = "PdbTestLibrary.dll"
@@ -2751,6 +2816,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		}
 
 		[Test]
+		[Category ("DotNetIgnore")] // n/a in .NET 5+, test validates __AndroidLibraryProjects__.zip generation
 		public void CheckLibraryImportsUpgrade ()
 		{
 			var path = Path.Combine ("temp", TestContext.CurrentContext.Test.Name);
@@ -2814,6 +2880,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		}
 
 		[Test]
+		[Category ("DotNetIgnore")] // n/a in .NET 5+, test validates __AndroidLibraryProjects__.zip generation
 		public void AndroidLibraryProjectsZipWithOddPaths ()
 		{
 			var proj = new XamarinAndroidLibraryProject ();
@@ -2828,7 +2895,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\foo.xml") {
 				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?><resources><string name=""foo"">bar</string></resources>",
 			});
-			using (var b = CreateDllBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
+			using (var b = CreateDllBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
 				var zipFile = Path.Combine (Root, b.ProjectDirectory, b.Output.IntermediateOutputPath, "foo", "__AndroidLibraryProjects__.zip");
@@ -3137,7 +3204,6 @@ namespace UnnamedProject {
 		}
 
 		[Test]
-		[Category ("SmokeTests")]
 		public void Desugar ([Values (true, false)] bool isRelease, [Values ("dx", "d8")] string dexTool, [Values ("", "proguard", "r8")] string linkTool)
 		{
 			AssertDexToolSupported (dexTool);
@@ -3195,9 +3261,9 @@ public class MyReceiver : BroadcastReceiver
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "gson-2.7.jar") {
 				WebContent = "https://repo1.maven.org/maven2/com/google/code/gson/gson/2.7/gson-2.7.jar"
 			});
-			//Twitter SDK https://mvnrepository.com/artifact/com.twitter.sdk.android/twitter-core/3.3.0
+			//Twitter SDK https://bintray.com/twitteross/twitterkit/twitter-core/3.3.0
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidAarLibrary", "twitter-core-3.3.0.aar") {
-				WebContent = "https://repo.spring.io/libs-release/com/twitter/sdk/android/twitter-core/3.3.0/twitter-core-3.3.0.aar",
+				WebContent = "https://dl.bintray.com/twitteross/twitterkit/com/twitter/sdk/android/twitter-core/3.3.0/twitter-core-3.3.0.aar",
 			});
 			/* The source is simple:
 			 *
@@ -3337,7 +3403,6 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 		{
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty ("_XASupportsFastDev", "True");
-			proj.SetProperty (KnownProperties.AndroidUseSharedRuntime, "True");
 			proj.SetProperty (proj.DebugProperties, "AndroidLinkMode", "Full");
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				b.Target = "Build"; // SignAndroidPackage would fail for OSS builds
@@ -3351,15 +3416,11 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 		{
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty ("_XASupportsFastDev", "True");
-			proj.SetProperty (KnownProperties.AndroidUseSharedRuntime, "True");
 			proj.SetProperty ("AndroidPackageFormat", "aab");
 			using (var builder = CreateApkBuilder ()) {
 				builder.ThrowOnBuildFailure = false;
-				Assert.IsFalse (builder.Build (proj), "Build should have failed.");
-				string error = builder.LastBuildOutput
-						.SkipWhile (x => !x.StartsWith ("Build FAILED."))
-						.FirstOrDefault (x => x.Contains ("error XA0119:"));
-				Assert.IsNotNull (error, "Build should have failed with XA0119.");
+				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+				Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, "XA0119"), "Output should contain XA0119 warnings");
 			}
 		}
 
@@ -3367,7 +3428,6 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 		public void FastDeploymentDoesNotAddContentProvider ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
-				AndroidUseSharedRuntime = true,
 				EmbedAssembliesIntoApk = false,
 			};
 			proj.SetProperty ("_XASupportsFastDev", "True");
@@ -3666,6 +3726,7 @@ public class ApplicationRegistration { }");
 		[Test]
 		public void AllResourcesInClassLibrary ([Values (true, false)] bool useAapt2)
 		{
+			AssertAaptSupported (useAapt2);
 			var path = Path.Combine ("temp", TestName);
 
 			// Create a "library" with all the application stuff in it
@@ -3678,7 +3739,7 @@ public class ApplicationRegistration { }");
 				}
 			};
 			lib.SetProperty ("AndroidApplication", "False");
-			lib.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			lib.AndroidUseAapt2 = useAapt2;
 
 			// Create an "app" that is basically empty and references the library
 			var app = new XamarinAndroidLibraryProject {
@@ -3701,7 +3762,7 @@ public class ApplicationRegistration { }");
 				app.SetProperty ("AndroidResgenFile", "Resources\\Resource.designer.cs");
 				app.SetProperty ("AndroidApplication", "True");
 			}
-			app.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			app.AndroidUseAapt2 = useAapt2;
 
 			app.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
 
@@ -3821,6 +3882,9 @@ namespace UnnamedProject
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, Path.Combine ("armeabi", "libe_sqlite3.so")), "Build should not use `armeabi`.");
+				if (Builder.UseDotNet) {
+					StringAssertEx.Contains ("warning XA4301", b.LastBuildOutput, "Should get a XA4301 warning");
+				}
 			}
 		}
 
@@ -3844,8 +3908,8 @@ namespace UnnamedProject
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty ("AndroidPackageFormat", packageFormat);
 			if (packageFormat == "aab")
-				// Disable the shared runtime for aabs because it is not currently compatible and so gives an XA0119 build error.
-				proj.AndroidUseSharedRuntime = false;
+				// Disable fast deployment for aabs because it is not currently compatible and so gives an XA0119 build error.
+				proj.EmbedAssembliesIntoApk = true;
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "kotlinx-coroutines-android-1.3.2.jar") {
 				WebContent = "https://repo1.maven.org/maven2/org/jetbrains/kotlinx/kotlinx-coroutines-android/1.3.2/kotlinx-coroutines-android-1.3.2.jar"
 			});
@@ -3885,6 +3949,68 @@ namespace UnnamedProject
 						.FirstOrDefault (x => x.Contains ("error XA1018:"));
 				Assert.IsNotNull (error, "Build should have failed with XA1018.");
 				StringAssert.Contains ("DoesNotExist", error, "Error should include the name of the nonexistent file");
+			}
+		}
+
+		static readonly object [] XA1027XA1028Source = new object [] {
+			new object [] {
+				/* linkTool */                   "r8",
+				/* enableProguard */             null,
+				/* androidEnableProguard */      "true",
+				/* expectedBuildResult */        true,
+				/* expectedWarning */            "0 Warning(s)",
+			},
+			new object [] {
+				/* linkTool */                   "proguard",
+				/* enableProguard */             null,
+				/* androidEnableProguard */      "true",
+				/* expectedBuildResult */        false,
+				/* expectedWarning */            "0 Warning(s)",
+			},
+			new object [] {
+				/* linkTool */                   null,
+				/* enableProguard */             null,
+				/* androidEnableProguard */      null,
+				/* expectedBuildResult */        true,
+				/* expectedWarning */            "0 Warning(s)",
+			},
+			new object [] {
+				/* linkTool */                   null,
+				/* enableProguard */             "true",
+				/* androidEnableProguard */      null,
+				/* expectedBuildResult */        false,
+				/* expectedWarning */            "warning XA1027:",
+			},
+			new object [] {
+				/* linkTool */                   null,
+				/* enableProguard */             null,
+				/* androidEnableProguard */      "true",
+				/* expectedBuildResult */        false,
+				/* expectedWarning */            "warning XA1028:",
+			}
+		};
+
+		[Test]
+		[TestCaseSource (nameof (XA1027XA1028Source))]
+		public void XA1027XA1028 (string linkTool, string enableProguard, string androidEnableProguard, bool expectedBuildResult, string expectedWarning)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				// Make sure the test covers the scenario where `$(AndroidDexTool)` is not explicitly configured
+				DexTool = null,
+				LinkTool = linkTool,
+				IsRelease = true
+			};
+			proj.SetProperty ("EnableProguard", enableProguard);
+			proj.SetProperty ("AndroidEnableProguard", androidEnableProguard);
+			using (var builder = CreateApkBuilder ()) {
+				builder.Target = "_CheckNonIdealConfigurations";
+				builder.ThrowOnBuildFailure = expectedBuildResult;
+				builder.Build (proj);
+				Assert.IsNotNull(
+					builder.LastBuildOutput
+						.SkipWhile (x => !x.StartsWith (expectedBuildResult ? "Build succeeded." : "Build FAILED."))
+						.FirstOrDefault (x => x.Contains (expectedWarning)),
+					$"Build output should contain '{expectedWarning}'.");
 			}
 		}
 

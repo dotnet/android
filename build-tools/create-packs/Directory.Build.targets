@@ -6,28 +6,40 @@
   </ItemGroup>
 
   <Import Project="..\..\Configuration.props" />
-  <Import Project="..\..\build-tools\scripts\XAVersionInfo.targets" />
+  <Import Project="..\..\build-tools\installers\create-installers.targets" />
   <Import Project="Sdk.props" Sdk="Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk" />
   <UsingTask TaskName="CreateFrameworkListFile" AssemblyFile="$(DotNetBuildTasksSharedFrameworkTaskFile)"/>
 
-  <ItemGroup>
-    <!-- NOTE: we don't have a reference assembly for Java.Interop.dll yet -->
-    <_AndroidAppRefAssemblies Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild-frameworks\Microsoft.Android\netcoreapp3.1\Java.Interop.dll" />
-    <_AndroidAppRefAssemblies Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild-frameworks\Microsoft.Android\netcoreapp3.1\ref\Mono.Android.dll" />
-    <_AndroidAppRefAssemblies Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild-frameworks\Microsoft.Android\netcoreapp3.1\ref\Mono.Android.Export.dll" />
-    <_AndroidAppPackAssemblies Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild-frameworks\Microsoft.Android\netcoreapp3.1\Java.Interop.dll" />
-    <_AndroidAppPackAssemblies Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild-frameworks\Microsoft.Android\netcoreapp3.1\Mono.Android.dll" />
-    <_AndroidAppPackAssemblies Include="$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\xamarin.android\xbuild-frameworks\Microsoft.Android\netcoreapp3.1\Mono.Android.Export.dll" />
-    <FrameworkListFileClass Include="@(_AndroidAppPackAssemblies->'%(Filename)%(Extension)')" Profile="Android" />
-  </ItemGroup>
+  <PropertyGroup>
+    <_MonoAndroidNETOutputDir>$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\netcoreapp3.1\</_MonoAndroidNETOutputDir>
+    <_WorkloadResolverFlagFile>$(DotNetPreviewPath)sdk\$(DotNetPreviewVersionFull)\EnableWorkloadResolver.sentinel</_WorkloadResolverFlagFile>
+  </PropertyGroup>
 
- <!-- https://github.com/dotnet/runtime/blob/0647ec314948904319da5eb15e9931f7c85ed1e2/src/installer/pkg/projects/Directory.Build.targets#L281 -->
+  <!-- LICENSE setup -->
+  <PropertyGroup>
+    <NuGetLicense Condition=" '$(NuGetLicense)' == '' ">$(XamarinAndroidSourcePath)LICENSE</NuGetLicense>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+  </PropertyGroup>
+  <Target Name="_GetLicense">
+    <!-- NuGet doesn't have a way to change the filename of License.txt, so copy it -->
+    <Copy
+        SourceFiles="$(NuGetLicense)"
+        DestinationFiles="$(IntermediateOutputPath)$(PackageLicenseFile)"
+        SkipUnchangedFiles="true"
+    />
+    <ItemGroup>
+      <_PackageFiles Include="$(IntermediateOutputPath)$(PackageLicenseFile)" PackagePath="\" />
+    </ItemGroup>
+  </Target>
+
+  <!-- https://github.com/dotnet/runtime/blob/0647ec314948904319da5eb15e9931f7c85ed1e2/src/installer/pkg/projects/Directory.Build.targets#L281 -->
+  <!-- TODO: Generate PlatformManifest.txt files? -->
   <Target Name="_GenerateFrameworkListFile" >
     <!-- Hardcode framework attributes -->
     <ItemGroup>
-      <FrameworkListRootAttributes Include="Name" Value=".NET 5.0 - Android" />
+      <FrameworkListRootAttributes Include="Name" Value=".NET 6.0 - Android" />
       <FrameworkListRootAttributes Include="TargetFrameworkIdentifier" Value=".NETCoreApp" />
-      <FrameworkListRootAttributes Include="TargetFrameworkVersion" Value="5.0" />
+      <FrameworkListRootAttributes Include="TargetFrameworkVersion" Value="6.0" />
       <FrameworkListRootAttributes Include="FrameworkName" Value="Microsoft.Android" />
     </ItemGroup>
 
@@ -51,18 +63,82 @@
     </PropertyGroup>
   </Target>
 
-  <Target Name="CreateAllRuntimePacks" >
-    <Exec Command="dotnet pack -p:Configuration=$(Configuration) -p:AndroidRID=android.21-arm -p:AndroidABI=armeabi-v7a &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
-    <Exec Command="dotnet pack -p:Configuration=$(Configuration) -p:AndroidRID=android.21-arm64 -p:AndroidABI=arm64-v8a &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
-    <Exec Command="dotnet pack -p:Configuration=$(Configuration) -p:AndroidRID=android.21-x86 -p:AndroidABI=x86 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
-    <Exec Command="dotnet pack -p:Configuration=$(Configuration) -p:AndroidRID=android.21-x64 -p:AndroidABI=x86_64 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
+  <Target Name="_SetGlobalProperties">
+    <ItemGroup>
+      <_GlobalProperties Include="-p:Configuration=$(Configuration)" />
+      <_GlobalProperties Include="-p:NuGetLicense=$(NuGetLicense)" />
+    </ItemGroup>
   </Target>
 
   <Target Name="CreateAllPacks"
-      DependsOnTargets="CreateAllRuntimePacks" >
-    <Exec Command="dotnet pack -p:Configuration=$(Configuration) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Ref.proj&quot;" />
-    <Exec Command="dotnet pack -p:Configuration=$(Configuration) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.proj&quot;" />
-    <Exec Command="dotnet pack -p:Configuration=$(Configuration) &quot;$(MSBuildThisFileDirectory)Xamarin.Android.Sdk.Lite.proj&quot;" />
+      DependsOnTargets="DeleteExtractedWorkloadPacks;_SetGlobalProperties">
+    <RemoveDir Directories="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs" />
+    <Exec Command="$(DotNetPreviewTool) pack @(_GlobalProperties, ' ') -p:AndroidRID=android.21-arm -p:AndroidABI=armeabi-v7a &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
+    <Exec Command="$(DotNetPreviewTool) pack @(_GlobalProperties, ' ') -p:AndroidRID=android.21-arm64 -p:AndroidABI=arm64-v8a &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
+    <Exec Command="$(DotNetPreviewTool) pack @(_GlobalProperties, ' ') -p:AndroidRID=android.21-x86 -p:AndroidABI=x86 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
+    <Exec Command="$(DotNetPreviewTool) pack @(_GlobalProperties, ' ') -p:AndroidRID=android.21-x64 -p:AndroidABI=x86_64 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
+    <Exec Command="$(DotNetPreviewTool) pack @(_GlobalProperties, ' ') &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Ref.proj&quot;" />
+    <Exec Command="$(DotNetPreviewTool) pack @(_GlobalProperties, ' ') -p:AndroidHostRID=linux-x64 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.proj&quot;"     Condition=" '$(HostOS)' == 'Linux' " />
+    <Exec Command="$(DotNetPreviewTool) pack @(_GlobalProperties, ' ') -p:AndroidHostRID=osx-x64   &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.proj&quot;"     Condition=" '$(HostOS)' == 'Darwin' " />
+    <Exec Command="$(DotNetPreviewTool) pack @(_GlobalProperties, ' ') -p:AndroidHostRID=win-x64   &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.proj&quot;" Condition=" '$(HostOS)' != 'Linux' " /> <!-- Windows pack should be built both Windows and macOS -->
+    <Exec Command="$(DotNetPreviewTool) pack @(_GlobalProperties, ' ') &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.BundleTool.proj&quot;" />
+    <Exec Command="$(DotNetPreviewTool) pack @(_GlobalProperties, ' ') &quot;$(MSBuildThisFileDirectory)Microsoft.NET.Workload.Android.proj&quot;" />
+    <Exec Command="$(DotNetPreviewTool) pack @(_GlobalProperties, ' ') &quot;$(XamarinAndroidSourcePath)src\Microsoft.Android.Templates\Microsoft.Android.Templates.csproj&quot;" />
+  </Target>
+
+  <Target Name="ExtractWorkloadPacks"
+      DependsOnTargets="DeleteExtractedWorkloadPacks" >
+    <ItemGroup>
+      <_WLManifest Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.NET.Workload.Android.*.nupkg" />
+      <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Sdk.linux-x64.*.nupkg"   Condition=" '$(HostOS)' == 'Linux' " />
+      <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Sdk.osx-x64.*.nupkg"     Condition=" '$(HostOS)' == 'Darwin' " />
+      <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Sdk.win-x64.*.nupkg" Condition=" '$(HostOS)' == 'Windows' " />
+      <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Sdk.BundleTool.*.nupkg" />
+      <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Ref.*.nupkg" />
+      <_WLTemplates Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Templates.*.nupkg" />
+      <!-- Runtime packs are not yet supported by workloads -->
+      <!-- <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Runtime.*.nupkg" /> -->
+    </ItemGroup>
+    <PropertyGroup>
+      <_WLPackVersion>@(_WLManifest->'%(Filename)'->Replace('Microsoft.NET.Workload.Android.', ''))</_WLPackVersion>
+    </PropertyGroup>
+    <Unzip
+        SourceFiles="@(_WLManifest)"
+        DestinationFolder="$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\Microsoft.NET.Workload.Android"
+    />
+    <Unzip
+        SourceFiles="@(_WLPacks)"
+        DestinationFolder="$(DotNetPreviewPath)packs\$([System.String]::Copy('%(_WLPacks.Filename)').Replace('.$(_WLPackVersion)', ''))\$(_WLPackVersion)"
+    />
+    <MakeDir Directories="$(DotNetPreviewPath)template-packs" />
+    <Copy SourceFiles="@(_WLTemplates)" DestinationFolder="$(DotNetPreviewPath)template-packs" />
+    <ItemGroup>
+      <_UnixExecutables Include="$(DotNetPreviewPath)packs\Microsoft.Android.Sdk.*\*\tools\$(HostOS)\**\*.*" />
+      <_FilesToTouch Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\Microsoft.NET.Workload.Android\**" />
+      <_FilesToTouch Include="$(DotNetPreviewPath)packs\$([System.String]::Copy('%(_WLPacks.Filename)').Replace('.$(_WLPackVersion)', ''))\$(_WLPackVersion)\**" />
+    </ItemGroup>
+    <Exec
+        Condition=" '$(HostOS)' == 'Darwin' or '$(HostOS)' == 'Linux' "
+        Command="chmod +x &quot;%(_UnixExecutables.Identity)&quot;"
+    />
+    <!-- Some files had timestamps in the future -->
+    <Touch Files="@(_FilesToTouch)" />
+    <MakeDir Directories="$([System.IO.Path]::GetDirectoryName ($(_WorkloadResolverFlagFile)))" />
+    <Touch
+        Files="$(_WorkloadResolverFlagFile)"
+        AlwaysCreate="true"
+    />
+  </Target>
+
+  <Target Name="DeleteExtractedWorkloadPacks" >
+    <ItemGroup>
+      <_PackFilesToDelete Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\Microsoft.Android.Workload\**\*.*" />
+      <_PackFilesToDelete Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetPreviewVersionBand)\Microsoft.NET.Workload.Android\**\*.*" />
+      <_PackFilesToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android*\**\*.*" />
+      <_PackFilesToDelete Include="$(DotNetPreviewPath)template-packs\Microsoft.Android.Templates.*.nupkg" />
+    </ItemGroup>
+    <RemoveDir Directories="%(_PackFilesToDelete.RootDir)%(_PackFilesToDelete.Directory)" />
+    <Delete Files="$(_WorkloadResolverFlagFile)" />
   </Target>
 
 </Project>

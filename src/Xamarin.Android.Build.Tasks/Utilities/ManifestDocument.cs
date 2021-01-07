@@ -88,7 +88,8 @@ namespace Xamarin.Android.Tasks {
 		public bool MultiDex { get; set; }
 		public bool NeedsInternet { get; set; }
 		public bool InstantRunEnabled { get; set; }
-		public bool UseSharedRuntime { get; set; }
+		public bool ForceExtractNativeLibs { get; set; }
+		public bool ForceDebuggable { get; set; }
 		public string VersionCode {
 			get {
 				XAttribute attr = doc.Root.Attribute (androidNs + "versionCode");
@@ -376,6 +377,7 @@ namespace Xamarin.Android.Tasks {
 
 			var providerNames = AddMonoRuntimeProviders (app);
 
+			bool needDebuggable = false;
 			if (Debug) {
 				app.Add (new XComment ("suppress ExportedReceiver"));
 				app.Add (new XElement ("receiver",
@@ -386,13 +388,19 @@ namespace Xamarin.Android.Tasks {
 							new XElement ("category",
 								new XAttribute (androidNs + "name", "mono.android.intent.category.SEPPUKU." + PackageName)))));
 				if (app.Attribute (androidNs + "debuggable") == null)
-					app.Add (new XAttribute (androidNs + "debuggable", "true"));
+					needDebuggable = true;
 			}
+
+			if (ForceDebuggable || needDebuggable) {
+				XAttribute debuggable = app.Attribute (androidNs + "debuggable");
+				if (debuggable == null)
+					app.Add (new XAttribute (androidNs + "debuggable", "true"));
+				else
+					debuggable.Value = "true";
+			}
+
 			if (Debug || NeedsInternet)
 				AddInternetPermissionForDebugger ();
-
-			if (!embed)
-				AddFastDeployPermissions ();
 
 			// If the manifest has android:installLocation, but we are targeting
 			// API 7 or lower, remove it for the user and show a warning
@@ -410,10 +418,9 @@ namespace Xamarin.Android.Tasks {
 			AddUsesPermissions (app);
 			AddUsesFeatures (app);
 			AddSupportsGLTextures (app);
-			if (UseSharedRuntime && targetSdkVersionValue >= 30)
-				AddQueries (app, targetSdkVersionValue);
+
 			if (targetSdkVersionValue >= 23) {
-				if (app.Attribute (androidNs + "extractNativeLibs") == null)
+				if (ForceExtractNativeLibs || app.Attribute (androidNs + "extractNativeLibs") == null)
 					app.SetAttributeValue (androidNs + "extractNativeLibs", "true");
 			}
 
@@ -788,13 +795,6 @@ namespace Xamarin.Android.Tasks {
 				app.AddBeforeSelf (new XElement ("uses-permission", new XAttribute (attName, permInternet)));
 		}
 
-		public void AddFastDeployPermissions ()
-		{
-			const string permReadExternalStorage  ="android.permission.READ_EXTERNAL_STORAGE";
-			if (!doc.Root.Descendants ("uses-permission").Any (x => (string)x.Attribute (attName) == permReadExternalStorage))
-				app.AddBeforeSelf (new XElement ("uses-permission", new XAttribute (attName, permReadExternalStorage)));
-		}
-
 		void AddPermissions (XElement application)
 		{
 			var assemblyAttrs =
@@ -837,18 +837,6 @@ namespace Xamarin.Android.Tasks {
 				if (!application.Parent.Descendants ("uses-permission").Any (x => (string)x.Attribute (attName) == upa.Name))
 					application.AddBeforeSelf (upa.ToElement (PackageName));
 		}
-
-		void AddQueries (XElement application, int targetSdkVersion)
-		{
-			var queries = application.Parent.Element ("queries");
-			if (queries == null) {
-				application.AddAfterSelf (queries = new XElement ("queries"));
-			}
-
-			queries.Add (new XElement ("package", new XAttribute (androidNs + "name", "Mono.Android.DebugRuntime")));
-			queries.Add (new XElement ("package", new XAttribute (androidNs + "name", $"Mono.Android.Platform.ApiLevel_{targetSdkVersion}")));
-		}
-
 		void AddUsesConfigurations (XElement application, IEnumerable<UsesConfigurationAttribute> configs)
 		{
 			foreach (var uca in configs)

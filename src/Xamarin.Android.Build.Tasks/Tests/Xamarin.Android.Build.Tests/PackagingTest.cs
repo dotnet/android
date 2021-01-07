@@ -49,6 +49,24 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void CheckProguardMappingFileExists ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidDexTool, "d8");
+			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidLinkTool, "r8");
+			// Projects must provide a $(AndroidProguardMappingFile) value to opt in
+			proj.SetProperty (proj.ReleaseProperties, "AndroidProguardMappingFile", @"$(OutputPath)\mapping.txt");
+
+			using (var b = CreateApkBuilder ()) {
+				string mappingFile = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, "mapping.txt");
+				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
+				FileAssert.Exists (mappingFile, $"'{mappingFile}' should have been generated.");
+			}
+		}
+
+		[Test]
 		public void CheckIncludedAssemblies ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
@@ -62,25 +80,16 @@ namespace Xamarin.Android.Build.Tests
 					TargetFramework = "monoandroid71",
 				});
 				proj.References.Add (new BuildItem.Reference ("Mono.Data.Sqlite.dll"));
+				proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "var command = new Mono.Data.Sqlite.SqliteCommand ();");
 			}
 			var expectedFiles = Builder.UseDotNet ?
 				new [] {
 					"Java.Interop.dll",
 					"Mono.Android.dll",
-					"System.Collections.NonGeneric.dll",
-					"System.ComponentModel.Primitives.dll",
 					"System.Console.dll",
 					"System.Linq.Expressions.dll",
 					"System.ObjectModel.dll",
-					"System.Private.Uri.dll",
-					"System.Private.Xml.dll",
-					"System.Private.Xml.Linq.dll",
-					"System.Runtime.CompilerServices.Unsafe.dll",
-					"System.Runtime.Serialization.Formatters.dll",
 					"System.Runtime.Serialization.Primitives.dll",
-					"System.Security.Cryptography.Algorithms.dll",
-					"System.Security.Cryptography.Primitives.dll",
-					"System.Text.RegularExpressions.dll",
 					"System.Private.CoreLib.dll",
 					"System.Collections.Concurrent.dll",
 					"System.Collections.dll",
@@ -91,19 +100,10 @@ namespace Xamarin.Android.Build.Tests
 					"Java.Interop.dll",
 					"Mono.Android.dll",
 					"mscorlib.dll",
-					"System.Collections.Concurrent.dll",
-					"System.Collections.dll",
 					"System.Core.dll",
-					"System.Diagnostics.Debug.dll",
+					"System.Data.dll",
 					"System.dll",
-					"System.Linq.dll",
-					"System.Reflection.dll",
-					"System.Reflection.Extensions.dll",
-					"System.Runtime.dll",
-					"System.Runtime.Extensions.dll",
-					"System.Runtime.InteropServices.dll",
 					"System.Runtime.Serialization.dll",
-					"System.Threading.dll",
 					"UnnamedProject.dll",
 					"Mono.Data.Sqlite.dll",
 					"Mono.Data.Sqlite.dll.config",
@@ -115,8 +115,8 @@ namespace Xamarin.Android.Build.Tests
 				using (var zip = ZipHelper.OpenZip (apk)) {
 					var existingFiles = zip.Where (a => a.FullName.StartsWith ("assemblies/", StringComparison.InvariantCultureIgnoreCase));
 					var missingFiles = expectedFiles.Where (x => !zip.ContainsEntry ("assemblies/" + Path.GetFileName (x)));
-					Assert.IsTrue (missingFiles.Any (),
-					string.Format ("The following Expected files are missing. {0}",
+					Assert.IsFalse (missingFiles.Any (),
+						string.Format ("The following Expected files are missing. {0}",
 						string.Join (Environment.NewLine, missingFiles)));
 					var additionalFiles = existingFiles.Where (x => !expectedFiles.Contains (Path.GetFileName (x.FullName)));
 					Assert.IsTrue (!additionalFiles.Any (),
@@ -154,11 +154,12 @@ namespace Xamarin.Android.Build.Tests
 		[Parallelizable (ParallelScope.Self)]
 		public void CheckIncludedNativeLibraries ([Values (true, false)] bool compressNativeLibraries, [Values (true, false)] bool useAapt2)
 		{
+			AssertAaptSupported (useAapt2);
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
 			proj.PackageReferences.Add(KnownPackages.SQLitePCLRaw_Core);
-			proj.SetProperty ("AndroidUseAapt2", useAapt2.ToString ());
+			proj.AndroidUseAapt2 = useAapt2;
 			proj.SetAndroidSupportedAbis ("x86");
 			proj.SetProperty (proj.ReleaseProperties, "AndroidStoreUncompressedFileExtensions", compressNativeLibraries ? "" : "so");
 			using (var b = CreateApkBuilder ()) {
@@ -509,8 +510,8 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 				IsRelease = isRelease,
 			};
 			proj.SetProperty ("AndroidPackageFormat", "aab");
-			// Disable the shared runtime because it is not currently compatible with aabs and so gives an XA0119 build error.
-			proj.AndroidUseSharedRuntime = false;
+			// Disable the fast deployment because it is not currently compatible with aabs and so gives an XA0119 build error.
+			proj.EmbedAssembliesIntoApk = true;
 
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				var bin = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
@@ -952,7 +953,8 @@ public class Test
 				}
 				using (var b = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
 					Assert.IsTrue (b.Build (app), "Build of jar should have succeeded.");
-					string expected = "Failed to add jar entry AndroidManifest.xml from test.jar: the same file already exists in the apk";
+					var jar = Builder.UseDotNet ? "2965D0C9A2D5DB1E.jar" : "test.jar";
+					string expected = $"Failed to add jar entry AndroidManifest.xml from {jar}: the same file already exists in the apk";
 					Assert.IsTrue (b.LastBuildOutput.ContainsText (expected), $"AndroidManifest.xml for test.jar should have been ignored.");
 				}
 			}

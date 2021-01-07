@@ -20,6 +20,11 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
+		/// <summary>
+		/// Returns the index of the file in $(_AndroidLibrayProjectAssemblyMapFile): map.cache
+		/// Adds the file to the cache if it doesn't exist.
+		/// </summary>
+		/// <param name="assemblyIdentity">The file name including extension.</param>
 		public string GetLibraryImportDirectoryNameForAssembly (string assemblyIdentity)
 		{
 			if (map.Contains (assemblyIdentity)) {

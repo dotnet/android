@@ -92,7 +92,7 @@ $@"<Project>
 				// Feeds only needed for .NET 5+
 				ExtraNuGetConfigSources = new List<string> {
 					Path.Combine (XABuildPaths.BuildOutputDirectory, "nupkgs"),
-					"https://dnceng.pkgs.visualstudio.com/public/_packaging/dotnet5/nuget/v3/index.json",
+					"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json",
 				};
 			} else {
 				SetProperty (KnownProperties.Configuration, () => Configuration);
@@ -252,7 +252,7 @@ $@"<Project>
 			foreach (var ig in ItemGroupList)
 				list.AddRange (ig.Select (s => new ProjectResource () {
 					Timestamp = s.Timestamp,
-					Path = s.Include?.Invoke (),
+					Path = s.Include?.Invoke () ?? s.Update?.Invoke (),
 					Content = s.TextContent == null ? null : s.TextContent (),
 					BinaryContent = s.BinaryContent == null ? null : s.BinaryContent (),
 					Encoding = s.Encoding,

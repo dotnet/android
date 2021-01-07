@@ -16,7 +16,7 @@ runtime library and BCL assemblies.
 
 Note that the update directory is *per-app*. The above mentioned `Mono.Android_Tests`
 directory is created when running the
-[`Mono.Android-Tests.csproj`](../../src/Mono.Android/Test/Mono.Android-Tests.csproj)
+[`Mono.Android-Tests.csproj`](../../tests/Mono.Android-Tests/Mono.Android-Tests.csproj)
 unit tests.
 
 The update directory is not used in `Release` configuration builds.

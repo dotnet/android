@@ -1,35 +1,21 @@
-<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net472;netstandard2.0</TargetFrameworks>
-    <RootNamespace>Xamarin.Android.Tools</RootNamespace>
-    <AssemblyName>api-xml-adjuster</AssemblyName>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net472' ">
+    <TargetFramework>net472</TargetFramework>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>..\..\bin\Build$(Configuration)</OutputPath>
-    <IntermediateOutputPath>obj\Build$(Configuration)</IntermediateOutputPath>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
-    <AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
-    <OutputPath>..\..\bin\Build$(Configuration)</OutputPath>
-    <IntermediateOutputPath>obj\Build$(Configuration)</IntermediateOutputPath>
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />
 
   <ItemGroup>
-    <ProjectReference Include="..\..\external\Java.Interop\src\Xamarin.Android.Tools.ApiXmlAdjuster\Xamarin.Android.Tools.ApiXmlAdjuster.csproj">
-      <Project>{1268EADF-8344-431C-81F6-FCB7CBC99F49}</Project>
-      <Name>Xamarin.Android.Tools.ApiXmlAdjuster</Name>
-    </ProjectReference>
+    <ProjectReference Include="..\..\external\Java.Interop\src\Xamarin.Android.Tools.ApiXmlAdjuster\Xamarin.Android.Tools.ApiXmlAdjuster.csproj" />
     <ProjectReference Include="..\..\external\Java.Interop\tools\class-parse\class-parse.csproj">
-      <Name>class-parse</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>
   <Import Project="api-xml-adjuster.targets" />
+
 </Project>

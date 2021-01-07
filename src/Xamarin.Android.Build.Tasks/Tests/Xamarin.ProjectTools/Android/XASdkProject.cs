@@ -10,12 +10,6 @@ namespace Xamarin.ProjectTools
 {
 	public class XASdkProject : DotNetStandard
 	{
-		public static readonly string SdkVersion = typeof (XASdkProject).Assembly
-			.GetCustomAttributes<AssemblyMetadataAttribute> ()
-			.Where (attr => attr.Key == "SdkVersion")
-			.Select (attr => attr.Value)
-			.FirstOrDefault () ?? "0.0.1";
-
 		const string default_strings_xml = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <resources>
 	<string name=""hello"">Hello World, Click Me!</string>
@@ -54,26 +48,13 @@ namespace Xamarin.ProjectTools
 			doc.Save (Path.Combine (directory, "NuGet.config"));
 		}
 
-		/// <summary>
-		/// Save a global.json to a directory, with version number to support a local build of  Microsoft.Android.Sdk
-		/// </summary>
-		public static void SaveGlobalJson (string directory)
-		{
-			File.WriteAllText (Path.Combine (directory, "global.json"),
-$@"{{
-    ""msbuild-sdks"": {{
-            ""Microsoft.Android.Sdk"": ""{SdkVersion}""
-    }}
-}}");
-		}
-
 		public string PackageName { get; set; }
 		public string JavaPackageName { get; set; }
 
 		public XASdkProject (string outputType = "Exe")
 		{
-			Sdk = $"Microsoft.Android.Sdk/{SdkVersion}";
-			TargetFramework = "net5.0-android";
+			Sdk = "Microsoft.NET.Sdk";
+			TargetFramework = "net6.0-android";
 
 			TargetSdkVersion = AndroidSdkResolver.GetMaxInstalledPlatform ().ToString ();
 			PackageName = PackageName ?? string.Format ("{0}.{0}", ProjectName);
@@ -83,7 +64,7 @@ $@"{{
 
 			// Add relevant Android content to our project without writing it to the .csproj file
 			if (outputType == "Exe") {
-				Sources.Add (new BuildItem.Source ("Properties\\AndroidManifest.xml") {
+				Sources.Add (new BuildItem.Source ("AndroidManifest.xml") {
 					TextContent = ProcessManifestTemplate
 				});
 			}

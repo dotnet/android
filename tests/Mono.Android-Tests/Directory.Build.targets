@@ -1,0 +1,72 @@
+<Project>
+
+  <ItemGroup>
+    <TestApkInstrumentation Include="xamarin.android.runtimetests.NUnitInstrumentation">
+      <Package>$(_MonoAndroidTestPackage)</Package>
+      <ResultsPath>$(OutputPath)TestResult-$(_MonoAndroidTestPackage).xml</ResultsPath>
+    </TestApkInstrumentation>
+
+    <TestApkPermission Include="READ_EXTERNAL_STORAGE">
+      <Package>$(_MonoAndroidTestPackage)</Package>
+    </TestApkPermission>
+
+    <TestApkPermission Include="WRITE_EXTERNAL_STORAGE">
+      <Package>$(_MonoAndroidTestPackage)</Package>
+    </TestApkPermission>
+  </ItemGroup>
+
+  <Target Name="BuildNativeLibs"
+      BeforeTargets="CoreBuild"
+      DependsOnTargets="AndroidPrepareForBuild"
+      Inputs="$(MSBuildThisFileDirectory)jni\reuse-threads.c;$(MSBuildThisFileDirectory)jni\Android.mk"
+      Outputs="@(AndroidNativeLibrary)">
+    <Error Text="Could not locate Android NDK." Condition="!Exists ('$(NdkBuildPath)')" />
+    <Exec Command="&quot;$(NdkBuildPath)&quot;" WorkingDirectory="$(MSBuildThisFileDirectory)"/>
+  </Target>
+
+  <Import Project="$(MSBuildThisFileDirectory)..\..\build-tools\scripts\JavaInteropDllConfigs.targets" />
+
+  <!-- Not required when testing against a system installation of XA. -->
+  <Target Name="EnsureJavaInteropDllConfigs"
+      Condition="Exists ('$(XAInstallPrefix)xbuild\Xamarin\Android\Java.Interop.dll')"
+      BeforeTargets="_GenerateJniMarshalMethods"
+      DependsOnTargets="_CreateJavaInteropDllConfigs">
+  </Target>
+
+  <Target Name="GenerateNuGetConfig" >
+    <PropertyGroup>
+      <LocalNupkgDirectory Condition=" '$(LocalNupkgDirectory)' == '' ">$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\</LocalNupkgDirectory>
+      <AndroidNETTestConfigOutputDir Condition=" '$(AndroidNETTestConfigOutputDir)' == '' ">$(MSBuildThisFileDirectory)Runtime-Microsoft.Android.Sdk\</AndroidNETTestConfigOutputDir>
+      <AndroidNETTestConfigOutputDir>$([MSBuild]::EnsureTrailingSlash($(AndroidNETTestConfigOutputDir)))</AndroidNETTestConfigOutputDir>
+      <NuGetConfigContent>
+<![CDATA[
+<configuration>
+  <packageSources>
+    <add key="xamarin-impl" value="https://pkgs.dev.azure.com/azure-public/vside/_packaging/xamarin-impl/nuget/v3/index.json" />
+    <add key="dotnet5" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5/nuget/v3/index.json" />
+    <add key="dotnet6" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json" />
+    <add key="xa-nupkgs" value="$(LocalNupkgDirectory)" />
+  </packageSources>
+</configuration>
+]]>
+      </NuGetConfigContent>
+    </PropertyGroup>
+
+    <WriteLinesToFile
+        File="$(AndroidNETTestConfigOutputDir)nuget.config"
+        Lines="$(NuGetConfigContent)"
+        Overwrite="true"
+    />
+  </Target>
+
+  <Target Name="RunDotNetInstrumentation"
+      DependsOnTargets="GenerateNuGetConfig" >
+    <ItemGroup>
+      <_RuntimeTestArgs Include="-p:Configuration=$(Configuration)" />
+      <_RuntimeTestArgs Include="-t:AcquireAndroidTarget,SignAndroidPackage,DeployTestApks,RunTestApks,UndeployTestApks,RenameApkTestCases,ReportComponentFailures" />
+      <_RuntimeTestArgs Include="-bl:$(XamarinAndroidSourcePath)bin\Test$(Configuration)\run-Mono.Android.NET-Tests.binlog" />
+    </ItemGroup>
+    <Exec Command="$(DotNetPreviewTool) build /v:n @(_RuntimeTestArgs, ' ') &quot;$(MSBuildThisFileDirectory)Runtime-Microsoft.Android.Sdk\Mono.Android.NET-Tests.csproj&quot;" />
+  </Target>
+
+</Project>

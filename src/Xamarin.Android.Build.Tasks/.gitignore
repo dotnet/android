@@ -1,4 +1,4 @@
-/Microsoft.Android.Sdk/targets/Microsoft.Android.Sdk.BundledVersions.props
-/Microsoft.Android.Sdk/targets/Microsoft.Android.Sdk.SupportedPlatforms.props
+/Microsoft.Android.Sdk/targets/Microsoft.Android.Sdk.BundledVersions.targets
+/Microsoft.Android.Sdk/targets/Microsoft.Android.Sdk.SupportedPlatforms.targets
 /Xamarin.Android.Common.props
 /Xamarin.Android.BuildInfo.txt
