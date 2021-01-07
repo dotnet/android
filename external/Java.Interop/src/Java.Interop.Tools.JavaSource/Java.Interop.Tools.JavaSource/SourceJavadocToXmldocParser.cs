@@ -25,6 +25,7 @@ namespace Java.Interop.Tools.JavaSource {
 		SerialTag           = 1 << 8,
 		SinceTag            = 1 << 9,
 		VersionTag          = 1 << 10,
+		ExtraRemarks        = 1 << 11,
 	}
 
 	[Flags]
@@ -41,11 +42,15 @@ namespace Java.Interop.Tools.JavaSource {
 			| ImportJavadoc.SerialTag
 			| ImportJavadoc.SinceTag
 			| ImportJavadoc.VersionTag
+			| ImportJavadoc.ExtraRemarks
 			,
 		IntelliSense = ImportJavadoc.Summary
 			| ImportJavadoc.ExceptionTag
 			| ImportJavadoc.ParamTag
 			| ImportJavadoc.ReturnTag
+			,
+		IntelliSenseAndExtraRemarks = IntelliSense
+			| ImportJavadoc.ExtraRemarks
 			,
 	}
 
@@ -101,6 +106,9 @@ namespace Java.Interop.Tools.JavaSource {
 				if (style.HasFlag (ImportJavadoc.Remarks) &&
 						(info.Remarks.Count > 0 || ExtraRemarks?.Length > 0)) {
 					yield return new XElement ("remarks", info.Remarks, ExtraRemarks);
+				}
+				else if (style.HasFlag (ImportJavadoc.ExtraRemarks) && ExtraRemarks?.Length > 0) {
+					yield return new XElement ("remarks", ExtraRemarks);
 				}
 				foreach (var n in info.Returns) {
 					yield return n;

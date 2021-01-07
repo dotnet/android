@@ -211,6 +211,7 @@ namespace Xamarin.Android.Binder
 
 		static XmldocStyle ParseXmldocStyle (string style) => style?.ToLowerInvariant () switch {
 			"intellisense" => XmldocStyle.IntelliSense,
+			"intellisense+extraremarks" => XmldocStyle.IntelliSenseAndExtraRemarks,
 			"full" => XmldocStyle.Full,
 			_ => XmldocStyle.Full,
 		};

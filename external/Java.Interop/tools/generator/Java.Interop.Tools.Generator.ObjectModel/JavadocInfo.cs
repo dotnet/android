@@ -80,7 +80,7 @@ namespace MonoDroid.Generation
 
 		static XElement[] GetExtra (XElement element, XmldocStyle style, string declaringJniType, string declaringMemberName, string declaringMemberJniSignature)
 		{
-			if (!style.HasFlag (XmldocStyle.Full))
+			if (!style.HasFlag (XmldocStyle.IntelliSenseAndExtraRemarks))
 				return null;
 
 			XElement javadocMetadata    = null;
@@ -254,6 +254,7 @@ namespace MonoDroid.Generation
 					new XAttribute ("type", "text/html"),
 					new XElement ("a",
 						new XAttribute ("href", new Uri (url.ToString ()).AbsoluteUri),
+						new XAttribute ("title", "Reference documentation"),
 						"Java documentation for ",
 						new XElement ("tt", java.ToString ()),
 						"."));
