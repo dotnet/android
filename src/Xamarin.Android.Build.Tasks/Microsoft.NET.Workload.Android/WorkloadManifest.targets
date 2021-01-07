@@ -1,4 +1,6 @@
 <Project>
   <Import Project="Sdk.targets" Sdk="Microsoft.Android.Sdk"
       Condition=" '$(TargetPlatformIdentifier)' == 'android' " />
+  <Import Project="Sdk.targets" Sdk="Microsoft.Android.Sdk.BundleTool"
+      Condition=" '$(AndroidPackageFormat)' == 'aab' " />
 </Project>
