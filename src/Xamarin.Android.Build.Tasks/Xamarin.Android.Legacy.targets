@@ -440,7 +440,7 @@ projects. .NET 5 projects will not import this file.
         OutputDirectory="$(IntermediateOutputPath)$(_NativeLibraryImportsDirectoryName)"
         EmbeddedNativeLibraries="@(EmbeddedNativeLibrary)"
     />
-    <Touch Files="$(IntermediateOutputPath)__AndroidNativeLibraries__.zip" />
+    <Touch Files="$(IntermediateOutputPath)__AndroidNativeLibraries__.zip" AlwaysCreate="true" />
     <ItemGroup>
       <FileWrites Include="$(IntermediateOutputPath)__AndroidNativeLibraries__.zip" />
       <EmbeddedResource Include="$(IntermediateOutputPath)__AndroidNativeLibraries__.zip">
@@ -464,7 +464,7 @@ projects. .NET 5 projects will not import this file.
         FlatArchivesDirectory="$(_AndroidLibraryFlatArchivesDirectory)"
         RemovedAndroidResourceFiles="@(_AndroidResourceDestRemovedFiles)"
     />
-    <Touch Files="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip" />
+    <Touch Files="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip" AlwaysCreate="true" />
     <ItemGroup>
       <FileWrites Include="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip" />
       <EmbeddedResource Include="$(IntermediateOutputPath)__AndroidLibraryProjects__.zip">
