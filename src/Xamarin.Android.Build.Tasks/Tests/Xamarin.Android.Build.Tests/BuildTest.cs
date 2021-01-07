@@ -56,7 +56,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		string GetLinkedPath (ProjectBuilder builder, bool isRelease, string filename)
+		public static string GetLinkedPath (ProjectBuilder builder, bool isRelease, string filename)
 		{
 			return Builder.UseDotNet && isRelease ?
 				builder.Output.GetIntermediaryPath (Path.Combine ("android.21-arm64", "linked", filename)) :

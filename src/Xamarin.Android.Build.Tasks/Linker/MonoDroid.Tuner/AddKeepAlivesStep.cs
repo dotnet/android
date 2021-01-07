@@ -106,7 +106,13 @@ namespace MonoDroid.Tuner
 					changed = true;
 
 					if (methodKeepAlive == null)
-						methodKeepAlive = Context.GetMethod ("mscorlib", "System.GC", "KeepAlive", new string [] { "System.Object" });
+						methodKeepAlive = Context.GetMethod (
+#if NETCOREAPP
+							"System.Private.CoreLib",
+#else
+							"mscorlib",
+#endif
+							"System.GC", "KeepAlive", new string [] { "System.Object" });
 
 					processor.InsertBefore (end, GetLoadArgumentInstruction (method.IsStatic ? i : i + 1, method.Parameters [i]));
 					processor.InsertBefore (end, Instruction.Create (OpCodes.Call, module.ImportReference (methodKeepAlive)));
