@@ -298,6 +298,22 @@ such as `<AndroidLibrary Include="..." Bind="false" />`:
 </Project>
 ```
 
+## JavaDocJar
+
+In a Xamarin.Android binding project, the **JavaDocJar** build action
+is used on `.jar` files which contain *Javadoc HTML*.  The Javadoc HTML
+is parsed in order to extract parameter names.
+
+Only certain "Javadoc HTML dialects" are supported, including:
+
+  * JDK 1.7 `javadoc` output
+  * JDK 1.8 `javadoc` output
+  * Droiddoc output
+
+This build action is deprecated in Xamarin.Android 11.3, and will not be
+supported in .NET 6.
+The `@(JavaSourceJar)` build action should be preferred.
+
 ## JavaSourceJar
 
 In a Xamarin.Android binding project, the **JavaSourceJar** build action

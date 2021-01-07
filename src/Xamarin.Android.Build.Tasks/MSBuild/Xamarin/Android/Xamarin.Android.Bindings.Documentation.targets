@@ -17,14 +17,13 @@ This file is only used by binding projects. .NET 5 can eventually use it, once `
   <UsingTask TaskName="Xamarin.Android.Tasks.Unzip"         AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 
   <Target Name="_ExtractJavaDocJars"
-      Condition=" '$(_UseLegacyJavadocImport)' == 'True' "
       Inputs="@(JavaDocJar)"
       Outputs="@(JavaDocJar->'$(IntermediateOutputPath)javadocs\%(FileName).stamp')">
     <Unzip
         Sources="@(JavaDocJar)"
         DestinationDirectories="@(JavaDocJar->'$(IntermediateOutputPath)javadocs\%(FileName)')"
     />
-    <Touch Files="@(JavaDocJar->'$(IntermediateOutputPath)javadocs\%(FileName).stamp')" />
+    <Touch Files="@(JavaDocJar->'$(IntermediateOutputPath)javadocs\%(FileName).stamp')" AlwaysCreate="true" />
     <ItemGroup>
       <JavaDocIndex Include="@(JavaDocJar->'$(IntermediateOutputPath)javadocs\%(FileName)\index.html')" />
     </ItemGroup>
