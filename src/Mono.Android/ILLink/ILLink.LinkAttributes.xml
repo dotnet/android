@@ -6,5 +6,8 @@
     <type fullname="Android.Runtime.IntDefinitionAttribute">
       <attribute internal="RemoveAttributeInstances" />
     </type>
+    <type fullname="Android.Runtime.GeneratedEnumAttribute">
+      <attribute internal="RemoveAttributeInstances" />
+    </type>
   </assembly>
 </linker>
