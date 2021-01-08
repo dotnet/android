@@ -1106,6 +1106,15 @@ To suppress the default AOT profiles, set the property to `false`.
 
 Added in Xamarin.Android 10.1.
 
+## AndroidUseInterpreter
+
+A boolean property which causes the `.apk` to contain the mono
+*interpreter*, and not the normal JIT.
+
+***Experimental***.  Does not work on the x86 ABI.
+
+Added in Xamarin.Android 11.3.
+
 ## AndroidUseLegacyVersionCode
 
 A boolean property which allows
