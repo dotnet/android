@@ -495,7 +495,7 @@ projects. .NET 5 projects will not import this file.
   <Target Name="_IncludeNativeSystemLibraries">
     <PropertyGroup>
       <_Assemblies>@(_ResolvedFrameworkAssemblies)</_Assemblies>
-      <_TargetInterpreterPrefix Condition=" '$(_AndroidUseInterpreter)' != 'False' ">interpreter-</_TargetInterpreterPrefix>
+      <_TargetInterpreterPrefix Condition=" '$(AndroidUseInterpreter)' != 'False' ">interpreter-</_TargetInterpreterPrefix>
       <_AndroidDebugNativeLibraries Condition=" '$(_AndroidDebugNativeLibraries)' == '' ">False</_AndroidDebugNativeLibraries>
     </PropertyGroup>
     <SplitProperty Value="$(AndroidEmbedProfilers)" Condition=" '$(AndroidEmbedProfilers)' != '' ">
