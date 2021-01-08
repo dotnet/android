@@ -102,7 +102,6 @@ namespace Xamarin.Android.Build.Tests
 					"System.Core.dll",
 					"System.Data.dll",
 					"System.dll",
-					"System.Runtime.Serialization.dll",
 					"UnnamedProject.dll",
 					"Mono.Data.Sqlite.dll",
 					"Mono.Data.Sqlite.dll.config",
