@@ -245,6 +245,7 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Build.Tasks.pdb" />
     <_MSBuildFiles Include="@(_LocalizationLanguages->'$(MSBuildSrcDir)\%(Identity)\Java.Interop.Localization.resources.dll')" />
     <_MSBuildFiles Include="@(_LocalizationLanguages->'$(MSBuildSrcDir)\%(Identity)\Xamarin.Android.Build.Tasks.resources.dll')" />
+    <_MSBuildFiles Include="@(_LocalizationLanguages->'$(MSBuildSrcDir)\%(Identity)\Xamarin.Android.Tools.AndroidSdk.resources.dll')" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.BuildInfo.txt" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Cecil.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Cecil.pdb" />
@@ -410,6 +411,7 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Analysis.Tasks.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Build.Debugging.Tasks.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Build.Debugging.Tasks.pdb" />
+    <_MSBuildFiles Include="@(_LocalizationLanguages->'$(MSBuildSrcDir)\%(Identity)\Xamarin.Android.Build.Debugging.Tasks.resources.dll')" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Common.Debugging.props" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Common.Debugging.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\lib\arm64-v8a\installer" />
