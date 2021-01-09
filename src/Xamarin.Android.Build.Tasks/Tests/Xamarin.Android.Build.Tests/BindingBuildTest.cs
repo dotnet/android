@@ -438,6 +438,30 @@ namespace Foo {
 		}
 
 		[Test]
+		[Category ("DotNetIgnore")]
+		public void JavaDocJar ()
+		{
+			var binding = new XamarinAndroidBindingProject () {
+				AndroidClassParser = "class-parse",
+			};
+			binding.SetProperty ("DocumentationFile", "UnnamedProject.xml");
+			using (var bindingBuilder = CreateDllBuilder ()) {
+				binding.Jars.Add (new AndroidItem.EmbeddedJar ("javasourcejartest.jar") {
+					BinaryContent = () => ResourceData.JavaSourceJarTestJar,
+				});
+				binding.OtherBuildItems.Add (new BuildItem ("JavaDocJar", "javasourcejartest-javadoc.jar") {
+					BinaryContent = () => ResourceData.JavaSourceJarTestJavadocJar,
+				});
+				Assert.IsTrue (bindingBuilder.Build (binding), "binding build should have succeeded");
+
+				var cs_file = bindingBuilder.Output.GetIntermediaryPath (
+					Path.Combine ("generated", "src", "Com.Xamarin.Android.Test.Msbuildtest.JavaSourceJarTest.cs"));
+				FileAssert.Exists (cs_file);
+				StringAssert.Contains ("Greet (string name, global::Java.Util.Date date)", File.ReadAllText (cs_file));
+			}
+		}
+
+		[Test]
 		public void JavaSourceJar ()
 		{
 			var binding = new XamarinAndroidBindingProject () {
@@ -446,10 +470,10 @@ namespace Foo {
 			binding.SetProperty ("DocumentationFile", "UnnamedProject.xml");
 			using (var bindingBuilder = CreateDllBuilder ()) {
 				binding.Jars.Add (new AndroidItem.EmbeddedJar ("javasourcejartest.jar") {
-					BinaryContent = () => Convert.FromBase64String (InlineData.JavaClassesJarBase64)
+					BinaryContent = () => ResourceData.JavaSourceJarTestJar,
 				});
 				binding.OtherBuildItems.Add (new BuildItem ("JavaSourceJar", "javasourcejartest-sources.jar") {
-					BinaryContent = () => Convert.FromBase64String (InlineData.JavaSourcesJarBase64)
+					BinaryContent = () => ResourceData.JavaSourceJarTestSourcesJar,
 				});
 				Assert.IsTrue (bindingBuilder.Build (binding), "binding build should have succeeded");
 
@@ -496,7 +520,7 @@ namespace Foo {
 				AndroidClassParser = classParser,
 				Jars = {
 					new AndroidItem.EmbeddedJar ("foo.jar") {
-						BinaryContent = () => Convert.FromBase64String (InlineData.JavaClassesJarBase64),
+						BinaryContent = () => ResourceData.JavaSourceJarTestJar,
 					}
 				}
 			};

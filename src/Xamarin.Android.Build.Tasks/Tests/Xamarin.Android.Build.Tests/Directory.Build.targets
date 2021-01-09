@@ -1,0 +1,54 @@
+<Project>
+
+  <Target Name="UpdateResources"
+      DependsOnTargets="_UpdateJavaSourceJar_Bytecode;_UpdateJavaSourceJar_Sources;_UpdateJavaSourceJar_Javadoc">
+  </Target>
+
+  <ItemGroup>
+    <JavaSourceJarTest Include="java/com/microsoft/android/test/msbuildtest/JavaSourceJarTest.java" />
+  </ItemGroup>
+
+  <Target Name="_UpdateJavaSourceJar_Bytecode"
+      Inputs="@(JavaSourceJarTest)"
+      Outputs="Resources\javasourcejartest.jar">
+    <PropertyGroup>
+      <_SourceVersions>-source $(JavacSourceVersion) -target $(JavacTargetVersion)</_SourceVersions>
+      <_Outdir>$(IntermediateOutputPath)/classes</_Outdir>
+    </PropertyGroup>
+    <MakeDir Directories="$(_Outdir)" />
+    <!-- Note: do NOT include `-parameters`; we want parameter name inferrence via -sources or -javadoc -->
+    <Exec Command="$(JavaCPath) $(_SourceVersions) -d $(_Outdir) @(JavaSourceJarTest, ' ')" />
+    <Exec
+        Command="$(JarPath) cf Resources/javasourcejartest.jar -C $(_Outdir) ."
+        WorkingDirectory="$(MSBuildThisFileDirectory)"
+    />
+  </Target>
+
+  <Target Name="_UpdateJavaSourceJar_Sources"
+      Inputs="@(JavaSourceJarTest)"
+      Outputs="Resources\javasourcejartest-sources.jar">
+    <Exec
+        Command="$(JarPath) cf Resources/javasourcejartest-sources.jar -C java ."
+        WorkingDirectory="$(MSBuildThisFileDirectory)"
+    />
+  </Target>
+
+  <Target Name="_UpdateJavaSourceJar_Javadoc"
+      Inputs="@(JavaSourceJarTest)"
+      Outputs="Resources/javasourcejartest-javadoc.jar">
+    <PropertyGroup>
+      <_Javadoc>"$(Java8SdkDirectory)/bin/javadoc"</_Javadoc>
+      <_Outdir>$(IntermediateOutputPath)/javadoc</_Outdir>
+    </PropertyGroup>
+    <MakeDir Directories="$(_Outdir)" />
+    <Exec
+        Command="$(_Javadoc) -public -d &quot;$(_Outdir)&quot; @(JavaSourceJarTest, ' ')"
+        WorkingDirectory="$(MSBuildThisFileDirectory)"
+    />
+    <Exec
+        Command="$(JarPath) cf Resources/javasourcejartest-javadoc.jar -C &quot;$(_Outdir)&quot; ."
+        WorkingDirectory="$(MSBuildThisFileDirectory)"
+    />
+  </Target>
+
+</Project>
