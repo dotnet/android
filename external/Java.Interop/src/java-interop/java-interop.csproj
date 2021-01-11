@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.Build.NoTargets/1.0.110">
+<Project Sdk="Microsoft.Build.NoTargets">
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
     <OutputPath>$(ToolOutputFullPath)</OutputPath>
