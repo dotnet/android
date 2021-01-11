@@ -30,7 +30,6 @@ namespace Java.Interop {
 					throw new InvalidOperationException (string.Format ("Could not raise an exception; JNIEnv::ThrowNew() returned {0}.", r));
 			}
 
-#if !XA_INTEGRATION
 			public static void Throw (Exception e)
 			{
 				if (e == null)
@@ -41,7 +40,6 @@ namespace Java.Interop {
 				}
 				Throw (je.PeerReference);
 			}
-#endif  // !XA_INTEGRATION
 		}
 	}
 }

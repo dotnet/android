@@ -17,7 +17,6 @@ namespace Java.Interop
 					return NewString (s, value.Length);
 			}
 
-#if !XA_INTEGRATION
 			public static string? ToString (IntPtr reference)
 			{
 				return ToString (new JniObjectReference (reference));
@@ -28,7 +27,6 @@ namespace Java.Interop
 				Debug.Assert (targetType == typeof (string), "Expected targetType==typeof(string); was: " + targetType);
 				return ToString (ref reference, transfer);
 			}
-#endif  // !XA_INTEGRATION
 
 			public static unsafe string? ToString (JniObjectReference value)
 			{

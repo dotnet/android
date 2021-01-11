@@ -111,7 +111,6 @@ namespace Java.Interop
 			return r;
 		}
 
-#if !XA_INTEGRATION
 		internal JniObjectReference AllocObject (Type declaringType)
 		{
 			var r   = GetConstructorsForType (declaringType)
@@ -120,7 +119,6 @@ namespace Java.Interop
 			r.Flags = JniObjectReferenceFlags.Alloc;
 			return r;
 		}
-#endif  // !XA_INTEGRATION
 
 		internal unsafe JniObjectReference NewObject (string constructorSignature, Type declaringType, JniArgumentValue* parameters)
 		{

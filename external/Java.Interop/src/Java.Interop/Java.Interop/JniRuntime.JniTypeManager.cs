@@ -201,7 +201,7 @@ namespace Java.Interop {
 						yield return type;
 						continue;
 					}
-#if !XA_INTEGRATION
+
 					if (typeSignature.ArrayRank > 0) {
 						var rank        = typeSignature.ArrayRank;
 						var arrayType   = type;
@@ -214,7 +214,7 @@ namespace Java.Interop {
 						}
 						yield return arrayType;
 					}
-#endif  // !XA_INTEGRATION
+
 					if (typeSignature.ArrayRank > 0) {
 						var rank        = typeSignature.ArrayRank;
 						var arrayType   = type;

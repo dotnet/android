@@ -248,9 +248,9 @@ namespace Java.Interop
 				}
 			}
 
-#if !XA_INTEGRATION
+#if !XA_JI_EXCLUDE
 			ManagedPeer.Init ();
-#endif  // !XA_INTEGRATION
+#endif  // !XA_JI_EXCLUDE
 		}
 
 		T SetRuntime<T> (T value)
@@ -325,11 +325,9 @@ namespace Java.Interop
 				JniObjectReference.Dispose (ref ClassLoader);
 
 				ClearTrackedReferences ();
-#if !XA_INTEGRATION
 				ValueManager.Dispose ();
 				marshalMemberBuilder?.Dispose ();
 				TypeManager.Dispose ();
-#endif  // !XA_INTEGRATION
 				ObjectReferenceManager.Dispose ();
 
 				var environments = JniEnvironment.Info.Values;
@@ -389,11 +387,7 @@ namespace Java.Interop
 
 		public virtual Exception? GetExceptionForThrowable (ref JniObjectReference reference, JniObjectReferenceOptions options)
 		{
-#if XA_INTEGRATION
-			throw new NotSupportedException ("Do not know h ow to convert a JniObjectReference to a System.Exception!");
-#else   // !XA_INTEGRATION
 			return ValueManager.GetValue<Exception> (ref reference, options);
-#endif  // !̣XA_INTEGRATION
 		}
 
 		public int GlobalReferenceCount {
@@ -436,13 +430,7 @@ namespace Java.Interop
 
 		public virtual void RaisePendingException (Exception pendingException)
 		{
-#if XA_INTEGRATION
-			if (pendingException == null)
-				throw new ArgumentNullException (nameof (pendingException));
-			throw new NotSupportedException ("Do not know how to marshal System.Exception instances.");
-#else   // !XA_INTEGRATION
 			JniEnvironment.Exceptions.Throw (pendingException);
-#endif  // !XA_INTEGRATION
 		}
 	}
 }

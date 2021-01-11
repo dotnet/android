@@ -67,12 +67,7 @@ namespace Java.Interop {
 			return $"JniType(Name='{Name}' PeerReference={PeerReference})";
 		}
 
-#if XA_INTEGRATION
-		internal
-#else   // !XA_INTEGRATION
-		public
-#endif  // !XA_INTEGRATION
-		void RegisterWithRuntime ()
+		public void RegisterWithRuntime ()
 		{
 			AssertValid ();
 
