@@ -31,6 +31,21 @@ namespace MonoDroid.Generation
 				// delegate bool _JniMarshal_PPL_Z (IntPtr jnienv, IntPtr klass, IntPtr a);
 				foreach (var jni in opt.GetJniMarshalDelegates ())
 					sw.WriteLine ($"delegate {FromJniType (jni[jni.Length - 1])} {jni} (IntPtr jnienv, IntPtr klass{GetDelegateParameters (jni)});");
+
+				// [SupportedOSPlatform] only exists in .NET 5.0+, so we need to generate a
+				// dummy one so earlier frameworks can compile.
+				if (opt.CodeGenerationTarget == Xamarin.Android.Binder.CodeGenerationTarget.XAJavaInterop1) {
+					sw.WriteLine ("#if !NET5_0_OR_GREATER");
+					sw.WriteLine ("namespace System.Runtime.Versioning {");
+					sw.WriteLine ("    [System.Diagnostics.Conditional(\"NEVER\")]");
+					sw.WriteLine ("    [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Constructor | AttributeTargets.Event | AttributeTargets.Method | AttributeTargets.Module | AttributeTargets.Property | AttributeTargets.Struct, AllowMultiple = true, Inherited = false)]");
+					sw.WriteLine ("    internal sealed class SupportedOSPlatformAttribute : Attribute {");
+					sw.WriteLine ("        public SupportedOSPlatformAttribute (string platformName) { }");
+					sw.WriteLine ("    }");
+					sw.WriteLine ("}");
+					sw.WriteLine ("#endif");
+					sw.WriteLine ("");
+				}
 			}
 		}
 

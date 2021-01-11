@@ -74,6 +74,8 @@ namespace generator.SourceWriters
 			if (gen.IsGeneratable)
 				GetterComments.Add ($"// Metadata.xml XPath method reference: path=\"{gen.MetadataXPathReference}/method[@name='{property.Getter.JavaName}'{property.Getter.Parameters.GetMethodXPathPredicate ()}]\"");
 
+			SourceWriterExtensions.AddSupportedOSPlatform (GetterAttributes, property.Getter, opt);
+
 			GetterAttributes.Add (new RegisterAttr (property.Getter.JavaName, property.Getter.JniSignature, property.Getter.IsVirtual ? property.Getter.GetConnectorNameFull (opt) : string.Empty, additionalProperties: property.Getter.AdditionalAttributeString ()));
 
 			SourceWriterExtensions.AddMethodBody (GetBody, property.Getter, opt);
@@ -83,6 +85,8 @@ namespace generator.SourceWriters
 
 				if (gen.IsGeneratable)
 					SetterComments.Add ($"// Metadata.xml XPath method reference: path=\"{gen.MetadataXPathReference}/method[@name='{property.Setter.JavaName}'{property.Setter.Parameters.GetMethodXPathPredicate ()}]\"");
+
+				SourceWriterExtensions.AddSupportedOSPlatform (SetterAttributes, property.Setter, opt);
 
 				SourceWriterExtensions.AddMethodCustomAttributes (SetterAttributes, property.Setter);
 				SetterAttributes.Add (new RegisterAttr (property.Setter.JavaName, property.Setter.JniSignature, property.Setter.IsVirtual ? property.Setter.GetConnectorNameFull (opt) : string.Empty, additionalProperties: property.Setter.AdditionalAttributeString ()));

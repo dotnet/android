@@ -45,6 +45,8 @@ namespace generator.SourceWriters
 			if (klass.IsDeprecated)
 				Attributes.Add (new ObsoleteAttr (klass.DeprecatedComment) { WriteAttributeSuffix = true });
 
+			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, klass, opt);
+
 			Attributes.Add (new RegisterAttr (klass.RawJniName, null, null, true, klass.AdditionalAttributeString ()) { UseGlobal = true, UseShortForm = true });
 
 			if (klass.TypeParameters != null && klass.TypeParameters.Any ())

@@ -285,6 +285,15 @@ namespace generator.SourceWriters
 			}
 		}
 
+		public static void AddSupportedOSPlatform (List<AttributeWriter> attributes, ApiVersionsSupport.IApiAvailability member, CodeGenerationOptions opt)
+		{
+			// There's no sense in writing say 'android15' because we do not support older APIs,
+			// so those APIs will be available in all of our versions.
+			if (member.ApiAvailableSince > 21 && opt.CodeGenerationTarget == Xamarin.Android.Binder.CodeGenerationTarget.XAJavaInterop1)
+				attributes.Add (new SupportedOSPlatformAttr (member.ApiAvailableSince));
+
+		}
+
 		public static void WriteMethodInvokerBody (CodeWriter writer, Method method, CodeGenerationOptions opt, string contextThis)
 		{
 			writer.WriteLine ($"if ({method.EscapedIdName} == IntPtr.Zero)");

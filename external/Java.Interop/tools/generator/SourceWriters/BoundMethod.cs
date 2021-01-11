@@ -70,6 +70,8 @@ namespace generator.SourceWriters
 			if (method.IsReturnEnumified)
 				Attributes.Add (new GeneratedEnumAttr (true));
 
+			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
+
 			Attributes.Add (new RegisterAttr (method.JavaName, method.JniSignature, method.IsVirtual ? method.GetConnectorNameFull (opt) : string.Empty, additionalProperties: method.AdditionalAttributeString ()));
 
 			SourceWriterExtensions.AddMethodCustomAttributes (Attributes, method);

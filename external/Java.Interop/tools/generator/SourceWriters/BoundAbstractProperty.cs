@@ -41,6 +41,8 @@ namespace generator.SourceWriters
 			if (property.Getter.IsReturnEnumified)
 				GetterAttributes.Add (new GeneratedEnumAttr (true));
 
+			SourceWriterExtensions.AddSupportedOSPlatform (GetterAttributes, property.Getter, opt);
+
 			GetterAttributes.Add (new RegisterAttr (property.Getter.JavaName, property.Getter.JniSignature, property.Getter.GetConnectorNameFull (opt), additionalProperties: property.Getter.AdditionalAttributeString ()));
 
 			SourceWriterExtensions.AddMethodCustomAttributes (GetterAttributes, property.Getter);
@@ -50,6 +52,8 @@ namespace generator.SourceWriters
 
 				if (gen.IsGeneratable)
 					SetterComments.Add ($"// Metadata.xml XPath method reference: path=\"{gen.MetadataXPathReference}/method[@name='{property.Setter.JavaName}'{property.Setter.Parameters.GetMethodXPathPredicate ()}]\"");
+
+				SourceWriterExtensions.AddSupportedOSPlatform (SetterAttributes, property.Setter, opt);
 
 				SourceWriterExtensions.AddMethodCustomAttributes (SetterAttributes, property.Setter);
 				SetterAttributes.Add (new RegisterAttr (property.Setter.JavaName, property.Setter.JniSignature, property.Setter.GetConnectorNameFull (opt), additionalProperties: property.Setter.AdditionalAttributeString ()));

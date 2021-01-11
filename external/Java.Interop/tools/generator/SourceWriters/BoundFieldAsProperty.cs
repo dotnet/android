@@ -31,6 +31,8 @@ namespace generator.SourceWriters
 			if (field.IsEnumified)
 				Attributes.Add (new GeneratedEnumAttr ());
 
+			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, field, opt);
+
 			Attributes.Add (new RegisterAttr (field.JavaName, additionalProperties: field.AdditionalAttributeString ()));
 
 			if (field.IsDeprecated)

@@ -31,6 +31,8 @@ namespace generator.SourceWriters
 			if (method.IsInterfaceDefaultMethod)
 				Attributes.Add (new CustomAttr ("[global::Java.Interop.JavaInterfaceDefaultMethod]"));
 
+			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
+
 			Attributes.Add (new RegisterAttr (method.JavaName, method.JniSignature, method.ConnectorName + ":" + method.GetAdapterName (opt, adapter), additionalProperties: method.AdditionalAttributeString ()));
 
 			method.JavadocInfo?.AddJavadocs (Comments);

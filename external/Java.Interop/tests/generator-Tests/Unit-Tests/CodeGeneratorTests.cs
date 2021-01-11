@@ -215,12 +215,39 @@ namespace generatortests
 
 			Assert.AreEqual (GetExpected (nameof (WriteDuplicateInterfaceEventArgs)), writer.ToString ().NormalizeLineEndings ());
 		}
+
+		[Test]
+		public void SupportedOSPlatform ()
+		{
+			// We do not write [SupportedOSPlatform] for JavaInterop, only XAJavaInterop
+			var klass = SupportTypeBuilder.CreateClass ("java.code.MyClass", options);
+			klass.ApiAvailableSince = 30;
+
+			generator.Context.ContextTypes.Push (klass);
+			generator.WriteType (klass, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			StringAssert.DoesNotContain ("[global::System.Runtime.Versioning.SupportedOSPlatformAttribute (\"android30.0\")]", builder.ToString (), "Should contain SupportedOSPlatform!");
+		}
 	}
 
 	[TestFixture]
 	class XAJavaInteropCodeGeneratorTests : CodeGeneratorTests
 	{
 		protected override CodeGenerationTarget Target => CodeGenerationTarget.XAJavaInterop1;
+
+		[Test]
+		public void SupportedOSPlatform ()
+		{
+			var klass = SupportTypeBuilder.CreateClass ("java.code.MyClass", options);
+			klass.ApiAvailableSince = 30;
+
+			generator.Context.ContextTypes.Push (klass);
+			generator.WriteType (klass, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			StringAssert.Contains ("[global::System.Runtime.Versioning.SupportedOSPlatformAttribute (\"android30.0\")]", builder.ToString (), "Should contain SupportedOSPlatform!");
+		}
 	}
 
 	[TestFixture]

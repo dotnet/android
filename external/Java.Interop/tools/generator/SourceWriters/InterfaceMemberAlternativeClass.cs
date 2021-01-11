@@ -36,6 +36,8 @@ namespace generator.SourceWriters
 
 			UsePriorityOrder = true;
 
+			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, iface, opt);
+
 			Attributes.Add (new RegisterAttr (iface.RawJniName, noAcw: true, additionalProperties: iface.AdditionalAttributeString ()) { AcwLast = true });
 
 			if (should_obsolete)
