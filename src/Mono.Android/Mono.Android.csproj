@@ -25,7 +25,7 @@
 
   <PropertyGroup>
     <IncludeAndroidJavadoc Condition=" '$(IncludeAndroidJavadoc)' == '' And '$(CONVERT_JAVADOC_TO_XMLDOC)' == 'true' And '$(AndroidFrameworkVersion)' == '$(AndroidLatestStableFrameworkVersion)'">True</IncludeAndroidJavadoc>
-    <AndroidJavadocVerbosity Condition=" '$(AndroidJavadocVerbosity)' == '' ">intellisense</AndroidJavadocVerbosity>
+    <AndroidJavadocVerbosity Condition=" '$(AndroidJavadocVerbosity)' == '' ">intellisense+extraremarks</AndroidJavadocVerbosity>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(IncludeAndroidJavadoc)' == 'True' ">
