@@ -7,7 +7,6 @@
     <RootNamespace>Xamarin.Android.Tools</RootNamespace>
     <AssemblyName>check-boot-times</AssemblyName>
     <OutputPath>..\..\bin\Build$(Configuration)</OutputPath>
-    <IntermediateOutputPath>obj\$(Configuration)</IntermediateOutputPath>
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />
