@@ -1,14 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="../../Configuration.props" />
-  <PropertyGroup Condition=" '$(OS)' != 'Windows_NT' And '$(MSBuildRuntimeType)' == 'Core' ">
-    <TargetFramework>net5.0</TargetFramework>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' Or '$(MSBuildRuntimeType)' != 'Core' ">
-    <TargetFramework>net472</TargetFramework>
-  </PropertyGroup>
 
   <PropertyGroup>
+    <!-- netcoreapp3.1 doesn't work as of now - it is unable to find Mono.Posix -->
+    <!--    <TargetFrameworks>net472;netcoreapp3.1</TargetFrameworks> -->
+    <TargetFrameworks>net472</TargetFrameworks>
     <Company>Microsoft Corporation</Company>
     <Copyright>2020 Microsoft Corporation</Copyright>
     <Version>0.0.1</Version>
@@ -16,10 +12,14 @@
     <OutputPath>../../bin/$(Configuration)/bin</OutputPath>
     <OutputType>Exe</OutputType>
     <PlatformTarget>x64</PlatformTarget>
-    <LangVersion>8.0</LangVersion>
+    <LangVersion>$(LangVersion)</LangVersion>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DefineConstants>$(DefineConstants);XAT</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup  Condition=" '$(TargetFramework)' == 'net472' ">
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
 
   <Import Project="xat.targets" Condition=" $(MSBuildToolsPath.IndexOf('omnisharp')) &lt; 0 " />
@@ -42,7 +42,6 @@
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(HostOS)' == 'Windows' ">
-
     <Compile Include="../../build-tools/xaprepare/xaprepare/Application/Log.Windows.cs" />
     <Compile Include="../../build-tools/xaprepare/xaprepare/Application/Utilities.Windows.cs" />
   </ItemGroup>
