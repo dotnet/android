@@ -99,6 +99,9 @@ namespace Xamarin.Android.Prepare
 			bool result = await msbuild.Run (
 				projectPath: projectPath,
 				logTag: "remap-assembly-ref",
+				arguments: new List <string> {
+				   "/t:Restore"
+			    },
 				binlogName: "build-remap-assembly-ref"
 			);
 
