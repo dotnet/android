@@ -100,8 +100,7 @@ namespace Xamarin.Android.Prepare
 				projectPath: projectPath,
 				logTag: "remap-assembly-ref",
 				arguments: new List <string> {
-				   "/t:Restore",
-				   "/t:Build",
+				   "/restore",
 			    },
 				binlogName: "build-remap-assembly-ref"
 			);
