@@ -98,7 +98,8 @@ namespace Xamarin.Android.Prepare
 				projectPath: projectPath,
 				logTag: "conjure-xamarin-android-cecil",
 				arguments: new List <string> {
-				   "/t:Restore"
+				   "/t:Restore",
+				   "/t:Build",
 			    },
 				binlogName: "build-conjure-xamarin-android-cecil"
 			);
