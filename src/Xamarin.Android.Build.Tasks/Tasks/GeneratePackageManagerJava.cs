@@ -260,7 +260,7 @@ namespace Xamarin.Android.Tasks
 				throw new InvalidOperationException ($"Unsupported BoundExceptionType value '{BoundExceptionType}'");
 			}
 
-			var appConfState = BuildEngine4.GetRegisteredTaskObject (ApplicationConfigTaskState.RegisterTaskObjectKey, RegisteredTaskObjectLifetime.Build) as ApplicationConfigTaskState;
+			var appConfState = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<ApplicationConfigTaskState> (ApplicationConfigTaskState.RegisterTaskObjectKey, RegisteredTaskObjectLifetime.Build);
 			foreach (string abi in SupportedAbis) {
 				NativeAssemblerTargetProvider asmTargetProvider = GetAssemblyTargetProvider (abi);
 				string baseAsmFilePath = Path.Combine (EnvironmentOutputDirectory, $"environment.{abi.ToLowerInvariant ()}");

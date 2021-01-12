@@ -43,6 +43,8 @@ namespace Xamarin.Android.Tasks
 
 		string GetJvmPath ()
 		{
+			// NOTE: this doesn't need to use GetRegisteredTaskObjectAssemblyLocal()
+			// because JavaSdkPath is the key and the value is a string.
 			var key = new Tuple<string, string> (nameof (ResolveJdkJvmPath), JavaSdkPath);
 			var cached = BuildEngine4.GetRegisteredTaskObject (key, RegisteredTaskObjectLifetime.AppDomain) as string;
 			if (cached != null) {

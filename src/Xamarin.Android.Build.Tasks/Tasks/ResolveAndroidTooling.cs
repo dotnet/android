@@ -200,6 +200,8 @@ namespace Xamarin.Android.Tasks
 			var aapt2Tool = Path.Combine (Aapt2ToolPath, Aapt2);
 
 			// Try to use a cached value for Aapt2Version
+			// NOTE: this doesn't need to use GetRegisteredTaskObjectAssemblyLocal()
+			// because the path to aapt2 is in the key and the value is a string.
 			var key = ($"{nameof (ResolveAndroidTooling)}.{nameof (Aapt2Version)}", aapt2Tool);
 			var cached = BuildEngine4.GetRegisteredTaskObject (key, RegisteredTaskObjectLifetime.AppDomain) as string;
 			if (!string.IsNullOrEmpty (cached)) {
