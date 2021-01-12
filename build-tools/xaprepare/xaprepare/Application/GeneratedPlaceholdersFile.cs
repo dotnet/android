@@ -31,7 +31,11 @@ namespace Xamarin.Android.Prepare
 
 			EnsureOutputDir ();
 			string outputData = inputData.ToString ();
-			File.WriteAllText (OutputPath, outputData, Encoding.UTF8);
+			File.WriteAllText (OutputPath, outputData, Utilities.UTF8NoBOM);
+
+			if (IsExecutable) {
+				Utilities.MakeExecutable (OutputPath);
+			}
 
 			if (!EchoOutput)
 				return;

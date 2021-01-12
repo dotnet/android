@@ -316,6 +316,7 @@ namespace Xamarin.Android.Prepare
 			public static string BuildBinDir                         => GetCachedPath (ref buildBinDir, ()                         => Path.Combine (Configurables.Paths.BinDirRoot, $"Build{ctx.Configuration}"));
 			public static string MingwBinDir                         => GetCachedPath (ref mingwBinDir, ()                         => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidMxeFullPath), "bin"));
 			public static string ProfileAssembliesProjitemsPath      => GetCachedPath (ref profileAssembliesProjitemsPath, ()      => Path.Combine (BuildBinDir, "ProfileAssemblies.projitems"));
+			public static string ConfigurationPropsGeneratedPath     => GetCachedPath (ref configurationPropsGeneratedPath, ()     => Path.Combine (BuildBinDir, "Configuration.Generated.props"));
 
 			// Mono Runtimes
 			public static string MonoAndroidFrameworksSubDir         = Path.Combine ("xbuild-frameworks", "MonoAndroid");
@@ -365,7 +366,7 @@ namespace Xamarin.Android.Prepare
 
 			// not really configurables, merely convenience aliases for more frequently used paths that come from properties
 			public static string XAInstallPrefix                => ctx.Properties.GetRequiredValue (KnownProperties.XAInstallPrefix);
-			public static string XAPackagesDir                  => ctx.Properties.GetRequiredValue (KnownProperties.XAPackagesDir);
+			public static string XAPackagesDir                  = DetermineNugetPackagesDir (ctx);
 			public static string MonoSourceFullPath             => ctx.Properties.GetRequiredValue (KnownProperties.MonoSourceFullPath);
 			public static string MonoSdksTpnPath                => GetCachedPath (ref monoSdksTpnPath, ()         => Path.Combine (MonoSDKSOutputDir, "android-tpn"));
 			public static string MonoSdksTpnExternalPath        => GetCachedPath (ref monoSdksTpnExternalPath, () => Path.Combine (MonoSdksTpnPath, "external"));
@@ -373,6 +374,17 @@ namespace Xamarin.Android.Prepare
 				var path = Path.Combine (MonoSdksTpnExternalPath, "llvm-project", "llvm");
 				return Directory.Exists (path) ? path : Path.Combine (MonoSdksTpnExternalPath, "llvm");
 			});
+
+			static string DetermineNugetPackagesDir (Context ctx)
+			{
+				return Path.GetFullPath (
+					Path.Combine (
+						ctx.Properties.GetRequiredValue (KnownProperties.PkgXamarin_LibZipSharp),
+						"..",
+						".."
+					)
+				);
+			}
 
 			static string EnsureAndroidToolchainBinDirectories ()
 			{
@@ -436,6 +448,7 @@ namespace Xamarin.Android.Prepare
 			static string? openJDK8InstallDir,  openJDK11InstallDir;
 			static string? openJDK8CacheDir,    openJDK11CacheDir;
 			static string? oldOpenJDKInstallDir;
+			static string? configurationPropsGeneratedPath;
 		}
 	}
 }

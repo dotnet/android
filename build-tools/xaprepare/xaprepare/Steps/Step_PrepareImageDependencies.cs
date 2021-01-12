@@ -52,12 +52,7 @@ namespace Xamarin.Android.Prepare
 			Log.StatusLine ($"Generating ", outputFile, tailColor: ConsoleColor.White);
 			File.WriteAllText (outputFile, sb.ToString ());
 
-			try {
-				MakeExecutable (outputFile);
-				return true;
-			} catch (InvalidOperationException) {
-				return false;
-			}
+			return Utilities.MakeExecutable (outputFile, throwOnError: false);
 
 			string MakeLines (List<string> list)
 			{
@@ -67,6 +62,5 @@ namespace Xamarin.Android.Prepare
 #pragma warning restore CS1998
 
 		partial void GatherMacPackages (List<string> brewTaps, List<string> brewPackages, List<string> pkgUrls);
-		partial void MakeExecutable (string scriptPath);
 	}
 }

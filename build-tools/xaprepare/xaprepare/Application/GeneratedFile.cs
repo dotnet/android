@@ -8,6 +8,7 @@ namespace Xamarin.Android.Prepare
 		public string InputPath { get; }
 		public string OutputPath { get; }
 		public bool EchoOutput { get; set; }
+		public bool IsExecutable { get; set; }
 
 		protected GeneratedFile (string outputPath)
 		{

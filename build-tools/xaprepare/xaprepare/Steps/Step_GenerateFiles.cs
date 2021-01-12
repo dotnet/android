@@ -47,10 +47,12 @@ namespace Xamarin.Android.Prepare
 				if (onlyRequired) {
 					return new List<GeneratedFile> {
 						Get_MonoGitHash_props (context),
+						Get_Configuration_Generated_Props (context),
 					};
 				} else {
 					return new List <GeneratedFile> {
 						Get_Configuration_OperatingSystem_props (context),
+						Get_Configuration_Generated_Props (context),
 						Get_Ndk_projitems (context),
 						Get_XABuildConfig_cs (context),
 						Get_mingw_32_cmake (context),
@@ -76,6 +78,21 @@ namespace Xamarin.Android.Prepare
 
 		partial void AddUnixPostBuildSteps (Context context, List<GeneratedFile> steps);
 		partial void AddOSSpecificSteps (Context context, List<GeneratedFile> steps);
+
+		GeneratedFile Get_Configuration_Generated_Props (Context context)
+		{
+			const string OutputFileName = "Configuration.Generated.props";
+
+			var replacements = new Dictionary<string, string> (StringComparer.Ordinal) {
+				{ "@XA_PACKAGES_DIR@", Configurables.Paths.XAPackagesDir },
+			};
+
+			return new GeneratedPlaceholdersFile (
+				replacements,
+				Path.Combine (Configurables.Paths.BootstrapResourcesDir, $"{OutputFileName}.in"),
+				Configurables.Paths.ConfigurationPropsGeneratedPath
+			);
+		}
 
 		GeneratedFile Get_Configuration_OperatingSystem_props (Context context)
 		{
