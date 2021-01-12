@@ -20,6 +20,10 @@ namespace Xamarin.Android.Prepare
 
 		public override void Generate (Context context)
 		{
+			string dir = Path.GetDirectoryName (OutputPath);
+			if (!Directory.Exists (dir))
+				Directory.CreateDirectory (dir);
+
 			using (var fs = File.Open (OutputPath, FileMode.Create)) {
 				using (var sw = new StreamWriter (fs)) {
 					sw.Write (Content);
