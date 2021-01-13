@@ -435,6 +435,10 @@ namespace Library1 {
 			proj.References.Add (new BuildItem.Reference ("System.Runtime.Serialization"));
 
 			if (Builder.UseDotNet) {
+				// serialization is broken on net6 when the app is linked. enable again once it is fixed
+				if (isRelease)
+					return;
+
 				proj.References.Add (new BuildItem.Reference ("System.Runtime.Serialization.Json"));
 				proj.References.Add (new BuildItem.Reference ("System.Runtime.Serialization.Formatters"));
 			}
@@ -481,6 +485,7 @@ namespace Library1 {
 			StreamReader sr = new StreamReader (stream);
 
 			stream.Position = 0;
+			serializer.Binder = new Person.Binder ();
 			Person p2 = (Person) serializer.Deserialize (stream);
 
 			Console.WriteLine ($""BinaryFormatter deserialzied: Name '{p2.Name}' Age '{p2.Age}' Handle '0x{p2.Handle:X}'"");
@@ -512,6 +517,17 @@ namespace Library1 {
 
 		[DataMember]
 		public int Age;
+
+		internal sealed class Binder : SerializationBinder
+		{
+			public override Type BindToType (string assemblyName, string typeName)
+			{
+				if (typeName == ""Person"")
+					return typeof (Person);
+
+				return null;
+			}
+		}
 	}").Replace ("using System;", @"using System;
 using System.IO;
 using System.Runtime.Serialization;
