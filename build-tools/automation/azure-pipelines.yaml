@@ -12,7 +12,7 @@ resources:
   - repository: yaml
     type: github
     name: xamarin/yaml-templates
-    ref: refs/heads/main
+    ref: refs/heads/dev/sign-exes-wildcards
     endpoint: xamarin
   - repository: monodroid
     type: github
@@ -68,6 +68,11 @@ variables:
   NUnit.NumberOfTestWorkers: 4
   GitHub.Token: $(github--pat--vs-mobiletools-engineering-service2)
   CONVERT_JAVADOC_TO_XMLDOC: $[ne(variables['Build.DefinitionName'], 'Xamarin.Android-PR')]
+  ${{ if eq(variables['Build.DefinitionName'], 'Xamarin.Android-PR') }}:
+    MicroBuildSignType: Test
+  ${{ if and(eq(variables['Build.DefinitionName'], 'Xamarin.Android'), ne(variables['Build.Reason'], 'PullRequest')) }}:
+    MicroBuildSignType: Real
+  TeamName: XamarinAndroid
 
 # Stage and Job "display names" are shortened because they are combined to form the name of the corresponding GitHub check.
 stages:
@@ -240,15 +245,6 @@ stages:
       inputs:
         artifactName: $(InstallerArtifactName)
         targetPath: xamarin-android/bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
-
-    - task: NuGetCommand@2
-      displayName: push nupkgs
-      inputs:
-        command: push
-        packagesToPush: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)/*.nupkg
-        nuGetFeedType: external
-        publishFeedCredentials: xamarin-impl public feed
-      condition: and(succeeded(), eq(variables['PushXAPackages'], 'true'))
 
     - task: PublishPipelineArtifact@1
       displayName: upload nupkgs
@@ -1099,10 +1095,51 @@ stages:
   displayName: .NET 6 Preview Installers
   dependsOn: mac_build
   jobs:
+  # Check - "Xamarin.Android (.NET 6 Preview Installers Sign NuGets))"
+  - template: sign-artifacts/jobs/v2.yml@yaml
+    parameters:
+      artifactName: nupkgs
+      signType: $(MicroBuildSignType)
+      usePipelineArtifactTasks: true
+      templateBranch: dev/sign-exes-wildcards
+
+  # Check - "Xamarin.Android (.NET 6 Preview Installers Create .pkg)"
+  - job: dotnet_create_pkg
+    displayName: Create .pkg
+    dependsOn: signing
+    pool: $(MacMojaveBuildPool)
+    workspace:
+      clean: all
+    steps:
+    - checkout: self
+      submodules: recursive
+
+    - template: yaml-templates/use-dot-net.yaml
+      parameters:
+        version: $(DotNetCoreVersion)
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: nuget-signed
+        downloadPath: $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
+
+    - task: NuGetCommand@2
+      displayName: push nupkgs
+      inputs:
+        command: push
+        packagesToPush: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)/*.nupkg
+        nuGetFeedType: external
+        publishFeedCredentials: xamarin-impl public feed
+      condition: and(succeeded(), eq(variables['PushXAPackages'], 'true'))
+
+    # Prepare for notarization, create .pkg, sign .pkg, notarize .pkg, upload .pkg
+
+
   # Check - "Xamarin.Android (.NET 6 Preview Installers Create .msi and Upload)"
-  - job: dotnet_preview_installers
+  - job: dotnet_create_msi
     displayName: Create .msi and Upload
-    pool: $(HostedWinVS2019)
+    dependsOn: dotnet_create_pkg
+    pool: VSEng-MicroBuildVS2019
     workspace:
       clean: all
     steps:
@@ -1111,14 +1148,22 @@ stages:
 
     - task: DownloadPipelineArtifact@2
       inputs:
-        artifactName: $(NuGetArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\nupkgs
+        artifactName: nuget-signed
+        downloadPath: $(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\$(NuGetArtifactName)
 
     - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: $(InstallerArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)\installer-artifacts
         patterns: Microsoft.*.pkg
+
+    - task: MicroBuildSigningPlugin@3
+      displayName: Install Signing Plugin
+      inputs:
+        signType: $(MicroBuildSignType)
+        azureSubscription: MicroBuild Signing Task (DevDiv)
+      env:
+        SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
     - task: MSBuild@1
       displayName: msbuild Xamarin.Android.BootstrapTasks
@@ -1128,11 +1173,18 @@ stages:
         msbuildArguments: /restore /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-bootstraptasks.binlog
 
     - task: MSBuild@1
+      displayName: msbuild /t:Restore create-dotnet-msi.csproj
+      inputs:
+        solution: $(System.DefaultWorkingDirectory)\build-tools\create-dotnet-msi\create-dotnet-msi.csproj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: /t:Restore /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\restore-create-msi.binlog
+
+    - task: MSBuild@1
       displayName: msbuild /t:CreateWorkloadInstallers
       inputs:
         solution: Xamarin.Android.sln
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:CreateWorkloadInstallers /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-workload.binlog
+        msbuildArguments: /t:CreateWorkloadInstallers /p:SignType=$(MicroBuildSignType) /p:MicroBuildPluginDirectory=$(MicroBuildOverridePluginDirectory) /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-workload.binlog
 
     - script: copy /Y $(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\*.msi $(System.DefaultWorkingDirectory)\installer-artifacts
       displayName: copy .msi
@@ -1149,6 +1201,10 @@ stages:
         solution: build-tools\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj
         artifactName: Build Results - .NET 6 Preview Installers
 
+    - task: MicroBuildCleanup@1
+      displayName: Clean Up Signing Tools
+      condition: always()
+
 - stage: finalize_installers
   displayName: Finalize Installers
   dependsOn: mac_build
@@ -1164,8 +1220,6 @@ stages:
       clean: all
     variables:
     - group: Xamarin Notarization
-    - name: TeamName
-      value: XamarinAndroid
     steps:
     - checkout: self
 

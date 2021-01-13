@@ -416,11 +416,11 @@
     <_MSBuildFiles Include="@(_LocalizationLanguages->'$(MSBuildSrcDir)\%(Identity)\Xamarin.Android.Build.Debugging.Tasks.resources.dll')" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Common.Debugging.props" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Common.Debugging.targets" />
+    <!-- The `installer` tool relies on protobuf-net.dll, listed above. -->
     <_MSBuildFiles Include="$(MSBuildSrcDir)\lib\arm64-v8a\installer" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\lib\armeabi-v7a\installer" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\lib\x86\installer" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\lib\x86_64\installer" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\protobuf-net.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\System.CodeDom.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\System.Collections.Immutable.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.AndroidTools.dll" />
@@ -432,7 +432,6 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Installer.Common.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Installer.Common.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Installer.Common.targets" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\K4os.Compression.LZ4.dll" />
     <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\xamarin.sync')" />
     <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\xamarin.find')" />
     <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\%(Identity)\xamarin.stat')" />

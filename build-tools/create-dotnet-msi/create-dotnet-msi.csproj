@@ -10,6 +10,13 @@
   <Import Project="..\scripts\XAVersionInfo.targets" />
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="0.4.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="**" />
     <None Include="$(_WixTemplate)" />
   </ItemGroup>
@@ -100,6 +107,9 @@
     <ItemGroup>
       <FileWrites Include="$(_WixMsi)" />
       <None Include="$(_WixMsi)" CopyToOutputDirectory="PreserveNewest" Link="Microsoft.NET.Workload.Android.$(AndroidMSIVersion).msi" />
+      <FilesToSign Include="$(OutputPath)\Microsoft.NET.Workload.Android.$(AndroidMSIVersion).msi">
+        <Authenticode>Microsoft400</Authenticode>
+      </FilesToSign>
     </ItemGroup>
   </Target>
 
