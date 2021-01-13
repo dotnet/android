@@ -476,7 +476,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 </Target>
 
 <Target Name="UpdateGeneratedFiles"
-		DependsOnTargets="ResolveAssemblyReferences;_RemoveLegacyDesigner;UpdateAndroidResources"
+    DependsOnTargets="ResolveAssemblyReferences;_RemoveLegacyDesigner;UpdateAndroidResources"
 	>
 </Target>
 
@@ -969,9 +969,24 @@ because xbuild doesn't support framework reference assemblies.
 />
 
 <Target Name="UpdateAndroidResources"
-    Condition=" '$(DesignTimeBuild)' != 'True' Or '$(DeferredBuildSupported)' != 'True' Or '$(DeferredBuild)' == 'True' "
+    Condition=" ('$(DesignTimeBuild)' != 'True' Or '$(DeferredBuildSupported)' != 'True' Or '$(DeferredBuild)' == 'True') And !Exists ('$(_AndroidStampDirectory)_UpdateAndroidResources.stamp')"
     DependsOnTargets="_SetupDesignTimeBuildForCompile;_ManagedUpdateAndroidResgen;_UpdateAndroidResources"
 />
+
+<Target Name="_BeforeUpdateAndroidResources"
+    BeforeTargets="_SetupDesignTimeBuildForCompile"
+    Condition="!Exists ('$(_AndroidStampDirectory)_UpdateAndroidResources.stamp')"
+>
+  <Touch Files="$(_AndroidStampDirectory)_UpdateAndroidResources.stamp" AlwaysCreate="True" />
+  <ItemGroup>
+    <FileWrites Include="$(_AndroidStampDirectory)_UpdateAndroidResources.stamp" />
+  </ItemGroup>
+</Target>
+
+<Target Name="_AfterUpdateAndroidResources" AfterTargets="UpdateAndroidResources">
+  <Delete Files="$(_AndroidStampDirectory)_UpdateAndroidResources.stamp" Condition="Exists ('$(_AndroidStampDirectory)_UpdateAndroidResources.stamp')" />
+</Target>
+
 
 <!-- Handle a case where the designer file has been deleted, but the flag file still exists -->
 <Target Name="_CheckForDeletedResourceFile">
