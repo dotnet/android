@@ -35,7 +35,7 @@ namespace MonoDroid.Generation
 				// [SupportedOSPlatform] only exists in .NET 5.0+, so we need to generate a
 				// dummy one so earlier frameworks can compile.
 				if (opt.CodeGenerationTarget == Xamarin.Android.Binder.CodeGenerationTarget.XAJavaInterop1) {
-					sw.WriteLine ("#if !NET5_0_OR_GREATER");
+					sw.WriteLine ("#if !NET");
 					sw.WriteLine ("namespace System.Runtime.Versioning {");
 					sw.WriteLine ("    [System.Diagnostics.Conditional(\"NEVER\")]");
 					sw.WriteLine ("    [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Constructor | AttributeTargets.Event | AttributeTargets.Method | AttributeTargets.Module | AttributeTargets.Property | AttributeTargets.Struct, AllowMultiple = true, Inherited = false)]");
