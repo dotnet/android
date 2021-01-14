@@ -867,7 +867,8 @@ stages:
  # Check - "Xamarin.Android (Designer Tests macOS)"
   - job: designer_integration_mac
     displayName: macOS
-    pool: $(HostedMacMojave)
+    pool: 
+      name: $(HostedMacMojave)
       demands:
       - Agent.ComputerName -equals XAMBOT-1009
     timeoutInMinutes: 120
