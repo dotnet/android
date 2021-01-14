@@ -1793,6 +1793,17 @@ namespace App1
 			}
 		}
 
+		[Test]
+		public void AndroidXClassLibraryNoResources ()
+		{
+			var proj = new XamarinAndroidLibraryProject ();
+			proj.AndroidResources.Clear ();
+			proj.PackageReferences.Add (KnownPackages.AndroidXLegacySupportV4);
+			using (var b = CreateDllBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			}
+		}
+
 #pragma warning disable 414
 		static object [] BuildApplicationWithJavaSourceChecks = new object [] {
 			new object[] {
