@@ -1212,6 +1212,7 @@ stages:
     - powershell: |
         # We require at a minimum version 2.8.0 of the azure cli installed for the ESRP signing
         # First, check for what version is currently installed on the machine
+        $ErrorActionPreference = "Continue"
         & az --version
 
         # Test whether az actually worked.  If it does not work, use a $CurrentVersion 
