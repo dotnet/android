@@ -1209,10 +1209,21 @@ stages:
         # We require at a minimum version 2.8.0 of the azure cli installed for the ESRP signing
         # First, check for what version is currently installed on the machine
         & az --version
-        $Versions = & az --version 
-        $AzureVersion = $Versions[0]
-        $AzureVersionFields = $AzureVersion.split(" ", [StringSplitOptions]::RemoveEmptyEntries)
-        $CurrentVersion = New-Object -TypeName System.Version -ArgumentList $AzureVersionFields[1]
+
+        # Test whether az actually worked.  If it does not work, use a $CurrentVersion 
+        # of 0 in order to force us to install Azure CLI no matter what.
+        if ($?)
+        {
+            $Versions = & az --version 
+            $AzureVersion = $Versions[0]
+            $AzureVersionFields = $AzureVersion.split(" ", [StringSplitOptions]::RemoveEmptyEntries)
+            $CurrentVersion = New-Object -TypeName System.Version -ArgumentList $AzureVersionFields[1]
+        }
+        else 
+        {
+            $CurrentVersion = New-Object -TypeName System.Version -ArgumentList "0.0"
+        }
+        
         $Version280 = New-Object -TypeName System.Version -ArgumentList "2.8.0"
 
         Write-Host "Current Version of azure-cli is $CurrentVersion"
