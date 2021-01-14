@@ -868,6 +868,8 @@ stages:
   - job: designer_integration_mac
     displayName: macOS
     pool: $(HostedMacMojave)
+      demands:
+      - Agent.HomeDirectory -equals XAMBOT-1009
     timeoutInMinutes: 120
     cancelTimeoutInMinutes: 5
     workspace:
@@ -1262,7 +1264,7 @@ stages:
     - task: MicroBuildSigningPlugin@3
       displayName: Install Signing Plugin
       inputs:
-        signType: real
+        signType: $(FailFast)
         azureSubscription: MicroBuild Signing Task (DevDiv)
       env:
         SYSTEM_ACCESSTOKEN: $(System.AccessToken)
