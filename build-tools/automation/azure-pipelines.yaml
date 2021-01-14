@@ -869,8 +869,6 @@ stages:
     displayName: macOS
     pool: 
       name: $(HostedMacMojave)
-      demands:
-      - Agent.ComputerName -equals XAMBOT-1009
     timeoutInMinutes: 120
     cancelTimeoutInMinutes: 5
     workspace:
@@ -1160,7 +1158,10 @@ stages:
   # Check - "Xamarin.Android (Finalize Installers Notarize and Upload to Storage)"
   - job: notarize_pkg_upload_storage
     displayName: Notarize and Upload to Storage
-    pool: $(MacMojaveBuildPool)
+    pool: 
+       name: $(MacMojaveBuildPool)
+       demands:
+         - Agent.ComputerName -equals XAMBOT-1009
     timeoutInMinutes: 90
     cancelTimeoutInMinutes: 1
     workspace:
