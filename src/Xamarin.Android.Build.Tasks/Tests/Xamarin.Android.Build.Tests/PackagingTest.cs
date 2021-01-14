@@ -217,10 +217,10 @@ namespace Xamarin.Android.Build.Tests
 		void AssertCompression (ZipEntry entry, bool compressed)
 		{
 			if (compressed) {
-				Assert.AreNotEqual (entry.CompressionMethod, CompressionMethod.Store, $"`{entry.FullName}` should be compressed!");
+				Assert.AreNotEqual (CompressionMethod.Store, entry.CompressionMethod, $"`{entry.FullName}` should be compressed!");
 				Assert.AreNotEqual (entry.Size, entry.CompressedSize, $"`{entry.FullName}` should be compressed!");
 			} else {
-				Assert.AreEqual (entry.CompressionMethod, CompressionMethod.Store, $"`{entry.FullName}` should be uncompressed!");
+				Assert.AreEqual (CompressionMethod.Store, entry.CompressionMethod, $"`{entry.FullName}` should be uncompressed!");
 				Assert.AreEqual (entry.Size, entry.CompressedSize, $"`{entry.FullName}` should be uncompressed!");
 			}
 		}
@@ -255,6 +255,7 @@ namespace Xamarin.Android.Build.Tests
 				proj.Touch ("Properties\\AndroidManifest.xml");
 				proj.SetProperty ("AndroidStoreUncompressedFileExtensions", ".bar");
 
+				b.BuildLogFile = "build2.log";
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded");
 
 				FileAssert.Exists (apk);
