@@ -19,6 +19,7 @@ namespace Xamarin.Android.Prepare
 
 			StandardArguments = new List<string> {
 				$"/p:Configuration={context.Configuration}",
+				"/restore",
 			};
 		}
 
@@ -34,7 +35,6 @@ namespace Xamarin.Android.Prepare
 			AddArguments (runner, StandardArguments);
 			if (!String.IsNullOrEmpty (binlogName)) {
 				string logPath = Utilities.GetRelativePath (workingDirectory!, Path.Combine (Configurables.Paths.BuildBinDir, $"msbuild-{Context.BuildTimeStamp}-{binlogName}.binlog"));
-				runner.AddQuotedArgument ("/restore");
 				runner.AddArgument ("/v:normal");
 				runner.AddQuotedArgument ($"/bl:{logPath}");
 			}
