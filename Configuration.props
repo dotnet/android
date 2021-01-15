@@ -218,4 +218,5 @@
   <Target Name="CreateManifestResourceNames" />
 
   <Import Project="$(MSBuildThisFileDirectory)build-tools\scripts\Ndk.targets" />
+  <Import Project="$(MSBuildThisFileDirectory)build-tools\scripts\RoslynAnalyzers.projitems" Condition=" '$(EnableRoslynAnalyzers)' == 'true' " />
 </Project>
