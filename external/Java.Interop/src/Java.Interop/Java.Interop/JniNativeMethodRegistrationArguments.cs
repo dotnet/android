@@ -7,7 +7,7 @@ namespace Java.Interop
 {
 	public struct JniNativeMethodRegistrationArguments
 	{
-		static readonly string invalidStateMessage = $"{nameof(JniNativeMethodRegistrationArguments)} state is invalid. Please use constructor with parameters.";
+		const string invalidStateMessage = nameof(JniNativeMethodRegistrationArguments) + " state is invalid. Please use constructor with parameters.";
 
 		public ICollection<JniNativeMethodRegistration> Registrations {
 			get { return _registrations ?? throw new InvalidOperationException (invalidStateMessage); }
