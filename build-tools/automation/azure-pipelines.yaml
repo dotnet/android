@@ -867,8 +867,7 @@ stages:
  # Check - "Xamarin.Android (Designer Tests macOS)"
   - job: designer_integration_mac
     displayName: macOS
-    pool: 
-      name: $(HostedMacMojave)
+    pool: $(HostedMacMojave)
     timeoutInMinutes: 120
     cancelTimeoutInMinutes: 5
     workspace:
@@ -1158,10 +1157,7 @@ stages:
   # Check - "Xamarin.Android (Finalize Installers Notarize and Upload to Storage)"
   - job: notarize_pkg_upload_storage
     displayName: Notarize and Upload to Storage
-    pool: 
-       name: $(MacMojaveBuildPool)
-       demands:
-         - Agent.ComputerName -equals XAMBOT-1009
+    pool: $(MacMojaveBuildPool)
     timeoutInMinutes: 90
     cancelTimeoutInMinutes: 1
     workspace:
@@ -1267,7 +1263,7 @@ stages:
     - task: MicroBuildSigningPlugin@3
       displayName: Install Signing Plugin
       inputs:
-        signType: $(FailFast)
+        signType: real
         azureSubscription: MicroBuild Signing Task (DevDiv)
       env:
         SYSTEM_ACCESSTOKEN: $(System.AccessToken)
