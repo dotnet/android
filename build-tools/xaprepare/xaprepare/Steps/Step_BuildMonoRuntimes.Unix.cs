@@ -88,9 +88,9 @@ namespace Xamarin.Android.Prepare
 			string projectPath = Path.Combine (Configurables.Paths.BuildToolsDir, "conjure-xamarin-android-cecil", "conjure-xamarin-android-cecil.csproj");
 			result = await msbuild.Run (
 				projectPath: projectPath,
-				arguments: new List <string> {
-				   "/restore",
-			    },
+				arguments: new List<string> {
+					"/restore",
+				},
 				logTag: "conjure-xamarin-android-cecil",
 				binlogName: "build-conjure-xamarin-android-cecil"
 			);
