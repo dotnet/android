@@ -59,8 +59,10 @@ namespace MonoDroid.Generation
 		public bool SupportNestedInterfaceTypes { get; set; }
 		public bool SupportNullableReferenceTypes { get; set; }
 		public bool UseShallowReferencedTypes { get; set; }
+		public bool RemoveConstSugar => BuildingCoreAssembly;
 
 		bool? buildingCoreAssembly;
+		// Basically this means "Are we building Mono.Android.dll?"
 		public bool BuildingCoreAssembly {
 			get {
 				return buildingCoreAssembly ?? (buildingCoreAssembly = (SymbolTable.Lookup ("java.lang.Object") is ClassGen gen && gen.FromXml)).Value;

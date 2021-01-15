@@ -158,22 +158,24 @@ namespace MonoDroid.Generation
 
 		public bool HasStaticMethods => GetAllMethods ().Any (m => m.IsStatic);
 
-		public bool IsConstSugar {
-			get {
-				if (Methods.Count > 0 || Properties.Count > 0)
+		public bool IsConstSugar (CodeGenerationOptions options)
+		{
+			if (!options.RemoveConstSugar)
+				return false;
+
+			if (Methods.Count > 0 || Properties.Count > 0)
+				return false;
+
+			foreach (InterfaceGen impl in GetAllDerivedInterfaces ())
+				if (!impl.IsConstSugar (options))
 					return false;
 
-				foreach (InterfaceGen impl in GetAllDerivedInterfaces ())
-					if (!impl.IsConstSugar)
-						return false;
+			// Need to keep Java.IO.ISerializable as a "marker interface"; want to
+			// hide android.provider.ContactsContract.DataColumnsWithJoins
+			if (Fields.Count == 0 && Interfaces.Count == 0)
+				return false;
 
-				// Need to keep Java.IO.ISerializable as a "marker interface"; want to
-				// hide android.provider.ContactsContract.DataColumnsWithJoins
-				if (Fields.Count == 0 && Interfaces.Count == 0)
-					return false;
-
-				return true;
-			}
+			return true;
 		}
 
 		// If there is a property it cannot generate valid implementor, so reject this at least so far.

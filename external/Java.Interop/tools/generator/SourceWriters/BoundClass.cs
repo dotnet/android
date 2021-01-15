@@ -145,7 +145,7 @@ namespace generator.SourceWriters
 		void AddImplementedInterfaces (ClassGen klass)
 		{
 			foreach (var isym in klass.Interfaces) {
-				if ((!(isym is GenericSymbol gs) ? isym : gs.Gen) is InterfaceGen gen && (gen.IsConstSugar || gen.RawVisibility != "public"))
+				if ((!(isym is GenericSymbol gs) ? isym : gs.Gen) is InterfaceGen gen && (gen.IsConstSugar (opt) || gen.RawVisibility != "public"))
 					continue;
 
 				Implements.Add (opt.GetOutputName (isym.FullName));

@@ -48,6 +48,13 @@ namespace generatortests
 		[Test]
 		public void WriteConstSugarInterfaceFields ()
 		{
+			// Need a JLO class "FromXml" to trigger ConstSugar logic. (ie: this is "building" Mono.Android.dll)
+			var klass = new TestClass ("java.lang.Object", "java.lang.Object") {
+				FromXml = true,
+			};
+
+			options.SymbolTable.AddType (klass);
+
 			// This is an interface that only has fields (IsConstSugar)
 			// We treat   a little differenly because they don't need to interop with Java
 			var iface = SupportTypeBuilder.CreateEmptyInterface ("java.code.IMyInterface");

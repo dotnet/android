@@ -26,7 +26,7 @@ namespace generator.SourceWriters
 			// If this interface is just fields and we can't generate any of them
 			// then we don't need to write the interface.  We still keep this type
 			// because it may have nested types or need an InterfaceMemberAlternativeClass.
-			if (iface.IsConstSugar && iface.GetGeneratableFields (opt).Count () == 0) {
+			if (iface.IsConstSugar (opt) && iface.GetGeneratableFields (opt).Count () == 0) {
 				dont_generate = true;
 				return;
 			}
@@ -43,7 +43,7 @@ namespace generator.SourceWriters
 			if (iface.IsDeprecated)
 				Attributes.Add (new ObsoleteAttr (iface.DeprecatedComment) { WriteAttributeSuffix = true, WriteEmptyString = true });
 
-			if (!iface.IsConstSugar) {
+			if (!iface.IsConstSugar (opt)) {
 				var signature = string.IsNullOrWhiteSpace (iface.Namespace)
 					? iface.FullName.Replace ('.', '/')
 					: iface.Namespace + "." + iface.FullName.Substring (iface.Namespace.Length + 1).Replace ('.', '/');
@@ -63,7 +63,7 @@ namespace generator.SourceWriters
 			AddNestedTypes (iface, opt, context, genInfo);
 
 			// If this interface is just constant fields we don't need to add all the invoker bits
-			if (iface.IsConstSugar)
+			if (iface.IsConstSugar (opt))
 				return;
 
 			if (!iface.AssemblyQualifiedName.Contains ('/')) {
@@ -137,13 +137,13 @@ namespace generator.SourceWriters
 			foreach (var isym in iface.Interfaces) {
 				var igen = (isym is GenericSymbol ? (isym as GenericSymbol).Gen : isym) as InterfaceGen;
 
-				if (igen.IsConstSugar || igen.RawVisibility != "public")
+				if (igen.IsConstSugar (opt) || igen.RawVisibility != "public")
 					continue;
 
 				Implements.Add (opt.GetOutputName (isym.FullName));
 			}
 
-			if (Implements.Count == 0 && !iface.IsConstSugar)
+			if (Implements.Count == 0 && !iface.IsConstSugar (opt))
 				Implements.AddRange (new [] { "IJavaObject", "IJavaPeerable" });
 		}
 

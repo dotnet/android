@@ -55,7 +55,7 @@ namespace MonoDroid.Generation
 			foreach (ISymbol isym in @class.Interfaces) {
 				GenericSymbol gs = isym as GenericSymbol;
 				InterfaceGen gen = (gs == null ? isym : gs.Gen) as InterfaceGen;
-				if (gen != null && (gen.IsConstSugar || gen.RawVisibility != "public"))
+				if (gen != null && (gen.IsConstSugar (opt) || gen.RawVisibility != "public"))
 					continue;
 				if (sb.Length > 0)
 					sb.Append (", ");
@@ -465,13 +465,13 @@ namespace MonoDroid.Generation
 
 			// If this interface is just fields and we can't generate any of them
 			// then we don't need to write the interface
-			if (@interface.IsConstSugar && @interface.GetGeneratableFields (opt).Count () == 0)
+			if (@interface.IsConstSugar (opt) && @interface.GetGeneratableFields (opt).Count () == 0)
 				return;
 
 			WriteInterfaceDeclaration (@interface, indent, gen_info);
 
 			// If this interface is just constant fields we don't need to write all the invoker bits
-			if (@interface.IsConstSugar)
+			if (@interface.IsConstSugar (opt))
 				return;
 
 			if (!@interface.AssemblyQualifiedName.Contains ('/'))
@@ -514,7 +514,7 @@ namespace MonoDroid.Generation
 			StringBuilder sb = new StringBuilder ();
 			foreach (ISymbol isym in @interface.Interfaces) {
 				InterfaceGen igen = (isym is GenericSymbol ? (isym as GenericSymbol).Gen : isym) as InterfaceGen;
-				if (igen.IsConstSugar || igen.RawVisibility != "public")
+				if (igen.IsConstSugar (opt) || igen.RawVisibility != "public")
 					continue;
 				if (sb.Length > 0)
 					sb.Append (", ");
@@ -526,7 +526,7 @@ namespace MonoDroid.Generation
 			if (@interface.IsDeprecated)
 				writer.WriteLine ("{0}[ObsoleteAttribute (@\"{1}\")]", indent, @interface.DeprecatedComment);
 
-			if (!@interface.IsConstSugar) {
+			if (!@interface.IsConstSugar (opt)) {
 				var signature = string.IsNullOrWhiteSpace (@interface.Namespace)
 					? @interface.FullName.Replace ('.', '/')
 					: @interface.Namespace + "." + @interface.FullName.Substring (@interface.Namespace.Length + 1).Replace ('.', '/');
@@ -537,7 +537,7 @@ namespace MonoDroid.Generation
 			if (@interface.TypeParameters != null && @interface.TypeParameters.Any ())
 				writer.WriteLine ("{0}{1}", indent, @interface.TypeParameters.ToGeneratedAttributeString ());
 			writer.WriteLine ("{0}{1} partial interface {2}{3} {{", indent, @interface.Visibility, @interface.Name,
-				@interface.IsConstSugar ? string.Empty : @interface.Interfaces.Count == 0 || sb.Length == 0 ? " : " + GetAllInterfaceImplements () : " : " + sb.ToString ());
+				@interface.IsConstSugar (opt) ? string.Empty : @interface.Interfaces.Count == 0 || sb.Length == 0 ? " : " + GetAllInterfaceImplements () : " : " + sb.ToString ());
 
 			if (opt.SupportDefaultInterfaceMethods && (@interface.HasDefaultMethods || @interface.HasStaticMethods))
 				WriteClassHandle (@interface, indent + "\t", @interface.Name);
