@@ -12,7 +12,7 @@ namespace Xamarin.Android.Prepare
 {
 	static partial class Utilities
 	{
-		static readonly TimeSpan ExceptionRetryInitialDelay = TimeSpan.FromMilliseconds (250);
+		static readonly TimeSpan ExceptionRetryInitialDelay = TimeSpan.FromSeconds (30);
 		static readonly TimeSpan WebRequestTimeout = TimeSpan.FromMinutes (60);
 		static readonly int ExceptionRetries = 5;
 
