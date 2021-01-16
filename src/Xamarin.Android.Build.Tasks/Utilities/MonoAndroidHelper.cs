@@ -554,7 +554,7 @@ namespace Xamarin.Android.Tasks
 
 		public static Dictionary<string, HashSet<string>> LoadCustomViewMapFile (IBuildEngine4 engine, string mapFile)
 		{
-			var cachedMap = (Dictionary<string, HashSet<string>>)engine?.GetRegisteredTaskObject (mapFile, RegisteredTaskObjectLifetime.Build);
+			var cachedMap = engine?.GetRegisteredTaskObjectAssemblyLocal<Dictionary<string, HashSet<string>>> (mapFile, RegisteredTaskObjectLifetime.Build);
 			if (cachedMap != null)
 				return cachedMap;
 			var map = new Dictionary<string, HashSet<string>> ();
@@ -574,7 +574,7 @@ namespace Xamarin.Android.Tasks
 
 		public static bool SaveCustomViewMapFile (IBuildEngine4 engine, string mapFile, Dictionary<string, HashSet<string>> map)
 		{
-			engine?.RegisterTaskObject (mapFile, map, RegisteredTaskObjectLifetime.Build, allowEarlyCollection: false);
+			engine?.RegisterTaskObjectAssemblyLocal (mapFile, map, RegisteredTaskObjectLifetime.Build);
 			using (var writer = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 				foreach (var i in map.OrderBy (x => x.Key)) {
 					foreach (var v in i.Value.OrderBy (x => x))
@@ -633,11 +633,10 @@ namespace Xamarin.Android.Tasks
 		static readonly string ResourceCaseMapKey = $"{nameof (MonoAndroidHelper)}_ResourceCaseMap";
 
 		public static void SaveResourceCaseMap (IBuildEngine4 engine, Dictionary<string, string> map) =>
-			engine.RegisterTaskObject (ResourceCaseMapKey, map, RegisteredTaskObjectLifetime.Build, allowEarlyCollection: false);
+			engine.RegisterTaskObjectAssemblyLocal (ResourceCaseMapKey, map, RegisteredTaskObjectLifetime.Build);
 
 		public static Dictionary<string, string> LoadResourceCaseMap (IBuildEngine4 engine) =>
-			engine.GetRegisteredTaskObject (ResourceCaseMapKey, RegisteredTaskObjectLifetime.Build)
-				as Dictionary<string, string> ?? new Dictionary<string, string> (0);
+			engine.GetRegisteredTaskObjectAssemblyLocal<Dictionary<string, string>> (ResourceCaseMapKey, RegisteredTaskObjectLifetime.Build) ?? new Dictionary<string, string> (0);
 
 		public static string FixUpAndroidResourcePath (string file, string resourceDirectory, string resourceDirectoryFullPath, Dictionary<string, string> resource_name_case_map)
 		{

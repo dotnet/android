@@ -21,7 +21,6 @@ namespace Xamarin.Android.Tasks
 
 		const string TargetFrameworkIdentifier = "MonoAndroid";
 		const RegisteredTaskObjectLifetime Lifetime = RegisteredTaskObjectLifetime.AppDomain;
-		const bool AllowEarlyCollection = false;
 
 		public ITaskItem [] InputAssemblies { get; set; }
 
@@ -48,7 +47,7 @@ namespace Xamarin.Android.Tasks
 					// Check in-memory cache
 					var module = reader.GetModuleDefinition ();
 					var key = (nameof (FilterAssemblies), reader.GetGuid (module.Mvid));
-					var value = BuildEngine4.GetRegisteredTaskObject (key, Lifetime);
+					var value = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal (key, Lifetime);
 					if (value is bool isMonoAndroidAssembly) {
 						if (isMonoAndroidAssembly) {
 							Log.LogDebugMessage ($"Cached: {assemblyItem.ItemSpec}");
@@ -61,25 +60,25 @@ namespace Xamarin.Android.Tasks
 					var targetFrameworkIdentifier = GetTargetFrameworkIdentifier (assemblyDefinition, reader);
 					if (string.Compare (targetFrameworkIdentifier, TargetFrameworkIdentifier, StringComparison.OrdinalIgnoreCase) == 0) {
 						output.Add (assemblyItem);
-						BuildEngine4.RegisterTaskObject (key, true, Lifetime, AllowEarlyCollection);
+						BuildEngine4.RegisterTaskObjectAssemblyLocal (key, value: true, Lifetime);
 						continue;
 					}
 					// Fallback to looking for a Mono.Android reference
 					if (MonoAndroidHelper.HasMonoAndroidReference (reader)) {
 						Log.LogDebugMessage ($"Mono.Android reference found: {assemblyItem.ItemSpec}");
 						output.Add (assemblyItem);
-						BuildEngine4.RegisterTaskObject (key, true, Lifetime, AllowEarlyCollection);
+						BuildEngine4.RegisterTaskObjectAssemblyLocal (key, value: true, Lifetime);
 						continue;
 					}
 					// Fallback to looking for *.jar or __Android EmbeddedResource files
 					if (HasEmbeddedResource (reader)) {
 						Log.LogDebugMessage ($"EmbeddedResource found: {assemblyItem.ItemSpec}");
 						output.Add (assemblyItem);
-						BuildEngine4.RegisterTaskObject (key, true, Lifetime, AllowEarlyCollection);
+						BuildEngine4.RegisterTaskObjectAssemblyLocal (key, value: true, Lifetime);
 						continue;
 					}
 					// Not a MonoAndroid assembly, store false
-					BuildEngine4.RegisterTaskObject (key, false, Lifetime, AllowEarlyCollection);
+					BuildEngine4.RegisterTaskObjectAssemblyLocal (key, value: false, Lifetime);
 				}
 			}
 			OutputAssemblies = output.ToArray ();
