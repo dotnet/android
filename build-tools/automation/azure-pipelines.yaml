@@ -46,6 +46,7 @@ resources:
 
 # Global variables
 variables:
+  System.Debug: true
   XA.Jdk8.Folder: jdk-1.8
   XA.Jdk11.Folder: jdk-11
   NuGetArtifactName: nupkgs
