@@ -236,7 +236,7 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Bindings.targets" ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Bindings.ClassParse.targets" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Bindings.Core.targets" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Bindings.Documentation.targets" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Bindings.Documentation.targets" ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Bindings.JarToXml.targets" ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Build.Tasks.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Xamarin.Android.Build.Tasks.pdb" />

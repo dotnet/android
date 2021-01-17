@@ -16,25 +16,27 @@ This file is only used by binding projects. .NET 5 can eventually use it, once `
   <UsingTask TaskName="Xamarin.Android.Tasks.MDoc"          AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.Unzip"         AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 
-  <PropertyGroup>
-    <_JavadocSupported Condition=" $(_JdkVersion.StartsWith ('1.8')) ">True</_JavadocSupported>
-  </PropertyGroup>
-
   <Target Name="_ExtractJavaDocJars"
-      Condition=" '$(_JavadocSupported)' == 'True' "
       Inputs="@(JavaDocJar)"
       Outputs="@(JavaDocJar->'$(IntermediateOutputPath)javadocs\%(FileName).stamp')">
     <Unzip
         Sources="@(JavaDocJar)"
         DestinationDirectories="@(JavaDocJar->'$(IntermediateOutputPath)javadocs\%(FileName)')"
     />
-    <Touch Files="@(JavaDocJar->'$(IntermediateOutputPath)javadocs\%(FileName).stamp')" />
+    <Touch Files="@(JavaDocJar->'$(IntermediateOutputPath)javadocs\%(FileName).stamp')" AlwaysCreate="true" />
     <ItemGroup>
       <JavaDocIndex Include="@(JavaDocJar->'$(IntermediateOutputPath)javadocs\%(FileName)\index.html')" />
     </ItemGroup>
   </Target>
 
+  <Target Name="_GetJavadocSupported">
+    <PropertyGroup>
+      <_JavadocSupported Condition=" '$(_JavadocSupported)' == '' And $(_JdkVersion.StartsWith ('1.8')) ">True</_JavadocSupported>
+    </PropertyGroup>
+  </Target>
+
   <Target Name="_GenerateJavaDocFromSourceJars"
+      DependsOnTargets="_GetJavadocSupported"
       Condition=" '$(_JavadocSupported)' == 'True' "
       Inputs="@(JavaSourceJar)"
       Outputs="@(JavaSourceJar->'$(IntermediateOutputPath)javadocs\%(FileName).stamp')">
@@ -57,6 +59,7 @@ This file is only used by binding projects. .NET 5 can eventually use it, once `
   </Target>
 
   <Target Name="BuildDocumentation"
+      DependsOnTargets="_GetJavadocSupported"
       Condition=" '@(JavaDocIndex->Count())' != '0' And '$(_JavadocSupported)' == 'True' "
       Inputs="@(JavaDocIndex);@(IntermediateAssembly->'$(IntermediateOutputPath)%(filename).xml')"
       Outputs="@(IntermediateAssembly->'$(OutputPath)%(filename).xml')">

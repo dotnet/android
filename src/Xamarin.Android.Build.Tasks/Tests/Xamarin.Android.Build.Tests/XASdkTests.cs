@@ -89,7 +89,7 @@ namespace Xamarin.Android.Build.Tests
 				TextContent = () => $"{env_var}={env_val}",
 			});
 			libB.OtherBuildItems.Add (new AndroidItem.AndroidLibrary ("sub\\directory\\foo.jar") {
-				BinaryContent = () => Convert.FromBase64String (InlineData.JavaClassesJarBase64),
+				BinaryContent = () => ResourceData.JavaSourceJarTestJar,
 			});
 			libB.OtherBuildItems.Add (new AndroidItem.AndroidLibrary ("sub\\directory\\arm64-v8a\\libfoo.so") {
 				BinaryContent = () => Array.Empty<byte> (),
@@ -183,7 +183,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var dotnet = CreateDotNetBuilder ();
 			Assert.IsTrue (dotnet.New (template), $"`dotnet new {template}` should succeed");
-			File.WriteAllBytes (Path.Combine (dotnet.ProjectDirectory, "foo.jar"), Convert.FromBase64String (InlineData.JavaClassesJarBase64));
+			File.WriteAllBytes (Path.Combine (dotnet.ProjectDirectory, "foo.jar"), ResourceData.JavaSourceJarTestJar);
 			Assert.IsTrue (dotnet.New ("android-activity"), "`dotnet new android-activity` should succeed");
 			Assert.IsTrue (dotnet.New ("android-layout", Path.Combine (dotnet.ProjectDirectory, "Resources", "layout")), "`dotnet new android-layout` should succeed");
 			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
@@ -205,7 +205,7 @@ namespace Xamarin.Android.Build.Tests
 				BinaryContent = () => Array.Empty<byte> (),
 			});
 			proj.OtherBuildItems.Add (new AndroidItem.AndroidLibrary ("sub\\directory\\foo.jar") {
-				BinaryContent = () => Convert.FromBase64String (InlineData.JavaClassesJarBase64),
+				BinaryContent = () => ResourceData.JavaSourceJarTestJar,
 			});
 			proj.OtherBuildItems.Add (new AndroidItem.AndroidLibrary ("sub\\directory\\arm64-v8a\\libfoo.so") {
 				BinaryContent = () => Array.Empty<byte> (),
@@ -280,12 +280,11 @@ namespace Xamarin.Android.Build.Tests
 </metadata>",
 			});
 			proj.Sources.Add (new AndroidItem.AndroidLibrary ("javaclasses.jar") {
-				BinaryContent = () => Convert.FromBase64String (InlineData.JavaClassesJarBase64)
+				BinaryContent = () => ResourceData.JavaSourceJarTestJar,
 			});
-			// TODO: bring back when Xamarin.Android.Bindings.Documentation.targets is working
-			//proj.OtherBuildItems.Add (new BuildItem ("JavaSourceJar", "javasources.jar") {
-			//	BinaryContent = () => Convert.FromBase64String (InlineData.JavaSourcesJarBase64)
-			//});
+			proj.OtherBuildItems.Add (new BuildItem ("JavaSourceJar", "javaclasses-sources.jar") {
+				BinaryContent = () => ResourceData.JavaSourceJarTestSourcesJar,
+			});
 			var dotnet = CreateDotNetBuilder (proj);
 			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
 
@@ -342,12 +341,11 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease
 			};
 			proj.OtherBuildItems.Add (new AndroidItem.InputJar ("javaclasses.jar") {
-				BinaryContent = () => Convert.FromBase64String (InlineData.JavaClassesJarBase64)
+				BinaryContent = () => ResourceData.JavaSourceJarTestJar,
 			});
-			// TODO: bring back when Xamarin.Android.Bindings.Documentation.targets is working
-			//proj.OtherBuildItems.Add (new BuildItem ("JavaSourceJar", "javasources.jar") {
-			//	BinaryContent = () => Convert.FromBase64String (InlineData.JavaSourcesJarBase64)
-			//});
+			proj.OtherBuildItems.Add (new BuildItem ("JavaSourceJar", "javaclasses-sources.jar") {
+				BinaryContent = () => ResourceData.JavaSourceJarTestSourcesJar,
+			});
 			if (!runtimeIdentifiers.Contains (";")) {
 				proj.SetProperty (KnownProperties.RuntimeIdentifier, runtimeIdentifiers);
 			} else {
