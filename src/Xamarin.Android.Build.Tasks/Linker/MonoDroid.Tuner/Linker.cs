@@ -94,7 +94,6 @@ namespace MonoDroid.Tuner
 				new RemoveSecurity (),
 				new MarkJavaObjects (),
 				new PreserveJavaExceptions (),
-				new PreserveJavaTypeRegistrations (),
 				new PreserveApplications (),
 				new RemoveAttributes (),
 				new PreserveDynamicTypes (),
