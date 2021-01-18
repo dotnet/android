@@ -13,7 +13,9 @@ namespace Xamarin.Android.Prepare
 
 		partial void InitGit (Context context, bool require)
 		{
-			Log.StatusLine ($"  {context.Characters.Bullet} git", ConsoleColor.White);
+			if (!quiet) {
+				Log.StatusLine ($"  {context.Characters.Bullet} git", ConsoleColor.White);
+			}
 			GitPath = context.OS.Which ("git", required: require);
 			ReportToolPath (gitPath);
 		}

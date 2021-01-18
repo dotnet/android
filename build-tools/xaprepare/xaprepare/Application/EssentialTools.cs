@@ -5,11 +5,14 @@ namespace Xamarin.Android.Prepare
 	partial class EssentialTools : AppObject
 	{
 		bool initialized;
+		bool quiet;
 
 		public bool IsInitialized => initialized;
 
-		public EssentialTools ()
-		{}
+		public EssentialTools (bool quiet = false)
+		{
+			this.quiet = quiet;
+		}
 
 		partial void InitGit (Context context, bool require);
 		partial void InitSevenZip (Context context, bool require);
@@ -18,8 +21,10 @@ namespace Xamarin.Android.Prepare
 		{
 			bool require = AreToolsRequired (context);
 
-			Log.StatusLine ();
-			Log.StatusLine ("Locating essential tool binaries", ConsoleColor.DarkGreen);
+			if (!quiet) {
+				Log.StatusLine ();
+				Log.StatusLine ("Locating essential tool binaries", ConsoleColor.DarkGreen);
+			}
 
 			InitGit (context, require);
 			InitSevenZip (context, require);
@@ -29,6 +34,10 @@ namespace Xamarin.Android.Prepare
 
 		void ReportToolPath (string path)
 		{
+			if (quiet) {
+				return;
+			}
+
 			if (!String.IsNullOrEmpty (path))
 				Log.StatusLine ("     Found: ", path, tailColor: Log.DestinationColor);
 			else

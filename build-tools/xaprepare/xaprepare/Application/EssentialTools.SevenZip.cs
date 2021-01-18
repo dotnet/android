@@ -13,7 +13,9 @@ namespace Xamarin.Android.Prepare
 
 		partial void InitSevenZip (Context context, bool require)
 		{
-			Log.StatusLine ($"  {context.Characters.Bullet} 7za", ConsoleColor.White);
+			if (!quiet) {
+				Log.StatusLine ($"  {context.Characters.Bullet} 7za", ConsoleColor.White);
+			}
 			SevenZipPath = context.OS.Which ("7za", required: require);
 			ReportToolPath (sevenZipPath);
 		}

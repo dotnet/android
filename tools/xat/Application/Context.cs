@@ -104,7 +104,7 @@ namespace Xamarin.Android.Prepare
 		/// <summary>
 		///   A shortcut to access a small set of essential tools used by the bootstrapper. See <see cref="EssentialTools" />
 		/// </summary>
-		public EssentialTools Tools                    { get; private set; } = new EssentialTools ();
+		public EssentialTools Tools                    { get; private set; } = new EssentialTools (quiet: true);
 
 		/// <summary>
 		///   If <c>true</c>, each test suite requiring and Android device will have a fresh emulator image (AVD)

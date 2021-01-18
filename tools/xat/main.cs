@@ -165,7 +165,9 @@ namespace Xamarin.Android.Tests
 			var commands = new CommandSet ("xat") {
 				"usage: xat COMMAND [OPTIONS]",
 				"",
-				$"Xamarin.Android v{BuildInfo.XAVersion} test shell",
+				$"Runs xamarin-android unit tests and applications.",
+				"",
+				"See tools/xat/README.md for more information",
 				"",
 				"Global options:",
 				{"v|verbosity=", $"Set console log verbosity to {{LEVEL}}. Level name may be abbreviated to the smallest unique part (one of: {GetVerbosityLevels ()}). Default: {Context.Instance.LoggingVerbosity.ToString().ToLowerInvariant ()}", v => Context.Instance.LoggingVerbosity = ParseLogVerbosity (v) },
@@ -176,6 +178,9 @@ namespace Xamarin.Android.Tests
 				"Available commands:",
 				new ListCommand (),
 				new RunCommand (),
+				"",
+				"Examples:",
+				"",
 			};
 
 			try {
