@@ -1061,7 +1061,7 @@ stages:
       inputs:
         solution: build-tools/remap-assembly-ref/remap-assembly-ref.csproj
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/remap-assembly-ref.binlog
+        msbuildArguments: /restore /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/remap-assembly-ref.binlog
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
