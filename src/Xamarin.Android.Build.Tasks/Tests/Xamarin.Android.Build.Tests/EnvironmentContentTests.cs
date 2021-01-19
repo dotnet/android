@@ -154,7 +154,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetProperty (proj.ReleaseProperties, "MonoSymbolArchive", "True");
 			proj.SetProperty (proj.ReleaseProperties, "DebugSymbols", "true");
-			proj.SetProperty (proj.ReleaseProperties, "DebugType", "PdbOnly");
+			proj.SetProperty (proj.ReleaseProperties, "DebugType", "Portable");
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, "true");
 			proj.SetProperty (proj.ReleaseProperties, "AndroidPackageFormat", packageFormat);
 			proj.SetAndroidSupportedAbis (supportedAbis);

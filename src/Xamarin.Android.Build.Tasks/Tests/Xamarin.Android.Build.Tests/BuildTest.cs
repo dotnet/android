@@ -1916,7 +1916,7 @@ namespace App1
 						foreach (var abi in abis) {
 							var assemblies = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
 								"aot", abi, "libaot-UnnamedProject.dll.so");
-							var shouldExist = monoSymbolArchive && debugSymbols && debugType == "PdbOnly";
+							var shouldExist = monoSymbolArchive && debugSymbols && (debugType == "PdbOnly" || debugType == "Portable");
 							var symbolicateFile = Directory.GetFiles (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
 								"aot", abi), "UnnamedProject.dll.msym", SearchOption.AllDirectories).FirstOrDefault ();
 							if (shouldExist)
