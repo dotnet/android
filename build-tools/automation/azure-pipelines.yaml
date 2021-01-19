@@ -1146,7 +1146,7 @@ stages:
     - task: MSBuild@1
       displayName: msbuild /t:Restore sign-dotnet-pkg.proj
       inputs:
-        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/create-dotnet-pkg/sign-dotnet-pkg.csproj
+        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/create-dotnet-pkg/sign-dotnet-pkg.proj
         configuration: $(XA.Build.Configuration)
         msbuildArguments: /t:Restore /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/restore-sign-pkg.binlog
 
@@ -1160,7 +1160,7 @@ stages:
     - task: MSBuild@1
       displayName: msbuild /t:CreateWorkloadInstallers
       inputs:
-        solution: Xamarin.Android.sln
+        solution: $(System.DefaultWorkingDirectory)/xamarin-android/Xamarin.Android.sln
         configuration: $(XA.Build.Configuration)
         msbuildArguments: /t:CreateWorkloadInstallers /p:SignType=$(MicroBuildSignType) /p:MicroBuildPluginDirectory=$(MicroBuildOverridePluginDirectory) /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/msbuild-workload.binlog
 
