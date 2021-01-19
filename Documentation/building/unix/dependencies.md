@@ -2,6 +2,7 @@
 
 Building Xamarin.Android requires:
 
+  * [Homebrew](#homebrew)
   * [Latest Mono](#mono-sdk)
   * [The Java Development Kit (JDK)](#jdk)
   * [Autotools (`autoconf`, `automake`, etc.)](#autotools)
@@ -27,6 +28,18 @@ then the build will fail and an error message will be displayed attempting
 to provide install instructions to obtain the missing dependency, e.g.:
 
     error : Could not find required program '7za'. Please run: brew install 'p7zip'.
+
+<a name="homebrew" />
+
+## Homebrew
+
+[Homebrew](https://brew.sh) must be installed and available via `$PATH` in
+order to provision xamarin-android.
+
+When building on Apple Silicon (arm64) machines, use the **arch**(1) command to
+allow Homebrew to be installed:
+
+	% arch -arch x86_64 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 
 <a name="mono-sdk" />

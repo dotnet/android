@@ -39,6 +39,7 @@ namespace Xamarin.Android.Prepare
 
 			WriteVariable ("export OS_NAME", context.OS.Type);
 			WriteVariable ("export OS_ARCH", context.OS.Architecture);
+			WriteVariable ("export OS_ARCH_TRANSLATED", context.OS.ProcessIsTranslated ? "true" : "false");
 			WriteVariable ("PRODUCT_VERSION", context.ProductVersion);
 			WriteVariable ("MONO_SOURCE_FULL_PATH", Configurables.Paths.MonoSourceFullPath);
 
