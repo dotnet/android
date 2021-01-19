@@ -1139,7 +1139,7 @@ stages:
     - task: MSBuild@1
       displayName: msbuild Xamarin.Android.BootstrapTasks
       inputs:
-        solution: Xamarin.Android.BootstrapTasks.sln
+        solution: $(System.DefaultWorkingDirectory)/xamarin-android/Xamarin.Android.BootstrapTasks.sln
         configuration: $(XA.Build.Configuration)
         msbuildArguments: /restore /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/msbuild-bootstraptasks.binlog
 
