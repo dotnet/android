@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project>
+
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+  <Import Project="..\..\Configuration.props" />
+
   <PropertyGroup>
+    <TargetFrameworks>monoandroid10;netcoreapp3.1</TargetFrameworks>
+     <OutputType>Library</OutputType>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectTypeGuids>{EFBA0AD7-5A72-4C68-AF49-83D382785DCF};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <ProjectGuid>{5EB9E888-E357-417E-9F39-DDEC195CE47F}</ProjectGuid>
-    <OutputType>Library</OutputType>
     <RootNamespace>OpenTK</RootNamespace>
     <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
     <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
@@ -21,27 +24,22 @@
     <AndroidApplication>false</AndroidApplication>
     <AndroidUseLatestPlatformSdk>false</AndroidUseLatestPlatformSdk>
     <AppendTargetFrameworkToIntermediateOutputPath>False</AppendTargetFrameworkToIntermediateOutputPath>
+    <DocumentationFile>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)\OpenTK-1.0.xml</DocumentationFile>
+    <DebugSymbols>true</DebugSymbols>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+    <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)</OutputPath>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
   <Import Project="..\..\Configuration.props" />
   <Import Project="..\..\build-tools\scripts\MonoAndroidFramework.props" />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
     <Optimize>false</Optimize>
-    <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)</OutputPath>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <DocumentationFile>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)\OpenTK-1.0.xml</DocumentationFile>
     <AndroidLinkMode>None</AndroidLinkMode>
-    <ConsolePause>false</ConsolePause>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
     <Optimize>true</Optimize>
-    <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)</OutputPath>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <DocumentationFile>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)\OpenTK-1.0.xml</DocumentationFile>
-    <ConsolePause>false</ConsolePause>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="mscorlib">
@@ -593,7 +591,7 @@
             <Link>WindowState.cs</Link>
         </Compile>
    </ItemGroup>
-  <Import Project="$(OutputPath)\..\..\..\xbuild\Xamarin\Android\Xamarin.Android.CSharp.targets" Condition="Exists('$(OutputPath)\..\..\..\xbuild\Xamarin\Android\Xamarin.Android.CSharp.targets')" />
+
   <PropertyGroup>
     <JavacSourceVersion Condition=" '$(JavacSourceVersion)' == '' And '$(AndroidApiLevel)' != '' And $(AndroidApiLevel) &gt; 23 ">1.8</JavacSourceVersion>
     <JavacSourceVersion Condition=" '$(JavacSourceVersion)' == '' ">1.6</JavacSourceVersion>
