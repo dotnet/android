@@ -1,96 +1,25 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project>
+  <Import Project="..\..\build-tools\scripts\MonoAndroidFramework.props" />
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{4D603AA3-3BFD-43C8-8050-0CD6C2601126}</ProjectGuid>
-    <ProjectTypeGuids>{EFBA0AD7-5A72-4C68-AF49-83D382785DCF};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <OutputType>Library</OutputType>
-    <RootNamespace>Xamarin.Android.NUnitLite</RootNamespace>
-    <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
-    <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
-    <AssemblyName>Xamarin.Android.NUnitLite</AssemblyName>
-    <AndroidResgenFile>Resources\Resource.designer.cs</AndroidResgenFile>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
-    <AndroidApplication>false</AndroidApplication>
-    <AndroidUseLatestPlatformSdk>false</AndroidUseLatestPlatformSdk>
-    <NoStdLib>true</NoStdLib>
     <!-- Disable XML doc warnings:
          CS1570: XML comment has badly formed XML - 'Whitespace is not allowed at this location.'
          CS1572: XML comment has a param tag for 'Bar', but there is no parameter by that name
          CS1591: Missing XML comment for publicly visible type or member 'Foo'
     -->
     <NoWarn>1570;1572;1591</NoWarn>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateDocumentation>true</GenerateDocumentation>
+    <AndroidUseIntermediateDesignerFile>true</AndroidUseIntermediateDesignerFile>
   </PropertyGroup>
-  <Import Project="..\..\Configuration.props" />
-  <Import Project="..\..\build-tools\scripts\MonoAndroidFramework.props" />
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <Optimize>false</Optimize>
-    <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\v1.0</OutputPath>
-    <DefineConstants>DEBUG;NUNITLITE;CLR_4_0;NET_4_5;__MOBILE__;MONOTOUCH</DefineConstants>
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);NUNITLITE;CLR_4_0;NET_4_5;__MOBILE__;MONOTOUCH</DefineConstants>
     <DocumentationFile>$(OutputPath)\$(AssemblyName).xml</DocumentationFile>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <ConsolePause>false</ConsolePause>
-    <GenerateDocumentation>True</GenerateDocumentation>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <Optimize>true</Optimize>
-    <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\v1.0</OutputPath>
-    <DefineConstants>NUNITLITE;CLR_4_0;NET_4_5;__MOBILE__;MONOTOUCH</DefineConstants>
-    <DocumentationFile>$(OutputPath)\$(AssemblyName).xml</DocumentationFile>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <ConsolePause>false</ConsolePause>
-    <GenerateDocumentation>True</GenerateDocumentation>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="mscorlib">
-      <HintPath>$(OutputPath)..\v1.0\mscorlib.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System">
-      <HintPath>$(OutputPath)..\v1.0\System.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Core">
-      <HintPath>$(OutputPath)..\v1.0\System.Core.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Xml">
-      <HintPath>$(OutputPath)..\v1.0\System.Xml.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Java.Interop">
-      <HintPath>$(OutputPath)..\v1.0\Java.Interop.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Resources\Resource.designer.cs" />
-    <Compile Include="Gui\AndroidRunner.cs" />
-    <Compile Include="Gui\Activities\TestSuiteActivity.cs" />
-    <Compile Include="Gui\Instrumentations\TestSuiteInstrumentation.cs" />
-    <Compile Include="Gui\Activities\TestResultActivity.cs" />
-    <Compile Include="Gui\Activities\OptionsActivity.cs" />
-    <Compile Include="Gui\Options.cs" />
-    <Compile Include="Gui\TcpTextWriter.cs" />
     <Compile Include="..\..\src-ThirdParty\NUnitLite\**\*.cs" />
   </ItemGroup>
   <ItemGroup>
-    <AndroidResource Include="Resources\layout\options.axml" />
-    <AndroidResource Include="Resources\layout\results.axml" />
-    <AndroidResource Include="Resources\layout\test_result.axml" />
-    <AndroidResource Include="Resources\layout\test_suite.axml" />
+    <AndroidResource Include="Resources\layout\*.axml" />
   </ItemGroup>
-  <Import Project="$(OutputPath)\..\..\..\xbuild\Xamarin\Android\Xamarin.Android.CSharp.targets" Condition="Exists('$(OutputPath)\..\..\..\xbuild\Xamarin\Android\Xamarin.Android.CSharp.targets')"/>
-  <ItemGroup>
-    <ProjectReference Include="..\Mono.Android\Mono.Android.csproj">
-      <Project>{66CF299A-CE95-4131-BCD8-DB66E30C4BF7}</Project>
-      <Name>Mono.Android</Name>
-      <Private>False</Private>
-    </ProjectReference>
-  </ItemGroup>
+  <Import Project="..\..\build-tools\scripts\MonoAndroidFramework.targets" />
 </Project>
