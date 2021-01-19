@@ -18,6 +18,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="0.4.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="**" />
     <None Include="distribution.xml.in" />
   </ItemGroup>
@@ -78,6 +85,9 @@
     <ItemGroup>
       <FileWrites Include="$(PkgProductOutputPath)" />
       <None Include="$(PkgProductOutputPath)" CopyToOutputDirectory="PreserveNewest" Link="Microsoft.NET.Workload.Android-$(AndroidPackVersionLong).pkg" />
+      <FilesToSign Include="$(OutputPath)\Microsoft.NET.Workload.Android-$(AndroidPackVersionLong).pkg">
+        <Authenticode>MacDeveloper</Authenticode>
+      </FilesToSign>
     </ItemGroup>
   </Target>
 
