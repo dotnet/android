@@ -1164,7 +1164,7 @@ stages:
       inputs:
         solution: $(System.DefaultWorkingDirectory)/xamarin-android/Xamarin.Android.sln
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:CreateWorkloadInstallers /p:SignType=$(MicroBuildSignType) /p:MicroBuildPluginDirectory=$(MicroBuildOverridePluginDirectory) /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/msbuild-workload.binlog
+        msbuildArguments: /t:CreateWorkloadInstallers /p:SignType=$(MicroBuildSignType) /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/msbuild-workload.binlog
 
     - powershell: |
         $pkg = Get-ChildItem -Path "$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/*" -Include *.pkg -File
@@ -1190,6 +1190,11 @@ stages:
       inputs:
         artifactName: net6-pkg
         targetPath: $(XA.NET6.Pkg)
+
+    - template: yaml-templates/upload-results.yaml
+      parameters:
+        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
+        artifactName: Build Results - .NET 6 Preview .pkg
 
     - task: MicroBuildCleanup@1
       displayName: Clean Up Signing Tools
@@ -1238,7 +1243,7 @@ stages:
       inputs:
         solution: Xamarin.Android.sln
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:CreateWorkloadInstallers /p:SignType=$(MicroBuildSignType) /p:MicroBuildPluginDirectory=$(MicroBuildOverridePluginDirectory) /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-workload.binlog
+        msbuildArguments: /t:CreateWorkloadInstallers /p:SignType=$(MicroBuildSignType) /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-workload.binlog
 
     - script: copy /Y $(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\*.msi $(System.DefaultWorkingDirectory)\installer-artifacts
       displayName: copy .msi
@@ -1253,7 +1258,7 @@ stages:
     - template: yaml-templates/upload-results.yaml
       parameters:
         solution: build-tools\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj
-        artifactName: Build Results - .NET 6 Preview Installers
+        artifactName: Build Results - .NET 6 Preview .msi
 
     - task: MicroBuildCleanup@1
       displayName: Clean Up Signing Tools
