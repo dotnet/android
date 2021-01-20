@@ -13,6 +13,8 @@ namespace Xamarin.Android.Tools.Tests
 	[TestFixture]
 	public class AndroidSdkInfoTests
 	{
+		const string NdkVersion = "21.0.6113669";
+
 		string      UnixConfigDirOverridePath;
 		string      PreferredJdksOverridePath;
 
@@ -65,13 +67,64 @@ namespace Xamarin.Android.Tools.Tests
 		}
 
 		[Test]
+		public void Ndk_MultipleNdkVersionsInSdk ()
+		{
+			// Must match like-named constants in AndroidSdkBase
+			const int MinimumCompatibleNDKMajorVersion = 16;
+			const int MaximumCompatibleNDKMajorVersion = 21;
+
+			CreateSdks(out string root, out string jdk, out string ndk, out string sdk);
+
+			Action<TraceLevel, string> logger = (level, message) => {
+				Console.WriteLine($"[{level}] {message}");
+			};
+
+			var ndkVersions = new List<string> {
+				"16.1.4479499",
+				"17.2.4988734",
+				"18.1.5063045",
+				"19.2.5345600",
+				"20.0.5594570",
+				"20.1.5948944",
+				"21.0.6113669",
+				"21.1.6352462",
+				"21.2.6472646",
+				"21.3.6528147",
+				"22.0.7026061",
+			};
+			string expectedVersion = "21.3.6528147";
+			string expectedNdkPath = Path.Combine (sdk, "ndk", expectedVersion);
+
+			try {
+				MakeNdkDir (Path.Combine (sdk, "ndk-bundle"), NdkVersion);
+
+				foreach (string ndkVer in ndkVersions) {
+					MakeNdkDir (Path.Combine (sdk, "ndk", ndkVer), ndkVer);
+				}
+
+				var info = new AndroidSdkInfo (logger, androidSdkPath: sdk, androidNdkPath: null, javaSdkPath: jdk);
+
+				Assert.AreEqual (expectedNdkPath, info.AndroidNdkPath, "AndroidNdkPath not found inside sdk!");
+
+				string ndkVersion = Path.GetFileName (info.AndroidNdkPath);
+				if (!Version.TryParse (ndkVersion, out Version ver)) {
+					Assert.Fail ($"Unable to parse '{ndkVersion}' as a valid version.");
+				}
+
+				Assert.True (ver.Major >= MinimumCompatibleNDKMajorVersion, $"NDK version must be at least {MinimumCompatibleNDKMajorVersion}");
+				Assert.True (ver.Major <= MaximumCompatibleNDKMajorVersion, $"NDK version must be at most {MinimumCompatibleNDKMajorVersion}");
+			} finally {
+				Directory.Delete (root, recursive: true);
+			}
+		}
+
+		[Test]
 		public void Ndk_PathInSdk()
 		{
 			CreateSdks(out string root, out string jdk, out string ndk, out string sdk);
 
-			var logs = new StringWriter();
 			Action<TraceLevel, string> logger = (level, message) => {
-				logs.WriteLine($"[{level}] {message}");
+				Console.WriteLine($"[{level}] {message}");
 			};
 
 			try
@@ -79,6 +132,7 @@ namespace Xamarin.Android.Tools.Tests
 				var extension = OS.IsWindows ? ".cmd" : "";
 				var ndkPath = Path.Combine(sdk, "ndk-bundle");
 				Directory.CreateDirectory(ndkPath);
+				File.WriteAllText(Path.Combine (ndkPath, "source.properties"), $"Pkg.Revision = {NdkVersion}");
 				Directory.CreateDirectory(Path.Combine(ndkPath, "toolchains"));
 				File.WriteAllText(Path.Combine(ndkPath, $"ndk-stack{extension}"), "");
 
@@ -106,6 +160,8 @@ namespace Xamarin.Android.Tools.Tests
 			};
 			var oldPath = Environment.GetEnvironmentVariable ("PATH");
 			var oldJavaHome = Environment.GetEnvironmentVariable ("JAVA_HOME");
+			var oldAndroidHome = Environment.GetEnvironmentVariable ("ANDROID_HOME");
+			var oldAndroidSdkRoot = Environment.GetEnvironmentVariable ("ANDROID_SDK_ROOT");
 			try {
 				var paths   = new List<string> () {
 					Path.Combine (jdk, "bin"),
@@ -116,6 +172,12 @@ namespace Xamarin.Android.Tools.Tests
 				Environment.SetEnvironmentVariable ("PATH", string.Join (Path.PathSeparator.ToString (), paths));
 				if (!string.IsNullOrEmpty (oldJavaHome)) {
 					Environment.SetEnvironmentVariable ("JAVA_HOME", string.Empty);
+				}
+				if (!string.IsNullOrEmpty (oldAndroidHome)) {
+					Environment.SetEnvironmentVariable ("ANDROID_HOME", string.Empty);
+				}
+				if (!string.IsNullOrEmpty (oldAndroidSdkRoot)) {
+					Environment.SetEnvironmentVariable ("ANDROID_SDK_ROOT", string.Empty);
 				}
 
 				var info    = new AndroidSdkInfo (logger);
@@ -128,6 +190,12 @@ namespace Xamarin.Android.Tools.Tests
 				Environment.SetEnvironmentVariable ("PATH", oldPath);
 				if (!string.IsNullOrEmpty (oldJavaHome)) {
 					Environment.SetEnvironmentVariable ("JAVA_HOME", oldJavaHome);
+				}
+				if (!string.IsNullOrEmpty (oldAndroidHome)) {
+					Environment.SetEnvironmentVariable ("ANDROID_HOME", oldAndroidHome);
+				}
+				if (!string.IsNullOrEmpty (oldAndroidSdkRoot)) {
+					Environment.SetEnvironmentVariable ("ANDROID_SDK_ROOT", oldAndroidSdkRoot);
 				}
 				Directory.Delete (root, recursive: true);
 			}
@@ -243,7 +311,7 @@ namespace Xamarin.Android.Tools.Tests
 			Directory.CreateDirectory (jdk);
 
 			CreateFauxAndroidSdkDirectory (sdk, "26.0.0");
-			CreateFauxAndroidNdkDirectory (ndk);
+			CreateFauxAndroidNdkDirectory (ndk, NdkVersion);
 			CreateFauxJavaSdkDirectory (jdk, "1.8.0", out var _, out var _);
 		}
 
@@ -311,8 +379,9 @@ namespace Xamarin.Android.Tools.Tests
 			public  string      Id;
 		}
 
-		static void CreateFauxAndroidNdkDirectory (string androidNdkDirectory)
+		static void CreateFauxAndroidNdkDirectory (string androidNdkDirectory, string ndkVersion)
 		{
+			File.WriteAllText (Path.Combine (androidNdkDirectory, "source.properties"), $"Pkg.Revision = {ndkVersion}");
 			File.WriteAllText (Path.Combine (androidNdkDirectory, "ndk-stack"),     "");
 			File.WriteAllText (Path.Combine (androidNdkDirectory, "ndk-stack.cmd"), "");
 
@@ -473,6 +542,15 @@ namespace Xamarin.Android.Tools.Tests
 			finally {
 				Directory.Delete (root, recursive: true);
 			}
+		}
+
+		void MakeNdkDir (string rootPath, string version)
+		{
+			var extension = OS.IsWindows ? ".cmd" : String.Empty;
+			Directory.CreateDirectory(rootPath);
+			File.WriteAllText(Path.Combine (rootPath, "source.properties"), $"Pkg.Revision = {version}");
+			Directory.CreateDirectory(Path.Combine(rootPath, "toolchains"));
+			File.WriteAllText(Path.Combine(rootPath, $"ndk-stack{extension}"), String.Empty);
 		}
 	}
 }

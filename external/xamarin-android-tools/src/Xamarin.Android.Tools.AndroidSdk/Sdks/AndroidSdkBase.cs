@@ -9,6 +9,15 @@ namespace Xamarin.Android.Tools
 {
 	abstract class AndroidSdkBase
 	{
+		// When this changes, update the test: Xamarin.Android.Tools.Tests.AndroidSdkInfoTests.Ndk_MultipleNdkVersionsInSdk
+		const int MinimumCompatibleNDKMajorVersion = 16;
+		const int MaximumCompatibleNDKMajorVersion = 21;
+
+		static readonly char[] SourcePropertiesKeyValueSplit = new char[] { '=' };
+
+		// Per https://developer.android.com/studio/command-line/variables#envar
+		protected static readonly string[] AndroidSdkEnvVars = {"ANDROID_HOME", "ANDROID_SDK_ROOT"};
+
 		string[]? allAndroidSdks;
 
 		public string[] AllAndroidSdks {
@@ -97,8 +106,9 @@ namespace Xamarin.Android.Tools
 			if (pathValidator (ctorParam))
 				return ctorParam;
 			foreach (var path in getAllPaths ()) {
-				if (pathValidator (path))
+				if (pathValidator (path)) {
 					return path;
+				}
 			}
 			return null;
 		}
@@ -108,7 +118,7 @@ namespace Xamarin.Android.Tools
 			if (ValidateAndroidNdkLocation (ctorParam))
 				return ctorParam;
 			if (AndroidSdkPath != null) {
-				string bundle = Path.Combine (AndroidSdkPath, "ndk-bundle");
+				string bundle = FindBestNDK (AndroidSdkPath);
 				if (Directory.Exists (bundle) && ValidateAndroidNdkLocation (bundle))
 					return bundle;
 			}
@@ -125,6 +135,18 @@ namespace Xamarin.Android.Tools
 		protected abstract IEnumerable<string> GetAllAvailableAndroidSdks ();
 		protected abstract string GetShortFormPath (string path);
 
+		protected IEnumerable<string> GetSdkFromEnvironmentVariables ()
+		{
+			foreach (string envVar in AndroidSdkEnvVars) {
+				string ev = Environment.GetEnvironmentVariable (envVar);
+				if (String.IsNullOrEmpty (ev)) {
+					continue;
+				}
+
+				yield return ev;
+			}
+		}
+
 		protected virtual IEnumerable<string> GetAllAvailableAndroidNdks ()
 		{
 			// Look in PATH
@@ -139,7 +161,67 @@ namespace Xamarin.Android.Tools
 			foreach (var sdk in GetAllAvailableAndroidSdks ()) {
 				if (sdk == AndroidSdkPath)
 					continue;
-				yield return Path.Combine (sdk, "ndk-bundle");
+				yield return FindBestNDK (sdk);
+			}
+		}
+
+		string FindBestNDK (string androidSdkPath)
+		{
+			var ndkInstances = new SortedDictionary<Version, string> (Comparer<Version>.Create ((Version l, Version r) => r.CompareTo (l)));
+
+			foreach (string ndkPath in Directory.EnumerateDirectories (androidSdkPath, "ndk*", SearchOption.TopDirectoryOnly)) {
+				if (String.Compare ("ndk-bundle", Path.GetFileName (ndkPath), StringComparison.OrdinalIgnoreCase) == 0) {
+					LoadNDKVersion (ndkPath);
+					continue;
+				}
+
+				if (String.Compare ("ndk", Path.GetFileName (ndkPath), StringComparison.OrdinalIgnoreCase) != 0) {
+					continue;
+				}
+
+				foreach (string versionedNdkPath in Directory.EnumerateDirectories (ndkPath, "*", SearchOption.TopDirectoryOnly)) {
+					LoadNDKVersion (versionedNdkPath);
+				}
+			}
+
+			if (ndkInstances.Count == 0) {
+				return String.Empty;
+			}
+
+			var kvp = ndkInstances.First ();
+			Logger (TraceLevel.Verbose, $"Best NDK selected: v{kvp.Key} in {kvp.Value}");
+			return kvp.Value;
+
+			void LoadNDKVersion (string path)
+			{
+				string propsFilePath = Path.Combine (path, "source.properties");
+				if (!File.Exists (propsFilePath)) {
+					Logger (TraceLevel.Verbose, $"Skipping NDK in '{path}': no source.properties, cannot determine version");
+					return;
+				}
+
+				foreach (string line in File.ReadLines (propsFilePath)) {
+					string[] parts = line.Split (SourcePropertiesKeyValueSplit, 2, StringSplitOptions.RemoveEmptyEntries);
+					if (parts.Length != 2) {
+						continue;
+					}
+
+					if (String.Compare ("Pkg.Revision", parts[0].Trim (), StringComparison.Ordinal) != 0) {
+						continue;
+					}
+
+					if (!Version.TryParse (parts[1].Trim (), out Version? ndkVer) || ndkVer == null || ndkInstances.ContainsKey (ndkVer)) {
+						continue;
+					}
+
+					if (ndkVer.Major < MinimumCompatibleNDKMajorVersion || ndkVer.Major > MaximumCompatibleNDKMajorVersion) {
+						Logger (TraceLevel.Verbose, $"Skipping NDK in '{path}': version {ndkVer} is out of the accepted range (major version must be between {MinimumCompatibleNDKMajorVersion} and {MaximumCompatibleNDKMajorVersion}");
+						continue;
+					}
+
+					ndkInstances.Add (ndkVer, path);
+					return;
+				}
 			}
 		}
 

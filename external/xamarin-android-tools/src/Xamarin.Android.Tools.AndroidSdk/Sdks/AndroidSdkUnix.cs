@@ -94,6 +94,10 @@ namespace Xamarin.Android.Tools
 			if (!string.IsNullOrEmpty (preferedSdkPath))
 				yield return preferedSdkPath!;
 
+			foreach (string dir in GetSdkFromEnvironmentVariables ()) {
+				yield return dir;
+			}
+
 			// Look in PATH
 			foreach (var adb in ProcessUtils.FindExecutablesInPath (Adb)) {
 				var path = Path.GetDirectoryName (adb);

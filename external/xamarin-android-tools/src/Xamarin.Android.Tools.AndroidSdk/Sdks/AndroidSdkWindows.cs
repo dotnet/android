@@ -230,6 +230,10 @@ namespace Xamarin.Android.Tools
 				if (CheckRegistryKeyForExecutable (root, regKey, MDREG_ANDROID_NDK, wow, ".", NdkStack))
 					yield return RegistryEx.GetValueString (root, regKey, MDREG_ANDROID_NDK, wow) ?? "";
 
+			foreach (string dir in GetSdkFromEnvironmentVariables ()) {
+				yield return dir;
+			}
+
 			/*
 			// Check for the key written by the Xamarin installer
 			if (CheckRegistryKeyForExecutable (RegistryEx.CurrentUser, XAMARIN_ANDROID_INSTALLER_PATH, XAMARIN_ANDROID_INSTALLER_KEY, wow, "platform-tools", Adb))
