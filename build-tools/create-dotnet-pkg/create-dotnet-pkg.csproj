@@ -87,6 +87,7 @@
       <None Include="$(PkgProductOutputPath)" CopyToOutputDirectory="PreserveNewest" Link="Microsoft.NET.Workload.Android-$(AndroidPackVersionLong).pkg" />
       <FilesToSign Include="$(OutputPath)\Microsoft.NET.Workload.Android-$(AndroidPackVersionLong).pkg">
         <Authenticode>MacDeveloper</Authenticode>
+        <Zip>true</Zip>
       </FilesToSign>
     </ItemGroup>
   </Target>
