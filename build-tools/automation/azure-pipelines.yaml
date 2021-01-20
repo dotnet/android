@@ -1136,6 +1136,8 @@ stages:
         publishFeedCredentials: xamarin-impl public feed
       condition: and(succeeded(), eq(variables['PushXAPackages'], 'true'))
 
+    - template: yaml-templates/install-signing-plugin.yaml
+
     - task: MSBuild@1
       displayName: msbuild Xamarin.Android.BootstrapTasks
       inputs:
