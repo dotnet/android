@@ -12,9 +12,7 @@
   <Import Project="..\..\Configuration.props" />
 
   <ItemGroup>
-    <Reference Include="Mono.Cecil">
-      <HintPath>$(XamarinAndroidSourcePath)external\mono\sdks\out\android-bcl\monodroid_tools\Mono.Cecil.dll</HintPath>
-    </Reference>
+    <PackageReference Include="Mono.Cecil" Version="0.11.2" />
   </ItemGroup>
 
 </Project>
