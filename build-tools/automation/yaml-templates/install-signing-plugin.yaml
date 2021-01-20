@@ -44,11 +44,12 @@ steps:
     {
         Write-Host "Version $CurrentVersion of azure-cli is higher than 2.8.0.  Nothin to do..."
     }
-  displayName: 'Install Azure CLI >= 2.8.0'
+  displayName: install Azure CLI >= 2.8.0
   condition: and(${{ parameters.condition }}, eq(variables['agent.os'], 'Darwin'))
 
 - task: MicroBuildSigningPlugin@3
-  displayName: Install Signing Plugin
+  displayName: install signing plugin
+  condition: ${{ parameters.condition }}
   inputs:
     signType: ${{ parameters.signType }}
     azureSubscription: MicroBuild Signing Task (DevDiv)

@@ -1,0 +1,15 @@
+parameters:
+  condition: always()
+
+steps:
+- task: MicroBuildCleanup@1
+  displayName: send signing telemetry
+  condition: ${{ parameters.condition }}
+
+- task: DeleteFiles@1
+  displayName: remove signing plugin
+  condition: ${{ parameters.condition }}
+  inputs:
+    sourceFolder: $(Build.ArtifactStagingDirectory)/MicroBuild
+    contents: '**/*'
+    removeSourceFolder: true

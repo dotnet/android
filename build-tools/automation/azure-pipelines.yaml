@@ -1191,14 +1191,12 @@ stages:
         artifactName: net6-pkg
         targetPath: $(XA.NET6.Pkg)
 
+    - template: yaml-templates/remove-signing-plugin.yaml
+
     - template: yaml-templates/upload-results.yaml
       parameters:
         solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
         artifactName: Build Results - .NET 6 Preview .pkg
-
-    - task: MicroBuildCleanup@1
-      displayName: Clean Up Signing Tools
-      condition: always()
 
   # Check - "Xamarin.Android (.NET 6 Preview Installers Create .msi and Upload)"
   - job: dotnet_create_msi
@@ -1218,7 +1216,7 @@ stages:
 
     - task: DownloadPipelineArtifact@2
       inputs:
-        artifactName: $(net6-pkg)
+        artifactName: net6-pkg
         downloadPath: $(System.DefaultWorkingDirectory)\installer-artifacts
         patterns: Microsoft.*.pkg
 
@@ -1255,14 +1253,12 @@ stages:
         Azure.BlobPrefix: $(Build.DefinitionName)/public/net6/$(Build.BuildId)/$(Build.SourceBranchName)/$(Build.SourceVersion)
         GitHub.Context: .NET 6 Preview Installers
 
+    - template: yaml-templates\remove-signing-plugin.yaml
+
     - template: yaml-templates/upload-results.yaml
       parameters:
         solution: build-tools\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj
         artifactName: Build Results - .NET 6 Preview .msi
-
-    - task: MicroBuildCleanup@1
-      displayName: Clean Up Signing Tools
-      condition: always()
 
 - stage: finalize_installers
   displayName: Finalize Installers
@@ -1336,23 +1332,12 @@ stages:
         AzureUploadLocation: $(Build.DefinitionName)/public/$(Build.BuildId)/$(Build.SourceBranchName)/$(Build.SourceVersion)
         SourceDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
 
-    - script: cp $(System.DefaultWorkingDirectory)/storage-artifacts/*.pkg $(Build.ArtifactStagingDirectory)
-      displayName: copy notarized pkg
-
-    - task: PublishPipelineArtifact@1
-      displayName: upload notarized pkg
-      inputs:
-        artifactName: notarized-pkg
-        targetPath: $(Build.ArtifactStagingDirectory)
+    - template: yaml-templates/remove-signing-plugin.yaml
 
     - template: uninstall-certificates/v1.yml@yaml
       parameters:
         HostedMacKeychainPassword: $(AzDO-OnPrem-KeychainPass)
 
-    - task: MicroBuildCleanup@1
-      displayName: Clean Up Signing Tools
-      condition: always()
-  
   # Check - "Xamarin.Android (Finalize Installers Queue Vsix Signing)"
   - job: queue_vsix_signing
     displayName: Queue Vsix Signing
