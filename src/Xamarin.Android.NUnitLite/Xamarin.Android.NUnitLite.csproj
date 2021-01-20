@@ -68,17 +68,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Resources\Resource.designer.cs" />
-    <Compile Include="Gui\AndroidRunner.cs" />
-    <Compile Include="Gui\Activities\TestSuiteActivity.cs" />
-    <Compile Include="Gui\Instrumentations\TestSuiteInstrumentation.cs" />
-    <Compile Include="Gui\Activities\TestResultActivity.cs" />
-    <Compile Include="Gui\Activities\OptionsActivity.cs" />
-    <Compile Include="Gui\Options.cs" />
-    <Compile Include="Gui\TcpTextWriter.cs" />
-    <Compile Include="..\..\src-ThirdParty\NUnitLite\**\*.cs" />
-  </ItemGroup>
-  <ItemGroup>
     <AndroidResource Include="Resources\layout\options.axml" />
     <AndroidResource Include="Resources\layout\results.axml" />
     <AndroidResource Include="Resources\layout\test_result.axml" />
