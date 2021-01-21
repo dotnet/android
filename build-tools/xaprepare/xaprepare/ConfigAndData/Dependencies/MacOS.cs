@@ -24,7 +24,6 @@ namespace Xamarin.Android.Prepare
 
 			new HomebrewProgram ("ninja"),
 			new HomebrewProgram ("p7zip", "7za"),
-			new HomebrewProgram ("xamarin/xamarin-android-windeps/mingw-zlib", "xamarin/xamarin-android-windeps", null),
 
 			new MonoPkgProgram ("Mono", "com.xamarin.mono-MDK.pkg", new Uri (Context.Instance.Properties.GetRequiredValue (KnownProperties.MonoDarwinPackageUrl))) {
 				MinimumVersion = Context.Instance.Properties.GetRequiredValue (KnownProperties.MonoRequiredMinimumVersion),
