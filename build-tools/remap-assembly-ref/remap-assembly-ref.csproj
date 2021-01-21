@@ -6,15 +6,13 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>remapassemblyref</RootNamespace>
     <AssemblyName>remap-assembly-ref</AssemblyName>
-    <OutputPath>..\..\bin\Build$(Configuration)</OutputPath>
+    <OutputPath>..\..\bin\Build$(Configuration)\remap-assembly-ref</OutputPath>
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />
 
   <ItemGroup>
-    <Reference Include="Mono.Cecil">
-      <HintPath>$(XamarinAndroidSourcePath)external\mono\sdks\out\android-bcl\monodroid_tools\Mono.Cecil.dll</HintPath>
-    </Reference>
+    <PackageReference Include="Mono.Cecil" Version="$(MonoCecilVersion)" />
   </ItemGroup>
 
 </Project>

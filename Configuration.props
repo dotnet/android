@@ -72,7 +72,7 @@
     <DotNetPreviewTool Condition=" '$(DotNetPreviewTool)' == '' ">$(DotNetPreviewPath)dotnet</DotNetPreviewTool>
     <!-- Version number from: https://github.com/dotnet/installer#installers-and-binaries -->
     <DotNetPreviewVersionBand Condition=" '$(DotNetPreviewVersionBand)' == '' ">6.0.100</DotNetPreviewVersionBand>
-    <DotNetPreviewVersionFull Condition=" '$(DotNetPreviewVersionFull)' == '' ">$(DotNetPreviewVersionBand)-alpha.1.20562.2</DotNetPreviewVersionFull>
+    <DotNetPreviewVersionFull Condition=" '$(DotNetPreviewVersionFull)' == '' ">$(DotNetPreviewVersionBand)-alpha.1.21064.27</DotNetPreviewVersionFull>
     <WixToolPath Condition=" '$(WixToolPath)' == '' ">$(AndroidToolchainDirectory)\wix\</WixToolPath>
     <AndroidCmakeVersion Condition=" '$(AndroidCmakeVersion)' == '' ">3.10.2</AndroidCmakeVersion>
     <AndroidCmakeVersionPath Condition=" '$(AndroidCmakeVersionPath)' == '' ">$(AndroidCmakeVersion).4988404</AndroidCmakeVersionPath>
@@ -126,6 +126,7 @@
     <_TestsBundleName Condition=" '$(BundleAssemblies)' == 'true' ">-Bundle</_TestsBundleName>
     <TestsFlavor>$(_TestsProfiledAotName)$(_TestsAotName)$(_TestsBundleName)</TestsFlavor>
     <LibZipSharpVersion>1.0.20</LibZipSharpVersion>
+    <MonoCecilVersion>0.11.2</MonoCecilVersion>
     <NuGetApiPackageVersion>5.4.0</NuGetApiPackageVersion>
   </PropertyGroup>
   <PropertyGroup>
@@ -198,7 +199,7 @@
     <AndroidSupportedTargetAotAbisSplit>$(AndroidSupportedTargetAotAbis.Split(':'))</AndroidSupportedTargetAotAbisSplit>
   </PropertyGroup>
   <PropertyGroup>
-    <RemapAssemblyRefToolExecutable>$(MSBuildThisFileDirectory)bin\Build$(Configuration)\remap-assembly-ref.exe</RemapAssemblyRefToolExecutable>
+    <RemapAssemblyRefToolExecutable>$(MSBuildThisFileDirectory)bin\Build$(Configuration)\remap-assembly-ref\remap-assembly-ref.exe</RemapAssemblyRefToolExecutable>
     <RemapAssemblyRefTool>$(ManagedRuntime) $(ManagedRuntimeArgs) &quot;$(RemapAssemblyRefToolExecutable)&quot;</RemapAssemblyRefTool>
   </PropertyGroup>
 
