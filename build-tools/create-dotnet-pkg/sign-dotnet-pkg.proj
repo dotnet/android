@@ -34,7 +34,7 @@
     </CreateItem>
     <CreateItem 
         Include="@(_MSBuildFilesUnixSignAndHarden -> '$(OutDir)\Microsoft.Android.Sdk.osx-x64\**\%(Filename)%(Extension)')"
-        Condition=" '%(_MSBuildFilesUnixSign.ExcludeFromAndroidNETSdk)' != 'true' " >
+        Condition=" '%(_MSBuildFilesUnixSignAndHarden.ExcludeFromAndroidNETSdk)' != 'true' " >
       <Output TaskParameter="Include" ItemName="_FilesToCodesignAndHarden" />
     </CreateItem>
     <Exec Command="codesign -vvvv -f -s - -o runtime --entitlements &quot;%(_FilesToCodesignAndHarden.EntitlementsPath)&quot; &quot;%(_FilesToCodesignAndHarden.Identity)&quot;" />
