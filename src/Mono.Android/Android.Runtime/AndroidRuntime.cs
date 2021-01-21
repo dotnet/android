@@ -625,6 +625,11 @@ namespace Android.Runtime {
 			return null;
 		}
 
+		public override void ActivatePeer (IJavaPeerable? self, JniObjectReference reference, Type peerType, Type [] constructorArguments, object? []? argumentValues)
+		{
+			Java.Interop.TypeManager.Activate (self, reference.Handle, peerType, constructorArguments, argumentValues);
+		}
+
 		protected override bool TryUnboxPeerObject (IJavaPeerable value, [NotNullWhen (true)]out object? result)
 		{
 			var proxy = value as JavaProxyThrowable;

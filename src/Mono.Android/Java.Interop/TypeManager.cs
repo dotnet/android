@@ -158,6 +158,11 @@ namespace Java.Interop {
 			}
 			Type[] ptypes = GetParameterTypes (JNIEnv.GetString (signature_ptr, JniHandleOwnership.DoNotTransfer));
 			var parms = JNIEnv.GetObjectArray (parameters_ptr, ptypes);
+			Activate (o, jobject, type, ptypes, parms);
+		}
+
+		internal static void Activate (IJavaPeerable? o, IntPtr jobject, Type type, Type[] ptypes, object? []? parms)
+		{
 			var cinfo = type.GetConstructor (ptypes);
 			if (cinfo == null) {
 				throw CreateMissingConstructorException (type, ptypes);
