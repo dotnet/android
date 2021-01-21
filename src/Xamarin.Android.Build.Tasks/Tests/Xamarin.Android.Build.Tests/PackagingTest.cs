@@ -681,7 +681,6 @@ namespace App1
 				"Mono.Android.Export.dll",
 				"App1.dll",
 				"FormsViewGroup.dll",
-				"Xamarin.Android.Arch.Core.Common.dll",
 				"Xamarin.Android.Arch.Lifecycle.Common.dll",
 				"Xamarin.Android.Arch.Lifecycle.Runtime.dll",
 				"Xamarin.Android.Support.Compat.dll",
