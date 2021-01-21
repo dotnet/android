@@ -126,6 +126,7 @@
     <_TestsBundleName Condition=" '$(BundleAssemblies)' == 'true' ">-Bundle</_TestsBundleName>
     <TestsFlavor>$(_TestsProfiledAotName)$(_TestsAotName)$(_TestsBundleName)</TestsFlavor>
     <LibZipSharpVersion>1.0.20</LibZipSharpVersion>
+    <MonoCecilVersion>0.11.2</MonoCecilVersion>
     <NuGetApiPackageVersion>5.4.0</NuGetApiPackageVersion>
   </PropertyGroup>
   <PropertyGroup>
@@ -198,7 +199,7 @@
     <AndroidSupportedTargetAotAbisSplit>$(AndroidSupportedTargetAotAbis.Split(':'))</AndroidSupportedTargetAotAbisSplit>
   </PropertyGroup>
   <PropertyGroup>
-    <RemapAssemblyRefToolExecutable>$(MSBuildThisFileDirectory)bin\Build$(Configuration)\remap-assembly-ref.exe</RemapAssemblyRefToolExecutable>
+    <RemapAssemblyRefToolExecutable>$(MSBuildThisFileDirectory)bin\Build$(Configuration)\remap-assembly-ref\remap-assembly-ref.exe</RemapAssemblyRefToolExecutable>
     <RemapAssemblyRefTool>$(ManagedRuntime) $(ManagedRuntimeArgs) &quot;$(RemapAssemblyRefToolExecutable)&quot;</RemapAssemblyRefTool>
   </PropertyGroup>
 
