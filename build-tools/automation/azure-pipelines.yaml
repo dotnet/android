@@ -1225,6 +1225,8 @@ stages:
             $CurrentVersion = New-Object -TypeName System.Version -ArgumentList "0.0"
         }
         
+        $ErrorActionPreference = "Stop"
+
         $Version280 = New-Object -TypeName System.Version -ArgumentList "2.8.0"
 
         Write-Host "Current Version of azure-cli is $CurrentVersion"
