@@ -462,11 +462,17 @@ Instead we can use an API provided by MSBuild:
 string key = "foo";
 BuildEngine4.RegisterTaskObject (key, "bar", RegisteredTaskObjectLifetime.Build, allowEarlyCollection: false);
 // To retrieve a value
-string value = (string)BuildEngine4.GetRegisteredTaskObject (key, RegisteredTaskObjectLifetime.Build);
+string value = BuildEngine4.GetRegisteredTaskObject (key, RegisteredTaskObjectLifetime.Build) as string;
 ```
 
 Or if you want to cache across multiple-builds, use
 `RegisteredTaskObjectLifetime.AppDomain` instead.
+
+> NOTE!
+> Use `as` for casts to avoid any unexpected `InvalidCastException`'s.
+> Use the `RegisterTaskObjectAssemblyLocal()` or
+> `GetRegisteredTaskObjectAssemblyLocal()` extension methods within
+> the Xamarin.Android codebase.
 
 To *test* and validate your MSBuild task's use of
 `RegisteredTaskObjectLifetime.AppDomain` you have two choices:

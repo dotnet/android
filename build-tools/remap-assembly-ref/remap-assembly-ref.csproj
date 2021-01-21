@@ -1,38 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{C876DA71-8573-4CEF-9149-716D72455ED4}</ProjectGuid>
+    <TargetFramework>net472</TargetFramework>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputType>Exe</OutputType>
     <RootNamespace>remapassemblyref</RootNamespace>
     <AssemblyName>remap-assembly-ref</AssemblyName>
+    <OutputPath>..\..\bin\Build$(Configuration)\remap-assembly-ref</OutputPath>
   </PropertyGroup>
+
   <Import Project="..\..\Configuration.props" />
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <Optimize>false</Optimize>
-    <OutputPath>..\..\bin\BuildDebug</OutputPath>
-    <DefineConstants>DEBUG;</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <ExternalConsole>true</ExternalConsole>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <Optimize>true</Optimize>
-    <OutputPath>..\..\bin\BuildRelease</OutputPath>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <ExternalConsole>true</ExternalConsole>
-  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="Mono.Cecil">
-      <HintPath>$(XamarinAndroidSourcePath)external\mono\sdks\out\android-bcl\monodroid_tools\Mono.Cecil.dll</HintPath>
-    </Reference>
+    <PackageReference Include="Mono.Cecil" Version="$(MonoCecilVersion)" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="remap-assembly-ref.cs" />
-  </ItemGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+
 </Project>

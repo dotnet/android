@@ -95,8 +95,8 @@ This item group populates the Build Action drop-down in IDEs.
     <!-- Legacy binding projects -->
     <ItemGroup Condition=" '$(_AndroidIsBindingProject)' == 'true' and '$(UsingAndroidNETSdk)' != 'true' ">
       <LibraryProjectZip    Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.aar' and '%(AndroidLibrary.Bind)' == 'true' " />
-      <EmbeddedJar          Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.jar' and '%(AndroidLibrary.Bind)' != 'true' " />
-      <EmbeddedReferenceJar Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.jar' and '%(AndroidLibrary.Bind)' == 'true' " />
+      <EmbeddedJar          Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.jar' and '%(AndroidLibrary.Bind)' == 'true' " />
+      <EmbeddedReferenceJar Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.jar' and '%(AndroidLibrary.Bind)' != 'true' " />
     </ItemGroup>
   </Target>
 

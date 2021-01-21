@@ -251,5 +251,40 @@ namespace Xamarin.Android.Tasks
 				assembly.SetMetadata ("DestinationSubPath", path);
 			}
 		}
+
+		static readonly string AssemblyLocation = typeof (MSBuildExtensions).Assembly.Location;
+
+		/// <summary>
+		/// IBuildEngine4.RegisterTaskObject, but adds the current assembly path into the key
+		/// </summary>
+		public static void RegisterTaskObjectAssemblyLocal (this IBuildEngine4 engine, object key, object value, RegisteredTaskObjectLifetime lifetime, bool allowEarlyCollection = false) =>
+			engine.RegisterTaskObject ((AssemblyLocation, key), value, lifetime, allowEarlyCollection);
+
+		/// <summary>
+		/// IBuildEngine4.GetRegisteredTaskObject, but adds the current assembly path into the key
+		/// </summary>
+		public static object GetRegisteredTaskObjectAssemblyLocal (this IBuildEngine4 engine, object key, RegisteredTaskObjectLifetime lifetime) =>
+			engine.GetRegisteredTaskObject ((AssemblyLocation, key), lifetime);
+
+		/// <summary>
+		/// Generic version of IBuildEngine4.GetRegisteredTaskObject, but adds the current assembly path into the key
+		/// </summary>
+		public static T GetRegisteredTaskObjectAssemblyLocal<T> (this IBuildEngine4 engine, object key, RegisteredTaskObjectLifetime lifetime)
+			where T : class =>
+			engine.GetRegisteredTaskObject ((AssemblyLocation, key), lifetime) as T;
+
+
+		/// <summary>
+		/// IBuildEngine4.UnregisterTaskObject, but adds the current assembly path into the key
+		/// </summary>
+		public static object UnregisterTaskObjectAssemblyLocal (this IBuildEngine4 engine, object key, RegisteredTaskObjectLifetime lifetime) =>
+			engine.UnregisterTaskObject ((AssemblyLocation, key), lifetime);
+
+		/// <summary>
+		/// Generic version of IBuildEngine4.UnregisterTaskObject, but adds the current assembly path into the key
+		/// </summary>
+		public static T UnregisterTaskObjectAssemblyLocal<T> (this IBuildEngine4 engine, object key, RegisteredTaskObjectLifetime lifetime)
+			where T : class =>
+			engine.UnregisterTaskObject ((AssemblyLocation, key), lifetime) as T;
 	}
 }

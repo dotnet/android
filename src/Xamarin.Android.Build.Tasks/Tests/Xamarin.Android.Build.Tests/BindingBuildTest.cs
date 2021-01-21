@@ -46,8 +46,15 @@ namespace Xamarin.Android.Build.Tests
 				WebContent = "https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/svg-android/svg-android.jar"
 			});
 			proj.AndroidClassParser = classParser;
-			using (var b = CreateDllBuilder (Path.Combine ("temp", TestName))) {
+			using (var b = CreateDllBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+				var assemblyPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.dll");
+				using (var assembly = AssemblyDefinition.ReadAssembly (assemblyPath)) {
+					var typeName = "Com.Larvalabs.Svgandroid.SVG";
+					var type = assembly.MainModule.GetType (typeName);
+					Assert.IsNotNull (type, $"{assemblyPath} should contain {typeName}");
+				}
 
 				//A list of properties we check exist in binding projects
 				var properties = new [] {
