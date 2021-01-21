@@ -61,7 +61,7 @@ This file contains the .NET 5-specific targets to customize ILLink
     </PropertyGroup>
     <PropertyGroup
         Condition=" '$(LinkerDumpDependencies)' == 'true' ">
-      <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --dump-dependencies"</_ExtraTrimmerArgs>
+      <_ExtraTrimmerArgs>--dump-dependencies $(_ExtraTrimmerArgs)"</_ExtraTrimmerArgs>
     </PropertyGroup>
     <ItemGroup>
       <!-- add our custom steps -->
