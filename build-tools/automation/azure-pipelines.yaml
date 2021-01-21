@@ -1095,7 +1095,7 @@ stages:
   displayName: .NET 6 Preview Installers
   dependsOn: mac_build
   jobs:
-  # Check - "Xamarin.Android (.NET 6 Preview Installers Sign NuGets))"
+  # Check - "Xamarin.Android (.NET 6 Preview Installers Sign NuGets)"
   - template: sign-artifacts/jobs/v2.yml@yaml
     parameters:
       artifactName: nupkgs
@@ -1136,7 +1136,7 @@ stages:
         publishFeedCredentials: xamarin-impl public feed
       condition: and(succeeded(), eq(variables['PushXAPackages'], 'true'))
 
-    - template: yaml-templates/install-signing-plugin.yaml
+    - template: yaml-templates/install-microbuild-tooling.yaml
 
     - task: MSBuild@1
       displayName: msbuild Xamarin.Android.BootstrapTasks
@@ -1191,7 +1191,7 @@ stages:
         artifactName: net6-pkg
         targetPath: $(XA.NET6.Pkg)
 
-    - template: yaml-templates/remove-signing-plugin.yaml
+    - template: yaml-templates/remove-microbuild-tooling.yaml
 
     - template: yaml-templates/upload-results.yaml
       parameters:
@@ -1220,7 +1220,7 @@ stages:
         downloadPath: $(System.DefaultWorkingDirectory)\installer-artifacts
         patterns: Microsoft.*.pkg
 
-    - template: yaml-templates\install-signing-plugin.yaml
+    - template: yaml-templates\install-microbuild-tooling.yaml
 
     - task: MSBuild@1
       displayName: msbuild Xamarin.Android.BootstrapTasks
@@ -1253,7 +1253,7 @@ stages:
         Azure.BlobPrefix: $(Build.DefinitionName)/public/net6/$(Build.BuildId)/$(Build.SourceBranchName)/$(Build.SourceVersion)
         GitHub.Context: .NET 6 Preview Installers
 
-    - template: yaml-templates\remove-signing-plugin.yaml
+    - template: yaml-templates\remove-microbuild-tooling.yaml
 
     - template: yaml-templates/upload-results.yaml
       parameters:
@@ -1314,7 +1314,7 @@ stages:
       parameters:
         UnsignedPkgPath: $(XA.Unsigned.Pkg)
 
-    - template: yaml-templates/install-signing-plugin.yaml
+    - template: yaml-templates/install-microbuild-tooling.yaml
 
     - script: >
         cd $(System.DefaultWorkingDirectory)/release-scripts &&
@@ -1332,7 +1332,7 @@ stages:
         AzureUploadLocation: $(Build.DefinitionName)/public/$(Build.BuildId)/$(Build.SourceBranchName)/$(Build.SourceVersion)
         SourceDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
 
-    - template: yaml-templates/remove-signing-plugin.yaml
+    - template: yaml-templates/remove-microbuild-tooling.yaml
 
     - template: uninstall-certificates/v1.yml@yaml
       parameters:
