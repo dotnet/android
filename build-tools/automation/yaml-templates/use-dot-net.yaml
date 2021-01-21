@@ -7,7 +7,7 @@ parameters:
 
 steps:
 
-  - powershell: |
+  - pwsh: |
       $ErrorActionPreference = 'Stop'
       $ProgressPreference = 'SilentlyContinue'
       $DotNetRoot = "$env:ProgramFiles\dotnet\"
