@@ -6,7 +6,8 @@ parameters:
 jobs:
   - job: mac_timezoneinfo_tests_${{ parameters.node_id }}
     displayName: macOS-${{ parameters.node_id }}
-    pool: $(HostedMac)
+    pool:
+      vmImage: $(HostedMacImage)
     timeoutInMinutes: 90
     cancelTimeoutInMinutes: 5
     workspace:
