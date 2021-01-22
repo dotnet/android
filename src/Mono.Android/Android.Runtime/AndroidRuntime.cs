@@ -625,9 +625,9 @@ namespace Android.Runtime {
 			return null;
 		}
 
-		public override void ActivatePeer (IJavaPeerable? self, JniObjectReference reference, Type peerType, Type [] constructorArguments, object? []? argumentValues)
+		public override void ActivatePeer (IJavaPeerable? self, JniObjectReference reference, ConstructorInfo cinfo, object? []? argumentValues)
 		{
-			Java.Interop.TypeManager.Activate (self, reference.Handle, peerType, constructorArguments, argumentValues);
+			Java.Interop.TypeManager.Activate (self, reference.Handle, cinfo, argumentValues);
 		}
 
 		protected override bool TryUnboxPeerObject (IJavaPeerable value, [NotNullWhen (true)]out object? result)
