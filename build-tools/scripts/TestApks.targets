@@ -11,14 +11,22 @@
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.RunUITests" />
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.StartAndroidEmulator" />
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.KillProcess" />
+  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.WaitForAndroidEmulator" />
   <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.Sleep" />
   <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.ProcessLogcatTiming" />
   <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.ProcessApkSizes" />
 
+  <!-- Scheduled tests run on Android 5.0 (21), 6.0 (23), 7.0 (24), 8.0 (26), 9 (28), 10 (29) -->
   <PropertyGroup>
-    <_TestImageName>XamarinAndroidTestRunner64</_TestImageName>
+    <TestAvdApiLevel Condition=" '$(TestAvdApiLevel)' == '' ">29</TestAvdApiLevel>
+    <TestAvdAbi Condition=" '$(TestAvdAbi)' == '' ">x86_64</TestAvdAbi>
+    <SdkManagerImageName Condition=" '$(SdkManagerImageName)' == '' ">system-images;android-$(TestAvdApiLevel);default;$(TestAvdAbi)</SdkManagerImageName>
+    <TestAvdName>XamarinAndroidTestRunner$(TestAvdApiLevel)-$(TestAvdAbi)</TestAvdName>
     <_AdbEmulatorPort>5570</_AdbEmulatorPort>
     <_ApkSizesReferenceDirectory>$(MSBuildThisFileDirectory)..\..\tests\apk-sizes-reference</_ApkSizesReferenceDirectory>
+    <AvdLaunchTimeoutMinutes Condition=" '$(AvdLaunchTimeoutMinutes)' == '' ">5</AvdLaunchTimeoutMinutes>
+    <AvdLaunchTimeoutSeconds>$([MSBuild]::Multiply($(AvdLaunchTimeoutMinutes), 60))</AvdLaunchTimeoutSeconds>
+    <AvdLaunchTimeoutMS>$([MSBuild]::Multiply($(AvdLaunchTimeoutSeconds), 1000))</AvdLaunchTimeoutMS>
   </PropertyGroup>
 
   <ItemGroup>
@@ -44,11 +52,12 @@
     </Xamarin.Android.Tools.BootstrapTasks.CheckAdbTarget>
     <CreateAndroidEmulator
         Condition=" '$(_ValidAdbTarget)' != 'True' "
-        AndroidAbi="x86_64"
+        AndroidAbi="$(TestAvdAbi)"
         AndroidSdkHome="$(AndroidSdkDirectory)"
         JavaSdkHome="$(JavaSdkDirectory)"
-        SdkVersion="29"
-        ImageName="$(_TestImageName)"
+        SdkVersion="$(TestAvdApiLevel)"
+        TargetId="$(SdkManagerImageName)"
+        ImageName="$(TestAvdName)"
         ToolExe="$(AvdManagerToolExe)"
         ToolPath="$(CommandLineToolsBinPath)"
         RamSizeMB="3072"
@@ -57,7 +66,7 @@
     <StartAndroidEmulator
         Condition=" '$(_ValidAdbTarget)' != 'True' "
         AndroidSdkHome="$(AndroidSdkDirectory)"
-        ImageName="$(_TestImageName)"
+        ImageName="$(TestAvdName)"
         Port="$(_AdbEmulatorPort)"
         ToolExe="$(EmulatorToolExe)"
         ToolPath="$(EmulatorToolPath)">
@@ -74,14 +83,13 @@
         Timeout="120000"
         WriteOutputAsMessage="True"
     />
-    <Xamarin.Android.Tools.BootstrapTasks.Adb
+    <WaitForAndroidEmulator
         EnvironmentVariables="ADB_TRACE=all"
         Condition=" '$(_ValidAdbTarget)' != 'True' "
-        ContinueOnError="ErrorAndContinue"
-        Arguments="$(_EmuTarget) shell 'counter=0; while [ $counter -lt 60 ] &amp;&amp; [ &quot;`getprop sys.boot_completed`&quot; != &quot;1&quot; ]; do echo Waiting for device to fully boot; sleep 1; let &quot;counter++&quot;; done'"
+        AdbTarget="$(_EmuTarget)"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
-        Timeout="120000"
+        Timeout="$(AvdLaunchTimeoutMS)"
         WriteOutputAsMessage="True"
     />
     <Xamarin.Android.Tools.BootstrapTasks.Adb
@@ -336,8 +344,48 @@
   <Target Name="CheckBootTimes"
       DependsOnTargets="AcquireAndroidTarget;ReleaseAndroidTarget">
     <RunAndroidEmulatorCheckBootTimes
-		DeviceName="$(_TestImageName)"
+        DeviceName="$(TestAvdName)"
         CheckBootTimesPath="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\check-boot-times.exe"
     />
   </Target>
+
+  <Target Name="InstallAvdImage" >
+    <PropertyGroup>
+
+    </PropertyGroup>
+    <!-- SDK component installation can be frail, try a few times. -->
+    <Exec
+        Command="&quot;$(AndroidSdkDirectory)\tools\bin\sdkmanager&quot; $(SdkManagerImageName)"
+        EnvironmentVariables="JAVA_HOME=$(Java8SdkDirectory)"
+        ContinueOnError="true">
+      <Output TaskParameter="ExitCode" PropertyName="_SdkManagerExitCode" />
+    </Exec>
+    <Sleep
+        Milliseconds="5000"
+        Condition=" '$(_SdkManagerExitCode)' != '0' "
+    />
+    <Exec
+        Command="&quot;$(AndroidSdkDirectory)\tools\bin\sdkmanager&quot; $(SdkManagerImageName)"
+        EnvironmentVariables="JAVA_HOME=$(Java8SdkDirectory)"
+        ContinueOnError="true"
+        Condition=" '$(_SdkManagerExitCode)' != '0' ">
+      <Output TaskParameter="ExitCode" PropertyName="_SdkManagerExitCode" />
+    </Exec>
+    <Sleep
+        Milliseconds="10000"
+        Condition=" '$(_SdkManagerExitCode)' != '0' "
+    />
+    <Exec
+        Command="&quot;$(AndroidSdkDirectory)\tools\bin\sdkmanager&quot; $(SdkManagerImageName)"
+        EnvironmentVariables="JAVA_HOME=$(Java8SdkDirectory)"
+        ContinueOnError="true"
+        Condition=" '$(_SdkManagerExitCode)' != '0' ">
+      <Output TaskParameter="ExitCode" PropertyName="_SdkManagerExitCode" />
+    </Exec>
+    <Error
+        Text="Attempt to install $(AvdImageName) failed after three attempts."
+        Condition=" '$(_SdkManagerExitCode)' != '0' "
+    />
+  </Target>
+
 </Project>
