@@ -54,8 +54,7 @@ variables:
   NUnitConsoleVersion: 3.11.1
   DotNetCoreVersion: 3.1.201
   DotNet5Version: 5.0.100
-  HostedMacMojave: Hosted Mac Internal Mojave
-  HostedMac: Hosted Mac Internal
+  HostedMacImage: macOS-10.15
   HostedWinVS2019: Hosted Windows 2019 with VS2019
   VSEngWinVS2019: Xamarin-Android-Win2019-1120
   # Run all tests if:
@@ -394,7 +393,8 @@ stages:
   # Check - "Xamarin.Android (Smoke Tests APK Instrumentation - macOS)"
   - job: mac_apk_tests
     displayName: APK Instrumentation - macOS
-    pool: $(HostedMac)
+    pool:
+      vmImage: $(HostedMacImage)
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
     workspace:
@@ -688,7 +688,8 @@ stages:
   # Check - "Xamarin.Android (Smoke Tests MSBuild Emulator - macOS)"
   - job: mac_msbuilddevice_tests
     displayName: MSBuild Emulator - macOS
-    pool: $(HostedMac)
+    pool:
+      vmImage: $(HostedMacImage)
     timeoutInMinutes: 90
     cancelTimeoutInMinutes: 5
     workspace:
@@ -867,7 +868,8 @@ stages:
  # Check - "Xamarin.Android (Designer Tests macOS)"
   - job: designer_integration_mac
     displayName: macOS
-    pool: $(HostedMacMojave)
+    pool:
+      vmImage: $(HostedMacImage)
     timeoutInMinutes: 120
     cancelTimeoutInMinutes: 5
     workspace:
@@ -1041,7 +1043,8 @@ stages:
   # Check - "Xamarin.Android (BCL Emulator Tests macOS)"
   - job: mac_bcl_tests
     displayName: macOS
-    pool: $(HostedMac)
+    pool:
+      vmImage: $(HostedMacImage)
     timeoutInMinutes: 180
     workspace:
       clean: all

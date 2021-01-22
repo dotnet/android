@@ -7,14 +7,36 @@ parameters:
 
 steps:
 
-  - powershell: |
+  - pwsh: |
       $ErrorActionPreference = 'Stop'
       $ProgressPreference = 'SilentlyContinue'
       $DotNetRoot = "$env:ProgramFiles\dotnet\"
       if ("${{ parameters.remove_dotnet }}" -eq $true) {
-        Remove-Item -Recurse $DotNetRoot -Verbose
+          Remove-Item -Recurse $DotNetRoot -Verbose
       }
-      Invoke-WebRequest -Uri "https://dot.net/v1/dotnet-install.ps1" -OutFile dotnet-install.ps1
+      $currentAttempt = 1
+      $totalAttempts = 5
+      $sleepTime = 5
+      $completed = $false
+      while (-not $completed -and $currentAttempt -le $totalAttempts) {
+          try {
+              $response = Invoke-WebRequest -Uri "https://dot.net/v1/dotnet-install.ps1" -OutFile dotnet-install.ps1 -PassThru
+              if ($response.StatusCode -ne 200) {
+                  throw
+              }
+              $completed = $true
+          } catch {
+              if ($currentAttempt -eq $totalAttempts) {
+                  Write-Host "Unable to download 'dotnet-install.ps1' after $currentAttempt attempts."
+                  throw
+              }
+              Write-Host $_.Exception
+              Write-Host "Retrying after $sleepTime seconds..."
+              Start-Sleep $sleepTime
+              $currentAttempt++
+              $sleepTime = $sleepTime * 2
+          }
+      }
       & .\dotnet-install.ps1 -Version ${{ parameters.version }} -InstallDir $DotNetRoot -Verbose
       & dotnet --list-sdks
     displayName: install .NET Core ${{ parameters.version }}
@@ -23,7 +45,7 @@ steps:
   - bash: >
       DOTNET_ROOT=~/.dotnet/ &&
       (if [[ "${{ parameters.remove_dotnet }}" == "true" ]] ; then rm -rfv $DOTNET_ROOT; fi) &&
-      curl -L https://dot.net/v1/dotnet-install.sh > dotnet-install.sh &&
+      curl -L https://dot.net/v1/dotnet-install.sh --retry 5 --retry-max-time 300 > dotnet-install.sh &&
       chmod +x dotnet-install.sh &&
       ./dotnet-install.sh --version ${{ parameters.version }} --install-dir $DOTNET_ROOT --verbose &&
       PATH="$DOTNET_ROOT:$PATH" &&
