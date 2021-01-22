@@ -50,7 +50,7 @@ namespace Xamarin.Android.Build.Tests
 			Directory.Delete (SdkWithSpacesPath, recursive: true);
 		}
 
-		[Test, Category ("SmokeTests")]
+		[Test, Category ("SmokeTests"), Category ("ProfiledAOT")]
 		public void BuildBasicApplicationReleaseProfiledAot ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -65,7 +65,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test, Category ("SmokeTests")]
+		[Test, Category ("SmokeTests"), Category ("ProfiledAOT")]
 		public void BuildBasicApplicationReleaseWithCustomAotProfile ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -88,7 +88,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
+		[Test, Category ("ProfiledAOT")]
 		public void BuildBasicApplicationReleaseProfiledAotWithoutDefaultProfile ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -147,8 +147,11 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[TestCaseSource (nameof (AotChecks))]
+		[Category ("DotNetIgnore")] // Not currently working, see: https://github.com/dotnet/runtime/issues/56163
 		public void BuildAotApplicationAndÜmläüts (string supportedAbis, bool enableLLVM, bool expectedResult)
 		{
+			AssertLLVMSupported (enableLLVM);
+
 			var path = Path.Combine ("temp", string.Format ("BuildAotApplication AndÜmläüts_{0}_{1}_{2}", supportedAbis, enableLLVM, expectedResult));
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
@@ -224,8 +227,11 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		[TestCaseSource (nameof (AotChecks))]
 		[Category ("Minor"), Category ("MkBundle")]
+		[Category ("DotNetIgnore")] // Not currently working, see: https://github.com/dotnet/runtime/issues/56163
 		public void BuildAotApplicationAndBundleAndÜmläüts (string supportedAbis, bool enableLLVM, bool expectedResult)
 		{
+			AssertLLVMSupported (enableLLVM);
+
 			var path = Path.Combine ("temp", string.Format ("BuildAotApplicationAndBundle AndÜmläüts_{0}_{1}_{2}", supportedAbis, enableLLVM, expectedResult));
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
@@ -368,6 +374,7 @@ namespace "+ libName + @" {
 		}
 
 		[Test]
+		[Category ("HybridAOT")]
 		public void HybridAOT ([Values ("armeabi-v7a;arm64-v8a", "armeabi-v7a", "arm64-v8a")] string abis)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -418,8 +425,11 @@ namespace "+ libName + @" {
 		}
 
 		[Test]
-		public void NoSymbolsArgShouldReduceAppSize ([Values (true, false)] bool enableHybridAot)
+		[Category ("LLVM")]
+		public void NoSymbolsArgShouldReduceAppSize ([Values ("", "Hybrid")] string androidAotMode)
 		{
+			AssertAotModeSupported (androidAotMode);
+
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 				AotAssemblies = true,
@@ -427,8 +437,8 @@ namespace "+ libName + @" {
 			var supportedAbi = "arm64-v8a";
 			proj.SetAndroidSupportedAbis (supportedAbi);
 			proj.SetProperty ("EnableLLVM", true.ToString ());
-			if (enableHybridAot)
-				proj.SetProperty ("AndroidAotMode", "Hybrid");
+			if (!string.IsNullOrEmpty (androidAotMode))
+				proj.SetProperty ("AndroidAotMode", androidAotMode);
 
 			var xaAssemblySize = 0;
 			var xaAssemblySizeNoSymbol = 0;
