@@ -1101,7 +1101,6 @@ stages:
       artifactName: nupkgs
       signType: $(MicroBuildSignType)
       usePipelineArtifactTasks: true
-      templateBranch: dev/sign-exes-wildcards
 
   # Check - "Xamarin.Android (.NET 6 Preview Installers Create .pkg)"
   - job: dotnet_create_pkg
