@@ -1,13 +1,13 @@
 # Java.Interop Pipelines
 
 trigger:
-  - master
+  - main
   - d16-*
 
 pr:
   branches:
     include:
-    - master
+    - main
     - d16-*
   paths:
     exclude:
