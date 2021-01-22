@@ -129,6 +129,8 @@ namespace Xamarin.Android.Tools
 			var token = coldBoot ? "emulator: INFO: boot time" : "onGuestSendCommand";
 
 			for (int i = 0; i < executionTimes; i++) {
+				await CloseEmulator ();
+
 				bool validation (string data, ManualResetEvent mre)
 				{
 					PrintVerbose (data);
@@ -192,9 +194,27 @@ namespace Xamarin.Android.Tools
 			return time;
 		}
 
+		static async Task<List<string>> GetEmulatorSerials ()
+		{
+			var serials = new List<string> ();
+			bool validation (string data, ManualResetEvent mre)
+			{
+				if (!string.IsNullOrWhiteSpace (data) && data.IndexOf ("emulator", StringComparison.OrdinalIgnoreCase) >= 0) {
+					var serial = data.Split (new string [] { " ", "device", "\t" }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault ();
+					if (!string.IsNullOrWhiteSpace (serial))
+						serials.Add (serial);
+				}
+
+				return true;
+			}
+
+			await RunProcess (adbPath, "devices", 10000, validation);
+			return serials;
+		}
+
 		static async Task<bool> CloseEmulator ()
 		{
-			PrintVerbose ("CloseEmulator");
+			PrintVerbose ("Attempting to close all running emulators...");
 			bool validation (string data, ManualResetEvent mre)
 			{
 				PrintVerbose (data);
@@ -205,13 +225,29 @@ namespace Xamarin.Android.Tools
 				return true;
 			}
 
-			if (!await RunProcess (adbPath, "-s emulator-5554 emu kill", 30000, validation)) {
-				Console.WriteLine ("unable to quit emulator.");
-				return false;
+			var serials = await GetEmulatorSerials ();
+			if (!serials.Any ()) {
+				if (!await RunProcess (adbPath, "emu kill", 30000, validation)) {
+					Console.WriteLine ("Attempt to run 'adb emu kill' failed.");
+					await ForceKillEmulator ();
+					return false;
+				}
+			} else {
+				var encounteredIssue = false;
+				foreach (var serial in serials) {
+					if (!await RunProcess (adbPath, $"-s {serial} emu kill", 30000, validation)) {
+						encounteredIssue = true;
+						Console.WriteLine ($"Attempt to run 'adb -s {serial} emu kill' failed.");
+					}
+				}
+				if (encounteredIssue) {
+					await ForceKillEmulator ();
+					return false;
+				}
 			}
 
 			for (int i = 0; i < 10; i++) {
-				PrintVerbose ("Checking if emulator was closed.");
+				PrintVerbose ("Checking if emulator was closed...");
 				try {
 					var proc = GetProcess ("emulator");
 					if (proc == null) {
@@ -222,10 +258,11 @@ namespace Xamarin.Android.Tools
 						}
 					}
 
-					PrintVerbose ("Emulator still running");
+					PrintVerbose ("Emulator processes are still running.");
 					await Task.Delay (5000);
 				} catch (Exception e) {
 					PrintVerbose (e.Message);
+					PrintVerbose ("Emulator processes have exited.");
 					return true;
 				}
 			}
@@ -429,7 +466,7 @@ namespace Xamarin.Android.Tools
 
 		static async Task ForceKillEmulator ()
 		{
-			PrintVerbose ("ForceKillEmulator");
+			PrintVerbose ("Attempting to kill 'emulator' and 'qemu' processes...");
 			while (true) {
 				try {
 					var proc = GetProcess ("emulator");
