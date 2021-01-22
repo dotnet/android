@@ -12,7 +12,7 @@ resources:
   - repository: yaml
     type: github
     name: xamarin/yaml-templates
-    ref: refs/heads/dev/sign-exes-wildcards
+    ref: refs/heads/main
     endpoint: xamarin
   - repository: monodroid
     type: github
