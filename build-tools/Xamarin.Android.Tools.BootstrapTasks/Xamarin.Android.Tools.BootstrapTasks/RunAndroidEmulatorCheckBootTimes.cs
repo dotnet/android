@@ -29,7 +29,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				return !Log.HasLoggedErrors;
 			}
 
-			var timeoutInMS = (int) TimeSpan.FromMinutes (12).TotalMilliseconds;
+			var timeoutInMS = (int) TimeSpan.FromMinutes (15).TotalMilliseconds;
 			bool finishAsExpected = false;
 			bool processTimedOut = false;
 			var success = RunProcess (

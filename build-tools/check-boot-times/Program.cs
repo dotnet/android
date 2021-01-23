@@ -225,42 +225,19 @@ namespace Xamarin.Android.Tools
 				return true;
 			}
 
-			var encounteredIssue = false;
 			var serials = await GetEmulatorSerials ();
+			if (!serials.Any ())
+				return true;
+
 			foreach (var serial in serials) {
 				if (!await RunProcess (adbPath, $"-s {serial} emu kill", 30000, validation)) {
-					encounteredIssue = true;
 					Console.WriteLine ($"Attempt to run 'adb -s {serial} emu kill' failed.");
 				}
 			}
-			if (encounteredIssue) {
-				await ForceKillEmulator ();
-				return false;
-			}
 
-			var endTime = DateTime.UtcNow.AddMinutes (2);
-			while (DateTime.UtcNow < endTime) {
-				try {
-					var emulatorProc = GetProcess ("emulator");
-					var qemuProc = GetProcess ("qemu");
-					if (emulatorProc == null && qemuProc == null) {
-						PrintVerbose ("Emulator processes are no longer running.");
-						return true;
-					}
-					if (emulatorProc != null) {
-						PrintVerbose ($"Waiting for process: {emulatorProc.ProcessName} - {emulatorProc.Id} to end.");
-					}
-					if (qemuProc != null) {
-						PrintVerbose ($"Waiting for process: {qemuProc.ProcessName} - {qemuProc.Id} to end.");
-					}
-				} catch (Exception e) {
-					PrintVerbose (e.Message);
-				}
-				await Task.Delay (5000);
-			}
-
-			await ForceKillEmulator ();
-			return false;
+			// Sleep for 10 seconds after killing running emulators
+			await Task.Delay (10000);
+			return await ForceKillEmulator ();
 		}
 
 		static async Task<bool> CheckAccelerationType ()
@@ -456,7 +433,7 @@ namespace Xamarin.Android.Tools
 			});
 		}
 
-		static async Task ForceKillEmulator ()
+		static async Task<bool> ForceKillEmulator ()
 		{
 			var endTime = DateTime.UtcNow.AddMinutes (1);
 			while (DateTime.UtcNow < endTime) {
@@ -465,7 +442,7 @@ namespace Xamarin.Android.Tools
 					var qemuProc = GetProcess ("qemu");
 					if (emulatorProc == null && qemuProc == null) {
 						PrintVerbose ("Emulator processes are no longer running.");
-						break;
+						return true;
 					}
 					if (emulatorProc != null) {
 						PrintVerbose ($"Attempting to kill process: {emulatorProc.ProcessName}: {emulatorProc.Id}");
@@ -480,11 +457,21 @@ namespace Xamarin.Android.Tools
 				}
 				await Task.Delay (5000);
 			}
+			return false;
 		}
 
 		static Process GetProcess (string processName)
 		{
-			return Process.GetProcesses ().FirstOrDefault (p => p.ProcessName.IndexOf (processName, StringComparison.OrdinalIgnoreCase) != -1);
+			var procs = Process.GetProcesses ();
+			foreach (var proc in procs) {
+				try {
+					if (proc.ProcessName.IndexOf (processName, StringComparison.OrdinalIgnoreCase) != -1)
+						return proc;
+				} catch {
+					// Ignoring invalid process.
+				}
+			}
+			return null;
 		}
 
 		static bool ToolsExist ()
