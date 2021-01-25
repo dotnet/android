@@ -1140,7 +1140,7 @@ stages:
 
     - template: yaml-templates/install-microbuild-tooling.yaml
       parameters:
-        condition: eq(variables['MicroBuildSignType'], 'Real')
+        condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
 
     - task: MSBuild@1
       displayName: msbuild Xamarin.Android.BootstrapTasks
