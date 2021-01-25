@@ -1139,6 +1139,8 @@ stages:
       condition: and(succeeded(), eq(variables['PushXAPackages'], 'true'))
 
     - template: yaml-templates/install-microbuild-tooling.yaml
+      parameters:
+        condition: eq(variables['MicroBuildSignType'], 'Real')
 
     - task: MSBuild@1
       displayName: msbuild Xamarin.Android.BootstrapTasks
@@ -1181,19 +1183,21 @@ stages:
         pwsh notarize.ps1 -FolderForApps $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)
       failOnStderr: true
       displayName: Notarize PKG
-      condition: and(succeeded(), eq(variables['Build.DefinitionName'], 'Xamarin.Android'), ne(variables['Build.Reason'], 'PullRequest'))
+      condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
 
     - script: xcrun stapler validate $(XA.NET6.Pkg)
       displayName: validate notarized pkg
-      condition: and(succeeded(), eq(variables['Build.DefinitionName'], 'Xamarin.Android'), ne(variables['Build.Reason'], 'PullRequest'))
+      condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
 
     - task: PublishPipelineArtifact@1
-      displayName: upload notarized pkg
+      displayName: upload pkg
       inputs:
         artifactName: net6-pkg
         targetPath: $(XA.NET6.Pkg)
 
     - template: yaml-templates/remove-microbuild-tooling.yaml
+      parameters:
+        condition: and(succeededOrFailed(), eq(variables['MicroBuildSignType'], 'Real'))
 
     - template: yaml-templates/upload-results.yaml
       parameters:
