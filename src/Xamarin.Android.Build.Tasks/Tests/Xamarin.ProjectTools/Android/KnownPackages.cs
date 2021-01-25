@@ -10,12 +10,12 @@ namespace Xamarin.ProjectTools
 		/// </summary>
 		public static void AddDotNetCompatPackages (this IShortFormProject project)
 		{
-			project.PackageReferences.Add (SystemCodeDom_5_0_0_preview_3_20214_6);
-			project.PackageReferences.Add (SystemDiagnosticsEventLog_5_0_0_preview_3_20214_6);
-			project.PackageReferences.Add (SystemDiagnosticsPerformanceCounter_5_0_0_preview_3_20214_6);
-			project.PackageReferences.Add (SystemIOPorts_5_0_0_preview_3_20214_6);
-			project.PackageReferences.Add (SystemSecurityPermissions_5_0_0_preview_3_20214_6);
-			project.PackageReferences.Add (SystemThreadingAccessControl_5_0_0_preview_3_20214_6);
+			project.PackageReferences.Add (SystemCodeDom);
+			project.PackageReferences.Add (SystemDiagnosticsEventLog);
+			project.PackageReferences.Add (SystemDiagnosticsPerformanceCounter);
+			project.PackageReferences.Add (SystemIOPorts);
+			project.PackageReferences.Add (SystemSecurityPermissions);
+			project.PackageReferences.Add (SystemThreadingAccessControl);
 		}
 
 		public static Package AndroidSupportV4_27_0_2_1 = new Package () {
@@ -223,35 +223,35 @@ namespace Xamarin.ProjectTools
 			TargetFramework = "MonoAndroid10.0",
 		};
 		/* additional packages for XForms 4.5 on NET5 */
-		public static Package SystemCodeDom_5_0_0_preview_3_20214_6 = new Package {
+		public static Package SystemCodeDom = new Package {
 			Id = "System.CodeDom",
-			Version = "5.0.0-preview.3.20214.6",
-			TargetFramework = "netcoreapp3.0",
+			Version = "5.0.0",
+			TargetFramework = "net5.0",
 		};
-		public static Package SystemDiagnosticsEventLog_5_0_0_preview_3_20214_6 = new Package {
+		public static Package SystemDiagnosticsEventLog = new Package {
 			Id = "System.Diagnostics.EventLog",
-			Version = "5.0.0-preview.3.20214.6",
-			TargetFramework = "netcoreapp3.0",
+			Version = "5.0.0",
+			TargetFramework = "net5.0",
 		};
-		public static Package SystemDiagnosticsPerformanceCounter_5_0_0_preview_3_20214_6 = new Package {
+		public static Package SystemDiagnosticsPerformanceCounter = new Package {
 			Id = "System.Diagnostics.PerformanceCounter",
-			Version = "5.0.0-preview.3.20214.6",
-			TargetFramework = "netcoreapp3.0",
+			Version = "5.0.0",
+			TargetFramework = "net5.0",
 		};
-		public static Package SystemIOPorts_5_0_0_preview_3_20214_6 = new Package {
+		public static Package SystemIOPorts = new Package {
 			Id = "System.IO.Ports",
-			Version = "5.0.0-preview.3.20214.6",
-			TargetFramework = "netcoreapp3.0",
+			Version = "5.0.0",
+			TargetFramework = "net5.0",
 		};
-		public static Package SystemSecurityPermissions_5_0_0_preview_3_20214_6 = new Package {
+		public static Package SystemSecurityPermissions = new Package {
 			Id = "System.Security.Permissions",
-			Version = "5.0.0-preview.3.20214.6",
-			TargetFramework = "netcoreapp3.0",
+			Version = "5.0.0",
+			TargetFramework = "net5.0",
 		};
-		public static Package SystemThreadingAccessControl_5_0_0_preview_3_20214_6 = new Package {
+		public static Package SystemThreadingAccessControl = new Package {
 			Id = "System.Threading.AccessControl",
-			Version = "5.0.0-preview.3.20214.6",
-			TargetFramework = "netcoreapp3.0",
+			Version = "5.0.0",
+			TargetFramework = "net5.0",
 		};
 		/* end of additional packages for XForms 4.5 on NET5 */
 		public static Package XamarinFormsMaps_4_0_0_425677 = new Package {
