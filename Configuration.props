@@ -72,7 +72,7 @@
     <DotNetPreviewTool Condition=" '$(DotNetPreviewTool)' == '' ">$(DotNetPreviewPath)dotnet</DotNetPreviewTool>
     <!-- Version number from: https://github.com/dotnet/installer#installers-and-binaries -->
     <DotNetPreviewVersionBand Condition=" '$(DotNetPreviewVersionBand)' == '' ">6.0.100</DotNetPreviewVersionBand>
-    <DotNetPreviewVersionFull Condition=" '$(DotNetPreviewVersionFull)' == '' ">$(DotNetPreviewVersionBand)-alpha.1.20562.2</DotNetPreviewVersionFull>
+    <DotNetPreviewVersionFull Condition=" '$(DotNetPreviewVersionFull)' == '' ">$(DotNetPreviewVersionBand)-alpha.1.21064.27</DotNetPreviewVersionFull>
     <WixToolPath Condition=" '$(WixToolPath)' == '' ">$(AndroidToolchainDirectory)\wix\</WixToolPath>
     <AndroidCmakeVersion Condition=" '$(AndroidCmakeVersion)' == '' ">3.10.2</AndroidCmakeVersion>
     <AndroidCmakeVersionPath Condition=" '$(AndroidCmakeVersionPath)' == '' ">$(AndroidCmakeVersion).4988404</AndroidCmakeVersionPath>

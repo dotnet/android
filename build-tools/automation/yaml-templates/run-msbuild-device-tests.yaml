@@ -9,7 +9,8 @@ parameters:
 jobs:
   - job: ${{ parameters.job_name }}
     displayName: MSBuild With Emulator - macOS - ${{ parameters.job_suffix }}
-    pool: $(HostedMac)
+    pool:
+      vmImage: $(HostedMacImage)
     timeoutInMinutes: 150
     cancelTimeoutInMinutes: 5
     workspace:
