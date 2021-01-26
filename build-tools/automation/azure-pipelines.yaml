@@ -61,7 +61,7 @@ variables:
   # - User who queued the job requested it (They set XA.RunAllTests to true)
   # - This is the master integration branch (Pipeline defaults XA.RunAllTests to true)
   # - This is a non-fork branch with name containing "mono-" (for Mono bumps)
-  IsMonoBranch: $[and(eq(variables['XA.Commercial.Build'], 'true'), ne(variables['System.PullRequest.IsFork'], 'True'), or(contains(variables['Build.SourceBranchName'], 'mono-'), contains(variables['System.PullRequest.SourceBranch'], 'mono-')))]
+  IsMonoBranch: $[and(ne(variables['System.PullRequest.IsFork'], 'True'), or(contains(variables['Build.SourceBranchName'], 'mono-'), contains(variables['System.PullRequest.SourceBranch'], 'mono-')))]
   RunAllTests: $[or(eq(variables['XA.RunAllTests'], true), eq(variables['IsMonoBranch'], true))]
   DotNetNUnitCategories: '& TestCategory != DotNetIgnore & TestCategory != AOT & TestCategory != MkBundle & TestCategory != MonoSymbolicate & TestCategory != PackagesConfig & TestCategory != StaticProject & TestCategory != Debugger'
   NUnit.NumberOfTestWorkers: 4
@@ -131,7 +131,7 @@ stages:
   - job: mac_build_create_installers
     displayName: Build
     pool: $(MacMojaveBuildPool)
-    timeoutInMinutes: 240
+    timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:
       clean: all
@@ -139,126 +139,12 @@ stages:
     - checkout: self
       submodules: recursive
 
-    - script: echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/Library/Android/$(XA.Jdk11.Folder)"
-      displayName: set JI_JAVA_HOME
-
-    - template: yaml-templates/use-dot-net.yaml
-      parameters:
-        version: $(DotNet5Version)
-        remove_dotnet: true
-
-    - template: yaml-templates/use-dot-net.yaml
-      parameters:
-        version: $(DotNetCoreVersion)
-
-    - template: install-certificates.yml@yaml
-      parameters:
-        DeveloperIdApplication: $(developer-id-application)
-        DeveloperIdInstaller: $(developer-id-installer)
-        IphoneDeveloper: $(iphone-developer)
-        MacDeveloper: $(mac-developer)
-        HostedMacKeychainPassword: $(AzDO-OnPrem-KeychainPass)
-
-    - task: provisionator@2
-      displayName: Install Xcode
-      inputs:
-        github_token: $(GitHub.Token)
-        provisioning_script: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/provisioning/xcode.csx
-        provisioning_extra_args: '-v -v -v -v'
-
-    # Prepare and build everything
-    - script: make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
-      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
-      displayName: make prepare-update-mono
+    - template: yaml-templates/commercial-build.yaml
 
     - script: mono $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/xaprepare/xaprepare/bin/$(XA.Build.Configuration)/xaprepare.exe --s=DetermineApplicableTests --no-emoji --run-mode=CI
+      displayName: determine which test stages to run
       name: TestConditions
       condition: and(succeeded(), eq(variables['Build.DefinitionName'], 'Xamarin.Android-PR'))
-
-    # Clone monodroid wth submodules, but disregard the unused xamarin-android submodule.
-    - checkout: monodroid
-      clean: true
-      submodules: recursive
-      path: s/xamarin-android/external/monodroid
-      persistCredentials: true
-      condition: and(succeeded(), eq(variables['XA.Commercial.Build'], 'true'))
-
-    - script: rm -rf external/monodroid/external/xamarin-android
-      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
-      displayName: delete legacy xamarin-android submodule
-      condition: and(succeeded(), eq(variables['XA.Commercial.Build'], 'true'))
-
-    - script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
-      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
-      displayName: make prepare-external-git-dependencies
-      condition: and(succeeded(), eq(variables['XA.Commercial.Build'], 'true'))
-
-    - script: make jenkins V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
-      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
-      displayName: make jenkins
-
-    # Build and package test assemblies
-    - script: make all-tests V=1 CONFIGURATION=$(XA.Build.Configuration)
-      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
-      displayName: make all-tests
-
-    - script: >
-        cp -r bin/$(XA.Build.Configuration)/bcl-tests bin/Test$(XA.Build.Configuration)/bcl-tests &&
-        cp bin/Build$(XA.Build.Configuration)/ProfileAssemblies.projitems bin/Test$(XA.Build.Configuration)/bcl-tests/
-      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
-      displayName: copy bcl-tests assemblies
-
-    - task: PublishPipelineArtifact@1
-      displayName: upload test assemblies
-      inputs:
-        artifactName: $(TestAssembliesArtifactName)
-        targetPath: xamarin-android/bin/Test$(XA.Build.Configuration)
-
-    - task: MSBuild@1
-      displayName: pack all nupkgs
-      inputs:
-        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/create-packs/Microsoft.Android.Sdk.proj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:CreateAllPacks /restore /p:NuGetLicense=$(System.DefaultWorkingDirectory)/xamarin-android/external/monodroid/tools/scripts/License.txt /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/create-all-packs.binlog
-
-    # Create installers
-    - script: make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)
-      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
-      displayName: make create-installers
-
-    - script: >
-        mkdir -p bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName) &&
-        cp bin/Build$(XA.Build.Configuration)/*.vsix bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName) &&
-        cp bin/Build$(XA.Build.Configuration)/*.pkg bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
-      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
-      displayName: copy unsigned installers
-
-    - script: >
-        VERSION=`LANG=C; export LANG && git log --no-color --first-parent -n1 --pretty=format:%ct` &&
-        echo "d1ec039f-f3db-468b-a508-896d7c382999 $VERSION" > bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)/updateinfo
-      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
-      displayName: create updateinfo file
-
-    - task: PublishPipelineArtifact@1
-      displayName: upload installers
-      inputs:
-        artifactName: $(InstallerArtifactName)
-        targetPath: xamarin-android/bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
-
-    - task: PublishPipelineArtifact@1
-      displayName: upload nupkgs
-      inputs:
-        artifactName: $(NuGetArtifactName)
-        targetPath: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
-
-    - template: yaml-templates/upload-results.yaml
-      parameters:
-        solution: xamarin-android/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
-        artifactName: Build Results - macOS
-
-    - template: uninstall-certificates/v1.yml@yaml
-      parameters:
-        HostedMacKeychainPassword: $(AzDO-OnPrem-KeychainPass)
 
 # This stage ensures Windows specific build steps continue to work, and runs unit tests.
 # Check - "Xamarin.Android (Windows Build and Test)"
@@ -483,7 +369,6 @@ stages:
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
-        condition: and(succeeded(), eq(variables['XA.Commercial.Build'], 'true'))
         configuration: $(ApkTestConfiguration)
         testName: Xamarin.Android.JcwGen_Tests_FastDev
         project: tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj
@@ -1269,7 +1154,7 @@ stages:
 - stage: finalize_installers
   displayName: Finalize Installers
   dependsOn: mac_build
-  condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(variables['XA.Commercial.Build'], 'true'), ne(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.DefinitionName'], 'Xamarin.Android'))
+  condition: and(eq(dependencies.mac_build.result, 'Succeeded'), ne(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.DefinitionName'], 'Xamarin.Android'))
   jobs:
   # Check - "Xamarin.Android (Finalize Installers Notarize and Upload to Storage)"
   - job: notarize_pkg_upload_storage

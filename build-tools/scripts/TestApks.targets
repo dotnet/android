@@ -16,7 +16,6 @@
   <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.ProcessLogcatTiming" />
   <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.ProcessApkSizes" />
 
-  <!-- Scheduled tests run on Android 5.0 (21), 6.0 (23), 7.0 (24), 8.0 (26), 9 (28), 10 (29) -->
   <PropertyGroup>
     <TestAvdApiLevel Condition=" '$(TestAvdApiLevel)' == '' ">29</TestAvdApiLevel>
     <TestAvdAbi Condition=" '$(TestAvdAbi)' == '' ">x86_64</TestAvdAbi>
@@ -350,12 +349,9 @@
   </Target>
 
   <Target Name="InstallAvdImage" >
-    <PropertyGroup>
-
-    </PropertyGroup>
     <!-- SDK component installation can be frail, try a few times. -->
     <Exec
-        Command="&quot;$(AndroidSdkDirectory)\tools\bin\sdkmanager&quot; $(SdkManagerImageName)"
+        Command="&quot;$(AndroidSdkDirectory)\tools\bin\sdkmanager&quot; &quot;$(SdkManagerImageName)&quot;"
         EnvironmentVariables="JAVA_HOME=$(Java8SdkDirectory)"
         ContinueOnError="true">
       <Output TaskParameter="ExitCode" PropertyName="_SdkManagerExitCode" />
@@ -365,7 +361,7 @@
         Condition=" '$(_SdkManagerExitCode)' != '0' "
     />
     <Exec
-        Command="&quot;$(AndroidSdkDirectory)\tools\bin\sdkmanager&quot; $(SdkManagerImageName)"
+        Command="&quot;$(AndroidSdkDirectory)\tools\bin\sdkmanager&quot; &quot;$(SdkManagerImageName)&quot;"
         EnvironmentVariables="JAVA_HOME=$(Java8SdkDirectory)"
         ContinueOnError="true"
         Condition=" '$(_SdkManagerExitCode)' != '0' ">
@@ -376,7 +372,7 @@
         Condition=" '$(_SdkManagerExitCode)' != '0' "
     />
     <Exec
-        Command="&quot;$(AndroidSdkDirectory)\tools\bin\sdkmanager&quot; $(SdkManagerImageName)"
+        Command="&quot;$(AndroidSdkDirectory)\tools\bin\sdkmanager&quot; &quot;$(SdkManagerImageName)&quot;"
         EnvironmentVariables="JAVA_HOME=$(Java8SdkDirectory)"
         ContinueOnError="true"
         Condition=" '$(_SdkManagerExitCode)' != '0' ">

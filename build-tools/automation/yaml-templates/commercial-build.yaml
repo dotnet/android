@@ -1,0 +1,119 @@
+parameters:
+  xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
+  makeMSBuildArgs: ''
+
+steps:
+- script: echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/Library/Android/$(XA.Jdk11.Folder)"
+  displayName: set JI_JAVA_HOME
+
+- template: use-dot-net.yaml
+  parameters:
+    version: $(DotNet5Version)
+    remove_dotnet: true
+
+- template: use-dot-net.yaml
+  parameters:
+    version: $(DotNetCoreVersion)
+
+- template: install-certificates.yml@yaml
+  parameters:
+    DeveloperIdApplication: $(developer-id-application)
+    DeveloperIdInstaller: $(developer-id-installer)
+    IphoneDeveloper: $(iphone-developer)
+    MacDeveloper: $(mac-developer)
+    HostedMacKeychainPassword: $(AzDO-OnPrem-KeychainPass)
+
+- task: provisionator@2
+  displayName: Install Xcode
+  inputs:
+    github_token: $(GitHub.Token)
+    provisioning_script: ${{ parameters.xaSourcePath }}/build-tools/provisioning/xcode.csx
+    provisioning_extra_args: '-v -v -v -v'
+
+- script: make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
+  workingDirectory: ${{ parameters.xaSourcePath }}
+  displayName: make prepare-update-mono
+
+# Clone and prepare monodroid with submodules, but disregard the unused xamarin-android submodule.
+- checkout: monodroid
+  clean: true
+  submodules: recursive
+  path: s/xamarin-android/external/monodroid
+  persistCredentials: true
+
+- script: rm -rf external/monodroid/external/xamarin-android
+  workingDirectory: ${{ parameters.xaSourcePath }}
+  displayName: delete legacy xamarin-android submodule
+
+- script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
+  workingDirectory: ${{ parameters.xaSourcePath }}
+  displayName: make prepare-external-git-dependencies
+
+# Prepare and Build everything
+- script: make jenkins V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1 MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
+  workingDirectory: ${{ parameters.xaSourcePath }}
+  displayName: make jenkins
+
+# Build and package test assemblies
+- script: make all-tests V=1 CONFIGURATION=$(XA.Build.Configuration)
+  workingDirectory: ${{ parameters.xaSourcePath }}
+  displayName: make all-tests
+
+- script: >
+    cp -r bin/$(XA.Build.Configuration)/bcl-tests bin/Test$(XA.Build.Configuration)/bcl-tests &&
+    cp bin/Build$(XA.Build.Configuration)/ProfileAssemblies.projitems bin/Test$(XA.Build.Configuration)/bcl-tests/
+  workingDirectory: ${{ parameters.xaSourcePath }}
+  displayName: copy bcl-tests assemblies
+
+- task: PublishPipelineArtifact@1
+  displayName: upload test assemblies
+  inputs:
+    artifactName: $(TestAssembliesArtifactName)
+    targetPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
+
+# Create and upload .nupkgs
+- task: MSBuild@1
+  displayName: pack all nupkgs
+  inputs:
+    solution: ${{ parameters.xaSourcePath }}/build-tools/create-packs/Microsoft.Android.Sdk.proj
+    configuration: $(XA.Build.Configuration)
+    msbuildArguments: /t:CreateAllPacks /restore /p:NuGetLicense=${{ parameters.xaSourcePath }}/external/monodroid/tools/scripts/License.txt /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/create-all-packs.binlog
+
+- task: PublishPipelineArtifact@1
+  displayName: upload nupkgs
+  inputs:
+    artifactName: $(NuGetArtifactName)
+    targetPath:  ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
+
+# Create and upload legacy installers
+- script: make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)
+  workingDirectory: ${{ parameters.xaSourcePath }}
+  displayName: make create-installers
+
+- script: >
+    mkdir -p bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName) &&
+    cp bin/Build$(XA.Build.Configuration)/*.vsix bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName) &&
+    cp bin/Build$(XA.Build.Configuration)/*.pkg bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
+  workingDirectory: ${{ parameters.xaSourcePath }}
+  displayName: copy unsigned installers
+
+- script: >
+    VERSION=`LANG=C; export LANG && git log --no-color --first-parent -n1 --pretty=format:%ct` &&
+    echo "d1ec039f-f3db-468b-a508-896d7c382999 $VERSION" > bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)/updateinfo
+  workingDirectory: ${{ parameters.xaSourcePath }}
+  displayName: create updateinfo file
+
+- task: PublishPipelineArtifact@1
+  displayName: upload installers
+  inputs:
+    artifactName: $(InstallerArtifactName)
+    targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
+
+- template: uninstall-certificates/v1.yml@yaml
+  parameters:
+    HostedMacKeychainPassword: $(AzDO-OnPrem-KeychainPass)
+
+- template: upload-results.yaml
+  parameters:
+    solution: ${{ parameters.xaSourcePath }}/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
+    artifactName: Build Results - macOS
