@@ -67,10 +67,10 @@ variables:
   NUnit.NumberOfTestWorkers: 4
   GitHub.Token: $(github--pat--vs-mobiletools-engineering-service2)
   CONVERT_JAVADOC_TO_XMLDOC: $[ne(variables['Build.DefinitionName'], 'Xamarin.Android-PR')]
-  ${{ if eq(variables['Build.DefinitionName'], 'Xamarin.Android-PR') }}:
-    MicroBuildSignType: Test
   ${{ if and(eq(variables['Build.DefinitionName'], 'Xamarin.Android'), ne(variables['Build.Reason'], 'PullRequest')) }}:
     MicroBuildSignType: Real
+  ${{ if or(ne(variables['Build.DefinitionName'], 'Xamarin.Android'), eq(variables['Build.Reason'], 'PullRequest')) }}:
+    MicroBuildSignType: Test
   TeamName: XamarinAndroid
 
 # Stage and Job "display names" are shortened because they are combined to form the name of the corresponding GitHub check.
