@@ -1021,7 +1021,8 @@ because xbuild doesn't support framework reference assemblies.
 	</ItemGroup>
 </Target>
 
-<Target Name="_AddMultiDexDependencyJars">
+<Target Name="_AddMultiDexDependencyJars"
+    Condition=" '$(AndroidApplication)' == 'true' ">
   <ItemGroup Condition=" '$(AndroidEnableMultiDex)' == 'True' AND '$(AndroidMultiDexSupportJar)' != '' ">
     <AndroidJavaLibrary Include="$(_AndroidSdkDirectory)\$(AndroidMultiDexSupportJar)" />
   </ItemGroup>

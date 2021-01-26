@@ -175,9 +175,30 @@ namespace Xamarin.Android.Build.Tests
 			//NOTE: these properties should not affect class libraries at all
 			proj.SetProperty ("AndroidPackageFormat", "aab");
 			proj.SetProperty ("AotAssemblies", "true");
+			proj.SetProperty ("AndroidEnableMultiDex", "true");
 			using (var b = CreateDllBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 0 Warning(s)"), "Should have no MSBuild warnings.");
+
+				// $(AndroidEnableMultiDex) should not add android-support-multidex.jar!
+				if (Builder.UseDotNet) {
+					var aarPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.aar");
+					using var zip = Xamarin.Tools.Zip.ZipArchive.Open (aarPath, FileMode.Open);
+					Assert.IsFalse (zip.Any (e => e.FullName.EndsWith (".jar", StringComparison.OrdinalIgnoreCase)),
+						$"{aarPath} should not contain a .jar file!");
+				} else {
+					var assemblyPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.dll");
+					using var assembly = AssemblyDefinition.ReadAssembly (assemblyPath);
+					const string libraryProjects = "__AndroidLibraryProjects__.zip";
+					var resource = assembly.MainModule.Resources.OfType<EmbeddedResource> ()
+						.FirstOrDefault (e => e.Name == libraryProjects);
+					Assert.IsNotNull (resource, $"{assemblyPath} should contain {libraryProjects}");
+
+					using var stream = resource.GetResourceStream ();
+					using var zip = Xamarin.Tools.Zip.ZipArchive.Open (stream);
+					Assert.IsFalse (zip.Any (e => e.FullName.EndsWith (".jar", StringComparison.OrdinalIgnoreCase)),
+						$"{resource.Name} should not contain a .jar file!");
+				}
 			}
 		}
 
