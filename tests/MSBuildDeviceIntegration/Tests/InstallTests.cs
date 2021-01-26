@@ -440,7 +440,20 @@ namespace Xamarin.Android.Build.Tests
 			AssertCommercialBuild ();
 			AssertHasDevices ();
 
-			var proj = new XamarinAndroidApplicationProject {
+			var path = Path.Combine ("temp", TestName);
+			var lib = new XamarinAndroidLibraryProject {
+				ProjectName = "Localization",
+				OtherBuildItems = {
+					new BuildItem ("EmbeddedResource", "Bar.resx") {
+						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancel</value></data>")
+					},
+					new BuildItem ("EmbeddedResource", "Bar.es.resx") {
+						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancelar</value></data>")
+					}
+				}
+			};
+
+			var app = new XamarinAndroidApplicationProject {
 				EmbedAssembliesIntoApk = false,
 				OtherBuildItems = {
 					new BuildItem ("EmbeddedResource", "Foo.resx") {
@@ -451,24 +464,26 @@ namespace Xamarin.Android.Build.Tests
 					}
 				}
 			};
+			app.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
 
-			using (var builder = CreateApkBuilder ()) {
-				Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
-				var projectOutputPath = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath);
+			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
+			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+				Assert.IsTrue (libBuilder.Build (lib), "Library Build should have succeeded.");
+				Assert.IsTrue (appBuilder.Install (app), "App Install should have succeeded.");
+				var projectOutputPath = Path.Combine (Root, appBuilder.ProjectDirectory, app.OutputPath);
 				var resourceFilesFromDisk = Directory.EnumerateFiles (projectOutputPath, "*.resources.dll", SearchOption.AllDirectories)
 					.Select (r => r = r.Replace (projectOutputPath, string.Empty).Replace ("\\", "/"));
 
 				var overrideContents = string.Empty;
-				foreach (var dir in GetOverrideDirectoryPaths (proj.PackageName)) {
-					overrideContents += RunAdbCommand ($"shell run-as {proj.PackageName} find {dir}");
+				foreach (var dir in GetOverrideDirectoryPaths (app.PackageName)) {
+					overrideContents += RunAdbCommand ($"shell run-as {app.PackageName} find {dir}");
 				}
-				builder.BuildLogFile = "uninstall.log";
-				builder.Uninstall (proj);
 				Assert.IsTrue (resourceFilesFromDisk.Any (), $"Unable to find any localized assemblies in {resourceFilesFromDisk}");
 				foreach (var res in resourceFilesFromDisk) {
 					StringAssert.Contains (res, overrideContents, $"{res} did not exist in the .__override__ directory.\nFound:{overrideContents}");
 				}
-
+				appBuilder.BuildLogFile = "uninstall.log";
+				appBuilder.Uninstall (app);
 			}
 		}
 
