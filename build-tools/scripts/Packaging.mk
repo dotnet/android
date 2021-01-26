@@ -1,4 +1,4 @@
-create-installers: create-pkg create-vsix create-workload-installers
+create-installers: create-pkg create-vsix
 
 create-pkg:
 	MONO_IOMAP=all MONO_OPTIONS="$(MONO_OPTIONS)" $(call MSBUILD_BINLOG,create-pkg) /p:Configuration=$(CONFIGURATION) /t:CreatePkg \

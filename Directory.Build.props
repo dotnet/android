@@ -23,4 +23,9 @@
     <AndroidPackVersion>11.0.200</AndroidPackVersion>
   </PropertyGroup>
 
+  <!-- Common <PackageReference/> versions -->
+  <PropertyGroup>
+    <MicroBuildCoreVersion>0.4.1</MicroBuildCoreVersion>
+  </PropertyGroup>
+
 </Project>

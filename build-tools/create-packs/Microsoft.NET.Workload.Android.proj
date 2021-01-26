@@ -9,11 +9,8 @@ workload manifest pack containing information about the various Microsoft.Androi
 <Project Sdk="Microsoft.Build.NoTargets">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
     <PackageId>Microsoft.NET.Workload.Android</PackageId>
-    <Authors>Microsoft</Authors>
     <Description>Microsoft.Android workload manifest. Please do not reference directly.</Description>
-    <OutputPath>..\..\bin\Build$(Configuration)\nupkgs\</OutputPath>
   </PropertyGroup>
 
   <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
