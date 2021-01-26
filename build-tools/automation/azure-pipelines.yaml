@@ -1270,7 +1270,7 @@ stages:
 
     - template: yaml-templates\remove-microbuild-tooling.yaml
       parameters:
-        condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
+        condition: and(succeededOrFailed(), eq(variables['MicroBuildSignType'], 'Real'))
 
     - template: yaml-templates/upload-results.yaml
       parameters:
