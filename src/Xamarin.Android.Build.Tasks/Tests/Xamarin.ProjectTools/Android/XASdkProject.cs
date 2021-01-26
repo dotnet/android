@@ -59,7 +59,7 @@ namespace Xamarin.ProjectTools
 			TargetSdkVersion = AndroidSdkResolver.GetMaxInstalledPlatform ().ToString ();
 			PackageName = PackageName ?? string.Format ("{0}.{0}", ProjectName);
 			JavaPackageName = JavaPackageName ?? PackageName.ToLowerInvariant ();
-			GlobalPackagesFolder = Path.Combine (XABuildPaths.TopDirectory, "packages");
+			GlobalPackagesFolder = FileSystemUtils.FindNugetGlobalPackageFolder ();
 			SetProperty (KnownProperties.OutputType, outputType);
 
 			// Add relevant Android content to our project without writing it to the .csproj file

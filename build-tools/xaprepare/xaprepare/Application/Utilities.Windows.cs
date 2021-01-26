@@ -16,6 +16,11 @@ namespace Xamarin.Android.Prepare
 		public static int ConsoleCursorLeft   => SafeConsoleAccess (() => Console.CursorLeft);
 		public static int ConsoleWindowHeight => SafeConsoleAccess (() => Console.WindowHeight);
 
+		public static bool MakeExecutable (string filePath, bool throwOnError = true)
+		{
+			return true;
+		}
+
 		public static void ConsoleSetCursorPosition (int left, int top)
 		{
 			if (left < 0 || top < 0)

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\..\packages\microsoft.vssdk.buildtools\15.0.26201\build\Microsoft.VSSDK.BuildTools.props" Condition="Exists('..\..\packages\microsoft.vssdk.buildtools\15.0.26201\build\Microsoft.VSSDK.BuildTools.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -8,7 +7,6 @@
     <OutputType>Library</OutputType>
     <RootNamespace>Xamarin.Android.Sdk</RootNamespace>
     <AssemblyName>Xamarin.Android.Sdk</AssemblyName>
-    <CreateVsixContainer Condition=" '$(CreateVsixContainer)' == '' ">False</CreateVsixContainer>
     <CopyBuildOutputToOutputDirectory>true</CopyBuildOutputToOutputDirectory>
     <CopyOutputSymbolsToOutputDirectory>True</CopyOutputSymbolsToOutputDirectory>
     <GeneratePkgDefFile>False</GeneratePkgDefFile>
@@ -16,15 +14,22 @@
     <IncludeCopyLocalReferencesInVSIXContainer>False</IncludeCopyLocalReferencesInVSIXContainer>
     <IncludeDebugSymbolsInLocalVSIXDeployment>False</IncludeDebugSymbolsInLocalVSIXDeployment>
     <IncludeDebugSymbolsInVSIXContainer>true</IncludeDebugSymbolsInVSIXContainer>
+    <OutputPath>bin\$(Configuration)</OutputPath>
+  </PropertyGroup>
+
+  <Import Project="..\..\Configuration.props" />
+  <Import Project="$(XAPackagesDir)\microsoft.vssdk.buildtools\15.0.26201\build\Microsoft.VSSDK.BuildTools.props" Condition="Exists('$(XAPackagesDir)\microsoft.vssdk.buildtools\15.0.26201\build\Microsoft.VSSDK.BuildTools.props')" />
+
+  <PropertyGroup>
+    <CreateVsixContainer Condition=" '$(CreateVsixContainer)' == '' ">False</CreateVsixContainer>
     <IsExperimental Condition=" '$(IsExperimental)' == '' ">true</IsExperimental>
     <IsProductComponent Condition=" '$(IsProductComponent)' == '' ">True</IsProductComponent>
     <ZipPackageCompressionLevel Condition=" '$(ZipPackageCompressionLevel)' == '' ">Normal</ZipPackageCompressionLevel>
     <_BuildVsix Condition=" '$(CreateVsixContainer)' == 'True' And Exists ('$(VsSDKInstall)') ">True</_BuildVsix>
     <_BuildVsix Condition=" '$(_BuildVsix)' == '' ">False</_BuildVsix>
     <ExtensionInstallationFolder>Xamarin\Xamarin.Android.Sdk</ExtensionInstallationFolder>
-    <OutputPath>bin\$(Configuration)</OutputPath>
   </PropertyGroup>
-  <Import Project="..\..\Configuration.props" />
+
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' " />
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' " />
   <ItemGroup>
