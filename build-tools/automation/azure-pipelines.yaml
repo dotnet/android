@@ -369,6 +369,12 @@ stages:
         testResultsFiles: TestResult-*.xml
         testRunTitle: Java Interop Tests - Windows Build Tree
 
+    - task: CmdLine@2
+      displayName: install apkdiff dotnet tool
+      inputs:
+        script: 'dotnet tool update apkdiff -g'
+      continueOnError: true
+
     # Limit the amount of worker threads used to run these tests in parallel to half of what is currently available (8) on the Windows pool.
     # Using all available cores seems to occasionally bog down our machines and cause parallel test execution to slow down dramatically.
     # Only run a subset of the Xamarin.Android.Build.Tests against the local Windows build tree.
@@ -672,6 +678,12 @@ stages:
         plotPathAndFilename: $(System.DefaultWorkingDirectory)/TestResult-Xamarin.Forms_Test-times.csv
 
     - template: yaml-templates/fail-on-issue.yaml
+
+    - task: CmdLine@2
+      displayName: install apkdiff dotnet tool
+      inputs:
+        script: 'dotnet tool update apkdiff -g'
+      continueOnError: true
 
   # Xamarin.Android (Smoke Tests MSBuild - Mac-0)
   - template: yaml-templates/run-msbuild-mac-tests.yaml
