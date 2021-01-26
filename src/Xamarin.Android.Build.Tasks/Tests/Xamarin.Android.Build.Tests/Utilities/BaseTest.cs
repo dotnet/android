@@ -237,7 +237,21 @@ namespace Xamarin.Android.Build.Tests
 			return RunProcess (adb, $"{adbTarget} {command}");
 		}
 
+		protected static (int code, string stdOutput, string stdError) RunApkDiffCommand (string args)
+		{
+			string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".exe" : "";
+
+			return RunProcessWithExitCode ("apkdiff" + ext, args);
+		}
+
 		protected static string RunProcess (string exe, string args)
+		{
+			var (_, stdOutput, stdError) = RunProcessWithExitCode (exe, args);
+
+			return stdOutput + stdError;
+		}
+
+		protected static (int code, string stdOutput, string stdError) RunProcessWithExitCode (string exe, string args)
 		{
 			TestContext.Out.WriteLine ($"{nameof(RunProcess)}: {exe} {args}");
 			var info = new ProcessStartInfo (exe, args) {
@@ -266,12 +280,12 @@ namespace Xamarin.Android.Build.Tests
 				if (!proc.WaitForExit ((int)TimeSpan.FromSeconds (30).TotalMilliseconds)) {
 					proc.Kill ();
 					TestContext.Out.WriteLine ($"{nameof (RunProcess)} timed out: {exe} {args}");
-					return null; //Don't try to read stdout/stderr
+					return (-1, null, null); //Don't try to read stdout/stderr
 				}
 
 				proc.WaitForExit ();
 
-				return standardOutput.ToString ().Trim () + errorOutput.ToString ().Trim ();
+				return (proc.ExitCode, standardOutput.ToString ().Trim (), errorOutput.ToString ().Trim ());
 			}
 		}
 
