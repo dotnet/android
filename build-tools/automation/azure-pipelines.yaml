@@ -369,10 +369,8 @@ stages:
         testResultsFiles: TestResult-*.xml
         testRunTitle: Java Interop Tests - Windows Build Tree
 
-    - task: CmdLine@2
+    - script: dotnet tool update apkdiff -g
       displayName: install apkdiff dotnet tool
-      inputs:
-        script: 'dotnet tool update apkdiff -g'
       continueOnError: true
 
     # Limit the amount of worker threads used to run these tests in parallel to half of what is currently available (8) on the Windows pool.
