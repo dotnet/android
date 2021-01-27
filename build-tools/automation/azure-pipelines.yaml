@@ -418,10 +418,8 @@ stages:
     - script: mono $(System.DefaultWorkingDirectory)/build-tools/xaprepare/xaprepare/bin/$(ApkTestConfiguration)/xaprepare.exe --s=EmulatorTestDependencies --no-emoji --run-mode=CI
       displayName: install emulator
 
-    - task: CmdLine@2
+    - script: 'dotnet tool update apkdiff -g'
       displayName: install apkdiff dotnet tool
-      inputs:
-        script: 'dotnet tool update apkdiff -g'
       continueOnError: true
 
     - template: yaml-templates/apk-instrumentation.yaml
@@ -678,12 +676,6 @@ stages:
         plotPathAndFilename: $(System.DefaultWorkingDirectory)/TestResult-Xamarin.Forms_Test-times.csv
 
     - template: yaml-templates/fail-on-issue.yaml
-
-    - task: CmdLine@2
-      displayName: install apkdiff dotnet tool
-      inputs:
-        script: 'dotnet tool update apkdiff -g'
-      continueOnError: true
 
   # Xamarin.Android (Smoke Tests MSBuild - Mac-0)
   - template: yaml-templates/run-msbuild-mac-tests.yaml
