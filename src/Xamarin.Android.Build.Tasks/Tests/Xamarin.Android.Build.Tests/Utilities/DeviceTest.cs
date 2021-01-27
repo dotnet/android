@@ -43,10 +43,28 @@ namespace Xamarin.Android.Build.Tests
 				}
 			}
 
+			UnInstallTestApp ();
+
 			ClearAdbLogcat ();
 
 
 			base.CleanupTest ();
+		}
+
+		protected static void UnInstallTestApp ()
+		{
+			if (TestPackageName.TryGetValue (TestContext.CurrentContext.Test.ID, out string packageName))
+				RunAdbCommand ($"uninstall {packageName}");
+		}
+
+		protected static string GeneratePackageName ()
+		{
+			if (TestPackageName.TryGetValue (TestContext.CurrentContext.Test.ID, out string packageName))
+				return packageName;
+
+			packageName = $"com.xamarin.test{TestContext.CurrentContext.Test.ID.Replace ("-", "")}";
+			TestPackageName[TestContext.CurrentContext.Test.ID] = packageName;
+			return packageName;
 		}
 
 		protected static void RunAdbInput (string command, params object [] args)

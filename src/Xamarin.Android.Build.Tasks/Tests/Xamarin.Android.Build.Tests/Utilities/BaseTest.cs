@@ -17,6 +17,7 @@ namespace Xamarin.Android.Build.Tests
 	public class BaseTest
 	{
 		public static ConcurrentDictionary<string, string> TestOutputDirectories = new ConcurrentDictionary<string, string> ();
+		public static ConcurrentDictionary<string, string> TestPackageName = new ConcurrentDictionary<string, string> ();
 
 		[SetUpFixture]
 		public class SetUp {

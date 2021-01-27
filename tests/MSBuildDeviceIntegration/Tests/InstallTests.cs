@@ -46,6 +46,7 @@ namespace Xamarin.Android.Build.Tests
 
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
+				PackageName = GeneratePackageName (),
 			};
 			if (isRelease) {
 				proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
@@ -75,6 +76,7 @@ namespace Xamarin.Android.Build.Tests
 
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
+				PackageName = GeneratePackageName (),
 			};
 			if (isRelease) {
 				// Set debuggable=true to allow run-as command usage with a release build
@@ -139,6 +141,7 @@ namespace Xamarin.Android.Build.Tests
 
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = false,
+				PackageName = GeneratePackageName (),
 			};
 			// Set debuggable=true to allow run-as command usage with a release build
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", "<application android:debuggable=\"true\" ");
@@ -184,6 +187,7 @@ namespace Xamarin.Android.Build.Tests
 
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
+				PackageName = GeneratePackageName (),
 			};
 			proj.SetProperty (proj.ReleaseProperties, "Optimize", false);
 			proj.SetProperty (proj.ReleaseProperties, "DebugType", "none");
@@ -201,7 +205,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (builder.Install (proj));
 				var runtimeInfo = builder.GetSupportedRuntimes ();
 				var apkPath = Path.Combine (Root, builder.ProjectDirectory,
-					proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
+					proj.IntermediateOutputPath, "android", "bin", $"{proj.PackageName}.apk");
 				using (var apk = ZipHelper.OpenZip (apkPath)) {
 					foreach (var abi in abis) {
 						var runtime = runtimeInfo.FirstOrDefault (x => x.Abi == abi && x.Runtime == "debug");
@@ -237,6 +241,7 @@ namespace Xamarin.Android.Build.Tests
 			var abi = "armeabi-v7a";
 			var proj = new XamarinAndroidApplicationProject {
 				EmbedAssembliesIntoApk = true,
+				PackageName = GeneratePackageName (),
 			};
 			proj.SetAndroidSupportedAbis (abi);
 
@@ -258,6 +263,7 @@ namespace Xamarin.Android.Build.Tests
 
 			var proj = new XamarinAndroidApplicationProject {
 				EmbedAssembliesIntoApk = false,
+				PackageName = GeneratePackageName (),
 				OtherBuildItems = {
 					new BuildItem.NoActionResource ("UnnamedProject.dll.config") {
 						TextContent = () => "<?xml version='1.0' ?><configuration/>",
@@ -300,6 +306,7 @@ namespace Xamarin.Android.Build.Tests
 
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
+				PackageName = GeneratePackageName (),
 			};
 			// Set debuggable=true to allow run-as command usage with a release build
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", "<application android:debuggable=\"true\" ");
@@ -325,7 +332,9 @@ namespace Xamarin.Android.Build.Tests
 			AssertHasDevices ();
 
 			var serial = GetAttachedDeviceSerial ();
-			var proj = new XamarinAndroidApplicationProject ();
+			var proj = new XamarinAndroidApplicationProject () {
+				PackageName = GeneratePackageName (),
+			};
 			proj.SetProperty (proj.DebugProperties, "EmbedAssembliesIntoApk", false);
 
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
@@ -382,7 +391,8 @@ namespace Xamarin.Android.Build.Tests
 			string keypassfile = Path.Combine (Root, path, "keypass.txt");
 			byte [] data = GetKeystore ();
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease
+				IsRelease = isRelease,
+				PackageName = GeneratePackageName (),
 			};
 			Dictionary<string, string> envVar = new Dictionary<string, string> ();
 			if (password.StartsWith ("env:", StringComparison.Ordinal)) {
@@ -455,6 +465,7 @@ namespace Xamarin.Android.Build.Tests
 
 			var app = new XamarinAndroidApplicationProject {
 				EmbedAssembliesIntoApk = false,
+				PackageName = GeneratePackageName (),
 				OtherBuildItems = {
 					new BuildItem ("EmbeddedResource", "Foo.resx") {
 						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancel</value></data>")
@@ -517,6 +528,7 @@ namespace Xamarin.Android.Build.Tests
 
 			var app = new XamarinFormsAndroidApplicationProject () {
 				EmbedAssembliesIntoApk = false,
+				PackageName = GeneratePackageName (),
 				References = {
 					new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj"),
 					new BuildItem ("ProjectReference", "..\\Library2\\Library2.csproj"),

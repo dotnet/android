@@ -37,6 +37,7 @@ namespace Xamarin.Android.Build.Tests
 
 			proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
+				PackageName = GeneratePackageName (),
 				MinSdkVersion = "23",
 				TargetSdkVersion = null,
 			};
@@ -67,6 +68,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 
 			proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
+				PackageName = GeneratePackageName (),
 			};
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
@@ -112,6 +114,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 
 			proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
+				PackageName = GeneratePackageName (),
 			};
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
 			proj.SetProperty (proj.ReleaseProperties, "MonoSymbolArchive", "True");
@@ -177,6 +180,7 @@ namespace Library1 {
 
 			proj = new XamarinFormsAndroidApplicationProject () {
 				IsRelease = true,
+				PackageName = GeneratePackageName (),
 				References = {
 					new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj"),
 				},
@@ -237,7 +241,9 @@ namespace Library1 {
 			AssertHasDevices ();
 			AssertCommercialBuild ();
 
-			proj = new XamarinAndroidApplicationProject ();
+			proj = new XamarinAndroidApplicationProject () {
+				PackageName = GeneratePackageName (),
+			};
 			builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 			string mlpdDestination = Path.Combine (Root, builder.ProjectDirectory, "profile.mlpd");
@@ -352,6 +358,7 @@ namespace Library1 {
 
 			proj = new XamarinFormsAndroidApplicationProject () {
 				IsRelease = true,
+				PackageName = GeneratePackageName (),
 				AndroidLinkModeRelease = linkMode,
 				References = {
 					new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj"),
@@ -426,6 +433,7 @@ namespace Library1 {
 
 			proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
+				PackageName = GeneratePackageName (),
 			};
 
 			if (isRelease || !CommercialBuildAvailable) {
