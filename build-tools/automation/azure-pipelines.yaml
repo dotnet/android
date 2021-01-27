@@ -1109,7 +1109,8 @@ stages:
   # Check - "Xamarin.Android (.NET 6 Preview Installers Create .pkg)"
   - job: dotnet_create_pkg
     displayName: Create .pkg
-    dependsOn: signing
+    ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
+      dependsOn: signing
     pool: $(MacMojaveBuildPool)
     workspace:
       clean: all
