@@ -291,14 +291,15 @@ $@"			var myButton = new AttributedButtonStub (this);
 
 		// mode
 		//   0 .. Debug configuration
-		//   1 .. Release configuration
-		//   2 .. Release configuration, AndroidLinkMode=None
+		//   1 .. Debug configuration, AndroidAddKeepAlives=true
+		//   2 .. Release configuration
+		//   3 .. Release configuration, AndroidLinkMode=None
 		[Test]
 		[Category ("DotNetIgnore")]
-		public void AndroidAddKeepAlives ([Values (0, 1, 2)] int mode)
+		public void AndroidAddKeepAlives ([Values (0, 1, 2, 3)] int mode)
 		{
 			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = (mode > 0),
+				IsRelease = (mode > 1),
 				OtherBuildItems = {
 					new BuildItem ("Compile", "Method.cs") { TextContent = () => @"
 using System;
@@ -328,8 +329,14 @@ namespace UnnamedProject {
 
 			proj.SetProperty ("AllowUnsafeBlocks", "True");
 
-			if (mode == 2)
-				proj.SetProperty (proj.ReleaseProperties, "AndroidLinkMode", "None");
+			switch (mode) {
+				case 1:
+					proj.SetProperty ("AndroidAddKeepAlives", "True");
+					break;
+				case 3:
+					proj.SetProperty (proj.ReleaseProperties, "AndroidLinkMode", "None");
+					break;
+			}
 
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Building a project should have succeded.");
@@ -359,7 +366,10 @@ namespace UnnamedProject {
 						break;
 					}
 
-					Assert.IsTrue (hasKeepAliveCall);
+					if (mode == 0)
+						Assert.IsFalse (hasKeepAliveCall);
+					else
+						Assert.IsTrue (hasKeepAliveCall);
 				}
 			}
 		}
