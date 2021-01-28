@@ -143,7 +143,7 @@ You could setup a cross-platform solution in .NET 6 with:
 
 * `Hello/Hello.csproj` - `net6.0` shared code
 * `HelloAndroid/HelloAndroid.csproj` - `net6.0-android`
-* `HelloiOS/HelloiOS.csproj` - `net6.0-android`
+* `HelloiOS/HelloiOS.csproj` - `net6.0-ios`
 * `Hello.sln`
 * `Directory.Build.props`
 
