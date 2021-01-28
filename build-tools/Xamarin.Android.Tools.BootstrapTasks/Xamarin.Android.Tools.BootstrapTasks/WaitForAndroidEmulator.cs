@@ -18,10 +18,9 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 			if (bootCompleted != 1) {
 				Log.LogError ($"Emulator '{AdbTarget}' did not finish launching in {Timeout} ms.");
-				return false;
-			} else {
-				return true;
 			}
+
+			return !Log.HasLoggedErrors;
 		}
 
 		protected override List <CommandInfo> GenerateCommandArguments ()
