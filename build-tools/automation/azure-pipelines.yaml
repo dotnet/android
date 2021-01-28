@@ -72,6 +72,7 @@ variables:
   ${{ if or(ne(variables['Build.DefinitionName'], 'Xamarin.Android'), eq(variables['Build.Reason'], 'PullRequest')) }}:
     MicroBuildSignType: Test
   TeamName: XamarinAndroid
+  NugetSecurityAnalysisWarningLevel: none
 
 # Stage and Job "display names" are shortened because they are combined to form the name of the corresponding GitHub check.
 stages:
