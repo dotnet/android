@@ -1,0 +1,151 @@
+# Xamarin.Android Nightly Pipeline
+
+name: $(Build.SourceBranchName)-$(Build.SourceVersion)-$(Rev:r)
+
+trigger:
+  - none
+
+pr:
+  - none
+
+schedules:
+- cron: "0 3 * * *"
+  displayName: Run daily at 3:00 UTC
+  branches:
+    include:
+    - master
+    - d16-9
+
+# External sources, scripts, tests, and yaml template files.
+resources:
+  repositories:
+  - repository: yaml
+    type: github
+    name: xamarin/yaml-templates
+    ref: refs/heads/main
+    endpoint: xamarin
+  - repository: monodroid
+    type: github
+    name: xamarin/monodroid
+    endpoint: xamarin
+
+# Global variables
+variables:
+  RunningOnCI: true
+  XA.Build.Configuration: Release
+  XA.Jdk8.Folder: jdk-1.8
+  NuGetArtifactName: nupkgs
+  InstallerArtifactName: installers
+  TestAssembliesArtifactName: test-assemblies
+  DotNetCoreVersion: 3.1.201
+  DotNet5Version: 5.0.100
+  MacMojaveBuildPool: VSEng-Xamarin-RedmondMac-Android-Untrusted
+  HostedMacImage: macOS-10.15
+  VSEngWinVS2019: Xamarin-Android-Win2019-1120
+  GitHub.Token: $(github--pat--vs-mobiletools-engineering-service2)
+
+stages:
+- stage: mac_build
+  displayName: Build
+  dependsOn: []
+  jobs:
+  - job: mac_build_create_installers
+    displayName: macOS
+    pool: $(MacMojaveBuildPool)
+    timeoutInMinutes: 240
+    cancelTimeoutInMinutes: 5
+    workspace:
+      clean: all
+    variables:
+      - group: Xamarin-Secrets
+      - group: Xamarin Signing
+      - group: xamops-azdev-secrets
+    steps:
+    - checkout: self
+      submodules: recursive
+
+    - template: yaml-templates/commercial-build.yaml
+      parameters:
+        makeMSBuildArgs: /p:EnableRoslynAnalyzers=true
+
+- stage: test
+  displayName: Test
+  dependsOn: mac_build
+  jobs:
+  - job: emulator_tests
+    displayName: Emulator
+    timeoutInMinutes: 180
+    cancelTimeoutInMinutes: 2
+    strategy:
+      matrix:
+        Android21-x86:
+          avdApiLevel: 21
+          avdAbi: x86
+        Android23-x86:
+          avdApiLevel: 23
+          avdAbi: x86
+        Android24-x86:
+          avdApiLevel: 24
+          avdAbi: x86
+        Android26-x86_64:
+          avdApiLevel: 26
+          avdAbi: x86_64
+        Android28-x86_64:
+          avdApiLevel: 28
+          avdAbi: x86_64
+    pool:
+      vmImage: $(HostedMacImage)
+    workspace:
+      clean: all
+    variables:
+      - group: Xamarin-Secrets
+      - group: xamops-azdev-secrets
+    steps:
+    - template: yaml-templates/setup-test-environment.yaml
+      parameters:
+        configuration: $(XA.Build.Configuration)
+
+    - script: >
+        mono $(System.DefaultWorkingDirectory)/build-tools/xaprepare/xaprepare/bin/$(XA.Build.Configuration)/xaprepare.exe
+        --s=Required --auto-provision=yes --auto-provision-uses-sudo=yes --no-emoji --run-mode=CI
+      displayName: install required brew tools and prepare java.interop
+
+    - script: >
+        mono $(System.DefaultWorkingDirectory)/build-tools/xaprepare/xaprepare/bin/$(XA.Build.Configuration)/xaprepare.exe
+        --s=EmulatorTestDependencies --no-emoji --run-mode=CI
+      displayName: install emulator
+
+    - script: echo "##vso[task.setvariable variable=Java8SdkDirectory]$HOME/Library/Android/$(XA.Jdk8.Folder)"
+      displayName: set Java8SdkDirectory
+
+    - task: MSBuild@1
+      displayName: install and launch emulator
+      inputs:
+        solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: /t:InstallAvdImage;AcquireAndroidTarget /p:TestAvdApiLevel=$(avdApiLevel) /p:TestAvdAbi=$(avdAbi) /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/install-emulator-$(avdApiLevel).binlog
+
+    - template: yaml-templates/apk-instrumentation.yaml
+      parameters:
+        configuration: $(XA.Build.Configuration)
+        testName: Mono.Android_Tests-$(avdApiLevel)-$(avdAbi)
+        project: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
+        testResultsFiles: TestResult-Mono.Android_Tests-$(XA.Build.Configuration).xml
+        extraBuildArgs: /p:TestAvdApiLevel=$(avdApiLevel) /p:TestAvdAbi=$(avdAbi)
+        artifactName: Mono.Android_Tests-Signed.apk
+        artifactFolder: Default
+
+    - task: MSBuild@1
+      displayName: shut down emulator
+      inputs:
+        solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: /t:AcquireAndroidTarget,ReleaseAndroidTarget /p:TestAvdApiLevel=$(avdApiLevel) /p:TestAvdAbi=$(avdAbi) /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/shutdown-emulator.binlog
+      condition: always()
+
+    - template: yaml-templates/upload-results.yaml
+      parameters:
+        configuration: $(XA.Build.Configuration)
+        artifactName: Test Results - Emulator $(avdApiLevel)-$(avdAbi) - macOS
+
+    - template: yaml-templates/fail-on-issue.yaml

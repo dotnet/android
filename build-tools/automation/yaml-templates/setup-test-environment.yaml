@@ -36,17 +36,6 @@ steps:
   parameters:
     version: $(DotNetCoreVersion)
 
-- script: |
-    dotnet tool install --global boots
-  displayName: install boots
-  condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
-
-- script: |
-    export PATH="$PATH:/Users/runner/.dotnet/tools"
-    boots https://download.mono-project.com/archive/6.8.0/macos-10-universal/MonoFramework-MDK-6.8.0.105.macos10.xamarin.universal.pkg
-  displayName: update Mono to version 6.x
-  condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
-
 - task: MSBuild@1
   displayName: build xaprepare
   inputs:
