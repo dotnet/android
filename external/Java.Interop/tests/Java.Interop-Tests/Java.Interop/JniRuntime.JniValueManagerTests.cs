@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Reflection;
 using System.Collections.Generic;
 
 using Java.Interop;
@@ -58,6 +59,11 @@ namespace Java.InteropTests {
 			public override IJavaPeerable PeekPeer (JniObjectReference reference)
 			{
 				return null;
+			}
+
+			public override void ActivatePeer (IJavaPeerable self, JniObjectReference reference, ConstructorInfo cinfo, object [] argumentValues)
+			{
+				throw new NotImplementedException ();
 			}
 		}
 

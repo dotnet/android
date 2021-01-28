@@ -1,7 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace Java.Interop {
 
@@ -227,6 +231,32 @@ namespace Java.Interop {
 					RegisteredInstances.Remove (key);
 			}
 			return null;
+		}
+
+		static Exception CreateJniLocationException ()
+		{
+			using (var e = new JavaException ()) {
+				return new JniLocationException (e.ToString ());
+			}
+		}
+
+		public override void ActivatePeer (IJavaPeerable self, JniObjectReference reference, ConstructorInfo cinfo, object [] argumentValues)
+		{
+			var runtime = JniEnvironment.Runtime;
+
+			try {
+				var f = runtime.MarshalMemberBuilder.CreateConstructActivationPeerFunc (cinfo);
+				f (cinfo, reference, argumentValues);
+			} catch (Exception e) {
+				var m = string.Format ("Could not activate {{ PeerReference={0} IdentityHashCode=0x{1} Java.Type={2} }} for managed type '{3}'.",
+						reference,
+						runtime.ValueManager.GetJniIdentityHashCode (reference).ToString ("x"),
+						JniEnvironment.Types.GetJniTypeNameFromInstance (reference),
+						cinfo.DeclaringType.FullName);
+				Debug.WriteLine (m);
+
+				throw new NotSupportedException (m, e);
+			}
 		}
 
 		public override void FinalizePeer (IJavaPeerable value)

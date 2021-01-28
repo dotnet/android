@@ -93,31 +93,17 @@ namespace Java.Interop {
 
 				var ptypes  = GetParameterTypes (JniEnvironment.Strings.ToString (n_constructorSignature));
 				var pvalues = GetValues (runtime, new JniObjectReference (n_constructorArguments), ptypes);
-				var ctor    = type.GetConstructors (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-					.FirstOrDefault (c =>
-						c.GetParameters ().Select (p => p.ParameterType).SequenceEqual (ptypes));
-				if (ctor == null) {
+				var cinfo = type.GetConstructor (ptypes);
+				if (cinfo == null) {
 					throw CreateMissingConstructorException (type, ptypes);
 				}
+
 				if (self != null) {
-					ctor.Invoke (self, pvalues);
+					cinfo.Invoke (self, pvalues);
 					return;
 				}
 
-				try {
-					var f = JniEnvironment.Runtime.MarshalMemberBuilder.CreateConstructActivationPeerFunc (ctor);
-					f (ctor, new JniObjectReference (n_self), pvalues);
-				}
-				catch (Exception e) {
-					var m = string.Format ("Could not activate {{ PeerReference={0} IdentityHashCode=0x{1} Java.Type={2} }} for managed type '{3}'.",
-							r_self,
-							runtime.ValueManager.GetJniIdentityHashCode (r_self).ToString ("x"),
-							JniEnvironment.Types.GetJniTypeNameFromInstance (r_self),
-							type.FullName);
-					Debug.WriteLine (m);
-
-					throw new NotSupportedException (m, e);
-				}
+				JniEnvironment.Runtime.ValueManager.ActivatePeer (self, new JniObjectReference (n_self), cinfo, pvalues);
 			}
 			catch (Exception e) when (JniEnvironment.Runtime.ExceptionShouldTransitionToJni (e)) {
 				envp.SetPendingException (e);
@@ -127,27 +113,31 @@ namespace Java.Interop {
 			}
 		}
 
-		static Exception CreateJniLocationException ()
-		{
-			using (var e = new JavaException ()) {
-				return new JniLocationException (e.ToString ());
-			}
-		}
-
-		static Exception CreateMissingConstructorException (Type type, Type[] ptypes)
+		static Exception CreateMissingConstructorException (Type type, Type [] ptypes)
 		{
 			var message = new StringBuilder ();
 			message.Append ("Unable to find constructor ");
 			message.Append (type.FullName);
 			message.Append ("(");
+
 			if (ptypes.Length > 0) {
 				message.Append (ptypes [0].FullName);
 				for (int i = 1; i < ptypes.Length; ++i)
 					message.Append (", ").Append (ptypes [i].FullName);
 			}
+
 			message.Append (")");
 			message.Append (". Please provide the missing constructor.");
+
 			return new NotSupportedException (message.ToString (), CreateJniLocationException ());
+		}
+
+
+		static Exception CreateJniLocationException ()
+		{
+			using (var e = new JavaException ()) {
+				return new JniLocationException (e.ToString ());
+			}
 		}
 
 		static Type[] GetParameterTypes (string? signature)
