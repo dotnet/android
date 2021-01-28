@@ -10,9 +10,7 @@ if defined NUGET_PACKAGES (
  
 set NUGET_PATH=%MYDIR%..\..\.nuget\NuGet.exe
 if exist "%NUGET_PATH%" (
-  for /f "tokens=1,2,3 delims=:" %%a in ('"%NUGET_PATH%" locals -list global-packages') do set drive=%%b&set dir=%%c
-  rem %drive% will contain a leading space, get rid of it
-  set PACKAGES_PATH=%drive: =%:%dir%
+  for /f "tokens=1,2" %%a in ('"%NUGET_PATH%" locals -list global-packages') do set PACKAGES_PATH=%%b
   goto got_location
 )
 
