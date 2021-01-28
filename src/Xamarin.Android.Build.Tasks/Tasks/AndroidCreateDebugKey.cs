@@ -26,6 +26,17 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendSwitchIfNotNull ("-storetype ", StoreType);
 			return cmd;
 		}
+
+		protected override void LogFromStandardError (string text)
+		{
+			// Downgrade error message to warning:
+			// error: java.lang.Exception: Key pair not generated, alias <androiddebugkey> already exists
+			if (text.Contains ($"alias <{KeyAlias}> already exists")) {
+				text = text.Replace ("error:", "warning:");
+			}
+
+			base.LogFromStandardError (text);
+		}
 	}
 }
 
