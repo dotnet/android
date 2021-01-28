@@ -289,12 +289,16 @@ $@"			var myButton = new AttributedButtonStub (this);
 			}
 		}
 
+		// mode
+		//   0 .. Debug configuration
+		//   1 .. Release configuration
+		//   2 .. Release configuration, AndroidLinkMode=None
 		[Test]
 		[Category ("DotNetIgnore")]
-		public void AndroidAddKeepAlives ()
+		public void AndroidAddKeepAlives ([Values (0, 1, 2)] int mode)
 		{
 			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
+				IsRelease = (mode > 0),
 				OtherBuildItems = {
 					new BuildItem ("Compile", "Method.cs") { TextContent = () => @"
 using System;
@@ -323,6 +327,9 @@ namespace UnnamedProject {
 			};
 
 			proj.SetProperty ("AllowUnsafeBlocks", "True");
+
+			if (mode == 2)
+				proj.SetProperty (proj.ReleaseProperties, "AndroidLinkMode", "None");
 
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Building a project should have succeded.");
