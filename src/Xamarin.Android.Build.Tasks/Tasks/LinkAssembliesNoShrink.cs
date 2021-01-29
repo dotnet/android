@@ -55,7 +55,7 @@ namespace Xamarin.Android.Tasks
 				// Set up the FixAbstractMethodsStep
 				var step1 = new FixAbstractMethodsStep (resolver, new TypeDefinitionCache (), Log);
 				// Set up the AddKeepAlivesStep
-				var step2 = new MonoDroid.Tuner.AddKeepAlivesStep (new TypeDefinitionCache ());
+				var step2 = new AddKeepAlivesStep (resolver, new TypeDefinitionCache (), Log);
 				for (int i = 0; i < SourceFiles.Length; i++) {
 					var source = SourceFiles [i];
 					var destination = DestinationFiles [i];
@@ -110,6 +110,29 @@ namespace Xamarin.Android.Tasks
 			protected override AssemblyDefinition GetMonoAndroidAssembly ()
 			{
 				return resolver.GetAssembly ("Mono.Android.dll");
+			}
+
+			public override void LogMessage (string message)
+			{
+				logger.LogDebugMessage ("{0}", message);
+			}
+		}
+
+		class AddKeepAlivesStep : MonoDroid.Tuner.AddKeepAlivesStep
+		{
+			readonly DirectoryAssemblyResolver resolver;
+			readonly TaskLoggingHelper logger;
+
+			public AddKeepAlivesStep (DirectoryAssemblyResolver resolver, TypeDefinitionCache cache, TaskLoggingHelper logger)
+				: base (cache)
+			{
+				this.resolver = resolver;
+				this.logger = logger;
+			}
+
+			protected override AssemblyDefinition GetCorlibAssembly ()
+			{
+				return resolver.GetAssembly ("mscorlib.dll");
 			}
 
 			public override void LogMessage (string message)
