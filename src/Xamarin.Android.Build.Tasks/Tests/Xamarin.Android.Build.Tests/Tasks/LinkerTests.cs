@@ -289,16 +289,43 @@ $@"			var myButton = new AttributedButtonStub (this);
 			}
 		}
 
-		// mode
-		//   0 .. Debug configuration
-		//   1 .. Debug configuration, AndroidAddKeepAlives=true
-		//   2 .. Release configuration
-		//   3 .. Release configuration, AndroidLinkMode=None
+		static readonly object [] AndroidAddKeepAlivesSource = new object [] {
+			// Debug configuration
+			new object [] {
+				/* isRelease */                  false,
+				/* AndroidAddKeepAlives=true */  false,
+				/* AndroidLinkMode=None */       false,
+				/* should add KeepAlives */      false,
+			},
+			// Debug configuration, AndroidAddKeepAlives=true
+			new object [] {
+				/* isRelease */                  false,
+				/* AndroidAddKeepAlives=true */  true,
+				/* AndroidLinkMode=None */       false,
+				/* should add KeepAlives */      true,
+			},
+			// Release configuration
+			new object [] {
+				/* isRelease */                  true,
+				/* AndroidAddKeepAlives=true */  false,
+				/* AndroidLinkMode=None */       false,
+				/* should add KeepAlives */      true,
+			},
+			// Release configuration, AndroidLinkMode=None
+			new object [] {
+				/* isRelease */                  true,
+				/* AndroidAddKeepAlives=true */  false,
+				/* AndroidLinkMode=None */       true,
+				/* should add KeepAlives */      true,
+			},
+		};
+
 		[Test]
-		public void AndroidAddKeepAlives ([Values (0, 1, 2, 3)] int mode)
+		[TestCaseSource (nameof (AndroidAddKeepAlivesSource))]
+		public void AndroidAddKeepAlives (bool isRelease, bool setAndroidAddKeepAlivesTrue, bool setLinkModeNone, bool shouldAddKeepAlives)
 		{
 			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = (mode > 1),
+				IsRelease = isRelease,
 				OtherBuildItems = {
 					new BuildItem ("Compile", "Method.cs") { TextContent = () => @"
 using System;
@@ -328,14 +355,11 @@ namespace UnnamedProject {
 
 			proj.SetProperty ("AllowUnsafeBlocks", "True");
 
-			switch (mode) {
-				case 1:
-					proj.SetProperty ("AndroidAddKeepAlives", "True");
-					break;
-				case 3:
-					proj.SetProperty (proj.ReleaseProperties, "AndroidLinkMode", "None");
-					break;
-			}
+			if (setAndroidAddKeepAlivesTrue)
+				proj.SetProperty ("AndroidAddKeepAlives", "True");
+
+			if (setLinkModeNone)
+				proj.SetProperty (isRelease ? proj.ReleaseProperties : proj.DebugProperties, "AndroidLinkMode", "None");
 
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Building a project should have succeded.");
@@ -365,10 +389,7 @@ namespace UnnamedProject {
 						break;
 					}
 
-					if (mode == 0)
-						Assert.IsFalse (hasKeepAliveCall);
-					else
-						Assert.IsTrue (hasKeepAliveCall);
+					Assert.IsTrue (hasKeepAliveCall == shouldAddKeepAlives);
 				}
 			}
 		}
