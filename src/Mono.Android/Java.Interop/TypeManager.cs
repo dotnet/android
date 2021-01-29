@@ -166,12 +166,18 @@ namespace Java.Interop {
 				cinfo.Invoke (o, parms);
 				return;
 			}
+
+			Activate (o, jobject, cinfo, parms);
+		}
+
+		internal static void Activate (IJavaPeerable? o, IntPtr jobject, ConstructorInfo cinfo, object? []? parms)
+		{
 			try {
-				var activator = ConstructorBuilder.CreateDelegate (type, cinfo, ptypes);
+				var activator = ConstructorBuilder.CreateDelegate (cinfo);
 				activator (jobject, parms);
 			} catch (Exception e) {
 				var m = string.Format ("Could not activate JNI Handle 0x{0} (key_handle 0x{1}) of Java type '{2}' as managed type '{3}'.",
-						jobject.ToString ("x"), JNIEnv.IdentityHash! (jobject).ToString ("x"), JNIEnv.GetClassNameFromInstance (jobject), type.FullName);
+						jobject.ToString ("x"), JNIEnv.IdentityHash! (jobject).ToString ("x"), JNIEnv.GetClassNameFromInstance (jobject), cinfo.DeclaringType.FullName);
 				Logger.Log (LogLevel.Warn, "monodroid", m);
 				Logger.Log (LogLevel.Warn, "monodroid", CreateJavaLocationException ().ToString ());
 

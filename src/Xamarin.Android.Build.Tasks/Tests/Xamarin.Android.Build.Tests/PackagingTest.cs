@@ -87,11 +87,8 @@ namespace Xamarin.Android.Build.Tests
 					"Java.Interop.dll",
 					"Mono.Android.dll",
 					"System.Console.dll",
-					"System.Linq.Expressions.dll",
-					"System.ObjectModel.dll",
 					"System.Private.CoreLib.dll",
 					"System.Collections.Concurrent.dll",
-					"System.Collections.dll",
 					"System.Linq.dll",
 					"UnnamedProject.dll",
 				} :
