@@ -46,13 +46,11 @@ namespace Xamarin.Android.Prepare
 				// MSBuild: Runs all legacy and One .NET Xamarin.Android.Build.Task tests
 				// MSBuildDevice: Runs all MSBuildDeviceIntegration tests
 				// BCL: Runs BCL tests on emulator
-				// TimeZone: Runs timezone unit tests on emulator
 				// Designer: Runs designer integration tests
 				if (file == ".external" || file == "Configuration.props" || IsRelevantBuildToolsFile (file)) {
 					testAreas.Add ("MSBuild");
 					testAreas.Add ("MSBuildDevice");
 					testAreas.Add ("BCL");
-					testAreas.Add ("TimeZone");
 					testAreas.Add ("Designer");
 				}
 
@@ -146,7 +144,6 @@ namespace Xamarin.Android.Prepare
 
 				if (file.Contains ("tests/MSBuildDeviceIntegration")) {
 					testAreas.Add ("MSBuildDevice");
-					testAreas.Add ("TimeZone");
 				}
 
 				if (file.Contains ("tests/msbuild-times-reference")) {
