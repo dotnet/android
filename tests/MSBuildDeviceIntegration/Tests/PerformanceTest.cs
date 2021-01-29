@@ -13,6 +13,7 @@ namespace Xamarin.Android.Build.Tests
 	[TestFixture, NonParallelizable]
 	public class PerformanceTest : DeviceTest
 	{
+		const int Retry = 2;
 		static readonly Dictionary<string, int> csv_values = new Dictionary<string, int> ();
 
 		[OneTimeSetUp]
@@ -43,7 +44,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		void Profile (ProjectBuilder builder, Action<ProjectBuilder> action, bool additionalTimeForSigning, [CallerMemberName] string caller = null)
+		void Profile (ProjectBuilder builder, Action<ProjectBuilder> action, [CallerMemberName] string caller = null)
 		{
 			if (!csv_values.TryGetValue (caller, out int expected)) {
 				Assert.Fail ($"No timeout value found for a key of {caller}");
@@ -52,11 +53,6 @@ namespace Xamarin.Android.Build.Tests
 			if (Builder.UseDotNet) {
 				//TODO: there is currently a slight performance regression in .NET 6
 				expected += 500;
-
-				//NOTE: some tests run `dotnet build`, which would sign the .apk
-				if (additionalTimeForSigning) {
-					expected += 500;
-				}
 			}
 
 			action (builder);
@@ -111,7 +107,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[Retry (2)]
+		[Retry (Retry)]
 		public void Build_From_Clean_DontIncludeRestore ()
 		{
 			var proj = CreateApplicationProject ();
@@ -119,12 +115,12 @@ namespace Xamarin.Android.Build.Tests
 				builder.AutomaticNuGetRestore = false;
 				builder.Target = "Build";
 				builder.Restore (proj);
-				Profile (builder, b => b.Build (proj), additionalTimeForSigning: true);
+				Profile (builder, b => b.Build (proj));
 			}
 		}
 
 		[Test]
-		[Retry (2)]
+		[Retry (Retry)]
 		public void Build_No_Changes ()
 		{
 			var proj = CreateApplicationProject ();
@@ -135,7 +131,7 @@ namespace Xamarin.Android.Build.Tests
 				builder.AutomaticNuGetRestore = false;
 
 				// Profile no changes
-				Profile (builder, b => b.Build (proj), additionalTimeForSigning: false);
+				Profile (builder, b => b.Build (proj));
 
 				// Change C# and build
 				proj.MainActivity += $"{Environment.NewLine}//comment";
@@ -143,12 +139,12 @@ namespace Xamarin.Android.Build.Tests
 				builder.Build (proj);
 
 				// Profile no changes
-				Profile (builder, b => b.Build (proj), additionalTimeForSigning: false);
+				Profile (builder, b => b.Build (proj));
 			}
 		}
 
 		[Test]
-		[Retry (2)]
+		[Retry (Retry)]
 		public void Build_CSharp_Change ()
 		{
 			var proj = CreateApplicationProject ();
@@ -161,12 +157,12 @@ namespace Xamarin.Android.Build.Tests
 				// Profile C# change
 				proj.MainActivity += $"{Environment.NewLine}//comment";
 				proj.Touch ("MainActivity.cs");
-				Profile (builder, b => b.Build (proj), additionalTimeForSigning: false);
+				Profile (builder, b => b.Build (proj));
 			}
 		}
 
 		[Test]
-		[Retry (2)]
+		[Retry (Retry)]
 		public void Build_AndroidResource_Change ()
 		{
 			var proj = CreateApplicationProject ();
@@ -178,12 +174,12 @@ namespace Xamarin.Android.Build.Tests
 				// Profile AndroidResource change
 				proj.LayoutMain += $"{Environment.NewLine}<!--comment-->";
 				proj.Touch ("Resources\\layout\\Main.axml");
-				Profile (builder, b => b.Build (proj), additionalTimeForSigning: true);
+				Profile (builder, b => b.Build (proj));
 			}
 		}
 
 		[Test]
-		[Retry (2)]
+		[Retry (Retry)]
 		public void Build_AndroidAsset_Change ()
 		{
 			var bytes = new byte [1024*1024*10];
@@ -215,12 +211,12 @@ namespace Xamarin.Android.Build.Tests
 				libBuilder.Build (lib);
 				builder.Target = "SignAndroidPackage";
 				// Profile AndroidAsset change
-				Profile (builder, b => b.Build (proj), additionalTimeForSigning: false);
+				Profile (builder, b => b.Build (proj));
 			}
 		}
 
 		[Test]
-		[Retry (2)]
+		[Retry (Retry)]
 		public void Build_Designer_Change ()
 		{
 			var proj = CreateApplicationProject ();
@@ -236,12 +232,12 @@ namespace Xamarin.Android.Build.Tests
 				builder.RunTarget (proj, "SetupDependenciesForDesigner", parameters: parameters);
 
 				// Profile AndroidResource change
-				Profile (builder, b => b.Build (proj), additionalTimeForSigning: true);
+				Profile (builder, b => b.Build (proj));
 			}
 		}
 
 		[Test]
-		[Retry (2)]
+		[Retry (Retry)]
 		public void Build_JLO_Change ()
 		{
 			var className = "Foo";
@@ -257,12 +253,12 @@ namespace Xamarin.Android.Build.Tests
 				// Profile Java.Lang.Object rename
 				className = "Foo2";
 				proj.Touch ("Foo.cs");
-				Profile (builder, b => b.Build (proj), additionalTimeForSigning: true);
+				Profile (builder, b => b.Build (proj));
 			}
 		}
 
 		[Test]
-		[Retry (2)]
+		[Retry (Retry)]
 		public void Build_AndroidManifest_Change ()
 		{
 			var proj = CreateApplicationProject ();
@@ -274,12 +270,12 @@ namespace Xamarin.Android.Build.Tests
 				// Profile AndroidManifest.xml change
 				proj.AndroidManifest += $"{Environment.NewLine}<!--comment-->";
 				proj.Touch ("Properties\\AndroidManifest.xml");
-				Profile (builder, b => b.Build (proj), additionalTimeForSigning: true);
+				Profile (builder, b => b.Build (proj));
 			}
 		}
 
 		[Test]
-		[Retry (2)]
+		[Retry (Retry)]
 		public void Build_CSProj_Change ()
 		{
 			var proj = CreateApplicationProject ();
@@ -292,7 +288,7 @@ namespace Xamarin.Android.Build.Tests
 				proj.Sources.Add (new BuildItem ("None", "Foo.txt") {
 					TextContent = () => "Bar",
 				});
-				Profile (builder, b => b.Build (proj), additionalTimeForSigning: true);
+				Profile (builder, b => b.Build (proj));
 			}
 		}
 
@@ -314,7 +310,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		[TestCaseSource (nameof (XAML_Change))]
 		[Category ("UsesDevice")]
-		[Retry (2)]
+		[Retry (Retry)]
 		public void Build_XAML_Change (bool produceReferenceAssembly, bool install)
 		{
 			if (install) {
@@ -381,16 +377,16 @@ namespace Xamarin.Android.Build.Tests
 				lib.Touch ("MyPage.xaml");
 				libBuilder.Build (lib, doNotCleanupOnUpdate: true);
 				if (install) {
-					Profile (appBuilder, b => b.Install (app, doNotCleanupOnUpdate: true), additionalTimeForSigning: false, caller);
+					Profile (appBuilder, b => b.Install (app, doNotCleanupOnUpdate: true), caller);
 				} else {
-					Profile (appBuilder, b => b.Build (app, doNotCleanupOnUpdate: true), additionalTimeForSigning: false, caller);
+					Profile (appBuilder, b => b.Build (app, doNotCleanupOnUpdate: true), caller);
 				}
 			}
 		}
 
 		[Test]
 		[Category ("UsesDevice")]
-		[Retry (2)]
+		[Retry (Retry)]
 		public void Install_CSharp_Change ()
 		{
 			AssertCommercialBuild (); // This test will fail without Fast Deployment
@@ -406,7 +402,7 @@ namespace Xamarin.Android.Build.Tests
 				// Profile C# change
 				proj.MainActivity += $"{Environment.NewLine}//comment";
 				proj.Touch ("MainActivity.cs");
-				Profile (builder, b => b.Install (proj), additionalTimeForSigning: false);
+				Profile (builder, b => b.Install (proj));
 			}
 		}
 	}
