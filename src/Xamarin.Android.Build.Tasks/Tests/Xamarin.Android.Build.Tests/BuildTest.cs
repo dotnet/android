@@ -3633,22 +3633,15 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 				};
 				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 				var oldMonoPackageManager = Path.Combine (intermediate, "android", "src", "mono", "MonoPackageManager.java");
-				var seppuku = Path.Combine (intermediate, "android", "src", "mono", "android", "Seppuku.java");
 				var notifyTimeZoneChanges = Path.Combine (intermediate, "android", "src", "mono", "android", "app", "NotifyTimeZoneChanges.java");
-				Directory.CreateDirectory (Path.GetDirectoryName (seppuku));
 				Directory.CreateDirectory (Path.GetDirectoryName (notifyTimeZoneChanges));
 				File.WriteAllText (oldMonoPackageManager, @"package mono;
 public class MonoPackageManager { }
 class MonoPackageManager_Resources { }");
-				File.WriteAllText (seppuku, @"package mono.android;
-public class Seppuku { }");
 				File.WriteAllText (notifyTimeZoneChanges, @"package mono.android.app;
 public class ApplicationRegistration { }");
 				var oldMonoPackageManagerClass = Path.Combine (intermediate, "android", "bin", "classes" , "mono", "MonoPackageManager.class");
-				var seppukuClass = Path.Combine (intermediate, "android", "bin", "classes", "mono", "android", "Seppuku.class");
-				Directory.CreateDirectory (Path.GetDirectoryName (seppukuClass));
 				File.WriteAllText (oldMonoPackageManagerClass, "");
-				File.WriteAllText (seppukuClass, "");
 				// Change $(XamarinAndroidVersion) to trigger _CleanIntermediateIfNeeded
 				var property = Builder.UseDotNet ? "AndroidNETSdkVersion" : "XamarinAndroidVersion";
 				Assert.IsTrue (b.Build (proj, parameters: new [] { $"{property}=99.99" }, doNotCleanupOnUpdate: true), "Build should have succeeded.");
@@ -3658,8 +3651,6 @@ public class ApplicationRegistration { }");
 				// Old files that should *not* exist
 				FileAssert.DoesNotExist (oldMonoPackageManager);
 				FileAssert.DoesNotExist (oldMonoPackageManagerClass);
-				FileAssert.DoesNotExist (seppuku);
-				FileAssert.DoesNotExist (seppukuClass);
 				FileAssert.DoesNotExist (notifyTimeZoneChanges);
 				// New files that should exist
 				var monoPackageManager_Resources = Path.Combine (intermediate, "android", "src", "mono", "MonoPackageManager_Resources.java");
