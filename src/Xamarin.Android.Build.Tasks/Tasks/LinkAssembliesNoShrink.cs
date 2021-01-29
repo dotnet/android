@@ -44,10 +44,14 @@ namespace Xamarin.Android.Tasks
 				DeterministicMvid = Deterministic,
 			};
 
+			var hasSystemPrivateCorelib = false;
 			using (var resolver = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: true, loadReaderParameters: readerParameters)) {
 				// Add SearchDirectories with ResolvedAssemblies
 				foreach (var assembly in ResolvedAssemblies) {
 					var path = Path.GetFullPath (Path.GetDirectoryName (assembly.ItemSpec));
+					if (Path.GetFileName (assembly.ItemSpec) == "System.Private.CoreLib.dll")
+						hasSystemPrivateCorelib = true;
+
 					if (!resolver.SearchDirectories.Contains (path))
 						resolver.SearchDirectories.Add (path);
 				}
@@ -55,7 +59,7 @@ namespace Xamarin.Android.Tasks
 				// Set up the FixAbstractMethodsStep
 				var step1 = new FixAbstractMethodsStep (resolver, new TypeDefinitionCache (), Log);
 				// Set up the AddKeepAlivesStep
-				var step2 = new AddKeepAlivesStep (resolver, new TypeDefinitionCache (), Log);
+				var step2 = new AddKeepAlivesStep (resolver, new TypeDefinitionCache (), Log, hasSystemPrivateCorelib);
 				for (int i = 0; i < SourceFiles.Length; i++) {
 					var source = SourceFiles [i];
 					var destination = DestinationFiles [i];
@@ -122,17 +126,19 @@ namespace Xamarin.Android.Tasks
 		{
 			readonly DirectoryAssemblyResolver resolver;
 			readonly TaskLoggingHelper logger;
+			readonly bool hasSystemPrivateCoreLib;
 
-			public AddKeepAlivesStep (DirectoryAssemblyResolver resolver, TypeDefinitionCache cache, TaskLoggingHelper logger)
+			public AddKeepAlivesStep (DirectoryAssemblyResolver resolver, TypeDefinitionCache cache, TaskLoggingHelper logger, bool hasSystemPrivateCoreLib)
 				: base (cache)
 			{
 				this.resolver = resolver;
 				this.logger = logger;
+				this.hasSystemPrivateCoreLib = hasSystemPrivateCoreLib;
 			}
 
 			protected override AssemblyDefinition GetCorlibAssembly ()
 			{
-				return resolver.GetAssembly ("mscorlib.dll");
+				return resolver.GetAssembly (hasSystemPrivateCoreLib ? "System.Private.CoreLib.dll" : "mscorlib.dll");
 			}
 
 			public override void LogMessage (string message)
