@@ -97,7 +97,7 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendSwitchIfNotNull ("-signedjar ", Path.Combine (SignedApkDirectory, $"{fileName}{FileSuffix}{extension}" ));
 
 			cmd.AppendFileNameIfNotNull (UnsignedApk);
-			cmd.AppendSwitch (KeyAlias);
+			cmd.AppendSwitchIfNotNull (" ", KeyAlias);
 
 			return cmd.ToString ();
 		}

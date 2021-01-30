@@ -366,11 +366,12 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 			string keyToolPath = Path.Combine (androidSdk.JavaSdkPath, "bin");
 			var engine = new MockBuildEngine (Console.Out);
 			string pass = "Cy(nBW~j.&@B-!R_aq7/syzFR!S$4]7R%i6)R!";
+			string alias = "release store";
 			var task = new AndroidCreateDebugKey {
 				BuildEngine = engine,
 				KeyStore = keyfile,
 				StorePass = pass,
-				KeyAlias = "releasestore",
+				KeyAlias = alias,
 				KeyPass = pass,
 				KeyAlgorithm="RSA",
 				Validity=30,
@@ -381,15 +382,12 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 			Assert.IsTrue (task.Execute (), "Task should have succeeded.");
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
+
 			};
-			if (useApkSigner) {
-				proj.SetProperty ("AndroidUseApkSigner", "true");
-			} else {
-				proj.RemoveProperty ("AndroidUseApkSigner");
-			}
+			proj.SetProperty (proj.ReleaseProperties, "AndroidUseApkSigner", useApkSigner);
 			proj.SetProperty (proj.ReleaseProperties, "AndroidKeyStore", "True");
 			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningKeyStore", keyfile);
-			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningKeyAlias", "releasestore");
+			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningKeyAlias", alias);
 			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningKeyPass", Uri.EscapeDataString (pass));
 			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningStorePass", Uri.EscapeDataString (pass));
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, perAbiApk);
