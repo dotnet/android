@@ -382,7 +382,6 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 			Assert.IsTrue (task.Execute (), "Task should have succeeded.");
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
-
 			};
 			proj.SetProperty (proj.ReleaseProperties, "AndroidUseApkSigner", useApkSigner);
 			proj.SetProperty (proj.ReleaseProperties, "AndroidKeyStore", "True");
