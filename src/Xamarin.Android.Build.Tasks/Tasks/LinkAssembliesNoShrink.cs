@@ -49,7 +49,7 @@ namespace Xamarin.Android.Tasks
 				// Add SearchDirectories with ResolvedAssemblies
 				foreach (var assembly in ResolvedAssemblies) {
 					var path = Path.GetFullPath (Path.GetDirectoryName (assembly.ItemSpec));
-					if (Path.GetFileName (assembly.ItemSpec) == "System.Private.CoreLib.dll")
+					if (Path.GetFileName (assembly.ItemSpec).Equals ("System.Private.CoreLib.dll", StringComparison.OrdinalIgnoreCase))
 						hasSystemPrivateCorelib = true;
 
 					if (!resolver.SearchDirectories.Contains (path))
