@@ -52,13 +52,18 @@ namespace Xamarin.Android.Build.Tests
 				AssertExtractNativeLibs (manifest, extractNativeLibs);
 				ClearAdbLogcat ();
 				b.BuildLogFile = "run.log";
-				if (CommercialBuildAvailable)
-					Assert.True (b.RunTarget (proj, "_Run"), "Project should have run.");
-				else
-					AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
+				RunAdbCommand ($"shell setprop debug.ld.app.{proj.PackageName} dlerror,dlopen,dlsym");
+				try {
+					if (CommercialBuildAvailable)
+						Assert.True (b.RunTarget (proj, "_Run"), "Project should have run.");
+					else
+						AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
 
-				Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
-					Path.Combine (Root, b.ProjectDirectory, "logcat.log"), 30), "Activity should have started.");
+					Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
+						Path.Combine (Root, b.ProjectDirectory, "logcat.log"), 30), "Activity should have started.");
+				} finally {
+					RunAdbCommand ($"shell setprop debug.ld.app.{proj.PackageName} dlerror");
+				}
 				b.BuildLogFile = "uninstall.log";
 				Assert.True (b.Uninstall (proj), "Project should have uninstalled.");
 			}
