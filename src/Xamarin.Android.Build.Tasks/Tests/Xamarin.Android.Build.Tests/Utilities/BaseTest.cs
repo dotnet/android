@@ -241,7 +241,14 @@ namespace Xamarin.Android.Build.Tests
 		{
 			string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".exe" : "";
 
-			return RunProcessWithExitCode ("apkdiff" + ext, args);
+			try {
+				return RunProcessWithExitCode ("apkdiff" + ext, args);
+			} catch (System.ComponentModel.Win32Exception) {
+				// apkdiff's location might not be in the $PATH, try known location
+				var profileDir = Environment.GetEnvironmentVariable ("USERPROFILE");
+
+				return RunProcessWithExitCode (Path.Combine (profileDir, ".dotnet", "tools", "apkdiff" + ext), args);
+			}
 		}
 
 		protected static string RunProcess (string exe, string args)
