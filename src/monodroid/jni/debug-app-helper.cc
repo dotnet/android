@@ -29,7 +29,7 @@ void log_fatal (LogCategories category, const char *format, ...);
 
 static void copy_file_to_internal_location (char *to_dir, char *from_dir, char *file);
 static void copy_native_libraries_to_internal_location ();
-static char* get_libmonosgen_path ();
+static const char* get_libmonosgen_path ();
 
 bool maybe_load_library (const char *path);
 
@@ -87,7 +87,7 @@ Java_mono_android_DebugRuntime_init (JNIEnv *env, [[maybe_unused]] jclass klass,
 		log_warn (LOG_DEFAULT, "Using runtime path: %s", androidSystem.get_runtime_libdir ());
 	}
 
-	char *monosgen_path = get_libmonosgen_path ();
+	const char *monosgen_path = get_libmonosgen_path ();
 	void *monosgen = dlopen (monosgen_path, RTLD_LAZY | RTLD_GLOBAL);
 	if (monosgen == nullptr) {
 		log_fatal (LOG_DEFAULT, "Failed to dlopen Mono runtime from %s: %s", monosgen_path, dlerror ());
@@ -196,7 +196,7 @@ runtime_exists (const char *dir, char*& libmonoso)
 	return false;
 }
 
-static char*
+static const char*
 get_libmonosgen_path ()
 {
 	char *libmonoso;
@@ -207,7 +207,7 @@ get_libmonosgen_path ()
 	copy_native_libraries_to_internal_location ();
 
 	if (androidSystem.is_embedded_dso_mode_enabled ()) {
-		return (char*) SharedConstants::MONO_SGEN_SO;
+		return SharedConstants::MONO_SGEN_SO;
 	}
 
 	for (size_t i = 0; i < BasicAndroidSystem::MAX_OVERRIDES; ++i) {
