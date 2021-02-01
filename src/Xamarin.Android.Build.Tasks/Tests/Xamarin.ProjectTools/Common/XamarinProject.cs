@@ -40,13 +40,23 @@ namespace Xamarin.ProjectTools
 		public virtual bool ShouldPopulate => true;
 		public IList<Import> Imports { get; private set; }
 		PropertyGroup common, debug, release;
+		bool isRelease;
 
 		/// <summary>
 		/// Configures projects with Configuration=Debug or Release
 		/// * Directly in the `.csproj` file for legacy projects
 		/// * Uses `Directory.Build.props` for .NET 5+ projects
 		/// </summary>
-		public bool IsRelease { get; set; }
+		public bool IsRelease {
+			get => isRelease;
+			set {
+				isRelease = value;
+
+				if (Builder.UseDotNet) {
+					Touch ("Directory.Build.props");
+				}
+			}
+		}
 
 		public string Configuration => IsRelease ? releaseConfigurationName : debugConfigurationName;
 
