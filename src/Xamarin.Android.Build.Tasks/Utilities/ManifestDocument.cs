@@ -380,14 +380,6 @@ namespace Xamarin.Android.Tasks {
 
 			bool needDebuggable = false;
 			if (Debug) {
-				app.Add (new XComment ("suppress ExportedReceiver"));
-				app.Add (new XElement ("receiver",
-						new XAttribute (androidNs + "name", "mono.android.Seppuku"),
-						new XElement ("intent-filter",
-							new XElement ("action",
-								new XAttribute (androidNs + "name", "mono.android.intent.action.SEPPUKU")),
-							new XElement ("category",
-								new XAttribute (androidNs + "name", "mono.android.intent.category.SEPPUKU." + PackageName)))));
 				if (app.Attribute (androidNs + "debuggable") == null)
 					needDebuggable = true;
 			}

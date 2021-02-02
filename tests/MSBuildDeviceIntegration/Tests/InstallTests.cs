@@ -440,7 +440,20 @@ namespace Xamarin.Android.Build.Tests
 			AssertCommercialBuild ();
 			AssertHasDevices ();
 
-			var proj = new XamarinAndroidApplicationProject {
+			var path = Path.Combine ("temp", TestName);
+			var lib = new XamarinAndroidLibraryProject {
+				ProjectName = "Localization",
+				OtherBuildItems = {
+					new BuildItem ("EmbeddedResource", "Bar.resx") {
+						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancel</value></data>")
+					},
+					new BuildItem ("EmbeddedResource", "Bar.es.resx") {
+						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancelar</value></data>")
+					}
+				}
+			};
+
+			var app = new XamarinAndroidApplicationProject {
 				EmbedAssembliesIntoApk = false,
 				OtherBuildItems = {
 					new BuildItem ("EmbeddedResource", "Foo.resx") {
@@ -451,24 +464,26 @@ namespace Xamarin.Android.Build.Tests
 					}
 				}
 			};
+			app.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
 
-			using (var builder = CreateApkBuilder ()) {
-				Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
-				var projectOutputPath = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath);
+			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
+			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+				Assert.IsTrue (libBuilder.Build (lib), "Library Build should have succeeded.");
+				Assert.IsTrue (appBuilder.Install (app), "App Install should have succeeded.");
+				var projectOutputPath = Path.Combine (Root, appBuilder.ProjectDirectory, app.OutputPath);
 				var resourceFilesFromDisk = Directory.EnumerateFiles (projectOutputPath, "*.resources.dll", SearchOption.AllDirectories)
 					.Select (r => r = r.Replace (projectOutputPath, string.Empty).Replace ("\\", "/"));
 
 				var overrideContents = string.Empty;
-				foreach (var dir in GetOverrideDirectoryPaths (proj.PackageName)) {
-					overrideContents += RunAdbCommand ($"shell run-as {proj.PackageName} find {dir}");
+				foreach (var dir in GetOverrideDirectoryPaths (app.PackageName)) {
+					overrideContents += RunAdbCommand ($"shell run-as {app.PackageName} find {dir}");
 				}
-				builder.BuildLogFile = "uninstall.log";
-				builder.Uninstall (proj);
 				Assert.IsTrue (resourceFilesFromDisk.Any (), $"Unable to find any localized assemblies in {resourceFilesFromDisk}");
 				foreach (var res in resourceFilesFromDisk) {
 					StringAssert.Contains (res, overrideContents, $"{res} did not exist in the .__override__ directory.\nFound:{overrideContents}");
 				}
-
+				appBuilder.BuildLogFile = "uninstall.log";
+				appBuilder.Uninstall (app);
 			}
 		}
 
@@ -478,23 +493,25 @@ namespace Xamarin.Android.Build.Tests
 			AssertCommercialBuild ();
 			AssertHasDevices ();
 
+			var class1src = new BuildItem.Source ("Class1.cs") {
+				TextContent = () => "namespace Library1 { public class Class1 { public static int foo = 0; } }"
+			};
 			var lib1 = new XamarinAndroidLibraryProject () {
 				ProjectName = "Library1",
 				Sources = {
-					new BuildItem.Source ("Class1.cs") {
-						TextContent = () => "namespace Library1 { public class Class1 { } }"
-					},
+					class1src,
 				}
 			};
 
+			var class2src = new BuildItem.Source ("Class2.cs") {
+				TextContent = () => "namespace Library2 { public class Class2 { public static int foo = 0; } }"
+			};
 			var lib2 = new DotNetStandard {
 				ProjectName = "Library2",
 				Sdk = "Microsoft.NET.Sdk",
 				TargetFramework = "netstandard2.0",
 				Sources = {
-					new BuildItem.Source ("Class2.cs") {
-						TextContent = () => "namespace Library2 { public class Class2 { } }"
-					},
+					class2src,
 				}
 			};
 
@@ -513,15 +530,22 @@ namespace Xamarin.Android.Build.Tests
 			using (var lb2 = CreateDllBuilder (Path.Combine (rootPath, lib2.ProjectName)))
 				Assert.IsTrue (lb2.Build (lib2), "Second library build should have succeeded.");
 
+			long lib1FirstBuildSize = new FileInfo (Path.Combine (rootPath, lib1.ProjectName, lib1.OutputPath, "Library1.dll")).Length;
+
 			using (var builder = CreateApkBuilder (Path.Combine (rootPath, app.ProjectName))) {
 				builder.ThrowOnBuildFailure = false;
+				builder.BuildLogFile = "install.log";
 				Assert.IsTrue (builder.Install (app), "First install should have succeeded.");
+				var logLines = builder.LastBuildOutput;
+				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync CopyFile") && l.Contains ("UnnamedProject.dll")), "UnnamedProject.dll should have been uploaded");
+				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync CopyFile") && l.Contains ("Library1.dll")), "Library1.dll should have been uploaded");
+				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync CopyFile") && l.Contains ("Library2.dll")), "Library2.dll should have been uploaded");
 				var firstInstallTime = builder.LastBuildTime;
+				builder.BuildLogFile = "install2.log";
 				Assert.IsTrue (builder.Install (app, doNotCleanupOnUpdate: true, saveProject: false), "Second install should have succeeded.");
 				var secondInstallTime = builder.LastBuildTime;
 
 				var filesToTouch = new [] {
-					Path.Combine (rootPath, lib1.ProjectName, "Class1.cs"),
 					Path.Combine (rootPath, lib2.ProjectName, "Class2.cs"),
 					Path.Combine (rootPath, app.ProjectName, "MainPage.xaml"),
 				};
@@ -530,8 +554,22 @@ namespace Xamarin.Android.Build.Tests
 					File.SetLastWriteTimeUtc (file, DateTime.UtcNow);
 				}
 
+				class1src.TextContent = () => "namespace Library1 { public class Class1 { public static int foo = 100; } }";
+				class1src.Timestamp = DateTime.UtcNow.AddSeconds(1);
+				using (var lb1 = CreateDllBuilder (Path.Combine (rootPath, lib1.ProjectName)))
+					Assert.IsTrue (lb1.Build (lib1), "Second library build should have succeeded.");
+
+				long lib1SecondBuildSize = new FileInfo (Path.Combine (rootPath, lib1.ProjectName, lib1.OutputPath, "Library1.dll")).Length;
+				Assert.AreEqual (lib1FirstBuildSize, lib1SecondBuildSize, "Library2.dll was not the same size.");
+
+				builder.BuildLogFile = "install3.log";
 				Assert.IsTrue (builder.Install (app, doNotCleanupOnUpdate: true, saveProject: false), "Third install should have succeeded.");
+				logLines = builder.LastBuildOutput;
+				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync CopyFile") && l.Contains ("UnnamedProject.dll")), "UnnamedProject.dll should have been uploaded");
+				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync CopyFile") && l.Contains ("Library1.dll")), "Library1.dll should have been uploaded");
+				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync SkipCopyFile") && l.Contains ("Library2.dll")), "Library2.dll should not have been uploaded");
 				var thirdInstallTime = builder.LastBuildTime;
+				builder.BuildLogFile = "install4.log";
 				Assert.IsTrue (builder.Install (app, doNotCleanupOnUpdate: true, saveProject: false), "Fourth install should have succeeded.");
 				var fourthInstalTime = builder.LastBuildTime;
 

@@ -32,6 +32,7 @@ namespace ${ROOT_NAMESPACE}
 			//${AFTER_ONCREATE}
 		}
 	}
+	//${AFTER_MAINACTIVITY}
 }
 
 

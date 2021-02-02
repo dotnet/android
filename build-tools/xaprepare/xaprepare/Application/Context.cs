@@ -749,6 +749,7 @@ namespace Xamarin.Android.Prepare
 
 			Log.StatusLine ();
 			Log.StatusLine ("   OS type: ", OS.Type, tailColor: Log.InfoColor);
+			Log.StatusLine (" OS flavor: ", OS.Flavor, tailColor: Log.InfoColor);
 			Log.StatusLine ("   OS name: ", OS.Name, tailColor: Log.InfoColor);
 			Log.StatusLine ("OS release: ", OS.Release, tailColor: Log.InfoColor);
 			Log.StatusLine ("   OS bits: ", OS.Architecture, tailColor: Log.InfoColor);

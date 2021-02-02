@@ -9,21 +9,14 @@ core workload sdk packs imported by Microsoft.NET.Workload.Android.
 <Project Sdk="Microsoft.Build.NoTargets">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
     <AndroidHostRID Condition=" '$(AndroidHostRID)' == '' and '$(HostOS)' == 'Linux' ">linux-x64</AndroidHostRID>
     <AndroidHostRID Condition=" '$(AndroidHostRID)' == '' and '$(HostOS)' == 'Darwin' ">osx-x64</AndroidHostRID>
     <AndroidHostRID Condition=" '$(AndroidHostRID)' == '' and '$(HostOS)' == 'Windows' ">win-x64</AndroidHostRID>
     <PackageId>Microsoft.Android.Sdk.$(AndroidHostRID)</PackageId>
-    <Authors>Microsoft</Authors>
     <Description>C# Tools and Bindings for the Android SDK</Description>
-    <OutputPath>..\..\bin\Build$(Configuration)\nupkgs\</OutputPath>
     <!-- Exclude mono bundle components declared in `create-installers.targets`. -->
     <IncludeMonoBundleComponents>false</IncludeMonoBundleComponents>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Mono.Posix.NETStandard" Version="5.20.1-preview" GeneratePathProperty="true" PrivateAssets="all" />
-  </ItemGroup>
 
  <PropertyGroup>
     <BeforePack>
@@ -49,15 +42,8 @@ core workload sdk packs imported by Microsoft.NET.Workload.Android.
       <AndroidSdkBuildTools Include="@(_MSBuildFilesWin)" Condition=" '$(AndroidHostRID)' == 'win-x64' ">
         <RelativePath>$([MSBuild]::MakeRelative($(MSBuildSrcDir), %(FullPath)))</RelativePath>
       </AndroidSdkBuildTools>
-      <!-- Exclude host-os specific native libraries, aside from libMonoPosixHelper.dylib which is required by LibZipSharp on macOS. -->
       <AndroidSdkBuildTools Include="@(_MSBuildFilesUnix);@(_MSBuildFilesUnixSign);@(_MSBuildFilesUnixSignAndHarden)" Condition=" '$(AndroidHostRID)' == 'linux-x64' or '$(AndroidHostRID)' == 'osx-x64' ">
         <RelativePath>$([MSBuild]::MakeRelative($(MSBuildSrcDir), %(FullPath)))</RelativePath>
-      </AndroidSdkBuildTools>
-      <AndroidSdkBuildTools Include="$(PkgMono_Posix_NETStandard)\runtimes\osx\native\libMonoPosixHelper.dylib" Condition=" '$(AndroidHostRID)' == 'osx-x64' ">
-        <RelativePath>libMonoPosixHelper.dylib</RelativePath>
-      </AndroidSdkBuildTools>
-      <AndroidSdkBuildTools Include="$(PkgMono_Posix_NETStandard)\runtimes\linux-x64\native\libMonoPosixHelper.so" Condition=" '$(AndroidHostRID)' == 'linux-x64' " >
-        <RelativePath>libMonoPosixHelper.so</RelativePath>
       </AndroidSdkBuildTools>
       <!-- Remove items with '%(ExcludeFromAndroidNETSdk)' == 'true' metadata -->
       <AndroidSdkBuildTools Remove="@(AndroidSdkBuildTools)" Condition=" '%(AndroidSdkBuildTools.ExcludeFromAndroidNETSdk)' == 'true' " />
@@ -83,6 +69,7 @@ core workload sdk packs imported by Microsoft.NET.Workload.Android.
       <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\Sdk\**" PackagePath="Sdk" />
       <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Microsoft.Android.Sdk.ILLink\PreserveLists\**" PackagePath="PreserveLists" />
       <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\targets\**" PackagePath="targets" />
+      <None Include="$(MSBuildThisFileDirectory)SignList.xml" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
   </Target>
 

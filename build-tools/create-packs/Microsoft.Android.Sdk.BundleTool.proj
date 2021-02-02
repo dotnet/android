@@ -1,0 +1,33 @@
+<!--
+***********************************************************************************************
+Microsoft.Android.Sdk.BundleTool.proj
+
+This project file is used to create the Microsoft.Android.Sdk.BundleTool NuGet.
+Since bundletool.jar is quite large (and optional), it is in a separate pack.
+***********************************************************************************************
+-->
+<Project Sdk="Microsoft.Build.NoTargets">
+
+  <PropertyGroup>
+    <PackageId>Microsoft.Android.Sdk.BundleTool</PackageId>
+    <Description>Contains tooling for Android App Bundles.</Description>
+    <MSBuildSrcDir>$(RootBuildDir)lib\xamarin.android\xbuild\Xamarin\Android\</MSBuildSrcDir>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <BeforePack>
+      _GetPackItems;
+      _GetDefaultPackageVersion;
+      $(BeforePack);
+    </BeforePack>
+  </PropertyGroup>
+
+  <Target Name="_GetPackItems"
+      DependsOnTargets="_GetLicense">
+    <ItemGroup>
+      <_PackageFiles Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk.BundleTool\Sdk\*" PackagePath="Sdk" />
+      <_PackageFiles Include="$(MSBuildSrcDir)\bundletool.jar" PackagePath="tools" />
+    </ItemGroup>
+  </Target>
+
+</Project>

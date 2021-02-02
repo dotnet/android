@@ -215,16 +215,11 @@ namespace Xamarin.Android.UnitTests
 			LogPaddedInfo ("Manufacturer", Build.Manufacturer, alignColumn);
 			LogPaddedInfo ("Model", Build.Model, alignColumn);
 			LogPaddedInfo ("Product", Build.Product, alignColumn);
-#if __ANDROID_9__
+#if __ANDROID_9__ && !__ANDROID_26__
 			if (sdkInt >= 8) {
-#if __ANDROID_26__
-				// .Serial was deprecated in API26, .GetSerial () is the recommended replacement
-				// GetSerial is now restricted on API 29+ - https://developer.android.com/reference/android/os/Build.html#getSerial()
-				if (sdkInt >= 26 && sdkInt < 29)
-					LogPaddedInfo ("Serial", Build.GetSerial (), alignColumn);
-				else if (sdkInt < 26)
-#endif
-					LogPaddedInfo ("Serial", Build.Serial, alignColumn);
+				// .Serial was deprecated in API26, however the recommended replacement .GetSerial () requires the READ_PHONE_STATE permission.
+				// .GetSerial () will also always throw when compiling against API 29+ - https://developer.android.com/reference/android/os/Build.html#getSerial()
+				LogPaddedInfo ("Serial", Build.Serial, alignColumn);
 			}
 #endif
 

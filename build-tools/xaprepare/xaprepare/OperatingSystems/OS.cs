@@ -133,6 +133,8 @@ namespace Xamarin.Android.Prepare
 		/// </summary>
 		public string HomebrewPrefix { get; set; } = String.Empty;
 
+		public virtual bool ProcessIsTranslated => false;
+
 		/// <summary>
 		///   File extension used for ZIP archives
 		/// </summary>

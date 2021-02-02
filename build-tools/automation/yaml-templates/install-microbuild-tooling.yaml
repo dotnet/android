@@ -1,0 +1,19 @@
+parameters:
+  signType: $(MicroBuildSignType)
+  condition: succeeded()
+
+steps:
+# ESRP signing requires minimum azure client version 2.8.0
+- template: azure-tools/az-client-update.yml@yaml
+  parameters:
+    version: '2.8.0'
+    condition: and(${{ parameters.condition }}, eq(variables['agent.os'], 'Darwin'))
+
+- task: MicroBuildSigningPlugin@3
+  displayName: install signing plugin
+  condition: ${{ parameters.condition }}
+  inputs:
+    signType: ${{ parameters.signType }}
+    azureSubscription: MicroBuild Signing Task (DevDiv)
+  env:
+    SYSTEM_ACCESSTOKEN: $(System.AccessToken)

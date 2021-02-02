@@ -11,7 +11,8 @@ parameters:
 jobs:
   - job: ${{ parameters.job_name }}
     displayName: MSBuild ${{ parameters.job_suffix }} - macOS-${{ parameters.node_id }}
-    pool: $(HostedMac)
+    pool:
+      vmImage: $(HostedMacImage)
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:

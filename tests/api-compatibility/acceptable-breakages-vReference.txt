@@ -22,3 +22,4 @@ CannotRemoveAttribute : Attribute 'System.ComponentModel.CategoryAttribute' exis
 CannotRemoveAttribute : Attribute 'System.ComponentModel.CategoryAttribute' exists on 'Android.Content.ContentProviderAttribute.Icon' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ComponentModel.CategoryAttribute' exists on 'Android.Content.ContentProviderAttribute.Label' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'System.ComponentModel.CategoryAttribute' exists on 'Android.Content.ContentProviderAttribute.RoundIcon' in the contract but not the implementation.
+CannotRemoveAttribute : Attribute 'System.Runtime.Serialization.DataContractAttribute' exists on 'Java.Lang.Object' in the contract but not the implementation.

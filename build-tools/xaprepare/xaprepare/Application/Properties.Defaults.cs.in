@@ -42,6 +42,8 @@ namespace Xamarin.Android.Prepare
 			properties.Add (KnownProperties.MonoRequiredMinimumVersion,          StripQuotes ("@MonoRequiredMinimumVersion@"));
 			properties.Add (KnownProperties.MonoRequiredMaximumVersion,          StripQuotes ("@MonoRequiredMaximumVersion@"));
 			properties.Add (KnownProperties.MonoSourceFullPath,                  StripQuotes (@"@MonoSourceFullPath@"));
+			properties.Add (KnownProperties.Pkg7Zip_CommandLine,                 StripQuotes (@"@Pkg7-Zip_CommandLine@"));
+			properties.Add (KnownProperties.PkgXamarin_LibZipSharp,              StripQuotes (@"@PkgXamarin_LibZipSharp@"));
 			properties.Add (KnownProperties.ProductVersion,                      StripQuotes ("@ProductVersion@"));
 			properties.Add (KnownProperties.RemapAssemblyRefToolExecutable,      StripQuotes (@"@RemapAssemblyRefToolExecutable@"));
 			properties.Add (KnownProperties.XABuildToolsFolder,                  StripQuotes (@"@XABuildToolsFolder@"));
@@ -49,7 +51,6 @@ namespace Xamarin.Android.Prepare
 			properties.Add (KnownProperties.XABuildToolsPackagePrefix,           StripQuotes ("@XABuildToolsPackagePrefix@"));
 			properties.Add (KnownProperties.XABinRelativeInstallPrefix,          StripQuotes (@"@XABinRelativeInstallPrefix@"));
 			properties.Add (KnownProperties.XAInstallPrefix,                     StripQuotes (@"@XAInstallPrefix@"));
-			properties.Add (KnownProperties.XAPackagesDir,                       StripQuotes (@"@XAPackagesDir@"));
 			properties.Add (KnownProperties.XAPlatformToolsVersion,              StripQuotes ("@XAPlatformToolsVersion@"));
 			properties.Add (KnownProperties.XAPlatformToolsPackagePrefix,        StripQuotes ("@XAPlatformToolsPackagePrefix@"));
 		}

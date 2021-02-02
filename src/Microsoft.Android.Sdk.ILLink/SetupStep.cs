@@ -52,6 +52,10 @@ namespace Microsoft.Android.Sdk.ILLink
 			if (Context.TryGetCustomData ("ProguardConfiguration", out proguardPath))
 				InsertAfter (new GenerateProguardConfiguration (proguardPath),  "CleanStep");
 
+			string addKeepAlivesStep;
+			if (Context.TryGetCustomData ("AddKeepAlivesStep", out addKeepAlivesStep) && bool.TryParse (addKeepAlivesStep, out var bv) && bv)
+				InsertAfter (new AddKeepAlivesStep (cache), "CleanStep");
+
 			InsertAfter (new StripEmbeddedLibraries (),  "CleanStep");
 		}
 

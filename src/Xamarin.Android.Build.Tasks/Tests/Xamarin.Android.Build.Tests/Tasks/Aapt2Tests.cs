@@ -105,7 +105,7 @@ namespace Xamarin.Android.Build.Tests
 				DaemonKeepInDomain = false,
 			};
 			Assert.True (task.Execute (), $"task should have succeeded. {string.Join (";", errors.Select (x => x.Message))}");
-			Aapt2Daemon daemon = (Aapt2Daemon)engine.GetRegisteredTaskObject (typeof(Aapt2Daemon).FullName, RegisteredTaskObjectLifetime.Build);
+			var daemon = engine.GetRegisteredTaskObjectAssemblyLocal<Aapt2Daemon> (Aapt2Daemon.RegisterTaskObjectKey, RegisteredTaskObjectLifetime.Build);
 			Assert.IsNotNull (daemon, "Should have got a Daemon");
 			Assert.AreEqual (expectedMax, daemon.MaxInstances, $"Expected {expectedMax} but was {daemon.MaxInstances}");
 			Assert.AreEqual (expectedInstances, daemon.CurrentInstances, $"Expected {expectedInstances} but was {daemon.CurrentInstances}");

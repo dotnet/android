@@ -42,4 +42,16 @@
     </Content>
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\javasourcejartest.jar">
+      <LogicalName>javasourcejartest.jar</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\javasourcejartest-sources.jar">
+      <LogicalName>javasourcejartest-sources.jar</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\javasourcejartest-javadoc.jar">
+      <LogicalName>javasourcejartest-javadoc.jar</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+
 </Project>

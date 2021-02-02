@@ -42,8 +42,12 @@ namespace Xamarin.Android.Prepare
 		{
 			Version ubuntuRelease;
 			if (!Version.TryParse (Release, out ubuntuRelease)) {
-				Log.ErrorLine ($"Unable to parse string '{Release}' as a valid Ubuntu release version");
-				return false;
+				if (Int32.TryParse (Release, out int singleNumberVersion)) {
+					ubuntuRelease = new Version (singleNumberVersion, 0);
+				} else {
+					Log.ErrorLine ($"Unable to parse string '{Release}' as a valid {Name} release version");
+					return false;
+				}
 			}
 			UbuntuRelease = ubuntuRelease;
 

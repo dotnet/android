@@ -92,6 +92,8 @@ namespace Xamarin.Android.Tasks
 
 		protected Version GetVersionFromTool (string javaExe, Regex versionRegex)
 		{
+			// NOTE: this doesn't need to use GetRegisteredTaskObjectAssemblyLocal()
+			// because the path to java/javac is the key and the value is a System.Version.
 			var javaTool = Path.Combine (JavaSdkPath, "bin", javaExe);
 			var key = new Tuple<string, string> (nameof (ValidateJavaVersion), javaTool);
 			var cached = BuildEngine4.GetRegisteredTaskObject (key, RegisteredTaskObjectLifetime.AppDomain) as Version;

@@ -15,14 +15,18 @@ namespace Xamarin.Android.Tasks
 {
 	internal class Aapt2Daemon : IDisposable
 	{
+		static readonly string TypeFullName = typeof (Aapt2Daemon).FullName;
+
+		internal static object RegisterTaskObjectKey => TypeFullName;
+
 		public static Aapt2Daemon GetInstance (IBuildEngine4 engine, string aapt2, int numberOfInstances, int initalNumberOfDaemons, bool registerInDomain = false)
 		{
 			var area = registerInDomain ? RegisteredTaskObjectLifetime.AppDomain : RegisteredTaskObjectLifetime.Build;
-			Aapt2Daemon daemon = (Aapt2Daemon)engine.GetRegisteredTaskObject (typeof (Aapt2Daemon).FullName, area);
+			var daemon = engine.GetRegisteredTaskObjectAssemblyLocal<Aapt2Daemon> (RegisterTaskObjectKey, area);
 			if (daemon == null)
 			{
 				daemon = new Aapt2Daemon (aapt2, numberOfInstances, initalNumberOfDaemons);
-				engine.RegisterTaskObject (typeof (Aapt2Daemon).FullName, daemon, area, allowEarlyCollection: false);
+				engine.RegisterTaskObjectAssemblyLocal (RegisterTaskObjectKey, daemon, area, allowEarlyCollection: false);
 			}
 			return daemon;
 		}

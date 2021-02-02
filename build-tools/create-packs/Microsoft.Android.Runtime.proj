@@ -10,13 +10,10 @@ projects that use the Microsoft.Android framework in .NET 5.
 <Project Sdk="Microsoft.Build.NoTargets">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
     <AndroidRID Condition=" '$(AndroidRID)' == '' ">android.21-arm64</AndroidRID>
     <AndroidABI Condition=" '$(AndroidABI)' == '' ">arm64-v8a</AndroidABI>
     <PackageId>Microsoft.Android.Runtime.$(AndroidRID)</PackageId>
-    <Authors>Microsoft</Authors>
     <Description>Microsoft.Android runtime components. Please do not reference directly.</Description>
-    <OutputPath>..\..\bin\Build$(Configuration)\nupkgs\</OutputPath>
     <_AndroidRuntimePackAssemblyPath>runtimes\$(AndroidRID)\lib\net6.0</_AndroidRuntimePackAssemblyPath>
     <_AndroidRuntimePackNativePath>runtimes\$(AndroidRID)\native</_AndroidRuntimePackNativePath>
   </PropertyGroup>

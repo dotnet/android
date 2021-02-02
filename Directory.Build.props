@@ -22,13 +22,10 @@
     -->
     <AndroidPackVersion>11.0.200</AndroidPackVersion>
   </PropertyGroup>
-  
-  <!-- Add Roslyn analyzers NuGet to all projects (except NRefactory which has violations but is only used for running tests and XamarinManifestGenerator which uses packages.config ) -->
-  <ItemGroup Condition=" '$(EnableRoslynAnalyzers)' == 'True' And !$(AssemblyName.StartsWith ('ICSharpCode.NRefactory')) And !$(AssemblyName.StartsWith ('XamarinManifestGenerator')) ">
-    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.3.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
+
+  <!-- Common <PackageReference/> versions -->
+  <PropertyGroup>
+    <MicroBuildCoreVersion>0.4.1</MicroBuildCoreVersion>
+  </PropertyGroup>
 
 </Project>

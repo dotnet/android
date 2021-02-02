@@ -26,7 +26,7 @@ This file contains the .NET 5-specific targets to customize ILLink
   <Target Name="_PrepareLinking"
       Condition=" '$(PublishTrimmed)' == 'true' "
       AfterTargets="ComputeResolvedFilesToPublishList"
-      DependsOnTargets="GetReferenceAssemblyPaths">
+      DependsOnTargets="GetReferenceAssemblyPaths;_CreatePropertiesCache">
     <ItemGroup>
       <!-- Mark all assemblies to be linked for AndroidLinkMode=Full -->
       <ResolvedFileToPublish
@@ -39,8 +39,6 @@ This file contains the .NET 5-specific targets to customize ILLink
           Condition=" '$(AndroidLinkMode)' == 'SdkOnly' and ( $([System.String]::Copy(%(Filename)).StartsWith ('Xamarin.AndroidX.')) or $([System.String]::Copy(%(Filename)).StartsWith ('Xamarin.Android.Support.')) or $([System.String]::Copy(%(Filename)).StartsWith ('Xamarin.Google.')) or $([System.String]::Copy(%(Filename)).StartsWith ('Xamarin.GooglePlayServices.')) ) ">
         <TrimMode>link</TrimMode>
       </ResolvedFileToPublish>
-      <!-- Mark our entry assembly as a root assembly. -->
-      <TrimmerRootAssembly Include="$(AssemblyName)" />
     </ItemGroup>
     <PropertyGroup>
       <!-- make the output verbose to see what the linker is doing. FIXME: make dependent upon verbosity level -->
@@ -52,12 +50,16 @@ This file contains the .NET 5-specific targets to customize ILLink
       <_AdditionalTaskAssembly>$(_AdditionalTaskAssemblyDirectory)dotnet-linker.dll</_AdditionalTaskAssembly>
     </PropertyGroup>
     <PropertyGroup
+        Condition=" '$(AndroidAddKeepAlives)' != '' ">
+      <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --custom-data AddKeepAlivesStep="$(AndroidAddKeepAlives)"</_ExtraTrimmerArgs>
+    </PropertyGroup>
+    <PropertyGroup
         Condition=" '$(_ProguardProjectConfiguration)' != '' ">
       <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --custom-data ProguardConfiguration="$(_ProguardProjectConfiguration)"</_ExtraTrimmerArgs>
     </PropertyGroup>
     <PropertyGroup
         Condition=" '$(LinkerDumpDependencies)' == 'true' ">
-      <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --dump-dependencies"</_ExtraTrimmerArgs>
+      <_ExtraTrimmerArgs>--dump-dependencies $(_ExtraTrimmerArgs)"</_ExtraTrimmerArgs>
     </PropertyGroup>
     <ItemGroup>
       <!-- add our custom steps -->

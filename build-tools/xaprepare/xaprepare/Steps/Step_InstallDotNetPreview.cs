@@ -38,6 +38,13 @@ namespace Xamarin.Android.Prepare
 				}
 			}
 
+			if (Directory.Exists (dotnetPath)) {
+				if (!TestDotNetSdk (dotnetPath)) {
+					Log.WarningLine ($"Attempt to run `dotnet --version` failed, reinstalling the SDK.");
+					Utilities.DeleteDirectory (dotnetPath);
+				}
+			}
+
 			if (!await InstallDotNetAsync (context, dotnetPath, dotnetPreviewVersion)) {
 				Log.ErrorLine ($"Installation of dotnet SDK {dotnetPreviewVersion} failed.");
 				return false;
@@ -92,7 +99,8 @@ namespace Xamarin.Android.Prepare
 				return false;
 			}
 
-			Log.StatusLine ($"Installing dotnet SDK/runtime '{version}'...");
+			var type = runtimeOnly ? "runtime" : "SDK";
+			Log.StatusLine ($"Installing dotnet {type} '{version}'...");
 
 			if (Context.IsWindows) {
 				var args = new List<string> {
@@ -112,6 +120,11 @@ namespace Xamarin.Android.Prepare
 
 				return Utilities.RunCommand ("bash", args.ToArray ());
 			}
+		}
+
+		bool TestDotNetSdk (string dotnetPath)
+		{
+			return Utilities.RunCommand (Path.Combine (dotnetPath, "dotnet"), new string [] { "--version" });
 		}
 
 	}

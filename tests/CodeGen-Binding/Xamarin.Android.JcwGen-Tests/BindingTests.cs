@@ -66,14 +66,14 @@ namespace Xamarin.Android.JcwGenTests {
 		{
 			using (var dh = new Com.Xamarin.Android.DataHandler ()) {
 				EventHandler<Com.Xamarin.Android.DataEventArgs> h = (o, e) => {
-					Assert.AreEqual ("fromNode", e.P0);
-					Assert.AreEqual ("fromChannel", e.P1);
-					Assert.AreEqual ("payloadType", e.P2);
-					for (int i = 0; i < e.P3.Length; ++i) {
-						for (int j = 0; j < e.P3 [i].Length; ++j) {
+					Assert.AreEqual ("fromNode", e.FromNode);
+					Assert.AreEqual ("fromChannel", e.FromChannel);
+					Assert.AreEqual ("payloadType", e.PayloadType);
+					for (int i = 0; i < e.Payload.Length; ++i) {
+						for (int j = 0; j < e.Payload [i].Length; ++j) {
 							byte expected = (byte) (((i+1)*10) + (j+1));
-							Assert.AreEqual ((byte)(expected + 'J'), e.P3 [i][j]);
-							e.P3 [i][j] = expected;
+							Assert.AreEqual ((byte)(expected + 'J'), e.Payload [i][j]);
+							e.Payload [i][j] = expected;
 						}
 					}
 				};

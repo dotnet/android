@@ -57,7 +57,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		string GetLinkedPath (ProjectBuilder builder, bool isRelease, string filename)
+		public static string GetLinkedPath (ProjectBuilder builder, bool isRelease, string filename)
 		{
 			return Builder.UseDotNet && isRelease ?
 				builder.Output.GetIntermediaryPath (Path.Combine ("android.21-arm64", "linked", filename)) :
@@ -176,9 +176,30 @@ namespace Xamarin.Android.Build.Tests
 			//NOTE: these properties should not affect class libraries at all
 			proj.SetProperty ("AndroidPackageFormat", "aab");
 			proj.SetProperty ("AotAssemblies", "true");
+			proj.SetProperty ("AndroidEnableMultiDex", "true");
 			using (var b = CreateDllBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 0 Warning(s)"), "Should have no MSBuild warnings.");
+
+				// $(AndroidEnableMultiDex) should not add android-support-multidex.jar!
+				if (Builder.UseDotNet) {
+					var aarPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.aar");
+					using var zip = Xamarin.Tools.Zip.ZipArchive.Open (aarPath, FileMode.Open);
+					Assert.IsFalse (zip.Any (e => e.FullName.EndsWith (".jar", StringComparison.OrdinalIgnoreCase)),
+						$"{aarPath} should not contain a .jar file!");
+				} else {
+					var assemblyPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.dll");
+					using var assembly = AssemblyDefinition.ReadAssembly (assemblyPath);
+					const string libraryProjects = "__AndroidLibraryProjects__.zip";
+					var resource = assembly.MainModule.Resources.OfType<EmbeddedResource> ()
+						.FirstOrDefault (e => e.Name == libraryProjects);
+					Assert.IsNotNull (resource, $"{assemblyPath} should contain {libraryProjects}");
+
+					using var stream = resource.GetResourceStream ();
+					using var zip = Xamarin.Tools.Zip.ZipArchive.Open (stream);
+					Assert.IsFalse (zip.Any (e => e.FullName.EndsWith (".jar", StringComparison.OrdinalIgnoreCase)),
+						$"{resource.Name} should not contain a .jar file!");
+				}
 			}
 		}
 
@@ -1794,6 +1815,17 @@ namespace App1
 			}
 		}
 
+		[Test]
+		public void AndroidXClassLibraryNoResources ()
+		{
+			var proj = new XamarinAndroidLibraryProject ();
+			proj.AndroidResources.Clear ();
+			proj.PackageReferences.Add (KnownPackages.AndroidXLegacySupportV4);
+			using (var b = CreateDllBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			}
+		}
+
 #pragma warning disable 414
 		static object [] BuildApplicationWithJavaSourceChecks = new object [] {
 			new object[] {
@@ -1906,7 +1938,7 @@ namespace App1
 						foreach (var abi in abis) {
 							var assemblies = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
 								"aot", abi, "libaot-UnnamedProject.dll.so");
-							var shouldExist = monoSymbolArchive && debugSymbols && debugType == "PdbOnly";
+							var shouldExist = monoSymbolArchive && debugSymbols && (debugType == "PdbOnly" || debugType == "Portable");
 							var symbolicateFile = Directory.GetFiles (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
 								"aot", abi), "UnnamedProject.dll.msym", SearchOption.AllDirectories).FirstOrDefault ();
 							if (shouldExist)
@@ -3602,22 +3634,15 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 				};
 				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 				var oldMonoPackageManager = Path.Combine (intermediate, "android", "src", "mono", "MonoPackageManager.java");
-				var seppuku = Path.Combine (intermediate, "android", "src", "mono", "android", "Seppuku.java");
 				var notifyTimeZoneChanges = Path.Combine (intermediate, "android", "src", "mono", "android", "app", "NotifyTimeZoneChanges.java");
-				Directory.CreateDirectory (Path.GetDirectoryName (seppuku));
 				Directory.CreateDirectory (Path.GetDirectoryName (notifyTimeZoneChanges));
 				File.WriteAllText (oldMonoPackageManager, @"package mono;
 public class MonoPackageManager { }
 class MonoPackageManager_Resources { }");
-				File.WriteAllText (seppuku, @"package mono.android;
-public class Seppuku { }");
 				File.WriteAllText (notifyTimeZoneChanges, @"package mono.android.app;
 public class ApplicationRegistration { }");
 				var oldMonoPackageManagerClass = Path.Combine (intermediate, "android", "bin", "classes" , "mono", "MonoPackageManager.class");
-				var seppukuClass = Path.Combine (intermediate, "android", "bin", "classes", "mono", "android", "Seppuku.class");
-				Directory.CreateDirectory (Path.GetDirectoryName (seppukuClass));
 				File.WriteAllText (oldMonoPackageManagerClass, "");
-				File.WriteAllText (seppukuClass, "");
 				// Change $(XamarinAndroidVersion) to trigger _CleanIntermediateIfNeeded
 				var property = Builder.UseDotNet ? "AndroidNETSdkVersion" : "XamarinAndroidVersion";
 				Assert.IsTrue (b.Build (proj, parameters: new [] { $"{property}=99.99" }, doNotCleanupOnUpdate: true), "Build should have succeeded.");
@@ -3627,8 +3652,6 @@ public class ApplicationRegistration { }");
 				// Old files that should *not* exist
 				FileAssert.DoesNotExist (oldMonoPackageManager);
 				FileAssert.DoesNotExist (oldMonoPackageManagerClass);
-				FileAssert.DoesNotExist (seppuku);
-				FileAssert.DoesNotExist (seppukuClass);
 				FileAssert.DoesNotExist (notifyTimeZoneChanges);
 				// New files that should exist
 				var monoPackageManager_Resources = Path.Combine (intermediate, "android", "src", "mono", "MonoPackageManager_Resources.java");

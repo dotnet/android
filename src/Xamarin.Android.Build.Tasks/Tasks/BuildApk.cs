@@ -290,7 +290,7 @@ namespace Xamarin.Android.Tasks
 			if (compress) {
 				string key = CompressedAssemblyInfo.GetKey (ProjectFullPath);
 				Log.LogDebugMessage ($"Retrieving assembly compression info with key '{key}'");
-				compressedAssembliesInfo = BuildEngine4.UnregisterTaskObject (key, RegisteredTaskObjectLifetime.Build) as IDictionary<string, CompressedAssemblyInfo>;
+				compressedAssembliesInfo = BuildEngine4.UnregisterTaskObjectAssemblyLocal<IDictionary<string, CompressedAssemblyInfo>> (key, RegisteredTaskObjectLifetime.Build);
 				if (compressedAssembliesInfo == null)
 					throw new InvalidOperationException ($"Assembly compression info not found for key '{key}'. Compression will not be performed.");
 			}

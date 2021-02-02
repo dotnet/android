@@ -19,6 +19,7 @@ namespace Xamarin.Android.Prepare
 
 			StandardArguments = new List<string> {
 				$"/p:Configuration={context.Configuration}",
+				"/restore",
 			};
 		}
 

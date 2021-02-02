@@ -1,0 +1,12 @@
+<Project> 
+  <Import Project="..\..\Directory.Build.props" />
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Authors>Microsoft</Authors>
+    <OutputPath>..\..\bin\Build$(Configuration)\nupkgs\</OutputPath>
+    <GenerateDependencyFile>false</GenerateDependencyFile>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+</Project>

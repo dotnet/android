@@ -1,18 +1,13 @@
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{2CF172E5-BDAE-4ABA-8BC8-08040ED3E77A}</ProjectGuid>
-  </PropertyGroup>
-  <Import Project="..\..\Configuration.props" />
-  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
-    <OutputPath>..\..\bin\Debug\</OutputPath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)'=='Release'">
-    <OutputPath>..\..\bin\Release\</OutputPath>
+    <TargetFramework>net472</TargetFramework>
+    <OutputPath>..\..\bin\$(Configuration)\</OutputPath>
   </PropertyGroup>
 
+  <Import Project="..\..\Configuration.props" />
   <Import Project="unix-distribution-setup.targets" />
 </Project>
 

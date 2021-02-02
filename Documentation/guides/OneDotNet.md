@@ -264,6 +264,11 @@ Play, ad-hoc distribution, etc. It could be able to sign the `.apk` or
 `.aab` with different keys. As a starting point, this will currently
 copy the output to a `publish` directory on disk.
 
+_NOTE: Behavior inside IDEs will differ. The `Build` target will not
+produce an `.apk` file if `$(BuildingInsideVisualStudio)` is `true`.
+IDEs will call the `Install` target for deployment, which will produce
+the `.apk` file. This behavior matches "legacy" Xamarin.Android._
+
 [illink]: https://github.com/mono/linker/blob/master/src/linker/README.md
 
 ### dotnet run

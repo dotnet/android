@@ -1,5 +1,5 @@
 parameters:
-  nunitConsole: $(System.DefaultWorkingDirectory)/packages/nunit.consolerunner/$(NUnitConsoleVersion)/tools/nunit3-console.exe
+  nunitConsole: $(System.DefaultWorkingDirectory)/build-tools/scripts/nunit3-console
   testRunTitle: Xamarin Android Tests
   testAssembly: []
   testResultsFile: TestResult.xml
@@ -17,7 +17,7 @@ steps:
             & $env:HOME/Library/Android/dotnet/dotnet test ${{ parameters.testAssembly }} --results-directory . --logger "trx;LogFileName=${{ parameters.testResultsFile }}" ${{ parameters.dotNetTestExtraArgs }} -- NUnit.NumberOfTestWorkers=${{ parameters.workers }}
         } else {
             Write-Host '##vso[task.setvariable variable=TestResultsFormat]NUnit'
-            mono ${{ parameters.nunitConsole }} ${{ parameters.testAssembly }} --result ${{ parameters.testResultsFile }} --workers=${{ parameters.workers }} ${{ parameters.nunitConsoleExtraArgs }}
+            & ${{ parameters.nunitConsole }} ${{ parameters.testAssembly }} --result ${{ parameters.testResultsFile }} --workers=${{ parameters.workers }} ${{ parameters.nunitConsoleExtraArgs }}
         }
     } else {
         if ("${{ parameters.useDotNet }}" -eq $true) {
@@ -25,7 +25,7 @@ steps:
            & $env:USERPROFILE\android-toolchain\dotnet\dotnet.exe test ${{ parameters.testAssembly }} --results-directory . --logger "trx;LogFileName=${{ parameters.testResultsFile }}" ${{ parameters.dotNetTestExtraArgs }} -- NUnit.NumberOfTestWorkers=${{ parameters.workers }}
         } else {
            Write-Host '##vso[task.setvariable variable=TestResultsFormat]NUnit'
-           ${{ parameters.nunitConsole }} ${{ parameters.testAssembly }} --result ${{ parameters.testResultsFile }} --workers=${{ parameters.workers }} ${{ parameters.nunitConsoleExtraArgs }}
+           & cmd /c '${{ parameters.nunitConsole }}.cmd' ${{ parameters.testAssembly }} --result ${{ parameters.testResultsFile }} --workers=${{ parameters.workers }} ${{ parameters.nunitConsoleExtraArgs }}
         }
     }
     if ($LASTEXITCODE -ne 0) {

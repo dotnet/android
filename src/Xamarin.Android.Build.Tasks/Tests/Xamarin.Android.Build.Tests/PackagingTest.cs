@@ -87,12 +87,8 @@ namespace Xamarin.Android.Build.Tests
 					"Java.Interop.dll",
 					"Mono.Android.dll",
 					"System.Console.dll",
-					"System.Linq.Expressions.dll",
-					"System.ObjectModel.dll",
-					"System.Runtime.Serialization.Primitives.dll",
 					"System.Private.CoreLib.dll",
 					"System.Collections.Concurrent.dll",
-					"System.Collections.dll",
 					"System.Linq.dll",
 					"UnnamedProject.dll",
 				} :
@@ -103,7 +99,6 @@ namespace Xamarin.Android.Build.Tests
 					"System.Core.dll",
 					"System.Data.dll",
 					"System.dll",
-					"System.Runtime.Serialization.dll",
 					"UnnamedProject.dll",
 					"Mono.Data.Sqlite.dll",
 					"Mono.Data.Sqlite.dll.config",
@@ -371,11 +366,12 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 			string keyToolPath = Path.Combine (androidSdk.JavaSdkPath, "bin");
 			var engine = new MockBuildEngine (Console.Out);
 			string pass = "Cy(nBW~j.&@B-!R_aq7/syzFR!S$4]7R%i6)R!";
+			string alias = "release store";
 			var task = new AndroidCreateDebugKey {
 				BuildEngine = engine,
 				KeyStore = keyfile,
 				StorePass = pass,
-				KeyAlias = "releasestore",
+				KeyAlias = alias,
 				KeyPass = pass,
 				KeyAlgorithm="RSA",
 				Validity=30,
@@ -387,14 +383,10 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
-			if (useApkSigner) {
-				proj.SetProperty ("AndroidUseApkSigner", "true");
-			} else {
-				proj.RemoveProperty ("AndroidUseApkSigner");
-			}
+			proj.SetProperty (proj.ReleaseProperties, "AndroidUseApkSigner", useApkSigner);
 			proj.SetProperty (proj.ReleaseProperties, "AndroidKeyStore", "True");
 			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningKeyStore", keyfile);
-			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningKeyAlias", "releasestore");
+			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningKeyAlias", alias);
 			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningKeyPass", Uri.EscapeDataString (pass));
 			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningStorePass", Uri.EscapeDataString (pass));
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, perAbiApk);

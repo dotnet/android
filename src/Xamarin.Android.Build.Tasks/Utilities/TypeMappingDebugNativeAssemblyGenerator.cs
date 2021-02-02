@@ -71,7 +71,9 @@ namespace Xamarin.Android.Tasks
 			if (haveJavaToManaged) {
 				foreach (TypeMapGenerator.TypeMapDebugEntry entry in data.JavaToManagedMap) {
 					size += WritePointer (output, entry.JavaLabel);
-					size += WritePointer (output, entry.SkipInJavaToManaged ? null : entry.ManagedLabel);
+
+					TypeMapGenerator.TypeMapDebugEntry managedEntry = entry.DuplicateForJavaToManaged != null ? entry.DuplicateForJavaToManaged : entry;
+					size += WritePointer (output, managedEntry.SkipInJavaToManaged ? null : managedEntry.ManagedLabel);
 				}
 			}
 			WriteStructureSize (output, JavaToManagedSymbol, size, alwaysWriteSize: true);

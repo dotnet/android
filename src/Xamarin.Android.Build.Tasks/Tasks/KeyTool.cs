@@ -54,11 +54,13 @@ namespace Xamarin.Android.Tasks
 				if (previousLine != null && previousLine.EndsWith (":", StringComparison.Ordinal)) {
 					text = previousLine + " " + text;
 				}
-				Log.LogFromStandardError (DefaultErrorCode, text);
+				LogFromStandardError (text);
 			}
 
 			previousLine = text;
 		}
+
+		protected virtual void LogFromStandardError (string text) => Log.LogFromStandardError (DefaultErrorCode, text);
 
 		protected virtual CommandLineBuilder CreateCommandLine()
 		{

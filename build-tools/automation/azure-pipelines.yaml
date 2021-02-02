@@ -54,20 +54,24 @@ variables:
   NUnitConsoleVersion: 3.11.1
   DotNetCoreVersion: 3.1.201
   DotNet5Version: 5.0.100
-  HostedMacMojave: Hosted Mac Internal Mojave
-  HostedMac: Hosted Mac Internal
+  HostedMacImage: macOS-10.15
   HostedWinVS2019: Hosted Windows 2019 with VS2019
   VSEngWinVS2019: Xamarin-Android-Win2019-1120
   # Run all tests if:
   # - User who queued the job requested it (They set XA.RunAllTests to true)
   # - This is the master integration branch (Pipeline defaults XA.RunAllTests to true)
   # - This is a non-fork branch with name containing "mono-" (for Mono bumps)
-  IsMonoBranch: $[and(eq(variables['XA.Commercial.Build'], 'true'), ne(variables['System.PullRequest.IsFork'], 'True'), or(contains(variables['Build.SourceBranchName'], 'mono-'), contains(variables['System.PullRequest.SourceBranch'], 'mono-')))]
+  IsMonoBranch: $[and(ne(variables['System.PullRequest.IsFork'], 'True'), or(contains(variables['Build.SourceBranchName'], 'mono-'), contains(variables['System.PullRequest.SourceBranch'], 'mono-')))]
   RunAllTests: $[or(eq(variables['XA.RunAllTests'], true), eq(variables['IsMonoBranch'], true))]
   DotNetNUnitCategories: '& TestCategory != DotNetIgnore & TestCategory != AOT & TestCategory != MkBundle & TestCategory != MonoSymbolicate & TestCategory != PackagesConfig & TestCategory != StaticProject & TestCategory != Debugger'
   NUnit.NumberOfTestWorkers: 4
   GitHub.Token: $(github--pat--vs-mobiletools-engineering-service2)
   CONVERT_JAVADOC_TO_XMLDOC: $[ne(variables['Build.DefinitionName'], 'Xamarin.Android-PR')]
+  ${{ if and(eq(variables['Build.DefinitionName'], 'Xamarin.Android'), ne(variables['Build.Reason'], 'PullRequest')) }}:
+    MicroBuildSignType: Real
+  ${{ if or(ne(variables['Build.DefinitionName'], 'Xamarin.Android'), eq(variables['Build.Reason'], 'PullRequest')) }}:
+    MicroBuildSignType: Test
+  TeamName: XamarinAndroid
 
 # Stage and Job "display names" are shortened because they are combined to form the name of the corresponding GitHub check.
 stages:
@@ -127,7 +131,7 @@ stages:
   - job: mac_build_create_installers
     displayName: Build
     pool: $(MacMojaveBuildPool)
-    timeoutInMinutes: 240
+    timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:
       clean: all
@@ -135,135 +139,12 @@ stages:
     - checkout: self
       submodules: recursive
 
-    - script: echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/Library/Android/$(XA.Jdk11.Folder)"
-      displayName: set JI_JAVA_HOME
-
-    - template: yaml-templates/use-dot-net.yaml
-      parameters:
-        version: $(DotNet5Version)
-        remove_dotnet: true
-
-    - template: yaml-templates/use-dot-net.yaml
-      parameters:
-        version: $(DotNetCoreVersion)
-
-    - template: install-certificates.yml@yaml
-      parameters:
-        DeveloperIdApplication: $(developer-id-application)
-        DeveloperIdInstaller: $(developer-id-installer)
-        IphoneDeveloper: $(iphone-developer)
-        MacDeveloper: $(mac-developer)
-        HostedMacKeychainPassword: $(AzDO-OnPrem-KeychainPass)
-
-    - task: provisionator@2
-      displayName: Install Xcode
-      inputs:
-        github_token: $(GitHub.Token)
-        provisioning_script: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/provisioning/xcode.csx
-        provisioning_extra_args: '-v -v -v -v'
-
-    # Prepare and build everything
-    - script: make prepare-update-mono V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
-      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
-      displayName: make prepare-update-mono
+    - template: yaml-templates/commercial-build.yaml
 
     - script: mono $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/xaprepare/xaprepare/bin/$(XA.Build.Configuration)/xaprepare.exe --s=DetermineApplicableTests --no-emoji --run-mode=CI
+      displayName: determine which test stages to run
       name: TestConditions
       condition: and(succeeded(), eq(variables['Build.DefinitionName'], 'Xamarin.Android-PR'))
-
-    # Clone monodroid wth submodules, but disregard the unused xamarin-android submodule.
-    - checkout: monodroid
-      clean: true
-      submodules: recursive
-      path: s/xamarin-android/external/monodroid
-      persistCredentials: true
-      condition: and(succeeded(), eq(variables['XA.Commercial.Build'], 'true'))
-
-    - script: rm -rf external/monodroid/external/xamarin-android
-      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
-      displayName: delete legacy xamarin-android submodule
-      condition: and(succeeded(), eq(variables['XA.Commercial.Build'], 'true'))
-
-    - script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
-      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
-      displayName: make prepare-external-git-dependencies
-      condition: and(succeeded(), eq(variables['XA.Commercial.Build'], 'true'))
-
-    - script: make jenkins V=1 CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
-      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
-      displayName: make jenkins
-
-    # Build and package test assemblies
-    - script: make all-tests V=1 CONFIGURATION=$(XA.Build.Configuration)
-      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
-      displayName: make all-tests
-
-    - script: >
-        cp -r bin/$(XA.Build.Configuration)/bcl-tests bin/Test$(XA.Build.Configuration)/bcl-tests &&
-        cp bin/Build$(XA.Build.Configuration)/ProfileAssemblies.projitems bin/Test$(XA.Build.Configuration)/bcl-tests/
-      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
-      displayName: copy bcl-tests assemblies
-
-    - task: PublishPipelineArtifact@1
-      displayName: upload test assemblies
-      inputs:
-        artifactName: $(TestAssembliesArtifactName)
-        targetPath: xamarin-android/bin/Test$(XA.Build.Configuration)
-
-    - task: MSBuild@1
-      displayName: pack all nupkgs
-      inputs:
-        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/create-packs/Microsoft.Android.Sdk.proj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:CreateAllPacks /restore /p:NuGetLicense=$(System.DefaultWorkingDirectory)/xamarin-android/external/monodroid/tools/scripts/License.txt /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/create-all-packs.binlog
-
-    # Create installers
-    - script: make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)
-      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
-      displayName: make create-installers
-
-    - script: >
-        mkdir -p bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName) &&
-        cp bin/Build$(XA.Build.Configuration)/*.vsix bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName) &&
-        cp bin/Build$(XA.Build.Configuration)/*.pkg bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
-      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
-      displayName: copy unsigned installers
-
-    - script: >
-        VERSION=`LANG=C; export LANG && git log --no-color --first-parent -n1 --pretty=format:%ct` &&
-        echo "d1ec039f-f3db-468b-a508-896d7c382999 $VERSION" > bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)/updateinfo
-      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
-      displayName: create updateinfo file
-
-    - task: PublishPipelineArtifact@1
-      displayName: upload installers
-      inputs:
-        artifactName: $(InstallerArtifactName)
-        targetPath: xamarin-android/bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
-
-    - task: NuGetCommand@2
-      displayName: push nupkgs
-      inputs:
-        command: push
-        packagesToPush: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)/*.nupkg
-        nuGetFeedType: external
-        publishFeedCredentials: xamarin-impl public feed
-      condition: and(succeeded(), eq(variables['PushXAPackages'], 'true'))
-
-    - task: PublishPipelineArtifact@1
-      displayName: upload nupkgs
-      inputs:
-        artifactName: $(NuGetArtifactName)
-        targetPath: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
-
-    - template: yaml-templates/upload-results.yaml
-      parameters:
-        solution: xamarin-android/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
-        artifactName: Build Results - macOS
-
-    - template: uninstall-certificates/v1.yml@yaml
-      parameters:
-        HostedMacKeychainPassword: $(AzDO-OnPrem-KeychainPass)
 
 # This stage ensures Windows specific build steps continue to work, and runs unit tests.
 # Check - "Xamarin.Android (Windows Build and Test)"
@@ -394,7 +275,8 @@ stages:
   # Check - "Xamarin.Android (Smoke Tests APK Instrumentation - macOS)"
   - job: mac_apk_tests
     displayName: APK Instrumentation - macOS
-    pool: $(HostedMac)
+    pool:
+      vmImage: $(HostedMacImage)
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
     workspace:
@@ -487,7 +369,6 @@ stages:
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
-        condition: and(succeeded(), eq(variables['XA.Commercial.Build'], 'true'))
         configuration: $(ApkTestConfiguration)
         testName: Xamarin.Android.JcwGen_Tests_FastDev
         project: tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj
@@ -688,7 +569,8 @@ stages:
   # Check - "Xamarin.Android (Smoke Tests MSBuild Emulator - macOS)"
   - job: mac_msbuilddevice_tests
     displayName: MSBuild Emulator - macOS
-    pool: $(HostedMac)
+    pool:
+      vmImage: $(HostedMacImage)
     timeoutInMinutes: 90
     cancelTimeoutInMinutes: 5
     workspace:
@@ -867,7 +749,8 @@ stages:
  # Check - "Xamarin.Android (Designer Tests macOS)"
   - job: designer_integration_mac
     displayName: macOS
-    pool: $(HostedMacMojave)
+    pool:
+      vmImage: $(HostedMacImage)
     timeoutInMinutes: 120
     cancelTimeoutInMinutes: 5
     workspace:
@@ -1041,7 +924,8 @@ stages:
   # Check - "Xamarin.Android (BCL Emulator Tests macOS)"
   - job: mac_bcl_tests
     displayName: macOS
-    pool: $(HostedMac)
+    pool:
+      vmImage: $(HostedMacImage)
     timeoutInMinutes: 180
     workspace:
       clean: all
@@ -1061,7 +945,7 @@ stages:
       inputs:
         solution: build-tools/remap-assembly-ref/remap-assembly-ref.csproj
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/remap-assembly-ref.binlog
+        msbuildArguments: /restore /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/remap-assembly-ref.binlog
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -1099,10 +983,122 @@ stages:
   displayName: .NET 6 Preview Installers
   dependsOn: mac_build
   jobs:
+  # Check - "Xamarin.Android (.NET 6 Preview Installers Sign NuGets)"
+  - template: sign-artifacts/jobs/v2.yml@yaml
+    parameters:
+      artifactName: nupkgs
+      signType: $(MicroBuildSignType)
+      usePipelineArtifactTasks: true
+      condition: eq(variables['MicroBuildSignType'], 'Real')
+
+  # Check - "Xamarin.Android (.NET 6 Preview Installers Create .pkg)"
+  - job: dotnet_create_pkg
+    displayName: Create .pkg
+    ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
+      dependsOn: signing
+    pool: $(MacMojaveBuildPool)
+    workspace:
+      clean: all
+    steps:
+    - checkout: self
+      submodules: recursive
+
+    - checkout: release_scripts
+      clean: true
+      persistCredentials: true
+
+    - template: yaml-templates/use-dot-net.yaml
+      parameters:
+        version: $(DotNetCoreVersion)
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
+          artifactName: nuget-signed
+        ${{ if ne(variables['MicroBuildSignType'], 'Real') }}:
+          artifactName: $(NuGetArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
+
+    - task: NuGetCommand@2
+      displayName: push nupkgs
+      inputs:
+        command: push
+        packagesToPush: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)/*.nupkg
+        nuGetFeedType: external
+        publishFeedCredentials: xamarin-impl public feed
+      condition: and(succeeded(), eq(variables['PushXAPackages'], 'true'))
+
+    - template: yaml-templates/install-microbuild-tooling.yaml
+      parameters:
+        condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
+
+    - task: MSBuild@1
+      displayName: msbuild Xamarin.Android.BootstrapTasks
+      inputs:
+        solution: $(System.DefaultWorkingDirectory)/xamarin-android/Xamarin.Android.BootstrapTasks.sln
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: /restore /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/msbuild-bootstraptasks.binlog
+
+    - task: MSBuild@1
+      displayName: msbuild /t:Restore sign-dotnet-pkg.proj
+      inputs:
+        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/create-dotnet-pkg/sign-dotnet-pkg.proj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: /t:Restore /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/restore-sign-pkg.binlog
+
+    - task: MSBuild@1
+      displayName: msbuild /t:Restore create-dotnet-pkg.proj
+      inputs:
+        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/create-dotnet-pkg/create-dotnet-pkg.csproj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: /t:Restore /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/restore-create-pkg.binlog
+
+    - task: MSBuild@1
+      displayName: msbuild /t:CreateWorkloadInstallers
+      inputs:
+        solution: $(System.DefaultWorkingDirectory)/xamarin-android/Xamarin.Android.sln
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: /t:CreateWorkloadInstallers /p:SignType=$(MicroBuildSignType) /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/msbuild-workload.binlog
+
+    - powershell: |
+        $pkg = Get-ChildItem -Path "$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/*" -Include *.pkg -File
+        if (![System.IO.File]::Exists($pkg)) {
+            throw [System.IO.FileNotFoundException] "Pkg File not found in $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)"
+        }
+        Write-Host "##vso[task.setvariable variable=XA.NET6.Pkg]$pkg"
+      displayName: set variable to pkg path
+
+    - script: >
+        cd $(System.DefaultWorkingDirectory)/release-scripts &&
+        pwsh notarize.ps1 -FolderForApps $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)
+      failOnStderr: true
+      displayName: Notarize PKG
+      condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
+
+    - script: xcrun stapler validate $(XA.NET6.Pkg)
+      displayName: validate notarized pkg
+      condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
+
+    - task: PublishPipelineArtifact@1
+      displayName: upload pkg
+      inputs:
+        artifactName: net6-pkg
+        targetPath: $(XA.NET6.Pkg)
+
+    - template: yaml-templates/remove-microbuild-tooling.yaml
+      parameters:
+        condition: and(succeededOrFailed(), eq(variables['MicroBuildSignType'], 'Real'))
+
+    - template: yaml-templates/upload-results.yaml
+      parameters:
+        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
+        artifactName: Build Results - .NET 6 Preview .pkg
+
   # Check - "Xamarin.Android (.NET 6 Preview Installers Create .msi and Upload)"
-  - job: dotnet_preview_installers
+  - job: dotnet_create_msi
     displayName: Create .msi and Upload
-    pool: $(HostedWinVS2019)
+    dependsOn: dotnet_create_pkg
+    pool: VSEng-MicroBuildVS2019
     workspace:
       clean: all
     steps:
@@ -1111,14 +1107,21 @@ stages:
 
     - task: DownloadPipelineArtifact@2
       inputs:
-        artifactName: $(NuGetArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\nupkgs
+        ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
+          artifactName: nuget-signed
+        ${{ if ne(variables['MicroBuildSignType'], 'Real') }}:
+          artifactName: $(NuGetArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\$(NuGetArtifactName)
 
     - task: DownloadPipelineArtifact@2
       inputs:
-        artifactName: $(InstallerArtifactName)
+        artifactName: net6-pkg
         downloadPath: $(System.DefaultWorkingDirectory)\installer-artifacts
         patterns: Microsoft.*.pkg
+
+    - template: yaml-templates\install-microbuild-tooling.yaml
+      parameters:
+        condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
 
     - task: MSBuild@1
       displayName: msbuild Xamarin.Android.BootstrapTasks
@@ -1128,11 +1131,18 @@ stages:
         msbuildArguments: /restore /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-bootstraptasks.binlog
 
     - task: MSBuild@1
+      displayName: msbuild /t:Restore create-dotnet-msi.csproj
+      inputs:
+        solution: $(System.DefaultWorkingDirectory)\build-tools\create-dotnet-msi\create-dotnet-msi.csproj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: /t:Restore /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\restore-create-msi.binlog
+
+    - task: MSBuild@1
       displayName: msbuild /t:CreateWorkloadInstallers
       inputs:
         solution: Xamarin.Android.sln
         configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:CreateWorkloadInstallers /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-workload.binlog
+        msbuildArguments: /t:CreateWorkloadInstallers /p:SignType=$(MicroBuildSignType) /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-workload.binlog
 
     - script: copy /Y $(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\*.msi $(System.DefaultWorkingDirectory)\installer-artifacts
       displayName: copy .msi
@@ -1144,15 +1154,19 @@ stages:
         Azure.BlobPrefix: $(Build.DefinitionName)/public/net6/$(Build.BuildId)/$(Build.SourceBranchName)/$(Build.SourceVersion)
         GitHub.Context: .NET 6 Preview Installers
 
+    - template: yaml-templates\remove-microbuild-tooling.yaml
+      parameters:
+        condition: and(succeededOrFailed(), eq(variables['MicroBuildSignType'], 'Real'))
+
     - template: yaml-templates/upload-results.yaml
       parameters:
         solution: build-tools\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj
-        artifactName: Build Results - .NET 6 Preview Installers
+        artifactName: Build Results - .NET 6 Preview .msi
 
 - stage: finalize_installers
   displayName: Finalize Installers
   dependsOn: mac_build
-  condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(variables['XA.Commercial.Build'], 'true'), ne(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.DefinitionName'], 'Xamarin.Android'))
+  condition: and(eq(dependencies.mac_build.result, 'Succeeded'), ne(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.DefinitionName'], 'Xamarin.Android'))
   jobs:
   # Check - "Xamarin.Android (Finalize Installers Notarize and Upload to Storage)"
   - job: notarize_pkg_upload_storage
@@ -1164,8 +1178,6 @@ stages:
       clean: all
     variables:
     - group: Xamarin Notarization
-    - name: TeamName
-      value: XamarinAndroid
     steps:
     - checkout: self
 
@@ -1205,56 +1217,7 @@ stages:
       parameters:
         UnsignedPkgPath: $(XA.Unsigned.Pkg)
 
-    - powershell: |
-        # We require at a minimum version 2.8.0 of the azure cli installed for the ESRP signing
-        # First, check for what version is currently installed on the machine
-        & az --version
-        $Versions = & az --version 
-        $AzureVersion = $Versions[0]
-        $AzureVersionFields = $AzureVersion.split(" ", [StringSplitOptions]::RemoveEmptyEntries)
-        $CurrentVersion = New-Object -TypeName System.Version -ArgumentList $AzureVersionFields[1]
-        $Version280 = New-Object -TypeName System.Version -ArgumentList "2.8.0"
-
-        Write-Host "Current Version of azure-cli is $CurrentVersion"
-
-        # Check if version 2.8 is higher than the current version.
-        # If it is then we need to do work and download and install the 2.8.0 version of the azure cli in
-        # a really really freaked out non-intuitive way using brew. Why is this so hard to do???
-        # https://stackoverflow.com/questions/62785290/installing-previous-versions-of-a-formula-with-brew-extract
-        if ($Version280 -gt $CurrentVersion)
-        {
-            Write-Host "Version $CurrentVersion of azure-cli is lower than 2.8.0.  Installing the 2.8.0 version of azure-cli..."
-
-            & brew untap builder/azure-cli
-
-            # unlink the current version
-            & brew unlink azure-cli
-
-            # Create a new tap
-            & brew tap-new builder/azure-cli
-
-            # Extract version 2.8.0 to the tap
-            & brew extract --force --version 2.8.0 azure-cli builder/azure-cli
-
-            # Install this version 
-            & brew install builder/azure-cli/azure-cli@2.8.0
-
-            # link this version to start using it
-            & brew link azure-cli@2.8.0
-        }
-        else 
-        {
-            Write-Host "Version $CurrentVersion of azure-cli is higher than 2.8.0.  Nothin to do..."
-        }
-      displayName: 'Install Azure CLI >= 2.8.0'
-
-    - task: MicroBuildSigningPlugin@3
-      displayName: Install Signing Plugin
-      inputs:
-        signType: real
-        azureSubscription: MicroBuild Signing Task (DevDiv)
-      env:
-        SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+    - template: yaml-templates/install-microbuild-tooling.yaml
 
     - script: >
         cd $(System.DefaultWorkingDirectory)/release-scripts &&
@@ -1272,14 +1235,7 @@ stages:
         AzureUploadLocation: $(Build.DefinitionName)/public/$(Build.BuildId)/$(Build.SourceBranchName)/$(Build.SourceVersion)
         SourceDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
 
-    - script: cp $(System.DefaultWorkingDirectory)/storage-artifacts/*.pkg $(Build.ArtifactStagingDirectory)
-      displayName: copy notarized pkg
-
-    - task: PublishPipelineArtifact@1
-      displayName: upload notarized pkg
-      inputs:
-        artifactName: notarized-pkg
-        targetPath: $(Build.ArtifactStagingDirectory)
+    - template: yaml-templates/remove-microbuild-tooling.yaml
 
     - template: uninstall-certificates/v1.yml@yaml
       parameters:

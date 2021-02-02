@@ -413,7 +413,7 @@ namespace Xamarin.Android.Tasks
 			if (!tmg.Generate (Debug, SkipJniAddNativeMethodRegistrationAttributeScan, types, cache, TypemapOutputDirectory, GenerateNativeAssembly, out ApplicationConfigTaskState appConfState))
 				throw new XamarinAndroidException (4308, Properties.Resources.XA4308);
 			GeneratedBinaryTypeMaps = tmg.GeneratedBinaryTypeMaps.ToArray ();
-			BuildEngine4.RegisterTaskObject (ApplicationConfigTaskState.RegisterTaskObjectKey, appConfState, RegisteredTaskObjectLifetime.Build, allowEarlyCollection: false);
+			BuildEngine4.RegisterTaskObjectAssemblyLocal (ApplicationConfigTaskState.RegisterTaskObjectKey, appConfState, RegisteredTaskObjectLifetime.Build);
 		}
 	}
 }

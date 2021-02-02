@@ -18,6 +18,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(MicroBuildCoreVersion)">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="**" />
     <None Include="distribution.xml.in" />
   </ItemGroup>
@@ -35,6 +42,7 @@
       <_FilesToCopy Include="$(DotNetPreviewPath)\sdk-manifests\$(DotNetPreviewVersionBand)\Microsoft.NET.Workload.Android\**\*" />
       <_FilesToCopy Include="$(DotNetPreviewPath)\packs\Microsoft.Android.Ref\**\*" />
       <_FilesToCopy Include="$(DotNetPreviewPath)\packs\Microsoft.Android.Sdk.osx-x64\**\*" />
+      <_FilesToCopy Include="$(DotNetPreviewPath)\packs\Microsoft.Android.Sdk.BundleTool\**\*" />
       <_FilesToCopy Include="$(DotNetPreviewPath)\template-packs\Microsoft.Android.Templates.*.nupkg" />
     </ItemGroup>
     <MakeDir Directories="$(PkgOutputPath);$(PayloadDir);$(PkgResourcesPath);$(LicenseDestination)"/>
@@ -77,6 +85,10 @@
     <ItemGroup>
       <FileWrites Include="$(PkgProductOutputPath)" />
       <None Include="$(PkgProductOutputPath)" CopyToOutputDirectory="PreserveNewest" Link="Microsoft.NET.Workload.Android-$(AndroidPackVersionLong).pkg" />
+      <FilesToSign Include="$(OutputPath)\Microsoft.NET.Workload.Android-$(AndroidPackVersionLong).pkg">
+        <Authenticode>MacDeveloper</Authenticode>
+        <Zip>true</Zip>
+      </FilesToSign>
     </ItemGroup>
   </Target>
 

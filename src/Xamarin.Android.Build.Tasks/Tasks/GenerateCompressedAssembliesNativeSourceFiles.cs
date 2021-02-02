@@ -68,7 +68,7 @@ namespace Xamarin.Android.Tasks
 
 			string key = CompressedAssemblyInfo.GetKey (ProjectFullPath);
 			Log.LogDebugMessage ($"Storing compression assemblies info with key '{key}'");
-			BuildEngine4.RegisterTaskObject (key, assemblies, RegisteredTaskObjectLifetime.Build, false);
+			BuildEngine4.RegisterTaskObjectAssemblyLocal (key, assemblies, RegisteredTaskObjectLifetime.Build);
 			Generate (assemblies);
 
 			void Generate (IDictionary<string, CompressedAssemblyInfo> dict)

@@ -289,12 +289,43 @@ $@"			var myButton = new AttributedButtonStub (this);
 			}
 		}
 
+		static readonly object [] AndroidAddKeepAlivesSource = new object [] {
+			// Debug configuration
+			new object [] {
+				/* isRelease */                  false,
+				/* AndroidAddKeepAlives=true */  false,
+				/* AndroidLinkMode=None */       false,
+				/* should add KeepAlives */      false,
+			},
+			// Debug configuration, AndroidAddKeepAlives=true
+			new object [] {
+				/* isRelease */                  false,
+				/* AndroidAddKeepAlives=true */  true,
+				/* AndroidLinkMode=None */       false,
+				/* should add KeepAlives */      true,
+			},
+			// Release configuration
+			new object [] {
+				/* isRelease */                  true,
+				/* AndroidAddKeepAlives=true */  false,
+				/* AndroidLinkMode=None */       false,
+				/* should add KeepAlives */      true,
+			},
+			// Release configuration, AndroidLinkMode=None
+			new object [] {
+				/* isRelease */                  true,
+				/* AndroidAddKeepAlives=true */  false,
+				/* AndroidLinkMode=None */       true,
+				/* should add KeepAlives */      true,
+			},
+		};
+
 		[Test]
-		[Category ("DotNetIgnore")]
-		public void AndroidAddKeepAlives ()
+		[TestCaseSource (nameof (AndroidAddKeepAlivesSource))]
+		public void AndroidAddKeepAlives (bool isRelease, bool setAndroidAddKeepAlivesTrue, bool setLinkModeNone, bool shouldAddKeepAlives)
 		{
 			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
+				IsRelease = isRelease,
 				OtherBuildItems = {
 					new BuildItem ("Compile", "Method.cs") { TextContent = () => @"
 using System;
@@ -324,10 +355,17 @@ namespace UnnamedProject {
 
 			proj.SetProperty ("AllowUnsafeBlocks", "True");
 
+			if (setAndroidAddKeepAlivesTrue)
+				proj.SetProperty ("AndroidAddKeepAlives", "True");
+
+			if (setLinkModeNone)
+				proj.SetProperty (isRelease ? proj.ReleaseProperties : proj.DebugProperties, "AndroidLinkMode", "None");
+
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Building a project should have succeded.");
 
-				var assemblyPath = b.Output.GetIntermediaryPath (Path.Combine ("android", "assets", "UnnamedProject.dll"));
+				var assemblyFile = "UnnamedProject.dll";
+				var assemblyPath = (Builder.UseDotNet && (!isRelease || setLinkModeNone)) ? b.Output.GetIntermediaryPath (Path.Combine ("android", "assets", assemblyFile)) : BuildTest.GetLinkedPath (b,  true, assemblyFile);
 				using (var assembly = AssemblyDefinition.ReadAssembly (assemblyPath)) {
 					Assert.IsTrue (assembly != null);
 
@@ -352,7 +390,7 @@ namespace UnnamedProject {
 						break;
 					}
 
-					Assert.IsTrue (hasKeepAliveCall);
+					Assert.IsTrue (hasKeepAliveCall == shouldAddKeepAlives);
 				}
 			}
 		}

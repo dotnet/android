@@ -2,7 +2,11 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <!--
     Note: This file *must* be imported *after* `$(Configuration)` is set.
-    -->
+  -->
+  <Import
+      Project="$(MSBuildThisFileDirectory)Build$(Configuration)\Configuration.Generated.props"
+      Condition="Exists('$(MSBuildThisFileDirectory)Build$(Configuration)\Configuration.Generated.props')"
+  />
   <Import
       Project="$(MSBuildThisFileDirectory)Configuration.Override.props"
       Condition="Exists('$(MSBuildThisFileDirectory)Configuration.Override.props')"
@@ -72,7 +76,7 @@
     <DotNetPreviewTool Condition=" '$(DotNetPreviewTool)' == '' ">$(DotNetPreviewPath)dotnet</DotNetPreviewTool>
     <!-- Version number from: https://github.com/dotnet/installer#installers-and-binaries -->
     <DotNetPreviewVersionBand Condition=" '$(DotNetPreviewVersionBand)' == '' ">6.0.100</DotNetPreviewVersionBand>
-    <DotNetPreviewVersionFull Condition=" '$(DotNetPreviewVersionFull)' == '' ">$(DotNetPreviewVersionBand)-alpha.1.20562.2</DotNetPreviewVersionFull>
+    <DotNetPreviewVersionFull Condition=" '$(DotNetPreviewVersionFull)' == '' ">$(DotNetPreviewVersionBand)-preview.1.21081.5</DotNetPreviewVersionFull>
     <WixToolPath Condition=" '$(WixToolPath)' == '' ">$(AndroidToolchainDirectory)\wix\</WixToolPath>
     <AndroidCmakeVersion Condition=" '$(AndroidCmakeVersion)' == '' ">3.10.2</AndroidCmakeVersion>
     <AndroidCmakeVersionPath Condition=" '$(AndroidCmakeVersionPath)' == '' ">$(AndroidCmakeVersion).4988404</AndroidCmakeVersionPath>
@@ -118,15 +122,17 @@
     <XAPlatformToolsVersion>30.0.2</XAPlatformToolsVersion>
     <XAIncludeProprietaryBits Condition="'$(XAIncludeProprietaryBits)' == ''">False</XAIncludeProprietaryBits>
     <XABundleToolVersion Condition="'$(XABundleToolVersion)' == ''">1.4.0</XABundleToolVersion>
-    <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' And '$(NUGET_PACKAGES)' != '' ">$(NUGET_PACKAGES)</XAPackagesDir>
-    <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' ">$(XamarinAndroidSourcePath)\packages</XAPackagesDir>
+    <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' And '$(HostOS)' == 'Windows'">$(userprofile)\.nuget\packages</XAPackagesDir>
+    <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' And '$(HostOS)' != 'Windows'">$(HOME)/.nuget/packages</XAPackagesDir>
     <PathSeparator>$([System.IO.Path]::PathSeparator)</PathSeparator>
     <_TestsAotName Condition=" '$(AotAssemblies)' == 'true' ">-Aot</_TestsAotName>
     <_TestsProfiledAotName Condition=" '$(AndroidEnableProfiledAot)' == 'true' ">-Profiled</_TestsProfiledAotName>
     <_TestsBundleName Condition=" '$(BundleAssemblies)' == 'true' ">-Bundle</_TestsBundleName>
     <TestsFlavor>$(_TestsProfiledAotName)$(_TestsAotName)$(_TestsBundleName)</TestsFlavor>
     <LibZipSharpVersion>1.0.20</LibZipSharpVersion>
+    <MonoCecilVersion>0.11.2</MonoCecilVersion>
     <NuGetApiPackageVersion>5.4.0</NuGetApiPackageVersion>
+    <LZ4PackageVersion>1.1.11</LZ4PackageVersion>
   </PropertyGroup>
   <PropertyGroup>
     <MingwCommandPrefix32>i686-w64-mingw32</MingwCommandPrefix32>
@@ -198,7 +204,7 @@
     <AndroidSupportedTargetAotAbisSplit>$(AndroidSupportedTargetAotAbis.Split(':'))</AndroidSupportedTargetAotAbisSplit>
   </PropertyGroup>
   <PropertyGroup>
-    <RemapAssemblyRefToolExecutable>$(MSBuildThisFileDirectory)bin\Build$(Configuration)\remap-assembly-ref.exe</RemapAssemblyRefToolExecutable>
+    <RemapAssemblyRefToolExecutable>$(MSBuildThisFileDirectory)bin\Build$(Configuration)\remap-assembly-ref\remap-assembly-ref.exe</RemapAssemblyRefToolExecutable>
     <RemapAssemblyRefTool>$(ManagedRuntime) $(ManagedRuntimeArgs) &quot;$(RemapAssemblyRefToolExecutable)&quot;</RemapAssemblyRefTool>
   </PropertyGroup>
 
@@ -209,6 +215,7 @@
 
   <!-- Unit Test Properties -->
   <PropertyGroup>
+    <!-- When changing the version below, please also update the 'build-tools/scripts/nunit3-console*' scripts -->
     <NUnitConsoleVersion Condition=" '$(NUnitConsoleVersion)' == '' ">3.11.1</NUnitConsoleVersion>
     <_Runtime Condition=" '$(HostOS)' != 'Windows' ">$(ManagedRuntime) $(ManagedRuntimeArgs)</_Runtime>
     <_NUnit>$(_Runtime) $(XAPackagesDir)\nunit.consolerunner\$(NUnitConsoleVersion)\tools\nunit3-console.exe</_NUnit>
@@ -218,4 +225,5 @@
   <Target Name="CreateManifestResourceNames" />
 
   <Import Project="$(MSBuildThisFileDirectory)build-tools\scripts\Ndk.targets" />
+  <Import Project="$(MSBuildThisFileDirectory)build-tools\scripts\RoslynAnalyzers.projitems" Condition=" '$(EnableRoslynAnalyzers)' == 'true' " />
 </Project>
