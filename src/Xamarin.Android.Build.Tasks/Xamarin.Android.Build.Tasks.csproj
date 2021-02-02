@@ -5,7 +5,7 @@
   <Import Project="..\..\Configuration.props" />
   <Import Project="..\..\build-tools\scripts\LocalizationLanguages.projitems" />
   <Import Project="..\..\build-tools\scripts\MSBuildReferences.projitems" />
-  <Import Project="..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />
+  <Import Project="..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Condition="Exists('..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
