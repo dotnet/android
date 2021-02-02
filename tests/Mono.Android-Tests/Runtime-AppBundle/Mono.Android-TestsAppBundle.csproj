@@ -24,6 +24,7 @@
     <AssemblyOriginatorKeyFile>..\..\..\product.snk</AssemblyOriginatorKeyFile>
     <_SkipJniAddNativeMethodRegistrationAttributeScan>True</_SkipJniAddNativeMethodRegistrationAttributeScan>
     <_MonoAndroidTestPackage>Mono.Android_TestsAppBundle</_MonoAndroidTestPackage>
+    <PlotDataLabelSuffix>-AppBundle</PlotDataLabelSuffix>
   </PropertyGroup>
   <Import Project="..\Mono.Android-Test.Shared.projitems" Label="Shared" Condition="Exists('..\Mono.Android-Test.Shared.projitems')" />
   <Import Project="..\..\..\Configuration.props" />

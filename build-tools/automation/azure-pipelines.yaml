@@ -516,8 +516,6 @@ stages:
     # Process Plot CSV files and send results to AppInsights
     # XamarinAndroidMetrics: https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/64e11c84-c922-4ffd-bea9-67ab39354edd/resourceGroups/XamarinMetrics/providers/microsoft.insights/components/XamarinAndroidMetrics/overview
     # UNDONE: Need plot definitions for the following files:
-    #  TestResult-Mono.Android_TestsAppBundle-times.csv
-    #  TestResult-Mono.Android_TestsMultiDex-times.csv
     #  TestResult-Xamarin.Android.EmbeddedDSO_Test-times.csv
 
     - template: yaml-templates/plots-to-appinsights.yaml
@@ -527,6 +525,30 @@ stages:
         plotGroup: Test times
         plotTitle: Runtime merged
         plotPathAndFilename: $(System.DefaultWorkingDirectory)/TestResult-Mono.Android_Tests-times.csv
+
+    - template: yaml-templates/plots-to-appinsights.yaml
+      parameters:
+        condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
+        configuration: $(ApkTestConfiguration)
+        plotGroup: Test times
+        plotTitle: Runtime merged
+        plotPathAndFilename: $(System.DefaultWorkingDirectory)/TestResult-Mono.Android_TestsAppBundle-times.csv
+
+    - template: yaml-templates/plots-to-appinsights.yaml
+      parameters:
+        condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
+        configuration: $(ApkTestConfiguration)
+        plotGroup: Test times
+        plotTitle: Runtime merged
+        plotPathAndFilename: $(System.DefaultWorkingDirectory)/TestResult-Mono.Android_TestsMultiDex-times.csv
+
+    - template: yaml-templates/plots-to-appinsights.yaml
+      parameters:
+        condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
+        configuration: $(ApkTestConfiguration)
+        plotGroup: Test times
+        plotTitle: Runtime merged
+        plotPathAndFilename: $(System.DefaultWorkingDirectory)/TestResult-Mono.Android.NET_Tests-times.csv
 
     - template: yaml-templates/plots-to-appinsights.yaml
       parameters:

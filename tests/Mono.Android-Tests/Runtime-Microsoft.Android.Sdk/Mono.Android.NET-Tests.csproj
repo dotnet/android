@@ -18,6 +18,7 @@
     <EnableDefaultAndroidResourceItems>false</EnableDefaultAndroidResourceItems>
     <EnableDefaultAndroidAssetItems>false</EnableDefaultAndroidAssetItems>
     <_MonoAndroidTestPackage>Mono.Android.NET_Tests</_MonoAndroidTestPackage>
+    <PlotDataLabelSuffix>-NET6</PlotDataLabelSuffix>
     <!-- TODO: Fix excluded tests -->
     <ExcludeCategories>DotNetIgnore:InetAccess</ExcludeCategories>
   </PropertyGroup>
