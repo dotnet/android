@@ -16,12 +16,6 @@ namespace Xamarin.Android.Prepare
 
 			new HomebrewProgram ("make"),
 
-			new HomebrewProgram ("mingw-w64") {
-				MinimumVersion = "7.0.0_2",
-				MaximumVersion = "7.0.0_3",
-				Pin = true,
-			},
-
 			new HomebrewProgram ("ninja"),
 			new HomebrewProgram ("p7zip", "7za"),
 
@@ -31,9 +25,17 @@ namespace Xamarin.Android.Prepare
 			},
 		};
 
+		static readonly HomebrewProgram mingw = new HomebrewProgram ("mingw-w64") {
+			MinimumVersion = "7.0.0_2",
+			MaximumVersion = "7.0.0_3",
+			Pin = true,
+		}};
+
 		protected override void InitializeDependencies ()
 		{
 			Dependencies.AddRange (programs);
+			if (!Context.Instance.NoMingwW64)
+				Dependencies.Add (mingw);
 		}
 	}
 }
