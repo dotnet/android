@@ -29,7 +29,7 @@ namespace Xamarin.Android.Prepare
 			MinimumVersion = "7.0.0_2",
 			MaximumVersion = "7.0.0_3",
 			Pin = true,
-		}};
+		};
 
 		protected override void InitializeDependencies ()
 		{
