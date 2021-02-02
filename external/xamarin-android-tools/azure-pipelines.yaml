@@ -68,7 +68,6 @@ jobs:
     inputs:
       command: test
       projects: bin/TestDebug-net*/**/*-Tests.dll
-      testRunTitle: Xamarin.Android.Tools Tests - $(vmImage)
 
   - powershell: |
       $hashOfLastVersionChange = & "git" "log" "--follow" "-1" "--pretty=%H" "nuget.version"

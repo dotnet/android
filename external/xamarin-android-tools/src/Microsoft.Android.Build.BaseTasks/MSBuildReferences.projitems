@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- https://github.com/xamarin/xamarin-android/blob/adcad50c014574322fb5cf8ef92bbab0e9673c8a/build-tools/scripts/MSBuildReferences.projitems -->
+
+<Project>
+  <!--Import this file in projects needing to reference Microsoft.Build.*.dll -->
+  <PropertyGroup>
+    <MSBuildReferenceVersion>15.1.0.0</MSBuildReferenceVersion>
+    <MSBuildPackageReferenceVersion>16.5</MSBuildPackageReferenceVersion>
+    <LibZipSharpVersion>1.0.20</LibZipSharpVersion>
+  </PropertyGroup>
+
+  <ItemGroup Condition="$([MSBuild]::IsOSPlatform('windows'))" >
+    <!-- Compile against Microsoft.Build* NuGet refs, but do not copy to OutputDir. -->
+    <!-- Only use these on Windows as it causes problems with running unit tests in the IDE's on MacOS -->
+    <PackageReference Include="Microsoft.Build"                Version="$(MSBuildPackageReferenceVersion)" IncludeAssets="compile" />
+    <PackageReference Include="Microsoft.Build.Framework"      Version="$(MSBuildPackageReferenceVersion)" IncludeAssets="compile" />
+    <PackageReference Include="Microsoft.Build.Tasks.Core"     Version="$(MSBuildPackageReferenceVersion)" IncludeAssets="compile" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MSBuildPackageReferenceVersion)" IncludeAssets="compile" />
+  </ItemGroup>
+
+  <ItemGroup Condition="!$([MSBuild]::IsOSPlatform('windows'))">
+    <Reference Include="Microsoft.Build, Version=$(MSBuildReferenceVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" >
+      <SpecificVersion>True</SpecificVersion>
+      <HintPath>$(MSBuildToolsPath)\Microsoft.Build.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Build.Framework, Version=$(MSBuildReferenceVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" >
+      <SpecificVersion>True</SpecificVersion>
+      <HintPath>$(MSBuildToolsPath)\Microsoft.Build.Framework.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Build.Tasks.Core, Version=$(MSBuildReferenceVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" >
+      <SpecificVersion>True</SpecificVersion>
+      <HintPath>$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Build.Utilities.Core, Version=$(MSBuildReferenceVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" >
+      <SpecificVersion>True</SpecificVersion>
+      <HintPath>$(MSBuildToolsPath)\Microsoft.Build.Utilities.Core.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="K4os.Compression.LZ4" Version="1.1.11" />
+    <PackageReference Include="Xamarin.Build.AsyncTask" Version="0.3.4" GeneratePathProperty="true" />
+    <PackageReference Include="Xamarin.LibZipSharp" Version="$(LibZipSharpVersion)" GeneratePathProperty="true" />
+    <PackageReference Include="Mono.Posix.NETStandard" Version="5.20.1-preview" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="System.Buffers" Version="4.5.1" />
+    <PackageReference Include="System.Collections.Immutable" Version="1.7.1" />
+    <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.7.1" />
+    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$([MSBuild]::IsOSPlatform('windows'))" >
+    <!-- Copy system Microsoft.Build*.dll and dependencies for tests to run against. We can remove this
+          and rely entirely on NuGet assets when mono/msbuild is merged into microsoft/msbuild. -->
+    <None Include="$(MSBuildToolsPath)\Microsoft.Build*.dll" >
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

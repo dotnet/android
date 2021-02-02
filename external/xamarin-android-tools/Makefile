@@ -16,3 +16,5 @@ prepare:
 run-all-tests:
 	dotnet test -l "console;verbosity=detailed" -l trx \
 		tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj
+	dotnet test -l "console;verbosity=detailed" -l trx \
+		tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj
