@@ -52,7 +52,7 @@ variables:
   InstallerArtifactName: installers
   TestAssembliesArtifactName: test-assemblies
   NUnitConsoleVersion: 3.11.1
-  DotNetCoreVersion: 3.1.201
+  DotNetCoreVersion: 3.1.405
   DotNet5Version: 5.0.100
   HostedMacImage: macOS-10.15
   HostedWinVS2019: Hosted Windows 2019 with VS2019
@@ -69,8 +69,10 @@ variables:
   CONVERT_JAVADOC_TO_XMLDOC: $[ne(variables['Build.DefinitionName'], 'Xamarin.Android-PR')]
   ${{ if and(eq(variables['Build.DefinitionName'], 'Xamarin.Android'), ne(variables['Build.Reason'], 'PullRequest')) }}:
     MicroBuildSignType: Real
+    VSEngMacBuildPool: VSEng-Xamarin-RedmondMacMojaveBuildPool-Android
   ${{ if or(ne(variables['Build.DefinitionName'], 'Xamarin.Android'), eq(variables['Build.Reason'], 'PullRequest')) }}:
     MicroBuildSignType: Test
+    VSEngMacBuildPool: VSEng-Xamarin-RedmondMacBuildPool-Test
   TeamName: XamarinAndroid
 
 # Stage and Job "display names" are shortened because they are combined to form the name of the corresponding GitHub check.
@@ -130,7 +132,7 @@ stages:
   # Check - "Xamarin.Android (Mac Build)"
   - job: mac_build_create_installers
     displayName: Build
-    pool: $(MacMojaveBuildPool)
+    pool: $(VSEngMacBuildPool)
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:
@@ -996,7 +998,7 @@ stages:
     displayName: Create .pkg
     ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
       dependsOn: signing
-    pool: $(MacMojaveBuildPool)
+    pool: $(VSEngMacBuildPool)
     workspace:
       clean: all
     steps:
@@ -1171,7 +1173,7 @@ stages:
   # Check - "Xamarin.Android (Finalize Installers Notarize and Upload to Storage)"
   - job: notarize_pkg_upload_storage
     displayName: Notarize and Upload to Storage
-    pool: $(MacMojaveBuildPool)
+    pool: $(VSEngMacBuildPool)
     timeoutInMinutes: 90
     cancelTimeoutInMinutes: 1
     workspace:

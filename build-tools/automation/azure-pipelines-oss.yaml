@@ -26,7 +26,7 @@ variables:
   InstallerArtifactName: Installers
   EXTRA_MSBUILD_ARGS: /p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False
   PREPARE_FLAGS: PREPARE_CI=1 PREPARE_CI_PR=1
-  DotNetCoreVersion: 3.1.201
+  DotNetCoreVersion: 3.1.405
   DotNet5Version: 5.0.100
   GitHub.Token: $(github--pat--vs-mobiletools-engineering-service2)
 

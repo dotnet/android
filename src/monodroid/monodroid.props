@@ -14,8 +14,8 @@
     <_CmakeMxeCommonFlags>$(_CmakeCommonFlags) $(_CommonDefines) -DENABLE_NDK=OFF</_CmakeMxeCommonFlags>
 
     <_CmakeMxeCommonFlags Condition=" '$(_MingwDependenciesRootDirectory)' != '' ">$(_CmakeMxeCommonFlags) -DMINGW_DEPENDENCIES_ROOT_DIR=$(_MingwDependenciesRootDirectory)</_CmakeMxeCommonFlags>
-    <_CmakeMxeCommonFlags32>$(_CmakeMxeCommonFlags) -DCMAKE_TOOLCHAIN_FILE=$(_CmakeMxeToolchainBasePath)-32.cmake -DMINGW_TARGET_32=1 -DMINGW_ZLIB_LIBRARY_PATH=&quot;$(MingwZlibRootDirectory32)\lib\$(MingwZlibLibraryName)&quot;</_CmakeMxeCommonFlags32>
-    <_CmakeMxeCommonFlags64>$(_CmakeMxeCommonFlags) -DCMAKE_TOOLCHAIN_FILE=$(_CmakeMxeToolchainBasePath)-64.cmake -DMINGW_TARGET_64=1 -DMINGW_ZLIB_LIBRARY_PATH=&quot;$(MingwZlibRootDirectory64)\lib\$(MingwZlibLibraryName)&quot;</_CmakeMxeCommonFlags64>
+    <_CmakeMxeCommonFlags32>$(_CmakeMxeCommonFlags) -DCMAKE_TOOLCHAIN_FILE=$(_CmakeMxeToolchainBasePath)-32.cmake -DMINGW_TARGET_32=1</_CmakeMxeCommonFlags32>
+    <_CmakeMxeCommonFlags64>$(_CmakeMxeCommonFlags) -DCMAKE_TOOLCHAIN_FILE=$(_CmakeMxeToolchainBasePath)-64.cmake -DMINGW_TARGET_64=1</_CmakeMxeCommonFlags64>
 
     <_CmakeAndroidFlags>$(_CmakeAndroidFlags) $(_CommonDefines)</_CmakeAndroidFlags>
   </PropertyGroup>

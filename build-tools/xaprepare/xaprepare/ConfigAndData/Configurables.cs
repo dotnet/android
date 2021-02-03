@@ -64,7 +64,7 @@ namespace Xamarin.Android.Prepare
 			public static readonly Version JetBrainsOpenJDK8Version = new Version (Configurables.JetBrainsOpenJDK8VersionFull);
 			public static readonly Version JetBrainsOpenJDK8Release = new Version (Configurables.JetBrainsOpenJDK8Release);
 
-			public const string DotNetTestRuntimeVersion                   = "3.1.3";
+			public const string DotNetTestRuntimeVersion                   = "3.1.11";
 
 			// Mono runtimes
 			public const string DebugFileExtension                         = ".pdb";

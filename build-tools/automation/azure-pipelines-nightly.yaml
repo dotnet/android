@@ -37,7 +37,7 @@ variables:
   NuGetArtifactName: nupkgs
   InstallerArtifactName: installers
   TestAssembliesArtifactName: test-assemblies
-  DotNetCoreVersion: 3.1.201
+  DotNetCoreVersion: 3.1.405
   DotNet5Version: 5.0.100
   MacMojaveBuildPool: VSEng-Xamarin-RedmondMac-Android-Untrusted
   HostedMacImage: macOS-10.15
