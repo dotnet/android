@@ -358,6 +358,11 @@ namespace Xamarin.Android.Prepare
 			}
 		}
 
+		/// <summary>
+		///   Do not install mingw-w64 with brew on MacOS, default false
+		/// </summary>
+		public bool NoMingwW64 { get; set; } = false;
+
 		static Context ()
 		{
 			Instance = new Context ();
