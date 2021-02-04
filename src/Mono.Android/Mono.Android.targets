@@ -167,7 +167,7 @@
         IgnoreStandardErrorWarningFormat="True"
     />
     <ItemGroup>
-      <Compile Include="$(_FullIntermediateOutputPath)\mcw\**\*.cs" KeepDuplicates="False" />
+      <Compile Include="$(_FullIntermediateOutputPath)\mcw\**\*.cs" KeepDuplicates="False" Exclude="$(_FullIntermediateOutputPath)\mcw\Java.Interop.__TypeRegistrations.cs" />
     </ItemGroup>
     <XmlPeek
         Namespaces="&lt;Namespace Prefix='msbuild' Uri='http://schemas.microsoft.com/developer/msbuild/2003' /&gt;"

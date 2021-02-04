@@ -120,7 +120,11 @@
   <Import Project="..\..\build-tools\scripts\JavaCallableWrappers.targets" />
   <Import Project="$(IntermediateOutputPath)mcw\Mono.Android.projitems" Condition="Exists('$(IntermediateOutputPath)mcw\Mono.Android.projitems')" />
 
-<ItemGroup>
+  <ItemGroup>
+      <Compile Remove="$(IntermediateOutputPath)mcw\Java.Interop.__TypeRegistrations.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Include="Android\IncludeAndroidResourcesFromAttribute.cs" />
     <Compile Include="Android\LinkerSafeAttribute.cs" />
     <Compile Include="Android\NativeLibraryReferenceAttribute.cs" />

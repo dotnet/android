@@ -218,29 +218,9 @@ namespace Java.Interop {
 			if (type != null)
 				return type;
 
-			if (!JNIEnv.IsRunningOnDesktop) {
-				// Miss message is logged in the native runtime
-				if (JNIEnv.LogTypemapMissStackTrace)
-					JNIEnv.LogTypemapTrace (new System.Diagnostics.StackTrace (true));
-				return null;
-			}
+			if (!JNIEnv.IsRunningOnDesktop && JNIEnv.LogTypemapMissStackTrace)
+				JNIEnv.LogTypemapTrace (new System.Diagnostics.StackTrace (true));
 
-			__TypeRegistrations.RegisterPackages ();
-
-			type = null;
-			int ls      = class_name.LastIndexOf ('/');
-			var package = ls >= 0 ? class_name.Substring (0, ls) : "";
-			if (packageLookup.TryGetValue (package, out var mappers)) {
-				foreach (Converter<string, Type?> c in mappers) {
-					type = c (class_name);
-					if (type == null)
-						continue;
-					return type;
-				}
-			}
-			if ((type = Type.GetType (JavaNativeTypeManager.ToCliType (class_name))) != null) {
-				return type;
-			}
 			return null;
 		}
 
@@ -353,36 +333,14 @@ namespace Java.Interop {
 			}
 		}
 
-		static Dictionary<string, List<Converter<string, Type?>>> packageLookup = new Dictionary<string, List<Converter<string, Type?>>> ();
-
 		public static void RegisterPackage (string package, Converter<string, Type> lookup)
 		{
-			lock (packageLookup) {
-				if (!packageLookup.TryGetValue (package, out var lookups))
-					packageLookup.Add (package, lookups = new List<Converter<string, Type?>> ());
-				lookups.Add (lookup);
-			}
+			throw new NotImplementedException ();
 		}
 
 		public static void RegisterPackages (string[] packages, Converter<string, Type?>[] lookups)
 		{
-			if (packages == null)
-				throw new ArgumentNullException ("packages");
-			if (lookups == null)
-				throw new ArgumentNullException ("lookups");
-			if (packages.Length != lookups.Length)
-				throw new ArgumentException ("`packages` and `lookups` arrays must have same number of elements.");
-
-			lock (packageLookup) {
-				for (int i = 0; i < packages.Length; ++i) {
-					string package                  = packages [i];
-					var lookup			= lookups [i];
-
-					if (!packageLookup.TryGetValue (package, out var _lookups))
-						packageLookup.Add (package, _lookups = new List<Converter<string, Type?>> ());
-					_lookups.Add (lookup);
-				}
-			}
+			throw new NotImplementedException ();
 		}
 
 		[Register ("mono/android/TypeManager", DoNotGenerateAcw = true)]
