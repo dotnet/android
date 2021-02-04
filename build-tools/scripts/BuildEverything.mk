@@ -13,16 +13,16 @@
 # Local `make jenkins` invocations should build everything by default. We need to ensure `-a` is passed to xaprepare when no CI flags are set.
 #
 jenkins:
+ifneq ("$(wildcard $(topdir)/external/monodroid/Makefile)","")
+	cd $(topdir)/external/monodroid && ./configure --with-xamarin-android='$(topdir)'
+	cd $(topdir)/external/monodroid && $(MAKE) build-monodroid CONFIGURATION=$(CONFIGURATION) XAMARIN_ANDROID_PATH=$(topdir)
+endif
 ifeq ($(PREPARE_CI_PR)$(PREPARE_CI),00)
 	$(MAKE) PREPARE_ARGS=-a prepare
 else
 	$(MAKE) prepare
 endif
 	$(MAKE) leeroy $(ZIP_OUTPUT)
-ifneq ("$(wildcard $(topdir)/external/monodroid/Makefile)","")
-	cd $(topdir)/external/monodroid && ./configure --with-xamarin-android='$(topdir)'
-	cd $(topdir)/external/monodroid && $(MAKE) build-monodroid CONFIGURATION=$(CONFIGURATION) XAMARIN_ANDROID_PATH=$(topdir)
-endif
 
 leeroy: leeroy-all framework-assemblies opentk-jcw
 
