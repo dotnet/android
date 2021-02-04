@@ -39,6 +39,8 @@ stages:
     displayName: Mac Build
     pool:
       name: $(XA.Build.MacOSSPool)
+      demands:
+      - agent.osversionfamily -equals 10.14
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:

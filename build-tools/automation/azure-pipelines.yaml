@@ -124,7 +124,10 @@ stages:
   # Check - "Xamarin.Android (Mac Build)"
   - job: mac_build_create_installers
     displayName: Build
-    pool: $(MacMojaveBuildPool)
+    pool:
+      name: $(MacMojaveBuildPool)
+      demands:
+      - agent.osversionfamily -equals 10.14
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
     workspace:
@@ -1159,7 +1162,10 @@ stages:
   # Check - "Xamarin.Android (Finalize Installers Notarize and Upload to Storage)"
   - job: notarize_pkg_upload_storage
     displayName: Notarize and Upload to Storage
-    pool: $(MacMojaveBuildPool)
+    pool:
+      name: $(MacMojaveBuildPool)
+      demands:
+      - agent.osversionfamily -equals 10.14
     timeoutInMinutes: 90
     cancelTimeoutInMinutes: 1
     workspace:
