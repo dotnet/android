@@ -80,7 +80,8 @@
       <InstrumentationType>xamarin.android.runtimetests.NUnitInstrumentation</InstrumentationType>
       <ResultsPath>$(MSBuildThisFileDirectory)..\..\..\TestResult-$(_MonoAndroidTestPackage).xml</ResultsPath>
       <TimingDefinitionsFilename>$(MSBuildThisFileDirectory)..\..\..\build-tools\scripts\TimingDefinitions.txt</TimingDefinitionsFilename>
-      <TimingResultsFilename>$(MSBuildThisFileDirectory)..\..\..\TestResult-$(_MonoAndroidTestPackage)-times.csv</TimingResultsFilename>
+      <!-- Use default package name to write all Mono.Android-Tests* timing data to the same .csv -->
+      <TimingResultsFilename>$(XamarinAndroidSourcePath)TestResult-Mono.Android_Tests-times.csv</TimingResultsFilename>
     </TestAab>
   </ItemGroup>
 

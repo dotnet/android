@@ -531,30 +531,6 @@ stages:
         condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
         configuration: $(ApkTestConfiguration)
         plotGroup: Test times
-        plotTitle: Runtime merged
-        plotPathAndFilename: $(System.DefaultWorkingDirectory)/TestResult-Mono.Android_TestsAppBundle-times.csv
-
-    - template: yaml-templates/plots-to-appinsights.yaml
-      parameters:
-        condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
-        configuration: $(ApkTestConfiguration)
-        plotGroup: Test times
-        plotTitle: Runtime merged
-        plotPathAndFilename: $(System.DefaultWorkingDirectory)/TestResult-Mono.Android_TestsMultiDex-times.csv
-
-    - template: yaml-templates/plots-to-appinsights.yaml
-      parameters:
-        condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
-        configuration: $(ApkTestConfiguration)
-        plotGroup: Test times
-        plotTitle: Runtime merged
-        plotPathAndFilename: $(System.DefaultWorkingDirectory)/TestResult-Mono.Android.NET_Tests-times.csv
-
-    - template: yaml-templates/plots-to-appinsights.yaml
-      parameters:
-        condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
-        configuration: $(ApkTestConfiguration)
-        plotGroup: Test times
         plotTitle: Jcw
         plotPathAndFilename: $(System.DefaultWorkingDirectory)/TestResult-Xamarin.Android.JcwGen_Tests-times.csv
 

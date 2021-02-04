@@ -40,7 +40,8 @@
       <InstrumentationType>xamarin.android.runtimetests.NUnitInstrumentation</InstrumentationType>
       <ResultsPath>$(XamarinAndroidSourcePath)TestResult-$(_MonoAndroidTestPackage).xml</ResultsPath>
       <TimingDefinitionsFilename>$(XamarinAndroidSourcePath)build-tools\scripts\TimingDefinitions.txt</TimingDefinitionsFilename>
-      <TimingResultsFilename>$(XamarinAndroidSourcePath)TestResult-$(_MonoAndroidTestPackage)-times.csv</TimingResultsFilename>
+      <!-- Use default package name to write all Mono.Android-Tests* timing data to the same .csv -->
+      <TimingResultsFilename>$(XamarinAndroidSourcePath)TestResult-Mono.Android_Tests-times.csv</TimingResultsFilename>
       <ApkSizesInputFilename>apk-sizes-$(_MonoAndroidTestPackage)-$(Configuration)$(TestsFlavor).txt</ApkSizesInputFilename>
       <ApkSizesDefinitionFilename>$(XamarinAndroidSourcePath)build-tools\scripts\ApkSizesDefinitions.txt</ApkSizesDefinitionFilename>
       <ApkSizesResultsFilename>$(XamarinAndroidSourcePath)TestResult-$(_MonoAndroidTestPackage)-values-$(Configuration).csv</ApkSizesResultsFilename>
