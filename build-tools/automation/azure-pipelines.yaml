@@ -69,10 +69,10 @@ variables:
   CONVERT_JAVADOC_TO_XMLDOC: $[ne(variables['Build.DefinitionName'], 'Xamarin.Android-PR')]
   ${{ if and(eq(variables['Build.DefinitionName'], 'Xamarin.Android'), ne(variables['Build.Reason'], 'PullRequest')) }}:
     MicroBuildSignType: Real
-    VSEngMacBuildPool: VSEng-Xamarin-RedmondMacMojaveBuildPool-Android
+    VSEngMacBuildPool: VSEng-Xamarin-RedmondMac-Android-Trusted
   ${{ if or(ne(variables['Build.DefinitionName'], 'Xamarin.Android'), eq(variables['Build.Reason'], 'PullRequest')) }}:
     MicroBuildSignType: Test
-    VSEngMacBuildPool: VSEng-Xamarin-RedmondMacBuildPool-Test
+    VSEngMacBuildPool: VSEng-Xamarin-RedmondMac-Android-Untrusted
   TeamName: XamarinAndroid
 
 # Stage and Job "display names" are shortened because they are combined to form the name of the corresponding GitHub check.
@@ -132,7 +132,10 @@ stages:
   # Check - "Xamarin.Android (Mac Build)"
   - job: mac_build_create_installers
     displayName: Build
-    pool: $(VSEngMacBuildPool)
+    pool:
+      name: $(VSEngMacBuildPool)
+      demands:
+      - agent.osversionfamily -equals 10.15
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:
@@ -998,7 +1001,10 @@ stages:
     displayName: Create .pkg
     ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
       dependsOn: signing
-    pool: $(VSEngMacBuildPool)
+    pool:
+      name: $(VSEngMacBuildPool)
+      demands:
+      - agent.osversionfamily -equals 10.15
     workspace:
       clean: all
     steps:
@@ -1173,7 +1179,10 @@ stages:
   # Check - "Xamarin.Android (Finalize Installers Notarize and Upload to Storage)"
   - job: notarize_pkg_upload_storage
     displayName: Notarize and Upload to Storage
-    pool: $(VSEngMacBuildPool)
+    pool:
+      name: $(VSEngMacBuildPool)
+      demands:
+      - agent.osversionfamily -equals 10.15
     timeoutInMinutes: 90
     cancelTimeoutInMinutes: 1
     workspace:
