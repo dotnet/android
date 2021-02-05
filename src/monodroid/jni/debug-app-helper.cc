@@ -29,7 +29,7 @@ void log_fatal (LogCategories category, const char *format, ...);
 
 static void copy_file_to_internal_location (char *to_dir, char *from_dir, char *file);
 static void copy_native_libraries_to_internal_location ();
-static char* get_libmonosgen_path ();
+static const char* get_libmonosgen_path ();
 
 bool maybe_load_library (const char *path);
 
@@ -87,7 +87,7 @@ Java_mono_android_DebugRuntime_init (JNIEnv *env, [[maybe_unused]] jclass klass,
 		log_warn (LOG_DEFAULT, "Using runtime path: %s", androidSystem.get_runtime_libdir ());
 	}
 
-	char *monosgen_path = get_libmonosgen_path ();
+	const char *monosgen_path = get_libmonosgen_path ();
 	void *monosgen = dlopen (monosgen_path, RTLD_LAZY | RTLD_GLOBAL);
 	if (monosgen == nullptr) {
 		log_fatal (LOG_DEFAULT, "Failed to dlopen Mono runtime from %s: %s", monosgen_path, dlerror ());
@@ -196,30 +196,29 @@ runtime_exists (const char *dir, char*& libmonoso)
 	return false;
 }
 
-static char*
+static const char*
 get_libmonosgen_path ()
 {
 	char *libmonoso;
-	bool embedded_dso_mode_enabled = androidSystem.is_embedded_dso_mode_enabled ();
 
 	// Android 5 includes some restrictions on loading dynamic libraries via dlopen() from
 	// external storage locations so we need to file copy the shared object to an internal
 	// storage location before loading it.
 	copy_native_libraries_to_internal_location ();
 
-	if (!embedded_dso_mode_enabled) {
-		for (size_t i = 0; i < BasicAndroidSystem::MAX_OVERRIDES; ++i) {
-			if (runtime_exists (BasicAndroidSystem::override_dirs [i], libmonoso)) {
-				return libmonoso;
-			}
+	if (androidSystem.is_embedded_dso_mode_enabled ()) {
+		return SharedConstants::MONO_SGEN_SO;
+	}
+
+	for (size_t i = 0; i < BasicAndroidSystem::MAX_OVERRIDES; ++i) {
+		if (runtime_exists (BasicAndroidSystem::override_dirs [i], libmonoso)) {
+			return libmonoso;
 		}
 	}
 
-	if (!embedded_dso_mode_enabled) {
-		for (size_t i = 0; i < BasicAndroidSystem::app_lib_directories_size; i++) {
-			if (runtime_exists (BasicAndroidSystem::app_lib_directories [i], libmonoso)) {
-				return libmonoso;
-			}
+	for (size_t i = 0; i < BasicAndroidSystem::app_lib_directories_size; i++) {
+		if (runtime_exists (BasicAndroidSystem::app_lib_directories [i], libmonoso)) {
+			return libmonoso;
 		}
 	}
 
@@ -265,12 +264,10 @@ get_libmonosgen_path ()
 		return libmonoso;
 	log_fatal (LOG_DEFAULT, "Cannot find '%s'. Looked in the following locations:", SharedConstants::MONO_SGEN_SO);
 
-	if (!embedded_dso_mode_enabled) {
-		for (size_t i = 0; i < BasicAndroidSystem::MAX_OVERRIDES; ++i) {
-			if (BasicAndroidSystem::override_dirs [i] == nullptr)
-				continue;
-			log_fatal (LOG_DEFAULT, "  %s", BasicAndroidSystem::override_dirs [i]);
-		}
+	for (size_t i = 0; i < BasicAndroidSystem::MAX_OVERRIDES; ++i) {
+		if (BasicAndroidSystem::override_dirs [i] == nullptr)
+			continue;
+		log_fatal (LOG_DEFAULT, "  %s", BasicAndroidSystem::override_dirs [i]);
 	}
 
 	for (size_t i = 0; i < BasicAndroidSystem::app_lib_directories_size; i++) {

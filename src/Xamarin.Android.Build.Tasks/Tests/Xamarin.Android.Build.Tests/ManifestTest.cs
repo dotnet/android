@@ -460,6 +460,7 @@ namespace Bug12935
 				MinSdkVersion = null,
 			};
 			proj.SetProperty ("Foo", "1");
+			proj.SetProperty ("GenerateApplicationManifest", "false"); // Disable $(AndroidVersionCode) support
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, seperateApk);
 			if (!string.IsNullOrEmpty (abis))
 				proj.SetAndroidSupportedAbis (abis);

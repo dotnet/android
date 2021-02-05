@@ -1134,6 +1134,25 @@ than `aapt`.
 
 Added in Xamarin.Android 8.1.
 
+## AndroidVersionCode
+
+An MSBuild property that can be used as an alternative to
+`/manifest/@android:versionCode` in the [`AndroidManifest.xml`](~/android/platform/android-manifest.md)
+file. To opt into this feature you must also enable
+`<GenerateApplicationManifest>true</GenerateApplicationManifest>`.
+This will be the default going forward in .NET 6.
+
+This property is ignored if
+[`$(AndroidCreatePackagePerAbi)`](#androidcreatepackageperabi) and
+[`$(AndroidVersionCodePattern)`](#androidversioncodepattern) are used.
+
+`@android:versionCode` is an integer value that must be incremented
+for each Google Play release. See the [Android documentation][manifest-element]
+for further details about the requirements for
+`/manifest/@android:versionCode`.
+
+Added in Xamarin.Android 11.3.
+
 ## AndroidVersionCodePattern
 
 A string property which allows
@@ -1195,6 +1214,49 @@ you can make use of existing or custom MSBuild properties in the
 string.
 
 Added in Xamarin.Android 7.2.
+
+## ApplicationId
+
+An MSBuild property that can be used as an alternative to
+`/manifest/@package` in the [`AndroidManifest.xml`](~/android/platform/android-manifest.md)
+file. To opt into this feature you must also enable
+`<GenerateApplicationManifest>true</GenerateApplicationManifest>`.
+This will be the default going forward in .NET 6.
+
+See the [Android documentation][manifest-element] for further details
+about the requirements for `/manifest/@package`.
+
+[manifest-element]: https://developer.android.com/guide/topics/manifest/manifest-element
+
+Added in Xamarin.Android 11.3.
+
+## ApplicationTitle
+
+An MSBuild property that can be used as an alternative to
+`/manifest/application/@android:label` in the [`AndroidManifest.xml`](~/android/platform/android-manifest.md)
+file. To opt into this feature you must also enable
+`<GenerateApplicationManifest>true</GenerateApplicationManifest>`.
+This will be the default going forward in .NET 6.
+
+See the [Android documentation][application-element] for further details
+about the requirements for `/manifest/application/@android:label`.
+
+Added in Xamarin.Android 11.3.
+
+[application-element]: https://developer.android.com/guide/topics/manifest/application-element
+
+## ApplicationVersion
+
+An MSBuild property that can be used as an alternative to
+`/manifest/@android:versionName` in the [`AndroidManifest.xml`](~/android/platform/android-manifest.md)
+file. To opt into this feature you must also enable
+`<GenerateApplicationManifest>true</GenerateApplicationManifest>`.
+This will be the default going forward in .NET 6.
+
+See the [Android documentation][manifest-element] for further details
+about the requirements for `/manifest/@android:versionName`.
+
+Added in Xamarin.Android 11.3.
 
 ## AotAssemblies
 
@@ -1317,6 +1379,21 @@ When `True`,
 [@(ProguardConfiguration)](~/android/deploy-test/building-apps/build-items.md#proguardconfiguration)
 files will be used
 to control `proguard` execution.
+
+## GenerateApplicationManifest
+
+Enables or disables the following MSBuild properties that emit values
+in the final [`AndroidManifest.xml`](~/android/platform/android-manifest.md) file:
+
+- [`$(AndroidVersionCode)`](#androidversioncode)
+- [`$(ApplicationId)`](#applicationid)
+- [`$(ApplicationTitle)`](#applicationtitle)
+- [`$(ApplicationVersion)`](#applicationversion)
+
+`$(GenerateApplicationManifest)` defaults to `true` in .NET 6 and
+`false` in "legacy" Xamarin.Android.
+
+Added in Xamarin.Android 11.3.
 
 ## JavaMaximumHeapSize
 

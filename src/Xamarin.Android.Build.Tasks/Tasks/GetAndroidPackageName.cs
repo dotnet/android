@@ -27,8 +27,6 @@
 using System.IO;
 using System.Xml;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
-using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
 
@@ -48,29 +46,28 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
+			if (!string.IsNullOrEmpty (PackageName)) {
+				PackageName = AndroidAppManifest.CanonicalizePackageName (PackageName);
+			} else if (!string.IsNullOrEmpty (ManifestFile) && File.Exists (ManifestFile)) {
+				using var stream = File.OpenRead (ManifestFile);
+				using var reader = XmlReader.Create (stream);
+				if (reader.MoveToContent () == XmlNodeType.Element) {
+					var package = reader.GetAttribute ("package");
+					if (!string.IsNullOrEmpty (package)) {
+						PackageName = AndroidAppManifest.CanonicalizePackageName (package);
+					}
+				}
+			}
+
 			// If we don't have a manifest, default to using the assembly name
 			// If the assembly doesn't have a period in it, duplicate it so it does
-			PackageName = AndroidAppManifest.CanonicalizePackageName (AssemblyName);
-
-			if (string.IsNullOrEmpty (ManifestFile) || !File.Exists (ManifestFile)) {
-				Log.LogMessage ("  PackageName: {0}", PackageName);
-				return true;
+			if (string.IsNullOrEmpty (PackageName)) {
+				PackageName = AndroidAppManifest.CanonicalizePackageName (AssemblyName);
 			}
 
-			XmlDocument doc = new XmlDocument ();
+			Log.LogDebugMessage ($"  PackageName: {PackageName}");
 
-			doc.Load (ManifestFile);
-
-			if (!doc.DocumentElement.HasAttribute ("package")) {
-				Log.LogMessage ("  PackageName: {0}", PackageName);
-				return true;
-			}
-
-			PackageName = AndroidAppManifest.CanonicalizePackageName (doc.DocumentElement.GetAttribute ("package"));
-
-			Log.LogMessage ("  PackageName: {0}", PackageName);
-
-			return true;
+			return !Log.HasLoggedErrors;
 		}
 	}
 }

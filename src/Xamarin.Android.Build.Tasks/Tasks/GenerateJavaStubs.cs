@@ -54,8 +54,10 @@ namespace Xamarin.Android.Tasks
 
 		public bool Debug { get; set; }
 		public bool MultiDex { get; set; }
-		public string ApplicationName { get; set; }
+		public string ApplicationLabel { get; set; }
 		public string PackageName { get; set; }
+		public string VersionName { get; set; }
+		public string VersionCode { get; set; }
 		public string [] ManifestPlaceholders { get; set; }
 
 		public string AndroidSdkDir { get; set; }
@@ -255,19 +257,25 @@ namespace Xamarin.Android.Tasks
 			}
 
 			// Step 3 - Merge [Activity] and friends into AndroidManifest.xml
-			var manifest = new ManifestDocument (ManifestTemplate);
-
-			manifest.PackageName = PackageName;
-			manifest.ApplicationName = ApplicationName ?? PackageName;
-			manifest.Placeholders = ManifestPlaceholders;
+			var manifest = new ManifestDocument (ManifestTemplate) {
+				PackageName = PackageName,
+				VersionName = VersionName,
+				ApplicationLabel = ApplicationLabel ?? PackageName,
+				Placeholders = ManifestPlaceholders,
+				Resolver = res,
+				SdkDir = AndroidSdkDir,
+				SdkVersion = AndroidSdkPlatform,
+				Debug = Debug,
+				MultiDex = MultiDex,
+				NeedsInternet = NeedsInternet,
+				InstantRunEnabled = InstantRunEnabled
+			};
+			// Only set manifest.VersionCode if it is not blank.
+			// We do not want to override the existing manifest in this case.
+			if (!string.IsNullOrEmpty (VersionCode)) {
+				manifest.VersionCode = VersionCode;
+			}
 			manifest.Assemblies.AddRange (userAssemblies.Values);
-			manifest.Resolver = res;
-			manifest.SdkDir = AndroidSdkDir;
-			manifest.SdkVersion = AndroidSdkPlatform;
-			manifest.Debug = Debug;
-			manifest.MultiDex = MultiDex;
-			manifest.NeedsInternet = NeedsInternet;
-			manifest.InstantRunEnabled = InstantRunEnabled;
 
 			if (!String.IsNullOrWhiteSpace (CheckedBuild)) {
 				// We don't validate CheckedBuild value here, this will be done in BuildApk. We just know that if it's

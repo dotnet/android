@@ -49,9 +49,6 @@ namespace Xamarin.Android.Tasks
 		public string UncompressedFileExtensions { get; set; }
 		public string PackageName { get; set; }
 
-		[Required]
-		public string ApplicationName { get; set; }
-
 		public string ExtraPackages { get; set; }
 
 		public ITaskItem [] AdditionalResourceDirectories { get; set; }
@@ -282,7 +279,6 @@ namespace Xamarin.Android.Tasks
 				LogCodedError (errorCode, ManifestFile, 0, error);
 				return string.Empty;
 			}
-			manifest.ApplicationName = ApplicationName;
 			manifest.Save (LogCodedWarning, manifestFile);
 
 			cmd.AppendSwitchIfNotNull ("-M ", manifestFile);

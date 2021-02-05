@@ -251,6 +251,10 @@ stages:
         testResultsFiles: TestResult-*.xml
         testRunTitle: Java Interop Tests - Windows Build Tree
 
+    - script: dotnet tool update apkdiff -g
+      displayName: install apkdiff dotnet tool
+      continueOnError: true
+
     # Limit the amount of worker threads used to run these tests in parallel to half of what is currently available (8) on the Windows pool.
     # Using all available cores seems to occasionally bog down our machines and cause parallel test execution to slow down dramatically.
     # Only run a subset of the Xamarin.Android.Build.Tests against the local Windows build tree.
@@ -288,16 +292,14 @@ stages:
       parameters:
         configuration: $(ApkTestConfiguration)
 
-    - script: mono $(System.DefaultWorkingDirectory)/build-tools/xaprepare/xaprepare/bin/$(ApkTestConfiguration)/xaprepare.exe --s=Required --auto-provision=yes --auto-provision-uses-sudo=yes --no-emoji --run-mode=CI
+    - script: mono $(System.DefaultWorkingDirectory)/build-tools/xaprepare/xaprepare/bin/$(ApkTestConfiguration)/xaprepare.exe --s=Required --auto-provision=yes --auto-provision-uses-sudo=yes --no-emoji --no-mingw-w64 --run-mode=CI
       displayName: install required brew tools and prepare java.interop
 
     - script: mono $(System.DefaultWorkingDirectory)/build-tools/xaprepare/xaprepare/bin/$(ApkTestConfiguration)/xaprepare.exe --s=EmulatorTestDependencies --no-emoji --run-mode=CI
       displayName: install emulator
 
-    - task: CmdLine@2
+    - script: 'dotnet tool update apkdiff -g'
       displayName: install apkdiff dotnet tool
-      inputs:
-        script: 'dotnet tool update apkdiff -g'
       continueOnError: true
 
     - template: yaml-templates/apk-instrumentation.yaml

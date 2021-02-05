@@ -27,6 +27,12 @@ jobs:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
+    - task: CmdLine@2
+      displayName: install apkdiff dotnet tool
+      inputs:
+        script: 'dotnet tool update apkdiff -g'
+      continueOnError: true
+
     - template: run-nunit-tests.yaml
       parameters:
         useDotNet: $(UseDotNet)

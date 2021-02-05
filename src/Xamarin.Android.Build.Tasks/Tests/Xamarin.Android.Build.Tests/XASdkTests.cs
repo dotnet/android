@@ -491,6 +491,35 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		[Test]
+		public void XamarinLegacySdk ()
+		{
+			var proj = new XASdkProject (outputType: "Library") {
+				Sdk = "Xamarin.Legacy.Sdk/0.1.0-alpha2",
+				Sources = {
+					new AndroidItem.AndroidLibrary ("javaclasses.jar") {
+						BinaryContent = () => ResourceData.JavaSourceJarTestJar,
+					}
+				}
+			};
+
+			using var b = new Builder ();
+			var dotnetTargetFramework = "net6.0-android30.0";
+			var legacyTargetFrameworkVersion = b.LatestTargetFrameworkVersion ().TrimStart ('v');
+			var legacyTargetFramework = $"monoandroid{legacyTargetFrameworkVersion}";
+			proj.SetProperty ("TargetFramework",  value: "");
+			proj.SetProperty ("TargetFrameworks", value: $"{dotnetTargetFramework};{legacyTargetFramework}");
+
+			var dotnet = CreateDotNetBuilder (proj);
+			Assert.IsTrue (dotnet.Pack (), "`dotnet pack` should succeed");
+
+			var nupkgPath = Path.Combine (FullProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.1.0.0.nupkg");
+			FileAssert.Exists (nupkgPath);
+			using var nupkg = ZipHelper.OpenZip (nupkgPath);
+			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetTargetFramework}/{proj.ProjectName}.dll");
+			nupkg.AssertContainsEntry (nupkgPath, $"lib/{legacyTargetFramework}/{proj.ProjectName}.dll");
+		}
+
 		DotNetCLI CreateDotNetBuilder (string relativeProjectDir = null)
 		{
 			if (string.IsNullOrEmpty (relativeProjectDir)) {
