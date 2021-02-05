@@ -1,7 +1,6 @@
 #nullable enable
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -168,7 +167,7 @@ namespace Java.Interop
 			current = newCurrent;
 		}
 
-		ConcurrentDictionary<IntPtr, IDisposable>       TrackedInstances    = new ConcurrentDictionary<IntPtr, IDisposable> ();
+		Dictionary<IntPtr, IDisposable>                 TrackedInstances    = new Dictionary<IntPtr, IDisposable> ();
 
 		JavaVMInterface                                 Invoker;
 		bool                                            DestroyRuntimeOnDispose;
@@ -403,21 +402,30 @@ namespace Java.Interop
 
 		internal void Track (JniType value)
 		{
-			TrackedInstances.TryAdd (value.PeerReference.Handle, value);
+			lock (TrackedInstances) {
+				if (!TrackedInstances.ContainsKey (value.PeerReference.Handle))
+					TrackedInstances [value.PeerReference.Handle] = value;
+			}
 		}
 
 		internal void UnTrack (IntPtr key)
 		{
-			TrackedInstances.TryRemove (key, out var _);
+			lock (TrackedInstances) {
+				if (TrackedInstances.ContainsKey (key))
+					TrackedInstances.Remove (key);
+			}
 		}
 
 		void ClearTrackedReferences ()
 		{
-			foreach (var k in TrackedInstances.Keys.ToList ()) {
-				if (TrackedInstances.TryRemove (k, out var d))
-					d.Dispose ();
+			List<IDisposable> values;
+			lock (TrackedInstances) {
+				values = new List<IDisposable> (TrackedInstances.Values);
+				TrackedInstances.Clear ();
 			}
-			TrackedInstances.Clear ();
+
+			foreach (var d in values)
+				d.Dispose ();
 		}
 
 		public virtual bool ExceptionShouldTransitionToJni (Exception e)
