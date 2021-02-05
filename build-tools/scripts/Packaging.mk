@@ -1,3 +1,10 @@
+# If commercial components exist in output, set required variables
+ifneq ("$(wildcard $(topdir)/bin/$(CONFIGURATION)/lib/xamarin.android/xbuild/Xamarin/Android/Xamarin.Android.Common.Debugging.targets)","")
+PKG_LICENSE_EN=$(topdir)/external/monodroid/tools/scripts/License.txt
+USE_COMMERCIAL_INSTALLER_NAME=true
+EXPERIMENTAL=false
+endif
+
 create-installers: create-pkg create-vsix
 
 create-pkg:

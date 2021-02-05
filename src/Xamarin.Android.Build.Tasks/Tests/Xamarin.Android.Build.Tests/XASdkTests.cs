@@ -7,6 +7,7 @@ using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 using Xamarin.Tools.Zip;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -404,7 +405,7 @@ namespace Xamarin.Android.Build.Tests
 				apk.AssertContainsEntry (apkPath, $"assemblies/System.Linq.dll",        shouldContainEntry: expectEmbeddedAssembies);
 				apk.AssertContainsEntry (apkPath, $"assemblies/es/{proj.ProjectName}.resources.dll", shouldContainEntry: expectEmbeddedAssembies);
 				var rids = runtimeIdentifiers.Split (';');
-				foreach (var abi in rids.Select (MonoAndroidHelper.RuntimeIdentifierToAbi)) {
+				foreach (var abi in rids.Select (AndroidRidAbiHelper.RuntimeIdentifierToAbi)) {
 					apk.AssertContainsEntry (apkPath, $"lib/{abi}/libmonodroid.so");
 					apk.AssertContainsEntry (apkPath, $"lib/{abi}/libmonosgen-2.0.so");
 					if (rids.Length > 1) {

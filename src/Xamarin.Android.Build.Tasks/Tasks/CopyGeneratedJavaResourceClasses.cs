@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -34,7 +35,7 @@ namespace Xamarin.Android.Tasks
 				//NOTE: DestinationTopDirectory is optional, and we can just use the file in SourceTopDirectory
 				if (!string.IsNullOrEmpty (DestinationTopDirectory)) {
 					string dst = Path.Combine (DestinationTopDirectory, subpath, "R.java");
-					MonoAndroidHelper.CopyIfChanged (src, dst);
+					Files.CopyIfChanged (src, dst);
 					list.Add (dst);
 				} else {
 					list.Add (src);

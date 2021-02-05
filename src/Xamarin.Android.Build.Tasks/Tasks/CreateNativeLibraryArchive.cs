@@ -5,6 +5,7 @@ using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 
 using Xamarin.Android.Tools;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -34,7 +35,7 @@ namespace Xamarin.Android.Tasks
 				outDirInfo.Create ();
 			foreach (var lib in EmbeddedNativeLibraries) {
 				// seealso bug #3477 to find out why we use this method.
-				var abi = MonoAndroidHelper.GetNativeLibraryAbi (lib);
+				var abi = AndroidRidAbiHelper.GetNativeLibraryAbi (lib);
 				if (abi == null) {
 					Log.LogWarning (
 							subcategory:      string.Empty,
@@ -54,7 +55,7 @@ namespace Xamarin.Android.Tasks
 				}
 				if (!outDirInfo.GetDirectories (abi).Any ())
 					outDirInfo.CreateSubdirectory (abi);
-				MonoAndroidHelper.CopyIfChanged (lib.ItemSpec, Path.Combine (OutputDirectory, abi, Path.GetFileName (lib.ItemSpec)));
+				Files.CopyIfChanged (lib.ItemSpec, Path.Combine (OutputDirectory, abi, Path.GetFileName (lib.ItemSpec)));
 			}
 
 			var outpath = Path.Combine (outDirInfo.Parent.FullName, "__AndroidNativeLibraries__.zip");

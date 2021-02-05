@@ -15,6 +15,7 @@ using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -3292,7 +3293,7 @@ public class MyReceiver : BroadcastReceiver
 					rules.Add ("-dontwarn java.lang.invoke.LambdaMetafactory");
 				}
 				//FIXME: We aren't de-BOM'ing proguard files?
-				var bytes = MonoAndroidHelper.UTF8withoutBOM.GetBytes (string.Join (Environment.NewLine, rules));
+				var bytes = Files.UTF8withoutBOM.GetBytes (string.Join (Environment.NewLine, rules));
 				proj.OtherBuildItems.Add (new BuildItem ("ProguardConfiguration", "okhttp3.pro") {
 					BinaryContent = () => bytes,
 				});

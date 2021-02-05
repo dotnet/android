@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -58,7 +59,7 @@ namespace Xamarin.Android.Tasks
 				using (var sharedOutput = MemoryStreamPool.Shared.CreateStreamWriter (output.Encoding)) {
 					WriteAssemblyNames (sharedOutput);
 					sharedOutput.Flush ();
-					MonoAndroidHelper.CopyIfStreamChanged (sharedOutput.BaseStream, SharedIncludeFile);
+					Files.CopyIfStreamChanged (sharedOutput.BaseStream, SharedIncludeFile);
 				}
 			}
 
@@ -66,7 +67,7 @@ namespace Xamarin.Android.Tasks
 				using (var mapOutput = MemoryStreamPool.Shared.CreateStreamWriter (output.Encoding)) {
 					WriteMapModules (output, mapOutput, "map_modules");
 					mapOutput.Flush ();
-					MonoAndroidHelper.CopyIfStreamChanged (mapOutput.BaseStream, TypemapsIncludeFile);
+					Files.CopyIfStreamChanged (mapOutput.BaseStream, TypemapsIncludeFile);
 				}
 			} else {
 				WriteMapModules (output, null, "map_modules");

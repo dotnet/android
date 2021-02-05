@@ -12,6 +12,7 @@ using Microsoft.Build.Framework;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using Xamarin.Android.Tools;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks {
 
@@ -108,7 +109,7 @@ namespace Xamarin.Android.Tasks {
 						if (File.Exists (tmpfile)) {
 							if (aaptResult) {
 								LogDebugMessage ($"Copying {tmpfile} to {currentResourceOutputFile}");
-								MonoAndroidHelper.CopyIfZipChanged (tmpfile, currentResourceOutputFile);
+								Files.CopyIfZipChanged (tmpfile, currentResourceOutputFile);
 							}
 							File.Delete (tmpfile);
 						}
@@ -120,7 +121,7 @@ namespace Xamarin.Android.Tasks {
 					}
 				}
 				if (!string.IsNullOrEmpty (ProguardRuleOutput))
-					MonoAndroidHelper.CopyIfChanged (proguardRuleOutputTemp, ProguardRuleOutput);
+					Files.CopyIfChanged (proguardRuleOutputTemp, ProguardRuleOutput);
 			} finally {
 				lock (tempFiles) {
 					foreach (var temp in tempFiles) {

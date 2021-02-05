@@ -4,6 +4,7 @@ using System.IO;
 using System.Xml.Linq;
 using Xamarin.Android.Tools;
 using System.Collections.Generic;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -51,7 +52,7 @@ namespace Xamarin.Android.Tasks
 </wearableApp>
 ", wearPackageName, doc.Root.Attribute (androidNs + "versionCode").Value, doc.Root.Attribute (androidNs + "versionName").Value, Path.GetFileNameWithoutExtension (rawapk));
 
-			if (MonoAndroidHelper.CopyIfChanged (WearApplicationApkPath, intermediateApkPath)) {
+			if (Files.CopyIfChanged (WearApplicationApkPath, intermediateApkPath)) {
 				Log.LogDebugMessage ("    Copied APK to {0}", intermediateApkPath);
 				modified.Add (intermediateApkPath);
 			}

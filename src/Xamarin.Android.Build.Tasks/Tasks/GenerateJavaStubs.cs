@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2011 Xamarin, Inc. All rights reserved.
+// Copyright (C) 2011 Xamarin, Inc. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -18,6 +18,7 @@ using Java.Interop.Tools.JavaCallableWrappers;
 using Java.Interop.Tools.TypeNameMappings;
 
 using Xamarin.Android.Tools;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -241,7 +242,7 @@ namespace Xamarin.Android.Tasks
 				}
 
 				acw_map.Flush ();
-				MonoAndroidHelper.CopyIfStreamChanged (acw_map.BaseStream, AcwMapFile);
+				Files.CopyIfStreamChanged (acw_map.BaseStream, AcwMapFile);
 			}
 
 			foreach (var kvp in managedConflicts) {
@@ -297,7 +298,7 @@ namespace Xamarin.Android.Tasks
 			foreach (var provider in additionalProviders) {
 				var contents = providerTemplate.Replace ("MonoRuntimeProvider", provider);
 				var real_provider = Path.Combine (OutputDirectory, "src", "mono", provider + ".java");
-				MonoAndroidHelper.CopyIfStringChanged (contents, real_provider);
+				Files.CopyIfStringChanged (contents, real_provider);
 			}
 
 			// Create additional application java sources.
@@ -339,7 +340,7 @@ namespace Xamarin.Android.Tasks
 						writer.Flush ();
 
 						var path = jti.GetDestinationPath (outputPath);
-						MonoAndroidHelper.CopyIfStreamChanged (writer.BaseStream, path);
+						Files.CopyIfStreamChanged (writer.BaseStream, path);
 						if (jti.HasExport && !hasExportReference)
 							Diagnostic.Error (4210, Properties.Resources.XA4210);
 					} catch (XamarinAndroidException xae) {
@@ -411,7 +412,7 @@ namespace Xamarin.Android.Tasks
 		{
 			string template = GetResource (resource);
 			template = applyTemplate (template);
-			MonoAndroidHelper.CopyIfStringChanged (template, Path.Combine (destDir, filename));
+			Files.CopyIfStringChanged (template, Path.Combine (destDir, filename));
 		}
 
 		void WriteTypeMappings (List<TypeDefinition> types, TypeDefinitionCache cache)

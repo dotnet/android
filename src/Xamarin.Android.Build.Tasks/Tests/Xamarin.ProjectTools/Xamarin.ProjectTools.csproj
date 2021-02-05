@@ -6,7 +6,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <Import Project="..\..\..\..\Configuration.props" />
-  <Import Project="..\..\..\..\build-tools\scripts\MSBuildReferences.projitems" />
+  <Import Project="..\..\..\..\external\xamarin-android-tools\src\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />
   <ItemGroup>
     <Compile Remove="Resources\**\*.cs" />
     <EmbeddedResource Include="Resources\AndroidX\Tabbar.xml">
@@ -78,7 +78,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\..\..\..\.nuget\NuGet.exe">
-      <Link>nuget\NuGet.exe</Link>
+      <Link>..\nuget\NuGet.exe</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="FrameworkPath.targets">

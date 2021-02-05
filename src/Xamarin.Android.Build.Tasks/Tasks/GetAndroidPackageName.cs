@@ -1,4 +1,4 @@
-﻿// 
+// 
 // GetAndroidPackageName.cs
 //  
 // Author:
@@ -28,6 +28,7 @@ using System.IO;
 using System.Xml;
 using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {

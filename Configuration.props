@@ -129,10 +129,6 @@
     <_TestsProfiledAotName Condition=" '$(AndroidEnableProfiledAot)' == 'true' ">-Profiled</_TestsProfiledAotName>
     <_TestsBundleName Condition=" '$(BundleAssemblies)' == 'true' ">-Bundle</_TestsBundleName>
     <TestsFlavor>$(_TestsProfiledAotName)$(_TestsAotName)$(_TestsBundleName)</TestsFlavor>
-    <LibZipSharpVersion>1.0.20</LibZipSharpVersion>
-    <MonoCecilVersion>0.11.2</MonoCecilVersion>
-    <NuGetApiPackageVersion>5.4.0</NuGetApiPackageVersion>
-    <LZ4PackageVersion>1.1.11</LZ4PackageVersion>
   </PropertyGroup>
   <PropertyGroup>
     <MingwCommandPrefix32>i686-w64-mingw32</MingwCommandPrefix32>

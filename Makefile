@@ -136,12 +136,6 @@ uninstall::
 
 topdir  := $(shell pwd)
 
-# Used by External XA Build
-EXTERNAL_XA_PATH=$(topdir)
-EXTERNAL_GIT_PATH=$(topdir)/external
-
--include $(EXTERNAL_GIT_PATH)/monodroid/xa-integration.mk
-
 include build-tools/scripts/BuildEverything.mk
 
 # Must be after BuildEverything.mk - it uses variables defined there
