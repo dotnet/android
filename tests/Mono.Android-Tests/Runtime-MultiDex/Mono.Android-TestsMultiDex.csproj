@@ -24,6 +24,7 @@
     <AssemblyOriginatorKeyFile>..\..\..\product.snk</AssemblyOriginatorKeyFile>
     <_SkipJniAddNativeMethodRegistrationAttributeScan>True</_SkipJniAddNativeMethodRegistrationAttributeScan>
     <_MonoAndroidTestPackage>Mono.Android_TestsMultiDex</_MonoAndroidTestPackage>
+    <PlotDataLabelSuffix>-MultiDex</PlotDataLabelSuffix>
   </PropertyGroup>
   <Import Project="..\Mono.Android-Test.Shared.projitems" Label="Shared" Condition="Exists('..\Mono.Android-Test.Shared.projitems')" />
   <Import Project="..\..\..\Configuration.props" />
@@ -79,7 +80,8 @@
       <InstrumentationType>xamarin.android.runtimetests.NUnitInstrumentation</InstrumentationType>
       <ResultsPath>$(MSBuildThisFileDirectory)..\..\..\TestResult-$(_MonoAndroidTestPackage).xml</ResultsPath>
       <TimingDefinitionsFilename>$(MSBuildThisFileDirectory)..\..\..\build-tools\scripts\TimingDefinitions.txt</TimingDefinitionsFilename>
-      <TimingResultsFilename>$(MSBuildThisFileDirectory)..\..\..\TestResult-$(_MonoAndroidTestPackage)-times.csv</TimingResultsFilename>
+      <!-- Use default package name to write all Mono.Android-Tests* timing data to the same .csv -->
+      <TimingResultsFilename>$(XamarinAndroidSourcePath)TestResult-Mono.Android_Tests-times.csv</TimingResultsFilename>
       <ApkSizesInputFilename>apk-sizes-$(_MonoAndroidTestPackage)-$(Configuration)$(TestsFlavor).txt</ApkSizesInputFilename>
       <ApkSizesDefinitionFilename>$(MSBuildThisFileDirectory)..\..\..\build-tools\scripts\ApkSizesDefinitions.txt</ApkSizesDefinitionFilename>
       <ApkSizesResultsFilename>$(MSBuildThisFileDirectory)..\..\..\TestResult-$(_MonoAndroidTestPackage)-values-$(Configuration).csv</ApkSizesResultsFilename>
