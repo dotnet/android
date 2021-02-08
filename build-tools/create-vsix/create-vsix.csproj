@@ -1,10 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project>
+  <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.props" />
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{94756FEB-1F64-411D-A18E-81B5158F776A}</ProjectGuid>
-    <OutputType>Library</OutputType>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Xamarin.Android.Sdk</RootNamespace>
     <AssemblyName>Xamarin.Android.Sdk</AssemblyName>
     <CopyBuildOutputToOutputDirectory>true</CopyBuildOutputToOutputDirectory>
@@ -14,6 +11,7 @@
     <IncludeCopyLocalReferencesInVSIXContainer>False</IncludeCopyLocalReferencesInVSIXContainer>
     <IncludeDebugSymbolsInLocalVSIXDeployment>False</IncludeDebugSymbolsInLocalVSIXDeployment>
     <IncludeDebugSymbolsInVSIXContainer>true</IncludeDebugSymbolsInVSIXContainer>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>bin\$(Configuration)</OutputPath>
   </PropertyGroup>
 
@@ -30,10 +28,7 @@
     <ExtensionInstallationFolder>Xamarin\Xamarin.Android.Sdk</ExtensionInstallationFolder>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' " />
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' " />
   <ItemGroup>
-    <Compile Include="AndroidSdkPackage.cs" />
     <Content Include="Resources\AndroidSdkPackage.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -44,16 +39,10 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="VSPackage.resx">
+    <EmbeddedResource Update="VSPackage.resx">
       <MergeWithCTO>True</MergeWithCTO>
       <ManifestResourceName>VSPackage</ManifestResourceName>
     </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="source.extension.vsixmanifest">
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Xamarin.Android.Sdk.pkgdef.in" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.VisualStudio.CoreUtility" Version="15.0.26201" />
@@ -71,7 +60,7 @@
     <PackageReference Include="Microsoft.VisualStudio.Validation" Version="15.0.82" />
     <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="15.0.26201" ExcludeAssets="all" />
   </ItemGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.targets" />
   <Import Project="$(VsSDKInstall)\Microsoft.VsSDK.targets" Condition=" '$(_BuildVsix)' == 'True' " />
   <PropertyGroup Condition=" '$(_BuildVsix)' == 'True' ">
     <BuildDependsOn>
