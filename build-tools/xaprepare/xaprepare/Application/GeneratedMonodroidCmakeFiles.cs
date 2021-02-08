@@ -40,16 +40,20 @@ namespace Xamarin.Android.Prepare
 
 		static readonly Dictionary<string, string> ApiLevelVariableNames = new Dictionary<string, string> (StringComparer.Ordinal) {
 			{ AbiNames.TargetJit.AndroidArmV7a, "NDK_LEGACY_API_ARMV7A" },
+			{ BuildAndroidPlatforms.AndroidArmV7a_NET6, "NDK_NET6_API_ARMV7A" },
 			{ AbiNames.TargetJit.AndroidArmV8a, "NDK_LEGACY_API_ARMV8A" },
+			{ BuildAndroidPlatforms.AndroidArmV8a_NET6, "NDK_NET6_API_ARMV8A" },
 			{ AbiNames.TargetJit.AndroidX86, "NDK_LEGACY_API_X86" },
+			{ BuildAndroidPlatforms.AndroidX86_NET6, "NDK_NET6_API_X86" },
 			{ AbiNames.TargetJit.AndroidX86_64, "NDK_LEGACY_API_X86_64" },
+			{ BuildAndroidPlatforms.AndroidX86_64_NET6, "NDK_NET6_API_X86_64" },
 		};
 
 		static readonly Dictionary<string, string> JitAbis = new Dictionary<string, string> (StringComparer.Ordinal) {
-			{ AbiNames.TargetJit.AndroidArmV7a, String.Empty },
-			{ AbiNames.TargetJit.AndroidArmV8a, String.Empty },
-			{ AbiNames.TargetJit.AndroidX86, String.Empty },
-			{ AbiNames.TargetJit.AndroidX86_64, String.Empty },
+			{ AbiNames.TargetJit.AndroidArmV7a, BuildAndroidPlatforms.AndroidArmV7a_NET6 },
+			{ AbiNames.TargetJit.AndroidArmV8a, BuildAndroidPlatforms.AndroidArmV8a_NET6 },
+			{ AbiNames.TargetJit.AndroidX86, BuildAndroidPlatforms.AndroidX86_NET6 },
+			{ AbiNames.TargetJit.AndroidX86_64, BuildAndroidPlatforms.AndroidX86_64_NET6 },
 		};
 
 		static readonly Dictionary<string, string> HostAbis = new Dictionary<string, string> (StringComparer.Ordinal) {
@@ -107,9 +111,13 @@ namespace Xamarin.Android.Prepare
 			sw.WriteLine ();
 
 			WriteApiLevelVariable (AbiNames.TargetJit.AndroidArmV7a);
+			WriteApiLevelVariable (BuildAndroidPlatforms.AndroidArmV7a_NET6);
 			WriteApiLevelVariable (AbiNames.TargetJit.AndroidArmV8a);
+			WriteApiLevelVariable (BuildAndroidPlatforms.AndroidArmV8a_NET6);
 			WriteApiLevelVariable (AbiNames.TargetJit.AndroidX86);
+			WriteApiLevelVariable (BuildAndroidPlatforms.AndroidX86_NET6);
 			WriteApiLevelVariable (AbiNames.TargetJit.AndroidX86_64);
+			WriteApiLevelVariable (BuildAndroidPlatforms.AndroidX86_64_NET6);
 			sw.WriteLine ();
 
 			string indent = "\t";
@@ -240,8 +248,8 @@ namespace Xamarin.Android.Prepare
 
 			foreach (var kvp in abis) {
 				string abi = kvp.Key;
-				string apiLevelVarName = kvp.Key;
-				string outputDirName = abi;
+				string apiLevelVarName = command.IsNet6 ? kvp.Value : kvp.Key;
+				string outputDirName = command.IsNet6 ? $"{abi}-net6" : abi;
 				string isMxe = "no";
 				string mxeBitness = String.Empty;
 				bool forMxe = false;
@@ -353,7 +361,6 @@ namespace Xamarin.Android.Prepare
 				{ "@NATIVE_API_LEVEL@", "" },
 				{ "@ABI@", "%(AndroidSupportedTargetJitAbi.Identity)" },
 				{ "@OUTPUT_DIRECTORY@", "" },
-
 			};
 
 			var hostRuntimeReplacements = new Dictionary<string, string> (StringComparer.Ordinal) {
@@ -419,12 +426,13 @@ namespace Xamarin.Android.Prepare
 		void WriteMSBuildConfigureAndroidRuntimeCommands (StreamWriter sw, string indent, CmakeBuilds.RuntimeCommand command, Dictionary<string, string> replacements)
 		{
 			const string LegacyOutputDirectory = "$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity)";
+			const string Net6OutputDirectory = LegacyOutputDirectory + "-net6";
 
 			WriteMSBuildConfigureRuntimeCommands (
 				sw,
 				indent,
 				$"$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-{command.Suffix}",
-				LegacyOutputDirectory,
+				command.IsNet6 ? Net6OutputDirectory : LegacyOutputDirectory,
 				"@(AndroidSupportedTargetJitAbi)",
 				CmakeBuilds.ConfigureAndroidRuntimeCommandsCommonFlags,
 				command,

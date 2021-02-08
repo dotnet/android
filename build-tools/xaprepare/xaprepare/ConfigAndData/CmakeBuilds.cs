@@ -20,6 +20,7 @@ namespace Xamarin.Android.Prepare
 			public string Suffix = String.Empty;
 			public string MSBuildApiLevel = String.Empty;
 			public List<string>? ExtraOptions = null;
+			public bool IsNet6 = false;
 			public bool IsHost = false;
 		};
 
@@ -83,12 +84,26 @@ namespace Xamarin.Android.Prepare
 
 		public static readonly List<string> AsanExtraOptions = new List<string> {
 			"-DENABLE_CLANG_ASAN=ON",
+			"-DANDROID_STL=\"c++_static\"",
 		};
 
 		public static readonly List<string> UbsanExtraOptions = new List<string> {
 			"-DENABLE_CLANG_UBSAN=ON",
 			"-DANDROID_STL=\"c++_static\"",
 			"-DANDROID_CPP_FEATURES=\"rtti exceptions\"",
+		};
+
+		const string enableNet6 = "-DENABLE_NET6=ON";
+		public static readonly List<string> Net6ExtraOptions = new List<string> {
+			enableNet6,
+		};
+
+		public static readonly List<string> Net6AsanExtraOptions = new List<string> (AsanExtraOptions) {
+			enableNet6,
+		};
+
+		public static readonly List<string> Net6UbsanExtraOptions = new List<string> (UbsanExtraOptions) {
+			enableNet6,
 		};
 
 		public static readonly List<RuntimeCommand> AndroidRuntimeCommands = new List<RuntimeCommand> {
@@ -116,6 +131,33 @@ namespace Xamarin.Android.Prepare
 				ExtraOptions = UbsanExtraOptions,
 			},
 
+			new RuntimeCommand {
+				Suffix = "net6-Debug",
+				Configuration = "Release",
+				BuildType = "Debug",
+				MSBuildApiLevel = msbuildApiLevelNet6,
+				ExtraOptions = Net6ExtraOptions,
+				IsNet6 = true,
+			},
+
+			new RuntimeCommand {
+				Suffix = "net6-asan-Debug",
+				Configuration = "Release",
+				BuildType = "Debug",
+				MSBuildApiLevel = msbuildApiLevelNet6,
+				ExtraOptions = Net6AsanExtraOptions,
+				IsNet6 = true,
+			},
+
+			new RuntimeCommand {
+				Suffix = "net6-ubsan-Debug",
+				Configuration = "Release",
+				BuildType = "Debug",
+				MSBuildApiLevel = msbuildApiLevelNet6,
+				ExtraOptions = Net6UbsanExtraOptions,
+				IsNet6 = true,
+			},
+
 			// Release builds
 
 			new RuntimeCommand {
@@ -139,6 +181,33 @@ namespace Xamarin.Android.Prepare
 				BuildType = "Release",
 				MSBuildApiLevel = msbuildApiLevelLegacy,
 				ExtraOptions = UbsanExtraOptions,
+			},
+
+			new RuntimeCommand {
+				Suffix = "net6-Release",
+				Configuration = "Debug",
+				BuildType = "Release",
+				MSBuildApiLevel = msbuildApiLevelNet6,
+				ExtraOptions = Net6ExtraOptions,
+				IsNet6 = true,
+			},
+
+			new RuntimeCommand {
+				Suffix = "net6-asan-Release",
+				Configuration = "Debug",
+				BuildType = "Release",
+				MSBuildApiLevel = msbuildApiLevelNet6,
+				ExtraOptions = Net6AsanExtraOptions,
+				IsNet6 = true,
+			},
+
+			new RuntimeCommand {
+				Suffix = "net6-ubsan-Release",
+				Configuration = "Debug",
+				BuildType = "Release",
+				MSBuildApiLevel = msbuildApiLevelNet6,
+				ExtraOptions = Net6UbsanExtraOptions,
+				IsNet6 = true,
 			},
 		};
 

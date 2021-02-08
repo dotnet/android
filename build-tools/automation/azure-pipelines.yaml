@@ -53,7 +53,7 @@ variables:
   TestAssembliesArtifactName: test-assemblies
   NUnitConsoleVersion: 3.11.1
   DotNetCoreVersion: 3.1.405
-  DotNet5Version: 5.0.100
+  DotNet5Version: 5.0.200
   HostedMacImage: macOS-10.15
   HostedWinVS2019: Hosted Windows 2019 with VS2019
   VSEngWinVS2019: Xamarin-Android-Win2019-1120
