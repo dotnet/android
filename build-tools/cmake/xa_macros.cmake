@@ -1,33 +1,187 @@
-# Trying to perform the tests in the foreach loop unfortunately fails...
-# CMake appears to run the check only once, for the first entry in the list,
-# probably caching the result using the <var> name and so further tests aren't
-# performed.
-macro(c_compiler_has_flag _flag)
-  string(REGEX REPLACE "-|,|=" "_" flag_name ${_flag})
-  check_c_compiler_flag(-${_flag} HAS_${flag_name}_C)
-  if (HAS_${flag_name}_C)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -${_flag}")
-  endif()
-endmacro(c_compiler_has_flag)
+include(CheckCXXCompilerFlag)
+include(CheckCCompilerFlag)
+include(CheckLinkerFlag)
 
-macro(cxx_compiler_has_flag _flag)
-  string(REGEX REPLACE "-|,|=" "_" flag_name ${_flag})
-  check_cxx_compiler_flag(-${_flag} HAS_${flag_name}_CXX)
-  if (HAS_${flag_name}_CXX)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -${_flag}")
-  endif()
-endmacro(cxx_compiler_has_flag)
+macro(_compiler_has_flag _lang _flag)
+  string(REGEX REPLACE "-|,|=" "_" _flag_name ${_flag})
+  string(TOUPPER "${_lang}" _lang_upper)
 
-macro(linker_has_flag _flag)
-  string(REGEX REPLACE "-|,|=" "_" flag_name ${_flag})
-  set(CMAKE_REQUIRED_FLAGS "-${_flag}")
-  check_c_compiler_flag("" HAS_${flag_name}_LINKER)
-  if(HAS_${flag_name}_LINKER)
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -${_flag}")
+  cmake_language(CALL check_${_lang}_compiler_flag "${_flag}" HAS_${_flag_name}_${_lang_upper})
+  if(HAS_${_flag_name}_${_lang_upper})
+    set(COMPILER_FLAG_FOUND True)
+  else()
+	set(COMPILER_FLAG_FOUND False)
   endif()
 endmacro()
 
-macro(xa_common_prepare)
+macro(cxx_compiler_has_flag _flag)
+  _compiler_has_flag(cxx ${_flag})
+endmacro()
+
+macro(c_compiler_has_flag _flag)
+  _compiler_has_flag(c ${_flag})
+endmacro()
+
+macro(_linker_has_flag _lang _flag)
+  string(REGEX REPLACE "-|,|=" "_" _flag_name ${_flag})
+  string(TOUPPER "${_lang}" _lang_upper)
+
+  check_linker_flag(${_lang} "${_flag}" HAS_${_flag_name}_LINKER_${_lang_upper})
+  if(HAS_${_flag_name}_LINKER_${_lang_upper})
+    set(LINKER_FLAG_FOUND True)
+  else()
+	set(LINKER_FLAG_FOUND False)
+  endif()
+endmacro()
+
+macro(cxx_linker_has_flag _flag)
+  _linker_has_flag(CXX ${_flag})
+endmacro()
+
+macro(c_linker_has_flag _flag)
+  _linker_has_flag(C ${_flag})
+endmacro()
+
+#
+# Uses ${XA_COMMON_COMPILER_FLAGS}, if defined
+#
+# ${EXTRA_C_FLAGS} contains a set of additional C compiler flags to check
+#
+# Sets VARNAME on exit
+#
+macro(xa_check_c_flags VARNAME EXTRA_C_FLAGS)
+  set(_CHECKED_FLAGS "")
+  set(_CHECK_FLAGS ${XA_COMMON_COMPILER_FLAGS} ${EXTRA_C_FLAGS})
+
+  list(LENGTH _CHECK_FLAGS ARGS_LEN)
+  if(ARGS_LEN LESS_EQUAL 0)
+	return()
+  endif()
+
+  foreach(flag ${_CHECK_FLAGS})
+	c_compiler_has_flag(${flag})
+	if(COMPILER_FLAG_FOUND)
+	  list(APPEND _CHECKED_FLAGS "${flag}")
+	endif()
+  endforeach()
+
+  set(${VARNAME} "${_CHECKED_FLAGS}")
+endmacro()
+
+#
+# Uses ${XA_COMMON_COMPILER_FLAGS}, if defined
+#
+# ${EXTRA_CXX_FLAGS} contains a set of additional C compiler flags to check
+#
+# Sets VARNAME on exit
+#
+macro(xa_check_cxx_flags VARNAME EXTRA_CXX_FLAGS)
+  set(_CHECKED_FLAGS "")
+  set(_CHECK_FLAGS ${XA_COMMON_COMPILER_FLAGS} ${EXTRA_CXX_FLAGS})
+
+  list(LENGTH _CHECK_FLAGS ARGS_LEN)
+  if(ARGS_LEN LESS_EQUAL 0)
+	return()
+  endif()
+
+  foreach(flag ${_CHECK_FLAGS})
+	cxx_compiler_has_flag(${flag})
+	if(COMPILER_FLAG_FOUND)
+	  list(APPEND _CHECKED_FLAGS "${flag}")
+	endif()
+  endforeach()
+
+  set(${VARNAME} "${_CHECKED_FLAGS}")
+endmacro()
+
+#
+# Uses ${XA_COMMON_LINKER_FLAGS}, if defined
+#
+# ${EXTRA_C_LINKER_FLAGS} contains a set of additional C linker flags to check
+#
+# Sets VARNAME on exit
+#
+macro(xa_check_c_linker_flags VARNAME EXTRA_C_LINKER_FLAGS)
+  set(_CHECKED_FLAGS "")
+  set(_CHECK_FLAGS ${XA_COMMON_LINKER_FLAGS} ${EXTRA_C_LINKER_FLAGS})
+
+  list(LENGTH _CHECK_FLAGS ARGS_LEN)
+  if(ARGS_LEN LESS_EQUAL 0)
+	return()
+  endif()
+
+  foreach(flag ${_CHECK_FLAGS})
+	c_linker_has_flag(${flag})
+	if(LINKER_FLAG_FOUND)
+	  list(APPEND _CHECKED_FLAGS "${flag}")
+	endif()
+  endforeach()
+
+  set(${VARNAME} "${_CHECKED_FLAGS}")
+endmacro()
+
+#
+# Uses ${XA_COMMON_LINKER_FLAGS}, if defined
+#
+# ${EXTRA_CXX_LINKER_FLAGS} contains a set of additional C++ linker flags to check
+#
+# Sets VARNAME on exit
+#
+macro(xa_check_cxx_linker_flags VARNAME EXTRA_CXX_LINKER_FLAGS)
+  set(_CHECKED_FLAGS "")
+  set(_CHECK_FLAGS ${XA_COMMON_LINKER_FLAGS} ${EXTRA_CXX_LINKER_FLAGS})
+
+  list(LENGTH _CHECK_FLAGS ARGS_LEN)
+  if(ARGS_LEN LESS_EQUAL 0)
+	return()
+  endif()
+
+  foreach(flag ${_CHECK_FLAGS})
+	cxx_linker_has_flag(${flag})
+	if(LINKER_FLAG_FOUND)
+	  list(APPEND _CHECKED_FLAGS "${flag}")
+	endif()
+  endforeach()
+
+  set(${VARNAME} "${_CHECKED_FLAGS}")
+endmacro()
+
+#
+# Uses ${XA_COMMON_COMPILER_FLAGS}, if defined
+#
+# ${EXTRA_C_FLAGS} contains a set of additional C compiler flags to check
+# ${EXTRA_CXX_FLAGS} contains a set of additional C compiler flags to check
+#
+# Sets VARNAME_CXX on exit
+# Sets VARNAME_C on exit
+#
+macro(xa_check_compiler_flags VARNAME_CXX VARNAME_C EXTRA_CXX_FLAGS EXTRA_C_FLAGS)
+  xa_check_cxx_flags(${VARNAME_CXX} "${EXTRA_CXX_FLAGS}")
+  xa_check_c_flags(${VARNAME_C} "${EXTRA_C_FLAGS}")
+endmacro()
+
+#
+# Uses ${XA_COMMON_LINKER_FLAGS}, if defined
+#
+# ${EXTRA_C_LINKER_FLAGS} contains a set of additional C linker flags to check
+# ${EXTRA_CXX_LINKER_FLAGS} contains a set of additional C++ linker flags to check
+#
+# Sets VARNAME_C on exit
+# Sets VARNAME_CXX on exit
+#
+macro(xa_check_linker_flags VARNAME_CXX VARNAME_C EXTRA_CXX_LINKER_FLAGS EXTRA_C_LINKER_FLAGS)
+  xa_check_cxx_linker_flags(${VARNAME_CXX} "${EXTRA_CXX_LINKER_FLAGS}")
+  xa_check_c_linker_flags(${VARNAME_C} "${EXTRA_C_LINKER_FLAGS}")
+endmacro()
+
+#
+# Sets ${XA_COMMON_COMPILER_FLAGS} to flags that can be shared by C and C++ compilers
+# Sets ${XA_COMMON_LINKER_FLAGS} to flags that can be shared by C and C++ linkers
+# Sets ${XA_DEFAULT_SYMBOL_VISIBILITY} to the default symbol visibility value
+#
+# Defines RELEASE and NDEBUG macros for C/C++ builds if the current build type is Release
+#
+function(xa_common_prepare)
   if(NOT DSO_SYMBOL_VISIBILITY)
     set(DSO_SYMBOL_VISIBILITY "hidden")
   endif()
@@ -38,44 +192,48 @@ macro(xa_common_prepare)
   #  -fsanitize=safe-stack
   #
 
-  # Don't put the leading '-' in options
-  set(XA_COMPILER_FLAGS
-    fno-strict-aliasing
-    ffunction-sections
-    funswitch-loops
-    finline-limit=300
-    fvisibility=${DSO_SYMBOL_VISIBILITY}
-    fstack-protector-strong
-    fstrict-return
-    Wa,-noexecstack
-    fPIC
-    g
-    O2
+  set(XA_DEFAULT_SYMBOL_VISIBILITY
+	-fvisibility=${DSO_SYMBOL_VISIBILITY}
+	PARENT_SCOPE)
+
+  set(XA_COMMON_COMPILER_FLAGS
+	-fstack-protector-strong
+	-fstrict-return
+    -fno-strict-aliasing
+    -ffunction-sections
+    -funswitch-loops
+    -finline-limit=300
+    -Wa,-noexecstack
+    -fPIC
+    -g
+    -O2
+	PARENT_SCOPE
     )
 
-  if(CMAKE_BUILD_TYPE STREQUAL Release)
-    add_definitions("-DRELEASE")
-  endif()
-
-  set(XA_LINKER_ARGS
-    Wl,-z,now
-    Wl,-z,relro
-    Wl,-z,noexecstack
-    Wl,--no-undefined
+  set(XA_COMMON_LINKER_FLAGS
+	-fstack-protector-strong
+    LINKER:-fstrict-return
+    LINKER:-z,now
+    LINKER:-z,relro
+    LINKER:-z,noexecstack
+    LINKER:--no-undefined
+	PARENT_SCOPE
     )
 
   if(MINGW)
-    set(XA_LINKER_ARGS
-      ${XA_LINKER_ARGS}
-      Wl,--export-all-symbols
+    list(APPEND XA_COMMON_LINKER_FLAGS
+      LINKER:--export-all-symbols
       )
   else()
-    set(XA_LINKER_ARGS
-      ${XA_LINKER_ARGS}
-      Wl,--export-dynamic
+	list(APPEND XA_COMMON_LINKER_FLAGS
+      LINKER:--export-dynamic
       )
   endif()
-endmacro()
+
+  if(CMAKE_BUILD_TYPE STREQUAL Release)
+    add_compile_definitions(RELEASE NDEBUG)
+  endif()
+endfunction()
 
 macro(xa_macos_prepare_arm64)
   if(APPLE)

@@ -48,11 +48,15 @@ namespace Xamarin.Android.Prepare
 					return new List<GeneratedFile> {
 						Get_MonoGitHash_props (context),
 						Get_Configuration_Generated_Props (context),
+						Get_Cmake_XA_Build_Configuration (context),
+						new GeneratedMonodroidCmakeFiles (Configurables.Paths.BuildBinDir),
 					};
 				} else {
 					return new List <GeneratedFile> {
 						Get_Configuration_OperatingSystem_props (context),
 						Get_Configuration_Generated_Props (context),
+						Get_Cmake_XA_Build_Configuration (context),
+						new GeneratedMonodroidCmakeFiles (Configurables.Paths.BuildBinDir),
 						Get_Ndk_projitems (context),
 						Get_XABuildConfig_cs (context),
 						Get_mingw_32_cmake (context),
@@ -79,12 +83,30 @@ namespace Xamarin.Android.Prepare
 		partial void AddUnixPostBuildSteps (Context context, List<GeneratedFile> steps);
 		partial void AddOSSpecificSteps (Context context, List<GeneratedFile> steps);
 
+		GeneratedFile Get_Cmake_XA_Build_Configuration (Context context)
+		{
+			const string OutputFileName = "xa_build_configuration.cmake";
+
+			var replacements = new Dictionary<string, string> (StringComparer.Ordinal) {
+				{ "@NETCORE_APP_RUNTIME_ANDROID_ARM@",    Configurables.Paths.NetcoreAppRuntimeAndroidARM },
+				{ "@NETCORE_APP_RUNTIME_ANDROID_ARM64@",  Configurables.Paths.NetcoreAppRuntimeAndroidARM64 },
+				{ "@NETCORE_APP_RUNTIME_ANDROID_X86@",    Configurables.Paths.NetcoreAppRuntimeAndroidX86 },
+				{ "@NETCORE_APP_RUNTIME_ANDROID_X86_64@", Configurables.Paths.NetcoreAppRuntimeAndroidX86_64 },
+			};
+
+			return new GeneratedPlaceholdersFile (
+				replacements,
+				Path.Combine (Configurables.Paths.BuildToolsScriptsDir, $"{OutputFileName}.in"),
+				Path.Combine (Configurables.Paths.BuildBinDir, OutputFileName)
+			);
+		}
+
 		GeneratedFile Get_Configuration_Generated_Props (Context context)
 		{
 			const string OutputFileName = "Configuration.Generated.props";
 
 			var replacements = new Dictionary<string, string> (StringComparer.Ordinal) {
-				{ "@XA_PACKAGES_DIR@", Configurables.Paths.XAPackagesDir },
+				{ "@XA_PACKAGES_DIR@",                    Configurables.Paths.XAPackagesDir },
 			};
 
 			return new GeneratedPlaceholdersFile (
@@ -160,9 +182,13 @@ namespace Xamarin.Android.Prepare
 			var replacements = new Dictionary<string, string> (StringComparer.Ordinal) {
 				{ "@NDK_RELEASE@",               BuildAndroidPlatforms.AndroidNdkVersion },
 				{ "@NDK_ARMEABI_V7_API@",        BuildAndroidPlatforms.NdkMinimumAPI [AbiNames.TargetJit.AndroidArmV7a].ToString () },
+				{ "@NDK_ARMEABI_V7_API_NET6@",   BuildAndroidPlatforms.NdkMinimumAPI [BuildAndroidPlatforms.AndroidArmV7a_NET6].ToString () },
 				{ "@NDK_ARM64_V8A_API@",         BuildAndroidPlatforms.NdkMinimumAPI [AbiNames.TargetJit.AndroidArmV8a].ToString () },
+				{ "@NDK_ARM64_V8A_API_NET6@",    BuildAndroidPlatforms.NdkMinimumAPI [BuildAndroidPlatforms.AndroidArmV8a_NET6].ToString () },
 				{ "@NDK_X86_API@",               BuildAndroidPlatforms.NdkMinimumAPI [AbiNames.TargetJit.AndroidX86].ToString () },
+				{ "@NDK_X86_API_NET6@",          BuildAndroidPlatforms.NdkMinimumAPI [BuildAndroidPlatforms.AndroidX86_NET6].ToString () },
 				{ "@NDK_X86_64_API@",            BuildAndroidPlatforms.NdkMinimumAPI [AbiNames.TargetJit.AndroidX86_64].ToString () },
+				{ "@NDK_X86_64_API_NET6@",       BuildAndroidPlatforms.NdkMinimumAPI [BuildAndroidPlatforms.AndroidX86_64_NET6].ToString () },
 			};
 
 			return new GeneratedPlaceholdersFile (

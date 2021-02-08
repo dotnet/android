@@ -41,11 +41,17 @@ namespace Xamarin.Android.Prepare
 			new AndroidPlatform (apiName: "R",                      apiLevel: 30, platformID: "30",  include: "v11.0",   framework: "v11.0"),
 		};
 
+		// These are here until we can drop "legacy" targets and use only .NET6+
+		public const string AndroidArmV7a_NET6 = AbiNames.TargetJit.AndroidArmV7a + "_NET6";
+		public const string AndroidArmV8a_NET6 = AbiNames.TargetJit.AndroidArmV8a + "_NET6";
+		public const string AndroidX86_NET6    = AbiNames.TargetJit.AndroidX86 + "_NET6";
+		public const string AndroidX86_64_NET6 = AbiNames.TargetJit.AndroidX86_64 + "_NET6";
+
 		public static readonly Dictionary<string, uint> NdkMinimumAPI = new Dictionary<string, uint> {
-			{ AbiNames.TargetJit.AndroidArmV7a, 16 },
-			{ AbiNames.TargetJit.AndroidArmV8a, 21 },
-			{ AbiNames.TargetJit.AndroidX86,    16 },
-			{ AbiNames.TargetJit.AndroidX86_64, 21 },
+			{ AbiNames.TargetJit.AndroidArmV7a, 16 }, { AndroidArmV7a_NET6, 21 },
+			{ AbiNames.TargetJit.AndroidArmV8a, 21 }, { AndroidArmV8a_NET6, 21 },
+			{ AbiNames.TargetJit.AndroidX86,    16 }, { AndroidX86_NET6, 21 },
+			{ AbiNames.TargetJit.AndroidX86_64, 21 }, { AndroidX86_64_NET6, 21 },
 		};
 	}
 }

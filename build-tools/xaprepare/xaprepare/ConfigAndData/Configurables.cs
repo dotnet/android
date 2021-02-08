@@ -367,6 +367,18 @@ namespace Xamarin.Android.Prepare
 			public static string MonoArchiveLocalPath                => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory), MonoArchiveFileName);
 			public static string MonoArchiveWindowsLocalPath         => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory), MonoArchiveWindowsFileName);
 
+			// .NET 6
+			public static string NetcoreAppRuntimeAndroidARM         => GetCachedPath (ref netcoreAppRuntimeAndroidARM, () => GetNetcoreAppRuntimePath (ctx, "arm"));
+			public static string NetcoreAppRuntimeAndroidARM64       => GetCachedPath (ref netcoreAppRuntimeAndroidARM64, () => GetNetcoreAppRuntimePath (ctx, "arm64"));
+			public static string NetcoreAppRuntimeAndroidX86         => GetCachedPath (ref netcoreAppRuntimeAndroidX86, () => GetNetcoreAppRuntimePath (ctx, "x86"));
+			public static string NetcoreAppRuntimeAndroidX86_64      => GetCachedPath (ref netcoreAppRuntimeAndroidX86_64, () => GetNetcoreAppRuntimePath (ctx, "x64"));
+
+			// CMake
+			public static string CmakeMSBuildPropsName               = "cmake-config.props";
+			public static string CmakeShellScriptsPropsName          = "cmake-config.sh";
+			public static string CmakeMonodroidTargets               = "cmake-monodroid.targets";
+			public static string MonodroidSourceDir                  => GetCachedPath (ref monodroidSourceDir, () => Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "src", "monodroid"));
+
 			// Other
 			public static string AndroidNdkDirectory                 => ctx.Properties.GetRequiredValue (KnownProperties.AndroidNdkDirectory);
 			public static string AndroidToolchainRootDirectory       => GetCachedPath (ref androidToolchainRootDirectory,       () => Path.Combine (AndroidNdkDirectory, "toolchains", "llvm", "prebuilt", NdkToolchainOSTag));
@@ -385,6 +397,17 @@ namespace Xamarin.Android.Prepare
 				var path = Path.Combine (MonoSdksTpnExternalPath, "llvm-project", "llvm");
 				return Directory.Exists (path) ? path : Path.Combine (MonoSdksTpnExternalPath, "llvm");
 			});
+
+			static string GetNetcoreAppRuntimePath (Context ctx, string androidTarget)
+			{
+				return Path.Combine (
+					XAPackagesDir,
+					$"microsoft.netcore.app.runtime.android-{androidTarget}",
+					ctx.Properties.GetRequiredValue (KnownProperties.DotNetRuntimePacksVersion).Trim ('[').Trim (']'),
+					"runtimes",
+					$"android-{androidTarget}"
+				);
+			}
 
 			static string DetermineNugetPackagesDir (Context ctx)
 			{
@@ -464,6 +487,11 @@ namespace Xamarin.Android.Prepare
 			static string? configurationPropsGeneratedPath;
 			static string? windowsBinutilsInstallDir;
 			static string? hostBinutilsInstallDir;
+			static string? netcoreAppRuntimeAndroidARM;
+			static string? netcoreAppRuntimeAndroidARM64;
+			static string? netcoreAppRuntimeAndroidX86;
+			static string? netcoreAppRuntimeAndroidX86_64;
+			static string? monodroidSourceDir;
 		}
 	}
 }

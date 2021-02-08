@@ -18,7 +18,8 @@ namespace Xamarin.Android.Prepare
 					throw new ArgumentNullException (nameof (context));
 
 				using (StreamWriter sw = Utilities.OpenStreamWriter (OutputPath)) {
-					sw.WriteLine ($"CONFIGURATION = {context.Configuration}");
+					sw.WriteLine ("# This file is used by both Make and shell scripts");
+					sw.WriteLine ($"CONFIGURATION={context.Configuration}");
 					sw.Flush ();
 				}
 			}

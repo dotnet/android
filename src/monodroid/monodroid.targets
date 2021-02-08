@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\..\external\Java.Interop\bin\Build$(Configuration)\JdkInfo.props" Condition="Exists('..\..\external\Java.Interop\bin\Build$(Configuration)\JdkInfo.props')"/>
-  <Import Project="monodroid.props" />
+  <Import Project="..\..\bin\Build$(Configuration)\cmake-config.props" Condition="Exists('..\..\bin\Build$(Configuration)\cmake-config.props')" />
   <Import Project="monodroid.projitems" />
   <Import Project="..\..\build-tools\scripts\JavaInteropDllConfigs.targets" />
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.GenerateMonoDroidIncludes" />
@@ -33,90 +33,9 @@
     />
   </Target>
 
-  <Target Name="_PrepareConfigureRuntimeCommands"
-      DependsOnTargets="_GetBuildHostRuntimes">
-    <MakeDir Directories="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-Debug" />
-    <ItemGroup>
-      <_ConfigureRuntimeCommands
-          Include="@(AndroidSupportedTargetJitAbi)">
-        <Command>$(CmakePath)</Command>
-        <Arguments>--debug-output $(_CmakeAndroidFlags) -DCONFIGURATION=Release -DCMAKE_BUILD_TYPE=Debug -DANDROID_NATIVE_API_LEVEL=%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_PLATFORM=android-%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_ABI=%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) $(MSBuildThisFileDirectory)</Arguments>
-        <WorkingDirectory>$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-Debug</WorkingDirectory>
-      </_ConfigureRuntimeCommands>
-    </ItemGroup>
-
-    <MakeDir Directories="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-asan-Debug" />
-    <ItemGroup>
-      <_ConfigureRuntimeCommands
-          Include="@(AndroidSupportedTargetJitAbi)">
-        <Command>$(CmakePath)</Command>
-        <Arguments>--debug-output $(_CmakeAndroidFlags) -DENABLE_CLANG_ASAN=ON -DCONFIGURATION=Release -DCMAKE_BUILD_TYPE=Debug -DANDROID_NATIVE_API_LEVEL=%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_PLATFORM=android-%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_ABI=%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) $(MSBuildThisFileDirectory)</Arguments>
-        <WorkingDirectory>$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-asan-Debug</WorkingDirectory>
-      </_ConfigureRuntimeCommands>
-    </ItemGroup>
-
-    <MakeDir Directories="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-ubsan-Debug" />
-    <ItemGroup>
-      <_ConfigureRuntimeCommands
-          Include="@(AndroidSupportedTargetJitAbi)">
-        <Command>$(CmakePath)</Command>
-        <Arguments>--debug-output $(_CmakeAndroidFlags) -DANDROID_STL="c++_static" -DANDROID_CPP_FEATURES="rtti exceptions" -DENABLE_CLANG_UBSAN=ON -DCONFIGURATION=Release -DCMAKE_BUILD_TYPE=Debug -DANDROID_NATIVE_API_LEVEL=%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_PLATFORM=android-%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_ABI=%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) $(MSBuildThisFileDirectory)</Arguments>
-        <WorkingDirectory>$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-ubsan-Debug</WorkingDirectory>
-      </_ConfigureRuntimeCommands>
-    </ItemGroup>
-
-    <MakeDir Directories="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-Release" />
-    <ItemGroup>
-      <_ConfigureRuntimeCommands
-          Include="@(AndroidSupportedTargetJitAbi)">
-        <Command>$(CmakePath)</Command>
-        <Arguments>--debug-output $(_CmakeAndroidFlags) -DSTRIP_DEBUG=ON -DCONFIGURATION=Debug -DCMAKE_BUILD_TYPE=Release -DANDROID_NATIVE_API_LEVEL=%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_PLATFORM=android-%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_ABI=%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) $(MSBuildThisFileDirectory)</Arguments>
-        <WorkingDirectory>$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-Release</WorkingDirectory>
-      </_ConfigureRuntimeCommands>
-    </ItemGroup>
-
-    <MakeDir Directories="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-asan-Release" />
-    <ItemGroup>
-      <_ConfigureRuntimeCommands
-          Include="@(AndroidSupportedTargetJitAbi)">
-        <Command>$(CmakePath)</Command>
-        <Arguments>--debug-output $(_CmakeAndroidFlags) -DENABLE_CLANG_ASAN=ON -DSTRIP_DEBUG=ON -DCONFIGURATION=Debug -DCMAKE_BUILD_TYPE=Release -DANDROID_NATIVE_API_LEVEL=%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_PLATFORM=android-%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_ABI=%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) $(MSBuildThisFileDirectory)</Arguments>
-        <WorkingDirectory>$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-asan-Release</WorkingDirectory>
-      </_ConfigureRuntimeCommands>
-    </ItemGroup>
-
-    <MakeDir Directories="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-ubsan-Release" />
-    <ItemGroup>
-      <_ConfigureRuntimeCommands
-          Include="@(AndroidSupportedTargetJitAbi)">
-        <Command>$(CmakePath)</Command>
-        <Arguments>--debug-output $(_CmakeAndroidFlags) -DANDROID_STL="c++_static" -DANDROID_CPP_FEATURES="rtti exceptions" -DENABLE_CLANG_UBSAN=ON -DSTRIP_DEBUG=ON -DCONFIGURATION=Debug -DCMAKE_BUILD_TYPE=Release -DANDROID_NATIVE_API_LEVEL=%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_PLATFORM=android-%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_ABI=%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) $(MSBuildThisFileDirectory)</Arguments>
-        <WorkingDirectory>$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-ubsan-Release</WorkingDirectory>
-      </_ConfigureRuntimeCommands>
-    </ItemGroup>
-
-    <MakeDir Directories="$(IntermediateOutputPath)%(_HostRuntime.OutputDirectory)-Debug" />
-    <!-- CMAKE_RUNTIME_OUTPUT_DIRECTORY is provided for the mingw cross builds. DLL outputs are treated as _runtime_ objects (as opposed to _library_ ones for .so, .dylib etc) by cmake
-         and so in order to put libmono-android.*.dll in the output dir we need to set this property. Since we build no executables here, it won't affect the non-DLL outputs.  -->
-    <ItemGroup>
-      <_ConfigureRuntimeCommands
-          Include="@(_HostRuntime)">
-        <Command>$(CmakePath)</Command>
-        <Arguments>--debug-output %(_HostRuntime.CmakeFlags) -DCONFIGURATION=Release -DCMAKE_BUILD_TYPE=Debug -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=$(OutputPath)/%(_HostRuntime.OutputDirectory) -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$(OutputPath)/%(_HostRuntime.OutputDirectory) -DCMAKE_RUNTIME_OUTPUT_DIRECTORY=$(OutputPath)/%(_HostRuntime.OutputDirectory) $(MSBuildThisFileDirectory)</Arguments>
-        <WorkingDirectory>$(IntermediateOutputPath)%(_HostRuntime.OutputDirectory)-Debug</WorkingDirectory>
-      </_ConfigureRuntimeCommands>
-    </ItemGroup>
-
-    <MakeDir Directories="$(IntermediateOutputPath)%(_HostRuntime.OutputDirectory)-Release" />
-    <ItemGroup>
-      <_ConfigureRuntimeCommands
-          Include="@(_HostRuntime)">
-        <Command>$(CmakePath)</Command>
-        <Arguments>--debug-output %(_HostRuntime.CmakeFlags) -DSTRIP_DEBUG=ON -DCONFIGURATION=Debug -DCMAKE_BUILD_TYPE=Release -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=$(OutputPath)/%(_HostRuntime.OutputDirectory) -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$(OutputPath)/%(_HostRuntime.OutputDirectory) -DCMAKE_RUNTIME_OUTPUT_DIRECTORY=$(OutputPath)/%(_HostRuntime.OutputDirectory) $(MSBuildThisFileDirectory)</Arguments>
-        <WorkingDirectory>$(IntermediateOutputPath)%(_HostRuntime.OutputDirectory)-Release</WorkingDirectory>
-      </_ConfigureRuntimeCommands>
-    </ItemGroup>
-  </Target>
+  <!-- The targets file is generated by xaprepare, if you need to make any changes to the options, go to ../../build-tools/xaprepare/xaprepare/ConfigAndData/CmakeBuilds.cs -->
+  <!-- The file contains the _PrepareConfigureRuntimeCommands target -->
+  <Import Project="..\..\bin\Build$(Configuration)\cmake-monodroid.targets" Condition="Exists('..\..\bin\Build$(Configuration)\cmake-monodroid.targets')" />
 
   <Target Name="_ConfigureRuntimesInputs">
     <ItemGroup>
@@ -183,6 +102,11 @@
 
     <Exec
         Command="$(NinjaPath) -v"
+        WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-net6-Debug"
+    />
+
+    <Exec
+        Command="$(NinjaPath) -v"
         WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-Release"
     />
 
@@ -194,6 +118,11 @@
     <Exec
         Command="$(NinjaPath) -v"
         WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-ubsan-Release"
+    />
+
+    <Exec
+        Command="$(NinjaPath) -v"
+        WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-net6-Release"
     />
 
     <Touch Files="@(_BuildAndroidRuntimesOutputs)" />
