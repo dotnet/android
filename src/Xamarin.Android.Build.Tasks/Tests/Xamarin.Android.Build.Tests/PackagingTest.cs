@@ -88,7 +88,6 @@ namespace Xamarin.Android.Build.Tests
 					"Mono.Android.dll",
 					"System.Console.dll",
 					"System.Private.CoreLib.dll",
-					"System.Collections.Concurrent.dll",
 					"System.Linq.dll",
 					"UnnamedProject.dll",
 				} :
