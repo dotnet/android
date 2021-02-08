@@ -410,10 +410,8 @@ namespace Xamarin.Android.Build.Tests
 					apk.AssertContainsEntry (apkPath, $"lib/{abi}/libmonosgen-2.0.so");
 					if (rids.Length > 1) {
 						apk.AssertContainsEntry (apkPath, $"assemblies/{abi}/System.Private.CoreLib.dll",        shouldContainEntry: expectEmbeddedAssembies);
-						apk.AssertContainsEntry (apkPath, $"assemblies/{abi}/System.Collections.Concurrent.dll", shouldContainEntry: expectEmbeddedAssembies);
 					} else {
 						apk.AssertContainsEntry (apkPath, "assemblies/System.Private.CoreLib.dll",        shouldContainEntry: expectEmbeddedAssembies);
-						apk.AssertContainsEntry (apkPath, "assemblies/System.Collections.Concurrent.dll", shouldContainEntry: expectEmbeddedAssembies);
 					}
 				}
 			}
