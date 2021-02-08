@@ -17,6 +17,7 @@
     <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.7.1" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
+    <PackageReference Include="System.Memory" Version="4.5.4" />
     <Reference Include="MSBuild">
       <HintPath>$(MSBuildToolsPath)\MSBuild.$(_MSBuildExtension)</HintPath>
     </Reference>
