@@ -16,8 +16,10 @@ pr:
 
 # Global variables
 variables:
+  RunningOnCI: true
+  Build.Configuration: Release
   DotNetCoreVersion: 3.1.300
-  HostedMac: Hosted Mac Internal
+  HostedMacImage: macOS-10.15
   HostedWinVS2019: Hosted Windows 2019 with VS2019
 
 jobs:
@@ -91,7 +93,8 @@ jobs:
     
 - job: mac_build
   displayName: Mac - Mono
-  pool: $(HostedMac)
+  pool:
+    vmImage: $(HostedMacImage)
   timeoutInMinutes: 20
   workspace:
     clean: all
@@ -140,7 +143,8 @@ jobs:
     
 - job: mac_dotnet_build
   displayName: Mac - .NET Core
-  pool: $(HostedMac)
+  pool:
+    vmImage: $(HostedMacImage)
   timeoutInMinutes: 20
   workspace:
     clean: all

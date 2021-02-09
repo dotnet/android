@@ -6,9 +6,3 @@ steps:
   displayName: Use .NET Core $(DotNetCoreVersion)
   inputs:
     version: $(DotNetCoreVersion)
-  
-- script: |
-    dotnet tool install --global boots  
-    boots --stable Mono
-  displayName: Install Mono-Stable
-  condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
