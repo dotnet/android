@@ -18,6 +18,7 @@ jobs:
       VSINSTALLDIR: C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise
       UseDotNet: ${{ eq(parameters.target_framework, 'netcoreapp3.1') }}
     steps:
+    - script: netsh int ipv4 set global sourceroutingbehavior=drop
 
     - template: kill-processes.yaml
 

@@ -158,6 +158,8 @@ stages:
     timeoutInMinutes: 360
     cancelTimeoutInMinutes: 5
     steps:
+    - script: netsh int ipv4 set global sourceroutingbehavior=drop
+
     - checkout: self
       submodules: recursive
 
