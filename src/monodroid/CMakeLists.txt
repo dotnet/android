@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.6.0)
+cmake_minimum_required(VERSION 3.10.2)
 
 #
 # MUST be included before project()!
@@ -21,7 +21,7 @@ option(DISABLE_DEBUG "Disable the built-in debugging code" OFF)
 option(ENABLE_CLANG_ASAN "Enable the clang AddressSanitizer support" OFF)
 option(ENABLE_CLANG_UBSAN "Enable the clang UndefinedBehaviorSanitizer support" OFF)
 
-include(CheckIncludeFileCXX)
+include(CheckIncludeFile)
 include(CheckCXXSymbolExists)
 include(CheckCCompilerFlag)
 include(CheckCXXCompilerFlag)
@@ -80,7 +80,7 @@ if(NOT ANDROID)
     )
 endif()
 
-if(MINGW)
+if(MINGW AND NOT WIN32)
   if(NOT DEFINED MINGW_DEPENDENCIES_ROOT_DIR)
     message(FATAL_ERROR "Please set the MINGW_DEPENDENCIES_ROOT_DIR variable on command line (-DMINGW_DEPENDENCIES_ROOT_DIR=PATH)")
   endif()
@@ -98,8 +98,6 @@ xa_macos_prepare_arm64()
 
 # Don't put the leading '-' in options
 set(TEST_COMPILER_ARGS_CPP ${XA_COMPILER_FLAGS}
-  fno-rtti
-  fno-exceptions
   Wall
   Wconversion
   Wdeprecated
@@ -124,6 +122,10 @@ if(ENABLE_NDK)
       ${TEST_COMPILER_ARGS_CPP}
       fno-omit-frame-pointer
       fno-optimize-sibling-calls
+      )
+  else()
+    set(TEST_COMPILER_ARGS_CPP
+      ${TEST_COMPILER_ARGS_CPP}
       )
   endif()
 
@@ -307,9 +309,9 @@ if(ENABLE_NDK AND (ENABLE_CLANG_UBSAN OR ENABLE_CLANG_ASAN))
   string(STRIP "${CMAKE_REQUIRED_FLAGS}" CMAKE_REQUIRED_FLAGS)
 endif()
 
-check_include_file_cxx("linux/netlink.h" HAVE_LINUX_NETLINK_H)
-check_include_file_cxx("linux/rtnetlink.h" HAVE_LINUX_RTNETLINK_H)
-check_include_file_cxx("linux/if_arp.h" HAVE_LINUX_IF_ARP_H)
+check_include_file("linux/netlink.h" HAVE_LINUX_NETLINK_H)
+check_include_file("linux/rtnetlink.h" HAVE_LINUX_RTNETLINK_H)
+check_include_file("linux/if_arp.h" HAVE_LINUX_IF_ARP_H)
 
 if(ENABLE_NDK AND (ENABLE_CLANG_UBSAN OR ENABLE_CLANG_ASAN))
   set(CMAKE_REQUIRED_FLAGS "${OLD_CMAKE_REQUIRED_FLAGS}")

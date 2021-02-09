@@ -60,7 +60,7 @@
       <_ConfigureRuntimeCommands
           Include="@(AndroidSupportedTargetJitAbi)">
         <Command>$(CmakePath)</Command>
-        <Arguments>--debug-output $(_CmakeAndroidFlags) -DENABLE_CLANG_UBSAN=ON -DCONFIGURATION=Release -DCMAKE_BUILD_TYPE=Debug -DANDROID_NATIVE_API_LEVEL=%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_PLATFORM=android-%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_ABI=%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) $(MSBuildThisFileDirectory)</Arguments>
+        <Arguments>--debug-output $(_CmakeAndroidFlags) -DANDROID_STL="c++_static" -DANDROID_CPP_FEATURES="rtti exceptions" -DENABLE_CLANG_UBSAN=ON -DCONFIGURATION=Release -DCMAKE_BUILD_TYPE=Debug -DANDROID_NATIVE_API_LEVEL=%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_PLATFORM=android-%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_ABI=%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) $(MSBuildThisFileDirectory)</Arguments>
         <WorkingDirectory>$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-ubsan-Debug</WorkingDirectory>
       </_ConfigureRuntimeCommands>
     </ItemGroup>
@@ -90,7 +90,7 @@
       <_ConfigureRuntimeCommands
           Include="@(AndroidSupportedTargetJitAbi)">
         <Command>$(CmakePath)</Command>
-        <Arguments>--debug-output $(_CmakeAndroidFlags) -DENABLE_CLANG_UBSAN=ON -DSTRIP_DEBUG=ON -DCONFIGURATION=Debug -DCMAKE_BUILD_TYPE=Release -DANDROID_NATIVE_API_LEVEL=%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_PLATFORM=android-%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_ABI=%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) $(MSBuildThisFileDirectory)</Arguments>
+        <Arguments>--debug-output $(_CmakeAndroidFlags) -DANDROID_STL="c++_static" -DANDROID_CPP_FEATURES="rtti exceptions" -DENABLE_CLANG_UBSAN=ON -DSTRIP_DEBUG=ON -DCONFIGURATION=Debug -DCMAKE_BUILD_TYPE=Release -DANDROID_NATIVE_API_LEVEL=%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_PLATFORM=android-%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_ABI=%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity) $(MSBuildThisFileDirectory)</Arguments>
         <WorkingDirectory>$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-ubsan-Release</WorkingDirectory>
       </_ConfigureRuntimeCommands>
     </ItemGroup>

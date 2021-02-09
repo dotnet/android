@@ -521,6 +521,11 @@ namespace Xamarin.Android.Prepare
 			return String.Empty;
 		}
 
+		public virtual string AppendExecutableExtension (string programName)
+		{
+			return programName;
+		}
+
 		protected static string FindProgram (string programName, List<string> directories)
 		{
 			foreach (string dir in directories) {

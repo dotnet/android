@@ -266,6 +266,12 @@ namespace Xamarin.Android.Prepare
 			/// </summary>
 			public static readonly List <string> BuildStatusBundleExclude = new List <string> {
 			};
+
+			public static readonly List <NDKTool> NDKTools = new List<NDKTool> {
+				new NDKTool (name: "as"),
+				new NDKTool (name: "ld.gold", destinationName: "ld"),
+				new NDKTool (name: "strip"),
+			};
 		}
 
 		public static partial class Paths
@@ -362,7 +368,12 @@ namespace Xamarin.Android.Prepare
 			public static string MonoArchiveWindowsLocalPath         => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory), MonoArchiveWindowsFileName);
 
 			// Other
-			public static string AndroidToolchainBinDirectory => EnsureAndroidToolchainBinDirectories ();
+			public static string AndroidNdkDirectory                 => ctx.Properties.GetRequiredValue (KnownProperties.AndroidNdkDirectory);
+			public static string AndroidToolchainRootDirectory       => GetCachedPath (ref androidToolchainRootDirectory,       () => Path.Combine (AndroidNdkDirectory, "toolchains", "llvm", "prebuilt", NdkToolchainOSTag));
+			public static string AndroidToolchainBinDirectory        => GetCachedPath (ref androidToolchainBinDirectory,        () => Path.Combine (AndroidToolchainRootDirectory, "bin"));
+			public static string AndroidToolchainSysrootLibDirectory => GetCachedPath (ref androidToolchainSysrootLibDirectory, () => Path.Combine (AndroidToolchainRootDirectory, "sysroot", "usr", "lib"));
+			public static string WindowsBinutilsInstallDir           => GetCachedPath (ref windowsBinutilsInstallDir,           () => Path.Combine (InstallMSBuildDir, "ndk"));
+			public static string HostBinutilsInstallDir              => GetCachedPath (ref hostBinutilsInstallDir,              () => Path.Combine (InstallMSBuildDir, ctx.Properties.GetRequiredValue (KnownProperties.HostOS), "ndk"));
 
 			// not really configurables, merely convenience aliases for more frequently used paths that come from properties
 			public static string XAInstallPrefix                => ctx.Properties.GetRequiredValue (KnownProperties.XAInstallPrefix);
@@ -410,7 +421,9 @@ namespace Xamarin.Android.Prepare
 			static string? binDir;
 			static string? netCoreBinDir;
 			static string? monoSDKsOutputDir;
+			static string? androidToolchainRootDirectory;
 			static string? androidToolchainBinDirectory;
+			static string? androidToolchainSysrootLibDirectory;
 			static string? monoProfileDir;
 			static string? monoProfileToolsDir;
 			static string? bclTestsDestDir;
@@ -449,6 +462,8 @@ namespace Xamarin.Android.Prepare
 			static string? openJDK8CacheDir,    openJDK11CacheDir;
 			static string? oldOpenJDKInstallDir;
 			static string? configurationPropsGeneratedPath;
+			static string? windowsBinutilsInstallDir;
+			static string? hostBinutilsInstallDir;
 		}
 	}
 }

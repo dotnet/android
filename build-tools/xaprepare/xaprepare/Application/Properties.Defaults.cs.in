@@ -26,6 +26,7 @@ namespace Xamarin.Android.Prepare
 			properties.Add (KnownProperties.DotNetPreviewVersionFull,            StripQuotes ("@DotNetPreviewVersionFull@"));
 			properties.Add (KnownProperties.EmulatorVersion,                     StripQuotes ("@EmulatorVersion@"));
 			properties.Add (KnownProperties.EmulatorPkgRevision,                 StripQuotes ("@EmulatorPkgRevision@"));
+			properties.Add (KnownProperties.HostOS,                              StripQuotes ("@HostOS@"));
 			properties.Add (KnownProperties.IgnoreMaxMonoVersion,                StripQuotes ("@IgnoreMaxMonoVersion@"));
 			properties.Add (KnownProperties.IgnoreMinMonoVersion,                StripQuotes ("@IgnoreMinMonoVersion@"));
 			properties.Add (KnownProperties.JavaInteropFullPath,                 StripQuotes (@"@JavaInteropFullPath@"));

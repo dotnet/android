@@ -59,6 +59,7 @@
       <Replacement Include="@DotNetPreviewVersionFull@=$(DotNetPreviewVersionFull)" />
       <Replacement Include="@EmulatorVersion@=$(EmulatorVersion)" />
       <Replacement Include="@EmulatorPkgRevision@=$(EmulatorPkgRevision)" />
+      <Replacement Include="@HostOS@=$(HostOS)" />
       <Replacement Include="@IgnoreMaxMonoVersion@=$(IgnoreMaxMonoVersion)" />
       <Replacement Include="@JavaInteropFullPath@=$(JavaInteropFullPath)" />
       <Replacement Include="@JavaSdkDirectory@=$(JavaSdkDirectory)" />
