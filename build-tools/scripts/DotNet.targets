@@ -3,9 +3,9 @@
     <_Root>$(MSBuildThisFileDirectory)..\..\</_Root>
   </PropertyGroup>
   <Target Name="PackDotNet">
-    <Exec Command="$(AndroidToolchainDirectory)\dotnet\dotnet build $(_Root)src\Microsoft.Android.Sdk.ILLink\Microsoft.Android.Sdk.ILLink.csproj" />
     <MSBuild Projects="$(_Root)build-tools\xa-prep-tasks\xa-prep-tasks.csproj" />
     <MSBuild Projects="$(_Root)Xamarin.Android.sln" Properties="DisableApiCompatibilityCheck=true" />
+    <Exec Command="$(AndroidToolchainDirectory)\dotnet\dotnet build $(_Root)src\Microsoft.Android.Sdk.ILLink\Microsoft.Android.Sdk.ILLink.csproj" />
     <MSBuild Projects="$(_Root)build-tools\create-packs\Microsoft.Android.Sdk.proj" Targets="CreateAllPacks" />
     <MSBuild Projects="$(_Root)build-tools\create-packs\Microsoft.Android.Sdk.proj" Targets="ExtractWorkloadPacks" />
     <!-- Clean up old, previously restored packages -->
