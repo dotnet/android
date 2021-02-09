@@ -45,12 +45,6 @@ jobs:
     inputs:
       versionSpec: 5.x
 
-  - script: |
-      dotnet tool install --global boots
-      boots https://download.mono-project.com/archive/6.12.0/macos-10-universal/MonoFramework-MDK-6.12.0.107.macos10.xamarin.universal.pkg
-    displayName: Install Mono 6.12
-    condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
-
   - task: NuGetCommand@2
     displayName: 'NuGet Restore'
     inputs:
