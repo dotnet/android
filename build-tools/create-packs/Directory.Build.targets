@@ -71,7 +71,7 @@
   </Target>
 
   <Target Name="BuildILLinkCustomStep">
-    <Exec Command="$(AndroidToolchainDirectory)\dotnet\dotnet build /p:Configuration=$(Configuration) $(MSBuildThisFileDirectory)..\..\src\Microsoft.Android.Sdk.ILLink\Microsoft.Android.Sdk.ILLink.csproj" />
+    <Exec Command="$(DotNetPreviewTool) build -p:Configuration=$(Configuration) &quot;$(XamarinAndroidSourcePath)src\Microsoft.Android.Sdk.ILLink\Microsoft.Android.Sdk.ILLink.csproj&quot;" />
   </Target>
 
   <Target Name="CreateAllPacks"
