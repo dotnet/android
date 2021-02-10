@@ -781,6 +781,11 @@ stages:
         git submodule update -q --init --recursive
       displayName: Clone and update UITools
 
+    - task: NuGetAuthenticate@0
+      displayName: authenticate with azure artifacts
+      inputs:
+        forceReinstallCredentialProvider: true
+
     - task: provisionator@2
       displayName: provision designer dependencies
       inputs:
@@ -855,6 +860,11 @@ stages:
         git checkout $branchName
         git submodule update -q --init --recursive
       displayName: Clone and update UITools
+
+    - task: NuGetAuthenticate@0
+      displayName: authenticate with azure artifacts
+      inputs:
+        forceReinstallCredentialProvider: true
 
     - task: provisionator@2
       displayName: provision designer dependencies
