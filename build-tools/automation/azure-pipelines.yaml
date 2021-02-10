@@ -228,6 +228,13 @@ stages:
         configuration: $(XA.Build.Configuration)
         msbuildArguments: /p:CreateVsixContainer=True /p:ZipPackageCompressionLevel=Normal /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-create-vsix.binlog
 
+    - task: MSBuild@1
+      displayName: msbuild xabuild
+      inputs:
+        solution: tools\xabuild\xabuild.csproj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: /restore /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-xabuild.binlog
+
     - task: CmdLine@1
       displayName: xabuild Xamarin.Android-Tests
       inputs:
@@ -329,61 +336,74 @@ stages:
       displayName: Prepare Solution
       inputs:
         projects: Xamarin.Android.sln
-        arguments: '-c $(XA.Build.Configuration) -target:Prepare'
+        arguments: '-c $(XA.Build.Configuration) -target:Prepare -m:1 -p:AutoProvision=true -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-build-prepare.binlog'
 
-    ## Build, pack .nupkgs, and extract workload packs to dotnet preview test directory
-    #- task: MSBuild@1
-    #  displayName: msbuild Xamarin.Android
-    #  inputs:
-    #    solution: Xamarin.Android.sln
-    #    configuration: $(XA.Build.Configuration)
-    #    msbuildArguments: /t:PackDotNet /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-build.binlog
+    - task: DotNetCoreCLI@2
+      displayName: Build Solution
+      inputs:
+        projects: Xamarin.Android.sln
+        arguments: '-c $(XA.Build.Configuration) -m:1 -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-build.binlog'
 
-    #- task: MSBuild@1
-    #  displayName: msbuild create-vsix
-    #  inputs:
-    #    solution: build-tools\create-vsix\create-vsix.csproj
-    #    configuration: $(XA.Build.Configuration)
-    #    msbuildArguments: /p:CreateVsixContainer=True /p:ZipPackageCompressionLevel=Normal /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\msbuild-create-vsix.binlog
+    - task: MSBuild@1
+      displayName: msbuild create-vsix
+      inputs:
+        solution: build-tools\create-vsix\create-vsix.csproj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: /p:CreateVsixContainer=True /p:ZipPackageCompressionLevel=Normal /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-create-vsix.binlog
 
-    #- task: CmdLine@1
-    #  displayName: xabuild Xamarin.Android-Tests
-    #  inputs:
-    #    filename: bin\$(XA.Build.Configuration)\bin\xabuild.exe
-    #    arguments: Xamarin.Android-Tests.sln /restore /p:Configuration=$(XA.Build.Configuration) /bl:$(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\msbuild-build-tests.binlog
+    # Pack .nupkgs and extract workload packs to dotnet preview test directory
+    - task: MSBuild@1
+      displayName: PackDotNet
+      inputs:
+        solution: Xamarin.Android.sln
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: /t:PackDotNet /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-packdotnet.binlog
 
-    #- task: MSBuild@1
-    #  displayName: nunit Java.Interop Tests
-    #  inputs:
-    #    solution: Xamarin.Android.sln
-    #    configuration: $(XA.Build.Configuration)
-    #    msbuildArguments: >-
-    #      /restore
-    #      /t:RunJavaInteropTests
-    #      /p:TestAssembly="bin\Test$(XA.Build.Configuration)\generator-Tests.dll;bin\Test$(XA.Build.Configuration)\Java.Interop.Tools.JavaCallableWrappers-Tests.dll;bin\Test$(XA.Build.Configuration)\logcat-parse-Tests.dll;bin\Test$(XA.Build.Configuration)\Xamarin.Android.Tools.ApiXmlAdjuster-Tests.dll;bin\Test$(XA.Build.Configuration)\Xamarin.Android.Tools.Bytecode-Tests.dll"
-    #      /bl:$(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\msbuild-run-ji-tests.binlog
-    #  continueOnError: True
+    - task: MSBuild@1
+      displayName: msbuild xabuild
+      inputs:
+        solution: tools\xabuild\xabuild.csproj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: /restore /bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-xabuild.binlog
 
-    #- task: PublishTestResults@2
-    #  displayName: publish test results
-    #  inputs:
-    #    testResultsFormat: NUnit
-    #    testResultsFiles: TestResult-*.xml
-    #    testRunTitle: Java Interop Tests - Windows Build Tree
+    - task: CmdLine@1
+      displayName: xabuild Xamarin.Android-Tests
+      inputs:
+        filename: bin\$(XA.Build.Configuration)\bin\xabuild.exe
+        arguments: Xamarin.Android-Tests.sln /restore /p:Configuration=$(XA.Build.Configuration) /bl:$(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\dotnet-build-tests.binlog
 
-    ## Limit the amount of worker threads used to run these tests in parallel to half of what is currently available (8) on the Windows pool.
-    ## Using all available cores seems to occasionally bog down our machines and cause parallel test execution to slow down dramatically.
-    ## Only run a subset of the Xamarin.Android.Build.Tests against the local Windows build tree.
-    #- template: yaml-templates\run-nunit-tests.yaml
-    #  parameters:
-    #    testRunTitle: Smoke MSBuild Tests - Windows Build Tree
-    #    testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\net472\Xamarin.Android.Build.Tests.dll
-    #    testResultsFile: TestResult-SmokeMSBuildTests-WinBuildTree-$(XA.Build.Configuration).xml
-    #    nunitConsoleExtraArgs: --where "cat == SmokeTests"
+    - task: MSBuild@1
+      displayName: nunit Java.Interop Tests
+      inputs:
+        solution: Xamarin.Android.sln
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: >-
+          /restore
+          /t:RunJavaInteropTests
+          /p:TestAssembly="bin\Test$(XA.Build.Configuration)\generator-Tests.dll;bin\Test$(XA.Build.Configuration)\Java.Interop.Tools.JavaCallableWrappers-Tests.dll;bin\Test$(XA.Build.Configuration)\logcat-parse-Tests.dll;bin\Test$(XA.Build.Configuration)\Xamarin.Android.Tools.ApiXmlAdjuster-Tests.dll;bin\Test$(XA.Build.Configuration)\Xamarin.Android.Tools.Bytecode-Tests.dll"
+          /bl:$(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\dotnet-run-ji-tests.binlog
+      continueOnError: True
 
-    #- template: yaml-templates\upload-results.yaml
-    #  parameters:
-    #    artifactName: Build Results - Windows
+    - task: PublishTestResults@2
+      displayName: publish test results
+      inputs:
+        testResultsFormat: NUnit
+        testResultsFiles: TestResult-*.xml
+        testRunTitle: Java Interop Tests - Windows Build Tree
+
+    # Limit the amount of worker threads used to run these tests in parallel to half of what is currently available (8) on the Windows pool.
+    # Using all available cores seems to occasionally bog down our machines and cause parallel test execution to slow down dramatically.
+    # Only run a subset of the Xamarin.Android.Build.Tests against the local Windows build tree.
+    - template: yaml-templates\run-nunit-tests.yaml
+      parameters:
+        testRunTitle: Smoke MSBuild Tests - Windows Build Tree
+        testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\net472\Xamarin.Android.Build.Tests.dll
+        testResultsFile: TestResult-SmokeMSBuildTests-WinDotnetBuildTree-$(XA.Build.Configuration).xml
+        nunitConsoleExtraArgs: --where "cat == SmokeTests"
+
+    - template: yaml-templates\upload-results.yaml
+      parameters:
+        artifactName: Build Results - Windows DotNet
 
     - template: yaml-templates\fail-on-issue.yaml
 

@@ -32,6 +32,7 @@ BOOTSTRAP_MSBUILD_FLAGS = /t:Restore,Build /binaryLogger:"$(BOOTSTRAP_BUILD_LOG)
 
 all:
 	$(call MSBUILD_BINLOG,all,$(_SLN_BUILD)) /restore $(MSBUILD_FLAGS) $(SOLUTION)
+	$(call MSBUILD_BINLOG,all,$(_SLN_BUILD)) /restore $(MSBUILD_FLAGS) tools/xabuild/xabuild.csproj
 
 -include bin/Build$(CONFIGURATION)/rules.mk
 

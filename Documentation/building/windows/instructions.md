@@ -30,7 +30,11 @@ MSBuild version 15 or later is required.
 
         msbuild Xamarin.Android.sln
 
- 7. (For Microsoft team members only - Optional) In a [Developer Command
+ 7. In order to use the in-tree Xamarin.Android, build xabuild:
+ 
+         msbuild tools/xabuild/xabuild.csproj
+
+ 8. (For Microsoft team members only - Optional) In a [Developer Command
     Prompt][developer-prompt], build external proprietary git
     dependencies:
 
