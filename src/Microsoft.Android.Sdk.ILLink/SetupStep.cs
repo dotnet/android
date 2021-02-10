@@ -43,9 +43,9 @@ namespace Microsoft.Android.Sdk.ILLink
 			subSteps2.Add (new PreserveRegistrations (cache));
 			subSteps2.Add (new PreserveJavaInterfaces ());
 
-			InsertAfter (new FixAbstractMethodsStep (cache), "RemoveUnreachableBlocksStep");
-			InsertAfter (subSteps2, "RemoveUnreachableBlocksStep");
-			InsertAfter (subSteps1, "RemoveUnreachableBlocksStep");
+			InsertAfter (new FixAbstractMethodsStep (cache), "SetupStep");
+			InsertAfter (subSteps2, "SetupStep");
+			InsertAfter (subSteps1, "SetupStep");
 
 			string proguardPath;
 			if (Context.TryGetCustomData ("ProguardConfiguration", out proguardPath))
