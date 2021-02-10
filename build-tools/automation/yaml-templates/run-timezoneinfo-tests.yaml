@@ -8,7 +8,7 @@ jobs:
     displayName: macOS-${{ parameters.node_id }}
     pool:
       vmImage: $(HostedMacImage)
-    timeoutInMinutes: 90
+    timeoutInMinutes: 120
     cancelTimeoutInMinutes: 5
     workspace:
       clean: all

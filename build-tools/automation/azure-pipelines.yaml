@@ -918,6 +918,10 @@ stages:
     parameters:
       node_id: 3
 
+  - template: yaml-templates\run-timezoneinfo-tests.yaml
+    parameters:
+      node_id: 4
+
 - stage: bcl_tests
   displayName: BCL Emulator Tests
   dependsOn: mac_build

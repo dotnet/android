@@ -35,12 +35,18 @@ namespace Xamarin.Android.Build.Tests
 			if (debuggable != "1") {
 				Assert.Ignore ("TimeZone tests need to use `su root` and this device does not support that feature. Try using an emulator.");
 			}
+			// Disable auto timezone
+			RunAdbCommand ("shell settings put global auto_time_zone 0");
 
 			proj = new XamarinFormsAndroidApplicationProject ();
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			var mainPage = proj.Sources.First (x => x.Include () == "MainPage.xaml.cs");
 			var source = mainPage.TextContent ().Replace ("InitializeComponent ();", @"InitializeComponent ();
+			Console.WriteLine ($""TimeZoneInfoNative={Java.Util.TimeZone.Default.ID}"");
 			Console.WriteLine ($""TimeZoneInfo={TimeZoneInfo.Local.DisplayName}"");
+");
+			source = source.Replace ("Console.WriteLine (\"Button was Clicked!\");", @"Console.WriteLine (""Button was Clicked!"");
+			Console.WriteLine ($""TimeZoneInfoClick={TimeZoneInfo.Local.DisplayName}"");
 ");
 			mainPage.TextContent = () => source;
 			builder = CreateApkBuilder (Path.Combine ("temp", "DeploymentTests"));
@@ -183,7 +189,7 @@ namespace Xamarin.Android.Build.Tests
 			}, Path.Combine (Root, builder.ProjectDirectory, "button-logcat.log")), "Button Should have been Clicked.");
 		}
 
-		private const int NODE_COUNT = 3;
+		private const int NODE_COUNT = 4;
 
 		static object [] GetTimeZoneTestCases (int node)
 		{
@@ -203,38 +209,72 @@ namespace Xamarin.Android.Build.Tests
 			return tests.Where (p => tests.IndexOf (p) % NODE_COUNT == node).ToArray ();
 		}
 
-		[Test]
+		[Test, NonParallelizable]
 		[TestCaseSource (nameof (GetTimeZoneTestCases), new object [] { 0 })]
 		[Category ("TimeZoneInfo")]
+		[Retry (2)]
 		public void CheckTimeZoneInfoIsCorrectNode1 (string timeZone) => CheckTimeZoneInfoIsCorrect (timeZone);
 
-		[Test]
+		[Test, NonParallelizable]
 		[TestCaseSource (nameof (GetTimeZoneTestCases), new object [] { 1 })]
 		[Category ("TimeZoneInfo")]
+		[Retry (2)]
 		public void CheckTimeZoneInfoIsCorrectNode2 (string timeZone) => CheckTimeZoneInfoIsCorrect (timeZone);
 
-		[Test]
+		[Test, NonParallelizable]
 		[TestCaseSource (nameof (GetTimeZoneTestCases), new object [] { 2 })]
 		[Category ("TimeZoneInfo")]
+		[Retry (2)]
 		public void CheckTimeZoneInfoIsCorrectNode3 (string timeZone) => CheckTimeZoneInfoIsCorrect (timeZone);
+
+		[Test, NonParallelizable]
+		[TestCaseSource (nameof (GetTimeZoneTestCases), new object [] { 3 })]
+		[Category ("TimeZoneInfo")]
+		[Retry (2)]
+		public void CheckTimeZoneInfoIsCorrectNode4 (string timeZone) => CheckTimeZoneInfoIsCorrect (timeZone);
 
 		public void CheckTimeZoneInfoIsCorrect (string timeZone)
 		{
 			AssertHasDevices ();
 
 			string currentTimeZone = RunAdbCommand ("shell getprop persist.sys.timezone")?.Trim ();
+			string deviceTz = string.Empty;
+			string logFile = Path.Combine (Root, builder.ProjectDirectory, $"startup-logcat-{timeZone.Replace ("/", "-")}.log");
 			try {
-				RunAdbCommand ($"shell su root setprop persist.sys.timezone \"{timeZone}\"");
+				for (int attempt = 0; attempt < 5; attempt++) {
+					RunAdbCommand ($"shell su root setprop persist.sys.timezone \"{timeZone}\"");
+					deviceTz = RunAdbCommand ("shell getprop persist.sys.timezone")?.Trim ();
+					if (deviceTz == timeZone) {
+						break;
+					}
+				}
+				Assert.AreEqual (timeZone, deviceTz, $"The command to set the device timezone to {timeZone} failed. Current device timezone is {deviceTz}");
+				ClearAdbLogcat ();
+				RunAdbCommand ($"shell am force-stop --user all {proj.PackageName}");
+				RunAdbCommand ($"shell am kill --user all {proj.PackageName}");
+				WaitFor ((int)TimeSpan.FromSeconds (2).TotalMilliseconds);
 				ClearAdbLogcat ();
 				AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
-				Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity",
-					Path.Combine (Root, builder.ProjectDirectory, $"startup-logcat-{timeZone.Replace ("/", "-")}.log")), "Activity should have started");
+				Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity", logFile), "Activity should have started");
+				string line = "";
+				string logCatFile = Path.Combine (Root, builder.ProjectDirectory, $"timezone-logcat-{timeZone.Replace ("/", "-")}.log");
+				ClickButton (proj.PackageName, "myXFButton", "CLICK ME");
 				Assert.IsTrue (MonitorAdbLogcat ((l) => {
-					return l.Contains ($"TimeZoneInfo={timeZone}");
-				}, Path.Combine (Root, builder.ProjectDirectory, $"timezone-logcat-{timeZone.Replace ("/", "-")}.log")), $"TimeZone should have been {timeZone}");
+					if (l.Contains ("TimeZoneInfoClick=")) {
+						line = l;
+						return l.Contains ($"{timeZone}");
+					}
+					return false;
+				}, logCatFile, timeout:30), $"TimeZone should have been {timeZone}. We found : {line}");
 			} finally {
-				if (!string.IsNullOrEmpty (currentTimeZone))
+				RunAdbCommand ($"shell am force-stop --user all {proj.PackageName}");
+				RunAdbCommand ($"shell am kill --user all {proj.PackageName}");
+				if (!string.IsNullOrEmpty (currentTimeZone)) {
 					RunAdbCommand ($"shell su root setprop persist.sys.timezone \"{currentTimeZone}\"");
+				}
+				if (File.Exists (logFile)) {
+					TestContext.AddTestAttachment (logFile);
+				}
 			}
 		}
 	}
