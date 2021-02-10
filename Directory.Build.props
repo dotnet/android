@@ -29,6 +29,8 @@
     <MicroBuildCoreVersion>0.4.1</MicroBuildCoreVersion>
     <MonoCecilVersion>0.11.2</MonoCecilVersion>
     <NuGetApiPackageVersion>5.4.0</NuGetApiPackageVersion>
+    <LZ4PackageVersion>1.1.11</LZ4PackageVersion>
+    <MonoOptionsVersion>6.6.0.161</MonoOptionsVersion>
   </PropertyGroup>
 
 </Project>

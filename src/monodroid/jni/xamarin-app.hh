@@ -8,6 +8,7 @@
 
 #include "monodroid.h"
 
+static constexpr uint64_t FORMAT_TAG = 0x015E6972616D58;
 static constexpr uint32_t COMPRESSED_DATA_MAGIC = 0x5A4C4158; // 'XALZ', little-endian
 static constexpr uint32_t MODULE_MAGIC_NAMES = 0x53544158; // 'XATS', little-endian
 static constexpr uint32_t MODULE_INDEX_MAGIC = 0x49544158; // 'XATI', little-endian
@@ -110,6 +111,8 @@ struct ApplicationConfig
 	uint32_t system_property_count;
 	const char *android_package_name;
 };
+
+MONO_API uint64_t format_tag;
 
 #if defined (DEBUG) || !defined (ANDROID)
 MONO_API const TypeMap type_map; // MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGenerator.cs
