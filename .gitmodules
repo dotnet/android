@@ -24,7 +24,7 @@
     branch = master
 [submodule "external/nrefactory"]
     path = external/nrefactory
-    url = https://github.com/icsharpcode/NRefactory.git
+    url = https://github.com/xamarin/NRefactory.git
     branch = master
 [submodule "external/opentk"]
     path = external/opentk
