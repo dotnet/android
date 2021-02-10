@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 using Mono.Options;
@@ -74,6 +75,9 @@ namespace Xamarin.Android.Prepare
 		static async Task<int> Run (string[] args)
 		{
 			Log.SetContext (Context.Instance);
+
+			// Kajabity requires an encoding (iso-8859-4) that does not ship with .NET Core by default.
+			Encoding.RegisterProvider (CodePagesEncodingProvider.Instance);
 
 			var optionErrors = new List <string> ();
 			ParsedOptions parsedOptions = new ParsedOptions {
