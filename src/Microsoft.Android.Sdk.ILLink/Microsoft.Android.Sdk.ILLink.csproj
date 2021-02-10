@@ -9,9 +9,6 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.ILLink" Version="6.0.0-alpha.1.21109.1" />
     <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Export\Java.Interop.Export.csproj" SkipGetTargetFrameworkProperties="true" AdditionalProperties="TargetFramework=netcoreapp3.1" />
-    <ProjectReference Include="..\..\src\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj" SkipGetTargetFrameworkProperties="true">
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-    </ProjectReference>
 
     <Compile Include="..\Xamarin.Android.Build.Tasks\obj\$(Configuration)\Profile.g.cs" Link="Profile.g.cs" />
 
