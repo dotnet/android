@@ -1,54 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectTypeGuids>{EFBA0AD7-5A72-4C68-AF49-83D382785DCF};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <ProjectGuid>{2868FC32-A4E7-4008-87C8-2C7879CACB58}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <RootNamespace>System.EnterpriseServices</RootNamespace>
-    <AssemblyName>System.EnterpriseServices</AssemblyName>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
-    <NoStdLib>true</NoStdLib>
-    <AndroidApplication>false</AndroidApplication>
-    <AndroidUseLatestPlatformSdk>false</AndroidUseLatestPlatformSdk>
-  </PropertyGroup>
-  <Import Project="..\..\Configuration.props" />
+<Project>
   <Import Project="..\..\build-tools\scripts\MonoAndroidFramework.props" />
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <Optimize>false</Optimize>
-    <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\v1.0\</OutputPath>
-    <DefineConstants>DEBUG;</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <ConsolePause>false</ConsolePause>
-    <NoStdLib>true</NoStdLib>
+  <PropertyGroup>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <Optimize>true</Optimize>
-    <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\v1.0\</OutputPath>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <ConsolePause>false</ConsolePause>
-    <NoStdLib>true</NoStdLib>
-  </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="mscorlib">
-    <HintPath>$(OutputPath)..\v1.0\mscorlib.dll</HintPath>
-    <Private>False</Private>
-  </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <Import Project="$(OutputPath)\..\..\..\xbuild\Xamarin\Android\Xamarin.Android.CSharp.targets" Condition="Exists('$(OutputPath)\..\..\..\xbuild\Xamarin\Android\Xamarin.Android.CSharp.targets')" />
-  <ItemGroup>
-    <ProjectReference Include="..\Mono.Android\Mono.Android.csproj">
-      <Project>{66CF299A-CE95-4131-BCD8-DB66E30C4BF7}</Project>
-      <Name>Mono.Android</Name>
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-    </ProjectReference>
-  </ItemGroup>
+  <Import Project="..\..\build-tools\scripts\MonoAndroidFramework.targets" />
 </Project>
