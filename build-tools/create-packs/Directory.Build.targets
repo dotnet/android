@@ -70,8 +70,12 @@
     </ItemGroup>
   </Target>
 
+  <Target Name="BuildILLinkCustomStep">
+    <Exec Command="$(DotNetPreviewTool) build -p:Configuration=$(Configuration) &quot;$(XamarinAndroidSourcePath)src\Microsoft.Android.Sdk.ILLink\Microsoft.Android.Sdk.ILLink.csproj&quot;" />
+  </Target>
+
   <Target Name="CreateAllPacks"
-      DependsOnTargets="DeleteExtractedWorkloadPacks;_SetGlobalProperties">
+      DependsOnTargets="BuildILLinkCustomStep;DeleteExtractedWorkloadPacks;_SetGlobalProperties">
     <RemoveDir Directories="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs" />
     <Exec Command="$(DotNetPreviewTool) pack @(_GlobalProperties, ' ') -p:AndroidRID=android.21-arm -p:AndroidABI=armeabi-v7a &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
     <Exec Command="$(DotNetPreviewTool) pack @(_GlobalProperties, ' ') -p:AndroidRID=android.21-arm64 -p:AndroidABI=arm64-v8a &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
