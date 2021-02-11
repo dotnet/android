@@ -236,7 +236,7 @@ namespace Java.Interop {
 		static Exception CreateJniLocationException ()
 		{
 			using (var e = new JavaException ()) {
-				return new JniLocationException (e.ToString ());
+				return new OverrideStackTrace (e.ToString ());
 			}
 		}
 
@@ -401,6 +401,22 @@ namespace Java.Interop {
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
 		internal static extern void java_interop_gc_bridge_wait_for_bridge_processing (IntPtr bridge);
+	}
+
+	sealed class OverrideStackTrace : Exception {
+
+		readonly    string  stackTrace;
+
+		public OverrideStackTrace (string stackTrace)
+		{
+			this.stackTrace = stackTrace;
+		}
+
+		public override string StackTrace {
+			get {
+				return stackTrace;
+			}
+		}
 	}
 }
 
