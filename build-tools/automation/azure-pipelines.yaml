@@ -910,28 +910,6 @@ stages:
         artifactName: Test Results - Designer - Windows
         targetPath: $(Build.ArtifactStagingDirectory)\designer-binlogs
 
-- stage: tz_tests
-  displayName: TimeZoneInfo Emulator Tests
-  dependsOn: mac_build
-  condition: and(succeeded(), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'TimeZone')))
-  jobs:
-  # TimeZoneInfo tests
-  - template: yaml-templates\run-timezoneinfo-tests.yaml
-    parameters:
-      node_id: 1
-
-  - template: yaml-templates\run-timezoneinfo-tests.yaml
-    parameters:
-      node_id: 2
-
-  - template: yaml-templates\run-timezoneinfo-tests.yaml
-    parameters:
-      node_id: 3
-
-  - template: yaml-templates\run-timezoneinfo-tests.yaml
-    parameters:
-      node_id: 4
-
 - stage: bcl_tests
   displayName: BCL Emulator Tests
   dependsOn: mac_build
