@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.Build.Framework;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -81,7 +82,7 @@ namespace Xamarin.Android.Tasks
 					using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 						asmgen.Write (sw);
 						sw.Flush ();
-						if (MonoAndroidHelper.CopyIfStreamChanged (sw.BaseStream, asmFilePath)) {
+						if (Files.CopyIfStreamChanged (sw.BaseStream, asmFilePath)) {
 							Log.LogDebugMessage ($"File {asmFilePath} was regenerated");
 						}
 					}

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using Microsoft.Build.Utilities;
@@ -7,6 +7,7 @@ using System.Xml.Linq;
 
 using Xamarin.Android.Tools;
 using Xamarin.Android.Tools.Aidl;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {

@@ -50,7 +50,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.BindingReso
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Android.BindingResolveImports-Tests", "tests\ResolveImports\Xamarin.Android.BindingResolveImports-Tests\Xamarin.Android.BindingResolveImports-Tests.csproj", "{B297008B-C313-455E-B230-E119589D2D79}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Forms.Performance.Integration", "tests\Xamarin.Forms-Performance-Integration\Xamarin.Forms.Performance.Integration.csproj", "{195BE9C2-1F91-40DC-BD6D-DE860BF083FB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.Forms.Performance.Integration", "tests\Xamarin.Forms-Performance-Integration\Xamarin.Forms.Performance.Integration.csproj", "{195BE9C2-1F91-40DC-BD6D-DE860BF083FB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.Forms.Performance.Integration.Droid", "tests\Xamarin.Forms-Performance-Integration\Droid\Xamarin.Forms.Performance.Integration.Droid.csproj", "{576312CC-83FF-48B1-A473-488CDC7121AD}"
 EndProject
@@ -70,11 +70,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonSampleLibrary", "test
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CodeBehind", "CodeBehind", "{9B63992C-2201-4BB0-BD00-D637B481A995}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamarin.ProjectTools", "src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Xamarin.ProjectTools.csproj", "{2DD1EE75-6D8D-4653-A800-0A24367F7F38}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.ProjectTools", "src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Xamarin.ProjectTools.csproj", "{2DD1EE75-6D8D-4653-A800-0A24367F7F38}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Performance-Tests", "Performance-Tests", "{68B8E272-5B12-47AA-8923-550B9CE535C7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "timing", "build-tools\timing\timing.csproj", "{37CAA28C-40BE-4253-BA68-CC5D7316A617}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "timing", "build-tools\timing\timing.csproj", "{37CAA28C-40BE-4253-BA68-CC5D7316A617}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EmbeddedDSO", "tests\EmbeddedDSOs\EmbeddedDSO\EmbeddedDSO.csproj", "{056ED976-618F-4A3E-910E-AA25230C2296}"
 EndProject
@@ -93,6 +93,8 @@ EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		tests\Mono.Android-Tests\Mono.Android-Test.Shared.projitems*{0ab4956e-6fb9-4da0-9d49-ab65a3ff403a}*SharedItemsImports = 13
+		tests\Mono.Android-Tests\Mono.Android-Test.Shared.projitems*{40ead437-216b-4df4-8258-3f47e1672c3a}*SharedItemsImports = 4
+		tests\Mono.Android-Tests\Mono.Android-Test.Shared.projitems*{9ecbea14-b79f-4f92-9266-495c03a32571}*SharedItemsImports = 4
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

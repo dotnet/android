@@ -12,6 +12,7 @@ using Microsoft.Build.Utilities;
 
 using Java.Interop.Tools.Diagnostics;
 using Xamarin.Android.Tools;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -35,7 +36,6 @@ namespace Xamarin.Android.Tasks
 		{
 			Version ndkVersion;
 			bool hasNdkVersion = GetNdkToolchainRelease (ndkPath ?? "", out ndkVersion);
-
 			if (!hasNdkVersion) {
 				logError ("XA5104", Properties.Resources.XA5104);
 				return false;
@@ -209,21 +209,48 @@ namespace Xamarin.Android.Tasks
 			if (forCompiler && OS.IsWindows)
 				toolName = $"{toolName}{extension}";
 			else
-				toolName = $"{toolchainPrefix}-{toolName}{extension}";
+				toolName = GetPrefixedName (toolName);
 
-			string binDir = Path.Combine (toolchainDir, "bin");
-			string toolExe  = MonoAndroidHelper.GetExecutablePath (binDir, toolName);
-			string toolPath  = Path.Combine (binDir, toolExe);
-			if (File.Exists (toolPath))
+			string toolPath = GetToolPath (toolName);
+			if (String.IsNullOrEmpty (toolPath) && String.Compare ("ld", tool, StringComparison.OrdinalIgnoreCase) == 0) {
+				// NDK r22 removed arch-prefixed `ld` binary. There exists the unprefixed `ld` binary, from the LLVM
+				// toolchain, and two binutils linkers - `ld.bfd` and `ld.gold`. Since we will need to keep using
+				// binutils once NDK removes them, let's use one of the latter. `ld.gold` is the better choice, so we'll
+				// use it if found
+				toolPath = GetToolPath (GetPrefixedName ("ld.gold"));
+			}
+
+			if (!String.IsNullOrEmpty (toolPath)) {
 				return toolPath;
+			}
 
 			Diagnostic.Error (5105, Properties.Resources.XA5105, toolName, arch, toolchainDir);
 			return null;
+
+			string GetPrefixedName (string name)
+			{
+				return $"{toolchainPrefix}-{name}{extension}";
+			}
+
+			string GetToolPath (string name)
+			{
+				string binDir = Path.Combine (toolchainDir, "bin");
+				string toolExe  = MonoAndroidHelper.GetExecutablePath (binDir, name);
+				string toolPath  = Path.Combine (binDir, toolExe);
+				if (File.Exists (toolPath))
+					return toolPath;
+				return null;
+			}
 		}
 
 		static string GetUnifiedHeadersPath (string androidNdkPath)
 		{
-			return Path.Combine (androidNdkPath, "sysroot", "usr", "include");
+			string preNdk22SysrootIncludeDir = Path.Combine (androidNdkPath, "sysroot", "usr", "include");
+			if (Directory.Exists (preNdk22SysrootIncludeDir)) {
+				return preNdk22SysrootIncludeDir;
+			}
+
+			return Path.Combine (GetToolchainDir (androidNdkPath), "sysroot", "usr", "include");
 		}
 
 		public static string GetArchDirName (AndroidTargetArch arch)
@@ -274,10 +301,19 @@ namespace Xamarin.Android.Tasks
 			if (!UsingClangNDK)
 				return NdkUtilOld.GetNdkPlatformLibPath (androidNdkPath, arch, apiLevel);
 
+			var checkedPaths = new List<string> ();
 			string lib = arch == AndroidTargetArch.X86_64 ? "lib64" : "lib";
 			string path = Path.Combine (androidNdkPath, "platforms", $"android-{apiLevel}", $"arch-{GetPlatformArch (arch)}", "usr", lib);
-			if (!Directory.Exists (path))
-				throw new InvalidOperationException ($"Platform library directory for target {arch} and API Level {apiLevel} was not found. Expected path is \"{path}\"");
+			if (!Directory.Exists (path)) {
+				checkedPaths.Add (path);
+				path = Path.Combine (GetNdk22OrNewerSysrootDir (androidNdkPath), GetArchDirName (arch), apiLevel.ToString ());
+			}
+
+			if (!Directory.Exists (path)) {
+				checkedPaths.Add (path);
+				string paths = String.Join ("; ", checkedPaths);
+				throw new InvalidOperationException ($"Platform library directory for target {arch} and API Level {apiLevel} was not found. Checked paths: {paths}");
+			}
 			return path;
 		}
 
@@ -355,9 +391,65 @@ namespace Xamarin.Android.Tasks
 			return arch == AndroidTargetArch.Arm64 || arch == AndroidTargetArch.X86_64;
 		}
 
-		public static IEnumerable<int> GetSupportedPlatforms (string androidNdkPath)
+		static string GetNdk22OrNewerSysrootDir (string androidNdkPath)
 		{
-			foreach (var platform in Directory.EnumerateDirectories (Path.Combine (androidNdkPath, "platforms"))) {
+			return Path.Combine (GetToolchainDir (androidNdkPath), "sysroot", "usr", "lib");
+		}
+
+		public static IEnumerable<int> GetSupportedPlatforms (TaskLoggingHelper log, string androidNdkPath)
+		{
+			string preNdk22PlatformsDir = Path.Combine (androidNdkPath, "platforms");
+
+			if (Directory.Exists (preNdk22PlatformsDir)) {
+				return GetSupportedPlatformsPreNdk22 (preNdk22PlatformsDir);
+			}
+
+			// NDK r22 no longer has a single platforms dir.  The API level directories are now found in per-arch
+			// subdirectories under the toolchain directory. We need to examine all of them and compose a list of unique
+			// API levels (since they are repeated in each per-arch subdirectory, but not all architectures have the
+			// same set of API levels)
+			var apiLevels = new HashSet<int> ();
+			string sysrootLibDir = GetNdk22OrNewerSysrootDir (androidNdkPath);
+			foreach (AndroidTargetArch targetArch in Enum.GetValues (typeof (AndroidTargetArch))) {
+				if (targetArch == AndroidTargetArch.None ||
+				    targetArch == AndroidTargetArch.Other ||
+				    targetArch == AndroidTargetArch.Mips) {
+					continue;
+				}
+
+				string archDirName = GetArchDirName (targetArch);
+				if (String.IsNullOrEmpty (archDirName)) {
+					log.LogWarning ($"NDK architecture {targetArch} unknown?");
+					continue;
+				}
+
+				string archDir = Path.Combine (sysrootLibDir, archDirName);
+				if (!Directory.Exists (archDir)) {
+					log.LogWarning ($"Architecture {targetArch} toolchain directory '{archDir}' not found");
+					continue;
+				}
+
+				foreach (string platform in Directory.EnumerateDirectories (archDir, "*", SearchOption.TopDirectoryOnly)) {
+					string plibc = Path.Combine (platform, "libc.so");
+					if (!File.Exists (plibc)) {
+						continue;
+					}
+
+					string pdir = Path.GetFileName (platform);
+					int api;
+					if (!Int32.TryParse (pdir, out api) || apiLevels.Contains (api)) {
+						continue;
+					}
+					apiLevels.Add (api);
+				}
+			}
+
+			return apiLevels;
+		}
+
+		static IEnumerable<int> GetSupportedPlatformsPreNdk22 (string platformsDir)
+		{
+			foreach (var platform in Directory.EnumerateDirectories (platformsDir)) {
 				var androidApi = Path.GetFileName (platform);
 				int api = -1;
 				if (int.TryParse (androidApi.Replace ("android-", String.Empty), out api)) {

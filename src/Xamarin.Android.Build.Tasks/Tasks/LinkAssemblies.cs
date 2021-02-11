@@ -15,6 +15,7 @@ using ML = Mono.Linker;
 
 using Java.Interop.Tools.Cecil;
 using Java.Interop.Tools.Diagnostics;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {

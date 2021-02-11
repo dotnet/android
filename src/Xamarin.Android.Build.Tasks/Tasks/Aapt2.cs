@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2011 Xamarin, Inc. All rights reserved.
+// Copyright (C) 2011 Xamarin, Inc. All rights reserved.
 
 using System;
 using System.Diagnostics;
@@ -16,6 +16,7 @@ using System.Collections.Concurrent;
 using Xamarin.Android.Tools;
 using ThreadingTasks = System.Threading.Tasks;
 using Xamarin.Build;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks {
 

@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -234,7 +235,7 @@ namespace Xamarin.Android.Tasks
 				code = o.ToString ();
 			}
 
-			if (MonoAndroidHelper.CopyIfStringChanged (code, file)) {
+			if (Files.CopyIfStringChanged (code, file)) {
 				Log.LogDebugMessage ($"Writing to: {file}");
 			}
 		}

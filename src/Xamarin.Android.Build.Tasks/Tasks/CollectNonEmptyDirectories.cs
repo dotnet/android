@@ -6,6 +6,7 @@ using System.Linq;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks {
 

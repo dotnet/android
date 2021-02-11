@@ -243,6 +243,7 @@
       <_IncludeCategories Condition=" '$(IncludeCategories)' != '' ">include=$(IncludeCategories)</_IncludeCategories>
       <_ExcludeCategories Condition=" '$(ExcludeCategories)' != '' ">exclude=$(ExcludeCategories)</_ExcludeCategories>
       <_LogcatFilenameBase>$(MSBuildThisFileDirectory)..\..\bin\Test$(Configuration)\logcat-$(Configuration)$(TestsFlavor)</_LogcatFilenameBase>
+      <PlotDataLabelSuffix Condition=" '$(PlotDataLabelSuffix)' == '' ">$(TestsFlavor)</PlotDataLabelSuffix>
     </PropertyGroup>
     <RunInstrumentationTests
         Condition=" '%(TestApkInstrumentation.Identity)' != ''"
@@ -280,7 +281,7 @@
         ResultsFilename="%(_AllArchives.TimingResultsFilename)"
         DefinitionsFilename="%(_AllArchives.TimingDefinitionsFilename)"
         AddResults="true"
-        LabelSuffix="-$(Configuration)$(TestsFlavor)"
+        LabelSuffix="-$(Configuration)$(PlotDataLabelSuffix)"
         Activity="%(_AllArchives.Activity)" />
   </Target>
   <Target Name="RenameTestCases">

@@ -1,4 +1,4 @@
-﻿﻿// Copyright (C) 2011 Xamarin, Inc. All rights reserved.
+﻿// Copyright (C) 2011 Xamarin, Inc. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -10,6 +10,7 @@ using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 using System.Collections.Specialized;
 using Xamarin.Android.Tools;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {

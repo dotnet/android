@@ -5,6 +5,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Build.Tests {
 	[TestFixture]
@@ -51,7 +52,7 @@ namespace Xamarin.Android.Build.Tests {
 		[TestCaseSource (nameof (AndroidComputeResPathsChecks))]
 		public void AndroidComputeResPathsTest (string identity, string logicalName, string expectedIntermediateFile, string expectedResultFile)
 		{
-			var hash = Tools.Files.HashString (identity + logicalName + expectedIntermediateFile + expectedResultFile);
+			var hash = Files.HashString (identity + logicalName + expectedIntermediateFile + expectedResultFile);
 			var projectDir = Path.Combine (Root, "temp", $"{nameof (AndroidComputeResPathsTest)}_{hash}");
 			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = projectDir;
 			var intermdiateDir = Path.Combine (projectDir, "assets");

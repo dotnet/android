@@ -15,6 +15,7 @@ using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -64,6 +65,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Category ("SmokeTests")]
 		public void BuildReleaseArm64 ([Values (false, true)] bool forms)
 		{
 			var proj = forms ?
@@ -81,6 +83,16 @@ namespace Xamarin.Android.Build.Tests
 					proj.AddDotNetCompatPackages ();
 			}
 
+			byte [] apkDescData;
+			var flavor = (forms ? "XForms" : "Simple") + (Builder.UseDotNet ? "DotNet" : "Legacy");
+			var apkDescFilename = $"BuildReleaseArm64{flavor}.apkdesc";
+			var apkDescReference = "reference.apkdesc";
+			using (var stream = typeof (XamarinAndroidApplicationProject).Assembly.GetManifestResourceStream ($"Xamarin.ProjectTools.Resources.Base.{apkDescFilename}")) {
+				apkDescData = new byte [stream.Length];
+				stream.Read (apkDescData, 0, (int) stream.Length);
+			}
+			proj.OtherBuildItems.Add (new BuildItem ("ApkDescFile", apkDescReference) { BinaryContent = () => apkDescData });
+
 			// use BuildHelper.CreateApkBuilder so that the test directory is not removed in tearup
 			using (var b = BuildHelper.CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
@@ -90,6 +102,14 @@ namespace Xamarin.Android.Build.Tests
 					? GetLinkedPath (b, true, depsFilename)
 					: Path.Combine (proj.Root, b.ProjectDirectory, depsFilename);
 				FileAssert.Exists (depsFile);
+
+				const int ApkSizeThreshold = 50 * 1024;
+				const int AssemblySizeThreshold = 50 * 1024;
+				var apkFile = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, proj.PackageName + "-Signed.apk");
+				var apkDescPath = Path.Combine (Root, b.ProjectDirectory, apkDescFilename);
+				var apkDescReferencePath = Path.Combine (Root, b.ProjectDirectory, apkDescReference);
+				var (code, stdOut, stdErr) = RunApkDiffCommand ($"-s --save-description-2={apkDescPath} --test-apk-size-regression={ApkSizeThreshold} --test-assembly-size-regression={AssemblySizeThreshold} {apkDescReferencePath} {apkFile}");
+				Assert.IsTrue (code == 0, $"apkdiff regression test failed with exit code: {code}\nstdOut: {stdOut}\nstdErr: {stdErr}");
 			}
 		}
 
@@ -3273,7 +3293,7 @@ public class MyReceiver : BroadcastReceiver
 					rules.Add ("-dontwarn java.lang.invoke.LambdaMetafactory");
 				}
 				//FIXME: We aren't de-BOM'ing proguard files?
-				var bytes = MonoAndroidHelper.UTF8withoutBOM.GetBytes (string.Join (Environment.NewLine, rules));
+				var bytes = Files.UTF8withoutBOM.GetBytes (string.Join (Environment.NewLine, rules));
 				proj.OtherBuildItems.Add (new BuildItem ("ProguardConfiguration", "okhttp3.pro") {
 					BinaryContent = () => bytes,
 				});

@@ -10,6 +10,7 @@ using System.Threading;
 using System.Xml.Linq;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -237,7 +238,28 @@ namespace Xamarin.Android.Build.Tests
 			return RunProcess (adb, $"{adbTarget} {command}");
 		}
 
+		protected static (int code, string stdOutput, string stdError) RunApkDiffCommand (string args)
+		{
+			string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".exe" : "";
+
+			try {
+				return RunProcessWithExitCode ("apkdiff" + ext, args);
+			} catch (System.ComponentModel.Win32Exception) {
+				// apkdiff's location might not be in the $PATH, try known location
+				var profileDir = Environment.GetEnvironmentVariable ("USERPROFILE");
+
+				return RunProcessWithExitCode (Path.Combine (profileDir, ".dotnet", "tools", "apkdiff" + ext), args);
+			}
+		}
+
 		protected static string RunProcess (string exe, string args)
+		{
+			var (_, stdOutput, stdError) = RunProcessWithExitCode (exe, args);
+
+			return stdOutput + stdError;
+		}
+
+		protected static (int code, string stdOutput, string stdError) RunProcessWithExitCode (string exe, string args)
 		{
 			TestContext.Out.WriteLine ($"{nameof(RunProcess)}: {exe} {args}");
 			var info = new ProcessStartInfo (exe, args) {
@@ -266,12 +288,12 @@ namespace Xamarin.Android.Build.Tests
 				if (!proc.WaitForExit ((int)TimeSpan.FromSeconds (30).TotalMilliseconds)) {
 					proc.Kill ();
 					TestContext.Out.WriteLine ($"{nameof (RunProcess)} timed out: {exe} {args}");
-					return null; //Don't try to read stdout/stderr
+					return (-1, null, null); //Don't try to read stdout/stderr
 				}
 
 				proc.WaitForExit ();
 
-				return standardOutput.ToString ().Trim () + errorOutput.ToString ().Trim ();
+				return (proc.ExitCode, standardOutput.ToString ().Trim (), errorOutput.ToString ().Trim ());
 			}
 		}
 
@@ -455,8 +477,8 @@ namespace Xamarin.Android.Build.Tests
 		{
 			Assert.IsNotNull (stream1, "stream1 of StreamCompare should not be null");
 			Assert.IsNotNull (stream2, "stream2 of StreamCompare should not be null");
-			string hash1 = MonoAndroidHelper.HashBytes (ReadAllBytesIgnoringLineEndings (stream1));
-			string hash2 = MonoAndroidHelper.HashBytes (ReadAllBytesIgnoringLineEndings (stream2));
+			string hash1 = Files.HashBytes (ReadAllBytesIgnoringLineEndings (stream1));
+			string hash2 = Files.HashBytes (ReadAllBytesIgnoringLineEndings (stream2));
 			return hash1 == hash2;
 		}
 

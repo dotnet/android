@@ -7,6 +7,7 @@ using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 using Xamarin.Tools.Zip;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -404,15 +405,13 @@ namespace Xamarin.Android.Build.Tests
 				apk.AssertContainsEntry (apkPath, $"assemblies/System.Linq.dll",        shouldContainEntry: expectEmbeddedAssembies);
 				apk.AssertContainsEntry (apkPath, $"assemblies/es/{proj.ProjectName}.resources.dll", shouldContainEntry: expectEmbeddedAssembies);
 				var rids = runtimeIdentifiers.Split (';');
-				foreach (var abi in rids.Select (MonoAndroidHelper.RuntimeIdentifierToAbi)) {
+				foreach (var abi in rids.Select (AndroidRidAbiHelper.RuntimeIdentifierToAbi)) {
 					apk.AssertContainsEntry (apkPath, $"lib/{abi}/libmonodroid.so");
 					apk.AssertContainsEntry (apkPath, $"lib/{abi}/libmonosgen-2.0.so");
 					if (rids.Length > 1) {
 						apk.AssertContainsEntry (apkPath, $"assemblies/{abi}/System.Private.CoreLib.dll",        shouldContainEntry: expectEmbeddedAssembies);
-						apk.AssertContainsEntry (apkPath, $"assemblies/{abi}/System.Collections.Concurrent.dll", shouldContainEntry: expectEmbeddedAssembies);
 					} else {
 						apk.AssertContainsEntry (apkPath, "assemblies/System.Private.CoreLib.dll",        shouldContainEntry: expectEmbeddedAssembies);
-						apk.AssertContainsEntry (apkPath, "assemblies/System.Collections.Concurrent.dll", shouldContainEntry: expectEmbeddedAssembies);
 					}
 				}
 			}
@@ -488,6 +487,35 @@ namespace Xamarin.Android.Build.Tests
 				apk.AssertContainsEntry (apkPath, "res/raw/foo.txt");
 				apk.AssertContainsEntry (apkPath, "assets/foo/bar.txt");
 			}
+		}
+
+		[Test]
+		public void XamarinLegacySdk ()
+		{
+			var proj = new XASdkProject (outputType: "Library") {
+				Sdk = "Xamarin.Legacy.Sdk/0.1.0-alpha2",
+				Sources = {
+					new AndroidItem.AndroidLibrary ("javaclasses.jar") {
+						BinaryContent = () => ResourceData.JavaSourceJarTestJar,
+					}
+				}
+			};
+
+			using var b = new Builder ();
+			var dotnetTargetFramework = "net6.0-android30.0";
+			var legacyTargetFrameworkVersion = b.LatestTargetFrameworkVersion ().TrimStart ('v');
+			var legacyTargetFramework = $"monoandroid{legacyTargetFrameworkVersion}";
+			proj.SetProperty ("TargetFramework",  value: "");
+			proj.SetProperty ("TargetFrameworks", value: $"{dotnetTargetFramework};{legacyTargetFramework}");
+
+			var dotnet = CreateDotNetBuilder (proj);
+			Assert.IsTrue (dotnet.Pack (), "`dotnet pack` should succeed");
+
+			var nupkgPath = Path.Combine (FullProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.1.0.0.nupkg");
+			FileAssert.Exists (nupkgPath);
+			using var nupkg = ZipHelper.OpenZip (nupkgPath);
+			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetTargetFramework}/{proj.ProjectName}.dll");
+			nupkg.AssertContainsEntry (nupkgPath, $"lib/{legacyTargetFramework}/{proj.ProjectName}.dll");
 		}
 
 		DotNetCLI CreateDotNetBuilder (string relativeProjectDir = null)

@@ -42,6 +42,7 @@ variables:
   HostedMacImage: macOS-10.15
   VSEngWinVS2019: Xamarin-Android-Win2019-1120
   GitHub.Token: $(github--pat--vs-mobiletools-engineering-service2)
+  NUnit.NumberOfTestWorkers: 4
 
 stages:
 - stage: mac_build
@@ -73,6 +74,9 @@ stages:
 - stage: test
   displayName: Test
   dependsOn: mac_build
+  variables:
+    - group: Xamarin-Secrets
+    - group: xamops-azdev-secrets
   jobs:
   - job: emulator_tests
     displayName: Emulator
@@ -99,9 +103,6 @@ stages:
       vmImage: $(HostedMacImage)
     workspace:
       clean: all
-    variables:
-      - group: Xamarin-Secrets
-      - group: xamops-azdev-secrets
     steps:
     - template: yaml-templates/setup-test-environment.yaml
       parameters:
@@ -151,3 +152,20 @@ stages:
         artifactName: Test Results - Emulator $(avdApiLevel)-$(avdAbi) - macOS
 
     - template: yaml-templates/fail-on-issue.yaml
+
+  # TimeZoneInfo test jobs
+  - template: yaml-templates/run-timezoneinfo-tests.yaml
+    parameters:
+      node_id: 1
+
+  - template: yaml-templates/run-timezoneinfo-tests.yaml
+    parameters:
+      node_id: 2
+
+  - template: yaml-templates/run-timezoneinfo-tests.yaml
+    parameters:
+      node_id: 3
+
+  - template: yaml-templates/run-timezoneinfo-tests.yaml
+    parameters:
+      node_id: 4

@@ -4,6 +4,7 @@ using System.IO;
 using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;
 using Xamarin.Tools.Zip;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -70,7 +71,7 @@ namespace Xamarin.Android.Tasks
 		{
 			stream.SetLength (0); //Reuse the stream
 			entry.Extract (stream);
-			MonoAndroidHelper.CopyIfStreamChanged (stream, destination);
+			Files.CopyIfStreamChanged (stream, destination);
 		}
 
 		void DeleteUnknownFiles (string directory, HashSet<string> knownFiles)

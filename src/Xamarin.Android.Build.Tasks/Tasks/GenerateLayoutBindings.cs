@@ -12,6 +12,7 @@ using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 
 using Xamarin.Build;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -275,7 +276,7 @@ namespace Xamarin.Android.Tasks
 					}
 				}
 				if (result)
-					MonoAndroidHelper.CopyIfChanged (tempFile, outputFilePath);
+					Files.CopyIfChanged (tempFile, outputFilePath);
 			} finally {
 				if (File.Exists (tempFile))
 					File.Delete (tempFile);

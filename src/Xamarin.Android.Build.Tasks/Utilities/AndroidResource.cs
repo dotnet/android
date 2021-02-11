@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using Xamarin.Android.Tasks;
+using Microsoft.Android.Build.Tasks;
 
 namespace Monodroid {
 	static class AndroidResource {
@@ -24,7 +25,7 @@ namespace Monodroid {
 					xw.WriteNode (doc.CreateNavigator (), false);
 					xw.Flush ();
 					sw.Flush ();
-					return MonoAndroidHelper.CopyIfStreamChanged (sw.BaseStream, filename);
+					return Files.CopyIfStreamChanged (sw.BaseStream, filename);
 				}
 			} catch (Exception e) {
 				logMessage?.Invoke (TraceLevel.Warning, string.Format (Xamarin.Android.Tasks.Properties.Resources.XA1001, filename, e.Message));

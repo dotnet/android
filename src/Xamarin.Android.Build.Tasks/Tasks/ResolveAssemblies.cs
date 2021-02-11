@@ -14,6 +14,7 @@ using System.Reflection.Metadata;
 using System.Text;
 using Xamarin.Android.Tools;
 using Xamarin.Build;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -62,7 +63,7 @@ namespace Xamarin.Android.Tasks
 			using (var resolver = new MetadataResolver ()) {
 				Execute (resolver);
 			}
-			return Done;
+			return System.Threading.Tasks.Task.CompletedTask;
 		}
 
 		void Execute (MetadataResolver resolver)

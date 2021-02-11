@@ -3,7 +3,6 @@
     "nxunitExplorer.modules": [
         "bin/TestDebug/MSBuildDeviceIntegration/net472/MSBuildDeviceIntegration.dll",
         "bin/TestDebug/net472/Xamarin.Android.Build.Tests.dll",
-        "bin/TestDebug/Xamarin.Android.Build.Tests.Commercial.dll",
         "bin/TestRelease/MSBuildDeviceIntegration/net472/MSBuildDeviceIntegration.dll",
     ],
     "cmake.configureOnOpen": false

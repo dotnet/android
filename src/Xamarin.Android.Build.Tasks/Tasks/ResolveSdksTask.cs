@@ -31,6 +31,7 @@ using Microsoft.Build.Utilities;
 using System;
 using System.IO;
 using System.Linq;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {

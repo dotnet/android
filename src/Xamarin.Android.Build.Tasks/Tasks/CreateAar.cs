@@ -5,6 +5,7 @@ using System.Text;
 using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;
 using Xamarin.Tools.Zip;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -72,7 +73,7 @@ namespace Xamarin.Android.Tasks
 					}
 					if (nameCaseMap.Length > 0) {
 						var archivePath = ".net/__res_name_case_map.txt";
-						aar.AddEntry (archivePath, nameCaseMap.ToString (), MonoAndroidHelper.UTF8withoutBOM);
+						aar.AddEntry (archivePath, nameCaseMap.ToString (), Files.UTF8withoutBOM);
 						existingEntries.Remove (archivePath);
 					}
 				}
@@ -92,7 +93,7 @@ namespace Xamarin.Android.Tasks
 				}
 				if (NativeLibraries != null) {
 					foreach (var lib in NativeLibraries) {
-						var abi = MonoAndroidHelper.GetNativeLibraryAbi (lib);
+						var abi = AndroidRidAbiHelper.GetNativeLibraryAbi (lib);
 						if (string.IsNullOrWhiteSpace (abi)) {
 							Log.LogCodedError ("XA4301", lib.ItemSpec, 0, Properties.Resources.XA4301_ABI, lib.ItemSpec);
 							continue;

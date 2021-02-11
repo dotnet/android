@@ -6,6 +6,7 @@ using System.Text;
 using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -44,7 +45,7 @@ namespace Xamarin.Android.Tasks
 				var ms = MemoryStreamPool.Shared.Rent ();
 				try {
 					m.Save (Log, ms, removeNodes: true);
-					if (!MonoAndroidHelper.CopyIfStreamChanged (ms, OutputManifestFile)) {
+					if (!Files.CopyIfStreamChanged (ms, OutputManifestFile)) {
 						// NOTE: We still need to update the timestamp on this file, or the target would run again
 						File.SetLastWriteTimeUtc (OutputManifestFile, DateTime.UtcNow);
 					}

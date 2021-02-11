@@ -39,7 +39,6 @@ namespace Microsoft.Android.Sdk.ILLink
 			subSteps2.Add (new PreserveExportedTypes ());
 			subSteps2.Add (new MarkJavaObjects ());
 			subSteps2.Add (new PreserveJavaExceptions ());
-			subSteps2.Add (new PreserveJavaTypeRegistrations ());
 			subSteps2.Add (new PreserveApplications ());
 			subSteps2.Add (new PreserveRegistrations (cache));
 			subSteps2.Add (new PreserveJavaInterfaces ());

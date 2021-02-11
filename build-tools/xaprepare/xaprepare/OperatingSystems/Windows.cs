@@ -80,6 +80,16 @@ namespace Xamarin.Android.Prepare
 			return base.Which (programPath, required);
 		}
 
+		public override string AppendExecutableExtension (string programName)
+		{
+			string ext = Path.GetExtension (programName);
+			if (String.Compare (".exe", ext, StringComparison.OrdinalIgnoreCase) == 0) {
+				return programName;
+			}
+
+			return $"{programName}.exe";
+		}
+
 		protected override string AssertIsExecutable (string fullPath)
 		{
 			return fullPath;

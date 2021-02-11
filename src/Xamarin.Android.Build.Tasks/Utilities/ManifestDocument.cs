@@ -23,6 +23,7 @@ using Java.Interop.Tools.TypeNameMappings;
 using System.Xml;
 using System.Text;
 using Xamarin.Android.Tools;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks {
 
@@ -78,7 +79,7 @@ namespace Xamarin.Android.Tasks {
 		};
 
 		public string PackageName { get; set; }
-		public string ApplicationName { get; set; }
+		public string ApplicationLabel { get; set; }
 		public string [] Placeholders { get; set; }
 		public List<string> Assemblies { get; set; }
 		public DirectoryAssemblyResolver Resolver { get; set; }
@@ -90,6 +91,13 @@ namespace Xamarin.Android.Tasks {
 		public bool InstantRunEnabled { get; set; }
 		public bool ForceExtractNativeLibs { get; set; }
 		public bool ForceDebuggable { get; set; }
+		public string VersionName { get; set; }
+
+		string versionCode;
+
+		/// <summary>
+		/// NOTE: this property modifies the underlying XDocument
+		/// </summary>
 		public string VersionCode {
 			get {
 				XAttribute attr = doc.Root.Attribute (androidNs + "versionCode");
@@ -101,9 +109,10 @@ namespace Xamarin.Android.Tasks {
 				return "1";
 			}
 			set {
-				doc.Root.SetAttributeValue (androidNs + "versionCode", value);
+				doc.Root.SetAttributeValue (androidNs + "versionCode", versionCode = value);
 			}
 		}
+
 		public string GetMinimumSdk () {
 			int defaultMinSdkVersion = MonoAndroidHelper.SupportedVersions.MinStableVersion.ApiLevel;
 			var minAttr = doc.Root.Element ("uses-sdk")?.Attribute (androidNs + "minSdkVersion");
@@ -236,28 +245,35 @@ namespace Xamarin.Android.Tasks {
 
 		public IList<string> Merge (TaskLoggingHelper log, TypeDefinitionCache cache, List<TypeDefinition> subclasses, string applicationClass, bool embed, string bundledWearApplicationName, IEnumerable<string> mergedManifestDocuments)
 		{
-			string applicationName  = ApplicationName;
-
 			var manifest = doc.Root;
 
 			if (manifest == null || manifest.Name != "manifest")
 				throw new Exception ("Root element must be 'manifest'");
 
 			var manifest_package = (string) manifest.Attribute ("package");
-
-			if (!string.IsNullOrWhiteSpace (manifest_package))
+			if (string.IsNullOrEmpty (manifest_package)) {
+				if (!string.IsNullOrEmpty (PackageName)) {
+					manifest.SetAttributeValue ("package", PackageName);
+				}
+			} else {
 				PackageName = manifest_package;
+			}
 
 			manifest.SetAttributeValue (XNamespace.Xmlns + "android", "http://schemas.android.com/apk/res/android");
-			if (manifest.Attribute (androidNs + "versionCode") == null)
-				manifest.SetAttributeValue (androidNs + "versionCode", "1");
-			if (manifest.Attribute (androidNs + "versionName") == null)
-				manifest.SetAttributeValue (androidNs + "versionName", "1.0");
+
+			if (manifest.Attribute (androidNs + "versionCode") == null) {
+				manifest.SetAttributeValue (androidNs + "versionCode",
+					string.IsNullOrEmpty (versionCode) ? "1" : versionCode);
+			}
+			if (manifest.Attribute (androidNs + "versionName") == null) {
+				manifest.SetAttributeValue (androidNs + "versionName",
+					string.IsNullOrEmpty (VersionName) ? "1.0" : VersionName);
+			}
 
 			app = CreateApplicationElement (manifest, applicationClass, subclasses, cache);
 
-			if (app.Attribute (androidNs + "label") == null && applicationName != null)
-				app.SetAttributeValue (androidNs + "label", applicationName);
+			if (app.Attribute (androidNs + "label") == null && !string.IsNullOrEmpty (ApplicationLabel))
+				app.SetAttributeValue (androidNs + "label", ApplicationLabel);
 
 			var existingTypes = new HashSet<string> (
 				app.Descendants ().Select (a => (string) a.Attribute (attName)).Where (v => v != null));
@@ -903,7 +919,7 @@ namespace Xamarin.Android.Tasks {
 			MemoryStream stream = MemoryStreamPool.Shared.Rent ();
 			try {
 				Save (log, stream);
-				return MonoAndroidHelper.CopyIfStreamChanged (stream, filename);
+				return Files.CopyIfStreamChanged (stream, filename);
 			} finally {
 				MemoryStreamPool.Shared.Return (stream);
 			}
@@ -914,7 +930,7 @@ namespace Xamarin.Android.Tasks {
 
 		public void Save (Action<string, string> logCodedWarning, string filename)
 		{
-			using (var file = new StreamWriter (filename, append: false, encoding: MonoAndroidHelper.UTF8withoutBOM))
+			using (var file = new StreamWriter (filename, append: false, encoding: Files.UTF8withoutBOM))
 				Save (logCodedWarning, file);
 		}
 
@@ -923,7 +939,7 @@ namespace Xamarin.Android.Tasks {
 
 		public void Save (Action<string, string> logCodedWarning, Stream stream, bool removeNodes = false)
 		{
-			using (var file = new StreamWriter (stream, MonoAndroidHelper.UTF8withoutBOM, bufferSize: 1024, leaveOpen: true))
+			using (var file = new StreamWriter (stream, Files.UTF8withoutBOM, bufferSize: 1024, leaveOpen: true))
 				Save (logCodedWarning, file, removeNodes: removeNodes);
 		}
 
@@ -942,8 +958,8 @@ namespace Xamarin.Android.Tasks {
 			} finally {
 				MemoryStreamPool.Shared.Return (ms);
 			}
-			if (ApplicationName != null)
-				s = s.Replace ("${applicationId}", ApplicationName);
+			if (!string.IsNullOrEmpty (PackageName))
+				s = s.Replace ("${applicationId}", PackageName);
 			if (Placeholders != null)
 				foreach (var entry in Placeholders.Select (e => e.Split (new char [] {'='}, 2, StringSplitOptions.None))) {
 					if (entry.Length == 2)

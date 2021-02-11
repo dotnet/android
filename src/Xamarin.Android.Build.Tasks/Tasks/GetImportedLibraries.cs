@@ -5,6 +5,7 @@ using System.Linq;
 using System.Xml.Linq;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -44,7 +45,7 @@ namespace Xamarin.Android.Tasks
 			var jarFiles          = new List<ITaskItem> ();
 			foreach (var file in Directory.EnumerateFiles (TargetDirectory, "*", SearchOption.AllDirectories)) {
 				if (file.EndsWith (".so", StringComparison.OrdinalIgnoreCase)) {
-					if (MonoAndroidHelper.GetNativeLibraryAbi (file) != null)
+					if (AndroidRidAbiHelper.GetNativeLibraryAbi (file) != null)
 						nativeLibraries.Add (new TaskItem (file));
 				} else if (file.EndsWith (".jar", StringComparison.OrdinalIgnoreCase)) {
 					jarFiles.Add (new TaskItem (file));

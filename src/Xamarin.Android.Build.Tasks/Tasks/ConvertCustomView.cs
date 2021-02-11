@@ -9,6 +9,7 @@ using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Monodroid;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks {
 	public class ConvertCustomView : AndroidTask {

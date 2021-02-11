@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2011 Xamarin, Inc. All rights reserved.
+// Copyright (C) 2011 Xamarin, Inc. All rights reserved.
 
 using System;
 using System.Diagnostics;
@@ -14,6 +14,7 @@ using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using Xamarin.Android.Tools;
 using Xamarin.Build;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -47,9 +48,6 @@ namespace Xamarin.Android.Tasks
 
 		public string UncompressedFileExtensions { get; set; }
 		public string PackageName { get; set; }
-
-		[Required]
-		public string ApplicationName { get; set; }
 
 		public string ExtraPackages { get; set; }
 
@@ -172,7 +170,7 @@ namespace Xamarin.Android.Tasks
 			}
 			if (ret && !string.IsNullOrEmpty (currentResourceOutputFile)) {
 				var tmpfile = currentResourceOutputFile + ".bk";
-				MonoAndroidHelper.CopyIfZipChanged (tmpfile, currentResourceOutputFile);
+				Files.CopyIfZipChanged (tmpfile, currentResourceOutputFile);
 				File.Delete (tmpfile);
 			}
 			return ret;
@@ -281,7 +279,6 @@ namespace Xamarin.Android.Tasks
 				LogCodedError (errorCode, ManifestFile, 0, error);
 				return string.Empty;
 			}
-			manifest.ApplicationName = ApplicationName;
 			manifest.Save (LogCodedWarning, manifestFile);
 
 			cmd.AppendSwitchIfNotNull ("-M ", manifestFile);

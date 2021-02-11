@@ -15,6 +15,7 @@ using System.Text.RegularExpressions;
 using Xamarin.Android.Tools;
 using System.IO.Compression;
 using Xamarin.Tools.Zip;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {

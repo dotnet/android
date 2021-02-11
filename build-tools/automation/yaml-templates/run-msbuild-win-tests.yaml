@@ -18,6 +18,7 @@ jobs:
       VSINSTALLDIR: C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise
       UseDotNet: ${{ eq(parameters.target_framework, 'netcoreapp3.1') }}
     steps:
+    - script: netsh int ipv4 set global sourceroutingbehavior=drop
 
     - template: kill-processes.yaml
 
@@ -32,6 +33,12 @@ jobs:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)
 
+    - task: CmdLine@2
+      displayName: install apkdiff dotnet tool
+      inputs:
+        script: 'dotnet tool update apkdiff -g'
+      continueOnError: true
+
     # Limit the amount of worker threads used to run these tests in parallel to half of what is currently available (8) on the Windows pool.
     # Using all available cores seems to occasionally bog down our machines and cause parallel test execution to slow down dramatically.
     - template: run-nunit-tests.yaml
@@ -45,13 +52,6 @@ jobs:
 
     # Only run these tests on node 2
     - ${{ if eq(parameters.run_extra_tests, true) }}:
-      - template: run-nunit-tests.yaml
-        parameters:
-          useDotNet: $(UseDotNet)
-          testRunTitle: Xamarin.Android.Build.Tests.Commercial - Windows
-          testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\Xamarin.Android.Build.Tests.Commercial.dll
-          testResultsFile: TestResult-MSBuildTestsCommercial-Windows-$(XA.Build.Configuration).xml
-          
       - template: run-nunit-tests.yaml
         parameters:
           useDotNet: $(UseDotNet)

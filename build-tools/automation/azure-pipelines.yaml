@@ -163,6 +163,8 @@ stages:
     timeoutInMinutes: 360
     cancelTimeoutInMinutes: 5
     steps:
+    - script: netsh int ipv4 set global sourceroutingbehavior=drop
+
     - checkout: self
       submodules: recursive
 
@@ -256,6 +258,10 @@ stages:
         testResultsFiles: TestResult-*.xml
         testRunTitle: Java Interop Tests - Windows Build Tree
 
+    - script: dotnet tool update apkdiff -g
+      displayName: install apkdiff dotnet tool
+      continueOnError: true
+
     # Limit the amount of worker threads used to run these tests in parallel to half of what is currently available (8) on the Windows pool.
     # Using all available cores seems to occasionally bog down our machines and cause parallel test execution to slow down dramatically.
     # Only run a subset of the Xamarin.Android.Build.Tests against the local Windows build tree.
@@ -293,16 +299,14 @@ stages:
       parameters:
         configuration: $(ApkTestConfiguration)
 
-    - script: mono $(System.DefaultWorkingDirectory)/build-tools/xaprepare/xaprepare/bin/$(ApkTestConfiguration)/xaprepare.exe --s=Required --auto-provision=yes --auto-provision-uses-sudo=yes --no-emoji --run-mode=CI
+    - script: mono $(System.DefaultWorkingDirectory)/build-tools/xaprepare/xaprepare/bin/$(ApkTestConfiguration)/xaprepare.exe --s=Required --auto-provision=yes --auto-provision-uses-sudo=yes --no-emoji --no-mingw-w64 --run-mode=CI
       displayName: install required brew tools and prepare java.interop
 
     - script: mono $(System.DefaultWorkingDirectory)/build-tools/xaprepare/xaprepare/bin/$(ApkTestConfiguration)/xaprepare.exe --s=EmulatorTestDependencies --no-emoji --run-mode=CI
       displayName: install emulator
 
-    - task: CmdLine@2
+    - script: 'dotnet tool update apkdiff -g'
       displayName: install apkdiff dotnet tool
-      inputs:
-        script: 'dotnet tool update apkdiff -g'
       continueOnError: true
 
     - template: yaml-templates/apk-instrumentation.yaml
@@ -521,8 +525,6 @@ stages:
     # Process Plot CSV files and send results to AppInsights
     # XamarinAndroidMetrics: https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/64e11c84-c922-4ffd-bea9-67ab39354edd/resourceGroups/XamarinMetrics/providers/microsoft.insights/components/XamarinAndroidMetrics/overview
     # UNDONE: Need plot definitions for the following files:
-    #  TestResult-Mono.Android_TestsAppBundle-times.csv
-    #  TestResult-Mono.Android_TestsMultiDex-times.csv
     #  TestResult-Xamarin.Android.EmbeddedDSO_Test-times.csv
 
     - template: yaml-templates/plots-to-appinsights.yaml
@@ -784,6 +786,11 @@ stages:
         git submodule update -q --init --recursive
       displayName: Clone and update UITools
 
+    - task: NuGetAuthenticate@0
+      displayName: authenticate with azure artifacts
+      inputs:
+        forceReinstallCredentialProvider: true
+
     - task: provisionator@2
       displayName: provision designer dependencies
       inputs:
@@ -859,6 +866,11 @@ stages:
         git submodule update -q --init --recursive
       displayName: Clone and update UITools
 
+    - task: NuGetAuthenticate@0
+      displayName: authenticate with azure artifacts
+      inputs:
+        forceReinstallCredentialProvider: true
+
     - task: provisionator@2
       displayName: provision designer dependencies
       inputs:
@@ -902,24 +914,6 @@ stages:
         displayName: upload designer binlogs
         artifactName: Test Results - Designer - Windows
         targetPath: $(Build.ArtifactStagingDirectory)\designer-binlogs
-
-- stage: tz_tests
-  displayName: TimeZoneInfo Emulator Tests
-  dependsOn: mac_build
-  condition: and(succeeded(), or(eq(variables['RunAllTests'], true), contains(dependencies.mac_build.outputs['mac_build_create_installers.TestConditions.TestAreas'], 'TimeZone')))
-  jobs:
-  # TimeZoneInfo tests
-  - template: yaml-templates\run-timezoneinfo-tests.yaml
-    parameters:
-      node_id: 1
-
-  - template: yaml-templates\run-timezoneinfo-tests.yaml
-    parameters:
-      node_id: 2
-
-  - template: yaml-templates\run-timezoneinfo-tests.yaml
-    parameters:
-      node_id: 3
 
 - stage: bcl_tests
   displayName: BCL Emulator Tests

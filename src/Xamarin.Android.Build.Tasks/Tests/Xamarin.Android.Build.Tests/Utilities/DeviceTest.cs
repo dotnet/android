@@ -125,8 +125,8 @@ namespace Xamarin.Android.Build.Tests
 					proc.BeginOutputReadLine ();
 					TimeSpan time = TimeSpan.FromSeconds (timeout);
 					while (!stdout_done.IsSet && !didActionSucceed && time.TotalMilliseconds > 0) {
-						proc.WaitForExit (100);
-						time -= TimeSpan.FromMilliseconds (100);
+						proc.WaitForExit (10);
+						time -= TimeSpan.FromMilliseconds (10);
 					}
 					proc.Kill ();
 					proc.WaitForExit ();

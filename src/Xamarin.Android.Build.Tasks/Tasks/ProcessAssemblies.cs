@@ -6,6 +6,7 @@ using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -128,7 +129,7 @@ namespace Xamarin.Android.Tasks
 		void SetDestinationSubDirectory (ITaskItem assembly, string fileName, ITaskItem symbol)
 		{
 			var rid = assembly.GetMetadata ("RuntimeIdentifier");
-			var abi = MonoAndroidHelper.RuntimeIdentifierToAbi (rid);
+			var abi = AndroidRidAbiHelper.RuntimeIdentifierToAbi (rid);
 			if (!string.IsNullOrEmpty (abi)) {
 				string destination = Path.Combine (assembly.GetMetadata ("DestinationSubDirectory"), abi);
 				assembly.SetMetadata ("DestinationSubDirectory", destination + Path.DirectorySeparatorChar);

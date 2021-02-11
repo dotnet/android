@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -1113,7 +1114,7 @@ namespace Lib2
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
 				var output = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.dll");
 				FileAssert.Exists (output);
-				string expectedHash = MonoAndroidHelper.HashFile (output);
+				string expectedHash = Files.HashFile (output);
 				Guid expectedMvid;
 				using (var assembly = AssemblyDefinition.ReadAssembly (output)) {
 					expectedMvid = assembly.MainModule.Mvid;
@@ -1125,10 +1126,10 @@ namespace Lib2
 				using (var assembly = AssemblyDefinition.ReadAssembly (output)) {
 					if (deterministic) {
 						Assert.AreEqual (expectedMvid, assembly.MainModule.Mvid, "Mvid should match");
-						Assert.AreEqual (expectedHash, MonoAndroidHelper.HashFile (output), "hash should match");
+						Assert.AreEqual (expectedHash, Files.HashFile (output), "hash should match");
 					} else {
 						Assert.AreNotEqual (expectedMvid, assembly.MainModule.Mvid, "Mvid should *not* match");
-						Assert.AreNotEqual (expectedHash, MonoAndroidHelper.HashFile (output), "hash should *not* match");
+						Assert.AreNotEqual (expectedHash, Files.HashFile (output), "hash should *not* match");
 					}
 				}
 			}
