@@ -32,13 +32,13 @@ namespace Xamarin.ProjectTools
 		public static void SetRuntimeIdentifier (this IShortFormProject project, string androidAbi)
 		{
 			if (androidAbi == "armeabi-v7a") {
-				project.SetProperty (KnownProperties.RuntimeIdentifier, "android.21-arm");
+				project.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm");
 			} else if (androidAbi == "arm64-v8a") {
-				project.SetProperty (KnownProperties.RuntimeIdentifier, "android.21-arm64");
+				project.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
 			} else if (androidAbi == "x86") {
-				project.SetProperty (KnownProperties.RuntimeIdentifier, "android.21-x86");
+				project.SetProperty (KnownProperties.RuntimeIdentifier, "android-x86");
 			} else if (androidAbi == "x86_64") {
-				project.SetProperty (KnownProperties.RuntimeIdentifier, "android.21-x64");
+				project.SetProperty (KnownProperties.RuntimeIdentifier, "android-x64");
 			}
 		}
 
@@ -47,13 +47,13 @@ namespace Xamarin.ProjectTools
 			var abis = new List<string> ();
 			foreach (var androidAbi in androidAbis) {
 				if (androidAbi == "armeabi-v7a") {
-					abis.Add ("android.21-arm");
+					abis.Add ("android-arm");
 				} else if (androidAbi == "arm64-v8a") {
-					abis.Add ("android.21-arm64");
+					abis.Add ("android-arm64");
 				} else if (androidAbi == "x86") {
-					abis.Add ("android.21-x86");
+					abis.Add ("android-x86");
 				} else if (androidAbi == "x86_64") {
-					abis.Add ("android.21-x64");
+					abis.Add ("android-x64");
 				}
 			}
 			project.SetProperty (KnownProperties.RuntimeIdentifiers, string.Join (";", abis));

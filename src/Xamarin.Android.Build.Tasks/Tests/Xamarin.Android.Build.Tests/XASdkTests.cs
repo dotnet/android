@@ -300,35 +300,35 @@ namespace Xamarin.Android.Build.Tests
 
 		static readonly object [] DotNetBuildSource = new object [] {
 			new object [] {
-				/* runtimeIdentifiers */ "android.21-arm",
+				/* runtimeIdentifiers */ "android-arm",
 				/* isRelease */          false,
 			},
 			new object [] {
-				/* runtimeIdentifiers */ "android.21-arm64",
+				/* runtimeIdentifiers */ "android-arm64",
 				/* isRelease */          false,
 			},
 			new object [] {
-				/* runtimeIdentifiers */ "android.21-x86",
+				/* runtimeIdentifiers */ "android-x86",
 				/* isRelease */          false,
 			},
 			new object [] {
-				/* runtimeIdentifiers */ "android.21-x64",
+				/* runtimeIdentifiers */ "android-x64",
 				/* isRelease */          false,
 			},
 			new object [] {
-				/* runtimeIdentifiers */ "android.21-arm",
+				/* runtimeIdentifiers */ "android-arm",
 				/* isRelease */          true,
 			},
 			new object [] {
-				/* runtimeIdentifiers */ "android.21-arm;android.21-arm64;android.21-x86;android.21-x64",
+				/* runtimeIdentifiers */ "android-arm;android-arm64;android-x86;android-x64",
 				/* isRelease */          false,
 			},
 			new object [] {
-				/* runtimeIdentifiers */ "android.21-arm;android.21-arm64;android.21-x86",
+				/* runtimeIdentifiers */ "android-arm;android-arm64;android-x86",
 				/* isRelease */          true,
 			},
 			new object [] {
-				/* runtimeIdentifiers */ "android.21-arm;android.21-arm64;android.21-x86;android.21-x64",
+				/* runtimeIdentifiers */ "android-arm;android-arm64;android-x86;android-x64",
 				/* isRelease */          true,
 			},
 		};
@@ -430,7 +430,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void DotNetPublish ([Values (false, true)] bool isRelease)
 		{
-			const string runtimeIdentifier = "android.21-arm";
+			const string runtimeIdentifier = "android-arm";
 			var proj = new XASdkProject {
 				IsRelease = isRelease
 			};

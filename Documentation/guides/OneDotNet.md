@@ -96,7 +96,7 @@ Instead use .NET's concept of [runtime identifiers][rids]:
 ```xml
 <PropertyGroup>
   <!-- Used going forward in .NET -->
-  <RuntimeIdentifiers>android.21-arm;android.21-arm64;android.21-x86;android.21-x64</RuntimeIdentifiers>
+  <RuntimeIdentifiers>android-arm;android-arm64;android-x86;android-x64</RuntimeIdentifiers>
 </PropertyGroup>
 ```
 
