@@ -137,7 +137,11 @@ namespace generator.SourceWriters
 			foreach (var isym in iface.Interfaces) {
 				var igen = (isym is GenericSymbol ? (isym as GenericSymbol).Gen : isym) as InterfaceGen;
 
-				if (igen.IsConstSugar (opt) || igen.RawVisibility != "public")
+				// igen *should not* be null here because we *should* only be inheriting interfaces, but
+				// in the case of constants on that interface we create a C# *class* that is registered for the
+				// Java *interface*. Thus when we do type resolution, we are actually pointed to the
+				// Foo abstract class instead of the IFoo interface.
+				if (igen is null || igen.IsConstSugar (opt) || igen.RawVisibility != "public")
 					continue;
 
 				Implements.Add (opt.GetOutputName (isym.FullName));

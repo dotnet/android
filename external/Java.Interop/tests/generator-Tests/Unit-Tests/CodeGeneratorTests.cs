@@ -229,6 +229,44 @@ namespace generatortests
 
 			StringAssert.DoesNotContain ("[global::System.Runtime.Versioning.SupportedOSPlatformAttribute (\"android30.0\")]", builder.ToString (), "Should contain SupportedOSPlatform!");
 		}
+
+		[Test]
+		public void InheritedInterfaceAsClass ()
+		{
+			// This is a somewhat cheating way to repro a real issue.
+			// The real issue is:
+			// - Binding an interface which implements 'android.provider.BaseColumns'
+			// - android.provider.BaseColumns is an interface in android.jar
+			// - Mono.Android.dll has both:
+			//   - [Register ("android.provider.BaseColumns")] public abstract class BaseColumns
+			//   - [Register ("android.provider.BaseColumns")] public interface IBaseColumns
+			// Our Java type resolution is "last one wins" and happens to pick the class instead of
+			// the interface. So our code is trying to bind an interface that implements a class.
+			var xml = @"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+			  </package>
+			  <package name='com.xamarin.android' jni-name='com/xamarin/android'>
+			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' final='false' name='MyConsts' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+			    <interface abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='false' name='MyClass' static='false' visibility='public' jni-signature='Lcom/xamarin/android/MyClass;'>
+			      <implements name='com.xamarin.android.MyConsts' name-generic-aware='com.xamarin.android.MyConsts' jni-type='Lcom/xamarin/android/MyConsts;'></implements>
+			    </interface>
+			  </package>
+			</api>";
+
+			var gens = ParseApiDefinition (xml);
+
+			// Disable "BuildingCoreAssembly"
+			(gens.Single (g => g.Name == "Object") as ClassGen).FromXml = false;
+
+			var klass = gens.Single (g => g.Name == "IMyClass");
+
+			generator.Context.ContextTypes.Push (klass);
+			generator.WriteType (klass, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			Assert.Pass ("WriteType did not NRE");
+		}
 	}
 
 	[TestFixture]
