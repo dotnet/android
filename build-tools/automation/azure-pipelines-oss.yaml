@@ -19,14 +19,12 @@ pr:
 variables:
   XA.Jdk8.Folder: jdk-1.8
   XA.Jdk11.Folder: jdk-11
-  XA.Build.MacOSSPool: VSEng-Xamarin-RedmondMacMojaveBuildPool-Android-OSS
-  XA.Build.LinuxOSSPool: Xamarin-Android-Ubuntu-Public
   XA.Build.Configuration: Release
   NuGetArtifactName: nupkgs
   InstallerArtifactName: Installers
   EXTRA_MSBUILD_ARGS: /p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False
   PREPARE_FLAGS: PREPARE_CI=1 PREPARE_CI_PR=1
-  DotNetCoreVersion: 3.1.201
+  DotNetCoreVersion: 3.1.405
   DotNet5Version: 5.0.100
   GitHub.Token: $(github--pat--vs-mobiletools-engineering-service2)
 
@@ -38,7 +36,9 @@ stages:
   - job: mac_build
     displayName: Mac Build
     pool:
-      name: $(XA.Build.MacOSSPool)
+      name: VSEng-Xamarin-RedmondMac-Android-OSS
+      demands:
+      - agent.osversionfamily -equals 10.15
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:
@@ -175,7 +175,7 @@ stages:
   jobs:
   - job: linux_build_package
     displayName: Linux Build
-    pool: $(XA.Build.LinuxOSSPool)
+    pool: Xamarin-Android-Ubuntu-Public
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:
