@@ -2027,7 +2027,17 @@ MonodroidRuntime::get_java_class_name_for_TypeManager (jclass klass)
 
 	JNIEnv *env = osBridge.ensure_jnienv ();
 	jstring name = reinterpret_cast<jstring> (env->CallObjectMethod (klass, Class_getName));
+	if (name == nullptr) {
+		log_error (LOG_DEFAULT, "Failed to obtain Java class name for object at %p", klass);
+		return nullptr;
+	}
+
 	const char *mutf8 = env->GetStringUTFChars (name, nullptr);
+	if (mutf8 == nullptr) {
+		log_error (LOG_DEFAULT, "Failed to convert Java class name to UTF8 (out of memory?)");
+		env->DeleteLocalRef (name);
+		return nullptr;
+	}
 	char *ret = strdup (mutf8);
 
 	env->ReleaseStringUTFChars (name, mutf8);
