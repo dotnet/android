@@ -15,6 +15,11 @@ steps:
   parameters:
     version: $(DotNetCoreVersion)
 
+- task: NuGetAuthenticate@0
+  displayName: authenticate with azure artifacts
+  inputs:
+    forceReinstallCredentialProvider: true
+
 - template: install-certificates.yml@yaml
   parameters:
     DeveloperIdApplication: $(developer-id-application)
