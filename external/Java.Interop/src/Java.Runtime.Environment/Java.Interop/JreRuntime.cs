@@ -147,10 +147,6 @@ namespace Java.Interop {
 
 		protected override void Dispose (bool disposing)
 		{
-			var bridge = NativeMethods.java_interop_gc_bridge_get_current ();
-			if (bridge != IntPtr.Zero) {
-				NativeMethods.java_interop_gc_bridge_remove_current_app_domain (bridge);
-			}
 			base.Dispose (disposing);
 		}
 	}

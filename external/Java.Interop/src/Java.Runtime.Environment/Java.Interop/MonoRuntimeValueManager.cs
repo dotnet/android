@@ -90,6 +90,11 @@ namespace Java.Interop {
 				RegisteredInstances.Clear ();
 				RegisteredInstances = null;
 			}
+
+			if (bridge != IntPtr.Zero) {
+				NativeMethods.java_interop_gc_bridge_remove_current_app_domain (bridge);
+				bridge  = IntPtr.Zero;
+			}
 		}
 
 		Dictionary<int, List<WeakReference<IJavaPeerable>>>     RegisteredInstances = new Dictionary<int, List<WeakReference<IJavaPeerable>>>();

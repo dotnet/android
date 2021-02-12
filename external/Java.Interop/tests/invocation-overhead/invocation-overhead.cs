@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using Java.Interop;
 
@@ -8,20 +10,7 @@ using JIIntPtrEnv   = Java.Interop.JIIntPtrs.JniEnvironment;
 using PinvokeEnv    = Java.Interop.JIPinvokes.JniEnvironment;
 using XAIntPtrEnv   = Java.Interop.XAIntPtrs.JniEnvironment;
 
-namespace Java.Interop {
-	public enum JniObjectReferenceType {
-		Invalid     = 0,
-		Local       = 1,
-		Global      = 2,
-		WeakGlobal  = 3,
-	}
-
-	public enum JniReleaseArrayElementsMode {
-		Default,
-		Commit,
-		Abort,
-	}
-
+namespace Java.Interop.SafeHandles {
 	public struct JniObjectReference
 	{
 		public  JniReferenceSafeHandle      SafeHandle  {get; private set;}
@@ -48,152 +37,6 @@ namespace Java.Interop {
 			Type    = type;
 		}
 	}
-
-	[StructLayout(LayoutKind.Explicit)]
-	public struct JniArgumentValue {
-#pragma warning disable 0414
-		[FieldOffset(0)] bool z;
-		[FieldOffset(0)] sbyte b;
-		[FieldOffset(0)] char c;
-		[FieldOffset(0)] short s;
-		[FieldOffset(0)] int i;
-		[FieldOffset(0)] long j;
-		[FieldOffset(0)] float f;
-		[FieldOffset(0)] double d;
-		[FieldOffset(0)] IntPtr l;
-#pragma warning restore 0414
-
-		public JniArgumentValue (bool value)
-		{
-			this = new JniArgumentValue ();
-			z = value;
-		}
-
-		public JniArgumentValue (sbyte value)
-		{
-			this = new JniArgumentValue ();
-			b = value;
-		}
-
-		public JniArgumentValue (char value)
-		{
-			this = new JniArgumentValue ();
-			c = value;
-		}
-
-		public JniArgumentValue (short value)
-		{
-			this = new JniArgumentValue ();
-			s = value;
-		}
-
-		public JniArgumentValue (int value)
-		{
-			this = new JniArgumentValue ();
-			i = value;
-		}
-
-		public JniArgumentValue (long value)
-		{
-			this = new JniArgumentValue ();
-			j = value;
-		}
-
-		public JniArgumentValue (float value)
-		{
-			this = new JniArgumentValue ();
-			f = value;
-		}
-
-		public JniArgumentValue (double value)
-		{
-			this = new JniArgumentValue ();
-			d = value;
-		}
-		public JniArgumentValue (IntPtr value)
-		{
-			this = new JniArgumentValue ();
-			l = value;
-		}
-		public JniArgumentValue (JniObjectReference value)
-		{
-			this = new JniArgumentValue ();
-			var sh = value.SafeHandle;
-			if (sh != null)
-				l = value.SafeHandle.DangerousGetHandle ();
-			else
-				l = value.Handle;
-		}
-
-		public JniArgumentValue (JniReferenceSafeHandle value)
-		{
-			this = new JniArgumentValue ();
-			l = value == null ? IntPtr.Zero : value.DangerousGetHandle ();
-		}
-
-		public override string ToString ()
-		{
-			return string.Format ("Java.Interop.JniArgumentValue(z={0},b={1},c={2},s={3},i={4},f={5},d={6},l=0x{7})",
-					z, b, c, s, i, f, d, l.ToString ("x"));
-		}
-	}
-	public sealed class JniFieldInfo
-	{
-		public IntPtr ID;
-		public bool   IsStatic;
-		public bool IsValid {get {return ID != IntPtr.Zero;}}
-
-		public JniFieldInfo (IntPtr id, bool isStatic)
-		{
-			ID = id;
-			IsStatic = isStatic;
-		}
-		public JniFieldInfo (string name, string signature, IntPtr id, bool isStatic)
-		{
-			ID = id;
-			IsStatic = isStatic;
-		}
-
-		public override string ToString ()
-		{
-			return string.Format ("{0}(0x{1})", GetType ().FullName, ID.ToString ("x"));
-		}
-	}
-
-	public class JniMethodInfo
-	{
-		public IntPtr ID;
-		public bool   IsStatic;
-		public bool IsValid {get {return ID != IntPtr.Zero;}}
-		public JniMethodInfo (IntPtr id, bool isStatic)
-		{
-			ID = id;
-			IsStatic = isStatic;
-		}
-		public JniMethodInfo (string name, string signature, IntPtr id, bool isStatic)
-		{
-			ID = id;
-			IsStatic = isStatic;
-		}
-		public override string ToString ()
-		{
-			return string.Format ("{0}(0x{1})", GetType ().FullName, ID.ToString ("x"));
-		}
-	}
-	public struct JniNativeMethodRegistration {
-
-		public  string      Name;
-		public  string      Signature;
-		public  Delegate    Marshaler;
-
-		public JniNativeMethodRegistration (string name, string signature, Delegate marshaler)
-		{
-			Name        = name;
-			Signature   = signature;
-			Marshaler   = marshaler;
-		}
-	}
-
 	public abstract class JniReferenceSafeHandle : SafeHandle
 	{
 		protected JniReferenceSafeHandle ()
@@ -292,6 +135,7 @@ namespace Java.Interop {
 			return string.Format ("{0}(0x{1})", GetType ().FullName, handle.ToString ("x"));
 		}
 	}
+
 	public sealed class JavaVMSafeHandle : SafeHandle {
 
 		JavaVMSafeHandle ()
@@ -324,27 +168,7 @@ namespace Java.Interop {
 			return string.Format ("{0}(0x{1})", GetType ().FullName, handle.ToString ("x"));
 		}
 	}
-	struct JavaVMInitArgs {
-		public  JniVersion                      version;    /*				 use JNI_VERSION_1_2 or later */
 
-		public  int                             nOptions;
-		public  IntPtr /* JavaVMOption[] */     options;
-		public  byte                            ignoreUnrecognized;
-	}
-
-	struct JavaVMOption {
-		public  IntPtr /* const char* */    optionString;
-		public  IntPtr /* void * */         extraInfo;
-	}
-	public enum JniVersion {
-		// v1_1    = 0x00010001,
-		v1_2    = 0x00010002,
-		v1_4    = 0x00010004,
-		v1_6	= 0x00010006,
-	}
-}
-
-namespace Java.Interop.SafeHandles {
 	class JniEnvironmentInfo {
 		public IntPtr EnvironmentPointer;
 		public JniEnvironmentInvoker Invoker;
@@ -371,6 +195,22 @@ namespace Java.Interop.SafeHandles {
 }
 
 namespace Java.Interop.JIIntPtrs {
+	public struct JniObjectReference
+	{
+		public  IntPtr                      Handle  {get; private set;}
+		public  JniObjectReferenceType      Type    {get; private set;}
+		public  bool                        IsValid {
+			get {
+				return Handle != IntPtr.Zero;
+			}
+		}
+
+		public JniObjectReference (IntPtr handle, JniObjectReferenceType type = JniObjectReferenceType.Invalid)
+		{
+			Handle  = handle;
+			Type    = type;
+		}
+	}
 	class JniEnvironmentInfo {
 		public IntPtr EnvironmentPointer;
 		public JniEnvironmentInvoker Invoker;
@@ -396,6 +236,22 @@ namespace Java.Interop.JIIntPtrs {
 }
 
 namespace Java.Interop.JIPinvokes {
+	public struct JniObjectReference
+	{
+		public  IntPtr                      Handle  {get; private set;}
+		public  JniObjectReferenceType      Type    {get; private set;}
+		public  bool                        IsValid {
+			get {
+				return Handle != IntPtr.Zero;
+			}
+		}
+
+		public JniObjectReference (IntPtr handle, JniObjectReferenceType type = JniObjectReferenceType.Invalid)
+		{
+			Handle  = handle;
+			Type    = type;
+		}
+	}
 	public static partial class JniEnvironment {
 		public static IntPtr EnvironmentPointer;
 
@@ -426,6 +282,22 @@ namespace Java.Interop.JIPinvokes {
 	}
 }
 namespace Java.Interop.XAIntPtrs {
+	public struct JniObjectReference
+	{
+		public  IntPtr                      Handle  {get; private set;}
+		public  JniObjectReferenceType      Type    {get; private set;}
+		public  bool                        IsValid {
+			get {
+				return Handle != IntPtr.Zero;
+			}
+		}
+
+		public JniObjectReference (IntPtr handle, JniObjectReferenceType type = JniObjectReferenceType.Invalid)
+		{
+			Handle  = handle;
+			Type    = type;
+		}
+	}
 	class JniEnvironmentInfo {
 		public IntPtr EnvironmentPointer;
 		public JniEnvironmentInvoker Invoker;
@@ -449,34 +321,110 @@ namespace Java.Interop.XAIntPtrs {
 	}
 }
 
+namespace Java.Interop {
+	public sealed class JniFieldInfo
+	{
+		public IntPtr ID;
+		public bool   IsStatic;
+		public bool IsValid {get {return ID != IntPtr.Zero;}}
+
+		public JniFieldInfo (IntPtr id, bool isStatic)
+		{
+			ID = id;
+			IsStatic = isStatic;
+		}
+		public JniFieldInfo (string name, string signature, IntPtr id, bool isStatic)
+		{
+			ID = id;
+			IsStatic = isStatic;
+		}
+
+		public override string ToString ()
+		{
+			return string.Format ("{0}(0x{1})", GetType ().FullName, ID.ToString ("x"));
+		}
+	}
+	public class JniMethodInfo
+	{
+		public IntPtr ID;
+		public bool   IsStatic;
+		public bool IsValid {get {return ID != IntPtr.Zero;}}
+		public JniMethodInfo (IntPtr id, bool isStatic)
+		{
+			ID = id;
+			IsStatic = isStatic;
+		}
+		public JniMethodInfo (string name, string signature, IntPtr id, bool isStatic)
+		{
+			ID = id;
+			IsStatic = isStatic;
+		}
+		public override string ToString ()
+		{
+			return string.Format ("{0}(0x{1})", GetType ().FullName, ID.ToString ("x"));
+		}
+	}
+}
+
+
+class DummyValueManager : JniRuntime.JniValueManager {
+	public override void WaitForGCBridgeProcessing ()
+	{
+	}
+	public override void CollectPeers ()
+	{
+	}
+	public override void AddPeer (IJavaPeerable reference)
+	{
+	}
+	public override void RemovePeer (IJavaPeerable reference)
+	{
+	}
+	public override void FinalizePeer (IJavaPeerable reference)
+	{
+	}
+	public override List<JniSurfacedPeerInfo> GetSurfacedPeers ()
+	{
+		return null;
+	}
+	public override IJavaPeerable PeekPeer (global::Java.Interop.JniObjectReference reference)
+	{
+		return null;
+	}
+	public override void ActivatePeer (IJavaPeerable self, global::Java.Interop.JniObjectReference reference, ConstructorInfo cinfo, object [] argumentValues)
+	{
+		throw new NotImplementedException ();
+	}
+}
+
+class DummyObjectReferenceManager : JniRuntime.JniObjectReferenceManager {
+		public override int GlobalReferenceCount {
+			get {return 0;}
+		}
+
+		public override int WeakGlobalReferenceCount {
+			get {return 0;}
+		}
+}
 
 class App {
-	const string LibraryName = "jvm.dll";
-
-	[DllImport (LibraryName)]
-	static extern int JNI_CreateJavaVM (out IntPtr javavm, out IntPtr jnienv, ref JavaVMInitArgs args);
 
 	public static void Main ()
 	{
-		IntPtr _jvm, _env;
-		CreateJavaVM (out _jvm, out _env);
+		var runtimeOptions  = new JreRuntimeOptions (){
+			JvmLibraryPath          = Environment.GetEnvironmentVariable ("JI_JVM_PATH"),
+			ValueManager            = new DummyValueManager (),
+			ObjectReferenceManager  = new DummyObjectReferenceManager (),
+		};
+		var GlobalRuntime   = runtimeOptions.CreateJreVM ();
+		IntPtr _env         = global::Java.Interop.JniEnvironment.EnvironmentPointer;
 
 		SafeTiming (_env);
+		XAIntPtrTiming (_env);
 		JIIntPtrTiming (_env);
 		JIPinvokeTiming (_env);
-		XAIntPtrTiming (_env);
-	}
 
-	static void CreateJavaVM (out IntPtr jvm, out IntPtr jnienv)
-	{
-		var args = new JavaVMInitArgs () {
-			version             = JniVersion.v1_6,
-			nOptions            = 0,
-			ignoreUnrecognized  = (byte) 1,
-		};
-		int r = JNI_CreateJavaVM (out jvm, out jnienv, ref args);
-		if (r != 0)
-			throw new InvalidOperationException ("JNI_CreateJavaVM returned: " + r);
+		GlobalRuntime.Dispose ();
 	}
 
 	const int C = 10000000;
@@ -495,7 +443,7 @@ class App {
 
 		var t = Stopwatch.StartNew ();
 		var args = stackalloc JniArgumentValue [2];
-		args [0] = new JniArgumentValue (intArray);
+		args [0] = new JniArgumentValue (intArray.SafeHandle.DangerousGetHandle ());
 		args [1] = new JniArgumentValue (2);
 		for (int i = 0; i < C; ++i) {
 			int r = SafeEnv.StaticMethods.CallStaticIntMethod (Arrays_class, Arrays_binarySearch, args);
@@ -522,7 +470,7 @@ class App {
 
 		var t = Stopwatch.StartNew ();
 		var args = stackalloc JniArgumentValue [2];
-		args [0] = new JniArgumentValue (intArray);
+		args [0] = new JniArgumentValue (intArray.Handle);
 		args [1] = new JniArgumentValue (2);
 		for (int i = 0; i < C; ++i) {
 			int r = JIIntPtrEnv.StaticMethods.CallStaticIntMethod (Arrays_class, Arrays_binarySearch, args);
@@ -543,7 +491,7 @@ class App {
 
 		var t = Stopwatch.StartNew ();
 		var args = stackalloc JniArgumentValue [2];
-		args [0] = new JniArgumentValue (intArray);
+		args [0] = new JniArgumentValue (intArray.Handle);
 		args [1] = new JniArgumentValue (2);
 		for (int i = 0; i < C; ++i) {
 			int r = PinvokeEnv.StaticMethods.CallStaticIntMethod (Arrays_class, Arrays_binarySearch, args);

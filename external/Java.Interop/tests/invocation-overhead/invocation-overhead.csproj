@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>net472;netcoreapp3.1</TargetFrameworks>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <AppendTargetFrameworkToOutputPath>True</AppendTargetFrameworkToOutputPath>
+    <DefineConstants>FEATURE_JNIENVIRONMENT_JI_INTPTRS;FEATURE_JNIENVIRONMENT_JI_PINVOKES;FEATURE_JNIENVIRONMENT_SAFEHANDLES;FEATURE_JNIENVIRONMENT_XA_INTPTRS </DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\build-tools\jnienv-gen\jnienv-gen.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\src\java-interop\java-interop.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\src\Java.Runtime.Environment\Java.Runtime.Environment.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" Version="1.0.0" />
+  </ItemGroup>
+</Project>

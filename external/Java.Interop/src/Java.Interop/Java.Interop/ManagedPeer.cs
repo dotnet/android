@@ -14,6 +14,18 @@ namespace Java.Interop {
 	[JniTypeSignature (JniTypeName)]
 	/* static */ sealed class ManagedPeer : JavaObject {
 
+		delegate void ConstructDelegate (IntPtr jnienv,
+				IntPtr klass,
+				IntPtr n_self,
+				IntPtr n_assemblyQualifiedName,
+				IntPtr n_constructorSignature,
+				IntPtr n_constructorArguments);
+		delegate void RegisterDelegate (IntPtr jnienv,
+				IntPtr klass,
+				IntPtr n_nativeClass,
+				IntPtr n_assemblyQualifiedName,
+				IntPtr n_methods);
+
 		internal const string JniTypeName = "com/xamarin/java_interop/ManagedPeer";
 
 
@@ -25,11 +37,11 @@ namespace Java.Interop {
 					new JniNativeMethodRegistration (
 						"construct",
 						ConstructSignature,
-						(Action<IntPtr, IntPtr, IntPtr, IntPtr, IntPtr, IntPtr>) Construct),
+						(ConstructDelegate) Construct),
 					new JniNativeMethodRegistration (
 						"registerNativeMembers",
 						RegisterNativeMembersSignature,
-						(Action<IntPtr, IntPtr, IntPtr, IntPtr, IntPtr>) RegisterNativeMembers)
+						(RegisterDelegate) RegisterNativeMembers)
 			);
 		}
 

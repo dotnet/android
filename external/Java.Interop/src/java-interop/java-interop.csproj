@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.Build.NoTargets">
   <PropertyGroup>
-    <TargetFramework>net472</TargetFramework>
+    <TargetFrameworks>net472;netcoreapp3.1</TargetFrameworks>
     <OutputPath>$(ToolOutputFullPath)</OutputPath>
     <JNIEnvGenPath>$(BuildToolOutputFullPath)</JNIEnvGenPath>
     <OutputName>java-interop</OutputName>
@@ -44,6 +44,9 @@
     <ClCompile Include="java-interop-dlfcn.cc" />
     <ClCompile Include="java-interop-jvm.cc" />
     <ClCompile Include="java-interop-logger.cc" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net472' ">
     <ClCompile Include="java-interop-mono.cc" />
     <ClCompile Include="java-interop-gc-bridge-mono.cc" />
   </ItemGroup>

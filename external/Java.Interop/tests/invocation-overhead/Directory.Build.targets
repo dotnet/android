@@ -1,0 +1,46 @@
+<Project>
+  <Target Name="BuildJniEnvironment_g_cs"
+      BeforeTargets="BeforeCompile"
+      Inputs="$(_JNIEnvGenPath)"
+      Outputs="jni.cs;jni.c">
+    <Exec
+        Command="$(_RunJNIEnvGen) jni.cs jni.c"
+    />
+  </Target>
+
+  <ItemGroup>
+    <_NativeLibsSrc Include="$(ToolOutputFullPath)\libjava-interop.*" />
+    <_NativeLibsDst Include="@(_NativeLibsSrc->'$(OutputPath)%(Filename)%(Extension)')" />
+  </ItemGroup>
+
+  <Target Name="CopyNativeLibs"
+      BeforeTargets="BeforeCompile"
+      Inputs="@(_NativeLibsSrc)"
+      Outputs="@(_NativeLibsDst)">
+    <Copy
+        SourceFiles="@(_NativeLibsSrc)"
+        DestinationFiles="@(_NativeLibsDst)"
+    />
+  </Target>
+
+  <Target Name="Run">
+    <MSBuild Projects="$(MSBuildThisFileDirectory)invocation-overhead.csproj"
+        Properties="TargetFramework=net472"
+        Targets="_Run_net472"
+    />
+    <MSBuild Projects="$(MSBuildThisFileDirectory)invocation-overhead.csproj"
+        Properties="TargetFramework=netcoreapp3.1"
+        Targets="_Run_netcoreapp"
+    />
+  </Target>
+
+  <Target Name="_Run_net472">
+    <Message Text="Mono timing:" Importance="High" />
+    <Exec Command="JI_JVM_PATH=&quot;$(JdkJvmPath)&quot; $(Runtime) $(TargetPath)" />
+  </Target>
+
+  <Target Name="_Run_netcoreapp">
+    <Message Text=".NET Core timing:" Importance="High" />
+    <Exec Command="JI_JVM_PATH=&quot;$(JdkJvmPath)&quot; dotnet $(TargetPath)" />
+  </Target>
+</Project>
