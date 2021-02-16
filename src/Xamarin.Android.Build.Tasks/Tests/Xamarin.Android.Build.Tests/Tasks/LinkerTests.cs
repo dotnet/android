@@ -399,7 +399,7 @@ namespace UnnamedProject {
 		public void TypeRegistrationsFallback ([Values (true, false)] bool enabled)
 		{
 			if (!Builder.UseDotNet)
-				return;
+				Assert.Ignore ("Test only valid on .NET 6");
 
 			var proj = new XamarinAndroidApplicationProject () { IsRelease = true };
 			if (enabled)
