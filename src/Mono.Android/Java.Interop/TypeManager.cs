@@ -212,9 +212,9 @@ namespace Java.Interop {
 		[MethodImplAttribute(MethodImplOptions.InternalCall)]
 		static extern Type monodroid_typemap_java_to_managed (string java_type_name);
 
-		private static bool TypeRegistrationFallbackIsEnabled { get; } = InitializeTypeRegistrationFallbackIsEnabled ();
-		private static bool InitializeTypeRegistrationFallbackIsEnabled () =>
-		    AppContext.TryGetSwitch ("Java.Interop.TypeManager.TypeRegistrationFallbackIsEnabled", out bool isEnabled) ? isEnabled : true;
+		static bool TypeRegistrationFallbackIsEnabled { get; } = InitializeTypeRegistrationFallbackIsEnabled ();
+		static bool InitializeTypeRegistrationFallbackIsEnabled () =>
+		    !AppContext.TryGetSwitch ("Java.Interop.TypeManager.TypeRegistrationFallbackIsEnabled", out bool isEnabled) || isEnabled;
 
 		internal static Type? GetJavaToManagedType (string class_name)
 		{
@@ -370,7 +370,7 @@ namespace Java.Interop {
 		static void LazyInitPackageLookup ()
 		{
 			if (packageLookup == null)
-				packageLookup = new Dictionary<string, List<Converter<string, Type?>>> ();
+				packageLookup = new Dictionary<string, List<Converter<string, Type?>>> (StringComparer.Ordinal);
 		}
 
 		public static void RegisterPackage (string package, Converter<string, Type> lookup)
