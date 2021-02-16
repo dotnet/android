@@ -22,6 +22,7 @@ This file contains the .NET 5-specific targets to customize ILLink
     <UseSystemResourceKeys Condition="'$(UseSystemResourceKeys)' == ''">true</UseSystemResourceKeys>
     <HttpActivityPropagationSupport Condition="'$(HttpActivityPropagationSupport)' == ''">false</HttpActivityPropagationSupport>
     <StartupHookSupport Condition="'$(StartupHookSupport)' == ''">false</StartupHookSupport>
+    <XATypeRegistrationFallback Condition="'$(XATypeRegistrationFallback)' == ''">false</XATypeRegistrationFallback>
   </PropertyGroup>
 
   <Target Name="_PrepareLinking"
@@ -29,6 +30,10 @@ This file contains the .NET 5-specific targets to customize ILLink
       AfterTargets="ComputeResolvedFilesToPublishList"
       DependsOnTargets="GetReferenceAssemblyPaths;_CreatePropertiesCache">
     <ItemGroup>
+      <RuntimeHostConfigurationOption Include="Java.Interop.TypeManager.TypeRegistrationFallbackIsEnabled"
+          Condition="'$(XATypeRegistrationFallback)' != ''"
+          Value="$(XATypeRegistrationFallback)"
+          Trim="true" />
       <!-- Mark all assemblies to be linked for AndroidLinkMode=Full -->
       <ResolvedFileToPublish
           Update="@(ResolvedFileToPublish)"

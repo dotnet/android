@@ -212,6 +212,10 @@ namespace Java.Interop {
 		[MethodImplAttribute(MethodImplOptions.InternalCall)]
 		static extern Type monodroid_typemap_java_to_managed (string java_type_name);
 
+		static bool TypeRegistrationFallbackIsEnabled { get; } = InitializeTypeRegistrationFallbackIsEnabled ();
+		static bool InitializeTypeRegistrationFallbackIsEnabled () =>
+		    !AppContext.TryGetSwitch ("Java.Interop.TypeManager.TypeRegistrationFallbackIsEnabled", out bool isEnabled) || isEnabled;
+
 		internal static Type? GetJavaToManagedType (string class_name)
 		{
 			Type? type = monodroid_typemap_java_to_managed (class_name);
@@ -225,10 +229,18 @@ namespace Java.Interop {
 				return null;
 			}
 
+			if (TypeRegistrationFallbackIsEnabled)
+				return TypeRegistrationFallback (class_name);
+
+			return null;
+		}
+
+		internal static Type? TypeRegistrationFallback (string class_name)
+		{
 			__TypeRegistrations.RegisterPackages ();
 
-			type = null;
-			int ls      = class_name.LastIndexOf ('/');
+			Type? type = null;
+			int ls = class_name.LastIndexOf ('/');
 			var package = ls >= 0 ? class_name.Substring (0, ls) : "";
 			if (packageLookup.TryGetValue (package, out var mappers)) {
 				foreach (Converter<string, Type?> c in mappers) {
@@ -353,10 +365,18 @@ namespace Java.Interop {
 			}
 		}
 
-		static Dictionary<string, List<Converter<string, Type?>>> packageLookup = new Dictionary<string, List<Converter<string, Type?>>> ();
+		static Dictionary<string, List<Converter<string, Type?>>>? packageLookup;
+
+		static void LazyInitPackageLookup ()
+		{
+			if (packageLookup == null)
+				packageLookup = new Dictionary<string, List<Converter<string, Type?>>> (StringComparer.Ordinal);
+		}
 
 		public static void RegisterPackage (string package, Converter<string, Type> lookup)
 		{
+			LazyInitPackageLookup ();
+
 			lock (packageLookup) {
 				if (!packageLookup.TryGetValue (package, out var lookups))
 					packageLookup.Add (package, lookups = new List<Converter<string, Type?>> ());
@@ -366,6 +386,8 @@ namespace Java.Interop {
 
 		public static void RegisterPackages (string[] packages, Converter<string, Type?>[] lookups)
 		{
+			LazyInitPackageLookup ();
+
 			if (packages == null)
 				throw new ArgumentNullException ("packages");
 			if (lookups == null)
