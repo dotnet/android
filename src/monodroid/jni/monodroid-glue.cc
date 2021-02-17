@@ -99,7 +99,9 @@ using namespace xamarin::android::internal;
 // implementation details as it would prevent mkbundle from working
 #include "mkbundle-api.h"
 
+#if !defined (NET6)
 #include "config.include"
+#endif
 #include "machine.config.include"
 
 std::mutex MonodroidRuntime::api_init_lock;
@@ -1271,6 +1273,20 @@ MonodroidRuntime::monodroid_dlsym (void *handle, const char *name, char **err, [
 	return s;
 }
 
+#if defined (NET6)
+void*
+MonodroidRuntime::monodroid_pinvoke_override (const char *library_name, const char *entrypoint_name)
+{
+	if (library_name == nullptr || *library_name == '\0' || entrypoint_name == nullptr || *entrypoint_name == '\0') {
+		return nullptr;
+	}
+
+	log_warn (LOG_DEFAULT, "MonodroidRuntime::monodroid_pinvoke_override (\"%s\", \"%s\")", library_name, entrypoint_name);
+
+	return nullptr;
+}
+#endif
+
 inline void
 MonodroidRuntime::set_environment_variable_for_directory (const char *name, jstring_wrapper &value, bool createDirectory, mode_t mode)
 {
@@ -1635,6 +1651,19 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 		total_time.mark_start ();
 	}
 
+#if defined (NET6)
+	{
+		PInvokeOverrideFn pinvoke_override_cb = monodroid_pinvoke_override;
+		char ptr_str[20];
+		snprintf (ptr_str, sizeof(ptr_str), "0x%p", pinvoke_override_cb);
+
+		const char* property_keys[] { "PINVOKE_OVERRIDE" };
+		const char* property_values[] { ptr_str };
+
+		monovm_initialize (1, property_keys, property_values);
+	}
+#endif
+
 	jstring_array_wrapper applicationDirs (env, appDirs);
 
 	android_api_level = apiLevel;
@@ -1722,7 +1751,9 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	debug.start_debugging_and_profiling ();
 #endif
 
+#if !defined (NET6)
 	mono_config_parse_memory (reinterpret_cast<const char*> (monodroid_config));
+#endif
 	mono_register_machine_config (reinterpret_cast<const char*> (monodroid_machine_config));
 
 	log_info (LOG_DEFAULT, "Probing for Mono AOT mode\n");

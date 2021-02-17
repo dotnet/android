@@ -10,6 +10,14 @@
 #include <mono/utils/mono-counters.h>
 #include <mono/metadata/profiler.h>
 
+#if defined (NET6)
+#include <mono/jit/mono-private-unstable.h>
+#include <mono/metadata/mono-private-unstable.h>
+
+// This should be defined in the public Mono headers
+typedef void * (*PInvokeOverrideFn) (const char *libraryName, const char *entrypointName);
+#endif
+
 namespace xamarin::android::internal
 {
 	class MonodroidRuntime
@@ -146,6 +154,7 @@ namespace xamarin::android::internal
 #if defined (WINDOWS) || defined (APPLE_OS_X)
 		static const char* get_my_location (bool remove_file_name = true);
 #endif  // defined(WINDOWS) || defined(APPLE_OS_X)
+		static void* monodroid_pinvoke_override (const char *library_name, const char *entrypoint_name);
 		static void* monodroid_dlopen (const char *name, int flags, char **err, void *user_data);
 		static void* monodroid_dlsym (void *handle, const char *name, char **err, void *user_data);
 		static void* monodroid_dlopen_log_and_return (void *handle, char **err, const char *full_name, bool free_memory, bool need_api_init = false);

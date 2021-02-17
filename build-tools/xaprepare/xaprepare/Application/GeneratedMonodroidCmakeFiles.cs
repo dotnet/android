@@ -360,14 +360,14 @@ namespace Xamarin.Android.Prepare
 				{ "@CmakeAndroidFlags@", "$(_CmakeAndroidFlags)" },
 				{ "@NATIVE_API_LEVEL@", "" },
 				{ "@ABI@", "%(AndroidSupportedTargetJitAbi.Identity)" },
-				{ "@OUTPUT_DIRECTORY@", "$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity)" },
+				{ "@OUTPUT_DIRECTORY@", "" },
 
 			};
 
 			var hostRuntimeReplacements = new Dictionary<string, string> (StringComparer.Ordinal) {
 				{ "@CmakeHostFlags@", "%(_HostRuntime.CmakeFlags)" },
 				{ "@JdkIncludePath@", "@(JdkIncludePath->'%(Identity)', ' ')" },
-				{ "@OUTPUT_DIRECTORY@", "$(OutputPath)/%(_HostRuntime.OutputDirectory)" },
+				{ "@OUTPUT_DIRECTORY@", "" },
 			};
 
 			AddReplacements (commonReplacements, androidRuntimeReplacements);
@@ -389,11 +389,12 @@ namespace Xamarin.Android.Prepare
 			WriteMSBuildProjectEnd (sw);
 		}
 
-		void WriteMSBuildConfigureRuntimeCommands (StreamWriter sw, string indent, string workingDirectory, string itemName, List<string> commonFlags, CmakeBuilds.RuntimeCommand command, Dictionary<string, string> replacements, bool needsApiLevel)
+		void WriteMSBuildConfigureRuntimeCommands (StreamWriter sw, string indent, string workingDirectory, string outputDirectory, string itemName, List<string> commonFlags, CmakeBuilds.RuntimeCommand command, Dictionary<string, string> replacements, bool needsApiLevel)
 		{
 			replacements["@CONFIGURATION@"] = EnsureRequired ("Configuration", command.Configuration);
 			replacements["@BUILD_TYPE@"] = EnsureRequired ("BuildType", command.BuildType);
 			replacements["@NATIVE_API_LEVEL@"] = needsApiLevel ? EnsureRequired ("MSBuildApiLevel", command.MSBuildApiLevel) : String.Empty;
+			replacements["@OUTPUT_DIRECTORY@"] = outputDirectory;
 
 			var flags = new StringBuilder ();
 			flags.Append (String.Join (" ", commonFlags));
@@ -425,10 +426,14 @@ namespace Xamarin.Android.Prepare
 
 		void WriteMSBuildConfigureAndroidRuntimeCommands (StreamWriter sw, string indent, CmakeBuilds.RuntimeCommand command, Dictionary<string, string> replacements)
 		{
+			const string LegacyOutputDirectory = "$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity)";
+			const string Net6OutputDirectory = LegacyOutputDirectory + "-net6";
+
 			WriteMSBuildConfigureRuntimeCommands (
 				sw,
 				indent,
 				$"$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-{command.Suffix}",
+				command.IsNet6 ? Net6OutputDirectory : LegacyOutputDirectory,
 				"@(AndroidSupportedTargetJitAbi)",
 				CmakeBuilds.ConfigureAndroidRuntimeCommandsCommonFlags,
 				command,
@@ -443,6 +448,7 @@ namespace Xamarin.Android.Prepare
 				sw,
 				indent,
 				$"$(IntermediateOutputPath)%(_HostRuntime.OutputDirectory)-{command.Suffix}",
+				"$(OutputPath)/%(_HostRuntime.OutputDirectory)",
 				"@(_HostRuntime)",
 				CmakeBuilds.ConfigureHostRuntimeCommandsCommonFlags,
 				command,
