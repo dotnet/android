@@ -28,6 +28,7 @@ leeroy: leeroy-all framework-assemblies opentk-jcw
 
 leeroy-all:
 	$(call MSBUILD_BINLOG,leeroy-all,$(_SLN_BUILD)) /restore $(SOLUTION) /p:Configuration=$(CONFIGURATION) $(_MSBUILD_ARGS)
+	$(call MSBUILD_BINLOG,leeroy-all,$(_SLN_BUILD)) /restore tools/xabuild/xabuild.csproj /p:Configuration=$(CONFIGURATION) $(_MSBUILD_ARGS)
 
 opentk-jcw:
 	$(foreach api_level, $(API_LEVELS), \
