@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
-    <_CmakeCommonFlags>-GNinja -DCMAKE_MAKE_PROGRAM=$(NinjaPath) -DXA_BUILD_CONFIGURATION=$(Configuration)</_CmakeCommonFlags>
-    <_CmakeAndroidFlags>$(_CmakeCommonFlags) -DANDROID_STL="none" -DANDROID_CPP_FEATURES="no-rtti no-exceptions" -DANDROID_TOOLCHAIN=clang -DCMAKE_TOOLCHAIN_FILE=$(AndroidNdkDirectory)\build\cmake\android.toolchain.cmake -DANDROID_NDK=$(AndroidNdkDirectory)</_CmakeAndroidFlags>
-  </PropertyGroup>
-</Project>

@@ -40,7 +40,6 @@
   <Target Name="_ConfigureRuntimesInputs">
     <ItemGroup>
       <_ConfigureRuntimesInputs  Include="CMakeLists.txt" />
-      <_ConfigureRuntimesInputs  Include="..\..\build-tools\scripts\cmake-common.props" />
       <_ConfigureRuntimesInputs  Include="..\..\build-tools\scripts\Ndk.targets" />
       <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Debug\CMakeCache.txt')" />
       <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(Identity)-Release\CMakeCache.txt')" />
