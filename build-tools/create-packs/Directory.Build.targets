@@ -77,10 +77,10 @@
   <Target Name="CreateAllPacks"
       DependsOnTargets="BuildILLinkCustomStep;DeleteExtractedWorkloadPacks;_SetGlobalProperties">
     <RemoveDir Directories="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs" />
-    <Exec Command="$(DotNetPreviewTool) pack @(_GlobalProperties, ' ') -p:AndroidRID=android.21-arm -p:AndroidABI=armeabi-v7a &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
-    <Exec Command="$(DotNetPreviewTool) pack @(_GlobalProperties, ' ') -p:AndroidRID=android.21-arm64 -p:AndroidABI=arm64-v8a &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
-    <Exec Command="$(DotNetPreviewTool) pack @(_GlobalProperties, ' ') -p:AndroidRID=android.21-x86 -p:AndroidABI=x86 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
-    <Exec Command="$(DotNetPreviewTool) pack @(_GlobalProperties, ' ') -p:AndroidRID=android.21-x64 -p:AndroidABI=x86_64 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
+    <Exec Command="$(DotNetPreviewTool) pack @(_GlobalProperties, ' ') -p:AndroidRID=android-arm -p:AndroidABI=armeabi-v7a &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
+    <Exec Command="$(DotNetPreviewTool) pack @(_GlobalProperties, ' ') -p:AndroidRID=android-arm64 -p:AndroidABI=arm64-v8a &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
+    <Exec Command="$(DotNetPreviewTool) pack @(_GlobalProperties, ' ') -p:AndroidRID=android-x86 -p:AndroidABI=x86 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
+    <Exec Command="$(DotNetPreviewTool) pack @(_GlobalProperties, ' ') -p:AndroidRID=android-x64 -p:AndroidABI=x86_64 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
     <Exec Command="$(DotNetPreviewTool) pack @(_GlobalProperties, ' ') &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Ref.proj&quot;" />
     <Exec Command="$(DotNetPreviewTool) pack @(_GlobalProperties, ' ') -p:AndroidHostRID=linux-x64 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.proj&quot;"     Condition=" '$(HostOS)' == 'Linux' " />
     <Exec Command="$(DotNetPreviewTool) pack @(_GlobalProperties, ' ') -p:AndroidHostRID=osx-x64   &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.proj&quot;"     Condition=" '$(HostOS)' == 'Darwin' " />

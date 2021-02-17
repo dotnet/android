@@ -84,7 +84,7 @@ core workload sdk packs imported by Microsoft.NET.Workload.Android.
     </PropertyGroup>
 
     <ItemGroup>
-      <_AndroidNETAppRuntimePackRids Include="android.21-arm;android.21-arm64;android.21-x86;android.21-x64" />
+      <_AndroidNETAppRuntimePackRids Include="android-arm;android-arm64;android-x86;android-x64" />
     </ItemGroup>
 
     <PropertyGroup>

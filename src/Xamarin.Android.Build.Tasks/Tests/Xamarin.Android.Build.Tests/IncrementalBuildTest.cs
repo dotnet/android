@@ -1370,7 +1370,7 @@ namespace Lib2
 				b.Build (proj);
 
 				var parameters = Builder.UseDotNet ?
-					new [] { $"{KnownProperties.RuntimeIdentifier}=android.21-x86" } :
+					new [] { $"{KnownProperties.RuntimeIdentifier}=android-x86" } :
 					new [] { $"{KnownProperties.AndroidSupportedAbis}=x86" };
 				b.Build (proj, parameters: parameters, doNotCleanupOnUpdate: true);
 			}
