@@ -168,6 +168,23 @@ _ResolveAssemblies MSBuild target.
         IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)">
       <Output TaskParameter="OutputLibraries" ItemName="FrameworkNativeLibrary" />
     </ProcessNativeLibraries>
+    <ItemGroup>
+      <LocalFrameworkNativeLibrary Include="$(IntermediateOutputPath)native\%(FrameworkNativeLibrary.RuntimeIdentifier)\%(FrameworkNativeLibrary.Filename)%(FrameworkNativeLibrary.Extension)">
+        <RuntimeIdentifier>%(FrameworkNativeLibrary.RuntimeIdentifier)</RuntimeIdentifier>
+      </LocalFrameworkNativeLibrary>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_StripNativeSystemLibraries"
+      Condition=" '$(AndroidIncludeDebugSymbols)' != 'true' "
+      Inputs="@(FrameworkNativeLibrary)"
+      Outputs="@(LocalFrameworkNativeLibrary)">
+    <Copy
+        SourceFiles="@(FrameworkNativeLibrary)"
+        DestinationFiles="@(LocalFrameworkNativeLibrary)" />
+    <StripNativeLibraries
+        InputLibraries="@(FrameworkNativeLibrary)"
+        AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)" />
   </Target>
 
 </Project>
