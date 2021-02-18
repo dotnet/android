@@ -1138,6 +1138,8 @@ MonodroidRuntime::monodroid_dlopen_log_and_return (void *handle, char **err, con
 void*
 MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err, [[maybe_unused]] void *user_data)
 {
+	log_warn (LOG_DEFAULT, "MonodroidRuntime::monodroid_dlopen (\"%s\", 0x%x, %p, %p)", name, flags, err, user_data);
+
 	unsigned int dl_flags = monodroidRuntime.convert_dl_flags (flags);
 	bool libmonodroid_fallback = false;
 	bool name_is_full_path = false;
@@ -1277,13 +1279,54 @@ MonodroidRuntime::monodroid_dlsym (void *handle, const char *name, char **err, [
 void*
 MonodroidRuntime::monodroid_pinvoke_override (const char *library_name, const char *entrypoint_name)
 {
+	log_warn (LOG_DEFAULT, "MonodroidRuntime::monodroid_pinvoke_override (\"%s\", \"%s\")", library_name, entrypoint_name);
+
 	if (library_name == nullptr || *library_name == '\0' || entrypoint_name == nullptr || *entrypoint_name == '\0') {
 		return nullptr;
 	}
 
-	log_warn (LOG_DEFAULT, "MonodroidRuntime::monodroid_pinvoke_override (\"%s\", \"%s\")", library_name, entrypoint_name);
+	bool is_internal;
+	switch (library_name[0]) {
+		case 'j':
+			is_internal = strcmp ("java-interop", library_name) == 0;
+			break;
 
-	return nullptr;
+		case 'x':
+			is_internal = strcmp ("xa-internal-api", library_name) == 0;
+			break;
+
+		default:
+			is_internal = false;
+			break;
+	}
+
+	if (!is_internal) {
+		return nullptr; // let `monodroid_dlopen` callback handle this one
+	}
+
+	constexpr char UNKNOWN_ERROR[] = "Unknown error";
+
+	char *err = nullptr;
+
+	// "java-interop" is an alias for __Internal, which we handle as if it was "xa-internal-api", both of which can
+	// be represented by a null name passed to monodroid_dlopen
+	void *dso_handle = monodroid_dlopen (nullptr, 0, &err, nullptr);
+	if (dso_handle == nullptr) {
+		log_warn (LOG_DEFAULT, "Failed to load internal API shared library. %s", err != nullptr ? err : UNKNOWN_ERROR);
+	}
+
+	if (dso_handle == nullptr) {
+		delete[] err;
+		return nullptr;
+	}
+
+	void *func_ptr = monodroid_dlsym (dso_handle, entrypoint_name, &err, nullptr);
+	if (func_ptr == nullptr) {
+		log_warn (LOG_DEFAULT, "Failed to look up symbol '%s' in '%s'. %s", entrypoint_name, library_name, err != nullptr ? err : UNKNOWN_ERROR);
+		delete[] err;
+	}
+
+	return func_ptr;
 }
 #endif
 
@@ -1655,11 +1698,12 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	{
 		PInvokeOverrideFn pinvoke_override_cb = monodroid_pinvoke_override;
 		char ptr_str[20];
-		snprintf (ptr_str, sizeof(ptr_str), "0x%p", pinvoke_override_cb);
+		snprintf (ptr_str, sizeof(ptr_str), "%p", pinvoke_override_cb);
 
 		const char* property_keys[] { "PINVOKE_OVERRIDE" };
 		const char* property_values[] { ptr_str };
 
+		log_warn (LOG_DEFAULT, "Initializing .NET6 Mono VM (override callback at %p, passed as %s", pinvoke_override_cb, ptr_str);
 		monovm_initialize (1, property_keys, property_values);
 	}
 #endif
