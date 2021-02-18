@@ -192,6 +192,7 @@
     <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\interpreter-%(Identity)\libMonoPosixHelper.so')"            ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MSBuildSrcDir)\lib\interpreter-%(Identity)\libmonosgen-2.0.so')"               ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\libZipSharp.dll" />
+    <_MSBuildFiles Include="@(_LocalizationLanguages->'$(MSBuildSrcDir)\%(Identity)\libZipSharp.resources.dll')" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\libZipSharp.dll.config" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\libZipSharp.pdb" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\Mono.Posix.NETStandard.dll" />
