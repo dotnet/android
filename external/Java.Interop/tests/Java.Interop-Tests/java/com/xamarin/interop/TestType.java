@@ -6,7 +6,7 @@ import com.xamarin.java_interop.GCUserPeerable;
 
 public class TestType implements GCUserPeerable {
 
-	static  final   String  assemblyQualifiedName   = "Java.InteropTests.TestType, Java.Interop-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null";
+	static  final   String  assemblyQualifiedName   = "Java.InteropTests.TestType, Java.Interop-Tests";
 	static {
 		com.xamarin.java_interop.ManagedPeer.registerNativeMembers (
 				TestType.class,

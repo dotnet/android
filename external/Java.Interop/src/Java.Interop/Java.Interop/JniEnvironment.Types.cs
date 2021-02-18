@@ -48,29 +48,37 @@ namespace Java.Interop
 				}
 
 				NativeMethods.java_interop_jnienv_exception_clear (info.EnvironmentPointer);
-				var e   = new JniObjectReference (thrown, JniObjectReferenceType.Local);
-				LogCreateLocalRef (e);
+
+				var findClassThrown     = new JniObjectReference (thrown, JniObjectReferenceType.Local);
+				LogCreateLocalRef (findClassThrown);
+				var pendingException    = info.Runtime.GetExceptionForThrowable (ref findClassThrown, JniObjectReferenceOptions.CopyAndDispose);
 
 				if (info.Runtime.ClassLoader_LoadClass != null) {
 					var java    = info.ToJavaName (classname);
 					var __args  = stackalloc JniArgumentValue [1];
 					__args [0]  = new JniArgumentValue (java);
 
-					IntPtr ignoreThrown;
-					c = NativeMethods.java_interop_jnienv_call_object_method_a (info.EnvironmentPointer, out ignoreThrown, info.Runtime.ClassLoader.Handle, info.Runtime.ClassLoader_LoadClass.ID, (IntPtr) __args);
+					c = NativeMethods.java_interop_jnienv_call_object_method_a (info.EnvironmentPointer, out thrown, info.Runtime.ClassLoader.Handle, info.Runtime.ClassLoader_LoadClass.ID, (IntPtr) __args);
 					JniObjectReference.Dispose (ref java);
-					if (ignoreThrown == IntPtr.Zero) {
-						JniObjectReference.Dispose (ref e);
+					if (thrown == IntPtr.Zero) {
+						(pendingException as IJavaPeerable)?.Dispose ();
 						var r = new JniObjectReference (c, JniObjectReferenceType.Local);
 						JniEnvironment.LogCreateLocalRef (r);
 						return r;
 					}
 					NativeMethods.java_interop_jnienv_exception_clear (info.EnvironmentPointer);
-					NativeMethods.java_interop_jnienv_delete_local_ref (info.EnvironmentPointer, ignoreThrown);
 
+					if (pendingException != null) {
+						NativeMethods.java_interop_jnienv_delete_local_ref (info.EnvironmentPointer, thrown);
+					}
+					else {
+						var loadClassThrown = new JniObjectReference (thrown, JniObjectReferenceType.Local);
+						LogCreateLocalRef (loadClassThrown);
+						pendingException    = info.Runtime.GetExceptionForThrowable (ref loadClassThrown, JniObjectReferenceOptions.CopyAndDispose);
+					}
 				}
 
-				throw info.Runtime.GetExceptionForThrowable (ref e, JniObjectReferenceOptions.CopyAndDispose)!;
+				throw pendingException!;
 #endif  // !FEATURE_JNIENVIRONMENT_JI_PINVOKES
 #if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 				var c       = info.Invoker.FindClass (info.EnvironmentPointer, classname);
@@ -80,25 +88,32 @@ namespace Java.Interop
 					return new JniObjectReference (c, JniObjectReferenceType.Local);
 				}
 				info.Invoker.ExceptionClear (info.EnvironmentPointer);
-				LogCreateLocalRef (thrown);
+				var findClassThrown     = new JniObjectReference (thrown, JniObjectReferenceType.Local);
+				LogCreateLocalRef (findClassThrown);
+				var pendingException    = info.Runtime.GetExceptionForThrowable (ref findClassThrown, JniObjectReferenceOptions.CopyAndDispose);
 
 				var java    = info.ToJavaName (classname);
 				var __args  = stackalloc JniArgumentValue [1];
 				__args [0]  = new JniArgumentValue (java);
 
-				c                   = info.Invoker.CallObjectMethodA (info.EnvironmentPointer, info.Runtime.ClassLoader.SafeHandle, info.Runtime.ClassLoader_LoadClass.ID, __args);
+				c       = info.Invoker.CallObjectMethodA (info.EnvironmentPointer, info.Runtime.ClassLoader.SafeHandle, info.Runtime.ClassLoader_LoadClass.ID, __args);
 				JniObjectReference.Dispose (ref java);
-				var ignoreThrown    = info.Invoker.ExceptionOccurred (info.EnvironmentPointer);
+				thrown  = info.Invoker.ExceptionOccurred (info.EnvironmentPointer);
 				if (ignoreThrown.IsInvalid) {
-					thrown.Dispose ();
-					JniEnvironment.LogCreateLocalRef (c);
-					return new JniObjectReference (c, JniObjectReferenceType.Local);
+					(pendingException as IJavaPeerable)?.Dispose ();
+					var r   = new JniObjectReference (c, JniObjectReferenceType.Local);
+					JniEnvironment.LogCreateLocalRef (r);
+					return r;
 				}
 				info.Invoker.ExceptionClear (info.EnvironmentPointer);
-				LogCreateLocalRef (ignoreThrown);
-				ignoreThrown.Dispose ();
-				var e   = new JniObjectReference (thrown, JniObjectReferenceType.Local);
-				throw info.Runtime.GetExceptionForThrowable (ref e, JniObjectReferenceOptions.CopyAndDispose);
+				if (pendingException != null) {
+					thrown.Dispose ();
+					throw pendingException;
+				}
+				var loadClassThrown     = new JniObjectReference (thrown, JniObjectReferenceType.Local);
+				LogCreateLocalRef (loadClassThrown);
+				pendingException    = info.Runtime.GetExceptionForThrowable (ref loadClassThrown, JniObjectReferenceOptions.CopyAndDispose);
+				throw pendingException!;
 #endif  // !FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 			}
 

@@ -6,7 +6,7 @@ import com.xamarin.java_interop.GCUserPeerable;
 
 public class GetThis implements GCUserPeerable {
 
-	static  final   String  assemblyQualifiedName   = "Java.InteropTests.GetThis, Java.Interop-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null";
+	static  final   String  assemblyQualifiedName   = "Java.InteropTests.GetThis, Java.Interop-Tests";
 	static {
 		com.xamarin.java_interop.ManagedPeer.registerNativeMembers (
 				GetThis.class,
@@ -20,7 +20,7 @@ public class GetThis implements GCUserPeerable {
 		if (GetThis.class == getClass ()) {
 			com.xamarin.java_interop.ManagedPeer.construct (
 					this,
-					"Java.InteropTests.GetThis, Java.Interop-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+					assemblyQualifiedName,
 					""
 			);
 		}

@@ -39,7 +39,7 @@
   </ItemDefinitionGroup>
 
   <ItemGroup>
-    <ClCompile Include="jni.c" />
+    <ClCompile Include="$(IntermediateOutputPath)jni.c" />
     <ClCompile Include="java-interop.cc" />
     <ClCompile Include="java-interop-dlfcn.cc" />
     <ClCompile Include="java-interop-jvm.cc" />

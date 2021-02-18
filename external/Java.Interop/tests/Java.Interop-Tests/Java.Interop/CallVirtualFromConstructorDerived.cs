@@ -12,7 +12,7 @@ namespace Java.InteropTests
 		[JniAddNativeMethodRegistrationAttribute]
 		static void RegisterNativeMembers (JniNativeMethodRegistrationArguments args)
 		{
-			args.Registrations.Add (new JniNativeMethodRegistration ("calledFromConstructor", "(I)V", (Action<IntPtr, IntPtr, int>)CalledFromConstructorHandler));
+			args.Registrations.Add (new JniNativeMethodRegistration ("calledFromConstructor", "(I)V", (CalledFromConstructorMarshalMethod)CalledFromConstructorHandler));
 		}
 
 		public override JniPeerMembers JniPeerMembers {
@@ -57,6 +57,7 @@ namespace Java.InteropTests
 			return JniEnvironment.Runtime.ValueManager.GetValue<CallVirtualFromConstructorDerived> (ref o, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
+		delegate void CalledFromConstructorMarshalMethod (IntPtr jnienv, IntPtr n_self, int value);
 		static void CalledFromConstructorHandler (IntPtr jnienv, IntPtr n_self, int value)
 		{
 			var envp = new JniTransition (jnienv);

@@ -6,13 +6,15 @@ import com.xamarin.java_interop.GCUserPeerable;
 
 public class CallNonvirtualBase implements GCUserPeerable {
 
+	static  final   String  assemblyQualifiedName   = "Java.InteropTests.CallNonvirtualBase, Java.Interop-Tests";
+
 	ArrayList<Object>       managedReferences     = new ArrayList<Object>();
 
 	public CallNonvirtualBase () {
 		if (CallNonvirtualBase.class == getClass ()) {
 			com.xamarin.java_interop.ManagedPeer.construct (
 					this,
-					"Java.InteropTests.CallNonvirtualBase, Java.Interop-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+					assemblyQualifiedName,
 					""
 			);
 		}

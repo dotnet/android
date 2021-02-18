@@ -8,7 +8,7 @@ public class CallVirtualFromConstructorDerived
 		extends CallVirtualFromConstructorBase
 		implements GCUserPeerable
 {
-	static  final   String  assemblyQualifiedName   = "Java.InteropTests.CallVirtualFromConstructorDerived, Java.Interop-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null";
+	static  final   String  assemblyQualifiedName   = "Java.InteropTests.CallVirtualFromConstructorDerived, Java.Interop-Tests";
 	static {
 		com.xamarin.java_interop.ManagedPeer.registerNativeMembers (
 				CallVirtualFromConstructorDerived.class,

@@ -6,13 +6,15 @@ import com.xamarin.java_interop.GCUserPeerable;
 
 public class SelfRegistration implements GCUserPeerable {
 
+	static  final   String  assemblyQualifiedName   = "Java.InteropTests.SelfRegistration, Java.Interop-Tests";
+
 	ArrayList<Object>       managedReferences     = new ArrayList<Object>();
 
 	public SelfRegistration () {
 		if (SelfRegistration.class == getClass ()) {
 			com.xamarin.java_interop.ManagedPeer.construct (
 					this,
-					"Java.InteropTests.SelfRegistration, Java.Interop-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+					assemblyQualifiedName,
 					""
 			);
 		}

@@ -366,55 +366,12 @@ namespace Java.Interop {
 	}
 }
 
-
-class DummyValueManager : JniRuntime.JniValueManager {
-	public override void WaitForGCBridgeProcessing ()
-	{
-	}
-	public override void CollectPeers ()
-	{
-	}
-	public override void AddPeer (IJavaPeerable reference)
-	{
-	}
-	public override void RemovePeer (IJavaPeerable reference)
-	{
-	}
-	public override void FinalizePeer (IJavaPeerable reference)
-	{
-	}
-	public override List<JniSurfacedPeerInfo> GetSurfacedPeers ()
-	{
-		return null;
-	}
-	public override IJavaPeerable PeekPeer (global::Java.Interop.JniObjectReference reference)
-	{
-		return null;
-	}
-	public override void ActivatePeer (IJavaPeerable self, global::Java.Interop.JniObjectReference reference, ConstructorInfo cinfo, object [] argumentValues)
-	{
-		throw new NotImplementedException ();
-	}
-}
-
-class DummyObjectReferenceManager : JniRuntime.JniObjectReferenceManager {
-		public override int GlobalReferenceCount {
-			get {return 0;}
-		}
-
-		public override int WeakGlobalReferenceCount {
-			get {return 0;}
-		}
-}
-
 class App {
 
 	public static void Main ()
 	{
 		var runtimeOptions  = new JreRuntimeOptions (){
 			JvmLibraryPath          = Environment.GetEnvironmentVariable ("JI_JVM_PATH"),
-			ValueManager            = new DummyValueManager (),
-			ObjectReferenceManager  = new DummyObjectReferenceManager (),
 		};
 		var GlobalRuntime   = runtimeOptions.CreateJreVM ();
 		IntPtr _env         = global::Java.Interop.JniEnvironment.EnvironmentPointer;

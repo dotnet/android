@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 
@@ -43,6 +44,10 @@ namespace Java.Interop {
 			if (onMono) {
 				ValueManager            = ValueManager              ?? new MonoRuntimeValueManager ();
 				ObjectReferenceManager  = ObjectReferenceManager    ?? new MonoRuntimeObjectReferenceManager ();
+			}
+			else {
+				ValueManager            = ValueManager              ?? new DummyValueManager ();
+				ObjectReferenceManager  = ObjectReferenceManager    ?? new DummyObjectReferenceManager ();
 			}
 		}
 
@@ -160,6 +165,53 @@ namespace Java.Interop {
 
 		[DllImport (JavaInteropLib, CharSet=CharSet.Ansi, CallingConvention=CallingConvention.Cdecl)]
 		internal static extern int java_interop_jvm_create (out IntPtr javavm, out IntPtr jnienv, ref JavaVMInitArgs args);
+	}
+
+	class DummyValueManager : JniRuntime.JniValueManager {
+
+		public override void WaitForGCBridgeProcessing ()
+		{
+		}
+
+		public override void CollectPeers ()
+		{
+		}
+
+		public override void AddPeer (IJavaPeerable reference)
+		{
+		}
+
+		public override void RemovePeer (IJavaPeerable reference)
+		{
+		}
+
+		public override void FinalizePeer (IJavaPeerable reference)
+		{
+		}
+
+		public override List<JniSurfacedPeerInfo> GetSurfacedPeers ()
+		{
+			return null;
+		}
+
+		public override IJavaPeerable PeekPeer (global::Java.Interop.JniObjectReference reference)
+		{
+			return null;
+		}
+
+		public override void ActivatePeer (IJavaPeerable self, JniObjectReference reference, ConstructorInfo cinfo, object [] argumentValues)
+		{
+		}
+	}
+
+	class DummyObjectReferenceManager : JniRuntime.JniObjectReferenceManager {
+		public override int GlobalReferenceCount {
+			get {return 0;}
+		}
+
+		public override int WeakGlobalReferenceCount {
+			get {return 0;}
+		}
 	}
 }
 

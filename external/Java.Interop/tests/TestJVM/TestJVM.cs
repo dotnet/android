@@ -5,6 +5,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 
+using Xamarin.Android.Tools;
+
 using Java.Interop;
 
 namespace Java.InteropTests
@@ -15,8 +17,8 @@ namespace Java.InteropTests
 		{
 			var dir = Path.GetDirectoryName (typeof (TestJVM).Assembly.Location);
 			var builder = new JreRuntimeOptions () {
-				JvmLibraryPath              = Environment.GetEnvironmentVariable ("JI_JVM_PATH"),
-				JniAddNativeMethodRegistrationAttributePresent = true,
+				JvmLibraryPath                                  = GetJvmLibraryPath (),
+				JniAddNativeMethodRegistrationAttributePresent  = true,
 			};
 			if (jars != null) {
 				foreach (var jar in jars)
@@ -26,6 +28,16 @@ namespace Java.InteropTests
 			builder.TypeManager                 = new JreTypeManager ();
 
 			return builder;
+		}
+
+		static string GetJvmLibraryPath ()
+		{
+			var env = Environment.GetEnvironmentVariable ("JI_JVM_PATH");
+			if (!string.IsNullOrEmpty (env))
+				return env;
+			var jdk = JdkInfo.GetKnownSystemJdkInfos ()
+				.FirstOrDefault ();
+			return jdk?.JdkJvmPath;
 		}
 
 		Dictionary<string, Type> typeMappings;

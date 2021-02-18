@@ -6,13 +6,15 @@ import com.xamarin.java_interop.GCUserPeerable;
 
 public class CrossReferenceBridge implements GCUserPeerable {
 
+	static  final   String  assemblyQualifiedName   = "Java.InteropTests.CrossReferenceBridge, Java.Interop-Tests";
+
 	ArrayList<Object>       managedReferences     = new ArrayList<Object>();
 
 	public CrossReferenceBridge () {
 		if (CrossReferenceBridge.class == getClass ()) {
 			com.xamarin.java_interop.ManagedPeer.construct (
 					this,
-					"Java.InteropTests.CrossReferenceBridge, Java.Interop-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+					assemblyQualifiedName,
 					""
 			);
 		}

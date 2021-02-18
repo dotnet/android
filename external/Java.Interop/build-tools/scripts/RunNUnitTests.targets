@@ -19,14 +19,6 @@
   </ItemGroup>
   <Target Name="RunTests"
       Outputs="$(_TopDir)\TestResult-%(_TestAssembly.Filename).xml">
-    <ItemGroup>
-      <_JavaInteropNativeLibrary Include="$(_TopDir)\bin\$(Configuration)\libjava-interop.*" />
-    </ItemGroup>
-    <Copy
-        SourceFiles="@(_JavaInteropNativeLibrary)"
-        DestinationFolder="$(_TopDir)\bin\Test$(Configuration)"
-        SkipUnchangedFiles="True"
-    />
     <SetEnvironmentVariable Name="ANDROID_SDK_PATH"      Value="$(AndroidSdkDirectory)" Condition=" '$(AndroidSdkDirectory)' != '' " />
     <SetEnvironmentVariable Name="MONO_TRACE_LISTENER"   Value="Console.Out" />
     <SetEnvironmentVariable Name="JAVA_INTEROP_GREF_LOG" Value="bin\Test$(Configuration)\g-%(_TestAssembly.Filename).txt" />

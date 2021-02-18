@@ -8,13 +8,15 @@ public class CallNonvirtualDerived2
 		extends CallNonvirtualDerived
 		implements GCUserPeerable
 {
+	static  final   String  assemblyQualifiedName   = "Java.InteropTests.CallNonvirtualDerived2, Java.Interop-Tests";
+
 	ArrayList<Object>       managedReferences     = new ArrayList<Object>();
 
 	public CallNonvirtualDerived2 () {
 		if (CallNonvirtualDerived2.class == getClass ()) {
 			com.xamarin.java_interop.ManagedPeer.construct (
 					this,
-					"Java.InteropTests.CallNonvirtualDerived2, Java.Interop-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+					assemblyQualifiedName,
 					""
 			);
 		}

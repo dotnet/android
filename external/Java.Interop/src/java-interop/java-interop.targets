@@ -2,9 +2,9 @@
 <Project>
   <Target Name="BuildJni_c"
       Inputs="$(_JNIEnvGenPath)"
-      Outputs="jni.c">
+      Outputs="$(IntermediateOutputPath)jni.c">
     <MakeDir Directories="$(OutputPath)" />
-    <Exec Command="$(_RunJNIEnvGen) jni.g.cs jni.c" />
+    <Exec Command="$(_RunJNIEnvGen) $(IntermediateOutputPath)jni.g.cs $(IntermediateOutputPath)jni.c" />
   </Target>
 
   <PropertyGroup>
@@ -12,11 +12,23 @@
     <_UnixLib>$(OutputPath)/lib$(OutputName).so</_UnixLib>
   </PropertyGroup>
 
+  <ItemGroup Condition=" '$(OS)' != 'Windows_NT' And Exists ('/Library/Frameworks/') ">
+    <None Include="$(_MacLib)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(OS)' != 'Windows_NT' And !Exists ('/Library/Frameworks/') ">
+    <None Include="$(_UnixLib)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
   <ItemDefinitionGroup>
     <ClCompile>
       <PreprocessorDefinitions>$([MSBuild]::Unescape($(DefineSymbols.Replace(' ', ';'))))</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$([MSBuild]::Unescape($(_MonoIncludePath)));$([MSBuild]::Unescape($(_JdkIncludePath)))</AdditionalIncludeDirectories>
-      <Obj Condition=" '$(OS)' != 'Windows_NT' ">obj/$(Configuration)/%(Filename).o</Obj>
+      <Obj Condition=" '$(OS)' != 'Windows_NT' ">$(IntermediateOutputPath)/%(Filename).o</Obj>
     </ClCompile>
   </ItemDefinitionGroup>
 
@@ -25,7 +37,7 @@
       DependsOnTargets="BuildJni_c"
       Inputs="@(ClCompile);@(ClInclude)"
       Outputs="%(ClCompile.Obj)">
-    <MakeDir Directories="obj\$(Configuration)" />
+    <MakeDir Directories="$(IntermediateOutputPath)" />
     <ItemGroup>
       <_Cl Include="@(ClCompile)">
         <Compiler Condition=" '%(Extension)' == '.c' ">gcc -std=c99 -fPIC</Compiler>
@@ -86,7 +98,6 @@
 
   <Target Name="Clean">
     <RemoveDir Directories="obj" />
-    <Delete Files="jni.c" />
     <Delete
         Files="$(_MacLib);$(_UnixLib)"
         Condition=" '$(OS)' != 'Windows_NT' "

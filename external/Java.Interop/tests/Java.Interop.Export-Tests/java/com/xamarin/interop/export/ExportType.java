@@ -8,7 +8,7 @@ public class ExportType
 		implements GCUserPeerable
 {
 
-	static  final   String  assemblyQualifiedName   = "Java.InteropTests.ExportTest, Java.Interop.Export-Tests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null";
+	static  final   String  assemblyQualifiedName   = "Java.InteropTests.ExportTest, Java.Interop.Export-Tests";
 	static {
 		com.xamarin.java_interop.ManagedPeer.registerNativeMembers (
 				ExportType.class,

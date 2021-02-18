@@ -8,7 +8,7 @@ import com.xamarin.java_interop.GCUserPeerable;
 		extends java.lang.Error
 		implements GCUserPeerable
 {
-	static  final   String  assemblyQualifiedName   = "Java.Interop.JavaProxyThrowable, Java.Interop, Version=0.1.0.0, Culture=neutral, PublicKeyToken=null";
+	static  final   String  assemblyQualifiedName   = "Java.Interop.JavaProxyThrowable, Java.Interop";
 	static {
 		com.xamarin.java_interop.ManagedPeer.registerNativeMembers (
 				JavaProxyThrowable.class,
