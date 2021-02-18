@@ -88,10 +88,10 @@ namespace Xamarin.Android.Prepare
 			const string OutputFileName = "xa_build_configuration.cmake";
 
 			var replacements = new Dictionary<string, string> (StringComparer.Ordinal) {
-				{ "@NETCORE_APP_RUNTIME_ANDROID_ARM@",    Configurables.Paths.NetcoreAppRuntimeAndroidARM },
-				{ "@NETCORE_APP_RUNTIME_ANDROID_ARM64@",  Configurables.Paths.NetcoreAppRuntimeAndroidARM64 },
-				{ "@NETCORE_APP_RUNTIME_ANDROID_X86@",    Configurables.Paths.NetcoreAppRuntimeAndroidX86 },
-				{ "@NETCORE_APP_RUNTIME_ANDROID_X86_64@", Configurables.Paths.NetcoreAppRuntimeAndroidX86_64 },
+				{ "@NETCORE_APP_RUNTIME_ANDROID_ARM@",    Utilities.EscapePathSeparators (Configurables.Paths.NetcoreAppRuntimeAndroidARM) },
+				{ "@NETCORE_APP_RUNTIME_ANDROID_ARM64@",  Utilities.EscapePathSeparators (Configurables.Paths.NetcoreAppRuntimeAndroidARM64) },
+				{ "@NETCORE_APP_RUNTIME_ANDROID_X86@",    Utilities.EscapePathSeparators (Configurables.Paths.NetcoreAppRuntimeAndroidX86) },
+				{ "@NETCORE_APP_RUNTIME_ANDROID_X86_64@", Utilities.EscapePathSeparators (Configurables.Paths.NetcoreAppRuntimeAndroidX86_64) },
 			};
 
 			return new GeneratedPlaceholdersFile (

@@ -13,6 +13,11 @@ namespace Xamarin.Android.Prepare
 		public static int ConsoleCursorLeft   => Console.CursorLeft;
 		public static int ConsoleWindowHeight => Console.WindowHeight;
 
+		public static string EscapePathSeparators (string path)
+		{
+			return path;
+		}
+
 		public static bool MakeExecutable (string filePath, bool throwOnError = true)
 		{
 			if (String.IsNullOrEmpty (filePath)) {
