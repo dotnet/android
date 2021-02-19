@@ -13,6 +13,7 @@ namespace Microsoft.Android.Sdk.ILLink
 	class SetupStep : BaseStep
 	{
 		List<IStep> _steps;
+		List<IMarkHandler> _markHandlers;
 
 		List<IStep> Steps {
 			get {
@@ -27,6 +28,16 @@ namespace Microsoft.Android.Sdk.ILLink
 		}
 
 		static MethodInfo getReferencedAssembliesMethod = typeof (LinkContext).GetMethod ("GetReferencedAssemblies", BindingFlags.Public | BindingFlags.Instance);
+
+		List<IMarkHandler> MarkHandlers {
+			get {
+				if (_markHandlers == null) {
+					var pipeline = typeof (LinkContext).GetProperty ("Pipeline").GetGetMethod ().Invoke (Context, null);
+					_markHandlers = (List<IMarkHandler>) pipeline.GetType ().GetProperty ("MarkHandlers").GetValue (pipeline);
+				}
+				return _markHandlers;
+			}
+		}
 
 		protected override void Process ()
 		{
@@ -46,9 +57,9 @@ namespace Microsoft.Android.Sdk.ILLink
 			subSteps2.Add (new PreserveRegistrations (cache));
 			subSteps2.Add (new PreserveJavaInterfaces ());
 
-			InsertAfter (new FixAbstractMethodsStep (cache), "SetupStep");
-			InsertAfter (subSteps2, "SetupStep");
-			InsertAfter (subSteps1, "SetupStep");
+			MarkHandlers.Add (subSteps1);
+			MarkHandlers.Add (subSteps2);
+			MarkHandlers.Add (new FixAbstractMethodsHandler (cache));
 
 			// temporary workaround: this call forces illink to process all the assemblies
 			if (getReferencedAssembliesMethod == null)

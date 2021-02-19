@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -9,26 +9,33 @@ using Java.Interop.Tools.Cecil;
 using Mono.Linker;
 using Mono.Linker.Steps;
 
-using Mono.Tuner;
 #if NET5_LINKER
 using Microsoft.Android.Sdk.ILLink;
+#else
+using Mono.Tuner;
 #endif
 
-namespace MonoDroid.Tuner
+
+namespace Microsoft.Android.Sdk.ILLink
 {
-	/// <summary>
-	/// NOTE: this step is subclassed so it can be called directly from Xamarin.Android.Build.Tasks
-	/// </summary>
-	public class FixAbstractMethodsStep : BaseStep
+	public class FixAbstractMethodsHandler : IMarkHandler
 	{
 		readonly TypeDefinitionCache cache;
+		protected LinkContext Context { get; private set; }
+		protected AnnotationStore Annotations => Context?.Annotations;
 
-		public FixAbstractMethodsStep (TypeDefinitionCache cache)
+		public FixAbstractMethodsHandler (TypeDefinitionCache cache)
 		{
 			this.cache = cache;
 		}
 
-		protected override void ProcessAssembly (AssemblyDefinition assembly)
+		public void Initialize (LinkContext context, MarkContext markContext)
+		{
+			Context = context;
+			markContext.RegisterMarkAssemblyAction (assembly => ProcessAssembly (assembly));
+		}
+
+		protected void ProcessAssembly (AssemblyDefinition assembly)
 		{
 			if (!Annotations.HasAction (assembly))
 				Annotations.SetAction (assembly, AssemblyAction.Skip);
@@ -44,7 +51,6 @@ namespace MonoDroid.Tuner
 #if !NET5_LINKER
 				Context.SafeReadSymbols (assembly);
 #endif
-				// TODO: fix this.
 				AssemblyAction action = Annotations.HasAction (assembly) ? Annotations.GetAction (assembly) : AssemblyAction.Skip;
 				if (action == AssemblyAction.Skip || action == AssemblyAction.Copy || action == AssemblyAction.Delete)
 					Annotations.SetAction (assembly, AssemblyAction.Save);

@@ -193,7 +193,7 @@ namespace MonoDroid.Tuner {
 			if (invoker == null)
 				return;
 
-			PreserveIntPtrConstructor (invoker);
+			PreserveIntPtrConstructor (invoker); // seems redundant.
 			PreserveInterfaceMethods (type, invoker);
 		}
 

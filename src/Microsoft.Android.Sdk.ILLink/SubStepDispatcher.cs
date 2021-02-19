@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Microsoft.Android.Sdk.ILLink
 {
-	public class SubStepDispatcher : Mono.Linker.Steps.SubStepsDispatcher
+	public class SubStepDispatcher : Mono.Linker.Steps.MarkHandlerDispatcher
 	{
 	}
 }
