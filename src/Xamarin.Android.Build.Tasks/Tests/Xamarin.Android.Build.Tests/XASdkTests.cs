@@ -53,7 +53,10 @@ namespace Xamarin.Android.Build.Tests
 				Sources = {
 					new BuildItem.Source ("Bar.cs") {
 						TextContent = () => "public class Bar { }",
-					}
+					},
+					new AndroidItem.AndroidResource (() => "Resources\\drawable\\IMALLCAPS.png") {
+						BinaryContent = () => XamarinAndroidApplicationProject.icon_binary_mdpi,
+					},
 				}
 			};
 			libC.OtherBuildItems.Add (new AndroidItem.AndroidAsset ("Assets\\bar\\bar.txt") {
@@ -70,7 +73,19 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease,
 				Sources = {
 					new BuildItem.Source ("Foo.cs") {
-						TextContent = () => "public class Foo : Bar { }",
+						TextContent = () =>
+@"public class Foo : Bar
+{
+	public Foo ()
+	{
+		int x = LibraryB.Resource.Drawable.IMALLCAPS;
+	}
+}",
+					},
+					new AndroidItem.AndroidResource ("Resources\\layout\\test.axml") {
+						TextContent = () => {
+							return "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<ImageView xmlns:android=\"http://schemas.android.com/apk/res/android\" android:src=\"@drawable/IMALLCAPS\" />";
+						}
 					}
 				}
 			};
