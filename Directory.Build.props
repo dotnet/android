@@ -31,6 +31,7 @@
     <NuGetApiPackageVersion>5.4.0</NuGetApiPackageVersion>
     <LZ4PackageVersion>1.1.11</LZ4PackageVersion>
     <MonoOptionsVersion>6.6.0.161</MonoOptionsVersion>
+    <SystemCollectionsImmutableVersion>1.7.1</SystemCollectionsImmutableVersion>
   </PropertyGroup>
 
   <!-- Properties to help us run managed assemblies on various runtimes.
