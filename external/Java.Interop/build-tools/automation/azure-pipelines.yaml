@@ -160,5 +160,7 @@ jobs:
   - template: templates\core-build.yaml
       
   - template: templates\core-tests.yaml
+    parameters:
+      runNativeTests: true
 
   - template: templates\fail-on-issue.yaml
