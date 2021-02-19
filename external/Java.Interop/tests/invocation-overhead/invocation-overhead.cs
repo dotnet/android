@@ -10,7 +10,52 @@ using JIIntPtrEnv   = Java.Interop.JIIntPtrs.JniEnvironment;
 using PinvokeEnv    = Java.Interop.JIPinvokes.JniEnvironment;
 using XAIntPtrEnv   = Java.Interop.XAIntPtrs.JniEnvironment;
 
+public class XFieldInfo
+{
+	public IntPtr ID;
+	public bool   IsStatic;
+	public bool IsValid {get {return ID != IntPtr.Zero;}}
+	public XFieldInfo (string name, string signature, IntPtr id, bool isStatic)
+	{
+		ID = id;
+		IsStatic = isStatic;
+	}
+	public override string ToString ()
+	{
+		return string.Format ("{0}(0x{1})", GetType ().FullName, ID.ToString ("x"));
+	}
+}
+
+public class XMethodInfo
+{
+	public IntPtr ID;
+	public bool   IsStatic;
+	public bool IsValid {get {return ID != IntPtr.Zero;}}
+	public XMethodInfo (string name, string signature, IntPtr id, bool isStatic)
+	{
+		ID = id;
+		IsStatic = isStatic;
+	}
+	public override string ToString ()
+	{
+		return string.Format ("{0}(0x{1})", GetType ().FullName, ID.ToString ("x"));
+	}
+}
+
+
 namespace Java.Interop.SafeHandles {
+	public class JniFieldInfo : XFieldInfo {
+		public JniFieldInfo (string name, string signature, IntPtr id, bool isStatic)
+			: base (name, signature, id, isStatic)
+		{
+		}
+	}
+	public class JniMethodInfo : XMethodInfo {
+		public JniMethodInfo (string name, string signature, IntPtr id, bool isStatic)
+			: base (name, signature, id, isStatic)
+		{
+		}
+	}
 	public struct JniObjectReference
 	{
 		public  JniReferenceSafeHandle      SafeHandle  {get; private set;}
@@ -195,6 +240,18 @@ namespace Java.Interop.SafeHandles {
 }
 
 namespace Java.Interop.JIIntPtrs {
+	public class JniFieldInfo : XFieldInfo {
+		public JniFieldInfo (string name, string signature, IntPtr id, bool isStatic)
+			: base (name, signature, id, isStatic)
+		{
+		}
+	}
+	public class JniMethodInfo : XMethodInfo {
+		public JniMethodInfo (string name, string signature, IntPtr id, bool isStatic)
+			: base (name, signature, id, isStatic)
+		{
+		}
+	}
 	public struct JniObjectReference
 	{
 		public  IntPtr                      Handle  {get; private set;}
@@ -236,6 +293,18 @@ namespace Java.Interop.JIIntPtrs {
 }
 
 namespace Java.Interop.JIPinvokes {
+	public class JniFieldInfo : XFieldInfo {
+		public JniFieldInfo (string name, string signature, IntPtr id, bool isStatic)
+			: base (name, signature, id, isStatic)
+		{
+		}
+	}
+	public class JniMethodInfo : XMethodInfo {
+		public JniMethodInfo (string name, string signature, IntPtr id, bool isStatic)
+			: base (name, signature, id, isStatic)
+		{
+		}
+	}
 	public struct JniObjectReference
 	{
 		public  IntPtr                      Handle  {get; private set;}
@@ -282,6 +351,18 @@ namespace Java.Interop.JIPinvokes {
 	}
 }
 namespace Java.Interop.XAIntPtrs {
+	public class JniFieldInfo : XFieldInfo {
+		public JniFieldInfo (string name, string signature, IntPtr id, bool isStatic)
+			: base (name, signature, id, isStatic)
+		{
+		}
+	}
+	public class JniMethodInfo : XMethodInfo {
+		public JniMethodInfo (string name, string signature, IntPtr id, bool isStatic)
+			: base (name, signature, id, isStatic)
+		{
+		}
+	}
 	public struct JniObjectReference
 	{
 		public  IntPtr                      Handle  {get; private set;}
@@ -317,51 +398,6 @@ namespace Java.Interop.XAIntPtrs {
 			LogCreateLocalRef (h);
 			XAIntPtrEnv.References.DeleteLocalRef (h);
 			return new Exception ("yada yada yada");
-		}
-	}
-}
-
-namespace Java.Interop {
-	public sealed class JniFieldInfo
-	{
-		public IntPtr ID;
-		public bool   IsStatic;
-		public bool IsValid {get {return ID != IntPtr.Zero;}}
-
-		public JniFieldInfo (IntPtr id, bool isStatic)
-		{
-			ID = id;
-			IsStatic = isStatic;
-		}
-		public JniFieldInfo (string name, string signature, IntPtr id, bool isStatic)
-		{
-			ID = id;
-			IsStatic = isStatic;
-		}
-
-		public override string ToString ()
-		{
-			return string.Format ("{0}(0x{1})", GetType ().FullName, ID.ToString ("x"));
-		}
-	}
-	public class JniMethodInfo
-	{
-		public IntPtr ID;
-		public bool   IsStatic;
-		public bool IsValid {get {return ID != IntPtr.Zero;}}
-		public JniMethodInfo (IntPtr id, bool isStatic)
-		{
-			ID = id;
-			IsStatic = isStatic;
-		}
-		public JniMethodInfo (string name, string signature, IntPtr id, bool isStatic)
-		{
-			ID = id;
-			IsStatic = isStatic;
-		}
-		public override string ToString ()
-		{
-			return string.Format ("{0}(0x{1})", GetType ().FullName, ID.ToString ("x"));
 		}
 	}
 }
