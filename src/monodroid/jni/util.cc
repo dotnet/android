@@ -33,7 +33,7 @@
 
 using namespace xamarin::android;
 
-#if defined (ANDROID) || defined (LINUX)
+#if defined (ANDROID) || defined (__linux__) || defined (__linux)
 using timestruct = timespec;
 #else
 using timestruct = timeval;
@@ -45,7 +45,7 @@ void timing_point::mark ()
 	uint64_t tail;
 	timestruct tv_ctm;
 
-#if defined (ANDROID) || defined (LINUX)
+#if defined (ANDROID) || defined (__linux__) || defined (__linux)
 	ret = clock_gettime (CLOCK_MONOTONIC, &tv_ctm);
 	tail = static_cast<uint64_t>(tv_ctm.tv_nsec);
 #else

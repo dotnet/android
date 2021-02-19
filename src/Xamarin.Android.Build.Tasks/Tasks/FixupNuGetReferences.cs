@@ -45,7 +45,7 @@ namespace Xamarin.Android.Tasks
 						foreach (var fallback in PackageTargetFallback) {
 							if (!string.Equals (name, fallback, StringComparison.OrdinalIgnoreCase))
 								continue;
-							var fallbackDirectory = Path.Combine (parent.FullName, fallback);
+							var fallbackDirectory = Path.Combine (parent.FullName, name);
 							fallbackDirectories.Add (fallbackDirectory);
 
 							// Remove the netstandard assembly, if there is a platform-specific one

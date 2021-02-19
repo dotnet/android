@@ -15,7 +15,7 @@ namespace xamarin::android::internal
 	class SharedConstants
 	{
 	public:
-#if ANDROID || LINUX
+#if defined (ANDROID) || defined (__linux__) || defined (__linux)
 		static constexpr char MONO_SGEN_SO[]      = "libmonosgen-2.0.so";
 		static constexpr char MONO_SGEN_ARCH_SO[] = "libmonosgen-" __BITNESS__ "-2.0.so";
 #elif APPLE_OS_X

@@ -42,7 +42,7 @@
 #include <errno.h>
 #endif
 
-#if defined (LINUX)
+#if defined (__linux__) || defined (__linux)
 #include <sys/syscall.h>
 #endif
 
@@ -1830,7 +1830,7 @@ JNI_OnLoad (JavaVM *vm, void *reserved)
 JNIEXPORT void JNICALL
 Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
                                 jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader,
-                                jobjectArray externalStorageDirs, jobjectArray assembliesJava, [[maybe_unused]] jstring packageName,
+                                [[maybe_unused]] jobjectArray externalStorageDirs, jobjectArray assembliesJava, [[maybe_unused]] jstring packageName,
                                 jint apiLevel, [[maybe_unused]] jobjectArray environmentVariables)
 {
 	monodroidRuntime.Java_mono_android_Runtime_initInternal (

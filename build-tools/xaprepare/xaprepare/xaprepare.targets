@@ -30,6 +30,7 @@
       <BuildInfoOutFile>$(IntermediateOutputPath)\BuildInfo.Generated.cs</BuildInfoOutFile>
       <PropertyDefaultsInFile>Application/Properties.Defaults.cs.in</PropertyDefaultsInFile>
       <PropertyDefaultsOutFile>$(IntermediateOutputPath)\Properties.Defaults.cs</PropertyDefaultsOutFile>
+      <JavaIncludePath>@(JdkIncludePath)</JavaIncludePath>
     </PropertyGroup>
 
     <ReplaceFileContents
@@ -39,6 +40,7 @@
 
     <ItemGroup>
       <Replacement Include="@AndroidLatestStableFrameworkVersion@=$(AndroidLatestStableFrameworkVersion)" />
+      <Replacement Include="@AndroidCmakeUrlPrefix@=$(AndroidCmakeUrlPrefix)" />
       <Replacement Include="@AndroidCmakeVersion@=$(AndroidCmakeVersion)" />
       <Replacement Include="@AndroidCmakeVersionPath@=$(AndroidCmakeVersionPath)" />
       <Replacement Include="@AndroidMxeFullPath@=$(AndroidMxeFullPath)" />
@@ -52,17 +54,20 @@
       <Replacement Include="@AndroidToolchainDirectory@=$(AndroidToolchainDirectory)" />
       <Replacement Include="@AutoProvision@=$(AutoProvision)" />
       <Replacement Include="@AutoProvisionUsesSudo@=$(AutoProvisionUsesSudo)" />
+      <Replacement Include="@CmakePath@=$(CmakePath)" />
       <Replacement Include="@Configuration@=$(Configuration)" />
       <Replacement Include="@CommandLineToolsFolder@=$(CommandLineToolsFolder)" />
       <Replacement Include="@CommandLineToolsVersion@=$(CommandLineToolsVersion)" />
       <Replacement Include="@DotNetPreviewPath@=$(DotNetPreviewPath)" />
       <Replacement Include="@DotNetPreviewVersionFull@=$(DotNetPreviewVersionFull)" />
+      <Replacement Include="@DotNetRuntimePacksVersion@=$(DotNetRuntimePacksVersion)" />
       <Replacement Include="@EmulatorVersion@=$(EmulatorVersion)" />
       <Replacement Include="@EmulatorPkgRevision@=$(EmulatorPkgRevision)" />
       <Replacement Include="@HostOS@=$(HostOS)" />
       <Replacement Include="@IgnoreMaxMonoVersion@=$(IgnoreMaxMonoVersion)" />
       <Replacement Include="@JavaInteropFullPath@=$(JavaInteropFullPath)" />
       <Replacement Include="@JavaSdkDirectory@=$(JavaSdkDirectory)" />
+      <Replacement Include="@JdkIncludePath@=$(JavaIncludePath)" />
       <Replacement Include="@LibZipSourceFullPath@=$(LibZipSourceFullPath)" />
       <Replacement Include="@ManagedRuntime@=$(ManagedRuntime)" />
       <Replacement Include="@MingwCommandPrefix32@=$(MingwCommandPrefix32)" />
@@ -75,6 +80,7 @@
       <Replacement Include="@MonoRequiredMinimumVersion@=$(MonoRequiredMinimumVersion)" />
       <Replacement Include="@MonoRequiredMaximumVersion@=$(MonoRequiredMaximumVersion)" />
       <Replacement Include="@MonoSourceFullPath@=$(MonoSourceFullPath)" />
+      <Replacement Include="@NinjaPath@=$(NinjaPath)" />
       <Replacement Include="@Pkg7-Zip_CommandLine@=$(Pkg7-Zip_CommandLine)" />
       <Replacement Include="@PkgXamarin_LibZipSharp@=$(PkgXamarin_LibZipSharp)" />
       <Replacement Include="@ProductVersion@=$(ProductVersion)" />
