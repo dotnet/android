@@ -58,7 +58,7 @@ namespace Xamarin.ProjectTools
 			TargetFramework = "net6.0-android";
 
 			TargetSdkVersion = AndroidSdkResolver.GetMaxInstalledPlatform ().ToString ();
-			PackageName = $"com.xamarin.{packageName?.Replace ("-", "") ?? ProjectName}";
+			PackageName = $"com.xamarin.{packageName ?? ProjectName}";
 			JavaPackageName = JavaPackageName ?? PackageName.ToLowerInvariant ();
 			GlobalPackagesFolder = FileSystemUtils.FindNugetGlobalPackageFolder ();
 			SetProperty (KnownProperties.OutputType, outputType);

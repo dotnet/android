@@ -445,7 +445,7 @@ namespace Xamarin.Android.Build.Tests
 			if (string.IsNullOrEmpty (directory))
 				directory = Path.Combine ("temp", TestName);
 			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = Path.Combine (Root, directory);
-			TestPackageNames [packageName] = $"com.xamarin.{packageName?.Replace ("-", "")}";
+			TestPackageNames [packageName] = $"com.xamarin.{packageName}";
 			return BuildHelper.CreateApkBuilder (directory, cleanupAfterSuccessfulBuild, cleanupOnDispose);
 		}
 

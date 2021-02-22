@@ -68,7 +68,7 @@ namespace Xamarin.ProjectTools
 			TargetSdkVersion = AndroidSdkResolver.GetMaxInstalledPlatform ().ToString ();
 			LayoutMain = default_layout_main;
 			StringsXml = default_strings_xml;
-			PackageName = $"com.xamarin.{packageName?.Replace ("-", "") ?? ProjectName}";
+			PackageName = $"com.xamarin.{packageName ?? ProjectName}";
 			JavaPackageName = JavaPackageName ?? PackageName.ToLowerInvariant ();
 
 			OtherBuildItems.Add (new BuildItem.NoActionResource ("Properties\\AndroidManifest.xml") {
