@@ -1,20 +1,31 @@
 using Mono.Cecil;
+using Mono.Linker;
 using Mono.Linker.Steps;
 using MonoDroid.Tuner;
 
 namespace Microsoft.Android.Sdk.ILLink
 {
-	class PreserveJavaInterfaces : BaseSubStep
+	class PreserveJavaInterfaces : IMarkHandler
 	{
-		public override bool IsActiveFor (AssemblyDefinition assembly)
+		LinkContext context;
+
+		public void Initialize (LinkContext context, MarkContext markContext)
+		{
+			this.context = context;
+			markContext.RegisterMarkTypeAction (type => ProcessType (type));
+		}
+
+		bool IsActiveFor (AssemblyDefinition assembly)
 		{
 			return assembly.Name.Name == "Mono.Android" || assembly.MainModule.HasTypeReference ("Android.Runtime.IJavaObject");
 		}
 
-		public override SubStepTargets Targets { get { return SubStepTargets.Type;  } }
-
-		public override void ProcessType (TypeDefinition type)
+		void ProcessType (TypeDefinition type)
 		{
+			// TODO: is there a way for this to happen outside of the Mono.Android assemblies?
+			if (!IsActiveFor (type.Module.Assembly))
+				return;
+
 			// If we are preserving a Mono.Android interface,
 			// preserve all members on the interface.
 			if (!type.IsInterface)
@@ -25,7 +36,7 @@ namespace Microsoft.Android.Sdk.ILLink
 				return;
 
 			foreach (MethodReference method in type.Methods)
-				Annotations.AddPreservedMethod (type, method.Resolve ());
+				context.Annotations.AddPreservedMethod (type, method.Resolve ());
 		}
 	}
 }

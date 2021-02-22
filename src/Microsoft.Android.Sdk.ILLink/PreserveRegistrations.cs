@@ -10,34 +10,28 @@ using MonoDroid.Tuner;
 
 namespace Microsoft.Android.Sdk.ILLink
 {
-	class PreserveRegistrations : BaseSubStep
+	class PreserveRegistrations : IMarkHandler
 	{
-		delegate void AddPreservedMethodDelegate (AnnotationStore store, MethodDefinition key, MethodDefinition method);
-
-		static readonly AddPreservedMethodDelegate addPreservedMethod;
-
 		readonly TypeDefinitionCache cache;
+
+		LinkContext context;
 
 		public PreserveRegistrations (TypeDefinitionCache cache) => this.cache = cache;
 
-		static PreserveRegistrations ()
+		public void Initialize (LinkContext context, MarkContext markContext)
 		{
-			// temporarily use reflection to get void AnnotationStore::AddPreservedMethod (MethodDefinition key, MethodDefinition method)
-			// this can be removed once we have newer Microsoft.NET.ILLink containing https://github.com/mono/linker/commit/e6dadc995a834603e1178f9a1918f0ae38056b29
-			var method = typeof (AnnotationStore).GetMethod ("AddPreservedMethod", new Type [] { typeof (MethodDefinition), typeof (MethodDefinition) });
-			addPreservedMethod = (AddPreservedMethodDelegate)(method != null ? Delegate.CreateDelegate (typeof (AddPreservedMethodDelegate), null, method, false) : null);
+			this.context = context;
+			markContext.RegisterMarkMethodAction (method => ProcessMethod (method));
 		}
 
-		public override bool IsActiveFor (AssemblyDefinition assembly)
+		bool IsActiveFor (AssemblyDefinition assembly)
 		{
-			return addPreservedMethod != null && (assembly.Name.Name == "Mono.Android" || assembly.MainModule.HasTypeReference ("Android.Runtime.RegisterAttribute"));
+			return assembly.Name.Name == "Mono.Android" || assembly.MainModule.HasTypeReference ("Android.Runtime.RegisterAttribute");
 		}
-
-		public override SubStepTargets Targets { get { return SubStepTargets.Method;  } }
 
 		bool PreserveJniMarshalMethods ()
 		{
-			if (Context.TryGetCustomData ("XAPreserveJniMarshalMethods", out var boolValue))
+			if (context.TryGetCustomData ("XAPreserveJniMarshalMethods", out var boolValue))
 				return bool.Parse (boolValue);
 
 			return false;
@@ -78,8 +72,11 @@ namespace Microsoft.Android.Sdk.ILLink
 				type = type.BaseType.Resolve ();
 		}
 
-		public override void ProcessMethod (MethodDefinition method)
+		void ProcessMethod (MethodDefinition method)
 		{
+			if (!IsActiveFor (method.Module.Assembly))
+				return;
+
 			bool preserveJniMarshalMethodOnly = false;
 			if (!method.TryGetRegisterMember (out var member, out var nativeMethod, out var signature)) {
 				if (PreserveJniMarshalMethods () &&
@@ -105,7 +102,7 @@ namespace Microsoft.Android.Sdk.ILLink
 
 		void AddPreservedMethod (MethodDefinition key, MethodDefinition method)
 		{
-			addPreservedMethod.Invoke (Context.Annotations, key, method);
+			context.Annotations.AddPreservedMethod (key, method);
 		}
 	}
 }

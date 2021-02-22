@@ -24,6 +24,12 @@
     <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\Linker.cs" />
     <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\LinkerOptions.cs" />
 
+    <!-- Steps that have a different implementation as a new custom step -->
+    <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\MarkJavaObjects.cs" />
+    <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\PreserveApplications.cs" />
+    <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\PreserveJavaExceptions.cs" />
+    <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\FixAbstractMethodsStep.cs" />
+
     <!--Steps that are upstreamed, these are OK to remove-->
     <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\ApplyPreserveAttribute.cs" />
     <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\OutputStepWithTimestamps.cs" />

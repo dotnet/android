@@ -32,35 +32,51 @@ namespace Microsoft.Android.Sdk.ILLink
 		public void Initialize (LinkContext context, MarkContext markContext)
 		{
 			Context = context;
-			markContext.RegisterMarkAssemblyAction (assembly => ProcessAssembly (assembly));
+			markContext.RegisterMarkTypeAction (type => ProcessType (type));
 		}
 
-		protected void ProcessAssembly (AssemblyDefinition assembly)
+		bool ShouldProcessTypeFromAssembly (AssemblyDefinition assembly)
 		{
 			if (!Annotations.HasAction (assembly))
 				Annotations.SetAction (assembly, AssemblyAction.Skip);
 
 			if (IsProductOrSdkAssembly (assembly))
-				return;
+				return false;
 
 #if !NET5_LINKER
 			CheckAppDomainUsageUnconditional (assembly, (string msg) => Context.LogMessage (MessageImportance.High, msg));
 #endif
 
-			if (FixAbstractMethodsUnconditional (assembly)) {
-#if !NET5_LINKER
-				Context.SafeReadSymbols (assembly);
-#endif
-				AssemblyAction action = Annotations.HasAction (assembly) ? Annotations.GetAction (assembly) : AssemblyAction.Skip;
-				if (action == AssemblyAction.Skip || action == AssemblyAction.Copy || action == AssemblyAction.Delete)
-					Annotations.SetAction (assembly, AssemblyAction.Save);
-				var td = AbstractMethodErrorConstructor.DeclaringType.Resolve ();
-				Annotations.Mark (td);
-				Annotations.SetPreserve (td, TypePreserve.Nothing);
-				Annotations.AddPreservedMethod (td, AbstractMethodErrorConstructor.Resolve ());
-			}
+			if (!assembly.MainModule.HasTypeReference ("Java.Lang.Object"))
+				return false;
+
+			return true;
 		}
 
+		protected void ProcessType (TypeDefinition type)
+		{
+			var assembly = type.Module.Assembly;
+			if (!ShouldProcessTypeFromAssembly (assembly))
+				return;
+			
+			bool changed = false;
+			if (!MightNeedFix (type))
+				return;
+
+			if (!FixAbstractMethods (type))
+				return;
+
+#if !NET5_LINKER
+			Context.SafeReadSymbols (assembly);
+#endif
+			AssemblyAction action = Annotations.HasAction (assembly) ? Annotations.GetAction (assembly) : AssemblyAction.Skip;
+			if (action == AssemblyAction.Skip || action == AssemblyAction.Copy || action == AssemblyAction.Delete)
+				Annotations.SetAction (assembly, AssemblyAction.Save);
+			var td = AbstractMethodErrorConstructor.DeclaringType.Resolve ();
+			Annotations.Mark (td);
+			Annotations.SetPreserve (td, TypePreserve.Nothing);
+			Annotations.AddPreservedMethod (td, AbstractMethodErrorConstructor.Resolve ());
+		}
 
 #if !NET5_LINKER
 		internal void CheckAppDomainUsage (AssemblyDefinition assembly, Action<string> warn)
@@ -85,6 +101,7 @@ namespace Microsoft.Android.Sdk.ILLink
 		}
 #endif
 
+		// TODO: dead code?
 		internal bool FixAbstractMethods (AssemblyDefinition assembly)
 		{
 			return !IsProductOrSdkAssembly (assembly) && FixAbstractMethodsUnconditional (assembly);

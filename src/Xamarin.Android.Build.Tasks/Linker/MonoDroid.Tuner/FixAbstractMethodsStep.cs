@@ -79,6 +79,7 @@ namespace MonoDroid.Tuner
 		}
 #endif
 
+		// TODO: dead code?
 		internal bool FixAbstractMethods (AssemblyDefinition assembly)
 		{
 			return !IsProductOrSdkAssembly (assembly) && FixAbstractMethodsUnconditional (assembly);

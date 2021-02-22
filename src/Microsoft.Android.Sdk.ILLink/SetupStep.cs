@@ -45,20 +45,18 @@ namespace Microsoft.Android.Sdk.ILLink
 			if (Context.TryGetCustomData ("XATargetFrameworkDirectories", out tfmPaths))
 				Xamarin.Android.Tasks.MonoAndroidHelper.TargetFrameworkDirectories = tfmPaths.Split (new char [] { ';' });
 
-			var subSteps1 = new SubStepDispatcher ();
-			subSteps1.Add (new ApplyPreserveAttribute ());
+			var subSteps = new SubStepDispatcher ();
+			subSteps.Add (new ApplyPreserveAttribute ());
+			subSteps.Add (new PreserveExportedTypes ());
+			MarkHandlers.Add (subSteps);
 
+			MarkHandlers.Add (new MarkJavaObjects ());
+			MarkHandlers.Add (new PreserveJavaExceptions ());
+			MarkHandlers.Add (new PreserveApplications ());
 			var cache = new TypeDefinitionCache ();
-			var subSteps2 = new SubStepDispatcher ();
-			subSteps2.Add (new PreserveExportedTypes ());
-			subSteps2.Add (new MarkJavaObjects ());
-			subSteps2.Add (new PreserveJavaExceptions ());
-			subSteps2.Add (new PreserveApplications ());
-			subSteps2.Add (new PreserveRegistrations (cache));
-			subSteps2.Add (new PreserveJavaInterfaces ());
+			MarkHandlers.Add (new PreserveRegistrations (cache));
+			MarkHandlers.Add (new PreserveJavaInterfaces ());
 
-			MarkHandlers.Add (subSteps1);
-			MarkHandlers.Add (subSteps2);
 			MarkHandlers.Add (new FixAbstractMethodsHandler (cache));
 
 			// temporary workaround: this call forces illink to process all the assemblies
