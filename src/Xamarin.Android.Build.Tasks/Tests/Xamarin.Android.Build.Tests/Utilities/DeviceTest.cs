@@ -1,6 +1,7 @@
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 using System;
+using System.Linq;
 using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -52,8 +53,11 @@ namespace Xamarin.Android.Build.Tests
 		[OneTimeTearDown]
 		protected static void UnInstallTestApp ()
  		{
- 			foreach(var kvp in TestPackageNames)
- 				RunAdbCommand ($"uninstall {kvp.Value}");
+			var packages = TestPackageNames.Values.ToArray ();
+			TestPackageNames.Clear ();
+ 			foreach(var package in packages) {
+ 				RunAdbCommand ($"uninstall {package}");
+			}
  		}
 
 		protected static void RunAdbInput (string command, params object [] args)
