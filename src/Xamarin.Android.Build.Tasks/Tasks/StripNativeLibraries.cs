@@ -9,9 +9,7 @@ using Xamarin.Android.Tools;
 namespace Xamarin.Android.Tasks
 {
 	/// <summary>
-	/// Processes .so files coming from @(ResolvedFileToPublish).
-	/// * Checks if ABI is valid
-	/// * Strips debug information from the native libraries
+	/// Strips debug information from the native libraries
 	/// </summary>
 	public class StripNativeLibraries : AndroidTask
 	{
@@ -50,8 +48,6 @@ namespace Xamarin.Android.Tasks
 
 				var tripple = GetNdkTrippleFromAbi (abi);
 				var exe = Path.Combine (AndroidBinUtilsDirectory, $"{tripple}-strip{ext}");
-				Log.LogDebugMessage ($"strip: {exe} lib: {library} abi: {abi}");
-
 				var localDir = Path.Combine (LocalPath, library.GetMetadata ("RuntimeIdentifier"));
 				Directory.CreateDirectory (localDir);
 
@@ -63,9 +59,8 @@ namespace Xamarin.Android.Tasks
 
 				var code = proc.ExitCode;
 				if (code != 0)
-					Log.LogCodedError ("XA0000", $"Unable to strip native library: {library.ItemSpec}, strip tool exited with code: {code}");
+					Log.LogCodedError ("XA3008", $"Unable to strip native library: {library.ItemSpec}, strip tool exited with code: {code}");
 
-				Log.LogDebugMessage ($"localLib: {localLib} code: {code}");
 				library.ItemSpec = localLib;
 				output.Add (library);
 			}
