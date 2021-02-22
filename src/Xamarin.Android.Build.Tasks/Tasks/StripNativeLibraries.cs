@@ -59,7 +59,7 @@ namespace Xamarin.Android.Tasks
 
 				var code = proc.ExitCode;
 				if (code != 0)
-					Log.LogCodedError ("XA3008", $"Unable to strip native library: {library.ItemSpec}, strip tool exited with code: {code}");
+					Log.LogCodedError ("XA3008", library.ItemSpec, code);
 
 				library.ItemSpec = localLib;
 				output.Add (library);

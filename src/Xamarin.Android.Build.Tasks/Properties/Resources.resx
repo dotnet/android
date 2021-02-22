@@ -519,9 +519,9 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>Could not link native shared library: {0}</value>
   </data>
   <data name="XA3008" xml:space="preserve">
-    <value>Unable to strip native library: {library.ItemSpec}, strip tool exited with code: {code}</value>
-    <comment>{library.ItemSpec} - the native library path
-{code} - integer number exit code</comment>
+    <value>Unable to strip native library: {0}, strip tool exited with code: {1}</value>
+    <comment>{0} - the native library path
+{1} - integer number exit code</comment>
   </data>
   <data name="XA4209" xml:space="preserve">
     <value>Failed to generate Java type for class: {0} due to {1}</value>
