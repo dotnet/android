@@ -178,7 +178,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void AppBundle ()
 		{
-			var aab = Path.Combine (intermediate, "android", "bin", "UnnamedProject.UnnamedProject.aab");
+			var aab = Path.Combine (intermediate, "android", "bin", $"{app.ProjectName}.aab");
 			FileAssert.Exists (aab);
 			var contents = ListArchiveContents (aab);
 			var expectedFiles = new List<string> {
@@ -242,7 +242,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void AppBundleSigned ()
 		{
-			var aab = Path.Combine (bin, "UnnamedProject.UnnamedProject-Signed.aab");
+			var aab = Path.Combine (bin, $"{app.ProjectName}-Signed.aab");
 			FileAssert.Exists (aab);
 			var contents = ListArchiveContents (aab);
 			Assert.IsTrue (StringAssertEx.ContainsText (contents, "META-INF/MANIFEST.MF"), $"{aab} is not signed!");
@@ -256,7 +256,7 @@ namespace Xamarin.Android.Build.Tests
 			appBuilder.BuildLogFile = "install.log";
 			Assert.IsTrue (appBuilder.RunTarget (app, "Install"), "App should have installed.");
 
-			var aab = Path.Combine (intermediate, "android", "bin", "UnnamedProject.UnnamedProject.apks");
+			var aab = Path.Combine (intermediate, "android", "bin", $"{app.ProjectName}.apks");
 			FileAssert.Exists (aab);
 			// Expecting: splits/base-arm64_v8a.apk, splits/base-master.apk, splits/base-xxxhdpi.apk
 			// This are split up based on: abi, base, and dpi

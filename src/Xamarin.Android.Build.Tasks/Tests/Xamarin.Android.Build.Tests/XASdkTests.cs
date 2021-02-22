@@ -412,7 +412,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			bool expectEmbeddedAssembies = !(CommercialBuildAvailable && !isRelease);
-			var apkPath = Path.Combine (outputPath, "UnnamedProject.UnnamedProject.apk");
+			var apkPath = Path.Combine (outputPath, $"{proj.PackageName}.apk");
 			FileAssert.Exists (apkPath);
 			using (var apk = ZipHelper.OpenZip (apkPath)) {
 				apk.AssertContainsEntry (apkPath, $"assemblies/{proj.ProjectName}.dll", shouldContainEntry: expectEmbeddedAssembies);

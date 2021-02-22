@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace Xamarin.ProjectTools
 {
@@ -24,8 +25,8 @@ namespace Xamarin.ProjectTools
 				default_layout_round_main = sr.ReadToEnd ();
 		}
 
-		public XamarinAndroidWearApplicationProject (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release")
-			: base (debugConfigurationName, releaseConfigurationName)
+		public XamarinAndroidWearApplicationProject (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release", [CallerMemberName] string packageName = "")
+			: base (debugConfigurationName, releaseConfigurationName, packageName)
 		{
 			TargetFrameworkVersion = Versions.KitkatWatch;
 			UseLatestPlatformSdk = true;
