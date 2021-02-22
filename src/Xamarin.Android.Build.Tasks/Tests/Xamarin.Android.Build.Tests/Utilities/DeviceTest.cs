@@ -43,8 +43,6 @@ namespace Xamarin.Android.Build.Tests
 				}
 			}
 
-			UnInstallTestApp ();
-
 			ClearAdbLogcat ();
 
 
