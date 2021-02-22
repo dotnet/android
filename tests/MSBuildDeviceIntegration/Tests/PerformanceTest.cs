@@ -102,7 +102,6 @@ namespace Xamarin.Android.Build.Tests
 		XamarinAndroidApplicationProject CreateApplicationProject ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
-				PackageName = GeneratePackageName (),
 			};
 			proj.SetAndroidSupportedAbis ("x86"); // Use a single ABI
 			return proj;

@@ -53,12 +53,10 @@ namespace Xamarin.Android.Build.Tests
 			XASdkProject proj;
 			if (xamarinForms) {
 				proj = new XamarinFormsXASdkProject {
-					PackageName = GeneratePackageName (),
 					IsRelease = isRelease
 				};
 			} else {
 				proj = new XASdkProject {
-					PackageName = GeneratePackageName (),
 					IsRelease = isRelease
 				};
 			}
@@ -92,7 +90,6 @@ namespace Xamarin.Android.Build.Tests
 
 			XASdkProject proj;
 			proj = new XASdkProject () {
-				PackageName = GeneratePackageName (),
 			};
 			proj.SetRuntimeIdentifier (DeviceAbi);
 			string runtimeId = proj.GetProperty (KnownProperties.RuntimeIdentifier);

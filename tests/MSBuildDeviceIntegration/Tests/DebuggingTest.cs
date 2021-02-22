@@ -39,7 +39,6 @@ namespace Xamarin.Android.Build.Tests
 
 			var proj = new XamarinFormsAndroidApplicationProject () {
 				IsRelease = isRelease,
-				PackageName = GeneratePackageName (),
 			};
 			if (isRelease || !CommercialBuildAvailable) {
 				proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
@@ -74,7 +73,6 @@ namespace Xamarin.Android.Build.Tests
 
 			var app = new XamarinAndroidApplicationProject {
 				ProjectName = "MyApp",
-				PackageName = GeneratePackageName (),
 			};
 			if (!CommercialBuildAvailable) {
 				app.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
@@ -151,7 +149,6 @@ namespace Xamarin.Android.Build.Tests
 			AssertHasDevices ();
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = false,
-				PackageName = GeneratePackageName (),
 				AndroidFastDeploymentType = fastDevType,
 			};
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
@@ -314,7 +311,6 @@ namespace ${ROOT_NAMESPACE} {
 
 			var proj = new XamarinFormsAndroidApplicationProject () {
 				IsRelease = false,
-				PackageName = GeneratePackageName (),
 				EmbedAssembliesIntoApk = embedAssemblies,
 				AndroidFastDeploymentType = fastDevType
 			};

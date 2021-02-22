@@ -43,7 +43,6 @@ namespace Xamarin.Android.Build.Tests
 			AssertHasDevices ();
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = false,
-				PackageName = GeneratePackageName (),
 				AndroidFastDeploymentType = fastDevType,
 				References = {
 					new BuildItem.Reference ("Mono.Android.Export"),

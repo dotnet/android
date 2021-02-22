@@ -19,7 +19,6 @@ namespace Xamarin.Android.Build.Tests
 			AssertHasDevices ();
 
 			var proj = new XamarinFormsAndroidApplicationProject {
-				PackageName = GeneratePackageName (),
 				AndroidFastDeploymentType = "Assemblies:Dexes",
 				UseLatestPlatformSdk = true,
 				DexTool = dexTool,
@@ -56,7 +55,6 @@ namespace Xamarin.Android.Build.Tests
 			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject () {
-				PackageName = GeneratePackageName (),
 				AndroidFastDeploymentType = "Assemblies:Dexes",
 				UseLatestPlatformSdk = true,
 			};
@@ -134,7 +132,6 @@ namespace Xamarin.Android.Build.Tests
 			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject {
-				PackageName = GeneratePackageName (),
 				AndroidFastDeploymentType = "Assemblies:Dexes",
 				UseLatestPlatformSdk = true,
 				DexTool = dexTool,
@@ -154,7 +151,6 @@ namespace Xamarin.Android.Build.Tests
 			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject {
-				PackageName = GeneratePackageName (),
 				AndroidFastDeploymentType = "Assemblies:Dexes",
 				UseLatestPlatformSdk = true,
 				DexTool = dexTool,
@@ -196,7 +192,6 @@ namespace Xamarin.Android.Build.Tests
 			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject () {
-				PackageName = GeneratePackageName (),
 				AndroidFastDeploymentType = "Assemblies:Dexes",
 				UseLatestPlatformSdk = true,
 			};
@@ -229,7 +224,6 @@ namespace Xamarin.Android.Build.Tests
 			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject () {
-				PackageName = GeneratePackageName (),
 				AndroidFastDeploymentType = "Assemblies:Dexes",
 				UseLatestPlatformSdk = true,
 				DexTool = dexTool,
@@ -265,7 +259,6 @@ namespace Xamarin.Android.Build.Tests
 			AssertHasDevices ();
 
 			var proj = new XamarinAndroidApplicationProject () {
-				PackageName = GeneratePackageName (),
 				AndroidFastDeploymentType = "Assemblies:Dexes",
 				UseLatestPlatformSdk = true,
 				DexTool = dexTool,
@@ -298,7 +291,6 @@ namespace Xamarin.Android.Build.Tests
 				MetadataValues = $"Link=libs\\{DeviceAbi}\\libtest.so",
 			};
 			var proj = new XamarinAndroidApplicationProject () {
-				PackageName = GeneratePackageName (),
 				AndroidFastDeploymentType = "Assemblies:Dexes",
 				UseLatestPlatformSdk = true,
 				DexTool = dexTool,

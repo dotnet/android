@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace Xamarin.ProjectTools
 {
@@ -37,8 +38,8 @@ namespace Xamarin.ProjectTools
 				App_xaml_cs = sr.ReadToEnd ();
 		}
 
-		public XamarinFormsAndroidApplicationProject (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release")
-			: base (debugConfigurationName, releaseConfigurationName)
+		public XamarinFormsAndroidApplicationProject (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release", [CallerMemberName] string packageName = "")
+			: base (debugConfigurationName, releaseConfigurationName, packageName)
 		{
 			if (Builder.UseDotNet) {
 				PackageReferences.Add (KnownPackages.XamarinForms_4_7_0_1142);

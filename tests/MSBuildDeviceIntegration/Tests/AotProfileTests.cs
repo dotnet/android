@@ -24,7 +24,6 @@ namespace Xamarin.Android.Build.Tests
 
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
-				PackageName = GeneratePackageName (),
 			};
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			var port = 9000 + new Random ().Next (1000);

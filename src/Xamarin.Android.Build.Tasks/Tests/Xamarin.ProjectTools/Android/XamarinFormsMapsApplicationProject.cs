@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace Xamarin.ProjectTools
 {
@@ -13,7 +14,8 @@ namespace Xamarin.ProjectTools
 				MainPageMaps_xaml = sr.ReadToEnd ();
 		}
 
-		public XamarinFormsMapsApplicationProject ()
+		public XamarinFormsMapsApplicationProject (string outputType = "Exe", [CallerMemberName] string packageName = "")
+			: base (outputType, packageName)
 		{
 			if (Builder.UseDotNet) {
 				PackageReferences.Add (KnownPackages.XamarinFormsMaps_4_7_0_1142);
