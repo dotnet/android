@@ -109,10 +109,11 @@ namespace Java.InteropTests
 
 		static Delegate GetEqualsThisHandler ()
 		{
-			Func<IntPtr, IntPtr, IntPtr, bool> h = _EqualsThis;
+			EqualsThisMarshalMethod h = _EqualsThis;
 			return JniEnvironment.Runtime.MarshalMemberBuilder.CreateMarshalToManagedDelegate (h);
 		}
 
+		delegate bool EqualsThisMarshalMethod (IntPtr jnienv, IntPtr n_self, IntPtr n_value);
 		static bool _EqualsThis (IntPtr jnienv, IntPtr n_self, IntPtr n_value)
 		{
 			var jvm     = JniEnvironment.Runtime;
@@ -131,10 +132,11 @@ namespace Java.InteropTests
 
 		static Delegate GetInt32ValueHandler ()
 		{
-			Func<IntPtr, IntPtr, int> h = _GetInt32Value;
+			GetInt32ValueMarshalMethod h = _GetInt32Value;
 			return JniEnvironment.Runtime.MarshalMemberBuilder.CreateMarshalToManagedDelegate (h);
 		}
 
+		delegate int GetInt32ValueMarshalMethod (IntPtr jnienv, IntPtr n_self);
 		static int _GetInt32Value (IntPtr jnienv, IntPtr n_self)
 		{
 			var r_self  = new JniObjectReference (n_self);
@@ -148,10 +150,11 @@ namespace Java.InteropTests
 
 		static Delegate _GetStringValueHandler ()
 		{
-			Func<IntPtr, IntPtr, int, IntPtr> h = GetStringValueHandler;
+			GetStringValueMarshalMethod h = GetStringValueHandler;
 			return JniEnvironment.Runtime.MarshalMemberBuilder.CreateMarshalToManagedDelegate (h);
 		}
 
+		delegate IntPtr GetStringValueMarshalMethod (IntPtr jnienv, IntPtr n_self, int value);
 		static IntPtr GetStringValueHandler (IntPtr jnienv, IntPtr n_self, int value)
 		{
 			var r_self  = new JniObjectReference (n_self);
@@ -171,10 +174,11 @@ namespace Java.InteropTests
 
 		static Delegate GetMethodThrowsHandler ()
 		{
-			Action<IntPtr, IntPtr> h = MethodThrowsHandler;
+			MethodThrowsMarshalMethod h = MethodThrowsHandler;
 			return JniEnvironment.Runtime.MarshalMemberBuilder.CreateMarshalToManagedDelegate (h);
 		}
 
+		delegate void MethodThrowsMarshalMethod (IntPtr jnienv, IntPtr n_self);
 		static void MethodThrowsHandler (IntPtr jnienv, IntPtr n_self)
 		{
 			var r_self  = new JniObjectReference (n_self);

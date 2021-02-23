@@ -58,14 +58,14 @@ namespace Java.Interop {
 			return r;
 		}
 
-		string GetCurrentManagedThreadName (bool create)
+		string? GetCurrentManagedThreadName (bool create)
 		{
 			if (create)
 				return Runtime.GetCurrentManagedThreadName ();
 			return null;
 		}
 
-		string GetCurrentManagedThreadStack (bool create)
+		string? GetCurrentManagedThreadStack (bool create)
 		{
 			if (create)
 				return Runtime.GetCurrentManagedThreadStackTrace (skipFrames: 2, fNeedFileInfo: true);
@@ -120,7 +120,7 @@ namespace Java.Interop {
 			get {return logGlobalRefs;}
 		}
 
-		public override void WriteGlobalReferenceLine (string format, params object[] args)
+		public override void WriteGlobalReferenceLine (string format, params object?[]? args)
 		{
 			if (!LogGlobalReferenceMessages)
 				return;
@@ -217,13 +217,13 @@ namespace Java.Interop {
 		internal static extern int java_interop_gc_bridge_lref_set_log_level    (IntPtr bridge, int level);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		internal static extern void java_interop_gc_bridge_lref_log_message     (IntPtr bridge, int level,      string message);
+		internal static extern void java_interop_gc_bridge_lref_log_message     (IntPtr bridge, int level,      string? message);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		internal static extern void java_interop_gc_bridge_lref_log_new         (IntPtr bridge, int lref_count, IntPtr curHandle, byte curType, IntPtr newHandle, byte newType, string thread_name, long thread_id, string from);
+		internal static extern void java_interop_gc_bridge_lref_log_new         (IntPtr bridge, int lref_count, IntPtr curHandle, byte curType, IntPtr newHandle, byte newType, string? thread_name, long thread_id, string? from);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		internal static extern void java_interop_gc_bridge_lref_log_delete      (IntPtr bridge, int lref_count, IntPtr handle,    byte type,                                    string thread_name, long thread_id, string from);
+		internal static extern void java_interop_gc_bridge_lref_log_delete      (IntPtr bridge, int lref_count, IntPtr handle,    byte type,                                    string? thread_name, long thread_id, string? from);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
 		internal static extern IntPtr java_interop_gc_bridge_gref_get_log_file  (IntPtr bridge);
@@ -232,19 +232,19 @@ namespace Java.Interop {
 		internal static extern int java_interop_gc_bridge_gref_set_log_level    (IntPtr bridge, int level);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		internal static extern void java_interop_gc_bridge_gref_log_message     (IntPtr bridge, int level,      string message);
+		internal static extern void java_interop_gc_bridge_gref_log_message     (IntPtr bridge, int level,      string? message);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		internal static extern int java_interop_gc_bridge_gref_log_new          (IntPtr bridge,                 IntPtr curHandle, byte curType, IntPtr newHandle, byte newType, string thread_name, long thread_id, string from);
+		internal static extern int java_interop_gc_bridge_gref_log_new          (IntPtr bridge,                 IntPtr curHandle, byte curType, IntPtr newHandle, byte newType, string? thread_name, long thread_id, string? from);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		internal static extern int java_interop_gc_bridge_gref_log_delete       (IntPtr bridge,                 IntPtr handle,    byte type,                                    string thread_name, long thread_id, string from);
+		internal static extern int java_interop_gc_bridge_gref_log_delete       (IntPtr bridge,                 IntPtr handle,    byte type,                                    string? thread_name, long thread_id, string? from);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		internal static extern int java_interop_gc_bridge_weak_gref_log_new     (IntPtr bridge,                 IntPtr curHandle, byte curType, IntPtr newHandle, byte newType, string thread_name, long thread_id, string from);
+		internal static extern int java_interop_gc_bridge_weak_gref_log_new     (IntPtr bridge,                 IntPtr curHandle, byte curType, IntPtr newHandle, byte newType, string? thread_name, long thread_id, string? from);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		internal static extern int java_interop_gc_bridge_weak_gref_log_delete  (IntPtr bridge,                 IntPtr handle,    byte type,                                    string thread_name, long thread_id, string from);
+		internal static extern int java_interop_gc_bridge_weak_gref_log_delete  (IntPtr bridge,                 IntPtr handle,    byte type,                                    string? thread_name, long thread_id, string? from);
 	}
 }
 

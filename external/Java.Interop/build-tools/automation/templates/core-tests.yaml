@@ -68,6 +68,14 @@ steps:
   continueOnError: true
 
 - task: DotNetCoreCLI@2
+  displayName: 'Tests: Java.Interop'
+  condition: eq('${{ parameters.runNativeTests }}', 'true')
+  inputs:
+    command: test
+    arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Interop-Tests.dll
+  continueOnError: true
+
+- task: DotNetCoreCLI@2
   displayName: 'Tests: Java.Interop.Dynamic'
   condition: eq('${{ parameters.runNativeTests }}', 'true')
   inputs:

@@ -15,7 +15,9 @@ namespace Java.InteropTests {
 			var c = new TestJVM (
 					jars:           new[]{ "interop-test.jar" },
 					typeMappings:   new Dictionary<string, Type> () {
+#if !NO_MARSHAL_MEMBER_BUILDER_SUPPORT
 						{ TestType.JniTypeName, typeof (TestType) },
+#endif  // !NO_MARSHAL_MEMBER_BUILDER_SUPPORT
 						{ GenericHolder<int>.JniTypeName,   typeof (GenericHolder<>) },
 					}
 			);

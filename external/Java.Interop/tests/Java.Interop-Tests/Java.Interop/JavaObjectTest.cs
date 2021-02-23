@@ -10,6 +10,7 @@ namespace Java.InteropTests
 	[TestFixture]
 	public class JavaObjectTest : JavaVMFixture
 	{
+#if !NO_GC_BRIDGE_SUPPORT
 		[Test]
 		public void JavaReferencedInstanceSurvivesCollection ()
 		{
@@ -41,6 +42,7 @@ namespace Java.InteropTests
 				array.Dispose ();
 			}
 		}
+#endif  // !NO_GC_BRIDGE_SUPPORT
 
 		[Test]
 		public void UnregisterFromRuntime ()
@@ -72,6 +74,7 @@ namespace Java.InteropTests
 			}
 		}
 
+#if !NO_GC_BRIDGE_SUPPORT
 		[Test]
 		public void UnreferencedInstanceIsCollected ()
 		{
@@ -92,6 +95,7 @@ namespace Java.InteropTests
 			Assert.IsNull (JniRuntime.CurrentRuntime.ValueManager.PeekValue (oldHandle));
 			JniObjectReference.Dispose (ref oldHandle);
 		}
+#endif  // !NO_GC_BRIDGE_SUPPORT
 
 		[Test]
 		public void Dispose ()
@@ -104,6 +108,7 @@ namespace Java.InteropTests
 			Assert.IsFalse (f);
 		}
 
+#if !NO_GC_BRIDGE_SUPPORT
 		[Test]
 		public void Dispose_Finalized ()
 		{
@@ -122,6 +127,7 @@ namespace Java.InteropTests
 			Assert.IsFalse (d);
 			Assert.IsTrue (f);
 		}
+#endif  // !NO_GC_BRIDGE_SUPPORT
 
 		[Test]
 		public void ObjectDisposed ()

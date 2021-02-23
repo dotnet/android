@@ -21,6 +21,7 @@ variables:
   DotNetCoreVersion: 3.1.300
   HostedMacImage: macOS-10.15
   HostedWinVS2019: Hosted Windows 2019 with VS2019
+  NetCoreTargetFrameworkPathSuffix: -netcoreapp3.1
 
 jobs:
 - job: windows_build

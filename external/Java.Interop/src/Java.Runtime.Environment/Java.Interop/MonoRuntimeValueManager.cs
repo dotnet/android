@@ -97,11 +97,14 @@ namespace Java.Interop {
 			}
 		}
 
-		Dictionary<int, List<WeakReference<IJavaPeerable>>>     RegisteredInstances = new Dictionary<int, List<WeakReference<IJavaPeerable>>>();
+		Dictionary<int, List<WeakReference<IJavaPeerable>>>?    RegisteredInstances = new Dictionary<int, List<WeakReference<IJavaPeerable>>>();
 
 
 		public override List<JniSurfacedPeerInfo> GetSurfacedPeers ()
 		{
+			if (RegisteredInstances == null)
+				throw new ObjectDisposedException (nameof (MonoRuntimeValueManager));
+
 			lock (RegisteredInstances) {
 				var peers = new List<JniSurfacedPeerInfo> (RegisteredInstances.Count);
 				foreach (var e in RegisteredInstances) {
@@ -115,6 +118,9 @@ namespace Java.Interop {
 
 		public override void AddPeer (IJavaPeerable value)
 		{
+			if (RegisteredInstances == null)
+				throw new ObjectDisposedException (nameof (MonoRuntimeValueManager));
+
 			var r = value.PeerReference;
 			if (!r.IsValid)
 				throw new ObjectDisposedException (value.GetType ().FullName);
@@ -183,6 +189,9 @@ namespace Java.Interop {
 
 		public override void RemovePeer (IJavaPeerable value)
 		{
+			if (RegisteredInstances == null)
+				throw new ObjectDisposedException (nameof (MonoRuntimeValueManager));
+
 			if (value == null)
 				throw new ArgumentNullException (nameof (value));
 
@@ -209,8 +218,11 @@ namespace Java.Interop {
 			}
 		}
 
-		public override IJavaPeerable PeekPeer (JniObjectReference reference)
+		public override IJavaPeerable? PeekPeer (JniObjectReference reference)
 		{
+			if (RegisteredInstances == null)
+				throw new ObjectDisposedException (nameof (MonoRuntimeValueManager));
+
 			if (!reference.IsValid)
 				return null;
 
@@ -245,7 +257,7 @@ namespace Java.Interop {
 			}
 		}
 
-		public override void ActivatePeer (IJavaPeerable self, JniObjectReference reference, ConstructorInfo cinfo, object [] argumentValues)
+		public override void ActivatePeer (IJavaPeerable? self, JniObjectReference reference, ConstructorInfo cinfo, object?[]? argumentValues)
 		{
 			var runtime = JniEnvironment.Runtime;
 
@@ -337,19 +349,19 @@ namespace Java.Interop {
 	}
 
 	static class JavaLangRuntime {
-		static JniType _typeRef;
+		static JniType? _typeRef;
 		static JniType TypeRef {
 			get {return JniType.GetCachedJniType (ref _typeRef, "java/lang/Runtime");}
 		}
 
-		static JniMethodInfo _getRuntime;
+		static JniMethodInfo? _getRuntime;
 		internal static JniObjectReference GetRuntime ()
 		{
 			TypeRef.GetCachedStaticMethod (ref _getRuntime, "getRuntime", "()Ljava/lang/Runtime;");
 			return JniEnvironment.StaticMethods.CallStaticObjectMethod (TypeRef.PeerReference, _getRuntime);
 		}
 
-		static JniMethodInfo _gc;
+		static JniMethodInfo? _gc;
 		internal static void GC (JniObjectReference runtime)
 		{
 			TypeRef.GetCachedInstanceMethod (ref _gc, "gc", "()V");

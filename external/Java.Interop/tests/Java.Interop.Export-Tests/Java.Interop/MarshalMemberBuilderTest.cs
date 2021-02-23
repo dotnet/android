@@ -530,20 +530,29 @@ namespace Java.InteropTests
 			var b   = CreateBuilder ();
 			var c   = typeof (MarshalMemberBuilderTest).GetConstructor (new Type [0]);
 			var e   = b.CreateConstructActivationPeerExpression (c);
+
+			const string GetUninitializedObject_decltype =
+#if NETCOREAPP
+				"RuntimeHelpers"
+#else   // !NETCOREAPP
+				"FormatterServices"
+#endif  // !NETCOREAPP
+				;
+
 			CheckExpression (e,
 					"ExportedMemberBuilderTest_ctor",
 					typeof(Func<ConstructorInfo, JniObjectReference, object[], object>),
-					@"object (ConstructorInfo constructor, JniObjectReference reference, object[] parameters)
-{
+					$@"object (ConstructorInfo constructor, JniObjectReference reference, object[] parameters)
+{{
 	Type type;
 	object self;
 
 	type = constructor.DeclaringType;
-	self = FormatterServices.GetUninitializedObject(type);
+	self = {GetUninitializedObject_decltype}.GetUninitializedObject(type);
 	(IJavaPeerable)self.SetPeerReference(reference);
 	constructor.Invoke(self, parameters);
 	return self;
-}");
+}}");
 		}
 	}
 }

@@ -31,6 +31,9 @@ namespace Java.Interop {
 
 		public  Collection<string>  ClassPath           {get; private set;}
 
+		public  TextWriter? JniGlobalReferenceLogWriter {get; set;}
+		public  TextWriter? JniLocalReferenceLogWriter  {get; set;}
+
 		public JreRuntimeOptions ()
 		{
 			JniVersion  = JniVersion.v1_2;
@@ -39,16 +42,6 @@ namespace Java.Interop {
 					Path.GetDirectoryName (typeof (JreRuntimeOptions).Assembly.Location),
 					"java-interop.jar"),
 			};
-
-			bool onMono = Type.GetType ("Mono.Runtime", throwOnError: false) != null;
-			if (onMono) {
-				ValueManager            = ValueManager              ?? new MonoRuntimeValueManager ();
-				ObjectReferenceManager  = ObjectReferenceManager    ?? new MonoRuntimeObjectReferenceManager ();
-			}
-			else {
-				ValueManager            = ValueManager              ?? new DummyValueManager ();
-				ObjectReferenceManager  = ObjectReferenceManager    ?? new DummyObjectReferenceManager ();
-			}
 		}
 
 		public JreRuntimeOptions AddOption (string option)
@@ -87,12 +80,22 @@ namespace Java.Interop {
 			if (builder == null)
 				throw new ArgumentNullException ("builder");
 
+			bool onMono = Type.GetType ("Mono.Runtime", throwOnError: false) != null;
+			if (onMono) {
+				builder.ValueManager            = builder.ValueManager              ?? new MonoRuntimeValueManager ();
+				builder.ObjectReferenceManager  = builder.ObjectReferenceManager    ?? new MonoRuntimeObjectReferenceManager ();
+			}
+			else {
+				builder.ValueManager            = builder.ValueManager              ?? new ManagedValueManager ();
+				builder.ObjectReferenceManager  = builder.ObjectReferenceManager    ?? new ManagedObjectReferenceManager (builder.JniGlobalReferenceLogWriter, builder.JniLocalReferenceLogWriter);
+			}
+
 			if (builder.InvocationPointer != IntPtr.Zero)
 				return builder;
 
 			if (!string.IsNullOrEmpty (builder.JvmLibraryPath)) {
 				IntPtr errorPtr = IntPtr.Zero;
-				int r = NativeMethods.java_interop_jvm_load_with_error_message (builder.JvmLibraryPath, out errorPtr);
+				int r = NativeMethods.java_interop_jvm_load_with_error_message (builder.JvmLibraryPath!, out errorPtr);
 				if (r != 0) {
 					string error = Marshal.PtrToStringAnsi (errorPtr);
 					NativeMethods.java_interop_free (errorPtr);
@@ -165,53 +168,6 @@ namespace Java.Interop {
 
 		[DllImport (JavaInteropLib, CharSet=CharSet.Ansi, CallingConvention=CallingConvention.Cdecl)]
 		internal static extern int java_interop_jvm_create (out IntPtr javavm, out IntPtr jnienv, ref JavaVMInitArgs args);
-	}
-
-	class DummyValueManager : JniRuntime.JniValueManager {
-
-		public override void WaitForGCBridgeProcessing ()
-		{
-		}
-
-		public override void CollectPeers ()
-		{
-		}
-
-		public override void AddPeer (IJavaPeerable reference)
-		{
-		}
-
-		public override void RemovePeer (IJavaPeerable reference)
-		{
-		}
-
-		public override void FinalizePeer (IJavaPeerable reference)
-		{
-		}
-
-		public override List<JniSurfacedPeerInfo> GetSurfacedPeers ()
-		{
-			return null;
-		}
-
-		public override IJavaPeerable PeekPeer (global::Java.Interop.JniObjectReference reference)
-		{
-			return null;
-		}
-
-		public override void ActivatePeer (IJavaPeerable self, JniObjectReference reference, ConstructorInfo cinfo, object [] argumentValues)
-		{
-		}
-	}
-
-	class DummyObjectReferenceManager : JniRuntime.JniObjectReferenceManager {
-		public override int GlobalReferenceCount {
-			get {return 0;}
-		}
-
-		public override int WeakGlobalReferenceCount {
-			get {return 0;}
-		}
 	}
 }
 

@@ -10,6 +10,10 @@
     <OutputPath>$(TestOutputFullPath)</OutputPath>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
+    <DefineConstants>$(DefineConstants);NO_MARSHAL_MEMBER_BUILDER_SUPPORT;NO_GC_BRIDGE_SUPPORT</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Remove="Java.Interop\JniReferenceSafeHandleTest.cs" />
   </ItemGroup>
@@ -31,6 +35,10 @@
     <ProjectReference Include="..\..\src\Java.Interop.GenericMarshaler\Java.Interop.GenericMarshaler.csproj" />
     <ProjectReference Include="..\..\src\Java.Runtime.Environment\Java.Runtime.Environment.csproj" />
     <ProjectReference Include="..\TestJVM\TestJVM.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' != 'netcoreapp3.1' ">
+    <ProjectReference Include="..\..\src\Java.Interop.Export\Java.Interop.Export.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.Text;
 
@@ -46,6 +47,12 @@ namespace Java.Interop
 					JniEnvironment.LogCreateLocalRef (r);
 					return r;
 				}
+
+				// If the Java-side exception stack trace is *lost* a'la 89a5a229,
+				// change `false` to `true` and rebuild+re-run.
+#if false
+				NativeMethods.java_interop_jnienv_exception_describe (info.EnvironmentPointer);
+#endif
 
 				NativeMethods.java_interop_jnienv_exception_clear (info.EnvironmentPointer);
 
@@ -167,6 +174,17 @@ namespace Java.Interop
 
 			public static void RegisterNatives (JniObjectReference type, JniNativeMethodRegistration [] methods, int numMethods)
 			{
+#if DEBUG && NETCOREAPP
+				foreach (var m in methods) {
+					if (m.Marshaler.GetType ().GenericTypeArguments.Length != 0) {
+						var method  = m.Marshaler.Method;
+						Debug.WriteLine ($"JNIEnv::RegisterNatives() given a generic delegate type.  .NET Core doesn't like this.");
+						Debug.WriteLine ($"  Java: {m.Name}{m.Signature}");
+						Debug.WriteLine ($"  Marshaler Type={m.Marshaler.GetType ().FullName} Method={method.DeclaringType.FullName}.{method.Name}");
+					}
+				}
+#endif  // DEBUG && NETCOREAPP
+
 				int r   = _RegisterNatives (type, methods, numMethods);
 
 				if (r != 0) {
