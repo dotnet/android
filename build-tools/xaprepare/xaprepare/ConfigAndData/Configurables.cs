@@ -367,6 +367,12 @@ namespace Xamarin.Android.Prepare
 			public static string MonoArchiveLocalPath                => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory), MonoArchiveFileName);
 			public static string MonoArchiveWindowsLocalPath         => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory), MonoArchiveWindowsFileName);
 
+			// CMake
+			public static string CmakeMSBuildPropsName               = "cmake-config.props";
+			public static string CmakeShellScriptsPropsName          = "cmake-config.sh";
+			public static string CmakeMonodroidTargets               = "cmake-monodroid.targets";
+			public static string MonodroidSourceDir                  => GetCachedPath (ref monodroidSourceDir, () => Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "src", "monodroid"));
+
 			// Other
 			public static string AndroidNdkDirectory                 => ctx.Properties.GetRequiredValue (KnownProperties.AndroidNdkDirectory);
 			public static string AndroidToolchainRootDirectory       => GetCachedPath (ref androidToolchainRootDirectory,       () => Path.Combine (AndroidNdkDirectory, "toolchains", "llvm", "prebuilt", NdkToolchainOSTag));
@@ -464,6 +470,7 @@ namespace Xamarin.Android.Prepare
 			static string? configurationPropsGeneratedPath;
 			static string? windowsBinutilsInstallDir;
 			static string? hostBinutilsInstallDir;
+			static string? monodroidSourceDir;
 		}
 	}
 }

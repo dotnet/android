@@ -220,7 +220,7 @@
 /* Maximum interface address label size, should be more than enough */
 #define MAX_IFA_LABEL_SIZE 1024
 
-#if LINUX
+#if defined (__linux__) || defined (__linux)
 
 /* This is the message we send to the kernel */
 typedef struct {

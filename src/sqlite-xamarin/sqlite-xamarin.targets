@@ -1,5 +1,5 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="sqlite-xamarin.props" />
+  <Import Project="..\..\bin\Build$(Configuration)\cmake-config.props" Condition="Exists('..\..\bin\Build$(Configuration)\cmake-config.props')" />
 
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.RunParallelCmds" />
 
@@ -17,7 +17,7 @@
       <_ConfigureSqliteCommands
           Include="@(AndroidSupportedTargetJitAbi)">
         <Command>$(CmakePath)</Command>
-        <Arguments>$(_CmakeAndroidFlags) -DCMAKE_BUILD_TYPE=$(Configuration) -DANDROID_ABI=%(AndroidSupportedTargetJitAbi.Identity) -DANDROID_NATIVE_API_LEVEL=%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_PLATFORM=android-%(AndroidSupportedTargetJitAbi.ApiLevel) -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=&quot;$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity)&quot; -DSQLITE_LIBRARY_NAME=$(_SqliteBaseLibName) SQLITE_SOURCE_DIR=&quot;$(SqliteSourceFullPath)&quot; -DSQLITE_OUTPUT_DIR=&quot;@(AndroidSupportedTargetJitAbi->'$(MSBuildThisFileDirectory)$(OutputPath)\%(Identity)')&quot; $(MSBuildThisFileDirectory)</Arguments>
+        <Arguments>$(_CmakeAndroidFlags) -DANDROID_NATIVE_API_LEVEL=%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_PLATFORM=android-%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_ABI=%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY="$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity)" -DCMAKE_LIBRARY_OUTPUT_DIRECTORY="$(OutputPath)%(AndroidSupportedTargetJitAbi.Identity)" -DCMAKE_BUILD_TYPE=$(Configuration) -DSQLITE_SOURCE_DIR="$(SqliteSourceFullPath)" -DSQLITE_LIBRARY_NAME="$(_SqliteBaseLibName)" -DSQLITE_OUTPUT_DIR="@(AndroidSupportedTargetJitAbi->'$(MSBuildThisFileDirectory)$(OutputPath)\%(Identity)')" $(MSBuildThisFileDirectory)</Arguments>
         <WorkingDirectory>$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-$(Configuration)</WorkingDirectory>
       </_ConfigureSqliteCommands>
     </ItemGroup>

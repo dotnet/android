@@ -80,8 +80,11 @@
     <ILLinkVersionBand Condition=" '$(ILLinkVersionBand)' == '' ">6.0.0</ILLinkVersionBand>
     <ILLinkVersionFull Condition=" '$(ILLinkVersionFull)' == '' ">$(ILLinkVersionBand)-alpha.1.21109.1</ILLinkVersionFull>
     <WixToolPath Condition=" '$(WixToolPath)' == '' ">$(AndroidToolchainDirectory)\wix\</WixToolPath>
-    <AndroidCmakeVersion Condition=" '$(AndroidCmakeVersion)' == '' ">3.10.2</AndroidCmakeVersion>
-    <AndroidCmakeVersionPath Condition=" '$(AndroidCmakeVersionPath)' == '' ">$(AndroidCmakeVersion).4988404</AndroidCmakeVersionPath>
+    <AndroidCmakeVersion Condition=" '$(AndroidCmakeVersion)' == '' ">3.18.1</AndroidCmakeVersion>
+    <AndroidCmakeUrlPrefix Condition=" '$(HostOS)' == 'Windows' And '$(AndroidCmakeUrlPrefix)' == '' ">7c386a739f915f5bd60051f2572c24782388e807.</AndroidCmakeUrlPrefix>
+    <AndroidCmakeUrlPrefix Condition=" '$(HostOS)' == 'Darwin' And '$(AndroidCmakeUrlPrefix)' == '' ">ba34c321f92f6e6fd696c8354c262c122f56abf8.</AndroidCmakeUrlPrefix>
+    <AndroidCmakeUrlPrefix Condition=" '$(HostOS)' == 'Linux' And '$(AndroidCmakeUrlPrefix)' == '' "></AndroidCmakeUrlPrefix>
+    <AndroidCmakeVersionPath Condition=" '$(AndroidCmakeVersionPath)' == '' ">$(AndroidCmakeVersion)</AndroidCmakeVersionPath>
     <AndroidSdkCmakeDirectory>$(AndroidSdkDirectory)\cmake\$(AndroidCmakeVersionPath)</AndroidSdkCmakeDirectory>
     <CmakePath Condition=" '$(CmakePath)' == '' ">$(AndroidSdkCmakeDirectory)\bin\cmake</CmakePath>
     <NinjaPath Condition=" '$(NinjaPath)' == '' ">$(AndroidSdkCmakeDirectory)\bin\ninja</NinjaPath>

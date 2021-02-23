@@ -15,6 +15,10 @@ namespace xamarin::android::internal
 		using ForEachApkHandler = void (BasicAndroidSystem::*) (const char *apk, size_t index, size_t apk_count, void *user_data);
 
 	private:
+#if defined (__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wc99-designator"
+#endif
 		// Values correspond to the CPU_KIND_* macros
 		static constexpr const char* android_abi_names[CPU_KIND_X86_64+1] = {
 			[0]                 = "unknown",
@@ -24,6 +28,9 @@ namespace xamarin::android::internal
 			[CPU_KIND_X86]      = "x86",
 			[CPU_KIND_X86_64]   = "x86_64",
 		};
+#if defined (__clang__)
+#pragma clang diagnostic pop
+#endif
 		static constexpr size_t ANDROID_ABI_NAMES_SIZE = sizeof(android_abi_names) / sizeof (android_abi_names[0]);
 		static const char* built_for_abi_name;
 
@@ -34,7 +41,7 @@ namespace xamarin::android::internal
 		static constexpr char SYSTEM_LIB_PATH[] = "/system/lib";
 #elif LINUX_FLATPAK
 		static constexpr char SYSTEM_LIB_PATH[] = "/app/lib/mono";
-#elif LINUX
+#elif defined (__linux__) || defined (__linux)
 		static constexpr char SYSTEM_LIB_PATH[] = "/usr/lib";
 #elif APPLE_OS_X
 		static constexpr char SYSTEM_LIB_PATH[] = "/Library/Frameworks/Xamarin.Android.framework/Versions/Current/lib/xamarin.android/xbuild/Xamarin/Android/lib/host-Darwin";

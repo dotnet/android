@@ -2,7 +2,7 @@
 #include <string.h>
 
 #include <sys/types.h>
-#if defined (LINUX) || defined (__linux__) || defined (__linux)
+#if defined (__linux__) || defined (__linux)
 #include <sys/syscall.h>
 #endif
 
@@ -95,7 +95,7 @@ static tid_type gettid ()
 {
 #ifdef WINDOWS
 	return GetCurrentThreadId ();
-#elif defined (LINUX) || defined (__linux__) || defined (__linux)
+#elif defined (__linux__) || defined (__linux)
 	return static_cast<tid_type>(syscall (SYS_gettid));
 #else
 	uint64_t tid;
