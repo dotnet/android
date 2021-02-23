@@ -1763,6 +1763,13 @@ namespace App1
 				int maxApiLevel = AndroidSdkResolver.GetMaxInstalledPlatform ();
 				string apiLevel;
 				proj.TargetFrameworkVersion = b.LatestTargetFrameworkVersion (out apiLevel);
+
+				// TODO: We aren't sure how to support preview bindings in .NET6 yet.
+				if (Builder.UseDotNet && apiLevel == "31") {
+					apiLevel = "30";
+					proj.TargetFrameworkVersion = "v11.0";
+				}
+
 				if (int.TryParse (apiLevel, out int a) && a < maxApiLevel)
 					disabledIssues += ",OldTargetApi";
 				proj.SetProperty ("AndroidLintDisabledIssues", disabledIssues);
