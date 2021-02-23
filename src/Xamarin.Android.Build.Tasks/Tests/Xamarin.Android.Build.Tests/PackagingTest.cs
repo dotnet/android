@@ -709,7 +709,7 @@ namespace App1
 					Assert.IsTrue (builder.Build (netStandardProject), "XamFormsSample should have built.");
 					Assert.IsTrue (ab.Build (app), "App should have built.");
 					var apk = Path.Combine (Root, ab.ProjectDirectory,
-						app.IntermediateOutputPath, "android", "bin", $"{proj.PackageName}.apk");
+						app.IntermediateOutputPath, "android", "bin", $"{app.PackageName}.apk");
 					using (var zip = ZipHelper.OpenZip (apk)) {
 						var existingFiles = zip.Where (a => a.FullName.StartsWith ("assemblies/", StringComparison.InvariantCultureIgnoreCase));
 						var missingFiles = expectedFiles.Where (x => !zip.ContainsEntry ("assemblies/" + Path.GetFileName (x)));
