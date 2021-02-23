@@ -30,7 +30,7 @@
 
   <PropertyGroup Condition=" '$(IncludeAndroidJavadoc)' == 'True' ">
     <DocumentationFile>$(OutputPath)Mono.Android.xml</DocumentationFile>
-    <NoWarn>$(NoWarn);CS1572;CS1573;CS1574;CS1587;CS1591;</NoWarn>
+    <NoWarn>$(NoWarn);CS1572;CS1573;CS1574;CS1584;CS1587;CS1591;CS1658;</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(TargetFramework)' == 'monoandroid10' ">
