@@ -14,8 +14,8 @@ namespace Xamarin.ProjectTools
 				MainPageMaps_xaml = sr.ReadToEnd ();
 		}
 
-		public XamarinFormsMapsApplicationProject (string outputType = "Exe", [CallerMemberName] string packageName = "")
-			: base (outputType, packageName)
+		public XamarinFormsMapsApplicationProject ([CallerMemberName] string packageName = "")
+			: base (packageName: packageName)
 		{
 			if (Builder.UseDotNet) {
 				PackageReferences.Add (KnownPackages.XamarinFormsMaps_4_7_0_1142);

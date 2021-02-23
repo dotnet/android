@@ -68,7 +68,7 @@ namespace Xamarin.ProjectTools
 			TargetSdkVersion = AndroidSdkResolver.GetMaxInstalledPlatform ().ToString ();
 			LayoutMain = default_layout_main;
 			StringsXml = default_strings_xml;
-			PackageName = $"com.xamarin.{packageName ?? ProjectName}";
+			PackageName = $"com.xamarin.{(packageName ?? ProjectName).ToLower ()}";
 			JavaPackageName = JavaPackageName ?? PackageName.ToLowerInvariant ();
 
 			OtherBuildItems.Add (new BuildItem.NoActionResource ("Properties\\AndroidManifest.xml") {
@@ -176,6 +176,8 @@ namespace Xamarin.ProjectTools
 		public string MainActivity { get; set; }
 		public string StringsXml { get; set; }
 		public string PackageName { get; set; }
+
+		public string PackageNameJavaIntermediatePath { get { return PackageName.Replace ('.', Path.DirectorySeparatorChar).ToLower ();}}
 		public string JavaPackageName { get; set; }
 
 		public override BuildOutput CreateBuildOutput (ProjectBuilder builder)

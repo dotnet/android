@@ -2577,7 +2577,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				StringAssert.Contains ("Xamarin.Android.Support.v4", assets,
 					"Nuget Package Xamarin.Android.Support.v4.21.0.3.0 should have been restored.");
 				var src = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "src");
-				var main_r_java = Path.Combine (src, "unnamedproject", "unnamedproject", "R.java");
+				var main_r_java = Path.Combine (src, proj.PackageNameJavaIntermediatePath, "R.java");
 				FileAssert.Exists (main_r_java);
 				var lib_r_java = Path.Combine (src, "android", "support", "compat", "R.java");
 				FileAssert.Exists (lib_r_java);

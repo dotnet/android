@@ -394,11 +394,11 @@ namespace Xamarin.Android.Build.Tests
 				.OrderBy (f => f)
 				.ToArray ();
 			var expectedFiles = new[]{
+				$"{proj.PackageName}.apk",
+				$"{proj.PackageName}-Signed.apk",
 				"es",
 				$"{proj.ProjectName}.dll",
 				$"{proj.ProjectName}.pdb",
-				$"{proj.PackageName}.apk",
-				$"{proj.PackageName}-Signed.apk",
 				$"{proj.ProjectName}.xml",
 			};
 			CollectionAssert.AreEqual (expectedFiles, files, $"Expected: {string.Join (";", expectedFiles)}\n   Found: {string.Join (";", files)}");
