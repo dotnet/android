@@ -78,7 +78,7 @@ namespace Xamarin.Android.ApiTools.JavaStubImporter
 			}
 			var pkg = api.AllPackages.FirstOrDefault (p => p.Name == parsedPackage.Name);
 			if (pkg == null) {
-				api.AllPackages.Add (parsedPackage);
+				api.Packages.Add (parsedPackage.Name, parsedPackage);
 				pkg = parsedPackage;
 			} else
 				foreach (var t in parsedPackage.AllTypes)
