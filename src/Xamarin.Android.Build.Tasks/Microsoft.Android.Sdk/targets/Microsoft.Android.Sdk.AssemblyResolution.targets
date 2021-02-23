@@ -170,26 +170,26 @@ _ResolveAssemblies MSBuild target.
       <Output TaskParameter="OutputLibraries" ItemName="FrameworkNativeLibrary" />
     </ProcessNativeLibraries>
     <ItemGroup>
-      <LocalFrameworkNativeLibrary Include="$(IntermediateOutputPath)native\%(FrameworkNativeLibrary.RuntimeIdentifier)\%(FrameworkNativeLibrary.Filename)%(FrameworkNativeLibrary.Extension)">
+      <_LocalFrameworkNativeLibrary Include="$(IntermediateOutputPath)native\%(FrameworkNativeLibrary.RuntimeIdentifier)\%(FrameworkNativeLibrary.Filename)%(FrameworkNativeLibrary.Extension)">
         <RuntimeIdentifier>%(FrameworkNativeLibrary.RuntimeIdentifier)</RuntimeIdentifier>
-      </LocalFrameworkNativeLibrary>
+      </_LocalFrameworkNativeLibrary>
     </ItemGroup>
   </Target>
 
   <Target Name="_StripFrameworkNativeLibraries"
       Condition=" '$(AndroidIncludeDebugSymbols)' != 'true' "
       Inputs="@(FrameworkNativeLibrary)"
-      Outputs="@(LocalFrameworkNativeLibrary)">
+      Outputs="@(_LocalFrameworkNativeLibrary)">
     <StripNativeLibraries
         Libraries="@(FrameworkNativeLibrary)"
         LocalPath="$(IntermediateOutputPath)native"
         AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)">
-      <Output TaskParameter="OutputLibraries" ItemName="StrippedFrameworkNativeLibrary" />
+      <Output TaskParameter="OutputLibraries" ItemName="_StrippedFrameworkNativeLibrary" />
     </StripNativeLibraries>
     <ItemGroup Condition=" '$(AndroidIncludeDebugSymbols)' != 'true' ">
       <FrameworkNativeLibrary Remove="@(FrameworkNativeLibrary)"/>
-      <FrameworkNativeLibrary Include="@(StrippedFrameworkNativeLibrary)"/>
-      <FileWrites Include="@(StrippedFrameworkNativeLibrary)" />
+      <FrameworkNativeLibrary Include="@(_StrippedFrameworkNativeLibrary)"/>
+      <FileWrites Include="@(_StrippedFrameworkNativeLibrary)" />
     </ItemGroup>
   </Target>
 
