@@ -31,4 +31,4 @@ to become new reference.
 
 This can be done for example in the powershell:
 
-    Get-ChildItem -r -Filter Build*apkdesc .\bin\TestDebug\temp\BuildReleaseArm64* | Copy-Item -Destination src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTols\Resources\Base\
+    Get-ChildItem -r -Filter Build*apkdesc .\bin\TestDebug\temp\BuildReleaseArm64* | Copy-Item -Destination src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Resources\Base\
