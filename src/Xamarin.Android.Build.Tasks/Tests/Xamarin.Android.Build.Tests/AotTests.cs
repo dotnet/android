@@ -118,6 +118,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = true,
 				BundleAssemblies = false,
 				AotAssemblies = true,
+				PackageName = "com.xamarin.buildaotappwithspecialchars",
 			};
 			proj.SetProperty (KnownProperties.TargetFrameworkVersion, "v5.1");
 			proj.SetAndroidSupportedAbis (supportedAbis);
@@ -196,6 +197,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = true,
 				BundleAssemblies = true,
 				AotAssemblies = true,
+				PackageName = "com.xamarin.buildaotappandbundlewithspecialchars",
 			};
 			proj.SetProperty (KnownProperties.TargetFrameworkVersion, "v5.1");
 			proj.SetAndroidSupportedAbis (supportedAbis);
