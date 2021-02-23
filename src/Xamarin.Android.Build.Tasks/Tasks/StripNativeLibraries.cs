@@ -1,16 +1,16 @@
 using System;
-using System.Diagnostics;
 using System.IO;
 using Microsoft.Build.Framework;
 using Microsoft.Android.Build.Tasks;
 using Xamarin.Android.Tools;
+using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks
 {
 	/// <summary>
 	/// Strips debug information from the native libraries
 	/// </summary>
-	public class StripNativeLibraries : AndroidTask
+	public class StripNativeLibraries : AndroidToolTask
 	{
 		public override string TaskPrefix => "SNL";
 
@@ -18,8 +18,9 @@ namespace Xamarin.Android.Tasks
 
 		public ITaskItem [] DestinationFiles { get; set; }
 
-		[Required]
-		public string AndroidBinUtilsDirectory { get; set; }
+		string triple;
+		ITaskItem source;
+		ITaskItem destination;
 
 		public override bool RunTask ()
 		{
@@ -28,10 +29,9 @@ namespace Xamarin.Android.Tasks
 			if (SourceFiles == null || SourceFiles.Length == 0)
 				return true;
 
-			var ext = OS.IsWindows ? ".exe" : "";
 			for (int i = 0; i < SourceFiles.Length; i++) {
-				var source = SourceFiles [i];
-				var destination = DestinationFiles [i];
+				source = SourceFiles [i];
+				destination = DestinationFiles [i];
 
 				var abi = AndroidRidAbiHelper.GetNativeLibraryAbi (source);
 				if (string.IsNullOrEmpty (abi)) {
@@ -44,19 +44,30 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 
-				var triple = GetNdkTripleFromAbi (abi);
-				var exe = Path.Combine (AndroidBinUtilsDirectory, $"{triple}-strip{ext}");
+				triple = GetNdkTripleFromAbi (abi);
 				Directory.CreateDirectory (Path.GetDirectoryName (destination.ItemSpec));
 
-				using var proc = Process.Start (Path.Combine (AndroidBinUtilsDirectory, exe), $"--strip-debug \"{source.ItemSpec}\" -o \"{destination.ItemSpec}\"");
-				proc.WaitForExit ();
+				// This runs the tool
+				base.RunTask ();
 
-				var code = proc.ExitCode;
-				if (code != 0)
-					Log.LogCodedError ("XA3008", source.ItemSpec, code);
+				// Stop early on failure
+				if (Log.HasLoggedErrors)
+					return false;
 			}
 
 			return !Log.HasLoggedErrors;
+		}
+
+		protected override string ToolName => OS.IsWindows ? $"{triple}-strip.exe" : $"{triple}-strip";
+
+		protected override string GenerateFullPathToTool () => Path.Combine (ToolPath, ToolName);
+
+		protected override string GenerateCommandLineCommands ()
+		{
+			var cmd = new CommandLineBuilder ();
+			cmd.AppendSwitchIfNotNull ("--strip-debug ", source.ItemSpec);
+			cmd.AppendSwitchIfNotNull ("-o ", destination.ItemSpec);
+			return cmd.ToString ();
 		}
 
 		string GetNdkTripleFromAbi (string abi)

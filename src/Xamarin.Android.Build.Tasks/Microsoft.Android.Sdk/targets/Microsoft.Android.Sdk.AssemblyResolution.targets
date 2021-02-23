@@ -182,7 +182,7 @@ _ResolveAssemblies MSBuild target.
     <StripNativeLibraries
         SourceFiles="@(FrameworkNativeLibrary)"
         DestinationFiles="@(_StrippedFrameworkNativeLibrary)"
-        AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
+        ToolPath="$(AndroidBinUtilsDirectory)"
     />
     <ItemGroup Condition=" '$(AndroidIncludeDebugSymbols)' != 'true' ">
       <FrameworkNativeLibrary Remove="@(FrameworkNativeLibrary)"/>
