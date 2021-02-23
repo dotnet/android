@@ -103,8 +103,8 @@ namespace Xamarin.Android.Build.Tests
 					: Path.Combine (proj.Root, b.ProjectDirectory, depsFilename);
 				FileAssert.Exists (depsFile);
 
-				const int ApkSizeThreshold = 50 * 1024;
-				const int AssemblySizeThreshold = 50 * 1024;
+				const int ApkSizeThreshold = 5 * 1024;
+				const int AssemblySizeThreshold = 5 * 1024;
 				var apkFile = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, proj.PackageName + "-Signed.apk");
 				var apkDescPath = Path.Combine (Root, b.ProjectDirectory, apkDescFilename);
 				var apkDescReferencePath = Path.Combine (Root, b.ProjectDirectory, apkDescReference);
