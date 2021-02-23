@@ -1,0 +1,1 @@
+Get-ChildItem -r -Filter Build*apkdesc .\bin\TestDebug\temp\BuildReleaseArm64* | Copy-Item -Destination src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTls\Resources\Base\
