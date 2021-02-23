@@ -385,8 +385,10 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (StringAssertEx.ContainsText (dotnet.LastBuildOutput, " 0 Warning(s)"), "Should have no MSBuild warnings.");
 
 			var outputPath = Path.Combine (FullProjectDirectory, proj.OutputPath);
+			var intermediateOutputPath = Path.Combine (FullProjectDirectory, proj.IntermediateOutputPath);
 			if (!runtimeIdentifiers.Contains (";")) {
 				outputPath = Path.Combine (outputPath, runtimeIdentifiers);
+				intermediateOutputPath = Path.Combine (intermediateOutputPath, runtimeIdentifiers);
 			}
 
 			var files = Directory.EnumerateFileSystemEntries (outputPath)
@@ -411,6 +413,15 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsNotNull (type, $"{assemblyPath} should contain {typeName}");
 			}
 
+			var rids = runtimeIdentifiers.Split (';');
+			if (isRelease) {
+				// Check for stripped native libraries
+				foreach (var rid in rids) {
+					FileAssert.Exists (Path.Combine (intermediateOutputPath, "native", rid, "libmono-android.release.so"));
+					FileAssert.Exists (Path.Combine (intermediateOutputPath, "native", rid, "libmonosgen-2.0.so"));
+				}
+			}
+
 			bool expectEmbeddedAssembies = !(CommercialBuildAvailable && !isRelease);
 			var apkPath = Path.Combine (outputPath, "UnnamedProject.UnnamedProject.apk");
 			FileAssert.Exists (apkPath);
@@ -419,7 +430,6 @@ namespace Xamarin.Android.Build.Tests
 				apk.AssertContainsEntry (apkPath, $"assemblies/{proj.ProjectName}.pdb", shouldContainEntry: !CommercialBuildAvailable && !isRelease);
 				apk.AssertContainsEntry (apkPath, $"assemblies/System.Linq.dll",        shouldContainEntry: expectEmbeddedAssembies);
 				apk.AssertContainsEntry (apkPath, $"assemblies/es/{proj.ProjectName}.resources.dll", shouldContainEntry: expectEmbeddedAssembies);
-				var rids = runtimeIdentifiers.Split (';');
 				foreach (var abi in rids.Select (AndroidRidAbiHelper.RuntimeIdentifierToAbi)) {
 					apk.AssertContainsEntry (apkPath, $"lib/{abi}/libmonodroid.so");
 					apk.AssertContainsEntry (apkPath, $"lib/{abi}/libmonosgen-2.0.so");

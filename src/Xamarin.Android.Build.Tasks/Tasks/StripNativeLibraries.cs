@@ -1,6 +1,5 @@
 using System;
 using System.Diagnostics;
-using System.Collections.Generic;
 using System.IO;
 using Microsoft.Build.Framework;
 using Microsoft.Android.Build.Tasks;
@@ -15,62 +14,52 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "SNL";
 
-		[Required]
-		public ITaskItem [] Libraries { get; set; }
+		public ITaskItem [] SourceFiles { get; set; }
 
-		[Required]
-		public string LocalPath { get; set; }
+		public ITaskItem [] DestinationFiles { get; set; }
 
 		[Required]
 		public string AndroidBinUtilsDirectory { get; set; }
 
-		[Output]
-		public ITaskItem [] OutputLibraries { get; set; }
-
 		public override bool RunTask ()
 		{
-			if (Libraries == null || Libraries.Length == 0)
+			if (SourceFiles.Length != DestinationFiles.Length)
+				throw new ArgumentException ("source and destination count mismatch");
+			if (SourceFiles == null || SourceFiles.Length == 0)
 				return true;
 
-			var output = new List<ITaskItem> (Libraries.Length);
 			var ext = OS.IsWindows ? ".exe" : "";
-			foreach (var library in Libraries) {
-				var abi = AndroidRidAbiHelper.GetNativeLibraryAbi (library);
+			for (int i = 0; i < SourceFiles.Length; i++) {
+				var source = SourceFiles [i];
+				var destination = DestinationFiles [i];
+
+				var abi = AndroidRidAbiHelper.GetNativeLibraryAbi (source);
 				if (string.IsNullOrEmpty (abi)) {
-					var packageId = library.GetMetadata ("NuGetPackageId");
+					var packageId = source.GetMetadata ("NuGetPackageId");
 					if (!string.IsNullOrEmpty (packageId)) {
-						Log.LogCodedWarning ("XA4301", library.ItemSpec, 0, Properties.Resources.XA4301_ABI_NuGet, library.ItemSpec, packageId);
+						Log.LogCodedWarning ("XA4301", source.ItemSpec, 0, Properties.Resources.XA4301_ABI_NuGet, source.ItemSpec, packageId);
 					} else {
-						Log.LogCodedWarning ("XA4301", library.ItemSpec, 0, Properties.Resources.XA4301_ABI, library.ItemSpec);
+						Log.LogCodedWarning ("XA4301", source.ItemSpec, 0, Properties.Resources.XA4301_ABI, source.ItemSpec);
 					}
 					continue;
 				}
 
-				var tripple = GetNdkTrippleFromAbi (abi);
-				var exe = Path.Combine (AndroidBinUtilsDirectory, $"{tripple}-strip{ext}");
-				var localDir = Path.Combine (LocalPath, library.GetMetadata ("RuntimeIdentifier"));
-				Directory.CreateDirectory (localDir);
+				var triple = GetNdkTripleFromAbi (abi);
+				var exe = Path.Combine (AndroidBinUtilsDirectory, $"{triple}-strip{ext}");
+				Directory.CreateDirectory (Path.GetDirectoryName (destination.ItemSpec));
 
-				var filename = library.GetMetadata ("Filename");
-				var extension = library.GetMetadata ("Extension");
-				var localLib = Path.Combine (localDir, $"{filename}{extension}");
-				using var proc = Process.Start (Path.Combine (AndroidBinUtilsDirectory, $"{tripple}-strip{ext}"), $"--strip-debug \"{library.ItemSpec}\" -o \"{localLib}\"");
+				using var proc = Process.Start (Path.Combine (AndroidBinUtilsDirectory, exe), $"--strip-debug \"{source.ItemSpec}\" -o \"{destination.ItemSpec}\"");
 				proc.WaitForExit ();
 
 				var code = proc.ExitCode;
 				if (code != 0)
-					Log.LogCodedError ("XA3008", library.ItemSpec, code);
-
-				library.ItemSpec = localLib;
-				output.Add (library);
+					Log.LogCodedError ("XA3008", source.ItemSpec, code);
 			}
-
-			OutputLibraries = output.ToArray ();
 
 			return !Log.HasLoggedErrors;
 		}
 
-		string GetNdkTrippleFromAbi (string abi)
+		string GetNdkTripleFromAbi (string abi)
 		{
 			return abi switch {
 				"arm64-v8a" => "aarch64-linux-android",
