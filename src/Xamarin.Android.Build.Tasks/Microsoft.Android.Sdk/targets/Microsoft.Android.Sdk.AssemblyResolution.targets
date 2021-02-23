@@ -189,6 +189,7 @@ _ResolveAssemblies MSBuild target.
     <ItemGroup Condition=" '$(AndroidIncludeDebugSymbols)' != 'true' ">
       <FrameworkNativeLibrary Remove="@(FrameworkNativeLibrary)"/>
       <FrameworkNativeLibrary Include="@(StrippedFrameworkNativeLibrary)"/>
+      <FileWrites Include="@(StrippedFrameworkNativeLibrary)" />
     </ItemGroup>
   </Target>
 
