@@ -12,6 +12,7 @@ _ResolveAssemblies MSBuild target.
 
   <UsingTask TaskName="Xamarin.Android.Tasks.ProcessAssemblies"      AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.ProcessNativeLibraries" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.StripNativeLibraries" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <PropertyGroup Condition=" '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true' ">
     <OutputPath Condition=" '$(_OuterOutputPath)' != '' ">$(_OuterOutputPath)</OutputPath>
@@ -168,6 +169,26 @@ _ResolveAssemblies MSBuild target.
         IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)">
       <Output TaskParameter="OutputLibraries" ItemName="FrameworkNativeLibrary" />
     </ProcessNativeLibraries>
+    <ItemGroup>
+      <_StrippedFrameworkNativeLibrary Include="@(FrameworkNativeLibrary->'$(IntermediateOutputPath)native\%(RuntimeIdentifier)\%(Filename)%(Extension)')" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_StripFrameworkNativeLibraries"
+      Condition=" '$(AndroidIncludeDebugSymbols)' != 'true' "
+      DependsOnTargets="_IncludeNativeSystemLibraries"
+      Inputs="@(FrameworkNativeLibrary)"
+      Outputs="@(_StrippedFrameworkNativeLibrary)">
+    <StripNativeLibraries
+        SourceFiles="@(FrameworkNativeLibrary)"
+        DestinationFiles="@(_StrippedFrameworkNativeLibrary)"
+        ToolPath="$(AndroidBinUtilsDirectory)"
+    />
+    <ItemGroup Condition=" '$(AndroidIncludeDebugSymbols)' != 'true' ">
+      <FrameworkNativeLibrary Remove="@(FrameworkNativeLibrary)"/>
+      <FrameworkNativeLibrary Include="@(_StrippedFrameworkNativeLibrary)"/>
+      <FileWrites Include="@(_StrippedFrameworkNativeLibrary)" />
+    </ItemGroup>
   </Target>
 
 </Project>
