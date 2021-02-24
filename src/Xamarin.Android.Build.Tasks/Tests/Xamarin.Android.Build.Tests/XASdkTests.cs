@@ -355,6 +355,12 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var proj = new XASdkProject {
 				IsRelease = isRelease,
+				ExtraNuGetConfigSources = {
+					"https://pkgs.dev.azure.com/azure-public/vside/_packaging/xamarin-impl/nuget/v3/index.json"
+				},
+				PackageReferences = {
+					new Package { Id = "Xamarin.AndroidX.AppCompat", Version = "1.2.0.7-net6preview01" }
+				},
 				Sources = {
 					new BuildItem ("EmbeddedResource", "Foo.resx") {
 						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancel</value></data>")
@@ -364,6 +370,7 @@ namespace Xamarin.Android.Build.Tests
 					},
 				}
 			};
+			proj.MainActivity = proj.DefaultMainActivity.Replace (": Activity", ": AndroidX.AppCompat.App.AppCompatActivity");
 			proj.OtherBuildItems.Add (new AndroidItem.InputJar ("javaclasses.jar") {
 				BinaryContent = () => ResourceData.JavaSourceJarTestJar,
 			});
