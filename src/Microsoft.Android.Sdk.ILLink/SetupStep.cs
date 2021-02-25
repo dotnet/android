@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Java.Interop.Tools.Cecil;
+using Mono.Cecil;
 using Mono.Linker;
 using Mono.Linker.Steps;
 using Mono.Tuner;
@@ -50,7 +51,8 @@ namespace Microsoft.Android.Sdk.ILLink
 			InsertAfter (subSteps1, "SetupStep");
 
 			// temporary workaround: this call forces illink to process all the assemblies
-			getReferencedAssembliesMethod.Invoke (Context, null);
+			foreach (var assembly in (IEnumerable<AssemblyDefinition>)getReferencedAssembliesMethod.Invoke (Context, null))
+				Context.LogMessage ($"Reference assembly to process: {assembly}");
 
 			string proguardPath;
 			if (Context.TryGetCustomData ("ProguardConfiguration", out proguardPath))
