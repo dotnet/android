@@ -126,6 +126,8 @@ namespace Xamarin.ProjectTools
 			}
 		}
 
+		public bool IsTargetSkipped (string target) => BuildOutput.IsTargetSkipped (LastBuildOutput, target);
+
 		List<string> GetDefaultCommandLineArgs (string verb, string target = null, string [] parameters = null)
 		{
 			string testDir = Path.GetDirectoryName (projectOrSolution);
