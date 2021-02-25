@@ -51,6 +51,9 @@ namespace Microsoft.Android.Sdk.ILLink
 			InsertAfter (subSteps1, "SetupStep");
 
 			// temporary workaround: this call forces illink to process all the assemblies
+			if (getReferencedAssembliesMethod == null)
+				throw new InvalidOperationException ($"Temporary linker workaround failed, {nameof (getReferencedAssembliesMethod)} is null.");
+
 			foreach (var assembly in (IEnumerable<AssemblyDefinition>)getReferencedAssembliesMethod.Invoke (Context, null))
 				Context.LogMessage ($"Reference assembly to process: {assembly}");
 
