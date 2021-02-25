@@ -6,7 +6,7 @@
   <PropertyGroup>
     <MSBuildReferenceVersion>15.1.0.0</MSBuildReferenceVersion>
     <MSBuildPackageReferenceVersion>16.5</MSBuildPackageReferenceVersion>
-    <LibZipSharpVersion>1.0.22</LibZipSharpVersion>
+    <LibZipSharpVersion>1.0.23</LibZipSharpVersion>
   </PropertyGroup>
 
   <ItemGroup Condition="$([MSBuild]::IsOSPlatform('windows'))" >
