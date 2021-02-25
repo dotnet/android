@@ -26,6 +26,8 @@ namespace Microsoft.Android.Sdk.ILLink
 			}
 		}
 
+		static MethodInfo getReferencedAssembliesMethod = typeof (LinkContext).GetMethod ("GetReferencedAssemblies", BindingFlags.Public | BindingFlags.Instance);
+
 		protected override void Process ()
 		{
 			string tfmPaths;
@@ -44,9 +46,12 @@ namespace Microsoft.Android.Sdk.ILLink
 			subSteps2.Add (new PreserveRegistrations (cache));
 			subSteps2.Add (new PreserveJavaInterfaces ());
 
-			ProcessDispatcher (subSteps1);
-			ProcessDispatcher (subSteps1);
-			ProcessStep (new FixAbstractMethodsStep (cache));
+			InsertAfter (new FixAbstractMethodsStep (cache), "SetupStep");
+			InsertAfter (subSteps2, "SetupStep");
+			InsertAfter (subSteps1, "SetupStep");
+
+			// temporary workaround: this call forces illink to process all the assemblies
+			getReferencedAssembliesMethod.Invoke (Context, null);
 
 			string proguardPath;
 			if (Context.TryGetCustomData ("ProguardConfiguration", out proguardPath))
@@ -57,26 +62,6 @@ namespace Microsoft.Android.Sdk.ILLink
 				InsertAfter (new AddKeepAlivesStep (cache), "CleanStep");
 
 			InsertAfter (new StripEmbeddedLibraries (),  "CleanStep");
-		}
-
-		static Type dispatcherType = typeof (SubStepsDispatcher);
-		static MethodInfo initMethod = dispatcherType.GetMethod ("InitializeSubSteps", BindingFlags.NonPublic | BindingFlags.Instance);
-		static MethodInfo browseMethod = dispatcherType.GetMethod ("BrowseAssemblies", BindingFlags.NonPublic | BindingFlags.Instance);
-		static MethodInfo getReferencedAssembliesMethod = typeof (LinkContext).GetMethod ("GetReferencedAssemblies", BindingFlags.Public | BindingFlags.Instance);
-		static MethodInfo processAssemblyMethod = typeof (BaseStep).GetMethod ("ProcessAssembly", BindingFlags.NonPublic | BindingFlags.Instance);
-
-		void ProcessStep (BaseStep step)
-		{
-			typeof (BaseStep).GetField ("_context", BindingFlags.Instance | BindingFlags.NonPublic).SetValue (step, Context);
-
-			foreach (var assembly in (IEnumerable<AssemblyDefinition>) getReferencedAssembliesMethod.Invoke (Context, null))
-				processAssemblyMethod.Invoke (step, new object [] { assembly });
-		}
-
-		void ProcessDispatcher (SubStepDispatcher dispatcher)
-		{
-			initMethod.Invoke (dispatcher, new object [] { Context });
-			browseMethod.Invoke (dispatcher, new object [] { getReferencedAssembliesMethod.Invoke (Context, null) });
 		}
 
 		void InsertAfter (IStep step, string stepName)
