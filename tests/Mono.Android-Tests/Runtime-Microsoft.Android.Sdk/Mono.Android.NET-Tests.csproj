@@ -50,4 +50,6 @@
 
   <Import Project="$(XamarinAndroidSourcePath)build-tools\scripts\TestApks.targets" />
 
+  <PackageReference Include="System.Drawing.Common" Version="6.0.0-preview.1.21102.12"/>
+
 </Project>
