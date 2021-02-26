@@ -16,16 +16,28 @@ namespace Xamarin.Java.Interop
 	partial class Generator
 	{
 		static string jnienv_g_c;
+		static string jnienv_g_h;
 		static string jnienv_g_cs;
 
 		public static int Main (string [] args)
 		{
 			jnienv_g_c  = "JniEnvironment.g.c";
+			jnienv_g_h  = "JniEnvironment.g.h";
 			jnienv_g_cs = "JniEnvironment.g.cs";
 			if (args.Length > 0)
 				jnienv_g_cs = args [0];
-			if (args.Length > 1)
+			if (args.Length > 1) {
 				jnienv_g_c = args [1];
+				if (jnienv_g_c != "-") {
+					jnienv_g_h = Path.Combine (Path.GetDirectoryName (jnienv_g_c), $"{Path.GetFileNameWithoutExtension(jnienv_g_c)}-api.h");
+				} else {
+					jnienv_g_h = "-";
+				}
+			}
+			if (args.Length > 2) {
+				jnienv_g_h = args [2];
+			}
+
 			try {
 				using (TextWriter w = new StringWriter ()) {
 					w.NewLine = "\n";
@@ -36,15 +48,21 @@ namespace Xamarin.Java.Interop
 					else
 						File.WriteAllText (jnienv_g_cs, content);
 				}
-				using (TextWriter w = new StringWriter ()) {
-					w.NewLine = "\n";
-					GenerateNativeLibSource (w);
-					string content = w.ToString ();
-					if (jnienv_g_c == "-" || jnienv_g_cs == "-")
-						Console.WriteLine (content);
-					else
-						File.WriteAllText (jnienv_g_c, content);
-				}
+				using (TextWriter sw = new StringWriter ()) {
+				using (TextWriter hw = new StringWriter ()) {
+					sw.NewLine = "\n";
+					GenerateNativeLibSource (sw, hw, jnienv_g_h);
+					string sourceContent = sw.ToString ();
+					string headerContent = hw.ToString ();
+					if (jnienv_g_c == "-" || jnienv_g_cs == "-") {
+						Console.WriteLine (headerContent);
+						Console.WriteLine ();
+						Console.WriteLine (sourceContent);
+					} else {
+						File.WriteAllText (jnienv_g_h, headerContent);
+						File.WriteAllText (jnienv_g_c, sourceContent);
+					}
+				}}
 				return 0;
 			} catch (Exception ex) {
 				Console.WriteLine (ex);
@@ -431,67 +449,100 @@ namespace Xamarin.Java.Interop
 			o.WriteLine ();
 		}
 
-		static void GenerateNativeLibSource (TextWriter o)
+		static void WriteNativeFileHeader (TextWriter o)
 		{
 			o.WriteLine ("/*");
 			o.WriteLine (" * Generated file; DO NOT EDIT!");
 			o.WriteLine (" *");
-			o.WriteLine (" * To make changes, edit Java.Interop/tools/jnienv-gen and rerun");
+			o.WriteLine (" * To make changes, edit Java.Interop/build-tools/jnienv-gen and rerun");
 			o.WriteLine (" */");
 			o.WriteLine ();
-			o.WriteLine ("#include <jni.h>");
-			o.WriteLine ();
-			o.WriteLine ("typedef jmethodID jstaticmethodID;");
-			o.WriteLine ("typedef jfieldID  jstaticfieldID;");
-			o.WriteLine ("typedef jobject   jglobal;");
-			o.WriteLine ();
-			o.WriteLine ("/* VS 2010 and later have stdint.h */");
-			o.WriteLine ("#if defined(_MSC_VER)");
-			o.WriteLine ();
-			o.WriteLine ("	#define JI_API_EXPORT __declspec(dllexport)");
-			o.WriteLine ("	#define JI_API_IMPORT __declspec(dllimport)");
-			o.WriteLine ();
-			o.WriteLine ("#else   /* defined(_MSC_VER */");
-			o.WriteLine ();
-			o.WriteLine ("\t#define JI_API_EXPORT __attribute__ ((visibility (\"default\")))");
-			o.WriteLine ("	#define JI_API_IMPORT");
-			o.WriteLine ();
-			o.WriteLine ("#endif  /* !defined(_MSC_VER) */");
-			o.WriteLine ();
-			o.WriteLine ("#if defined(JI_DLL_EXPORT)");
-			o.WriteLine ("	#define JI_API JI_API_EXPORT");
-			o.WriteLine ("#elif defined(JI_DLL_IMPORT)");
-			o.WriteLine ("	#define JI_API JI_API_IMPORT");
-			o.WriteLine ("#else   /* !defined(JI_DLL_IMPORT) && !defined(JI_API_IMPORT) */");
-			o.WriteLine ("	#define JI_API");
-			o.WriteLine ("#endif  /* JI_DLL_EXPORT... */");
+		}
+
+		static void GenerateNativeLibSource (TextWriter source, TextWriter header, string headerName)
+		{
+			WriteNativeFileHeader (source);
+			WriteNativeFileHeader (header);
+
+			header.WriteLine ("#if !defined (__JAVA_INTEROP_NATIVE_H)");
+			header.WriteLine ("#define __JAVA_INTEROP_NATIVE_H");
+			header.WriteLine ();
+			header.WriteLine ("#include <jni.h>");
+			header.WriteLine ();
+			header.WriteLine ("typedef jmethodID jstaticmethodID;");
+			header.WriteLine ("typedef jfieldID  jstaticfieldID;");
+			header.WriteLine ("typedef jobject   jglobal;");
+			header.WriteLine ();
+			header.WriteLine ("#if !defined(JI_NO_VISIBILITY)");
+			header.WriteLine ("\t/* VS 2010 and later have stdint.h */");
+			header.WriteLine ("\t#if defined(_MSC_VER)");
+			header.WriteLine ();
+			header.WriteLine ("\t\t#define JI_API_EXPORT __declspec(dllexport)");
+			header.WriteLine ("\t\t#define JI_API_IMPORT __declspec(dllimport)");
+			header.WriteLine ();
+			header.WriteLine ("\t#else   /* defined(_MSC_VER */");
+			header.WriteLine ();
+			header.WriteLine ("\t\t#define JI_API_EXPORT __attribute__ ((visibility (\"default\")))");
+			header.WriteLine ("\t\t#define JI_API_IMPORT");
+			header.WriteLine ();
+			header.WriteLine ("\t#endif  /* !defined(_MSC_VER) */");
+			header.WriteLine ();
+			header.WriteLine ("\t#if defined(JI_DLL_EXPORT)");
+			header.WriteLine ("\t\t#define JI_API JI_API_EXPORT");
+			header.WriteLine ("\t#elif defined(JI_DLL_IMPORT)");
+			header.WriteLine ("\t\t#define JI_API JI_API_IMPORT");
+			header.WriteLine ("\t#else   /* !defined(JI_DLL_IMPORT) && !defined(JI_API_IMPORT) */");
+			header.WriteLine ("\t\t#define JI_API");
+			header.WriteLine ("\t#endif  /* JI_DLL_EXPORT... */");
+			header.WriteLine ("#else // JI_NO_VISIBILITY");
+			header.WriteLine ("\t#define JI_API");
+			header.WriteLine ("#endif // JI_NO_VISIBILITY");
+			header.WriteLine ();
+
+			if (headerName != "-") {
+				source.WriteLine ($"#include \"{Path.GetFileName(headerName)}\"");
+			}
+
 			foreach (JniFunction entry in JNIEnvEntries) {
 				if (entry.IsPrivate || entry.CustomWrapper)
 					continue;
-				o.WriteLine ();
-				o.WriteLine ("JI_API {0}", entry.ReturnType.JniType);
-				o.WriteLine ("{0} (JNIEnv *env{1}{2}{3})",
+
+				header.WriteLine (
+					"JI_API {0} {1} (JNIEnv *env{2}{3}{4});",
+					entry.ReturnType.JniType,
+					GetPinvokeName (entry.Name),
+					entry.Throws ? ", jthrowable *_thrown" : "",
+					entry.Parameters.Length != 0 ? ", " : "",
+					string.Join (", ", entry.Parameters.Select (p => string.Format ("{0} {1}", p.Type.JniType, p.Name)))
+				);
+
+				source.WriteLine ();
+				source.WriteLine ("JI_API {0}", entry.ReturnType.JniType);
+				source.WriteLine ("{0} (JNIEnv *env{1}{2}{3})",
 					GetPinvokeName (entry.Name),
 					entry.Throws ? ", jthrowable *_thrown" : "",
 					entry.Parameters.Length != 0 ? ", " : "",
 					string.Join (", ", entry.Parameters.Select (p => string.Format ("{0} {1}", p.Type.JniType, p.Name))));
-				o.WriteLine ("{");
+				source.WriteLine ("{");
 				bool isVoid = entry.ReturnType.JniType == "void";
 				if (entry.Throws)
-					o.WriteLine ("\t*_thrown = 0;");
-				o.Write ("\t");
+					source.WriteLine ("\t*_thrown = 0;");
+				source.Write ("\t");
 				if (!isVoid)
-					o.Write ("{0} _r_ = ", entry.ReturnType.JniType);
-				o.WriteLine ("(*env)->{0} (env{1}{2});",
+					source.Write ("{0} _r_ = ", entry.ReturnType.JniType);
+				source.WriteLine ("(*env)->{0} (env{1}{2});",
 					entry.Name,
 					entry.Parameters.Length != 0 ? ", " : "",
 					string.Join (", ", entry.Parameters.Select (p => p.Name)));
 				if (entry.Throws)
-					o.WriteLine ("\t*_thrown = (*env)->ExceptionOccurred (env);");
+					source.WriteLine ("\t*_thrown = (*env)->ExceptionOccurred (env);");
 				if (!isVoid)
-					o.WriteLine ("\treturn _r_;");
-				o.WriteLine ("}");
+					source.WriteLine ("\treturn _r_;");
+				source.WriteLine ("}");
 			}
+
+			header.WriteLine ();
+			header.WriteLine ("#endif // __JAVA_INTEROP_NATIVE_H");
 		}
 	}
 
