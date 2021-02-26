@@ -11,12 +11,14 @@ using System.Xml.Linq;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 using Microsoft.Android.Build.Tasks;
+using System.Runtime.CompilerServices;
 
 namespace Xamarin.Android.Build.Tests
 {
 	public class BaseTest
 	{
 		public static ConcurrentDictionary<string, string> TestOutputDirectories = new ConcurrentDictionary<string, string> ();
+		public static ConcurrentDictionary<string, string> TestPackageNames = new ConcurrentDictionary<string, string> ();
 
 		[SetUpFixture]
 		public class SetUp {
@@ -438,11 +440,12 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		protected ProjectBuilder CreateApkBuilder (string directory = null, bool cleanupAfterSuccessfulBuild = false, bool cleanupOnDispose = false)
+		protected ProjectBuilder CreateApkBuilder (string directory = null, bool cleanupAfterSuccessfulBuild = false, bool cleanupOnDispose = false, [CallerMemberName] string packageName = "")
 		{
 			if (string.IsNullOrEmpty (directory))
 				directory = Path.Combine ("temp", TestName);
 			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = Path.Combine (Root, directory);
+			TestPackageNames [packageName] = $"com.xamarin.{packageName}";
 			return BuildHelper.CreateApkBuilder (directory, cleanupAfterSuccessfulBuild, cleanupOnDispose);
 		}
 

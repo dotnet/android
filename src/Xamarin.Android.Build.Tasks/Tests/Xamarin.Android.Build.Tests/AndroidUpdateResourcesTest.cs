@@ -1247,7 +1247,7 @@ namespace UnnamedProject
 						b.Output.IsTargetSkipped ("_FixupCustomViewsForAapt2"),
 						"The target _FixupCustomViewsForAapt2 should have been skipped");
 				}
-				var r_java = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "src", "unnamedproject", "unnamedproject", "R.java");
+				var r_java = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "src", proj.PackageNameJavaIntermediatePath, "R.java");
 				FileAssert.Exists (r_java);
 				var r_java_contents = File.ReadAllLines (r_java);
 				Assert.IsTrue (StringAssertEx.ContainsText (r_java_contents, textView1), $"android/support/compat/R.java should contain `{textView1}`!");

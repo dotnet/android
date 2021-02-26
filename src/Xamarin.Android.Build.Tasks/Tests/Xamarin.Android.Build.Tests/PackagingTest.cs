@@ -105,7 +105,7 @@ namespace Xamarin.Android.Build.Tests
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
-						proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
+						proj.IntermediateOutputPath, "android", "bin", $"{proj.PackageName}.apk");
 				using (var zip = ZipHelper.OpenZip (apk)) {
 					var existingFiles = zip.Where (a => a.FullName.StartsWith ("assemblies/", StringComparison.InvariantCultureIgnoreCase));
 					var missingFiles = expectedFiles.Where (x => !zip.ContainsEntry ("assemblies/" + Path.GetFileName (x)));
@@ -137,7 +137,7 @@ namespace Xamarin.Android.Build.Tests
 
 				Assert.IsTrue (b.Build (proj), "build failed");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
-						proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
+						proj.IntermediateOutputPath, "android", "bin", $"{proj.PackageName}.apk");
 				using (var zip = ZipHelper.OpenZip (apk)) {
 					Assert.IsTrue (zip.ContainsEntry ("classes.dex"), "Apk should contain classes.dex");
 				}
@@ -160,7 +160,7 @@ namespace Xamarin.Android.Build.Tests
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj), "build failed");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
-						proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
+						proj.IntermediateOutputPath, "android", "bin", $"{proj.PackageName}.apk");
 				CompressionMethod method = compressNativeLibraries ? CompressionMethod.Deflate : CompressionMethod.Store;
 				using (var zip = ZipHelper.OpenZip (apk)) {
 					var libFiles = zip.Where (x => x.FullName.StartsWith("lib/") && !x.FullName.Equals("lib/", StringComparison.InvariantCultureIgnoreCase));
@@ -191,7 +191,7 @@ namespace Xamarin.Android.Build.Tests
 				AssertExtractNativeLibs (manifest, extractNativeLibs: false);
 
 				var apk = Path.Combine (Root, b.ProjectDirectory,
-						proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
+						proj.IntermediateOutputPath, "android", "bin", $"{proj.PackageName}.apk");
 				AssertEmbeddedDSOs (apk);
 
 				//Delete the apk & build again
@@ -240,7 +240,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded");
 
 				var apk = Path.Combine (Root, b.ProjectDirectory,
-						proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
+						proj.IntermediateOutputPath, "android", "bin", $"{proj.PackageName}.apk");
 				FileAssert.Exists (apk);
 				using (var zip = ZipHelper.OpenZip (apk)) {
 					foreach (var entry in zip) {
@@ -510,7 +510,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
 
 				// Make sure the AAB is signed
-				var aab = Path.Combine (bin, "UnnamedProject.UnnamedProject-Signed.aab");
+				var aab = Path.Combine (bin, $"{proj.PackageName}-Signed.aab");
 				using (var zip = ZipHelper.OpenZip (aab)) {
 					Assert.IsTrue (zip.Any (e => e.FullName == "META-INF/MANIFEST.MF"), $"AAB file `{aab}` is not signed! It is missing `META-INF/MANIFEST.MF`.");
 				}
@@ -709,7 +709,7 @@ namespace App1
 					Assert.IsTrue (builder.Build (netStandardProject), "XamFormsSample should have built.");
 					Assert.IsTrue (ab.Build (app), "App should have built.");
 					var apk = Path.Combine (Root, ab.ProjectDirectory,
-						app.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
+						app.IntermediateOutputPath, "android", "bin", $"{app.PackageName}.apk");
 					using (var zip = ZipHelper.OpenZip (apk)) {
 						var existingFiles = zip.Where (a => a.FullName.StartsWith ("assemblies/", StringComparison.InvariantCultureIgnoreCase));
 						var missingFiles = expectedFiles.Where (x => !zip.ContainsEntry ("assemblies/" + Path.GetFileName (x)));
@@ -819,7 +819,7 @@ namespace App1
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj, parameters: parameters), "Build should have succeeded.");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
-					proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
+					proj.IntermediateOutputPath, "android", "bin", $"{proj.PackageName}.apk");
 				using (var zip = ZipHelper.OpenZip (apk)) {
 					Assert.IsTrue (zip.ContainsEntry ("classes.dex"), "Apk should contain classes.dex");
 				}

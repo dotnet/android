@@ -403,11 +403,11 @@ namespace Xamarin.Android.Build.Tests
 				.OrderBy (f => f)
 				.ToArray ();
 			var expectedFiles = new[]{
+				$"{proj.PackageName}.apk",
+				$"{proj.PackageName}-Signed.apk",
 				"es",
 				$"{proj.ProjectName}.dll",
 				$"{proj.ProjectName}.pdb",
-				$"{proj.PackageName}.apk",
-				$"{proj.PackageName}-Signed.apk",
 				$"{proj.ProjectName}.xml",
 			};
 			CollectionAssert.AreEqual (expectedFiles, files, $"Expected: {string.Join (";", expectedFiles)}\n   Found: {string.Join (";", files)}");
@@ -430,7 +430,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			bool expectEmbeddedAssembies = !(CommercialBuildAvailable && !isRelease);
-			var apkPath = Path.Combine (outputPath, "UnnamedProject.UnnamedProject.apk");
+			var apkPath = Path.Combine (outputPath, $"{proj.PackageName}.apk");
 			FileAssert.Exists (apkPath);
 			using (var apk = ZipHelper.OpenZip (apkPath)) {
 				apk.AssertContainsEntry (apkPath, $"assemblies/{proj.ProjectName}.dll", shouldContainEntry: expectEmbeddedAssembies);

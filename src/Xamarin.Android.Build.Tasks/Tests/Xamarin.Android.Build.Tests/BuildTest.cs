@@ -994,14 +994,14 @@ namespace UnamedProject
 					"bundles", "armeabi-v7a", "libmonodroid_bundle_app.so");
 				Assert.IsTrue (File.Exists (libapp), "libmonodroid_bundle_app.so does not exist");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
-					proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
+					proj.IntermediateOutputPath, "android", "bin", $"{proj.PackageName}.apk");
 				using (var zipFile = ZipHelper.OpenZip (apk)) {
 					Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
 						"lib/armeabi-v7a/libmonodroid_bundle_app.so"),
-						"lib/armeabi-v7a/libmonodroid_bundle_app.so should be in the UnnamedProject.UnnamedProject.apk");
+						$"lib/armeabi-v7a/libmonodroid_bundle_app.so should be in the {proj.PackageName}.apk");
 					Assert.IsNull (ZipHelper.ReadFileFromZip (zipFile,
 						Path.Combine ("assemblies", "UnnamedProject.dll")),
-						"UnnamedProject.dll should not be in the UnnamedProject.UnnamedProject.apk");
+						$"UnnamedProject.dll should not be in the {proj.PackageName}.apk");
 				}
 			}
 		}
@@ -1022,14 +1022,14 @@ namespace UnamedProject
 						"bundles", abi, "libmonodroid_bundle_app.so");
 					Assert.IsTrue (File.Exists (libapp), abi + " libmonodroid_bundle_app.so does not exist");
 					var apk = Path.Combine (Root, b.ProjectDirectory,
-						proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
+						proj.IntermediateOutputPath, "android", "bin", $"{proj.PackageName}.apk");
 					using (var zipFile = ZipHelper.OpenZip (apk)) {
 						Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
 							"lib/" + abi + "/libmonodroid_bundle_app.so"),
-							"lib/{0}/libmonodroid_bundle_app.so should be in the UnnamedProject.UnnamedProject.apk", abi);
+							$"lib/{0}/libmonodroid_bundle_app.so should be in the {proj.PackageName}.apk", abi);
 						Assert.IsNull (ZipHelper.ReadFileFromZip (zipFile,
 							Path.Combine ("assemblies", "UnnamedProject.dll")),
-							"UnnamedProject.dll should not be in the UnnamedProject.UnnamedProject.apk");
+							$"UnnamedProject.dll should not be in the {proj.PackageName}.apk");
 					}
 				}
 			}
@@ -1170,7 +1170,7 @@ namespace UnamedProject
 			using (var b = CreateApkBuilder ()) {
 				string intermediateDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 				string androidBinDir = Path.Combine (intermediateDir, "android", "bin");
-				string apkPath = Path.Combine (androidBinDir, "UnnamedProject.UnnamedProject.apk");
+				string apkPath = Path.Combine (androidBinDir, $"{proj.PackageName}.apk");
 
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				FileAssert.Exists (Path.Combine (androidBinDir, "classes.dex"));
@@ -1902,7 +1902,7 @@ namespace App1
 				var runtimeInfo = b.GetSupportedRuntimes ();
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var apkPath = Path.Combine (Root, b.ProjectDirectory,
-					proj.IntermediateOutputPath,"android", "bin", "UnnamedProject.UnnamedProject.apk");
+					proj.IntermediateOutputPath,"android", "bin", $"{proj.PackageName}.apk");
 				using (var apk = ZipHelper.OpenZip (apkPath)) {
 					var runtime = runtimeInfo.FirstOrDefault (x => x.Abi == supportedAbi && x.Runtime == expectedRuntime);
 					Assert.IsNotNull (runtime, "Could not find the expected runtime.");
@@ -1946,13 +1946,13 @@ namespace App1
 					Assert.Ignore ("Cross compiler was not available");
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
-					proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
+					proj.IntermediateOutputPath, "android", "bin", $"{proj.PackageName}.apk");
 				var msymarchive = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, proj.PackageName + ".apk.mSYM");
 				using (var zipFile = ZipHelper.OpenZip (apk)) {
 					var mdbExits = ZipHelper.ReadFileFromZip (zipFile, "assemblies/UnnamedProject.dll.mdb") != null ||
 						ZipHelper.ReadFileFromZip (zipFile, "assemblies/UnnamedProject.pdb") != null;
 					Assert.AreEqual (embedMdb, mdbExits,
-						"assemblies/UnnamedProject.dll.mdb or assemblies/UnnamedProject.pdb should{0}be in the UnnamedProject.UnnamedProject.apk", embedMdb ? " " : " not ");
+						$"assemblies/UnnamedProject.dll.mdb or assemblies/UnnamedProject.pdb should{0}be in the {proj.PackageName}.apk", embedMdb ? " " : " not ");
 					if (aotAssemblies) {
 						foreach (var abi in abis) {
 							var assemblies = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
@@ -1971,10 +1971,10 @@ namespace App1
 							Assert.IsTrue (File.Exists (assemblies), "{0} libaot-UnnamedProject.dll.so does not exist", abi);
 							Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
 								string.Format ("lib/{0}/libaot-UnnamedProject.dll.so", abi)),
-								"lib/{0}/libaot-UnnamedProject.dll.so should be in the UnnamedProject.UnnamedProject.apk", abi);
+								$"lib/{0}/libaot-UnnamedProject.dll.so should be in the {proj.PackageName}.apk", abi);
 							Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
 								"assemblies/UnnamedProject.dll"),
-								"UnnamedProject.dll should be in the UnnamedProject.UnnamedProject.apk");
+								$"UnnamedProject.dll should be in the {proj.PackageName}.apk");
 						}
 					}
 					var runtimeInfo = b.GetSupportedRuntimes ();
@@ -2062,7 +2062,7 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 					using (var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName))) {
 						Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 						var apk = Path.Combine (Root, builder.ProjectDirectory,
-							proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
+							proj.IntermediateOutputPath, "android", "bin", $"{proj.PackageName}.apk");
 						Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, "warning XA4301: APK already contains the item lib/armeabi-v7a/libRSSupport.so; ignoring."),
 							"warning about skipping libRSSupport.so should have been raised");
 						using (var zipFile = ZipHelper.OpenZip (apk)) {
@@ -2259,7 +2259,7 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 				var manifest = XDocument.Load (Path.Combine (Root, builder.ProjectDirectory, "obj", "Debug", "android", "AndroidManifest.xml"));
 				var namespaceResolver = new XmlNamespaceManager (new NameTable ());
 				namespaceResolver.AddNamespace ("android", "http://schemas.android.com/apk/res/android");
-				var element = manifest.XPathSelectElement ("/manifest/application/provider[@android:name='UnnamedProject.UnnamedProject']", namespaceResolver);
+				var element = manifest.XPathSelectElement ($"/manifest/application/provider[@android:name='{proj.PackageName}']", namespaceResolver);
 				Assert.IsNotNull (element, "placeholder not replaced");
 			}
 		}
@@ -2279,7 +2279,7 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 				builder.Target = "Build";
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 				var manifest = File.ReadAllText (Path.Combine (Root, builder.ProjectDirectory, "obj", "Debug", "android", "AndroidManifest.xml"));
-				Assert.IsTrue (manifest.Contains ("android:authorities=\"UnnamedProject.UnnamedProject.crashlyticsinitprovider\""), "placeholder not replaced");
+				Assert.IsTrue (manifest.Contains ($"android:authorities=\"{proj.PackageName}.crashlyticsinitprovider\""), "placeholder not replaced");
 				Assert.IsFalse (manifest.Contains ("dollar_openBracket_applicationId_closeBracket"), "`aapt/AndroidManifest.xml` not ignored");
 			}
 		}
@@ -2577,7 +2577,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				StringAssert.Contains ("Xamarin.Android.Support.v4", assets,
 					"Nuget Package Xamarin.Android.Support.v4.21.0.3.0 should have been restored.");
 				var src = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "src");
-				var main_r_java = Path.Combine (src, "unnamedproject", "unnamedproject", "R.java");
+				var main_r_java = Path.Combine (src, proj.PackageNameJavaIntermediatePath, "R.java");
 				FileAssert.Exists (main_r_java);
 				var lib_r_java = Path.Combine (src, "android", "support", "compat", "R.java");
 				FileAssert.Exists (lib_r_java);
@@ -2815,7 +2815,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 					File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "assets", "NetStandard16.pdb")),
 					"NetStandard16.pdb must be copied to Intermediate directory");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
-					proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
+					proj.IntermediateOutputPath, "android", "bin", $"{proj.PackageName}.apk");
 				using (var zipFile = ZipHelper.OpenZip (apk)) {
 					Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
 							"assemblies/NetStandard16.pdb"),
@@ -3962,7 +3962,7 @@ namespace UnnamedProject
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 				var archive = Path.Combine (Root, b.ProjectDirectory,
-					proj.IntermediateOutputPath, "android", "bin", $"UnnamedProject.UnnamedProject.{packageFormat}");
+					proj.IntermediateOutputPath, "android", "bin", $"{proj.PackageName}.{packageFormat}");
 				var prefix = packageFormat == "apk" ? "" : "base/root/";
 				var expectedFiles = new [] {
 					prefix + "META-INF/maven/com.google.code.gson/gson/pom.xml",

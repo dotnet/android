@@ -201,7 +201,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (builder.Install (proj));
 				var runtimeInfo = builder.GetSupportedRuntimes ();
 				var apkPath = Path.Combine (Root, builder.ProjectDirectory,
-					proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
+					proj.IntermediateOutputPath, "android", "bin", $"{proj.PackageName}.apk");
 				using (var apk = ZipHelper.OpenZip (apkPath)) {
 					foreach (var abi in abis) {
 						var runtime = runtimeInfo.FirstOrDefault (x => x.Abi == abi && x.Runtime == "debug");
@@ -325,7 +325,8 @@ namespace Xamarin.Android.Build.Tests
 			AssertHasDevices ();
 
 			var serial = GetAttachedDeviceSerial ();
-			var proj = new XamarinAndroidApplicationProject ();
+			var proj = new XamarinAndroidApplicationProject () {
+			};
 			proj.SetProperty (proj.DebugProperties, "EmbedAssembliesIntoApk", false);
 
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
@@ -382,7 +383,7 @@ namespace Xamarin.Android.Build.Tests
 			string keypassfile = Path.Combine (Root, path, "keypass.txt");
 			byte [] data = GetKeystore ();
 			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease
+				IsRelease = isRelease,
 			};
 			Dictionary<string, string> envVar = new Dictionary<string, string> ();
 			if (password.StartsWith ("env:", StringComparison.Ordinal)) {

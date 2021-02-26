@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Xml.Linq;
+using System.Runtime.CompilerServices;
 
 namespace Xamarin.ProjectTools
 {
@@ -51,13 +52,13 @@ namespace Xamarin.ProjectTools
 		public string PackageName { get; set; }
 		public string JavaPackageName { get; set; }
 
-		public XASdkProject (string outputType = "Exe")
+		public XASdkProject (string outputType = "Exe", [CallerMemberName] string packageName = "")
 		{
 			Sdk = "Microsoft.NET.Sdk";
 			TargetFramework = "net6.0-android";
 
 			TargetSdkVersion = AndroidSdkResolver.GetMaxInstalledPlatform ().ToString ();
-			PackageName = PackageName ?? string.Format ("{0}.{0}", ProjectName);
+			PackageName = $"com.xamarin.{(packageName ?? ProjectName).ToLower ()}";
 			JavaPackageName = JavaPackageName ?? PackageName.ToLowerInvariant ();
 			GlobalPackagesFolder = FileSystemUtils.FindNugetGlobalPackageFolder ();
 			SetProperty (KnownProperties.OutputType, outputType);

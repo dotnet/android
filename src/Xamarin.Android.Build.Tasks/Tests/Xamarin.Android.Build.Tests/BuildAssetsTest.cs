@@ -94,7 +94,7 @@ namespace Xamarin.Android.Build.Tests
 						Encoding = Encoding.ASCII,
 					},
 					new AndroidItem.AndroidAsset ("Assets\\subfolder\\") {
-						
+
 					},
 					new AndroidItem.AndroidAsset ("Assets\\subfolder\\asset4.txt") {
 						TextContent = () => "Asset4",
@@ -113,7 +113,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (libb.Build (libproj), "{0} should have built successfully.", libproj.ProjectName);
 				using (var b = CreateApkBuilder (Path.Combine (projectPath, proj.ProjectName))) {
 					Assert.IsTrue (b.Build (proj), "{0} should have built successfully.", proj.ProjectName);
-					using (var apk = ZipHelper.OpenZip (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk"))) {
+					using (var apk = ZipHelper.OpenZip (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "bin", $"{proj.PackageName}.apk"))) {
 						foreach (var a in libproj.OtherBuildItems.Where (x => x is AndroidItem.AndroidAsset)) {
 							var item = a.Include ().ToLower ().Replace ("\\", "/");
 							if (item.EndsWith ("/"))

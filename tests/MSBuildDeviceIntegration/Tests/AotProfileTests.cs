@@ -22,7 +22,9 @@ namespace Xamarin.Android.Build.Tests
 		{
 			AssertHasDevices ();
 
-			var proj = new XamarinAndroidApplicationProject () { IsRelease = true };
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+			};
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
 			var port = 9000 + new Random ().Next (1000);
 			proj.SetProperty ("AndroidAotProfilerPort", port.ToString ());

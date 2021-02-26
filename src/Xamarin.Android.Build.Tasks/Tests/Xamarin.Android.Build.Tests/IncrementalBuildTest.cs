@@ -1269,7 +1269,7 @@ namespace Lib2
 				TextContent = () => text
 			});
 			using (var b = CreateApkBuilder ()) {
-				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, "UnnamedProject.UnnamedProject.apk");
+				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}.apk");
 				Assert.IsTrue (b.Build (proj), "first build should succeed");
 				AssertAssetContents (apk);
 
@@ -1310,7 +1310,7 @@ namespace Lib2
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first build should succeed");
 
-				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, "UnnamedProject.UnnamedProject.apk");
+				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}.apk");
 				FileAssert.Exists (apk);
 				using (var zip = ZipHelper.OpenZip (apk)) {
 					Assert.IsTrue (zip.ContainsEntry ("assets/foo/bar.txt"), "bar.txt should exist in apk!");
@@ -1396,7 +1396,7 @@ namespace Lib2
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
 				var assemblyPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, "UnnamedProject.dll");
-				var apkPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, "UnnamedProject.UnnamedProject-Signed.apk");
+				var apkPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				var firstAssemblyWrite = new FileInfo (assemblyPath).LastWriteTime;
 				var firstApkWrite = new FileInfo (apkPath).LastWriteTime;
 

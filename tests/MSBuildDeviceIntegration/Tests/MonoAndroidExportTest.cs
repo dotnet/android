@@ -102,7 +102,7 @@ namespace UnnamedProject
 				string apiLevel;
 				proj.TargetFrameworkVersion = b.LatestTargetFrameworkVersion (out apiLevel);
 				proj.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
-<manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""UnnamedProject.UnnamedProject"">
+<manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""${proj.PackageName}"">
 	<uses-sdk android:minSdkVersion=""24"" android:targetSdkVersion=""{apiLevel}"" />
 	<application android:label=""${{PROJECT_NAME}}"">
 	</application >

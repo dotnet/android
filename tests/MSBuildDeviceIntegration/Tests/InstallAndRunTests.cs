@@ -237,7 +237,8 @@ namespace Library1 {
 			AssertHasDevices ();
 			AssertCommercialBuild ();
 
-			proj = new XamarinAndroidApplicationProject ();
+			proj = new XamarinAndroidApplicationProject () {
+			};
 			builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 			string mlpdDestination = Path.Combine (Root, builder.ProjectDirectory, "profile.mlpd");

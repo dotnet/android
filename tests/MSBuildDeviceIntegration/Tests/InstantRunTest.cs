@@ -9,7 +9,7 @@ namespace Xamarin.Android.Build.Tests
 	[TestFixture]
 	[NonParallelizable] //These tests deploy to devices
 	[Category ("Commercial"), Category ("UsesDevices")]
-	public class InstantRunTest : BaseTest
+	public class InstantRunTest : DeviceTest
 	{
 		[Test]
 		public void InstantRunSimpleBuild ([Values ("dx", "d8")] string dexTool)
@@ -54,7 +54,10 @@ namespace Xamarin.Android.Build.Tests
 			AssertCommercialBuild ();
 			AssertHasDevices ();
 
-			var proj = new XamarinAndroidApplicationProject () { AndroidFastDeploymentType = "Assemblies:Dexes", UseLatestPlatformSdk = true };
+			var proj = new XamarinAndroidApplicationProject () {
+				AndroidFastDeploymentType = "Assemblies:Dexes",
+				UseLatestPlatformSdk = true,
+			};
 			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", useManagedResourceGenerator.ToString ());
 			var b = CreateApkBuilder ($"temp/InstantRunTargetsSkipped_{useManagedResourceGenerator}", cleanupOnDispose: false);
 			Assert.IsTrue (b.Build (proj), "1 build should have succeeded.");
@@ -188,7 +191,10 @@ namespace Xamarin.Android.Build.Tests
 			AssertCommercialBuild ();
 			AssertHasDevices ();
 
-			var proj = new XamarinAndroidApplicationProject () { AndroidFastDeploymentType = "Assemblies:Dexes", UseLatestPlatformSdk = true };
+			var proj = new XamarinAndroidApplicationProject () {
+				AndroidFastDeploymentType = "Assemblies:Dexes",
+				UseLatestPlatformSdk = true,
+			};
 			proj.SetDefaultTargetDevice ();
 			foreach (var pkg in packages)
 				proj.PackageReferences.Add (pkg);
@@ -261,7 +267,7 @@ namespace Xamarin.Android.Build.Tests
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Install (proj), "packaging should have succeeded. 0");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
-					proj.IntermediateOutputPath, "android", "bin", "UnnamedProject.UnnamedProject.apk");
+					proj.IntermediateOutputPath, "android", "bin", $"{proj.PackageName}.apk");
 				Assert.IsNull (ZipHelper.ReadFileFromZip (apk, "Mono.Android.typemap"), $"Mono.Android.typemap should NOT be in {apk}.");
 				var logLines = b.LastBuildOutput;
 				Assert.IsTrue (logLines.Any (l => l.Contains ("Building target \"_BuildApkFastDev\" completely.") ||
