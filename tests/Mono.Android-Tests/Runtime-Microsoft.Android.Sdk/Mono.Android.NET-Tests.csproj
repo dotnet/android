@@ -46,10 +46,9 @@
       <ApkSizesDefinitionFilename>$(XamarinAndroidSourcePath)build-tools\scripts\ApkSizesDefinitions.txt</ApkSizesDefinitionFilename>
       <ApkSizesResultsFilename>$(XamarinAndroidSourcePath)TestResult-$(_MonoAndroidTestPackage)-values-$(Configuration).csv</ApkSizesResultsFilename>
     </TestApk>
+    <PackageReference Include="System.Drawing.Common" Version="6.0.0-preview.1.21102.12" />
   </ItemGroup>
 
   <Import Project="$(XamarinAndroidSourcePath)build-tools\scripts\TestApks.targets" />
-
-  <PackageReference Include="System.Drawing.Common" Version="6.0.0-preview.1.21102.12" />
 
 </Project>
