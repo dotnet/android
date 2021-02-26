@@ -47,6 +47,8 @@
       <ApkSizesResultsFilename>$(XamarinAndroidSourcePath)TestResult-$(_MonoAndroidTestPackage)-values-$(Configuration).csv</ApkSizesResultsFilename>
     </TestApk>
     <PackageReference Include="System.Drawing.Common" Version="6.0.0-preview.1.21102.12" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.0-preview.1.21102.12" />
+    <PackageReference Include="System.Security.Permissions" Version="6.0.0-preview.1.21102.12" />
   </ItemGroup>
 
   <Import Project="$(XamarinAndroidSourcePath)build-tools\scripts\TestApks.targets" />
