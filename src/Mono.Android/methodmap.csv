@@ -2519,8 +2519,8 @@
 29, android.app, AppOpsManager, startWatchingMode, flags, Android.App.WatchForeground
 29, android.app, RemoteInput.Builder, setEditChoicesBeforeSending, editChoicesBeforeSending, Android.App.EditChoices
 29, android.app, RemoteInput, getEditChoicesBeforeSending, return, Android.App.EditChoices
-29, android.app, Service, getForegroundServiceType, return, Android.App.ForegroundService
-29, android.app, Service, startForeground, foregroundServiceType, Android.App.ForegroundService
+29, android.app, Service, getForegroundServiceType, return, Android.Content.PM.ForegroundService
+29, android.app, Service, startForeground, foregroundServiceType, Android.Content.PM.ForegroundService
 // Cannot change this at this state.
 // 27, android.app, WallpaperManager.OnColorsChangedListener, onColorsChanged, which, Android.App.WallpaperManagerFlags
 29, android.content, Context, bindIsolatedService, flags, Android.App.Bind
