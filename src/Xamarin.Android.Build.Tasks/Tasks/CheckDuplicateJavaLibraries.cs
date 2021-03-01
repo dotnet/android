@@ -9,6 +9,11 @@ namespace Xamarin.Android.Tasks
 {
 	public class CheckDuplicateJavaLibraries : AndroidTask
 	{
+		readonly static string [] ExcludedFiles = new [] {
+			"classes.jar",
+			"r-classes.jar",
+		};
+
 		public override string TaskPrefix => "CDJ";
 
 		public ITaskItem [] JavaSourceFiles { get; set; }
@@ -26,7 +31,7 @@ namespace Xamarin.Android.Tasks
 
 			// Remove duplicate identical jars by name, size and content, and reject any jars that conflicts by name (i.e. different content).
 			var jars = MonoAndroidHelper.DistinctFilesByContent (jarFilePaths).ToArray ();
-			var dups = MonoAndroidHelper.GetDuplicateFileNames (jars, new string [] {"classes.jar"});
+			var dups = MonoAndroidHelper.GetDuplicateFileNames (jars, ExcludedFiles);
 			if (dups.Any ()) {
 				Log.LogCodedError ("XA1014", Properties.Resources.XA1014, String.Join (", ", dups.ToArray ()));
 				return false;
