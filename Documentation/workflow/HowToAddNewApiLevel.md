@@ -1,84 +1,59 @@
+# HowTo: Add a new Android API Level
 
-# How to deal with new API Level
+## Developer Preview
 
+The first developer preview generally ships in late February or early March.  At this early
+stage for the APIs, we simply add literal bindings for them.  We do not spend resources on
+the more manual parts like enumification that will likely change as the APIs mature.
 
-## Quick Android Q API support workflow logs.
+### Add New Platform to `xaprepare`
 
-- Make changes to Configuration.props
-- Add android-toolchain projitems
-- Run `make prepare` and `make` to first download platform-Q under `~/android-toolchain`
-- Generate android-Q.params.txt
-  - go to `external/Java.Interop/build-tools/xamarin-android-docimporter-ng`.
-  - add new API level to `generate.sh`
-  - run `nuget restore`, `make`, and `./generate.sh`. Take some rest (it takes a while).
-  - copy `android-*.params.txt` to `{xamarin-android topdir}/src/Mono.Android/Profiles/`.
-  - In `src/Mono.Android/Profiles/`, renamed `android-Q.params.txt` to `android-29.params.txt` as the later builds expect that.
-  - Make changes to `Configuration.props`, create `Configuration.Override.props` to set AndroidApiLevel etc.
-  - Make other changes to e.g. `build-tools/scripts/BuildEverything.mk`, `src/Mono.Android/Mono.Android.projitems`.
-  - run `make` on xamarin-android topdir. It results in various errors.
-  - Fix builds by making changes to `src/Mono.Android/metadata` and sources under `src/Mono.Android`.
+- Add new level to `/build-tools/xaprepare/xaprepare/ConfigAndData/BuildAndroidPlatforms.cs`:
+  - `new AndroidPlatform (apiName: "S", apiLevel: 31, platformID: "S", include: "v11.0.99", framework: "v11.0.99", stable: false),`
+- Add new level to `/build-tools/xaprepare/xaprepare/ConfigAndData/Dependencies/AndroidToolchain.cs`:
+  - `new AndroidPlatformComponent ("platform-S_r01", apiLevel: "S", pkgRevision: "1"),`
+  
+At this point, you can run `Xamarin.Android.sln /t:Prepare` using your usual mechanism, and
+the new platform will be downloaded to your local Android SDK.
 
-## This documentation is incomplete
+### Generate `params.txt` File
 
-In Xamarin ages, we used to have (more complete) API upgrade guide internally. But since then we switched to new xamarin-android repository which entirely changed the build system from Makefile to MSBuild solution, as well as the managed API for manipulating Android SDK, the old documentation almost does not make sense anymore. Even though I am writing this documentation, I don't know everything required (nor those who changed the build system didn't care about API upgrades).
+- In `/external/Java.Interop/tools/param-name-importer`:
+  - Add new level to `generate.sh` and run
+  - *or* run manually: `param-name-importer.exe -source-stub-zip C:/Users/USERNAME/android-toolchain/sdk/platforms/android-S/android-stubs-src.jar -output-text api-S.params.txt -output-xml api-S.params.xml -verbose -framework-only`
+- Copy the produced `api-X.params.txt` file to `/src/Mono.Android/Profiles/`
 
-Hence, this documentation is written from the ground,  exploring everything around.
+### Other Infrastructure Changes
 
-And since the build system has changed between the first preview of Android O and the latest Android O preview (3), and it is quite possible that the build system changes over and over again, it might still not make much sense in the future.
+- Add level to `/build-tools/api-merge/merge-configuration.xml` to create `api-S.xml.class-parse`
+- Add level to `/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks/CheckApiCompatibility.cs`
+  to enable running ApiCompat against the new level. (ex: `{ "v11.0.99", "v11.0" }`)
+- Add level to `/build-tools/api-xml-adjuster/Makefile`
+- LOCAL ONLY: Update `Configuration.props` or `Configuration.Override.props` to specify building the new level:
+  - `<AndroidApiLevel>31</AndroidApiLevel>`
+  - `<AndroidPlatformId>S</AndroidPlatformId>`
+  - `<AndroidFrameworkVersion>v11.0.99</AndroidFrameworkVersion>`
 
-Things also changed after O. P bindings were generated in the different way than that for O.
+### Building the New Mono.Android
 
-## Quick list of the related components
+- Build `Xamarin.Android.sln` with your usual mechanism, and the new `Mono.Android.dll` should be built
+- Read the note at the bottom of `/src/Mono.Android/metadata` that has a few lines that must be 
+  copy/pasted for new API levels
+- Add required metadata fixes in `/src/Mono.Android/metadata` until `Mono.Android.csproj` builds
+  
+### ApiCompat
 
-- SDK components (build-tools/android-toolchain)
-- API (parameter names) description (external/Java.Interop/build-tools/xamarin-android-docimporter-ng)
-- Mono.Android API (src/Mono.Android)
-- Mono.Android API enumification (build-tools/enumification-helpers)
-- new AndroidManifest.xml elements and attributes (build-tools/manifest-attribute-codegen)
+There may be ApiCompat issues that need to be examined.  Either fix the assembly with metadata or allow
+acceptable "breaks":
 
-It often happens that a new API binding uncovers "generator" issues, or requires new features (e.g. actions for default interface methods).
+- Add new file to `/tests/api-compatibility`, like `acceptable-breakages-v11.0.99.txt`
+- Copy errors reported from ApiCompat task to acceptable breakages file
 
-## Steps
+## Bindings Stabilization
 
-Anyhow, this commit would tell you what needs to be changed when the new API preview arrives (and that becomes stable): https://github.com/xamarin/xamarin-android/commit/8ce2537
+When Google announces that the APIs are frozen, additional work such as enumification is needed.
 
-For reference, this was for O: https://github.com/xamarin/xamarin-android/pull/642
-
-1) Add/update new download to build-tools/android-toolchain.
-
-The new API archive should be found on the web repository description
-that Google Android SDK Manager uses (which can be now shown as part
-of SDK Manager options in Android Studio).
-
-As of Android P, it is at https://dl-ssl.google.com/android/repository/repository2-1.xml . It used to be different repository description URL, and it will be different URL in the future.
-
-2) Create and add api-P.params.txt.
-
-It can be done from within `external/Java.Interop/build-tools/xamarin-android-docimporter-ng` directory. See `README.md` in that directory for details. You will have to make changes to Makefile in that directory to generate it. We used to parse DroidDoc, but since google had stopped shipping docs in timely manner and scraping docs is very error prone, we switched to "stubs" source parser.
-
-You might be forced to fix and/or add new features to Java source parsers. (You don't have to listen to people who say you can implement full Java parser. We don't need that and it's waste of development resource.)
-
-Once api-P.params.txt is successfully generated, then copy it to `src/Mono.Android/Profiles`.
-
-3) Make changes to Configuration.props, android-toolchain.projitems, BuildEverything.mk etc.
-
-There are many configuration files that holds API definitions. Since the build system is an assorted hacks that don't care consistency, definitions are everywhere. Check the commit mentioned above and edit those files.
-
-Usually preview API is given some unconfirmed number for the target framework (e.g. P API, which ended up to be 9.0, was initially given 8.1.99 where O was 8.1).
-
-There is some assumption that an API Level is a number, whereas a "platform ID" can be possibly alphabets. For P preview, API Level was `28` while platform ID was `P`. There are couple of definitions that need to be declared if and only if those two are different.
-
-When the API became final, those preview-only property values have to be reverted back to the stable state.
-
-4) Generate new API binding (and review the API updates).
-
-Once you are done with all above, then you are ready to try to build `Mono.Android.dll`. `make API_LEVEL=P` would generate the target API binding (might be `API_LEVEL=28`).
-
-Mono.Android.dll build is somewhat different from normal Android Binding projects, but the basic process is the same. First `class-parse` extracts API definition from `android.jar`, then `api-xml-adjuster` fixes API definitions so that it can consistently apply `metadata` (which is `Metadata.xml` in binding project templates) as well as `map.csv` and `methodmap.csv` (which are `EnumFields.xml` and `EnumMethods.xml` in binding project templates), then ... `generator` generates the C# sources.
-
-What's different from normal bindings is between `api-xml-adjuster` and `generator`. We "merge" API various descriptions for all the supported API levels (10, 15, 16, ... 28) so that we provide consistent (non-breaking) APIs across API Levels. It is done by a tool called `api-merge`.
-
-`generator` step usually fails at first, and you are supposed to make some changes to `src/Mono.Android/metadata` to resolve those API generation glitches (in the same spirit as normal Android Binding projects). "Troubleshooting Bindings" document would be helpful for you. Note that API fixup has to be done against `src/Mono.Android/obj/Debug/android-P/mcw/api.xml` which is the result of `api-merge` step.
+---- Somewhat outdated docs below, update when we do this year's stabilization ----
 
 5) enumification
 

@@ -20,6 +20,7 @@ This file contains *temporary* workarounds for NuGet in .NET 5.
     -->
     <PackageTargetFallback>
       net6.0-android$(TargetPlatformVersion).0;
+      monoandroid12.0;
       monoandroid11.0;
       monoandroid10.0;
       monoandroid90;

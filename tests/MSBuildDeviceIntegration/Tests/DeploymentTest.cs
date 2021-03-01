@@ -52,6 +52,13 @@ namespace Xamarin.Android.Build.Tests
 			builder = CreateApkBuilder (Path.Combine ("temp", "DeploymentTests"));
 			string apiLevel;
 			proj.TargetFrameworkVersion = builder.LatestTargetFrameworkVersion (out apiLevel);
+
+			// TODO: We aren't sure how to support preview bindings in .NET6 yet.
+			if (Builder.UseDotNet && apiLevel == "31") {
+				apiLevel = "30";
+				proj.TargetFrameworkVersion = "v11.0";
+			}
+
 			proj.PackageName = "Xamarin.TimeZoneTest";
 			proj.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""Xamarin.TimeZoneTest"">
@@ -118,6 +125,13 @@ namespace Xamarin.Android.Build.Tests
 				b.ThrowOnBuildFailure = false;
 				string apiLevel;
 				app.TargetFrameworkVersion = b.LatestTargetFrameworkVersion (out apiLevel);
+
+				// TODO: We aren't sure how to support preview bindings in .NET6 yet.
+				if (Builder.UseDotNet && apiLevel == "31") {
+					apiLevel = "30";
+					app.TargetFrameworkVersion = "v11.0";
+				}
+
 				app.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""{app.PackageName}"">
 	<uses-sdk android:minSdkVersion=""24"" android:targetSdkVersion=""{apiLevel}"" />
@@ -152,6 +166,13 @@ namespace Xamarin.Android.Build.Tests
 				app.AndroidUseAapt2 = useAapt2;
 				app.LayoutMain = app.LayoutMain.Replace ("@string/hello", "@string/hello_me");
 				app.TargetFrameworkVersion = b.LatestTargetFrameworkVersion (out apiLevel);
+
+				// TODO: We aren't sure how to support preview bindings in .NET6 yet.
+				if (Builder.UseDotNet && apiLevel == "31") {
+					apiLevel = "30";
+					app.TargetFrameworkVersion = "v11.0";
+				}
+
 				app.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""{app.PackageName}"">
 	<uses-sdk android:minSdkVersion=""24"" android:targetSdkVersion=""{apiLevel}"" />
