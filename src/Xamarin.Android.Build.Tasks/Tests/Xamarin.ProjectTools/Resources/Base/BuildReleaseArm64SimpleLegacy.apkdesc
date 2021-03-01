@@ -26,22 +26,22 @@
       "Size": 1724
     },
     "classes.dex": {
-      "Size": 316956
+      "Size": 316848
     },
     "assemblies/UnnamedProject.dll": {
-      "Size": 2862
+      "Size": 2863
     },
     "assemblies/Java.Interop.dll": {
-      "Size": 75153
+      "Size": 75279
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 264429
+      "Size": 264424
     },
     "assemblies/mscorlib.dll": {
-      "Size": 769824
+      "Size": 769789
     },
     "assemblies/System.Core.dll": {
-      "Size": 28190
+      "Size": 28191
     },
     "assemblies/System.dll": {
       "Size": 12986
@@ -50,7 +50,7 @@
       "Size": 68560
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 250696
+      "Size": 247872
     },
     "lib/arm64-v8a/libxa-internal-api.so": {
       "Size": 65184

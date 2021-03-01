@@ -56,7 +56,7 @@ This file contains the .NET 5-specific targets to customize ILLink
     <ItemGroup>
       <!-- add our custom steps -->
       <_TrimmerCustomSteps Include="$(MSBuildThisFileDirectory)..\tools\Microsoft.Android.Sdk.ILLink.dll">
-        <BeforeStep>LoadReferencesStep</BeforeStep>
+        <BeforeStep>MarkStep</BeforeStep>
         <Type>Microsoft.Android.Sdk.ILLink.SetupStep</Type>
       </_TrimmerCustomSteps>
     </ItemGroup>
