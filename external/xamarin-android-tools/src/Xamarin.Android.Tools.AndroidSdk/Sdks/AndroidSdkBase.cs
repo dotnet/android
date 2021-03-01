@@ -152,7 +152,7 @@ namespace Xamarin.Android.Tools
 			// Look in PATH
 			foreach (var ndkStack in ProcessUtils.FindExecutablesInPath (NdkStack)) {
 				var ndkDir  = Path.GetDirectoryName (ndkStack);
-				if (ndkDir == null)
+				if (string.IsNullOrEmpty (ndkDir))
 					continue;
 				yield return ndkDir;
 			}
@@ -161,12 +161,19 @@ namespace Xamarin.Android.Tools
 			foreach (var sdk in GetAllAvailableAndroidSdks ()) {
 				if (sdk == AndroidSdkPath)
 					continue;
-				yield return FindBestNDK (sdk);
+				var ndkDir = FindBestNDK (sdk);
+				if (string.IsNullOrEmpty (ndkDir))
+					continue;
+				yield return ndkDir;
 			}
 		}
 
 		string FindBestNDK (string androidSdkPath)
 		{
+			if (!Directory.Exists (androidSdkPath)) {
+				return String.Empty;
+			}
+
 			var ndkInstances = new SortedDictionary<Version, string> (Comparer<Version>.Create ((Version l, Version r) => r.CompareTo (l)));
 
 			foreach (string ndkPath in Directory.EnumerateDirectories (androidSdkPath, "ndk*", SearchOption.TopDirectoryOnly)) {

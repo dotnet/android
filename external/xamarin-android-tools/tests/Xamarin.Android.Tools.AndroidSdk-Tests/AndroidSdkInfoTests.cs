@@ -147,6 +147,28 @@ namespace Xamarin.Android.Tools.Tests
 		}
 
 		[Test]
+		public void Ndk_AndroidSdkDoesNotExist ()
+		{
+			CreateSdks (out string root, out string jdk, out string ndk, out string sdk);
+
+			Action<TraceLevel, string> logger = (level, message) => {
+				Console.WriteLine ($"[{level}] {message}");
+				if (level == TraceLevel.Error)
+					Assert.Fail (message);
+			};
+
+			var oldAndroidHome = Environment.GetEnvironmentVariable ("ANDROID_HOME");
+			try {
+				Environment.SetEnvironmentVariable ("ANDROID_HOME", "/i/dont/exist");
+				// Check that this doesn't throw
+				new AndroidSdkInfo (logger, androidSdkPath: sdk, androidNdkPath: null, javaSdkPath: jdk);
+			} finally {
+				Environment.SetEnvironmentVariable ("ANDROID_HOME", oldAndroidHome);
+				Directory.Delete (root, recursive: true);
+			}
+		}
+
+		[Test]
 		public void Constructor_SetValuesFromPath ()
 		{
 			if (OS.IsWindows)
