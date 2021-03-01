@@ -77,7 +77,7 @@
     <!-- Version number from: https://github.com/dotnet/installer#installers-and-binaries -->
     <!-- Please update DotNetRuntimePacksVersion below accordingly -->
     <DotNetPreviewVersionBand Condition=" '$(DotNetPreviewVersionBand)' == '' ">6.0.100</DotNetPreviewVersionBand>
-    <DotNetPreviewVersionFull Condition=" '$(DotNetPreviewVersionFull)' == '' ">$(DotNetPreviewVersionBand)-preview.1.21109.8</DotNetPreviewVersionFull>
+    <DotNetPreviewVersionFull Condition=" '$(DotNetPreviewVersionFull)' == '' ">$(DotNetPreviewVersionBand)-preview.2.21114.3</DotNetPreviewVersionFull>
     <!-- This version comes from the a file in the dotnet distribution: sdk/$(DotNetPreviewVersionFull)/dotnet.runtimeconfig.json (the `runtimeOptions/framework/version key`) -->
     <DotNetRuntimePacksVersion Condition=" '$(DotNetRuntimePacksVersion)' == '' ">6.0.0-preview.2.21108.2</DotNetRuntimePacksVersion>
     <ILLinkVersionBand Condition=" '$(ILLinkVersionBand)' == '' ">6.0.0</ILLinkVersionBand>
