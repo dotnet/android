@@ -550,6 +550,41 @@ namespace Xamarin.Android.Build.Tests
 			nupkg.AssertContainsEntry (nupkgPath, $"lib/{legacyTargetFramework}/{proj.ProjectName}.dll");
 		}
 
+		[Test]
+		public void DotNetIncremental ()
+		{
+			// Setup dependencies App A -> Lib B
+			var path = Path.Combine ("temp", TestName);
+
+			var libB = new XASdkProject (outputType: "Library") {
+				ProjectName = "LibraryB"
+			};
+			libB.Sources.Clear ();
+			libB.Sources.Add (new BuildItem.Source ("Foo.cs") {
+				TextContent = () => "public class Foo { }",
+			});
+
+			// Will save the project, does not need to build it
+			CreateDotNetBuilder (libB, Path.Combine (path, libB.ProjectName));
+
+			var appA = new XASdkProject {
+				ProjectName = "AppA",
+				Sources = {
+					new BuildItem.Source ("Bar.cs") {
+						TextContent = () => "public class Bar : Foo { }",
+					}
+				}
+			};
+			appA.AddReference (libB);
+			var appBuilder = CreateDotNetBuilder (appA, Path.Combine (path, appA.ProjectName));
+			Assert.IsTrue (appBuilder.Build (), $"{appA.ProjectName} should succeed");
+			appBuilder.AssertTargetIsNotSkipped ("CoreCompile");
+
+			// Build again, no changes
+			Assert.IsTrue (appBuilder.Build (), $"{appA.ProjectName} should succeed");
+			appBuilder.AssertTargetIsSkipped ("CoreCompile");
+		}
+
 		DotNetCLI CreateDotNetBuilder (string relativeProjectDir = null)
 		{
 			if (string.IsNullOrEmpty (relativeProjectDir)) {
