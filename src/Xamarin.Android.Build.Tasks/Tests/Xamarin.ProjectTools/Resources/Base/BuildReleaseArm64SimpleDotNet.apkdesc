@@ -29,7 +29,7 @@
       "Size": 316880
     },
     "assemblies/UnnamedProject.dll": {
-      "Size": 3098
+      "Size": 3095
     },
     "assemblies/System.Console.dll": {
       "Size": 6257
@@ -38,13 +38,13 @@
       "Size": 16470
     },
     "assemblies/System.Private.CoreLib.dll": {
-      "Size": 532892
+      "Size": 530811
     },
     "assemblies/Java.Interop.dll": {
-      "Size": 63841
+      "Size": 57657
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 87135
+      "Size": 82694
     },
     "lib/arm64-v8a/libxamarin-app.so": {
       "Size": 68560
@@ -80,5 +80,5 @@
       "Size": 2385
     }
   },
-  "PackageSize": 2951103
+  "PackageSize": 2934719
 }
