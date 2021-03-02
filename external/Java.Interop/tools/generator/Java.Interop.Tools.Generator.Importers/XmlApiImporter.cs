@@ -37,13 +37,16 @@ namespace MonoDroid.Generation
 						klass.AddImplementedInterface (iname);
 						break;
 					case "method":
-						klass.AddMethod (CreateMethod (klass, child, options));
+						if (child.XGetAttribute ("visibility") != "kotlin-internal")
+							klass.AddMethod (CreateMethod (klass, child, options));
 						break;
 					case "constructor":
-						klass.Ctors.Add (CreateCtor (klass, child, options));
+						if (child.XGetAttribute ("visibility") != "kotlin-internal")
+							klass.Ctors.Add (CreateCtor (klass, child, options));
 						break;
 					case "field":
-						klass.AddField (CreateField (klass, child, options));
+						if (child.XGetAttribute ("visibility") != "kotlin-internal")
+							klass.AddField (CreateField (klass, child, options));
 						break;
 					case "typeParameters":
 						break; // handled at GenBaseSupport
@@ -230,10 +233,12 @@ namespace MonoDroid.Generation
 						iface.AddImplementedInterface (iname);
 						break;
 					case "method":
-						iface.AddMethod (CreateMethod (iface, child, options));
+						if (child.XGetAttribute ("visibility") != "kotlin-internal")
+							iface.AddMethod (CreateMethod (iface, child, options));
 						break;
 					case "field":
-						iface.AddField (CreateField (iface, child, options));
+						if (child.XGetAttribute ("visibility") != "kotlin-internal")
+							iface.AddField (CreateField (iface, child, options));
 						break;
 					case "typeParameters":
 						break; // handled at GenBaseSupport

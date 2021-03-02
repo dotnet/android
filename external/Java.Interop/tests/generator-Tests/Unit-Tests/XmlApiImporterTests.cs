@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 using MonoDroid.Generation;
@@ -243,6 +244,27 @@ namespace generatortests
 			Assert.AreEqual (3, method.LineNumber);
 			Assert.AreEqual (2, method.LinePosition);
 			Assert.AreEqual ("obj/Debug/api.xml", method.SourceFile);
+		}
+
+		[Test]
+		public void IgnoreKotlinInternalMembers ()
+		{
+			var xml = XDocument.Parse (@"
+				<api>
+					<package name='com.example.test' jni-name='com/example/test'>
+						<class name='Test' visibility='public'>
+							<constructor name='Test' visibility='kotlin-internal' />
+							<method name='DoStuff' visibility='kotlin-internal' />
+							<field name='MyField' visibility='kotlin-internal' />
+						</class>
+					</package>
+				</api>");
+
+			var gens = new Parser (opt).Parse (xml, new List<string> (), "0", 0);
+			var klass = gens.Single ();
+
+			Assert.AreEqual (0, klass.Fields.Count);
+			Assert.AreEqual (0, klass.Methods.Count);
 		}
 	}
 }

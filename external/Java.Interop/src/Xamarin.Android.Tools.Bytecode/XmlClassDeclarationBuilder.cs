@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -28,9 +28,6 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		public XElement ToXElement ()
 		{
-			var visibility = GetClassVisibility (this.classFile.AccessFlags);
-			if (visibility == "private")
-				return null;
 			return new XElement (GetElementName (),
 					new XAttribute ("abstract",                 (classFile.AccessFlags & ClassAccessFlags.Abstract) != 0),
 					new XAttribute ("deprecated",               GetDeprecatedValue (classFile.Attributes)),
@@ -319,7 +316,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 		IEnumerable<XElement> GetConstructors ()
 		{
 			return classFile.Methods.Where (m => m.Name == "<init>" 
-					&& (GetMethodVisibility(m.AccessFlags) == "public" || GetMethodVisibility(m.AccessFlags) == "protected"))
+					&& (GetMethodVisibility(m.AccessFlags) == "public" || GetMethodVisibility(m.AccessFlags) == "protected" || GetMethodVisibility (m.AccessFlags) == "kotlin-internal"))
 				.OrderBy (m => m.Name + m.Descriptor, StringComparer.OrdinalIgnoreCase)
 				.Select (c => GetMethod ("constructor", GetThisClassName (), c, null));
 		}
@@ -374,6 +371,8 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		static string GetVisibility (MethodAccessFlags accessFlags)
 		{
+			if (accessFlags.HasFlag (MethodAccessFlags.Internal))
+				return "kotlin-internal";
 			if ((accessFlags & MethodAccessFlags.Public) != 0)
 				return "public";
 			if ((accessFlags & MethodAccessFlags.Protected) != 0)
@@ -605,6 +604,8 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		static string GetMethodVisibility (MethodAccessFlags accessFlags)
 		{
+			if (accessFlags.HasFlag (MethodAccessFlags.Internal))
+				return "kotlin-internal";
 			if ((accessFlags & MethodAccessFlags.Public) != 0)
 				return "public";
 			if ((accessFlags & MethodAccessFlags.Protected) != 0)
@@ -628,7 +629,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 		IEnumerable<XElement> GetMethods ()
 		{
 			return classFile.Methods.Where (m => !m.Name.StartsWith ("<", StringComparison.OrdinalIgnoreCase)
-						&& (GetMethodVisibility(m.AccessFlags) == "public" || GetMethodVisibility(m.AccessFlags) == "protected"))
+						&& (GetMethodVisibility(m.AccessFlags) == "public" || GetMethodVisibility(m.AccessFlags) == "protected" || GetMethodVisibility (m.AccessFlags) == "kotlin-internal"))
 				.OrderBy (m => m.Name + m.Descriptor, StringComparer.OrdinalIgnoreCase)
 				.Select (m => GetMethod ("method", m.Name, m,
 					returns: m.ReturnType.TypeSignature));

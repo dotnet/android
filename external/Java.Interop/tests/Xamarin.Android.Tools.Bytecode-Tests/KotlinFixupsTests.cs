@@ -24,6 +24,9 @@ namespace Xamarin.Android.Tools.BytecodeTests
 
 			Assert.False (klass.AccessFlags.HasFlag (ClassAccessFlags.Public));
 			Assert.False (inner_class.InnerClassAccessFlags.HasFlag (ClassAccessFlags.Public));
+
+			var output = new XmlClassDeclarationBuilder (klass).ToXElement ().ToString ();
+			Assert.True (output.Contains ("visibility=\"private\""));
 		}
 
 		[Test]
@@ -58,6 +61,9 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			KotlinFixups.Fixup (new [] { klass });
 
 			Assert.False (ctor.AccessFlags.HasFlag (MethodAccessFlags.Public));
+
+			var output = new XmlClassDeclarationBuilder (klass).ToXElement ().ToString ();
+			Assert.True (output.Contains ("visibility=\"kotlin-internal\""));
 		}
 
 		[Test]
@@ -124,6 +130,9 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			KotlinFixups.Fixup (new [] { klass });
 
 			Assert.False (method.AccessFlags.HasFlag (MethodAccessFlags.Public));
+
+			var output = new XmlClassDeclarationBuilder (klass).ToXElement ().ToString ();
+			Assert.True (output.Contains ("visibility=\"kotlin-internal\""));
 		}
 
 		[Test]
@@ -154,6 +163,9 @@ namespace Xamarin.Android.Tools.BytecodeTests
 
 			Assert.False (getter.AccessFlags.HasFlag (MethodAccessFlags.Public));
 			Assert.False (setter.AccessFlags.HasFlag (MethodAccessFlags.Public));
+
+			var output = new XmlClassDeclarationBuilder (klass).ToXElement ().ToString ();
+			Assert.True (output.Contains ("visibility=\"kotlin-internal\""));
 		}
 
 		[Test]

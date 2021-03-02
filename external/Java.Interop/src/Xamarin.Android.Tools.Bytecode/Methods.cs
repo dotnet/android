@@ -352,6 +352,9 @@ namespace Xamarin.Android.Tools.Bytecode {
 		Abstract        = 0x0400,
 		Strict          = 0x0800,
 		Synthetic       = 0x1000,
+
+		// This is not a real Java MethodAccessFlags, it is used to denote Kotlin "internal" access.
+		Internal        = 0x10000000,
 	}
 
 	[Flags]

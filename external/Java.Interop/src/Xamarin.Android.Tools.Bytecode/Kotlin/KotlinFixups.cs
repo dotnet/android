@@ -70,36 +70,56 @@ namespace Xamarin.Android.Tools.Bytecode
 				// Interfaces should be set to "package-private"
 				if (klass.AccessFlags.HasFlag (ClassAccessFlags.Interface)) {
 					Log.Debug ($"Kotlin: Setting internal interface {klass.ThisClass.Name.Value} to package-private");
-					klass.AccessFlags = SetPackagePrivate (klass.AccessFlags);
+					klass.AccessFlags = SetVisibility (klass.AccessFlags, null);
 
 					foreach (var ic in klass.InnerClasses) {
 						Log.Debug ($"Kotlin: Setting nested type {ic.InnerClass.Name.Value} in an internal interface to package-private");
-						ic.InnerClassAccessFlags = SetPackagePrivate (ic.InnerClassAccessFlags);
+						ic.InnerClassAccessFlags = SetVisibility (ic.InnerClassAccessFlags, null);
 					}
 
 					return;
 				}
 
 				Log.Debug ($"Kotlin: Hiding internal class {klass.ThisClass.Name.Value}");
-				klass.AccessFlags = ClassAccessFlags.Private;
+				klass.AccessFlags = SetVisibility (klass.AccessFlags, ClassAccessFlags.Private);
 
 				foreach (var ic in klass.InnerClasses) {
 					Log.Debug ($"Kotlin: Hiding nested internal type {ic.InnerClass.Name.Value}");
-					ic.InnerClassAccessFlags = ClassAccessFlags.Private;
+					ic.InnerClassAccessFlags = SetVisibility (ic.InnerClassAccessFlags, ClassAccessFlags.Private);
 				}
 
 				return;
 			}
 		}
 
-		static ClassAccessFlags SetPackagePrivate (ClassAccessFlags flags)
+		// Passing null for 'newVisibility' parameter means 'package-private'
+		static ClassAccessFlags SetVisibility (ClassAccessFlags existing, ClassAccessFlags? newVisibility)
 		{
-			// Package-private is stored as "no visibility flags"
-			flags = (flags ^ ClassAccessFlags.Public) & flags;
-			flags = (flags ^ ClassAccessFlags.Protected) & flags;
-			flags = (flags ^ ClassAccessFlags.Private) & flags;
+			// First we need to remove any existing visibility flags,
+			// without modifying other flags like Abstract
+			existing = (existing ^ ClassAccessFlags.Public) & existing;
+			existing = (existing ^ ClassAccessFlags.Protected) & existing;
+			existing = (existing ^ ClassAccessFlags.Private) & existing;
 
-			return flags;
+			// Package-private is stored as "no visibility flags", so only add flag if specified
+			if (newVisibility.HasValue)
+				existing |= newVisibility.Value;
+
+			return existing;
+		}
+
+		static MethodAccessFlags SetVisibility (MethodAccessFlags existing, MethodAccessFlags newVisibility)
+		{
+			// First we need to remove any existing visibility flags,
+			// without modifying other flags like Abstract
+			existing = (existing ^ MethodAccessFlags.Public) & existing;
+			existing = (existing ^ MethodAccessFlags.Protected) & existing;
+			existing = (existing ^ MethodAccessFlags.Private) & existing;
+			existing = (existing ^ MethodAccessFlags.Internal) & existing;
+
+			existing |= newVisibility;
+
+			return existing;
 		}
 
 		static void FixupJavaMethods (Methods methods)
@@ -132,7 +152,7 @@ namespace Xamarin.Android.Tools.Bytecode
 			// Hide constructor if it isn't Public/Protected
 			if (method.IsPubliclyVisible && !metadata.Flags.IsPubliclyVisible ()) {
 				Log.Debug ($"Kotlin: Hiding internal constructor {method.DeclaringType?.ThisClass.Name.Value} - {metadata.GetSignature ()}");
-				method.AccessFlags = MethodAccessFlags.Private;
+				method.AccessFlags = SetVisibility (method.AccessFlags, MethodAccessFlags.Internal);
 			}
 		}
 
@@ -144,7 +164,7 @@ namespace Xamarin.Android.Tools.Bytecode
 			// Hide function if it isn't Public/Protected
 			if (!metadata.Flags.IsPubliclyVisible ()) {
 				Log.Debug ($"Kotlin: Hiding internal method {method.DeclaringType?.ThisClass.Name.Value} - {metadata.GetSignature ()}");
-				method.AccessFlags = MethodAccessFlags.Private;
+				method.AccessFlags = SetVisibility (method.AccessFlags, MethodAccessFlags.Internal);
 				return;
 			}
 
@@ -190,12 +210,12 @@ namespace Xamarin.Android.Tools.Bytecode
 
 				if (getter?.IsPubliclyVisible == true) {
 					Log.Debug ($"Kotlin: Hiding internal getter method {getter.DeclaringType?.ThisClass.Name.Value} - {getter.Name}");
-					getter.AccessFlags = MethodAccessFlags.Private;
+					getter.AccessFlags = SetVisibility (getter.AccessFlags, MethodAccessFlags.Internal);
 				}
 
 				if (setter?.IsPubliclyVisible == true) {
 					Log.Debug ($"Kotlin: Hiding internal setter method {setter.DeclaringType?.ThisClass.Name.Value} - {setter.Name}");
-					setter.AccessFlags = MethodAccessFlags.Private;
+					setter.AccessFlags = SetVisibility (setter.AccessFlags, MethodAccessFlags.Internal);
 				}
 
 				return;
