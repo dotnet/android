@@ -188,7 +188,7 @@ namespace MonoDroid.Tuner
 			var instructions = methodPrefill.Body.Instructions;
 			instructions.Clear ();
 
-			instructions.Add (CreateLoadArraySizeOrOffsetInstruction (marshalTypes.Count));
+			instructions.Add (Extensions.CreateLoadArraySizeOrOffsetInstruction (marshalTypes.Count));
 			instructions.Add (Instruction.Create (OpCodes.Newobj, magicType.Module.ImportReference (genericMethodDictionaryCtor)));
 			instructions.Add (Instruction.Create (OpCodes.Stsfld, fieldTypesMap));
 
@@ -197,7 +197,7 @@ namespace MonoDroid.Tuner
 			foreach (var type in marshalTypes) {
 				instructions.Add (Instruction.Create (OpCodes.Ldsfld, fieldTypesMap));
 				instructions.Add (Instruction.Create (OpCodes.Ldstr, type.FullName.Replace ("/__<$>_jni_marshal_methods", "").Replace ("/","+")));
-				instructions.Add (CreateLoadArraySizeOrOffsetInstruction (idx++));
+				instructions.Add (Extensions.CreateLoadArraySizeOrOffsetInstruction (idx++));
 				instructions.Add (Instruction.Create (OpCodes.Callvirt, importedMethodSetItem));
 			}
 
@@ -265,40 +265,6 @@ namespace MonoDroid.Tuner
 			return true;
 		}
 
-		static Instruction CreateLoadArraySizeOrOffsetInstruction (int intValue)
-		{
-			if (intValue < 0)
-				throw new ArgumentException ($"{nameof (intValue)} cannot be negative");
-
-			if (intValue < 9) {
-				switch (intValue) {
-				case 0:
-					return Instruction.Create (OpCodes.Ldc_I4_0);
-				case 1:
-					return Instruction.Create (OpCodes.Ldc_I4_1);
-				case 2:
-					return Instruction.Create (OpCodes.Ldc_I4_2);
-				case 3:
-					return Instruction.Create (OpCodes.Ldc_I4_3);
-				case 4:
-					return Instruction.Create (OpCodes.Ldc_I4_4);
-				case 5:
-					return Instruction.Create (OpCodes.Ldc_I4_5);
-				case 6:
-					return Instruction.Create (OpCodes.Ldc_I4_6);
-				case 7:
-					return Instruction.Create (OpCodes.Ldc_I4_7);
-				case 8:
-					return Instruction.Create (OpCodes.Ldc_I4_8);
-				}
-			}
-
-			if (intValue < 128)
-				return Instruction.Create (OpCodes.Ldc_I4_S, (sbyte)intValue);
-
-			return Instruction.Create (OpCodes.Ldc_I4, intValue);
-		}
-
 		bool UpdateMarshalRegisterMethod (MethodDefinition method, HashSet<string> markedMethods)
 		{
 			var instructions = method.Body.Instructions;
@@ -310,7 +276,7 @@ namespace MonoDroid.Tuner
 				if (!arraySizeUpdated && idx + 1 < instructions.Count) {
 					int length;
 					if (IsLdcI4 (instructions [idx++], out length) && instructions [idx].OpCode == OpCodes.Newarr) {
-						instructions [idx - 1] = CreateLoadArraySizeOrOffsetInstruction (markedMethods.Count);
+						instructions [idx - 1] = Extensions.CreateLoadArraySizeOrOffsetInstruction (markedMethods.Count);
 						idx++;
 						arraySizeUpdated = true;
 						continue;
@@ -351,7 +317,7 @@ namespace MonoDroid.Tuner
 						continue;
 
 					if (markedMethods.Contains (mr.Name)) {
-						instructions [offsetIdx] = CreateLoadArraySizeOrOffsetInstruction (arrayOffset++);
+						instructions [offsetIdx] = Extensions.CreateLoadArraySizeOrOffsetInstruction (arrayOffset++);
 						continue;
 					}
 
@@ -436,7 +402,7 @@ namespace MonoDroid.Tuner
 			foreach (MethodReference method in type.Methods)
 				MarkMethod (method);
 		}
-		
+
 		private void PreserveRegisteredMethod (TypeDefinition type, string member)
 		{
 			var type_ptr = type;
