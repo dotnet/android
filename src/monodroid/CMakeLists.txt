@@ -5,8 +5,15 @@ cmake_minimum_required(VERSION 3.18.1)
 #
 include("../../build-tools/cmake/xa_common.cmake")
 
+#
+# Read product version
+#
+file(STRINGS "../../Directory.Build.props" XA_PRODUCT_VERSION_XML REGEX "^[ \t]*<ProductVersion>(.*)</ProductVersion>")
+string(REGEX REPLACE "^[ \t]*<ProductVersion>(.*)</ProductVersion>" "\\1" XA_VERSION "${XA_PRODUCT_VERSION_XML}")
+
 project(
   monodroid
+  VERSION ${XA_VERSION}
   DESCRIPTION "Xamarin.Android native runtime"
   HOMEPAGE_URL "https://github.com/xamarin/xamarin-android"
   LANGUAGES CXX C
@@ -196,6 +203,7 @@ xa_macos_prepare_arm64()
 
 # Compiler defines
 
+add_compile_definitions(XA_VERSION="${XA_VERSION}")
 add_compile_definitions(DHAVE_CONFIG_H)
 add_compile_definitions(_REENTRANT)
 add_compile_definitions(JI_DLL_EXPORT)
