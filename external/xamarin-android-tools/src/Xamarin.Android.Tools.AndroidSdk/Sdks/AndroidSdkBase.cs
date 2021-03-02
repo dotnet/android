@@ -138,7 +138,7 @@ namespace Xamarin.Android.Tools
 		protected IEnumerable<string> GetSdkFromEnvironmentVariables ()
 		{
 			foreach (string envVar in AndroidSdkEnvVars) {
-				string ev = Environment.GetEnvironmentVariable (envVar);
+				var ev = Environment.GetEnvironmentVariable (envVar);
 				if (String.IsNullOrEmpty (ev)) {
 					continue;
 				}
