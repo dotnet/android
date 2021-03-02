@@ -16,7 +16,6 @@
       "kind": "sdk",
       "version": "@SDK_PACK_VERSION@",
       "alias-to": {
-        "linux-x64": "Microsoft.Android.Sdk.linux-x64",
         "osx-x64": "Microsoft.Android.Sdk.osx-x64",
         "win-x64": "Microsoft.Android.Sdk.win-x64",
         "linux-x64": "Microsoft.Android.Sdk.linux-x64"

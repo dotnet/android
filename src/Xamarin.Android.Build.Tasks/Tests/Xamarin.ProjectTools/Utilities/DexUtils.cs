@@ -110,7 +110,7 @@ namespace Xamarin.ProjectTools
 				if (l == TraceLevel.Error) {
 					throw new Exception (m);
 				}
-			}, androidSdkDirectory);
+			}, androidSdkDirectory, javaSdkPath: AndroidSdkResolver.GetJavaSdkPath ());
 			var buildToolsPath = androidSdk.GetBuildToolsPaths ().FirstOrDefault ();
 			if (string.IsNullOrEmpty (buildToolsPath)) {
 				throw new Exception ($"Unable to find build-tools in `{androidSdkDirectory}`!");

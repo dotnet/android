@@ -451,6 +451,11 @@ stages:
       parameters:
         version: $(DotNetCoreVersion)
 
+    - task: NuGetAuthenticate@0
+      displayName: authenticate with azure artifacts
+      inputs:
+        forceReinstallCredentialProvider: true
+
     - script: >
         sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF &&
         echo "deb https://download.mono-project.com/repo/ubuntu stable-focal main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list &&
@@ -461,11 +466,6 @@ stages:
     - task: NuGetToolInstaller@0
       inputs:
         versionSpec: 5.x
-
-    - task: NuGetAuthenticate@0
-      displayName: authenticate with azure artifacts
-      inputs:
-        forceReinstallCredentialProvider: true
 
     - script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
@@ -498,19 +498,25 @@ stages:
         artifactName: nupkg-linux
         targetPath: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nupkg-linux
 
+    - script: dotnet tool update apkdiff -g
+      displayName: install apkdiff dotnet tool
+      continueOnError: true
+
     - template: yaml-templates/run-nunit-tests.yaml
       parameters:
         useDotNet: true
         useHostedDotNetPath: false
         testRunTitle: Xamarin.Android.Build.Tests - Linux .NET 6 Smoke Tests
         testAssembly: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Test$(XA.Build.Configuration)/netcoreapp3.1/Xamarin.Android.Build.Tests.dll
-        dotNetTestExtraArgs: --filter "TestCategory = SmokeTests $(DotNetNUnitCategories)"
+        dotNetTestExtraArgs: --filter CheckSignApk  # TODO: Add more tests (e.g. "TestCategory = SmokeTests $(DotNetNUnitCategories)" )
         testResultsFile: TestResult-NET6SmokeMSBuildTests-Linux-$(XA.Build.Configuration).xml
 
     - template: yaml-templates/upload-results.yaml
       parameters:
         solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
         artifactName: Build Results - Linux
+
+    - template: yaml-templates\fail-on-issue.yaml
 
 - stage: smoke_tests
   displayName: Smoke Tests

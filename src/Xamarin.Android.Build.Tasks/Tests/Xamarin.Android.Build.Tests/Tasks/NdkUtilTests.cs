@@ -33,7 +33,7 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 			using (var builder = new Builder ()) {
 				var ndkDir = AndroidNdkPath;
 				var sdkDir = AndroidSdkPath;
-				MonoAndroidHelper.AndroidSdk = new AndroidSdkInfo ((arg1, arg2) => { }, sdkDir, ndkDir);
+				MonoAndroidHelper.AndroidSdk = new AndroidSdkInfo ((arg1, arg2) => { }, sdkDir, ndkDir, AndroidSdkResolver.GetJavaSdkPath ());
 				NdkUtil.Init (log, ndkDir);
 				var platforms = NdkUtil.GetSupportedPlatforms (log, ndkDir);
 				Assert.AreNotEqual (0, platforms.Count (), "No platforms found");

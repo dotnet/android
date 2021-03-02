@@ -32,9 +32,9 @@ namespace Xamarin.ProjectTools
 
 			var sdkPath = AndroidSdkResolver.GetAndroidSdkPath ();
 			var ndkPath = AndroidSdkResolver.GetAndroidNdkPath ();
-			var androidSdk = new AndroidSdkInfo (logger, androidSdkPath: sdkPath, androidNdkPath: ndkPath);
-			JavacFullPath = Path.Combine (androidSdk.JavaSdkPath, "bin", "javac");
-			JarFullPath = Path.Combine (androidSdk.JavaSdkPath, "bin", "jar");
+			var jdkPath = AndroidSdkResolver.GetJavaSdkPath ();
+			JavacFullPath = Path.Combine (jdkPath, "bin", "javac");
+			JarFullPath = Path.Combine (jdkPath, "bin", "jar");
 		}
 
 		public override byte [] Build ()
