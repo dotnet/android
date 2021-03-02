@@ -1631,10 +1631,10 @@
       "Size": 341040
     },
     "classes.dex": {
-      "Size": 3454264
+      "Size": 3455212
     },
     "assemblies/UnnamedProject.dll": {
-      "Size": 116878
+      "Size": 116885
     },
     "assemblies/FormsViewGroup.dll": {
       "Size": 7211
@@ -1658,7 +1658,7 @@
       "Size": 131928
     },
     "assemblies/Xamarin.AndroidX.DrawerLayout.dll": {
-      "Size": 15425
+      "Size": 15426
     },
     "assemblies/Xamarin.AndroidX.Fragment.dll": {
       "Size": 43133
@@ -1712,10 +1712,10 @@
       "Size": 186658
     },
     "assemblies/Java.Interop.dll": {
-      "Size": 76477
+      "Size": 76345
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 588522
+      "Size": 588526
     },
     "assemblies/mscorlib.dll": {
       "Size": 915451
@@ -1739,7 +1739,7 @@
       "Size": 26591
     },
     "assemblies/Mono.Security.dll": {
-      "Size": 68487
+      "Size": 68488
     },
     "lib/arm64-v8a/libxamarin-app.so": {
       "Size": 139944

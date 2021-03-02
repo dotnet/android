@@ -29,16 +29,16 @@
       "Size": 316848
     },
     "assemblies/UnnamedProject.dll": {
-      "Size": 2863
+      "Size": 2873
     },
     "assemblies/Java.Interop.dll": {
-      "Size": 75279
+      "Size": 75153
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 264424
+      "Size": 264429
     },
     "assemblies/mscorlib.dll": {
-      "Size": 769789
+      "Size": 769825
     },
     "assemblies/System.Core.dll": {
       "Size": 28191
