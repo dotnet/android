@@ -248,7 +248,7 @@ namespace Xamarin.Android.Build.Tests
 				return RunProcessWithExitCode ("apkdiff" + ext, args);
 			} catch (System.ComponentModel.Win32Exception) {
 				// apkdiff's location might not be in the $PATH, try known location
-				var profileDir = Environment.GetEnvironmentVariable ("USERPROFILE");
+				var profileDir = Environment.GetFolderPath (Environment.SpecialFolder.UserProfile);
 
 				return RunProcessWithExitCode (Path.Combine (profileDir, ".dotnet", "tools", "apkdiff" + ext), args);
 			}
