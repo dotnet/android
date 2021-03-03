@@ -74,7 +74,6 @@ namespace Xamarin.Android.Tasks
 		{
 			// OS X:    $prefix/lib/xamarin.android/xbuild/Xamarin/Android
 			// Windows: %ProgramFiles(x86)%\MSBuild\Xamarin\Android
-			// Linux: !?
 			if (string.IsNullOrEmpty (MonoAndroidToolsPath)) {
 				MonoAndroidToolsPath  = Path.GetDirectoryName (typeof (ResolveSdks).Assembly.Location);
 			}

@@ -96,7 +96,6 @@
       DependsOnTargets="_BuildAndroidRuntimesInputs"
       Inputs="@(_BuildAndroidRuntimesInputs)"
       Outputs="@(_BuildAndroidRuntimesOutputs)">
-    <Message Importance="High" Text="wdir: $(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-Debug" />
     <Exec
         Command="$(NinjaPath) -v"
         WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-Debug"

@@ -2,7 +2,7 @@
 
 V             ?= 0
 prefix         = /usr/local
-CONFIGURATION ?= Release
+CONFIGURATION ?= Debug
 RUNTIME       := $(shell which mono64 2> /dev/null && echo mono64 || echo mono) --debug=casts
 SOLUTION       = Xamarin.Android.sln
 TEST_TARGETS   = build-tools/scripts/RunTests.targets
@@ -107,9 +107,6 @@ all-tests::
 
 pack-dotnet::
 	$(call MSBUILD_BINLOG,pack-dotnet,$(_SLN_BUILD)) $(MSBUILD_FLAGS) Xamarin.Android.sln /t:PackDotNet
-
-customstep::
-	$(call MSBUILD_BINLOG,pack-customstep,$(_SLN_BUILD)) $(MSBUILD_FLAGS) build-tools/create-packs/Microsoft.Android.Sdk.proj /t:BuildILLinkCustomStep,ExtractWorkloadPacks
 
 install::
 	@if [ ! -d "bin/$(CONFIGURATION)" ]; then \

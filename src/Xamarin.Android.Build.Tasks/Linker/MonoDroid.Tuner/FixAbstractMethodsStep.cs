@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -44,7 +44,6 @@ namespace MonoDroid.Tuner
 #if !NET5_LINKER
 				Context.SafeReadSymbols (assembly);
 #endif
-				// TODO: fix this.
 				AssemblyAction action = Annotations.HasAction (assembly) ? Annotations.GetAction (assembly) : AssemblyAction.Skip;
 				if (action == AssemblyAction.Skip || action == AssemblyAction.Copy || action == AssemblyAction.Delete)
 					Annotations.SetAction (assembly, AssemblyAction.Save);
@@ -79,7 +78,6 @@ namespace MonoDroid.Tuner
 		}
 #endif
 
-		// TODO: dead code?
 		internal bool FixAbstractMethods (AssemblyDefinition assembly)
 		{
 			return !IsProductOrSdkAssembly (assembly) && FixAbstractMethodsUnconditional (assembly);

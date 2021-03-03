@@ -22,7 +22,6 @@ namespace Microsoft.Android.Sdk.ILLink
 
 		void ProcessType (TypeDefinition type)
 		{
-			// TODO: is there a way for this to happen outside of the Mono.Android assemblies?
 			if (!IsActiveFor (type.Module.Assembly))
 				return;
 

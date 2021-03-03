@@ -101,12 +101,6 @@ namespace Microsoft.Android.Sdk.ILLink
 		}
 #endif
 
-		// TODO: dead code?
-		internal bool FixAbstractMethods (AssemblyDefinition assembly)
-		{
-			return !IsProductOrSdkAssembly (assembly) && FixAbstractMethodsUnconditional (assembly);
-		}
-
 		bool FixAbstractMethodsUnconditional (AssemblyDefinition assembly)
 		{
 			if (!assembly.MainModule.HasTypeReference ("Java.Lang.Object"))
