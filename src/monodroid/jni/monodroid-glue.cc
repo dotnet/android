@@ -1748,7 +1748,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	if (runtimeNativeLibDir != nullptr) {
 		jstr = runtimeNativeLibDir;
 		androidSystem.set_runtime_libdir (strdup (jstr.get_cstr ()));
-		log_warn (LOG_DEFAULT, "Using runtime path: %s", androidSystem.get_runtime_libdir ());
+		log_info (LOG_DEFAULT, "Using runtime path: %s", androidSystem.get_runtime_libdir ());
 	}
 
 	androidSystem.setup_process_args (runtimeApks);
@@ -1864,6 +1864,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 		                                 reinterpret_cast<const void*> (monodroid_Mono_UnhandledException_internal));
 	}
 
+	log_info (LOG_DEFAULT, "Xamarin.Android version: %s; MonoVM version: %s", XA_VERSION, mono_get_runtime_build_info ());
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
 		total_time.mark_end ();
 
