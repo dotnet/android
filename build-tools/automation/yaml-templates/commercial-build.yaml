@@ -20,14 +20,6 @@ steps:
   inputs:
     forceReinstallCredentialProvider: true
 
-- template: install-certificates.yml@yaml
-  parameters:
-    DeveloperIdApplication: $(developer-id-application)
-    DeveloperIdInstaller: $(developer-id-installer)
-    IphoneDeveloper: $(iphone-developer)
-    MacDeveloper: $(mac-developer)
-    HostedMacKeychainPassword: $(AzDO-OnPrem-KeychainPass)
-
 - task: provisionator@2
   displayName: Install Xcode
   inputs:
@@ -88,10 +80,37 @@ steps:
   displayName: upload nupkgs
   inputs:
     artifactName: $(NuGetArtifactName)
-    targetPath:  ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
+    targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
 
-# Create and upload legacy installers
-- script: make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)
+# Create, sign, notarize, and upload legacy installers to artifacts and blob storage. The .vsix needs to be signed on Windows, which runs in separate job.
+- template: install-microbuild-tooling.yaml
+  parameters:
+    condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
+
+# Restore needs to be executed first or MicroBuild targets won't be imported in time
+- task: MSBuild@1
+  displayName: msbuild /t:Restore create-pkg.proj
+  inputs:
+    solution: ${{ parameters.xaSourcePath }}/build-tools/create-pkg/create-pkg.csproj
+    configuration: $(XA.Build.Configuration)
+    msbuildArguments: /t:Restore /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/restore-create-pkg.binlog
+
+- task: MSBuild@1
+  displayName: msbuild /t:Restore sign-pkg-content.proj
+  inputs:
+    solution: ${{ parameters.xaSourcePath }}/build-tools/installers/sign-pkg-content.proj
+    configuration: $(XA.Build.Configuration)
+    msbuildArguments: /t:Restore /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/restore-sign-pkg-content.binlog
+
+- task: MSBuild@1
+  displayName: sign and harden legacy and .NET 6 .pkg content
+  inputs:
+    solution: ${{ parameters.xaSourcePath }}/build-tools/installers/sign-pkg-content.proj
+    configuration: $(XA.Build.Configuration)
+    msbuildArguments: /p:SignType=$(MicroBuildSignType) /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/restore-sign-pkg-content.binlog
+  condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
+
+- script: make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration) _MSBUILD_ARGS='/p:SignType=$(MicroBuildSignType) /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins'
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make create-installers
 
@@ -108,15 +127,40 @@ steps:
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: create updateinfo file
 
+
+- script: >
+    cd $(System.DefaultWorkingDirectory)/release-scripts &&
+    pwsh notarize.ps1 -FolderForApps ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
+  failOnStderr: true
+  displayName: Notarize PKG
+  condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
+
+- powershell: |
+    $pkg = Get-ChildItem -Path "${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)/*" -Include *.pkg -File
+    if (![System.IO.File]::Exists($pkg)) {
+        throw [System.IO.FileNotFoundException] "Pkg File not found in ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)"
+    }
+    xcrun stapler validate $pkg
+  displayName: validate notarized pkg
+  condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
+
+- template: upload-to-storage.yml@yaml
+  parameters:
+    BuildPackages: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
+    AzureContainerName: $(Azure.Container.Name)
+    AzureUploadLocation: $(Build.DefinitionName)/public/$(Build.BuildId)/$(Build.SourceBranchName)/$(Build.SourceVersion)
+    SourceDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
+    condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
+
+- template: remove-microbuild-tooling.yaml
+  parameters:
+    condition: and(succeededOrFailed(), eq(variables['MicroBuildSignType'], 'Real'))
+
 - task: PublishPipelineArtifact@1
   displayName: upload installers
   inputs:
     artifactName: $(InstallerArtifactName)
     targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
-
-- template: uninstall-certificates/v1.yml@yaml
-  parameters:
-    HostedMacKeychainPassword: $(AzDO-OnPrem-KeychainPass)
 
 - template: upload-results.yaml
   parameters:

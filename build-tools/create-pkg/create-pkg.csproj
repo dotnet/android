@@ -11,6 +11,13 @@
   <Import Project="..\..\Configuration.props" />
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(MicroBuildCoreVersion)">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="distribution.xml.in" />
   </ItemGroup>
   <Import Project="create-pkg.targets" />
