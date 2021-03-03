@@ -104,9 +104,9 @@ namespace xamarin::android::internal
 #if !defined (NET6)
 			// HACK! See below
 			return get_mono_aot_mode () == MonoAotMode::MONO_AOT_MODE_LAST && is_aot_mode_last_really_interpreter_mode ();
-#else
+#else   // defined (NET6)
 			return get_mono_aot_mode () == MonoAotMode::MONO_AOT_MODE_INTERP_ONLY;
-#endif
+#endif  // !defined (NET6)
 		}
 
 		// Hack, see comment for `aot_mode_last_is_interpreter` at the bottom of the class declaration
@@ -114,9 +114,9 @@ namespace xamarin::android::internal
 		{
 #if !defined(NET6)
 			return aot_mode_last_is_interpreter;
-#else
+#else   // defined (NET6)
 			return false;
-#endif
+#endif  // !defined (NET6)
 		}
 
 		void set_running_in_emulator (bool yesno)
@@ -170,7 +170,7 @@ namespace xamarin::android::internal
 		// See also: https://github.com/mono/mono/issues/18893
 		//
 		bool aot_mode_last_is_interpreter = false;
-#endif
+#endif  // !defined (NET6)
 	};
 }
 #endif // !__ANDROID_SYSTEM_H
