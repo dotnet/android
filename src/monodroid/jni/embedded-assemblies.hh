@@ -6,6 +6,10 @@
 #include <mono/metadata/object.h>
 #include <mono/metadata/assembly.h>
 
+#if defined (NET6)
+#include <mono/metadata/mono-private-unstable.h>
+#endif
+
 #include "strings.hh"
 #include "xamarin-app.hh"
 
@@ -72,7 +76,11 @@ namespace xamarin::android::internal {
 		MonoReflectionType* typemap_java_to_managed (const char *java_type_name);
 		size_t register_from (const char *apk_file, monodroid_should_register should_register);
 		void gather_bundled_assemblies_from_apk (const char* apk, monodroid_should_register should_register);
+#if defined (NET6) && defined (NET6_ALC_WORKS)
+		MonoAssembly* open_from_bundles (MonoAssemblyName* aname, MonoAssemblyLoadContextGCHandle alc_gchandle, MonoError *error);
+#else // def NET6 && def NET6_ALC_WORKS
 		MonoAssembly* open_from_bundles (MonoAssemblyName* aname, bool ref_only);
+#endif // !(def NET6 && def NET6_ALC_WORKS)
 #if defined (DEBUG) || !defined (ANDROID)
 		template<typename H>
 		bool typemap_read_header (int dir_fd, const char *file_type, const char *dir_path, const char *file_path, uint32_t expected_magic, H &header, size_t &file_size, int &fd);
@@ -86,9 +94,12 @@ namespace xamarin::android::internal {
 		bool register_debug_symbols_for_assembly (const char *entry_name, MonoBundledAssembly *assembly, const mono_byte *debug_contents, int debug_size);
 
 		static md_mmap_info md_mmap_apk_file (int fd, uint32_t offset, uint32_t size, const char* filename, const char* apk);
-
+#if defined (NET6) && defined (NET6_ALC_WORKS)
+		static MonoAssembly* open_from_bundles (MonoAssemblyLoadContextGCHandle alc_gchandle, MonoAssemblyName *aname, char **assemblies_path, void *user_data, MonoError *error);
+#else // def NET6 && def NET6_ALC_WORKS
 		static MonoAssembly* open_from_bundles_full (MonoAssemblyName *aname, char **assemblies_path, void *user_data);
 		static MonoAssembly* open_from_bundles_refonly (MonoAssemblyName *aname, char **assemblies_path, void *user_data);
+#endif // !(def NET6 && def NET6_ALC_WORKS)
 		static void get_assembly_data (const MonoBundledAssembly *e, char*& assembly_data, uint32_t& assembly_data_size);
 
 		void zip_load_entries (int fd, const char *apk_name, monodroid_should_register should_register);
@@ -132,5 +143,8 @@ namespace xamarin::android::internal {
 	};
 }
 
+#if !defined (NET6)
 MONO_API int monodroid_embedded_assemblies_set_assemblies_prefix (const char *prefix);
+#endif // ndef NET6
+
 #endif /* INC_MONODROID_EMBEDDED_ASSEMBLIES_H */

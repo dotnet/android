@@ -11,7 +11,7 @@ projects that use the Microsoft.Android framework in .NET 5.
 
   <PropertyGroup>
     <AndroidRID Condition=" '$(AndroidRID)' == '' ">android-arm64</AndroidRID>
-    <AndroidABI Condition=" '$(AndroidABI)' == '' ">arm64-v8a</AndroidABI>
+    <AndroidABI Condition=" '$(AndroidABI)' == '' ">arm64-v8a-net6</AndroidABI>
     <PackageId>Microsoft.Android.Runtime.$(AndroidRID)</PackageId>
     <Description>Microsoft.Android runtime components. Please do not reference directly.</Description>
     <_AndroidRuntimePackAssemblyPath>runtimes\$(AndroidRID)\lib\net6.0</_AndroidRuntimePackAssemblyPath>
@@ -39,7 +39,6 @@ projects that use the Microsoft.Android framework in .NET 5.
       <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETOutputDir)Mono.Android.Export.dll" />
       <_AndroidRuntimePackAssets Include="$(XAInstallPrefix)xbuild\Xamarin\Android\lib\$(AndroidABI)\libmono-android.debug.so" />
       <_AndroidRuntimePackAssets Include="$(XAInstallPrefix)xbuild\Xamarin\Android\lib\$(AndroidABI)\libmono-android.release.so" />
-      <_AndroidRuntimePackAssets Include="$(XAInstallPrefix)xbuild\Xamarin\Android\lib\$(AndroidABI)\libxa-internal-api.so" />
       <_AndroidRuntimePackAssets Include="$(XAInstallPrefix)xbuild\Xamarin\Android\lib\$(AndroidABI)\libxamarin-debug-app-helper.so" />
       <FrameworkListFileClass Include="@(_AndroidRuntimePackAssemblies->'%(Filename)%(Extension)')" Profile="Android" />
       <FrameworkListFileClass Include="@(_AndroidRuntimePackAssets->'%(Filename)%(Extension)')" Profile="Android" />

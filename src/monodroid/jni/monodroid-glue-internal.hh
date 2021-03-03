@@ -2,6 +2,7 @@
 #ifndef __MONODROID_GLUE_INTERNAL_H
 #define __MONODROID_GLUE_INTERNAL_H
 
+#include <string>
 #include <jni.h>
 #include "android-system.hh"
 #include "osbridge.hh"
@@ -10,10 +11,65 @@
 #include <mono/utils/mono-counters.h>
 #include <mono/metadata/profiler.h>
 
+#if defined (NET6)
+// NDEBUG causes robin_map.h not to include <iostream> which, in turn, prevents indirect inclusion of <mutex>. <mutex>
+// conflicts with our std::mutex definition in cppcompat.hh
+#if !defined (NDEBUG)
+#define NDEBUG
+#define NDEBUG_UNDEFINE
+#endif
+
+// hush some compiler warnings
+#if defined (__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-parameter"
+#endif // __clang__
+
+#include <tsl/robin_map.h>
+
+#if defined (__clang__)
+#pragma clang diagnostic pop
+#endif // __clang__
+
+#if defined (NDEBUG_UNDEFINE)
+#undef NDEBUG
+#undef NDEBUG_UNDEFINE
+#endif
+
+#include <mono/jit/mono-private-unstable.h>
+#include <mono/metadata/mono-private-unstable.h>
+
+// This should be defined in the public Mono headers
+typedef void * (*PInvokeOverrideFn) (const char *libraryName, const char *entrypointName);
+#endif
+
 namespace xamarin::android::internal
 {
 	class MonodroidRuntime
 	{
+#if defined (NET6)
+		using pinvoke_api_map = tsl::robin_map<
+			std::string,
+			void*,
+			std::hash<std::string>,
+			std::equal_to<std::string>,
+			std::allocator<std::pair<std::string, void*>>,
+			true
+		>;
+
+		using pinvoke_api_map_ptr = pinvoke_api_map*;
+		using pinvoke_library_map = tsl::robin_map<
+			std::string,
+			pinvoke_api_map_ptr,
+			std::hash<std::string>,
+			std::equal_to<std::string>,
+			std::allocator<std::pair<std::string, pinvoke_api_map_ptr>>,
+			true
+		>;
+
+		static constexpr pinvoke_library_map::size_type LIBRARY_MAP_INITIAL_BUCKET_COUNT = 1;
+#endif // def NET6
+
 #if defined (DEBUG) && !defined (WINDOWS)
 		struct RuntimeOptions {
 			bool debug = false;
@@ -61,6 +117,7 @@ namespace xamarin::android::internal
 #else
 		true;
 #endif
+
 #define MAKE_API_DSO_NAME(_ext_) "libxa-internal-api." # _ext_
 #if defined (WINDOWS)
 		static constexpr char API_DSO_NAME[] = MAKE_API_DSO_NAME (dll);
@@ -70,6 +127,12 @@ namespace xamarin::android::internal
 		static constexpr char API_DSO_NAME[] = MAKE_API_DSO_NAME (so);
 #endif  // defined(WINDOWS)
 	public:
+		static constexpr bool is_net6 =
+#if NET6
+		true;
+#else // def NET6
+		false;
+#endif // ndef NET6
 		static constexpr int XA_LOG_COUNTERS = MONO_COUNTER_JIT | MONO_COUNTER_METADATA | MONO_COUNTER_GC | MONO_COUNTER_GENERICS | MONO_COUNTER_INTERP;
 
 	public:
@@ -77,10 +140,13 @@ namespace xamarin::android::internal
 		void Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
 		                                             jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader,
 		                                             jobjectArray assembliesJava, jint apiLevel, jboolean isEmulator);
+#if !defined (ANDROID)
 		jint Java_mono_android_Runtime_createNewContextWithData (JNIEnv *env, jclass klass, jobjectArray runtimeApksJava, jobjectArray assembliesJava,
 		                                                         jobjectArray assembliesBytes, jobjectArray assembliesPaths, jobject loader, jboolean force_preload_assemblies);
 		void Java_mono_android_Runtime_switchToContext (JNIEnv *env, jint contextID);
 		void Java_mono_android_Runtime_destroyContexts (JNIEnv *env, jintArray array);
+		void shutdown_android_runtime (MonoDomain *domain);
+#endif
 		jint Java_JNI_OnLoad (JavaVM *vm, void *reserved);
 
 		int get_android_api_level () const
@@ -139,10 +205,18 @@ namespace xamarin::android::internal
 #if defined (WINDOWS) || defined (APPLE_OS_X)
 		static const char* get_my_location (bool remove_file_name = true);
 #endif  // defined(WINDOWS) || defined(APPLE_OS_X)
+#if defined (NET6)
+		static void* load_library_entry (std::string const& library_name, std::string const& entrypoint_name, pinvoke_api_map_ptr api_map);
+		static void* fetch_or_create_pinvoke_map_entry (std::string const& library_name, std::string const& entrypoint_name, pinvoke_api_map_ptr api_map, bool need_lock);
+		static void* monodroid_pinvoke_override (const char *library_name, const char *entrypoint_name);
+		static void* monodroid_dlopen (const char *name, int flags, char **err);
+#endif // def NET6
 		static void* monodroid_dlopen (const char *name, int flags, char **err, void *user_data);
 		static void* monodroid_dlsym (void *handle, const char *name, char **err, void *user_data);
 		static void* monodroid_dlopen_log_and_return (void *handle, char **err, const char *full_name, bool free_memory, bool need_api_init = false);
+#if !defined (NET6)
 		static void  init_internal_api_dso (void *handle);
+#endif // ndef NET6
 		int LocalRefsAreIndirect (JNIEnv *env, jclass runtimeClass, int version);
 		void create_xdg_directory (jstring_wrapper& home, size_t home_len, const char *relativePath, size_t relative_path_len, const char *environmentVariableName);
 		void create_xdg_directories_and_environment (jstring_wrapper &homeDir);
@@ -168,7 +242,6 @@ namespace xamarin::android::internal
 		}
 
 		MonoClass* get_android_runtime_class (MonoDomain *domain);
-		void shutdown_android_runtime (MonoDomain *domain);
 		MonoDomain*	create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks, bool is_root_domain);
 		MonoDomain* create_and_initialize_domain (JNIEnv* env, jclass runtimeClass, jstring_array_wrapper &runtimeApks,
 		                                          jstring_array_wrapper &assemblies, jobjectArray assembliesBytes, jstring_array_wrapper &assembliesPaths,
@@ -227,8 +300,14 @@ namespace xamarin::android::internal
 		 */
 		int                 current_context_id = -1;
 
+#if defined (NET6)
+		static std::mutex             pinvoke_map_write_lock;
+		static pinvoke_api_map        xa_pinvoke_map;
+		static pinvoke_library_map    other_pinvoke_map;
+#else // def NET6
 		static std::mutex   api_init_lock;
 		static void        *api_dso_handle;
+#endif // !def NET6
 	};
 }
 #endif
