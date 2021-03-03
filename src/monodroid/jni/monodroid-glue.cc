@@ -1807,6 +1807,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	MonoAotMode mode = MonoAotMode::MONO_AOT_MODE_NONE;
 	if (androidSystem.is_mono_aot_enabled ()) {
 		mode = androidSystem.get_mono_aot_mode ();
+#if !defined (NET6)
 		if (mode == MonoAotMode::MONO_AOT_MODE_LAST) {
 			// Hack. See comments in android-system.hh
 			if (!androidSystem.is_interpreter_enabled ()) {
@@ -1821,6 +1822,13 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 				log_info (LOG_DEFAULT, "Enabling Mono Interpreter");
 			}
 		}
+#else   // defined (NET6)
+		if (mode != MonoAotMode::MONO_AOT_MODE_INTERP_ONLY) {
+			log_info (LOG_DEFAULT, "Enabling AOT mode in Mono");
+		} else {
+			log_info (LOG_DEFAULT, "Enabling Mono Interpreter");
+		}
+#endif  // !defined (NET6)
 	}
 	mono_jit_set_aot_mode (mode);
 
