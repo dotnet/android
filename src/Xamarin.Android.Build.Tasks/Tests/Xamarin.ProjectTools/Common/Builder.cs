@@ -391,7 +391,7 @@ namespace Xamarin.ProjectTools
 							stdout.Set ();
 					};
 					p.StartInfo = psi;
-					Console.WriteLine ($"{psi.FileName} {psi.Arguments}");
+					Console.WriteLine ($"{psi.FileName} {psi.Arguments} {string.Join (" ", File.ReadAllLines (responseFile))}");
 					p.Start ();
 					p.BeginOutputReadLine ();
 					p.BeginErrorReadLine ();
