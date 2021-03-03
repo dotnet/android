@@ -801,10 +801,14 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 	if (mono_mkbundle_initialize_mono_api) {
 		BundleMonoAPI bundle_mono_api = {
 			.mono_register_bundled_assemblies = mono_register_bundled_assemblies,
+#if !defined(NET6)
 			.mono_register_config_for_assembly = mono_register_config_for_assembly,
+#endif // ndef NET6
 			.mono_jit_set_aot_mode = reinterpret_cast<void (*)(int)>(mono_jit_set_aot_mode),
 			.mono_aot_register_module = mono_aot_register_module,
+#if !defined(NET6)
 			.mono_config_parse_memory = mono_config_parse_memory,
+#endif // ndef NET6
 			.mono_register_machine_config = reinterpret_cast<void (*)(const char *)>(mono_register_machine_config),
 		};
 
@@ -813,7 +817,14 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 	}
 
 	if (mono_mkbundle_init)
-		mono_mkbundle_init (mono_register_bundled_assemblies, mono_register_config_for_assembly, reinterpret_cast<void (*)(int)>(mono_jit_set_aot_mode));
+		mono_mkbundle_init (
+			mono_register_bundled_assemblies,
+#if defined(NET6)
+			nullptr,
+#else
+			mono_register_config_for_assembly,
+#endif // def NET6
+			reinterpret_cast<void (*)(int)>(mono_jit_set_aot_mode));
 
 	/*
 	 * Assembly preload hooks are invoked in _reverse_ registration order.
