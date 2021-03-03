@@ -45,10 +45,10 @@ namespace Microsoft.Android.Sdk.ILLink
 			if (Context.TryGetCustomData ("XATargetFrameworkDirectories", out tfmPaths))
 				Xamarin.Android.Tasks.MonoAndroidHelper.TargetFrameworkDirectories = tfmPaths.Split (new char [] { ';' });
 
-			var subSteps = new SubStepDispatcher ();
-			subSteps.Add (new ApplyPreserveAttribute ());
-			subSteps.Add (new PreserveExportedTypes ());
-			MarkHandlers.Add (subSteps);
+			MarkHandlers.Add (new SubStepDispatcher (new List<ISubStep> () {
+				new ApplyPreserveAttribute (),
+				new PreserveExportedTypes ()
+			}));
 
 			MarkHandlers.Add (new MarkJavaObjects ());
 			MarkHandlers.Add (new PreserveJavaExceptions ());
