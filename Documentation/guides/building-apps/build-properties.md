@@ -488,6 +488,22 @@ deprecated API's to work.
 
 **Experimental**. This property was added in Xamarin.Android 6.1.
 
+## AndroidFinalVersionCode
+
+This is a string property which represents the final `android:versionCode` which
+was written to the `AndroidManifest.xml`.
+This is a read only property and is for information only.
+
+Added in Xamarin.Android 11.3.
+
+## AndroidFinalVersionName
+
+This is a string property which represents the final `android:versionName` which
+was written to the `AndroidManifest.xml`.
+This is a read only property and is for information only.
+
+Added in Xamarin.Android 11.3.
+
 ## AndroidGenerateJniMarshalMethods
 
 A bool property which
