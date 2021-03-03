@@ -1822,13 +1822,13 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 				log_info (LOG_DEFAULT, "Enabling Mono Interpreter");
 			}
 		}
-#else
+#else   // defined (NET6)
 		if (mode != MonoAotMode::MONO_AOT_MODE_INTERP_ONLY) {
 			log_info (LOG_DEFAULT, "Enabling AOT mode in Mono");
 		} else {
 			log_info (LOG_DEFAULT, "Enabling Mono Interpreter");
 		}
-#endif
+#endif  // !defined (NET6)
 	}
 	mono_jit_set_aot_mode (mode);
 
