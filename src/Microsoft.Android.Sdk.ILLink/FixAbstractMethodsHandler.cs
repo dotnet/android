@@ -9,12 +9,7 @@ using Java.Interop.Tools.Cecil;
 using Mono.Linker;
 using Mono.Linker.Steps;
 
-#if NET5_LINKER
 using Microsoft.Android.Sdk.ILLink;
-#else
-using Mono.Tuner;
-#endif
-
 
 namespace Microsoft.Android.Sdk.ILLink
 {
@@ -43,10 +38,6 @@ namespace Microsoft.Android.Sdk.ILLink
 			if (IsProductOrSdkAssembly (assembly))
 				return false;
 
-#if !NET5_LINKER
-			CheckAppDomainUsageUnconditional (assembly, (string msg) => Context.LogMessage (MessageImportance.High, msg));
-#endif
-
 			if (!assembly.MainModule.HasTypeReference ("Java.Lang.Object"))
 				return false;
 
@@ -66,9 +57,6 @@ namespace Microsoft.Android.Sdk.ILLink
 			if (!FixAbstractMethods (type))
 				return;
 
-#if !NET5_LINKER
-			Context.SafeReadSymbols (assembly);
-#endif
 			AssemblyAction action = Annotations.HasAction (assembly) ? Annotations.GetAction (assembly) : AssemblyAction.Skip;
 			if (action == AssemblyAction.Skip || action == AssemblyAction.Copy || action == AssemblyAction.Delete)
 				Annotations.SetAction (assembly, AssemblyAction.Save);
@@ -77,29 +65,6 @@ namespace Microsoft.Android.Sdk.ILLink
 			Annotations.SetPreserve (td, TypePreserve.Nothing);
 			Annotations.AddPreservedMethod (td, AbstractMethodErrorConstructor.Resolve ());
 		}
-
-#if !NET5_LINKER
-		internal void CheckAppDomainUsage (AssemblyDefinition assembly, Action<string> warn)
-		{
-			if (IsProductOrSdkAssembly (assembly))
-				return;
-
-			CheckAppDomainUsageUnconditional (assembly, warn);
-		}
-
-		void CheckAppDomainUsageUnconditional (AssemblyDefinition assembly, Action<string> warn)
-		{
-			if (!assembly.MainModule.HasTypeReference ("System.AppDomain"))
-				return;
-
-			foreach (var mr in assembly.MainModule.GetMemberReferences ()) {
-				if (mr.ToString ().Contains ("System.AppDomain System.AppDomain::CreateDomain")) {
-					warn (string.Format ("warning XA2000: " + Xamarin.Android.Tasks.Properties.Resources.XA2000, assembly));
-					break;
-				}
-			}
-		}
-#endif
 
 		bool FixAbstractMethodsUnconditional (AssemblyDefinition assembly)
 		{
@@ -322,15 +287,7 @@ namespace Microsoft.Android.Sdk.ILLink
 
 		protected virtual AssemblyDefinition GetMonoAndroidAssembly ()
 		{
-#if !NET5_LINKER
-			foreach (var assembly in Context.GetAssemblies ()) {
-				if (assembly.Name.Name == "Mono.Android")
-					return assembly;
-			}
-			return null;
-#else
 			return Context.GetLoadedAssembly ("Mono.Android");
-#endif
 		}
 	}
 }
