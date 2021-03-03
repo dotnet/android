@@ -28,6 +28,24 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[DebuggerHidden]
+		public static void AssertTargetIsSkipped (this DotNetCLI dotnet, string target, int? occurrence = null)
+		{
+			if (occurrence != null)
+				Assert.IsTrue (dotnet.IsTargetSkipped (target), $"The target {target} should have been skipped. ({occurrence})");
+			else
+				Assert.IsTrue (dotnet.IsTargetSkipped (target), $"The target {target} should have been skipped.");
+		}
+
+		[DebuggerHidden]
+		public static void AssertTargetIsNotSkipped (this DotNetCLI dotnet, string target, int? occurrence = null)
+		{
+			if (occurrence != null)
+				Assert.IsFalse (dotnet.IsTargetSkipped (target), $"The target {target} should have *not* been skipped. ({occurrence})");
+			else
+				Assert.IsFalse (dotnet.IsTargetSkipped (target), $"The target {target} should have *not* been skipped.");
+		}
+
+		[DebuggerHidden]
 		public static void AssertTargetIsPartiallyBuilt (this BuildOutput output, string target, int? occurrence = null)
 		{
 			if (occurrence != null)

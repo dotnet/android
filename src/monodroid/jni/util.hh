@@ -42,6 +42,7 @@ constexpr int FALSE = 0;
 #include "java-interop-util.h"
 #include "logger.hh"
 
+#if !defined (NET6)
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
@@ -59,7 +60,10 @@ extern "C" {
 	MONO_API  char   *path_combine (const char *path1, const char *path2);
 #ifdef __cplusplus
 }
+#endif // __cplusplus
+#endif // NET6
 
+#ifdef __cplusplus
 namespace xamarin::android
 {
 	class Util : public BasicUtilities

@@ -50,6 +50,10 @@ This file contains the .NET 5-specific targets to customize ILLink
       <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --custom-data ProguardConfiguration="$(_ProguardProjectConfiguration)"</_ExtraTrimmerArgs>
     </PropertyGroup>
     <PropertyGroup
+        Condition=" '$(AndroidLinkResources)' != '' ">
+      <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --custom-data AndroidLinkResources="$(AndroidLinkResources)"</_ExtraTrimmerArgs>
+    </PropertyGroup>
+    <PropertyGroup
         Condition=" '$(LinkerDumpDependencies)' == 'true' ">
       <_ExtraTrimmerArgs>--dump-dependencies $(_ExtraTrimmerArgs)"</_ExtraTrimmerArgs>
     </PropertyGroup>

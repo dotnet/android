@@ -193,6 +193,34 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void RemoveDesigner ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetProperty ("AndroidEnableAssemblyCompression", "False");
+			proj.SetProperty ("AndroidLinkResources", "True");
+			string assemblyName = proj.ProjectName;
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
+				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}.apk");
+				FileAssert.Exists (apk);
+				using (var zip = ZipHelper.OpenZip (apk)) {
+					Assert.IsTrue (zip.ContainsEntry ($"assemblies/{assemblyName}.dll"), $"{assemblyName}.dll should exist in apk!");
+					var entry = zip.ReadEntry ($"assemblies/{assemblyName}.dll");
+					using (var stream = new MemoryStream ()) {
+						entry.Extract (stream);
+						stream.Position = 0;
+						using (var assembly = AssemblyDefinition.ReadAssembly (stream)) {
+							var type = assembly.MainModule.GetType ($"{assemblyName}.Resource");
+							Assert.AreEqual (0, type.NestedTypes.Count, "All Nested Resource Types should be removed.");
+						}
+					}
+				}
+			}
+		}
+
+		[Test]
 		public void LinkDescription ()
 		{
 			string assembly_name = Builder.UseDotNet ? "System.Console" : "mscorlib";

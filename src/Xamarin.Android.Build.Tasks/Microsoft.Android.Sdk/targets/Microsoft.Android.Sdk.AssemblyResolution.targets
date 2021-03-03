@@ -24,6 +24,10 @@ _ResolveAssemblies MSBuild target.
     <CoreBuildDependsOn>
       $([MSBuild]::Unescape($(CoreBuildDependsOn.Replace('IncrementalClean;', ''))))
     </CoreBuildDependsOn>
+    <CompileDependsOn>
+      _AddAndroidDefines;
+      $(CompileDependsOn);
+    </CompileDependsOn>
   </PropertyGroup>
 
   <Target Name="_ComputeFilesToPublishForRuntimeIdentifiers"

@@ -27,6 +27,10 @@
       <MSBuildFrameworksDir>$(XAFrameworkDir)\lib\xamarin.android\xbuild-frameworks\MonoAndroid</MSBuildFrameworksDir>
     </PropertyGroup>
     <RemoveDir Directories="$(PayloadDir)" />
+    <ItemGroup>
+      <!-- Remove items with '%(ExcludeFromLegacy)' == 'true' metadata -->
+      <MSBuildItemsUnix Remove="@(MSBuildItemsUnix)" Condition=" '%(MSBuildItemsUnix.ExcludeFromLegacy)' == 'true' " />
+    </ItemGroup>
     <Copy
         SourceFiles="@(FrameworkItemsUnix)"
         DestinationFiles="@(FrameworkItemsUnix->'$(MSBuildFrameworksDir)\%(RelativePath)')"

@@ -65,6 +65,11 @@ namespace Microsoft.Android.Sdk.ILLink
 			if (Context.TryGetCustomData ("AddKeepAlivesStep", out addKeepAlivesStep) && bool.TryParse (addKeepAlivesStep, out var bv) && bv)
 				InsertAfter (new AddKeepAlivesStep (cache), "CleanStep");
 
+			string androidLinkResources;
+			if (Context.TryGetCustomData ("AndroidLinkResources", out androidLinkResources) && bool.TryParse (androidLinkResources, out var linkResources) && linkResources) {
+				InsertAfter (new RemoveResourceDesignerStep (),  "CleanStep");
+				InsertAfter (new GetAssembliesStep (), "CleanStep");
+			}
 			InsertAfter (new StripEmbeddedLibraries (),  "CleanStep");
 		}
 
