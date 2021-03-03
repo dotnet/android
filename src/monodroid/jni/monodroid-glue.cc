@@ -803,11 +803,15 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 			.mono_register_bundled_assemblies = mono_register_bundled_assemblies,
 #if !defined(NET6)
 			.mono_register_config_for_assembly = mono_register_config_for_assembly,
+#else
+			.mono_register_config_for_assembly = nullptr,
 #endif // ndef NET6
 			.mono_jit_set_aot_mode = reinterpret_cast<void (*)(int)>(mono_jit_set_aot_mode),
 			.mono_aot_register_module = mono_aot_register_module,
 #if !defined(NET6)
 			.mono_config_parse_memory = mono_config_parse_memory,
+#else
+			.mono_config_parse_memory = nullptr,
 #endif // ndef NET6
 			.mono_register_machine_config = reinterpret_cast<void (*)(const char *)>(mono_register_machine_config),
 		};
