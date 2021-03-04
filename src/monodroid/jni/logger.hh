@@ -17,7 +17,7 @@ typedef enum android_LogPriority {
 } android_LogPriority;
 #endif
 
-void init_logging_categories ();
+void init_logging_categories (char*& mono_log_mask, char*& mono_log_level);
 
 void init_reference_logging (const char *override_dir);
 

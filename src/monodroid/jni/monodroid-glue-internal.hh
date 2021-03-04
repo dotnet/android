@@ -127,12 +127,6 @@ namespace xamarin::android::internal
 		static constexpr char API_DSO_NAME[] = MAKE_API_DSO_NAME (so);
 #endif  // defined(WINDOWS)
 	public:
-		static constexpr bool is_net6 =
-#if NET6
-		true;
-#else // def NET6
-		false;
-#endif // ndef NET6
 		static constexpr int XA_LOG_COUNTERS = MONO_COUNTER_JIT | MONO_COUNTER_METADATA | MONO_COUNTER_GC | MONO_COUNTER_GENERICS | MONO_COUNTER_INTERP;
 
 	public:
@@ -201,6 +195,13 @@ namespace xamarin::android::internal
 		char*	get_java_class_name_for_TypeManager (jclass klass);
 
 	private:
+#if defined (ANDROID)
+		static void mono_log_handler (const char *log_domain, const char *log_level, const char *message, mono_bool fatal, void *user_data);
+		static void mono_log_standard_streams_handler (const char *str, mono_bool is_stdout);
+		void setup_mono_tracing (char const* const& mono_log_mask);
+		void install_logging_handlers ();
+#endif // def ANDROID
+
 		unsigned int convert_dl_flags (int flags);
 #if defined (WINDOWS) || defined (APPLE_OS_X)
 		static const char* get_my_location (bool remove_file_name = true);
