@@ -26,7 +26,7 @@
       "Size": 1724
     },
     "classes.dex": {
-      "Size": 316848
+      "Size": 316700
     },
     "assemblies/UnnamedProject.dll": {
       "Size": 2869
@@ -35,13 +35,13 @@
       "Size": 67718
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 246170
+      "Size": 246077
     },
     "assemblies/mscorlib.dll": {
       "Size": 769322
     },
     "assemblies/System.Core.dll": {
-      "Size": 28192
+      "Size": 28193
     },
     "assemblies/System.dll": {
       "Size": 9180
@@ -50,10 +50,10 @@
       "Size": 68560
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 247872
+      "Size": 263536
     },
     "lib/arm64-v8a/libxa-internal-api.so": {
-      "Size": 65184
+      "Size": 65200
     },
     "lib/arm64-v8a/libmono-btls-shared.so": {
       "Size": 1613872
@@ -74,5 +74,5 @@
       "Size": 2098
     }
   },
-  "PackageSize": 3954388
+  "PackageSize": 3958484
 }

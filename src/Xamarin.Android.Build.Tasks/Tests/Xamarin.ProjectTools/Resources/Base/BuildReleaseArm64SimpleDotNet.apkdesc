@@ -26,59 +26,56 @@
       "Size": 1724
     },
     "classes.dex": {
-      "Size": 316880
+      "Size": 316728
     },
     "assemblies/UnnamedProject.dll": {
       "Size": 3095
     },
     "assemblies/System.Console.dll": {
-      "Size": 6257
+      "Size": 6253
     },
     "assemblies/System.Linq.dll": {
-      "Size": 16470
+      "Size": 10951
     },
     "assemblies/System.Private.CoreLib.dll": {
-      "Size": 530811
+      "Size": 528679
     },
     "assemblies/Java.Interop.dll": {
-      "Size": 57657
+      "Size": 57615
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 82694
+      "Size": 82604
     },
     "lib/arm64-v8a/libxamarin-app.so": {
       "Size": 68560
     },
     "lib/arm64-v8a/libSystem.IO.Compression.Native.so": {
-      "Size": 776216
+      "Size": 776168
     },
     "lib/arm64-v8a/libSystem.Native.so": {
-      "Size": 75872
+      "Size": 75824
     },
     "lib/arm64-v8a/libSystem.Security.Cryptography.Native.OpenSsl.so": {
-      "Size": 100464
+      "Size": 100408
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
-      "Size": 3796008
+      "Size": 3754992
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 247312
-    },
-    "lib/arm64-v8a/libxa-internal-api.so": {
-      "Size": 65480
+      "Size": 341856
     },
     "lib/arm64-v8a/libxamarin-debug-app-helper.so": {
-      "Size": 37408
+      "Size": 37096
     },
     "META-INF/ANDROIDD.SF": {
-      "Size": 2512
+      "Size": 2405
     },
     "META-INF/ANDROIDD.RSA": {
       "Size": 1213
     },
     "META-INF/MANIFEST.MF": {
-      "Size": 2385
+      "Size": 2278
     }
   },
-  "PackageSize": 2934719
+  "PackageSize": 2910062
 }

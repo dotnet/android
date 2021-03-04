@@ -1631,7 +1631,7 @@
       "Size": 341040
     },
     "classes.dex": {
-      "Size": 3455212
+      "Size": 3455100
     },
     "assemblies/UnnamedProject.dll": {
       "Size": 116885
@@ -1664,7 +1664,7 @@
       "Size": 43130
     },
     "assemblies/Xamarin.AndroidX.Legacy.Support.Core.UI.dll": {
-      "Size": 6713
+      "Size": 6712
     },
     "assemblies/Xamarin.AndroidX.Lifecycle.Common.dll": {
       "Size": 7054
@@ -1685,7 +1685,7 @@
       "Size": 6269
     },
     "assemblies/Xamarin.AndroidX.SwipeRefreshLayout.dll": {
-      "Size": 11269
+      "Size": 11268
     },
     "assemblies/Xamarin.AndroidX.ViewPager.dll": {
       "Size": 19420
@@ -1709,13 +1709,13 @@
       "Size": 110644
     },
     "assemblies/System.Runtime.Serialization.dll": {
-      "Size": 186654
+      "Size": 186653
     },
     "assemblies/Java.Interop.dll": {
       "Size": 68652
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 557041
+      "Size": 556942
     },
     "assemblies/mscorlib.dll": {
       "Size": 915446
@@ -1727,7 +1727,7 @@
       "Size": 388893
     },
     "assemblies/System.Xml.dll": {
-      "Size": 395685
+      "Size": 395684
     },
     "assemblies/System.Numerics.dll": {
       "Size": 15681
@@ -1745,10 +1745,10 @@
       "Size": 139944
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 247872
+      "Size": 263536
     },
     "lib/arm64-v8a/libxa-internal-api.so": {
-      "Size": 65184
+      "Size": 65200
     },
     "lib/arm64-v8a/libmono-btls-shared.so": {
       "Size": 1613872
@@ -1883,5 +1883,5 @@
       "Size": 75731
     }
   },
-  "PackageSize": 9468062
+  "PackageSize": 9476254
 }
