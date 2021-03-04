@@ -68,20 +68,6 @@ steps:
     artifactName: $(TestAssembliesArtifactName)
     targetPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
 
-# Create and upload .nupkgs
-- task: MSBuild@1
-  displayName: pack all nupkgs
-  inputs:
-    solution: ${{ parameters.xaSourcePath }}/build-tools/create-packs/Microsoft.Android.Sdk.proj
-    configuration: $(XA.Build.Configuration)
-    msbuildArguments: /t:CreateAllPacks /restore /p:NuGetLicense=${{ parameters.xaSourcePath }}/external/monodroid/tools/scripts/License.txt /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/create-all-packs.binlog
-
-- task: PublishPipelineArtifact@1
-  displayName: upload nupkgs
-  inputs:
-    artifactName: $(NuGetArtifactName)
-    targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
-
 # Create, sign, notarize, and upload legacy installers to artifacts and blob storage. The .vsix needs to be signed on Windows, which runs in separate job.
 - template: install-microbuild-tooling.yaml
   parameters:
@@ -110,6 +96,19 @@ steps:
     msbuildArguments: /p:SignType=$(MicroBuildSignType) /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/restore-sign-pkg-content.binlog
   condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
 
+- task: MSBuild@1
+  displayName: pack all nupkgs
+  inputs:
+    solution: ${{ parameters.xaSourcePath }}/build-tools/create-packs/Microsoft.Android.Sdk.proj
+    configuration: $(XA.Build.Configuration)
+    msbuildArguments: /t:CreateAllPacks /restore /p:NuGetLicense=${{ parameters.xaSourcePath }}/external/monodroid/tools/scripts/License.txt /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/create-all-packs.binlog
+
+- task: PublishPipelineArtifact@1
+  displayName: upload nupkgs
+  inputs:
+    artifactName: $(NuGetArtifactName)
+    targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
+
 - script: make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration) _MSBUILD_ARGS='/p:SignType=$(MicroBuildSignType) /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins'
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make create-installers
@@ -126,7 +125,6 @@ steps:
     echo "d1ec039f-f3db-468b-a508-896d7c382999 $VERSION" > bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)/updateinfo
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: create updateinfo file
-
 
 - script: >
     cd $(System.DefaultWorkingDirectory)/release-scripts &&
