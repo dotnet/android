@@ -275,6 +275,7 @@ namespace ${ROOT_NAMESPACE} {
 				/* allowDeltaInstall */  false,
 				/* user */		 null,
 				/* debugType */          "",
+				/* isRelease */		 false,
 			},
 			new object[] {
 				/* embedAssemblies */    true,
@@ -282,6 +283,7 @@ namespace ${ROOT_NAMESPACE} {
 				/* allowDeltaInstall */  false,
 				/* user */		 null,
 				/* debugType */          "full",
+				/* isRelease */		 false,
 			},
 			new object[] {
 				/* embedAssemblies */    false,
@@ -289,6 +291,7 @@ namespace ${ROOT_NAMESPACE} {
 				/* allowDeltaInstall */  false,
 				/* user */		 null,
 				/* debugType */          "",
+				/* isRelease */		 false,
 			},
 			new object[] {
 				/* embedAssemblies */    false,
@@ -296,6 +299,7 @@ namespace ${ROOT_NAMESPACE} {
 				/* allowDeltaInstall */  true,
 				/* user */		 null,
 				/* debugType */          "",
+				/* isRelease */		 false,
 			},
 			new object[] {
 				/* embedAssemblies */    false,
@@ -303,6 +307,7 @@ namespace ${ROOT_NAMESPACE} {
 				/* allowDeltaInstall */  false,
 				/* user */		 null,
 				/* debugType */          "",
+				/* isRelease */		 false,
 			},
 			new object[] {
 				/* embedAssemblies */    false,
@@ -310,6 +315,7 @@ namespace ${ROOT_NAMESPACE} {
 				/* allowDeltaInstall */  true,
 				/* user */		 null,
 				/* debugType */          "",
+				/* isRelease */		 false,
 			},
 			new object[] {
 				/* embedAssemblies */    true,
@@ -317,6 +323,7 @@ namespace ${ROOT_NAMESPACE} {
 				/* allowDeltaInstall */  false,
 				/* user */		 DeviceTest.GuestUserName,
 				/* debugType */          "",
+				/* isRelease */		 false,
 			},
 			new object[] {
 				/* embedAssemblies */    false,
@@ -324,13 +331,22 @@ namespace ${ROOT_NAMESPACE} {
 				/* allowDeltaInstall */  false,
 				/* user */		 DeviceTest.GuestUserName,
 				/* debugType */          "",
+				/* isRelease */		 false,
+			},
+			new object[] {
+				/* embedAssemblies */    true,
+				/* fastDevType */        "Assemblies",
+				/* allowDeltaInstall */  false,
+				/* user */		 null,
+				/* debugType */          "portable",
+				/* isRelease */		 true,
 			},
 		};
 #pragma warning restore 414
 
 		[Test, Category ("SmokeTests"), Category ("Debugger")]
 		[TestCaseSource (nameof(DebuggerTestCases))]
-		public void ApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, string fastDevType, bool allowDeltaInstall, string username, string debugType)
+		public void ApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, string fastDevType, bool allowDeltaInstall, string username, string debugType, bool isRelease)
 		{
 			AssertCommercialBuild ();
 			AssertHasDevices ();
@@ -372,6 +388,9 @@ namespace ${ROOT_NAMESPACE} {
 			app.SetProperty (KnownProperties._AndroidAllowDeltaInstall, allowDeltaInstall.ToString ());
 			if (!string.IsNullOrEmpty (debugType)) {
 				app.SetProperty ("DebugType", debugType);
+			}
+			if (isRelease) {
+				app.SetProperty (app.ReleaseProperties, "DebugSymbols", "True");
 			}
 			app.SetDefaultTargetDevice ();
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
