@@ -65,6 +65,11 @@ namespace Xamarin.Android.Build.Tests
 
 		double GetDurationFromBinLog (ProjectBuilder builder)
 		{
+			//TODO: BuildEventArgsReader.Read() returns null in .NET 6 Preview 2
+			// See: https://github.com/dotnet/msbuild/issues/6225
+			if (Builder.UseDotNet)
+				Assert.Ignore ("Cannot currently parse .binlog files in .NET 6 Preview 2");
+
 			var duration = TimeSpan.Zero;
 			var binlog = Path.Combine (Root, builder.ProjectDirectory, "msbuild.binlog");
 			FileAssert.Exists (binlog);

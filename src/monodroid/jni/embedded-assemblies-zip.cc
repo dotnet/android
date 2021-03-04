@@ -105,6 +105,7 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, monodroid_sh
 				continue;
 		}
 
+#if !defined(NET6)
 		if (utils.ends_with (file_name, ".config") && bundled_assemblies != nullptr) {
 			char *assembly_name = strdup (basename (file_name));
 			// Remove '.config' suffix
@@ -115,6 +116,7 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, monodroid_sh
 
 			continue;
 		}
+#endif // ndef NET6
 
 		if (!utils.ends_with (file_name, ".dll"))
 			continue;
