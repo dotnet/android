@@ -650,5 +650,42 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 					"`lint.jar` should not be extracted!");
 			}
 		}
+
+		/// <summary>
+		/// Tests two .aar files with r-classes.jar
+		/// </summary>
+		[Test]
+		public void AarWithRClassesJar ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var lib1 = new XamarinAndroidBindingProject {
+				ProjectName = "Library1",
+				AndroidClassParser = "class-parse",
+				Jars = {
+					new AndroidItem.LibraryProjectZip ("Library1.aar") {
+						BinaryContent = () => ResourceData.Library1Aar
+					}
+				},
+			};
+			var lib2 = new XamarinAndroidBindingProject {
+				ProjectName = "Library2",
+				AndroidClassParser = "class-parse",
+				Jars = {
+					new AndroidItem.LibraryProjectZip ("Library2.aar") {
+						BinaryContent = () => ResourceData.Library2Aar
+					}
+				},
+			};
+			var app = new XamarinAndroidApplicationProject ();
+			app.AddReference (lib1);
+			app.AddReference (lib2);
+			using (var lib1Builder = CreateDllBuilder (Path.Combine (path, lib1.ProjectName)))
+			using (var lib2Builder = CreateDllBuilder (Path.Combine (path, lib2.ProjectName)))
+			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+				Assert.IsTrue (lib1Builder.Build (lib1), "Library1 build should have succeeded.");
+				Assert.IsTrue (lib2Builder.Build (lib2), "Library2 build should have succeeded.");
+				Assert.IsTrue (appBuilder.Build (app), "App build should have succeeded.");
+			}
+		}
 	}
 }
