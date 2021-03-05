@@ -6,7 +6,6 @@ parameters:
   nunitConsoleExtraArgs: ''
   dotNetTestExtraArgs: ''
   useDotNet: false
-  useHostedDotNetPath: true
   workers: $(NUnit.NumberOfTestWorkers)
   condition: succeeded()
 
@@ -16,7 +15,7 @@ steps:
         if ("${{ parameters.useDotNet }}" -eq $true) {
             Write-Host '##vso[task.setvariable variable=TestResultsFormat]VSTest'
             $dotnetPath = "$env:HOME/Library/Android/dotnet/dotnet"
-            if ("${{ parameters.useHostedDotNetPath }}" -ne $true) {
+            if (-not (Test-Path $dotnetPath)) {
                 $dotnetPath = "$env:HOME/android-toolchain/dotnet/dotnet"
             }
             & $dotnetPath test ${{ parameters.testAssembly }} --results-directory . --logger "trx;LogFileName=${{ parameters.testResultsFile }}" ${{ parameters.dotNetTestExtraArgs }} -- NUnit.NumberOfTestWorkers=${{ parameters.workers }}

@@ -505,7 +505,6 @@ stages:
     - template: yaml-templates/run-nunit-tests.yaml
       parameters:
         useDotNet: true
-        useHostedDotNetPath: false
         testRunTitle: Xamarin.Android.Build.Tests - Linux .NET 6 Smoke Tests
         testAssembly: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Test$(XA.Build.Configuration)/netcoreapp3.1/Xamarin.Android.Build.Tests.dll
         dotNetTestExtraArgs: --filter CheckSignApk  # TODO: Add more tests (e.g. "TestCategory = SmokeTests $(DotNetNUnitCategories)" )
