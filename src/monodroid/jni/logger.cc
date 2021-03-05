@@ -61,7 +61,7 @@ __android_log_vprint (int prio, const char* tag, const char* fmt, va_list ap)
 }
 #endif
 
-unsigned int log_categories;
+unsigned int log_categories = LOG_NONE;
 unsigned int log_timing_categories;
 int gc_spew_enabled;
 
@@ -122,10 +122,13 @@ init_reference_logging (const char *override_dir)
 }
 
 void
-init_logging_categories ()
+init_logging_categories (char*& mono_log_mask, char*& mono_log_level)
 {
 	char *value;
 	char **args, **ptr;
+
+	mono_log_mask = nullptr;
+	mono_log_level = nullptr;
 
 #if !ANDROID
 	log_categories = LOG_DEFAULT;
@@ -164,6 +167,11 @@ init_logging_categories ()
 
 #undef CATEGORY
 
+		constexpr char MONO_LOG_MASK_ARG[] = "mono_log_mask=";
+		constexpr size_t MONO_LOG_MASK_ARG_LEN = sizeof(MONO_LOG_MASK_ARG) - 1;
+		constexpr char MONO_LOG_LEVEL_ARG[] = "mono_log_level=";
+		constexpr size_t MONO_LOG_LEVEL_ARG_LEN = sizeof(MONO_LOG_LEVEL_ARG) - 1;
+
 		if (!strncmp (arg, "gref=", 5)) {
 			log_categories  |= LOG_GREF;
 			gref_file        = arg + 5;
@@ -178,6 +186,10 @@ init_logging_categories ()
 			light_lref       = 1;
 		} else if (!strncmp (arg, "timing=bare", 11)) {
 			log_timing_categories |= LOG_TIMING_BARE;
+		} else if (strncmp (arg, MONO_LOG_MASK_ARG, MONO_LOG_MASK_ARG_LEN) == 0) {
+			mono_log_mask = utils.strdup_new (arg + MONO_LOG_MASK_ARG_LEN);
+		} else if (strncmp (arg, MONO_LOG_LEVEL_ARG, MONO_LOG_LEVEL_ARG_LEN) == 0) {
+			mono_log_level = utils.strdup_new (arg + MONO_LOG_LEVEL_ARG_LEN);
 		}
 #if !defined (WINDOWS) && defined (DEBUG)
 		else if (!strncmp (arg, "debugger-log-level=", 19)) {

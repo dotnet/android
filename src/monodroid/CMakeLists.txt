@@ -463,6 +463,7 @@ set(XAMARIN_MONODROID_SOURCES
 
 if(ANDROID)
   list(APPEND XAMARIN_MONODROID_SOURCES
+    ${SOURCES_DIR}/mono-log-adapter.cc
     ${LZ4_SOURCES}
     )
 
