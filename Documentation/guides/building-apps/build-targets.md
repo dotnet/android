@@ -80,7 +80,7 @@ Android package may be installed to or removed from.
 MSBuild /t:Install ProjectName.csproj /p:AdbTarget=-e
 ```
 
-## SignAndroidPackage**
+## SignAndroidPackage
 
 Creates and signs the Android package (`.apk`) file.
 

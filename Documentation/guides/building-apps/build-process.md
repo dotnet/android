@@ -6,7 +6,7 @@ ms.assetid: 3BE5EE1E-3FF6-4E95-7C9F-7B443EE3E94C
 ms.technology: xamarin-android
 author: davidortinau
 ms.author: daortin
-ms.date: 09/11/2020
+ms.date: 03/01/2021
 ---
 
 # Build Process
@@ -28,38 +28,53 @@ In broad terms, there are two types of Android application packages
 (`.apk` files) which the Xamarin.Android build system can generate:
 
 - **Release** builds, which are fully self-contained and don't
-  require additional packages to execute. These are the
-  packages which would be provided to an App store.
+  require extra packages to execute. These are the
+  packages that are provided to an App store.
 
 - **Debug** builds, which are not.
 
-Not coincidentally, these match the MSBuild `Configuration` which
+These package types match the MSBuild `Configuration` which
 produces the package.
+
+## Shared Runtime
+
+Prior to Xamarin.Android 11.2, the *shared runtime* was a pair
+of extra Android packages which
+provide the Base Class Library (`mscorlib.dll`, etc.) and the
+Android binding library (`Mono.Android.dll`, etc.). Debug builds
+rely upon the shared runtime in lieu of including the Base Class Library and
+Binding assemblies within the Android application package, allowing the
+Debug package to be smaller.
+
+The shared runtime could be disabled in Debug builds by setting the
+[`$(AndroidUseSharedRuntime)`](~/android/deploy-test/building-apps/build-properties.md#androidusesharedruntime)
+property to `False`.
+
+Support for the Shared Runtime was removed in Xamarin.Android 11.2.
 
 <a name="Fast_Deployment"></a>
 
 ## Fast Deployment
 
 *Fast deployment* works by further shrinking Android application
-package size. This is done by not bundling the app's assemblies
-within the package. Instead, the are deployed directly to the
-application internal `files` directory. This is usually located
-in `/data/data/com.some.package`. This is not a global writable
-folder, so we need to use the `run-as` tool to run all the
-commands to copy the files into that diectory.
+package size. This is done by excluding the app's assemblies from the
+package, and instead deploying the app's assemblies directly to the
+application's internal `files` directory, usually located
+in `/data/data/com.some.package`. The internal `files` directory is
+not a globally writable folder, so the `run-as` tool is used to execute
+all the commands to copy the files into that directory.
 
-This process speeds up the build/deploy/debug cycle because
-if *only* assemblies are changed, the package is not reinstalled.
-Instead, only the updated assemblies are re-synchronized to the
-target device.
+This process speeds up the build/deploy/debug cycle because the package
+is not reinstalled when *only* assemblies are changed.
+Only the updated assemblies are resynchronized to the target device.
 
-Fast deployment is known to fail on devices which block `run-as`. This
-is usually devices of API 20 and lower.
+> [!WARNING]
+> Fast deployment is known to fail on devices which block `run-as`, which often includes devices older than Android 5.0.
 
 Fast deployment is enabled by default, and may be disabled in Debug builds
 by setting the `$(EmbedAssembliesIntoApk)` property to `True`.
 
-The [Enhanced Fast Deployment](~/android/deploy-test/building-apps/build-properties.md#AndroidFastDeploymentType) mode can
+The [Enhanced Fast Deployment](~/android/deploy-test/building-apps/build-properties.md#androidfastdeploymenttype) mode can
 be used in conjunction with this feature to speed up deployments even further.
 This will deploy both assemblies, native libraries, typemaps and dexes to the `files`
 directory. But you should only really need to enable this if you are changing
@@ -184,7 +199,7 @@ Extension points include:
 A word of caution about extending the build process: If not
 written correctly, build extensions can affect your build
 performance, especially if they run on every build. It is
-highly recommended that you read the MSBuild [documentation](https://docs.microsoft.com/visualstudio/msbuild/msbuild)
+highly recommended that you read the MSBuild [documentation](/visualstudio/msbuild/msbuild)
 before implementing such extensions.
 
 ## Target Definitions
