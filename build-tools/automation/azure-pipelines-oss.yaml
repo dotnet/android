@@ -3,14 +3,14 @@
 name: $(Build.SourceBranchName)-$(Build.SourceVersion)-$(Rev:r)
 
 trigger:
-- master
+- main
 - d16-*
 
 pr:
   autoCancel: false
   branches:
     include:
-    - master
+    - main
     - d16-*
 
 # Global variables

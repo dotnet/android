@@ -317,7 +317,7 @@ Currently defaults to `dx`. For further information see our
 documentation on [D8 and R8][d8-r8].
 
 [dex]: https://source.android.com/devices/tech/dalvik/dalvik-bytecode
-[d8-r8]: https://github.com/xamarin/xamarin-android/blob/master/Documentation/guides/D8andR8.md
+[d8-r8]: https://github.com/xamarin/xamarin-android/blob/main/Documentation/guides/D8andR8.md
 
 ## AndroidEnableDesugar
 
@@ -528,7 +528,7 @@ Added in Xamarin.Android 9.2.
 
 ## AndroidGenerateLayoutBindings
 
-Enables generation of [layout code-behind](https://github.com/xamarin/xamarin-android/blob/master/Documentation/guides/LayoutCodeBehind.md)
+Enables generation of [layout code-behind](https://github.com/xamarin/xamarin-android/blob/main/Documentation/guides/LayoutCodeBehind.md)
 if set to `true` or disables it completely if set to `false`. The
 default value is `false`.
 
@@ -735,7 +735,7 @@ used for Java code. Currently defaults to an empty string, or
 `proguard` if `$(AndroidEnableProguard)` is `True`. For further
 information see our documentation on [D8 and R8][d8-r8].
 
-[d8-r8]: https://github.com/xamarin/xamarin-android/blob/master/Documentation/guides/D8andR8.md
+[d8-r8]: https://github.com/xamarin/xamarin-android/blob/main/Documentation/guides/D8andR8.md
 
 ## AndroidLintEnabled
 

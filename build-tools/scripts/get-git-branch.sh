@@ -29,7 +29,7 @@ if [ "$(echo $BRANCH_FULL | cut -c 1-6)" == "HEAD, " ]; then
     # Detached HEAD
     # Sample format:
     #
-    #    HEAD, origin/master, origin/d16-0-p1, origin/HEAD, master
+    #    HEAD, origin/main, origin/d16-0-p1, origin/HEAD, main
     #
     BRANCH="$(echo $BRANCH_FULL | cut -c 7-)"
 elif [ "$(echo $BRANCH_FULL | cut -c 1-8)" == "HEAD -> " ]; then
