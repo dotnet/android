@@ -6,7 +6,7 @@ ms.assetid: FC0DBC08-EBCB-4D2D-AB3F-76B54E635C22
 ms.technology: xamarin-android
 author: jonpryor
 ms.author: jopryo
-ms.date: 09/21/2020
+ms.date: 03/01/2021
 ---
 
 # Build Properties
@@ -14,7 +14,7 @@ ms.date: 09/21/2020
 MSBuild properties control the behavior of the
 [targets](~/android/deploy-test/building-apps/build-targets.md).
 They are specified within the project file, for example **MyApp.csproj**, within
-an [MSBuild PropertyGroup](https://docs.microsoft.com/visualstudio/msbuild/propertygroup-element-msbuild).
+an [MSBuild PropertyGroup](/visualstudio/msbuild/propertygroup-element-msbuild).
 
 ## AdbTarget
 
@@ -58,7 +58,7 @@ object collection.
 
 Defaults to `True` for Release configuration builds.
 
-Added in Xamarin.Android 11.2.
+This property was added in Xamarin.Android 11.2.
 
 ## AndroidAotCustomProfilePath
 
@@ -289,13 +289,13 @@ Added in Xamarin.Android 10.2.
 
 Allows deploying and debugging the application under guest
 or work accounts. The value is the `uid` value you get
-from the following adb command
+from the following adb command:
 
 ```
 adb shell pm list users
 ```
 
-This will return the following data
+This will return the following data:
 
 ```
 Users:
@@ -306,7 +306,7 @@ Users:
 The `uid` is the first integer value. In the example they
 are `0` and `10`.
 
-Added in Xamarin.Android 11.2
+This property was added in Xamarin.Android 11.2.
 
 ## AndroidDexTool
 
@@ -468,7 +468,6 @@ the `.apk` needs to be rebuilt, and the install process can be
 faster.) Valid values include:
 
 - `Assemblies`: Deploy application assemblies.
-
 - `Dexes`: Deploy `.dex` files, native libraries and typemaps.
   **This value can *only* be used on devices running
   Android 4.4 or later (API-19).**
@@ -479,7 +478,7 @@ Support for Fast Deploying resources and assets via that system was
 removed in commit [f0d565fe](https://github.com/xamarin/xamarin-android/commit/f0d565fe4833f16df31378c77bbb492ffd2904b9). This was becuase it required the use of
 deprecated API's to work.
 
-**Experimental**. Added in Xamarin.Android 6.1.
+**Experimental**. This property was added in Xamarin.Android 6.1.
 
 ## AndroidGenerateJniMarshalMethods
 
@@ -540,7 +539,7 @@ Controls the default
 the `System.Net.Http.HttpClient` default constructor. The value is an
 assembly-qualified type name of an `HttpMessageHandler` subclass, suitable
 for use with
-[`System.Type.GetType(string)`](https://docs.microsoft.com/dotnet/api/system.type.gettype#System_Type_GetType_System_String_).
+[`System.Type.GetType(string)`](/dotnet/api/system.type.gettype#System_Type_GetType_System_String_).
 The most common values for this property are:
 
 - `Xamarin.Android.Net.AndroidClientHandler`: Use the Android Java APIs
@@ -601,7 +600,7 @@ application startup/runtime behavior.
 
 The script is added to the project using the
 [`@(AndroidNativeLibrary)`](~/android/deploy-test/building-apps/build-items.md#androidnativelibrary)
-build action, because it is placed in the same directory where
+build action, because it is placed in the same directory as
 architecture-specific native libraries, and must be named `wrap.sh`.
 
 The easiest way to specify path to the `wrap.sh` script is to put it
@@ -658,7 +657,7 @@ This is an enum-style property, with possible values of `full` or
 
 The default value is `intellisense`.
 
-Added in Xamarin.Android 11.3.
+Support for this property was added in Xamarin.Android 11.3.
 
 ## AndroidKeyStore
 
@@ -715,7 +714,7 @@ var view = FindViewById(Resources.Ids.foo);
 
 Any other scenarios (such as reflection) will not be supported.
 
-Added in Xamarin.Android 11.3.
+Support for this property was added in Xamarin.Android 11.3
 
 ## AndroidLinkSkip
 
@@ -895,9 +894,9 @@ mean the `mapping.txt` file will be produced in the `$(OutputPath)`
 folder. This file can then be used when uploading packages to the
 Google Play Store.
 
-Default value is `$(OutputPath)mapping.txt`
+The default value is `$(OutputPath)mapping.txt`.
 
-Added in Xamarin.Android 11.2
+This property was added in Xamarin.Android 11.2.
 
 ## AndroidR8IgnoreWarnings
 
@@ -1108,7 +1107,7 @@ in their `.csproj`. Alternatively provide the property on the command line:
 /p:AndroidUseAapt2=True
 ```
 
-Added in Xamarin.Android 8.3. Setting `AndroidUseAapt2` to `false` is
+This property was added in Xamarin.Android 8.3. Setting `AndroidUseAapt2` to `false` is
 deprecated in Xamarin.Android 11.2.
 
 ## AndroidUseApkSigner
@@ -1132,9 +1131,9 @@ Added in Xamarin.Android 10.1.
 A boolean property which causes the `.apk` to contain the mono
 *interpreter*, and not the normal JIT.
 
-***Experimental***.  Does not work on the x86 ABI.
+***Experimental***.
 
-Added in Xamarin.Android 11.3.
+Support for this property was added in Xamarin.Android 11.3.
 
 ## AndroidUseLegacyVersionCode
 
@@ -1155,6 +1154,20 @@ than `aapt`.
 
 Added in Xamarin.Android 8.1.
 
+## AndroidUseSharedRuntime
+
+A boolean property that
+determines whether the *shared runtime packages* are required in
+order to run the Application on the target device. Relying on the
+shared runtime packages allows the Application package to be
+smaller, speeding up the package creation and deployment process,
+resulting in a faster build/deploy/debug turnaround cycle.
+
+Prior to Xamarin.Android 11.2, this property should be `True` for
+Debug builds, and `False` for Release projects.
+
+This property was *removed* in Xamarin.Android 11.2.
+
 ## AndroidVersionCode
 
 An MSBuild property that can be used as an alternative to
@@ -1172,7 +1185,7 @@ for each Google Play release. See the [Android documentation][manifest-element]
 for further details about the requirements for
 `/manifest/@android:versionCode`.
 
-Added in Xamarin.Android 11.3.
+Support for this property was added in Xamarin.Android 11.3.
 
 ## AndroidVersionCodePattern
 
@@ -1249,7 +1262,7 @@ about the requirements for `/manifest/@package`.
 
 [manifest-element]: https://developer.android.com/guide/topics/manifest/manifest-element
 
-Added in Xamarin.Android 11.3.
+Support for this property was added in Xamarin.Android 11.3.
 
 ## ApplicationTitle
 
@@ -1262,7 +1275,7 @@ This will be the default going forward in .NET 6.
 See the [Android documentation][application-element] for further details
 about the requirements for `/manifest/application/@android:label`.
 
-Added in Xamarin.Android 11.3.
+Support for this property was added in Xamarin.Android 11.3.
 
 [application-element]: https://developer.android.com/guide/topics/manifest/application-element
 
@@ -1277,7 +1290,7 @@ This will be the default going forward in .NET 6.
 See the [Android documentation][manifest-element] for further details
 about the requirements for `/manifest/@android:versionName`.
 
-Added in Xamarin.Android 11.3.
+Support for this property was added in Xamarin.Android 11.3.
 
 ## AotAssemblies
 
@@ -1338,7 +1351,7 @@ string or `Full`.
 ## DebugType
 
 Specifies the
-[type of debug symbols](https://docs.microsoft.com/visualstudio/msbuild/csc-task)
+[type of debug symbols](/visualstudio/msbuild/csc-task)
 to generate as part of the build, which also impacts whether the
 Application is debuggable. Possible values include:
 
@@ -1414,7 +1427,7 @@ in the final [`AndroidManifest.xml`](~/android/platform/android-manifest.md) fil
 `$(GenerateApplicationManifest)` defaults to `true` in .NET 6 and
 `false` in "legacy" Xamarin.Android.
 
-Added in Xamarin.Android 11.3.
+Support for this property was added in Xamarin.Android 11.3.
 
 ## JavaMaximumHeapSize
 
@@ -1582,7 +1595,7 @@ debugging symbols enabled:
 [`$(EmbedAssembliesIntoApk)`](#embedassembliesintoapk) is True,
 [`$(DebugSymbols)`](~/android/deploy-test/building-apps/build-properties.md#debugsymbols)
  is True, and
-[`$(Optimize)`](https://docs.microsoft.com/visualstudio/msbuild/common-msbuild-project-properties)
+[`$(Optimize)`](/visualstudio/msbuild/common-msbuild-project-properties)
 is True.
 
 Added in Xamarin.Android 7.1.
