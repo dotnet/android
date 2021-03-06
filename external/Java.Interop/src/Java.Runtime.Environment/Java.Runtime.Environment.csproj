@@ -7,6 +7,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>8.0</LangVersion>
     <Nullable>enable</Nullable>
+    <MSBuildWarningsAsMessages>NU1702</MSBuildWarningsAsMessages>
   </PropertyGroup>
 
   <PropertyGroup>

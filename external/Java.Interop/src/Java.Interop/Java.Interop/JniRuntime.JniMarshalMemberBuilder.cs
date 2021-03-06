@@ -87,7 +87,7 @@ namespace Java.Interop {
 			{
 				if (value == null)
 					throw new ArgumentNullException (nameof (value));
-				return CreateMarshalToManagedExpression (value.GetMethodInfo ()).Compile ();
+				return CreateMarshalToManagedExpression (value.GetMethodInfo ()!).Compile ();
 			}
 
 			public  abstract    LambdaExpression                            CreateMarshalToManagedExpression (MethodInfo method);

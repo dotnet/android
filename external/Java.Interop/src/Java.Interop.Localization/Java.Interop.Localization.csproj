@@ -5,6 +5,7 @@
     <LangVersion>8.0</LangVersion>
     <Nullable>enable</Nullable>
     <DefineConstants>INTERNAL_NULLABLE_ATTRIBUTES</DefineConstants>
+    <NeutralLanguage>en</NeutralLanguage>
   </PropertyGroup>
 
   <ItemGroup>

@@ -14,7 +14,7 @@ namespace Java.Interop {
 
 	public sealed class JniType : IDisposable {
 
-		[return: NotNullIfNotNull ("name")]
+		[return: NotNullIfNotNull ("classFileData")]
 		public static unsafe JniType? DefineClass (string name, JniObjectReference loader, byte[] classFileData)
 		{
 			if (classFileData == null)
