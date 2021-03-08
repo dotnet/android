@@ -773,6 +773,7 @@ stages:
       job_name: mac_msbuild_tests_1
       job_suffix: Legacy
       nunit_categories: '&& cat != SmokeTests'
+      jdkTestFolder: $(XA.Jdk8.Folder)
 
   - template: yaml-templates\run-msbuild-mac-tests.yaml
     parameters:
@@ -781,6 +782,7 @@ stages:
       job_suffix: Legacy
       nunit_categories: '&& cat != SmokeTests'
       run_extra_tests: true
+      jdkTestFolder: $(XA.Jdk8.Folder)
 
   - template: yaml-templates\run-msbuild-mac-tests.yaml
     parameters:
@@ -788,6 +790,7 @@ stages:
       job_name: mac_msbuild_tests_3
       job_suffix: Legacy
       nunit_categories: '&& cat != SmokeTests'
+      jdkTestFolder: $(XA.Jdk8.Folder)
 
   # Xamarin.Android (Test MSBuild Legacy - Windows)
   - template: yaml-templates\run-msbuild-win-tests.yaml
@@ -796,6 +799,7 @@ stages:
       job_name: win_msbuild_tests_1
       job_suffix: Legacy
       nunit_categories: '&& cat != SmokeTests'
+      jdkTestFolder: $(XA.Jdk8.Folder)
 
   - template: yaml-templates\run-msbuild-win-tests.yaml
     parameters:
@@ -804,6 +808,7 @@ stages:
       job_suffix: Legacy
       nunit_categories: '&& cat != SmokeTests'
       run_extra_tests: true
+      jdkTestFolder: $(XA.Jdk8.Folder)
 
   - template: yaml-templates\run-msbuild-win-tests.yaml
     parameters:
@@ -811,6 +816,7 @@ stages:
       job_name: win_msbuild_tests_3
       job_suffix: Legacy
       nunit_categories: '&& cat != SmokeTests'
+      jdkTestFolder: $(XA.Jdk8.Folder)
 
 - stage: msbuild_dotnet
   displayName: One .NET Tests
@@ -877,6 +883,7 @@ stages:
     parameters:
       job_name: mac_msbuilddevice_tests
       job_suffix: Legacy
+      jdkTestFolder: $(XA.Jdk8.Folder)
 
   # Check - "Xamarin.Android (MSBuild Emulator Tests macOS - One .NET)"
   - template: yaml-templates/run-msbuild-device-tests.yaml
@@ -939,12 +946,7 @@ stages:
     - template: yaml-templates/setup-test-environment.yaml
       parameters:
         xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
-
-    - script: echo "##vso[task.setvariable variable=JavaSdkDirectory]$HOME/Library/Android/$(XA.Jdk8.Folder)"
-      displayName: set JavaSdkDirectory
-
-    - script: echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/Library/Android/$(XA.Jdk8.Folder)"
-      displayName: reset JI_JAVA_HOME for Designer
+        jdkTestFolder: $(XA.Jdk8.Folder)
 
     - template: designer/android-designer-build-mac.yaml@yaml
       parameters:
@@ -1019,15 +1021,7 @@ stages:
     - template: yaml-templates\setup-test-environment.yaml
       parameters:
         xaSourcePath: $(System.DefaultWorkingDirectory)\xamarin-android
-
-    - script: echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/Library/Android/$(XA.Jdk8.Folder)"
-      displayName: reset JI_JAVA_HOME for Designer
-      condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
-
-    - script: |
-        echo ##vso[task.setvariable variable=JI_JAVA_HOME]%USERPROFILE%\android-toolchain\$(XA.Jdk8.Folder)
-      displayName: reset JI_JAVA_HOME for Designer
-      condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
+        jdkTestFolder: $(XA.Jdk8.Folder)
 
     - template: designer\android-designer-build-win.yaml@yaml
       parameters:

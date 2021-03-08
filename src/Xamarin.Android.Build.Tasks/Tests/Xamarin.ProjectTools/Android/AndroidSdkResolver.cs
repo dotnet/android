@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 
 namespace Xamarin.ProjectTools
 {
@@ -58,6 +59,30 @@ namespace Xamarin.ProjectTools
 			if (string.IsNullOrEmpty (JavaSdkPath))
 				JavaSdkPath = Path.GetFullPath (Path.Combine (ToolchainPath, "jdk"));
 			return JavaSdkPath;
+		}
+
+		static string JavaSdkVersionString;
+
+		public static string GetJavaSdkVersionString ()
+		{
+			if (string.IsNullOrEmpty (JavaSdkVersionString)) {
+				var javaPath = Path.Combine (GetJavaSdkPath (), "bin", "java");
+				var psi = new ProcessStartInfo (javaPath, "-version") {
+					CreateNoWindow = true,
+					RedirectStandardOutput = true,
+					RedirectStandardError = true,
+					WindowStyle = ProcessWindowStyle.Hidden,
+					UseShellExecute = false,
+				};
+				var output = new StringBuilder ();
+				using (var p = Process.Start (psi)) {
+					p.WaitForExit ();
+					output.AppendLine (p.StandardOutput.ReadToEnd ());
+					output.AppendLine (p.StandardError.ReadToEnd ());
+					JavaSdkVersionString = output.ToString ();
+				}
+			}
+			return JavaSdkVersionString;
 		}
 
 		// Cache the result, so we don't run MSBuild on every call
