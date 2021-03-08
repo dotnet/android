@@ -15,16 +15,6 @@ namespace Xamarin.Android.Build.Tests
 	[Category ("Commercial"), Category ("UsesDevice")]
 	public class InstallTests : DeviceTest
 	{
-		static byte [] GetKeystore ()
-		{
-			var assembly = typeof (XamarinAndroidCommonProject).Assembly;
-			using (var stream = assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.test.keystore")) {
-				var data = new byte [stream.Length];
-				stream.Read (data, 0, (int) stream.Length);
-				return data;
-			}
-		}
-
 		string GetContentFromAllOverrideDirectories (string packageName, bool useRunAsCommand = true)
 		{
 			var adbShellArgs = $"shell run-as {packageName} ls";
@@ -114,7 +104,7 @@ namespace Xamarin.Android.Build.Tests
 			using (var builder = CreateApkBuilder ()) {
 				// Use the default debug.keystore XA generates
 				Assert.IsTrue (builder.Install (proj), "first install should succeed.");
-				byte [] data = GetKeystore ();
+				byte [] data = ResourceData.GetKeystore ();
 				proj.OtherBuildItems.Add (new BuildItem (BuildActions.None, "test.keystore") {
 					BinaryContent = () => data
 				});
@@ -387,7 +377,7 @@ namespace Xamarin.Android.Build.Tests
 			string path = Path.Combine ("temp", TestName.Replace (expected, expected.Replace ("-", "_")));
 			string storepassfile = Path.Combine (Root, path, "storepass.txt");
 			string keypassfile = Path.Combine (Root, path, "keypass.txt");
-			byte [] data = GetKeystore ();
+			byte [] data = ResourceData.GetKeystore ();
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 			};
@@ -587,6 +577,5 @@ namespace Xamarin.Android.Build.Tests
 					$"Fourth unchanged install: '{fourthInstalTime}' should be faster than clean install: '{firstInstallTime}' and incremental install: '{thirdInstallTime}'.");
 			}
 		}
-
 	}
 }

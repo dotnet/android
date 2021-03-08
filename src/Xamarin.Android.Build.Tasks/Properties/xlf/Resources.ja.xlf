@@ -744,9 +744,11 @@ In this message, "root element" refers to the root element of an XML file.
         <note>The following are literal names and should not be translated: MultiDexMainDexList</note>
       </trans-unit>
       <trans-unit id="XA4310">
-        <source>`$(AndroidSigningKeyStore)` file `{0}` could not be found.</source>
-        <target state="translated">'$(AndroidSigningKeyStore)' ファイル '{0}' が見つかりませんでした。</target>
-        <note>The following are literal names and should not be translated: `$(AndroidSigningKeyStore)`</note>
+        <source>`{0}` file `{1}` could not be found.</source>
+        <target state="needs-review-translation">'{0}' ファイル '{1}' が見つかりませんでした。</target>
+        <note>{0} - The MSBuildProperty which contains the file name value.
+{1} - The value of the MSBuildProperty. Normally a filename.
+</note>
       </trans-unit>
       <trans-unit id="XA4311">
         <source>The application won't contain the paired Wear package because the Wear application package APK is not created yet. If building on the command line, be sure to build the "SignAndroidPackage" target.</source>

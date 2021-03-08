@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Xml.XPath;
+using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
