@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <PackageReference Include="NodaTime" Version="2.4.5" />
+    <PackageReference Include="MSBuild.StructuredLogger" Version="2.1.303" />
   </ItemGroup>
 
   <ItemGroup>

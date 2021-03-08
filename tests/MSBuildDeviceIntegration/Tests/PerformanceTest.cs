@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Logging;
+using Microsoft.Build.Logging.StructuredLogger;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
 
@@ -65,30 +65,13 @@ namespace Xamarin.Android.Build.Tests
 
 		double GetDurationFromBinLog (ProjectBuilder builder)
 		{
-			//TODO: BuildEventArgsReader.Read() returns null in .NET 6 Preview 2
-			// See: https://github.com/dotnet/msbuild/issues/6225
-			if (Builder.UseDotNet)
-				Assert.Ignore ("Cannot currently parse .binlog files in .NET 6 Preview 2");
-
-			var duration = TimeSpan.Zero;
 			var binlog = Path.Combine (Root, builder.ProjectDirectory, "msbuild.binlog");
 			FileAssert.Exists (binlog);
 
-			using (var fileStream = File.OpenRead (binlog))
-			using (var gzip = new GZipStream (fileStream, CompressionMode.Decompress))
-			using (var binaryReader = new BinaryReader (gzip)) {
-				int fileFormatVersion = binaryReader.ReadInt32 ();
-				var buildReader = new BuildEventArgsReader (binaryReader, fileFormatVersion);
-				BuildEventArgs args;
-				var started = new Stack<DateTime> ();
-				while ((args = buildReader.Read ()) != null) {
-					if (args is ProjectStartedEventArgs projectStarted) {
-						started.Push (projectStarted.Timestamp);
-					} else if (args is ProjectFinishedEventArgs projectFinished) {
-						duration += projectFinished.Timestamp - started.Pop ();
-					}
-				}
-			}
+			var build = BinaryLog.ReadBuild (binlog);
+			var duration = build
+				.FindChildrenRecursive<Project> ()
+				.Aggregate (TimeSpan.Zero, (duration, project) => duration + project.Duration);
 
 			if (duration == TimeSpan.Zero)
 				throw new InvalidDataException ($"No project build duration found in {binlog}");
