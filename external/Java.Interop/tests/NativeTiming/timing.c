@@ -1,6 +1,11 @@
 #include <stdio.h>
-#include <sys/time.h>
 #include <jni.h>
+
+#if WIN32
+#include <windows.h>
+#else   /* !def WIN32 */
+#include <sys/time.h>
+#endif  /* def WIN32 */
 
 #ifdef PLATFORM_ANDROID
 #include <android/log.h>
@@ -211,11 +216,15 @@ foo_init (JNIEnv *env)
 static long long
 current_time_millis (void)
 {
+#if defined (WIN32)
+	return (long long) GetTickCount64 ();
+#else   /* !def WIN32 */
 	struct timeval tv;
 
 	gettimeofday(&tv, (struct timezone *) NULL);
 	long long when = tv.tv_sec * 1000LL + tv.tv_usec / 1000;
 	return when;
+#endif  /* def WIN32 */
 }
 
 void

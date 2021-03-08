@@ -22,6 +22,7 @@ variables:
   HostedMacImage: macOS-10.15
   HostedWinVS2019: Hosted Windows 2019 with VS2019
   NetCoreTargetFrameworkPathSuffix: -netcoreapp3.1
+  VSInstallRoot: C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise
 
 jobs:
 - job: windows_build

@@ -90,3 +90,19 @@ steps:
     command: test
     arguments: bin/Test$(Build.Configuration)/Java.Interop.Export-Tests.dll
   continueOnError: true
+
+- task: DotNetCoreCLI@2
+  displayName: 'Tests: Java.Interop'
+  condition: eq('${{ parameters.runNativeTests }}', 'true')
+  inputs:
+    command: test
+    arguments: bin/Test$(Build.Configuration)/Java.Interop-PerformanceTests.dll
+  continueOnError: true
+
+- task: DotNetCoreCLI@2
+  displayName: 'Tests: Java.Interop'
+  condition: eq('${{ parameters.runNativeTests }}', 'true')
+  inputs:
+    command: test
+    arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Interop-PerformanceTests.dll
+  continueOnError: true

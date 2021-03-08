@@ -1,0 +1,113 @@
+<Project>
+
+  <PropertyGroup>
+    <_NativeTimingLibName Condition=" '$(OS)' != 'Windows_NT' And Exists ('/Library/Frameworks/') ">libNativeTiming.dylib</_NativeTimingLibName>
+    <_NativeTimingLibName Condition=" '$(OS)' != 'Windows_NT' And !Exists ('/Library/Frameworks/') ">libNativeTiming.so</_NativeTimingLibName>
+    <_NativeTimingLibName Condition=" '$(OS)' == 'Windows_NT' ">NativeTiming.dll</_NativeTimingLibName>
+    <_NativeTimingOutputPath>$(OutputPath)$(_NativeTimingLibName)</_NativeTimingOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="$(_NativeTimingOutputPath)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <Target Name="_BuildLibs"
+      BeforeTargets="Build"
+      DependsOnTargets="_PrepareCmake;_BuildNativeTiming">
+  </Target>
+
+  <Target Name="_GetBuildComands">
+    <ItemGroup>
+      <_Vcvarsall
+          Condition=" '$(VSINSTALLROOT)' != '' And Exists('$(VSINSTALLROOT)') "
+          Include="$(VSINSTALLROOT)\VC\Auxiliary\Build\vcvarsall.bat"
+      />
+    </ItemGroup>
+    <PropertyGroup Condition=" '@(_Vcvarsall->Count())' != '0' ">
+      <_Vcvarsall>%(_Vcvarsall.Identity)</_Vcvarsall>
+      <_PrepareToolchain>call "$(_Vcvarsall)" x86_amd64 &amp;&amp; </_PrepareToolchain>
+    </PropertyGroup>
+    <PropertyGroup>
+      <_Make Condition=" '$(OS)' != 'Windows_NT' ">make</_Make>
+      <_Make Condition=" '$(OS)' == 'Windows_NT' ">nmake</_Make>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="_PrepareCmake"
+      DependsOnTargets="_GetBuildComands"
+      Inputs="CMakeLists.txt;$(MSBuildThisFileFullPath);NativeTiming.csproj"
+      Outputs="$(IntermediateOutputPath)CMakeCache.txt">
+    <MakeDir Directories="$(IntermediateOutputPath)" />
+    <PropertyGroup>
+      <_JdkDirs>"-DJDK_INCLUDE_LIST=@(JdkIncludePath, ';')"</_JdkDirs>
+      <_CmakeGenerator Condition=" '$(OS)' != 'Windows_NT' ">-G "Unix Makefiles"</_CmakeGenerator>
+      <_CmakeGenerator Condition=" '$(OS)' == 'Windows_NT' ">-G "NMake Makefiles"</_CmakeGenerator>
+    </PropertyGroup>
+    <Exec
+        ContinueOnError="WarnAndContinue"
+        Command="$(_PrepareToolchain) $(CmakePath) $(_CmakeGenerator) -S . -B $(IntermediateOutputPath) $(_JdkDirs)"
+    />
+    <PropertyGroup>
+      <_CmakeStatus>$(MSBuildLastTaskResult)</_CmakeStatus>
+    </PropertyGroup>
+    <ReadLinesFromFile
+        Condition=" '$(_CmakeStatus)' == 'false' "
+        File="$(IntermediateOutputPath)CMakeFiles/CMakeOutput.log">
+      <Output TaskParameter="Lines" ItemName="_CmakeLog" />
+    </ReadLinesFromFile>
+    <Message
+        Condition=" '$(_CmakeStatus)' == 'false' "
+        Text="CMakeOutput.log"
+    />
+    <Message
+        Condition=" '$(_CmakeStatus)' == 'false' "
+        Text="@(_CmakeLog, '
+')"
+    />
+    <ReadLinesFromFile
+        Condition=" '$(_CmakeStatus)' == 'false' "
+        File="$(IntermediateOutputPath)CMakeFiles/CMakeError.log">
+      <Output TaskParameter="Lines" ItemName="_CmakeErrorLog" />
+    </ReadLinesFromFile>
+    <Message
+        Condition=" '$(_CmakeStatus)' == 'false' "
+        Text="CMakeError.log"
+    />
+    <Message
+        Condition=" '$(_CmakeStatus)' == 'false' "
+        Text="@(_CmakeErrorLog, '
+')"
+    />
+    <Error
+        Condition=" '$(_CmakeStatus)' == 'false' "
+        Text="`cmake` failed.  See previous messages."
+    />
+    <Touch Files="$(IntermediateOutputPath)CMakeCache.txt" />
+  </Target>
+
+  <Target Name="_BuildNativeTiming"
+      DependsOnTargets="_GetBuildComands"
+      Inputs="timing.c"
+      Outputs="$(_NativeTimingOutputPath)">
+    <Exec
+        Command="$(_PrepareToolchain) $(_Make) VERBOSE=1"
+        WorkingDirectory="$(IntermediateOutputPath)"
+    />
+    <ItemGroup>
+      <_Libs Include="$(IntermediateOutputPath)$(_NativeTimingLibName)*" />
+    </ItemGroup>
+    <Copy
+        SourceFiles="@(_Libs)"
+        DestinationFolder="$(OutputPath)"
+    />
+    <Touch Files="$(_NativeTimingOutputPath)" />
+  </Target>
+
+  <Target Name="_Clean"
+      AfterTargets="Clean">
+    <Delete Files="$(_NativeTimingOutputPath)" />
+  </Target>
+
+</Project>
