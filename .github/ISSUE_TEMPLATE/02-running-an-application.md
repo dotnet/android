@@ -2,8 +2,8 @@
 name: "\U0001F3C3‍♀️ Running an Application"
 about: Issues trying to run your application, like crashes on device or in the emulator.
 title: ''
-labels: 'Area: App Runtime'
-assignees: ''
+labels: 'Area: App Runtime, needs-triage'
+assignees: 'grendello'
 
 ---
 
