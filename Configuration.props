@@ -77,9 +77,9 @@
     <!-- Version number from: https://github.com/dotnet/installer#installers-and-binaries -->
     <!-- Please update DotNetRuntimePacksVersion below accordingly -->
     <DotNetPreviewVersionBand Condition=" '$(DotNetPreviewVersionBand)' == '' ">6.0.100</DotNetPreviewVersionBand>
-    <DotNetPreviewVersionFull Condition=" '$(DotNetPreviewVersionFull)' == '' ">$(DotNetPreviewVersionBand)-preview.2.21153.28</DotNetPreviewVersionFull>
+    <DotNetPreviewVersionFull Condition=" '$(DotNetPreviewVersionFull)' == '' ">$(DotNetPreviewVersionBand)-preview.2.21155.3</DotNetPreviewVersionFull>
     <!-- This version comes from the a file in the dotnet distribution: sdk/$(DotNetPreviewVersionFull)/dotnet.runtimeconfig.json (the `runtimeOptions/framework/version key`) -->
-    <DotNetRuntimePacksVersion Condition=" '$(DotNetRuntimePacksVersion)' == '' ">6.0.0-preview.2.21123.7</DotNetRuntimePacksVersion>
+    <DotNetRuntimePacksVersion Condition=" '$(DotNetRuntimePacksVersion)' == '' ">6.0.0-preview.2.21154.6</DotNetRuntimePacksVersion>
     <ILLinkVersionBand Condition=" '$(ILLinkVersionBand)' == '' ">6.0.0</ILLinkVersionBand>
     <ILLinkVersionFull Condition=" '$(ILLinkVersionFull)' == '' ">$(ILLinkVersionBand)-alpha.1.21109.1</ILLinkVersionFull>
     <WixToolPath Condition=" '$(WixToolPath)' == '' ">$(AndroidToolchainDirectory)\wix\</WixToolPath>
