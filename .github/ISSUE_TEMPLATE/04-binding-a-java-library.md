@@ -2,7 +2,7 @@
 name: "☕ Binding an Android Library"
 about: Issues trying to bind an Android library using an Android Bindings project.
 title: ''
-labels: 'Area: Bindings'
+labels: 'Area: Bindings, needs-triage'
 assignees: 'jpobst'
 
 ---
@@ -23,28 +23,24 @@ If you have a repro project, you may drag & drop the .zip/etc. onto the issue ed
 
 ### Version Information
 
+<details>
 <!--
 1. On macOS and within Visual Studio, select Visual Studio > About Visual Studio, then click the Show Details button, then click the Copy Information button.
 
 2. Paste below this comment block.
 -->
 
+
+
+</details>
+
+
 ### Log File
 
 <!--
-1. Within Visual Studio:
-    a. Click **Tools** > **SDK Command Prompt** on macOS or
-       **Tools** > **Android** > **Android Adb Command Prompt** on Windows
-    b. On macOS, in the launched `Terminal.app` window, run:
+Some useful binding logging is only available with MSBuild Diagnostic logging enabled.
 
-            adb logcat -d | pbcopy
-
-       On Windows, in the launched `cmd.exe` window, run:
-
-            adb logcat -d | clip
-
-2. Paste below this comment block
--->
+Enable [Diagnostic logging](https://docs.microsoft.com/en-us/xamarin/android/troubleshooting/troubleshooting#diagnostic-msbuild-output), **Rebuild** (not just Build) your project, and attach the log.
 
 
 
