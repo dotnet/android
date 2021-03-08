@@ -14,9 +14,9 @@ This file contains the .NET 5-specific targets to customize ILLink
       AfterTargets="ComputeResolvedFilesToPublishList"
       DependsOnTargets="GetReferenceAssemblyPaths;_CreatePropertiesCache">
     <ItemGroup>
-      <RuntimeHostConfigurationOption Include="Java.Interop.TypeManager.TypeRegistrationFallbackIsEnabled"
-          Condition="'$(XATypeRegistrationFallback)' != ''"
-          Value="$(XATypeRegistrationFallback)"
+      <RuntimeHostConfigurationOption Include="Android.Runtime.AndroidEnvironment.VSAndroidDesignerIsEnabled"
+          Condition="'$(VSAndroidDesigner)' != ''"
+          Value="$(VSAndroidDesigner)"
           Trim="true" />
       <!-- Mark all assemblies to be linked for AndroidLinkMode=Full -->
       <ResolvedFileToPublish

@@ -431,7 +431,7 @@ namespace UnnamedProject {
 
 			var proj = new XamarinAndroidApplicationProject () { IsRelease = true };
 			if (enabled)
-				proj.SetProperty (proj.ActiveConfigurationProperties, "XATypeRegistrationFallback", "true");
+				proj.SetProperty (proj.ActiveConfigurationProperties, "VSAndroidDesigner", "true");
 
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");

@@ -55,7 +55,7 @@ namespace Android.Runtime {
 						hasNoLibLog = true;
 					}
 				}
-				if (hasNoLibLog)
+				if (AndroidEnvironment.VSAndroidDesignerIsEnabled && hasNoLibLog)
 					System.Console.WriteLine ("[{0}] {1}: {2}", level, appname, line);
 			}
 		}
