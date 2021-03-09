@@ -109,7 +109,7 @@ namespace Xamarin.Android.Build.Tests
 				var apkDescPath = Path.Combine (Root, apkDescFilename);
 				var apkDescReferencePath = Path.Combine (Root, b.ProjectDirectory, apkDescReference);
 				var (code, stdOut, stdErr) = RunApkDiffCommand ($"-s --save-description-2={apkDescPath} --descrease-is-regression --test-apk-size-regression={ApkSizeThreshold} --test-assembly-size-regression={AssemblySizeThreshold} {apkDescReferencePath} {apkFile}");
-				Assert.IsTrue (code == 0, $"apkdiff regression test failed with exit code: {code}\nstdOut: {stdOut}\nstdErr: {stdErr}");
+				Assert.IsTrue (code == 0, $"apkdiff regression test failed with exit code: {code}\ncontext: https://github.com/xamarin/xamarin-android/blob/main/Documentation/project-docs/ApkSizeRegressionChecks.md\nstdOut: {stdOut}\nstdErr: {stdErr}");
 			}
 		}
 
