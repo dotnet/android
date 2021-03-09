@@ -2,730 +2,7 @@
   "Comment": null,
   "Entries": {
     "AndroidManifest.xml": {
-      "Size": 3684
-    },
-    "assemblies/FormsViewGroup.dll": {
-      "Size": 16384
-    },
-    "assemblies/Java.Interop.dll": {
-      "Size": 164864
-    },
-    "assemblies/Mono.Android.dll": {
-      "Size": 2445312
-    },
-    "assemblies/Mono.Security.dll": {
-      "Size": 121856
-    },
-    "assemblies/mscorlib.dll": {
-      "Size": 2091008
-    },
-    "assemblies/Newtonsoft.Json.dll": {
-      "Size": 682496
-    },
-    "assemblies/Plugin.Connectivity.Abstractions.dll": {
-      "Size": 7680
-    },
-    "assemblies/Plugin.Connectivity.dll": {
-      "Size": 17920
-    },
-    "assemblies/System.Core.dll": {
-      "Size": 390144
-    },
-    "assemblies/System.Data.dll": {
-      "Size": 747520
-    },
-    "assemblies/System.dll": {
-      "Size": 874496
-    },
-    "assemblies/System.Drawing.Common.dll": {
-      "Size": 26112
-    },
-    "assemblies/System.Net.Http.dll": {
-      "Size": 218112
-    },
-    "assemblies/System.Numerics.dll": {
-      "Size": 38912
-    },
-    "assemblies/System.Runtime.Serialization.dll": {
-      "Size": 419328
-    },
-    "assemblies/System.ServiceModel.Internals.dll": {
-      "Size": 55808
-    },
-    "assemblies/System.Xml.dll": {
-      "Size": 1399296
-    },
-    "assemblies/System.Xml.Linq.dll": {
-      "Size": 65024
-    },
-    "assemblies/Xamarin.AndroidX.Activity.dll": {
-      "Size": 22528
-    },
-    "assemblies/Xamarin.AndroidX.Annotation.dll": {
-      "Size": 6144
-    },
-    "assemblies/Xamarin.AndroidX.AppCompat.dll": {
-      "Size": 723968
-    },
-    "assemblies/Xamarin.AndroidX.AppCompat.Resources.dll": {
-      "Size": 23040
-    },
-    "assemblies/Xamarin.AndroidX.Arch.Core.Common.dll": {
-      "Size": 6656
-    },
-    "assemblies/Xamarin.AndroidX.Arch.Core.Runtime.dll": {
-      "Size": 6144
-    },
-    "assemblies/Xamarin.AndroidX.AsyncLayoutInflater.dll": {
-      "Size": 6144
-    },
-    "assemblies/Xamarin.AndroidX.Browser.dll": {
-      "Size": 10752
-    },
-    "assemblies/Xamarin.AndroidX.CardView.dll": {
-      "Size": 23040
-    },
-    "assemblies/Xamarin.AndroidX.Collection.dll": {
-      "Size": 6656
-    },
-    "assemblies/Xamarin.AndroidX.CoordinatorLayout.dll": {
-      "Size": 98304
-    },
-    "assemblies/Xamarin.AndroidX.Core.dll": {
-      "Size": 689152
-    },
-    "assemblies/Xamarin.AndroidX.CursorAdapter.dll": {
-      "Size": 6656
-    },
-    "assemblies/Xamarin.AndroidX.CustomView.dll": {
-      "Size": 6656
-    },
-    "assemblies/Xamarin.AndroidX.DocumentFile.dll": {
-      "Size": 6144
-    },
-    "assemblies/Xamarin.AndroidX.DrawerLayout.dll": {
-      "Size": 54784
-    },
-    "assemblies/Xamarin.AndroidX.Fragment.dll": {
-      "Size": 233472
-    },
-    "assemblies/Xamarin.AndroidX.Interpolator.dll": {
-      "Size": 6656
-    },
-    "assemblies/Xamarin.AndroidX.Legacy.Support.Core.UI.dll": {
-      "Size": 19456
-    },
-    "assemblies/Xamarin.AndroidX.Legacy.Support.Core.Utils.dll": {
-      "Size": 6144
-    },
-    "assemblies/Xamarin.AndroidX.Lifecycle.Common.dll": {
-      "Size": 19456
-    },
-    "assemblies/Xamarin.AndroidX.Lifecycle.LiveData.Core.dll": {
-      "Size": 20992
-    },
-    "assemblies/Xamarin.AndroidX.Lifecycle.LiveData.dll": {
-      "Size": 6144
-    },
-    "assemblies/Xamarin.AndroidX.Lifecycle.Runtime.dll": {
-      "Size": 6144
-    },
-    "assemblies/Xamarin.AndroidX.Lifecycle.ViewModel.dll": {
-      "Size": 11776
-    },
-    "assemblies/Xamarin.AndroidX.Loader.dll": {
-      "Size": 52224
-    },
-    "assemblies/Xamarin.AndroidX.LocalBroadcastManager.dll": {
-      "Size": 6144
-    },
-    "assemblies/Xamarin.AndroidX.Media.dll": {
-      "Size": 11776
-    },
-    "assemblies/Xamarin.AndroidX.Print.dll": {
-      "Size": 5632
-    },
-    "assemblies/Xamarin.AndroidX.RecyclerView.dll": {
-      "Size": 601088
-    },
-    "assemblies/Xamarin.AndroidX.SavedState.dll": {
-      "Size": 15360
-    },
-    "assemblies/Xamarin.AndroidX.SlidingPaneLayout.dll": {
-      "Size": 7168
-    },
-    "assemblies/Xamarin.AndroidX.SwipeRefreshLayout.dll": {
-      "Size": 35328
-    },
-    "assemblies/Xamarin.AndroidX.Transition.dll": {
-      "Size": 10240
-    },
-    "assemblies/Xamarin.AndroidX.VectorDrawable.Animated.dll": {
-      "Size": 7680
-    },
-    "assemblies/Xamarin.AndroidX.VectorDrawable.dll": {
-      "Size": 6656
-    },
-    "assemblies/Xamarin.AndroidX.VersionedParcelable.dll": {
-      "Size": 6656
-    },
-    "assemblies/Xamarin.AndroidX.ViewPager.dll": {
-      "Size": 77312
-    },
-    "assemblies/Xamarin.Forms.Core.dll": {
-      "Size": 1022464
-    },
-    "assemblies/Xamarin.Forms.Performance.Integration.dll": {
-      "Size": 43520
-    },
-    "assemblies/Xamarin.Forms.Performance.Integration.Droid.dll": {
-      "Size": 221696
-    },
-    "assemblies/Xamarin.Forms.Platform.Android.dll": {
-      "Size": 900096
-    },
-    "assemblies/Xamarin.Forms.Platform.dll": {
-      "Size": 131072
-    },
-    "assemblies/Xamarin.Forms.Xaml.dll": {
-      "Size": 100864
-    },
-    "assemblies/Xamarin.Google.Android.Material.dll": {
-      "Size": 248320
-    },
-    "classes.dex": {
-      "Size": 2102188
-    },
-    "lib/armeabi-v7a/libaot-FormsViewGroup.dll.so": {
-      "Size": 16936
-    },
-    "lib/armeabi-v7a/libaot-Java.Interop.dll.so": {
-      "Size": 300092
-    },
-    "lib/armeabi-v7a/libaot-Mono.Android.dll.so": {
-      "Size": 954396
-    },
-    "lib/armeabi-v7a/libaot-Mono.Security.dll.so": {
-      "Size": 18744
-    },
-    "lib/armeabi-v7a/libaot-mscorlib.dll.so": {
-      "Size": 2243600
-    },
-    "lib/armeabi-v7a/libaot-Newtonsoft.Json.dll.so": {
-      "Size": 437344
-    },
-    "lib/armeabi-v7a/libaot-Plugin.Connectivity.Abstractions.dll.so": {
-      "Size": 6492
-    },
-    "lib/armeabi-v7a/libaot-Plugin.Connectivity.dll.so": {
-      "Size": 6468
-    },
-    "lib/armeabi-v7a/libaot-System.Core.dll.so": {
-      "Size": 796196
-    },
-    "lib/armeabi-v7a/libaot-System.Data.dll.so": {
-      "Size": 176404
-    },
-    "lib/armeabi-v7a/libaot-System.dll.so": {
-      "Size": 680904
-    },
-    "lib/armeabi-v7a/libaot-System.Drawing.Common.dll.so": {
-      "Size": 6472
-    },
-    "lib/armeabi-v7a/libaot-System.Net.Http.dll.so": {
-      "Size": 99888
-    },
-    "lib/armeabi-v7a/libaot-System.Numerics.dll.so": {
-      "Size": 10556
-    },
-    "lib/armeabi-v7a/libaot-System.Runtime.Serialization.dll.so": {
-      "Size": 117156
-    },
-    "lib/armeabi-v7a/libaot-System.ServiceModel.Internals.dll.so": {
-      "Size": 16740
-    },
-    "lib/armeabi-v7a/libaot-System.Xml.dll.so": {
-      "Size": 217480
-    },
-    "lib/armeabi-v7a/libaot-System.Xml.Linq.dll.so": {
-      "Size": 31896
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Activity.dll.so": {
-      "Size": 10576
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Annotation.dll.so": {
-      "Size": 6484
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.AppCompat.dll.so": {
-      "Size": 88400
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.AppCompat.Resources.dll.so": {
-      "Size": 6500
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Arch.Core.Common.dll.so": {
-      "Size": 6496
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Arch.Core.Runtime.dll.so": {
-      "Size": 6496
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.AsyncLayoutInflater.dll.so": {
-      "Size": 6500
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Browser.dll.so": {
-      "Size": 6476
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.CardView.dll.so": {
-      "Size": 10576
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Collection.dll.so": {
-      "Size": 6484
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.CoordinatorLayout.dll.so": {
-      "Size": 14688
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Core.dll.so": {
-      "Size": 76104
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.CursorAdapter.dll.so": {
-      "Size": 6488
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.CustomView.dll.so": {
-      "Size": 6484
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.DocumentFile.dll.so": {
-      "Size": 6488
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.DrawerLayout.dll.so": {
-      "Size": 14680
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Fragment.dll.so": {
-      "Size": 26960
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Interpolator.dll.so": {
-      "Size": 6488
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Legacy.Support.Core.UI.dll.so": {
-      "Size": 6508
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Legacy.Support.Core.Utils.dll.so": {
-      "Size": 6512
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Lifecycle.Common.dll.so": {
-      "Size": 6496
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Lifecycle.LiveData.Core.dll.so": {
-      "Size": 6508
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Lifecycle.LiveData.dll.so": {
-      "Size": 6500
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Lifecycle.Runtime.dll.so": {
-      "Size": 6496
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Lifecycle.ViewModel.dll.so": {
-      "Size": 6500
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Loader.dll.so": {
-      "Size": 10572
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.LocalBroadcastManager.dll.so": {
-      "Size": 6504
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Media.dll.so": {
-      "Size": 6472
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Print.dll.so": {
-      "Size": 6472
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.RecyclerView.dll.so": {
-      "Size": 63832
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.SavedState.dll.so": {
-      "Size": 6484
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.SlidingPaneLayout.dll.so": {
-      "Size": 6496
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.SwipeRefreshLayout.dll.so": {
-      "Size": 10596
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Transition.dll.so": {
-      "Size": 6484
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.VectorDrawable.Animated.dll.so": {
-      "Size": 6508
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.VectorDrawable.dll.so": {
-      "Size": 6492
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.VersionedParcelable.dll.so": {
-      "Size": 6500
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.ViewPager.dll.so": {
-      "Size": 14672
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.Forms.Core.dll.so": {
-      "Size": 1743912
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.Forms.Performance.Integration.dll.so": {
-      "Size": 141300
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.Forms.Performance.Integration.Droid.dll.so": {
-      "Size": 10612
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.Forms.Platform.Android.dll.so": {
-      "Size": 1135372
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.Forms.Platform.dll.so": {
-      "Size": 10568
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.Forms.Xaml.dll.so": {
-      "Size": 75608
-    },
-    "lib/armeabi-v7a/libaot-Xamarin.Google.Android.Material.dll.so": {
-      "Size": 39260
-    },
-    "lib/armeabi-v7a/libmono-btls-shared.so": {
-      "Size": 856580
-    },
-    "lib/armeabi-v7a/libmonodroid.so": {
-      "Size": 170808
-    },
-    "lib/armeabi-v7a/libmono-native.so": {
-      "Size": 714476
-    },
-    "lib/armeabi-v7a/libmonosgen-2.0.so": {
-      "Size": 3816228
-    },
-    "lib/armeabi-v7a/libxamarin-app.so": {
-      "Size": 127116
-    },
-    "lib/x86/libaot-FormsViewGroup.dll.so": {
-      "Size": 16552
-    },
-    "lib/x86/libaot-Java.Interop.dll.so": {
-      "Size": 283880
-    },
-    "lib/x86/libaot-Mono.Android.dll.so": {
-      "Size": 771068
-    },
-    "lib/x86/libaot-Mono.Security.dll.so": {
-      "Size": 14420
-    },
-    "lib/x86/libaot-mscorlib.dll.so": {
-      "Size": 2044400
-    },
-    "lib/x86/libaot-Newtonsoft.Json.dll.so": {
-      "Size": 385356
-    },
-    "lib/x86/libaot-Plugin.Connectivity.Abstractions.dll.so": {
-      "Size": 6264
-    },
-    "lib/x86/libaot-Plugin.Connectivity.dll.so": {
-      "Size": 6240
-    },
-    "lib/x86/libaot-System.Core.dll.so": {
-      "Size": 750508
-    },
-    "lib/x86/libaot-System.Data.dll.so": {
-      "Size": 128840
-    },
-    "lib/x86/libaot-System.dll.so": {
-      "Size": 615368
-    },
-    "lib/x86/libaot-System.Drawing.Common.dll.so": {
-      "Size": 6244
-    },
-    "lib/x86/libaot-System.Net.Http.dll.so": {
-      "Size": 84024
-    },
-    "lib/x86/libaot-System.Numerics.dll.so": {
-      "Size": 6232
-    },
-    "lib/x86/libaot-System.Runtime.Serialization.dll.so": {
-      "Size": 84212
-    },
-    "lib/x86/libaot-System.ServiceModel.Internals.dll.so": {
-      "Size": 16508
-    },
-    "lib/x86/libaot-System.Xml.dll.so": {
-      "Size": 131136
-    },
-    "lib/x86/libaot-System.Xml.Linq.dll.so": {
-      "Size": 23828
-    },
-    "lib/x86/libaot-Xamarin.AndroidX.Activity.dll.so": {
-      "Size": 6252
-    },
-    "lib/x86/libaot-Xamarin.AndroidX.Annotation.dll.so": {
-      "Size": 6256
-    },
-    "lib/x86/libaot-Xamarin.AndroidX.AppCompat.dll.so": {
-      "Size": 51308
-    },
-    "lib/x86/libaot-Xamarin.AndroidX.AppCompat.Resources.dll.so": {
-      "Size": 6272
-    },
-    "lib/x86/libaot-Xamarin.AndroidX.Arch.Core.Common.dll.so": {
-      "Size": 6268
-    },
-    "lib/x86/libaot-Xamarin.AndroidX.Arch.Core.Runtime.dll.so": {
-      "Size": 6268
-    },
-    "lib/x86/libaot-Xamarin.AndroidX.AsyncLayoutInflater.dll.so": {
-      "Size": 6272
-    },
-    "lib/x86/libaot-Xamarin.AndroidX.Browser.dll.so": {
-      "Size": 6248
-    },
-    "lib/x86/libaot-Xamarin.AndroidX.CardView.dll.so": {
-      "Size": 6252
-    },
-    "lib/x86/libaot-Xamarin.AndroidX.Collection.dll.so": {
-      "Size": 6256
-    },
-    "lib/x86/libaot-Xamarin.AndroidX.CoordinatorLayout.dll.so": {
-      "Size": 10364
-    },
-    "lib/x86/libaot-Xamarin.AndroidX.Core.dll.so": {
-      "Size": 43108
-    },
-    "lib/x86/libaot-Xamarin.AndroidX.CursorAdapter.dll.so": {
-      "Size": 6260
-    },
-    "lib/x86/libaot-Xamarin.AndroidX.CustomView.dll.so": {
-      "Size": 6256
-    },
-    "lib/x86/libaot-Xamarin.AndroidX.DocumentFile.dll.so": {
-      "Size": 6260
-    },
-    "lib/x86/libaot-Xamarin.AndroidX.DrawerLayout.dll.so": {
-      "Size": 10356
-    },
-    "lib/x86/libaot-Xamarin.AndroidX.Fragment.dll.so": {
-      "Size": 18540
-    },
-    "lib/x86/libaot-Xamarin.AndroidX.Interpolator.dll.so": {
-      "Size": 6260
-    },
-    "lib/x86/libaot-Xamarin.AndroidX.Legacy.Support.Core.UI.dll.so": {
-      "Size": 6280
-    },
-    "lib/x86/libaot-Xamarin.AndroidX.Legacy.Support.Core.Utils.dll.so": {
-      "Size": 6284
-    },
-    "lib/x86/libaot-Xamarin.AndroidX.Lifecycle.Common.dll.so": {
-      "Size": 6268
-    },
-    "lib/x86/libaot-Xamarin.AndroidX.Lifecycle.LiveData.Core.dll.so": {
-      "Size": 6280
-    },
-    "lib/x86/libaot-Xamarin.AndroidX.Lifecycle.LiveData.dll.so": {
-      "Size": 6272
-    },
-    "lib/x86/libaot-Xamarin.AndroidX.Lifecycle.Runtime.dll.so": {
-      "Size": 6268
-    },
-    "lib/x86/libaot-Xamarin.AndroidX.Lifecycle.ViewModel.dll.so": {
-      "Size": 6272
-    },
-    "lib/x86/libaot-Xamarin.AndroidX.Loader.dll.so": {
-      "Size": 10344
-    },
-    "lib/x86/libaot-Xamarin.AndroidX.LocalBroadcastManager.dll.so": {
-      "Size": 6276
-    },
-    "lib/x86/libaot-Xamarin.AndroidX.Media.dll.so": {
-      "Size": 6244
-    },
-    "lib/x86/libaot-Xamarin.AndroidX.Print.dll.so": {
-      "Size": 6244
-    },
-    "lib/x86/libaot-Xamarin.AndroidX.RecyclerView.dll.so": {
-      "Size": 39028
-    },
-    "lib/x86/libaot-Xamarin.AndroidX.SavedState.dll.so": {
-      "Size": 6256
-    },
-    "lib/x86/libaot-Xamarin.AndroidX.SlidingPaneLayout.dll.so": {
-      "Size": 6268
-    },
-    "lib/x86/libaot-Xamarin.AndroidX.SwipeRefreshLayout.dll.so": {
-      "Size": 10368
-    },
-    "lib/x86/libaot-Xamarin.AndroidX.Transition.dll.so": {
-      "Size": 6256
-    },
-    "lib/x86/libaot-Xamarin.AndroidX.VectorDrawable.Animated.dll.so": {
-      "Size": 6280
-    },
-    "lib/x86/libaot-Xamarin.AndroidX.VectorDrawable.dll.so": {
-      "Size": 6264
-    },
-    "lib/x86/libaot-Xamarin.AndroidX.VersionedParcelable.dll.so": {
-      "Size": 6272
-    },
-    "lib/x86/libaot-Xamarin.AndroidX.ViewPager.dll.so": {
-      "Size": 10348
-    },
-    "lib/x86/libaot-Xamarin.Forms.Core.dll.so": {
-      "Size": 1599332
-    },
-    "lib/x86/libaot-Xamarin.Forms.Performance.Integration.dll.so": {
-      "Size": 137556
-    },
-    "lib/x86/libaot-Xamarin.Forms.Performance.Integration.Droid.dll.so": {
-      "Size": 10384
-    },
-    "lib/x86/libaot-Xamarin.Forms.Platform.Android.dll.so": {
-      "Size": 1039376
-    },
-    "lib/x86/libaot-Xamarin.Forms.Platform.dll.so": {
-      "Size": 10340
-    },
-    "lib/x86/libaot-Xamarin.Forms.Xaml.dll.so": {
-      "Size": 63128
-    },
-    "lib/x86/libaot-Xamarin.Google.Android.Material.dll.so": {
-      "Size": 26744
-    },
-    "lib/x86/libmono-btls-shared.so": {
-      "Size": 1311172
-    },
-    "lib/x86/libmonodroid.so": {
-      "Size": 203048
-    },
-    "lib/x86/libmono-native.so": {
-      "Size": 788196
-    },
-    "lib/x86/libmonosgen-2.0.so": {
-      "Size": 3799820
-    },
-    "lib/x86/libxamarin-app.so": {
-      "Size": 126860
-    },
-    "META-INF/android.support.design_material.version": {
-      "Size": 12
-    },
-    "META-INF/ANDROIDD.RSA": {
-      "Size": 1205
-    },
-    "META-INF/ANDROIDD.SF": {
-      "Size": 82771
-    },
-    "META-INF/androidx.activity_activity.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.appcompat_appcompat.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.appcompat_appcompat-resources.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.arch.core_core-runtime.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.asynclayoutinflater_asynclayoutinflater.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.browser_browser.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.cardview_cardview.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.coordinatorlayout_coordinatorlayout.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.core_core.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.cursoradapter_cursoradapter.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.customview_customview.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.documentfile_documentfile.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.drawerlayout_drawerlayout.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.fragment_fragment.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.interpolator_interpolator.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.legacy_legacy-support-core-ui.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.legacy_legacy-support-core-utils.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.legacy_legacy-support-v4.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.lifecycle_lifecycle-livedata.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.lifecycle_lifecycle-livedata-core.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.lifecycle_lifecycle-runtime.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.lifecycle_lifecycle-viewmodel.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.loader_loader.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.localbroadcastmanager_localbroadcastmanager.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.media_media.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.print_print.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.recyclerview_recyclerview.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.savedstate_savedstate.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.slidingpanelayout_slidingpanelayout.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.swiperefreshlayout_swiperefreshlayout.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.transition_transition.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.vectordrawable_vectordrawable.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.vectordrawable_vectordrawable-animated.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.versionedparcelable_versionedparcelable.version": {
-      "Size": 6
-    },
-    "META-INF/androidx.viewpager_viewpager.version": {
-      "Size": 6
-    },
-    "META-INF/com.google.android.material_material.version": {
-      "Size": 10
-    },
-    "META-INF/MANIFEST.MF": {
-      "Size": 82663
-    },
-    "META-INF/proguard/androidx-annotations.pro": {
-      "Size": 339
+      "Size": 3748
     },
     "res/anim/abc_fade_in.xml": {
       "Size": 388
@@ -823,6 +100,12 @@
     "res/anim/exittoright.xml": {
       "Size": 468
     },
+    "res/anim-v21/design_bottom_sheet_slide_in.xml": {
+      "Size": 616
+    },
+    "res/anim-v21/design_bottom_sheet_slide_out.xml": {
+      "Size": 616
+    },
     "res/animator/design_fab_hide_motion_spec.xml": {
       "Size": 796
     },
@@ -831,6 +114,9 @@
     },
     "res/animator/mtrl_btn_state_list_anim.xml": {
       "Size": 2624
+    },
+    "res/animator-v19/mtrl_btn_state_list_anim.xml": {
+      "Size": 2664
     },
     "res/animator/mtrl_btn_unelevated_state_list_anim.xml": {
       "Size": 120
@@ -850,17 +136,8 @@
     "res/animator/mtrl_fab_transformation_sheet_expand_spec.xml": {
       "Size": 1888
     },
-    "res/animator-v19/mtrl_btn_state_list_anim.xml": {
-      "Size": 2664
-    },
     "res/animator-v21/design_appbar_state_list_animator.xml": {
       "Size": 1216
-    },
-    "res/anim-v21/design_bottom_sheet_slide_in.xml": {
-      "Size": 616
-    },
-    "res/anim-v21/design_bottom_sheet_slide_out.xml": {
-      "Size": 616
     },
     "res/color/abc_background_cache_hint_selector_material_dark.xml": {
       "Size": 468
@@ -1096,11 +373,20 @@
     "res/drawable/abc_ratingbar_indicator_material.xml": {
       "Size": 664
     },
+    "res/drawable-v21/abc_ratingbar_indicator_material.xml": {
+      "Size": 704
+    },
     "res/drawable/abc_ratingbar_material.xml": {
       "Size": 664
     },
+    "res/drawable-v21/abc_ratingbar_material.xml": {
+      "Size": 704
+    },
     "res/drawable/abc_ratingbar_small_material.xml": {
       "Size": 664
+    },
+    "res/drawable-v21/abc_ratingbar_small_material.xml": {
+      "Size": 704
     },
     "res/drawable/abc_seekbar_thumb_material.xml": {
       "Size": 1100
@@ -1205,13 +491,232 @@
       "Size": 484
     },
     "res/drawable/xamarin_logo.png": {
-      "Size": 9799
+      "Size": 9794
     },
-    "res/drawable-anydpi-v21/design_ic_visibility.xml": {
-      "Size": 540
+    "res/drawable-watch-v20/abc_dialog_material_background.xml": {
+      "Size": 372
     },
-    "res/drawable-anydpi-v21/design_ic_visibility_off.xml": {
-      "Size": 1144
+    "res/drawable-v21/$avd_hide_password__0.xml": {
+      "Size": 1176
+    },
+    "res/drawable-v21/$avd_hide_password__1.xml": {
+      "Size": 592
+    },
+    "res/drawable-v21/$avd_hide_password__2.xml": {
+      "Size": 556
+    },
+    "res/drawable-v21/$avd_show_password__0.xml": {
+      "Size": 1136
+    },
+    "res/drawable-v21/$avd_show_password__1.xml": {
+      "Size": 592
+    },
+    "res/drawable-v21/$avd_show_password__2.xml": {
+      "Size": 556
+    },
+    "res/drawable-v21/abc_action_bar_item_background_material.xml": {
+      "Size": 264
+    },
+    "res/drawable-v21/abc_btn_colored_material.xml": {
+      "Size": 1716
+    },
+    "res/drawable-v21/abc_dialog_material_background.xml": {
+      "Size": 716
+    },
+    "res/drawable-v21/abc_edit_text_material.xml": {
+      "Size": 1172
+    },
+    "res/drawable-v21/abc_list_divider_material.xml": {
+      "Size": 516
+    },
+    "res/drawable-v21/avd_hide_password.xml": {
+      "Size": 660
+    },
+    "res/drawable-v21/avd_show_password.xml": {
+      "Size": 660
+    },
+    "res/drawable-v21/design_bottom_navigation_item_background.xml": {
+      "Size": 264
+    },
+    "res/drawable-v21/design_password_eye.xml": {
+      "Size": 816
+    },
+    "res/drawable-v21/notification_action_background.xml": {
+      "Size": 1180
+    },
+    "res/drawable-v23/abc_control_background_material.xml": {
+      "Size": 304
+    },
+    "res/drawable-mdpi-v4/abc_ab_share_pack_mtrl_alpha.9.png": {
+      "Size": 267
+    },
+    "res/drawable-mdpi-v4/abc_btn_check_to_on_mtrl_000.png": {
+      "Size": 214
+    },
+    "res/drawable-mdpi-v4/abc_btn_check_to_on_mtrl_015.png": {
+      "Size": 321
+    },
+    "res/drawable-mdpi-v4/abc_btn_radio_to_on_mtrl_000.png": {
+      "Size": 324
+    },
+    "res/drawable-mdpi-v4/abc_btn_radio_to_on_mtrl_015.png": {
+      "Size": 356
+    },
+    "res/drawable-mdpi-v4/abc_btn_switch_to_on_mtrl_00001.9.png": {
+      "Size": 754
+    },
+    "res/drawable-mdpi-v4/abc_btn_switch_to_on_mtrl_00012.9.png": {
+      "Size": 825
+    },
+    "res/drawable-mdpi-v4/abc_cab_background_top_mtrl_alpha.9.png": {
+      "Size": 216
+    },
+    "res/drawable-mdpi-v4/abc_ic_commit_search_api_mtrl_alpha.png": {
+      "Size": 173
+    },
+    "res/drawable-mdpi-v4/abc_ic_menu_copy_mtrl_am_alpha.png": {
+      "Size": 133
+    },
+    "res/drawable-mdpi-v4/abc_ic_menu_cut_mtrl_alpha.png": {
+      "Size": 251
+    },
+    "res/drawable-mdpi-v4/abc_ic_menu_paste_mtrl_am_alpha.png": {
+      "Size": 152
+    },
+    "res/drawable-mdpi-v4/abc_ic_menu_selectall_mtrl_alpha.png": {
+      "Size": 139
+    },
+    "res/drawable-mdpi-v4/abc_ic_menu_share_mtrl_alpha.png": {
+      "Size": 270
+    },
+    "res/drawable-mdpi-v4/abc_ic_star_black_16dp.png": {
+      "Size": 193
+    },
+    "res/drawable-mdpi-v4/abc_ic_star_black_36dp.png": {
+      "Size": 364
+    },
+    "res/drawable-mdpi-v4/abc_ic_star_black_48dp.png": {
+      "Size": 467
+    },
+    "res/drawable-mdpi-v4/abc_ic_star_half_black_16dp.png": {
+      "Size": 146
+    },
+    "res/drawable-mdpi-v4/abc_ic_star_half_black_36dp.png": {
+      "Size": 253
+    },
+    "res/drawable-mdpi-v4/abc_ic_star_half_black_48dp.png": {
+      "Size": 310
+    },
+    "res/drawable-mdpi-v4/abc_list_divider_mtrl_alpha.9.png": {
+      "Size": 167
+    },
+    "res/drawable-mdpi-v4/abc_list_focused_holo.9.png": {
+      "Size": 222
+    },
+    "res/drawable-mdpi-v4/abc_list_longpressed_holo.9.png": {
+      "Size": 211
+    },
+    "res/drawable-mdpi-v4/abc_list_pressed_holo_dark.9.png": {
+      "Size": 207
+    },
+    "res/drawable-mdpi-v4/abc_list_pressed_holo_light.9.png": {
+      "Size": 207
+    },
+    "res/drawable-mdpi-v4/abc_list_selector_disabled_holo_dark.9.png": {
+      "Size": 217
+    },
+    "res/drawable-mdpi-v4/abc_list_selector_disabled_holo_light.9.png": {
+      "Size": 217
+    },
+    "res/drawable-mdpi-v4/abc_menu_hardkey_panel_mtrl_mult.9.png": {
+      "Size": 541
+    },
+    "res/drawable-mdpi-v4/abc_popup_background_mtrl_mult.9.png": {
+      "Size": 776
+    },
+    "res/drawable-mdpi-v4/abc_scrubber_control_off_mtrl_alpha.png": {
+      "Size": 159
+    },
+    "res/drawable-mdpi-v4/abc_scrubber_control_to_pressed_mtrl_000.png": {
+      "Size": 145
+    },
+    "res/drawable-mdpi-v4/abc_scrubber_control_to_pressed_mtrl_005.png": {
+      "Size": 197
+    },
+    "res/drawable-mdpi-v4/abc_scrubber_primary_mtrl_alpha.9.png": {
+      "Size": 203
+    },
+    "res/drawable-mdpi-v4/abc_scrubber_track_mtrl_alpha.9.png": {
+      "Size": 194
+    },
+    "res/drawable-mdpi-v4/abc_spinner_mtrl_am_alpha.9.png": {
+      "Size": 327
+    },
+    "res/drawable-mdpi-v4/abc_switch_track_mtrl_alpha.9.png": {
+      "Size": 395
+    },
+    "res/drawable-mdpi-v4/abc_tab_indicator_mtrl_alpha.9.png": {
+      "Size": 186
+    },
+    "res/drawable-mdpi-v4/abc_text_select_handle_left_mtrl_dark.png": {
+      "Size": 203
+    },
+    "res/drawable-mdpi-v4/abc_text_select_handle_left_mtrl_light.png": {
+      "Size": 203
+    },
+    "res/drawable-mdpi-v4/abc_text_select_handle_middle_mtrl_dark.png": {
+      "Size": 311
+    },
+    "res/drawable-mdpi-v4/abc_text_select_handle_middle_mtrl_light.png": {
+      "Size": 310
+    },
+    "res/drawable-mdpi-v4/abc_text_select_handle_right_mtrl_dark.png": {
+      "Size": 187
+    },
+    "res/drawable-mdpi-v4/abc_text_select_handle_right_mtrl_light.png": {
+      "Size": 186
+    },
+    "res/drawable-mdpi-v4/abc_textfield_activated_mtrl_alpha.9.png": {
+      "Size": 181
+    },
+    "res/drawable-mdpi-v4/abc_textfield_default_mtrl_alpha.9.png": {
+      "Size": 178
+    },
+    "res/drawable-mdpi-v4/abc_textfield_search_activated_mtrl_alpha.9.png": {
+      "Size": 178
+    },
+    "res/drawable-mdpi-v4/abc_textfield_search_default_mtrl_alpha.9.png": {
+      "Size": 178
+    },
+    "res/drawable-mdpi-v4/design_ic_visibility.png": {
+      "Size": 309
+    },
+    "res/drawable-mdpi-v4/design_ic_visibility_off.png": {
+      "Size": 351
+    },
+    "res/drawable-mdpi-v4/notification_bg_low_normal.9.png": {
+      "Size": 215
+    },
+    "res/drawable-mdpi-v4/notification_bg_low_pressed.9.png": {
+      "Size": 223
+    },
+    "res/drawable-mdpi-v4/notification_bg_normal.9.png": {
+      "Size": 215
+    },
+    "res/drawable-mdpi-v4/notification_bg_normal_pressed.9.png": {
+      "Size": 223
+    },
+    "res/drawable-mdpi-v4/notify_panel_notification_icon_bg.png": {
+      "Size": 98
+    },
+    "res/drawable-ldrtl-mdpi-v17/abc_ic_menu_copy_mtrl_am_alpha.png": {
+      "Size": 127
+    },
+    "res/drawable-ldrtl-mdpi-v17/abc_ic_menu_cut_mtrl_alpha.png": {
+      "Size": 253
+    },
+    "res/drawable-ldrtl-mdpi-v17/abc_spinner_mtrl_am_alpha.9.png": {
+      "Size": 318
     },
     "res/drawable-hdpi-v4/abc_ab_share_pack_mtrl_alpha.9.png": {
       "Size": 272
@@ -1387,267 +892,6 @@
     "res/drawable-ldrtl-hdpi-v17/abc_spinner_mtrl_am_alpha.9.png": {
       "Size": 345
     },
-    "res/drawable-ldrtl-mdpi-v17/abc_ic_menu_copy_mtrl_am_alpha.png": {
-      "Size": 127
-    },
-    "res/drawable-ldrtl-mdpi-v17/abc_ic_menu_cut_mtrl_alpha.png": {
-      "Size": 253
-    },
-    "res/drawable-ldrtl-mdpi-v17/abc_spinner_mtrl_am_alpha.9.png": {
-      "Size": 318
-    },
-    "res/drawable-ldrtl-xhdpi-v17/abc_ic_menu_copy_mtrl_am_alpha.png": {
-      "Size": 178
-    },
-    "res/drawable-ldrtl-xhdpi-v17/abc_ic_menu_cut_mtrl_alpha.png": {
-      "Size": 494
-    },
-    "res/drawable-ldrtl-xhdpi-v17/abc_spinner_mtrl_am_alpha.9.png": {
-      "Size": 417
-    },
-    "res/drawable-ldrtl-xxhdpi-v17/abc_ic_menu_copy_mtrl_am_alpha.png": {
-      "Size": 260
-    },
-    "res/drawable-ldrtl-xxhdpi-v17/abc_ic_menu_cut_mtrl_alpha.png": {
-      "Size": 705
-    },
-    "res/drawable-ldrtl-xxhdpi-v17/abc_spinner_mtrl_am_alpha.9.png": {
-      "Size": 525
-    },
-    "res/drawable-ldrtl-xxxhdpi-v17/abc_ic_menu_copy_mtrl_am_alpha.png": {
-      "Size": 325
-    },
-    "res/drawable-ldrtl-xxxhdpi-v17/abc_ic_menu_cut_mtrl_alpha.png": {
-      "Size": 905
-    },
-    "res/drawable-ldrtl-xxxhdpi-v17/abc_spinner_mtrl_am_alpha.9.png": {
-      "Size": 437
-    },
-    "res/drawable-mdpi-v4/abc_ab_share_pack_mtrl_alpha.9.png": {
-      "Size": 267
-    },
-    "res/drawable-mdpi-v4/abc_btn_check_to_on_mtrl_000.png": {
-      "Size": 214
-    },
-    "res/drawable-mdpi-v4/abc_btn_check_to_on_mtrl_015.png": {
-      "Size": 321
-    },
-    "res/drawable-mdpi-v4/abc_btn_radio_to_on_mtrl_000.png": {
-      "Size": 324
-    },
-    "res/drawable-mdpi-v4/abc_btn_radio_to_on_mtrl_015.png": {
-      "Size": 356
-    },
-    "res/drawable-mdpi-v4/abc_btn_switch_to_on_mtrl_00001.9.png": {
-      "Size": 754
-    },
-    "res/drawable-mdpi-v4/abc_btn_switch_to_on_mtrl_00012.9.png": {
-      "Size": 825
-    },
-    "res/drawable-mdpi-v4/abc_cab_background_top_mtrl_alpha.9.png": {
-      "Size": 216
-    },
-    "res/drawable-mdpi-v4/abc_ic_commit_search_api_mtrl_alpha.png": {
-      "Size": 173
-    },
-    "res/drawable-mdpi-v4/abc_ic_menu_copy_mtrl_am_alpha.png": {
-      "Size": 133
-    },
-    "res/drawable-mdpi-v4/abc_ic_menu_cut_mtrl_alpha.png": {
-      "Size": 251
-    },
-    "res/drawable-mdpi-v4/abc_ic_menu_paste_mtrl_am_alpha.png": {
-      "Size": 152
-    },
-    "res/drawable-mdpi-v4/abc_ic_menu_selectall_mtrl_alpha.png": {
-      "Size": 139
-    },
-    "res/drawable-mdpi-v4/abc_ic_menu_share_mtrl_alpha.png": {
-      "Size": 270
-    },
-    "res/drawable-mdpi-v4/abc_ic_star_black_16dp.png": {
-      "Size": 193
-    },
-    "res/drawable-mdpi-v4/abc_ic_star_black_36dp.png": {
-      "Size": 364
-    },
-    "res/drawable-mdpi-v4/abc_ic_star_black_48dp.png": {
-      "Size": 467
-    },
-    "res/drawable-mdpi-v4/abc_ic_star_half_black_16dp.png": {
-      "Size": 146
-    },
-    "res/drawable-mdpi-v4/abc_ic_star_half_black_36dp.png": {
-      "Size": 253
-    },
-    "res/drawable-mdpi-v4/abc_ic_star_half_black_48dp.png": {
-      "Size": 310
-    },
-    "res/drawable-mdpi-v4/abc_list_divider_mtrl_alpha.9.png": {
-      "Size": 167
-    },
-    "res/drawable-mdpi-v4/abc_list_focused_holo.9.png": {
-      "Size": 222
-    },
-    "res/drawable-mdpi-v4/abc_list_longpressed_holo.9.png": {
-      "Size": 211
-    },
-    "res/drawable-mdpi-v4/abc_list_pressed_holo_dark.9.png": {
-      "Size": 207
-    },
-    "res/drawable-mdpi-v4/abc_list_pressed_holo_light.9.png": {
-      "Size": 207
-    },
-    "res/drawable-mdpi-v4/abc_list_selector_disabled_holo_dark.9.png": {
-      "Size": 217
-    },
-    "res/drawable-mdpi-v4/abc_list_selector_disabled_holo_light.9.png": {
-      "Size": 217
-    },
-    "res/drawable-mdpi-v4/abc_menu_hardkey_panel_mtrl_mult.9.png": {
-      "Size": 541
-    },
-    "res/drawable-mdpi-v4/abc_popup_background_mtrl_mult.9.png": {
-      "Size": 776
-    },
-    "res/drawable-mdpi-v4/abc_scrubber_control_off_mtrl_alpha.png": {
-      "Size": 159
-    },
-    "res/drawable-mdpi-v4/abc_scrubber_control_to_pressed_mtrl_000.png": {
-      "Size": 145
-    },
-    "res/drawable-mdpi-v4/abc_scrubber_control_to_pressed_mtrl_005.png": {
-      "Size": 197
-    },
-    "res/drawable-mdpi-v4/abc_scrubber_primary_mtrl_alpha.9.png": {
-      "Size": 203
-    },
-    "res/drawable-mdpi-v4/abc_scrubber_track_mtrl_alpha.9.png": {
-      "Size": 194
-    },
-    "res/drawable-mdpi-v4/abc_spinner_mtrl_am_alpha.9.png": {
-      "Size": 327
-    },
-    "res/drawable-mdpi-v4/abc_switch_track_mtrl_alpha.9.png": {
-      "Size": 395
-    },
-    "res/drawable-mdpi-v4/abc_tab_indicator_mtrl_alpha.9.png": {
-      "Size": 186
-    },
-    "res/drawable-mdpi-v4/abc_text_select_handle_left_mtrl_dark.png": {
-      "Size": 203
-    },
-    "res/drawable-mdpi-v4/abc_text_select_handle_left_mtrl_light.png": {
-      "Size": 203
-    },
-    "res/drawable-mdpi-v4/abc_text_select_handle_middle_mtrl_dark.png": {
-      "Size": 311
-    },
-    "res/drawable-mdpi-v4/abc_text_select_handle_middle_mtrl_light.png": {
-      "Size": 310
-    },
-    "res/drawable-mdpi-v4/abc_text_select_handle_right_mtrl_dark.png": {
-      "Size": 187
-    },
-    "res/drawable-mdpi-v4/abc_text_select_handle_right_mtrl_light.png": {
-      "Size": 186
-    },
-    "res/drawable-mdpi-v4/abc_textfield_activated_mtrl_alpha.9.png": {
-      "Size": 181
-    },
-    "res/drawable-mdpi-v4/abc_textfield_default_mtrl_alpha.9.png": {
-      "Size": 178
-    },
-    "res/drawable-mdpi-v4/abc_textfield_search_activated_mtrl_alpha.9.png": {
-      "Size": 178
-    },
-    "res/drawable-mdpi-v4/abc_textfield_search_default_mtrl_alpha.9.png": {
-      "Size": 178
-    },
-    "res/drawable-mdpi-v4/design_ic_visibility.png": {
-      "Size": 309
-    },
-    "res/drawable-mdpi-v4/design_ic_visibility_off.png": {
-      "Size": 351
-    },
-    "res/drawable-mdpi-v4/notification_bg_low_normal.9.png": {
-      "Size": 215
-    },
-    "res/drawable-mdpi-v4/notification_bg_low_pressed.9.png": {
-      "Size": 223
-    },
-    "res/drawable-mdpi-v4/notification_bg_normal.9.png": {
-      "Size": 215
-    },
-    "res/drawable-mdpi-v4/notification_bg_normal_pressed.9.png": {
-      "Size": 223
-    },
-    "res/drawable-mdpi-v4/notify_panel_notification_icon_bg.png": {
-      "Size": 98
-    },
-    "res/drawable-v21/$avd_hide_password__0.xml": {
-      "Size": 1176
-    },
-    "res/drawable-v21/$avd_hide_password__1.xml": {
-      "Size": 592
-    },
-    "res/drawable-v21/$avd_hide_password__2.xml": {
-      "Size": 556
-    },
-    "res/drawable-v21/$avd_show_password__0.xml": {
-      "Size": 1136
-    },
-    "res/drawable-v21/$avd_show_password__1.xml": {
-      "Size": 592
-    },
-    "res/drawable-v21/$avd_show_password__2.xml": {
-      "Size": 556
-    },
-    "res/drawable-v21/abc_action_bar_item_background_material.xml": {
-      "Size": 264
-    },
-    "res/drawable-v21/abc_btn_colored_material.xml": {
-      "Size": 1716
-    },
-    "res/drawable-v21/abc_dialog_material_background.xml": {
-      "Size": 716
-    },
-    "res/drawable-v21/abc_edit_text_material.xml": {
-      "Size": 1172
-    },
-    "res/drawable-v21/abc_list_divider_material.xml": {
-      "Size": 516
-    },
-    "res/drawable-v21/abc_ratingbar_indicator_material.xml": {
-      "Size": 704
-    },
-    "res/drawable-v21/abc_ratingbar_material.xml": {
-      "Size": 704
-    },
-    "res/drawable-v21/abc_ratingbar_small_material.xml": {
-      "Size": 704
-    },
-    "res/drawable-v21/avd_hide_password.xml": {
-      "Size": 660
-    },
-    "res/drawable-v21/avd_show_password.xml": {
-      "Size": 660
-    },
-    "res/drawable-v21/design_bottom_navigation_item_background.xml": {
-      "Size": 264
-    },
-    "res/drawable-v21/design_password_eye.xml": {
-      "Size": 816
-    },
-    "res/drawable-v21/notification_action_background.xml": {
-      "Size": 1180
-    },
-    "res/drawable-v23/abc_control_background_material.xml": {
-      "Size": 304
-    },
-    "res/drawable-watch-v20/abc_dialog_material_background.xml": {
-      "Size": 372
-    },
     "res/drawable-xhdpi-v4/abc_ab_share_pack_mtrl_alpha.9.png": {
       "Size": 280
     },
@@ -1813,6 +1057,15 @@
     "res/drawable-xhdpi-v4/notify_panel_notification_icon_bg.png": {
       "Size": 138
     },
+    "res/drawable-ldrtl-xhdpi-v17/abc_ic_menu_copy_mtrl_am_alpha.png": {
+      "Size": 178
+    },
+    "res/drawable-ldrtl-xhdpi-v17/abc_ic_menu_cut_mtrl_alpha.png": {
+      "Size": 494
+    },
+    "res/drawable-ldrtl-xhdpi-v17/abc_spinner_mtrl_am_alpha.9.png": {
+      "Size": 417
+    },
     "res/drawable-xxhdpi-v4/abc_ab_share_pack_mtrl_alpha.9.png": {
       "Size": 286
     },
@@ -1963,6 +1216,15 @@
     "res/drawable-xxhdpi-v4/icon.png": {
       "Size": 1647
     },
+    "res/drawable-ldrtl-xxhdpi-v17/abc_ic_menu_copy_mtrl_am_alpha.png": {
+      "Size": 260
+    },
+    "res/drawable-ldrtl-xxhdpi-v17/abc_ic_menu_cut_mtrl_alpha.png": {
+      "Size": 705
+    },
+    "res/drawable-ldrtl-xxhdpi-v17/abc_spinner_mtrl_am_alpha.9.png": {
+      "Size": 525
+    },
     "res/drawable-xxxhdpi-v4/abc_btn_check_to_on_mtrl_000.png": {
       "Size": 275
     },
@@ -2047,6 +1309,21 @@
     "res/drawable-xxxhdpi-v4/design_ic_visibility_off.png": {
       "Size": 1201
     },
+    "res/drawable-ldrtl-xxxhdpi-v17/abc_ic_menu_copy_mtrl_am_alpha.png": {
+      "Size": 325
+    },
+    "res/drawable-ldrtl-xxxhdpi-v17/abc_ic_menu_cut_mtrl_alpha.png": {
+      "Size": 905
+    },
+    "res/drawable-ldrtl-xxxhdpi-v17/abc_spinner_mtrl_am_alpha.9.png": {
+      "Size": 437
+    },
+    "res/drawable-anydpi-v21/design_ic_visibility.xml": {
+      "Size": 540
+    },
+    "res/drawable-anydpi-v21/design_ic_visibility_off.xml": {
+      "Size": 1144
+    },
     "res/interpolator/btn_checkbox_checked_mtrl_animation_interpolator_0.xml": {
       "Size": 316
     },
@@ -2107,6 +1384,9 @@
     "res/layout/abc_action_mode_close_item_material.xml": {
       "Size": 748
     },
+    "res/layout-v17/abc_action_mode_close_item_material.xml": {
+      "Size": 840
+    },
     "res/layout/abc_activity_chooser_view.xml": {
       "Size": 1684
     },
@@ -2116,17 +1396,29 @@
     "res/layout/abc_alert_dialog_button_bar_material.xml": {
       "Size": 1492
     },
+    "res/layout-v17/abc_alert_dialog_button_bar_material.xml": {
+      "Size": 1536
+    },
+    "res/layout-v22/abc_alert_dialog_button_bar_material.xml": {
+      "Size": 1584
+    },
     "res/layout/abc_alert_dialog_material.xml": {
       "Size": 2476
     },
     "res/layout/abc_alert_dialog_title_material.xml": {
       "Size": 1472
     },
+    "res/layout-v17/abc_alert_dialog_title_material.xml": {
+      "Size": 1560
+    },
     "res/layout/abc_cascading_menu_item_layout.xml": {
       "Size": 1868
     },
     "res/layout/abc_dialog_title_material.xml": {
       "Size": 1072
+    },
+    "res/layout-v17/abc_dialog_title_material.xml": {
+      "Size": 1116
     },
     "res/layout/abc_expanded_menu_layout.xml": {
       "Size": 388
@@ -2146,6 +1438,9 @@
     "res/layout/abc_popup_menu_header_item_layout.xml": {
       "Size": 804
     },
+    "res/layout-v17/abc_popup_menu_header_item_layout.xml": {
+      "Size": 848
+    },
     "res/layout/abc_popup_menu_item_layout.xml": {
       "Size": 2072
     },
@@ -2161,17 +1456,29 @@
     "res/layout/abc_screen_toolbar.xml": {
       "Size": 1452
     },
+    "res/layout-v21/abc_screen_toolbar.xml": {
+      "Size": 1504
+    },
     "res/layout/abc_search_dropdown_item_icons_2line.xml": {
       "Size": 1916
     },
     "res/layout/abc_search_view.xml": {
       "Size": 3428
     },
+    "res/layout-v17/abc_search_view.xml": {
+      "Size": 3472
+    },
     "res/layout/abc_select_dialog_material.xml": {
       "Size": 976
     },
+    "res/layout-v17/abc_select_dialog_material.xml": {
+      "Size": 1020
+    },
     "res/layout/abc_tooltip.xml": {
       "Size": 972
+    },
+    "res/layout-v17/abc_tooltip.xml": {
+      "Size": 1056
     },
     "res/layout/bottomtablayout.xml": {
       "Size": 832
@@ -2179,8 +1486,14 @@
     "res/layout/browser_actions_context_menu_page.xml": {
       "Size": 1576
     },
+    "res/layout-v17/browser_actions_context_menu_page.xml": {
+      "Size": 1660
+    },
     "res/layout/browser_actions_context_menu_row.xml": {
       "Size": 1032
+    },
+    "res/layout-v17/browser_actions_context_menu_row.xml": {
+      "Size": 1164
     },
     "res/layout/custom_dialog.xml": {
       "Size": 612
@@ -2196,6 +1509,9 @@
     },
     "res/layout/design_layout_snackbar_include.xml": {
       "Size": 1352
+    },
+    "res/layout-v17/design_layout_snackbar_include.xml": {
+      "Size": 1444
     },
     "res/layout/design_layout_tab_icon.xml": {
       "Size": 408
@@ -2233,6 +1549,9 @@
     "res/layout/fallbacktoolbardonotuse.xml": {
       "Size": 452
     },
+    "res/layout-v21/fallbacktoolbardonotuse.xml": {
+      "Size": 496
+    },
     "res/layout/flyoutcontent.xml": {
       "Size": 944
     },
@@ -2242,11 +1561,20 @@
     "res/layout/mtrl_layout_snackbar_include.xml": {
       "Size": 1312
     },
+    "res/layout-v17/mtrl_layout_snackbar_include.xml": {
+      "Size": 1404
+    },
     "res/layout/notification_action.xml": {
       "Size": 1092
     },
+    "res/layout-v17/notification_action.xml": {
+      "Size": 1156
+    },
     "res/layout/notification_action_tombstone.xml": {
       "Size": 1268
+    },
+    "res/layout-v17/notification_action_tombstone.xml": {
+      "Size": 1332
     },
     "res/layout/notification_media_action.xml": {
       "Size": 564
@@ -2257,14 +1585,32 @@
     "res/layout/notification_template_big_media.xml": {
       "Size": 1504
     },
+    "res/layout-v17/notification_template_big_media.xml": {
+      "Size": 1696
+    },
     "res/layout/notification_template_big_media_custom.xml": {
       "Size": 2760
+    },
+    "res/layout-v17/notification_template_big_media_custom.xml": {
+      "Size": 3044
     },
     "res/layout/notification_template_big_media_narrow.xml": {
       "Size": 1564
     },
+    "res/layout-v17/notification_template_big_media_narrow.xml": {
+      "Size": 1824
+    },
     "res/layout/notification_template_big_media_narrow_custom.xml": {
       "Size": 2868
+    },
+    "res/layout-v17/notification_template_big_media_narrow_custom.xml": {
+      "Size": 3216
+    },
+    "res/layout-v16/notification_template_custom_big.xml": {
+      "Size": 3012
+    },
+    "res/layout-v17/notification_template_custom_big.xml": {
+      "Size": 3208
     },
     "res/layout/notification_template_icon_group.xml": {
       "Size": 392
@@ -2272,11 +1618,20 @@
     "res/layout/notification_template_lines_media.xml": {
       "Size": 2660
     },
+    "res/layout-v17/notification_template_lines_media.xml": {
+      "Size": 2872
+    },
     "res/layout/notification_template_media.xml": {
       "Size": 1200
     },
+    "res/layout-v17/notification_template_media.xml": {
+      "Size": 1292
+    },
     "res/layout/notification_template_media_custom.xml": {
       "Size": 2528
+    },
+    "res/layout-v17/notification_template_media_custom.xml": {
+      "Size": 2756
     },
     "res/layout/notification_template_part_chronometer.xml": {
       "Size": 440
@@ -2293,8 +1648,14 @@
     "res/layout/select_dialog_multichoice_material.xml": {
       "Size": 780
     },
+    "res/layout-v17/select_dialog_multichoice_material.xml": {
+      "Size": 864
+    },
     "res/layout/select_dialog_singlechoice_material.xml": {
       "Size": 780
+    },
+    "res/layout-v17/select_dialog_singlechoice_material.xml": {
+      "Size": 864
     },
     "res/layout/shellcontent.xml": {
       "Size": 888
@@ -2308,92 +1669,20 @@
     "res/layout/toolbar.xml": {
       "Size": 452
     },
+    "res/layout-v21/toolbar.xml": {
+      "Size": 496
+    },
     "res/layout-sw600dp-v13/design_layout_snackbar.xml": {
       "Size": 528
     },
     "res/layout-sw600dp-v13/mtrl_layout_snackbar.xml": {
       "Size": 528
     },
-    "res/layout-v16/notification_template_custom_big.xml": {
-      "Size": 3012
+    "res/layout-watch-v20/abc_alert_dialog_button_bar_material.xml": {
+      "Size": 1208
     },
-    "res/layout-v17/abc_action_mode_close_item_material.xml": {
-      "Size": 840
-    },
-    "res/layout-v17/abc_alert_dialog_button_bar_material.xml": {
-      "Size": 1536
-    },
-    "res/layout-v17/abc_alert_dialog_title_material.xml": {
-      "Size": 1560
-    },
-    "res/layout-v17/abc_dialog_title_material.xml": {
-      "Size": 1116
-    },
-    "res/layout-v17/abc_popup_menu_header_item_layout.xml": {
-      "Size": 848
-    },
-    "res/layout-v17/abc_search_view.xml": {
-      "Size": 3472
-    },
-    "res/layout-v17/abc_select_dialog_material.xml": {
-      "Size": 1020
-    },
-    "res/layout-v17/abc_tooltip.xml": {
-      "Size": 1056
-    },
-    "res/layout-v17/browser_actions_context_menu_page.xml": {
-      "Size": 1660
-    },
-    "res/layout-v17/browser_actions_context_menu_row.xml": {
-      "Size": 1164
-    },
-    "res/layout-v17/design_layout_snackbar_include.xml": {
-      "Size": 1444
-    },
-    "res/layout-v17/mtrl_layout_snackbar_include.xml": {
-      "Size": 1404
-    },
-    "res/layout-v17/notification_action.xml": {
-      "Size": 1156
-    },
-    "res/layout-v17/notification_action_tombstone.xml": {
-      "Size": 1332
-    },
-    "res/layout-v17/notification_template_big_media.xml": {
-      "Size": 1696
-    },
-    "res/layout-v17/notification_template_big_media_custom.xml": {
-      "Size": 3044
-    },
-    "res/layout-v17/notification_template_big_media_narrow.xml": {
-      "Size": 1824
-    },
-    "res/layout-v17/notification_template_big_media_narrow_custom.xml": {
-      "Size": 3216
-    },
-    "res/layout-v17/notification_template_custom_big.xml": {
-      "Size": 3208
-    },
-    "res/layout-v17/notification_template_lines_media.xml": {
-      "Size": 2872
-    },
-    "res/layout-v17/notification_template_media.xml": {
-      "Size": 1292
-    },
-    "res/layout-v17/notification_template_media_custom.xml": {
-      "Size": 2756
-    },
-    "res/layout-v17/select_dialog_multichoice_material.xml": {
-      "Size": 864
-    },
-    "res/layout-v17/select_dialog_singlechoice_material.xml": {
-      "Size": 864
-    },
-    "res/layout-v21/abc_screen_toolbar.xml": {
-      "Size": 1504
-    },
-    "res/layout-v21/fallbacktoolbardonotuse.xml": {
-      "Size": 496
+    "res/layout-watch-v20/abc_alert_dialog_title_material.xml": {
+      "Size": 1352
     },
     "res/layout-v21/notification_action.xml": {
       "Size": 1052
@@ -2407,24 +1696,552 @@
     "res/layout-v21/notification_template_icon_group.xml": {
       "Size": 988
     },
-    "res/layout-v21/toolbar.xml": {
-      "Size": 496
-    },
-    "res/layout-v22/abc_alert_dialog_button_bar_material.xml": {
-      "Size": 1584
-    },
     "res/layout-v26/abc_screen_toolbar.xml": {
       "Size": 1560
     },
-    "res/layout-watch-v20/abc_alert_dialog_button_bar_material.xml": {
-      "Size": 1208
-    },
-    "res/layout-watch-v20/abc_alert_dialog_title_material.xml": {
-      "Size": 1352
-    },
     "resources.arsc": {
       "Size": 347268
+    },
+    "classes.dex": {
+      "Size": 2467756
+    },
+    "assemblies/Xamarin.Forms.Performance.Integration.Droid.dll": {
+      "Size": 114906
+    },
+    "assemblies/FormsViewGroup.dll": {
+      "Size": 7191
+    },
+    "assemblies/Newtonsoft.Json.dll": {
+      "Size": 317978
+    },
+    "assemblies/Plugin.Connectivity.Abstractions.dll": {
+      "Size": 3760
+    },
+    "assemblies/Plugin.Connectivity.dll": {
+      "Size": 10201
+    },
+    "assemblies/Xamarin.AndroidX.Activity.dll": {
+      "Size": 7686
+    },
+    "assemblies/Xamarin.AndroidX.AppCompat.dll": {
+      "Size": 124577
+    },
+    "assemblies/Xamarin.AndroidX.AppCompat.Resources.dll": {
+      "Size": 6649
+    },
+    "assemblies/Xamarin.AndroidX.CardView.dll": {
+      "Size": 7355
+    },
+    "assemblies/Xamarin.AndroidX.CoordinatorLayout.dll": {
+      "Size": 18262
+    },
+    "assemblies/Xamarin.AndroidX.Core.dll": {
+      "Size": 131922
+    },
+    "assemblies/Xamarin.AndroidX.DrawerLayout.dll": {
+      "Size": 15433
+    },
+    "assemblies/Xamarin.AndroidX.Fragment.dll": {
+      "Size": 43119
+    },
+    "assemblies/Xamarin.AndroidX.Legacy.Support.Core.UI.dll": {
+      "Size": 6705
+    },
+    "assemblies/Xamarin.AndroidX.Lifecycle.Common.dll": {
+      "Size": 7053
+    },
+    "assemblies/Xamarin.AndroidX.Lifecycle.LiveData.Core.dll": {
+      "Size": 7185
+    },
+    "assemblies/Xamarin.AndroidX.Lifecycle.ViewModel.dll": {
+      "Size": 4865
+    },
+    "assemblies/Xamarin.AndroidX.Loader.dll": {
+      "Size": 13574
+    },
+    "assemblies/Xamarin.AndroidX.RecyclerView.dll": {
+      "Size": 102425
+    },
+    "assemblies/Xamarin.AndroidX.SavedState.dll": {
+      "Size": 6260
+    },
+    "assemblies/Xamarin.AndroidX.SwipeRefreshLayout.dll": {
+      "Size": 11260
+    },
+    "assemblies/Xamarin.AndroidX.ViewPager.dll": {
+      "Size": 19420
+    },
+    "assemblies/Xamarin.Forms.Core.dll": {
+      "Size": 471882
+    },
+    "assemblies/Xamarin.Forms.Performance.Integration.dll": {
+      "Size": 22008
+    },
+    "assemblies/Xamarin.Forms.Platform.Android.dll": {
+      "Size": 367732
+    },
+    "assemblies/Xamarin.Forms.Platform.dll": {
+      "Size": 56584
+    },
+    "assemblies/Xamarin.Forms.Xaml.dll": {
+      "Size": 55027
+    },
+    "assemblies/Xamarin.Google.Android.Material.dll": {
+      "Size": 43499
+    },
+    "assemblies/System.Runtime.Serialization.dll": {
+      "Size": 193447
+    },
+    "assemblies/Java.Interop.dll": {
+      "Size": 68623
+    },
+    "assemblies/Mono.Android.dll": {
+      "Size": 554752
+    },
+    "assemblies/mscorlib.dll": {
+      "Size": 936306
+    },
+    "assemblies/System.Core.dll": {
+      "Size": 192208
+    },
+    "assemblies/System.dll": {
+      "Size": 443294
+    },
+    "assemblies/System.Net.Http.dll": {
+      "Size": 113286
+    },
+    "assemblies/System.Xml.dll": {
+      "Size": 592605
+    },
+    "assemblies/System.ServiceModel.Internals.dll": {
+      "Size": 26592
+    },
+    "assemblies/System.Drawing.Common.dll": {
+      "Size": 16345
+    },
+    "assemblies/System.Data.dll": {
+      "Size": 316116
+    },
+    "assemblies/System.Numerics.dll": {
+      "Size": 23251
+    },
+    "assemblies/System.Xml.Linq.dll": {
+      "Size": 34368
+    },
+    "assemblies/Mono.Security.dll": {
+      "Size": 68489
+    },
+    "lib/armeabi-v7a/libxamarin-app.so": {
+      "Size": 130176
+    },
+    "lib/x86/libxamarin-app.so": {
+      "Size": 129296
+    },
+    "lib/armeabi-v7a/libmonodroid.so": {
+      "Size": 216940
+    },
+    "lib/x86/libmonodroid.so": {
+      "Size": 272124
+    },
+    "lib/armeabi-v7a/libxa-internal-api.so": {
+      "Size": 48620
+    },
+    "lib/x86/libxa-internal-api.so": {
+      "Size": 61312
+    },
+    "lib/armeabi-v7a/libmono-btls-shared.so": {
+      "Size": 1113088
+    },
+    "lib/x86/libmono-btls-shared.so": {
+      "Size": 1459984
+    },
+    "lib/armeabi-v7a/libmonosgen-2.0.so": {
+      "Size": 4456372
+    },
+    "lib/x86/libmonosgen-2.0.so": {
+      "Size": 4212484
+    },
+    "lib/armeabi-v7a/libmono-native.so": {
+      "Size": 736764
+    },
+    "lib/x86/libmono-native.so": {
+      "Size": 803736
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Forms.Performance.Integration.Droid.dll.so": {
+      "Size": 10612
+    },
+    "lib/armeabi-v7a/libaot-FormsViewGroup.dll.so": {
+      "Size": 16980
+    },
+    "lib/armeabi-v7a/libaot-System.Runtime.Serialization.dll.so": {
+      "Size": 117156
+    },
+    "lib/armeabi-v7a/libaot-Plugin.Connectivity.Abstractions.dll.so": {
+      "Size": 6492
+    },
+    "lib/armeabi-v7a/libaot-System.Core.dll.so": {
+      "Size": 789752
+    },
+    "lib/armeabi-v7a/libaot-Java.Interop.dll.so": {
+      "Size": 296496
+    },
+    "lib/armeabi-v7a/libaot-Mono.Android.dll.so": {
+      "Size": 873968
+    },
+    "lib/armeabi-v7a/libaot-Newtonsoft.Json.dll.so": {
+      "Size": 437344
+    },
+    "lib/armeabi-v7a/libaot-mscorlib.dll.so": {
+      "Size": 2248488
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Activity.dll.so": {
+      "Size": 6480
+    },
+    "lib/armeabi-v7a/libaot-System.Net.Http.dll.so": {
+      "Size": 99872
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.CoordinatorLayout.dll.so": {
+      "Size": 10592
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.AppCompat.Resources.dll.so": {
+      "Size": 6500
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Core.dll.so": {
+      "Size": 63816
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.AppCompat.dll.so": {
+      "Size": 72016
+    },
+    "lib/armeabi-v7a/libaot-System.Xml.dll.so": {
+      "Size": 217480
+    },
+    "lib/armeabi-v7a/libaot-Plugin.Connectivity.dll.so": {
+      "Size": 6468
+    },
+    "lib/armeabi-v7a/libaot-System.dll.so": {
+      "Size": 680880
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.DrawerLayout.dll.so": {
+      "Size": 10584
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.CardView.dll.so": {
+      "Size": 6480
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.SavedState.dll.so": {
+      "Size": 6484
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Lifecycle.LiveData.Core.dll.so": {
+      "Size": 6508
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Fragment.dll.so": {
+      "Size": 22864
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Lifecycle.Common.dll.so": {
+      "Size": 6496
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Legacy.Support.Core.UI.dll.so": {
+      "Size": 6508
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.RecyclerView.dll.so": {
+      "Size": 51544
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Loader.dll.so": {
+      "Size": 10572
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.Lifecycle.ViewModel.dll.so": {
+      "Size": 6500
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.SwipeRefreshLayout.dll.so": {
+      "Size": 10596
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.AndroidX.ViewPager.dll.so": {
+      "Size": 14672
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Forms.Performance.Integration.dll.so": {
+      "Size": 141268
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Forms.Platform.dll.so": {
+      "Size": 10568
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Forms.Xaml.dll.so": {
+      "Size": 75608
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Forms.Platform.Android.dll.so": {
+      "Size": 1018392
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Google.Android.Material.dll.so": {
+      "Size": 31068
+    },
+    "lib/armeabi-v7a/libaot-System.Data.dll.so": {
+      "Size": 176404
+    },
+    "lib/armeabi-v7a/libaot-System.ServiceModel.Internals.dll.so": {
+      "Size": 16740
+    },
+    "lib/armeabi-v7a/libaot-System.Drawing.Common.dll.so": {
+      "Size": 6472
+    },
+    "lib/x86/libaot-Xamarin.Forms.Performance.Integration.Droid.dll.so": {
+      "Size": 10384
+    },
+    "lib/armeabi-v7a/libaot-System.Numerics.dll.so": {
+      "Size": 10556
+    },
+    "lib/x86/libaot-System.Runtime.Serialization.dll.so": {
+      "Size": 84212
+    },
+    "lib/armeabi-v7a/libaot-Xamarin.Forms.Core.dll.so": {
+      "Size": 1743912
+    },
+    "lib/x86/libaot-Java.Interop.dll.so": {
+      "Size": 280096
+    },
+    "lib/armeabi-v7a/libaot-Mono.Security.dll.so": {
+      "Size": 18744
+    },
+    "lib/armeabi-v7a/libaot-System.Xml.Linq.dll.so": {
+      "Size": 31896
+    },
+    "lib/x86/libaot-FormsViewGroup.dll.so": {
+      "Size": 16596
+    },
+    "lib/x86/libaot-Plugin.Connectivity.Abstractions.dll.so": {
+      "Size": 6264
+    },
+    "lib/x86/libaot-Mono.Android.dll.so": {
+      "Size": 719160
+    },
+    "lib/x86/libaot-System.Core.dll.so": {
+      "Size": 747968
+    },
+    "lib/x86/libaot-Xamarin.AndroidX.Activity.dll.so": {
+      "Size": 6252
+    },
+    "lib/x86/libaot-Plugin.Connectivity.dll.so": {
+      "Size": 6240
+    },
+    "lib/x86/libaot-System.Net.Http.dll.so": {
+      "Size": 84008
+    },
+    "lib/x86/libaot-System.dll.so": {
+      "Size": 615344
+    },
+    "lib/x86/libaot-System.Xml.dll.so": {
+      "Size": 131136
+    },
+    "lib/x86/libaot-mscorlib.dll.so": {
+      "Size": 2049260
+    },
+    "lib/x86/libaot-Newtonsoft.Json.dll.so": {
+      "Size": 385356
+    },
+    "lib/x86/libaot-Xamarin.AndroidX.CoordinatorLayout.dll.so": {
+      "Size": 10364
+    },
+    "lib/x86/libaot-Xamarin.AndroidX.Core.dll.so": {
+      "Size": 34916
+    },
+    "lib/x86/libaot-Xamarin.AndroidX.Legacy.Support.Core.UI.dll.so": {
+      "Size": 6280
+    },
+    "lib/x86/libaot-Xamarin.AndroidX.Lifecycle.Common.dll.so": {
+      "Size": 6268
+    },
+    "lib/x86/libaot-Xamarin.AndroidX.DrawerLayout.dll.so": {
+      "Size": 10356
+    },
+    "lib/x86/libaot-Xamarin.AndroidX.AppCompat.Resources.dll.so": {
+      "Size": 6272
+    },
+    "lib/x86/libaot-Xamarin.AndroidX.Lifecycle.LiveData.Core.dll.so": {
+      "Size": 6280
+    },
+    "lib/x86/libaot-Xamarin.AndroidX.Fragment.dll.so": {
+      "Size": 14444
+    },
+    "lib/x86/libaot-Xamarin.AndroidX.CardView.dll.so": {
+      "Size": 6252
+    },
+    "lib/x86/libaot-Xamarin.AndroidX.Lifecycle.ViewModel.dll.so": {
+      "Size": 6272
+    },
+    "lib/x86/libaot-Xamarin.AndroidX.AppCompat.dll.so": {
+      "Size": 43116
+    },
+    "lib/x86/libaot-Xamarin.AndroidX.Loader.dll.so": {
+      "Size": 6248
+    },
+    "lib/x86/libaot-Xamarin.AndroidX.SavedState.dll.so": {
+      "Size": 6256
+    },
+    "lib/x86/libaot-Xamarin.AndroidX.SwipeRefreshLayout.dll.so": {
+      "Size": 10368
+    },
+    "lib/x86/libaot-Xamarin.AndroidX.ViewPager.dll.so": {
+      "Size": 10348
+    },
+    "lib/x86/libaot-Xamarin.Forms.Performance.Integration.dll.so": {
+      "Size": 137516
+    },
+    "lib/x86/libaot-Xamarin.AndroidX.RecyclerView.dll.so": {
+      "Size": 30836
+    },
+    "lib/x86/libaot-System.Drawing.Common.dll.so": {
+      "Size": 6244
+    },
+    "lib/x86/libaot-Xamarin.Forms.Xaml.dll.so": {
+      "Size": 63128
+    },
+    "lib/x86/libaot-Xamarin.Forms.Platform.dll.so": {
+      "Size": 10340
+    },
+    "lib/x86/libaot-System.ServiceModel.Internals.dll.so": {
+      "Size": 16508
+    },
+    "lib/x86/libaot-Xamarin.Google.Android.Material.dll.so": {
+      "Size": 22648
+    },
+    "lib/x86/libaot-Mono.Security.dll.so": {
+      "Size": 14420
+    },
+    "lib/x86/libaot-System.Numerics.dll.so": {
+      "Size": 6232
+    },
+    "lib/x86/libaot-System.Xml.Linq.dll.so": {
+      "Size": 23828
+    },
+    "lib/x86/libaot-System.Data.dll.so": {
+      "Size": 128840
+    },
+    "lib/x86/libaot-Xamarin.Forms.Platform.Android.dll.so": {
+      "Size": 935172
+    },
+    "lib/x86/libaot-Xamarin.Forms.Core.dll.so": {
+      "Size": 1599332
+    },
+    "META-INF/androidx.swiperefreshlayout_swiperefreshlayout.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.fragment_fragment.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.documentfile_documentfile.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.vectordrawable_vectordrawable.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.drawerlayout_drawerlayout.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.loader_loader.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.cursoradapter_cursoradapter.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.lifecycle_lifecycle-livedata-core.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.interpolator_interpolator.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.activity_activity.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.legacy_legacy-support-core-utils.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.transition_transition.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.versionedparcelable_versionedparcelable.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.cardview_cardview.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.browser_browser.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.appcompat_appcompat-resources.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.appcompat_appcompat.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.legacy_legacy-support-core-ui.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.localbroadcastmanager_localbroadcastmanager.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.slidingpanelayout_slidingpanelayout.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.lifecycle_lifecycle-viewmodel.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.savedstate_savedstate.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.vectordrawable_vectordrawable-animated.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.arch.core_core-runtime.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.recyclerview_recyclerview.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.print_print.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.lifecycle_lifecycle-runtime.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.legacy_legacy-support-v4.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.media_media.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.customview_customview.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.coordinatorlayout_coordinatorlayout.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.asynclayoutinflater_asynclayoutinflater.version": {
+      "Size": 6
+    },
+    "META-INF/android.support.design_material.version": {
+      "Size": 12
+    },
+    "META-INF/com.google.android.material_material.version": {
+      "Size": 10
+    },
+    "META-INF/androidx.viewpager_viewpager.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.core_core.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.lifecycle_lifecycle-livedata.version": {
+      "Size": 6
+    },
+    "META-INF/proguard/androidx-annotations.pro": {
+      "Size": 339
+    },
+    "META-INF/ANDROIDD.SF": {
+      "Size": 76149
+    },
+    "META-INF/ANDROIDD.RSA": {
+      "Size": 1205
+    },
+    "META-INF/MANIFEST.MF": {
+      "Size": 76041
     }
   },
-  "PackageSize": 26111198
+  "PackageSize": 16905412
 }
