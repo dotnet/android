@@ -2518,6 +2518,7 @@ because xbuild doesn't support framework reference assemblies.
       KeyAlias="$(_ApkKeyAlias)"
       KeyPass="$(_ApkKeyPass)"
       StorePass="$(_ApkStorePass)"
+      ExtraArgs="$(AndroidBundleToolExtraArgs)"
   />
   <InstallApkSet
       ToolPath="$(JavaToolPath)"
@@ -2527,6 +2528,7 @@ because xbuild doesn't support framework reference assemblies.
       AdbToolPath="$(AdbToolPath)"
       AdbTarget="$(AdbTarget)"
       ApkSet="$(_ApkSetIntermediate)"
+      Modules="@(AndroidInstallModules)"
   />
 </Target>
 
