@@ -103,12 +103,12 @@ namespace Xamarin.Android.Build.Tests
 					: Path.Combine (proj.Root, b.ProjectDirectory, depsFilename);
 				FileAssert.Exists (depsFile);
 
-				const int ApkSizeThreshold = 50 * 1024;
-				const int AssemblySizeThreshold = 50 * 1024;
+				const int ApkSizeThreshold = 5 * 1024;
+				const int AssemblySizeThreshold = 5 * 1024;
 				var apkFile = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, proj.PackageName + "-Signed.apk");
-				var apkDescPath = Path.Combine (Root, b.ProjectDirectory, apkDescFilename);
+				var apkDescPath = Path.Combine (Root, apkDescFilename);
 				var apkDescReferencePath = Path.Combine (Root, b.ProjectDirectory, apkDescReference);
-				var (code, stdOut, stdErr) = RunApkDiffCommand ($"-s --save-description-2={apkDescPath} --test-apk-size-regression={ApkSizeThreshold} --test-assembly-size-regression={AssemblySizeThreshold} {apkDescReferencePath} {apkFile}");
+				var (code, stdOut, stdErr) = RunApkDiffCommand ($"-s --save-description-2={apkDescPath} --descrease-is-regression --test-apk-size-regression={ApkSizeThreshold} --test-assembly-size-regression={AssemblySizeThreshold} {apkDescReferencePath} {apkFile}");
 				Assert.IsTrue (code == 0, $"apkdiff regression test failed with exit code: {code}\nstdOut: {stdOut}\nstdErr: {stdErr}");
 			}
 		}
@@ -1659,25 +1659,11 @@ namespace App1
 			}
 		}
 
-		/// <summary>
-		/// Works around a bug in lint.bat on Windows: https://issuetracker.google.com/issues/68753324
-		/// - We may want to remove this if a future Android SDK tools, no longer has this issue
-		/// </summary>
-		void FixLintOnWindows ()
-		{
-			if (Environment.OSVersion.Platform == PlatformID.Win32NT) {
-				var androidSdk = AndroidSdkResolver.GetAndroidSdkPath ();
-				var androidSdkTools = Path.Combine (androidSdk, "tools");
-				if (Directory.Exists (androidSdkTools)) {
-					Environment.SetEnvironmentVariable ("JAVA_OPTS", $"\"-Dcom.android.tools.lint.bindir={androidSdkTools}\"", EnvironmentVariableTarget.Process);
-				}
-			}
-		}
-
 		[Test]
 		public void CheckLintResourceFileReferencesAreFixed ()
 		{
-			FixLintOnWindows ();
+			if (TestEnvironment.IsUsingJdk8)
+				Assert.Ignore ("https://github.com/xamarin/xamarin-android/issues/5698");
 
 			var proj = new XamarinAndroidApplicationProject () {
 				PackageReferences = {
@@ -1720,7 +1706,8 @@ namespace App1
 		[NonParallelizable]
 		public void CheckLintErrorsAndWarnings ()
 		{
-			FixLintOnWindows ();
+			if (TestEnvironment.IsUsingJdk8)
+				Assert.Ignore ("https://github.com/xamarin/xamarin-android/issues/5698");
 
 			string disabledIssues = "StaticFieldLeak,ObsoleteSdkInt,AllowBackup,ExportedReceiver";
 
@@ -1785,7 +1772,8 @@ namespace App1
 		[Test]
 		public void CheckLintConfigMerging ()
 		{
-			FixLintOnWindows ();
+			if (TestEnvironment.IsUsingJdk8)
+				Assert.Ignore ("https://github.com/xamarin/xamarin-android/issues/5698");
 
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty ("AndroidLintEnabled", true.ToString ());

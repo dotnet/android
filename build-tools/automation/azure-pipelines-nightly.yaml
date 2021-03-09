@@ -13,7 +13,7 @@ schedules:
   displayName: Run daily at 3:00 UTC
   branches:
     include:
-    - master
+    - main
     - d16-9
 
 # External sources, scripts, tests, and yaml template files.

@@ -289,10 +289,17 @@ namespace Xamarin.Android.Build.Tests
 		public void DotNetBuildBinding ()
 		{
 			var proj = new XASdkProject (outputType: "Library");
+			// Both transform files should be applied
+			proj.Sources.Add (new AndroidItem.TransformFile ("Transforms.xml") {
+				TextContent = () =>
+@"<metadata>
+  <attr path=""/api/package[@name='com.xamarin.android.test.msbuildtest']"" name=""managedName"">FooBar</attr>
+</metadata>",
+			});
 			proj.Sources.Add (new AndroidItem.TransformFile ("Transforms\\Metadata.xml") {
 				TextContent = () =>
 @"<metadata>
-  <attr path=""/api/package[@name='com.xamarin.android.test.msbuildtest']"" name=""managedName"">MSBuildTest</attr>
+  <attr path=""/api/package[@managedName='FooBar']"" name=""managedName"">MSBuildTest</attr>
 </metadata>",
 			});
 			proj.Sources.Add (new AndroidItem.AndroidLibrary ("javaclasses.jar") {

@@ -2,8 +2,8 @@
 name: "\U0001F6E0 Building an Application"
 about: Issues trying to compile or package your application.
 title: ''
-labels: 'Area: App+Library Build'
-assignees: jonathanpeppers dellis1972
+labels: 'Area: App+Library Build, needs-triage'
+assignees: 'jonathanpeppers, dellis1972'
 
 ---
 

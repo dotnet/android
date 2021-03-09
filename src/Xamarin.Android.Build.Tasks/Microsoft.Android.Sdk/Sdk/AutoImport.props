@@ -35,6 +35,7 @@ https://github.com/dotnet/designs/blob/4703666296f5e59964961464c25807c727282cae/
     <!-- Default Asset file inclusion -->
     <AndroidAsset Include="$(MonoAndroidAssetsPrefix)\**\*" Exclude="$(MonoAndroidAssetsPrefix)\**\.*\**" />
     <!-- Default XPath transforms for bindings -->
+    <TransformFile Include="Transforms*.xml" />
     <TransformFile Include="Transforms\**\*.xml" />
     <!-- Default Java or native libraries -->
     <AndroidLibrary       Include="**\*.jar" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder);$(_DefaultJavaSourceJarPattern)" />

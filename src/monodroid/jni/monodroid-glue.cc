@@ -30,6 +30,7 @@
 #include <mono/metadata/mono-config.h>
 #include <mono/metadata/mono-debug.h>
 #include <mono/utils/mono-dl-fallback.h>
+#include <mono/utils/mono-logger.h>
 
 #include "mono_android_Runtime.h"
 
@@ -80,6 +81,7 @@
 #include "xamarin-app.hh"
 #include "timing.hh"
 #include "xa-internal-api-impl.hh"
+#include "build-info.hh"
 
 #ifndef WINDOWS
 #include "xamarin_getifaddrs.h"
@@ -801,10 +803,18 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 	if (mono_mkbundle_initialize_mono_api) {
 		BundleMonoAPI bundle_mono_api = {
 			.mono_register_bundled_assemblies = mono_register_bundled_assemblies,
+#if !defined(NET6)
 			.mono_register_config_for_assembly = mono_register_config_for_assembly,
+#else
+			.mono_register_config_for_assembly = nullptr,
+#endif // ndef NET6
 			.mono_jit_set_aot_mode = reinterpret_cast<void (*)(int)>(mono_jit_set_aot_mode),
 			.mono_aot_register_module = mono_aot_register_module,
+#if !defined(NET6)
 			.mono_config_parse_memory = mono_config_parse_memory,
+#else
+			.mono_config_parse_memory = nullptr,
+#endif // ndef NET6
 			.mono_register_machine_config = reinterpret_cast<void (*)(const char *)>(mono_register_machine_config),
 		};
 
@@ -813,7 +823,14 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] dynamic_local_string<PROPE
 	}
 
 	if (mono_mkbundle_init)
-		mono_mkbundle_init (mono_register_bundled_assemblies, mono_register_config_for_assembly, reinterpret_cast<void (*)(int)>(mono_jit_set_aot_mode));
+		mono_mkbundle_init (
+			mono_register_bundled_assemblies,
+#if defined(NET6)
+			nullptr,
+#else
+			mono_register_config_for_assembly,
+#endif // def NET6
+			reinterpret_cast<void (*)(int)>(mono_jit_set_aot_mode));
 
 	/*
 	 * Assembly preload hooks are invoked in _reverse_ registration order.
@@ -1682,12 +1699,102 @@ MonodroidRuntime::get_my_location (bool remove_file_name)
 }
 #endif  // defined(WINDOWS)
 
+#if defined (ANDROID)
+force_inline void
+MonodroidRuntime::setup_mono_tracing (char const* const& mono_log_mask)
+{
+	bool have_log_assembly = (log_categories & LOG_ASSEMBLY) != 0;
+	bool have_log_gc = (log_categories & LOG_GC) != 0;
+
+	constexpr char   MASK_ASM[] = "asm";
+	constexpr size_t MASK_ASM_LEN = sizeof(MASK_ASM) - 1;
+	constexpr char   MASK_DLL[] = "dll";
+	constexpr size_t MASK_DLL_LEN = sizeof(MASK_DLL) - 1;
+	constexpr char   MASK_GC[] = "gc";
+	constexpr size_t MASK_GC_LEN = sizeof(MASK_GC) - 1;
+
+	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> log_mask;
+	if (mono_log_mask == nullptr || *mono_log_mask == '\0') {
+		if (have_log_assembly) {
+			log_mask.append (MASK_ASM);
+			log_mask.append (",");
+			log_mask.append (MASK_DLL);
+		}
+
+		if (have_log_gc) {
+			if (log_mask.length () > 0) {
+				log_mask.append (",");
+			}
+			log_mask.append (MASK_GC);
+		}
+
+		// empty string turns off all Mono VM tracing
+		mono_trace_set_mask_string (log_mask.get ());
+		return;
+	}
+
+	if (!have_log_assembly && !have_log_gc)  {
+		mono_trace_set_mask_string (mono_log_mask);
+		return;
+	}
+
+	bool need_asm = have_log_assembly, need_dll = have_log_assembly, need_gc = have_log_gc;
+	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> input_log_mask;
+	input_log_mask.assign (mono_log_mask);
+
+	string_segment token;
+	while (input_log_mask.next_token (',', token)) {
+		if (need_asm && token.equal (MASK_ASM, MASK_ASM_LEN)) {
+			need_asm = false;
+		} else if (need_dll && token.equal (MASK_DLL, MASK_DLL_LEN)) {
+			need_dll = false;
+		} else if (need_gc && token.equal (MASK_GC, MASK_GC_LEN)) {
+			need_gc = false;
+		}
+
+		if (!need_asm && !need_dll && !need_gc) {
+			mono_trace_set_mask_string (mono_log_mask);
+			return;
+		}
+	}
+
+	if (need_asm) {
+		input_log_mask.append (",");
+		input_log_mask.append (MASK_ASM);
+	}
+
+	if (need_dll) {
+		input_log_mask.append (",");
+		input_log_mask.append (MASK_DLL);
+	}
+
+	if (need_gc) {
+		input_log_mask.append (",");
+		input_log_mask.append (MASK_GC);
+	}
+
+	mono_trace_set_mask_string (input_log_mask.get ());
+}
+
+force_inline void
+MonodroidRuntime::install_logging_handlers ()
+{
+	mono_trace_set_log_handler (mono_log_handler, nullptr);
+	mono_trace_set_print_handler (mono_log_standard_streams_handler);
+	mono_trace_set_printerr_handler (mono_log_standard_streams_handler);
+}
+
+#endif // def ANDROID
+
 inline void
 MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
                                                           jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader,
                                                           jobjectArray assembliesJava, jint apiLevel, jboolean isEmulator)
 {
-	init_logging_categories ();
+	char *mono_log_mask = nullptr;
+	char *mono_log_level = nullptr;
+
+	init_logging_categories (mono_log_mask, mono_log_level);
 
 	timing_period total_time;
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
@@ -1744,6 +1851,21 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 #endif
 
 	setup_bundled_app ("libmonodroid_bundle_app.so");
+
+#if defined (ANDROID)
+	if (mono_log_level == nullptr || *mono_log_level == '\0') {
+		mono_trace_set_level_string ("error");
+	} else {
+		// `mono_log_level` cannot be freed here, Mono VM stores it internally
+		mono_trace_set_level_string (mono_log_level);
+	}
+
+	setup_mono_tracing (mono_log_mask);
+
+#if defined (NET6)
+	install_logging_handlers ();
+#endif // def NET6
+#endif
 
 	if (runtimeNativeLibDir != nullptr) {
 		jstr = runtimeNativeLibDir;
@@ -1807,6 +1929,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	MonoAotMode mode = MonoAotMode::MONO_AOT_MODE_NONE;
 	if (androidSystem.is_mono_aot_enabled ()) {
 		mode = androidSystem.get_mono_aot_mode ();
+#if !defined (NET6)
 		if (mode == MonoAotMode::MONO_AOT_MODE_LAST) {
 			// Hack. See comments in android-system.hh
 			if (!androidSystem.is_interpreter_enabled ()) {
@@ -1821,6 +1944,13 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 				log_info (LOG_DEFAULT, "Enabling Mono Interpreter");
 			}
 		}
+#else   // defined (NET6)
+		if (mode != MonoAotMode::MONO_AOT_MODE_INTERP_ONLY) {
+			log_info (LOG_DEFAULT, "Enabling AOT mode in Mono");
+		} else {
+			log_info (LOG_DEFAULT, "Enabling Mono Interpreter");
+		}
+#endif  // !defined (NET6)
 	}
 	mono_jit_set_aot_mode (mode);
 
@@ -1858,13 +1988,33 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	/* the first assembly is used to initialize the AppDomain name */
 	create_and_initialize_domain (env, klass, runtimeApks, assemblies, nullptr, assembliesPaths, loader, /*is_root_domain:*/ true, /*force_preload_assemblies:*/ false);
 
+#if defined (ANDROID) && !defined (NET6)
+	// Mono from mono/mono has a bug which requires us to install the handlers after `mono_init_jit_version` is called
+	install_logging_handlers ();
+#endif // def ANDROID && ndef NET6
+
 	// Install our dummy exception handler on Desktop
 	if constexpr (is_running_on_desktop) {
 		mono_add_internal_call ("System.Diagnostics.Debugger::Mono_UnhandledException_internal(System.Exception)",
 		                                 reinterpret_cast<const void*> (monodroid_Mono_UnhandledException_internal));
 	}
 
-	log_info (LOG_DEFAULT, "Xamarin.Android version: %s; MonoVM version: %s", XA_VERSION, mono_get_runtime_build_info ());
+	if (XA_UNLIKELY (utils.should_log (LOG_DEFAULT))) {
+		log_info_nocheck (
+			LOG_DEFAULT,
+			"Xamarin.Android version: %s (%s; %s); built on %s",
+			BuildInfo::xa_version,
+			BuildInfo::architecture,
+			BuildInfo::kind,
+			BuildInfo::date
+		);
+
+#if defined (ANDROID)
+		log_info_nocheck (LOG_DEFAULT, "NDK version: %s; API level: %s", BuildInfo::ndk_version, BuildInfo::ndk_api_level);
+		log_info_nocheck (LOG_DEFAULT, "MonoVM version: %s", mono_get_runtime_build_info ());
+#endif // def ANDROID
+	}
+
 	if (XA_UNLIKELY (utils.should_log (LOG_TIMING))) {
 		total_time.mark_end ();
 

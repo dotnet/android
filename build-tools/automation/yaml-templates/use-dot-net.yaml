@@ -1,4 +1,4 @@
-# This template enables installation of stable and master/nighly builds of .NET.
+# This template enables installation of stable and main/nighly builds of .NET.
 # We prefer this over the UseDotNet task so that we can always clean up old/unstable versions on disk.
 
 parameters:

@@ -96,6 +96,10 @@ namespace Xamarin.ProjectTools
 				}
 			}
 		}
+
+		public static bool IsUsingJdk8 => AndroidSdkResolver.GetJavaSdkVersionString ().Contains ("1.8.0");
+
+		public static bool IsUsingJdk11 => AndroidSdkResolver.GetJavaSdkVersionString ().Contains ("11.0");
 	}
 }
 

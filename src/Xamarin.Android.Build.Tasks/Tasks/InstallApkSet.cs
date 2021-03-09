@@ -7,7 +7,7 @@ namespace Xamarin.Android.Tasks
 {
 	/// <summary>
 	/// Invokes `bundletool` to install an APK set to an attached device
-	/// 
+	///
 	/// Usage: bundletool install-apks --apks=foo.apks
 	/// </summary>
 	public class InstallApkSet : BundleToolAdbTask
@@ -16,6 +16,8 @@ namespace Xamarin.Android.Tasks
 
 		[Required]
 		public string ApkSet { get; set; }
+
+		public string[] Modules  { get; set; }
 
 		internal override CommandLineBuilder GetCommandLineBuilder ()
 		{
@@ -28,8 +30,11 @@ namespace Xamarin.Android.Tasks
 			// --modules: List of modules to be installed, or "_ALL_" for all modules.
 			// Defaults to modules installed during first install, i.e. not on-demand.
 			// Xamarin.Android won't support on-demand modules yet.
-			cmd.AppendSwitchIfNotNull ("--modules ", "_ALL_");
-			
+			if (Modules == null)
+				cmd.AppendSwitchIfNotNull ("--modules ", "_ALL_");
+			else
+				cmd.AppendSwitchIfNotNull ("--modules ", $"\"{string.Join ("\",\"", Modules)}\"");
+
 			return cmd;
 		}
 	}
