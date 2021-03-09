@@ -2,9 +2,6 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\installers\create-installers.targets" />
   <PropertyGroup>
-    <BuildDependsOn>ResolveReferences</BuildDependsOn>
-  </PropertyGroup>
-  <PropertyGroup>
     <PkgInstallDir>/</PkgInstallDir>
     <PkgInstallDir Condition="$([MSBuild]::IsOsPlatform(Linux))">/usr</PkgInstallDir>
     <PayloadDir>$(OutputPath)\pkg\archive</PayloadDir>
@@ -16,7 +13,6 @@
     <PkgScriptsDir>$(MSBuildThisFileDirectory)scripts</PkgScriptsDir>
     <UpdateInfoGuid>d1ec039f-f3db-468b-a508-896d7c382999</UpdateInfoGuid>
   </PropertyGroup>
-  <Target Name="Build" />
   <Target Name="_CopyFilesToPayloadDir"
       DependsOnTargets="ConstructInstallerItems;GetXAVersion" >
     <PropertyGroup>
@@ -123,6 +119,7 @@
   </Target>
   <Target Name="CreatePkg"
       Condition=" '$(HostOS)' == 'Darwin' "
+      BeforeTargets="AssignTargetPaths"
       DependsOnTargets="_FinalizePayload">
     <MakeDir Directories="$(PkgOutputPath)"/>
     <PropertyGroup>

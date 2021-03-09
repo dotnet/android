@@ -109,7 +109,7 @@ steps:
     artifactName: $(NuGetArtifactName)
     targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
 
-- script: make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration) _MSBUILD_ARGS='/p:SignType=$(MicroBuildSignType) /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins'
+- script: make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration) SIGN_TYPE=$(MicroBuildSignType) MICROBUILD_DIRECTORY=$(Build.StagingDirectory)/MicroBuild/Plugins
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make create-installers
 
