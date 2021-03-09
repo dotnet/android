@@ -126,6 +126,22 @@ steps:
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: create updateinfo file
 
+- script: >
+    cd $(System.DefaultWorkingDirectory)/release-scripts &&
+    pwsh notarize.ps1 -FolderForApps ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
+  failOnStderr: true
+  displayName: Notarize PKG
+  condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
+
+- powershell: |
+    $pkg = Get-ChildItem -Path "${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)/*" -Include *.pkg -File
+    if (![System.IO.File]::Exists($pkg)) {
+        throw [System.IO.FileNotFoundException] "Pkg File not found in ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)"
+    }
+    xcrun stapler validate $pkg
+  displayName: validate notarized pkg
+  condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
+
 - template: upload-to-storage.yml@yaml
   parameters:
     BuildPackages: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
