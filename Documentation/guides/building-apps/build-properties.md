@@ -204,6 +204,8 @@ Specifies additional
 command-line options to pass to the **bundletool** command when
 build app bundles.
 
+This property was added in Xamarin.Android 11.3.
+
 ## AndroidClassParser
 
 A string property which controls how
