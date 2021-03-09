@@ -151,7 +151,7 @@ Introduced in Xamarin.Android 11.2
 Specifies the modules which get installed by **bundletool** command when
 installing app bundles.
 
-Introduced in Xamarin.Android 11.3
+This build action was introduced in Xamarin.Android 11.3.
 
 ## AndroidNativeLibrary
 
