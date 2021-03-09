@@ -3363,6 +3363,7 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 
 		//See: https://developer.android.com/about/versions/marshmallow/android-6.0-changes#behavior-apache-http-client
 		[Test]
+		[Retry (5)]
 		public void MissingOrgApacheHttpClient ([Values ("dx", "d8")] string dexTool)
 		{
 			AssertDexToolSupported (dexTool);
