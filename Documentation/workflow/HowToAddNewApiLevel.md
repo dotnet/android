@@ -80,4 +80,16 @@ the latest tool versions are being used.
 
 The major version should match the new API level. For Android P this will be 28.x.x . If a version which exactly matches the API Level is not available then the latest version should be used.
 
+## Bindings Finalization
+
+
+### Update BuildVersionCodes API Level Value
+
+Our enumification process stores the value of the constants in `map.csv`. The build version code
+constant for the preview API level is 10000, but changes to eg: 31 when the API goes stable.
+
+Depending on when enumification was done, the 10000 may be stored instead of 31. When the API
+goes stable we must update `map.csv` to the correct value.
+
+Search for `android/os/Build$VERSION_CODES` in `map.csv`.
 
