@@ -56,7 +56,7 @@ variables:
   DotNet5Version: 5.0.103
   HostedMacImage: macOS-10.15
   HostedWinVS2019: Hosted Windows 2019 with VS2019
-  VSEngWinVS2019: Xamarin-Android-Win2019-1120
+  VSEngWinVS2019: Xamarin-Android-Win2019
   # Run all tests if:
   # - User who queued the job requested it (They set XA.RunAllTests to true)
   # - This is the master integration branch (Pipeline defaults XA.RunAllTests to true)

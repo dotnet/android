@@ -40,7 +40,6 @@ variables:
   DotNetCoreVersion: 3.1.405
   DotNet5Version: 5.0.100
   HostedMacImage: macOS-10.15
-  VSEngWinVS2019: Xamarin-Android-Win2019-1120
   GitHub.Token: $(github--pat--vs-mobiletools-engineering-service2)
   NUnit.NumberOfTestWorkers: 4
 
