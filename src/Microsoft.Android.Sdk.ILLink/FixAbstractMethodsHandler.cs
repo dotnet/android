@@ -49,7 +49,7 @@ namespace Microsoft.Android.Sdk.ILLink
 			var assembly = type.Module.Assembly;
 			if (!ShouldProcessTypeFromAssembly (assembly))
 				return;
-			
+
 			bool changed = false;
 			if (!MightNeedFix (type))
 				return;
@@ -261,7 +261,7 @@ namespace Microsoft.Android.Sdk.ILLink
 					return abstractMethodErrorConstructor;
 
 				var assembly = GetMonoAndroidAssembly ();
-				if (assembly != null) { 
+				if (assembly != null) {
 					var errorException = assembly.MainModule.GetType ("Java.Lang.AbstractMethodError");
 					if (errorException != null) {
 						foreach (var method in errorException.Methods) {
