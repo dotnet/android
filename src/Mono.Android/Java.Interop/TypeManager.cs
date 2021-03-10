@@ -212,10 +212,6 @@ namespace Java.Interop {
 		[MethodImplAttribute(MethodImplOptions.InternalCall)]
 		static extern Type monodroid_typemap_java_to_managed (string java_type_name);
 
-		static bool TypeRegistrationFallbackIsEnabled { get; } = InitializeTypeRegistrationFallbackIsEnabled ();
-		static bool InitializeTypeRegistrationFallbackIsEnabled () =>
-		    !AppContext.TryGetSwitch ("Java.Interop.TypeManager.TypeRegistrationFallbackIsEnabled", out bool isEnabled) || isEnabled;
-
 		internal static Type? GetJavaToManagedType (string class_name)
 		{
 			Type? type = monodroid_typemap_java_to_managed (class_name);
@@ -229,7 +225,7 @@ namespace Java.Interop {
 				return null;
 			}
 
-			if (TypeRegistrationFallbackIsEnabled)
+			if (AndroidEnvironment.VSAndroidDesignerIsEnabled)
 				return TypeRegistrationFallback (class_name);
 
 			return null;

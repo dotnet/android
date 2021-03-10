@@ -74,7 +74,7 @@
     <UseNativeHttpHandler Condition="'$(UseNativeHttpHandler)' == ''">true</UseNativeHttpHandler>
 
     <!-- XA feature switches defaults -->
-    <XATypeRegistrationFallback Condition="'$(XATypeRegistrationFallback)' == ''">false</XATypeRegistrationFallback>
+    <VSAndroidDesigner Condition="'$(VSAndroidDesigner)' == ''">false</VSAndroidDesigner>
 
   </PropertyGroup>
   <PropertyGroup Condition=" '$(AndroidApplication)' == 'true' and '$(GenerateApplicationManifest)' == 'true' ">
