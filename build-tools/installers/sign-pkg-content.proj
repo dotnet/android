@@ -19,6 +19,9 @@ ourself (using an empty signing identity) before passing these files to ESRP.
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <!-- NOTE: Any file you want to sign must be under either $(OutDir) or $(IntermediateOutputPath). -->
     <OutDir Condition=" '$(OutDir)' == '' ">$(MSBuildSrcDir)</OutDir>
+    <_BundleToolJar>$([System.IO.Path]::GetFullPath('$(MSBuildSrcDir)\bundletool.jar'))</_BundleToolJar>
+    <_BundleToolExtractLocation>$(MSBuildSrcDir)\sign-bundletool</_BundleToolExtractLocation>
+    <_BundleToolAapt2>$(_BundleToolExtractLocation)\macos\aapt2</_BundleToolAapt2>
   </PropertyGroup>
 
   <ItemGroup>
@@ -32,28 +35,32 @@ ourself (using an empty signing identity) before passing these files to ESRP.
       BeforeTargets="SignFiles"
       AfterTargets="AfterBuild" >
     <Exec Command="codesign -vvvv -f -s - -o runtime --entitlements &quot;%(_MSBuildFilesUnixSignAndHarden.EntitlementsPath)&quot; &quot;%(_MSBuildFilesUnixSignAndHarden.Identity)&quot;" />
-    <!-- Unpack, sign, and repack bundletool-->
-    <PropertyGroup>
-      <_BundleToolJar>$([System.IO.Path]::GetFullPath('$(MSBuildSrcDir)\bundletool.jar'))</_BundleToolJar>
-      <_BundleToolExtractLocation>$(MSBuildSrcDir)\sign-bundletool</_BundleToolExtractLocation>
-    </PropertyGroup>
+    <!-- Unpack bundletool.jar and sign embedded aapt2 -->
     <RemoveDir Directories="$(_BundleToolExtractLocation)" />
     <MakeDir Directories="$(_BundleToolExtractLocation)" />
     <Exec WorkingDirectory="$(_BundleToolExtractLocation)" Command="jar -xvf &quot;$(_BundleToolJar)&quot;" />
     <Delete Files="$(_BundleToolJar)" />
-    <Exec Command="codesign -vvvv -f -s - -o runtime --entitlements &quot;$(DefaultRuntimeEntitlementsPath)&quot; &quot;$(_BundleToolExtractLocation)\macos\aapt2&quot;" />
-    <Exec WorkingDirectory="$(_BundleToolExtractLocation)" Command="jar -cvmf META-INF/MANIFEST.MF &quot;$(_BundleToolJar)&quot; ." />
-    <RemoveDir Directories="$(_BundleToolExtractLocation)" />
+    <Exec Command="codesign -vvvv -f -s - -o runtime --entitlements &quot;$(DefaultRuntimeEntitlementsPath)&quot; &quot;$(_BundleToolAapt2)&quot;" />
     <ItemGroup>
       <FilesToSign Include="@(_MSBuildFilesUnixSign)">
         <Authenticode>MacDeveloper</Authenticode>
         <Zip>true</Zip>
       </FilesToSign>
-      <FilesToSign Include="@(_MSBuildFilesUnixSignAndHarden)">
+      <FilesToSign Include="@(_MSBuildFilesUnixSignAndHarden);$(_BundleToolAapt2)">
         <Authenticode>MacDeveloperHarden</Authenticode>
         <Zip>true</Zip>
       </FilesToSign>
     </ItemGroup>
+  </Target>
+
+  <Target Name="_RepackAndSignBundleToolJar"
+      AfterTargets="SignFiles" >
+    <!-- Repack and sign bundletool.jar after signing aapt2 -->
+    <Exec WorkingDirectory="$(_BundleToolExtractLocation)" Command="jar -cvmf META-INF/MANIFEST.MF &quot;$(_BundleToolJar)&quot; ." />
+    <RemoveDir Directories="$(_BundleToolExtractLocation)" />
+    <Exec
+        Condition=" '$(MBSIGN_APPFOLDER)' != '' and '$(SignType)' == 'real' "
+        Command="dotnet $(MBSIGN_APPFOLDER)/DDSignFiles.dll /file:&quot;$(_BundleToolJar)&quot; /certs:MicrosoftJarSHA2" />
   </Target>
 
 </Project>
