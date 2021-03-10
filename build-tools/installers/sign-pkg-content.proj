@@ -60,7 +60,7 @@ ourself (using an empty signing identity) before passing these files to ESRP.
     <RemoveDir Directories="$(_BundleToolExtractLocation)" />
     <Exec
         Condition=" '$(MBSIGN_APPFOLDER)' != '' and '$(SignType)' == 'real' "
-        Command="dotnet $(MBSIGN_APPFOLDER)/DDSignFiles.dll /file:&quot;$(_BundleToolJar)&quot; /certs:MicrosoftJarSHA2" />
+        Command="dotnet $(MBSIGN_APPFOLDER)/DDSignFiles.dll /file:&quot;$(_BundleToolJar)&quot; /certs:100010171" />
   </Target>
 
 </Project>
