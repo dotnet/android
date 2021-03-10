@@ -42,6 +42,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			var cmd = new CommandLineBuilder ();
 			cmd.AppendSwitch ("-s");
 			cmd.AppendSwitch ($"--save-description-2={apkDescFile}");
+			cmd.AppendSwitch ("--descrease-is-regression");
 			cmd.AppendSwitch ($"--test-apk-size-regression={ApkSizeThreshold}");
 			cmd.AppendSwitch ($"--test-assembly-size-regression={AssemblySizeThreshold}");
 			cmd.AppendFileNameIfNotNull (ReferenceDescription);
@@ -71,7 +72,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			ErrorResultsHelper.CreateErrorResultsFile (
 				testResultPath,
 				nameof (ApkDiffCheckRegression),
-				"check apk size regression",
+				"check apk size regression, context: https://github.com/xamarin/xamarin-android/blob/main/Documentation/project-docs/ApkSizeRegressionChecks.md",
 				new Exception (errorMessage),
 				$"apkdiff output:\n{logCopy}");
 
