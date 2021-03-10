@@ -1199,12 +1199,6 @@ stages:
         Write-Host "##vso[task.setvariable variable=XA.NET6.Pkg]$pkg"
       displayName: set variable to pkg path
 
-    - task: PublishPipelineArtifact@1
-      displayName: upload pkg
-      inputs:
-        artifactName: net6-pkg
-        targetPath: $(XA.NET6.Pkg)
-
     - script: >
         cd $(System.DefaultWorkingDirectory)/release-scripts &&
         pwsh notarize.ps1 -FolderForApps $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)
@@ -1215,6 +1209,12 @@ stages:
     - script: xcrun stapler validate $(XA.NET6.Pkg)
       displayName: validate notarized pkg
       condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
+
+    - task: PublishPipelineArtifact@1
+      displayName: upload pkg
+      inputs:
+        artifactName: net6-pkg
+        targetPath: $(XA.NET6.Pkg)
 
     - template: yaml-templates/remove-microbuild-tooling.yaml
       parameters:
