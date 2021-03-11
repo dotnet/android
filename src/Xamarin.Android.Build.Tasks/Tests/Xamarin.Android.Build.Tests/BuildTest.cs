@@ -3378,7 +3378,7 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				string downloaddir = Path.Combine (Root, b.ProjectDirectory, "Downloads");
 				Directory.CreateDirectory (downloaddir);
-				prop.SetProperty ("XamarinBuildDownloadDir", downloaddir);
+				proj.SetProperty ("XamarinBuildDownloadDir", downloaddir);
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded");
 			}
 		}
