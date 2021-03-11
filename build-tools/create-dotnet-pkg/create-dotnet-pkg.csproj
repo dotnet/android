@@ -38,7 +38,7 @@
       <DotNetPayloadDir>$(PayloadDir)\usr\local\share\dotnet\</DotNetPayloadDir>
     </PropertyGroup>
     <ItemGroup>
-      <_FilesToCopy Include="$(DotNetPreviewPath)\sdk\$(MicrosoftNETSdkPackageVersion)\EnableWorkloadResolver.sentinel" />
+      <_FilesToCopy Include="$(DotNetPreviewPath)\sdk\$(MicrosoftDotnetSdkInternalPackageVersion)\EnableWorkloadResolver.sentinel" />
       <_FilesToCopy Include="$(DotNetPreviewPath)\sdk-manifests\$(DotNetPreviewVersionBand)\Microsoft.NET.Workload.Android\**\*" />
       <_FilesToCopy Include="$(DotNetPreviewPath)\packs\Microsoft.Android.Ref\**\*" />
       <_FilesToCopy Include="$(DotNetPreviewPath)\packs\Microsoft.Android.Sdk.osx-x64\**\*" />
