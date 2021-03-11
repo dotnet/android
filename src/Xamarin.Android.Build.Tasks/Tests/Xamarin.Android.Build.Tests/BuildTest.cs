@@ -3366,7 +3366,6 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 		[Retry (5)]
 		public void MissingOrgApacheHttpClient ([Values ("dx", "d8")] string dexTool)
 		{
-			Directory.CreateDirectory (downloaddir);
 			AssertDexToolSupported (dexTool);
 			var proj = new XamarinAndroidApplicationProject {
 				DexTool = dexTool,
@@ -3378,6 +3377,7 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 			proj.PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Maps);
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				string downloaddir = Path.Combine (Root, b.ProjectDirectory, "Downloads");
+				Directory.CreateDirectory (downloaddir);
 				prop.SetProperty ("XamarinBuildDownloadDir", downloaddir);
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded");
 			}
