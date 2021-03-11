@@ -78,9 +78,6 @@ namespace Xamarin.Android.Build.Tests
 			if (forms) {
 				proj.PackageReferences.Clear ();
 				proj.PackageReferences.Add (KnownPackages.XamarinForms_4_7_0_1142);
-
-				if (Builder.UseDotNet)
-					proj.AddDotNetCompatPackages ();
 			}
 
 			byte [] apkDescData;
@@ -2039,9 +2036,7 @@ namespace App1
 				}
 			};
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
-			if (Builder.UseDotNet) {
-				proj.AddDotNetCompatPackages ();
-			} else {
+			if (!Builder.UseDotNet) {
 				//NOTE: Mono.Data.Sqlite and Mono.Posix do not exist in .NET 5+
 				proj.References.Add (new BuildItem.Reference ("Mono.Data.Sqlite"));
 				proj.References.Add (new BuildItem.Reference ("Mono.Posix"));
@@ -2564,8 +2559,6 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 					KnownPackages.AndroidSupportV4_27_0_2_1,
 				},
 			};
-			if (Builder.UseDotNet)
-				proj.AddDotNetCompatPackages ();
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var assets = b.Output.GetIntermediaryAsText (Path.Combine ("..", "project.assets.json"));
@@ -2659,8 +2652,6 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				string build_props = b.Output.GetIntermediaryPath ("build.props");
 				FileAssert.Exists (build_props, "build.props should exist after first build.");
 				proj.PackageReferences.Add (KnownPackages.SupportV7CardView_27_0_2_1);
-				if (Builder.UseDotNet)
-					proj.AddDotNetCompatPackages ();
 
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build should have succeeded.");
 				FileAssert.Exists (build_props, "build.props should exist after second build.");

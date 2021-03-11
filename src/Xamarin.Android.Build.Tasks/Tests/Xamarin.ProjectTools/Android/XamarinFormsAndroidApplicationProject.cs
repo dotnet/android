@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 
@@ -43,7 +43,6 @@ namespace Xamarin.ProjectTools
 		{
 			if (Builder.UseDotNet) {
 				PackageReferences.Add (KnownPackages.XamarinForms_4_7_0_1142);
-				this.AddDotNetCompatPackages ();
 			} else {
 				PackageReferences.Add (KnownPackages.XamarinForms_4_0_0_425677);
 			}
