@@ -3363,6 +3363,7 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 
 		//See: https://developer.android.com/about/versions/marshmallow/android-6.0-changes#behavior-apache-http-client
 		[Test]
+		[Retry (5)]
 		public void MissingOrgApacheHttpClient ([Values ("dx", "d8")] string dexTool)
 		{
 			AssertDexToolSupported (dexTool);
@@ -3372,8 +3373,12 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("</application>",
 				"<uses-library android:name=\"org.apache.http.legacy\" android:required=\"false\" /></application>");
 			proj.SetProperty ("AndroidEnableMultiDex", "True");
+
 			proj.PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Maps);
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				string downloaddir = Path.Combine (Root, b.ProjectDirectory, "Downloads");
+				Directory.CreateDirectory (downloaddir);
+				proj.SetProperty ("XamarinBuildDownloadDir", downloaddir);
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded");
 			}
 		}
