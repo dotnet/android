@@ -403,7 +403,7 @@ namespace Xamarin.Android.Prepare
 				return Path.Combine (
 					XAPackagesDir,
 					$"microsoft.netcore.app.runtime.android-{androidTarget}",
-					ctx.Properties.GetRequiredValue (KnownProperties.DotNetRuntimePacksVersion),
+					ctx.Properties.GetRequiredValue (KnownProperties.MicrosoftNetCoreAppRuntimeandroidarm64PackageVersion),
 					"runtimes",
 					$"android-{androidTarget}"
 				);

@@ -17,7 +17,7 @@ namespace Xamarin.Android.Prepare
 		{
 			var dotnetPath = context.Properties.GetRequiredValue (KnownProperties.DotNetPreviewPath);
 			dotnetPath = dotnetPath.TrimEnd (new char [] { Path.DirectorySeparatorChar });
-			var dotnetPreviewVersion = context.Properties.GetRequiredValue (KnownProperties.DotNetPreviewVersionFull);
+			var dotnetPreviewVersion = context.Properties.GetRequiredValue (KnownProperties.MicrosoftNETSdkPackageVersion);
 			var dotnetTestRuntimeVersion = Configurables.Defaults.DotNetTestRuntimeVersion;
 
 			// Delete any custom Microsoft.Android packs that may have been installed by test runs. Other ref/runtime packs will be ignored.

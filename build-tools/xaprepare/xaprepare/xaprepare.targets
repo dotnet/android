@@ -59,8 +59,8 @@
       <Replacement Include="@CommandLineToolsFolder@=$(CommandLineToolsFolder)" />
       <Replacement Include="@CommandLineToolsVersion@=$(CommandLineToolsVersion)" />
       <Replacement Include="@DotNetPreviewPath@=$(DotNetPreviewPath)" />
-      <Replacement Include="@DotNetPreviewVersionFull@=$(DotNetPreviewVersionFull)" />
-      <Replacement Include="@DotNetRuntimePacksVersion@=$(DotNetRuntimePacksVersion)" />
+      <Replacement Include="@MicrosoftNETSdkPackageVersion@=$(MicrosoftNETSdkPackageVersion)" />
+      <Replacement Include="@MicrosoftNetCoreAppRuntimeandroidarm64PackageVersion@=$(MicrosoftNetCoreAppRuntimeandroidarm64PackageVersion)" />
       <Replacement Include="@EmulatorVersion@=$(EmulatorVersion)" />
       <Replacement Include="@EmulatorPkgRevision@=$(EmulatorPkgRevision)" />
       <Replacement Include="@HostOS@=$(HostOS)" />
