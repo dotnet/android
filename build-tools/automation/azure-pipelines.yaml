@@ -140,14 +140,9 @@ stages:
     cancelTimeoutInMinutes: 5
     workspace:
       clean: all
-    variables:
-    - group: Xamarin Notarization
     steps:
     - checkout: self
       submodules: recursive
-    - checkout: release_scripts
-      clean: true
-      condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
 
     - template: yaml-templates/commercial-build.yaml
 
@@ -1299,9 +1294,94 @@ stages:
   dependsOn: mac_build
   condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(variables['MicroBuildSignType'], 'Real'))
   jobs:
+  # Check - "Xamarin.Android (Finalize Installers Notarize and Upload to Storage)"
+  - job: notarize_pkg_upload_storage
+    displayName: Notarize and Upload to Storage
+    pool:
+      name: $(VSEngMacBuildPool)
+      demands:
+      - agent.osversionfamily -equals 10.15
+    timeoutInMinutes: 120
+    cancelTimeoutInMinutes: 1
+    workspace:
+      clean: all
+    variables:
+    - group: Xamarin Notarization
+    steps:
+    - checkout: self
+
+    - checkout: release_scripts
+      clean: true
+
+    - template: yaml-templates/use-dot-net.yaml
+      parameters:
+        version: $(DotNetCoreVersion)
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: $(InstallerArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)/storage-artifacts
+        patterns: |
+          xamarin.android*.pkg
+          Xamarin.Android*.vsix
+          updateinfo
+
+    - powershell: |
+        $pkg = Get-ChildItem -Path "$(System.DefaultWorkingDirectory)/storage-artifacts/*" -Include *.pkg -File
+        if (![System.IO.File]::Exists($pkg)) {
+            throw [System.IO.FileNotFoundException] "Pkg File not found in $(System.DefaultWorkingDirectory)/storage-artifacts"
+        }
+        Write-Host "##vso[task.setvariable variable=XA.Unsigned.Pkg]$pkg"
+      displayName: set variable to pkg path
+
+    - template: yaml-templates/install-microbuild-tooling.yaml
+
+    - task: MSBuild@1
+      displayName: msbuild /t:Restore create-pkg.proj
+      inputs:
+        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/create-pkg/create-pkg.csproj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: /t:Restore /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/restore-create-pkg.binlog
+
+    - task: MSBuild@1
+      displayName: msbuild /t:SignFiles create-pkg.proj
+      inputs:
+        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/create-pkg/create-pkg.csproj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: >-
+          /t:SignFiles
+          /p:SignType=$(MicroBuildSignType)
+          /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins
+          /p:OutputPath=$(System.DefaultWorkingDirectory)/storage-artifacts
+          /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/sign-pkg.binlog
+
+    - script: >
+        cd $(System.DefaultWorkingDirectory)/release-scripts &&
+        pwsh notarize.ps1 -FolderForApps $(System.DefaultWorkingDirectory)/storage-artifacts
+      failOnStderr: true
+      displayName: Notarize PKG
+
+    - script: xcrun stapler validate $(XA.Unsigned.Pkg)
+      displayName: validate notarized pkg
+
+    - template: upload-to-storage.yml@yaml
+      parameters:
+        BuildPackages: $(System.DefaultWorkingDirectory)/storage-artifacts
+        AzureContainerName: $(Azure.Container.Name)
+        AzureUploadLocation: $(Build.DefinitionName)/public/$(Build.BuildId)/$(Build.SourceBranchName)/$(Build.SourceVersion)
+        SourceDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
+
+    - template: yaml-templates/remove-microbuild-tooling.yaml
+
+    - template: yaml-templates/upload-results.yaml
+      parameters:
+        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
+        artifactName: Legacy Notarization Results - macOS
+
   # Check - "Xamarin.Android (Finalize Installers Queue Vsix Signing)"
   - job: queue_vsix_signing
     displayName: Queue Vsix Signing
+    dependsOn: notarize_pkg_upload_storage
     pool: VSEng-MicroBuildVS2019
     timeoutInMinutes: 90
     cancelTimeoutInMinutes: 1

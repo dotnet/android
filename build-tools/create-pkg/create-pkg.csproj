@@ -5,7 +5,7 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <RootNamespace>createpkg</RootNamespace>
     <AssemblyName>create-pkg</AssemblyName>
-    <OutputPath>..\..\bin\Build$(Configuration)</OutputPath>
+    <OutputPath Condition=" '$(OutputPath)' == '' ">..\..\bin\Build$(Configuration)</OutputPath>
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />
@@ -20,5 +20,13 @@
   <ItemGroup>
     <None Include="distribution.xml.in" />
   </ItemGroup>
+
+  <ItemGroup>
+    <FilesToSign Include="$(OutputPath)\xamarin.android-*.pkg">
+      <Authenticode>MacDeveloper</Authenticode>
+      <Zip>true</Zip>
+    </FilesToSign>
+  </ItemGroup>
+
   <Import Project="create-pkg.targets" />
 </Project>

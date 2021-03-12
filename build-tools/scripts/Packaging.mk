@@ -8,15 +8,13 @@ endif
 create-installers: create-pkg create-vsix
 
 create-pkg:
-	MONO_IOMAP=all MONO_OPTIONS="$(MONO_OPTIONS)" $(call MSBUILD_BINLOG,create-pkg) /p:Configuration=$(CONFIGURATION) /restore \
+	MONO_IOMAP=all MONO_OPTIONS="$(MONO_OPTIONS)" $(call MSBUILD_BINLOG,create-pkg) /p:Configuration=$(CONFIGURATION) /t:CreatePkg \
 		build-tools/create-pkg/create-pkg.csproj \
 		$(if $(PACKAGE_VERSION),/p:ProductVersion="$(PACKAGE_VERSION)") \
 		$(if $(PACKAGE_VERSION_REV),/p:XAVersionCommitCount="$(PACKAGE_VERSION_REV)") \
 		$(if $(PKG_LICENSE_EN),/p:PkgLicenseSrcEn="$(PKG_LICENSE_EN)") \
 		$(if $(PKG_OUTPUT_PATH),/p:PkgProductOutputPath="$(PKG_OUTPUT_PATH)") \
 		$(if $(USE_COMMERCIAL_INSTALLER_NAME),/p:UseCommercialInstallerName="$(USE_COMMERCIAL_INSTALLER_NAME)") \
-		$(if $(SIGN_TYPE),/p:SignType="$(SIGN_TYPE)") \
-		$(if $(MICROBUILD_DIRECTORY),/p:MicroBuildOverridePluginDirectory="$(MICROBUILD_DIRECTORY)") \
 		$(if $(_MSBUILD_ARGS),"$(_MSBUILD_ARGS)")
 
 create-workload-installers:
