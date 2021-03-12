@@ -1309,6 +1309,7 @@ stages:
     - group: Xamarin Notarization
     steps:
     - checkout: self
+      submodules: recursive
 
     - checkout: release_scripts
       clean: true
