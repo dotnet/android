@@ -360,9 +360,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 			string keyfile = Path.Combine (Root, "temp", TestName, "release.keystore");
 			if (File.Exists (keyfile))
 				File.Delete (keyfile);
-			var androidSdk = new AndroidSdkInfo ((level, message) => {
-			}, AndroidSdkPath, AndroidNdkPath);
-			string keyToolPath = Path.Combine (androidSdk.JavaSdkPath, "bin");
+			string keyToolPath = Path.Combine (AndroidSdkResolver.GetJavaSdkPath (), "bin");
 			var engine = new MockBuildEngine (Console.Out);
 			string pass = "Cy(nBW~j.&@B-!R_aq7/syzFR!S$4]7R%i6)R!";
 			string alias = "release store";
