@@ -1,8 +1,8 @@
 <Dependencies>
   <ProductDependencies>
-    <Dependency Name="Microsoft.Dotnet.Sdk.Internal" Version="6.0.100-preview.3.21160.15">
+    <Dependency Name="Microsoft.Dotnet.Sdk.Internal" Version="6.0.100-preview.3.21162.51">
       <Uri>https://github.com/dotnet/installer</Uri>
-      <Sha>a28ceebdcd4601c69f86d4ec1341ad95295f5020</Sha>
+      <Sha>d0e94ee0f1ccabd82513ae429da84f598d9d0b25</Sha>
     </Dependency>
     <Dependency Name="Microsoft.NETCore.App.Runtime.android-arm64" Version="6.0.0-preview.3.21160.15">
       <Uri>https://github.com/dotnet/runtime</Uri>
