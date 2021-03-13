@@ -1,7 +1,6 @@
 <Project>
   <ItemGroup>
     <!-- Do not sign files that already have a signature -->
-    <Skip Include="bundletool.jar" />
     <Skip Include="libzip*" />
     <Skip Include="libZipSharp*" />
   </ItemGroup>
