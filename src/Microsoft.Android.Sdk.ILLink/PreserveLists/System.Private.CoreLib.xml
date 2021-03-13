@@ -3,5 +3,6 @@
 <linker>
 	<assembly fullname="System.Private.CoreLib">
 		<type fullname="System.Globalization.GlobalizationMode" />
+		<type fullname="System.Runtime.CompilerServices.InternalsVisibleToAttribute" />
 	</assembly>
 </linker>
