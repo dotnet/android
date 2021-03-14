@@ -20,7 +20,7 @@ the `$(prefix)` make variable:
 
 In order for `xbuild` or `msbuild` within `$PATH` to resolve the
 Xamarin.Android assemblies, you must install Xamarin.Android into the
-same prefix as mono.
+same prefix as mono; e.g. if mono is at /usr/bin/mono then prefix=/usr.
 
 
 ## Windows System-Wide Installation
