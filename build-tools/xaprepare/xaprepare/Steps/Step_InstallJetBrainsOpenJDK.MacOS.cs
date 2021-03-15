@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace Xamarin.Android.Prepare
 {
-	partial class Step_InstallJetBrainsOpenJDK
+	partial class Step_InstallOpenJDK
 	{
 		async Task<bool> Unpack (string fullArchivePath, string destinationDirectory, bool cleanDestinationBeforeUnpacking = false)
 		{
