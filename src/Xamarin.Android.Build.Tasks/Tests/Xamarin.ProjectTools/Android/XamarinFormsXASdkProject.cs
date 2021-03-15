@@ -45,7 +45,6 @@ namespace Xamarin.ProjectTools
 			: base (outputType, packageName)
 		{
 			PackageReferences.Add (KnownPackages.XamarinForms_4_7_0_1142);
-			this.AddDotNetCompatPackages ();
 
 			// Workaround for AndroidX, see: https://github.com/xamarin/AndroidSupportComponents/pull/239
 			Imports.Add (new Import (() => "Directory.Build.targets") {
