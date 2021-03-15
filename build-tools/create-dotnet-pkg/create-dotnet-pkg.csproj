@@ -41,7 +41,7 @@
       <_FilesToCopy Include="$(DotNetPreviewPath)\sdk\$(MicrosoftDotnetSdkInternalPackageVersion)\EnableWorkloadResolver.sentinel" />
       <_FilesToCopy Include="$(DotNetPreviewPath)\sdk-manifests\$(DotNetPreviewVersionBand)\Microsoft.NET.Workload.Android\**\*" />
       <_FilesToCopy Include="$(DotNetPreviewPath)\packs\Microsoft.Android.Ref\**\*" />
-      <_FilesToCopy Include="$(DotNetPreviewPath)\packs\Microsoft.Android.Sdk.osx-x64\**\*" />
+      <_FilesToCopy Include="$(DotNetPreviewPath)\packs\Microsoft.Android.Sdk.Darwin\**\*" />
       <_FilesToCopy Include="$(DotNetPreviewPath)\packs\Microsoft.Android.Sdk.BundleTool\**\*" />
       <_FilesToCopy Include="$(DotNetPreviewPath)\template-packs\Microsoft.Android.Templates.*.nupkg" />
     </ItemGroup>

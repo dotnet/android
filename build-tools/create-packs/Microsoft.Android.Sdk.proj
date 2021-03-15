@@ -9,10 +9,7 @@ core workload sdk packs imported by Microsoft.NET.Workload.Android.
 <Project Sdk="Microsoft.Build.NoTargets">
 
   <PropertyGroup>
-    <AndroidHostRID Condition=" '$(AndroidHostRID)' == '' and '$(HostOS)' == 'Linux' ">linux-x64</AndroidHostRID>
-    <AndroidHostRID Condition=" '$(AndroidHostRID)' == '' and '$(HostOS)' == 'Darwin' ">osx-x64</AndroidHostRID>
-    <AndroidHostRID Condition=" '$(AndroidHostRID)' == '' and '$(HostOS)' == 'Windows' ">win-x64</AndroidHostRID>
-    <PackageId>Microsoft.Android.Sdk.$(AndroidHostRID)</PackageId>
+    <PackageId>Microsoft.Android.Sdk.$(HostOS)</PackageId>
     <Description>C# Tools and Bindings for the Android SDK</Description>
     <!-- Exclude mono bundle components declared in `create-installers.targets`. -->
     <IncludeMonoBundleComponents>false</IncludeMonoBundleComponents>
@@ -39,10 +36,10 @@ core workload sdk packs imported by Microsoft.NET.Workload.Android.
       <AndroidSdkBuildTools Include="@(_MSBuildTargetsSrcFiles)" >
         <RelativePath>$([MSBuild]::MakeRelative($(MSBuildTargetsSrcDir), %(FullPath)))</RelativePath>
       </AndroidSdkBuildTools>
-      <AndroidSdkBuildTools Include="@(_MSBuildFilesWin)" Condition=" '$(AndroidHostRID)' == 'win-x64' ">
+      <AndroidSdkBuildTools Include="@(_MSBuildFilesWin)" Condition=" '$(HostOS)' == 'Windows' ">
         <RelativePath>$([MSBuild]::MakeRelative($(MSBuildSrcDir), %(FullPath)))</RelativePath>
       </AndroidSdkBuildTools>
-      <AndroidSdkBuildTools Include="@(_MSBuildFilesUnix);@(_MSBuildFilesUnixSign);@(_MSBuildFilesUnixSignAndHarden)" Condition=" '$(AndroidHostRID)' == 'linux-x64' or '$(AndroidHostRID)' == 'osx-x64' ">
+      <AndroidSdkBuildTools Include="@(_MSBuildFilesUnix);@(_MSBuildFilesUnixSign);@(_MSBuildFilesUnixSignAndHarden)" Condition=" '$(HostOS)' == 'Linux' or '$(HostOS)' == 'Darwin' ">
         <RelativePath>$([MSBuild]::MakeRelative($(MSBuildSrcDir), %(FullPath)))</RelativePath>
       </AndroidSdkBuildTools>
       <!-- Remove items with '%(ExcludeFromAndroidNETSdk)' == 'true' metadata -->
