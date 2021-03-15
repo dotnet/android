@@ -1,8 +1,11 @@
 <Project>
   <!--Package versions-->
   <PropertyGroup>
-    <MicrosoftDotnetSdkInternalPackageVersion>6.0.100-preview.3.21160.15</MicrosoftDotnetSdkInternalPackageVersion>
-    <MicrosoftNETCoreAppRuntimeandroidarm64PackageVersion>6.0.0-preview.3.21160.15</MicrosoftNETCoreAppRuntimeandroidarm64PackageVersion>
-    <MicrosoftNETILLinkPackageVersion>6.0.100-preview.2.21160.1</MicrosoftNETILLinkPackageVersion>
+    <MicrosoftDotnetSdkInternalPackageVersion>6.0.100-preview.3.21167.10</MicrosoftDotnetSdkInternalPackageVersion>
+    <MicrosoftNETILLinkPackageVersion>6.0.100-preview.2.21167.4</MicrosoftNETILLinkPackageVersion>
+  </PropertyGroup>
+  <PropertyGroup>
+    <!-- Trim all characters after first `-` or `+` is encountered. -->
+    <DotNetPreviewVersionBand Condition=" '$(DotNetPreviewVersionBand)' == '' ">$([System.Text.RegularExpressions.Regex]::Replace($(MicrosoftDotnetSdkInternalPackageVersion), `[-+].*$`, ""))</DotNetPreviewVersionBand>
   </PropertyGroup>
 </Project>

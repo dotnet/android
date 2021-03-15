@@ -60,10 +60,5 @@
   </ItemGroup>
 
   <Import Project="xaprepare.targets" Condition=" $(MSBuildToolsPath.IndexOf('omnisharp')) &lt; 0 " />
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
-    <PackageDownload Include="Microsoft.NETCore.App.Runtime.android-arm64" Version="[$(MicrosoftNetCoreAppRuntimeandroidarm64PackageVersion)]" />
-    <PackageDownload Include="Microsoft.NETCore.App.Runtime.android-x64" Version="[$(MicrosoftNetCoreAppRuntimeandroidarm64PackageVersion)]" />
-    <PackageDownload Include="Microsoft.NETCore.App.Runtime.android-arm" Version="[$(MicrosoftNetCoreAppRuntimeandroidarm64PackageVersion)]" />
-    <PackageDownload Include="Microsoft.NETCore.App.Runtime.android-x86" Version="[$(MicrosoftNetCoreAppRuntimeandroidarm64PackageVersion)]" />
-  </ItemGroup>
+
 </Project>

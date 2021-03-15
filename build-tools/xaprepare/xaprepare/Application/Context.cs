@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace Xamarin.Android.Prepare
 {
@@ -355,6 +356,27 @@ namespace Xamarin.Android.Prepare
 				string serverTypeValue = Environment.GetEnvironmentVariable ("SYSTEM_SERVERTYPE");
 				bool isHostedServerType = !string.IsNullOrEmpty (serverTypeValue) && serverTypeValue.ToUpperInvariant ().Contains ("HOSTED");
 				return hasHostedAgentName || isHostedServerType;
+			}
+		}
+
+		string _bundledPreviewRuntimePackVersion;
+		public string BundledPreviewRuntimePackVersion {
+			get {
+				if (string.IsNullOrEmpty (_bundledPreviewRuntimePackVersion)) {
+					var dotnetPath = Properties.GetRequiredValue (KnownProperties.DotNetPreviewPath);
+					dotnetPath = dotnetPath.TrimEnd (new char [] { Path.DirectorySeparatorChar });
+					var dotnetPreviewVersion = Properties.GetRequiredValue (KnownProperties.MicrosoftDotnetSdkInternalPackageVersion);
+					var bundledVersionsPath = Path.Combine (dotnetPath, "sdk", dotnetPreviewVersion, "Microsoft.NETCoreSdk.BundledVersions.props");
+					if (!File.Exists (bundledVersionsPath))
+						throw new FileNotFoundException ("Could not find Microsoft.NETCoreSdk.BundledVersions.props.", bundledVersionsPath);
+
+					var version = XDocument.Load (bundledVersionsPath).Descendants ().FirstOrDefault (p => p.Name == "BundledNETCoreAppPackageVersion")?.Value ?? string.Empty;
+					if (string.IsNullOrEmpty (version))
+						throw new InvalidOperationException ($"Unable to locate $(BundledNETCoreAppPackageVersion) in {bundledVersionsPath}.");
+
+					_bundledPreviewRuntimePackVersion = version;
+				}
+				return _bundledPreviewRuntimePackVersion;
 			}
 		}
 

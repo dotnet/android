@@ -75,8 +75,6 @@
     <AndroidNdkDirectory Condition=" '$(AndroidNdkDirectory)' == '' ">$(AndroidToolchainDirectory)\ndk</AndroidNdkDirectory>
     <DotNetPreviewPath Condition=" '$(DotNetPreviewPath)' == '' ">$(AndroidToolchainDirectory)\dotnet\</DotNetPreviewPath>
     <DotNetPreviewTool Condition=" '$(DotNetPreviewTool)' == '' ">$(DotNetPreviewPath)dotnet</DotNetPreviewTool>
-    <!-- TODO: Calculate based on $(MicrosoftDotnetSdkInternalPackageVersion) -->
-    <DotNetPreviewVersionBand Condition=" '$(DotNetPreviewVersionBand)' == '' ">6.0.100</DotNetPreviewVersionBand>
     <WixToolPath Condition=" '$(WixToolPath)' == '' ">$(AndroidToolchainDirectory)\wix\</WixToolPath>
     <AndroidCmakeVersion Condition=" '$(AndroidCmakeVersion)' == '' ">3.18.1</AndroidCmakeVersion>
     <AndroidCmakeUrlPrefix Condition=" '$(HostOS)' == 'Windows' And '$(AndroidCmakeUrlPrefix)' == '' ">7c386a739f915f5bd60051f2572c24782388e807.</AndroidCmakeUrlPrefix>

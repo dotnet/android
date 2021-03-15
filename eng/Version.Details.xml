@@ -1,16 +1,12 @@
 <Dependencies>
   <ProductDependencies>
-    <Dependency Name="Microsoft.Dotnet.Sdk.Internal" Version="6.0.100-preview.3.21160.15">
+    <Dependency Name="Microsoft.Dotnet.Sdk.Internal" Version="6.0.100-preview.3.21167.10">
       <Uri>https://github.com/dotnet/installer</Uri>
-      <Sha>a28ceebdcd4601c69f86d4ec1341ad95295f5020</Sha>
+      <Sha>18a633b84588c419939a55ee9504727eeb2e9714</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NETCore.App.Runtime.android-arm64" Version="6.0.0-preview.3.21160.15">
-      <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>b38ea6a4f067b571a007b2ac69f3e4431cb100e7</Sha>
-    </Dependency>
-    <Dependency Name="Microsoft.NET.ILLink" Version="6.0.100-preview.2.21160.1">
+    <Dependency Name="Microsoft.NET.ILLink" Version="6.0.100-preview.2.21167.4">
       <Uri>https://github.com/mono/linker</Uri>
-      <Sha>bb923d296a0aa9afa499ffe29dcf71e66ee54352</Sha>
+      <Sha>75b1c3003bc12139c3a918705da5a4c12e7cb37b</Sha>
     </Dependency>
   </ProductDependencies>
 </Dependencies>

@@ -60,7 +60,6 @@
       <Replacement Include="@CommandLineToolsVersion@=$(CommandLineToolsVersion)" />
       <Replacement Include="@DotNetPreviewPath@=$(DotNetPreviewPath)" />
       <Replacement Include="@MicrosoftDotnetSdkInternalPackageVersion@=$(MicrosoftDotnetSdkInternalPackageVersion)" />
-      <Replacement Include="@MicrosoftNetCoreAppRuntimeandroidarm64PackageVersion@=$(MicrosoftNetCoreAppRuntimeandroidarm64PackageVersion)" />
       <Replacement Include="@EmulatorVersion@=$(EmulatorVersion)" />
       <Replacement Include="@EmulatorPkgRevision@=$(EmulatorPkgRevision)" />
       <Replacement Include="@HostOS@=$(HostOS)" />
