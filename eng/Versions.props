@@ -1,7 +1,7 @@
 <Project>
   <!--Package versions-->
   <PropertyGroup>
-    <MicrosoftDotnetSdkInternalPackageVersion>6.0.100-preview.3.21160.15</MicrosoftDotnetSdkInternalPackageVersion>
+    <MicrosoftDotnetSdkInternalPackageVersion>6.0.100-preview.3.21165.3</MicrosoftDotnetSdkInternalPackageVersion>
     <MicrosoftNETCoreAppRuntimeandroidarm64PackageVersion>6.0.0-preview.3.21160.15</MicrosoftNETCoreAppRuntimeandroidarm64PackageVersion>
     <MicrosoftNETILLinkPackageVersion>6.0.100-preview.2.21160.1</MicrosoftNETILLinkPackageVersion>
   </PropertyGroup>
