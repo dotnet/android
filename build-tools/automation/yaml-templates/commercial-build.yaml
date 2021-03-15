@@ -89,7 +89,6 @@ steps:
       /p:SignType=$(MicroBuildSignType)
       /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins
       /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/restore-sign-pkg-content.binlog
-  condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
 
 # Create and upload .nupkgs
 - task: MSBuild@1
