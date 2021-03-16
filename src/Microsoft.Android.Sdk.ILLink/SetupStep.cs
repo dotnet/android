@@ -27,8 +27,6 @@ namespace Microsoft.Android.Sdk.ILLink
 			}
 		}
 
-		static MethodInfo getReferencedAssembliesMethod = typeof (LinkContext).GetMethod ("GetReferencedAssemblies", BindingFlags.Public | BindingFlags.Instance);
-
 		List<IMarkHandler> MarkHandlers {
 			get {
 				if (_markHandlers == null) {
@@ -50,21 +48,14 @@ namespace Microsoft.Android.Sdk.ILLink
 				new PreserveExportedTypes ()
 			}));
 
+			var cache = new TypeDefinitionCache ();
 			MarkHandlers.Add (new MarkJavaObjects ());
 			MarkHandlers.Add (new PreserveJavaExceptions ());
 			MarkHandlers.Add (new PreserveApplications ());
-			var cache = new TypeDefinitionCache ();
 			MarkHandlers.Add (new PreserveRegistrations (cache));
 			MarkHandlers.Add (new PreserveJavaInterfaces ());
 
 			MarkHandlers.Add (new FixAbstractMethodsHandler (cache));
-
-			// temporary workaround: this call forces illink to process all the assemblies
-			if (getReferencedAssembliesMethod == null)
-				throw new InvalidOperationException ($"Temporary linker workaround failed, {nameof (getReferencedAssembliesMethod)} is null.");
-
-			foreach (var assembly in (IEnumerable<AssemblyDefinition>)getReferencedAssembliesMethod.Invoke (Context, null))
-				Context.LogMessage ($"Reference assembly to process: {assembly}");
 
 			string proguardPath;
 			if (Context.TryGetCustomData ("ProguardConfiguration", out proguardPath))
