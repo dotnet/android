@@ -13,6 +13,13 @@ This file contains the .NET 5-specific targets to customize ILLink
       Condition=" '$(PublishTrimmed)' == 'true' "
       AfterTargets="ComputeResolvedFilesToPublishList"
       DependsOnTargets="GetReferenceAssemblyPaths;_CreatePropertiesCache">
+    <PropertyGroup>
+      <!-- Mark all assemblies to be linked for AndroidLinkMode=Full -->
+      <_TrimmerDefaultAction Condition=" '$(AndroidLinkMode)' == 'Full' ">link</_TrimmerDefaultAction>
+      <_TrimmerDumpDependencies Condition=" '$(LinkerDumpDependencies)' == 'true' ">true</_TrimmerDumpDependencies>
+      <!-- make the output verbose to see what the linker is doing. FIXME: make dependent upon verbosity level -->
+      <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --verbose</_ExtraTrimmerArgs>
+    </PropertyGroup>
     <ItemGroup>
       <RuntimeHostConfigurationOption Include="Android.Runtime.AndroidEnvironment.VSAndroidDesignerIsEnabled"
           Condition="'$(VSAndroidDesigner)' != ''"
@@ -23,39 +30,18 @@ This file contains the .NET 5-specific targets to customize ILLink
           Condition=" '$(AndroidLinkMode)' == 'SdkOnly' and ( $([System.String]::Copy(%(Filename)).StartsWith ('Xamarin.AndroidX.')) or $([System.String]::Copy(%(Filename)).StartsWith ('Xamarin.Android.Support.')) or $([System.String]::Copy(%(Filename)).StartsWith ('Xamarin.Google.')) or $([System.String]::Copy(%(Filename)).StartsWith ('Xamarin.GooglePlayServices.')) ) ">
         <TrimMode>link</TrimMode>
       </ResolvedFileToPublish>
-      <!-- Mark our entry assembly as a root assembly. -->
-      <TrimmerRootAssembly Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.Filename)' == '$(AssemblyName)' and '%(ResolvedFileToPublish.Extension)' == '.dll' " />
-    </ItemGroup>
-    <PropertyGroup>
-      <!-- make the output verbose to see what the linker is doing. FIXME: make dependent upon verbosity level -->
-      <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --verbose --deterministic --custom-data XATargetFrameworkDirectories="$(_XATargetFrameworkDirectories)"</_ExtraTrimmerArgs>
-      <_AdditionalTaskAssemblyDirectory>$(XamarinSdkRootDirectory)tools/dotnet-linker/</_AdditionalTaskAssemblyDirectory>
-      <_AdditionalTaskAssembly>$(_AdditionalTaskAssemblyDirectory)dotnet-linker.dll</_AdditionalTaskAssembly>
-    </PropertyGroup>
-    <PropertyGroup
-        Condition=" '$(AndroidAddKeepAlives)' != '' ">
-      <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --custom-data AddKeepAlivesStep="$(AndroidAddKeepAlives)"</_ExtraTrimmerArgs>
-    </PropertyGroup>
-    <PropertyGroup
-        Condition=" '$(_ProguardProjectConfiguration)' != '' ">
-      <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --custom-data ProguardConfiguration="$(_ProguardProjectConfiguration)"</_ExtraTrimmerArgs>
-    </PropertyGroup>
-    <PropertyGroup
-        Condition=" '$(AndroidLinkResources)' != '' ">
-      <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --custom-data AndroidLinkResources="$(AndroidLinkResources)"</_ExtraTrimmerArgs>
-    </PropertyGroup>
-    <PropertyGroup
-        Condition=" '$(LinkerDumpDependencies)' == 'true' ">
-      <_ExtraTrimmerArgs>--dump-dependencies $(_ExtraTrimmerArgs)"</_ExtraTrimmerArgs>
-    </PropertyGroup>
-    <ItemGroup>
+
+      <_TrimmerCustomData Include="XATargetFrameworkDirectories" Value="$(_XATargetFrameworkDirectories)" />
+      <_TrimmerCustomData Condition=" '$(AndroidAddKeepAlives)' != '' " Include="AddKeepAlivesStep" Value="$(AndroidAddKeepAlives)" />
+      <_TrimmerCustomData Condition=" '$(_ProguardProjectConfiguration)' != '' " Include="ProguardConfiguration" Value="$(_ProguardProjectConfiguration)" />
+      <_TrimmerCustomData Condition=" '$(AndroidLinkResources)' != '' " Include="AndroidLinkResources" Value="$(AndroidLinkResources)" />
+
       <!-- add our custom steps -->
       <_TrimmerCustomSteps Include="$(MSBuildThisFileDirectory)..\tools\Microsoft.Android.Sdk.ILLink.dll">
         <BeforeStep>MarkStep</BeforeStep>
         <Type>Microsoft.Android.Sdk.ILLink.SetupStep</Type>
       </_TrimmerCustomSteps>
-    </ItemGroup>
-    <ItemGroup>
+
       <_PreserveLists Include="$(MSBuildThisFileDirectory)..\PreserveLists\*.xml" />
       <TrimmerRootDescriptor
           Condition=" '@(ResolvedFileToPublish->Count())' != '0' and '%(Filename)' != '' "
