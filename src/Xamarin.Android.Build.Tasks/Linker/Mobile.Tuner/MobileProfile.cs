@@ -53,8 +53,6 @@ namespace Mobile.Tuner {
 			"Mono.Data.Sqlite",
 			"Mono.Posix",
 			"Mono.Security",
-			"OpenTK",
-			"OpenTK-1.0",
 			// Facades assemblies (PCL)
 			"Microsoft.Win32.Primitives",
 			"Microsoft.Win32.Registry.AccessControl",
