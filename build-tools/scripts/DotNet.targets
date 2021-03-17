@@ -29,12 +29,6 @@
     <MSBuild
         Condition=" $([MSBuild]::IsOSPlatform('osx')) "
         Targets="Restore;Build"
-        Projects="$(_Root)build-tools\create-dotnet-pkg\sign-dotnet-pkg.proj"
-        Properties="Configuration=$(Configuration)"
-    />
-    <MSBuild
-        Condition=" $([MSBuild]::IsOSPlatform('osx')) "
-        Targets="Restore;Build"
         Projects="$(_Root)build-tools\create-dotnet-pkg\create-dotnet-pkg.csproj"
         Properties="Configuration=$(Configuration)"
     />

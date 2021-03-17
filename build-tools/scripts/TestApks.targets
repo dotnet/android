@@ -200,6 +200,7 @@
         ContinueOnError="ErrorAndContinue"
         JavaPath="$(JavaPath)"
         JarPath="$(BundleToolJarPath)"
+        Aapt2ToolPath="$(Aapt2ToolPath)"
         AdbToolExe="$(AdbToolExe)"
         AdbToolPath="$(AdbToolPath)"
         KeyStore="$([System.IO.Path]::GetFullPath ('$(_KeyStore)'))"

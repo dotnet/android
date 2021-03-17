@@ -16,6 +16,8 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		[Required]
 		public string Arguments { get; set; }
 
+		public string Aapt2ToolPath { get; set; }
+
 		public string AdbToolPath { get; set; }
 
 		public string AdbToolExe { get; set; }
@@ -43,6 +45,9 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 					adb += ".exe";
 				}
 				cmd.AppendSwitchIfNotNull ("--adb ", Path.Combine (AdbToolPath, adb));
+			}
+			if (!string.IsNullOrEmpty (Aapt2ToolPath)) {
+				cmd.AppendSwitchIfNotNull ("--aapt2 ", Path.Combine (Aapt2ToolPath, OS.IsWindows ? "aapt2.exe" : "aapt2"));
 			}
 			cmd.AppendSwitchIfNotNull ("--ks ", KeyStore);
 			cmd.AppendSwitchIfNotNull ("--ks-key-alias ", KeyAlias);

@@ -1240,7 +1240,6 @@ stages:
 
     - checkout: release_scripts
       clean: true
-      persistCredentials: true
 
     - template: yaml-templates/use-dot-net.yaml
       parameters:
@@ -1273,13 +1272,6 @@ stages:
         solution: $(System.DefaultWorkingDirectory)/xamarin-android/Xamarin.Android.BootstrapTasks.sln
         configuration: $(XA.Build.Configuration)
         msbuildArguments: /restore /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/msbuild-bootstraptasks.binlog
-
-    - task: MSBuild@1
-      displayName: msbuild /t:Restore sign-dotnet-pkg.proj
-      inputs:
-        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/create-dotnet-pkg/sign-dotnet-pkg.proj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:Restore /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/restore-sign-pkg.binlog
 
     - task: MSBuild@1
       displayName: msbuild /t:Restore create-dotnet-pkg.proj
@@ -1401,7 +1393,7 @@ stages:
 - stage: finalize_installers
   displayName: Finalize Installers
   dependsOn: mac_build
-  condition: and(eq(dependencies.mac_build.result, 'Succeeded'), ne(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.DefinitionName'], 'Xamarin.Android'))
+  condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(variables['MicroBuildSignType'], 'Real'))
   jobs:
   # Check - "Xamarin.Android (Finalize Installers Notarize and Upload to Storage)"
   - job: notarize_pkg_upload_storage
@@ -1410,7 +1402,7 @@ stages:
       name: $(VSEngMacBuildPool)
       demands:
       - agent.osversionfamily -equals 10.15
-    timeoutInMinutes: 90
+    timeoutInMinutes: 120
     cancelTimeoutInMinutes: 1
     workspace:
       clean: all
@@ -1418,21 +1410,14 @@ stages:
     - group: Xamarin Notarization
     steps:
     - checkout: self
+      submodules: recursive
 
     - checkout: release_scripts
       clean: true
-      persistCredentials: true
 
     - template: yaml-templates/use-dot-net.yaml
       parameters:
         version: $(DotNetCoreVersion)
-
-    - template: install-certificates.yml@yaml
-      parameters:
-        DeveloperIdApplication: $(developer-id-application)
-        DeveloperIdInstaller: $(developer-id-installer)
-        IphoneDeveloper: $(iphone-developer)
-        MacDeveloper: $(mac-developer)
 
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -1451,11 +1436,26 @@ stages:
         Write-Host "##vso[task.setvariable variable=XA.Unsigned.Pkg]$pkg"
       displayName: set variable to pkg path
 
-    - template: productsign-pkg.yml@yaml
-      parameters:
-        UnsignedPkgPath: $(XA.Unsigned.Pkg)
-
     - template: yaml-templates/install-microbuild-tooling.yaml
+
+    - task: MSBuild@1
+      displayName: msbuild /t:Restore create-pkg.proj
+      inputs:
+        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/create-pkg/create-pkg.csproj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: /t:Restore /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/restore-create-pkg.binlog
+
+    - task: MSBuild@1
+      displayName: msbuild /t:SignFiles create-pkg.proj
+      inputs:
+        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/create-pkg/create-pkg.csproj
+        configuration: $(XA.Build.Configuration)
+        msbuildArguments: >-
+          /t:SignFiles
+          /p:SignType=$(MicroBuildSignType)
+          /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins
+          /p:OutputPath=$(System.DefaultWorkingDirectory)/storage-artifacts
+          /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/sign-pkg.binlog
 
     - script: >
         cd $(System.DefaultWorkingDirectory)/release-scripts &&
@@ -1475,9 +1475,10 @@ stages:
 
     - template: yaml-templates/remove-microbuild-tooling.yaml
 
-    - template: uninstall-certificates/v1.yml@yaml
+    - template: yaml-templates/upload-results.yaml
       parameters:
-        HostedMacKeychainPassword: $(AzDO-OnPrem-KeychainPass)
+        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
+        artifactName: Legacy Notarization Results - macOS
 
   # Check - "Xamarin.Android (Finalize Installers Queue Vsix Signing)"
   - job: queue_vsix_signing
