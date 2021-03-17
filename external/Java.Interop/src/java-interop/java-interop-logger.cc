@@ -1,15 +1,19 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+#ifndef _MSC_VER
+#include <strings.h>
+#endif  // ndef _MSC_VER
+
 #include "java-interop-logger.h"
 
 #define LOG_VA_ARGS(_kind_,_category_,_format_)                                 \
 	do {                                                                    \
-		const char*     kind      = (_kind_);                           \
-		LogCategories   category  = (_category_);                       \
+		const char*     _kind     = (_kind_);                           \
+		LogCategories   _cat      = (_category_);                       \
 		va_list args;                                                   \
-		va_start (args, (_format_));                                    \
-		log_vprint (kind, CATEGORY_NAME (category), (_format_), args);  \
+		va_start (args, _format_);                                      \
+		log_vprint (_kind, CATEGORY_NAME (_cat), (_format_), args);  \
 		va_end (args);                                                  \
 	} while (0)
 
@@ -29,7 +33,15 @@ static const char* log_names[] = {
 	"*error*",
 };
 
-#if defined(__i386__) && defined(__GNUC__)
+#if defined(_MSC_VER)
+#pragma intrinsic(_BitScanForward)
+static inline unsigned long ffs (unsigned long value)
+{
+	unsigned long index;
+	unsigned char isNonzero = _BitScanForward (&index, value);
+	return isNonzero ? (index + 1) : 0;
+}
+#elif defined(__i386__) && defined(__GNUC__)
 #define ffs(__value__) __builtin_ffs ((__value__))
 #elif defined(__x86_64__) && defined(__GNUC__)
 #define ffs(__value__) __builtin_ffsll ((__value__))

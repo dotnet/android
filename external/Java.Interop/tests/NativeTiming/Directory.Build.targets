@@ -1,108 +1,77 @@
 <Project>
 
+  <Import Project="..\..\build-tools\scripts\NativeToolchain.targets" />
+
   <PropertyGroup>
-    <_NativeTimingLibName Condition=" '$(OS)' != 'Windows_NT' And Exists ('/Library/Frameworks/') ">libNativeTiming.dylib</_NativeTimingLibName>
-    <_NativeTimingLibName Condition=" '$(OS)' != 'Windows_NT' And !Exists ('/Library/Frameworks/') ">libNativeTiming.so</_NativeTimingLibName>
-    <_NativeTimingLibName Condition=" '$(OS)' == 'Windows_NT' ">NativeTiming.dll</_NativeTimingLibName>
-    <_NativeTimingOutputPath>$(OutputPath)$(_NativeTimingLibName)</_NativeTimingOutputPath>
+    <_NativeTimingLibName Condition=" $([MSBuild]::IsOSPlatform ('osx')) ">libNativeTiming.dylib</_NativeTimingLibName>
+    <_NativeTimingLibName Condition=" $([MSBuild]::IsOSPlatform ('linux')) ">libNativeTiming.so</_NativeTimingLibName>
+    <_NativeTimingLibName Condition=" $([MSBuild]::IsOSPlatform ('windows')) ">NativeTiming.dll</_NativeTimingLibName>
   </PropertyGroup>
 
+  <ItemGroup Condition=" $([MSBuild]::IsOSPlatform ('windows')) ">
+    <_NativeTimingLib Include="CMakeLists.txt">
+      <Arch>x86_amd64</Arch>
+      <Dir>win-x64\</Dir>
+    </_NativeTimingLib>
+    <_NativeTimingLib Include="CMakeLists.txt">
+      <Arch>x86</Arch>
+      <Dir>win-x86\</Dir>
+    </_NativeTimingLib>
+  </ItemGroup>
+
+  <ItemGroup Condition=" !$([MSBuild]::IsOSPlatform ('windows')) ">
+    <_NativeTimingLib Include="CMakeLists.txt" />
+  </ItemGroup>
+
   <ItemGroup>
-    <None Include="$(_NativeTimingOutputPath)">
+    <None Include="@(_NativeTimingLib->'$(OutputPath)%(Dir)$(_NativeTimingLibName)')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>%(Dir)$(_NativeTimingLibName)</Link>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ClInclude Include="*.h" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ClCompile Include="$(IntermediateOutputPath)jni.c" />
+    <ClCompile Include="*.cc" />
   </ItemGroup>
 
   <Target Name="_BuildLibs"
       BeforeTargets="Build"
-      DependsOnTargets="_PrepareCmake;_BuildNativeTiming">
-  </Target>
-
-  <Target Name="_GetBuildComands">
-    <ItemGroup>
-      <_Vcvarsall
-          Condition=" '$(VSINSTALLROOT)' != '' And Exists('$(VSINSTALLROOT)') "
-          Include="$(VSINSTALLROOT)\VC\Auxiliary\Build\vcvarsall.bat"
-      />
-    </ItemGroup>
-    <PropertyGroup Condition=" '@(_Vcvarsall->Count())' != '0' ">
-      <_Vcvarsall>%(_Vcvarsall.Identity)</_Vcvarsall>
-      <_PrepareToolchain>call "$(_Vcvarsall)" x86_amd64 &amp;&amp; </_PrepareToolchain>
-    </PropertyGroup>
-    <PropertyGroup>
-      <_Make Condition=" '$(OS)' != 'Windows_NT' ">make</_Make>
-      <_Make Condition=" '$(OS)' == 'Windows_NT' ">nmake</_Make>
-    </PropertyGroup>
-  </Target>
-
-  <Target Name="_PrepareCmake"
-      DependsOnTargets="_GetBuildComands"
-      Inputs="CMakeLists.txt;$(MSBuildThisFileFullPath);NativeTiming.csproj"
-      Outputs="$(IntermediateOutputPath)CMakeCache.txt">
+      DependsOnTargets="GetNativeBuildCommands"
+      Inputs="@(_NativeTimingLib);$(MSBuildThisFileFullPath);NativeTiming.csproj;@(ClInclude);@(ClCompile)"
+      Outputs="$(OutputPath)%(_NativeTimingLib.Dir)$(_NativeTimingLibName)">
     <MakeDir Directories="$(IntermediateOutputPath)" />
     <PropertyGroup>
       <_JdkDirs>"-DJDK_INCLUDE_LIST=@(JdkIncludePath, ';')"</_JdkDirs>
-      <_CmakeGenerator Condition=" '$(OS)' != 'Windows_NT' ">-G "Unix Makefiles"</_CmakeGenerator>
-      <_CmakeGenerator Condition=" '$(OS)' == 'Windows_NT' ">-G "NMake Makefiles"</_CmakeGenerator>
     </PropertyGroup>
-    <Exec
-        ContinueOnError="WarnAndContinue"
-        Command="$(_PrepareToolchain) $(CmakePath) $(_CmakeGenerator) -S . -B $(IntermediateOutputPath) $(_JdkDirs)"
-    />
-    <PropertyGroup>
-      <_CmakeStatus>$(MSBuildLastTaskResult)</_CmakeStatus>
-    </PropertyGroup>
-    <ReadLinesFromFile
-        Condition=" '$(_CmakeStatus)' == 'false' "
-        File="$(IntermediateOutputPath)CMakeFiles/CMakeOutput.log">
-      <Output TaskParameter="Lines" ItemName="_CmakeLog" />
-    </ReadLinesFromFile>
-    <Message
-        Condition=" '$(_CmakeStatus)' == 'false' "
-        Text="CMakeOutput.log"
-    />
-    <Message
-        Condition=" '$(_CmakeStatus)' == 'false' "
-        Text="@(_CmakeLog, '
-')"
-    />
-    <ReadLinesFromFile
-        Condition=" '$(_CmakeStatus)' == 'false' "
-        File="$(IntermediateOutputPath)CMakeFiles/CMakeError.log">
-      <Output TaskParameter="Lines" ItemName="_CmakeErrorLog" />
-    </ReadLinesFromFile>
-    <Message
-        Condition=" '$(_CmakeStatus)' == 'false' "
-        Text="CMakeError.log"
-    />
-    <Message
-        Condition=" '$(_CmakeStatus)' == 'false' "
-        Text="@(_CmakeErrorLog, '
-')"
-    />
-    <Error
-        Condition=" '$(_CmakeStatus)' == 'false' "
-        Text="`cmake` failed.  See previous messages."
-    />
-    <Touch Files="$(IntermediateOutputPath)CMakeCache.txt" />
-  </Target>
-
-  <Target Name="_BuildNativeTiming"
-      DependsOnTargets="_GetBuildComands"
-      Inputs="timing.c"
-      Outputs="$(_NativeTimingOutputPath)">
-    <Exec
-        Command="$(_PrepareToolchain) $(_Make) VERBOSE=1"
-        WorkingDirectory="$(IntermediateOutputPath)"
+    <ItemGroup>
+      <_Cmake
+          Condition=" '$(PrepareNativeToolchain)' != '' "
+          Include="PrepareNativeToolchain=$(PrepareNativeToolchain) %(_NativeTimingLib.Arch)"
+      />
+      <_Cmake Include="CmakePath=$(CmakePath)" />
+      <_Cmake Include="CmakeGenerator=$(CmakeGenerator)" />
+      <_Cmake Include="CmakeSourceDir=$(MSBuildThisFileDirectory)" />
+      <_Cmake Include="CmakeBuildDir=$(MSBuildThisFileDirectory)$(IntermediateOutputPath)%(_NativeTimingLib.Dir)" />
+      <_Cmake Include="CmakeExtraArgs=$(_JdkDirs)" />
+    </ItemGroup>
+    <MSBuild
+        Projects="..\..\build-tools\scripts\RunCmake.proj"
+        Properties="@(_Cmake)"
+        Targets="Cmake"
     />
     <ItemGroup>
-      <_Libs Include="$(IntermediateOutputPath)$(_NativeTimingLibName)*" />
+      <_Libs Include="$(IntermediateOutputPath)%(_NativeTimingLib.Dir)$(_NativeTimingLibName)*" />
     </ItemGroup>
     <Copy
         SourceFiles="@(_Libs)"
-        DestinationFolder="$(OutputPath)"
+        DestinationFolder="$(OutputPath)%(_NativeTimingLib.Dir)"
     />
-    <Touch Files="$(_NativeTimingOutputPath)" />
+    <Touch Files="$(OutputPath)%(_NativeTimingLib.Dir)$(_NativeTimingLibName)" />
   </Target>
 
   <Target Name="_Clean"

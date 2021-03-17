@@ -1,0 +1,100 @@
+<Project>
+
+  <Import Project="..\..\build-tools\scripts\NativeToolchain.targets" />
+
+  <PropertyGroup>
+    <_JavaInteropLibName Condition=" $([MSBuild]::IsOSPlatform ('osx')) ">libjava-interop.dylib</_JavaInteropLibName>
+    <_JavaInteropLibName Condition=" $([MSBuild]::IsOSPlatform ('linux')) ">libjava-interop.so</_JavaInteropLibName>
+    <_JavaInteropLibName Condition=" $([MSBuild]::IsOSPlatform ('windows')) ">java-interop.dll</_JavaInteropLibName>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" $([MSBuild]::IsOSPlatform ('windows')) ">
+    <_JavaInteropNativeLib Include="CMakeLists.txt">
+      <Arch>x86_amd64</Arch>
+      <Dir>win-x64\</Dir>
+    </_JavaInteropNativeLib>
+    <_JavaInteropNativeLib Include="CMakeLists.txt">
+      <Arch>x86</Arch>
+      <Dir>win-x86\</Dir>
+    </_JavaInteropNativeLib>
+  </ItemGroup>
+
+  <ItemGroup Condition=" !$([MSBuild]::IsOSPlatform ('windows')) ">
+    <_JavaInteropNativeLib Include="CMakeLists.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="@(_JavaInteropNativeLib->'$(OutputPath)%(Dir)$(_JavaInteropLibName)')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>%(Dir)$(_JavaInteropLibName)</Link>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ClInclude Include="*.h" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ClCompile Include="$(IntermediateOutputPath)jni.c" />
+    <ClCompile Include="*.cc" />
+  </ItemGroup>
+
+  <Target Name="_BuildJni_c"
+      Inputs="$(_JNIEnvGenPath)"
+      Outputs="$(IntermediateOutputPath)jni.c">
+    <MakeDir Directories="$(OutputPath)" />
+    <Exec Command="$(_RunJNIEnvGen) $(IntermediateOutputPath)jni.g.cs $(IntermediateOutputPath)jni.c" />
+  </Target>
+
+  <Target Name="_GetCmakeOptions">
+    <PropertyGroup Condition=" '$(TargetFramework)' == 'net472' And '@(MonoIncludePath->Count())' != '0' ">
+      <_MonoDirs>"-DMONO_INCLUDE_LIST=@(MonoIncludePath, ';')"</_MonoDirs>
+      <_MonoLib>"-DMONO_LINK_FLAGS=$(MonoLibs)"</_MonoLib>
+      <_EnableMono>-DENABLE_MONO_INTEGRATION=ON</_EnableMono>
+    </PropertyGroup>
+    <PropertyGroup>
+      <_JdkDirs>"-DJDK_INCLUDE_LIST=@(JdkIncludePath, ';')"</_JdkDirs>
+      <_Jni_c>"-DJNI_C_PATH=$(MSBuildThisFileDirectory)$(IntermediateOutputPath)jni.c"</_Jni_c>
+      <_ExtraArgs>$([MSBuild]::Escape('$(_JdkDirs) $(_Jni_c) $(_EnableMono) $(_MonoDirs) $(_MonoLib)'))</_ExtraArgs>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="_BuildLibs"
+      DependsOnTargets="GetNativeBuildCommands;_BuildJni_c;_GetCmakeOptions"
+      BeforeTargets="Build"
+      Inputs="@(_JavaInteropNativeLib);$(MSBuildThisFileFullPath);java-interop.csproj;@(ClInclude);@(ClCompile)"
+      Outputs="$(OutputPath)%(_JavaInteropNativeLib.Dir)$(_JavaInteropLibName)">
+    <MakeDir Directories="$(IntermediateOutputPath)%(_JavaInteropNativeLib.Dir)" />
+    <ItemGroup>
+      <_Cmake
+          Condition=" '$(PrepareNativeToolchain)' != '' "
+          Include="PrepareNativeToolchain=$(PrepareNativeToolchain) %(_JavaInteropNativeLib.Arch)"
+      />
+      <_Cmake Include="CmakePath=$(CmakePath)" />
+      <_Cmake Include="CmakeGenerator=$(CmakeGenerator)" />
+      <_Cmake Include="CmakeSourceDir=$(MSBuildThisFileDirectory)" />
+      <_Cmake Include="CmakeBuildDir=$(MSBuildThisFileDirectory)$(IntermediateOutputPath)%(_JavaInteropNativeLib.Dir)" />
+      <_Cmake Include="CmakeExtraArgs=$(_ExtraArgs)" />
+    </ItemGroup>
+    <MSBuild
+        Projects="..\..\build-tools\scripts\RunCmake.proj"
+        Properties="@(_Cmake)"
+        Targets="Cmake"
+    />
+    <MakeDir Directories="$(OutputPath)%(_JavaInteropNativeLib.Dir)" />
+    <ItemGroup>
+      <_Libs Include="$(IntermediateOutputPath)%(_JavaInteropNativeLib.Dir)$(_JavaInteropLibName)*" />
+    </ItemGroup>
+    <Copy
+        SourceFiles="@(_Libs)"
+        DestinationFolder="$(OutputPath)%(_JavaInteropNativeLib.Dir)"
+    />
+    <Touch Files="$(OutputPath)%(_JavaInteropNativeLib.Dir)$(_JavaInteropLibName)" />
+  </Target>
+
+  <Target Name="_Clean"
+      AfterTargets="Clean">
+    <Delete Files="@(None)" />
+  </Target>
+
+</Project>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <Target Name="GetNativeBuildCommands">
+    <ItemGroup Condition=" '$(VSINSTALLROOT)' != '' And Exists('$(VSINSTALLROOT)') ">
+      <_Vcvarsall
+          Include="$(VSINSTALLROOT)\VC\Auxiliary\Build\vcvarsall.bat"
+      />
+    </ItemGroup>
+    <PropertyGroup Condition=" '@(_Vcvarsall->Count())' != '0' ">
+      <_Vcvarsall>%(_Vcvarsall.Identity)</_Vcvarsall>
+      <PrepareNativeToolchain>call "$(_Vcvarsall)" </PrepareNativeToolchain>
+    </PropertyGroup>
+    <PropertyGroup>
+      <CmakeGenerator Condition=" $([MSBuild]::IsOSPlatform ('windows')) ">-G "NMake Makefiles"</CmakeGenerator>
+      <CmakeGenerator Condition=" !$([MSBuild]::IsOSPlatform ('windows')) ">-G "Unix Makefiles"</CmakeGenerator>
+    </PropertyGroup>
+  </Target>
+</Project>

@@ -11,7 +11,7 @@
 #include "java-interop-mono.h"
 #include "java-interop-util.h"
 
-#ifdef WINDOWS
+#ifdef _WINDOWS
 #include <fileapi.h>
 #endif
 
@@ -141,7 +141,7 @@ java_interop_gc_bridge_destroy (JavaInteropGCBridge *bridge)
 	return 0;
 }
 
-#ifdef WINDOWS
+#ifdef _WINDOWS
 static char*
 _ji_realpath_win_loop (wchar_t* wpath, DWORD len)
 {
@@ -178,7 +178,7 @@ ji_realpath (const char *path)
 	if (path == NULL)
 		return NULL;
 
-#ifndef WINDOWS
+#ifndef _WINDOWS
 	char   *rp = realpath (path, NULL);
 	if (rp == NULL) {
 		return strdup (path);

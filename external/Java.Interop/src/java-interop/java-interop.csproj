@@ -17,43 +17,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ClInclude Include="java-interop.h" />
-    <ClInclude Include="java-interop-dlfcn.h" />
-    <ClInclude Include="java-interop-gc-bridge.h" />
-    <ClInclude Include="java-interop-jvm.h" />
-    <ClInclude Include="java-interop-logger.h" />
-    <ClInclude Include="java-interop-mono.h" />
-    <ClInclude Include="java-interop-util.h" />
-  </ItemGroup>
-
-  <PropertyGroup>
-    <_MonoIncludePath>@(MonoIncludePath->'%(FullPath)')</_MonoIncludePath>
-    <_JdkIncludePath>@(JdkIncludePath->'%(FullPath)')</_JdkIncludePath>
-  </PropertyGroup>
-
-  <ItemDefinitionGroup>
-    <ClCompile>
-      <PreprocessorDefinitions>$([MSBuild]::Unescape($(DefineSymbols.Replace(' ', ';'))))</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$([MSBuild]::Unescape($(_MonoIncludePath)));$([MSBuild]::Unescape($(_JdkIncludePath)))</AdditionalIncludeDirectories>
-    </ClCompile>
-  </ItemDefinitionGroup>
-
-  <ItemGroup>
-    <ClCompile Include="$(IntermediateOutputPath)jni.c" />
-    <ClCompile Include="java-interop.cc" />
-    <ClCompile Include="java-interop-dlfcn.cc" />
-    <ClCompile Include="java-interop-jvm.cc" />
-    <ClCompile Include="java-interop-logger.cc" />
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net472' ">
-    <ClCompile Include="java-interop-mono.cc" />
-    <ClCompile Include="java-interop-gc-bridge-mono.cc" />
-  </ItemGroup>
-
-  <Import Project="java-interop.targets" />
-
-  <ItemGroup>
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" Version="1.0.0" />
   </ItemGroup>
 

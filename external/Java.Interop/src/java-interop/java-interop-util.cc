@@ -1,7 +1,7 @@
-#ifdef WINDOWS
+#ifdef _WINDOWS
 #include <assert.h>
 #include <direct.h>
-#include <stringapiset.h>
+#include <windows.h>
 
 char*
 utf16_to_utf8 (const wchar_t *widestr)
@@ -30,4 +30,4 @@ utf8_to_utf16 (const char *mbstr)
 
 	return widestr;
 }
-#endif // def WINDOWS
+#endif // def _WINDOWS

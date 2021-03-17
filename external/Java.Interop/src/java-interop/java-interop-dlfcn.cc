@@ -2,11 +2,8 @@
 #include "java-interop-dlfcn.h"
 #include "java-interop-util.h"
 
-#ifdef WINDOWS
-#include <libloaderapi.h>
-#include <winerror.h>
-#include <wtypes.h>
-#include <winbase.h>
+#ifdef _WINDOWS
+#include <windows.h>
 #else
 #include <dlfcn.h>
 #include <string.h>
@@ -17,7 +14,7 @@ namespace microsoft::java_interop {
 static char *
 _get_last_dlerror ()
 {
-#ifdef WINDOWS
+#ifdef _WINDOWS
 
 	DWORD error = GetLastError ();
 	if (error == ERROR_SUCCESS /* 0 */) {
@@ -43,11 +40,11 @@ _get_last_dlerror ()
 
 	return message;
 
-#else   // ndef WINDOWS
+#else   // ndef _WINDOWS
 
 	return java_interop_strdup (dlerror ());
 
-#endif  // ndef WINDOWS
+#endif  // ndef _WINDOWS
 }
 
 static void
@@ -86,7 +83,7 @@ java_interop_lib_load (const char *path, [[maybe_unused]] unsigned int flags, ch
 
 	void *handle    = nullptr;
 
-#ifdef WINDOWS
+#ifdef _WINDOWS
 
 	wchar_t *wpath   = utf8_to_utf16 (path);
 	if (wpath == nullptr) {
@@ -96,13 +93,13 @@ java_interop_lib_load (const char *path, [[maybe_unused]] unsigned int flags, ch
 	HMODULE module  = LoadLibraryExW (
 			/* lpLibFileName */ wpath,
 			/* hFile */         nullptr,
-			/* dwFlags */       LOAD_LIBRARY_SEARCH_APPLICATION_DIR | LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_USER_DIRS
+			/* dwFlags */       LOAD_LIBRARY_SEARCH_APPLICATION_DIR | LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_USER_DIRS | LOAD_LIBRARY_SEARCH_SYSTEM32
 	);
 	java_interop_free (wpath);
 
 	handle = reinterpret_cast<void*>(module);
 
-#else   // ndef WINDOWS
+#else   // ndef _WINDOWS
 
 	int mode = 0;
 	if ((flags & JAVA_INTEROP_LIB_LOAD_GLOBALLY) == JAVA_INTEROP_LIB_LOAD_GLOBALLY) {
@@ -119,7 +116,7 @@ java_interop_lib_load (const char *path, [[maybe_unused]] unsigned int flags, ch
 
 	handle  = dlopen (path, mode);
 
-#endif  // ndef WINDOWS
+#endif  // ndef _WINDOWS
 
 	if (handle == nullptr) {
 		_set_error_to_last_error (error);
@@ -144,17 +141,17 @@ java_interop_lib_symbol (void *library, const char *symbol, char **error)
 
 	void *address   = nullptr;
 
-#ifdef WINDOWS
+#ifdef _WINDOWS
 
 	HMODULE module  = reinterpret_cast<HMODULE>(library);
 	FARPROC a       = GetProcAddress (module, symbol);
 	address	        = reinterpret_cast<void*>(a);
 
-#else   // ndef WINDOWS
+#else   // ndef _WINDOWS
 
 	address         = dlsym (library, symbol);
 
-#endif  // ndef WINDOWS
+#endif  // ndef _WINDOWS
 
 	if (address == nullptr) {
 		_set_error_to_last_error (error);
@@ -174,18 +171,18 @@ java_interop_lib_close (void* library, char **error)
 
 	int r   = 0;
 
-#ifdef WINDOWS
+#ifdef _WINDOWS
 	HMODULE h   = reinterpret_cast<HMODULE>(library);
 	BOOL    v   = FreeLibrary (h);
 	if (!v) {
 		r   = JAVA_INTEROP_LIB_CLOSE_FAILED;
 	}
-#else   // ndef WINDOWS
+#else   // ndef _WINDOWS
 	r           = dlclose (library);
 	if (r != 0) {
 		r   = JAVA_INTEROP_LIB_CLOSE_FAILED;
 	}
-#endif  // ndef WINDOWS
+#endif  // ndef _WINDOWS
 
 	if (r != 0) {
 		_set_error_to_last_error (error);

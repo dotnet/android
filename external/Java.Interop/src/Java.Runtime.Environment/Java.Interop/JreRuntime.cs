@@ -70,6 +70,15 @@ namespace Java.Interop {
 
 	public class JreRuntime : JniRuntime
 	{
+		static JreRuntime ()
+		{
+			if (Environment.OSVersion.Platform == PlatformID.Win32NT) {
+				var baseDir = Path.GetDirectoryName (typeof (JreRuntime).Assembly.Location);
+				var newDir  = Path.Combine (baseDir, Environment.Is64BitProcess ? "win-x64" : "win-x86");
+				NativeMethods.AddDllDirectory (newDir);
+			}
+		}
+
 		static int CreateJavaVM (out IntPtr javavm, out IntPtr jnienv, ref JavaVMInitArgs args)
 		{
 			return NativeMethods.java_interop_jvm_create (out javavm, out jnienv, ref args);
@@ -168,6 +177,9 @@ namespace Java.Interop {
 
 		[DllImport (JavaInteropLib, CharSet=CharSet.Ansi, CallingConvention=CallingConvention.Cdecl)]
 		internal static extern int java_interop_jvm_create (out IntPtr javavm, out IntPtr jnienv, ref JavaVMInitArgs args);
+
+		[DllImport ("kernel32", CharSet=CharSet.Unicode)]
+		internal static extern int AddDllDirectory (string NewDirectory);
 	}
 }
 

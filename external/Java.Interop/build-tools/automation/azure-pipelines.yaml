@@ -18,7 +18,7 @@ pr:
 variables:
   RunningOnCI: true
   Build.Configuration: Release
-  DotNetCoreVersion: 3.1.300
+  DotNetCoreVersion: 5.0.103
   HostedMacImage: macOS-10.15
   HostedWinVS2019: Hosted Windows 2019 with VS2019
   NetCoreTargetFrameworkPathSuffix: -netcoreapp3.1
@@ -90,6 +90,8 @@ jobs:
   - template: templates\core-build.yaml
 
   - template: templates\core-tests.yaml
+    parameters:
+      runNativeDotnetTests: true
 
   - template: templates\fail-on-issue.yaml
     
