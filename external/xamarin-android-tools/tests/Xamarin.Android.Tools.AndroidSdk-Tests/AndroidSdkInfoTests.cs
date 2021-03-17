@@ -147,6 +147,50 @@ namespace Xamarin.Android.Tools.Tests
 		}
 
 		[Test]
+		public void Ndk_Path_InvalidChars ()
+		{
+			CreateSdks (out string root, out string jdk, out string ndk, out string sdk);
+
+			Action<TraceLevel, string> logger = (level, message) => {
+				Console.WriteLine ($"[{level}] {message}");
+				if (level == TraceLevel.Error)
+					Assert.Fail (message);
+			};
+
+			var oldPath = Environment.GetEnvironmentVariable ("PATH");
+			try {
+				Environment.SetEnvironmentVariable ("PATH", "\"C:\\IHAVEQUOTES\\\"");
+				// Check that this doesn't throw
+				new AndroidSdkInfo (logger, androidSdkPath: sdk, androidNdkPath: null, javaSdkPath: jdk);
+			} finally {
+				Environment.SetEnvironmentVariable ("PATH", oldPath);
+				Directory.Delete (root, recursive: true);
+			}
+		}
+
+		[Test]
+		public void Ndk_PathExt_InvalidChars ()
+		{
+			CreateSdks (out string root, out string jdk, out string ndk, out string sdk);
+
+			Action<TraceLevel, string> logger = (level, message) => {
+				Console.WriteLine ($"[{level}] {message}");
+				if (level == TraceLevel.Error)
+					Assert.Fail (message);
+			};
+
+			var oldPathExt = Environment.GetEnvironmentVariable ("PATHEXT");
+			try {
+				Environment.SetEnvironmentVariable ("PATHEXT", string.Join (Path.PathSeparator.ToString (), "\"", ".EXE", ".BAT"));
+				// Check that this doesn't throw
+				new AndroidSdkInfo (logger, androidSdkPath: sdk, androidNdkPath: null, javaSdkPath: jdk);
+			} finally {
+				Environment.SetEnvironmentVariable ("PATHEXT", oldPathExt);
+				Directory.Delete (root, recursive: true);
+			}
+		}
+
+		[Test]
 		public void Ndk_AndroidSdkDoesNotExist ()
 		{
 			CreateSdks (out string root, out string jdk, out string ndk, out string sdk);

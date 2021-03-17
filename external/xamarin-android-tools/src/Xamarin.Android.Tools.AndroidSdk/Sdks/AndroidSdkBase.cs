@@ -292,9 +292,14 @@ namespace Xamarin.Android.Tools
 			if (string.IsNullOrEmpty (dir))
 				return exe;
 
-			foreach (var e in ProcessUtils.ExecutableFiles (exe))
-				if (File.Exists (Path.Combine (dir, e)))
-					return e;
+			foreach (var e in ProcessUtils.ExecutableFiles (exe)) {
+				try {
+					if (File.Exists (Path.Combine (dir, e)))
+						return e;
+				} catch (ArgumentException) {
+					continue;
+				}
+			}
 			return exe;
 		}
 	}

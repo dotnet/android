@@ -173,8 +173,15 @@ namespace Xamarin.Android.Tools
 
 		internal static IEnumerable<string> FindExecutablesInDirectory (string dir, string executable)
 		{
+			if (!Directory.Exists (dir))
+				yield break;
 			foreach (var exe in ExecutableFiles (executable)) {
-				var exePath = Path.Combine (dir, exe);
+				string exePath;
+				try {
+					exePath = Path.Combine (dir, exe);
+				} catch (ArgumentException) {
+					continue;
+				}
 				if (File.Exists (exePath))
 					yield return exePath;
 			}
