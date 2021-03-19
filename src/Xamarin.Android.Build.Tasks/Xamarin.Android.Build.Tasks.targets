@@ -220,12 +220,21 @@
     </ReplaceFileContents>
     <PropertyGroup>
       <_HaveVcVars Condition=" Exists('C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat') ">True</_HaveVcVars>
+      <_HaveVc Condition=" Exists('C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC') ">True</_HaveVc>
     </PropertyGroup>
     <Message Text="# jonp: Does vcvarsall.bat exist? $(_HaveVcVars) " />
+    <Message Text="# jonp: Does VC exist? $(_HaveVc) " />
     <ItemGroup Condition=" '$(_HaveVcVars)' == '' And '$(OS)' == 'Windows_NT' ">
       <_Vcvars Include="C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\**\vcvarsall.bat" />
     </ItemGroup>
     <Message Text="# jonp: Anywhere? @(_Vcvars, ';')" />
+    <ItemGroup Condition=" '$(_HaveVc)' != '' And '$(OS)' == 'Windows_NT' ">
+      <_VcScripts Include="C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\**\*.bat" />
+      <_VcScripts Include="C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\**\*.cmd" />
+    </ItemGroup>
+    <Message Text="# jonp: Any scripts?
+@(_VcScripts, '
+')" />
   </Target>
   <Target Name="_FindAndroidApiInfo">
     <ItemGroup>
