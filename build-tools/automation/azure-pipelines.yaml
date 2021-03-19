@@ -48,8 +48,8 @@ resources:
 variables:
   XA.Jdk8.Folder: jdk-1.8
   XA.Jdk11.Folder: jdk-11
-  NuGetArtifactName: nupkgs
-  InstallerArtifactName: installers
+  NuGetArtifactName: nuget-unsigned
+  InstallerArtifactName: installers-unsigned
   TestAssembliesArtifactName: test-assemblies
   NUnitConsoleVersion: 3.11.1
   DotNetCoreVersion: 3.1.405
@@ -144,7 +144,20 @@ stages:
     - checkout: self
       submodules: recursive
 
+    - template: yaml-templates/install-microbuild-tooling.yaml
+      parameters:
+        condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
+
     - template: yaml-templates/commercial-build.yaml
+
+    - template: yaml-templates/remove-microbuild-tooling.yaml
+      parameters:
+        condition: and(succeededOrFailed(), eq(variables['MicroBuildSignType'], 'Real'))
+
+    - template: yaml-templates/upload-results.yaml
+      parameters:
+        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
+        artifactName: Build Results - Nightly macOS
 
     - script: mono $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/xaprepare/xaprepare/bin/$(XA.Build.Configuration)/xaprepare.exe --s=DetermineApplicableTests --no-emoji --run-mode=CI
       displayName: determine which test stages to run
@@ -486,17 +499,17 @@ stages:
           /bl:$(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/create-all-packs.binlog
 
     - script: >
-        mkdir -p $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nupkg-linux &&
+        mkdir -p $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-linux &&
         cp $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)/Microsoft.Android.Sdk.linux-x64*.nupkg
-        $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nupkg-linux
+        $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-linux
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: copy linux sdk
 
     - task: PublishPipelineArtifact@1
       displayName: upload linux sdk
       inputs:
-        artifactName: nupkg-linux
-        targetPath: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nupkg-linux
+        artifactName: nuget-linux-unsigned
+        targetPath: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-linux
 
     - script: dotnet tool update apkdiff -g
       displayName: install apkdiff dotnet tool
@@ -1218,7 +1231,7 @@ stages:
   # Check - "Xamarin.Android (.NET 6 Preview Installers Sign NuGets)"
   - template: sign-artifacts/jobs/v2.yml@yaml
     parameters:
-      artifactName: nupkgs
+      artifactName: $(NuGetArtifactName)
       signType: $(MicroBuildSignType)
       usePipelineArtifactTasks: true
       condition: eq(variables['MicroBuildSignType'], 'Real')
@@ -1309,7 +1322,10 @@ stages:
     - task: PublishPipelineArtifact@1
       displayName: upload pkg
       inputs:
-        artifactName: net6-pkg
+        ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
+          artifactName: net6-pkg-signed
+        ${{ if ne(variables['MicroBuildSignType'], 'Real') }}:
+          artifactName: net6-pkg-unsigned
         targetPath: $(XA.NET6.Pkg)
 
     - template: yaml-templates/remove-microbuild-tooling.yaml
@@ -1342,7 +1358,10 @@ stages:
 
     - task: DownloadPipelineArtifact@2
       inputs:
-        artifactName: net6-pkg
+        ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
+          artifactName: net6-pkg-signed
+        ${{ if ne(variables['MicroBuildSignType'], 'Real') }}:
+          artifactName: net6-pkg-unsigned
         downloadPath: $(System.DefaultWorkingDirectory)\installer-artifacts
         patterns: Microsoft.*.pkg
 
