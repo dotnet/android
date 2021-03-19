@@ -3,6 +3,7 @@ using Microsoft.Build.Utilities;
 using System;
 using System.IO;
 using Xamarin.Tools.Zip;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
@@ -32,9 +33,12 @@ namespace Xamarin.Android.Tasks
 		/// </summary>
 		protected override void FixupArchive (ZipArchiveEx zip)
 		{
-			if (!zip.Archive.ContainsEntry ("AndroidManifest.xml"))
+			if (!zip.Archive.ContainsEntry ("AndroidManifest.xml")) {
+				Log.LogDebugMessage ($"No AndroidManifest.xml. Skipping Fixup");
 				return;
+			}
 			var entry = zip.Archive.ReadEntry ("AndroidManifest.xml");
+			Log.LogDebugMessage ($"Fixing up AndroidManifest.xml to be manifest/AndroidManifest.xml.");
 			using (var stream = new MemoryStream ()) {
 				entry.Extract (stream);
 				stream.Position = 0;
