@@ -68,10 +68,6 @@ steps:
     artifactName: $(TestAssembliesArtifactName)
     targetPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
 
-- template: install-microbuild-tooling.yaml
-  parameters:
-    condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
-
 # Restore needs to be executed first or MicroBuild targets won't be imported in time
 - task: MSBuild@1
   displayName: msbuild /t:Restore sign-pkg-content.proj
@@ -125,17 +121,8 @@ steps:
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: create updateinfo file
 
-- template: remove-microbuild-tooling.yaml
-  parameters:
-    condition: and(succeededOrFailed(), eq(variables['MicroBuildSignType'], 'Real'))
-
 - task: PublishPipelineArtifact@1
   displayName: upload installers
   inputs:
     artifactName: $(InstallerArtifactName)
     targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
-
-- template: upload-results.yaml
-  parameters:
-    solution: ${{ parameters.xaSourcePath }}/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
-    artifactName: Build Results - macOS

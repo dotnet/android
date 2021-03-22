@@ -76,7 +76,7 @@
 
   <Target Name="CreateAllPacks"
       DependsOnTargets="BuildILLinkCustomStep;DeleteExtractedWorkloadPacks;_SetGlobalProperties">
-    <RemoveDir Directories="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs" />
+    <RemoveDir Directories="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned" />
     <Exec Command="$(DotNetPreviewTool) pack @(_GlobalProperties, ' ') -p:AndroidRID=android-arm -p:AndroidABI=armeabi-v7a-net6 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
     <Exec Command="$(DotNetPreviewTool) pack @(_GlobalProperties, ' ') -p:AndroidRID=android-arm64 -p:AndroidABI=arm64-v8a-net6 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
     <Exec Command="$(DotNetPreviewTool) pack @(_GlobalProperties, ' ') -p:AndroidRID=android-x86 -p:AndroidABI=x86-net6 &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
@@ -93,15 +93,15 @@
   <Target Name="ExtractWorkloadPacks"
       DependsOnTargets="DeleteExtractedWorkloadPacks" >
     <ItemGroup>
-      <_WLManifest Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.NET.Workload.Android.*.nupkg" />
-      <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Sdk.linux-x64.*.nupkg"   Condition=" '$(HostOS)' == 'Linux' " />
-      <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Sdk.osx-x64.*.nupkg"     Condition=" '$(HostOS)' == 'Darwin' " />
-      <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Sdk.win-x64.*.nupkg" Condition=" '$(HostOS)' == 'Windows' " />
-      <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Sdk.BundleTool.*.nupkg" />
-      <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Ref.*.nupkg" />
-      <_WLTemplates Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Templates.*.nupkg" />
+      <_WLManifest Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned\Microsoft.NET.Workload.Android.*.nupkg" />
+      <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned\Microsoft.Android.Sdk.linux-x64.*.nupkg"   Condition=" '$(HostOS)' == 'Linux' " />
+      <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned\Microsoft.Android.Sdk.osx-x64.*.nupkg"     Condition=" '$(HostOS)' == 'Darwin' " />
+      <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned\Microsoft.Android.Sdk.win-x64.*.nupkg" Condition=" '$(HostOS)' == 'Windows' " />
+      <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned\Microsoft.Android.Sdk.BundleTool.*.nupkg" />
+      <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned\Microsoft.Android.Ref.*.nupkg" />
+      <_WLTemplates Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned\Microsoft.Android.Templates.*.nupkg" />
       <!-- Runtime packs are not yet supported by workloads -->
-      <!-- <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nupkgs\Microsoft.Android.Runtime.*.nupkg" /> -->
+      <!-- <_WLPacks Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned\Microsoft.Android.Runtime.*.nupkg" /> -->
     </ItemGroup>
     <PropertyGroup>
       <_WLPackVersion>@(_WLManifest->'%(Filename)'->Replace('Microsoft.NET.Workload.Android.', ''))</_WLPackVersion>

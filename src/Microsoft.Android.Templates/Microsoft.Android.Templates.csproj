@@ -10,7 +10,7 @@
     <IncludeContentInPack>true</IncludeContentInPack>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <ContentTargetFolders>content</ContentTargetFolders>
-    <OutputPath>..\..\bin\Build$(Configuration)\nupkgs\</OutputPath>
+    <OutputPath>..\..\bin\Build$(Configuration)\nuget-unsigned\</OutputPath>
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />
