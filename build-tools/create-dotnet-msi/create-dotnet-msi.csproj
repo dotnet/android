@@ -74,7 +74,7 @@
         Template="$(_WixTemplate)"
         DestinationFile="$(_WixFile)"
         DotNetPath="$(DotNetPreviewPath)"
-        DotNetVersion="$(DotNetPreviewVersionFull)"
+        DotNetVersion="$(MicrosoftDotnetSdkInternalPackageVersion)"
         MSIVersion="$(AndroidMSIVersion)"
     />
     <ItemGroup>

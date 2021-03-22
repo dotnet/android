@@ -12,7 +12,7 @@
 
   <PropertyGroup>
     <_MonoAndroidNETOutputDir>$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\netcoreapp3.1\</_MonoAndroidNETOutputDir>
-    <_WorkloadResolverFlagFile>$(DotNetPreviewPath)sdk\$(DotNetPreviewVersionFull)\EnableWorkloadResolver.sentinel</_WorkloadResolverFlagFile>
+    <_WorkloadResolverFlagFile>$(DotNetPreviewPath)sdk\$(MicrosoftDotnetSdkInternalPackageVersion)\EnableWorkloadResolver.sentinel</_WorkloadResolverFlagFile>
   </PropertyGroup>
 
   <!-- LICENSE setup -->
