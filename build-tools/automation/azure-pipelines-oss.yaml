@@ -20,8 +20,8 @@ variables:
   XA.Jdk8.Folder: jdk-1.8
   XA.Jdk11.Folder: jdk-11
   XA.Build.Configuration: Release
-  NuGetArtifactName: nupkgs
-  InstallerArtifactName: Installers
+  NuGetArtifactName: nuget-unsigned
+  InstallerArtifactName: installers-unsigned
   EXTRA_MSBUILD_ARGS: /p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False
   PREPARE_FLAGS: PREPARE_CI=1 PREPARE_CI_PR=1
   DotNetCoreVersion: 3.1.405

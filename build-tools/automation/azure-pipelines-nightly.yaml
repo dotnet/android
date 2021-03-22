@@ -34,8 +34,8 @@ variables:
   RunningOnCI: true
   XA.Build.Configuration: Release
   XA.Jdk8.Folder: jdk-1.8
-  NuGetArtifactName: nupkgs
-  InstallerArtifactName: installers
+  NuGetArtifactName: nuget-unsigned
+  InstallerArtifactName: installers-unsigned
   TestAssembliesArtifactName: test-assemblies
   DotNetCoreVersion: 3.1.405
   DotNet5Version: 5.0.100
@@ -69,6 +69,11 @@ stages:
     - template: yaml-templates/commercial-build.yaml
       parameters:
         makeMSBuildArgs: /p:EnableRoslynAnalyzers=true
+
+    - template: yaml-templatesupload-results.yaml
+      parameters:
+        solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
+        artifactName: Build Results - Nightly macOS
 
 - stage: test
   displayName: Test

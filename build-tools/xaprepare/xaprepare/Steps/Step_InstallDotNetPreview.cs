@@ -17,7 +17,8 @@ namespace Xamarin.Android.Prepare
 		{
 			var dotnetPath = context.Properties.GetRequiredValue (KnownProperties.DotNetPreviewPath);
 			dotnetPath = dotnetPath.TrimEnd (new char [] { Path.DirectorySeparatorChar });
-			var dotnetPreviewVersion = context.Properties.GetRequiredValue (KnownProperties.DotNetPreviewVersionFull);
+			var dotnetTool = Path.Combine (dotnetPath, "dotnet");
+			var dotnetPreviewVersion = context.Properties.GetRequiredValue (KnownProperties.MicrosoftDotnetSdkInternalPackageVersion);
 			var dotnetTestRuntimeVersion = Configurables.Defaults.DotNetTestRuntimeVersion;
 
 			// Delete any custom Microsoft.Android packs that may have been installed by test runs. Other ref/runtime packs will be ignored.
@@ -38,8 +39,8 @@ namespace Xamarin.Android.Prepare
 				}
 			}
 
-			if (Directory.Exists (dotnetPath)) {
-				if (!TestDotNetSdk (dotnetPath)) {
+			if (File.Exists (dotnetTool)) {
+				if (!TestDotNetSdk (dotnetTool)) {
 					Log.WarningLine ($"Attempt to run `dotnet --version` failed, reinstalling the SDK.");
 					Utilities.DeleteDirectory (dotnetPath);
 				}
@@ -55,7 +56,11 @@ namespace Xamarin.Android.Prepare
 				return false;
 			}
 
-			return true;
+			// Install runtime packs associated with the SDK previously installed.
+			var packageDownloadProj = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "build-tools", "xaprepare", "xaprepare", "package-download.proj");
+			var logPath = Path.Combine (Configurables.Paths.BuildBinDir, $"msbuild-{context.BuildTimeStamp}-download-runtime-packs.binlog");
+			return Utilities.RunCommand (dotnetTool, new string [] { "restore", $"-p:DotNetRuntimePacksVersion={context.BundledPreviewRuntimePackVersion}",
+				ProcessRunner.QuoteArgument (packageDownloadProj), ProcessRunner.QuoteArgument ($"-bl:{logPath}") });
 		}
 
 		async Task<bool> InstallDotNetAsync (Context context, string dotnetPath, string version, bool runtimeOnly = false)
@@ -122,9 +127,9 @@ namespace Xamarin.Android.Prepare
 			}
 		}
 
-		bool TestDotNetSdk (string dotnetPath)
+		bool TestDotNetSdk (string dotnetTool)
 		{
-			return Utilities.RunCommand (Path.Combine (dotnetPath, "dotnet"), new string [] { "--version" });
+			return Utilities.RunCommand (dotnetTool, new string [] { "--version" });
 		}
 
 	}
