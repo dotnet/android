@@ -23,7 +23,7 @@
     <_JavaInteropNativeLib Include="CMakeLists.txt" />
   </ItemGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition=" '$(NativeToolchainSupported)' == 'True' ">
     <None Include="@(_JavaInteropNativeLib->'$(OutputPath)%(Dir)$(_JavaInteropLibName)')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>%(Dir)$(_JavaInteropLibName)</Link>
@@ -60,6 +60,7 @@
   </Target>
 
   <Target Name="_BuildLibs"
+      Condition=" '$(NativeToolchainSupported)' == 'True' "
       DependsOnTargets="GetNativeBuildCommands;_BuildJni_c;_GetCmakeOptions"
       BeforeTargets="Build"
       Inputs="@(_JavaInteropNativeLib);$(MSBuildThisFileFullPath);java-interop.csproj;@(ClInclude);@(ClCompile)"

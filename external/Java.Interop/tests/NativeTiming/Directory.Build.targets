@@ -23,7 +23,7 @@
     <_NativeTimingLib Include="CMakeLists.txt" />
   </ItemGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition=" '$(NativeToolchainSupported)' == 'True' ">
     <None Include="@(_NativeTimingLib->'$(OutputPath)%(Dir)$(_NativeTimingLibName)')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>%(Dir)$(_NativeTimingLibName)</Link>
@@ -40,6 +40,7 @@
   </ItemGroup>
 
   <Target Name="_BuildLibs"
+      Condition=" '$(NativeToolchainSupported)' == 'True' "
       BeforeTargets="Build"
       DependsOnTargets="GetNativeBuildCommands"
       Inputs="@(_NativeTimingLib);$(MSBuildThisFileFullPath);NativeTiming.csproj;@(ClInclude);@(ClCompile)"
