@@ -1637,7 +1637,7 @@
   <!-- API-31 Adjustments -->
   <!-- Work around a generator bug where having multiple Listener methods with the same name cause multiple conflicting EventArgs classes to be created. -->
   <!-- This is the "default" method version, so it's ok to remove it from an interface. -->
-  <remove-node api-since="31" path="/api/package[@name='android.location']/interface[@name='LocationListener']/method[@name='onLocationChanged' and count(parameter)=1 and parameter[1][@type='android.location.LocationResult']]" />
+  <remove-node api-since="31" path="/api/package[@name='android.location']/interface[@name='LocationListener']/method[@name='onLocationChanged' and count(parameter)=1 and parameter[1][@type='java.util.List&lt;android.location.Location&gt;']]" />
 
   <!-- These parameters that we enumify changed names. Change them back so the enumification process can still find them. -->
   <attr api-since="31" path="/api/package[@name='android.location']/*[@name='LocationManager']/method[@name='addTestProvider']/parameter[@name='powerUsage']" name="name">powerRequirement</attr>
