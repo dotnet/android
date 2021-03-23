@@ -158,8 +158,10 @@ namespace Xamarin.Android.Tasks
 							}
 							Log.LogDebugMessage ($"Deregistering item {entryName}");
 							existingEntries.Remove (entryName);
-							if (lastWriteInput <= lastWriteOutput)
+							if (lastWriteInput <= lastWriteOutput) {
+								Log.LogDebugMessage ($"Skipping to next item. {lastWriteInput} <= {lastWriteOutput}.");
 								continue;
+							}
 							if (apk.Archive.ContainsEntry (entryName)) {
 								ZipEntry e = apk.Archive.ReadEntry (entryName);
 								// check the CRC values as the ModifiedDate is always 01/01/1980 in the aapt generated file.
@@ -266,6 +268,9 @@ namespace Xamarin.Android.Tasks
 				}
 				// Clean up Removed files.
 				foreach (var entry in existingEntries) {
+					// never remove an AndroidManifest. It may be renamed when using aab.
+					if (string.Compare (Path.GetFileName (entry), "AndroidManifest.xml", StringComparison.OrdinalIgnoreCase) == 0)
+						continue;
 					Log.LogDebugMessage ($"Removing {entry} as it is not longer required.");
 					apk.Archive.DeleteEntry (entry);
 				}
