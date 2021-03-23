@@ -70,7 +70,7 @@ stages:
       parameters:
         makeMSBuildArgs: /p:EnableRoslynAnalyzers=true
 
-    - template: yaml-templatesupload-results.yaml
+    - template: yaml-templates/upload-results.yaml
       parameters:
         solution: $(System.DefaultWorkingDirectory)/xamarin-android/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
         artifactName: Build Results - Nightly macOS
