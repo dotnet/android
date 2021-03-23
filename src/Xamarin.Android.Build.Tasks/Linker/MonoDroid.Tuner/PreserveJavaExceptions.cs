@@ -12,13 +12,34 @@ using Mono.Cecil;
 
 namespace MonoDroid.Tuner {
 
-	public class PreserveJavaExceptions : BaseSubStep {
+	public class PreserveJavaExceptions
+#if NET5_LINKER
+	: IMarkHandler
+#else
+	: BaseSubStep
+#endif
+	{
 
+#if NET5_LINKER
+		LinkContext context;
+		AnnotationStore Annotations => context?.Annotations;
+
+		public void Initialize (LinkContext context, MarkContext markContext)
+		{
+			this.context = context;
+			markContext.RegisterMarkTypeAction (type => ProcessType (type));
+		}
+#else
 		public override SubStepTargets Targets {
 			get { return SubStepTargets.Type; }
 		}
+#endif
 
-		public override void ProcessType (TypeDefinition type)
+		public
+#if !NET5_LINKER
+		override
+#endif
+		void ProcessType (TypeDefinition type)
 		{
 			if (type.IsJavaException ())
 				PreserveJavaException (type);

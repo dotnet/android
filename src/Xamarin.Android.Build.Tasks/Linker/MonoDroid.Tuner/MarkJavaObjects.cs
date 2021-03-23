@@ -2,20 +2,44 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Mono.Cecil;
+using Mono.Linker;
 using Mono.Linker.Steps;
 using Mono.Tuner;
 using Xamarin.Android.Tasks;
 
 namespace MonoDroid.Tuner {
 
-	public class MarkJavaObjects : BaseSubStep {
+	public class MarkJavaObjects
+#if NET5_LINKER
+	: IMarkHandler
+#else
+	: BaseSubStep
+#endif
+	{
 		Dictionary<ModuleDefinition, Dictionary<string, TypeDefinition>> module_types = new Dictionary<ModuleDefinition, Dictionary<string, TypeDefinition>> ();
 
+#if NET5_LINKER
+		AnnotationStore Annotations => context?.Annotations;
+		LinkContext context;
+#else
 		public override SubStepTargets Targets {
 			get { return SubStepTargets.Type; }
 		}
+#endif
 
-		public override void ProcessType (TypeDefinition type)
+#if NET5_LINKER
+		public void Initialize (LinkContext context, MarkContext markContext)
+		{
+			this.context = context;
+			markContext.RegisterMarkTypeAction (type => ProcessType (type));
+		}
+#endif
+
+		public
+#if !NET5_LINKER
+		override
+#endif
+		void ProcessType (TypeDefinition type)
 		{
 			// If this isn't a JLO or IJavaObject implementer,
 			// then we don't need to MarkJavaObjects

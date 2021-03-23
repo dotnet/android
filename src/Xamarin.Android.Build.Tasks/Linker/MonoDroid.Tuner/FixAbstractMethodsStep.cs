@@ -10,49 +10,93 @@ using Mono.Linker;
 using Mono.Linker.Steps;
 
 using Mono.Tuner;
+#if NET5_LINKER
+using Microsoft.Android.Sdk.ILLink;
+#endif
 
 namespace MonoDroid.Tuner
 {
 	/// <summary>
 	/// NOTE: this step is subclassed so it can be called directly from Xamarin.Android.Build.Tasks
 	/// </summary>
-	public class FixAbstractMethodsStep : BaseStep
+	public class FixAbstractMethodsStep
+#if NET5_LINKER
+	: IMarkHandler
+#else
+	: BaseStep
+#endif
 	{
 		readonly TypeDefinitionCache cache;
+
+#if NET5_LINKER
+		protected LinkContext Context { get; private set; }
+		protected AnnotationStore Annotations => Context?.Annotations;
+#endif
 
 		public FixAbstractMethodsStep (TypeDefinitionCache cache)
 		{
 			this.cache = cache;
 		}
 
-		protected override void ProcessAssembly (AssemblyDefinition assembly)
+#if NET5_LINKER
+		public void Initialize (LinkContext context, MarkContext markContext)
+		{
+			Context = context;
+			markContext.RegisterMarkTypeAction (type => ProcessType (type));
+		}
+#endif
+
+		bool CheckShouldProcessAssembly (AssemblyDefinition assembly)
 		{
 			if (!Annotations.HasAction (assembly))
 				Annotations.SetAction (assembly, AssemblyAction.Skip);
 
 			if (IsProductOrSdkAssembly (assembly))
-				return;
+				return false;
 
 #if !NET5_LINKER
 			CheckAppDomainUsageUnconditional (assembly, (string msg) => Context.LogMessage (MessageImportance.High, msg));
 #endif
 
+			return assembly.MainModule.HasTypeReference ("Java.Lang.Object");
+		}
+
+		void UpdateAssemblyAction (AssemblyDefinition assembly)
+		{
+			AssemblyAction action = Annotations.HasAction (assembly) ? Annotations.GetAction (assembly) : AssemblyAction.Skip;
+			if (action == AssemblyAction.Skip || action == AssemblyAction.Copy || action == AssemblyAction.Delete)
+				Annotations.SetAction (assembly, AssemblyAction.Save);
+		}
+
+#if NET5_LINKER
+		protected void ProcessType (TypeDefinition type)
+		{
+			var assembly = type.Module.Assembly;
+			if (!CheckShouldProcessAssembly (assembly))
+				return;
+
+			if (!MightNeedFix (type))
+				return;
+
+			if (!FixAbstractMethods (type))
+				return;
+
+			UpdateAssemblyAction (assembly);
+			MarkAbstractMethodErrorType ();
+		}
+#else
+		protected override void ProcessAssembly (AssemblyDefinition assembly)
+		{
+			if (!CheckShouldProcessAssembly (assembly))
+				return;
+
 			if (FixAbstractMethodsUnconditional (assembly)) {
-#if !NET5_LINKER
 				Context.SafeReadSymbols (assembly);
-#endif
-				AssemblyAction action = Annotations.HasAction (assembly) ? Annotations.GetAction (assembly) : AssemblyAction.Skip;
-				if (action == AssemblyAction.Skip || action == AssemblyAction.Copy || action == AssemblyAction.Delete)
-					Annotations.SetAction (assembly, AssemblyAction.Save);
-				var td = AbstractMethodErrorConstructor.DeclaringType.Resolve ();
-				Annotations.Mark (td);
-				Annotations.SetPreserve (td, TypePreserve.Nothing);
-				Annotations.AddPreservedMethod (td, AbstractMethodErrorConstructor.Resolve ());
+				UpdateAssemblyAction (assembly);
+				MarkAbstractMethodErrorType ();
 			}
 		}
 
-
-#if !NET5_LINKER
 		internal void CheckAppDomainUsage (AssemblyDefinition assembly, Action<string> warn)
 		{
 			if (IsProductOrSdkAssembly (assembly))
@@ -73,7 +117,6 @@ namespace MonoDroid.Tuner
 				}
 			}
 		}
-#endif
 
 		internal bool FixAbstractMethods (AssemblyDefinition assembly)
 		{
@@ -82,9 +125,6 @@ namespace MonoDroid.Tuner
 
 		bool FixAbstractMethodsUnconditional (AssemblyDefinition assembly)
 		{
-			if (!assembly.MainModule.HasTypeReference ("Java.Lang.Object"))
-				return false;
-
 			bool changed = false;
 			foreach (var type in assembly.MainModule.Types) {
 				if (MightNeedFix (type))
@@ -92,6 +132,7 @@ namespace MonoDroid.Tuner
 			}
 			return changed;
 		}
+#endif
 
 		bool IsProductOrSdkAssembly (AssemblyDefinition assembly)
 		{
@@ -292,6 +333,19 @@ namespace MonoDroid.Tuner
 
 				return abstractMethodErrorConstructor;
 			}
+		}
+
+		bool markedAbstractMethodErrorType;
+
+		void MarkAbstractMethodErrorType () {
+			if (markedAbstractMethodErrorType)
+				return;
+			markedAbstractMethodErrorType = true;
+				
+			var td = AbstractMethodErrorConstructor.DeclaringType.Resolve ();
+			Annotations.Mark (td);
+			Annotations.SetPreserve (td, TypePreserve.Nothing);
+			Annotations.AddPreservedMethod (td, AbstractMethodErrorConstructor.Resolve ());
 		}
 
 		public virtual void LogMessage (string message)

@@ -55,7 +55,7 @@ namespace Microsoft.Android.Sdk.ILLink
 			MarkHandlers.Add (new PreserveRegistrations (cache));
 			MarkHandlers.Add (new PreserveJavaInterfaces ());
 
-			MarkHandlers.Add (new FixAbstractMethodsHandler (cache));
+			MarkHandlers.Add (new FixAbstractMethodsStep (cache));
 
 			string proguardPath;
 			if (Context.TryGetCustomData ("ProguardConfiguration", out proguardPath))

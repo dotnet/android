@@ -12,26 +12,64 @@ using Mono.Cecil;
 
 namespace MonoDroid.Tuner {
 
-	public class PreserveApplications : BaseSubStep {
+	public class PreserveApplications
+#if NET5_LINKER
+	: IMarkHandler
+#else
+	: BaseSubStep
+#endif
+	{
 
+#if NET5_LINKER
+		LinkContext context;
+		AnnotationStore Annotations => context?.Annotations;
+
+		public void Initialize (LinkContext context, MarkContext markContext)
+		{
+			this.context = context;
+			markContext.RegisterMarkAssemblyAction (assembly => ProcessAssembly (assembly));
+			markContext.RegisterMarkTypeAction (type => ProcessType (type));
+		}
+#else
 		public override SubStepTargets Targets {
 			get { return SubStepTargets.Type
 				| SubStepTargets.Assembly;
 			}
 		}
+#endif
 
-		public override bool IsActiveFor (AssemblyDefinition assembly)
+		public
+#if !NET5_LINKER
+		override
+#endif
+		bool IsActiveFor (AssemblyDefinition assembly)
 		{
 			return Annotations.GetAction (assembly) == AssemblyAction.Link;
 		}
 
-		public override void ProcessAssembly (AssemblyDefinition assembly)
+		public 
+#if !NET5_LINKER
+		override
+#endif
+		void ProcessAssembly (AssemblyDefinition assembly)
 		{
+#if NET5_LINKER
+			if (!IsActiveFor (assembly))
+				return;
+#endif
 			ProcessAttributeProvider (assembly);
 		}
 
-		public override void ProcessType (TypeDefinition type)
+		public
+#if !NET5_LINKER
+		override
+#endif
+		void ProcessType (TypeDefinition type)
 		{
+#if NET5_LINKER
+			if (!IsActiveFor (type.Module.Assembly))
+				return;
+#endif
 			if (!type.Inherits ("Android.App.Application"))
 				return;
 
