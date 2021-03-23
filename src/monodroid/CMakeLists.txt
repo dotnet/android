@@ -294,7 +294,7 @@ if(NOT ANDROID)
 endif()
 
 if(WIN32 OR MINGW)
-  add_compile_definitions(WINDOWS NTDDI_VERSION=NTDDI_VISTA _WIN32_WINNT=_WIN32_WINNT_VISTA)
+  add_compile_definitions(WINDOWS NTDDI_VERSION=NTDDI_VISTA _WINDOWS _WIN32_WINNT=_WIN32_WINNT_VISTA)
 endif()
 
 # Compiler and linker flags
