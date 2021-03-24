@@ -105,7 +105,7 @@ Several `.nupkg` files will be output in `.\bin\BuildDebug\nuget-unsigned`,
 but this is only part of the story. Your local
 `%USERPROFILE%\android-toolchain\dotnet\packs` directory will be
 populated with a local Android "workload" in
-`Microsoft.Android.Sdk.win-x64` matching your operating system.
+`Microsoft.Android.Sdk.$(HostOS)` matching your operating system.
 
 To use the Android workload, you will need a `NuGet.config`:
 
