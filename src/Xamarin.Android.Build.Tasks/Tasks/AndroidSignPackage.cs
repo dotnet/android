@@ -20,30 +20,30 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		[Output]
 		public string KeyStore { get; set; }
-		
+
 		[Required]
 		public string KeyAlias { get; set; }
-		
+
 		/// <summary>
 		/// The Password for the Key.
 		/// You can use the raw password here, however if you want to hide your password in logs
-		/// you can use a preview of env: or file: to point it to an Environment variable or 
+		/// you can use a preview of env: or file: to point it to an Environment variable or
 		/// a file.
 		///
 		///   env:<PasswordEnvironentVariable>
-		///   file:<PasswordFile> 
+		///   file:<PasswordFile>
 		/// </summary>
 		[Required]
 		public string KeyPass { get; set; }
-		
+
 		/// <summary>
 		/// The Password for the Keystore.
 		/// You can use the raw password here, however if you want to hide your password in logs
-		/// you can use a preview of env: or file: to point it to an Environment variable or 
+		/// you can use a preview of env: or file: to point it to an Environment variable or
 		/// a file.
 		///
 		///   env:<PasswordEnvironentVariable>
-		///   file:<PasswordFile> 
+		///   file:<PasswordFile>
 		/// </summary>
 		[Required]
 		public string StorePass { get; set; }
@@ -150,7 +150,7 @@ namespace Xamarin.Android.Tasks
 		protected override bool ValidateParameters ()
 		{
 			if (!string.IsNullOrEmpty (KeyStore) && !File.Exists (KeyStore)) {
-				Log.LogCodedError ("XA4310", Properties.Resources.XA4310, KeyStore);
+				Log.LogCodedError ("XA4310", Properties.Resources.XA4310, "$(AndroidSigningKeyStore)", KeyStore);
 				return false;
 			}
 			return base.ValidateParameters ();
