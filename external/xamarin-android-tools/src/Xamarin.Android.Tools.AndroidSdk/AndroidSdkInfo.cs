@@ -185,7 +185,7 @@ namespace Xamarin.Android.Tools
 
 			logger          = logger ?? DefaultConsoleLogger;
 
-			var latestJdk   = JdkInfo.GetMacOSMicrosoftJdks (logger).FirstOrDefault ();
+			var latestJdk   = JdkInfo.GetMicrosoftOpenJdks (logger).FirstOrDefault ();
 			if (latestJdk == null)
 				throw new NotSupportedException ("No Microsoft OpenJDK could be found.  Please re-run the Visual Studio installer or manually specify the JDK path in settings.");
 

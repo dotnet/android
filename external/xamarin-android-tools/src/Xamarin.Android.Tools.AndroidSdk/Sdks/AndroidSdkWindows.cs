@@ -18,6 +18,7 @@ namespace Xamarin.Android.Tools
 		const string ANDROID_INSTALLER_KEY = "Path";
 		const string XAMARIN_ANDROID_INSTALLER_PATH = @"SOFTWARE\Xamarin\MonoAndroid";
 		const string XAMARIN_ANDROID_INSTALLER_KEY = "PrivateAndroidSdkPath";
+		const string MICROSOFT_OPENJDK_PATH         = @"SOFTWARE\Microsoft\JDK";
 
 		public AndroidSdkWindows (Action<TraceLevel, string> logger)
 			: base (logger)
@@ -131,8 +132,9 @@ namespace Xamarin.Android.Tools
 			}
 
 			return ToJdkInfos (GetPreferredJdkPaths (), "Preferred Registry")
-				.Concat (ToJdkInfos (GetOpenJdkPaths (), "OpenJDK"))
-				.Concat (ToJdkInfos (GetKnownOpenJdkPaths (), "Well-known OpenJDK paths"))
+				.Concat (ToJdkInfos (GetMicrosoftOpenJdkFilesystemPaths (), "Microsoft OpenJDK Filesystem"))
+				.Concat (ToJdkInfos (GetMicrosoftOpenJdkRegistryPaths (), "Microsoft OpenJDK Registry"))
+				.Concat (ToJdkInfos (GetVSAndroidJdkPaths (), @"HKLM\SOFTWARE\Microsoft\VisualStudio\Android@JavaHome"))
 				.Concat (ToJdkInfos (GetOracleJdkPaths (), "Oracle JDK"))
 				;
 		}
@@ -150,7 +152,7 @@ namespace Xamarin.Android.Tools
 			}
 		}
 
-		private static IEnumerable<string> GetOpenJdkPaths ()
+		private static IEnumerable<string> GetVSAndroidJdkPaths ()
 		{
 			var root = RegistryEx.LocalMachine;
 			var wows = new[] { RegistryEx.Wow64.Key32, RegistryEx.Wow64.Key64 };
@@ -163,34 +165,83 @@ namespace Xamarin.Android.Tools
 			}
 		}
 
-		/// <summary>
-		/// Locate OpenJDK installations by well known path.
-		/// </summary>
-		/// <returns>List of valid OpenJDK paths in version descending order.</returns>
-		private static IEnumerable<string> GetKnownOpenJdkPaths ()
+		static IEnumerable<string> GetMicrosoftOpenJdkFilesystemPaths ()
 		{
-			string JdkFolderNamePattern = "microsoft_dist_openjdk_";
+			const string JdkFolderNamePrefix = "jdk-";
 
 			var paths = new List<Tuple<string, Version>> ();
 			var rootPaths = new List<string> {
-				Path.Combine (Environment.ExpandEnvironmentVariables ("%ProgramW6432%"), "Android", "jdk"),
+				Path.Combine (Environment.ExpandEnvironmentVariables ("%ProgramW6432%"), "Microsoft"),
 				Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86), "Android", "jdk"),
 			};
 
 			foreach (var rootPath in rootPaths) {
-				if (Directory.Exists (rootPath))  {
-					foreach (var directoryName in Directory.EnumerateDirectories (rootPath, $"{JdkFolderNamePattern}*").ToList ()) {
-						var versionString = directoryName.Replace ($"{rootPath}\\{JdkFolderNamePattern}", string.Empty);
-						if (Version.TryParse (versionString, out Version? ver)) {
-							paths.Add (new Tuple<string, Version>(directoryName, ver));
-						}
-					}
+				if (!Directory.Exists (rootPath))
+					continue;
+				foreach (var directoryName in Directory.EnumerateDirectories (rootPath, $"{JdkFolderNamePrefix}*")) {
+					var version = ExtractVersion (directoryName, JdkFolderNamePrefix);
+					if (version == null)
+						continue;
+					paths.Add (Tuple.Create (directoryName, version));
 				}
 			}
 
 			return paths.OrderByDescending (v => v.Item2)
 				.Where (openJdk => ProcessUtils.FindExecutablesInDirectory (Path.Combine (openJdk.Item1, "bin"), _JarSigner).Any ())
 				.Select (openJdk => openJdk.Item1);
+		}
+
+		static IEnumerable<string> GetMicrosoftOpenJdkRegistryPaths ()
+		{
+			var paths   = new List<(Version version, string path)> ();
+			var roots   = new[] { RegistryEx.CurrentUser, RegistryEx.LocalMachine };
+			var wows    = new[] { RegistryEx.Wow64.Key32, RegistryEx.Wow64.Key64 };
+			foreach (var root in roots)
+			foreach (var wow in wows) {
+				foreach (var subkeyName in RegistryEx.EnumerateSubkeys (root, MICROSOFT_OPENJDK_PATH, wow)) {
+					if (!Version.TryParse (subkeyName, out var version))
+						continue;
+					var msiKey  = $@"{MICROSOFT_OPENJDK_PATH}\{subkeyName}\hotspot\MSI";
+					var path    = RegistryEx.GetValueString (root, msiKey, "Path", wow);
+					if (path == null)
+						continue;
+					paths.Add ((version, path));
+				}
+			}
+
+			return paths.OrderByDescending (e => e.version)
+				.Select (e => e.path);
+		}
+
+		internal static Version? ExtractVersion (string path, string prefix)
+		{
+			var name = Path.GetFileName (path);
+			if (name.Length <= prefix.Length)
+				return null;
+			if (!name.StartsWith (prefix, StringComparison.OrdinalIgnoreCase))
+				return null;
+
+			var start   = prefix.Length;
+			while (start < name.Length && !char.IsDigit (name, start)) {
+				++start;
+			}
+			if (start == name.Length)
+				return null;
+
+			name    = name.Substring (start);
+			int end = 0;
+			while (end < name.Length &&
+					(char.IsDigit (name [end]) || name [end] == '.')) {
+				end++;
+			}
+
+			do {
+				if (Version.TryParse (name.Substring (0, end), out var v))
+					return v;
+				end = name.LastIndexOf ('.', end-1);
+			} while (end > 0);
+
+			return null;
 		}
 
 		private static IEnumerable<string> GetOracleJdkPaths ()

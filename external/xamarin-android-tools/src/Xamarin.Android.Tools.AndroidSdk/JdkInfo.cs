@@ -287,7 +287,7 @@ namespace Xamarin.Android.Tools
 			return GetEnvironmentVariableJdks ("JI_JAVA_HOME", logger)
 				.Concat (GetWindowsJdks (logger))
 				.Concat (GetConfiguredJdks (logger))
-				.Concat (GetMacOSMicrosoftJdks (logger))
+				.Concat (GetMacOSMicrosoftOpenJdks (logger))
 				.Concat (GetEnvironmentVariableJdks ("JAVA_HOME", logger))
 				.Concat (GetPathEnvironmentJdks (logger))
 				.Concat (GetLibexecJdks (logger))
@@ -313,27 +313,47 @@ namespace Xamarin.Android.Tools
 			}
 		}
 
-		internal static IEnumerable<JdkInfo> GetMacOSMicrosoftJdks (Action<TraceLevel, string> logger)
+		internal static IEnumerable<JdkInfo> GetMicrosoftOpenJdks (Action<TraceLevel, string> logger)
 		{
-			return GetMacOSMicrosoftJdkPaths ()
-				.Select (p => TryGetJdkInfo (p, logger, "$HOME/Library/Developer/Xamarin/jdk"))
+			foreach (var dir in GetMacOSMicrosoftOpenJdks (logger))
+				yield return dir;
+			if (Path.DirectorySeparatorChar != '\\')
+				yield break;
+			foreach (var dir in AndroidSdkWindows.GetJdkInfos (logger)) {
+				yield return dir;
+			}
+		}
+
+		static IEnumerable<JdkInfo> GetMacOSMicrosoftOpenJdks (Action<TraceLevel, string> logger)
+		{
+			return GetMacOSMicrosoftOpenJdkPaths ()
+				.Select (p => TryGetJdkInfo (p, logger, "/Library/Java/JavaVirtualMachines/microsoft-*.jdk"))
 				.Where (jdk => jdk != null)
 				.Select (jdk => jdk!)
 				.OrderByDescending (jdk => jdk, JdkInfoVersionComparer.Default);
 		}
 
-		static IEnumerable<string> GetMacOSMicrosoftJdkPaths ()
+		static IEnumerable<string> GetMacOSMicrosoftOpenJdkPaths ()
 		{
+			var root    = "/Library/Java/JavaVirtualMachines";
+			var pattern = "microsoft-*.jdk";
+			var toHome  = Path.Combine ("Contents", "Home");
 			var jdks    = AppDomain.CurrentDomain.GetData ($"GetMacOSMicrosoftJdkPaths jdks override! {typeof (JdkInfo).AssemblyQualifiedName}")
 				?.ToString ();
-			if (jdks == null) {
-				var home    = Environment.GetFolderPath (Environment.SpecialFolder.Personal);
-				jdks        = Path.Combine (home, "Library", "Developer", "Xamarin", "jdk");
+			if (jdks != null) {
+				root    = jdks;
+				toHome  = "";
+				pattern = "*";
 			}
-			if (!Directory.Exists (jdks))
-				return Enumerable.Empty <string> ();
-
-			return Directory.EnumerateDirectories (jdks);
+			if (!Directory.Exists (root)) {
+				yield break;
+			}
+			foreach (var dir in Directory.EnumerateDirectories (root, pattern)) {
+				var home = Path.Combine (dir, toHome);
+				if (!Directory.Exists (home))
+					continue;
+				yield return home;
+			}
 		}
 
 		static JdkInfo? TryGetJdkInfo (string path, Action<TraceLevel, string> logger, string locator)

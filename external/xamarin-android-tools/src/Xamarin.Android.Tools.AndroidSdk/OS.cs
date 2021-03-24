@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.IO;
 using System.Text;
@@ -139,8 +140,88 @@ namespace Xamarin.Android.Tools
 		static extern int RegCreateKeyEx (UIntPtr hKey, string subKey, uint reserved, string? @class, uint options,
 			uint samDesired, IntPtr lpSecurityAttributes, out UIntPtr phkResult, out Disposition lpdwDisposition);
 
+		// https://docs.microsoft.com/en-us/windows/win32/api/winreg/nf-winreg-regenumkeyexw
+		[DllImport (ADVAPI, CharSet = CharSet.Unicode, SetLastError = true)]
+		static extern int RegEnumKeyExW (
+				UIntPtr         hKey,
+				uint            dwIndex,
+				[Out] char[]    lpName,
+				ref uint        lpcchName,
+				IntPtr          lpReserved,
+				IntPtr          lpClass,
+				IntPtr          lpcchClass,
+				IntPtr          lpftLastWriteTime
+		);
+
+		// https://docs.microsoft.com/en-us/windows/win32/api/winreg/nf-winreg-regqueryinfokeyw
+		[DllImport (ADVAPI, CharSet = CharSet.Unicode, SetLastError = true)]
+		static extern int RegQueryInfoKey (
+				UIntPtr     hKey,
+				IntPtr      lpClass,
+				IntPtr      lpcchClass,
+				IntPtr      lpReserved,
+				out uint    lpcSubkey,
+				out uint    lpcchMaxSubkeyLen,
+				IntPtr      lpcchMaxClassLen,
+				IntPtr      lpcValues,
+				IntPtr      lpcchMaxValueNameLen,
+				IntPtr      lpcbMaxValueLen,
+				IntPtr      lpSecurityDescriptor,
+				IntPtr      lpftLastWriteTime
+		);
+
 		[DllImport ("advapi32.dll", SetLastError = true)]
 		static extern int RegCloseKey (UIntPtr hKey);
+
+		public static IEnumerable<string> EnumerateSubkeys (UIntPtr key, string subkey, Wow64 wow64)
+		{
+			UIntPtr regKeyHandle;
+			uint sam = (uint)Rights.Read + (uint)wow64;
+			int r = RegOpenKeyEx (key, subkey, 0, sam, out regKeyHandle);
+			if (r != 0) {
+				yield break;
+			}
+			try {
+				r = RegQueryInfoKey (
+						hKey:                   regKeyHandle,
+						lpClass:                IntPtr.Zero,
+						lpcchClass:             IntPtr.Zero,
+						lpReserved:             IntPtr.Zero,
+						lpcSubkey:              out uint cSubkeys,
+						lpcchMaxSubkeyLen:      out uint cchMaxSubkeyLen,
+						lpcchMaxClassLen:       IntPtr.Zero,
+						lpcValues:              IntPtr.Zero,
+						lpcchMaxValueNameLen:   IntPtr.Zero,
+						lpcbMaxValueLen:        IntPtr.Zero,
+						lpSecurityDescriptor:   IntPtr.Zero,
+						lpftLastWriteTime:      IntPtr.Zero
+				);
+				if (r != 0) {
+					yield break;
+				}
+				var name    = new char [cchMaxSubkeyLen+1];
+				for (uint i = 0; i < cSubkeys; ++i) {
+					var nameLen = (uint) name.Length;
+					r = RegEnumKeyExW (
+							hKey:               regKeyHandle,
+							dwIndex:            i,
+							lpName:             name,
+							lpcchName:          ref nameLen,
+							lpReserved:         IntPtr.Zero,
+							lpClass:            IntPtr.Zero,
+							lpcchClass:         IntPtr.Zero,
+							lpftLastWriteTime:  IntPtr.Zero
+					);
+					if (r != 0) {
+						continue;
+					}
+					yield return new string (name, 0, (int) nameLen);
+				}
+			}
+			finally {
+				RegCloseKey (regKeyHandle);
+			}
+		}
 
 		public static string? GetValueString (UIntPtr key, string subkey, string valueName, Wow64 wow64)
 		{
@@ -192,6 +273,9 @@ namespace Xamarin.Android.Tools
 			SetValue = 0x0002,
 			CreateSubKey = 0x0004,
 			EnumerateSubKey = 0x0008,
+			Notify          = 0x0010,
+			Read            = _StandardRead | QueryValue | EnumerateSubKey | Notify,
+			_StandardRead   = 0x20000,
 		}
 
 		enum Options
