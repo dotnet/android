@@ -27,7 +27,7 @@ variables:
   EXTRA_MSBUILD_ARGS: /p:AutoProvision=True /p:AutoProvisionUsesSudo=True /p:IgnoreMaxMonoVersion=False
   PREPARE_FLAGS: PREPARE_CI=1 PREPARE_CI_PR=1
   DotNetCoreVersion: 3.1.405
-  DotNet5Version: 5.0.100
+  DotNet5Version: 5.0.201
   GitHub.Token: $(github--pat--vs-mobiletools-engineering-service2)
 
 stages:
@@ -110,16 +110,10 @@ stages:
       displayName: make jenkins
 
     - script: >
-        echo "make create-pkg create-vsix V=1 CONFIGURATION=$(XA.Build.Configuration)" &&
-        make create-pkg create-vsix V=1 CONFIGURATION=$(XA.Build.Configuration)
+        echo "make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)" &&
+        make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)
       workingDirectory: $(Build.SourcesDirectory)
       displayName: create installers
-
-    - script: >
-        echo "make package-oss CONFIGURATION=$(XA.Build.Configuration) V=1" &&
-        make package-oss CONFIGURATION=$(XA.Build.Configuration) V=1
-      workingDirectory: $(Build.SourcesDirectory)
-      displayName: package oss
 
     - script: >
         mkdir -p bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName) &&
@@ -134,6 +128,12 @@ stages:
         artifactName: $(InstallerArtifactName) - macOS and Windows
         targetPath: $(Build.SourcesDirectory)/bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
 
+    - task: PublishPipelineArtifact@1
+      displayName: upload nupkgs
+      inputs:
+        artifactName: $(NuGetArtifactName) - macOS
+        targetPath: $(Build.SourcesDirectory)/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
+
     - script: >
         echo "all-tests CONFIGURATION=$(XA.Build.Configuration) V=1" &&
         make all-tests CONFIGURATION=$(XA.Build.Configuration) V=1
@@ -145,19 +145,6 @@ stages:
         make package-build-status CONFIGURATION=$(XA.Build.Configuration) V=1
       workingDirectory: $(Build.SourcesDirectory)
       displayName: package build status
-
-    - task: MSBuild@1
-      displayName: pack all nupkgs
-      inputs:
-        solution: $(Build.SourcesDirectory)/build-tools/create-packs/Microsoft.Android.Sdk.proj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:CreateAllPacks /restore /bl:$(Build.SourcesDirectory)/bin/Build$(XA.Build.Configuration)/create-all-packs.binlog
-
-    - task: PublishPipelineArtifact@1
-      displayName: upload nupkgs
-      inputs:
-        artifactName: $(NuGetArtifactName) - macOS
-        targetPath: $(Build.SourcesDirectory)/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
 
     - script: >
         echo "make run-performance-tests CONFIGURATION=$(XA.Build.Configuration) V=1" &&
@@ -185,6 +172,15 @@ stages:
     steps:
     - checkout: self
       submodules: recursive
+
+    - template: yaml-templates/use-dot-net.yaml
+      parameters:
+        version: $(DotNet5Version)
+        remove_dotnet: true
+
+    - template: yaml-templates/use-dot-net.yaml
+      parameters:
+        version: $(DotNetCoreVersion)
 
     - task: NuGetToolInstaller@1
       displayName: 'Use NuGet 5.x'
@@ -214,15 +210,11 @@ stages:
     - script: make jenkins V=1 PREPARE_CI_PR=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
       displayName: make jenkins
 
+    - script: make create-nupkgs V=1 CONFIGURATION=$(XA.Build.Configuration)
+      displayName: make create-nupkgs
+
     - script: make package-deb V=1 CONFIGURATION=$(XA.Build.Configuration)
       displayName: make package-deb
-
-    - task: MSBuild@1
-      displayName: pack all nupkgs
-      inputs:
-        solution: $(System.DefaultWorkingDirectory)/build-tools/create-packs/Microsoft.Android.Sdk.proj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:CreateAllPacks /restore /bl:$(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/create-all-packs.binlog
 
     - script: >
         mkdir -p $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/linux-artifacts &&
