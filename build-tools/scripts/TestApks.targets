@@ -57,6 +57,7 @@
     <StartAndroidEmulator
         Condition=" '$(_ValidAdbTarget)' != 'True' "
         AndroidSdkHome="$(AndroidSdkDirectory)"
+        Arguments="$(TestEmulatorArguments)"
         ImageName="$(_TestImageName)"
         Port="$(_AdbEmulatorPort)"
         ToolExe="$(EmulatorToolExe)"

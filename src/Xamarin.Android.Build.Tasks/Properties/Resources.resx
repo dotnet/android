@@ -712,8 +712,10 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
     <comment>The following are literal names and should not be translated: MultiDexMainDexList</comment>
   </data>
   <data name="XA4310" xml:space="preserve">
-    <value>`$(AndroidSigningKeyStore)` file `{0}` could not be found.</value>
-    <comment>The following are literal names and should not be translated: `$(AndroidSigningKeyStore)`</comment>
+    <value>`{0}` file `{1}` could not be found.</value>
+    <comment>{0} - The MSBuildProperty which contains the file name value.
+{1} - The value of the MSBuildProperty. Normally a filename.
+</comment>
   </data>
   <data name="XA4311" xml:space="preserve">
     <value>The application won't contain the paired Wear package because the Wear application package APK is not created yet. If building on the command line, be sure to build the "SignAndroidPackage" target.</value>
