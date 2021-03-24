@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -27,6 +28,16 @@ namespace Xamarin.Android.Build.Tests
 			using var m = new MemoryStream (checked ((int) s.Length));
 			s.CopyTo (m);
 			return m.ToArray ();
+		}
+
+		public static byte [] GetKeystore (string keyname = "test.keystore")
+		{
+			var assembly = typeof (XamarinAndroidCommonProject).Assembly;
+			using (var stream = assembly.GetManifestResourceStream ($"Xamarin.ProjectTools.Resources.Base.{keyname}")) {
+				var data = new byte [stream.Length];
+				stream.Read (data, 0, (int) stream.Length);
+				return data;
+			}
 		}
 	}
 }

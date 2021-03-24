@@ -1041,6 +1041,20 @@ To use a file located at `C:\Users\user1\AndroidSigningPassword.txt`:
 > The `env:` prefix is not supported when [`$(AndroidPackageFormat)`](#androidpackageformat)
 > is set to `aab`.
 
+## AndroidSigningPlatformKey
+
+Specifies the key file to use to sign the apk.
+This is only used when building `system` applications.
+
+Support for this property was added in Xamarin.Android 11.3.
+
+## AndroidSigningPlatformCert
+
+Specifies the certificate file to use to sign the apk.
+This is only used when building `system` applications.
+
+Support for this property was added in Xamarin.Android 11.3.
+
 ## AndroidSupportedAbis
 
 A string property that contains a
