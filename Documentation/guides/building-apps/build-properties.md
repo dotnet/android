@@ -1046,10 +1046,14 @@ To use a file located at `C:\Users\user1\AndroidSigningPassword.txt`:
 Specifies the key file to use to sign the apk.
 This is only used when building `system` applications.
 
+Support for this property was added in Xamarin.Android 11.3.
+
 ## AndroidSigningPlatformCert
 
 Specifies the certificate file to use to sign the apk.
 This is only used when building `system` applications.
+
+Support for this property was added in Xamarin.Android 11.3.
 
 ## AndroidSupportedAbis
 
