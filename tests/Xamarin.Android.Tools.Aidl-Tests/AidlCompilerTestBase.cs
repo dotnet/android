@@ -36,7 +36,7 @@ namespace Xamarin.Android.Tools.Aidl_Tests
 			}
 
 			Assert.Ignore ("Generating output for this test.");
-#endif
+#endif  // GENERATE_OUTPUT
 
 			Assert.AreEqual (StripLineEndings (expected_output), StripLineEndings (output));
 		}
@@ -48,7 +48,7 @@ namespace Xamarin.Android.Tools.Aidl_Tests
 			if (index < 0) {
 #if GENERATE_OUTPUT
 				return (text, null);
-#endif
+#endif  // GENERATE_OUTPUT
 				throw new Exception ("No expected output found.");
 			}
 
