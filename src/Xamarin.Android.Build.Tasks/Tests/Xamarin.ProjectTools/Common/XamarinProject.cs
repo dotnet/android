@@ -101,7 +101,7 @@ $@"<Project>
 
 				// Feeds only needed for .NET 5+
 				ExtraNuGetConfigSources = new List<string> {
-					Path.Combine (XABuildPaths.BuildOutputDirectory, "nupkgs"),
+					Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned"),
 					"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json",
 				};
 			} else {

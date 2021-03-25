@@ -35,10 +35,14 @@
     url = https://github.com/Guardsquare/proguard.git
     branch = master
     ignore = dirty
+[submodule "external/robin-map"]
+    path = external/robin-map
+    url = https://github.com/Tessil/robin-map.git
+    branch = master
 [submodule "external/sqlite"]
     path = external/sqlite
     url = https://github.com/xamarin/sqlite.git
-    branch = 3.34.0
+    branch = 3.35.2
 [submodule "external/xamarin-android-tools"]
     path = external/xamarin-android-tools
     url = https://github.com/xamarin/xamarin-android-tools

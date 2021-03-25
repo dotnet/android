@@ -38,7 +38,7 @@ namespace Xamarin.Android.Tasks
 				var directory = Path.GetDirectoryName (item.ItemSpec);
 				var directoryName = Path.GetFileName (directory);
 				Log.LogDebugMessage ($"{directoryName} -> {item.ItemSpec}");
-				if (directoryName == "netstandard2.0") {
+				if (directoryName.StartsWith ("netstandard2", StringComparison.OrdinalIgnoreCase)) {
 					var parent = Directory.GetParent (directory);
 					foreach (var nugetDirectory in parent.EnumerateDirectories ()) {
 						var name = Path.GetFileName (nugetDirectory.Name);

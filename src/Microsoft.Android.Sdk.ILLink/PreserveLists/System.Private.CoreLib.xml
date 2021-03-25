@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Temporary workaround for crash in GlobalizationNative_GetSortHandle, context: https://github.com/xamarin/xamarin-android/pull/5669 -->
+<linker>
+	<assembly fullname="System.Private.CoreLib">
+		<type fullname="System.Globalization.GlobalizationMode" />
+		<type fullname="System.Runtime.CompilerServices.InternalsVisibleToAttribute" />
+	</assembly>
+</linker>

@@ -20,14 +20,6 @@ steps:
   inputs:
     forceReinstallCredentialProvider: true
 
-- template: install-certificates.yml@yaml
-  parameters:
-    DeveloperIdApplication: $(developer-id-application)
-    DeveloperIdInstaller: $(developer-id-installer)
-    IphoneDeveloper: $(iphone-developer)
-    MacDeveloper: $(mac-developer)
-    HostedMacKeychainPassword: $(AzDO-OnPrem-KeychainPass)
-
 - task: provisionator@2
   displayName: Install Xcode
   inputs:
@@ -76,21 +68,42 @@ steps:
     artifactName: $(TestAssembliesArtifactName)
     targetPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
 
+# Restore needs to be executed first or MicroBuild targets won't be imported in time
+- task: MSBuild@1
+  displayName: msbuild /t:Restore sign-pkg-content.proj
+  inputs:
+    solution: ${{ parameters.xaSourcePath }}/build-tools/installers/sign-pkg-content.proj
+    configuration: $(XA.Build.Configuration)
+    msbuildArguments: /t:Restore /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/restore-sign-pkg-content.binlog
+
+- task: MSBuild@1
+  displayName: sign and harden legacy and .NET 6 .pkg content
+  inputs:
+    solution: ${{ parameters.xaSourcePath }}/build-tools/installers/sign-pkg-content.proj
+    configuration: $(XA.Build.Configuration)
+    msbuildArguments: >-
+      /p:SignType=$(MicroBuildSignType)
+      /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins
+      /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/restore-sign-pkg-content.binlog
+
 # Create and upload .nupkgs
 - task: MSBuild@1
   displayName: pack all nupkgs
   inputs:
     solution: ${{ parameters.xaSourcePath }}/build-tools/create-packs/Microsoft.Android.Sdk.proj
     configuration: $(XA.Build.Configuration)
-    msbuildArguments: /t:CreateAllPacks /restore /p:NuGetLicense=${{ parameters.xaSourcePath }}/external/monodroid/tools/scripts/License.txt /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/create-all-packs.binlog
+    msbuildArguments: >-
+      /t:CreateAllPacks
+      /restore
+      /p:NuGetLicense=${{ parameters.xaSourcePath }}/external/monodroid/tools/scripts/License.txt
+      /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/create-all-packs.binlog
 
 - task: PublishPipelineArtifact@1
   displayName: upload nupkgs
   inputs:
     artifactName: $(NuGetArtifactName)
-    targetPath:  ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
+    targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/$(NuGetArtifactName)
 
-# Create and upload legacy installers
 - script: make create-installers V=1 CONFIGURATION=$(XA.Build.Configuration)
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make create-installers
@@ -113,12 +126,3 @@ steps:
   inputs:
     artifactName: $(InstallerArtifactName)
     targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/$(InstallerArtifactName)
-
-- template: uninstall-certificates/v1.yml@yaml
-  parameters:
-    HostedMacKeychainPassword: $(AzDO-OnPrem-KeychainPass)
-
-- template: upload-results.yaml
-  parameters:
-    solution: ${{ parameters.xaSourcePath }}/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
-    artifactName: Build Results - macOS

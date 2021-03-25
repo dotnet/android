@@ -355,6 +355,11 @@ namespace Android.Runtime {
 			return Activator.CreateInstance (handlerType);
 		}
 
+		internal static bool VSAndroidDesignerIsEnabled { get; } = InitializeVSAndroidDesignerIsEnabled ();
+
+		static bool InitializeVSAndroidDesignerIsEnabled () =>
+		    !AppContext.TryGetSwitch ("Xamarin.Android.VSAndroidDesigner.IsSupported", out bool isEnabled) || isEnabled;
+
 		class _Proxy : IWebProxy {
 			readonly ProxySelector selector = ProxySelector.Default!;
 

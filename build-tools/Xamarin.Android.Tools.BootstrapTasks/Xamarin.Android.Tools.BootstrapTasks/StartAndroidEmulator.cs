@@ -20,6 +20,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		public                  string          AndroidSdkHome  {get; set;}
 		public                  string          Port            {get; set;}
 		public                  string          ImageName       {get; set;} = "XamarinAndroidTestRunner64";
+		public			string		Arguments	{get; set;}
 		public                  string          ToolPath        {get; set;}
 		public                  string          ToolExe         {get; set;}
 
@@ -62,7 +63,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				return;
 
 			var port = string.IsNullOrEmpty (Port) ? "" : $" -port {Port}";
-			var arguments = $"-verbose -no-boot-anim -no-audio -no-snapshot -cache-size 512 -timezone \"Etc/UTC\" -avd {ImageName}{port}";
+			var arguments = $"{Arguments ?? string.Empty} -verbose -no-boot-anim -no-audio -no-snapshot -cache-size 512 -timezone \"Etc/UTC\" -avd {ImageName}{port}";
 			Log.LogMessage (MessageImportance.Low, $"Tool {emulator} execution started with arguments: {arguments}");
 			var psi = new ProcessStartInfo () {
 				FileName                = emulator,

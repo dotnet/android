@@ -26,12 +26,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			engine = new MockBuildEngine (TestContext.Out, errors = new List<BuildErrorEventArgs> (), warnings = new List<BuildWarningEventArgs> (), messages = new List<BuildMessageEventArgs> ());
 			temp = Path.GetTempFileName ();
-
-			var androidSdk = new AndroidSdkInfo ((level, message) => {
-				if (level == TraceLevel.Error)
-					Assert.Fail (message);
-			}, AndroidSdkPath, AndroidNdkPath);
-			keyToolPath = Path.Combine (androidSdk.JavaSdkPath, "bin");
+			keyToolPath = Path.Combine (AndroidSdkResolver.GetJavaSdkPath (), "bin");
 		}
 
 		[TearDown]

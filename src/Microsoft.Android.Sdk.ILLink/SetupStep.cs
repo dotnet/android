@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Java.Interop.Tools.Cecil;
+using Mono.Cecil;
 using Mono.Linker;
 using Mono.Linker.Steps;
 using Mono.Tuner;
@@ -25,6 +26,8 @@ namespace Microsoft.Android.Sdk.ILLink
 			}
 		}
 
+		static MethodInfo getReferencedAssembliesMethod = typeof (LinkContext).GetMethod ("GetReferencedAssemblies", BindingFlags.Public | BindingFlags.Instance);
+
 		protected override void Process ()
 		{
 			string tfmPaths;
@@ -43,9 +46,16 @@ namespace Microsoft.Android.Sdk.ILLink
 			subSteps2.Add (new PreserveRegistrations (cache));
 			subSteps2.Add (new PreserveJavaInterfaces ());
 
-			InsertAfter (new FixAbstractMethodsStep (cache), "RemoveUnreachableBlocksStep");
-			InsertAfter (subSteps2, "RemoveUnreachableBlocksStep");
-			InsertAfter (subSteps1, "RemoveUnreachableBlocksStep");
+			InsertAfter (new FixAbstractMethodsStep (cache), "SetupStep");
+			InsertAfter (subSteps2, "SetupStep");
+			InsertAfter (subSteps1, "SetupStep");
+
+			// temporary workaround: this call forces illink to process all the assemblies
+			if (getReferencedAssembliesMethod == null)
+				throw new InvalidOperationException ($"Temporary linker workaround failed, {nameof (getReferencedAssembliesMethod)} is null.");
+
+			foreach (var assembly in (IEnumerable<AssemblyDefinition>)getReferencedAssembliesMethod.Invoke (Context, null))
+				Context.LogMessage ($"Reference assembly to process: {assembly}");
 
 			string proguardPath;
 			if (Context.TryGetCustomData ("ProguardConfiguration", out proguardPath))
@@ -55,6 +65,11 @@ namespace Microsoft.Android.Sdk.ILLink
 			if (Context.TryGetCustomData ("AddKeepAlivesStep", out addKeepAlivesStep) && bool.TryParse (addKeepAlivesStep, out var bv) && bv)
 				InsertAfter (new AddKeepAlivesStep (cache), "CleanStep");
 
+			string androidLinkResources;
+			if (Context.TryGetCustomData ("AndroidLinkResources", out androidLinkResources) && bool.TryParse (androidLinkResources, out var linkResources) && linkResources) {
+				InsertAfter (new RemoveResourceDesignerStep (),  "CleanStep");
+				InsertAfter (new GetAssembliesStep (), "CleanStep");
+			}
 			InsertAfter (new StripEmbeddedLibraries (),  "CleanStep");
 		}
 

@@ -60,4 +60,5 @@
   </ItemGroup>
 
   <Import Project="xaprepare.targets" Condition=" $(MSBuildToolsPath.IndexOf('omnisharp')) &lt; 0 " />
+
 </Project>

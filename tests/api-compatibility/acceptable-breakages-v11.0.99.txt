@@ -1,0 +1,5 @@
+Compat issues with assembly Mono.Android:
+CannotChangeAttribute : Attribute 'System.ObsoleteAttribute' on 'System.Int32 Android.Provider.ContactsContract.DataColumns.CarrierPresenceVtCapable' changed from '[ObsoleteAttribute("Use 'Android.Provider.ContactsContract.IDataColumns.CarrierPresenceVtCapable'. This class will be removed in a future release.")]' in the contract to '[ObsoleteAttribute("deprecated")]' in the implementation.
+CannotChangeAttribute : Attribute 'System.ObsoleteAttribute' on 'System.String Android.Provider.ContactsContract.DataColumns.CarrierPresence' changed from '[ObsoleteAttribute("Use 'Android.Provider.ContactsContract.IDataColumns.CarrierPresence'. This class will be removed in a future release.")]' in the contract to '[ObsoleteAttribute("deprecated")]' in the implementation.
+InterfacesShouldHaveSameMembers : Interface member 'public System.Boolean Java.Lang.IDeprecated.ForRemoval()' is present in the implementation but not in the contract.
+InterfacesShouldHaveSameMembers : Interface member 'public System.String Java.Lang.IDeprecated.Since()' is present in the implementation but not in the contract.

@@ -17,6 +17,8 @@ namespace Xamarin.ProjectTools
 		const string SigSegvError = "Got a SIGSEGV while executing native code";
 		const string ConsoleLoggerError = "[ERROR] FATAL UNHANDLED EXCEPTION: System.ArgumentException: is negative";
 
+		string Arm32AbiDir => UseDotNet ? "armeabi-v7a-net6" : "armeabi-v7a";
+
 		/// <summary>
 		/// If true, use `dotnet build` and IShortFormProject throughout the tests
 		/// </summary>
@@ -80,7 +82,7 @@ namespace Xamarin.ProjectTools
 			get {
 				var outdir = Environment.GetEnvironmentVariable ("XA_BUILD_OUTPUT_PATH");
 				string configuration = Environment.GetEnvironmentVariable ("CONFIGURATION") ?? XABuildPaths.Configuration;
-				var libmonodroidPath = Path.Combine ("lib", "xamarin.android", "xbuild", "Xamarin", "Android", "lib", "armeabi-v7a", "libmono-android.release.so");
+				var libmonodroidPath = Path.Combine ("lib", "xamarin.android", "xbuild", "Xamarin", "Android", "lib", Arm32AbiDir, "libmono-android.release.so");
 				if (String.IsNullOrEmpty(outdir))
 					outdir = Path.GetFullPath (Path.Combine (Root, "..", "..", "..", "..", "..", "..", "..", "out"));
 				if (!Directory.Exists (Path.Combine (outdir, "lib")) || !File.Exists (Path.Combine (outdir, libmonodroidPath)))
@@ -105,7 +107,7 @@ namespace Xamarin.ProjectTools
 		public string AndroidMSBuildDirectory {
 			get {
 				var msbuildDir = Path.Combine (BuildOutputDirectory, "lib", "xamarin.android", "xbuild", "Xamarin", "Android");
-				if (Directory.Exists (msbuildDir) && File.Exists (Path.Combine (msbuildDir, "lib", "armeabi-v7a", "libmono-android.release.so")))
+				if (Directory.Exists (msbuildDir) && File.Exists (Path.Combine (msbuildDir, "lib", Arm32AbiDir, "libmono-android.release.so")))
 					return msbuildDir;
 
 				return TestEnvironment.MonoAndroidToolsDirectory;

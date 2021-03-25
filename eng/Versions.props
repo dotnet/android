@@ -1,0 +1,11 @@
+<Project>
+  <!--Package versions-->
+  <PropertyGroup>
+    <MicrosoftDotnetSdkInternalPackageVersion>6.0.100-preview.3.21168.18</MicrosoftDotnetSdkInternalPackageVersion>
+    <MicrosoftNETILLinkPackageVersion>6.0.100-preview.2.21168.1</MicrosoftNETILLinkPackageVersion>
+  </PropertyGroup>
+  <PropertyGroup>
+    <!-- Trim all characters after first `-` or `+` is encountered. -->
+    <DotNetPreviewVersionBand Condition=" '$(DotNetPreviewVersionBand)' == '' ">$([System.Text.RegularExpressions.Regex]::Replace($(MicrosoftDotnetSdkInternalPackageVersion), `[-+].*$`, ""))</DotNetPreviewVersionBand>
+  </PropertyGroup>
+</Project>

@@ -1,35 +1,10 @@
 /*
  * Generated file; DO NOT EDIT!
  *
- * To make changes, edit Java.Interop/tools/jnienv-gen and rerun
+ * To make changes, edit Java.Interop/build-tools/jnienv-gen and rerun
  */
 
-#include <jni.h>
-
-typedef jmethodID jstaticmethodID;
-typedef jfieldID  jstaticfieldID;
-typedef jobject   jglobal;
-
-/* VS 2010 and later have stdint.h */
-#if defined(_MSC_VER)
-
-	#define JI_API_EXPORT __declspec(dllexport)
-	#define JI_API_IMPORT __declspec(dllimport)
-
-#else   /* defined(_MSC_VER */
-
-	#define JI_API_EXPORT __attribute__ ((visibility ("default")))
-	#define JI_API_IMPORT
-
-#endif  /* !defined(_MSC_VER) */
-
-#if defined(JI_DLL_EXPORT)
-	#define JI_API JI_API_EXPORT
-#elif defined(JI_DLL_IMPORT)
-	#define JI_API JI_API_IMPORT
-#else   /* !defined(JI_DLL_IMPORT) && !defined(JI_API_IMPORT) */
-	#define JI_API
-#endif  /* JI_DLL_EXPORT... */
+#include "java_interop_api.h"
 
 JI_API jint
 java_interop_jnienv_get_version (JNIEnv *env)

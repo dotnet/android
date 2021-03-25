@@ -3,6 +3,7 @@
   <!--
     Note: This file *must* be imported *after* `$(Configuration)` is set.
   -->
+  <Import Project="$(MSBuildThisFileDirectory)eng\Versions.props" />
   <Import
       Project="$(MSBuildThisFileDirectory)Build$(Configuration)\Configuration.Generated.props"
       Condition="Exists('$(MSBuildThisFileDirectory)Build$(Configuration)\Configuration.Generated.props')"
@@ -74,11 +75,6 @@
     <AndroidNdkDirectory Condition=" '$(AndroidNdkDirectory)' == '' ">$(AndroidToolchainDirectory)\ndk</AndroidNdkDirectory>
     <DotNetPreviewPath Condition=" '$(DotNetPreviewPath)' == '' ">$(AndroidToolchainDirectory)\dotnet\</DotNetPreviewPath>
     <DotNetPreviewTool Condition=" '$(DotNetPreviewTool)' == '' ">$(DotNetPreviewPath)dotnet</DotNetPreviewTool>
-    <!-- Version number from: https://github.com/dotnet/installer#installers-and-binaries -->
-    <DotNetPreviewVersionBand Condition=" '$(DotNetPreviewVersionBand)' == '' ">6.0.100</DotNetPreviewVersionBand>
-    <DotNetPreviewVersionFull Condition=" '$(DotNetPreviewVersionFull)' == '' ">$(DotNetPreviewVersionBand)-preview.1.21103.13</DotNetPreviewVersionFull>
-    <ILLinkVersionBand Condition=" '$(ILLinkVersionBand)' == '' ">6.0.0</ILLinkVersionBand>
-    <ILLinkVersionFull Condition=" '$(ILLinkVersionFull)' == '' ">$(ILLinkVersionBand)-alpha.1.21109.1</ILLinkVersionFull>
     <WixToolPath Condition=" '$(WixToolPath)' == '' ">$(AndroidToolchainDirectory)\wix\</WixToolPath>
     <AndroidCmakeVersion Condition=" '$(AndroidCmakeVersion)' == '' ">3.18.1</AndroidCmakeVersion>
     <AndroidCmakeUrlPrefix Condition=" '$(HostOS)' == 'Windows' And '$(AndroidCmakeUrlPrefix)' == '' ">7c386a739f915f5bd60051f2572c24782388e807.</AndroidCmakeUrlPrefix>

@@ -20,34 +20,34 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public ITaskItem ManifestFile { get; set; }
 
-		[Required]
 		public string KeyStore { get; set; }
 
-		[Required]
 		public string KeyAlias { get; set; }
+
+		public string PlatformKey { get; set; }
+
+		public string PlatformCert { get; set; }
 
 		/// <summary>
 		/// The Password for the Key.
 		/// You can use the raw password here, however if you want to hide your password in logs
-		/// you can use a preview of env: or file: to point it to an Environment variable or 
+		/// you can use a preview of env: or file: to point it to an Environment variable or
 		/// a file.
 		///
 		///   env:<PasswordEnvironentVariable>
-		///   file:<PasswordFile> 
+		///   file:<PasswordFile>
 		/// </summary>
-		[Required]
 		public string KeyPass { get; set; }
 
 		/// <summary>
 		/// The Password for the Keystore.
 		/// You can use the raw password here, however if you want to hide your password in logs
-		/// you can use a preview of env: or file: to point it to an Environment variable or 
+		/// you can use a preview of env: or file: to point it to an Environment variable or
 		/// a file.
 		///
 		///   env:<PasswordEnvironentVariable>
-		///   file:<PasswordFile> 
+		///   file:<PasswordFile>
 		/// </summary>
-		[Required]
 		public string StorePass { get; set; }
 
 		public string AdditionalArguments { get; set; }
@@ -81,13 +81,21 @@ namespace Xamarin.Android.Tasks
 
 			cmd.AppendSwitchIfNotNull ("-jar ", ApkSignerJar);
 			cmd.AppendSwitch ("sign");
-			cmd.AppendSwitchIfNotNull ("--ks ", KeyStore);
-			AddStorePass (cmd, "--ks-pass", StorePass);
-			cmd.AppendSwitchIfNotNull ("--ks-key-alias ", KeyAlias);
-			AddStorePass (cmd, "--key-pass", KeyPass);
+
+			if (!string.IsNullOrEmpty (PlatformKey) && !string.IsNullOrEmpty (PlatformCert)) {
+				cmd.AppendSwitchIfNotNull ("--key ", PlatformKey);
+				cmd.AppendSwitchIfNotNull ("--cert ", PlatformCert);
+			} else {
+				cmd.AppendSwitchIfNotNull ("--ks ", KeyStore);
+				AddStorePass (cmd, "--ks-pass", StorePass);
+				cmd.AppendSwitchIfNotNull ("--ks-key-alias ", KeyAlias);
+				AddStorePass (cmd, "--key-pass", KeyPass);
+			}
+
 			cmd.AppendSwitchIfNotNull ("--min-sdk-version ", minSdk.ToString ());
 			cmd.AppendSwitchIfNotNull ("--max-sdk-version ", maxSdk.ToString ());
-		
+
+
 			if (!string.IsNullOrEmpty (AdditionalArguments))
 				cmd.AppendSwitch (AdditionalArguments);
 
@@ -116,9 +124,20 @@ namespace Xamarin.Android.Tasks
 
 		protected override bool ValidateParameters ()
 		{
-			if (!string.IsNullOrEmpty (KeyStore) && !File.Exists (KeyStore)) {
-				Log.LogCodedError ("XA4310", Properties.Resources.XA4310, KeyStore);
-				return false;
+			if (!string.IsNullOrEmpty (PlatformKey) && !string.IsNullOrEmpty (PlatformCert)) {
+				if (!File.Exists (PlatformKey)) {
+					Log.LogCodedError ("XA4310", Properties.Resources.XA4310, "$(AndroidSigningPlatformKey)", PlatformKey);
+					return false;
+				}
+				if (!File.Exists (PlatformCert)) {
+					Log.LogCodedError ("XA4310", Properties.Resources.XA4310, "$(AndroidSigningPlatformCert)", PlatformCert);
+					return false;
+				}
+			} else {
+				if (!string.IsNullOrEmpty (KeyStore) && !File.Exists (KeyStore)) {
+					Log.LogCodedError ("XA4310", Properties.Resources.XA4310, "$(AndroidSigningKeyStore)", KeyStore);
+					return false;
+				}
 			}
 			return base.ValidateParameters ();
 		}

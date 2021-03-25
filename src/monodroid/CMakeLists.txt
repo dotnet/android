@@ -5,8 +5,15 @@ cmake_minimum_required(VERSION 3.18.1)
 #
 include("../../build-tools/cmake/xa_common.cmake")
 
+#
+# Read product version
+#
+file(STRINGS "../../Directory.Build.props" XA_PRODUCT_VERSION_XML REGEX "^[ \t]*<ProductVersion>(.*)</ProductVersion>")
+string(REGEX REPLACE "^[ \t]*<ProductVersion>(.*)</ProductVersion>" "\\1" XA_VERSION "${XA_PRODUCT_VERSION_XML}")
+
 project(
   monodroid
+  VERSION ${XA_VERSION}
   DESCRIPTION "Xamarin.Android native runtime"
   HOMEPAGE_URL "https://github.com/xamarin/xamarin-android"
   LANGUAGES CXX C
@@ -22,6 +29,7 @@ set(CMAKE_C_EXTENSIONS OFF)
 
 option(ENABLE_CLANG_ASAN "Enable the clang AddressSanitizer support" OFF)
 option(ENABLE_CLANG_UBSAN "Enable the clang UndefinedBehaviorSanitizer support" OFF)
+option(ENABLE_NET6 "Enable compilation for .NET6" OFF)
 option(ENABLE_TIMING "Build with timing support" OFF)
 option(STRIP_DEBUG "Strip debugging information when linking" ON)
 option(DISABLE_DEBUG "Disable the built-in debugging code" OFF)
@@ -30,6 +38,14 @@ if(CMAKE_BUILD_TYPE STREQUAL Debug)
   set(DEBUG_BUILD True)
 else()
   set(DEBUG_BUILD False)
+endif()
+
+if(ANDROID)
+  if(ANDROID_STL STREQUAL none)
+    set(USES_LIBSTDCPP False)
+  else()
+    set(USES_LIBSTDCPP True)
+  endif()
 endif()
 
 # Environment checks
@@ -106,11 +122,13 @@ endif()
 set(EXTERNAL_DIR "../../external")
 set(JAVA_INTEROP_SRC_PATH "${EXTERNAL_DIR}/Java.Interop/src/java-interop")
 set(SOURCES_DIR ${CMAKE_SOURCE_DIR}/jni)
+set(BIONIC_SOURCES_DIR "../../src-ThirdParty/bionic")
 set(LZ4_SRC_DIR "${EXTERNAL_DIR}/lz4/lib")
 set(LZ4_INCLUDE_DIR ${LZ4_SRC_DIR})
 set(XA_BIN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../bin/${XA_BUILD_CONFIGURATION}")
 set(XA_BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../bin/Build${XA_BUILD_CONFIGURATION}")
 set(XA_LIB_TOP_DIR "${XA_BIN_DIR}/lib/xamarin.android/xbuild/Xamarin/Android/lib")
+set(ROBIN_MAP_DIR "${EXTERNAL_DIR}/robin-map")
 
 if(NOT ANDROID)
   if(WIN32 OR MINGW)
@@ -130,12 +148,29 @@ if(NOT ANDROID)
   endif()
 endif()
 
+include("${XA_BUILD_DIR}/xa_build_configuration.cmake")
+
+if(ENABLE_NET6)
+  if(ANDROID_ABI MATCHES "^arm64-v8a")
+    set(NET6_RUNTIME_DIR "${NETCORE_APP_RUNTIME_DIR_ARM64}")
+  elseif(ANDROID_ABI MATCHES "^armeabi-v7a")
+    set(NET6_RUNTIME_DIR "${NETCORE_APP_RUNTIME_DIR_ARM}")
+  elseif(ANDROID_ABI MATCHES "^x86_64")
+    set(NET6_RUNTIME_DIR "${NETCORE_APP_RUNTIME_DIR_X86_64}")
+  elseif(ANDROID_ABI MATCHES "^x86")
+    set(NET6_RUNTIME_DIR "${NETCORE_APP_RUNTIME_DIR_X86}")
+  else()
+    message(FATAL "${ANDROID_ABI} is not supported for .NET6 builds")
+  endif()
+endif()
+
 set(LZ4_SOURCES
   "${LZ4_SRC_DIR}/lz4.c"
   )
 
 # Include directories
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/include/ ${CMAKE_SOURCE_DIR}/include)
+include_directories(${ROBIN_MAP_DIR}/include)
 
 if(NOT ANDROID)
   string(REPLACE " " ";" JDK_INCLUDE_LIST ${JDK_INCLUDE})
@@ -176,7 +211,12 @@ if (WIN32)
   include_directories(BEFORE "jni/win32")
 endif()
 
-include_directories("${XA_BIN_DIR}/include/mono-2.0")
+if(ENABLE_NET6)
+  include_directories("${NET6_RUNTIME_DIR}/native/include/mono-2.0")
+else()
+  include_directories("${XA_BIN_DIR}/include/mono-2.0")
+endif()
+
 include_directories("jni")
 include_directories("${XA_BIN_DIR}/include")
 include_directories("${XA_BIN_DIR}/include/${ANDROID_ABI}/eglib")
@@ -196,10 +236,17 @@ xa_macos_prepare_arm64()
 
 # Compiler defines
 
-add_compile_definitions(DHAVE_CONFIG_H)
+add_compile_definitions(XA_VERSION="${XA_VERSION}")
+add_compile_definitions(TSL_NO_EXCEPTIONS)
+add_compile_definitions(HAVE_CONFIG_H)
 add_compile_definitions(_REENTRANT)
 add_compile_definitions(JI_DLL_EXPORT)
 add_compile_definitions(MONO_DLL_EXPORT)
+
+if(ENABLE_NET6)
+  add_compile_definitions(NET6)
+  add_compile_definitions(JI_NO_VISIBILITY)
+endif()
 
 if(DEBUG_BUILD AND NOT DISABLE_DEBUG)
   add_compile_definitions(DEBUG)
@@ -247,7 +294,7 @@ if(NOT ANDROID)
 endif()
 
 if(WIN32 OR MINGW)
-  add_compile_definitions(WINDOWS NTDDI_VERSION=NTDDI_VISTA _WIN32_WINNT=_WIN32_WINNT_VISTA)
+  add_compile_definitions(WINDOWS NTDDI_VERSION=NTDDI_VISTA _WINDOWS _WIN32_WINNT=_WIN32_WINNT_VISTA)
 endif()
 
 # Compiler and linker flags
@@ -341,8 +388,13 @@ endif()
 
 # Library directories
 if(ANDROID)
-  set(XA_LIBRARY_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/${ANDROID_ABI}")
-  link_directories("${XA_LIBRARY_OUTPUT_DIRECTORY}")
+  if(ENABLE_NET6)
+    set(XA_LIBRARY_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/${ANDROID_ABI}-net6")
+    link_directories("${NET6_RUNTIME_DIR}/native")
+  else()
+    set(XA_LIBRARY_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/${ANDROID_ABI}")
+    link_directories("${XA_LIBRARY_OUTPUT_DIRECTORY}")
+  endif()
 endif()
 
 if(WIN32 OR MINGW)
@@ -399,7 +451,6 @@ set(XAMARIN_MONODROID_SOURCES
   ${SOURCES_DIR}/globals.cc
   ${SOURCES_DIR}/logger.cc
   ${SOURCES_DIR}/monodroid-glue.cc
-  ${SOURCES_DIR}/xa-internal-api.cc
   ${SOURCES_DIR}/osbridge.cc
   ${SOURCES_DIR}/shared-constants.cc
   ${SOURCES_DIR}/timezones.cc
@@ -412,11 +463,21 @@ set(XAMARIN_MONODROID_SOURCES
 
 if(ANDROID)
   list(APPEND XAMARIN_MONODROID_SOURCES
+    ${SOURCES_DIR}/mono-log-adapter.cc
     ${LZ4_SOURCES}
     )
+
+  if(NOT USES_LIBSTDCPP)
+    list(APPEND XAMARIN_MONODROID_SOURCES
+      ${BIONIC_SOURCES_DIR}/cxa_guard.cc
+      ${SOURCES_DIR}/cxx-abi/string.cc
+      ${SOURCES_DIR}/cxx-abi/terminate.cc
+      )
+  endif()
 else()
   list(APPEND XAMARIN_MONODROID_SOURCES
     ${SOURCES_DIR}/designer-assemblies.cc
+    ${SOURCES_DIR}/monodroid-glue-designer.cc
     ${JAVA_INTEROP_SRC_PATH}/java-interop-gc-bridge-mono.cc
     ${JAVA_INTEROP_SRC_PATH}/java-interop-jvm.cc
     )
@@ -429,11 +490,23 @@ if(UNIX)
     )
 endif()
 
-set(XAMARIN_INTERNAL_API_SOURCES
-  ${SOURCES_DIR}/jni.c
-  ${SOURCES_DIR}/internal-pinvoke-api.cc
-  ${JAVA_INTEROP_SRC_PATH}/java-interop-util.cc
-  )
+if(ANDROID AND ENABLE_NET6)
+  list(APPEND XAMARIN_MONODROID_SOURCES
+    ${SOURCES_DIR}/pinvoke-override-api.cc
+    ${SOURCES_DIR}/java_interop_api.c
+    ${JAVA_INTEROP_SRC_PATH}/java-interop-util.cc
+    )
+else()
+  list(APPEND XAMARIN_MONODROID_SOURCES
+    ${SOURCES_DIR}/xa-internal-api.cc
+    )
+
+  set(XAMARIN_INTERNAL_API_SOURCES
+    ${SOURCES_DIR}/java_interop_api.c
+    ${SOURCES_DIR}/internal-pinvoke-api.cc
+    ${JAVA_INTEROP_SRC_PATH}/java-interop-util.cc
+    )
+endif()
 
 set(XAMARIN_APP_STUB_SOURCES
   ${SOURCES_DIR}/application_dso_stub.cc
@@ -451,21 +524,23 @@ set(XAMARIN_DEBUG_APP_HELPER_SOURCES
 # Build
 configure_file(jni/host-config.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/host-config.h)
 
-add_library(
-  ${XAMARIN_INTERNAL_API_LIB}
-  SHARED
-  ${XAMARIN_INTERNAL_API_SOURCES}
-  )
+if(NOT (ANDROID AND ENABLE_NET6))
+  add_library(
+    ${XAMARIN_INTERNAL_API_LIB}
+    SHARED
+    ${XAMARIN_INTERNAL_API_SOURCES}
+    )
 
-target_compile_options(
-  ${XAMARIN_INTERNAL_API_LIB}
-  PRIVATE -fvisibility=default
-  )
+  target_compile_options(
+    ${XAMARIN_INTERNAL_API_LIB}
+    PRIVATE -fvisibility=default
+    )
 
-target_link_options(
-  ${XAMARIN_INTERNAL_API_LIB}
-  PRIVATE -fvisibility=default
-  )
+  target_link_options(
+    ${XAMARIN_INTERNAL_API_LIB}
+    PRIVATE -fvisibility=default
+    )
+endif()
 
 add_library(
   ${XAMARIN_APP_STUB_LIB}

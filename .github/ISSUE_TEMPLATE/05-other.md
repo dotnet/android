@@ -2,8 +2,8 @@
 name: "\U0001F41B Other"
 about: Not sure where your issue fits? We'll direct it the right place!
 title: ''
-labels: ''
-assignees: ''
+labels: 'needs-triage'
+assignees: 'jpobst'
 
 ---
 
@@ -23,15 +23,27 @@ If you have a repro project, you may drag & drop the .zip/etc. onto the issue ed
 
 ### Version Information
 
+<details>
 <!--
 1. On macOS and within Visual Studio, select Visual Studio > About Visual Studio, then click the Show Details button, then click the Copy Information button.
 
 2. Paste below this comment block.
 -->
 
+
+
+</details>
+
+
 ### Log File
 
 <!--
+The appropriate logfile(s) depend on the nature of your issue.
+
+Issues you see in Visual Studio generally produce an [MSBuild log](https://docs.microsoft.com/en-us/xamarin/android/troubleshooting/troubleshooting#diagnostic-msbuild-output) that is helpful.
+
+Issues on device generally have useful information in the Android Device Log:
+
 1. Within Visual Studio:
     a. Click **Tools** > **SDK Command Prompt** on macOS or
        **Tools** > **Android** > **Android Adb Command Prompt** on Windows

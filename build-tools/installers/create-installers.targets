@@ -227,10 +227,14 @@
     <_MSBuildFiles Include="$(MSBuildSrcDir)\startup-xf.aotprofile" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\r8.jar" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\bundletool.jar" ExcludeFromAndroidNETSdk="true" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\java_runtime.jar" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\java_runtime_fastdev.jar" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\java_runtime.dex" />
-    <_MSBuildFiles Include="$(MSBuildSrcDir)\java_runtime_fastdev.dex" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\java_runtime.jar" ExcludeFromAndroidNETSdk="true" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\java_runtime_fastdev.jar" ExcludeFromAndroidNETSdk="true" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\java_runtime.dex" ExcludeFromAndroidNETSdk="true" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\java_runtime_fastdev.dex" ExcludeFromAndroidNETSdk="true" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\java_runtime_net6.jar" ExcludeFromLegacy="true" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\java_runtime_fastdev_net6.jar" ExcludeFromLegacy="true" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\java_runtime_net6.dex" ExcludeFromLegacy="true" />
+    <_MSBuildFiles Include="$(MSBuildSrcDir)\java_runtime_fastdev_net6.dex" ExcludeFromLegacy="true" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\manifestmerger.jar" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\protobuf-net.dll" />
     <_MSBuildFiles Include="$(MSBuildSrcDir)\SgmlReaderDll.dll" />
@@ -301,7 +305,9 @@
   </ItemGroup>
   <ItemGroup>
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\libzip.dll" />
+    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\libzip.pdb" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\lib64\libzip.dll" />
+    <_MSBuildFilesWin Include="$(MSBuildSrcDir)\lib64\libzip.pdb" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\proguard\bin\proguard.bat" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\aapt2.exe" />
     <_MSBuildFilesWin Include="$(MSBuildSrcDir)\ndk\aarch64-linux-android-as.exe" />

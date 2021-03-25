@@ -78,9 +78,6 @@ namespace Xamarin.Android.Build.Tests
 			if (forms) {
 				proj.PackageReferences.Clear ();
 				proj.PackageReferences.Add (KnownPackages.XamarinForms_4_7_0_1142);
-
-				if (Builder.UseDotNet)
-					proj.AddDotNetCompatPackages ();
 			}
 
 			byte [] apkDescData;
@@ -103,13 +100,13 @@ namespace Xamarin.Android.Build.Tests
 					: Path.Combine (proj.Root, b.ProjectDirectory, depsFilename);
 				FileAssert.Exists (depsFile);
 
-				const int ApkSizeThreshold = 50 * 1024;
-				const int AssemblySizeThreshold = 50 * 1024;
+				const int ApkSizeThreshold = 5 * 1024;
+				const int AssemblySizeThreshold = 5 * 1024;
 				var apkFile = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, proj.PackageName + "-Signed.apk");
-				var apkDescPath = Path.Combine (Root, b.ProjectDirectory, apkDescFilename);
+				var apkDescPath = Path.Combine (Root, apkDescFilename);
 				var apkDescReferencePath = Path.Combine (Root, b.ProjectDirectory, apkDescReference);
-				var (code, stdOut, stdErr) = RunApkDiffCommand ($"-s --save-description-2={apkDescPath} --test-apk-size-regression={ApkSizeThreshold} --test-assembly-size-regression={AssemblySizeThreshold} {apkDescReferencePath} {apkFile}");
-				Assert.IsTrue (code == 0, $"apkdiff regression test failed with exit code: {code}\nstdOut: {stdOut}\nstdErr: {stdErr}");
+				var (code, stdOut, stdErr) = RunApkDiffCommand ($"-s --save-description-2={apkDescPath} --descrease-is-regression --test-apk-size-regression={ApkSizeThreshold} --test-assembly-size-regression={AssemblySizeThreshold} {apkDescReferencePath} {apkFile}");
+				Assert.IsTrue (code == 0, $"apkdiff regression test failed with exit code: {code}\ncontext: https://github.com/xamarin/xamarin-android/blob/main/Documentation/project-docs/ApkSizeRegressionChecks.md\nstdOut: {stdOut}\nstdErr: {stdErr}");
 			}
 		}
 
@@ -1659,25 +1656,11 @@ namespace App1
 			}
 		}
 
-		/// <summary>
-		/// Works around a bug in lint.bat on Windows: https://issuetracker.google.com/issues/68753324
-		/// - We may want to remove this if a future Android SDK tools, no longer has this issue
-		/// </summary>
-		void FixLintOnWindows ()
-		{
-			if (Environment.OSVersion.Platform == PlatformID.Win32NT) {
-				var androidSdk = AndroidSdkResolver.GetAndroidSdkPath ();
-				var androidSdkTools = Path.Combine (androidSdk, "tools");
-				if (Directory.Exists (androidSdkTools)) {
-					Environment.SetEnvironmentVariable ("JAVA_OPTS", $"\"-Dcom.android.tools.lint.bindir={androidSdkTools}\"", EnvironmentVariableTarget.Process);
-				}
-			}
-		}
-
 		[Test]
 		public void CheckLintResourceFileReferencesAreFixed ()
 		{
-			FixLintOnWindows ();
+			if (TestEnvironment.IsUsingJdk8)
+				Assert.Ignore ("https://github.com/xamarin/xamarin-android/issues/5698");
 
 			var proj = new XamarinAndroidApplicationProject () {
 				PackageReferences = {
@@ -1720,7 +1703,8 @@ namespace App1
 		[NonParallelizable]
 		public void CheckLintErrorsAndWarnings ()
 		{
-			FixLintOnWindows ();
+			if (TestEnvironment.IsUsingJdk8)
+				Assert.Ignore ("https://github.com/xamarin/xamarin-android/issues/5698");
 
 			string disabledIssues = "StaticFieldLeak,ObsoleteSdkInt,AllowBackup,ExportedReceiver";
 
@@ -1763,6 +1747,13 @@ namespace App1
 				int maxApiLevel = AndroidSdkResolver.GetMaxInstalledPlatform ();
 				string apiLevel;
 				proj.TargetFrameworkVersion = b.LatestTargetFrameworkVersion (out apiLevel);
+
+				// TODO: We aren't sure how to support preview bindings in .NET6 yet.
+				if (Builder.UseDotNet && apiLevel == "31") {
+					apiLevel = "30";
+					proj.TargetFrameworkVersion = "v11.0";
+				}
+
 				if (int.TryParse (apiLevel, out int a) && a < maxApiLevel)
 					disabledIssues += ",OldTargetApi";
 				proj.SetProperty ("AndroidLintDisabledIssues", disabledIssues);
@@ -1778,7 +1769,8 @@ namespace App1
 		[Test]
 		public void CheckLintConfigMerging ()
 		{
-			FixLintOnWindows ();
+			if (TestEnvironment.IsUsingJdk8)
+				Assert.Ignore ("https://github.com/xamarin/xamarin-android/issues/5698");
 
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty ("AndroidLintEnabled", true.ToString ());
@@ -2044,9 +2036,7 @@ namespace App1
 				}
 			};
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
-			if (Builder.UseDotNet) {
-				proj.AddDotNetCompatPackages ();
-			} else {
+			if (!Builder.UseDotNet) {
 				//NOTE: Mono.Data.Sqlite and Mono.Posix do not exist in .NET 5+
 				proj.References.Add (new BuildItem.Reference ("Mono.Data.Sqlite"));
 				proj.References.Add (new BuildItem.Reference ("Mono.Posix"));
@@ -2569,8 +2559,6 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 					KnownPackages.AndroidSupportV4_27_0_2_1,
 				},
 			};
-			if (Builder.UseDotNet)
-				proj.AddDotNetCompatPackages ();
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var assets = b.Output.GetIntermediaryAsText (Path.Combine ("..", "project.assets.json"));
@@ -2664,8 +2652,6 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				string build_props = b.Output.GetIntermediaryPath ("build.props");
 				FileAssert.Exists (build_props, "build.props should exist after first build.");
 				proj.PackageReferences.Add (KnownPackages.SupportV7CardView_27_0_2_1);
-				if (Builder.UseDotNet)
-					proj.AddDotNetCompatPackages ();
 
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build should have succeeded.");
 				FileAssert.Exists (build_props, "build.props should exist after second build.");
@@ -3368,6 +3354,7 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 
 		//See: https://developer.android.com/about/versions/marshmallow/android-6.0-changes#behavior-apache-http-client
 		[Test]
+		[Retry (5)]
 		public void MissingOrgApacheHttpClient ([Values ("dx", "d8")] string dexTool)
 		{
 			AssertDexToolSupported (dexTool);
@@ -3377,8 +3364,12 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("</application>",
 				"<uses-library android:name=\"org.apache.http.legacy\" android:required=\"false\" /></application>");
 			proj.SetProperty ("AndroidEnableMultiDex", "True");
+
 			proj.PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Maps);
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				string downloaddir = Path.Combine (Root, b.ProjectDirectory, "Downloads");
+				Directory.CreateDirectory (downloaddir);
+				proj.SetProperty ("XamarinBuildDownloadDir", downloaddir);
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded");
 			}
 		}

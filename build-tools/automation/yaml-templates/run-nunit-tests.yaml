@@ -14,7 +14,11 @@ steps:
     if ([Environment]::OSVersion.Platform -eq "Unix") {
         if ("${{ parameters.useDotNet }}" -eq $true) {
             Write-Host '##vso[task.setvariable variable=TestResultsFormat]VSTest'
-            & $env:HOME/Library/Android/dotnet/dotnet test ${{ parameters.testAssembly }} --results-directory . --logger "trx;LogFileName=${{ parameters.testResultsFile }}" ${{ parameters.dotNetTestExtraArgs }} -- NUnit.NumberOfTestWorkers=${{ parameters.workers }}
+            $dotnetPath = "$env:HOME/Library/Android/dotnet/dotnet"
+            if (-not (Test-Path $dotnetPath)) {
+                $dotnetPath = "$env:HOME/android-toolchain/dotnet/dotnet"
+            }
+            & $dotnetPath test ${{ parameters.testAssembly }} --results-directory . --logger "trx;LogFileName=${{ parameters.testResultsFile }}" ${{ parameters.dotNetTestExtraArgs }} -- NUnit.NumberOfTestWorkers=${{ parameters.workers }}
         } else {
             Write-Host '##vso[task.setvariable variable=TestResultsFormat]NUnit'
             & ${{ parameters.nunitConsole }} ${{ parameters.testAssembly }} --result ${{ parameters.testResultsFile }} --workers=${{ parameters.workers }} ${{ parameters.nunitConsoleExtraArgs }}

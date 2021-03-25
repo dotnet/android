@@ -77,6 +77,41 @@ namespace Xamarin.Android.Tools.Aidl
 
 			return result;
 		}
+
+		// This overload is primarily for unit tests.
+		public Result Run (string input, out string output, AssemblyDefinition[] references = null, ParcelableHandling parcelableHandling = ParcelableHandling.Ignore)
+		{
+			var result = new Result ();
+			var database = new BindingDatabase (references ?? Array.Empty<AssemblyDefinition> ());
+			var lang = new LanguageData (new AidlGrammar () { LanguageFlags = LanguageFlags.Default | LanguageFlags.CreateAst });
+			var parser = new Parser (lang);
+
+			var pt = parser.Parse (input);
+
+			if (pt.HasErrors ()) {
+				foreach (var l in pt.ParserMessages)
+					result.LogMessages.Add ("input.aidl", l);
+
+				output = null;
+				return result;
+			}
+
+			var unit = (CompilationUnit) pt.Root.AstNode;
+
+			var parcelables = new List<TypeName> ();
+
+			foreach (Parcelable t in unit.Types.Where (t => t is Parcelable))
+				parcelables.Add (unit.Package == null ? t.Name : new TypeName (unit.Package.Identifiers.Concat (t.Name.Identifiers).ToArray ()));
+
+			var sw = new StringWriter ();
+			var opts = new ConverterOptions { ParcelableHandling = parcelableHandling };
+
+			new CSharpCodeGenerator (sw, database).GenerateCode (unit, parcelables, opts);
+
+			output = sw.ToString ();
+
+			return result;
+		}
 	}
 }
 

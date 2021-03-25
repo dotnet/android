@@ -6,10 +6,10 @@ ms.assetid: 5EBEE1A5-3879-45DD-B1DE-5CD4327C2656
 ms.technology: xamarin-android
 author: jonpryor
 ms.author: jopryo
-ms.date: 09/23/2020
+ms.date: 03/01/2021
 ---
 
-# Build items
+# Build Items
 
 Build items control how a Xamarin.Android application
 or library project is built.
@@ -33,9 +33,9 @@ and `.jar` files will be included in the appropriate item groups.
 
 ## AndroidAotProfile
 
-Used to provide AOT profiles, for use with profile-guided AOT.
+Used to provide an AOT profile, for use with profile-guided AOT.
 
-It can be also used from Visual Studio by setting `AndroidAotProfile`
+It can be also used from Visual Studio by setting the `AndroidAotProfile`
 build action to a file containing an AOT profile.
 
 ## AndroidBoundLayout
@@ -93,17 +93,17 @@ The result of the above code snippet has a different effect for each
 Xamarin.Android project type:
 
 * Application and class library projects:
-  * `foo.jar` maps to [**AndroidJavaLibrary**](#androidjavalibrary)
-  * `bar.aar` maps to [**AndroidAarLibrary**](#androidaarlibrary)
+  * `foo.jar` maps to [**AndroidJavaLibrary**](#androidjavalibrary).
+  * `bar.aar` maps to [**AndroidAarLibrary**](#androidaarlibrary).
 * Java binding projects:
-  * `foo.jar` maps to [**EmbeddedJar**](#embeddedjar)
+  * `foo.jar` maps to [**EmbeddedJar**](#embeddedjar).
   * `foo.jar` maps to [**EmbeddedReferenceJar**](#embeddedreferencejar)
-    if `Bind="false"` metadata is added
-  * `bar.aar` maps to [**LibraryProjectZip**](#libraryprojectzip)
+    if `Bind="false"` metadata is added.
+  * `bar.aar` maps to [**LibraryProjectZip**](#libraryprojectzip).
 
 This simplification means you can use **AndroidLibrary** everywhere.
 
-Added in Xamarin.Android 11.2.
+This build action was added in Xamarin.Android 11.2.
 
 ## AndroidLintConfig
 
@@ -118,17 +118,17 @@ for more details.
 
 ## AndroidManifestOverlay
 
-The build action `AndroidManifestOverlay` can be used to provide additional
-`AndroidManifest.xml` files to the [Manifest Merger]([~/android/deploy-test/building-apps/build-properties.md#](https://developer.android.com/studio/build/manifest-merge)) tool.
+The `AndroidManifestOverlay` build action can be used to provide additional
+`AndroidManifest.xml` files to the [Manifest Merger](https://developer.android.com/studio/build/manifest-merge) tool.
 Files with this build action will be passed to the Manifest Merger along with
 the main `AndroidManifest.xml` file and any additional manifest files from
 references. These will then be merged into the final manifest.
 
 You can use this build action to provide additional changes and settings to
-your app depending on your build configuration. For example if you need to
+your app depending on your build configuration. For example, if you need to
 have a specific permission only while debugging, you can use the overlay to
-inject that permission when debugging. For example given the following
-overlay file contents
+inject that permission when debugging. For example, given the following
+overlay file contents:
 
 ```
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
@@ -136,7 +136,7 @@ overlay file contents
 </manifest>
 ```
 
-you can use the following to add this for a debug build.
+You can use the following to add this for a debug build:
 
 ```
 <ItemGroup>
@@ -144,7 +144,14 @@ you can use the following to add this for a debug build.
 </ItemGroup>
 ```
 
-Introduced in Xamarin.Android 11.2
+This build action was introduced in Xamarin.Android 11.2.
+
+## AndroidInstallModules
+
+Specifies the modules which get installed by **bundletool** command when
+installing app bundles.
+
+This build action was introduced in Xamarin.Android 11.3.
 
 ## AndroidNativeLibrary
 
@@ -202,7 +209,7 @@ example:
   <AndroidResource Include="Resources-Debug\values\strings.xml"/>
 </ItemGroup>
 <PropertyGroup>
-  <MonoAndroidResourcePrefix>Resources;Resources-Debug<MonoAndroidResourcePrefix>
+  <MonoAndroidResourcePrefix>Resources;Resources-Debug</MonoAndroidResourcePrefix>
 </PropertyGroup>
 ```
 
@@ -229,7 +236,7 @@ layout diagnostics tool. This is currently only used in the layout
 editor and not for build messages.
 
 See the [Android Resource Analysis
-documentation](https://aka.ms/androidresourceanalysis) for more
+documentation](../../user-interface/android-designer/diagnostics.md) for more
 details.
 
 Added in Xamarin.Android 10.2.
@@ -306,18 +313,18 @@ is parsed in order to extract parameter names.
 
 Only certain "Javadoc HTML dialects" are supported, including:
 
-  * JDK 1.7 `javadoc` output
-  * JDK 1.8 `javadoc` output
-  * Droiddoc output
+  * JDK 1.7 `javadoc` output.
+  * JDK 1.8 `javadoc` output.
+  * Droiddoc output.
 
 This build action is deprecated in Xamarin.Android 11.3, and will not be
 supported in .NET 6.
-The `@(JavaSourceJar)` build action should be preferred.
+The `@(JavaSourceJar)` build action is preferred.
 
 ## JavaSourceJar
 
 In a Xamarin.Android binding project, the **JavaSourceJar** build action
-is used on `.jar` files which contain *Java source code*, which contains
+is used on `.jar` files that contain *Java source code*, which contain
 [Javadoc documentation comments](https://www.oracle.com/technical-resources/articles/java/javadoc-tool.html).
 
 Prior to Xamarin.Android 11.3, the Javadoc would be converted into HTML
@@ -325,11 +332,10 @@ via the `javadoc` utility during build time, and later turned into
 XML documentation.
 
 Starting with Xamarin.Android 11.3, Javadoc will instead be converted into
-[C# XML Documentation Comments](https://docs.microsoft.com/en-us/dotnet/csharp/codedoc)
+[C# XML Documentation Comments](/dotnet/csharp/codedoc)
 within the generated binding source code.
 
-[`$(AndroidJavadocVerbosity)`](~/android/deploy-test/building-apps/build-properties.md#androidjavadocverbosity)
-controls how "verbose" or "complete" the imported Javadoc is.
+`$(AndroidJavadocVerbosity)` controls how "verbose" or "complete" the imported Javadoc is.
 
 Starting in Xamarin.Android 11.3, the following MSBuild metadata is supported:
 
@@ -357,7 +363,7 @@ application.
 > [!NOTE]
 > Only a single **LibraryProjectZip** can be included in a
 > Xamarin.Android binding project. This limitation will be removed
-> going forward in .NET 6.
+> in .NET 6.
 
 ## LinkDescription
 

@@ -1634,6 +1634,15 @@
   <remove-node api-since="30" path="/api/package[@name='android.database']/interface[@name='Cursor']/method[@name='setNotificationUris' and count(parameter)=2 and parameter[1][@type='android.content.ContentResolver'] and parameter[2][@type='java.util.List&lt;android.net.Uri&gt;']]" />
   <remove-node api-since="30" path="/api/package[@name='android.database']/interface[@name='Cursor']/method[@name='getNotificationUris']" />
 
+  <!-- API-31 Adjustments -->
+  <!-- Work around a generator bug where having multiple Listener methods with the same name cause multiple conflicting EventArgs classes to be created. -->
+  <!-- This is the "default" method version, so it's ok to remove it from an interface. -->
+  <remove-node api-since="31" path="/api/package[@name='android.location']/interface[@name='LocationListener']/method[@name='onLocationChanged' and count(parameter)=1 and parameter[1][@type='android.location.LocationResult']]" />
+
+  <!-- These parameters that we enumify changed names. Change them back so the enumification process can still find them. -->
+  <attr api-since="31" path="/api/package[@name='android.location']/*[@name='LocationManager']/method[@name='addTestProvider']/parameter[@name='powerUsage']" name="name">powerRequirement</attr>
+  <attr api-since="31" path="/api/package[@name='java.math']/*[@name='RoundingMode']/method[@name='valueOf']/parameter[@name='rm']" name="name">mode</attr>
+
   <!--
     ***********************************************************************
     THE FOLLOWING LINES MUST BE CREATED FOR ANY NEW PLATFORM THAT IS ADDED.
@@ -1646,6 +1655,8 @@
   <!-- This keeps us from creating any Constants classes for interface constants in new DIM-enabled API -->
   <attr api-since="30" path="/api/package/interface[contains(@merge.SourceFile,'api-30.xml.in')]" name="no-alternatives">true</attr>
   <attr api-since="30" path="/api/package/interface[contains(@merge.SourceFile,'api-R.xml.in')]" name="no-alternatives">true</attr>
+  <attr api-since="31" path="/api/package/interface[contains(@merge.SourceFile,'api-31.xml.in')]" name="no-alternatives">true</attr>
+  <attr api-since="31" path="/api/package/interface[contains(@merge.SourceFile,'api-S.xml.in')]" name="no-alternatives">true</attr>
 
   <!-- Set ApiSince based on merge sourcefile. -->
   <attr api-since="22" path="/api//*[contains(@merge.SourceFile,'api-22.xml.in')]" name="api-since">22</attr>
@@ -1658,4 +1669,6 @@
   <attr api-since="29" path="/api//*[contains(@merge.SourceFile,'api-29.xml.in')]" name="api-since">29</attr>
   <attr api-since="30" path="/api//*[contains(@merge.SourceFile,'api-30.xml.in')]" name="api-since">30</attr>
   <attr api-since="30" path="/api//*[contains(@merge.SourceFile,'api-R.xml.in')]" name="api-since">30</attr>
+  <attr api-since="31" path="/api//*[contains(@merge.SourceFile,'api-31.xml.in')]" name="api-since">31</attr>
+  <attr api-since="31" path="/api//*[contains(@merge.SourceFile,'api-S.xml.in')]" name="api-since">31</attr>
 </metadata>

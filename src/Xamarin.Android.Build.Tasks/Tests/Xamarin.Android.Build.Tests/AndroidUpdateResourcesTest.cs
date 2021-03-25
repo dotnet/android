@@ -151,9 +151,6 @@ namespace Xamarin.Android.Build.Tests
 					KnownPackages.SupportV7AppCompat_27_0_2_1,
 				},
 			};
-			if (Builder.UseDotNet) {
-				proj.AddDotNetCompatPackages ();
-			}
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "First build should have succeeded.");
 				var Rdrawable = b.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes", "android", "support", "v7", "appcompat", "R$drawable.class"));
@@ -989,9 +986,6 @@ namespace Lib1 {
 				},
 			};
 			appProj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");
-			if (Builder.UseDotNet) {
-				appProj.AddDotNetCompatPackages ();
-			}
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, libProj.ProjectName), false, false)) {
 				libBuilder.AutomaticNuGetRestore = false;
 				Assert.IsTrue (libBuilder.RunTarget (libProj, "Restore"), "Library project should have restored.");
