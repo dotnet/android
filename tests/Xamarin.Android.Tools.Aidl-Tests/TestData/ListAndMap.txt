@@ -58,7 +58,7 @@ using Android;
 				arg0 = (global::Android.Runtime.JavaList) data.ReadArrayList ((global::Java.Lang.ClassLoader) null);
 				this.ArrayList (arg0);
 				reply.WriteNoException ();
-				data.WriteList (arg0);
+				reply.WriteList (arg0);
 				return true;
 				}
 
@@ -68,7 +68,7 @@ using Android;
 				arg0 = (global::Android.Runtime.JavaDictionary) data.ReadHashMap ((global::Java.Lang.ClassLoader) null);
 				this.Map (arg0);
 				reply.WriteNoException ();
-				data.WriteMap (arg0);
+				reply.WriteMap (arg0);
 				return true;
 				}
 
