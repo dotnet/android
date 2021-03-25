@@ -3,6 +3,10 @@
   <!--
     Note: This file *must* be imported *after* `$(Configuration)` is set.
   -->
+  <Import
+      Project="$(MSBuildThisFileDirectory)Configuration.OperatingSystem.props"
+      Condition=" Exists('$(MSBuildThisFileDirectory)Configuration.OperatingSystem.props') And '$(DoNotLoadOSProperties)' != 'True' "
+  />
   <Import Project="$(MSBuildThisFileDirectory)eng\Versions.props" />
   <Import
       Project="$(MSBuildThisFileDirectory)Build$(Configuration)\Configuration.Generated.props"
@@ -11,10 +15,6 @@
   <Import
       Project="$(MSBuildThisFileDirectory)Configuration.Override.props"
       Condition="Exists('$(MSBuildThisFileDirectory)Configuration.Override.props')"
-  />
-  <Import
-      Project="$(MSBuildThisFileDirectory)Configuration.OperatingSystem.props"
-      Condition=" Exists('$(MSBuildThisFileDirectory)Configuration.OperatingSystem.props') And '$(DoNotLoadOSProperties)' != 'True' "
   />
   <PropertyGroup>
     <!-- TFV for all projects, try v4.7.2 but fallback if needed -->
