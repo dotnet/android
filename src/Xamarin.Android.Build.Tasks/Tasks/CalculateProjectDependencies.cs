@@ -29,8 +29,6 @@ namespace Xamarin.Android.Tasks
 
 		public string PlatformToolsVersion { get; set; }
 
-		public string ToolsVersion { get; set; }
-
 		public string NdkVersion { get; set; }
 
 		public bool NdkRequired { get; set; }
@@ -67,9 +65,6 @@ namespace Xamarin.Android.Tasks
 			}
 			if (!string.IsNullOrEmpty (CommandLineToolsVersion)) {
 				dependencies.Add (CreateAndroidDependency ($"cmdline-tools/{CommandLineToolsVersion}", CommandLineToolsVersion));
-			}
-			if (!string.IsNullOrEmpty (ToolsVersion)) {
-				dependencies.Add (CreateAndroidDependency ("tools", ToolsVersion));
 			}
 			if (!string.IsNullOrEmpty (NdkVersion) && NdkRequired) {
 				dependencies.Add (CreateAndroidDependency ("ndk-bundle", NdkVersion));

@@ -29,7 +29,6 @@ namespace Xamarin.Android.Build.Tests {
 			};
 
 			task.PlatformToolsVersion = "26.0.3";
-			task.ToolsVersion = "26.0.1";
 			task.NdkVersion = "12.1";
 			task.NdkRequired = ndkRequred;
 			task.BuildToolsVersion = "26.0.1";
@@ -37,11 +36,9 @@ namespace Xamarin.Android.Build.Tests {
 			task.ManifestFile = new TaskItem (Path.Combine (path, "AndroidManifest.xml"));
 			Assert.IsTrue (task.Execute ());
 			Assert.IsNotNull (task.Dependencies);
-			Assert.AreEqual (ndkRequred ? 5 : 4, task.Dependencies.Length);
+			Assert.AreEqual (ndkRequred ? 4 : 3, task.Dependencies.Length);
 			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "build-tools/26.0.1" && x.GetMetadata ("Version") == "26.0.1"),
 				"Dependencies should contains a build-tools version 26.0.1");
-			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "tools" && x.GetMetadata ("Version") == "26.0.1"),
-				"Dependencies should contains a tools version 26.0.1");
 			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "platforms/android-26" && x.GetMetadata ("Version") == ""),
 				"Dependencies should contains a platform version android-26");
 			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "platform-tools" && x.GetMetadata ("Version") == "26.0.3"),
@@ -70,7 +67,6 @@ namespace Xamarin.Android.Build.Tests {
 			};
 
 			task.PlatformToolsVersion = "26.0.3";
-			task.ToolsVersion = "26.0.1";
 			task.NdkVersion = "12.1";
 			task.NdkRequired = true;
 			task.BuildToolsVersion = "26.0.1";
@@ -78,11 +74,9 @@ namespace Xamarin.Android.Build.Tests {
 			task.ManifestFile = new TaskItem (Path.Combine (path, "AndroidManifest.xml"));
 			Assert.IsTrue (task.Execute ());
 			Assert.IsNotNull (task.Dependencies);
-			Assert.AreEqual (5, task.Dependencies.Length);
+			Assert.AreEqual (4, task.Dependencies.Length);
 			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "build-tools/26.0.1" && x.GetMetadata ("Version") == "26.0.1"),
 				"Dependencies should contains a build-tools version 26.0.1");
-			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "tools" && x.GetMetadata ("Version") == "26.0.1"),
-				"Dependencies should contains a tools version 26.0.1");
 			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "platforms/android-26" && x.GetMetadata ("Version") == ""),
 				"Dependencies should contains a platform version android-26");
 			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "platform-tools" && x.GetMetadata ("Version") == "26.0.3"),
@@ -114,7 +108,6 @@ namespace Xamarin.Android.Build.Tests {
 </manifest>");
 
 			task.PlatformToolsVersion = "26.0.3";
-			task.ToolsVersion = "26.0.1";
 			task.NdkVersion = "12.1";
 			task.NdkRequired = true;
 			task.BuildToolsVersion = "26.0.1";
@@ -122,11 +115,9 @@ namespace Xamarin.Android.Build.Tests {
 			task.ManifestFile = new TaskItem (manifestFile);
 			Assert.IsTrue(task.Execute ());
 			Assert.IsNotNull (task.Dependencies);
-			Assert.AreEqual (5, task.Dependencies.Length);
+			Assert.AreEqual (4, task.Dependencies.Length);
 			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "build-tools/26.0.1" && x.GetMetadata ("Version") == "26.0.1"),
 				"Dependencies should contains a build-tools version 26.0.1");
-			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "tools" && x.GetMetadata ("Version") == "26.0.1"),
-				"Dependencies should contains a tools version 26.0.1");
 			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "platforms/android-26" && x.GetMetadata ("Version") == ""),
 				"Dependencies should contains a platform version android-26");
 			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "platform-tools" && x.GetMetadata ("Version") == "26.0.3"),
