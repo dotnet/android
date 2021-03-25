@@ -63,6 +63,15 @@ jobs:
           dotNetTestExtraArgs: --filter "TestCategory != Node-1 & TestCategory != Node-2 & TestCategory != Node-3"
           testResultsFile: TestResult-MSBuildTests-Windows-NoNode-$(XA.Build.Configuration).xml
 
+    # Only run these tests on node 2
+    - ${{ if eq(parameters.run_extra_tests, true) }}:
+      - template: run-nunit-tests.yaml
+        parameters:
+          useDotNet: $(UseDotNet)
+          testRunTitle: Xamarin.Android.Tools.Aidl-Tests - Windows
+          testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\${{ parameters.target_framework }}\Xamarin.Android.Tools.Aidl-Tests.dll
+          testResultsFile: TestResult-Aidl-Tests-Windows-$(XA.Build.Configuration).xml
+
     - template: upload-results.yaml
       parameters:
         artifactName: Test Results - MSBuild ${{ parameters.job_suffix }} - Windows-${{ parameters.node_id }}
