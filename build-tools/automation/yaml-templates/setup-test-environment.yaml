@@ -85,9 +85,8 @@ steps:
     artifactName: $(NuGetArtifactName)
     downloadPath: ${{ parameters.xaSourcePath }}/bin/Build${{ parameters.configuration }}/$(NuGetArtifactName)
 
-- task: MSBuild@1
+- task: DotNetCoreCLI@2
   displayName: extract workload packs
   inputs:
-    solution: ${{ parameters.xaSourcePath }}/build-tools/create-packs/Microsoft.Android.Sdk.proj
-    configuration: ${{ parameters.configuration }}
-    msbuildArguments: /t:ExtractWorkloadPacks /bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/extract-workloads.binlog
+    projects: ${{ parameters.xaSourcePath }}/build-tools/create-packs/Microsoft.Android.Sdk.proj
+    arguments: -t:ExtractWorkloadPacks -c ${{ parameters.configuration }} -v:n -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/extract-workloads.binlog
