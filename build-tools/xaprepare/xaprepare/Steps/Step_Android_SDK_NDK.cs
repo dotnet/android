@@ -147,15 +147,6 @@ namespace Xamarin.Android.Prepare
 
 		bool GatherNDKInfo (Context context)
 		{
-			if (context.OS.IsWindows) {
-				// Quick hack to test https://github.com/android/ndk/issues/1427#issuecomment-763424992
-				Log.Info ("Copying NDK r21 CMake toolchain file to NDK r22 directory");
-				Utilities.CopyFile (
-					Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "src-ThirdParty", "ndk", "android.toolchain.cmake.ndk_r21.3"),
-					Path.Combine (context.Properties.GetRequiredValue (KnownProperties.AndroidNdkDirectory), "build", "cmake", "android.toolchain.cmake")
-				);
-			}
-
 			// Ignore NDK property setting if not installing the NDK
 			if (!DependencyTypeToInstall.HasFlag (AndroidToolchainComponentType.BuildDependency))
 				return true;
