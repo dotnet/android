@@ -2656,7 +2656,6 @@ namespace Com.Android.Internal.Telephony
 				arg0 = data.ReadString ();
 				this.Dial (arg0);
 				reply.WriteNoException ();
-				data.WriteString (arg0);
 				return true;
 				}
 
@@ -2668,8 +2667,6 @@ namespace Com.Android.Internal.Telephony
 				arg1 = data.ReadString ();
 				this.Call (arg0, arg1);
 				reply.WriteNoException ();
-				data.WriteString (arg0);
-				data.WriteString (arg1);
 				return true;
 				}
 
@@ -2680,7 +2677,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IsRadioOn (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteString (arg0);
 				return true;
 				}
 
@@ -2693,8 +2689,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IsRadioOnWithFeature (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteString (arg0);
-				data.WriteString (arg1);
 				return true;
 				}
 
@@ -2707,8 +2701,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IsRadioOnForSubscriber (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
 				return true;
 				}
 
@@ -2723,9 +2715,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IsRadioOnForSubscriberWithFeature (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
-				data.WriteString (arg2);
 				return true;
 				}
 
@@ -2738,8 +2727,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.SupplyPinForSubscriber (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
 				return true;
 				}
 
@@ -2754,9 +2741,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.SupplyPukForSubscriber (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
-				data.WriteString (arg2);
 				return true;
 				}
 
@@ -2769,8 +2753,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.SupplyPinReportResultForSubscriber (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteIntArray (result);
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
 				return true;
 				}
 
@@ -2785,9 +2767,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.SupplyPukReportResultForSubscriber (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteIntArray (result);
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
-				data.WriteString (arg2);
 				return true;
 				}
 
@@ -2798,7 +2777,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.HandlePinMmi (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteString (arg0);
 				return true;
 				}
 
@@ -2812,8 +2790,6 @@ namespace Com.Android.Internal.Telephony
 				arg2 = ResultReceiverStub.AsInterface (data.ReadStrongBinder ());
 				this.HandleUssdRequest (arg0, arg1, arg2);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
 				return true;
 				}
 
@@ -2826,8 +2802,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.HandlePinMmiForSubscriber (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
 				return true;
 				}
 
@@ -2844,7 +2818,6 @@ namespace Com.Android.Internal.Telephony
 				arg0 = data.ReadInt ();
 				this.ToggleRadioOnOffForSubscriber (arg0);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -2855,7 +2828,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.SetRadio (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0 ? 1 : 0);
 				return true;
 				}
 
@@ -2868,8 +2840,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.SetRadioForSubscriber (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
-				data.WriteInt (arg1 ? 1 : 0);
 				return true;
 				}
 
@@ -2880,7 +2850,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.SetRadioPower (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0 ? 1 : 0);
 				return true;
 				}
 
@@ -2897,7 +2866,6 @@ namespace Com.Android.Internal.Telephony
 				arg0 = data.ReadInt ();
 				this.UpdateServiceLocationForSubscriber (arg0);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -2914,7 +2882,6 @@ namespace Com.Android.Internal.Telephony
 				arg0 = data.ReadInt ();
 				this.EnableLocationUpdatesForSubscriber (arg0);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -2931,7 +2898,6 @@ namespace Com.Android.Internal.Telephony
 				arg0 = data.ReadInt ();
 				this.DisableLocationUpdatesForSubscriber (arg0);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -2958,7 +2924,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IsDataConnectivityPossible (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -2971,8 +2936,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetCellLocation (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteStrongBinder ((((result != null)) ? (result.AsBinder ()) : (null)));
-				data.WriteString (arg0);
-				data.WriteString (arg1);
 				return true;
 				}
 
@@ -2983,7 +2946,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetNetworkCountryIsoForPhone (arg0);
 				reply.WriteNoException ();
 				reply.WriteString (result);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -2996,8 +2958,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetNeighboringCellInfo (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteTypedList (result);
-				data.WriteString (arg0);
-				data.WriteString (arg1);
 				return true;
 				}
 
@@ -3016,7 +2976,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetCallStateForSlot (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -3035,7 +2994,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetDataActivityForSubId (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -3054,7 +3012,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetDataStateForSubId (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -3073,7 +3030,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetActivePhoneTypeForSlot (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -3086,8 +3042,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetCdmaEriIconIndex (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteString (arg0);
-				data.WriteString (arg1);
 				return true;
 				}
 
@@ -3102,9 +3056,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetCdmaEriIconIndexForSubscriber (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
-				data.WriteString (arg2);
 				return true;
 				}
 
@@ -3117,8 +3068,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetCdmaEriIconMode (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteString (arg0);
-				data.WriteString (arg1);
 				return true;
 				}
 
@@ -3133,9 +3082,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetCdmaEriIconModeForSubscriber (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
-				data.WriteString (arg2);
 				return true;
 				}
 
@@ -3148,8 +3094,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetCdmaEriText (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteString (result);
-				data.WriteString (arg0);
-				data.WriteString (arg1);
 				return true;
 				}
 
@@ -3164,9 +3108,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetCdmaEriTextForSubscriber (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteString (result);
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
-				data.WriteString (arg2);
 				return true;
 				}
 
@@ -3189,9 +3130,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.SetVoiceMailNumber (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
-				data.WriteString (arg2);
 				return true;
 				}
 
@@ -3203,8 +3141,6 @@ namespace Com.Android.Internal.Telephony
 				arg1 = data.ReadInt ();
 				this.SetVoiceActivationState (arg0, arg1);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
-				data.WriteInt (arg1);
 				return true;
 				}
 
@@ -3216,8 +3152,6 @@ namespace Com.Android.Internal.Telephony
 				arg1 = data.ReadInt ();
 				this.SetDataActivationState (arg0, arg1);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
-				data.WriteInt (arg1);
 				return true;
 				}
 
@@ -3230,8 +3164,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetVoiceActivationState (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
 				return true;
 				}
 
@@ -3244,8 +3176,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetDataActivationState (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
 				return true;
 				}
 
@@ -3260,9 +3190,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetVoiceMessageCountForSubscriber (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
-				data.WriteString (arg2);
 				return true;
 				}
 
@@ -3273,7 +3200,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IsConcurrentVoiceAndDataAllowed (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -3286,8 +3212,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetVisualVoicemailSettings (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteStrongBinder ((((result != null)) ? (result.AsBinder ()) : (null)));
-				data.WriteString (arg0);
-				data.WriteInt (arg1);
 				return true;
 				}
 
@@ -3302,9 +3226,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetVisualVoicemailPackageName (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteString (result);
-				data.WriteString (arg0);
-				data.WriteString (arg1);
-				data.WriteInt (arg2);
 				return true;
 				}
 
@@ -3318,8 +3239,6 @@ namespace Com.Android.Internal.Telephony
 				arg2 = VisualVoicemailSmsFilterSettingsStub.AsInterface (data.ReadStrongBinder ());
 				this.EnableVisualVoicemailSmsFilter (arg0, arg1, arg2);
 				reply.WriteNoException ();
-				data.WriteString (arg0);
-				data.WriteInt (arg1);
 				return true;
 				}
 
@@ -3330,8 +3249,6 @@ namespace Com.Android.Internal.Telephony
 				int arg1 = default (int);
 				arg1 = data.ReadInt ();
 				this.DisableVisualVoicemailSmsFilter (arg0, arg1);
-				data.WriteString (arg0);
-				data.WriteInt (arg1);
 				return true;
 				}
 
@@ -3344,8 +3261,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetVisualVoicemailSmsFilterSettings (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteStrongBinder ((((result != null)) ? (result.AsBinder ()) : (null)));
-				data.WriteString (arg0);
-				data.WriteInt (arg1);
 				return true;
 				}
 
@@ -3356,7 +3271,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetActiveVisualVoicemailSmsFilterSettings (arg0);
 				reply.WriteNoException ();
 				reply.WriteStrongBinder ((((result != null)) ? (result.AsBinder ()) : (null)));
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -3378,7 +3292,6 @@ namespace Com.Android.Internal.Telephony
 				arg6 = PendingIntentStub.AsInterface (data.ReadStrongBinder ());
 				this.SendVisualVoicemailSmsForSubscriber (arg0, arg1, arg2, arg3, arg4, arg5, arg6);
 				reply.WriteNoException ();
-				data.WriteString (arg1);
 				return true;
 				}
 
@@ -3390,8 +3303,6 @@ namespace Com.Android.Internal.Telephony
 				arg1 = data.ReadString ();
 				this.SendDialerSpecialCode (arg0, arg1);
 				reply.WriteNoException ();
-				data.WriteString (arg0);
-				data.WriteString (arg1);
 				return true;
 				}
 
@@ -3406,9 +3317,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetNetworkTypeForSubscriber (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
-				data.WriteString (arg2);
 				return true;
 				}
 
@@ -3421,8 +3329,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetDataNetworkType (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteString (arg0);
-				data.WriteString (arg1);
 				return true;
 				}
 
@@ -3437,9 +3343,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetDataNetworkTypeForSubscriber (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
-				data.WriteString (arg2);
 				return true;
 				}
 
@@ -3454,9 +3357,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetVoiceNetworkTypeForSubscriber (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
-				data.WriteString (arg2);
 				return true;
 				}
 
@@ -3475,7 +3375,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.HasIccCardUsingSlotIndex (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -3488,8 +3387,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetLteOnCdmaMode (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteString (arg0);
-				data.WriteString (arg1);
 				return true;
 				}
 
@@ -3504,9 +3401,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetLteOnCdmaModeForSubscriber (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
-				data.WriteString (arg2);
 				return true;
 				}
 
@@ -3519,8 +3413,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetAllCellInfo (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteTypedList (result);
-				data.WriteString (arg0);
-				data.WriteString (arg1);
 				return true;
 				}
 
@@ -3536,9 +3428,6 @@ namespace Com.Android.Internal.Telephony
 				arg3 = data.ReadString ();
 				this.RequestCellInfoUpdate (arg0, arg1, arg2, arg3);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
-				data.WriteString (arg2);
-				data.WriteString (arg3);
 				return true;
 				}
 
@@ -3556,8 +3445,6 @@ namespace Com.Android.Internal.Telephony
 				arg4 = WorkSourceStub.AsInterface (data.ReadStrongBinder ());
 				this.RequestCellInfoUpdateWithWorkSource (arg0, arg1, arg2, arg3, arg4);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
-				data.WriteString (arg3);
 				return true;
 				}
 
@@ -3567,7 +3454,6 @@ namespace Com.Android.Internal.Telephony
 				arg0 = data.ReadInt ();
 				this.SetCellInfoListRate (arg0);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -3584,10 +3470,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IccOpenLogicalChannelBySlot (arg0, arg1, arg2, arg3);
 				reply.WriteNoException ();
 				reply.WriteStrongBinder ((((result != null)) ? (result.AsBinder ()) : (null)));
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
-				data.WriteString (arg2);
-				data.WriteInt (arg3);
 				return true;
 				}
 
@@ -3604,10 +3486,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IccOpenLogicalChannel (arg0, arg1, arg2, arg3);
 				reply.WriteNoException ();
 				reply.WriteStrongBinder ((((result != null)) ? (result.AsBinder ()) : (null)));
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
-				data.WriteString (arg2);
-				data.WriteInt (arg3);
 				return true;
 				}
 
@@ -3620,8 +3498,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IccCloseLogicalChannelBySlot (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
-				data.WriteInt (arg1);
 				return true;
 				}
 
@@ -3634,8 +3510,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IccCloseLogicalChannel (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
-				data.WriteInt (arg1);
 				return true;
 				}
 
@@ -3660,14 +3534,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IccTransmitApduLogicalChannelBySlot (arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
 				reply.WriteNoException ();
 				reply.WriteString (result);
-				data.WriteInt (arg0);
-				data.WriteInt (arg1);
-				data.WriteInt (arg2);
-				data.WriteInt (arg3);
-				data.WriteInt (arg4);
-				data.WriteInt (arg5);
-				data.WriteInt (arg6);
-				data.WriteString (arg7);
 				return true;
 				}
 
@@ -3692,14 +3558,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IccTransmitApduLogicalChannel (arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
 				reply.WriteNoException ();
 				reply.WriteString (result);
-				data.WriteInt (arg0);
-				data.WriteInt (arg1);
-				data.WriteInt (arg2);
-				data.WriteInt (arg3);
-				data.WriteInt (arg4);
-				data.WriteInt (arg5);
-				data.WriteInt (arg6);
-				data.WriteString (arg7);
 				return true;
 				}
 
@@ -3724,14 +3582,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IccTransmitApduBasicChannelBySlot (arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
 				reply.WriteNoException ();
 				reply.WriteString (result);
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
-				data.WriteInt (arg2);
-				data.WriteInt (arg3);
-				data.WriteInt (arg4);
-				data.WriteInt (arg5);
-				data.WriteInt (arg6);
-				data.WriteString (arg7);
 				return true;
 				}
 
@@ -3756,14 +3606,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IccTransmitApduBasicChannel (arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
 				reply.WriteNoException ();
 				reply.WriteString (result);
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
-				data.WriteInt (arg2);
-				data.WriteInt (arg3);
-				data.WriteInt (arg4);
-				data.WriteInt (arg5);
-				data.WriteInt (arg6);
-				data.WriteString (arg7);
 				return true;
 				}
 
@@ -3786,13 +3628,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IccExchangeSimIO (arg0, arg1, arg2, arg3, arg4, arg5, arg6);
 				reply.WriteNoException ();
 				reply.WriteByteArray (result);
-				data.WriteInt (arg0);
-				data.WriteInt (arg1);
-				data.WriteInt (arg2);
-				data.WriteInt (arg3);
-				data.WriteInt (arg4);
-				data.WriteInt (arg5);
-				data.WriteString (arg6);
 				return true;
 				}
 
@@ -3805,8 +3640,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.SendEnvelopeWithStatus (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteString (result);
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
 				return true;
 				}
 
@@ -3817,7 +3650,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.NvReadItem (arg0);
 				reply.WriteNoException ();
 				reply.WriteString (result);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -3830,8 +3662,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.NvWriteItem (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
 				return true;
 				}
 
@@ -3852,7 +3682,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.ResetModemConfig (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -3863,7 +3692,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.RebootModem (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -3876,8 +3704,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetCalculatedPreferredNetworkType (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteString (arg0);
-				data.WriteString (arg1);
 				return true;
 				}
 
@@ -3888,7 +3714,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetPreferredNetworkType (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -3899,7 +3724,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IsTetheringApnRequiredForSubscriber (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -3909,7 +3733,6 @@ namespace Com.Android.Internal.Telephony
 				arg0 = data.ReadInt ();
 				this.EnableIms (arg0);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -3919,7 +3742,6 @@ namespace Com.Android.Internal.Telephony
 				arg0 = data.ReadInt ();
 				this.DisableIms (arg0);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -3929,7 +3751,6 @@ namespace Com.Android.Internal.Telephony
 				arg0 = data.ReadInt ();
 				this.ResetIms (arg0);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -3942,7 +3763,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetMmTelFeatureAndListen (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteStrongBinder ((((result != null)) ? (result.AsBinder ()) : (null)));
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -3955,7 +3775,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetRcsFeatureAndListen (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteStrongBinder ((((result != null)) ? (result.AsBinder ()) : (null)));
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -3969,8 +3788,6 @@ namespace Com.Android.Internal.Telephony
 				arg2 = IImsServiceFeatureCallbackStub.AsInterface (data.ReadStrongBinder ());
 				this.UnregisterImsFeatureCallback (arg0, arg1, arg2);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
-				data.WriteInt (arg1);
 				return true;
 				}
 
@@ -3983,8 +3800,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetImsRegistration (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteStrongBinder ((((result != null)) ? (result.AsBinder ()) : (null)));
-				data.WriteInt (arg0);
-				data.WriteInt (arg1);
 				return true;
 				}
 
@@ -3997,8 +3812,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetImsConfig (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteStrongBinder ((((result != null)) ? (result.AsBinder ()) : (null)));
-				data.WriteInt (arg0);
-				data.WriteInt (arg1);
 				return true;
 				}
 
@@ -4015,8 +3828,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.SetBoundImsServiceOverride (arg0, arg1, arg2, arg3);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
-				data.WriteInt (arg1 ? 1 : 0);
 				return true;
 				}
 
@@ -4031,9 +3842,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetBoundImsServicePackage (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteString (result);
-				data.WriteInt (arg0);
-				data.WriteInt (arg1 ? 1 : 0);
-				data.WriteInt (arg2);
 				return true;
 				}
 
@@ -4045,8 +3853,6 @@ namespace Com.Android.Internal.Telephony
 				arg1 = IIntegerConsumerStub.AsInterface (data.ReadStrongBinder ());
 				this.GetImsMmTelFeatureState (arg0, arg1);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
-				data.WriteStrongBinder ((((arg1 != null)) ? (arg1.AsBinder ()) : (null)));
 				return true;
 				}
 
@@ -4056,7 +3862,6 @@ namespace Com.Android.Internal.Telephony
 				arg0 = data.ReadInt ();
 				this.SetNetworkSelectionModeAutomatic (arg0);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -4071,9 +3876,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetCellNetworkScanResults (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteStrongBinder ((((result != null)) ? (result.AsBinder ()) : (null)));
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
-				data.WriteString (arg2);
 				return true;
 				}
 
@@ -4094,8 +3896,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.RequestNetworkScan (arg0, arg1, arg2, arg3, arg4, arg5);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteInt (arg0);
-				data.WriteString (arg5);
 				return true;
 				}
 
@@ -4107,8 +3907,6 @@ namespace Com.Android.Internal.Telephony
 				arg1 = data.ReadInt ();
 				this.StopNetworkScan (arg0, arg1);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
-				data.WriteInt (arg1);
 				return true;
 				}
 
@@ -4123,8 +3921,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.SetNetworkSelectionModeManual (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
-				data.WriteInt (arg2 ? 1 : 0);
 				return true;
 				}
 
@@ -4135,7 +3931,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetAllowedNetworkTypes (arg0);
 				reply.WriteNoException ();
 				reply.WriteLong (result);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -4148,8 +3943,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.SetAllowedNetworkTypes (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
-				data.WriteLong (arg1);
 				return true;
 				}
 
@@ -4162,8 +3955,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetAllowedNetworkTypesForReason (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteLong (result);
-				data.WriteInt (arg0);
-				data.WriteInt (arg1);
 				return true;
 				}
 
@@ -4174,7 +3965,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetEffectiveAllowedNetworkTypes (arg0);
 				reply.WriteNoException ();
 				reply.WriteLong (result);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -4189,9 +3979,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.SetAllowedNetworkTypesForReason (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
-				data.WriteInt (arg1);
-				data.WriteLong (arg2);
 				return true;
 				}
 
@@ -4204,8 +3991,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.SetPreferredNetworkType (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
-				data.WriteInt (arg1);
 				return true;
 				}
 
@@ -4217,8 +4002,6 @@ namespace Com.Android.Internal.Telephony
 				arg1 = data.ReadInt () != 0;
 				this.SetUserDataEnabled (arg0, arg1);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
-				data.WriteInt (arg1 ? 1 : 0);
 				return true;
 				}
 
@@ -4229,7 +4012,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetDataEnabled (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -4240,7 +4022,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IsUserDataEnabled (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -4251,7 +4032,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IsDataEnabled (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -4262,7 +4042,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IsManualNetworkSelectionAllowed (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -4274,8 +4053,6 @@ namespace Com.Android.Internal.Telephony
 				arg1 = data.ReadInt () != 0;
 				this.SetAlwaysReportSignalStrength (arg0, arg1);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
-				data.WriteInt (arg1 ? 1 : 0);
 				return true;
 				}
 
@@ -4290,9 +4067,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetPcscfAddress (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteStringArray (result);
-				data.WriteString (arg0);
-				data.WriteString (arg1);
-				data.WriteString (arg2);
 				return true;
 				}
 
@@ -4302,7 +4076,6 @@ namespace Com.Android.Internal.Telephony
 				arg0 = data.ReadInt () != 0;
 				this.SetImsRegistrationState (arg0);
 				reply.WriteNoException ();
-				data.WriteInt (arg0 ? 1 : 0);
 				return true;
 				}
 
@@ -4313,7 +4086,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetCdmaMdn (arg0);
 				reply.WriteNoException ();
 				reply.WriteString (result);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -4324,7 +4096,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetCdmaMin (arg0);
 				reply.WriteNoException ();
 				reply.WriteString (result);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -4340,8 +4111,6 @@ namespace Com.Android.Internal.Telephony
 				arg3 = data.ReadString ();
 				this.RequestNumberVerification (arg0, arg1, arg2, arg3);
 				reply.WriteNoException ();
-				data.WriteLong (arg1);
-				data.WriteString (arg3);
 				return true;
 				}
 
@@ -4352,7 +4121,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetCarrierPrivilegeStatus (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -4365,8 +4133,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetCarrierPrivilegeStatusForUid (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteInt (arg0);
-				data.WriteInt (arg1);
 				return true;
 				}
 
@@ -4379,8 +4145,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.CheckCarrierPrivilegesForPackage (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
 				return true;
 				}
 
@@ -4391,7 +4155,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.CheckCarrierPrivilegesForPackageAnyPhone (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteString (arg0);
 				return true;
 				}
 
@@ -4404,7 +4167,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetCarrierPackageNamesForIntentAndPhone (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteStringList ((global::System.Collections.Generic.IList<string>) result);
-				data.WriteInt (arg1);
 				return true;
 				}
 
@@ -4419,9 +4181,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.SetLine1NumberForDisplayForSubscriber (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
-				data.WriteString (arg2);
 				return true;
 				}
 
@@ -4436,9 +4195,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetLine1NumberForDisplay (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteString (result);
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
-				data.WriteString (arg2);
 				return true;
 				}
 
@@ -4453,9 +4209,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetLine1AlphaTagForDisplay (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteString (result);
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
-				data.WriteString (arg2);
 				return true;
 				}
 
@@ -4470,9 +4223,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetMergedSubscriberIds (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteStringArray (result);
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
-				data.WriteString (arg2);
 				return true;
 				}
 
@@ -4485,8 +4235,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetMergedImsisFromGroup (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteStringArray (result);
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
 				return true;
 				}
 
@@ -4499,8 +4247,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.SetOperatorBrandOverride (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
 				return true;
 				}
 
@@ -4519,7 +4265,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.SetRoamingOverride (arg0, arg1, arg2, arg3, arg4);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -4528,10 +4273,17 @@ namespace Com.Android.Internal.Telephony
 				byte [] arg0 = default (byte []);
 				arg0 = data.CreateByteArray ();
 				byte [] arg1 = default (byte []);
+				int arg1_length = data.ReadInt();
+				if (arg1_length < 0) {
+					arg1 = null;
+				}
+				else {
+					arg1 = new byte [arg1_length];
+				}
 				var result = this.InvokeOemRilRequestRaw (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteByteArray (arg1);
+				reply.WriteByteArray (arg1);
 				return true;
 				}
 
@@ -4559,7 +4311,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetRadioAccessFamily (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteString (arg1);
 				return true;
 				}
 
@@ -4569,7 +4320,6 @@ namespace Com.Android.Internal.Telephony
 				arg0 = data.ReadInt () != 0;
 				this.EnableVideoCalling (arg0);
 				reply.WriteNoException ();
-				data.WriteInt (arg0 ? 1 : 0);
 				return true;
 				}
 
@@ -4582,8 +4332,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IsVideoCallingEnabled (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteString (arg0);
-				data.WriteString (arg1);
 				return true;
 				}
 
@@ -4598,9 +4346,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.CanChangeDtmfToneLength (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
-				data.WriteString (arg2);
 				return true;
 				}
 
@@ -4615,9 +4360,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IsWorldPhone (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
-				data.WriteString (arg2);
 				return true;
 				}
 
@@ -4636,7 +4378,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IsRttSupported (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -4655,7 +4396,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IsImsRegistered (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -4666,7 +4406,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IsWifiCallingAvailable (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -4677,7 +4416,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IsVideoTelephonyAvailable (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -4688,7 +4426,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetImsRegTechnologyForMmTel (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -4699,7 +4436,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetDeviceId (arg0);
 				reply.WriteNoException ();
 				reply.WriteString (result);
-				data.WriteString (arg0);
 				return true;
 				}
 
@@ -4712,8 +4448,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetDeviceIdWithFeature (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteString (result);
-				data.WriteString (arg0);
-				data.WriteString (arg1);
 				return true;
 				}
 
@@ -4728,9 +4462,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetImeiForSlot (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteString (result);
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
-				data.WriteString (arg2);
 				return true;
 				}
 
@@ -4741,7 +4472,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetTypeAllocationCodeForSlot (arg0);
 				reply.WriteNoException ();
 				reply.WriteString (result);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -4756,9 +4486,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetMeidForSlot (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteString (result);
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
-				data.WriteString (arg2);
 				return true;
 				}
 
@@ -4769,7 +4496,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetManufacturerCodeForSlot (arg0);
 				reply.WriteNoException ();
 				reply.WriteString (result);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -4784,9 +4510,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetDeviceSoftwareVersionForSlot (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteString (result);
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
-				data.WriteString (arg2);
 				return true;
 				}
 
@@ -4811,8 +4534,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetSubIdForPhoneAccountHandle (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteString (arg1);
-				data.WriteString (arg2);
 				return true;
 				}
 
@@ -4823,7 +4544,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetPhoneAccountHandleForSubscriptionId (arg0);
 				reply.WriteNoException ();
 				reply.WriteStrongBinder ((((result != null)) ? (result.AsBinder ()) : (null)));
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -4833,7 +4553,6 @@ namespace Com.Android.Internal.Telephony
 				arg0 = data.ReadInt ();
 				this.FactoryReset (arg0);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -4844,7 +4563,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetSimLocaleForSubscriber (arg0);
 				reply.WriteNoException ();
 				reply.WriteString (result);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -4867,9 +4585,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetServiceStateForSubscriber (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteStrongBinder ((((result != null)) ? (result.AsBinder ()) : (null)));
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
-				data.WriteString (arg2);
 				return true;
 				}
 
@@ -4893,7 +4608,6 @@ namespace Com.Android.Internal.Telephony
 				arg2 = UriStub.AsInterface (data.ReadStrongBinder ());
 				this.SetVoicemailRingtoneUri (arg0, arg1, arg2);
 				reply.WriteNoException ();
-				data.WriteString (arg0);
 				return true;
 				}
 
@@ -4917,8 +4631,6 @@ namespace Com.Android.Internal.Telephony
 				arg2 = data.ReadInt () != 0;
 				this.SetVoicemailVibrationEnabled (arg0, arg1, arg2);
 				reply.WriteNoException ();
-				data.WriteString (arg0);
-				data.WriteInt (arg2 ? 1 : 0);
 				return true;
 				}
 
@@ -4929,7 +4641,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetPackagesWithCarrierPrivileges (arg0);
 				reply.WriteNoException ();
 				reply.WriteStringList ((global::System.Collections.Generic.IList<string>) result);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -4950,8 +4661,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetAidForAppType (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteString (result);
-				data.WriteInt (arg0);
-				data.WriteInt (arg1);
 				return true;
 				}
 
@@ -4962,7 +4671,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetEsn (arg0);
 				reply.WriteNoException ();
 				reply.WriteString (result);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -4973,7 +4681,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetCdmaPrlVersion (arg0);
 				reply.WriteNoException ();
 				reply.WriteString (result);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -5010,7 +4717,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetSubscriptionCarrierId (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -5021,7 +4727,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetSubscriptionCarrierName (arg0);
 				reply.WriteNoException ();
 				reply.WriteString (result);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -5032,7 +4737,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetSubscriptionSpecificCarrierId (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -5043,7 +4747,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetSubscriptionSpecificCarrierName (arg0);
 				reply.WriteNoException ();
 				reply.WriteString (result);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -5058,9 +4761,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetCarrierIdFromMccMnc (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
-				data.WriteInt (arg2 ? 1 : 0);
 				return true;
 				}
 
@@ -5072,8 +4772,6 @@ namespace Com.Android.Internal.Telephony
 				arg1 = data.ReadInt () != 0;
 				this.CarrierActionSetMeteredApnsEnabled (arg0, arg1);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
-				data.WriteInt (arg1 ? 1 : 0);
 				return true;
 				}
 
@@ -5085,8 +4783,6 @@ namespace Com.Android.Internal.Telephony
 				arg1 = data.ReadInt () != 0;
 				this.CarrierActionSetRadioEnabled (arg0, arg1);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
-				data.WriteInt (arg1 ? 1 : 0);
 				return true;
 				}
 
@@ -5098,8 +4794,6 @@ namespace Com.Android.Internal.Telephony
 				arg1 = data.ReadInt () != 0;
 				this.CarrierActionReportDefaultNetworkStatus (arg0, arg1);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
-				data.WriteInt (arg1 ? 1 : 0);
 				return true;
 				}
 
@@ -5109,7 +4803,6 @@ namespace Com.Android.Internal.Telephony
 				arg0 = data.ReadInt ();
 				this.CarrierActionResetAll (arg0);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -5122,8 +4815,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetCallForwarding (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteStrongBinder ((((result != null)) ? (result.AsBinder ()) : (null)));
-				data.WriteInt (arg0);
-				data.WriteInt (arg1);
 				return true;
 				}
 
@@ -5136,7 +4827,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.SetCallForwarding (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -5147,7 +4837,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetCallWaitingStatus (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -5160,8 +4849,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.SetCallWaitingStatus (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
-				data.WriteInt (arg1 ? 1 : 0);
 				return true;
 				}
 
@@ -5173,8 +4860,6 @@ namespace Com.Android.Internal.Telephony
 				arg1 = data.ReadInt ();
 				this.SetPolicyDataEnabled (arg0, arg1);
 				reply.WriteNoException ();
-				data.WriteInt (arg0 ? 1 : 0);
-				data.WriteInt (arg1);
 				return true;
 				}
 
@@ -5189,9 +4874,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetClientRequestStats (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteTypedList (result);
-				data.WriteString (arg0);
-				data.WriteString (arg1);
-				data.WriteInt (arg2);
 				return true;
 				}
 
@@ -5203,8 +4885,6 @@ namespace Com.Android.Internal.Telephony
 				arg1 = data.ReadInt ();
 				this.SetSimPowerStateForSlot (arg0, arg1);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
-				data.WriteInt (arg1);
 				return true;
 				}
 
@@ -5221,10 +4901,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetForbiddenPlmns (arg0, arg1, arg2, arg3);
 				reply.WriteNoException ();
 				reply.WriteStringArray (result);
-				data.WriteInt (arg0);
-				data.WriteInt (arg1);
-				data.WriteString (arg2);
-				data.WriteString (arg3);
 				return true;
 				}
 
@@ -5243,10 +4919,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.SetForbiddenPlmns (arg0, arg1, arg2, arg3, arg4);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteInt (arg0);
-				data.WriteInt (arg1);
-				data.WriteString (arg3);
-				data.WriteString (arg4);
 				return true;
 				}
 
@@ -5257,7 +4929,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetEmergencyCallbackMode (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -5268,7 +4939,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetSignalStrength (arg0);
 				reply.WriteNoException ();
 				reply.WriteStrongBinder ((((result != null)) ? (result.AsBinder ()) : (null)));
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -5281,8 +4951,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetCardIdForDefaultEuicc (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
 				return true;
 				}
 
@@ -5293,7 +4961,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetUiccCardsInfo (arg0);
 				reply.WriteNoException ();
 				reply.WriteTypedList (result);
-				data.WriteString (arg0);
 				return true;
 				}
 
@@ -5314,7 +4981,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IsDataRoamingEnabled (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -5326,8 +4992,6 @@ namespace Com.Android.Internal.Telephony
 				arg1 = data.ReadInt () != 0;
 				this.SetDataRoamingEnabled (arg0, arg1);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
-				data.WriteInt (arg1 ? 1 : 0);
 				return true;
 				}
 
@@ -5338,7 +5002,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetCdmaRoamingMode (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -5351,8 +5014,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.SetCdmaRoamingMode (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
-				data.WriteInt (arg1);
 				return true;
 				}
 
@@ -5365,8 +5026,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.SetCdmaSubscriptionMode (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
-				data.WriteInt (arg1);
 				return true;
 				}
 
@@ -5394,16 +5053,6 @@ namespace Com.Android.Internal.Telephony
 				arg9 = data.ReadString ();
 				this.SetCarrierTestOverride (arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
-				data.WriteString (arg2);
-				data.WriteString (arg3);
-				data.WriteString (arg4);
-				data.WriteString (arg5);
-				data.WriteString (arg6);
-				data.WriteString (arg7);
-				data.WriteString (arg8);
-				data.WriteString (arg9);
 				return true;
 				}
 
@@ -5414,7 +5063,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetCarrierIdListVersion (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -5424,7 +5072,6 @@ namespace Com.Android.Internal.Telephony
 				arg0 = data.ReadInt ();
 				this.RefreshUiccProfile (arg0);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -5439,9 +5086,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetNumberOfModemsWithSimultaneousDataConnections (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
-				data.WriteString (arg2);
 				return true;
 				}
 
@@ -5452,7 +5096,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetNetworkSelectionMode (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -5475,9 +5118,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetRadioPowerState (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
-				data.WriteString (arg2);
 				return true;
 				}
 
@@ -5489,8 +5129,6 @@ namespace Com.Android.Internal.Telephony
 				arg1 = IImsRegistrationCallbackStub.AsInterface (data.ReadStrongBinder ());
 				this.RegisterImsRegistrationCallback (arg0, arg1);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
-				data.WriteStrongBinder ((((arg1 != null)) ? (arg1.AsBinder ()) : (null)));
 				return true;
 				}
 
@@ -5502,8 +5140,6 @@ namespace Com.Android.Internal.Telephony
 				arg1 = IImsRegistrationCallbackStub.AsInterface (data.ReadStrongBinder ());
 				this.UnregisterImsRegistrationCallback (arg0, arg1);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
-				data.WriteStrongBinder ((((arg1 != null)) ? (arg1.AsBinder ()) : (null)));
 				return true;
 				}
 
@@ -5515,8 +5151,6 @@ namespace Com.Android.Internal.Telephony
 				arg1 = IIntegerConsumerStub.AsInterface (data.ReadStrongBinder ());
 				this.GetImsMmTelRegistrationState (arg0, arg1);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
-				data.WriteStrongBinder ((((arg1 != null)) ? (arg1.AsBinder ()) : (null)));
 				return true;
 				}
 
@@ -5528,8 +5162,6 @@ namespace Com.Android.Internal.Telephony
 				arg1 = IIntegerConsumerStub.AsInterface (data.ReadStrongBinder ());
 				this.GetImsMmTelRegistrationTransportType (arg0, arg1);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
-				data.WriteStrongBinder ((((arg1 != null)) ? (arg1.AsBinder ()) : (null)));
 				return true;
 				}
 
@@ -5541,8 +5173,6 @@ namespace Com.Android.Internal.Telephony
 				arg1 = IImsCapabilityCallbackStub.AsInterface (data.ReadStrongBinder ());
 				this.RegisterMmTelCapabilityCallback (arg0, arg1);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
-				data.WriteStrongBinder ((((arg1 != null)) ? (arg1.AsBinder ()) : (null)));
 				return true;
 				}
 
@@ -5554,8 +5184,6 @@ namespace Com.Android.Internal.Telephony
 				arg1 = IImsCapabilityCallbackStub.AsInterface (data.ReadStrongBinder ());
 				this.UnregisterMmTelCapabilityCallback (arg0, arg1);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
-				data.WriteStrongBinder ((((arg1 != null)) ? (arg1.AsBinder ()) : (null)));
 				return true;
 				}
 
@@ -5570,9 +5198,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IsCapable (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
-				data.WriteInt (arg1);
-				data.WriteInt (arg2);
 				return true;
 				}
 
@@ -5587,9 +5212,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IsAvailable (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
-				data.WriteInt (arg1);
-				data.WriteInt (arg2);
 				return true;
 				}
 
@@ -5605,10 +5227,6 @@ namespace Com.Android.Internal.Telephony
 				arg3 = data.ReadInt ();
 				this.IsMmTelCapabilitySupported (arg0, arg1, arg2, arg3);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
-				data.WriteStrongBinder ((((arg1 != null)) ? (arg1.AsBinder ()) : (null)));
-				data.WriteInt (arg2);
-				data.WriteInt (arg3);
 				return true;
 				}
 
@@ -5619,7 +5237,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IsAdvancedCallingSettingEnabled (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -5631,8 +5248,6 @@ namespace Com.Android.Internal.Telephony
 				arg1 = data.ReadInt () != 0;
 				this.SetAdvancedCallingSettingEnabled (arg0, arg1);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
-				data.WriteInt (arg1 ? 1 : 0);
 				return true;
 				}
 
@@ -5643,7 +5258,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IsVtSettingEnabled (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -5655,8 +5269,6 @@ namespace Com.Android.Internal.Telephony
 				arg1 = data.ReadInt () != 0;
 				this.SetVtSettingEnabled (arg0, arg1);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
-				data.WriteInt (arg1 ? 1 : 0);
 				return true;
 				}
 
@@ -5667,7 +5279,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IsVoWiFiSettingEnabled (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -5679,8 +5290,6 @@ namespace Com.Android.Internal.Telephony
 				arg1 = data.ReadInt () != 0;
 				this.SetVoWiFiSettingEnabled (arg0, arg1);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
-				data.WriteInt (arg1 ? 1 : 0);
 				return true;
 				}
 
@@ -5691,7 +5300,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IsVoWiFiRoamingSettingEnabled (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -5703,8 +5311,6 @@ namespace Com.Android.Internal.Telephony
 				arg1 = data.ReadInt () != 0;
 				this.SetVoWiFiRoamingSettingEnabled (arg0, arg1);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
-				data.WriteInt (arg1 ? 1 : 0);
 				return true;
 				}
 
@@ -5718,9 +5324,6 @@ namespace Com.Android.Internal.Telephony
 				arg2 = data.ReadInt ();
 				this.SetVoWiFiNonPersistent (arg0, arg1, arg2);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
-				data.WriteInt (arg1 ? 1 : 0);
-				data.WriteInt (arg2);
 				return true;
 				}
 
@@ -5731,7 +5334,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetVoWiFiModeSetting (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -5743,8 +5345,6 @@ namespace Com.Android.Internal.Telephony
 				arg1 = data.ReadInt ();
 				this.SetVoWiFiModeSetting (arg0, arg1);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
-				data.WriteInt (arg1);
 				return true;
 				}
 
@@ -5755,7 +5355,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetVoWiFiRoamingModeSetting (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -5767,8 +5366,6 @@ namespace Com.Android.Internal.Telephony
 				arg1 = data.ReadInt ();
 				this.SetVoWiFiRoamingModeSetting (arg0, arg1);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
-				data.WriteInt (arg1);
 				return true;
 				}
 
@@ -5780,8 +5377,6 @@ namespace Com.Android.Internal.Telephony
 				arg1 = data.ReadInt () != 0;
 				this.SetRttCapabilitySetting (arg0, arg1);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
-				data.WriteInt (arg1 ? 1 : 0);
 				return true;
 				}
 
@@ -5792,7 +5387,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IsTtyOverVolteEnabled (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -5805,8 +5399,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetEmergencyNumberList (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteMap (result);
-				data.WriteString (arg0);
-				data.WriteString (arg1);
 				return true;
 				}
 
@@ -5819,8 +5411,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IsEmergencyNumber (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteString (arg0);
-				data.WriteInt (arg1 ? 1 : 0);
 				return true;
 				}
 
@@ -5831,7 +5421,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetCertsFromCarrierPrivilegeAccessRules (arg0);
 				reply.WriteNoException ();
 				reply.WriteStringList ((global::System.Collections.Generic.IList<string>) result);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -5843,8 +5432,6 @@ namespace Com.Android.Internal.Telephony
 				arg1 = IImsConfigCallbackStub.AsInterface (data.ReadStrongBinder ());
 				this.RegisterImsProvisioningChangedCallback (arg0, arg1);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
-				data.WriteStrongBinder ((((arg1 != null)) ? (arg1.AsBinder ()) : (null)));
 				return true;
 				}
 
@@ -5856,8 +5443,6 @@ namespace Com.Android.Internal.Telephony
 				arg1 = IImsConfigCallbackStub.AsInterface (data.ReadStrongBinder ());
 				this.UnregisterImsProvisioningChangedCallback (arg0, arg1);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
-				data.WriteStrongBinder ((((arg1 != null)) ? (arg1.AsBinder ()) : (null)));
 				return true;
 				}
 
@@ -5873,10 +5458,6 @@ namespace Com.Android.Internal.Telephony
 				arg3 = data.ReadInt () != 0;
 				this.SetImsProvisioningStatusForCapability (arg0, arg1, arg2, arg3);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
-				data.WriteInt (arg1);
-				data.WriteInt (arg2);
-				data.WriteInt (arg3 ? 1 : 0);
 				return true;
 				}
 
@@ -5891,9 +5472,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetImsProvisioningStatusForCapability (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
-				data.WriteInt (arg1);
-				data.WriteInt (arg2);
 				return true;
 				}
 
@@ -5906,8 +5484,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetRcsProvisioningStatusForCapability (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
-				data.WriteInt (arg1);
 				return true;
 				}
 
@@ -5921,9 +5497,6 @@ namespace Com.Android.Internal.Telephony
 				arg2 = data.ReadInt () != 0;
 				this.SetRcsProvisioningStatusForCapability (arg0, arg1, arg2);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
-				data.WriteInt (arg1);
-				data.WriteInt (arg2 ? 1 : 0);
 				return true;
 				}
 
@@ -5938,9 +5511,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IsMmTelCapabilityProvisionedInCache (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
-				data.WriteInt (arg1);
-				data.WriteInt (arg2);
 				return true;
 				}
 
@@ -5956,10 +5526,6 @@ namespace Com.Android.Internal.Telephony
 				arg3 = data.ReadInt () != 0;
 				this.CacheMmTelCapabilityProvisioning (arg0, arg1, arg2, arg3);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
-				data.WriteInt (arg1);
-				data.WriteInt (arg2);
-				data.WriteInt (arg3 ? 1 : 0);
 				return true;
 				}
 
@@ -5972,8 +5538,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetImsProvisioningInt (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteInt (arg0);
-				data.WriteInt (arg1);
 				return true;
 				}
 
@@ -5986,8 +5550,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetImsProvisioningString (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteString (result);
-				data.WriteInt (arg0);
-				data.WriteInt (arg1);
 				return true;
 				}
 
@@ -6002,9 +5564,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.SetImsProvisioningInt (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteInt (arg0);
-				data.WriteInt (arg1);
-				data.WriteInt (arg2);
 				return true;
 				}
 
@@ -6019,9 +5578,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.SetImsProvisioningString (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteInt (arg0);
-				data.WriteInt (arg1);
-				data.WriteString (arg2);
 				return true;
 				}
 
@@ -6033,7 +5589,6 @@ namespace Com.Android.Internal.Telephony
 				arg1 = EmergencyNumberStub.AsInterface (data.ReadStrongBinder ());
 				this.UpdateEmergencyNumberListTestMode (arg0, arg1);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -6052,7 +5607,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetEmergencyNumberDbVersion (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -6088,8 +5642,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.EnableModemForSlot (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
-				data.WriteInt (arg1 ? 1 : 0);
 				return true;
 				}
 
@@ -6099,7 +5651,6 @@ namespace Com.Android.Internal.Telephony
 				arg0 = data.ReadInt () != 0;
 				this.SetMultiSimCarrierRestriction (arg0);
 				reply.WriteNoException ();
-				data.WriteInt (arg0 ? 1 : 0);
 				return true;
 				}
 
@@ -6112,8 +5663,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IsMultiSimSupported (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteInt (result);
-				data.WriteString (arg0);
-				data.WriteString (arg1);
 				return true;
 				}
 
@@ -6123,7 +5672,6 @@ namespace Com.Android.Internal.Telephony
 				arg0 = data.ReadInt ();
 				this.SwitchMultiSimConfig (arg0);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -6138,9 +5686,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.DoesSwitchMultiSimConfigTriggerReboot (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
-				data.WriteString (arg2);
 				return true;
 				}
 
@@ -6177,8 +5722,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IsApplicationOnUicc (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
-				data.WriteInt (arg1);
 				return true;
 				}
 
@@ -6193,9 +5736,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IsModemEnabledForSlot (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
-				data.WriteString (arg1);
-				data.WriteString (arg2);
 				return true;
 				}
 
@@ -6210,9 +5750,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IsDataEnabledForApn (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
-				data.WriteInt (arg1);
-				data.WriteString (arg2);
 				return true;
 				}
 
@@ -6225,8 +5762,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IsApnMetered (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
-				data.WriteInt (arg1);
 				return true;
 				}
 
@@ -6239,8 +5774,6 @@ namespace Com.Android.Internal.Telephony
 				IBooleanConsumer arg2 = default (IBooleanConsumer);
 				arg2 = IBooleanConsumerStub.AsInterface (data.ReadStrongBinder ());
 				this.SetSystemSelectionChannels (arg0, arg1, arg2);
-				data.WriteInt (arg1);
-				data.WriteStrongBinder ((((arg2 != null)) ? (arg2.AsBinder ()) : (null)));
 				return true;
 				}
 
@@ -6255,9 +5788,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IsMvnoMatched (arg0, arg1, arg2);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
-				data.WriteInt (arg1);
-				data.WriteString (arg2);
 				return true;
 				}
 
@@ -6270,9 +5800,6 @@ namespace Com.Android.Internal.Telephony
 				IIntegerConsumer arg2 = default (IIntegerConsumer);
 				arg2 = IIntegerConsumerStub.AsInterface (data.ReadStrongBinder ());
 				this.EnqueueSmsPickResult (arg0, arg1, arg2);
-				data.WriteString (arg0);
-				data.WriteString (arg1);
-				data.WriteStrongBinder ((((arg2 != null)) ? (arg2.AsBinder ()) : (null)));
 				return true;
 				}
 
@@ -6283,7 +5810,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetMmsUserAgent (arg0);
 				reply.WriteNoException ();
 				reply.WriteString (result);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -6294,7 +5820,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetMmsUAProfUrl (arg0);
 				reply.WriteNoException ();
 				reply.WriteString (result);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -6307,8 +5832,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.SetDataAllowedDuringVoiceCall (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
-				data.WriteInt (arg1 ? 1 : 0);
 				return true;
 				}
 
@@ -6319,7 +5842,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IsDataAllowedInVoiceCall (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -6332,8 +5854,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.SetAlwaysAllowMmsData (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
-				data.WriteInt (arg1 ? 1 : 0);
 				return true;
 				}
 
@@ -6342,7 +5862,6 @@ namespace Com.Android.Internal.Telephony
 				bool arg0 = default (bool);
 				arg0 = data.ReadInt () != 0;
 				this.SetCepEnabled (arg0);
-				data.WriteInt (arg0 ? 1 : 0);
 				return true;
 				}
 
@@ -6356,8 +5875,6 @@ namespace Com.Android.Internal.Telephony
 				arg2 = data.ReadInt () != 0;
 				this.NotifyRcsAutoConfigurationReceived (arg0, arg1, arg2);
 				reply.WriteNoException ();
-				data.WriteInt (arg0);
-				data.WriteInt (arg2 ? 1 : 0);
 				return true;
 				}
 
@@ -6368,7 +5885,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.IsIccLockEnabled (arg0);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -6391,7 +5907,6 @@ namespace Com.Android.Internal.Telephony
 				var result = this.GetManualNetworkSelectionPlmn (arg0);
 				reply.WriteNoException ();
 				reply.WriteString (result);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -6470,7 +5985,7 @@ namespace Com.Android.Internal.Telephony
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -6493,7 +6008,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -6517,7 +6032,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -6541,7 +6056,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -6566,7 +6081,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -6590,7 +6105,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -6615,7 +6130,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int [] __result = default (int []);
+				int [] __result = default (int []);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -6639,7 +6154,7 @@ int [] __result = default (int []);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int [] __result = default (int []);
+				int [] __result = default (int []);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -6664,7 +6179,7 @@ int [] __result = default (int []);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -6708,7 +6223,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -6769,7 +6284,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -6792,7 +6307,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -6816,7 +6331,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -6950,7 +6465,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -6972,7 +6487,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -6994,7 +6509,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -7017,7 +6532,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-CellIdentity __result = default (CellIdentity);
+				CellIdentity __result = default (CellIdentity);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -7041,7 +6556,7 @@ CellIdentity __result = default (CellIdentity);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-String __result = default (String);
+				String __result = default (String);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -7064,7 +6579,7 @@ String __result = default (String);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-List __result = default (List);
+				List __result = default (List);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -7088,7 +6603,7 @@ List __result = default (List);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -7110,7 +6625,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -7133,7 +6648,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -7155,7 +6670,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -7178,7 +6693,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -7200,7 +6715,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -7223,7 +6738,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -7245,7 +6760,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -7268,7 +6783,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -7292,7 +6807,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -7317,7 +6832,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -7341,7 +6856,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -7366,7 +6881,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-String __result = default (String);
+				String __result = default (String);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -7390,7 +6905,7 @@ String __result = default (String);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-String __result = default (String);
+				String __result = default (String);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -7415,7 +6930,7 @@ String __result = default (String);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -7437,7 +6952,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -7502,7 +7017,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -7526,7 +7041,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -7550,7 +7065,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -7575,7 +7090,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -7598,7 +7113,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-Bundle __result = default (Bundle);
+				Bundle __result = default (Bundle);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -7622,7 +7137,7 @@ Bundle __result = default (Bundle);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-String __result = default (String);
+				String __result = default (String);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -7688,7 +7203,7 @@ String __result = default (String);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-VisualVoicemailSmsFilterSettings __result = default (VisualVoicemailSmsFilterSettings);
+				VisualVoicemailSmsFilterSettings __result = default (VisualVoicemailSmsFilterSettings);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -7712,7 +7227,7 @@ VisualVoicemailSmsFilterSettings __result = default (VisualVoicemailSmsFilterSet
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-VisualVoicemailSmsFilterSettings __result = default (VisualVoicemailSmsFilterSettings);
+				VisualVoicemailSmsFilterSettings __result = default (VisualVoicemailSmsFilterSettings);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -7780,7 +7295,7 @@ VisualVoicemailSmsFilterSettings __result = default (VisualVoicemailSmsFilterSet
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -7805,7 +7320,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -7829,7 +7344,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -7854,7 +7369,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -7879,7 +7394,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -7901,7 +7416,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -7924,7 +7439,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -7948,7 +7463,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -7973,7 +7488,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-List __result = default (List);
+				List __result = default (List);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -8061,7 +7576,7 @@ List __result = default (List);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-IccOpenLogicalChannelResponse __result = default (IccOpenLogicalChannelResponse);
+				IccOpenLogicalChannelResponse __result = default (IccOpenLogicalChannelResponse);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -8087,7 +7602,7 @@ IccOpenLogicalChannelResponse __result = default (IccOpenLogicalChannelResponse)
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-IccOpenLogicalChannelResponse __result = default (IccOpenLogicalChannelResponse);
+				IccOpenLogicalChannelResponse __result = default (IccOpenLogicalChannelResponse);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -8113,7 +7628,7 @@ IccOpenLogicalChannelResponse __result = default (IccOpenLogicalChannelResponse)
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -8137,7 +7652,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -8161,7 +7676,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-String __result = default (String);
+				String __result = default (String);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -8191,7 +7706,7 @@ String __result = default (String);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-String __result = default (String);
+				String __result = default (String);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -8221,7 +7736,7 @@ String __result = default (String);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-String __result = default (String);
+				String __result = default (String);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -8251,7 +7766,7 @@ String __result = default (String);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-String __result = default (String);
+				String __result = default (String);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -8281,7 +7796,7 @@ String __result = default (String);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-byte [] __result = default (byte []);
+				byte [] __result = default (byte []);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -8310,7 +7825,7 @@ byte [] __result = default (byte []);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-String __result = default (String);
+				String __result = default (String);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -8334,7 +7849,7 @@ String __result = default (String);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-String __result = default (String);
+				String __result = default (String);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -8357,7 +7872,7 @@ String __result = default (String);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -8381,7 +7896,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -8404,7 +7919,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -8427,7 +7942,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -8450,7 +7965,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -8474,7 +7989,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -8497,7 +8012,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -8577,7 +8092,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-IImsMmTelFeature __result = default (IImsMmTelFeature);
+				IImsMmTelFeature __result = default (IImsMmTelFeature);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -8601,7 +8116,7 @@ IImsMmTelFeature __result = default (IImsMmTelFeature);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-IImsRcsFeature __result = default (IImsRcsFeature);
+				IImsRcsFeature __result = default (IImsRcsFeature);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -8646,7 +8161,7 @@ IImsRcsFeature __result = default (IImsRcsFeature);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-IImsRegistration __result = default (IImsRegistration);
+				IImsRegistration __result = default (IImsRegistration);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -8670,7 +8185,7 @@ IImsRegistration __result = default (IImsRegistration);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-IImsConfig __result = default (IImsConfig);
+				IImsConfig __result = default (IImsConfig);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -8694,7 +8209,7 @@ IImsConfig __result = default (IImsConfig);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -8720,7 +8235,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-String __result = default (String);
+				String __result = default (String);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -8784,7 +8299,7 @@ String __result = default (String);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-CellNetworkScanResult __result = default (CellNetworkScanResult);
+				CellNetworkScanResult __result = default (CellNetworkScanResult);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -8809,7 +8324,7 @@ CellNetworkScanResult __result = default (CellNetworkScanResult);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -8857,7 +8372,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -8882,7 +8397,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-long __result = default (long);
+				long __result = default (long);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -8905,7 +8420,7 @@ long __result = default (long);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -8929,7 +8444,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-long __result = default (long);
+				long __result = default (long);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -8953,7 +8468,7 @@ long __result = default (long);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-long __result = default (long);
+				long __result = default (long);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -8976,7 +8491,7 @@ long __result = default (long);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -9001,7 +8516,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -9045,7 +8560,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -9068,7 +8583,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -9091,7 +8606,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -9114,7 +8629,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -9157,7 +8672,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-String [] __result = default (String []);
+				String [] __result = default (String []);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -9201,7 +8716,7 @@ String [] __result = default (String []);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-String __result = default (String);
+				String __result = default (String);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -9224,7 +8739,7 @@ String __result = default (String);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-String __result = default (String);
+				String __result = default (String);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -9269,7 +8784,7 @@ String __result = default (String);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -9292,7 +8807,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -9316,7 +8831,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -9340,7 +8855,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -9363,7 +8878,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-List __result = default (List);
+				List __result = default (List);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -9387,7 +8902,7 @@ List __result = default (List);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -9412,7 +8927,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-String __result = default (String);
+				String __result = default (String);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -9437,7 +8952,7 @@ String __result = default (String);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-String __result = default (String);
+				String __result = default (String);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -9462,7 +8977,7 @@ String __result = default (String);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-String [] __result = default (String []);
+				String [] __result = default (String []);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -9487,7 +9002,7 @@ String [] __result = default (String []);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-String [] __result = default (String []);
+				String [] __result = default (String []);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -9511,7 +9026,7 @@ String [] __result = default (String []);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -9535,7 +9050,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -9562,11 +9077,12 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
 					__data.WriteByteArray (oemReq);
+					if (oemResp == null) { __data.WriteInt(-1); } else { __data.WriteInt(oemResp.Length); }
 					remote.Transact (ITelephonyStub.TransactionInvokeOemRilRequestRaw, __data, __reply, 0);
 					__reply.ReadException ();
 					__result = __reply.ReadInt ();
@@ -9586,7 +9102,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -9626,7 +9142,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -9669,7 +9185,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -9693,7 +9209,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -9718,7 +9234,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -9743,7 +9259,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -9765,7 +9281,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -9788,7 +9304,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -9810,7 +9326,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -9833,7 +9349,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -9856,7 +9372,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -9879,7 +9395,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -9902,7 +9418,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-String __result = default (String);
+				String __result = default (String);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -9925,7 +9441,7 @@ String __result = default (String);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-String __result = default (String);
+				String __result = default (String);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -9949,7 +9465,7 @@ String __result = default (String);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-String __result = default (String);
+				String __result = default (String);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -9974,7 +9490,7 @@ String __result = default (String);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-String __result = default (String);
+				String __result = default (String);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -9997,7 +9513,7 @@ String __result = default (String);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-String __result = default (String);
+				String __result = default (String);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -10022,7 +9538,7 @@ String __result = default (String);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-String __result = default (String);
+				String __result = default (String);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -10045,7 +9561,7 @@ String __result = default (String);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-String __result = default (String);
+				String __result = default (String);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -10070,7 +9586,7 @@ String __result = default (String);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -10093,7 +9609,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -10118,7 +9634,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-PhoneAccountHandle __result = default (PhoneAccountHandle);
+				PhoneAccountHandle __result = default (PhoneAccountHandle);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -10160,7 +9676,7 @@ PhoneAccountHandle __result = default (PhoneAccountHandle);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-String __result = default (String);
+				String __result = default (String);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -10202,7 +9718,7 @@ String __result = default (String);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-ServiceState __result = default (ServiceState);
+				ServiceState __result = default (ServiceState);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -10227,7 +9743,7 @@ ServiceState __result = default (ServiceState);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-Uri __result = default (Uri);
+				Uri __result = default (Uri);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -10271,7 +9787,7 @@ Uri __result = default (Uri);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -10315,7 +9831,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-List __result = default (List);
+				List __result = default (List);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -10338,7 +9854,7 @@ List __result = default (List);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-List __result = default (List);
+				List __result = default (List);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -10360,7 +9876,7 @@ List __result = default (List);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-String __result = default (String);
+				String __result = default (String);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -10384,7 +9900,7 @@ String __result = default (String);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-String __result = default (String);
+				String __result = default (String);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -10407,7 +9923,7 @@ String __result = default (String);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-String __result = default (String);
+				String __result = default (String);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -10430,7 +9946,7 @@ String __result = default (String);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-List __result = default (List);
+				List __result = default (List);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -10452,7 +9968,7 @@ List __result = default (List);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -10475,7 +9991,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-CarrierRestrictionRules __result = default (CarrierRestrictionRules);
+				CarrierRestrictionRules __result = default (CarrierRestrictionRules);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -10497,7 +10013,7 @@ CarrierRestrictionRules __result = default (CarrierRestrictionRules);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -10520,7 +10036,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-String __result = default (String);
+				String __result = default (String);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -10543,7 +10059,7 @@ String __result = default (String);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -10566,7 +10082,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-String __result = default (String);
+				String __result = default (String);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -10589,7 +10105,7 @@ String __result = default (String);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -10693,7 +10209,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-CallForwardingInfo __result = default (CallForwardingInfo);
+				CallForwardingInfo __result = default (CallForwardingInfo);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -10717,7 +10233,7 @@ CallForwardingInfo __result = default (CallForwardingInfo);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -10741,7 +10257,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -10764,7 +10280,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -10808,7 +10324,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-List __result = default (List);
+				List __result = default (List);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -10853,7 +10369,7 @@ List __result = default (List);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-String [] __result = default (String []);
+				String [] __result = default (String []);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -10879,7 +10395,7 @@ String [] __result = default (String []);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -10906,7 +10422,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -10929,7 +10445,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-SignalStrength __result = default (SignalStrength);
+				SignalStrength __result = default (SignalStrength);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -10952,7 +10468,7 @@ SignalStrength __result = default (SignalStrength);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -10976,7 +10492,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-List __result = default (List);
+				List __result = default (List);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -10999,7 +10515,7 @@ List __result = default (List);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -11022,7 +10538,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -11065,7 +10581,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -11088,7 +10604,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -11112,7 +10628,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -11164,7 +10680,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -11206,7 +10722,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -11231,7 +10747,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -11254,7 +10770,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -11276,7 +10792,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -11421,7 +10937,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -11446,7 +10962,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -11493,7 +11009,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -11536,7 +11052,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -11579,7 +11095,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -11622,7 +11138,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -11686,7 +11202,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -11729,7 +11245,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -11792,7 +11308,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -11815,7 +11331,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-global::Android.Runtime.JavaDictionary __result = default (global::Android.Runtime.JavaDictionary);
+				global::Android.Runtime.JavaDictionary __result = default (global::Android.Runtime.JavaDictionary);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -11839,7 +11355,7 @@ global::Android.Runtime.JavaDictionary __result = default (global::Android.Runti
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -11863,7 +11379,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-List __result = default (List);
+				List __result = default (List);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -11948,7 +11464,7 @@ List __result = default (List);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -11973,7 +11489,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -12018,7 +11534,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -12065,7 +11581,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -12089,7 +11605,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-String __result = default (String);
+				String __result = default (String);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -12113,7 +11629,7 @@ String __result = default (String);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -12138,7 +11654,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -12183,7 +11699,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-List __result = default (List);
+				List __result = default (List);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -12205,7 +11721,7 @@ List __result = default (List);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -12283,7 +11799,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -12326,7 +11842,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -12369,7 +11885,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -12394,7 +11910,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int [] __result = default (int []);
+				int [] __result = default (int []);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -12416,7 +11932,7 @@ int [] __result = default (int []);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -12438,7 +11954,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-String __result = default (String);
+				String __result = default (String);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -12460,7 +11976,7 @@ String __result = default (String);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -12484,7 +12000,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -12509,7 +12025,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -12534,7 +12050,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -12579,7 +12095,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -12625,7 +12141,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-String __result = default (String);
+				String __result = default (String);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -12648,7 +12164,7 @@ String __result = default (String);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-String __result = default (String);
+				String __result = default (String);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -12671,7 +12187,7 @@ String __result = default (String);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -12695,7 +12211,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -12718,7 +12234,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -12782,7 +12298,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -12841,7 +12357,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-String __result = default (String);
+				String __result = default (String);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -12864,7 +12380,7 @@ String __result = default (String);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
