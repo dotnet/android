@@ -109,7 +109,6 @@ namespace Xamarin.Android.Prepare
 			string[] sdkManagerPaths = new[]{
 				Path.Combine (sdkRoot, "cmdline-tools", context.Properties [KnownProperties.CommandLineToolsFolder], "bin", "sdkmanager"),
 				Path.Combine (sdkRoot, "cmdline-tools", "latest", "bin", "sdkmanager"),
-				Path.Combine (sdkRoot, "tools", "bin", "sdkmanager"),
 			};
 			string sdkManager = "";
 			foreach (var sdkManagerPath in sdkManagerPaths) {

@@ -531,8 +531,6 @@ namespace Xamarin.Android.Tools
 							$"{sdkPath}/cmdline-tools/1.0/bin",
 							$"{sdkPath}/cmdline-tools/latest/bin",
 							$"{sdkPath}/emulator",
-							$"{sdkPath}/tools",
-							$"{sdkPath}/tools/bin",
 						});
 					} else {
 						potentialLocations.AddRange (new []{
@@ -540,20 +538,14 @@ namespace Xamarin.Android.Tools
 							"AppData/Local/Android/Sdk/cmdline-tools/1.0/bin",
 							"AppData/Local/Android/Sdk/cmdline-tools/latest/bin",
 							"AppData/Local/Android/Sdk/emulator",
-							"AppData/Local/Android/Sdk/tools",
-							"AppData/Local/Android/Sdk/tools/bin",
 							"Library/Android/sdk/platform-tools",
 							"Library/Android/sdk/cmdline-tools/1.0/bin",
 							"Library/Android/sdk/cmdline-tools/latest/bin",
 							"Library/Android/sdk/emulator",
-							"Library/Android/sdk/tools",
-							"Library/Android/sdk/tools/bin",
 							"android-toolchain/sdk/platform-tools",
 							"android-toolchain/sdk/cmdline-tools/1.0/bin",
 							"android-toolchain/sdk/cmdline-tools/latest/bin",
 							"android-toolchain/sdk/emulator",
-							"android-toolchain/sdk/tools",
-							"android-toolchain/sdk/tools/bin",
 						});
 
 						if (RunningOnWindowsEnvironment) {
@@ -562,8 +554,6 @@ namespace Xamarin.Android.Tools
 								"C:/Program Files (x86)/Android/android-sdk/cmdline-tools/1.0/bin",
 								"C:/Program Files (x86)/Android/android-sdk/cmdline-tools/latest/bin",
 								"C:/Program Files (x86)/Android/android-sdk/emulator",
-								"C:/Program Files (x86)/Android/android-sdk/tools",
-								"C:/Program Files (x86)/Android/android-sdk/tools/bin",
 							});
 						}
 					}
