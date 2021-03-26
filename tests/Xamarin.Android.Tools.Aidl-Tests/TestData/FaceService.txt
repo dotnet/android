@@ -113,7 +113,6 @@ namespace Com.Android.Internal.Util.Custom.Faceunlock
 				long arg0 = default (long);
 				arg0 = data.ReadLong ();
 				this.Authenticate (arg0);
-				data.WriteLong (arg0);
 				return true;
 				}
 
@@ -132,7 +131,6 @@ namespace Com.Android.Internal.Util.Custom.Faceunlock
 				int [] arg2 = default (int []);
 				arg2 = data.CreateIntArray ();
 				this.Enroll (arg0, arg1, arg2);
-				data.WriteInt (arg1);
 				return true;
 				}
 
@@ -151,7 +149,6 @@ namespace Com.Android.Internal.Util.Custom.Faceunlock
 				var result = this.GenerateChallenge (arg0);
 				reply.WriteNoException ();
 				reply.WriteLong (result);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -172,8 +169,6 @@ namespace Com.Android.Internal.Util.Custom.Faceunlock
 				var result = this.GetFeature (arg0, arg1);
 				reply.WriteNoException ();
 				reply.WriteInt (result ? 1 : 0);
-				data.WriteInt (arg0);
-				data.WriteInt (arg1);
 				return true;
 				}
 
@@ -190,7 +185,6 @@ namespace Com.Android.Internal.Util.Custom.Faceunlock
 				int arg0 = default (int);
 				arg0 = data.ReadInt ();
 				this.Remove (arg0);
-				data.WriteInt (arg0);
 				return true;
 				}
 
@@ -229,9 +223,6 @@ namespace Com.Android.Internal.Util.Custom.Faceunlock
 				int arg3 = default (int);
 				arg3 = data.ReadInt ();
 				this.SetFeature (arg0, arg1, arg2, arg3);
-				data.WriteInt (arg0);
-				data.WriteInt (arg1 ? 1 : 0);
-				data.WriteInt (arg3);
 				return true;
 				}
 
@@ -321,7 +312,7 @@ namespace Com.Android.Internal.Util.Custom.Faceunlock
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -343,7 +334,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-long __result = default (long);
+				long __result = default (long);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -366,7 +357,7 @@ long __result = default (long);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -388,7 +379,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-bool __result = default (bool);
+				bool __result = default (bool);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -412,7 +403,7 @@ bool __result = default (bool);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
@@ -472,7 +463,7 @@ int __result = default (int);
 				global::Android.OS.Parcel __data = global::Android.OS.Parcel.Obtain ();
 
 				global::Android.OS.Parcel __reply = global::Android.OS.Parcel.Obtain ();
-int __result = default (int);
+				int __result = default (int);
 
 				try {
 					__data.WriteInterfaceToken (descriptor);
