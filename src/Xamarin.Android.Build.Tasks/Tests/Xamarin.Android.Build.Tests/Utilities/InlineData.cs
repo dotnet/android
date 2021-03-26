@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Globalization;
+using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -28,6 +30,15 @@ namespace Xamarin.Android.Build.Tests
 		public static string ResxWithContents (string contents)
 		{
 			return Resx.Replace ("<!--contents-->", contents);
+		}
+
+		public static void AddCultureResourcesToProject (IShortFormProject proj, string filename, string dataName, CultureTypes types = CultureTypes.AllCultures)
+		{
+			foreach (var culture in CultureInfo.GetCultures (types)) {
+				proj.OtherBuildItems.Add (new BuildItem ("EmbeddedResource", $"{filename}.{culture.Name}.resx") {
+					TextContent = () => InlineData.ResxWithContents ($"<data name=\"{dataName}\"><value>{culture.Name}</value></data>")
+				});
+			}
 		}
 	}
 }

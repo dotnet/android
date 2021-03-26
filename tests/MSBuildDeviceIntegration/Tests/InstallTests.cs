@@ -7,6 +7,7 @@ using Microsoft.Build.Framework;
 using System.Text;
 using System.Xml.Linq;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -440,27 +441,13 @@ namespace Xamarin.Android.Build.Tests
 			var path = Path.Combine ("temp", TestName);
 			var lib = new XamarinAndroidLibraryProject {
 				ProjectName = "Localization",
-				OtherBuildItems = {
-					new BuildItem ("EmbeddedResource", "Bar.resx") {
-						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancel</value></data>")
-					},
-					new BuildItem ("EmbeddedResource", "Bar.es.resx") {
-						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancelar</value></data>")
-					}
-				}
 			};
+			InlineData.AddCultureResourcesToProject (lib, "Bar", "CancelButton");
 
 			var app = new XamarinAndroidApplicationProject {
 				EmbedAssembliesIntoApk = false,
-				OtherBuildItems = {
-					new BuildItem ("EmbeddedResource", "Foo.resx") {
-						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancel</value></data>")
-					},
-					new BuildItem ("EmbeddedResource", "Foo.es.resx") {
-						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancelar</value></data>")
-					}
-				}
 			};
+			InlineData.AddCultureResourcesToProject (lib, "Foo", "CancelButton");
 			app.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
 
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
