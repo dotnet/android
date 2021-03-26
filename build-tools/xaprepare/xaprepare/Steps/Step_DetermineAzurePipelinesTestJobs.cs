@@ -47,7 +47,9 @@ namespace Xamarin.Android.Prepare
 				// MSBuildDevice: Runs all MSBuildDeviceIntegration tests
 				// BCL: Runs BCL tests on emulator
 				// Designer: Runs designer integration tests
-				if (file == ".external" || file == "Configuration.props" || IsRelevantBuildToolsFile (file)) {
+				if (file == ".external" || file == "Configuration.props" ||
+						file.Contains ("eng/Version") ||
+						IsRelevantBuildToolsFile (file)) {
 					testAreas.Add ("MSBuild");
 					testAreas.Add ("MSBuildDevice");
 					testAreas.Add ("BCL");
