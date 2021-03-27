@@ -2,7 +2,7 @@
   <!--Package versions-->
   <PropertyGroup>
     <MicrosoftDotnetSdkInternalPackageVersion>6.0.100-preview.3.21174.8</MicrosoftDotnetSdkInternalPackageVersion>
-    <MicrosoftNETILLinkPackageVersion>6.0.100-preview.2.21174.1</MicrosoftNETILLinkPackageVersion>
+    <MicrosoftNETILLinkPackageVersion>6.0.100-preview.2.21177.1</MicrosoftNETILLinkPackageVersion>
   </PropertyGroup>
   <PropertyGroup>
     <!-- Trim all characters after first `-` or `+` is encountered. -->
