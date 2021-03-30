@@ -135,12 +135,12 @@ namespace Xamarin.Android.Tasks
 			return false;
 		}
 
-		/// <summary>
-		/// See: http://hg.openjdk.java.net/jdk8u/jdk8u-dev/jdk/file/0fc878b99541/src/share/classes/sun/security/tools/jarsigner/Resources.java
-		/// </summary>
 		static readonly string [] IgnoredWarnings = new [] {
+			// See: http://hg.openjdk.java.net/jdk8u/jdk8u-dev/jdk/file/0fc878b99541/src/share/classes/sun/security/tools/jarsigner/Resources.java
 			"certificate is self-signed",
 			"No -tsa or -tsacert is provided",
+			// FIXME: warning encountered when using: https://aka.ms/getopenjdk
+			"POSIX file permission and/or symlink attributes detected"
 		};
 
 		protected override string ToolName
