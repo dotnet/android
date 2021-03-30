@@ -86,7 +86,7 @@
       <!-- See Azure Pipelines predefined variables. -->
       <_AndroidPackLabel Condition=" '$(SYSTEM_PULLREQUEST_PULLREQUESTNUMBER)' != '' ">ci.pr.gh$(SYSTEM_PULLREQUEST_PULLREQUESTNUMBER).$(PackVersionCommitCount)</_AndroidPackLabel>
       <_AndroidPackBranch>$([System.Text.RegularExpressions.Regex]::Replace('$(XAVersionBranch)', '[^a-zA-Z0-9-]', '-'))</_AndroidPackBranch>
-      <_AndroidPackLabel Condition=" '$(_AndroidPackLabel)' == '' ">ci.$(_AndroidPackBranch).$(PackVersionCommitCount)</_AndroidPackLabel>
+      <_AndroidPackLabel Condition=" '$(_AndroidPackLabel)' == '' ">preview.7.$(PackVersionCommitCount)</_AndroidPackLabel>
       <AndroidPackVersionLong>$(AndroidPackVersion)-$(_AndroidPackLabel)</AndroidPackVersionLong>
       <AndroidMSIVersion>$(AndroidPackVersion).$(PackVersionCommitCount)</AndroidMSIVersion>
     </PropertyGroup>
