@@ -5,6 +5,7 @@ name: $(Build.SourceBranchName)-$(Build.SourceVersion)-$(Rev:r)
 trigger:
 - main
 - d16-*
+- 6.0.*
 
 pr:
   autoCancel: false
@@ -12,6 +13,7 @@ pr:
     include:
     - main
     - d16-*
+    - 6.0.*
 
 # Global variables
 # Predefined variables: https://docs.microsoft.com/en-us/azure/devops/pipelines/build/variables?view=azure-devops&tabs=yaml
